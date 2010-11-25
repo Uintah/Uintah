@@ -830,8 +830,7 @@ void UCNH::addComputesAndRequires(Task* task,
 {
   const MaterialSubset* matlset = matl->thisMaterial();
 
-  if(flag->d_integrator == MPMFlags::Implicit)
-  {
+  if(flag->d_integrator == MPMFlags::Implicit) {
     bool reset = flag->d_doGridReset;
     addSharedCRForImplicit(task, matlset, reset, true,SchedParent);
   }
@@ -1432,8 +1431,7 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
     parent_old_dw->get(pvolumeold, lb->pVolumeLabel,           pset);
     parent_old_dw->get(pDefGrad, lb->pDeformationMeasureLabel, pset);
     parent_old_dw->get(pBeBar,   bElBarLabel,                  pset);
-    old_dw->get(gDisp,           lb->dispNewLabel, dwi, patch, gac, 1);
-   
+
     new_dw->allocateAndPut(pStress,     lb->pStressLabel_preReloc, pset);
     new_dw->allocateAndPut(pVolume_new, lb->pVolumeDeformedLabel,  pset);
     new_dw->allocateTemporary(pDefGrad_new, pset);
@@ -1476,9 +1474,10 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
                                                       dx, pSize,interpolator);
       }
 
-    
-      // No "Active Stress" so don't need time
-      //      double time = d_sharedState->getElapsedTime();
+      if(d_usePlasticity || d_useDamage && flag->d_doGridReset){
+        old_dw->get(gDisp,           lb->dispNewLabel, dwi, patch, gac, 1);
+      }
+
       for(iter = pset->begin(); iter != pset->end(); iter++){
         particleIndex idx = *iter;
       
