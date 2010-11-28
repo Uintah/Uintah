@@ -109,7 +109,7 @@ DragModel::problemSetup(const ProblemSpecP& params)
       } else {
         std::string errmsg;
         errmsg = "ERROR: Arches: DragModel: Invalid variable role:";
-        errmsg += "must be \"length\", \"u_velocity\", \"v_velocity\", or \"w_velocity\", you specified \"" + role_name + "\".";
+        errmsg += "must be \"particle_length\", \"u_velocity\", \"v_velocity\", or \"w_velocity\", you specified \"" + role_name + "\".";
         throw ProblemSetupException(errmsg,__FILE__,__LINE__);
       }
     }
@@ -260,9 +260,9 @@ DragModel::sched_computeModel( const LevelP& level,
     
     tsk->requires( Task::OldDW, d_fieldLabels->d_densityCPLabel,   gn, 0);   // gas density
     tsk->requires( Task::OldDW, d_fieldLabels->d_newCCVelocityLabel, gn, 0 ); // gas velocity
-    tsk->requires( Task::OldDW, d_velocity_label, gn, 0 ); // particle velocity
 
-    // particle density is always calculated FIRST, so get it from the new DW
+    // particle density, velocity always calculated FIRST (see ExplicitSolver.cc), so get it from new DW
+    tsk->requires( Task::NewDW, d_velocity_label, gn, 0 );      // particle velocity
     tsk->requires( Task::NewDW, particle_density_label, gn, 0); // particle density 
 
     tsk->requires( Task::OldDW, d_weight_label, gn, 0);
@@ -282,6 +282,7 @@ DragModel::sched_computeModel( const LevelP& level,
 
     tsk->requires( Task::NewDW, d_fieldLabels->d_densityTempLabel,   gn, 0);   // gas density
     tsk->requires( Task::NewDW, d_fieldLabels->d_newCCVelocityLabel, gn, 0); // gas velocity
+
     tsk->requires( Task::NewDW, d_velocity_label,       gn, 0); // particle velocity
     tsk->requires( Task::NewDW, particle_density_label, gn, 0); // particle density 
 
@@ -545,12 +546,11 @@ DragModel::computeModel( const ProcessorGroup* pc,
     if( timeSubStep == 0 ) {
 
       old_dw->get( gas_density, d_fieldLabels->d_densityCPLabel, matlIndex, patch, gn, 0);
-
-      // particle density is always calculated FIRST, so get from new DW
-      new_dw->get( particle_density, particle_density_label, matlIndex, patch, gn, 0);
-
       old_dw->get( gas_velocity, d_fieldLabels->d_newCCVelocityLabel, matlIndex, patch, gn, 0);
-      old_dw->get( particle_velocity, d_velocity_label, matlIndex, patch, gn, 0);
+
+      // particle density, velocity always calculated FIRST, so get from new DW
+      new_dw->get( particle_density, particle_density_label, matlIndex, patch, gn, 0);
+      new_dw->get( particle_velocity, d_velocity_label, matlIndex, patch, gn, 0);
 
       old_dw->get( particle_length, d_length_label, matlIndex, patch, gn, 0 );
       old_dw->get( weight, d_weight_label, matlIndex, patch, gn, 0 );
@@ -573,9 +573,9 @@ DragModel::computeModel( const ProcessorGroup* pc,
     } else { 
 
       new_dw->get( gas_density, d_fieldLabels->d_densityTempLabel, matlIndex, patch, gn, 0);
-      new_dw->get( particle_density, particle_density_label, matlIndex, patch, gn, 0);
-
       new_dw->get( gas_velocity, d_fieldLabels->d_newCCVelocityLabel, matlIndex, patch, gn, 0);
+
+      new_dw->get( particle_density, particle_density_label, matlIndex, patch, gn, 0);
       new_dw->get( particle_velocity, d_velocity_label, matlIndex, patch, gn, 0);
 
       new_dw->get( particle_length, d_length_label, matlIndex, patch, gn, 0 );
@@ -593,9 +593,11 @@ DragModel::computeModel( const ProcessorGroup* pc,
     for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
       IntVector c = *iter;
 
-      if( !d_unweighted && weight[c] < d_w_small ) {
-        drag_particle[c] = Vector(0.,0.,0.);
-        drag_gas[c] = Vector(0.,0.,0.);
+      //if( !d_unweighted && weight[c] < d_w_small ) {
+      if( weight[c] < d_w_small ) {
+
+        drag_particle[c] = Vector(0.0,0.0,0.0);
+        drag_gas[c] = Vector(0.0,0.0,0.0);
 
       } else {
 
@@ -626,29 +628,50 @@ DragModel::computeModel( const ProcessorGroup* pc,
 
         double phi;
         if(Re < 1) {
-          phi = 1;
+          phi = 1.0;
         } else if(Re>1000) {
           phi = 0.0183*Re;
         } else {
-          phi = 1. + .15*pow(Re, 0.687);
+          phi = 1.0 + 0.15*pow(Re, 0.687);
         }
 
         if( length > TINY ) {
 
-          double t_p = (rhop/(18*d_visc))*pow(length,2);
+          double t_p = (rhop/(18.0*d_visc))*pow(length,2);
 
           uvel_model[c] = (phi/t_p)*(cartGas.x()-cartPart.x())+d_gravity.x();
           vvel_model[c] = (phi/t_p)*(cartGas.y()-cartPart.y())+d_gravity.y();
           wvel_model[c] = (phi/t_p)*(cartGas.z()-cartPart.z())+d_gravity.z();
           drag_particle[c] = Vector( uvel_model[c], vvel_model[c], wvel_model[c] );
 
-          double prefix = -weight[c] * d_w_scaling_factor * rhop * (1/6) * pi * phi * (1/t_p) * pow(length,3);
+          double prefix = -weight[c] * d_w_scaling_factor * rhop * (1.0/6.0) * pi * phi * (1/t_p) * pow(length,3);
           double gas_x = prefix * (cartGas.x() - cartPart.x());
           double gas_y = prefix * (cartGas.y() - cartPart.y());
           double gas_z = prefix * (cartGas.z() - cartPart.z());
           drag_gas[c] = Vector( gas_x, gas_y, gas_z );
 
 #ifdef DEBUG_MODELS
+
+          if( fabs(uvel_model[c]) > 1.0e9 ) {
+            cout << "U Velocity model term is larger than 1.0e9..." << endl;
+            cout << "    Cell = " << c << ", QN = " << d_quadNode << ", Gas vel = " << gasVel << endl;
+            cout << "    Prefix = -weight*rhop*(1/6)*pi*phi*(1/tau_p)*pow(length,3) = -" << weight[c] << "*" << rhop << "*(1/6)*pi*phi*(1/" << t_p << ")*" << pow(length,3) << " = " << prefix << endl;
+            cout << "    Gas drag = prefix*diff = " << prefix << "*" << (cartGas - cartPart) << " = " << drag_gas[c] << endl;
+            cout << "    phi (for Re = " << Re << ") = ";
+                if( Re < 1 ) {
+                  cout << "1 (" << phi << ")" << endl;
+                } else if( Re > 1000) {
+                  cout << "0.0183*Re = " << phi << endl;
+                } else {
+                  cout << "1.0 + 0.15 * Re^(0.687) = 1.0 + 0.15*" << pow(Re,0.687) << " = " << phi << endl;
+                }
+            cout << "    tau_p = (rhop/(18*d_visc))*pow(length,2) = (" << rhop << "/(18*" << d_visc << "))*" << length*length << " = " << t_p << endl;
+            cout << "    X-Vel = (phi/t_p)*(x_diff) + d_gravity.x() = (" << phi << "/" << t_p << ")*(" << cartGas.x() - cartPart.x() << ") + " << d_gravity.x() << " = " << drag_particle[c].x() << endl;
+            cout << "    Y-Vel = (phi/t_p)*(y_diff) + d_gravity.y() = (" << phi << "/" << t_p << ")*(" << cartGas.y() - cartPart.y() << ") + " << d_gravity.y() << " = " << drag_particle[c].y() << endl;
+            cout << "    Z-Vel = (phi/t_p)*(z_diff) + d_gravity.z() = (" << phi << "/" << t_p << ")*(" << cartGas.z() - cartPart.z() << ") + " << d_gravity.z() << " = " << drag_particle[c].z() << endl;
+            cout << endl;
+          }
+
           if( c == IntVector(1,34,34) ) {
             cout << endl;
             cout << "Drag model J, cell " << c << ": QN " << d_quadNode << ": Gas vel = " << gasVel << endl;
@@ -669,6 +692,11 @@ DragModel::computeModel( const ProcessorGroup* pc,
             cout << endl;
           }
 #endif
+
+        } else {
+
+          drag_particle[c] = Vector(0.0, 0.0, 0.0);
+          drag_gas[c] = Vector(0.0, 0.0, 0.0);
 
         }//end if length is tiny
 

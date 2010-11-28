@@ -822,7 +822,7 @@ Patch::getEdgeCellIterator(const FaceType& face0,
 
   //the bounds of the patch iterators
   IntVector patchLow, patchHigh;
-  IntVector patchExtraLow, patchExtraHigh;
+  IntVector patchExtraLow(0,0,0), patchExtraHigh(0,0,0);
 
   //determine the correct query functions
   switch(type)
@@ -881,6 +881,13 @@ Patch::getEdgeCellIterator(const FaceType& face0,
        
       break;
     default:
+
+      //set these values to quiet a compiler warning about unintialized variables
+      patchLow=IntVector(0,0,0);
+      patchHigh=IntVector(0,0,0);
+      patchExtraLow=IntVector(0,0,0);
+      patchExtraHigh=IntVector(0,0,0);
+
       throw SCIRun::InternalError("Invalid EdgeIteratorType Specified", __FILE__, __LINE__);
   };
   vector<IntVector>loPt(2), hiPt(2); 
@@ -1078,8 +1085,14 @@ void Patch::cullIntersection(VariableBasis basis, IntVector bl, const Patch* nei
   // line up at least in corners.
   int bad_diffs = 0;
   for (int dim = 0; dim < 3; dim++) {
-    if (diff[dim] == 2) // if it's two, then it must be overlapping extra cells (min patch size is 3, even in 1/2D)
+    //if the length of the side is not equal to zero,
+    //is equal to 2 times the number of extra cells,
+    //and the patches are adjacent on this dimension
+      //then increment the bad_diffs counter
+    if (diff[dim]!=0 && diff[dim] == 2*d_extraCells[dim] 
+        && (p_int_low[dim]==n_int_high[dim] || n_int_low[dim]==p_int_high[dim]) ) 
       bad_diffs++;
+
     // depending on the region, cull away the portion of the region that in 'this'
     if (n_int_high[dim] == p_int_low[dim]) {
       region_high[dim] = Min(region_high[dim], neighbor->getHighIndex(basis)[dim]);
@@ -1090,6 +1103,7 @@ void Patch::cullIntersection(VariableBasis basis, IntVector bl, const Patch* nei
   }
   
   // prune it back if heuristic met or if already empty
+    //if bad_diffs is >=2 then we have a bad corner/edge that needs to be pruned
   IntVector region_diff = region_high - region_low;
   if (bad_diffs >= 2 || region_diff.x() * region_diff.y() * region_diff.z() == 0)
     region_low = region_high;  // caller will check for this case

@@ -80,20 +80,23 @@ TabPropsInterface::problemSetup( const ProblemSpecP& propertiesParameters )
   
   // Obtain object parameters
   db_tabprops->require( "inputfile", tableFileName );
-  db_tabprops->getWithDefault( "hl_pressure", d_hl_pressure, 0.0); 
-  db_tabprops->getWithDefault( "hl_outlet",   d_hl_outlet,   0.0); 
   db_tabprops->getWithDefault( "hl_scalar_init", d_hl_scalar_init, 0.0); 
   db_tabprops->getWithDefault( "cold_flow", d_coldflow, false); 
 
   // only solve for heat loss if a working radiation model is found
   const ProblemSpecP params_root = db_tabprops->getRootNode();
-  ProblemSpecP db_radiation = params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ExplicitSolver")->findBlock("EnthalpySolver")->findBlock("DORadiationModel");
-  d_adiabatic = true; 
-  if (db_radiation) { 
-    proc0cout << "Found a working radiation model -- will implement case with heat loss" << endl;
-    d_adiabatic = false; 
-  } else { 
-    proc0cout << "No working radiation model found -- will NOT implement case with heat loss" << endl;
+  ProblemSpecP db_enthalpy  =  params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ExplicitSolver")->findBlock("EnthalpySolver");
+  if (db_enthalpy) { 
+    ProblemSpecP db_radiation = params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ExplicitSolver")->findBlock("EnthalpySolver")->findBlock("DORadiationModel");
+    d_adiabatic = true; 
+    if (db_radiation) { 
+      proc0cout << "Found a working radiation model -- will implement case with heat loss" << endl;
+      d_adiabatic = false; 
+    } else { 
+      proc0cout << "No working radiation model found -- will NOT implement case with heat loss" << endl;
+      d_adiabatic = true; 
+    }
+  } else {
     d_adiabatic = true; 
   }
  
@@ -130,37 +133,14 @@ TabPropsInterface::problemSetup( const ProblemSpecP& propertiesParameters )
 
   setMixDVMap( db_rootnode ); 
 
+  // Get Spline information for a more efficient TabProps
+  getSplineInfo(); 
+  getEnthalpySplineInfo(); // maybe want a more elegant way of handling this? 
+
   // Extract independent and dependent variables from the table
   d_allIndepVarNames = d_statetbl.get_indepvar_names();
   d_allDepVarNames   = d_statetbl.get_depvar_names();
-
-
-
-  /*
-  cout_tabledbg << " -------------------------------- " << endl;
-  cout_tabledbg << " Now printing all independent variables in table:" << endl;
-  for( unsigned int z=0; z < d_allIndepVarNames.size(); ++z ) {
-    cout_tabledbg << " --> " << d_allIndepVarNames[z] << endl;
-  }
-  cout_tabledbg << " Finished printing all independent variables in table." << endl;
-  cout_tabledbg << " -------------------------------- " << endl;
-
-  cout_tabledbg << endl << endl;
-
-  cout_tabledbg << " -------------------------------- " << endl;
-  cout_tabledbg << " Now printing all dependent variables in table:" << endl;
-  for( unsigned int z=0; z < d_allDepVarNames.size(); ++z ) {
-    cout_tabledbg << " --> " << d_allDepVarNames[z] << endl;
-  }
-  cout_tabledbg << " Finished printing all dependent variables in table." << endl;
-  cout_tabledbg << " -------------------------------- " << endl;
-
-  cout_tabledbg << endl << endl;
-  */
-
-
-
-
+ 
   proc0cout << "  Now matching user-defined IV's with table IV's" << endl;
   proc0cout << "     Note: If sus crashes here, check to make sure your" << endl;
   proc0cout << "           <TransportEqns><eqn> names match those in the table. " << endl;
@@ -174,15 +154,15 @@ TabPropsInterface::problemSetup( const ProblemSpecP& propertiesParameters )
     // !! need to add support for variance !!
     if (varName == "heat_loss") {
 
-      cout_tabledbg << " Heat loss variable " << varName << " being inserted into the indep. var map. " << endl;
+      cout_tabledbg << " Heat loss being inserted into the indep. var map. " << endl;
 
-      d_ivVarMap[varName] = d_lab->d_heatLossLabel;
+      d_ivVarMap.insert(make_pair(varName, d_lab->d_heatLossLabel)).first; 
 
     } else if ( varName == "scalar_variance") {
 
       cout_tabledbg << " Scalar variance being inserted into the indep. var map. " << endl;
 
-      d_ivVarMap.insert(make_pair(varName, d_lab->d_scalarVarSPLabel)).first; 
+      d_ivVarMap.insert(make_pair(varName, d_lab->d_normalizedScalarVarLabel)).first; 
 
     } else if ( varName == "DissipationRate") {
 
@@ -200,7 +180,7 @@ TabPropsInterface::problemSetup( const ProblemSpecP& propertiesParameters )
       // then it must be a mixture fraction 
       EqnFactory& eqn_factory = EqnFactory::self();
       EqnBase& eqn = eqn_factory.retrieve_scalar_eqn( varName );
-      d_ivVarMap.insert(make_pair(varName, eqn.getTransportEqnLabel())).first;
+      d_ivVarMap.insert(make_pair(varName, eqn.getTransportEqnLabel())).first; 
 
     }
   }
@@ -383,7 +363,7 @@ TabPropsInterface::getState( const ProcessorGroup* pc,
         mpmarches_denmicro.initialize(0.0);
       }
 
-      drho_df.initialize(0.0);  // this variable might not be actually used anywhere any may just be polution  
+      drho_df.initialize(0.0);  // this variable might not be actually used anywhere and may just be polution  
       if ( !d_coldflow ) { 
         arches_temperature.initialize(0.0); 
         arches_cp.initialize(0.0); 
@@ -425,6 +405,9 @@ TabPropsInterface::getState( const ProcessorGroup* pc,
 
       IntVector c = *iter; 
 
+      if ( c == IntVector( 0,8,8 ) )
+        cout << " IN TABPROPS " << endl;
+
       // fill independent variables
       std::vector<double> iv; 
       for ( std::vector<constCCVariable<double> >::iterator i = indep_storage.begin(); i != indep_storage.end(); ++i ) {
@@ -432,7 +415,7 @@ TabPropsInterface::getState( const ProcessorGroup* pc,
       }
 
       if ( d_coal_table ) { 
- 
+
         // we transport f_p and eta for coal
         // need to compute f_p and pass that rather than f 
         // here we replace the value of f_p with the derived f
@@ -441,36 +424,41 @@ TabPropsInterface::getState( const ProcessorGroup* pc,
         double f = 0.0; 
         
         if ( iv[coal_eta_index] < 1.0 ) {
- 
-          f = iv[coal_fp_index] / ( 1.0 - iv[coal_eta_index] ); 
- 
-        } else { 
- 
-          f = 0.0; 
- 
-        }
- 
-        iv[coal_fp_index] = f;
- 
-      }
 
+          f = iv[coal_fp_index] / ( 1.0 - iv[coal_eta_index] ); 
+
+          if ( f < 0.0 )
+            f = 0.0;
+          if ( f > 1.0 )
+            f = 1.0; 
+
+        } else { 
+
+          f = 0.0; 
+
+        }
+
+        iv[coal_fp_index] = f;
+
+      }
 
       // retrieve all depenedent variables from table
       for ( std::map< string, CCVariable<double>* >::iterator i = depend_storage.begin(); 
             i != depend_storage.end(); ++i ){
 
-        double table_value = getSingleState( i->first, iv ); 
+        SplineMap::iterator i_spline = d_depVarSpline.find( i->first ); 
+  
+        double table_value = getSingleState( i_spline->second, i->first, iv ); 
         (*i->second)[c] = table_value;
 
         if (i->first == "density") {
           arches_density[c] = table_value; 
-          if (d_MAlab) {
+          if (d_MAlab)
             mpmarches_denmicro[c] = table_value; 
-          }
         } else if (i->first == "temperature" && !d_coldflow) {
           arches_temperature[c] = table_value; 
-        } else if (i->first == "heat_capacity" && !d_coldflow) {
-        //} else if (i->first == "specificheat" && !d_coldflow) {
+        //} else if (i->first == "heat_capacity" && !d_coldflow) {
+        } else if (i->first == "specificheat" && !d_coldflow) {
           arches_cp[c] = table_value; 
         } else if (i->first == "CO2" && !d_coldflow) {
           arches_co2[c] = table_value; 
@@ -488,16 +476,22 @@ TabPropsInterface::getState( const ProcessorGroup* pc,
 
     // Loop over all boundary faces on this patch
     for (bf_iter = bf.begin(); bf_iter != bf.end(); bf_iter++){
+
       Patch::FaceType face = *bf_iter; 
+      IntVector insideCellDir = patch->faceDirection(face);
 
       int numChildren = patch->getBCDataArray(face)->getNumberChildren(matlIndex);
       for (int child = 0; child < numChildren; child++){
 
         std::vector<double> iv; 
-        for ( int i = 0; i < (int) iv_names.size(); i++ ){
+        Iterator nu;
+        Iterator bound_ptr; 
 
-          Iterator nu;
-          Iterator bound_ptr; 
+        std::vector<TabPropsInterface::BoundaryType> which_bc;
+        std::vector<double> bc_values;
+
+        // look to make sure every variable has a BC set:
+        for ( int i = 0; i < (int) iv_names.size(); i++ ){
           std::string variable_name = iv_names[i]; 
 
           const BoundCondBase* bc = patch->getArrayBCValues( face, matlIndex,
@@ -505,75 +499,104 @@ TabPropsInterface::getState( const ProcessorGroup* pc,
                                                              nu, child );
 
           const BoundCond<double> *new_bcs =  dynamic_cast<const BoundCond<double> *>(bc);
-
           if ( new_bcs == 0 ) {
             cout << "Error: For variable named " << variable_name << endl;
-            throw InvalidValue( "When trying to compute properties at a boundary, found boundary specification missing in the <Grid> section of the input file.", __FILE__, __LINE__); 
+            throw InvalidValue( "Error: When trying to compute properties at a boundary, found boundary specification missing in the <Grid> section of the input file.", __FILE__, __LINE__); 
           }
+
           double bc_value     = new_bcs->getValue(); 
           std::string bc_kind = new_bcs->getBCType__NEW(); 
 
-          //begin to loop over all boundary cells: 
-          for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++){
+          if ( bc_kind == "Dirichlet" ) {
+            which_bc.push_back(TabPropsInterface::DIRICHLET); 
+          } else if (bc_kind == "Neumann" ) { 
+            which_bc.push_back(TabPropsInterface::NEUMANN); 
+          } else
+            throw InvalidValue( "Error: BC type not supported for property calculation", __FILE__, __LINE__ ); 
 
-            IntVector c = *bound_ptr; 
-            //loop over all IV's and fill with current values: 
-            for ( std::vector<constCCVariable<double> >::iterator i = indep_storage.begin(); 
-                  i != indep_storage.end(); ++i ) {
-              if ( bc_kind == "Dirichlet" ) 
-                iv.push_back( bc_value ); 
-              else
-                iv.push_back( (*i)[c] );
+          // currently assuming a constant value across the mesh. 
+          bc_values.push_back( bc_value ); 
+        
+          bc_values.push_back(0.0);
+          which_bc.push_back(TabPropsInterface::DIRICHLET);
+
+        }
+
+        // now use the last bound_ptr to loop over all boundary cells: 
+        for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++){
+
+          IntVector c   =   *bound_ptr; 
+          IntVector cp1 = ( *bound_ptr - insideCellDir ); 
+
+          // again loop over iv's and fill iv vector
+          for ( int i = 0; i < (int) iv_names.size(); i++ ){
+
+            switch (which_bc[i]) { 
+              case TabPropsInterface::DIRICHLET:
+                iv.push_back( bc_values[i] ); 
+                break; 
+              case TabPropsInterface::NEUMANN:
+                iv.push_back(0.5*(indep_storage[i][c] + indep_storage[i][cp1]));  
+                break; 
+              default: 
+                throw InvalidValue( "Error: BC type not supported for property calculation", __FILE__, __LINE__ ); 
+            }
+          }
+
+          // if this is coal, we need to compute f from f_p and eta
+          if ( d_coal_table ) { 
+
+            double f = 0.0; 
+            
+            if ( iv[coal_eta_index] < 1.0 ) {
+
+              f = iv[coal_fp_index] / ( 1.0 - iv[coal_eta_index] ); 
+
+              if ( f < 0.0 )
+                f = 0.0;
+              if ( f > 1.0 )
+                f = 1.0; 
+
+            } else { 
+
+              f = 0.0; 
+
             }
 
-            // if this is coal, we need to compute f from f_p and eta
-            if ( d_coal_table ) { 
+            iv[coal_fp_index] = f;
 
-              double f = 0.0; 
-              
-              if ( iv[coal_eta_index] < 1.0 ) {
+          } 
 
-                f = iv[coal_fp_index] / ( 1.0 - iv[coal_eta_index] ); 
-
-              } else { 
-
-                f = 0.0; 
-
-              }
-
-              iv[coal_fp_index] = f;
-
-
-            } 
-
-            // retrieve all depenedent variables from table
-            for ( std::map< string, CCVariable<double>* >::iterator i = depend_storage.begin(); 
-                  i != depend_storage.end(); ++i ){
+          // now get state for boundary cell: 
+          for ( std::map< string, CCVariable<double>* >::iterator i = depend_storage.begin(); 
+                i != depend_storage.end(); ++i ){
   
-              double table_value = getSingleState( i->first, iv ); 
-              (*i->second)[c] = table_value;
+            SplineMap::iterator i_spline = d_depVarSpline.find( i->first ); 
+  
+            double table_value = getSingleState( i_spline->second, i->first, iv ); 
+            (*i->second)[c] = table_value;
 
-              if (i->first == "density") {
-                arches_density[c] = table_value; 
-                if (d_MAlab)
-                  mpmarches_denmicro[c] = table_value; 
-              } else if (i->first == "temperature" && !d_coldflow) {
-                arches_temperature[c] = table_value; 
-              //} else if (i->first == "heat_capacity" && !d_coldflow) {
-              } else if (i->first == "specificheat" && !d_coldflow) {
-                arches_cp[c] = table_value; 
-              } else if (i->first == "CO2" && !d_coldflow) {
-                arches_co2[c] = table_value; 
-              } else if (i->first == "H2O" && !d_coldflow) {
-                arches_h2o[c] = table_value; 
-              }
-
+            if (i->first == "density") {
+              //double ghost_value = 2.0*table_value - arches_density[cp1];
+              arches_density[c] = table_value;
+              //arches_density[c] = ghost_value; 
+              if (d_MAlab)
+                mpmarches_denmicro[c] = table_value; 
+            } else if (i->first == "temperature" && !d_coldflow) {
+              arches_temperature[c] = table_value; 
+            //} else if (i->first == "heat_capacity" && !d_coldflow) {
+            } else if (i->first == "specificheat" && !d_coldflow) {
+              arches_cp[c] = table_value; 
+            } else if (i->first == "CO2" && !d_coldflow) {
+              arches_co2[c] = table_value; 
+            } else if (i->first == "H2O" && !d_coldflow) {
+              arches_h2o[c] = table_value; 
             }
-          } // end boundary loop 
+          }
+          iv.clear(); 
         }
       }
     }
-
 
     for ( CCMap::iterator i = depend_storage.begin(); i != depend_storage.end(); ++i ){
       delete i->second;
@@ -698,10 +721,10 @@ TabPropsInterface::computeHeatLoss( const ProcessorGroup* pc,
         }
 
         // actually compute the heat loss: 
-        //double sensible_enthalpy  = getSingleState( "sensibleenthalpy", iv ); 
-        //double adiabatic_enthalpy = getSingleState( "adiabaticenthalpy", iv );  
-        double sensible_enthalpy  = getSingleState( "sensible_heat", iv ); 
-        double adiabatic_enthalpy = getSingleState( "adiabatic_enthalpy", iv );  
+        SplineMap::iterator i_spline = d_enthalpyVarSpline.find( "sensibleenthalpy" ); 
+        double sensible_enthalpy  = getSingleState( i_spline->second, "sensibleenthalpy", iv ); 
+        i_spline = d_enthalpyVarSpline.find( "adiabaticenthalpy" ); 
+        double adiabatic_enthalpy = getSingleState( i_spline->second, "adiabaticenthalpy", iv );  
         double current_heat_loss  = 0.0;
         double small = 1e-10; 
         if ( calcEnthalpy )
@@ -772,7 +795,7 @@ TabPropsInterface::computeFirstEnthalpy( const ProcessorGroup* pc,
     for ( vector<string>::iterator i = d_allIndepVarNames.begin(); i != d_allIndepVarNames.end(); i++){
 
       const VarMap::iterator iv_iter = d_ivVarMap.find( *i ); 
-
+      
       if ( iv_iter == d_ivVarMap.end() ) {
         cout << " For variable named: " << *i << endl;
         throw InternalError("Error: Could not map this label to the correct Uintah grid variable." ,__FILE__,__LINE__);
@@ -803,21 +826,20 @@ TabPropsInterface::computeFirstEnthalpy( const ProcessorGroup* pc,
       int index = 0; 
       for ( std::vector<constCCVariable<double> >::iterator i = the_variables.begin(); i != the_variables.end(); i++){
 
-        if ( d_allIndepVarNames[index] != "heat_loss" ) {
+        if ( d_allIndepVarNames[index] != "heat_loss" ) 
           iv.push_back( (*i)[c] );
-        } else {
+        else 
           iv.push_back( d_hl_scalar_init ); 
-        }
 
         index++; 
       }
 
       double current_heat_loss = d_hl_scalar_init; // may want to make this more sophisticated later(?)
-      //double sensible_enthalpy = getSingleState( "sensibleenthalpy", iv ); 
-      //double adiab_enthalpy    = getSingleState( "adiabaticenthalpy", iv ); 
-      double sensible_enthalpy = getSingleState( "sensible_heat", iv ); 
-      double adiab_enthalpy    = getSingleState( "adiabatic_enthalpy", iv ); 
-      enthalpy[c]     = adiab_enthalpy - current_heat_loss * sensible_enthalpy; 
+      SplineMap::iterator i_spline = d_enthalpyVarSpline.find( "sensibleenthalpy" ); 
+      double sensible_enthalpy  = getSingleState( i_spline->second, "sensibleenthalpy", iv ); 
+      i_spline = d_enthalpyVarSpline.find( "adiabaticenthalpy" ); 
+      double adiabatic_enthalpy = getSingleState( i_spline->second, "adiabaticenthalpy", iv );  
+      enthalpy[c]     = adiabatic_enthalpy - current_heat_loss * sensible_enthalpy; 
 
     }
   }
@@ -836,9 +858,6 @@ TabPropsInterface::oldTableHack( const InletStream& inStream, Stream& outStream,
   const std::vector<string>& iv_names = getAllIndepVars();
   std::vector<double> iv(iv_names.size());
 
-  // notes: 
-  // mixture fraction 2 is being set to zero always!...fix it!
-
   for ( int i = 0; i < (int) iv_names.size(); i++){
 
     if ( (iv_names[i] == "mixture_fraction") || (iv_names[i] == "coal_gas_mix_frac") || (iv_names[i] == "MixtureFraction")){
@@ -846,21 +865,17 @@ TabPropsInterface::oldTableHack( const InletStream& inStream, Stream& outStream,
     } else if (iv_names[i] == "mixture_fraction_variance") {
       iv[i] = 0.0;
     } else if (iv_names[i] == "mixture_fraction_2") {
-      iv[i] = 0.0; 
+      iv[i] = 0.0; // set below if there is one...just want to make sure it is initialized properly
     } else if (iv_names[i] == "mixture_fraction_variance_2") {
       iv[i] = 0.0; 
     } else if (iv_names[i] == "heat_loss") {
-      if ( bc_type == "pressure" )
-        iv[i] = d_hl_pressure; 
-      else if ( bc_type == "outlet" )
-        iv[i] = d_hl_outlet; 
-      else if ( bc_type == "scalar_init" )
+      if ( bc_type == "scalar_init" )
         iv[i] = d_hl_scalar_init; 
       else
         iv[i] = 0.0; 
       if (!calcEnthalpy) {
         iv[i] = 0.0; // override any user input because case is adiabatic
-        if ( d_hl_scalar_init > 0.0 || d_hl_outlet > 0.0 || d_hl_pressure > 0.0 )
+        if ( d_hl_scalar_init > 0.0 )
           proc0cout << "NOTICE!: Case is adiabatic so we will ignore your heat loss initialization." << endl;
       }
     }
@@ -883,20 +898,14 @@ TabPropsInterface::oldTableHack( const InletStream& inStream, Stream& outStream,
     double enthalpy          = 0.0; 
     double sensible_enthalpy = 0.0; 
 
-    //sensible_enthalpy = getSingleState( "sensibleenthalpy", iv ); 
-    //adiab_enthalpy    = getSingleState( "adiabaticenthalpy", iv ); 
-    sensible_enthalpy = getSingleState( "sensible_heat", iv ); 
-    adiab_enthalpy    = getSingleState( "adiabatic_enthalpy", iv ); 
+    sensible_enthalpy = getSingleState( "sensibleenthalpy", iv ); 
+    adiab_enthalpy    = getSingleState( "adiabaticenthalpy", iv ); 
 
     enthalpy          = inStream.d_enthalpy; 
 
     if ( inStream.d_initEnthalpy || ((abs(adiab_enthalpy - enthalpy)/abs(adiab_enthalpy) < 1.0e-4 ) && f < 1.0e-4) ) {
 
-      if ( bc_type == "pressure" )
-        current_heat_loss = d_hl_pressure; 
-      else if ( bc_type == "outlet" )
-        current_heat_loss = d_hl_outlet; 
-      else if ( bc_type == "scalar_init" )
+      if ( bc_type == "scalar_init" )
         current_heat_loss = d_hl_scalar_init; 
       else
         current_heat_loss = 0.0; 
@@ -919,8 +928,8 @@ TabPropsInterface::oldTableHack( const InletStream& inStream, Stream& outStream,
   outStream.d_density     = getSingleState( "density", iv ); 
   if (!d_coldflow) { 
     outStream.d_temperature = getSingleState( "temperature", iv ); 
-    outStream.d_cp          = getSingleState( "heat_capacity", iv ); 
-    //outStream.d_cp          = getSingleState( "specificheat", iv ); 
+    //outStream.d_cp          = getSingleState( "heat_capacity", iv ); 
+    outStream.d_cp          = getSingleState( "specificheat", iv ); 
     outStream.d_h2o         = getSingleState( "H2O", iv); 
     outStream.d_co2         = getSingleState( "CO2", iv);
     outStream.d_heatLoss    = current_heat_loss; 
@@ -977,6 +986,41 @@ TabPropsInterface::getAllIndepVars()
 }
 
 //--------------------------------------------------------------------------- 
+// Get Spline information
+//--------------------------------------------------------------------------- 
+void 
+TabPropsInterface::getSplineInfo()
+{
+
+  for ( MixingRxnModel::VarMap::iterator i = d_dvVarMap.begin(); i != d_dvVarMap.end(); ++i ) {
+
+    const BSpline* spline = d_statetbl.find_entry( i->first ); 
+
+    insertIntoSplineMap( i->first, spline ); 
+
+  }
+}
+
+//--------------------------------------------------------------------------- 
+// Get Enthalpy Spline information
+//--------------------------------------------------------------------------- 
+void 
+TabPropsInterface::getEnthalpySplineInfo()
+{
+
+  cout_tabledbg << "TabPropsInterface::getEnthalpySplineInfo(): Looking for sensibleenthalpy" << endl;
+  const BSpline* spline = d_statetbl.find_entry( "sensibleenthalpy" );
+
+  d_enthalpyVarSpline.insert( make_pair( "sensibleenthalpy", spline )).first; 
+
+  cout_tabledbg << "TabPropsInterface::getEnthalpySplineInfo(): Looking for adiabaticenthalpy" << endl;
+  spline = d_statetbl.find_entry( "adiabaticenthalpy" );
+
+  d_enthalpyVarSpline.insert( make_pair( "adiabaticenthalpy", spline )).first; 
+
+}
+
+//--------------------------------------------------------------------------- 
 // schedule Dummy Init
 //--------------------------------------------------------------------------- 
 void 
@@ -1029,4 +1073,3 @@ TabPropsInterface::dummyInit( const ProcessorGroup* pc,
     }
   }
 }
-

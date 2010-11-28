@@ -515,7 +515,9 @@ void HypoElasticImplicit::addComputesAndRequires(Task* task,
 // The "CM" versions use the pressure-volume relationship of the CNH model
 double HypoElasticImplicit::computeRhoMicroCM(double pressure, 
                                               const double p_ref,
-                                              const MPMMaterial* matl)
+                                              const MPMMaterial* matl,
+                                              double temperature,
+                                              double rho_guess)
 {
   double rho_orig = matl->getInitialDensity();
   double p_gauge = pressure - p_ref;
@@ -531,7 +533,8 @@ void HypoElasticImplicit::computePressEOSCM(const double rho_cur,
                                             double& pressure, 
                                             const double p_ref,
                                             double& dp_drho, double& tmp,
-                                            const MPMMaterial* matl)
+                                            const MPMMaterial* matl, 
+                                            double temperature)
 {
   double bulk = d_initialData.K;
   double rho_orig = matl->getInitialDensity();

@@ -46,8 +46,9 @@
 
 namespace SCIRun {
 
-Gaussian::Gaussian(double mean, double sigma, int seed) 
-  : mean_(mean), sigma_(sigma), mr_(new MusilRNG(seed))
+Gaussian::Gaussian(double mean, double sigma, int seed,
+                   double refVol, double exponent)
+  : mean_(mean), sigma_(sigma), refVol_(refVol), exponent_(exponent), mr_(new MusilRNG(seed))
 {
 }
 

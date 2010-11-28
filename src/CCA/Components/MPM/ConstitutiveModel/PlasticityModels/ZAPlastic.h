@@ -62,12 +62,12 @@ namespace Uintah {
     For FCC metals, \n
     \f$ B = 0, \beta_0 = 0, \beta_1 = 0, K = 0 \f$  and \n
     \f$ B_0 = c_2, \alpha_0 = c_3, \alpha_1 = c_4, 
-        \sigma_g = \Delta\sigma_G^', k_H = k\f$. \n
+        \sigma_g = \Delta\sigma_{G}', k_H = k\f$. \n
 
     For BCC metals, \n
     \f$ B_0 = 0, \alpha_0 = 0, \alpha_1 = 0 \f$  and \n
     \f$ B = c_1, \beta_0 = c_3, \beta_1 = c_4, K = c_5, 
-        \sigma_g = \Delta\sigma_G^', k_H = k\f$. \n
+        \sigma_g = \Delta\sigma_{G}', k_H = k\f$. \n
 
     For HCP metals and alloys (such as HY 100 steel) \n
     all the constants are non-zero.
@@ -76,14 +76,14 @@ namespace Uintah {
 
     For FCC metals,\n
     \f[
-     $\sigma = {\Delta} {\sigma}_{G}' + c_2 {\epsilon^{1/2}}e^{(-{c_3} T + 
-               c_4 T \ln{\dot{\epsilon}})} + kl^{-1/2}$
+     \sigma = {\Delta} {\sigma}_{G}' + c_2 {\epsilon^{1/2}}e^{(-{c_3} T + 
+               c_4 T \ln{\dot{\epsilon}})} + kl^{-1/2}
     \f]
 
     For BCC metals,\n
     \f[
-    $\sigma = {\Delta} {\sigma}_{G}' + c_1 e^{(-{c_3} T + c_4 T 
-              \ln{\dot{\epsilon}})} + c_5 {\epsilon}^n + kl^{-1/2}$
+    \sigma = {\Delta} {\sigma}_{G}' + c_1 e^{(-{c_3} T + c_4 T 
+              \ln{\dot{\epsilon}})} + c_5 {\epsilon}^n + kl^{-1/2}
     \f]
 
     where \f$\sigma\f$  = equivalent stress \n

@@ -35,6 +35,10 @@
  *   Department of Mechanical Engineering
  *   University of Utah
  *   April 2009
+ *  Modified by:
+ *   Jim Guilkey
+ *   Schlumberger
+ *   September 2010
  *
  *  Copyright (C) 2009 SCI Group
  */
@@ -44,7 +48,6 @@
 #define SCI_WEIBULL_H__
 
 #include <Core/Math/MusilRNG.h>
-#include <Core/Math/Trig.h> // for M_PI
 #include <cmath>
 
 #include <Core/Math/share.h>
@@ -53,14 +56,16 @@ namespace SCIRun {
 
 class SCISHARE Weibull {
 public:
-  double WeibMed_;
+  double WeibMean_;
   double WeibMod_;
   double WeibRefVol_;
+  double WeibExp_;
   MusilRNG *mr_;
-  Weibull(double WeibMed=0,
+  Weibull(double WeibMean=0,
           double WeibMod=1,
           double WeibRefVol=1,
-          int WeibSeed=0);
+          int WeibSeed=0,
+          double WeibExp=1);
           ~Weibull();
 
   // Equation taken from
@@ -68,15 +73,40 @@ public:
   // Effects in Damage Models for Failure and Fragmentation"
   // by R.M. Brannon and O.E. Strack, Sandia National Laboratories
   inline double rand(double PartVol) {
- return WeibMed_*pow(log((*mr_)())/((PartVol/WeibRefVol_)*log(0.5)),1/WeibMod_);
+
+  // Get the uniformly distributed random #
+  double y = (*mr_)();
+  // Include a volume scaling factor
+  double C = pow(WeibRefVol_/PartVol,1./WeibExp_);
+
+  double eta = WeibMean_/tgamma(1./WeibMod_ + 1.0);
+  //double eta = WeibMed_/pow(log(2.0),1./WeibMod_);
+
+  // New version, easy to read and comprehend!
+  return C*eta*pow(-log(y),1./WeibMod_);
+
+// Old way, hard to read
+//return WeibMed_*pow(log((*mr_)())/((PartVol/WeibRefVol_)*log(.5)),1/WeibMod_);
   }
 
   // Probability that x was picked from this Weibull distribution
   // found on http://www.weibull.com/LifeDataWeb/weibull_probability_density_function.htm
   double prob(double x, double PartVol) {
-   return (WeibMod_/(PartVol/WeibRefVol_))*
-           pow((x-WeibMed_)/(PartVol/WeibRefVol_),WeibMod_-1)*
-           exp(-pow((x-WeibMed_)/(PartVol/WeibRefVol_),WeibMod_));
+
+   // The following is new and hopefully correct
+   double C = pow(WeibRefVol_/PartVol,1./WeibExp_);
+
+   double eta = WeibMean_/tgamma(1./WeibMod_ + 1.0);
+   //double eta = WeibMed_/pow(log(2.0),1./WeibMod_);
+
+   return WeibMod_/(C*eta)*pow(x/(C*eta),WeibMod_-1.)
+                     *exp(-pow(x/(C*eta),WeibMod_));
+
+   // Old and evidently wrong
+//   return (WeibMod_/(PartVol/WeibRefVol_))*
+//           pow((x-WeibMed_)/(PartVol/WeibRefVol_),WeibMod_-1)*
+//           exp(-pow((x-WeibMed_)/(PartVol/WeibRefVol_),WeibMod_));
+
   }
 };
 

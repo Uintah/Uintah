@@ -30,7 +30,7 @@ DEALINGS IN THE SOFTWARE.
 //Allgatherv currently performs poorly on Kraken.  
 //This hack changes the Allgatherv to an allgather 
 //by padding the digits
-#define AG_HACK  
+//#define AG_HACK  
 
 
 #include <TauProfilerForSCIRun.h>
@@ -266,16 +266,16 @@ void Level::findNodeIndexRange(IntVector& lowIndex,IntVector& highIndex) const
   Vector l=(d_spatial_range.min()-d_anchor)/d_dcell;
   Vector h=(d_spatial_range.max()-d_anchor)/d_dcell+Vector(1,1,1);
 
-  lowIndex=IntVector(l.x(),l.y(),l.z());
-  highIndex=IntVector(h.x(),h.y(),h.z());
+  lowIndex=IntVector((int)l.x(),(int)l.y(),(int)l.z());
+  highIndex=IntVector((int)h.x(),(int)h.y(),(int)h.z());
 }
 void Level::findCellIndexRange(IntVector& lowIndex,IntVector& highIndex) const
 {
   Vector l=(d_spatial_range.min()-d_anchor)/d_dcell;
   Vector h=(d_spatial_range.max()-d_anchor)/d_dcell;
 
-  lowIndex=IntVector(l.x(),l.y(),l.z());
-  highIndex=IntVector(h.x(),h.y(),h.z());
+  lowIndex=IntVector((int)l.x(),(int)l.y(),(int)l.z());
+  highIndex=IntVector((int)h.x(),(int)h.y(),(int)h.z());
 }
 
 void Level::findInteriorCellIndexRange(IntVector& lowIndex,IntVector& highIndex) const
@@ -283,8 +283,8 @@ void Level::findInteriorCellIndexRange(IntVector& lowIndex,IntVector& highIndex)
   Vector l=(d_int_spatial_range.min()-d_anchor)/d_dcell;
   Vector h=(d_int_spatial_range.max()-d_anchor)/d_dcell;
 
-  lowIndex=IntVector(l.x(),l.y(),l.z());
-  highIndex=IntVector(h.x(),h.y(),h.z());
+  lowIndex=IntVector((int)l.x(),(int)l.y(),(int)l.z());
+  highIndex=IntVector((int)h.x(),(int)h.y(),(int)h.z());
 }
 
 void Level::findInteriorNodeIndexRange(IntVector& lowIndex,IntVector& highIndex) const
@@ -292,8 +292,8 @@ void Level::findInteriorNodeIndexRange(IntVector& lowIndex,IntVector& highIndex)
   Vector l=(d_int_spatial_range.min()-d_anchor)/d_dcell;
   Vector h=(d_int_spatial_range.max()-d_anchor)/d_dcell+Vector(1,1,1);
 
-  lowIndex=IntVector(l.x(),l.y(),l.z());
-  highIndex=IntVector(h.x(),h.y(),h.z());
+  lowIndex=IntVector((int)l.x(),(int)l.y(),(int)l.z());
+  highIndex=IntVector((int)h.x(),(int)h.y(),(int)h.z());
 }
 
 long Level::totalCells() const
@@ -963,12 +963,31 @@ IntVector Level::mapCellToFiner(const IntVector& idx) const
   }    
   return fineCell + offset;
 }
-
+//__________________________________
+// mapNodeToCoarser:
+// Example: 1D grid with refinement ratio = 4
+//  Coarse Node index: 10                  11    
+//                     |                   |       
+//                 ----*----*----*----*----*-----  
+//                     |                   |       
+//  Fine Node Index    40   41   42   43   44      
+//                            
+//  What is returned   10   10   10   10   11
 IntVector Level::mapNodeToCoarser(const IntVector& idx) const
 {
   return (idx+d_refinementRatio-IntVector(1,1,1))/d_refinementRatio;
 }
 
+//__________________________________
+// mapNodeToFiner:
+// Example: 1D grid with refinement ratio = 4
+//  Coarse Node index: 10                  11    
+//                     |                   |       
+//                 ----*----*----*----*----*-----  
+//                     |                   |       
+//  Fine Node Index    40   41   42   43   44      
+//                            
+//  What is returned   40                  44
 IntVector Level::mapNodeToFiner(const IntVector& idx) const
 {
   return idx*grid->getLevel(d_index+1)->d_refinementRatio;

@@ -147,8 +147,10 @@ void MPMCommon::printSchedule(const PatchSet* patches,
                               const string& where)
 {
   if (dbg.active()){
-    dbg << d_myworld->myrank() << " " 
-        << where << "L-"
+    dbg << d_myworld->myrank() << " ";
+    dbg << left;
+    dbg.width(50);
+    dbg  << where << "L-"
         << getLevel(patches)->getIndex()<< endl;
   }  
 }
@@ -158,8 +160,10 @@ void MPMCommon::printSchedule(const LevelP& level,
                               const string& where)
 {
   if (dbg.active()){
-    dbg << d_myworld->myrank() << " " 
-        << where << "L-"
+    dbg << d_myworld->myrank() << " ";
+    dbg << left;
+    dbg.width(50);
+    dbg << where << "L-"
         << level->getIndex()<< endl;
   }  
 }
@@ -170,8 +174,10 @@ void MPMCommon::printTask(const PatchSubset* patches,
                           const string& where)
 {
   if (dbg.active()){
-    dbg << d_myworld->myrank() << " " 
-        << where << " MPM \tL-"
+    dbg << d_myworld->myrank() << " ";
+    dbg << left;
+    dbg.width(50);
+    dbg << where << " MPM \tL-"
         << getLevel(patches)->getIndex()
         << " patch " << patch->getGridIndex()<< endl;
   }  

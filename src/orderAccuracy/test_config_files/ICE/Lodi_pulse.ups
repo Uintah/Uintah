@@ -13,7 +13,7 @@
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
    <Time>
-       <maxTime>            0.02        </maxTime>
+       <maxTime>            0.2        </maxTime>
        <initTime>           0.0         </initTime>
        <delt_min>           0.0         </delt_min>
        <delt_max>           1.0         </delt_max>
@@ -32,6 +32,7 @@
         <press_infinity>  101325.0  </press_infinity>
         <sigma>           0.27      </sigma>
         <material>       atmosphere </material>
+        <Li_scale>       0.1        </Li_scale>
       </LODI>
 
       <Face side = "x-">
@@ -70,6 +71,41 @@
       </Face> 
       
       <Face side = "y-">
+        <BCType id = "0"   label = "Pressure"     var = "LODI">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "Velocity"     var = "LODI">
+                              <value> [0.0,0.0,0.0] </value>
+        </BCType>
+        <BCType id = "0"   label = "Temperature"  var = "LODI">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "Density"      var = "LODI">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0 </value>
+        </BCType>
+      </Face>
+      <Face side = "y+">
+        <BCType id = "0"   label = "Pressure"     var = "LODI">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "Velocity"     var = "LODI">
+                              <value> [0.0,0.0,0.0] </value>
+        </BCType>
+        <BCType id = "0"   label = "Temperature"  var = "LODI">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "Density"      var = "LODI">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0 </value>
+        </BCType>
+      </Face> 
+<!--
+      <Face side = "y-">
         <BCType id = "0"   label = "Pressure"     var = "Neumann">
                               <value> 0.0 </value>
         </BCType>
@@ -104,6 +140,7 @@
                               <value> 0.0 </value>
         </BCType>
       </Face>
+-->
       <Face side = "z-">
         <BCType id = "0"   label = "Symmetric" var = "symmetry">
         </BCType>
@@ -119,11 +156,11 @@
     <!--____________________________________________________________________-->
        <Level>
            <Box label="1">
-              <lower>        [0, 0,     0]    </lower>
-              <upper>        [1, 0.01 , 0.01]    </upper>
+              <lower>        [0,    0,    0]    </lower>
+              <upper>        [1, 1 , 0.01]    </upper>
               <extraCells>   [1,1,1]         </extraCells>
               <patches>      [1,1,1]         </patches>
-              <resolution>   [100,1,1]       </resolution>
+              <resolution>   [100,100,1]       </resolution>
            </Box>
        </Level>
     </Grid>    
@@ -131,8 +168,8 @@
     <!--      O  U  P  U  T     V  A  R  I  A  B  L  E  S                   -->
     <!--____________________________________________________________________-->
    <DataArchiver>
-      <filebase>pulse_imp_Lodi_xdir.uda</filebase>
-      <outputInterval>0.0002</outputInterval>
+      <filebase>pulse_Lodi_2d.uda</filebase>
+      <outputTimestepInterval>1</outputTimestepInterval>
       <save label="vel_CC"/>
       <save label="temp_CC"/>
       <save label="rho_CC"/>
@@ -140,6 +177,9 @@
       <save label="delP_Dilatate"/>
       <save label="TotalMass"/>
       <save label="TotalMomentum"/>
+      <save label="mass_L_CC"/>
+      <save label="mom_L_ME_CC"/>
+      <save label="eng_L_ME_CC"/>
       <save label="Li1"/>
       <save label="Li5"/>
    </DataArchiver>
@@ -154,29 +194,30 @@
         
         <customInitialization>
           <gaussianTemperature>
-            <origin>   [0.5,0.005,0]  </origin>
+            <origin>   [0.5,0.5,0]  </origin>
             <amplitude> 8      </amplitude>
-            <spread_x>  0.1    </spread_x>
-            <spread_y>  0.1    </spread_y>
+            <spread_x>  0.1  </spread_x>
+            <spread_y>  0.1 </spread_y>
           </gaussianTemperature>
         </customInitialization>
         
         <TimeStepControl>
           <Scheme_for_delT_calc> aggressive   </Scheme_for_delT_calc>
-          <knob_for_speedSound>  0.25            </knob_for_speedSound>
+          <knob_for_speedSound> 0.0 </knob_for_speedSound>
         </TimeStepControl>
-        
+
         <ImplicitSolver>
            <max_outer_iterations>      20       </max_outer_iterations>
            <outer_iteration_tolerance> 1e-6     </outer_iteration_tolerance>
-           <iters_before_timestep_restart> 15   </iters_before_timestep_restart>           <Parameters variable="implicitPressure">
+           <iters_before_timestep_restart> 15   </iters_before_timestep_restart>
+           <Parameters variable="implicitPressure">
              <!-- Common options -->
               <tolerance>1.e-8    </tolerance>
-                                                                                
+
              <!-- CGSolver options -->
               <norm>     LInfinity  </norm>
               <criteria> Absolute   </criteria>
-                                                                                
+
              <!-- Hypre options -->
              <solver>         cg      </solver>
              <preconditioner> pfmg    </preconditioner>
@@ -187,8 +228,7 @@
              <jump>           0       </jump>
            </Parameters>
         </ImplicitSolver>
-        
-        
+
       </ICE>        
     </CFD>
     <!--____________________________________________________________________-->
@@ -213,8 +253,8 @@
            <gamma>                  1.289                 </gamma>
            <geom_object>
                <box label="Whole grid">                       
-                   <min>[ -5.0, -5.0, -5.0 ]           </min> 
-                   <max>[  5.0,  5.0,  5.0 ]              </max> 
+                   <min>[ -2.0, -2.0, -2.0 ]           </min> 
+                   <max>[  2.0,  2.0,  2.0 ]              </max> 
                </box>                                         
                <res>                 [2,2,2]                  </res>
                <velocity>      [0.0,0.0,0.0]            </velocity>

@@ -30,15 +30,16 @@ DEALINGS IN THE SOFTWARE.
 
 #ifndef UINTAH_MISCMATH_H
 #define UINTAH_MISCMATH_H
-
+#include <string.h>
 namespace Uintah {
   //__________________________________
   //   compute Nan
   inline double getNan(){
     double nanvalue;
-    unsigned int* ntmp = reinterpret_cast<unsigned int*>(&nanvalue);
+    unsigned int ntmp[2];
     ntmp[0] = 0xffff5a5a;
     ntmp[1] = 0xffff5a5a;
+    memcpy((void*)&nanvalue, (void*) ntmp,sizeof(double));
     return nanvalue;
   }
 } // namespace Uintah

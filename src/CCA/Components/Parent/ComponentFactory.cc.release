@@ -27,6 +27,7 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
+#include <sci_defs/uintah_defs.h>
 
 #include <CCA/Components/Parent/ComponentFactory.h>
 #include <CCA/Components/Parent/Switcher.h>
@@ -38,11 +39,12 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/MPM/ImpMPM.h>
 #include <CCA/Components/ICE/ICE.h>
 #include <CCA/Components/ICE/AMRICE.h>
+#include <CCA/Components/ICE/impAMRICE.h>
 #include <CCA/Components/MPMICE/MPMICE.h>
 #include <CCA/Components/MPMArches/MPMArches.h>
 #include <CCA/Components/Examples/Poisson1.h>
 #include <CCA/Components/Examples/Poisson2.h>
-#include <CCA/Components/Examples/Poisson4.h>
+//#include <CCA/Components/Examples/Poisson4.h>
 #include <CCA/Components/Examples/Burger.h>
 #include <CCA/Components/Examples/Wave.h>
 #include <CCA/Components/Examples/AMRWave.h>
@@ -50,6 +52,10 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Examples/RegridderTest.h>
 #include <CCA/Components/Examples/Poisson3.h>
 #include <CCA/Components/Examples/Benchmark.h>
+#ifndef NO_WASATCH
+#include <CCA/Components/Wasatch/Wasatch.h>
+#endif
+#include <CCA/Components/Angio/Angio.h>
 #include <CCA/Components/Examples/SolverTest1.h>
 #include <CCA/Components/PatchCombiner/PatchCombiner.h>
 #include <CCA/Components/PatchCombiner/UdaReducer.h>
@@ -58,11 +64,12 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
 
+#if !defined(NO_ARCHES)
+#  include <CCA/Components/SpatialOps/SpatialOps.h>
+#endif
 
 #include <iosfwd>
 #include <string>
-
-#include <sci_defs/uintah_defs.h>
 
 using namespace Uintah;
 using namespace std;
@@ -114,10 +121,20 @@ ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world,
 #endif
 #ifndef NO_ICE
   if (sim_comp == "ice" || sim_comp == "ICE") {
-    if (doAMR)
-      return scinew AMRICE(world);
-    else
+    ProblemSpecP cfd_ps = ps->findBlock("CFD");
+    ProblemSpecP ice_ps = cfd_ps->findBlock("ICE");
+    ProblemSpecP imp_ps = ice_ps->findBlock("ImplicitSolver");
+    bool doImplicitSolver = (imp_ps);
+    
+    if (doAMR){
+      if(doImplicitSolver){
+        return scinew impAMRICE(world);
+      }else{
+        return scinew AMRICE(world);
+      }
+    }else{
       return scinew ICE(world);
+    }
   } 
 #else
   turned_off_options += "ICE ";
@@ -160,7 +177,12 @@ ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world,
       return scinew AMRWave(world);
     else
       return scinew Wave(world);
+  }
+#ifndef NO_WASATCH
+  if (sim_comp == "wasatch") {
+    return scinew Wasatch::Wasatch(world);
   } 
+#endif
   if (sim_comp == "poisson1" || sim_comp == "POISSON1") {
     return scinew Poisson1(world);
   } 
@@ -173,9 +195,9 @@ ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world,
   if (sim_comp == "poisson3" || sim_comp == "POISSON3") {
     return scinew Poisson3(world);
   } 
-  if (sim_comp == "poisson4" || sim_comp == "POISSON4") {
-    return scinew Poisson4(world);
-  } 
+//  if (sim_comp == "poisson4" || sim_comp == "POISSON4") {
+//    return scinew Poisson4(world);
+//  } 
   if (sim_comp == "benchmark" || sim_comp == "BENCHMARK") {
     return scinew Benchmark(world);
   } 
@@ -194,6 +216,11 @@ ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world,
   if (sim_comp == "reduce_uda") {
     return scinew UdaReducer(world, uda);
   } 
+#if !defined(NO_ARCHES)
+  if (sim_comp == "spatialops") {
+	 return scinew SpatialOps(world);
+  }
+#endif
   throw ProblemSetupException("Unknown simulationComponent ('" + sim_comp + "'). Must specify -arches, -ice, -mpm, "
                               "-impm, -mpmice, -mpmarches, -burger, -wave, -poisson1, -poisson2, -poisson3, -benchmark.\n"
                               "Note: the following components were turned off at configure time: " + turned_off_options + "\n"

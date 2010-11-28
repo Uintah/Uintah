@@ -7,7 +7,9 @@ ExecTimes         SCI_DEBUG     outputs the time for execution on each task.
 ReductionTasks    SCI_DEBUG     outputs a message on processor 0 whenever a reduction task occurs.
 RELOCATE_DBG      SCI_DEBUG     prints out debugging information in the code that finds the neighboring patches inside of particle relocation task.
 AMR               SCI_DEBUG     prints out the patch layout
-TaskGraph         SCI_DEBUG     prints out details of computes and requires
+TaskDBG           SCI_DEBUG     output the name of each task as it begins executing and when it's completed
+TaskGraph         SCI_DEBUG     prints out computes and requires for every task
+TaskGraphDetailed SCI_DEBUG     prints out internal details of computes and requires for every task
 WaitForDebugger   SCI_DEBUG     when an exception is thrown halt the program and print out
                                 the pid so you can attach a debugger to it.
 OnDemandDataWarehouse           outputs when a variable is retrieved or put into the data warehouse.

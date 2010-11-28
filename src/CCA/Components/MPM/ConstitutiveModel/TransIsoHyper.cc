@@ -703,7 +703,9 @@ void TransIsoHyper::addComputesAndRequires(Task* ,
 // The "CM" versions use the pressure-volume relationship of the CNH model
 double TransIsoHyper::computeRhoMicroCM(double pressure, 
                                         const double p_ref,
-                                        const MPMMaterial* matl)
+                                        const MPMMaterial* matl,
+                                        double temperature,
+                                        double rho_guess)
 {
   double rho_orig = matl->getInitialDensity();
   double Bulk = d_initialData.Bulk;
@@ -724,7 +726,8 @@ double TransIsoHyper::computeRhoMicroCM(double pressure,
 void TransIsoHyper::computePressEOSCM(const double rho_cur,double& pressure, 
                                       const double p_ref,
                                       double& dp_drho, double& tmp,
-                                      const MPMMaterial* matl)
+                                      const MPMMaterial* matl,
+                                      double temperature)
 {
   double Bulk = d_initialData.Bulk;
   double rho_orig = matl->getInitialDensity();

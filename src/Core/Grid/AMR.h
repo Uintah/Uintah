@@ -46,7 +46,7 @@ DEALINGS IN THE SOFTWARE.
 
 #include <Core/Grid/uintahshare.h>
 
-//#define is_rightFace(face) ( (face == "xminus" || face == "xplus" || face == "yminus" || face == "yplus"|| face == "zminus" || face == "zplus") ?1:0  )
+
 #define is_rightFace(face) ( (face == "xminus" || face == "yminus" ||  face == "zminus" ) ?1:0  )
 namespace Uintah {
 
@@ -851,26 +851,49 @@ template<class T>
 // (we need the finePatch, as the fine level might not entirely overlap the coarse)
 // also get the coarse range to iterate over
 UINTAHSHARE void getFineLevelRange(const Patch* coarsePatch, const Patch* finePatch,
-                             IntVector& cl, IntVector& ch, IntVector& fl, IntVector& fh);
+                                    IntVector& cl, IntVector& ch, 
+                                    IntVector& fl, IntVector& fh);
 
-// As above, but do the same for nodes, and include ghost data requirements
-UINTAHSHARE void getFineLevelRangeNodes(const Patch* coarsePatch, const Patch* finePatch,
-                            IntVector& cl, IntVector& ch,
-                            IntVector& fl, IntVector& fh, IntVector ghost);
+// As above, but do the same for nodes, and include ghost data & boundary cell requirements                                        
+/*`==========TESTING==========*/
+UINTAHSHARE void getFineLevelRangeNodes_old(const Patch* coarsePatch, 
+                                        const Patch* finePatch,
+                                        IntVector& cl, IntVector& ch,
+                                        IntVector& fl, IntVector& fh, 
+                                        IntVector ghost);
+
+UINTAHSHARE void getFineLevelRangeNodes(const Patch* coarsePatch, 
+                                        const Patch* finePatch,
+                                        IntVector& cl, IntVector& ch,
+                                        IntVector& fl, IntVector& fh, 
+                                        int ghost,
+                                        int nBoundaryCells); 
+/*===========TESTING==========`*/
 
 // find the range of values to get from the coarseLevel that coincides with coarsePatch
 // ngc is the number of ghost cells to get at the fine level
 UINTAHSHARE void getCoarseLevelRange(const Patch* finePatch, const Level* coarseLevel, 
-                               IntVector& cl, IntVector& ch, IntVector& fl, IntVector& fh, int ngc);
+                                     IntVector& cl, IntVector& ch, 
+                                     IntVector& fl, IntVector& fh, 
+                                     int ngc);
 
 UINTAHSHARE void getCoarseLevelRangeNodes(const Patch* finePatch,
-                                       const Level* coarseLevel, 
-                                       IntVector& cl, IntVector& ch,
-                                       IntVector& fl, IntVector& fh, int ngc);
+                                          const Level* coarseLevel, 
+                                          IntVector& cl, IntVector& ch,
+                                          IntVector& fl, IntVector& fh,
+                                          int ngc,
+                                          int nBoundaryCells);
 
 // find the range of a coarse-fine interface along a certain face
-UINTAHSHARE void getCoarseFineFaceRange(const Patch* finePatch, const Level* coarseLevel, Patch::FaceType face,
-                                  const int interOrder, IntVector& cl, IntVector& ch, IntVector& fl, IntVector& fh);
+UINTAHSHARE void getCoarseFineFaceRange(const Patch* finePatch, 
+                                        const Level* coarseLevel,
+                                        Patch::FaceType face,
+                                        Patch::FaceIteratorType domain,
+                                        const int nCells, 
+                                        IntVector& cl, 
+                                        IntVector& ch, 
+                                        IntVector& fl, 
+                                        IntVector& fh);
                                   
 UINTAHSHARE void coarseLevel_CFI_NodeIterator(Patch::FaceType patchFace,
                                               const Patch* coarsePatch, 
@@ -887,10 +910,10 @@ UINTAHSHARE void coarseLevel_CFI_Iterator(Patch::FaceType patchFace,
                                           bool& isRight_CP_FP_pair);
                                        
 UINTAHSHARE void fineLevel_CFI_Iterator(Patch::FaceType patchFace,
-                                       const Patch* coarsePatch,  
-                                       const Patch* finePatch,    
-                                       CellIterator& iter,
-                                       bool& isRight_CP_FP_pair);   
+                                        const Patch* coarsePatch,  
+                                        const Patch* finePatch,    
+                                        CellIterator& iter,
+                                        bool& isRight_CP_FP_pair);   
                                        
 UINTAHSHARE void fineLevel_CFI_NodeIterator(Patch::FaceType patchFace,
                                             const Patch* coarsePatch,  

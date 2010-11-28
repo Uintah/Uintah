@@ -35,7 +35,7 @@ namespace Wasatch{
   public:
 
     // define the types of fields that this TransportEquation deals with.
-    typedef ScalarVolField            FieldT;
+    typedef SVolField            FieldT;
     typedef FaceTypes<FieldT>::XFace  XFaceT;
     typedef FaceTypes<FieldT>::YFace  YFaceT;
     typedef FaceTypes<FieldT>::ZFace  ZFaceT;

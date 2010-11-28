@@ -445,7 +445,7 @@ ConstantDensityCoal::sched_computeModel( const LevelP& level, SchedulerP& sched,
   }
 
   /*
-  // Commenting out to see if the length model terms are screwing things up
+  // Commenting out because length model terms are screwing things up
 
   // also need the source terms "G" for each mass internal coordinate
   DQMOMEqnFactory& dqmomFactory = DQMOMEqnFactory::self();
@@ -549,7 +549,7 @@ ConstantDensityCoal::computeModel( const ProcessorGroup * pc,
     model_gasSource.initialize(0.0);
 
     /*
-    // Commenting this out...
+    // Commenting this out because it is't working as expected...
 
     // make a vector of all the mass internal coordinate model terms
     DQMOMEqnFactory& dqmomFactory = DQMOMEqnFactory::self();

@@ -425,7 +425,7 @@ namespace Uintah{
        *      This function does not have boundary checking (for speed). */
       template< class phiT >
         inline FaceData1D superBeeInterp( const IntVector c, const IntVector coord, phiT& phi, 
-            FaceData1D vel ) {
+            FaceData1D vel, constCCVariable<Vector>& areaFraction ) {
 
           FaceData1D face_values;
           face_values.plus  = 0.0;
@@ -441,15 +441,31 @@ namespace Uintah{
           IntVector cxm  = c - coord; 
           IntVector cxmm = c - coord - coord; 
 
+          int dim = 0; 
+          if (coord[0] == 1)
+            dim =0; 
+          else if (coord[1] == 1)
+            dim = 1; 
+          else 
+            dim = 2; 
+
           // - FACE
           if ( vel.minus > 0.0 ) {
             Sup = phi[cxm];
             Sdn = phi[c];
-            r = ( phi[cxm] - phi[cxmm] ) / ( phi[c] - phi[cxm] ); 
+            r = ( phi[cxm] - phi[cxmm] ) / ( phi[c] - phi[cxm] );
+
+            if ( areaFraction[cxm][dim] < TINY || areaFraction[c][dim] < TINY )
+              r = 0.0;
+
           } else if ( vel.minus < 0.0 ) {
             Sup = phi[c];
             Sdn = phi[cxm];
             r = ( phi[cxp] - phi[c] ) / ( phi[c] - phi[cxm] );
+
+            if ( areaFraction[cxp][dim] < TINY || areaFraction[c][dim] < TINY )
+              r = 0.0;
+
           } else { 
             Sup = 0.0;
             Sdn = 0.0; 
@@ -465,10 +481,18 @@ namespace Uintah{
             r = ( phi[c] - phi[cxm] ) / ( phi[cxp] - phi[c] );
             Sup = phi[c];
             Sdn = phi[cxp];
+
+            if ( areaFraction[c][dim] < TINY || areaFraction[cxp][dim] < TINY )
+              r = 0.0;
+
           } else if ( vel.plus < 0.0 ) {
             r = ( phi[cxpp] - phi[cxp] ) / ( phi[cxp] - phi[c] );
             Sup = phi[cxp];
             Sdn = phi[c]; 
+
+            if ( areaFraction[cxpp][dim] < TINY || areaFraction[cxp][dim] < TINY )
+              r = 0.0; 
+
           } else {
             Sup = 0.0;
             Sdn = 0.0; 
@@ -486,7 +510,7 @@ namespace Uintah{
        *       This function includes boundary checking (slower).  */ 
       template< class phiT >
         inline FaceData1D superBeeInterp( const IntVector c, const IntVector coord, phiT& phi, 
-            FaceData1D vel, FaceBoundaryBool isBoundary) {
+            FaceData1D vel, FaceBoundaryBool isBoundary, constCCVariable<Vector>& areaFraction ) {
 
           FaceData1D face_values;
           face_values.plus  = 0.0;
@@ -502,6 +526,14 @@ namespace Uintah{
           IntVector cxm  = c - coord; 
           IntVector cxmm = c - coord - coord; 
 
+          int dim = 0; 
+          if (coord[0] == 1)
+            dim =0; 
+          else if (coord[1] == 1)
+            dim = 1; 
+          else 
+            dim = 2; 
+
           // - FACE
           if (isBoundary.minus) 
             face_values.minus = 0.5*(phi[c]+phi[cxm]);
@@ -510,10 +542,18 @@ namespace Uintah{
               Sup = phi[cxm];
               Sdn = phi[c];
               r = ( phi[cxm] - phi[cxmm] ) / ( phi[c] - phi[cxm] ); 
+
+            if ( areaFraction[cxm][dim] < TINY || areaFraction[c][dim] < TINY )
+              r = 0.0;
+
             } else if ( vel.minus < 0.0 ) {
               Sup = phi[c];
               Sdn = phi[cxm];
               r = ( phi[cxp] - phi[c] ) / ( phi[c] - phi[cxm] );
+
+            if ( areaFraction[cxp][dim] < TINY || areaFraction[c][dim] < TINY )
+              r = 0.0;
+
             } else { 
               Sup = 0.0;
               Sdn = 0.0; 
@@ -533,10 +573,18 @@ namespace Uintah{
               r = ( phi[c] - phi[cxm] ) / ( phi[cxp] - phi[c] );
               Sup = phi[c];
               Sdn = phi[cxp];
+
+            if ( areaFraction[c][dim] < TINY || areaFraction[cxp][dim] < TINY )
+              r = 0.0;
+
             } else if ( vel.plus < 0.0 ) {
               r = ( phi[cxpp] - phi[cxp] ) / ( phi[cxp] - phi[c] );
               Sup = phi[cxp];
               Sdn = phi[c]; 
+
+            if ( areaFraction[cxpp][dim] < TINY || areaFraction[cxp][dim] < TINY )
+              r = 0.0; 
+
             } else {
               Sup = 0.0;
               Sdn = 0.0; 
@@ -845,7 +893,7 @@ namespace Uintah{
 
           face_den       = getDensityOnFace( c, coord, Fconv, den ); 
           face_vel       = getFaceVelocity( c, Fconv, uVel ); 
-          face_phi       = superBeeInterp( c, coord, oldPhi, face_vel ); 
+          face_phi       = superBeeInterp( c, coord, oldPhi, face_vel, areaFraction ); 
           Fconv[c]       = getFlux( area, face_den, face_vel, face_phi, areaFraction, coord, c ); 
 
 #ifdef YDIM
@@ -855,7 +903,7 @@ namespace Uintah{
 
           face_den       = getDensityOnFace( c, coord, Fconv, den ); 
           face_vel       = getFaceVelocity( c, Fconv, vVel ); 
-          face_phi       = superBeeInterp( c, coord, oldPhi, face_vel ); 
+          face_phi       = superBeeInterp( c, coord, oldPhi, face_vel, areaFraction ); 
           Fconv[c]      += getFlux( area, face_den, face_vel, face_phi, areaFraction, coord, c ); 
 #endif 
 #ifdef ZDIM
@@ -865,7 +913,7 @@ namespace Uintah{
 
           face_den       = getDensityOnFace( c, coord, Fconv, den ); 
           face_vel       = getFaceVelocity( c, Fconv, wVel ); 
-          face_phi       = superBeeInterp( c, coord, oldPhi, face_vel ); 
+          face_phi       = superBeeInterp( c, coord, oldPhi, face_vel, areaFraction ); 
           Fconv[c]      += getFlux( area, face_den, face_vel, face_phi, areaFraction, coord, c ); 
 #endif
         }
@@ -905,7 +953,7 @@ namespace Uintah{
             faceIsBoundary = checkFacesForBoundaries( p, c, coord ); 
             face_den       = getDensityOnFace( c, coord, Fconv, den ); 
             face_vel       = getFaceVelocity( c, Fconv, uVel ); 
-            face_phi       = superBeeInterp( c, coord, oldPhi, face_vel, faceIsBoundary ); 
+            face_phi       = superBeeInterp( c, coord, oldPhi, face_vel, faceIsBoundary, areaFraction ); 
             Fconv[c]       = getFlux( area, face_den, face_vel, face_phi, areaFraction, coord, c ); 
 
 #ifdef YDIM
@@ -916,7 +964,7 @@ namespace Uintah{
             faceIsBoundary = checkFacesForBoundaries( p, c, coord ); 
             face_den       = getDensityOnFace( c, coord, Fconv, den ); 
             face_vel       = getFaceVelocity( c, Fconv, vVel ); 
-            face_phi       = superBeeInterp( c, coord, oldPhi, face_vel, faceIsBoundary ); 
+            face_phi       = superBeeInterp( c, coord, oldPhi, face_vel, faceIsBoundary, areaFraction ); 
             Fconv[c]      += getFlux( area, face_den, face_vel, face_phi, areaFraction, coord, c ); 
 
 #endif 
@@ -928,7 +976,7 @@ namespace Uintah{
             faceIsBoundary = checkFacesForBoundaries( p, c, coord ); 
             face_den       = getDensityOnFace( c, coord, Fconv, den ); 
             face_vel       = getFaceVelocity( c, Fconv, wVel ); 
-            face_phi       = superBeeInterp( c, coord, oldPhi, face_vel, faceIsBoundary ); 
+            face_phi       = superBeeInterp( c, coord, oldPhi, face_vel, faceIsBoundary, areaFraction ); 
             Fconv[c]      += getFlux( area, face_den, face_vel, face_phi, areaFraction, coord, c ); 
 
 #endif
@@ -1137,7 +1185,7 @@ namespace Uintah{
           area = Dx.y()*Dx.z(); 
 
           face_vel       = getFaceVelocity( c, Fconv, uVel ); 
-          face_phi       = superBeeInterp( c, coord, oldPhi, face_vel ); 
+          face_phi       = superBeeInterp( c, coord, oldPhi, face_vel, areaFraction ); 
           Fconv[c]       = getFlux( area, face_vel, face_phi, areaFraction, coord, c ); 
 
 #ifdef YDIM
@@ -1146,7 +1194,7 @@ namespace Uintah{
           area = Dx.x()*Dx.z(); 
 
           face_vel       = getFaceVelocity( c, Fconv, vVel ); 
-          face_phi       = superBeeInterp( c, coord, oldPhi, face_vel ); 
+          face_phi       = superBeeInterp( c, coord, oldPhi, face_vel, areaFraction ); 
           Fconv[c]      += getFlux( area, face_vel, face_phi, areaFraction, coord, c ); 
 #endif 
 #ifdef ZDIM
@@ -1155,7 +1203,7 @@ namespace Uintah{
           area = Dx.x()*Dx.y(); 
 
           face_vel       = getFaceVelocity( c, Fconv, wVel ); 
-          face_phi       = superBeeInterp( c, coord, oldPhi, face_vel ); 
+          face_phi       = superBeeInterp( c, coord, oldPhi, face_vel, areaFraction ); 
           Fconv[c]      += getFlux( area, face_vel, face_phi, areaFraction, coord, c  ); 
 #endif
         }
@@ -1193,7 +1241,7 @@ namespace Uintah{
 
             faceIsBoundary = checkFacesForBoundaries( p, c, coord ); 
             face_vel       = getFaceVelocity( c, Fconv, uVel ); 
-            face_phi       = superBeeInterp( c, coord, oldPhi, face_vel, faceIsBoundary ); 
+            face_phi       = superBeeInterp( c, coord, oldPhi, face_vel, faceIsBoundary, areaFraction ); 
             Fconv[c]       = getFlux( area, face_vel, face_phi, areaFraction, coord, c ); 
 
 #ifdef YDIM
@@ -1203,7 +1251,7 @@ namespace Uintah{
 
             faceIsBoundary = checkFacesForBoundaries( p, c, coord ); 
             face_vel       = getFaceVelocity( c, Fconv, vVel ); 
-            face_phi       = superBeeInterp( c, coord, oldPhi, face_vel, faceIsBoundary ); 
+            face_phi       = superBeeInterp( c, coord, oldPhi, face_vel, faceIsBoundary, areaFraction ); 
             Fconv[c]      += getFlux( area, face_vel, face_phi, areaFraction, coord, c ); 
 
 #endif 
@@ -1214,7 +1262,7 @@ namespace Uintah{
 
             faceIsBoundary = checkFacesForBoundaries( p, c, coord ); 
             face_vel       = getFaceVelocity( c, Fconv, wVel ); 
-            face_phi       = superBeeInterp( c, coord, oldPhi, face_vel, faceIsBoundary ); 
+            face_phi       = superBeeInterp( c, coord, oldPhi, face_vel, faceIsBoundary, areaFraction ); 
             Fconv[c]      += getFlux( area, face_vel, face_phi, areaFraction, coord, c  ); 
 
 #endif
@@ -1422,7 +1470,7 @@ namespace Uintah{
           area = Dx.y()*Dx.z(); 
 
           face_vel       = getFaceVelocity( c, Fconv, partVel, coord ); 
-          face_phi       = superBeeInterp( c, coord, oldPhi, face_vel ); 
+          face_phi       = superBeeInterp( c, coord, oldPhi, face_vel, areaFraction ); 
           Fconv[c]       = getFlux( area, face_vel, face_phi, areaFraction, coord, c ); 
 
 #ifdef YDIM
@@ -1431,7 +1479,7 @@ namespace Uintah{
           area = Dx.x()*Dx.z(); 
 
           face_vel       = getFaceVelocity( c, Fconv, partVel, coord ); 
-          face_phi       = superBeeInterp( c, coord, oldPhi, face_vel ); 
+          face_phi       = superBeeInterp( c, coord, oldPhi, face_vel, areaFraction ); 
           Fconv[c]      += getFlux( area, face_vel, face_phi, areaFraction, coord, c ); 
 #endif 
 #ifdef ZDIM
@@ -1440,7 +1488,7 @@ namespace Uintah{
           area = Dx.x()*Dx.y(); 
 
           face_vel       = getFaceVelocity( c, Fconv, partVel, coord ); 
-          face_phi       = superBeeInterp( c, coord, oldPhi, face_vel ); 
+          face_phi       = superBeeInterp( c, coord, oldPhi, face_vel, areaFraction ); 
           Fconv[c]      += getFlux( area, face_vel, face_phi, areaFraction, coord, c ); 
 #endif
         }
@@ -1478,7 +1526,7 @@ namespace Uintah{
 
             faceIsBoundary = checkFacesForBoundaries( p, c, coord ); 
             face_vel       = getFaceVelocity( c, Fconv, partVel, coord ); 
-            face_phi       = superBeeInterp( c, coord, oldPhi, face_vel, faceIsBoundary ); 
+            face_phi       = superBeeInterp( c, coord, oldPhi, face_vel, faceIsBoundary, areaFraction ); 
             Fconv[c]       = getFlux( area, face_vel, face_phi, areaFraction, coord, c ); 
 
 #ifdef YDIM
@@ -1488,7 +1536,7 @@ namespace Uintah{
 
             faceIsBoundary = checkFacesForBoundaries( p, c, coord ); 
             face_vel       = getFaceVelocity( c, Fconv, partVel, coord ); 
-            face_phi       = superBeeInterp( c, coord, oldPhi, face_vel, faceIsBoundary ); 
+            face_phi       = superBeeInterp( c, coord, oldPhi, face_vel, faceIsBoundary, areaFraction ); 
             Fconv[c]      += getFlux( area, face_vel, face_phi, areaFraction, coord, c ); 
 
 #endif 
@@ -1499,7 +1547,7 @@ namespace Uintah{
 
             faceIsBoundary = checkFacesForBoundaries( p, c, coord ); 
             face_vel       = getFaceVelocity( c, Fconv, partVel, coord ); 
-            face_phi       = superBeeInterp( c, coord, oldPhi, face_vel, faceIsBoundary ); 
+            face_phi       = superBeeInterp( c, coord, oldPhi, face_vel, faceIsBoundary, areaFraction ); 
             Fconv[c]      += getFlux( area, face_vel, face_phi, areaFraction, coord, c ); 
 
 #endif
@@ -1635,15 +1683,17 @@ namespace Uintah{
         for (int child = 0; child < numChildren; child++){
 
           string bc_kind = "NotSet"; 
+          double bc_value = 0.0; 
           Iterator bound_ptr; 
           Iterator nu; //not used...who knows why?
           const BoundCondBase* bc = p->getArrayBCValues( face, mat_id, 
                                                          varName, bound_ptr, 
                                                          nu, child ); 
           const BoundCond<double> *new_bcs = dynamic_cast<const BoundCond<double> *>(bc); 
-          if (new_bcs != 0) 
+          if (new_bcs != 0) {
             bc_kind = new_bcs->getBCType__NEW(); 
-          else {
+            bc_value = new_bcs->getValue();
+          } else {
             cout << "Warning!  Boundary condition not set for: " << endl;
             cout << "variable = " << varName << endl;
             cout << "face = " << face << endl;
@@ -1666,6 +1716,7 @@ namespace Uintah{
 
                   IntVector bp1(*bound_ptr - insideCellDir); 
                   IntVector c = *bound_ptr; 
+
                   face_gamma = centralInterp( bp1, coord, gamma ); 
                   grad_phi   = gradPtoF( bp1, oldPhi, dx, coord ); 
 
@@ -1674,6 +1725,11 @@ namespace Uintah{
 
                   Fdiff[bp1] += 1.0/prNo[c] * Dx.y()*Dx.z() * 
                              ( face_gamma.minus * grad_phi.minus * c_af.x() ); 
+
+                  // to match with the old code...
+                  Fdiff[bp1] -= 1.0/prNo[c] * Dx.y()*Dx.z() * 
+                            ( face_gamma.minus * ( oldPhi[bp1] - bc_value )/Dx.x() * c_af.x() ); 
+
                 }
                 break; 
               case Patch::xplus:
@@ -1693,6 +1749,10 @@ namespace Uintah{
 
                   Fdiff[bp1] -= 1.0/prNo[c] * Dx.y()*Dx.z() * 
                              ( face_gamma.plus * grad_phi.plus * cp_af.x() ); 
+
+                  // to match with the old code...
+                  Fdiff[bp1] += 1.0/prNo[c] * Dx.y()*Dx.z() * 
+                             ( face_gamma.plus * (bc_value - oldPhi[bp1])/Dx.x() * cp_af.x() ); 
                 }
                 break; 
 #ifdef YDIM
@@ -1713,6 +1773,10 @@ namespace Uintah{
 
                   Fdiff[bp1] += 1.0/prNo[c] * Dx.x()*Dx.z() * 
                              ( face_gamma.minus * grad_phi.minus * c_af.y() ); 
+
+                  // to match with the old code...
+                  Fdiff[bp1] -= 1.0/prNo[c] * Dx.x()*Dx.z() * 
+                            ( face_gamma.minus * ( oldPhi[bp1] - bc_value )/Dx.y() * c_af.y() ); 
                 }
                 break; 
               case Patch::yplus:
@@ -1732,6 +1796,10 @@ namespace Uintah{
 
                   Fdiff[bp1] -= 1.0/prNo[c] * Dx.x()*Dx.z() * 
                              ( face_gamma.plus * grad_phi.plus * cp_af.y() ); 
+
+                  // to match with the old code...
+                  Fdiff[bp1] += 1.0/prNo[c] * Dx.x()*Dx.z() * 
+                             ( face_gamma.plus * (bc_value - oldPhi[bp1])/Dx.y() * cp_af.y() ); 
                 }
                 break;
 #endif 
@@ -1753,6 +1821,11 @@ namespace Uintah{
 
                   Fdiff[bp1] += 1.0/prNo[c] * Dx.x()*Dx.y() * 
                              ( face_gamma.minus * grad_phi.minus * c_af.z() ); 
+
+                  // to match with the old code...
+                  Fdiff[bp1] -= 1.0/prNo[c] * Dx.x()*Dx.y() * 
+                            ( face_gamma.minus * ( oldPhi[bp1] - bc_value )/Dx.z() * c_af.z() ); 
+
                 }
                 break; 
               case Patch::zplus:
@@ -1772,6 +1845,10 @@ namespace Uintah{
 
                   Fdiff[bp1] -= 1.0/prNo[c] * Dx.x()*Dx.y() * 
                              ( face_gamma.plus * grad_phi.plus * cp_af.z() ); 
+
+                  // to match with the old code...
+                  Fdiff[bp1] += 1.0/prNo[c] * Dx.x()*Dx.y() * 
+                             ( face_gamma.plus * (bc_value - oldPhi[bp1])/Dx.z() * cp_af.z() ); 
                 }
                 break; 
 #endif

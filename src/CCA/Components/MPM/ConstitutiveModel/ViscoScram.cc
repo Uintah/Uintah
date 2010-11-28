@@ -53,6 +53,7 @@ DEALINGS IN THE SOFTWARE.
 
 #include <fstream>
 #include <iostream>
+#include <iomanip>
 
 
 using std::cerr;
@@ -100,11 +101,33 @@ ViscoScram::ViscoScram(ProblemSpecP& ps,MPMFlags* Mflag)
   // Murnaghan EOS inputs
   ps->getWithDefault("useMurnahanEOS", d_useMurnahanEOS, false);
   if(d_useMurnahanEOS) {
-    ps->require("gamma", d_gamma);
-    ps->require("P0",    d_P0);
-    ps->require("bulkPrime", d_bulkPrime);
+    ps->require("gamma", d_murnahanEOSData.gamma);
+    ps->require("P0",    d_murnahanEOSData.P0);
+    ps->require("bulkPrime", d_murnahanEOSData.bulkPrime);
+    // takes precedence over Modified
+    d_useModifiedEOS = false;
   }
 
+  // JWL EOS inputs
+  ps->getWithDefault("useJWLEOS", d_useJWLEOS, false);
+  ps->getWithDefault("useJWLCEOS", d_useJWLCEOS, false);
+  if(d_useJWLEOS || d_useJWLCEOS) {
+    ps->require("A",d_JWLEOSData.A);
+    ps->require("B",d_JWLEOSData.B);
+    ps->require("R1",d_JWLEOSData.R1);
+    ps->require("R2",d_JWLEOSData.R2);
+    ps->require("om",d_JWLEOSData.om);
+    // takes precedence over Murnaghan and Modified
+    d_useMurnahanEOS = false;
+    d_useModifiedEOS = false;
+  }
+  if(d_useJWLEOS) {
+    d_useJWLCEOS = false;
+    ps->require("Cv",d_JWLEOSData.Cv);
+  }
+  if(d_useJWLCEOS) {
+    ps->require("C",d_JWLEOSData.C);
+  }
   // Time-temperature data for relaxtion time calculation
   d_tt.T0_WLF = 298.0;
   ps->get("T0", d_tt.T0_WLF);
@@ -185,9 +208,21 @@ ViscoScram::ViscoScram(const ViscoScram* cm) : ConstitutiveModel(cm)
   // Murnaghan EOS inputs
   d_useMurnahanEOS = cm->d_useMurnahanEOS;
   if(d_useMurnahanEOS) {
-    d_gamma     = cm->d_gamma;
-    d_P0        = cm->d_P0;
-    d_bulkPrime = cm->d_bulkPrime;
+    d_murnahanEOSData.gamma     = cm->d_murnahanEOSData.gamma;
+    d_murnahanEOSData.P0        = cm->d_murnahanEOSData.P0;
+    d_murnahanEOSData.bulkPrime = cm->d_murnahanEOSData.bulkPrime;
+  }
+
+  // JWL EOS inputs
+  d_useJWLEOS = cm->d_useJWLEOS;
+  if(d_useJWLEOS || d_useJWLCEOS){
+    d_JWLEOSData.A =   cm->d_JWLEOSData.A;
+    d_JWLEOSData.B =   cm->d_JWLEOSData.B;
+    d_JWLEOSData.C =   cm->d_JWLEOSData.C;
+    d_JWLEOSData.Cv =   cm->d_JWLEOSData.Cv;
+    d_JWLEOSData.R1 =   cm->d_JWLEOSData.R1;
+    d_JWLEOSData.R2 =   cm->d_JWLEOSData.R2;
+    d_JWLEOSData.om =   cm->d_JWLEOSData.om;
   }
 
   // Time-temperature data for relaxtion time calculation
@@ -285,9 +320,22 @@ void ViscoScram::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
   // Murnaghan EOS inputs
   cm_ps->appendElement("useMurnahanEOS", d_useMurnahanEOS);
   if(d_useMurnahanEOS) {
-    cm_ps->appendElement("gamma", d_gamma);
-    cm_ps->appendElement("P0",    d_P0);
-    cm_ps->appendElement("bulkPrime", d_bulkPrime);
+    cm_ps->appendElement("gamma", d_murnahanEOSData.gamma);
+    cm_ps->appendElement("P0",    d_murnahanEOSData.P0);
+    cm_ps->appendElement("bulkPrime", d_murnahanEOSData.bulkPrime);
+  }
+
+  // JWL EOS inputs
+  cm_ps->appendElement("useJWLEOS", d_useJWLEOS);
+  cm_ps->appendElement("useJWLCEOS", d_useJWLCEOS);
+  if(d_useJWLEOS || d_useJWLCEOS){
+    cm_ps->appendElement("A",     d_JWLEOSData.A);
+    cm_ps->appendElement("B",     d_JWLEOSData.B);
+    cm_ps->appendElement("C",     d_JWLEOSData.C);
+    cm_ps->appendElement("Cv",     d_JWLEOSData.Cv);
+    cm_ps->appendElement("R1",     d_JWLEOSData.R1);
+    cm_ps->appendElement("R2",     d_JWLEOSData.R2);
+    cm_ps->appendElement("om",     d_JWLEOSData.om);
   }
 
   // Time-temperature data for relaxtion time calculation
@@ -1237,17 +1285,165 @@ ViscoScram::addParticleState(std::vector<const VarLabel*>& from,
 
 double ViscoScram::computeRhoMicroCM(double pressure,
                                      const double p_ref,
-                                     const MPMMaterial* matl)
+                                     const MPMMaterial* matl,
+                                     double temperature,
+                                     double rho_guess)
 {
   double rho_orig = matl->getInitialDensity();
   double p_gauge = pressure - p_ref;
   double rho_cur;
 
-  if(d_useMurnahanEOS) {    // Murnaghan EOS
-    if( pressure >= d_P0 ) {
-      rho_cur = rho_orig * pow((d_bulkPrime*d_gamma*(pressure-d_P0)+1.0),1.0/d_gamma);
+  if(d_useJWLEOS) {                        // JWL EOS
+    double Cv = d_JWLEOSData.Cv;
+    //    double om = d_JWLEOSData.om;
+
+    Pressure = pressure;
+    Temperature = temperature;
+    SpecificHeat = Cv;
+
+    double epsilon  = 1e-15;
+    double rho_min = 0.0;                      // Such that f(min) < 0
+    double rho_max = 100000; //pressure*1.001*rho_orig/(om*Cv*temperature)*1.3431907e7; // Such that f(max) > 0
+    IL = rho_min;
+    IR = rho_max;
+
+    double f = 0;
+    double df_drho = 0;
+    double delta_old, delta_new;
+
+    double rho_cur = rho_guess <= rho_max ? rho_guess : rho_max/2.0;
+    //double rhoM_start = rhoM;
+
+    int iter = 0;
+    while(1){
+      f = func(rho_cur,matl);
+      setInterval(f, rho_cur);
+      if(fabs((IL-IR)/rho_cur)<epsilon){
+        return (IL+IR)/2.0;
+      }
+
+      delta_new = 1e100;
+      while(1){
+        df_drho = deri(rho_cur,matl);
+        delta_old = delta_new;
+        delta_new = -f/df_drho;
+        rho_cur += delta_new;
+
+        if(fabs(delta_new/rho_cur)<epsilon){
+          return rho_cur;
+        }
+
+        if(iter>=100){
+          ostringstream warn;
+          warn << setprecision(15);
+          warn << "ERROR:MPM:ViscoSCRAM:JWL::computeRhoMicro not converging. \n";
+          warn << "press= " << pressure << " temp=" << temperature << "\n";
+          warn << "delta= " << delta_new << " rhoM= " << rho_cur << " f = " << f
+               <<" df_drho =" << df_drho << "\n";
+          throw InternalError(warn.str(), __FILE__, __LINE__);
+        }
+
+        if(rho_cur<IL || rho_cur>IR || fabs(delta_new)>fabs(delta_old*0.7)){
+          break;
+        }
+
+        f = func(rho_cur,matl);
+        setInterval(f, rho_cur);
+        iter++;
+      }
+
+      rho_cur = (IL+IR)/2.0;
+      iter++;
+    }
+
+
+  } else if(d_useJWLCEOS) {                // JWLC EOS
+    double A = d_JWLEOSData.A;
+    double B = d_JWLEOSData.B;
+    double C = d_JWLEOSData.C;
+    double R1 = d_JWLEOSData.R1;
+    double R2 = d_JWLEOSData.R2;
+    double om = d_JWLEOSData.om;
+
+    // copied from JWL
+    double rhoM = rho_orig;
+
+    double epsilon = 1.e-15;
+    double delta = 1.;
+    double f,df_drho,relfac=.9;
+    int count = 0;
+
+    double one_plus_omega = 1.+om;
+
+    while(fabs(delta/rhoM)>epsilon){
+      double inv_rho_rat=rho_orig/rhoM;
+      double rho_rat=rhoM/rho_orig;
+      double A_e_to_the_R1_rho0_over_rhoM=A*exp(-R1*inv_rho_rat);
+      double B_e_to_the_R2_rho0_over_rhoM=B*exp(-R2*inv_rho_rat);
+      double C_rho_rat_tothe_one_plus_omega=C*pow(rho_rat,one_plus_omega);
+
+      f = (A_e_to_the_R1_rho0_over_rhoM +
+           B_e_to_the_R2_rho0_over_rhoM + C_rho_rat_tothe_one_plus_omega) - pressure;
+
+      double rho0_rhoMsqrd = rho_orig/(rhoM*rhoM);
+      df_drho = R1*rho0_rhoMsqrd*A_e_to_the_R1_rho0_over_rhoM
+            + R2*rho0_rhoMsqrd*B_e_to_the_R2_rho0_over_rhoM
+            + (one_plus_omega/rhoM)*C_rho_rat_tothe_one_plus_omega;
+
+      delta = -relfac*(f/df_drho);
+      rhoM+=delta;
+      rhoM=fabs(rhoM);
+      if(count>=100){
+
+        // The following is here solely to help figure out what was going on
+        // at the time the above code failed to converge.  Start over with this
+        // copy and print more out.
+        delta = 1.;
+        rhoM = 2.*rho_orig;
+        while(fabs(delta/rhoM)>epsilon){
+         double inv_rho_rat=rho_orig/rhoM;
+         double rho_rat=rhoM/rho_orig;
+         double A_e_to_the_R1_rho0_over_rhoM=A*exp(-R1*inv_rho_rat);
+         double B_e_to_the_R2_rho0_over_rhoM=B*exp(-R2*inv_rho_rat);
+         double C_rho_rat_tothe_one_plus_omega=C*pow(rho_rat,one_plus_omega);
+
+         f = (A_e_to_the_R1_rho0_over_rhoM +
+              B_e_to_the_R2_rho0_over_rhoM +
+              C_rho_rat_tothe_one_plus_omega) - pressure;
+
+         double rho0_rhoMsqrd = rho_orig/(rhoM*rhoM);
+         df_drho = R1*rho0_rhoMsqrd*A_e_to_the_R1_rho0_over_rhoM
+                  + R2*rho0_rhoMsqrd*B_e_to_the_R2_rho0_over_rhoM
+                  + (one_plus_omega/rhoM)*C_rho_rat_tothe_one_plus_omega;
+
+         delta = -relfac*(f/df_drho);
+         rhoM+=delta;
+         rhoM=fabs(rhoM);
+         if(count>=150){
+           ostringstream warn;
+           warn << "ERROR:MPM:ViscoScram:JWLC::computeRhoMicro not converging. \n";
+           warn << "press= " << pressure << "\n";
+           warn << "delta= " << delta << " rhoM= " << rhoM << " f = " << f
+                <<" df_drho =" << df_drho << "\n";
+           throw InternalError(warn.str(), __FILE__, __LINE__);
+
+         }
+        count++;
+        }
+      }
+      count++;
+    }
+    // copy local rhoM to function rho_cur
+    rho_cur = rhoM;
+  } else if(d_useMurnahanEOS) {    // Murnaghan EOS
+    double bulkPrime = d_murnahanEOSData.bulkPrime;
+    double P0        = d_murnahanEOSData.P0;
+    double gamma     = d_murnahanEOSData.gamma;
+
+    if( pressure >= P0 ) {
+      rho_cur = rho_orig * pow((bulkPrime*gamma*(pressure-P0)+1.0),1.0/gamma);
     } else {
-      rho_cur = rho_orig * pow((pressure/d_P0), d_bulkPrime*d_P0);
+      rho_cur = rho_orig * pow((pressure/P0), bulkPrime*P0);
     } 
   } else if(d_useModifiedEOS && p_gauge < 0.0) {
     double A = p_ref;       // Modified EOS
@@ -1261,24 +1457,80 @@ double ViscoScram::computeRhoMicroCM(double pressure,
   return rho_cur;
 
 }
-
 void ViscoScram::computePressEOSCM(double rho_cur,double& pressure,
                                    double p_ref,
                                    double& dp_drho, double& tmp,
-                                   const MPMMaterial* matl)
+                                   const MPMMaterial* matl, 
+                                   double temperature)
 {
   double rho_orig = matl->getInitialDensity();
   double inv_rho_orig = 1./rho_orig;
 
-  if(d_useMurnahanEOS) {
+  if(d_useJWLEOS) {
+    double A = d_JWLEOSData.A;
+    double B = d_JWLEOSData.B;
+    double Cv = d_JWLEOSData.Cv;
+    double R1 = d_JWLEOSData.R1;
+    double R2 = d_JWLEOSData.R2;
+    double om = d_JWLEOSData.om;
+
+    double V  = rho_orig/rho_cur;
+    double P1 = A*exp(-R1*V);
+    double P2 = B*exp(-R2*V);
+    double P3 = om*Cv*temperature/V;
+
+    double press = P1 + P2 + P3;
+    pressure   = press;
+    double dpdrho = (R1*rho_orig*P1 + R2*rho_orig*P2)/(rho_cur*rho_cur) + om*Cv*temperature/rho_orig;
+    dp_drho = dpdrho;
+    tmp = dp_drho;
+
+  } else if(d_useJWLCEOS) {
+    double A = d_JWLEOSData.A;
+    double B = d_JWLEOSData.B;
+    double C = d_JWLEOSData.C;
+    double R1 = d_JWLEOSData.R1;
+    double R2 = d_JWLEOSData.R2;
+    double om = d_JWLEOSData.om;
+
+  // Pointwise computation of thermodynamic quantities
+  // This looked like the following before optimization
+  //  double pressold   = A*exp(-R1*rho0/rhoM) ++ 
+  //            B*exp(-R2*rho0/rhoM) + C*pow((rhoM/rho0),1+om);
+
+  //  double dp_drhoold = (A*R1*rho0/(rhoM*rhoM))*(exp(-R1*rho0/rhoM))
+  //          + (B*R2*rho0/(rhoM*rhoM))*(exp(-R2*rho0/rhoM))
+  //          + C*((1.+om)/pow(rho0,1.+om))*pow(rhoM,om);
+
+    double one_plus_omega = 1.+om;
+    double inv_rho_rat=rho_orig/rho_cur;
+    double rho_rat=rho_cur/rho_orig;
+    double A_e_to_the_R1_rho0_over_rhoM=A*exp(-R1*inv_rho_rat);
+    double B_e_to_the_R2_rho0_over_rhoM=B*exp(-R2*inv_rho_rat);
+    double C_rho_rat_tothe_one_plus_omega=C*pow(rho_rat,one_plus_omega);
+
+    pressure = A_e_to_the_R1_rho0_over_rhoM +
+               B_e_to_the_R2_rho0_over_rhoM + C_rho_rat_tothe_one_plus_omega;
+
+    double rho0_rhoMsqrd = rho_orig/(rho_cur*rho_cur);
+    dp_drho = R1*rho0_rhoMsqrd*A_e_to_the_R1_rho0_over_rhoM
+            + R2*rho0_rhoMsqrd*B_e_to_the_R2_rho0_over_rhoM
+            + (one_plus_omega/rho_cur)*C_rho_rat_tothe_one_plus_omega;
+
+    tmp      = dp_drho;       // speed of sound squared
+  } else if(d_useMurnahanEOS) {
+    double bulkPrime = d_murnahanEOSData.bulkPrime;
+    double P0        = d_murnahanEOSData.P0;
+    double gamma     = d_murnahanEOSData.gamma;
+
     if(rho_cur >= rho_orig) {
-      pressure = d_P0 + (1.0/(d_bulkPrime*d_gamma))*(pow(rho_cur/rho_orig,d_gamma)-1.0);
-      dp_drho  = (1.0/(d_bulkPrime*rho_orig))*pow((rho_cur/rho_orig),d_gamma-1.0);
+      pressure = P0 + (1.0/(bulkPrime*gamma))*(pow(rho_cur/rho_orig,gamma)-1.0);
+      dp_drho  = (1.0/(bulkPrime*rho_orig))*pow((rho_cur/rho_orig),gamma-1.0);
       // is this the right speed of sound?
-      tmp      = d_bulk/rho_cur;
+      tmp      = dp_drho;
     } else {
-      pressure = d_P0*pow(rho_cur/rho_cur, (1.0/(d_bulkPrime*d_P0)));
-      dp_drho  = (1.0/(d_bulkPrime*rho_orig))*pow(rho_cur/rho_orig,(1.0/(d_bulkPrime*d_P0)-1.0));
+      pressure = P0*pow(rho_cur/rho_cur, (1.0/(bulkPrime*P0)));
+      dp_drho  = (1.0/(bulkPrime*rho_orig))*pow(rho_cur/rho_orig,(1.0/(bulkPrime*P0)-1.0));
       // is this the right speed of sound?
       tmp      = d_bulk/rho_cur;
     } 
@@ -1303,6 +1555,50 @@ double ViscoScram::getCompressibility()
   return 1.0/d_bulk;
 }
 
+// Func used in Newton-Bisection Solver for JWL Temperature Dependent EOS
+double ViscoScram::func(double rhoM,const MPMMaterial*  matl){
+  double A = d_JWLEOSData.A;
+  double B = d_JWLEOSData.B;
+  double R1 = d_JWLEOSData.R1;
+  double R2 = d_JWLEOSData.R2;
+  double om = d_JWLEOSData.om;
+
+  if(rhoM == 0){
+    return -Pressure;
+  }
+  double V  = matl->getInitialDensity()/rhoM;
+  double P1 = A*exp(-R1*V);
+  double P2 = B*exp(-R2*V);
+  double P3 = om*SpecificHeat*Temperature/V;
+  return (P1 + P2 + P3) - Pressure;
+}
+
+// deri used in Newton-Bisection Solver for JWL Temperature Dependent EOS
+double ViscoScram::deri(double rhoM, const MPMMaterial* matl){
+  double A = d_JWLEOSData.A;
+  double B = d_JWLEOSData.B;
+  double R1 = d_JWLEOSData.R1;
+  double R2 = d_JWLEOSData.R2;
+  double om = d_JWLEOSData.om;
+
+  double V  = matl->getInitialDensity()/rhoM;
+  double P1 = A*exp(-R1*V);
+  double P2 = B*exp(-R2*V);
+  double P3 = om*SpecificHeat*Temperature/V;
+  return (P1*R1*V + P2*R2*V+P3)/rhoM;
+}
+
+// setInterval used in Newton-Bisection Solver for JWL Temperature Dependent EOS
+void ViscoScram::setInterval(double f, double rhoM){
+  if(f < 0)
+    IL = rhoM;
+  else if(f > 0)
+    IR = rhoM;
+  else if(f ==0){
+    IL = rhoM;
+    IR = rhoM;
+  }
+}
 
 namespace Uintah {
 

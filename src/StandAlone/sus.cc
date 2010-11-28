@@ -349,6 +349,9 @@ main( int argc, char *argv[], char *env[] )
     } else if(arg == "-TRACK") {
       track = true;
       track_or_die = true;
+    } else if (arg=="-reduce_uda")
+    {
+      reduce_uda=true;
     } else if(arg == "-combine_patches") {
       combine_patches = true;
     } else if( arg == "-arches"  || arg == "-ice"      || arg == "-impm"     || arg == "-mpm"      || arg == "-mpmarches"  ||
@@ -487,9 +490,9 @@ main( int argc, char *argv[], char *env[] )
     // Run svn commands on Packages/Uintah 
     if (do_svnDiff || do_svnStat){
 #if defined(REDSTORM)
-      cerr << "WARNING:  SVN DIFF is disabled.\n";
+      cout << "WARNING:  SVN DIFF is disabled.\n";
 #else
-      cerr << "____SVN_____________________________________________________________\n";
+      cout << "____SVN_____________________________________________________________\n";
       string sdir = string(sci_getenv("SCIRUN_SRCDIR"));
       if(do_svnDiff){
         string cmd = "svn diff " + sdir;
@@ -501,7 +504,7 @@ main( int argc, char *argv[], char *env[] )
         cmd = "svn stat -u " + sdir;
         system(cmd.c_str());
       }
-      cerr << "____SVN_______________________________________________________________\n";
+      cout << "____SVN_______________________________________________________________\n";
 #endif
     }
   }
@@ -725,6 +728,8 @@ main( int argc, char *argv[], char *env[] )
     cout << "Sus: going down successfully\n";
   }
 
+  // use exitAll(0) since return does not work
+  Thread::exitAll(0);
   return 0;
 
 } // end main()

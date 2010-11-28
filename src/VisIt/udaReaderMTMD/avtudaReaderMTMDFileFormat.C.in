@@ -288,6 +288,81 @@ avtudaReaderMTMDFileFormat::ActivateTimestep(int ts)
 }
 
 
+
+// ****************************************************************************
+//  Method: avtudaReaderMTMDFileFormat::AddExpressionsToMetadata
+// ****************************************************************************
+void avtudaReaderMTMDFileFormat::AddExpressionsToMetadata(avtDatabaseMetaData *md) {
+  string home(getenv("HOME"));
+  string fname = home +"/.visit/udaExpressions.txt";
+  FILE *f = fopen(fname.c_str(), "r");
+  if (!f) {
+    debug5<<"couldn't open uda expressions file"<<endl;
+    return;
+  }
+
+
+  int line = 0;
+  char cline[2048];
+  while (fgets(cline, 2048, f)) {
+    line++;
+
+    string line(cline);
+    if (line[0] == '#' ||
+        line.length() == 0 ||
+        line == "\n" || line=="\r\n")
+      continue;
+
+    // first token is the expression name
+    int space = line.find(" ");
+    if (space < 0) {
+      debug5<<"uda expression syntax error on line "<<line<<endl;
+      continue;
+    }
+    string name = line.substr(0, space);
+    line = line.substr(space+1);
+
+    // second token is the expression type
+    space = line.find(" ");
+    if (space < 0) {
+      debug5<<"uda expression syntax error on line "<<line<<endl;
+      continue;
+    }
+    string type = line.substr(0, space);
+    line = line.substr(space+1);
+
+    Expression::ExprType etype = Expression::Unknown;
+    if (type == "scalar")
+      etype = Expression::ScalarMeshVar;
+    if (type == "vector")
+      etype = Expression::VectorMeshVar;
+    if (type == "tensor")
+      etype = Expression::TensorMeshVar;
+    if (type == "symtensor")
+      etype = Expression::SymmetricTensorMeshVar;
+    if (type == "array")
+      etype = Expression::ArrayMeshVar;
+    if (type == "curve")
+      etype = Expression::CurveMeshVar;
+
+    if (etype == Expression::Unknown) {
+      debug5<<"uda expression - unknown type on line "<<line<<endl;
+      continue;
+    }
+
+
+    Expression e;
+    e.SetName(name);
+    e.SetType(etype);
+    e.SetDefinition(line);
+    md->AddExpression(&e);
+  }
+
+
+  fclose(f);
+}
+
+
 // ****************************************************************************
 //  Method: avtudaReaderMTMDFileFormat::ReadMetaData
 //
@@ -536,6 +611,9 @@ avtudaReaderMTMDFileFormat::ReadMetaData(avtDatabaseMetaData *md, int timeState)
   
   md->AddGroupInformation(numLevels, totalPatches, groupIds);
   md->AddDefaultSILRestrictionDescription(std::string("!TurnOnAll"));
+
+
+  AddExpressionsToMetadata(md);
 }
 
 

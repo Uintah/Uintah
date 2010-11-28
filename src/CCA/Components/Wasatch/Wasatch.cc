@@ -35,6 +35,7 @@
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/SimpleMaterial.h>
+#include <Core/Grid/Task.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Exceptions/ProblemSetupException.h>
@@ -50,6 +51,8 @@
 
 //-- Wasatch includes --//
 #include "Wasatch.h"
+#include "CoordHelper.h"
+#include "FieldAdaptor.h"
 #include "StringNames.h"
 #include "TaskInterface.h"
 #include "TimeStepper.h"
@@ -61,69 +64,43 @@
 
 namespace Wasatch{
 
-  //------------------------------------------------------------------
-
-  void
-  create_tree_on_patches( const Uintah::PatchSet* const localPatches,
-                          const Uintah::MaterialSet* const materials,
-                          Uintah::SchedulerP& sched,
-                          const PatchInfoMap& patchInfoMap,
-                          Expr::ExpressionFactory& factory,
-                          const IDSet& rootIDs,
-                          const std::string name )
-  {
-    if( rootIDs.empty() ) return;  // nothing to do since the tree would be empty.
-
-    Expr::ExpressionTree* const graph = new Expr::ExpressionTree( factory, -1, name );
-
-    for( IDSet::const_iterator iid=rootIDs.begin(); iid!=rootIDs.end(); ++iid ){
-      graph->insert_tree( *iid );
-    }
-
-    //_______________________________________________________
-    // create the TaskInterface and schedule this task for
-    // execution.  Note that field dependencies are assigned
-    // within the TaskInterface object.
-    TaskInterface* const task = new TaskInterface( graph, patchInfoMap );
-    task->schedule( sched, localPatches, materials );
-
-    //________________
-    // jcs diagnostics
-    std::string fname = name+".dot";
-    std::cout << "writing tree file to '" << fname << "'" << std::endl;
-    std::ofstream fout(fname.c_str());
-    graph->write_tree(fout);
-  }
-
   //--------------------------------------------------------------------
 
   Wasatch::Wasatch( const Uintah::ProcessorGroup* myworld )
     : Uintah::UintahParallelComponent( myworld )
   {
     const bool log = true;
-    graphCategories_[ INITIALIZATION     ] = new GraphHelper( new Expr::ExpressionFactory(log) );
-    graphCategories_[ TIMESTEP_SELECTION ] = new GraphHelper( new Expr::ExpressionFactory(log) );
-    graphCategories_[ ADVANCE_SOLUTION   ] = new GraphHelper( new Expr::ExpressionFactory(log) );
+    graphCategories_[ INITIALIZATION     ] = scinew GraphHelper( scinew Expr::ExpressionFactory(log) );
+    graphCategories_[ TIMESTEP_SELECTION ] = scinew GraphHelper( scinew Expr::ExpressionFactory(log) );
+    graphCategories_[ ADVANCE_SOLUTION   ] = scinew GraphHelper( scinew Expr::ExpressionFactory(log) );
+
+    icCoordHelper_  = new CoordHelper( *(graphCategories_[INITIALIZATION  ]->exprFactory) );
   }
 
   //--------------------------------------------------------------------
 
   Wasatch::~Wasatch()
   {
-    // wipe out the patchInfoMap_ stuff
     for( PatchInfoMap::iterator i=patchInfoMap_.begin(); i!=patchInfoMap_.end(); ++i ){
       delete i->second.operators;
-    }
-
-    for( GraphCategories::iterator igc=graphCategories_.begin(); igc!=graphCategories_.end(); ++igc ){
-      delete igc->second->exprFactory;
     }
 
     for( EquationAdaptors::iterator i=adaptors_.begin(); i!=adaptors_.end(); ++i ){
       delete *i;
     }
 
+    for( std::list<TaskInterface*>::iterator i=taskInterfaceList_.begin(); i!=taskInterfaceList_.end(); ++i ){
+      delete *i;
+    }
+
+    delete icCoordHelper_;
     delete timeStepper_;
+
+    for( GraphCategories::iterator igc=graphCategories_.begin(); igc!=graphCategories_.end(); ++igc ){
+      delete igc->second->exprFactory;
+      delete igc->second;
+    }
+
   }
 
   //--------------------------------------------------------------------
@@ -161,8 +138,8 @@ namespace Wasatch{
       adaptors_.push_back( parse_equation( transEqnParams, graphCategories_ ) );
     }
 
-    timeStepper_ = new TimeStepper( sharedState_->get_delt_label(),
-                                    *graphCategories_[ ADVANCE_SOLUTION ]->exprFactory );
+    timeStepper_ = scinew TimeStepper( sharedState_->get_delt_label(),
+                                       *graphCategories_[ ADVANCE_SOLUTION ]->exprFactory );
   }
 
   //--------------------------------------------------------------------
@@ -186,7 +163,7 @@ namespace Wasatch{
 
       for( int ipss=0; ipss<patches->size(); ++ipss ){
 
-        SpatialOps::OperatorDatabase* const opdb = new SpatialOps::OperatorDatabase();
+        SpatialOps::OperatorDatabase* const opdb = scinew SpatialOps::OperatorDatabase();
         const Uintah::Patch* const patch = patches->get(ipss);
         build_operators( *patch, *opdb );
         PatchInfo& pi = patchInfoMap_[patch->getID()];
@@ -195,34 +172,35 @@ namespace Wasatch{
       }
     }
 
-    //_____________________________________________
-    // Build the initial condition expression graph
     GraphHelper* const icGraphHelper = graphCategories_[ INITIALIZATION ];
 
-    //======================= <temporary > ====================== jcs
-    // hack for now to test parsing for creating simple expressions.
-    // Later we won't need this (I don't think).  Transport equation
-    // initialization sets root nodes in the tree, so we don't need to
-    // set them again here. In fact, this will break things in
-    // general.
-    {
-      const Expr::ExpressionFactory* const exprFactory = icGraphHelper->exprFactory;
-      const Expr::ExpressionRegistry& reg = exprFactory->get_registry();
-      const Expr::Tag tempTag("temperature",Expr::STATE_N);
-      if( reg.have_entry(tempTag) ){
-        std::cout << "jcs hack inserting temperature into ic graph" << std::endl;
-        icGraphHelper->rootIDs.insert( reg.get_id(tempTag) );
-      }
-    }
-    //======================= </temporary> ======================
+    //_____________________________________________
+    // Build the initial condition expression graph
+    if( !icGraphHelper->rootIDs.empty() ){
 
-    create_tree_on_patches( sched->getLoadBalancer()->getPerProcessorPatchSet(level),
-                            sharedState_->allMaterials(),
-                            sched,
-                            patchInfoMap_,
-                            *icGraphHelper->exprFactory,
-                            icGraphHelper->rootIDs,
-                            "initialization" );
+      Expr::ExpressionTree* const graph = scinew Expr::ExpressionTree( *icGraphHelper->exprFactory, -1, "initialization" );
+
+      for( IDSet::const_iterator iid=icGraphHelper->rootIDs.begin(); iid!=icGraphHelper->rootIDs.end(); ++iid ){
+        graph->insert_tree( *iid );
+      }
+
+      // set coordinate values as required by the IC graph.
+      icCoordHelper_->create_task( sched, localPatches, sharedState_->allMaterials() );
+
+      //_______________________________________________________
+      // create the TaskInterface and schedule this task for
+      // execution.  Note that field dependencies are assigned
+      // within the TaskInterface object.
+      TaskInterface* const task = scinew TaskInterface( graph, patchInfoMap_ );
+      task->schedule( sched, localPatches, sharedState_->allMaterials(), icCoordHelper_->field_tags() );
+      taskInterfaceList_.push_back( task );
+
+      //________________
+      // jcs diagnostics
+      std::cout << "writing tree file to 'initialization.dot'" << std::endl;
+      std::ofstream fout("initialization.dot");
+      graph->write_tree(fout);
+    }
 
     std::cout << "Wasatch: done creating initialization task(s)" << std::endl;
   }
@@ -240,13 +218,26 @@ namespace Wasatch{
     const Uintah::MaterialSet* materials = sharedState_->allMaterials();
 
     if( tsGraphHelper->rootIDs.size() > 0 ){
-      create_tree_on_patches( patches,
-                              materials,
-                              sched,
-                              patchInfoMap_,
-                              *tsGraphHelper->exprFactory,
-                              tsGraphHelper->rootIDs,
-                              "calculate timestep" );
+
+      Expr::ExpressionTree* const graph = scinew Expr::ExpressionTree( *tsGraphHelper->exprFactory, -1, "initialization" );
+
+      for( IDSet::const_iterator iid=tsGraphHelper->rootIDs.begin(); iid!=tsGraphHelper->rootIDs.end(); ++iid ){
+        graph->insert_tree( *iid );
+      }
+
+      //_______________________________________________________
+      // create the TaskInterface and schedule this task for
+      // execution.  Note that field dependencies are assigned
+      // within the TaskInterface object.
+      TaskInterface* const task = scinew TaskInterface( graph, patchInfoMap_ );
+      task->schedule( sched, patches, materials );
+      taskInterfaceList_.push_back( task );
+
+      //________________
+      // jcs diagnostics
+      std::cout << "writing tree file to 'deltat.dot'" << std::endl;
+      std::ofstream fout("detat.dot");
+      graph->write_tree(fout);
     }
     else{ // default
 
@@ -308,7 +299,7 @@ namespace Wasatch{
     // will be available to all expressions if needed.
     const Expr::ExpressionID timeID =
       exprFactory.register_expression( Expr::Tag(StringNames::self().time,Expr::STATE_NONE),
-                                       new SetCurrentTime::Builder(sharedState_) );
+                                       scinew SetCurrentTime::Builder(sharedState_) );
 
     //___________________________________________
     // Plug in each equation that has been set up
@@ -347,6 +338,7 @@ namespace Wasatch{
 //       Expr::ExpressionTree* timeTree = scinew Expr::ExpressionTree( timeID, exprFactory, -1, "set time" );
 //       TaskInterface* const timeTask = scinew TaskInterface( timeTree, patchInfoMap_ );
 //       timeTask->schedule( sched, localPatches, materials );
+//       taskInterfaceList_.push_back( timeTask );
 //     }
   }
 
@@ -361,22 +353,17 @@ namespace Wasatch{
   {
     const double deltat = 1.0; // jcs should get this from an input file possibly?
 
-    for( size_t im=0; im<matls->size(); ++im ){
-
-      const int material = matls->get(im);
-
-      std::cout << std::endl
-                << "Wasatch: executing 'Wasatch::computeDelT()' on all patches and material "
-                << material << std::endl;
+//       std::cout << std::endl
+//                 << "Wasatch: executing 'Wasatch::computeDelT()' on all patches"
+//                 << std::endl;
 
       new_dw->put( Uintah::delt_vartype(deltat),
                    sharedState_->get_delt_label(),
                    Uintah::getLevel(patches) );
       //                   material );
       // jcs it seems that we cannot specify a material here.  Why not?
-    }
   }
 
   //------------------------------------------------------------------
-  
+
 } // namespace Wasatch

@@ -54,13 +54,14 @@ LinearInterpolator* LinearInterpolator::clone(const Patch* patch)
   return scinew LinearInterpolator(patch);
  }
     
+//__________________________________
 void LinearInterpolator::findCellAndWeights(const Point& pos,
                                            vector<IntVector>& ni, 
                                            vector<double>& S,
                                            const Vector& size,
                                            const Matrix3& defgrad)
 {
-  Point cellpos = d_patch->getLevel()->positionToIndex(pos);
+  Point cellpos = d_patch->getLevel()->positionToIndex(pos );
   int ix = Floor(cellpos.x());
   int iy = Floor(cellpos.y());
   int iz = Floor(cellpos.z());
@@ -86,6 +87,177 @@ void LinearInterpolator::findCellAndWeights(const Point& pos,
   S[5] = fx * fy1 * fz;
   S[6] = fx * fy * fz1;
   S[7] = fx * fy * fz;
+}
+
+//______________________________________________________________________
+//  This interpolation function from equation 14 of 
+//  Jin Ma, Hongbind Lu and Ranga Komanduri
+// "Structured Mesh Refinement in Generalized Interpolation Material Point Method
+//  for Simulation of Dynamic Problems" CMES, vol 12, no 3, pp. 213-227 2006
+//  This function is only called when coarse level particles, in the pseudo
+//  extra cells are interpolating information to the CFI nodes.
+
+void LinearInterpolator::findCellAndWeights(const Point& pos,
+                                            vector<IntVector>& CFI_ni,
+                                            vector<double>& S,
+                                            constNCVariable<Stencil7>& zoi)
+{
+  const Level* level = d_patch->getLevel();
+  IntVector refineRatio(level->getRefinementRatio());
+
+  //__________________________________
+  // Identify the nodes that are along the coarse fine interface (*)
+  //
+  //             |           |
+  //             |           |
+  //  ___________*__o__o__o__o________
+  //    |  |  |  |  .  .  .  |        
+  //  __|__|__|__*..o..o..o..o        
+  //    |  |  |  |  .  . 0 . |        
+  //  __|__|__|__*..o..o..o..o        
+  //    |  |  |  |  .  .  .  |        
+  //  __|__|__|__*..o..o..o..o        
+  //    |  |  |  |  .  .  .  |        
+  //  __|__|__|__*__o__o__o__o________
+  //             |           |        
+  //             |           |         
+  //             |           |        
+  //  Coarse fine interface nodes: *
+  //  ExtraCell nodes on the fine level: o  (technically these don't exist)
+  //  Particle postition on the coarse level: 0
+
+  const int ngn = 0;
+  IntVector finePatch_lo = d_patch->getNodeLowIndex(ngn);
+  IntVector finePatch_hi = d_patch->getNodeHighIndex(ngn) - IntVector(1,1,1);
+  
+  // Find node index of coarse cell and then map that node to fine level
+  const Level* coarseLevel = level->getCoarserLevel().get_rep();
+  IntVector ni_c = coarseLevel->getCellIndex(pos);
+  IntVector ni_f = coarseLevel->mapNodeToFiner(ni_c);
+  
+  int ix = ni_f.x();
+  int iy = ni_f.y();
+  int iz = ni_f.z();
+
+  // loop over all (o) nodes and find which lie on edge of the patch or the CFI
+  for(int x = 0; x<= refineRatio.x(); x++){
+    for(int y = 0; y<= refineRatio.y(); y++){
+      for(int z = 0; z<= refineRatio.z(); z++){
+      
+        IntVector extraCell_node = IntVector(ix + x, iy + y, iz + z);
+         // this is an inside test
+         if(extraCell_node == Max(extraCell_node, finePatch_lo) && extraCell_node == Min(extraCell_node, finePatch_hi) ) {  
+          CFI_ni.push_back(extraCell_node);
+          //cout << "    ni " << node << endl;
+        } 
+      }
+    }
+  }
+  
+  //__________________________________
+  // Reference Nomenclature: Stencil7 Mapping
+  // Lx- :  L.w
+  // Lx+ :  L.e
+  // Ly- :  L.s
+  // Ly+ :  L.n
+  // Lz- :  L.b
+  // Lz+ :  L.t
+   
+  for (int i = 0; i< CFI_ni.size(); i++){
+    Point nodepos = level->getNodePosition(CFI_ni[i]);
+    double dx = pos.x() - nodepos.x();
+    double dy = pos.y() - nodepos.y();
+    double dz = pos.z() - nodepos.z();
+    double fx = -9, fy = -9, fz = -9;
+    
+    Stencil7 L = zoi[CFI_ni[i]];  // fine level zoi
+    
+/*`==========TESTING==========*/
+#if 0
+  if(ni[i].x() == 100 && (ni[i].z() == 1 || ni[i].z() == 2)){
+    cout << "  findCellAndWeights " << ni[i] << endl;
+    cout << "    dx " << dx << " L.w " << L.w << " L.e " << L.e << endl;
+    cout << "    dy " << dy << " L.n " << L.n << " L.s " << L.s << endl;
+    
+   if(dx <= -L.w){                       // Lx-
+      cout << "     fx = 0;" << endl; 
+    }
+    else if ( -L.w <= dx && dx <= 0 ){   // Lx-
+     cout << "     fx = 1 + dx/L.w; " << endl;
+    }
+    else if ( 0 <= dx  && dx <= L.e ){    // Lx+
+      cout << "     fx = 1 - dx/L.e; " << endl;
+    }
+    else if (L.e <= dx){                  // Lx+
+      cout << "     fx = 0; " << endl;
+    }
+    
+    if(dy <= -L.s){                       // Ly-
+      cout << "     fy = 0; " << endl;
+    }
+    else if ( -L.s <= dy && dy <= 0 ){    // Ly-
+      cout << "     fy = 1 + dy/L.s; " << endl;
+    }
+    else if ( 0 <= dy && dy <= L.n ){    // Ly+
+      cout << "     fy = 1 - dy/L.n; " << endl;
+    }
+    else if (L.n <= dy){                 // Ly+
+      cout << "     fy = 0; " << endl;
+    } 
+  } 
+#endif
+/*===========TESTING==========`*/
+  
+    if(dx <= -L.w){                       // Lx-
+      fx = 0; 
+    }
+    else if ( -L.w <= dx && dx <= 0 ){   // Lx-
+      fx = 1 + dx/L.w;
+    }
+    else if ( 0 <= dx  && dx <= L.e ){    // Lx+
+      fx = 1 - dx/L.e;
+    }
+    else if (L.e <= dx){                  // Lx+
+      fx = 0;
+    }
+
+    if(dy <= -L.s){                       // Ly-
+      fy = 0;
+    }
+    else if ( -L.s <= dy && dy <= 0 ){    // Ly-
+      fy = 1 + dy/L.s;
+    }
+    else if ( 0 <= dy && dy <= L.n ){    // Ly+
+      fy = 1 - dy/L.n;
+    }
+    else if (L.n <= dy){                 // Ly+
+      fy = 0;
+    }
+
+    if(dz <= -L.b){                       // Lz-
+      fz = 0;
+    }
+    else if ( -L.b <= dz && dz <= 0 ){    // Lz-
+      fz = 1 + dz/L.b;
+    }
+    else if ( 0 <= dz && dz <= L.n ){    // Lz+
+      fz = 1 - dz/L.t;
+    }
+    else if (L.t <= dz){                 // Lz+
+      fz = 0;
+    }
+
+    double s = fx * fy * fz;
+    S.push_back(s);
+    
+/*`==========TESTING==========*/
+#if 0
+    if(ni[i].x() == 100 && (ni[i].z() == 1 || ni[i].z() == 2)){
+      cout <<"     fx " << fx << " fy " << fy <<  " fz " << fz << "    S[i] "<< s<< endl;
+    }
+#endif 
+/*===========TESTING==========`*/
+  }
 }
 
 void LinearInterpolator::findCellAndWeights(const Point& pos,

@@ -111,9 +111,10 @@ BufferInfo::get_type(void*& out_buf, int& out_count,
     } else {
       vector<MPI_Aint> indices(count());
       for(int i=0;i<(int)startbufs.size();i++)
-	indices[i]=(MPI_Aint)startbufs[i];
+	      indices[i]=(MPI_Aint)startbufs[i];
       MPI_Type_struct(count(), &counts[0], &indices[0], &datatypes[0],
 		      &datatype);
+      MPI_Type_commit(&datatype);
       buf=0;
       cnt=1;
       free_datatype=true;

@@ -77,7 +77,7 @@ namespace Uintah {
     \f]
     A backward Euler discretization leads to
     \f[
-    \beta_{n+1} - \beta_n = \Delta\lambda(\sqrt{\frac{2}{3}}~H_1~\n_{n+1} - \sqrt{\frac{3}{2}}~H_2~\beta_{n+1})
+    \beta_{n+1} - \beta_n = \Delta\lambda(\sqrt{\frac{2}{3}}~H_1~/n_{n+1} - \sqrt{\frac{3}{2}}~H_2~\beta_{n+1})
     \f]
     or
     \f[

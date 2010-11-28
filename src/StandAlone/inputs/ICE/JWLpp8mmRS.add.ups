@@ -213,7 +213,7 @@
     <MaterialProperties add="true">
       <ICE>       
          <material name = "product">
-           <include href="inputs/ICE/JWLEOSANFO.xml"/>
+           <include href="inputs/ICE/EOS/Data/JWLEOSANFO.xml"/>
            <dynamic_viscosity>      0.0                 </dynamic_viscosity>
            <thermal_conductivity>   0.0                 </thermal_conductivity>
            <specific_heat>          544.96              </specific_heat>

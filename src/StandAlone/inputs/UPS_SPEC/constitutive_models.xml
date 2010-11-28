@@ -7,12 +7,16 @@
                                                                         ideal_gas, membrane, murnahanMPM, mw_visco_elastic, rigid, shell_CNH,
                                                                         small_strain_plastic, trans_iso_hyper, visco_plastic,
                                                                         visco_scram, visco_trans_iso_hyper, water, kayenta, diamm, cnh_mms, 
-                                                                        cnh_damage, cnhp_damage, UCNH'">
+                                                                        cnh_damage, cnhp_damage, UCNH, program_burn'">
+    <A                             spec="OPTIONAL DOUBLE" />
     <allow_no_tension              spec="OPTIONAL BOOLEAN" />
     <alpha                         spec="OPTIONAL DOUBLE" />
+    <B                             spec="OPTIONAL DOUBLE" />
     <Beta                          spec="OPTIONAL DOUBLE" />
     <bulk_modulus                  spec="OPTIONAL DOUBLE" />
     <bulkPrime                     spec="OPTIONAL DOUBLE" />
+    <C                             spec="OPTIONAL DOUBLE" />
+    <Cv                            spec="OPTIONAL DOUBLE" />
     <c1                            spec="OPTIONAL DOUBLE" />
     <c2                            spec="OPTIONAL DOUBLE" />
     <c3                            spec="OPTIONAL DOUBLE" />
@@ -27,10 +31,24 @@
     <check_max_stress_failure      spec="OPTIONAL BOOLEAN" />
     <check_TEPLA_failure_criterion spec="OPTIONAL BOOLEAN" />
     <check_failure                 spec="OPTIONAL BOOLEAN" />
-    <failure_by_stress             spec="OPTIONAL BOOLEAN" />
     <failure_variable_mean         spec="OPTIONAL DOUBLE" />
     <failure_variable_std          spec="OPTIONAL DOUBLE" />
     <failure_variable_distrib      spec="OPTIONAL STRING" />
+    <failure_criteria              spec="OPTIONAL STRING" /> <!-- Options are: MaximumPrincipalStress, MaximumPrincipalStrain and MohrColoumb -->
+    <!-- The following three are for UCNH with failureCriteria of MohrColoumb-->
+    <tensile_cutoff_fraction_of_cohesion spec="OPTIONAL DOUBLE" /> <!-- Range from 0 to infinity -->
+    <friction_angle                spec="OPTIONAL DOUBLE" /> <!-- In degrees -->
+
+ <!-- BrittleDamage in UCNH for cnh_damage -->
+      <brittle_damage_initial_threshold  spec="OPTIONAL DOUBLE" />
+      <brittle_damage_fracture_energy    spec="OPTIONAL DOUBLE" />
+      <brittle_damage_constant_D         spec="OPTIONAL DOUBLE" />
+      <brittle_damage_max_damage_increment  spec="OPTIONAL DOUBLE" />
+      <brittle_damage_allowRecovery      spec="OPTIONAL BOOLEAN" />
+      <brittle_damage_recoveryCoeff      spec="OPTIONAL DOUBLE" />
+      <brittle_damage_printDamage        spec="OPTIONAL BOOLEAN" />
+
+
     <Chi                           spec="OPTIONAL DOUBLE" /> <!-- FIXME: What is this? -->
     <coeff_thermal_expansion       spec="OPTIONAL DOUBLE" />
     <CoeffThermalExpansion         spec="OPTIONAL DOUBLE" />
@@ -55,6 +73,9 @@
       <D5                          spec="OPTIONAL DOUBLE" />
     </damage_model>
     <DCp_DTemperature              spec="OPTIONAL DOUBLE" />
+    <D                             spec="OPTIONAL DOUBLE" />  <!-- FIXME: what are these for? -->
+    <starting_location             spec="OPTIONAL VECTOR" />  <!-- FIXME: what are these for? -->
+    <direction_if_plane            spec="OPTIONAL VECTOR" />  <!-- FIXME: what are these for? -->
     <delH                          spec="OPTIONAL DOUBLE" /> <!-- FIXME: what is this for? -->
     <direction_of_symm             spec="OPTIONAL VECTOR" />
     <do_melting                    spec="OPTIONAL BOOLEAN" />
@@ -76,13 +97,15 @@
     </equation_of_state>
     <evolve_damage                 spec="OPTIONAL BOOLEAN" />
     <evolve_porosity               spec="OPTIONAL BOOLEAN" />
-    <failure_strain_mean           spec="OPTIONAL DOUBLE" />
-    <failure_strain_std            spec="OPTIONAL DOUBLE" />
-    <failure_strain_distrib        spec="OPTIONAL STRING 'constant, gauss, weibull'" />
-    <failure_strain_scale          spec="OPTIONAL DOUBLE" />
-    <failure_strain_seed           spec="OPTIONAL INTEGER" />
+    <failure_mean           spec="OPTIONAL DOUBLE" />
+    <failure_std            spec="OPTIONAL DOUBLE" />
+    <failure_distrib        spec="OPTIONAL STRING 'constant, gauss, weibull'" />
+    <exponent               spec="OPTIONAL DOUBLE" />
+    <failure_seed           spec="OPTIONAL INTEGER" />
     <failure_by_stress             spec="OPTIONAL BOOLEAN" />
-    <failure_by_pressure             spec="OPTIONAL BOOLEAN" />
+    <scaling                       spec="OPTIONAL STRING 'none, kayenta'" />
+    <reference_volume              spec="OPTIONAL DOUBLE 'positive'" />
+    <failure_by_pressure           spec="OPTIONAL BOOLEAN" />
     <frac_nucleation               spec="OPTIONAL DOUBLE" />
     <fracture_toughness_curve      spec="OPTIONAL NO_DATA" >
       <crack_propagation_criterion spec="REQUIRED STRING 'empirical_criterion'" />
@@ -116,6 +139,7 @@
     <initial_std_scalar_damage     spec="OPTIONAL DOUBLE" />
     <isothermal                    spec="OPTIONAL BOOLEAN" />
     <K                             spec="OPTIONAL DOUBLE" />
+    <n                             spec="OPTIONAL DOUBLE" />
     <meanstrain_nucleation         spec="OPTIONAL DOUBLE" />
     <melting_temp_model            spec="OPTIONAL NO_DATA"
                                      attribute1="type REQUIRED STRING 'constant_Tm, scg_Tm'" >
@@ -123,6 +147,7 @@
       <Gamma_0                     spec="OPTIONAL DOUBLE" />
       <T_m0                        spec="OPTIONAL DOUBLE" />
     </melting_temp_model>
+    <om                            spec="OPTIONAL DOUBLE" />
     <plasticity_model              spec="OPTIONAL NO_DATA"
                                      attribute1="type REQUIRED STRING 'isotropic_hardening, johnson_cook, mts_model,
                                                                        preston_tonks_wallace, steinberg_cochran_guinan,
@@ -223,6 +248,8 @@
     <randomize_parameters          spec="OPTIONAL BOOLEAN" />
     <reduction_factor              spec="OPTIONAL DOUBLE" />
     <rho0                          spec="OPTIONAL DOUBLE" />
+    <R1                            spec="OPTIONAL DOUBLE" />
+    <R2                            spec="OPTIONAL DOUBLE" />
     <RTau1                         spec="OPTIONAL DOUBLE" />
     <RTau2                         spec="OPTIONAL DOUBLE" />
     <RTau3                         spec="OPTIONAL DOUBLE" />
@@ -269,6 +296,8 @@
     <taylor_quinney_coeff          spec="OPTIONAL DOUBLE" />
     <tolerance                     spec="OPTIONAL DOUBLE" />
     <useDamage                     spec="OPTIONAL BOOLEAN" />
+    <useJWLEOS                     spec="OPTIONAL BOOLEAN" />
+    <useJWLCEOS                    spec="OPTIONAL BOOLEAN" />
     <useMurnahanEOS                spec="OPTIONAL BOOLEAN" />
     <useModifiedEOS                spec="OPTIONAL BOOLEAN" />
     <useObjectiveRate              spec="OPTIONAL BOOLEAN" />        <!-- FIXME: What is the default -->

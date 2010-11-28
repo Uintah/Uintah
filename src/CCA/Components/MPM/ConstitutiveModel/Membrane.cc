@@ -599,7 +599,9 @@ Membrane::addComputesAndRequires(Task* ,
 // The "CM" versions use the pressure-volume relationship of the CNH model
 double Membrane::computeRhoMicroCM(double pressure, 
                                       const double p_ref,
-                                      const MPMMaterial* matl)
+                                      const MPMMaterial* matl,
+                                      double temperature,
+                                    double rho_guess)
 {
   double rho_orig = matl->getInitialDensity();
  // double p_ref=101325.0;
@@ -616,7 +618,8 @@ double Membrane::computeRhoMicroCM(double pressure,
 void Membrane::computePressEOSCM(double rho_cur,double& pressure, 
                                  double p_ref,
                                  double& dp_drho, double& tmp,
-                                 const MPMMaterial* matl)
+                                 const MPMMaterial* matl, 
+                                 double temperature)
 {
   //double p_ref=101325.0;
   double bulk = d_initialData.Bulk;

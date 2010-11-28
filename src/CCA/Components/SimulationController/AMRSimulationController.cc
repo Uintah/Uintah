@@ -489,7 +489,7 @@ AMRSimulationController::subCycleExecute(GridP& grid, int startDW, int dwStride,
   
   int newDWStride = dwStride/numSteps;
 
-  DataWarehouse::ScrubMode oldScrubbing = (d_lb->isDynamic() || d_sim->restartableTimesteps()) ? 
+  DataWarehouse::ScrubMode oldScrubbing = (/*d_lb->isDynamic() ||*/ d_sim->restartableTimesteps()) ? 
     DataWarehouse::ScrubNonPermanent : DataWarehouse::ScrubComplete;
 
   int curDW = startDW;

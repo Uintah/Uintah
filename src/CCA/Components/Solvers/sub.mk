@@ -40,16 +40,10 @@ SRCS     += \
 	$(SRCDIR)/SolverFactory.cc
 
 ifeq ($(HAVE_HYPRE),yes)
-  SRCS += $(SRCDIR)/HypreSolver.cc 
+  SRCS += $(SRCDIR)/HypreSolver.cc
   
-  SRCS += $(SRCDIR)/AMRSolver.cc \
-	$(SRCDIR)/HypreDriver.cc \
-	$(SRCDIR)/HypreDriverStruct.cc \
-	$(SRCDIR)/HypreDriverSStruct.cc
-  SUBDIRS := \
-        $(SRCDIR)/HypreSolvers \
-        $(SRCDIR)/HyprePreconds
-
+  SUBDIRS := $(SRCDIR)/AMR
+  
   include $(SCIRUN_SCRIPTS)/recurse.mk
 
 endif # if $(HAVE_HYPRE)
@@ -74,7 +68,7 @@ PSELIBS := \
 LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY) $(BLAS_LIBRARY) $(LAPACK_LIBRARY)
 
 ifeq ($(HAVE_HYPRE),yes)
-LIBS := $(LIBS) $(HYPRE_LIBRARY) 
+  LIBS := $(LIBS) $(HYPRE_LIBRARY) 
 endif
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

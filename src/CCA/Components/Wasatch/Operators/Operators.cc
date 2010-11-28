@@ -9,6 +9,7 @@
 
 //-- Wasatch includes --//
 #include "Operators.h"
+#include <CCA/Components/Wasatch/Operators/UpwindInterpolant.h>
 
 //-- Uintah includes --//
 #include <Core/Grid/Patch.h>
@@ -161,6 +162,45 @@ namespace Wasatch{
     opDB.register_new_operator<InterpYVolSSurfY>( InterpYVolSSurfY::Assembler( dim, bcPlus[0], bcPlus[1], bcPlus[2] ) );
     opDB.register_new_operator<InterpZVolSSurfZ>( InterpZVolSSurfZ::Assembler( dim, bcPlus[0], bcPlus[1], bcPlus[2] ) );
 
+    //--------------------------------------------------------
+    // UPWIND interpolants - phi volume to phi surface
+    //--------------------------------------------------------    
+    typedef UpwindInterpolant<SVolField,SSurfXField> UpwindSVolSSurfX;
+    opDB.register_new_operator<UpwindSVolSSurfX>(scinew UpwindSVolSSurfX(dim, bcPlus) );
+    
+    typedef UpwindInterpolant<SVolField,SSurfYField> UpwindSVolSSurfY;
+    opDB.register_new_operator<UpwindSVolSSurfY>(scinew UpwindSVolSSurfY(dim, bcPlus ));
+
+    typedef UpwindInterpolant<SVolField,SSurfZField> UpwindSVolSSurfZ;
+    opDB.register_new_operator<UpwindSVolSSurfZ>(scinew UpwindSVolSSurfZ(dim, bcPlus ));
+
+    typedef UpwindInterpolant<XVolField,XSurfXField> UpwindXVolXSurfX;
+    opDB.register_new_operator<UpwindXVolXSurfX>(scinew UpwindXVolXSurfX(dim, bcPlus ));
+    
+    typedef UpwindInterpolant<XVolField,XSurfYField> UpwindXVolXSurfY;
+    opDB.register_new_operator<UpwindXVolXSurfY>(scinew UpwindXVolXSurfY(dim, bcPlus ));
+    
+    typedef UpwindInterpolant<XVolField,XSurfZField> UpwindXVolXSurfZ;
+    opDB.register_new_operator<UpwindXVolXSurfZ>(scinew UpwindXVolXSurfZ(dim, bcPlus ));
+
+    typedef UpwindInterpolant<YVolField,YSurfXField> UpwindYVolYSurfX;
+    opDB.register_new_operator<UpwindYVolYSurfX>(scinew UpwindYVolYSurfX(dim, bcPlus ));
+    
+    typedef UpwindInterpolant<YVolField,YSurfYField> UpwindYVolYSurfY;
+    opDB.register_new_operator<UpwindYVolYSurfY>(scinew UpwindYVolYSurfY(dim, bcPlus ));
+    
+    typedef UpwindInterpolant<YVolField,YSurfZField> UpwindYVolYSurfZ;
+    opDB.register_new_operator<UpwindYVolYSurfZ>(scinew UpwindYVolYSurfZ(dim, bcPlus ));
+    
+    typedef UpwindInterpolant<ZVolField,ZSurfXField> UpwindZVolZSurfX;
+    opDB.register_new_operator<UpwindZVolZSurfX>(scinew UpwindZVolZSurfX(dim, bcPlus ));
+    
+    typedef UpwindInterpolant<ZVolField,ZSurfYField> UpwindZVolZSurfY;
+    opDB.register_new_operator<UpwindZVolZSurfY>(scinew UpwindZVolZSurfY(dim, bcPlus ));
+    
+    typedef UpwindInterpolant<ZVolField,ZSurfZField> UpwindZVolZSurfZ;
+    opDB.register_new_operator<UpwindZVolZSurfZ>(scinew UpwindZVolZSurfZ(dim, bcPlus ));
+    
 
     //--------------------------------------------------------
     // scalar surface to staggered volumes (pressure gradients)
@@ -172,45 +212,45 @@ namespace Wasatch{
     //--------------------------------------------------------
     // scratch operators
     //--------------------------------------------------------
-    opDB.register_new_operator<ScratchSVol>( ScratchSVol::Assembler( dim, XDIR::value, bcPlus[0], bcPlus[1], bcPlus[2] ) );
-    opDB.register_new_operator<ScratchSVol>( ScratchSVol::Assembler( dim, YDIR::value, bcPlus[0], bcPlus[1], bcPlus[2] ) );
-    opDB.register_new_operator<ScratchSVol>( ScratchSVol::Assembler( dim, ZDIR::value, bcPlus[0], bcPlus[1], bcPlus[2] ) );
+//     opDB.register_new_operator<ScratchSVol>( ScratchSVol::Assembler( dim, XDIR::value, bcPlus[0], bcPlus[1], bcPlus[2] ) );
+//     opDB.register_new_operator<ScratchSVol>( ScratchSVol::Assembler( dim, YDIR::value, bcPlus[0], bcPlus[1], bcPlus[2] ) );
+//     opDB.register_new_operator<ScratchSVol>( ScratchSVol::Assembler( dim, ZDIR::value, bcPlus[0], bcPlus[1], bcPlus[2] ) );
                                                                                                                           
-    opDB.register_new_operator<ScratchXVol>( ScratchXVol::Assembler( dim, XDIR::value, bcPlus[0], bcPlus[1], bcPlus[2] ) );
-    opDB.register_new_operator<ScratchXVol>( ScratchXVol::Assembler( dim, YDIR::value, bcPlus[0], bcPlus[1], bcPlus[2] ) );
-    opDB.register_new_operator<ScratchXVol>( ScratchXVol::Assembler( dim, ZDIR::value, bcPlus[0], bcPlus[1], bcPlus[2] ) );
+//     opDB.register_new_operator<ScratchXVol>( ScratchXVol::Assembler( dim, XDIR::value, bcPlus[0], bcPlus[1], bcPlus[2] ) );
+//     opDB.register_new_operator<ScratchXVol>( ScratchXVol::Assembler( dim, YDIR::value, bcPlus[0], bcPlus[1], bcPlus[2] ) );
+//     opDB.register_new_operator<ScratchXVol>( ScratchXVol::Assembler( dim, ZDIR::value, bcPlus[0], bcPlus[1], bcPlus[2] ) );
                                                                                                                           
-    opDB.register_new_operator<ScratchYVol>( ScratchYVol::Assembler( dim, XDIR::value, bcPlus[0], bcPlus[1], bcPlus[2] ) );
-    opDB.register_new_operator<ScratchYVol>( ScratchYVol::Assembler( dim, YDIR::value, bcPlus[0], bcPlus[1], bcPlus[2] ) );
-    opDB.register_new_operator<ScratchYVol>( ScratchYVol::Assembler( dim, ZDIR::value, bcPlus[0], bcPlus[1], bcPlus[2] ) );
+//     opDB.register_new_operator<ScratchYVol>( ScratchYVol::Assembler( dim, XDIR::value, bcPlus[0], bcPlus[1], bcPlus[2] ) );
+//     opDB.register_new_operator<ScratchYVol>( ScratchYVol::Assembler( dim, YDIR::value, bcPlus[0], bcPlus[1], bcPlus[2] ) );
+//     opDB.register_new_operator<ScratchYVol>( ScratchYVol::Assembler( dim, ZDIR::value, bcPlus[0], bcPlus[1], bcPlus[2] ) );
                                                                                                                           
-    opDB.register_new_operator<ScratchZVol>( ScratchZVol::Assembler( dim, XDIR::value, bcPlus[0], bcPlus[1], bcPlus[2] ) );
-    opDB.register_new_operator<ScratchZVol>( ScratchZVol::Assembler( dim, YDIR::value, bcPlus[0], bcPlus[1], bcPlus[2] ) );
-    opDB.register_new_operator<ScratchZVol>( ScratchZVol::Assembler( dim, ZDIR::value, bcPlus[0], bcPlus[1], bcPlus[2] ) );
+//     opDB.register_new_operator<ScratchZVol>( ScratchZVol::Assembler( dim, XDIR::value, bcPlus[0], bcPlus[1], bcPlus[2] ) );
+//     opDB.register_new_operator<ScratchZVol>( ScratchZVol::Assembler( dim, YDIR::value, bcPlus[0], bcPlus[1], bcPlus[2] ) );
+//     opDB.register_new_operator<ScratchZVol>( ScratchZVol::Assembler( dim, ZDIR::value, bcPlus[0], bcPlus[1], bcPlus[2] ) );
     
 
-    // scratch grad ops - need to test these.
+//     // scratch grad ops - need to test these.
  
-    opDB.register_new_operator<ScratchSVolSSurfX>( ScratchSVolSSurfX::Assembler( spacing[0], dim, bcPlus[0], bcPlus[1], bcPlus[2] ) );
-    opDB.register_new_operator<ScratchSVolSSurfY>( ScratchSVolSSurfY::Assembler( spacing[1], dim, bcPlus[0], bcPlus[1], bcPlus[2] ) );
-    opDB.register_new_operator<ScratchSVolSSurfZ>( ScratchSVolSSurfZ::Assembler( spacing[2], dim, bcPlus[0], bcPlus[1], bcPlus[2] ) );
+//     opDB.register_new_operator<ScratchSVolSSurfX>( ScratchSVolSSurfX::Assembler( spacing[0], dim, bcPlus[0], bcPlus[1], bcPlus[2] ) );
+//     opDB.register_new_operator<ScratchSVolSSurfY>( ScratchSVolSSurfY::Assembler( spacing[1], dim, bcPlus[0], bcPlus[1], bcPlus[2] ) );
+//     opDB.register_new_operator<ScratchSVolSSurfZ>( ScratchSVolSSurfZ::Assembler( spacing[2], dim, bcPlus[0], bcPlus[1], bcPlus[2] ) );
                                                                                                                                        
-    opDB.register_new_operator<ScratchXVolXSurfX>( ScratchXVolXSurfX::Assembler( spacing[0], dim, bcPlus[0], bcPlus[1], bcPlus[2] ) );
-    opDB.register_new_operator<ScratchXVolXSurfY>( ScratchXVolXSurfY::Assembler( spacing[1], dim, bcPlus[0], bcPlus[1], bcPlus[2] ) );
-    opDB.register_new_operator<ScratchXVolXSurfZ>( ScratchXVolXSurfZ::Assembler( spacing[2], dim, bcPlus[0], bcPlus[1], bcPlus[2] ) );
+//     opDB.register_new_operator<ScratchXVolXSurfX>( ScratchXVolXSurfX::Assembler( spacing[0], dim, bcPlus[0], bcPlus[1], bcPlus[2] ) );
+//     opDB.register_new_operator<ScratchXVolXSurfY>( ScratchXVolXSurfY::Assembler( spacing[1], dim, bcPlus[0], bcPlus[1], bcPlus[2] ) );
+//     opDB.register_new_operator<ScratchXVolXSurfZ>( ScratchXVolXSurfZ::Assembler( spacing[2], dim, bcPlus[0], bcPlus[1], bcPlus[2] ) );
                                                                                                                                        
-    opDB.register_new_operator<ScratchYVolYSurfX>( ScratchYVolYSurfX::Assembler( spacing[0], dim, bcPlus[0], bcPlus[1], bcPlus[2] ) );
-    opDB.register_new_operator<ScratchYVolYSurfY>( ScratchYVolYSurfY::Assembler( spacing[1], dim, bcPlus[0], bcPlus[1], bcPlus[2] ) );
-    opDB.register_new_operator<ScratchYVolYSurfZ>( ScratchYVolYSurfZ::Assembler( spacing[2], dim, bcPlus[0], bcPlus[1], bcPlus[2] ) );
+//     opDB.register_new_operator<ScratchYVolYSurfX>( ScratchYVolYSurfX::Assembler( spacing[0], dim, bcPlus[0], bcPlus[1], bcPlus[2] ) );
+//     opDB.register_new_operator<ScratchYVolYSurfY>( ScratchYVolYSurfY::Assembler( spacing[1], dim, bcPlus[0], bcPlus[1], bcPlus[2] ) );
+//     opDB.register_new_operator<ScratchYVolYSurfZ>( ScratchYVolYSurfZ::Assembler( spacing[2], dim, bcPlus[0], bcPlus[1], bcPlus[2] ) );
                                                                                                                                        
-    opDB.register_new_operator<ScratchZVolZSurfX>( ScratchZVolZSurfX::Assembler( spacing[0], dim, bcPlus[0], bcPlus[1], bcPlus[2] ) );
-    opDB.register_new_operator<ScratchZVolZSurfY>( ScratchZVolZSurfY::Assembler( spacing[1], dim, bcPlus[0], bcPlus[1], bcPlus[2] ) );
-    opDB.register_new_operator<ScratchZVolZSurfZ>( ScratchZVolZSurfZ::Assembler( spacing[2], dim, bcPlus[0], bcPlus[1], bcPlus[2] ) );
+//     opDB.register_new_operator<ScratchZVolZSurfX>( ScratchZVolZSurfX::Assembler( spacing[0], dim, bcPlus[0], bcPlus[1], bcPlus[2] ) );
+//     opDB.register_new_operator<ScratchZVolZSurfY>( ScratchZVolZSurfY::Assembler( spacing[1], dim, bcPlus[0], bcPlus[1], bcPlus[2] ) );
+//     opDB.register_new_operator<ScratchZVolZSurfZ>( ScratchZVolZSurfZ::Assembler( spacing[2], dim, bcPlus[0], bcPlus[1], bcPlus[2] ) );
 
-    // bc operators
-    opDB.register_new_operator<ScratchSSurfX>( ScratchSSurfX::Assembler( dim, XDIR::value, bcPlus[0], bcPlus[1], bcPlus[2] ) );
-    opDB.register_new_operator<ScratchSSurfY>( ScratchSSurfY::Assembler( dim, YDIR::value, bcPlus[0], bcPlus[1], bcPlus[2] ) );
-    opDB.register_new_operator<ScratchSSurfZ>( ScratchSSurfZ::Assembler( dim, ZDIR::value, bcPlus[0], bcPlus[1], bcPlus[2] ) );
+//     // bc operators
+//     opDB.register_new_operator<ScratchSSurfX>( ScratchSSurfX::Assembler( dim, XDIR::value, bcPlus[0], bcPlus[1], bcPlus[2] ) );
+//     opDB.register_new_operator<ScratchSSurfY>( ScratchSSurfY::Assembler( dim, YDIR::value, bcPlus[0], bcPlus[1], bcPlus[2] ) );
+//     opDB.register_new_operator<ScratchSSurfZ>( ScratchSSurfZ::Assembler( dim, ZDIR::value, bcPlus[0], bcPlus[1], bcPlus[2] ) );
   }
 
 } // namespace Wasatch

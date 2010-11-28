@@ -175,7 +175,6 @@ void FractureMPM::scheduleInitialize(const LevelP& level,
   t->computes(lb->pDeformationMeasureLabel);
   t->computes(lb->pStressLabel);
   t->computes(lb->pSizeLabel);
-  t->computes(lb->pErosionLabel);
   t->computes(lb->pDispGradsLabel);
   t->computes(lb->pStrainEnergyDensityLabel);
   t->computes(d_sharedState->get_delt_label(),level.get_rep());
@@ -709,7 +708,7 @@ void FractureMPM::scheduleComputeAndIntegrateAcceleration(SchedulerP& sched,
                            getLevel(patches)->getGrid()->numLevels()))
     return;
 
-  printSchedule(patches,cout_doing,"MPM::scheduleComputeAndIntegrateAcceleration\t\t\t\t");
+  printSchedule(patches,cout_doing,"MPM::scheduleComputeAndIntegrateAcceleration");
 
   Task* t = scinew Task("MPM::computeAndIntegrateAcceleration",
                         this, &FractureMPM::computeAndIntegrateAcceleration);
@@ -1210,7 +1209,8 @@ void FractureMPM::initializePressureBC(const ProcessorGroup*,
           for(;iter != pset->end(); iter++){
             particleIndex idx = *iter;
             if (pLoadCurveID[idx] == nofPressureBCs) {
-              pExternalForce[idx] = pbc->getForceVector(px[idx], forcePerPart);
+              pExternalForce[idx] = pbc->getForceVector(px[idx], forcePerPart,
+                                                        time);
             }
           }
         } // matl loop
@@ -1655,7 +1655,7 @@ void FractureMPM::computeArtificialViscosity(const ProcessorGroup*,
         interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],pDeformationMeasure[idx]);
 
         // get particle's velocity gradients 
-        Vector gvel;
+        Vector gvel(0.,0.,0.);
         velGrad.set(0.0);
         for(int k = 0; k < flags->d_8or27; k++) {
           if(pgCode[idx][k]==1) gvel = gvelocity[ni[k]];
@@ -2226,7 +2226,7 @@ void FractureMPM::applyExternalLoads(const ProcessorGroup* ,
             } else {
               PressureBC* pbc = pbcP[loadCurveID];
               double force = forcePerPart[loadCurveID];
-              pExternalForce_new[idx] = pbc->getForceVector(px[idx], force);
+              pExternalForce_new[idx] = pbc->getForceVector(px[idx],force,time);
             }
           }
 

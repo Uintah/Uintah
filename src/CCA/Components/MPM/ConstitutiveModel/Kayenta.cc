@@ -49,6 +49,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Containers/StaticArray.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/MinMax.h>
+#include <Core/Parallel/Parallel.h>
 
 #include <sci_defs/uintah_defs.h>
 #include <Core/Math/Weibull.h>
@@ -140,11 +141,11 @@ Kayenta::Kayenta(ProblemSpecP& ps,MPMFlags* Mflag)
   KMMRXV( UI, UI, UI, nx, namea, keya, rinit, rdim, iadvct, itype );
 
   d_NINSV=nx;
-  cout << "d_NINSV = " << d_NINSV << endl;
+  proc0cout << "d_NINSV = " << d_NINSV << endl;
 //  for(int i = 0;i<d_NINSV; i++){
 //    cout << rinit[i] << endl;
 //  }
-
+  setErosionAlgorithm();
   initializeLocalMPMLabels();
 }
 
@@ -161,6 +162,12 @@ Kayenta::Kayenta(const Kayenta* cm) : ConstitutiveModel(cm)
   wdist.Perturb    = cm->wdist.Perturb;
   wdist.WeibDist   = cm->wdist.WeibDist;
 
+
+
+  d_allowNoTension = cm->d_allowNoTension;
+  d_removeMass = cm->d_removeMass;
+
+
   //Create VarLabels for GeoModel internal state variables (ISVs)
   initializeLocalMPMLabels();
 }
@@ -172,6 +179,8 @@ Kayenta::~Kayenta()
    }
    VarLabel::destroy(peakI1IDistLabel);
    VarLabel::destroy(peakI1IDistLabel_preReloc);
+   VarLabel::destroy(pLocalizedLabel);
+   VarLabel::destroy(pLocalizedLabel_preReloc);
 }
 
 void Kayenta::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
@@ -380,7 +389,7 @@ void Kayenta::initializeCMData(const Patch* patch,
 
   StaticArray<ParticleVariable<double> > ISVs(d_NINSV+1);
 
-  cout << "In initializeCMData" << endl;
+  proc0cout << "In initializeCMData" << endl;
   for(int i=0;i<d_NINSV;i++){
     new_dw->allocateAndPut(ISVs[i],ISVLabels[i], pset);
     ParticleSubset::iterator iter = pset->begin();
@@ -390,16 +399,23 @@ void Kayenta::initializeCMData(const Patch* patch,
 //    cout << "RINIT[" << i << "] = " << rinit[i] << endl;
   }
 
+  ParticleVariable<int>     pLocalized;
+  new_dw->allocateAndPut(pLocalized,         pLocalizedLabel, pset);
+  ParticleSubset::iterator iter = pset->begin();
+  for(;iter != pset->end();iter++){
+  pLocalized[*iter] = 0;
+  }
+  
   ParticleVariable<double> peakI1IDist;
   new_dw->allocateAndPut(peakI1IDist, peakI1IDistLabel, pset);
-  cout << "Weibull Variables for PEAKI1I: (initialize CMData)\n"
-       << "Median:          " << wdist.WeibMed
-       << "\nModulus:         " << wdist.WeibMod
-       << "\nReference Vol:   " << wdist.WeibRefVol
-       << "\nSeed:            " << wdist.WeibSeed
-       << "\nPerturb?:        " << wdist.Perturb << std::endl;
+  proc0cout << "Weibull Variables for PEAKI1I: (initialize CMData)\n"
+            << "Median:          " << wdist.WeibMed
+            << "\nModulus:         " << wdist.WeibMod
+            << "\nReference Vol:   " << wdist.WeibRefVol
+            << "\nSeed:            " << wdist.WeibSeed
+            << "\nPerturb?:        " << wdist.Perturb << std::endl;
   if ( wdist.Perturb){
-    SCIRun::Weibull weibGen(wdist.WeibMed,wdist.WeibMod,wdist.WeibRefVol,wdist.WeibSeed);
+    SCIRun::Weibull weibGen(wdist.WeibMed,wdist.WeibMod,wdist.WeibRefVol,wdist.WeibSeed,wdist.WeibMod);
     constParticleVariable<double>pVolume;
     new_dw->get(pVolume, lb->pVolumeLabel, pset);
   
@@ -427,6 +443,7 @@ void Kayenta::allocateCMDataAddRequires(Task* task,
     task->requires(Task::NewDW,ISVLabels_preReloc[i], matlset, Ghost::None);
   }
   task->requires(Task::NewDW,peakI1IDistLabel_preReloc,matlset,Ghost::None);
+  task->requires(Task::NewDW, pLocalizedLabel_preReloc,      matlset,Ghost::None);
 }
 
 
@@ -445,12 +462,14 @@ void Kayenta::allocateCMDataAdd(DataWarehouse* new_dw,
   StaticArray<ParticleVariable<double> > ISVs(d_NINSV+1);
   StaticArray<constParticleVariable<double> > o_ISVs(d_NINSV+1);
   constParticleVariable<double> o_peakI1IDist;
-
+  ParticleVariable<int>     pLocalized;
+  constParticleVariable<int>     o_Localized;
   new_dw->get(o_peakI1IDist,peakI1IDistLabel_preReloc,delset);
 
   ParticleVariable<double> peakI1IDist;
   new_dw->allocateTemporary(peakI1IDist,addset);
-
+  new_dw->allocateTemporary(pLocalized,addset);
+  new_dw->get(o_Localized,pLocalizedLabel_preReloc,delset);
   ParticleSubset::iterator o,n = addset->begin();
   for (o=delset->begin(); o != delset->end(); o++, n++) {
           peakI1IDist[*n] = o_peakI1IDist[*o];
@@ -464,10 +483,45 @@ void Kayenta::allocateCMDataAdd(DataWarehouse* new_dw,
     ParticleSubset::iterator o,n = addset->begin();
     for (o=delset->begin(); o != delset->end(); o++, n++) {
       ISVs[i][*n] = o_ISVs[i][*n];
+
     }
     (*newState)[ISVLabels[i]]=ISVs[i].clone();
   }
+  
+  for (o=delset->begin(); o != delset->end(); o++, n++) {
+    pLocalized[*n] = o_Localized[*o];
+  
+  }
+  (*newState)[pLocalizedLabel]=pLocalized.clone();
+
 }
+
+void Kayenta::addRequiresDamageParameter(Task* task,
+                                           const MPMMaterial* matl,
+                                           const PatchSet* ) const
+{
+  const MaterialSubset* matlset = matl->thisMaterial();
+  task->requires(Task::NewDW, pLocalizedLabel_preReloc,matlset,Ghost::None);
+}
+
+
+void Kayenta::getDamageParameter(const Patch* patch,
+                                   ParticleVariable<int>& damage,
+                                   int dwi,
+                                   DataWarehouse* old_dw,
+                                   DataWarehouse* new_dw)
+{
+  ParticleSubset* pset = old_dw->getParticleSubset(dwi,patch);
+  constParticleVariable<int> pLocalized;
+  new_dw->get(pLocalized, pLocalizedLabel_preReloc, pset);
+
+  ParticleSubset::iterator iter;
+  for (iter = pset->begin(); iter != pset->end(); iter++) {
+    damage[*iter] = pLocalized[*iter];
+  }
+   
+}
+
 
 void Kayenta::addParticleState(std::vector<const VarLabel*>& from,
                                std::vector<const VarLabel*>& to)
@@ -477,7 +531,9 @@ void Kayenta::addParticleState(std::vector<const VarLabel*>& from,
     from.push_back(ISVLabels[i]);
     to.push_back(ISVLabels_preReloc[i]);
   }
+  from.push_back(pLocalizedLabel);
   from.push_back(peakI1IDistLabel);
+  to.push_back(pLocalizedLabel_preReloc);
   to.push_back(peakI1IDistLabel_preReloc);
 }
 
@@ -521,6 +577,52 @@ void Kayenta::computeStableTimestep(const Patch* patch,
   new_dw->put(delt_vartype(delT_new), lb->delTLabel, patch->getLevel());
 }
 
+
+void 
+Kayenta::setErosionAlgorithm()
+{
+  d_allowNoTension = false;
+  d_removeMass=false;
+  if (flag->d_doErosion) {
+    if (flag->d_erosionAlgorithm == "AllowNoTension") 
+      d_allowNoTension = true;
+    else if (flag->d_erosionAlgorithm == "RemoveMass") 
+      d_removeMass = true;
+  }
+}
+
+
+void Kayenta::viscousStressUpdate(Matrix3& D, const Matrix3& old_stress, double& rho_orig,const double& old_volume, double& bulk, double& viscosity, double& delT, Matrix3& new_stress, Matrix3& new_defgrad, double& rho_cur, double& new_volume, double& USM, double& c_dil ){
+  new_volume  = old_volume;
+  rho_cur = rho_orig;
+  Matrix3 Identity;
+  Identity.Identity();
+  // the deformation gradient will be set to the identity
+  new_defgrad = Identity;
+  double one_third = 1.0/3.0;
+  double pressure = one_third*old_stress.Trace();
+  double pressure_rate = bulk*D.Trace();
+  Matrix3 DPrime = D - Identity*one_third*D.Trace();
+  Matrix3 shear = DPrime*(2.*viscosity);	
+	
+  // first we add the pressure to the old stress tensor:
+  pressure = pressure + pressure_rate*delT;
+  // check to see if pressure is compresive:
+  if (pressure>0){
+    pressure=0;
+  }
+  // now we add the shear and pressure components
+  new_stress = Identity*pressure + shear;
+	  
+  //now we must define USM
+  USM = bulk;
+	
+  c_dil = sqrt(bulk/rho_cur);
+
+
+
+}
+
 void Kayenta::computeStressTensor(const PatchSubset* patches,
                                   const MPMMaterial* matl,
                                   DataWarehouse* old_dw,
@@ -557,10 +659,15 @@ void Kayenta::computeStressTensor(const PatchSubset* patches,
     constParticleVariable<Vector> pvelocity, psize;
     constNCVariable<Vector> gvelocity;
     delt_vartype delT;
+    constParticleVariable<int> pLocalized;
+    ParticleVariable<int>     pLocalized_new;
+
+    old_dw->get(pLocalized, pLocalizedLabel, pset);
+    new_dw->allocateAndPut(pLocalized_new,pLocalizedLabel_preReloc, pset);
     old_dw->get(delT, lb->delTLabel, getLevel(patches));
 
     Ghost::GhostType  gac   = Ghost::AroundCells;
-    
+        
     old_dw->get(px,                  lb->pXLabel,                  pset);
     old_dw->get(pstress,             lb->pStressLabel,             pset);
     old_dw->get(psize,               lb->pSizeLabel,               pset);
@@ -622,138 +729,238 @@ void Kayenta::computeStressTensor(const PatchSubset* patches,
 
       // Calculate rate of deformation D, and deviatoric rate DPrime,
       Matrix3 D = (velGrad + velGrad.Transpose())*.5;
+      pLocalized_new[idx]=0;
+      if (pLocalized[idx]!=0){
 
-      // Compute the deformation gradient increment using the time_step
-      // velocity gradient
-      // F_n^np1 = dudx * dt + Identity
-      deformationGradientInc = velGrad * delT + Identity;
+	pLocalized_new[idx]= pLocalized[idx];
+	// the particle is localized and will be updated using a viscous model
+	// we need to caluclate: pstress_new, pvolume_new, deformationGradient_new
+	// we have available pstress, pmass, pvolume, ptemperature, deformationGradient,
+	double viscosity = 1e-3;
+	double USM;
+	double rho_cur;
+	double dt=delT;
+	viscousStressUpdate( D, pstress[idx], rho_orig, pvolume[idx], UI[0],viscosity,dt, pstress_new[idx], deformationGradient_new[idx], rho_cur,pvolume_new[idx],USM,c_dil);
 
-      Jinc = deformationGradientInc.Determinant();
+	// Compute The Strain Energy for all the particles
+	Matrix3 AvgStress = (pstress_new[idx] + pstress[idx])*.5;
 
-      // Update the deformation gradient tensor to its time n+1 value.
-      deformationGradient_new[idx] = deformationGradientInc *
-                                     deformationGradient[idx];
+	double e = (D(0,0)*AvgStress(0,0) +
+		    D(1,1)*AvgStress(1,1) +
+		    D(2,2)*AvgStress(2,2) +
+		    2.*(D(0,1)*AvgStress(0,1) +
+			D(0,2)*AvgStress(0,2) +
+			D(1,2)*AvgStress(1,2))) * pvolume_new[idx]*delT;
 
-      // get the volumetric part of the deformation
-      double J = deformationGradient_new[idx].Determinant();
-      // Check 1: Look at Jacobian
-      if (!(J > 0.0)) {
-        cerr << getpid() ;
-        constParticleVariable<long64> pParticleID;
-        old_dw->get(pParticleID, lb->pParticleIDLabel, pset);
-        cerr << "**ERROR** Negative Jacobian of deformation gradient"
-             << " in particle " << pParticleID[idx] << endl;
-        cerr << "l = " << velGrad << endl;
-        cerr << "F_old = " << deformationGradient[idx] << endl;
-        cerr << "F_inc = " << deformationGradientInc << endl;
-        cerr << "F_new = " << deformationGradient_new[idx] << endl;
-        cerr << "J = " << J << endl;
-        throw InternalError("Negative Jacobian",__FILE__,__LINE__);
+	se += e;
+
+	// Compute wave speed at each particle, store the maximum
+	Vector pvelocity_idx = pvelocity[idx];
+	WaveSpeed=Vector(Max(c_dil+fabs(pvelocity_idx.x()),WaveSpeed.x()),
+			 Max(c_dil+fabs(pvelocity_idx.y()),WaveSpeed.y()),
+			 Max(c_dil+fabs(pvelocity_idx.z()),WaveSpeed.z()));
+
+	// Compute artificial viscosity term
+	if (flag->d_artificial_viscosity) {
+	  double dx_ave = (dx.x() + dx.y() + dx.z())/3.0;
+	  double c_bulk = sqrt(UI[0]/rho_cur);
+	  Matrix3 D=(velGrad + velGrad.Transpose())*0.5;
+	  p_q[idx] = artificialBulkViscosity(D.Trace(), c_bulk, rho_cur, dx_ave);
+	} else {
+	  p_q[idx] = 0.;
+	}
+
+	// the 
+      }else{
+
+    
+	  // Compute the deformation gradient increment using the time_step
+	  // velocity gradient
+	  // F_n^np1 = dudx * dt + Identity
+	  deformationGradientInc = velGrad * delT + Identity;
+
+	  Jinc = deformationGradientInc.Determinant();
+
+	  // Update the deformation gradient tensor to its time n+1 value.
+	  deformationGradient_new[idx] = deformationGradientInc *
+					 deformationGradient[idx];
+
+	  // get the volumetric part of the deformation
+	  double J = deformationGradient_new[idx].Determinant();
+	  // Check 1: Look at Jacobian
+	  if (J<=0.0||J>20.0) {
+	      cout<<"negative or huge J encountered (J="<<J<<", deleting particle" << endl;
+
+	    constParticleVariable<long64> pParticleID;
+	    old_dw->get(pParticleID, lb->pParticleIDLabel, pset);
+	    if(d_allowNoTension){
+	      pLocalized_new[idx]=1;
+	      cout<< "localizing (viscous) particle "<<pParticleID[idx]<<endl;
+	    }else if(d_removeMass){
+	      pLocalized_new[idx]=-999;
+	      cout<< "localizing (deleting) particle "<<pParticleID[idx]<<endl;
+              cout<< "material = " << dwi << ", Momentum deleted = " 
+                                          << pvelocity[idx]*pmass[idx] <<endl;
+	    }else{
+	      cerr << getpid() 
+		   << "**ERROR** Negative Jacobian of deformation gradient, no erosion algorithm set" << endl;
+	      throw InternalError("Negative Jacobian",__FILE__,__LINE__);	      
+	    }
+
+
+	    // the particle is localized and will be updated using a viscous model
+	    // we need to caluclate: pstress_new, pvolume_new, deformationGradient_new
+	    // we have available pstress, pmass, pvolume, ptemperature, deformationGradient,
+	    double viscosity = 1e-3;
+	    double USM;
+	    double rho_cur;
+	    double dt;
+	    viscousStressUpdate( D, pstress[idx], rho_orig, pvolume[idx], UI[0],viscosity,dt, pstress_new[idx],deformationGradient_new[idx],rho_cur,pvolume_new[idx],USM,c_dil);
+
+	    // Compute The Strain Energy for all the particles
+	    Matrix3 AvgStress = (pstress_new[idx] + pstress[idx])*.5;
+
+	    double e = (D(0,0)*AvgStress(0,0) +
+			D(1,1)*AvgStress(1,1) +
+			D(2,2)*AvgStress(2,2) +
+			2.*(D(0,1)*AvgStress(0,1) +
+			    D(0,2)*AvgStress(0,2) +
+			    D(1,2)*AvgStress(1,2))) * pvolume_new[idx]*delT;
+
+	    se += e;
+
+	    // Compute wave speed at each particle, store the maximum
+	    Vector pvelocity_idx = pvelocity[idx];
+	    WaveSpeed=Vector(Max(c_dil+fabs(pvelocity_idx.x()),WaveSpeed.x()),
+			     Max(c_dil+fabs(pvelocity_idx.y()),WaveSpeed.y()),
+			     Max(c_dil+fabs(pvelocity_idx.z()),WaveSpeed.z()));
+
+	    // Compute artificial viscosity term
+	    if (flag->d_artificial_viscosity) {
+	      double dx_ave = (dx.x() + dx.y() + dx.z())/3.0;
+	      double c_bulk = sqrt(UI[0]/rho_cur);
+	      Matrix3 D=(velGrad + velGrad.Transpose())*0.5;
+	      p_q[idx] = artificialBulkViscosity(D.Trace(), c_bulk, rho_cur, dx_ave);
+	    } else {
+	      p_q[idx] = 0.;
+	    }
+
+
+
+	  }else{
+	    pvolume_new[idx]=Jinc*pvolume[idx];
+
+	    // Compute the local sound speed
+	    double rho_cur = rho_orig/J;
+
+	    // NEED TO FIND R
+	    Matrix3 tensorR, tensorU;
+
+	    deformationGradient_new[idx].polarDecompositionRMB(tensorU, tensorR);
+
+	    // This is the previous timestep Cauchy stress
+	    // unrotated tensorSig=R^T*pstress*R
+	    Matrix3 tensorSig = (tensorR.Transpose())*(pstress[idx]*tensorR);
+
+	    // Load into 1-D array for the fortran code
+	    double sigarg[6];
+	    sigarg[0]=tensorSig(0,0);
+	    sigarg[1]=tensorSig(1,1);
+	    sigarg[2]=tensorSig(2,2);
+	    sigarg[3]=tensorSig(0,1);
+	    sigarg[4]=tensorSig(1,2);
+	    sigarg[5]=tensorSig(2,0);
+
+	    // UNROTATE D: S=R^T*D*R
+	    D=(tensorR.Transpose())*(D*tensorR);
+
+	    // Load into 1-D array for the fortran code
+	    double Darray[6];
+	    Darray[0]=D(0,0);
+	    Darray[1]=D(1,1);
+	    Darray[2]=D(2,2);
+	    Darray[3]=D(0,1);
+	    Darray[4]=D(1,2);
+	    Darray[5]=D(2,0);
+	    double svarg[d_NINSV];
+	    double USM=9e99;
+	    double dt = delT;
+	    int nblk = 1;
+
+	    // Load ISVs into a 1D array for fortran code
+	    for(int i=0;i<d_NINSV;i++){
+	      svarg[i]=ISVs[i][idx];
+	    }
+	    constParticleVariable<long64> pParticleID;
+	    old_dw->get(pParticleID, lb->pParticleIDLabel, pset);
+
+	    // 'Hijack' UI[42] with perturbed value if desired
+	    // put real value of UI[42] in tmp var just in case
+	    if (wdist.Perturb){
+	      double tempVar = UI[42];
+	      UI[42] = peakI1IDist[idx];
+
+
+	      KAYENTA_CALC(nblk, d_NINSV, dt, UI, sigarg, Darray, svarg, USM);
+	      UI[42]=tempVar;
+	    } else {
+	      KAYENTA_CALC(nblk, d_NINSV, dt, UI, sigarg, Darray, svarg, USM);
+	    }
+
+	    if(sigarg[1]>1e19){
+	      cout<<"huge stress (sig22="<<sigarg[1]<<") in particle "<<pParticleID[idx]<<endl;
+	    }
+	    // Unload ISVs from 1D array into ISVs_new 
+	    for(int i=0;i<d_NINSV;i++){
+	      ISVs_new[i][idx]=svarg[i];
+	    }
+
+	    // This is the Cauchy stress, still unrotated
+	    tensorSig(0,0) = sigarg[0];
+	    tensorSig(1,1) = sigarg[1];
+	    tensorSig(2,2) = sigarg[2];
+	    tensorSig(0,1) = sigarg[3];
+	    tensorSig(1,0) = sigarg[3];
+	    tensorSig(2,1) = sigarg[4];
+	    tensorSig(1,2) = sigarg[4];
+	    tensorSig(2,0) = sigarg[5];
+	    tensorSig(0,2) = sigarg[5];
+
+	    // ROTATE pstress_new: S=R*tensorSig*R^T
+	    pstress_new[idx] = (tensorR*tensorSig)*(tensorR.Transpose());
+	    c_dil = sqrt(USM/rho_cur);
+	    // Compute The Strain Energy for all the particles
+	    Matrix3 AvgStress = (pstress_new[idx] + pstress[idx])*.5;
+
+	    double e = (D(0,0)*AvgStress(0,0) +
+			D(1,1)*AvgStress(1,1) +
+			D(2,2)*AvgStress(2,2) +
+			2.*(D(0,1)*AvgStress(0,1) +
+			    D(0,2)*AvgStress(0,2) +
+			    D(1,2)*AvgStress(1,2))) * pvolume_new[idx]*delT;
+
+	    se += e;
+
+	    // Compute wave speed at each particle, store the maximum
+	    Vector pvelocity_idx = pvelocity[idx];
+	    WaveSpeed=Vector(Max(c_dil+fabs(pvelocity_idx.x()),WaveSpeed.x()),
+			     Max(c_dil+fabs(pvelocity_idx.y()),WaveSpeed.y()),
+			     Max(c_dil+fabs(pvelocity_idx.z()),WaveSpeed.z()));
+
+	    // Compute artificial viscosity term
+	    if (flag->d_artificial_viscosity) {
+	      double dx_ave = (dx.x() + dx.y() + dx.z())/3.0;
+	      double c_bulk = sqrt(UI[0]/rho_cur);
+	      Matrix3 D=(velGrad + velGrad.Transpose())*0.5;
+	      p_q[idx] = artificialBulkViscosity(D.Trace(), c_bulk, rho_cur, dx_ave);
+	    } else {
+	      p_q[idx] = 0.;
+	    }
+	  }
       }
-      pvolume_new[idx]=Jinc*pvolume[idx];
 
-      // Compute the local sound speed
-      double rho_cur = rho_orig/J;
-       
-      // NEED TO FIND R
-      Matrix3 tensorR, tensorU;
 
-      deformationGradient_new[idx].polarDecompositionRMB(tensorU, tensorR);
 
-      // This is the previous timestep Cauchy stress
-      // unrotated tensorSig=R^T*pstress*R
-      Matrix3 tensorSig = (tensorR.Transpose())*(pstress[idx]*tensorR);
-
-      // Load into 1-D array for the fortran code
-      double sigarg[6];
-      sigarg[0]=tensorSig(0,0);
-      sigarg[1]=tensorSig(1,1);
-      sigarg[2]=tensorSig(2,2);
-      sigarg[3]=tensorSig(0,1);
-      sigarg[4]=tensorSig(1,2);
-      sigarg[5]=tensorSig(2,0);
-
-      // UNROTATE D: S=R^T*D*R
-      D=(tensorR.Transpose())*(D*tensorR);
-
-      // Load into 1-D array for the fortran code
-      double Darray[6];
-      Darray[0]=D(0,0);
-      Darray[1]=D(1,1);
-      Darray[2]=D(2,2);
-      Darray[3]=D(0,1);
-      Darray[4]=D(1,2);
-      Darray[5]=D(2,0);
-      double svarg[d_NINSV];
-      double USM=9e99;
-      double dt = delT;
-      int nblk = 1;
-
-      // Load ISVs into a 1D array for fortran code
-      for(int i=0;i<d_NINSV;i++){
-        svarg[i]=ISVs[i][idx];
-      }
-
-      // 'Hijack' UI[42] with perturbed value if desired
-      // put real value of UI[42] in tmp var just in case
-      if (wdist.Perturb){
-          double tempVar = UI[42];
-          UI[42] = peakI1IDist[idx];
-
-          KAYENTA_CALC(nblk, d_NINSV, dt, UI, sigarg, Darray, svarg, USM);
-          UI[42]=tempVar;
-      } else {
-          KAYENTA_CALC(nblk, d_NINSV, dt, UI, sigarg, Darray, svarg, USM);
-      }
-
-      // Unload ISVs from 1D array into ISVs_new 
-      for(int i=0;i<d_NINSV;i++){
-        ISVs_new[i][idx]=svarg[i];
-      }
-
-      // This is the Cauchy stress, still unrotated
-      tensorSig(0,0) = sigarg[0];
-      tensorSig(1,1) = sigarg[1];
-      tensorSig(2,2) = sigarg[2];
-      tensorSig(0,1) = sigarg[3];
-      tensorSig(1,0) = sigarg[3];
-      tensorSig(2,1) = sigarg[4];
-      tensorSig(1,2) = sigarg[4];
-      tensorSig(2,0) = sigarg[5];
-      tensorSig(0,2) = sigarg[5];
-
-      // ROTATE pstress_new: S=R*tensorSig*R^T
-      pstress_new[idx] = (tensorR*tensorSig)*(tensorR.Transpose());
-
-      c_dil = sqrt(USM/rho_cur);
-
-      // Compute the strain energy for all the particles
-      Matrix3 AvgStress = (pstress_new[idx] + pstress[idx])*.5;
-
-      double e = (D(0,0)*AvgStress(0,0) +
-                  D(1,1)*AvgStress(1,1) +
-                  D(2,2)*AvgStress(2,2) +
-              2.*(D(0,1)*AvgStress(0,1) +
-                  D(0,2)*AvgStress(0,2) +
-                  D(1,2)*AvgStress(1,2))) * pvolume_new[idx]*delT;
-
-      se += e;
-
-      // Compute wave speed at each particle, store the maximum
-      Vector pvelocity_idx = pvelocity[idx];
-      WaveSpeed=Vector(Max(c_dil+fabs(pvelocity_idx.x()),WaveSpeed.x()),
-                       Max(c_dil+fabs(pvelocity_idx.y()),WaveSpeed.y()),
-                       Max(c_dil+fabs(pvelocity_idx.z()),WaveSpeed.z()));
-
-      // Compute artificial viscosity term
-      if (flag->d_artificial_viscosity) {
-        double dx_ave = (dx.x() + dx.y() + dx.z())/3.0;
-        double c_bulk = sqrt(UI[0]/rho_cur);
-        Matrix3 D=(velGrad + velGrad.Transpose())*0.5;
-        p_q[idx] = artificialBulkViscosity(D.Trace(), c_bulk, rho_cur, dx_ave);
-      } else {
-        p_q[idx] = 0.;
-      }
     }  // end loop over particles
 
     WaveSpeed = dx/WaveSpeed;
@@ -769,6 +976,8 @@ void Kayenta::computeStressTensor(const PatchSubset* patches,
   }
 }
 
+
+
 void Kayenta::carryForward(const PatchSubset* patches,
                            const MPMMaterial* matl,
                            DataWarehouse* old_dw,
@@ -781,11 +990,13 @@ void Kayenta::carryForward(const PatchSubset* patches,
 
     constParticleVariable<double> peakI1IDist;
     ParticleVariable<double> peakI1IDist_new;
+    constParticleVariable<int>     pLocalized;
 
     old_dw->get(peakI1IDist, peakI1IDistLabel, pset);
     new_dw->allocateAndPut(peakI1IDist_new,
                                  peakI1IDistLabel_preReloc, pset);
     peakI1IDist_new.copyData(peakI1IDist);
+    old_dw->get(pLocalized,      pLocalizedLabel,      pset);
 
     // Carry forward the data common to all constitutive models 
     // when using RigidMPM.
@@ -795,13 +1006,14 @@ void Kayenta::carryForward(const PatchSubset* patches,
     // Carry forward the data local to this constitutive model 
     StaticArray<constParticleVariable<double> > ISVs(d_NINSV+1);
     StaticArray<ParticleVariable<double> > ISVs_new(d_NINSV+1);
+    ParticleVariable<int>          pLocalized_new;
 
     for(int i=0;i<d_NINSV;i++){
       old_dw->get(ISVs[i],ISVLabels[i], pset);
       new_dw->allocateAndPut(ISVs_new[i],ISVLabels_preReloc[i], pset);
       ISVs_new[i].copyData(ISVs[i]);
   }
-
+    new_dw->allocateAndPut(pLocalized_new, pLocalizedLabel_preReloc, pset);
     // Don't affect the strain energy or timestep size
     new_dw->put(delt_vartype(1.e10), lb->delTLabel, patch->getLevel());
     
@@ -826,6 +1038,7 @@ void Kayenta::addInitialComputesAndRequires(Task* task,
   for(int i=0;i<d_NINSV;i++){
     task->computes(ISVLabels[i], matlset);
   }
+  task->computes(pLocalizedLabel,     matlset);
   task->computes(peakI1IDistLabel, matlset);
 }
 
@@ -842,10 +1055,14 @@ void Kayenta::addComputesAndRequires(Task* task,
   // Computes and requires for internal state data
   for(int i=0;i<d_NINSV;i++){
     task->requires(Task::OldDW, ISVLabels[i],          matlset, Ghost::None);
+
     task->computes(             ISVLabels_preReloc[i], matlset);
   }
+  task->requires(Task::OldDW, pLocalizedLabel,        matlset, Ghost::None);
   task->requires(Task::OldDW, peakI1IDistLabel, matlset, Ghost::None);
+  task->requires(Task::OldDW, lb->pParticleIDLabel,  matlset, Ghost::None);
   task->computes(peakI1IDistLabel_preReloc, matlset);
+  task->computes(pLocalizedLabel_preReloc,      matlset);
 }
 
 void Kayenta::addComputesAndRequires(Task*,
@@ -857,7 +1074,9 @@ void Kayenta::addComputesAndRequires(Task*,
 
 double Kayenta::computeRhoMicroCM(double pressure,
                                   const double p_ref,
-                                  const MPMMaterial* matl)
+                                  const MPMMaterial* matl,
+                                  double temperature,
+                                  double rho_guess)
 {
   double rho_orig = matl->getInitialDensity();
   double p_gauge = pressure - p_ref;
@@ -876,7 +1095,8 @@ double Kayenta::computeRhoMicroCM(double pressure,
 void Kayenta::computePressEOSCM(double rho_cur, double& pressure,
                                 double p_ref,
                                 double& dp_drho,      double& tmp,
-                                const MPMMaterial* matl)
+                                const MPMMaterial* matl, 
+                                double temperature)
 {
 
   double bulk = UI[0];
@@ -1078,17 +1298,23 @@ Kayenta::getInputParameters(ProblemSpecP& ps)
 
   ps->get("PEAKI1IDIST",wdist.WeibDist);
   WeibullParser(wdist);
-  cout << "Weibull Variables for PEAKI1I (getInputParameters):\n"
-       << "Median:            " << wdist.WeibMed
-       << "\nModulus:         " << wdist.WeibMod
-       << "\nReference Vol:   " << wdist.WeibRefVol
-       << "\nSeed:            " << wdist.WeibSeed << std::endl;
+  proc0cout << "Weibull Variables for PEAKI1I (getInputParameters):\n"
+            << "Median:            " << wdist.WeibMed
+            << "\nModulus:         " << wdist.WeibMod
+            << "\nReference Vol:   " << wdist.WeibRefVol
+            << "\nSeed:            " << wdist.WeibSeed << std::endl;
 }
 
 void
 Kayenta::initializeLocalMPMLabels()
 {
-  vector<string> ISVNames;
+
+  // create a localized variable
+  pLocalizedLabel = VarLabel::create("p.localized",
+ ParticleVariable<int>::getTypeDescription());
+  pLocalizedLabel_preReloc = VarLabel::create("p.localized+",
+					      ParticleVariable<int>::getTypeDescription());
+ vector<string> ISVNames;
 
 // These lines of code are added by KC to replace the currently hard-coded
 // internal variable allocation with a proper call to KMMRXV routine.
@@ -1105,13 +1331,11 @@ Kayenta::initializeLocalMPMLabels()
 
   char *ISV[d_NINSV];
   ISV[0] = strtok(keya, "|"); // Splits | between words in string
-  //cout << "ISV's Requested are :: " << ISV[0] << endl; 
   ISVNames.push_back(ISV[0]);
   for(int i = 1; i < d_NINSV ; i++)
   {
 // If you specify NULL, by default it will start again from the previous stop.
         ISV[i] = strtok (NULL, "|"); 
-        //cout << "ISV's Requested are :: " << ISV[i] << endl; //
 	ISVNames.push_back(ISV[i]);
   }
 

@@ -52,72 +52,75 @@ PropertyModelFactory::problemSetup(const ProblemSpecP& params)
   proc0cout << "\n"; 
   proc0cout << "******* Property Model Registration *******" << endl;
 
-  for ( ProblemSpecP prop_db = propmodels_db->findBlock("model"); prop_db != 0; prop_db = prop_db->findNextBlock("model") ) {
-      
-    std::string prop_name; 
-    prop_db->getAttribute("label", prop_name); 
+  if( propmodels_db ) {
+    for ( ProblemSpecP prop_db = propmodels_db->findBlock("model"); prop_db != 0; prop_db = prop_db->findNextBlock("model") ) {
+        
+      std::string prop_name; 
+      prop_db->getAttribute("label", prop_name); 
 
-    std::string prop_type; 
-    prop_db->getAttribute("type", prop_type); 
+      std::string prop_type; 
+      prop_db->getAttribute("type", prop_type); 
 
-    proc0cout << "Found a property model: " << prop_name << endl; 
+      proc0cout << "Found a property model: " << prop_name << endl; 
 
-    PropertyModelBase::Builder* propBuilder;
+      PropertyModelBase::Builder* propBuilder;
 
-    if ( prop_type == "cc_constant" ) {
+      if ( prop_type == "cc_constant" ) {
 
-      // An example of a constant CC variable property 
-      propBuilder = new ConstProperty<CCVariable<double>, constCCVariable<double> >::Builder( prop_name, d_fieldLabels->d_sharedState ); 
+        // An example of a constant CC variable property 
+        propBuilder = new ConstProperty<CCVariable<double>, constCCVariable<double> >::Builder( prop_name, d_fieldLabels->d_sharedState ); 
 
-    } else if ( prop_type == "laminar_pr" ) {
+      } else if ( prop_type == "laminar_pr" ) {
 
-      // Laminar Pr number calculation
-      propBuilder = new LaminarPrNo::Builder( prop_name, d_fieldLabels->d_sharedState ); 
+        // Laminar Pr number calculation
+        propBuilder = new LaminarPrNo::Builder( prop_name, d_fieldLabels->d_sharedState ); 
 
-    } else if ( prop_type == "scalar_diss" ) {
+      } else if ( prop_type == "scalar_diss" ) {
 
-      // Scalar dissipation rate calculation 
-      if ( prop_name != "scalar_dissipation_rate" ) {
-        proc0cout << "WARNING: PropertyModelFactory::problemSetup(): " << prop_name  << " renamed to scalar_dissipation_rate. " << endl;
+        // Scalar dissipation rate calculation 
+        if ( prop_name != "scalar_dissipation_rate" ) {
+          proc0cout << "WARNING: PropertyModelFactory::problemSetup(): " << prop_name  << " renamed to scalar_dissipation_rate. " << endl;
+        }
+        propBuilder = new ScalarDiss::Builder( "scalar_dissipation_rate", d_fieldLabels->d_sharedState ); 
+
+      } else if ( prop_type == "extent_rxn" ) {
+
+        // Scalar dissipation rate calculation 
+        propBuilder = new ExtentRxn::Builder( prop_name, d_fieldLabels->d_sharedState ); 
+
+      } else if ( prop_type == "tab_strip_factor" ) {
+
+        // Scalar dissipation rate calculation 
+        propBuilder = new TabStripFactor::Builder( prop_name, d_fieldLabels->d_sharedState ); 
+
+      } else if ( prop_type == "fx_constant" ) {
+
+        // An example of a constant FCX variable property 
+        propBuilder = new ConstProperty<SFCXVariable<double>, constCCVariable<double> >::Builder( prop_name, d_fieldLabels->d_sharedState ); 
+
+      } else {
+
+        proc0cout << endl;
+        proc0cout << "For property model named: " << prop_name << endl;
+        proc0cout << "with type: " << prop_type << endl;
+        throw ProblemSetupException("This property model is not recognized or supported! ", __FILE__, __LINE__); 
+
       }
-      propBuilder = new ScalarDiss::Builder( "scalar_dissipation_rate", d_fieldLabels->d_sharedState ); 
 
-    } else if ( prop_type == "extent_rxn" ) {
+      register_property_model( prop_name, propBuilder ); 
 
-      // Scalar dissipation rate calculation 
-      propBuilder = new ExtentRxn::Builder( prop_name, d_fieldLabels->d_sharedState ); 
+      // Step 2: Run problemSetup() for the model
+      PropMap::iterator iProps = _property_models.find(prop_name);
+      if( iProps != _property_models.end() ) {
+        PropertyModelBase* pm = iProps->second;
+        pm->problemSetup( propmodels_db );
+      }
 
-    } else if ( prop_type == "tab_strip_factor" ) {
+    } 
 
-      // Scalar dissipation rate calculation 
-      propBuilder = new TabStripFactor::Builder( prop_name, d_fieldLabels->d_sharedState ); 
-
-    } else if ( prop_type == "fx_constant" ) {
-
-      // An example of a constant FCX variable property 
-      propBuilder = new ConstProperty<SFCXVariable<double>, constCCVariable<double> >::Builder( prop_name, d_fieldLabels->d_sharedState ); 
-
-    } else {
-
-      proc0cout << endl;
-      proc0cout << "For property model named: " << prop_name << endl;
-      proc0cout << "with type: " << prop_type << endl;
-      throw ProblemSetupException("This property model is not recognized or supported! ", __FILE__, __LINE__); 
-
-    }
-
-    register_property_model( prop_name, propBuilder ); 
-
-    // Step 2: Run problemSetup() for the model
-    PropMap::iterator iProps = _property_models.find(prop_name);
-    if( iProps != _property_models.end() ) {
-      PropertyModelBase* pm = iProps->second;
-      pm->problemSetup( propmodels_db );
-    }
-
-    proc0cout << endl;
-
-  }//end for each model
+  } else {
+    proc0cout << "No property models found." << endl;
+  }
 
   proc0cout << endl;
 

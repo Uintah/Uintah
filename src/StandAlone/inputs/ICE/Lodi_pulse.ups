@@ -13,13 +13,14 @@
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
    <Time>
-       <maxTime>            0.02        </maxTime>
+       <maxTime>            0.2        </maxTime>
        <initTime>           0.0         </initTime>
        <delt_min>           0.0         </delt_min>
        <delt_max>           1.0         </delt_max>
        <delt_init>          1.0e-6      </delt_init>
        <timestep_multiplier>1.0         </timestep_multiplier>
-       <!--<max_iterations>        10   </max_iterations> -->
+       <max_delt_increase>    1.0       </max_delt_increase>
+       <!--<max_Timesteps>        10   </max_Timesteps> -->
    </Time>
     <!--____________________________________________________________________-->
     <!--   B O U N D A R Y   C O N D I T I O N S                            -->
@@ -31,6 +32,7 @@
         <press_infinity>  101325.0  </press_infinity>
         <sigma>           0.27      </sigma>
         <material>       atmosphere </material>
+        <Li_scale>       0.1        </Li_scale>
       </LODI>
 
       <Face side = "x-">
@@ -140,6 +142,9 @@
       <save label="delP_Dilatate"/>
       <save label="TotalMass"/>
       <save label="TotalMomentum"/>
+      <save label="mass_L_CC"/>
+      <save label="mom_L_ME_CC"/>
+      <save label="eng_L_ME_CC"/>
       <save label="Li1"/>
       <save label="Li5"/>
    </DataArchiver>
@@ -160,6 +165,35 @@
             <maxPoint>   [1.0,  0, 0] </maxPoint>
           </exponentialTemperature>
         </customInitialization>
+        
+        <TimeStepControl>
+          <Scheme_for_delT_calc> aggressive   </Scheme_for_delT_calc>
+          <knob_for_speedSound> 0.0 </knob_for_speedSound>
+        </TimeStepControl>
+
+        <ImplicitSolver>
+           <max_outer_iterations>      20       </max_outer_iterations>
+           <outer_iteration_tolerance> 1e-6     </outer_iteration_tolerance>
+           <iters_before_timestep_restart> 15   </iters_before_timestep_restart>
+           <Parameters variable="implicitPressure">
+             <!-- Common options -->
+              <tolerance>1.e-8    </tolerance>
+
+             <!-- CGSolver options -->
+              <norm>     LInfinity  </norm>
+              <criteria> Absolute   </criteria>
+
+             <!-- Hypre options -->
+             <solver>         cg      </solver>
+             <preconditioner> pfmg    </preconditioner>
+             <maxiterations>  500    </maxiterations>
+             <npre>           1       </npre>
+             <npost>          1       </npost>
+             <skip>           0       </skip>
+             <jump>           0       </jump>
+           </Parameters>
+        </ImplicitSolver>
+
       </ICE>        
     </CFD>
     <!--____________________________________________________________________-->

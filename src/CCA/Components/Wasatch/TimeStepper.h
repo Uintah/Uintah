@@ -14,13 +14,22 @@
 #include "PatchInfo.h"
 #include "FieldAdaptor.h"
 
+#include <list>
+
 namespace Uintah{
   class ProcessorGroup;
+  class DataWarehouse;
 }
+
+namespace Expr{ class ExpressionTree; }
 
 namespace Wasatch{
 
+  class CoordHelper;
+  class TaskInterface;
+
   /**
+   *  \ingroup WasatchCore
    *  \class  TimeStepper
    *  \author James C. Sutherland
    *  \date   June 2010
@@ -32,6 +41,7 @@ namespace Wasatch{
   {
 
     /**
+     *  \ingroup WasatchCore
      *  \struct FieldInfo
      *  \author James C. Sutherland
      *
@@ -69,6 +79,10 @@ namespace Wasatch{
     Expr::ExpressionFactory* const factory_;  ///< the factory that is associated with this time stepper.
     const Uintah::VarLabel* const deltaTLabel_;  ///< label for the time step variable.
 
+    CoordHelper* coordHelper_;
+
+    std::list< TaskInterface*  > taskInterfaceList_;
+
     /**
      *  \brief used internally to obtain the appropriate vector
      *         (e.g. scalarFields_) given the type of field we are
@@ -100,6 +114,8 @@ namespace Wasatch{
     TimeStepper( const Uintah::VarLabel* deltaTLabel,
                  Expr::ExpressionFactory& factory );
 
+    ~TimeStepper();
+
     /**
      *  \brief Add a transport equation to this TimeStepper
      *
@@ -122,6 +138,11 @@ namespace Wasatch{
 
     /**
      *  \brief schedule the tasks associated with this TimeStepper
+     *
+     *  \param timeID the ExpressionID for the Expression that calculates the time.
+     *  \param localPatches the patches that this task will be executed on
+     *  \param materials the materials that this task will be executed on
+     *  \param sched the scheduler
      */
     void create_tasks( const Expr::ExpressionID timeID,
                        const PatchInfoMap&,

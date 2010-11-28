@@ -94,9 +94,22 @@ namespace Uintah {
     };
 
     // Murnaghan Equation of State Variables 
-    double d_P0;
-    double d_gamma;
-    double d_bulkPrime;
+    struct MurnaghanEOS {
+      double P0;
+      double gamma;
+      double bulkPrime;
+    };
+    // JWL Equation of State Variables
+    struct JWLEOS {
+      double A;        // Pa
+      double B;        // Pa
+      double C;        // Pa
+      double Cv;       // Pa/K
+      double R1;
+      double R2;
+      double om;
+    };
+
 
     typedef ViscoScramStateData StateData;
     
@@ -122,6 +135,8 @@ namespace Uintah {
        fun_getTypeDescription(ViscoScramStateData*);
 
     // Create datatype for storing model parameters
+    bool d_useJWLEOS;
+    bool d_useJWLCEOS;
     bool d_useModifiedEOS;
     bool d_useMurnahanEOS;
     bool d_random;
@@ -131,7 +146,8 @@ namespace Uintah {
 
     CMData d_initialData;
     TimeTemperatureData d_tt;
-
+    MurnaghanEOS d_murnahanEOSData;
+    JWLEOS d_JWLEOSData;
   private:
 
     // Prevent assignment of this class
@@ -214,16 +230,27 @@ namespace Uintah {
     /*! Used by MPMICE for pressure equilibriation */
     virtual double computeRhoMicroCM(double pressure,
                                      const double p_ref,
-                                     const MPMMaterial* matl);
+                                     const MPMMaterial* matl,
+                                     double temperature,
+                                     double rho_guess);
 
     /*! Used by MPMICE for pressure equilibriation */
     virtual void computePressEOSCM(double rho_m, double& press_eos,
                                    double p_ref,
                                    double& dp_drho, double& ss_new,
-                                   const MPMMaterial* matl);
+                                   const MPMMaterial* matl,
+                                   double temperature);
 
     /*! Used by MPMICE for pressure equilibriation */
     virtual double getCompressibility();
+
+    double   Pressure;
+    double   Temperature;
+    double   SpecificHeat;
+    double   IL, IR;
+    double func(double rhoM,const MPMMaterial* matl);
+    double deri(double rhoM,const MPMMaterial* matl);
+    void   setInterval(double f, double rhoM);
 
   };
 

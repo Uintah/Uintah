@@ -100,7 +100,6 @@ public:
 
   ~TabPropsInterface();
 
-
   void problemSetup( const ProblemSpecP& params );
   
   /** @brief Gets the thermochemical state for a patch 
@@ -173,6 +172,15 @@ public:
     return result = d_statetbl.query(  dv, &iv[0] ); 
   };
 
+  /** @brief          Returns a single dependent variable, given a vector of independent variable values
+      @param spline   The spline information for the dep. var. 
+      @param iv       The vector of indepenent variable values */
+  inline double getSingleState( const BSpline* spline, std::string dv, vector<double> iv ) {
+    double result = 0.0; 
+    cout_tabledbg << "From your table, looking up a variable using spline information: " << dv << endl;
+    return result = d_statetbl.query(  spline, &iv[0] ); 
+  };
+
   /** @brief Dummy initialization as required by MPMArches */
   void sched_dummyInit( const LevelP& level, SchedulerP& sched );
 
@@ -183,14 +191,21 @@ public:
                   DataWarehouse* old_dw, 
                   DataWarehouse* new_dw );
 
+  /** @brief Gets the Spline information for TabProps.  Spline info is used because it is more efficient that passing strings */
+  void getSplineInfo(); 
+  /** @brief Gets the Spline information for TabProps.  This is specific to the enthalpy vars */ 
+  void getEnthalpySplineInfo(); 
+
+  typedef std::map<std::string, const BSpline*>   SplineMap; 
+
+  enum BoundaryType { DIRICHLET, NEUMANN };
+
 protected :
 
 private:
 
   bool d_table_isloaded;    ///< Boolean: has the table been loaded?
   
-  double d_hl_outlet;       ///< Heat loss value for non-adiabatic conditions
-  double d_hl_pressure;     ///< Heat loss value for non-adiabatic conditions
   double d_hl_scalar_init;  ///< Heat loss value for non-adiabatic conditions
 
   IntVector d_ijk_den_ref;                ///< Reference density location
@@ -201,11 +216,29 @@ private:
   vector<string> d_allUserDepVarNames;    ///< Vector storing all independent varaible names requested in input file
 
   StateTable d_statetbl;                  ///< StateTable object to represent the table data
+  SplineMap  d_depVarSpline;              ///< Map of spline information for each dependent var
+  SplineMap  d_enthalpyVarSpline;         ///< Holds the sensible and adiabatic enthalpy spline information
+                                          // note that this ^^^ is a bit of a quick fix. Should find a better way later. 
 
   /// A dependent variable wrapper
   struct ADepVar {
     string name; 
     CCVariable<double> data; 
+  };
+
+  /** @brief  Helper for filling the spline map */
+  inline void insertIntoSplineMap( const string var_name, const BSpline* spline ){
+
+    SplineMap::iterator i = d_depVarSpline.find( var_name ); 
+
+    if ( i == d_depVarSpline.end() ) {
+
+      cout_tabledbg << "Inserting " << var_name << " spline information into storage." << endl;
+
+      i = d_depVarSpline.insert( make_pair( var_name, spline ) ).first; 
+
+    } 
+    return; 
   };
 
 }; // end class TabPropsInterface

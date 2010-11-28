@@ -9,19 +9,19 @@
 
    <Wasatch>
 
-     <BasicExpression label="TIC" type="Cell">
+     <BasicExpression type="SVOL">
        <TaskList>initialization</TaskList>
        <NameTag name="temperature" state="STATE_N" />
        <Constant>543.21</Constant>
      </BasicExpression>
 
-     <BasicExpression label="junkIC" type="Cell">
+     <BasicExpression type="SVOL">
        <TaskList>initialization</TaskList>
        <NameTag name="MyTestVariable" state="STATE_NONE" />
        <Constant>123.456</Constant>
      </BasicExpression>
 
-     <BasicExpression label="ThermalCond" type="Cell">
+     <BasicExpression type="SVOL">
        <TaskList>advance_solution</TaskList>
        <NameTag name="thermal conductivity" state="STATE_NONE" />
        <Constant>1.0</Constant>

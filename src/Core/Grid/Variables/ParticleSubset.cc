@@ -83,6 +83,8 @@ ParticleSubset::ParticleSubset(int num_particles, int matlIndex, const Patch* pa
     d_low(low), d_high(high),
     neighbors(neighbors), neighbor_subsets(neighbor_subsets)
 {
+  //cout << "ParticleSubset contstructor called\n";
+  //WAIT_FOR_DEBUGGER();
   init();
   for(int i=0;i<(int)neighbor_subsets.size();i++)
     neighbor_subsets[i]->addReference();
@@ -198,13 +200,12 @@ particleIndex ParticleSubset::addParticles(particleIndex count)
 namespace Uintah {
 ostream& operator<<(ostream& out, ParticleSubset& pset)
 {
-    out << &pset
-        << " patch: " << pset.getPatch() << " (" << (pset.getPatch()?pset.getPatch()->getID():0)
+    out << "pset (patch: " << *(pset.getPatch()) << " (" << (pset.getPatch()?pset.getPatch()->getID():0)
         << "), matl "
         << pset.getMatlIndex() << " range [" << pset.getLow() 
-        << ", " << pset.getHigh() << ") " 
+        << ", " << pset.getHigh() << "]   " 
         << pset.numParticles() << " particles, " 
-        << pset.getNeighbors().size() << " neighbors" ;
+        << pset.getNeighbors().size() << " neighboring patches)" ;
     return out;
 }
 } // end namespace Uintah

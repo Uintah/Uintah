@@ -7,6 +7,7 @@
 #include <CCA/Components/Arches/SourceTerms/ParticleGasHeat.h>
 #include <CCA/Components/Arches/SourceTerms/UnweightedSrcTerm.h>
 #include <CCA/Components/Arches/SourceTerms/WestbrookDryer.h>
+#include <CCA/Components/Arches/SourceTerms/IntrusionInlet.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqnFactory.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
 #include <Core/Parallel/Parallel.h>
@@ -137,6 +138,26 @@ void SourceTermFactory::problemSetup(const ProblemSpecP& params)
         SourceTermBase::Builder* srcBuilder = scinew ParticleGasMomentum::Builder(srcName, required_varLabels, d_fieldLabels->d_sharedState);
         register_source_term( srcName, srcBuilder );
 
+     } else if ( src_type == "cc_intrusion_inlet" ) {
+       // Adds a constant to the RHS in specified geometric locations
+       SourceTermBase::Builder* srcBuilder = scinew IntrusionInlet<CCVariable<double> >::Builder(srcName, required_varLabels, d_fieldLabels->d_sharedState);
+       register_source_term( srcName, srcBuilder ); 
+
+     } else if ( src_type == "fx_intrusion_inlet" ) {
+       // Adds a constant to the RHS in specified geometric locations
+       SourceTermBase::Builder* srcBuilder = scinew IntrusionInlet<SFCXVariable<double> >::Builder(srcName, required_varLabels, d_fieldLabels->d_sharedState);
+       register_source_term( srcName, srcBuilder ); 
+
+     } else if ( src_type == "fy_intrusion_inlet" ) {
+       // Adds a constant to the RHS in specified geometric locations
+       SourceTermBase::Builder* srcBuilder = scinew IntrusionInlet<SFCYVariable<double> >::Builder(srcName, required_varLabels, d_fieldLabels->d_sharedState);
+       register_source_term( srcName, srcBuilder ); 
+
+     } else if ( src_type == "fz_intrusion_inlet" ) {
+       // Adds a constant to the RHS in specified geometric locations
+       SourceTermBase::Builder* srcBuilder = scinew IntrusionInlet<SFCZVariable<double> >::Builder(srcName, required_varLabels, d_fieldLabels->d_sharedState);
+       register_source_term( srcName, srcBuilder ); 
+
       } else {
         proc0cout << "For source term named: " << srcName << endl;
         proc0cout << "with type: " << src_type << endl;
@@ -159,9 +180,12 @@ void SourceTermFactory::problemSetup(const ProblemSpecP& params)
   // (this is the extra source term coming from the convection term changing forms)
   DQMOMEqnFactory& dqmomFactory = DQMOMEqnFactory::self();
   if( dqmomFactory.getDoDQMOM() ) {
+    proc0cout << "Doing DQMOM..." << endl;
     if( dqmomFactory.getDQMOMType() == "unweightedAbs" ) {
+      proc0cout << "Doing unweighted DQMOM..." << endl;
       DQMOMEqnFactory::EqnMap& dqmom_eqns = dqmomFactory.retrieve_all_eqns(); 
       for( DQMOMEqnFactory::EqnMap::iterator iEqn = dqmom_eqns.begin(); iEqn != dqmom_eqns.end(); ++iEqn ) {
+        proc0cout << "For equation " << iEqn->second->getEqnName() << "..." << endl;
         DQMOMEqn* eqn = dynamic_cast<DQMOMEqn*>(iEqn->second);
         if( !eqn->weight() ) {
           string eqn_name = eqn->getEqnName();
@@ -169,6 +193,7 @@ void SourceTermFactory::problemSetup(const ProblemSpecP& params)
           vector<string> required_varLabels;
           required_varLabels.push_back(eqn_name);
           SourceTermBase::Builder* srcBuilder = scinew UnweightedSrcTerm::Builder( srcName, required_varLabels, d_fieldLabels->d_sharedState, d_fieldLabels );
+          proc0cout << "Registering source term for equation " << eqn_name << endl;
           register_source_term( srcName, srcBuilder );
         }
       }

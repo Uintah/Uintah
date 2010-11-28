@@ -321,7 +321,7 @@ ConstitutiveModel::getInitialFiberDir()
 //          HARDWIRE FOR AN IDEAL GAS -Todd 
 double 
 ConstitutiveModel::computeRhoMicro(double press, double gamma,
-                                   double cv, double Temp)
+                                   double cv, double Temp, double rho_guess)
 {
   // Pointwise computation of microscopic density
   return  press/((gamma - 1.0)*cv*Temp);

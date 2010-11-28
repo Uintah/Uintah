@@ -47,6 +47,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/Variables/VarLabel.h>
 
 namespace Uintah {
+  class MPMFlags;
   class Kayenta : public ConstitutiveModel {
   public:
 
@@ -82,6 +83,13 @@ namespace Uintah {
     const VarLabel* peakI1IDistLabel_preReloc;
     int d_NINSV;
     double rinit[100];
+    const VarLabel* pLocalizedLabel;  
+    const VarLabel* pLocalizedLabel_preReloc;  
+
+  protected:
+    bool   d_allowNoTension;
+    bool   d_removeMass;
+
 
   private:
     // Prevent copying of this class
@@ -104,6 +112,18 @@ namespace Uintah {
 
     // clone
     Kayenta* clone();
+    virtual void addRequiresDamageParameter(Task* task,
+                                            const MPMMaterial* matl,
+                                            const PatchSet* patches) const;
+
+
+    ////////////////////////////////////////////////////////////////////////
+    /*! \brief Put documentation here. */
+    ////////////////////////////////////////////////////////////////////////
+    virtual void getDamageParameter(const Patch* patch, 
+                                    ParticleVariable<int>& damage, int dwi,
+                                    DataWarehouse* old_dw,
+                                    DataWarehouse* new_dw);
 
     // compute stable timestep for this patch
     virtual void computeStableTimestep(const Patch* patch,
@@ -155,12 +175,15 @@ namespace Uintah {
 
     virtual double computeRhoMicroCM(double pressure,
                                      const double p_ref,
-                                     const MPMMaterial* matl);
+                                     const MPMMaterial* matl,
+                                     double temperature,
+                                     double rho_guess);
 
     virtual void computePressEOSCM(double rho_m, double& press_eos,
                                    double p_ref,
                                    double& dp_drho, double& ss_new,
-                                   const MPMMaterial* matl);
+                                   const MPMMaterial* matl, 
+                                   double temperature);
 
     virtual double getCompressibility();
 
@@ -178,6 +201,10 @@ namespace Uintah {
     // double WeibScale     Scale parameter
     // std::string WeibDist  String for Distribution
     virtual void WeibullParser(WeibParameters &iP);
+
+    virtual void viscousStressUpdate(Matrix3& D, const Matrix3& old_stress, double& rho_orig,const double& old_volume, double& bulk, double& viscosity, double& delT,Matrix3& new_stress, Matrix3& new_defgrad, double& rho_cur, double& new_volume, double& USM, double& c_dil );
+  protected:    
+    void setErosionAlgorithm();
 
   };
 
