@@ -188,8 +188,8 @@ void DQMOM::problemSetup(const ProblemSpecP& params)
       // store equation:
       EqnBase& temp_weightedAbscissaEqnE = eqn_factory.retrieve_scalar_eqn( final_name );
       DQMOMEqn& temp_weightedAbscissaEqnD = dynamic_cast<DQMOMEqn&>(temp_weightedAbscissaEqnE);
-      weightedAbscissaEqns.push_back( &temp_weightedAbscissaEqnD );
-      d_weighted_abscissa_scaling_constants.push_back( temp_weightedAbscissaEqnD.getScalingConstant() );
+      abscissaEqns.push_back( &temp_weightedAbscissaEqnD );
+      d_abscissa_scaling_constants.push_back( temp_weightedAbscissaEqnD.getScalingConstant() );
     }
     N_xi = N_xi + 1;
   }
@@ -310,6 +310,13 @@ DQMOM::sched_dummyInit( const LevelP& level, SchedulerP& sched )
     tsk->computes( iMoment->second );
   }
 
+  tsk->computes(d_normBLabel); 
+  tsk->computes(d_normXLabel);
+  tsk->computes(d_normResLabel);
+  tsk->computes(d_normResNormalizedLabelB);
+  tsk->computes(d_normResNormalizedLabelX);
+  tsk->computes(d_conditionNumberLabel);
+
   sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
 }
 
@@ -340,6 +347,22 @@ DQMOM::dummyInit( const ProcessorGroup* pc,
       new_dw->allocateAndPut( moment, iMoment->second, matlIndex, patch );
       moment.initialize(0.0);
     }
+
+    CCVariable<double> normB;
+    CCVariable<double> normX;
+    CCVariable<double> normRes;
+    CCVariable<double> normResNormalizedB;
+    CCVariable<double> normResNormalizedX;
+    CCVariable<double> conditionNumber;
+
+    new_dw->allocateAndPut( normB,   d_normBLabel,   matlIndex, patch );
+    new_dw->allocateAndPut( normX,   d_normXLabel,   matlIndex, patch );
+    new_dw->allocateAndPut( normRes, d_normResLabel, matlIndex, patch );
+
+    new_dw->allocateAndPut( normResNormalizedB, d_normResNormalizedLabelB, matlIndex, patch );
+    new_dw->allocateAndPut( normResNormalizedX, d_normResNormalizedLabelX, matlIndex, patch );
+
+    new_dw->allocateAndPut( conditionNumber, d_conditionNumberLabel, matlIndex, patch );
 
   }//end patches
 }
@@ -496,7 +519,7 @@ DQMOM::sched_solveLinearSystem( const LevelP& level, SchedulerP& sched, int time
     }
   }
   
-  for (vector<DQMOMEqn*>::iterator iEqn = weightedAbscissaEqns.begin(); iEqn != weightedAbscissaEqns.end(); ++iEqn) {
+  for (vector<DQMOMEqn*>::iterator iEqn = abscissaEqns.begin(); iEqn != abscissaEqns.end(); ++iEqn) {
     const VarLabel* tempLabel;
     tempLabel = (*iEqn)->getTransportEqnLabel();
     
@@ -638,9 +661,9 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
 
     // Create vector of CCVariables for weighted abscissas, weighted abscissa
     // model terms, and weighted abscissa source terms
-    vector< constCCVariable<double>* > weightedAbscissaCCVars;
-    vector< vector< constCCVariable<double>* > > weightedAbscissaModelsCCVars;
-    vector< CCVariable<double>* > weightedAbscissaSourceCCVars; 
+    vector< constCCVariable<double>* > abscissaCCVars;
+    vector< vector< constCCVariable<double>* > > abscissaModelsCCVars;
+    vector< CCVariable<double>* > abscissaSourceCCVars; 
     // ----------------------------
 
     // Populate the vector of weight & weight source term CCVariables with new/empty CCVariables
@@ -673,40 +696,40 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
     // ----------------------------
   
     // Populate the vector of weighted abscissa source term CCVariables with new/empty CCVariables
-    for( unsigned int cc = 0; cc < weightedAbscissaEqns.size(); ++cc ) {
-      weightedAbscissaCCVars.push_back( scinew constCCVariable<double> );
-      weightedAbscissaSourceCCVars.push_back( scinew CCVariable<double> );
+    for( unsigned int cc = 0; cc < abscissaEqns.size(); ++cc ) {
+      abscissaCCVars.push_back( scinew constCCVariable<double> );
+      abscissaSourceCCVars.push_back( scinew CCVariable<double> );
 
       // also populate the model vector for each weighted abscissa...
-      int size = weightedAbscissaEqns[cc]->getModelsList().size();
+      int size = abscissaEqns[cc]->getModelsList().size();
       vector< constCCVariable<double>* > tempVector;
       for( int ss = 0; ss < size; ++ss ) {
         tempVector.push_back( scinew constCCVariable<double> );
       }
-      weightedAbscissaModelsCCVars.push_back( tempVector );
+      abscissaModelsCCVars.push_back( tempVector );
     }
     
     // Put the weighted abscissa source term CCVariables in a vector
     counter = 0;
-    for( vector<DQMOMEqn*>::iterator iEqn = weightedAbscissaEqns.begin();
-         iEqn != weightedAbscissaEqns.end(); ++iEqn ) {
+    for( vector<DQMOMEqn*>::iterator iEqn = abscissaEqns.begin();
+         iEqn != abscissaEqns.end(); ++iEqn ) {
       
       // link the w.a. CCVariable with the VarLabel
       const VarLabel* equation_label = (*iEqn)->getTransportEqnLabel();
-      new_dw->get( (*weightedAbscissaCCVars[counter]), equation_label, matlIndex, patch, Ghost::None, 0 );
+      new_dw->get( (*abscissaCCVars[counter]), equation_label, matlIndex, patch, Ghost::None, 0 );
 
       // link the w.a. source CCVariable with the VarLabel
       const VarLabel* source_label = (*iEqn)->getSourceLabel();
       if (new_dw->exists(source_label, matlIndex, patch)) {
-        new_dw->getModifiable( (*weightedAbscissaSourceCCVars[counter]), source_label, matlIndex, patch);
+        new_dw->getModifiable( (*abscissaSourceCCVars[counter]), source_label, matlIndex, patch);
       } else {
-        new_dw->allocateAndPut( (*weightedAbscissaSourceCCVars[counter]), source_label, matlIndex, patch);
+        new_dw->allocateAndPut( (*abscissaSourceCCVars[counter]), source_label, matlIndex, patch);
       }
-      (*weightedAbscissaSourceCCVars[counter]).initialize(0.0);
+      (*abscissaSourceCCVars[counter]).initialize(0.0);
 
       // link the w.a. model term CCVariable with the VarLabel
-      vector<const VarLabel*> modelsList = weightedAbscissaEqns[counter]->getModelsList();
-      vector< constCCVariable<double>* > tempCCVector = weightedAbscissaModelsCCVars[counter];
+      vector<const VarLabel*> modelsList = abscissaEqns[counter]->getModelsList();
+      vector< constCCVariable<double>* > tempCCVector = abscissaModelsCCVars[counter];
       for( unsigned int ss=0; ss < modelsList.size(); ++ss ) {
         new_dw->get( (*tempCCVector[ss]), modelsList[ss], matlIndex, patch, Ghost::None, 0 );
 
@@ -734,7 +757,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
       IntVector c = *iter;
 
       vector<double> weights;
-      vector<double> weightedAbscissas;
+      vector<double> abscissas;
       vector<double> models;
 
       // get weights in current cell, store value in vector
@@ -744,11 +767,11 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
       }
 
       // get weighted abscissas in current cell, store value in vector
-      vector< vector< constCCVariable<double>* > >::iterator iM = weightedAbscissaModelsCCVars.begin();
-      for( vector< constCCVariable<double>* >::iterator iWA = weightedAbscissaCCVars.begin(); 
-           iWA != weightedAbscissaCCVars.end(); ++iWA, ++iM ) {
+      vector< vector< constCCVariable<double>* > >::iterator iM = abscissaModelsCCVars.begin();
+      for( vector< constCCVariable<double>* >::iterator iWA = abscissaCCVars.begin(); 
+           iWA != abscissaCCVars.end(); ++iWA, ++iM ) {
         
-        weightedAbscissas.push_back( (**iWA)[c] );
+        abscissas.push_back( (**iWA)[c] );
         
         double runningsum = 0.0;
         for( vector< constCCVariable<double>* >::iterator iM2 = (*iM).begin();
@@ -789,6 +812,24 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
         //total_MatMultTime += (Time::currentSeconds() - start_MatMultTime); //timing
 
         //double start_OtherTime = Time::currentSeconds();
+
+        // norm of B
+        double this_normB = 0;
+        for( int ii=0; ii<dimension; ++ii ) {
+          if( fabs((*BB)[ii]) > this_normB ) {
+            this_normB = fabs( (*BB)[ii] );
+          }
+        }
+        normB[c] = this_normB;
+
+        // norm of X
+        double this_normX = 0;
+        for( int ii=0; ii<dimension; ++ii ) {
+          if( fabs((*XX)[ii]) > this_normX ) {
+            this_normX = fabs( (*XX)[ii] );
+          }
+        }
+        normX[c] = this_normX;
 
 #if defined(DEBUG_MATRICES)
 
@@ -892,8 +933,8 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
         //double start_OtherTime2 = Time::currentSeconds(); //timing
 
         // Weighted abscissas:
-        for( vector< CCVariable<double>* >::iterator iter = weightedAbscissaSourceCCVars.begin();
-             iter != weightedAbscissaSourceCCVars.end(); ++iter ) {
+        for( vector< CCVariable<double>* >::iterator iter = abscissaSourceCCVars.begin();
+             iter != abscissaSourceCCVars.end(); ++iter ) {
 
           if( z >= dimension ) {
             stringstream err_msg;
@@ -927,7 +968,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
   
         //double start_AXBConstructionTime = Time::currentSeconds(); //timing
   
-        constructLinearSystem( A, B, weights, weightedAbscissas, models);
+        constructLinearSystem( A, B, weights, abscissas, models);
   
         //total_AXBConstructionTime += Time::currentSeconds() - start_AXBConstructionTime; //timing
   
@@ -1103,8 +1144,8 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
         }
 
         // Weighted abscissas:
-        for( vector< CCVariable<double>* >::iterator iter = weightedAbscissaSourceCCVars.begin();
-             iter != weightedAbscissaSourceCCVars.end(); ++iter ) {
+        for( vector< CCVariable<double>* >::iterator iter = abscissaSourceCCVars.begin();
+             iter != abscissaSourceCCVars.end(); ++iter ) {
 
           (**iter)[c] = Xlong[z];
 
@@ -1143,7 +1184,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
   
         //double start_AXBConstructionTime = Time::currentSeconds(); //timing
   
-        constructLinearSystem( AA, BB, weights, weightedAbscissas, models ); 
+        constructLinearSystem( AA, BB, weights, abscissas, models ); 
   
         //total_AXBConstructionTime += Time::currentSeconds() - start_AXBConstructionTime; //timing
   
@@ -1467,9 +1508,9 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
           ++z;
         }
 
-        // Weighted abscissas:
-        for( vector< CCVariable<double>* >::iterator iter = weightedAbscissaSourceCCVars.begin();
-             iter != weightedAbscissaSourceCCVars.end(); ++iter ) {
+        // Abscissas:
+        for( vector< CCVariable<double>* >::iterator iter = abscissaSourceCCVars.begin();
+             iter != abscissaSourceCCVars.end(); ++iter ) {
 
           (**iter)[c] = (*XX)[z];
 
@@ -1515,8 +1556,8 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
       }
 
       // set weighted abscissa transport eqn source terms equal to results
-      for( vector< CCVariable<double>* >::iterator iter = weightedAbscissaSourceCCVars.begin();
-           iter != weightedAbscissaSourceCCVars.end(); ++iter ) {
+      for( vector< CCVariable<double>* >::iterator iter = abscissaSourceCCVars.begin();
+           iter != abscissaSourceCCVars.end(); ++iter ) {
         (**iter)[c] = 0.0;
       }
 
@@ -1535,12 +1576,12 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
          iter != weightSourceCCVars.end(); ++iter ) {
       delete *iter;
     }
-    for( vector< constCCVariable<double>* >::iterator iter = weightedAbscissaCCVars.begin();
-         iter != weightedAbscissaCCVars.end(); ++iter ) {
+    for( vector< constCCVariable<double>* >::iterator iter = abscissaCCVars.begin();
+         iter != abscissaCCVars.end(); ++iter ) {
       delete *iter;
     }
-    for( vector< vector< constCCVariable<double>* > >::iterator iter1 = weightedAbscissaModelsCCVars.begin();
-          iter1 != weightedAbscissaModelsCCVars.end(); ++iter1 ) {
+    for( vector< vector< constCCVariable<double>* > >::iterator iter1 = abscissaModelsCCVars.begin();
+          iter1 != abscissaModelsCCVars.end(); ++iter1 ) {
       vector< constCCVariable<double>* > temp = *iter1;
       for( vector< constCCVariable<double>* >::iterator iter2 = temp.begin();
            iter2 != temp.end(); ++iter2 ) {
@@ -1548,8 +1589,8 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
       }
       //delete *iter1;
     }
-    for( vector< CCVariable<double>* >::iterator iter = weightedAbscissaSourceCCVars.begin();
-         iter != weightedAbscissaSourceCCVars.end(); ++iter ) {
+    for( vector< CCVariable<double>* >::iterator iter = abscissaSourceCCVars.begin();
+         iter != abscissaSourceCCVars.end(); ++iter ) {
       delete *iter;
     }
 
@@ -2186,11 +2227,11 @@ DQMOM::sched_calculateMoments( const LevelP& level, SchedulerP& sched, int timeS
     }
   }
 
-  // require the weights and weighted abscissas
+  // require the weights and abscissas
   for (vector<DQMOMEqn*>::iterator iEqn = weightEqns.begin(); iEqn != weightEqns.end(); ++iEqn) {
     tsk->requires( Task::NewDW, (*iEqn)->getTransportEqnLabel(), Ghost::None, 0 );
   }
-  for (vector<DQMOMEqn*>::iterator iEqn = weightedAbscissaEqns.begin(); iEqn != weightedAbscissaEqns.end(); ++iEqn) {
+  for (vector<DQMOMEqn*>::iterator iEqn = abscissaEqns.begin(); iEqn != abscissaEqns.end(); ++iEqn) {
     tsk->requires(Task::NewDW, (*iEqn)->getTransportEqnLabel(), Ghost::None, 0);
   }
 
@@ -2222,7 +2263,7 @@ DQMOM::calculateMoments( const ProcessorGroup* pc,
 
     // Create vector of CCVariables for weights, weighted abscissas, moments
     vector< constCCVariable<double>* > weightCCVars;
-    vector< constCCVariable<double>* > weightedAbscissaCCVars;
+    vector< constCCVariable<double>* > abscissaCCVars;
     vector< CCVariable<double>* > momentCCVars;
     vector< CCVariable<double>* > meanMomentCCVars;
 
@@ -2230,8 +2271,8 @@ DQMOM::calculateMoments( const ProcessorGroup* pc,
     for( vector<DQMOMEqn*>::iterator iEqn = weightEqns.begin(); iEqn != weightEqns.end(); iEqn++ ) {
       weightCCVars.push_back( scinew constCCVariable<double> );
     }
-    for( vector<DQMOMEqn*>::iterator iEqn = weightedAbscissaEqns.begin(); iEqn != weightedAbscissaEqns.end(); ++iEqn ) {
-      weightedAbscissaCCVars.push_back( scinew constCCVariable<double> );
+    for( vector<DQMOMEqn*>::iterator iEqn = abscissaEqns.begin(); iEqn != abscissaEqns.end(); ++iEqn ) {
+      abscissaCCVars.push_back( scinew constCCVariable<double> );
     }
     for( vector<MomentVector>::iterator iAllMoments = momentIndexes.begin(); iAllMoments != momentIndexes.end(); ++iAllMoments ) {
       momentCCVars.push_back( scinew CCVariable<double> );
@@ -2252,11 +2293,11 @@ DQMOM::calculateMoments( const ProcessorGroup* pc,
 
     // Put the weighted abscissa CCVariables in a vector
     counter = 0;
-    for( vector<DQMOMEqn*>::iterator iEqn = weightedAbscissaEqns.begin();
-         iEqn != weightedAbscissaEqns.end(); ++iEqn ) {
+    for( vector<DQMOMEqn*>::iterator iEqn = abscissaEqns.begin();
+         iEqn != abscissaEqns.end(); ++iEqn ) {
       // link the w.a. CCVariable with the VarLabel
       const VarLabel* equation_label = (*iEqn)->getTransportEqnLabel();
-      new_dw->get( (*weightedAbscissaCCVars[counter]), equation_label, matlIndex, patch, Ghost::None, 0 );
+      new_dw->get( (*abscissaCCVars[counter]), equation_label, matlIndex, patch, Ghost::None, 0 );
       ++counter;
     }
 
@@ -2310,7 +2351,7 @@ DQMOM::calculateMoments( const ProcessorGroup* pc,
       IntVector c = *iter;
       
       vector<double> weights;
-      vector<double> weightedAbscissas;
+      vector<double> abscissas;
 
       // get weights in current cell, store value in vector
       for( vector< constCCVariable<double>* >::iterator iW = weightCCVars.begin();
@@ -2319,9 +2360,9 @@ DQMOM::calculateMoments( const ProcessorGroup* pc,
       }
 
       // get weighted abscissas in current cell, store value in vector
-      for( vector< constCCVariable<double>* >::iterator iWA = weightedAbscissaCCVars.begin(); 
-           iWA != weightedAbscissaCCVars.end(); ++iWA ) {
-        weightedAbscissas.push_back( (**iWA)[c] );
+      for( vector< constCCVariable<double>* >::iterator iA = abscissaCCVars.begin(); 
+           iA != abscissaCCVars.end(); ++iA ) {
+        abscissas.push_back( (**iA)[c] );
       }
 
 
@@ -2360,7 +2401,12 @@ DQMOM::calculateMoments( const ProcessorGroup* pc,
             running_weights_sum += weight;
             running_product = weight;
             for( unsigned int j = 0; j < N_xi; ++j ) {
-              double base = (weightedAbscissas[j*(N_)+alpha]/weights[alpha])*(d_weighted_abscissa_scaling_constants[j*(N_)+alpha]); // don't need 1/d_weight_scaling_constant 
+              double base;
+              if( d_unweighted ) { 
+                base = (abscissas[j*(N_)+alpha])*(d_abscissa_scaling_constants[j*(N_)+alpha]); 
+              } else {
+                base = (abscissas[j*(N_)+alpha]/weights[alpha])*(d_abscissa_scaling_constants[j*(N_)+alpha]); // don't need 1/d_weight_scaling_constant 
+              }
               double mean_base = base;
                                                                                                                                     // because it's already in the weighted abscissa!
               // calculating moments about the mean... so find the mean
@@ -2369,7 +2415,11 @@ DQMOM::calculateMoments( const ProcessorGroup* pc,
                 double mean_numerator = 0.0;
                 double mean_divisor = 0.0;
                 for( unsigned int alpha2 = 0; alpha2 < N_; ++alpha2 ) {
-                  mean_numerator += weightedAbscissas[j*(N_)+alpha2]*d_weighted_abscissa_scaling_constants[j*(N_)+alpha2];
+                  if( d_unweighted ) {
+                    mean_numerator += weights[alpha2]*abscissas[j*(N_)+alpha2]*d_abscissa_scaling_constants[j*(N_)+alpha2];
+                  } else {
+                    mean_numerator += abscissas[j*(N_)+alpha2]*d_abscissa_scaling_constants[j*(N_)+alpha2];
+                  }
                   mean_divisor += weights[alpha2];
                 }
                 if (mean_divisor != 0 ) {
@@ -2408,7 +2458,7 @@ DQMOM::calculateMoments( const ProcessorGroup* pc,
     for( vector< constCCVariable<double>* >::iterator iter = weightCCVars.begin(); iter != weightCCVars.end(); ++iter ) {
       delete *iter;
     }
-    for( vector< constCCVariable<double>* >::iterator iter = weightedAbscissaCCVars.begin(); iter != weightedAbscissaCCVars.end(); ++iter ) {
+    for( vector< constCCVariable<double>* >::iterator iter = abscissaCCVars.begin(); iter != abscissaCCVars.end(); ++iter ) {
       delete *iter;
     }
     for( vector< CCVariable<double>* >::iterator iter = momentCCVars.begin(); iter != momentCCVars.end(); ++iter ) {
@@ -2830,12 +2880,12 @@ DQMOM::verifyABConstruction()
   getVectorFromFile( weights, vab_inputs );
 
   // assemble weighted abscissas
-  vector<double> weightedAbscissas(vab_N*vab_N_xi);
-  getVectorFromFile( weightedAbscissas, vab_inputs );
+  vector<double> abscissas(vab_N*vab_N_xi);
+  getVectorFromFile( abscissas, vab_inputs );
   // weight the abscissas
   for(int m=0; m<vab_N_xi; ++m) {
     for(int n=0; n<vab_N; ++n) {
-      weightedAbscissas[m*(N_)+n] = weightedAbscissas[m*(N_)+n]*weights[n];
+      abscissas[m*(N_)+n] = abscissas[m*(N_)+n]*weights[n];
     }
   }
 
@@ -2881,10 +2931,10 @@ DQMOM::verifyABConstruction()
 
     proc0cout << endl << endl;
 
-    proc0cout << "Input Weighted Abscissas:" << endl;
+    proc0cout << "Input Abscissas:" << endl;
     proc0cout << "-----------------------------" << endl;
-    for(vector<double>::iterator iWA = weightedAbscissas.begin();
-        iWA != weightedAbscissas.end(); ++iWA ) {
+    for(vector<double>::iterator iWA = abscissas.begin();
+        iWA != abscissas.end(); ++iWA ) {
       proc0cout << (*iWA) << endl;
     }
 
@@ -2935,11 +2985,11 @@ DQMOM::verifyABConstruction()
   // construct A and B
   LU A( vab_dimension );
   vector<double> B( vab_dimension );
-  constructLinearSystem( A, B, weights, weightedAbscissas, models );
+  constructLinearSystem( A, B, weights, abscissas, models );
 
   DenseMatrix* AA = scinew DenseMatrix( vab_dimension, vab_dimension );
   ColumnMatrix* BB = scinew ColumnMatrix( vab_dimension );
-  constructLinearSystem( AA, BB, weights, weightedAbscissas, models );
+  constructLinearSystem( AA, BB, weights, abscissas, models );
 
   // --------------------------------------------------------------
   // 1. Compare constructed A to verification A (from file)

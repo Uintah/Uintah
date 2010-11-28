@@ -62,6 +62,8 @@ namespace Uintah {
                                     const Vector& size, 
                                     const Matrix3& defgrad) = 0;
                                     
+
+                                    
     virtual void findCellAndShapeDerivatives(const Point& pos,
                                              vector<IntVector>& ni,
                                              vector<Vector>& d_S,
@@ -75,6 +77,8 @@ namespace Uintah {
                                                        const Vector& size, 
                                                        const Matrix3& defgrad) = 0;
 
+   //__________________________________
+   //  Needed for AMRMPM
     virtual void findCellAndWeights(const Point& p,vector<IntVector>& ni,
                                     vector<double>& S,
                                     constNCVariable<Stencil7>& zoi,
@@ -83,7 +87,11 @@ namespace Uintah {
                                     int& num_cur,int& num_fine,int& num_coarse,                                     
                                     const Vector& size, bool coarse_part,
                                     const Patch* patch) {};
-
+                                    
+    virtual void findCellAndWeights(const Point& pos,
+                                    vector<IntVector>& ni,
+                                    vector<double>& S,
+                                    constNCVariable<Stencil7>& zoi) {};
     virtual int size() = 0;
   };
 }

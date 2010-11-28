@@ -164,11 +164,6 @@ public:
         flags->d_with_arches = true;
   };
 
-  enum bctype { NONE=0,
-                FIXED,
-                SYMMETRY,
-                NEIGHBOR };
-
   enum IntegratorType {
     Explicit,
     Implicit,
@@ -419,6 +414,7 @@ protected:
   virtual void scheduleComputeStressTensor(SchedulerP&, const PatchSet*,
                                            const MaterialSet*);
   
+
   void scheduleUpdateErosionParameter(SchedulerP& sched,
                                       const PatchSet* patches,
                                       const MaterialSet* matls);

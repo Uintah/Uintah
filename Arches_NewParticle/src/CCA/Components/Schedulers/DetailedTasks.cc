@@ -270,7 +270,7 @@ DetailedTask::doit(const ProcessorGroup* pg,
 void DetailedTasks::initializeScrubs(vector<OnDemandDataWarehouseP>& dws, int dwmap[])
 {
   vector<bool> initialized(dws.size(),false);
-  if(0&&scrubout.active())
+  if(scrubout.active())
     scrubout << Parallel::getMPIRank() << " Begin initialize scrubs\n";
   for(int i=0;i<(int)Task::TotalDWs;i++){
     if (dwmap[i] < 0)
@@ -296,7 +296,7 @@ void DetailedTasks::initializeScrubs(vector<OnDemandDataWarehouseP>& dws, int dw
       initialized[dwmap[i]] = true;
     }
   }
-  if(0&&scrubout.active())
+  if(scrubout.active())
     scrubout << Parallel::getMPIRank() << " End initialize scrubs\n";
 }
 
@@ -305,7 +305,7 @@ DetailedTask::scrub(vector<OnDemandDataWarehouseP>& dws)
 {
   const Task* task = getTask();
 
-  if(0&&scrubout.active())
+  if(scrubout.active())
     scrubout << Parallel::getMPIRank() << " Starting scrub after task: " << *this << '\n';
   const set<const VarLabel*, VarLabel::Compare>& initialRequires
     = taskGroup->getSchedulerCommon()->getInitialRequiredVars();

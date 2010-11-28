@@ -55,14 +55,20 @@ ifeq ($(BUILD_ARCHES),yes)
                        $(COMPONENTS)/Arches/MCRT/ArchesRMCRT \
                        $(COMPONENTS)/SpatialOps
 endif
+
 ifeq ($(BUILD_MPM),yes)
   MPM_LIB            = CCA/Components/MPM
   ifeq ($(BUILD_ICE),yes)
     MPMICE_LIB       = CCA/Components/MPMICE
   endif
 endif
+
 ifeq ($(BUILD_ICE),yes)
   ICE_LIB            = CCA/Components/ICE
+endif
+
+ifeq ($(BUILD_WASATCH),yes)
+  WASATCH_LIB        = CCA/Components/Wasatch
 endif
 
 
@@ -86,17 +92,18 @@ ifeq ($(IS_STATIC_BUILD),yes)
     CCA/Components/ICE                  \
     CCA/Components/MPM                  \
     CCA/Components/OnTheFlyAnalysis     \
-    \
+                                        \
     $(ARCHES_LIBS)                      \
     $(ARCHES_SUB_LIBS)                  \
     $(MPMARCHES_LIB)                    \
     $(MPM_LIB)                          \
     $(ICE_LIB)                          \
     $(MPMICE_LIB)                       \
-    \
+    $(WASATCH_LIB)                      \
+                                        \
     CCA/Components/Models               \
     CCA/Components/PatchCombiner        \
-    \
+                                        \
     Core/Datatypes                      \
     Core/DataArchive                    \
     Core/Grid                           \
@@ -158,13 +165,16 @@ else
 endif
 
 ifeq ($(IS_STATIC_BUILD),yes)
-  LIBS := $(CORE_STATIC_LIBS) $(ZOLTAN_LIBRARY) $(TABPROPS_LIBRARY) $(HDF5_LIBRARY)
+  LIBS := $(CORE_STATIC_LIBS) $(ZOLTAN_LIBRARY)    \
+          $(HDF5_LIBRARY) $(BOOST_LIBRARY)         \
+          $(EXPRLIB_LIBRARY) $(SPATIALOPS_LIBRARY) $(TABPROPS_LIBRARY)
 else
   LIBS := $(XML2_LIBRARY) $(F_LIBRARY) $(HYPRE_LIBRARY)      \
           $(CANTERA_LIBRARY) $(ZOLTAN_LIBRARY)               \
           $(PETSC_LIBRARY) $(BLAS_LIBRARY) $(LAPACK_LIBRARY) \
           $(MPI_LIBRARY) $(M_LIBRARY) $(THREAD_LIBRARY) $(Z_LIBRARY) \
-          $(TEEM_LIBRARY) $(PNG_LIBRARY)
+          $(TEEM_LIBRARY) $(PNG_LIBRARY) \
+          $(BOOST_LIBRARY)
 endif
 
 include $(SCIRUN_SCRIPTS)/program.mk

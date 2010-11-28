@@ -2,7 +2,7 @@
 # 
 # The MIT License
 # 
-# Copyright (c) 1997-2009 Center for the Simulation of Accidental Fires and 
+# Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
 # Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 # University of Utah.
 # 
@@ -35,8 +35,12 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR     := CCA/Components/Parent
 COMPONENTS := CCA/Components
 
-SRCS    := $(SRCDIR)/Switcher.cc \
-	   $(SRCDIR)/ComponentFactory.cc 
+SRCS := $(SRCDIR)/Switcher.cc \
+        $(SRCDIR)/ComponentFactory.cc 
+
+ifeq ($(BUILD_ARCHES),yes)
+  MORE_LIBS := $(COMPONENTS)/SpatialOps
+endif
 
 # ARCHES et. al. should have been seen by CCA/Components/sub.mk
 PSELIBS := \
@@ -58,12 +62,12 @@ PSELIBS := \
         $(MPM)           \
         $(MPMICE)        \
         $(COMPONENTS)/Examples             \
-	$(COMPONENTS)/PatchCombiner        \
-	$(COMPONENTS)/ProblemSpecification \
-	$(COMPONENTS)/Solvers              \
-	$(COMPONENTS)/SwitchingCriteria    \
-        $(WASATCH)
-
+        $(COMPONENTS)/PatchCombiner        \
+        $(COMPONENTS)/ProblemSpecification \
+        $(COMPONENTS)/Solvers              \
+        $(COMPONENTS)/SwitchingCriteria    \
+        $(WASATCH)                         \
+        $(MORE_LIBS)
 
 LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY)
 

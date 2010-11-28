@@ -50,22 +50,32 @@ namespace Uintah {
     ~mms() {};
   };
 
-  struct expTemp{         
-    Vector direction;
-    Point minPoint;
-    Point maxPoint;
-    double coeff;
-    ~expTemp() {};
+  struct gaussTemp{         
+    double spread_x;
+    double spread_y;
+    double amplitude;
+    Point  origin;
+    ~gaussTemp() {};
+  };
+  
+  struct counterflow{         
+    double strainRate;
+    Vector domainLength;
+    IntVector refCell;
+    ~counterflow() {};
   };
 
   struct customInitialize_basket{
-    vortices* vortex_inputs;
-    mms*      mms_inputs;
-    expTemp*  expTemp_inputs;
+    vortices*     vortex_inputs;
+    mms*          mms_inputs;
+    gaussTemp*    gaussTemp_inputs;
+    counterflow*  counterflow_inputs;
+    bool          doesComputePressure;
     string which;
   };
   void customInitialization_problemSetup( const ProblemSpecP& cfd_ice_ps,
-                                        customInitialize_basket* cib);
+                                        customInitialize_basket* cib,
+                                        GridP& grid);
                                         
   void customInitialization(const Patch* patch,
                             CCVariable<double>& rho_CC,

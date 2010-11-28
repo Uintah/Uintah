@@ -208,7 +208,7 @@ private:
 
   vector<MomentVector>  momentIndexes;              ///< Vector containing all moment indices
   vector<DQMOMEqn* >    weightEqns;                 ///< Weight equation labels, IN SAME ORDER AS GIVEN IN INPUT FILE
-  vector<DQMOMEqn* >    weightedAbscissaEqns;       ///< Weighted abscissa equation labels, IN SAME ORDER AS GIVEN IN INPUT FILE
+  vector<DQMOMEqn* >    abscissaEqns;               ///< Weighted abscissa equation labels, IN SAME ORDER AS GIVEN IN INPUT FILE
   vector<string>        InternalCoordinateEqnNames;
   vector< vector<ModelBase> > weightedAbscissaModels;
 
@@ -228,7 +228,7 @@ private:
   double d_maxConditionNumber;
   double d_w_small;
   double d_weight_scaling_constant;
-  vector<double> d_weighted_abscissa_scaling_constants;
+  vector<double> d_abscissa_scaling_constants;
   vector<double> d_opt_abscissas;
   DenseMatrix* AAopt;
 

@@ -162,7 +162,7 @@ WARNING
      /**
      * Return the number of cells in the iterator
      */
-     inline unsigned int size() 
+     inline unsigned int size() const
      {
       IntVector size_int=d_int_high-d_int_low;
       IntVector size_ext=d_ext_high-d_ext_low;

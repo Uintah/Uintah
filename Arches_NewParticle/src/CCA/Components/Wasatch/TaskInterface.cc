@@ -35,8 +35,8 @@ namespace Wasatch{
       patchInfoMap_( info ),
 
       builtFML_( fml==NULL ),
-      fml_( builtFML_ ? new Expr::FieldManagerList( tree->name() ) : fml ),
-      uintahTask_( new Uintah::Task( tree->name(), this, &TaskInterface::execute ) )
+      fml_( builtFML_ ? scinew Expr::FieldManagerList( tree->name() ) : fml ),
+      uintahTask_( scinew Uintah::Task( tree->name(), this, &TaskInterface::execute ) )
   {
     hasBeenScheduled_ = false;
     tree->register_fields( *fml_ );
@@ -57,18 +57,30 @@ namespace Wasatch{
   void
   TaskInterface::schedule( Uintah::SchedulerP& scheduler,
                            const Uintah::PatchSet* const patches,
-                           const Uintah::MaterialSet* const materials )
+                           const Uintah::MaterialSet* const materials,
+                           const std::vector<Expr::Tag>& newDWFields )
   {
-    add_fields_to_task( patches, materials );
+    add_fields_to_task( patches, materials, newDWFields );
     scheduler->addTask( uintahTask_, patches, materials );
     hasBeenScheduled_ = true;
+  }
+  //------------------------------------------------------------------
+
+  void
+  TaskInterface::schedule( Uintah::SchedulerP& scheduler,
+                           const Uintah::PatchSet* const patches,
+                           const Uintah::MaterialSet* const materials )
+  {
+    std::vector<Expr::Tag> newDWFields;
+    this->schedule( scheduler, patches, materials, newDWFields );
   }
 
   //------------------------------------------------------------------
 
   void
   TaskInterface::add_fields_to_task( const Uintah::PatchSet* const patches,
-                                     const Uintah::MaterialSet* const materials )
+                                     const Uintah::MaterialSet* const materials,
+                                     const std::vector<Expr::Tag>& newDWFields )
   {
     // this is done once when the task is scheduled.  The purpose of
     // this method is to collect the fields from the ExpressionTree
@@ -100,7 +112,7 @@ namespace Wasatch{
       PropertyMap& properties = (*ifm)->properties();
       PropertyMap::iterator ipm = properties.find("UintahInfo");
       assert( ipm != properties.end() );
-      Expr::IDInfoMap& infomap = boost::any_cast<boost::reference_wrapper<Expr::IDInfoMap> >(ipm->second);
+      Expr::IDInfoMap& infomap = boost::any_cast< boost::reference_wrapper<Expr::IDInfoMap> >(ipm->second);
 
       //______________________________________
       // cycle through each field of this type
@@ -108,20 +120,23 @@ namespace Wasatch{
 
         Expr::FieldInfo& fieldInfo = ii->second;
 
+        //________________
         // set field mode 
-        // 
-        // jcs this is a hack.  On initialization, it takes a STATE_N
-        // to a new DW and on timestepping it does the same for the
-        // solution variable because we must wrap it with an
-        // expression.  Need to figure out a more robust way of
-        // handling this.
         {
           const Expr::Tag fieldTag(fieldInfo.varlabel->getName(), fieldInfo.context );
 
-          if( tree_->has_expression( fieldTag ) )
-            fieldInfo.mode = Expr::COMPUTES;
-          else
+          if( tree_->has_expression( fieldTag ) ){
+            if( tree_->get_expression(fieldTag).is_placeholder() ){
+              fieldInfo.mode = Expr::REQUIRES;
+              if( find( newDWFields.begin(), newDWFields.end(), fieldTag ) == newDWFields.end() )
+                fieldInfo.useOldDataWarehouse = true;
+            }
+            else
+              fieldInfo.mode = Expr::COMPUTES;
+          }
+          else{
             fieldInfo.mode = Expr::REQUIRES;
+          }
         }
 
         // jcs : old dw is (should be) read only.
@@ -176,22 +191,6 @@ namespace Wasatch{
   //------------------------------------------------------------------
 
   void
-  TaskInterface::bind_fields_operators( const Expr::AllocInfo& info,
-                                        const SpatialOps::OperatorDatabase& opDB )
-  {
-    // wrap fields from Uintah in the strongly typed field managers
-    // and then bind them to the tree.  Then bind all operators
-    // associated with this patch and task
-    //
-    // This is called each time a task is executed.
-    fml_->allocate_fields( info );
-    tree_->bind_fields( *fml_ );
-    tree_->bind_operators( opDB );
-  }
-
-  //------------------------------------------------------------------
-
-  void
   TaskInterface::execute( const Uintah::ProcessorGroup* const pg,
                           const Uintah::PatchSubset* const patches,
                           const Uintah::MaterialSubset* const materials,
@@ -206,25 +205,30 @@ namespace Wasatch{
     //       Otherwise we would have binding clashes between different
     //       threads.
     //
-    for( size_t ip=0; ip<patches->size(); ++ip ){
+    for( int ip=0; ip<patches->size(); ++ip ){
 
       const Uintah::Patch* const patch = patches->get(ip);
       const PatchInfoMap::const_iterator ipim = patchInfoMap_.find(patch->getID());
       ASSERT( ipim!=patchInfoMap_.end() );
       const SpatialOps::OperatorDatabase& opdb = *ipim->second.operators;
 
-      for( size_t im=0; im<materials->size(); ++im ){
+      for( int im=0; im<materials->size(); ++im ){
 
         const int material = materials->get(im);
         try{
-          cout << endl
-               << "Wasatch: executing '" << taskName_
-               << "' for patch " << patch->getID()
-               << " and material " << material
-               << endl;
-          bind_fields_operators( Expr::AllocInfo( oldDW, newDW, material, patch ),
-                                 opdb );
+//           cout << endl
+//                << "Wasatch: executing graph '" << taskName_
+//                << "' for patch " << patch->getID()
+//                << " and material " << material
+//                << endl;
+
+//     fml_->dump_fields(cout);
+          fml_->allocate_fields( Expr::AllocInfo( oldDW, newDW, material, patch, pg ) );
+          tree_->bind_fields( *fml_ );
+          tree_->bind_operators( opdb );
           tree_->execute_tree();
+//           cout << "Wasatch: done executing graph '" << taskName_ << "'" << endl;
+          fml_->deallocate_fields();
         }
         catch( exception& e ){
           cout << e.what() << endl;

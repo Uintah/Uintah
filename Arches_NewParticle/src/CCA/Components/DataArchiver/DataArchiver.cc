@@ -41,6 +41,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Ports/SimulationInterface.h>
 
+#include <Core/Containers/StringUtil.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/GeometryPiece/GeometryPieceFactory.h>
 #include <Core/Grid/Box.h>
@@ -506,6 +507,19 @@ DataArchiver::initializeOutput(const ProblemSpecP& params)
 
       dynamic_cast<SimulationInterface*>(getPort("sim"))->outputPS(d_dir);
 
+      /////////////////////////////////////////////////////////
+      // Save the original .ups file in the UDA...
+      //     FIXME: might want to avoid using 'system' copy which the below uses...
+      //     If so, we will need to write our own (simple) file reader and writer
+      //     routine.
+
+      cout << "Saving original .ups file in UDA...\n";
+      Dir ups_location( pathname( params->getFile() ) );
+      ups_location.copy( basename( params->getFile() ), d_dir );
+
+      //
+      /////////////////////////////////////////////////////////
+
       createIndexXML(d_dir);
    
       // create checkpoints/index.xml (if we are saving checkpoints)
@@ -939,8 +953,10 @@ DataArchiver::finalizeTimestep(double time, double delt,
 #endif
 
   // we don't want to schedule more tasks unless we're recompiling
-  if (!recompile)
+  if ( !recompile ) {
     return;
+  }
+
   if ( (d_outputInterval != 0.0 || d_outputTimestepInterval != 0) && 
        (delt != 0 || d_outputInitTimestep)) {
     // Schedule task to dump out reduction variables at every timestep
@@ -1630,12 +1646,12 @@ DataArchiver::outputReduction(const ProcessorGroup*,
 }
 
 void
-DataArchiver::output(const ProcessorGroup*,
-                     const PatchSubset* patches,
-                     const MaterialSubset* matls,
-                     DataWarehouse* /*old_dw*/,
-                     DataWarehouse* new_dw,
-                     int type)
+DataArchiver::output(const ProcessorGroup * /*world*/,
+                     const PatchSubset    * patches,
+                     const MaterialSubset * /*matls*/,
+                     DataWarehouse        * /*old_dw*/,
+                     DataWarehouse        * new_dw,
+                     int                    type)
 {
   // IMPORTANT - this function should only be called once per processor per level per type
   //   (files will be opened and closed, and those operations are heavy on 
@@ -2091,10 +2107,13 @@ DataArchiver::initSaveLabels(SchedulerP& sched, bool initTimestep)
     //   make sure that the scheduler shows that that it has been scheduled
     //   to be computed.  Then save it to saveItems.
     VarLabel* var = VarLabel::find((*it).labelName);
-    if (var == NULL) 
-      throw ProblemSetupException((*it).labelName +
-                                  " variable not found to save.", __FILE__, __LINE__);
-
+    if (var == NULL) {
+      if (initTimestep)
+        continue;
+      else
+        throw ProblemSetupException((*it).labelName +
+                                    " variable not found to save.", __FILE__, __LINE__);
+    }
     if ((*it).compressionMode != "")
       var->setCompressionMode((*it).compressionMode);
       

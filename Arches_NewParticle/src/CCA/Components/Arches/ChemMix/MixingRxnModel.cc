@@ -120,8 +120,8 @@ MixingRxnModel::setMixDVMap( const ProblemSpecP& root_params )
   if ( !d_coldflow ){ 
     var_name = "temperature"; 
     insertIntoMap( var_name ); 
-    var_name = "heat_capacity"; 
-    //var_name = "specificheat"; 
+    //var_name = "heat_capacity"; 
+    var_name = "specificheat"; 
     insertIntoMap( var_name ); 
     var_name = "CO2"; 
     insertIntoMap( var_name ); 
@@ -131,8 +131,6 @@ MixingRxnModel::setMixDVMap( const ProblemSpecP& root_params )
 
   proc0cout << endl;
 }
-
-
 //---------------------------------------------------------------------------
 // Add Additional Table Lookup Variables
 //---------------------------------------------------------------------------
@@ -141,6 +139,8 @@ MixingRxnModel::addAdditionalDV( std::vector<string>& vars )
 {
   proc0cout << "  Adding these additional variables for table lookup: " << endl; 
   for ( std::vector<string>::iterator ivar = vars.begin(); ivar != vars.end(); ivar++ ) { 
+
     insertIntoMap( *ivar ); 
+
   }
 }

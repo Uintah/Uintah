@@ -851,6 +851,7 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
             velocityVars.vVelNonlinearSrc[c]  += velocityVars.otherVectorSource[c].y()*vol;
             velocityVars.wVelNonlinearSrc[c]  += velocityVars.otherVectorSource[c].z()*vol;
 
+            /*
             if( c == IntVector(1,34,34) ) {
               cout << endl;
               cout << "Gas x-velocity has source term " << velocityVars.otherVectorSource[c].x() << "*" << vol << " = " << velocityVars.otherVectorSource[c].x()*vol;
@@ -858,6 +859,7 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
               cout << "Gas z-velocity has source term " << velocityVars.otherVectorSource[c].z() << "*" << vol << " = " << velocityVars.otherVectorSource[c].z()*vol;
               cout << endl;
             }                                               
+            */
 
           }
         } 

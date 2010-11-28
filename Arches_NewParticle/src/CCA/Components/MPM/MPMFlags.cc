@@ -34,6 +34,9 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/LinearInterpolator.h>
 #include <Core/Grid/Node27Interpolator.h>
 #include <Core/Grid/cpdiInterpolator.h>
+#include <Core/Grid/axiCpdiInterpolator.h>
+#include <Core/Grid/fastCpdiInterpolator.h>
+#include <Core/Grid/fastAxiCpdiInterpolator.h>
 #include <Core/Grid/TOBSplineInterpolator.h>
 #include <Core/Grid/BSplineInterpolator.h>
 #include <Core/Parallel/ProcessorGroup.h>
@@ -67,9 +70,8 @@ MPMFlags::MPMFlags(const ProcessorGroup* myworld)
   d_minGridLevel = 0;
   d_maxGridLevel = 1000;
                       
-  d_doErosion = false;
-  d_deleteRogueParticles = false;
   d_erosionAlgorithm = "none";
+  d_deleteRogueParticles = false;
   d_doThermalExpansion = true;
 
   d_artificialDampCoeff = 0.0;
@@ -94,6 +96,7 @@ MPMFlags::MPMFlags(const ProcessorGroup* myworld)
   d_max_vel = 3.e105;
   d_with_ice = false;
   d_with_arches = false;
+  d_use_momentum_form = false;
   d_myworld = myworld;
   
   d_reductionVars = scinew reductionVars();
@@ -159,7 +162,7 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
      cerr << "nodes8or27 is deprecated, use " << endl;
      cerr << "<interpolator>type</interpolator>" << endl;
      cerr << "where type is one of the following:" << endl;
-     cerr << "linear, gimp, 3rdorderBS,cpdi" << endl;
+     cerr << "linear, gimp, 3rdorderBS, cpdi, fastcpdi" << endl;
     exit(1);
   }
 
@@ -218,14 +221,14 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
   mpm_flag_ps->get("do_contact_friction_heating", d_do_contact_friction);
   if (!d_do_contact_friction) d_addFrictionWork = 0.0;
 
+   ProblemSpecP erosion_ps = mpm_flag_ps->findBlock("erosion");
+   if (erosion_ps) {
+     if (erosion_ps->getAttribute("algorithm", d_erosionAlgorithm)) {
+       if (d_erosionAlgorithm == "none") d_doErosion = false;
+       else d_doErosion = true;
+     }
+   }
 
-  ProblemSpecP erosion_ps = mpm_flag_ps->findBlock("erosion");
-  if (erosion_ps) {
-    if (erosion_ps->getAttribute("algorithm", d_erosionAlgorithm)) {
-      if (d_erosionAlgorithm == "none") d_doErosion = false;
-      else d_doErosion = true;
-    }
-  }
   mpm_flag_ps->get("delete_rogue_particles",  d_deleteRogueParticles);
   
   // d_doComputeHeatFlux:
@@ -276,8 +279,19 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
     d_interpolator = scinew BSplineInterpolator();
     d_8or27 = 64;
   } else if(d_interpolator_type=="cpdi"){
-    d_interpolator = scinew cpdiInterpolator();
     d_8or27 = 64;
+    if(d_axisymmetric){
+      d_interpolator = scinew axiCpdiInterpolator();
+    } else{
+      d_interpolator = scinew cpdiInterpolator();
+    }
+  } else if(d_interpolator_type=="fastcpdi"){
+    d_8or27 = 27;
+    if(d_axisymmetric){
+      d_interpolator = scinew fastAxiCpdiInterpolator();
+    } else{
+      d_interpolator = scinew fastCpdiInterpolator();
+    }
   }else{
     ostringstream warn;
     warn << "ERROR:MPM: invalid interpolation type ("<<d_interpolator_type << ")"
@@ -294,6 +308,8 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
 
   mpm_flag_ps->get("boundary_traction_faces", d_bndy_face_txt_list);
 
+  mpm_flag_ps->get("UseMomentumForm", d_use_momentum_form);
+
   if (dbg.active()) {
     dbg << "---------------------------------------------------------\n";
     dbg << "MPM Flags " << endl;
@@ -308,9 +324,7 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
     dbg << " Artificial Viscosity Coeff2 = " << d_artificialViscCoeff2<< endl;
     dbg << " Create New Particles        = " << d_createNewParticles << endl;
     dbg << " Add New Material            = " << d_addNewMaterial << endl;
-    dbg << " Do Erosion ?                = " << d_doErosion << endl;
-    dbg << " Delete Rogue Particles?     = " << d_doErosion << endl;
-    dbg << "  Erosion Algorithm          = " << d_erosionAlgorithm << endl;
+    dbg << " Delete Rogue Particles?     = " << d_deleteRogueParticles << endl;
     dbg << " Use Load Curves             = " << d_useLoadCurves << endl;
     dbg << " Use Cohesive Zones          = " << d_useCohesiveZones << endl;
     dbg << " ForceBC increment factor    = " << d_forceIncrementFactor<< endl;
@@ -362,14 +376,16 @@ MPMFlags::outputProblemSpec(ProblemSpecP& ps)
 
   ps->appendElement("do_contact_friction_heating", d_do_contact_friction);
 
+  ps->appendElement("delete_rogue_particles",d_deleteRogueParticles);
+
   ProblemSpecP erosion_ps = ps->appendChild("erosion");
   erosion_ps->setAttribute("algorithm", d_erosionAlgorithm);
-
-  ps->appendElement("delete_rogue_particles",d_deleteRogueParticles);
  
   ps->appendElement("extra_solver_flushes", d_extraSolverFlushes);
 
   ps->appendElement("boundary_traction_faces", d_bndy_face_txt_list);
+
+  ps->appendElement("UseMomentumForm", d_use_momentum_form);
 }
 
 

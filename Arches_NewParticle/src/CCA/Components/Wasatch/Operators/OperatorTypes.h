@@ -5,6 +5,10 @@
 
 #include <spatialops/structured/FVStaggered.h>
 
+/**
+ *  \file OperatorTypes.h
+ */
+
 namespace Wasatch{
 
   typedef SpatialOps::Divergence  Divergence;
@@ -12,7 +16,15 @@ namespace Wasatch{
   typedef SpatialOps::Interpolant Interpolant;
 
   /**
-   *  Convenience definition for a SpatialOperator
+   *  \ingroup WasatchOperators
+   *  \ingroup WasatchCore
+   *  \struct OperatorTypeBuilder
+   *  \brief Convenience definition for a SpatialOperator
+   *
+   *  Supplies a typedef defining \c type, which defines the operator.
+   *
+   *  This should not generally be used by programmers.  Rather, it is
+   *  used internally here to define various operators.
    */
   template<typename Op, typename SrcT, typename DestT>
   struct OperatorTypeBuilder{
@@ -23,7 +35,7 @@ namespace Wasatch{
   {
     typedef typename OperatorTypeBuilder< Gradient,
                                           CellT,
-                                          typename FaceTypes<CellT>::XFace >::type  	GradX;
+                                          typename FaceTypes<CellT>::XFace >::type  GradX;
     typedef typename OperatorTypeBuilder< Gradient,
                                           CellT,
                                           typename FaceTypes<CellT>::YFace >::type 	GradY;

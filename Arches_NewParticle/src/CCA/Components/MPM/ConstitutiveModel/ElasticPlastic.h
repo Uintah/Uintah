@@ -160,7 +160,6 @@ namespace Uintah {
     bool   d_setStressToZero;
     bool   d_allowNoTension;
     bool   d_allowNoShear;
-    bool   d_removeMass;
 
     YieldCondition*     d_yield;
     StabilityCheck*     d_stable;
@@ -325,7 +324,9 @@ namespace Uintah {
     ////////////////////////////////////////////////////////////////////////
     virtual double computeRhoMicroCM(double pressure,
                                      const double p_ref,
-                                     const MPMMaterial* matl);
+                                     const MPMMaterial* matl, 
+                                     double temperature,
+                                     double rho_guess);
 
     ////////////////////////////////////////////////////////////////////////
     /*! \brief Sockets for MPM-ICE */
@@ -333,7 +334,8 @@ namespace Uintah {
     virtual void computePressEOSCM(double rho_m, double& press_eos,
                                    double p_ref,
                                    double& dp_drho, double& ss_new,
-                                   const MPMMaterial* matl);
+                                   const MPMMaterial* matl, 
+                                   double temperature);
 
     ////////////////////////////////////////////////////////////////////////
     /*! \brief Sockets for MPM-ICE */

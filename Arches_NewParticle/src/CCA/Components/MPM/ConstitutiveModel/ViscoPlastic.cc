@@ -406,7 +406,7 @@ ViscoPlastic::initializeCMData(const Patch* patch,
   new_dw->allocateAndPut(pFailureVariable, pFailureVariableLabel, pset);
 
   // Initialize a gaussian random number generator
-  SCIRun::Gaussian gaussGen(d_varf.mean, d_varf.std, 0);
+  SCIRun::Gaussian gaussGen(d_varf.mean, d_varf.std, 0, 1, DBL_MAX);
 
 
   for(ParticleSubset::iterator iter = pset->begin();iter != pset->end();iter++){
@@ -423,7 +423,7 @@ ViscoPlastic::initializeCMData(const Patch* patch,
     if (d_varf.dist == "constant") {
       pFailureVariable[*iter] = d_varf.mean;
     } else {
-      pFailureVariable[*iter] = fabs(gaussGen.rand());
+      pFailureVariable[*iter] = fabs(gaussGen.rand(1.0));
     }
 
   }
@@ -2945,7 +2945,9 @@ ViscoPlastic::convertToVoigtForm(const TangentModulusTensor Ce,
 double
 ViscoPlastic::computeRhoMicroCM(double pressure,
                                       const double p_ref,
-                                      const MPMMaterial* matl)
+                                      const MPMMaterial* matl,
+                                      double temperature,
+                                      double rho_guess)
 {
   double rho_orig = matl->getInitialDensity();
   double bulk = d_initialData.Bulk;
@@ -2973,7 +2975,8 @@ void
 ViscoPlastic::computePressEOSCM(double rho_cur,double& pressure,
                                       double p_ref,  
                                       double& dp_drho, double& tmp,
-                                      const MPMMaterial* matl)
+                                      const MPMMaterial* matl,
+                                      double temperature)
 {
   double bulk = d_initialData.Bulk;
   double rho_orig = matl->getInitialDensity();

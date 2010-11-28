@@ -156,7 +156,7 @@ void RigidMPM::scheduleComputeAndIntegrateAcceleration(SchedulerP& sched,
                            getLevel(patches)->getGrid()->numLevels()))
     return;
 
-  printSchedule(patches,cout_doing,"MPM::scheduleComputeAndIntegrateAcceleration\t\t\t\t");
+  printSchedule(patches,cout_doing,"MPM::scheduleComputeAndIntegrateAcceleration");
 
   Task* t = scinew Task("MPM::computeAndIntegrateAcceleration",
                         this, &RigidMPM::computeAndIntegrateAcceleration);
@@ -179,7 +179,7 @@ void RigidMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    printTask(patches, patch,cout_doing,"Doing computeAndIntegrateAcceleration\t\t\t\t");
+    printTask(patches, patch,cout_doing,"Doing computeAndIntegrateAcceleration");
 
     Ghost::GhostType  gnone = Ghost::None;
     for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){

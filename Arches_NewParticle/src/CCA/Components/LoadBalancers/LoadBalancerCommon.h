@@ -157,7 +157,7 @@ namespace Uintah {
 
       SimulationStateP d_sharedState; ///< to keep track of timesteps
       Scheduler* d_scheduler; ///< store the scheduler to not have to keep passing it in
-      std::set<const Patch*> d_neighbors; ///< the neighborhood.  \See createNeighborhood
+      std::set<const Patch*> d_neighbors; ///< the neighborhood.  See createNeighborhood
       std::set<int> d_neighborProcessors; //a list of processors that are in this processors neighborhood
       //! output on every nth processor.  This variable needs to be shared 
       //! with the DataArchiver as well, but we keep it here because the lb

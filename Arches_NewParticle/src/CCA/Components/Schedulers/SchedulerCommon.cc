@@ -213,8 +213,7 @@ SchedulerCommon::useInternalDeps()
 {
   // keep track of internal dependencies only if it will emit
   // the taskgraphs (by default).
-  // return emit_taskgraph;
-  return false;
+  return emit_taskgraph;
 }
 
 void
@@ -227,7 +226,7 @@ SchedulerCommon::emitNode( const DetailedTask* task,
 {  
     if (m_nodes == 0)
         return;
-    
+   
     ProblemSpecP node = m_nodes->appendChild("node");
     //m_nodes->appendChild(node);
 
@@ -254,13 +253,12 @@ SchedulerCommon::finalizeNodes(int process /* = 0*/)
       ostringstream fname;
       fname << "/taskgraph_" << setw(5) << setfill('0') << process << ".xml";
       string file_name(timestep_dir + fname.str());
-      ofstream graphfile(file_name.c_str());
-      graphfile << m_graphDoc << "\n";
+      m_graphDoc->output(file_name.c_str());
     }
     
-    m_graphDoc->releaseDocument();
-    m_graphDoc = NULL;
-    m_nodes = NULL;
+    //m_graphDoc->releaseDocument();
+    //m_graphDoc = NULL;
+    //m_nodes = NULL;
 }
 
 void
@@ -1408,7 +1406,7 @@ SchedulerCommon::copyDataToNewGrid(const ProcessorGroup*, const PatchSubset* pat
             // for particles anyhow (but we will have to reset the bounds to copy the data)
             oldsub = oldDataWarehouse->getParticleSubset(matl, newPatch->getLowIndexWithDomainLayer(Patch::CellBased),
                                                          newPatch->getHighIndexWithDomainLayer(Patch::CellBased), 
-                                                         oldLevel.get_rep(), 0, reloc_new_posLabel_);
+                                                         oldLevel.get_rep(), newPatch, reloc_new_posLabel_);
             oldsubsets[matl] = oldsub;
             oldsub->addReference();
           }

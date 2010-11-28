@@ -43,13 +43,16 @@ namespace Uintah {
             the customInitialize_basket.
 _____________________________________________________________________*/
 void customInitialization_problemSetup( const ProblemSpecP& cfd_ice_ps,
-                                        customInitialize_basket* cib)
+                                        customInitialize_basket* cib,
+                                        GridP& grid)
 {
   //__________________________________
   //  search the ICE problem spec for 
   // custom initialization inputs
   ProblemSpecP c_init_ps= cfd_ice_ps->findBlock("customInitialization");
-  cib->which = "none";  // default
+  // defaults
+  cib->which = "none"; 
+  cib->doesComputePressure = false;
   
   if(c_init_ps){
     //__________________________________
@@ -58,6 +61,7 @@ void customInitialization_problemSetup( const ProblemSpecP& cfd_ice_ps,
     if(vortices_ps) {
       cib->vortex_inputs = scinew vortices();
       cib->which = "vortices";
+      cib->doesComputePressure = true;
       
       for (ProblemSpecP vortex_ps = vortices_ps->findBlock("vortex"); vortex_ps != 0;
                         vortex_ps = vortex_ps->findNextBlock("vortex")) {
@@ -76,21 +80,22 @@ void customInitialization_problemSetup( const ProblemSpecP& cfd_ice_ps,
     }  // multiple vortices
     
     
-    ProblemSpecP expTemp_ps= c_init_ps->findBlock("exponentialTemperature");
-    if(expTemp_ps){
-      cib->which = "exponentialTemp";
-      cib->expTemp_inputs = scinew expTemp();
-      Vector dir;
-      Point minPt,maxPt;
-      double coeff;
-      expTemp_ps->require("coefficient", coeff);
-      expTemp_ps->require("direction",   dir);
-      expTemp_ps->require("minPoint",    minPt);
-      expTemp_ps->require("maxPoint",    maxPt);
-      cib->expTemp_inputs->direction = dir;
-      cib->expTemp_inputs->coeff     = coeff;
-      cib->expTemp_inputs->minPoint  = minPt;
-      cib->expTemp_inputs->maxPoint  = maxPt;
+    ProblemSpecP gaussTemp_ps= c_init_ps->findBlock("gaussianTemperature");
+    if(gaussTemp_ps){
+      cib->which = "gaussianTemp";
+      cib->gaussTemp_inputs = scinew gaussTemp();
+      double spread_x;
+      double spread_y;
+      Point  origin;
+      double amp;
+      gaussTemp_ps->require("amplitude", amp); 
+      gaussTemp_ps->require("origin",    origin);      
+      gaussTemp_ps->require("spread_x",  spread_x);  
+      gaussTemp_ps->require("spread_y",  spread_y);  
+      cib->gaussTemp_inputs->amplitude = amp;
+      cib->gaussTemp_inputs->origin    = origin;
+      cib->gaussTemp_inputs->spread_x  = spread_x;
+      cib->gaussTemp_inputs->spread_y  = spread_y;
     }
     
     //__________________________________
@@ -98,9 +103,23 @@ void customInitialization_problemSetup( const ProblemSpecP& cfd_ice_ps,
     ProblemSpecP mms_ps= c_init_ps->findBlock("manufacturedSolution");
     if(mms_ps) {
       cib->which = "mms_1";
+      cib->doesComputePressure = true;
       cib->mms_inputs = scinew mms();
       mms_ps->require("A", cib->mms_inputs->A);
     } 
+    
+    //__________________________________
+    //  2D counterflow in the x & y plane
+    ProblemSpecP cf_ps= c_init_ps->findBlock("counterflow");
+    if(cf_ps) {
+      cib->which = "counterflow";
+      cib->doesComputePressure = true;
+      cib->counterflow_inputs = scinew counterflow();
+      cf_ps->require("strainRate",   cib->counterflow_inputs->strainRate);
+      cf_ps->require("referenceCell", cib->counterflow_inputs->refCell);
+      
+      grid->getLength(cib->counterflow_inputs->domainLength, "minusExtraCells");
+    }
   }
 }
 /*_____________________________________________________________________ 
@@ -151,30 +170,68 @@ void customInitialization(const Patch* patch,
     }  // loop
   } // vortices
   //__________________________________
-  // exponential Temperature
-  if(cib->which == "exponentialTemp"){
+  // gaussian Temperature
+  if(cib->which == "gaussianTemp"){
   
-    double coeff = cib->expTemp_inputs->coeff;
-    Vector dir   = cib->expTemp_inputs->direction;
-    Point minPt  = cib->expTemp_inputs->minPoint;
-    Point maxPt  = cib->expTemp_inputs->maxPoint;
+    double amp = cib->gaussTemp_inputs->amplitude;
+    Point origin     = cib->gaussTemp_inputs->origin;
+    double spread_x  = cib->gaussTemp_inputs->spread_x;
+    double spread_y  = cib->gaussTemp_inputs->spread_y;
+    
+    double x0 = origin.x();
+    double y0 = origin.y();
     
     for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
       IntVector c = *iter;
       Point pt = patch->cellPosition(c);
+      double x = pt.x();
+      double y = pt.y();
+
+      double a = ( (x-x0) * (x-x0) )/ (2*spread_x*spread_x + 1e-100);
+      double b = ( (y-y0) * (y-y0) )/ (2*spread_y*spread_y + 1e-100);
       
-      temp_CC[c] = 300;
-      
-      if( (pt.asVector() >= minPt.asVector()) && (pt.asVector() <= maxPt.asVector()) ){
-      
-       Vector n = (maxPt - minPt)/( (pt - minPt) * ( maxPt - pt ) );
-    
-       temp_CC[c]  += dir.x() * exp(coeff - n.x() + 1e-100)  
-                    + dir.y() * exp(coeff - n.y() + 1e-100)           
-                    + dir.z() * exp(coeff - n.z() + 1e-100);
-      }
+      double Z = amp*exp(-(a + b));
+      temp_CC[c] = 300 + Z;
     }
   } 
+  
+   //__________________________________
+  // 2D counterflow flowfield
+  // See:  "Characteristic Boundary conditions for direct simulations
+  //        of turbulent counterflow flames" by Yoo, Wang Trouve and IM
+  //        Combustion Theory and Modelling, Vol 9. No 4., Nov. 2005, 617-646
+  if(cib->which == "counterflow"){
+  
+    double strainRate   = cib->counterflow_inputs->strainRate;
+    Vector domainLength = cib->counterflow_inputs->domainLength;
+    IntVector refCell   = cib->counterflow_inputs->refCell;
+    
+    double u_ref   = vel_CC[refCell].x();
+    double v_ref   = vel_CC[refCell].y();
+    double p_ref   = 101325;
+    double rho_ref = rho_CC[refCell];
+    
+    for(CellIterator iter=patch->getExtraCellIterator(); !iter.done();iter++) {
+      IntVector c = *iter;
+      Point pt = patch->cellPosition(c);
+      double x = pt.x();
+      double y = pt.y();
+
+      double u = -strainRate * (x - domainLength.x()/2.0);
+      double v =  strainRate * (y - domainLength.y()/2.0);
+      // for a purely converging flow 
+      //v = -strainRate * (y - domainLength.y()/2.0);
+      
+      vel_CC[c].x( u );
+      vel_CC[c].y( v );
+ 
+      press_CC[c] = p_ref
+                  + 0.5 * rho_ref * (u_ref * u_ref + v_ref * v_ref)
+                  - 0.5 * rho_ref * (u * u + v * v);
+    }
+  }
+  
+  
   //__________________________________
   // method of manufactured solution 1
   // See:  "A non-trival analytical solution to the 2d incompressible

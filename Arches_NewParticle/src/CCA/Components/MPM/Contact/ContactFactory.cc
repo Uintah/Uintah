@@ -32,6 +32,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/MPM/Contact/NullContact.h>
 #include <CCA/Components/MPM/Contact/SingleVelContact.h>
 #include <CCA/Components/MPM/Contact/FrictionContact.h>
+#include <CCA/Components/MPM/Contact/NodalSVFContact.h>
 #include <CCA/Components/MPM/Contact/SpecifiedBodyContact.h>
 #include <CCA/Components/MPM/Contact/ApproachContact.h>
 #include <CCA/Components/MPM/Contact/CompositeContact.h>
@@ -73,6 +74,9 @@ Contact* ContactFactory::create(const ProcessorGroup* myworld,
       
       else if (con_type == "single_velocity")
         contact_list->add(scinew SingleVelContact(myworld,child,ss,lb,flag));
+      
+      else if (con_type == "nodal_svf")
+        contact_list->add(scinew NodalSVFContact(myworld,child,ss,lb,flag));
       
       else if (con_type == "friction")
         contact_list->add(scinew FrictionContact(myworld,child,ss,lb,flag));

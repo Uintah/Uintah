@@ -21,7 +21,7 @@
 #  Loop over each Uintah component
 #    - create a results directory for that component
 #    - read in "whatToRun.xml" (list of tests to run)
-#    - add comparison utilities path to PATH
+#    - add post processing utilities path to PATH
 #
 #    Loop over each Uintah component test
 #      - create a results directory
@@ -54,10 +54,10 @@ system("which octave")  == 0 ||  die("Cannot find the command octave $@");
 system("which gnuplot") == 0 ||  die("Cannot find the command gnuplot $@");
 
 # Define the paths
-my $base_path          = $ARGV[0];    # path to orderAccuracy scripts
-my $config_files_path  = $base_path . "/test_config_files";  # configurations files
-my $scripts_path       = $base_path . "/framework_scripts";  # framework scripts 
-my $compareUtil_path   = $base_path . "/comparisonUtils";    # comparison utilities
+my $base_path             = $ARGV[0];    # path to orderAccuracy scripts
+my $config_files_path     = $base_path . "/test_config_files";  # configurations files
+my $scripts_path          = $base_path . "/framework_scripts";  # framework scripts 
+my $postProcessCmd_path   = $base_path . "/postProcessTools";    # postProcessing 
 
 if (! -e $base_path."/framework_scripts" ){
   print "\n\nError: You must specify the path to the orderAccuracy directory ($base_path)\n";
@@ -84,7 +84,7 @@ my $extraScripts_path = $xml->{scripts_path}[0];
 #__________________________________
 # add compare_path:sus_path and framework_scripts to the path
 my $orgPath = $ENV{"PATH"};
-$ENV{"PATH"} = "$compareUtil_path:$sus_path:$scripts_path:$extraScripts_path:$orgPath";
+$ENV{"PATH"} = "$postProcessCmd_path:$sus_path:$scripts_path:$extraScripts_path:$orgPath";
 
 system("which sus") == 0 ||  die("Cannot find the command sus $@");
 
@@ -104,7 +104,7 @@ system("which sus") == 0 ||  die("Cannot find the command sus $@");
    my $whatToRun = $simple->XMLin($fw_path."/whatToRun.xml");
    
    # add the comparison utilities path to PATH
-   my $p   = $whatToRun->{compareUtil_path}[0];
+   my $p   = $whatToRun->{postProcessCmd_path}[0];
    my $orgPath = $ENV{"PATH"};
    $ENV{"PATH"} = "$p:$orgPath";
    

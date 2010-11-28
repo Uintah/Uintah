@@ -145,7 +145,7 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
               }
               if(interp_type=="gimp" || interp_type=="cpdi"){
                 IntVector off = IntVector(0,1,0);
-                IntVector L,H;
+                IntVector L(0,0,0),H(0,0,0);
                 if(face==Patch::yminus){
                   L = l+off; H = h+off;
                 } else if(face==Patch::yplus){
@@ -184,7 +184,7 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
               }
               if(interp_type=="gimp"||interp_type=="cpdi"){
                 IntVector off = IntVector(0,0,1);
-                IntVector L,H;
+                IntVector L(0,0,0),H(0,0,0);
                 if(face==Patch::zminus){
                   L = l+off; H = h+off;
                 } else if(face==Patch::zplus){
@@ -242,34 +242,8 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
         Iterator nbound_ptr;
         Iterator nu;  // not used
 
-        if(type=="Temperature"){
-          const BoundCondBase *bcb = 
-            patch->getArrayBCValues(face,dwi,type,nu,nbound_ptr,child);
-
-          const BoundCond<double>* bc = 
-            dynamic_cast<const BoundCond<double>*>(bcb);
-          if (bc != 0){
-            if (bc->getBCType__NEW() == "Dirichlet") {
-              double bcv = bc->getValue();
-              for (nbound_ptr.reset(); !nbound_ptr.done();nbound_ptr++){
-                IntVector nd = *nbound_ptr;
-                variable[nd] = bcv;
-              }
-              if(interp_type=="gimp" || interp_type=="3rdorderBS" || interp_type=="cpdi"){
-                for(NodeIterator it(l,h); !it.done(); it++) {
-                  IntVector nd = *it;
-                  variable[nd] = bcv;
-                }
-              }
-            }
-            delete bc;
-          } else
-            delete bcb;
-        }
-
 // Used in MPMICE.
-#if 1
-        if(type=="Pressure"){
+        if(type=="Pressure" || type=="Temperature"){
           const BoundCondBase *bcb = 
             patch->getArrayBCValues(face,dwi,type,nu,nbound_ptr, child);
 
@@ -291,8 +265,7 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
               }
             }
             
-            if (bc->getBCType__NEW() == "Neumann" && (interp_type=="gimp" 
-                                               ||  interp_type=="3rdorderBS" || interp_type=="cpdi")) {
+            if (bc->getBCType__NEW() == "Neumann"){
               Vector deltax = patch->dCell();
               double dx = -9;
               IntVector off(-9,-9,-9);
@@ -332,7 +305,6 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
           } else
           delete bcb;
         }
-#endif
       }  // child
     } else
       continue;

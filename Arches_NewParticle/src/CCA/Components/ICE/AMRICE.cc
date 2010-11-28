@@ -356,8 +356,7 @@ void AMRICE::refineCoarseFineInterface(const ProcessorGroup*,
                << " Doing refineCoarseFineInterface("<< variable->getName() <<")\t\t\t AMRICE L-" 
                << fineLevel->getIndex() << " Patches: " << *patches << " progressVar " << subCycleProgress
                << endl;
-    bool dbg_onOff = cout_dbg.active();      // is cout_dbg switch on or off
-      
+    
     for(int p=0;p<patches->size();p++){
       const Patch* finePatch = patches->get(p);
       
@@ -557,7 +556,7 @@ void AMRICE::setBC_FineLevel(const ProcessorGroup*,
           // fine level hi & lo cell iter limits
           // coarselevel hi and low index
           IntVector cl, ch, fl, fh;
-          getCoarseFineFaceRange(patch, coarseLevel, face, orderOfInterpolation, cl, ch, fl, fh);
+          getCoarseFineFaceRange(patch, coarseLevel, face, Patch::ExtraPlusEdgeCells, orderOfInterpolation, cl, ch, fl, fh);
 
           constCCVariable<double> cv_coarse, gamma_coarse, vol_frac_coarse;
           coarse_new_dw->getRegion(cv_coarse,      lb->specific_heatLabel, indx, coarseLevel,cl, ch);

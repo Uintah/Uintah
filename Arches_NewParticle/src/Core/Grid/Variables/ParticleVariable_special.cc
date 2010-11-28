@@ -69,8 +69,8 @@ using namespace SCIRun;
   // specialization for T=Point
   template <>
   void ParticleVariable<Point>::gather(ParticleSubset* pset,
-                                       vector<ParticleSubset*> subsets,
-                                       vector<ParticleVariableBase*> srcs,
+                                       const vector<ParticleSubset*> &subsets,
+                                       const vector<ParticleVariableBase*> &srcs,
                                        const vector<const Patch*>& srcPatches,
                                        particleIndex extra)
   {
@@ -80,10 +80,11 @@ using namespace SCIRun;
     if(d_pset && d_pset->removeReference())
       delete d_pset;
 
-    // a null patch means that there is no patch center for the pset
+    // pset center patch and neighbor patch are not in same level
     // (probably on an AMR copy data timestep)
     const Patch* patch = pset->getPatch();
-    if (!patch){
+    if (pset->getNeighbors().size() != 0 && 
+        pset->getNeighbors().front()->getLevel() != patch->getLevel()){
       patch = srcPatches[0];
     }
     

@@ -1,49 +1,39 @@
 #!/bin/sh
 
 # to differentiate among the build names & even directories
-OS=`uname -s`
-
-USE_DEFAULT_BUILD="yes"
-SCRIPT_DIR=/usr/local/home/csafe-tester/scripts
-USE_DEFAULT_TEST_DATA="yes"
 COMPILE="yes"
-USE_PREVTREE="no"
-USE_TREE="new"
-SEND_MAIL_TO=""
-MAIL_REMAKE_LOG_TO=""
-DEFAULT_MAIL_TO="csafe-homebrew@cs.utah.edu"
-DEFAULT_REMAKE_LOG_TO="kuzimmer@cs.utah.edu, sparker@cs.utah.edu, dav@cs.utah.edu"
-REPLY_TO="csafe-homebrew@cs.utah.edu"
-PARALLELISM=0
-VERBOSE="no"
-WEEKLY="0"
-NOTESTS="0"
-MONTHLYBACKUP="no"
-mallocstrict="no"
-USER=""
+DEFAULT_MAIL_TO="uintah-developer@gforge.sci.utah.edu"
+DEFAULT_REMAKE_LOG_TO="dav@cs.utah.edu"
 DO_DBG="1"
 DO_OPT="1"
+LOCAL_OR_NIGHTLY_TEST="nightly"
+MAIL_REMAKE_LOG_TO=""
+mallocstrict="no"
+MONTHLYBACKUP="no"
+NOTESTS="0"
+OS=`uname -s`
+PARALLELISM=0
+REPLY_TO="uintah-developer@gforge.sci.utah.edu"
+SCRIPT_DIR=/usr/local/home/csafe-tester/scripts
+SEND_MAIL_TO=""
+USE_DEFAULT_BUILD="yes"
+USE_DEFAULT_TEST_DATA="yes"
+USE_PREVTREE="no"
+USE_TREE="new"
+VERBOSE="no"
+
 
 BUILD_DIR=/usr/local/home/csafe-tester/"$OS"
 TEST_DATA=/usr/local/home/csafe-tester/"$OS"/TestData
 TEMP_DIR=/usr/local/home/csafe-tester/"$OS"
 
-# test OS, if Linux or IRIX, set appropriate compiler env. vars, else, abort
-if [ "$OS" == "Linux" ]; then
-  CC=gcc-4.2
-  CXX=g++-4.2
-  F77=gfortran-4.2
-elif [ "$OS" == "Darwin" ]; then
-  CC=gcc
-  CXX=c++
-  F77=gfortran
-else
-  echo "Unknown OS. Abort"
+# test OS
+if [ "$OS" != "Linux" ]; then
+  echo "Linux OS is the only OS that is current configured to work. Abort"
   exit -1
 fi
 
-export OS CC CXX F77
-
+export OS
 unset SHELL
 umask 002
 
@@ -99,10 +89,6 @@ while [ "$#" -gt 0 ]; do
             PARALLELISM="$1"
         fi
         ;;
-
-    -weekly)
-        WEEKLY="1"
-        ;;
     -build_only)
         NOTESTS="1"
         ;;
@@ -126,12 +112,6 @@ while [ "$#" -gt 0 ]; do
     -help)
         show_help=1
         ;;
-    -user)
-        if [ "$#" -gt 1 ]; then
-            shift
-            USER="$1"
-        fi
-        ;;
      *)
         echo "$1: Unknown option, -help for help"
         exit 1
@@ -139,12 +119,6 @@ while [ "$#" -gt 0 ]; do
      esac
      shift
 done
-
-if [ "$USER" != "" ]; then
-  if [ "$USE_DEFAULT_BUILD" = "yes" -o "$USE_DEFAULT_TEST_DATA" = "yes" ]; then
-    show_help="1"
-  fi
-fi
 
 # usage string - exit
 if [ $show_help != "0" ]; then
@@ -163,23 +137,16 @@ if [ $show_help != "0" ]; then
             -opt_only:              Only run optimized tests.
             -no_compile:            Run the tests only; assume the build is already done.
             -verbose:               Display verbose output
-            -weekly:                Run longer regression tests (meant for once a week)
             -build_dir:             Change the directory where SCIRun is downloaded to.
             -test_data:             Change the GoldStandard directory.
-            -user <user>:           Run the tests in Test/users/<user>/ instead of Test/
-              You must use either the -use_tree or -build_dir options and
-              the -test_data option
             -help:                  Display this option summary
 EOF
     exit 0
 fi
 
-if [ "$WEEKLY" == "1" ]; then
-  BUILD_DIR="$BUILD_DIR"/Weekly
-fi
 
 PATH="$PATH":"$SCRIPT_DIR":/usr/bin:/local/bin:/usr/sci/local/bin/:/usr/gnu/bin:/usr/local/bin:/bin:/usr/lib:.
-export PATH WEEKLY mallocstrict NOTESTS USER COMPILE
+export PATH mallocstrict NOTESTS COMPILE LOCAL_OR_NIGHTLY_TEST
 
 # set number of processors to use when building
 if [ "$PARALLELISM" == "0" ]; then
@@ -203,15 +170,7 @@ if [ $VERBOSE == "yes" ]; then
 fi
 
 # find the ID to append to SCIRun based on time of run - i.e., SCIRun.080102
-if [ $WEEKLY == "1" ]; then
-  ID=`date +%a%b%d%y`
-else
-  ID=`date +%m%d%y`
-fi
-
-if [ "$USER" != "" ]; then
-  ID="$ID"-"$USER"
-fi
+ID=`date +%m%d%y`
 
 if [ $USE_TREE != "new" ]; then
   # use the SCIRun specified on the command line
@@ -287,7 +246,7 @@ else
 
 
   echo $PATH
-  svn co https://code.sci.utah.edu/svn/SCIRun/trunk/src src  > "$BUILDROOT"/svn_co.log 2>&1
+  svn co https://code.sci.utah.edu/svn/uintah/trunk/src src  > "$BUILDROOT"/svn_co.log 2>&1
   retval=$?
 
   if [ $VERBOSE == "yes" ]; then
@@ -312,7 +271,7 @@ else
 fi
 
 # set a lock once a month for six months
-if [ "$USE_TREE" == "new" -a "$USE_PREVTREE" == "no" -a `date +%d` == "01" -a "$MONTHLYBACKUP" == "1" -a "$WEEKLY" == "0" ]; then
+if [ "$USE_TREE" == "new" -a "$USE_PREVTREE" == "no" -a `date +%d` == "01" -a "$MONTHLYBACKUP" == "1" ]; then
   if [ -L "5_month.lock" ]; then
     mv -f "${BUILD_DIR}/5_month.lock" "${BUILD_DIR}/6_month.lock"
   fi
@@ -332,33 +291,8 @@ if [ "$USE_TREE" == "new" -a "$USE_PREVTREE" == "no" -a `date +%d` == "01" -a "$
 fi
 
 # where the webpage will be, and init webpage
-if [ "$WEEKLY" == "0" ]; then
-  HTMLLOG=/usr/local/home/csafe-tester/public_html/SCIRun.${ID}.html
-  WEBLOG=http://blaze.sci.utah.edu/~csafe-tester/SCIRun.${ID}.html
-else
-  HTMLLOG=/usr/local/home/csafe-tester/public_html//Weekly/SCIRun.${ID}.html
-  WEBLOG=http://blaze.sci.utah.edu/~csafe-tester/Weekly/SCIRun.${ID}.html
-fi
-
-#__________________________________
-# Configure Commands
-DBG_CONFIGURE="--enable-debug --enable-64bit --enable-sci-malloc --enable-scinew-line-numbers"
-OPT_CONFIGURE="--enable-64bit --enable-assertion-level=0"
-# set configure command options based on architecture
-if [ "$OS" == "Linux" ]; then
-  export PETSC_ARCH=linux-gnu-amd64
-  COMMON="--with-mpi=/usr/lib/openmpi --with-petsc=/usr/ --with-hypre=/usr/"
-  #COMMON="--enable-package='Uintah' --with-thirdparty=/usr/local/share/SCIRun/Thirdparty/1.25.4/Linux/gcc-4.3.1-2-64bit --with-mpi=/usr/lib/openmpi --with-petsc=/usr/ --with-hypre=/usr/"
-  #COMMON="--enable-package='Uintah' --with-thirdparty=/usr/local/share/SCIRun/Thirdparty/1.25.4/Linux/gcc-4.3.1-2-64bit --with-mpi=/usr/lib/openmpi --with-petsc=/usr/local/share/SCIRun/Thirdparty/1.25.4/Linux/gcc-4.3.1-2-64bit/petsc-2.3.3-p13-openmpi-opt-install/ --with-hypre=/usr/local/share/SCIRun/Thirdparty/1.25.4/Linux/gcc-4.3.1-2-64bit/hypre-2.0.0-openmpi-opt-install"
-  DBG_CONFIGURE="$COMMON $DBG_CONFIGURE"
-  OPT_CONFIGURE="$COMMON '--enable-optimize=-O3 -mfpmath=sse' $OPT_CONFIGURE"
-else
-# Darwin
-  export PETSC_ARCH=darwin9.4.0-c-real-opt
-  COMMON="--enable-package='Uintah Teem' --with-petsc=/usr/sci/projects/Uintah/Thirdparty/1.0.0/Darwin/PPC-9.4.0/gcc-4.0.1-openmpi-32bit --with-hypre=/usr/sci/projects/Uintah/Thirdparty/1.0.0/Darwin/PPC-9.4.0/gcc-4.0.1-openmpi-32bit --with-mpi=/usr/local/openmpi"
-  DBG_CONFIGURE="$COMMON $DBG_CONFIGURE"
-  OPT_CONFIGURE="$COMMON '--enable-optimize=-mcpu=7450 -O2 -fsigned-char -maltivec -mabi=altivec -mpowerpc-gfxopt' $OPT_CONFIGURE"
-fi
+HTMLLOG=/usr/local/home/csafe-tester/public_html/SCIRun.${ID}.html
+WEBLOG=http://blaze.sci.utah.edu/~csafe-tester/SCIRun.${ID}.html
 
 #__________________________________
 # create html web page
@@ -374,7 +308,7 @@ echo "LOG: $HTMLLOG" >> $HTMLLOG
 
 #PATH="$BUILDROOT"/src/Packages/Uintah/R_Tester/helpers:"$PATH"
 PATH="$BUILDROOT"/src/R_Tester/helpers:"$PATH"
-export PATH DO_DBG DO_OPT DBG_CONFIGURE OPT_CONFIGURE HTMLLOG WEBLOG VERBOSE
+export PATH DO_DBG DO_OPT HTMLLOG WEBLOG VERBOSE
 
 if [ $VERBOSE == "yes" ]; then
    echo "Running Tests"

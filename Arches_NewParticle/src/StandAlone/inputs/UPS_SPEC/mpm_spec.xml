@@ -18,7 +18,7 @@
       <DoThermalExpansion                 spec="OPTIONAL BOOLEAN" />  <!-- FIXME: default is? -->
       <computeNodalHeatFlux               spec="OPTIONAL BOOLEAN" />
       <erosion                            spec="OPTIONAL NO_DATA"
-                                            attribute1="algorithm REQUIRED STRING 'none, AllowNoTension, KeepStress, ZeroStress, RemoveMass, AllowNoShear'" />
+                                            attribute1="algorithm REQUIRED STRING 'none, AllowNoTension, KeepStress, ZeroStress, RemoveMass, AllowNoShear, BrittleDamage'" />
       <delete_rogue_particles               spec="OPTIONAL BOOLEAN" />
       <ForceBC_force_increment_factor     spec="OPTIONAL DOUBLE" />  <!-- default is 0. -->
       <manual_new_material                spec="OPTIONAL BOOLEAN" />  <!-- default is false -->
@@ -28,7 +28,7 @@
       <boundary_traction_faces            spec="OPTIONAL STRING" />
       <interpolateParticleTempToGridEveryStep spec="OPTIONAL BOOLEAN" />  <!-- default is false -->
       <time_integrator                    spec="OPTIONAL STRING 'explicit, fracture, implicit'" /> <!-- FIXME: is 'fracture' valid? -->
-      <interpolator                       spec="OPTIONAL STRING 'linear, gimp,cpdi, 3rdorderBS, 4thorderBS'" /> <!-- Default is linear -->
+      <interpolator                       spec="OPTIONAL STRING 'linear, gimp,cpdi, fastcpdi, 3rdorderBS, 4thorderBS'" /> <!-- Default is linear -->
       <minimum_particle_mass              spec="OPTIONAL DOUBLE 'positive'"/>
       <minimum_mass_for_acc               spec="OPTIONAL DOUBLE 'positive'"/>
       <maximum_particle_velocity          spec="OPTIONAL DOUBLE 'positive'"/>
@@ -108,11 +108,13 @@
     <MPM                                 spec="OPTIONAL NO_DATA">
       <contact                           spec="MULTIPLE NO_DATA" >
         <direction                       spec="OPTIONAL VECTOR" />
+        <myu                             spec="OPTIONAL DOUBLE 'positive'" /> <!-- Used in NodalSVFContact -->
+        <use_svf                         spec="OPTIONAL BOOLEAN"/>            <!-- Used in NodalSVFContact -->
         <mu                              spec="OPTIONAL DOUBLE 'positive'" /> <!-- ONLY USED FOR FRICTION OR APPROACH -->
         <volume_constraint               spec="OPTIONAL DOUBLE 'positive'" /> <!-- ONLY USED FOR FRICTION OR APPROACH -->
         <materials                       spec="OPTIONAL MULTIPLE_INTEGERS" />
         <stop_time                       spec="OPTIONAL DOUBLE" /> <!-- Time at which to make the velocity of the rigid body have the value of velocity_after_stop -->
-        <type                            spec="REQUIRED STRING 'null, single_velocity, rigid, specified, friction, approach'" />
+        <type                            spec="REQUIRED STRING 'null, nodal_svf, single_velocity, rigid, specified, friction, approach'" />
         <vel_fields                      spec="OPTIONAL MULTIPLE_INTEGERS" />
         <velocity_after_stop             spec="OPTIONAL VECTOR" />
         <filename                        spec="OPTIONAL STRING" />
@@ -161,6 +163,7 @@
         <sig_max                           spec="OPTIONAL DOUBLE" />
         <tau_max                           spec="OPTIONAL DOUBLE" />
         <cz_filename                       spec="REQUIRED STRING" />
+        <do_rotation                       spec="OPTIONAL BOOLEAN" />
       </cohesive_zone>
       <thermal_contact                   spec="OPTIONAL NO_DATA" />
     </MPM>

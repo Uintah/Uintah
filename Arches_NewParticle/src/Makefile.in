@@ -236,38 +236,6 @@ distclean:: clean
 	rm -f $(patsubst %,%/Makefile, $(ALLOBJSUBDIRS))
 	rm -f include/sci_defs/*.h stamp-h
 
-cleanall:: cleanai cleanAI cleanjs cleanJS cleantz cleanTZ cleanrest
-
-cleanai::
-	rm -f $(patsubst %,%/[a-i]*.$(OBJEXT), $(ALLOBJSUBDIRS))
-	rm -f $(patsubst %,%/ii_files/[a-i]*.ii, $(ALLOBJSUBDIRS))
-cleanAI::
-	rm -f $(patsubst %,%/[A-I]*.$(OBJEXT), $(ALLOBJSUBDIRS))
-	rm -f $(patsubst %,%/ii_files/[A-I]*.ii, $(ALLOBJSUBDIRS))
-cleanjs::
-	rm -f $(patsubst %,%/[j-s]*.$(OBJEXT), $(ALLOBJSUBDIRS))
-	rm -f $(patsubst %,%/ii_files/[j-s]*.ii, $(ALLOBJSUBDIRS))
-cleanJS::
-	rm -f $(patsubst %,%/[J-S]*.$(OBJEXT), $(ALLOBJSUBDIRS))
-	rm -f $(patsubst %,%/ii_files/[J-S]*.ii, $(ALLOBJSUBDIRS))
-cleantz::
-	rm -f $(patsubst %,%/[t-z]*.$(OBJEXT), $(ALLOBJSUBDIRS))
-	rm -f $(patsubst %,%/ii_files/[t-z]*.ii, $(ALLOBJSUBDIRS))
-cleanTZ::
-	rm -f $(patsubst %,%/[T-Z]*.$(OBJEXT), $(ALLOBJSUBDIRS))
-	rm -f $(patsubst %,%/ii_files/[T-Z]*.ii, $(ALLOBJSUBDIRS))
-cleanrest::
-	rm -f $(patsubst %,%/*.$(OBJEXT), $(ALLOBJSUBDIRS))
-	rm -f $(patsubst %,%/depend.mk, $(ALLOBJSUBDIRS))
-	rm -f $(patsubst %,%/core, $(ALLOBJSUBDIRS))
-	rm -f $(patsubst %,%/ii_files/*.ii, $(ALLOBJSUBDIRS))
-	-rmdir $(patsubst %,%/ii_files, $(ALLOBJSUBDIRS))
-	rm -f $(patsubst %,%/*~, $(ALLOBJSUBDIRS))
-	rm -f $(LIBDIR)/so_locations
-	rm -f $(CLEANLIBS)
-	rm -f $(CLEANPROGS)
-	rm -f y.output
-	rm -Rf $(LIBDIR)
 
 objs: $(CLEANOBJS)
 
@@ -275,6 +243,10 @@ cleantau:
 	rm -f Uintah/CCA/Components/Schedulers/MPIScheduler.$(OBJEXT)
 	rm -f Uintah/CCA/Components/Schedulers/ThreadPool.$(OBJEXT)
 	rm -f Uintah/StandAlone/sus.$(OBJEXT)
+
+cleanVisIt:
+	@echo "Removing udaReaderMTMD directory,"
+	rm -rf VisIt/udaReaderMTMD
 
 ifeq (,$(findstring objs,$(MAKECMDGOALS)))
 # This includes all of the dependencies.  We prepend the absolute path
@@ -296,3 +268,21 @@ vc: prereqs $(VCSOLUTION) $(ALLTCLINDEXES)
 # since foreach inserts a space at the end of the line that VS can't have, remove it
 $(VCSOLUTION): $(ALLVCPROJECTS)
 	@echo -e "Microsoft Visual Studio Solution File, Format Version 8.00$(foreach project,$^,\nProject(\"{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}\") = \"$(basename $(notdir $(project)))\", \"$(project)\", \"{$($(project)_ID)}\"\n\tProjectSection(ProjectDependencies) = postProject$(foreach dep,$($(project)_PROJ_DEPS),\n\t\t{$($(dep)_ID)} = {$($(dep)_ID)}PPPPP)\n\tEndProjectSection\nEndProject)\nGlobal\n\tGlobalSection(SolutionConfiguration) = preSolution\n\t\t$(CONF_NAME) = $(CONF_NAME)\n\tEndGlobalSection\n\tGlobalSection(ProjectConfiguration) = postSolution$(foreach project,$^,\n\t\t{$($(project)_ID)}.$(CONF_NAME).ActiveCfg = $(CONF_NAME)|Win32\n\t\t{$($(project)_ID)}.$(CONF_NAME).Build.0 = $(CONF_NAME)|Win32PPPPP)\n\tEndGlobalSection\n\tGlobalSection(ExtensibilityGlobals) = postSolution\n\tEndGlobalSection\n\tGlobalSection(ExtensibilityAddIns) = postSolution\n\tEndGlobalSection\nEndGlobal" | sed 's,PPPPP ,,g' | sed 's,PPPPP,,g' > $@
+
+#########################################################################################################
+# Targets for regression testing...
+
+gold_standards :
+	@mkdir -p $(OBJTOP_ABS)/TestData;                    \
+         cd $(OBJTOP_ABS)/TestData;                          \
+	 components=`$(SRCTOP_ABS)/R_Tester/helpers/selectComponents.sh $(SRCTOP_ABS)/R_Tester`; \
+	 if test "$$?" == 0; then                            \
+            export PYTHONPATH="$(SRCTOP_ABS)/R_Tester/toplevel:$(SRCTOP_ABS)/R_Tester"; \
+            $(SRCTOP_ABS)/R_Tester/toplevel/generateGoldStandards.py -b $(OBJTOP_ABS) -s $(SRCTOP_ABS) $$components -j $(MAKE_PARALLELISM) -v; \
+         fi
+
+#__________________________________
+#  to execute the local regression tester
+runLocalRT:
+	@cd $(OBJTOP_ABS)
+	@$(SRCTOP)/R_Tester/toplevel/startLocalTest $(OBJTOP_ABS) $(SRCTOP_ABS)

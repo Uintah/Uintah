@@ -50,6 +50,9 @@ CylinderGeometryPiece::CylinderGeometryPiece()
   d_bottom = bottom;
   d_top = top;
   d_radius = 0.0;
+  d_cylinder_end=false;
+  d_axisymmetric_end=false;
+  d_axisymmetric_side=false;
 }
 
 CylinderGeometryPiece::CylinderGeometryPiece(ProblemSpecP& ps) 
@@ -61,6 +64,9 @@ CylinderGeometryPiece::CylinderGeometryPiece(ProblemSpecP& ps)
   ps->require("bottom",bottom);
   ps->require("top",top);
   ps->require("radius",rad);
+  ps->getWithDefault("cylinder_end",     d_cylinder_end,      false);
+  ps->getWithDefault("axisymmetric_end", d_axisymmetric_end,  false);
+  ps->getWithDefault("axisymmetric_side",d_axisymmetric_side, false);
   
   double near_zero = 1e-100;
   Vector axis = top - bottom;
@@ -94,6 +100,9 @@ CylinderGeometryPiece::CylinderGeometryPiece(const Point& top,
   d_bottom = bottom;
   d_top = top;
   d_radius = radius;
+  d_cylinder_end=false;
+  d_axisymmetric_end=false;
+  d_axisymmetric_side=false;
 }
 
 CylinderGeometryPiece::~CylinderGeometryPiece()
@@ -106,6 +115,11 @@ CylinderGeometryPiece::outputHelper( ProblemSpecP & ps ) const
   ps->appendElement("bottom",d_bottom);
   ps->appendElement("top",d_top);
   ps->appendElement("radius",d_radius);
+  if(d_cylinder_end || d_axisymmetric_end || d_axisymmetric_side){
+    ps->appendElement("cylinder_end",d_cylinder_end);
+    ps->appendElement("axisymmetric_end", d_axisymmetric_end);
+    ps->appendElement("axisymmetric_side",d_axisymmetric_side);
+  }
 }
 
 GeometryPieceP

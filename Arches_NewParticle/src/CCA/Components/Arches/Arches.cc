@@ -342,22 +342,14 @@ Arches::problemSetup(const ProblemSpecP& params,
   propertyFactory.setArchesLabel( d_lab );
 
   ProblemSpecP transportEqn_db = db->findBlock("TransportEqns");
-  if (transportEqn_db) {
-    // register transport eqns
-    eqnFactory.problemSetup(transportEqn_db);
+  // register transport eqns
+  eqnFactory.problemSetup(transportEqn_db);
 
-    // Wait until later to register source terms,
-    // since some source terms need DQMOM information
-  } else {
-    proc0cout << "No *extra* transport equations found." << endl;
-  }
+  // Wait until later to register source terms,
+  // since some source terms need DQMOM information
 
   ProblemSpecP propmodels_db = db->findBlock("PropertyModels"); 
-  if ( propmodels_db ){
-    propertyFactory.problemSetup( propmodels_db );
-  } else {
-    proc0cout << "No property models found." << endl;
-  }
+  propertyFactory.problemSetup( propmodels_db );
 
   // read properties
   // d_MAlab = multimaterial arches common labels
@@ -578,10 +570,8 @@ Arches::problemSetup(const ProblemSpecP& params,
 
   // Do problem setup stuff for TranpsortEqns (some of these require DQMOM information, which is why this goes after the DQMOM problem setup)
   if( db->findBlock("TransportEqns") ) {
-    if( db->findBlock("TransportEqns")->findBlock("Sources") ) {
-      ProblemSpecP sources_db = db->findBlock("TransportEqns")->findBlock("Sources");
-      srcFactory.problemSetup( sources_db );
-    }
+    ProblemSpecP sources_db = db->findBlock("TransportEqns")->findBlock("Sources");
+    srcFactory.problemSetup( sources_db );
   }
 
   if( db->findBlock("DQMOM") ) {

@@ -112,6 +112,10 @@ public:
   };
 
 protected:
+  enum coarsenFlag{
+    coarsenData,
+    zeroData,
+  };
 
   virtual void actuallyInitialize(const ProcessorGroup*,
                                   const PatchSubset* patches,
@@ -148,6 +152,20 @@ protected:
                                           const MaterialSubset* matls,
                                           DataWarehouse* old_dw,
                                           DataWarehouse* new_dw);
+  // At Coarse Fine interface
+  void interpolateParticlesToGrid_CFI(const ProcessorGroup*,
+                                      const PatchSubset* patches,
+                                      const MaterialSubset* matls,
+                                      DataWarehouse* old_dw,
+                                      DataWarehouse* new_dw);
+                                      
+  void coarsenNodalData_CFI(const ProcessorGroup*,
+                            const PatchSubset* patches,
+                            const MaterialSubset* matls,
+                            DataWarehouse* old_dw,
+                            DataWarehouse* new_dw,
+                            const coarsenFlag flag);
+
 
   virtual void computeStressTensor(const ProcessorGroup*,
                                    const PatchSubset* patches,
@@ -196,6 +214,12 @@ protected:
                                                const MaterialSubset* matls,
                                                DataWarehouse* old_dw,
                                                DataWarehouse* new_dw);
+  // At Coarse Fine interface
+  void interpolateToParticlesAndUpdate_CFI(const ProcessorGroup*,
+                                           const PatchSubset* patches,
+                                           const MaterialSubset* matls,
+                                           DataWarehouse* old_dw,
+                                           DataWarehouse* new_dw);
 
   void refine(const ProcessorGroup*,
               const PatchSubset* patches,
@@ -222,6 +246,15 @@ protected:
   virtual void scheduleInterpolateParticlesToGrid(SchedulerP&, 
                                                   const PatchSet*,
                                                   const MaterialSet*);
+                                                  
+  void scheduleInterpolateParticlesToGrid_CFI(SchedulerP&, 
+                                              const PatchSet*,
+                                              const MaterialSet*);
+                                              
+  void scheduleCoarsenNodalData_CFI(SchedulerP&, 
+                                    const PatchSet*,
+                                    const MaterialSet*,
+                                    const coarsenFlag flag);
 
   virtual void scheduleComputeStressTensor(SchedulerP&, 
                                            const PatchSet*,
@@ -250,6 +283,10 @@ protected:
   virtual void scheduleInterpolateToParticlesAndUpdate(SchedulerP&, 
                                                        const PatchSet*,
                                                        const MaterialSet*);
+                                                       
+  void scheduleInterpolateToParticlesAndUpdate_CFI(SchedulerP&, 
+                                                   const PatchSet*,
+                                                   const MaterialSet*);
   
   //
   //  count the total number of particles in the domain

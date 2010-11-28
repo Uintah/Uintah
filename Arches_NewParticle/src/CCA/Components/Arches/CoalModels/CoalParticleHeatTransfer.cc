@@ -718,22 +718,13 @@ CoalParticleHeatTransfer::computeModel( const ProcessorGroup * pc,
       gas_heat_rate[c] = gas_heat_rate_;
       abskp[c] = abskp_;
 
-      if( c == IntVector(3,35,22) || c == IntVector(120,35,22) ) {
-        cout << endl;
-        cout << "Coal particle heat transfer: Cell " << c << " -------------" << endl;
-        cout << "Current particle temperature is " << scaled_particle_temperature << "(" << unscaled_particle_temperature << ")" << endl;
-        cout << "Qradiation = Absc*(Fsum - Eb) = " << dummy_Apsc << " * (" << dummy_FSum << " - " << dummy_Eb << ") = " << dummy_Apsc*(dummy_FSum - dummy_Eb) << endl;
-        cout << "Heating rate for qn " << d_quadNode << " = (Q_convection + Q_radiation)/(mp_Cp * d_pt_scaling_constant) = (" << Q_convection << " + " << Q_radiation << ")/(" << mp_Cp << " + " << d_pt_scaling_constant << ") = " << heat_rate_ << endl;
-        cout << "Gas heating rate for qn " << d_quadNode << " is " << gas_heat_rate_ << endl;
-        cout << endl;
-      }
-
 #ifdef DEBUG_MODELS
       if( c == IntVector(1,35,35) ) {
         cout << endl;
         cout << "Coal particle heat transfer: Cell " << c << " -------------" << endl;
         cout << "Current particle temperature is " << scaled_particle_temperature << "(" << unscaled_particle_temperature << ")" << endl;
-        cout << "Heating rate for qn " << d_quadNode << " is ~ Q_convection + Q_radiation = " << Q_convection << " + " << Q_radiation << " = " << heat_rate_ << endl;
+        cout << "Qradiation = Absc*(Fsum - Eb) = " << dummy_Apsc << " * (" << dummy_FSum << " - " << dummy_Eb << ") = " << dummy_Apsc*(dummy_FSum - dummy_Eb) << endl;
+        cout << "Heating rate for qn " << d_quadNode << " = (Q_convection + Q_radiation)/(mp_Cp * d_pt_scaling_constant) = (" << Q_convection << " + " << Q_radiation << ")/(" << mp_Cp << " + " << d_pt_scaling_constant << ") = " << heat_rate_ << endl;
         cout << "Gas heating rate for qn " << d_quadNode << " is " << gas_heat_rate_ << endl;
         cout << endl;
       }

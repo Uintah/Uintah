@@ -1,0 +1,166 @@
+#!/bin/sh
+
+#______________________________________________________________________
+#  startLocalTest:
+#     This script executes the local regression tests for a single component
+
+#__________________________________
+# define environmental variables and export them
+HTMLLOG=""
+LOCAL_OR_NIGHTLY_TEST="local"
+mallocstrict="no"
+OS=`uname -s`
+PARALLELISM=8
+WEBLOG=""
+BUILD_DIR=/dev/null
+
+export mallocstrict  BUILD_DIR  HTMLLOG WEBLOG LOCAL_OR_NIGHTLY_TEST OS
+
+#__________________________________
+unset SHELL
+umask 002
+
+if [ "$#" != 2 ]; then
+  echo "Usage: startLocalTest <Path to Build Directory> <path to src directory>"
+  exit
+fi
+
+BUILD_DIR="$1"
+SRCTOP="$2"
+
+if [ ! -d "${BUILD_DIR}" ]; then
+  echo "ERROR: The build directory $BUILD_DIR does not exist.  Now exiting"
+  exit -1
+fi
+
+cd "${BUILD_DIR}"
+
+TEST_DATA="${BUILD_DIR}/TestData"
+#__________________________________
+#    - generate the symbolic links
+#    - check for the goldStandards
+mkdir local_RT >& /dev/null
+cd    local_RT
+
+if [ ! -d TestScripts ]; then
+  ln -s ${SRCTOP}/R_Tester TestScripts
+fi
+
+if [ ! -f replace_all_GS ]; then
+  ln -s ${SRCTOP}/R_Tester/helpers/replace_all_GS replace_all_GS
+fi
+
+if [ ! -d susdir ]; then
+  ln -s ../StandAlone susdir
+fi
+
+if [ ! -d inputs ]; then
+  ln -s ${SRCTOP}/StandAlone/inputs inputs
+fi
+
+if [ -d goldStandard ]; then
+  rm -f goldStandard
+fi
+ln -s "${TEST_DATA}" goldStandard
+
+#__________________________________
+# bulletproofing
+if [ ! -d "$TEST_DATA" ]; then
+  echo "__________________________________"
+  echo "ERROR: gold standards directory doesn't exist: $TEST_DATA."
+  echo "Run the command:"
+  echo "    make gold_standards"
+  echo " to generate them.  Now exiting"
+  echo "__________________________________"
+  exit -1;
+fi
+
+if [ ! -f susdir/sus ]; then
+  echo "ERROR: The executable sus was not found.  Please compile it by running make uintah.  Now exiting"
+  exit -1;
+fi
+if [ ! -f susdir/compare_uda ]; then
+  echo "ERROR: The comparison utility compare_uda was not found.  Please compile it by running make uintah.  Now exiting"
+  exit -1;
+fi
+
+# If the env var TEST_COMPONENTS is set, use it instead of asking user for component list...
+if test ${TEST_COMPONENTS:+1}; then
+    echo ""
+    echo "Using TEST_COMPONENTS env var for list of components to test: ($TEST_COMPONENTS)"
+    selectedCompTests=$TEST_COMPONENTS
+else
+  if test "$TERM" == "dumb" -o "$TERM" == "emacs"; then
+    echo
+    echo "ERROR: startLocalTest requires a fully functional terminal... you have '$TERM'."
+    echo "       (Consider setting environment variable TEST_COMPONENTS.)  Goodbye."
+    echo
+    exit                                                                                    
+  fi
+  if test "$EMACS" == "t"; then
+    echo
+    echo "ERROR: startLocalTest cannot be run from within emacs..."
+    echo "       (Consider setting environment variable TEST_COMPONENTS.)  Goodbye."
+    echo
+    exit                                                                                    
+  fi
+  #__________________________________
+  # Have the user pick a component
+  # find all the component tests which are python scripts
+
+  allComponentTests=`ls TestScripts/*.py | grep -v __init__ | sed "s/.py//g" | sed "s,TestScripts/,,g"`
+
+  list=""
+  n="0"
+  for comp in $allComponentTests; do
+    list="$list $comp - off,"
+    n=$(( $n + 1 ))
+  done
+  echo $list
+
+  selectedCompTests=`dialog --stdout --separate-output --checklist "Select the component for local regression testing" 20 61 15 $list`
+
+  if [ $? != 0 ] ; then                                                                
+    echo ""
+    echo "Cancel selected... Goodbye."                                                                  
+    echo ""
+    exit                                                                                    
+  fi 
+fi
+
+#__________________________________
+# Now run the tests
+echo ""
+echo ""
+date
+for componentTest in $selectedCompTests; do
+  echo "Running $componentTest Tests"
+
+  # clean up old test results
+  /bin/rm -f $componentTest.log >/dev/null
+  /bin/rm -rf $componentTest-results >/dev/null
+
+  # create the do<component>tests  python script
+  doTestScript="do${componentTest}tests"
+  echo "#!/bin/tcsh"                                         >  "$doTestScript"
+  echo "setenv PATH $PATH"                                   >> "$doTestScript"
+  echo "setenv OS $OS"                                       >> "$doTestScript"
+  echo "setenv SCI_DEBUG \"\""                               >> "$doTestScript"
+  echo "setenv LOCAL_OR_NIGHTLY_TEST $LOCAL_OR_NIGHTLY_TEST" >> "$doTestScript"
+  echo "python -u TestScripts/$componentTest.py susdir inputs goldStandard unknown $PARALLELISM "'$1' >> "$doTestScript"
+
+  /bin/chmod a+x "$doTestScript"
+
+  #__________________________________
+  # run the python script that contains all the
+  # tests for that component
+
+  "./$doTestScript" | tee "${componentTest}.log"
+
+  retval=$?
+
+  echo ""
+  echo ""
+done
+exit $retval
+

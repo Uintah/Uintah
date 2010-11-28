@@ -8,7 +8,7 @@
 
   <Wasatch>
 
-    <BasicExpression label="fIC" type="Cell">
+    <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
       <NameTag name="mixture fraction" state="STATE_N" />
       <Constant>0.5</Constant>
@@ -16,19 +16,33 @@
 
     <!-- Set up a tabular property evaluation -->
     <TabProps>
-      <FileNamePrefix>AdiabaticEquil</FileNamePrefix>
-      <IndependentVariable name="MixtureFraction" alias="mixture fraction" />
-      <ExtractVariable name="Temperature" alias="temperature" type="Cell" />
+      <FileNamePrefix>inputs/Wasatch/AdiabaticEquil</FileNamePrefix>
+      <IndependentVariable>
+        <NameTag name="mixture fraction" state="STATE_N" />
+        <NameInTable>MixtureFraction</NameInTable>
+      </IndependentVariable>
+      <ExtractVariable>
+        <NameInTable>Temperature</NameInTable>
+        <NameTag name="temperature" state="STATE_NONE" />
+        <Type>SVOL</Type>
+      </ExtractVariable>
+      <ExtractVariable>
+        <NameInTable>Conductivity</NameInTable>
+        <NameTag name="thermal conductivity" state="STATE_NONE" />
+        <Type>SVOL</Type>
+      </ExtractVariable>
     </TabProps>
 
     <!-- Build a scalar transport equation -->
-    <TransportEquation equation="scalar">
+    <TransportEquation equation="generic">
 
       <SolutionVariable>mixture fraction</SolutionVariable>
 
       <DiffusiveFluxExpression>
         <Direction>X</Direction>
-        <ConstantDiffusivity>1.0</ConstantDiffusivity>
+        <DiffusionCoefficient>
+	  <NameTag name="thermal conductivity" state="STATE_NONE" />
+        </DiffusionCoefficient>
       </DiffusiveFluxExpression>
 
       <DiffusiveFluxExpression>
@@ -48,7 +62,7 @@
   </Wasatch>
 
   <Time>
-    <maxTime>0.0</maxTime>
+    <maxTime>2.0</maxTime>
     <initTime>0.0</initTime>
     <delt_min>0.001</delt_min>
     <delt_max>2.0</delt_max>
@@ -61,8 +75,8 @@
     <outputInitTimestep/>
     <checkpoint cycle = "2" interval = "0.01"/>
     <compression>gzip</compression>
-    <save label="temperature"/>
-    <!--     <save label="thermal conductivity"/> -->
+    <save label="mixture fraction"/>
+    <save label="thermal conductivity"/>
   </DataArchiver>
 
   <Grid>
@@ -70,10 +84,11 @@
       <Box label="1">
         <lower>[0,0,0]</lower>
         <upper>[1,1,1]</upper>
-        <resolution>[10,10,10]</resolution>
+        <resolution>[20,10,10]</resolution>
         <!--         <extraCells>[0,0,0]</extraCells> -->
         <patches>[1,1,1]</patches>
       </Box>
+      <periodic>[1,1,1]</periodic>
     </Level>
   </Grid>
 

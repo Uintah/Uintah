@@ -9,13 +9,13 @@
 
    <Wasatch>
 
-     <BasicExpression label="TIC" type="Cell">
+     <BasicExpression type="SVOL">
        <TaskList>initialization</TaskList>
        <NameTag name="temperature" state="STATE_N" />
        <Constant>543.21</Constant>
      </BasicExpression>
 
-     <BasicExpression label="ThermalCond" type="Cell">
+     <BasicExpression type="SVOL">
        <TaskList>advance_solution</TaskList>
        <NameTag name="thermal conductivity" state="STATE_NONE" />
        <Constant>1.0</Constant>
@@ -56,6 +56,7 @@
 <!--         <extraCells>[0,0,0]</extraCells> -->
         <patches>[1,1,1]</patches>
       </Box>
+      <periodic>[1,1,1]</periodic>
     </Level>
   </Grid>
 

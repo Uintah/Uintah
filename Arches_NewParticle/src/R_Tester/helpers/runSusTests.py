@@ -2,10 +2,17 @@
 
 from os import environ,rmdir,mkdir,path,system,chdir,stat,getcwd,pathsep,symlink
 from time import asctime,localtime,strftime,time
-from sys import argv,exit
+from sys import argv,exit,stdout
 from string import upper,rstrip,rsplit
 from modUPS import modUPS
 from commands import getoutput
+
+####
+# Assuming that running python with the '-u' arg doesn't fix the i/o buffering problem, this line
+# can be added after print statements:
+#
+# stdout.flush() # Make sure that output (via 'tee' command (from calling script)) is actually printed...
+####
 
 def nameoftest (test):
     return test[0]
@@ -14,7 +21,7 @@ def input (test):
 def num_processes (test):
     return test[2]
 def testOS(test):
-    return test[3]
+    return upper(test[3])
 def inputs_root ():
     return argv[2]
 def date ():
@@ -23,13 +30,26 @@ def userFlags (test):
     return test[-1]
 def nullCallback (test, susdir, inputsdir, compare_root, dbg_opt, max_parallelism):
     pass
+
+#______________________________________________________________________
+# Used by toplevel/generateGoldStandards.py
+
+inputs_dir = ""
+
+def setGeneratingGoldStandards( inputs ) :
+    global inputs_dir
+    inputs_dir = inputs
+
+def generatingGoldStandards() :
+    global inputs_dir
+    return inputs_dir
     
 #______________________________________________________________________
 # if a callback is given, it is executed before running each test and given
 # all of the paramaters given to runSusTest
 def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
  
-  if len(argv) < 6 or len(argv) > 7 or not argv[4] in ["dbg", "opt"] :
+  if len(argv) < 6 or len(argv) > 7 or not argv[4] in ["dbg", "opt", "unknown"] :
     print "usage: %s <susdir> <inputsdir> <testdata_goldstandard> <dbg_opt> " \
              "<max_parallelsim> <test>" % argv[0]
     print "    where <test> is optional"
@@ -58,13 +78,18 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
   if len(argv) == 7:
     solotest = argv[6]
   
-  # If run from startTester, tell it to output logs in web dir
-  # otherwise, save it in the build, and display links
-  try:
-
-    # if webpath exists, use that, otherwise, use BUILDROOT/dbg_opt
-    outputpath    = "%s-%s" % (environ['HTMLLOG'], dbg_opt)
-    weboutputpath = "%s-%s" % (environ['WEBLOG'],  dbg_opt)
+  
+  outputpath = startpath
+  weboutputpath = startpath
+  # If running Nightly RT, output logs in web dir
+  # otherwise, save it in the build
+  if environ['LOCAL_OR_NIGHTLY_TEST'] == "nightly" :
+    try:
+      outputpath    = "%s-%s" % (environ['HTMLLOG'], dbg_opt)
+      weboutputpath = "%s-%s" % (environ['WEBLOG'],  dbg_opt)
+    except Exception:
+      pass
+      
     try:
       # make outputpath/dbg or opt dirs
       environ['outputlinks'] ="1"
@@ -72,10 +97,6 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
       system("chmod -R 775 %s" % outputpath)
     except Exception:
       pass
-
-  except Exception:
-    outputpath = startpath
-    weboutputpath = startpath
 
   #__________________________________
   # bulletproofing
@@ -136,14 +157,15 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
   print "===================================="
   print ""
 
-  
-
   #______________________________________________________________________
   # Loop over tests 
   ran_any_tests  = 0
   failcode       = 0
   solotest_found = 0
   comp_time0 = time()
+  
+  # clean up any old log files
+  system("rm -rf %s/%s-short.log" % (startpath,ALGO))
  
   for test in TESTS:
 
@@ -151,8 +173,8 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
     
     if solotest != "" and testname != solotest:
       continue
-
-    if testOS(test) != environ['OS'] and testOS(test) != "ALL":
+    
+    if testOS(test) != upper(environ['OS']) and testOS(test) != "ALL":
       continue
       
     print "__________________"
@@ -214,11 +236,20 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
         if flags[i] == "exactComparison":
           abs_tolerance = 0.0
           rel_tolerance = 0.0
+    
+    #Warnings
+    if dbg_opt == "dbg" and do_performance == 1:
+      print "\nERROR: performance tests cannot be run with a debug build, skipping this test\n"
+      continue
            
     if do_debug == 0 and dbg_opt == "dbg":
+      print "\nWARNING: skipping this test (do_debug: %s, dbg_opt: %s)\n" % (do_debug, dbg_opt)
       continue
+    
     if do_opt == 0 and dbg_opt == "opt":
+      print "\nWARNING: skipping this test (do_opt: %s, dbg_opt: %s)\n" % (do_opt, dbg_opt)
       continue
+    
       
     if dbg_opt == "opt":
       do_memory = 0
@@ -230,13 +261,21 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
 
     #__________________________________
     # bulletproofing
-    # does gold standard exists
+    # Does gold standard exists?
+    # If it doesn't then either throw an error (local RT) or generate it (Nightly RT).
     try:
       chdir(compare_root)
       chdir(testname)
     except Exception:
-      chdir(compare_root)
-      mkdir(testname)
+      if environ['LOCAL_OR_NIGHTLY_TEST'] == "local" :
+        print "ERROR: The gold standard for the (%s) test does not exist." % testname
+        print "To generate it run: \n   make gold_standards"
+        exit(1) 
+        
+      if environ['LOCAL_OR_NIGHTLY_TEST'] == "nightly" :     
+        print "gold Standard being created for  (%s)" % testname
+        chdir(compare_root)
+        mkdir(testname)
     
     if startFrom == "checkpoint":
       try:
@@ -266,7 +305,7 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
       print "Remove %s/%s before running this test" % (resultsdir, testname)
       exit(1)
 
-    system("echo '%s/replace_gold_standard %s %s/%s-results %s $1 \"$2\"' > %s/replace_gold_standard" % (helperspath, compare_root, startpath, ALGO, testname, testname))
+    system("echo '%s/replace_gold_standard %s %s/%s-results %s' > %s/replace_gold_standard" % (helperspath, compare_root, startpath, ALGO, testname, testname))
     system("chmod gu+rwx %s/replace_gold_standard" % testname)
 
     chdir(testname)
@@ -343,7 +382,7 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
       system( "echo 'This test last passed with %s'> %s" %(svn_revision, svn_file))  
     #__________________________________
     # end of test loop
-    
+
   chdir("..")
 
   system("chgrp -R csafe %s > /dev/null 2>&1" % resultsdir)
@@ -413,11 +452,23 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
     blah = environ['HTMLLOG']
   except Exception:
     output_to_browser=0
-
-  # set the command name for mpirun - differs on different platforms
-  MPIHEAD="mpirun -np"
+  
+  #__________________________________
+  # Does mpirun command exist or has the environmental variable been set?
+  MPIRUN = "mpirun"
+  rc = system("which mpirun>&/dev/null")
+  
+  if rc == 256:  # mpirun not found
+    try:
+      MPIRUN = environ['MPIRUN']
+    except Exception:
+      print "ERROR:runSusTests.py  mpirun command not found."
+      print "Please set the environmental variable MPIRUN or add mpirun to your path"
+      exit (1)
+      
+  MPIHEAD="%s -np" % MPIRUN
   if environ['OS'] == "Linux":
-    MPIHEAD="mpirun -x MALLOC_STATS,SCI_SIGNALMODE -np" 
+    MPIHEAD="%s -x MALLOC_STATS -x SCI_SIGNALMODE -np" % MPIRUN 
 
   # set where to view the log files
   logpath = environ['WEBLOG']
@@ -426,6 +477,7 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
 
   # if doing performance tests, strip the output and checkpoints portions
   if do_performance_test == 1:
+      
     inputxml = modUPS("", inputxml,["<outputInterval>0</outputInterval>",
                                     "<outputTimestepInterval>0</outputTimestepInterval>",
                                     '<checkpoint cycle="0" interval="0"/>'])
@@ -498,6 +550,7 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
 
   # actually run the test!
   short_cmd = command.replace(susdir+'/','')
+
   print "Command Line: %s %s" % (short_cmd, susinput)
   rc = system("%s %s > sus.log.txt 2>&1" % (command, susinput))
   
@@ -525,7 +578,7 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
       print "\t\tMake sure the problem makes checkpoints before finishing"
     
     print sus_log_msg
-    system("echo '  -- %s%s test failed to complete' >> %s/%s-short.log" % (testname,restart_text,startpath,ALGO))
+    system("echo '  -- %s%s test did not run to completion' >> %s/%s-short.log" % (testname,restart_text,startpath,ALGO))
     return_code = 1
   else:
     # Sus completed successfully - now run memory,compar_uda and performance tests
@@ -553,6 +606,7 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
         short_message = rstrip(short_message_file.readline(500))
       except Exception:
         short_message = ""
+        
       if performance_RC == 0:
         print "\tPerformance tests passed."
         if short_message != "":
@@ -584,15 +638,20 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
         if compUda_RC == 10 * 256:
           print "\t*** Input file(s) differs from the goldstandard"
           print "%s" % replace_msg
+          
         elif compUda_RC == 1 * 256 or compUda_RC == 5*256:
           print "\t*** Warning, test %s failed uda comparison with error code %s" % (testname, compUda_RC)
           print compare_msg
+          
           if startFrom != "restart":
            print "%s" % replace_msg
+        
         elif compUda_RC == 65280: # (-1 return code)
           print "\tComparison tests passed.  (Note: No dat files to compare.)"
+        
         else:
           print "\tComparison tests passed.  (Note: No previous gold standard.)"
+      
       else:
         print "\tComparison tests passed."
     #__________________________________
@@ -626,15 +685,15 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
     # print error codes
     # if comparison, memory, performance tests fail, return here, so mem_leak tests can run
     if compUda_RC == 5*256 or compUda_RC == 1*256:
-      system("echo '  -- %s%s test failed comparison tests' >> %s/%s-short.log" % (testname,restart_text,startpath,ALGO))
+      system("echo '  --%s-- \t%s test failed comparison tests' >> %s/%s-short.log" % (testname,restart_text,startpath,ALGO))
       return_code = 2;
         
     if performance_RC == 2*256:
-      system("echo '  -- %s%s test failed performance tests' >> %s/%s-short.log" % (testname,restart_text,startpath,ALGO))
+      system("echo '  --%s-- \t%s test failed performance tests' >> %s/%s-short.log" % (testname,restart_text,startpath,ALGO))
       return_code = 2;
     
     if memory_RC == 1*256 or memory_RC == 2*256:
-      system("echo '  -- %s%s test failed memory tests' >> %s/%s-short.log" % (testname,restart_text,startpath,ALGO))
+      system("echo '  --%s-- \t%s test failed memory tests' >> %s/%s-short.log" % (testname,restart_text,startpath,ALGO))
       return_code = 2;
     
     if return_code != 0:

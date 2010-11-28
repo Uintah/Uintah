@@ -3,6 +3,7 @@
 
 #include <expression/Expr_Expression.h>
 
+#include <Core/Grid/SimulationState.h>
 #include <Core/Grid/SimulationStateP.h>
 
 

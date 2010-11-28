@@ -501,7 +501,8 @@ void AMRICE::refine_CF_interfaceOperator(const Patch* finePatch,
     // coarselevel hi and low index
 
     IntVector cl, ch, fl, fh;
-    getCoarseFineFaceRange(finePatch, coarseLevel, face, d_orderOf_CFI_Interpolation, cl, ch, fl, fh);
+    getCoarseFineFaceRange(finePatch, coarseLevel, face, Patch::ExtraPlusEdgeCells, 
+                           d_orderOf_CFI_Interpolation, cl, ch, fl, fh);
 
     cout_dbg<< " face " << face << " refineRatio "<< refineRatio
             << " BC type " << finePatch->getBCType(face)

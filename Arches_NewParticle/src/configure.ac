@@ -116,6 +116,21 @@ AC_COPYRIGHT(
 ##
 WOFF_NUMBERS=
 
+##
+## Used to store warnings that should be redisplayed to the user at the
+## end of configure in hopes that the user actually sees them. 
+##
+## Use 'add_important_warning()' to add a warning.
+##
+declare -a IMPORTANT_WARNINGS
+NUM_IMPORTANT_WARNINGS=0
+add_important_warning()
+{
+   # Note: need '[[' below to get autoconf to create a single '[' in the actual configure file.
+   IMPORTANT_WARNINGS[[$NUM_IMPORTANT_WARNINGS]]=$1
+   ((NUM_IMPORTANT_WARNINGS++))
+}
+
 ## Clean up files that could be left around if configure was 
 ## interrupted (by control-c, ^c) because I do not know how to add
 ## cleanup to the builtin AC function that uses the 'trap' command.
@@ -192,6 +207,18 @@ fi
 ##  initialize the recognized argument lists
 sci_arg_with_list="--no-create --no-recursion"
 sci_arg_enable_list=""
+
+##  --------------------------------------------------------------------
+##  ------------------  optional variable intialization  ---------------
+##  --------------------------------------------------------------------
+
+# Setting variables to 'no' isn't required, but is useful in displaying
+# some error condition information to the user.
+HAVE_HDF5="no"
+HAVE_BOOST="no"
+HAVE_TABPROPS="no"
+HAVE_SPATIALOPS="no"
+HAVE_EXPRLIB="no"
 
 ##  --------------------------------------------------------------------
 ##  ------------------  check for all arguments     --------------------
@@ -292,18 +319,18 @@ SCI_ARG_WITH(boost,
   [with_boost="$withval"
    sci_required_boost=yes],
   [with_boost=""])
-#SCI_ARG_WITH(spatialops,
-#  AC_HELP_STRING(--with-spatialops=DIR,
-#                 Use the SpatialOps library in DIR),
-#  [with_spatialops="$withval"
-#   sci_required_spatialops=yes],
-#  [with_spatialops=""])
-#SCI_ARG_WITH(exprlib,
-#  AC_HELP_STRING(--with-exprlib=DIR,
-#                 Use the ExprLib library in DIR),
-#  [with_exprlib="$withval"
-#   sci_required_exprlib=yes],
-#  [with_exprlib=""])
+SCI_ARG_WITH(spatialops,
+  AC_HELP_STRING(--with-spatialops=DIR,
+                 Use the SpatialOps library in DIR),
+  [with_spatialops="$withval"
+   sci_required_spatialops=yes],
+  [with_spatialops=""])
+SCI_ARG_WITH(exprlib,
+  AC_HELP_STRING(--with-exprlib=DIR,
+                 Use the ExprLib library in DIR),
+  [with_exprlib="$withval"
+   sci_required_exprlib=yes],
+  [with_exprlib=""])
 SCI_ARG_WITH(tabprops,
   AC_HELP_STRING(--with-tabprops=DIR,
                  Use the TabProps library in DIR),
@@ -394,6 +421,12 @@ SCI_ARG_WITH(visit,
   [with_visit="$withval"],
   [with_visit=""])
 
+SCI_ARG_ENABLE(wasatch_3p,
+  AC_HELP_STRING(--enable-wasatch_3p,
+                 Download and build the Wasatch Thirdparty libraries - TabProps, ExprLib, SpatialOps),
+  [wasatch_3p="yes"],
+  [wasatch_3p=="no"])
+
 SCI_ARG_ENABLE(static,
   AC_HELP_STRING(--enable-static,
                  Build a statically linked version of Uintah),
@@ -463,9 +496,9 @@ SCI_ARG_WITH(MallocTrace,
   [with_malloc_trace=""])
 SCI_ARG_ENABLE(assertion-level,
   AC_HELP_STRING(--enable-assertion-level=N,
-                 Use assertion level N (0-3)),
+                 Use assertion level N (0-3) (Where 0 turns off assertions, and 3 turns on all assertions.)),
   [enable_assertion_level="$enableval"],
-  [enable_assertion_level=${enable_assertion_level=3}])
+  [enable_assertion_level=""])
 SCI_ARG_ENABLE(scinew-line-numbers,
   AC_HELP_STRING(--enable-scinew-line-numbers,
                  Have SCI malloc store the file and line that calls 'scinew'),
@@ -489,7 +522,7 @@ fi
 
 if test "$enable_memory_initialization" != "no"; then
    DEF_MEMORY_INIT="#define INITIALIZE_MEMORY"
-   if   test "$enable_memory_initialization" == "yes"; then
+   if test "$enable_memory_initialization" = "yes"; then
       memory_init=127
    else
       val=$enable_memory_initialization
@@ -800,7 +833,6 @@ case $host in
         ;;
 esac
 
-ASSERTION_LEVEL="$enable_assertion_level"
 THROW_LEVEL="$enable_throw_level"
 extra_cflags=""
 
@@ -878,7 +910,7 @@ AC_MSG_CHECKING(whether optimize was enabled)
 if test "$optimize" = "no"; then
   if test "$debug" = "no"; then
     # neither debug nor optimize specified, DEFAULT TO: optimized
-    extra_cflags="-O2 ${extra_cflags}"
+    extra_cflags="-O2 -DNDEBUG ${extra_cflags}"
     AC_MSG_RESULT(no (default to -O2) )
   else
     # Debug mode specified
@@ -888,11 +920,36 @@ if test "$optimize" = "no"; then
     AC_MSG_RESULT(no (${no_optimize_flag}) )
   fi
 elif test "$optimize" = "yes"; then
-  extra_cflags="-O2 ${extra_cflags}"
+  extra_cflags="-O2 -DNDEBUG ${extra_cflags}"
   AC_MSG_RESULT(yes (-O2) )
 else
-  extra_cflags="$optimize ${extra_cflags}"
+  extra_cflags="$optimize -DNDEBUG ${extra_cflags}"
   AC_MSG_RESULT(yes ($optimize) )
+fi
+
+# Check to see if assertions are off but optimize is on... and warn user if so...
+if test "$optimize" != "no"; then
+
+  ASSERTION_LEVEL="$enable_assertion_level"
+  if test "$ASSERTION_LEVEL" = ""; then
+    add_important_warning "FYI: Configure turned off assertions due to --enable-optimize."
+    ASSERTION_LEVEL=0
+  else
+    if test "$ASSERTION_LEVEL" != "0"; then
+      add_important_warning "You explicitly turned on assertions (Level $ASSERTION_LEVEL) but you also specified --enable-optimize.  You can turn assertions off with --enable-assertion-level=0.  Assertions can significantly decrease performance."
+    fi
+  fi
+else
+  # Configuring debug build...
+  ASSERTION_LEVEL="$enable_assertion_level"
+  if test "$ASSERTION_LEVEL" = ""; then
+    # Debug builds default to level 3 assertions.
+    ASSERTION_LEVEL=3
+  fi
+fi
+
+if test $ASSERTION_LEVEL != "0" -a $ASSERTION_LEVEL != "1" -a $ASSERTION_LEVEL != "2" -a $ASSERTION_LEVEL != "3"; then
+  AC_MSG_ERROR([--enable-assertion-level was set to '$ASSERTION_LEVEL', but must be 0, 1, 2, or 3.])
 fi
 
 if test ! -e "`type $CC | sed 's%^.* /%/%'`"; then
@@ -930,8 +987,6 @@ if test "$with_fortran" = no; then
             DEF_NO_FORTRAN="#define NO_FORTRAN";
             NO_FORTRAN="yes";
 fi
-if test "$USE_WASATCH" = yes; then BUILD_WASATCH=yes; fi
-if test "$BUILD_WASATCH" = no; then DEF_WASATCH="#define NO_WASATCH"; fi
 
 # NO_FORTRAN is used in configVars.mk[.in] and DEF_NO_FORTRAN is used in uintah_testdefs.h.in
 
@@ -939,7 +994,6 @@ AC_SUBST(BUILD_ARCHES)
 AC_SUBST(BUILD_ICE)
 AC_SUBST(BUILD_MPM)
 AC_SUBST(BUILD_RADIATION)
-AC_SUBST(BUILD_WASATCH)
 AC_SUBST(DEF_ARCHES)
 AC_SUBST(DEF_ICE)
 AC_SUBST(DEF_MPM)
@@ -976,6 +1030,7 @@ if test "$static" = "yes" -o "$SO_OR_ARCHIVE_EXTENSION" = "a"; then
   AC_MSG_WARN( Building a statically linked version of Uintah! )
   IS_STATIC_BUILD="yes"
   SO_OR_ARCHIVE_EXTENSION=a
+#  LDFLAGS="$LDFLAGS -static"   # FIXME... need -static (at least for gcc)...
   MAKE_ARCHIVES="yes"
   STATIC_BUILD_DEF="#define STATIC_BUILD 1"
 else
@@ -1017,6 +1072,53 @@ AC_SUBST(INC_MALLOC_TRACE_H)
 AC_SUBST(MALLOC_TRACE_LIB_FLAG)
 AC_SUBST(MALLOC_TRACE_LIB_DIR_FLAG)
 AC_SUBST(MALLOC_TRACE_LIB_MPI_FLAG)
+
+##  --  Check for 64 vs 80 bit floating point number storage in register precission error ------------------------
+
+# In other words, the processor may use 80 bit floating point number registers, and as long as the
+# data is kept on the processor (in registers) then you get extra precission... however, as soon as
+# the number is stored to memory, it is truncated back to fewer (64?) bits.  At this point, it is possible
+# for the original floating pointloatingpoint number to not compare with itself (ie, if the register data
+# happens to stay around, and the 'old' value is loaded back from memory and then compared to the register).
+# This can cause some very strange and hard to track down errors in the code.  To turn this off, gnu
+# provides the -ffloat-store compiler argument.
+
+# WARNING: The following test case was created by Justin Luitjens.  It seems to work, and I can't 
+# come up with a better version, but I am not convinced that it will catch the problem in all cases...
+
+cat > conftest-fpr.cc <<EOF
+
+#include <iostream>
+
+int main()
+{
+  double a=1;
+  double b=.01;
+
+  int c=a/b;
+  return c != 100; // Shell return codes are backward in that 0 == success, thus the '!='.
+}
+EOF
+
+$CXX $CXXFLAGS conftest-fpr.cc -o conftest-fpr
+./conftest-fpr
+if test $? != 0; then
+   AC_MSG_WARN( ----------------------------------------------------------------------------------------- )
+   AC_MSG_WARN( Floating point - usually 64 vs 80 bit - register precission problem detected. )
+   AC_MSG_WARN( Disabling use of floating point registers with '-ffloat-store' compiler flag. )
+   AC_MSG_WARN( ----------------------------------------------------------------------------------------- )
+   add_important_warning "Automatically added -ffloat-store compiler option to C/CXXFLAGS."
+   CFLAGS="$CFLAGS -ffloat-store"
+   CXXFLAGS="$CXXFLAGS -ffloat-store"
+   # Verify that the compiler accepts the -ffloat-store flag:
+   $CXX $CXXFLAGS conftest-fpr.cc -o conftest-fpr 2>&5
+   if test $? != 0; then
+      rm -f conftest-fpr conftest-fpr.cc
+      AC_MSG_ERROR( Tried to add the -ffloat-store flag but the compiler ($CXX) failed to accept it...\nSee 'WARNING' message above. )
+   fi
+fi
+
+rm -f conftest-fpr conftest-fpr.cc
 
 ##  --  search for Zoltan ------------------------
 
@@ -1791,6 +1893,21 @@ if test "$with_visit"; then
       AC_MSG_ERROR( VisIt requires CMake. Please make sure 'cmake' is in your path!)
    fi
 
+   if test "$with_visit" = "yes"; then 
+      AC_MSG_ERROR( You must provide a DIRECTORY when using --with-visit=DIR. )
+   fi
+   if ! test -f "$with_visit/bin/xml2cmake"; then 
+      AC_MSG_ERROR( Could not find xml2cmake in $with_visit/bin/... )
+   fi
+
+   if test -f "./VisIt/udaReaderMTMD/Makefile.visit"; then
+      old_visit_dir=`grep TOPDIR ./VisIt/udaReaderMTMD/Makefile.visit`
+      if test "$old_visit_dir" != "TOPDIR=$with_visit/src"; then
+      	 AC_MSG_WARN(VisIt target directory has changed - removing old VisIt build directory...)
+	 rm -rf ./VisIt
+      fi
+   fi
+
    CMAKE_LOCATION=`which cmake`
 
    # Verify that cmake is new enough:
@@ -1813,21 +1930,6 @@ if test "$with_visit"; then
       AC_MSG_ERROR(CMake must be version 2.8 or better.  $CMAKE_LOCATION is version $CMAKE_VERSION_STRING.)
    fi
 
-   if test "$with_visit" == "yes"; then 
-      AC_MSG_ERROR( You must provide a DIRECTORY when using --with-visit=DIR. )
-   fi
-   if ! test -f "$with_visit/bin/xml2cmake"; then 
-      AC_MSG_ERROR( Could not find xml2cmake in $with_visit/bin/... )
-   fi
-
-   if test -f "./VisIt/udaReaderMTMD/Makefile.visit"; then
-      old_visit_dir=`grep TOPDIR ./VisIt/udaReaderMTMD/Makefile.visit`
-      if test "$old_visit_dir" != "TOPDIR=$with_visit/src"; then
-      	 AC_MSG_WARN(VisIt target directory has changed - removing old VisIt build directory)
-	 rm -rf ./VisIt
-      fi
-   fi
-
    sci_defs_files="$sci_defs_files VisIt/udaReaderMTMD/avtudaReaderMTMDFileFormat.C"
 
    BUILD_VISIT=yes
@@ -1844,7 +1946,7 @@ AC_SUBST(VISIT_INSTALL_DIR)
 
 if test "$with_ofed"; then
 
-   if test "$with_ofed" == "yes"; then
+   if test "$with_ofed" = "yes"; then
       AC_MSG_ERROR( You must specify a directory with the '--with-ofed=DIR' option! )
    else
       dir="$with_ofed"
@@ -1861,7 +1963,7 @@ fi
 
 if test "$with_mx"; then
 
-   if test "$with_mx" == "yes"; then
+   if test "$with_mx" = "yes"; then
       AC_MSG_ERROR( You must specify a directory with the '--with-mx=DIR' option! )
    else
       dir="$with_mx"
@@ -2026,7 +2128,11 @@ if test -e $_sci_lib/../bin/xml2-config; then
     found_xml2_config="yes"
     AC_MSG_WARN(Using $_sci_lib/../bin/xml2-config to set libxml2 variables.)
 
-    XML2_LIB_DIR_FLAG=`$_sci_lib/../bin/xml2-config --libs`
+    if test "$IS_STATIC_BUILD" = "yes" -a "$IS_OSX" != "yes"; then
+       STATIC_FLAG=--static
+    fi
+
+    XML2_LIB_DIR_FLAG=`$_sci_lib/../bin/xml2-config --libs $STATIC_FLAG`
     XML2_LDFLAGS=""
     XML2_LIB_PATH=""
     for i in $XML2_LIB_DIR_FLAG;do
@@ -3104,140 +3210,147 @@ if test -z "$PETSC_ARCH"; then
    AC_MSG_ERROR(PETSC_ARCH environment var is not set.  Please set.)
 fi
 
-# Make sure we have either mpi or mpi-uni, blas, and lapack
-# It seems that under AIX and OSF, the libs that cover blas also cover lapack
-if (test "$HAVE_MPI" = "yes" || test "$HAVE_MPI_UNI" = "yes") && test "$HAVE_BLAS" = "yes" && 
-   (test "$PETSC_ARCH" = "aix5.1.0.0" || test "$PETSC_ARCH" = "dec" ||
-    test "$HAVE_LAPACK" = "yes"); then
+# Handle --without option
 
-  _sci_lib_dir=
-  _sci_inc=
+if test "$with_petsc" == "no"; then
+  AC_MSG_WARN( "PETSc disabled." )
+else  
 
-  for petsc_arch in "$PETSC_ARCH" linux-gnu linux-gnu-c-opt; do
-    if test "$HAVE_PETSC" = "yes"; then
-      break
-    fi
+  # Make sure we have either mpi or mpi-uni, blas, and lapack
+  # It seems that under AIX and OSF, the libs that cover blas also cover lapack
+  if (test "$HAVE_MPI" = "yes" || test "$HAVE_MPI_UNI" = "yes") && test "$HAVE_BLAS" = "yes" && 
+     (test "$PETSC_ARCH" = "aix5.1.0.0" || test "$PETSC_ARCH" = "dec" ||
+      test "$HAVE_LAPACK" = "yes"); then
 
-    PETSC_SUB=lib/libO
+    _sci_lib_dir=
+    _sci_inc=
 
-    if test "$with_petsc"; then
-
-      ####################################################
-      # The newer (2.3+) versions of petsc don't use the libO anymore...
-      have23=`echo "$with_petsc" | grep "2.3."`
-      if test -z "$have23" ; then
-         petsc_version_major=`grep PETSC_VERSION_MAJOR $with_petsc/include/petscversion.h | grep define | awk '{print $3}'`
-         petsc_version_minor=`grep PETSC_VERSION_MINOR $with_petsc/include/petscversion.h | grep define | awk '{print $3}'`
-         if test "$petsc_version_major" -eq 2 ; then
-            if test "$petsc_version_minor" -eq 3 ; then
-               have23=true
-            fi
-         fi
+    for petsc_arch in "$PETSC_ARCH" linux-gnu linux-gnu-c-opt; do
+      if test "$HAVE_PETSC" = "yes"; then
+        break
       fi
-      if test "$have23"; then
-         PETSC_SUB=lib
+
+      PETSC_SUB=lib/libO
+
+      if test "$with_petsc"; then
+
+        ####################################################
+        # The newer (2.3+) versions of petsc don't use the libO anymore...
+        have23=`echo "$with_petsc" | grep "2.3."`
+        if test -z "$have23" ; then
+           petsc_version_major=`grep PETSC_VERSION_MAJOR $with_petsc/include/petscversion.h | grep define | awk '{print $3}'`
+           petsc_version_minor=`grep PETSC_VERSION_MINOR $with_petsc/include/petscversion.h | grep define | awk '{print $3}'`
+           if test "$petsc_version_major" -eq 2 ; then
+              if test "$petsc_version_minor" -eq 3 ; then
+                 have23=true
+              fi
+           fi
+        fi
+        if test "$have23"; then
+           PETSC_SUB=lib
+        fi
+        ####################################################
+
+        _sci_lib_dir="$with_petsc/$PETSC_SUB/$petsc_arch"
+        _sci_inc="$with_petsc/bmake/$petsc_arch $with_petsc/include"
+      else
+        # Modify _sci_dirs to have correct path information:
+        for i in $sci_thirdparty_dir; do
+          if test ! -d "$i"; then
+            continue
+          fi
+
+          #this is where the lib actually lives
+          if test ! -d "$i/$PETSC_VERSION_DIR/$PETSC_SUB/$petsc_arch"; then
+            continue
+          fi
+
+          _sci_lib_dir="$_sci_lib_dir $i/$PETSC_VERSION_DIR/$PETSC_SUB/$petsc_arch"
+          _sci_inc="$_sci_inc $i/$PETSC_VERSION_DIR/include $i/$PETSC_VERSION_DIR/bmake/$petsc_arch"
+        done  
       fi
-      ####################################################
 
-      _sci_lib_dir="$with_petsc/$PETSC_SUB/$petsc_arch"
-      _sci_inc="$with_petsc/bmake/$petsc_arch $with_petsc/include"
-    else
-      # Modify _sci_dirs to have correct path information:
-      for i in $sci_thirdparty_dir; do
-        if test ! -d "$i"; then
-          continue
-        fi
-  
-        #this is where the lib actually lives
-        if test ! -d "$i/$PETSC_VERSION_DIR/$PETSC_SUB/$petsc_arch"; then
-          continue
-        fi
-  
-        _sci_lib_dir="$_sci_lib_dir $i/$PETSC_VERSION_DIR/$PETSC_SUB/$petsc_arch"
-        _sci_inc="$_sci_inc $i/$PETSC_VERSION_DIR/include $i/$PETSC_VERSION_DIR/bmake/$petsc_arch"
-      done  
-    fi
+      # For Petsc 2.2 use this line below:   petsc petscvec petscmat petscdm petscsnes petscts petscksp $LAPACK_LIB_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $MPI_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $DL_LIB_FLAG,
+      # Use -DMPIPP_H so we don't include mpi++.h where we don't want it.
 
-    # For Petsc 2.2 use this line below:   petsc petscvec petscmat petscdm petscsnes petscts petscksp $LAPACK_LIB_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $MPI_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $DL_LIB_FLAG,
-    # Use -DMPIPP_H so we don't include mpi++.h where we don't want it.
-
-    SCI_TRY_LINK(PETSC,
-                 petsc libraries and headers (petsc_arch = $petsc_arch),
-                 petsc.h,
-                 $_sci_inc /usr/include/petsc,
-                 petsc petscvec petscmat petscdm petscsnes petscts petscksp,
-                 $_sci_lib_dir,
-                 $INC_MPI_H -DMPIPP_H $LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $MALLOC_TRACE_LIB_DIR_FLAG $MALLOC_TRACE_LIB_FLAG $M_LIB_FLAG $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG,
-                 ,
-                 optional)
-
-    if test "$HAVE_PETSC" = "yes" ; then
-      DEF_PETSC="#define HAVE_PETSC 1"
-    fi    
-  done  
-  if test "$with_petsc" && test ! "$DEF_PETSC"; then
-    echo
-    AC_MSG_ERROR(One or more of the PETSc components is missing.)
-    echo
-  fi
-
-  #  --  search for uni-petsc  --------------------------------------------
-
-  if test "$HAVE_PETSC" != "yes" ; then
-
-    # Only check for uni petsc if petsc not found.
-    _sci_lib=""
-    _sci_inc=""
-
-    if test "$with_unipetsc"; then
-      _sci_lib="$with_unipetsc/$PETSC_SUB/$PETSC_ARCH"
-      _sci_inc="$with_unipetsc/bmake/$PETSC_ARCH $with_unipetsc/include"
-    fi
-
-    # For petsc 2.2 use this line below:  petsc petscvec petscmat petscdm petscsnes petscts petscksp,
-    # Use -DMPIPP_H so we don't include mpi++.h where we don't want it.
-    SCI_TRY_LINK(PETSC_UNI,
-                 petsc-uni libraries and headers,
-                 petsc.h,
-                 $_sci_inc /usr/include/petsc,
-                 petsc petscvec petscmat petscdm petscsnes petscts petscksp,
-                 $_sci_lib,
-                 $LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $INC_MPI_UNI_H $MPI_UNI_LIB_DIR_FLAG $MPI_UNI_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG -DMPIPP_H,
-                 ,
-                 optional)
-
-    if test "$HAVE_PETSC_UNI" = "yes" ; then
-      DEF_PETSC_UNI="#define PETSC_UNI 1"
-    else
-      # Give it a shot on the old petsc-uni version
-      SCI_TRY_LINK(PETSC_UNI,
-                   petsc libraries and headers - old2,
+      SCI_TRY_LINK(PETSC,
+                   petsc libraries and headers (petsc_arch = $petsc_arch),
                    petsc.h,
                    $_sci_inc /usr/include/petsc,
-                   petsc petscvec petscmat petscdm petscsnes petscts,
+                   petsc petscvec petscmat petscdm petscsnes petscts petscksp,
+                   $_sci_lib_dir,
+                   $INC_MPI_H -DMPIPP_H $LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $MALLOC_TRACE_LIB_DIR_FLAG $MALLOC_TRACE_LIB_FLAG $M_LIB_FLAG $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG,
+                   ,
+                   optional)
+
+      if test "$HAVE_PETSC" = "yes" ; then
+        DEF_PETSC="#define HAVE_PETSC 1"
+      fi    
+    done  
+    if test "$with_petsc" && test ! "$DEF_PETSC"; then
+      echo
+      AC_MSG_ERROR(One or more of the PETSc components is missing.)
+      echo
+    fi
+
+    #  --  search for uni-petsc  --------------------------------------------
+
+    if test "$HAVE_PETSC" != "yes" ; then
+
+      # Only check for uni petsc if petsc not found.
+      _sci_lib=""
+      _sci_inc=""
+
+      if test "$with_unipetsc"; then
+        _sci_lib="$with_unipetsc/$PETSC_SUB/$PETSC_ARCH"
+        _sci_inc="$with_unipetsc/bmake/$PETSC_ARCH $with_unipetsc/include"
+      fi
+
+      # For petsc 2.2 use this line below:  petsc petscvec petscmat petscdm petscsnes petscts petscksp,
+      # Use -DMPIPP_H so we don't include mpi++.h where we don't want it.
+      SCI_TRY_LINK(PETSC_UNI,
+                   petsc-uni libraries and headers,
+                   petsc.h,
+                   $_sci_inc /usr/include/petsc,
+                   petsc petscvec petscmat petscdm petscsnes petscts petscksp,
                    $_sci_lib,
                    $LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $INC_MPI_UNI_H $MPI_UNI_LIB_DIR_FLAG $MPI_UNI_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG -DMPIPP_H,
                    ,
                    optional)
+
       if test "$HAVE_PETSC_UNI" = "yes" ; then
         DEF_PETSC_UNI="#define PETSC_UNI 1"
-      fi  
+      else
+        # Give it a shot on the old petsc-uni version
+        SCI_TRY_LINK(PETSC_UNI,
+                     petsc libraries and headers - old2,
+                     petsc.h,
+                     $_sci_inc /usr/include/petsc,
+                     petsc petscvec petscmat petscdm petscsnes petscts,
+                     $_sci_lib,
+                     $LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $INC_MPI_UNI_H $MPI_UNI_LIB_DIR_FLAG $MPI_UNI_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG -DMPIPP_H,
+                     ,
+                     optional)
+        if test "$HAVE_PETSC_UNI" = "yes" ; then
+          DEF_PETSC_UNI="#define PETSC_UNI 1"
+        fi  
+      fi
+
+      if test "$with_unipetsc" && test ! "$DEF_PETSC_UNI"; then
+        echo
+        AC_MSG_ERROR(One or more of the UNI-PETSC components is missing.)
+        echo
+      fi
     fi
 
-    if test "$with_unipetsc" && test ! "$DEF_PETSC_UNI"; then
-      echo
-      AC_MSG_ERROR(One or more of the UNI-PETSC components is missing.)
-      echo
-    fi
+  else
+    AC_MSG_WARN(One or more of MPI or BLAS or LAPACK is missing.)
+    AC_MSG_WARN(HAVE_MPI: $HAVE_MPI)
+    AC_MSG_WARN(HAVE_MPI_UNI: $HAVE_MPI_UNI)
+    AC_MSG_WARN(HAVE_BLAS: $HAVE_BLAS)
+    AC_MSG_WARN(HAVE_LAPACK: $HAVE_LAPACK)
+    AC_MSG_WARN(Not configuring PETSc.)
   fi
-
-else
-  AC_MSG_WARN(One or more of MPI or BLAS or LAPACK is missing.)
-  AC_MSG_WARN(HAVE_MPI: $HAVE_MPI)
-  AC_MSG_WARN(HAVE_MPI_UNI: $HAVE_MPI_UNI)
-  AC_MSG_WARN(HAVE_BLAS: $HAVE_BLAS)
-  AC_MSG_WARN(HAVE_LAPACK: $HAVE_LAPACK)
-  AC_MSG_WARN(Not configuring PETSc.)
 fi
 
 AC_SUBST(HAVE_PETSC)
@@ -3472,6 +3585,184 @@ AC_SUBST(HDF5_LIB_DIR_FLAG)	# Place this var in the configVars.mk.in
 sci_defs_files="$sci_defs_files include/sci_defs/hdf5_testdefs.h"
 AC_LANG(C)
 
+##  --  search for Boost ------------------------
+
+if test "$with_boost"; then
+  if test "$with_boost" = "yes"; then
+    AC_MSG_ERROR( --with-boost=DIR requires a DIRectory be provided. )
+  else
+    AC_MSG_CHECKING(for Boost files (For now we are just verifying the existence of lib and .h files)) 
+    if test ! -d $with_boost; then
+      echo ""
+      AC_MSG_ERROR( '$with_boost' directory does not exist. )
+    fi
+    # Check for header files
+    BOOST_INCLUDE_DIR=$with_boost/include/boost
+    for file in signal.hpp shared_ptr.hpp bind.hpp signal.hpp shared_ptr.hpp ref.hpp graph/adjacency_list.hpp graph/graph_traits.hpp \
+                graph/topological_sort.hpp graph/graphviz.hpp graph/breadth_first_search.hpp graph/visitors.hpp graph/transpose_graph.hpp \
+                shared_ptr.hpp any.hpp; do
+      if test ! -f $BOOST_INCLUDE_DIR/$file; then
+        echo ""
+        AC_MSG_ERROR( '$BOOST_INCLUDE_DIR/$file' does not exist. )
+      fi
+    done
+    # Check for libraries files
+    BOOST_LIB_DIR=$with_boost/lib
+    for file in libboost_thread-mt libboost_signals-mt libboost_serialization; do
+      EXT=$SO_OR_ARCHIVE_EXTENSION
+      if test ! -f $BOOST_LIB_DIR/$file.$EXT; then
+        echo ""
+        AC_MSG_WARN( $file.$EXT lib does not exist... looking for non-mt version...)
+        short_name="`echo $file | cut -f1 -d"-"`.$EXT"
+        if test ! -f $BOOST_LIB_DIR/$short_name; then
+            AC_MSG_ERROR( $BOOST_LIB_DIR/$short_name lib does not exist!)
+        else
+            short_name=`echo $short_name | cut -f1 -d"." | cut -c4-`
+            BOOST_LIB_FLAG="$BOOST_LIB_FLAG -l$short_name"
+        fi
+      else
+        short_name=`echo $file | cut -f1 -d"." | cut -c4-`
+        BOOST_LIB_FLAG="$BOOST_LIB_FLAG -l$short_name"
+      fi
+    done
+  fi
+  AC_MSG_RESULT(Found Boost)
+  DEF_BOOST="#define HAVE_BOOST 1"
+  if test "$with_boost" != "/usr"; then
+    # If with_boost points to /usr, then we don't need to explicitly point to it...
+    INC_BOOST_H="-I$with_boost/include"
+    BOOST_LIB_DIR_FLAG="$LDRUN_PREFIX$with_boost/lib -L$with_boost/lib"
+  fi
+  HAVE_BOOST="yes"
+fi
+AC_SUBST(HAVE_BOOST)
+AC_SUBST(DEF_BOOST)
+AC_SUBST(INC_BOOST_H)
+AC_SUBST(BOOST_LIB_FLAG)
+AC_SUBST(BOOST_LIB_DIR_FLAG)
+
+##  --  Handle --enable-wasatch_3p... ------------------------
+
+if test "$wasatch_3p" = "yes"; then
+
+  if test "$HAVE_BOOST" != "yes"; then
+      AC_MSG_ERROR( Option --enable-wasatch_3p requires Boost... <--with-boost=DIR> )
+  fi
+  if test "$HAVE_HDF5" != "yes"; then
+      AC_MSG_ERROR( Option --enable-wasatch_3p requires HDF5... <--with-hdf5=DIR> )
+  fi
+  if test "$with_tabprops"; then
+     AC_MSG_ERROR( Do NOT specify both --with-tabprops and --enable-wasatch_3p )
+  fi
+  if test "$with_spatialops"; then
+     AC_MSG_ERROR( Do NOT specify both --with-spatialops and --enable-wasatch_3p )
+  fi
+  if test "$with_exprlib"; then
+     AC_MSG_ERROR( Do NOT specify both --with-exprlib and --enable-wasatch_3p )
+  fi
+
+  mkdir -p Wasatch3P
+  $path_to_src/build_scripts/build_wasatch_3p.sh `$sci_pwd` "$with_boost" "$with_hdf5"
+
+  if test $? != 0; then
+     AC_MSG_ERROR( Failed to build Wasatch 3p libraries... )
+  fi
+
+  with_spatialops=`$sci_pwd`/Wasatch3P/install/SpatialOps
+  with_exprlib=`$sci_pwd`/Wasatch3P/install/ExprLib
+  with_tabprops=`$sci_pwd`/Wasatch3P/install/TabProps
+fi
+
+##  --  search for SpatialOps Library ------------------------
+
+if test "$with_spatialops"; then
+  if test "$HAVE_BOOST" != "yes"; then
+    AC_MSG_ERROR( --with-spatialops=DIR requires Boost. )
+  fi
+
+  if test "$with_spatialops" = "yes"; then
+    AC_MSG_ERROR( --with-spatialops=DIR requires a DIRectory be provided. )
+  else
+
+    AC_MSG_CHECKING(for SpatialOps files (For now we are just verifying the existence of lib and .h files)) 
+    if test ! -d $with_spatialops; then
+      echo ""
+      AC_MSG_ERROR( '$with_spatialops' directory does not exist. )
+    fi
+    SPOPS_INCLUDE_DIR="include/spatialops"
+    # Check includes
+    for file in FieldFunctions.h LinAlgTrilinos.h LinAlgUBlas.h LinearSystem.h OperatorDatabase.h \
+                SpatialOperator.h SpatialOpsConfigure.h SpatialOpsDefs.h SpatialOpsTools.h \
+                particles structured; do
+      if test ! -e $with_spatialops/$SPOPS_INCLUDE_DIR/$file; then
+        echo ""
+        AC_MSG_ERROR( '$with_spatialops/$SPOPS_INCLUDE_DIR/$file' does not exist. )
+      fi
+    done
+    # Check lib
+    if test ! -f $with_spatialops/lib/spatialops/libspatialops.a; then
+      echo ""
+      AC_MSG_ERROR( '$with_spatialops/lib/spatialops/libspatialops.a' does not exist. )
+    fi
+  fi
+  AC_MSG_RESULT(yes)
+  DEF_SPATIALOPS="#define HAVE_SPATIALOPS 1"
+  INC_SPATIALOPS_H="-I$with_spatialops/include"
+  SPATIALOPS_LIB_DIR_FLAG="-L$with_spatialops/lib/spatialops"
+  SPATIALOPS_LIB_FLAG="-lspatialops"
+  HAVE_SPATIALOPS="yes"
+fi
+AC_SUBST(HAVE_SPATIALOPS)
+AC_SUBST(DEF_SPATIALOPS)
+AC_SUBST(INC_SPATIALOPS_H)
+AC_SUBST(SPATIALOPS_LIB_FLAG)
+AC_SUBST(SPATIALOPS_LIB_DIR_FLAG)
+
+##  --  search for Exprlib Library ------------------------
+
+if test "$with_exprlib"; then
+  if test "$HAVE_SPATIALOPS" != "yes"; then
+    AC_MSG_ERROR( --with-exprlib=DIR requires SpatialOps. )
+  fi
+
+  if test "$with_exprlib" = "yes"; then
+    AC_MSG_ERROR( --with-exprlib=DIR requires a DIRectory be provided. )
+  else
+
+    AC_MSG_CHECKING(for Exprlib files (For now we are just verifying the existence of lib and .h files)) 
+    if test ! -d $with_exprlib; then
+      echo ""
+      AC_MSG_ERROR( '$with_exprlib' directory does not exist. )
+    fi
+    SPOPS_INCLUDE_DIR="include/expression"
+    # Check includes
+    for file in ExecuteExpression.h ExprDeps.h ExprLib.h Expr_Context.h Expr_Expression.h Expr_ExpressionID.h Expr_FieldManagerList.h \
+                ExpressionBase.h ExpressionFactory.h ExpressionRegistry.h ExpressionTree.h FieldDeps.h FieldManager.h FieldManagerBase.h \
+                Functions.h PlaceHolderExpr.h Tag.h TransportEquation.h uintah; do
+      if test ! -e $with_exprlib/$SPOPS_INCLUDE_DIR/$file; then
+        echo ""
+        AC_MSG_ERROR( '$with_exprlib/$SPOPS_INCLUDE_DIR/$file' does not exist. )
+      fi
+    done
+    # Check lib
+    if test ! -f $with_exprlib/lib/expression/libexprlib.a; then
+      echo ""
+      AC_MSG_ERROR( '$with_exprlib/lib/expression/libexprlib.a' does not exist. )
+    fi
+  fi
+  AC_MSG_RESULT(yes)
+  DEF_EXPRLIB="#define HAVE_EXPRLIB 1"
+  INC_EXPRLIB_H="-I$with_exprlib/include"
+  EXPRLIB_LIB_DIR_FLAG="-L$with_exprlib/lib/expression"
+  EXPRLIB_LIB_FLAG="-lexprlib"
+  HAVE_EXPRLIB="yes"
+fi
+AC_SUBST(HAVE_EXPRLIB)
+AC_SUBST(DEF_EXPRLIB)
+AC_SUBST(INC_EXPRLIB_H)
+AC_SUBST(EXPRLIB_LIB_FLAG)
+AC_SUBST(EXPRLIB_LIB_DIR_FLAG)
+
 ##  --  search for TabProps ------------------------
 
 if test "$with_tabprops"; then
@@ -3505,34 +3796,33 @@ AC_SUBST(INC_TABPROPS_H)
 AC_SUBST(TABPROPS_LIB_FLAG)
 AC_SUBST(TABPROPS_LIB_DIR_FLAG)
 
-##  --  search for Boost ------------------------
+##  --  Determine whether we can use WASATCH OR NOT ----------------------
 
-if test "$with_boost"; then
-  if test "$with_boost" = "yes"; then
-    AC_MSG_ERROR( --with-boost=DIR requires a DIRectory be provided. )
+if test "$USE_WASATCH" = yes; then
+  if test "$HAVE_HDF5" = "yes" &&
+     test "$HAVE_BOOST" = "yes" &&
+     test "$HAVE_TABPROPS" = "yes" &&
+     test "$HAVE_SPATIALOPS" = "yes" &&
+     test "$HAVE_EXPRLIB" = "yes"; then
+    BUILD_WASATCH=yes
   else
-    AC_MSG_CHECKING(for Boost files (For now we are just verifying the existence of lib and .h files)) 
-    if test ! -d $with_boost; then
-      AC_MSG_ERROR( '$with_boost' directory does not exist. )
-    fi
-    for file in include/boost/BSpline.h include/boost/LU.h include/boost/StateTable.h lib/boost/libboost.a; do
-      if test ! -f $with_boost/$file; then
-        AC_MSG_ERROR( '$with_boost/$file' does not exist. )
-      fi
-    done
+    AC_MSG_ERROR(You specified the use of the Wasatch component but do not have all the of the prereqs: HDF5 ($HAVE_HDF5); Boost ($HAVE_BOOST); TabProps ($HAVE_TABPROPS); SpatialOps ($HAVE_SPATIALOPS); and ExprLib ($HAVE_EXPRLIB).)
   fi
-  AC_MSG_RESULT(yes)
-  DEF_BOOST="#define HAVE_BOOST 1"
-  INC_BOOST_H="-I$with_boost/include"
-  BOOST_LIB_DIR_FLAG="-L$with_boost/lib/boost"
-  BOOST_LIB_FLAG="-lboost"
-  HAVE_BOOST="yes"
+else
+  if test "$HAVE_HDF5" = "yes" &&
+     test "$HAVE_BOOST" = "yes" &&
+     test "$HAVE_TABPROPS" = "yes" &&
+     test "$HAVE_SPATIALOPS" = "yes" &&
+     test "$HAVE_EXPRLIB" = "yes"; then
+    BUILD_WASATCH=yes
+    AC_MSG_WARN(All prereqs satisfied, turning on Wasatch component.)
+  fi
 fi
-AC_SUBST(HAVE_BOOST)
-AC_SUBST(DEF_BOOST)
-AC_SUBST(INC_BOOST_H)
-AC_SUBST(BOOST_LIB_FLAG)
-AC_SUBST(BOOST_LIB_DIR_FLAG)
+
+if test "$BUILD_WASATCH" = no; then 
+  DEF_WASATCH="#define NO_WASATCH";
+fi
+AC_SUBST(BUILD_WASATCH)
 
 ##  --  search for hypre stuff  ------------------------------------------
 
@@ -3540,39 +3830,44 @@ _sci_lib=
 _sci_inc=
 _sci_optional=optional
 
-if test "$with_hypre" = "yes"; then
-  _sci_optional=required
-elif test "$with_hypre"; then
-  _sci_lib="$with_hypre/lib"
-  _sci_inc="$with_hypre/include"
-  _sci_optional=specific
-fi
+# Handle --without option
+if test "$with_hypre" = "no"; then
+   AC_MSG_WARN( "Hypre is turned off." )
+else
+   if test "$with_hypre" = "yes"; then
+      _sci_optional=required
+   elif test "$with_hypre"; then
+      _sci_lib="$with_hypre/lib"
+      _sci_inc="$with_hypre/include"
+      _sci_optional=specific
+   fi
 
-# # We used to also check for HYPRE_blas, but hypre 1.9 doesn't have it,
-# # so we aren't going to check for it in any version.  If the other 3
-# # libs exist, we will assume that HYPRE_blas is there if it is needed.
-# SCI_TRY_LINK(HYPRE,HYPRE libraries and headers,HYPRE.h,$_sci_inc,
-#                          HYPRE_struct_mv HYPRE_struct_ls HYPRE_sstruct_mv HYPRE_sstruct_ls HYPRE_LSI HYPRE_superlu HYPRE_utilities,
-#                          $_sci_lib,-lm,,$_sci_optional)
+   # # We used to also check for HYPRE_blas, but hypre 1.9 doesn't have it,
+   # # so we aren't going to check for it in any version.  If the other 3
+   # # libs exist, we will assume that HYPRE_blas is there if it is needed.
+   # SCI_TRY_LINK(HYPRE,HYPRE libraries and headers,HYPRE.h,$_sci_inc,
+   #                          HYPRE_struct_mv HYPRE_struct_ls HYPRE_sstruct_mv HYPRE_sstruct_ls HYPRE_LSI HYPRE_superlu HYPRE_utilities,
+   #                          $_sci_lib,-lm,,$_sci_optional)
 
-# We should just be able to link vs. libHYPRE.so...
-#   Also, libHYPRE has some C++ stuff in it, so we need to be in C++ mode...
-AC_LANG([C++])
-SCI_TRY_LINK(HYPRE,HYPRE libraries and headers,HYPRE.h,$_sci_inc,
-                         HYPRE,
-                         $_sci_lib,
-                         $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $MALLOC_TRACE_LIB_DIR_FLAG $MALLOC_TRACE_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $M_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG,
-                         ,
-                         $_sci_optional)
-AC_LANG([C])
+   # We should just be able to link vs. libHYPRE.so...
+   #   Also, libHYPRE has some C++ stuff in it, so we need to be in C++ mode...
+   AC_LANG([C++])
+   SCI_TRY_LINK(HYPRE,HYPRE libraries and headers,HYPRE.h,$_sci_inc,
+                            HYPRE,
+                            $_sci_lib,
+                            $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $MALLOC_TRACE_LIB_DIR_FLAG $MALLOC_TRACE_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $M_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG,
+                            ,
+                            $_sci_optional)
+   AC_LANG([C])
 
-if test "$HAVE_HYPRE" = "yes" ; then
-  DEF_HYPRE="#define HAVE_HYPRE 1"
-fi
+   if test "$HAVE_HYPRE" = "yes" ; then
+      DEF_HYPRE="#define HAVE_HYPRE 1"
+   fi
 
-if test "$with_hypre" && test ! "$DEF_HYPRE"; then
-  echo
-  AC_MSG_ERROR(One or more of the HYPRE components is missing.)
+   if test "$with_hypre" && test ! "$DEF_HYPRE"; then
+      echo
+      AC_MSG_ERROR(One or more of the HYPRE components is missing.)
+   fi
 fi
 
 AC_SUBST(HAVE_HYPRE)
@@ -3703,6 +3998,26 @@ for testfile in $sci_defs_files; do
 
   fi
 done
+
+###############
+## Re-display any IMPORTANT_WARNINGS that have been collected during configure in hopes
+## that the user actually sees them.
+
+if (( $NUM_IMPORTANT_WARNINGS > 0 )); then
+
+   echo ""
+   echo "!!! IMPORTANT WARNINGS - Please Read: !!!"
+   echo ""
+   echo "NOTE: Some IMPORTANT WARNINGS were generated during configuration.  A summary of"
+   echo "these messages can be found below:"
+   echo
+
+   # Note: need '[[' below to get autoconf to create a single '[' in the actual configure file.
+   for (( i=0; i < $NUM_IMPORTANT_WARNINGS; i++ )); do
+      echo " - " ${IMPORTANT_WARNINGS[[${i}]]}
+   done
+   echo
+fi
 
 #### Clean up: ####
 ## Possible temporary template directories
