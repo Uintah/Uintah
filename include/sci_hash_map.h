@@ -56,8 +56,11 @@
    using std::hash;
 #elif defined(HAVE_TR1_HASHMAP)
 #  include <tr1/unordered_map>
-#  define hash_map std::tr1::unordered_map
-#  define hash_multimap std::tr1::unordered_multimap
+template<typename A, typename B, typename C> class hash_map : public std::tr1::unordered_map<A, B, C> {
+   public:
+   hash_map(int &n) : std::tr1::unordered_map<A,B,C>(n){}
+};
+   template<typename A, typename B> class hash_multimap : public std::tr1::unordered_multimap<A, B> {};
    using std::tr1::hash;
 #elif defined(HAVE_GNU_HASHMAP)
 #  include <ext/hash_map>
