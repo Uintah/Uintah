@@ -136,6 +136,14 @@ Useful libraries:
 Note, Uintah recently upgraded from using Hypre v2.0 and PETSc
 v2.3.3.  (July 22, 2009)
 
+The Wasatch component requires the following:
+\begin{itemize}
+  \item git
+  \item boost-1.44
+  \item cmake 2.8 or above
+  \item libhdf5-serial-1.6.6-0 
+  \item libhdf5-serial-dev
+\end{itemize}
 \section{OS Version Dependencies}
 
 \subsection{Debian Dependencies}
@@ -152,15 +160,25 @@ libxml2-dev zlib1g-dev liblapack-dev cmake libglew1.5-dev \
 libglui-dev libxmu-dev
 \end{verbatim}
 
-Once these libraries are installed, Teem and VisIt can be installed
+\noindent If you are interested in compiling the Wasatch component execute:
+\begin{verbatim}
+  aptitude install libhdf5-serial-1.6.6-0 
+  aptitude install libhdf5-serial-dev
+  aptitude install git-core
+  aptitude install cmake > 2.8 (from squeeze)
+
+  download boost-1.44 from www.boost.org
+  bootstrap.sh --prefix=path/to/installation/prefix
+  bjam threading=single install
+\end{verbatim}
+
+\noindent Once these libraries are installed, Teem and VisIt can be installed
 followed by installation of \textbf{Uintah}.
 
-To install the latest \TT{Nvidia}video drivers:
+\noindent To install the latest \TT{Nvidia}video drivers:
 \begin{verbatim}
   As root run the following commands:
   aptitude install module-assistant module-init-tools
-  
-  Change the repository in /etc/apt/sources.list from {lenny/squeeze} -> unstable
   aptitude clean
   aptitude update
   uname -r
@@ -969,7 +987,13 @@ PETSC_ARCH=linux-gnu-c-real-opt <= Specifies PETSc architecture
         USE_RADIATION=no
 
 \end{verbatim}
-
+To compile the Wasatch component add:
+\begin{verbatim}
+  --with-hdf5
+  --with-boost=<path to boost install>
+  --enable-wasatch_3p
+\end{verbatim}
+to the configure line.
 
 \subsection{Build}
 
@@ -978,6 +1002,7 @@ Then build the software by typing \TT{make} at the command line and create symbo
 make
 make link_inputs
 \end{verbatim}
+
 
 Please see the \textbf{User Guide}
 \url{http://www.uintah.utah.edu/trac/chrome/site/uintah.pdf} on how to use
