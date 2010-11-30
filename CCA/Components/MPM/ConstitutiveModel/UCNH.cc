@@ -1474,7 +1474,7 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
                                                       dx, pSize,interpolator);
       }
 
-      if(d_usePlasticity || d_useDamage && flag->d_doGridReset){
+      if((d_usePlasticity || d_useDamage) && flag->d_doGridReset){
         old_dw->get(gDisp,           lb->dispNewLabel, dwi, patch, gac, 1);
       }
 
@@ -1945,9 +1945,6 @@ void UCNH::computeStressTensorImplicit(const PatchSubset* patches,
     old_dw->get(pDefGrad,                 lb->pDeformationMeasureLabel, pset);
     old_dw->get(pBeBar,                   bElBarLabel,                  pset);
     
-    // Get Grid info
-    new_dw->get(gDisp,   lb->dispNewLabel, dwi, patch, gac, 1);
-   
     // Allocate space for updated particle variables
     new_dw->allocateAndPut(pVolume_new, 
                            lb->pVolumeDeformedLabel,              pset);
