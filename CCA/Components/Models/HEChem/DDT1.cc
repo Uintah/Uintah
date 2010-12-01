@@ -273,7 +273,9 @@ void DDT1::scheduleInitialize(SchedulerP& sched,
   t->computes(burningLabel,         react_matl);
   t->computes(detLocalToLabel,      react_matl);
   t->computes(surfaceTempLabel,     react_matl);
-  t->computes(crackedEnoughLabel,   react_matl);
+
+  if(d_useCrackModel)
+    t->computes(crackedEnoughLabel,   react_matl);
   sched->addTask(t, level->eachPatch(), d_mymatls);
 }
 
@@ -295,13 +297,16 @@ void DDT1::initialize(const ProcessorGroup*,
     new_dw->allocateAndPut(burn, burningLabel,         m0, patch);
     new_dw->allocateAndPut(Ts,   surfaceTempLabel,     m0, patch);
     new_dw->allocateAndPut(det,  detLocalToLabel,      m0, patch,Ghost::AroundCells,1);
-    new_dw->allocateAndPut(crack,crackedEnoughLabel,   m0, patch);
- 
+    if(d_useCrackModel)
+    {
+      new_dw->allocateAndPut(crack,crackedEnoughLabel,   m0, patch);
+      crack.initialize(0.0);
+    } 
+
     F.initialize(0.0);
     burn.initialize(0.0);
     det.initialize(0.0);
     Ts.initialize(0.0);
-    crack.initialize(0.0);
   }
 }
 
@@ -355,6 +360,10 @@ void DDT1::scheduleComputeModelSources(SchedulerP& sched,
     t1->requires(Task::NewDW, Ilb->press_equil_CCLabel, d_one_matl, gac, 1);
     t1->requires(Task::OldDW, pCrackRadiusLabel,        react_matl, gn);
     t1->computes(crackedEnoughLabel,    react_matl);
+    t->requires(Task::OldDW, Mlb->pXLabel,            mpm_matls,  gn);
+    t->requires(Task::OldDW, pCrackRadiusLabel,       react_matl, gn);
+    t->requires(Task::OldDW, detLocalToLabel,         react_matl, oms, gac,1);
+    t->requires(Task::NewDW, crackedEnoughLabel,        react_matl, gac,1);
   }
   
   sched->addTask(t1, level->eachPatch(), d_mymatls);
@@ -366,11 +375,6 @@ void DDT1::scheduleComputeModelSources(SchedulerP& sched,
   t->requires(Task::OldDW, Ilb->temp_CCLabel,         ice_matls, oms, gac,1);
   t->requires(Task::NewDW, MIlb->temp_CCLabel,        mpm_matls, oms, gac,1);
   t->requires(Task::NewDW, Ilb->vol_frac_CCLabel,     all_matls, oms, gac,1);
-  if(d_useCrackModel){
-    t->requires(Task::OldDW, Mlb->pXLabel,            mpm_matls,  gn);
-    t->requires(Task::OldDW, pCrackRadiusLabel,       react_matl, gn);
-    t->requires(Task::OldDW, detLocalToLabel,         react_matl, oms, gac,1);
-  }
 
   //__________________________________
   // Products
@@ -385,7 +389,6 @@ void DDT1::scheduleComputeModelSources(SchedulerP& sched,
   t->requires(Task::NewDW, Ilb->rho_CCLabel,          react_matl, gn);
   t->requires(Task::NewDW, Mlb->gMassLabel,           react_matl, gac,1);
   t->requires(Task::NewDW, numPPCLabel,               react_matl, gac,1);
-  t->requires(Task::NewDW, crackedEnoughLabel,        react_matl, gac,1);
 
   //__________________________________
   // Computes
@@ -443,16 +446,16 @@ void DDT1::computeNumPPC(const ProcessorGroup*,
         /* Indicating cells containing how many particles */
         CCVariable<double> pFlag, crack;
         new_dw->allocateAndPut(pFlag,       numPPCLabel,        m0, patch);
-        new_dw->allocateAndPut(crack,       crackedEnoughLabel, m0, patch);
         pFlag.initialize(0.0);
-        crack.initialize(0.0);
         
         // get cracked burning stuff
         constCCVariable<double> press_CC; 
         constParticleVariable<double> crackRad;  // store the level of cracking 
         if(d_useCrackModel){
-           old_dw->get(crackRad,    pCrackRadiusLabel, pset); 
-           new_dw->get(press_CC,    Ilb->press_equil_CCLabel, 0,  patch, gac, 1);
+          old_dw->get(crackRad,    pCrackRadiusLabel, pset); 
+          new_dw->get(press_CC,    Ilb->press_equil_CCLabel, 0,  patch, gac, 1);
+          new_dw->allocateAndPut(crack,       crackedEnoughLabel, m0, patch);
+          crack.initialize(0.0);
         }
 
         /* count how many reactant particles in each cell */
@@ -720,8 +723,8 @@ void DDT1::computeModelSources(const ProcessorGroup*,
 
 
           // Burn mass if necessary
-          if(((burning == 1 && productPress >= d_thresholdPress_SB) || 
-             (crackedEnough[c])) && !detonatingLocalTo){
+          if(((burning == 1 && productPress >= d_thresholdPress_SB) || (d_useCrackModel && 
+             (crackedEnough[c]))) && !detonatingLocalTo){
               burningCell[c]=1.0;
               
               Vector rhoGradVector = computeDensityGradientVector(nodeIdx,
