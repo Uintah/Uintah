@@ -450,8 +450,8 @@ WARNING
     enum DomainSpec {
       NormalDomain,  // <- Normal/default setting
       OutOfDomain,   // <- Require things from another level or set of patches
-      CoarseLevel,   // <- AMR 
-      FineLevel,
+      CoarseLevel,   // <- AMR :  The data on the coarse level under the range of the fine patches (including extra cells or boundary layers)
+      FineLevel,     // <- AMR :  The data on the fine level under the range of the coarse patches (including extra cells or boundary layers)
       OtherGridDomain // for when we copy data to new grid after a regrid.
     };
 
