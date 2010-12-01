@@ -218,6 +218,9 @@ cleanreally::
 	  do if test -d $$fname; then rm -rf $$fname; fi; done
 	rm -f $(patsubst %,%/*~, $(ALLOBJSUBDIRS))
 	rm -f $(LIBDIR)/so_locations ./so_locations
+       
+reallyclean:: cleanreally
+
 ifeq ($(CC_DEPEND_EXT),depend.mk)
 	rm -f $(patsubst %,%/depend.mk, $(ALLOBJSUBDIRS))
 else
