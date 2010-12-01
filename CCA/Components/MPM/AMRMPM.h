@@ -165,6 +165,12 @@ protected:
                             DataWarehouse* old_dw,
                             DataWarehouse* new_dw,
                             const coarsenFlag flag);
+                            
+  void Nodal_velocity_temperature(const ProcessorGroup*,
+                                  const PatchSubset* patches,
+                                  const MaterialSubset* matls,
+                                  DataWarehouse* old_dw,
+                                  DataWarehouse* new_dw);
 
 
   virtual void computeStressTensor(const ProcessorGroup*,
@@ -255,6 +261,10 @@ protected:
                                     const PatchSet*,
                                     const MaterialSet*,
                                     const coarsenFlag flag);
+                                    
+  void scheduleNodal_velocity_temperature(SchedulerP&, 
+                                          const PatchSet*,
+                                          const MaterialSet*);
 
   virtual void scheduleComputeStressTensor(SchedulerP&, 
                                            const PatchSet*,
