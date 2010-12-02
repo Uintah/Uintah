@@ -75,11 +75,16 @@ RHSSolver::calculateHatVelocity(const Patch* patch,
                                 ArchesConstVariables* constvars)
 
 {
+  // ignore faces that lie on the edge of the computational domain
+  // in the principal direction
+  IntVector noNeighborsLow = patch->noNeighborsLow();
+  IntVector noNeighborsHigh = patch->noNeighborsHigh();
+  
   //__________________________________
   //    X dir
-  IntVector shift(-1,0,0);  // ignore outer edge/plane of computational domain
-  IntVector loPt =  patch->getExtraLowIndex( Patch::XFaceBased,shift);
-  IntVector hiPt =  patch->getExtraHighIndex(Patch::XFaceBased,shift);
+  IntVector shift(-1,0,0);  //one cell inward.  Only offset at the edge of the computational domain.
+  IntVector loPt = patch->getSFCXLowIndex() - noNeighborsLow * shift;
+  IntVector hiPt = patch->getSFCXHighIndex()+ noNeighborsHigh * shift;
   CellIterator iter = CellIterator(loPt, hiPt);
   
   explicitUpdate_stencilMatrix<SFCXVariable<double> > (iter,  shift,                         
@@ -125,9 +130,9 @@ RHSSolver::calculateHatVelocity(const Patch* patch,
   }
   //__________________________________
   //    Y dir
-  shift = IntVector(0,-1,0);  // ignore outer edge/plane of computational domain
-  loPt =  patch->getExtraLowIndex( Patch::YFaceBased,shift);
-  hiPt =  patch->getExtraHighIndex(Patch::YFaceBased,shift);
+  shift = IntVector(0,-1,0);  // one cell inward.  Only offset at the edge of the computational domain.
+  loPt = patch->getSFCYLowIndex() - noNeighborsLow * shift;
+  hiPt = patch->getSFCYHighIndex()+ noNeighborsHigh * shift;
   iter = CellIterator(loPt, hiPt);
   
   explicitUpdate_stencilMatrix<SFCYVariable<double> > (iter,  shift,                         
@@ -171,9 +176,9 @@ RHSSolver::calculateHatVelocity(const Patch* patch,
 
   //__________________________________
   //    Z dir       
-  shift = IntVector(0,0,-1);  // ignore outer edge/plane of computational domain
-  loPt =  patch->getExtraLowIndex( Patch::ZFaceBased,shift);
-  hiPt =  patch->getExtraHighIndex(Patch::ZFaceBased,shift);
+  shift = IntVector(0,0,-1); //one cell inward.  Only offset at the edge of the computational domain. 
+  loPt = patch->getSFCZLowIndex() - noNeighborsLow * shift;
+  hiPt = patch->getSFCZHighIndex()+ noNeighborsHigh * shift;
   iter = CellIterator(loPt, hiPt);
   
   explicitUpdate_stencilMatrix<SFCZVariable<double> > (iter,  shift,                         
@@ -226,11 +231,16 @@ RHSSolver::calculateVelocity(const Patch* patch,
                              constCCVariable<double>& rho_CC,
                              constCCVariable<double>& press_CC)
 {
+  // ignore faces that lie on the edge of the computational domain
+  // in the principal direction
+  IntVector noNeighborsLow = patch->noNeighborsLow();
+  IntVector noNeighborsHigh = patch->noNeighborsHigh();
+  
   //__________________________________
   //  X-Velocity
-  IntVector shift(-1,0,0);  // ignore outer edge/plane of computational domain
-  IntVector loPt =  patch->getExtraLowIndex( Patch::XFaceBased,shift);
-  IntVector hiPt =  patch->getExtraHighIndex(Patch::XFaceBased,shift);
+  IntVector shift(-1,0,0);  //one cell inward.  Only offset at the edge of the computational domain.
+  IntVector loPt = patch->getSFCXLowIndex() - noNeighborsLow * shift;
+  IntVector hiPt = patch->getSFCXHighIndex()+ noNeighborsHigh * shift;
   CellIterator iter = CellIterator(loPt, hiPt);
   
   for (; !iter.done(); iter++){
@@ -243,9 +253,9 @@ RHSSolver::calculateVelocity(const Patch* patch,
 
   //__________________________________
   //  Y-Velocity
-  shift = IntVector(0,-1,0); // ignore outer edge/plane of computational domain
-  loPt =  patch->getExtraLowIndex( Patch::YFaceBased,shift);
-  hiPt =  patch->getExtraHighIndex(Patch::YFaceBased,shift);
+  shift = IntVector(0,-1,0);  // one cell inward.  Only offset at the edge of the computational domain.
+  loPt = patch->getSFCYLowIndex() - noNeighborsLow * shift;
+  hiPt = patch->getSFCYHighIndex()+ noNeighborsHigh * shift;
   iter = CellIterator(loPt, hiPt);
   
   for (; !iter.done(); iter++){
@@ -258,9 +268,9 @@ RHSSolver::calculateVelocity(const Patch* patch,
   
   //__________________________________
   //  Z-Velocity  
-  shift = IntVector(0,0,-1); // ignore outer edge/plan of computational domain
-  loPt =  patch->getExtraLowIndex( Patch::ZFaceBased,shift);
-  hiPt =  patch->getExtraHighIndex(Patch::ZFaceBased,shift);
+  shift = IntVector(0,0,-1); // Only offset iterator at the edge of the computational domain. 
+  loPt = patch->getSFCZLowIndex() - noNeighborsLow * shift;
+  hiPt = patch->getSFCZHighIndex()+ noNeighborsHigh * shift;
   iter = CellIterator(loPt, hiPt);
   
   for (; !iter.done(); iter++){
