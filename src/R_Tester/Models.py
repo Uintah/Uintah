@@ -33,7 +33,6 @@ NIGHTLYTESTS = [   ("HePlume",       "HePlume.ups",     1.1, "Linux",  ["exactCo
                
 # Tests that are run during local regression testing               
 LOCALTESTS   = [   ("HePlume",       "HePlume.ups",     1.1, "Linux",  ["exactComparison"]), \
-                   ("HePlume",       "HePlume.ups",     1.1, "Darwin", ["doesTestRun"]), \
                    ("JP8_Radiation", "JP8_Radiation.ups", 4, "Linux",  ["exactComparison"])
     	        ]
 
