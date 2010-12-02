@@ -166,7 +166,7 @@
     <filebase>wasatch_test.uda</filebase>
     <outputTimestepInterval>10</outputTimestepInterval>
     <outputInitTimestep/>
-    <checkpoint cycle = "1" interval = "100"/>
+    <checkpoint cycle = "1" interval = "5"/>
     <compression>gzip</compression>
     <save label="phi-scalar" />
     <save label="phi-xStaggered" />
