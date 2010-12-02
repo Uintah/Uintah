@@ -1219,24 +1219,10 @@ void Patch::computeExtents(VariableBasis basis,
   ASSERT(lowOffset[0] >= 0 && lowOffset[1] >= 0 && lowOffset[2] >= 0 &&
          highOffset[0] >= 0 && highOffset[2] >= 0 && highOffset[2] >= 0);
   
-  IntVector origLowIndex = getExtraLowIndex(basis, IntVector(0,0,0));
-  IntVector origHighIndex = getExtraHighIndex(basis, IntVector(0,0,0));
-  low = origLowIndex - lowOffset;
-  high = origHighIndex + highOffset;
-
-  for (int i = 0; i < 3; i++) {
-    FaceType faceType = (FaceType)(2 * i); // x, y, or z minus
-    if (getBCType(faceType) != Neighbor) {
-      // no neighbor -- use original low index for that side
-      low[i] = origLowIndex[i]-boundaryLayer[i];
-    }
-    
-    faceType = (FaceType)(faceType + 1); // x, y, or z plus
-    if (getBCType(faceType) != Neighbor) {
-      // no neighbor -- use original high index for that side
-      high[i] = origHighIndex[i]+boundaryLayer[i];
-    }
-  }
+  IntVector origLowIndex = getExtraLowIndex(basis, boundaryLayer);
+  IntVector origHighIndex = getExtraHighIndex(basis, boundaryLayer);
+  low = origLowIndex - neighborsLow()*lowOffset;
+  high = origHighIndex + neighborsHigh()*highOffset;
 }
 
 void Patch::getOtherLevelPatches(int levelOffset,
@@ -1349,6 +1335,19 @@ IntVector Patch::noNeighborsHigh() const
   return IntVector(getBCType(xplus) == Neighbor? 0:1,
                    getBCType(yplus) == Neighbor? 0:1,
                    getBCType(zplus) == Neighbor? 0:1);
+}
+IntVector Patch::neighborsLow() const
+{
+  return IntVector(getBCType(xminus) == Neighbor? 1:0,
+                   getBCType(yminus) == Neighbor? 1:0,
+                   getBCType(zminus) == Neighbor? 1:0);
+}
+
+IntVector Patch::neighborsHigh() const
+{
+  return IntVector(getBCType(xplus) == Neighbor? 1:0,
+                   getBCType(yplus) == Neighbor? 1:0,
+                   getBCType(zplus) == Neighbor? 1:0);
 }
 
 /**
