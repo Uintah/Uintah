@@ -1566,6 +1566,18 @@ WARNING
       IntVector noNeighborsHigh() const;
       
       /**
+       * Returns an IntVector with 0 or 1 depending on
+       * if there are neighboring patches on the low faces.  
+       */
+      IntVector neighborsLow() const;
+      
+      /**
+       * Returns an IntVector with 0 or 1 depending on
+       * if there are neighboring patches on high low faces.  
+       */
+      IntVector neighborsHigh() const;
+      
+      /**
        * Returns the position of the node idx in domain coordinates.
        */
       Point nodePosition(const IntVector& idx) const;
