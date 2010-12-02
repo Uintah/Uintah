@@ -412,8 +412,6 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
         IntVector ec;
         box_ps->getWithDefault("extraCells", ec, IntVector(0,0,0));
         extraCells = Max(ec, extraCells);
-
-        Patch::setExtraCells(extraCells);
         
         // bulletproofing
         if(have_levelspacing || have_patchspacing){

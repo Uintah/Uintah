@@ -229,12 +229,13 @@ WARNING
        */
       inline IntVector getExtraCellLowIndex(int ngc=0) const
       {
+        IntVector ec=getExtraCells();
         //if have a neighbor subtract the number of ghost cells from the index
         //otherwise subtract the number of extra cells from the index
         return d_lowIndex-IntVector(
-            getBCType(xminus)==Neighbor?ngc:d_extraCells[0],
-            getBCType(yminus)==Neighbor?ngc:d_extraCells[1],
-            getBCType(zminus)==Neighbor?ngc:d_extraCells[2]); 
+            getBCType(xminus)==Neighbor?ngc:ec[0],
+            getBCType(yminus)==Neighbor?ngc:ec[1],
+            getBCType(zminus)==Neighbor?ngc:ec[2]); 
       }
 
       /**
@@ -243,12 +244,13 @@ WARNING
        */
       inline IntVector getExtraCellHighIndex(int ngc=0) const
       {
+        IntVector ec=getExtraCells();
         //if have a neighbor add the number of ghost cells to the index
         //otherwise add the number of extra cells to the index
         return d_highIndex+IntVector(
-            getBCType(xplus)==Neighbor?ngc:d_extraCells[0],
-            getBCType(yplus)==Neighbor?ngc:d_extraCells[1],
-            getBCType(zplus)==Neighbor?ngc:d_extraCells[2]); 
+            getBCType(xplus)==Neighbor?ngc:ec[0],
+            getBCType(yplus)==Neighbor?ngc:ec[1],
+            getBCType(zplus)==Neighbor?ngc:ec[2]); 
       }
 
       /**
@@ -293,12 +295,13 @@ WARNING
        */
       inline IntVector getExtraNodeLowIndex(int ngn=0) const
       {
+        IntVector ec=getExtraCells();
         //if have a neighbor subtract the number of ghost nodes from the index
         //otherwise subtract the number of extra nodes from the index
         return d_lowIndex-IntVector(
-            getBCType(xminus)==Neighbor?ngn:d_extraCells[0],
-            getBCType(yminus)==Neighbor?ngn:d_extraCells[1],
-            getBCType(zminus)==Neighbor?ngn:d_extraCells[2]); 
+            getBCType(xminus)==Neighbor?ngn:ec[0],
+            getBCType(yminus)==Neighbor?ngn:ec[1],
+            getBCType(zminus)==Neighbor?ngn:ec[2]); 
       }
 
       /**
@@ -307,12 +310,13 @@ WARNING
        */
       inline IntVector getExtraNodeHighIndex(int ngn=0) const
       {
+        IntVector ec=getExtraCells();
         //if have a neighbor add the number of ghost nodes to the index
         //otherwise the number of extra nodes to the index and 1 for the plus face node
         return d_highIndex+IntVector(
-            getBCType(xplus)==Neighbor?ngn:d_extraCells[0]+1,
-            getBCType(yplus)==Neighbor?ngn:d_extraCells[1]+1,
-            getBCType(zplus)==Neighbor?ngn:d_extraCells[2]+1); 
+            getBCType(xplus)==Neighbor?ngn:ec[0]+1,
+            getBCType(yplus)==Neighbor?ngn:ec[1]+1,
+            getBCType(zplus)==Neighbor?ngn:ec[2]+1); 
 
       }
 
@@ -701,12 +705,13 @@ WARNING
        */
       inline IntVector getFortranExtraCellLowIndex(int ngc=0) const
       {
+        IntVector ec=getExtraCells();
         //if have a neighbor subtract the number of ghost cells from the index
         //otherwise subtract the number of extra cells from the index
         return d_lowIndex-IntVector(
-            getBCType(xminus)==Neighbor?ngc:d_extraCells[0],
-            getBCType(yminus)==Neighbor?ngc:d_extraCells[1],
-            getBCType(zminus)==Neighbor?ngc:d_extraCells[2]); 
+            getBCType(xminus)==Neighbor?ngc:ec[0],
+            getBCType(yminus)==Neighbor?ngc:ec[1],
+            getBCType(zminus)==Neighbor?ngc:ec[2]); 
       }
 
       /**
@@ -715,12 +720,13 @@ WARNING
        */
       inline IntVector getFortranExtraCellHighIndex(int ngc=0) const
       {
+        IntVector ec=getExtraCells();
         //if have a neighbor add the number of ghost cells to the index
         //otherwise add the number of extra cells to the index
         return d_highIndex-IntVector(1,1,1)+IntVector(
-            getBCType(xplus)==Neighbor?ngc:d_extraCells[0],
-            getBCType(yplus)==Neighbor?ngc:d_extraCells[1],
-            getBCType(zplus)==Neighbor?ngc:d_extraCells[2]); 
+            getBCType(xplus)==Neighbor?ngc:ec[0],
+            getBCType(yplus)==Neighbor?ngc:ec[1],
+            getBCType(zplus)==Neighbor?ngc:ec[2]); 
       }
 
       /**
@@ -765,12 +771,13 @@ WARNING
        */
       inline IntVector getFortranExtraNodeLowIndex(int ngn=0) const
       {
+        IntVector ec=getExtraCells();
         //if have a neighbor subtract the number of ghost nodes from the index
         //otherwise subtract the number of extra nodes from the index
         return d_lowIndex-IntVector(
-            getBCType(xminus)==Neighbor?ngn:d_extraCells[0],
-            getBCType(yminus)==Neighbor?ngn:d_extraCells[1],
-            getBCType(zminus)==Neighbor?ngn:d_extraCells[2]); 
+            getBCType(xminus)==Neighbor?ngn:ec[0],
+            getBCType(yminus)==Neighbor?ngn:ec[1],
+            getBCType(zminus)==Neighbor?ngn:ec[2]); 
       }
 
       /**
@@ -779,12 +786,13 @@ WARNING
        */
       inline IntVector getFortranExtraNodeHighIndex(int ngn=0) const
       {
+        IntVector ec=getExtraCells();
         //if have a neighbor add the number of ghost nodes to the index
         //otherwise the number of extra nodes to the index and 1 for the plus face node
         return d_highIndex-IntVector(1,1,1)+IntVector(
-            getBCType(xplus)==Neighbor?ngn:d_extraCells[0]+1,
-            getBCType(yplus)==Neighbor?ngn:d_extraCells[1]+1,
-            getBCType(zplus)==Neighbor?ngn:d_extraCells[2]+1); 
+            getBCType(xplus)==Neighbor?ngn:ec[0]+1,
+            getBCType(yplus)==Neighbor?ngn:ec[1]+1,
+            getBCType(zplus)==Neighbor?ngn:ec[2]+1); 
 
       }
 
@@ -988,19 +996,11 @@ WARNING
       }
 
       /**
-       * Sets the number of extra cells for the patch class.
-       */
-      static inline void setExtraCells(IntVector extraCells) 
-      {
-        d_extraCells=extraCells;
-      }
-
-      /**
        * Gets the number of extra cells for the patch class.
        */
-      static inline IntVector getExtraCells() 
+      inline IntVector getExtraCells() const 
       {
-        return d_extraCells;
+        return getLevel()->getExtraCells();
       }
 
       /** 
@@ -1949,11 +1949,6 @@ WARNING
        * The high index of the patch without extra or ghost cells
        */
       IntVector d_highIndex;
-
-      /**
-       * The number of extra cells on the edge of the domain
-       */
-      static IntVector d_extraCells;
 
       /**
        * The patch state.  This stores much of the internal state

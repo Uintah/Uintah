@@ -363,9 +363,6 @@ DataArchive::queryGrid( int index, const ProblemSpec* ups)
 
       if (!have_stretch)
         dcell *= d_cell_scale;
-      IntVector extraCells(0,0,0);
-      n->get("extraCells", extraCells);
-      Patch::setExtraCells(extraCells);
 
       int id;
       if(!n->get("id", id)){
@@ -378,7 +375,11 @@ DataArchive::queryGrid( int index, const ProblemSpec* ups)
         id=-1;
       }
       LevelP level = grid->addLevel(anchor, dcell, id);
+      
+      IntVector extraCells(0,0,0);
+      n->get("extraCells", extraCells);
       level->setExtraCells(extraCells);
+      
       if (have_stretch) {
         level->setStretched((Grid::Axis)0, faces[0]);
         level->setStretched((Grid::Axis)1, faces[1]);

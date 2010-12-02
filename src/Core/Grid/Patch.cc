@@ -56,7 +56,6 @@ using namespace Uintah;
 
 static AtomicCounter ids("Patch ID counter",0);
 static Mutex ids_init("ID init");
-IntVector Patch::d_extraCells;
 
 
 Patch::Patch(const Level* level,
@@ -1089,7 +1088,7 @@ void Patch::cullIntersection(VariableBasis basis, IntVector bl, const Patch* nei
     //is equal to 2 times the number of extra cells,
     //and the patches are adjacent on this dimension
       //then increment the bad_diffs counter
-    if (diff[dim]!=0 && diff[dim] == 2*d_extraCells[dim] 
+    if (diff[dim]!=0 && diff[dim] == 2*getExtraCells()[dim] 
         && (p_int_low[dim]==n_int_high[dim] || n_int_low[dim]==p_int_high[dim]) ) 
       bad_diffs++;
 
