@@ -39,15 +39,17 @@
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Exceptions/ProblemSetupException.h>
-
+#include <Core/Grid/Patch.h>
+#include <Core/Grid/BoundaryConditions/BCDataArray.h>
+#include <Core/Grid/BoundaryConditions/BoundCond.h>
 
 //-- SpatialOps includes --//
 #include <spatialops/OperatorDatabase.h>
-
+#include <spatialops/structured/FVStaggered.h>
+#include <spatialops/structured/FVStaggeredBCTools.h>
 
 //-- ExprLib includes --//
 #include <expression/ExprLib.h>
-
 
 //-- Wasatch includes --//
 #include "Wasatch.h"
@@ -61,6 +63,7 @@
 #include "Expressions/BasicExprBuilder.h"
 #include "Expressions/SetCurrentTime.h"
 #include "transport/ParseEquation.h"
+#include "BCHelperTools.h"
 
 namespace Wasatch{
 
@@ -259,6 +262,41 @@ namespace Wasatch{
 
   //--------------------------------------------------------------------
 
+//  template <typename T>
+//  bool getIteratorBCValueBCKind( const Uintah::Patch* patch, 
+//                                const Uintah::Patch::FaceType face,
+//                                 const int child,
+//                                const std::string& desc,
+//                                 const int mat_id,
+//                                 T& bc_value,
+//                                SCIRun::Iterator& bound_ptr,
+//                                std::string& bc_kind)
+//  {  
+//    SCIRun::Iterator nu;
+//    const Uintah::BoundCondBase* bc = patch->getArrayBCValues(face,mat_id,
+//		                                          		    desc, bound_ptr,
+//                                                      nu, child);
+//    const Uintah::BoundCond<T>* new_bcs;
+//    new_bcs =  dynamic_cast<const Uintah::BoundCond<T> *>(bc);
+//    
+//    bc_value=T(-9);
+//    bc_kind="NotSet";
+//    if (new_bcs != 0) {      // non-symmetric
+//      bc_value = new_bcs->getValue();
+//      bc_kind =  new_bcs->getBCType__NEW();
+//    }        
+//    delete bc;
+//    
+//    // Did I find an iterator
+//    if( bc_kind == "NotSet" ){
+//      return false;
+//    }else{
+//      return true;
+//    }
+//  }
+  
+  //--------------------------------------------------------------------
+
   void
   Wasatch::scheduleTimeAdvance( const Uintah::LevelP& level,
                                 Uintah::SchedulerP& sched )
@@ -280,7 +318,20 @@ namespace Wasatch{
     //       executed together across all patches.  This is required if
     //       any global MPI syncronizations occurr (e.g. in a linear
     //       solve)
-  }
+    //
+    //
+    // -----------------------------------------------------------------------
+    // BOUNDARY CONDITIONS TREATMENT
+    // -----------------------------------------------------------------------
+    // get the advance solution graph
+    const GraphHelper* gh = graphCategories_[ ADVANCE_SOLUTION ];
+    // get a pointer to local patches
+    const Uintah::PatchSet* const localPatches = sched->getLoadBalancer()->getPerProcessorPatchSet(level);
+    // get the Uintah materials
+    const Uintah::MaterialSubset* const materials = sharedState_->allMaterials()->getUnion();
+    // build the boundary conditions
+    buildBoundaryConditions(adaptors_, gh, localPatches, patchInfoMap_, materials);    
+}
 
   //--------------------------------------------------------------------
 

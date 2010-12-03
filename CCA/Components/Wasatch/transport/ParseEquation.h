@@ -1,6 +1,7 @@
 #ifndef Wasatch_ParseEquations_h
 #define Wasatch_ParseEquations_h
 
+#include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 
 #include "../GraphHelperTools.h"
@@ -34,13 +35,16 @@ namespace Wasatch{
   class EqnTimestepAdaptorBase
   {
   protected:
-    EqnTimestepAdaptorBase( Expr::TransportEquation* eqn );
+    EqnTimestepAdaptorBase( Expr::TransportEquation* eqn, 
+                           Uintah::ProblemSpecP transEqnParams );
     Expr::TransportEquation* const eqn_;
+    Uintah::ProblemSpecP transEqnParams_;
   public:
     virtual ~EqnTimestepAdaptorBase();
     virtual void hook( TimeStepper& ts ) const = 0;
     Expr::TransportEquation* equation(){ return eqn_; }
     const Expr::TransportEquation* equation() const{ return eqn_; }
+    Uintah::ProblemSpecP transEqnParams() { return transEqnParams_;}
   };
 
 
