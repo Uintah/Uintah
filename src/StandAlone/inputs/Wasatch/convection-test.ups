@@ -11,10 +11,37 @@
     <!-- Set the initial condition for non-staggered scalar -->
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="phi1-scalar" state="STATE_N" />
+      <NameTag name="phi0-scalar" state="STATE_N" />
       <SineFunction amplitude="10.0" frequency="1.0" offset="0.0">
          <NameTag name="XSVOL" state="STATE_NONE" />
        </SineFunction>
+    </BasicExpression>
+
+    <!-- Set the initial condition for an x-staggered scalar -->
+    <BasicExpression type="XVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="phi1-scalar" state="STATE_N" />
+      <SineFunction amplitude="1.0" frequency="10.0" offset="0.0">
+        <NameTag name="XXVOL" state="STATE_NONE" />
+      </SineFunction>
+    </BasicExpression>
+
+    <!-- Set the initial condition for a y-staggered scalar -->
+    <BasicExpression type="YVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="phi2-scalar" state="STATE_N" />
+      <SineFunction amplitude="1.0" frequency="10.0" offset="0.0">
+        <NameTag name="XYVOL" state="STATE_NONE" />
+      </SineFunction>
+    </BasicExpression>
+
+    <!-- Set the initial condition for the z-staggered scalar -->
+    <BasicExpression type="ZVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="phi3-scalar" state="STATE_N" />
+      <SineFunction amplitude="1.0" frequency="10.0" offset="0.0">
+        <NameTag name="XZVOL" state="STATE_NONE" />
+      </SineFunction>
     </BasicExpression>
     
     <!-- CREATE AN EXPRESSION FOR THE VELOCITY FIELD -->
@@ -41,7 +68,7 @@
     <!-- Build a non-staggered scalar transport equation -->
     <TransportEquation equation="generic">
 
-      <SolutionVariable>phi1-scalar</SolutionVariable>
+      <SolutionVariable>phi0-scalar</SolutionVariable>
 
       <ConvectiveFluxExpression>
         <Method>UPWIND</Method> 
@@ -68,6 +95,106 @@
       </ConvectiveFluxExpression>
 
     </TransportEquation>
+
+    <!-- Build an x-staggered scalar transport equation -->
+    <TransportEquation equation="generic">
+
+      <SolutionVariable>phi1-scalar</SolutionVariable>
+
+      <StaggeredDirection>X</StaggeredDirection>
+
+      <ConvectiveFluxExpression>
+        <Method>UPWIND</Method> 
+        <Direction>X</Direction>
+        <AdvectiveVelocity>
+            <NameTag name="advective-velocity-x" state="STATE_N"/>
+        </AdvectiveVelocity>
+      </ConvectiveFluxExpression>
+
+      <ConvectiveFluxExpression>
+        <Method>UPWIND</Method>
+        <Direction>Y</Direction>
+        <AdvectiveVelocity>
+            <NameTag name="advective-velocity-y" state="STATE_N"/>
+        </AdvectiveVelocity>
+      </ConvectiveFluxExpression>
+
+      <ConvectiveFluxExpression>
+        <Method>UPWIND</Method>
+        <Direction>Z</Direction>
+        <AdvectiveVelocity>
+            <NameTag name="advective-velocity-z" state="STATE_N"/>
+        </AdvectiveVelocity>
+      </ConvectiveFluxExpression>
+
+    </TransportEquation>
+
+    <!-- Build a y-staggered scalar transport equation -->
+    <TransportEquation equation="generic">
+
+      <SolutionVariable>phi2-scalar</SolutionVariable>
+
+      <StaggeredDirection>Y</StaggeredDirection>
+
+      <ConvectiveFluxExpression>
+        <Method>UPWIND</Method> 
+        <Direction>X</Direction>
+        <AdvectiveVelocity>
+            <NameTag name="advective-velocity-x" state="STATE_N"/>
+        </AdvectiveVelocity>
+      </ConvectiveFluxExpression>
+
+      <ConvectiveFluxExpression>
+        <Method>UPWIND</Method>
+        <Direction>Y</Direction>
+        <AdvectiveVelocity>
+            <NameTag name="advective-velocity-y" state="STATE_N"/>
+        </AdvectiveVelocity>
+      </ConvectiveFluxExpression>
+
+      <ConvectiveFluxExpression>
+        <Method>UPWIND</Method>
+        <Direction>Z</Direction>
+        <AdvectiveVelocity>
+            <NameTag name="advective-velocity-z" state="STATE_N"/>
+        </AdvectiveVelocity>
+      </ConvectiveFluxExpression>
+
+    </TransportEquation>
+
+    <!-- Build a z-staggered scalar transport equation -->
+    <TransportEquation equation="generic">
+
+      <SolutionVariable>phi3-scalar</SolutionVariable>
+
+      <StaggeredDirection>Z</StaggeredDirection>
+
+      <ConvectiveFluxExpression>
+        <Method>UPWIND</Method> 
+        <Direction>X</Direction>
+        <AdvectiveVelocity>
+            <NameTag name="advective-velocity-x" state="STATE_N"/>
+        </AdvectiveVelocity>
+      </ConvectiveFluxExpression>
+
+      <ConvectiveFluxExpression>
+        <Method>UPWIND</Method>
+        <Direction>Y</Direction>
+        <AdvectiveVelocity>
+            <NameTag name="advective-velocity-y" state="STATE_N"/>
+        </AdvectiveVelocity>
+      </ConvectiveFluxExpression>
+
+      <ConvectiveFluxExpression>
+        <Method>UPWIND</Method>
+        <Direction>Z</Direction>
+        <AdvectiveVelocity>
+            <NameTag name="advective-velocity-z" state="STATE_N"/>
+        </AdvectiveVelocity>
+      </ConvectiveFluxExpression>
+
+    </TransportEquation>
+
   </Wasatch>
 
 
