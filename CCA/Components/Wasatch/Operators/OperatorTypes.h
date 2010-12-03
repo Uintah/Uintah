@@ -2,6 +2,7 @@
 #define Wasatch_OperatorTypes_h
 
 #include "../FieldTypes.h"
+#include "UpwindInterpolant.h"
 
 #include <spatialops/structured/FVStaggered.h>
 
@@ -35,13 +36,13 @@ namespace Wasatch{
   {
     typedef typename OperatorTypeBuilder< Gradient,
                                           CellT,
-                                          typename FaceTypes<CellT>::XFace >::type  GradX;
+                                          typename FaceTypes<CellT>::XFace >::type	GradX;
     typedef typename OperatorTypeBuilder< Gradient,
                                           CellT,
-                                          typename FaceTypes<CellT>::YFace >::type 	GradY;
+                                          typename FaceTypes<CellT>::YFace >::type	GradY;
     typedef typename OperatorTypeBuilder< Gradient,
                                           CellT,
-                                          typename FaceTypes<CellT>::ZFace >::type 	GradZ;
+                                          typename FaceTypes<CellT>::ZFace >::type	GradZ;
 
     typedef typename OperatorTypeBuilder< Divergence,
                                           typename FaceTypes<CellT>::XFace,
@@ -62,6 +63,10 @@ namespace Wasatch{
     typedef typename OperatorTypeBuilder< Interpolant,
                                           CellT,
                                           typename FaceTypes<CellT>::ZFace >::type 	InterpC2FZ;
+
+    typedef UpwindInterpolant< CellT, typename FaceTypes<CellT>::XFace > 		InterpC2FXUpwind;
+    typedef UpwindInterpolant< CellT, typename FaceTypes<CellT>::YFace > 		InterpC2FYUpwind;
+    typedef UpwindInterpolant< CellT, typename FaceTypes<CellT>::ZFace > 		InterpC2FZUpwind;
 
     typedef typename OperatorTypeBuilder< Interpolant,
                                           typename FaceTypes<CellT>::XFace,
