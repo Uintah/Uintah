@@ -180,7 +180,6 @@
         <lower>[0,0,0]</lower>
         <upper>[10,10,10]</upper>
         <resolution>[10,10,10]</resolution>
-<!--         <extraCells>[0,0,0]</extraCells> -->
         <patches>[1,1,1]</patches>
       </Box>
       <periodic>[1,1,1]</periodic>
