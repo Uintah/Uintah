@@ -530,6 +530,9 @@ ScalarEqn::solveTransportEqn( const ProcessorGroup* pc,
     //     to get phi^{(j+1)}
     d_timeIntegrator->singlePatchFEUpdate( patch, phi_at_jp1, old_den, new_den, RHS, dt, curr_ssp_time, d_eqnName);
 
+    if (d_doClipping) 
+      clipPhi( patch, phi_at_jp1 ); 
+
   }
 }
 //---------------------------------------------------------------------------

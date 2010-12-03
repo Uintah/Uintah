@@ -806,6 +806,19 @@ int ExplicitSolver::noSolve(const LevelP& level,
                                                           false, false);
   }
 
+  EqnFactory& eqn_factory = EqnFactory::self();
+  EqnFactory::EqnMap& scalar_eqns = eqn_factory.retrieve_all_eqns(); 
+  for (EqnFactory::EqnMap::iterator iter = scalar_eqns.begin(); iter != scalar_eqns.end(); iter++){
+
+    EqnBase* eqn = iter->second; 
+    eqn->sched_dummyInit( level, sched ); 
+
+  }
+
+  string mixmodel = d_props->getMixingModelType(); 
+  if ( mixmodel == "TabProps" )
+    d_props->sched_doTPDummyInit( level, sched ); 
+
   d_props->sched_computePropsFirst_mm(                    sched, patches, matls);
 
   d_props->sched_computeDrhodt(                           sched, patches, matls,
@@ -860,15 +873,6 @@ int ExplicitSolver::noSolve(const LevelP& level,
     }
   }
 
-  EqnFactory& eqn_factory = EqnFactory::self();
-  EqnFactory::EqnMap& scalar_eqns = eqn_factory.retrieve_all_eqns(); 
-  for (EqnFactory::EqnMap::iterator iter = scalar_eqns.begin(); iter != scalar_eqns.end(); iter++){
-
-    EqnBase* eqn = iter->second; 
-    eqn->sched_dummyInit( level, sched ); 
-
-  }
-
   SourceTermFactory& src_factory = SourceTermFactory::self();
   SourceTermFactory::SourceMap& sources = src_factory.retrieve_all_sources(); 
   for (SourceTermFactory::SourceMap::iterator iter = sources.begin(); iter != sources.end(); iter++){
@@ -888,9 +892,6 @@ int ExplicitSolver::noSolve(const LevelP& level,
 
   }
 
-  string mixmodel = d_props->getMixingModelType(); 
-  if ( mixmodel == "TabProps" )
-    d_props->sched_doTPDummyInit( level, sched ); 
 
   // Schedule an interpolation of the face centered velocity data 
   // to a cell centered vector for used by the viz tools
