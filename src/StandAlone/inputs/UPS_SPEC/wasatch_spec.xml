@@ -14,22 +14,19 @@
       
       <!-- Specify a staggered direction for this scalar. If the scalar is non-staggered, this block is not needed -->                          
       <StaggeredDirection  spec="OPTIONAL STRING 'X,Y,Z'"/>
-            
-      <!-- SPECIFICATION OF THE CONVECTIVE FLUX -->
+      
+      <!-- ================================================================================== -->            
+      <!-- CONVECTIVE FLUX -->
       <ConvectiveFluxExpression	spec="MULTIPLE NO_DATA">
-        <!-- SPECIFY THE NAME OF A BASIC EXPRESSION, IF PROVIDED -->
-        <NameTag		spec="OPTIONAL" />
-        <!-- SPECIFY THE INTERPOLATION METHOD -->
-        <Method         spec="REQUIRED STRING 'SOU, CENTRAL, UPWIND, SUPERBEE'" />
-        <!-- SPECIFY THE DIRECTION OF THE FLUX -->
-        <Direction      spec="REQUIRED STRING 'X,Y,Z'"/>
-        <!-- SPECIFY THE ADVECTIVE VELOCITY -->
-        <AdvectiveVelocity  spec="OPTIONAL NO_DATA">
-            <!-- IF AN EXPRESSION FOR THE VELOCITY WAS SPECIFIED, THEN USE THAT -->
-            <NameTag spec="REQUIRED"/>
+        <NameTag		spec="OPTIONAL" /> <!-- SPECIFY THE NAME OF A BASIC EXPRESSION, IF PROVIDED -->
+        <Method         spec="REQUIRED STRING 'SOU, CENTRAL, UPWIND, SUPERBEE'" /> <!-- SPECIFY THE INTERPOLATION METHOD -->
+        <Direction      spec="REQUIRED STRING 'X,Y,Z'"/> <!-- SPECIFY THE DIRECTION OF THE FLUX -->
+        <AdvectiveVelocity  spec="OPTIONAL NO_DATA"> <!-- SPECIFY THE ADVECTIVE VELOCITY -->
+            <NameTag spec="REQUIRED"/> <!-- IF AN EXPRESSION FOR THE VELOCITY WAS SPECIFIED, THEN USE THAT -->
         </AdvectiveVelocity>
       </ConvectiveFluxExpression>
-
+      
+      <!-- ================================================================================== -->            
       <!-- Specification of the diffusive flux -->
       <DiffusiveFluxExpression	spec="MULTIPLE NO_DATA"
                                 children1="ONE_OF(CHILD ConstantDiffusivity, DiffusionCoefficient, NameTag)"
@@ -49,7 +46,9 @@
         <NameTag		spec="OPTIONAL" />
 
       </DiffusiveFluxExpression>
-
+      
+      <!-- ================================================================================== -->            
+      <!-- Specification of the source term -->
       <SourceTermExpression	spec="MULTIPLE NO_DATA">
         <!-- specify the name of one or more source term expressions to be added to this transport equation -->
         <NameTag		spec="REQUIRED" />

@@ -43,7 +43,8 @@ SRCS     +=                             \
 	$(SRCDIR)/StringNames.cc	\
         $(SRCDIR)/TaskInterface.cc	\
 	$(SRCDIR)/TimeStepper.cc	\
-	$(SRCDIR)/Wasatch.cc
+	$(SRCDIR)/Wasatch.cc  \
+  $(SRCDIR)/BCHelperTools.cc
 
 PSELIBS :=              \
 	Core/Geometry   \
