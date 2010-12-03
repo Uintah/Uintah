@@ -1,6 +1,7 @@
 #ifndef TabPropsEvaluator_Expr_h
 #define TabPropsEvaluator_Expr_h
 
+#include <tabprops/BSpline.h>
 #include <tabprops/StateTable.h>
 
 #include <expression/Expr_Expression.h>
