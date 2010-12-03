@@ -87,7 +87,7 @@ public:
    *         velocity field. This must be of the same type as the
    *         destination field, i.e. a face centered field.
    */
-  inline void set_advective_velocity (const PhiFaceT &theAdvectiveVelocity);
+  void set_advective_velocity (const PhiFaceT &theAdvectiveVelocity);
   
   /**
    *  \brief Applies the Upwind interpolation to the source field.
@@ -99,7 +99,7 @@ public:
    *         hold the convective flux \phi*u_i in the direction i. It
    *         will be stored on the staggered cell centers.
    */
-  inline void apply_to_field(const PhiVolT &src, PhiFaceT &dest) const; 
+  void apply_to_field(const PhiVolT &src, PhiFaceT &dest) const; 
   
 };
 
