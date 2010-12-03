@@ -118,8 +118,6 @@ testname="$1";          shift;
 eval set -- "$@"
 comment="$@"
 
-echo "inside replace_gold_standard comment: $comment"
-
 # Info for a log file, to keep track of who replaced gold standards
 logfile="$gold_standard_dir/$testname/replace.log"
 user=`whoami`
