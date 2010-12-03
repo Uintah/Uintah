@@ -7,12 +7,12 @@ from string import upper,rstrip,rsplit
 from modUPS import modUPS
 from commands import getoutput
 
-####
+#______________________________________________________________________
 # Assuming that running python with the '-u' arg doesn't fix the i/o buffering problem, this line
 # can be added after print statements:
 #
 # stdout.flush() # Make sure that output (via 'tee' command (from calling script)) is actually printed...
-####
+#______________________________________________________________________
 
 def nameoftest (test):
     return test[0]
@@ -166,7 +166,8 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
   
   # clean up any old log files
   system("rm -rf %s/%s-short.log" % (startpath,ALGO))
- 
+  system("rm -rf %s/%s.log" % (startpath,ALGO))
+  
   for test in TESTS:
 
     testname = nameoftest(test)
@@ -578,7 +579,7 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
       print "\t\tMake sure the problem makes checkpoints before finishing"
     
     print sus_log_msg
-    system("echo '  -- %s%s test did not run to completion' >> %s/%s-short.log" % (testname,restart_text,startpath,ALGO))
+    system("echo '  :%s: test did not run to completion' >> %s/%s-short.log" % (testname,restart_text,startpath,ALGO))
     return_code = 1
   else:
     # Sus completed successfully - now run memory,compar_uda and performance tests
@@ -685,15 +686,15 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
     # print error codes
     # if comparison, memory, performance tests fail, return here, so mem_leak tests can run
     if compUda_RC == 5*256 or compUda_RC == 1*256:
-      system("echo '  --%s-- \t%s test failed comparison tests' >> %s/%s-short.log" % (testname,restart_text,startpath,ALGO))
+      system("echo '  :%s: \t%s test failed comparison tests' >> %s/%s-short.log" % (testname,restart_text,startpath,ALGO))
       return_code = 2;
         
     if performance_RC == 2*256:
-      system("echo '  --%s-- \t%s test failed performance tests' >> %s/%s-short.log" % (testname,restart_text,startpath,ALGO))
+      system("echo '  :%s: \t%s test failed performance tests' >> %s/%s-short.log" % (testname,restart_text,startpath,ALGO))
       return_code = 2;
     
     if memory_RC == 1*256 or memory_RC == 2*256:
-      system("echo '  --%s-- \t%s test failed memory tests' >> %s/%s-short.log" % (testname,restart_text,startpath,ALGO))
+      system("echo '  :%s: \t%s test failed memory tests' >> %s/%s-short.log" % (testname,restart_text,startpath,ALGO))
       return_code = 2;
     
     if return_code != 0:
