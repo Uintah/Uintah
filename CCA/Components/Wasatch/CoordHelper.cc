@@ -115,7 +115,7 @@ namespace Wasatch{
                   Uintah::DataWarehouse* const dw,
                   const Uintah::Patch* const patch,
                   const int material,
-                  const double shift,
+                  const SCIRun::Vector& shift,
                   const int idir )
   {
     typename SelectUintahFieldType<FieldT>::type field;
@@ -127,7 +127,7 @@ namespace Wasatch{
         for( int i=lo[0]; i<hi[0]; ++i ){
           const IntVector index(i,j,k);
           const SCIRun::Vector xyz = patch->getCellPosition(index).vector();
-          field[index] = xyz[idir] + shift;  // jcs note that this is inefficient.
+          field[index] = xyz[idir] + shift[idir];  // jcs note that this is inefficient.
         }
       }
     }
@@ -149,23 +149,25 @@ namespace Wasatch{
         const int material = materials->get(im);
 
         const SCIRun::Vector spacing = patch->dCell();
+        SCIRun::Vector shift( 0.0, 0.0, 0.0 );
 
-        double shift = 0.0;
         if( xSVolCoord_ ) set_coord<SVolField>( xSVol_, newDW, patch, material, shift, 0 );
         if( ySVolCoord_ ) set_coord<SVolField>( ySVol_, newDW, patch, material, shift, 1 );
         if( zSVolCoord_ ) set_coord<SVolField>( zSVol_, newDW, patch, material, shift, 2 );
 
-        shift = -spacing[0]*0.5;  // shift x by -dx/2
+        shift[0] = -spacing[0]*0.5;  // shift x by -dx/2
         if( xXVolCoord_ ) set_coord<XVolField>( xXVol_, newDW, patch, material, shift, 0 );
         if( yXVolCoord_ ) set_coord<XVolField>( yXVol_, newDW, patch, material, shift, 1 );
         if( zXVolCoord_ ) set_coord<XVolField>( zXVol_, newDW, patch, material, shift, 2 );
 
-        shift = -spacing[1]*0.5;
+        shift[0] = 0;
+        shift[1] = -spacing[1]*0.5;
         if( xYVolCoord_ ) set_coord<YVolField>( xYVol_, newDW, patch, material, shift, 0 );
         if( yYVolCoord_ ) set_coord<YVolField>( yYVol_, newDW, patch, material, shift, 1 );
         if( zYVolCoord_ ) set_coord<YVolField>( zYVol_, newDW, patch, material, shift, 2 );
 
-        shift = -spacing[2]*0.5;
+        shift[1] = 0;
+        shift[2] = -spacing[2]*0.5;
         if( xZVolCoord_ ) set_coord<ZVolField>( xZVol_, newDW, patch, material, shift, 0 );
         if( yZVolCoord_ ) set_coord<ZVolField>( yZVol_, newDW, patch, material, shift, 1 );
         if( zZVolCoord_ ) set_coord<ZVolField>( zZVol_, newDW, patch, material, shift, 2 );
