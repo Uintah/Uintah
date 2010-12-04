@@ -485,20 +485,25 @@ void AMRMPM::scheduleInterpolateParticlesToGrid_CFI(SchedulerP& sched,
     Task* t = scinew Task("AMRMPM::interpolateParticlesToGrid_CFI",
                      this,&AMRMPM::interpolateParticlesToGrid_CFI);
 
-    Ghost::GhostType  gn  = Ghost::None;
+    Ghost::GhostType  gac  = Ghost::AroundCells;
     Task::DomainSpec  ND  = Task::NormalDomain;
+    int nPaddingCells = 1;
+    
+    
     #define allPatches 0
     #define allMatls 0
-
-    t->requires(Task::NewDW, lb->gZOILabel,   gn, 0);
-
-    t->requires(Task::OldDW, lb->pMassLabel,               allPatches, Task::CoarseLevel,allMatls, ND, gn,0);
-    t->requires(Task::OldDW, lb->pVolumeLabel,             allPatches, Task::CoarseLevel,allMatls, ND, gn,0);
-    t->requires(Task::OldDW, lb->pVelocityLabel,           allPatches, Task::CoarseLevel,allMatls, ND, gn,0);
-    t->requires(Task::OldDW, lb->pXLabel,                  allPatches, Task::CoarseLevel,allMatls, ND, gn,0);
-    t->requires(Task::NewDW, lb->pExtForceLabel_preReloc,  allPatches, Task::CoarseLevel,allMatls, ND, gn,0);
-    t->requires(Task::OldDW, lb->pTemperatureLabel,        allPatches, Task::CoarseLevel,allMatls, ND, gn,0);
-    t->requires(Task::OldDW, lb->pDeformationMeasureLabel, allPatches, Task::CoarseLevel,allMatls, ND, gn,0);
+    //__________________________________
+    //  Note: were using nPaddingCells to extract the region of coarse level
+    // particles around every fine patch.   Technically, these are ghost
+    // cells but somehow it works.
+    t->requires(Task::NewDW, lb->gZOILabel,   Ghost::None, 0);
+    t->requires(Task::OldDW, lb->pMassLabel,               allPatches, Task::CoarseLevel,allMatls, ND, gac, nPaddingCells);
+    t->requires(Task::OldDW, lb->pVolumeLabel,             allPatches, Task::CoarseLevel,allMatls, ND, gac, nPaddingCells);
+    t->requires(Task::OldDW, lb->pVelocityLabel,           allPatches, Task::CoarseLevel,allMatls, ND, gac, nPaddingCells);
+    t->requires(Task::OldDW, lb->pXLabel,                  allPatches, Task::CoarseLevel,allMatls, ND, gac, nPaddingCells);
+    t->requires(Task::NewDW, lb->pExtForceLabel_preReloc,  allPatches, Task::CoarseLevel,allMatls, ND, gac, nPaddingCells);
+    t->requires(Task::OldDW, lb->pTemperatureLabel,        allPatches, Task::CoarseLevel,allMatls, ND, gac, nPaddingCells);
+    t->requires(Task::OldDW, lb->pDeformationMeasureLabel, allPatches, Task::CoarseLevel,allMatls, ND, gac, nPaddingCells);
 
     t->modifies(lb->gMassLabel);
     t->modifies(lb->gVolumeLabel);
@@ -519,15 +524,16 @@ void AMRMPM::scheduleCoarsenNodalData_CFI(SchedulerP& sched,
                                           const coarsenFlag flag)
 {
   const Level* level = getLevel(patches);
+
+  string txt = "(zero)";
+  if (flag == coarsenData){
+    txt = "(coarsen)";
+  }
   
-  if(level->hasFinerLevel()){
-  
-    string txt = "(zero)";
-    if (flag == coarsenData){
-      txt = "(coarsen)";
-    }
-    printSchedule(patches,cout_doing,"AMRMPM::scheduleCoarsenNodalData_CFI "+txt);
-    
+  if(level->hasCoarserLevel()){
+
+    printSchedule(patches,cout_doing,"AMRMPM::scheduleCoarsenNodalData_CFI" + txt);
+
     Task* t = scinew Task("AMRMPM::coarsenNodalData_CFI",
                      this,&AMRMPM::coarsenNodalData_CFI, flag);
 
@@ -536,13 +542,12 @@ void AMRMPM::scheduleCoarsenNodalData_CFI(SchedulerP& sched,
     #define allPatches 0
     #define allMatls 0
 
-    // need to add all the variables
-    t->requires(Task::NewDW, lb->gMassLabel,          allPatches, Task::FineLevel,allMatls, ND, gn,0);
-    t->requires(Task::NewDW, lb->gVolumeLabel,        allPatches, Task::FineLevel,allMatls, ND, gn,0);
-    t->requires(Task::NewDW, lb->gVelocityLabel,      allPatches, Task::FineLevel,allMatls, ND, gn,0);
-    t->requires(Task::NewDW, lb->gTemperatureLabel,   allPatches, Task::FineLevel,allMatls, ND, gn,0);
-    t->requires(Task::NewDW, lb->gExternalForceLabel, allPatches, Task::FineLevel,allMatls, ND, gn,0);
-    t->requires(Task::NewDW, lb->gSumWeightsLabel,    allPatches, Task::FineLevel,allMatls, ND, gn,0);
+    t->requires(Task::NewDW, lb->gMassLabel,          allPatches, Task::CoarseLevel,allMatls, ND, gn,0);
+    t->requires(Task::NewDW, lb->gVolumeLabel,        allPatches, Task::CoarseLevel,allMatls, ND, gn,0);
+    t->requires(Task::NewDW, lb->gVelocityLabel,      allPatches, Task::CoarseLevel,allMatls, ND, gn,0);
+    t->requires(Task::NewDW, lb->gTemperatureLabel,   allPatches, Task::CoarseLevel,allMatls, ND, gn,0);
+    t->requires(Task::NewDW, lb->gExternalForceLabel, allPatches, Task::CoarseLevel,allMatls, ND, gn,0);
+    t->requires(Task::NewDW, lb->gSumWeightsLabel,    allPatches, Task::CoarseLevel,allMatls, ND, gn,0);
 
     t->modifies(lb->gMassLabel);
     t->modifies(lb->gVolumeLabel);
@@ -815,6 +820,7 @@ void AMRMPM::scheduleInterpolateToParticlesAndUpdate_CFI(SchedulerP& sched,
     #define allMatls 0
     t->requires(Task::OldDW, d_sharedState->get_delt_label() );
 
+    t->requires(Task::NewDW, lb->gSumWeightsLabel,   allPatches, Task::FineLevel,allMatls, ND, gn,0);
     t->requires(Task::NewDW, lb->gVelocityStarLabel, allPatches, Task::FineLevel,allMatls, ND, gn,0);
     t->requires(Task::NewDW, lb->gAccelerationLabel, allPatches, Task::FineLevel,allMatls, ND, gn,0);
     t->requires(Task::NewDW, lb->gZOILabel,          allPatches, Task::FineLevel,allMatls, ND, gn,0);
@@ -1219,7 +1225,7 @@ void AMRMPM::interpolateParticlesToGrid_CFI(const ProcessorGroup*,
             gSum_S[fineNode]              += S[k];
 
   /*`==========TESTING==========*/
-  #if 1
+  #if 0
             if(fineNode.z() == 0){
               cout << "    fineNode " << fineNode << " ni.size " << ni.size() << " S[k] " << S[k] << " gMass_fine " << gMass_fine[fineNode]<< " \t zoi " << (zoi_fine[fineNode]) << endl;
             }
@@ -1253,6 +1259,8 @@ void AMRMPM::coarsenNodalData_CFI(const ProcessorGroup*,
       
     //__________________________________
     // Iterate over coarse/fine interface faces
+    cout << " finelevel: " << fineLevel->getIndex() << " finePatch: " << finePatch->getID() << endl;
+    
     if(finePatch->hasCoarseFaces() ){  
 
       ASSERT(fineLevel->hasCoarserLevel());
@@ -1269,7 +1277,7 @@ void AMRMPM::coarsenNodalData_CFI(const ProcessorGroup*,
         if (flag == coarsenData){
           txt = "(coarsen)";
         }
-        printTask(finePatches,finePatch,cout_doing,"Doing coarsenNodalData_CFI"+txt);
+        printTask(coarsePatch,cout_doing,"Doing coarsenNodalData_CFI"+txt);
 
         int numMatls = d_sharedState->getNumMPMMatls();
         for(int m = 0; m < numMatls; m++){
@@ -1356,7 +1364,7 @@ void AMRMPM::coarsenNodalData_CFI(const ProcessorGroup*,
                 }
 
 /*`==========TESTING==========*/
-#if 1
+#if 0
                 if(coarsePatch->getFaceName(patchFace) == "xplus" ) {
                   if(f_node.z() == 1 || f_node.z() == 2 ){
                     cout << "      coarseLevel CFI Cells L-" << coarseLevel->getIndex() << " c_node: " << c_node << " fineNode: " << f_node 

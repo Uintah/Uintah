@@ -182,3 +182,18 @@ void MPMCommon::printTask(const PatchSubset* patches,
         << " patch " << patch->getGridIndex()<< endl;
   }  
 }
+
+
+void MPMCommon::printTask(const Patch* patch,
+                          DebugStream& dbg,
+                          const string& where)
+{
+  if (dbg.active()){
+    dbg << d_myworld->myrank() << " ";
+    dbg << left;
+    dbg.width(50);
+    dbg << where << " MPM \tL-"
+        << patch->getLevel()->getIndex()
+        << " patch " << patch->getGridIndex()<< endl;
+  }  
+}
