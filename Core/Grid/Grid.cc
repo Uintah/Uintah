@@ -894,7 +894,7 @@ namespace Uintah
           << " has " << level->numPatches() << " patch(es)" << endl;
       for ( Level::patchIterator patchIter = level->patchesBegin(); patchIter < level->patchesEnd(); patchIter++ ) {
         const Patch* patch = *patchIter;
-        out << *patch << endl;
+        out <<"    "<< *patch << endl;
       }
     }
     return out;
