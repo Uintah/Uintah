@@ -200,6 +200,15 @@ public:
 
   enum BoundaryType { DIRICHLET, NEUMANN };
 
+  struct DepVarCont {
+
+    CCVariable<double>* var; 
+    const BSpline* spline; 
+
+  }; 
+
+  typedef std::map<string, DepVarCont >       DepVarMap;
+
 protected :
 
 private:

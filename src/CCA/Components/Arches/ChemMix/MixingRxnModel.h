@@ -117,21 +117,21 @@ public:
 
 protected :
 
-  VarMap d_dvVarMap; 
-  VarMap d_ivVarMap; 
+  VarMap d_dvVarMap;   ///< Dependent variable map
+  VarMap d_ivVarMap;   ///< Independent variable map
 
   /** @brief Sets the mixing table's dependent variable list. */
   void setMixDVMap( const ProblemSpecP& root_params ); 
 
-  const ArchesLabel* d_lab; 
-  const MPMArchesLabel* d_MAlab;
+  const ArchesLabel* d_lab;       ///< Arches labels
+  const MPMArchesLabel* d_MAlab;  ///< MPMArches labels 
 
-  bool d_coldflow; 
-  bool d_adiabatic; 
-  bool d_coal_table; 
+  bool d_coldflow;          ///< Will not compute heat loss and will not initialized ethalpy
+  bool d_adiabatic;         ///< Will not compute heat loss
+  bool d_coal_table;        ///< Flagged as a coal table or not  
 
-  std::string d_fp_label; 
-  std::string d_eta_label; 
+  std::string d_fp_label;   ///< Primary mixture fraction name for a coal table
+  std::string d_eta_label;  ///< Eta mixture fraction name for a coal table
 
 private:
 
