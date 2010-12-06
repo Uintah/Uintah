@@ -119,7 +119,7 @@ void AMRMPM::problemSetup(const ProblemSpecP& prob_spec,
   dynamic_cast<Scheduler*>(getPort("scheduler"))->setPositionVar(lb->pXLabel);
 
   Output* dataArchiver = dynamic_cast<Output*>(getPort("output"));
-  
+
   if(!dataArchiver){
     throw InternalError("AMRMPM:couldn't get output port", __FILE__, __LINE__);
   }
@@ -315,7 +315,7 @@ void AMRMPM::scheduleTimeAdvance(const LevelP & level,
     scheduleInterpolateParticlesToGrid_CFI( sched, patches, matls);
   }
 
-  for (int l = 0; l < maxLevels; l++) {
+  for (int l = 0; l < maxLevels-1; l++) {
     const LevelP& level = grid->getLevel(l);
     const PatchSet* patches = level->eachPatch();
     scheduleCoarsenNodalData_CFI( sched, patches, matls, coarsenData);
@@ -347,7 +347,7 @@ void AMRMPM::scheduleTimeAdvance(const LevelP & level,
   }
 
  // zero the nodal data at the CFI on the coarse level 
- for (int l = 0; l < maxLevels; l++) {
+ for (int l = 0; l < maxLevels-1; l++) {
     const LevelP& level = grid->getLevel(l);
     const PatchSet* patches = level->eachPatch();
     scheduleCoarsenNodalData_CFI( sched, patches, matls, zeroData);
@@ -529,35 +529,32 @@ void AMRMPM::scheduleCoarsenNodalData_CFI(SchedulerP& sched,
   if (flag == coarsenData){
     txt = "(coarsen)";
   }
-  
-  if(level->hasCoarserLevel()){
 
-    printSchedule(patches,cout_doing,"AMRMPM::scheduleCoarsenNodalData_CFI" + txt);
+  printSchedule(patches,cout_doing,"AMRMPM::scheduleCoarsenNodalData_CFI" + txt);
 
-    Task* t = scinew Task("AMRMPM::coarsenNodalData_CFI",
-                     this,&AMRMPM::coarsenNodalData_CFI, flag);
+  Task* t = scinew Task("AMRMPM::coarsenNodalData_CFI",
+                   this,&AMRMPM::coarsenNodalData_CFI, flag);
 
-    Ghost::GhostType  gn  = Ghost::None;
-    Task::DomainSpec  ND  = Task::NormalDomain;
-    #define allPatches 0
-    #define allMatls 0
+  Ghost::GhostType  gn  = Ghost::None;
+  Task::DomainSpec  ND  = Task::NormalDomain;
+  #define allPatches 0
+  #define allMatls 0
 
-    t->requires(Task::NewDW, lb->gMassLabel,          allPatches, Task::CoarseLevel,allMatls, ND, gn,0);
-    t->requires(Task::NewDW, lb->gVolumeLabel,        allPatches, Task::CoarseLevel,allMatls, ND, gn,0);
-    t->requires(Task::NewDW, lb->gVelocityLabel,      allPatches, Task::CoarseLevel,allMatls, ND, gn,0);
-    t->requires(Task::NewDW, lb->gTemperatureLabel,   allPatches, Task::CoarseLevel,allMatls, ND, gn,0);
-    t->requires(Task::NewDW, lb->gExternalForceLabel, allPatches, Task::CoarseLevel,allMatls, ND, gn,0);
-    t->requires(Task::NewDW, lb->gSumWeightsLabel,    allPatches, Task::CoarseLevel,allMatls, ND, gn,0);
+  t->requires(Task::NewDW, lb->gMassLabel,          allPatches, Task::FineLevel,allMatls, ND, gn,0);
+  t->requires(Task::NewDW, lb->gVolumeLabel,        allPatches, Task::FineLevel,allMatls, ND, gn,0);
+  t->requires(Task::NewDW, lb->gVelocityLabel,      allPatches, Task::FineLevel,allMatls, ND, gn,0);
+  t->requires(Task::NewDW, lb->gTemperatureLabel,   allPatches, Task::FineLevel,allMatls, ND, gn,0);
+  t->requires(Task::NewDW, lb->gExternalForceLabel, allPatches, Task::FineLevel,allMatls, ND, gn,0);
+  t->requires(Task::NewDW, lb->gSumWeightsLabel,    allPatches, Task::FineLevel,allMatls, ND, gn,0);
 
-    t->modifies(lb->gMassLabel);
-    t->modifies(lb->gVolumeLabel);
-    t->modifies(lb->gVelocityLabel);
-    t->modifies(lb->gTemperatureLabel);
-    t->modifies(lb->gExternalForceLabel);
-    t->modifies(lb->gSumWeightsLabel);
+  t->modifies(lb->gMassLabel);
+  t->modifies(lb->gVolumeLabel);
+  t->modifies(lb->gVelocityLabel);
+  t->modifies(lb->gTemperatureLabel);
+  t->modifies(lb->gExternalForceLabel);
+  t->modifies(lb->gSumWeightsLabel);
 
-    sched->addTask(t, patches, matls);
-  }
+  sched->addTask(t, patches, matls);
 }
 
 //______________________________________________________________________
@@ -1242,79 +1239,82 @@ void AMRMPM::interpolateParticlesToGrid_CFI(const ProcessorGroup*,
 //______________________________________________________________________
 //  copy the fine level nodal data to the underlying coarse nodes at the CFI.
 void AMRMPM::coarsenNodalData_CFI(const ProcessorGroup*,
-                                  const PatchSubset* finePatches,
+                                  const PatchSubset* coarsePatches,
                                   const MaterialSubset* ,
                                   DataWarehouse* old_dw,
                                   DataWarehouse* new_dw,
                                   const coarsenFlag flag)
 {
   //__________________________________
-  // From the fine patch look down for coarse level patches
-  // that have coarse fine interfaces.
-  const Level* fineLevel = getLevel(finePatches);
+  // From the coarse patch look up to the fine patches that have
+  // coarse fine interfaces.
+  const Level* coarseLevel = getLevel(coarsePatches);
   
-  
-  for(int p=0;p<finePatches->size();p++){
-    const Patch* finePatch = finePatches->get(p);
-      
-    //__________________________________
-    // Iterate over coarse/fine interface faces
-    cout << " finelevel: " << fineLevel->getIndex() << " finePatch: " << finePatch->getID() << endl;
-    
-    if(finePatch->hasCoarseFaces() ){  
+  for(int p=0;p<coarsePatches->size();p++){
+    const Patch* coarsePatch = coarsePatches->get(p);
 
-      ASSERT(fineLevel->hasCoarserLevel());
-      const Level* coarseLevel = fineLevel->getCoarserLevel().get_rep();
+    string txt = "(zero)";
+    if (flag == coarsenData){
+      txt = "(coarsen)";
+    }
+    printTask(coarsePatch,cout_doing,"Doing coarsenNodalData_CFI"+txt);
+    
+    int numMatls = d_sharedState->getNumMPMMatls();                  
+    for(int m = 0; m < numMatls; m++){                               
+      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );    
+      int dwi = mpm_matl->getDWIndex();
       
-      Level::selectType coarsePatches;
-      finePatch->getCoarseLevelPatches(coarsePatches);
+      // get coarse level data                                                                                    
+      NCVariable<double> gMass_coarse;                                                                            
+      NCVariable<double> gVolume_coarse;                                                                          
+      NCVariable<Vector> gVelocity_coarse;                                                                        
+      NCVariable<Vector> gExternalforce_coarse;                                                                   
+      NCVariable<double> gTemperature_coarse;                                                                     
+      NCVariable<double> gSum_S_coarse;                                                                           
+      cout << UintahParallelComponent::d_myworld->myrank() << "  getting Coarse patch Data: " << *coarsePatch;    
+      new_dw->getModifiable(gMass_coarse,            lb->gMassLabel,           dwi,coarsePatch);                  
+      new_dw->getModifiable(gVolume_coarse,          lb->gVolumeLabel,         dwi,coarsePatch);                  
+      new_dw->getModifiable(gVelocity_coarse,        lb->gVelocityLabel,       dwi,coarsePatch);                  
+      new_dw->getModifiable(gTemperature_coarse,     lb->gTemperatureLabel,    dwi,coarsePatch);                  
+      new_dw->getModifiable(gExternalforce_coarse,   lb->gExternalForceLabel,  dwi,coarsePatch);                  
+      new_dw->getModifiable(gSum_S_coarse,           lb->gSumWeightsLabel,     dwi,coarsePatch);                  
+      cout << ": done" << endl;                                                                                   
+        
+      //__________________________________
+      // Iterate over coarse/fine interface faces
+      cout << UintahParallelComponent::d_myworld->myrank() << " coarselevel: " << coarseLevel->getIndex() << " coarsePatch: " << coarsePatch->getID() << endl;
+
+
+      ASSERT(coarseLevel->hasFinerLevel());
+      const Level* fineLevel = coarseLevel->getFinerLevel().get_rep();
+
+      Level::selectType finePatches;
+      coarsePatch->getFineLevelPatches(finePatches);
 
       // loop over all the coarse level patches
-      for(int p=0;p<coarsePatches.size();p++){  
-        const Patch* coarsePatch = coarsePatches[p];
+      for(int fp=0;fp<finePatches.size();fp++){  
+        const Patch* finePatch = finePatches[fp];
+        if(finePatch->hasCoarseFaces() ){
 
-        string txt = "(zero)";
-        if (flag == coarsenData){
-          txt = "(coarsen)";
-        }
-        printTask(coarsePatch,cout_doing,"Doing coarsenNodalData_CFI"+txt);
+          // get fine level data                                                                                  
+          constNCVariable<double> gMass_fine;                                                                     
+          constNCVariable<double> gVolume_fine;                                                                   
+          constNCVariable<Vector> gVelocity_fine;                                                                 
+          constNCVariable<Vector> gExternalforce_fine;                                                            
+          constNCVariable<double> gTemperature_fine;                                                              
+          constNCVariable<double> gSum_S_fine;                                                                    
+          Ghost::GhostType  gn = Ghost::None;                                                                     
 
-        int numMatls = d_sharedState->getNumMPMMatls();
-        for(int m = 0; m < numMatls; m++){
-          MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
-          int dwi = mpm_matl->getDWIndex();
-          
-          // get fine level data
-          constNCVariable<double> gMass_fine;
-          constNCVariable<double> gVolume_fine;
-          constNCVariable<Vector> gVelocity_fine;
-          constNCVariable<Vector> gExternalforce_fine;
-          constNCVariable<double> gTemperature_fine;
-          constNCVariable<double> gSum_S_fine;
-          Ghost::GhostType  gn = Ghost::None;
-          
-          if(flag == coarsenData){
-            new_dw->get(gMass_fine,             lb->gMassLabel,          dwi, finePatch, gn, 0);
-            new_dw->get(gVolume_fine,           lb->gVolumeLabel,        dwi, finePatch, gn, 0);
-            new_dw->get(gVelocity_fine,         lb->gVelocityLabel,      dwi, finePatch, gn, 0);
-            new_dw->get(gTemperature_fine,      lb->gTemperatureLabel,   dwi, finePatch, gn, 0);
-            new_dw->get(gExternalforce_fine,    lb->gExternalForceLabel, dwi, finePatch, gn, 0);
-            new_dw->get(gSum_S_fine,            lb->gSumWeightsLabel,    dwi, finePatch, gn, 0);
-          }
-          
-          // get coarse level data
-          NCVariable<double> gMass_coarse;
-          NCVariable<double> gVolume_coarse;
-          NCVariable<Vector> gVelocity_coarse;
-          NCVariable<Vector> gExternalforce_coarse;
-          NCVariable<double> gTemperature_coarse;
-          NCVariable<double> gSum_S_coarse;
-          new_dw->getModifiable(gMass_coarse,            lb->gMassLabel,           dwi,coarsePatch);
-          new_dw->getModifiable(gVolume_coarse,          lb->gVolumeLabel,         dwi,coarsePatch);
-          new_dw->getModifiable(gVelocity_coarse,        lb->gVelocityLabel,       dwi,coarsePatch);
-          new_dw->getModifiable(gTemperature_coarse,     lb->gTemperatureLabel,    dwi,coarsePatch);
-          new_dw->getModifiable(gExternalforce_coarse,   lb->gExternalForceLabel,  dwi,coarsePatch);
-          new_dw->getModifiable(gSum_S_coarse,           lb->gSumWeightsLabel,     dwi,coarsePatch);
+          if(flag == coarsenData){                                                                                
+            cout << UintahParallelComponent::d_myworld->myrank() << "  getting fine patch Data: " << *finePatch;  
+            new_dw->get(gMass_fine,             lb->gMassLabel,          dwi, finePatch, gn, 0);                  
+            new_dw->get(gVolume_fine,           lb->gVolumeLabel,        dwi, finePatch, gn, 0);                  
+            new_dw->get(gVelocity_fine,         lb->gVelocityLabel,      dwi, finePatch, gn, 0);                  
+            new_dw->get(gTemperature_fine,      lb->gTemperatureLabel,   dwi, finePatch, gn, 0);                  
+            new_dw->get(gExternalforce_fine,    lb->gExternalForceLabel, dwi, finePatch, gn, 0);                  
+            new_dw->get(gSum_S_fine,            lb->gSumWeightsLabel,    dwi, finePatch, gn, 0);                  
+            cout << ": done" << endl;                                                                             
+          }                                                                                                       
 
           vector<Patch::FaceType> cf;
           finePatch->getCoarseFaces(cf);
@@ -1323,26 +1323,26 @@ void AMRMPM::coarsenNodalData_CFI(const ProcessorGroup*,
           vector<Patch::FaceType>::const_iterator iter;  
           for (iter  = cf.begin(); iter != cf.end(); ++iter){
             Patch::FaceType patchFace = *iter;
-
-            cout << "  working on fine patch face " << finePatch->getFaceName(patchFace)<<  endl;
+            
+            cout << UintahParallelComponent::d_myworld->myrank() << "  working on fine patch face " << finePatch->getFaceName(patchFace)<<  endl;
 
             // determine the iterator on the coarse level.
             NodeIterator n_iter(IntVector(-8,-8,-8),IntVector(-9,-9,-9));
             bool isRight_CP_FP_pair;
-            
+
             coarseLevel_CFI_NodeIterator( patchFace,coarsePatch, finePatch,fineLevel,
                                           n_iter ,isRight_CP_FP_pair);
- 
-            cout << "    CoarseLevel iterator: " << n_iter << endl;
-            
+
             // Is this the right coarse/fine patch pair
             if (isRight_CP_FP_pair){
-            
+              
+              cout << UintahParallelComponent::d_myworld->myrank() << "    CoarseLevel iterator: " << n_iter << endl;
+              
               for(; !n_iter.done(); n_iter++) {
                 IntVector c_node = *n_iter;
-                
+
                 IntVector f_node = coarseLevel->mapNodeToFiner(c_node);
-                
+
                 switch(flag)
                 {
                   case coarsenData:
@@ -1363,23 +1363,24 @@ void AMRMPM::coarsenNodalData_CFI(const ProcessorGroup*,
                     break;
                 }
 
-/*`==========TESTING==========*/
-#if 0
+  /*`==========TESTING==========*/
+  #if 0
                 if(coarsePatch->getFaceName(patchFace) == "xplus" ) {
                   if(f_node.z() == 1 || f_node.z() == 2 ){
                     cout << "      coarseLevel CFI Cells L-" << coarseLevel->getIndex() << " c_node: " << c_node << " fineNode: " << f_node 
                          << " sum_S: " << gSum_S_coarse[c_node] << endl;
                   }
                 }
-#endif 
-/*===========TESTING==========`*/
+  #endif 
+  /*===========TESTING==========`*/
               }
             }  // isRight_CP_FP_pair
+
           }  // end CFI face loop
-        }  // end matl loop
-      }  // end coarsePatches loop
-    }  // if patch has coarse face
-  }  // end patch loop
+        }  //  if finepatch has coarse face
+      }  //  end fine Patch loop
+    }  //  end matl loop
+  }  // end coarse patch loop
 }
 
 
