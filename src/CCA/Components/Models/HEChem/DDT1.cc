@@ -588,7 +588,7 @@ void DDT1::computeModelSources(const ProcessorGroup*,
     
     new_dw->allocateAndPut(burningCell,  burningLabel,            m0,patch);  
     new_dw->allocateAndPut(detonating,   detonatingLabel,         m0,patch);
-    new_dw->allocateAndPut(detLocalTo,   detLocalToLabel,         m0,patch);
+    new_dw->allocateAndPut(detLocalTo,   detLocalToLabel,         m0,patch, gac, 1);
     new_dw->allocateAndPut(Fr,           reactedFractionLabel,    m0,patch);
     new_dw->allocateAndPut(delF,         delFLabel,               m0,patch);
     new_dw->allocateAndPut(onSurface,    onSurfaceLabel,          m0,patch);
@@ -614,6 +614,7 @@ void DDT1::computeModelSources(const ProcessorGroup*,
       if (press_CC[c] > d_threshold_press_JWL && rctVolFrac[c] > d_threshold_volFrac){
         
         detonating[c] = 1;   // Flag for detonating 
+        
         
         Fr[c] = prodRho[c]/(rctRho[c]+prodRho[c]);   
         if(Fr[c] >= 0. && Fr[c] < .99){
@@ -721,12 +722,10 @@ void DDT1::computeModelSources(const ProcessorGroup*,
             }//end 2nd for
           }//end 1st for
 
-
           // Burn mass if necessary
           if(((burning == 1 && productPress >= d_thresholdPress_SB) || (d_useCrackModel && 
              (crackedEnough[c]))) && !detonatingLocalTo){
               burningCell[c]=1.0;
-              
               Vector rhoGradVector = computeDensityGradientVector(nodeIdx,
                                                                   rctMass_NC, NC_CCweight,dx);
               
@@ -742,7 +741,7 @@ void DDT1::computeModelSources(const ProcessorGroup*,
               }
              
               // If cracking applies, add to mass
-              if(crackedEnough[c]){
+              if(d_useCrackModel && crackedEnough[c]){
                 burnedMass += d_Gcrack*(1 - prodRho[c]/(rctRho[c]+prodRho[c]))
                             *pow(press_CC[c]/101325.0, d_nCrack);              
               }
