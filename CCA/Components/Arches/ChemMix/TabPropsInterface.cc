@@ -212,7 +212,7 @@ TabPropsInterface::sched_getState( const LevelP& level,
 
   Task* tsk = scinew Task(taskname, this, &TabPropsInterface::getState, time_labels, initialize_me, with_energy_exch, modify_ref_den );
 
-  // independent variables
+  // independent variables :: these must have been computed previously 
   for ( MixingRxnModel::VarMap::iterator i = d_ivVarMap.begin(); i != d_ivVarMap.end(); ++i ) {
 
     tsk->requires( Task::NewDW, i->second, gn, 0 ); 
@@ -333,16 +333,24 @@ TabPropsInterface::getState( const ProcessorGroup* pc,
     CCVariable<double> arches_soot; 
     CCVariable<double> mpmarches_denmicro; 
 
-    CCMap depend_storage; 
+    DepVarMap depend_storage; 
     if ( initialize_me ) {
     
       for ( VarMap::iterator i = d_dvVarMap.begin(); i != d_dvVarMap.end(); ++i ){
-       
-        CCVariable<double>* the_var = new CCVariable<double>; 
-        new_dw->allocateAndPut( *the_var, i->second, matlIndex, patch ); 
-        (*the_var).initialize(0.0);
 
-        depend_storage.insert( make_pair( i->first, the_var )).first; 
+        DepVarCont storage;
+       
+        storage.var = new CCVariable<double>; 
+        new_dw->allocateAndPut( *storage.var, i->second, matlIndex, patch ); 
+        (*storage.var).initialize(0.0);
+
+        SplineMap::iterator i_spline = d_depVarSpline.find( i->first ); 
+        storage.spline = i_spline->second; 
+
+        depend_storage.insert( make_pair( i->first, storage )).first; 
+
+
+        //depend_storage.insert( make_pair( i->first, the_var )).first; 
         
       }
 
@@ -374,11 +382,16 @@ TabPropsInterface::getState( const ProcessorGroup* pc,
     } else { 
 
       for ( VarMap::iterator i = d_dvVarMap.begin(); i != d_dvVarMap.end(); ++i ){
-       
-        CCVariable<double>* the_var = new CCVariable<double>; 
-        new_dw->getModifiable( *the_var, i->second, matlIndex, patch ); 
 
-        depend_storage.insert( make_pair( i->first, the_var )).first; 
+        DepVarCont storage;
+       
+        storage.var = new CCVariable<double>; 
+        new_dw->getModifiable( *storage.var, i->second, matlIndex, patch ); 
+
+        SplineMap::iterator i_spline = d_depVarSpline.find( i->first ); 
+        storage.spline = i_spline->second; 
+
+        depend_storage.insert( make_pair( i->first, storage )).first; 
         
       }
 
@@ -439,13 +452,10 @@ TabPropsInterface::getState( const ProcessorGroup* pc,
       }
 
       // retrieve all depenedent variables from table
-      for ( std::map< string, CCVariable<double>* >::iterator i = depend_storage.begin(); 
-            i != depend_storage.end(); ++i ){
+      for ( DepVarMap::iterator i = depend_storage.begin(); i != depend_storage.end(); ++i ){
 
-        SplineMap::iterator i_spline = d_depVarSpline.find( i->first ); 
-  
-        double table_value = getSingleState( i_spline->second, i->first, iv ); 
-        (*i->second)[c] = table_value;
+        double table_value = getSingleState( i->second.spline, i->first, iv ); 
+        (*i->second.var)[c] = table_value;
 
         if (i->first == "density") {
           arches_density[c] = table_value; 
@@ -564,13 +574,10 @@ TabPropsInterface::getState( const ProcessorGroup* pc,
           } 
 
           // now get state for boundary cell: 
-          for ( std::map< string, CCVariable<double>* >::iterator i = depend_storage.begin(); 
-                i != depend_storage.end(); ++i ){
+          for ( DepVarMap::iterator i = depend_storage.begin(); i != depend_storage.end(); ++i ){
   
-            SplineMap::iterator i_spline = d_depVarSpline.find( i->first ); 
-  
-            double table_value = getSingleState( i_spline->second, i->first, iv ); 
-            (*i->second)[c] = table_value;
+            double table_value = getSingleState( i->second.spline, i->first, iv ); 
+            (*i->second.var)[c] = table_value;
 
             if (i->first == "density") {
               //double ghost_value = 2.0*table_value - arches_density[cp1];
@@ -594,8 +601,8 @@ TabPropsInterface::getState( const ProcessorGroup* pc,
       }
     }
 
-    for ( CCMap::iterator i = depend_storage.begin(); i != depend_storage.end(); ++i ){
-      delete i->second;
+    for ( DepVarMap::iterator i = depend_storage.begin(); i != depend_storage.end(); ++i ){
+      delete i->second.var;
     }
 
     // reference density modification 
