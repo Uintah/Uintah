@@ -80,11 +80,15 @@ static DebugStream amr_doing("AMRMPM", false);
 //
 // - scheduleTimeAdvance:  Do we need to schedule each task in a separate level loop?  I suspect that we only need
 //                         to in the CFI tasks
+// - debug why pure translation with on a 2D complex grid gives that wrong answers.
+//
 //  What is going on in refine & coarsen
 //  To Test:
 //    Symetric BC
-//    compilicated grids
+//    compilicated grids  
 //    multi processors 
+//
+//  Need to Add gimp interpolation
 
 // From ThreadPool.cc:  Used for syncing cerr'ing so it is easier to read.
 extern Mutex cerrLock;
@@ -115,6 +119,8 @@ void AMRMPM::problemSetup(const ProblemSpecP& prob_spec,
                           GridP& grid,
                           SimulationStateP& sharedState)
 {
+  cout_doing<<"Doing problemSetup\t\t\t\t\t MPM"<<endl;
+  
   d_sharedState = sharedState;
   dynamic_cast<Scheduler*>(getPort("scheduler"))->setPositionVar(lb->pXLabel);
 
@@ -124,25 +130,23 @@ void AMRMPM::problemSetup(const ProblemSpecP& prob_spec,
     throw InternalError("AMRMPM:couldn't get output port", __FILE__, __LINE__);
   }
    
-  ProblemSpecP restart_mat_ps = 0;
+  ProblemSpecP mat_ps = 0;
   if (restart_prob_spec){
-    restart_mat_ps = restart_prob_spec;
-  }
-  else{
-    restart_mat_ps = prob_spec;
+    mat_ps = restart_prob_spec;
+  } else{
+    mat_ps = prob_spec;
   }
 
   ProblemSpecP mpm_soln_ps = prob_spec->findBlock("MPM");
 
-  if(mpm_soln_ps) {
 
-    // Read all MPM flags (look in MPMFlags.cc)
-    flags->readMPMFlags(restart_mat_ps, dataArchiver);
-    if (flags->d_integrator_type == "implicit"){
-      throw ProblemSetupException("Can't use implicit integration with -mpm",
-                                   __FILE__, __LINE__);
-    }
+  // Read all MPM flags (look in MPMFlags.cc)
+  flags->readMPMFlags(mat_ps, dataArchiver);
+  if (flags->d_integrator_type == "implicit"){
+    throw ProblemSetupException("Can't use implicit integration with -mpm",
+                                 __FILE__, __LINE__);
   }
+
 
   //__________________________________
   //  bulletproofing
@@ -164,7 +168,7 @@ void AMRMPM::problemSetup(const ProblemSpecP& prob_spec,
 
   d_sharedState->setParticleGhostLayer(Ghost::AroundNodes, NGP);
 
-  materialProblemSetup(restart_mat_ps, d_sharedState,flags);
+  materialProblemSetup(mat_ps, d_sharedState,flags);
 }
 
 //______________________________________________________________________
@@ -517,14 +521,16 @@ void AMRMPM::scheduleInterpolateParticlesToGrid_CFI(SchedulerP& sched,
 }
 
 //______________________________________________________________________
-//  Copy fine patch node data to the coarse level at CFI
+//  This task does one of two operations on the coarse nodes along
+//  the coarse fine interface.  The input parameter "flag" determines
+//  which.
+//  Coarsen:  copy fine patch node data to the coarse level at CFI
+//  Zero:     zero the coarse level nodal data directly under the fine level
 void AMRMPM::scheduleCoarsenNodalData_CFI(SchedulerP& sched,
                                           const PatchSet* patches,
                                           const MaterialSet* matls,
                                           const coarsenFlag flag)
 {
-  const Level* level = getLevel(patches);
-
   string txt = "(zero)";
   if (flag == coarsenData){
     txt = "(coarsen)";
@@ -785,7 +791,7 @@ void AMRMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->computes(lb->CenterOfMassPositionLabel);
   t->computes(lb->TotalMomentumLabel);
   t->modifies(lb->gSumWeightsLabel);
-  
+
   // debugging scalar
   if(flags->d_with_color) {
     t->requires(Task::OldDW, lb->pColorLabel,  gnone);
@@ -1270,8 +1276,9 @@ void AMRMPM::coarsenNodalData_CFI(const ProcessorGroup*,
       NCVariable<Vector> gVelocity_coarse;                                                                        
       NCVariable<Vector> gExternalforce_coarse;                                                                   
       NCVariable<double> gTemperature_coarse;                                                                     
-      NCVariable<double> gSum_S_coarse;                                                                           
-      cout << UintahParallelComponent::d_myworld->myrank() << "  getting Coarse patch Data: " << *coarsePatch;    
+      NCVariable<double> gSum_S_coarse;      
+      cout << UintahParallelComponent::d_myworld->myrank() << " coarselevel: " << coarseLevel->getIndex() << " coarsePatch: " << coarsePatch->getID() 
+           << "  getting Data: " << *coarsePatch;    
       new_dw->getModifiable(gMass_coarse,            lb->gMassLabel,           dwi,coarsePatch);                  
       new_dw->getModifiable(gVolume_coarse,          lb->gVolumeLabel,         dwi,coarsePatch);                  
       new_dw->getModifiable(gVelocity_coarse,        lb->gVelocityLabel,       dwi,coarsePatch);                  
@@ -1282,7 +1289,6 @@ void AMRMPM::coarsenNodalData_CFI(const ProcessorGroup*,
         
       //__________________________________
       // Iterate over coarse/fine interface faces
-      cout << UintahParallelComponent::d_myworld->myrank() << " coarselevel: " << coarseLevel->getIndex() << " coarsePatch: " << coarsePatch->getID() << endl;
 
 
       ASSERT(coarseLevel->hasFinerLevel());
@@ -1324,8 +1330,7 @@ void AMRMPM::coarsenNodalData_CFI(const ProcessorGroup*,
           for (iter  = cf.begin(); iter != cf.end(); ++iter){
             Patch::FaceType patchFace = *iter;
             
-            cout << UintahParallelComponent::d_myworld->myrank() << "  working on fine patch face " << finePatch->getFaceName(patchFace)<<  endl;
-
+            
             // determine the iterator on the coarse level.
             NodeIterator n_iter(IntVector(-8,-8,-8),IntVector(-9,-9,-9));
             bool isRight_CP_FP_pair;
@@ -1335,8 +1340,8 @@ void AMRMPM::coarsenNodalData_CFI(const ProcessorGroup*,
 
             // Is this the right coarse/fine patch pair
             if (isRight_CP_FP_pair){
-              
-              cout << UintahParallelComponent::d_myworld->myrank() << "    CoarseLevel iterator: " << n_iter << endl;
+              cout << UintahParallelComponent::d_myworld->myrank() << "    fine patch face " << finePatch->getFaceName(patchFace)
+              << "    CoarseLevel CFI iterator: " << n_iter << endl;
               
               for(; !n_iter.done(); n_iter++) {
                 IntVector c_node = *n_iter;
@@ -2079,6 +2084,8 @@ void AMRMPM::interpolateToParticlesAndUpdate_CFI(const ProcessorGroup*,
     move_particles=0.;
   }
   
+  //__________________________________
+  //Loop over the coarse level patches
   for(int p=0;p<coarsePatches->size();p++){
     const Patch* coarsePatch = coarsePatches->get(p);
     printTask(coarsePatches,coarsePatch,cout_doing,"interpolateToParticlesAndUpdate_CFI");
@@ -2087,7 +2094,9 @@ void AMRMPM::interpolateToParticlesAndUpdate_CFI(const ProcessorGroup*,
         
     Level::selectType finePatches;
     coarsePatch->getFineLevelPatches(finePatches);
-
+    
+    //__________________________________
+    //  Fine patch loop
     for(int i=0;i<finePatches.size();i++){
       const Patch* finePatch = finePatches[i]; 
       
@@ -2151,9 +2160,11 @@ void AMRMPM::interpolateToParticlesAndUpdate_CFI(const ProcessorGroup*,
               
               fineNode = ni[k];
 /*`==========TESTING==========*/
+#if 0
               if(fineNode.z() == 0){
                 cout << " working on node: " << fineNode << " S[k] " << S[k] << endl;
-              } 
+              }
+#endif 
 /*===========TESTING==========`*/
               gSum_S[fineNode] -= S[k];
               vel  += gvelocity_star_fine[fineNode] * S[k];
@@ -2175,6 +2186,7 @@ void AMRMPM::interpolateToParticlesAndUpdate_CFI(const ProcessorGroup*,
 }
 
 //______________________________________________________________________
+//
 void
 AMRMPM::initialErrorEstimate(const ProcessorGroup*,
                              const PatchSubset* patches,
