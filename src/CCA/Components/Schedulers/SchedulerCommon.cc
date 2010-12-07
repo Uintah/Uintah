@@ -677,9 +677,9 @@ SchedulerCommon::addTask(Task* task, const PatchSet* patches,
       }
       else if (numParticleGhostCells_ != dep->numGhostCells) {
         ostringstream ostr;
-        ostr << "Invalid Particle Variable require: not consistent with previous particle requires:\n"
-             << "Previous: Ghost::" << Ghost::getGhostTypeName(particleGhostType_) << " with numGhostCells " << numParticleGhostCells_
-             << " Invalid: Ghost::" << Ghost::getGhostTypeName(dep->gtype) << " with numGhostCells " << dep->numGhostCells << endl;
+        ostr << ": " << dep->var->getName() << ": Invalid particle variable require statement.  Not consistent with previous particle requires:\n"
+             << " Previous: Ghost::" << Ghost::getGhostTypeName(particleGhostType_) << " with numGhostCells " << numParticleGhostCells_
+             << "\n Invalid: Ghost::" << Ghost::getGhostTypeName(dep->gtype) << " with numGhostCells " << dep->numGhostCells << endl;
         throw InternalError(ostr.str(), __FILE__, __LINE__);
       }
     }
