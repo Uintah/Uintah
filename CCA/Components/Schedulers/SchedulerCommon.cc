@@ -670,20 +670,6 @@ SchedulerCommon::addTask(Task* task, const PatchSet* patches,
       d_initRequires.push_back(dep);
       d_initRequiredVars.insert(dep->var);
     }
-    if (dep->var->typeDescription()->getType() == TypeDescription::ParticleVariable && dep->numGhostCells != 0) {
-      if (numParticleGhostCells_ == 0) {
-        numParticleGhostCells_ = dep->numGhostCells;
-        particleGhostType_ = dep->gtype;
-      }
-      else if (numParticleGhostCells_ != dep->numGhostCells) {
-        ostringstream ostr;
-        ostr << ": " << dep->var->getName() << ": Invalid particle variable require statement.  Not consistent with previous particle requires:\n"
-             << " Previous: Ghost::" << Ghost::getGhostTypeName(particleGhostType_) << " with numGhostCells " << numParticleGhostCells_
-             << "\n Invalid: Ghost::" << Ghost::getGhostTypeName(dep->gtype) << " with numGhostCells " << dep->numGhostCells << endl;
-        throw InternalError(ostr.str(), __FILE__, __LINE__);
-      }
-    }
-    
   }
 
   // for the treat-as-old vars, go through the computes and add them.
