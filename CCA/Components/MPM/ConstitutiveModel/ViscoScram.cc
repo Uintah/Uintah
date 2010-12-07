@@ -66,6 +66,12 @@ ViscoScram::ViscoScram(ProblemSpecP& ps,MPMFlags* Mflag)
   : ConstitutiveModel(Mflag)
 {
   ps->require("PR",d_initialData.PR);
+  if( d_initialData.PR > 0.5 || d_initialData.PR < -1.0 )
+  {
+    ostringstream msg;
+    msg << "ERROR: Poisson Ratio (ViscoSCRAM input parameter 'PR') must be greater than -1 and less than 0.5\n";
+    throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
+  }
   //d_initialData.CoefThermExp = 12.5e-5;  // strains per K
   d_initialData.CoefThermExp = 0.0;  // keep from breaking RT
   ps->get("CoeffThermalExpansion", d_initialData.CoefThermExp);
