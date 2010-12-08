@@ -2743,13 +2743,14 @@ OnDemandDataWarehouse::checkPutAccess(const VarLabel* label,
 #endif
 #endif
 }
-  
+
 inline void
 OnDemandDataWarehouse::checkModifyAccess(const VarLabel* label, int matlIndex,
                                          const Patch* patch)
 { checkPutAccess(label, matlIndex, patch, true); }
 
-
+//______________________________________________________________________
+//
 inline 
 Task::WhichDW OnDemandDataWarehouse::getWhichDW(RunningTaskInfo *info)
 {
@@ -2763,7 +2764,8 @@ Task::WhichDW OnDemandDataWarehouse::getWhichDW(RunningTaskInfo *info)
     return Task::ParentOldDW;
   throw InternalError("Unknown DW\n",__FILE__,__LINE__);
 }
-
+//______________________________________________________________________
+//
 inline bool
 OnDemandDataWarehouse::hasGetAccess(const Task* runningTask,
                                     const VarLabel* label, int matlIndex,
@@ -2772,7 +2774,8 @@ OnDemandDataWarehouse::hasGetAccess(const Task* runningTask,
 { 
   return runningTask->hasRequires(label, matlIndex, patch, lowOffset, highOffset, getWhichDW(info));
 }
-
+//______________________________________________________________________
+//
 inline
 bool OnDemandDataWarehouse::hasPutAccess(const Task* runningTask,
                                          const VarLabel* label, int matlIndex,
@@ -2780,7 +2783,8 @@ bool OnDemandDataWarehouse::hasPutAccess(const Task* runningTask,
 {
     return runningTask->hasComputes(label, matlIndex, patch);
 }
-
+//______________________________________________________________________
+//
 void OnDemandDataWarehouse::pushRunningTask(const Task* task,
                                             vector<OnDemandDataWarehouseP>* dws)
 {
@@ -2789,7 +2793,8 @@ void OnDemandDataWarehouse::pushRunningTask(const Task* task,
   d_runningTasks[Thread::self()].push_back(RunningTaskInfo(task, dws));
  d_lock.writeUnlock();
 }
-
+//______________________________________________________________________
+//
 void OnDemandDataWarehouse::popRunningTask()
 {
  d_lock.writeLock();
@@ -2800,7 +2805,8 @@ void OnDemandDataWarehouse::popRunningTask()
   }
  d_lock.writeUnlock();
 }
-
+//______________________________________________________________________
+//
 inline list<OnDemandDataWarehouse::RunningTaskInfo>*
 OnDemandDataWarehouse::getRunningTasksInfo()
 {
@@ -2808,21 +2814,24 @@ OnDemandDataWarehouse::getRunningTasksInfo()
     d_runningTasks.find(Thread::self());
   return (findIt != d_runningTasks.end()) ? &findIt->second : 0;
 }
-
+//______________________________________________________________________
+//
 inline bool OnDemandDataWarehouse::hasRunningTask()
 {
   list<OnDemandDataWarehouse::RunningTaskInfo>* runningTasks =
     getRunningTasksInfo();
   return runningTasks ? !runningTasks->empty() : false;
 }
-
+//______________________________________________________________________
+//
 inline OnDemandDataWarehouse::RunningTaskInfo*
 OnDemandDataWarehouse::getCurrentTaskInfo()
 {
   list<RunningTaskInfo>* taskInfoList = getRunningTasksInfo();
   return (taskInfoList && !taskInfoList->empty()) ? &taskInfoList->back() : 0;
 }
-
+//______________________________________________________________________
+//
 DataWarehouse*
 OnDemandDataWarehouse::getOtherDataWarehouse(Task::WhichDW dw, RunningTaskInfo* info)
 {
@@ -2832,7 +2841,8 @@ OnDemandDataWarehouse::getOtherDataWarehouse(Task::WhichDW dw, RunningTaskInfo* 
   d_lock.readUnlock();
   return result;
 }
-
+//______________________________________________________________________
+//
 DataWarehouse*
 OnDemandDataWarehouse::getOtherDataWarehouse(Task::WhichDW dw)
 {
