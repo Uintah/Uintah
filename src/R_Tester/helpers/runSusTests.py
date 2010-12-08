@@ -60,6 +60,8 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
   gold_standard = path.normpath(path.join(getcwd(), argv[3]))
   helperspath   = "%s/%s" % (path.normpath(path.join(getcwd(), path.dirname(argv[0]))), "helpers")
   inputpath     = path.normpath(path.join(getcwd(), inputs_root()))
+  
+  global startpath
   startpath     = getcwd()
   
   dbg_opt         = argv[4]
@@ -430,6 +432,8 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
 # in that order
 
 def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallelism, tests_to_do, tolerances, startFrom):
+  global startpath
+  
   testname = nameoftest(test)
 
   np = float(num_processes(test))
@@ -473,8 +477,6 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
 
   # set where to view the log files
   logpath = environ['WEBLOG']
-
-  startpath = "../.."
 
   # if doing performance tests, strip the output and checkpoints portions
   if do_performance_test == 1:
@@ -562,15 +564,17 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
     rc = -9
     
   # determine path of replace_msg in 2 places to not have 2 different msgs.
-  replace_msg = "\tTo replace the goldStandards run:\n\t "
-
+  replace_msg = "\tTo replace this test's goldStandards run:\n\t    "
+  
   if startFrom == "restart":
     chdir("..")
     replace_msg = "%s%s/replace_gold_standard" % (replace_msg, getcwd())
     chdir("restart")
   else:
     replace_msg = "%s%s/replace_gold_standard" % (replace_msg, getcwd())
-
+  
+  replace_msg = "%s\n\tTo replace multiple tests that have failed run:\n\t    %s/replace_all_GS\n" % (replace_msg,startpath)
+  
   return_code = 0
   if rc != 0:
     print "\t*** Test %s failed with code %d" % (testname, rc)
