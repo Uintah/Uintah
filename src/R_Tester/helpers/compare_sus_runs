@@ -34,7 +34,7 @@ if [ -d "$TEST_UDADIR" ]; then
     echo "Storing uda directory: $COMPARE_UDADIR"
 
     # try to remove it in case it exists as a non-directory
-    rm $COMPARE_UDADIR 
+    /bin/rm $COMPARE_UDADIR 
 
     # if cp has a --dereference option, then us it
     cp -r --dereference $TEST_UDADIR $COMPARE_UDADIR
@@ -42,16 +42,16 @@ if [ -d "$TEST_UDADIR" ]; then
 	# try without --dereference -- not all cp's have this option
 	cp -r $TEST_UDADIR $COMPARE_UDADIR
     fi
+    
+    # copy text files to the goldStandard
+    cp $TEST_DIR/sus.log.txt  $TEST_DIR/timestamp $TEST_DIR/restart_timestamp $COMPARE_ROOT/$TEST >/dev/null
+    cp $TEST_DIR/malloc_stats $TEST_DIR/restart_malloc_stats $COMPARE_ROOT/$TEST >/dev/null
 
     chgrp -R csafe "$COMPARE_ROOT/$TEST"
     chmod -R g+rwX "$COMPARE_ROOT/$TEST"
 
     exit -2
-#    find $UDADIR -type d | xargs cvs add
-#    find $UDADIR -name "*.dat" | xargs cvs add
-#    find $UDADIR -name "*.data" | xargs cvs add
-#    find $UDADIR -name "*.xml" | xargs cvs add
-#    cvs commit -R -m "Automated Tester storing dat files" $UDADIR
+    
   else
       echo "Testing $TEST"
       compare_sus_runs_by_udas $TEST_UDADIR $COMPARE_UDADIR $SUS_DIR $ABS_TOL $REL_TOL
