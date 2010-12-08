@@ -2173,11 +2173,6 @@ getGridVar(GridVariableBase& var, const VarLabel* label, int matlIndex, const Pa
   IntVector low = patch->getExtraLowIndex(basis, label->getBoundaryLayer());
   IntVector high = patch->getExtraHighIndex(basis, label->getBoundaryLayer());
 
-  // The data should have been put in the database,
-  // windowed with this low and high.
-  ASSERTEQ(var.getLow(), low);
-  ASSERTEQ(var.getHigh(), high);
-  
   if (gtype == Ghost::None) {
     if(numGhostCells != 0)
       SCI_THROW(InternalError("Ghost cells specified with type: None!\n", __FILE__, __LINE__));
@@ -2195,6 +2190,11 @@ getGridVar(GridVariableBase& var, const VarLabel* label, int matlIndex, const Pa
     patch->computeVariableExtents(basis, label->getBoundaryLayer(),
 				  gtype, numGhostCells,
                                   lowIndex, highIndex);
+    
+    // The data should have been put in the database,
+    // windowed with this low and high.
+    ASSERTEQ(var.getLow(), lowIndex);
+    ASSERTEQ(var.getHigh(), highIndex);
 
     if (numGhostCells > 0)
       patch->getLevel()->selectPatches(lowIndex, highIndex, neighbors);
