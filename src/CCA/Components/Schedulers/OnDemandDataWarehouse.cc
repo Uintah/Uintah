@@ -114,6 +114,8 @@ struct ParticleSend : public RefCounted {
 #define PARTICLESET_TAG	0x4000|batch->messageTag
 #define DAV_DEBUG 0
 
+bool OnDemandDataWarehouse::d_combineMemory=true;
+
 OnDemandDataWarehouse::OnDemandDataWarehouse(const ProcessorGroup* myworld,
 					     Scheduler* scheduler,
 					     int generation, const GridP& grid,
@@ -1473,194 +1475,239 @@ allocateAndPut(GridVariableBase& var, const VarLabel* label,
 			 numGhostCells, lowOffset, highOffset);
   patch->computeExtents(basis, label->getBoundaryLayer(),
 			lowOffset, highOffset, lowIndex, highIndex);
-  
-  if (exists) {
-    // it had been allocated and put as part of the superpatch of
-    // another patch
-    d_varDB.get(label, matlIndex, patch, var);
-    
-    // The var's window should be the size of the patch or smaller than it.
-    ASSERTEQ(Min(var.getLow(), lowIndex), lowIndex);
-    ASSERTEQ(Max(var.getHigh(), highIndex), highIndex);
-    
-    if (var.getLow() != patch->getExtraLowIndex(basis, label->getBoundaryLayer()) ||
-        var.getHigh() != patch->getExtraHighIndex(basis, label->getBoundaryLayer()) ||
-        var.getBasePointer() == 0 /* place holder for ghost patch */) {
-      // It wasn't allocated as part of another patch's superpatch;
-      // it existed as ghost patch of another patch.. so we have no
-      // choice but to blow it away and replace it.
-      d_varDB.put(label, matlIndex, patch, 0, true);
+ 
+  if(!d_combineMemory)
+  {
+    if (exists) 
+    {
+      // it had been allocated and put as part of the superpatch of
+      // another patch
+      d_varDB.get(label, matlIndex, patch, var);
+
+      // The var's window should be the size of the patch or smaller than it.
+      ASSERTEQ(Min(var.getLow(), lowIndex), lowIndex);
+      ASSERTEQ(Max(var.getHigh(), highIndex), highIndex);
 
       // this is just a tricky way to uninitialize var
       Variable* tmpVar = dynamic_cast<Variable*>(var.cloneType());
       var.copyPointer(*tmpVar);
       delete tmpVar;
     }
-    else {
-      // It was allocated and put as part of the superpatch of another patch
-      var.rewindow(lowIndex, highIndex);
-     d_lock.writeUnlock();      
-      return; // got it -- done
-    }
+    //allocate the memory
+    var.allocate(lowIndex, highIndex);
+    //put the variable in the database
+    d_varDB.put(label, matlIndex, patch, var.clone() ,true);
   }
+  else
+  {
+    if (exists) 
+    {
+      // it had been allocated and put as part of the superpatch of
+      // another patch
+      d_varDB.get(label, matlIndex, patch, var);
 
-  IntVector superLowIndex, superHighIndex;
-  // requiredSuper[Low/High]'s don't take numGhostCells into consideration
-  // -- just includes ghosts that will be required by later tasks.
-  IntVector requiredSuperLow, requiredSuperHigh;  
+      // The var's window should be the size of the patch or smaller than it.
+      ASSERTEQ(Min(var.getLow(), lowIndex), lowIndex);
+      ASSERTEQ(Max(var.getHigh(), highIndex), highIndex);
 
-  const vector<const Patch*>* superPatchGroup =
-    d_scheduler->getSuperPatchExtents(label, matlIndex, patch,
-                                      gtype, numGhostCells,
-                                      requiredSuperLow, requiredSuperHigh,
-                                      superLowIndex, superHighIndex);
+      if (var.getLow() != patch->getExtraLowIndex(basis, label->getBoundaryLayer()) ||
+          var.getHigh() != patch->getExtraHighIndex(basis, label->getBoundaryLayer()) ||
+          var.getBasePointer() == 0 /* place holder for ghost patch */) 
+      {
+        // It wasn't allocated as part of another patch's superpatch;
+        // it existed as ghost patch of another patch.. so we have no
+        // choice but to blow it away and replace it.
+        d_varDB.put(label, matlIndex, patch, 0, true);
 
-  ASSERT(superPatchGroup != 0);
-  
-  var.allocate(superLowIndex, superHighIndex);
+        // this is just a tricky way to uninitialize var
+        Variable* tmpVar = dynamic_cast<Variable*>(var.cloneType());
+        var.copyPointer(*tmpVar);
+        delete tmpVar;
+      }
+      else 
+      {
+        // It was allocated and put as part of the superpatch of another patch
+        var.rewindow(lowIndex, highIndex);
+        d_lock.writeUnlock();      
+        return; // got it -- done
+      }
+    }
+
+    IntVector superLowIndex, superHighIndex;
+    // requiredSuper[Low/High]'s don't take numGhostCells into consideration
+    // -- just includes ghosts that will be required by later tasks.
+    IntVector requiredSuperLow, requiredSuperHigh;  
+
+    const vector<const Patch*>* superPatchGroup =
+      d_scheduler->getSuperPatchExtents(label, matlIndex, patch,
+          gtype, numGhostCells,
+          requiredSuperLow, requiredSuperHigh,
+          superLowIndex, superHighIndex);
+
+    ASSERT(superPatchGroup != 0);
+
+    var.allocate(superLowIndex, superHighIndex);
 
 #if SCI_ASSERTION_LEVEL >= 3
 
 
-  // check for dead portions of a variable (variable space that isn't covered by any patch).  
-  // This will happen with L-shaped patch configs and ngc > extra cells.  
-  // find all dead space and mark it with a bogus value.
-  
-  if (1) { // numGhostCells > ec) { (numGhostCells is 0, query it from the superLowIndex...
-    deque<Box> b1, b2, difference;
-    b1.push_back(Box(Point(superLowIndex(0), superLowIndex(1), superLowIndex(2)), 
-                     Point(superHighIndex(0), superHighIndex(1), superHighIndex(2))));
-    for (size_t i = 0; i < (*superPatchGroup).size(); i++) {
-      const Patch* p = (*superPatchGroup)[i];
-      IntVector low = p->getExtraLowIndex(basis, label->getBoundaryLayer());
-      IntVector high = p->getExtraHighIndex(basis, label->getBoundaryLayer());
-      b2.push_back(Box(Point(low(0), low(1), low(2)), Point(high(0), high(1), high(2))));
-    }
-    difference = Box::difference(b1, b2);
+    // check for dead portions of a variable (variable space that isn't covered by any patch).  
+    // This will happen with L-shaped patch configs and ngc > extra cells.  
+    // find all dead space and mark it with a bogus value.
+
+    if (1) 
+    { // numGhostCells > ec) { (numGhostCells is 0, query it from the superLowIndex...
+      deque<Box> b1, b2, difference;
+      b1.push_back(Box(Point(superLowIndex(0), superLowIndex(1), superLowIndex(2)), 
+            Point(superHighIndex(0), superHighIndex(1), superHighIndex(2))));
+      for (size_t i = 0; i < (*superPatchGroup).size(); i++) 
+      {
+        const Patch* p = (*superPatchGroup)[i];
+        IntVector low = p->getExtraLowIndex(basis, label->getBoundaryLayer());
+        IntVector high = p->getExtraHighIndex(basis, label->getBoundaryLayer());
+        b2.push_back(Box(Point(low(0), low(1), low(2)), Point(high(0), high(1), high(2))));
+      }
+      difference = Box::difference(b1, b2);
 
 #if 0
-    if (difference.size() > 0) {
-      cout << "Box difference: " << superLowIndex << " " << superHighIndex << " with patches " << endl;
-      for (size_t i = 0; i < (*superPatchGroup).size(); i++) {
-        const Patch* p = (*superPatchGroup)[i];
-        cout << p->getExtraLowIndex(basis, label->getBoundaryLayer()) << " " << p->getExtraHighIndex(basis, label->getBoundaryLayer()) << endl;
-      }
+      if (difference.size() > 0) {
+        cout << "Box difference: " << superLowIndex << " " << superHighIndex << " with patches " << endl;
+        for (size_t i = 0; i < (*superPatchGroup).size(); i++) {
+          const Patch* p = (*superPatchGroup)[i];
+          cout << p->getExtraLowIndex(basis, label->getBoundaryLayer()) << " " << p->getExtraHighIndex(basis, label->getBoundaryLayer()) << endl;
+        }
 
-      for (size_t i = 0; i < difference.size(); i++) {
-        cout << difference[i].lower() << " " << difference[i].upper() << endl;
+        for (size_t i = 0; i < difference.size(); i++) {
+          cout << difference[i].lower() << " " << difference[i].upper() << endl;
+        }
       }
-    }
 #endif
-    // get more efficient way of doing this...
-    for (size_t i = 0; i < difference.size(); i++) {
-      Box b = difference[i];
-      IntVector low((int)b.lower()(0), (int)b.lower()(1), (int)b.lower()(2));
-      IntVector high((int)b.upper()(0), (int)b.upper()(1), (int)b.upper()(2));
-      if (GridVariable<double>* typedVar = dynamic_cast<GridVariable<double>*>(&var)) {
-        for (CellIterator iter(low, high); !iter.done(); iter++)
-          (*typedVar)[*iter] = -5.555555e256;
-      }
-      else if (GridVariable<Vector>* typedVar = dynamic_cast<GridVariable<Vector>*>(&var)) {
-        for (CellIterator iter(low, high); !iter.done(); iter++)
-          (*typedVar)[*iter] = -5.555555e256;
+      // get more efficient way of doing this...
+      for (size_t i = 0; i < difference.size(); i++) 
+      {
+        Box b = difference[i];
+        IntVector low((int)b.lower()(0), (int)b.lower()(1), (int)b.lower()(2));
+        IntVector high((int)b.upper()(0), (int)b.upper()(1), (int)b.upper()(2));
+        if (GridVariable<double>* typedVar = dynamic_cast<GridVariable<double>*>(&var)) 
+        {
+          for (CellIterator iter(low, high); !iter.done(); iter++)
+            (*typedVar)[*iter] = -5.555555e256;
+        }
+        else if (GridVariable<Vector>* typedVar = dynamic_cast<GridVariable<Vector>*>(&var)) 
+        {
+          for (CellIterator iter(low, high); !iter.done(); iter++)
+            (*typedVar)[*iter] = -5.555555e256;
+        }
       }
     }
-  }
 #endif 
 
-  Patch::selectType encompassedPatches;
-  if (requiredSuperLow == lowIndex && requiredSuperHigh == highIndex) {
-    // only encompassing the patch currently being allocated
-    encompassedPatches.push_back(patch);
-  }
-  else {
-    // Use requiredSuperLow/High instead of superLowIndex/superHighIndex
-    // so we don't put the var for patches in the datawarehouse that won't be
-    // required (this is important for scrubbing).
-    patch->getLevel()->selectPatches(requiredSuperLow, requiredSuperHigh,
-                                     encompassedPatches);
-  }
-  
-  // Make a set of the non ghost patches that
-  // has quicker lookup than the vector.
-  set<const Patch*> nonGhostPatches;
-  for (size_t i = 0; i < superPatchGroup->size(); ++i) {
-    nonGhostPatches.insert((*superPatchGroup)[i]);
-  }
-  
-  Patch::selectType::iterator iter = encompassedPatches.begin();    
-  for (; iter != encompassedPatches.end(); ++iter) {
-    const Patch* patchGroupMember = *iter;
-    GridVariableBase* clone = var.clone();
-    IntVector groupMemberLowIndex = patchGroupMember->getExtraLowIndex(basis, label->getBoundaryLayer());
-    IntVector groupMemberHighIndex = patchGroupMember->getExtraHighIndex(basis, label->getBoundaryLayer());
-    IntVector enclosedLowIndex = Max(groupMemberLowIndex, superLowIndex);
-    IntVector enclosedHighIndex = Min(groupMemberHighIndex, superHighIndex);
-    
-    clone->rewindow(enclosedLowIndex, enclosedHighIndex);
-    if (patchGroupMember == patch) {
-      // this was checked already
-      exists = false;
+    Patch::selectType encompassedPatches;
+    if (requiredSuperLow == lowIndex && requiredSuperHigh == highIndex) 
+    {
+      // only encompassing the patch currently being allocated
+      encompassedPatches.push_back(patch);
     }
-    else {
-      exists = d_varDB.exists(label, matlIndex, patchGroupMember);
+    else 
+    {
+      // Use requiredSuperLow/High instead of superLowIndex/superHighIndex
+      // so we don't put the var for patches in the datawarehouse that won't be
+      // required (this is important for scrubbing).
+      patch->getLevel()->selectPatches(requiredSuperLow, requiredSuperHigh,
+          encompassedPatches);
     }
-    if (patchGroupMember->isVirtual()) {
-      // Virtual patches can only be ghost patches.
-      ASSERT(nonGhostPatches.find(patchGroupMember) ==
-             nonGhostPatches.end());
-      clone->offsetGrid(IntVector(0,0,0) -
-                        patchGroupMember->getVirtualOffset());
-      enclosedLowIndex = clone->getLow();
-      enclosedHighIndex = clone->getHigh();
-      patchGroupMember = patchGroupMember->getRealPatch();
-      IntVector dummy;
-      if (d_scheduler->
-          getSuperPatchExtents(label, matlIndex, patchGroupMember, gtype,
-                               numGhostCells, dummy, dummy, dummy, dummy) != 0)
-      {
-        // The virtual patch refers to a real patch in which the label
-        // is computed locally, so don't overwrite the local copy.
-        delete clone;
-        continue;
-      }
-    }
-    if (exists) {
-      // variable section already exists in this patchGroupMember
-      // (which is assumed to be a ghost patch)
-      // so check if one is enclosed in the other.
-      
-      GridVariableBase* existingGhostVar =
-        dynamic_cast<GridVariableBase*>(d_varDB.get(label, matlIndex, patchGroupMember));
-      IntVector existingLow = existingGhostVar->getLow();
-      IntVector existingHigh = existingGhostVar->getHigh();
-      IntVector minLow = Min(existingLow, enclosedLowIndex);
-      IntVector maxHigh = Max(existingHigh, enclosedHighIndex);
 
-      if (existingGhostVar->isForeign()) {
-        // data already being received, so don't replace it
-        delete clone;
-      }
-      else if (minLow == enclosedLowIndex && maxHigh == enclosedHighIndex) {
-        // this new ghost variable section encloses the old one,
-        // so replace the old one
-        d_varDB.put(label, matlIndex, patchGroupMember, clone, true);
-      }
-      else {
-        // Either the old ghost variable section encloses this new one
-        // (so leave it), or neither encloses the other (so just forget
-        // about it -- it'll allocate extra space for it when receiving
-        // the ghost data in recvMPIGridVar if nothing else).
-        delete clone;
-      }
+    // Make a set of the non ghost patches that
+    // has quicker lookup than the vector.
+    set<const Patch*> nonGhostPatches;
+    for (size_t i = 0; i < superPatchGroup->size(); ++i) 
+    {
+      nonGhostPatches.insert((*superPatchGroup)[i]);
     }
-    else {
-      // it didn't exist before -- add it
-      d_varDB.put(label, matlIndex, patchGroupMember, clone, false);
+
+    Patch::selectType::iterator iter = encompassedPatches.begin();    
+    for (; iter != encompassedPatches.end(); ++iter) 
+    {
+      const Patch* patchGroupMember = *iter;
+      GridVariableBase* clone = var.clone();
+      IntVector groupMemberLowIndex = patchGroupMember->getExtraLowIndex(basis, label->getBoundaryLayer());
+      IntVector groupMemberHighIndex = patchGroupMember->getExtraHighIndex(basis, label->getBoundaryLayer());
+      IntVector enclosedLowIndex = Max(groupMemberLowIndex, superLowIndex);
+      IntVector enclosedHighIndex = Min(groupMemberHighIndex, superHighIndex);
+
+      clone->rewindow(enclosedLowIndex, enclosedHighIndex);
+      if (patchGroupMember == patch) 
+      {
+        // this was checked already
+        exists = false;
+      }
+      else 
+      {
+        exists = d_varDB.exists(label, matlIndex, patchGroupMember);
+      }
+      if (patchGroupMember->isVirtual()) 
+      {
+        // Virtual patches can only be ghost patches.
+        ASSERT(nonGhostPatches.find(patchGroupMember) ==
+            nonGhostPatches.end());
+        clone->offsetGrid(IntVector(0,0,0) -
+            patchGroupMember->getVirtualOffset());
+        enclosedLowIndex = clone->getLow();
+        enclosedHighIndex = clone->getHigh();
+        patchGroupMember = patchGroupMember->getRealPatch();
+        IntVector dummy;
+        if (d_scheduler->
+            getSuperPatchExtents(label, matlIndex, patchGroupMember, gtype,
+              numGhostCells, dummy, dummy, dummy, dummy) != 0)
+        {
+          // The virtual patch refers to a real patch in which the label
+          // is computed locally, so don't overwrite the local copy.
+          delete clone;
+          continue;
+        }
+      }
+      if (exists) 
+      {
+        // variable section already exists in this patchGroupMember
+        // (which is assumed to be a ghost patch)
+        // so check if one is enclosed in the other.
+
+        GridVariableBase* existingGhostVar =
+          dynamic_cast<GridVariableBase*>(d_varDB.get(label, matlIndex, patchGroupMember));
+        IntVector existingLow = existingGhostVar->getLow();
+        IntVector existingHigh = existingGhostVar->getHigh();
+        IntVector minLow = Min(existingLow, enclosedLowIndex);
+        IntVector maxHigh = Max(existingHigh, enclosedHighIndex);
+
+        if (existingGhostVar->isForeign()) 
+        {
+          // data already being received, so don't replace it
+          delete clone;
+        }
+        else if (minLow == enclosedLowIndex && maxHigh == enclosedHighIndex) 
+        {
+          // this new ghost variable section encloses the old one,
+          // so replace the old one
+          d_varDB.put(label, matlIndex, patchGroupMember, clone, true);
+        }
+        else 
+        {
+          // Either the old ghost variable section encloses this new one
+          // (so leave it), or neither encloses the other (so just forget
+          // about it -- it'll allocate extra space for it when receiving
+          // the ghost data in recvMPIGridVar if nothing else).
+          delete clone;
+        }
+      }
+      else 
+      {
+        // it didn't exist before -- add it
+        d_varDB.put(label, matlIndex, patchGroupMember, clone, false);
+      }
     }
   }
- d_lock.writeUnlock();
-   
+  d_lock.writeUnlock();
+
   var.rewindow(lowIndex, highIndex);
 }
 
