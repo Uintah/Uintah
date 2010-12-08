@@ -332,6 +332,7 @@ if [ "$do_uda" = "true" -o "$do_mem" = "true" -o "$do_perf" = "true" -o "$do_inp
   if [[ "$replaced_uda" = "true" && "$owner" = "csafe-tester" ]]; then
     tail -1 $logfile > message
     mutt  -s "GoldStandard Change:$testname" john.schmidt@utah.edu < message
+    /bin/rm message
   fi
 
 # change groups and permissions so (hopefully) anybody can replace them later
