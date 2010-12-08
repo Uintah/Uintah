@@ -147,8 +147,6 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
       new_dw->getModifiable(gvelocity[m],  lb->gVelocityLabel,       dwi,patch);
       new_dw->allocateAndPut(gsurfnorm[m], lb->gSurfNormLabel,       dwi,patch);
       new_dw->getModifiable(frictionWork[m],lb->frictionalWorkLabel, dwi,patch);
-      new_dw->allocateAndPut(gstress[m],      lb->gStressLabel,      dwi,patch);
-      new_dw->allocateAndPut(gnormtraction[m],lb->gNormTractionLabel,dwi,patch);
 
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch,
                                                        gan, NGP, lb->pXLabel);
@@ -164,7 +162,6 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
       old_dw->get(psize,               lb->pSizeLabel,               pset);
       old_dw->get(deformationGradient,  lb->pDeformationMeasureLabel, pset);
 
-      gstress[m].initialize(Matrix3(0.0));
       gsurfnorm[m].initialize(Vector(0.0,0.0,0.0));
 
       if(!d_matls.requested(m)) continue;
@@ -194,12 +191,51 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
              if (patch->containsNode(ni[k])){
                Vector grad(d_S[k].x()*oodx[0],d_S[k].y()*oodx[1],
                            d_S[k].z()*oodx[2]);
-//               gsurfnorm[m][ni[k]] += pmass[idx] * d_S[k];
                gsurfnorm[m][ni[k]] += pmass[idx] * grad;
              }
            }
         }
      }
+    }  // loop over matls
+
+
+    for(NodeIterator iter=patch->getExtraNodeIterator();
+                       !iter.done();iter++){
+       IntVector c = *iter;
+       double max_mag = gsurfnorm[0][c].length();
+       int max_mag_matl = 0;
+       for(int m=1; m<numMatls; m++){
+         double mag = gsurfnorm[m][c].length();
+         if(mag > max_mag){
+            max_mag = mag;
+            max_mag_matl = m;
+         }
+       }  // loop over matls
+       for(int m=0; m<numMatls; m++){
+        if(m!=max_mag_matl){
+          gsurfnorm[m][c] = -gsurfnorm[max_mag_matl][c];
+        }
+       }  // loop over matls
+    }
+
+
+    for(int m=0;m<numMatls;m++){
+      int dwi = matls->get(m);
+
+      ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch,
+                                                       gan, NGP, lb->pXLabel);
+
+      constParticleVariable<Point> px;
+      constParticleVariable<Vector> psize;
+      constParticleVariable<Matrix3> deformationGradient;
+
+      old_dw->get(px,                   lb->pXLabel,                  pset);
+      old_dw->get(psize,                lb->pSizeLabel,               pset);
+      old_dw->get(deformationGradient,  lb->pDeformationMeasureLabel, pset);
+
+      new_dw->allocateAndPut(gnormtraction[m],lb->gNormTractionLabel,dwi,patch);
+      new_dw->allocateAndPut(gstress[m],      lb->gStressLabel,      dwi,patch);
+      gstress[m].initialize(Matrix3(0.0));
 
      MPMBoundCond bc;
      bc.setBoundaryCondition(patch,dwi,"Symmetric",  gsurfnorm[m],interp_type);
