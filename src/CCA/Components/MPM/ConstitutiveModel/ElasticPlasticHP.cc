@@ -907,7 +907,7 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
       double sp_vol = 1./rho_cur;
 
       // Compute polar decomposition of F (F = RU)
-      tensorF_new.polarDecomposition(tensorU, tensorR, d_tol, true);
+      tensorF_new.polarDecompositionRMB(tensorU, tensorR);
 
       // Calculate rate of deformation tensor (D)
       tensorD = (tensorL + tensorL.Transpose())*0.5;
