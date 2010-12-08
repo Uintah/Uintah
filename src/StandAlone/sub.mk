@@ -263,9 +263,10 @@ uintah: sus \
         timeextract \
         faceextract \
         link_inputs \
-	link_scripts \
+        link_scripts \
         link_tools \
         link_regression_tester \
+        link_localRT \
 	$(VISIT_STUFF)
 
 ###############################################
@@ -294,6 +295,11 @@ link_tools:
 	       ln -sf $(OBJTOP_ABS)/StandAlone/tools/puda/puda $(OBJTOP_ABS)/StandAlone/puda; \
               ln -sf $(OBJTOP_ABS)/StandAlone/tools/extractors/lineextract $(OBJTOP_ABS)/StandAlone/lineextract; \
               ln -sf $(OBJTOP_ABS)/StandAlone/tools/extractors/timeextract $(OBJTOP_ABS)/StandAlone/timeextract; \
+	   fi )
+link_localRT:
+	@( if ! test -L StandAlone/localRT; then \
+               echo "Creating link to localRT script." ; \
+	       ln -sf $(SRCTOP_ABS)/scripts/localRT StandAlone/localRT; \
 	   fi )
 link_regression_tester:
 	@( if ! test -L StandAlone/run_RT; then \
