@@ -113,3 +113,8 @@ foreach indx ($choices[*]:q)
     $cmd
   endif
 end 
+
+
+# cleanup
+/bin/rm $tmpFile
+
