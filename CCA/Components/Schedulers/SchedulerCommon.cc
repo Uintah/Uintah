@@ -1392,7 +1392,7 @@ SchedulerCommon::copyDataToNewGrid(const ProcessorGroup*, const PatchSubset* pat
             // for particles anyhow (but we will have to reset the bounds to copy the data)
             oldsub = oldDataWarehouse->getParticleSubset(matl, newPatch->getLowIndexWithDomainLayer(Patch::CellBased),
                                                          newPatch->getHighIndexWithDomainLayer(Patch::CellBased), 
-                                                         oldLevel.get_rep(), newPatch, reloc_new_posLabel_);
+                                                         newPatch, reloc_new_posLabel_, oldLevel.get_rep());
             oldsubsets[matl] = oldsub;
             oldsub->addReference();
           }

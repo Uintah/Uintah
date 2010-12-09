@@ -181,13 +181,16 @@ public:
 					          const Patch*, Ghost::GhostType, 
 					          int numGhostCells,
 					          const VarLabel* posvar);
-                                        
+                                 
+   //returns the particle subset in the range of low->high
+     //relPatch is used as the key and should be the patch you are querying from
+     //level is used if you are querying from an old level
    virtual ParticleSubset* getParticleSubset(int matlIndex, 
                                              IntVector low, 
                                              IntVector high, 
-                                             const Level* level, 
                                              const Patch* relPatch,
-                                             const VarLabel* posvar);
+                                             const VarLabel* posvar,
+                                             const Level* level=0);
                                              
    virtual void allocateTemporary(ParticleVariableBase&, 
                                   ParticleSubset*);

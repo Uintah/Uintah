@@ -151,8 +151,8 @@ public:
 					    int numGhostCells,
 					    const VarLabel* posvar) = 0;
   virtual ParticleSubset* getParticleSubset(int matlIndex, IntVector low, IntVector high,
-                                            const Level* level, const Patch* relPatch,
-                                            const VarLabel* posvar) = 0;
+                                            const Patch* relPatch,
+                                            const VarLabel* posvar, const Level* level=0) = 0;
   virtual void allocateTemporary(ParticleVariableBase&,
 				 ParticleSubset*) = 0;
   virtual void allocateAndPut(ParticleVariableBase&, const VarLabel*,
