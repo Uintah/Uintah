@@ -870,7 +870,7 @@ OnDemandDataWarehouse::createParticleSubset(particleIndex numParticles,
   }
 
 
-  dbg << d_myworld->myrank() << " DW ID " << getID() << " createParticleSubset: MI: " << matlIndex << " P: " << patch->getID() << " (" << low << ", " << high << ")\n";
+  dbg << d_myworld->myrank() << " DW ID " << getID() << " createParticleSubset: MI: " << matlIndex << " P: " << patch->getID() << " (" << low << ", " << high << ") size: " << numParticles << "\n";
 
   ASSERT(!patch->isVirtual());
 
@@ -899,6 +899,7 @@ OnDemandDataWarehouse::saveParticleSubset(ParticleSubset* psubset,
     high = patch->getExtraCellHighIndex();
   }
 
+  dbg << d_myworld->myrank() << " DW ID " << getID() << " saveParticleSubset: MI: " << matlIndex << " P: " << patch->getID() << " (" << low << ", " << high << ") size: " << psubset->numParticles() << "\n";
   insertPSetRecord(d_psetDB,patch,low,high,matlIndex,psubset);
 }
 //______________________________________________________________________
@@ -955,6 +956,7 @@ OnDemandDataWarehouse::queryPSetDB(psetDBType &subsetDB,
                                    const VarLabel* pos_var,                 
                                    bool exact)                              
 {
+
   MALLOC_TRACE_TAG_SCOPE("OnDemandDataWarehouse::queryPSetDB");
   ParticleSubset* subset=0;
 
@@ -968,10 +970,12 @@ OnDemandDataWarehouse::queryPSetDB(psetDBType &subsetDB,
   
   //search multimap for best subset
   for(psetDBType::const_iterator iter=ret.first; iter!=ret.second; ++iter){
+  
     ParticleSubset *ss=iter->second;
     IntVector sslow  = ss->getLow();
     IntVector sshigh = ss->getHigh();
     int vol=Region::getVolume(sslow,sshigh);
+
     //check if volume is better than current best
     if(vol<best_volume)
     {
@@ -997,11 +1001,15 @@ OnDemandDataWarehouse::queryPSetDB(psetDBType &subsetDB,
   d_lock.readUnlock();
 
   if(exact && best_volume!=target_volume)
+  {
     return 0;
+  }
 
   //if we don't need to filter or we already have an exact match just return this subset
   if(pos_var==0 || best_volume==target_volume)
+  {
     return subset;
+  }
 
   //otherwise filter out particles that are not within this range
   constParticleVariable<Point> pos;
@@ -1103,7 +1111,7 @@ OnDemandDataWarehouse::getParticleSubset(int matlIndex,
     return getParticleSubset(matlIndex, patch);
   }
 
-  return getParticleSubset(matlIndex, lowIndex, highIndex, patch->getLevel(), patch, pos_var);
+  return getParticleSubset(matlIndex, lowIndex, highIndex, patch, pos_var);
 }
 
 //______________________________________________________________________
@@ -1112,33 +1120,35 @@ ParticleSubset*
 OnDemandDataWarehouse::getParticleSubset(int matlIndex, 
                                          IntVector lowIndex, 
                                          IntVector highIndex, 
-                                         const Level* level, 
                                          const Patch* relPatch, 
-                                         const VarLabel* pos_var)
+                                         const VarLabel* pos_var,
+                                         const Level* level )  //level is ONLY used when querying from an old grid, otherwise the level will be determined from the patch
 {
   MALLOC_TRACE_TAG_SCOPE("OnDemandDataWarehouse::getParticleSubset-c");
   TAU_PROFILE("OnDemandDataWarehouse::getParticleSubset-b", " ", TAU_USER);
   // relPatch can be NULL if trying to get a particle subset for an arbitrary spot on the level
   Patch::selectType neighbors;
-
+ 
   ASSERT(relPatch!=0); //you should pass in the patch on which the task was called on
+  if(level==0)
+    level=relPatch->getLevel(); 
+ 
+  //compute intersection between query range and patch
+  IntVector low=Min(lowIndex,relPatch->getExtraCellLowIndex());
+  IntVector high=Max(highIndex,relPatch->getExtraCellHighIndex());
 
-  if(relPatch->getLevel()!=level) //case where the get is on a coarse or fine level
+
+  //if the query range is larger than the patch
+  if(low!=relPatch->getExtraCellLowIndex() || high!=relPatch->getExtraCellHighIndex())
   {
     level->selectPatches(lowIndex, highIndex, neighbors);  //find all intersecting patches with the range
   }
-  //single patch case on the same level:  
-  //check if the indices are contained within the patch
-  else if (Max(lowIndex,relPatch->getExtraCellLowIndex())==lowIndex && Min(highIndex,relPatch->getExtraCellHighIndex())==highIndex)
-  { 
+  else
+  {
     //just add this patch, do not query the whole level
     neighbors.push_back(relPatch);
   }
-  else  //same level but the range does not match the patch so intersect patches on this level
-  {  
-    level->selectPatches(lowIndex, highIndex, neighbors);
-  }
-  
+
   particleIndex totalParticles = 0;
   vector<ParticleVariableBase*> neighborvars;
   vector<ParticleSubset*> subsets;
