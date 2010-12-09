@@ -111,10 +111,21 @@ void getCoarseLevelRange(const Patch* finePatch, const Level* coarseLevel,
   //Add one to adjust for truncation.  The if is to check for the case where the
   //refinement ratio of 1.  In this case there is no truncation so we do not want
   //to add 1.
-  if(ch!=fh && returnExclusiveRange){
-    ch += IntVector(1,1,1);
+  if (returnExclusiveRange){
+    if(ch.x()!= fh.x())
+    {
+      ch += IntVector(1,0,0);
+    }
+    if(ch.y()!= fh.y())
+    {
+      ch += IntVector(0,1,0);
+    }
+    if(ch.z()!= fh.z())
+    {
+      ch += IntVector(0,0,1);
+    }
   }
-
+  
   //__________________________________
   // coarseHigh and coarseLow cannot lie outside
   // of the coarselevel index range
