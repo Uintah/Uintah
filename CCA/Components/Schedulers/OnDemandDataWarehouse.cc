@@ -2339,11 +2339,6 @@ OnDemandDataWarehouse::getGridVar(GridVariableBase& var,
                                   gtype, numGhostCells,
                                   lowIndex, highIndex);
     
-    // The data should have been put in the database,
-    // windowed with this low and high.
-    ASSERTEQ(var.getLow(), lowIndex);
-    ASSERTEQ(var.getHigh(), highIndex);
-
     if (numGhostCells > 0)
       patch->getLevel()->selectPatches(lowIndex, highIndex, neighbors);
     else
