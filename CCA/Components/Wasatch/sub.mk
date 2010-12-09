@@ -51,6 +51,7 @@ PSELIBS :=              \
 	Core/Util       \
 	Core/Exceptions   \
 	CCA/Ports         \
+	CCA/Components/Schedulers \
 	Core/Grid         \
 	Core/Util         \
 	Core/ProblemSpec  \
