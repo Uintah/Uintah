@@ -91,25 +91,30 @@ void getFineLevelRangeNodes(const Patch* coarsePatch, const Patch* finePatch,
 
 
 //______________________________________________________________________
+// This returns either the inclusive or exclusive coarse range 
+//  and fine level exclusive range.
 void getCoarseLevelRange(const Patch* finePatch, const Level* coarseLevel, 
                          IntVector& cl, IntVector& ch, 
                          IntVector& fl, IntVector& fh,
                          IntVector boundaryLayer,
-                         int ngc)
+                         int ngc, 
+                         const bool returnExclusiveRange)
 {
-  // This the extents including extraCells and padding or bo
+  // compute the extents including extraCells and padding or boundary layers cells
   finePatch->computeVariableExtents(Patch::CellBased, boundaryLayer, Ghost::AroundCells,ngc, fl, fh); 
   
   // coarse region we need to get from the dw
   cl = finePatch->getLevel()->mapCellToCoarser(fl);
   ch = finePatch->getLevel()->mapCellToCoarser(fh);
+
   
   //Add one to adjust for truncation.  The if is to check for the case where the
   //refinement ratio of 1.  In this case there is no truncation so we do not want
   //to add 1.
-  if(ch!=fh){
+  if(ch!=fh && returnExclusiveRange){
     ch += IntVector(1,1,1);
   }
+
   //__________________________________
   // coarseHigh and coarseLow cannot lie outside
   // of the coarselevel index range
@@ -121,6 +126,7 @@ void getCoarseLevelRange(const Patch* finePatch, const Level* coarseLevel,
   // fine region to work over
   fl = finePatch->getCellLowIndex();
   fh = finePatch->getCellHighIndex();
+  //cout << "getCoarseLevelRange: cl " << cl << " ch " << ch << " fl " << fl << " fh " << fh << " finePatch " << *finePatch << endl;
 }
 
 //______________________________________________________________________
