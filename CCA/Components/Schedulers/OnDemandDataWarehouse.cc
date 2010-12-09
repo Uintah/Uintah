@@ -1122,7 +1122,7 @@ OnDemandDataWarehouse::getParticleSubset(int matlIndex,
                                          IntVector highIndex, 
                                          const Patch* relPatch, 
                                          const VarLabel* pos_var,
-                                         const Level* level )  //level is ONLY used when querying from an old grid, otherwise the level will be determined from the patch
+                                         const Level* oldLevel )  //level is ONLY used when querying from an old grid, otherwise the level will be determined from the patch
 {
   MALLOC_TRACE_TAG_SCOPE("OnDemandDataWarehouse::getParticleSubset-c");
   TAU_PROFILE("OnDemandDataWarehouse::getParticleSubset-b", " ", TAU_USER);
@@ -1130,16 +1130,20 @@ OnDemandDataWarehouse::getParticleSubset(int matlIndex,
   Patch::selectType neighbors;
  
   ASSERT(relPatch!=0); //you should pass in the patch on which the task was called on
-  if(level==0)
-    level=relPatch->getLevel(); 
+  const Level* level=relPatch->getLevel(); 
  
   //compute intersection between query range and patch
   IntVector low=Min(lowIndex,relPatch->getExtraCellLowIndex());
   IntVector high=Max(highIndex,relPatch->getExtraCellHighIndex());
 
 
+  //if the user passed in the old level then query its patches
+  if(oldLevel!=0)
+  {
+    oldLevel->selectPatches(lowIndex, highIndex, neighbors);  //find all intersecting patches with the range
+  }
   //if the query range is larger than the patch
-  if(low!=relPatch->getExtraCellLowIndex() || high!=relPatch->getExtraCellHighIndex())
+  else if(low!=relPatch->getExtraCellLowIndex() || high!=relPatch->getExtraCellHighIndex())
   {
     level->selectPatches(lowIndex, highIndex, neighbors);  //find all intersecting patches with the range
   }
