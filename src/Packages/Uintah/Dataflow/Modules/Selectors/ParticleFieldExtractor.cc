@@ -116,7 +116,7 @@ ParticleFieldExtractor::ParticleFieldExtractor(GuiContext* ctx) :
   Module("ParticleFieldExtractor", ctx, Filter, "Selectors", "Uintah"),
   progress_lock("PFE Progress Lock"),
   tcl_status(get_ctx()->subVar("tcl_status")),
-  generation(-1),  timestep(-1), material(-1), levelnum(0),
+  generation(-1),  timestep(-1), material(-1), levelnum(0), nLevels(0),
   level_(get_ctx()->subVar("level"), 0),
   psVar(get_ctx()->subVar("psVar")),
   pvVar(get_ctx()->subVar("pvVar")),
@@ -614,9 +614,19 @@ ParticleFieldExtractor::execute()
   DataArchiveHandle archive = handle->getDataArchive();
 
   int new_generation = handle->generation;
-  bool archive_dirty = new_generation != generation;
+  bool archive_dirty = false;
+  GridP grid = archive->queryGrid( 0 );
+  int new_nLevels = grid->numLevels();
+  
+  // if the number of levels changes or the generation number
+  // then mark it as dirty.
+  if (new_generation != generation || new_nLevels != nLevels ) {
+    archive_dirty = true;
+  }
+  
   if( archive_dirty ){
     generation = new_generation;
+    nLevels = new_nLevels;
     // we have a different archive
     //      cerr<<"new DataArchive ... \n";
     // empty the cache of stored variables

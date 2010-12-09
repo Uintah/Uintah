@@ -133,6 +133,7 @@ private:
   int timestep;
   int material;
   int levelnum;
+  int nLevels;
   GuiInt level_;
   GuiString psVar;
   GuiString pvVar;
