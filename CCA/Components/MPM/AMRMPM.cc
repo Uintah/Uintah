@@ -491,8 +491,13 @@ void AMRMPM::scheduleInterpolateParticlesToGrid_CFI(SchedulerP& sched,
 
     Ghost::GhostType  gac  = Ghost::AroundCells;
     Task::DomainSpec  ND  = Task::NormalDomain;
-    int nPaddingCells = 1;
     
+/*`==========TESTING==========*/
+    //  Linear 1 coarseLevelCells:
+    int nPaddingCells = 1;
+    // Gimp:  2 coarse level cells:
+    nPaddingCells  = 2;  
+/*===========TESTING==========`*/
     
     #define allPatches 0
     #define allMatls 0
@@ -1129,6 +1134,7 @@ void AMRMPM::interpolateParticlesToGrid_CFI(const ProcessorGroup*,
 {
   const Level* fineLevel = getLevel(finePatches);
   const Level* coarseLevel = fineLevel->getCoarserLevel().get_rep();
+  IntVector refineRatio(fineLevel->getRefinementRatio());
   
   for(int fp=0; fp<finePatches->size(); fp++){
     const Patch* finePatch = finePatches->get(fp);
@@ -1146,11 +1152,20 @@ void AMRMPM::interpolateParticlesToGrid_CFI(const ProcessorGroup*,
     // Determine extents for coarser level particle data
     // Linear Interpolation:  1 layer of coarse level cells
     // Gimp Interpolation:    2 layers
-    IntVector nBoundaryLayer = fineLevel->getRefinementRatio();  // This will need to be fixed for gimp!
-    cout << " nBoundaryLayer " << nBoundaryLayer << endl;
+/*`==========TESTING==========*/
+    IntVector nLayers(1,1,1);
+    
+    IntVector nPaddingCells = nLayers * (fineLevel->getRefinementRatio());
+/*===========TESTING==========`*/
+    cout << " nPaddingCells " << nPaddingCells << "nLayers " << nLayers << endl;
+    
     int nGhostCells = 0;
+    bool returnExclusiveRange=false;
     IntVector cl_tmp, ch_tmp, fl, fh;
-    getCoarseLevelRange(finePatch, coarseLevel, cl_tmp, ch_tmp, fl, fh, nBoundaryLayer, nGhostCells);
+
+    getCoarseLevelRange(finePatch, coarseLevel, cl_tmp, ch_tmp, fl, fh, 
+                        nPaddingCells, nGhostCells,returnExclusiveRange);
+
 
     for(int m = 0; m < numMatls; m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
@@ -1189,6 +1204,7 @@ void AMRMPM::interpolateParticlesToGrid_CFI(const ProcessorGroup*,
         IntVector ch = Min(ch_tmp, coarsePatch->getCellHighIndex());
         
         ParticleSubset* pset=0;
+        
         pset = old_dw->getParticleSubset(dwi, cl, ch, coarseLevel, finePatch,lb->pXLabel);
         cout << "  coarseLevel: " << coarseLevel->getIndex() << " cl: " << cl << " ch: " << ch<< " fl: " << fl << " fh " << fh << endl;
         cout << "  " << *pset << endl;
@@ -1203,6 +1219,7 @@ void AMRMPM::interpolateParticlesToGrid_CFI(const ProcessorGroup*,
 
         for (ParticleSubset::iterator iter = pset->begin();iter != pset->end(); iter++){
           particleIndex idx = *iter;
+            cout << "pX_coarse: " << pX_coarse[idx] << endl;
 
           // Get the node indices that surround the fine patch cell
           vector<IntVector> ni;

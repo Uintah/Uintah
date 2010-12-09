@@ -2743,8 +2743,10 @@ void MPMICE::refineVariableCC(const ProcessorGroup*,
     IntVector cl, ch, fl, fh;
     IntVector bl(0,0,0);  // boundary layer cells
     int nGhostCells = 1;
+    bool returnExclusiveRange=true;
     
-    getCoarseLevelRange(finePatch, coarseLevel, cl, ch, fl, fh, bl, nGhostCells);
+    getCoarseLevelRange(finePatch, coarseLevel, cl, ch, fl, fh, bl, 
+                        nGhostCells, returnExclusiveRange);
 
     for(int m = 0;m<matls->size();m++){
       int indx = matls->get(m);

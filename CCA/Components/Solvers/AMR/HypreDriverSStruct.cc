@@ -822,7 +822,10 @@ HypreDriverSStruct::HyprePatch_CC::makeConnections(HYPRE_SStructMatrix& HA,
         IntVector cl, ch, fl, fh;
         int nGhostCells = 1;
         IntVector bl(0,0,0);  // boundary layer cells
-        getCoarseLevelRange(finePatch, coarseLevel, cl, ch, fl, fh, bl, nGhostCells);
+        bool returnExclusiveRange=true;
+        getCoarseLevelRange(finePatch, coarseLevel, cl, ch, fl, fh, bl, 
+                            nGhostCells, returnExclusiveRange);
+                            
         A_dw->getRegion(A_fine, A_label, _matl, fineLevel, fl, fh);
         
         counter_coarse.allocate(cl, ch);
