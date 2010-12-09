@@ -33,6 +33,7 @@ NIGHTLYTESTS = [
   ("TabPropsInterface",                 "TabPropsInterface.ups",                1,      "Linux",        ["exactComparison","no_restart","no_memoryTest"] ), \
   ("convection-test2", 			"convection-test2.ups", 		2,	"Linux",	["exactComparison","no_restart","no_memoryTest","no_dbg"] ), \
   ("convection-test", 			"convection-test.ups", 			3,	"Linux",	["exactComparison","no_restart","no_memoryTest"] ), \
+  ("convection-test3", 			"convection-test3.ups",			1,	"Linux",	["exactComparison","no_restart","no_memoryTest"] ), \
   ("ScalarTransportEquation", 		"ScalarTransportEquation.ups",		1,	"Linux",	["exactComparison","no_restart","no_memoryTest","no_dbg"] )
 ]
 
@@ -43,6 +44,7 @@ LOCALTESTS = [
   ("TabPropsInterface",                 "TabPropsInterface.ups",                1,      "All",	["exactComparison","no_restart","no_memoryTest"] ), \
   ("convection-test2", 			"convection-test2.ups", 		2,	"All",	["exactComparison","no_restart","no_memoryTest","no_dbg"] ), \
   ("convection-test", 			"convection-test.ups", 			3,	"All",	["exactComparison","no_restart","no_memoryTest"] ), \
+  ("convection-test3", 			"convection-test3.ups",			1,	"All",	["exactComparison","no_restart","no_memoryTest"] ), \
   ("ScalarTransportEquation", 		"ScalarTransportEquation.ups",		1,	"All",	["exactComparison","no_restart","no_memoryTest","no_dbg"] )
 ]
 

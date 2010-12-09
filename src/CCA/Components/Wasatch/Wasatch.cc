@@ -29,6 +29,7 @@
 
 //-- Uintah framework includes --//
 #include <CCA/Ports/Scheduler.h>
+#include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Level.h>
@@ -72,6 +73,11 @@ namespace Wasatch{
   Wasatch::Wasatch( const Uintah::ProcessorGroup* myworld )
     : Uintah::UintahParallelComponent( myworld )
   {
+    // disable memory windowing on variables.  This will ensure that
+    // each variable is allocated its own memory on each patch,
+    // precluding memory blocks being defined across multiple patches.
+    Uintah::OnDemandDataWarehouse::d_combineMemory = false;
+
     const bool log = true;
     graphCategories_[ INITIALIZATION     ] = scinew GraphHelper( scinew Expr::ExpressionFactory(log) );
     graphCategories_[ TIMESTEP_SELECTION ] = scinew GraphHelper( scinew Expr::ExpressionFactory(log) );
