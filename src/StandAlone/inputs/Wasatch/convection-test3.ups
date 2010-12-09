@@ -94,14 +94,14 @@
     <maxTime>0.5</maxTime>
     <initTime>0.0</initTime>
     <delt_min>0.01</delt_min>
-    <delt_max>0.02</delt_max>
+    <delt_max>0.025</delt_max>
     <timestep_multiplier>1.0</timestep_multiplier>
   </Time>
 
 
   <DataArchiver>
     <filebase>convection-test3.uda</filebase>
-    <outputTimestepInterval>3</outputTimestepInterval>
+    <outputTimestepInterval>1</outputTimestepInterval>
     <outputInitTimestep/>
     <checkpoint cycle = "2" interval = "0.04"/>
     <compression>gzip</compression>
@@ -115,8 +115,8 @@
       <Box label="1">
         <lower>[0,0,0]</lower>
         <upper>[2,2,2]</upper>
-        <resolution>[16,16,16]</resolution>
-        <patches>[2,2,2]</patches>
+        <resolution>[12,12,12]</resolution>
+        <patches>[2,3,2]</patches>
       </Box>
       <periodic>[1,1,1]</periodic>
     </Level>
