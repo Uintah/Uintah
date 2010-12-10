@@ -28,10 +28,10 @@ namespace Wasatch {
    is needed to extract the operators database associated with a given patch.
    @param       theMaterials: a pointer to the uintah material subset.
   */
-  void buildBoundaryConditions(std::vector<EqnTimestepAdaptorBase*> theEqnAdaptors, 
+  void buildBoundaryConditions(std::vector<EqnTimestepAdaptorBase*>* theEqnAdaptors, 
                                const GraphHelper* theGraphHelper,
                                const Uintah::PatchSet* const theLocalPatches,
-                               PatchInfoMap thePatchInfoMap,
+                               PatchInfoMap* const thePatchInfoMap,
                                const Uintah::MaterialSubset* const theMaterials);
 }
 
