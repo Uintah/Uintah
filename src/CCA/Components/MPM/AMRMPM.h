@@ -308,7 +308,17 @@ protected:
                       const PatchSubset* patches,                            
                       const MaterialSubset*,                   
                       DataWarehouse* old_dw,                                 
-                      DataWarehouse* new_dw);                 
+                      DataWarehouse* new_dw);
+                      
+  void scheduleDebug_CFI(SchedulerP&, 
+                         const PatchSet*,
+                         const MaterialSet*);
+                                                                                         
+  void debug_CFI(const ProcessorGroup*,
+                 const PatchSubset* patches,                            
+                 const MaterialSubset*,                   
+                 DataWarehouse* old_dw,                                
+                 DataWarehouse* new_dw);    
                             
 
   

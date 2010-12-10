@@ -73,6 +73,8 @@ using namespace std;
 static DebugStream cout_doing("AMRMPM", false);
 static DebugStream amr_doing("AMRMPM", false);
 
+#define USE_DEBUG_TASK
+
 //__________________________________
 //   TODO:
 // - We only need to compute ZOI when the grid changes not every timestep
@@ -119,7 +121,7 @@ void AMRMPM::problemSetup(const ProblemSpecP& prob_spec,
                           GridP& grid,
                           SimulationStateP& sharedState)
 {
-  cout_doing<<"Doing problemSetup\t\t\t\t\t MPM"<<endl;
+  cout_doing<<"Doing problemSetup\t\t\t\t\t AMRMPM"<<endl;
   
   d_sharedState = sharedState;
   dynamic_cast<Scheduler*>(getPort("scheduler"))->setPositionVar(lb->pXLabel);
@@ -318,6 +320,14 @@ void AMRMPM::scheduleTimeAdvance(const LevelP & level,
     const PatchSet* patches = level->eachPatch();
     scheduleInterpolateParticlesToGrid_CFI( sched, patches, matls);
   }
+  
+#ifdef USE_DEBUG_TASK
+  for (int l = 0; l < maxLevels; l++) {
+    const LevelP& level = grid->getLevel(l);
+    const PatchSet* patches = level->eachPatch();
+    scheduleDebug_CFI( sched, patches, matls);
+  }
+#endif
 
   for (int l = 0; l < maxLevels-1; l++) {
     const LevelP& level = grid->getLevel(l);
@@ -797,12 +807,13 @@ void AMRMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->computes(lb->TotalMomentumLabel);
   t->modifies(lb->gSumWeightsLabel);
 
+#ifndef USE_DEBUG_TASK
   // debugging scalar
   if(flags->d_with_color) {
     t->requires(Task::OldDW, lb->pColorLabel,  gnone);
     t->computes(lb->pColorLabel_preReloc);
   }
-  
+#endif  
   sched->addTask(t, patches, matls);
 }
 
@@ -2067,7 +2078,7 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       new_dw->put(sum_vartype(thermal_energy),  lb->ThermalEnergyLabel);
       new_dw->put(sumvec_vartype(CMX),          lb->CenterOfMassPositionLabel);
       new_dw->put(sumvec_vartype(totalMom),     lb->TotalMomentumLabel);
-      
+#ifndef USE_DEBUG_TASK  
       //__________________________________
       //  particle debugging label-- carry forward
       if (flags->d_with_color) {
@@ -2077,6 +2088,7 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         new_dw->allocateAndPut(pColor_new, lb->pColorLabel_preReloc, pset);
         pColor_new.copyData(pColor);
       }     
+#endif
     }
     delete interpolator;
   }
@@ -2401,4 +2413,117 @@ void AMRMPM::countParticles(const ProcessorGroup*,
     }
   }
   new_dw->put(sumlong_vartype(totalParticles), lb->partCountLabel);
+}
+
+//______________________________________________________________________
+//  
+
+//______________________________________________________________________
+// This task colors the particles that are retrieved from the coarse level and
+// used on the CFI.  This task mimics interpolateParticlesToGrid_CFI
+void AMRMPM::scheduleDebug_CFI(SchedulerP& sched,
+                               const PatchSet* patches,
+                               const MaterialSet* matls)
+{
+  printSchedule(patches,cout_doing,"AMRMPM::scheduleDebug_CFI");
+
+  Task* t = scinew Task("AMRMPM::debug_CFI",
+                   this,&AMRMPM::debug_CFI);
+  t->requires(Task::OldDW, lb->pXLabel, Ghost::None, 0);
+  t->computes(lb->pColorLabel_preReloc);
+
+  sched->addTask(t, patches, matls);
+}
+//______________________________________________________________________
+void AMRMPM::debug_CFI(const ProcessorGroup*,
+                       const PatchSubset* patches,
+                       const MaterialSubset* ,
+                       DataWarehouse* old_dw,
+                       DataWarehouse* new_dw)
+{
+
+
+  const Level* level = getLevel(patches);
+  
+  for(int cp=0; cp<patches->size(); cp++){
+    const Patch* patch = patches->get(cp);
+
+    printTask(patches,patch,cout_doing,"Doing debug_CFI");
+
+    //__________________________________
+    //  Write p.color all levels all patches  
+    ParticleSubset* pset=0;
+    int dwi = 0;
+    pset = old_dw->getParticleSubset(dwi, patch);
+    
+    constParticleVariable<Point>  px;
+    ParticleVariable<double>  pColor;
+    old_dw->get(px, lb->pXLabel,  pset);
+    new_dw->allocateAndPut(pColor, lb->pColorLabel_preReloc, pset);
+    
+    cout << "  level: " << level->getIndex() << endl;
+    cout << "  " << *pset << endl;
+
+    for (ParticleSubset::iterator iter = pset->begin();iter != pset->end(); iter++){
+      particleIndex idx = *iter;
+      pColor[idx] = 0;
+    }  
+
+    //__________________________________
+    //  Mark the particles that are accessed at the CFI.
+    //  You cannot modify a particle subet
+    if(level->hasFinerLevel()){  
+      Level::selectType finePatches;
+      patch->getFineLevelPatches(finePatches);  
+
+      const Level* fineLevel = level->getFinerLevel().get_rep();
+      IntVector refineRatio(fineLevel->getRefinementRatio());
+
+      for(int fp=0; fp<finePatches.size(); fp++){
+        const Patch* finePatch = finePatches[fp];
+
+        // Determine extents for coarser level particle data
+        // Linear Interpolation:  1 layer of coarse level cells
+        // Gimp Interpolation:    2 layers
+    /*`==========TESTING==========*/
+        IntVector nLayers(1,1,1);
+        IntVector nPaddingCells = nLayers * (refineRatio);
+    /*===========TESTING==========`*/
+        cout << " nPaddingCells " << nPaddingCells << "nLayers " << nLayers << endl;
+
+        int nGhostCells = 0;
+        bool returnExclusiveRange=false;
+        IntVector cl_tmp, ch_tmp, fl, fh;
+
+        getCoarseLevelRange(finePatch, level, cl_tmp, ch_tmp, fl, fh, 
+                            nPaddingCells, nGhostCells,returnExclusiveRange);
+
+        // coarseLow and coarseHigh cannot lie outside of the coarse patch
+        IntVector cl = Max(cl_tmp, patch->getCellLowIndex());
+        IntVector ch = Min(ch_tmp, patch->getCellHighIndex());
+
+        ParticleSubset* pset2=0;
+        pset2 = old_dw->getParticleSubset(dwi, cl, ch, patch,lb->pXLabel);
+
+        constParticleVariable<Point>  px_CFI;
+        old_dw->get(px_CFI, lb->pXLabel,  pset2);
+
+        cout << "  level: " << level->getIndex() << " cl: " << cl << " ch: " << ch<< " fl: " << fl << " fh " << fh << endl;
+        cout << "  " << *pset2 << endl;
+
+        for (ParticleSubset::iterator iter = pset->begin();iter != pset->end(); iter++){
+          particleIndex idx = *iter;
+          
+          for (ParticleSubset::iterator iter2 = pset2->begin();iter2 != pset2->end(); iter2++){
+            particleIndex idx2 = *iter2;
+            if( px[idx] == px_CFI[idx2] ){
+              pColor[idx] = 9;
+              cout <<"pX_CFI: idx" <<idx << " px: " <<  px[idx] << endl;
+            }
+          }  // End of particle loop
+        }
+
+      }  // loop over fine patches
+    }  //// hasFinerLevel
+  }  // End loop over coarse patches
 }
