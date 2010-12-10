@@ -506,7 +506,6 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
   if startFrom == "restart":
     print "Running restart test  ---%s--- %s at %s" % (testname, mpimsg, strftime( "%I:%M:%S"))
     susinput     = "-restart ../*.uda.000 -t 0 -copy"
-    startpath    = "../../.."
     restart_text = " (restart)"
     
   if startFrom == "inputFile":
