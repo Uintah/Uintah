@@ -134,6 +134,7 @@ private:
   int material;
   int levelnum;
   int nLevels;
+  int nPatches;
   GuiInt level_;
   GuiString psVar;
   GuiString pvVar;
