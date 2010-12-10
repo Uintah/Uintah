@@ -1448,12 +1448,15 @@ OnDemandDataWarehouse::put(ParticleVariableBase& var,
   MALLOC_TRACE_TAG_SCOPE("OnDemandDataWarehouse::put(Particle Variable):" + label->getName());
   ASSERT(!d_finalized);  
 
-   ParticleSubset* pset = var.getParticleSubset();
-   
-   const Patch* patch = pset->getPatch();
-   if(pset->getLow() != patch->getExtraCellLowIndex() || pset->getHigh() != patch->getExtraCellHighIndex())
-     SCI_THROW(InternalError("ParticleVariable cannot use put with ghost cells", __FILE__, __LINE__));
-   int matlIndex = pset->getMatlIndex();
+  ParticleSubset* pset = var.getParticleSubset();
+
+  const Patch* patch = pset->getPatch();
+
+  if(pset->getLow() != patch->getExtraCellLowIndex() || pset->getHigh() != patch->getExtraCellHighIndex()){
+    SCI_THROW(InternalError(" put(Particle Variable (" + label->getName() +") ).  The particleSubset low/high index does not match the patch low/high indices", __FILE__, __LINE__)); 
+  }
+  
+  int matlIndex = pset->getMatlIndex();
 
   dbg << d_myworld->myrank() << " Putting: " << *label << " MI: " << matlIndex << " patch: " 
        << *patch << " \t\t into DW: " << d_generation << "\n";
