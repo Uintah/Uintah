@@ -267,42 +267,6 @@ namespace Wasatch{
   }
 
   //--------------------------------------------------------------------
-
-//  template <typename T>
-//  bool getIteratorBCValueBCKind( const Uintah::Patch* patch, 
-//                                const Uintah::Patch::FaceType face,
-//                                 const int child,
-//                                const std::string& desc,
-//                                 const int mat_id,
-//                                 T& bc_value,
-//                                SCIRun::Iterator& bound_ptr,
-//                                std::string& bc_kind)
-//  {  
-//    SCIRun::Iterator nu;
-//    const Uintah::BoundCondBase* bc = patch->getArrayBCValues(face,mat_id,
-//		                                          		    desc, bound_ptr,
-//                                                      nu, child);
-//    const Uintah::BoundCond<T>* new_bcs;
-//    new_bcs =  dynamic_cast<const Uintah::BoundCond<T> *>(bc);
-//    
-//    bc_value=T(-9);
-//    bc_kind="NotSet";
-//    if (new_bcs != 0) {      // non-symmetric
-//      bc_value = new_bcs->getValue();
-//      bc_kind =  new_bcs->getBCType__NEW();
-//    }        
-//    delete bc;
-//    
-//    // Did I find an iterator
-//    if( bc_kind == "NotSet" ){
-//      return false;
-//    }else{
-//      return true;
-//    }
-//  }
-  
-  //--------------------------------------------------------------------
-
   void
   Wasatch::scheduleTimeAdvance( const Uintah::LevelP& level,
                                 Uintah::SchedulerP& sched )
@@ -336,7 +300,7 @@ namespace Wasatch{
     // get the Uintah materials
     const Uintah::MaterialSubset* const materials = sharedState_->allMaterials()->getUnion();
     // build the boundary conditions
-    buildBoundaryConditions(adaptors_, gh, localPatches, patchInfoMap_, materials);    
+    buildBoundaryConditions(&adaptors_, gh, localPatches, &patchInfoMap_, materials);    
 }
 
   //--------------------------------------------------------------------

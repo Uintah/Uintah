@@ -105,10 +105,10 @@ namespace Wasatch {
   
   //-----------------------------------------------------------------------------
   
-  void buildBoundaryConditions(std::vector<EqnTimestepAdaptorBase*> theEqnAdaptors, 
+  void buildBoundaryConditions(std::vector<EqnTimestepAdaptorBase*>* theEqnAdaptors, 
                                const GraphHelper* theGraphHelper,
                                const Uintah::PatchSet* const theLocalPatches,
-                               PatchInfoMap thePatchInfoMap,
+                               PatchInfoMap* const thePatchInfoMap,
                                const Uintah::MaterialSubset* const theMaterials)
   {
      /*
@@ -131,7 +131,7 @@ namespace Wasatch {
     typedef SS::ConstValEval BCEvaluator; // basic functor for constant functions.
     typedef std::vector<EqnTimestepAdaptorBase*> EquationAdaptors;
     
-    for( EquationAdaptors::const_iterator ia=theEqnAdaptors.begin(); ia!=theEqnAdaptors.end(); ++ia ){
+    for( EquationAdaptors::const_iterator ia=(*theEqnAdaptors).begin(); ia!=(*theEqnAdaptors).end(); ++ia ){
       EqnTimestepAdaptorBase* const adaptor = *ia;
       
       // get the input parameters corresponding to this transport equation
@@ -172,7 +172,6 @@ namespace Wasatch {
             std::vector<Uintah::Patch::FaceType>::const_iterator faceIterator;
             std::vector<Uintah::Patch::FaceType> bndFaces;
             patch->getBoundaryFaces(bndFaces);
-            SCIRun::Vector spacing = patch->dCell();
             
             // get plus face information
             const bool bcx = (*patch).getBCType(Uintah::Patch::xplus) != Uintah::Patch::Neighbor;
@@ -180,15 +179,13 @@ namespace Wasatch {
             const bool bcz = (*patch).getBCType(Uintah::Patch::zplus) != Uintah::Patch::Neighbor;
             
             // get the patch info from which we can get the operators database
-            const PatchInfo& pi = thePatchInfoMap[patch->getID()];
+            const PatchInfo& pi = (*thePatchInfoMap)[patch->getID()];
             const SpatialOps::OperatorDatabase* theOperatorsDb= pi.operators;
             
             // now loop over the boundary faces
             for (faceIterator = bndFaces.begin(); faceIterator !=bndFaces.end(); faceIterator++){
               Uintah::Patch::FaceType theFace = *faceIterator;
               
-              //get the face direction
-              SCIRun::IntVector insideCellDir = patch->faceDirection(theFace);
               //get the number of children
               int numChildren = patch->getBCDataArray(theFace)->getNumberChildren(materialID);
               
@@ -200,15 +197,14 @@ namespace Wasatch {
                 bool foundIterator = getIteratorBCValueBCKind( patch, theFace, child, phiName, materialID, bc_value, bound_ptr, bc_kind);                 
                 
                 if (foundIterator) {
-                  std::cout<<"SETTING UP BOUNDARY CONDITIONS\n";
-                  // bp1: boundary cell + 1 or the interior cell one in from the boundary
+                  std::cout<<"SETTING BOUNDARY CONDITIONS\n";
+
                   if (bc_kind == "Dirichlet") {
                     switch (theFace) {
                         
                       case Uintah::Patch::xminus:
                         
                         for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
-                          SCIRun::IntVector bc_point_indices1(*bound_ptr - insideCellDir);
                           SCIRun::IntVector bc_point_indices(*bound_ptr); 
                           const SS::IntVec bcPointIJK(bc_point_indices[0],bc_point_indices[1],bc_point_indices[2]);                          
                           //
@@ -234,7 +230,6 @@ namespace Wasatch {
                         
                       case Uintah::Patch::xplus:
                         for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
-                          SCIRun::IntVector bc_point_indices1(*bound_ptr - insideCellDir);
                           SCIRun::IntVector bc_point_indices(*bound_ptr); 
                           const SS::IntVec bcPointIJK(bc_point_indices[0],bc_point_indices[1],bc_point_indices[2]);
                           
@@ -261,7 +256,6 @@ namespace Wasatch {
                         
                       case Uintah::Patch::yminus:
                         for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
-                          SCIRun::IntVector bc_point_indices1(*bound_ptr - insideCellDir);
                           SCIRun::IntVector bc_point_indices(*bound_ptr); 
                           const SS::IntVec bcPointIJK(bc_point_indices[0],bc_point_indices[1],bc_point_indices[2]);
                           
@@ -286,7 +280,6 @@ namespace Wasatch {
                         
                       case Uintah::Patch::yplus:
                         for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
-                          SCIRun::IntVector bc_point_indices1(*bound_ptr - insideCellDir);
                           SCIRun::IntVector bc_point_indices(*bound_ptr); 
                           const SS::IntVec bcPointIJK(bc_point_indices[0],bc_point_indices[1],bc_point_indices[2]);
                           
@@ -312,7 +305,6 @@ namespace Wasatch {
                         
                       case Uintah::Patch::zminus:
                         for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
-                          SCIRun::IntVector bc_point_indices1(*bound_ptr - insideCellDir);
                           SCIRun::IntVector bc_point_indices(*bound_ptr); 
                           const SS::IntVec bcPointIJK(bc_point_indices[0],bc_point_indices[1],bc_point_indices[2]);
                           
@@ -338,7 +330,6 @@ namespace Wasatch {
                         
                       case Uintah::Patch::zplus:
                         for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
-                          SCIRun::IntVector bc_point_indices1(*bound_ptr - insideCellDir);
                           SCIRun::IntVector bc_point_indices(*bound_ptr); 
                           const SS::IntVec bcPointIJK(bc_point_indices[0],bc_point_indices[1],bc_point_indices[2]);
                           
@@ -378,7 +369,6 @@ namespace Wasatch {
                       case Uintah::Patch::xminus:
                         
                         for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
-                          SCIRun::IntVector bc_point_indices1(*bound_ptr - insideCellDir);
                           SCIRun::IntVector bc_point_indices(*bound_ptr); 
                           const SS::IntVec bcPointIJK(bc_point_indices[0],bc_point_indices[1],bc_point_indices[2]);
                           
@@ -405,7 +395,6 @@ namespace Wasatch {
                         
                       case Uintah::Patch::xplus:
                         for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
-                          SCIRun::IntVector bc_point_indices1(*bound_ptr - insideCellDir);
                           SCIRun::IntVector bc_point_indices(*bound_ptr); 
                           const SS::IntVec bcPointIJK(bc_point_indices[0],bc_point_indices[1],bc_point_indices[2]);
                           
@@ -432,7 +421,6 @@ namespace Wasatch {
                         
                       case Uintah::Patch::yminus:
                         for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
-                          SCIRun::IntVector bc_point_indices1(*bound_ptr - insideCellDir);
                           SCIRun::IntVector bc_point_indices(*bound_ptr); 
                           const SS::IntVec bcPointIJK(bc_point_indices[0],bc_point_indices[1],bc_point_indices[2]);
                           
@@ -457,7 +445,6 @@ namespace Wasatch {
                         
                       case Uintah::Patch::yplus:
                         for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
-                          SCIRun::IntVector bc_point_indices1(*bound_ptr - insideCellDir);
                           SCIRun::IntVector bc_point_indices(*bound_ptr); 
                           const SS::IntVec bcPointIJK(bc_point_indices[0],bc_point_indices[1],bc_point_indices[2]);
                           
@@ -483,7 +470,6 @@ namespace Wasatch {
                         
                       case Uintah::Patch::zminus:
                         for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
-                          SCIRun::IntVector bc_point_indices1(*bound_ptr - insideCellDir);
                           SCIRun::IntVector bc_point_indices(*bound_ptr); 
                           const SS::IntVec bcPointIJK(bc_point_indices[0],bc_point_indices[1],bc_point_indices[2]);
                           
@@ -509,7 +495,6 @@ namespace Wasatch {
                         
                       case Uintah::Patch::zplus:
                         for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
-                          SCIRun::IntVector bc_point_indices1(*bound_ptr - insideCellDir);
                           SCIRun::IntVector bc_point_indices(*bound_ptr); 
                           const SS::IntVec bcPointIJK(bc_point_indices[0],bc_point_indices[1],bc_point_indices[2]);
                           

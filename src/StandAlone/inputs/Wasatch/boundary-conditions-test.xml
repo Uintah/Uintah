@@ -1,7 +1,7 @@
 <Uintah_specification>
 
   <Meta>
-    <title>Test upwind convection</title>
+    <title>Test Boundary Conditions</title>
   </Meta>
 
   <SimulationComponent type="wasatch"/>
@@ -12,9 +12,10 @@
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
       <NameTag name="phi1-scalar" state="STATE_N" />
-      <SineFunction amplitude="10.0" frequency="1.0" offset="0.0">
+      <Constant>1.0</Constant>
+      <!--SineFunction amplitude="10.0" frequency="1.0" offset="0.0">
          <NameTag name="XSVOL" state="STATE_NONE" />
-       </SineFunction>
+       </SineFunction-->
     </BasicExpression>
         
     <!-- Build a non-staggered scalar transport equation -->
@@ -66,16 +67,16 @@
 
 
   <Time>
-    <maxTime>0.5</maxTime>
+    <maxTime>50</maxTime>
     <initTime>0.0</initTime>
-    <delt_min>0.01</delt_min>
-    <delt_max>0.05</delt_max>
+    <delt_min>0.001</delt_min>
+    <delt_max>0.005</delt_max>
     <timestep_multiplier>1.0</timestep_multiplier>
   </Time>
 
 
   <DataArchiver>
-    <filebase>convection-test.uda</filebase>
+    <filebase>boundary-conditions-test.uda</filebase>
     <outputTimestepInterval>2</outputTimestepInterval>
     <outputInitTimestep/>
     <checkpoint cycle = "2" interval = "0.01"/>
@@ -87,7 +88,7 @@
       <BoundaryConditions>
       <Face side="x-">
         <BCType id="all" var="Dirichlet" label="phi1-scalar">
-          <value> 1.0 </value>
+          <value> 10.0 </value>
         </BCType>
       </Face>
       <Face side="x+">
@@ -95,37 +96,37 @@
           <value> 10.0 </value>
         </BCType>
       </Face>
-      <Face side="y-">
-        <BCType id="all" var="Dirichlet" label="phi1-scalar">
+      <!-- Face side="y-">
+        <BCType id="all" var="Neumann" label="phi1-scalar">
           <value> 0.0 </value>
         </BCType>
       </Face>
       <Face side="y+">
-        <BCType id="all" var="Dirichlet" label="phi1-scalar">
+        <BCType id="all" var="Neumann" label="phi1-scalar">
           <value> 0.0 </value>
         </BCType>
       </Face>
       <Face side="z-">
-        <BCType id="all" var="Dirichlet" label="phi1-scalar">
+        <BCType id="all" var="Neumann" label="phi1-scalar">
           <value> 0.0 </value>
         </BCType>
       </Face>
       <Face side="z+">
-        <BCType id="all" var="Dirichlet" label="phi1-scalar">
+        <BCType id="all" var="Neumann" label="phi1-scalar">
           <value> 0.0 </value>
         </BCType>
-      </Face>
+      </Face -->
     </BoundaryConditions>
 
     <Level>
       <Box label="1">
         <lower>[0,0,0]</lower>
         <upper>[1,1,1]</upper>
-        <resolution>[2,2,2]</resolution>
-        <extraCells>[1,1,1]</extraCells>
+        <resolution>[5,5,5]</resolution>
+        <!--extraCells>[1,1,1]</extraCells-->
         <patches>[1,1,1]</patches>
       </Box>
-      <!--periodic>[1,1,1]</periodic-->
+      <periodic>[0,1,1]</periodic>
     </Level>
   </Grid>
 
