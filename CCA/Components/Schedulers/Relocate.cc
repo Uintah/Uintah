@@ -177,7 +177,8 @@ namespace Uintah {
 } // End namespace Uintah
 
 //______________________________________________________________________
-//
+// All variables that will be relocated must exist on the same levels. 
+// You cannot have one variable that exists on a different number of levels  
 void
 Relocate::scheduleParticleRelocation(Scheduler* sched,
                                      const ProcessorGroup* pg,
