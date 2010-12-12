@@ -129,6 +129,7 @@ protected :
   bool d_coldflow;          ///< Will not compute heat loss and will not initialized ethalpy
   bool d_adiabatic;         ///< Will not compute heat loss
   bool d_coal_table;        ///< Flagged as a coal table or not  
+  bool d_use_mixing_model;  ///< Turn on/off mixing model
 
   std::string d_fp_label;   ///< Primary mixture fraction name for a coal table
   std::string d_eta_label;  ///< Eta mixture fraction name for a coal table

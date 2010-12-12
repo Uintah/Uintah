@@ -77,11 +77,13 @@ TabPropsInterface::problemSetup( const ProblemSpecP& propertiesParameters )
   // Create sub-ProblemSpecP object
   string tableFileName;
   ProblemSpecP db_tabprops = propertiesParameters->findBlock("TabProps");
+  ProblemSpecP db_properties_root = propertiesParameters; 
   
   // Obtain object parameters
   db_tabprops->require( "inputfile", tableFileName );
   db_tabprops->getWithDefault( "hl_scalar_init", d_hl_scalar_init, 0.0); 
   db_tabprops->getWithDefault( "cold_flow", d_coldflow, false); 
+  db_properties_root->getWithDefault( "use_mixing_model", d_use_mixing_model, false ); 
 
   // only solve for heat loss if a working radiation model is found
   const ProblemSpecP params_root = db_tabprops->getRootNode();
@@ -158,7 +160,7 @@ TabPropsInterface::problemSetup( const ProblemSpecP& propertiesParameters )
 
       d_ivVarMap.insert(make_pair(varName, d_lab->d_heatLossLabel)).first; 
 
-    } else if ( varName == "scalar_variance") {
+    } else if ( varName == "scalar_variance" || varName == "MixtureFractionVariance" ) {
 
       cout_tabledbg << " Scalar variance being inserted into the indep. var map. " << endl;
 
