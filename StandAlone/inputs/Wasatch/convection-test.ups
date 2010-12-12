@@ -55,14 +55,14 @@
     <BasicExpression type="YVOL">
       <TaskList>advance_solution</TaskList>
       <NameTag name="advective-velocity-y" state="STATE_N" />
-      <Constant>0.0</Constant>
+      <Constant>1.0</Constant>
     </BasicExpression>
     
     <!-- CREATE AN EXPRESSION FOR THE VELOCITY FIELD -->
     <BasicExpression type="ZVOL">
       <TaskList>advance_solution</TaskList>
       <NameTag name="advective-velocity-z" state="STATE_N" />
-      <Constant>0.0</Constant>
+      <Constant>1.0</Constant>
     </BasicExpression>
     
     <!-- Build a non-staggered scalar transport equation -->
@@ -199,7 +199,7 @@
 
 
   <Time>
-    <maxTime>1</maxTime>
+    <maxTime>0.5</maxTime>
     <initTime>0.0</initTime>
     <delt_min>0.01</delt_min>
     <delt_max>0.05</delt_max>
@@ -224,8 +224,8 @@
       <Box label="1">
         <lower>[0,0,0]</lower>
         <upper>[6.283,1,1]</upper>
-        <resolution>[60,10,2]</resolution>
-        <patches>[1,1,1]</patches>
+        <resolution>[60,10,10]</resolution>
+        <patches>[3,1,1]</patches>
       </Box>
       <periodic>[1,1,1]</periodic>
     </Level>
