@@ -1564,6 +1564,9 @@ BoundaryCondition::setFlatProfV( const Patch* patch,
           }
         }
         break; 
+      default: 
+        throw InvalidValue("Error: Face type for setFlatProfV not recognized.",__FILE__,__LINE__); 
+        break; 
     }
   }
 }

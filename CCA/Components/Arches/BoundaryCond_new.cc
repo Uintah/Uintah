@@ -11,6 +11,7 @@
 #include <CCA/Components/Arches/ArchesMaterial.h>
 #include <CCA/Components/Arches/BoundaryCond_new.h>
 #include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/Exceptions/InvalidValue.h>
 
 //===========================================================================
 
@@ -107,14 +108,10 @@ void BoundaryCondition_new::setScalarValueBC( const ProcessorGroup*,
               }
               break;
 #endif
-          case Patch::numFaces:
-            SCI_THROW(InvalidState("numFaces is not a valid face",__FILE__,__LINE__));
-            break;
-          case Patch::invalidFace:
-            SCI_THROW(InvalidState("invalidFace is not a valid face",__FILE__,__LINE__));
-            break;
+          default: 
+            throw InvalidValue("Error: Face type not recognized.",__FILE__,__LINE__); 
+            break; 
           }
-
         } else if (bc_kind == "Neumann") {
           switch (face) {
             case Patch::xminus:
@@ -157,14 +154,10 @@ void BoundaryCondition_new::setScalarValueBC( const ProcessorGroup*,
               }
               break;
 #endif
-          case Patch::numFaces:
-            SCI_THROW(InvalidState("numFaces is not a valid face",__FILE__,__LINE__));
-            break;
-          case Patch::invalidFace:
-            SCI_THROW(InvalidState("invalidFace is not a valid face",__FILE__,__LINE__));
-            break;
+          default: 
+            throw InvalidValue("Error: Face type not recognized.",__FILE__,__LINE__); 
+            break; 
           }
-
         }
       }
     }
@@ -278,12 +271,10 @@ void BoundaryCondition_new::setVectorValueBC( const ProcessorGroup*,
               }
               break;
 #endif
-          case Patch::numFaces:
-            break;
-          case Patch::invalidFace:
-            break;
+          default: 
+            throw InvalidValue("Error: Face type not recognized.",__FILE__,__LINE__); 
+            break; 
           }
-
         }
       }
     }
@@ -441,12 +432,10 @@ void BoundaryCondition_new::setVectorValueBC( const ProcessorGroup*,
               }
               break;
 #endif
-          case Patch::numFaces:
-            break;
-          case Patch::invalidFace:
-            break;
+          default: 
+            throw InvalidValue("Error: Face type not recognized.",__FILE__,__LINE__); 
+            break; 
           }
-
         }
       }
     }
@@ -612,11 +601,10 @@ void BoundaryCondition_new::computeBCArea( const ProcessorGroup*,
               }
               break;
 #endif
+            default: 
+              throw InvalidValue("Error: Face type not recognized.",__FILE__,__LINE__); 
+              break; 
           } // end switch statement
-
-          
-          
-
         } // found boundary object
       } // iterator over children
     } // iterator over faces
