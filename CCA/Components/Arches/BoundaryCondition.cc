@@ -1271,7 +1271,7 @@ BoundaryCondition::setProfile(const ProcessorGroup*,
     // loop thru the flow inlets to set all the components of velocity and density
     if (d_inletBoundary) {
 
-      double time = 0.0; 
+      //double time = 0.0; 
 
       for (int indx = 0; indx < d_numInlets; indx++) {
 
@@ -1583,8 +1583,6 @@ BoundaryCondition::setFlatProfS( const Patch* patch,
   vector<Patch::FaceType> bf;
   patch->getBoundaryFaces(bf);
   Vector Dx = patch->dCell(); 
-
-  int archIndex = 0; 
 
   for (fiter = bf.begin(); fiter !=bf.end(); fiter++){
     Patch::FaceType face = *fiter;
