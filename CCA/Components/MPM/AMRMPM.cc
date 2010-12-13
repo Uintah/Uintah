@@ -1154,9 +1154,6 @@ void AMRMPM::interpolateParticlesToGrid_CFI(const ProcessorGroup*,
     int numMatls = d_sharedState->getNumMPMMatls();
     ParticleInterpolator* interpolator = flags->d_interpolator->clone(finePatch);
     
-    Level::selectType coarsePatches;
-    finePatch->getCoarseLevelPatches(coarsePatches);
-    
     constNCVariable<Stencil7> zoi_fine;
     new_dw->get(zoi_fine, lb->gZOILabel, 0, finePatch, Ghost::None, 0 );
 
@@ -1177,6 +1174,10 @@ void AMRMPM::interpolateParticlesToGrid_CFI(const ProcessorGroup*,
     getCoarseLevelRange(finePatch, coarseLevel, cl_tmp, ch_tmp, fl, fh, 
                         nPaddingCells, nGhostCells,returnExclusiveRange);
 
+    // find the coarse patches under the fine patch.  You must add a layer of padding cells.
+    int padding = 1;
+    Level::selectType coarsePatches;
+    finePatch->getOtherLevelPatches(-1, coarsePatches, padding);
 
     for(int m = 0; m < numMatls; m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
@@ -1217,7 +1218,9 @@ void AMRMPM::interpolateParticlesToGrid_CFI(const ProcessorGroup*,
         ParticleSubset* pset=0;
         
         pset = old_dw->getParticleSubset(dwi, cl, ch, coarsePatch ,lb->pXLabel);
-        cout << "  coarseLevel: " << coarseLevel->getIndex() << " cl: " << cl << " ch: " << ch<< " fl: " << fl << " fh " << fh << endl;
+        cout << "  coarseLevel: " << coarseLevel->getIndex() << endl;
+        cout << " cl_tmp: "<< cl_tmp << " ch_tmp: " << ch_tmp << endl;
+        cout << " cl:     " << cl    << " ch:     " << ch<< " fl: " << fl << " fh " << fh << endl;
         cout << "  " << *pset << endl;
         
         old_dw->get(pX_coarse,             lb->pXLabel,                  pset);
@@ -2460,9 +2463,6 @@ void AMRMPM::debug_CFI(const ProcessorGroup*,
     ParticleVariable<double>  pColor;
     old_dw->get(px, lb->pXLabel,  pset);
     new_dw->allocateAndPut(pColor, lb->pColorLabel_preReloc, pset);
-    
-    cout << "  level: " << level->getIndex() << endl;
-    cout << "  " << *pset << endl;
 
     for (ParticleSubset::iterator iter = pset->begin();iter != pset->end(); iter++){
       particleIndex idx = *iter;
@@ -2473,8 +2473,11 @@ void AMRMPM::debug_CFI(const ProcessorGroup*,
     //  Mark the particles that are accessed at the CFI.
     //  You cannot modify a particle subet
     if(level->hasFinerLevel()){  
+
+      // find the fine patches over the coarse patch.  You must add a layer of padding cells.
+      int padding = 2;
       Level::selectType finePatches;
-      patch->getFineLevelPatches(finePatches);  
+      patch->getOtherLevelPatches(1, finePatches, padding);
 
       const Level* fineLevel = level->getFinerLevel().get_rep();
       IntVector refineRatio(fineLevel->getRefinementRatio());
@@ -2508,7 +2511,7 @@ void AMRMPM::debug_CFI(const ProcessorGroup*,
         constParticleVariable<Point>  px_CFI;
         old_dw->get(px_CFI, lb->pXLabel,  pset2);
 
-        cout << "  level: " << level->getIndex() << " cl: " << cl << " ch: " << ch<< " fl: " << fl << " fh " << fh << endl;
+        cout << "  level: " << level->getIndex() << " coarsePatch: " << *patch << " cl: " << cl << " ch: " << ch<< " fl: " << fl << " fh " << fh << endl;
         cout << "  " << *pset2 << endl;
 
         for (ParticleSubset::iterator iter = pset->begin();iter != pset->end(); iter++){
