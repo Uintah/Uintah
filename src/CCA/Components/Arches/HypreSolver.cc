@@ -331,6 +331,23 @@ HypreSolver::setPressMatrix(const ProcessorGroup* pc,
     A[i+1] = -constvars->pressCoeff[c].s; //[0,-1,0]
     A[i+2] = -constvars->pressCoeff[c].w; //[-1,0,0]
     A[i+3] =  constvars->pressCoeff[c].p; //[0,0,0]
+
+    //---- temporary until we can figure out why Hypre randomly segfaults --- 
+    if (isnan(A[i])){
+      cout << "For cell " << c << endl;
+      throw InvalidValue("Found a nan in pressure matrix, A[i]",__FILE__,__LINE__);
+    } else if (isnan(A[i+1])){
+      cout << "For cell " << c << endl;
+      throw InvalidValue("Found a nan in pressure matrix, A[i+1]",__FILE__,__LINE__);
+    } else if (isnan(A[i+2])){
+      cout << "For cell " << c << endl;
+      throw InvalidValue("Found a nan in pressure matrix, A[i+2]",__FILE__,__LINE__);
+    } else if (isnan(A[i+3])){
+      cout << "For cell " << c << endl;
+      throw InvalidValue("Found a nan in pressure matrix, A[i+3]",__FILE__,__LINE__);
+    }
+    //------------------ end temporary ----------------------------------------
+
     i = i + d_stencilSize;
   }
   
@@ -351,6 +368,12 @@ HypreSolver::setPressMatrix(const ProcessorGroup* pc,
   for(CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
     IntVector c = *iter;
     B[i] = constvars->pressNonlinearSrc[c];
+    //------ temporary until we can figure out why the Hypre solver randomly segfaults -- 
+    if (isnan(B[i])){
+      cout << "For cell " << c << endl;
+      throw InvalidValue("Found a nan in pressure source, B[i]",__FILE__,__LINE__); 
+    }
+    //--------------------- end temporary -------------------------------------------------
     i++;
   }
     
@@ -363,6 +386,12 @@ HypreSolver::setPressMatrix(const ProcessorGroup* pc,
   for(CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
     IntVector c = *iter;
     X[i] = vars->pressure[c];
+    //------ temporary until we can figure out why the Hypre solver randomly segfaults -- 
+    if (isnan(X[i])){
+      cout << "For cell " << c << endl;
+      throw InvalidValue("Found a nan in pressure guess, X[i]",__FILE__,__LINE__); 
+    }
+    //--------------------- end temporary -------------------------------------------------
     i++;
   }
     
