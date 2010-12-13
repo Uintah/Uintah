@@ -557,7 +557,7 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
   rc = system("%s %s > sus.log.txt 2>&1" % (command, susinput))
   
   # was an exception thrown
-  exception = system("grep -q exception sus.log.txt");
+  exception = system("grep -q 'Caught exception' sus.log.txt");
   if exception == 0:
     print "\t*** An exception was thrown ***";
     rc = -9
@@ -582,7 +582,8 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
       print "\t\tMake sure the problem makes checkpoints before finishing"
     
     print sus_log_msg
-    system("echo '  :%s: test did not run to completion' >> %s/%s-short.log" % (testname,restart_text,startpath,ALGO))
+    print 
+    system("echo '  :%s: %s test did not run to completion' >> %s/%s-short.log" % (testname,restart_text,startpath,ALGO))
     return_code = 1
   else:
     # Sus completed successfully - now run memory,compar_uda and performance tests
