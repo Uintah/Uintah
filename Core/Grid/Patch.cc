@@ -1226,18 +1226,19 @@ void Patch::computeExtents(VariableBasis basis,
 
 void Patch::getOtherLevelPatches(int levelOffset,
                                  Patch::selectType& selected_patches,
-                                 int numGhostCells /*=0*/) const
+                                 int nPaddingCells /*=0*/) const
 {
   ASSERT(levelOffset == 1 || levelOffset == -1);
 
-  // include in the final low/high
-  IntVector gc(numGhostCells, numGhostCells, numGhostCells);
+  // include the padding cells in the final low/high indices
+  IntVector pc(nPaddingCells, nPaddingCells, nPaddingCells);
+  
+  Point lowPt = getLevel()->getCellPosition(getExtraCellLowIndex());
+  Point hiPt  = getLevel()->getCellPosition(getExtraCellHighIndex());
 
   const LevelP& otherLevel = getLevel()->getRelativeLevel(levelOffset);
-  IntVector low = 
-    otherLevel->getCellIndex(getLevel()->getCellPosition(getExtraCellLowIndex()));
-  IntVector high =
-    otherLevel->getCellIndex(getLevel()->getCellPosition(getExtraCellHighIndex()));
+  IntVector low  = otherLevel->getCellIndex(lowPt);
+  IntVector high = otherLevel->getCellIndex(hiPt);
 
   if (levelOffset < 0) {
     // we don't grab enough in the high direction if the fine extra cell
@@ -1261,18 +1262,20 @@ void Patch::getOtherLevelPatches(int levelOffset,
     // cells, since selectPatches doesn't 
     // use extra cells. 
     low = low - IntVector(2,2,2);
-    
   }
 
-  //cout << "  Patch:Golp: " << low-gc << " " << high+gc << endl;
+  //cout << "  Patch:Golp: " << low-pc << " " << high+pc << endl;
   Level::selectType patches;
-  otherLevel->selectPatches(low-gc, high+gc, patches); 
+  otherLevel->selectPatches(low-pc, high+pc, patches); 
   
   // based on the expanded range above to search for extra cells, we might
   // have grabbed more patches than we wanted, so refine them here
-  
   for (int i = 0; i < patches.size(); i++) {
-    if (levelOffset < 0 || getExtraBox().overlaps(patches[i]->getExtraBox())) {
+    IntVector lo = patches[i]->getExtraCellLowIndex();
+    IntVector hi = patches[i]->getExtraCellHighIndex();
+    bool intersect = doesIntersect(low-pc, high+pc, lo, hi );
+    
+    if (levelOffset < 0 || intersect) {
       selected_patches.push_back(patches[i]);
     }
   }
