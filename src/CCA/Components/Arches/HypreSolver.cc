@@ -333,16 +333,16 @@ HypreSolver::setPressMatrix(const ProcessorGroup* pc,
     A[i+3] =  constvars->pressCoeff[c].p; //[0,0,0]
 
     //---- temporary until we can figure out why Hypre randomly segfaults --- 
-    if (isnan(A[i])){
+    if (abs(A[i]) > 1e30){
       cout << "For cell " << c << endl;
       throw InvalidValue("Found a nan in pressure matrix, A[i]",__FILE__,__LINE__);
-    } else if (isnan(A[i+1])){
+    } else if (abs(A[i+1]) > 1e30){
       cout << "For cell " << c << endl;
       throw InvalidValue("Found a nan in pressure matrix, A[i+1]",__FILE__,__LINE__);
-    } else if (isnan(A[i+2])){
+    } else if (abs(A[i+2]) > 1e30){
       cout << "For cell " << c << endl;
       throw InvalidValue("Found a nan in pressure matrix, A[i+2]",__FILE__,__LINE__);
-    } else if (isnan(A[i+3])){
+    } else if (abs(A[i+3]) > 1e30){
       cout << "For cell " << c << endl;
       throw InvalidValue("Found a nan in pressure matrix, A[i+3]",__FILE__,__LINE__);
     }
@@ -369,7 +369,7 @@ HypreSolver::setPressMatrix(const ProcessorGroup* pc,
     IntVector c = *iter;
     B[i] = constvars->pressNonlinearSrc[c];
     //------ temporary until we can figure out why the Hypre solver randomly segfaults -- 
-    if (isnan(B[i])){
+    if (abs(B[i]) > 1e30){
       cout << "For cell " << c << endl;
       throw InvalidValue("Found a nan in pressure source, B[i]",__FILE__,__LINE__); 
     }
@@ -387,7 +387,7 @@ HypreSolver::setPressMatrix(const ProcessorGroup* pc,
     IntVector c = *iter;
     X[i] = vars->pressure[c];
     //------ temporary until we can figure out why the Hypre solver randomly segfaults -- 
-    if (isnan(X[i])){
+    if (abs(X[i])>1e30){
       cout << "For cell " << c << endl;
       throw InvalidValue("Found a nan in pressure guess, X[i]",__FILE__,__LINE__); 
     }
