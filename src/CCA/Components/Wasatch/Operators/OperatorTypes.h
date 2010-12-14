@@ -32,6 +32,19 @@ namespace Wasatch{
     typedef SpatialOps::SpatialOperator< LinAlg, Op, SrcT, DestT >  type;
   };
 
+  /**
+   *  \ingroup WasatchOperators
+   *  \ingroup WasatchCore
+   *  \struct OpTypes
+   *  \brief provides typedefs for various operators related to the given cell type
+   *
+   *  Example:
+   *  \code
+   *    typedef OpTypes< SVolField >  VolOps;
+   *    typedef VolOps::GradX         GradX;
+   *    typedef VolOps::DivX          DivX;
+   *  \endcode
+   */
   template< typename CellT > struct OpTypes
   {
     typedef typename OperatorTypeBuilder< Gradient,
