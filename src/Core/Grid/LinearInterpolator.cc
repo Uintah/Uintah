@@ -240,7 +240,7 @@ void LinearInterpolator::findCellAndWeights(const Point& pos,
     else if ( -L.b <= dz && dz <= 0 ){    // Lz-
       fz = 1 + dz/L.b;
     }
-    else if ( 0 <= dz && dz <= L.n ){    // Lz+
+    else if ( 0 <= dz && dz <= L.t ){    // Lz+
       fz = 1 - dz/L.t;
     }
     else if (L.t <= dz){                 // Lz+
@@ -248,15 +248,17 @@ void LinearInterpolator::findCellAndWeights(const Point& pos,
     }
 
     double s = fx * fy * fz;
+    
     S.push_back(s);
     
 /*`==========TESTING==========*/
 #if 0
-    if(ni[i].x() == 100 && (ni[i].z() == 1 || ni[i].z() == 2)){
-      cout <<"     fx " << fx << " fy " << fy <<  " fz " << fz << "    S[i] "<< s<< endl;
+    if(s < 0 ) {
+      cout << CFI_ni[i] << "  fx " << fx << " fy " << fy <<  " fz " << fz << "    S[i] "<< s<< endl;
     }
 #endif 
 /*===========TESTING==========`*/
+    ASSERT(s>0);
   }
 }
 
