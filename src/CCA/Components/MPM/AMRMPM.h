@@ -330,8 +330,10 @@ protected:
 
   double   d_SMALL_NUM_MPM;
   int      NGP;      // Number of ghost particles needed.
-  int      NGN;      // Number of ghost nodes     needed.
-  
+  int      NGN;      // Number of ghost nodes  needed.
+  int      d_nPaddingCells_Coarse;  // Number of cells on the coarse level that contain particles and surround a fine patch.
+                                   // Coarse level particles are used in the task interpolateToParticlesAndUpdate_CFI.
+                                   
   vector<MPMPhysicalBC*> d_physicalBCs;
   IntegratorType d_integrator;
 

@@ -103,8 +103,9 @@ AMRMPM::AMRMPM(const ProcessorGroup* myworld) :SerialMPM(myworld)
   flags->d_maxGridLevel = 1000;
 
   d_SMALL_NUM_MPM=1e-200;
-  NGP     = 1;
-  NGN     = 1;
+  NGP     = -9;
+  NGN     = -9;
+  d_nPaddingCells_Coarse = -9;
   dataArchiver = 0;
 }
 
@@ -167,6 +168,14 @@ void AMRMPM::problemSetup(const ProblemSpecP& prob_spec,
     NGP=2;
     NGN=2;
   }
+  // Determine extents for coarser level particle data
+  // Linear Interpolation:  1 layer of coarse level cells
+  // Gimp Interpolation:    2 layers
+  
+/*`==========TESTING==========*/
+  d_nPaddingCells_Coarse = 2;
+  NGP = 2; 
+/*===========TESTING==========`*/
 
   d_sharedState->setParticleGhostLayer(Ghost::AroundNodes, NGP);
 
@@ -503,10 +512,9 @@ void AMRMPM::scheduleInterpolateParticlesToGrid_CFI(SchedulerP& sched,
     Task::DomainSpec  ND  = Task::NormalDomain;
     
 /*`==========TESTING==========*/
-    //  Linear 1 coarseLevelCells:
-    int nPaddingCells = 1;
+    // Linear 1 coarse Level cells:
     // Gimp:  2 coarse level cells:
-    nPaddingCells  = 2;  
+    int npc = d_nPaddingCells_Coarse;  
 /*===========TESTING==========`*/
     
     #define allPatches 0
@@ -516,13 +524,13 @@ void AMRMPM::scheduleInterpolateParticlesToGrid_CFI(SchedulerP& sched,
     // particles around every fine patch.   Technically, these are ghost
     // cells but somehow it works.
     t->requires(Task::NewDW, lb->gZOILabel,   Ghost::None, 0);
-    t->requires(Task::OldDW, lb->pMassLabel,               allPatches, Task::CoarseLevel,allMatls, ND, gac, nPaddingCells);
-    t->requires(Task::OldDW, lb->pVolumeLabel,             allPatches, Task::CoarseLevel,allMatls, ND, gac, nPaddingCells);
-    t->requires(Task::OldDW, lb->pVelocityLabel,           allPatches, Task::CoarseLevel,allMatls, ND, gac, nPaddingCells);
-    t->requires(Task::OldDW, lb->pXLabel,                  allPatches, Task::CoarseLevel,allMatls, ND, gac, nPaddingCells);
-    t->requires(Task::NewDW, lb->pExtForceLabel_preReloc,  allPatches, Task::CoarseLevel,allMatls, ND, gac, nPaddingCells);
-    t->requires(Task::OldDW, lb->pTemperatureLabel,        allPatches, Task::CoarseLevel,allMatls, ND, gac, nPaddingCells);
-    t->requires(Task::OldDW, lb->pDeformationMeasureLabel, allPatches, Task::CoarseLevel,allMatls, ND, gac, nPaddingCells);
+    t->requires(Task::OldDW, lb->pMassLabel,               allPatches, Task::CoarseLevel,allMatls, ND, gac, npc);
+    t->requires(Task::OldDW, lb->pVolumeLabel,             allPatches, Task::CoarseLevel,allMatls, ND, gac, npc);
+    t->requires(Task::OldDW, lb->pVelocityLabel,           allPatches, Task::CoarseLevel,allMatls, ND, gac, npc);
+    t->requires(Task::OldDW, lb->pXLabel,                  allPatches, Task::CoarseLevel,allMatls, ND, gac, npc);
+    t->requires(Task::NewDW, lb->pExtForceLabel_preReloc,  allPatches, Task::CoarseLevel,allMatls, ND, gac, npc);
+    t->requires(Task::OldDW, lb->pTemperatureLabel,        allPatches, Task::CoarseLevel,allMatls, ND, gac, npc);
+    t->requires(Task::OldDW, lb->pDeformationMeasureLabel, allPatches, Task::CoarseLevel,allMatls, ND, gac, npc);
 
     t->modifies(lb->gMassLabel);
     t->modifies(lb->gVolumeLabel);
@@ -1161,10 +1169,10 @@ void AMRMPM::interpolateParticlesToGrid_CFI(const ProcessorGroup*,
     // Linear Interpolation:  1 layer of coarse level cells
     // Gimp Interpolation:    2 layers
 /*`==========TESTING==========*/
-    IntVector nLayers(1,1,1);
-    
+    IntVector nLayers(d_nPaddingCells_Coarse, d_nPaddingCells_Coarse, d_nPaddingCells_Coarse );
     IntVector nPaddingCells = nLayers * (fineLevel->getRefinementRatio());
 /*===========TESTING==========`*/
+
     cout << " nPaddingCells " << nPaddingCells << "nLayers " << nLayers << endl;
     
     int nGhostCells = 0;
@@ -1233,7 +1241,8 @@ void AMRMPM::interpolateParticlesToGrid_CFI(const ProcessorGroup*,
 
         for (ParticleSubset::iterator iter = pset->begin();iter != pset->end(); iter++){
           particleIndex idx = *iter;
-            cout << "pX_coarse: " << pX_coarse[idx] << endl;
+          
+          //cout << "pX_coarse: " << pX_coarse[idx] << endl;
 
           // Get the node indices that surround the fine patch cell
           vector<IntVector> ni;
@@ -1308,15 +1317,13 @@ void AMRMPM::coarsenNodalData_CFI(const ProcessorGroup*,
       NCVariable<Vector> gExternalforce_coarse;                                                                   
       NCVariable<double> gTemperature_coarse;                                                                     
       NCVariable<double> gSum_S_coarse;      
-      cout << UintahParallelComponent::d_myworld->myrank() << " coarselevel: " << coarseLevel->getIndex() << " coarsePatch: " << coarsePatch->getID() 
-           << "  getting Data: " << *coarsePatch;    
+    
       new_dw->getModifiable(gMass_coarse,            lb->gMassLabel,           dwi,coarsePatch);                  
       new_dw->getModifiable(gVolume_coarse,          lb->gVolumeLabel,         dwi,coarsePatch);                  
       new_dw->getModifiable(gVelocity_coarse,        lb->gVelocityLabel,       dwi,coarsePatch);                  
       new_dw->getModifiable(gTemperature_coarse,     lb->gTemperatureLabel,    dwi,coarsePatch);                  
       new_dw->getModifiable(gExternalforce_coarse,   lb->gExternalForceLabel,  dwi,coarsePatch);                  
-      new_dw->getModifiable(gSum_S_coarse,           lb->gSumWeightsLabel,     dwi,coarsePatch);                  
-      cout << ": done" << endl;                                                                                   
+      new_dw->getModifiable(gSum_S_coarse,           lb->gSumWeightsLabel,     dwi,coarsePatch);                                                                                   
         
       //__________________________________
       // Iterate over coarse/fine interface faces
@@ -1342,16 +1349,14 @@ void AMRMPM::coarsenNodalData_CFI(const ProcessorGroup*,
           constNCVariable<double> gSum_S_fine;                                                                    
           Ghost::GhostType  gn = Ghost::None;                                                                     
 
-          if(flag == coarsenData){                                                                                
-            cout << UintahParallelComponent::d_myworld->myrank() << "  getting fine patch Data: " << *finePatch;  
-            new_dw->get(gMass_fine,             lb->gMassLabel,          dwi, finePatch, gn, 0);                  
-            new_dw->get(gVolume_fine,           lb->gVolumeLabel,        dwi, finePatch, gn, 0);                  
-            new_dw->get(gVelocity_fine,         lb->gVelocityLabel,      dwi, finePatch, gn, 0);                  
-            new_dw->get(gTemperature_fine,      lb->gTemperatureLabel,   dwi, finePatch, gn, 0);                  
-            new_dw->get(gExternalforce_fine,    lb->gExternalForceLabel, dwi, finePatch, gn, 0);                  
-            new_dw->get(gSum_S_fine,            lb->gSumWeightsLabel,    dwi, finePatch, gn, 0);                  
-            cout << ": done" << endl;                                                                             
-          }                                                                                                       
+          if(flag == coarsenData){
+            new_dw->get(gMass_fine,             lb->gMassLabel,          dwi, finePatch, gn, 0);
+            new_dw->get(gVolume_fine,           lb->gVolumeLabel,        dwi, finePatch, gn, 0);
+            new_dw->get(gVelocity_fine,         lb->gVelocityLabel,      dwi, finePatch, gn, 0);
+            new_dw->get(gTemperature_fine,      lb->gTemperatureLabel,   dwi, finePatch, gn, 0);
+            new_dw->get(gExternalforce_fine,    lb->gExternalForceLabel, dwi, finePatch, gn, 0);
+            new_dw->get(gSum_S_fine,            lb->gSumWeightsLabel,    dwi, finePatch, gn, 0);
+          }                                                                                     
 
           vector<Patch::FaceType> cf;
           finePatch->getCoarseFaces(cf);
@@ -1371,8 +1376,8 @@ void AMRMPM::coarsenNodalData_CFI(const ProcessorGroup*,
 
             // Is this the right coarse/fine patch pair
             if (isRight_CP_FP_pair){
-              cout << UintahParallelComponent::d_myworld->myrank() << "    fine patch face " << finePatch->getFaceName(patchFace)
-              << "    CoarseLevel CFI iterator: " << n_iter << endl;
+              //cout << UintahParallelComponent::d_myworld->myrank() << "    fine patch face " << finePatch->getFaceName(patchFace)
+              //<< "    CoarseLevel CFI iterator: " << n_iter << endl;
               
               for(; !n_iter.done(); n_iter++) {
                 IntVector c_node = *n_iter;
@@ -2028,8 +2033,8 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       psizeNew.copyData(psize);
 
       Ghost::GhostType  gac = Ghost::AroundCells;
-      new_dw->get(gvelocity_star,    lb->gVelocityStarLabel,   dwi,patch,gac,NGP);
-      new_dw->get(gacceleration,     lb->gAccelerationLabel,   dwi,patch,gac,NGP);
+      new_dw->get(gvelocity_star,    lb->gVelocityStarLabel,   dwi,patch,gac,NGN);
+      new_dw->get(gacceleration,     lb->gAccelerationLabel,   dwi,patch,gac,NGN);
       new_dw->getModifiable(gSum_S,  lb->gSumWeightsLabel,     dwi,patch);
 
       // Loop over particles
@@ -2167,7 +2172,7 @@ void AMRMPM::interpolateToParticlesAndUpdate_CFI(const ProcessorGroup*,
           // allow you to get a pset with a high/low index that does not match
           // the patch low high index  
           pset = old_dw->getParticleSubset(dwi, coarsePatch);
-          cout << *pset << endl; 
+          //cout << *pset << endl; 
 /*===========TESTING==========`*/
           
           new_dw->getModifiable(pxnew_coarse,        lb->pXLabel_preReloc,        pset);
@@ -2474,10 +2479,10 @@ void AMRMPM::debug_CFI(const ProcessorGroup*,
     //  You cannot modify a particle subet
     if(level->hasFinerLevel()){  
 
-      // find the fine patches over the coarse patch.  You must add a layer of padding cells.
-      int padding = 2;
+      // find the fine patches over the coarse patch.  Add a single layer of cells
+      // so you will get the required patches when coarse patch and fine patch boundaries coincide.
       Level::selectType finePatches;
-      patch->getOtherLevelPatches(1, finePatches, padding);
+      patch->getOtherLevelPatches(1, finePatches, 1);
 
       const Level* fineLevel = level->getFinerLevel().get_rep();
       IntVector refineRatio(fineLevel->getRefinementRatio());
@@ -2489,7 +2494,7 @@ void AMRMPM::debug_CFI(const ProcessorGroup*,
         // Linear Interpolation:  1 layer of coarse level cells
         // Gimp Interpolation:    2 layers
     /*`==========TESTING==========*/
-        IntVector nLayers(1,1,1);
+        IntVector nLayers(d_nPaddingCells_Coarse, d_nPaddingCells_Coarse, d_nPaddingCells_Coarse);
         IntVector nPaddingCells = nLayers * (refineRatio);
     /*===========TESTING==========`*/
         cout << " nPaddingCells " << nPaddingCells << "nLayers " << nLayers << endl;
@@ -2521,7 +2526,7 @@ void AMRMPM::debug_CFI(const ProcessorGroup*,
             particleIndex idx2 = *iter2;
             if( px[idx] == px_CFI[idx2] ){
               pColor[idx] = 9;
-              cout <<"pX_CFI: idx" <<idx << " px: " <<  px[idx] << endl;
+              //cout <<"pX_CFI: idx" <<idx << " px: " <<  px[idx] << endl;
             }
           }  // End of particle loop
         }
