@@ -90,8 +90,7 @@ evaluate()
     result *= -coefVal_;  // J = -gamma * grad(phi)
   }
   else{
-    result *= *coef_;  // J =  gamma * grad(phi)
-    result *= -1.0;    // J = -gamma * grad(phi)
+    result <<= result * -1.0 * *coef_;  // J =  - gamma * grad(phi)
   }
 }
 
