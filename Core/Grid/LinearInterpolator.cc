@@ -258,7 +258,7 @@ void LinearInterpolator::findCellAndWeights(const Point& pos,
     }
 #endif 
 /*===========TESTING==========`*/
-    ASSERT(s>0);
+    ASSERT(s>=0);
   }
 }
 
