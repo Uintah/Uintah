@@ -27,21 +27,25 @@ set mytics
 #set grid mxtics ytics
 set grid xtics ytics
 set pointsize 1
+set format y "%10.3f"
 
 set autoscale
 set terminal x11 1
-#set terminal enhanced postscript "Times-Roman" 9
-set output "$uda/datPlots.ps"
+#set terminal postscript color "Times-Roman" 12
+#set output "$uda/datPlots.ps"
+
+
+set label "2-D pure translation test (XY plane, 3 levels, RR:4)" at screen 0.5, screen 0.99 center
 
 #set xrange[0:0.02]
 #__________________________________
 #   TotalMass
 #__________________________________
 set multiplot
-set size 0.51,0.51  
+set size 0.50,0.48  
 set origin 0.0,0.0
-set ylabel "total mass"
-set y2tics
+set ylabel "Total mass"
+#set y2tics
 
 plot   '$uda/TotalMass.dat'      using 1:2 t ''  w lines
 
@@ -49,7 +53,7 @@ plot   '$uda/TotalMass.dat'      using 1:2 t ''  w lines
 #   StrainEnergy
 #__________________________________
 set origin 0.5,0.0
-
+#set yrange[-1e-3:1e-3]
 set ylabel "Strain Energy"
 plot   '$uda/StrainEnergy.dat'    using 1:2  t '' w lines
 
@@ -57,19 +61,19 @@ plot   '$uda/StrainEnergy.dat'    using 1:2  t '' w lines
 #  KineticEnergy.dat
 #__________________________________ 
 set origin 0.0,0.5
-
+#set yrange[3999.999:4000.001]
 set ylabel "KineticEnergy"
 plot   '$uda/KineticEnergy.dat'  using 1:2 t ''  w lines
 
 #__________________________________
 #  totalMomentum.dat
 #__________________________________ 
-set origin 0.5,0.5
-
-set ylabel "total Momentum"
-plot   '$uda/TotalMom.dat'         using 1:2 t 'x'  w lines,\
-       '$uda/TotalMom.dat'         using 1:3 t 'y'  w lines, \
-       '$uda/TotalMom.dat'         using 1:4 t 'z'  w lines
+set origin 0.5,0.48
+#set yrange[79.999:80.001]
+set ylabel "Total Momentum"
+plot   '$uda/TotalMom.dat'         using 1:2 t 'x'  w linespoints,\
+       '$uda/TotalMom.dat'         using 1:3 t 'y'  w linespoints, \
+       '$uda/TotalMom.dat'         using 1:4 t 'z'  w linespoints
        
 set nomultiplot   
 pause -1 "Hit return to continue"
