@@ -250,6 +250,9 @@ LoadBalancerCommon::createNeighborhood(const GridP& grid, const GridP& oldGrid)
   d_neighbors.clear();
   d_neighborProcessors.clear();
   
+  //this processor should always be in the neighbhood
+  d_neighborProcessors.insert(d_myworld->myrank());
+ 
   // go through all patches on all levels, and if the patchwise
   // processor assignment equals the current processor, then store the 
   // patch's neighbors in the load balancer array
