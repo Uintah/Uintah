@@ -146,7 +146,7 @@ void AMRMPM::problemSetup(const ProblemSpecP& prob_spec,
   // Read all MPM flags (look in MPMFlags.cc)
   flags->readMPMFlags(mat_ps, dataArchiver);
   if (flags->d_integrator_type == "implicit"){
-    throw ProblemSetupException("Can't use implicit integration with -mpm",
+    throw ProblemSetupException("Can't use implicit integration with AMRMPM",
                                  __FILE__, __LINE__);
   }
 
@@ -173,8 +173,8 @@ void AMRMPM::problemSetup(const ProblemSpecP& prob_spec,
   // Gimp Interpolation:    2 layers
   
 /*`==========TESTING==========*/
-  d_nPaddingCells_Coarse = 2;
-  NGP = 2; 
+  d_nPaddingCells_Coarse = 1;
+  NGP = 1; 
 /*===========TESTING==========`*/
 
   d_sharedState->setParticleGhostLayer(Ghost::AroundNodes, NGP);
@@ -368,7 +368,7 @@ void AMRMPM::scheduleTimeAdvance(const LevelP & level,
     const PatchSet* patches = level->eachPatch();
     scheduleComputeStressTensor(            sched, patches, matls);
   }
-
+ 
  // zero the nodal data at the CFI on the coarse level 
  for (int l = 0; l < maxLevels-1; l++) {
     const LevelP& level = grid->getLevel(l);
@@ -573,15 +573,24 @@ void AMRMPM::scheduleCoarsenNodalData_CFI(SchedulerP& sched,
   t->requires(Task::NewDW, lb->gVolumeLabel,        allPatches, Task::FineLevel,allMatls, ND, gn,0);
   t->requires(Task::NewDW, lb->gVelocityLabel,      allPatches, Task::FineLevel,allMatls, ND, gn,0);
   t->requires(Task::NewDW, lb->gTemperatureLabel,   allPatches, Task::FineLevel,allMatls, ND, gn,0);
+
   t->requires(Task::NewDW, lb->gExternalForceLabel, allPatches, Task::FineLevel,allMatls, ND, gn,0);
   t->requires(Task::NewDW, lb->gSumWeightsLabel,    allPatches, Task::FineLevel,allMatls, ND, gn,0);
-
+  
   t->modifies(lb->gMassLabel);
   t->modifies(lb->gVolumeLabel);
   t->modifies(lb->gVelocityLabel);
   t->modifies(lb->gTemperatureLabel);
   t->modifies(lb->gExternalForceLabel);
   t->modifies(lb->gSumWeightsLabel);
+
+  if (flag == zeroData){
+    t->requires(Task::NewDW, lb->gAccelerationLabel,  allPatches, Task::FineLevel,allMatls, ND, gn,0);
+    t->requires(Task::NewDW, lb->gVelocityStarLabel,  allPatches, Task::FineLevel,allMatls, ND, gn,0);
+    t->modifies(lb->gAccelerationLabel);
+    t->modifies(lb->gVelocityStarLabel);
+  }
+
 
   sched->addTask(t, patches, matls);
 }
@@ -1171,10 +1180,9 @@ void AMRMPM::interpolateParticlesToGrid_CFI(const ProcessorGroup*,
 /*`==========TESTING==========*/
     IntVector nLayers(d_nPaddingCells_Coarse, d_nPaddingCells_Coarse, d_nPaddingCells_Coarse );
     IntVector nPaddingCells = nLayers * (fineLevel->getRefinementRatio());
+    //cout << " nPaddingCells " << nPaddingCells << "nLayers " << nLayers << endl;
 /*===========TESTING==========`*/
 
-    cout << " nPaddingCells " << nPaddingCells << "nLayers " << nLayers << endl;
-    
     int nGhostCells = 0;
     bool returnExclusiveRange=false;
     IntVector cl_tmp, ch_tmp, fl, fh;
@@ -1182,7 +1190,7 @@ void AMRMPM::interpolateParticlesToGrid_CFI(const ProcessorGroup*,
     getCoarseLevelRange(finePatch, coarseLevel, cl_tmp, ch_tmp, fl, fh, 
                         nPaddingCells, nGhostCells,returnExclusiveRange);
 
-    // find the coarse patches under the fine patch.  You must add a layer of padding cells.
+    // find the coarse patches under the fine patch.  You must add a single layer of padding cells.
     int padding = 1;
     Level::selectType coarsePatches;
     finePatch->getOtherLevelPatches(-1, coarsePatches, padding);
@@ -1226,11 +1234,12 @@ void AMRMPM::interpolateParticlesToGrid_CFI(const ProcessorGroup*,
         ParticleSubset* pset=0;
         
         pset = old_dw->getParticleSubset(dwi, cl, ch, coarsePatch ,lb->pXLabel);
+#if 0
         cout << "  coarseLevel: " << coarseLevel->getIndex() << endl;
         cout << " cl_tmp: "<< cl_tmp << " ch_tmp: " << ch_tmp << endl;
         cout << " cl:     " << cl    << " ch:     " << ch<< " fl: " << fl << " fh " << fh << endl;
         cout << "  " << *pset << endl;
-        
+#endif        
         old_dw->get(pX_coarse,             lb->pXLabel,                  pset);
         old_dw->get(pMass_coarse,          lb->pMassLabel,               pset);
         old_dw->get(pVolume_coarse,        lb->pVolumeLabel,             pset);
@@ -1242,7 +1251,7 @@ void AMRMPM::interpolateParticlesToGrid_CFI(const ProcessorGroup*,
         for (ParticleSubset::iterator iter = pset->begin();iter != pset->end(); iter++){
           particleIndex idx = *iter;
           
-          //cout << "pX_coarse: " << pX_coarse[idx] << endl;
+         // cout << "pX_coarse: " << pX_coarse[idx] << endl;
 
           // Get the node indices that surround the fine patch cell
           vector<IntVector> ni;
@@ -1269,8 +1278,9 @@ void AMRMPM::interpolateParticlesToGrid_CFI(const ProcessorGroup*,
 
   /*`==========TESTING==========*/
   #if 0
-            if(fineNode.z() == 0){
-              cout << "    fineNode " << fineNode << " ni.size " << ni.size() << " S[k] " << S[k] << " gMass_fine " << gMass_fine[fineNode]<< " \t zoi " << (zoi_fine[fineNode]) << endl;
+            if(fineNode.z() == 0 && gMass_fine[fineNode] > 1e-200){
+              cout << "    fineNode " << fineNode  << " S[k] " << S[k] << " \t gMass_fine " << gMass_fine[fineNode]
+                   << " gVelocity " << gVelocity_fine[fineNode]/gMass_fine[fineNode] << " \t zoi " << (zoi_fine[fineNode]) << endl; 
             }
   #endif 
   /*===========TESTING==========`*/
@@ -1313,7 +1323,9 @@ void AMRMPM::coarsenNodalData_CFI(const ProcessorGroup*,
       // get coarse level data                                                                                    
       NCVariable<double> gMass_coarse;                                                                            
       NCVariable<double> gVolume_coarse;                                                                          
-      NCVariable<Vector> gVelocity_coarse;                                                                        
+      NCVariable<Vector> gVelocity_coarse;
+      NCVariable<Vector> gVelocityStar_coarse;
+      NCVariable<Vector> gAcceleration_coarse;                                                                 
       NCVariable<Vector> gExternalforce_coarse;                                                                   
       NCVariable<double> gTemperature_coarse;                                                                     
       NCVariable<double> gSum_S_coarse;      
@@ -1323,7 +1335,12 @@ void AMRMPM::coarsenNodalData_CFI(const ProcessorGroup*,
       new_dw->getModifiable(gVelocity_coarse,        lb->gVelocityLabel,       dwi,coarsePatch);                  
       new_dw->getModifiable(gTemperature_coarse,     lb->gTemperatureLabel,    dwi,coarsePatch);                  
       new_dw->getModifiable(gExternalforce_coarse,   lb->gExternalForceLabel,  dwi,coarsePatch);                  
-      new_dw->getModifiable(gSum_S_coarse,           lb->gSumWeightsLabel,     dwi,coarsePatch);                                                                                   
+      new_dw->getModifiable(gSum_S_coarse,           lb->gSumWeightsLabel,     dwi,coarsePatch);
+      
+      if(flag == zeroData){
+        new_dw->getModifiable(gVelocityStar_coarse,  lb->gVelocityStarLabel,     dwi,coarsePatch);
+        new_dw->getModifiable(gAcceleration_coarse,  lb->gAccelerationLabel,     dwi,coarsePatch);
+      }                                                                               
         
       //__________________________________
       // Iterate over coarse/fine interface faces
@@ -1399,6 +1416,8 @@ void AMRMPM::coarsenNodalData_CFI(const ProcessorGroup*,
                     gSum_S_coarse[c_node]         = 0;
                     gVolume_coarse[c_node]        = 0;
                     gVelocity_coarse[c_node]      = Vector(0,0,0);
+                    gVelocityStar_coarse[c_node]  = Vector(0,0,0);
+                    gAcceleration_coarse[c_node]  = Vector(0,0,0);
                     gTemperature_coarse[c_node]   = 0;
                     gExternalforce_coarse[c_node] = Vector(0,0,0);
                     break;
@@ -1459,6 +1478,16 @@ void AMRMPM::Nodal_velocity_temperature(const ProcessorGroup*,
         IntVector n = *iter;
         gVelocity[n]     /= gMass[n];
         gTemperature[n]  /= gMass[n];
+        
+/*`==========TESTING==========*/
+#if 0
+        Vector ans(100,0,0);
+        if( abs(gVelocity[n].length() - ans.length()) > 1e-12 && gMass[n] > 1e-8 ) {
+          cout << " nodalVelocityTemperature L-"<< getLevel(patches)->getIndex() << " node: "<< n << " velocity: " << gVelocity[n] << endl;
+        }
+#endif 
+/*===========TESTING==========`*/
+        
       }
       
       // Apply boundary conditions to the temperature and velocity (if symmetry)
@@ -2059,12 +2088,32 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 // This doesn't work on multiple patches.
 //          gSum_S[node] -= S[k]; 
 /*===========TESTING==========`*/
+
+/*`==========TESTING==========*/
+#if 0
+          Vector ans(0,0,0);
+          if( abs(acc.length() - ans.length()) > 1e-8 ) {
+            cout << "    L-"<< getLevel(patches)->getIndex() << " node: "<< node << " acc: " << acc << "\t  gacceleration " << gacceleration[node] << " S[k] " << S[k] << endl;
+          } 
+#endif
+/*===========TESTING==========`*/
         }
         
         // Update the particle's position and velocity
         pxnew[idx]           = px[idx]         + vel*delT*move_particles;
         pdispnew[idx]        = pdisp[idx]      + vel*delT;
         pvelocitynew[idx]    = pvelocity[idx]  + acc*delT;
+        
+/*`==========TESTING==========*/
+#if 0
+          Vector ans(100,0,0);
+          if( abs(pvelocitynew[idx].length() - ans.length()) > 1e-12 ) {
+            cout << "    L-"<< getLevel(patches)->getIndex() << " px: "<< pxnew[idx] << " pvelocitynew: " << pvelocitynew[idx] <<  " pvelocity " << pvelocity[idx]<< endl;
+          }
+#endif 
+/*===========TESTING==========`*/  
+        
+        
         
         // pxx is only useful if we're not in normal grid resetting mode.
         pxx[idx]             = px[idx]    + pdispnew[idx];
@@ -2196,22 +2245,27 @@ void AMRMPM::interpolateToParticlesAndUpdate_CFI(const ProcessorGroup*,
             for(int k = 0; k < ni.size(); k++) {
               
               fineNode = ni[k];
-/*`==========TESTING==========*/
-#if 0
-              if(fineNode.z() == 0){
-                cout << " working on node: " << fineNode << " S[k] " << S[k] << endl;
-              }
-#endif 
-/*===========TESTING==========`*/
+            
               gSum_S[fineNode] -= S[k];
               vel  += gvelocity_star_fine[fineNode] * S[k];
               acc  += gacceleration_fine[fineNode]  * S[k];
+/*`==========TESTING==========*/
+#if 0
+              if(fineNode == IntVector(30,39,0) || fineNode == IntVector(30,41,0)){
+                cout << " working on node: " << fineNode << " S[k] " << S[k] << " gvelocity_star_fine " << gvelocity_star_fine[fineNode] << " gacceleration_fine " << gacceleration_fine[fineNode] << endl;
+              }
+#endif 
+/*===========TESTING==========`*/
             }
+            
+//            cout << " pvelocitynew_coarse  "<< idx << " "  << pvelocitynew_coarse[idx] << " p.x " << pxnew_coarse[idx] ;
             
             // Update the particle's position and velocity
             pxnew_coarse[idx]         += vel*delT*move_particles;  
             pdispnew_coarse[idx]      += vel*delT;                 
-            pvelocitynew_coarse[idx]  += acc*delT;                 
+            pvelocitynew_coarse[idx]  += acc*delT; 
+            
+//            cout << " after update: " <<    pvelocitynew_coarse[idx]  << endl;
             
           } // End of particle loop
         } // End loop over materials 
@@ -2496,8 +2550,8 @@ void AMRMPM::debug_CFI(const ProcessorGroup*,
     /*`==========TESTING==========*/
         IntVector nLayers(d_nPaddingCells_Coarse, d_nPaddingCells_Coarse, d_nPaddingCells_Coarse);
         IntVector nPaddingCells = nLayers * (refineRatio);
+        //cout << " nPaddingCells " << nPaddingCells << "nLayers " << nLayers << endl;
     /*===========TESTING==========`*/
-        cout << " nPaddingCells " << nPaddingCells << "nLayers " << nLayers << endl;
 
         int nGhostCells = 0;
         bool returnExclusiveRange=false;
@@ -2515,10 +2569,12 @@ void AMRMPM::debug_CFI(const ProcessorGroup*,
 
         constParticleVariable<Point>  px_CFI;
         old_dw->get(px_CFI, lb->pXLabel,  pset2);
-
+/*`==========TESTING==========*/
+#if 0
         cout << "  level: " << level->getIndex() << " coarsePatch: " << *patch << " cl: " << cl << " ch: " << ch<< " fl: " << fl << " fh " << fh << endl;
         cout << "  " << *pset2 << endl;
-
+#endif 
+/*===========TESTING==========`*/
         for (ParticleSubset::iterator iter = pset->begin();iter != pset->end(); iter++){
           particleIndex idx = *iter;
           
