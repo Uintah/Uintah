@@ -1277,7 +1277,7 @@ void AMRMPM::interpolateParticlesToGrid_CFI(const ProcessorGroup*,
             gSum_S[fineNode]              += S[k];
 
   /*`==========TESTING==========*/
-  #if 0
+  #ifdef DEBUG
             if(fineNode.z() == 0 && gMass_fine[fineNode] > 1e-200){
               cout << "    fineNode " << fineNode  << " S[k] " << S[k] << " \t gMass_fine " << gMass_fine[fineNode]
                    << " gVelocity " << gVelocity_fine[fineNode]/gMass_fine[fineNode] << " \t zoi " << (zoi_fine[fineNode]) << endl; 
@@ -1480,8 +1480,8 @@ void AMRMPM::Nodal_velocity_temperature(const ProcessorGroup*,
         gTemperature[n]  /= gMass[n];
         
 /*`==========TESTING==========*/
-#if 0
-        Vector ans(100,0,0);
+#ifdef DEBUG
+        Vector ans(100,100,0);
         if( abs(gVelocity[n].length() - ans.length()) > 1e-12 && gMass[n] > 1e-8 ) {
           cout << " nodalVelocityTemperature L-"<< getLevel(patches)->getIndex() << " node: "<< n << " velocity: " << gVelocity[n] << endl;
         }
@@ -1608,7 +1608,7 @@ void AMRMPM::computeInternalForce(const ProcessorGroup*,
       new_dw->get(gvolume, lb->gVolumeLabel, dwi, patch, Ghost::None, 0);
       new_dw->allocateAndPut(gstress,      lb->gStressForSavingLabel,dwi,patch);
       new_dw->allocateAndPut(internalforce,lb->gInternalForceLabel,  dwi,patch);
-
+      gstress.initialize(Matrix3(0));
       internalforce.initialize(Vector(0,0,0));
 
       Matrix3 stresspress;
@@ -1664,34 +1664,48 @@ void AMRMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
       // Get required variables for this patch
       constNCVariable<Vector> internalforce;
       constNCVariable<Vector> externalforce;
-      constNCVariable<Vector> velocity;
-      constNCVariable<double> mass;
+      constNCVariable<Vector> gvelocity;
+      constNCVariable<double> gmass;
 
       delt_vartype delT;
       old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches) );
 
       new_dw->get(internalforce,lb->gInternalForceLabel, dwi, patch, gnone, 0);
       new_dw->get(externalforce,lb->gExternalForceLabel, dwi, patch, gnone, 0);
-      new_dw->get(mass,         lb->gMassLabel,          dwi, patch, gnone, 0);
-      new_dw->get(velocity,     lb->gVelocityLabel,      dwi, patch, gnone, 0);
+      new_dw->get(gmass,         lb->gMassLabel,          dwi, patch, gnone, 0);
+      new_dw->get(gvelocity,     lb->gVelocityLabel,      dwi, patch, gnone, 0);
 
       // Create variables for the results
-      NCVariable<Vector> velocity_star;
-      NCVariable<Vector> acceleration;
-      new_dw->allocateAndPut(velocity_star, lb->gVelocityStarLabel, dwi, patch);
-      new_dw->allocateAndPut(acceleration,  lb->gAccelerationLabel, dwi, patch);
+      NCVariable<Vector> gvelocity_star;
+      NCVariable<Vector> gacceleration;
+      new_dw->allocateAndPut(gvelocity_star, lb->gVelocityStarLabel, dwi, patch);
+      new_dw->allocateAndPut(gacceleration,  lb->gAccelerationLabel, dwi, patch);
 
-      acceleration.initialize(Vector(0.,0.,0.));
+      gacceleration.initialize(Vector(0.,0.,0.));
+      gvelocity_star.initialize(Vector(0.,0.,0.));
 
-      for(NodeIterator iter=patch->getExtraNodeIterator();
-                        !iter.done();iter++){
-        IntVector c = *iter;
-        Vector acc = (internalforce[c] + externalforce[c])/mass[c];
-        acceleration[c]  = acc +  gravity;
-        velocity_star[c] = velocity[c] + acceleration[c] * delT;
+      for(NodeIterator iter=patch->getExtraNodeIterator(); !iter.done();iter++){
+        IntVector n = *iter;
+        Vector acc = (internalforce[n] + externalforce[n])/gmass[n];
+        gacceleration[n]  = acc +  gravity;
+        gvelocity_star[n] = gvelocity[n] + gacceleration[n] * delT;
+/*`==========TESTING==========*/
+#ifdef DEBUG
+        Vector ans(0,0,0);
+        if( abs(gacceleration[n].length() - ans.length()) > 1e-8 ) {
+          cout << "    L-"<< getLevel(patches)->getIndex() << " node: "<< n << " gacceleration: " << gacceleration[n] 
+               <<  " externalForce: " <<externalforce[n] << " internalforce: " << internalforce[n] <<endl;
+        }
+        
+        if(getLevel(patches)->getIndex() == 1 && n == IntVector(88,88,0) ){
+           cout << "    L-"<< getLevel(patches)->getIndex() << " node: "<< n << " gacceleration: " << gacceleration[n] 
+                 <<  " externalForce: " <<externalforce[n] << " internalforce: " << internalforce[n] <<endl;
+        }
+#endif 
+/*===========TESTING==========`*/
       }
-    }    // matls
-  }
+    }  // matls
+  }  // patches
 }
 //______________________________________________________________________
 //
@@ -1715,6 +1729,7 @@ void AMRMPM::setGridBoundaryConditions(const ProcessorGroup*,
     for(int m = 0; m < numMPMMatls; m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
+
       
       NCVariable<Vector> gvelocity_star;
       NCVariable<Vector> gacceleration;
@@ -1723,23 +1738,37 @@ void AMRMPM::setGridBoundaryConditions(const ProcessorGroup*,
       new_dw->getModifiable(gacceleration, lb->gAccelerationLabel,  dwi,patch);
       new_dw->getModifiable(gvelocity_star,lb->gVelocityStarLabel,  dwi,patch);
       new_dw->get(gvelocity,               lb->gVelocityLabel,      dwi, patch, Ghost::None,0);
+          
+          
+      //__________________________________
+      // Apply grid boundary conditions to velocity_star and acceleration
+      if( patch->hasBoundaryFaces() && !patch->hasCoarseFaces() ){
+
+        MPMBoundCond bc;
+        bc.setBoundaryCondition(patch,dwi,"Velocity", gvelocity_star,interp_type);
+        bc.setBoundaryCondition(patch,dwi,"Symmetric",gvelocity_star,interp_type);
+
+       
+        // Now recompute acceleration as the difference between the velocity
+        // interpolated to the grid (no bcs applied) and the new velocity_star
+        for(NodeIterator iter = patch->getExtraNodeIterator(); !iter.done(); iter++){
+          IntVector c = *iter;
+          gacceleration[c] = (gvelocity_star[c] - gvelocity[c])/delT;
+  /*`==========TESTING==========*/
+#ifndef DEBUG
+          if(getLevel(patches)->getIndex() == 1 && c == IntVector(88,88,0) ){
+             cout << "    L-"<< getLevel(patches)->getIndex() << " node: "<< c << " acceleration: " << gacceleration[c] 
+                   <<  " gvelocity_star: " <<gvelocity_star[c] << " gvelocity: " << gvelocity[c] <<endl;
+          } 
+#endif
+  /*===========TESTING==========`*/
+        }
+        // Set symmetry BCs on acceleration
+        bc.setBoundaryCondition(patch,dwi,"Symmetric",gacceleration,interp_type);
+      } 
       
       //__________________________________
-      // Apply grid boundary conditions to velocity_star and
-      // acceleration before interpolating back to the particles
-
-      MPMBoundCond bc;
-      bc.setBoundaryCondition(patch,dwi,"Velocity", gvelocity_star,interp_type);
-      bc.setBoundaryCondition(patch,dwi,"Symmetric",gvelocity_star,interp_type);
-
-      //__________________________________
-      // Now recompute acceleration as the difference between the velocity
-      // interpolated to the grid (no bcs applied) and the new velocity_star
-      for(NodeIterator iter = patch->getExtraNodeIterator(); !iter.done(); iter++){
-        IntVector c = *iter;
-        gacceleration[c] = (gvelocity_star[c] - gvelocity[c])/delT;
-      }
-
+      //
       if(!flags->d_doGridReset){
         NCVariable<Vector> displacement;
         constNCVariable<Vector> displacementOld;
@@ -1751,8 +1780,7 @@ void AMRMPM::setGridBoundaryConditions(const ProcessorGroup*,
            displacement[c] = displacementOld[c] + gvelocity_star[c] * delT;
         }
       }  // d_doGridReset
-      // Set symmetry BCs on acceleration if called for
-      bc.setBoundaryCondition(patch,dwi,"Symmetric",gacceleration,interp_type);
+
     } // matl loop
   }  // patch loop
 }
@@ -2090,7 +2118,7 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 /*===========TESTING==========`*/
 
 /*`==========TESTING==========*/
-#if 0
+#ifdef DEBUG
           Vector ans(0,0,0);
           if( abs(acc.length() - ans.length()) > 1e-8 ) {
             cout << "    L-"<< getLevel(patches)->getIndex() << " node: "<< node << " acc: " << acc << "\t  gacceleration " << gacceleration[node] << " S[k] " << S[k] << endl;
@@ -2105,8 +2133,8 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         pvelocitynew[idx]    = pvelocity[idx]  + acc*delT;
         
 /*`==========TESTING==========*/
-#if 0
-          Vector ans(100,0,0);
+#ifdef DEBUG
+          Vector ans(100,100,0);
           if( abs(pvelocitynew[idx].length() - ans.length()) > 1e-12 ) {
             cout << "    L-"<< getLevel(patches)->getIndex() << " px: "<< pxnew[idx] << " pvelocitynew: " << pvelocitynew[idx] <<  " pvelocity " << pvelocity[idx]<< endl;
           }
@@ -2250,10 +2278,10 @@ void AMRMPM::interpolateToParticlesAndUpdate_CFI(const ProcessorGroup*,
               vel  += gvelocity_star_fine[fineNode] * S[k];
               acc  += gacceleration_fine[fineNode]  * S[k];
 /*`==========TESTING==========*/
-#if 0
-              if(fineNode == IntVector(30,39,0) || fineNode == IntVector(30,41,0)){
+#ifdef DEBUG
+     //         if(fineNode == IntVector(30,39,0) || fineNode == IntVector(30,41,0)){
                 cout << " working on node: " << fineNode << " S[k] " << S[k] << " gvelocity_star_fine " << gvelocity_star_fine[fineNode] << " gacceleration_fine " << gacceleration_fine[fineNode] << endl;
-              }
+     //         }
 #endif 
 /*===========TESTING==========`*/
             }
