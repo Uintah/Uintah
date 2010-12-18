@@ -267,6 +267,7 @@ namespace Wasatch{
   }
 
   //--------------------------------------------------------------------
+
   void
   Wasatch::scheduleTimeAdvance( const Uintah::LevelP& level,
                                 Uintah::SchedulerP& sched )
@@ -293,15 +294,12 @@ namespace Wasatch{
     // -----------------------------------------------------------------------
     // BOUNDARY CONDITIONS TREATMENT
     // -----------------------------------------------------------------------
-    // get the advance solution graph
     const GraphHelper* gh = graphCategories_[ ADVANCE_SOLUTION ];
-    // get a pointer to local patches
     const Uintah::PatchSet* const localPatches = sched->getLoadBalancer()->getPerProcessorPatchSet(level);
-    // get the Uintah materials
     const Uintah::MaterialSubset* const materials = sharedState_->allMaterials()->getUnion();
-    // build the boundary conditions
-    buildBoundaryConditions(&adaptors_, gh, localPatches, &patchInfoMap_, materials);    
-}
+
+    buildBoundaryConditions( adaptors_, *gh, localPatches, patchInfoMap_, materials );
+  }
 
   //--------------------------------------------------------------------
 

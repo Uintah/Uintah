@@ -21,8 +21,6 @@ namespace Uintah{
   class DataWarehouse;
 }
 
-namespace Expr{ class ExpressionTree; }
-
 namespace Wasatch{
 
   class CoordHelper;
@@ -126,11 +124,6 @@ namespace Wasatch{
      *  This method is strongly typed to ensure that the solution
      *  variables are advanced properly and to guarantee compatibility
      *  with the Expression library.
-     *
-     *  The TimeStepper maintains an ExpressionTree object that
-     *  calculates the RHS for all transport equations that are
-     *  managed by this TimeStepper.  Adding an equation augments this
-     *  tree and causes a recompilation of it.
      */
     template<typename FieldT>
     inline void add_equation( const std::string& solnVarName,
