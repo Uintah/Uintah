@@ -22,12 +22,12 @@ namespace Wasatch {
 
   //-----------------------------------------------------------------------------
   
-  /*!
-    @struct     BCOpTypeSelector
-    @abstract   This templated struct is used to simplify boundary condition
-   operator selection.
-  */
-
+  /**
+   *  @struct BCOpTypeSelector
+   *
+   *  @brief This templated struct is used to simplify boundary
+   *         condition operator selection.
+   */
   template< typename FieldT, typename BCEvaluator>
   struct BCOpTypeSelector
   {
@@ -47,24 +47,24 @@ namespace Wasatch {
   //-----------------------------------------------------------------------------
 
   template < typename FieldT, typename BCOpT >
-  void setBoundaryCondition(const Uintah::Patch* const thePatch,
-                            const GraphHelper* const theGraph,
-                            const std::string phiName,
-                            const SpatialOps::structured::IntVec theBCPointIndex,
-                            const SpatialOps::structured::IntVec thePatchDimension, //send in the patch dimension to avoid calculating it for every point!
-                            const bool bcx,
-                            const bool bcy,
-                            const bool bcz,
-                            const SpatialOps::structured::BCSide theBCSide,
-                            const double theBCValue,
-                            const SpatialOps::OperatorDatabase* theOperatorsDb) 
+  void setBoundaryCondition( const Uintah::Patch* const thePatch,
+                             const GraphHelper& theGraph,
+                             const std::string& phiName,
+                             const SpatialOps::structured::IntVec& theBCPointIndex,
+                             const SpatialOps::structured::IntVec& thePatchDimension, //send in the patch dimension to avoid calculating it for every point!
+                             const bool bcx,
+                             const bool bcy,
+                             const bool bcz,
+                             const SpatialOps::structured::BCSide theBCSide,
+                             const double theBCValue,
+                             const SpatialOps::OperatorDatabase& theOperatorsDb ) 
   {
-    Expr::ExpressionFactory& theExprFactory = *theGraph->exprFactory;
+    Expr::ExpressionFactory& theExprFactory = *theGraph.exprFactory;
     const Expr::Tag phiLabel( phiName, Expr::STATE_N );
     const Expr::ExpressionID phiID = theExprFactory.get_registry().get_id(phiLabel);  
     Expr::Expression<FieldT>& phiExpr = dynamic_cast<Expr::Expression<FieldT>&> ( theExprFactory.retrieve_expression( phiID, thePatch->getID() ) );
     //
-    BCOpT theBCOperator(thePatchDimension, bcx, bcy, bcz, theBCPointIndex, theBCSide, SpatialOps::structured::ConstValEval(theBCValue), *theOperatorsDb);
+    BCOpT theBCOperator(thePatchDimension, bcx, bcy, bcz, theBCPointIndex, theBCSide, SpatialOps::structured::ConstValEval(theBCValue), theOperatorsDb);
     phiExpr.process_after_evaluate(theBCOperator);
   }
   
@@ -72,13 +72,13 @@ namespace Wasatch {
   
   template <typename T>
   bool getIteratorBCValueBCKind( const Uintah::Patch* patch, 
-                                const Uintah::Patch::FaceType face,
-                                const int child,
-                                const std::string& desc,
-                                const int mat_id,
-                                T& bc_value,
-                                SCIRun::Iterator& bound_ptr,
-                                std::string& bc_kind)
+                                 const Uintah::Patch::FaceType face,
+                                 const int child,
+                                 const std::string& desc,
+                                 const int mat_id,
+                                 T& bc_value,
+                                 SCIRun::Iterator& bound_ptr,
+                                 std::string& bc_kind )
   {  
     SCIRun::Iterator nu;
     const Uintah::BoundCondBase* bc = patch->getArrayBCValues(face,mat_id,
@@ -105,11 +105,11 @@ namespace Wasatch {
   
   //-----------------------------------------------------------------------------
   
-  void buildBoundaryConditions(std::vector<EqnTimestepAdaptorBase*>* theEqnAdaptors, 
-                               const GraphHelper* theGraphHelper,
-                               const Uintah::PatchSet* const theLocalPatches,
-                               PatchInfoMap* const thePatchInfoMap,
-                               const Uintah::MaterialSubset* const theMaterials)
+  void buildBoundaryConditions( const std::vector<EqnTimestepAdaptorBase*>& theEqnAdaptors, 
+                                const GraphHelper& theGraphHelper,
+                                const Uintah::PatchSet* const theLocalPatches,
+                                const PatchInfoMap& thePatchInfoMap,
+                                const Uintah::MaterialSubset* const theMaterials)
   {
      /*
      ALGORITHM:
@@ -131,7 +131,7 @@ namespace Wasatch {
     typedef SS::ConstValEval BCEvaluator; // basic functor for constant functions.
     typedef std::vector<EqnTimestepAdaptorBase*> EquationAdaptors;
     
-    for( EquationAdaptors::const_iterator ia=(*theEqnAdaptors).begin(); ia!=(*theEqnAdaptors).end(); ++ia ){
+    for( EquationAdaptors::const_iterator ia=theEqnAdaptors.begin(); ia!=theEqnAdaptors.end(); ++ia ){
       EqnTimestepAdaptorBase* const adaptor = *ia;
       
       // get the input parameters corresponding to this transport equation
@@ -179,8 +179,9 @@ namespace Wasatch {
             const bool bcz = (*patch).getBCType(Uintah::Patch::zplus) != Uintah::Patch::Neighbor;
             
             // get the patch info from which we can get the operators database
-            const PatchInfo& pi = (*thePatchInfoMap)[patch->getID()];
-            const SpatialOps::OperatorDatabase* theOperatorsDb= pi.operators;
+            const PatchInfoMap::const_iterator ipi = thePatchInfoMap.find( patch->getID() );
+            assert( ipi != thePatchInfoMap.end() );
+            const SpatialOps::OperatorDatabase& theOperatorsDb= *(ipi->second.operators);
             
             // now loop over the boundary faces
             for (faceIterator = bndFaces.begin(); faceIterator !=bndFaces.end(); faceIterator++){
@@ -194,7 +195,7 @@ namespace Wasatch {
                 double bc_value = -9; 
                 std::string bc_kind = "NotSet";
                 SCIRun::Iterator bound_ptr;                
-                bool foundIterator = getIteratorBCValueBCKind( patch, theFace, child, phiName, materialID, bc_value, bound_ptr, bc_kind);                 
+                bool foundIterator = getIteratorBCValueBCKind( patch, theFace, child, phiName, materialID, bc_value, bound_ptr, bc_kind);
                 
                 if (foundIterator) {
                   std::cout<<"SETTING BOUNDARY CONDITIONS\n";
