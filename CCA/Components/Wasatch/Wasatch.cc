@@ -187,11 +187,12 @@ namespace Wasatch{
     // Build the initial condition expression graph
     if( !icGraphHelper->rootIDs.empty() ){
 
-      Expr::ExpressionTree* const graph = scinew Expr::ExpressionTree( *icGraphHelper->exprFactory, -1, "initialization" );
-
-      for( IDSet::const_iterator iid=icGraphHelper->rootIDs.begin(); iid!=icGraphHelper->rootIDs.end(); ++iid ){
-        graph->insert_tree( *iid );
-      }
+      TaskInterface* const task = scinew TaskInterface( icGraphHelper->rootIDs,
+                                                        "initialization",
+                                                        *icGraphHelper->exprFactory,
+                                                        localPatches,
+                                                        patchInfoMap_,
+                                                        false );
 
       // set coordinate values as required by the IC graph.
       icCoordHelper_->create_task( sched, localPatches, sharedState_->allMaterials() );
@@ -200,15 +201,8 @@ namespace Wasatch{
       // create the TaskInterface and schedule this task for
       // execution.  Note that field dependencies are assigned
       // within the TaskInterface object.
-      TaskInterface* const task = scinew TaskInterface( graph, patchInfoMap_ );
       task->schedule( sched, localPatches, sharedState_->allMaterials(), icCoordHelper_->field_tags() );
       taskInterfaceList_.push_back( task );
-
-      //________________
-      // jcs diagnostics
-      std::cout << "writing tree file to 'initialization.dot'" << std::endl;
-      std::ofstream fout("initialization.dot");
-      graph->write_tree(fout);
     }
 
     std::cout << "Wasatch: done creating initialization task(s)" << std::endl;
@@ -228,25 +222,18 @@ namespace Wasatch{
 
     if( tsGraphHelper->rootIDs.size() > 0 ){
 
-      Expr::ExpressionTree* const graph = scinew Expr::ExpressionTree( *tsGraphHelper->exprFactory, -1, "initialization" );
-
-      for( IDSet::const_iterator iid=tsGraphHelper->rootIDs.begin(); iid!=tsGraphHelper->rootIDs.end(); ++iid ){
-        graph->insert_tree( *iid );
-      }
-
       //_______________________________________________________
       // create the TaskInterface and schedule this task for
       // execution.  Note that field dependencies are assigned
       // within the TaskInterface object.
-      TaskInterface* const task = scinew TaskInterface( graph, patchInfoMap_ );
+      TaskInterface* const task = scinew TaskInterface( tsGraphHelper->rootIDs,
+                                                        "compute timestep",
+                                                        *tsGraphHelper->exprFactory,
+                                                        patches,
+                                                        patchInfoMap_,
+                                                        false );
       task->schedule( sched, patches, materials );
       taskInterfaceList_.push_back( task );
-
-      //________________
-      // jcs diagnostics
-      std::cout << "writing tree file to 'deltat.dot'" << std::endl;
-      std::ofstream fout("detat.dot");
-      graph->write_tree(fout);
     }
     else{ // default
 
@@ -260,7 +247,6 @@ namespace Wasatch{
       // jcs why can't we specify a metrial here?  It doesn't seem to be working if I do.
 
       sched->addTask( task, level->eachPatch(), sharedState_->allMaterials() );
-
     }
 
     std::cout << "Wasatch: done creating timestep task(s)" << std::endl;
@@ -354,8 +340,7 @@ namespace Wasatch{
 //     // some things (e.g. boundary conditions) may be prescribed
 //     // functions of time.
 //     {
-//       Expr::ExpressionTree* timeTree = scinew Expr::ExpressionTree( timeID, exprFactory, -1, "set time" );
-//       TaskInterface* const timeTask = scinew TaskInterface( timeTree, patchInfoMap_ );
+//       TaskInterface* const timeTask = scinew TaskInterface( timeID, "set time", exprFactory, localPatches, patchInfoMap_, false );
 //       timeTask->schedule( sched, localPatches, materials );
 //       taskInterfaceList_.push_back( timeTask );
 //     }

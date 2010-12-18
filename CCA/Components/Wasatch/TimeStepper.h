@@ -71,7 +71,7 @@ namespace Wasatch{
     YVolFields   yVolFields_;    ///< A vector of the y-volume fields being solved by this time integrator.
     ZVolFields   zVolFields_;    ///< A vector of the z-volume fields being solved by this time integrator.
 
-    typedef std::vector< Expr::ExpressionID > RHSIDList;
+    typedef std::set< Expr::ExpressionID > RHSIDList;
     RHSIDList rhsIDs_;  ///< A list of all of the RHS evaluators associated with this integrator.
 
     Expr::ExpressionFactory* const factory_;  ///< the factory that is associated with this time stepper.
@@ -185,7 +185,7 @@ namespace Wasatch{
     Uintah::VarLabel* rhsVarLabel  = Uintah::VarLabel::create( rhsName,     typeDesc, ghostDesc );
     std::vector< FieldInfo<FieldT> >& fields = field_info_selctor<FieldT>();
     fields.push_back( FieldInfo<FieldT>( solnVarName, solnVarLabel, rhsVarLabel ) );
-    rhsIDs_.push_back( rhsID );
+    rhsIDs_.insert( rhsID );
 
     typedef Expr::PlaceHolder<FieldT>  FieldExpr;
     factory_->register_expression( Expr::Tag(solnVarName,Expr::STATE_N  ), new typename FieldExpr::Builder() );
