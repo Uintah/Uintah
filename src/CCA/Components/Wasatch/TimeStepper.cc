@@ -155,19 +155,17 @@ namespace Wasatch{
       // jcs for multistage integrators, we may need to keep the same
       //     field manager list for all of the stages?  Otherwise we
       //     will have all sorts of name clashes?
-      Expr::ExpressionTree* rhsTree = scinew Expr::ExpressionTree( rhsIDs_, *factory_, -1, "rhs" );
-      TaskInterface* rhsTask = scinew TaskInterface( rhsTree, patchInfoMap );
+      TaskInterface* rhsTask = scinew TaskInterface( rhsIDs_,
+                                                     "rhs",
+                                                     *factory_,
+                                                     patches,
+                                                     patchInfoMap,
+                                                     false );
 
       taskInterfaceList_.push_back( rhsTask );
 
       coordHelper_->create_task( sched, patches, materials );
       rhsTask->schedule( sched, patches, materials, coordHelper_->field_tags() );
-      
-      // jcs hacked diagnostics - problems in parallel.
-      const std::string fname("rhs.dot");
-      std::cout << "writing RHS tree to '" << fname << "'" << std::endl;
-      std::ofstream fout(fname.c_str());
-      rhsTree->write_tree(fout);
     }
     catch( std::exception& e ){
       std::ostringstream msg;
@@ -182,11 +180,13 @@ namespace Wasatch{
     // add a task to populate a "field" with the current time.
     // This is required by the time integrator.
     {
-      Expr::ExpressionTree* timeTree = scinew Expr::ExpressionTree( timeID, *factory_, -1, "set time" );
-      TaskInterface* const timeTask = scinew TaskInterface( timeTree, patchInfoMap );
-
+      TaskInterface* const timeTask = scinew TaskInterface( timeID,
+                                                            "set time",
+                                                            *factory_,
+                                                            patches,
+                                                            patchInfoMap,
+                                                            false );
       taskInterfaceList_.push_back( timeTask );
-
       timeTask->schedule( sched, patches, materials, coordHelper_->field_tags() );
     }
 
