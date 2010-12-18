@@ -183,6 +183,13 @@ namespace Wasatch{
 
     GraphHelper* const icGraphHelper = graphCategories_[ INITIALIZATION ];
 
+    Expr::ExpressionFactory& exprFactory = *icGraphHelper->exprFactory;
+
+    //_______________________________________
+    // set the time
+    exprFactory.register_expression( Expr::Tag(StringNames::self().time,Expr::STATE_NONE),
+                                     scinew SetCurrentTime::Builder(sharedState_) );
+    
     //_____________________________________________
     // Build the initial condition expression graph
     if( !icGraphHelper->rootIDs.empty() ){

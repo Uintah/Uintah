@@ -1,0 +1,47 @@
+This is BibTeX, Version 0.99c (TeX Live 2009)
+The top-level auxiliary file: MMS_and_Convergence_Study.aux
+The style file: unsrt.bst
+Database file #1: Wasatch_MMS.bib
+Warning--empty year in rjm_diss
+You've used 1 entry,
+            1791 wiz_defined-function locations,
+            449 strings with 3684 characters,
+and the built_in function-call counts, 143 in all, are:
+= -- 11
+> -- 4
+< -- 0
++ -- 2
+- -- 1
+* -- 8
+:= -- 33
+add.period$ -- 3
+call.type$ -- 1
+change.case$ -- 0
+chr.to.int$ -- 0
+cite$ -- 2
+duplicate$ -- 7
+empty$ -- 12
+format.name$ -- 1
+if$ -- 25
+int.to.chr$ -- 0
+int.to.str$ -- 1
+missing$ -- 0
+newline$ -- 8
+num.names$ -- 1
+pop$ -- 3
+preamble$ -- 1
+purify$ -- 0
+quote$ -- 0
+skip$ -- 2
+stack$ -- 0
+substring$ -- 0
+swap$ -- 1
+text.length$ -- 0
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 0
+warning$ -- 1
+while$ -- 1
+width$ -- 2
+write$ -- 12
+(There was 1 warning)
