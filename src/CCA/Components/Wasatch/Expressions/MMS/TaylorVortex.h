@@ -33,18 +33,18 @@ public:
   /**
    *  @brief Builds a Taylor Vortex Velocity Function in x dirextion Expression.
    */
-    struct Builder : public Expr::ExpressionBuilder
+  struct Builder : public Expr::ExpressionBuilder
   {
-	Builder( const Expr::Tag xTag,
-           const Expr::Tag yTag,
-           const Expr::Tag tTag,
-           const double A=1.0,         ///< Amplitude of the function
-           const double nu=0.1 );		 ///< Kinematic viscosity of the fluid
-	Expr::ExpressionBase* build( const Expr::ExpressionID& id,
+    Builder( const Expr::Tag xTag,
+             const Expr::Tag yTag,
+             const Expr::Tag tTag,
+             const double A=1.0,         ///< Amplitude of the function
+             const double nu=0.1 );		 ///< Kinematic viscosity of the fluid
+    Expr::ExpressionBase* build( const Expr::ExpressionID& id,
                                  const Expr::ExpressionRegistry& reg ) const;
   private:
-	const double A_, nu_;
-	const Expr::Tag xt_, yt_, tt_;
+    const double A_, nu_;
+    const Expr::Tag xt_, yt_, tt_;
   };
 
   void advertise_dependents( Expr::ExprDeps& exprDeps );
@@ -94,16 +94,16 @@ public:
    */
   struct Builder : public Expr::ExpressionBuilder
   {
-	Builder( const Expr::Tag xTag,
-           const Expr::Tag yTag,
-           const Expr::Tag tTag,
-           const double A=1.0,         ///< Amplitude of the function
-           const double nu=0.1 );		 ///< Kinematic viscosity of the fluid
-	Expr::ExpressionBase* build( const Expr::ExpressionID& id,
+    Builder( const Expr::Tag xTag,
+             const Expr::Tag yTag,
+             const Expr::Tag tTag,
+             const double A=1.0,         ///< Amplitude of the function
+             const double nu=0.1 );		 ///< Kinematic viscosity of the fluid
+    Expr::ExpressionBase* build( const Expr::ExpressionID& id,
                                  const Expr::ExpressionRegistry& reg ) const;
   private:
-	const double A_, nu_;
-	const Expr::Tag xt_, yt_, tt_;
+    const double A_, nu_;
+    const Expr::Tag xt_, yt_, tt_;
   };
 		
   void advertise_dependents( Expr::ExprDeps& exprDeps );
@@ -157,16 +157,16 @@ public:
    */
   struct Builder : public Expr::ExpressionBuilder
   {
-	Builder( const Expr::Tag xTag,
-           const Expr::Tag yTag,
-           const Expr::Tag tTag,
-           const double A=1.0,         ///< Amplitude of the function
-           const double nu=0.1 );		 ///< Kinematic viscosity of the fluid
-	Expr::ExpressionBase* build( const Expr::ExpressionID& id,
-                               const Expr::ExpressionRegistry& reg ) const;
+    Builder( const Expr::Tag xTag,
+             const Expr::Tag yTag,
+             const Expr::Tag tTag,
+             const double A=1.0,         ///< Amplitude of the function
+             const double nu=0.1 );		 ///< Kinematic viscosity of the fluid
+    Expr::ExpressionBase* build( const Expr::ExpressionID& id,
+                                 const Expr::ExpressionRegistry& reg ) const;
   private:
-	const double A_, nu_;
-	const Expr::Tag xt_, yt_, tt_;
+    const double A_, nu_;
+    const Expr::Tag xt_, yt_, tt_;
   };
 		
   void advertise_dependents( Expr::ExprDeps& exprDeps );
@@ -220,21 +220,21 @@ public:
    */
   struct Builder : public Expr::ExpressionBuilder
   {
-	Builder( const Expr::Tag xTag,
-           const Expr::Tag yTag,
-           const Expr::Tag tTag,
-           const double A=1.0,         ///< Amplitude of the function
-           const double nu=0.1 );		 ///< Kinematic viscosity of the fluid
-	Expr::ExpressionBase* build( const Expr::ExpressionID& id,
-                               const Expr::ExpressionRegistry& reg ) const;
-	private:
-	  const double A_, nu_;
-	  const Expr::Tag xt_, yt_, tt_;
-	};
+    Builder( const Expr::Tag xTag,
+             const Expr::Tag yTag,
+             const Expr::Tag tTag,
+             const double A=1.0,         ///< Amplitude of the function
+             const double nu=0.1 );		 ///< Kinematic viscosity of the fluid
+    Expr::ExpressionBase* build( const Expr::ExpressionID& id,
+                                 const Expr::ExpressionRegistry& reg ) const;
+  private:
+    const double A_, nu_;
+    const Expr::Tag xt_, yt_, tt_;
+  };
 		
-	void advertise_dependents( Expr::ExprDeps& exprDeps );
-	void bind_fields( const Expr::FieldManagerList& fml );
-	void evaluate();
+  void advertise_dependents( Expr::ExprDeps& exprDeps );
+  void bind_fields( const Expr::FieldManagerList& fml );
+  void evaluate();
 		
 private:
 		
@@ -320,12 +320,7 @@ VelocityX<ValT>::
 evaluate()
 {
   ValT& phi = this->value();
-  typename ValT::const_iterator ix = this->x_->begin();
-  typename ValT::const_iterator iy = this->y_->begin();
-  const double t = *(this->t_);
-  for( typename ValT::iterator iphi = phi.begin(); iphi!=phi.end(); ++iphi, ++ix, ++iy ){
-	*iphi = 1 - A_ * std::cos(*ix - t) * std::sin(*iy - t) * std::exp(-2 * nu_ * t);
-  }
+  phi <<= 1.0 - A_ * cos( *x_ - *t_ ) * sin( *y_ - *t_ ) * exp( -2.0 * nu_ * *t_ );
 }
 	
 //--------------------------------------------------------------------
@@ -338,10 +333,10 @@ Builder( const Expr::Tag xtag,
          const double A,
          const double nu)
   : A_(A),
-	nu_(nu),
-	xt_( xtag ),
-	yt_( ytag ),
-	tt_( ttag )
+    nu_(nu),
+    xt_( xtag ),
+    yt_( ytag ),
+    tt_( ttag )
 {}
 	
 //--------------------------------------------------------------------
@@ -409,28 +404,23 @@ VelocityY<ValT>::
 evaluate()
 {
   ValT& phi = this->value();
-  typename ValT::const_iterator ix = this->x_->begin();
-  typename ValT::const_iterator iy = this->y_->begin();
-  const double t = *(this->t_);
-  for( typename ValT::iterator iphi = phi.begin(); iphi!=phi.end(); ++iphi, ++ix, ++iy ){
-    *iphi = 1 + A_ * std::sin(*ix - t) * std::cos(*iy - t) * std::exp(-2 * nu_ * t);
-  }
+  phi <<= 1.0 + A_ * sin( *x_ - *t_ ) * cos( *y_ - *t_ ) * exp( -2.0*nu_ * *t_ );
 }
 	
 //--------------------------------------------------------------------
 	
 template< typename ValT >
 VelocityY<ValT>::Builder::
-  Builder( const Expr::Tag xtag,
-           const Expr::Tag ytag,
-           const Expr::Tag ttag,
-           const double A,
-           const double nu )
+Builder( const Expr::Tag xtag,
+         const Expr::Tag ytag,
+         const Expr::Tag ttag,
+         const double A,
+         const double nu )
   : A_(A),
-	nu_(nu),
-	xt_( xtag ),
-	yt_( ytag ),
-	tt_( ttag )
+    nu_(nu),
+    xt_( xtag ),
+    yt_( ytag ),
+    tt_( ttag )
 {}
 	
 //--------------------------------------------------------------------
@@ -460,7 +450,7 @@ GradPX( const Expr::Tag& xtag,
         const Expr::ExpressionID& id,
         const Expr::ExpressionRegistry& reg )
   : Expr::Expression<ValT>( id, reg ),
-	A_(A), nu_(nu), xTag_( xtag ), yTag_( ytag ), tTag_( ttag )
+    A_(A), nu_(nu), xTag_( xtag ), yTag_( ytag ), tTag_( ttag )
 {}
 	
 //--------------------------------------------------------------------
@@ -498,12 +488,7 @@ GradPX<ValT>::
 evaluate()
 {
   ValT& phi = this->value();
-  typename ValT::const_iterator ix = this->x_->begin();
-  typename ValT::const_iterator iy = this->y_->begin();
-  const double t = *(this->t_);
-  for( typename ValT::iterator iphi = phi.begin(); iphi!=phi.end(); ++iphi, ++ix, ++iy ){
-	  *iphi = -(A_ * A_ /2) * std::sin(2 * ( *ix - t))  * std::exp(-4 * nu_ * t);
-  }	
+  phi <<= -1.0*(A_*A_/2.0) * sin( 2.0*( *x_ - *t_ ) ) * exp( -4.0*nu_ * *t_ );
 }
 	
 //--------------------------------------------------------------------
@@ -516,10 +501,10 @@ Builder( const Expr::Tag xtag,
          const double A,
          const double nu )
   : A_(A), 
-	nu_(nu),
-	xt_( xtag ),
-	yt_( ytag ),
-	tt_( ttag )
+    nu_(nu),
+    xt_( xtag ),
+    yt_( ytag ),
+    tt_( ttag )
 {}
 	
 //--------------------------------------------------------------------
@@ -549,7 +534,7 @@ GradPY( const Expr::Tag& xtag,
         const Expr::ExpressionID& id,
         const Expr::ExpressionRegistry& reg )
   : Expr::Expression<ValT>( id, reg ),
-	A_(A), nu_(nu), xTag_( xtag ), yTag_( ytag ), tTag_( ttag )
+    A_(A), nu_(nu), xTag_( xtag ), yTag_( ytag ), tTag_( ttag )
 {}
 	
 //--------------------------------------------------------------------
@@ -587,12 +572,7 @@ GradPY<ValT>::
 evaluate()
 {
   ValT& phi = this->value();
-  typename ValT::const_iterator ix = this->x_->begin();
-  typename ValT::const_iterator iy = this->y_->begin();
-  const double t = *(this->t_);
-  for( typename ValT::iterator iphi = phi.begin(); iphi!=phi.end(); ++iphi, ++ix, ++iy ){
-	*iphi = -(A_ * A_ / 2) * std::sin(2 * ( *iy - t))  * std::exp(-4 * nu_ * t);
-  }	
+  phi <<= -1.0*(A_*A_/2.0) * sin( 2.0*(*y_-*t_) ) * exp(-4.0 * nu_ * *t_);
 }
 	
 //--------------------------------------------------------------------
@@ -605,10 +585,10 @@ Builder( const Expr::Tag xtag,
          const double A,
          const double nu )
   : A_(A), 
-	nu_(nu),
-	xt_( xtag ),
-	yt_( ytag ),
-	tt_( ttag )
+    nu_(nu),
+    xt_( xtag ),
+    yt_( ytag ),
+    tt_( ttag )
 {}
 	
 //--------------------------------------------------------------------
