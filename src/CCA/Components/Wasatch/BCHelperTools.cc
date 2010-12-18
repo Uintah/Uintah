@@ -62,7 +62,7 @@ namespace Wasatch {
     Expr::ExpressionFactory& theExprFactory = *theGraph.exprFactory;
     const Expr::Tag phiLabel( phiName, Expr::STATE_N );
     const Expr::ExpressionID phiID = theExprFactory.get_registry().get_id(phiLabel);  
-    Expr::Expression<FieldT>& phiExpr = dynamic_cast<Expr::Expression<FieldT>&> ( theExprFactory.retrieve_expression( phiID, thePatch->getID() ) );
+    Expr::Expression<FieldT>& phiExpr = dynamic_cast<Expr::Expression<FieldT>&> ( theExprFactory.retrieve_expression( phiID, thePatch->getID(), true ) );
     //
     BCOpT theBCOperator(thePatchDimension, bcx, bcy, bcz, theBCPointIndex, theBCSide, SpatialOps::structured::ConstValEval(theBCValue), theOperatorsDb);
     phiExpr.process_after_evaluate(theBCOperator);
