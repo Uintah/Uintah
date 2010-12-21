@@ -703,6 +703,7 @@
     <VarTracker           spec="OPTIONAL NO_DATA">
       <start_time         spec="REQUIRED DOUBLE" />
       <end_time           spec="REQUIRED DOUBLE" />
+      <level              spec="OPTIONAL INTEGER" />
       <start_index        spec="REQUIRED VECTOR" />
       <end_index          spec="REQUIRED VECTOR" />
       <var                spec="MULTIPLE NO_DATA"
