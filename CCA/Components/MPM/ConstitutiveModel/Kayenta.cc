@@ -128,7 +128,19 @@ Kayenta::Kayenta(ProblemSpecP& ps,MPMFlags* Mflag)
 
   // Check that model parameters are valid and allow model to change if needed
 
+  //First, print out the UI values specified by the user
+  proc0cout << "Original UI values" << endl;
+  for(int i = 0; i<d_NKMMPROP; i++){
+     proc0cout << "UI[i] = " << UI[i] << endl;
+  }
+
   KMMCHK(UI,UI,UI);
+
+  //Now, print out the UI values after alteration by KMMCHK
+  proc0cout << "Altered UI values" << endl;
+  for(int i = 0; i<d_NKMMPROP; i++){
+     proc0cout << "UI[i] = " << UI[i] << endl;
+  }
 
   //Create VarLabels for GeoModel internal state variables (ISVs)
   int nx;
