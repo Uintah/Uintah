@@ -11,8 +11,17 @@
 #   to the ups file.
 #_________________________________________________________________________
 #
+if ($#argv == "0") then
+  echo "Usage: plot_dat_files <path to uda>"
+  exit
+endif
 
 set uda = $1;
+if ( ! -d $uda ) then
+  echo "ERROR:  path to uda is not valid"
+  echo "Usage: plot_dat_files <path to uda>"
+  exit
+endif
 
 echo $uda
 #_________________________________
@@ -34,8 +43,7 @@ set terminal x11 1
 #set terminal postscript color "Times-Roman" 12
 #set output "$uda/datPlots.ps"
 
-
-set label "2-D pure translation test (XY plane, 3 levels, RR:4)" at screen 0.5, screen 0.99 center
+set label "2-D pure translation test (XZ plane, 3 levels, RR:4, simple grid)" at screen 0.5, screen 0.99 center
 
 #set xrange[0:0.02]
 #__________________________________
@@ -69,7 +77,7 @@ plot   '$uda/KineticEnergy.dat'  using 1:2 t ''  w lines
 #  totalMomentum.dat
 #__________________________________ 
 set origin 0.5,0.48
-#set yrange[79.999:80.001]
+#set yrange[6320 - 6320*0.0001:6320 + 6320*0.0001]
 set ylabel "Total Momentum"
 plot   '$uda/TotalMom.dat'         using 1:2 t 'x'  w linespoints,\
        '$uda/TotalMom.dat'         using 1:3 t 'y'  w linespoints, \
