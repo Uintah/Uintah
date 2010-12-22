@@ -199,7 +199,7 @@ namespace Wasatch{
                                                         *icGraphHelper->exprFactory,
                                                         localPatches,
                                                         patchInfoMap_,
-                                                        false );
+                                                        true );
 
       // set coordinate values as required by the IC graph.
       icCoordHelper_->create_task( sched, localPatches, sharedState_->allMaterials() );
@@ -238,7 +238,7 @@ namespace Wasatch{
                                                         *tsGraphHelper->exprFactory,
                                                         patches,
                                                         patchInfoMap_,
-                                                        false );
+                                                        true );
       task->schedule( sched, patches, materials );
       taskInterfaceList_.push_back( task );
     }
@@ -347,7 +347,7 @@ namespace Wasatch{
 //     // some things (e.g. boundary conditions) may be prescribed
 //     // functions of time.
 //     {
-//       TaskInterface* const timeTask = scinew TaskInterface( timeID, "set time", exprFactory, localPatches, patchInfoMap_, false );
+//       TaskInterface* const timeTask = scinew TaskInterface( timeID, "set time", exprFactory, localPatches, patchInfoMap_, true );
 //       timeTask->schedule( sched, localPatches, materials );
 //       taskInterfaceList_.push_back( timeTask );
 //     }
