@@ -80,9 +80,9 @@ extern "C"{
 #endif
 
 //#define KMM_ORTHOTROPIC
-//#undef KMM_ORTHOTROPIC
+#undef KMM_ORTHOTROPIC
 //#define KMM_ANISOTROPIC
-//#undef KMM_ANISOTROPIC
+#undef KMM_ANISOTROPIC
 
    void KMMCHK( double UI[], double UJ[], double UK[] );
    void KAYENTA_CALC( int &nblk, int &ninsv, double &dt,
