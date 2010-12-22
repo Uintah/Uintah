@@ -224,7 +224,8 @@ namespace Wasatch{
     typedef std::vector<EqnTimestepAdaptorBase*> EquationAdaptors;
     EquationAdaptors adaptors_;
 
-    std::list< TaskInterface*  > taskInterfaceList_;
+    std::list< const TaskInterface*  > taskInterfaceList_;
+    std::list< const Uintah::PatchSet* > patchSetList_;
 
     Wasatch( const Wasatch& ); // disallow copying
     Wasatch& operator=( const Wasatch& ); // disallow assignment
@@ -240,6 +241,11 @@ namespace Wasatch{
                       const Uintah::MaterialSubset* matls,
                       Uintah::DataWarehouse* old_dw,
                       Uintah::DataWarehouse* new_dw );
+
+    /** \brief obtain the set of patches to operate on */
+    const Uintah::PatchSet* get_patchset( const Uintah::LevelP& level,
+                                          Uintah::SchedulerP& sched );
+
   };
 
 } // namespace Wasatch
