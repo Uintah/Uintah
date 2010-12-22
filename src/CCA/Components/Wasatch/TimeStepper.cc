@@ -160,7 +160,7 @@ namespace Wasatch{
                                                      *factory_,
                                                      patches,
                                                      patchInfoMap,
-                                                     false );
+                                                     true );
 
       taskInterfaceList_.push_back( rhsTask );
 
@@ -185,7 +185,7 @@ namespace Wasatch{
                                                             *factory_,
                                                             patches,
                                                             patchInfoMap,
-                                                            false );
+                                                            true );
       taskInterfaceList_.push_back( timeTask );
       timeTask->schedule( sched, patches, materials, coordHelper_->field_tags() );
     }
