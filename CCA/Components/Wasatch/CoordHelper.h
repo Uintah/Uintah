@@ -56,8 +56,8 @@ namespace Wasatch{
     template<typename FieldT> void reg_field( Uintah::VarLabel*& vl,
                                               const Expr::Tag tag,
                                               Uintah::Task& task,
-                                              const Uintah::PatchSet&,
-                                              const Uintah::MaterialSet& );
+                                              const Uintah::PatchSubset* const,
+                                              const Uintah::MaterialSubset* const );
 
   public:
 
@@ -100,15 +100,15 @@ namespace Wasatch{
   CoordHelper::reg_field( Uintah::VarLabel*& vl,
                           const Expr::Tag tag,
                           Uintah::Task& task,
-                          const Uintah::PatchSet& ps,
-                          const Uintah::MaterialSet& ms )
+                          const Uintah::PatchSubset* const pss,
+                          const Uintah::MaterialSubset* const mss )
   {
     const Uintah::Task::DomainSpec domain = Uintah::Task::NormalDomain;
     vl = Uintah::VarLabel::create( tag.field_name(),
                                    getUintahFieldTypeDescriptor<FieldT>(),
                                    getUintahGhostDescriptor<FieldT>() );
     fieldTags_.push_back( tag );
-    task.computes( vl, ps.getUnion(), domain, ms.getUnion(), domain );
+    task.computes( vl, pss, domain, mss, domain );
   }
 
   template<> inline void CoordHelper::requires_coordinate<SVolField>( const Direction dir )

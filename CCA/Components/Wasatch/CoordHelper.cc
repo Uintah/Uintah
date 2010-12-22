@@ -88,24 +88,27 @@ namespace Wasatch{
 
   void
   CoordHelper::register_coord_fields( Uintah::Task& task,
-                                      const Uintah::PatchSet& ps,
-                                      const Uintah::MaterialSet& ms )
+                                      const Uintah::PatchSet& patches,
+                                      const Uintah::MaterialSet& materials )
   {
-    if( xSVolCoord_ ) reg_field<SVolField>( xSVol_, Expr::Tag("XSVOL",context_), task, ps, ms );
-    if( ySVolCoord_ ) reg_field<SVolField>( ySVol_, Expr::Tag("YSVOL",context_), task, ps, ms );
-    if( zSVolCoord_ ) reg_field<SVolField>( zSVol_, Expr::Tag("ZSVOL",context_), task, ps, ms );
+    const Uintah::MaterialSubset* const mss = materials.getUnion();
+    const Uintah::PatchSubset* const pss = patches.getUnion();
 
-    if( xXVolCoord_ ) reg_field<XVolField>( xXVol_, Expr::Tag("XXVOL",context_), task, ps, ms );
-    if( yXVolCoord_ ) reg_field<XVolField>( yXVol_, Expr::Tag("YXVOL",context_), task, ps, ms );
-    if( zXVolCoord_ ) reg_field<XVolField>( zXVol_, Expr::Tag("ZXVOL",context_), task, ps, ms );
+    if( xSVolCoord_ ) reg_field<SVolField>( xSVol_, Expr::Tag("XSVOL",context_), task, pss, mss );
+    if( ySVolCoord_ ) reg_field<SVolField>( ySVol_, Expr::Tag("YSVOL",context_), task, pss, mss );
+    if( zSVolCoord_ ) reg_field<SVolField>( zSVol_, Expr::Tag("ZSVOL",context_), task, pss, mss );
 
-    if( xYVolCoord_ ) reg_field<YVolField>( xYVol_, Expr::Tag("XYVOL",context_), task, ps, ms );
-    if( yYVolCoord_ ) reg_field<YVolField>( yYVol_, Expr::Tag("YYVOL",context_), task, ps, ms );
-    if( zYVolCoord_ ) reg_field<YVolField>( zYVol_, Expr::Tag("ZYVOL",context_), task, ps, ms );
+    if( xXVolCoord_ ) reg_field<XVolField>( xXVol_, Expr::Tag("XXVOL",context_), task, pss, mss );
+    if( yXVolCoord_ ) reg_field<XVolField>( yXVol_, Expr::Tag("YXVOL",context_), task, pss, mss );
+    if( zXVolCoord_ ) reg_field<XVolField>( zXVol_, Expr::Tag("ZXVOL",context_), task, pss, mss );
 
-    if( xZVolCoord_ ) reg_field<ZVolField>( xZVol_, Expr::Tag("XZVOL",context_), task, ps, ms );
-    if( yZVolCoord_ ) reg_field<ZVolField>( yZVol_, Expr::Tag("YZVOL",context_), task, ps, ms );
-    if( zZVolCoord_ ) reg_field<ZVolField>( zZVol_, Expr::Tag("ZZVOL",context_), task, ps, ms );
+    if( xYVolCoord_ ) reg_field<YVolField>( xYVol_, Expr::Tag("XYVOL",context_), task, pss, mss );
+    if( yYVolCoord_ ) reg_field<YVolField>( yYVol_, Expr::Tag("YYVOL",context_), task, pss, mss );
+    if( zYVolCoord_ ) reg_field<YVolField>( zYVol_, Expr::Tag("ZYVOL",context_), task, pss, mss );
+
+    if( xZVolCoord_ ) reg_field<ZVolField>( xZVol_, Expr::Tag("XZVOL",context_), task, pss, mss );
+    if( yZVolCoord_ ) reg_field<ZVolField>( yZVol_, Expr::Tag("YZVOL",context_), task, pss, mss );
+    if( zZVolCoord_ ) reg_field<ZVolField>( zZVol_, Expr::Tag("ZZVOL",context_), task, pss, mss );
   }
 
   //------------------------------------------------------------------

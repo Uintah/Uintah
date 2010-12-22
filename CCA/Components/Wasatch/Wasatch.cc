@@ -78,7 +78,7 @@ namespace Wasatch{
     // precluding memory blocks being defined across multiple patches.
     Uintah::OnDemandDataWarehouse::d_combineMemory = false;
 
-    const bool log = true;
+    const bool log = false;
     graphCategories_[ INITIALIZATION     ] = scinew GraphHelper( scinew Expr::ExpressionFactory(log) );
     graphCategories_[ TIMESTEP_SELECTION ] = scinew GraphHelper( scinew Expr::ExpressionFactory(log) );
     graphCategories_[ ADVANCE_SOLUTION   ] = scinew GraphHelper( scinew Expr::ExpressionFactory(log) );
@@ -98,7 +98,11 @@ namespace Wasatch{
       delete *i;
     }
 
-    for( std::list<TaskInterface*>::iterator i=taskInterfaceList_.begin(); i!=taskInterfaceList_.end(); ++i ){
+    for( std::list<const TaskInterface*>::iterator i=taskInterfaceList_.begin(); i!=taskInterfaceList_.end(); ++i ){
+      delete *i;
+    }
+
+    for( std::list<const Uintah::PatchSet*>::iterator i=patchSetList_.begin(); i!=patchSetList_.end(); ++i ){
       delete *i;
     }
 
@@ -164,22 +168,20 @@ namespace Wasatch{
     //
     // Also save off the timestep label information.
     //
-    const Uintah::PatchSet* localPatches = sched->getLoadBalancer()->getPerProcessorPatchSet(level);
+    const Uintah::PatchSet* const localPatches = get_patchset( level, sched );
+    const Uintah::MaterialSet* const materials = sharedState_->allMaterials();
 
-    for( int ip=0; ip<localPatches->size(); ++ip ){
-
-      const Uintah::PatchSubset* const patches = localPatches->getSubset(ip);
-
-      for( int ipss=0; ipss<patches->size(); ++ipss ){
-
-        SpatialOps::OperatorDatabase* const opdb = scinew SpatialOps::OperatorDatabase();
-        const Uintah::Patch* const patch = patches->get(ipss);
-        build_operators( *patch, *opdb );
-        PatchInfo& pi = patchInfoMap_[patch->getID()];
-        pi.operators   = opdb;
-        pi.patchID = patch->getID();
+    for( int ipss=0; ipss<localPatches->size(); ++ipss ){
+        const Uintah::PatchSubset* pss = localPatches->getSubset(ipss);
+        for( int ip=0; ip<pss->size(); ++ip ){
+          SpatialOps::OperatorDatabase* const opdb = scinew SpatialOps::OperatorDatabase();
+          const Uintah::Patch* const patch = pss->get(ip);
+          build_operators( *patch, *opdb );
+          PatchInfo& pi = patchInfoMap_[patch->getID()];
+          pi.operators = opdb;
+          pi.patchID = patch->getID();
+        }
       }
-    }
 
     GraphHelper* const icGraphHelper = graphCategories_[ INITIALIZATION ];
 
@@ -197,22 +199,24 @@ namespace Wasatch{
       TaskInterface* const task = scinew TaskInterface( icGraphHelper->rootIDs,
                                                         "initialization",
                                                         *icGraphHelper->exprFactory,
+                                                        sched,
                                                         localPatches,
+                                                        materials,
                                                         patchInfoMap_,
                                                         true );
 
       // set coordinate values as required by the IC graph.
-      icCoordHelper_->create_task( sched, localPatches, sharedState_->allMaterials() );
+      icCoordHelper_->create_task( sched, localPatches, materials );
 
       //_______________________________________________________
       // create the TaskInterface and schedule this task for
       // execution.  Note that field dependencies are assigned
       // within the TaskInterface object.
-      task->schedule( sched, localPatches, sharedState_->allMaterials(), icCoordHelper_->field_tags() );
+      task->schedule( icCoordHelper_->field_tags() );
       taskInterfaceList_.push_back( task );
     }
-
-    std::cout << "Wasatch: done creating initialization task(s)" << std::endl;
+    if( d_myworld->myrank() == 0 )
+      std::cout << "Wasatch: done creating initialization task(s)" << std::endl;
   }
 
   //--------------------------------------------------------------------
@@ -223,8 +227,8 @@ namespace Wasatch{
     GraphHelper* const tsGraphHelper = graphCategories_[ TIMESTEP_SELECTION ];
 
     // jcs: was getting patch set this way (from discussions with Justin).
-    // sched->getLoadBalancer()->getPerProcessorPatchSet(level),
-    const Uintah::PatchSet* patches = level->eachPatch();
+    const Uintah::PatchSet* const localPatches = get_patchset(level,sched);
+
     const Uintah::MaterialSet* materials = sharedState_->allMaterials();
 
     if( tsGraphHelper->rootIDs.size() > 0 ){
@@ -236,15 +240,19 @@ namespace Wasatch{
       TaskInterface* const task = scinew TaskInterface( tsGraphHelper->rootIDs,
                                                         "compute timestep",
                                                         *tsGraphHelper->exprFactory,
-                                                        patches,
+                                                        sched,
+                                                        localPatches,
+                                                        materials,
                                                         patchInfoMap_,
                                                         true );
-      task->schedule( sched, patches, materials );
+      task->schedule();
       taskInterfaceList_.push_back( task );
     }
     else{ // default
 
-      cout << "Task 'compute timestep' COMPUTES 'delT' in NEW data warehouse" << endl;
+      if( d_myworld->myrank() == 0 )
+        cout << "Task 'compute timestep' COMPUTES 'delT' in NEW data warehouse" << endl;
+
       Uintah::Task* task = scinew Uintah::Task( "compute timestep", this, &Wasatch::computeDelT );
 
       // jcs it appears that for reduction variables we cannot specify the patches - only the materials.
@@ -253,10 +261,11 @@ namespace Wasatch{
       //              materials->getUnion() );
       // jcs why can't we specify a metrial here?  It doesn't seem to be working if I do.
 
-      sched->addTask( task, level->eachPatch(), sharedState_->allMaterials() );
+      sched->addTask( task, localPatches, sharedState_->allMaterials() );
     }
 
-    std::cout << "Wasatch: done creating timestep task(s)" << std::endl;
+    if( d_myworld->myrank() == 0 )
+      std::cout << "Wasatch: done creating timestep task(s)" << std::endl;
   }
 
   //--------------------------------------------------------------------
@@ -265,11 +274,15 @@ namespace Wasatch{
   Wasatch::scheduleTimeAdvance( const Uintah::LevelP& level,
                                 Uintah::SchedulerP& sched )
   {
-    create_timestepper_on_patches( sched->getLoadBalancer()->getPerProcessorPatchSet(level),
-                                   sharedState_->allMaterials(),
-                                   sched );
+    // jcs why do we need this instead of getting the level?
+    const Uintah::PatchSet* const localPatches = get_patchset( level, sched );
 
-    std::cout << "Wasatch: done creating solution task(s)" << std::endl;
+    const Uintah::MaterialSet* const materials = sharedState_->allMaterials();
+
+    create_timestepper_on_patches( localPatches, materials, sched );
+
+    if( d_myworld->myrank() == 0 )
+      std::cout << "Wasatch: done creating solution task(s)" << std::endl;
 
     // jcs notes:
     //
@@ -282,16 +295,14 @@ namespace Wasatch{
     //       executed together across all patches.  This is required if
     //       any global MPI syncronizations occurr (e.g. in a linear
     //       solve)
-    //
-    //
+    //    also need to set a flag on the task: task->setType(Task::OncePerProc);
+
+
     // -----------------------------------------------------------------------
     // BOUNDARY CONDITIONS TREATMENT
     // -----------------------------------------------------------------------
     const GraphHelper* gh = graphCategories_[ ADVANCE_SOLUTION ];
-    const Uintah::PatchSet* const localPatches = sched->getLoadBalancer()->getPerProcessorPatchSet(level);
-    const Uintah::MaterialSubset* const materials = sharedState_->allMaterials()->getUnion();
-
-    buildBoundaryConditions( adaptors_, *gh, localPatches, patchInfoMap_, materials );
+    buildBoundaryConditions( adaptors_, *gh, localPatches, patchInfoMap_, materials->getUnion() );
   }
 
   //--------------------------------------------------------------------
@@ -347,8 +358,8 @@ namespace Wasatch{
 //     // some things (e.g. boundary conditions) may be prescribed
 //     // functions of time.
 //     {
-//       TaskInterface* const timeTask = scinew TaskInterface( timeID, "set time", exprFactory, localPatches, patchInfoMap_, true );
-//       timeTask->schedule( sched, localPatches, materials );
+//       TaskInterface* const timeTask = scinew TaskInterface( timeID, "set time", exprFactory, sched, localPatches, materials, patchInfoMap_, true );
+//       timeTask->schedule( sched );
 //       taskInterfaceList_.push_back( timeTask );
 //     }
   }
@@ -373,6 +384,29 @@ namespace Wasatch{
                    Uintah::getLevel(patches) );
       //                   material );
       // jcs it seems that we cannot specify a material here.  Why not?
+  }
+
+  //------------------------------------------------------------------
+
+  const Uintah::PatchSet*
+  Wasatch::get_patchset( const Uintah::LevelP& level,
+                         Uintah::SchedulerP& sched )
+  {
+//     return sched->getLoadBalancer()->getPerProcessorPatchSet(level);
+    return level->eachPatch();
+
+//     const Uintah::PatchSet* const allPatches = sched->getLoadBalancer()->getPerProcessorPatchSet(level);
+//     const Uintah::PatchSubset* const localPatches = allPatches->getSubset( d_myworld->myrank() );
+//     Uintah::PatchSet* patches = new Uintah::PatchSet;
+//     // jcs: this results in "normal" scheduling and WILL NOT WORK FOR LINEAR SOLVES
+//     //      in that case, we need to use "gang" scheduling: addAll( localPatches )
+//     patches->addEach( localPatches->getVector() );
+// //     const std::set<int>& procs = sched->getLoadBalancer()->getNeighborhoodProcessors();
+// //     for( std::set<int>::const_iterator ip=procs.begin(); ip!=procs.end(); ++ip ){
+// //       patches->addEach( allPatches->getSubset( *ip )->getVector() );
+// //     }
+//     patchSetList_.push_back( patches );
+//     return patches;
   }
 
   //------------------------------------------------------------------

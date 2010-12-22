@@ -69,7 +69,11 @@ namespace Wasatch{
      *
      *  \param factory the Expr::ExpressionFactory that will be used to build the tree.
      *
+     *  \param sched The Scheduler that this task will be loaded on.
+     *
      *  \param patches the patches to associate this task with.
+     *
+     *  \param materials the MaterialSet for the materials associated with this task
      *
      *  \param info The PatchInfoMap object.
      *
@@ -85,7 +89,9 @@ namespace Wasatch{
     TaskInterface( const IDSet& roots,
                    const std::string taskName,
                    Expr::ExpressionFactory& factory,
+                   Uintah::SchedulerP& sched,
                    const Uintah::PatchSet* const patches,
+                   const Uintah::MaterialSet* const materials,
                    const PatchInfoMap& info,
                    const bool createUniqueTreePerPatch,
                    Expr::FieldManagerList* fml = NULL );
@@ -93,7 +99,9 @@ namespace Wasatch{
     TaskInterface( const Expr::ExpressionID& root,
                    const std::string taskName,
                    Expr::ExpressionFactory& factory,
+                   Uintah::SchedulerP& sched,
                    const Uintah::PatchSet* const patches,
+                   const Uintah::MaterialSet* const materials,
                    const PatchInfoMap& info,
                    const bool createUniqueTreePerPatch,
                    Expr::FieldManagerList* fml = NULL );
@@ -102,9 +110,6 @@ namespace Wasatch{
 
     /**
      *  \brief Schedule for execution with Uintah
-     *  \param scheduler the Uintah::Scheduler that we will put this task on
-     *  \param patches the Uintah::PatchSet associated with this task
-     *  \param material the Uintah::MaterialSet associated with this task
      *  \param newDWFields - a vector of Expr::Tag indicating fields
      *         should be pulled from the new DW.  This is particularly
      *         useful for situations where another task will be
@@ -116,19 +121,25 @@ namespace Wasatch{
      *  This sets all field requirements for the Uintah task and
      *  scheduled it for execution.
      */
-    void schedule( Uintah::SchedulerP& scheduler,
-                   const Uintah::PatchSet* const patches,
-                   const Uintah::MaterialSet* const materials,
-                   const std::vector<Expr::Tag>& newDWFields );
+    void schedule( const std::vector<Expr::Tag>& newDWFields );
 
-    void schedule( Uintah::SchedulerP& scheduler,
-                   const Uintah::PatchSet* const patches,
-                   const Uintah::MaterialSet* const materials );
+
+    /**
+     *  \brief Schedule for execution with Uintah
+     *
+     *  This sets all field requirements for the Uintah task and
+     *  scheduled it for execution.
+     */
+    void schedule();
 
   private:
 
     typedef std::pair< Expr::ExpressionTree*, Uintah::Task* > TreeTaskPair;
     typedef std::map< int, TreeTaskPair > PatchTreeMap;
+
+    Uintah::SchedulerP& scheduler_;
+    const Uintah::PatchSet* const patches_;
+    const Uintah::MaterialSet* const materials_;
 
     const bool createUniqueTreePerPatch_;
     PatchTreeMap patchTreeMap_;
@@ -143,16 +154,14 @@ namespace Wasatch{
     bool hasBeenScheduled_;             ///< true after the call to schedule().  Must be true prior to add_fields_to_task().
 
     void setup_tree( const IDSet& roots,
-                     const std::string& taskName,
-                     Expr::ExpressionFactory& factory,
-                     const Uintah::PatchSet* const patches );
+                     Expr::ExpressionFactory& factory );
 
     /** advertises field requirements to Uintah. */
     static void add_fields_to_task( Uintah::Task& task,
                                     const Expr::ExpressionTree& tree,
                                     Expr::FieldManagerList& fml,
-                                    const Uintah::PatchSet* const patches,
-                                    const Uintah::MaterialSet* const materials,
+                                    const Uintah::PatchSubset* const patches,
+                                    const Uintah::MaterialSubset* const materials,
                                     const std::vector<Expr::Tag>& );
 
     /** main execution driver - the callback function exposed to Uintah. */

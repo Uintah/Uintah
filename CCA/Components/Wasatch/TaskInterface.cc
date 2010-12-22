@@ -30,11 +30,16 @@ namespace Wasatch{
   TaskInterface::TaskInterface( const Expr::ExpressionID& root,
                                 const std::string taskName,
                                 Expr::ExpressionFactory& factory,
+                                Uintah::SchedulerP& sched,
                                 const Uintah::PatchSet* const patches,
+                                const Uintah::MaterialSet* const materials,
                                 const PatchInfoMap& info,
                                 const bool createUniqueTreePerPatch,
                                 Expr::FieldManagerList* fml )
-    : createUniqueTreePerPatch_( createUniqueTreePerPatch ),
+    : scheduler_( sched ),
+      patches_( patches ),
+      materials_( materials ),
+      createUniqueTreePerPatch_( createUniqueTreePerPatch ),
       taskName_( taskName ),
       patchInfoMap_( info ),
       builtFML_( fml==NULL ),
@@ -42,7 +47,7 @@ namespace Wasatch{
   {
     hasBeenScheduled_ = false;
     IDSet ids; ids.insert(root);
-    setup_tree( ids, taskName, factory, patches );
+    setup_tree( ids, factory );
   }
 
   //------------------------------------------------------------------
@@ -50,49 +55,53 @@ namespace Wasatch{
   TaskInterface::TaskInterface( const IDSet& roots,
                                 const std::string taskName,
                                 Expr::ExpressionFactory& factory,
-                                const Uintah::PatchSet* const patches,
+                                Uintah::SchedulerP& sched,
+                                const Uintah::PatchSet* patches,
+                                const Uintah::MaterialSet* const materials,
                                 const PatchInfoMap& info,
                                 const bool createUniqueTreePerPatch,
                                 Expr::FieldManagerList* fml )
-    : createUniqueTreePerPatch_( createUniqueTreePerPatch ),
+    : scheduler_( sched ),
+      patches_( patches ),
+      materials_( materials ),
+      createUniqueTreePerPatch_( createUniqueTreePerPatch ),
       taskName_( taskName ),
       patchInfoMap_( info ),
       builtFML_( fml==NULL ),
       fml_( builtFML_ ? scinew Expr::FieldManagerList( taskName ) : fml )
   {
     hasBeenScheduled_ = false;
-    setup_tree( roots, taskName, factory, patches );
+    setup_tree( roots, factory );
   }
 
   //------------------------------------------------------------------
 
   void
   TaskInterface::setup_tree( const IDSet& roots,
-                             const std::string& taskName,
-                             Expr::ExpressionFactory& factory,
-                             const Uintah::PatchSet* const patches )
+                             Expr::ExpressionFactory& factory )
   {
     if( createUniqueTreePerPatch_ ){
-      for( int ip=0; ip<patches->size(); ++ip ){
-        const Uintah::PatchSubset* const pss = patches->getSubset(ip);
-        for( int ipss=0; ipss<pss->size(); ++ipss ){
-          const Uintah::Patch* const patch = pss->get(ipss);
-          Expr::ExpressionTree* tree = scinew Expr::ExpressionTree( roots, factory, patch->getID(), taskName );
+      for( int ipss=0; ipss!=patches_->size(); ++ipss ){
+        const Uintah::PatchSubset* const pss = patches_->getSubset(ipss);
+        for( int ip=0; ip<pss->size(); ++ip ){
+          const Uintah::Patch* const patch = pss->get(ip);
+//           cout << "Setting up tree '" << taskName_ << "' on patch (" << patch->getID() << ")" << endl;
+          Expr::ExpressionTree* tree = scinew Expr::ExpressionTree( roots, factory, patch->getID(), taskName_ );
           tree->register_fields( *fml_ );
           patchTreeMap_[ patch->getID() ] = make_pair( tree,
-                                                       scinew Uintah::Task( tree->name(), this, &TaskInterface::execute ) );
+                                                       scinew Uintah::Task( taskName_, this, &TaskInterface::execute ) );
         }
       }
     }
     else{
-      Expr::ExpressionTree* tree = scinew Expr::ExpressionTree( roots, factory, -1, taskName );
+      Expr::ExpressionTree* tree = scinew Expr::ExpressionTree( roots, factory, -1, taskName_ );
       tree->register_fields( *fml_ );
       patchTreeMap_[ -1 ] = make_pair( tree,
-                                       scinew Uintah::Task( taskName, this, &TaskInterface::execute ) );
+                                       scinew Uintah::Task( taskName_, this, &TaskInterface::execute ) );
     }
 
     // jcs hacked diagnostics - problems in parallel.
-    std::ofstream fout( (taskName+".dot").c_str());
+    std::ofstream fout( (taskName_+".dot").c_str());
     PatchTreeMap::const_iterator iptm = patchTreeMap_.begin();
     iptm->second.first->write_tree(fout);
   }
@@ -113,31 +122,32 @@ namespace Wasatch{
   //------------------------------------------------------------------
 
   void
-  TaskInterface::schedule( Uintah::SchedulerP& scheduler,
-                           const Uintah::PatchSet* const patches,
-                           const Uintah::MaterialSet* const materials,
-                           const std::vector<Expr::Tag>& newDWFields )
+  TaskInterface::schedule( const std::vector<Expr::Tag>& newDWFields )
   {
     ASSERT( !hasBeenScheduled_ );
 
-    for( PatchTreeMap::iterator iptm=patchTreeMap_.begin(); iptm!=patchTreeMap_.end(); ++iptm ){
-      Uintah::Task* const task = iptm->second.second;
-      Expr::ExpressionTree* tree = iptm->second.first;
-      add_fields_to_task( *task, *tree, *fml_, patches, materials, newDWFields );
-      scheduler->addTask( task, patches, materials );
-    }
+    const PatchTreeMap::iterator iptm = patchTreeMap_.begin();
+    ASSERT( iptm != patchTreeMap_.end() );
+
+    Uintah::Task* const task = iptm->second.second;
+    Expr::ExpressionTree* const tree = iptm->second.first;
+
+    const Uintah::MaterialSubset* const mss = materials_->getUnion();
+
+    const Uintah::PatchSubset* const pss = patches_->getUnion();
+    add_fields_to_task( *task, *tree, *fml_, pss, mss, newDWFields );
+    scheduler_->addTask( task, patches_, materials_ );
+
     hasBeenScheduled_ = true;
   }
 
   //------------------------------------------------------------------
 
   void
-  TaskInterface::schedule( Uintah::SchedulerP& scheduler,
-                           const Uintah::PatchSet* const patches,
-                           const Uintah::MaterialSet* const materials )
+  TaskInterface::schedule()
   {
     std::vector<Expr::Tag> newDWFields;
-    this->schedule( scheduler, patches, materials, newDWFields );
+    this->schedule( newDWFields );
   }
 
   //------------------------------------------------------------------
@@ -146,17 +156,13 @@ namespace Wasatch{
   TaskInterface::add_fields_to_task( Uintah::Task& task,
                                      const Expr::ExpressionTree& tree,
                                      Expr::FieldManagerList& fml,
-                                     const Uintah::PatchSet* const patches,
-                                     const Uintah::MaterialSet* const materials,
+                                     const Uintah::PatchSubset* const patches,
+                                     const Uintah::MaterialSubset* const materials,
                                      const std::vector<Expr::Tag>& newDWFields )
   {
     // this is done once when the task is scheduled.  The purpose of
     // this method is to collect the fields from the ExpressionTree
     // and then advertise their usage to Uintah.
-
-    // for now we will assume that we are computing things on ALL patches and ALL materials
-    const Uintah::PatchSubset*    const pss = patches->getUnion();
-    const Uintah::MaterialSubset* const mss = materials->getUnion();
 
     //
     // root nodes in the dependency tree are always "COMPUTES" fields
@@ -208,44 +214,45 @@ namespace Wasatch{
         Uintah::Task::WhichDW dw = Uintah::Task::NewDW;
         if( fieldInfo.useOldDataWarehouse ) dw = Uintah::Task::OldDW;
 
-        cout << "Task '" << tree.name() << "' "; // jcs diagnostic
+//         cout << "Task '" << tree.name() << "' "; // jcs diagnostic
         switch( fieldInfo.mode ){
 
         case Expr::COMPUTES:
-          cout << "COMPUTES";  // jcs diagnostic
+//           cout << "COMPUTES";  // jcs diagnostic
           ASSERT( dw == Uintah::Task::NewDW );
           // jcs note that we need ghost information on the computes fields as well!
           task.computes( fieldInfo.varlabel,
-                         pss, Uintah::Task::NormalDomain,
-                         mss, Uintah::Task::NormalDomain );
+                         patches, Uintah::Task::NormalDomain,
+                         materials, Uintah::Task::NormalDomain );
           break;
 
         case Expr::REQUIRES:
-          cout << "REQUIRES";  // jcs diagnostic
+//           cout << "REQUIRES";  // jcs diagnostic
           task.requires( dw,
                          fieldInfo.varlabel,
-                         pss, Uintah::Task::NormalDomain,
-                         mss, Uintah::Task::NormalDomain,
+                         patches, Uintah::Task::NormalDomain,
+                         materials, Uintah::Task::NormalDomain,
                          fieldInfo.ghostType, fieldInfo.nghost );
           break;
 
         case Expr::MODIFIES:
-          cout << "MODIFIES"; // jcs diagnostic
+//           cout << "MODIFIES"; // jcs diagnostic
           ASSERT( dw == Uintah::Task::NewDW );
           task.modifies( fieldInfo.varlabel,
-                         pss, Uintah::Task::NormalDomain,
-                         mss, Uintah::Task::NormalDomain );
+                         patches, Uintah::Task::NormalDomain,
+                         materials, Uintah::Task::NormalDomain );
           break;
         } // switch
         
         //==================== <diagnostics> ====================
-        cout << " '"  << fieldInfo.varlabel->getName() << "' ("
-             << fieldInfo.context << ") in ";
-        if( fieldInfo.useOldDataWarehouse ) cout << "OLD";
-        else cout << "NEW";
-        cout << " data warehouse"
-             << " with " << fieldInfo.nghost << " ghosts"
-             << endl;
+//         cout << " '"  << fieldInfo.varlabel->getName() << "' ("
+//              << fieldInfo.context << ") in ";
+//         if( fieldInfo.useOldDataWarehouse ) cout << "OLD";
+//         else cout << "NEW";
+//         cout << " data warehouse"
+//              << " with " << fieldInfo.nghost << " ghosts on patches "
+//              << *patches
+//              << endl;
         //==================== </diagnostics> ====================
 
 
@@ -277,6 +284,17 @@ namespace Wasatch{
       ASSERT( ipim!=patchInfoMap_.end() );
       const SpatialOps::OperatorDatabase& opdb = *ipim->second.operators;
 
+      // resolve the tree
+      Expr::ExpressionTree* tree = NULL;
+      if( createUniqueTreePerPatch_ ){
+        PatchTreeMap::iterator iptm = patchTreeMap_.find( patch->getID() );
+        ASSERT( iptm != patchTreeMap_.end() );
+        tree = iptm->second.first;
+      }
+      else{
+        tree = patchTreeMap_[ -1 ].first;
+      }
+
       for( int im=0; im<materials->size(); ++im ){
 
         const int material = materials->get(im);
@@ -290,16 +308,6 @@ namespace Wasatch{
 //     fml_->dump_fields(cout);
           fml_->allocate_fields( Expr::AllocInfo( oldDW, newDW, material, patch, pg ) );
 
-          // resolve the tree
-          Expr::ExpressionTree* tree = NULL;
-          if( createUniqueTreePerPatch_ ){
-            PatchTreeMap::iterator iptm = patchTreeMap_.find( patch->getID() );
-            ASSERT( iptm != patchTreeMap_.end() );
-            tree = iptm->second.first;
-          }
-          else{
-            tree = patchTreeMap_[ -1 ].first;
-          }
           tree->bind_fields( *fml_ );
           tree->bind_operators( opdb );
           tree->execute_tree();
