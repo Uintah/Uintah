@@ -131,7 +131,7 @@ Kayenta::Kayenta(ProblemSpecP& ps,MPMFlags* Mflag)
   //First, print out the UI values specified by the user
   proc0cout << "Original UI values" << endl;
   for(int i = 0; i<d_NKMMPROP; i++){
-     proc0cout << "UI[i] = " << UI[i] << endl;
+     proc0cout << "UI[" << i << "] = " << UI[i] << endl;
   }
 
   KMMCHK(UI,UI,UI);
@@ -139,7 +139,7 @@ Kayenta::Kayenta(ProblemSpecP& ps,MPMFlags* Mflag)
   //Now, print out the UI values after alteration by KMMCHK
   proc0cout << "Altered UI values" << endl;
   for(int i = 0; i<d_NKMMPROP; i++){
-     proc0cout << "UI[i] = " << UI[i] << endl;
+     proc0cout << "UI[" << i << "] = " << UI[i] << endl;
   }
 
   //Create VarLabels for GeoModel internal state variables (ISVs)
@@ -174,11 +174,8 @@ Kayenta::Kayenta(const Kayenta* cm) : ConstitutiveModel(cm)
   wdist.Perturb    = cm->wdist.Perturb;
   wdist.WeibDist   = cm->wdist.WeibDist;
 
-
-
   d_allowNoTension = cm->d_allowNoTension;
   d_removeMass = cm->d_removeMass;
-
 
   //Create VarLabels for GeoModel internal state variables (ISVs)
   initializeLocalMPMLabels();
