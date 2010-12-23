@@ -27,41 +27,44 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-
 #include <CCA/Components/MPM/AMRMPM.h>
-#include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
+#include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <CCA/Components/MPM/MPMBoundCond.h>
+#include <CCA/Components/MPM/ParticleCreator/ParticleCreator.h>
+#include <CCA/Components/Regridder/PerPatchVars.h>
 #include <CCA/Ports/DataWarehouse.h>
-#include <CCA/Ports/Scheduler.h>
 #include <CCA/Ports/LoadBalancer.h>
-#include <Core/Grid/AMR.h>
-#include <Core/Grid/Grid.h>
-#include <Core/Grid/Variables/PerPatch.h>
-#include <Core/Grid/Level.h>
-#include <Core/Grid/Variables/CCVariable.h>
-#include <Core/Grid/Variables/NCVariable.h>
-#include <Core/Grid/Variables/ParticleVariable.h>
-#include <Core/Grid/UnknownVariable.h>
-#include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Grid/Variables/NodeIterator.h>
-#include <Core/Grid/Variables/CellIterator.h>
-#include <Core/Grid/Patch.h>
-#include <Core/Grid/SimulationState.h>
-#include <Core/Grid/Variables/SoleVariable.h>
-#include <Core/Grid/Task.h>
-#include <Core/Grid/Variables/VarTypes.h>
+#include <CCA/Ports/Scheduler.h>
 #include <Core/Exceptions/ParameterNotFound.h>
 #include <Core/Exceptions/ProblemSetupException.h>
-#include <Core/Parallel/ProcessorGroup.h>
-#include <CCA/Components/MPM/ParticleCreator/ParticleCreator.h>
-#include <CCA/Components/MPM/MPMBoundCond.h>
-#include <CCA/Components/Regridder/PerPatchVars.h>
-
-#include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Point.h>
+#include <Core/Geometry/Vector.h>
+#include <Core/GeometryPiece/FileGeometryPiece.h>
+#include <Core/GeometryPiece/GeometryObject.h>
+#include <Core/GeometryPiece/GeometryPieceFactory.h>
+#include <Core/GeometryPiece/UnionGeometryPiece.h>
+#include <Core/Grid/AMR.h>
+#include <Core/Grid/Grid.h>
+#include <Core/Grid/Level.h>
+#include <Core/Grid/Patch.h>
+#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/Task.h>
+#include <Core/Grid/UnknownVariable.h>
+#include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/Variables/CellIterator.h>
+#include <Core/Grid/Variables/NCVariable.h>
+#include <Core/Grid/Variables/NodeIterator.h>
+#include <Core/Grid/Variables/ParticleVariable.h>
+#include <Core/Grid/Variables/PerPatch.h>
+#include <Core/Grid/Variables/SoleVariable.h>
+#include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Math/MinMax.h>
-#include <Core/Util/DebugStream.h>
+#include <Core/Parallel/ProcessorGroup.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Thread/Mutex.h>
+#include <Core/Util/DebugStream.h>
+
 
 #include <iostream>
 #include <fstream>
@@ -74,7 +77,7 @@ static DebugStream cout_doing("AMRMPM", false);
 static DebugStream amr_doing("AMRMPM", false);
 
 #define USE_DEBUG_TASK
-
+//#define DEBUG
 //__________________________________
 //   TODO:
 // - We only need to compute ZOI when the grid changes not every timestep
@@ -113,6 +116,9 @@ AMRMPM::~AMRMPM()
 {
   delete lb;
   delete flags;
+  for (int i = 0; i< (int)d_refine_geom_objs.size(); i++) {
+    delete d_refine_geom_objs[i];
+  }
 }
 
 //______________________________________________________________________
@@ -150,6 +156,50 @@ void AMRMPM::problemSetup(const ProblemSpecP& prob_spec,
                                  __FILE__, __LINE__);
   }
 
+  //__________________________________
+  //  Read in the AMR section
+  ProblemSpecP mpm_ps;
+  ProblemSpecP amr_ps = prob_spec->findBlock("AMR");
+  if (amr_ps){
+    mpm_ps = amr_ps->findBlock("MPM");
+  }
+  if(!mpm_ps){
+    string warn;
+    warn ="\n INPUT FILE ERROR:\n <MPM>  block not found inside of <AMR> block \n";
+    throw ProblemSetupException(warn, __FILE__, __LINE__);
+  }
+  //__________________________________
+  // read in the regions that user would like 
+  // refined
+  ProblemSpecP refine_ps = mpm_ps->findBlock("Refine_Regions");
+  if(!refine_ps ){
+    string warn;
+    warn ="\n INPUT FILE ERROR:\n <Refine_Regions> "
+         " block not found inside of <MPM> block \n";
+    throw ProblemSetupException(warn, __FILE__, __LINE__);
+  }
+  
+  // Read in the refined regions geometry objects
+  int piece_num = 0;
+  list<string> geom_obj_data;
+  for (ProblemSpecP geom_obj_ps = refine_ps->findBlock("geom_object");
+        geom_obj_ps != 0;
+        geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
+
+      vector<GeometryPieceP> pieces;
+      GeometryPieceFactory::create(geom_obj_ps, pieces);
+
+      GeometryPieceP mainpiece;
+      if(pieces.size() == 0){
+         throw ParameterNotFound("No piece specified in geom_object", __FILE__, __LINE__);
+      } else if(pieces.size() > 1){
+         mainpiece = scinew UnionGeometryPiece(pieces);
+      } else {
+         mainpiece = pieces[0];
+      }
+      piece_num++;
+      d_refine_geom_objs.push_back(scinew GeometryObject(mainpiece,geom_obj_ps,geom_obj_data));
+   }
 
   //__________________________________
   //  bulletproofing
@@ -929,29 +979,15 @@ void AMRMPM::scheduleCoarsen(const LevelP& /*coarseLevel*/,
 void AMRMPM::scheduleErrorEstimate(const LevelP& coarseLevel,
                                    SchedulerP& sched)
 {
-  // main way is to count particles, but for now we only want particles on
-  // the finest level.  Thus to schedule cells for regridding during the 
-  // execution, we'll coarsen the flagged cells (see coarsen).
-
-  if (amr_doing.active())
-    amr_doing << "AMRMPM::scheduleErrorEstimate on level " << coarseLevel->getIndex() << '\n';
-
-  // The simulation controller should not schedule it every time step
-  Task* task = scinew Task("AMRMPM::errorEstimate", this, &AMRMPM::errorEstimate);
+    
+  printSchedule(coarseLevel,cout_doing,"AMRMPM::scheduleErrorEstimate");
   
-  // if the finest level, compute flagged cells
-  if (coarseLevel->getIndex() == coarseLevel->getGrid()->numLevels()-1) {
-    task->requires(Task::NewDW, lb->pXLabel, Ghost::AroundCells, 0);
-  }
-  else {
-    task->requires(Task::NewDW, d_sharedState->get_refineFlag_label(),
-                   0, Task::FineLevel, d_sharedState->refineFlagMaterials(), 
-                   Task::NormalDomain, Ghost::None, 0);
-  }
+  Task* task = scinew Task("AMRMPM::errorEstimate", this, 
+                           &AMRMPM::errorEstimate);
+
   task->modifies(d_sharedState->get_refineFlag_label(),      d_sharedState->refineFlagMaterials());
   task->modifies(d_sharedState->get_refinePatchFlag_label(), d_sharedState->refineFlagMaterials());
   sched->addTask(task, coarseLevel->eachPatch(), d_sharedState->allMPMMaterials());
-
 }
 //______________________________________________________________________
 // Schedule to mark initial flags for AMR regridding
@@ -2268,11 +2304,11 @@ void AMRMPM::interpolateToParticlesAndUpdate_CFI(const ProcessorGroup*,
 //______________________________________________________________________
 //
 void
-AMRMPM::initialErrorEstimate(const ProcessorGroup*,
-                             const PatchSubset* patches,
-                             const MaterialSubset* /*matls*/,
-                             DataWarehouse*,
-                             DataWarehouse* new_dw)
+AMRMPM::errorEstimate(const ProcessorGroup*,
+                      const PatchSubset* patches,
+                      const MaterialSubset* /*matls*/,
+                      DataWarehouse*,
+                      DataWarehouse* new_dw)
 {
   const Level* level = getLevel(patches);
     
@@ -2287,6 +2323,33 @@ AMRMPM::initialErrorEstimate(const ProcessorGroup*,
 
     PatchFlag* refinePatch = refinePatchFlag.get().get_rep();
     
+    // loop over all the geometry objects
+    for(int obj=0; obj<(int)d_refine_geom_objs.size(); obj++){
+      GeometryPieceP piece = d_refine_geom_objs[obj]->getPiece();
+      
+      IntVector ppc = d_refine_geom_objs[obj]->getNumParticlesPerCell();
+      Vector dxpp    = patch->dCell()/ppc;
+      Vector dcorner = dxpp*0.5;
+      
+      for(CellIterator iter = patch->getExtraCellIterator(); !iter.done();iter++){
+        IntVector c = *iter;
+        Point lower = patch->nodePosition(c) + dcorner;
+        
+        for(int ix=0;ix < ppc.x(); ix++){
+          for(int iy=0;iy < ppc.y(); iy++){
+            for(int iz=0;iz < ppc.z(); iz++){
+              IntVector idx(ix, iy, iz);
+              Point p = lower + dxpp*idx;
+              if(piece->inside(p))
+                refineFlag[c] = true;
+                refinePatch->set();
+            }  //z
+          }  // y
+        }  // x
+      }  // cellIter
+    }
+
+#if 0    
     for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
@@ -2303,75 +2366,10 @@ AMRMPM::initialErrorEstimate(const ProcessorGroup*,
         refinePatch->set();
       }
     }
+#endif
   }
-}
-//______________________________________________________________________
-void
-AMRMPM::errorEstimate(const ProcessorGroup* group,
-                      const PatchSubset* patches,
-                      const MaterialSubset* matls,
-                      DataWarehouse* old_dw,
-                      DataWarehouse* new_dw)
-{
-  const Level* level = getLevel(patches);
-  if (level->getIndex() == level->getGrid()->numLevels()-1) {
-    // on finest level, we do the same thing as initialErrorEstimate, so call it
-    initialErrorEstimate(group, patches, matls, old_dw, new_dw);
-  }
-  else {
-    // coarsen the errorflag.
-    const Level* fineLevel = level->getFinerLevel().get_rep();
-  
-    for(int p=0;p<patches->size();p++){  
-      const Patch* coarsePatch = patches->get(p);
-      printTask(patches, coarsePatch,cout_doing,"Doing errorEstimate");
-     
-      CCVariable<int> refineFlag;
-      PerPatch<PatchFlagP> refinePatchFlag;
-      
-      new_dw->getModifiable(refineFlag, d_sharedState->get_refineFlag_label(),
-                            0, coarsePatch);
-      new_dw->get(refinePatchFlag, d_sharedState->get_refinePatchFlag_label(),
-                           0, coarsePatch);
 
-      PatchFlag* refinePatch = refinePatchFlag.get().get_rep();
-    
-      Level::selectType finePatches;
-      coarsePatch->getFineLevelPatches(finePatches);
-      
-      // coarsen the fineLevel flag
-      for(int i=0;i<finePatches.size();i++){
-        const Patch* finePatch = finePatches[i];
- 
-        IntVector cl, ch, fl, fh;
-        getFineLevelRange(coarsePatch, finePatch, cl, ch, fl, fh);
-        if (fh.x() <= fl.x() || fh.y() <= fl.y() || fh.z() <= fl.z()) {
-          continue;
-        }
-        constCCVariable<int> fineErrorFlag;
-        new_dw->getRegion(fineErrorFlag, 
-                          d_sharedState->get_refineFlag_label(), 0, 
-                          fineLevel,fl, fh, false);
-        
-        //__________________________________
-        //if the fine level flag has been set
-        // then set the corrsponding coarse level flag
-        for(CellIterator iter(cl, ch); !iter.done(); iter++){
-          IntVector fineStart(level->mapCellToFiner(*iter));
-          
-          for(CellIterator inside(IntVector(0,0,0), 
-               fineLevel->getRefinementRatio()); !inside.done(); inside++){
-               
-            if (fineErrorFlag[fineStart+*inside]) {
-              refineFlag[*iter] = 1;
-              refinePatch->set();
-            }
-          }
-        }  // coarse patch iterator
-      }  // fine patch loop
-    }  // coarse patch loop 
-  }
-}  
+}
 //______________________________________________________________________
 //
 void AMRMPM::refine(const ProcessorGroup*,
