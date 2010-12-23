@@ -1418,16 +1418,21 @@ void AMRMPM::coarsenNodalData_CFI(const ProcessorGroup*,
                 IntVector c_node = *n_iter;
 
                 IntVector f_node = coarseLevel->mapNodeToFiner(c_node);
-
+ 
                 switch(flag)
                 {
                   case coarsenData:
-                    gMass_coarse[c_node]           = gMass_fine[f_node];
-                    gVolume_coarse[c_node]         = gVolume_fine[f_node];
-                    gVelocity_coarse[c_node]       = gVelocity_fine[f_node];
-                    gTemperature_coarse[c_node]    = gTemperature_fine[f_node];
-                    gExternalforce_coarse[c_node]  = gExternalforce_fine[f_node];
-                    break;
+                    // only overwrite coarse data if there is non-zero fine data
+                    if( gMass_fine[f_node] != d_SMALL_NUM_MPM ){
+                      //cout << "    coarsen:  c_node: " << c_node << " f_node: "<< f_node << " gmass_coarse: " 
+                      //     << gMass_coarse[c_node] << " gmass_fine: " << gMass_fine[f_node] << endl;
+                      gMass_coarse[c_node]           = gMass_fine[f_node];
+                      gVolume_coarse[c_node]         = gVolume_fine[f_node];
+                      gVelocity_coarse[c_node]       = gVelocity_fine[f_node];
+                      gTemperature_coarse[c_node]    = gTemperature_fine[f_node];
+                      gExternalforce_coarse[c_node]  = gExternalforce_fine[f_node];
+                    }
+                   break;
                   case zeroData:
                     gMass_coarse[c_node]          = 0;
                     gVolume_coarse[c_node]        = 0;
@@ -1691,23 +1696,22 @@ void AMRMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
 
       for(NodeIterator iter=patch->getExtraNodeIterator(); !iter.done();iter++){
         IntVector n = *iter;
-        Vector acc = (internalforce[n] + externalforce[n])/gmass[n];
-        gacceleration[n]  = acc +  gravity;
-        gvelocity_star[n] = gvelocity[n] + gacceleration[n] * delT;
-/*`==========TESTING==========*/
-#ifdef DEBUG
-        Vector ans(0,0,0);
-        if( abs(gacceleration[n].length() - ans.length()) > 1e-8 ) {
-          cout << "    L-"<< getLevel(patches)->getIndex() << " node: "<< n << " gacceleration: " << gacceleration[n] 
-               <<  " externalForce: " <<externalforce[n] << " internalforce: " << internalforce[n] <<endl;
+        if (gmass[n] > flags->d_min_mass_for_acceleration){
+          Vector acc = (internalforce[n] + externalforce[n])/gmass[n];
+          gacceleration[n]  = acc +  gravity;
+          gvelocity_star[n] = gvelocity[n] + gacceleration[n] * delT;
+  /*`==========TESTING==========*/
+  #ifdef DEBUG
+          Vector ans(0,0,0);
+          if( abs(gacceleration[n].length() - ans.length()) > 1e-13 ) {
+            cout << "    L-"<< getLevel(patches)->getIndex() << " node: "<< n << " gacceleration: " << gacceleration[n] 
+                 <<  " externalForce: " <<externalforce[n] << " internalforce: " << internalforce[n] << " gmass: " << gmass[n] << endl;
+          }
+            cout << "    L-"<< getLevel(patches)->getIndex() << " node: "<< n << " gacceleration: " << gacceleration[n] 
+                 <<  " externalForce: " <<externalforce[n] << " internalforce: " << internalforce[n] << " gmass: " << gmass[n] << endl; 
+  #endif 
+  /*===========TESTING==========`*/
         }
-        
-        if(getLevel(patches)->getIndex() == 1 && n == IntVector(88,88,0) ){
-           cout << "    L-"<< getLevel(patches)->getIndex() << " node: "<< n << " gacceleration: " << gacceleration[n] 
-                 <<  " externalForce: " <<externalforce[n] << " internalforce: " << internalforce[n] <<endl;
-        }
-#endif 
-/*===========TESTING==========`*/
       }
     }  // matls
   }  // patches
@@ -1748,11 +1752,18 @@ void AMRMPM::setGridBoundaryConditions(const ProcessorGroup*,
       //__________________________________
       // Apply grid boundary conditions to velocity_star and acceleration
       if( patch->hasBoundaryFaces() && !patch->hasCoarseFaces() ){
+        IntVector node(10,10,0);
+        //cout << "    L-"<< getLevel(patches)->getIndex() << " before setBC  gvelocity_star: " << gvelocity_star[node] << endl;
+        
 
         MPMBoundCond bc;
         bc.setBoundaryCondition(patch,dwi,"Velocity", gvelocity_star,interp_type);
+        
+        //cout << "    L-"<< getLevel(patches)->getIndex() << " After setBC  gvelocity_star: " << gvelocity_star[node] << endl;
+        
         bc.setBoundaryCondition(patch,dwi,"Symmetric",gvelocity_star,interp_type);
 
+       //cout << "    L-"<< getLevel(patches)->getIndex() <<  " After setBC2  gvelocity_star: " << gvelocity_star[node] << endl;
        
         // Now recompute acceleration as the difference between the velocity
         // interpolated to the grid (no bcs applied) and the new velocity_star
@@ -1760,8 +1771,8 @@ void AMRMPM::setGridBoundaryConditions(const ProcessorGroup*,
           IntVector c = *iter;
           gacceleration[c] = (gvelocity_star[c] - gvelocity[c])/delT;
   /*`==========TESTING==========*/
-#ifndef DEBUG
-          if(getLevel(patches)->getIndex() == 1 && c == IntVector(88,88,0) ){
+#ifdef DEBUG
+          if(getLevel(patches)->getIndex() == 0 && c == IntVector(10,10,0) ){
              cout << "    L-"<< getLevel(patches)->getIndex() << " node: "<< c << " acceleration: " << gacceleration[c] 
                    <<  " gvelocity_star: " <<gvelocity_star[c] << " gvelocity: " << gvelocity[c] <<endl;
           } 
@@ -2119,11 +2130,17 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
 /*`==========TESTING==========*/
 #ifdef DEBUG
-          Vector ans(0,0,0);
-          if( abs(acc.length() - ans.length()) > 1e-8 ) {
-            cout << "    L-"<< getLevel(patches)->getIndex() << " node: "<< node << " acc: " << acc << "\t  gacceleration " << gacceleration[node] << " S[k] " << S[k] << endl;
-          } 
-#endif
+          Vector acc_ans(0,0,0);                                                                                                         
+          Vector vel_ans(100,100,0);                                                                                                     
+                                                                                                                                         
+          if( abs(acc.length() - acc_ans.length() > 1e-10 ) || abs(vel.length() - vel_ans.length() > 1e-10 )) {
+            cout << "    L-"<< getLevel(patches)->getIndex() << " node: "<< node << " gacceleration: " << gacceleration[node]
+                 <<  " gvelocity_star: " <<gvelocity_star[node]; 
+            cout << "    hardwiring the answers!!!!" << endl;
+            acc = acc_ans;
+            vel = vel_ans;
+          }                                                                                                                              
+#endif 
 /*===========TESTING==========`*/
         }
         
@@ -2132,6 +2149,12 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         pdispnew[idx]        = pdisp[idx]      + vel*delT;
         pvelocitynew[idx]    = pvelocity[idx]  + acc*delT;
         
+        // pxx is only useful if we're not in normal grid resetting mode.
+        pxx[idx]             = px[idx]    + pdispnew[idx];
+        pTempNew[idx]        = pTemperature[idx];
+        pTempPreNew[idx]     = pTemperature[idx]; //
+        pmassNew[idx]        = pmass[idx];
+        pvolumeNew[idx]      = pvolume[idx];
 /*`==========TESTING==========*/
 #ifdef DEBUG
           Vector ans(100,100,0);
@@ -2139,16 +2162,7 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
             cout << "    L-"<< getLevel(patches)->getIndex() << " px: "<< pxnew[idx] << " pvelocitynew: " << pvelocitynew[idx] <<  " pvelocity " << pvelocity[idx]<< endl;
           }
 #endif 
-/*===========TESTING==========`*/  
-        
-        
-        
-        // pxx is only useful if we're not in normal grid resetting mode.
-        pxx[idx]             = px[idx]    + pdispnew[idx];
-        pTempNew[idx]        = pTemperature[idx];
-        pTempPreNew[idx]     = pTemperature[idx]; //
-        pmassNew[idx]        = pmass[idx];
-        pvolumeNew[idx]      = pvolume[idx];
+/*===========TESTING==========`*/ 
         
         totalmass      += pmass[idx];
         thermal_energy += pTemperature[idx] * pmass[idx] * Cp;
@@ -2276,9 +2290,13 @@ void AMRMPM::interpolateToParticlesAndUpdate_CFI(const ProcessorGroup*,
               acc  += gacceleration_fine[fineNode]  * S[k];
 /*`==========TESTING==========*/
 #ifdef DEBUG
-     //         if(fineNode == IntVector(30,39,0) || fineNode == IntVector(30,41,0)){
-                cout << " working on node: " << fineNode << " S[k] " << S[k] << " gvelocity_star_fine " << gvelocity_star_fine[fineNode] << " gacceleration_fine " << gacceleration_fine[fineNode] << endl;
-     //         }
+              Vector acc_ans(0,0,0);
+              Vector vel_ans(100,100,0);
+              
+              if( abs(acc.length() - acc_ans.length() > 1e-10 ) || abs(vel.length() - vel_ans.length() > 1e-10 )) {
+                cout << "    L-"<< fineLevel->getIndex() << " node: "<< fineNode << " gacceleration: " << gacceleration_fine[fineNode] 
+                     <<  " gvelocity_star_fine: " <<gvelocity_star_fine[fineNode] << endl;
+              }
 #endif 
 /*===========TESTING==========`*/
             }
@@ -2290,7 +2308,16 @@ void AMRMPM::interpolateToParticlesAndUpdate_CFI(const ProcessorGroup*,
             pdispnew_coarse[idx]      += vel*delT;                 
             pvelocitynew_coarse[idx]  += acc*delT; 
             
-//            cout << " after update: " <<    pvelocitynew_coarse[idx]  << endl;
+/*`==========TESTING==========*/
+#ifdef DEBUG
+            Vector vel_ans(100,100,0);
+
+            if( abs(pvelocitynew_coarse[idx].length() - vel_ans.length() > 1e-10 )) {
+              cout << "    L-"<< fineLevel->getIndex() << " pxNew: "<< fineNode << " gacceleration: " << gacceleration_fine[fineNode] 
+                   <<  " gvelocity_star_fine: " <<gvelocity_star_fine[fineNode] << endl;
+            }
+#endif 
+/*===========TESTING==========`*/
             
           } // End of particle loop
         } // End loop over materials 
