@@ -171,8 +171,12 @@
 
   <AMR>
     <MPM                                spec="OPTIONAL NO_DATA" >
-      <min_grid_level                   spec="REQUIRED INTEGER" />
-      <max_grid_level                   spec="REQUIRED INTEGER" />
+      <!--<min_grid_level                   spec="REQUIRED INTEGER" />
+      <max_grid_level                   spec="REQUIRED INTEGER" /> -->
+      
+      <Refine_Regions                   spec="OPTIONAL NO_DATA" >
+        <geom_object                    spec="MULTIPLE" />
+      </Refine_Regions>
     </MPM>
   </AMR>
 
