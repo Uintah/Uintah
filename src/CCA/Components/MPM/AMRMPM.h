@@ -53,6 +53,7 @@ DEALINGS IN THE SOFTWARE.
 namespace Uintah {
 
 using namespace SCIRun;
+class GeometryObject;
 
 class UINTAHSHARE AMRMPM : public SerialMPM {
 
@@ -338,7 +339,7 @@ protected:
   IntegratorType d_integrator;
 
 private:
-
+  std::vector<GeometryObject*> d_refine_geom_objs;
   AMRMPM(const AMRMPM&);
   AMRMPM& operator=(const AMRMPM&);
          
