@@ -148,7 +148,7 @@ void LinearInterpolator::findCellAndWeights(const Point& pos,
          // this is an inside test
          if(extraCell_node == Max(extraCell_node, finePatch_lo) && extraCell_node == Min(extraCell_node, finePatch_hi) ) {  
           CFI_ni.push_back(extraCell_node);
-          //cout << "    ni " << node << endl;
+          //cout << "    ni " << extraCell_node << endl;
         } 
       }
     }
@@ -261,88 +261,6 @@ void LinearInterpolator::findCellAndWeights(const Point& pos,
     ASSERT(s>=0);
   }
 }
-
-void LinearInterpolator::findCellAndWeights(const Point& pos,
-                                            vector<IntVector>& ni,
-                                            vector<double>& S,
-                                            constNCVariable<Stencil7>& zoi,
-                                            constNCVariable<Stencil7>& zoi_fine,
-                                            const bool& getFiner,
-                                            int& num_cur, int& num_fine,
-                                            int& num_coarse, const Vector& size,
-                                            bool coarse_particle,
-                                            const Patch* patch)
-{
-  num_coarse=0;
-  num_fine=0;
-  const Level* lvl = d_patch->getLevel();
-  vector<IntVector> cur(8);
-
-  constNCVariable<Stencil7> zoi_use;
-
-  int keep=0;
-  if(coarse_particle){
-    zoi_use=zoi_fine;
-    findFinerNodes(pos,cur,lvl,patch);
-    for(int i=0;i<8;i++){
-      if(lvl->selectPatchForNodeIndex(cur[i])!=0){
-        int use = (int) zoi_fine[cur[i]].p;
-        ni[keep]=cur[i];
-        keep+=use;
-      }
-    }
-  }
-  else{
-    zoi_use=zoi;
-    findNodes(pos,cur,lvl);
-    for(int i=0;i<8;i++){
-      int use = (int) zoi[cur[i]].p;
-      ni[keep]=cur[i];
-      keep+=use;
-    }
-  }
-  num_cur=keep;
-
-  double Sx,Sy,Sz,r;
-  for(int i=0;i<keep;i++){
-    Point node_pos = lvl->getNodePosition(ni[i]);
-    Stencil7 ZOI = zoi_use[ni[i]];
-    r = pos.x() - node_pos.x();
-    uS(Sx,r,ZOI.e,ZOI.w);
-    r = pos.y() - node_pos.y();
-    uS(Sy,r,ZOI.n,ZOI.s);
-    r = pos.z() - node_pos.z();
-    uS(Sz,r,ZOI.t,ZOI.b);
-    S[i]=Sx*Sy*Sz;
-  }
-
-  if(lvl->hasFinerLevel() && getFiner && keep != 8){
-    const Level* fineLevel = lvl->getFinerLevel().get_rep();
-    findFinerNodes(pos,cur,fineLevel,patch);
-    for(int i=0;i<8;i++){
-      if(fineLevel->selectPatchForNodeIndex(cur[i])!=0){
-        ni[keep]=cur[i];
-        keep++;
-      }
-    }
-
-    double Sx,Sy,Sz,r;
-    for(int i=keep;i<8;i++){
-      Point node_pos = fineLevel->getNodePosition(ni[i]);
-      Stencil7 ZOI = zoi_fine[ni[i]];
-      r = pos.x() - node_pos.x();
-      uS(Sx,r,ZOI.e,ZOI.w);
-      r = pos.y() - node_pos.y();
-      uS(Sy,r,ZOI.n,ZOI.s);
-      r = pos.z() - node_pos.z();
-      uS(Sz,r,ZOI.t,ZOI.b);
-      S[i]=Sx*Sy*Sz;
-    }
-    num_fine=keep-num_cur;
-  }
-
-  return;
-}
  
 void LinearInterpolator::findCellAndShapeDerivatives(const Point& pos,
                                                      vector<IntVector>& ni,
@@ -425,31 +343,4 @@ LinearInterpolator::findCellAndWeightsAndShapeDerivatives(const Point& pos,
 int LinearInterpolator::size()
 {
   return d_size;
-}
-
-void LinearInterpolator::findFinerNodes(const Point& pos,
-                               vector<IntVector>& cur,
-                               const Level* level, 
-                               const Patch* patch)
-{
-        Point cellpos = level->positionToIndex(pos);
-        int r = Floor(cellpos.x());
-        int s = Floor(cellpos.y());
-        int t = Floor(cellpos.z());
-
-        IntVector l(patch->getExtraNodeLowIndex());
-        IntVector h(patch->getExtraNodeHighIndex());
-
-        int ix = max(max(l.x()-1,r),min(h.x()-1,r));
-        int iy = max(max(l.y()-1,s),min(h.y()-1,s));
-        int iz = max(max(l.z()-1,t),min(h.z()-1,t));
-
-        cur[0] = IntVector(ix, iy, iz);
-        cur[1] = IntVector(ix, iy, iz+1);
-        cur[2] = IntVector(ix, iy+1, iz);
-        cur[3] = IntVector(ix, iy+1, iz+1);
-        cur[4] = IntVector(ix+1, iy, iz);
-        cur[5] = IntVector(ix+1, iy, iz+1);
-        cur[6] = IntVector(ix+1, iy+1, iz);
-        cur[7] = IntVector(ix+1, iy+1, iz+1);
 }
