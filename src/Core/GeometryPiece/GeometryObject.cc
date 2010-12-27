@@ -35,17 +35,44 @@ DEALINGS IN THE SOFTWARE.
 
 using namespace Uintah;
 
+
 GeometryObject::GeometryObject(GeometryPieceP piece, ProblemSpecP& ps,
-                               list<string>& data) :
+                               list<DataItem>& data) :
   d_piece(piece)
 {
-   ps->require("res", d_resolution);
-   ps->require("velocity", d_initialVel);
-
-   for (list<string>::iterator it = data.begin(); it != data.end();it++){
-     double val;
-     ps->require(*it,val);
-     d_data[*it] = val;
+   for (list<DataItem>::iterator it = data.begin(); it != data.end();it++)
+   {
+     switch(it->type)
+     {
+        case Double:
+        {
+          double val;
+          ps->require(it->name,val);
+          d_double_data[it->name] = val;
+          break;
+        }
+        case Vector:
+        {
+          Uintah::Vector val;
+          ps->require(it->name,val);
+          d_vector_data[it->name] = val;
+          break;
+        }
+        case IntVector:
+        {
+          Uintah::IntVector val;
+          ps->require(it->name,val);
+          d_intvector_data[it->name] = val;
+          break;
+        }
+        case Point:
+        {
+          Uintah::Point val;
+          ps->require(it->name,val);
+          d_point_data[it->name] = val;
+          break;
+        }
+     };
    }
 }
 
@@ -55,10 +82,20 @@ GeometryObject::outputProblemSpec(ProblemSpecP& ps)
   ProblemSpecP geom_obj_ps = ps->appendChild("geom_object");
   d_piece->outputProblemSpec(geom_obj_ps);
   
-  geom_obj_ps->appendElement("res", d_resolution);
-  geom_obj_ps->appendElement("velocity", d_initialVel);
-  for (map<string,double>::iterator it = d_data.begin(); 
-       it != d_data.end(); it++) {
+  for (map<string,double>::iterator it = d_double_data.begin(); 
+       it != d_double_data.end(); it++) {
+    geom_obj_ps->appendElement(it->first.c_str(),it->second);
+  }
+  for (map<string,Uintah::Vector>::iterator it = d_vector_data.begin(); 
+       it != d_vector_data.end(); it++) {
+    geom_obj_ps->appendElement(it->first.c_str(),it->second);
+  }
+  for (map<string,Uintah::IntVector>::iterator it = d_intvector_data.begin(); 
+       it != d_intvector_data.end(); it++) {
+    geom_obj_ps->appendElement(it->first.c_str(),it->second);
+  }
+  for (map<string,Uintah::Point>::iterator it = d_point_data.begin(); 
+       it != d_point_data.end(); it++) {
     geom_obj_ps->appendElement(it->first.c_str(),it->second);
   }
 }

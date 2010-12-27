@@ -181,7 +181,7 @@ void AMRMPM::problemSetup(const ProblemSpecP& prob_spec,
   
   // Read in the refined regions geometry objects
   int piece_num = 0;
-  list<string> geom_obj_data;
+  list<GeometryObject::DataItem> geom_obj_data;
   for (ProblemSpecP geom_obj_ps = refine_ps->findBlock("geom_object");
         geom_obj_ps != 0;
         geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
@@ -2354,7 +2354,7 @@ AMRMPM::errorEstimate(const ProcessorGroup*,
     for(int obj=0; obj<(int)d_refine_geom_objs.size(); obj++){
       GeometryPieceP piece = d_refine_geom_objs[obj]->getPiece();
       
-      IntVector ppc = d_refine_geom_objs[obj]->getNumParticlesPerCell();
+      IntVector ppc = d_refine_geom_objs[obj]->getInitialData_IntVector("res");
       Vector dxpp    = patch->dCell()/ppc;
       Vector dcorner = dxpp*0.5;
       
