@@ -33,6 +33,8 @@ DEALINGS IN THE SOFTWARE.
 #define __GEOMETRY_OBJECT_H__
 
 #include <Core/Geometry/IntVector.h>
+#include <Core/Geometry/Vector.h>
+#include <Core/Geometry/Point.h>
 #include <Core/GeometryPiece/GeometryPiece.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 
@@ -80,11 +82,21 @@ WARNING
 ****************************************/
 
 class UINTAHSHARE GeometryObject {
-	 
+ 
 public:
+  enum DataType
+  {
+    IntVector, Vector, Point, Double
+  };
+  struct DataItem
+  {
+    string name;
+    DataType type;
+    DataItem(string name, DataType datatype) : name(name), type(datatype) {};
+  };
   //////////
   // Insert Documentation Here:
-  GeometryObject(GeometryPieceP piece, ProblemSpecP&,list<string>& data);
+  GeometryObject(GeometryPieceP piece, ProblemSpecP&,list<DataItem>& data);
 
   //////////
   // Insert Documentation Here:
@@ -94,27 +106,37 @@ public:
 
   //////////
   // Insert Documentation Here:
-  IntVector getNumParticlesPerCell() const { return d_resolution; }
-
-  //////////
-  // Insert Documentation Here:
   GeometryPieceP getPiece() const {
     return d_piece;
   }
 
-  Vector getInitialVelocity() const {
-    return d_initialVel;
+  double getInitialData_double(const string& data_string) {
+    return d_double_data[data_string];
   }
-
-  double getInitialData(const string& data_string) {
-    return d_data[data_string];
+  
+  int getInitialData_int(const string& data_string) {
+    return d_int_data[data_string];
+  }
+  
+  Uintah::Point getInitialData_Point(const string& data_string) {
+    return d_point_data[data_string];
+  }
+  
+  Uintah::Vector getInitialData_Vector(const string& data_string) {
+    return d_vector_data[data_string];
+  }
+  
+  Uintah::IntVector getInitialData_IntVector(const string& data_string) {
+    return d_intvector_data[data_string];
   }
 
 private:
   GeometryPieceP     d_piece;
-  IntVector          d_resolution;
-  Vector             d_initialVel;
-  map<string,double> d_data;
+  map<string,int>    d_int_data;
+  map<string,double> d_double_data;
+  map<string,Uintah::Vector> d_vector_data;
+  map<string,Uintah::IntVector> d_intvector_data;
+  map<string,Uintah::Point>  d_point_data;
 
 };
 
