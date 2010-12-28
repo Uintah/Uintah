@@ -182,6 +182,8 @@ void AMRMPM::problemSetup(const ProblemSpecP& prob_spec,
   // Read in the refined regions geometry objects
   int piece_num = 0;
   list<GeometryObject::DataItem> geom_obj_data;
+  geom_obj_data.push_back(GeometryObject::DataItem("res", GeometryObject::IntVector));
+  
   for (ProblemSpecP geom_obj_ps = refine_ps->findBlock("geom_object");
         geom_obj_ps != 0;
         geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
