@@ -182,7 +182,6 @@ void AMRMPM::problemSetup(const ProblemSpecP& prob_spec,
   // Read in the refined regions geometry objects
   int piece_num = 0;
   list<GeometryObject::DataItem> geom_obj_data;
-  geom_obj_data.push_back(GeometryObject::DataItem("res", GeometryObject::IntVector));
   
   for (ProblemSpecP geom_obj_ps = refine_ps->findBlock("geom_object");
         geom_obj_ps != 0;
@@ -2355,27 +2354,18 @@ AMRMPM::errorEstimate(const ProcessorGroup*,
     // loop over all the geometry objects
     for(int obj=0; obj<(int)d_refine_geom_objs.size(); obj++){
       GeometryPieceP piece = d_refine_geom_objs[obj]->getPiece();
-      
-      IntVector ppc = d_refine_geom_objs[obj]->getInitialData_IntVector("res");
-      Vector dxpp    = patch->dCell()/ppc;
-      Vector dcorner = dxpp*0.5;
+      Vector dx = patch->dCell();
       
       for(CellIterator iter = patch->getExtraCellIterator(); !iter.done();iter++){
         IntVector c = *iter;
-        Point lower = patch->nodePosition(c) + dcorner;
+        Point  lower  = patch->nodePosition(c);
+        Vector upperV = lower.asVector() + dx; 
+        Point  upper  = upperV.asPoint();
         
-        for(int ix=0;ix < ppc.x(); ix++){
-          for(int iy=0;iy < ppc.y(); iy++){
-            for(int iz=0;iz < ppc.z(); iz++){
-              IntVector idx(ix, iy, iz);
-              Point p = lower + dxpp*idx;
-              if(piece->inside(p))
-                refineFlag[c] = true;
-                refinePatch->set();
-            }  //z
-          }  // y
-        }  // x
-      }  // cellIter
+        if(piece->inside(upper) && piece->inside(lower))
+          refineFlag[c] = true;
+          refinePatch->set();
+      }
     }
 
 #if 0    
