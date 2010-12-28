@@ -293,6 +293,7 @@
 
       <res                    spec="OPTIONAL VECTOR" /> <!-- FIXME: ?? These are only  optional in some cases... -->
       <velocity               spec="OPTIONAL VECTOR" /> <!--           eg, ARCHES doesn't use them... -->
+      <level                  spec="OPTIONAL INTEGER"/> 
       <temperature            spec="OPTIONAL DOUBLE" />
       <color                  spec="OPTIONAL DOUBLE" />
       <density                spec="OPTIONAL DOUBLE" />

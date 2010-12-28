@@ -182,6 +182,7 @@ void AMRMPM::problemSetup(const ProblemSpecP& prob_spec,
   // Read in the refined regions geometry objects
   int piece_num = 0;
   list<GeometryObject::DataItem> geom_obj_data;
+  geom_obj_data.push_back(GeometryObject::DataItem("level", GeometryObject::Integer));
   
   for (ProblemSpecP geom_obj_ps = refine_ps->findBlock("geom_object");
         geom_obj_ps != 0;
@@ -2356,6 +2357,12 @@ AMRMPM::errorEstimate(const ProcessorGroup*,
       GeometryPieceP piece = d_refine_geom_objs[obj]->getPiece();
       Vector dx = patch->dCell();
       
+      int geom_level =  d_refine_geom_objs[obj]->getInitialData_int("level");
+     
+      //don't add refinement flags if the current level is greater than the geometry level specification
+      if(geom_level!=-1 && level->getIndex()>=geom_level)
+        continue;
+
       for(CellIterator iter = patch->getExtraCellIterator(); !iter.done();iter++){
         IntVector c = *iter;
         Point  lower  = patch->nodePosition(c);
