@@ -306,7 +306,7 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
         if(IveBeenHere[*iter] == -9){
           // This cell hasn't been hit for this matl yet so set values
           // to ensure that everything is set to something everywhere
-          vel_CC[*iter]     = d_geom_objs[obj]->getInitialData_double("velocity");
+          vel_CC[*iter]     = d_geom_objs[obj]->getInitialData_Vector("velocity");
           rho_micro[*iter]  = d_geom_objs[obj]->getInitialData_double("density");
           rho_CC[*iter]     = rho_micro[*iter] * vol_frac_CC[*iter] +
                             d_TINY_RHO*rho_micro[*iter];
