@@ -211,6 +211,7 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
     }
 
     // --- new turbulence inlet flow generator --- 
+    turbinlet = false; 
     if (ProblemSpecP turb_db = db->findBlock("TurbulentInlet")){
       turbinlet = true;
       int Nstep;
