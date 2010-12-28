@@ -86,7 +86,7 @@ class UINTAHSHARE GeometryObject {
 public:
   enum DataType
   {
-    IntVector, Vector, Point, Double
+    IntVector, Vector, Point, Double, Integer
   };
   struct DataItem
   {

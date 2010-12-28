@@ -51,6 +51,13 @@ GeometryObject::GeometryObject(GeometryPieceP piece, ProblemSpecP& ps,
           d_double_data[it->name] = val;
           break;
         }
+        case Integer:
+        {
+          int val;
+          ps->require(it->name,val);
+          d_int_data[it->name] = val;
+          break;
+        }
         case Vector:
         {
           Uintah::Vector val;
