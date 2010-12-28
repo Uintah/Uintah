@@ -59,12 +59,13 @@ namespace Wasatch {
                              const double theBCValue,
                              const SpatialOps::OperatorDatabase& theOperatorsDb ) 
   {
+    typedef typename BCOpT::BCEvalT BCEvaluator;
     Expr::ExpressionFactory& theExprFactory = *theGraph.exprFactory;
     const Expr::Tag phiLabel( phiName, Expr::STATE_N );
     const Expr::ExpressionID phiID = theExprFactory.get_registry().get_id(phiLabel);  
     Expr::Expression<FieldT>& phiExpr = dynamic_cast<Expr::Expression<FieldT>&> ( theExprFactory.retrieve_expression( phiID, thePatch->getID(), true ) );
     //
-    BCOpT theBCOperator(thePatchDimension, bcx, bcy, bcz, theBCPointIndex, theBCSide, SpatialOps::structured::ConstValEval(theBCValue), theOperatorsDb);
+    BCOpT theBCOperator(thePatchDimension, bcx, bcy, bcz, theBCPointIndex, theBCSide, BCEvaluator(theBCValue), theOperatorsDb);
     phiExpr.process_after_evaluate(theBCOperator);
   }
   
@@ -81,7 +82,7 @@ namespace Wasatch {
                                  std::string& bc_kind )
   {  
     SCIRun::Iterator nu;
-    const Uintah::BoundCondBase* bc = patch->getArrayBCValues(face,mat_id,
+    const Uintah::BoundCondBase* bc = patch->getArrayBCValues(face, mat_id,
                                                               desc, bound_ptr,
                                                               nu, child);
     const Uintah::BoundCond<T>* new_bcs;
@@ -163,26 +164,26 @@ namespace Wasatch {
           const IntVector patchDim = hi - lo;
           const SS::IntVec thePatchDim(patchDim[0],patchDim[1],patchDim[2]);
           
+          // get plus face information
+          const bool bcx = (*patch).getBCType(Uintah::Patch::xplus) != Uintah::Patch::Neighbor;
+          const bool bcy = (*patch).getBCType(Uintah::Patch::yplus) != Uintah::Patch::Neighbor;
+          const bool bcz = (*patch).getBCType(Uintah::Patch::zplus) != Uintah::Patch::Neighbor;          
+          
+          // setup some info
+          std::vector<Uintah::Patch::FaceType>::const_iterator faceIterator;
+          std::vector<Uintah::Patch::FaceType> bndFaces;
+          patch->getBoundaryFaces(bndFaces);
+          
+          // get the patch info from which we can get the operators database
+          const PatchInfoMap::const_iterator ipi = thePatchInfoMap.find( patch->getID() );
+          assert( ipi != thePatchInfoMap.end() );
+          const SpatialOps::OperatorDatabase& theOperatorsDb= *(ipi->second.operators);          
+          
           // loop over materials
           for( int im=0; im<theMaterials->size(); ++im ){
             
             const int materialID = theMaterials->get(im);
-            
-            // setup some info
-            std::vector<Uintah::Patch::FaceType>::const_iterator faceIterator;
-            std::vector<Uintah::Patch::FaceType> bndFaces;
-            patch->getBoundaryFaces(bndFaces);
-            
-            // get plus face information
-            const bool bcx = (*patch).getBCType(Uintah::Patch::xplus) != Uintah::Patch::Neighbor;
-            const bool bcy = (*patch).getBCType(Uintah::Patch::yplus) != Uintah::Patch::Neighbor;
-            const bool bcz = (*patch).getBCType(Uintah::Patch::zplus) != Uintah::Patch::Neighbor;
-            
-            // get the patch info from which we can get the operators database
-            const PatchInfoMap::const_iterator ipi = thePatchInfoMap.find( patch->getID() );
-            assert( ipi != thePatchInfoMap.end() );
-            const SpatialOps::OperatorDatabase& theOperatorsDb= *(ipi->second.operators);
-            
+                        
             // now loop over the boundary faces
             for (faceIterator = bndFaces.begin(); faceIterator !=bndFaces.end(); faceIterator++){
               Uintah::Patch::FaceType theFace = *faceIterator;
@@ -211,19 +212,19 @@ namespace Wasatch {
                           //
                           if ( staggeredDirection=="X" ) { // X Volume Field
                             typedef SS::XVolField FieldT;
-                            setBoundaryCondition< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::DirichletX >(patch, theGraphHelper, phiName, bcPointIJK, thePatchDim, bcx,bcy,bcz,SS::X_MINUS_SIDE, bc_value, theOperatorsDb);
+                            setBoundaryCondition< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::DirichletX >(patch, theGraphHelper, phiName, bcPointIJK, thePatchDim, bcx, bcy, bcz, SS::X_MINUS_SIDE, bc_value, theOperatorsDb);
                            
                           } else if (staggeredDirection=="Y") { // Y Volume Field
                             typedef SS::YVolField  FieldT;                          
-                            setBoundaryCondition< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::DirichletX >(patch, theGraphHelper, phiName, bcPointIJK, thePatchDim, bcx,bcy,bcz,SS::X_MINUS_SIDE, bc_value, theOperatorsDb);
+                            setBoundaryCondition< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::DirichletX >(patch, theGraphHelper, phiName, bcPointIJK, thePatchDim, bcx, bcy, bcz, SS::X_MINUS_SIDE, bc_value, theOperatorsDb);
                             
                           } else if (staggeredDirection=="Z") { // Z Volume Field
                             typedef SS::ZVolField  FieldT;                          
-                            setBoundaryCondition< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::DirichletX >(patch, theGraphHelper, phiName, bcPointIJK, thePatchDim, bcx,bcy,bcz,SS::X_MINUS_SIDE, bc_value, theOperatorsDb);
+                            setBoundaryCondition< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::DirichletX >(patch, theGraphHelper, phiName, bcPointIJK, thePatchDim, bcx, bcy, bcz, SS::X_MINUS_SIDE, bc_value, theOperatorsDb);
                             
                           } else { // Scalar Volume Field
                             typedef SS::SVolField  FieldT;            
-                            setBoundaryCondition< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::DirichletX >(patch, theGraphHelper, phiName, bcPointIJK, thePatchDim, bcx,bcy,bcz,SS::X_MINUS_SIDE, bc_value, theOperatorsDb);
+                            setBoundaryCondition< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::DirichletX >(patch, theGraphHelper, phiName, bcPointIJK, thePatchDim, bcx, bcy, bcz, SS::X_MINUS_SIDE, bc_value, theOperatorsDb);
                           }                                                    
                           
                         }
@@ -236,19 +237,19 @@ namespace Wasatch {
                           
                           if ( staggeredDirection=="X" ) { // X Volume Field
                             typedef SS::XVolField  FieldT;                          
-                            setBoundaryCondition< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::DirichletX >(patch, theGraphHelper, phiName, bcPointIJK, thePatchDim, bcx,bcy,bcz,SS::X_PLUS_SIDE, bc_value, theOperatorsDb);
+                            setBoundaryCondition< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::DirichletX >(patch, theGraphHelper, phiName, bcPointIJK, thePatchDim, bcx, bcy, bcz, SS::X_PLUS_SIDE, bc_value, theOperatorsDb);
                             
                           } else if (staggeredDirection=="Y") { // Y Volume Field
                             typedef SS::YVolField  FieldT;                          
-                            setBoundaryCondition< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::DirichletX >(patch, theGraphHelper, phiName, bcPointIJK, thePatchDim, bcx,bcy,bcz,SS::X_PLUS_SIDE, bc_value, theOperatorsDb);
+                            setBoundaryCondition< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::DirichletX >(patch, theGraphHelper, phiName, bcPointIJK, thePatchDim, bcx, bcy, bcz, SS::X_PLUS_SIDE, bc_value, theOperatorsDb);
                             
                           } else if (staggeredDirection=="Z") { // Z Volume Field
                             typedef SS::ZVolField  FieldT;     
-                            setBoundaryCondition< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::DirichletX >(patch, theGraphHelper, phiName, bcPointIJK, thePatchDim, bcx,bcy,bcz,SS::X_PLUS_SIDE, bc_value, theOperatorsDb);
+                            setBoundaryCondition< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::DirichletX >(patch, theGraphHelper, phiName, bcPointIJK, thePatchDim, bcx, bcy, bcz, SS::X_PLUS_SIDE, bc_value, theOperatorsDb);
                             
                           } else { // Scalar Volume Field
                             typedef SS::SVolField  FieldT;
-                            setBoundaryCondition< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::DirichletX >(patch, theGraphHelper, phiName, bcPointIJK, thePatchDim, bcx,bcy,bcz,SS::X_PLUS_SIDE, bc_value, theOperatorsDb);
+                            setBoundaryCondition< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::DirichletX >(patch, theGraphHelper, phiName, bcPointIJK, thePatchDim, bcx, bcy, bcz, SS::X_PLUS_SIDE, bc_value, theOperatorsDb);
                           }                                                    
                           
                           
@@ -257,48 +258,50 @@ namespace Wasatch {
                         
                       case Uintah::Patch::yminus:
                         for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
+                          SCIRun::IntVector insideCellDir = patch->faceDirection(theFace);
                           SCIRun::IntVector bc_point_indices(*bound_ptr); 
                           const SS::IntVec bcPointIJK(bc_point_indices[0],bc_point_indices[1],bc_point_indices[2]);
                           
                           if ( staggeredDirection=="X" ) { // X Volume Field
                             typedef SS::XVolField  FieldT;  
-                            setBoundaryCondition< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::DirichletY >(patch, theGraphHelper, phiName, bcPointIJK, thePatchDim, bcx,bcy,bcz,SS::Y_MINUS_SIDE, bc_value, theOperatorsDb);
+                            setBoundaryCondition< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::DirichletY >(patch, theGraphHelper, phiName, bcPointIJK, thePatchDim, bcx, bcy, bcz, SS::Y_MINUS_SIDE, bc_value, theOperatorsDb);
                             
                           } else if (staggeredDirection=="Y") { // Y Volume Field
                             typedef SS::YVolField  FieldT;                      
-                            setBoundaryCondition< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::DirichletY >(patch, theGraphHelper, phiName, bcPointIJK, thePatchDim, bcx,bcy,bcz,SS::Y_MINUS_SIDE, bc_value, theOperatorsDb);
+                            setBoundaryCondition< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::DirichletY >(patch, theGraphHelper, phiName, bcPointIJK, thePatchDim, bcx, bcy, bcz, SS::Y_MINUS_SIDE, bc_value, theOperatorsDb);
                             
                           } else if (staggeredDirection=="Z") { // Z Volume Field
                             typedef SS::ZVolField  FieldT;                          
-                            setBoundaryCondition< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::DirichletY >(patch, theGraphHelper, phiName, bcPointIJK, thePatchDim, bcx,bcy,bcz,SS::Y_MINUS_SIDE, bc_value, theOperatorsDb);
+                            setBoundaryCondition< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::DirichletY >(patch, theGraphHelper, phiName, bcPointIJK, thePatchDim, bcx, bcy, bcz, SS::Y_MINUS_SIDE, bc_value, theOperatorsDb);
                             
                           } else { // Scalar Volume Field
                             typedef SS::SVolField  FieldT;       
-                            setBoundaryCondition< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::DirichletY >(patch, theGraphHelper, phiName, bcPointIJK, thePatchDim, bcx,bcy,bcz,SS::Y_MINUS_SIDE, bc_value, theOperatorsDb);
+                            setBoundaryCondition< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::DirichletY >(patch, theGraphHelper, phiName, bcPointIJK, thePatchDim, bcx, bcy, bcz, SS::Y_MINUS_SIDE, bc_value, theOperatorsDb);
                           }                                                    
                         }
                         break;
                         
                       case Uintah::Patch::yplus:
                         for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
+                          SCIRun::IntVector insideCellDir = patch->faceDirection(theFace);
                           SCIRun::IntVector bc_point_indices(*bound_ptr); 
                           const SS::IntVec bcPointIJK(bc_point_indices[0],bc_point_indices[1],bc_point_indices[2]);
                           
                           if ( staggeredDirection=="X" ) { // X Volume Field
                             typedef SS::XVolField  FieldT;  
-                            setBoundaryCondition< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::DirichletY >(patch, theGraphHelper, phiName, bcPointIJK, thePatchDim, bcx,bcy,bcz,SS::Y_PLUS_SIDE, bc_value, theOperatorsDb);
+                            setBoundaryCondition< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::DirichletY >(patch, theGraphHelper, phiName, bcPointIJK, thePatchDim, bcx, bcy, bcz, SS::Y_PLUS_SIDE, bc_value, theOperatorsDb);
                             
                           } else if (staggeredDirection=="Y") { // Y Volume Field
                             typedef SS::YVolField  FieldT;                      
-                            setBoundaryCondition< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::DirichletY >(patch, theGraphHelper, phiName, bcPointIJK, thePatchDim, bcx,bcy,bcz,SS::Y_PLUS_SIDE, bc_value, theOperatorsDb);
+                            setBoundaryCondition< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::DirichletY >(patch, theGraphHelper, phiName, bcPointIJK, thePatchDim, bcx, bcy, bcz, SS::Y_PLUS_SIDE, bc_value, theOperatorsDb);
                             
                           } else if (staggeredDirection=="Z") { // Z Volume Field
                             typedef SS::ZVolField  FieldT;                          
-                            setBoundaryCondition< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::DirichletY >(patch, theGraphHelper, phiName, bcPointIJK, thePatchDim, bcx,bcy,bcz,SS::Y_PLUS_SIDE, bc_value, theOperatorsDb);
+                            setBoundaryCondition< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::DirichletY >(patch, theGraphHelper, phiName, bcPointIJK, thePatchDim, bcx, bcy, bcz, SS::Y_PLUS_SIDE, bc_value, theOperatorsDb);
                             
                           } else { // Scalar Volume Field
                             typedef SS::SVolField  FieldT;       
-                            setBoundaryCondition< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::DirichletY >(patch, theGraphHelper, phiName, bcPointIJK, thePatchDim, bcx,bcy,bcz,SS::Y_PLUS_SIDE, bc_value, theOperatorsDb);
+                            setBoundaryCondition< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::DirichletY >(patch, theGraphHelper, phiName, bcPointIJK, thePatchDim, bcx, bcy, bcz, SS::Y_PLUS_SIDE, bc_value, theOperatorsDb);
                           }                                                    
                           
                         }
@@ -311,19 +314,19 @@ namespace Wasatch {
                           
                           if ( staggeredDirection=="X" ) { // X Volume Field
                             typedef SS::XVolField  FieldT;
-                            setBoundaryCondition< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::DirichletZ >(patch, theGraphHelper, phiName, bcPointIJK, thePatchDim, bcx,bcy,bcz,SS::Z_MINUS_SIDE, bc_value, theOperatorsDb);
+                            setBoundaryCondition< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::DirichletZ >(patch, theGraphHelper, phiName, bcPointIJK, thePatchDim, bcx, bcy, bcz, SS::Z_MINUS_SIDE, bc_value, theOperatorsDb);
                                                         
                           } else if (staggeredDirection=="Y") { // Y Volume Field
                             typedef SS::YVolField  FieldT;                          
-                            setBoundaryCondition< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::DirichletZ >(patch, theGraphHelper, phiName, bcPointIJK, thePatchDim, bcx,bcy,bcz,SS::Z_MINUS_SIDE, bc_value, theOperatorsDb);
+                            setBoundaryCondition< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::DirichletZ >(patch, theGraphHelper, phiName, bcPointIJK, thePatchDim, bcx, bcy, bcz, SS::Z_MINUS_SIDE, bc_value, theOperatorsDb);
                             
                           } else if (staggeredDirection=="Z") { // Z Volume Field
                             typedef SS::ZVolField  FieldT;                          
-                            setBoundaryCondition< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::DirichletZ >(patch, theGraphHelper, phiName, bcPointIJK, thePatchDim, bcx,bcy,bcz,SS::Z_MINUS_SIDE, bc_value, theOperatorsDb);
+                            setBoundaryCondition< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::DirichletZ >(patch, theGraphHelper, phiName, bcPointIJK, thePatchDim, bcx, bcy, bcz, SS::Z_MINUS_SIDE, bc_value, theOperatorsDb);
                             
                           } else { // Scalar Volume Field
                             typedef SS::SVolField  FieldT;                      
-                            setBoundaryCondition< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::DirichletZ >(patch, theGraphHelper, phiName, bcPointIJK, thePatchDim, bcx,bcy,bcz,SS::Z_MINUS_SIDE, bc_value, theOperatorsDb);
+                            setBoundaryCondition< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::DirichletZ >(patch, theGraphHelper, phiName, bcPointIJK, thePatchDim, bcx, bcy, bcz, SS::Z_MINUS_SIDE, bc_value, theOperatorsDb);
                           }                                                    
                           
                         }
@@ -336,19 +339,19 @@ namespace Wasatch {
                           
                           if ( staggeredDirection=="X" ) { // X Volume Field
                             typedef SS::XVolField  FieldT;
-                            setBoundaryCondition< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::DirichletZ >(patch, theGraphHelper, phiName, bcPointIJK, thePatchDim, bcx,bcy,bcz,SS::Z_PLUS_SIDE, bc_value, theOperatorsDb);
+                            setBoundaryCondition< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::DirichletZ >(patch, theGraphHelper, phiName, bcPointIJK, thePatchDim, bcx, bcy, bcz, SS::Z_PLUS_SIDE, bc_value, theOperatorsDb);
                             
                           } else if (staggeredDirection=="Y") { // Y Volume Field
                             typedef SS::YVolField  FieldT;                      
-                            setBoundaryCondition< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::DirichletZ >(patch, theGraphHelper, phiName, bcPointIJK, thePatchDim, bcx,bcy,bcz,SS::Z_PLUS_SIDE, bc_value, theOperatorsDb);
+                            setBoundaryCondition< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::DirichletZ >(patch, theGraphHelper, phiName, bcPointIJK, thePatchDim, bcx, bcy, bcz, SS::Z_PLUS_SIDE, bc_value, theOperatorsDb);
                             
                           } else if (staggeredDirection=="Z") { // Z Volume Field
                             typedef SS::ZVolField  FieldT;                          
-                            setBoundaryCondition< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::DirichletZ >(patch, theGraphHelper, phiName, bcPointIJK, thePatchDim, bcx,bcy,bcz,SS::Z_PLUS_SIDE, bc_value, theOperatorsDb);
+                            setBoundaryCondition< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::DirichletZ >(patch, theGraphHelper, phiName, bcPointIJK, thePatchDim, bcx, bcy, bcz, SS::Z_PLUS_SIDE, bc_value, theOperatorsDb);
                             
                           } else { // Scalar Volume Field
                             typedef SS::SVolField  FieldT;                          
-                            setBoundaryCondition< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::DirichletZ >(patch, theGraphHelper, phiName, bcPointIJK, thePatchDim, bcx,bcy,bcz,SS::Z_PLUS_SIDE, bc_value, theOperatorsDb);
+                            setBoundaryCondition< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::DirichletZ >(patch, theGraphHelper, phiName, bcPointIJK, thePatchDim, bcx, bcy, bcz, SS::Z_PLUS_SIDE, bc_value, theOperatorsDb);
                           }                                                    
                           
                         }
@@ -376,19 +379,19 @@ namespace Wasatch {
                           //
                           if ( staggeredDirection=="X" ) { // X Volume Field
                             typedef SS::XVolField FieldT;
-                            setBoundaryCondition< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::NeumannX >(patch, theGraphHelper, phiName, bcPointIJK, thePatchDim, bcx,bcy,bcz,SS::X_MINUS_SIDE, bc_value, theOperatorsDb);
+                            setBoundaryCondition< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::NeumannX >(patch, theGraphHelper, phiName, bcPointIJK, thePatchDim, bcx, bcy, bcz, SS::X_MINUS_SIDE, bc_value, theOperatorsDb);
                             
                           } else if (staggeredDirection=="Y") { // Y Volume Field
                             typedef SS::YVolField  FieldT;                          
-                            setBoundaryCondition< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::NeumannX >(patch, theGraphHelper, phiName, bcPointIJK, thePatchDim, bcx,bcy,bcz,SS::X_MINUS_SIDE, bc_value, theOperatorsDb);
+                            setBoundaryCondition< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::NeumannX >(patch, theGraphHelper, phiName, bcPointIJK, thePatchDim, bcx, bcy, bcz, SS::X_MINUS_SIDE, bc_value, theOperatorsDb);
                             
                           } else if (staggeredDirection=="Z") { // Z Volume Field
                             typedef SS::ZVolField  FieldT;                      
-                            setBoundaryCondition< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::NeumannX >(patch, theGraphHelper, phiName, bcPointIJK, thePatchDim, bcx,bcy,bcz,SS::X_MINUS_SIDE, bc_value, theOperatorsDb);
+                            setBoundaryCondition< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::NeumannX >(patch, theGraphHelper, phiName, bcPointIJK, thePatchDim, bcx, bcy, bcz, SS::X_MINUS_SIDE, bc_value, theOperatorsDb);
                             
                           } else { // Scalar Volume Field
                             typedef SS::SVolField  FieldT;            
-                            setBoundaryCondition< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::NeumannX >(patch, theGraphHelper, phiName, bcPointIJK, thePatchDim, bcx,bcy,bcz,SS::X_MINUS_SIDE, bc_value, theOperatorsDb);
+                            setBoundaryCondition< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::NeumannX >(patch, theGraphHelper, phiName, bcPointIJK, thePatchDim, bcx, bcy, bcz, SS::X_MINUS_SIDE, bc_value, theOperatorsDb);
                           }                                                    
                           
                         }
@@ -401,19 +404,19 @@ namespace Wasatch {
                           
                           if ( staggeredDirection=="X" ) { // X Volume Field
                             typedef SS::XVolField  FieldT; 
-                            setBoundaryCondition< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::NeumannX >(patch, theGraphHelper, phiName, bcPointIJK, thePatchDim, bcx,bcy,bcz,SS::X_PLUS_SIDE, bc_value, theOperatorsDb);
+                            setBoundaryCondition< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::NeumannX >(patch, theGraphHelper, phiName, bcPointIJK, thePatchDim, bcx, bcy, bcz, SS::X_PLUS_SIDE, bc_value, theOperatorsDb);
                             
                           } else if (staggeredDirection=="Y") { // Y Volume Field
                             typedef SS::YVolField  FieldT;                          
-                            setBoundaryCondition< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::NeumannX >(patch, theGraphHelper, phiName, bcPointIJK, thePatchDim, bcx,bcy,bcz,SS::X_PLUS_SIDE, bc_value, theOperatorsDb);
+                            setBoundaryCondition< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::NeumannX >(patch, theGraphHelper, phiName, bcPointIJK, thePatchDim, bcx, bcy, bcz, SS::X_PLUS_SIDE, bc_value, theOperatorsDb);
                             
                           } else if (staggeredDirection=="Z") { // Z Volume Field
                             typedef SS::ZVolField  FieldT;     
-                            setBoundaryCondition< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::NeumannX >(patch, theGraphHelper, phiName, bcPointIJK, thePatchDim, bcx,bcy,bcz,SS::X_PLUS_SIDE, bc_value, theOperatorsDb);
+                            setBoundaryCondition< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::NeumannX >(patch, theGraphHelper, phiName, bcPointIJK, thePatchDim, bcx, bcy, bcz, SS::X_PLUS_SIDE, bc_value, theOperatorsDb);
                             
                           } else { // Scalar Volume Field
                             typedef SS::SVolField  FieldT;
-                            setBoundaryCondition< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::NeumannX >(patch, theGraphHelper, phiName, bcPointIJK, thePatchDim, bcx,bcy,bcz,SS::X_PLUS_SIDE, bc_value, theOperatorsDb);
+                            setBoundaryCondition< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::NeumannX >(patch, theGraphHelper, phiName, bcPointIJK, thePatchDim, bcx, bcy, bcz, SS::X_PLUS_SIDE, bc_value, theOperatorsDb);
                           }                                                    
                           
                           
@@ -427,19 +430,19 @@ namespace Wasatch {
                           
                           if ( staggeredDirection=="X" ) { // X Volume Field
                             typedef SS::XVolField  FieldT;  
-                            setBoundaryCondition< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::NeumannY >(patch, theGraphHelper, phiName, bcPointIJK, thePatchDim, bcx,bcy,bcz,SS::Y_MINUS_SIDE, bc_value, theOperatorsDb);
+                            setBoundaryCondition< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::NeumannY >(patch, theGraphHelper, phiName, bcPointIJK, thePatchDim, bcx, bcy, bcz, SS::Y_MINUS_SIDE, bc_value, theOperatorsDb);
                             
                           } else if (staggeredDirection=="Y") { // Y Volume Field
                             typedef SS::YVolField  FieldT;                          
-                            setBoundaryCondition< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::NeumannY >(patch, theGraphHelper, phiName, bcPointIJK, thePatchDim, bcx,bcy,bcz,SS::Y_MINUS_SIDE, bc_value, theOperatorsDb);
+                            setBoundaryCondition< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::NeumannY >(patch, theGraphHelper, phiName, bcPointIJK, thePatchDim, bcx, bcy, bcz, SS::Y_MINUS_SIDE, bc_value, theOperatorsDb);
                             
                           } else if (staggeredDirection=="Z") { // Z Volume Field
                             typedef SS::ZVolField  FieldT;                      
-                            setBoundaryCondition< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::NeumannY >(patch, theGraphHelper, phiName, bcPointIJK, thePatchDim, bcx,bcy,bcz,SS::Y_MINUS_SIDE, bc_value, theOperatorsDb);
+                            setBoundaryCondition< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::NeumannY >(patch, theGraphHelper, phiName, bcPointIJK, thePatchDim, bcx, bcy, bcz, SS::Y_MINUS_SIDE, bc_value, theOperatorsDb);
                             
                           } else { // Scalar Volume Field
                             typedef SS::SVolField  FieldT;       
-                            setBoundaryCondition< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::NeumannY >(patch, theGraphHelper, phiName, bcPointIJK, thePatchDim, bcx,bcy,bcz,SS::Y_MINUS_SIDE, bc_value, theOperatorsDb);
+                            setBoundaryCondition< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::NeumannY >(patch, theGraphHelper, phiName, bcPointIJK, thePatchDim, bcx, bcy, bcz, SS::Y_MINUS_SIDE, bc_value, theOperatorsDb);
                           }                                                    
                         }
                         break;
@@ -451,19 +454,19 @@ namespace Wasatch {
                           
                           if ( staggeredDirection=="X" ) { // X Volume Field
                             typedef SS::XVolField  FieldT;  
-                            setBoundaryCondition< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::NeumannY >(patch, theGraphHelper, phiName, bcPointIJK, thePatchDim, bcx,bcy,bcz,SS::Y_PLUS_SIDE, bc_value, theOperatorsDb);
+                            setBoundaryCondition< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::NeumannY >(patch, theGraphHelper, phiName, bcPointIJK, thePatchDim, bcx, bcy, bcz, SS::Y_PLUS_SIDE, bc_value, theOperatorsDb);
                             
                           } else if (staggeredDirection=="Y") { // Y Volume Field
                             typedef SS::YVolField  FieldT;    
-                            setBoundaryCondition< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::NeumannY >(patch, theGraphHelper, phiName, bcPointIJK, thePatchDim, bcx,bcy,bcz,SS::Y_PLUS_SIDE, bc_value, theOperatorsDb);
+                            setBoundaryCondition< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::NeumannY >(patch, theGraphHelper, phiName, bcPointIJK, thePatchDim, bcx, bcy, bcz, SS::Y_PLUS_SIDE, bc_value, theOperatorsDb);
                             
                           } else if (staggeredDirection=="Z") { // Z Volume Field
                             typedef SS::ZVolField  FieldT;                          
-                            setBoundaryCondition< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::NeumannY >(patch, theGraphHelper, phiName, bcPointIJK, thePatchDim, bcx,bcy,bcz,SS::Y_PLUS_SIDE, bc_value, theOperatorsDb);
+                            setBoundaryCondition< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::NeumannY >(patch, theGraphHelper, phiName, bcPointIJK, thePatchDim, bcx, bcy, bcz, SS::Y_PLUS_SIDE, bc_value, theOperatorsDb);
                             
                           } else { // Scalar Volume Field
                             typedef SS::SVolField  FieldT;       
-                            setBoundaryCondition< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::NeumannY >(patch, theGraphHelper, phiName, bcPointIJK, thePatchDim, bcx,bcy,bcz,SS::Y_PLUS_SIDE, bc_value, theOperatorsDb);
+                            setBoundaryCondition< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::NeumannY >(patch, theGraphHelper, phiName, bcPointIJK, thePatchDim, bcx, bcy, bcz, SS::Y_PLUS_SIDE, bc_value, theOperatorsDb);
                           }                                                    
                           
                         }
@@ -476,19 +479,19 @@ namespace Wasatch {
                           
                           if ( staggeredDirection=="X" ) { // X Volume Field
                             typedef SS::XVolField  FieldT;
-                            setBoundaryCondition< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::NeumannZ >(patch, theGraphHelper, phiName, bcPointIJK, thePatchDim, bcx,bcy,bcz,SS::Z_MINUS_SIDE, bc_value, theOperatorsDb);
+                            setBoundaryCondition< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::NeumannZ >(patch, theGraphHelper, phiName, bcPointIJK, thePatchDim, bcx, bcy, bcz, SS::Z_MINUS_SIDE, bc_value, theOperatorsDb);
                             
                           } else if (staggeredDirection=="Y") { // Y Volume Field
                             typedef SS::YVolField  FieldT;                          
-                            setBoundaryCondition< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::NeumannZ >(patch, theGraphHelper, phiName, bcPointIJK, thePatchDim, bcx,bcy,bcz,SS::Z_MINUS_SIDE, bc_value, theOperatorsDb);
+                            setBoundaryCondition< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::NeumannZ >(patch, theGraphHelper, phiName, bcPointIJK, thePatchDim, bcx, bcy, bcz, SS::Z_MINUS_SIDE, bc_value, theOperatorsDb);
                             
                           } else if (staggeredDirection=="Z") { // Z Volume Field
                             typedef SS::ZVolField  FieldT;                      
-                            setBoundaryCondition< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::NeumannZ >(patch, theGraphHelper, phiName, bcPointIJK, thePatchDim, bcx,bcy,bcz,SS::Z_MINUS_SIDE, bc_value, theOperatorsDb);
+                            setBoundaryCondition< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::NeumannZ >(patch, theGraphHelper, phiName, bcPointIJK, thePatchDim, bcx, bcy, bcz, SS::Z_MINUS_SIDE, bc_value, theOperatorsDb);
                             
                           } else { // Scalar Volume Field
                             typedef SS::SVolField  FieldT;                          
-                            setBoundaryCondition< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::NeumannZ >(patch, theGraphHelper, phiName, bcPointIJK, thePatchDim, bcx,bcy,bcz,SS::Z_MINUS_SIDE, bc_value, theOperatorsDb);
+                            setBoundaryCondition< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::NeumannZ >(patch, theGraphHelper, phiName, bcPointIJK, thePatchDim, bcx, bcy, bcz, SS::Z_MINUS_SIDE, bc_value, theOperatorsDb);
                           }                                                    
                           
                         }
@@ -501,19 +504,19 @@ namespace Wasatch {
                           
                           if ( staggeredDirection=="X" ) { // X Volume Field
                             typedef SS::XVolField  FieldT;
-                            setBoundaryCondition< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::NeumannZ >(patch, theGraphHelper, phiName, bcPointIJK, thePatchDim, bcx,bcy,bcz,SS::Z_PLUS_SIDE, bc_value, theOperatorsDb);
+                            setBoundaryCondition< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::NeumannZ >(patch, theGraphHelper, phiName, bcPointIJK, thePatchDim, bcx, bcy, bcz, SS::Z_PLUS_SIDE, bc_value, theOperatorsDb);
                             
                           } else if (staggeredDirection=="Y") { // Y Volume Field
                             typedef SS::YVolField  FieldT;                          
-                            setBoundaryCondition< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::NeumannZ >(patch, theGraphHelper, phiName, bcPointIJK, thePatchDim, bcx,bcy,bcz,SS::Z_PLUS_SIDE, bc_value, theOperatorsDb);
+                            setBoundaryCondition< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::NeumannZ >(patch, theGraphHelper, phiName, bcPointIJK, thePatchDim, bcx, bcy, bcz, SS::Z_PLUS_SIDE, bc_value, theOperatorsDb);
                             
                           } else if (staggeredDirection=="Z") { // Z Volume Field
                             typedef SS::ZVolField  FieldT;                          
-                            setBoundaryCondition< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::NeumannZ >(patch, theGraphHelper, phiName, bcPointIJK, thePatchDim, bcx,bcy,bcz,SS::Z_PLUS_SIDE, bc_value, theOperatorsDb);
+                            setBoundaryCondition< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::NeumannZ >(patch, theGraphHelper, phiName, bcPointIJK, thePatchDim, bcx, bcy, bcz, SS::Z_PLUS_SIDE, bc_value, theOperatorsDb);
                             
                           } else { // Scalar Volume Field
                             typedef SS::SVolField  FieldT;                          
-                            setBoundaryCondition< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::NeumannZ >(patch, theGraphHelper, phiName, bcPointIJK, thePatchDim, bcx,bcy,bcz,SS::Z_PLUS_SIDE, bc_value, theOperatorsDb);
+                            setBoundaryCondition< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::NeumannZ >(patch, theGraphHelper, phiName, bcPointIJK, thePatchDim, bcx, bcy, bcz, SS::Z_PLUS_SIDE, bc_value, theOperatorsDb);
                           }                                                    
                           
                         }
