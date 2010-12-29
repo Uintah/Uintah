@@ -902,7 +902,8 @@ void AMRMPM::scheduleInterpolateToParticlesAndUpdate_CFI(SchedulerP& sched,
     #define allPatches 0
     #define allMatls 0
     t->requires(Task::OldDW, d_sharedState->get_delt_label() );
-
+    
+    t->requires(Task::OldDW, lb->pXLabel, gn);
     t->requires(Task::NewDW, lb->gVelocityStarLabel, allPatches, Task::FineLevel,allMatls, ND, gn,0);
     t->requires(Task::NewDW, lb->gAccelerationLabel, allPatches, Task::FineLevel,allMatls, ND, gn,0);
     t->requires(Task::NewDW, lb->gZOILabel,          allPatches, Task::FineLevel,allMatls, ND, gn,0);
@@ -2254,6 +2255,8 @@ void AMRMPM::interpolateToParticlesAndUpdate_CFI(const ProcessorGroup*,
           ParticleVariable<Point>  pxnew_coarse;
           ParticleVariable<Vector> pdispnew_coarse;
           ParticleVariable<Vector> pvelocitynew_coarse;
+          constParticleVariable<Point>  pxold_coarse;
+          
           ParticleSubset* pset=0;
           
 /*`==========TESTING==========*/
@@ -2265,11 +2268,14 @@ void AMRMPM::interpolateToParticlesAndUpdate_CFI(const ProcessorGroup*,
           pset = old_dw->getParticleSubset(dwi, coarsePatch);
           //cout << *pset << endl; 
 /*===========TESTING==========`*/
-          
+          old_dw->get(pxold_coarse,                  lb->pXLabel,                 pset);
           new_dw->getModifiable(pxnew_coarse,        lb->pXLabel_preReloc,        pset);
           new_dw->getModifiable(pdispnew_coarse,     lb->pDispLabel_preReloc,     pset);
           new_dw->getModifiable(pvelocitynew_coarse, lb->pVelocityLabel_preReloc, pset);
+          
 
+          
+          
           for (ParticleSubset::iterator iter = pset->begin();iter != pset->end(); iter++){
             particleIndex idx = *iter;
 
@@ -2277,7 +2283,7 @@ void AMRMPM::interpolateToParticlesAndUpdate_CFI(const ProcessorGroup*,
             vector<IntVector> ni;
             vector<double> S;
             
-            interpolator->findCellAndWeights(pxnew_coarse[idx],ni,S,zoi_fine);
+            interpolator->findCellAndWeights(pxold_coarse[idx],ni,S,zoi_fine);
 
             Vector acc(0.0, 0.0, 0.0); 
             Vector vel(0.0, 0.0, 0.0);
@@ -2314,7 +2320,7 @@ void AMRMPM::interpolateToParticlesAndUpdate_CFI(const ProcessorGroup*,
 #ifdef DEBUG
             Vector vel_ans(100,100,0);
 
-            if( abs(pvelocitynew_coarse[idx].length() - vel_ans.length() > 1e-10 )) {
+            if( ( abs(pvelocitynew_coarse[idx].length() - vel_ans.length()) > 1e-10 )) {
               cout << "    L-"<< fineLevel->getIndex() << " pxNew: "<< fineNode << " gacceleration: " << gacceleration_fine[fineNode] 
                    <<  " gvelocity_star_fine: " <<gvelocity_star_fine[fineNode] << endl;
             }
