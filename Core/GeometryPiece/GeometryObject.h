@@ -41,8 +41,10 @@ DEALINGS IN THE SOFTWARE.
 #include   <list>
 #include   <string>
 #include   <map>
+#include   <sstream>
 
 #include <Core/GeometryPiece/uintahshare.h>
+#include <Core/Exceptions/InternalError.h>
 namespace Uintah {
 
 class GeometryPiece;
@@ -111,22 +113,52 @@ public:
   }
 
   double getInitialData_double(const string& data_string) {
+    if(d_double_data.find(data_string)==d_double_data.end())
+    {
+      std::stringstream msg;
+      msg << "Geometry Object string '" << data_string << "' was not read during problemSetup";
+      throw InternalError(msg.str(),__FILE__,__LINE__);
+    }
     return d_double_data[data_string];
   }
   
   int getInitialData_int(const string& data_string) {
+    if(d_int_data.find(data_string)==d_int_data.end())
+    {
+      std::stringstream msg;
+      msg << "Geometry Object string '" << data_string << "' was not read during problemSetup";
+      throw InternalError(msg.str(),__FILE__,__LINE__);
+    }
     return d_int_data[data_string];
   }
   
   Uintah::Point getInitialData_Point(const string& data_string) {
+    if(d_point_data.find(data_string)==d_point_data.end())
+    {
+      std::stringstream msg;
+      msg << "Geometry Object string '" << data_string << "' was not read during problemSetup";
+      throw InternalError(msg.str(),__FILE__,__LINE__);
+    }
     return d_point_data[data_string];
   }
   
   Uintah::Vector getInitialData_Vector(const string& data_string) {
+    if(d_vector_data.find(data_string)==d_vector_data.end())
+    {
+      std::stringstream msg;
+      msg << "Geometry Object string '" << data_string << "' was not read during problemSetup";
+      throw InternalError(msg.str(),__FILE__,__LINE__);
+    }
     return d_vector_data[data_string];
   }
   
   Uintah::IntVector getInitialData_IntVector(const string& data_string) {
+    if(d_intvector_data.find(data_string)==d_intvector_data.end())
+    {
+      std::stringstream msg;
+      msg << "Geometry Object string '" << data_string << "' was not read during problemSetup";
+      throw InternalError(msg.str(),__FILE__,__LINE__);
+    }
     return d_intvector_data[data_string];
   }
 
