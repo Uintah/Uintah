@@ -81,11 +81,11 @@ static DebugStream amr_doing("AMRMPM", false);
 //__________________________________
 //   TODO:
 // - We only need to compute ZOI when the grid changes not every timestep
+//
 // - InterpolateParticlesToGrid_CFI()  Need to account for gimp when getting particles on coarse level.
 //
 // - scheduleTimeAdvance:  Do we need to schedule each task in a separate level loop?  I suspect that we only need
 //                         to in the CFI tasks
-// - debug why pure translation with on a 2D complex grid gives that wrong answers.
 //
 //  What is going on in refine & coarsen
 //  To Test:
@@ -163,6 +163,8 @@ void AMRMPM::problemSetup(const ProblemSpecP& prob_spec,
   if (amr_ps){
     mpm_ps = amr_ps->findBlock("MPM");
   }
+  
+  
   if(!mpm_ps){
     string warn;
     warn ="\n INPUT FILE ERROR:\n <MPM>  block not found inside of <AMR> block \n";
@@ -170,37 +172,42 @@ void AMRMPM::problemSetup(const ProblemSpecP& prob_spec,
   }
   //__________________________________
   // read in the regions that user would like 
-  // refined
-  ProblemSpecP refine_ps = mpm_ps->findBlock("Refine_Regions");
-  if(!refine_ps ){
-    string warn;
-    warn ="\n INPUT FILE ERROR:\n <Refine_Regions> "
-         " block not found inside of <MPM> block \n";
-    throw ProblemSetupException(warn, __FILE__, __LINE__);
-  }
+  // refined if the grid has not been setup manually
+  bool manualGrid;
+  mpm_ps->getWithDefault("manualGrid", manualGrid, false);
   
-  // Read in the refined regions geometry objects
-  int piece_num = 0;
-  list<GeometryObject::DataItem> geom_obj_data;
-  geom_obj_data.push_back(GeometryObject::DataItem("level", GeometryObject::Integer));
-  
-  for (ProblemSpecP geom_obj_ps = refine_ps->findBlock("geom_object");
-        geom_obj_ps != 0;
-        geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
+  if(!manualGrid){
+    ProblemSpecP refine_ps = mpm_ps->findBlock("Refine_Regions");
+    if(!refine_ps ){
+      string warn;
+      warn ="\n INPUT FILE ERROR:\n <Refine_Regions> "
+           " block not found inside of <MPM> block \n";
+      throw ProblemSetupException(warn, __FILE__, __LINE__);
+    }
 
-      vector<GeometryPieceP> pieces;
-      GeometryPieceFactory::create(geom_obj_ps, pieces);
+    // Read in the refined regions geometry objects
+    int piece_num = 0;
+    list<GeometryObject::DataItem> geom_obj_data;
+    geom_obj_data.push_back(GeometryObject::DataItem("level", GeometryObject::Integer));
 
-      GeometryPieceP mainpiece;
-      if(pieces.size() == 0){
-         throw ParameterNotFound("No piece specified in geom_object", __FILE__, __LINE__);
-      } else if(pieces.size() > 1){
-         mainpiece = scinew UnionGeometryPiece(pieces);
-      } else {
-         mainpiece = pieces[0];
-      }
-      piece_num++;
-      d_refine_geom_objs.push_back(scinew GeometryObject(mainpiece,geom_obj_ps,geom_obj_data));
+    for (ProblemSpecP geom_obj_ps = refine_ps->findBlock("geom_object");
+          geom_obj_ps != 0;
+          geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
+
+        vector<GeometryPieceP> pieces;
+        GeometryPieceFactory::create(geom_obj_ps, pieces);
+
+        GeometryPieceP mainpiece;
+        if(pieces.size() == 0){
+           throw ParameterNotFound("No piece specified in geom_object", __FILE__, __LINE__);
+        } else if(pieces.size() > 1){
+           mainpiece = scinew UnionGeometryPiece(pieces);
+        } else {
+           mainpiece = pieces[0];
+        }
+        piece_num++;
+        d_refine_geom_objs.push_back(scinew GeometryObject(mainpiece,geom_obj_ps,geom_obj_data));
+     }
    }
 
   //__________________________________
@@ -1302,11 +1309,13 @@ void AMRMPM::interpolateParticlesToGrid_CFI(const ProcessorGroup*,
                                            * pMass_coarse[idx] * S[k];
 
   /*`==========TESTING==========*/
+  #if 0
   #ifdef DEBUG
             if(fineNode.z() == 0 && gMass_fine[fineNode] > 1e-200){
               cout << "    fineNode " << fineNode  << " S[k] " << S[k] << " \t gMass_fine " << gMass_fine[fineNode]
                    << " gVelocity " << gVelocity_fine[fineNode]/gMass_fine[fineNode] << " \t zoi " << (zoi_fine[fineNode]) << endl; 
             }
+  #endif
   #endif 
   /*===========TESTING==========`*/
           }
@@ -1491,16 +1500,6 @@ void AMRMPM::Nodal_velocity_temperature(const ProcessorGroup*,
         IntVector n = *iter;
         gVelocity[n]     /= gMass[n];
         gTemperature[n]  /= gMass[n];
-        
-/*`==========TESTING==========*/
-#ifdef DEBUG
-        Vector ans(100,100,0);
-        if( abs(gVelocity[n].length() - ans.length()) > 1e-12 && gMass[n] > 1e-8 ) {
-          cout << " nodalVelocityTemperature L-"<< getLevel(patches)->getIndex() << " node: "<< n << " velocity: " << gVelocity[n] << endl;
-        }
-#endif 
-/*===========TESTING==========`*/
-        
       }
       
       // Apply boundary conditions to the temperature and velocity (if symmetry)
@@ -1705,13 +1704,11 @@ void AMRMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
           gvelocity_star[n] = gvelocity[n] + gacceleration[n] * delT;
   /*`==========TESTING==========*/
   #ifdef DEBUG
-          Vector ans(0,0,0);
+          Vector ans(1000,0,0);
           if( abs(gacceleration[n].length() - ans.length()) > 1e-13 ) {
             cout << "    L-"<< getLevel(patches)->getIndex() << " node: "<< n << " gacceleration: " << gacceleration[n] 
                  <<  " externalForce: " <<externalforce[n] << " internalforce: " << internalforce[n] << " gmass: " << gmass[n] << endl;
-          }
-            cout << "    L-"<< getLevel(patches)->getIndex() << " node: "<< n << " gacceleration: " << gacceleration[n] 
-                 <<  " externalForce: " <<externalforce[n] << " internalforce: " << internalforce[n] << " gmass: " << gmass[n] << endl; 
+          } 
   #endif 
   /*===========TESTING==========`*/
         }
@@ -1773,14 +1770,6 @@ void AMRMPM::setGridBoundaryConditions(const ProcessorGroup*,
         for(NodeIterator iter = patch->getExtraNodeIterator(); !iter.done(); iter++){
           IntVector c = *iter;
           gacceleration[c] = (gvelocity_star[c] - gvelocity[c])/delT;
-  /*`==========TESTING==========*/
-#ifdef DEBUG
-          if(getLevel(patches)->getIndex() == 0 && c == IntVector(10,10,0) ){
-             cout << "    L-"<< getLevel(patches)->getIndex() << " node: "<< c << " acceleration: " << gacceleration[c] 
-                   <<  " gvelocity_star: " <<gvelocity_star[c] << " gvelocity: " << gvelocity[c] <<endl;
-          } 
-#endif
-  /*===========TESTING==========`*/
         }
         // Set symmetry BCs on acceleration
         bc.setBoundaryCondition(patch,dwi,"Symmetric",gacceleration,interp_type);
@@ -2133,15 +2122,12 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
 /*`==========TESTING==========*/
 #ifdef DEBUG
-          Vector acc_ans(0,0,0);                                                                                                         
+          Vector acc_ans(1000,0,0);                                                                                                         
           Vector vel_ans(100,100,0);                                                                                                     
                                                                                                                                          
-          if( abs(acc.length() - acc_ans.length() > 1e-10 ) || abs(vel.length() - vel_ans.length() > 1e-10 )) {
-            cout << "    L-"<< getLevel(patches)->getIndex() << " node: "<< node << " gacceleration: " << gacceleration[node]
-                 <<  " gvelocity_star: " <<gvelocity_star[node]; 
-            cout << "    hardwiring the answers!!!!" << endl;
-            acc = acc_ans;
-            vel = vel_ans;
+          if( abs(acc.length() - acc_ans.length() ) > 1e-10 ) {
+            cout << "    L-"  << getLevel(patches)->getIndex() << " node: "<< node <<  " gacceleration: " <<gacceleration[node] 
+                 <<  " diff " << abs(acc.length() - acc_ans.length() ) << endl;
           }                                                                                                                              
 #endif 
 /*===========TESTING==========`*/
@@ -2160,10 +2146,12 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         pvolumeNew[idx]      = pvolume[idx];
 /*`==========TESTING==========*/
 #ifdef DEBUG
+      #if 0
           Vector ans(100,100,0);
           if( abs(pvelocitynew[idx].length() - ans.length()) > 1e-12 ) {
             cout << "    L-"<< getLevel(patches)->getIndex() << " px: "<< pxnew[idx] << " pvelocitynew: " << pvelocitynew[idx] <<  " pvelocity " << pvelocity[idx]<< endl;
           }
+      #endif
 #endif 
 /*===========TESTING==========`*/ 
         
@@ -2298,12 +2286,11 @@ void AMRMPM::interpolateToParticlesAndUpdate_CFI(const ProcessorGroup*,
               acc  += gacceleration_fine[fineNode]  * S[k];
 /*`==========TESTING==========*/
 #ifdef DEBUG
-              Vector acc_ans(0,0,0);
+              Vector acc_ans(1000,0,0);
               Vector vel_ans(100,100,0);
               
-              if( abs(acc.length() - acc_ans.length() > 1e-10 ) || abs(vel.length() - vel_ans.length() > 1e-10 )) {
-                cout << "    L-"<< fineLevel->getIndex() << " node: "<< fineNode << " gacceleration: " << gacceleration_fine[fineNode] 
-                     <<  " gvelocity_star_fine: " <<gvelocity_star_fine[fineNode] << endl;
+              if( abs(acc.length() - acc_ans.length() > 1e-10 ) ) {
+                cout << "    L-"<< fineLevel->getIndex() << " node: "<< fineNode << " gacceleration: " << gacceleration_fine[fineNode] << endl;
               }
 #endif 
 /*===========TESTING==========`*/
@@ -2315,17 +2302,6 @@ void AMRMPM::interpolateToParticlesAndUpdate_CFI(const ProcessorGroup*,
             pxnew_coarse[idx]         += vel*delT*move_particles;  
             pdispnew_coarse[idx]      += vel*delT;                 
             pvelocitynew_coarse[idx]  += acc*delT; 
-            
-/*`==========TESTING==========*/
-#ifdef DEBUG
-            Vector vel_ans(100,100,0);
-
-            if( ( abs(pvelocitynew_coarse[idx].length() - vel_ans.length()) > 1e-10 )) {
-              cout << "    L-"<< fineLevel->getIndex() << " pxNew: "<< fineNode << " gacceleration: " << gacceleration_fine[fineNode] 
-                   <<  " gvelocity_star_fine: " <<gvelocity_star_fine[fineNode] << endl;
-            }
-#endif 
-/*===========TESTING==========`*/
             
           } // End of particle loop
         } // End loop over materials 
@@ -2627,7 +2603,7 @@ void AMRMPM::debug_CFI(const ProcessorGroup*,
             particleIndex idx2 = *iter2;
             
             if( px[idx] == px_CFI[idx2] ){       
-//              pColor[idx] = 0;
+              pColor[idx] = 0;
               vector<IntVector> ni;
               vector<double> S;
               interpolatorFine->findCellAndWeights(px[idx],ni,S,zoi); 
