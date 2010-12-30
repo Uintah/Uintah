@@ -175,6 +175,7 @@
       <max_grid_level                   spec="OPTIONAL INTEGER" />
       
       <Refine_Regions                   spec="OPTIONAL NO_DATA" >
+        <manualGrid                     spec="OPTIONAL BOOLEAN" />
         <geom_object                    spec="MULTIPLE" />
       </Refine_Regions>
     </MPM>
