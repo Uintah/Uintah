@@ -43,6 +43,7 @@ NIGHTLYTESTS = [
                  ("test_corrug_plate",              "test_corrug_plate.ups",              1,  "Linux", ["exactComparison"]),    \
                  ("test_cyl_pene_no_ero",           "test_cyl_pene_no_ero.ups",           1,  "Linux", ["exactComparison"]),    \
                  ("test_gurson_beckerdrucker_mts",  "test_gurson_beckerdrucker_mts.ups",  1,  "Linux", ["exactComparison"]),    \
+                 ("advect_3L_3D",                    "advect_3L_3D.ups",                  1,  "Linux", ["exactComparison"]),    \
            
                  ("disks2mat4patch",                "disks2mat4patch.ups",                4,  "Darwin", ["doesTestRun"]),    \
                  ("heatcond2mat",                   "heatcond2mat.ups",                   1,  "Darwin", ["doesTestRun"]),    \
@@ -61,7 +62,8 @@ NIGHTLYTESTS = [
               
 # Tests that are run during local regression testing              
 LOCALTESTS = [  
-                 ("disks2mat4patch",                 "disks2mat4patch.ups",                4,  "Linux", ["exactComparison"]),    \
+                 ("advect_3L_3D",                   "advect_3L_3D.ups",                   1,  "Linux", ["exactComparison"]),    \ 
+                 ("disks2mat4patch",                "disks2mat4patch.ups",                4,  "Linux", ["exactComparison"]),    \ 
                  ("heatcond2mat",                   "heatcond2mat.ups",                   1,  "Linux", ["exactComparison"]),    \
                  ("inclined_plane_sphere",          "inclined_plane_sphere.ups",          1,  "Linux", ["exactComparison"]),    \
                  ("foam_crush",                     "foam_crush.ups",                     4,  "Linux", ["exactComparison"]),    \
