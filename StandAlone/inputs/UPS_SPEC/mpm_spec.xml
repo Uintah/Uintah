@@ -173,9 +173,9 @@
     <MPM                                spec="OPTIONAL NO_DATA" >
       <min_grid_level                   spec="OPTIONAL INTEGER" />   <!-- AMRMPM doesn't need it, but MPMICE does -->
       <max_grid_level                   spec="OPTIONAL INTEGER" />
+      <manualGrid                       spec="OPTIONAL BOOLEAN" />
       
-      <Refine_Regions                   spec="OPTIONAL NO_DATA" >
-        <manualGrid                     spec="OPTIONAL BOOLEAN" />
+      <Refine_Regions                   spec="OPTIONAL NO_DATA" >  
         <geom_object                    spec="MULTIPLE" />
       </Refine_Regions>
     </MPM>
