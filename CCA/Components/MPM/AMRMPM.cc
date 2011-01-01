@@ -2613,8 +2613,9 @@ void AMRMPM::debug_CFI(const ProcessorGroup*,
             }
           }  // pset2 loop
         }  // pset loop
-
+        delete interpolatorFine;
       }  // loop over fine patches
     }  //// hasFinerLevel
+    delete interpolatorCoarse;
   }  // End loop over coarse patches
 }
