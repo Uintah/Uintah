@@ -328,7 +328,7 @@
                                                                       mpmf, mpmice, amrmpm,
                                                                       wasatch, reduce_uda,
                                                                       poisson1, poisson2, poisson3, poisson4, benchmark, rigidmpmice, 
-                                                                      rmpmice, smpm, smpmice, spatialops, switcher, wave, solvertest'" >
+                                                                      rmpmice, smpm, smpmice, spatialops, switcher, wave, solvertest, RMCRT_Test'" >
                                   <!-- The 'type' above is used in CCA/Components/Parent/ComponentFactory.cc -->
         <carry_over                 spec="MULTIPLE NO_DATA"
                                   attribute1="var   REQUIRED STRING"
@@ -1003,7 +1003,10 @@
   <Solver                     spec="OPTIONAL NO_DATA" 
                                 attribute1="type REQUIRED STRING 'CGSolver, direct, hypre, hypreamr'" />
 
-
+  <!--__________________________________-->
+  <!-- Examples:RMCRT_Test              -->
+  <RMCRT                      spec="OPTIONAL NO_DATA">
+  </RMCRT>
 
   <Poisson                    spec="OPTIONAL NO_DATA" >
     <delt                     spec="REQUIRED DOUBLE" />

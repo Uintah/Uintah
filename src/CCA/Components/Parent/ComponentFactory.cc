@@ -27,42 +27,42 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#include <sci_defs/uintah_defs.h>
-
-#include <CCA/Components/Parent/ComponentFactory.h>
-#include <CCA/Components/Parent/Switcher.h>
-#include <CCA/Components/MPM/SerialMPM.h>
-#include <CCA/Components/MPM/AMRMPM.h>
-#include <CCA/Components/MPM/FractureMPM.h>
-#include <CCA/Components/MPM/RigidMPM.h>
-#include <CCA/Components/MPM/ShellMPM.h>
-#include <CCA/Components/MPM/ImpMPM.h>
-#include <CCA/Components/ICE/ICE.h>
-#include <CCA/Components/ICE/AMRICE.h>
-#include <CCA/Components/ICE/impAMRICE.h>
-#include <CCA/Components/MPMICE/MPMICE.h>
-#include <CCA/Components/MPMArches/MPMArches.h>
+#include <CCA/Components/Angio/Angio.h>
+#include <CCA/Components/Examples/AMRWave.h>
+#include <CCA/Components/Examples/Benchmark.h>
+#include <CCA/Components/Examples/Burger.h>
+#include <CCA/Components/Examples/RMCRT_Test.h>
+#include <CCA/Components/Examples/ParticleTest1.h>
 #include <CCA/Components/Examples/Poisson1.h>
 #include <CCA/Components/Examples/Poisson2.h>
-//#include <CCA/Components/Examples/Poisson4.h>
-#include <CCA/Components/Examples/Burger.h>
-#include <CCA/Components/Examples/Wave.h>
-#include <CCA/Components/Examples/AMRWave.h>
-#include <CCA/Components/Examples/ParticleTest1.h>
-#include <CCA/Components/Examples/RegridderTest.h>
 #include <CCA/Components/Examples/Poisson3.h>
-#include <CCA/Components/Examples/Benchmark.h>
-#ifndef NO_WASATCH
-#include <CCA/Components/Wasatch/Wasatch.h>
-#endif
-#include <CCA/Components/Angio/Angio.h>
+#include <CCA/Components/Examples/RegridderTest.h>
 #include <CCA/Components/Examples/SolverTest1.h>
+#include <CCA/Components/Examples/Wave.h>
+#include <CCA/Components/ICE/AMRICE.h>
+#include <CCA/Components/ICE/ICE.h>
+#include <CCA/Components/ICE/impAMRICE.h>
+#include <CCA/Components/MPM/AMRMPM.h>
+#include <CCA/Components/MPM/FractureMPM.h>
+#include <CCA/Components/MPM/ImpMPM.h>
+#include <CCA/Components/MPM/RigidMPM.h>
+#include <CCA/Components/MPM/SerialMPM.h>
+#include <CCA/Components/MPM/ShellMPM.h>
+#include <CCA/Components/MPMArches/MPMArches.h>
+#include <CCA/Components/MPMICE/MPMICE.h>
+#include <CCA/Components/Parent/ComponentFactory.h>
+#include <CCA/Components/Parent/Switcher.h>
 #include <CCA/Components/PatchCombiner/PatchCombiner.h>
 #include <CCA/Components/PatchCombiner/UdaReducer.h>
-
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
+#include <sci_defs/uintah_defs.h>
+//#include <CCA/Components/Examples/Poisson4.h>
+
+#ifndef NO_WASATCH
+#include <CCA/Components/Wasatch/Wasatch.h>
+#endif
 
 #if !defined(NO_ARCHES)
 #  include <CCA/Components/SpatialOps/SpatialOps.h>
@@ -201,6 +201,9 @@ ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world,
   if (sim_comp == "benchmark" || sim_comp == "BENCHMARK") {
     return scinew Benchmark(world);
   } 
+  if (sim_comp == "RMCRT_Test") {
+    return scinew RMCRT_Test(world);
+  }
   if (sim_comp == "angio") {
     return scinew Angio(world);
   } 
