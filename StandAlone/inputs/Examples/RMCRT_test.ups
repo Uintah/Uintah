@@ -16,31 +16,73 @@
     <max_Timesteps> 10        </max_Timesteps>
     <timestep_multiplier>  1  </timestep_multiplier>
   </Time>
-  
+  <!--__________________________________-->
+  <Grid>
+    <Level>
+      <Box label = "0">                              
+         <lower>     [-1,-1,-0.1]  </lower>         
+         <upper>     [ 1, 1, 0.1]  </upper>         
+         <resolution>[20,20,3]     </resolution>    
+         <patches>   [1,1,1]       </patches>       
+      </Box>                                         
+    </Level>
+    <Level>
+      <Box label = "1">                              
+         <lower>     [ -0.5,-0.5,-0.1]  </lower>         
+         <upper>     [  0.5, 0.5, 0.1]  </upper>         
+         <resolution>[20,20,3]          </resolution>    
+         <patches>   [1,1,1]            </patches>       
+      </Box>                                         
+    </Level>
+    
+  </Grid>
+  <!--__________________________________-->
+  <AMR>
+    <useLockStep> true </useLockStep>
+    <RMCRT>
+      <manualGrid> true </manualGrid>
+    </RMCRT>
+    
+    <!--
+    <RMCRT>
+      <Refine_Regions>
+        <geom_object>
+          <box label = "regrid">
+              <min>           [-0.2, -0.2,-0.2]   </min>
+              <max>           [ 0.2,  0.2, 0.2]   </max>
+            </box>
+            <level> -1 </level>
+          </geom_object>
+          
+        </Refine_Regions>
+      </RMCRT>
+      <Regridder type="Tiled">
+        <max_levels>2</max_levels>
+        <cell_refinement_ratio>    [[2,2,1]]    </cell_refinement_ratio>
+        <cell_stability_dilation>   [2,2,0]     </cell_stability_dilation>   
+        <min_boundary_cells>       [1,1,0]      </min_boundary_cells>
+        <min_patch_size>           [[10,10,1]]  </min_patch_size>
+        <patches_per_level_per_proc> 8          </patches_per_level_per_proc>
+      </Regridder>
+      -->
+      
+  </AMR>    
   <!--__________________________________-->
   <DataArchiver>
   <filebase>rmcrtTest.uda</filebase>
+      <outputInitTimestep/>
       <outputTimestepInterval>1</outputTimestepInterval>
       <save label = "color"/>
+      <!--<save label = "refineFlag"/> -->
       <checkpoint cycle = "2" timestepInterval = "1"/>
   </DataArchiver>
   
   
-  <!--__________________________________-->
+  <!--__________________________________ -->
   <RMCRT>
+    <ballRadius>  0.1     </ballRadius>
+    <orbitRadius> 0.25    </orbitRadius>
+    <angularVelocity> 10  </angularVelocity>
   </RMCRT>
-  
-  
-  <!--__________________________________-->
-  <Grid>
-    <Level>
-      <Box label = "1">                              
-         <lower>     [0,0,0]        </lower>         
-         <upper>     [1.0,1.0,1.0]  </upper>         
-         <resolution>[50,50,50]     </resolution>    
-         <patches>   [1,1,1]        </patches>       
-      </Box>                                         
-    </Level>
-  </Grid>
-
+ 
 </Uintah_specification>

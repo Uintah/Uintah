@@ -27,18 +27,21 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-
 #include <CCA/Components/Examples/ExamplesLabel.h>
 #include <CCA/Components/Examples/RMCRT_Test.h>
 #include <CCA/Components/Regridder/PerPatchVars.h>
 #include <CCA/Ports/LoadBalancer.h>
 #include <CCA/Ports/Scheduler.h>
+#include <Core/Exceptions/ParameterNotFound.h>
+#include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Geometry/BBox.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
+#include <Core/GeometryPiece/GeometryObject.h>
+#include <Core/GeometryPiece/GeometryPieceFactory.h>
+#include <Core/GeometryPiece/UnionGeometryPiece.h>
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/Level.h>
-
 #include <Core/Grid/SimpleMaterial.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Task.h>
@@ -48,7 +51,6 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Parallel/ProcessorGroup.h>
-
 
 using SCIRun::Point;
 using SCIRun::Vector;
@@ -71,11 +73,15 @@ namespace Uintah
   RMCRT_Test::~RMCRT_Test ( void )
   {
     dbg << UintahParallelComponent::d_myworld->myrank() << " Doing: RMCRT destructor " << endl;
+    
+    for (int i = 0; i< (int)d_refine_geom_objs.size(); i++) {
+      delete d_refine_geom_objs[i];
+    }
     //delete d_examplesLabel;
   }
 
   //______________________________________________________________________
-  void RMCRT_Test::problemSetup(const ProblemSpecP& params, 
+  void RMCRT_Test::problemSetup(const ProblemSpecP& prob_spec, 
                                 const ProblemSpecP& restart_prob_spec, 
                                 GridP& grid, 
                                 SimulationStateP& state )
@@ -84,7 +90,7 @@ namespace Uintah
     d_material = scinew SimpleMaterial();
     d_sharedState->registerSimpleMaterial( d_material );
 
-    ProblemSpecP spec = params->findBlock("RMCRT");
+    ProblemSpecP spec = prob_spec->findBlock("RMCRT");
     
     BBox gridBoundingBox;
     grid->getSpatialRange( gridBoundingBox );
@@ -104,13 +110,81 @@ namespace Uintah
     spec->get("orbitRadius",      d_radiusOfOrbit);
     spec->get("angularVelocity",  d_angularVelocity);
     spec->get("changingRadius",   d_radiusGrowth);
+    
+    
+    
+    //__________________________________
+    //  Read in the AMR section
+    ProblemSpecP rmcrt_ps;
+    ProblemSpecP amr_ps = prob_spec->findBlock("AMR");
+    if (amr_ps){
+      rmcrt_ps = amr_ps->findBlock("RMCRT");
+    }
+
+    if(!rmcrt_ps){
+      string warn;
+      warn ="\n INPUT FILE ERROR:\n <RMCRT>  block not found inside of <AMR> block \n";
+      throw ProblemSetupException(warn, __FILE__, __LINE__);
+    }
+    //__________________________________
+    // read in the regions that user would like 
+    // refined if the grid has not been setup manually
+    bool manualGrid;
+    rmcrt_ps->getWithDefault("manualGrid", manualGrid, false);
+
+    if(!manualGrid){
+      ProblemSpecP refine_ps = rmcrt_ps->findBlock("Refine_Regions");
+      if(!refine_ps ){
+        string warn;
+        warn ="\n INPUT FILE ERROR:\n <Refine_Regions> "
+             " block not found inside of <RMCRT> block \n";
+        throw ProblemSetupException(warn, __FILE__, __LINE__);
+      }
+
+      // Read in the refined regions geometry objects
+      int piece_num = 0;
+      list<GeometryObject::DataItem> geom_obj_data;
+      geom_obj_data.push_back(GeometryObject::DataItem("level", GeometryObject::Integer));
+
+      for (ProblemSpecP geom_obj_ps = refine_ps->findBlock("geom_object");
+            geom_obj_ps != 0;
+            geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
+
+          vector<GeometryPieceP> pieces;
+          GeometryPieceFactory::create(geom_obj_ps, pieces);
+
+          GeometryPieceP mainpiece;
+          if(pieces.size() == 0){
+             throw ParameterNotFound("No piece specified in geom_object", __FILE__, __LINE__);
+          } else if(pieces.size() > 1){
+             mainpiece = scinew UnionGeometryPiece(pieces);
+          } else {
+             mainpiece = pieces[0];
+          }
+          piece_num++;
+          d_refine_geom_objs.push_back(scinew GeometryObject(mainpiece,geom_obj_ps,geom_obj_data));
+       }
+     }
+
+    //__________________________________
+    //  bulletproofing
+    if(!d_sharedState->isLockstepAMR()){
+      ostringstream msg;
+      msg << "\n ERROR: You must add \n"
+          << " <useLockStep> true </useLockStep> \n"
+          << " inside of the <AMR> section. \n"; 
+      throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
+    }  
   }
   
   //______________________________________________________________________
   void RMCRT_Test::scheduleInitialize ( const LevelP& level, 
-                                  SchedulerP& scheduler )
+                                        SchedulerP& scheduler )
   {
-    Task* task = scinew Task( "RMCRT_Test::initialize", this, &RMCRT_Test::initialize );
+    printSchedule(level,dbg,"RMCRT_Test::scheduleInitialize");
+    
+    Task* task = scinew Task( "RMCRT_Test::initialize", this, 
+                              &RMCRT_Test::initialize );
     
     task->computes( d_colorLabel );
     task->computes( d_currentAngleLabel, (Level*)0 );
@@ -123,7 +197,8 @@ namespace Uintah
   {
     printSchedule(level,dbg,"RMCRT_Test::scheduleComputeStableTimestep");
    
-    Task* task = scinew Task( "RMCRT_Test::computeStableTimestep", this, &RMCRT_Test::computeStableTimestep );
+    Task* task = scinew Task( "RMCRT_Test::computeStableTimestep", this, 
+                              &RMCRT_Test::computeStableTimestep );
     
     task->computes( d_sharedState->get_delt_label(),level.get_rep() );
     
@@ -134,10 +209,9 @@ namespace Uintah
   {
     printSchedule(level,dbg,"RMCRT_Test::scheduleTimeAdvance");
     
-    Task* task = scinew Task( "RMCRT_Test::timeAdvance", this, &RMCRT_Test::timeAdvance );
+    Task* task = scinew Task( "RMCRT_Test::timeAdvance", this, 
+                              &RMCRT_Test::timeAdvance );
     
-    task->requires( Task::OldDW, d_colorLabel, d_gac, 1 );
-    task->computes( d_oldcolorLabel );
     task->computes( d_colorLabel );
     
     scheduler->addTask( task, level->eachPatch(), d_sharedState->allMaterials() );
@@ -147,29 +221,29 @@ namespace Uintah
   {
     printSchedule(level,dbg,"RMCRT_Test::errorEstimate");
     
-    Task* task = scinew Task( "RMCRT_Test::errorEstimate", this, &RMCRT_Test::errorEstimate, false );
+    Task* task = scinew Task( "RMCRT_Test::errorEstimate", this, 
+                              &RMCRT_Test::errorEstimate, false );
     
     task->requires( Task::OldDW, d_currentAngleLabel, (Level*) 0);
-    task->requires( Task::NewDW, d_colorLabel,    d_gac, 1 );
-    task->requires( Task::NewDW, d_oldcolorLabel, d_gac, 1 );
+    task->requires( Task::NewDW, d_colorLabel,    d_gn, 0 );
     
     task->modifies( d_sharedState->get_refineFlag_label(),      d_sharedState->refineFlagMaterials() );
-    task->modifies( d_sharedState->get_oldRefineFlag_label(),   d_sharedState->refineFlagMaterials() );
     task->modifies( d_sharedState->get_refinePatchFlag_label(), d_sharedState->refineFlagMaterials() );
     task->computes( d_currentAngleLabel, (Level*) 0);
     
     scheduler->addTask( task, scheduler->getLoadBalancer()->getPerProcessorPatchSet(level), d_sharedState->allMaterials() );
   }
+  
   //______________________________________________________________________
   void RMCRT_Test::scheduleInitialErrorEstimate ( const LevelP& level, SchedulerP& scheduler )
   {
     printSchedule(level,dbg,"RMCRT_Test::scheduleInitialErrorEstimate");
     
-    Task* task = scinew Task( "RMCRT_Test::initialErrorEstimate", this, &RMCRT_Test::errorEstimate, true );
+    Task* task = scinew Task( "RMCRT_Test::initialErrorEstimate", this, 
+                              &RMCRT_Test::errorEstimate, true );
     
-    task->requires( Task::NewDW, d_colorLabel, d_gac, 1 );
+    task->requires( Task::NewDW, d_colorLabel, d_gn, 0 );
     task->modifies( d_sharedState->get_refineFlag_label(),      d_sharedState->refineFlagMaterials() );
-    task->modifies( d_sharedState->get_oldRefineFlag_label(),   d_sharedState->refineFlagMaterials() );
     task->modifies( d_sharedState->get_refinePatchFlag_label(), d_sharedState->refineFlagMaterials() );
     
     scheduler->addTask( task, level->eachPatch(), d_sharedState->allMaterials() );
@@ -179,7 +253,8 @@ namespace Uintah
   {
     printSchedule(coarseLevel,dbg,"RMCRT_Test::scheduleCoarsen");
     
-    Task* task = scinew Task( "RMCRT_Test::coarsen", this, &RMCRT_Test::coarsen );
+    Task* task = scinew Task( "RMCRT_Test::coarsen", this, 
+                              &RMCRT_Test::coarsen );
     
     task->requires(Task::NewDW, d_colorLabel, 0, Task::FineLevel, 0, Task::NormalDomain, d_gn, 0);
     task->modifies(d_colorLabel);
@@ -192,7 +267,8 @@ namespace Uintah
   {
     printSchedule(patches,dbg,"RMCRT_Test::scheduleRefine");
     
-    Task* task = scinew Task( "RMCRT_Test::refine", this, &RMCRT_Test::refine );
+    Task* task = scinew Task( "RMCRT_Test::refine", this, 
+                              &RMCRT_Test::refine );
     
     task->requires(Task::NewDW, d_colorLabel, 0, Task::CoarseLevel, 0, Task::NormalDomain, d_gn, 0);
     //    task->requires(Task::NewDW, d_oldcolorLabel, 0, Task::CoarseLevel, 0,
@@ -270,24 +346,15 @@ namespace Uintah
 	int matl = matls->get(m);
 	
        CCVariable<double> color;
-	new_dw->allocateAndPut(color, d_colorLabel, matl, patch);
-
-        // an exercise to get from the old and put in the new (via mpi amr)...
-	constCCVariable<double> oldDWcolor;
-       CCVariable<double> oldcolor;
-	
-       old_dw->get(           oldDWcolor, d_colorLabel,    matl, patch, d_gac, 1 );
-       new_dw->allocateAndPut(oldcolor,   d_oldcolorLabel, matl, patch);
-
+	new_dw->allocateAndPut(color,    d_colorLabel,    matl, patch);
 
 	for ( CellIterator iter(patch->getCellIterator()); !iter.done(); iter++) {
-	  IntVector idx(*iter);
+	  IntVector c(*iter);
          
-	  Vector whereThisCellIs( patch->cellPosition( idx ) );
+	  Vector whereThisCellIs( patch->cellPosition( c ) );
 	  Vector distanceToCenterOfDomain = whereThisCellIs - d_centerOfBall;
 	  
-         color[idx] = distanceToCenterOfDomain.length();
-         oldcolor[idx] = oldDWcolor[idx];
+         color[c] = distanceToCenterOfDomain.length();
 	}
       }
     }
@@ -299,95 +366,121 @@ namespace Uintah
 				      DataWarehouse* old_dw, 
                                   DataWarehouse* new_dw, 
                                   bool initial )
-  {
+  { 
+    //__________________________________
+    //   initial refinement region
+    if(initial){
     
-    double pi = 3.141592653589;
-    if ( getLevel(patches)->getIndex() == getLevel(patches)->getGrid()->numLevels()-1 ) {
-      max_vartype angle;
-      double currentAngle;
-      if (!initial) {
+      const Level* level = getLevel(patches);
+    
+      for(int p=0;p<patches->size();p++){
+        const Patch* patch = patches->get(p);
+        printTask(patches, patch,dbg,"Doing initialErrorEstimate");
+
+        CCVariable<int> refineFlag;
+        PerPatch<PatchFlagP> refinePatchFlag;
+        new_dw->getModifiable(refineFlag, d_sharedState->get_refineFlag_label(), 0, patch);
+        new_dw->get(refinePatchFlag, d_sharedState->get_refinePatchFlag_label(), 0, patch);
+
+        PatchFlag* refinePatch = refinePatchFlag.get().get_rep();
+
+        // loop over all the geometry objects
+        for(int obj=0; obj<(int)d_refine_geom_objs.size(); obj++){
+          GeometryPieceP piece = d_refine_geom_objs[obj]->getPiece();
+          Vector dx = patch->dCell();
+
+          int geom_level =  d_refine_geom_objs[obj]->getInitialData_int("level");
+
+          //don't add refinement flags if the current level is greater than the geometry level specification
+          if(geom_level!=-1 && level->getIndex()>=geom_level)
+            continue;
+
+          for(CellIterator iter = patch->getCellIterator(); !iter.done();iter++){
+            IntVector c = *iter;
+            Point  lower  = patch->nodePosition(c);
+            Vector upperV = lower.asVector() + dx; 
+            Point  upper  = upperV.asPoint();
+
+            if(piece->inside(upper) && piece->inside(lower))
+              refineFlag[c] = true;
+              refinePatch->set();
+          }
+        }  // object loop
+      }  // patches loop
+    }
+    else{
+      
+      //__________________________________
+      //   flag regions inside of the ball
+      double pi = 3.141592653589;
+      if ( getLevel(patches)->getIndex() == getLevel(patches)->getGrid()->numLevels()-1 ) {
+        max_vartype angle;
+        double currentAngle;
         old_dw->get(angle, d_currentAngleLabel);
         currentAngle = angle + d_angularVelocity;
         new_dw->put(max_vartype(currentAngle), d_currentAngleLabel);
-      }
-      else {
-        currentAngle = angle;
-      }
-        
-      d_oldCenterOfBall = d_centerOfBall;
-      
-      d_centerOfBall = d_centerOfDomain;
-      d_centerOfBall[0] += d_radiusOfOrbit * cos( ( pi * currentAngle ) / 180.0 );
-      d_centerOfBall[1] += d_radiusOfOrbit * sin( ( pi * currentAngle ) / 180.0 );
 
-      if (d_radiusGrowth) {
-        if (d_radiusGrowthDir) {
-          d_radiusOfBall     += 0.001 * d_gridMax.x();
-          if (d_radiusOfBall > .25 * d_gridMax.x())
-            d_radiusGrowthDir = false;
+        d_oldCenterOfBall = d_centerOfBall;
+
+        d_centerOfBall     = d_centerOfDomain;
+        d_centerOfBall[0] += d_radiusOfOrbit * cos( ( pi * currentAngle ) / 180.0 );
+        d_centerOfBall[1] += d_radiusOfOrbit * sin( ( pi * currentAngle ) / 180.0 );
+
+        if (d_radiusGrowth) {
+          if (d_radiusGrowthDir) {
+            d_radiusOfBall     += 0.001 * d_gridMax.x();
+            if (d_radiusOfBall > .25 * d_gridMax.x()){
+              d_radiusGrowthDir = false;
+            }
+          }
+          else {
+            d_radiusOfBall     -= 0.001 * d_gridMax.x();
+            if (d_radiusOfBall < .1 * d_gridMax.x()){
+              d_radiusGrowthDir = true;
+            }
+          }
         }
-        else {
-          d_radiusOfBall     -= 0.001 * d_gridMax.x();
-          if (d_radiusOfBall < .1 * d_gridMax.x())
-            d_radiusGrowthDir = true;
-        }
       }
-          
-      //cerr << "RANDY: RMCRT_Test::scheduleErrorEstimate() after  = " << d_centerOfBall << endl;
-    }
 
-    for ( int p = 0; p < patches->size(); p++ ) {
-      const Patch* patch = patches->get(p);
-      
-      printTask(patches, patch,dbg,"Doing errorEstimate");
+      for ( int p = 0; p < patches->size(); p++ ) {
+        const Patch* patch = patches->get(p);
 
-      CCVariable<int> refineFlag;
-      new_dw->getModifiable(refineFlag, d_sharedState->get_refineFlag_label(), 0, patch);
+        printTask(patches, patch,dbg,"Doing errorEstimate");
 
-      CCVariable<int> oldRefineFlag;
-      new_dw->getModifiable(oldRefineFlag, d_sharedState->get_oldRefineFlag_label(), 0, patch);
+        CCVariable<int> refineFlag;
+        new_dw->getModifiable(refineFlag, d_sharedState->get_refineFlag_label(), 0, patch);
 
-      PerPatch<PatchFlagP> refinePatchFlag;
-      new_dw->get(refinePatchFlag, d_sharedState->get_refinePatchFlag_label(), 0, patch);
-      PatchFlag* refinePatch = refinePatchFlag.get().get_rep();
+        PerPatch<PatchFlagP> refinePatchFlag;
+        new_dw->get(refinePatchFlag, d_sharedState->get_refinePatchFlag_label(), 0, patch);
+        PatchFlag* refinePatch = refinePatchFlag.get().get_rep();
 
-      bool foundErrorOnPatch = false;
+        bool foundErrorOnPatch = false;
 
-      for(int m = 0;m<matls->size();m++) {
-	 int matl = matls->get(m);
-	 constCCVariable<double> color;
-	 constCCVariable<double> oldcolor;
-	 new_dw->get( color, d_colorLabel, matl, patch, d_gac, 1 );
-        
-        if (!initial){
-          new_dw->get( oldcolor, d_oldcolorLabel, matl, patch, d_gac, 1 );
-        }
-    
-	 for ( CellIterator iter(patch->getCellIterator()); !iter.done(); iter++) {
-	   IntVector idx(*iter);
+        for(int m = 0;m<matls->size();m++) {
+	   int matl = matls->get(m);
+	   constCCVariable<double> color;
+	   new_dw->get( color,    d_colorLabel,    matl, patch, d_gn, 0 );
 
-	   if ( color[idx] <= d_radiusOfBall ) {
-	     refineFlag[idx]=true;
-	     foundErrorOnPatch = true;
-	   } else {
-	     refineFlag[idx]=false;
+          for(CellIterator iter = patch->getCellIterator(); !iter.done();iter++){
+            IntVector c = *iter;
+
+            if ( color[c] <= d_radiusOfBall ) {
+              refineFlag[c]=true;
+              foundErrorOnPatch = true;
+            } else {
+              refineFlag[c]=false;
+            }
 	   }
-           if (!initial) {
-             if ( oldcolor[idx] <= d_radiusOfBall ) {
-               oldRefineFlag[idx]=true;
-             } else {
-               oldRefineFlag[idx]=false;
-             }
-           }
-	 }
-      }
-
-      if ( foundErrorOnPatch ) {
-	refinePatch->flag = true;
-      } else {
-	refinePatch->flag = false;
-      }
-    }
+        }
+        // flag this patch
+        if ( foundErrorOnPatch ) {
+	  refinePatch->flag = true;
+        } else {
+	  refinePatch->flag = false;
+        }
+        
+      }  // patch loop
+    }  // not initial timestep
   }
   //______________________________________________________________________
   void RMCRT_Test::coarsen ( const ProcessorGroup*,
@@ -411,17 +504,15 @@ namespace Uintah
       
       for(int m = 0;m<matls->size();m++){
         int matl = matls->get(m);
-        //__________________________________
-        //   D E N S I T Y
-        CCVariable<double> color;
-        new_dw->getModifiable(color, d_colorLabel, matl, coarsePatch);
-        //print(color, "before coarsen color");
+
+        CCVariable<double> color_coarse;
+        new_dw->getModifiable(color_coarse, d_colorLabel, matl, coarsePatch);
         
         for(int i=0;i<finePatches.size();i++){
           const Patch* finePatch = finePatches[i];
     
-          constCCVariable<double> fine_den;
-          new_dw->get(fine_den, d_colorLabel, matl, finePatch,d_gn, 0);
+          constCCVariable<double> color_fine;
+          new_dw->get(color_fine, d_colorLabel, matl, finePatch, d_gn, 0);
           
           IntVector fl(finePatch->getCellLowIndex());
           IntVector fh(finePatch->getCellHighIndex());
@@ -433,15 +524,17 @@ namespace Uintah
           h = Min(h, coarsePatch->getCellHighIndex());
           
           for(CellIterator iter(l, h); !iter.done(); iter++){
-            double rho_tmp=0;
-            IntVector fineStart(coarseLevel->mapCellToFiner(*iter));
+            IntVector c = *iter;
+            
+            double sumColor=0;
+            IntVector fineStart(coarseLevel->mapCellToFiner(c));
             
             for(CellIterator inside(IntVector(0,0,0), fineLevel->getRefinementRatio());
                 !inside.done(); inside++){
-              rho_tmp+=fine_den[fineStart+*inside];
+              sumColor += color_fine[fineStart+*inside];
             }
-            color[*iter]=rho_tmp*ratio;
-          }
+            color_coarse[c]=sumColor*ratio;
+          }  // intersection loop
         }  // fine patch loop
       }
     }  // course patch loop 
@@ -465,10 +558,10 @@ namespace Uintah
 	new_dw->allocateAndPut(color, d_colorLabel, matl, patch);
 	
        for ( CellIterator iter(patch->getCellIterator()); !iter.done(); iter++) {
-	  IntVector idx(*iter);
-	  Vector whereThisCellIs( patch->cellPosition( idx ) );
+	  IntVector c = *iter;
+	  Vector whereThisCellIs( patch->cellPosition( c ) );
 	  Vector distanceToCenterOfDomain = whereThisCellIs - d_centerOfBall;
-	  color[idx] = distanceToCenterOfDomain.length();
+	  color[c] = distanceToCenterOfDomain.length();
 	}
       }
     }
