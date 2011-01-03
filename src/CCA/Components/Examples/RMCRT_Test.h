@@ -45,6 +45,7 @@ namespace Uintah
   class SimpleMaterial;
   class ExamplesLabel;
   class VarLabel;
+  class GeometryObject;
 /**************************************
 
 CLASS
@@ -175,6 +176,8 @@ WARNING
 
     bool           d_radiusGrowth;
     bool           d_radiusGrowthDir;
+    
+    std::vector<GeometryObject*> d_refine_geom_objs;
   };
 
 } // namespace Uintah
