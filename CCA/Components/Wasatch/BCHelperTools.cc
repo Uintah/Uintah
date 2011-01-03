@@ -28,20 +28,20 @@ namespace Wasatch {
    *  @brief This templated struct is used to simplify boundary
    *         condition operator selection.
    */
-  template< typename FieldT, typename BCEvaluator>
+  template< typename FieldT, typename BCEvalT>
   struct BCOpTypeSelector
   {
   private:
     typedef OpTypes<FieldT> Ops;
     
   public:
-    typedef SpatialOps::structured::BoundaryConditionOp< typename Ops::InterpC2FX, BCEvaluator > DirichletX;
-    typedef SpatialOps::structured::BoundaryConditionOp< typename Ops::InterpC2FY, BCEvaluator > DirichletY;
-    typedef SpatialOps::structured::BoundaryConditionOp< typename Ops::InterpC2FZ, BCEvaluator > DirichletZ;
+    typedef SpatialOps::structured::BoundaryConditionOp< typename Ops::InterpC2FX, BCEvalT > DirichletX;
+    typedef SpatialOps::structured::BoundaryConditionOp< typename Ops::InterpC2FY, BCEvalT > DirichletY;
+    typedef SpatialOps::structured::BoundaryConditionOp< typename Ops::InterpC2FZ, BCEvalT > DirichletZ;
     
-    typedef SpatialOps::structured::BoundaryConditionOp< typename Ops::GradX, BCEvaluator > NeumannX;
-    typedef SpatialOps::structured::BoundaryConditionOp< typename Ops::GradY, BCEvaluator > NeumannY;
-    typedef SpatialOps::structured::BoundaryConditionOp< typename Ops::GradZ, BCEvaluator > NeumannZ;
+    typedef SpatialOps::structured::BoundaryConditionOp< typename Ops::GradX, BCEvalT > NeumannX;
+    typedef SpatialOps::structured::BoundaryConditionOp< typename Ops::GradY, BCEvalT > NeumannY;
+    typedef SpatialOps::structured::BoundaryConditionOp< typename Ops::GradZ, BCEvalT > NeumannZ;
   };
   
   //-----------------------------------------------------------------------------
@@ -199,12 +199,13 @@ namespace Wasatch {
                 bool foundIterator = getIteratorBCValueBCKind( patch, theFace, child, phiName, materialID, bc_value, bound_ptr, bc_kind);
                 
                 if (foundIterator) {
-                  std::cout<<"SETTING BOUNDARY CONDITIONS\n";
 
                   if (bc_kind == "Dirichlet") {
                     switch (theFace) {
                         
                       case Uintah::Patch::xminus:
+
+                        std::cout<<"SETTING DIRICHLET BOUNDARY CONDITIONS ON X-MINUS FACE FOR "<< phiName <<std::endl;
                         
                         for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
                           SCIRun::IntVector bc_point_indices(*bound_ptr); 
@@ -231,6 +232,9 @@ namespace Wasatch {
                         break;
                         
                       case Uintah::Patch::xplus:
+                        
+                        std::cout<<"SETTING DIRICHLET BOUNDARY CONDITIONS ON X-PLUS FACE FOR "<< phiName <<std::endl;
+                        
                         for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
                           SCIRun::IntVector bc_point_indices(*bound_ptr); 
                           const SS::IntVec bcPointIJK(bc_point_indices[0],bc_point_indices[1],bc_point_indices[2]);
@@ -257,6 +261,9 @@ namespace Wasatch {
                         break;
                         
                       case Uintah::Patch::yminus:
+
+                        std::cout<<"SETTING DIRICHLET BOUNDARY CONDITIONS ON Y-MINUS FACE FOR "<< phiName <<std::endl;
+
                         for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
                           SCIRun::IntVector insideCellDir = patch->faceDirection(theFace);
                           SCIRun::IntVector bc_point_indices(*bound_ptr); 
@@ -282,6 +289,9 @@ namespace Wasatch {
                         break;
                         
                       case Uintah::Patch::yplus:
+
+                        std::cout<<"SETTING DIRICHLET BOUNDARY CONDITIONS ON Y-PLUS FACE FOR "<< phiName <<std::endl;
+
                         for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
                           SCIRun::IntVector insideCellDir = patch->faceDirection(theFace);
                           SCIRun::IntVector bc_point_indices(*bound_ptr); 
@@ -302,12 +312,14 @@ namespace Wasatch {
                           } else { // Scalar Volume Field
                             typedef SS::SVolField  FieldT;       
                             setBoundaryCondition< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::DirichletY >(patch, theGraphHelper, phiName, bcPointIJK, thePatchDim, bcx, bcy, bcz, SS::Y_PLUS_SIDE, bc_value, theOperatorsDb);
-                          }                                                    
-                          
+                          }                                                                              
                         }
                         break;
                         
                       case Uintah::Patch::zminus:
+                        
+                        std::cout<<"SETTING DIRICHLET BOUNDARY CONDITIONS ON Z-MINUS FACE FOR "<< phiName <<std::endl;
+                        
                         for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
                           SCIRun::IntVector bc_point_indices(*bound_ptr); 
                           const SS::IntVec bcPointIJK(bc_point_indices[0],bc_point_indices[1],bc_point_indices[2]);
@@ -333,6 +345,9 @@ namespace Wasatch {
                         break;
                         
                       case Uintah::Patch::zplus:
+                        
+                        std::cout<<"SETTING DIRICHLET BOUNDARY CONDITIONS ON Z-PLUS FACE FOR "<< phiName <<std::endl;
+
                         for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
                           SCIRun::IntVector bc_point_indices(*bound_ptr); 
                           const SS::IntVec bcPointIJK(bc_point_indices[0],bc_point_indices[1],bc_point_indices[2]);
@@ -371,7 +386,9 @@ namespace Wasatch {
                     switch (theFace) {
                         
                       case Uintah::Patch::xminus:
-                        
+
+                        std::cout<<"SETTING NEUMANN BOUNDARY CONDITIONS ON X-MINUS FACE FOR "<< phiName <<std::endl;
+
                         for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
                           SCIRun::IntVector bc_point_indices(*bound_ptr); 
                           const SS::IntVec bcPointIJK(bc_point_indices[0],bc_point_indices[1],bc_point_indices[2]);
@@ -398,6 +415,9 @@ namespace Wasatch {
                         break;
                         
                       case Uintah::Patch::xplus:
+                        
+                        std::cout<<"SETTING NEUMANN BOUNDARY CONDITIONS ON X-PLUS FACE FOR "<< phiName <<std::endl;
+                        
                         for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
                           SCIRun::IntVector bc_point_indices(*bound_ptr); 
                           const SS::IntVec bcPointIJK(bc_point_indices[0],bc_point_indices[1],bc_point_indices[2]);
@@ -424,6 +444,9 @@ namespace Wasatch {
                         break;
                         
                       case Uintah::Patch::yminus:
+                        
+                        std::cout<<"SETTING NEUMANN BOUNDARY CONDITIONS ON Y-MINUS FACE FOR "<< phiName <<std::endl;
+                        
                         for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
                           SCIRun::IntVector bc_point_indices(*bound_ptr); 
                           const SS::IntVec bcPointIJK(bc_point_indices[0],bc_point_indices[1],bc_point_indices[2]);
@@ -448,6 +471,9 @@ namespace Wasatch {
                         break;
                         
                       case Uintah::Patch::yplus:
+                        
+                        std::cout<<"SETTING NEUMANN BOUNDARY CONDITIONS ON Y-PLUS FACE FOR "<< phiName <<std::endl;
+                        
                         for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
                           SCIRun::IntVector bc_point_indices(*bound_ptr); 
                           const SS::IntVec bcPointIJK(bc_point_indices[0],bc_point_indices[1],bc_point_indices[2]);
@@ -473,6 +499,9 @@ namespace Wasatch {
                         break;
                         
                       case Uintah::Patch::zminus:
+                        
+                        std::cout<<"SETTING NEUMANN BOUNDARY CONDITIONS ON Z-MINUS FACE FOR "<< phiName <<std::endl;
+                        
                         for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
                           SCIRun::IntVector bc_point_indices(*bound_ptr); 
                           const SS::IntVec bcPointIJK(bc_point_indices[0],bc_point_indices[1],bc_point_indices[2]);
@@ -498,6 +527,9 @@ namespace Wasatch {
                         break;
                         
                       case Uintah::Patch::zplus:
+                        
+                        std::cout<<"SETTING NEUMANN BOUNDARY CONDITIONS ON Z-PLUS FACE FOR "<< phiName <<std::endl;
+                        
                         for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
                           SCIRun::IntVector bc_point_indices(*bound_ptr); 
                           const SS::IntVec bcPointIJK(bc_point_indices[0],bc_point_indices[1],bc_point_indices[2]);

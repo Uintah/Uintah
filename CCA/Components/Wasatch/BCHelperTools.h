@@ -1,5 +1,14 @@
 #ifndef Wasatch_BCHelperTools_h
 #define Wasatch_BCHelperTools_h
+/* ----------------------------------------------------------------------------
+ ########   ######     ########  #######   #######  ##        ######  
+ ##     ## ##    ##       ##    ##     ## ##     ## ##       ##    ## 
+ ##     ## ##             ##    ##     ## ##     ## ##       ##       
+ ########  ##             ##    ##     ## ##     ## ##        ######  
+ ##     ## ##             ##    ##     ## ##     ## ##             ## 
+ ##     ## ##    ##       ##    ##     ## ##     ## ##       ##    ## 
+ ########   ######        ##     #######   #######  ########  ######  
+------------------------------------------------------------------------------*/
 
 //-- Uintah framework includes --//
 #include <Core/Grid/Patch.h>
@@ -9,6 +18,14 @@
 #include "PatchInfo.h"
 #include "FieldAdaptor.h"
 #include "transport/ParseEquation.h"
+
+/**
+ *  \file BCHelperTools.h
+ *  \author    Tony Saad
+ *  \date      December 2010
+ *
+ *  \brief Provides tools to apply boundary conditions to transport equations.
+ */
 
 namespace Wasatch {
  
