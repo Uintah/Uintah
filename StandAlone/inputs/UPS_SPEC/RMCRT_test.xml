@@ -1,0 +1,21 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<Uintah_Include> 
+  <AMR>
+    <RMCRT                    spec="OPTIONAL NO_DATA" >             
+      <min_grid_level         spec="OPTIONAL INTEGER" />            
+      <max_grid_level         spec="OPTIONAL INTEGER" />            
+      <manualGrid             spec="OPTIONAL BOOLEAN" />            
+      
+      <Refine_Regions         spec="OPTIONAL NO_DATA" >             
+        <geom_object          spec="MULTIPLE" />                 
+      </Refine_Regions>
+    </RMCRT>
+  </AMR>
+  
+
+  <RMCRT                      spec="OPTIONAL NO_DATA">
+    <ballRadius               spec="OPTIONAL DOUBLE 'positive'"/>
+    <orbitRadius              spec="OPTIONAL DOUBLE 'positive'"/>
+    <angularVelocity          spec="OPTIONAL DOUBLE 'positive'"/>
+  </RMCRT>
+</Uintah_Include>

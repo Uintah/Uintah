@@ -146,6 +146,25 @@
 
       </material>
     </ICE>
+    
+    <exchange_properties           spec="OPTIONAL NO_DATA" >
+      <convective_fluid            spec="OPTIONAL INTEGER" /> 
+      <convective_solid            spec="OPTIONAL INTEGER" /> 
+      <do_convective_heat_transfer spec="OPTIONAL BOOLEAN" /> <!-- FIXME: What is the default? -->
+      <heatExchangeCoeff           spec="OPTIONAL STRING 'variable'" />
+      
+      <exchange_coefficients       spec="REQUIRED NO_DATA" >
+        <momentum                  spec="REQUIRED MULTIPLE_DOUBLES" />
+        <heat                      spec="OPTIONAL MULTIPLE_DOUBLES" />
+      </exchange_coefficients>
+      
+      <exch_coef_after_MPM_add     spec="OPTIONAL NO_DATA" >
+        <momentum                  spec="REQUIRED MULTIPLE_DOUBLES" />
+        <heat                      spec="OPTIONAL MULTIPLE_DOUBLES" /> 
+      </exch_coef_after_MPM_add>
+      
+    </exchange_properties>
+    
   </MaterialProperties>
 
 </Uintah_Include>
