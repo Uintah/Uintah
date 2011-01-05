@@ -27,11 +27,13 @@ namespace Wasatch{
      */
     static const StringNames& self();
 
+    const std::string time;
+
     const std::string
-      time,
-      xcoord,
-      ycoord,
-      zcoord;
+      xsvolcoord,  ysvolcoord,  zsvolcoord,
+      xxvolcoord,  yxvolcoord,  zxvolcoord,
+      xyvolcoord,  yyvolcoord,  zyvolcoord,
+      xzvolcoord,  yzvolcoord,  zzvolcoord;
 
     // energy related variables
     const std::string

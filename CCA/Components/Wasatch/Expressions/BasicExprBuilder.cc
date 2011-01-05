@@ -92,6 +92,8 @@ namespace Wasatch{
   Expr::ExpressionBuilder*
   build_taylor_vortex_mms_expr( Uintah::ProblemSpecP params )
   {
+    const StringNames& sName = StringNames::self();
+
     Expr::ExpressionBuilder* builder = NULL;
 		
     std::string exprType;
@@ -104,7 +106,7 @@ namespace Wasatch{
       valParams->getAttribute("viscosity",viscosity);
       const Expr::Tag indepVarTag1 = parse_nametag( valParams->findBlock("XCoordinate")->findBlock("NameTag") );
       const Expr::Tag indepVarTag2 = parse_nametag( valParams->findBlock("YCoordinate")->findBlock("NameTag") );
-      const Expr::Tag timeVarTag( StringNames::self().time, Expr::STATE_NONE );
+      const Expr::Tag timeVarTag( sName.time, Expr::STATE_NONE );
       typedef typename VelocityX<FieldT>::Builder Builder;
       builder = scinew Builder( indepVarTag1, indepVarTag2, timeVarTag, amplitude, viscosity );
     }
@@ -116,7 +118,7 @@ namespace Wasatch{
       valParams->getAttribute("viscosity",viscosity);
       const Expr::Tag indepVarTag1 = parse_nametag( valParams->findBlock("XCoordinate")->findBlock("NameTag") );
       const Expr::Tag indepVarTag2 = parse_nametag( valParams->findBlock("YCoordinate")->findBlock("NameTag") );
-      const Expr::Tag timeVarTag( StringNames::self().time, Expr::STATE_NONE );
+      const Expr::Tag timeVarTag( sName.time, Expr::STATE_NONE );
       typedef typename VelocityY<FieldT>::Builder Builder;
       builder = scinew Builder( indepVarTag1, indepVarTag2, timeVarTag, amplitude, viscosity );
     }
@@ -128,7 +130,7 @@ namespace Wasatch{
       valParams->getAttribute("viscosity",viscosity);
       const Expr::Tag indepVarTag1 = parse_nametag( valParams->findBlock("XCoordinate")->findBlock("NameTag") );
       const Expr::Tag indepVarTag2 = parse_nametag( valParams->findBlock("YCoordinate")->findBlock("NameTag") );
-      const Expr::Tag timeVarTag( StringNames::self().time, Expr::STATE_NONE );
+      const Expr::Tag timeVarTag( sName.time, Expr::STATE_NONE );
       typedef typename GradPX<FieldT>::Builder Builder;
       builder = scinew Builder( indepVarTag1, indepVarTag2, timeVarTag, amplitude, viscosity );
     }
@@ -140,7 +142,7 @@ namespace Wasatch{
       valParams->getAttribute("viscosity",viscosity);
       const Expr::Tag indepVarTag1 = parse_nametag( valParams->findBlock("XCoordinate")->findBlock("NameTag") );
       const Expr::Tag indepVarTag2 = parse_nametag( valParams->findBlock("YCoordinate")->findBlock("NameTag") );
-      const Expr::Tag timeVarTag( StringNames::self().time, Expr::STATE_NONE );
+      const Expr::Tag timeVarTag( sName.time, Expr::STATE_NONE );
       typedef typename GradPY<FieldT>::Builder Builder;
       builder = scinew Builder( indepVarTag1, indepVarTag2, timeVarTag, amplitude, viscosity );
     }
