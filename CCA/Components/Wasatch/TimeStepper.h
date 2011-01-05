@@ -79,7 +79,8 @@ namespace Wasatch{
 
     CoordHelper* coordHelper_;
 
-    std::list< TaskInterface*  > taskInterfaceList_;
+    std::list  < TaskInterface*    > taskInterfaceList_;
+    std::vector< Uintah::VarLabel* > createdVarLabels_;
 
     /**
      *  \brief used internally to obtain the appropriate vector
@@ -186,6 +187,8 @@ namespace Wasatch{
     std::vector< FieldInfo<FieldT> >& fields = field_info_selctor<FieldT>();
     fields.push_back( FieldInfo<FieldT>( solnVarName, solnVarLabel, rhsVarLabel ) );
     rhsIDs_.insert( rhsID );
+    createdVarLabels_.push_back( solnVarLabel );
+    createdVarLabels_.push_back( rhsVarLabel );
 
     typedef Expr::PlaceHolder<FieldT>  FieldExpr;
     factory_->register_expression( Expr::Tag(solnVarName,Expr::STATE_N  ), new typename FieldExpr::Builder() );

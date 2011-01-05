@@ -60,22 +60,22 @@ namespace Wasatch{
 
   CoordHelper::~CoordHelper()
   {
-//     // wipe out VarLabels
-//     if( xSVolCoord_ ) Uintah::VarLabel::destroy(xSVol_);
-//     if( ySVolCoord_ ) Uintah::VarLabel::destroy(ySVol_);
-//     if( zSVolCoord_ ) Uintah::VarLabel::destroy(zSVol_);
+    // wipe out VarLabels
+    if( xSVolCoord_ ) Uintah::VarLabel::destroy(xSVol_);
+    if( ySVolCoord_ ) Uintah::VarLabel::destroy(ySVol_);
+    if( zSVolCoord_ ) Uintah::VarLabel::destroy(zSVol_);
 
-//     if( xXVolCoord_ ) Uintah::VarLabel::destroy(xXVol_);
-//     if( yXVolCoord_ ) Uintah::VarLabel::destroy(yXVol_);
-//     if( zXVolCoord_ ) Uintah::VarLabel::destroy(zXVol_);
+    if( xXVolCoord_ ) Uintah::VarLabel::destroy(xXVol_);
+    if( yXVolCoord_ ) Uintah::VarLabel::destroy(yXVol_);
+    if( zXVolCoord_ ) Uintah::VarLabel::destroy(zXVol_);
 
-//     if( xYVolCoord_ ) Uintah::VarLabel::destroy(xYVol_);
-//     if( yYVolCoord_ ) Uintah::VarLabel::destroy(yYVol_);
-//     if( zYVolCoord_ ) Uintah::VarLabel::destroy(zYVol_);
+    if( xYVolCoord_ ) Uintah::VarLabel::destroy(xYVol_);
+    if( yYVolCoord_ ) Uintah::VarLabel::destroy(yYVol_);
+    if( zYVolCoord_ ) Uintah::VarLabel::destroy(zYVol_);
 
-//     if( xZVolCoord_ ) Uintah::VarLabel::destroy(xZVol_);
-//     if( yZVolCoord_ ) Uintah::VarLabel::destroy(yZVol_);
-//     if( zZVolCoord_ ) Uintah::VarLabel::destroy(zZVol_);
+    if( xZVolCoord_ ) Uintah::VarLabel::destroy(xZVol_);
+    if( yZVolCoord_ ) Uintah::VarLabel::destroy(yZVol_);
+    if( zZVolCoord_ ) Uintah::VarLabel::destroy(zZVol_);
   }
 
   //------------------------------------------------------------------
