@@ -58,8 +58,6 @@
 
 namespace SCIRun {
 
-using std::vector;
-
 template <class Basis>
 class QuadSurfMesh : public Mesh
 {
@@ -80,21 +78,21 @@ public:
     typedef EdgeIndex<under_type>       index_type;
     typedef EdgeIterator<under_type>    iterator;
     typedef EdgeIndex<under_type>       size_type;
-    typedef vector<index_type>          array_type;
+    typedef std::vector<index_type>     array_type;
   };
 
   struct Face {
     typedef FaceIndex<under_type>       index_type;
     typedef FaceIterator<under_type>    iterator;
     typedef FaceIndex<under_type>       size_type;
-    typedef vector<index_type>          array_type;
+    typedef std::vector<index_type>     array_type;
   };
 
   struct Cell {
     typedef CellIndex<under_type>       index_type;
     typedef CellIterator<under_type>    iterator;
     typedef CellIndex<under_type>       size_type;
-    typedef vector<index_type>          array_type;
+    typedef std::vector<index_type>     array_type;
   };
 
   typedef Face Elem;
@@ -177,7 +175,7 @@ public:
   virtual BBox get_bounding_box() const;
   virtual void transform(const Transform &t);
 
-  bool get_dim(vector<unsigned int>&) const { return false;  }
+  bool get_dim(std::vector<unsigned int>&) const { return false;  }
 
   void begin(typename Node::iterator &) const;
   void begin(typename Edge::iterator &) const;
@@ -287,7 +285,7 @@ public:
   void get_point(Point &p, typename Node::index_type i) const { p = points_[i]; }
   void get_normal(Vector &n, typename Node::index_type i) const { n = normals_[i]; }
 
-  void get_normal(Vector &result, vector<double> &coords,
+  void get_normal(Vector &result, std::vector<double> &coords,
                   typename Elem::index_type eidx, unsigned int)
   {
 
@@ -320,7 +318,7 @@ public:
     }
 
     ElemData ed(*this, eidx);
-    vector<Point> Jv;
+    std::vector<Point> Jv;
     basis_.derivate(coords, ed, Jv);
     result = Cross(Jv[0].asVector(), Jv[1].asVector());
     result.normalize();
@@ -366,7 +364,7 @@ public:
 
   //! Generate the list of points that make up a sufficiently accurate
   //! piecewise linear approximation of an edge.
-  void pwl_approx_edge(vector<vector<double> > &coords,
+  void pwl_approx_edge(std::vector<vector<double> > &coords,
                        typename Elem::index_type ci,
                        unsigned which_edge,
                        unsigned div_per_unit) const
@@ -380,7 +378,7 @@ public:
 
   //! Generate the list of points that make up a sufficiently accurate
   //! piecewise linear approximation of an face.
-  void pwl_approx_face(vector<vector<vector<double> > > &coords,
+  void pwl_approx_face(std::vector<std::vector<std::vector<double> > > &coords,
                        typename Elem::index_type ci,
                        unsigned,
                        unsigned div_per_unit) const
@@ -390,7 +388,7 @@ public:
     basis_.approx_face(0, div_per_unit, coords);
   }
 
-  bool get_coords(vector<double> &coords,
+  bool get_coords(std::vector<double> &coords,
                   const Point &p,
                   typename Elem::index_type idx) const
   {
@@ -398,7 +396,7 @@ public:
     return basis_.get_coords(coords, p, ed);
   }
 
-  void interpolate(Point &pt, const vector<double> &coords,
+  void interpolate(Point &pt, const std::vector<double> &coords,
                    typename Elem::index_type idx) const
   {
     ElemData ed(*this, idx);
@@ -406,9 +404,9 @@ public:
   }
 
   // get the Jacobian matrix
-  void derivate(const vector<double> &coords,
+  void derivate(const std::vector<double> &coords,
                 typename Elem::index_type idx,
-                vector<Point> &J) const
+                std::vector<Point> &J) const
   {
     ElemData ed(*this, idx);
     basis_.derivate(coords, ed, J);
@@ -441,18 +439,18 @@ private:
   int next(int i) { return ((i%4)==3) ? (i-3) : (i+1); }
   int prev(int i) { return ((i%4)==0) ? (i+3) : (i-1); }
 
-  vector<Point>                         points_;
-  vector<typename Node::index_type>     faces_;
-  vector<under_type>                    edges_;
+  std::vector<Point>                     points_;
+  std::vector<typename Node::index_type> faces_;
+  std::vector<under_type>                edges_;
   typedef vector<vector<typename Elem::index_type> > NodeNeighborMap;
-  NodeNeighborMap                       node_neighbors_;
-  vector<under_type>                    edge_neighbors_;
-  vector<Vector>                        normals_; //! normalized per node
-  LockingHandle<SearchGrid>             grid_;
+  NodeNeighborMap                        node_neighbors_;
+  std::vector<under_type>                edge_neighbors_;
+  std::vector<Vector>                    normals_; //! normalized per node
+  LockingHandle<SearchGrid>              grid_;
 
-  Mutex                                 synchronize_lock_;
-  unsigned int                          synchronized_;
-  Basis                                 basis_;
+  Mutex                                  synchronize_lock_;
+  unsigned int                           synchronized_;
+  Basis                                  basis_;
 
 
 #ifdef HAVE_HASH_MAP
@@ -597,7 +595,7 @@ QuadSurfMesh<Basis>::get_bounding_box() const
 {
   BBox result;
 
-  for (vector<Point>::size_type i = 0; i < points_.size(); i++)
+  for (std::vector<Point>::size_type i = 0; i < points_.size(); i++)
   {
     result.extend(points_[i]);
   }
@@ -611,8 +609,8 @@ void
 QuadSurfMesh<Basis>::transform(const Transform &t)
 {
   synchronize_lock_.lock();
-  vector<Point>::iterator itr = points_.begin();
-  vector<Point>::iterator eitr = points_.end();
+  std::vector<Point>::iterator itr = points_.begin();
+  std::vector<Point>::iterator eitr = points_.end();
   while (itr != eitr)
   {
     *itr = t.project(*itr);
@@ -978,7 +976,7 @@ QuadSurfMesh<Basis>::get_weights(const Point &p, typename Node::array_type &l,
   if (locate(idx, p))
   {
     get_nodes(l,idx);
-    vector<double> coords(2);
+    std::vector<double> coords(2);
     if (get_coords(coords, p, idx))
     {
       basis_.get_weights(coords, w);
@@ -1078,9 +1076,9 @@ QuadSurfMesh<Basis>::compute_normals()
   normals_.resize(points_.size()); // 1 per node
 
   // build table of faces that touch each node
-  vector<vector<typename Face::index_type> > node_in_faces(points_.size());
+  std::vector<vector<typename Face::index_type> > node_in_faces(points_.size());
   //! face normals (not normalized) so that magnitude is also the area.
-  vector<Vector> face_normals(faces_.size());
+  std::vector<Vector> face_normals(faces_.size());
   // Computing normal per face.
   typename Node::array_type nodes(4);
   typename Face::iterator iter, iter_end;
@@ -1110,12 +1108,12 @@ QuadSurfMesh<Basis>::compute_normals()
     ++iter;
   }
   //Averaging the normals.
-  typename vector<vector<typename Face::index_type> >::iterator nif_iter =
+  typename std::vector<std::vector<typename Face::index_type> >::iterator nif_iter =
     node_in_faces.begin();
   int i = 0;
   while (nif_iter != node_in_faces.end()) {
-    const vector<typename Face::index_type> &v = *nif_iter;
-    typename vector<typename Face::index_type>::const_iterator fiter =
+    const std::vector<typename Face::index_type> &v = *nif_iter;
+    typename std::vector<typename Face::index_type>::const_iterator fiter =
       v.begin();
     Vector ave(0.L,0.L,0.L);
     while(fiter != v.end()) {

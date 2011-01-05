@@ -97,9 +97,9 @@ public:
   bool isValid() const {return d_valid;}
 
   void emit(OutputContext&, const IntVector& l, const IntVector& h,
-            const string& compressionModeHint);
+            const std::string& compressionModeHint);
   void read(InputContext&, long end, bool swapbytes, int nByteMode,
-            const string& compressionMode);
+            const std::string& compressionMode);
 
   virtual void emitNormal(std::ostream& out, const IntVector& l,
                           const IntVector& h, ProblemSpecP varnode, bool outputDoubleAsFloat ) = 0;

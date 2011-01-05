@@ -60,7 +60,7 @@ void PerPatchBase::offsetGrid(const IntVector&)
 {
 }
 
-void PerPatchBase::emitNormal(ostream&, const IntVector&,
+void PerPatchBase::emitNormal(std::ostream&, const IntVector&,
                               const IntVector&, ProblemSpecP, bool)
 {
   SCI_THROW(InternalError("emitNormal not implemented for PerPatch", __FILE__, __LINE__));

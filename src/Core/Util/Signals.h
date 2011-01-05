@@ -49,9 +49,6 @@
 
 namespace SCIRun {
 
-  //using std::cerr;
-  //using std::endl;
-using std::vector;
 /*
  * SlotBase & SignalBase
  */
@@ -73,7 +70,7 @@ public:
 class SignalBase {
  protected:
   Mutex lock_;
-  vector<SlotBase *> slot_;
+  std::vector<SlotBase *> slot_;
   
  protected: //you can not allocated a SignalBase
   SignalBase() : lock_("signal lock") {} 

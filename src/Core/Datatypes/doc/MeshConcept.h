@@ -52,9 +52,6 @@
 
 namespace SCIRun {
 
-using std::string;
-using std::vector;
-
 //! The Mesh Concept, a sample mesh with all the required interface.
 /*! This is all the things that belong in a Mesh.
  */ 
@@ -99,28 +96,28 @@ public:
     typedef NodeIndex<under_type>       index_type;
     typedef NodeIterator<under_type>    iterator;
     typedef NodeIndex<under_type>       size_type;
-    typedef vector<index_type>          array_type;
+    typedef std::vector<index_type>     array_type;
   };					
   					
   struct Edge {				
     typedef EdgeIndex<under_type>       index_type;
     typedef EdgeIterator<under_type>    iterator;
     typedef EdgeIndex<under_type>       size_type;
-    typedef vector<index_type>          array_type;
+    typedef std::vector<index_type>     array_type;
   };					
 					
   struct Face {				
     typedef FaceIndex<under_type>       index_type;
     typedef FaceIterator<under_type>    iterator;
     typedef FaceIndex<under_type>       size_type;
-    typedef vector<index_type>          array_type;
+    typedef std::vector<index_type>     array_type;
   };					
 					
   struct Cell {				
     typedef CellIndex<under_type>       index_type;
     typedef CellIterator<under_type>    iterator;
     typedef CellIndex<under_type>       size_type;
-    typedef vector<index_type>          array_type;
+    typedef std::vector<index_type>     array_type;
   };
   //@}
 
@@ -156,7 +153,7 @@ public:
   //! for meshes that dimensionality makes sense (structured) fill the vector
   //! with the size in each dimension for all of the axes
   //! unstructured meshses will return false, and not touch the vector.
-  bool get_dim(vector<unsigned int>&) const { return false;  }
+  bool get_dim(std::vector<unsigned int>&) const { return false;  }
 
   void begin(Node::iterator &itr) const;
   void begin(Edge::iterator &itr) const;
@@ -313,7 +310,7 @@ public:
    */
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
-  static  const string type_name(int n = -1);
+  static  const std::string type_name(int n = -1);
   //@}
 
   //! Virtualized get_type_description().

@@ -300,7 +300,7 @@ public:
   { return size_; }
 
   // these return the number of bytes written/read
-  long write(ostream& out) throw(ErrnoException);
+  long write(std::ostream& out) throw(ErrnoException);
 
   long read(std::istream& in, bool swapBytes = false,
 	    int nByteMode = sizeof(unsigned long)) throw(InternalError)
@@ -322,7 +322,7 @@ public:
       return seekPriv<false>(fd, index, swapBytes, nByteMode);
   }
  
-  void testPrint(ostream& out);
+  void testPrint(std::ostream& out);
 
 private:
 
@@ -661,7 +661,7 @@ void RunLengthEncoder<T, Sequencer>::finalize()
  */
 
 template<class T, class Sequencer>
-long RunLengthEncoder<T, Sequencer>::write(ostream& out) throw(ErrnoException)
+long RunLengthEncoder<T, Sequencer>::write(std::ostream& out) throw(ErrnoException)
 {
   finalize();
   ssize_t header_size = (ssize_t)(groups_.size() + 1) * header_item_size;
@@ -942,7 +942,7 @@ T RunLengthEncoder<T, Sequencer>::seekPriv(int fd, unsigned long index,
 }
 
 template<class T, class Sequencer>
-void RunLengthEncoder<T, Sequencer>::testPrint(ostream& out)
+void RunLengthEncoder<T, Sequencer>::testPrint(std::ostream& out)
 {
   finalize();
   unsigned long total_length = 0;

@@ -33,7 +33,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Regridder/RegridderCommon.h>
 
 #include <vector> 
-using namespace std;
+
 namespace Uintah {
 
 /**************************************
@@ -77,18 +77,18 @@ WARNING
 			      const GridP& grid,
 			      const SimulationStateP& state);
 
-    vector<IntVector> getMinPatchSize() {return d_minTileSize;}
+    std::vector<IntVector> getMinPatchSize() {return d_minTileSize;}
 
     //! create and compare a checksum for the grid across all processors
     bool verifyGrid(Grid *grid);
 
   protected:
     void problemSetup_BulletProofing(const int k);
-    Grid* CreateGrid(Grid* oldGrid, vector<vector<IntVector> > &tiles );
-    void CoarsenFlags(GridP oldGrid, int l, vector<IntVector> tiles); 
+    Grid* CreateGrid(Grid* oldGrid, std::vector<std::vector<IntVector> > &tiles );
+    void CoarsenFlags(GridP oldGrid, int l, std::vector<IntVector> tiles); 
     void OutputGridStats(Grid* newGrid);
-    void ComputeTiles(vector<IntVector> &tiles, const LevelP level, IntVector tile_size, IntVector cellRefinementRatio);
-    void GatherTiles(vector<IntVector>& mytiles, vector<IntVector> &gatheredTiles );
+    void ComputeTiles(std::vector<IntVector> &tiles, const LevelP level, IntVector tile_size, IntVector cellRefinementRatio);
+    void GatherTiles(std::vector<IntVector>& mytiles, std::vector<IntVector> &gatheredTiles );
     //maps a cell index to a tile index
     IntVector computeTileIndex(const IntVector& cellIndex, const IntVector& numCells, const IntVector& tilesize);
     //maps a tile index to the cell low index for that tile

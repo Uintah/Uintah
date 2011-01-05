@@ -67,8 +67,6 @@
 
 namespace SCIRun {
 
-using std::string;
-
 template <class Basis>
 class StructQuadSurfMesh : public ImageMesh<Basis>
 {
@@ -332,7 +330,7 @@ public:
 
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
-  static  const string type_name(int n = -1);
+  static  const std::string type_name(int n = -1);
   virtual const TypeDescription *get_type_description() const;
 
   virtual bool synchronize(unsigned int);
@@ -862,18 +860,18 @@ StructQuadSurfMesh<Basis>::io(Piostream& stream)
 
 
 template <class Basis>
-const string
+const std::string
 StructQuadSurfMesh<Basis>::type_name(int n)
 {
   ASSERT((n >= -1) && n <= 1);
   if (n == -1)
   {
-    static const string name = type_name(0) + FTNS + type_name(1) + FTNE;
+    static const std::string name = type_name(0) + FTNS + type_name(1) + FTNE;
     return name;
   }
   else if (n == 0)
   {
-    static const string nm("StructQuadSurfMesh");
+    static const std::string nm("StructQuadSurfMesh");
     return nm;
   }
   else
@@ -894,7 +892,7 @@ get_type_description(StructQuadSurfMesh<Basis> *)
     TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(1);
     (*subs)[0] = sub;
     td = scinew TypeDescription("StructQuadSurfMesh", subs,
-                                string(__FILE__),
+                                std::string(__FILE__),
                                 "SCIRun",
                                 TypeDescription::MESH_E);
   }
@@ -920,7 +918,7 @@ StructQuadSurfMesh<Basis>::node_type_description()
     const TypeDescription *me =
       SCIRun::get_type_description((StructQuadSurfMesh<Basis> *)0);
     td = scinew TypeDescription(me->get_name() + "::Node",
-                                string(__FILE__),
+                                std::string(__FILE__),
                                 "SCIRun",
                                 TypeDescription::MESH_E);
   }
@@ -938,7 +936,7 @@ StructQuadSurfMesh<Basis>::edge_type_description()
     const TypeDescription *me =
       SCIRun::get_type_description((StructQuadSurfMesh<Basis> *)0);
     td = scinew TypeDescription(me->get_name() + "::Edge",
-                                string(__FILE__),
+                                std::string(__FILE__),
                                 "SCIRun",
                                 TypeDescription::MESH_E);
   }
@@ -956,7 +954,7 @@ StructQuadSurfMesh<Basis>::face_type_description()
     const TypeDescription *me =
       SCIRun::get_type_description((StructQuadSurfMesh<Basis> *)0);
     td = scinew TypeDescription(me->get_name() + "::Face",
-                                string(__FILE__),
+                                std::string(__FILE__),
                                 "SCIRun",
                                 TypeDescription::MESH_E);
   }
@@ -974,7 +972,7 @@ StructQuadSurfMesh<Basis>::cell_type_description()
     const TypeDescription *me =
       SCIRun::get_type_description((StructQuadSurfMesh<Basis> *)0);
     td = scinew TypeDescription(me->get_name() + "::Cell",
-                                string(__FILE__),
+                                std::string(__FILE__),
                                 "SCIRun",
                                 TypeDescription::MESH_E);
   }
