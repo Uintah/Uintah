@@ -33,8 +33,6 @@ namespace Wasatch{
     xYVolCoord_ = yYVolCoord_ = zYVolCoord_ = false;
     xZVolCoord_ = yZVolCoord_ = zZVolCoord_ = false;
 
-    const StringNames& sName = StringNames::self();
-
     //_____________________________________________________________
     // build expressions to set coordinates.  If any initialization
     // expressions require the coordinates, then this will trigger
