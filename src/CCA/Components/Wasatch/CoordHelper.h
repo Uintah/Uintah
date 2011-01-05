@@ -24,9 +24,18 @@ namespace Uintah{
 namespace Expr{ class ExpressionFactory; }
 
 namespace Wasatch{
+
+  class StringNames;
   
   class CoordHelper
   {
+    const Expr::Context context_;
+    const StringNames& sName_;
+    const Expr::Tag xsvt_, ysvt_, zsvt_;
+    const Expr::Tag xxvt_, yxvt_, zxvt_;
+    const Expr::Tag xyvt_, yyvt_, zyvt_;
+    const Expr::Tag xzvt_, yzvt_, zzvt_;
+
     bool needCoords_,
       xSVolCoord_, ySVolCoord_, zSVolCoord_,
       xXVolCoord_, yXVolCoord_, zXVolCoord_,
@@ -38,7 +47,6 @@ namespace Wasatch{
     Uintah::VarLabel *xYVol_, *yYVol_, *zYVol_;
     Uintah::VarLabel *xZVol_, *yZVol_, *zZVol_;
 
-    const Expr::Context context_;
     std::vector<Expr::Tag> fieldTags_;
 
     /** \brief sets the requested grid variables - callback for an initialization task */
