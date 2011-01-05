@@ -125,6 +125,41 @@ namespace Wasatch{
   {
     sharedState_ = sharedState;
 
+    // disallow specification of extraCells
+    {
+      std::ostringstream msg;
+      bool foundExtraCells = false;
+      Uintah::ProblemSpecP grid = params->findBlock("Grid");
+      for( Uintah::ProblemSpecP level = grid->findBlock("Level");
+           level != 0;
+           level = grid->findNextBlock("Level") ){
+        for( Uintah::ProblemSpecP box = level->findBlock("Box");
+             box != 0;
+             box = level->findNextBlock("Box") ){
+          // note that a [0,0,0] specification gets added by default,
+          // so we will check to ensure that something other than
+          // [0,0,0] has not been specified.
+          if( box->findBlock("extraCells") ){
+            Uintah::IntVector extraCells;
+            box->get("extraCells",extraCells);
+            if( extraCells != Uintah::IntVector(0,0,0) ){
+              foundExtraCells = true;
+              std::string boxLabel;
+              box->get("label",boxLabel);
+              msg << "box '" << boxLabel << "' has extraCells specified." << endl;
+            }
+          }
+        }
+      }
+      if( foundExtraCells ){
+        msg << endl
+            << "  Specification of 'extraCells' is forbidden in Wasatch." << endl
+            << "  Please remove it from your input file" << endl
+            << endl;
+        throw std::runtime_error( msg.str() );
+      }
+    }
+
     Uintah::ProblemSpecP wasatchParams = params->findBlock("Wasatch");
 
     //
