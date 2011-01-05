@@ -41,6 +41,8 @@ DEALINGS IN THE SOFTWARE.
 #include <cstdlib>
 
 using namespace Uintah;
+using std::string;
+using std::map;
 
 void BoundCondFactory::create(ProblemSpecP& child,BoundCondBase* &bc, 
                               int& mat_id)

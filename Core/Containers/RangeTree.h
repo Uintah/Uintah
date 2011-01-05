@@ -32,7 +32,6 @@
 #include <Core/Util/Assert.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Exceptions/InternalError.h>
-#include <vector>
 #include <list>
 #include <iostream>
 #include <climits>
@@ -156,8 +155,6 @@ DESCRIPTION
    
 **************************************/
 
-using namespace std;
-  
 const int RANGE_LEFT = 0;
 const int RANGE_RIGHT = 1;
 
@@ -172,25 +169,25 @@ public:
   // be Point's with equivalent values in the list but there
   // should not be Point*'s that are duplicated in the list
   // or this will cause an error.
-  RangeTree(list<TPoint*> points, int dimensions /* >= 2 */);
+  RangeTree(std::list<TPoint*> points, int dimensions /* >= 2 */);
   
   ~RangeTree();
 
   // Query for Point's in the given range such that
   // low[i] <= p[i] <= high[i] for each dimension.
   inline void query(const TPoint& low, const TPoint& high,
-		    list<TPoint*>& found)
+		    std::list<TPoint*>& found)
   { query(root_, found, low, high, DIMENSIONS_ - 1); }
 
   // Query for Point's in the given range such that
   // distance(p, q[i]) <= radius (using L2, geometric definition of distance).
   inline void querySphere(const TPoint& p, TPointElem radius,
-			  list<TPoint*>& found)
+			  std::list<TPoint*>& found)
   { querySphereR2(p, radius*radius, found); }
 
   // given the radius squared instead of the radius itself
   inline void querySphereR2(const TPoint& p, TPointElem radiusSquared,
-				       list<TPoint*>& found)
+                            std::list<TPoint*>& found)
   { querySphere<true>(root_, found, p, radiusSquared, radiusSquared,
 		      DIMENSIONS_ - 1); }
 
@@ -202,13 +199,13 @@ public:
   // leaf points that aren't checked (whereas a standarde range query does
   // check these).
   inline void querySphereNonStrict(const TPoint& p, TPointElem radius,
-				   list<TPoint*>& found)
+				   std::list<TPoint*>& found)
   { querySphereNonStrictR2(p, radius*radius, found); }
 
   // given the radius squared instead of the radius itself
   inline void querySphereNonStrictR2(const TPoint& p,
 				     TPointElem radiusSquared,
-				     list<TPoint*>& found)
+				     std::list<TPoint*>& found)
   { querySphere<false>(root_, found, p, radiusSquared, radiusSquared,
 		       DIMENSIONS_ - 1); }
   
@@ -356,7 +353,7 @@ private:
 
     // Append points to found list in the range from points_[start]
     // until points_[j] <= high.
-    void getRange(list<TPoint*>& found, int start, TPointElem high);
+    void getRange(std::list<TPoint*>& found, int start, TPointElem high);
 
     void setExtremePoints(int** diagonalDirections,
 			  int numDiagDirections, int dimensions);
@@ -597,7 +594,7 @@ private:
     TPointElem radiusSquared_;
   };
 
-  void query(RangeTreeNode* root, list<TPoint*>& found,
+  void query(RangeTreeNode* root, std::list<TPoint*>& found,
 	     const TPoint& low, const TPoint& high, int d);
 
   RangeTreeNode* findSplit(RangeTreeNode* root, TPointElem low,
@@ -607,13 +604,13 @@ private:
   
   // template a version for the left side and a version for the right side
   template <int SIDE>
-  void queryFromSplit(RangeTreeNode* vsplit, list<TPoint*>& found,
+  void queryFromSplit(RangeTreeNode* vsplit, std::list<TPoint*>& found,
 		      const TPoint& low, const TPoint& high, int d);
 
   // template a version for the left side and a version for the right side
   // for d == 1 case.
   template<int SIDE>
-  void queryFromSplitD1(RangeTreeNode* vsplit, list<TPoint*>& found,
+  void queryFromSplitD1(RangeTreeNode* vsplit, std::list<TPoint*>& found,
 			const TPoint& low, const TPoint& high,
 			int splitSubFirstGreaterEq);
 
@@ -645,18 +642,18 @@ private:
 		  TPointElem& nearestKnownL1Distance);
 
   template <bool STRICTLY_INSIDE>
-  void querySphere(RangeTreeNode* root, list<TPoint*>& found, const TPoint& p,
+  void querySphere(RangeTreeNode* root, std::list<TPoint*>& found, const TPoint& p,
 		   TPointElem radiusSquared, TPointElem availableRadiusSquared,
 		   int d);
 
   // query on one side in a dimension
   template <int SIDE, bool STRICTLY_INSIDE>
-  void querySphereFromSplit(RangeTreeNode* vsplit, list<TPoint*>& found,
+  void querySphereFromSplit(RangeTreeNode* vsplit, std::list<TPoint*>& found,
 				const TPoint& p, TPointElem radiusSquared,
 				TPointElem availableRadiusSquared, int d);
   // d == 1 version
   template<int SIDE, bool STRICTLY_INSIDE>
-  void querySphereFromSplitD1(RangeTreeNode* vsplit, list<TPoint*>& found,
+  void querySphereFromSplitD1(RangeTreeNode* vsplit, std::list<TPoint*>& found,
 			      const TPoint& p, TPointElem radiusSquared,
 			      TPointElem availableRadiusSquared,
 			      int splitSubIndexP);
@@ -723,7 +720,7 @@ private:
 
 template<class TPoint, class TPointElem, bool ALLOW_NEAREST_NEIGHBOR_QUERY>
 RangeTree<TPoint, TPointElem, ALLOW_NEAREST_NEIGHBOR_QUERY>::
-RangeTree(list<TPoint*> points, int dimensions)
+RangeTree(std::list<TPoint*> points, int dimensions)
   : DIMENSIONS_(dimensions), diagonalDirections_(0), numDiagDirections_(0)
 {
   ASSERT(dimensions >= 2);
@@ -737,7 +734,7 @@ RangeTree(list<TPoint*> points, int dimensions)
   ASSERT(points.size() <= INT_MAX);
   int n = (int)points.size();
   int i, j;
-  typename list<TPoint*>::iterator iter;
+  typename std::list<TPoint*>::iterator iter;
 
   largestPossibleL1Distance_ = 0;
   for (i = 0; i < dimensions; i++) {
@@ -782,14 +779,14 @@ queryNearest(const TPoint& p, TPointElem maximumValue)
     TPointElem distSquared = getDistanceSquared(p, *nearestL1, DIMENSIONS_);
     if (distSquared == 0)
       return nearestL1; // can't get closer than zero    
-    list<TPoint*> candidates;
+    std::list<TPoint*> candidates;
     querySphereNonStrictR2(p, distSquared, candidates);
     
     nearest = nearestL1;
     TPointElem nearestDistSquared = distSquared;
     // just do a linear search on the results (which hopefully, and in
     // most cases, will be a relatively small subset of points).
-    for (typename list<TPoint*>::iterator it = candidates.begin();
+    for (typename std::list<TPoint*>::iterator it = candidates.begin();
 	 it != candidates.end(); it++) {
       distSquared = getDistanceSquared(p, **it, DIMENSIONS_);
       if (distSquared < nearestDistSquared) {
@@ -832,7 +829,7 @@ void RangeTree<TPoint, TPointElem, ALLOW_NEAREST_NEIGHBOR_QUERY>::
 topLevelDump() // for debugging
 {
   root_->singleDimensionDump(DIMENSIONS_ - 1);
-  cout << endl;
+  std::cout << std::endl;
 }
 
 template<class TPoint, class TPointElem, bool ALLOW_NEAREST_NEIGHBOR_QUERY>
@@ -1006,14 +1003,14 @@ singleDimensionDump(int d)
 {
   if (leftChild_ != NULL) {
     ASSERT(rightChild_ != NULL);
-    cout << "(";
+    std::cout << "(";
     leftChild_->singleDimensionDump(d);
-    cout << ",{" << (*point_)[d] << "},";
+    std::cout << ",{" << (*point_)[d] << "},";
     rightChild_->singleDimensionDump(d);
-    cout << ")";
+    std::cout << ")";
   }
   else
-    cout /*<< point_->getId() << ":" */ << (*point_)[d];
+    std::cout /*<< point_->getId() << ":" */ << (*point_)[d];
 }
 
 template<class TPoint, class TPointElem, bool ALLOW_NEAREST_NEIGHBOR_QUERY>
@@ -1181,7 +1178,7 @@ setSubLinks(int* sublinks, BaseLevelSet* subset)
 template<class TPoint, class TPointElem, bool ALLOW_NEAREST_NEIGHBOR_QUERY>
 void
 RangeTree<TPoint, TPointElem, ALLOW_NEAREST_NEIGHBOR_QUERY>::BaseLevelSet::
-getRange(list<TPoint*>& found, int start, TPointElem high)
+getRange(std::list<TPoint*>& found, int start, TPointElem high)
 {
   for (int i = start; i < size_; i++) {
     if ((*points_[i])[0] <= high)
@@ -1197,9 +1194,9 @@ RangeTree<TPoint, TPointElem, ALLOW_NEAREST_NEIGHBOR_QUERY>::BaseLevelSet::
 dump()
 {
   for (int i = 0; i < size_; i++) {
-    cout << (*points_[i])[0] << " "; //(" << points_[i]->getId() << ") ";
+    std::cout << (*points_[i])[0] << " "; //(" << points_[i]->getId() << ") ";
   }
-  cout << endl;
+  std::cout << std::endl;
   if (this->leftSubset_ != NULL) {
     this->leftSubset_->dump();
     this->rightSubset_->dump();
@@ -1261,7 +1258,7 @@ findSplitRadius2(RangeTreeNode* root, TPointElem p, TPointElem radius2, int d)
 
 template<class TPoint, class TPointElem, bool ALLOW_NEAREST_NEIGHBOR_QUERY>
 void RangeTree<TPoint, TPointElem, ALLOW_NEAREST_NEIGHBOR_QUERY>::
-query(RangeTreeNode* root, list<TPoint*>& found,
+query(RangeTreeNode* root, std::list<TPoint*>& found,
       const TPoint& low, const TPoint& high, int d)
 {
   if (root == NULL)
@@ -1301,7 +1298,7 @@ query(RangeTreeNode* root, list<TPoint*>& found,
 template<class TPoint, class TPointElem, bool ALLOW_NEAREST_NEIGHBOR_QUERY>
 template<int SIDE>
 void RangeTree<TPoint, TPointElem, ALLOW_NEAREST_NEIGHBOR_QUERY>::
-queryFromSplit(RangeTreeNode* vsplit, list<TPoint*>& found,
+queryFromSplit(RangeTreeNode* vsplit, std::list<TPoint*>& found,
 	       const TPoint& low, const TPoint& high, int d)
 {
   const int OTHER_SIDE = (SIDE + 1) % 2;
@@ -1325,7 +1322,7 @@ queryFromSplit(RangeTreeNode* vsplit, list<TPoint*>& found,
 template<class TPoint, class TPointElem, bool ALLOW_NEAREST_NEIGHBOR_QUERY>
 template<int SIDE>
 void RangeTree<TPoint, TPointElem, ALLOW_NEAREST_NEIGHBOR_QUERY>::
-queryFromSplitD1(RangeTreeNode* vsplit, list<TPoint*>& found,
+queryFromSplitD1(RangeTreeNode* vsplit, std::list<TPoint*>& found,
 		 const TPoint& low, const TPoint& high,
 		 int splitSubFirstGreaterEq /* only used if d1 is true */)
 {
@@ -1365,7 +1362,7 @@ queryFromSplitD1(RangeTreeNode* vsplit, list<TPoint*>& found,
 template<class TPoint, class TPointElem, bool ALLOW_NEAREST_NEIGHBOR_QUERY>
 template <bool STRICTLY_INSIDE>
 void RangeTree<TPoint, TPointElem, ALLOW_NEAREST_NEIGHBOR_QUERY>::
-querySphere(RangeTreeNode* root, list<TPoint*>& found, const TPoint& p,
+querySphere(RangeTreeNode* root, std::list<TPoint*>& found, const TPoint& p,
 	    TPointElem radiusSquared, TPointElem availableRadiusSquared, int d)
 {
   if (root == NULL)
@@ -1411,7 +1408,7 @@ querySphere(RangeTreeNode* root, list<TPoint*>& found, const TPoint& p,
 template<class TPoint, class TPointElem, bool ALLOW_NEAREST_NEIGHBOR_QUERY>
 template<int SIDE, bool STRICTLY_INSIDE>
 void RangeTree<TPoint, TPointElem, ALLOW_NEAREST_NEIGHBOR_QUERY>::
-querySphereFromSplit(RangeTreeNode* vsplit, list<TPoint*>& found,
+querySphereFromSplit(RangeTreeNode* vsplit, std::list<TPoint*>& found,
 		     const TPoint& p, TPointElem radiusSquared,
 		     TPointElem availableRadiusSquared, int d)
 {
@@ -1448,7 +1445,7 @@ querySphereFromSplit(RangeTreeNode* vsplit, list<TPoint*>& found,
 template<class TPoint, class TPointElem, bool ALLOW_NEAREST_NEIGHBOR_QUERY>
 template<int SIDE, bool STRICTLY_INSIDE>
 void RangeTree<TPoint, TPointElem, ALLOW_NEAREST_NEIGHBOR_QUERY>::
-querySphereFromSplitD1(RangeTreeNode* vsplit, list<TPoint*>& found,
+querySphereFromSplitD1(RangeTreeNode* vsplit, std::list<TPoint*>& found,
 		       const TPoint& p, TPointElem radiusSquared,
 		       TPointElem availableRadiusSquared,
 		       int splitSubIndexP)
@@ -1588,10 +1585,10 @@ queryNearestL1FromSplit(RangeTreeNode* vsplit, const TPoint& p,
 			TPointElem& nearestKnownL1Distance, TPoint*& nearest)
 {
   const int FAR_SIDE = (NEAR_SIDE + 1) % 2;
-  list<RangeTreeNode*> edgeNodes;
-  list<int> subCascadedIndices; // from fractional cascading
-  typename list<RangeTreeNode*>::iterator iter;
-  list<int>::iterator cascadedIndexIter;
+  std::list<RangeTreeNode*> edgeNodes;
+  std::list<int> subCascadedIndices; // from fractional cascading
+  typename std::list<RangeTreeNode*>::iterator iter;
+  std::list<int>::iterator cascadedIndexIter;
   RangeTreeNode* leafNode = 0;
   int splitSubIndex;
 

@@ -33,7 +33,6 @@ DEALINGS IN THE SOFTWARE.
 
 #include <map>
 #include <vector>
-using namespace std;
 
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/Region.h>
@@ -101,7 +100,7 @@ namespace Uintah {
   public:
     enum FILTER_TYPE {KALMAN,MEMORY};
     ProfileDriver(const ProcessorGroup* myworld, FILTER_TYPE type, LoadBalancer *lb) : d_lb(lb), d_myworld(myworld), d_timestepWindow(20), timesteps(0), r(4.5e-5) ,phi(.01), d_type(type){updateAlpha();};
-    void setMinPatchSize(const vector<IntVector> &min_patch_size);
+    void setMinPatchSize(const std::vector<IntVector> &min_patch_size);
     //add the contribution for region r on level l
     void addContribution(const PatchSubset* patches, double cost);
     //finalize the contributions for this timestep
@@ -109,7 +108,7 @@ namespace Uintah {
     //outputs the error associated with the profiler
     void outputError(const GridP currentGrid);
     //get the contribution for region r on level l
-    void getWeights(int l, const vector<Region> &regions, vector<double> &weights);
+    void getWeights(int l, const std::vector<Region> &regions, std::vector<double> &weights);
     //sets the decay rate for the exponential average
     void setTimestepWindow(int window) {d_timestepWindow=window, updateAlpha();}
     //initializes the regions in the new level that are not in the old level
@@ -125,10 +124,10 @@ namespace Uintah {
             
     int d_timestepWindow;
     double d_alpha;
-    vector<IntVector> d_minPatchSize;
-    vector<int> d_minPatchSizeVolume;
+    std::vector<IntVector> d_minPatchSize;
+    std::vector<int> d_minPatchSizeVolume;
 
-    vector<map<IntVector, Contribution> > costs;
+    std::vector<std::map<IntVector, Contribution> > costs;
     int timesteps;
     double r;
     double phi;

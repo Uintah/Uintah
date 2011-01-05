@@ -38,6 +38,7 @@ DEALINGS IN THE SOFTWARE.
 using namespace SCIRun;
 using namespace Uintah;
 
+using std::vector;
 
 const string UnionGeometryPiece::TYPE_NAME = "union";
 

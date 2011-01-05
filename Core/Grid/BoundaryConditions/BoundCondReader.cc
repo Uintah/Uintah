@@ -56,6 +56,9 @@ DEALINGS IN THE SOFTWARE.
 #include   <iterator>
 #include   <set>
 
+using std::map;
+using std::vector;
+using std::string;
 
 using namespace Uintah;
 

@@ -30,6 +30,7 @@ DEALINGS IN THE SOFTWARE.
 
 #include <CCA/Components/MPM/Crack/NullCrack.h>
 
+using std::vector;
 
 using namespace Uintah;
 

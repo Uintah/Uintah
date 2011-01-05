@@ -39,7 +39,6 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/uintahshare.h>
 namespace Uintah {
 
-using std::ostream;
 
 /**************************************
 
@@ -78,13 +77,13 @@ WARNING
       virtual void copyPointer(Variable&) = 0;
       virtual ReductionVariableBase* clone() const = 0;
       virtual void reduce(const ReductionVariableBase&) = 0;
-      virtual void print(ostream&) const = 0;
+      virtual void print(std::ostream&) const = 0;
       virtual void getMPIInfo(int& count, MPI_Datatype& datatype, MPI_Op& op) = 0;
-      virtual void getMPIData(vector<char>& buf, int& index) = 0;
-      virtual void putMPIData(vector<char>& buf, int& index) = 0;
+      virtual void getMPIData(std::vector<char>& buf, int& index) = 0;
+      virtual void putMPIData(std::vector<char>& buf, int& index) = 0;
       virtual const TypeDescription* virtualGetTypeDescription() const = 0;
       virtual RefCounted* getRefCounted();
-      virtual void getSizeInfo(string& elems, unsigned long& totsize,
+      virtual void getSizeInfo(std::string& elems, unsigned long& totsize,
                                void*& ptr) const = 0;
       virtual void setBenignValue() = 0;
    protected:

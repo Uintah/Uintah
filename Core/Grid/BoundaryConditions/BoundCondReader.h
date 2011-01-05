@@ -33,7 +33,7 @@ DEALINGS IN THE SOFTWARE.
 
 #include <map>
 #include <string>
-#include <vector>
+
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Grid/BoundaryConditions/BCData.h>
 #include <Core/Grid/BoundaryConditions/BCGeomBase.h>
@@ -86,11 +86,6 @@ namespace Uintah {
   Center for the Simulation of Accidental Fires and Explosions (C-SAFE) \n\n
 
 */
-
-  using std::map;
-  using std::string;
-  using std::vector;
-
 
   class BoundCondReader  {
   public:
@@ -147,7 +142,7 @@ namespace Uintah {
    private:
     friend class Level;
     friend class Patch;
-    map<Patch::FaceType,BCDataArray > d_BCReaderData;
+    std::map<Patch::FaceType,BCDataArray > d_BCReaderData;
   };
 
   void print(BCGeomBase* p);
