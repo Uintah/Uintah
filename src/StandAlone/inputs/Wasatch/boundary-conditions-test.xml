@@ -310,7 +310,6 @@
         <lower>[0,0,0]</lower>
         <upper>[1,1,1]</upper>
         <resolution>[40,40,40]</resolution>
-        <!--extraCells>[0,0,0]</extraCells-->
         <patches>[1,1,1]</patches>
       </Box>
       <periodic>[0,0,0]</periodic>
