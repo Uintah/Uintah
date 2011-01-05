@@ -140,7 +140,7 @@ void BNRTask::continueTask()
       return;
     default:
       char error[100];
-      sprintf(error,"Error invalid status (%d) in parallel task\n",status_);
+      std::sprintf(error,"Error invalid status (%d) in parallel task\n",status_);
       throw InternalError(error,__FILE__,__LINE__);
   }
                   
@@ -514,7 +514,7 @@ void BNRTask::continueTaskSerial()
                   goto WAIT_FOR_CHILDREN;
           default:
                   char error[100];
-                  sprintf(error,"Error invalid status (%d) in serial task\n",status_);
+                  std::sprintf(error,"Error invalid status (%d) in serial task\n",status_);
                   throw InternalError(error,__FILE__,__LINE__);
   }
                   
