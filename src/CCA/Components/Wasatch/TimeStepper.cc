@@ -133,6 +133,9 @@ namespace Wasatch{
     for( std::list<TaskInterface*>::iterator i=taskInterfaceList_.begin(); i!=taskInterfaceList_.end(); ++i ){
       delete *i;
     }
+    for( std::vector<Uintah::VarLabel*>::iterator i=createdVarLabels_.begin(); i!=createdVarLabels_.end(); ++i ){
+      Uintah::VarLabel::destroy( *i );
+    }
   }
 
   //------------------------------------------------------------------

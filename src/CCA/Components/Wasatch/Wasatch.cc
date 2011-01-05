@@ -34,7 +34,7 @@
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/Variables/VarTypes.h>
-#include <Core/Grid/Variables/VarLabel.h>
+
 #include <Core/Grid/SimpleMaterial.h>
 #include <Core/Grid/Task.h>
 #include <Core/Parallel/ProcessorGroup.h>
