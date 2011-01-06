@@ -90,6 +90,8 @@ Balachandar::problemSetup(const ProblemSpecP& params)
   string temp_ic_name;
   string temp_ic_name_full;
 
+
+
   // -----------------------------------------------------------------
   // Look for required internal coordinates
   ProblemSpecP db_icvars = params->findBlock("ICVars");
@@ -121,22 +123,8 @@ Balachandar::problemSetup(const ProblemSpecP& params)
     }
   }
 
-  // fix the d_icLabels to point to the correct quadrature node (since there is 1 model per quad node)
-  for ( vector<std::string>::iterator iString = d_icLabels.begin(); 
-        iString != d_icLabels.end(); ++iString) {
 
-    temp_ic_name        = *iString;
-    temp_ic_name_full   = temp_ic_name;
 
-    std::stringstream out;
-    out << d_quadNode;
-    string node = out.str();
-    temp_ic_name_full += "_qn";
-    temp_ic_name_full += node;
-
-    std::replace( d_icLabels.begin(), d_icLabels.end(), temp_ic_name, temp_ic_name_full);
-  }
- 
   // -----------------------------------------------------------------
   // Look for required scalars
   // (Not used by Balachandar)
@@ -163,6 +151,79 @@ Balachandar::problemSetup(const ProblemSpecP& params)
   }
   */
 
+
+
+  // -----------------------------------------------------------------
+  // Look for constants used (for now, only length)
+  //
+  //  <ConstantVar label="length" role="particle_length">
+  //    <constant qn="0" value="1.00" />
+  //  </ConstantVar>
+  for( ProblemSpecP db_constantvar = params->findBlock("ConstantVar");
+       db_constantvar != 0; db_constantvar = params->findNextBlock("ConstantVar") ) {
+
+    db_constantvar->getAttribute("label", label_name);
+    db_constantvar->getAttribute("role",  role_name );
+
+    std::stringstream out;
+    out << d_quadNode;
+    string node = out.str();
+    temp_label_name = d_modelName;
+    temp_label_name += "_";
+    temp_label_name += label_name;
+    temp_label_name += "_qn";
+    temp_label_name += node;
+
+    if (role_name == "particle_length") {
+      LabelToRoleMap[temp_label_name] = role_name;
+      d_useLength = true;
+      d_constantLength = true;
+
+      d_length_label = VarLabel::create( temp_label_name, CCVariable<double>::getTypeDescription() );
+      d_length_scaling_factor = 1.0;
+
+    } else {
+      std::string errmsg;
+      errmsg = "ERROR: Arches: Balachandar: Invalid constant role:";
+      errmsg += "must be \"particle_length\", you specified \"" + role_name + "\".";
+      throw ProblemSetupException(errmsg,__FILE__,__LINE__);
+    }
+
+    // Now grab the actual values of the constants
+    for( ProblemSpecP db_constant = db_constantvar->findBlock("constant");
+         db_constant != 0; db_constant = db_constantvar->findNextBlock("constant") ) {
+      string s_tempQuadNode;
+      db_constant->getAttribute("qn",s_tempQuadNode);
+      int i_tempQuadNode = atoi( s_tempQuadNode.c_str() );
+
+      if( i_tempQuadNode == d_quadNode ) {
+        string s_constant;
+        db_constant->getAttribute("value", s_constant);
+        d_length_constant_value = atof( s_constant.c_str() );
+      }
+    }
+  }
+
+
+
+  // -----------------------------------------------------------------
+  // fix the d_icLabels to point to the correct quadrature node (since there is 1 model per quad node)
+  for ( vector<std::string>::iterator iString = d_icLabels.begin(); 
+        iString != d_icLabels.end(); ++iString) {
+
+    temp_ic_name        = *iString;
+    temp_ic_name_full   = temp_ic_name;
+
+    std::stringstream out;
+    out << d_quadNode;
+    string node = out.str();
+    temp_ic_name_full += "_qn";
+    temp_ic_name_full += node;
+
+    std::replace( d_icLabels.begin(), d_icLabels.end(), temp_ic_name, temp_ic_name_full);
+  }
+ 
+
   if(!d_useLength) {
     string errmsg = "ERROR: Arches: Balachandar: No particle length internal coordinate was specified.  Quitting...";
     throw ProblemSetupException(errmsg,__FILE__,__LINE__);
@@ -185,15 +246,18 @@ Balachandar::problemSetup(const ProblemSpecP& params)
     } else if( eqn_factory.find_scalar_eqn(iter->first) ) {
       current_eqn = &(eqn_factory.retrieve_scalar_eqn(iter->first));
     } else {
-      string errmsg = "ERROR: Arches: Balachandar: Invalid variable \"" + iter->first + 
-                      "\" given for \""+iter->second+"\" role, could not find in EqnFactory or DQMOMEqnFactory!";
-      throw ProblemSetupException(errmsg,__FILE__,__LINE__);
+      if( !d_constantLength ) {
+        string errmsg = "ERROR: Arches: Balachandar: Invalid variable \"" + iter->first + 
+                        "\" given for \""+iter->second+"\" role, could not find in EqnFactory or DQMOMEqnFactory!";
+        throw ProblemSetupException(errmsg,__FILE__,__LINE__);
+      }
     }
 
-
     if( iter->second == "particle_length" ){
-      d_length_label = current_eqn->getTransportEqnLabel();
-      d_length_scaling_factor = current_eqn->getScalingConstant();
+      if( !d_constantLength ) {
+        d_length_label = current_eqn->getTransportEqnLabel();
+        d_length_scaling_factor = current_eqn->getScalingConstant();
+      } // otherwise d_length_label has already been created
     } else {
       // can't find this required variable in the labels-to-roles map!
       std::string errmsg = "ERROR: Arches: Balachandar: You specified that the variable \"" + iter->first + 
@@ -229,10 +293,15 @@ Balachandar::sched_computeModel( const LevelP& level, SchedulerP& sched, int tim
   if( timeSubStep == 0 ) {
     tsk->computes(d_modelLabel);
     tsk->computes(d_gasLabel); 
+
+    if( d_constantLength ) {
+      tsk->computes(d_length_label);
+    }
   } else {
     tsk->modifies(d_modelLabel);
     tsk->modifies(d_gasLabel);  
   }
+
 
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials()); 
 
@@ -304,6 +373,11 @@ Balachandar::sched_computeParticleVelocity( const LevelP& level,
     tsk->requires( Task::OldDW, d_weight_label, gn, 0); // require weight label
     tsk->requires( Task::OldDW, d_length_label, Ghost::None, 0); // require internal coordinates
 
+    if( d_constantLength ) {
+      // this is required, because initializing variable to its constant value in NewDW
+      tsk->computes(d_length_label);
+    }
+
   } else {
 
     tsk->modifies( d_velocity_label );
@@ -345,6 +419,7 @@ Balachandar::computeParticleVelocity( const ProcessorGroup* pc,
     constCCVariable<double> particle_density;
     constCCVariable<Vector> gas_velocity;
     CCVariable<Vector> particle_velocity;
+    CCVariable<double> new_particle_length;
 
     if( timeSubStep == 0 ) {
 
@@ -359,6 +434,11 @@ Balachandar::computeParticleVelocity( const ProcessorGroup* pc,
 
       new_dw->allocateAndPut( particle_velocity, d_velocity_label, matlIndex, patch );
       particle_velocity.initialize( Vector(0.0,0.0,0.0) );
+
+      if( d_constantLength ) {
+        new_dw->allocateAndPut( new_particle_length, d_length_label, matlIndex, patch );
+        new_particle_length.initialize(d_length_constant_value);
+      }
 
     } else {
 
@@ -395,7 +475,7 @@ Balachandar::computeParticleVelocity( const ProcessorGroup* pc,
         beta = 1/( 2*rhoRatio + 1 );
 
         double length;
-        if( d_unweighted ) {
+        if( d_unweighted || d_constantLength ) {
           length = particle_length[c]*d_length_scaling_factor;
         } else {
           length = (particle_length[c]/weight[c])*d_length_scaling_factor;
@@ -476,6 +556,10 @@ Balachandar::sched_initVars( const LevelP& level, SchedulerP& sched )
 
   tsk->computes( d_velocity_label );
 
+  if( d_constantLength ) {
+    tsk->computes( d_length_label );
+  }
+
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials()); 
 }
 
@@ -506,6 +590,13 @@ Balachandar::initVars( const ProcessorGroup * pc,
     CCVariable<Vector> particle_velocity; 
     new_dw->allocateAndPut( particle_velocity, d_velocity_label, matlIndex, patch ); 
     particle_velocity.initialize( Vector(0.0,0.0,0.0) );
+
+    // if length is constant, initialize it to constant value
+    if( d_constantLength ) {
+      CCVariable<double> particle_length;
+      new_dw->allocateAndPut( particle_length, d_length_label, matlIndex, patch );
+      particle_length.initialize(d_length_constant_value);
+    }
 
   }//end patches
 }

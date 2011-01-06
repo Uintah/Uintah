@@ -5,6 +5,7 @@
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Components/Arches/ArchesLabel.h>
 #include <CCA/Components/Arches/TransportEqns/EqnBase.h>
+#include <CCA/Components/Arches/SourceTerms/SourceTermFactory.h>
 
 using namespace std;
 using namespace Uintah;
@@ -111,3 +112,7 @@ EqnBase::checkBCs( const ProcessorGroup* pc,
     }
   }
 }
+
+
+
+

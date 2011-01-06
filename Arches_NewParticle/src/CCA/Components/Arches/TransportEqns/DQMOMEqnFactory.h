@@ -173,7 +173,7 @@ public:
   /** @brief  Set the value of the private member d_MinTimestepVar, which is the minimum timestep required for stability by the DQMOM scalar equations */
   void setMinTimestepVar( string eqnName, double new_min );
 
-//cmr
+//cmr - for explanation see comments in Arches.cc
 //  inline void setDQMOMSolvers( vector<DQMOM*> solvers ) {
 //    d_dqmomSolvers = solvers; };
     

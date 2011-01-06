@@ -56,7 +56,8 @@ public:
   /** @brief Dummy init for MPMArches */ 
   virtual void sched_dummyInit( const LevelP&, SchedulerP& sched ) = 0; 
 
-
+  /** @brief Compute all source terms for this scalar eqn */
+  virtual void sched_computeSources( const LevelP& level, SchedulerP& schedi, int timeSubStep ) = 0;
 
   ////////////////////////////////////////////////
   // Calculation methods
@@ -216,6 +217,8 @@ protected:
   BoundaryCondition_new* d_boundaryCond;  ///< Boundary condition object associated with equation object
   ExplicitTimeInt* d_timeIntegrator;      ///< Time integrator object associated with equation object
   Discretization_new* d_disc;             ///< Discretization object associated with equation object
+
+  vector<const VarLabel*> d_sources;  ///< List of variable labels corresponding to source terms for this DQMOM internal coordinate/environment
 
   const VarLabel* d_transportVarLabel;    ///< Label for scalar being transported, in NEW data warehouse
   const VarLabel* d_oldtransportVarLabel; ///< Label for scalar being transported, in OLD data warehouse ("old" refers to old value within RK substeps)

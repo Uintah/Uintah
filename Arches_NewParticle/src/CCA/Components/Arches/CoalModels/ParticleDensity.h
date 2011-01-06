@@ -103,9 +103,23 @@ protected:
 
   const VarLabel* d_density_label;  ///< Variable label for particle density (this is the quantity the the model calculates)
   const VarLabel* d_weight_label;   ///< Variable label for weight
+  const VarLabel* d_length_label;         ///< Label for particle length internal coordinate
 
-  double d_w_scaling_constant;      ///< Scaling constant for weight
   double d_w_small;                 ///< "small" clip value for weights; if weight < d_w_small, no model value is calculated
+  double d_w_scaling_constant;      ///< Scaling constant for weight
+  double d_length_scaling_constant;       ///< Scaling constant for particle length internal coordinate
+  double d_length_low;                    ///< Low clip value for length (if applicable)
+  double d_length_hi;                     ///< High clip value for length (if applicable)
+
+  bool d_doLengthLowClip;  ///< Boolean: do low clipping for length?
+  bool d_doLengthHighClip; ///< Boolean: do high clipping for length?
+  bool d_useLength;        ///< Boolean: use particle length internal coordinate?
+
+  // Constant value (if user specifies value of length should be constant)
+  double d_length_constant_value;
+
+  // Constant bool
+  bool d_constantLength; ///< Boolean: is the length a constant fixed value? (as opposed to an internal coordinate)
 
 }; // end ParticleDensity
 } // end namespace Uintah

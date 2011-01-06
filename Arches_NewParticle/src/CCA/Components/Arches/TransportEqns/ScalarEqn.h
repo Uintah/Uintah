@@ -110,7 +110,7 @@ public:
                              int timeSubStep);
 
   /** @brief Return a list of all sources associated with this transport equation */ 
-  inline const vector<string> getSourcesList(){
+  inline const vector<const VarLabel*> getSourcesList(){
     return d_sources; };
 
   /** @brief Apply boundary conditions */
@@ -169,11 +169,9 @@ private:
 
   double d_timestepMultiplier;
 
-  vector<std::string> d_sources;
-
   bool d_laminar_pr; 
 
-  const VarLabel* d_prNo_label;           ///< Label for the prandlt number 
+  const VarLabel* d_prNo_label;       ///< Label for the Prandlt number 
 
 }; // class ScalarEqn
 } // namespace Uintah

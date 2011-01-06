@@ -168,7 +168,7 @@ public:
       @param iv   The vector of indepenent variable values */
   inline double getSingleState( string dv, vector<double> iv ) {
     double result = 0.0; 
-    cout_tabledbg << "From your table, looking up: " << dv << endl;
+    //cout_tabledbg << "From your table, looking up: " << dv << endl;
     return result = d_statetbl.query(  dv, &iv[0] ); 
   };
 
@@ -177,7 +177,7 @@ public:
       @param iv       The vector of indepenent variable values */
   inline double getSingleState( const BSpline* spline, std::string dv, vector<double> iv ) {
     double result = 0.0; 
-    cout_tabledbg << "From your table, looking up a variable using spline information: " << dv << endl;
+    //cout_tabledbg << "From your table, looking up a variable using spline information: " << dv << endl;
     return result = d_statetbl.query(  spline, &iv[0] ); 
   };
 
@@ -199,6 +199,15 @@ public:
   typedef std::map<std::string, const BSpline*>   SplineMap; 
 
   enum BoundaryType { DIRICHLET, NEUMANN };
+
+  struct DepVarCont {
+
+    CCVariable<double>* var; 
+    const BSpline* spline; 
+
+  }; 
+
+  typedef std::map<string, DepVarCont >       DepVarMap;
 
 protected :
 

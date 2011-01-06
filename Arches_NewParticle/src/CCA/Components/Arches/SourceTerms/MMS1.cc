@@ -52,7 +52,7 @@ MMS1::sched_computeSource( const LevelP& level, SchedulerP& sched, int timeSubSt
 
   for (vector<std::string>::iterator iter = _required_labels.begin(); 
        iter != _required_labels.end(); iter++) { 
-    // HERE I WOULD REQUIRE ANY VARIABLES NEEDED TO COMPUTE THE SOURCe
+    // HERE I WOULD REQUIRE ANY VARIABLES NEEDED TO COMPUTE THE SOURCE
     //tsk->requires( Task::OldDW, .... ); 
   }
 

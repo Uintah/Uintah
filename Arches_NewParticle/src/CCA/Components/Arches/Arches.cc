@@ -328,15 +328,46 @@ Arches::problemSetup(const ProblemSpecP& params,
   eqnFactory.setArchesLabel( d_lab );
   eqnFactory.setTimeIntegrator(d_timeIntegrator);
 
+  // ----- DQMOM STUFF:
   DQMOMEqnFactory& dqmomFactory = DQMOMEqnFactory::self();
   dqmomFactory.setArchesLabel( d_lab );
   dqmomFactory.setTimeIntegrator(d_timeIntegrator);
 
-  SourceTermFactory& srcFactory = SourceTermFactory::self();
-  srcFactory.setArchesLabel( d_lab );
-
   CoalModelFactory& coalFactory = CoalModelFactory::self();
   coalFactory.setArchesLabel( d_lab );
+
+  // If there is at least one DQMOM block, set up the DQMOM equation factory
+  ProblemSpecP dqmom_db = db->findBlock("DQMOM");
+  if ( dqmom_db ) {
+    d_doDQMOM = true;
+
+    // assume there is only 1 <DQMOM> for now...
+    d_dqmomSolver = scinew DQMOM(d_lab);
+
+    //cmr
+    // uncomment next line when that assumption changes
+    //d_dqmomSolvers.push_back(dqmomSolver);
+
+    dqmomFactory.problemSetup( dqmom_db );
+    coalFactory.problemSetup(dqmom_db);
+    d_dqmomSolver->problemSetup( dqmom_db ); 
+
+    dqmomFactory.setDQMOMSolver( d_dqmomSolver );
+
+  }
+
+  SourceTermFactory& srcFactory = SourceTermFactory::self();
+  srcFactory.setArchesLabel( d_lab );
+  if( db->findBlock("TransportEqns") ) {
+    ProblemSpecP sources_db = db->findBlock("TransportEqns")->findBlock("Sources");
+    srcFactory.problemSetup( sources_db );
+  }
+
+  if( dqmom_db ) {
+    // Now populate the list of "extra" (MMS and unweighted abscissa) source terms for DQMOMEqns
+    // (must go after the source term factory's problemSetup)
+    dqmomFactory.problemSetupSources( dqmom_db );
+  }
 
   PropertyModelFactory& propertyFactory = PropertyModelFactory::self();
   propertyFactory.setArchesLabel( d_lab );
@@ -344,9 +375,6 @@ Arches::problemSetup(const ProblemSpecP& params,
   ProblemSpecP transportEqn_db = db->findBlock("TransportEqns");
   // register transport eqns
   eqnFactory.problemSetup(transportEqn_db);
-
-  // Wait until later to register source terms,
-  // since some source terms need DQMOM information
 
   ProblemSpecP propmodels_db = db->findBlock("PropertyModels"); 
   propertyFactory.problemSetup( propmodels_db );
@@ -366,6 +394,52 @@ Arches::problemSetup(const ProblemSpecP& params,
   d_props->problemSetup(db);
 
   coalFactory.setTabPropsInterface( d_props->getMixingRxnModel() );
+
+  // TODO
+  // Looping over all <DQMOM> blocks will require changing DQMOMEqnFactory
+  // (e.g. getting the number of quad nodes)
+  //
+  // Will also require changing all the classes that are using DQMOMEqnFactory...
+  // (particularly those grabbing # quad nodes)
+
+  // Loop through alll <DQMOM> blocks to create a model factory for each
+  /*
+  for( ProblemSpecP dqmom_db = db->findBlock("DQMOM"); 
+       dqmom_db != 0; dqmom_db = dqmom_db->findNextBlock("DQMOM")) {
+
+    if( !time_db ) {
+      throw ProblemSetupException("ERROR: Arches: <DQMOM> block used without a <TimeIntegrator> block. You must add a time integrator to use DQMOM.",__FILE__,__LINE__);
+    }
+
+    d_doDQMOM = true;
+
+    // Figure out what kind of DQMOM factory to create
+    string dqmom_physics;
+    dqmom_db->getWithDefault("physics",dqmom_physics,"none");
+
+    // Depending on the type, need to initialize different model factories
+    if( dqmom_physics == "coal" ) {
+      // Set up coal model factory
+      CoalModelFactory& model_factory = CoalModelFactory::self();
+      model_factory.setArchesLabel( d_lab ); 
+      model_factory.problemSetup(dqmom_db);
+
+    } else if (dqmom_physics == "soot" ) {
+      throw ProblemSetupException("ERROR: Arches: DQMOM for soot is not currently supported.",__FILE__,__LINE__);
+
+    } else if (dqmom_physics == "none" ) {
+      // TODO 
+      // add a generic DQMOM models folder
+      // with a generic DQMOM models factory
+    }
+
+    // Set up the DQMOM linear solver:
+    DQMOM* dqmomSolver = scinew DQMOM(d_lab);
+    dqmomSolver->problemSetup( dqmom_db ); 
+    d_dqmomSolvers.push_back(dqmomSolver);
+  }
+  */
+
 
   // read boundary condition information 
   d_boundaryCondition = scinew BoundaryCondition(d_lab, d_MAlab, d_physicalConsts,
@@ -500,86 +574,6 @@ Arches::problemSetup(const ProblemSpecP& params,
     d_analysisModule->problemSetup(params, grid, sharedState);
   }
 
-  // ----- DQMOM STUFF:
-
-  // If there is at least one DQMOM block, set up the DQMOM equation factory
-  ProblemSpecP dqmom_db = db->findBlock("DQMOM");
-  if ( dqmom_db ) {
-    d_doDQMOM = true;
-
-    // assume there is only 1 <DQMOM> for now...
-    d_dqmomSolver = scinew DQMOM(d_lab);
-
-    //cmr
-    // uncomment next line when that assumption changes
-    //d_dqmomSolvers.push_back(dqmomSolver);
-
-    dqmomFactory.problemSetup( dqmom_db );
-    coalFactory.problemSetup(dqmom_db);
-    d_dqmomSolver->problemSetup( dqmom_db ); 
-
-
-    dqmomFactory.setDQMOMSolver( d_dqmomSolver );
-
-  }
-
-  // TODO
-  // Looping over all <DQMOM> blocks will require changing DQMOMEqnFactory
-  // (e.g. getting the number of quad nodes)
-  //
-  // Will also require changing all the classes that are using DQMOMEqnFactory...
-  // (particularly those grabbing # quad nodes)
-
-  // Loop through alll <DQMOM> blocks to create a model factory for each
-  /*
-  for( ProblemSpecP dqmom_db = db->findBlock("DQMOM"); 
-       dqmom_db != 0; dqmom_db = dqmom_db->findNextBlock("DQMOM")) {
-
-    if( !time_db ) {
-      throw ProblemSetupException("ERROR: Arches: <DQMOM> block used without a <TimeIntegrator> block. You must add a time integrator to use DQMOM.",__FILE__,__LINE__);
-    }
-
-    d_doDQMOM = true;
-
-    // Figure out what kind of DQMOM factory to create
-    string dqmom_physics;
-    dqmom_db->getWithDefault("physics",dqmom_physics,"none");
-
-    // Depending on the type, need to initialize different model factories
-    if( dqmom_physics == "coal" ) {
-      // Set up coal model factory
-      CoalModelFactory& model_factory = CoalModelFactory::self();
-      model_factory.setArchesLabel( d_lab ); 
-      model_factory.problemSetup(dqmom_db);
-
-    } else if (dqmom_physics == "soot" ) {
-      throw ProblemSetupException("ERROR: Arches: DQMOM for soot is not currently supported.",__FILE__,__LINE__);
-
-    } else if (dqmom_physics == "none" ) {
-      // TODO 
-      // add a generic DQMOM models folder
-      // with a generic DQMOM models factory
-    }
-
-    // Set up the DQMOM linear solver:
-    DQMOM* dqmomSolver = scinew DQMOM(d_lab);
-    dqmomSolver->problemSetup( dqmom_db ); 
-    d_dqmomSolvers.push_back(dqmomSolver);
-  }
-  */
-
-  // Do problem setup stuff for TranpsortEqns (some of these require DQMOM information, which is why this goes after the DQMOM problem setup)
-  if( db->findBlock("TransportEqns") ) {
-    ProblemSpecP sources_db = db->findBlock("TransportEqns")->findBlock("Sources");
-    srcFactory.problemSetup( sources_db );
-  }
-
-  if( db->findBlock("DQMOM") ) {
-    ProblemSpecP dqmom_db = db->findBlock("DQMOM");
-
-    // Now populate the list of "extra" (MMS and unweighted abscissa) source terms for DQMOMEqn's
-    dqmomFactory.problemSetupSources( dqmom_db );
-  }
 
 }
 
@@ -1343,6 +1337,9 @@ Arches::computeStableTimeStep(const ProcessorGroup* ,
       }
     }
 
+
+
+    // Scalar equations minimum timestep criteria
     EqnFactory& eqnFactory = EqnFactory::self();
     if( eqnFactory.useScalarEqns() ) {
       delt_vartype MinScalarTimestep;
@@ -1354,6 +1351,7 @@ Arches::computeStableTimeStep(const ProcessorGroup* ,
       delta_t2 = Min(min_scalar_timestep,delta_t2);
     }
 
+    // DQMOM equations minimum timestep criteria
     DQMOMEqnFactory& dqmomFactory = DQMOMEqnFactory::self();
     if( dqmomFactory.getDoDQMOM() ) {
       delt_vartype MinDQMOMTimestep;
@@ -1364,6 +1362,8 @@ Arches::computeStableTimeStep(const ProcessorGroup* ,
       }
       delta_t2 = Min(min_dqmom_timestep,delta_t2);
     }
+
+
 
     if (d_variableTimeStep) {
       delta_t = delta_t2;

@@ -211,6 +211,7 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
     }
 
     // --- new turbulence inlet flow generator --- 
+    turbinlet = false; 
     if (ProblemSpecP turb_db = db->findBlock("TurbulentInlet")){
       turbinlet = true;
       int Nstep;
@@ -1271,7 +1272,7 @@ BoundaryCondition::setProfile(const ProcessorGroup*,
     // loop thru the flow inlets to set all the components of velocity and density
     if (d_inletBoundary) {
 
-      double time = 0.0; 
+      //double time = 0.0; 
 
       for (int indx = 0; indx < d_numInlets; indx++) {
 
@@ -1564,6 +1565,9 @@ BoundaryCondition::setFlatProfV( const Patch* patch,
           }
         }
         break; 
+      default: 
+        throw InvalidValue("Error: Face type for setFlatProfV not recognized.",__FILE__,__LINE__); 
+        break; 
     }
   }
 }
@@ -1583,8 +1587,6 @@ BoundaryCondition::setFlatProfS( const Patch* patch,
   vector<Patch::FaceType> bf;
   patch->getBoundaryFaces(bf);
   Vector Dx = patch->dCell(); 
-
-  int archIndex = 0; 
 
   for (fiter = bf.begin(); fiter !=bf.end(); fiter++){
     Patch::FaceType face = *fiter;

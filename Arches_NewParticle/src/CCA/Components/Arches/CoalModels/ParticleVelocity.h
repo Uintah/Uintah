@@ -118,6 +118,13 @@ protected:
   double d_w_scaling_factor;        ///< Scaling factor for weights
   double d_w_small;                 ///< "small" clip value for weights; if weights < d_w_small, model value is not computed
 
+  // Constant value (if user specifies value of length should be constant)
+  double d_length_constant_value;
+
+  // Constant bool
+  bool d_constantLength; ///< Boolean: is the length a constant fixed value? (as opposed to an internal coordinate)
+
+
   BoundaryCondition_new* d_boundaryCond;  ///< Boundary conditions for particle velocity
 
 }; // end ParticleVelocity

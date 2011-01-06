@@ -260,10 +260,11 @@ EnthalpySolver::solve(const LevelP& level,
                       bool doing_EKT_now)
 {
   int timeSubStep = 0;
-  if ( timelabels->integrator_step_number == TimeIntegratorStepNumber::Second )
+  if ( timelabels->integrator_step_number == TimeIntegratorStepNumber::Second ) {
     timeSubStep = 1;
-  else if ( timelabels->integrator_step_number == TimeIntegratorStepNumber::Third )
+  } else if ( timelabels->integrator_step_number == TimeIntegratorStepNumber::Third ) {
     timeSubStep = 2;
+  }
 
   // Schedule additional sources for evaluation
   SourceTermFactory& factory = SourceTermFactory::self();

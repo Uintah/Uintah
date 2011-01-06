@@ -185,7 +185,7 @@ void SourceTermFactory::problemSetup(const ProblemSpecP& params)
       proc0cout << "Doing unweighted DQMOM..." << endl;
       DQMOMEqnFactory::EqnMap& dqmom_eqns = dqmomFactory.retrieve_all_eqns(); 
       for( DQMOMEqnFactory::EqnMap::iterator iEqn = dqmom_eqns.begin(); iEqn != dqmom_eqns.end(); ++iEqn ) {
-        proc0cout << "For equation " << iEqn->second->getEqnName() << "..." << endl;
+        //proc0cout << "For equation " << iEqn->second->getEqnName() << "..." << endl;
         DQMOMEqn* eqn = dynamic_cast<DQMOMEqn*>(iEqn->second);
         if( !eqn->weight() ) {
           string eqn_name = eqn->getEqnName();
@@ -193,7 +193,7 @@ void SourceTermFactory::problemSetup(const ProblemSpecP& params)
           vector<string> required_varLabels;
           required_varLabels.push_back(eqn_name);
           SourceTermBase::Builder* srcBuilder = scinew UnweightedSrcTerm::Builder( srcName, required_varLabels, d_fieldLabels->d_sharedState, d_fieldLabels );
-          proc0cout << "Registering source term for equation " << eqn_name << endl;
+          //proc0cout << "Registering unweighted source term for equation " << eqn_name << endl;
           register_source_term( srcName, srcBuilder );
         }
       }
@@ -202,11 +202,33 @@ void SourceTermFactory::problemSetup(const ProblemSpecP& params)
 
 }
 
+/** @details 
+This method computes source terms.  Source terms are dealt with by
+the SourceTermFactory, and nowhere else.  This way, 
+source term related calculations are not scattered 
+all over the place (as they were before).
+
+The procedure is as follows:
+1. Initialize source terms, if necessary
+2. Update the source terms
+3. (Last time substep) Clean up
+*/
 void
-SourceTermFactory::sched_computeSourceTerms( const LevelP& level, SchedulerP& sched, int timeSubStep ) 
+SourceTermFactory::sched_computeSourceTerms( const LevelP& level, SchedulerP& sched, int timeSubStep, bool lastTimeSubstep ) 
 {
+  proc0cout << "SourceTermFactory::sched_computeSourceTerms is being called." << endl;
+  // Step 1 - initialize source terms (not needed)
+
+  // Step 2 - update source terms
   for( SourceMap::iterator iSrc = sources_.begin(); iSrc != sources_.end(); ++iSrc ) {
     iSrc->second->sched_computeSource( level, sched, timeSubStep );
+  }
+
+  // Step 3 - clean up
+  if( lastTimeSubstep ) {
+    for( SourceMap::iterator iSrc = sources_.begin(); iSrc != sources_.end(); ++iSrc ) {
+      iSrc->second->reinitializeLabel();
+    }
   }
 }
 
@@ -223,12 +245,12 @@ SourceTermFactory::sched_sourceInit( const LevelP& level, SchedulerP& sched )
     
     tsk->computes( src->getSrcLabel() );
 
-    //vector<const VarLabel*> extraLocalLabels = src->getExtraLocalLabels();
+    vector<const VarLabel*> extraLocalLabels = src->getExtraLocalLabels();
 
-    //for( vector<const VarLabel*>::iterator iExtraSrc = extraLocalLabels.begin(); 
-    //     iExtraSrc != extraLocalLabels.end(); ++iExtraSrc ) {
-    //  tsk->computes( *iExtraSrc );
-    //}
+    for( vector<const VarLabel*>::iterator iExtraSrc = extraLocalLabels.begin(); 
+         iExtraSrc != extraLocalLabels.end(); ++iExtraSrc ) {
+      tsk->computes( *iExtraSrc );
+    }
   }
   
   if( d_labelSet ) {
@@ -321,22 +343,6 @@ SourceTermFactory::register_source_term( const std::string name,
   if( srcType == "ParticleGasMomentum" ) {
     d_useParticleGasMomentumSource = true;
     d_particleGasMomentumSource = src;
-
-  // } else if ( srcType == "CoalGasDevolatilization" ) {
-  //   //d_useCoalGasDevolSource = true;
-
-  // } else if ( srcType == "WestbrookDryer" ) {
-  //   //d_useWestbrookDryerSource = true;
-
-  // } else if ( srcType == "Constant" ) {
-  //   //d_useConstantSource = true;
-
-  // } else if ( srcType == "MMS1" ) {
-  //   //d_useMMS1Source = true;
-
-  // } else {
-  //   proc0cout << "WARNING: Arches: SourceTermFactory: Unrecognized source term type " << name << endl;
-  //   proc0cout << "Continuing..." << endl;
   }
 
 }

@@ -128,17 +128,14 @@ private:
   vector<const VarLabel*> d_massLabels;  ///< Vector of VarLabels for all mass internal coordinates (used to grab the mass source terms, which are used to calculate the length model term \f$ G_{L} \f$ )
   vector<double> d_massScalingConstants; ///< Vector of scaling constants for mass internal coordinates (used to scale the mass source terms)
 
-  const VarLabel* d_length_label;         ///< Label for particle length internal coordinate
   const VarLabel* d_raw_coal_mass_label;  ///< Label for raw coal mass internal coordinate
   const VarLabel* d_char_mass_label;      ///< Label for char mass internal coordinate
   const VarLabel* d_moisture_mass_label;  ///< Label for moisture mass internal coordinate
 
-  double d_length_scaling_constant;   ///< Scaling constant for particle length internal coordinate
   double d_rc_scaling_constant;       ///< Scaling constant for raw coal internal coordinate
   double d_char_scaling_constant;     ///< Scaling constant for char internal coordinate
   double d_moisture_scaling_constant; ///< Scaling constant for moisture internal coordinate
 
-  bool d_useLength;    ///< Boolean: use length internal coordinate?
   bool d_useRawCoal;   ///< Boolean: use raw coal internal coordinate?
   bool d_useChar;      ///< Boolean: use char internal coordinate?
   bool d_useMoisture;  ///< Boolean: use moisture inernal coordinate?

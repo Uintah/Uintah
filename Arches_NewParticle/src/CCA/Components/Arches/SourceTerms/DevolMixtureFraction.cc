@@ -53,40 +53,26 @@ DevolMixtureFraction::sched_computeSource( const LevelP& level, SchedulerP& sche
     // Every source term needs to set this flag after the varLabel is computed. 
     // transportEqn.cleanUp should reinitialize this flag at the end of the time step. 
     _label_sched_init = true;
+  }
 
+  if( timeSubStep == 0 ) {
     tsk->computes(_src_label);
   } else {
     tsk->modifies(_src_label); 
   }
 
-  DQMOMEqnFactory& dqmomFactory  = DQMOMEqnFactory::self(); 
-  CoalModelFactory& modelFactory = CoalModelFactory::self(); 
+  CoalModelFactory& coalFactory = CoalModelFactory::self(); 
 
-  for (int iqn = 0; iqn < dqmomFactory.get_quad_nodes(); iqn++){
-    std::string weight_name = "w_qn";
-    std::string model_name = d_devolModelName; 
-    std::string node;  
-    std::stringstream out; 
-    out << iqn; 
-    node = out.str(); 
-    weight_name += node; 
-    model_name += "_qn";
-    model_name += node; 
+  if( coalFactory.useDevolatilizationModel() ) {
 
-    EqnBase& eqn = dqmomFactory.retrieve_scalar_eqn( weight_name );
-
-    const VarLabel* tempLabel_w = eqn.getTransportEqnLabel();
-    tsk->requires( Task::NewDW, tempLabel_w, Ghost::None, 0 ); 
-
-    ModelBase& model = modelFactory.retrieve_model( model_name ); 
-    
-    const VarLabel* tempLabel_m = model.getModelLabel(); 
-    tsk->requires( Task::NewDW, tempLabel_m, Ghost::None, 0 );
-
-    const VarLabel* tempgasLabel_m = model.getGasSourceLabel();
-    tsk->requires( Task::NewDW, tempgasLabel_m, Ghost::None, 0 );
+    DQMOMEqnFactory& dqmomFactory  = DQMOMEqnFactory::self(); 
+    for( int iqn=0; iqn < dqmomFactory.get_quad_nodes(); ++iqn ) {
+      Devolatilization* devol_model = coalFactory.getDevolatilizationModel(iqn);
+      tsk->requires( Task::NewDW, devol_model->getGasSourceLabel(), Ghost::None, 0);
+    }
 
   }
+
 
   sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials()); 
 
@@ -105,8 +91,6 @@ DevolMixtureFraction::computeSource( const ProcessorGroup* pc,
   //patch loop
   for (int p=0; p < patches->size(); p++){
 
-    //Ghost::GhostType  gaf = Ghost::AroundFaces;
-    //Ghost::GhostType  gac = Ghost::AroundCells;
     Ghost::GhostType  gn  = Ghost::None;
 
     const Patch* patch = patches->get(p);
@@ -114,54 +98,50 @@ DevolMixtureFraction::computeSource( const ProcessorGroup* pc,
     int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex(); 
 
     CCVariable<double> devolSrc; 
-    if ( new_dw->exists(_src_label, matlIndex, patch ) ){
-      new_dw->getModifiable( devolSrc, _src_label, matlIndex, patch ); 
-      devolSrc.initialize(0.0);
-    } else {
+    if( timeSubStep == 0 ) {
       new_dw->allocateAndPut( devolSrc, _src_label, matlIndex, patch );
-      devolSrc.initialize(0.0);
+    } else {
+      new_dw->getModifiable( devolSrc, _src_label, matlIndex, patch ); 
     } 
+    devolSrc.initialize(0.0);
     
-    CoalModelFactory& modelFactory = CoalModelFactory::self(); 
-    DQMOMEqnFactory& dqmomFactory  = DQMOMEqnFactory::self(); 
-    int numEnvironments = dqmomFactory.get_quad_nodes();
+    CoalModelFactory& coalFactory = CoalModelFactory::self(); 
 
-    // vector holding model constCCvariables 
-    vector< constCCVariable<double>* > modelCCVars(numEnvironments);
-    
-    // populate vector holding model constCCVariables
-    for (int iqn = 0; iqn < dqmomFactory.get_quad_nodes(); iqn++) {
-      modelCCVars[iqn] = scinew constCCVariable<double>;
+    if( coalFactory.useDevolatilizationModel() ) {
 
-      std::string model_name = d_devolModelName; 
-      std::string node;  
-      std::stringstream out; 
-      out << iqn; 
-      node = out.str(); 
-      model_name += "_qn";
-      model_name += node;
+      DQMOMEqnFactory& dqmomFactory = DQMOMEqnFactory::self();
+      int numEnvironments = dqmomFactory.get_quad_nodes();
 
-      ModelBase& model = modelFactory.retrieve_model( model_name ); 
+      // create a vector to hold devol model constCCVariables
+      vector< constCCVariable<double>* > devolCCVars(numEnvironments);
 
-      new_dw->get( *(modelCCVars[iqn]), model.getGasSourceLabel(), matlIndex, patch, gn, 0 );
-    }
-        
-    for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
-      IntVector c = *iter;
+      // populate this vector with constCCVariables associated with heat xfer model
+      for( int iqn=0; iqn < numEnvironments; ++iqn ) {
+        devolCCVars[iqn] = scinew constCCVariable<double>;
+        Devolatilization* devol_model = coalFactory.getDevolatilizationModel(iqn);
+        new_dw->get( *(devolCCVars[iqn]), devol_model->getGasSourceLabel(), matlIndex, patch, gn, 0);
+      }
 
-      double running_sum = 0.0;
-      for( vector< constCCVariable<double>* >::iterator iModel = modelCCVars.begin(); 
-           iModel != modelCCVars.end(); ++iModel ) {
-        running_sum += (**iModel)[c];
+      // next, create the net source term by adding source terms for each quad node together
+      for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
+        IntVector c = *iter; 
+
+        double running_sum = 0.0;
+        for( vector< constCCVariable<double>* >::iterator iD = devolCCVars.begin(); iD != devolCCVars.end(); ++iD ) {
+          running_sum += (**iD)[c];
+        }
+
+        devolSrc[c] = running_sum;
+
       }
       
-      devolSrc[c] = running_sum;
+      // finally, delete constCCVariables created on the stack
+      for( vector< constCCVariable<double>* >::iterator ii = devolCCVars.begin(); ii != devolCCVars.end(); ++ii ) {
+        delete *ii;
+      }
+
     }
 
-    // now delete CCVariables created on the heap with the "scinew" operator
-    for( vector< constCCVariable<double>* >::iterator i = modelCCVars.begin(); i != modelCCVars.end(); ++i ) {
-      delete *i;
-    }
   }
 }
 //---------------------------------------------------------------------------
@@ -202,14 +182,15 @@ DevolMixtureFraction::dummyInit( const ProcessorGroup* pc,
     new_dw->allocateAndPut( src, _src_label, matlIndex, patch ); 
 
     src.initialize(0.0); 
+    //constCCVariable<double> old_src;
+    //old_dw->get(old_src, _src_label, matlIndex, patch, Ghost::None, 0 );
+    //src.copyData(old_src);
 
     for (std::vector<const VarLabel*>::iterator iter = _extra_local_labels.begin(); iter != _extra_local_labels.end(); iter++){
       CCVariable<double> tempVar; 
       new_dw->allocateAndPut(tempVar, *iter, matlIndex, patch ); 
+      tempVar.initialize(0.0);
     }
   }
 }
-
-
-
 

@@ -90,7 +90,7 @@ public:
   // Source term computation
 
   /** @brief  Schedule computation of all source terms */
-  void sched_computeSourceTerms( const LevelP& level, SchedulerP& sched, int timeSubStep );
+  void sched_computeSourceTerms( const LevelP& level, SchedulerP& sched, int timeSubStep, bool lastTimeSubstep );
 
   /////////////////////////////////////////////
   // Get/set methods

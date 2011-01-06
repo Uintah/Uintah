@@ -87,10 +87,11 @@ DQMOMEqn::problemSetup(const ProblemSpecP& inputdb )
   ProblemSpecP dqmom_db = db_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("DQMOM");
   std::string which_dqmom; 
   dqmom_db->getAttribute( "type", which_dqmom ); 
-  if ( which_dqmom == "unweightedAbs" ) 
+  if ( which_dqmom == "unweightedAbs" ) {
     d_unweighted = true;
-  else 
+  } else {
     d_unweighted = false; 
+  }
 
   db->getWithDefault("turbulentPrandtlNumber",d_turbPrNo,0.4);
 
@@ -204,10 +205,10 @@ DQMOMEqn::problemSetup(const ProblemSpecP& inputdb )
         db_env_constants->getAttribute("qn", s_tempQuadNode);
         int i_tempQuadNode = atoi( s_tempQuadNode.c_str() );
 
-        string s_constant;
-        db_env_constants->getAttribute("value", s_constant);
-        double constantValue = atof( s_constant.c_str() );
         if( i_tempQuadNode == d_quadNode ) {
+          string s_constant;
+          db_env_constants->getAttribute("value", s_constant);
+          double constantValue = atof( s_constant.c_str() );
           d_constant_init = constantValue / d_scalingConstant;
         }
       }
@@ -304,6 +305,7 @@ DQMOMEqn::problemSetupSources( const ProblemSpecP& db )
     d_addExtraSources = true;
     d_sources.push_back( srcFactory.retrieve_source_term(srcname).getSrcLabel() );
   }
+
 }
 
 
@@ -335,6 +337,7 @@ DQMOMEqn::sched_initializeVariables( const LevelP& level, SchedulerP& sched )
   string taskname = "DQMOMEqn::initializeVariables";
   Task* tsk = scinew Task(taskname, this, &DQMOMEqn::initializeVariables);
   Ghost::GhostType gn = Ghost::None;
+
   //New
   tsk->computes(d_transportVarLabel);
   tsk->computes(d_oldtransportVarLabel); // for rk sub stepping 
@@ -401,24 +404,6 @@ void DQMOMEqn::initializeVariables( const ProcessorGroup* pc,
   }
 }
 
-#ifdef VERIFY_DQMOM_TRANSPORT
-//---------------------------------------------------------------------------
-// Method: Schedule compute the sources. 
-// Only used for verification of the DQMOM transport equations
-//--------------------------------------------------------------------------- 
-void 
-DQMOMEqn::sched_computeSources( const LevelP& level, 
-                                SchedulerP& sched, 
-                                int timeSubStep )
-{
-  // This scheduler only calls other schedulers
-  SourceTermFactory& factory = SourceTermFactory::self(); 
-  for (vector<std::string>::iterator iter = d_sources.begin(); iter != d_sources.end(); iter++){
-    SourceTermBase& temp_src = factory.retrieve_source_term( *iter ); 
-    temp_src.sched_computeSource( level, sched, timeSubStep ); 
-  }
-}
-#endif
 
 //---------------------------------------------------------------------------
 // Method: Schedule build the transport equation. 
@@ -430,26 +415,26 @@ DQMOMEqn::sched_buildTransportEqn( const LevelP& level,
 {
   string taskname = "DQMOMEqn::buildTransportEqn"; 
 
-  Task* tsk = scinew Task(taskname, this, &DQMOMEqn::buildTransportEqn);
+  Task* tsk = scinew Task(taskname, this, &DQMOMEqn::buildTransportEqn, timeSubStep);
   
   CoalModelFactory& coalFactory = CoalModelFactory::self();
 
-  //----NEW----
+  // Modifies:
   tsk->modifies(d_transportVarLabel);
-  tsk->requires(Task::NewDW, d_oldtransportVarLabel, Ghost::AroundCells, 2);
   tsk->modifies(d_FdiffLabel);
   tsk->modifies(d_FconvLabel);
   tsk->modifies(d_RHSLabel);
+ 
+  // Requires:
   if( coalFactory.useParticleVelocityModel() ) {
     tsk->requires(Task::NewDW, coalFactory.getParticleVelocityLabel(d_quadNode), Ghost::AroundCells, 1);
   } else {
     tsk->requires(Task::OldDW, d_fieldLabels->d_newCCVelocityLabel, Ghost::AroundCells, 1);
   }
- 
-  //-----OLD-----
-  tsk->requires(Task::OldDW, d_fieldLabels->d_areaFractionLabel, Ghost::AroundCells, 2); 
+  tsk->requires(Task::NewDW, d_oldtransportVarLabel, Ghost::AroundCells, 2);
   tsk->requires(Task::OldDW, d_transportVarLabel, Ghost::AroundCells, 2);
   tsk->requires(Task::OldDW, d_fieldLabels->d_viscosityCTSLabel, Ghost::AroundCells, 1);
+  tsk->requires(Task::OldDW, d_fieldLabels->d_areaFractionLabel, Ghost::AroundCells, 2); 
   tsk->requires(Task::OldDW, d_fieldLabels->d_uVelocitySPBCLabel, Ghost::AroundCells, 1);   
 
 #ifdef YDIM
@@ -459,15 +444,15 @@ DQMOMEqn::sched_buildTransportEqn( const LevelP& level,
   tsk->requires(Task::OldDW, d_fieldLabels->d_wVelocitySPBCLabel, Ghost::AroundCells, 1); 
 #endif
 
-#ifdef VERIFY_DQMOM_TRANSPORT
   // extra srcs
   if (d_addExtraSources) {
-    for (vector<std::string>::iterator iter = d_sources.begin(); iter != d_sources.end(); iter++){
+    for (vector<const VarLabel*>::iterator iter = d_sources.begin(); iter != d_sources.end(); ++iter){
       tsk->requires( Task::NewDW, (*iter), Ghost::None, 0 ); 
     }
   }
-#endif
 
+  // This always occurs after source terms are evaluated
+  // (see DQMOMEqnFactory::sched_evalTransportEqns)
   tsk->requires(Task::NewDW, d_sourceLabel, Ghost::None, 0 );
 
   sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
@@ -480,7 +465,8 @@ DQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
                              const PatchSubset* patches, 
                              const MaterialSubset* matls, 
                              DataWarehouse* old_dw, 
-                             DataWarehouse* new_dw )
+                             DataWarehouse* new_dw,
+                             int timeSubStep )
 {
   //patch loop
   for (int p=0; p < patches->size(); p++){
@@ -526,12 +512,12 @@ DQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
 #endif
 
     CoalModelFactory& coalFactory = CoalModelFactory::self();
-
     if( coalFactory.useParticleVelocityModel() ) {
       new_dw->get( partVel, coalFactory.getParticleVelocityLabel(d_quadNode), matlIndex, patch, gac, 1 );
     } else {
       old_dw->get( partVel, d_fieldLabels->d_newCCVelocityLabel, matlIndex, patch, gac, 1 );
     }
+
     new_dw->getModifiable(phi, d_transportVarLabel, matlIndex, patch);
     new_dw->getModifiable(Fdiff, d_FdiffLabel, matlIndex, patch);
     new_dw->getModifiable(Fconv, d_FconvLabel, matlIndex, patch); 
@@ -565,21 +551,33 @@ DQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
         RHS[c] += src[c]*vol;           
 
 #ifdef VERIFY_DQMOM_TRANSPORT
-        if (d_addExtraSources) { 
+        if (d_addSources) {
           // Going to subtract out the src from the Ax=b solver
           // This assumes that you don't care about the solution (for verification). 
           RHS[c] -= src[c]*vol;
 
-          // Get the factory of source terms
-          for (vector<std::string>::iterator src_iter = d_sources.begin(); src_iter != d_sources.end(); src_iter++) {
-            new_dw->get(extra_src, (*src_iter), matlIndex, patch, gn, 0);
+          if( d_addExtraSources ) {
+            // Get the factory of source terms
+            for (vector<const VarLabel*>::iterator src_iter = d_sources.begin(); src_iter != d_sources.end(); src_iter++) {
+              old_dw->get(extra_src, (*src_iter), matlIndex, patch, gn, 0);
 
-           // Add to the RHS
-           RHS[c] += extra_src[c]*vol; 
-          }            
+              // Add to the RHS
+              RHS[c] -= extra_src[c]*vol; 
+            }            
+          }
         }
 #endif
-      
+
+        if( d_addExtraSources ) {
+
+          // Loop over all extra sources
+          for (vector<const VarLabel*>::iterator src_iter = d_sources.begin(); src_iter != d_sources.end(); src_iter++) {
+            new_dw->get(extra_src, (*src_iter), matlIndex, patch, gn, 0);
+
+            // Add to the RHS
+            RHS[c] += extra_src[c]*vol;
+          } 
+        }
       }
 
 #ifdef DEBUG_MODELS
@@ -589,8 +587,6 @@ DQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
 #endif
 
     }//end cells
-
-
 
   }//end patches
 }
@@ -609,15 +605,14 @@ DQMOMEqn::sched_solveTransportEqn( const LevelP& level,
 
   Task* tsk = scinew Task(taskname, this, &DQMOMEqn::solveTransportEqn, timeSubStep, copyOldIntoNew);
 
-  //New
+  // modifies
   tsk->modifies(d_transportVarLabel);
   tsk->modifies(d_oldtransportVarLabel);  
-  tsk->requires(Task::NewDW, d_RHSLabel, Ghost::None, 0);
 
-  //Old
+  // requires
+  tsk->requires(Task::NewDW, d_RHSLabel, Ghost::None, 0);
   tsk->requires(Task::OldDW, d_transportVarLabel, Ghost::None, 0);
   tsk->requires(Task::OldDW, d_fieldLabels->d_sharedState->get_delt_label(), Ghost::None, 0 );
-  tsk->requires(Task::OldDW, d_fieldLabels->d_sharedState->get_delt_label(), level.get_rep());
 
   sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
 }
@@ -661,16 +656,12 @@ DQMOMEqn::solveTransportEqn( const ProcessorGroup* pc,
 
 
 #ifdef DEBUG_MODELS
-    // for a particular equation,
-    // for a particular cell, 
     // print what phi is before the FE update
     // print out RHS*(dt/vol)
-
     //if( d_eqnName == "Tp_qn0" ) {
     //  if( patch->getCellLowIndex().x() < 1  && patch->getCellHighIndex().x() > 1 ) {
     //    if( patch->getCellLowIndex().y() < 34 && patch->getCellHighIndex().y() > 34 ) {
     //      if( patch->getCellLowIndex().z() < 33 && patch->getCellHighIndex().z() > 33 ) {
-    //        
     //        cout << "Equation Tp_qn0: " << endl;
     //        cout << "    Before: phi = " << phi_at_jp1[IntVector(1,34,33)] << endl;
     //        Vector dx=patch->dCell();
@@ -687,24 +678,14 @@ DQMOMEqn::solveTransportEqn( const ProcessorGroup* pc,
 
 
 #ifdef DEBUG_MODELS
-    // for a particular equation,
-    // for a particular cell,
     // print what phi is after the FE update
-
-    //if( d_eqnName == "Tp_qn0" ) {
-    //  if( patch->getCellLowIndex().x() < 1  && patch->getCellHighIndex().x() > 1 ) {
-    //    if( patch->getCellLowIndex().y() < 34 && patch->getCellHighIndex().y() > 34 ) {
-    //      if( patch->getCellLowIndex().z() < 33 && patch->getCellHighIndex().z() > 33 ) {
-    //        cout << "    After: phi = " << phi_at_jp1[IntVector(1,34,33)] << endl;
-    //      }
-    //    }
-    //  }
-    //}
 #endif
     
     // Compute the current RK time
     double factor = d_timeIntegrator->time_factor[timeSubStep]; 
     curr_ssp_time = curr_time + factor * dt; 
+
+    // Don't think time averaging should occur here
 
     /// For the RK Averaging procedure, computing the time averaged phi^{time averaged}.
     /// Here, for convenience we assign the time averaged phi to phi_at_jp1, so:
@@ -717,7 +698,7 @@ DQMOMEqn::solveTransportEqn( const ProcessorGroup* pc,
     //----BOUNDARY CONDITIONS
     // For first time step, bc's have been set in dqmomInit
     computeBCs( patch, d_eqnName, phi_at_jp1 );
-    
+
     // ---------------------------------
     // Stable timestep calculation
 
@@ -750,11 +731,12 @@ DQMOMEqn::solveTransportEqn( const ProcessorGroup* pc,
         }
 
       }//end cells
-      
-      new_min_delta_t *= d_timestepMultiplier;
-      DQMOMEqnFactory& dqmomFactory  = DQMOMEqnFactory::self(); 
 
-      //cout << "Hi from equation " << d_eqnName << ", about to set minimum timestep var to " << new_min_delta_t << endl;
+      //cout << "DQMOMEqn: " << d_eqnName << ": Setting delta t = " << new_min_delta_t << "*" << d_timestepMultiplier;
+      new_min_delta_t *= d_timestepMultiplier;
+      //cout << " = " << new_min_delta_t << endl;
+
+      DQMOMEqnFactory& dqmomFactory  = DQMOMEqnFactory::self(); 
       if( new_min_delta_t != 0.0) {
         dqmomFactory.setMinTimestepVar( d_eqnName, new_min_delta_t );
       }
@@ -763,6 +745,26 @@ DQMOMEqn::solveTransportEqn( const ProcessorGroup* pc,
 
   }//end patches
 
+}
+
+
+//---------------------------------------------------------------------------
+// Method: Schedule compute the sources. 
+// Only used for verification of the DQMOM transport equations
+//--------------------------------------------------------------------------- 
+void 
+DQMOMEqn::sched_computeSources( const LevelP& level, 
+                               SchedulerP& sched, 
+                               int timeSubStep )
+{
+  // This scheduler only calls other schedulers
+  SourceTermFactory& factory = SourceTermFactory::self(); 
+  if( d_addExtraSources ) {
+    for( vector<const VarLabel*>::iterator iLabel = d_sources.begin(); iLabel != d_sources.end(); ++iLabel ) {
+      SourceTermBase& temp_src = factory.retrieve_source_term( (*iLabel)->getName() );
+      temp_src.sched_computeSource( level, sched, timeSubStep ); 
+    }
+  }
 }
 
 
@@ -777,7 +779,6 @@ DQMOMEqn::sched_getUnscaledValues( const LevelP& level, SchedulerP& sched )
   Task* tsk = scinew Task(taskname, this, &DQMOMEqn::getUnscaledValues);
   
   Ghost::GhostType  gn  = Ghost::None;
-  DQMOMEqnFactory& dqmomFactory  = DQMOMEqnFactory::self(); 
 
   //NEW
   tsk->modifies(d_icLabel);
@@ -785,16 +786,7 @@ DQMOMEqn::sched_getUnscaledValues( const LevelP& level, SchedulerP& sched )
 
   if( !d_weight ) {
     if( !d_unweighted ) {
-      string name = "w_qn"; 
-      string node; 
-      std::stringstream out; 
-      out << d_quadNode; 
-      node = out.str(); 
-      name += node; 
-
-      EqnBase& eqn = dqmomFactory.retrieve_scalar_eqn( name ); 
-      
-      tsk->requires( Task::NewDW, eqn.getTransportEqnLabel(), gn, 0 ); 
+      tsk->requires( Task::NewDW, d_weightLabel, gn, 0 ); 
     }
   }
  

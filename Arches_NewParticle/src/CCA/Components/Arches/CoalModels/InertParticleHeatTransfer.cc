@@ -62,11 +62,17 @@ InertParticleHeatTransfer::InertParticleHeatTransfer( std::string modelName,
   d_useMass = false;
   d_useTp = false;
   d_useTgas = false;
+
+  d_constantLength = false;
 }
 
 InertParticleHeatTransfer::~InertParticleHeatTransfer()
 {
   VarLabel::destroy(d_abskp);
+
+  if( d_constantLength ) {
+    VarLabel::destroy(d_length_label);
+  }
 }
 
 //---------------------------------------------------------------------------
@@ -91,25 +97,6 @@ InertParticleHeatTransfer::problemSetup(const ProblemSpecP& params)
     throw InvalidValue("ERROR: InertParticleHeatTransfer: problemSetup(): Missing <PhysicalConstants> section in input file, no viscosity value specified.",__FILE__,__LINE__);
   }
 
-  // Check for radiation 
-  b_radiation = false;
-  if( params_root->findBlock("CFD") ) {
-    if( params_root->findBlock("CFD")->findBlock("ARCHES") ) {
-      if( params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ExplicitSolver") ) {
-        if( params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ExplicitSolver")->findBlock("EnthalpySolver") ) {
-          if( params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ExplicitSolver")->findBlock("EnthalpySolver")->findBlock("DORadiationModel") ) {
-            b_radiation = true; // if gas phase radiation is turned on.  
-          }
-        }
-      }
-    }
-  }
-  
-  //user can specifically turn off radiation heat transfer
-  if (db->findBlock("noRadiation")) {
-    b_radiation = false;
-  }
-
   string label_name;
   string role_name;
   string temp_label_name;
@@ -120,6 +107,8 @@ InertParticleHeatTransfer::problemSetup(const ProblemSpecP& params)
   std::stringstream out;
   out << d_quadNode; 
   string node = out.str();
+
+
 
   // -----------------------------------------------------------------
   // Look for required internal coordinates
@@ -152,19 +141,6 @@ InertParticleHeatTransfer::problemSetup(const ProblemSpecP& params)
     }//end for dqmom variables
   }
 
-  // fix the d_icLabels to point to the correct quadrature node (since there is 1 model per quad node)
-  for ( vector<std::string>::iterator iString = d_icLabels.begin(); 
-        iString != d_icLabels.end(); ++iString) {
-    
-    temp_ic_name      = (*iString);
-    temp_ic_name_full = temp_ic_name;
-
-    temp_ic_name_full += "_qn";
-    temp_ic_name_full += node;
-
-    std::replace( d_icLabels.begin(), d_icLabels.end(), temp_ic_name, temp_ic_name_full);
-  }
-
   // -----------------------------------------------------------------
   // Look for required scalars
   ProblemSpecP db_scalarvars = params->findBlock("scalarVars");
@@ -187,6 +163,74 @@ InertParticleHeatTransfer::problemSetup(const ProblemSpecP& params)
       }
     }//end for scalar variables
   }
+
+
+  // -----------------------------------------------------------------
+  // Look for constants used (for now, only length)
+  //
+  //  <ConstantVar label="length" role="particle_length">
+  //    <constant qn="0" value="1.00" />
+  //  </ConstantVar>
+  for( ProblemSpecP db_constantvar = params->findBlock("ConstantVar");
+       db_constantvar != 0; db_constantvar = params->findNextBlock("ConstantVar") ) {
+
+    db_constantvar->getAttribute("label", label_name);
+    db_constantvar->getAttribute("role",  role_name );
+
+    temp_label_name = d_modelName;
+    temp_label_name += "_";
+    temp_label_name += label_name;
+    temp_label_name += "_qn";
+    temp_label_name += node;
+
+    if (role_name == "particle_length") {
+      LabelToRoleMap[temp_label_name] = role_name;
+      d_useLength = true;
+      d_constantLength = true;
+
+      d_length_label = VarLabel::create( temp_label_name, CCVariable<double>::getTypeDescription() );
+      d_length_scaling_constant = 1.0;
+
+    } else {
+      std::string errmsg;
+      errmsg = "ERROR: Arches: InertParticleHeatTransfer: Invalid constant role:";
+      errmsg += "must be \"particle_length\", you specified \"" + role_name + "\".";
+      throw ProblemSetupException(errmsg,__FILE__,__LINE__);
+
+    }
+
+    // Now grab the actual values of the constants
+    for( ProblemSpecP db_constant = db_constantvar->findBlock("constant");
+         db_constant != 0; db_constant = db_constantvar->findNextBlock("constant") ) {
+      string s_tempQuadNode;
+      db_constant->getAttribute("qn",s_tempQuadNode);
+      int i_tempQuadNode = atoi( s_tempQuadNode.c_str() );
+
+      if( i_tempQuadNode == d_quadNode ) {
+        string s_constant;
+        db_constant->getAttribute("value", s_constant);
+        d_length_constant_value = atof( s_constant.c_str() );
+      }
+    }
+  }
+
+
+
+  // -----------------------------------------------------------------
+  // fix the d_icLabels to point to the correct quadrature node (since there is 1 model per quad node)
+  for ( vector<std::string>::iterator iString = d_icLabels.begin(); 
+        iString != d_icLabels.end(); ++iString) {
+    
+    temp_ic_name      = (*iString);
+    temp_ic_name_full = temp_ic_name;
+
+    temp_ic_name_full += "_qn";
+    temp_ic_name_full += node;
+
+    std::replace( d_icLabels.begin(), d_icLabels.end(), temp_ic_name, temp_ic_name_full);
+  }
+
+
 
   if(!d_useMass) {
     string errmsg = "ERROR: Arches: InertParticleHeatTransfer: No particle mass variable was specified. Quitting...";
@@ -223,20 +267,28 @@ InertParticleHeatTransfer::problemSetup(const ProblemSpecP& params)
       current_eqn = &(dqmom_eqn_factory.retrieve_scalar_eqn(iter->first));
     } else if( eqn_factory.find_scalar_eqn(iter->first) ) {
       current_eqn = &(eqn_factory.retrieve_scalar_eqn(iter->first));
+    } else if( d_constantLength ) {
+      // it's all good... length label is already created 
     } else {
       string errmsg = "ERROR: Arches: InertParticleHeatTransfer: Invalid variable \"" + iter->first + "\" given for \""+iter->second+"\" role, could not find in EqnFactory or DQMOMEqnFactory!";
       throw ProblemSetupException(errmsg,__FILE__,__LINE__);
     }
 
     if( iter->second == "particle_length" ) {
-      d_length_label = current_eqn->getTransportEqnLabel();
-      d_length_scaling_constant = current_eqn->getScalingConstant();
+      if( !d_constantLength ) {
+        d_length_label = current_eqn->getTransportEqnLabel();
+        d_length_scaling_constant = current_eqn->getScalingConstant();
+      } // otherwise the label and scaling constant have already been set
     } else if( iter->second == "particle_mass" ) {
       d_particle_mass_label = current_eqn->getTransportEqnLabel();
       d_mass_scaling_constant = current_eqn->getScalingConstant();
     } else if( iter->second == "particle_temperature" ) {
       d_particle_temperature_label = current_eqn->getTransportEqnLabel();
       d_pt_scaling_constant = current_eqn->getScalingConstant();
+
+      DQMOMEqn* dqmom_eqn = dynamic_cast<DQMOMEqn*>(current_eqn);
+      dqmom_eqn->addModel( d_modelLabel );
+
     } else if( iter->second == "gas_temperature" ) {
       d_gas_temperature_label = current_eqn->getTransportEqnLabel();
     } else {
@@ -264,9 +316,50 @@ InertParticleHeatTransfer::sched_initVars( const LevelP& level, SchedulerP& sche
   tsk->computes( d_modelLabel );
   tsk->computes( d_gasLabel   );
   tsk->computes( d_abskp );
+  if(d_constantLength) {
+    tsk->computes( d_length_label );
+  }
 
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials()); 
 }
+
+//-------------------------------------------------------------------------
+// Method: Initialize special variables unique to the model
+//-------------------------------------------------------------------------
+void
+InertParticleHeatTransfer::initVars( const ProcessorGroup * pc, 
+                                     const PatchSubset    * patches, 
+                                     const MaterialSubset * matls, 
+                                     DataWarehouse        * old_dw, 
+                                     DataWarehouse        * new_dw )
+{
+  for( int p=0; p < patches->size(); p++ ) {  // Patch loop
+
+    const Patch* patch = patches->get(p);
+    int archIndex = 0;
+    int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+
+    CCVariable<double> model_value; 
+    new_dw->allocateAndPut( model_value, d_modelLabel, matlIndex, patch ); 
+    model_value.initialize(0.0);
+
+    CCVariable<double> gas_value; 
+    new_dw->allocateAndPut( gas_value, d_gasLabel, matlIndex, patch ); 
+    gas_value.initialize(0.0);
+
+    CCVariable<double> abskp; 
+    new_dw->allocateAndPut( abskp, d_abskp, matlIndex, patch ); 
+    abskp.initialize(0.0);
+
+    if( d_constantLength ) {
+      CCVariable<double> particle_length;
+      new_dw->allocateAndPut( particle_length, d_length_label, matlIndex, patch );
+      particle_length.initialize(d_length_constant_value);
+    }
+
+  }
+}
+
 
 //---------------------------------------------------------------------------
 // Method: Schedule the calculation of the Model 
@@ -275,7 +368,7 @@ void
 InertParticleHeatTransfer::sched_computeModel( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
   std::string taskname = "InertParticleHeatTransfer::computeModel";
-  Task* tsk = scinew Task(taskname, this, &InertParticleHeatTransfer::computeModel);
+  Task* tsk = scinew Task(taskname, this, &InertParticleHeatTransfer::computeModel, timeSubStep );
 
   Ghost::GhostType gn = Ghost::None;
 
@@ -286,21 +379,19 @@ InertParticleHeatTransfer::sched_computeModel( const LevelP& level, SchedulerP& 
     // transportEqn.cleanUp should reinitialize this flag at the end of the time step. 
     d_labelSchedInit = true;
 
-    tsk->computes(d_modelLabel);
-    tsk->computes(d_gasLabel); 
-    tsk->computes(d_abskp);
-  } else {
-    tsk->modifies(d_modelLabel);
-    tsk->modifies(d_gasLabel);  
-    tsk->modifies(d_abskp);
   }
 
   CoalModelFactory& coalFactory = CoalModelFactory::self();
 
-  // gas density
-  tsk->requires(Task::OldDW, d_fieldLabels->d_densityCPLabel, gn, 0);
-
   if( timeSubStep == 0 ) {
+
+    // calculated quantities
+    tsk->computes(d_modelLabel);
+    tsk->computes(d_gasLabel); 
+    tsk->computes(d_abskp);
+
+    // gas density
+    tsk->requires(Task::OldDW, d_fieldLabels->d_densityCPLabel, gn, 0);
 
     // velocities - gas and particle velocities 
     if( coalFactory.useParticleVelocityModel() ) {
@@ -318,14 +409,27 @@ InertParticleHeatTransfer::sched_computeModel( const LevelP& level, SchedulerP& 
       tsk->requires(Task::OldDW, d_fieldLabels->d_radiationVolqINLabel, gn, 0);
     }
 
-    //// particle internal coordinates and weights
+    // particle internal coordinates and weights
     tsk->requires(Task::OldDW, d_weight_label, gn, 0 );
     tsk->requires(Task::OldDW, d_length_label, gn, 0);
     tsk->requires(Task::OldDW, d_particle_mass_label, gn, 0);
     tsk->requires(Task::OldDW, d_particle_temperature_label, gn, 0);
     tsk->requires(Task::OldDW, d_gas_temperature_label, gn, 0);
 
+    if( d_constantLength ) {
+      // this is required, because initializing variable to its constant value in NewDW
+      tsk->computes(d_length_label);
+    }
+
   } else {
+
+    // calculated quantities
+    tsk->modifies(d_modelLabel);
+    tsk->modifies(d_gasLabel);  
+    tsk->modifies(d_abskp);
+
+    // density
+    tsk->requires(Task::NewDW, d_fieldLabels->d_densityCPLabel, gn, 0);
 
     // velocities - gas and particle velocities 
     if( coalFactory.useParticleVelocityModel() ) {
@@ -335,6 +439,7 @@ InertParticleHeatTransfer::sched_computeModel( const LevelP& level, SchedulerP& 
 
     // gas temperature (particle temp is required below)
     tsk->requires( Task::NewDW, d_gas_temperature_label, gn, 0 );
+    tsk->requires(Task::NewDW, d_particle_temperature_label, gn, 0);
 
     // radiation variables
     if(b_radiation){
@@ -343,12 +448,10 @@ InertParticleHeatTransfer::sched_computeModel( const LevelP& level, SchedulerP& 
       tsk->requires(Task::NewDW, d_fieldLabels->d_radiationVolqINLabel, gn, 0);
     }
 
-    //// particle internal coordinates and weights
+    // particle internal coordinates and weights
     tsk->requires(Task::NewDW, d_weight_label, gn, 0 );
     tsk->requires(Task::NewDW, d_length_label, gn, 0);
     tsk->requires(Task::NewDW, d_particle_mass_label, gn, 0);
-    tsk->requires(Task::NewDW, d_particle_temperature_label, gn, 0);
-    tsk->requires(Task::NewDW, d_gas_temperature_label, gn, 0);
 
   }
 
@@ -362,10 +465,11 @@ InertParticleHeatTransfer::sched_computeModel( const LevelP& level, SchedulerP& 
 //---------------------------------------------------------------------------
 void
 InertParticleHeatTransfer::computeModel( const ProcessorGroup * pc, 
-                                  const PatchSubset    * patches, 
-                                  const MaterialSubset * matls, 
-                                  DataWarehouse        * old_dw, 
-                                  DataWarehouse        * new_dw )
+                                         const PatchSubset    * patches, 
+                                         const MaterialSubset * matls, 
+                                         DataWarehouse        * old_dw, 
+                                         DataWarehouse        * new_dw,
+                                         int timeSubStep )
 {
   for( int p=0; p < patches->size(); p++ ) {  // Patch loop
 
@@ -375,117 +479,117 @@ InertParticleHeatTransfer::computeModel( const ProcessorGroup * pc,
     int archIndex = 0;
     int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
-    CCVariable<double> heat_rate;
-    if ( new_dw->exists( d_modelLabel, matlIndex, patch) ) {
-      new_dw->getModifiable( heat_rate, d_modelLabel, matlIndex, patch ); 
-    } else {
-      new_dw->allocateAndPut( heat_rate, d_modelLabel, matlIndex, patch );
-      heat_rate.initialize(0.0);
-    }
-    
-    CCVariable<double> gas_heat_rate; 
-    if( new_dw->exists( d_gasLabel, matlIndex, patch ) ) {
-      new_dw->getModifiable( gas_heat_rate, d_gasLabel, matlIndex, patch ); 
-    } else {
-      new_dw->allocateAndPut( gas_heat_rate, d_gasLabel, matlIndex, patch );
-      gas_heat_rate.initialize(0.0);
-    }
-    
-    CCVariable<double> abskp; 
-    if( new_dw->exists( d_abskp, matlIndex, patch) ) {
-      new_dw->getModifiable( abskp, d_abskp, matlIndex, patch ); 
-    } else {
-      new_dw->allocateAndPut( abskp, d_abskp, matlIndex, patch );
-      abskp.initialize(0.0);
-    }
- 
     CoalModelFactory& coalFactory = CoalModelFactory::self();
 
-    //--------------------------------------------
-    // Velocities - gas and particle
+    CCVariable<double> heat_rate;
+    CCVariable<double> gas_heat_rate; 
+    CCVariable<double> abskp; 
 
     constCCVariable<Vector> particle_velocity;
-    if( coalFactory.useParticleVelocityModel() ) {
-      if( new_dw->exists(coalFactory.getParticleVelocityLabel(d_quadNode), matlIndex, patch) ) {
-        new_dw->get( particle_velocity, coalFactory.getParticleVelocityLabel( d_quadNode ), matlIndex, patch, gn, 0 );
-      } else {
-        old_dw->get( particle_velocity, coalFactory.getParticleVelocityLabel( d_quadNode ), matlIndex, patch, gn, 0 );
-      }
-
-    } else {
-      if( new_dw->exists(d_fieldLabels->d_newCCVelocityLabel, matlIndex, patch) ) {
-        new_dw->get( particle_velocity, d_fieldLabels->d_newCCVelocityLabel, matlIndex, patch, gn, 0 );
-      } else {
-        old_dw->get( particle_velocity, d_fieldLabels->d_newCCVelocityLabel, matlIndex, patch, gn, 0 );
-      }
-    }
-    
     constCCVariable<Vector> gas_velocity;
-    if( new_dw->exists(d_fieldLabels->d_newCCVelocityLabel, matlIndex, patch) ) {
-      new_dw->get( gas_velocity, d_fieldLabels->d_newCCVelocityLabel, matlIndex, patch, gn, 0 );
-    } else {
-      old_dw->get( gas_velocity, d_fieldLabels->d_newCCVelocityLabel, matlIndex, patch, gn, 0 );
-    }
-    
-    //------------------------------------------------
-    // Densities - gas (no particle density needed)
 
     constCCVariable<double> gas_density;
-    old_dw->get(gas_density, d_fieldLabels->d_densityCPLabel, matlIndex, patch, gn, 0 ); 
-
-    //-------------------------------------------------------
-    // Temperatures (gas and particle)
-
     constCCVariable<double> particle_temperature;
-    if( new_dw->exists(d_particle_temperature_label, matlIndex, patch) ) {
-      new_dw->get( particle_temperature, d_particle_temperature_label, matlIndex, patch, gn, 0);
-    } else {
-      old_dw->get( particle_temperature, d_particle_temperature_label, matlIndex, patch, gn, 0);
-    }
-
     constCCVariable<double> gas_temperature;
-    if( new_dw->exists(d_gas_temperature_label, matlIndex, patch) ) {
-      new_dw->get( gas_temperature, d_gas_temperature_label, matlIndex, patch, gn, 0);
-    } else {
-      old_dw->get( gas_temperature, d_gas_temperature_label, matlIndex, patch, gn, 0);
-    }
-
-    //---------------------------------------------------------
-    // Radiation variables
 
     constCCVariable<double> radiationSRCIN;
     constCCVariable<double> abskgIN;
     constCCVariable<double> radiationVolqIN;
 
-    if(b_radiation){
-      old_dw->get(radiationSRCIN, d_fieldLabels->d_radiationSRCINLabel, matlIndex, patch, gn, 0);
-      old_dw->get(abskgIN, d_fieldLabels->d_abskgINLabel, matlIndex, patch, gn, 0);
-      old_dw->get(radiationVolqIN, d_fieldLabels->d_radiationVolqINLabel, matlIndex, patch, gn, 0);
-    }
-
-    //----------------------------------------------------------
-    // Internal coordinates and weights
-
     constCCVariable<double> weight;
-    if( new_dw->exists(d_weight_label, matlIndex, patch) ) {
-      new_dw->get( weight, d_weight_label, matlIndex, patch, gn, 0 );
-    } else {
-      old_dw->get( weight, d_weight_label, matlIndex, patch, gn, 0 );
-    }
-
     constCCVariable<double> particle_length;
-    if( new_dw->exists(d_length_label, matlIndex, patch) ) {
-      new_dw->get( particle_length, d_length_label, matlIndex, patch, gn, 0 );
+    constCCVariable<double> particle_mass;
+
+    CCVariable<double> new_particle_length;
+
+    if( timeSubStep == 0 ) {
+
+      // calculated quantities
+      new_dw->allocateAndPut( heat_rate, d_modelLabel, matlIndex, patch );
+      heat_rate.initialize(0.0);
+
+      new_dw->allocateAndPut( gas_heat_rate, d_gasLabel, matlIndex, patch );
+      gas_heat_rate.initialize(0.0);
+
+      new_dw->allocateAndPut( abskp, d_abskp, matlIndex, patch );
+      abskp.initialize(0.0);
+
+      // density
+      old_dw->get(gas_density, d_fieldLabels->d_densityCPLabel, matlIndex, patch, gn, 0 ); 
+
+      // velocity
+      if( coalFactory.useParticleVelocityModel() ) {
+        old_dw->get( particle_velocity, coalFactory.getParticleVelocityLabel( d_quadNode ), matlIndex, patch, gn, 0 );
+      } else {
+        old_dw->get( particle_velocity, d_fieldLabels->d_newCCVelocityLabel, matlIndex, patch, gn, 0 );
+      }
+      old_dw->get( gas_velocity, d_fieldLabels->d_newCCVelocityLabel, matlIndex, patch, gn, 0 );
+
+      // temperature
+      old_dw->get( particle_temperature, d_particle_temperature_label, matlIndex, patch, gn, 0);
+      old_dw->get( gas_temperature, d_gas_temperature_label, matlIndex, patch, gn, 0);
+
+      // radiation
+      if(b_radiation){
+        old_dw->get(radiationSRCIN, d_fieldLabels->d_radiationSRCINLabel, matlIndex, patch, gn, 0);
+        old_dw->get(abskgIN, d_fieldLabels->d_abskgINLabel, matlIndex, patch, gn, 0);
+        old_dw->get(radiationVolqIN, d_fieldLabels->d_radiationVolqINLabel, matlIndex, patch, gn, 0);
+      }
+
+      // DQMOM internal coordinates
+      old_dw->get( weight, d_weight_label, matlIndex, patch, gn, 0 );
+      if( d_useLength ) {
+        old_dw->get( particle_length, d_length_label, matlIndex, patch, gn, 0 );
+      }
+      if( d_useMass ) {
+        old_dw->get( particle_mass, d_particle_mass_label, matlIndex, patch, gn, 0 );
+      }
+
+      // constant length
+      if( d_constantLength ) {
+        new_dw->allocateAndPut( new_particle_length, d_length_label, matlIndex, patch );
+        new_particle_length.initialize(d_length_constant_value);
+      }
+
     } else {
-      old_dw->get( particle_length, d_length_label, matlIndex, patch, gn, 0 );
+
+      // calculated quantities
+      new_dw->getModifiable( heat_rate, d_modelLabel, matlIndex, patch ); 
+      new_dw->getModifiable( gas_heat_rate, d_gasLabel, matlIndex, patch ); 
+      new_dw->getModifiable( abskp, d_abskp, matlIndex, patch ); 
+
+      // density
+      new_dw->get( gas_density, d_fieldLabels->d_densityCPLabel, matlIndex, patch, gn, 0 ); 
+
+      // velocity
+      if( coalFactory.useParticleVelocityModel() ) {
+        new_dw->get( particle_velocity, coalFactory.getParticleVelocityLabel( d_quadNode ), matlIndex, patch, gn, 0 );
+      } else {
+        new_dw->get( particle_velocity, d_fieldLabels->d_newCCVelocityLabel, matlIndex, patch, gn, 0 );
+      }
+      new_dw->get( gas_velocity, d_fieldLabels->d_newCCVelocityLabel, matlIndex, patch, gn, 0 );
+
+      // temperature
+      new_dw->get( particle_temperature, d_particle_temperature_label, matlIndex, patch, gn, 0);
+      new_dw->get( gas_temperature, d_gas_temperature_label, matlIndex, patch, gn, 0 );
+
+      // radiation
+      if(b_radiation) {
+        new_dw->get(radiationSRCIN, d_fieldLabels->d_radiationSRCINLabel, matlIndex, patch, gn, 0);
+        new_dw->get(abskgIN, d_fieldLabels->d_abskgINLabel, matlIndex, patch, gn, 0);
+        new_dw->get(radiationVolqIN, d_fieldLabels->d_radiationVolqINLabel, matlIndex, patch, gn, 0);
+      }
+
+      // DQMOM internal coordinates
+      new_dw->get( weight, d_weight_label, matlIndex, patch, gn, 0 );
+      if( d_useLength ) {
+        new_dw->get( particle_length, d_length_label, matlIndex, patch, gn, 0 );
+      } 
+      if( d_useMass ) {
+        new_dw->get( particle_mass, d_particle_mass_label, matlIndex, patch, gn, 0 );
+      }
     }
 
-    constCCVariable<double> particle_mass;
-    if( new_dw->exists(d_particle_mass_label, matlIndex, patch) ) {
-      new_dw->get( particle_mass, d_particle_mass_label, matlIndex, patch, gn, 0 );
-    } else {
-      old_dw->get( particle_mass, d_particle_mass_label, matlIndex, patch, gn, 0 );
-    }
 
 
     for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
@@ -547,7 +651,7 @@ InertParticleHeatTransfer::computeModel( const ProcessorGroup * pc,
         }
         unscaled_particle_temperature = scaled_particle_temperature*d_pt_scaling_constant;
 
-        if( d_unweighted ) {
+        if( d_unweighted || d_constantLength ) {
           scaled_length = particle_length[c];
         } else {
           scaled_length = particle_length[c]/scaled_weight;
@@ -652,35 +756,4 @@ InertParticleHeatTransfer::props(double Tg, double Tp){
   return kg; // I believe this is in J/s/m/K, but not sure
 }
 
-
-//-------------------------------------------------------------------------
-// Method: Initialize special variables unique to the model
-//-------------------------------------------------------------------------
-void
-InertParticleHeatTransfer::initVars( const ProcessorGroup * pc, 
-                                     const PatchSubset    * patches, 
-                                     const MaterialSubset * matls, 
-                                     DataWarehouse        * old_dw, 
-                                     DataWarehouse        * new_dw )
-{
-  for( int p=0; p < patches->size(); p++ ) {  // Patch loop
-
-    const Patch* patch = patches->get(p);
-    int archIndex = 0;
-    int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
-
-    CCVariable<double> model_value; 
-    new_dw->allocateAndPut( model_value, d_modelLabel, matlIndex, patch ); 
-    model_value.initialize(0.0);
-
-    CCVariable<double> gas_value; 
-    new_dw->allocateAndPut( gas_value, d_gasLabel, matlIndex, patch ); 
-    gas_value.initialize(0.0);
-
-    CCVariable<double> abskp; 
-    new_dw->allocateAndPut( abskp, d_abskp, matlIndex, patch ); 
-    abskp.initialize(0.0);
-
-  }
-}
 

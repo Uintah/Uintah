@@ -67,7 +67,8 @@ public:
                          const PatchSubset* patches, 
                          const MaterialSubset*, 
                          DataWarehouse* old_dw, 
-                         DataWarehouse* new_dw);
+                         DataWarehouse* new_dw, 
+                         int timeSubStep );
 
   /** @brief Schedule the solution the transport equation
       @param  copyOldIntoNew    Boolean: should the new phi's (phi_jp1) be copied into the old phi's (phi_j)? This should only be false on the last time substep, 
@@ -98,7 +99,9 @@ public:
                               DataWarehouse* new_dw );
 
   /** @brief Compute all source terms for this scalar eqn */
-  void sched_computeSources( const LevelP& level, SchedulerP& schedi, int timeSubStep );
+  void sched_computeSources( const LevelP& level, 
+                             SchedulerP& schedi, 
+                             int timeSubStep );
 
   /** @brief Apply boundary conditions */
   template <class phiType> void computeBCs( const Patch* patch, string varName, phiType& phi ){
@@ -165,15 +168,6 @@ public:
   inline const vector<const VarLabel*> getModelsList() {
     return d_models; };
 
-  /*
-  inline const vector<string> getModelsList(){
-    return d_models; };
-
-  inline void addModel( string modelName ) {
-    d_models.push_back(modelName); }
-  */
-
-  //cmr
   /** @brief  Add a VarLabel* pointer to a model term to the vector of model labels */
   inline void addModel( const VarLabel* var_label ) {
     d_models.push_back( var_label ); }
@@ -219,11 +213,7 @@ private:
   double d_w_small;               ///< Value of "small" weights
   bool d_unweighted;
 
-  //vector<string> d_models;   
   vector<const VarLabel*> d_models;   ///< List of variable labels corresponding to model terms for this DQMOM internal coordinate/environment
-  //vector<string> d_sources;
-  vector<const VarLabel*> d_sources;  ///< List of variable labels corresponding to source terms for this DQMOM internal coordinate/environment
-                                      /// (not sure if this is ever even used...)
   int d_quadNode;                     ///< The quadrature node for this equation object 
   bool d_weight;                      ///< Boolean: is this equation object for a weight?
   bool d_addExtraSources;             ///< Boolean: add source terms that are associated with this equation?

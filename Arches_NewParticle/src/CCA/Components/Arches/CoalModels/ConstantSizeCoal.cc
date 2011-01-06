@@ -341,11 +341,11 @@ ConstantSizeCoal::computeParticleDensity( const ProcessorGroup* pc,
       // weight - check if small
       bool weight_is_small = (weight[c] < d_w_small) || (weight[c] == 0.0);
 
-      double unscaled_weight;
-      double unscaled_length;
-      double unscaled_rc_mass;
-      double unscaled_char_mass;
-      double unscaled_moisture_mass;
+      double unscaled_weight        = 0.0;
+      double unscaled_length        = 0.0;
+      double unscaled_rc_mass       = 0.0;
+      double unscaled_char_mass     = 0.0;
+      double unscaled_moisture_mass = 0.0;
 
       if(!d_unweighted && weight_is_small) {
 

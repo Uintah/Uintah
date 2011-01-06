@@ -45,10 +45,16 @@ ParticleDensity::ParticleDensity( std::string modelName,
   d_density_label = VarLabel::create( density_name+qnode, CCVariable<double>::getTypeDescription() );
 
   pi = 3.1415926535;
+
+  d_constantLength = false; 
 }
 
 ParticleDensity::~ParticleDensity()
-{}
+{
+  if( d_constantLength ) {
+    VarLabel::destroy(d_length_label);
+  }
+}
 
 //---------------------------------------------------------------------------
 // Method: Problem Setup
@@ -104,6 +110,10 @@ ParticleDensity::sched_dummyInit( const LevelP& level, SchedulerP& sched )
   tsk->computes(d_modelLabel);
   tsk->computes(d_gasLabel); 
 
+  if( d_constantLength ) {
+    tsk->computes(d_length_label);
+  }
+
   sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
 }
 
@@ -156,6 +166,13 @@ ParticleDensity::dummyInit( const ProcessorGroup* pc,
     ModelTerm.copyData(oldModelTerm);
     GasModelTerm.copyData(oldGasModelTerm);
     ParticleDensity.copyData(oldParticleDensity);
+
+    if( d_constantLength ) {
+      CCVariable<double> particle_length;
+      new_dw->allocateAndPut( particle_length, d_length_label, matlIndex, patch );
+      particle_length.initialize(d_length_constant_value);
+    }
+
   }
 }
 
