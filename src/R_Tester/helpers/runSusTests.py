@@ -524,19 +524,14 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
   environ['SCI_SIGNALMODE'] = "exit"
 
   if do_memory_test == 1:
+  
+    environ['MALLOC_STRICT'] = "set"
+    
     if startFrom == "restart":
       malloc_stats_file = "restart_malloc_stats"        
     else:
       malloc_stats_file = "malloc_stats"
     environ['MALLOC_STATS'] = malloc_stats_file
-
-    # if regression tester was called with -malloc_strict
-    try:
-      if environ['mallocstrict'] == "yes":
-        environ['MALLOC_STRICT'] = "blah"
-    except Exception:
-      pass
-
 
   # messages to print
   if environ['outputlinks'] == "1":

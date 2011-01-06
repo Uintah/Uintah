@@ -8,7 +8,6 @@ DO_DBG="1"
 DO_OPT="1"
 LOCAL_OR_NIGHTLY_TEST="nightly"
 MAIL_REMAKE_LOG_TO=""
-mallocstrict="no"
 MONTHLYBACKUP="no"
 NOTESTS="0"
 OS=`uname -s`
@@ -106,9 +105,6 @@ while [ "$#" -gt 0 ]; do
     -no_compile)
         COMPILE="no"
         ;;
-    -malloc_strict)
-        mallocstrict="yes"
-        ;;
     -help)
         show_help=1
         ;;
@@ -129,7 +125,6 @@ if [ $show_help != "0" ]; then
             -sendmail:              Send error messages to the default people
             -sendmailto "emails":   Send error messages to these people
             -j #:                   Use # number of processors maximum
-            -malloc_strict:         Have debug runs use malloc_strict 
             -use_tree "tree":       Use the given tree instead of checking one out
             -use_prevtree:          Use the previous (last_ran.lock) checkout and/or build
             -build_only:            Test the compilation only.  Don\'t run the tests.
@@ -146,7 +141,7 @@ fi
 
 
 PATH="$PATH":"$SCRIPT_DIR":/usr/bin:/local/bin:/usr/sci/local/bin/:/usr/gnu/bin:/usr/local/bin:/bin:/usr/lib:.
-export PATH mallocstrict NOTESTS COMPILE LOCAL_OR_NIGHTLY_TEST
+export PATH NOTESTS COMPILE LOCAL_OR_NIGHTLY_TEST
 
 # set number of processors to use when building
 if [ "$PARALLELISM" == "0" ]; then
