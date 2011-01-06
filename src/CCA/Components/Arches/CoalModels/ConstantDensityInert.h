@@ -137,17 +137,10 @@ private:
   vector<const VarLabel*> d_massLabels;   ///< Vector of VarLabels for all mass internal coordinates (used to grab the mass source terms, which are used to calculate the length model term \f$ G_{L} \f$ )
   vector<double> d_massScalingConstants;  ///< Vector of scaling constants for all mass internal coordinates (used to scale the mass source terms)
 
-  const VarLabel* d_length_label;         ///< Variable label for particle length internal coordinate
   const VarLabel* d_particle_mass_label;  ///< Variable label for particle mass internal coordinate
 
-  double d_length_low;                    ///< Low clip value for length (if applicable)
-  double d_length_hi;                     ///< High clip value for length (if applicable)
-  double d_length_scaling_constant;       ///< Scaling constant for particle length internal coordinate
   double d_mass_scaling_constant;         ///< Scaling constant for particle mass internal coordinate
 
-  bool d_doLengthLowClip;  ///< Boolean: do low clipping for length?
-  bool d_doLengthHighClip; ///< Boolean: do high clipping for length?
-  bool d_useLength;        ///< Boolean: use particle length internal coordinate?
   bool d_useMass;          ///< Boolean: use particle mass internal coordinate?
 
 }; // end ConstantDensityInert

@@ -429,21 +429,21 @@ KobayashiSarofimDevol::computeModel( const ProcessorGroup * pc,
       bool weight_is_small = (weight[c] < d_w_small) || (weight[c] == 0.0);
 
       // devol_rate: raw caol internal coordinate source G
-      double devol_rate_;
+      double devol_rate_ = 0.0;
 
       // gas_devol_rate: gas source
-      double gas_devol_rate_;
+      double gas_devol_rate_ = 0.0;
 
       // char_production_rate: char internal coordinate source G
-      double char_production_rate_;
+      double char_production_rate_ = 0.0;
 
 
-      double unscaled_weight;
-      double unscaled_temperature;
-      double unscaled_raw_coal_mass;
+      double unscaled_weight        = 0.0;
+      double unscaled_temperature   = 0.0;
+      double unscaled_raw_coal_mass = 0.0;
 
-      double scaled_raw_coal_mass;
-      double scaled_temperature;
+      double scaled_raw_coal_mass = 0.0;
+      double scaled_temperature   = 0.0;
 
       if (!d_unweighted && weight_is_small) {
 
@@ -508,15 +508,23 @@ KobayashiSarofimDevol::computeModel( const ProcessorGroup * pc,
       }
 
 #ifdef DEBUG_MODELS
-      if( c == IntVector(1,35,35) ) {
+
+      if( devol_rate_ < -1.0e9 ) {
         cout << endl;
-        cout << "Kobayashi Model: QN " << d_quadNode << endl;
+        cout << "Kobayashi Model: QN " << d_quadNode << ", cell " << c << endl;
         cout << "  For scaled (unscaled) temperature = " << scaled_temperature << " (" << unscaled_temperature;
             cout << ") and scaled (unscaled) raw coal mass = " << scaled_raw_coal_mass << " (" << unscaled_raw_coal_mass << ")" << endl;
+        cout << "  Unscaled (scaled) weight = " << unscaled_weight << " (" << weight[c] << ")" << endl;
+        if( weight_is_small ) { 
+          cout << "    Weight is small." << endl;
+        } else {
+          cout << "    Weight is not small." << endl;
+        }
         cout << "  Coal devolatilization rate for qn " << d_quadNode << " = " << devol_rate_ << endl;
         cout << "  Gas production rate for qn " << d_quadNode << " = " << gas_devol_rate_ << endl;
         cout << endl;
       }
+
 #endif
 
     }//end cell loop

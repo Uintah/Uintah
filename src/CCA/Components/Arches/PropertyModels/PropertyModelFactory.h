@@ -6,9 +6,6 @@
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/SimulationStateP.h>
-//#include <map>
-//#include <vector>
-//#include <string>
 
 /**
  *  @class  PropertyModelFactory
@@ -28,10 +25,6 @@
 class PropertyModelFactory
 {
 public:
-
-  typedef std::map< std::string, PropertyModelBase::Builder* > BuildMap;
-  typedef std::map< std::string, PropertyModelBase*    > PropMap;
-
   /**
    *  @brief obtain a reference to the PropertyModelFactory.
    */
@@ -73,8 +66,8 @@ public:
    */
   PropertyModelBase& retrieve_property_model( const std::string name );
 
-	////////////////////////////////////////////////
-	// Get/set methods
+  typedef std::map< std::string, PropertyModelBase::Builder* > BuildMap;
+  typedef std::map< std::string, PropertyModelBase*    > PropMap;
 
   /** @brief Returns the list of all property models in Map form. */ 
   PropMap& retrieve_all_property_models(){

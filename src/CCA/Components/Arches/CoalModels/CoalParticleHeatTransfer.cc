@@ -52,9 +52,9 @@ CoalParticleHeatTransfer::CoalParticleHeatTransfer( std::string modelName,
   d_abskp = VarLabel::create(abskpName, CCVariable<double>::getTypeDescription());
 
   // Set constants
-  Pr = 0.7;
-  blow = 1.0;
-  sigma = 5.67e-8;   // [=] J/s/m^2/K^4 : Stefan-Boltzmann constant (from white book)
+  d_Pr = 0.7;
+  d_blow = 1.0;
+  d_sigma = 5.67e-8;   // [=] J/s/m^2/K^4 : Stefan-Boltzmann constant (from white book)
 
   pi = 3.14159265358979; 
 
@@ -65,11 +65,16 @@ CoalParticleHeatTransfer::CoalParticleHeatTransfer( std::string modelName,
   d_useTp = false;
   d_useTgas = false;
 
+  d_constantLength = false;
 }
 
 CoalParticleHeatTransfer::~CoalParticleHeatTransfer()
 {
   VarLabel::destroy(d_abskp);
+
+  if(d_constantLength) {
+    VarLabel::destroy(d_length_label);
+  }
 }
 
 //---------------------------------------------------------------------------
@@ -86,8 +91,8 @@ CoalParticleHeatTransfer::problemSetup(const ProblemSpecP& params)
   // check for viscosity
   if (params_root->findBlock("PhysicalConstants")) {
     ProblemSpecP db_phys = params_root->findBlock("PhysicalConstants");
-    db_phys->require("viscosity", visc);
-    if( visc == 0.0 ) {
+    db_phys->require("viscosity", d_visc);
+    if( d_visc == 0.0 ) {
       throw InvalidValue("ERROR: CoalParticleHeatTransfer: problemSetup(): Zero viscosity specified in <PhysicalConstants> section of input file.",__FILE__,__LINE__);
     }
   } else {
@@ -104,13 +109,12 @@ CoalParticleHeatTransfer::problemSetup(const ProblemSpecP& params)
         db_coal->require("O", yelem[3]);
         db_coal->require("S", yelem[4]);
         db_coal->require("initial_ash_mass", d_ash_mass);
-        if( params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("Coal_Properties")->findBlock("initial_fixcarb_mass") ) {
+        if( db_coal->findBlock("initial_fixcarb_mass") ) {
           d_use_fixcarb_mass = true;
           db_coal->require("initial_fixcarb_mass", d_fixcarb_mass );
         } else {
           d_use_fixcarb_mass = false;
         }
-          
 
         // normalize amounts
         double ysum = yelem[0] + yelem[1] + yelem[2] + yelem[3] + yelem[4];
@@ -125,25 +129,6 @@ CoalParticleHeatTransfer::problemSetup(const ProblemSpecP& params)
     }
   }
 
-  // Check for radiation 
-  b_radiation = false;
-  if( params_root->findBlock("CFD") ) {
-    if( params_root->findBlock("CFD")->findBlock("ARCHES") ) {
-      if( params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ExplicitSolver") ) {
-        if( params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ExplicitSolver")->findBlock("EnthalpySolver") ) {
-          if( params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ExplicitSolver")->findBlock("EnthalpySolver")->findBlock("DORadiationModel") ) {
-            b_radiation = true; // if gas phase radiation is turned on.  
-          }
-        }
-      }
-    }
-  }
-  
-  //user can specifically turn off radiation heat transfer
-  if (db->findBlock("noRadiation")) {
-    b_radiation = false;
-  }
-
   string label_name;
   string role_name;
   string temp_label_name;
@@ -154,6 +139,8 @@ CoalParticleHeatTransfer::problemSetup(const ProblemSpecP& params)
   std::stringstream out;
   out << d_quadNode; 
   string node = out.str();
+
+
 
   // -----------------------------------------------------------------
   // Look for required internal coordinates
@@ -192,21 +179,7 @@ CoalParticleHeatTransfer::problemSetup(const ProblemSpecP& params)
     }//end for dqmom variables
   }
 
-  // fix the d_icLabels to point to the correct quadrature node (since there is 1 model per quad node)
-  for ( vector<std::string>::iterator iString = d_icLabels.begin(); 
-        iString != d_icLabels.end(); ++iString) {
-    
-    temp_ic_name      = (*iString);
-    temp_ic_name_full = temp_ic_name;
 
-    std::stringstream out;
-    out << d_quadNode;
-    string node = out.str();
-    temp_ic_name_full += "_qn";
-    temp_ic_name_full += node;
-
-    std::replace( d_icLabels.begin(), d_icLabels.end(), temp_ic_name, temp_ic_name_full);
-  }
 
   // -----------------------------------------------------------------
   // Look for required scalars
@@ -230,6 +203,75 @@ CoalParticleHeatTransfer::problemSetup(const ProblemSpecP& params)
       }
     }//end for scalar variables
   }
+
+
+
+  // -----------------------------------------------------------------
+  // Look for constants used (for now, only length)
+  //
+  //  <ConstantVar label="length" role="particle_length">
+  //    <constant qn="0" value="1.00" />
+  //  </ConstantVar>
+  for( ProblemSpecP db_constantvar = params->findBlock("ConstantVar");
+       db_constantvar != 0; db_constantvar = params->findNextBlock("ConstantVar") ) {
+
+    db_constantvar->getAttribute("label", label_name);
+    db_constantvar->getAttribute("role",  role_name );
+
+    temp_label_name = d_modelName;
+    temp_label_name += "_";
+    temp_label_name += label_name;
+    temp_label_name += "_qn";
+    temp_label_name += node;
+
+    if (role_name == "particle_length") {
+      LabelToRoleMap[temp_label_name] = role_name;
+      d_useLength = true;
+      d_constantLength = true;
+
+      d_length_label = VarLabel::create( temp_label_name, CCVariable<double>::getTypeDescription() );
+      d_length_scaling_constant = 1.0;
+
+    } else {
+      std::string errmsg;
+      errmsg = "ERROR: Arches: DragModel: Invalid constant role:";
+      errmsg += "must be \"particle_length\", you specified \"" + role_name + "\".";
+      throw ProblemSetupException(errmsg,__FILE__,__LINE__);
+    }
+
+    // Now grab the actual values of the constants
+    for( ProblemSpecP db_constant = db_constantvar->findBlock("constant");
+         db_constant != 0; db_constant = db_constantvar->findNextBlock("constant") ) {
+      string s_tempQuadNode;
+      db_constant->getAttribute("qn",s_tempQuadNode);
+      int i_tempQuadNode = atoi( s_tempQuadNode.c_str() );
+
+      if( i_tempQuadNode == d_quadNode ) {
+        string s_constant;
+        db_constant->getAttribute("value", s_constant);
+        d_length_constant_value = atof( s_constant.c_str() );
+      }
+    }
+  }
+
+
+  // -----------------------------------------------------------------
+  // fix the d_icLabels to point to the correct quadrature node (since there is 1 model per quad node)
+  for ( vector<std::string>::iterator iString = d_icLabels.begin(); 
+        iString != d_icLabels.end(); ++iString) {
+    
+    temp_ic_name      = (*iString);
+    temp_ic_name_full = temp_ic_name;
+
+    std::stringstream out;
+    out << d_quadNode;
+    string node = out.str();
+    temp_ic_name_full += "_qn";
+    temp_ic_name_full += node;
+
+    std::replace( d_icLabels.begin(), d_icLabels.end(), temp_ic_name, temp_ic_name_full);
+  }
+
 
   if(!d_useRawCoal) {
     string errmsg = "ERROR: Arches: CoalParticleHeatTransfer: No raw coal variable was specified. Quitting...";
@@ -266,14 +308,18 @@ CoalParticleHeatTransfer::problemSetup(const ProblemSpecP& params)
       current_eqn = &(dqmom_eqn_factory.retrieve_scalar_eqn(iter->first));
     } else if( eqn_factory.find_scalar_eqn(iter->first) ) {
       current_eqn = &(eqn_factory.retrieve_scalar_eqn(iter->first));
+    } else if( d_constantLength ) {
+      // it's ok... the label has already been created
     } else {
       string errmsg = "ERROR: Arches: CoalParticleHeatTransfer: Invalid variable \"" + iter->first + "\" given for \""+iter->second+"\" role, could not find in EqnFactory or DQMOMEqnFactory!";
       throw ProblemSetupException(errmsg,__FILE__,__LINE__);
     }
 
     if( iter->second == "particle_length" ) {
-      d_length_label = current_eqn->getTransportEqnLabel();
-      d_length_scaling_constant = current_eqn->getScalingConstant();
+      if( !d_constantLength ) {
+        d_length_label = current_eqn->getTransportEqnLabel();
+        d_length_scaling_constant = current_eqn->getScalingConstant();
+      } // otherwise d_length_label has already been created
     } else if( iter->second == "raw_coal_mass" ) {
       d_raw_coal_mass_label = current_eqn->getTransportEqnLabel();
       d_rc_scaling_constant = current_eqn->getScalingConstant();
@@ -289,6 +335,7 @@ CoalParticleHeatTransfer::problemSetup(const ProblemSpecP& params)
 
       DQMOMEqn* dqmom_eqn = dynamic_cast<DQMOMEqn*>(current_eqn);
       dqmom_eqn->addModel( d_modelLabel );
+
     } else if( iter->second == "gas_temperature" ) {
       d_gas_temperature_label = current_eqn->getTransportEqnLabel();
     } else {
@@ -316,9 +363,50 @@ CoalParticleHeatTransfer::sched_initVars( const LevelP& level, SchedulerP& sched
   tsk->computes( d_modelLabel );
   tsk->computes( d_gasLabel   );
   tsk->computes( d_abskp );
+  if(d_constantLength) {
+    tsk->computes( d_length_label );
+  }
 
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials()); 
 }
+
+//-------------------------------------------------------------------------
+// Method: Initialize special variables unique to the model
+//-------------------------------------------------------------------------
+void
+CoalParticleHeatTransfer::initVars( const ProcessorGroup * pc, 
+                                    const PatchSubset    * patches, 
+                                    const MaterialSubset * matls, 
+                                    DataWarehouse        * old_dw, 
+                                    DataWarehouse        * new_dw )
+{
+  for( int p=0; p < patches->size(); p++ ) {  // Patch loop
+
+    const Patch* patch = patches->get(p);
+    int archIndex = 0;
+    int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+
+    CCVariable<double> model_value; 
+    new_dw->allocateAndPut( model_value, d_modelLabel, matlIndex, patch ); 
+    model_value.initialize(0.0);
+
+    CCVariable<double> gas_value; 
+    new_dw->allocateAndPut( gas_value, d_gasLabel, matlIndex, patch ); 
+    gas_value.initialize(0.0);
+
+    CCVariable<double> abskp; 
+    new_dw->allocateAndPut( abskp, d_abskp, matlIndex, patch ); 
+    abskp.initialize(0.0);
+
+    if( d_constantLength ) {
+      CCVariable<double> particle_length;
+      new_dw->allocateAndPut( particle_length, d_length_label, matlIndex, patch );
+      particle_length.initialize(d_length_constant_value);
+    }
+
+  }
+}
+
 
 //---------------------------------------------------------------------------
 // Method: Schedule the calculation of the Model 
@@ -378,6 +466,11 @@ CoalParticleHeatTransfer::sched_computeModel( const LevelP& level, SchedulerP& s
       tsk->requires(Task::OldDW, d_moisture_mass_label, gn, 0);
     }
 
+    if( d_constantLength ) {
+      // this is required, because initializing variable to its constant value in NewDW
+      tsk->computes(d_length_label);
+    }
+
   } else {
 
     // calculated quantities
@@ -409,7 +502,6 @@ CoalParticleHeatTransfer::sched_computeModel( const LevelP& level, SchedulerP& s
     tsk->requires(Task::NewDW, d_weight_label, gn, 0 );
     tsk->requires(Task::NewDW, d_raw_coal_mass_label, gn, 0);
     tsk->requires(Task::NewDW, d_length_label, gn, 0);
-    tsk->requires(Task::NewDW, d_particle_temperature_label, gn, 0);
     if( d_useChar ) {
       tsk->requires(Task::NewDW, d_char_mass_label, gn, 0);
     }
@@ -472,6 +564,9 @@ CoalParticleHeatTransfer::computeModel( const ProcessorGroup * pc,
     constCCVariable<double> char_mass;
     constCCVariable<double> moisture_mass;
 
+    // if length is constant and first time substep, have to initialize length in NewDW
+    CCVariable<double> new_particle_length;
+
     if( timeSubStep == 0 ) {
 
       // calculated quantities
@@ -508,7 +603,9 @@ CoalParticleHeatTransfer::computeModel( const ProcessorGroup * pc,
 
       // DQMOM internal coordinates
       old_dw->get( weight, d_weight_label, matlIndex, patch, gn, 0 );
-      old_dw->get( raw_coal_mass, d_raw_coal_mass_label, matlIndex, patch, gn, 0 );
+      if( d_useRawCoal ) {
+        old_dw->get( raw_coal_mass, d_raw_coal_mass_label, matlIndex, patch, gn, 0 );
+      }
       if(d_useLength) {
         old_dw->get( particle_length, d_length_label, matlIndex, patch, gn, 0 );
       }
@@ -519,6 +616,11 @@ CoalParticleHeatTransfer::computeModel( const ProcessorGroup * pc,
         old_dw->get( moisture_mass, d_moisture_mass_label, matlIndex, patch, gn, 0 );
       }
 
+      // constant length
+      if( d_constantLength ) {
+        new_dw->allocateAndPut( new_particle_length, d_length_label, matlIndex, patch );
+        new_particle_length.initialize(d_length_constant_value);
+      }
 
     } else {
 
@@ -551,7 +653,9 @@ CoalParticleHeatTransfer::computeModel( const ProcessorGroup * pc,
 
       // DQMOM internal coordinates
       new_dw->get( weight, d_weight_label, matlIndex, patch, gn, 0 );
-      new_dw->get( raw_coal_mass, d_raw_coal_mass_label, matlIndex, patch, gn, 0 );
+      if( d_useRawCoal ) {
+        new_dw->get( raw_coal_mass, d_raw_coal_mass_label, matlIndex, patch, gn, 0 );
+      }
       if(d_useLength) {
         new_dw->get( particle_length, d_length_label, matlIndex, patch, gn, 0 );
       }
@@ -641,7 +745,7 @@ CoalParticleHeatTransfer::computeModel( const ProcessorGroup * pc,
         }
         unscaled_particle_temperature = scaled_particle_temperature*d_pt_scaling_constant;
 
-        if( d_unweighted ) {
+        if( d_unweighted || d_constantLength ) {
           scaled_length = particle_length[c];
         } else {
           scaled_length = particle_length[c]/scaled_weight;
@@ -659,10 +763,10 @@ CoalParticleHeatTransfer::computeModel( const ProcessorGroup * pc,
         // Convection part: 
 
         // Reynolds number
-        Re = abs(gas_velocity[c].length() - particle_velocity[c].length())*unscaled_length*gas_density[c]/visc;
+        Re = abs(gas_velocity[c].length() - particle_velocity[c].length())*unscaled_length*gas_density[c]/d_visc;
 
         // Nusselt number
-        //Nu = 2.0 + 0.65*pow(Re,0.50)*pow(Pr,(1.0/3.0));
+        //Nu = 2.0 + 0.65*pow(Re,0.50)*pow(d_Pr,(1.0/3.0));
         Nu = 2.0;
 
         // Heat capacity of raw coal
@@ -675,7 +779,8 @@ CoalParticleHeatTransfer::computeModel( const ProcessorGroup * pc,
         Cph = calc_Cp_char( unscaled_particle_temperature );
 
         // Heat capacity
-        mp_Cp = (Cpc*unscaled_raw_coal_mass + Cpa*unscaled_ash_mass);
+        mp_Cp = (Cpc*max(unscaled_raw_coal_mass,0.0) + Cpa*unscaled_ash_mass);
+        // need to add char here...
         if( d_use_fixcarb_mass ) {
           mp_Cp += (Cph*unscaled_fixcarb_mass);
         }
@@ -684,7 +789,7 @@ CoalParticleHeatTransfer::computeModel( const ProcessorGroup * pc,
         rkg = props(gas_temperature[c], unscaled_particle_temperature); // [=] J/s/m/K
 
         // Q_convection (see Section 5.4 of LES_Coal document)
-        Q_convection = Nu*pi*blow*rkg*unscaled_length*(gas_temperature[c] - unscaled_particle_temperature);
+        Q_convection = Nu*pi*d_blow*rkg*unscaled_length*(gas_temperature[c] - unscaled_particle_temperature);
 
 
         // ---------------------------------------------
@@ -697,7 +802,7 @@ CoalParticleHeatTransfer::computeModel( const ProcessorGroup * pc,
 
           double Qabs = 0.8;
           double Apsc = (pi/4)*Qabs*pow(unscaled_length,2);
-          double Eb = 4*sigma*pow(unscaled_particle_temperature,4);
+          double Eb = 4*d_sigma*pow(unscaled_particle_temperature,4);
 
           FSum = radiationVolqIN[c];    
           Q_radiation = Apsc*(FSum - Eb);
@@ -713,6 +818,22 @@ CoalParticleHeatTransfer::computeModel( const ProcessorGroup * pc,
         gas_heat_rate_ = -unscaled_weight*Q_convection;
 
       }
+
+#ifdef DEBUG_MODELS
+      if( fabs(heat_rate_) > 1.0e6 || c == IntVector(2,36,33) ) {
+        cout << endl;
+        cout << "Heat transfer model: quad node " << d_quadNode << ", cell " << c << endl; 
+        cout << "    Heat rate magnitude > 1.0e6..." << endl;
+        cout << "    Current particle temperature is " << scaled_particle_temperature << "(" << unscaled_particle_temperature << ")" << endl;
+        cout << "    m_p * C_p = mp_coal*Cp_coal + mp_ash*Cp_ash = " ;
+        cout << "              = " << unscaled_raw_coal_mass << "*" << Cpc; 
+        cout <<              " + " << unscaled_ash_mass      << "*" << Cpa << endl;
+        cout << "    Heat rate = ( Qconvection + Qradiation ) / ( mp_Cp * TpScalingConstant )" << endl;
+        cout << "              = ( " << Q_convection << " + " << Q_radiation << " ) / ( " << mp_Cp << " * " << d_pt_scaling_constant << " )" << endl;
+        cout << "              = " << heat_rate_ << endl;
+        cout << endl;
+      } 
+#endif
 
       heat_rate[c] = heat_rate_;
       gas_heat_rate[c] = gas_heat_rate_;
@@ -742,7 +863,7 @@ CoalParticleHeatTransfer::computeModel( const ProcessorGroup * pc,
 
 double
 CoalParticleHeatTransfer::g1( double z){
-  double dum1 = (exp(z)-1)/z;
+ double dum1 = (exp(z)-1)/z;
   double dum2 = pow(dum1,2);
   double sol = exp(z)/dum2;
   return sol;
@@ -831,35 +952,4 @@ CoalParticleHeatTransfer::props(double Tg, double Tp){
   return kg; // I believe this is in J/s/m/K, but not sure
 }
 
-
-//-------------------------------------------------------------------------
-// Method: Initialize special variables unique to the model
-//-------------------------------------------------------------------------
-void
-CoalParticleHeatTransfer::initVars( const ProcessorGroup * pc, 
-                              const PatchSubset    * patches, 
-                              const MaterialSubset * matls, 
-                              DataWarehouse        * old_dw, 
-                              DataWarehouse        * new_dw )
-{
-  for( int p=0; p < patches->size(); p++ ) {  // Patch loop
-
-    const Patch* patch = patches->get(p);
-    int archIndex = 0;
-    int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
-
-    CCVariable<double> model_value; 
-    new_dw->allocateAndPut( model_value, d_modelLabel, matlIndex, patch ); 
-    model_value.initialize(0.0);
-
-    CCVariable<double> gas_value; 
-    new_dw->allocateAndPut( gas_value, d_gasLabel, matlIndex, patch ); 
-    gas_value.initialize(0.0);
-
-    CCVariable<double> abskp; 
-    new_dw->allocateAndPut( abskp, d_abskp, matlIndex, patch ); 
-    abskp.initialize(0.0);
-
-  }
-}
 

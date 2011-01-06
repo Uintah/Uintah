@@ -167,36 +167,20 @@ private:
 
   bool d_use_fixcarb_mass;        ///< Boolean: did user specify initial fixed carbon mass?
 
-  double visc;                    ///< Viscosity of gas
   double yelem[5];                ///< Mass fractions of each element in coal (C, H, N, O, S respectively)
   double rhop;                    ///< Density of particle 
-  double Pr;                      ///< Prandtl number 
-  double blow;                    ///< Blowing parameter
-  double sigma;                   ///< [=] J/s/m^2/K^4 : Stefan-Boltzmann constant (from white book)
 
-  double pi;
-
-  const VarLabel* d_abskp;                      ///< Label for thermal conductivity of the particles
-
-  const VarLabel* d_length_label;               ///< Label for particle length
   const VarLabel* d_raw_coal_mass_label;        ///< Label for raw coal mass
   const VarLabel* d_char_mass_label;            ///< Label for char mass
   const VarLabel* d_moisture_mass_label;        ///< Label for moisture mass
-  const VarLabel* d_particle_temperature_label; ///< Label for particle temperature
-  const VarLabel* d_gas_temperature_label;
  
-  double d_length_scaling_constant;   ///< Scaling factor for particle size (length)
   double d_rc_scaling_constant;       ///< Scaling factor for raw coal mass variable
   double d_char_scaling_constant;     ///< Scaling constant for char mass variable 
   double d_moisture_scaling_constant; ///< Scaling constant for moisture mass variable 
-  double d_pt_scaling_constant;       ///< Scaling factor for particle temperature variable 
 
-  bool d_useLength;    ///< Boolean: is length a scalar/DQMOM variable?
   bool d_useRawCoal;   ///< Boolean: is raw coal mass a scalar/DQMOM variable?
   bool d_useChar;      ///< Boolean: is char mass a scalar/DQMOM variable?
   bool d_useMoisture;  ///< Boolean: is moisture mass a scalar/DQMOM variable?
-  bool d_useTp;        ///< Boolean: is particle temperature a DQMOM variable?
-  bool d_useTgas;      ///< Boolean: is gas temperature a scalar variable?
 
 }; // end CoalParticleHeatTransfer
 } // end namespace Uintah

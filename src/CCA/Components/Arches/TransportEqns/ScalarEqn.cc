@@ -88,16 +88,16 @@ ScalarEqn::problemSetup(const ProblemSpecP& inputdb)
   // algorithmic knobs
   //Keep USE_DENSITY_GUESS set to true until the algorithmic details are settled. - Jeremy 
   d_use_density_guess = true; // use the density guess rather than the new density from the table...implies that the equation is updated BEFORE properties are computed. 
-  //if (db->findBlock("use_density_guess"))
-  //  d_use_density_guess = true; 
 
   // Source terms:
+  proc0cout << "ScalarEqn: retrieving source terms associated with this scalar eqn." << endl;
+  SourceTermFactory& srcFactory = SourceTermFactory::self();
   if (db->findBlock("src")){
     string srcname; 
     for (ProblemSpecP src_db = db->findBlock("src"); src_db != 0; src_db = src_db->findNextBlock("src")){
       src_db->getAttribute("label", srcname);
       //which sources are turned on for this equation
-      d_sources.push_back( srcname ); 
+      d_sources.push_back( srcFactory.retrieve_source_term(srcname).getSrcLabel() ); 
 
     }
   }
@@ -169,6 +169,8 @@ ScalarEqn::problemSetup(const ProblemSpecP& inputdb)
     }
   }
 }
+
+
 //---------------------------------------------------------------------------
 // Method: Schedule clean up. 
 //---------------------------------------------------------------------------
@@ -180,6 +182,8 @@ ScalarEqn::sched_cleanUp( const LevelP& level, SchedulerP& sched )
 
   sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
 }
+
+
 //---------------------------------------------------------------------------
 // Method: Actually clean up. 
 //---------------------------------------------------------------------------
@@ -189,15 +193,13 @@ void ScalarEqn::cleanUp( const ProcessorGroup* pc,
                          DataWarehouse* old_dw, 
                          DataWarehouse* new_dw )
 {
-
-  //Set the initialization flag for the source label to false.
-  SourceTermFactory& factory = SourceTermFactory::self(); 
-  for (vector<std::string>::iterator iter = d_sources.begin(); iter != d_sources.end(); iter++){
- 
-    SourceTermBase& temp_src = factory.retrieve_source_term( *iter ); 
-  
-    temp_src.reinitializeLabel(); 
-
+  if( d_addSources ) {
+    //Set the initialization flag for the source label to false.
+    SourceTermFactory& factory = SourceTermFactory::self(); 
+    for( vector<const VarLabel*>::iterator iLabel = d_sources.begin(); iLabel != d_sources.end(); ++iLabel ) {
+      SourceTermBase& temp_src = factory.retrieve_source_term( (*iLabel)->getName() );
+      temp_src.reinitializeLabel(); 
+    }
   }
 }
 
@@ -294,18 +296,17 @@ void ScalarEqn::initializeVariables( const ProcessorGroup* pc,
 // Method: Schedule compute the sources. 
 //--------------------------------------------------------------------------- 
 void 
-ScalarEqn::sched_computeSources( const LevelP& level, SchedulerP& sched, int timeSubStep )
+ScalarEqn::sched_computeSources( const LevelP& level, 
+                                 SchedulerP& sched, 
+                                 int timeSubStep )
 {
-  // This scheduler only calls other schedulers
-  SourceTermFactory& factory = SourceTermFactory::self(); 
-  for (vector<std::string>::iterator iter = d_sources.begin(); iter != d_sources.end(); iter++){
- 
-    SourceTermBase& temp_src = factory.retrieve_source_term( *iter ); 
-   
-    temp_src.sched_computeSource( level, sched, timeSubStep ); 
-
+  if( d_addSources ) {
+    SourceTermFactory& factory = SourceTermFactory::self(); 
+    for( vector<const VarLabel*>::iterator iLabel = d_sources.begin(); iLabel != d_sources.end(); ++iLabel ) {
+      SourceTermBase& temp_src = factory.retrieve_source_term( (*iLabel)->getName() );
+      temp_src.sched_computeSource( level, sched, timeSubStep ); 
+    }
   }
-
 }
 
 //---------------------------------------------------------------------------
@@ -335,19 +336,13 @@ ScalarEqn::sched_buildTransportEqn( const LevelP& level, SchedulerP& sched, int 
   tsk->requires(Task::NewDW, d_oldtransportVarLabel, Ghost::AroundCells, 2);
   tsk->requires(Task::NewDW, d_prNo_label, Ghost::None, 0); 
 
-  // srcs
+  // extra srcs
   if (d_addSources) {
-    SourceTermFactory& src_factory = SourceTermFactory::self(); 
-    for (vector<std::string>::iterator iter = d_sources.begin(); 
-         iter != d_sources.end(); iter++){
-      SourceTermBase& temp_src = src_factory.retrieve_source_term( *iter ); 
-      const VarLabel* temp_varLabel; 
-      temp_varLabel = temp_src.getSrcLabel(); 
-      tsk->requires( Task::NewDW, temp_src.getSrcLabel(), Ghost::None, 0 ); 
+    for( vector<const VarLabel*>::iterator iter = d_sources.begin(); iter != d_sources.end(); ++iter ) {
+      tsk->requires( Task::OldDW, (*iter), Ghost::None, 0 );
     }
   }
-  
-  //-----OLD-----
+
   tsk->requires(Task::OldDW, d_fieldLabels->d_areaFractionLabel, Ghost::AroundCells, 2); 
 
   sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
@@ -383,6 +378,7 @@ ScalarEqn::buildTransportEqn( const ProcessorGroup* pc,
     constSFCXVariable<double> uVel; 
     constSFCYVariable<double> vVel; 
     constSFCZVariable<double> wVel; 
+    constCCVariable<double> extra_src; // Any additional source (eg, mms or unweighted abscissa src)  
     constCCVariable<Vector> areaFraction; 
     constCCVariable<double> prNumber; 
 
@@ -390,12 +386,13 @@ ScalarEqn::buildTransportEqn( const ProcessorGroup* pc,
     CCVariable<double> Fconv; 
     CCVariable<double> RHS; 
 
-    new_dw->get(oldPhi, d_oldtransportVarLabel, matlIndex, patch, gac, 2);
-    new_dw->get(den, d_fieldLabels->d_densityCPLabel, matlIndex, patch, gac, 1); 
+    new_dw->get(oldPhi,       d_oldtransportVarLabel, matlIndex, patch, gac, 2);
+    new_dw->get(den,          d_fieldLabels->d_densityCPLabel, matlIndex, patch, gac, 1); 
     new_dw->get(mu_t,         d_fieldLabels->d_viscosityCTSLabel, matlIndex, patch, gac, 1); 
     new_dw->get(uVel,         d_fieldLabels->d_uVelocitySPBCLabel, matlIndex, patch, gac, 1); 
     old_dw->get(areaFraction, d_fieldLabels->d_areaFractionLabel, matlIndex, patch, gac, 2); 
-    new_dw->get(prNumber, d_prNo_label, matlIndex, patch, gn, 0); 
+    new_dw->get(prNumber,     d_prNo_label, matlIndex, patch, gn, 0); 
+
     double vol = Dx.x();
 #ifdef YDIM
     new_dw->get(vVel,   d_fieldLabels->d_vVelocitySPBCLabel, matlIndex, patch, gac, 1); 
@@ -410,16 +407,6 @@ ScalarEqn::buildTransportEqn( const ProcessorGroup* pc,
     new_dw->getModifiable(Fconv, d_FconvLabel, matlIndex, patch); 
     new_dw->getModifiable(RHS, d_RHSLabel, matlIndex, patch);
 
-    vector< constCCVariable<double>* > sourceVars;
-    if( d_addSources ) {
-      SourceTermFactory& srcFactory = SourceTermFactory::self();
-      int z = 0;
-      for( vector<string>::iterator iSrc = d_sources.begin(); iSrc != d_sources.end(); ++iSrc, ++z ) {
-        sourceVars.push_back( scinew constCCVariable<double> );
-        SourceTermBase& tempSrc = srcFactory.retrieve_source_term( *iSrc );
-        new_dw->get( *sourceVars[z], tempSrc.getSrcLabel(), matlIndex, patch, gn, 0 );
-      }
-    }
 
     RHS.initialize(0.0); 
     Fconv.initialize(0.0); 
@@ -433,18 +420,29 @@ ScalarEqn::buildTransportEqn( const ProcessorGroup* pc,
     if (d_doDiff)
       d_disc->computeDiff( patch, Fdiff, oldPhi, mu_t, areaFraction, prNumber, matlIndex, d_eqnName );
  
+    //----STORE SOURCES
+    vector< constCCVariable<double>* > sourceVars; 
+    if( d_addSources ) {
+      int z = 0;
+      for( vector<const VarLabel*>::iterator src_iter = d_sources.begin(); src_iter != d_sources.end(); ++src_iter, ++z ) {
+        sourceVars.push_back( scinew constCCVariable<double> );
+        new_dw->get( *sourceVars[z], (*src_iter), matlIndex, patch, gn, 0 );
+      }
+    }
+
     //----SUM UP RHS
     for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
       IntVector c = *iter; 
 
       RHS[c] += Fdiff[c] - Fconv[c];
 
-      //-----ADD SOURCES
+      //-----SUM UP EXTRA SOURCES
       if( d_addSources ) {
-        for( vector< constCCVariable<double>* >::iterator iSource = sourceVars.begin(); iSource != sourceVars.end(); ++iSource ) {
-          RHS[c] += (**iSource)[c] * vol;
+        for( vector< constCCVariable<double>* >::iterator iS = sourceVars.begin(); iS != sourceVars.end(); ++iS ) {
+          RHS[c] += (**iS)[c]*vol;
         }
       }
+
     }//end cells
 
   }//end patches
@@ -463,21 +461,13 @@ ScalarEqn::sched_solveTransportEqn( const LevelP& level,
 
   Task* tsk = scinew Task(taskname, this, &ScalarEqn::solveTransportEqn, timeSubStep, copyOldIntoNew);
 
-  //New
   tsk->modifies(d_transportVarLabel);
   tsk->modifies(d_oldtransportVarLabel); 
   tsk->requires(Task::NewDW, d_RHSLabel, Ghost::None, 0);
 
+  tsk->requires(Task::NewDW, d_fieldLabels->d_densityGuessLabel, Ghost::None, 0);
   tsk->requires(Task::NewDW, d_fieldLabels->d_densityCPLabel, Ghost::None, 0);
 
-  // DensityTemp is the density from the last substep (or timestep if substep = 0).
-  if(timeSubStep == 0) {
-    tsk->requires(Task::OldDW, d_fieldLabels->d_densityCPLabel, Ghost::None, 0); 
-  } else {
-    tsk->requires(Task::NewDW, d_fieldLabels->d_densityTempLabel, Ghost::None, 0);
-  }
-
-  //Old
   tsk->requires(Task::OldDW, d_fieldLabels->d_sharedState->get_delt_label(), Ghost::None, 0);
 
   sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
@@ -522,33 +512,14 @@ ScalarEqn::solveTransportEqn( const ProcessorGroup* pc,
     old_dw->get(rk1_phi, d_transportVarLabel, matlIndex, patch, gn, 0);
     new_dw->get(RHS, d_RHSLabel, matlIndex, patch, gn, 0);
 
-    new_dw->get(new_den, d_fieldLabels->d_densityCPLabel, matlIndex, patch, gn, 0);
-
-    if ( timeSubStep == 0 ) {
-      old_dw->get(old_den, d_fieldLabels->d_densityCPLabel, matlIndex, patch, gn, 0);
-    } else {
-      new_dw->get(old_den, d_fieldLabels->d_densityTempLabel, matlIndex, patch, gn, 0); 
-    }
+    new_dw->get(new_den, d_fieldLabels->d_densityGuessLabel, matlIndex, patch, gn, 0); 
+    new_dw->get(old_den, d_fieldLabels->d_densityCPLabel, matlIndex, patch, gn, 0);
 
     // update to get phi^{(j+1)}
     d_timeIntegrator->singlePatchFEUpdate( patch, phi_at_jp1, old_den, new_den, RHS, dt, curr_ssp_time, d_eqnName);
 
-    // Compute the current RK time. 
-    double factor = d_timeIntegrator->time_factor[timeSubStep]; 
-    curr_ssp_time = curr_time + factor * dt;
-
-    /// For the RK Averaging procedure, computing the time averaged phi^{time averaged}.
-    /// Here, for convenience we assign the time averaged phi to phi_at_jp1, so:
-    /// phi^{j+1} = alpha*(phi^{n}) + beta*(phi^{j+1})
-    /// @seealso 
-    /// Sigal Gottlieb, Chi-Wang Shu and Eitan Tadmor
-    /// SIAM Review, Vol. 43, No. 1 (Mar., 2001), pp. 89-112 
-    ///
-    d_timeIntegrator->timeAvePhi( patch, phi_at_jp1, rk1_phi, timeSubStep, curr_ssp_time ); 
-
-    //----BOUNDARY CONDITIONS
-    //    must update BCs for next substep
-    computeBCs( patch, d_eqnName, phi_at_jp1 );
+    // Time averaging will occur separately, and later
+    // (see ExplicitSolver::nonLinearSolve)
 
     //----COPY averaged phi into oldphi
     if( copyOldIntoNew ) {

@@ -77,11 +77,13 @@ TabPropsInterface::problemSetup( const ProblemSpecP& propertiesParameters )
   // Create sub-ProblemSpecP object
   string tableFileName;
   ProblemSpecP db_tabprops = propertiesParameters->findBlock("TabProps");
+  ProblemSpecP db_properties_root = propertiesParameters; 
   
   // Obtain object parameters
   db_tabprops->require( "inputfile", tableFileName );
   db_tabprops->getWithDefault( "hl_scalar_init", d_hl_scalar_init, 0.0); 
   db_tabprops->getWithDefault( "cold_flow", d_coldflow, false); 
+  db_properties_root->getWithDefault( "use_mixing_model", d_use_mixing_model, false ); 
 
   // only solve for heat loss if a working radiation model is found
   const ProblemSpecP params_root = db_tabprops->getRootNode();
@@ -152,13 +154,13 @@ TabPropsInterface::problemSetup( const ProblemSpecP& propertiesParameters )
     string varName = d_allIndepVarNames[i];  
 
     // !! need to add support for variance !!
-    if (varName == "heat_loss") {
+    if (varName == "heat_loss" || varName == "HeatLoss") {
 
       cout_tabledbg << " Heat loss being inserted into the indep. var map. " << endl;
 
       d_ivVarMap.insert(make_pair(varName, d_lab->d_heatLossLabel)).first; 
 
-    } else if ( varName == "scalar_variance") {
+    } else if ( varName == "scalar_variance" || varName == "MixtureFractionVariance" ) {
 
       cout_tabledbg << " Scalar variance being inserted into the indep. var map. " << endl;
 
@@ -212,7 +214,7 @@ TabPropsInterface::sched_getState( const LevelP& level,
 
   Task* tsk = scinew Task(taskname, this, &TabPropsInterface::getState, time_labels, initialize_me, with_energy_exch, modify_ref_den );
 
-  // independent variables
+  // independent variables :: these must have been computed previously 
   for ( MixingRxnModel::VarMap::iterator i = d_ivVarMap.begin(); i != d_ivVarMap.end(); ++i ) {
 
     tsk->requires( Task::NewDW, i->second, gn, 0 ); 
@@ -292,23 +294,22 @@ TabPropsInterface::getState( const ProcessorGroup* pc,
 
     //independent variables:
     std::vector<constCCVariable<double> > indep_storage; 
-    const std::vector<string>& iv_names = getAllIndepVars();
 
     int coal_fp_index  = -1; 
     int coal_eta_index = -1; 
 
-    for ( int i = 0; i < (int) iv_names.size(); i++ ){
+    for ( int i = 0; i < (int) d_allIndepVarNames.size(); i++ ){
 
-      VarMap::iterator ivar = d_ivVarMap.find( iv_names[i] ); 
+      VarMap::iterator ivar = d_ivVarMap.find( d_allIndepVarNames[i] ); 
 
       constCCVariable<double> the_var; 
       new_dw->get( the_var, ivar->second, matlIndex, patch, gn, 0 );
       indep_storage.push_back( the_var ); 
 
       if (d_coal_table) {
-        if ( iv_names[i] == d_fp_label )
+        if ( d_allIndepVarNames[i] == d_fp_label )
           coal_fp_index = i;
-        if ( iv_names[i] == d_eta_label ) 
+        if ( d_allIndepVarNames[i] == d_eta_label ) 
           coal_eta_index = i; 
       }
     }
@@ -334,16 +335,24 @@ TabPropsInterface::getState( const ProcessorGroup* pc,
     CCVariable<double> arches_soot; 
     CCVariable<double> mpmarches_denmicro; 
 
-    CCMap depend_storage; 
+    DepVarMap depend_storage; 
     if ( initialize_me ) {
     
       for ( VarMap::iterator i = d_dvVarMap.begin(); i != d_dvVarMap.end(); ++i ){
-       
-        CCVariable<double>* the_var = new CCVariable<double>; 
-        new_dw->allocateAndPut( *the_var, i->second, matlIndex, patch ); 
-        (*the_var).initialize(0.0);
 
-        depend_storage.insert( make_pair( i->first, the_var )).first; 
+        DepVarCont storage;
+       
+        storage.var = new CCVariable<double>; 
+        new_dw->allocateAndPut( *storage.var, i->second, matlIndex, patch ); 
+        (*storage.var).initialize(0.0);
+
+        SplineMap::iterator i_spline = d_depVarSpline.find( i->first ); 
+        storage.spline = i_spline->second; 
+
+        depend_storage.insert( make_pair( i->first, storage )).first; 
+
+
+        //depend_storage.insert( make_pair( i->first, the_var )).first; 
         
       }
 
@@ -375,11 +384,16 @@ TabPropsInterface::getState( const ProcessorGroup* pc,
     } else { 
 
       for ( VarMap::iterator i = d_dvVarMap.begin(); i != d_dvVarMap.end(); ++i ){
-       
-        CCVariable<double>* the_var = new CCVariable<double>; 
-        new_dw->getModifiable( *the_var, i->second, matlIndex, patch ); 
 
-        depend_storage.insert( make_pair( i->first, the_var )).first; 
+        DepVarCont storage;
+       
+        storage.var = new CCVariable<double>; 
+        new_dw->getModifiable( *storage.var, i->second, matlIndex, patch ); 
+
+        SplineMap::iterator i_spline = d_depVarSpline.find( i->first ); 
+        storage.spline = i_spline->second; 
+
+        depend_storage.insert( make_pair( i->first, storage )).first; 
         
       }
 
@@ -404,9 +418,6 @@ TabPropsInterface::getState( const ProcessorGroup* pc,
     for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
 
       IntVector c = *iter; 
-
-      if ( c == IntVector( 0,8,8 ) )
-        cout << " IN TABPROPS " << endl;
 
       // fill independent variables
       std::vector<double> iv; 
@@ -443,13 +454,10 @@ TabPropsInterface::getState( const ProcessorGroup* pc,
       }
 
       // retrieve all depenedent variables from table
-      for ( std::map< string, CCVariable<double>* >::iterator i = depend_storage.begin(); 
-            i != depend_storage.end(); ++i ){
+      for ( DepVarMap::iterator i = depend_storage.begin(); i != depend_storage.end(); ++i ){
 
-        SplineMap::iterator i_spline = d_depVarSpline.find( i->first ); 
-  
-        double table_value = getSingleState( i_spline->second, i->first, iv ); 
-        (*i->second)[c] = table_value;
+        double table_value = getSingleState( i->second.spline, i->first, iv ); 
+        (*i->second.var)[c] = table_value;
 
         if (i->first == "density") {
           arches_density[c] = table_value; 
@@ -491,8 +499,8 @@ TabPropsInterface::getState( const ProcessorGroup* pc,
         std::vector<double> bc_values;
 
         // look to make sure every variable has a BC set:
-        for ( int i = 0; i < (int) iv_names.size(); i++ ){
-          std::string variable_name = iv_names[i]; 
+        for ( int i = 0; i < (int) d_allIndepVarNames.size(); i++ ){
+          std::string variable_name = d_allIndepVarNames[i]; 
 
           const BoundCondBase* bc = patch->getArrayBCValues( face, matlIndex,
 		                                          		           variable_name, bound_ptr,
@@ -529,7 +537,7 @@ TabPropsInterface::getState( const ProcessorGroup* pc,
           IntVector cp1 = ( *bound_ptr - insideCellDir ); 
 
           // again loop over iv's and fill iv vector
-          for ( int i = 0; i < (int) iv_names.size(); i++ ){
+          for ( int i = 0; i < (int) d_allIndepVarNames.size(); i++ ){
 
             switch (which_bc[i]) { 
               case TabPropsInterface::DIRICHLET:
@@ -568,13 +576,10 @@ TabPropsInterface::getState( const ProcessorGroup* pc,
           } 
 
           // now get state for boundary cell: 
-          for ( std::map< string, CCVariable<double>* >::iterator i = depend_storage.begin(); 
-                i != depend_storage.end(); ++i ){
+          for ( DepVarMap::iterator i = depend_storage.begin(); i != depend_storage.end(); ++i ){
   
-            SplineMap::iterator i_spline = d_depVarSpline.find( i->first ); 
-  
-            double table_value = getSingleState( i_spline->second, i->first, iv ); 
-            (*i->second)[c] = table_value;
+            double table_value = getSingleState( i->second.spline, i->first, iv ); 
+            (*i->second.var)[c] = table_value;
 
             if (i->first == "density") {
               //double ghost_value = 2.0*table_value - arches_density[cp1];
@@ -598,8 +603,8 @@ TabPropsInterface::getState( const ProcessorGroup* pc,
       }
     }
 
-    for ( CCMap::iterator i = depend_storage.begin(); i != depend_storage.end(); ++i ){
-      delete i->second;
+    for ( DepVarMap::iterator i = depend_storage.begin(); i != depend_storage.end(); ++i ){
+      delete i->second.var;
     }
 
     // reference density modification 
@@ -633,7 +638,7 @@ TabPropsInterface::sched_computeHeatLoss( const LevelP& level, SchedulerP& sched
   for (MixingRxnModel::VarMap::iterator i = d_ivVarMap.begin(); i != d_ivVarMap.end(); ++i) {
 
     const VarLabel* the_label = i->second;
-    if (i->first != "heat_loss") 
+    if (i->first != "heat_loss" && i->first != "HeatLoss" ) 
       tsk->requires( Task::NewDW, the_label, gn, 0 ); 
   }
 
@@ -680,7 +685,6 @@ TabPropsInterface::computeHeatLoss( const ProcessorGroup* pc,
       new_dw->get(enthalpy, d_lab->d_enthalpySPLabel, matlIndex, patch, gn, 0 ); 
 
     std::vector<constCCVariable<double> > the_variables; 
-    const std::vector<string>& iv_names = getAllIndepVars();
 
     // exceptions for cold flow or adiabatic cases
     bool compute_heatloss = true; 
@@ -691,10 +695,10 @@ TabPropsInterface::computeHeatLoss( const ProcessorGroup* pc,
 
     if ( compute_heatloss ) { 
 
-      for ( int i = 0; i < (int) iv_names.size(); i++ ){
+      for ( int i = 0; i < (int) d_allIndepVarNames.size(); i++ ){
 
-        VarMap::iterator ivar = d_ivVarMap.find( iv_names[i] ); 
-        if ( ivar->first != "heat_loss" ){
+        VarMap::iterator ivar = d_ivVarMap.find( d_allIndepVarNames[i] ); 
+        if ( ivar->first != "heat_loss" && ivar->first != "HeatLoss" ){
           constCCVariable<double> test_Var; 
           new_dw->get( test_Var, ivar->second, matlIndex, patch, gn, 0 );  
 
@@ -712,7 +716,7 @@ TabPropsInterface::computeHeatLoss( const ProcessorGroup* pc,
         int index = 0; 
         for ( std::vector<constCCVariable<double> >::iterator i = the_variables.begin(); i != the_variables.end(); i++){
 
-          if ( d_allIndepVarNames[index] != "heat_loss" ) 
+          if ( d_allIndepVarNames[index] != "heat_loss" && d_allIndepVarNames[index] != "HeatLoss" ) 
             iv.push_back( (*i)[c] );
           else 
             iv.push_back( 0.0 ); 
@@ -759,7 +763,7 @@ TabPropsInterface::sched_computeFirstEnthalpy( const LevelP& level, SchedulerP& 
   for (MixingRxnModel::VarMap::iterator i = d_ivVarMap.begin(); i != d_ivVarMap.end(); ++i) {
 
     const VarLabel* the_label = i->second;
-    if (i->first != "heat_loss") 
+    if (i->first != "heat_loss" && i->first != "HeatLoss") 
       tsk->requires( Task::NewDW, the_label, gn, 0 ); 
   }
 
@@ -801,8 +805,8 @@ TabPropsInterface::computeFirstEnthalpy( const ProcessorGroup* pc,
         throw InternalError("Error: Could not map this label to the correct Uintah grid variable." ,__FILE__,__LINE__);
       }
 
-      if ( *i != "heat_loss" ) { // heat loss hasn't been computed yet so this is why 
-                                 // we have an "if" here.
+      if ( *i != "heat_loss" && *i != "HeatLoss" ) { // heat loss hasn't been computed yet so this is why 
+                                                     // we have an "if" here.
         cout_tabledbg << " Found label = " << iv_iter->first << endl;
         constCCVariable<double> test_Var;
         new_dw->get( test_Var, iv_iter->second, matlIndex, patch, gn, 0 ); 
@@ -826,7 +830,7 @@ TabPropsInterface::computeFirstEnthalpy( const ProcessorGroup* pc,
       int index = 0; 
       for ( std::vector<constCCVariable<double> >::iterator i = the_variables.begin(); i != the_variables.end(); i++){
 
-        if ( d_allIndepVarNames[index] != "heat_loss" ) 
+        if ( d_allIndepVarNames[index] != "heat_loss" && d_allIndepVarNames[index] != "HeatLoss") 
           iv.push_back( (*i)[c] );
         else 
           iv.push_back( d_hl_scalar_init ); 
@@ -855,20 +859,19 @@ TabPropsInterface::oldTableHack( const InletStream& inStream, Stream& outStream,
   cout_tabledbg << " In method TabPropsInterface::OldTableHack " << endl;
 
   //This is a temporary hack to get the table stuff working with the new interface
-  const std::vector<string>& iv_names = getAllIndepVars();
-  std::vector<double> iv(iv_names.size());
+  std::vector<double> iv(d_allIndepVarNames.size());
 
-  for ( int i = 0; i < (int) iv_names.size(); i++){
+  for ( int i = 0; i < (int) d_allIndepVarNames.size(); i++){
 
-    if ( (iv_names[i] == "mixture_fraction") || (iv_names[i] == "coal_gas_mix_frac") || (iv_names[i] == "MixtureFraction")){
+    if ( (d_allIndepVarNames[i] == "mixture_fraction") || (d_allIndepVarNames[i] == "coal_gas_mix_frac") || (d_allIndepVarNames[i] == "MixtureFraction")){
       iv[i] = inStream.d_mixVars[0]; 
-    } else if (iv_names[i] == "mixture_fraction_variance") {
+    } else if (d_allIndepVarNames[i] == "mixture_fraction_variance") {
       iv[i] = 0.0;
-    } else if (iv_names[i] == "mixture_fraction_2") {
+    } else if (d_allIndepVarNames[i] == "mixture_fraction_2") {
       iv[i] = 0.0; // set below if there is one...just want to make sure it is initialized properly
-    } else if (iv_names[i] == "mixture_fraction_variance_2") {
+    } else if (d_allIndepVarNames[i] == "mixture_fraction_variance_2") {
       iv[i] = 0.0; 
-    } else if (iv_names[i] == "heat_loss") {
+    } else if (d_allIndepVarNames[i] == "heat_loss" || d_allIndepVarNames[i] == "HeatLoss") {
       if ( bc_type == "scalar_init" )
         iv[i] = d_hl_scalar_init; 
       else
@@ -974,8 +977,8 @@ const vector<string> &
 TabPropsInterface::getAllIndepVars()
 {
   if( d_table_isloaded == true ) {
-    vector<string>& d_allIndepVarNames_ref(d_allIndepVarNames);
-    return d_allIndepVarNames_ref;
+    vector<string>& allIndepVarNames_ref(d_allIndepVarNames);
+    return allIndepVarNames_ref;
   } 
   else {
     ostringstream exception;
@@ -995,6 +998,13 @@ TabPropsInterface::getSplineInfo()
   for ( MixingRxnModel::VarMap::iterator i = d_dvVarMap.begin(); i != d_dvVarMap.end(); ++i ) {
 
     const BSpline* spline = d_statetbl.find_entry( i->first ); 
+
+    if ( spline == NULL ) {
+      ostringstream exception; 
+      exception << "Error: could not find spline information for variable " << i->first << " \n" << 
+        "Please check your dependent variable list and match it to your requested variables. " << endl;
+      throw InternalError(exception.str(), __FILE__, __LINE__); 
+    }
 
     insertIntoSplineMap( i->first, spline ); 
 
@@ -1069,6 +1079,8 @@ TabPropsInterface::dummyInit( const ProcessorGroup* pc,
       (*the_var).initialize(0.0);
       constCCVariable<double> old_var; 
       old_dw->get(old_var, i->second, matlIndex, patch, Ghost::None, 0 ); 
+
+      the_var->copyData( old_var ); 
       
     }
   }

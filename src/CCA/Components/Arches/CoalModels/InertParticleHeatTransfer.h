@@ -102,7 +102,8 @@ public:
                      const PatchSubset* patches, 
                      const MaterialSubset* matls, 
                      DataWarehouse* old_dw, 
-                     DataWarehouse* new_dw );
+                     DataWarehouse* new_dw,
+                     int timeSubStep );
 
   // TODO: add Glacier computation methods
 
@@ -161,28 +162,13 @@ private:
       @param  Tp  Particle temperature */
   double props(double Tg, double Tp);
 
-  double d_visc;    ///< Viscosity of gas
-  double d_Pr;      ///< Prandtl number 
-  double d_blow;    ///< Blowing parameter
-  double d_sigma;   ///< [=] J/s/m^2/K^4 : Stefan-Boltzmann constant (from white book)
-  double d_Cp;      ///< Coal particle heat capacity
-  double pi;
+  double d_Cp;      ///< Particle heat capacity
 
-  const VarLabel* d_abskp;                      ///< Label for thermal conductivity of the particles
-
-  const VarLabel* d_length_label;               ///< Label for particle length
   const VarLabel* d_particle_mass_label;        ///< Label for raw coal mass
-  const VarLabel* d_particle_temperature_label; ///< Label for particle temperature
-  const VarLabel* d_gas_temperature_label;      ///< Label for gas temperature 
  
-  double d_length_scaling_constant;   ///< Scaling factor for particle size (length)
   double d_mass_scaling_constant;     ///< Scaling factor for raw coal mass variable
-  double d_pt_scaling_constant;       ///< Scaling factor for particle temperature variable 
 
-  bool d_useLength;    ///< Boolean: is length a scalar/DQMOM variable?
   bool d_useMass;      ///< Boolean: is particle mass a scalar/DQMOM variable?
-  bool d_useTp;        ///< Boolean: is particle temperature a DQMOM variable?
-  bool d_useTgas;      ///< Boolean: is gas temperature a scalar variable?
 
 }; // end InertParticleHeatTransfer
 } // end namespace Uintah

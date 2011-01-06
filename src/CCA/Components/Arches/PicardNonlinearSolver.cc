@@ -482,7 +482,7 @@ PicardNonlinearSolver::recursiveSolver(const ProcessorGroup* pg,
                                              d_timeIntegratorLabels[curr_level]);
 
   
-  d_scalarSolver->solve(                     subsched, local_patches, local_matls, 
+  d_scalarSolver->solve(                     level, subsched, local_patches, local_matls, 
                                              d_timeIntegratorLabels[curr_level],
                                                                     false, false);
 

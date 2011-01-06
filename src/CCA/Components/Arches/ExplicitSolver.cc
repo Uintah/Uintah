@@ -373,14 +373,6 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
     }
 
-    // calculating source terms here because otherwise source terms added to mixture fraction equation are the old values for the first time sub-step 
-    // (which leads to "wrong" source terms after time-averaging)
-    // the values of the gas-phase source terms from DQMOM models are already calculated above
-    // the source term calculation is simply being moved out of the equation solver and executed earlier
-    // using this approach, the source term for the mixture fraction "eta" (extra scalar) will now match the source term for the mixture fraction "scalarSP" (calculated in ScalarSolver class)
-    SourceTermFactory& srcFactory = SourceTermFactory::self();
-    srcFactory.sched_computeSourceTerms( level, sched, curr_level );
-
     sched_saveTempCopies(sched, patches, matls,d_timeIntegratorLabels[curr_level]);
 
     bool doing_EKT_now = false;
@@ -393,7 +385,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
                                       d_timeIntegratorLabels[curr_level],
                                       d_EKTCorrection, doing_EKT_now);
 
-      d_scalarSolver->solve(sched, patches, matls, 
+      d_scalarSolver->solve(          level, sched, patches, matls, 
                                       d_timeIntegratorLabels[curr_level],
                                       d_EKTCorrection, doing_EKT_now);
 
@@ -448,9 +440,9 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
                                       d_timeIntegratorLabels[curr_level],
                                       d_EKTCorrection, doing_EKT_now);
 
-    d_scalarSolver->solve(sched, patches, matls, 
-                          d_timeIntegratorLabels[curr_level],
-                          d_EKTCorrection, doing_EKT_now);
+    d_scalarSolver->solve( level, sched, patches, matls, 
+                           d_timeIntegratorLabels[curr_level],
+                           d_EKTCorrection, doing_EKT_now);
 
     bool evalDensityGuessEqns; ///< Boolean: evaluate transport equations that use a density guess?
     bool cleanup;              ///< Boolean: clean up after solving the transport equation?
@@ -458,6 +450,9 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
     cleanup = false;
     if( curr_level == numTimeIntegratorLevels-1 ) { cleanup = true; }
+
+    // initialize the minimum stable scalar timestep label
+    eqnFactory.sched_initializeMinTimestepLabel( level, sched, curr_level );
 
     // Evaluate scalar equations that do have a density guess
     evalDensityGuessEqns = true;
@@ -518,10 +513,6 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
     }
 
-    // Evaluate scalar equations that don't have a density guess
-    evalDensityGuessEqns = false;
-    eqnFactory.sched_evalTransportEqns( level, sched, curr_level, evalDensityGuessEqns, lastTimeSubstep );
-    
     // Property models needed after table lookup:
     for ( PropertyModelFactory::PropMap::iterator iprop = all_prop_models.begin(); 
           iprop != all_prop_models.end(); iprop++){
@@ -531,6 +522,15 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
     }
 
+    // Evaluate scalar equations that don't have a density guess
+    evalDensityGuessEqns = false;
+    eqnFactory.sched_evalTransportEqns( level, sched, curr_level, evalDensityGuessEqns, lastTimeSubstep );
+
+    // schedule clean up of all scalar eqns
+    if( lastTimeSubstep ) {
+      eqnFactory.cleanUp( level, sched );
+    }
+    
     if (d_standAloneRMCRT) { 
       d_RMCRTRadiationModel->sched_solve( level, sched, d_timeIntegratorLabels[curr_level] );  
     }
@@ -555,6 +555,12 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     d_momSolver->solveVelHat(level, sched, d_timeIntegratorLabels[curr_level],
                              d_EKTCorrection);
 
+    // initialize the minimum stable scalar timestep label
+    if( lastTimeSubstep ) {
+      eqnFactory.sched_setMinTimestepLabel( level, sched );
+    }
+
+    // time-averaging for scalar equations
     eqnFactory.sched_timeAveraging( level, sched, curr_level );
 
     // averaging for RKSSP
@@ -752,6 +758,13 @@ int ExplicitSolver::noSolve(const LevelP& level,
                                                           false, false);
   }
 
+  EqnFactory& eqnFactory = EqnFactory::self();
+  eqnFactory.sched_dummyInit( level, sched );
+
+  string mixmodel = d_props->getMixingModelType(); 
+  if ( mixmodel == "TabProps" )
+    d_props->sched_doTPDummyInit( level, sched ); 
+
   d_props->sched_computePropsFirst_mm(                    sched, patches, matls);
 
   d_props->sched_computeDrhodt(                           sched, patches, matls,
@@ -781,7 +794,6 @@ int ExplicitSolver::noSolve(const LevelP& level,
   // Get a reference to all the DQMOM equations
   DQMOMEqnFactory& dqmomFactory  = DQMOMEqnFactory::self(); 
   CoalModelFactory& modelFactory = CoalModelFactory::self(); 
-  EqnFactory& eqnFactory = EqnFactory::self();
   SourceTermFactory& sourceFactory = SourceTermFactory::self();
   PropertyModelFactory& propertyFactory = PropertyModelFactory::self(); 
 
@@ -791,15 +803,10 @@ int ExplicitSolver::noSolve(const LevelP& level,
     modelFactory.sched_dummyInit( level, sched );
   }
 
-  eqnFactory.sched_dummyInit( level, sched );
-
   sourceFactory.sched_dummyInit( level, sched );
 
   propertyFactory.sched_dummyInit( level, sched );
 
-  string mixmodel = d_props->getMixingModelType(); 
-  if ( mixmodel == "TabProps" )
-    d_props->sched_doTPDummyInit( level, sched ); 
 
   // Schedule an interpolation of the face centered velocity data 
   // to a cell centered vector for used by the viz tools

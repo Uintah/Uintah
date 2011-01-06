@@ -33,6 +33,7 @@ CoalModelFactory::CoalModelFactory()
   d_useParticleVelocityModel = false;
   d_useParticleDensityModel = false;
   d_useHeatTransferModel = false;
+  d_useDevolatilizationModel = false;
 
 }
 
@@ -80,6 +81,7 @@ void CoalModelFactory::problemSetup(const ProblemSpecP& params)
   d_ParticleVelocityModel.resize(numQuadNodes);
   d_ParticleDensityModel.resize(numQuadNodes);
   d_HeatTransferModel.resize(numQuadNodes);
+  d_DevolatilizationModel.resize(numQuadNodes);
 
   // ----------------------------------------------
   // Step 1: CoalModelFactory problem setup
@@ -246,6 +248,7 @@ void CoalModelFactory::problemSetup(const ProblemSpecP& params)
         } else if ( model_type == "KobayashiSarofimDevol" ) {
           modelBuilder = scinew KobayashiSarofimDevolBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_fieldLabels, d_fieldLabels->d_sharedState, iqn);
           //what about computedVarLabels?
+          d_useDevolatilizationModel = true;
 
 //-------- Heat transfer models
         } else if ( model_type == "CoalParticleHeatTransfer" ) {
@@ -312,29 +315,6 @@ void CoalModelFactory::problemSetup(const ProblemSpecP& params)
         throw ProblemSetupException(err,__FILE__,__LINE__);
       }
     }
-
-    // This block not used, since this isn't how we're specifying source terms anymore
-    /*
-    // if using a devolatilization or char oxidation model, check if there is a corresponding <src> tag in <MixtureFractionSolver> block
-    if( d_useDevolatilizationModel || d_useCharOxidationModel ) {
-      const ProblemSpecP params_root = db->getRootNode();
-      if( params_root->findBlock("CFD") ) {
-        if( params_root->findBlock("CFD")->findBlock("ARCHES") ) {
-          if( params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ExplicitSolver") ) {
-            if( params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ExplicitSolver")->findBlock("MixtureFractionSolver") ) {
-              // check for a <src> tag
-              if( !params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ExplicitSolver")->findBlock("MixtureFractionSolver")->findBlock("src") ) {
-                proc0cout << endl;
-                proc0cout << "WARNING: CoalModelFactory: You are using a devolatilization model, but you have not included any source terms (via SourceTermFactory) using <src> tags in the mixture fraction solver block." << endl;
-                proc0cout << "         No source term will be added to the mixture fraction equation." << endl;
-                proc0cout << "         Continuing..." << endl;
-              }
-            }
-          }
-        }
-      }
-    }
-    */
 
   } else {
     proc0cout << "No models were found by CoalModelFactory." << endl;
@@ -414,6 +394,7 @@ CoalModelFactory::register_model( const std::string name,
   }
 
   if( modelType == "Devolatilization" ) {
+    d_DevolatilizationModel[quad_node] = dynamic_cast<Devolatilization*>(model);
     d_useDevolatilizationModel = true;
   }
 

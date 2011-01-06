@@ -88,14 +88,23 @@ public:
   void sched_dummyInit( const LevelP& level,
                         SchedulerP& sched );
 
-  /** @brief  Initialize the value of the minimum timestep label for DQMOM scalar equations IN THE DATA WAREHOUSE, as well as initializing the value of the private member d_MinTimestepVar. */
+  /** @brief  Schedule initializing value of the minimum timestep var label */
+  void sched_initializeMinTimestepLabel( const LevelP& level,
+                                         SchedulerP& sched,
+                                         int timeSubStep );
+
+  /** @brief  Initialize the value of the minimum timestep label for DQMOM scalar equations in the data warehouse, as well as initializing the value of the private member d_MinTimestepVar. */
   void initializeMinTimestepLabel( const ProcessorGroup*,
                                    const PatchSubset* patches,
                                    const MaterialSubset*,
                                    DataWarehouse* old_dw,
                                    DataWarehouse* new_dw );
 
-  /** @brief  Set the value of the minimum timestep label for DQMOM scalar equations IN THE DATA WAREHOUSE
+  /** @brief  Schedule setting the value of the minimum timestep var label */
+  void sched_setMinTimestepLabel( const LevelP& level,
+                                  SchedulerP& sched );
+
+  /** @brief  Set the value of the minimum timestep label for DQMOM scalar equations in the data warehouse
               (Contrast this with setMinTimestepVar() below, which merely sets the value of the private member d_MinTimestepVar. */
   void setMinTimestepLabel( const ProcessorGroup*,
                             const PatchSubset* patches,
@@ -109,16 +118,19 @@ public:
   /** @brief  Schedule the evaluation of the scalar equations and their source terms 
       @param  evalDensityGuessEqns    (Boolean) If  true, only equations with a density guess are evaluated;
                                       if false, only equations without a density guess are evaluated
-      @param  cleanup                 (Boolean) If true, clean up after the equation (only done for last sub-step of time integrator) */
+  */
   void sched_evalTransportEqns( const LevelP& level,
                                 SchedulerP&,
                                 int timeSubStep,
                                 bool evalDensityGuessEqns,
-                                bool cleanup);
+                                bool lastTimeSubstep );
 
   void sched_timeAveraging( const LevelP& level,
                             SchedulerP&,
                             int timeSubStep );
+
+  void cleanUp( const LevelP& level,
+                SchedulerP& );
 
   ///////////////////////////////////////////////
   // Equation retrieval methods

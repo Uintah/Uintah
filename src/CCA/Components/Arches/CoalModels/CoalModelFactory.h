@@ -252,6 +252,23 @@ public:
   };
 
   // ------------------------------------
+  // Get methods for particle devolatilization
+
+  /** @brief   Returns true if there is a devolatilization model specified in the input file. */
+  const inline bool useDevolatilizationModel() {
+    return d_useDevolatilizationModel; }
+
+  /** @brief    Return the model object for heat transfer model */
+  Devolatilization* getDevolatilizationModel( int qn ) {
+    if( d_useDevolatilizationModel ) {
+      vector<Devolatilization*>::iterator iD = d_DevolatilizationModel.begin() + qn;
+      return (*iD);
+    } else {
+      return NULL;
+    }
+  };
+
+  // ------------------------------------
   // Get methods for particle heat transfer
 
   /** @brief   Returns true if there is a particle temperature (heat transfer) model specified in the input file. */
@@ -297,6 +314,7 @@ private:
   vector<ParticleVelocity*> d_ParticleVelocityModel; ///< Vector containing particle velocity models for each environment 
   vector<ParticleDensity*>  d_ParticleDensityModel;  ///< Vector containing particle density models for each environment 
   vector<HeatTransfer*>     d_HeatTransferModel;     ///< Vector containing particle density models for each environment 
+  vector<Devolatilization*> d_DevolatilizationModel; ///< Vector containing particle devolatilization models for each environment
   
   CoalModelFactory();
   ~CoalModelFactory();

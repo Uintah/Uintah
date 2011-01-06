@@ -69,8 +69,9 @@ HeatTransfer::problemSetup(const ProblemSpecP& params)
   }
 
   //user can specifically turn off radiation heat transfer
-  if (db->findBlock("noRadiation"))
+  if (db->findBlock("noRadiation")) {
     b_radiation = false; 
+  }
 
   // set model clipping
   db->getWithDefault( "low_clip",  d_lowModelClip,  1.0e-6 );
@@ -113,6 +114,10 @@ HeatTransfer::sched_dummyInit( const LevelP& level, SchedulerP& sched )
 
   tsk->computes(d_modelLabel);
   tsk->computes(d_gasLabel); 
+
+  if(d_constantLength) {
+    tsk->computes(d_length_label);
+  }
 
   sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
 }
@@ -162,6 +167,13 @@ HeatTransfer::dummyInit( const ProcessorGroup* pc,
     
     ModelTerm.copyData(oldModelTerm);
     GasModelTerm.copyData(oldGasModelTerm);
+
+    if(d_constantLength) {
+      CCVariable<double> particle_length;
+      new_dw->allocateAndPut( particle_length, d_length_label, matlIndex, patch );
+      particle_length.initialize(d_length_constant_value);
+    }
+
   }
 }
 

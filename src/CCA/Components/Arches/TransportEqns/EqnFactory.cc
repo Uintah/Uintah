@@ -119,7 +119,6 @@ EqnFactory::sched_scalarInit( const LevelP& level, SchedulerP& sched )
 {
   Task* tsk = scinew Task("EqnFactory::scalarInit", this, &EqnFactory::scalarInit);
 
-  //cmr
   tsk->computes(d_fieldLabels->d_MinScalarTimestepLabel);
 
   for( EqnMap::iterator iEqn = eqns_.begin(); iEqn != eqns_.end(); ++iEqn ){
@@ -147,7 +146,6 @@ EqnFactory::scalarInit( const ProcessorGroup* ,
                         DataWarehouse* old_dw,
                         DataWarehouse* new_dw )
 {
-  //cmr
   double delta_t = 1.0e16;
   new_dw->put( min_vartype(delta_t), d_fieldLabels->d_MinScalarTimestepLabel );
 
@@ -203,69 +201,98 @@ EqnFactory::sched_dummyInit( const LevelP& level, SchedulerP& sched )
 
 
 //---------------------------------------------------------------------------
+// Method: Clean up all scalar equations
+//---------------------------------------------------------------------------
+void
+EqnFactory::cleanUp( const LevelP& level,
+                     SchedulerP& sched )
+{
+  for( EqnMap::iterator iEqn = eqns_.begin(); iEqn != eqns_.end(); ++iEqn ) {
+    iEqn->second->sched_cleanUp( level, sched );
+  }
+}
+
+
+//---------------------------------------------------------------------------
 // Method: Evaluation the ScalarEqns and their source terms
 //---------------------------------------------------------------------------
-/* @details
+/** @details
 This method was created so that the ExplicitSolver could schedule the evaluation
 of ScalarEqns but still abstract the details to the EqnFactory.
 
 The procedure for this method is as follows:
 1. Initialize scalar equation variables, if necessary
-2. Update the scalar equation variables using the source terms
-3. (Last time sub-step only) Clip
-4. (Last time sub-step only) Clean up after the equation evaluation
+2. Calculate source terms
+3. Build the scalar equation variables using the source terms
+4. Solve the scalar equation
+5. (Last time sub-step only) Clip
 */
 void
-EqnFactory::sched_evalTransportEqns( const LevelP& level, SchedulerP& sched, int timeSubStep, bool evalDensityGuessEqns, bool lastTimeSubstep )
+EqnFactory::sched_evalTransportEqns( const LevelP& level, 
+                                     SchedulerP& sched, 
+                                     int timeSubStep, 
+                                     bool evalDensityGuessEqns, 
+                                     bool lastTimeSubstep )
 {
-  // Step 0
-  if( timeSubStep == 0 ) {
-    string taskname = "EqnFactory::initializeMinTimestepLabel";
-    Task* tsk = scinew Task(taskname, this, &EqnFactory::initializeMinTimestepLabel);
+  // density guess equations are evaluated first
+  if( evalDensityGuessEqns == true ) {
+
     if( timeSubStep == 0 ) {
-      tsk->computes(d_fieldLabels->d_MinScalarTimestepLabel);
-    } else { 
-      tsk->modifies(d_fieldLabels->d_MinScalarTimestepLabel);
-    }
-    sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
-  }
-
-  for( EqnMap::iterator iEqn = eqns_.begin(); iEqn != eqns_.end(); ++iEqn ) {
-    if( iEqn->second->getDensityGuessBool() == evalDensityGuessEqns ) {
-
-      // Step 1
-      if( timeSubStep == 0 ) {
+      for( EqnMap::iterator iEqn = eqns_.begin(); iEqn != eqns_.end(); ++iEqn ) {
+        // Step 1
+        // initialize
         iEqn->second->sched_initializeVariables( level, sched );
       }
+    }
 
+    for( EqnMap::iterator iEqn = eqns_.begin(); iEqn != eqns_.end(); ++iEqn ) {
       // Step 2
-      iEqn->second->sched_buildTransportEqn( level, sched, timeSubStep );
-      iEqn->second->sched_solveTransportEqn( level, sched, timeSubStep, !lastTimeSubstep );
+      // if(d_addSources) 
+      // compute sources here...
+      iEqn->second->sched_computeSources( level, sched, timeSubStep );
+    }
 
-
+    for( EqnMap::iterator iEqn = eqns_.begin(); iEqn != eqns_.end(); ++iEqn ) {
       // Step 3
-      if( lastTimeSubstep ) {
-        if( iEqn->second->doLowClip() || iEqn->second->doHighClip() ) {
-          iEqn->second->sched_clipPhi( level, sched );
-        }
+      // build ALL scalar transport eqns
+      iEqn->second->sched_buildTransportEqn( level, sched, timeSubStep );
+    }
 
+    for( EqnMap::iterator iEqn = eqns_.begin(); iEqn != eqns_.end(); ++iEqn ) {
+      if( iEqn->second->getDensityGuessBool() == evalDensityGuessEqns ) {
         // Step 4
-        iEqn->second->sched_cleanUp( level, sched );
+        // only solve scalar transport eqns that guess density
+        iEqn->second->sched_solveTransportEqn( level, sched, timeSubStep, !lastTimeSubstep );
 
+        // Step 5
+        // clip
+        if( lastTimeSubstep ) {
+          if( iEqn->second->doLowClip() || iEqn->second->doHighClip() ) {
+            iEqn->second->sched_clipPhi( level, sched );
+          }
+        }
       }
 
     }
 
-    if( lastTimeSubstep ) {
-      // Step 5
-      string taskname = "EqnFactory::setMinTimestepLabel";
-      Task* tsk = scinew Task(taskname, this, &EqnFactory::setMinTimestepLabel);
-      tsk->modifies(d_fieldLabels->d_MinScalarTimestepLabel);
-      sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
+  } else {
+    
+    for( EqnMap::iterator iEqn = eqns_.begin(); iEqn != eqns_.end(); ++iEqn ) {
+      if( iEqn->second->getDensityGuessBool() == evalDensityGuessEqns ) {
+        // Step 4
+        // only solve scalar transport eqns that don't guess density
+        iEqn->second->sched_solveTransportEqn( level, sched, timeSubStep, !lastTimeSubstep );
+
+        // Step 5
+        // clip
+        if( lastTimeSubstep ) {
+          if( iEqn->second->doLowClip() || iEqn->second->doHighClip() ) {
+            iEqn->second->sched_clipPhi( level, sched );
+          }
+        }
+      }
     }
-
   }
-
 }
 
 /** 
@@ -290,6 +317,22 @@ EqnFactory::sched_timeAveraging(const LevelP& level, SchedulerP& sched, int time
   }
 }
 
+
+void
+EqnFactory::sched_initializeMinTimestepLabel( const LevelP& level,
+                                              SchedulerP& sched,
+                                              int timeSubStep ) 
+{
+  string taskname = "EqnFactory::initializeMinTimestepLabel";
+  Task* tsk = scinew Task(taskname, this, &EqnFactory::initializeMinTimestepLabel);
+  if( timeSubStep == 0 ) {
+    tsk->computes(d_fieldLabels->d_MinScalarTimestepLabel);
+  } else { 
+    tsk->modifies(d_fieldLabels->d_MinScalarTimestepLabel);
+  }
+  sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
+}
+
 /**
 @details
 Before any scalar equations have a chance to set d_MinTimestepVar,
@@ -306,6 +349,21 @@ EqnFactory::initializeMinTimestepLabel( const ProcessorGroup* pc,
   double value = 1.0e16;
   new_dw->put( min_vartype(value), d_fieldLabels->d_MinScalarTimestepLabel);
   d_MinTimestepVar = value;
+}
+
+
+/**
+@details
+Schedule setting the minimum timestep variable
+*/
+void
+EqnFactory::sched_setMinTimestepLabel( const LevelP& level,
+                                       SchedulerP& sched )
+{
+  string taskname = "EqnFactory::setMinTimestepLabel";
+  Task* tsk = scinew Task(taskname, this, &EqnFactory::setMinTimestepLabel);
+  tsk->modifies(d_fieldLabels->d_MinScalarTimestepLabel);
+  sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
 }
 
 

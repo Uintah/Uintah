@@ -211,13 +211,29 @@ ScalarSolver::problemSetup(const ProblemSpecP& params)
 // Schedule solve of linearized scalar equation
 //****************************************************************************
 void 
-ScalarSolver::solve(SchedulerP& sched,
+ScalarSolver::solve(const LevelP& level,
+                    SchedulerP& sched,
                     const PatchSet* patches,
                     const MaterialSet* matls,
                     const TimeIntegratorLabel* timelabels,
                     bool d_EKTCorrection,
                     bool doing_EKT_now)
 {
+  int timeSubStep = 0;
+  if ( timelabels->integrator_step_number == TimeIntegratorStepNumber::Second ) {
+    timeSubStep = 1;
+  } else if ( timelabels->integrator_step_number == TimeIntegratorStepNumber::Third ) {
+    timeSubStep = 2;
+  }
+
+  // Schedule additional sources for evaluation
+  SourceTermFactory& factory = SourceTermFactory::self();
+  for (vector<std::string>::iterator iter = d_new_sources.begin();
+      iter != d_new_sources.end(); iter++){
+    SourceTermBase& src = factory.retrieve_source_term( *iter );
+    src.sched_computeSource( level, sched, timeSubStep );
+  }
+
   //computes stencil coefficients and source terms
   // requires : scalarIN, [u,v,w]VelocitySPBC, densityIN, viscosityIN
   // computes : scalCoefSBLM, scalLinSrcSBLM, scalNonLinSrcSBLM

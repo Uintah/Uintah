@@ -20,8 +20,8 @@ SRCS += \
   $(SRCDIR)/GlobalCharOxidation.cc \
   $(SRCDIR)/HeatTransfer.cc \
   $(SRCDIR)/CoalParticleHeatTransfer.cc \
+  $(SRCDIR)/InertParticleHeatTransfer.cc \
   $(SRCDIR)/DragModel.cc \
 
 
-  #$(SRCDIR)/InertParticleHeatTransfer.cc \
 

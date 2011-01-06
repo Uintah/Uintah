@@ -41,11 +41,17 @@ ParticleVelocity::ParticleVelocity( std::string modelName,
   qnode = out.str();
   std::string velname = "vel_qn";
   d_velocity_label = VarLabel::create( velname+qnode, CCVariable<Vector>::getTypeDescription() );
+
+  d_constantLength = false;
 }
 
 ParticleVelocity::~ParticleVelocity()
 {
   delete d_boundaryCond;
+  if( d_constantLength ) {
+    // the label was created in DragModel::problemSetup()
+    VarLabel::destroy(d_length_label);
+  }
 }
 
 //---------------------------------------------------------------------------
@@ -124,6 +130,10 @@ ParticleVelocity::sched_dummyInit( const LevelP& level, SchedulerP& sched )
   tsk->computes(d_velocity_label);
   tsk->computes(d_modelLabel);
   tsk->computes(d_gasLabel); 
+  
+  if( d_constantLength ) {
+    tsk->computes(d_length_label);
+  }
 
   sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
 }
@@ -177,6 +187,13 @@ ParticleVelocity::dummyInit( const ProcessorGroup* pc,
     ModelTerm.copyData(oldModelTerm);
     GasModelTerm.copyData(oldGasModelTerm);
     particleVelocity.copyData(oldParticleVelocity);
+
+    if( d_constantLength ) {
+      CCVariable<double> particle_length;
+      new_dw->allocateAndPut( particle_length, d_length_label, matlIndex, patch );
+      particle_length.initialize(d_length_constant_value);
+    }
+
   }
 }
 

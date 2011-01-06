@@ -344,6 +344,13 @@ void MomentumSolver::solveVelHat(const LevelP& level,
     timeSubStep = 2; 
   }
 
+  // Schedule additional sources for evaluation
+  SourceTermFactory& factory = SourceTermFactory::self(); 
+  for (vector<std::string>::iterator iter = d_new_sources.begin(); iter != d_new_sources.end(); iter++){
+    SourceTermBase& src = factory.retrieve_source_term( *iter ); 
+    src.sched_computeSource( level, sched, timeSubStep ); 
+  }
+
   sched_buildLinearMatrixVelHat(sched, patches, matls, 
                                 timelabels, d_EKTCorrection);
 
@@ -850,17 +857,6 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
             velocityVars.uVelNonlinearSrc[c]  += velocityVars.otherVectorSource[c].x()*vol;
             velocityVars.vVelNonlinearSrc[c]  += velocityVars.otherVectorSource[c].y()*vol;
             velocityVars.wVelNonlinearSrc[c]  += velocityVars.otherVectorSource[c].z()*vol;
-
-            /*
-            if( c == IntVector(1,34,34) ) {
-              cout << endl;
-              cout << "Gas x-velocity has source term " << velocityVars.otherVectorSource[c].x() << "*" << vol << " = " << velocityVars.otherVectorSource[c].x()*vol;
-              cout << "Gas y-velocity has source term " << velocityVars.otherVectorSource[c].y() << "*" << vol << " = " << velocityVars.otherVectorSource[c].y()*vol;
-              cout << "Gas z-velocity has source term " << velocityVars.otherVectorSource[c].z() << "*" << vol << " = " << velocityVars.otherVectorSource[c].z()*vol;
-              cout << endl;
-            }                                               
-            */
-
           }
         } 
         break; 

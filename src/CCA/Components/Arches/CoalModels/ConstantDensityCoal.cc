@@ -131,21 +131,7 @@ ConstantDensityCoal::problemSetup(const ProblemSpecP& params)
     }
   }
 
-  // fix the d_icLabels to point to the correct quadrature node (since there is 1 model per quad node)
-  for ( vector<std::string>::iterator iString = d_icLabels.begin(); 
-        iString != d_icLabels.end(); ++iString) {
 
-    temp_ic_name        = (*iString);
-    temp_ic_name_full   = temp_ic_name;
-
-    std::stringstream out;
-    out << d_quadNode;
-    string node = out.str();
-    temp_ic_name_full += "_qn";
-    temp_ic_name_full += node;
-
-    std::replace( d_icLabels.begin(), d_icLabels.end(), temp_ic_name, temp_ic_name_full);
-  }
 
   /*
   // -----------------------------------------------------------------
@@ -168,6 +154,78 @@ ConstantDensityCoal::problemSetup(const ProblemSpecP& params)
     }
   }
   */
+
+
+
+  // -----------------------------------------------------------------
+  // Look for constants used (for now, only length)
+  //
+  //  <ConstantVar label="length" role="particle_length">
+  //    <constant qn="0" value="1.00" />
+  //  </ConstantVar>
+  for( ProblemSpecP db_constantvar = params->findBlock("ConstantVar");
+       db_constantvar != 0; db_constantvar = params->findNextBlock("ConstantVar") ) {
+
+    db_constantvar->getAttribute("label", label_name);
+    db_constantvar->getAttribute("role",  role_name );
+
+    temp_label_name = d_modelName;
+    temp_label_name += "_";
+    temp_label_name += label_name;
+    temp_label_name += "_qn";
+    temp_label_name += node;
+
+    if (role_name == "particle_length") {
+      LabelToRoleMap[temp_label_name] = role_name;
+      d_useLength = true;
+      d_constantLength = true;
+
+      d_length_label = VarLabel::create( temp_label_name, CCVariable<double>::getTypeDescription() );
+      d_length_scaling_constant = 1.0;
+
+    } else {
+      std::string errmsg;
+      errmsg = "ERROR: Arches: ConstantDensityCoal: Invalid constant role:";
+      errmsg += "must be \"particle_length\", you specified \"" + role_name + "\".";
+      throw ProblemSetupException(errmsg,__FILE__,__LINE__);
+
+    }
+
+    // Now grab the actual values of the constants
+    for( ProblemSpecP db_constant = db_constantvar->findBlock("constant");
+         db_constant != 0; db_constant = db_constantvar->findNextBlock("constant") ) {
+      string s_tempQuadNode;
+      db_constant->getAttribute("qn",s_tempQuadNode);
+      int i_tempQuadNode = atoi( s_tempQuadNode.c_str() );
+
+      if( i_tempQuadNode == d_quadNode ) {
+        string s_constant;
+        db_constant->getAttribute("value", s_constant);
+        d_length_constant_value = atof( s_constant.c_str() );
+      }
+    }
+  }
+
+
+
+  // -----------------------------------------------------------------
+  // fix the d_icLabels to point to the correct quadrature node (since there is 1 model per quad node)
+  for ( vector<std::string>::iterator iString = d_icLabels.begin(); 
+        iString != d_icLabels.end(); ++iString) {
+
+    temp_ic_name        = (*iString);
+    temp_ic_name_full   = temp_ic_name;
+
+    std::stringstream out;
+    out << d_quadNode;
+    string node = out.str();
+    temp_ic_name_full += "_qn";
+    temp_ic_name_full += node;
+
+    std::replace( d_icLabels.begin(), d_icLabels.end(), temp_ic_name, temp_ic_name_full);
+  }
+
+
 
   if(!d_useRawCoal) {
     string errmsg = "ERROR: Arches: ConstantDensityCoal: You did not specify a raw coal internal coordinate!\n";
@@ -196,15 +254,21 @@ ConstantDensityCoal::problemSetup(const ProblemSpecP& params)
     } else if( eqn_factory.find_scalar_eqn(iter->first) ) {
       current_eqn = &(eqn_factory.retrieve_scalar_eqn(iter->first));
     } else {
-      string errmsg = "ERROR: Arches: ConstantDensityCoal: Invalid variable \"" + iter->first + "\" given for \""+iter->second+"\" role, could not find in EqnFactory or DQMOMEqnFactory!";
-      throw ProblemSetupException(errmsg,__FILE__,__LINE__);
+      if( !d_constantLength ) {
+        string errmsg = "ERROR: Arches: ConstantDensityCoal: Invalid variable \"" + iter->first + "\" given for \""+iter->second+"\" role, could not find in EqnFactory or DQMOMEqnFactory!";
+        throw ProblemSetupException(errmsg,__FILE__,__LINE__);
+      }
     }
 
     if( iter->second == "particle_length" ) {
-      d_length_label = current_eqn->getTransportEqnLabel();
-      d_length_scaling_constant = current_eqn->getScalingConstant();
-      DQMOMEqn* dqmom_eqn = (dynamic_cast<DQMOMEqn*>(current_eqn));
-      dqmom_eqn->addModel( d_modelLabel );
+      if( !d_constantLength ) {
+        d_length_label = current_eqn->getTransportEqnLabel();
+        d_length_scaling_constant = current_eqn->getScalingConstant();
+
+        DQMOMEqn* dqmom_eqn = (dynamic_cast<DQMOMEqn*>(current_eqn));
+        dqmom_eqn->addModel( d_modelLabel );
+      }
+
     } else if( iter->second == "raw_coal_mass" ) {
       d_raw_coal_mass_label = current_eqn->getTransportEqnLabel();
       d_rc_scaling_constant = current_eqn->getScalingConstant();
@@ -254,6 +318,10 @@ ConstantDensityCoal::sched_initVars( const LevelP& level, SchedulerP& sched )
   tsk->computes( d_gasLabel   );
   tsk->computes( d_density_label );
 
+  if( d_constantLength ) {
+    tsk->computes( d_length_label );
+  }
+
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials()); 
 }
 
@@ -270,17 +338,25 @@ ConstantDensityCoal::initVars( const ProcessorGroup * pc,
 {
   DQMOMEqnFactory& dqmomFactory = DQMOMEqnFactory::self();
 
-  EqnBase* length_eqn = &dqmomFactory.retrieve_scalar_eqn(d_length_label->getName());
-  EqnBase* rawcoal_eqn = &dqmomFactory.retrieve_scalar_eqn(d_raw_coal_mass_label->getName());
+  EqnBase* rawcoal_eqn;
+  EqnBase* length_eqn;
   EqnBase* moisture_eqn;
   EqnBase* char_eqn;
 
-  if(   length_eqn->getInitFcn() == "step" 
-     || length_eqn->getInitFcn() == "env_step"
-     || rawcoal_eqn->getInitFcn() == "step"
-     || rawcoal_eqn->getInitFcn() == "env_step" ) {
-    string errmsg = "ERROR: Arches: ConstantDensityCoal: Internal coordinates cannot be initialized with a step function when using constant density models, otherwise no density value can be obtained.\n";
-    throw InvalidValue(errmsg,__FILE__,__LINE__);
+  if( d_useLength && !d_constantLength ) {
+    length_eqn = &dqmomFactory.retrieve_scalar_eqn(d_length_label->getName());
+    if( length_eqn->getInitFcn() == "step" || length_eqn->getInitFcn() == "env_step" ) {
+      string errmsg = "ERROR: Arches: ConstantDensityCoal: Internal coordinates cannot be initialized with a step function when using constant density models, otherwise no density value can be obtained.\n";
+      throw InvalidValue(errmsg,__FILE__,__LINE__);
+    }
+  }
+
+  if( d_useRawCoal ) {
+    rawcoal_eqn = &dqmomFactory.retrieve_scalar_eqn(d_raw_coal_mass_label->getName());
+    if( rawcoal_eqn->getInitFcn() == "step" || rawcoal_eqn->getInitFcn() == "env_step" ) {
+      string errmsg = "ERROR: Arches: ConstantDensityCoal: Internal coordinates cannot be initialized with a step function when using constant density models, otherwise no density value can be obtained.\n";
+      throw InvalidValue(errmsg,__FILE__,__LINE__);
+    }
   }
 
   if( d_useMoisture ) {
@@ -305,6 +381,9 @@ ConstantDensityCoal::initVars( const ProcessorGroup * pc,
     int archIndex = 0;
     int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
+    /*
+    // Not being used... density is specified, not calculated
+
     double mass = 0.0;
     mass += rawcoal_eqn->getInitializationConstant()*rawcoal_eqn->getScalingConstant();
     if( d_useChar ) {
@@ -318,6 +397,7 @@ ConstantDensityCoal::initVars( const ProcessorGroup * pc,
     if( length < TINY ) {
       length = TINY;
     }
+    */
 
     CCVariable<double> model_value; 
     new_dw->allocateAndPut( model_value, d_modelLabel, matlIndex, patch ); 
@@ -330,6 +410,12 @@ ConstantDensityCoal::initVars( const ProcessorGroup * pc,
     CCVariable<double> density;
     new_dw->allocateAndPut( density, d_density_label, matlIndex, patch );
     density.initialize(d_density);
+
+    if( d_constantLength ) {
+      CCVariable<double> particle_length;
+      new_dw->allocateAndPut( particle_length, d_length_label, matlIndex, patch );
+      particle_length.initialize(d_length_constant_value);
+    }
 
   }
 }
@@ -360,9 +446,16 @@ ConstantDensityCoal::sched_computeParticleDensity( const LevelP& level,
   // Density labels
   if( timeSubStep == 0 ) {
     tsk->computes( d_density_label );
+
+    if( d_constantLength ) {
+      // this is required, because initializing variable to its constant value in NewDW
+      tsk->computes(d_length_label);
+    }
+
   } else {
     tsk->modifies( d_density_label );
   }
+
 
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials()); 
 }
@@ -391,12 +484,23 @@ ConstantDensityCoal::computeParticleDensity( const ProcessorGroup* pc,
 
     // compute density
     CCVariable<double> density;
+
     if( timeSubStep == 0 ) {
       new_dw->allocateAndPut( density, d_density_label, matlIndex, patch );
     } else {
       new_dw->getModifiable( density, d_density_label, matlIndex, patch );
     }
     density.initialize(d_density);
+
+    // compute particle length
+    CCVariable<double> new_particle_length;
+
+    if( timeSubStep == 0 ) {
+      if( d_constantLength ) {
+        new_dw->allocateAndPut( new_particle_length, d_length_label, matlIndex, patch );
+        new_particle_length.initialize(d_length_constant_value);
+      }
+    }
 
   }
 }

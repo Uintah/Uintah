@@ -155,10 +155,8 @@ DQMOMEqnFactory::problemSetupSources( const ProblemSpecP& inputdb )
 void
 DQMOMEqnFactory::sched_weightInit( const LevelP& level, SchedulerP& sched)
 {
-  proc0cout << "Scheduling weightInit" << endl;
   Task* tsk = scinew Task("DQMOMEqnFactory::weightInit",this,&DQMOMEqnFactory::weightInit);
 
-  //cmr
   tsk->computes(d_fieldLabels->d_MinDQMOMTimestepLabel);
 
   for(EqnMap::iterator iEqn = eqns_.begin(); iEqn != eqns_.end(); ++iEqn) {
@@ -190,13 +188,8 @@ DQMOMEqnFactory::weightInit( const ProcessorGroup* ,
                              DataWarehouse* old_dw,
                              DataWarehouse* new_dw )
 {
-  //cmr
   double delta_t = 1.0e16;
   new_dw->put( min_vartype(delta_t), d_fieldLabels->d_MinDQMOMTimestepLabel );
-  /*
-  //cmr
-  proc0cout << "Initializing minimum timestep label value to " << delta_t << endl;
-  */
   
   for (int p=0; p<patches->size(); ++p) {
     //assume only 1 material for now
@@ -238,7 +231,6 @@ DQMOMEqnFactory::weightInit( const ProcessorGroup* ,
         eqn->computeBCs( patch, eqn_name, phi );
       } 
     }
-    proc0cout << endl;
   }
 }
 
@@ -249,7 +241,6 @@ DQMOMEqnFactory::weightInit( const ProcessorGroup* ,
 void
 DQMOMEqnFactory::sched_abscissaInit( const LevelP& level, SchedulerP& sched)
 {
-  proc0cout << "Scheduling abscissa init" << endl;
   Task* tsk = scinew Task("DQMOMEqnFactory::abscissaInit",this,&DQMOMEqnFactory::abscissaInit);
 
   EqnMap& dqmom_eqns = retrieve_all_eqns();
@@ -343,7 +334,6 @@ DQMOMEqnFactory::abscissaInit( const ProcessorGroup* ,
 void
 DQMOMEqnFactory::sched_weightedAbscissaInit( const LevelP& level, SchedulerP& sched)
 {
-  proc0cout << "Scheduling weighted abscissa init" << endl;
   Task* tsk = scinew Task("DQMOMEqnFactory::weightedAbscissaInit",this,&DQMOMEqnFactory::weightedAbscissaInit);
 
   EqnMap& dqmom_eqns = retrieve_all_eqns();
@@ -491,10 +481,11 @@ The procedure for this method is as follows:                              \n
 0. Initialize the minimum timestep label                                  \n
 1. Initialize DQMOM equation variables, if necessary                      \n
 2. Solve the DQMOM linear system AX=B                                     \n
-3. Update the DQMOM equation variables using the results from AX=B        \n
-4. (Last time sub-step only) Clip                                         \n
-5. (Last time sub-step only) Clean up after the equation evaluation       \n
-6. (Last time sub-step only) Set the minimum timestep value               \n
+3. Compute source terms (unweighted source term) 
+4. Update the DQMOM equation variables using the results from AX=B        \n
+5. (Last time sub-step only) Clip                                         \n
+6. (Last time sub-step only) Clean up after the equation evaluation       \n
+7. (Last time sub-step only) Set the minimum timestep value               \n
 */
 void 
 DQMOMEqnFactory::sched_evalTransportEqns( const LevelP& level, 
@@ -518,20 +509,17 @@ DQMOMEqnFactory::sched_evalTransportEqns( const LevelP& level,
   if( timeSubStep == 0 ) {
     for( EqnMap::iterator iEqn = eqns_.begin(); iEqn != eqns_.end(); ++iEqn ) {
       iEqn->second->sched_initializeVariables( level, sched );
-#ifdef VERIFY_DQMOM_TRANSPORT
-      proc0cout << endl << endl << endl << "NOTICE: You have DQMOM transport verification turned on." << endl << endl;
-      if( iEqn->second->getAddExtraSources() ) {
-        iEqn->second->sched_computeSources(level, sched, timeSubStep );
-      }
-#endif
     }
   }
 
   // Step 2
   d_dqmomSolver->sched_solveLinearSystem( level, sched, timeSubStep );
 
-  // Step 3
   for( EqnMap::iterator iEqn = eqns_.begin(); iEqn != eqns_.end(); ++iEqn ) {
+    // Step 3
+    iEqn->second->sched_computeSources( level, sched, timeSubStep );
+
+    // Step 4
     iEqn->second->sched_buildTransportEqn( level, sched, timeSubStep );
 
     DQMOMEqn* dqmom_eqn = dynamic_cast<DQMOMEqn*>(iEqn->second);
@@ -546,18 +534,18 @@ DQMOMEqnFactory::sched_evalTransportEqns( const LevelP& level,
     for( EqnMap::iterator iEqn = eqns_.begin(); iEqn != eqns_.end(); ++iEqn ) {
       DQMOMEqn* dqmom_eqn = dynamic_cast<DQMOMEqn*>(iEqn->second);
 
-      // Step 4
+      // Step 5
       if( dqmom_eqn->doLowClip() || dqmom_eqn->doHighClip() ) {
         dqmom_eqn->sched_clipPhi( level, sched );
       }
 
-      // Step 5
+      // Step 6
       dqmom_eqn->sched_cleanUp( level, sched );
       dqmom_eqn->sched_getUnscaledValues( level, sched );
 
     }
     
-    // Step 6
+    // Step 7
     string taskname = "DQMOMEqnFactory::setMinTimestepLabel";
     Task* tsk = scinew Task(taskname, this, &DQMOMEqnFactory::setMinTimestepLabel);
     tsk->modifies(d_fieldLabels->d_MinDQMOMTimestepLabel);
@@ -589,7 +577,8 @@ DQMOMEqnFactory::initializeMinTimestepLabel( const ProcessorGroup* pc,
 /** 
 @details
 Once each DQMOM equation has had a chance to set d_MinTimestepVar, 
-set the value of the variable in the data warehouse equal to d_MinTimestepVar 
+set the value of the fieldLabels variable in the data warehouse 
+equal to d_MinTimestepVar 
 */
 void
 DQMOMEqnFactory::setMinTimestepLabel( const ProcessorGroup* pc, 
@@ -598,6 +587,7 @@ DQMOMEqnFactory::setMinTimestepLabel( const ProcessorGroup* pc,
                                       DataWarehouse* old_dw, 
                                       DataWarehouse* new_dw )
 {
+  proc0cout << min_vartype(d_MinTimestepVar) << endl;
   new_dw->put( min_vartype(d_MinTimestepVar), d_fieldLabels->d_MinDQMOMTimestepLabel);
 }
 
@@ -617,7 +607,6 @@ I don't know why this happens, but this is a (hopefully!) temporary and somewhat
 void
 DQMOMEqnFactory::setMinTimestepVar( string eqnName, double new_min )
 {
-  proc0cout << "DQMOM equation " << eqnName << " resetting timestep from " << d_MinTimestepVar << " to " << new_min << endl;
   d_MinTimestepVar = Min(new_min, d_MinTimestepVar );
 }
 

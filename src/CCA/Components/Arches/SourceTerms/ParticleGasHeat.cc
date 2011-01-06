@@ -1,8 +1,3 @@
-#include <Core/ProblemSpec/ProblemSpec.h>
-#include <CCA/Ports/Scheduler.h>
-#include <Core/Grid/SimulationState.h>
-#include <Core/Grid/Variables/VarTypes.h>
-#include <Core/Grid/Variables/CCVariable.h>
 #include <CCA/Components/Arches/SourceTerms/ParticleGasHeat.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqnFactory.h>
 #include <CCA/Components/Arches/CoalModels/CoalModelFactory.h>
@@ -10,6 +5,11 @@
 #include <CCA/Components/Arches/CoalModels/ModelBase.h>
 #include <CCA/Components/Arches/CoalModels/HeatTransfer.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
+#include <CCA/Ports/Scheduler.h>
+#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/Variables/VarTypes.h>
+#include <Core/Grid/Variables/CCVariable.h>
 
 //===========================================================================
 
@@ -62,15 +62,15 @@ ParticleGasHeat::sched_computeSource( const LevelP& level, SchedulerP& sched, in
     tsk->modifies(_src_label); 
   }
 
-  CoalModelFactory& coal_model_factory = CoalModelFactory::self(); 
+  CoalModelFactory& coalFactory = CoalModelFactory::self(); 
 
   // only require particle temperature labels
   // if there is actually a particle heat transfer model
-  if( coal_model_factory.useHeatTransferModel() ) {
+  if( coalFactory.useHeatTransferModel() ) {
 
-    DQMOMEqnFactory& dqmom_factory  = DQMOMEqnFactory::self(); 
-    for( int iqn=0; iqn < dqmom_factory.get_quad_nodes(); ++iqn ) {
-      HeatTransfer* heat_xfer_model = coal_model_factory.getHeatTransferModel( iqn );
+    DQMOMEqnFactory& dqmomFactory  = DQMOMEqnFactory::self(); 
+    for( int iqn=0; iqn < dqmomFactory.get_quad_nodes(); ++iqn ) {
+      HeatTransfer* heat_xfer_model = coalFactory.getHeatTransferModel( iqn );
       tsk->requires( Task::NewDW, heat_xfer_model->getGasSourceLabel(), Ghost::None, 0);
     }
 
@@ -94,8 +94,6 @@ ParticleGasHeat::computeSource( const ProcessorGroup* pc,
   //patch loop
   for (int p=0; p < patches->size(); p++){
 
-    //Ghost::GhostType  gaf = Ghost::AroundFaces;
-    //Ghost::GhostType  gac = Ghost::AroundCells;
     Ghost::GhostType  gn  = Ghost::None;
 
     const Patch* patch = patches->get(p);
@@ -110,9 +108,9 @@ ParticleGasHeat::computeSource( const ProcessorGroup* pc,
     }
     heatSrc.initialize(0.0);
 
-    CoalModelFactory& coal_model_factory = CoalModelFactory::self(); 
+    CoalModelFactory& coalFactory = CoalModelFactory::self(); 
 
-    if( coal_model_factory.useHeatTransferModel() ) {
+    if( coalFactory.useHeatTransferModel() ) {
 
       DQMOMEqnFactory& dqmom_factory = DQMOMEqnFactory::self(); 
       int numEnvironments = dqmom_factory.get_quad_nodes();
@@ -123,7 +121,7 @@ ParticleGasHeat::computeSource( const ProcessorGroup* pc,
       // populate this vector with constCCVariables associated with heat xfer model
       for( int iqn=0; iqn < numEnvironments; ++iqn ) {
         heatxferCCVars[iqn] = scinew constCCVariable<double>;
-        HeatTransfer* heat_xfer_model = coal_model_factory.getHeatTransferModel(iqn);
+        HeatTransfer* heat_xfer_model = coalFactory.getHeatTransferModel(iqn);
         new_dw->get( *(heatxferCCVars[iqn]), heat_xfer_model->getGasSourceLabel(), matlIndex, patch, gn, 0);
       }
 
@@ -173,10 +171,10 @@ ParticleGasHeat::sched_dummyInit( const LevelP& level, SchedulerP& sched )
 }
 void 
 ParticleGasHeat::dummyInit( const ProcessorGroup* pc, 
-                         const PatchSubset* patches, 
-                         const MaterialSubset* matls, 
-                         DataWarehouse* old_dw, 
-                         DataWarehouse* new_dw )
+                            const PatchSubset* patches, 
+                            const MaterialSubset* matls, 
+                            DataWarehouse* old_dw, 
+                            DataWarehouse* new_dw )
 {
   //patch loop
   for (int p=0; p < patches->size(); p++){
@@ -194,10 +192,8 @@ ParticleGasHeat::dummyInit( const ProcessorGroup* pc,
     for (std::vector<const VarLabel*>::iterator iter = _extra_local_labels.begin(); iter != _extra_local_labels.end(); iter++){
       CCVariable<double> tempVar; 
       new_dw->allocateAndPut(tempVar, *iter, matlIndex, patch ); 
+      tempVar.initialize(0.0);
     }
   }
 }
-
-
-
 

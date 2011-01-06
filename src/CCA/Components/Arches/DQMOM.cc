@@ -830,7 +830,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
           }
         }
         normX[c] = this_normX;
-
+        
 #if defined(DEBUG_MATRICES)
 
         //if( pc->myrank() == 0 ) {

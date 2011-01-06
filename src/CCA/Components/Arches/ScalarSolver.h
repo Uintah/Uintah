@@ -117,7 +117,8 @@ public:
   // GROUP: Schedule Action :
   ///////////////////////////////////////////////////////////////////////
   // Schedule Solve of linearized scalar equation
-  void solve(SchedulerP& sched,
+  void solve(const LevelP& level,
+             SchedulerP& sched,
              const PatchSet* patches,
              const MaterialSet* matls,
              const TimeIntegratorLabel* timelabels,

@@ -100,11 +100,33 @@ public:
 protected:
 
   bool b_radiation;               ///< Boolean: do radiation calculations?
+  
+  double pi;
+  double d_Pr;                    ///< Prandtl number 
+  double d_visc;                  ///< Viscosity of gas
+  double d_sigma;                 ///< [=] J/s/m^2/K^4 : Stefan-Boltzmann constant (from white book)
+  double d_blow;                  ///< Blowing parameter
 
-  const VarLabel* d_weight_label; ///< Variable label for weights
+  const VarLabel* d_weight_label;               ///< Variable label for weights
+  const VarLabel* d_length_label;               ///< Label for particle length
+  const VarLabel* d_particle_temperature_label; ///< Label for particle temperature
+  const VarLabel* d_gas_temperature_label;      ///< Label for gas temperature
+  const VarLabel* d_abskp;                      ///< Label for thermal conductivity of the particles
 
-  double d_w_scaling_constant;    ///< Scaling constant for weight
-  double d_w_small;               ///< "small" clip value for weights; if weights are < d_w_small, no model value is computed 
+  double d_w_small;                   ///< "small" clip value for weights; if weights are < d_w_small, no model value is computed 
+  double d_w_scaling_constant;        ///< Scaling constant for weight
+  double d_length_scaling_constant;   ///< Scaling factor for particle size (length)
+  double d_pt_scaling_constant;       ///< Scaling factor for particle temperature variable 
+
+  bool d_useLength;    ///< Boolean: is length a scalar/DQMOM variable?
+  bool d_useTp;        ///< Boolean: is particle temperature a DQMOM variable?
+  bool d_useTgas;      ///< Boolean: is gas temperature a scalar variable?
+
+  // Constant value (if user specifies value of length should be constant)
+  double d_length_constant_value;
+
+  // Constant bool
+  bool d_constantLength; ///< Boolean: is the length a constant fixed value? (as opposed to an internal coordinate)
 
 }; // end HeatTransfer
 } // end namespace Uintah

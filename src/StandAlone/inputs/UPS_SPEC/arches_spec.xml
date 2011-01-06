@@ -398,7 +398,7 @@
           <src                          spec="MULTIPLE NO_DATA"
                                         attribute1="label REQUIRED STRING"
                                         attribute2="type REQUIRED STRING 'ConstantSourceTerm, DevolMixtureFraction, CharOxidationMixtureFraction, 
-                                                                          WestbrookDryer, MMS1, ParticleGasMomentumSource,
+                                                                          WestbrookDryer, MMS1, ParticleGasMomentumSource, ParticleGasHeat,
                                                                           fy_inject_src, fz_inject_src, tab_rxn_rate,
                                                                           cc_intrusion_inlet, fx_intrusion_inlet,
                                                                           fy_intrusion_inlet, fz_intrusion_inlet'">
@@ -520,14 +520,23 @@
             <ICVars                     spec="OPTIONAL NO_DATA"> <!-- block containing list of internal coordinates the DQMOM model depends on -->
               <variable                 spec="MULTIPLE NO_DATA"
                                         attribute1="label REQUIRED STRING"
-                                        attribute2="role REQUIRED STRING"/>
+                                        attribute2="role  REQUIRED STRING"/>
             </ICVars>
 
             <scalarVars                 spec="OPTIONAL NO_DATA"> <!-- block containing list of scalar variables the DQMOM model depends on -->
               <variable                 spec="MULTIPLE NO_DATA"
                                         attribute1="label REQUIRED STRING"
-                                        attribute2="role REQUIRED STRING"/>
+                                        attribute2="role  REQUIRED STRING"/>
             </scalarVars>
+
+            <ConstantVar                spec="OPTIONAL NO_DATA"
+                                        attribute1="label REQUIRED STRING"
+                                        attribute2="role  REQUIRED STRING" >
+                <constant               spec="MULTIPLE NO_DATA"
+                                        attribute1="qn REQUIRED INTEGER 'positive'"
+                                        attribute2="value REQUIRED DOUBLE" />
+            </ConstantVar>
+            
 
             <low_clip                   spec="OPTIONAL DOUBLE 'positive'"/> <!-- lowest value the DQMOM model term can have -->
             <high_clip                  spec="OPTIONAL DOUBLE 'positive'"/> <!-- highest value the DQMOM model term can have -->

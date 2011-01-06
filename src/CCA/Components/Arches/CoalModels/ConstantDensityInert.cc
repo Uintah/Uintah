@@ -76,6 +76,8 @@ ConstantDensityInert::problemSetup(const ProblemSpecP& params)
   out << d_quadNode; 
   string node = out.str();
 
+
+
   // -----------------------------------------------------------------
   // Look for required internal coordinates
   ProblemSpecP db_icvars = params->findBlock("ICVars");
@@ -106,21 +108,7 @@ ConstantDensityInert::problemSetup(const ProblemSpecP& params)
     }
   }
 
-  // fix the d_icLabels to point to the correct quadrature node (since there is 1 model per quad node)
-  for ( vector<std::string>::iterator iString = d_icLabels.begin(); 
-        iString != d_icLabels.end(); ++iString) {
 
-    temp_ic_name        = (*iString);
-    temp_ic_name_full   = temp_ic_name;
-
-    std::stringstream out;
-    out << d_quadNode;
-    string node = out.str();
-    temp_ic_name_full += "_qn";
-    temp_ic_name_full += node;
-
-    std::replace( d_icLabels.begin(), d_icLabels.end(), temp_ic_name, temp_ic_name_full);
-  }
 
   /*
   // -----------------------------------------------------------------
@@ -143,6 +131,78 @@ ConstantDensityInert::problemSetup(const ProblemSpecP& params)
     }
   }
   */
+
+
+
+  // -----------------------------------------------------------------
+  // Look for constants used (for now, only length)
+  //
+  //  <ConstantVar label="length" role="particle_length">
+  //    <constant qn="0" value="1.00" />
+  //  </ConstantVar>
+  for( ProblemSpecP db_constantvar = params->findBlock("ConstantVar");
+       db_constantvar != 0; db_constantvar = params->findNextBlock("ConstantVar") ) {
+
+    db_constantvar->getAttribute("label", label_name);
+    db_constantvar->getAttribute("role",  role_name );
+
+    temp_label_name = d_modelName;
+    temp_label_name += "_";
+    temp_label_name += label_name;
+    temp_label_name += "_qn";
+    temp_label_name += node;
+
+    if (role_name == "particle_length") {
+      LabelToRoleMap[temp_label_name] = role_name;
+      d_useLength = true;
+      d_constantLength = true;
+
+      d_length_label = VarLabel::create( temp_label_name, CCVariable<double>::getTypeDescription() );
+      d_length_scaling_constant = 1.0;
+
+    } else {
+      std::string errmsg;
+      errmsg = "ERROR: Arches: ConstantDensityInert: Invalid constant role:";
+      errmsg += "must be \"particle_length\", you specified \"" + role_name + "\".";
+      throw ProblemSetupException(errmsg,__FILE__,__LINE__);
+
+    }
+
+    // Now grab the actual values of the constants
+    for( ProblemSpecP db_constant = db_constantvar->findBlock("constant");
+         db_constant != 0; db_constant = db_constantvar->findNextBlock("constant") ) {
+      string s_tempQuadNode;
+      db_constant->getAttribute("qn",s_tempQuadNode);
+      int i_tempQuadNode = atoi( s_tempQuadNode.c_str() );
+
+      if( i_tempQuadNode == d_quadNode ) {
+        string s_constant;
+        db_constant->getAttribute("value", s_constant);
+        d_length_constant_value = atof( s_constant.c_str() );
+      }
+    }
+  }
+
+
+
+  // -----------------------------------------------------------------
+  // fix the d_icLabels to point to the correct quadrature node (since there is 1 model per quad node)
+  for ( vector<std::string>::iterator iString = d_icLabels.begin(); 
+        iString != d_icLabels.end(); ++iString) {
+
+    temp_ic_name        = (*iString);
+    temp_ic_name_full   = temp_ic_name;
+
+    std::stringstream out;
+    out << d_quadNode;
+    string node = out.str();
+    temp_ic_name_full += "_qn";
+    temp_ic_name_full += node;
+
+    std::replace( d_icLabels.begin(), d_icLabels.end(), temp_ic_name, temp_ic_name_full);
+  }
+
+
 
   if(!d_useMass) {
     string errmsg = "ERROR: Arches: ConstantDensityInert: You did not specify a particle mass internal coordinate!\n";
@@ -170,23 +230,19 @@ ConstantDensityInert::problemSetup(const ProblemSpecP& params)
     } else if( eqn_factory.find_scalar_eqn(iter->first) ) {
       current_eqn = &(eqn_factory.retrieve_scalar_eqn(iter->first));
     } else {
-      string errmsg = "ERROR: Arches: ConstantDensityInert: Invalid variable \"" + iter->first + "\" given for \""+iter->second+"\" role, could not find in EqnFactory or DQMOMEqnFactory!";
-      throw ProblemSetupException(errmsg,__FILE__,__LINE__);
+      if( !d_constantLength ) {
+        string errmsg = "ERROR: Arches: ConstantDensityInert: Invalid variable \"" + iter->first + "\" given for \""+iter->second+"\" role, could not find in EqnFactory or DQMOMEqnFactory!";
+        throw ProblemSetupException(errmsg,__FILE__,__LINE__);
+      }
     }
 
     if( iter->second == "particle_length" ) {
-      d_length_label = current_eqn->getTransportEqnLabel();
-      d_length_scaling_constant = current_eqn->getScalingConstant();
+      if( !d_constantLength ) {
+        d_length_label = current_eqn->getTransportEqnLabel();
+        d_length_scaling_constant = current_eqn->getScalingConstant();
 
-      DQMOMEqn* dqmom_eqn = dynamic_cast<DQMOMEqn*>(current_eqn);
-      dqmom_eqn->addModel( d_modelLabel );
-      d_doLengthLowClip  = dqmom_eqn->doLowClip();
-      d_doLengthHighClip = dqmom_eqn->doHighClip();
-      if( d_doLengthLowClip ) {
-        d_length_low = dqmom_eqn->getLowClip();
-      }
-      if( d_doLengthHighClip ) {
-        d_length_hi = dqmom_eqn->getHighClip();
+        DQMOMEqn* dqmom_eqn = dynamic_cast<DQMOMEqn*>(current_eqn);
+        dqmom_eqn->addModel( d_modelLabel );
       }
 
     } else if( iter->second == "particle_mass" ) {
@@ -203,8 +259,10 @@ ConstantDensityInert::problemSetup(const ProblemSpecP& params)
   //db->getWithDefault( "low_clip",  d_lowModelClip,  1.0e-6 );
   //db->getWithDefault( "high_clip", d_highModelClip, 999999 );
 
-  d_massLabels.push_back( d_particle_mass_label );
-  d_massScalingConstants.push_back( d_mass_scaling_constant );
+  if( d_useMass ) {
+    d_massLabels.push_back( d_particle_mass_label );
+    d_massScalingConstants.push_back( d_mass_scaling_constant );
+  }
 
 }
 
@@ -221,6 +279,10 @@ ConstantDensityInert::sched_initVars( const LevelP& level, SchedulerP& sched )
   tsk->computes( d_modelLabel );
   tsk->computes( d_gasLabel   );
   tsk->computes( d_density_label );
+
+  if( d_constantLength ) {
+    tsk->computes( d_length_label );
+  }
 
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials()); 
 }
@@ -376,6 +438,11 @@ ConstantDensityInert::sched_computeModel( const LevelP& level, SchedulerP& sched
     tsk->requires(Task::OldDW, d_length_label, gn, 0 );
     tsk->requires(Task::OldDW, d_particle_mass_label, gn, 0 );
 
+    if( d_constantLength ) {
+      // this is required, because initializing variable to its constant value in NewDW
+      tsk->computes(d_length_label);
+    }
+
   } else {
     tsk->modifies(d_modelLabel);
     tsk->modifies(d_gasLabel);  
@@ -465,6 +532,7 @@ ConstantDensityInert::computeModel( const ProcessorGroup * pc,
     constCCVariable<double> length;
     constCCVariable<double> mass;
 
+
     if( timeSubStep == 0 ) {
 
       new_dw->allocateAndPut( model, d_modelLabel, matlIndex, patch );
@@ -473,6 +541,7 @@ ConstantDensityInert::computeModel( const ProcessorGroup * pc,
       old_dw->get( weight,   d_weight_label,        matlIndex, patch, gn, 0 );
       old_dw->get(length, d_length_label,        matlIndex, patch, gn, 0 );
       old_dw->get(mass,   d_particle_mass_label, matlIndex, patch, gn, 0 );
+
 
     } else {
 
