@@ -73,7 +73,10 @@ SpecifiedBodyContact::SpecifiedBodyContact(const ProcessorGroup* myworld,
   
   ps->getWithDefault("master_material", d_material, 0);
   d_matls.add(d_material); // always need specified material
-  
+
+  d_vol_const=0.;
+  ps->get("volume_constraint",d_vol_const);
+
   if(d_filename!="") {
     std::ifstream is(d_filename.c_str());
     if (!is ){
@@ -120,6 +123,7 @@ void SpecifiedBodyContact::outputProblemSpec(ProblemSpecP& ps)
   contact_ps->appendElement("master_material",d_material);
   contact_ps->appendElement("stop_time",d_stop_time);
   contact_ps->appendElement("velocity_after_stop",d_vel_after_stop);
+  contact_ps->appendElement("volume_constraint",d_vol_const);
 
   d_matls.outputProblemSpec(contact_ps);
 }
@@ -241,21 +245,30 @@ void SpecifiedBodyContact::exMomIntegrated(const ProcessorGroup*,
                                        DataWarehouse* old_dw,
                                        DataWarehouse* new_dw)
 {
+  Ghost::GhostType  gnone = Ghost::None;
   int numMatls = d_sharedState->getNumMPMMatls();
+
+  // Retrieve necessary data from DataWarehouse
+  StaticArray<constNCVariable<double> > gmass(numMatls);
+  StaticArray<NCVariable<Vector> >      gvelocity_star(numMatls);
+  StaticArray<constNCVariable<Vector> > gvelocity(numMatls);
+  StaticArray<constNCVariable<Vector> > ginternalForce(numMatls);
+  StaticArray<constNCVariable<double> > gvolume(numMatls);
+
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
-    // Retrieve necessary data from DataWarehouse
-    StaticArray<constNCVariable<double> > gmass(numMatls);
-    StaticArray<NCVariable<Vector> >      gvelocity_star(numMatls);
-    StaticArray<constNCVariable<Vector> > gvelocity(numMatls);
-    StaticArray<constNCVariable<Vector> > ginternalForce(numMatls);
+    Vector dx = patch->dCell();
+    double cell_vol = dx.x()*dx.y()*dx.z();
+    constNCVariable<double> NC_CCweight;
+    old_dw->get(NC_CCweight,         lb->NC_CCweightLabel,  0, patch, gnone, 0);
 
     for(int m=0;m<matls->size();m++){
      int dwi = matls->get(m);
-     new_dw->get(gmass[m], lb->gMassLabel,dwi ,patch, Ghost::None, 0);
-     new_dw->getModifiable(gvelocity_star[m],  lb->gVelocityStarLabel, dwi,patch); // -> v*^k+1
-     new_dw->get(ginternalForce[m], lb->gInternalForceLabel, dwi, patch, Ghost::None, 0); // -> v*^k+1
+     new_dw->get(gmass[m], lb->gMassLabel,dwi ,patch, gnone, 0);
+     new_dw->getModifiable(gvelocity_star[m], lb->gVelocityStarLabel,dwi,patch);
+     new_dw->get(ginternalForce[m], lb->gInternalForceLabel,dwi,patch,gnone,0);
+     new_dw->get(gvolume[m],        lb->gVolumeLabel,       dwi,patch,gnone,0);
     }
     
     delt_vartype delT;
@@ -275,10 +288,16 @@ void SpecifiedBodyContact::exMomIntegrated(const ProcessorGroup*,
     }
 
     Vector reaction_force(0.0,0.0,0.0);
-    
+
     for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
       IntVector c = *iter; 
       
+      // Determine nodal volume
+      double totalNodalVol=0.0;
+      for(int  n = 0; n < numMatls; n++){
+        totalNodalVol+=gvolume[n][c]*8.0*NC_CCweight[c];
+      }
+
       for(int  n = 0; n < numMatls; n++){ // also updates material d_material to new velocity.
         Vector rigid_vel = requested_velocity;
         if(rigid_velocity) {
@@ -291,7 +310,8 @@ void SpecifiedBodyContact::exMomIntegrated(const ProcessorGroup*,
         if(n==d_material || d_direction[1]) new_vel.y( rigid_vel.y() );
         if(n==d_material || d_direction[2]) new_vel.z( rigid_vel.z() );
 
-        if(!compare(gmass[d_material][c],0.)){
+        if (!compare(gmass[d_material][c], 0.)
+        && (totalNodalVol/cell_vol) > d_vol_const){
           Vector old_vel = gvelocity_star[n][c];
           gvelocity_star[n][c] =  new_vel;
           //reaction_force += gmass[n][c]*(new_vel-old_vel)/delT;
@@ -325,11 +345,18 @@ void SpecifiedBodyContact::addComputesAndRequiresIntegrated(SchedulerP & sched,
 {
   Task * t = scinew Task("SpecifiedBodyContact::exMomIntegrated", 
                       this, &SpecifiedBodyContact::exMomIntegrated);
+
+  MaterialSubset* z_matl = scinew MaterialSubset();
+  z_matl->add(0);
+  z_matl->addReference();
   
   const MaterialSubset* mss = ms->getUnion();
   t->requires(Task::OldDW, lb->delTLabel);    
-  t->requires(Task::NewDW, lb->gMassLabel, Ghost::None);
-  t->requires(Task::NewDW, lb->gInternalForceLabel, Ghost::None);
+  t->requires(Task::NewDW, lb->gMassLabel,             Ghost::None);
+  t->requires(Task::NewDW, lb->gInternalForceLabel,    Ghost::None);
+  t->requires(Task::NewDW, lb->gVolumeLabel,           Ghost::None);
+  t->requires(Task::OldDW, lb->NC_CCweightLabel,z_matl,Ghost::None);
+
   t->modifies(             lb->gVelocityStarLabel,   mss);
   t->computes(lb->RigidReactionForceLabel);
 
