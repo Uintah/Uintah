@@ -361,4 +361,7 @@ void SpecifiedBodyContact::addComputesAndRequiresIntegrated(SchedulerP & sched,
   t->computes(lb->RigidReactionForceLabel);
 
   sched->addTask(t, patches, ms);
+
+  if (z_matl->removeReference())
+    delete z_matl; // shouln't happen, but...
 }
