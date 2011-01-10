@@ -5,7 +5,7 @@
 #        make runLocalRT
 #  It MUST be executed from either the dbg or opt directories.
 #__________________________________
-set opts = (`dialog --stdout --separate-output --checklist "Local Regression Testing:\nPlease select one." 20 45 20 "1" "Generate gold standards"  off, "2" "Run local regression tests"  off,`)
+set opts = (`dialog --stdout --separate-output --checklist "Local Regression Testing:\nPlease select one." 0 0 0 "1" "Generate gold standards"  off, "2" "Run local regression tests"  off,`)
 
 if( $status != 0 ) then
   echo "cancel selected"
