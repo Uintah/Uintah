@@ -6,12 +6,34 @@ COMPARISON_MALLOC_STATS=$3
 TMPDIR=$4
 error=1
 
-if [ ! -f $MALLOC_STATS ]; then
-  # the malloc_stats are in separate files for each process id
-  # merge them
+#__________________________________
+# define the stat command
+if [ $OS = "Linux" ]; then
+  STAT_CMD="stat --format %s"
+fi
+if [ $OS = "Darwin" ]; then 
+  STAT_CMD="stat -f %z"
+fi
+
+#__________________________________
+# bulletproofing
+if [[ ! -f $MALLOC_STATS  && ! -f $MALLOC_STATS.* ]]; then
+  echo "The malloc stats file(s) is missing.  Can't perform memory leak test."
+  echo "Verify that you've configured with"
+  echo "  --enable-sci-malloc"
+  exit 5
+fi
+
+#__________________________________
+# The malloc stats data are stored in separate files for each process id. Merge them
+ls $MALLOC_STATS.* >/dev/null
+retval=$?
+
+if [ $retval = "0" ]; then
   cat $MALLOC_STATS.* > $MALLOC_STATS
-  if [ `stat --format %s $MALLOC_STATS` = "0" ]; then
-    echo "No malloc_stats output found.  Can't do memory leak test."
+  echo "Merging malloc stats files from multiple processes."
+  if [ `$STAT_CMD $MALLOC_STATS` = "0" ]; then
+    echo "No malloc_stats information found.  Can't do memory leak test."
     exit 5
   fi
 fi
@@ -32,7 +54,7 @@ fi
 
 echo "Memory leak test passed -- no scinew memory leaks found"
 if [ ! -f $COMPARISON_MALLOC_STATS ]; then
-  echo "Storing $MALLOC_STATS"
+  echo "Storing $MALLOC_STATS in $COMPARISON_MALLOC_STATS"
   cp $MALLOC_STATS $COMPARISON_MALLOC_STATS
   exit -1
 fi
