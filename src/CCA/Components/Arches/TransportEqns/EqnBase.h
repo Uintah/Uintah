@@ -126,11 +126,11 @@ public:
     return d_initFunction; }; 
 
   /** @brief Return the scaling constant for the given equation. */
-  inline const double getScalingConstant(){
+  inline double getScalingConstant(){
     return d_scalingConstant; };
 
   /** @brief Return the density guess boolean */
-  inline const bool getDensityGuessBool(){
+  inline bool getDensityGuessBool(){
     return d_use_density_guess; 
   };
 

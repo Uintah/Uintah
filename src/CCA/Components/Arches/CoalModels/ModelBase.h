@@ -24,6 +24,7 @@
 namespace Uintah {
 
 class ArchesLabel;
+
 class ModelBase{ 
 
 public: 

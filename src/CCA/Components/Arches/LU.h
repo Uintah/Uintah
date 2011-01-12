@@ -162,7 +162,7 @@ class LU{
     /** @brief      Returns dimension of the LU object
       * 
       * @returns    The dimension of the LU object */
-    const unsigned int getDimension() {
+    unsigned int getDimension() {
       return dim_; };
   
   

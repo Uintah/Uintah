@@ -199,7 +199,7 @@ public:
     d_quadNode = node; };
 
   /** @brief Get the quadrature node value. */
-  inline const int getQuadNode(){
+  inline int getQuadNode(){
     return d_quadNode; };
 
  
