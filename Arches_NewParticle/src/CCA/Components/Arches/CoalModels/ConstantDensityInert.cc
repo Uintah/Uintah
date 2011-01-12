@@ -52,7 +52,11 @@ ConstantDensityInert::ConstantDensityInert( std::string modelName,
 }
 
 ConstantDensityInert::~ConstantDensityInert()
-{}
+{
+  if( d_constantLength ) {
+    VarLabel::destroy(d_length_label);
+  }
+}
 
 //-----------------------------------------------------------------------------
 //Problem Setup

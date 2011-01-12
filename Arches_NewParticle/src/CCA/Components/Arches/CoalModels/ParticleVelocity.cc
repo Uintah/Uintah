@@ -52,6 +52,7 @@ ParticleVelocity::~ParticleVelocity()
     // the label was created in DragModel::problemSetup()
     VarLabel::destroy(d_length_label);
   }
+  VarLabel::destroy(d_velocity_label);
 }
 
 //---------------------------------------------------------------------------

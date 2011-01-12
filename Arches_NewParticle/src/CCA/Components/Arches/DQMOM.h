@@ -209,8 +209,6 @@ private:
   vector<MomentVector>  momentIndexes;              ///< Vector containing all moment indices
   vector<DQMOMEqn* >    weightEqns;                 ///< Weight equation labels, IN SAME ORDER AS GIVEN IN INPUT FILE
   vector<DQMOMEqn* >    abscissaEqns;               ///< Weighted abscissa equation labels, IN SAME ORDER AS GIVEN IN INPUT FILE
-  vector<string>        InternalCoordinateEqnNames;
-  vector< vector<ModelBase> > weightedAbscissaModels;
 
   typedef map<const MomentVector, const VarLabel*> MomentMap;
   MomentMap DQMOMMoments;     ///< DQMOM moment values

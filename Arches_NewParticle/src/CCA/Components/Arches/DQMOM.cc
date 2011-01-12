@@ -63,6 +63,15 @@ DQMOM::~DQMOM()
   VarLabel::destroy(d_conditionNumberLabel);
   
   // Also need to delete moment labels
+  for( map<const MomentVector, const VarLabel*>::iterator iM = DQMOMMoments.begin();
+       iM != DQMOMMoments.end(); ++iM ) {
+    VarLabel::destroy( iM->second );
+  }
+
+  for( map<const MomentVector, const VarLabel*>::iterator iMM = DQMOMMomentsMean.begin();
+       iMM != DQMOMMomentsMean.end(); ++iMM ) {
+    VarLabel::destroy( iMM->second );
+  }
 }
 //---------------------------------------------------------------------------
 // Method: Problem setup

@@ -52,7 +52,11 @@ Balachandar::Balachandar( std::string modelName,
 }
 
 Balachandar::~Balachandar()
-{}
+{
+  if( d_constantLength ) {
+    VarLabel::destroy(d_length_label);
+  }
+}
 
 //---------------------------------------------------------------------------
 // Method: Problem Setup

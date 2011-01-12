@@ -54,7 +54,11 @@ ConstantDensityCoal::ConstantDensityCoal( std::string modelName,
 }
 
 ConstantDensityCoal::~ConstantDensityCoal()
-{}
+{
+  if( d_constantLength ) {
+    VarLabel::destroy(d_length_label);
+  }
+}
 
 //-----------------------------------------------------------------------------
 //Problem Setup
@@ -163,45 +167,51 @@ ConstantDensityCoal::problemSetup(const ProblemSpecP& params)
   //  <ConstantVar label="length" role="particle_length">
   //    <constant qn="0" value="1.00" />
   //  </ConstantVar>
-  for( ProblemSpecP db_constantvar = params->findBlock("ConstantVar");
-       db_constantvar != 0; db_constantvar = params->findNextBlock("ConstantVar") ) {
+  ProblemSpecP db_constvars = params->findBlock("ConstantVar");
+  if (db_constvars) {
+    for( ProblemSpecP db_constantvar = params->findBlock("ConstantVar");
+         db_constantvar != 0; db_constantvar = params->findNextBlock("ConstantVar") ) {
 
-    db_constantvar->getAttribute("label", label_name);
-    db_constantvar->getAttribute("role",  role_name );
+      db_constantvar->getAttribute("label", label_name);
+      db_constantvar->getAttribute("role",  role_name );
 
-    temp_label_name = d_modelName;
-    temp_label_name += "_";
-    temp_label_name += label_name;
-    temp_label_name += "_qn";
-    temp_label_name += node;
+      temp_label_name = d_modelName;
+      temp_label_name += "_";
+      temp_label_name += label_name;
+      temp_label_name += "_qn";
+      temp_label_name += node;
 
-    if (role_name == "particle_length") {
-      LabelToRoleMap[temp_label_name] = role_name;
-      d_useLength = true;
-      d_constantLength = true;
+      if (role_name == "particle_length") {
+        LabelToRoleMap[temp_label_name] = role_name;
+        d_useLength = true;
+        d_constantLength = true;
 
-      d_length_label = VarLabel::create( temp_label_name, CCVariable<double>::getTypeDescription() );
-      d_length_scaling_constant = 1.0;
+        d_length_label = VarLabel::create( temp_label_name, CCVariable<double>::getTypeDescription() );
+        d_length_scaling_constant = 1.0;
 
-    } else {
-      std::string errmsg;
-      errmsg = "ERROR: Arches: ConstantDensityCoal: Invalid constant role:";
-      errmsg += "must be \"particle_length\", you specified \"" + role_name + "\".";
-      throw ProblemSetupException(errmsg,__FILE__,__LINE__);
+        // should add this to an _extra_local_labels
+        // (and destroy it via _extra_local_labels in the destructor)
 
-    }
+      } else {
+        std::string errmsg;
+        errmsg = "ERROR: Arches: ConstantDensityCoal: Invalid constant role:";
+        errmsg += "must be \"particle_length\", you specified \"" + role_name + "\".";
+        throw ProblemSetupException(errmsg,__FILE__,__LINE__);
 
-    // Now grab the actual values of the constants
-    for( ProblemSpecP db_constant = db_constantvar->findBlock("constant");
-         db_constant != 0; db_constant = db_constantvar->findNextBlock("constant") ) {
-      string s_tempQuadNode;
-      db_constant->getAttribute("qn",s_tempQuadNode);
-      int i_tempQuadNode = atoi( s_tempQuadNode.c_str() );
+      }
 
-      if( i_tempQuadNode == d_quadNode ) {
-        string s_constant;
-        db_constant->getAttribute("value", s_constant);
-        d_length_constant_value = atof( s_constant.c_str() );
+      // Now grab the actual values of the constants
+      for( ProblemSpecP db_constant = db_constantvar->findBlock("constant");
+           db_constant != 0; db_constant = db_constantvar->findNextBlock("constant") ) {
+        string s_tempQuadNode;
+        db_constant->getAttribute("qn",s_tempQuadNode);
+        int i_tempQuadNode = atoi( s_tempQuadNode.c_str() );
+
+        if( i_tempQuadNode == d_quadNode ) {
+          string s_constant;
+          db_constant->getAttribute("value", s_constant);
+          d_length_constant_value = atof( s_constant.c_str() );
+        }
       }
     }
   }

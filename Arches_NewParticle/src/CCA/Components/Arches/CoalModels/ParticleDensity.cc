@@ -51,9 +51,7 @@ ParticleDensity::ParticleDensity( std::string modelName,
 
 ParticleDensity::~ParticleDensity()
 {
-  if( d_constantLength ) {
-    VarLabel::destroy(d_length_label);
-  }
+  VarLabel::destroy(d_density_label);
 }
 
 //---------------------------------------------------------------------------
