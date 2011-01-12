@@ -1,7 +1,8 @@
 <?xml version='1.0' encoding='ISO-8859-1' ?>
 <Uintah_Include> 
   <AMR>
-    <RMCRT                    spec="OPTIONAL NO_DATA" >             
+    <RMCRT                    spec="OPTIONAL NO_DATA" >
+      <orderOfInterpolation   spec="REQUIRED INTEGER 'positive'" />             
       <min_grid_level         spec="OPTIONAL INTEGER" />            
       <max_grid_level         spec="OPTIONAL INTEGER" />            
       <manualGrid             spec="OPTIONAL BOOLEAN" />            

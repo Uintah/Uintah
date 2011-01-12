@@ -9,11 +9,11 @@
   <SimulationComponent type="RMCRT_Test" />
   <!--__________________________________-->
   <Time>
-    <maxTime>       1.0       </maxTime>
+    <maxTime>       10.0       </maxTime>
     <initTime>      0.0       </initTime>
     <delt_min>      0.00001   </delt_min>
     <delt_max>      1         </delt_max>
-    <max_Timesteps> 10        </max_Timesteps>
+    <max_Timesteps> 100        </max_Timesteps>
     <timestep_multiplier>  1  </timestep_multiplier>
   </Time>
   <!--__________________________________-->
@@ -23,15 +23,15 @@
          <lower>     [-1,-1,-0.1]  </lower>         
          <upper>     [ 1, 1, 0.1]  </upper>         
          <resolution>[20,20,3]     </resolution>    
-         <patches>   [1,1,1]       </patches>       
+         <patches>   [3,3,1]       </patches>       
       </Box>                                         
     </Level>
     <Level>
       <Box label = "1">                              
-         <lower>     [ -0.5,-0.5,-0.1]  </lower>         
-         <upper>     [  0.5, 0.5, 0.1]  </upper>         
-         <resolution>[20,20,3]          </resolution>    
-         <patches>   [1,1,1]            </patches>       
+         <lower>     [ -1,-1,-0.1]  </lower>         
+         <upper>     [  1, 1, 0.1]  </upper>         
+         <resolution>[20,20,3]      </resolution>        
+         <patches>   [3,3,1]        </patches>           
       </Box>                                         
     </Level>
     
@@ -40,7 +40,8 @@
   <AMR>
     <useLockStep> true </useLockStep>
     <RMCRT>
-      <manualGrid> true </manualGrid>
+      <orderOfInterpolation> 1    </orderOfInterpolation>
+      <manualGrid>           true </manualGrid>
     </RMCRT>
     
     <!--
@@ -73,6 +74,7 @@
       <outputInitTimestep/>
       <outputTimestepInterval>1</outputTimestepInterval>
       <save label = "color"/>
+      <save label = "sumColorDiff" levels="0"/>
       <!--<save label = "refineFlag"/> -->
       <checkpoint cycle = "2" timestepInterval = "1"/>
   </DataArchiver>
