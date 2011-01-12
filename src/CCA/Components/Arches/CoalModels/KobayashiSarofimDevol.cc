@@ -86,7 +86,9 @@ KobayashiSarofimDevol::KobayashiSarofimDevol( std::string modelName,
 }
 
 KobayashiSarofimDevol::~KobayashiSarofimDevol()
-{}
+{
+  VarLabel::destroy( d_charModelLabel );
+}
 
 //-----------------------------------------------------------------------------
 //Problem Setup

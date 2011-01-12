@@ -62,6 +62,9 @@ DragModel::~DragModel()
   VarLabel::destroy(d_uvel_model_label);
   VarLabel::destroy(d_vvel_model_label);
   VarLabel::destroy(d_wvel_model_label);
+  if( d_constantLength ) {
+    VarLabel::destroy(d_length_label);
+  }
 }
 
 //---------------------------------------------------------------------------
@@ -1002,10 +1005,8 @@ DragModel::initVars( const ProcessorGroup * pc,
     // if length is constant, initialize it to constant value
     if( d_constantLength ) {
       CCVariable<double> particle_length;
-      proc0cout << "DragModel::initVars, about to allocateAndPut d_length_label" << d_length_label->getName() << "..." << endl;
       new_dw->allocateAndPut( particle_length, d_length_label, matlIndex, patch );
       particle_length.initialize(d_length_constant_value);
-      proc0cout << "DragModel::initVars, done allocatingAndPutting d_length_label" << d_length_label->getName() << "." << endl;
     }
 
     for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){

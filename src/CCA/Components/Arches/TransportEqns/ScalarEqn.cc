@@ -339,7 +339,7 @@ ScalarEqn::sched_buildTransportEqn( const LevelP& level, SchedulerP& sched, int 
   // extra srcs
   if (d_addSources) {
     for( vector<const VarLabel*>::iterator iter = d_sources.begin(); iter != d_sources.end(); ++iter ) {
-      tsk->requires( Task::OldDW, (*iter), Ghost::None, 0 );
+      tsk->requires( Task::NewDW, (*iter), Ghost::None, 0 );
     }
   }
 
@@ -444,6 +444,12 @@ ScalarEqn::buildTransportEqn( const ProcessorGroup* pc,
       }
 
     }//end cells
+
+    if( d_addSources ) {
+      for( vector< constCCVariable<double>* >::iterator iS = sourceVars.begin(); iS != sourceVars.end(); ++iS ) {
+        delete *iS;
+      }
+    }
 
   }//end patches
 }
