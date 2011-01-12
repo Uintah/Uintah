@@ -193,6 +193,7 @@ cleanreally::
 	rm -f $(patsubst %,%/*.$(OBJEXT), $(ALLOBJSUBDIRS))
 	rm -f $(patsubst %,%/depend.mk, $(ALLOBJSUBDIRS))
 	rm -f $(patsubst %,%/core, $(ALLOBJSUBDIRS))
+	rm -f $(patsubst %,%/*.d, $(ALLOBJSUBDIRS))
 	for fname in $(patsubst %,%/ii_files, $(ALLOBJSUBDIRS)); \
 	  do if test -d $$fname; then rm -rf $$fname; fi; done
 	rm -f $(patsubst %,%/*~, $(ALLOBJSUBDIRS))
