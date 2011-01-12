@@ -56,7 +56,7 @@ endif
 ifeq ($(IS_STATIC_BUILD),yes)
   LIBS := $(CORE_STATIC_LIBS)
 else
-  LIBS := $(M_LIBRARY) $(MPI_LIBRARY) $(THREAD_LIBRARY) 
+  LIBS := $(M_LIBRARY) $(MPI_LIBRARY) $(BLAS_LIBRARY) $(THREAD_LIBRARY) 
 endif
 
 include $(SCIRUN_SCRIPTS)/program.mk
@@ -79,12 +79,6 @@ else # Non-static build
         Core/Util
 endif
 
-ifeq ($(IS_STATIC_BUILD),yes)
-  LIBS := $(CORE_STATIC_LIBS)
-else
-  LIBS := $(M_LIBRARY) $(MPI_LIBRARY) $(THREAD_LIBRARY) 
-endif
-
 include $(SCIRUN_SCRIPTS)/program.mk
 
 #################################################################
@@ -105,12 +99,6 @@ else # Non-static build
         Core/Grid         \
         Core/Math         \
         Core/Util
-endif
-
-ifeq ($(IS_STATIC_BUILD),yes)
-  LIBS := $(CORE_STATIC_LIBS)
-else
-  LIBS := $(M_LIBRARY) $(MPI_LIBRARY) $(THREAD_LIBRARY) 
 endif
 
 include $(SCIRUN_SCRIPTS)/program.mk
