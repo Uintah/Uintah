@@ -92,9 +92,10 @@ MixedScheduler::wait_till_all_done()
 }
 
 void
-MixedScheduler::initiateTask( DetailedTask          * task,
+MixedScheduler::initiateTask( DetailedTask * task,
 			      bool /* only_old_recvs */,
-			      int /* abort_point */)
+			      int  /* abort_point */,
+                              int  /* iteration */ )
 {
   d_threadPool->addTask( task );
 }
@@ -106,7 +107,7 @@ MixedScheduler::initiateReduction( DetailedTask          * task )
 }
 
 void
-MixedScheduler::problemSetup( const ProblemSpecP& prob_spec )
+MixedScheduler::problemSetup( const ProblemSpecP& prob_spec, SimulationStateP& /* state */ )
 {
   log.problemSetup( prob_spec );
 }

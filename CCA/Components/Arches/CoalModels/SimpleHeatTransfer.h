@@ -130,7 +130,7 @@ public:
     return d_abskp; };  
   
   /** @brief  Access function for radiation flag (on/off) */
-  inline const bool getRadiationFlag(){
+  inline bool getRadiationFlag(){
     return b_radiation; };   
 
 
