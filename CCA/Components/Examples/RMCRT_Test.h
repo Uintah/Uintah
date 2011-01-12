@@ -94,27 +94,51 @@ WARNING
 
   private:
     void initialize ( const ProcessorGroup*,
-		        const PatchSubset* patches, 
+                      const PatchSubset* patches, 
                       const MaterialSubset* matls,
-		        DataWarehouse* old_dw, 
+                       DataWarehouse* old_dw, 
                       DataWarehouse* new_dw );
 
     void computeStableTimestep ( const ProcessorGroup*,
-				     const PatchSubset* patches,
-				     const MaterialSubset* matls,
-				     DataWarehouse* old_dw, 
+                                 const PatchSubset* patches,
+                                 const MaterialSubset* matls,
+                                 DataWarehouse* old_dw, 
                                  DataWarehouse* new_dw );
+    
+    void scheduleShootRays(SchedulerP& sched,
+                           const PatchSet* patches,
+                           const MaterialSet* matls);
+    
+    void shootRays ( const ProcessorGroup*,
+                     const PatchSubset* patches,
+                     const MaterialSubset* matls,
+                     DataWarehouse* old_dw,
+                     DataWarehouse* new_dw );
 
-    void timeAdvance ( const ProcessorGroup*,
-		         const PatchSubset* patches,
-		         const MaterialSubset* matls,
-		         DataWarehouse* old_dw, 
-                       DataWarehouse* new_dw);
+    void scheduleRefine_Q(const PatchSet* patches,
+                          SchedulerP& sched,
+                          const MaterialSet* matls);
+
+    void refine_Q(const ProcessorGroup*,
+                  const PatchSubset* patches,
+                  const MaterialSubset* matls,
+                  DataWarehouse*,
+                  DataWarehouse* new_dw);
+                                 
+    void schedulePseudoCFD(SchedulerP& sched,
+                           const PatchSet* patches,
+                           const MaterialSet* matls);
+
+    void pseudoCFD ( const ProcessorGroup*,
+                     const PatchSubset* patches,
+                     const MaterialSubset* matls,
+                     DataWarehouse* old_dw,
+                     DataWarehouse* new_dw);       
 
     void errorEstimate ( const ProcessorGroup*,
-			    const PatchSubset* patches,
-			    const MaterialSubset* matls,
-			    DataWarehouse*, 
+                         const PatchSubset* patches,
+                         const MaterialSubset* matls,
+                         DataWarehouse*, 
                          DataWarehouse* new_dw, 
                          bool initial);
 
@@ -125,11 +149,11 @@ WARNING
                    DataWarehouse* new_dw);
 
     void refine ( const ProcessorGroup*,
-		    const PatchSubset* patches,
-		    const MaterialSubset* matls,
-		    DataWarehouse*, 
+                  const PatchSubset* patches,
+                  const MaterialSubset* matls,
+                  DataWarehouse*, 
                   DataWarehouse* new_dw);
-                  
+
     void printSchedule(const PatchSet* patches,
                        DebugStream& dbg,
                        const string& where);
@@ -137,12 +161,12 @@ WARNING
     void printSchedule(const LevelP& level,
                        DebugStream& dbg,
                        const string& where);
-             
+
     void printTask(const PatchSubset* patches,
                    const Patch* patch,
                    DebugStream& dbg,
                    const string& where);
-                   
+
     void printTask(const Patch* patch,
                    DebugStream& dbg,
                    const string& where);
@@ -156,9 +180,9 @@ WARNING
     SimulationStateP d_sharedState;
     SimpleMaterial*  d_material;
 
-    VarLabel* d_oldcolorLabel;
     VarLabel* d_colorLabel;
-    VarLabel* d_currentAngleLabel;
+    VarLabel* d_sumColorDiffLabel;
+
     SCIRun::Vector d_gridMax;
     SCIRun::Vector d_gridMin;
     
@@ -169,14 +193,12 @@ WARNING
     // Fake cylinder
     SCIRun::Vector d_centerOfBall;
     SCIRun::Vector d_centerOfDomain;
-    SCIRun::Vector d_oldCenterOfBall;
     double         d_radiusOfBall;
     double         d_radiusOfOrbit;
     double         d_angularVelocity;
-
-    bool           d_radiusGrowth;
-    bool           d_radiusGrowthDir;
+    int            d_matl;
     
+    int d_orderOfInterpolation;         // Order of interpolation for interior fine patch
     std::vector<GeometryObject*> d_refine_geom_objs;
   };
 
