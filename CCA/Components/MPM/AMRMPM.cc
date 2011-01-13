@@ -1296,7 +1296,7 @@ void AMRMPM::interpolateParticlesToGrid_CFI(const ProcessorGroup*,
 
           // Add each particle's contribution to the local mass & velocity 
           IntVector fineNode;
-          for(int k = 0; k < ni.size(); k++) {
+          for(int k = 0; k < (int) ni.size(); k++) {
             fineNode = ni[k];
             
             //S[k] *= pErosion[idx];
@@ -2278,7 +2278,7 @@ void AMRMPM::interpolateToParticlesAndUpdate_CFI(const ProcessorGroup*,
 
             // Add each nodes contribution to the particle's velocity & acceleration 
             IntVector fineNode;
-            for(int k = 0; k < ni.size(); k++) {
+            for(int k = 0; k < (int)ni.size(); k++) {
               
               fineNode = ni[k];
             
@@ -2546,7 +2546,7 @@ void AMRMPM::debug_CFI(const ProcessorGroup*,
       
       interpolatorCoarse->findCellAndWeights(px[idx],ni,S,psize[idx],pDeformationMeasure[idx]);
       
-      for(int k = 0; k < ni.size(); k++) {
+      for(int k = 0; k < (int)ni.size(); k++) {
         pColor[idx] += S[k];
       }
     }  
@@ -2607,7 +2607,7 @@ void AMRMPM::debug_CFI(const ProcessorGroup*,
               vector<IntVector> ni;
               vector<double> S;
               interpolatorFine->findCellAndWeights(px[idx],ni,S,zoi); 
-              for(int k = 0; k < ni.size(); k++) {
+              for(int k = 0; k < (int)ni.size(); k++) {
                 pColor[idx] += S[k];
               }
             }
