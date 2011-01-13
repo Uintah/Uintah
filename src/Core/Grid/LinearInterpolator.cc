@@ -163,7 +163,7 @@ void LinearInterpolator::findCellAndWeights(const Point& pos,
   // Lz- :  L.b
   // Lz+ :  L.t
    
-  for (int i = 0; i< CFI_ni.size(); i++){
+  for (int i = 0; i< (int) CFI_ni.size(); i++){
     Point nodepos = level->getNodePosition(CFI_ni[i]);
     double dx = pos.x() - nodepos.x();
     double dy = pos.y() - nodepos.y();
