@@ -6,7 +6,7 @@ Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
-License for the specific language governing rights and limitations under
+License for the specific language governing rights and limitations under  
 Permission is hereby granted, free of charge, to any person obtaining a 
 copy of this software and associated documentation files (the "Software"),
 to deal in the Software without restriction, including without limitation 
@@ -64,8 +64,8 @@ namespace Uintah
 RMCRT_Test::RMCRT_Test ( const ProcessorGroup* myworld ): UintahParallelComponent( myworld )
 {
   //d_examplesLabel = scinew ExamplesLabel();
-  d_colorLabel        = VarLabel::create("color",         CCVariable<double>::getTypeDescription());
-  d_sumColorDiffLabel = VarLabel::create("sumColorDiff",      CCVariable<double>::getTypeDescription());
+  d_colorLabel        = VarLabel::create("color",        CCVariable<double>::getTypeDescription());
+  d_sumColorDiffLabel = VarLabel::create("sumColorDiff", CCVariable<double>::getTypeDescription());
   d_gac = Ghost::AroundCells;
   d_gn  = Ghost::None;
   d_matl = 0;
@@ -184,6 +184,7 @@ void RMCRT_Test::problemSetup(const ProblemSpecP& prob_spec,
 void RMCRT_Test::scheduleInitialize ( const LevelP& level, 
                                       SchedulerP& scheduler )
 {
+  
   printSchedule(level,dbg,"RMCRT_Test::scheduleInitialize");
 
   Task* task = scinew Task( "RMCRT_Test::initialize", this, 
@@ -217,15 +218,21 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
   GridP grid = level->getGrid();
   int maxLevels = level->getGrid()->numLevels();
 
+;
+  
   // pseudo RMCRT
   for (int l = 0; l < maxLevels-1; l++) {
     const LevelP& level = grid->getLevel(l);
     const PatchSet* patches = level->eachPatch();
+    scheduleCoarsen_Q (level, sched);
     scheduleShootRays( sched, patches, matls );
-    //scheduleComputeQ
-    //scheduleRefine_divQ
   }
-
+  
+  for (int l = 0; l < maxLevels; l++) {
+    const LevelP& level = grid->getLevel(l);
+    const PatchSet* patches = level->eachPatch();
+    scheduleRefine_Q (sched,  patches, matls);
+  }
 
   // only schedule CFD on the finest level
   const LevelP& fineLevel = grid->getLevel(maxLevels-1);
@@ -242,7 +249,9 @@ void RMCRT_Test::schedulePseudoCFD(SchedulerP& sched,
   
   Task* t = scinew Task("RMCRT_Test::pseudoCFD",
                   this, &RMCRT_Test::pseudoCFD);
-
+  t->requires(Task::NewDW, d_sumColorDiffLabel, d_gn, 0);
+  t->requires(Task::OldDW, d_colorLabel,        d_gn, 0);
+  
   t->computes( d_colorLabel );
 
   sched->addTask(t, patches, matls);
@@ -262,16 +271,19 @@ void RMCRT_Test::pseudoCFD ( const ProcessorGroup*,
     for(int m = 0;m<matls->size();m++){
       int matl = matls->get(m);
 
-     CCVariable<double> color;
-      new_dw->allocateAndPut(color,    d_colorLabel,    matl, patch);
+      CCVariable<double> color;
+      constCCVariable<double> sumDiffColor;
+      constCCVariable<double> color_old;
+      
+      new_dw->allocateAndPut(color, d_colorLabel,       d_matl, patch);
+      new_dw->get(sumDiffColor,     d_sumColorDiffLabel,d_matl, patch,d_gn,0);
+      old_dw->get(color_old,        d_colorLabel,       d_matl, patch,d_gn,0);
+      
+      color.initialize(0.0);
 
       for ( CellIterator iter(patch->getCellIterator()); !iter.done(); iter++) {
         IntVector c(*iter);
-
-        Vector whereThisCellIs( patch->cellPosition( c ) );
-        Vector distanceToCenterOfDomain = whereThisCellIs - d_centerOfBall;
-
-       color[c] = distanceToCenterOfDomain.length();
+        color[c] = color_old[c] + 0.01 * sumDiffColor[c];
       }
     }
   }
@@ -323,41 +335,45 @@ void RMCRT_Test::shootRays ( const ProcessorGroup*,
     CCVariable<double> sumColorDiff;
     new_dw->allocateAndPut(sumColorDiff, d_sumColorDiffLabel, d_matl, patch);
     sumColorDiff.initialize(0.0);
-
+#if 0
     IntVector P_lo = patch->getCellLowIndex();
     IntVector P_hi = patch->getCellHighIndex();
     IntVector middle = P_lo + (P_hi - P_lo)/IntVector(2,2,2);
+#endif
 
-    // Ray in x dir                            
-    int j = middle.y();                             
-    int k = middle.z();                             
-    for(int i=L_lo.x(); i<L_hi.x(); i++){      
-      IntVector h (i,j,k);                     
-      //cout << "    " << h << endl;             
-      sumColorDiff[middle] += color[h] - color[middle];  
-    }                                          
-    // Ray in Y dir                            
-    int i = middle.x();                             
-    k = middle.z();                                 
-    for(int j=L_lo.y(); j<L_hi.y(); j++){      
-      IntVector h (i,j,k);                     
-      sumColorDiff[middle] += color[h] - color[middle];  
-    }                                          
+    for (CellIterator iter = patch->getCellIterator();!iter.done();iter++){
+      const IntVector& c = *iter;
+      // Ray in x dir                            
+      int j = c.y();                             
+      int k = c.z();                             
+      for(int i=L_lo.x(); i<L_hi.x(); i++){      
+        IntVector h (i,j,k);                     
+        //cout << "    " << h << endl;             
+        sumColorDiff[c] += color[h] - color[c];  
+      }                                          
+      // Ray in Y dir                            
+      int i = c.x();                             
+      k = c.z();                                 
+      for(int j=L_lo.y(); j<L_hi.y(); j++){      
+        IntVector h (i,j,k);                     
+        sumColorDiff[c] += color[h] - color[c];  
+      }                                          
 
-    // Ray in Z dir                            
-    i = middle.x();                                 
-    j = middle.y();                                 
-    for(int k=L_lo.z(); k<L_hi.z(); k++){      
-      IntVector h (i,j,k);                     
-      sumColorDiff[middle] += color[h] - color[middle];  
-    } 
+      // Ray in Z dir                            
+      i = c.x();                                 
+      j = c.y();                                 
+      for(int k=L_lo.z(); k<L_hi.z(); k++){      
+        IntVector h (i,j,k);                     
+        sumColorDiff[c] += color[h] - color[c];  
+      } 
+    }
       // do something here
   }
 }  
 //______________________________________________________________________
 //
-void RMCRT_Test::scheduleRefine_Q(const PatchSet* patches,
-                                  SchedulerP& sched,
+void RMCRT_Test::scheduleRefine_Q(SchedulerP& sched,
+                                  const PatchSet* patches,
                                   const MaterialSet* matls)
 {
   const Level* fineLevel = getLevel(patches);
@@ -422,7 +438,7 @@ void RMCRT_Test::refine_Q(const ProcessorGroup*,
     selectInterpolator(sumColorDiff_coarse, d_orderOfInterpolation, coarseLevel, fineLevel,
                        refineRatio, fl, fh,sumColorDiff_fine);
 
-  }  // course patch loop 
+  }  // fine patch loop 
 }
   
 //______________________________________________________________________
@@ -458,29 +474,11 @@ void RMCRT_Test::scheduleInitialErrorEstimate ( const LevelP& level, SchedulerP&
 //______________________________________________________________________
 void RMCRT_Test::scheduleCoarsen ( const LevelP& coarseLevel, SchedulerP& scheduler )
 {
-  printSchedule(coarseLevel,dbg,"RMCRT_Test::scheduleCoarsen");
-
-  Task* task = scinew Task( "RMCRT_Test::coarsen", this, 
-                            &RMCRT_Test::coarsen );
-
-  task->requires(Task::NewDW, d_colorLabel, 0, Task::FineLevel, 0, Task::NormalDomain, d_gn, 0);
-  task->computes(d_colorLabel);
-
-  scheduler->addTask( task, coarseLevel->eachPatch(), d_sharedState->allMaterials() );
 }
 //______________________________________________________________________
 void RMCRT_Test::scheduleRefine ( const PatchSet* patches, 
                                   SchedulerP& scheduler )
 {
-  printSchedule(patches,dbg,"RMCRT_Test::scheduleRefine");
-
-  Task* task = scinew Task( "RMCRT_Test::refine", this, 
-                            &RMCRT_Test::refine );
-
-  task->requires(Task::NewDW, d_colorLabel, 0, Task::CoarseLevel, 0, Task::NormalDomain, d_gn, 0);
-  //    task->requires(Task::NewDW, d_oldcolorLabel, 0, Task::CoarseLevel, 0,
-  //             Task::NormalDomain, d_gn, 0);
-  scheduler->addTask( task, patches, d_sharedState->allMaterials() );
 }
 //______________________________________________________________________
 void RMCRT_Test::scheduleRefineInterface ( const LevelP&, 
@@ -501,7 +499,8 @@ void RMCRT_Test::initialize (const ProcessorGroup*,
 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-
+    printTask(patches, patch,dbg,"Doing initialize");
+    
     for(int m = 0;m<matls->size();m++){
       int matl = matls->get(m);
 
@@ -628,10 +627,24 @@ void RMCRT_Test::errorEstimate ( const ProcessorGroup*,
   }  // not initial timestep
 }
 //______________________________________________________________________
-void RMCRT_Test::coarsen ( const ProcessorGroup*,
-                          const PatchSubset* patches,
-                          const MaterialSubset* matls,
-                          DataWarehouse*, DataWarehouse* new_dw )
+void RMCRT_Test::scheduleCoarsen_Q ( const LevelP& coarseLevel, SchedulerP& scheduler )
+{
+  printSchedule(coarseLevel,dbg,"RMCRT_Test::scheduleCoarsen_Q");
+
+  Task* task = scinew Task( "RMCRT_Test::coarsen_Q", this, 
+                            &RMCRT_Test::coarsen_Q );
+
+  task->requires(Task::OldDW, d_colorLabel, 0, Task::FineLevel, 0, Task::NormalDomain, d_gn, 0);
+  task->computes(d_colorLabel);
+
+  scheduler->addTask( task, coarseLevel->eachPatch(), d_sharedState->allMaterials() );
+}
+//______________________________________________________________________
+void RMCRT_Test::coarsen_Q ( const ProcessorGroup*,
+                             const PatchSubset* patches,
+                             const MaterialSubset* matls,
+                             DataWarehouse* old_dw, 
+                             DataWarehouse* new_dw )
 {
   const Level* coarseLevel = getLevel(patches);
   const LevelP fineLevel = coarseLevel->getFinerLevel();
@@ -657,7 +670,7 @@ void RMCRT_Test::coarsen ( const ProcessorGroup*,
         const Patch* finePatch = finePatches[i];
 
         constCCVariable<double> color_fine;
-        new_dw->get(color_fine, d_colorLabel, matl, finePatch, d_gn, 0);
+        old_dw->get(color_fine, d_colorLabel, matl, finePatch, d_gn, 0);
 
         IntVector fl(finePatch->getCellLowIndex());
         IntVector fh(finePatch->getCellHighIndex());
@@ -685,33 +698,6 @@ void RMCRT_Test::coarsen ( const ProcessorGroup*,
   }  // course patch loop 
 }
 
-//______________________________________________________________________
-void RMCRT_Test::refine ( const ProcessorGroup*,
-                          const PatchSubset* patches,
-                          const MaterialSubset* matls,
-                          DataWarehouse*, 
-                          DataWarehouse* new_dw )
-{
-  for(int p=0;p<patches->size();p++){
-    const Patch* patch = patches->get(p);
-
-    printTask(patches, patch,dbg,"Doing refine");
-
-    for(int m = 0;m<matls->size();m++){
-      int matl = matls->get(m);
-
-     CCVariable<double> color;
-      new_dw->allocateAndPut(color, d_colorLabel, matl, patch);
-
-     for ( CellIterator iter(patch->getCellIterator()); !iter.done(); iter++) {
-        IntVector c = *iter;
-        Vector whereThisCellIs( patch->cellPosition( c ) );
-        Vector distanceToCenterOfDomain = whereThisCellIs - d_centerOfBall;
-        color[c] = distanceToCenterOfDomain.length();
-      }
-    }
-  }
-}
 //__________________________________
 //  
 void RMCRT_Test::printSchedule(const PatchSet* patches,

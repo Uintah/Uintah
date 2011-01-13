@@ -115,8 +115,8 @@ WARNING
                      DataWarehouse* old_dw,
                      DataWarehouse* new_dw );
 
-    void scheduleRefine_Q(const PatchSet* patches,
-                          SchedulerP& sched,
+    void scheduleRefine_Q(SchedulerP& sched,
+                          const PatchSet* patches,
                           const MaterialSet* matls);
 
     void refine_Q(const ProcessorGroup*,
@@ -124,7 +124,16 @@ WARNING
                   const MaterialSubset* matls,
                   DataWarehouse*,
                   DataWarehouse* new_dw);
-                                 
+                  
+    void scheduleCoarsen_Q( const LevelP& level, 
+                            SchedulerP& scheduler );
+                  
+    void coarsen_Q ( const ProcessorGroup*,
+                     const PatchSubset* patches,
+                     const MaterialSubset* matls,
+                     DataWarehouse*, 
+                     DataWarehouse* new_dw);
+                                                    
     void schedulePseudoCFD(SchedulerP& sched,
                            const PatchSet* patches,
                            const MaterialSet* matls);
@@ -141,19 +150,7 @@ WARNING
                          DataWarehouse*, 
                          DataWarehouse* new_dw, 
                          bool initial);
-
-    void coarsen ( const ProcessorGroup*,
-                   const PatchSubset* patches,
-                   const MaterialSubset* matls,
-                   DataWarehouse*, 
-                   DataWarehouse* new_dw);
-
-    void refine ( const ProcessorGroup*,
-                  const PatchSubset* patches,
-                  const MaterialSubset* matls,
-                  DataWarehouse*, 
-                  DataWarehouse* new_dw);
-
+                         
     void printSchedule(const PatchSet* patches,
                        DebugStream& dbg,
                        const string& where);

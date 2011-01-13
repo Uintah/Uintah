@@ -13,7 +13,7 @@
     <initTime>      0.0       </initTime>
     <delt_min>      0.00001   </delt_min>
     <delt_max>      1         </delt_max>
-    <max_Timesteps> 100        </max_Timesteps>
+    <max_Timesteps> 10        </max_Timesteps>
     <timestep_multiplier>  1  </timestep_multiplier>
   </Time>
   <!--__________________________________-->
@@ -71,10 +71,9 @@
   <!--__________________________________-->
   <DataArchiver>
   <filebase>rmcrtTest.uda</filebase>
-      <outputInitTimestep/>
       <outputTimestepInterval>1</outputTimestepInterval>
-      <save label = "color"/>
-      <save label = "sumColorDiff" levels="0"/>
+      <save label = "color"       />
+      <save label = "sumColorDiff" />
       <!--<save label = "refineFlag"/> -->
       <checkpoint cycle = "2" timestepInterval = "1"/>
   </DataArchiver>
