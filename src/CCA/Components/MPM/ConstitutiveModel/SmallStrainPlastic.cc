@@ -1302,8 +1302,6 @@ SmallStrainPlastic::computeStressTensorExplicit(const PatchSubset* patches,
                        Max(c_dil+fabs(pVel.y()),waveSpeed.y()),
                        Max(c_dil+fabs(pVel.z()),waveSpeed.z()));
 
-      delete state;
-
       // Compute artificial viscosity term
       double de_s=0.;
       if (flag->d_artificial_viscosity) {
@@ -1318,6 +1316,8 @@ SmallStrainPlastic::computeStressTensorExplicit(const PatchSubset* patches,
         de_s = 0.;
       }
       pdTdt[idx] += de_s/state->specificHeat;
+
+      delete state;
     }  // end loop over particles
 
     waveSpeed = dx/waveSpeed;
@@ -1704,5 +1704,3 @@ void SmallStrainPlastic::checkNeedAddMPMMaterial(const PatchSubset* patches,
 
   new_dw->put(sum_vartype(need_add),     lb->NeedAddMPMMaterialLabel);
 }
-
-
