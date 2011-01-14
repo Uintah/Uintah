@@ -65,8 +65,8 @@ GENERAL INFORMATION
    andrew@lanl.gov
 
    based on RigidBodyContact.
-     Steven G. Parker
-     Department of Computer Science
+     Jim Guilkey
+     Department of Mechanical Engineering 
      University of Utah
 
      Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
@@ -147,6 +147,7 @@ DESCRIPTION
     
     SimulationStateP d_sharedState;
     double    d_stop_time;
+    double    d_vol_const;
     Vector    d_vel_after_stop;
     int       d_material;
     std::string    d_filename;

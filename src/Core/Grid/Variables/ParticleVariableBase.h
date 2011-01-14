@@ -142,7 +142,7 @@ WARNING
       void getMPIBuffer(BufferInfo& buffer, ParticleSubset* sendset);
       virtual const TypeDescription* virtualGetTypeDescription() const = 0;
      virtual RefCounted* getRefCounted() = 0;
-     virtual void getSizeInfo(string& elems, unsigned long& totsize,
+     virtual void getSizeInfo(std::string& elems, unsigned long& totsize,
                               void*& ptr) const = 0;
    protected:
       ParticleVariableBase(const ParticleVariableBase&);

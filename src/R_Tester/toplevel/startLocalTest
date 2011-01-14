@@ -8,13 +8,12 @@
 # define environmental variables and export them
 HTMLLOG=""
 LOCAL_OR_NIGHTLY_TEST="local"
-mallocstrict="no"
 OS=`uname -s`
 PARALLELISM=8
 WEBLOG=""
 BUILD_DIR=/dev/null
 
-export mallocstrict  BUILD_DIR  HTMLLOG WEBLOG LOCAL_OR_NIGHTLY_TEST OS
+export BUILD_DIR  HTMLLOG WEBLOG LOCAL_OR_NIGHTLY_TEST OS
 
 #__________________________________
 unset SHELL

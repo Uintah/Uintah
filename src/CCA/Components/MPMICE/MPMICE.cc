@@ -2741,7 +2741,12 @@ void MPMICE::refineVariableCC(const ProcessorGroup*,
     
     // region of fine space that will correspond to the coarse we need to get
     IntVector cl, ch, fl, fh;
-    getCoarseLevelRange(finePatch, coarseLevel, cl, ch, fl, fh, 1);
+    IntVector bl(0,0,0);  // boundary layer cells
+    int nGhostCells = 1;
+    bool returnExclusiveRange=true;
+    
+    getCoarseLevelRange(finePatch, coarseLevel, cl, ch, fl, fh, bl, 
+                        nGhostCells, returnExclusiveRange);
 
     for(int m = 0;m<matls->size();m++){
       int indx = matls->get(m);
@@ -3013,17 +3018,11 @@ void MPMICE::coarsenVariableNC(const ProcessorGroup*,
         const Patch* finePatch = finePatches[i];
         
         IntVector cl, ch, fl, fh;
-/*`==========TESTING==========*/
-  #if 0
-        int nBoundaryCells = 1;
-        int ngc = 0;
-        getFineLevelRangeNodes(coarsePatch, finePatch, cl, ch, fl, fh,ngc,nBoundaryCells);
-  #endif
-         
-/*===========TESTING==========`*/
-        IntVector ghost(refineRatio.x()/2,refineRatio.y()/2,refineRatio.z()/2);
-        getFineLevelRangeNodes_old(coarsePatch, finePatch, cl, ch, fl, fh,ghost);
+
+        IntVector padding(refineRatio.x()/2,refineRatio.y()/2,refineRatio.z()/2);
+        getFineLevelRangeNodes(coarsePatch, finePatch, cl, ch, fl, fh,padding);
         
+
         if (fh.x() <= fl.x() || fh.y() <= fl.y() || fh.z() <= fl.z()) {
           continue;
         }

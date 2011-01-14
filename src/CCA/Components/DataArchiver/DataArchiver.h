@@ -47,10 +47,6 @@ class DataWarehouse;
 using SCIRun::ConsecutiveRangeSet;
 using SCIRun::Mutex;
 
-using std::string;
-using std::vector;
-using std::list;
-using std::pair;
 
    /**************************************
      
@@ -118,10 +114,10 @@ using std::pair;
        virtual void combinePatchSetup(Dir& fromDir);
 
        //! Copy a section between udas' index.xml.
-       void copySection(Dir& fromDir, Dir& toDir, string section);
+       void copySection(Dir& fromDir, Dir& toDir, std::string section);
 
        //! Copy a section from another uda's to our index.xml.
-       void copySection(Dir& fromDir, string section)
+       void copySection(Dir& fromDir, std::string section)
        { copySection(fromDir, d_dir, section); }
 
        //! Checks to see if this is an output timestep. 
@@ -138,7 +134,7 @@ using std::pair;
        virtual void executedTimestep(double delt, const GridP&);
 
        //! Returns as a string the name of the top of the output directory.
-       virtual const string getOutputLocation() const;
+       virtual const std::string getOutputLocation() const;
 
        //! Asks if we need to recompile the task graph.
        virtual bool needRecompile(double time, double dt,
@@ -189,18 +185,18 @@ using std::pair;
        { return d_isCheckpointTimestep; }
 
        //! Get the directory of the current time step for outputting info.
-       virtual const string& getLastTimestepOutputLocation() const
+       virtual const std::string& getLastTimestepOutputLocation() const
        { return d_lastTimestepLocation; }
 
-       bool isLabelSaved( string label );
+       bool isLabelSaved( std::string label );
 
      public:
 
        //! problemSetup parses the ups file into a list of these
        //! (d_saveLabelNames)
        struct SaveNameItem {
-         string labelName;
-         string compressionMode;
+         std::string labelName;
+         std::string compressionMode;
          ConsecutiveRangeSet matls;
          ConsecutiveRangeSet levels;
        };
@@ -216,7 +212,7 @@ using std::pair;
 
            const VarLabel* label_;
 
-           map<int, MaterialSetP> matlSet_;
+           std::map<int, MaterialSetP> matlSet_;
        };
 
      private:
@@ -233,12 +229,12 @@ using std::pair;
        //! helper for beginOutputTimestep - creates and writes
        //! the necessary directories and xml files to begin the 
        //! output timestep.
-       void outputTimestep(Dir& dir, vector<SaveItem>& saveLabels,
+       void outputTimestep(Dir& dir, std::vector<SaveItem>& saveLabels,
            double time, double delt, const GridP& grid,
-           string* pTimestepDir /* passed back */, bool hasGlobals = false);
+           std::string* pTimestepDir /* passed back */, bool hasGlobals = false);
 
        //! helper for finalizeTimestep - schedules a task for each var's output
-       void scheduleOutputTimestep(vector<SaveItem>& saveLabels,
+       void scheduleOutputTimestep(std::vector<SaveItem>& saveLabels,
            const GridP& grid, SchedulerP& sched,
            bool isThisCheckpoint);
 
@@ -275,7 +271,7 @@ using std::pair;
 
        //! string for uda dir (actual dir will have postpended numbers
        //! i.e., filebase.000
-       string d_filebase;
+       std::string d_filebase;
 
        //! pointer to simulation state, to get timestep and time info
        SimulationStateP d_sharedState;
@@ -302,7 +298,7 @@ using std::pair;
        bool d_outputInitTimestep;
 
        //! last timestep dir (filebase.000/t#)
-       string d_lastTimestepLocation;
+       std::string d_lastTimestepLocation;
        bool d_isOutputTimestep; //!< set if this is an output timestep
        bool d_isCheckpointTimestep; //!< set if a checkpoint timestep
 
@@ -320,9 +316,9 @@ using std::pair;
        //! information will be basically transferred to d_saveLabels or
        //! d_saveReductionLabels after mapping VarLabel names to their
        //! actual VarLabel*'s.
-       list< SaveNameItem > d_saveLabelNames;
-       vector< SaveItem > d_saveLabels;
-       vector< SaveItem > d_saveReductionLabels;
+       std::list< SaveNameItem > d_saveLabelNames;
+       std::vector< SaveItem > d_saveLabels;
+       std::vector< SaveItem > d_saveReductionLabels;
 
        // for efficiency of SaveItem's
        ConsecutiveRangeSet prevMatls_;
@@ -330,8 +326,8 @@ using std::pair;
 
        //! d_checkpointLabelNames is a temporary list containing
        //! the names of labels to save when checkpointing
-       vector< SaveItem > d_checkpointLabels;
-       vector< SaveItem > d_checkpointReductionLabels;
+       std::vector< SaveItem > d_checkpointLabels;
+       std::vector< SaveItem > d_checkpointReductionLabels;
 
        // Only one of these should be non-zero.
        double d_checkpointInterval;        // In seconds.
@@ -350,7 +346,7 @@ using std::pair;
        Dir d_checkpointsDir;
 
        //! List of current checkpoint dirs
-       list<string> d_checkpointTimestepDirs;
+       std::list<std::string> d_checkpointTimestepDirs;
        double d_nextCheckpointTime; //!< used when d_checkpointInterval != 0
        int d_nextCheckpointTimestep; //!< used when d_checkpointTimestepInterval != 0
        int d_nextCheckpointWalltime; //!< used when d_checkpointWalltimeInterval != 0
@@ -382,15 +378,15 @@ using std::pair;
        // at the same time we need two different sets.
        // Also store the filename for error-tracking purposes.
 
-       map< int, pair<int, char*> > d_DataFileHandles;
-       map< int, pair<int, char*> > d_CheckpointDataFileHandles;
+       std::map< int, std::pair<int, char*> > d_DataFileHandles;
+       std::map< int, std::pair<int, char*> > d_CheckpointDataFileHandles;
 
        // Each level needs it's own XML Data Doc
        // and if we are outputting and checkpointing
        // at the same time we need two different sets.
 
-       map< int, ProblemSpecP > d_XMLDataDocs;
-       map< int, ProblemSpecP > d_CheckpointXMLDataDocs;
+       std::map< int, ProblemSpecP > d_XMLDataDocs;
+       std::map< int, ProblemSpecP > d_CheckpointXMLDataDocs;
 
 
        //-----------------------------------------------------------
@@ -409,7 +405,7 @@ using std::pair;
 
        bool d_outputDoubleAsFloat;
 
-       string TranslateVariableType( string type, bool isThisCheckpoint );
+       std::string TranslateVariableType( std::string type, bool isThisCheckpoint );
 
 
        //-----------------------------------------------------------
@@ -432,8 +428,8 @@ using std::pair;
 
 #if SCI_ASSERTION_LEVEL >= 2
        //! double-check to make sure that DA::output is only called once per level per processor per type
-       vector<bool> d_outputCalled;
-       vector<bool> d_checkpointCalled;
+       std::vector<bool> d_outputCalled;
+       std::vector<bool> d_checkpointCalled;
        bool d_checkpointReductionCalled;
 #endif
        Mutex d_outputLock;

@@ -99,10 +99,11 @@ while true ; do
     *) echo "Internal error!" ; exit 1 ;;                                 
   esac                                                                          
 done
+
 #echo "Remaining arguments:"
-for arg do 
-  echo '--> '"\`$arg'" ;
-done
+#for arg do 
+#  echo '--> '"\`$arg'" ;
+#done
 
 if [ "printUsage" = "true" ]; then
   printHelp
@@ -110,10 +111,12 @@ fi
 
 shift $(($OPTIND - 1))
 
-gold_standard_dir="$1"
-replacement_dir="$2"
-testname="$3"
-comment="$4"
+# The shifts and eval set is to preserve white spaces in the comment variable 
+gold_standard_dir="$1"; shift;
+replacement_dir="$1";   shift;
+testname="$1";          shift;
+eval set -- "$@"
+comment="$@"
 
 # Info for a log file, to keep track of who replaced gold standards
 logfile="$gold_standard_dir/$testname/replace.log"
@@ -329,6 +332,7 @@ if [ "$do_uda" = "true" -o "$do_mem" = "true" -o "$do_perf" = "true" -o "$do_inp
   if [[ "$replaced_uda" = "true" && "$owner" = "csafe-tester" ]]; then
     tail -1 $logfile > message
     mutt  -s "GoldStandard Change:$testname" john.schmidt@utah.edu < message
+    /bin/rm message
   fi
 
 # change groups and permissions so (hopefully) anybody can replace them later

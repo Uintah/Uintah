@@ -67,8 +67,6 @@
 
 namespace SCIRun {
 
-using std::vector;
-
 template <class Basis>
 class TriSurfMesh : public Mesh
 {
@@ -89,21 +87,21 @@ public:
     typedef EdgeIndex<under_type>       index_type;
     typedef EdgeIterator<under_type>    iterator;
     typedef EdgeIndex<under_type>       size_type;
-    typedef vector<index_type>          array_type;
+    typedef std::vector<index_type>     array_type;
   };
 
   struct Face {
     typedef FaceIndex<under_type>       index_type;
     typedef FaceIterator<under_type>    iterator;
     typedef FaceIndex<under_type>       size_type;
-    typedef vector<index_type>          array_type;
+    typedef std::vector<index_type>     array_type;
   };
 
   struct Cell {
     typedef CellIndex<under_type>       index_type;
     typedef CellIterator<under_type>    iterator;
     typedef CellIndex<under_type>       size_type;
-    typedef vector<index_type>          array_type;
+    typedef std::vector<index_type>     array_type;
   };
 
   typedef Face Elem;
@@ -184,7 +182,7 @@ public:
   virtual BBox get_bounding_box() const;
   virtual void transform(const Transform &t);
 
-  bool get_dim(vector<unsigned int>&) const { return false;  }
+  bool get_dim(std::vector<unsigned int>&) const { return false;  }
   virtual int topology_geometry() const { return (UNSTRUCTURED | IRREGULAR); }
 
   void begin(typename Node::iterator &) const;
@@ -246,7 +244,7 @@ public:
                     typename Edge::index_type edge) const;
   bool get_neighbor(unsigned int &nbr_half_edge,
                     unsigned int half_edge) const;
-  void get_neighbors(vector<typename Node::index_type> &array,
+  void get_neighbors(std::vector<typename Node::index_type> &array,
                      typename Node::index_type idx) const;
 
   //! Get the size of an elemnt (length, area, volume)
@@ -280,7 +278,7 @@ public:
 
   int get_valence(typename Node::index_type idx) const
   {
-    vector<typename Node::index_type> nodes;
+    std::vector<typename Node::index_type> nodes;
     get_neighbors(nodes, idx);
     return (int)nodes.size();
   }
@@ -329,7 +327,7 @@ public:
   void set_point(const Point &point, typename Node::index_type index)
   { points_[index] = point; }
 
-  void get_normal(Vector &result, vector<double> &coords,
+  void get_normal(Vector &result, std::vector<double> &coords,
                   typename Elem::index_type eidx, unsigned int)
   {
     if (basis_.polynomial_order() < 2) {
@@ -360,7 +358,7 @@ public:
     }
 
     ElemData ed(*this, eidx);
-    vector<Point> Jv;
+    std::vector<Point> Jv;
     basis_.derivate(coords, ed, Jv);
     result = Cross(Jv[0].asVector(), Jv[1].asVector());
     result.normalize();
@@ -430,7 +428,7 @@ public:
 
   //! Generate the list of points that make up a sufficiently accurate
   //! piecewise linear approximation of an edge.
-  void pwl_approx_edge(vector<vector<double> > &coords,
+  void pwl_approx_edge(std::vector<std::vector<double> > &coords,
                        typename Elem::index_type ci,
                        unsigned which_edge,
                        unsigned div_per_unit) const
@@ -442,7 +440,7 @@ public:
 
   //! Generate the list of points that make up a sufficiently accurate
   //! piecewise linear approximation of an face.
-  void pwl_approx_face(vector<vector<vector<double> > > &coords,
+  void pwl_approx_face(std::vector<std::vector<std::vector<double> > > &coords,
                        typename Elem::index_type ci,
                        unsigned,
                        unsigned div_per_unit) const
@@ -450,7 +448,7 @@ public:
     basis_.approx_face(0, div_per_unit, coords);
   }
 
-  bool get_coords(vector<double> &coords,
+  bool get_coords(std::vector<double> &coords,
                   const Point &p,
                   typename Elem::index_type idx) const
   {
@@ -458,7 +456,7 @@ public:
     return basis_.get_coords(coords, p, ed);
   }
 
-  void interpolate(Point &pt, const vector<double> &coords,
+  void interpolate(Point &pt, const std::vector<double> &coords,
                    typename Elem::index_type idx) const
   {
     ElemData ed(*this, idx);
@@ -466,9 +464,9 @@ public:
   }
 
   // get the Jacobian matrix
-  void derivate(const vector<double> &coords,
+  void derivate(const std::vector<double> &coords,
                 typename Elem::index_type idx,
-                vector<Point> &J) const
+                std::vector<Point> &J) const
   {
     ElemData ed(*this, idx);
     basis_.derivate(coords, ed, J);
@@ -478,7 +476,7 @@ public:
                            const Point &p) const;
 
   double find_closest_elems(Point &result,
-                            vector<typename Elem::index_type> &elem,
+                            std::vector<typename Elem::index_type> &elem,
                             const Point &p) const;
 
   static const TypeDescription* node_type_description();
@@ -493,8 +491,8 @@ public:
 
 private:
   void                  walk_face_orient(typename Face::index_type face,
-                                         vector<bool> &tested,
-                                         vector<bool> &flip);
+                                         std::vector<bool> &tested,
+                                         std::vector<bool> &flip);
 
   // These require the synchronize_lock_ to be held before calling.
   void                  compute_normals();
@@ -515,13 +513,13 @@ private:
   static int next(int i) { return ((i%3)==2) ? (i-2) : (i+1); }
   static int prev(int i) { return ((i%3)==0) ? (i+2) : (i-1); }
 
-  vector<Point>         points_;
-  vector<under_type>    edges_;  // edges->halfedge map
-  vector<under_type>    halfedge_to_edge_;  // halfedge->edge map
-  vector<under_type>    faces_;
-  vector<under_type>    edge_neighbors_;
-  vector<Vector>        normals_;   //! normalized per node normal.
-  vector<vector<under_type> > node_neighbors_;
+  std::vector<Point>         points_;
+  std::vector<under_type>    edges_;  // edges->halfedge map
+  std::vector<under_type>    halfedge_to_edge_;  // halfedge->edge map
+  std::vector<under_type>    faces_;
+  std::vector<under_type>    edge_neighbors_;
+  std::vector<Vector>        normals_;   //! normalized per node normal.
+  std::vector<std::vector<under_type> > node_neighbors_;
   LockingHandle<SearchGridConstructor> grid_;
   unsigned int          synchronized_;
   Mutex                 synchronize_lock_;
@@ -727,7 +725,7 @@ TriSurfMesh<Basis>::get_bounding_box() const
 {
   BBox result;
 
-  for (vector<Point>::size_type i = 0; i < points_.size(); i++)
+  for (std::vector<Point>::size_type i = 0; i < points_.size(); i++)
   {
     result.extend(points_[i]);
   }
@@ -741,8 +739,8 @@ void
 TriSurfMesh<Basis>::transform(const Transform &t)
 {
   synchronize_lock_.lock();
-  vector<Point>::iterator itr = points_.begin();
-  vector<Point>::iterator eitr = points_.end();
+  std::vector<Point>::iterator itr = points_.begin();
+  std::vector<Point>::iterator eitr = points_.end();
   while (itr != eitr)
   {
     *itr = t.project(*itr);
@@ -938,7 +936,7 @@ TriSurfMesh<Basis>::compute_node_neighbors()
 //! Returns all nodes that share an edge with this node
 template <class Basis>
 void
-TriSurfMesh<Basis>::get_neighbors(vector<typename Node::index_type> &array,
+TriSurfMesh<Basis>::get_neighbors(std::vector<typename Node::index_type> &array,
                                   typename Node::index_type idx) const
 {
   ASSERTMSG(synchronized_ & NODE_NEIGHBORS_E,
@@ -1088,7 +1086,7 @@ TriSurfMesh<Basis>::get_weights(const Point &p, typename Node::array_type &l,
   if (locate(idx, p))
   {
     get_nodes(l,idx);
-    vector<double> coords(2);
+    std::vector<double> coords(2);
     if (get_coords(coords, p, idx)) {
       basis_.get_weights(coords, w);
       return basis_.dofs();
@@ -1190,9 +1188,9 @@ TriSurfMesh<Basis>::compute_normals()
   normals_.resize(points_.size()); // 1 per node
 
   // build table of faces that touch each node
-  vector<vector<typename Face::index_type> > node_in_faces(points_.size());
+  std::vector<std::vector<typename Face::index_type> > node_in_faces(points_.size());
   //! face normals (not normalized) so that magnitude is also the area.
-  vector<Vector> face_normals(faces_.size());
+  std::vector<Vector> face_normals(faces_.size());
   // Computing normal per face.
   typename Node::array_type nodes(3);
   typename Face::iterator iter, iter_end;
@@ -1219,12 +1217,12 @@ TriSurfMesh<Basis>::compute_normals()
     ++iter;
   }
   //Averaging the normals.
-  typename vector<vector<typename Face::index_type> >::iterator nif_iter =
+  typename std::vector<std::vector<typename Face::index_type> >::iterator nif_iter =
     node_in_faces.begin();
   int i = 0;
   while (nif_iter != node_in_faces.end()) {
-    const vector<typename Face::index_type> &v = *nif_iter;
-    typename vector<typename Face::index_type>::const_iterator fiter =
+    const std::vector<typename Face::index_type> &v = *nif_iter;
+    typename std::vector<typename Face::index_type>::const_iterator fiter =
       v.begin();
     Vector ave(0.L,0.L,0.L);
     while(fiter != v.end()) {
@@ -1580,7 +1578,7 @@ TriSurfMesh<Basis>::bisect_element(const typename Face::index_type face)
   const unsigned f0 = face*3;
   typename Node::array_type nodes;
   get_nodes(nodes,face);
-  vector<Vector> normals(3);
+  std::vector<Vector> normals(3);
   for (int edge = 0; edge < 3; ++edge)
   {
     Point p = ((points_[faces_[f0+edge]] +
@@ -1790,7 +1788,7 @@ TriSurfMesh<Basis>::add_find_point(const Point &p, double err)
   {
     synchronize_lock_.lock();
     points_.push_back(p);
-    node_neighbors_.push_back(vector<under_type>());
+    node_neighbors_.push_back(std::vector<under_type>());
     synchronize_lock_.unlock();
     return static_cast<typename Node::index_type>(points_.size() - 1);
   }
@@ -1857,7 +1855,7 @@ TriSurfMesh<Basis>::remove_orphan_nodes()
   bool rval = false;
   
   //! find the orphan nodes.
-  vector<under_type> onodes;
+  std::vector<under_type> onodes;
   //! check each point against the face list.
   for (under_type i = 0; i < points_.size(); i++) {
     if (find(faces_.begin(), faces_.end(), i) == faces_.end()) {
@@ -1869,17 +1867,17 @@ TriSurfMesh<Basis>::remove_orphan_nodes()
   if (onodes.size()) rval = true;
 
   //! check each point against the face list.
-  vector<under_type>::reverse_iterator orph_iter = onodes.rbegin();
+  std::vector<under_type>::reverse_iterator orph_iter = onodes.rbegin();
   while (orph_iter != onodes.rend()) {
     unsigned int i = *orph_iter++;
-    vector<under_type>::iterator iter = faces_.begin();
+    std::vector<under_type>::iterator iter = faces_.begin();
     while (iter != faces_.end()) {
       under_type &node = *iter++;
       if (node > i) {
 	node--;
       }
     }
-    vector<Point>::iterator niter = points_.begin();
+    std::vector<Point>::iterator niter = points_.begin();
     niter += i;
     points_.erase(niter);
   }
@@ -1897,8 +1895,8 @@ TriSurfMesh<Basis>::remove_face(typename Face::index_type f)
   bool rval = true;
 
   synchronize_lock_.lock();
-  vector<under_type>::iterator fb = faces_.begin() + f*3;
-  vector<under_type>::iterator fe = fb + 3;
+  std::vector<under_type>::iterator fb = faces_.begin() + f*3;
+  std::vector<under_type>::iterator fe = fb + 3;
 
   if (fe <= faces_.end())
     faces_.erase(fb, fe);
@@ -1989,8 +1987,8 @@ TriSurfMesh<Basis>::flip_face(typename Face::index_type face)
 template <class Basis>
 void
 TriSurfMesh<Basis>::walk_face_orient(typename Face::index_type face,
-                                     vector<bool> &tested,
-                                     vector<bool> &flip)
+                                     std::vector<bool> &tested,
+                                     std::vector<bool> &flip)
 {
   tested[face] = true;
   for (unsigned int i = 0; i < 3; i++)
@@ -2017,8 +2015,8 @@ TriSurfMesh<Basis>::orient_faces()
   synchronize_lock_.lock();
 
   int nfaces = (int)faces_.size() / 3;
-  vector<bool> tested(nfaces, false);
-  vector<bool> flip(nfaces, false);
+  std::vector<bool> tested(nfaces, false);
+  std::vector<bool> flip(nfaces, false);
 
   typename Face::iterator fiter, fend;
   begin(fiter);
@@ -2180,7 +2178,7 @@ TriSurfMesh<Basis>::add_point(const Point &p)
   if (synchronized_ & NORMALS_E) normals_.push_back(Vector());
   if (synchronized_ & NODE_NEIGHBORS_E)
   {
-    node_neighbors_.push_back(vector<under_type>());
+    node_neighbors_.push_back(std::vector<under_type>());
   }
   synchronize_lock_.unlock();
   return static_cast<typename Node::index_type>(points_.size() - 1);
@@ -2384,7 +2382,7 @@ TriSurfMesh<Basis>::find_closest_elem(Point &result,
 template <class Basis>
 double
 TriSurfMesh<Basis>::find_closest_elems(Point &result,
-                                       vector<typename TriSurfMesh::Elem::index_type> &faces,
+                                       std::vector<typename TriSurfMesh::Elem::index_type> &faces,
                                        const Point &p) const
 {
   // Walking the grid like this works really well if we're near the

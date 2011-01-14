@@ -51,13 +51,13 @@ class CrackGeometry
      virtual ~CrackGeometry();
      virtual void readCrack(ProblemSpecP&) = 0;
      virtual void outputInitialCrackPlane(int i) = 0;
-     virtual void discretize(int& nstart0,vector<Point>& cx,
-                             vector<IntVector>& ce,vector<int>& SegNodes) = 0;
+     virtual void discretize(int& nstart0,std::vector<Point>& cx,
+                             std::vector<IntVector>& ce,std::vector<int>& SegNodes) = 0;
 
      bool twoLinesCoincide(Point& p1, Point& p2, Point& p3, Point& p4);
 
  protected:
-     vector<Point> vertices;
+     std::vector<Point> vertices;
 };
 
 }//End namespace Uintah

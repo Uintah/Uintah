@@ -59,7 +59,7 @@ namespace Uintah {
     \f[
     p = \frac{\rho_0 C_0^2 \zeta 
               \left[1 + \left(1-\frac{\Gamma_0}{2}\right)\zeta\right]}
-             {\left[1 - (S_{\alpha} - 1) \zeta\right]^2 + \Gamma_0 C_p T}
+             {\left[1 - (S_{\alpha} - 1) \zeta\right]^2 } + \Gamma_0 C_p T
     \f]
     where 
     \f$ p\f$ = pressure \n

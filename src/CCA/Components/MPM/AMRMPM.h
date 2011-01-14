@@ -53,6 +53,7 @@ DEALINGS IN THE SOFTWARE.
 namespace Uintah {
 
 using namespace SCIRun;
+class GeometryObject;
 
 class UINTAHSHARE AMRMPM : public SerialMPM {
 
@@ -165,6 +166,12 @@ protected:
                             DataWarehouse* old_dw,
                             DataWarehouse* new_dw,
                             const coarsenFlag flag);
+                            
+  void Nodal_velocity_temperature(const ProcessorGroup*,
+                                  const PatchSubset* patches,
+                                  const MaterialSubset* matls,
+                                  DataWarehouse* old_dw,
+                                  DataWarehouse* new_dw);
 
 
   virtual void computeStressTensor(const ProcessorGroup*,
@@ -255,6 +262,10 @@ protected:
                                     const PatchSet*,
                                     const MaterialSet*,
                                     const coarsenFlag flag);
+                                    
+  void scheduleNodal_velocity_temperature(SchedulerP&, 
+                                          const PatchSet*,
+                                          const MaterialSet*);
 
   virtual void scheduleComputeStressTensor(SchedulerP&, 
                                            const PatchSet*,
@@ -298,7 +309,17 @@ protected:
                       const PatchSubset* patches,                            
                       const MaterialSubset*,                   
                       DataWarehouse* old_dw,                                 
-                      DataWarehouse* new_dw);                 
+                      DataWarehouse* new_dw);
+                      
+  void scheduleDebug_CFI(SchedulerP&, 
+                         const PatchSet*,
+                         const MaterialSet*);
+                                                                                         
+  void debug_CFI(const ProcessorGroup*,
+                 const PatchSubset* patches,                            
+                 const MaterialSubset*,                   
+                 DataWarehouse* old_dw,                                
+                 DataWarehouse* new_dw);    
                             
 
   
@@ -310,13 +331,15 @@ protected:
 
   double   d_SMALL_NUM_MPM;
   int      NGP;      // Number of ghost particles needed.
-  int      NGN;      // Number of ghost nodes     needed.
-  
+  int      NGN;      // Number of ghost nodes  needed.
+  int      d_nPaddingCells_Coarse;  // Number of cells on the coarse level that contain particles and surround a fine patch.
+                                   // Coarse level particles are used in the task interpolateToParticlesAndUpdate_CFI.
+                                   
   vector<MPMPhysicalBC*> d_physicalBCs;
   IntegratorType d_integrator;
 
 private:
-
+  std::vector<GeometryObject*> d_refine_geom_objs;
   AMRMPM(const AMRMPM&);
   AMRMPM& operator=(const AMRMPM&);
          

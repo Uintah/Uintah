@@ -1,6 +1,7 @@
 //-- Wasatch includes --//
 #include "CoordHelper.h"
 #include "Expressions/Coordinate.h"
+#include "StringNames.h"
 
 //-- Uintah includes --//
 #include <Core/Grid/Variables/VarTypes.h>
@@ -9,6 +10,8 @@
 #include <Core/Grid/Task.h>
 #include <Core/Parallel/ProcessorGroup.h>
 
+#include "StringNames.h"
+
 //-- ExprLib includes --//
 #include <expression/ExpressionFactory.h>
 
@@ -16,9 +19,15 @@
 namespace Wasatch{
 
   CoordHelper::CoordHelper( Expr::ExpressionFactory& exprFactory )
-    : context_( Expr::STATE_NONE )
+    : context_( Expr::STATE_NONE ),
+      sName_( StringNames::self() ),
+      xsvt_( sName_.xsvolcoord, context_ ),  ysvt_( sName_.ysvolcoord, context_ ),  zsvt_( sName_.zsvolcoord, context_ ),
+      xxvt_( sName_.xxvolcoord, context_ ),  yxvt_( sName_.yxvolcoord, context_ ),  zxvt_( sName_.zxvolcoord, context_ ),
+      xyvt_( sName_.xyvolcoord, context_ ),  yyvt_( sName_.yyvolcoord, context_ ),  zyvt_( sName_.zyvolcoord, context_ ),
+      xzvt_( sName_.xzvolcoord, context_ ),  yzvt_( sName_.yzvolcoord, context_ ),  zzvt_( sName_.zzvolcoord, context_ )
   {
     needCoords_ = false;
+
     xSVolCoord_ = ySVolCoord_ = zSVolCoord_ = false;
     xXVolCoord_ = yXVolCoord_ = zXVolCoord_ = false;
     xYVolCoord_ = yYVolCoord_ = zYVolCoord_ = false;
@@ -28,43 +37,43 @@ namespace Wasatch{
     // build expressions to set coordinates.  If any initialization
     // expressions require the coordinates, then this will trigger
     // their construction and incorporation into a graph.
-    exprFactory.register_expression( Expr::Tag("XSVOL",context_), scinew Coordinate<SVolField>::Builder(*this,XDIR) );
-    exprFactory.register_expression( Expr::Tag("YSVOL",context_), scinew Coordinate<SVolField>::Builder(*this,YDIR) );
-    exprFactory.register_expression( Expr::Tag("ZSVOL",context_), scinew Coordinate<SVolField>::Builder(*this,ZDIR) );
-
-    exprFactory.register_expression( Expr::Tag("XXVOL",context_), scinew Coordinate<XVolField>::Builder(*this,XDIR) );
-    exprFactory.register_expression( Expr::Tag("YXVOL",context_), scinew Coordinate<XVolField>::Builder(*this,YDIR) );
-    exprFactory.register_expression( Expr::Tag("ZXVOL",context_), scinew Coordinate<XVolField>::Builder(*this,ZDIR) );
-
-    exprFactory.register_expression( Expr::Tag("XYVOL",context_), scinew Coordinate<YVolField>::Builder(*this,XDIR) );
-    exprFactory.register_expression( Expr::Tag("YYVOL",context_), scinew Coordinate<YVolField>::Builder(*this,YDIR) );
-    exprFactory.register_expression( Expr::Tag("ZYVOL",context_), scinew Coordinate<YVolField>::Builder(*this,ZDIR) );
-
-    exprFactory.register_expression( Expr::Tag("XZVOL",context_), scinew Coordinate<ZVolField>::Builder(*this,XDIR) );
-    exprFactory.register_expression( Expr::Tag("YZVOL",context_), scinew Coordinate<ZVolField>::Builder(*this,YDIR) );
-    exprFactory.register_expression( Expr::Tag("ZZVOL",context_), scinew Coordinate<ZVolField>::Builder(*this,ZDIR) );
+    exprFactory.register_expression( xsvt_, scinew Coordinate<SVolField>::Builder(*this,XDIR) );
+    exprFactory.register_expression( ysvt_, scinew Coordinate<SVolField>::Builder(*this,YDIR) );
+    exprFactory.register_expression( zsvt_, scinew Coordinate<SVolField>::Builder(*this,ZDIR) );
+                                          
+    exprFactory.register_expression( xxvt_, scinew Coordinate<XVolField>::Builder(*this,XDIR) );
+    exprFactory.register_expression( yxvt_, scinew Coordinate<XVolField>::Builder(*this,YDIR) );
+    exprFactory.register_expression( zxvt_, scinew Coordinate<XVolField>::Builder(*this,ZDIR) );
+                                          
+    exprFactory.register_expression( xyvt_, scinew Coordinate<YVolField>::Builder(*this,XDIR) );
+    exprFactory.register_expression( yyvt_, scinew Coordinate<YVolField>::Builder(*this,YDIR) );
+    exprFactory.register_expression( zyvt_, scinew Coordinate<YVolField>::Builder(*this,ZDIR) );
+                                          
+    exprFactory.register_expression( xzvt_, scinew Coordinate<ZVolField>::Builder(*this,XDIR) );
+    exprFactory.register_expression( yzvt_, scinew Coordinate<ZVolField>::Builder(*this,YDIR) );
+    exprFactory.register_expression( zzvt_, scinew Coordinate<ZVolField>::Builder(*this,ZDIR) );
   }
 
   //------------------------------------------------------------------
 
   CoordHelper::~CoordHelper()
   {
-//     // wipe out VarLabels
-//     if( xSVolCoord_ ) Uintah::VarLabel::destroy(xSVol_);
-//     if( ySVolCoord_ ) Uintah::VarLabel::destroy(ySVol_);
-//     if( zSVolCoord_ ) Uintah::VarLabel::destroy(zSVol_);
+    // wipe out VarLabels
+    if( xSVolCoord_ ) Uintah::VarLabel::destroy(xSVol_);
+    if( ySVolCoord_ ) Uintah::VarLabel::destroy(ySVol_);
+    if( zSVolCoord_ ) Uintah::VarLabel::destroy(zSVol_);
 
-//     if( xXVolCoord_ ) Uintah::VarLabel::destroy(xXVol_);
-//     if( yXVolCoord_ ) Uintah::VarLabel::destroy(yXVol_);
-//     if( zXVolCoord_ ) Uintah::VarLabel::destroy(zXVol_);
+    if( xXVolCoord_ ) Uintah::VarLabel::destroy(xXVol_);
+    if( yXVolCoord_ ) Uintah::VarLabel::destroy(yXVol_);
+    if( zXVolCoord_ ) Uintah::VarLabel::destroy(zXVol_);
 
-//     if( xYVolCoord_ ) Uintah::VarLabel::destroy(xYVol_);
-//     if( yYVolCoord_ ) Uintah::VarLabel::destroy(yYVol_);
-//     if( zYVolCoord_ ) Uintah::VarLabel::destroy(zYVol_);
+    if( xYVolCoord_ ) Uintah::VarLabel::destroy(xYVol_);
+    if( yYVolCoord_ ) Uintah::VarLabel::destroy(yYVol_);
+    if( zYVolCoord_ ) Uintah::VarLabel::destroy(zYVol_);
 
-//     if( xZVolCoord_ ) Uintah::VarLabel::destroy(xZVol_);
-//     if( yZVolCoord_ ) Uintah::VarLabel::destroy(yZVol_);
-//     if( zZVolCoord_ ) Uintah::VarLabel::destroy(zZVol_);
+    if( xZVolCoord_ ) Uintah::VarLabel::destroy(xZVol_);
+    if( yZVolCoord_ ) Uintah::VarLabel::destroy(yZVol_);
+    if( zZVolCoord_ ) Uintah::VarLabel::destroy(zZVol_);
   }
 
   //------------------------------------------------------------------
@@ -88,24 +97,27 @@ namespace Wasatch{
 
   void
   CoordHelper::register_coord_fields( Uintah::Task& task,
-                                      const Uintah::PatchSet& ps,
-                                      const Uintah::MaterialSet& ms )
+                                      const Uintah::PatchSet& patches,
+                                      const Uintah::MaterialSet& materials )
   {
-    if( xSVolCoord_ ) reg_field<SVolField>( xSVol_, Expr::Tag("XSVOL",context_), task, ps, ms );
-    if( ySVolCoord_ ) reg_field<SVolField>( ySVol_, Expr::Tag("YSVOL",context_), task, ps, ms );
-    if( zSVolCoord_ ) reg_field<SVolField>( zSVol_, Expr::Tag("ZSVOL",context_), task, ps, ms );
+    const Uintah::MaterialSubset* const mss = materials.getUnion();
+    const Uintah::PatchSubset* const pss = patches.getUnion();
 
-    if( xXVolCoord_ ) reg_field<XVolField>( xXVol_, Expr::Tag("XXVOL",context_), task, ps, ms );
-    if( yXVolCoord_ ) reg_field<XVolField>( yXVol_, Expr::Tag("YXVOL",context_), task, ps, ms );
-    if( zXVolCoord_ ) reg_field<XVolField>( zXVol_, Expr::Tag("ZXVOL",context_), task, ps, ms );
-
-    if( xYVolCoord_ ) reg_field<YVolField>( xYVol_, Expr::Tag("XYVOL",context_), task, ps, ms );
-    if( yYVolCoord_ ) reg_field<YVolField>( yYVol_, Expr::Tag("YYVOL",context_), task, ps, ms );
-    if( zYVolCoord_ ) reg_field<YVolField>( zYVol_, Expr::Tag("ZYVOL",context_), task, ps, ms );
-
-    if( xZVolCoord_ ) reg_field<ZVolField>( xZVol_, Expr::Tag("XZVOL",context_), task, ps, ms );
-    if( yZVolCoord_ ) reg_field<ZVolField>( yZVol_, Expr::Tag("YZVOL",context_), task, ps, ms );
-    if( zZVolCoord_ ) reg_field<ZVolField>( zZVol_, Expr::Tag("ZZVOL",context_), task, ps, ms );
+    if( xSVolCoord_ ) reg_field<SVolField>( xSVol_, xsvt_, task, pss, mss );
+    if( ySVolCoord_ ) reg_field<SVolField>( ySVol_, ysvt_, task, pss, mss );
+    if( zSVolCoord_ ) reg_field<SVolField>( zSVol_, zsvt_, task, pss, mss );
+                                                         
+    if( xXVolCoord_ ) reg_field<XVolField>( xXVol_, xxvt_, task, pss, mss );
+    if( yXVolCoord_ ) reg_field<XVolField>( yXVol_, yxvt_, task, pss, mss );
+    if( zXVolCoord_ ) reg_field<XVolField>( zXVol_, zxvt_, task, pss, mss );
+                                                         
+    if( xYVolCoord_ ) reg_field<YVolField>( xYVol_, xyvt_, task, pss, mss );
+    if( yYVolCoord_ ) reg_field<YVolField>( yYVol_, yyvt_, task, pss, mss );
+    if( zYVolCoord_ ) reg_field<YVolField>( zYVol_, zyvt_, task, pss, mss );
+                                                         
+    if( xZVolCoord_ ) reg_field<ZVolField>( xZVol_, xzvt_, task, pss, mss );
+    if( yZVolCoord_ ) reg_field<ZVolField>( yZVol_, yzvt_, task, pss, mss );
+    if( zZVolCoord_ ) reg_field<ZVolField>( zZVol_, zzvt_, task, pss, mss );
   }
 
   //------------------------------------------------------------------
@@ -115,7 +127,7 @@ namespace Wasatch{
                   Uintah::DataWarehouse* const dw,
                   const Uintah::Patch* const patch,
                   const int material,
-                  const double shift,
+                  const SCIRun::Vector& shift,
                   const int idir )
   {
     typename SelectUintahFieldType<FieldT>::type field;
@@ -127,7 +139,7 @@ namespace Wasatch{
         for( int i=lo[0]; i<hi[0]; ++i ){
           const IntVector index(i,j,k);
           const SCIRun::Vector xyz = patch->getCellPosition(index).vector();
-          field[index] = xyz[idir] + shift;  // jcs note that this is inefficient.
+          field[index] = xyz[idir] + shift[idir];  // jcs note that this is inefficient.
         }
       }
     }
@@ -149,23 +161,25 @@ namespace Wasatch{
         const int material = materials->get(im);
 
         const SCIRun::Vector spacing = patch->dCell();
+        SCIRun::Vector shift( 0.0, 0.0, 0.0 );
 
-        double shift = 0.0;
         if( xSVolCoord_ ) set_coord<SVolField>( xSVol_, newDW, patch, material, shift, 0 );
         if( ySVolCoord_ ) set_coord<SVolField>( ySVol_, newDW, patch, material, shift, 1 );
         if( zSVolCoord_ ) set_coord<SVolField>( zSVol_, newDW, patch, material, shift, 2 );
 
-        shift = -spacing[0]*0.5;  // shift x by -dx/2
+        shift[0] = -spacing[0]*0.5;  // shift x by -dx/2
         if( xXVolCoord_ ) set_coord<XVolField>( xXVol_, newDW, patch, material, shift, 0 );
         if( yXVolCoord_ ) set_coord<XVolField>( yXVol_, newDW, patch, material, shift, 1 );
         if( zXVolCoord_ ) set_coord<XVolField>( zXVol_, newDW, patch, material, shift, 2 );
 
-        shift = -spacing[1]*0.5;
+        shift[0] = 0;
+        shift[1] = -spacing[1]*0.5;
         if( xYVolCoord_ ) set_coord<YVolField>( xYVol_, newDW, patch, material, shift, 0 );
         if( yYVolCoord_ ) set_coord<YVolField>( yYVol_, newDW, patch, material, shift, 1 );
         if( zYVolCoord_ ) set_coord<YVolField>( zYVol_, newDW, patch, material, shift, 2 );
 
-        shift = -spacing[2]*0.5;
+        shift[1] = 0;
+        shift[2] = -spacing[2]*0.5;
         if( xZVolCoord_ ) set_coord<ZVolField>( xZVol_, newDW, patch, material, shift, 0 );
         if( yZVolCoord_ ) set_coord<ZVolField>( yZVol_, newDW, patch, material, shift, 1 );
         if( zZVolCoord_ ) set_coord<ZVolField>( zZVol_, newDW, patch, material, shift, 2 );

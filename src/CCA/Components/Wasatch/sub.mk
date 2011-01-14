@@ -43,13 +43,15 @@ SRCS     +=                             \
 	$(SRCDIR)/StringNames.cc	\
         $(SRCDIR)/TaskInterface.cc	\
 	$(SRCDIR)/TimeStepper.cc	\
-	$(SRCDIR)/Wasatch.cc
+	$(SRCDIR)/Wasatch.cc  \
+  $(SRCDIR)/BCHelperTools.cc
 
 PSELIBS :=              \
 	Core/Geometry   \
 	Core/Util       \
 	Core/Exceptions   \
 	CCA/Ports         \
+	CCA/Components/Schedulers \
 	Core/Grid         \
 	Core/Util         \
 	Core/ProblemSpec  \

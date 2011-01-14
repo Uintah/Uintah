@@ -188,8 +188,6 @@
         <lower>[-5,0,0]</lower>
         <upper>[5,1,1]</upper>
         <resolution>[20,5,5]</resolution>
-        <!-- need extracells if periodic is turned off -->
-        <!--extraCells>[1,1,1]</extraCells-->
         <patches>[1,1,1]</patches>
       </Box>
       <periodic>[1,1,1]</periodic>

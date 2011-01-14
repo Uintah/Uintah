@@ -24,9 +24,18 @@ namespace Uintah{
 namespace Expr{ class ExpressionFactory; }
 
 namespace Wasatch{
+
+  class StringNames;
   
   class CoordHelper
   {
+    const Expr::Context context_;
+    const StringNames& sName_;
+    const Expr::Tag xsvt_, ysvt_, zsvt_;
+    const Expr::Tag xxvt_, yxvt_, zxvt_;
+    const Expr::Tag xyvt_, yyvt_, zyvt_;
+    const Expr::Tag xzvt_, yzvt_, zzvt_;
+
     bool needCoords_,
       xSVolCoord_, ySVolCoord_, zSVolCoord_,
       xXVolCoord_, yXVolCoord_, zXVolCoord_,
@@ -38,7 +47,6 @@ namespace Wasatch{
     Uintah::VarLabel *xYVol_, *yYVol_, *zYVol_;
     Uintah::VarLabel *xZVol_, *yZVol_, *zZVol_;
 
-    const Expr::Context context_;
     std::vector<Expr::Tag> fieldTags_;
 
     /** \brief sets the requested grid variables - callback for an initialization task */
@@ -56,8 +64,8 @@ namespace Wasatch{
     template<typename FieldT> void reg_field( Uintah::VarLabel*& vl,
                                               const Expr::Tag tag,
                                               Uintah::Task& task,
-                                              const Uintah::PatchSet&,
-                                              const Uintah::MaterialSet& );
+                                              const Uintah::PatchSubset* const,
+                                              const Uintah::MaterialSubset* const );
 
   public:
 
@@ -100,15 +108,15 @@ namespace Wasatch{
   CoordHelper::reg_field( Uintah::VarLabel*& vl,
                           const Expr::Tag tag,
                           Uintah::Task& task,
-                          const Uintah::PatchSet& ps,
-                          const Uintah::MaterialSet& ms )
+                          const Uintah::PatchSubset* const pss,
+                          const Uintah::MaterialSubset* const mss )
   {
     const Uintah::Task::DomainSpec domain = Uintah::Task::NormalDomain;
     vl = Uintah::VarLabel::create( tag.field_name(),
                                    getUintahFieldTypeDescriptor<FieldT>(),
                                    getUintahGhostDescriptor<FieldT>() );
     fieldTags_.push_back( tag );
-    task.computes( vl, ps.getUnion(), domain, ms.getUnion(), domain );
+    task.computes( vl, pss, domain, mss, domain );
   }
 
   template<> inline void CoordHelper::requires_coordinate<SVolField>( const Direction dir )

@@ -293,6 +293,7 @@
 
       <res                    spec="OPTIONAL VECTOR" /> <!-- FIXME: ?? These are only  optional in some cases... -->
       <velocity               spec="OPTIONAL VECTOR" /> <!--           eg, ARCHES doesn't use them... -->
+      <level                  spec="OPTIONAL INTEGER"/> 
       <temperature            spec="OPTIONAL DOUBLE" />
       <color                  spec="OPTIONAL DOUBLE" />
       <density                spec="OPTIONAL DOUBLE" />
@@ -327,7 +328,7 @@
                                                                       mpmf, mpmice, amrmpm,
                                                                       wasatch, reduce_uda,
                                                                       poisson1, poisson2, poisson3, poisson4, benchmark, rigidmpmice, 
-                                                                      rmpmice, smpm, smpmice, spatialops, switcher, wave, solvertest'" >
+                                                                      rmpmice, smpm, smpmice, spatialops, switcher, wave, solvertest, RMCRT_Test'" >
                                   <!-- The 'type' above is used in CCA/Components/Parent/ComponentFactory.cc -->
         <carry_over                 spec="MULTIPLE NO_DATA"
                                   attribute1="var   REQUIRED STRING"
@@ -406,10 +407,6 @@
   </CommonTags>
   <!-- End Common Block -->
   <!--===========================================================-->
-
-  <Burger                 spec="OPTIONAL NO_DATA">
-    <delt                 spec="REQUIRED DOUBLE 'positive'" />
-  </Burger>
 
   <Meta                   spec="OPTIONAL NO_DATA">
     <title                spec="OPTIONAL STRING" />
@@ -609,7 +606,7 @@
 
   <CFD                                  spec="OPTIONAL NO_DATA" >
 
-    <CanAddICEMaterial                  spec="OPTIONAL BOOLEAN" /> <!-- FIXME: what is the default? -->
+    <CanAddICEMaterial                  spec="OPTIONAL BOOLEAN" />            <!-- FIXME: This belongs in CFD/ICE -->
     <cfl                                spec="OPTIONAL INTEGER 'positive'" /> <!-- FIX ME: REALLY OPTIONAL??? -->
 
     <include href="ice_spec.xml"    section="CFD/ICE" />
@@ -659,8 +656,9 @@
     <doMultiTaskgraphing                spec="OPTIONAL BOOLEAN" />
     <useLockStep                        spec="OPTIONAL BOOLEAN" /> <!-- defaults to FALSE.  FIXME: correct?  Is it optional? -->
 
-    <include href="ice_spec.xml" section="AMR/ICE" />
-    <include href="mpm_spec.xml" section="AMR/MPM" />
+    <include href="ice_spec.xml"         section="AMR/ICE" />
+    <include href="mpm_spec.xml"         section="AMR/MPM" />
+    <include href="RMCRT_test.xml"       section="AMR/RMCRT" />
 
     <Regridder                          spec="OPTIONAL NO_DATA"
                                            attribute1="type REQUIRED STRING 'BNR, Hierarchical, Tiled'" >
@@ -704,6 +702,7 @@
     <VarTracker           spec="OPTIONAL NO_DATA">
       <start_time         spec="REQUIRED DOUBLE" />
       <end_time           spec="REQUIRED DOUBLE" />
+      <level              spec="OPTIONAL INTEGER" />
       <start_index        spec="REQUIRED VECTOR" />
       <end_index          spec="REQUIRED VECTOR" />
       <var                spec="MULTIPLE NO_DATA"
@@ -716,17 +715,7 @@
     </VarTracker>
   </Scheduler>
 
-  <ParticleTest1          spec="OPTIONAL NO_DATA" >
-    <doOutput             spec="OPTIONAL INTEGER" />
-    <doGhostCells         spec="OPTIONAL INTEGER" />
-  </ParticleTest1>
 
-  <Wave                   spec="OPTIONAL NO_DATA" >
-    <radius               spec="OPTIONAL DOUBLE 'positive'" />
-    <initial_condition    spec="OPTIONAL STRING" />
-    <integration          spec="OPTIONAL STRING" />
-    <refine_threshold     spec="OPTIONAL INTEGER" />
-  </Wave>
 
   <LoadBalancer            spec="OPTIONAL NO_DATA" 
                              attribute1="type REQUIRED STRING 'DLB PLB SimpleLoadBalancer'" >
@@ -750,23 +739,21 @@
     <particleCost          spec="OPTIONAL DOUBLE 'positive'" /> <!-- The weight per particle -->
     <patchCost             spec="OPTIONAL DOUBLE 'positive'" /> <!-- The weight per patch -->
     <extraCellCost         spec="OPTIONAL DOUBLE 'positive'" /> <!--The weight extra cell -->
-    
-
   </LoadBalancer>
 
-  <Multimaterial                                     spec="OPTIONAL NO_DATA" >
-    <fluidThermalConductivity                        spec="REQUIRED DOUBLE" />
-    <heatExchange                                    spec="REQUIRED BOOLEAN" />
-    <turbulentPrandtNo                               spec="REQUIRED DOUBLE" />
-    <fluidHeatCapacity                               spec="REQUIRED DOUBLE" />
-    <IfCutCell                                       spec="REQUIRED BOOLEAN" />
-    <StationarySolid                                 spec="REQUIRED BOOLEAN" />
-    <inviscid                                        spec="REQUIRED BOOLEAN" />
-    <restart                                         spec="REQUIRED BOOLEAN" />
-    <fixedCellType                                   spec="REQUIRED BOOLEAN" />
-    <fixedTemp                                       spec="REQUIRED BOOLEAN" />
-    <TestCutCells                                    spec="REQUIRED BOOLEAN" />
-    <stairstep                                       spec="REQUIRED BOOLEAN" />
+  <Multimaterial                       spec="OPTIONAL NO_DATA" >               
+    <fluidThermalConductivity          spec="REQUIRED DOUBLE" />               
+    <heatExchange                      spec="REQUIRED BOOLEAN" />              
+    <turbulentPrandtNo                 spec="REQUIRED DOUBLE" />               
+    <fluidHeatCapacity                 spec="REQUIRED DOUBLE" />               
+    <IfCutCell                         spec="REQUIRED BOOLEAN" />              
+    <StationarySolid                   spec="REQUIRED BOOLEAN" />              
+    <inviscid                          spec="REQUIRED BOOLEAN" />              
+    <restart                           spec="REQUIRED BOOLEAN" />              
+    <fixedCellType                     spec="REQUIRED BOOLEAN" />              
+    <fixedTemp                         spec="REQUIRED BOOLEAN" />              
+    <TestCutCells                      spec="REQUIRED BOOLEAN" />              
+    <stairstep                         spec="REQUIRED BOOLEAN" />              
   </Multimaterial>
 
   <Angio                                spec="OPTIONAL NO_DATA" >
@@ -794,22 +781,6 @@
         <fragment_file                   spec="REQUIRED STRING"/>
       </material>
     </Angio>
-
-    <exchange_properties           spec="OPTIONAL NO_DATA" >
-      <convective_fluid            spec="OPTIONAL INTEGER" /> <!-- FIXME: DOUBLE? IS THIS a Material index? -->
-      <convective_solid            spec="OPTIONAL INTEGER" /> <!-- FIXME: DOUBLE? -->
-      <do_convective_heat_transfer spec="OPTIONAL BOOLEAN" /> <!-- FIXME: What is the default? -->
-      <exchange_coefficients       spec="REQUIRED NO_DATA" >
-        <momentum                  spec="REQUIRED MULTIPLE_DOUBLES" />
-        <heat                      spec="OPTIONAL MULTIPLE_DOUBLES" />
-      </exchange_coefficients>
-      <exch_coef_after_MPM_add     spec="OPTIONAL NO_DATA" >
-        <momentum                  spec="REQUIRED MULTIPLE_DOUBLES" />
-        <heat                      spec="OPTIONAL MULTIPLE_DOUBLES" /> 
-      </exch_coef_after_MPM_add>
-      <heatExchangeCoeff           spec="OPTIONAL STRING 'variable'" />
-    </exchange_properties>
-
   </MaterialProperties>
   <!--__________________________________-->
   <Models                     spec="OPTIONAL NO_DATA" >
@@ -1002,13 +973,36 @@
   <Solver                     spec="OPTIONAL NO_DATA" 
                                 attribute1="type REQUIRED STRING 'CGSolver, direct, hypre, hypreamr'" />
 
-
-
+  <!--______________________________________________________________________-->
+  <!--                 EXAMPLES                                             -->
+  
+  <!-- RMCRT_Test     -->
+  <include href="RMCRT_test.xml" section="RMCRT"/>
+  
+  <!-- Burger         -->
+  <Burger                     spec="OPTIONAL NO_DATA">
+    <delt                     spec="REQUIRED DOUBLE 'positive'" />
+  </Burger>
+  
+  <!-- Poisson        -->
   <Poisson                    spec="OPTIONAL NO_DATA" >
     <delt                     spec="REQUIRED DOUBLE" />
     <maxresidual              spec="REQUIRED DOUBLE" />
   </Poisson>
 
+  <!--  Particle Test Component -->
+  <ParticleTest1              spec="OPTIONAL NO_DATA" >
+    <doOutput                 spec="OPTIONAL INTEGER" />
+    <doGhostCells             spec="OPTIONAL INTEGER" />
+  </ParticleTest1>
+  
+  <!--  Wave  Component -->
+  <Wave                       spec="OPTIONAL NO_DATA" >
+    <radius                   spec="OPTIONAL DOUBLE 'positive'" />
+    <initial_condition        spec="OPTIONAL STRING" />
+    <integration              spec="OPTIONAL STRING" />
+    <refine_threshold         spec="OPTIONAL INTEGER" />
+  </Wave>
   <!--  Solver Test  Component -->
   <SolverTest                 spec="OPTIONAL NO_DATA">
     <delt                     spec="REQUIRED DOUBLE 'positive'" />

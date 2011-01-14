@@ -49,14 +49,14 @@ class CurvedQuadCrack : public CrackGeometry
      virtual ~CurvedQuadCrack();
      virtual void readCrack(ProblemSpecP& ps);
      virtual void outputInitialCrackPlane(int i);
-     virtual void discretize(int& nstart0,vector<Point>& cx,
-                             vector<IntVector>& ce,vector<int>& SegNodes);
+     virtual void discretize(int& nstart0,std::vector<Point>& cx,
+                             std::vector<IntVector>& ce,std::vector<int>& SegNodes);
 
  private:
 
      int NStraightSides;
-     vector<Point> PtsSide2,PtsSide4;
-     vector<bool> AtFront;
+     std::vector<Point> PtsSide2,PtsSide4;
+     std::vector<bool> AtFront;
      int Repetition;
      Vector Offset;
 };

@@ -2,6 +2,7 @@
 #define Wasatch_OperatorTypes_h
 
 #include "../FieldTypes.h"
+#include "UpwindInterpolant.h"
 
 #include <spatialops/structured/FVStaggered.h>
 
@@ -31,17 +32,30 @@ namespace Wasatch{
     typedef SpatialOps::SpatialOperator< LinAlg, Op, SrcT, DestT >  type;
   };
 
+  /**
+   *  \ingroup WasatchOperators
+   *  \ingroup WasatchCore
+   *  \struct OpTypes
+   *  \brief provides typedefs for various operators related to the given cell type
+   *
+   *  Example:
+   *  \code
+   *    typedef OpTypes< SVolField >  VolOps;
+   *    typedef VolOps::GradX         GradX;
+   *    typedef VolOps::DivX          DivX;
+   *  \endcode
+   */
   template< typename CellT > struct OpTypes
   {
     typedef typename OperatorTypeBuilder< Gradient,
                                           CellT,
-                                          typename FaceTypes<CellT>::XFace >::type  GradX;
+                                          typename FaceTypes<CellT>::XFace >::type	GradX;
     typedef typename OperatorTypeBuilder< Gradient,
                                           CellT,
-                                          typename FaceTypes<CellT>::YFace >::type 	GradY;
+                                          typename FaceTypes<CellT>::YFace >::type	GradY;
     typedef typename OperatorTypeBuilder< Gradient,
                                           CellT,
-                                          typename FaceTypes<CellT>::ZFace >::type 	GradZ;
+                                          typename FaceTypes<CellT>::ZFace >::type	GradZ;
 
     typedef typename OperatorTypeBuilder< Divergence,
                                           typename FaceTypes<CellT>::XFace,
@@ -62,6 +76,10 @@ namespace Wasatch{
     typedef typename OperatorTypeBuilder< Interpolant,
                                           CellT,
                                           typename FaceTypes<CellT>::ZFace >::type 	InterpC2FZ;
+
+    typedef UpwindInterpolant< CellT, typename FaceTypes<CellT>::XFace > 		InterpC2FXUpwind;
+    typedef UpwindInterpolant< CellT, typename FaceTypes<CellT>::YFace > 		InterpC2FYUpwind;
+    typedef UpwindInterpolant< CellT, typename FaceTypes<CellT>::ZFace > 		InterpC2FZUpwind;
 
     typedef typename OperatorTypeBuilder< Interpolant,
                                           typename FaceTypes<CellT>::XFace,

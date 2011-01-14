@@ -134,7 +134,7 @@ Cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 *
 *  ...save values at beginning of step to local vars
 *
-      PRINT *, SIGARG(1,1)
+C     PRINT *, SIGARG(1,1)
 
 #ifdef MG_EOS
       RHON = SVARG(KRHO,IBLK)

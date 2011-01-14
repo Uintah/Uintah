@@ -854,35 +854,22 @@ UINTAHSHARE void getFineLevelRange(const Patch* coarsePatch, const Patch* finePa
                                     IntVector& cl, IntVector& ch, 
                                     IntVector& fl, IntVector& fh);
 
-// As above, but do the same for nodes, and include ghost data & boundary cell requirements                                        
-/*`==========TESTING==========*/
-UINTAHSHARE void getFineLevelRangeNodes_old(const Patch* coarsePatch, 
-                                        const Patch* finePatch,
-                                        IntVector& cl, IntVector& ch,
-                                        IntVector& fl, IntVector& fh, 
-                                        IntVector ghost);
-
+// As above, but do the same for nodes, and include fine patch padding cell requirements 
 UINTAHSHARE void getFineLevelRangeNodes(const Patch* coarsePatch, 
                                         const Patch* finePatch,
                                         IntVector& cl, IntVector& ch,
                                         IntVector& fl, IntVector& fh, 
-                                        int ghost,
-                                        int nBoundaryCells); 
-/*===========TESTING==========`*/
+                                        IntVector padding);
 
 // find the range of values to get from the coarseLevel that coincides with coarsePatch
 // ngc is the number of ghost cells to get at the fine level
 UINTAHSHARE void getCoarseLevelRange(const Patch* finePatch, const Level* coarseLevel, 
                                      IntVector& cl, IntVector& ch, 
                                      IntVector& fl, IntVector& fh, 
-                                     int ngc);
+                                     IntVector boundaryLayer,
+                                     int ngc,
+                                     const bool returnExclusiveRange);
 
-UINTAHSHARE void getCoarseLevelRangeNodes(const Patch* finePatch,
-                                          const Level* coarseLevel, 
-                                          IntVector& cl, IntVector& ch,
-                                          IntVector& fl, IntVector& fh,
-                                          int ngc,
-                                          int nBoundaryCells);
 
 // find the range of a coarse-fine interface along a certain face
 UINTAHSHARE void getCoarseFineFaceRange(const Patch* finePatch, 

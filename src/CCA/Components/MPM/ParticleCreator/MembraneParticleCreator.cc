@@ -106,8 +106,8 @@ ParticleSubset* MembraneParticleCreator::createParticles(MPMMaterial* matl,
     if(b.degenerate())
       count = 0;
     
-    IntVector ppc = (*obj)->getNumParticlesPerCell();
-    Vector dxpp = patch->dCell()/(*obj)->getNumParticlesPerCell();
+    IntVector ppc = (*obj)->getInitialData_IntVector("res");
+    Vector dxpp = patch->dCell()/(*obj)->getInitialData_IntVector("res");
     Vector dcorner = dxpp*0.5;
     // Size as a fraction of the cell size
     Vector size(1./((double) ppc.x()),
@@ -121,8 +121,8 @@ ParticleSubset* MembraneParticleCreator::createParticles(MPMMaterial* matl,
       int numP = SMGP->createParticles(patch, position, pvolume,
                                        pTang1, pTang2, pNorm, psize, start);
       for(int idx=0;idx<(start+numP);idx++){
-        pvelocity[start+idx]=(*obj)->getInitialVelocity();
-        ptemperature[start+idx]=(*obj)->getInitialData("temperature");
+        pvelocity[start+idx]=(*obj)->getInitialData_Vector("velocity");
+        ptemperature[start+idx]=(*obj)->getInitialData_double("temperature");
        psp_vol[start+idx]=1.0/matl->getInitialDensity();
         pmass[start+idx]=matl->getInitialDensity() * pvolume[start+idx];
         // Determine if particle is on the surface
@@ -162,8 +162,8 @@ ParticleSubset* MembraneParticleCreator::createParticles(MPMMaterial* matl,
               if(piece->inside(p)){
                 position[start+count]=p;
                 pvolume[start+count]=dxpp.x()*dxpp.y()*dxpp.z();
-                pvelocity[start+count]=(*obj)->getInitialVelocity();
-                ptemperature[start+count]=(*obj)->getInitialData("temperature");
+                pvelocity[start+count]=(*obj)->getInitialData_Vector("velocity");
+                ptemperature[start+count]=(*obj)->getInitialData_double("temperature");
               psp_vol[start+count]     =1.0/matl->getInitialDensity();
                 // Calculate particle mass
                 double partMass = matl->getInitialDensity()*pvolume[start+count];

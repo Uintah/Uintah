@@ -2,5 +2,6 @@
 
 SRCDIR   := CCA/Components/Wasatch/Operators
 
-SRCS     +=                             \
-	$(SRCDIR)/Operators.cc
+SRCS    +=				\
+	$(SRCDIR)/Operators.cc		\
+	$(SRCDIR)/UpwindInterpolant.cc

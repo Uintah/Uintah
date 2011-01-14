@@ -67,7 +67,7 @@ INSTALL_HERE=$1/Wasatch3P/install/SpatialOps
 run \
 "cmake \
  -DENABLE_TESTS=OFF \
- -DBoost_DIR=$BOOST_DIR \
+ -DBOOST_ROOT=$BOOST_DIR \
  -DHDF5_DIR=$HDF5_DIR \
  -DCMAKE_INSTALL_PREFIX=${INSTALL_HERE} \
  -DCMAKE_CXX_FLAGS="-fPIC" \
@@ -91,7 +91,7 @@ run \
 "cmake \
  -DENABLE_TESTS=OFF \
  -DBOOST_CMAKE=OFF \
- -DBoost_DIR=$BOOST_DIR \
+ -DBOOST_ROOT=$BOOST_DIR \
  \
  -DSpatialOps_DIR=${SPATIAL_OPS_INSTALL_DIR}/share \
  \

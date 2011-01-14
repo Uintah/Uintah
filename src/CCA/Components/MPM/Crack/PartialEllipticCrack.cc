@@ -33,6 +33,7 @@ DEALINGS IN THE SOFTWARE.
 
 using std::cout;
 using std::endl;
+using std::vector;
 
 using namespace Uintah;
 
