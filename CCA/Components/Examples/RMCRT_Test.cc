@@ -281,7 +281,7 @@ void RMCRT_Test::pseudoCFD ( const ProcessorGroup*,
       
       color.initialize(0.0);
 
-      for ( CellIterator iter(patch->getCellIterator()); !iter.done(); iter++) {
+      for ( CellIterator iter(patch->getExtraCellIterator()); !iter.done(); iter++) {
         IntVector c(*iter);
         color[c] = color_old[c] + 0.01 * sumDiffColor[c];
       }
@@ -306,6 +306,8 @@ void RMCRT_Test::scheduleShootRays(SchedulerP& sched,
   #define allMatls 0
 
   t->requires(Task::OldDW, d_colorLabel,  allPatches, ND,allMatls, ND, gn,0);
+//  t->requires(Task::OldDW, d_colorLabel,  allPatches, Task::CoarseLevel,allMatls, ND, gn, 0);
+  
   //t->requires(Task::OldDW, d_colorLabel,   d_gn, 0);
   t->computes( d_sumColorDiffLabel );
   sched->addTask(t, patches, matls);
@@ -415,14 +417,14 @@ void RMCRT_Test::refine_Q(const ProcessorGroup*,
 
     CCVariable<double> sumColorDiff_fine;
     new_dw->allocateAndPut(sumColorDiff_fine, d_sumColorDiffLabel, d_matl, finePatch);
-    sumColorDiff_fine.initialize(-999);
+    sumColorDiff_fine.initialize(0);
     
     IntVector refineRatio = fineLevel->getRefinementRatio();
 
     // region of fine space that will correspond to the coarse we need to get
     IntVector cl, ch, fl, fh;
     IntVector bl(0,0,0);  // boundary layer or padding
-    int nghostCells = 0;
+    int nghostCells = 1;
     bool returnExclusiveRange=true;
     
     getCoarseLevelRange(finePatch, coarseLevel, cl, ch, fl, fh, bl, 
@@ -507,7 +509,7 @@ void RMCRT_Test::initialize (const ProcessorGroup*,
      CCVariable<double> color;
       new_dw->allocateAndPut(color, d_colorLabel, matl, patch);
 
-     for ( CellIterator iter(patch->getCellIterator()); !iter.done(); iter++) {
+     for ( CellIterator iter(patch->getExtraCellIterator()); !iter.done(); iter++) {
 
        IntVector idx(*iter);
         Vector whereThisCellIs( patch->cellPosition( idx ) );
@@ -665,6 +667,7 @@ void RMCRT_Test::coarsen_Q ( const ProcessorGroup*,
 
       CCVariable<double> color_coarse;
       new_dw->allocateAndPut(color_coarse, d_colorLabel, matl, coarsePatch);
+      color_coarse.initialize(0.0);
 
       for(int i=0;i<finePatches.size();i++){
         const Patch* finePatch = finePatches[i];
