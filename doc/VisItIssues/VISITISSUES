@@ -1,0 +1,40 @@
+VisIt Issues
+============
+
+1) Intents
+----------
+Issues with VisIt visualization software will inevitably arise in day to day use.
+Herein exist the issues known when using VisIt on uda's created with sus.
+
+The general format that should be adopted for documenting such an issue is as 
+follows:
+
+a) Date reported
+b) Visit Version 
+c) Uintah Revision 
+d) Description of the issue
+e) A list of any images that demonstrate the issue
+
+
+2) Issues
+---------
+
+01/13/11
+Visit 2.1.0
+Uintah r4650
+VisIt will sometime complain that a number of data blocks are missing and has
+inserted 0's to compensate.  This results missing portions of the plot.
+The issue occurs when plotting a large number of different variable in a display.  
+It occurs when visualizing particle data, such as p.x or p.crackRad or p.velocity,
+as a "Pseudocolor Plot" with the "Transform" operator applied.  
+
+The typical error may be: "The compute engine running on host localhost issued the 
+following warning: In domain 0, your zonal variable "press_CC/0" has 400 values, 
+but it should have 0.  Some values were removed to ensure VisIt runs smoothly."
+
+As you may note, the visual artifacts do not occur in the press_CC plot, but rather in
+the p.crackRad.  
+
+See: pseudoTearing.png
+
+
