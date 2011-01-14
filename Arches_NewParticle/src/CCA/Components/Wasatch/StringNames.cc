@@ -8,9 +8,11 @@ namespace Wasatch{
   StringNames::StringNames() :
 
     time("time"),
-    xcoord("x"),
-    ycoord("y"),
-    zcoord("z"),
+
+    xsvolcoord("XSVOL"),  ysvolcoord("YSVOL"),  zsvolcoord("ZSVOL"),
+    xxvolcoord("XXVOL"),  yxvolcoord("YXVOL"),  zxvolcoord("ZXVOL"),
+    xyvolcoord("XYVOL"),  yyvolcoord("YYVOL"),  zyvolcoord("ZYVOL"),
+    xzvolcoord("XZVOL"),  yzvolcoord("YZVOL"),  zzvolcoord("ZZVOL"),
 
     // energy related variables
     temperature("temperature"),

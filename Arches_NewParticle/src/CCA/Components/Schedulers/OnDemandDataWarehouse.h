@@ -107,7 +107,7 @@ public:
    virtual ~OnDemandDataWarehouse();
    
    virtual bool exists(const VarLabel*, int matIndex, const Patch*) const; 
-  
+   
    // Returns a (const) pointer to the grid.  This pointer can then be
    // used to (for example) get the number of levels in the grid.
    virtual const Grid * getGrid() { return d_grid.get_rep(); }
@@ -181,13 +181,16 @@ public:
 					          const Patch*, Ghost::GhostType, 
 					          int numGhostCells,
 					          const VarLabel* posvar);
-                                        
+                                 
+   //returns the particle subset in the range of low->high
+     //relPatch is used as the key and should be the patch you are querying from
+     //level is used if you are querying from an old level
    virtual ParticleSubset* getParticleSubset(int matlIndex, 
                                              IntVector low, 
                                              IntVector high, 
-                                             const Level* level, 
                                              const Patch* relPatch,
-                                             const VarLabel* posvar);
+                                             const VarLabel* posvar,
+                                             const Level* level=0);
                                              
    virtual void allocateTemporary(ParticleVariableBase&, 
                                   ParticleSubset*);
@@ -344,6 +347,8 @@ public:
    // The following is for support of regriding
    virtual void getVarLabelMatlLevelTriples( vector<VarLabelMatl<Level> >& vars ) const;
 
+   static bool d_combineMemory;
+
    friend class SchedulerCommon;
 
 private:
@@ -468,6 +473,7 @@ private:
 
    // Whether this (Old) DW is being used for a restarted timestep (the new DWs are cleared out)
    bool hasRestarted_;
+
 };
 
 } // end namespace Uintah

@@ -34,13 +34,12 @@ set failedTestList = ""
 
 foreach X (*-short.log)
   set component = `echo $X | cut -f1 -d "-"`
-
-  set these = (`grep failed $X | cut -f3 -d "-" $X | uniq`)
+  set these = (`grep failed $X | cut -f2 -d\: | uniq`)
 
   foreach test ( $these[*]:q )
     set label = "$component--$test"
     set failedTestList = ($failedTestList $n "$label" off)
-    echo "$n-$component-$test" >> $tmpFile
+    echo "$n $component $test" >> $tmpFile
     @ n = $n + 1
   end
 end
@@ -85,8 +84,8 @@ end
 # Verify the user inputs
 set message = "\n "
 foreach indx ($choices[*]:q)  
-  set comp = `grep $indx $tmpFile | cut -f2 -d-`
-  set test = `grep $indx $tmpFile | cut -f3 -d-`
+  set comp = `grep $indx $tmpFile | cut -f2 -d" "`
+  set test = `grep $indx $tmpFile | cut -f3 -d" "`
   if ( $#opts > 0 )  then
     echo Replacing GS for $comp $test
     set message = ($message $comp "----" $test "\n")
@@ -106,11 +105,16 @@ set GS = `readlink goldStandard`
 set TS = `readlink TestScripts`
 set here = `pwd`
 foreach indx ($choices[*]:q)  
-  set comp = `grep $indx $tmpFile | cut -f2 -d-`
-  set test = `grep $indx $tmpFile | cut -f3 -d-`
+  set comp = `grep $indx $tmpFile | cut -f2 -d" "`
+  set test = `grep $indx $tmpFile | cut -f3 -d" "`
   if ( $#opts > 0 )  then
   echo $opts
     set cmd = "$TS/helpers/replace_gold_standard $opts $GS/$comp $here/$comp-results  $test $logMessage"
     $cmd
   endif
 end 
+
+
+# cleanup
+/bin/rm $tmpFile
+

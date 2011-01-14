@@ -82,11 +82,14 @@ ICEMaterial::ICEMaterial(ProblemSpecP& ps): Material(ps)
 
    // Step 3 -- Loop through all of the pieces in this geometry object
    int piece_num = 0;
-   list<string> geom_obj_data;
-   geom_obj_data.push_back("temperature");
-   geom_obj_data.push_back("pressure");
-   geom_obj_data.push_back("density");
-   
+
+   list<GeometryObject::DataItem> geom_obj_data;
+   geom_obj_data.push_back(GeometryObject::DataItem("res",        GeometryObject::IntVector));
+   geom_obj_data.push_back(GeometryObject::DataItem("temperature",GeometryObject::Double));
+   geom_obj_data.push_back(GeometryObject::DataItem("pressure",   GeometryObject::Double));
+   geom_obj_data.push_back(GeometryObject::DataItem("density",    GeometryObject::Double));
+   geom_obj_data.push_back(GeometryObject::DataItem("velocity",   GeometryObject::Vector));
+
    for (ProblemSpecP geom_obj_ps = ps->findBlock("geom_object");
         geom_obj_ps != 0;
         geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
@@ -104,8 +107,7 @@ ICEMaterial::ICEMaterial(ProblemSpecP& ps): Material(ps)
       }
 
       piece_num++;
-      d_geom_objs.push_back(scinew GeometryObject(mainpiece,geom_obj_ps,
-                                                  geom_obj_data));
+      d_geom_objs.push_back(scinew GeometryObject(mainpiece, geom_obj_ps, geom_obj_data));
    }
    lb = scinew ICELabel();
 }
@@ -177,7 +179,7 @@ double ICEMaterial::getThermalConductivity() const
 
 double ICEMaterial::getInitialDensity() const
 {
-  return d_geom_objs[0]->getInitialData("density");
+  return d_geom_objs[0]->getInitialData_double("density");
 }
 
 /* --------------------------------------------------------------------- 
@@ -241,15 +243,15 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
     // First initialize all variables everywhere.
     for(CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
       vol_frac_CC[*iter]= 1.0;
-      press_CC[*iter]   = d_geom_objs[obj]->getInitialData("pressure");
-      vel_CC[*iter]     = d_geom_objs[obj]->getInitialVelocity();
-      rho_micro[*iter]  = d_geom_objs[obj]->getInitialData("density");
+      press_CC[*iter]   = d_geom_objs[obj]->getInitialData_double("pressure");
+      vel_CC[*iter]     = d_geom_objs[obj]->getInitialData_Vector("velocity");
+      rho_micro[*iter]  = d_geom_objs[obj]->getInitialData_double("density");
       rho_CC[*iter]     = rho_micro[*iter] + d_TINY_RHO*rho_micro[*iter];
-      temp[*iter]       = d_geom_objs[obj]->getInitialData("temperature");
+      temp[*iter]       = d_geom_objs[obj]->getInitialData_double("temperature");
       IveBeenHere[*iter]= 1;
     }
 
-    IntVector ppc = d_geom_objs[obj]->getNumParticlesPerCell();
+    IntVector ppc = d_geom_objs[obj]->getInitialData_IntVector("res");
     double ppc_tot = ppc.x()*ppc.y()*ppc.z();
     cout << "ppc_tot = " << ppc_tot << endl;
     cout << "numPts = " << numPts << endl;
@@ -268,7 +270,7 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
 
    } else {
 
-    IntVector ppc = d_geom_objs[obj]->getNumParticlesPerCell();
+    IntVector ppc = d_geom_objs[obj]->getInitialData_IntVector("res");
     Vector dxpp = patch->dCell()/ppc;
     Vector dcorner = dxpp*0.5;
     double totalppc = ppc.x()*ppc.y()*ppc.z();
@@ -291,11 +293,11 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
       if(numMatls == 1)  {
         if ( count > 0 ) {
           vol_frac_CC[*iter]= 1.0;
-          press_CC[*iter]   = d_geom_objs[obj]->getInitialData("pressure");
-          vel_CC[*iter]     = d_geom_objs[obj]->getInitialVelocity();
-          rho_micro[*iter]  = d_geom_objs[obj]->getInitialData("density");
+          press_CC[*iter]   = d_geom_objs[obj]->getInitialData_double("pressure");
+          vel_CC[*iter]     = d_geom_objs[obj]->getInitialData_Vector("velocity");
+          rho_micro[*iter]  = d_geom_objs[obj]->getInitialData_double("density");
           rho_CC[*iter]     = rho_micro[*iter] + d_TINY_RHO*rho_micro[*iter];
-          temp[*iter]       = d_geom_objs[obj]->getInitialData("temperature");
+          temp[*iter]       = d_geom_objs[obj]->getInitialData_double("temperature");
           IveBeenHere[*iter]= 1;
         }
       }   
@@ -304,23 +306,23 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
         if(IveBeenHere[*iter] == -9){
           // This cell hasn't been hit for this matl yet so set values
           // to ensure that everything is set to something everywhere
-          vel_CC[*iter]     = d_geom_objs[obj]->getInitialVelocity();
-          rho_micro[*iter]  = d_geom_objs[obj]->getInitialData("density");
+          vel_CC[*iter]     = d_geom_objs[obj]->getInitialData_Vector("velocity");
+          rho_micro[*iter]  = d_geom_objs[obj]->getInitialData_double("density");
           rho_CC[*iter]     = rho_micro[*iter] * vol_frac_CC[*iter] +
                             d_TINY_RHO*rho_micro[*iter];
-          temp[*iter]       = d_geom_objs[obj]->getInitialData("temperature");
+          temp[*iter]       = d_geom_objs[obj]->getInitialData_double("temperature");
           IveBeenHere[*iter]= obj; 
         }
         if(IveBeenHere[*iter] != -9 && count > 0){
           // This cell HAS been hit but another object has values to
           // override it, possibly in a cell that was just set by default
           // in the above section.
-          press_CC[*iter]   = d_geom_objs[obj]->getInitialData("pressure");
-          vel_CC[*iter]     = d_geom_objs[obj]->getInitialVelocity();
-          rho_micro[*iter]  = d_geom_objs[obj]->getInitialData("density");
+          press_CC[*iter]   = d_geom_objs[obj]->getInitialData_double("pressure");
+          vel_CC[*iter]     = d_geom_objs[obj]->getInitialData_Vector("velocity");
+          rho_micro[*iter]  = d_geom_objs[obj]->getInitialData_double("density");
           rho_CC[*iter]     = rho_micro[*iter] * vol_frac_CC[*iter] +
                             d_TINY_RHO*rho_micro[*iter];
-          temp[*iter]       = d_geom_objs[obj]->getInitialData("temperature");
+          temp[*iter]       = d_geom_objs[obj]->getInitialData_double("temperature");
           IveBeenHere[*iter]= obj; 
         }
         if(IveBeenHere[*iter] != -9 && count == 0){

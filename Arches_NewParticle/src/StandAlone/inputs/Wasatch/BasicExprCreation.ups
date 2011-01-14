@@ -52,7 +52,6 @@
         <lower>[0,0,0]</lower>
         <upper>[1,1,1]</upper>
         <resolution>[9,9,9]</resolution>
-        <extraCells>[0,0,0]</extraCells>
         <patches>[1,1,1]</patches>
       </Box>
     </Level>

@@ -7,12 +7,12 @@ from string import upper,rstrip,rsplit
 from modUPS import modUPS
 from commands import getoutput
 
-####
+#______________________________________________________________________
 # Assuming that running python with the '-u' arg doesn't fix the i/o buffering problem, this line
 # can be added after print statements:
 #
 # stdout.flush() # Make sure that output (via 'tee' command (from calling script)) is actually printed...
-####
+#______________________________________________________________________
 
 def nameoftest (test):
     return test[0]
@@ -60,6 +60,8 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
   gold_standard = path.normpath(path.join(getcwd(), argv[3]))
   helperspath   = "%s/%s" % (path.normpath(path.join(getcwd(), path.dirname(argv[0]))), "helpers")
   inputpath     = path.normpath(path.join(getcwd(), inputs_root()))
+  
+  global startpath
   startpath     = getcwd()
   
   dbg_opt         = argv[4]
@@ -166,7 +168,8 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
   
   # clean up any old log files
   system("rm -rf %s/%s-short.log" % (startpath,ALGO))
- 
+  system("rm -rf %s/%s.log" % (startpath,ALGO))
+  
   for test in TESTS:
 
     testname = nameoftest(test)
@@ -429,6 +432,8 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
 # in that order
 
 def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallelism, tests_to_do, tolerances, startFrom):
+  global startpath
+  
   testname = nameoftest(test)
 
   np = float(num_processes(test))
@@ -473,8 +478,6 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
   # set where to view the log files
   logpath = environ['WEBLOG']
 
-  startpath = "../.."
-
   # if doing performance tests, strip the output and checkpoints portions
   if do_performance_test == 1:
       
@@ -503,7 +506,6 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
   if startFrom == "restart":
     print "Running restart test  ---%s--- %s at %s" % (testname, mpimsg, strftime( "%I:%M:%S"))
     susinput     = "-restart ../*.uda.000 -t 0 -copy"
-    startpath    = "../../.."
     restart_text = " (restart)"
     
   if startFrom == "inputFile":
@@ -522,19 +524,14 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
   environ['SCI_SIGNALMODE'] = "exit"
 
   if do_memory_test == 1:
+  
+    environ['MALLOC_STRICT'] = "set"
+    
     if startFrom == "restart":
       malloc_stats_file = "restart_malloc_stats"        
     else:
       malloc_stats_file = "malloc_stats"
     environ['MALLOC_STATS'] = malloc_stats_file
-
-    # if regression tester was called with -malloc_strict
-    try:
-      if environ['mallocstrict'] == "yes":
-        environ['MALLOC_STRICT'] = "blah"
-    except Exception:
-      pass
-
 
   # messages to print
   if environ['outputlinks'] == "1":
@@ -555,21 +552,23 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
   rc = system("%s %s > sus.log.txt 2>&1" % (command, susinput))
   
   # was an exception thrown
-  exception = system("grep -q exception sus.log.txt");
+  exception = system("grep -q 'Caught exception' sus.log.txt");
   if exception == 0:
     print "\t*** An exception was thrown ***";
     rc = -9
     
   # determine path of replace_msg in 2 places to not have 2 different msgs.
-  replace_msg = "\tTo replace the goldStandards run:\n\t "
-
+  replace_msg = "\tTo replace this test's goldStandards run:\n\t    "
+  
   if startFrom == "restart":
     chdir("..")
     replace_msg = "%s%s/replace_gold_standard" % (replace_msg, getcwd())
     chdir("restart")
   else:
     replace_msg = "%s%s/replace_gold_standard" % (replace_msg, getcwd())
-
+  
+  replace_msg = "%s\n\tTo replace multiple tests that have failed run:\n\t    %s/replace_all_GS\n" % (replace_msg,startpath)
+  
   return_code = 0
   if rc != 0:
     print "\t*** Test %s failed with code %d" % (testname, rc)
@@ -578,7 +577,8 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
       print "\t\tMake sure the problem makes checkpoints before finishing"
     
     print sus_log_msg
-    system("echo '  -- %s%s test did not run to completion' >> %s/%s-short.log" % (testname,restart_text,startpath,ALGO))
+    print 
+    system("echo '  :%s: %s test did not run to completion' >> %s/%s-short.log" % (testname,restart_text,startpath,ALGO))
     return_code = 1
   else:
     # Sus completed successfully - now run memory,compar_uda and performance tests
@@ -685,15 +685,15 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
     # print error codes
     # if comparison, memory, performance tests fail, return here, so mem_leak tests can run
     if compUda_RC == 5*256 or compUda_RC == 1*256:
-      system("echo '  --%s-- \t%s test failed comparison tests' >> %s/%s-short.log" % (testname,restart_text,startpath,ALGO))
+      system("echo '  :%s: \t%s test failed comparison tests' >> %s/%s-short.log" % (testname,restart_text,startpath,ALGO))
       return_code = 2;
         
     if performance_RC == 2*256:
-      system("echo '  --%s-- \t%s test failed performance tests' >> %s/%s-short.log" % (testname,restart_text,startpath,ALGO))
+      system("echo '  :%s: \t%s test failed performance tests' >> %s/%s-short.log" % (testname,restart_text,startpath,ALGO))
       return_code = 2;
     
     if memory_RC == 1*256 or memory_RC == 2*256:
-      system("echo '  --%s-- \t%s test failed memory tests' >> %s/%s-short.log" % (testname,restart_text,startpath,ALGO))
+      system("echo '  :%s: \t%s test failed memory tests' >> %s/%s-short.log" % (testname,restart_text,startpath,ALGO))
       return_code = 2;
     
     if return_code != 0:

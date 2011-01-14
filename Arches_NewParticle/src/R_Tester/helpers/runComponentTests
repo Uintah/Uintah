@@ -36,9 +36,10 @@ echo "python TestScripts/$componentTest.py susdir inputs goldStandard $mode $PAR
 # run the python script that contains all the
 # tests for that component
 rm -f "${BUILDROOT}/${mode}/${componentTest}-short.log"
-"$doTestScript" > "${componentTest}.log"  2>&1
+"$doTestScript" > comp.log  2>&1
 retval=$?
 
+mv comp.log "${componentTest}.log"
 cat "${componentTest}.log" >> summary_log
 cat "${componentTest}.log" >> "$HTMLLOG"
 

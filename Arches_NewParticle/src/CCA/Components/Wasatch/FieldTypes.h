@@ -86,7 +86,6 @@ namespace Wasatch{
     typedef SpatialOps::structured::ZSurfZField ZFace;
   };
 
-
 } // namespace Wasatch
 
 #endif // Wasatch_FieldTypes_h

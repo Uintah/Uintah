@@ -250,7 +250,6 @@ using std::vector;
       // Debugging Labels
       const VarLabel* pColorLabel;
       const VarLabel* pColorLabel_preReloc;
-      const VarLabel* gSumWeightsLabel;
 
       // For Cohesive Zones
       const VarLabel* czLengthLabel; 

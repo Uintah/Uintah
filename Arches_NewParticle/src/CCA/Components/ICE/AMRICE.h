@@ -595,7 +595,11 @@ void AMRICE::CoarseToFineOperator(CCVariable<T>& q_CC,
                        
   // region of fine space that will correspond to the coarse we need to get
   IntVector cl, ch, fl, fh;
-  getCoarseLevelRange(finePatch, coarseLevel, cl, ch, fl, fh, 1);
+  IntVector bl(0,0,0);  // boundary layer or padding
+  int nghostCells = 1;
+  bool returnExclusiveRange=true;
+  getCoarseLevelRange(finePatch, coarseLevel, cl, ch, fl, fh, bl, 
+                      nghostCells, returnExclusiveRange);
 
   cout_dbg <<" coarseToFineOperator: " << varLabel->getName()
            <<" finePatch  "<< finePatch->getID() << " fl " << fl << " fh " << fh

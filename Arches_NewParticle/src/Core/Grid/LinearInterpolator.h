@@ -99,15 +99,6 @@ namespace Uintah {
                                      const Vector& size, 
                                      const Matrix3& defgrad);
                                 
-    virtual void findCellAndWeights(const Point& p,
-                                    vector<IntVector>& ni,
-                                    vector<double>& S,
-                                    constNCVariable<Stencil7>& zoi,
-                                    constNCVariable<Stencil7>& zoi_fine,
-                                    const bool& getFiner,
-                                    int& num_cur,int& num_fine,int& num_coarse,
-                                    const Vector& size,  bool coarse_particle,
-                                    const Patch* patch);
                                     
     virtual void findCellAndWeights(const Point& pos,
                                     vector<IntVector>& ni,
@@ -224,17 +215,6 @@ namespace Uintah {
   private:
     const Patch* d_patch;
     int d_size;
-
-    void findFinerNodes(const Point& pos,
-                               vector<IntVector>& cur,
-                               const Level* level, const Patch* patch);
-    inline void uS(double& S, const double& r,
-                   const double& zoiP, const double& zoiM) {
-      S=(r<0.?(-zoiM<=r?1.+r/zoiM:0.):(r<zoiP?1.-r/zoiP:0.));
-      return;
-    }
-
-    
   };
 }
 

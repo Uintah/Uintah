@@ -180,7 +180,7 @@ void Water::computeStressTensor(const PatchSubset* patches,
   for(int pp=0;pp<patches->size();pp++){
     const Patch* patch = patches->get(pp);
     Matrix3 velGrad,Shear;
-    double p,se=0.;
+    double J, p,se=0.;
     double c_dil=0.0;
     Vector WaveSpeed(1.e-12,1.e-12,1.e-12);
     double onethird = (1.0/3.0);
@@ -260,8 +260,60 @@ void Water::computeStressTensor(const PatchSubset* patches,
 
       deformationGradient_new[idx]=(velGrad*delT+Identity)
                                     *deformationGradient[idx];
+     }
 
-      double J = deformationGradient_new[idx].Determinant();
+    // The following is used only for pressure stabilization
+    CCVariable<double> J_CC;
+    new_dw->allocateTemporary(J_CC,     patch);
+    J_CC.initialize(0.);
+
+    if(flag->d_doPressureStabilization) {
+      CCVariable<double> vol_0_CC;
+      CCVariable<double> vol_CC;
+      new_dw->allocateTemporary(vol_0_CC, patch);
+      new_dw->allocateTemporary(vol_CC, patch);
+
+      vol_0_CC.initialize(0.);
+      vol_CC.initialize(0.);
+      for(ParticleSubset::iterator iter = pset->begin();
+          iter != pset->end(); iter++){
+        particleIndex idx = *iter;
+  
+        // get the volumetric part of the deformation
+        J = deformationGradient_new[idx].Determinant();
+  
+        // Get the deformed volume
+        pvolume[idx]=(pmass[idx]/rho_orig)*J;
+  
+        IntVector cell_index;
+        patch->findCell(px[idx],cell_index);
+  
+        vol_CC[cell_index]+=pvolume[idx];
+        vol_0_CC[cell_index]+=pmass[idx]/rho_orig;
+      }
+
+      for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++){
+        IntVector c = *iter;
+        J_CC[c]=vol_CC[c]/vol_0_CC[c];
+      }
+    }
+
+    for(ParticleSubset::iterator iter = pset->begin();
+        iter != pset->end(); iter++){
+        particleIndex idx = *iter;
+
+      if(flag->d_doPressureStabilization) {
+        IntVector cell_index;
+        patch->findCell(px[idx],cell_index);
+
+        // get the original volumetric part of the deformation
+        J = deformationGradient_new[idx].Determinant();
+       // Change F such that the determinant is equal to the average for
+        // the cell
+        deformationGradient_new[idx]*=cbrt(J_CC[cell_index])/cbrt(J);
+      }
+
+      J = deformationGradient_new[idx].Determinant();
 
       // Calculate rate of deformation D, and deviatoric rate DPrime,
       Matrix3 D = (velGrad + velGrad.Transpose())*0.5;

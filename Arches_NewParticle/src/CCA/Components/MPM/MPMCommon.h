@@ -77,6 +77,10 @@ namespace Uintah {
    protected:
     const ProcessorGroup* d_myworld;
     
+    void printTask(const Patch* patch,
+                   DebugStream& dbg,
+                   const string& where);
+    
   };
 }
 

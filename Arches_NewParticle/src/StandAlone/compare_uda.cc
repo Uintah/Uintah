@@ -149,6 +149,7 @@ void displayProblemLocation(const string& var, int matl,
                             double time)
 {
   cerr << "Time: " << time << " "<<
+    "Level: " <<patch->getLevel()->getIndex() << " " << 
     "Patch1: " << patch->getID() << " " <<
     "Patch2: " << patch2->getID() << " " <<
     "Material: " << matl << " " <<

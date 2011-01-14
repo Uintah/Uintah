@@ -124,13 +124,14 @@ MPMMaterial::standardInitialization(ProblemSpecP& ps, MPMFlags* flags)
 
   // Step 3 -- Loop through all of the pieces in this geometry object
   //int piece_num = 0;
-  list<string> geom_obj_data;
-  geom_obj_data.push_back("temperature");
-  
+  list<GeometryObject::DataItem> geom_obj_data;
+  geom_obj_data.push_back(GeometryObject::DataItem("res",        GeometryObject::IntVector));
+  geom_obj_data.push_back(GeometryObject::DataItem("temperature",GeometryObject::Double));
+  geom_obj_data.push_back(GeometryObject::DataItem("velocity",   GeometryObject::Vector));
+
   if(flags->d_with_color){
-    geom_obj_data.push_back("color");
-  }
-  
+    geom_obj_data.push_back(GeometryObject::DataItem("color", GeometryObject::Double));
+  } 
   for (ProblemSpecP geom_obj_ps = ps->findBlock("geom_object");
        geom_obj_ps != 0; 
        geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
@@ -148,8 +149,7 @@ MPMMaterial::standardInitialization(ProblemSpecP& ps, MPMFlags* flags)
     }
 
     //    piece_num++;
-    d_geom_objs.push_back(scinew GeometryObject(mainpiece, geom_obj_ps,
-                                                geom_obj_data));
+    d_geom_objs.push_back(scinew GeometryObject(mainpiece, geom_obj_ps, geom_obj_data));
   }
 }
 
@@ -337,7 +337,7 @@ void MPMMaterial::initializeCCVariables(CCVariable<double>& rho_micro,
    Point b1up(b1.upper().x()+3.*dx.x(),b1.upper().y()+3.*dx.y(),
                                         b1.upper().z()+3.*dx.z());
    
-   IntVector ppc = d_geom_objs[obj]->getNumParticlesPerCell();
+   IntVector ppc = d_geom_objs[obj]->getInitialData_IntVector("res");
    Vector dxpp    = patch->dCell()/ppc;
    Vector dcorner = dxpp*0.5;
    double totalppc = ppc.x()*ppc.y()*ppc.z();
@@ -360,18 +360,18 @@ void MPMMaterial::initializeCCVariables(CCVariable<double>& rho_micro,
       if(numMatls == 1)  {
         if ( count > 0  && obj == 0) {
          // vol_frac_CC[*iter]= 1.0;
-          vel_CC[*iter]     = d_geom_objs[obj]->getInitialVelocity();
+          vel_CC[*iter]     = d_geom_objs[obj]->getInitialData_Vector("velocity");
           rho_micro[*iter]  = getInitialDensity();
           rho_CC[*iter]     = rho_micro[*iter] + d_TINY_RHO;
-          temp[*iter]       = d_geom_objs[obj]->getInitialData("temperature");
+          temp[*iter]       = d_geom_objs[obj]->getInitialData_double("temperature");
         }
 
         if (count > 0 && obj > 0) {
          // vol_frac_CC[*iter]= 1.0;
-          vel_CC[*iter]     = d_geom_objs[obj]->getInitialVelocity();
+          vel_CC[*iter]     = d_geom_objs[obj]->getInitialData_Vector("velocity");
           rho_micro[*iter]  = getInitialDensity();
           rho_CC[*iter]     = rho_micro[*iter] + d_TINY_RHO;
-          temp[*iter]       = d_geom_objs[obj]->getInitialData("temperature");
+          temp[*iter]       = d_geom_objs[obj]->getInitialData_double("temperature");
         } 
       }   
       if (numMatls > 1 ) {
@@ -382,8 +382,8 @@ void MPMMaterial::initializeCCVariables(CCVariable<double>& rho_micro,
         Point pd = patch->cellPosition(*iter);
         if((pd.x() > b1low.x() && pd.y() > b1low.y() && pd.z() > b1low.z()) &&
            (pd.x() < b1up.x()  && pd.y() < b1up.y()  && pd.z() < b1up.z())){
-            vel_CC[*iter]     = d_geom_objs[obj]->getInitialVelocity();
-            temp[*iter]      = d_geom_objs[obj]->getInitialData("temperature");
+            vel_CC[*iter]     = d_geom_objs[obj]->getInitialData_Vector("velocity");
+            temp[*iter]      = d_geom_objs[obj]->getInitialData_double("temperature");
         }    
       }    
     }  // Loop over domain

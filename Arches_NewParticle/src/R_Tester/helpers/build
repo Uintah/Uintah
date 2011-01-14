@@ -157,7 +157,7 @@ fi
 
 if [ $retval != "0" ]; then
   # failed 3 times
-  if  [ -x "${BUILDROOT}/${mode}/build/StandAlone/sus" && -x "${BUILDROOT}/${mode}/build/StandAlone/compare_uda"]; then
+  if [[ -x "${BUILDROOT}/${mode}/build/StandAlone/sus" && -x "${BUILDROOT}/${mode}/build/StandAlone/compare_uda" ]]; then
     # sus compiled
     echo "__________________________________"
     echo "*** Make failed, but sus & compare_uda compiled successfully"

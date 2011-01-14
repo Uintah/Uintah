@@ -77,7 +77,7 @@ ProblemSpecP Material::outputProblemSpec(ProblemSpecP& ps)
 
   std::stringstream strstream;
   strstream << getDWIndex();
-  string index_val = strstream.str();
+  std::string index_val = strstream.str();
   mat->setAttribute("index",index_val);
   return mat;
 }

@@ -38,11 +38,9 @@ DEALINGS IN THE SOFTWARE.
 #include <vector>
 #include <list>
 #include <map>
-#include <set>
 
 namespace Uintah {
 
-  using namespace std;
   class DetailedTask;
   class DetailedTasks;
   class Patch;
@@ -113,7 +111,7 @@ WARNING
     bool sorted;
   };
 
-  typedef map<Task*, GraphSortInfo> GraphSortInfoMap;
+  typedef std::map<Task*, GraphSortInfo> GraphSortInfoMap;
 
    class TaskGraph {
    public:
@@ -133,7 +131,7 @@ WARNING
      /// Calls setupTaskConnections, which has the side effect of creating
      /// reduction tasks for tasks that compute reduction variables.  
      /// calls processTask on each task to sort them.
-     void topologicalSort(vector<Task*>& tasks);
+     void topologicalSort(std::vector<Task*>& tasks);
      
 
      /// Sorts the tasks, and makes DetailedTask's out of them, 
@@ -160,7 +158,7 @@ WARNING
      /// However, this routine leaves the tasks in the order they were
      /// added, so that reduction tasks are hit in the correct order
      /// by each MPI process.
-     void nullSort( vector<Task*>& tasks );
+     void nullSort( std::vector<Task*>& tasks );
      
      int getNumTasks() const;
      Task* getTask(int i);
@@ -179,22 +177,22 @@ WARNING
      /// starting with 0
      void setIteration(int iter) {currentIteration = iter;}
      
-     vector<Task*>& getTasks() {
+     std::vector<Task*>& getTasks() {
        return d_tasks;
      }
 
      /// Makes and returns a map that associates VarLabel names with
      /// the materials the variable is computed for.
-     typedef map< string, list<int> > VarLabelMaterialMap;
+     typedef std::map< std::string, std::list<int> > VarLabelMaterialMap;
      void makeVarLabelMaterialMap(VarLabelMaterialMap* result);
    private:
 #ifdef HAVE_GNU_HASHMAP
-     typedef multimap<const VarLabel*, Task::Dependency*> CompMap;
+     typedef std::multimap<const VarLabel*, Task::Dependency*> CompMap;
 #else
      typedef hash_multimap<const VarLabel*, Task::Dependency*> CompMap;
 #endif
 
-     typedef map<VarLabelMatl<Level>, Task*> ReductionTasksMap;
+     typedef std::map<VarLabelMatl<Level>, Task*> ReductionTasksMap;
 
 
      /// Helper function for processTasks, processing the dependencies
@@ -202,7 +200,7 @@ WARNING
      /// Will call processTask (recursively, as this is a helper for 
      /// processTask) for each dependent task.
      void processDependencies(Task* task, Task::Dependency* req,
-			      vector<Task*>& sortedTasks,
+			      std::vector<Task*>& sortedTasks,
                               GraphSortInfoMap& sortinfo) const;
      
      /// Helper function for setupTaskConnections, adding dependency edges
@@ -251,11 +249,11 @@ WARNING
      /// (which checks for cycles in the graph), which then recursively
      /// calls processTask for each dependentTask.  After this process is
      /// finished, then the task is added at the end of sortedTasks.
-     void processTask(Task* task, vector<Task*>& sortedTasks,
+     void processTask(Task* task, std::vector<Task*>& sortedTasks,
                       GraphSortInfoMap& sortinfo) const;
       
-     vector<Task*>        d_tasks;
-     vector<Task::Edge*> edges;
+     std::vector<Task*>        d_tasks;
+     std::vector<Task::Edge*> edges;
 
      SchedulerCommon* sc;
      LoadBalancer* lb;
@@ -266,7 +264,7 @@ WARNING
      // how many times this taskgraph has executed this timestep
      int currentIteration;
 
-     typedef map<const VarLabel*, DetailedTask*, VarLabel::Compare>
+     typedef std::map<const VarLabel*, DetailedTask*, VarLabel::Compare>
      DetailedReductionTasksMap;
      DetailedReductionTasksMap d_reductionTasks;
    };

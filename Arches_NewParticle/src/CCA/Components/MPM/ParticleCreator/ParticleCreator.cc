@@ -102,7 +102,7 @@ ParticleCreator::createParticles(MPMMaterial* matl,
       continue;
     }
 
-    Vector dxpp = patch->dCell()/(*obj)->getNumParticlesPerCell();    
+    Vector dxpp = patch->dCell()/(*obj)->getInitialData_IntVector("res");    
 
     // Special case exception for SmoothGeomPieces and FileGeometryPieces
     SmoothGeomPiece *sgp = dynamic_cast<SmoothGeomPiece*>(piece.get_rep());
@@ -503,7 +503,7 @@ void ParticleCreator::createPoints(const Patch* patch, GeometryObject* obj)
   geompoints::key_type key(patch,obj);
   GeometryPieceP piece = obj->getPiece();
   Box b2 = patch->getExtraBox();
-  IntVector ppc = obj->getNumParticlesPerCell();
+  IntVector ppc = obj->getInitialData_IntVector("res");
   Vector dxpp = patch->dCell()/ppc;
   Vector dcorner = dxpp*0.5;
 
@@ -557,8 +557,8 @@ ParticleCreator::initializeParticle(const Patch* patch,
                                     particleIndex i,
                                     CCVariable<short int>& cellNAPID)
 {
-  IntVector ppc = (*obj)->getNumParticlesPerCell();
-  Vector dxpp = patch->dCell()/(*obj)->getNumParticlesPerCell();
+  IntVector ppc = (*obj)->getInitialData_IntVector("res");
+  Vector dxpp = patch->dCell()/(*obj)->getInitialData_IntVector("res");
   Vector size(1./((double) ppc.x()),
               1./((double) ppc.y()),
               1./((double) ppc.z()));
@@ -573,13 +573,13 @@ ParticleCreator::initializeParticle(const Patch* patch,
 
   psize[i]    = size;
 
-  pvelocity[i]    = (*obj)->getInitialVelocity();
-  ptemperature[i] = (*obj)->getInitialData("temperature");
+  pvelocity[i]    = (*obj)->getInitialData_Vector("velocity");
+  ptemperature[i] = (*obj)->getInitialData_double("temperature");
   pmass[i]        = matl->getInitialDensity()*pvolume[i];
   pdisp[i]        = Vector(0.,0.,0.);
   
   if(d_with_color){
-    pcolor[i] = (*obj)->getInitialData("color");
+    pcolor[i] = (*obj)->getInitialData_double("color");
   }
   if(d_artificial_viscosity){
     p_q[i] = 0.;
@@ -647,7 +647,7 @@ ParticleCreator::countAndCreateParticles(const Patch* patch,
       fgp->readPoints(patch->getID());
       numPts = fgp->returnPointCount();
     } else {
-      Vector dxpp = patch->dCell()/obj->getNumParticlesPerCell();    
+      Vector dxpp = patch->dCell()/obj->getInitialData_IntVector("res");    
       double dx   = Min(Min(dxpp.x(),dxpp.y()), dxpp.z());
       sgp->setParticleSpacing(dx);
       numPts = sgp->createPoints();

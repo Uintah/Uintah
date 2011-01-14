@@ -670,20 +670,6 @@ SchedulerCommon::addTask(Task* task, const PatchSet* patches,
       d_initRequires.push_back(dep);
       d_initRequiredVars.insert(dep->var);
     }
-    if (dep->var->typeDescription()->getType() == TypeDescription::ParticleVariable && dep->numGhostCells != 0) {
-      if (numParticleGhostCells_ == 0) {
-        numParticleGhostCells_ = dep->numGhostCells;
-        particleGhostType_ = dep->gtype;
-      }
-      else if (numParticleGhostCells_ != dep->numGhostCells) {
-        ostringstream ostr;
-        ostr << "Invalid Particle Variable require: not consistent with previous particle requires:\n"
-             << "Previous: Ghost::" << Ghost::getGhostTypeName(particleGhostType_) << " with numGhostCells " << numParticleGhostCells_
-             << " Invalid: Ghost::" << Ghost::getGhostTypeName(dep->gtype) << " with numGhostCells " << dep->numGhostCells << endl;
-        throw InternalError(ostr.str(), __FILE__, __LINE__);
-      }
-    }
-    
   }
 
   // for the treat-as-old vars, go through the computes and add them.
@@ -1406,7 +1392,7 @@ SchedulerCommon::copyDataToNewGrid(const ProcessorGroup*, const PatchSubset* pat
             // for particles anyhow (but we will have to reset the bounds to copy the data)
             oldsub = oldDataWarehouse->getParticleSubset(matl, newPatch->getLowIndexWithDomainLayer(Patch::CellBased),
                                                          newPatch->getHighIndexWithDomainLayer(Patch::CellBased), 
-                                                         oldLevel.get_rep(), newPatch, reloc_new_posLabel_);
+                                                         newPatch, reloc_new_posLabel_, oldLevel.get_rep());
             oldsubsets[matl] = oldsub;
             oldsub->addReference();
           }

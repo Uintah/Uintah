@@ -75,7 +75,7 @@ namespace Uintah {
 
     void         parseValidationFile();
     void         validateProblemSpec( ProblemSpecP & prob_spec );
-    string *     findFileNamePtr( const std::string & filename );
+    std::string* findFileNamePtr( const std::string & filename );
 
     // Replaces <include> tags with xml file tree.
     void resolveIncludes( xmlNode * child, xmlNode * parent, int depth = 0 );

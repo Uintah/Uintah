@@ -1,0 +1,31 @@
+***************
+*** 528,541 ****
+                                attribute7="radius        OPTIONAL DOUBLE 'positive'" 
+                                attribute8="rectangle      OPTIONAL STRING 'x-, x+, y-, y+, z-, z+'" 
+                                attribute9="lower          OPTIONAL MULTIPLE_DOUBLES" 
+-                               attribute10="upper          OPTIONAL MULTIPLE_DOUBLES" >
+          <BCType             spec="MULTIPLE NO_DATA"
+                                attribute1="id        REQUIRED STRING '0,1,2,3,4,5,6,all'"
+                                attribute2="var       REQUIRED STRING 'Neumann, Dirichlet, symmetry, LODI, computeFromDensity, Sine, creep, slip Custom'"
+                                attribute3="label     REQUIRED STRING " >
+                                                                  
+-           <value            spec="OPTIONAL STRING" /> <!-- ERROR... it is required for some, but not for Dirichlet!!!
+-                                                          also, type can be different for different labels... how to handle? --> 
+          </BCType>
+        </Face>
+      </BoundaryConditions>
+--- 559,572 ----
+                                attribute7="radius        OPTIONAL DOUBLE 'positive'" 
+                                attribute8="rectangle      OPTIONAL STRING 'x-, x+, y-, y+, z-, z+'" 
+                                attribute9="lower          OPTIONAL MULTIPLE_DOUBLES" 
++                               attribute10="upper          OPTIONAL MULTIPLE_DOUBLES"
++                               attribute11="name          OPTIONAL STRING">
+          <BCType             spec="MULTIPLE NO_DATA"
+                                attribute1="id        REQUIRED STRING '0,1,2,3,4,5,6,all'"
+                                attribute2="var       REQUIRED STRING 'Neumann, Dirichlet, symmetry, LODI, computeFromDensity, Sine, creep, slip Custom'"
+                                attribute3="label     REQUIRED STRING " >
+                                                                  
++           <value            spec="REQUIRED STRING"  need_applies_to="var Neumann Dirichlet LODI computeFromDensity Sine creep slip Custom" />
+          </BCType>
+        </Face>
+      </BoundaryConditions>

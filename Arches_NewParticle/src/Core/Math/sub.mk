@@ -73,7 +73,6 @@ SRCS += \
 	\
         Core/Geometry/BBox.cc \
         Core/Geometry/CompGeom.cc \
-        Core/Geometry/Grid.cc \
         Core/Geometry/IntVector.cc \
         Core/Geometry/Plane.cc \
         Core/Geometry/Point.cc \
