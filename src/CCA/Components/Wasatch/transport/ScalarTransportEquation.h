@@ -21,6 +21,7 @@ namespace Expr{
 namespace Wasatch{
 
   /**
+   *  \ingroup WasatchCore
    *  \class ScalarTransportEquation
    *  \date June, 2010
    *  \author James C. Sutherland

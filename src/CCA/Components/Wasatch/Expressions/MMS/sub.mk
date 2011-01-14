@@ -28,50 +28,7 @@
 # 
 # Makefile fragment for this subdirectory
 
-include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
-
-SRCDIR   := CCA/Components/Wasatch
+SRCDIR := CCA/Components/Wasatch/Expressions/MMS
 
 SRCS	+=                             \
-        $(SRCDIR)/FieldAdaptor.cc	\
-	$(SRCDIR)/CoordHelper.cc	\
-        $(SRCDIR)/GraphHelperTools.cc	\
-        $(SRCDIR)/ParseTools.cc		\
-	$(SRCDIR)/Properties.cc		\
-	$(SRCDIR)/StringNames.cc	\
-        $(SRCDIR)/TaskInterface.cc	\
-	$(SRCDIR)/TimeStepper.cc	\
-	$(SRCDIR)/Wasatch.cc  \
-  $(SRCDIR)/BCHelperTools.cc
-
-PSELIBS :=              \
-	Core/Geometry   \
-	Core/Util       \
-	Core/Exceptions   \
-	CCA/Ports         \
-	CCA/Components/Schedulers \
-	Core/Grid         \
-	Core/Util         \
-	Core/ProblemSpec  \
-	Core/GeometryPiece  \
-	Core/Exceptions   \
-	Core/Disclosure   \
-	Core/Math         \
-	Core/Parallel
-
-LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) 	\
-        $(EXPRLIB_LIBRARY) $(SPATIALOPS_LIBRARY) 	\
-        $(TABPROPS_LIBRARY) $(HDF5_LIBRARY)		\
-        $(BOOST_LIBRARY)
-
-INCLUDES := $(INCLUDES) $(SPATIALOPS_INCLUDE) $(EXPRLIB_INCLUDE) \
-            $(HDF5_INCLUDE) $(TABPROPS_INCLUDE) $(BOOST_INCLUDE)
-
-SUBDIRS := \
-        $(SRCDIR)/Operators	\
-        $(SRCDIR)/Expressions	\
-	$(SRCDIR)/transport
-
-include $(SCIRUN_SCRIPTS)/recurse.mk
-
-include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
+	$(SRCDIR)/TaylorVortex.cc
