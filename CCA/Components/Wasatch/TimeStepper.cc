@@ -169,7 +169,7 @@ namespace Wasatch{
 
       taskInterfaceList_.push_back( rhsTask );
       coordHelper_->create_task( sched, patches, materials );
-      rhsTask->schedule( coordHelper_->field_tags() ); // must be scheduled afer coordHelper_
+      rhsTask->schedule( coordHelper_->field_tags() ); // must be scheduled after coordHelper_
     }
     catch( std::exception& e ){
       std::ostringstream msg;
