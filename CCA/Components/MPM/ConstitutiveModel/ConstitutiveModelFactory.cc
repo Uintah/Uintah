@@ -61,6 +61,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/MPM/ConstitutiveModel/MurnahanMPM.h>
 #include <CCA/Components/MPM/ConstitutiveModel/SmallStrainPlastic.h>
 #include <CCA/Components/MPM/ConstitutiveModel/IdealGasMP.h>
+#include <CCA/Components/MPM/ConstitutiveModel/P_Alpha.h>
 #include <CCA/Components/MPM/ConstitutiveModel/SoilFoam.h>
 #include <CCA/Components/MPM/ConstitutiveModel/Water.h>
 #include <CCA/Components/MPM/ConstitutiveModel/UCNH.h>
@@ -141,6 +142,9 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
   
   else if (mat_type ==  "ideal_gas")
     return(scinew IdealGasMP(child,flags));
+
+  else if (mat_type ==  "p_alpha")
+    return(scinew P_Alpha(child,flags));
 
   else if (mat_type ==  "water")
     return(scinew Water(child,flags));
