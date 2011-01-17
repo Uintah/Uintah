@@ -1,7 +1,7 @@
 #ifndef Wasatch_FieldAdaptor_h
 #define Wasatch_FieldAdaptor_h
 
-#include <spatialops/structured/FVStaggeredTypes.h>
+#include <spatialops/structured/FVStaggeredFieldTypes.h>
 
 #include <Core/Grid/Variables/SFCXVariable.h>  /* x-face variable */
 #include <Core/Grid/Variables/SFCYVariable.h>  /* y-face variable */

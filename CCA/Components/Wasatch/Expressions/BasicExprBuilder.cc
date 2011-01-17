@@ -5,17 +5,13 @@
 //-- Wasatch includes --//
 #include <CCA/Components/Wasatch/Expressions/BasicExprBuilder.h>
 #include <CCA/Components/Wasatch/FieldAdaptor.h>
+#include <CCA/Components/Wasatch/FieldTypes.h>
 #include <CCA/Components/Wasatch/ParseTools.h>
 #include <CCA/Components/Wasatch/Expressions/MMS/TaylorVortex.h>
 #include <CCA/Components/Wasatch/StringNames.h>
 
-
 //-- ExprLib includes --//
 #include <expression/ExprLib.h>
-
-
-//-- SpatialOps includes --//
-#include <spatialops/structured/FVStaggeredTypes.h>
 
 
 #include <string>
@@ -174,10 +170,10 @@ namespace Wasatch{
                 << std::endl;
 
       switch( get_field_type(fieldType) ){
-      case SVOL : builder = build_basic_expr<SpatialOps::structured::SVolField  >( exprParams );  break;
-      case XVOL : builder = build_basic_expr<SpatialOps::structured::XVolField  >( exprParams );  break;
-      case YVOL : builder = build_basic_expr<SpatialOps::structured::YVolField  >( exprParams );  break;
-      case ZVOL : builder = build_basic_expr<SpatialOps::structured::ZVolField  >( exprParams );  break;
+      case SVOL : builder = build_basic_expr< SVolField >( exprParams );  break;
+      case XVOL : builder = build_basic_expr< XVolField >( exprParams );  break;
+      case YVOL : builder = build_basic_expr< YVolField >( exprParams );  break;
+      case ZVOL : builder = build_basic_expr< ZVolField >( exprParams );  break;
       default:
         std::ostringstream msg;
         msg << "ERROR: unsupported field type '" << fieldType << "'" << endl
@@ -215,10 +211,10 @@ namespace Wasatch{
                 << std::endl;
 		
       switch( get_field_type(fieldType) ){
-      case SVOL : builder = build_taylor_vortex_mms_expr< SpatialOps::structured::SVolField >( exprParams );  break;
-      case XVOL : builder = build_taylor_vortex_mms_expr< SpatialOps::structured::XVolField >( exprParams );  break;
-      case YVOL : builder = build_taylor_vortex_mms_expr< SpatialOps::structured::YVolField >( exprParams );  break;
-      case ZVOL : builder = build_taylor_vortex_mms_expr< SpatialOps::structured::ZVolField >( exprParams );  break;
+      case SVOL : builder = build_taylor_vortex_mms_expr< SVolField >( exprParams );  break;
+      case XVOL : builder = build_taylor_vortex_mms_expr< XVolField >( exprParams );  break;
+      case YVOL : builder = build_taylor_vortex_mms_expr< YVolField >( exprParams );  break;
+      case ZVOL : builder = build_taylor_vortex_mms_expr< ZVolField >( exprParams );  break;
       default:
         std::ostringstream msg;
         msg << "ERROR: unsupported field type '" << fieldType << "'" << endl

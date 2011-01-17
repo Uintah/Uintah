@@ -1,8 +1,6 @@
 #ifndef Wasatch_TimeStepper_h
 #define Wasatch_TimeStepper_h
 
-#include <spatialops/structured/FVStaggeredTypes.h>
-
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 
@@ -13,6 +11,7 @@
 
 #include "PatchInfo.h"
 #include "FieldAdaptor.h"
+#include "FieldTypes.h"
 
 #include <list>
 
