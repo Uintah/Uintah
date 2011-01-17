@@ -1,19 +1,21 @@
 //-- Wasatch includes --//
 #include "ScalarTransportEquation.h"
-#include <CCA/Components/Wasatch/ParseTools.h>
+#include <CCA/Components/Wasatch/FieldTypes.h>
 #include <CCA/Components/Wasatch/Operators/OperatorTypes.h>
+#include <CCA/Components/Wasatch/ParseTools.h>
+
 #include <CCA/Components/Wasatch/Expressions/DiffusiveFlux.h>
 #include <CCA/Components/Wasatch/Expressions/ConvectiveFlux.h>
+
 
 //-- ExprLib includes --//
 #include <expression/ExprLib.h>
 
-//-- SpatialOps includes --//
-#include <spatialops/structured/FVStaggeredTypes.h>
 
 //-- Uintah includes --//
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/ProblemSetupException.h>
+
 
 namespace Wasatch{
 

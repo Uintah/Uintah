@@ -1,11 +1,12 @@
 //-- SpatialOps includes --//
-#include <spatialops/OperatorDatabase.h>
-#include <spatialops/structured/FVStaggeredTypes.h>
-#include <spatialops/structured/FVStaggeredDivergence.h>
-#include <spatialops/structured/FVStaggeredGradient.h>
-#include <spatialops/structured/FVStaggeredInterpolant.h>
-#include <spatialops/structured/FVStaggeredScratch.h>
-#include <spatialops/structured/FVTopHatFilter.h>
+#include <spatialops/structured/FVStaggered.h>
+// #include <spatialops/OperatorDatabase.h>
+// #include <spatialops/structured/FVStaggeredFieldTypes.h>
+// #include <spatialops/structured/FVStaggeredDivergence.h>
+// #include <spatialops/structured/FVStaggeredGradient.h>
+// #include <spatialops/structured/FVStaggeredInterpolant.h>
+// #include <spatialops/structured/FVStaggeredScratch.h>
+// #include <spatialops/structured/FVTopHatFilter.h>
 
 //-- Wasatch includes --//
 #include "Operators.h"
@@ -14,6 +15,8 @@
 //-- Uintah includes --//
 #include <Core/Grid/Patch.h>
 
+using namespace SpatialOps;
+using namespace structured;
 
 namespace Wasatch{
 

@@ -45,7 +45,6 @@
 #include <Core/Grid/BoundaryConditions/BoundCond.h>
 
 //-- SpatialOps includes --//
-#include <spatialops/OperatorDatabase.h>
 #include <spatialops/structured/FVStaggered.h>
 #include <spatialops/structured/FVStaggeredBCTools.h>
 

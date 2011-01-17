@@ -5,11 +5,6 @@
 //-- ExprLib includes --//
 #include <expression/TransportEquation.h>
 
-
-//-- SpatialOps includes --//
-#include <spatialops/structured/FVStaggeredTypes.h>
-
-
 //-- Wasatch includes --//
 #include <CCA/Components/Wasatch/FieldTypes.h>
 
