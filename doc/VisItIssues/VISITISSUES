@@ -35,6 +35,9 @@ but it should have 0.  Some values were removed to ensure VisIt runs smoothly."
 As you may note, the visual artifacts do not occur in the press_CC plot, but rather in
 the p.crackRad.  
 
+An update -- 01/17/11 -- this problem only appears to be an issue when you have applied a "Threshold"
+operator that uses another variable in its conditional.
+
 See: pseudoTearing.png
 
 
