@@ -29,8 +29,6 @@ DEALINGS IN THE SOFTWARE.
 
 
 //----- Arches.cc ----------------------------------------------
-// This is a test.
-// This is another test. 
 #include <CCA/Components/Arches/DQMOM.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermFactory.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermBase.h>
