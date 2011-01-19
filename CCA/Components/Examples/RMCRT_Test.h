@@ -105,15 +105,26 @@ WARNING
                                  DataWarehouse* old_dw, 
                                  DataWarehouse* new_dw );
     
-    void scheduleShootRays(SchedulerP& sched,
-                           const PatchSet* patches,
-                           const MaterialSet* matls);
+    void scheduleShootRays_onCoarseLevel(SchedulerP& sched,
+                                   const PatchSet* patches,
+                                   const MaterialSet* matls);
     
-    void shootRays ( const ProcessorGroup*,
-                     const PatchSubset* patches,
-                     const MaterialSubset* matls,
-                     DataWarehouse* old_dw,
-                     DataWarehouse* new_dw );
+    void shootRays_onCoarseLevel ( const ProcessorGroup*,
+                             const PatchSubset* patches,
+                             const MaterialSubset* matls,
+                             DataWarehouse* old_dw,
+                             DataWarehouse* new_dw );
+                             
+                             
+    void scheduleShootRays_multiLevel(SchedulerP& sched,
+                                      const PatchSet* patches,
+                                      const MaterialSet* matls);
+    
+    void shootRays_multiLevel( const ProcessorGroup*,
+                              const PatchSubset* patches,
+                              const MaterialSubset* matls,
+                              DataWarehouse* old_dw,
+                              DataWarehouse* new_dw );
 
     void scheduleRefine_Q(SchedulerP& sched,
                           const PatchSet* patches,
@@ -194,6 +205,8 @@ WARNING
     double         d_radiusOfOrbit;
     double         d_angularVelocity;
     int            d_matl;
+    bool           d_CoarseLevelRMCRTMethod;
+    bool           d_multiLevelRMCRTMethod;
     
     int d_orderOfInterpolation;         // Order of interpolation for interior fine patch
     std::vector<GeometryObject*> d_refine_geom_objs;

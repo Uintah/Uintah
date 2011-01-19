@@ -112,6 +112,9 @@ void RMCRT_Test::problemSetup(const ProblemSpecP& prob_spec,
   spec->get("ballRadius",       d_radiusOfBall);
   spec->get("orbitRadius",      d_radiusOfOrbit);
   spec->get("angularVelocity",  d_angularVelocity);
+  
+  spec->get("CoarseLevelRMCRTMethod", d_CoarseLevelRMCRTMethod);
+  spec->get("multiLevelRMCRTMethod", d_multiLevelRMCRTMethod);
 
   //__________________________________
   //  Read in the AMR section
@@ -217,27 +220,46 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
   const MaterialSet* matls = d_sharedState->allMaterials();
   GridP grid = level->getGrid();
   int maxLevels = level->getGrid()->numLevels();
-
-;
   
-  // pseudo RMCRT
-  for (int l = 0; l < maxLevels-1; l++) {
-    const LevelP& level = grid->getLevel(l);
-    const PatchSet* patches = level->eachPatch();
-    scheduleCoarsen_Q (level, sched);
-    scheduleShootRays( sched, patches, matls );
+  //__________________________________
+  //  If the RMCRT is performed on each fine patch with a halo of coarse patches
+  //  around the fine patch
+  if(d_multiLevelRMCRTMethod){
+    for (int l = 0; l < maxLevels-1; l++) {
+      const LevelP& level = grid->getLevel(l);
+      scheduleCoarsen_Q (level, sched);
+    }
+    
+    // only schedule RMCRT and pseudoCFD on the finest level
+    const LevelP& fineLevel = grid->getLevel(maxLevels-1);
+    const PatchSet* patches = fineLevel->eachPatch();
+    scheduleShootRays_multiLevel( sched, patches, matls );
+    schedulePseudoCFD( sched, patches, matls );
   }
   
-  for (int l = 0; l < maxLevels; l++) {
-    const LevelP& level = grid->getLevel(l);
-    const PatchSet* patches = level->eachPatch();
-    scheduleRefine_Q (sched,  patches, matls);
-  }
+  //__________________________________
+  //  If the RMCRT is performed on only the coarse level
+  // and the results are interpolated to the fine level
+  if(d_CoarseLevelRMCRTMethod){
+    // pseudo RMCRT
+    for (int l = 0; l < maxLevels-1; l++) {
+      const LevelP& level = grid->getLevel(l);
+      const PatchSet* patches = level->eachPatch();
+      scheduleCoarsen_Q (level, sched);
+      scheduleShootRays_onCoarseLevel( sched, patches, matls );
+    }
 
-  // only schedule CFD on the finest level
-  const LevelP& fineLevel = grid->getLevel(maxLevels-1);
-  const PatchSet* patches = fineLevel->eachPatch();
-  schedulePseudoCFD( sched, patches, matls );
+    for (int l = 0; l < maxLevels; l++) {
+      const LevelP& level = grid->getLevel(l);
+      const PatchSet* patches = level->eachPatch();
+      scheduleRefine_Q (sched,  patches, matls);
+    }
+
+    // only schedule CFD on the finest level
+    const LevelP& fineLevel = grid->getLevel(maxLevels-1);
+    const PatchSet* patches = fineLevel->eachPatch();
+    schedulePseudoCFD( sched, patches, matls );
+  }
 }
 //______________________________________________________________________
 //
@@ -269,8 +291,6 @@ void RMCRT_Test::pseudoCFD ( const ProcessorGroup*,
     printTask(patches, patch,dbg,"pseudoCFD");
 
     for(int m = 0;m<matls->size();m++){
-      int matl = matls->get(m);
-
       CCVariable<double> color;
       constCCVariable<double> sumDiffColor;
       constCCVariable<double> color_old;
@@ -289,16 +309,160 @@ void RMCRT_Test::pseudoCFD ( const ProcessorGroup*,
   }
 }
 
+
 //______________________________________________________________________
 //
-void RMCRT_Test::scheduleShootRays(SchedulerP& sched,
-                                   const PatchSet* patches,
-                                   const MaterialSet* matls)
+void RMCRT_Test::scheduleShootRays_multiLevel(SchedulerP& sched,
+                                              const PatchSet* patches,
+                                              const MaterialSet* matls)
 {
-  printSchedule(patches,dbg,"RMCRT_Test::scheduleShootRays");
+  printSchedule(patches,dbg,"RMCRT_Test::scheduleShootRays_multiLevel");
   
-  Task* t = scinew Task("RMCRT_Test::shootRays",
-                  this, &RMCRT_Test::shootRays);
+  Task* t = scinew Task("RMCRT_Test::shootRays_multiLevel",
+                  this, &RMCRT_Test::shootRays_multiLevel);
+
+  Task::DomainSpec  ND  = Task::NormalDomain;
+  #define allPatches 0
+  #define allMatls 0
+  t->requires(Task::OldDW, d_colorLabel,  d_gn, 0);
+  t->requires(Task::OldDW, d_colorLabel,  allPatches, Task::CoarseLevel,allMatls, ND, d_gn, 0);
+  
+  t->computes( d_sumColorDiffLabel );
+  sched->addTask(t, patches, matls);
+}
+//______________________________________________________________________
+void RMCRT_Test::shootRays_multiLevel ( const ProcessorGroup*,
+                                        const PatchSubset* finePatches,
+                                        const MaterialSubset* matls,
+                                        DataWarehouse* old_dw,
+                                        DataWarehouse* new_dw )
+{ 
+  const Level* fineLevel = getLevel(finePatches);
+  const Level* coarseLevel = fineLevel->getCoarserLevel().get_rep();
+  
+  
+  IntVector C_lo,C_hi;
+  coarseLevel->findInteriorCellIndexRange(C_lo, C_hi);
+  
+  cout << " getting coarse level data: C_lo " << C_lo << " C_hi: " << C_hi << endl;
+  constCCVariable<double> colorCoarse;
+  old_dw->getRegion(colorCoarse, d_colorLabel,  d_matl, coarseLevel, C_lo, C_hi);
+
+  for(int p=0;p<finePatches->size();p++){
+    const Patch* finePatch = finePatches->get(p);
+
+    printTask(finePatches, finePatch,dbg,"shootRays_multiLevel");
+
+    CCVariable<double> sumColorDiff;
+    constCCVariable<double> colorFine;
+    new_dw->allocateAndPut(sumColorDiff, d_sumColorDiffLabel, d_matl,finePatch);
+    old_dw->get(colorFine,               d_colorLabel,       d_matl, finePatch, d_gn, 0);
+    
+    sumColorDiff.initialize(0.0);
+    
+    IntVector P_lo = finePatch->getCellLowIndex();
+    IntVector P_hi = finePatch->getCellHighIndex();
+    
+
+    for (CellIterator iter = finePatch->getCellIterator();!iter.done();iter++){
+      const IntVector& f_cell = *iter;
+      int i = -9;
+      int j = -9;
+      int k = -9;
+      
+      //__________________________________
+      // Ray in x dir       fine patch                        
+      j = f_cell.y();
+      k = f_cell.z();
+      for( i=P_lo.x(); i<P_hi.x(); i++ ){      
+        IntVector h (i,j,k);                     
+        //cout << "    fineLevel X: " << h << endl;             
+        sumColorDiff[f_cell] += colorFine[h] - colorFine[f_cell];  
+      }
+      // Ray in y dir       fine patch                        
+      i = f_cell.x();
+      k = f_cell.z();
+      for( j=P_lo.y(); j<P_hi.y(); j++ ){      
+        IntVector h (i,j,k);                     
+        //cout << "    fineLevel Y: " << h << endl;             
+        sumColorDiff[f_cell] += colorFine[h] - colorFine[f_cell];  
+      }
+#if 0
+      // Ray in z dir       fine patch                        
+      i = f_cell.x();
+      j = f_cell.y();
+      for( k=P_lo.z(); k<P_hi.z(); k++ ){      
+        IntVector h (i,j,k);                     
+        //cout << "    fineLevel Z: " << h << endl;             
+        sumColorDiff[f_cell] += colorFine[h] - colorFine[f_cell];  
+      }
+#endif      
+      
+      //__________________________________
+      // Ray in x dir        coarse level   Don't add contribution if under the fine patch.
+      IntVector c_cell = fineLevel->mapCellToCoarser(f_cell);
+      j = c_cell.y();                             
+      k = c_cell.z(); 
+      
+      for( i=C_lo.x(); i<C_hi.x(); i++ ){      
+        IntVector h (i,j,k);  
+        IntVector h_fine = coarseLevel->mapCellToFiner(h);
+        bool testHi = (h_fine.x() > P_hi.x() - 1 );  // P_hi is exclusive, we want inclusive
+        bool testLo = (h_fine.x() < P_lo.x() ); 
+        
+        if( testHi|| testLo ){         // possibly replace conditional with one_or_zero    
+          //cout << "    coarseLevel X: " << h << endl;
+          sumColorDiff[f_cell] += colorCoarse[h] - colorFine[f_cell];  
+        }
+      }
+                                                   
+      // Ray in y dir        coarse level
+      i = c_cell.x();         
+      k = c_cell.z(); 
+      
+      for( j=C_lo.y(); j<C_hi.y(); j++ ){      
+        IntVector h (i,j,k);  
+        IntVector h_fine = coarseLevel->mapCellToFiner(h);
+        bool testHi = (h_fine.y() > P_hi.y() - 1 ); 
+        bool testLo = (h_fine.y() < P_lo.y() );
+        
+        if( testHi|| testLo ){         
+          //cout << "    coarseLevel Y: " << h << endl;
+          sumColorDiff[f_cell] += colorCoarse[h] - colorFine[f_cell];  
+        }
+      }                                          
+
+#if 0
+      // Ray in z dir        coarse level
+      i = c_cell.x();         
+      j = c_cell.y(); 
+      
+      for( k=C_lo.z(); k<C_hi.z(); k++ ){      
+        IntVector h (i,j,k);  
+        IntVector h_fine = coarseLevel->mapCellToFiner(h);
+        bool testHi = (h_fine.z() > P_hi.z() - 1 ); 
+        bool testLo = (h_fine.z() < P_lo.z() );
+        
+        if( testHi|| testLo ){         // possibly replace conditional with one_or_zero    
+          cout << "    coarseLevel Z: " << h << endl;
+          sumColorDiff[f_cell] += colorCoarse[h] - colorFine[f_cell];  
+        }
+      }
+#endif
+    }  // fine level cell iterator
+  }  // fine patch loop
+}  
+
+//______________________________________________________________________
+//
+void RMCRT_Test::scheduleShootRays_onCoarseLevel(SchedulerP& sched,
+                                                 const PatchSet* patches,
+                                                 const MaterialSet* matls)
+{
+  printSchedule(patches,dbg,"RMCRT_Test::scheduleShootRays_onCoarseLevel");
+  
+  Task* t = scinew Task("RMCRT_Test::shootRays_onCoarseLevel",
+                  this, &RMCRT_Test::shootRays_onCoarseLevel);
 
   Ghost::GhostType  gn  = Ghost::None;
   Task::DomainSpec  ND  = Task::NormalDomain;
@@ -306,19 +470,16 @@ void RMCRT_Test::scheduleShootRays(SchedulerP& sched,
   #define allMatls 0
 
   t->requires(Task::OldDW, d_colorLabel,  allPatches, ND,allMatls, ND, gn,0);
-//  t->requires(Task::OldDW, d_colorLabel,  allPatches, Task::CoarseLevel,allMatls, ND, gn, 0);
-  
-  //t->requires(Task::OldDW, d_colorLabel,   d_gn, 0);
   t->computes( d_sumColorDiffLabel );
   sched->addTask(t, patches, matls);
 }
   
 //______________________________________________________________________
-void RMCRT_Test::shootRays ( const ProcessorGroup*,
-                             const PatchSubset* patches,
-                             const MaterialSubset* matls,
-                             DataWarehouse* old_dw,
-                             DataWarehouse* new_dw )
+void RMCRT_Test::shootRays_onCoarseLevel ( const ProcessorGroup*,
+                                           const PatchSubset* patches,
+                                           const MaterialSubset* matls,
+                                           DataWarehouse* old_dw,
+                                           DataWarehouse* new_dw )
 { 
   const Level* level = getLevel(patches);
   IntVector L_lo,L_hi;
@@ -332,7 +493,7 @@ void RMCRT_Test::shootRays ( const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
-    printTask(patches, patch,dbg,"shootRays");
+    printTask(patches, patch,dbg,"shootRays_onCoarseLevel");
 
     CCVariable<double> sumColorDiff;
     new_dw->allocateAndPut(sumColorDiff, d_sumColorDiffLabel, d_matl, patch);
@@ -369,7 +530,6 @@ void RMCRT_Test::shootRays ( const ProcessorGroup*,
         sumColorDiff[c] += color[h] - color[c];  
       } 
     }
-      // do something here
   }
 }  
 //______________________________________________________________________
@@ -586,7 +746,6 @@ void RMCRT_Test::errorEstimate ( const ProcessorGroup*,
 
     //__________________________________
     //   flag regions inside of the ball
-    double pi = 3.141592653589;
     if ( getLevel(patches)->getIndex() == getLevel(patches)->getGrid()->numLevels()-1 ) {
       d_centerOfBall     = d_centerOfDomain;
     }
