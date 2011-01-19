@@ -81,7 +81,8 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
                 IntVector nd = *nbound_ptr;
                 variable[nd] = bcv;
               }
-              if(interp_type=="gimp" || interp_type=="3rdorderBS" || interp_type=="cpdi"){
+              if(interp_type=="gimp" || interp_type=="3rdorderBS" 
+                                     || interp_type=="cpdi"){
                 for(NodeIterator it(l,h); !it.done(); it++) {
                   IntVector nd = *it;
                   variable[nd] = bcv;
@@ -95,125 +96,141 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
         } else if (type == "Symmetric"){
           const BoundCondBase* bcb =
             patch->getArrayBCValues(face,dwi,"Symmetric",nu,nbound_ptr,child);
-          
+
           if (bcb->getBCType__NEW() == "symmetry") {
             if (face == Patch::xplus || face == Patch::xminus){
-              if(interp_type!="gimp" || interp_type!="cpdi"){
+              if(interp_type=="linear"){
                for (nbound_ptr.reset(); !nbound_ptr.done();nbound_ptr++) {
                 IntVector nd = *nbound_ptr;
                 variable[nd] = Vector(0.,variable[nd].y(), variable[nd].z());
                }
-              }
-              if(interp_type=="gimp" || interp_type=="cpdi"){
+              } // linear
+              if(interp_type=="gimp" || interp_type=="cpdi" 
+                                     || interp_type=="3rdorderBS"){
                 IntVector off = IntVector(1,0,0);
-                IntVector L,H;
+                IntVector L(0,0,0),H(0,0,0);
+                IntVector inner;
                 if(face==Patch::xminus){
                   L = l+off; H = h+off;
+                  for(NodeIterator it(L,H); !it.done(); it++){//bndy face nodes
+                    IntVector nd = *it;
+                    variable[nd]=Vector(0.,variable[nd].y(), variable[nd].z());
+                  }
                 } else if(face==Patch::xplus){
                   L = l-off; H = h-off;
+                  for(NodeIterator it(L,H); !it.done(); it++){//bndy face nodes
+                    IntVector nd = *it;
+                    variable[nd]=Vector(0.,variable[nd].y(), variable[nd].z());
+                  }
                 }
-                for(NodeIterator it(L,H); !it.done(); it++) {
-                  IntVector nd = *it;
-                  variable[nd] = Vector(0.,variable[nd].y(), variable[nd].z());
+                if(face==Patch::xminus){
+                  inner = IntVector(2,0,0);
+                  for(NodeIterator it(l,h); !it.done(); it++) { //extra nodes
+                    IntVector nd = *it;
+                    variable[nd] = Vector(-variable[nd+inner].x(),
+                                           variable[nd+inner].y(), 
+                                           variable[nd+inner].z());
+                  }
+                } else if(face==Patch::xplus){
+                  inner = IntVector(-2,0,0);
+                  for(NodeIterator it(l,h); !it.done(); it++) { //extra nodes
+                    IntVector nd = *it;
+                    variable[nd] = Vector(-variable[nd+inner].x(),
+                                           variable[nd+inner].y(), 
+                                           variable[nd+inner].z());
+                  }
                 }
-                for(NodeIterator it(l,h); !it.done(); it++) {
-                  IntVector nd = *it;
-                  variable[nd] = Vector(0.,variable[nd].y(), variable[nd].z());
-                }
-              }
-              if(interp_type=="3rdorderBS"){
-                if (face == Patch::xplus){
-                   off=IntVector(-2,0,0);
-                }
-                else{
-                   off=IntVector(2,0,0);
-                }
-                for(NodeIterator it(l,h); !it.done(); it++) {
-                  IntVector nd = *it;
-                  IntVector od = nd + off;
-                  variable[nd] = Vector(-variable[od].x(),
-                                         variable[od].y(), variable[od].z());
-                }
-              }
-            }
+              }  // cpdi, gimp or 3rdorderBS
+            } // xplus/xminus faces
+
             if (face == Patch::yplus || face == Patch::yminus){
-              if(interp_type!="gimp" || interp_type!="cpdi"){
+              if(interp_type=="linear"){
                for (nbound_ptr.reset(); !nbound_ptr.done();nbound_ptr++){
                 IntVector nd = *nbound_ptr;
                 variable[nd] = Vector(variable[nd].x(),0.,variable[nd].z());
                }
-              }
-              if(interp_type=="gimp" || interp_type=="cpdi"){
+              } // linear
+              if(interp_type=="gimp" || interp_type=="cpdi" 
+                                     || interp_type=="3rdorderBS"){
                 IntVector off = IntVector(0,1,0);
                 IntVector L(0,0,0),H(0,0,0);
+                IntVector inner;
                 if(face==Patch::yminus){
                   L = l+off; H = h+off;
+                  for(NodeIterator it(L,H); !it.done(); it++){//bndy face nodes
+                    IntVector nd = *it;
+                    variable[nd]=Vector(variable[nd].x(),0.,variable[nd].z());
+                  }
                 } else if(face==Patch::yplus){
                   L = l-off; H = h-off;
+                  for(NodeIterator it(L,H); !it.done(); it++){//bndy face nodes
+                    IntVector nd = *it;
+                    variable[nd]=Vector(variable[nd].x(),0.,variable[nd].z());
+                  }
                 }
-                for(NodeIterator it(L,H); !it.done(); it++) {
-                  IntVector nd = *it;
-                  variable[nd] = Vector(variable[nd].x(),0.,variable[nd].z());
+                if(face==Patch::yminus){
+                  inner = IntVector(0,2,0);
+                  for(NodeIterator it(l,h); !it.done(); it++) { // extra nodes
+                    IntVector nd = *it;
+                    variable[nd] = Vector(variable[nd+inner].x(),
+                                         -variable[nd+inner].y(),
+                                          variable[nd+inner].z());
+                  }
+                } else if(face==Patch::yplus){
+                  inner = IntVector(0,-2,0);
+                  for(NodeIterator it(l,h); !it.done(); it++) { // extra nodes
+                    IntVector nd = *it;
+                    variable[nd] = Vector(variable[nd+inner].x(),
+                                         -variable[nd+inner].y(),
+                                          variable[nd+inner].z());
+                  }
                 }
-                for(NodeIterator it(l,h); !it.done(); it++) {
-                  IntVector nd = *it;
-                  variable[nd] = Vector(variable[nd].x(),0.,variable[nd].z());
-                }
-              }
-              if(interp_type=="3rdorderBS"){
-                if (face == Patch::yplus){
-                   off=IntVector(0,-2,0);
-                }
-                else{
-                   off=IntVector(0,2,0);
-                }
-                for(NodeIterator it(l,h); !it.done(); it++) {
-                  IntVector nd = *it;
-                  IntVector od = nd + off;
-                  variable[nd] = Vector(variable[od].x(),
-                                       -variable[od].y(), variable[od].z());
-                }
-              }
-            }
+              } // cpdi or gimp
+            }  // yplus/yminus faces
             if (face == Patch::zplus || face == Patch::zminus){
-              if(interp_type!="gimp"||interp_type!="cpdi"){
+              if(interp_type=="linear"){
                for (nbound_ptr.reset(); !nbound_ptr.done();nbound_ptr++){
                 IntVector nd = *nbound_ptr;
                 variable[nd] = Vector(variable[nd].x(), variable[nd].y(),0.);
                }
-              }
-              if(interp_type=="gimp"||interp_type=="cpdi"){
+              } // linear
+              if(interp_type=="gimp" || interp_type=="cpdi" 
+                                     || interp_type=="3rdorderBS"){
                 IntVector off = IntVector(0,0,1);
                 IntVector L(0,0,0),H(0,0,0);
+                IntVector inner;
                 if(face==Patch::zminus){
                   L = l+off; H = h+off;
+                  for(NodeIterator it(L,H); !it.done(); it++){//bndy face nodes
+                    IntVector nd = *it;
+                    variable[nd]=Vector(variable[nd].x(), variable[nd].y(),0.);
+                  }
                 } else if(face==Patch::zplus){
                   L = l-off; H = h-off;
+                  for(NodeIterator it(L,H); !it.done(); it++){//bndy face nodes
+                    IntVector nd = *it;
+                    variable[nd]=Vector(variable[nd].x(), variable[nd].y(),0.);
+                  }
                 }
-                for(NodeIterator it(L,H); !it.done(); it++) {
-                  IntVector nd = *it;
-                  variable[nd] = Vector(variable[nd].x(), variable[nd].y(),0.);
+                if(face==Patch::zminus){
+                  inner = IntVector(0,0,2);
+                  for(NodeIterator it(l,h); !it.done(); it++) { // extra nodes
+                    IntVector nd = *it;
+                    variable[nd] = Vector(variable[nd+inner].x(),
+                                          variable[nd+inner].y(),
+                                         -variable[nd+inner].z());
+                  }
+                } else if(face==Patch::zplus){
+                  inner = IntVector(0,0,-2);
+                  for(NodeIterator it(l,h); !it.done(); it++) { // extra nodes
+                    IntVector nd = *it;
+                    variable[nd] = Vector(variable[nd+inner].x(),
+                                          variable[nd+inner].y(),
+                                         -variable[nd+inner].z());
+                  }
                 }
-                for(NodeIterator it(l,h); !it.done(); it++) {
-                  IntVector nd = *it;
-                  variable[nd] = Vector(variable[nd].x(), variable[nd].y(),0.);
-                }
-              }
-              if(interp_type=="3rdorderBS"){
-                if (face == Patch::zplus){
-                   off=IntVector(0,0,-2);
-                }
-                else{
-                   off=IntVector(0,0,2);
-                }
-                for(NodeIterator it(l,h); !it.done(); it++) {
-                  IntVector nd = *it;
-                  IntVector od = nd + off;
-                  variable[nd] = Vector(variable[od].x(),
-                                        variable[od].y(), -variable[od].z());
-                }
-              }
-            }
+              } // cpdi or gimp
+            } // zplus/zminus
             delete bcb;
           } else
             delete bcb;
