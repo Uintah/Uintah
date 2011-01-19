@@ -2,6 +2,7 @@
 
 #include <CCA/Components/Wasatch/Operators/OperatorTypes.h>
 #include <CCA/Components/Wasatch/Operators/UpwindInterpolant.h>
+#include <CCA/Components/Wasatch/Operators/SuperbeeInterpolant.h>
 
 //-- ExprLib includes --//
 #include <expression/ExprLib.h>
@@ -94,37 +95,37 @@ Builder::build( const Expr::ExpressionID& id,
 //====================================================================
 
 template< typename PhiInterpT, typename VelInterpT >
-ConvectiveFluxUpwind<PhiInterpT, VelInterpT>::
-ConvectiveFluxUpwind( const Expr::Tag phiTag,
-                      const Expr::Tag velTag,
-                      const Expr::ExpressionID& id,
-                      const Expr::ExpressionRegistry& reg  )
-  : ConvectiveFlux<PhiInterpT, VelInterpT>(phiTag, velTag, id, reg)
+ConvectiveFluxLimiter<PhiInterpT, VelInterpT>::
+ConvectiveFluxLimiter( const Expr::Tag phiTag,
+                     const Expr::Tag velTag,
+                     const Expr::ExpressionID& id,
+                     const Expr::ExpressionRegistry& reg  )
+: ConvectiveFlux<PhiInterpT, VelInterpT>(phiTag, velTag, id, reg)
 {}
 
 //--------------------------------------------------------------------
 
 template< typename PhiInterpT, typename VelInterpT > 
-ConvectiveFluxUpwind<PhiInterpT, VelInterpT>::
-~ConvectiveFluxUpwind()
+ConvectiveFluxLimiter<PhiInterpT, VelInterpT>::
+~ConvectiveFluxLimiter()
 {}
 
 //--------------------------------------------------------------------
 
 template< typename PhiInterpT, typename VelInterpT > 
-void ConvectiveFluxUpwind<PhiInterpT, VelInterpT>::evaluate()
+void ConvectiveFluxLimiter<PhiInterpT, VelInterpT>::evaluate()
 {
   PhiFaceT& result = this->value();
-
+  
   // note that PhiFaceT and VelFaceT should on the same mesh location
   SpatialOps::SpatFldPtr<VelFaceT> velInterp = SpatialOps::SpatialFieldStore<VelFaceT>::self().get( result );
-
+  
   // move the velocity from staggered volume to phi faces
   this->velInterpOp_->apply_to_field( *this->vel_, *velInterp );
-
+  
   this->phiInterpOp_->set_advective_velocity( *velInterp );
   this->phiInterpOp_->apply_to_field( *this->phi_, result );
-
+  
   result *= *velInterp;
 }
 
@@ -137,6 +138,10 @@ struct InterpT
   typedef UpwindInterpolant< FieldT, typename Wasatch::FaceTypes<FieldT>::YFace >  UpwindY;
   typedef UpwindInterpolant< FieldT, typename Wasatch::FaceTypes<FieldT>::ZFace >  UpwindZ;
 
+  typedef SuperbeeInterpolant< FieldT, typename Wasatch::FaceTypes<FieldT>::XFace >  SuperbeeX;
+  typedef SuperbeeInterpolant< FieldT, typename Wasatch::FaceTypes<FieldT>::YFace >  SuperbeeY;
+  typedef SuperbeeInterpolant< FieldT, typename Wasatch::FaceTypes<FieldT>::ZFace >  SuperbeeZ;
+  
   typedef typename Wasatch::OpTypes<FieldT>::InterpC2FX  CentralX;
   typedef typename Wasatch::OpTypes<FieldT>::InterpC2FY  CentralY;
   typedef typename Wasatch::OpTypes<FieldT>::InterpC2FZ  CentralZ;
@@ -180,20 +185,36 @@ template class ConvectiveFlux< ZVOps::CentralX, ZVOps::VelX >;
 template class ConvectiveFlux< ZVOps::CentralY, ZVOps::VelY >;
 template class ConvectiveFlux< ZVOps::CentralZ, ZVOps::VelZ >;
 
+template class ConvectiveFluxLimiter< SVOps::UpwindX, SVOps::VelX >;
+template class ConvectiveFluxLimiter< SVOps::UpwindY, SVOps::VelY >;
+template class ConvectiveFluxLimiter< SVOps::UpwindZ, SVOps::VelZ >;
 
-template class ConvectiveFluxUpwind< SVOps::UpwindX, SVOps::VelX >;
-template class ConvectiveFluxUpwind< SVOps::UpwindY, SVOps::VelY >;
-template class ConvectiveFluxUpwind< SVOps::UpwindZ, SVOps::VelZ >;
+template class ConvectiveFluxLimiter< XVOps::UpwindX, XVOps::VelX >;
+template class ConvectiveFluxLimiter< XVOps::UpwindY, XVOps::VelY >;
+template class ConvectiveFluxLimiter< XVOps::UpwindZ, XVOps::VelZ >;
 
-template class ConvectiveFluxUpwind< XVOps::UpwindX, XVOps::VelX >;
-template class ConvectiveFluxUpwind< XVOps::UpwindY, XVOps::VelY >;
-template class ConvectiveFluxUpwind< XVOps::UpwindZ, XVOps::VelZ >;
+template class ConvectiveFluxLimiter< YVOps::UpwindX, YVOps::VelX >;
+template class ConvectiveFluxLimiter< YVOps::UpwindY, YVOps::VelY >;
+template class ConvectiveFluxLimiter< YVOps::UpwindZ, YVOps::VelZ >;
 
-template class ConvectiveFluxUpwind< YVOps::UpwindX, YVOps::VelX >;
-template class ConvectiveFluxUpwind< YVOps::UpwindY, YVOps::VelY >;
-template class ConvectiveFluxUpwind< YVOps::UpwindZ, YVOps::VelZ >;
+template class ConvectiveFluxLimiter< ZVOps::UpwindX, ZVOps::VelX >;
+template class ConvectiveFluxLimiter< ZVOps::UpwindY, ZVOps::VelY >;
+template class ConvectiveFluxLimiter< ZVOps::UpwindZ, ZVOps::VelZ >;
 
-template class ConvectiveFluxUpwind< ZVOps::UpwindX, ZVOps::VelX >;
-template class ConvectiveFluxUpwind< ZVOps::UpwindY, ZVOps::VelY >;
-template class ConvectiveFluxUpwind< ZVOps::UpwindZ, ZVOps::VelZ >;
+template class ConvectiveFluxLimiter< SVOps::SuperbeeX, SVOps::VelX >;
+template class ConvectiveFluxLimiter< SVOps::SuperbeeY, SVOps::VelY >;
+template class ConvectiveFluxLimiter< SVOps::SuperbeeZ, SVOps::VelZ >;
+
+template class ConvectiveFluxLimiter< XVOps::SuperbeeX, XVOps::VelX >;
+template class ConvectiveFluxLimiter< XVOps::SuperbeeY, XVOps::VelY >;
+template class ConvectiveFluxLimiter< XVOps::SuperbeeZ, XVOps::VelZ >;
+
+template class ConvectiveFluxLimiter< YVOps::SuperbeeX, YVOps::VelX >;
+template class ConvectiveFluxLimiter< YVOps::SuperbeeY, YVOps::VelY >;
+template class ConvectiveFluxLimiter< YVOps::SuperbeeZ, YVOps::VelZ >;
+
+template class ConvectiveFluxLimiter< ZVOps::SuperbeeX, ZVOps::VelX >;
+template class ConvectiveFluxLimiter< ZVOps::SuperbeeY, ZVOps::VelY >;
+template class ConvectiveFluxLimiter< ZVOps::SuperbeeZ, ZVOps::VelZ >;
+
 //============================================================================

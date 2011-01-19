@@ -11,6 +11,7 @@
 //-- Wasatch includes --//
 #include "Operators.h"
 #include <CCA/Components/Wasatch/Operators/UpwindInterpolant.h>
+#include <CCA/Components/Wasatch/Operators/SuperbeeInterpolant.h>
 
 //-- Uintah includes --//
 #include <Core/Grid/Patch.h>
@@ -204,6 +205,44 @@ namespace Wasatch{
     typedef UpwindInterpolant<ZVolField,ZSurfZField> UpwindZVolZSurfZ;
     opDB.register_new_operator<UpwindZVolZSurfZ>(scinew UpwindZVolZSurfZ(dim, bcPlus ));
     
+    //--------------------------------------------------------
+    // SUPERBEE interpolants - phi volume to phi surface
+    //--------------------------------------------------------    
+    typedef SuperbeeInterpolant<SVolField,SSurfXField> SuperbeeSVolSSurfX;
+    opDB.register_new_operator<SuperbeeSVolSSurfX>(scinew SuperbeeSVolSSurfX(dim, bcPlus) );
+    
+    typedef SuperbeeInterpolant<SVolField,SSurfYField> SuperbeeSVolSSurfY;
+    opDB.register_new_operator<SuperbeeSVolSSurfY>(scinew SuperbeeSVolSSurfY(dim, bcPlus ));
+    
+    typedef SuperbeeInterpolant<SVolField,SSurfZField> SuperbeeSVolSSurfZ;
+    opDB.register_new_operator<SuperbeeSVolSSurfZ>(scinew SuperbeeSVolSSurfZ(dim, bcPlus ));
+    
+    typedef SuperbeeInterpolant<XVolField,XSurfXField> SuperbeeXVolXSurfX;
+    opDB.register_new_operator<SuperbeeXVolXSurfX>(scinew SuperbeeXVolXSurfX(dim, bcPlus ));
+    
+    typedef SuperbeeInterpolant<XVolField,XSurfYField> SuperbeeXVolXSurfY;
+    opDB.register_new_operator<SuperbeeXVolXSurfY>(scinew SuperbeeXVolXSurfY(dim, bcPlus ));
+    
+    typedef SuperbeeInterpolant<XVolField,XSurfZField> SuperbeeXVolXSurfZ;
+    opDB.register_new_operator<SuperbeeXVolXSurfZ>(scinew SuperbeeXVolXSurfZ(dim, bcPlus ));
+    
+    typedef SuperbeeInterpolant<YVolField,YSurfXField> SuperbeeYVolYSurfX;
+    opDB.register_new_operator<SuperbeeYVolYSurfX>(scinew SuperbeeYVolYSurfX(dim, bcPlus ));
+    
+    typedef SuperbeeInterpolant<YVolField,YSurfYField> SuperbeeYVolYSurfY;
+    opDB.register_new_operator<SuperbeeYVolYSurfY>(scinew SuperbeeYVolYSurfY(dim, bcPlus ));
+    
+    typedef SuperbeeInterpolant<YVolField,YSurfZField> SuperbeeYVolYSurfZ;
+    opDB.register_new_operator<SuperbeeYVolYSurfZ>(scinew SuperbeeYVolYSurfZ(dim, bcPlus ));
+    
+    typedef SuperbeeInterpolant<ZVolField,ZSurfXField> SuperbeeZVolZSurfX;
+    opDB.register_new_operator<SuperbeeZVolZSurfX>(scinew SuperbeeZVolZSurfX(dim, bcPlus ));
+    
+    typedef SuperbeeInterpolant<ZVolField,ZSurfYField> SuperbeeZVolZSurfY;
+    opDB.register_new_operator<SuperbeeZVolZSurfY>(scinew SuperbeeZVolZSurfY(dim, bcPlus ));
+    
+    typedef SuperbeeInterpolant<ZVolField,ZSurfZField> SuperbeeZVolZSurfZ;
+    opDB.register_new_operator<SuperbeeZVolZSurfZ>(scinew SuperbeeZVolZSurfZ(dim, bcPlus ));    
 
     //--------------------------------------------------------
     // scalar surface to staggered volumes (pressure gradients)
