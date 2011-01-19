@@ -18,5 +18,7 @@
     <ballRadius               spec="OPTIONAL DOUBLE 'positive'"/>
     <orbitRadius              spec="OPTIONAL DOUBLE 'positive'"/>
     <angularVelocity          spec="OPTIONAL DOUBLE 'positive'"/>
+    <CoarseLevelRMCRTMethod   spec="OPTIONAL BOOLEAN" />
+    <multiLevelRMCRTMethod    spec="OPTIONAL BOOLEAN" />
   </RMCRT>
 </Uintah_Include>

@@ -13,7 +13,7 @@
     <initTime>      0.0       </initTime>
     <delt_min>      0.00001   </delt_min>
     <delt_max>      1         </delt_max>
-    <max_Timesteps> 10        </max_Timesteps>
+    <max_Timesteps> 100       </max_Timesteps>
     <timestep_multiplier>  1  </timestep_multiplier>
   </Time>
   <!--__________________________________-->
@@ -22,8 +22,8 @@
       <Box label = "0">                              
          <lower>     [-1,-1,-0.01]  </lower>         
          <upper>     [ 1, 1, 0.01]  </upper>         
-         <resolution>[20,20,1]     </resolution>    
-         <patches>   [3,3,1]       </patches> 
+         <resolution>[10,10,1]     </resolution>    
+         <patches>   [2,2,1]       </patches> 
          <extraCells> [1,1,1]      </extraCells>      
       </Box>                                         
     </Level>
@@ -31,8 +31,8 @@
       <Box label = "1">                              
          <lower>     [ -1,-1,-0.01]  </lower>         
          <upper>     [  1, 1, 0.01]  </upper>         
-         <resolution>[80,80,1]      </resolution>        
-         <patches>   [4,4,1]        </patches>   
+         <resolution>[20,20,1]      </resolution>        
+         <patches>   [5,5,1]        </patches>   
          <extraCells> [1,1,1]      </extraCells>         
       </Box>                                         
     </Level>
@@ -74,8 +74,10 @@
   <DataArchiver>
   <filebase>rmcrtTest.uda</filebase>
       <outputTimestepInterval>1</outputTimestepInterval>
-      <save label = "color"       />
-      <save label = "sumColorDiff" />
+      
+      <save label = "color" />
+      <save label = "sumColorDiff" levels="1"/>
+      
       <!--<save label = "refineFlag"/> -->
       <checkpoint cycle = "2" timestepInterval = "1"/>
   </DataArchiver>
@@ -86,6 +88,8 @@
     <ballRadius>  0.1     </ballRadius>
     <orbitRadius> 0.25    </orbitRadius>
     <angularVelocity> 10  </angularVelocity>
+    <CoarseLevelRMCRTMethod> false     </CoarseLevelRMCRTMethod>
+    <multiLevelRMCRTMethod>  true   </multiLevelRMCRTMethod>
   </RMCRT>
  
 </Uintah_specification>
