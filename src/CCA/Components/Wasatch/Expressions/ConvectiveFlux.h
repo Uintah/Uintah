@@ -97,16 +97,17 @@ public:
 
 /**
  *  \ingroup WasatchExpressions
- *  \class   ConvectiveFluxUpwind
- *  \author  James C. Sutherland
+ *  \class   ConvectiveFluxLimiter
  *  \author  Tony Saad
- *  \date    July, 2010
+ *  \date    January, 2011
  *
  *  \brief Creates an expression for the convective flux of a scalar
  *  given a velocity field \f$\mathbf{u}\f$. We write the convective
  *  flux in conservation form as \f$ J_i = \rho \varphi u_i = \phi u_i
  *  \f$ where \f$i=1,2,3\f$ is the coordinate direction. This requires
- *  knowledge of the velocity field.
+ *  knowledge of the velocity field. The ConvectiveFluxLimiter is used for
+ *  all interpolants that are dependent on a velocity field such as the
+ *  Upwind scheme or any of the flux limiters such as Superbee.
  *
  *  Here, we are constructing the convective flux J_i, therefore, it
  *  is convenient to set \f$ \rho \varphi \equiv \phi\f$
@@ -120,8 +121,8 @@ public:
  *  </ul>
  */
 template< typename PhiInterpT, typename VelInterpT > // scalar interpolant and velocity interpolant
-class ConvectiveFluxUpwind
-  : public ConvectiveFlux<PhiInterpT, VelInterpT>
+class ConvectiveFluxLimiter
+: public ConvectiveFlux<PhiInterpT, VelInterpT>
 {  
   // PhiInterpT: an interpolant from staggered or non-staggered volume field to staggered or non-staggered face field
   typedef typename PhiInterpT::SrcFieldType  PhiVolT; // source field is a scalar volume
@@ -136,7 +137,7 @@ public:
   {
   public:
     /**
-     *  \brief Construct an upwind convective flux given an expression
+     *  \brief Construct an convective flux limiter given an expression
      *         for \f$\phi\f$.
      *
      *  \param phiTag the Expr::Tag for the scalar field.  This is
@@ -146,22 +147,23 @@ public:
      *         velocity field is a face field.
      */
     Builder( const Expr::Tag phiTag,
-             const Expr::Tag velTag ) : ConvectiveFlux<PhiInterpT,VelInterpT>::Builder(phiTag,velTag) {}
+            const Expr::Tag velTag ) : ConvectiveFlux<PhiInterpT,VelInterpT>::Builder(phiTag,velTag) {}
     
     Expr::ExpressionBase* build( const Expr::ExpressionID& id,
-                                 const Expr::ExpressionRegistry& reg ) const
+                                const Expr::ExpressionRegistry& reg ) const
     {
-      return new ConvectiveFluxUpwind<PhiInterpT,VelInterpT>( this->phiT_, this->velT_, id, reg );
+      return new ConvectiveFluxLimiter<PhiInterpT,VelInterpT>( this->phiT_, this->velT_, id, reg );
     }		
   };
   
-  ConvectiveFluxUpwind( const Expr::Tag phiTag,
-                        const Expr::Tag velTag,
-                        const Expr::ExpressionID& id,
-                        const Expr::ExpressionRegistry& reg  );
-  ~ConvectiveFluxUpwind();
+  ConvectiveFluxLimiter( const Expr::Tag phiTag,
+                       const Expr::Tag velTag,
+                       const Expr::ExpressionID& id,
+                       const Expr::ExpressionRegistry& reg  );
+  ~ConvectiveFluxLimiter();
   
   void evaluate();
 };
+
 
 #endif // /ConvectiveFlux_Expr_h

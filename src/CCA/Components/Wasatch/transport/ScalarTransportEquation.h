@@ -8,6 +8,7 @@
 #include <CCA/Components/Wasatch/FieldTypes.h>
 #include <CCA/Components/Wasatch/FieldTypes.h>
 #include <CCA/Components/Wasatch/Operators/UpwindInterpolant.h>
+#include <CCA/Components/Wasatch/Operators/SuperbeeInterpolant.h>
 #include <CCA/Components/Wasatch/Expressions/ScalarRHS.h>
 
 //-- Uintah includes --//
