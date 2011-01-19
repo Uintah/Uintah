@@ -41,3 +41,13 @@ operator that uses another variable in its conditional.
 See: pseudoTearing.png
 
 
+3)  Additional capabilities 
+__________________________________
+In SCIRun you can select a point in the computational domain and the grid
+visualizer module will display the cell-centered or node-centered index of
+that point.  This can be done on a per level basis and it is very useful
+for debugging.  Additionally,  the grid visualizer module allows the user
+to input the cell-centered or node centered index along with the level and
+it will display that location with a marker.  This is really handy when you
+have a complex multilevel AMR grid.  I poked around in VisIT and I couldn't
+see how to do this.  --Todd
