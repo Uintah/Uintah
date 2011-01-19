@@ -99,9 +99,9 @@ SuperbeeInterpolant( const std::vector<int>& dim,
       xyzVolIncr_[1] = 0;
       xyzVolIncr_[2] = 0;
       if (hasPlusFace[2]) xyzFaceIncr_[2] += stride_;
-      xyzCount_[0] = dim[0] + nGhost;
-      //xyzCount_[2] = 1;
-      xyzCount_[2] -= 1;
+      //xyzCount_[0] = dim[0] + nGhost;
+      xyzCount_[2] = dim[2] -1;
+      //xyzCount_[2] -= 1;
             
       // boundary counters
       bndPlusStrideCoef_ = dim[2] + nGhost - 1;
