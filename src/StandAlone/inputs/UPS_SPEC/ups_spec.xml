@@ -328,7 +328,7 @@
                                                                       mpmf, mpmice, amrmpm,
                                                                       wasatch, reduce_uda,
                                                                       poisson1, poisson2, poisson3, poisson4, benchmark, rigidmpmice, 
-                                                                      rmpmice, smpm, smpmice, spatialops, switcher, wave, solvertest, RMCRT_Test'" >
+                                                                      rmpmice, smpm, smpmice, spatialops, switcher, wave, solvertest'" >
                                   <!-- The 'type' above is used in CCA/Components/Parent/ComponentFactory.cc -->
         <carry_over                 spec="MULTIPLE NO_DATA"
                                   attribute1="var   REQUIRED STRING"
@@ -658,7 +658,6 @@
 
     <include href="ice_spec.xml"         section="AMR/ICE" />
     <include href="mpm_spec.xml"         section="AMR/MPM" />
-    <include href="RMCRT_test.xml"       section="AMR/RMCRT" />
 
     <Regridder                          spec="OPTIONAL NO_DATA"
                                            attribute1="type REQUIRED STRING 'BNR, Hierarchical, Tiled'" >
@@ -975,9 +974,6 @@
 
   <!--______________________________________________________________________-->
   <!--                 EXAMPLES                                             -->
-  
-  <!-- RMCRT_Test     -->
-  <include href="RMCRT_test.xml" section="RMCRT"/>
   
   <!-- Burger         -->
   <Burger                     spec="OPTIONAL NO_DATA">
