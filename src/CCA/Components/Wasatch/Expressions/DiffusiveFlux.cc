@@ -1,5 +1,4 @@
 #include "DiffusiveFlux.h"
-#include <CCA/Components/Wasatch/Operators/OperatorTypes.h>
 
 //-- ExprLib includes --//
 #include <expression/ExprLib.h>
@@ -170,13 +169,16 @@ evaluate()
 //--------------------------------------------------------------------
 
 
-typedef Wasatch::OpTypes< Wasatch::SVolField >  SVOps;
-typedef Wasatch::OpTypes< Wasatch::XVolField >  XVOps;
-typedef Wasatch::OpTypes< Wasatch::YVolField >  YVOps;
-typedef Wasatch::OpTypes< Wasatch::ZVolField >  ZVOps;
-
 //==========================================================================
 // Explicit template instantiation for supported versions of this expression
+//
+#include <CCA/Components/Wasatch/Operators/OperatorTypes.h>
+
+typedef Wasatch::OpTypes< SVolField >  SVOps;
+typedef Wasatch::OpTypes< XVolField >  XVOps;
+typedef Wasatch::OpTypes< YVolField >  YVOps;
+typedef Wasatch::OpTypes< ZVolField >  ZVOps;
+
 template class DiffusiveFlux< SVOps::GradX >;
 template class DiffusiveFlux< SVOps::GradY >;
 template class DiffusiveFlux< SVOps::GradZ >;
@@ -209,4 +211,5 @@ template class DiffusiveFlux2< YVOps::GradZ, YVOps::InterpC2FZ >;
 template class DiffusiveFlux2< ZVOps::GradX, ZVOps::InterpC2FX >;
 template class DiffusiveFlux2< ZVOps::GradY, ZVOps::InterpC2FY >;
 template class DiffusiveFlux2< ZVOps::GradZ, ZVOps::InterpC2FZ >;
+//
 //==========================================================================

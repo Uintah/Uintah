@@ -134,9 +134,9 @@ void ConvectiveFluxLimiter<PhiInterpT, VelInterpT>::evaluate()
 template< typename FieldT >
 struct InterpT
 {
-  typedef UpwindInterpolant< FieldT, typename Wasatch::FaceTypes<FieldT>::XFace >  UpwindX;
-  typedef UpwindInterpolant< FieldT, typename Wasatch::FaceTypes<FieldT>::YFace >  UpwindY;
-  typedef UpwindInterpolant< FieldT, typename Wasatch::FaceTypes<FieldT>::ZFace >  UpwindZ;
+  typedef UpwindInterpolant< FieldT, typename FaceTypes<FieldT>::XFace >  UpwindX;
+  typedef UpwindInterpolant< FieldT, typename FaceTypes<FieldT>::YFace >  UpwindY;
+  typedef UpwindInterpolant< FieldT, typename FaceTypes<FieldT>::ZFace >  UpwindZ;
 
   typedef SuperbeeInterpolant< FieldT, typename Wasatch::FaceTypes<FieldT>::XFace >  SuperbeeX;
   typedef SuperbeeInterpolant< FieldT, typename Wasatch::FaceTypes<FieldT>::YFace >  SuperbeeY;
@@ -146,26 +146,26 @@ struct InterpT
   typedef typename Wasatch::OpTypes<FieldT>::InterpC2FY  CentralY;
   typedef typename Wasatch::OpTypes<FieldT>::InterpC2FZ  CentralZ;
 
-  typedef typename Wasatch::OperatorTypeBuilder<
-    Wasatch::Interpolant,
-    Wasatch::XVolField,
-    typename Wasatch::FaceTypes<FieldT>::XFace>::type	VelX;
+  typedef typename OperatorTypeBuilder<
+    Interpolant,
+    XVolField,
+    typename FaceTypes<FieldT>::XFace>::type	VelX;
 
-  typedef typename Wasatch::OperatorTypeBuilder<
-    Wasatch::Interpolant,
-    Wasatch::YVolField,
-    typename Wasatch::FaceTypes<FieldT>::YFace>::type VelY;
+  typedef typename OperatorTypeBuilder<
+    Interpolant,
+    YVolField,
+    typename FaceTypes<FieldT>::YFace>::type VelY;
 
-  typedef typename Wasatch::OperatorTypeBuilder<
-    Wasatch::Interpolant,
-    Wasatch::ZVolField,
-    typename Wasatch::FaceTypes<FieldT>::ZFace>::type VelZ;
+  typedef typename OperatorTypeBuilder<
+    Interpolant,
+    ZVolField,
+    typename FaceTypes<FieldT>::ZFace>::type VelZ;
 };
 
-typedef InterpT< Wasatch::SVolField >  SVOps;
-typedef InterpT< Wasatch::XVolField >  XVOps;
-typedef InterpT< Wasatch::YVolField >  YVOps;
-typedef InterpT< Wasatch::ZVolField >  ZVOps;
+typedef InterpT< SVolField >  SVOps;
+typedef InterpT< XVolField >  XVOps;
+typedef InterpT< YVolField >  YVOps;
+typedef InterpT< ZVolField >  ZVOps;
 
 //============================================================================
 // Explicit template instantiation for supported versions of these expressions
