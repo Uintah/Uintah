@@ -1,9 +1,9 @@
 //-- Wasatch includes --//
 #include "ScalarTransportEquation.h"
-#include <CCA/Components/Wasatch/FieldTypes.h>
 #include <CCA/Components/Wasatch/Operators/OperatorTypes.h>
+#include <CCA/Components/Wasatch/Operators/UpwindInterpolant.h>
+#include <CCA/Components/Wasatch/Operators/SuperbeeInterpolant.h>
 #include <CCA/Components/Wasatch/ParseTools.h>
-
 #include <CCA/Components/Wasatch/Expressions/DiffusiveFlux.h>
 #include <CCA/Components/Wasatch/Expressions/ConvectiveFlux.h>
 

@@ -6,18 +6,11 @@
 
 //-- Wasatch includes --//
 #include <CCA/Components/Wasatch/FieldTypes.h>
-#include <CCA/Components/Wasatch/FieldTypes.h>
-#include <CCA/Components/Wasatch/Operators/UpwindInterpolant.h>
-#include <CCA/Components/Wasatch/Operators/SuperbeeInterpolant.h>
 #include <CCA/Components/Wasatch/Expressions/ScalarRHS.h>
 
 //-- Uintah includes --//
 #include <Core/ProblemSpec/ProblemSpecP.h>
 
-namespace Expr{
-  class ExpressionID;
-  class ExpressionFactory;
-}
 
 namespace Wasatch{
 
