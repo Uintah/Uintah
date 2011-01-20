@@ -47,8 +47,6 @@ class ConvectiveFlux
   typedef typename VelInterpT::SrcFieldType  VelVolT; // source field is always a staggered volume field.
   typedef typename VelInterpT::DestFieldType VelFaceT;
   // the destination field of VelInterpT should be a PhiFaceT
-  
-protected:
 
   const Expr::Tag phiTag_, velTag_;
   const PhiVolT* phi_;
@@ -61,7 +59,7 @@ public:
                   const Expr::Tag velTag,
                   const Expr::ExpressionID& id,
                   const Expr::ExpressionRegistry& reg  );
-  virtual ~ConvectiveFlux();
+  ~ConvectiveFlux();
   
   void advertise_dependents( Expr::ExprDeps& exprDeps );
   void bind_fields( const Expr::FieldManagerList& fml );
@@ -70,8 +68,6 @@ public:
   
   class Builder : public Expr::ExpressionBuilder
   {
-    
-  protected:
     const Expr::Tag phiT_, velT_;
     
   public:
@@ -86,12 +82,15 @@ public:
      *         The velocity field is a face field.
      */
     Builder( const Expr::Tag phiTag,
-             const Expr::Tag velTag ):phiT_(phiTag), velT_(velTag) {}
+             const Expr::Tag velTag )
+      : phiT_(phiTag), velT_(velTag)
+    {}
 		
-    virtual Expr::ExpressionBase* build( const Expr::ExpressionID& id,
-                                         const Expr::ExpressionRegistry& reg ) const;
+    Expr::ExpressionBase*
+    build( const Expr::ExpressionID& id,
+           const Expr::ExpressionRegistry& reg ) const;
 
-    virtual ~Builder(){}
+    ~Builder(){}
   };
 };
 
@@ -122,7 +121,7 @@ public:
  */
 template< typename PhiInterpT, typename VelInterpT > // scalar interpolant and velocity interpolant
 class ConvectiveFluxLimiter
-: public ConvectiveFlux<PhiInterpT, VelInterpT>
+  : public Expr::Expression<typename PhiInterpT::DestFieldType>
 {  
   // PhiInterpT: an interpolant from staggered or non-staggered volume field to staggered or non-staggered face field
   typedef typename PhiInterpT::SrcFieldType  PhiVolT; // source field is a scalar volume
@@ -131,10 +130,22 @@ class ConvectiveFluxLimiter
   // VelInterpT: an interpolant from Staggered volume field to scalar face field
   typedef typename VelInterpT::SrcFieldType  VelVolT; // source field is always a staggered volume field.
   typedef typename VelInterpT::DestFieldType VelFaceT;
+
+  const Expr::Tag phiTag_, velTag_;
+  const PhiVolT* phi_;
+  const VelVolT* vel_;
+  PhiInterpT* phiInterpOp_;
+  const VelInterpT* velInterpOp_;
+
+  ConvectiveFluxLimiter( const Expr::Tag phiTag,
+                         const Expr::Tag velTag,
+                         const Expr::ExpressionID& id,
+                         const Expr::ExpressionRegistry& reg );
   
 public:
-  class Builder : public ConvectiveFlux<PhiInterpT,VelInterpT>::Builder
+  class Builder : public Expr::ExpressionBuilder
   {
+    const Expr::Tag phiT_, velT_;
   public:
     /**
      *  \brief Construct an convective flux limiter given an expression
@@ -147,21 +158,23 @@ public:
      *         velocity field is a face field.
      */
     Builder( const Expr::Tag phiTag,
-            const Expr::Tag velTag ) : ConvectiveFlux<PhiInterpT,VelInterpT>::Builder(phiTag,velTag) {}
+             const Expr::Tag velTag )
+      : phiT_( phiTag ), velT_( velTag )
+    {}
     
     Expr::ExpressionBase* build( const Expr::ExpressionID& id,
                                 const Expr::ExpressionRegistry& reg ) const
     {
-      return new ConvectiveFluxLimiter<PhiInterpT,VelInterpT>( this->phiT_, this->velT_, id, reg );
-    }		
+      return new ConvectiveFluxLimiter<PhiInterpT,VelInterpT>( phiT_, velT_, id, reg );
+    }
+    ~Builder(){}
   };
   
-  ConvectiveFluxLimiter( const Expr::Tag phiTag,
-                       const Expr::Tag velTag,
-                       const Expr::ExpressionID& id,
-                       const Expr::ExpressionRegistry& reg  );
   ~ConvectiveFluxLimiter();
   
+  void advertise_dependents( Expr::ExprDeps& exprDeps );
+  void bind_fields( const Expr::FieldManagerList& fml );
+  void bind_operators( const SpatialOps::OperatorDatabase& opDB );
   void evaluate();
 };
 

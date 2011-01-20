@@ -65,7 +65,7 @@ namespace Wasatch{
     
     typedef SuperbeeInterpolant< CellT, typename FaceTypes<CellT>::XFace >  InterpC2FXSuperbee;
     typedef SuperbeeInterpolant< CellT, typename FaceTypes<CellT>::YFace >  InterpC2FYSuperbee;
-    typedef SuperbeeInterpolant< CellT, typename FaceTypes<CellT>::ZFace >  InterpC2FZSuperbee;    
+    typedef SuperbeeInterpolant< CellT, typename FaceTypes<CellT>::ZFace >  InterpC2FZSuperbee;
   };
 }
 
