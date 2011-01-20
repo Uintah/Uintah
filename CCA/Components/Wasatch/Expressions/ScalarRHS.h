@@ -34,9 +34,9 @@ namespace Wasatch{
   {
   protected:
 
-    typedef typename Wasatch::FaceTypes<FieldT>::XFace XFluxT; ///< The type of field for the x-face variables.
-    typedef typename Wasatch::FaceTypes<FieldT>::YFace YFluxT; ///< The type of field for the y-face variables.
-    typedef typename Wasatch::FaceTypes<FieldT>::ZFace ZFluxT; ///< The type of field for the z-face variables.
+    typedef typename FaceTypes<FieldT>::XFace XFluxT; ///< The type of field for the x-face variables.
+    typedef typename FaceTypes<FieldT>::YFace YFluxT; ///< The type of field for the y-face variables.
+    typedef typename FaceTypes<FieldT>::ZFace ZFluxT; ///< The type of field for the z-face variables.
 
     typedef typename Wasatch::OpTypes<FieldT>::DivX   DivX; ///< Divergence operator (surface integral) in the x-direction
     typedef typename Wasatch::OpTypes<FieldT>::DivY   DivY; ///< Divergence operator (surface integral) in the y-direction

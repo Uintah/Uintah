@@ -8,6 +8,14 @@
 
 #include <spatialops/structured/FVStaggeredFieldTypes.h>
 
+
+using SpatialOps::structured::SVolField;
+using SpatialOps::structured::XVolField;
+using SpatialOps::structured::YVolField;
+using SpatialOps::structured::ZVolField;
+
+using SpatialOps::structured::FaceTypes;
+
 namespace Wasatch{
 
   /** \addtogroup WasatchFields
@@ -25,13 +33,6 @@ namespace Wasatch{
     ZDIR  = SpatialOps::ZDIR::value,
     NODIR = SpatialOps::NODIR::value
   };
-
-  using SpatialOps::structured::SVolField;
-  using SpatialOps::structured::XVolField;
-  using SpatialOps::structured::YVolField;
-  using SpatialOps::structured::ZVolField;
-
-  using SpatialOps::structured::FaceTypes;
 
 
   /** @} */
