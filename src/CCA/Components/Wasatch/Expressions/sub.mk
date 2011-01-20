@@ -36,7 +36,8 @@ SRCS     +=                             \
 	$(SRCDIR)/DiffusiveFlux.cc	\
 	$(SRCDIR)/PrimVar.cc		\
 	$(SRCDIR)/ScalarRHS.cc		\
-	$(SRCDIR)/SetCurrentTime.cc
+	$(SRCDIR)/SetCurrentTime.cc	\
+	$(SRCDIR)/Stress.cc
 
 SUBDIRS := \
         $(SRCDIR)/MMS
