@@ -423,7 +423,7 @@ SCI_ARG_WITH(visit,
 
 SCI_ARG_ENABLE(wasatch_3p,
   AC_HELP_STRING(--enable-wasatch_3p,
-                 Download and build the Wasatch Thirdparty libraries - TabProps, ExprLib, SpatialOps),
+                 Download and build the Wasatch Thirdparty libraries - TabProps oExprLibs SpatialOps.),
   [wasatch_3p="yes"],
   [wasatch_3p=="no"])
 
@@ -2144,9 +2144,16 @@ else
       found_xml2_config="yes"
       AC_MSG_WARN(Using $_sci_lib/../bin/xml2-config to set libxml2 variables.)
 
+      xml2_static=`xml2-config | grep static`
+
       if test "$IS_STATIC_BUILD" = "yes" -a "$IS_OSX" != "yes"; then
-        STATIC_FLAG=--static
+        if test -n "$xml2_static"; then
+           STATIC_FLAG=--static
+        else
+           STATIC_FLAG=''
+        fi
       fi
+
 
       XML2_LIB_DIR_FLAG=`$_sci_lib/../bin/xml2-config --libs $STATIC_FLAG`
       XML2_LDFLAGS=""
