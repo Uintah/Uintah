@@ -343,42 +343,6 @@ namespace Wasatch{
 
   //==================================================================
   // Explicit template instantiation
-
-  template void setup_convective_flux_expression< SVolField >( Uintah::ProblemSpecP,
-                                                               const std::string&,
-                                                               Expr::ExpressionFactory&,
-                                                               ScalarRHS<SVolField>::FieldTagInfo& );
-  template void setup_convective_flux_expression< XVolField >( Uintah::ProblemSpecP,
-                                                               const std::string&,
-                                                               Expr::ExpressionFactory&,
-                                                               ScalarRHS<XVolField>::FieldTagInfo& );
-  template void setup_convective_flux_expression< YVolField >( Uintah::ProblemSpecP,
-                                                               const std::string&,
-                                                               Expr::ExpressionFactory&,
-                                                               ScalarRHS<YVolField>::FieldTagInfo& );
-  template void setup_convective_flux_expression< ZVolField >( Uintah::ProblemSpecP,
-                                                                   const std::string&,
-                                                                   Expr::ExpressionFactory&,
-                                                                   ScalarRHS<ZVolField>::FieldTagInfo& );
-
-
-  template void setup_diffusive_flux_expression< SVolField >( Uintah::ProblemSpecP,
-                                                                  const std::string&,
-                                                                  Expr::ExpressionFactory&,
-                                                                  ScalarRHS<SVolField>::FieldTagInfo& );
-  template void setup_diffusive_flux_expression< XVolField >( Uintah::ProblemSpecP,
-                                                                  const std::string&,
-                                                                  Expr::ExpressionFactory&,
-                                                                  ScalarRHS<XVolField>::FieldTagInfo& );
-  template void setup_diffusive_flux_expression< YVolField >( Uintah::ProblemSpecP,
-                                                                  const std::string&,
-                                                                  Expr::ExpressionFactory&,
-                                                                  ScalarRHS<YVolField>::FieldTagInfo& );
-  template void setup_diffusive_flux_expression< ZVolField >( Uintah::ProblemSpecP,
-                                                                  const std::string&,
-                                                                  Expr::ExpressionFactory&,
-                                                                  ScalarRHS<ZVolField>::FieldTagInfo& );
-
   template class ScalarTransportEquation< SVolField >;
   template class ScalarTransportEquation< XVolField >;
   template class ScalarTransportEquation< YVolField >;
