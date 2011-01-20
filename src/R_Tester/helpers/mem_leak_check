@@ -17,7 +17,7 @@ fi
 
 #__________________________________
 # bulletproofing
-if [[ ! -f $MALLOC_STATS  && ! -f $MALLOC_STATS.* ]]; then
+if [[ (! -f $MALLOC_STATS)  && (! -f $MALLOC_STATS.0) ]]; then
   echo "The malloc stats file(s) is missing.  Can't perform memory leak test."
   echo "Verify that you've configured with"
   echo "  --enable-sci-malloc"
