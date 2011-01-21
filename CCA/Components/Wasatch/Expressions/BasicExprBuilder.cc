@@ -51,7 +51,7 @@ namespace Wasatch{
       valParams->getAttribute("offset",offset);
       const Expr::Tag indepVarTag = parse_nametag( valParams->findBlock("NameTag") );
       typedef typename Expr::SinFunction<FieldT>::Builder Builder;
-      builder = new Builder( indepVarTag, amplitude, frequency, offset);
+      builder = scinew Builder( indepVarTag, amplitude, frequency, offset);
     }
     
     else if ( params->findBlock("GaussianFunction") ) {
@@ -63,7 +63,7 @@ namespace Wasatch{
       valParams->getAttribute("baseline",baseline);
       const Expr::Tag indepVarTag = parse_nametag( valParams->findBlock("NameTag") );
       typedef typename Expr::GaussianFunction<FieldT>::Builder Builder;
-      builder = new Builder( indepVarTag, amplitude, deviation, mean, baseline);
+      builder = scinew Builder( indepVarTag, amplitude, deviation, mean, baseline);
     }
     
     else if ( params->findBlock("DoubleTanhFunction") ) {
@@ -75,7 +75,7 @@ namespace Wasatch{
       valParams->getAttribute("midpointDown",midpointDown);
       const Expr::Tag indepVarTag = parse_nametag( valParams->findBlock("NameTag") );
       typedef typename Expr::DoubleTanhFunction<FieldT>::Builder Builder;
-      builder = new Builder( indepVarTag, midpointUp, midpointDown, width, amplitude);
+      builder = scinew Builder( indepVarTag, midpointUp, midpointDown, width, amplitude);
     }
 	  
     return builder;
@@ -214,7 +214,6 @@ namespace Wasatch{
       case SVOL : builder = build_taylor_vortex_mms_expr< SVolField >( exprParams );  break;
       case XVOL : builder = build_taylor_vortex_mms_expr< XVolField >( exprParams );  break;
       case YVOL : builder = build_taylor_vortex_mms_expr< YVolField >( exprParams );  break;
-      case ZVOL : builder = build_taylor_vortex_mms_expr< ZVolField >( exprParams );  break;
       default:
         std::ostringstream msg;
         msg << "ERROR: unsupported field type '" << fieldType << "'" << endl
