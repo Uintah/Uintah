@@ -117,6 +117,18 @@
     </TransportEquation>
 
 
+    <MomentumEquations		spec="OPTIONAL NO_DATA">
+      <X-Velocity		spec="REQUIRED STRING" />
+      <Y-Velocity		spec="OPTIONAL STRING" />
+      <Z-Velocity		spec="OPTIONAL STRING" />
+      <X-Momentum		spec="REQUIRED STRING" />
+      <Y-Momentum		spec="OPTIONAL STRING" />
+      <Z-Momentum		spec="OPTIONAL STRING" />
+      <Viscosity		spec="REQUIRED NO_DATA">
+        <NameTag		spec="REQUIRED" />
+      </Viscosity>
+    </MomentumEquations>
+
     <!-- ================== -->
     <!-- Initial Conditions -->
     <!-- ================== -->

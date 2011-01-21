@@ -34,6 +34,7 @@ SRCS     +=                             \
 	$(SRCDIR)/BasicExprBuilder.cc	\
 	$(SRCDIR)/ConvectiveFlux.cc	\
 	$(SRCDIR)/DiffusiveFlux.cc	\
+	$(SRCDIR)/Dilatation.cc		\
 	$(SRCDIR)/PrimVar.cc		\
 	$(SRCDIR)/ScalarRHS.cc		\
 	$(SRCDIR)/SetCurrentTime.cc	\

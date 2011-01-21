@@ -14,13 +14,10 @@
  *  The stress tensor is given as
  *  \[ \tau_{ij} = -\mu \left( \frac{\partial u_i}{\partial x_j} + \frac{\partial u_j}{\partial x_i} \right) - \frac{2}{3} \mu \delta_{ij} \frac{\partial u_k}{\partial x_k} \]
  *
- *  \par Template Parameters
- *  <ul>
- *  <li> \b StressT The type of field for this stress component.
- *  <li> \b Vel1T   The type of field for the first velocity component.
- *  <li> \b Vel2T   The type of field for the second velocity component.
- *  <li> \b ViscT   The type of field for the viscosity.
- *  </ul>
+ *  \tparam StressT The type of field for this stress component.
+ *  \tparam Vel1T   The type of field for the first velocity component.
+ *  \tparam Vel2T   The type of field for the second velocity component.
+ *  \tparam ViscT   The type of field for the viscosity.
  */
 template< typename StressT,
           typename Vel1T,
@@ -32,8 +29,8 @@ class Stress
   const Expr::Tag visct_, vel1t_, vel2t_, dilt_;
 
   typedef typename OperatorTypeBuilder< Interpolant, ViscT, StressT >::type  ViscInterpT;
-  typedef typename OperatorTypeBuilder< Gradient,    Vel1T, StressT >::type  Vel1GradT;
-  typedef typename OperatorTypeBuilder< Gradient,    Vel2T, StressT >::type  Vel2GradT;
+  typedef typename OperatorTypeBuilder< Gradient,    Vel1T, StressT >::type  Vel1GradT;  // jcs this will likely be insufficient
+  typedef typename OperatorTypeBuilder< Gradient,    Vel2T, StressT >::type  Vel2GradT;  // jcs this will likely be insufficient
 
   const ViscInterpT* viscInterpOp_; ///< Interpolate viscosity to the face where we are building the stress
   const Vel1GradT*   vel1GradOp_;   ///< Calculate the velocity gradient dui/dxj at the stress face
