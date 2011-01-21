@@ -1,6 +1,7 @@
 #include "Stress.h"
 
 #include <spatialops/OperatorDatabase.h>
+#include <spatialops/structured/SpatialFieldStore.h>
 
 //====================================================================
 
@@ -219,9 +220,9 @@ Builder::build( const Expr::ExpressionID& id,
 // Explicit template instantiation
 #include <CCA/Components/Wasatch/FieldTypes.h>
 #define DECLARE_STRESS( VOL )	\
-  template class Stress< FaceTypes<VOL>::XFace, XVolField, XVolField, SVolField >;	\
-  template class Stress< FaceTypes<VOL>::YFace, XVolField, YVolField, SVolField >;	\
-  template class Stress< FaceTypes<VOL>::ZFace, XVolField, ZVolField, SVolField >;
+  template class Stress< FaceTypes<VOL>::XFace, VOL, XVolField, SVolField >;	\
+  template class Stress< FaceTypes<VOL>::YFace, VOL, YVolField, SVolField >;	\
+  template class Stress< FaceTypes<VOL>::ZFace, VOL, ZVolField, SVolField >;
 
 DECLARE_STRESS( XVolField );
 DECLARE_STRESS( YVolField );
