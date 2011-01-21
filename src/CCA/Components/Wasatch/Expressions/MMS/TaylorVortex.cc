@@ -342,23 +342,13 @@ build( const Expr::ExpressionID& id,
 #include <CCA/Components/Wasatch/FieldTypes.h>
 using namespace Wasatch;
 
-template class VelocityX< SVolField >;
-template class VelocityX< XVolField >;
-template class VelocityX< YVolField >;
-template class VelocityX< ZVolField >;
+#define DECLARE_TAYLOR_MMS( VOL ) 	\
+  template class VelocityX< VOL >;	\
+  template class VelocityY< VOL >;	\
+  template class GradPX< VOL >;		\
+  template class GradPY< VOL >;
 
-template class VelocityY< SVolField >;
-template class VelocityY< XVolField >;
-template class VelocityY< YVolField >;
-template class VelocityY< ZVolField >;
-
-template class GradPX< SVolField >;
-template class GradPX< XVolField >;
-template class GradPX< YVolField >;
-template class GradPX< ZVolField >;
-
-template class GradPY< SVolField >;
-template class GradPY< XVolField >;
-template class GradPY< YVolField >;
-template class GradPY< ZVolField >;
+DECLARE_TAYLOR_MMS( SVolField );
+DECLARE_TAYLOR_MMS( XVolField );
+DECLARE_TAYLOR_MMS( YVolField );
 //==========================================================================

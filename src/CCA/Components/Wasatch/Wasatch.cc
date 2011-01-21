@@ -336,7 +336,7 @@ namespace Wasatch{
     // BOUNDARY CONDITIONS TREATMENT
     // -----------------------------------------------------------------------
     const GraphHelper* gh = graphCategories_[ ADVANCE_SOLUTION ];
-    buildBoundaryConditions( adaptors_, *gh, localPatches, patchInfoMap_, materials->getUnion() );
+    build_bcs( adaptors_, *gh, localPatches, patchInfoMap_, materials->getUnion() );
   }
 
   //--------------------------------------------------------------------

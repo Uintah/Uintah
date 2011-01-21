@@ -100,8 +100,7 @@ namespace Wasatch{
 
     typedef typename Stress< FaceFieldT, Vel1T, Vel2T, ViscT >::Builder StressT;
 
-    factory.register_expression( stressTag,
-                                 new StressT( viscTag, vel1Tag, vel2Tag, dilTag ) );
+    factory.register_expression( stressTag, scinew StressT( viscTag, vel1Tag, vel2Tag, dilTag ) );
   }
 
   //==================================================================
@@ -117,7 +116,7 @@ namespace Wasatch{
     typedef typename SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, AdvelT, FluxT >::type  AdvelInterpOp;
 
     typedef typename ConvectiveFlux< MomInterpOp, AdvelInterpOp >::Builder ConvFlux;
-    factory.register_expression( fluxTag, new ConvFlux( momTag, advelTag ) );
+    factory.register_expression( fluxTag, scinew ConvFlux( momTag, advelTag ) );
   }
 
   //==================================================================
