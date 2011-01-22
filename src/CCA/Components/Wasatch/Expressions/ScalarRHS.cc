@@ -182,7 +182,7 @@ namespace Wasatch{
   ScalarRHS<FieldT>::Builder::Builder( const FieldTagInfo& fieldInfo,
                                        const std::vector<Expr::Tag>& sources )
   : info_( fieldInfo ),
-  srcT_( sources )
+    srcT_( sources )
   {}
   
   //------------------------------------------------------------------
