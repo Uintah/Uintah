@@ -136,6 +136,7 @@ namespace Wasatch{
 
     const Uintah::PatchSubset* const pss = patches_->getUnion();
     add_fields_to_task( *task, *tree, *fml_, pss, mss, newDWFields );
+    // jcs eachPatch vs. allPatches (gang schedule vs. independent...)
     scheduler_->addTask( task, patches_, materials_ );
 
     hasBeenScheduled_ = true;
