@@ -79,7 +79,8 @@
       <!-- CONVECTIVE FLUX -->
       <ConvectiveFluxExpression	spec="MULTIPLE NO_DATA">
         <NameTag		spec="OPTIONAL" /> <!-- SPECIFY THE NAME OF A BASIC EXPRESSION, IF PROVIDED -->
-        <Method         spec="REQUIRED STRING 'SOU, CENTRAL, UPWIND, SUPERBEE'" /> <!-- SPECIFY THE INTERPOLATION METHOD -->
+        <Method         spec="REQUIRED STRING 'CENTRAL, UPWIND, SUPERBEE,
+                            CHARM, KOREN, MC, OSPRE, SMART, VANLEER, HCUS, MINMOD, HQUICK'" /> <!-- SPECIFY THE INTERPOLATION METHOD -->
         <Direction      spec="REQUIRED STRING 'X,Y,Z'"/> <!-- SPECIFY THE DIRECTION OF THE FLUX -->
         <AdvectiveVelocity  spec="OPTIONAL NO_DATA"> <!-- SPECIFY THE ADVECTIVE VELOCITY -->
             <NameTag spec="REQUIRED"/> <!-- IF AN EXPRESSION FOR THE VELOCITY WAS SPECIFIED, THEN USE THAT -->
