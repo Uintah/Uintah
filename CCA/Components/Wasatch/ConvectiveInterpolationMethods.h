@@ -3,7 +3,7 @@
 
 #include <map>
 #include <string>
-
+#include <algorithm>
 namespace Wasatch {
   
   enum ConvInterpMethods {
