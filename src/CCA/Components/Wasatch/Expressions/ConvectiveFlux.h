@@ -11,6 +11,7 @@
 
 //-- ExprLib includes --//
 #include <expression/Expr_Expression.h>
+#include <CCA/Components/Wasatch/ConvectiveInterpolationMethods.h>
 
 /**
  *  \ingroup WasatchExpressions
@@ -130,7 +131,8 @@ class ConvectiveFluxLimiter
   // VelInterpT: an interpolant from Staggered volume field to scalar face field
   typedef typename VelInterpT::SrcFieldType  VelVolT; // source field is always a staggered volume field.
   typedef typename VelInterpT::DestFieldType VelFaceT;
-
+  //std::string limiterType_;
+  Wasatch::ConvInterpMethods limiterType_;
   const Expr::Tag phiTag_, velTag_;
   const PhiVolT* phi_;
   const VelVolT* vel_;
@@ -139,6 +141,7 @@ class ConvectiveFluxLimiter
 
   ConvectiveFluxLimiter( const Expr::Tag phiTag,
                          const Expr::Tag velTag,
+                         Wasatch::ConvInterpMethods limiterType,
                          const Expr::ExpressionID& id,
                          const Expr::ExpressionRegistry& reg );
   
@@ -146,6 +149,7 @@ public:
   class Builder : public Expr::ExpressionBuilder
   {
     const Expr::Tag phiT_, velT_;
+    Wasatch::ConvInterpMethods limiterType_;
   public:
     /**
      *  \brief Construct an convective flux limiter given an expression
@@ -158,14 +162,15 @@ public:
      *         velocity field is a face field.
      */
     Builder( const Expr::Tag phiTag,
-             const Expr::Tag velTag )
-      : phiT_( phiTag ), velT_( velTag )
+             const Expr::Tag velTag,
+            Wasatch::ConvInterpMethods limiterType)
+      : phiT_( phiTag ), velT_( velTag ), limiterType_( limiterType )
     {}
     
     Expr::ExpressionBase* build( const Expr::ExpressionID& id,
                                 const Expr::ExpressionRegistry& reg ) const
     {
-      return new ConvectiveFluxLimiter<PhiInterpT,VelInterpT>( phiT_, velT_, id, reg );
+      return new ConvectiveFluxLimiter<PhiInterpT,VelInterpT>( phiT_, velT_, limiterType_, id, reg );
     }
     ~Builder(){}
   };

@@ -3,7 +3,7 @@
 
 #include "../FieldTypes.h"
 #include "UpwindInterpolant.h"
-#include "SuperbeeInterpolant.h"
+#include "FluxLimiterInterpolant.h"
 
 #include <spatialops/structured/FVStaggered.h>
 
@@ -62,10 +62,11 @@ namespace Wasatch{
     typedef UpwindInterpolant< CellT, typename FaceTypes<CellT>::XFace >    InterpC2FXUpwind;
     typedef UpwindInterpolant< CellT, typename FaceTypes<CellT>::YFace >    InterpC2FYUpwind;
     typedef UpwindInterpolant< CellT, typename FaceTypes<CellT>::ZFace >    InterpC2FZUpwind;
+        
+    typedef FluxLimiterInterpolant< CellT, typename FaceTypes<CellT>::XFace >  InterpC2FXLimiter;
+    typedef FluxLimiterInterpolant< CellT, typename FaceTypes<CellT>::YFace >  InterpC2FYLimiter;
+    typedef FluxLimiterInterpolant< CellT, typename FaceTypes<CellT>::ZFace >  InterpC2FZLimiter;
     
-    typedef SuperbeeInterpolant< CellT, typename FaceTypes<CellT>::XFace >  InterpC2FXSuperbee;
-    typedef SuperbeeInterpolant< CellT, typename FaceTypes<CellT>::YFace >  InterpC2FYSuperbee;
-    typedef SuperbeeInterpolant< CellT, typename FaceTypes<CellT>::ZFace >  InterpC2FZSuperbee;
   };
 }
 

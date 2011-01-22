@@ -13,6 +13,7 @@
  -------------------------------------------------------------------------------------------------*/
 
 #include <vector>
+#include <CCA/Components/Wasatch/ConvectiveInterpolationMethods.h>
 
 /**
  *  \class     UpwindInterpolant
@@ -52,9 +53,9 @@ private:
   // For the y direction, stride_ = nx. For the z direction, stride_=nx*ny.
   size_t stride_; 
   // some counters to help in the evaluate member function
-  std::vector<size_t> xyzCount_;
-  std::vector<size_t> xyzVolIncr_;
-  std::vector<size_t> xyzFaceIncr_;
+  std::vector<size_t> faceCount_;
+  std::vector<size_t> volIncr_;
+  std::vector<size_t> faceIncr_;
   
 public:
   
@@ -88,6 +89,12 @@ public:
    *         destination field, i.e. a face centered field.
    */
   void set_advective_velocity (const PhiFaceT &theAdvectiveVelocity);
+  
+  /**
+   *   \brief Sets the flux limiter type to be used by this interpolant.
+   *   \param limiterType: An enum that holds the limiter name.
+   */
+  void set_flux_limiter_type (Wasatch::ConvInterpMethods limiterType){}
   
   /**
    *  \brief Applies the Upwind interpolation to the source field.

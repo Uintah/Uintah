@@ -11,7 +11,7 @@
 //-- Wasatch includes --//
 #include "Operators.h"
 #include <CCA/Components/Wasatch/Operators/UpwindInterpolant.h>
-#include <CCA/Components/Wasatch/Operators/SuperbeeInterpolant.h>
+#include <CCA/Components/Wasatch/Operators/FluxLimiterInterpolant.h>
 
 //-- Uintah includes --//
 #include <Core/Grid/Patch.h>
@@ -203,47 +203,47 @@ namespace Wasatch{
     opDB.register_new_operator<UpwindZVolZSurfY>(scinew UpwindZVolZSurfY(dim, bcPlus ));
     
     typedef UpwindInterpolant<ZVolField,ZSurfZField> UpwindZVolZSurfZ;
-    opDB.register_new_operator<UpwindZVolZSurfZ>(scinew UpwindZVolZSurfZ(dim, bcPlus ));
-    
-    //--------------------------------------------------------
-    // SUPERBEE interpolants - phi volume to phi surface
-    //--------------------------------------------------------    
-    typedef SuperbeeInterpolant<SVolField,SSurfXField> SuperbeeSVolSSurfX;
-    opDB.register_new_operator<SuperbeeSVolSSurfX>(scinew SuperbeeSVolSSurfX(dim, bcPlus) );
-    
-    typedef SuperbeeInterpolant<SVolField,SSurfYField> SuperbeeSVolSSurfY;
-    opDB.register_new_operator<SuperbeeSVolSSurfY>(scinew SuperbeeSVolSSurfY(dim, bcPlus ));
-    
-    typedef SuperbeeInterpolant<SVolField,SSurfZField> SuperbeeSVolSSurfZ;
-    opDB.register_new_operator<SuperbeeSVolSSurfZ>(scinew SuperbeeSVolSSurfZ(dim, bcPlus ));
-    
-    typedef SuperbeeInterpolant<XVolField,XSurfXField> SuperbeeXVolXSurfX;
-    opDB.register_new_operator<SuperbeeXVolXSurfX>(scinew SuperbeeXVolXSurfX(dim, bcPlus ));
-    
-    typedef SuperbeeInterpolant<XVolField,XSurfYField> SuperbeeXVolXSurfY;
-    opDB.register_new_operator<SuperbeeXVolXSurfY>(scinew SuperbeeXVolXSurfY(dim, bcPlus ));
-    
-    typedef SuperbeeInterpolant<XVolField,XSurfZField> SuperbeeXVolXSurfZ;
-    opDB.register_new_operator<SuperbeeXVolXSurfZ>(scinew SuperbeeXVolXSurfZ(dim, bcPlus ));
-    
-    typedef SuperbeeInterpolant<YVolField,YSurfXField> SuperbeeYVolYSurfX;
-    opDB.register_new_operator<SuperbeeYVolYSurfX>(scinew SuperbeeYVolYSurfX(dim, bcPlus ));
-    
-    typedef SuperbeeInterpolant<YVolField,YSurfYField> SuperbeeYVolYSurfY;
-    opDB.register_new_operator<SuperbeeYVolYSurfY>(scinew SuperbeeYVolYSurfY(dim, bcPlus ));
-    
-    typedef SuperbeeInterpolant<YVolField,YSurfZField> SuperbeeYVolYSurfZ;
-    opDB.register_new_operator<SuperbeeYVolYSurfZ>(scinew SuperbeeYVolYSurfZ(dim, bcPlus ));
-    
-    typedef SuperbeeInterpolant<ZVolField,ZSurfXField> SuperbeeZVolZSurfX;
-    opDB.register_new_operator<SuperbeeZVolZSurfX>(scinew SuperbeeZVolZSurfX(dim, bcPlus ));
-    
-    typedef SuperbeeInterpolant<ZVolField,ZSurfYField> SuperbeeZVolZSurfY;
-    opDB.register_new_operator<SuperbeeZVolZSurfY>(scinew SuperbeeZVolZSurfY(dim, bcPlus ));
-    
-    typedef SuperbeeInterpolant<ZVolField,ZSurfZField> SuperbeeZVolZSurfZ;
-    opDB.register_new_operator<SuperbeeZVolZSurfZ>(scinew SuperbeeZVolZSurfZ(dim, bcPlus ));    
+    opDB.register_new_operator<UpwindZVolZSurfZ>(scinew UpwindZVolZSurfZ(dim, bcPlus ));    
 
+    //--------------------------------------------------------
+    // FLUX LIMITER interpolants - phi volume to phi surface
+    //--------------------------------------------------------    
+    typedef FluxLimiterInterpolant<SVolField,SSurfXField> FluxLimiterSVolSSurfX;
+    opDB.register_new_operator<FluxLimiterSVolSSurfX>(scinew FluxLimiterSVolSSurfX(dim, bcPlus) );
+    
+    typedef FluxLimiterInterpolant<SVolField,SSurfYField> FluxLimiterSVolSSurfY;
+    opDB.register_new_operator<FluxLimiterSVolSSurfY>(scinew FluxLimiterSVolSSurfY(dim, bcPlus ));
+    
+    typedef FluxLimiterInterpolant<SVolField,SSurfZField> FluxLimiterSVolSSurfZ;
+    opDB.register_new_operator<FluxLimiterSVolSSurfZ>(scinew FluxLimiterSVolSSurfZ(dim, bcPlus ));
+    
+    typedef FluxLimiterInterpolant<XVolField,XSurfXField> FluxLimiterXVolXSurfX;
+    opDB.register_new_operator<FluxLimiterXVolXSurfX>(scinew FluxLimiterXVolXSurfX(dim, bcPlus ));
+    
+    typedef FluxLimiterInterpolant<XVolField,XSurfYField> FluxLimiterXVolXSurfY;
+    opDB.register_new_operator<FluxLimiterXVolXSurfY>(scinew FluxLimiterXVolXSurfY(dim, bcPlus ));
+    
+    typedef FluxLimiterInterpolant<XVolField,XSurfZField> FluxLimiterXVolXSurfZ;
+    opDB.register_new_operator<FluxLimiterXVolXSurfZ>(scinew FluxLimiterXVolXSurfZ(dim, bcPlus ));
+    
+    typedef FluxLimiterInterpolant<YVolField,YSurfXField> FluxLimiterYVolYSurfX;
+    opDB.register_new_operator<FluxLimiterYVolYSurfX>(scinew FluxLimiterYVolYSurfX(dim, bcPlus ));
+    
+    typedef FluxLimiterInterpolant<YVolField,YSurfYField> FluxLimiterYVolYSurfY;
+    opDB.register_new_operator<FluxLimiterYVolYSurfY>(scinew FluxLimiterYVolYSurfY(dim, bcPlus ));
+    
+    typedef FluxLimiterInterpolant<YVolField,YSurfZField> FluxLimiterYVolYSurfZ;
+    opDB.register_new_operator<FluxLimiterYVolYSurfZ>(scinew FluxLimiterYVolYSurfZ(dim, bcPlus ));
+    
+    typedef FluxLimiterInterpolant<ZVolField,ZSurfXField> FluxLimiterZVolZSurfX;
+    opDB.register_new_operator<FluxLimiterZVolZSurfX>(scinew FluxLimiterZVolZSurfX(dim, bcPlus ));
+    
+    typedef FluxLimiterInterpolant<ZVolField,ZSurfYField> FluxLimiterZVolZSurfY;
+    opDB.register_new_operator<FluxLimiterZVolZSurfY>(scinew FluxLimiterZVolZSurfY(dim, bcPlus ));
+    
+    typedef FluxLimiterInterpolant<ZVolField,ZSurfZField> FluxLimiterZVolZSurfZ;
+    opDB.register_new_operator<FluxLimiterZVolZSurfZ>(scinew FluxLimiterZVolZSurfZ(dim, bcPlus ));    
+    
     //--------------------------------------------------------
     // scalar surface to staggered volumes (pressure gradients)
     //--------------------------------------------------------
