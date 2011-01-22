@@ -15,39 +15,39 @@ UpwindInterpolant( const std::vector<int>& dim,
 {
   const SpatialOps::structured::IndexHelper<PhiVolT,PhiFaceT> indexHelper( dim, hasPlusFace[0], hasPlusFace[1], hasPlusFace[2] );
   stride_ = indexHelper.calculate_stride();
-  xyzCount_.resize(3);
-  xyzVolIncr_.resize(3);
-  xyzFaceIncr_.resize(3);  
+  faceCount_.resize(3);
+  volIncr_.resize(3);
+  faceIncr_.resize(3);  
   
   int nGhost = 2*SrcGhost::NGHOST;
   for (int i=0;i<=2;i++) {
-    xyzFaceIncr_[i] = 0;
-    xyzVolIncr_[i] = 0;
-    xyzCount_[i] = dim[i] + nGhost;
+    faceIncr_[i] = 0;
+    volIncr_[i] = 0;
+    faceCount_[i] = dim[i] + nGhost;
   }
   
   const size_t direction = PhiFaceT::Location::FaceDir::value;
   switch (direction) {
       
     case SpatialOps::XDIR::value:
-      xyzFaceIncr_[1] = 1;
-      xyzVolIncr_[1] = 1;
-      if (hasPlusFace[0]) xyzFaceIncr_[1] += 1;
-      xyzCount_[0] -= 1;
+      faceIncr_[1] = 1;
+      volIncr_[1] = 1;
+      if (hasPlusFace[0]) faceIncr_[1] += 1;
+      faceCount_[0] -= 1;
       break;
       
     case SpatialOps::YDIR::value:
-      xyzFaceIncr_[2] = stride_;
-      xyzVolIncr_[2] = stride_;      
-      if (hasPlusFace[1]) xyzFaceIncr_[2] += stride_;
-      xyzCount_[1] -= 1;
+      faceIncr_[2] = stride_;
+      volIncr_[2] = stride_;      
+      if (hasPlusFace[1]) faceIncr_[2] += stride_;
+      faceCount_[1] -= 1;
       break;
       
     case SpatialOps::ZDIR::value:
       // NOTE: for the z direction, xyzVolIncr & xyzFaceIncr are all zero.
       // no need to set them here as they are initialized to zero previously.
-      if (hasPlusFace[2]) xyzFaceIncr_[2] += stride_;
-      xyzCount_[2] -= 1;
+      if (hasPlusFace[2]) faceIncr_[2] += stride_;
+      faceCount_[2] -= 1;
       break;
   }  
 }
@@ -93,11 +93,11 @@ apply_to_field( const PhiVolT &src, PhiFaceT &dest ) const
   // In y direction, it will be nx. In z direction, it will be nx*ny
   typename PhiFaceT::const_iterator advVel = advectiveVelocity_->begin() + stride_;
 
-  for (size_t k=1; k<=xyzCount_[2]; k++) { // count zCount times
+  for (size_t k=1; k<=faceCount_[2]; k++) { // count zCount times
     
-    for (size_t j=1; j<=xyzCount_[1]; j++) { // count yCount times
+    for (size_t j=1; j<=faceCount_[1]; j++) { // count yCount times
       
-      for (size_t i =1; i<=xyzCount_[0]; i++) { // count xCount times
+      for (size_t i =1; i<=faceCount_[0]; i++) { // count xCount times
         if ((*advVel) > 0.0) *destFld = *srcFieldMinus;
         else if ((*advVel) < 0.0) *destFld = *srcFieldPlus;
         else *destFld = 0.0; // may need a better condition here to account for
@@ -109,16 +109,16 @@ apply_to_field( const PhiVolT &src, PhiFaceT &dest ) const
         ++advVel;
       }
       
-      srcFieldMinus += xyzVolIncr_[1];      
-      srcFieldPlus  += xyzVolIncr_[1];
-      destFld += xyzFaceIncr_[1];   
-      advVel  += xyzFaceIncr_[1];
+      srcFieldMinus += volIncr_[1];      
+      srcFieldPlus  += volIncr_[1];
+      destFld += faceIncr_[1];   
+      advVel  += faceIncr_[1];
     }
 
-    srcFieldMinus += xyzVolIncr_[2];
-    srcFieldPlus  += xyzVolIncr_[2];
-    destFld += xyzFaceIncr_[2];    
-    advVel  += xyzFaceIncr_[2];
+    srcFieldMinus += volIncr_[2];
+    srcFieldPlus  += volIncr_[2];
+    destFld += faceIncr_[2];    
+    advVel  += faceIncr_[2];
   }
 }
 

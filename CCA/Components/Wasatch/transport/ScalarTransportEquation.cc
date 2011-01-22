@@ -1,16 +1,13 @@
 //-- Wasatch includes --//
 #include "ScalarTransportEquation.h"
 #include <CCA/Components/Wasatch/Operators/OperatorTypes.h>
-#include <CCA/Components/Wasatch/Operators/UpwindInterpolant.h>
-#include <CCA/Components/Wasatch/Operators/SuperbeeInterpolant.h>
 #include <CCA/Components/Wasatch/ParseTools.h>
 #include <CCA/Components/Wasatch/Expressions/DiffusiveFlux.h>
 #include <CCA/Components/Wasatch/Expressions/ConvectiveFlux.h>
-
+#include <CCA/Components/Wasatch/ConvectiveInterpolationMethods.h>
 
 //-- ExprLib includes --//
 #include <expression/ExprLib.h>
-
 
 //-- Uintah includes --//
 #include <Core/ProblemSpec/ProblemSpec.h>
@@ -142,6 +139,7 @@ namespace Wasatch{
     // get the interpolation method (UPWIND, CENTRAL, etc...)
     std::string interpMethod;
     convFluxParams->get("Method",interpMethod);
+    const Wasatch::ConvInterpMethods convInterpMethod = Wasatch::get_conv_interp_method(interpMethod);
     
     // get the tag for the advective velocity
     Uintah::ProblemSpecP advVelocityTagParam = convFluxParams->findBlock( "AdvectiveVelocity" );
@@ -169,60 +167,69 @@ namespace Wasatch{
       Expr::ExpressionBuilder* builder = NULL;
       
       if( dir=="X" ){
-        cout << "SETTING UP CONVECTIVE FLUX EXPRESSION IN X DIRECTION "<< std::endl;
+        cout << "SETTING UP CONVECTIVE FLUX EXPRESSION IN X DIRECTION USING " << interpMethod << std::endl;
         typedef typename OperatorTypeBuilder<Interpolant,XVolField,typename FaceTypes<FieldT>::XFace>::type VelInterpOpT;
-        if (interpMethod=="UPWIND") {
-          cout << "SETTING UP UPWIND CONVECTION INTERPOLANT IN X DIRECTION "<< std::endl;
-          typedef typename ConvectiveFluxLimiter< typename Ops::InterpC2FXUpwind, VelInterpOpT >::Builder ConvFlux;
-          builder = scinew ConvFlux(phiTag, advVelocityTag);
-        }
-        else if (interpMethod=="CENTRAL") {
-          cout << "SETTING UP CENTRAL CONVECTION INTERPOLANT IN X DIRECTION "<< std::endl;
-          typedef typename ConvectiveFlux< typename Ops::InterpC2FX, VelInterpOpT >::Builder ConvFlux;
-          builder = scinew ConvFlux(phiTag, advVelocityTag);
-        }
-        else if (interpMethod=="SUPERBEE") {
-          cout << "SETTING UP SUPERBEE CONVECTION INTERPOLANT IN X DIRECTION "<< std::endl;
-          typedef typename ConvectiveFluxLimiter< typename Ops::InterpC2FXSuperbee, VelInterpOpT >::Builder ConvFlux;
-          builder = scinew ConvFlux(phiTag, advVelocityTag);          
+
+        switch (convInterpMethod) {
+            
+          case CENTRAL: // for central and upwind, use specified interpolants
+            typedef typename ConvectiveFlux< typename Ops::InterpC2FX, VelInterpOpT >::Builder convFluxCent;
+            builder = scinew convFluxCent(phiTag, advVelocityTag);
+            break;
+            
+          case UPWIND:
+            typedef typename ConvectiveFluxLimiter< typename Ops::InterpC2FXUpwind, VelInterpOpT >::Builder convFluxUpw;
+            builder = scinew convFluxUpw(phiTag, advVelocityTag, convInterpMethod);
+            break;
+            
+          default: // for all other limiter types
+            typedef typename ConvectiveFluxLimiter< typename Ops::InterpC2FXLimiter, VelInterpOpT >::Builder convFluxLim;
+            builder = scinew convFluxLim(phiTag, advVelocityTag, convInterpMethod);          
+            break;
         }
       }
       else if( dir=="Y" ){
-        cout << "SETTING UP CONVECTIVE FLUX EXPRESSION IN Y DIRECTION "<< std::endl;
+        cout << "SETTING UP CONVECTIVE FLUX EXPRESSION IN Y DIRECTION USING " << interpMethod << std::endl;
         typedef typename OperatorTypeBuilder<Interpolant,YVolField,typename FaceTypes<FieldT>::YFace>::type VelInterpOpT;
-        if (interpMethod=="UPWIND") {
-          cout << "SETTING UP UPWIND CONVECTION INTERPOLANT IN Y DIRECTION "<< std::endl;
-          typedef typename ConvectiveFluxLimiter< typename Ops::InterpC2FYUpwind, VelInterpOpT >::Builder ConvFlux;
-          builder = scinew ConvFlux(phiTag, advVelocityTag);
-        }
-        else if (interpMethod == "CENTRAL") {
-          cout << "SETTING UP CENTRAL CONVECTION INTERPOLANT IN Y DIRECTION "<< std::endl;
-          typedef typename ConvectiveFlux< typename Ops::InterpC2FY, VelInterpOpT >::Builder ConvFlux;
-          builder = scinew ConvFlux(phiTag, advVelocityTag);
-        }
-        else if (interpMethod=="SUPERBEE") {
-          cout << "SETTING UP SUPERBEE CONVECTION INTERPOLANT IN X DIRECTION "<< std::endl;
-          typedef typename ConvectiveFluxLimiter< typename Ops::InterpC2FYSuperbee, VelInterpOpT >::Builder ConvFlux;
-          builder = scinew ConvFlux(phiTag, advVelocityTag);          
+        
+        switch (convInterpMethod) {
+            
+          case CENTRAL: // for central and upwind, use specified interpolants
+            typedef typename ConvectiveFlux< typename Ops::InterpC2FY, VelInterpOpT >::Builder convFluxCent;
+            builder = scinew convFluxCent(phiTag, advVelocityTag);
+            break;
+            
+          case UPWIND:
+            typedef typename ConvectiveFluxLimiter< typename Ops::InterpC2FYUpwind, VelInterpOpT >::Builder convFluxUpw;
+            builder = scinew convFluxUpw(phiTag, advVelocityTag, convInterpMethod);
+            break;
+            
+          default: // for all other limiter types
+            typedef typename ConvectiveFluxLimiter< typename Ops::InterpC2FYLimiter, VelInterpOpT >::Builder convFluxLim;
+            builder = scinew convFluxLim(phiTag, advVelocityTag, convInterpMethod);          
+            break;
         }        
       }
       else if( dir=="Z") {
-        cout << "SETTING UP CONVECTIVE FLUX EXPRESSION IN Z DIRECTION "<< std::endl;
+        cout << "SETTING UP CONVECTIVE FLUX EXPRESSION IN Z DIRECTION USING " << interpMethod << std::endl;
         typedef typename OperatorTypeBuilder<Interpolant,ZVolField,typename FaceTypes<FieldT>::ZFace>::type VelInterpOpT;
-        if (interpMethod=="UPWIND") {
-          cout << "SETTING UP UPWIND CONVECTION INTERPOLANT IN Z DIRECTION "<< std::endl;
-          typedef typename ConvectiveFluxLimiter< typename Ops::InterpC2FZUpwind, VelInterpOpT >::Builder ConvFlux;
-          builder = scinew ConvFlux(phiTag, advVelocityTag);
-        }
-        else if (interpMethod=="CENTRAL") {
-          cout << "SETTING UP CENTRAL CONVECTION INTERPOLANT IN Z DIRECTION "<< std::endl;
-          typedef typename ConvectiveFlux< typename Ops::InterpC2FZ, VelInterpOpT >::Builder ConvFlux;
-          builder = scinew ConvFlux(phiTag, advVelocityTag);
-        }
-        else if (interpMethod=="SUPERBEE") {
-          cout << "SETTING UP SUPERBEE CONVECTION INTERPOLANT IN X DIRECTION "<< std::endl;
-          typedef typename ConvectiveFluxLimiter< typename Ops::InterpC2FZSuperbee, VelInterpOpT >::Builder ConvFlux;
-          builder = scinew ConvFlux(phiTag, advVelocityTag);          
+        
+        switch (convInterpMethod) {
+            
+          case CENTRAL: // for central and upwind, use specified interpolants
+            typedef typename ConvectiveFlux< typename Ops::InterpC2FZ, VelInterpOpT >::Builder convFluxCent;
+            builder = scinew convFluxCent(phiTag, advVelocityTag);
+            break;
+            
+          case UPWIND:
+            typedef typename ConvectiveFluxLimiter< typename Ops::InterpC2FZUpwind, VelInterpOpT >::Builder convFluxUpw;
+            builder = scinew convFluxUpw(phiTag, advVelocityTag, convInterpMethod);
+            break;
+            
+          default: // for all other limiter types
+            typedef typename ConvectiveFluxLimiter< typename Ops::InterpC2FZLimiter, VelInterpOpT >::Builder convFluxLim;
+            builder = scinew convFluxLim(phiTag, advVelocityTag, convInterpMethod);          
+            break;
         }        
       }
       
