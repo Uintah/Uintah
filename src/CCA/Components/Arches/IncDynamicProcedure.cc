@@ -1376,18 +1376,18 @@ IncDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
     ccuVel.print(cerr);
 #endif
 
-    d_filter->applyFilter(pc, patch,ccuVel, filterUVel);
-    d_filter->applyFilter(pc, patch,ccvVel, filterVVel);
-    d_filter->applyFilter(pc, patch,ccwVel, filterWVel);
-    d_filter->applyFilter(pc, patch,UU, filterUU);
-    d_filter->applyFilter(pc, patch,UV, filterUV);
-    d_filter->applyFilter(pc, patch,UW, filterUW);
-    d_filter->applyFilter(pc, patch,VV, filterVV);
-    d_filter->applyFilter(pc, patch,VW, filterVW);
-    d_filter->applyFilter(pc, patch,WW, filterWW);
+    d_filter->applyFilter< constCCVariable<double> >(pc, patch,ccuVel, filterUVel);
+    d_filter->applyFilter< constCCVariable<double> >(pc, patch,ccvVel, filterVVel);
+    d_filter->applyFilter< constCCVariable<double> >(pc, patch,ccwVel, filterWVel);
+    d_filter->applyFilter< Array3<double> >(pc, patch,UU, filterUU);
+    d_filter->applyFilter< Array3<double> >(pc, patch,UV, filterUV);
+    d_filter->applyFilter< Array3<double> >(pc, patch,UW, filterUW);
+    d_filter->applyFilter< Array3<double> >(pc, patch,VV, filterVV);
+    d_filter->applyFilter< Array3<double> >(pc, patch,VW, filterVW);
+    d_filter->applyFilter< Array3<double> >(pc, patch,WW, filterWW);
     for (int ii = 0; ii < d_lab->d_symTensorMatl->size(); ii++) {
-      d_filter->applyFilter(pc, patch,SIJ[ii], SHATIJ[ii]);
-      d_filter->applyFilter(pc, patch,betaIJ[ii], betaHATIJ[ii]);
+      d_filter->applyFilter< constCCVariable<double> >(pc, patch,SIJ[ii], SHATIJ[ii]);
+      d_filter->applyFilter< Array3<double> >(pc, patch,betaIJ[ii], betaHATIJ[ii]);
     }
     if (pc->myrank() == 0){
       cerr << "Time for the Filter operation in Turbulence Model: " << 
@@ -1850,8 +1850,8 @@ IncDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
     IntVector indexLow = patch->getFortranCellLowIndex();
     IntVector indexHigh = patch->getFortranCellHighIndex();
 #ifdef PetscFilter
-    d_filter->applyFilter(pc, patch, MLI, MLHatI);
-    d_filter->applyFilter(pc, patch, MMI, MMHatI);
+    d_filter->applyFilter< constCCVariable<double> >(pc, patch, MLI, MLHatI);
+    d_filter->applyFilter< constCCVariable<double> >(pc, patch, MMI, MMHatI);
 #else
     for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
       for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
@@ -1904,7 +1904,7 @@ IncDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
     // filtering for periodic case is not implemented 
     // if it needs to be then tempCs will require 1 layer of boundary cells to be computed
 #ifdef PetscFilter
-    d_filter->applyFilter(pc, patch, tempCs, Cs);
+    d_filter->applyFilter<CCVariable<double> >(pc, patch, tempCs, Cs);
 #else
     // filtering without petsc is not implemented
     // if it needs to be then tempCs will have to be computed with ghostcells
@@ -2156,8 +2156,8 @@ IncDynamicProcedure::computeScalarVariance(const ProcessorGroup* pc,
     IntVector indexLow = patch->getFortranCellLowIndex();
     IntVector indexHigh = patch->getFortranCellHighIndex();
 #ifdef PetscFilter
-    d_filter->applyFilter(pc, patch,scalar, filterPhi);
-    d_filter->applyFilter(pc, patch,phiSqr, filterPhiSqr);
+    d_filter->applyFilter< constCCVariable<double> >(pc, patch,scalar, filterPhi);
+    d_filter->applyFilter< Array3<double> >(pc, patch,phiSqr, filterPhiSqr);
 #else
 
     for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
