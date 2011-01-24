@@ -824,7 +824,7 @@ SmallStrainPlastic::computeStressTensorExplicit(const PatchSubset* patches,
       pVol_new[idx]=pMass[idx]/rho_cur;
 
       // Compute polar decomposition of F (F = RU)
-      defGrad_new.polarDecomposition(rightStretch, rotation, d_tol, true);
+      pDefGrad[idx].polarDecompositionRMB(rightStretch, rotation);
 
       // Calculate rate of deformation tensor (D)
       rateOfDef_new = (velGrad + velGrad.Transpose())*0.5;
@@ -1275,6 +1275,10 @@ SmallStrainPlastic::computeStressTensorExplicit(const PatchSubset* patches,
       //-----------------------------------------------------------------------
       // Rotate the stress/backStress back to the laboratory coordinates
       // Update the stress/back stress
+
+      // Use new rotation
+      defGrad_new.polarDecompositionRMB(rightStretch, rotation);
+
       backStress_new = (rotation*backStress_new)*(rotation.Transpose());
       sigma_new = (rotation*sigma_new)*(rotation.Transpose());
       d_kinematic->updateBackStress(idx, backStress_new);

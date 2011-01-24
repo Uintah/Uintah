@@ -473,8 +473,7 @@ void Diamm::computeStressTensor(const PatchSubset* patches,
       double d_tol = 1.0e-10;
 
       // Look into using Rebecca's PD algorithm
-      deformationGradient_new[idx].polarDecomposition(tensorU, tensorR,
-                                                      d_tol, true);
+      deformationGradient_new[idx].polarDecompositionRMB(tensorU, tensorR);
 
       // This is the previous timestep Cauchy stress
       // unrotated tensorSig=R^T*pstress*R
