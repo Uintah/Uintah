@@ -854,7 +854,7 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
         } else {  // axi-symmetric kinematics
          // Get the node indices that surround the cell
          interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,d_S,
-                                                                    psize[idx],pDeformGrad[idx]);
+                                                  psize[idx],pDeformGrad[idx]);
          // x -> r, y -> z, z -> theta
          computeAxiSymVelocityGradient(tensorL,ni,d_S,S,oodx,gVelocity,px[idx]);
         }
@@ -903,14 +903,10 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
       pVolume_deformed[idx]=pMass[idx]/rho_cur;
 
       // Compute polar decomposition of F (F = RU)
-//      tensorF_new.polarDecomposition(tensorU, tensorR, d_tol, true);
-      tensorF_new.polarDecompositionRMB(tensorU, tensorR);
+      pDeformGrad[idx].polarDecompositionRMB(tensorU, tensorR);
 
       // Calculate rate of deformation tensor (D)
       tensorD = (tensorL + tensorL.Transpose())*0.5;
-
-      // Update the kinematic variables
-      pRotation_new[idx] = tensorR;
 
       // Rotate the total rate of deformation tensor back to the 
       // material configuration
@@ -1395,8 +1391,15 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
       //-----------------------------------------------------------------------
       // Stage 5:
       //-----------------------------------------------------------------------
-      // Rotate the stress back to the laboratory coordinates
+
+      // Rotate the stress back to the laboratory coordinates using new R
+      // Compute polar decomposition of new F (F = RU)
+      tensorF_new.polarDecompositionRMB(tensorU, tensorR);
+
       tensorSig = (tensorR*tensorSig)*(tensorR.Transpose());
+
+      // Update the kinematic variables
+      pRotation_new[idx] = tensorR;
 
       // Save the new data
       pStress_new[idx] = tensorSig;
@@ -1750,7 +1753,6 @@ ElasticPlastic::computeStressTensorImplicit(const PatchSubset* patches,
       //           values for R and V if the incremental algorithm 
       //           for the polar decomposition is used in the explicit
       //           calculations following an implicit calculation.)
-//      DefGrad.polarDecomposition(RightStretch, Rotation, d_tol, true);
       DefGrad.polarDecompositionRMB(RightStretch, Rotation);
       pRotation_new[idx] = Rotation;
 

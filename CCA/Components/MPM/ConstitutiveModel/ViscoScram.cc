@@ -723,7 +723,6 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
       if (d_useObjectiveRate) {
 
         // Compute polar decomposition of F
-//        pDefGrad_new[idx].polarDecomposition(UU, RR, 1.0e-12, true);
         pDefGrad_new[idx].polarDecompositionRMB(UU, RR);
         RT = RR.Transpose();
 

@@ -778,45 +778,15 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
       pVolume_deformed[idx]=pMass[idx]/rho_cur;
 
       // Compute polar decomposition of F (F = VR)
-      tensorF_new.polarDecomposition(tensorV, tensorR, d_tol, false);
+      pDeformGrad[idx].polarDecompositionRMB(tensorV, tensorR);
 
       // Calculate rate of deformation tensor (D) and spin tensor (W)
       tensorD = (tensorL + tensorL.Transpose())*0.5;
-//      tensorW = (tensorL - tensorL.Transpose())*0.5;
       for (int ii = 0; ii < 3; ++ii) {
         for (int jj = 0; jj < 3; ++jj) {
           tensorD(ii,jj)=(fabs(tensorD(ii,jj)) < d_tol) ? 0.0 : tensorD(ii,jj);
-//        tensorW(ii,jj)=(fabs(tensorW(ii,jj)) < d_tol) ? 0.0 : tensorW(ii,jj);
         }
       }
-
-      /* COMMENT : Old incremental update of V and R
-
-      // Calculate the incremental update of the left stretch (V) 
-      // and the rotation (R)
-      tensorV = pLeftStretch[idx];
-      tensorR = pRotation[idx];
-      if (idx == 954) {
-      cerr << getpid() << "idx = " << idx <<  " V_old = " << tensorV << endl;
-      //cerr << getpid() << " R_old = " << tensorR << endl;
-      //cerr << getpid() << " D_in = " << tensorD << endl;
-      //cerr << getpid() << " W_in = " << tensorW << endl;
-      }
-      computeUpdatedVR(delT, tensorD, tensorW, tensorV, tensorR);
-      if (idx == 954) {
-      cerr << getpid() <<  "idx = " << idx << " V_new = " << tensorV << endl;
-      //cerr << getpid() << " R_new = " << tensorR << endl;
-      }
-      //tensorF_new = tensorV*tensorR;
-      //double J = tensorF_new.Determinant();
-      //pDeformGrad_new[idx] = tensorF_new;
-
-      */
-
-
-      // Update the kinematic variables
-      pLeftStretch_new[idx] = tensorV;
-      pRotation_new[idx] = tensorR;
 
       // If the particle is just sitting there, do nothing
       double defRateSq = tensorD.NormSquared();
@@ -947,6 +917,14 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
 
         // Get the elastic stress
         tensorSig = trialS + tensorHy;
+
+        // Compute polar decomposition of Fnew (F = VR)
+        tensorF_new.polarDecompositionRMB(tensorV, tensorR);
+
+        // Update the kinematic variables
+        pLeftStretch_new[idx] = tensorV;
+        pRotation_new[idx] = tensorR;
+
 
         // Rotate the stress rate back to the laboratory coordinates
         // to get the "true" Cauchy stress
@@ -1503,7 +1481,7 @@ HypoElasticPlastic::computeStressTensorImplicit(const PatchSubset* patches,
       //           values for R and V if the incremental algorithm 
       //           for the polar decomposition is used in the explicit
       //           calculations following an implicit calculation.)
-      DefGrad.polarDecomposition(LeftStretch, Rotation, d_tol, false);
+      DefGrad.polarDecompositionRMB(LeftStretch, Rotation);
       pLeftStretch_new[idx] = LeftStretch;
       pRotation_new[idx] = Rotation;
 

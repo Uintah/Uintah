@@ -907,13 +907,10 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
       double sp_vol = 1./rho_cur;
 
       // Compute polar decomposition of F (F = RU)
-      tensorF_new.polarDecompositionRMB(tensorU, tensorR);
+      pDeformGrad[idx].polarDecompositionRMB(tensorU, tensorR);
 
       // Calculate rate of deformation tensor (D)
       tensorD = (tensorL + tensorL.Transpose())*0.5;
-
-      // Update the kinematic variables
-      pRotation_new[idx] = tensorR;
 
       // Rotate the total rate of deformation tensor back to the 
       // material configuration
@@ -925,7 +922,7 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
       pStrainRate_new[idx] = sqrtTwoThird*tensorD.Norm();
 
       // Rotate the Cauchy stress back to the 
-      // material configuration and calculate the deviatoric part
+      // material configuration using old R and calculate the deviatoric part
       tensorSig = pStress[idx];
       tensorSig = (tensorR.Transpose())*(tensorSig*tensorR);
       double pressure = tensorSig.Trace()/3.0;
@@ -1397,8 +1394,14 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
       //-----------------------------------------------------------------------
       // Stage 5:
       //-----------------------------------------------------------------------
-      // Rotate the stress back to the laboratory coordinates
+      // Rotate the stress back to the laboratory coordinates using new R
+      // Compute polar decomposition of new F (F = RU)
+      tensorF_new.polarDecompositionRMB(tensorU, tensorR);
+
       tensorSig = (tensorR*tensorSig)*(tensorR.Transpose());
+
+      // Update the kinematic variables
+      pRotation_new[idx] = tensorR;
 
       // Save the new data
       pStress_new[idx] = tensorSig;
@@ -1753,7 +1756,7 @@ ElasticPlasticHP::computeStressTensorImplicit(const PatchSubset* patches,
       //           values for R and V if the incremental algorithm 
       //           for the polar decomposition is used in the explicit
       //           calculations following an implicit calculation.)
-      DefGrad.polarDecomposition(RightStretch, Rotation, d_tol, true);
+      DefGrad.polarDecompositionRMB(RightStretch, Rotation);
       pRotation_new[idx] = Rotation;
 
       // Compute the current strain and strain rate

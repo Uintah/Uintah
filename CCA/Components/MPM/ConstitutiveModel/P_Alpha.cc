@@ -242,7 +242,7 @@ void P_Alpha::computeStressTensor(const PatchSubset* patches,
     constParticleVariable<Matrix3> deformationGradient;
     ParticleVariable<Matrix3> pstress;
     constParticleVariable<double> pmass;
-    constParticleVariable<double> alpha_min_old;
+    constParticleVariable<double> alpha_min_old, ptemperature;
     ParticleVariable<double> pvolume;
     ParticleVariable<double> alpha_min_new;
     constParticleVariable<Vector> pvelocity, psize;
@@ -260,6 +260,7 @@ void P_Alpha::computeStressTensor(const PatchSubset* patches,
     old_dw->get(pmass,                       lb->pMassLabel,              pset);
     old_dw->get(psize,                       lb->pSizeLabel,              pset);
     old_dw->get(pvelocity,                   lb->pVelocityLabel,          pset);
+    old_dw->get(ptemperature,                lb->pTemperatureLabel,       pset);
     old_dw->get(deformationGradient,         lb->pDeformationMeasureLabel,pset);
     old_dw->get(alpha_min_old,               alphaLabel,                  pset);
 
@@ -381,6 +382,7 @@ void P_Alpha::computeStressTensor(const PatchSubset* patches,
       double c = sqrt(Ks/rhoS);
       double cs=sqrt(Ks/rhoS);
       double ce=sqrt(K0/rho_orig);
+
       if(alpha < alpha0 && alpha >= 1.0){
        if(alpha <= alpha_min_old[idx]){  // loading
         if(alpha <= alpha0 && alpha > alphaP){
@@ -410,16 +412,55 @@ void P_Alpha::computeStressTensor(const PatchSubset* patches,
        }
       }
       else if(alpha<1.0){
+#if 1
         p = Ps+Ks*(1.-alpha);
         c = cs;
+#endif
+#if 0
+       // Get the state data
+       double rho = rhoM;
+       double T_0 = 300.;
+       double Gamma_0 = 1.54;
+       double C_0 = 4029.;
+       double S_alpha = 1.237;
+
+       // Calc. zeta
+       double zeta = (rho/rhoS - 1.0);
+
+       // Calculate internal energy E
+       double cv = matl->getSpecificHeat();
+       double E = (cv)*(ptemperature[idx] - T_0)*rhoS;
+
+       // Calculate the pressure
+       double p = Gamma_0*E;
+       if (rho != rhoS) {
+         double numer = rhoS*(C_0*C_0)*(1.0/zeta+
+                              (1.0-0.5*Gamma_0));
+         double denom = 1.0/zeta - (S_alpha-1.0);
+         if (denom == 0.0) {
+           cout << "rh0_0 = " << rhoS << " zeta = " << zeta
+                << " numer = " << numer << endl;
+           denom = 1.0e-5;
+         }
+          p += numer/(denom*denom);
+        }
+      double etime = d_sharedState->getElapsedTime();
+      cout << "678 " << " " << etime << " " << alpha << " " << p << endl;
+        p = Ps + -1.*p;
+#endif
       }
 
-      p=max(p,0.0);
-
-      double time = d_sharedState->getElapsedTime();
-      cout << "12345 " << " " << time << " " << alpha << " " << p << " " << 1./dAel_dp << endl;
-
       alpha_min_new[idx]=min(alpha,alpha_min_old[idx]);
+
+      if(alpha > alpha0 || p < 0.){
+          double rho_max = rhoS/alpha_min_new[idx];
+          p = .5*K0*(1.-rho_max/rhoM);
+      }
+
+//      p=max(p,0.0);
+
+//      double etime = d_sharedState->getElapsedTime();
+//      cout << "12345 " << " " << etime << " " << alpha << " " << p << " " << 1./dAel_dp << endl;
 
       // Compute artificial viscosity term
       if (flag->d_artificial_viscosity) {
@@ -458,7 +499,6 @@ void P_Alpha::computeStressTensor(const PatchSubset* patches,
   }
 }
 
-         
 void P_Alpha::addComputesAndRequires(Task* task,
                                      const MPMMaterial* matl,
                                      const PatchSet* patches) const
