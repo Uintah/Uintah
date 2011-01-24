@@ -256,7 +256,7 @@ Discretization::computeDivergence(const ProcessorGroup* pc,
   // filtering for periodic case is not implemented 
   // if it needs to be then unfiltered_divergence will require 1 layer of boundary cells to be computed
 #ifdef PetscFilter
-    d_filter->applyFilter(pc, patch, unfiltered_divergence, vars->divergence);
+    d_filter->applyFilter<CCVariable<double> >(pc, patch, unfiltered_divergence, vars->divergence);
 #else
     // filtering without petsc is not implemented
     // if it needs to be then unfiltered_divergence will have to be computed with ghostcells
