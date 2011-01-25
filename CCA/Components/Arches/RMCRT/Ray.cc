@@ -73,7 +73,7 @@ Ray::rayTrace( const ProcessorGroup* pc,
     const Patch* patch = patches->get(p);
     int archIndex = 0;
     int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
-    int index = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    //int index = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
 
     //This stuff can stay til I switch to iterator, and different marching scheme. here a..
     int cur[3];//Oct 1:  I'll be switching to iterator. cur represents the current location of a ray as it is traced through the domain... 
@@ -134,7 +134,7 @@ Ray::rayTrace( const ProcessorGroup* pc,
     double chi_Iin_cv;//  Iin multiplied by its respective chi, per Phil's recommendation. 
     double Inet_cv[ix];// Is a separate Inet necessary for surfaces?. !! I don't think I need an array for this
     //double abskg1D[ix];// !! used to visualize abskg only.  otherwise comment out
-    double intensity;// used to determine how far to trace a ray.
+    //double intensity;// used to determine how far to trace a ray.
     double sigma_over_pi = 1.804944378616567e-8;//Stefan Boltzmann divided by pi (W* m-2* K-4)
     double chi; //the first segment length multiplied by cur cell's absorption coefficient
     bool   first;//used to determine chi. Basically we save the cell's self absorption coefficient
@@ -147,7 +147,7 @@ Ray::rayTrace( const ProcessorGroup* pc,
     double rho = 1.0 - _alpha; //reflectivity
     double optical_thickness;//The running total of alpha*length !!move to Ray.h  
     double optical_thickness_prev;//The running total of alpha*length !!move to Ray.h     
-    double segment_length;//The length of each segment of a ray within a cell
+    //double segment_length;//The length of each segment of a ray within a cell
     Vector Dx = patch->dCell(); // cell spacing
     IntVector   c; //represents i, j, k
     const double* temperature_ptr = const_cast<double*>( temperature.getPointer() );//maybe tempINLabel??
@@ -430,7 +430,7 @@ Ray::rayTrace( const ProcessorGroup* pc,
     if (_slice != Nx/2) cout << endl<<"SLICE IS NOT CENTERED! " << endl;
 
 
-    FILE *f, *fx, *fy, *fz;
+    FILE *f; //, *fx, *fy, *fz;
 
     f=fopen("DelDotqA.txt", "w");
     ix = Nx*Ny*_slice;//This can be adjusted to determine which slice of interest is used in visualization.
