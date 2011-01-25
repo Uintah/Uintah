@@ -103,7 +103,7 @@ PSELIBS := \
         Core/Exceptions    \
         CCA/Components/Arches/fortran   \
         CCA/Components/Arches/Mixing    \
-        CCA/Components/Arches/MCRT/ArchesRMCRT  \
+        CCA/Components/Arches/RMCRT  \
         CCA/Components/Arches/Radiation \
         CCA/Components/OnTheFlyAnalysis \
         CCA/Ports     \

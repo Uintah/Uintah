@@ -216,6 +216,7 @@ ScalarEqn::sched_evalTransportEqn( const LevelP& level,
   if (d_use_density_guess)
     sched_solveTransportEqn( level, sched, timeSubStep );
   // else we have to do it in ExplicitSolver.cc after properties are updated.
+
 }
 //---------------------------------------------------------------------------
 // Method: Schedule the intialization of the variables. 

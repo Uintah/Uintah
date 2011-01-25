@@ -45,6 +45,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Arches/Radiation/RadiationModel.h>
 #include <CCA/Components/Arches/Radiation/DORadiationModel.h>
 #include <CCA/Components/Arches/Radiation/RadLinearSolver.h>
+#include <CCA/Components/Arches/RMCRT/Ray.h>
 #ifdef HAVE_HYPRE
 #include <CCA/Components/Arches/Radiation/RadHypreSolver.h>
 #endif
@@ -93,7 +94,8 @@ EnthalpySolver::EnthalpySolver(const ArchesLabel* label,
   d_radCounter = -1; //to decide how often radiation calc is done
   d_radCalcFreq = 0; 
   d_DORadiationCalc = false;
-  d_radiationCalc = false; 
+  d_radiationCalc = false;
+  d_doRMCRT = false; 
 
 }
 
@@ -106,6 +108,7 @@ EnthalpySolver::~EnthalpySolver()
   delete d_source;
   delete d_rhsSolver;
   delete d_DORadiation;
+  delete d_RMCRT; 
   if(d_perproc_patches && d_perproc_patches->removeReference())
     delete d_perproc_patches;
 
@@ -121,6 +124,14 @@ EnthalpySolver::problemSetup(const ProblemSpecP& params)
   if (db->findBlock("DORadiationModel")) {
     d_DORadiationCalc = true;
     d_radiationCalc = true; 
+  }
+
+  if (db->findBlock("RMCRT")){
+    d_doRMCRT = true; 
+    ProblemSpecP rmcrt_db = db->findBlock("RMCRT"); 
+    d_RMCRT = scinew Ray( d_lab ); 
+    d_RMCRT->problemSetup( rmcrt_db ); 
+
   }
 
   if (d_radiationCalc) {
@@ -510,6 +521,11 @@ EnthalpySolver::sched_buildLinearMatrix(const LevelP& level,
 
   //  sched->addTask(tsk, patches, matls);
   sched->addTask(tsk, d_perproc_patches, matls);
+
+  // RMCRT Solve: 
+  if ( d_doRMCRT )
+    d_RMCRT->sched_rayTrace( level, sched );
+
 }
 
       

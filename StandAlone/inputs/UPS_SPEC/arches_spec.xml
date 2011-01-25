@@ -289,6 +289,12 @@
           <radCalcForAllImplicitSteps   spec="OPTIONAL BOOLEAN" />
           <src                          spec="MULTIPLE NO_DATA" 
                                         attribute1="label REQUIRED STRING"/>
+          <RMCRT                        spec="OPTIONAL NO_DATA" >
+            <NoOfRays                   spec="OPTIONAL INTEGER 'positive'"/>
+            <Threshold                  spec="OPTIONAL DOUBLE  'positive'"/>
+            <Alpha                      spec="OPTIONAL DOUBLE  'positive'"/>
+            <Slice                      spec="OPTIONAL DOUBLE"/>
+          </RMCRT>
           <DORadiationModel             spec="OPTIONAL NO_DATA" >
             <opl                        spec="REQUIRED DOUBLE" />
             <ordinates                  spec="OPTIONAL INTEGER" />
