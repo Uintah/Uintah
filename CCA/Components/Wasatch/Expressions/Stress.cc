@@ -218,13 +218,22 @@ Builder::build( const Expr::ExpressionID& id,
 
 //====================================================================
 // Explicit template instantiation
-#include <CCA/Components/Wasatch/FieldTypes.h>
+#include <spatialops/structured/FVStaggered.h>
 #define DECLARE_STRESS( VOL )	\
-  template class Stress< FaceTypes<VOL>::XFace, VOL, XVolField, SVolField >;	\
-  template class Stress< FaceTypes<VOL>::YFace, VOL, YVolField, SVolField >;	\
-  template class Stress< FaceTypes<VOL>::ZFace, VOL, ZVolField, SVolField >;
+  template class Stress< SpatialOps::structured::FaceTypes<VOL>::XFace,	\
+                         VOL,						\
+                         SpatialOps::structured::XVolField,             \
+                         SpatialOps::structured::SVolField >;           \
+  template class Stress< SpatialOps::structured::FaceTypes<VOL>::YFace,	\
+                         VOL,						\
+                         SpatialOps::structured::YVolField,		\
+                         SpatialOps::structured::SVolField >;           \
+  template class Stress< SpatialOps::structured::FaceTypes<VOL>::ZFace,	\
+                         VOL,						\
+                         SpatialOps::structured::ZVolField,		\
+                         SpatialOps::structured::SVolField >;
 
-DECLARE_STRESS( XVolField );
-DECLARE_STRESS( YVolField );
-DECLARE_STRESS( ZVolField );
+DECLARE_STRESS( SpatialOps::structured::XVolField );
+DECLARE_STRESS( SpatialOps::structured::YVolField );
+DECLARE_STRESS( SpatialOps::structured::ZVolField );
 //====================================================================

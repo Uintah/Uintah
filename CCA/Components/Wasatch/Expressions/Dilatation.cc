@@ -39,9 +39,9 @@ void
 Dilatation<FieldT,Vel1T,Vel2T,Vel3T>::
 bind_fields( const Expr::FieldManagerList& fml )
 {
-  const Expr::FieldManager<FieldT>& v1fm = fml.template field_manager<Vel1T>();
-  const Expr::FieldManager<FieldT>& v2fm = fml.template field_manager<Vel2T>();
-  const Expr::FieldManager<FieldT>& v3fm = fml.template field_manager<Vel3T>();
+  const Expr::FieldManager<Vel1T>& v1fm = fml.template field_manager<Vel1T>();
+  const Expr::FieldManager<Vel2T>& v2fm = fml.template field_manager<Vel2T>();
+  const Expr::FieldManager<Vel3T>& v3fm = fml.template field_manager<Vel3T>();
 
   if( vel1t_ != Expr::Tag() )  vel1_ = &v1fm.field_ref( vel1t_ );
   if( vel2t_ != Expr::Tag() )  vel2_ = &v2fm.field_ref( vel2t_ );
@@ -105,3 +105,14 @@ Builder::build( const Expr::ExpressionID& id,
   return new Dilatation<FieldT,Vel1T,Vel2T,Vel3T>( v1t_, v2t_, v3t_, id, reg );
 }
 
+//--------------------------------------------------------------------
+
+
+//==========================================================================
+// Explicit template instantiation for supported versions of this expression
+#include <spatialops/structured/FVStaggered.h>
+template class Dilatation< SpatialOps::structured::SVolField,
+                           SpatialOps::structured::XVolField,
+                           SpatialOps::structured::YVolField,
+                           SpatialOps::structured::ZVolField >;
+//==========================================================================
