@@ -54,16 +54,23 @@ namespace Uintah {
     // Create datatype for storing model parameters
   public:
     struct CMData {
+      // For P-alpha response
       double Ps;
       double Pe;
       double rhoS;
       double alpha0;
       double K0;
       double Ks;
+      // For Mie-Gruneisen response
+      double T_0;
+      double C_0;
+      double Gamma_0;
+      double S_alpha;
     };
 
     const VarLabel* alphaLabel;
-    const VarLabel* alphaLabel_preReloc;
+    const VarLabel* alphaMinLabel;
+    const VarLabel* alphaMinLabel_preReloc;
 
   private:
     CMData d_initialData;
