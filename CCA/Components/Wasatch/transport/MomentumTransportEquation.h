@@ -19,21 +19,23 @@ namespace Wasatch{
    *  \date January, 2011
    *
    *  \brief Creates a momentum transport equation
+   *
+   *  \todo Allow more flexibility in specifying initial and boundary conditions for momentum.
    */
   template< typename FieldT >
   class MomentumTransportEquation : public Expr::TransportEquation
   {
   public:
 
-    // these typedefs are provided for convenience.
     typedef typename FaceTypes<FieldT>::XFace  XFaceT; ///< The type of field on the x-faces of the volume.
     typedef typename FaceTypes<FieldT>::YFace  YFaceT; ///< The type of field on the y-faces of the volume.
     typedef typename FaceTypes<FieldT>::ZFace  ZFaceT; ///< The type of field on the z-faces of the volume.
 
     /**
      *  \brief Construct a MomentumTransportEquation
-     *  \param velName the name of the solution variable for this MomentumTransportEquation
-     *  \param momName
+     *  \param velName the name of the velocity component solved by this MomentumTransportEquation
+     *  \param momName the name of the momentum component solved by this MomentumTransportEquation
+     *  \param factory the Expr::ExpressionFactory that will hold expressions registered by this transport equation.
      *  \param params Parser information for this momentum equation
      */
     MomentumTransportEquation( const std::string velName,

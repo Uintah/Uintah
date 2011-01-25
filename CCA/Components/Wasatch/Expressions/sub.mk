@@ -35,6 +35,8 @@ SRCS     +=                             \
 	$(SRCDIR)/ConvectiveFlux.cc	\
 	$(SRCDIR)/DiffusiveFlux.cc	\
 	$(SRCDIR)/Dilatation.cc		\
+	$(SRCDIR)/MomentumPartialRHS.cc \
+	$(SRCDIR)/MomentumRHS.cc 	\
 	$(SRCDIR)/PrimVar.cc		\
 	$(SRCDIR)/ScalarRHS.cc		\
 	$(SRCDIR)/SetCurrentTime.cc	\
