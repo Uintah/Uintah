@@ -116,11 +116,11 @@ Builder::build( const Expr::ExpressionID& id,
 
 //====================================================================
 //  Explicit template instantiation
-#include <CCA/Components/Wasatch/FieldTypes.h>
-template class PrimVar<SVolField,SVolField>;
-template class PrimVar<XVolField,SVolField>;
-template class PrimVar<YVolField,SVolField>;
-template class PrimVar<ZVolField,SVolField>;
+#include <spatialops/structured/FVStaggeredFieldTypes.h>
+template class PrimVar< SpatialOps::structured::SVolField, SpatialOps::structured::SVolField >;
+template class PrimVar< SpatialOps::structured::XVolField, SpatialOps::structured::SVolField >;
+template class PrimVar< SpatialOps::structured::YVolField, SpatialOps::structured::SVolField >;
+template class PrimVar< SpatialOps::structured::ZVolField, SpatialOps::structured::SVolField >;
 //====================================================================
 
 

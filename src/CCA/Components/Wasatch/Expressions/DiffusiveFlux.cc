@@ -172,44 +172,22 @@ evaluate()
 //==========================================================================
 // Explicit template instantiation for supported versions of this expression
 //
-#include <CCA/Components/Wasatch/Operators/OperatorTypes.h>
+#include <spatialops/structured/FVStaggered.h>
 
-typedef Wasatch::OpTypes< SVolField >  SVOps;
-typedef Wasatch::OpTypes< XVolField >  XVOps;
-typedef Wasatch::OpTypes< YVolField >  YVOps;
-typedef Wasatch::OpTypes< ZVolField >  ZVOps;
+#define DECLARE_DIFF_FLUX( VOL )								\
+  template class DiffusiveFlux< SpatialOps::structured::BasicOpTypes<VOL>::GradX >; 		\
+  template class DiffusiveFlux< SpatialOps::structured::BasicOpTypes<VOL>::GradY >;		\
+  template class DiffusiveFlux< SpatialOps::structured::BasicOpTypes<VOL>::GradZ >;		\
+  template class DiffusiveFlux2< SpatialOps::structured::BasicOpTypes<VOL>::GradX,		\
+                                 SpatialOps::structured::BasicOpTypes<VOL>::InterpC2FX >;       \
+  template class DiffusiveFlux2< SpatialOps::structured::BasicOpTypes<VOL>::GradY,		\
+                                 SpatialOps::structured::BasicOpTypes<VOL>::InterpC2FY >;	\
+  template class DiffusiveFlux2< SpatialOps::structured::BasicOpTypes<VOL>::GradZ,		\
+                                 SpatialOps::structured::BasicOpTypes<VOL>::InterpC2FZ >;
 
-template class DiffusiveFlux< SVOps::GradX >;
-template class DiffusiveFlux< SVOps::GradY >;
-template class DiffusiveFlux< SVOps::GradZ >;
-
-template class DiffusiveFlux< XVOps::GradX >;
-template class DiffusiveFlux< XVOps::GradY >;
-template class DiffusiveFlux< XVOps::GradZ >;
-
-template class DiffusiveFlux< YVOps::GradX >;
-template class DiffusiveFlux< YVOps::GradY >;
-template class DiffusiveFlux< YVOps::GradZ >;
-
-template class DiffusiveFlux< ZVOps::GradX >;
-template class DiffusiveFlux< ZVOps::GradY >;
-template class DiffusiveFlux< ZVOps::GradZ >;
-
-
-template class DiffusiveFlux2< SVOps::GradX, SVOps::InterpC2FX >;
-template class DiffusiveFlux2< SVOps::GradY, SVOps::InterpC2FY >;
-template class DiffusiveFlux2< SVOps::GradZ, SVOps::InterpC2FZ >;
-
-template class DiffusiveFlux2< XVOps::GradX, XVOps::InterpC2FX >;
-template class DiffusiveFlux2< XVOps::GradY, XVOps::InterpC2FY >;
-template class DiffusiveFlux2< XVOps::GradZ, XVOps::InterpC2FZ >;
-
-template class DiffusiveFlux2< YVOps::GradX, YVOps::InterpC2FX >;
-template class DiffusiveFlux2< YVOps::GradY, YVOps::InterpC2FY >;
-template class DiffusiveFlux2< YVOps::GradZ, YVOps::InterpC2FZ >;
-
-template class DiffusiveFlux2< ZVOps::GradX, ZVOps::InterpC2FX >;
-template class DiffusiveFlux2< ZVOps::GradY, ZVOps::InterpC2FY >;
-template class DiffusiveFlux2< ZVOps::GradZ, ZVOps::InterpC2FZ >;
+DECLARE_DIFF_FLUX( SpatialOps::structured::SVolField );
+DECLARE_DIFF_FLUX( SpatialOps::structured::XVolField );
+DECLARE_DIFF_FLUX( SpatialOps::structured::YVolField );
+DECLARE_DIFF_FLUX( SpatialOps::structured::ZVolField );
 //
 //==========================================================================

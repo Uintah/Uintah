@@ -2,7 +2,7 @@
 #define Stress_Expr_h
 
 #include <expression/Expr_Expression.h>
-#include <CCA/Components/Wasatch/Operators/OperatorTypes.h>
+#include <spatialops/structured/FVStaggeredOperatorTypes.h>
 
 /**
  *  \class Stress
@@ -28,9 +28,9 @@ class Stress
 {
   const Expr::Tag visct_, vel1t_, vel2t_, dilt_;
 
-  typedef typename OperatorTypeBuilder< Interpolant, ViscT, StressT >::type  ViscInterpT;
-  typedef typename OperatorTypeBuilder< Gradient,    Vel1T, StressT >::type  Vel1GradT;  // jcs this will likely be insufficient
-  typedef typename OperatorTypeBuilder< Gradient,    Vel2T, StressT >::type  Vel2GradT;  // jcs this will likely be insufficient
+  typedef typename SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, ViscT, StressT >::type  ViscInterpT;
+  typedef typename SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Gradient,    Vel1T, StressT >::type  Vel1GradT;  // jcs this will likely be insufficient
+  typedef typename SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Gradient,    Vel2T, StressT >::type  Vel2GradT;  // jcs this will likely be insufficient
 
   const ViscInterpT* viscInterpOp_; ///< Interpolate viscosity to the face where we are building the stress
   const Vel1GradT*   vel1GradOp_;   ///< Calculate the velocity gradient dui/dxj at the stress face
@@ -94,8 +94,8 @@ class Stress< StressT, VelT, VelT, ViscT >
 {
   const Expr::Tag visct_, velt_, dilt_;
 
-  typedef typename OperatorTypeBuilder< Interpolant, ViscT, StressT >::type  ViscInterpT;
-  typedef typename OperatorTypeBuilder< Gradient,    VelT,  StressT >::type  VelGradT;
+  typedef typename SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, ViscT, StressT >::type  ViscInterpT;
+  typedef typename SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Gradient,    VelT,  StressT >::type  VelGradT;
 
   const ViscInterpT* viscInterpOp_; ///< Interpolate viscosity to the face where we are building the stress
   const VelGradT*    velGradOp_;    ///< Calculate the velocity gradient dui/dxj at the stress face
