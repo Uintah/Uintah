@@ -1,7 +1,8 @@
 #include "MomentumTransportEquation.h"
 
 //-- Wasatch includes --//
-#include <CCA/Components/Wasatch/Expressions/ScalarRHS.h>
+#include <CCA/Components/Wasatch/Expressions/MomentumPartialRHS.h>
+#include <CCA/Components/Wasatch/Expressions/MomentumRHS.h>
 #include <CCA/Components/Wasatch/Expressions/Stress.h>
 #include <CCA/Components/Wasatch/Expressions/PrimVar.h>
 #include <CCA/Components/Wasatch/Expressions/ConvectiveFlux.h>
@@ -192,11 +193,26 @@ namespace Wasatch{
     /*
       jcs still to do:
         - register dilatation expression (need only be done once, on scalar volume)
-        - create expressions to calculate div of fluxes.
-        - create expression for RHS of momentum, taking p, body force, and div of fluxes.
-        - create pressure expression.
+        - create pressure expression
         - create expression for body force
     */
+    const Expr::Tag bodyForce;  // for now, this is empty. 
+    const Expr::Tag pressure; // jcs need to fill in.
+
+    //_________________________________________________________
+    // register expression to calculate the partial RHS (absent
+    // pressure gradient) for use in the projection
+    const Expr::Tag rhsPart( thisMomTag.name() + "_rhs_partial", Expr::STATE_NONE );
+    factory.register_expression( rhsPart, new typename MomRHSPart<FieldT>::Builder( cfx, cfy, cfz,
+                                                                                    taux, tauy, tauz,
+                                                                                    bodyForce ) );
+    //__________________________________________
+    // The RHS (including the pressure gradient)
+    const Expr::Tag rhsFull( thisMomTag.name() + "_rhs_full", Expr::STATE_NONE );
+    const Expr::ExpressionID rhsID = factory.register_expression
+      ( rhsFull, new typename MomRHS<FieldT>::Builder( pressure, rhsPart ) );
+
+    return rhsID;
   }
 
   //==================================================================
@@ -213,8 +229,7 @@ namespace Wasatch{
                                                        Expr::Tag(momName,Expr::STATE_N),
                                                        Expr::Tag("dilatation",Expr::STATE_NONE),
                                                        params ) )
-  {
-  }
+  {}
 
   //------------------------------------------------------------------
 
