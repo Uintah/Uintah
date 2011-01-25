@@ -45,7 +45,6 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Arches/ExplicitSolver.h>
 #include <Core/Containers/StaticArray.h>
 #include <CCA/Components/Arches/Arches.h>
-#include <CCA/Components/Arches/MCRT/ArchesRMCRT/RMCRTRadiationModel.h>
 #include <CCA/Components/Arches/ArchesLabel.h>
 #include <CCA/Components/Arches/ArchesMaterial.h>
 #include <CCA/Components/Arches/BoundaryCondition.h>
@@ -154,13 +153,6 @@ ExplicitSolver::problemSetup(const ProblemSpecP& params)
     }
   }
   d_turbinlet = d_boundaryCondition->getturbinlet();
-
-  //RMCRT StandAlone solver:
-  db->getWithDefault("do_standalone_RMCRT",d_standAloneRMCRT, false);
-  if (d_standAloneRMCRT) {
-    d_RMCRTRadiationModel = scinew RMCRTRadiationModel(d_lab, d_boundaryCondition);
-    d_RMCRTRadiationModel->problemSetup(db);  
-  }  
 
   d_pressSolver = scinew PressureSolver(d_lab, d_MAlab,
                                           d_boundaryCondition,
@@ -584,10 +576,6 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       }
     }
 
-    if (d_standAloneRMCRT) { 
-      d_RMCRTRadiationModel->sched_solve( level, sched, d_timeIntegratorLabels[curr_level] );  
-    }
- 
     sched_computeDensityLag(sched, patches, matls,
                            d_timeIntegratorLabels[curr_level],
                            false);

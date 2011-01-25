@@ -56,7 +56,7 @@ endif
 ifeq ($(BUILD_ARCHES),yes)
   ARCHES   := $(SRCDIR)/Arches \
 	      $(ADIR)/fortran           $(ADIR)/Mixing \
-	      $(ADIR)/Radiation        $(ADIR)/Radiation/fortran $(ADIR)/MCRT/ArchesRMCRT \
+	      $(ADIR)/Radiation        $(ADIR)/Radiation/fortran $(ADIR)/RMCRT \
               $(SRCDIR)/SpatialOps 
   ifeq ($(BUILD_MPM),yes)
     MPMARCHES := $(SRCDIR)/MPMArches
