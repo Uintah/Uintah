@@ -3658,7 +3658,9 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 //             << " volnew = " << pvolume[idx] << endl;
         }
         if(pvelocitynew[idx].length() > flags->d_max_vel){
-          pvelocitynew[idx]=pvelocity[idx];
+          if(pvelocitynew[idx].length() >= pvelocity[idx].length()){
+            pvelocitynew[idx]=pvelocity[idx];
+          }
         }
       }
 
