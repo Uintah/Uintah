@@ -108,7 +108,8 @@ EnthalpySolver::~EnthalpySolver()
   delete d_source;
   delete d_rhsSolver;
   delete d_DORadiation;
-  delete d_RMCRT; 
+  if ( d_doRMCRT ) 
+    delete d_RMCRT; 
   if(d_perproc_patches && d_perproc_patches->removeReference())
     delete d_perproc_patches;
 
