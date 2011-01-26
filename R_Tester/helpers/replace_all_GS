@@ -84,8 +84,8 @@ end
 # Verify the user inputs
 set message = "\n "
 foreach indx ($choices[*]:q)  
-  set comp = `grep $indx $tmpFile | cut -f2 -d" "`
-  set test = `grep $indx $tmpFile | cut -f3 -d" "`
+  set comp = `grep ^$indx $tmpFile | cut -f2 -d" "`
+  set test = `grep ^$indx $tmpFile | cut -f3 -d" "`
   if ( $#opts > 0 )  then
     echo Replacing GS for $comp $test
     set message = ($message $comp "----" $test "\n")
@@ -105,10 +105,10 @@ set GS = `readlink goldStandard`
 set TS = `readlink TestScripts`
 set here = `pwd`
 foreach indx ($choices[*]:q)  
-  set comp = `grep $indx $tmpFile | cut -f2 -d" "`
-  set test = `grep $indx $tmpFile | cut -f3 -d" "`
+  set comp = `grep ^$indx $tmpFile | cut -f2 -d" "`
+  set test = `grep ^$indx $tmpFile | cut -f3 -d" "`
   if ( $#opts > 0 )  then
-  echo $opts
+    echo $opts
     set cmd = "$TS/helpers/replace_gold_standard $opts $GS/$comp $here/$comp-results  $test $logMessage"
     $cmd
   endif
