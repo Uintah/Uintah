@@ -293,6 +293,10 @@
     <strain_limit                  spec="OPTIONAL DOUBLE" />
     <StressIntensityF              spec="OPTIONAL DOUBLE" />
     <T0                            spec="OPTIONAL DOUBLE" />
+    <T_0                           spec="OPTIONAL DOUBLE" />
+    <C_0                           spec="OPTIONAL DOUBLE" />
+    <Gamma_0                       spec="OPTIONAL DOUBLE" />
+    <S_alpha                       spec="OPTIONAL DOUBLE" />
     <t1                            spec="OPTIONAL DOUBLE" />
     <t2                            spec="OPTIONAL DOUBLE" />
     <t3                            spec="OPTIONAL DOUBLE" />
