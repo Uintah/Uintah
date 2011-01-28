@@ -495,6 +495,8 @@ void Matrix3::polarRotationRMB(Matrix3& R) const
   double det = F.Determinant();
   if ( det <= 0.0 ) {
     cerr << "Singular matrix in polar decomposition..." << endl;
+    cerr << "F = " << F << endl;
+    cerr << "det = " << det << endl;
     exit(1);
   }
 
