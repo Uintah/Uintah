@@ -142,6 +142,10 @@ namespace Uintah {
                                         const PatchSet* patches,
                                         const bool recursion) const;
 
+    virtual void addInitialComputesAndRequires(Task* task,
+                                               const MPMMaterial* matl,
+                                               const PatchSet* patches) const;
+
     virtual double computeRhoMicroCM(double pressure,
                                      const double p_ref,
                                      const MPMMaterial* matl,

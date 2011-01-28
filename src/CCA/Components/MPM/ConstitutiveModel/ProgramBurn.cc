@@ -150,7 +150,6 @@ void ProgramBurn::initializeCMData(const Patch* patch,
   // Initialize the variables shared by all constitutive models
   // This method is defined in the ConstitutiveModel base class.
   initSharedDataForExplicit(patch, matl, new_dw);
-
   ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
 
   ParticleVariable<double> pProgress;
@@ -533,6 +532,14 @@ void ProgramBurn::addComputesAndRequires(Task* task,
 
   task->requires(Task::OldDW, pProgressFLabel,   matlset, Ghost::None);
   task->computes(pProgressFLabel_preReloc,       matlset);
+}
+
+void ProgramBurn::addInitialComputesAndRequires(Task* task,
+                                         const MPMMaterial* matl,
+                                         const PatchSet*) const
+{ 
+  const MaterialSubset* matlset = matl->thisMaterial();
+  task->computes(pProgressFLabel,       matlset);
 }
 
 void 
