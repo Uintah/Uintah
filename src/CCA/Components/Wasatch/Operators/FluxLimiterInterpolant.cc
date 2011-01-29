@@ -4,7 +4,7 @@
 #include <cmath>
 #include "spatialops/SpatialOpsDefs.h"
 #include "spatialops/structured/FVTools.h"
-#include "spatialops/structured/FVStaggeredIndexHelper.h"
+#include "spatialops/structured/matrix/FVStaggeredIndexHelper.h"
 
 //--------------------------------------------------------------------
 
