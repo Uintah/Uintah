@@ -99,7 +99,7 @@
   <DataArchiver>
     <filebase>Steady.uda</filebase>
     <!-- <outputInterval> 1.0e-5 </outputInterval> -->
-    <outputTimestepInterval> 100 </outputTimestepInterval>
+    <outputTimestepInterval> 10 </outputTimestepInterval>
     <compression> gzip </compression>
     <save label="rho_CC"/>
     <save label="sp_vol_CC"/>
