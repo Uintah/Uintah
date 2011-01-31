@@ -19,7 +19,7 @@
     <delt_min>            0.0       </delt_min>
     <delt_max>            1.0       </delt_max>
     <delt_init>           1.e-10    </delt_init>
-    <max_Timesteps>       310       </max_Timesteps>
+    <max_Timesteps>       100       </max_Timesteps>
     <max_delt_increase>   0.7       </max_delt_increase>
     <timestep_multiplier> 0.70      </timestep_multiplier>
   </Time>
