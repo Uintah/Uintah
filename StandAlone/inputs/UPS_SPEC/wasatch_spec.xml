@@ -117,17 +117,33 @@
 
     </TransportEquation>
 
-
-    <MomentumEquations		spec="OPTIONAL NO_DATA">
-      <X-Velocity		spec="REQUIRED STRING" />
+   
+    <MomentumEquations	spec="OPTIONAL NO_DATA">
+      <X-Velocity		spec="OPTIONAL STRING" />
       <Y-Velocity		spec="OPTIONAL STRING" />
       <Z-Velocity		spec="OPTIONAL STRING" />
-      <X-Momentum		spec="REQUIRED STRING" />
+      <X-Momentum		spec="OPTIONAL STRING" />
       <Y-Momentum		spec="OPTIONAL STRING" />
       <Z-Momentum		spec="OPTIONAL STRING" />
       <Viscosity		spec="REQUIRED NO_DATA">
         <NameTag		spec="REQUIRED" />
       </Viscosity>
+      <Pressure         spec="OPTIONAL NO_DATA">
+          <Parameters       spec="OPTIONAL NO_DATA">      
+            <criteria       spec="OPTIONAL STRING 'Absolute relative'" />                     
+            <jump           spec="OPTIONAL INTEGER" />                                        
+            <logging        spec="OPTIONAL INTEGER 'positive'" />                             
+            <maxiterations          spec="OPTIONAL INTEGER 'positive'" />                             
+            <norm                   spec="OPTIONAL STRING 'LInfinity linfinity L1 l1 L2 l2'" />       
+            <npost                  spec="REQUIRED INTEGER" />                                        
+            <npre                   spec="REQUIRED INTEGER" />                                        
+            <preconditioner         spec="REQUIRED STRING 'none, pfmg'" />                            
+            <outputEquations        spec="OPTIONAL BOOLEAN" />                                        
+            <skip                   spec="REQUIRED INTEGER" />                                        
+            <solver                 spec="REQUIRED STRING 'smg, SMG, PFMG, pfmg, SparseMSG, sparsemsg, CG, cg, Hybrid, hybrid, GMRES, gmres amg'" />                               
+            <tolerance              spec="REQUIRED DOUBLE" />                                         
+          </Parameters>
+      </Pressure>
     </MomentumEquations>
 
     <!-- ================== -->
