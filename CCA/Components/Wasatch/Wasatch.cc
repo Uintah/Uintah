@@ -43,6 +43,7 @@
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/BoundaryConditions/BCDataArray.h>
 #include <Core/Grid/BoundaryConditions/BoundCond.h>
+#include <CCA/Ports/SolverInterface.h>
 
 //-- SpatialOps includes --//
 #include <spatialops/structured/FVStaggered.h>
@@ -167,6 +168,12 @@ namespace Wasatch{
     Uintah::SimpleMaterial* mymaterial = scinew Uintah::SimpleMaterial();  
     sharedState->registerSimpleMaterial(mymaterial);
 
+    // we are able to get the solver port from here
+    //Uintah::SolverInterface* solver = dynamic_cast<Uintah::SolverInterface*>(getPort("solver"));
+    //if(!solver) {
+    //  throw Uintah::InternalError("Wasatch: couldn't get solver port", __FILE__, __LINE__);
+    //}
+    
     //
     // create expressions explicitly defined in the input file.  These
     // are typically associated with, e.g. initial conditions.
@@ -179,11 +186,22 @@ namespace Wasatch{
     // Build transport equations.  This registers all expressions as
     // appropriate for solution of each transport equation.
     //
-    for( Uintah::ProblemSpecP transEqnParams=wasatchParams->findBlock("TransportEquation");
-         transEqnParams != 0;
-         transEqnParams=transEqnParams->findNextBlock("TransportEquation") ){
-      adaptors_.push_back( parse_equation( transEqnParams, graphCategories_ ) );
+    for( Uintah::ProblemSpecP momEqnParams=wasatchParams->findBlock("TransportEquation");
+         momEqnParams != 0;
+         momEqnParams=momEqnParams->findNextBlock("TransportEquation") ){
+      adaptors_.push_back( parse_equation( momEqnParams, graphCategories_ ) );
     }
+    
+    //
+    // Build momentum transport equations.  This registers all expressions 
+    // required for solution of each momentum equation.
+    //
+    for( Uintah::ProblemSpecP transEqnParams=wasatchParams->findBlock("MomentumEquations");
+        transEqnParams != 0;
+        transEqnParams=transEqnParams->findNextBlock("MomentumEquations") ){
+      adaptors_.push_back( parse_momentum_equations( transEqnParams, graphCategories_ ) );
+    }
+    
 
     timeStepper_ = scinew TimeStepper( sharedState_->get_delt_label(),
                                        *graphCategories_[ ADVANCE_SOLUTION ]->exprFactory );

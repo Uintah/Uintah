@@ -1,12 +1,16 @@
 #ifndef Pressure_Expr_h
 #define Pressure_Expr_h
+//-- SpatialOps includes --//
+#include <spatialops/structured/FVStaggered.h>
+#include <spatialops/structured/FVStaggeredOperatorTypes.h>
 
+//-- ExprLib Includes --//
 #include <expression/Expr_Expression.h>
 
 //-- Wasatch Includes --//
 #include <CCA/Components/Wasatch/FieldTypes.h>
+#include <CCA/Components/Wasatch/Operators/Operators.h>
 #include <CCA/Components/Wasatch/Operators/OperatorTypes.h>
-
 
 //-- Uintah Includes --//
 #include <Core/Grid/Variables/VarLabel.h>
@@ -24,6 +28,9 @@ namespace Wasatch{
  *  \class Pressure
  *
  *  \brief Expression to form and solve the poisson system for pressure.
+ *  \author James C. Sutherland
+ *  \author Tony Saad
+ *  \date January, 2011
  *
  *  NOTE: this expression BREAKS WITH CONVENTION!  Notably, it has
  *  uintah tenticles that reach into it, and mixes SpatialOps and
@@ -47,17 +54,23 @@ class Pressure
 
   const Uintah::SolverParameters& solverParams_;
   Uintah::SolverInterface& solver_;
-  const Uintah::VarLabel matrixLabel_;
+  const Uintah::VarLabel* matrixLabel_;
+  const Uintah::VarLabel* pressureLabel_;
+  const Uintah::VarLabel* prhsLabel_;
 
   const SVolField* d2rhodt2_;
   const XVolField* fx_;
   const YVolField* fy_;
   const ZVolField* fz_;
 
+  // build interpolant operators
+  typedef OperatorTypeBuilder< Interpolant, XVolField, SVolField >::type  InterpXVolSVol;
+  typedef OperatorTypeBuilder< Interpolant, YVolField, SVolField >::type  InterpYVolSVol;
+  typedef OperatorTypeBuilder< Interpolant, ZVolField, SVolField >::type  InterpZVolSVol;
   const InterpXVolSVol* interpX_;
   const InterpYVolSVol* interpY_;
   const InterpZVolSVol* interpZ_;
-
+  
   typedef Uintah::CCVariable<Uintah::Stencil7> MatType;
   MatType matrix_;
 
@@ -77,11 +90,11 @@ public:
     const Uintah::SolverParameters& sparams_;
     Uintah::SolverInterface& solver_;
   public:
-    Builder( const Expr::Tag& fxtag,
-             const Expr::Tag& fytag,
-             const Expr::Tag& fztag,
+    Builder( Expr::Tag& fxtag,
+             Expr::Tag& fytag,
+             Expr::Tag& fztag,
              const Expr::Tag& d2rhodt2tag,
-             const Uintah::SolverParameters& sparams,
+             Uintah::SolverParameters& sparams,
              Uintah::SolverInterface& solver );
 
     Expr::ExpressionBase*
@@ -96,7 +109,7 @@ public:
    *         expression the information requried to schedule the
    *         linear solver.
    */
-  void schedule_solver( const LevelP& level, SchedulerP& sched, const MaterialSet* materials );
+  void schedule_solver( const Uintah::LevelP& level, Uintah::SchedulerP& sched, const Uintah::MaterialSet* materials );
 
   /**
    *  \brief allows Wasatch::TaskInterface to reach in and provide
@@ -119,7 +132,10 @@ public:
    *  matrix.  All other variables should be expressed as dependencies
    *  through the advertise_dependents method.
    */
-  void bind_uintah_vars( Uintah::DataWarehouse* const );
+  void bind_uintah_vars( Uintah::DataWarehouse* const dw,
+                         const Uintah::PatchSubset* const patches,
+                         const Uintah::MaterialSubset* const materials );
+  
 
   void advertise_dependents( Expr::ExprDeps& exprDeps );
   void bind_fields( const Expr::FieldManagerList& fml );

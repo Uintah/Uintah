@@ -1,18 +1,17 @@
 #include "Pressure.h"
 
 //-- Wasatch Includes --//
+#include <CCA/Components/Wasatch/FieldAdaptor.h>
+#include <CCA/Components/Wasatch/FieldTypes.h>
 
 //-- Uintah Includes --//
 #include <CCA/Ports/SolverInterface.h>
-#include <CCA/Ports/Scheduler.h>
-#include <Core/Grid/Task.h>
-#include <Core/Grid/Grid.h>
-#include <Core/Grid/Level.h>
-
+  
 //-- SpatialOps Includes --//
 #include <spatialops/OperatorDatabase.h>
 #include <spatialops/structured/SpatialFieldStore.h>
 
+namespace Wasatch {
 
 Pressure::Pressure( const Expr::Tag& fxtag,
                     const Expr::Tag& fytag,
@@ -22,7 +21,7 @@ Pressure::Pressure( const Expr::Tag& fxtag,
                     Uintah::SolverInterface& solver,
                     const Expr::ExpressionID& id,
                     const Expr::ExpressionRegistry& reg )
-  : Expr::Expression<FieldT>(id,reg),
+  : Expr::Expression<SVolField>(id,reg),
 
     fxt_( fxtag ),
     fyt_( fytag ),
@@ -40,7 +39,14 @@ Pressure::Pressure( const Expr::Tag& fxtag,
     solver_( solver ),
 
     // note that this does not provide any ghost entries in the matrix...
-    matrixLabel_( Uintah::VarLabel::create( "pressure_matrix", MatType::getTypeDescription() ) )
+    matrixLabel_  ( Uintah::VarLabel::create( "pressure_matrix", Uintah::CCVariable<Uintah::Stencil7>::getTypeDescription() ) ),
+  pressureLabel_( Uintah::VarLabel::create( "pressure_field", 
+                                           Wasatch::getUintahFieldTypeDescriptor<SVolField>(),
+                                           Wasatch::getUintahGhostDescriptor<SVolField>() ) ),
+  prhsLabel_    ( Uintah::VarLabel::create( "pressure_rhs", 
+                                           Wasatch::getUintahFieldTypeDescriptor<SVolField>(),
+                                           Wasatch::getUintahGhostDescriptor<SVolField>() ) )
+  
 {
 }
 
@@ -48,23 +54,24 @@ Pressure::Pressure( const Expr::Tag& fxtag,
 
 Pressure::~Pressure()
 {
-  Uintah::VarLabel::destroy( prhsLabel_   );
-  Uintah::VarLabel::destroy( matrixLabel_ );
+  Uintah::VarLabel::destroy( pressureLabel_ );
+  Uintah::VarLabel::destroy( prhsLabel_     );
+  Uintah::VarLabel::destroy( matrixLabel_   );
 }
 
 //--------------------------------------------------------------------
 
 void
-Pressure::schedule_solver( const LevelP& level,
-                           SchedulerP& sched,
-                           const MaterialSet* materials )
+Pressure::schedule_solver( const Uintah::LevelP& level,
+                          Uintah::SchedulerP& sched,
+                          const Uintah::MaterialSet* materials )
 {
   // need to get the pressure label...
   // need to get the pressure rhs label...
-  /*
-  solver->scheduleSolve( level, sched, materials, matrixLabel_, 
-                        Task::NewDW, lb_->pressure, false, lb_->pressure_rhs, Task::NewDW, 0, Task::OldDW, solverParams_ );
-  */
+  const Uintah::VarLabel* pressure_lbl;
+  const Uintah::VarLabel* rhs_lbl;
+  //solver->scheduleSolve( level, sched, materials, matrixLabel_, 
+  //                      Task::NewDW, pressureLabel_, false, prshLabel_, Task::NewDW, 0, Task::OldDW, solverParams_ );
 }
 
 //--------------------------------------------------------------------
@@ -81,15 +88,49 @@ Pressure::declare_uintah_vars( Uintah::Task& task,
 //--------------------------------------------------------------------
 
 void
-Pressure::bind_uintah_vars( Uintah::DataWarehouse* const,
+Pressure::bind_uintah_vars( Uintah::DataWarehouse* const dw,
                             const Uintah::PatchSubset* const patches,
                             const Uintah::MaterialSubset* const materials )
 {
+  // We should probably move the matrix construction to the evaluate() method.
+  // need a way to get access to the patch so that we can loop over the cells.
+  // p is current cell
+  int p = 0;
+  // n: north, s: south, e: east, w: west, t: top, b: bottom coefficient
+  int n=0, s=0, e=0, w=0, t=0, b=0;
+  
+  if (doX_) {
+    p += 2;
+    e = -1;
+    w = -1;
+  }
+  if (doY_) {
+    p += 2;
+    n = -1;
+    s = -1;
+  }
+  if (doZ_) {
+    p += 2;
+    t = -1;
+    b = -1;
+  }
+  
+  //
   for( int ip=0; ip<patches->size(); ++ip ){
     const Uintah::Patch* const patch = patches->get( ip );
     for( int im=0; im<materials->size(); ++im ){
       const int material = materials->get( im );
       dw->allocateAndPut( matrix_, matrixLabel_, material, patch );
+      //
+      // construct the coefficient matrix: \nabla^2
+      for(Uintah::CellIterator iter(patch->getExtraCellIterator()); !iter.done(); iter++){
+        IntVector iCell = *iter;
+        Uintah::Stencil7&  coefs = matrix_[iCell];
+        coefs.p = p; 
+        coefs.n = n;   coefs.s = s;
+        coefs.e = e;   coefs.w = w; 
+        coefs.t = t;   coefs.b = b;
+      }
     }
   }
 }
@@ -115,10 +156,10 @@ Pressure::bind_fields( const Expr::FieldManagerList& fml )
   const Expr::FieldManager<YVolField>& yvfm = fml.field_manager<YVolField>();
   const Expr::FieldManager<ZVolField>& zvfm = fml.field_manager<ZVolField>();
 
-  if( doX_    )  fx_       = &field_ref( fxt_       );
-  if( doX_    )  fy_       = &field_ref( fyt_       );
-  if( doX_    )  fz_       = &field_ref( fzt_       );
-  if( doDens_ )  d2rhodt2_ = &field_ref( d2rhodt2t_ );
+  if( doX_    )  fx_       = &xvfm.field_ref( fxt_       );
+  if( doY_    )  fy_       = &yvfm.field_ref( fyt_       );
+  if( doZ_    )  fz_       = &zvfm.field_ref( fzt_       );
+  if( doDens_ )  d2rhodt2_ = &svfm.field_ref( d2rhodt2t_ );
 }
 
 //--------------------------------------------------------------------
@@ -136,13 +177,15 @@ Pressure::bind_operators( const SpatialOps::OperatorDatabase& opDB )
 void
 Pressure::evaluate()
 {
-  std::vector<SVolField>& results = this->get_value_vec();
+  typedef std::vector<SVolField*> SVolFieldVec;
+  SVolFieldVec& results = this->get_value_vec();
 
   // jcs: can we do the linear solve in place? We probably can. If so,
   // we would only need one field, not two...
-  SVolField& pressure = results[0];
-  SVolField& rhs = results[1];
-
+  SVolField* p = results[0];
+  SVolField* r = results[1];
+  SVolField& pressure = *p;
+  SVolField& rhs = *r;
   SpatialOps::SpatFldPtr<SVolField> tmp = SpatialOps::SpatialFieldStore<SVolField>::self().get( pressure );
 
   //___________________________________________________
@@ -165,7 +208,7 @@ Pressure::evaluate()
   }
 
   if( doDens_ ){
-    rhs += *d2rhodt2t_;
+    rhs += *d2rhodt2_;
   }
 
   //_________________________________________________
@@ -175,11 +218,11 @@ Pressure::evaluate()
 
 //--------------------------------------------------------------------
 
-Pressure::Builder::Builder( const Expr::Tag& fxtag,
-                            const Expr::Tag& fytag,
-                            const Expr::Tag& fztag,
+Pressure::Builder::Builder( Expr::Tag& fxtag,
+                            Expr::Tag& fytag,
+                            Expr::Tag& fztag,
                             const Expr::Tag& d2rhodt2tag,
-                            const Uintah::SolverParameters& sparams,
+                            Uintah::SolverParameters& sparams,
                             Uintah::SolverInterface& solver )
  : fxt_( fxtag ),
    fyt_( fytag ),
