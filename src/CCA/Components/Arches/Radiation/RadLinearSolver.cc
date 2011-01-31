@@ -137,6 +137,8 @@ RadLinearSolver::problemSetup(const ProblemSpecP& params)
   int ierr = PetscInitialize(&argc, &argv, PETSC_NULL, PETSC_NULL);
   if(ierr)
     throw UintahPetscError(ierr, "PetscInitialize", __FILE__, __LINE__);
+  
+  delete argv;
 }
 
 
