@@ -75,7 +75,10 @@ SRCS += $(SRCDIR)/Arches.cc \
 	$(SRCDIR)/ExplicitTimeInt.cc 
 
 ifeq ($(HAVE_PETSC),yes)
-  SRCS += $(SRCDIR)/PetscSolver.cc $(SRCDIR)/Filter.cc
+  SRCS += $(SRCDIR)/PetscSolver.cc \
+          $(SRCDIR)/Filter.cc \
+          $(SRCDIR)/PetscCommon.cc
+  
 else
   SRCS += $(SRCDIR)/FakePetscSolver.cc
 endif

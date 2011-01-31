@@ -44,9 +44,6 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Parallel/Parallel.h>
 #include <Core/Grid/SimulationState.h>
 
-// If I'm not mistaken, this #define replaces the CHKERRQ() from PETSc itself...                                           
-#undef CHKERRQ
-#define CHKERRQ(x) if(x) throw UintahPetscError(x, __FILE__, __FILE__, __LINE__);
 
 using namespace std;
 using namespace Uintah;
@@ -113,11 +110,9 @@ Filter::sched_buildFilterMatrix(const LevelP& level,
   IntVector periodic_vector = level->getPeriodicBoundaries();
   d_3d_periodic = (periodic_vector == IntVector(1,1,1));
 
-  Task* tsk = scinew Task("Filter::BuildFilterMatrix",
-                          this,
+  Task* tsk = scinew Task("Filter::BuildFilterMatrix",this,
                           &Filter::buildFilterMatrix);
-  // Requires
-  // coefficient for the variable for which solve is invoked
+
 
   sched->addTask(tsk, d_perproc_patches, matls);
 }
@@ -151,10 +146,13 @@ Filter::matrixCreate(const PatchSet* allpatches,
   vector<int> numCells(numProcessors, 0);
   vector<int> startIndex(numProcessors);
   int totalCells = 0;
+  
   for(int s=0;s<allpatches->size();s++){
+  
     startIndex[s]=totalCells;
     int mytotal = 0;
     const PatchSubset* patches = allpatches->getSubset(s);
+  
     for(int p=0;p<patches->size();p++){
       const Patch* patch = patches->get(p);
 
@@ -261,22 +259,27 @@ Filter::matrixCreate(const PatchSet* allpatches,
   // for box filter of size 2 matrix width is 27
   d_nz = 27; // defined in Filter.h
   o_nz = 26;
+  
+  
+  //__________________________________
+  //  create the Petsc matrix A
   proc0cout << "Creating the patch matrix... \n Note: if sus crashes here, try reducing your resolution.\n"<<endl;
   int ierr = MatCreateMPIAIJ(PETSC_COMM_WORLD, numlrows, numlcolumns, globalrows,
                              globalcolumns, d_nz, PETSC_NULL, o_nz, PETSC_NULL, &A);
   if(ierr)
     throw UintahPetscError(ierr, "MatCreateMPIAIJ", __FILE__, __LINE__);
 
-  /* 
-     Create vectors.  Note that we form 1 vector from scratch and
-     then duplicate as needed.
-  */
+  //__________________________________
+  //  Create Petsc vectors.  Note that we form 1 vector from scratch and
+  //  then duplicate as needed.
   ierr = VecCreateMPI(PETSC_COMM_WORLD,numlrows, globalrows,&d_x);
   if(ierr)
     throw UintahPetscError(ierr, "VecCreateMPI", __FILE__, __LINE__);
+    
   ierr = VecSetFromOptions(d_x);
   if(ierr)
     throw UintahPetscError(ierr, "VecSetFromOptions", __FILE__, __LINE__);
+  
   ierr = VecDuplicate(d_x,&d_b);
   if(ierr)
     throw UintahPetscError(ierr, "VecDuplicate(d_b)", __FILE__, __LINE__);
@@ -329,74 +332,91 @@ Filter::setFilterMatrix(const ProcessorGroup* ,
      // fill matrix for internal patches
      // make sure that sizeof(d_petscIndex) is the last patch, i.e., appears last in the
      // petsc matrix
-     IntVector lowIndex = patch->getExtraCellLowIndex(Arches::ONEGHOSTCELL);
+     IntVector lowIndex  = patch->getExtraCellLowIndex(Arches::ONEGHOSTCELL);
      IntVector highIndex = patch->getExtraCellHighIndex(Arches::ONEGHOSTCELL);
 
      Array3<int> l2g(lowIndex, highIndex);
      l2g.copy(d_petscLocalToGlobal[patch]);
+     
      int flowID = d_boundaryCondition->flowCellType();
+     
      for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
        for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
          for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+     
            IntVector currCell(colX, colY, colZ);
+     
            int bndry_count=0;
            if  (!(cellType[IntVector(colX+1, colY, colZ)] == flowID))
              bndry_count++;
+     
            if  (!(cellType[IntVector(colX-1, colY, colZ)] == flowID))
              bndry_count++;
+     
            if  (!(cellType[IntVector(colX, colY+1, colZ)] == flowID))
              bndry_count++;
+     
            if  (!(cellType[IntVector(colX, colY-1, colZ)] == flowID))
              bndry_count++;
+     
            if  (!(cellType[IntVector(colX, colY, colZ+1)] == flowID))
              bndry_count++;
+     
            if  (!(cellType[IntVector(colX, colY, colZ-1)] == flowID))
              bndry_count++;
+     
            bool corner = (bndry_count==3);
            int count = 0;
            double totalVol = 0.0;
+           
            for (int kk = -1; kk <= 1; kk ++) {
              for (int jj = -1; jj <= 1; jj ++) {
                for (int ii = -1; ii <= 1; ii ++) {
+           
                  IntVector filterCell = IntVector(colX+ii,colY+jj,colZ+kk);
-                 double vol = cellinfo->sew[colX+ii]*cellinfo->sns[colY+jj]*
-                   cellinfo->stb[colZ+kk];
-                 if (!(corner)) vol *= (1.0-0.5*abs(ii))*
-                   (1.0-0.5*abs(jj))*(1.0-0.5*abs(kk));
+                 double vol = cellinfo->sew[colX+ii] * cellinfo->sns[colY+jj] * cellinfo->stb[colZ+kk];
+                
+                 if (!(corner)){
+                  vol *= (1.0 - 0.5 * abs(ii)) * (1.0 - 0.5 * abs(jj)) * (1.0 - 0.5 * abs(kk));
+                 }
                  col[count] = l2g[filterCell];  //ab
 #if 1
                  // on the boundary
-                 if (cellType[currCell] != flowID)
+                 if (cellType[currCell] != flowID){
                    if (filterCell == currCell) {
                      totalVol = vol;
                      value[count] = vol;
-                   }
-                   else
+                   }else{
                      value[count] = 0;
-                 else if ((col[count] != -1234)&&
-                     (cellType[filterCell] == flowID)) {
+                   }
+                 }else if ((col[count] != -1234) && (cellType[filterCell] == flowID)) {
                    totalVol += vol;
                    value[count] = vol;
                  }
-                 else 
+                 else{
                    value[count] = 0;
-#else
-                 if (col[count] != -1234) // not on the boundary
+                 }
+#else           
+                 if (col[count] != -1234){ // not on the boundary
                    totalVol += vol;
+                 }
+                 
                  value[count] = vol;
 #endif
                  count++;
                }
              }
            }
-           for (int ii = 0; ii < d_nz; ii++)
+           
+           for (int ii = 0; ii < d_nz; ii++){
              value[ii] /= totalVol;
+           }
+           
            int row = l2g[IntVector(colX,colY,colZ)];
 
 #if SCI_ASSERTION_LEVEL > 0
-           for(int i=0;i<d_nz;i++)
-           {
-            ASSERT(!isnan(value[i]));
+           for(int i=0;i<d_nz;i++){
+             ASSERT(!isnan(value[i]));
            }
 #endif           
            ierr = MatSetValues(A,1,&row,d_nz,col,value,INSERT_VALUES);
@@ -429,6 +449,3 @@ Filter::destroyMatrix()
   if(ierr)
     throw UintahPetscError(ierr, "MatDestroy", __FILE__, __LINE__);
 }
-
-
-
