@@ -104,8 +104,6 @@ public:
       // Problem setup
       void problemSetup(const ProblemSpecP& params);
 
-      // to close petsc 
-      void finalizeSolver();
 
       void matrixCreate(const PatchSet* allpatches,
                         const PatchSubset* mypatches);
@@ -133,22 +131,24 @@ public:
 protected:
 
 private:
-      int numlrows;
-      int numlcolumns;
-      int globalrows;
-      int globalcolumns;
+
+      int d_numlrows;
+      int d_numlcolumns;
+      int d_globalrows;
+      int d_globalcolumns;
       int d_nz;
       int o_nz;
+
+
       string d_pcType;
       string d_kspType;
       int d_overlap;
       int d_fill;
       int d_maxSweeps;
-      bool d_shsolver;
+//      bool d_shsolver;
       double d_tolerance; // convergence tolerence
-      double d_initResid;
-      double d_residual;
-   const ProcessorGroup* d_myworld;
+      const ProcessorGroup* d_myworld;
+      
 #ifdef HAVE_PETSC
    map<const Patch*, int> d_petscGlobalStart;
    map<const Patch*, Array3<int> > d_petscLocalToGlobal;
