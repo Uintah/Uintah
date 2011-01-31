@@ -54,10 +54,7 @@ namespace Wasatch{
    *  \param params the tag from the input file specifying the
    *         transport equation.
    *
-   *  \param gc the GraphCategories
-   *
-   *  \param ts the TimeStepper object that we will load this
-   *         transport equation on.
+   *  \param gc the GraphCategories.
    *
    *  \return an EqnTimestepAdaptorBase object that can be used to
    *          plug this transport equation into a TimeStepper.
@@ -65,6 +62,20 @@ namespace Wasatch{
   EqnTimestepAdaptorBase*
   parse_equation( Uintah::ProblemSpecP params,
                   GraphCategories& gc );
+  
+  /**
+   *  \brief Build the momentum equation specified by "params"
+   *
+   *  \param params The XML block from the input file specifying the
+   *         momentum equation. This will be <MomentumEquations>.
+   *
+   *  \param gc The GraphCategories.
+   *
+   *  \return an EqnTimestepAdaptorBase object that can be used to
+   *          plug this transport equation into a TimeStepper.
+   */  
+  EqnTimestepAdaptorBase* parse_momentum_equations( Uintah::ProblemSpecP params,
+                                                   GraphCategories& gc );
 
   /** @} */
 

@@ -40,7 +40,8 @@ SRCS     +=                             \
 	$(SRCDIR)/PrimVar.cc		\
 	$(SRCDIR)/ScalarRHS.cc		\
 	$(SRCDIR)/SetCurrentTime.cc	\
-	$(SRCDIR)/Stress.cc
+	$(SRCDIR)/Stress.cc \
+  $(SRCDIR)/Pressure.cc
 
 SUBDIRS := \
         $(SRCDIR)/MMS

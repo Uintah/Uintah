@@ -9,6 +9,7 @@
 
 //-- Uintah includes --//
 #include <Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/Parallel/UintahParallelComponent.h>
 
 
 namespace Wasatch{
@@ -16,6 +17,8 @@ namespace Wasatch{
   /**
    *  \ingroup WasatchCore
    *  \class MomentumTransportEquation
+   *  \author James C. Sutherland
+   *  \author Tony Saad
    *  \date January, 2011
    *
    *  \brief Creates a momentum transport equation
@@ -46,12 +49,12 @@ namespace Wasatch{
     ~MomentumTransportEquation();
 
     /**
-     *  \brief setup the boundary conditions associated with this transport equation
+     *  \brief setup the boundary conditions associated with this momentum equation
      */
     void setup_boundary_conditions( Expr::ExpressionFactory& factory );
 
     /**
-     *  \brief setup the initial conditions for this transport equation.
+     *  \brief setup the initial conditions for this momentum equation.
      */
     Expr::ExpressionID initial_condition( Expr::ExpressionFactory& icFactory );
 
