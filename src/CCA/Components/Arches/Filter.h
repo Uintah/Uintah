@@ -32,18 +32,19 @@ DEALINGS IN THE SOFTWARE.
 #ifndef Uintah_Components_Arches_Filter_h
 #define Uintah_Components_Arches_Filter_h
 
-#include <sci_defs/petsc_defs.h>
 
 #include <CCA/Components/Arches/CellInformationP.h>
-#include <CCA/Ports/SchedulerP.h>
+#include <CCA/Components/Arches/PetscCommon.h>
 #include <CCA/Ports/DataWarehouseP.h>
+#include <CCA/Ports/SchedulerP.h>
+#include <Core/Containers/Array1.h>
+#include <Core/Exceptions/UintahPetscError.h>
 #include <Core/Grid/LevelP.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Variables/Array3.h>
 #include <Core/Grid/Variables/CCVariable.h>
-#include <Core/Exceptions/UintahPetscError.h>
+#include <sci_defs/petsc_defs.h>
 
-#include <Core/Containers/Array1.h>
 
 #ifdef HAVE_PETSC
 #undef PETSC_USE_LOG
@@ -55,11 +56,8 @@ extern "C" {
 namespace Uintah {
 
 class ProcessorGroup;
- class ArchesLabel;
-
-using namespace SCIRun;
+class ArchesLabel;
 class BoundaryCondition;
-
 
 /**************************************
 CLASS
@@ -133,7 +131,8 @@ public:
   void setFilterMatrix(const ProcessorGroup* pc, 
                        const Patch* patch,
                        CellInformation* cellinfo, 
-                       constCCVariable<int>& cellType);
+                       constCCVariable<int>& cellType);            
+                       
   void destroyMatrix();
   
 //______________________________________________________________________
@@ -167,6 +166,7 @@ bool applyFilter(const ProcessorGroup* ,
 #endif
   IntVector inputLo = idxLo;
   IntVector inputHi = idxHi;
+  
   if (d_3d_periodic) {
     const Level* level = patch->getLevel();
     IntVector domain_low, domain_high;
@@ -184,8 +184,10 @@ bool applyFilter(const ProcessorGroup* ,
   for (int colZ = inputLo.z(); colZ <= inputHi.z(); colZ ++) {
     for (int colY = inputLo.y(); colY <= inputHi.y(); colY ++) {
       for (int colX = inputLo.x(); colX <= inputHi.x(); colX ++) {
+        
         vecvaluex = var[IntVector(colX, colY, colZ)];
         int row = l2g[IntVector(colX, colY, colZ)];         
+        
         ASSERT(!isnan(vecvaluex));
         ierr = VecSetValue(d_x, row, vecvaluex, INSERT_VALUES);
         if(ierr)
@@ -194,65 +196,55 @@ bool applyFilter(const ProcessorGroup* ,
     }
   }
 
+  //__________________________________
+  //  Matrix A
   ierr = MatAssemblyBegin(A,MAT_FINAL_ASSEMBLY);
   if(ierr)
     throw UintahPetscError(ierr, "MatAssemblyBegin", __FILE__, __LINE__);
+  
   ierr = MatAssemblyEnd(A,MAT_FINAL_ASSEMBLY);
-#if 0
-  ierr = MatView(A, PETSC_VIEWER_STDOUT_WORLD);
-#endif
-
   if(ierr)
     throw UintahPetscError(ierr, "MatAssemblyEnd", __FILE__, __LINE__);
+
+  //ierr = MatView(A, PETSC_VIEWER_STDOUT_WORLD);
+
+
+  //__________________________________
+  //  Vector B
   ierr = VecAssemblyBegin(d_b);
   if(ierr)
     throw UintahPetscError(ierr, "VecAssemblyBegin", __FILE__, __LINE__);
+  
   ierr = VecAssemblyEnd(d_b);
   if(ierr)
     throw UintahPetscError(ierr, "VecAssemblyEnd", __FILE__, __LINE__);
+  
+  //__________________________________
+  //  Vector X
   ierr = VecAssemblyBegin(d_x);
   if(ierr)
     throw UintahPetscError(ierr, "VecAssemblyBegin", __FILE__, __LINE__);
+  
   ierr = VecAssemblyEnd(d_x);
   if(ierr)
     throw UintahPetscError(ierr, "VecAssemblyEnd", __FILE__, __LINE__);
+  
+  //__________________________________
+  //  Solve 
   ierr = MatMult(A, d_x, d_b);
   if(ierr)
     throw UintahPetscError(ierr, "MatMult", __FILE__, __LINE__);
+  
+  
+  //__________________________________
   // copy vector b in the filterVar array
 #if 0
   ierr = VecView(d_x, PETSC_VIEWER_STDOUT_WORLD);
   ierr = VecView(d_b, PETSC_VIEWER_STDOUT_WORLD);
 #endif
-  double* xvec;
-  ierr = VecGetArray(d_b, &xvec);
-  if(ierr)
-    throw UintahPetscError(ierr, "VecGetArray", __FILE__, __LINE__);
 
-  PetscInt begin, end;
-  //get the ownership range so we know where the local indicing on this processor begins
-  VecGetOwnershipRange(d_b, &begin, &end);
 
-  for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-    for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-        int row = l2g[IntVector(colX, colY, colZ)]-begin;
-        
-        //verify this processor owns this node
-        ASSERTRANGE(l2g[IntVector(colX, colY, colZ)] ,begin,end);
-
-        filterVar[IntVector(colX, colY, colZ)] = xvec[row];
-      }
-    }
-  }
-#if 0
-  cerr << "In the filter class" << endl;
-  var.print(cerr);
-  filterVar.print(cerr);
-#endif
-  ierr = VecRestoreArray(d_b, &xvec);
-  if(ierr)
-    throw UintahPetscError(ierr, "VecRestoreArray", __FILE__, __LINE__);
+  Uintah::PetscToUintah_Vector<Array3<double> >(patch, filterVar, d_b, d_petscLocalToGlobal);
 
   return true;
 }
@@ -276,6 +268,7 @@ private:
   int d_nz, o_nz; // number of non zero values in a row
 #endif
 }; // End class Filter.h
+
 } // End namespace Uintah
 
 #endif  
