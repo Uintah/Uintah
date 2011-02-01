@@ -113,7 +113,7 @@ PetscSolver::problemSetup(const ProblemSpecP& params)
   if(d_pcType != "asm"   && d_pcType != "ilu" && d_pcType != "jacobi"){
     ostringstream warn;
     warn << "INPUT FILE ERROR: ARCHES: unknown PETSC preconditioner type ("<<d_pcType<<") \n"
-         << "Valid Options:  smg, pfmg, jacobi, none"<< endl;
+         << "Valid Options:  asm, ilu, jacobi, none"<< endl;
     throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
   }
   

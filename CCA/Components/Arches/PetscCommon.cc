@@ -392,48 +392,7 @@ void finalizePetscSolver()
 }
 
 
-//______________________________________________________________________
-//  Copy Petsc solution vector back into the Uintah CCVariable<double>array
-void  PetscToUintah_Vector(const Patch* patch, 
-                            CCVariable<double>& var, 
-                            Vec X, 
-                            map<const Patch*, Array3<int> > petscLocalToGlobal)
-{
-  IntVector idxLo = patch->getFortranCellLowIndex();
-  IntVector idxHi = patch->getFortranCellHighIndex();
-  double* xvec;
-  int ierr;
-  PetscInt begin, end;
-  
-  //get the ownership range so we know where the local indicing on this processor begins
-  VecGetOwnershipRange(X, &begin, &end);
-  
-  ierr = VecGetArray(X, &xvec);
-  if(ierr){
-    throw UintahPetscError(ierr, "VecGetArray", __FILE__, __LINE__);
-  }
-  
-  Array3<int> l2g = petscLocalToGlobal[patch];
-  
-  for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-    for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-      
-        IntVector c(colX, colY, colZ);
-      
-        //subtract the begining index from the global index to get to the local array index
-        int row = l2g[c] - begin;
-        ASSERTRANGE(l2g[c],begin,end);
-        var[c] = xvec[row];
-      }
-    }
-  }
-  
-  ierr = VecRestoreArray(X, &xvec);
-  if(ierr){
-    throw UintahPetscError(ierr, "VecRestoreArray", __FILE__, __LINE__);
-  }
-}
+
 
 
 
