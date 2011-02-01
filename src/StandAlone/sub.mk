@@ -247,6 +247,7 @@ uintah: sus \
         puda \
         dumpfields \
         compare_uda \
+        compute_Lnorm_udas \
         restart_merger \
         partextract \
         partvarRange \
@@ -326,13 +327,15 @@ ifeq ($(IS_REDSTORM),yes)
 	@echo "Built sus"
 endif
 
-tools: puda dumpfields compare_uda restart_merger partextract partvarRange selectpart async_mpi_test mpi_test extractV extractF extractS gambitFileReader slb pfs pfs2 timeextract faceextract lineextract compare_mms compare_scalar fsspeed
+tools: puda dumpfields compare_uda compute_Lnorm_udas restart_merger partextract partvarRange selectpart async_mpi_test mpi_test extractV extractF extractS gambitFileReader slb pfs pfs2 timeextract faceextract lineextract compare_mms compare_scalar fsspeed
 
 puda: prereqs StandAlone/tools/puda/puda
 
 dumpfields: prereqs StandAlone/tools/dumpfields/dumpfields
 
 compare_uda: prereqs StandAlone/compare_uda
+
+compute_Lnorm_udas: prereqs StandAlone/tools/compute_Lnorm_udas
 
 restart_merger: prereqs StandAlone/restart_merger
 
