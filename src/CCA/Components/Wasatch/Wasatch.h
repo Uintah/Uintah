@@ -108,6 +108,7 @@
 #include <Core/Parallel/UintahParallelComponent.h>
 #include <CCA/Ports/SimulationInterface.h>
 #include <Core/Grid/SimulationStateP.h>
+#include <CCA/Ports/SolverInterface.h>
 
 //-- Wasatch includes --//
 #include "PatchInfo.h"
@@ -217,6 +218,8 @@ namespace Wasatch{
     CoordHelper *icCoordHelper_;
 
     TimeStepper* timeStepper_;  ///< The TimeStepper used to advance equations registered here.
+    
+    Uintah::SolverInterface* linSolver_;
 
     typedef std::vector<EqnTimestepAdaptorBase*> EquationAdaptors;
     EquationAdaptors adaptors_;
