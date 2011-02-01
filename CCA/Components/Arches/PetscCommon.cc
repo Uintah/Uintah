@@ -392,20 +392,18 @@ void finalizePetscSolver()
 }
 
 
-
-
-
-
 //______________________________________________________________________
 //   Free work space.  All PETSc objects should be destroyed when they are no longer needed
 void
 destroyPetscObjects(Mat A, Vec X, Vec B, Vec U) 
 {
   int ierr;
-  ierr = VecDestroy(U);
-  if(ierr)
-    throw UintahPetscError(ierr, "destroyPetscObjects::VecDestroy", __FILE__, __LINE__);
-    
+  
+  if(U){
+    ierr = VecDestroy(U);
+    if(ierr)
+      throw UintahPetscError(ierr, "destroyPetscObjects::VecDestroy", __FILE__, __LINE__);
+  }
   ierr = VecDestroy(B);
   if(ierr)
     throw UintahPetscError(ierr, "destroyPetscObjects::VecDestroy", __FILE__, __LINE__);

@@ -379,27 +379,9 @@ RadLinearSolver::copyRadSoln(const Patch* patch, ArchesVariables* vars)
   PetscToUintah_Vector(patch, vars->cenint, d_x, d_petscLocalToGlobal);
 }
 //______________________________________________________________________
-//  
+//  Destroy Petsc objects
 void
 RadLinearSolver::destroyMatrix() 
 {
-  /* 
-     Free work space.  All PETSc objects should be destroyed when they
-     are no longer needed.
-  */
-#if 1
-  int ierr;
-  ierr = VecDestroy(d_u);
-  if(ierr)
-    throw UintahPetscError(ierr, "VecDestroy", __FILE__, __LINE__);
-  ierr = VecDestroy(d_b);
-  if(ierr)
-    throw UintahPetscError(ierr, "VecDestroy", __FILE__, __LINE__);
-  ierr = VecDestroy(d_x);
-  if(ierr)
-    throw UintahPetscError(ierr, "VecDestroy", __FILE__, __LINE__);
-  ierr = MatDestroy(A);
-  if(ierr)
-    throw UintahPetscError(ierr, "MatDestroy", __FILE__, __LINE__);
-#endif
+  destroyPetscObjects(A, d_x, d_b, d_u);
 }

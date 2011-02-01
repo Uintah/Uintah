@@ -433,19 +433,5 @@ Filter::setFilterMatrix(const ProcessorGroup* ,
 void
 Filter::destroyMatrix() 
 {
-  /* 
-     Free work space.  All PETSc objects should be destroyed when they
-     are no longer needed.
-  */
-  int ierr;
-  ierr = VecDestroy(d_b);
-  if(ierr)
-    throw UintahPetscError(ierr, "VecDestroy", __FILE__, __LINE__);
-  ierr = VecDestroy(d_x);
-  if(ierr)
-    throw UintahPetscError(ierr, "VecDestroy", __FILE__, __LINE__);
-
-  ierr = MatDestroy(A);
-  if(ierr)
-    throw UintahPetscError(ierr, "MatDestroy", __FILE__, __LINE__);
+  destroyPetscObjects(A, d_x, d_b);
 }
