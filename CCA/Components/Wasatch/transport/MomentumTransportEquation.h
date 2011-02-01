@@ -10,6 +10,7 @@
 //-- Uintah includes --//
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Parallel/UintahParallelComponent.h>
+#include <CCA/Ports/SolverInterface.h>
 
 
 namespace Wasatch{
@@ -44,7 +45,8 @@ namespace Wasatch{
     MomentumTransportEquation( const std::string velName,
                                const std::string momName,
                                Expr::ExpressionFactory& factory,
-                               Uintah::ProblemSpecP params );
+                               Uintah::ProblemSpecP params,
+                               Uintah::SolverInterface& linSolver);
 
     ~MomentumTransportEquation();
 

@@ -163,8 +163,11 @@ namespace Wasatch{
     doyvel = params->get( "Y-Velocity", yvelname );
     dozvel = params->get( "Z-Velocity", zvelname );
     if (doxvel) velTags.push_back( Expr::Tag(xvelname, Expr::STATE_N) );
+    else velTags.push_back( Expr::Tag() );
     if (doyvel) velTags.push_back( Expr::Tag(yvelname, Expr::STATE_N) );
+    else velTags.push_back( Expr::Tag() );
     if (dozvel) velTags.push_back( Expr::Tag(zvelname, Expr::STATE_N) );    
+    else velTags.push_back( Expr::Tag() );
   }
 
   //==================================================================
@@ -178,8 +181,11 @@ namespace Wasatch{
     doymom = params->get( "Y-Momentum", ymomname );
     dozmom = params->get( "Z-Momentum", zmomname );    
     if (doxmom) momTags.push_back( Expr::Tag(xmomname, Expr::STATE_N) );
+    else momTags.push_back( Expr::Tag() );
     if (doymom) momTags.push_back( Expr::Tag(ymomname, Expr::STATE_N) );
+    else momTags.push_back( Expr::Tag() );
     if (dozmom) momTags.push_back( Expr::Tag(zmomname, Expr::STATE_N) );
+    else momTags.push_back( Expr::Tag() );    
   }
 
   //==================================================================
@@ -189,13 +195,14 @@ namespace Wasatch{
   get_mom_rhs_id( Expr::ExpressionFactory& factory,
                  const std::string velName,
                  const std::string momName,
-                  Uintah::ProblemSpecP params )
+                  Uintah::ProblemSpecP params,
+                 Uintah::SolverInterface& linSolver)
   {   
-    const Expr::Tag thisVelTag( velName, Expr::STATE_NONE );
-    const Expr::Tag thisMomTag( momName, Expr::STATE_NONE );
+    const Expr::Tag thisVelTag( velName, Expr::STATE_N );
+    const Expr::Tag thisMomTag( momName, Expr::STATE_N );
     //
-    const Expr::Tag dilTag( "dilatation", Expr::STATE_NONE );    
-    const Expr::Tag viscTag = parse_nametag( params );
+    const Expr::Tag dilTag( "dilatation", Expr::STATE_N );    
+    const Expr::Tag viscTag = parse_nametag( params->findBlock("Viscosity")->findBlock("NameTag") );
     //
     Expr::TagList velTags, momTags;    
     set_vel_tags( params, velTags  );
@@ -207,15 +214,24 @@ namespace Wasatch{
 
     //___________________________________
     // diffusive flux (stress components)
-
+    std::string xmomname, ymomname, zmomname; // these are needed to construct fx, fy, and fz for pressure RHS
+    Uintah::ProblemSpecP doxmom,doymom,dozmom;
+    doxmom = params->get( "X-Momentum", xmomname );
+    doymom = params->get( "Y-Momentum", ymomname );
+    dozmom = params->get( "Z-Momentum", zmomname );
     const Expr::Tag tauxt( "tau_" + get_mom_dir_name<FieldT>() + "x", Expr::STATE_NONE );
     const Expr::Tag tauyt( "tau_" + get_mom_dir_name<FieldT>() + "y", Expr::STATE_NONE );
     const Expr::Tag tauzt( "tau_" + get_mom_dir_name<FieldT>() + "z", Expr::STATE_NONE );
 
-    setup_stress< XFace >( tauxt, viscTag, thisVelTag, velTags[0], dilTag, factory );
-    setup_stress< YFace >( tauyt, viscTag, thisVelTag, velTags[1], dilTag, factory );
-    setup_stress< ZFace >( tauzt, viscTag, thisVelTag, velTags[2], dilTag, factory );
-
+    if (doxmom) {
+      setup_stress< XFace >( tauxt, viscTag, thisVelTag, velTags[0], dilTag, factory );
+    }
+    if (doymom) {
+      setup_stress< YFace >( tauyt, viscTag, thisVelTag, velTags[1], dilTag, factory );
+    }
+    if (dozmom) {
+      setup_stress< ZFace >( tauzt, viscTag, thisVelTag, velTags[2], dilTag, factory );
+    }
 
     //__________________
     // convective fluxes
@@ -223,10 +239,16 @@ namespace Wasatch{
     const Expr::Tag cfyt( thisMomTag.name() + "_convFlux_y", Expr::STATE_NONE );
     const Expr::Tag cfzt( thisMomTag.name() + "_convFlux_z", Expr::STATE_NONE );
 
-    setup_convective_flux< XFace, XVolField >( cfxt, thisMomTag, velTags[0], factory );
-    setup_convective_flux< YFace, YVolField >( cfyt, thisMomTag, velTags[1], factory );
-    setup_convective_flux< ZFace, ZVolField >( cfzt, thisMomTag, velTags[2], factory );
-    
+    if (doxmom) {
+      setup_convective_flux< XFace, XVolField >( cfxt, thisMomTag, velTags[0], factory );
+    }
+    if (doymom) {
+      setup_convective_flux< YFace, YVolField >( cfyt, thisMomTag, velTags[1], factory );
+    }
+    if (dozmom) {
+      setup_convective_flux< ZFace, ZVolField >( cfzt, thisMomTag, velTags[2], factory );
+    }
+        
     //__________________
     // dilatation
     if (!factory.get_registry().have_entry( dilTag )) {
@@ -240,53 +262,48 @@ namespace Wasatch{
         - DONE. create pressure expression (need only be done once)
         - create expression for body force
     */
-    const Expr::Tag bodyForcet;  // for now, this is empty.
-
+    const Expr::Tag bodyForcet;//( "body-force", Expr::STATE_NONE);  // for now, this is empty.
+    //_________________________________________________________
+    // register expression to calculate the partial RHS (absent
+    // pressure gradient) for use in the projection
+    const Expr::Tag rhsPart( thisMomTag.name() + "_rhs_partial", Expr::STATE_NONE );
+    factory.register_expression( rhsPart, new typename MomRHSPart<FieldT>::Builder( cfxt, cfyt, cfzt,
+                                                                                   tauxt, tauyt, tauzt,
+                                                                                   bodyForcet) );
+    
     //__________________
-    // pressure
-    const Expr::Tag d2rhodt2t; // for now this is empty
+    // density time derivative
+    const Expr::Tag d2rhodt2t;//( "density-acceleration", Expr::STATE_NONE); // for now this is empty
+    
+    //------------------------------------
+    // THIS SECTION IS TEMPORARY TO TEST THINGS OUT - MUST SPECIFY DENSITY
+    // IN INPUT FILE AT THIS POINT
+    const Expr::Tag densT( "density", Expr::STATE_N );
+    factory.register_expression( thisVelTag, new typename PrimVar<FieldT,SVolField>::Builder( thisMomTag, densT));
+    
+    //__________________
+    // pressure    
     const Expr::Tag pressuret( "pressure", Expr::STATE_NONE); // jcs need to fill in.
-    Uintah::SolverInterface* solver;
-    const Uintah::ProcessorGroup* myworld;    
-    // THIS IS INCORRECT - PLACED HERE FOR CODE TO COMPILE. MUST GET PORT SOME
-    // OTHER MANNER
-    Uintah::UintahParallelPort* solverPort = Uintah::UintahParallelComponent( myworld ).getPort("solver");
-    solver = dynamic_cast<Uintah::SolverInterface*>(solverPort);
-    if(!solver) {
-      throw Uintah::InternalError("Wasatch: couldn't get solver port", __FILE__, __LINE__);
-    }
     Uintah::ProblemSpecP pressureParams = params->findBlock("Pressure");
-    Uintah::SolverParameters* sparams = solver->readParameters(pressureParams, "");
+    Uintah::SolverParameters* sparams = linSolver.readParameters(pressureParams, "");
     sparams->setSolveOnExtraCells(false);
     
     if (!factory.get_registry().have_entry(pressuret)) {
       // if pressure expression has not be registered, then register it
-      std::string xmomname, ymomname, zmomname; // these are needed to construct fx, fy, and fz for pressure RHS
-      Uintah::ProblemSpecP doxmom,doymom,dozmom;
-      doxmom = params->get( "X-Momentum", xmomname );
-      doymom = params->get( "Y-Momentum", ymomname );
-      dozmom = params->get( "Z-Momentum", zmomname );
       Expr::Tag fxt, fyt, fzt;
       if (doxmom) fxt = Expr::Tag( xmomname + "_rhs_partial", Expr::STATE_NONE);
       if (doymom) fyt = Expr::Tag( ymomname + "_rhs_partial", Expr::STATE_NONE);
       if (dozmom) fzt = Expr::Tag( zmomname + "_rhs_partial", Expr::STATE_NONE);      
       factory.register_expression( pressuret, new typename Pressure::Builder( fxt, fyt, fzt,
-                                                                             d2rhodt2t, *sparams, *solver));
+                                                                             d2rhodt2t, *sparams, linSolver));
     }
-    //_________________________________________________________
-    // register expression to calculate the partial RHS (absent
-    // pressure gradient) for use in the projection
-    const Expr::Tag rhsPart( thisMomTag.name() + "_rhs_partial", Expr::STATE_NONE );
-    factory.register_expression( rhsPart, new typename MomRHSPart<FieldT>::Builder( cfyt, cfyt, cfzt,
-                                                                                    tauxt, tauyt, cfxt,
-                                                                                    bodyForcet) );
     
     //__________________________________________
     // The RHS (including the pressure gradient)
     const Expr::Tag rhsFull( thisMomTag.name() + "_rhs_full", Expr::STATE_NONE );
     const Expr::ExpressionID rhsID = factory.register_expression
       ( rhsFull, new typename MomRHS<FieldT>::Builder( pressuret, rhsPart ) );
-
+        
     return rhsID;
   }
 
@@ -297,12 +314,14 @@ namespace Wasatch{
   MomentumTransportEquation( const std::string velName,
                              const std::string momName,
                              Expr::ExpressionFactory& factory,
-                             Uintah::ProblemSpecP params )
+                             Uintah::ProblemSpecP params,
+                             Uintah::SolverInterface& linSolver)
     : Expr::TransportEquation( momName,
                                get_mom_rhs_id<FieldT>( factory,
                                                        velName,
                                                        momName,
-                                                       params ) )
+                                                       params,
+                                                       linSolver) )
   {}
 
   //------------------------------------------------------------------

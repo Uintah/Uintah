@@ -43,7 +43,6 @@
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/BoundaryConditions/BCDataArray.h>
 #include <Core/Grid/BoundaryConditions/BoundCond.h>
-#include <CCA/Ports/SolverInterface.h>
 
 //-- SpatialOps includes --//
 #include <spatialops/structured/FVStaggered.h>
@@ -113,7 +112,6 @@ namespace Wasatch{
       delete igc->second->exprFactory;
       delete igc->second;
     }
-
   }
 
   //--------------------------------------------------------------------
@@ -169,10 +167,12 @@ namespace Wasatch{
     sharedState->registerSimpleMaterial(mymaterial);
 
     // we are able to get the solver port from here
-    //Uintah::SolverInterface* solver = dynamic_cast<Uintah::SolverInterface*>(getPort("solver"));
-    //if(!solver) {
-    //  throw Uintah::InternalError("Wasatch: couldn't get solver port", __FILE__, __LINE__);
-    //}
+    linSolver_ = dynamic_cast<Uintah::SolverInterface*>(getPort("solver"));
+    if(!linSolver_) {
+      throw Uintah::InternalError("Wasatch: couldn't get solver port", __FILE__, __LINE__);
+    } else if (linSolver_) {
+      std::cout << "Detected solver port... \n";
+    }
     
     //
     // create expressions explicitly defined in the input file.  These
@@ -199,8 +199,11 @@ namespace Wasatch{
     for( Uintah::ProblemSpecP transEqnParams=wasatchParams->findBlock("MomentumEquations");
         transEqnParams != 0;
         transEqnParams=transEqnParams->findNextBlock("MomentumEquations") ){
-      adaptors_.push_back( parse_momentum_equations( transEqnParams, graphCategories_ ) );
+      // note - parse_momentum_equations returns a vector of equation adaptors
+      EquationAdaptors momentumAdaptors = parse_momentum_equations( transEqnParams, graphCategories_, *linSolver_);
+      adaptors_.insert(adaptors_.end(), momentumAdaptors.begin(), momentumAdaptors.end());
     }
+    
     
 
     timeStepper_ = scinew TimeStepper( sharedState_->get_delt_label(),

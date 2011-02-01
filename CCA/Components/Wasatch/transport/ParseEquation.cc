@@ -172,11 +172,13 @@ namespace Wasatch{
   
   //==================================================================
   
-  EqnTimestepAdaptorBase* parse_momentum_equations( Uintah::ProblemSpecP params,
-                                         GraphCategories& gc )
+  std::vector<EqnTimestepAdaptorBase*> parse_momentum_equations( Uintah::ProblemSpecP params,
+                                                    GraphCategories& gc,
+                                                    Uintah::SolverInterface& linSolver )
   {
     const StringNames& sName = StringNames::self();
-    
+    typedef std::vector<EqnTimestepAdaptorBase*> EquationAdaptors;
+    EquationAdaptors adaptors;
     EqnTimestepAdaptorBase* adaptor = NULL;
     Expr::TransportEquation* momtranseq = NULL;
     
@@ -215,8 +217,10 @@ namespace Wasatch{
       momtranseq = scinew MomTransEq( xvelname, 
                                       xmomname,
                                       *solnGraphHelper->exprFactory,
-                                      params );
-      adaptor = scinew EqnTimestepAdaptor< XVolField >( momtranseq, params );      
+                                      params,
+                                     linSolver);
+      adaptor = scinew EqnTimestepAdaptor< XVolField >( momtranseq, params );
+      adaptors.push_back(adaptor);
     } 
     
     if (doyvel && doymom) {
@@ -226,8 +230,10 @@ namespace Wasatch{
       momtranseq = scinew MomTransEq( yvelname, 
                                       ymomname,
                                       *solnGraphHelper->exprFactory,
-                                      params );
-      adaptor = scinew EqnTimestepAdaptor< YVolField >( momtranseq, params );      
+                                      params,
+                                     linSolver);
+      adaptor = scinew EqnTimestepAdaptor< YVolField >( momtranseq, params );
+      adaptors.push_back(adaptor);            
     }
     
     if (dozvel && dozmom) {
@@ -237,41 +243,55 @@ namespace Wasatch{
       momtranseq = scinew MomTransEq( zvelname, 
                                       zmomname,
                                       *solnGraphHelper->exprFactory,
-                                      params );
-      adaptor = scinew EqnTimestepAdaptor< ZVolField >( momtranseq, params );      
-    }        
+                                      params,
+                                     linSolver);
+      adaptor = scinew EqnTimestepAdaptor< ZVolField >( momtranseq, params );
+      adaptors.push_back(adaptor);            
+    }      
     
-    //_____________________________________________________
-    // set up initial conditions on this momentum equation
-    try{
-      std::cout << "Setting initial conditions for momentum equations."<< std::endl;
-      icGraphHelper->rootIDs.insert( momtranseq->initial_condition( *icGraphHelper->exprFactory ) );
+    //
+    // loop over the local adaptors and set the initial and boundary conditions on each equation attached to that adaptor
+    for( EquationAdaptors::const_iterator ia=adaptors.begin(); ia!=adaptors.end(); ++ia ){
+      EqnTimestepAdaptorBase* const adaptor = *ia;
+      Expr::TransportEquation* momtranseq = adaptor->equation();
+      //_____________________________________________________
+      // set up initial conditions on this momentum equation
+      try{
+        std::cout << "Setting initial conditions for momentum equation: "
+                  << momtranseq->solution_variable_name()
+                  << std::endl;
+        icGraphHelper->rootIDs.insert( momtranseq->initial_condition( *icGraphHelper->exprFactory ) );
+      }
+      catch( std::runtime_error& e ){
+        std::ostringstream msg;
+        msg << e.what()
+        << std::endl
+        << "ERORR while setting initial conditions on momentum equation"
+        << momtranseq->solution_variable_name()
+        << std::endl;
+        throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+      }
+      
+      //______________________________________________________
+      // set up boundary conditions on this momentum equation
+      try{
+        std::cout << "Setting BCs for momentum equation: " 
+                  <<momtranseq->solution_variable_name()
+                  << std::endl;
+        momtranseq->setup_boundary_conditions( *solnGraphHelper->exprFactory );
+      }
+      catch( std::runtime_error& e ){
+        std::ostringstream msg;
+        msg << e.what()
+        << std::endl
+        << "ERORR while setting boundary conditions on momentum equation"
+        << std::endl;
+        throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+      }
+      std::cout << "------------------------------------------------" << std::endl;      
     }
-    catch( std::runtime_error& e ){
-      std::ostringstream msg;
-      msg << e.what()
-      << std::endl
-      << "ERORR while setting initial conditions on momentum equations"
-      << std::endl;
-      throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
-    }
-    
-    //______________________________________________________
-    // set up boundary conditions on this momentum equation
-    try{
-      std::cout << "Setting BCs for momentum equations" << std::endl;
-      momtranseq->setup_boundary_conditions( *solnGraphHelper->exprFactory );
-    }
-    catch( std::runtime_error& e ){
-      std::ostringstream msg;
-      msg << e.what()
-      << std::endl
-      << "ERORR while setting boundary conditions on momentum equation"
-      << std::endl;
-      throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
-    }
-    std::cout << "------------------------------------------------" << std::endl;
-    return adaptor;
+    //
+    return adaptors;
   }
   
   

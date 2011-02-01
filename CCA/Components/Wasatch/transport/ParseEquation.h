@@ -3,6 +3,7 @@
 
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
+#include <CCA/Ports/SolverInterface.h>
 
 #include "../GraphHelperTools.h"
 
@@ -74,8 +75,9 @@ namespace Wasatch{
    *  \return an EqnTimestepAdaptorBase object that can be used to
    *          plug this transport equation into a TimeStepper.
    */  
-  EqnTimestepAdaptorBase* parse_momentum_equations( Uintah::ProblemSpecP params,
-                                                   GraphCategories& gc );
+  std::vector<EqnTimestepAdaptorBase*> parse_momentum_equations( Uintah::ProblemSpecP params,
+                                                   GraphCategories& gc,
+                                                   Uintah::SolverInterface& linSolver);
 
   /** @} */
 
