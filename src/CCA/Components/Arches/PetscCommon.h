@@ -31,7 +31,7 @@ namespace Uintah {
   void finalizePetscSolver();
 
 
-  void destroyPetscObjects(Mat A, Vec X, Vec B, Vec U);
+  void destroyPetscObjects(Mat A, Vec X, Vec B, Vec U=NULL);
 
                              
   void PetscLocalToGlobalMapping(const PatchSet* perproc_patches,

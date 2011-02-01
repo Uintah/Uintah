@@ -329,18 +329,6 @@ PetscSolver::copyPressSoln(const Patch* patch, ArchesVariables* vars)
 void
 PetscSolver::destroyMatrix() 
 {
-  int ierr;
-  ierr = VecDestroy(d_u);
-  if(ierr)
-    throw UintahPetscError(ierr, "VecDestroy", __FILE__, __LINE__);
-  ierr = VecDestroy(d_b);
-  if(ierr)
-    throw UintahPetscError(ierr, "VecDestroy", __FILE__, __LINE__);
-  ierr = VecDestroy(d_x);
-  if(ierr)
-    throw UintahPetscError(ierr, "VecDestroy", __FILE__, __LINE__);
-  ierr = MatDestroy(A);
-  if(ierr)
-    throw UintahPetscError(ierr, "MatDestroy", __FILE__, __LINE__);
+  destroyPetscObjects(A, d_x, d_b);
 }
 
