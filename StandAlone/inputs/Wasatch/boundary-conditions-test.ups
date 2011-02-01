@@ -151,7 +151,7 @@
 
 
   <Time>
-    <maxTime>0.01</maxTime>
+    <maxTime>0.0002</maxTime>
     <initTime>0.0</initTime>
     <delt_min>0.00005</delt_min>
     <delt_max>0.00005</delt_max>
@@ -309,7 +309,7 @@
       <Box label="1">
         <lower>[0,0,0]</lower>
         <upper>[1,1,1]</upper>
-        <resolution>[40,40,40]</resolution>
+        <resolution>[12,12,12]</resolution>
         <patches>[1,1,1]</patches>
       </Box>
       <periodic>[0,0,0]</periodic>
