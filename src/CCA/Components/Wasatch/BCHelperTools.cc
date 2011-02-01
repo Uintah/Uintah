@@ -5,7 +5,6 @@
 #include <Core/Grid/BoundaryConditions/BoundCond.h>
 
 //-- SpatialOps includes --//
-#include "Operators/OperatorTypes.h"
 #include <spatialops/OperatorDatabase.h>
 #include <spatialops/structured/FVStaggered.h>
 #include <spatialops/structured/FVStaggeredBCTools.h>
@@ -14,6 +13,7 @@
 #include <expression/ExprLib.h>
 
 //-- Wasatch includes --//
+#include "Operators/OperatorTypes.h"
 #include "FieldTypes.h"
 #include "GraphHelperTools.h"
 #include "BCHelperTools.h"
@@ -162,7 +162,7 @@ namespace Wasatch {
           const IntVector lo = patch->getCellLowIndex();
           const IntVector hi = patch->getCellHighIndex();
           const IntVector uintahPatchDim = hi - lo;
-          const SS::IntVec patchDim( patchDim[0], patchDim[1], patchDim[2] );
+          const SS::IntVec patchDim( uintahPatchDim[0], uintahPatchDim[1], uintahPatchDim[2] );
           
           // get plus face information
           const bool bcx = (*patch).getBCType(Uintah::Patch::xplus) != Uintah::Patch::Neighbor;
