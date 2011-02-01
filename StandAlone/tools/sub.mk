@@ -89,6 +89,6 @@ PROGRAM := $(SRCDIR)/compute_Lnorm_udas
 
 include $(SCIRUN_SCRIPTS)/program.mk
 
-compute_Lnorm_udas: prereqs StandAlone/tools/compute_Lnorm_udas
+
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
