@@ -2268,7 +2268,7 @@ Properties::computeDrhodt(const ProcessorGroup* pc,
     // filtering for periodic case is not implemented 
     // if it needs to be then drhodt will require 1 layer of boundary cells to be computed
 #ifdef PetscFilter
-    d_filter->applyFilter(pc, patch, drhodt, filterdrhodt);
+    d_filter->applyFilter<CCVariable<double> >(pc, patch, drhodt, filterdrhodt);
 #else
     // filtering without petsc is not implemented
     // if it needs to be then drhodt will have to be computed with ghostcells

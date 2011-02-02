@@ -148,6 +148,8 @@ void DQMOM::problemSetup(const ProblemSpecP& params)
   sort( momentIndexes.begin(), momentIndexes.end(), vector_lexicographic_sort);
 
   /*
+  //cmr
+
   // Print out sorted list of moments
   for( vector< vector<int> >::iterator iM = momentIndexes.begin(); iM != momentIndexes.end(); ++iM ) {
     for( vector<int>::iterator iMM = iM->begin(); iMM != iM->end(); ++iMM ) {
@@ -204,6 +206,11 @@ void DQMOM::problemSetup(const ProblemSpecP& params)
   }
   
   proc0cout << "Size of momentIndexes is " << momentIndexes.size() << ", should be " << N_*(N_xi+1) << endl;
+  if( b_save_moments ) {
+    proc0cout << "Saving all moments." << endl;
+  } else {
+    proc0cout << "Saving only 0th, 1st, and 2nd moments." << endl;
+  }
 
   // Check to make sure number of total moments specified in input file is correct
   if ( moments != (N_xi+1)*N_ ) {
@@ -568,6 +575,8 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
   double start_solveLinearSystemTime = Time::currentSeconds();
 #if !defined(VERIFY_LINEAR_SOLVER) && !defined(VERIFY_AB_CONSTRUCTION)
   /*
+  //cmr 
+
   // timing:
   double total_SolveTime = 0.0;
   double total_SVDTime = 0.0;
@@ -1632,6 +1641,9 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
 #endif
 
   /*
+  //cmr
+  // for printing much more extensive timing info
+
   if ( b_optimize ) {
     proc0cout << "    Time for putting/getting: " << total_GetPutTime << " seconds\n";
     proc0cout << "    Time for matrix multiplication: " << total_MatMultTime << " seconds\n";

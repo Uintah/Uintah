@@ -250,10 +250,11 @@ Arches::problemSetup(const ProblemSpecP& params,
   }
 
   if(db->findBlock("MMS")) {
-
+/*
+    //cmr
     d_useMMSScalar = false;
     d_useMMSTable = false;
-
+*/
     d_doMMS = true;
     ProblemSpecP db_mms = db->findBlock("MMS");
     if( !db_mms->getAttribute( "whichMMS", d_mms ) ) {
@@ -265,7 +266,11 @@ Arches::problemSetup(const ProblemSpecP& params,
       db_mms0->getWithDefault("cv",d_cv,0.0);
       db_mms0->getWithDefault("cw",d_cw,0.0);
       db_mms0->getWithDefault("cp",d_cp,0.0);
+      db_mms0->getWithDefault("phi0",d_phi0,0.0);
       
+      /*
+      //cmr
+
       // Allow a choice to either specify mixture fraction or specify a table 
       if( db_mms0->findBlock("phi0") ) {
         db_mms0->getWithDefault("phi0",d_phi0,0.0);
@@ -275,6 +280,8 @@ Arches::problemSetup(const ProblemSpecP& params,
       } else {
         throw ProblemSetupException("ERROR: Arches: You must specify either an MMS scalar using <phi0>, or an MMS table using <useTable>, but you did not specify either!\n",__FILE__,__LINE__);
       }
+      */
+
       db_mms0->getWithDefault("esphi0",d_esphi0,0.0);
     }
     else if (d_mms == "almgrenMMS") {
@@ -401,6 +408,8 @@ Arches::problemSetup(const ProblemSpecP& params,
   //
   // Will also require changing all the classes that are using DQMOMEqnFactory...
   // (particularly those grabbing # quad nodes)
+  //
+  // cmr
 
   // Loop through alll <DQMOM> blocks to create a model factory for each
   /*
@@ -1127,8 +1136,6 @@ void
 Arches::scheduleComputeStableTimestep(const LevelP& level,
                                       SchedulerP& sched)
 {
-  proc0cout << "Computing stable timestep..." << endl;
-
   // primitive variable initialization
   Task* tsk = scinew Task( "Arches::computeStableTimeStep",this, 
                            &Arches::computeStableTimeStep);

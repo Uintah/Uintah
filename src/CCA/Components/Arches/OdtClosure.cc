@@ -895,16 +895,16 @@ OdtClosure::reComputeTurbSubmodel(const ProcessorGroup* pc,
 #endif
 
 //    d_filter->applyFilter(pc, patch,wVel, filterWVel);
-    d_filter->applyFilter(pc, patch,denUU, filterdenUU);
-    d_filter->applyFilter(pc, patch,denUV, filterdenUV);
-    d_filter->applyFilter(pc, patch,denUW, filterdenUW);
-    d_filter->applyFilter(pc, patch,denVV, filterdenVV);
-    d_filter->applyFilter(pc, patch,denVW, filterdenVW);
-    d_filter->applyFilter(pc, patch,denWW, filterdenWW);
-    d_filter->applyFilter(pc, patch,scalar, filterPhi);
-    d_filter->applyFilter(pc, patch,denPhiU, filterdenPhiU);
-    d_filter->applyFilter(pc, patch,denPhiV, filterdenPhiV);
-    d_filter->applyFilter(pc, patch,denPhiW, filterdenPhiW);
+    d_filter->applyFilter< constCCVariable<double> >(pc, patch,scalar, filterPhi);
+    d_filter->applyFilter< Array3<double> >(pc, patch,denUU, filterdenUU);
+    d_filter->applyFilter< Array3<double> >(pc, patch,denUV, filterdenUV);
+    d_filter->applyFilter< Array3<double> >(pc, patch,denUW, filterdenUW);
+    d_filter->applyFilter< Array3<double> >(pc, patch,denVV, filterdenVV);
+    d_filter->applyFilter< Array3<double> >(pc, patch,denVW, filterdenVW);
+    d_filter->applyFilter< Array3<double> >(pc, patch,denWW, filterdenWW);
+    d_filter->applyFilter< Array3<double> >(pc, patch,denPhiU, filterdenPhiU);
+    d_filter->applyFilter< Array3<double> >(pc, patch,denPhiV, filterdenPhiV);
+    d_filter->applyFilter< Array3<double> >(pc, patch,denPhiW, filterdenPhiW);
 #else
     for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
       for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
