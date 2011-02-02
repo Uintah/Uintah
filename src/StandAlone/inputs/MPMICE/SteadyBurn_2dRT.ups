@@ -130,7 +130,7 @@
     <save label= "p.localized"/>
 -->
     <!-- <checkpoint cycle="2" timestepInterval="3000"/> -->
-    <checkpoint cycle="2" timestepInterval="100"/>
+    <checkpoint cycle="2" timestepInterval="20"/>
   </DataArchiver>
 
 
