@@ -18,7 +18,9 @@ extern "C" {
 namespace Uintah { 
   class ProcessorGroup;
   
+  void finalizePetscSolver();  
   
+#ifdef HAVE_PETSC  
   bool PetscLinearSolve(Mat& A, 
                         Vec& B, Vec& X, Vec& U,
                         const string pcType,
@@ -27,12 +29,8 @@ namespace Uintah {
                         const int fill,
                         const double residual,
                         const ProcessorGroup* myworld);
-  
-  void finalizePetscSolver();
-
 
   void destroyPetscObjects(Mat A, Vec X, Vec B, Vec U=NULL);
-
                              
   void PetscLocalToGlobalMapping(const PatchSet* perproc_patches,
                                  const PatchSubset* mypatches,
@@ -85,6 +83,7 @@ namespace Uintah {
       throw UintahPetscError(ierr, "VecRestoreArray", __FILE__, __LINE__);
     }
   }
+#endif
 } // End namespace Uintah
 
 #endif

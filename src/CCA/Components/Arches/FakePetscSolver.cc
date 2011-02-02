@@ -103,11 +103,3 @@ PetscSolver::destroyMatrix()
   throw InternalError("PetscSolver not configured", __FILE__, __LINE__);
 }
 
-
-
-// Shutdown PETSc
-void PetscSolver::finalizeSolver()
-{
-  throw InternalError("PetscSolver not configured", __FILE__, __LINE__);
-}
-
