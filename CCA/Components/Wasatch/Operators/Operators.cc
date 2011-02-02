@@ -250,6 +250,17 @@ namespace Wasatch{
     opDB.register_new_operator<InterpSSurfXXVol>( InterpSSurfXXVol::Assembler( dim, bcPlus[0], bcPlus[1], bcPlus[2] ) );
     opDB.register_new_operator<InterpSSurfYYVol>( InterpSSurfYYVol::Assembler( dim, bcPlus[0], bcPlus[1], bcPlus[2] ) );
     opDB.register_new_operator<InterpSSurfZZVol>( InterpSSurfZZVol::Assembler( dim, bcPlus[0], bcPlus[1], bcPlus[2] ) );
+    
+    //--------------------------------------------------------
+    // staggered volume to scalar surface
+    //--------------------------------------------------------
+    typedef OperatorTypeBuilder< Interpolant, XVolField, SVolField >::type  InterpXVolSVol;
+    typedef OperatorTypeBuilder< Interpolant, YVolField, SVolField >::type  InterpYVolSVol;
+    typedef OperatorTypeBuilder< Interpolant, ZVolField, SVolField >::type  InterpZVolSVol;    
+    opDB.register_new_operator<InterpXVolSVol>( InterpXVolSVol::Assembler( dim, bcPlus[0], bcPlus[1], bcPlus[2] ) );
+    opDB.register_new_operator<InterpYVolSVol>( InterpYVolSVol::Assembler( dim, bcPlus[0], bcPlus[1], bcPlus[2] ) );
+    opDB.register_new_operator<InterpZVolSVol>( InterpZVolSVol::Assembler( dim, bcPlus[0], bcPlus[1], bcPlus[2] ) );
+    
 
     //--------------------------------------------------------
     // scratch operators

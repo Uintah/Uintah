@@ -167,9 +167,9 @@ Pressure::bind_fields( const Expr::FieldManagerList& fml )
 void
 Pressure::bind_operators( const SpatialOps::OperatorDatabase& opDB )
 {
-  interpX_ = opDB.retrieve_operator<InterpXVolSVol>();
-  interpY_ = opDB.retrieve_operator<InterpYVolSVol>();
-  interpZ_ = opDB.retrieve_operator<InterpZVolSVol>();
+  interpX_ = opDB.retrieve_operator<fxInterp>();
+  interpY_ = opDB.retrieve_operator<fyInterp>();
+  interpZ_ = opDB.retrieve_operator<fzInterp>();
 }
 
 //--------------------------------------------------------------------
