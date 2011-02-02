@@ -397,9 +397,13 @@ void finalizePetscSolver()
 void
 destroyPetscObjects(Mat A, Vec X, Vec B, Vec U) 
 {
+ 
   int ierr;
+
+  PetscTruth flg;
+  VecValid(U, &flg);
   
-  if(U){
+  if( flg ){
     ierr = VecDestroy(U);
     if(ierr)
       throw UintahPetscError(ierr, "destroyPetscObjects::VecDestroy", __FILE__, __LINE__);
@@ -416,4 +420,6 @@ destroyPetscObjects(Mat A, Vec X, Vec B, Vec U)
   if(ierr)
     throw UintahPetscError(ierr, "destroyPetscObjects::MatDestroy", __FILE__, __LINE__);
 }
-}
+
+} // uintah namespace
+
