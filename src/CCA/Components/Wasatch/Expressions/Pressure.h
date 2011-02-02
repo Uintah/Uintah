@@ -133,8 +133,12 @@ public:
    *  through the advertise_dependents method.
    */
   void bind_uintah_vars( Uintah::DataWarehouse* const dw,
-                         const Uintah::PatchSubset* const patches,
-                         const Uintah::MaterialSubset* const materials );
+                             const Uintah::Patch* const patch,
+                        const int material);
+  
+  //void bind_uintah_vars( Uintah::DataWarehouse* const dw,
+  //                       const Uintah::PatchSubset* const patches,
+  //                       const Uintah::MaterialSubset* const materials );
   
 
   void advertise_dependents( Expr::ExprDeps& exprDeps );

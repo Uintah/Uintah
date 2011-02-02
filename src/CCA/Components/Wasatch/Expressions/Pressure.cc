@@ -40,13 +40,12 @@ Pressure::Pressure( const Expr::Tag& fxtag,
 
     // note that this does not provide any ghost entries in the matrix...
     matrixLabel_  ( Uintah::VarLabel::create( "pressure_matrix", Uintah::CCVariable<Uintah::Stencil7>::getTypeDescription() ) ),
-  pressureLabel_( Uintah::VarLabel::create( "pressure_field", 
+    pressureLabel_( Uintah::VarLabel::create( "pressure", 
                                            Wasatch::getUintahFieldTypeDescriptor<SVolField>(),
                                            Wasatch::getUintahGhostDescriptor<SVolField>() ) ),
-  prhsLabel_    ( Uintah::VarLabel::create( "pressure_rhs", 
+    prhsLabel_    ( Uintah::VarLabel::create( "pressure_rhs", 
                                            Wasatch::getUintahFieldTypeDescriptor<SVolField>(),
                                            Wasatch::getUintahGhostDescriptor<SVolField>() ) )
-  
 {
 }
 
@@ -68,8 +67,8 @@ Pressure::schedule_solver( const Uintah::LevelP& level,
 {
   // need to get the pressure label...
   // need to get the pressure rhs label...
-  const Uintah::VarLabel* pressure_lbl;
-  const Uintah::VarLabel* rhs_lbl;
+  //const Uintah::VarLabel* pressure_lbl;
+  //const Uintah::VarLabel* rhs_lbl;
   //solver->scheduleSolve( level, sched, materials, matrixLabel_, 
   //                      Task::NewDW, pressureLabel_, false, prshLabel_, Task::NewDW, 0, Task::OldDW, solverParams_ );
 }
@@ -89,50 +88,58 @@ Pressure::declare_uintah_vars( Uintah::Task& task,
 
 void
 Pressure::bind_uintah_vars( Uintah::DataWarehouse* const dw,
-                            const Uintah::PatchSubset* const patches,
-                            const Uintah::MaterialSubset* const materials )
+                           const Uintah::Patch* const patch,
+                           const int material)
 {
   // We should probably move the matrix construction to the evaluate() method.
   // need a way to get access to the patch so that we can loop over the cells.
   // p is current cell
-  int p = 0;
+  double p = 0.0;
   // n: north, s: south, e: east, w: west, t: top, b: bottom coefficient
-  int n=0, s=0, e=0, w=0, t=0, b=0;
+  double n=0.0, s=0.0, e=0.0, w=0.0, t=0.0, b=0.0;
   
   if (doX_) {
-    p += 2;
-    e = -1;
-    w = -1;
+    //p += 2;
+    e = -1.0;
+    w = -1.0;
   }
   if (doY_) {
-    p += 2;
-    n = -1;
-    s = -1;
+    //p += 2;
+    n = -1.0;
+    s = -1.0;
   }
   if (doZ_) {
-    p += 2;
-    t = -1;
-    b = -1;
+    //p += 2;
+    t = -1.0;
+    b = -1.0;
   }
   
   //
-  for( int ip=0; ip<patches->size(); ++ip ){
-    const Uintah::Patch* const patch = patches->get( ip );
-    for( int im=0; im<materials->size(); ++im ){
-      const int material = materials->get( im );
+  //for( int ip=0; ip<patches->size(); ++ip ){
+  //  const Uintah::Patch* const patch = patches->get( ip );
+    const Uintah::Vector spacing = patch->dCell();
+    const double dx2 = spacing[0]*spacing[0];
+    const double dy2 = spacing[1]*spacing[1];
+    const double dz2 = spacing[2]*spacing[2];
+    if (doX_) p += 2.0/dx2;
+    if (doY_) p += 2.0/dy2;
+    if (doZ_) p += 2.0/dz2;
+   // for( int im=0; im<materials->size(); ++im ){
+   //   const int material = materials->get( im );
       dw->allocateAndPut( matrix_, matrixLabel_, material, patch );
+  //dw->allocateAndPut( rhs_, prhsLabel_, material, patch);
       //
       // construct the coefficient matrix: \nabla^2
       for(Uintah::CellIterator iter(patch->getExtraCellIterator()); !iter.done(); iter++){
         IntVector iCell = *iter;
         Uintah::Stencil7&  coefs = matrix_[iCell];
         coefs.p = p; 
-        coefs.n = n;   coefs.s = s;
-        coefs.e = e;   coefs.w = w; 
-        coefs.t = t;   coefs.b = b;
+        coefs.e = e/dx2;   coefs.w = w/dx2; 
+        coefs.n = n/dy2;   coefs.s = s/dy2;
+        coefs.t = t/dz2;   coefs.b = b/dz2;
       }
-    }
-  }
+//    }
+//  }
 }
 
 //--------------------------------------------------------------------
