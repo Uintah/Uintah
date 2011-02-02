@@ -217,7 +217,7 @@ public:
     return mixModel; 
   }
 #if HAVE_TABPROPS
-  inline TabPropsInterface* getMixRxnModel(){
+  inline MixingRxnModel* getMixRxnModel(){
     return d_mixingRxnTable; 
   }
 #endif
@@ -339,9 +339,8 @@ private:
       IntVector d_denRef;
       
       MixingModel* d_mixingModel;
-      //MixingRxnTable* d_mixingRxnTable;
 #if HAVE_TABPROPS
-      TabPropsInterface* d_mixingRxnTable;
+      MixingRxnModel* d_mixingRxnTable;
 #endif
       BoundaryCondition* d_bc;
       bool d_empirical_soot;

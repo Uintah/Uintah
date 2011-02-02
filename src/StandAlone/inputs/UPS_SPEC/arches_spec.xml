@@ -109,7 +109,7 @@
       </Turbulence>
 
       <Properties                       spec="REQUIRED NO_DATA"
-                                          children1="ONE_OF(CHILD ColdFlowMixingModel, NewStaticMixingTable, TabProps)" >
+                                          children1="ONE_OF(CHILD ColdFlowMixingModel, NewStaticMixingTable, TabProps, ClassicTable)" >
 
         <use_mixing_model               spec="REQUIRED BOOLEAN" /> 
         <empirical_soot                 spec="OPTIONAL BOOLEAN" />
@@ -147,6 +147,10 @@
                                         attribute1="fp_label REQUIRED STRING"     
                                         attribute2="eta_label REQUIRED STRING"/> <!-- Attributes must match the transported IVs specified in the TransportEqn node --> 
         </TabProps>
+
+        <ClassicTable                   spec="OPTIONAL NO_DATA">
+          <inputfile                   spec="REQUIRED STRING"/>
+        </ClassicTable>
 
         <emperical_soot               spec="OPTIONAL BOOLEAN" />
         <soot_factor                  spec="OPTIONAL DOUBLE '0,100'"/>
@@ -206,7 +210,7 @@
         </FlowInlet>
 
         <intrusions                     spec="OPTIONAL NO_DATA" >
-          <geom_object />
+          <geom_object                  spec="MULTIPLE NO_DATA"/>
         </intrusions>
 
         <PressureBC                     spec="OPTIONAL NO_DATA" >
