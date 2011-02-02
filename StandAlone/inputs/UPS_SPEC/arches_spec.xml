@@ -210,7 +210,7 @@
         </FlowInlet>
 
         <intrusions                     spec="OPTIONAL NO_DATA" >
-          <geom_object                  spec="MULTIPLE NO_DATA"/>
+          <geom_object                  spec="MULTIPLE"/>
         </intrusions>
 
         <PressureBC                     spec="OPTIONAL NO_DATA" >
