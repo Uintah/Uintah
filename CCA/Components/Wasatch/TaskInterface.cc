@@ -16,7 +16,7 @@
 
 //-- Wasatch includes --//
 #include "TaskInterface.h"
-
+#include <CCA/Components/Wasatch/Expressions/Pressure.h>
 
 #include <stdexcept>
 
@@ -310,8 +310,15 @@ namespace Wasatch{
           fml_->allocate_fields( Expr::AllocInfo( oldDW, newDW, material, patch, pg ) );
 
           tree->bind_fields( *fml_ );
-          tree->bind_operators( opdb );
+          tree->bind_operators( opdb );          
           tree->execute_tree();
+          // get pressure expression and build coefficient matrix for pressure
+          //const Expr::Tag pressuret("pressure", Expr::STATE_NONE );
+          //if( tree->has_expression( pressuret ) ){
+          //  Pressure& pressureExpr = dynamic_cast<Pressure&> (tree->get_expression(pressuret));
+          //  pressureExpr.bind_uintah_vars(newDW, patch, material);
+          //}
+          //
 //           cout << "Wasatch: done executing graph '" << taskName_ << "'" << endl;
           fml_->deallocate_fields();
         }
