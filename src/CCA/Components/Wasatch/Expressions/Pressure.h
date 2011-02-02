@@ -64,12 +64,12 @@ class Pressure
   const ZVolField* fz_;
 
   // build interpolant operators
-  typedef OperatorTypeBuilder< Interpolant, XVolField, SVolField >::type  InterpXVolSVol;
-  typedef OperatorTypeBuilder< Interpolant, YVolField, SVolField >::type  InterpYVolSVol;
-  typedef OperatorTypeBuilder< Interpolant, ZVolField, SVolField >::type  InterpZVolSVol;
-  const InterpXVolSVol* interpX_;
-  const InterpYVolSVol* interpY_;
-  const InterpZVolSVol* interpZ_;
+  typedef OperatorTypeBuilder< Interpolant, XVolField, SVolField >::type  fxInterp;
+  typedef OperatorTypeBuilder< Interpolant, YVolField, SVolField >::type  fyInterp;
+  typedef OperatorTypeBuilder< Interpolant, ZVolField, SVolField >::type  fzInterp;
+  const fxInterp* interpX_;
+  const fyInterp* interpY_;
+  const fzInterp* interpZ_;
   
   typedef Uintah::CCVariable<Uintah::Stencil7> MatType;
   MatType matrix_;
