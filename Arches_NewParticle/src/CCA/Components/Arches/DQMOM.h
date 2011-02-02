@@ -6,7 +6,7 @@
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/VarLabel.h>
-#include <Core/Grid/Variables/CCVariable.h>
+//#include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Datatypes/DenseMatrix.h>
@@ -36,6 +36,8 @@ namespace Uintah {
   * of the weights and abscissas of the quadrature approximation, and re-cast as a linear system,
   * \f$ \mathbf{AX} = \mathbf{B} \f$.  This class solves the linear system to yield the source terms
   * for the weight and weighted abscissa transport equations (the variables contained in \f$\mathbf{X}\f$).
+  *
+  * The DQMOM method is described by Fox in his book "Computational Models for Turbulent Reacting Flows" (2003).
   *
   * The optimized moment solver uses the algorithm described in Fox (2009), "Optimal moment sets for
   * multivariate DQMOM" (Ind. Eng. Chem. Res. 2009, 48, 9686-9696)
@@ -348,7 +350,7 @@ private:
 
     The primary purpose is to accelerate the construction of the B matrix.
     The entries of B for the zeroth and first moments are much easier to calculate,
-    so ordering the moments allows the indices of these moments to be known.
+    and ordering the moments allows the indices of these moments to be known.
     */
 inline bool vector_lexicographic_sort( vector<int> a, vector<int> b ) 
 { 

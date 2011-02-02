@@ -895,7 +895,7 @@ CompLocalDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup* pc,
     filterRho.copy(density, patch->getExtraCellLowIndex(),
                       patch->getExtraCellHighIndex());
 #ifdef PetscFilter
-    d_filter->applyFilter(pc, patch, density, filterRho);
+    d_filter->applyFilter<constCCVariable<double> >(pc, patch, density, filterRho);
     // making filterRho nonzero 
     sum_vartype den_ref_var;
     if (mmWallID > 0) {
@@ -919,11 +919,11 @@ CompLocalDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup* pc,
     }
     if (d_dynScalarModel) {
       if (d_calcScalar)
-        d_filter->applyFilter(pc, patch, rhoF, filterRhoF);
+        d_filter->applyFilter<Array3<double> >(pc, patch, rhoF, filterRhoF);
       if (d_calcEnthalpy)
-        d_filter->applyFilter(pc, patch, rhoE, filterRhoE);
+        d_filter->applyFilter<Array3<double> >(pc, patch, rhoE, filterRhoE);
       if (d_calcReactingScalar)
-        d_filter->applyFilter(pc, patch, rhoRF, filterRhoRF);
+        d_filter->applyFilter<Array3<double> >(pc, patch, rhoRF, filterRhoRF);
     }
 #endif
   }
@@ -1933,43 +1933,43 @@ CompLocalDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
     double start_turbTime = Time::currentSeconds();
 
 #ifdef PetscFilter
-    d_filter->applyFilter(pc, patch, rhoU, filterRhoU);
-    d_filter->applyFilter(pc, patch, rhoV, filterRhoV);
-    d_filter->applyFilter(pc, patch, rhoW, filterRhoW);
-    d_filter->applyFilter(pc, patch, rhoUU, filterRhoUU);
-    d_filter->applyFilter(pc, patch, rhoUV, filterRhoUV);
-    d_filter->applyFilter(pc, patch, rhoUW, filterRhoUW);
-    d_filter->applyFilter(pc, patch, rhoVV, filterRhoVV);
-    d_filter->applyFilter(pc, patch, rhoVW, filterRhoVW);
-    d_filter->applyFilter(pc, patch, rhoWW, filterRhoWW);
+    d_filter->applyFilter<Array3<double> >(pc, patch, rhoU, filterRhoU);
+    d_filter->applyFilter<Array3<double> >(pc, patch, rhoV, filterRhoV);
+    d_filter->applyFilter<Array3<double> >(pc, patch, rhoW, filterRhoW);
+    d_filter->applyFilter<Array3<double> >(pc, patch, rhoUU, filterRhoUU);
+    d_filter->applyFilter<Array3<double> >(pc, patch, rhoUV, filterRhoUV);
+    d_filter->applyFilter<Array3<double> >(pc, patch, rhoUW, filterRhoUW);
+    d_filter->applyFilter<Array3<double> >(pc, patch, rhoVV, filterRhoVV);
+    d_filter->applyFilter<Array3<double> >(pc, patch, rhoVW, filterRhoVW);
+    d_filter->applyFilter<Array3<double> >(pc, patch, rhoWW, filterRhoWW);
     for (int ii = 0; ii < d_lab->d_symTensorMatl->size(); ii++) {
-      d_filter->applyFilter(pc, patch, betaIJ[ii], betaHATIJ[ii]);
-      d_filter->applyFilter(pc, patch, cbetaIJ[ii], cbetaHATIJ[ii]);
+      d_filter->applyFilter<Array3<double> >(pc, patch, betaIJ[ii], betaHATIJ[ii]);
+      d_filter->applyFilter<Array3<double> >(pc, patch, cbetaIJ[ii], cbetaHATIJ[ii]);
     }
 
     if (d_dynScalarModel) {
       if (d_calcScalar) {
-        d_filter->applyFilter(pc, patch, rhoFU, filterRhoFU);
-        d_filter->applyFilter(pc, patch, rhoFV, filterRhoFV);
-        d_filter->applyFilter(pc, patch, rhoFW, filterRhoFW);
+        d_filter->applyFilter<Array3<double> >(pc, patch, rhoFU, filterRhoFU);
+        d_filter->applyFilter<Array3<double> >(pc, patch, rhoFV, filterRhoFV);
+        d_filter->applyFilter<Array3<double> >(pc, patch, rhoFW, filterRhoFW);
         for (int ii = 0; ii < d_lab->d_vectorMatl->size(); ii++) {
-          d_filter->applyFilter(pc, patch, scalarBeta[ii], scalarBetaHat[ii]);
+          d_filter->applyFilter<Array3<double> >(pc, patch, scalarBeta[ii], scalarBetaHat[ii]);
         }
       }
       if (d_calcEnthalpy) {
-        d_filter->applyFilter(pc, patch, rhoEU, filterRhoEU);
-        d_filter->applyFilter(pc, patch, rhoEV, filterRhoEV);
-        d_filter->applyFilter(pc, patch, rhoEW, filterRhoEW);
+        d_filter->applyFilter<Array3<double> >(pc, patch, rhoEU, filterRhoEU);
+        d_filter->applyFilter<Array3<double> >(pc, patch, rhoEV, filterRhoEV);
+        d_filter->applyFilter<Array3<double> >(pc, patch, rhoEW, filterRhoEW);
         for (int ii = 0; ii < d_lab->d_vectorMatl->size(); ii++) {
-          d_filter->applyFilter(pc, patch, enthalpyBeta[ii], enthalpyBetaHat[ii]);
+          d_filter->applyFilter<Array3<double> >(pc, patch, enthalpyBeta[ii], enthalpyBetaHat[ii]);
         }
       }
       if (d_calcReactingScalar) {
-        d_filter->applyFilter(pc, patch, rhoRFU, filterRhoRFU);
-        d_filter->applyFilter(pc, patch, rhoRFV, filterRhoRFV);
-        d_filter->applyFilter(pc, patch, rhoRFW, filterRhoRFW);
+        d_filter->applyFilter<Array3<double> >(pc, patch, rhoRFU, filterRhoRFU);
+        d_filter->applyFilter<Array3<double> >(pc, patch, rhoRFV, filterRhoRFV);
+        d_filter->applyFilter<Array3<double> >(pc, patch, rhoRFW, filterRhoRFW);
         for (int ii = 0; ii < d_lab->d_vectorMatl->size(); ii++) {
-          d_filter->applyFilter(pc, patch, reactScalarBeta[ii], reactScalarBetaHat[ii]);
+          d_filter->applyFilter<Array3<double> >(pc, patch, reactScalarBeta[ii], reactScalarBetaHat[ii]);
         }
       }
     }  
@@ -2411,20 +2411,20 @@ CompLocalDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
     IntVector idxLo = patch->getExtraCellLowIndex(Arches::ONEGHOSTCELL);
     IntVector idxHi = patch->getExtraCellHighIndex(Arches::ONEGHOSTCELL);
 #ifdef PetscFilter
-    d_filter->applyFilter(pc, patch, MLI, MLHatI);
-    d_filter->applyFilter(pc, patch, MMI, MMHatI);
+    d_filter->applyFilter<constCCVariable<double> >(pc, patch, MLI, MLHatI);
+    d_filter->applyFilter<constCCVariable<double> >(pc, patch, MMI, MMHatI);
     if (d_dynScalarModel) {
       if (d_calcScalar) {
-        d_filter->applyFilter(pc, patch, scalarNum, scalarNumHat);
-        d_filter->applyFilter(pc, patch, scalarDenom, scalarDenomHat);
+        d_filter->applyFilter<constCCVariable<double> >(pc, patch, scalarNum, scalarNumHat);
+        d_filter->applyFilter<constCCVariable<double> >(pc, patch, scalarDenom, scalarDenomHat);
       }
       if (d_calcEnthalpy) {
-        d_filter->applyFilter(pc, patch, enthalpyNum, enthalpyNumHat);
-        d_filter->applyFilter(pc, patch, enthalpyDenom, enthalpyDenomHat);
+        d_filter->applyFilter<constCCVariable<double> >(pc, patch, enthalpyNum, enthalpyNumHat);
+        d_filter->applyFilter<constCCVariable<double> >(pc, patch, enthalpyDenom, enthalpyDenomHat);
       }
       if (d_calcReactingScalar) {
-        d_filter->applyFilter(pc, patch, reactScalarNum, reactScalarNumHat);
-        d_filter->applyFilter(pc, patch, reactScalarDenom, reactScalarDenomHat);
+        d_filter->applyFilter<constCCVariable<double> >(pc, patch, reactScalarNum, reactScalarNumHat);
+        d_filter->applyFilter<constCCVariable<double> >(pc, patch, reactScalarDenom, reactScalarDenomHat);
       }
     }      
 #endif
@@ -2503,16 +2503,16 @@ CompLocalDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
       // filtering for periodic case is not implemented 
       // if it needs to be then tempCs will require 1 layer of boundary cells to be computed
 #ifdef PetscFilter
-        d_filter->applyFilter(pc, patch, tempCs, Cs);
+        d_filter->applyFilter<Array3<double> >(pc, patch, tempCs, Cs);
         if (d_dynScalarModel) {
           if (d_calcScalar) {
-            d_filter->applyFilter(pc, patch, tempShF, ShF);
+            d_filter->applyFilter<Array3<double> >(pc, patch, tempShF, ShF);
           }
           if (d_calcEnthalpy) {
-            d_filter->applyFilter(pc, patch, tempShE, ShE);
+            d_filter->applyFilter<Array3<double> >(pc, patch, tempShE, ShE);
           }
           if (d_calcReactingScalar) {
-            d_filter->applyFilter(pc, patch, tempShRF, ShRF);
+            d_filter->applyFilter<Array3<double> >(pc, patch, tempShRF, ShRF);
           }
         }      
 #endif
@@ -2551,7 +2551,7 @@ CompLocalDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
         // filtering for periodic case is not implemented 
         // if it needs to be then tempCs will require 1 layer of boundary cells to be computed
 #ifdef PetscFilter
-        d_filter->applyFilter(pc, patch, tempCs, Cs);      
+        d_filter->applyFilter<Array3<double> >(pc, patch, tempCs, Cs);      
 #endif
       }
       else
@@ -2936,8 +2936,8 @@ CompLocalDynamicProcedure::computeScalarVariance(const ProcessorGroup* pc,
     IntVector indexHigh = patch->getFortranCellHighIndex();
 
 #ifdef PetscFilter
-    d_filter->applyFilter(pc, patch, scalar, filterPhi);
-    d_filter->applyFilter(pc, patch, phiSqr, filterPhiSqr);
+    d_filter->applyFilter<constCCVariable<double> >(pc, patch, scalar, filterPhi);
+    d_filter->applyFilter<Array3<double> >(pc, patch, phiSqr, filterPhiSqr);
 #endif
 
     for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {

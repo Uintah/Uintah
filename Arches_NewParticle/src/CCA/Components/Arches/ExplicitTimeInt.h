@@ -173,8 +173,7 @@ private:
   {
 
 		for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
-      IntVector c = *iter; 
-			phi[c] = ssp_alpha[step]*old_phi[c] + ssp_beta[step]*phi[c];	
+			phi[*iter] = ssp_alpha[step]*old_phi[*iter] + ssp_beta[step]*phi[*iter];	
     }
 
 

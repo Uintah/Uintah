@@ -92,12 +92,13 @@ Discretization::calculateVelocityCoeff(const Patch* patch,
 {
    // ignore faces that lie on the edge of the computational domain
   // in the principal direction
-
+  IntVector noNeighborsLow = patch->noNeighborsLow();
+  IntVector noNeighborsHigh = patch->noNeighborsHigh();
   //__________________________________
   //  X DIR
-  IntVector oci(-1,0,0);  // one cell inward
-  IntVector idxLoU = patch->getExtraLowIndex(Patch::XFaceBased, oci);
-  IntVector idxHiU = patch->getExtraHighIndex(Patch::XFaceBased,oci)-IntVector(1,1,1);
+  IntVector oci(-1,0,0);  //one cell inward.  Only offset at the edge of the computational domain.
+  IntVector idxLoU = patch->getSFCXLowIndex() - noNeighborsLow * oci;
+  IntVector idxHiU = patch->getSFCXHighIndex()+ noNeighborsHigh * oci - IntVector(1,1,1);
 
   // Calculate the coeffs
   fort_uvelcoef(coeff_constvars->uVelocity,
@@ -135,9 +136,9 @@ Discretization::calculateVelocityCoeff(const Patch* patch,
 
   //__________________________________
   //      Y DIR
-  oci = IntVector(0,-1,0);  // one cell inward
-  IntVector idxLoV = patch->getExtraLowIndex(Patch::YFaceBased, oci);
-  IntVector idxHiV = patch->getExtraHighIndex(Patch::YFaceBased,oci)-IntVector(1,1,1);
+  oci = IntVector(0,-1,0);  // one cell inward.  Only offset at the edge of the computational domain.
+  IntVector idxLoV = patch->getSFCYLowIndex() - noNeighborsLow * oci;
+  IntVector idxHiV = patch->getSFCYHighIndex()+ noNeighborsHigh * oci - IntVector(1,1,1);
 
   // Calculate the coeffs
   fort_vvelcoef(coeff_constvars->vVelocity,
@@ -174,10 +175,10 @@ Discretization::calculateVelocityCoeff(const Patch* patch,
                 idxLoV, idxHiV);
   //__________________________________
   //    Z DIR
-  oci = IntVector(0,0,-1);  // one cell inward
-  IntVector idxLoW = patch->getExtraLowIndex(Patch::ZFaceBased, oci);
-  IntVector idxHiW = patch->getExtraHighIndex(Patch::ZFaceBased,oci)-IntVector(1,1,1);    
-
+  oci = IntVector(0,0,-1); //one cell inward.  Only offset at the edge of the computational domain. 
+  IntVector idxLoW = patch->getSFCZLowIndex() - noNeighborsLow * oci;
+  IntVector idxHiW = patch->getSFCZHighIndex()+ noNeighborsHigh * oci - IntVector(1,1,1);
+  
   // Calculate the coeffs
   fort_wvelcoef(coeff_constvars->wVelocity,
                 coeff_vars->wVelocityConvectCoeff[Arches::AE],
@@ -255,7 +256,7 @@ Discretization::computeDivergence(const ProcessorGroup* pc,
   // filtering for periodic case is not implemented 
   // if it needs to be then unfiltered_divergence will require 1 layer of boundary cells to be computed
 #ifdef PetscFilter
-    d_filter->applyFilter(pc, patch, unfiltered_divergence, vars->divergence);
+    d_filter->applyFilter<CCVariable<double> >(pc, patch, unfiltered_divergence, vars->divergence);
 #else
     // filtering without petsc is not implemented
     // if it needs to be then unfiltered_divergence will have to be computed with ghostcells
