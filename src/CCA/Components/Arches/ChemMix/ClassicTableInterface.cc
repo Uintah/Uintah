@@ -49,39 +49,7 @@
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/IO/UintahZlibUtil.h>
-#include <dirent.h>
 
-#include <CCA/Components/Arches/Mixing/NewStaticMixingTable.h>
-#include <CCA/Components/Arches/Mixing/InletStream.h>
-#include <CCA/Components/Arches/ExtraScalarSolver.h>
-#include <CCA/Components/Arches/ExtraScalarSrc.h>
-#include <CCA/Components/Arches/Arches.h>
-
-#include <Core/ProblemSpec/ProblemSpecP.h>
-#include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Exceptions/InvalidValue.h>
-#include <Core/Exceptions/ProblemSetupException.h>
-#include <Core/IO/UintahZlibUtil.h>
-#include <Core/Parallel/ProcessorGroup.h>
-#include <Core/Math/MiscMath.h>
-
-#include <CCA/Components/Arches/Mixing/Stream.h>
-#include <CCA/Components/Arches/Mixing/MixingModel.h>
-#include <Core/Parallel/UintahParallelComponent.h>
-#include <vector>
-#include <string>
-#include <fstream>
-#include <iomanip>
-#include <iostream>
-#include <sstream>
-
-#include <fcntl.h>
-#include <cmath>
-#include <cstdio>
-#include <cstdlib>
-#include <time.h>
-#include <unistd.h>
-#include <zlib.h>
 
 using namespace std;
 using namespace Uintah;
