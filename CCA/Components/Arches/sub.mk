@@ -87,14 +87,6 @@ ifeq ($(HAVE_HYPRE),yes)
   SRCS += $(SRCDIR)/HypreSolver.cc
 endif
 
-SUBDIRS := $(SRCDIR)/CoalModels $(SRCDIR)/SourceTerms $(SRCDIR)/TransportEqns $(SRCDIR)/PropertyModels
-
-ifeq ($(HAVE_TABPROPS),yes)
-  SUBDIRS += $(SRCDIR)/ChemMix
-endif
-
-include $(SCIRUN_SCRIPTS)/recurse.mk
-
 PSELIBS := \
         Core/ProblemSpec   \
         Core/GeometryPiece \
@@ -130,9 +122,19 @@ endif
 LIBS := $(LIBS) $(XML2_LIBRARY) $(F_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) \
         $(LAPACK_LIBRARY) $(BLAS_LIBRARY) $(THREAD_LIBRARY) $(TABPROPS_LIBRARY) $(HDF5_LIBRARY)
 
-include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
-
 INCLUDES := $(INCLUDES) $(HDF5_INCLUDE) $(TABPROPS_INCLUDE)
+
+#### Handle subdirs
+SUBDIRS := $(SRCDIR)/CoalModels $(SRCDIR)/SourceTerms $(SRCDIR)/TransportEqns $(SRCDIR)/PropertyModels
+
+ifeq ($(HAVE_TABPROPS),yes)
+  SUBDIRS += $(SRCDIR)/ChemMix
+endif
+
+include $(SCIRUN_SCRIPTS)/recurse.mk
+#### End handle subdirs
+
+include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
 $(SRCDIR)/BoundaryCondition.$(OBJEXT): $(SRCDIR)/fortran/areain_fort.h
 $(SRCDIR)/BoundaryCondition.$(OBJEXT): $(SRCDIR)/fortran/inlpresbcinout_fort.h

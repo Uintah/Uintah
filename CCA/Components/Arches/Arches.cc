@@ -736,7 +736,7 @@ Arches::scheduleInitialize(const LevelP& level,
 
   // Table Lookup 
   string mixmodel = d_props->getMixingModelType(); 
-  if ( mixmodel != "TabProps")
+  if ( mixmodel != "TabProps" && mixmodel != "ClassicTable")
     d_props->sched_reComputeProps(sched, patches, matls,
                                 init_timelabel, true, true, false,false);
   else {

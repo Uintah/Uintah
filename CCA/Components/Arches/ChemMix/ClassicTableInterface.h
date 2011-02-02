@@ -28,43 +28,40 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-//----- TabPropsInterface.h --------------------------------------------------
+//----- ClassicTableInterface.h --------------------------------------------------
 
-#ifndef Uintah_Component_Arches_TabPropsInterface_h
-#define Uintah_Component_Arches_TabPropsInterface_h
+#ifndef Uintah_Component_Arches_ClassicTableInterface_h
+#define Uintah_Component_Arches_ClassicTableInterface_h
 
 #include <tabprops/StateTable.h>
+#include <CCA/Components/Arches/Mixing/InletStream.h>
+#include <CCA/Components/Arches/Mixing/Stream.h>
 #include <CCA/Components/Arches/ArchesMaterial.h>
 #include <CCA/Components/Arches/TimeIntegratorLabel.h>
+#include <Core/Util/DebugStream.h>
 
+#include   <string>
 
 /**
- * @class  TabPropsInterface
- * @author Jeremy Thornock, Charles Reid
- * @date   May 2009
+ * @class  ClassicTableInterface
+ * @author Jeremy Thornock
+ * @date   Jan 2011
  *
- * @brief Table interface for those created with TabProps.
+ * @brief Table interface for those created with the Classic Arches Format 
  *
  * @todo
- * Add support for multiple scalar variance
  *
  * @details
- * This class provides and interface to TabProps formatted tables.  See the
- * TabProps project here: 
- * https://software.crsim.utah.edu/trac/wiki/TabProps
- * to get more information regarding TabProps and the its tabluar format.  
+ * This class provides and interface to classic Arches formatted tables.  
  
 This code checks for the following tags/attributes in the input file:
-The UPS interface for TabProps is: 
+The UPS interface is: 
 
 \code
     <Properties>
-        <TabProps>
-            <inputfile>REQUIRED STRING</inputfile>
-            <hl_pressure>OPTIONAL DOUBLE</hl_pressure> 
-            <hl_outlet>OPTIONAL DOUBLE</hl_outlet> 
-            <hl_scalar_init>OPTIONAL DOUBLE</hl_scalar_init>
-        </TabProps>
+      <ClassicTable>
+        <inputfile>REQUIRED STRING</inputfile>
+      </ClassicTable>
     </Properties>
 
     <DataArchiver>
@@ -78,21 +75,22 @@ The UPS interface for TabProps is:
  * report of what is going on in the table reader.
  *
  *
- */
+*/
 
 
 namespace Uintah {
 
+
 class ArchesLabel; 
 class MPMArchesLabel; 
 class TimeIntegratorLabel; 
-class TabPropsInterface : public MixingRxnModel {
+class ClassicTableInterface : public MixingRxnModel {
 
 public:
 
-  TabPropsInterface( const ArchesLabel* labels, const MPMArchesLabel* MAlabels );
+  ClassicTableInterface( const ArchesLabel* labels, const MPMArchesLabel* MAlabels );
 
-  ~TabPropsInterface();
+  ~ClassicTableInterface();
 
   void problemSetup( const ProblemSpecP& params );
   
@@ -157,24 +155,6 @@ public:
       @returns  A vector<string>& that is a reference to the list of all independent variables */ 
   const vector<string> & getAllIndepVars();
 
-  /** @brief      Returns a single dependent variable, given a vector of independent variable values
-      @param dv   The name of the dependent variable to look up in the table
-      @param iv   The vector of indepenent variable values */
-  inline double getSingleState( string dv, vector<double> iv ) {
-    double result = 0.0; 
-    //cout_tabledbg << "From your table, looking up: " << dv << endl;
-    return result = d_statetbl.query(  dv, &iv[0] ); 
-  };
-
-  /** @brief          Returns a single dependent variable, given a vector of independent variable values
-      @param spline   The spline information for the dep. var. 
-      @param iv       The vector of indepenent variable values */
-  inline double getSingleState( const BSpline* spline, std::string dv, vector<double> iv ) {
-    double result = 0.0; 
-    //cout_tabledbg << "From your table, looking up a variable using spline information: " << dv << endl;
-    return result = d_statetbl.query(  spline, &iv[0] ); 
-  };
-
   /** @brief Dummy initialization as required by MPMArches */
   void sched_dummyInit( const LevelP& level, SchedulerP& sched );
 
@@ -185,23 +165,23 @@ public:
                   DataWarehouse* old_dw, 
                   DataWarehouse* new_dw );
 
-  /** @brief Gets the Spline information for TabProps.  Spline info is used because it is more efficient that passing strings */
-  void getSplineInfo(); 
-  /** @brief Gets the Spline information for TabProps.  This is specific to the enthalpy vars */ 
-  void getEnthalpySplineInfo(); 
+  /** @brief Load table into memory */ 
+  void loadMixingTable( const string & inputfile );
 
-  typedef std::map<std::string, const BSpline*>   SplineMap; 
+  /** @brief Interpolate values from the table using the species index */ 
+  double tableLookUp( std::vector<double> iv, int var_index);
 
   enum BoundaryType { DIRICHLET, NEUMANN };
 
   struct DepVarCont {
 
     CCVariable<double>* var; 
-    const BSpline* spline; 
+    int index; 
 
   }; 
 
   typedef std::map<string, DepVarCont >       DepVarMap;
+  typedef std::map<string, int >               IndexMap; 
 
 protected :
 
@@ -210,18 +190,32 @@ private:
   bool d_table_isloaded;    ///< Boolean: has the table been loaded?
   
   double d_hl_scalar_init;  ///< Heat loss value for non-adiabatic conditions
+  // Specifically for the classic table: 
+  double d_f_stoich;        ///< Stoichiometric mixture fraction 
+  double d_H_fuel;          ///< Fuel Enthalpy
+  double d_H_air;           ///< Oxidizer Enthalpy
+  
+  int d_indepvarscount;     ///< Number of independent variables
+  int d_varscount;          ///< Total dependent variables
 
   IntVector d_ijk_den_ref;                ///< Reference density location
 
-  vector<string> d_allIndepVarNames;      ///< Vector storing all independent variable names from table file
-  vector<string> d_allDepVarNames;        ///< Vector storing all dependent variable names from the table file
+  IndexMap d_depVarIndexMap;              ///< Reference to the integer location of the variable
+  IndexMap d_enthalpyVarIndexMap;         ///< Referece to the integer location of variables for heat loss calculation
+
+  std::vector<string> d_allIndepVarNames;      ///< Vector storing all independent variable names from table file
+  std::vector<int>    d_allIndepVarNum;        ///< Vector storing the grid size for the Independant variables
+  std::vector<string> d_allDepVarNames;        ///< Vector storing all dependent variable names from the table file
+  std::vector<string> d_allDepVarUnits;        ///< Units for the dependent variables 
 
   vector<string> d_allUserDepVarNames;    ///< Vector storing all independent varaible names requested in input file
 
-  StateTable d_statetbl;                  ///< StateTable object to represent the table data
-  SplineMap  d_depVarSpline;              ///< Map of spline information for each dependent var
-  SplineMap  d_enthalpyVarSpline;         ///< Holds the sensible and adiabatic enthalpy spline information
-                                          // note that this ^^^ is a bit of a quick fix. Should find a better way later. 
+  //previous Arches specific variables: 
+  std::vector<std::vector<double> > i1; 
+  std::vector<double> i2; 
+  std::vector<double> i3; 
+  std::vector <std::vector <double> > table;
+
 
   /// A dependent variable wrapper
   struct ADepVar {
@@ -229,22 +223,33 @@ private:
     CCVariable<double> data; 
   };
 
-  /** @brief  Helper for filling the spline map */
-  inline void insertIntoSplineMap( const string var_name, const BSpline* spline ){
+  /// @brief Method to find the index for any dependent variable.  
+  int inline findIndex( std::string name ){ 
 
-    SplineMap::iterator i = d_depVarSpline.find( var_name ); 
+    int index = -1; 
 
-    if ( i == d_depVarSpline.end() ) {
+    for ( int i = 0; i < d_varscount; i++ ) { 
 
-      cout_tabledbg << "Inserting " << var_name << " spline information into storage." << endl;
+      if ( name.compare( d_allDepVarNames[i] ) == 0 ) {
+        index = i; 
+        break; 
+      }
+    }
 
-      i = d_depVarSpline.insert( make_pair( var_name, spline ) ).first; 
+    if ( index == -1 ) {
+      ostringstream exception;
+      exception << "Error: The variable " << name << " was not found in the table." << "\n" << 
+        "Please check your input file and try again. " << endl;
+      throw InternalError(exception.str(),__FILE__,__LINE__);
+    }
 
-    } 
-    return; 
-  };
+    return index; 
+  }
 
-}; // end class TabPropsInterface
+  void getIndexInfo(); 
+  void getEnthalpyIndexInfo(); 
+
+}; // end class ClassicTableInterface
   
 } // end namespace Uintah
 

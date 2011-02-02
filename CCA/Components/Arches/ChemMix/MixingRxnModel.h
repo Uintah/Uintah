@@ -33,6 +33,9 @@ DEALINGS IN THE SOFTWARE.
 #ifndef Uintah_Component_Arches_MixingRxnModel_h
 #define Uintah_Component_Arches_MixingRxnModel_h
 
+#include <CCA/Components/Arches/Mixing/InletStream.h>
+#include <CCA/Components/Arches/Mixing/Stream.h>
+
 // Uintah includes
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/Variables/VarLabel.h>
@@ -42,6 +45,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/MPMArches/MPMArchesLabel.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Parallel/Parallel.h>
+#include <Core/Util/DebugStream.h>
 
 // C++ includes
 #include     <vector>
@@ -72,6 +76,9 @@ DEALINGS IN THE SOFTWARE.
 
 namespace Uintah {
  
+// setenv SCI_DEBUG TABLE_DEBUG:+ 
+static DebugStream cout_tabledbg("TABLE_DEBUG",false);
+
 class ArchesLabel; 
 class TimeIntegratorLabel; 
 class MixingRxnModel{
@@ -114,6 +121,14 @@ public:
 
   /** @brief Provides access for models, algorithms, etc. to add additional table lookup variables. */
   void addAdditionalDV( std::vector<string>& vars );
+
+  /** @brief Needed for the old properties method until it goes away */ 
+  virtual void oldTableHack( const InletStream&, Stream&, bool, const std::string ) = 0; 
+
+  /** @brief Needed for dumb MPMArches */ 
+
+  virtual void sched_dummyInit( const LevelP& level, 
+                                    SchedulerP& sched ) = 0;
 
 protected :
 
