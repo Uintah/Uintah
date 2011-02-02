@@ -113,15 +113,6 @@ RadLinearSolver::destroyMatrix()
 }
 
 
-// Shutdown PETSc
-void RadLinearSolver::finalizeSolver()
-{
-  throw InternalError("PetscSolver not configured", __FILE__, __LINE__);
-}
-
-
-
-
 
 
 
