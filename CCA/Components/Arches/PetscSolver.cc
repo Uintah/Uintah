@@ -329,6 +329,6 @@ PetscSolver::copyPressSoln(const Patch* patch, ArchesVariables* vars)
 void
 PetscSolver::destroyMatrix() 
 {
-  destroyPetscObjects(A, d_x, d_b);
+  destroyPetscObjects(A, d_x, d_b, d_u);
 }
 

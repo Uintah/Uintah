@@ -30,7 +30,7 @@ namespace Uintah {
                         const double residual,
                         const ProcessorGroup* myworld);
 
-  void destroyPetscObjects(Mat A, Vec X, Vec B, Vec U=NULL);
+  void destroyPetscObjects(Mat A, Vec X, Vec B, Vec U);
                              
   void PetscLocalToGlobalMapping(const PatchSet* perproc_patches,
                                  const PatchSubset* mypatches,

@@ -433,5 +433,5 @@ Filter::setFilterMatrix(const ProcessorGroup* ,
 void
 Filter::destroyMatrix() 
 {
-  destroyPetscObjects(A, d_x, d_b);
+  destroyPetscObjects(A, d_x, d_b, PETSC_NULL);
 }
