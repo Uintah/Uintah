@@ -484,7 +484,6 @@ void RMCRT_Test::shootRays_onCoarseLevel ( const ProcessorGroup*,
 { 
   const Level* level = getLevel(patches);
   IntVector L_lo,L_hi;
-  bool useBoundaryCells = false;
 
   level->findInteriorCellIndexRange(L_lo, L_hi);
   constCCVariable<double> color;
