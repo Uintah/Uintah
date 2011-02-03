@@ -26,28 +26,31 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 
 */
-#include <Core/IO/DbgOutput.h>
+
+#include <Core/Grid/DbgOutput.h>
+#include <Core/Parallel/Parallel.h>
+
 namespace Uintah{
 
 //__________________________________
 //
-void printSchedule(const PatchSet* patches,
-                   SCIRun::DebugStream& dbg,
-                   const string& where)
+void printSchedule( const PatchSet      * patches,
+                    SCIRun::DebugStream & dbg,
+                    const string        & where )
 {
   if (dbg.active()){
     dbg << Uintah::Parallel::getMPIRank() << " ";
     dbg << left;
     dbg.width(50);
-    dbg  << where << "L-"
+    dbg << where << "L-"
         << getLevel(patches)->getIndex()<< endl;
   }  
 }
 //__________________________________
 //
-void printSchedule(const LevelP& level,
-                   SCIRun::DebugStream& dbg,
-                   const string& where)
+void printSchedule( const LevelP        & level,
+                    SCIRun::DebugStream & dbg,
+                    const string        & where )
 {
   if (dbg.active()){
     dbg << Uintah::Parallel::getMPIRank() << " ";

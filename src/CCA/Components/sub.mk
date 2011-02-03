@@ -34,8 +34,6 @@
 
 SRCDIR  := CCA/Components
 
-ADIR = $(SRCDIR)/Arches
-
 # The following variables are used by the Fake* scripts... please
 # do not modify...
 #
@@ -54,10 +52,7 @@ ifeq ($(BUILD_ICE),yes)
   ICE      := $(SRCDIR)/ICE
 endif
 ifeq ($(BUILD_ARCHES),yes)
-  ARCHES   := $(SRCDIR)/Arches \
-	      $(ADIR)/fortran           $(ADIR)/Mixing \
-	      $(ADIR)/Radiation        $(ADIR)/Radiation/fortran $(ADIR)/RMCRT \
-              $(SRCDIR)/SpatialOps 
+  ARCHES   := $(SRCDIR)/Arches $(SRCDIR)/SpatialOps
   ifeq ($(BUILD_MPM),yes)
     MPMARCHES := $(SRCDIR)/MPMArches
   endif

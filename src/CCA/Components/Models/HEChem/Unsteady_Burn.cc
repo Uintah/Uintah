@@ -36,7 +36,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Variables/VarTypes.h>
-#include <Core/IO/DbgOutput.h>
+#include <Core/Grid/DbgOutput.h>
 #include <Core/Labels/MPMLabel.h>
 #include <Core/Labels/ICELabel.h>
 #include <Core/Labels/MPMICELabel.h>

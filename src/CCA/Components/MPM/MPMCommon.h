@@ -36,7 +36,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/LevelP.h>
 #include <Core/Grid/SimulationStateP.h>
 #include <Core/Grid/Variables/ComputeSet.h>
-#include <Core/IO/DbgOutput.h>
+#include <Core/Grid/DbgOutput.h>
 #include <Core/Util/DebugStream.h>
 
 #include <CCA/Components/MPM/uintahshare.h>

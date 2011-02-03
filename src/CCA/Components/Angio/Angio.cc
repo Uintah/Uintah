@@ -49,7 +49,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/Variables/SoleVariable.h>
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Variables/VarTypes.h>
-#include <Core/IO/DbgOutput.h>
+#include <Core/Grid/DbgOutput.h>
 #include <Core/Exceptions/ParameterNotFound.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Parallel/ProcessorGroup.h>
