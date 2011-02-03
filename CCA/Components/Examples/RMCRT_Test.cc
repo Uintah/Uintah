@@ -51,7 +51,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/Variables/PerPatch.h>
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Variables/VarTypes.h>
-#include <Core/IO/DbgOutput.h>
+#include <Core/Grid/DbgOutput.h>
 #include <Core/Parallel/ProcessorGroup.h>
 
 using SCIRun::Point;

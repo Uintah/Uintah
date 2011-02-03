@@ -1,3 +1,6 @@
+#ifndef Uintah_CORE_GRID_DBGOUTPUT_H
+#define Uintah_CORE_GRID_DBGOUTPUT_H
+
 /*
 
 The MIT License
@@ -26,33 +29,31 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 
 */
-#ifndef Uintah_Component_parent_common_h
-#define Uintah_Component_parent_common_h
 
 #include <Core/Util/DebugStream.h>
 #include <Core/Grid/LevelP.h>
 #include <Core/Grid/Patch.h>
-#include <Core/Grid/Variables/ComputeSet.h>
-#include <Core/Parallel/Parallel.h>
 #include <string>
 
 namespace Uintah{
 
-void printSchedule(const PatchSet* patches,
-                   SCIRun::DebugStream& dbg,
-                   const string& where);
+void printSchedule( const PatchSet       * patches,
+                    SCIRun::DebugStream  & dbg,
+                    const std::string    & where );
 
-void printSchedule(const LevelP& level,
-                   SCIRun::DebugStream& dbg,
-                   const string& where);
+void printSchedule( const LevelP        & level,
+                    SCIRun::DebugStream & dbg,
+                    const string        & where );
 
-void printTask(const PatchSubset* patches,
-               const Patch* patch,
-               SCIRun::DebugStream& dbg,
-               const string& where);
+void printTask( const PatchSubset   * patches,
+                const Patch         * patch,
+                SCIRun::DebugStream & dbg,
+                const string        & where );
 
-void printTask(const Patch* patch,
-               SCIRun::DebugStream& dbg,
-               const string& where);
+void printTask( const Patch         * patch,
+                SCIRun::DebugStream & dbg,
+                const string        & where );
+
 } // End namespace Uintah
+
 #endif

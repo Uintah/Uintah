@@ -45,6 +45,7 @@ SRCS += \
         $(SRCDIR)/AMR.cc                   \
         $(SRCDIR)/Box.cc                   \
         $(SRCDIR)/BSplineInterpolator.cc   \
+        $(SRCDIR)/DbgOutput.cc             \
         $(SRCDIR)/Ghost.cc                 \
         $(SRCDIR)/Grid.cc                  \
         $(SRCDIR)/Level.cc                 \

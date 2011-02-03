@@ -39,7 +39,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Labels/MPMLabel.h>
 #include <Core/Labels/ICELabel.h>
 #include <Core/Labels/MPMICELabel.h>
-#include <Core/IO/DbgOutput.h>
+#include <Core/Grid/DbgOutput.h>
 #include <CCA/Components/ICE/ICEMaterial.h>
 #include <CCA/Components/ICE/BoundaryCond.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>

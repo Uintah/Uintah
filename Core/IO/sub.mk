@@ -35,8 +35,7 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR := Core/IO
 
 SRCS += \
-	$(SRCDIR)/UintahZlibUtil.cc \
-       $(SRCDIR)/DbgOutput.cc
+	$(SRCDIR)/UintahZlibUtil.cc
 
 PSELIBS :=
 LIBS    := $(Z_LIBRARY)
