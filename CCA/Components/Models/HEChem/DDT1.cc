@@ -35,6 +35,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Models/HEChem/Common.h>
 #include <CCA/Components/Models/HEChem/DDT1.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <CCA/Components/Parent/Common.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/Level.h>
@@ -266,7 +267,7 @@ void DDT1::scheduleInitialize(SchedulerP& sched,
                               const LevelP& level,
                               const ModelInfo*)
 {
-  printSchedule(level,"DDT1::scheduleInitialize\t\t\t");
+  printSchedule(level,cout_doing,"DDT1::scheduleInitialize");
   Task* t = scinew Task("DDT1::initialize", this, &DDT1::initialize);
   const MaterialSubset* react_matl = d_matl0->thisMaterial();
   t->computes(reactedFractionLabel, react_matl);
@@ -351,7 +352,7 @@ void DDT1::scheduleComputeModelSources(SchedulerP& sched,
   Task* t1 = scinew Task("DDT1::computeNumPPC", this, 
                          &DDT1::computeNumPPC, mi);
     
-  printSchedule(level,"DDT1::scheduleComputeNumPPC\t\t\t");  
+  printSchedule(level,cout_doing,"DDT1::scheduleComputeNumPPC");  
     
   t1->requires(Task::OldDW, Mlb->pXLabel,               react_matl, gn);
   t1->computes(numPPCLabel, react_matl);
@@ -435,7 +436,7 @@ void DDT1::computeNumPPC(const ProcessorGroup*,
     /* Patch Iteration */
     for(int p=0;p<patches->size();p++){
         const Patch* patch = patches->get(p);  
-        printTask(patches,patch,"Doing computeNumPPC\t\t\t\t");
+        printTask(patches,patch,cout_doing,"Doing DDT1::computeNumPPC");
         
         /* Indicating how many particles a cell contains */
         ParticleSubset* pset = old_dw->getParticleSubset(m0, patch);
@@ -822,29 +823,6 @@ void DDT1::scheduleTestConservation(SchedulerP&,
                                     const ModelInfo*)                     
 {
   // Not implemented yet
-}
-
-//______________________________________________________________________
-//
-void DDT1::printSchedule(const LevelP& level,
-                         const string& where){
-  if (cout_doing.active()){
-    cout_doing << d_myworld->myrank() << " "
-               << where << "L-"
-               << level->getIndex()<< endl;
-  }
-}
-
-//______________________________________________________________________
-void DDT1::printTask(const PatchSubset* patches,
-                     const Patch* patch,
-                     const string& where){
-    if (cout_doing.active()){
-        cout_doing << d_myworld->myrank() << " " 
-        << where << " DDT1 L-"
-        << getLevel(patches)->getIndex()
-        << " patch " << patch->getGridIndex()<< endl;
-    }  
 }
     
 /****************************************************************************/

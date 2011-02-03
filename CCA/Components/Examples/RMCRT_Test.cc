@@ -29,6 +29,7 @@ DEALINGS IN THE SOFTWARE.
 
 #include <CCA/Components/Examples/ExamplesLabel.h>
 #include <CCA/Components/Examples/RMCRT_Test.h>
+#include <CCA/Components/Parent/Common.h>
 #include <CCA/Components/Regridder/PerPatchVars.h>
 #include <CCA/Ports/LoadBalancer.h>
 #include <CCA/Ports/Scheduler.h>
@@ -858,67 +859,6 @@ void RMCRT_Test::coarsen_Q ( const ProcessorGroup*,
       }  // fine patch loop
     }
   }  // course patch loop 
-}
-
-//__________________________________
-//  
-void RMCRT_Test::printSchedule(const PatchSet* patches,
-                              DebugStream& dbg,
-                              const string& where)
-{
-  if (dbg.active()){
-    dbg << UintahParallelComponent::d_myworld->myrank() << " ";
-    dbg << left;
-    dbg.width(50);
-    dbg  << where << "L-"
-        << getLevel(patches)->getIndex()<< endl;
-  }  
-}
-//__________________________________
-//
-void RMCRT_Test::printSchedule(const LevelP& level,
-                              DebugStream& dbg,
-                              const string& where)
-{
-  if (dbg.active()){
-    dbg << UintahParallelComponent::d_myworld->myrank() << " ";
-    dbg << left;
-    dbg.width(50);
-    dbg << where << "L-"
-        << level->getIndex()<< endl;
-  }  
-}
-//__________________________________
-//
-void RMCRT_Test::printTask(const PatchSubset* patches,
-                          const Patch* patch,
-                          DebugStream& dbg,
-                          const string& where)
-{
-  if (dbg.active()){
-    dbg << UintahParallelComponent::d_myworld->myrank() << " ";
-    dbg << left;
-    dbg.width(50);
-    dbg << where << " MPM \tL-"
-        << getLevel(patches)->getIndex()
-        << " patch " << patch->getGridIndex()<< endl;
-  }  
-}
-
-//__________________________________
-//
-void RMCRT_Test::printTask(const Patch* patch,
-                          DebugStream& dbg,
-                          const string& where)
-{
-  if (dbg.active()){
-    dbg << UintahParallelComponent::d_myworld->myrank() << " ";
-    dbg << left;
-    dbg.width(50);
-    dbg << where << " MPM \tL-"
-        << patch->getLevel()->getIndex()
-        << " patch " << patch->getGridIndex()<< endl;
-  }  
 }  
- 
+
 } // namespace Uintah

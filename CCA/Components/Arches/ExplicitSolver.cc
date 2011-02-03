@@ -82,6 +82,8 @@ DEALINGS IN THE SOFTWARE.
 
 using namespace Uintah;
 
+static DebugStream dbg("ARCHES", false);
+
 // ****************************************************************************
 // Default constructor for ExplicitSolver
 // ****************************************************************************

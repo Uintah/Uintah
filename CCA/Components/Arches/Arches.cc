@@ -87,6 +87,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Arches/CompLocalDynamicProcedure.h>
 #include <CCA/Components/Arches/ExtraScalarSolver.h>
 #include <CCA/Components/Arches/OdtClosure.h>
+#include <CCA/Components/Parent/Common.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Exceptions/InvalidValue.h>
@@ -114,6 +115,9 @@ using namespace Uintah;
 #ifdef PetscFilter
 #include <CCA/Components/Arches/Filter.h>
 #endif
+
+
+static DebugStream dbg("ARCHES", false);
 
 const int Arches::NDIM = 3;
 
@@ -151,6 +155,7 @@ Arches::Arches(const ProcessorGroup* myworld) :
   dqmomfactory.set_quad_nodes(0);
   d_doDQMOM = false; 
   d_doMMS = false;
+  d_myworld = myworld;
   
 }
 
@@ -830,6 +835,8 @@ Arches::sched_paramInit(const LevelP& level,
     Task* tsk = scinew Task( "Arches::paramInit",
                        this, &Arches::paramInit);
 
+    printSchedule(level,dbg,"Arches::paramInit");
+
     tsk->computes(d_lab->d_cellInfoLabel);
     tsk->computes(d_lab->d_uVelocitySPBCLabel);
     tsk->computes(d_lab->d_vVelocitySPBCLabel);
@@ -1210,7 +1217,9 @@ Arches::scheduleComputeStableTimestep(const LevelP& level,
   // primitive variable initialization
   Task* tsk = scinew Task( "Arches::computeStableTimeStep",this, 
                            &Arches::computeStableTimeStep);
-  
+                           
+  printSchedule(level,dbg, "Arches::computeStableTimeStep");
+ 
   Ghost::GhostType  gac = Ghost::AroundCells;
   Ghost::GhostType  gaf = Ghost::AroundFaces;
   Ghost::GhostType  gn = Ghost::None;
@@ -1494,6 +1503,9 @@ Arches::sched_readCCInitialCondition(const LevelP& level,
     // primitive variable initialization
     Task* tsk = scinew Task( "Arches::readCCInitialCondition",
                             this, &Arches::readCCInitialCondition);
+
+    printSchedule(level,dbg,"Arches::readCCInitialCondition");
+                            
     tsk->modifies(d_lab->d_newCCUVelocityLabel);
     tsk->modifies(d_lab->d_newCCVVelocityLabel);
     tsk->modifies(d_lab->d_newCCWVelocityLabel);
@@ -1575,6 +1587,8 @@ Arches::sched_scalarInit( const LevelP& level,
 {
   Task* tsk = scinew Task( "Arches::scalarInit", 
                            this, &Arches::scalarInit); 
+                           
+  printSchedule(level,dbg,"Arches::scalarInit");
  
   EqnFactory& eqnFactory = EqnFactory::self(); 
   EqnFactory::EqnMap& scalar_eqns = eqnFactory.retrieve_all_eqns(); 
@@ -1688,6 +1702,9 @@ Arches::sched_weightInit( const LevelP& level,
 {
   Task* tsk = scinew Task( "Arches::weightInit", 
                            this, &Arches::weightInit); 
+                           
+  printSchedule(level,dbg,"Arches::weightInit");
+                           
   // DQMOM weight transport vars
   DQMOMEqnFactory& dqmomFactory = DQMOMEqnFactory::self(); 
   DQMOMEqnFactory::EqnMap& dqmom_eqns = dqmomFactory.retrieve_all_eqns(); 
@@ -1976,6 +1993,9 @@ Arches::sched_mmsInitialCondition(const LevelP& level,
   // primitive variable initialization
   Task* tsk = scinew Task( "Arches::mmsInitialCondition",
                           this, &Arches::mmsInitialCondition);
+                          
+  printSchedule(level,dbg,"Arches::mmsInitialCondition");
+                          
   tsk->modifies(d_lab->d_uVelocitySPBCLabel);
   tsk->modifies(d_lab->d_vVelocitySPBCLabel);
   tsk->modifies(d_lab->d_wVelocitySPBCLabel);
@@ -2106,6 +2126,9 @@ Arches::sched_interpInitialConditionToStaggeredGrid(const LevelP& level,
   // primitive variable initialization
   Task* tsk = scinew Task( "Arches::interpInitialConditionToStaggeredGrid",
                      this, &Arches::interpInitialConditionToStaggeredGrid);
+                     
+  printSchedule(level,dbg,"Arches::interpInitialConditionToStaggeredGrid");
+                       
   Ghost::GhostType  gac = Ghost::AroundCells;   
                       
   tsk->requires(Task::NewDW, d_lab->d_newCCUVelocityLabel, gac, 1);
@@ -2177,6 +2200,8 @@ Arches::sched_getCCVelocities(const LevelP& level, SchedulerP& sched)
 {
   Task* tsk = scinew Task("Arches::getCCVelocities", this, 
                           &Arches::getCCVelocities);
+                          
+  printSchedule(level,dbg,"Arches::getCCVelocities");
                           
   Ghost::GhostType  gaf = Ghost::AroundFaces;
   tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel, gaf, 1);
@@ -2816,4 +2841,3 @@ void Arches::registerDQMOMEqns(ProblemSpecP& db)
     }
   }  
 }
-
