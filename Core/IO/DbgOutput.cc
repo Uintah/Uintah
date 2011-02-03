@@ -26,7 +26,7 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 
 */
-#include <CCA/Components/Parent/Common.h>
+#include <Core/IO/DbgOutput.h>
 namespace Uintah{
 
 //__________________________________

@@ -32,11 +32,11 @@ DEALINGS IN THE SOFTWARE.
 #define UINTAH_HOMEBREW_MPM_COMMON_H
 
 #include <CCA/Components/MPM/MPMFlags.h>
-#include <CCA/Components/Parent/Common.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Grid/LevelP.h>
 #include <Core/Grid/SimulationStateP.h>
 #include <Core/Grid/Variables/ComputeSet.h>
+#include <Core/IO/DbgOutput.h>
 #include <Core/Util/DebugStream.h>
 
 #include <CCA/Components/MPM/uintahshare.h>

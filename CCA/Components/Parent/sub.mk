@@ -36,8 +36,7 @@ SRCDIR     := CCA/Components/Parent
 COMPONENTS := CCA/Components
 
 SRCS := $(SRCDIR)/Switcher.cc \
-        $(SRCDIR)/ComponentFactory.cc\
-        $(SRCDIR)/Common.cc 
+        $(SRCDIR)/ComponentFactory.cc
 
 ifeq ($(BUILD_ARCHES),yes)
   MORE_LIBS := $(COMPONENTS)/SpatialOps
