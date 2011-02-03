@@ -121,10 +121,6 @@ WARNING
                                          const PatchSet* patches,
                                          const ModelInfo* mi);
 
-   void printSchedule(const LevelP& level,
-                       const string& where);
-
-
   private:    
     void computeModelSources(const ProcessorGroup*, 
                              const PatchSubset* patches,

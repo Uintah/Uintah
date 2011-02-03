@@ -30,6 +30,7 @@ DEALINGS IN THE SOFTWARE.
 
 #include <CCA/Components/Models/HEChem/Steady_Burn.h>
 #include <CCA/Components/Models/HEChem/Common.h>
+#include <CCA/Components/Parent/Common.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/Variables/CellIterator.h>
@@ -179,7 +180,7 @@ void Steady_Burn::outputProblemSpec(ProblemSpecP& ps)
 }
 //______________________________________________________________________
 void Steady_Burn::scheduleInitialize(SchedulerP& sched, const LevelP& level, const ModelInfo*){
-  printSchedule(level,"Steady_Burn::scheduleInitialize\t\t\t");
+  printSchedule(level, cout_doing,"Steady_Burn::scheduleInitialize");
   
   Task* t = scinew Task("Steady_Burn::initialize", this, &Steady_Burn::initialize);                        
   const MaterialSubset* react_matl = matl0->thisMaterial();
@@ -227,7 +228,7 @@ void Steady_Burn::scheduleComputeModelSources(SchedulerP& sched,
   Task* t1 = scinew Task("Steady_Burn::computeNumPPC", this, 
                          &Steady_Burn::computeNumPPC, mi);
 
-  printSchedule(level,"Steady_Burn::scheduleComputeNumPPC\t\t\t");  
+  printSchedule(level, cout_doing,"Steady_Burn::scheduleComputeNumPPC");  
 
   t1->requires(Task::OldDW, Mlb->pXLabel,          react_matl, gn);
   t1->computes(numPPCLabel, react_matl);
@@ -239,7 +240,7 @@ void Steady_Burn::scheduleComputeModelSources(SchedulerP& sched,
   Task* t = scinew Task("Steady_Burn::computeModelSources", this, 
                         &Steady_Burn::computeModelSources, mi);
 
-  printSchedule(level,"Steady_Burn::scheduleComputeModelSources\t\t\t");  
+  printSchedule(level,cout_doing,"Steady_Burn::scheduleComputeModelSources");  
   t->requires( Task::OldDW, mi->delT_Label, level.get_rep());
   
   // define material subsets  
@@ -314,7 +315,7 @@ void Steady_Burn::computeNumPPC(const ProcessorGroup*,
   /* Patch Iteration */
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);  
-    printTask(patches,patch,"Doing computeNumPPC\t\t\t\t");
+    printTask(patches,patch,cout_doing,"Doing Steady_Burn::computeNumPPC");
 
     /* Indicating how many particles a cell contains */
     ParticleSubset* pset = old_dw->getParticleSubset(m0, patch);
@@ -367,7 +368,7 @@ void Steady_Burn::computeModelSources(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);  
     
-    printTask(patches,patch,"Doing computeModelSources\t\t\t\t");
+    printTask(patches,patch,cout_doing,"Doing Steady::computeModelSources");
     CCVariable<double> mass_src_0, mass_src_1, mass_0;
     CCVariable<Vector> momentum_src_0, momentum_src_1;
     CCVariable<double> energy_src_0, energy_src_1;
@@ -544,26 +545,6 @@ void Steady_Burn::scheduleTestConservation(SchedulerP&, const PatchSet*, const M
   // Not implemented yet
 }
 
-//______________________________________________________________________
-void Steady_Burn::printSchedule(const LevelP& level,
-                                const string& where){
-  if (cout_doing.active()){
-    cout_doing << d_myworld->myrank() << " " 
-               << where << "L-"
-               << level->getIndex()<< endl;
-  }  
-}
-//______________________________________________________________________
-void Steady_Burn::printTask(const PatchSubset* patches,
-                            const Patch* patch,
-                            const string& where){
-  if (cout_doing.active()){
-    cout_doing << d_myworld->myrank() << " " 
-               << where << " STEADY_BURN L-"
-               << getLevel(patches)->getIndex()
-               << " patch " << patch->getGridIndex()<< endl;
-  }  
-}
 
 /****************************************************************************/
 /******************* Bisection Newton Solver ********************************/

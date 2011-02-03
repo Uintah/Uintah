@@ -31,8 +31,8 @@ DEALINGS IN THE SOFTWARE.
 #ifndef UINTAH_HOMEBREW_MPM_COMMON_H
 #define UINTAH_HOMEBREW_MPM_COMMON_H
 
-
 #include <CCA/Components/MPM/MPMFlags.h>
+#include <CCA/Components/Parent/Common.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Grid/LevelP.h>
 #include <Core/Grid/SimulationStateP.h>
@@ -60,27 +60,8 @@ namespace Uintah {
     virtual void cohesiveZoneProblemSetup(const ProblemSpecP& prob_spec,
                                           SimulationStateP& sharedState,
                                           MPMFlags* flags);
-
-    virtual void printSchedule(const PatchSet* patches,
-                               DebugStream& dbg,
-                               const string& where);
-  
-    virtual void printSchedule(const LevelP& level,
-                               DebugStream& dbg,
-                               const string& where);
-                     
-    virtual void printTask(const PatchSubset* patches,
-                           const Patch* patch,
-                           DebugStream& dbg,
-                           const string& where);
-
    protected:
     const ProcessorGroup* d_myworld;
-    
-    void printTask(const Patch* patch,
-                   DebugStream& dbg,
-                   const string& where);
-    
   };
 }
 

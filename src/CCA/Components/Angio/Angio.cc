@@ -32,6 +32,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Angio/AngioMaterial.h>
 #include <CCA/Components/Angio/AngioParticleCreator.h>
 #include <CCA/Components/Regridder/PerPatchVars.h>
+#include <CCA/Components/Parent/Common.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Ports/LoadBalancer.h>
@@ -1929,41 +1930,6 @@ void Angio::materialProblemSetup(const ProblemSpecP& prob_spec,
       sharedState->registerAngioMaterial(mat);
     }
   }  // material
-}
-
-void Angio::printSchedule(const PatchSet* patches,
-                              DebugStream& dbg,
-                              const string& where)
-{
-  if (dbg.active()){
-    dbg << d_myworld->myrank() << " "
-        << where << "L-"
-        << getLevel(patches)->getIndex()<< endl;
-  }
-}
-                                                                                
-void Angio::printSchedule(const LevelP& level,
-                              DebugStream& dbg,
-                              const string& where)
-{
-  if (dbg.active()){
-    dbg << d_myworld->myrank() << " "
-        << where << "L-"
-        << level->getIndex()<< endl;
-  }
-}
-                                                                                
-void Angio::printTask(const PatchSubset* patches,
-                          const Patch* patch,
-                          DebugStream& dbg,
-                          const string& where)
-{
-  if (dbg.active()){
-    dbg << d_myworld->myrank() << " "
-        << where << " MPM \tL-"
-        << getLevel(patches)->getIndex()
-        << " patch " << patch->getGridIndex()<< endl;
-  }
 }
 
 

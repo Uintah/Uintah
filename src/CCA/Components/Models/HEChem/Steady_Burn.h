@@ -134,13 +134,6 @@ WARNING
     double computeBurnedMass(double To, double& Ts,  double P, double Vc,
                              double surfArea, double delT, double solidMass);
     
-    void printSchedule(const LevelP& level,
-                       const string& where); 
-    
-    void printTask(const PatchSubset* patches,
-                   const Patch* patch,
-                 const string& where);
-    
     Steady_Burn(const Steady_Burn&);
     Steady_Burn& operator=(const Steady_Burn&);
     

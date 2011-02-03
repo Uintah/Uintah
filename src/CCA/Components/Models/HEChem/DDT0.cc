@@ -35,6 +35,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Models/HEChem/Common.h>
 #include <CCA/Components/Models/HEChem/DDT0.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <CCA/Components/Parent/Common.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/Level.h>
@@ -232,7 +233,7 @@ void DDT0::scheduleInitialize(SchedulerP& sched,
                                const LevelP& level,
                                const ModelInfo*)
 {
-  printSchedule(level,"DDT0::scheduleInitialize\t\t\t");
+  printSchedule(level,cout_doing,"DDT0::scheduleInitialize");
   Task* t = scinew Task("DDT0::initialize", this, &DDT0::initialize);
   const MaterialSubset* react_matl = d_matl0->thisMaterial();
   t->computes(reactedFractionLabel, react_matl);
@@ -677,16 +678,5 @@ void DDT0::scheduleTestConservation(SchedulerP&,
                                      const ModelInfo*)                     
 {
   // Not implemented yet
-}
-
-//______________________________________________________________________
-//
-void DDT0::printSchedule(const LevelP& level,
-                                const string& where){
-  if (cout_doing.active()){
-    cout_doing << d_myworld->myrank() << " "
-               << where << "L-"
-               << level->getIndex()<< endl;
-  }
 }
 
