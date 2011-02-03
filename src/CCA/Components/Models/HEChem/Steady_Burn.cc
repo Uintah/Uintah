@@ -30,7 +30,6 @@ DEALINGS IN THE SOFTWARE.
 
 #include <CCA/Components/Models/HEChem/Steady_Burn.h>
 #include <CCA/Components/Models/HEChem/Common.h>
-#include <CCA/Components/Parent/Common.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/Variables/CellIterator.h>
@@ -40,6 +39,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Labels/MPMLabel.h>
 #include <Core/Labels/ICELabel.h>
 #include <Core/Labels/MPMICELabel.h>
+#include <Core/IO/DbgOutput.h>
 #include <CCA/Components/ICE/ICEMaterial.h>
 #include <CCA/Components/ICE/BoundaryCond.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>

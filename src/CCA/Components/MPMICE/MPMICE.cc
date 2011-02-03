@@ -41,7 +41,6 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/MPM/ShellMPM.h>
 #include <CCA/Components/MPM/ThermalContact/ThermalContact.h>
 #include <CCA/Components/OnTheFlyAnalysis/AnalysisModuleFactory.h>
-#include <CCA/Components/Parent/Common.h>
 #include <CCA/Ports/ModelMaker.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Exceptions/InvalidValue.h>
@@ -52,6 +51,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/Variables/NodeIterator.h>
 #include <Core/Grid/Variables/SoleVariable.h>
 #include <Core/Grid/Variables/VarTypes.h>
+#include <Core/IO/DbgOutput.h>
 #include <Core/Labels/ICELabel.h>
 #include <Core/Labels/MPMICELabel.h>
 #include <Core/Labels/MPMLabel.h>

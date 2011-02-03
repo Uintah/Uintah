@@ -32,7 +32,6 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Angio/AngioMaterial.h>
 #include <CCA/Components/Angio/AngioParticleCreator.h>
 #include <CCA/Components/Regridder/PerPatchVars.h>
-#include <CCA/Components/Parent/Common.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Ports/LoadBalancer.h>
@@ -50,6 +49,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/Variables/SoleVariable.h>
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Variables/VarTypes.h>
+#include <Core/IO/DbgOutput.h>
 #include <Core/Exceptions/ParameterNotFound.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Parallel/ProcessorGroup.h>

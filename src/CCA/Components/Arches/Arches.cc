@@ -87,7 +87,6 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Arches/CompLocalDynamicProcedure.h>
 #include <CCA/Components/Arches/ExtraScalarSolver.h>
 #include <CCA/Components/Arches/OdtClosure.h>
-#include <CCA/Components/Parent/Common.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Exceptions/InvalidValue.h>
@@ -99,6 +98,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Variables/VarTypes.h>
+#include <Core/IO/DbgOutput.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Parallel/Parallel.h>
 

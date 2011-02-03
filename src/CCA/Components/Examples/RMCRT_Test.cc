@@ -29,7 +29,6 @@ DEALINGS IN THE SOFTWARE.
 
 #include <CCA/Components/Examples/ExamplesLabel.h>
 #include <CCA/Components/Examples/RMCRT_Test.h>
-#include <CCA/Components/Parent/Common.h>
 #include <CCA/Components/Regridder/PerPatchVars.h>
 #include <CCA/Ports/LoadBalancer.h>
 #include <CCA/Ports/Scheduler.h>
@@ -52,6 +51,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/Variables/PerPatch.h>
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Variables/VarTypes.h>
+#include <Core/IO/DbgOutput.h>
 #include <Core/Parallel/ProcessorGroup.h>
 
 using SCIRun::Point;

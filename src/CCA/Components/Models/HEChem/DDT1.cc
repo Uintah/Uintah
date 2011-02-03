@@ -35,7 +35,6 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Models/HEChem/Common.h>
 #include <CCA/Components/Models/HEChem/DDT1.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <CCA/Components/Parent/Common.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/Level.h>
@@ -44,6 +43,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Variables/VarTypes.h>
+#include <Core/IO/DbgOutput.h>
 #include <Core/Labels/ICELabel.h>
 #include <Core/Labels/MPMICELabel.h>
 #include <Core/Labels/MPMLabel.h>
