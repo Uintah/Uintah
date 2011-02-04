@@ -46,12 +46,13 @@ Ray::sched_rayTrace( const LevelP& level, SchedulerP& sched )
   std::string taskname = "Ray::rayTrace";
   Task* tsk= scinew Task( taskname, this, &Ray::rayTrace );
 
-  tsk->requires( Task::OldDW, d_lab->d_tempINLabel, Ghost::None, 0 ); 
-  tsk->requires( Task::OldDW, d_lab->d_abskgINLabel, Ghost::None, 0 );
-  tsk->requires( Task::OldDW, d_lab->d_cellTypeLabel, Ghost::None, 0 ); 
+  tsk->requires( Task::OldDW, d_lab->d_tempINLabel,   Ghost::None, 0 ); 
+  tsk->requires( Task::OldDW, d_lab->d_abskgINLabel,  Ghost::None, 0 );
+  tsk->requires( Task::OldDW, d_lab->d_cellTypeLabel, Ghost::None, 0 );
+  
+  tsk->computes(d_lab->d_RMCRT_fixMeLabel); 
 
   sched->addTask( tsk, level->eachPatch(), d_lab->d_sharedState->allArchesMaterials() );
-
 }
 
 //---------------------------------------------------------------------------
@@ -85,6 +86,7 @@ Ray::rayTrace( const ProcessorGroup* pc,
     //because *ix_ptr will be changed.
     constCCVariable<double> temperature;
     constCCVariable<double> abskg;
+    CCVariable<double> fixMe;
 
     double disMin;
 
@@ -92,10 +94,13 @@ Ray::rayTrace( const ProcessorGroup* pc,
     // CCVariable<double> *ix_ptr = array_ptr; // this pointer is free to move along the members of the array
 
     //  getting the temperature from the DW
-    old_dw->get(temperature, d_lab->d_tempINLabel,  matlIndex, patch, Ghost::None, 0);
-    old_dw->get(abskg,       d_lab->d_abskgINLabel, matlIndex, patch, Ghost::None, 0);
+    old_dw->get(temperature,      d_lab->d_tempINLabel,       matlIndex, patch, Ghost::None, 0);
+    old_dw->get(abskg,            d_lab->d_abskgINLabel,      matlIndex, patch, Ghost::None, 0);
+    new_dw->allocateAndPut(fixMe, d_lab->d_RMCRT_fixMeLabel,  matlIndex, patch);
     //old_dw->getModifiable(IsaacFlux, d_lab->d_radiationVolqINIsaacLabel, index, patch);
 
+    fixMe.initialize(0.0);
+  
     IntVector pLow  = patch->getCellLowIndex();  // patch low index //returns 0 for edge patches
     IntVector pHigh = patch->getCellHighIndex(); // patch high index//returns index of highest cell (usually it's a ghost)
     int ii;//used as an index when creating 1D arrays out of 3d arrays
@@ -408,7 +413,9 @@ Ray::rayTrace( const ProcessorGroup* pc,
 
           //Compute Inet.  Iout is blackbody and must be multiplied by absorb_coef. absorb_coef is the kappa of 9.53.
           Inet_cv[ix] = Iout_cv[ix] * absorb_coef[ix] - (chi_Iin_cv/d_NoOfRays); //the last term is from Paula's eqn 3.10
-
+          
+          IntVector c(i,j,k);
+          fixMe[c] = Inet_cv[ix];
 
           ix++;//bottom of bottom of cell loop. otherwise ix begins at 1.  
         }// end cell iterator i
