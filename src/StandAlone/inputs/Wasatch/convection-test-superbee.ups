@@ -114,7 +114,7 @@
     <filebase>convection-test-superbee.uda</filebase>
     <outputTimestepInterval>2</outputTimestepInterval>
     <outputInitTimestep/>
-    <checkpoint cycle = "2" interval = "0.2"/>
+    <checkpoint cycle = "2" interval = "0.01"/>
     <compression>gzip</compression>
     <save label="phi0-scalar"/>
     <save label="phi1-scalar"/>
