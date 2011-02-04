@@ -26,6 +26,7 @@
     <save label="viscosityCTS"/>
     <save label="cellType"/>
     <save label="radiationVolqIN"/>
+    <save label="RMCRT_fixMe"/>
     <checkpoint cycle="2" interval="0.01"/>
     <outputDoubleAsFloat/>
     <compression>gzip</compression>
