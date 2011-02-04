@@ -75,8 +75,8 @@ Ray::rayTrace( const ProcessorGroup* pc,
     int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
     //int index = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
 
-    //This stuff can stay til I switch to iterator, and different marching scheme. here a..
-    int cur[3];//Oct 1:  I'll be switching to iterator. cur represents the current location of a ray as it is traced through the domain... 
+    //The following will be removed when using cell iterator..
+    int cur[3];//  cur represents the current location of a ray as it is traced through the domain... 
     //Each ray will always begin at c (the i,j,k of the iterator)
     Vector ray_location;
     Vector ray_location_prev;
@@ -88,12 +88,10 @@ Ray::rayTrace( const ProcessorGroup* pc,
 
     double disMin;
 
-    // I don't believe I need the next two lines because it's not the temperature which gets referenced...
-    // so frequently, it's the Iout, and dx_absorb_coef
-    // CCVariable<double> *array_ptr = temperature; // this is your pointer to the start of the 3D "CCVariable" array
+    // CCVariable<double> *array_ptr = temperature; // this is the pointer to the start of the 3D "CCVariable" array
     // CCVariable<double> *ix_ptr = array_ptr; // this pointer is free to move along the members of the array
 
-    // here we are actually getting the temperature from the DW
+    //  getting the temperature from the DW
     old_dw->get(temperature, d_lab->d_tempINLabel,  matlIndex, patch, Ghost::None, 0);
     old_dw->get(abskg,       d_lab->d_abskgINLabel, matlIndex, patch, Ghost::None, 0);
     //old_dw->getModifiable(IsaacFlux, d_lab->d_radiationVolqINIsaacLabel, index, patch);
@@ -125,32 +123,28 @@ Ray::rayTrace( const ProcessorGroup* pc,
     }
     */
 
-    double absorb_coef[ix]; //represents the fraction absorbed per cell length through a control volume !! Using hard coding...
-    //because the data warehouse values are all zero
-    // dx_absorb_coef is Not used in benchmark, but may be used later on.
-    double dx_absorb_coef[ix];// !! Make not an array. Just compute on the fly. Might be ok, since it is referenced so often   
-    double Iout_cv[ix];//Need an array? Yes, because each cell's intensity will be referenced so many...
+    double absorb_coef[ix]; //represents the fraction absorbed per cell length through a control volume 
+    //the data warehouse values begin at zero
+    double dx_absorb_coef[ix];// Dx multiplied by the absorption coefficient
+    double Iout_cv[ix];//Array because each cell's intensity will be referenced so many...
     //times through all the paths of other cell's rays
-    double chi_Iin_cv;//  Iin multiplied by its respective chi, per Phil's recommendation. 
-    double Inet_cv[ix];// Is a separate Inet necessary for surfaces?. !! I don't think I need an array for this
+    double chi_Iin_cv;//  Iin multiplied by its respective chi. 
+    double Inet_cv[ix];// separate Inet necessary for surfaces. !! I don't think I need an array for this
     //double abskg1D[ix];// !! used to visualize abskg only.  otherwise comment out
-    //double intensity;// used to determine how far to trace a ray.
     double sigma_over_pi = 1.804944378616567e-8;//Stefan Boltzmann divided by pi (W* m-2* K-4)
-    double chi; //the first segment length multiplied by cur cell's absorption coefficient
-    bool   first;//used to determine chi. Basically we save the cell's self absorption coefficient
+    double chi; //the absorption coefficient multiplied of the origin cell 
+    bool   first;//used to determine chi. 
     double fs; // fraction remaining after all current reflections
 
-    //int PathIndex[10000];//Big allocation in the event that optically thin media leads to a long path
     unsigned int size = 0;//current size of PathIndex !!move to Ray.h
-    //unsigned int total_size;
     //int netFaceFlux[ix][6]; // net radiative flux on each face of each cell //0:_bottom, 1:_top; 2:_south, 3:_north; 4:_west, 5:_east
     double rho = 1.0 - _alpha; //reflectivity
     double optical_thickness;//The running total of alpha*length !!move to Ray.h  
     double optical_thickness_prev;//The running total of alpha*length !!move to Ray.h     
-    //double segment_length;//The length of each segment of a ray within a cell
     Vector Dx = patch->dCell(); // cell spacing
     IntVector   c; //represents i, j, k
     const double* temperature_ptr = const_cast<double*>( temperature.getPointer() );//maybe tempINLabel??
+    const double* abskg_ptr = const_cast<double*>( abskg.getPointer() );//maybe tempINLabel??
     //double absorb_coef_3D[Nz][Ny][Nx];
 
     //Make Iout a 1D while referencing temperature which is a 3D array. This pre-computes Iout since it gets referenced so much
@@ -159,14 +153,15 @@ Ray::rayTrace( const ProcessorGroup* pc,
     for ( k=0; k<Nz; k++){//the indeces of the cells
       for ( j=0; j<Ny; j++){
         for ( i=0; i<Nx; i++){
-          //Iout_cv[ii] = (*temperature_ptr) * (*temperature_ptr) * (*temperature_ptr) * (*temperature_ptr) * sigma_over_pi;//sigmaT^4/pi
+          Iout_cv[ii] = (*temperature_ptr) * (*temperature_ptr) * (*temperature_ptr) * (*temperature_ptr) * sigma_over_pi;//sigmaT^4/pi
+          absorb_coef[ii] = *abskg_ptr;//make 1D from 3D
           //for benchmark case, temperature is 64.804 everywhere
-          Iout_cv[ii] = 64.804361 * 64.804361 * 64.804361 * 64.804361 * sigma_over_pi;//T^4*sigma/pi
-          absorb_coef[ii] = 0.9*(1-2*fabs((i -(Nx-1)/2.0)*Dx[0]))*(1-2*fabs((j -(Ny-1)/2.0)*Dx[1]))*(1-2*fabs((k -(Nz-1)/2.0)*Dx[2])) +0.1;//benchmark 99
-          // absorb_coef[ii] = 0.9*(1-2*fabs((i -(Nx)/2)*Dx[0]))*(1-2*fabs((j -(Ny)/2)*Dx[1]))*(1-2*fabs((k -(Nz)/2)*Dx[2])) +0.1;//benchmark 99
-//next line is for visualization only.
+          //Iout_cv[ii] = 64.804361 * 64.804361 * 64.804361 * 64.804361 * sigma_over_pi;//T^4*sigma/pi
+         // absorb_coef[ii] = 0.9*(1-2*fabs((i -(Nx-1)/2.0)*Dx[0]))*(1-2*fabs((j -(Ny-1)/2.0)*Dx[1]))*(1-2*fabs((k -(Nz-1)/2.0)*Dx[2])) +0.1;//benchmark 99
+          //next line is for visualization only.
           dx_absorb_coef[ii] = Dx.x()*absorb_coef[ii];//Used in optical thickness calculation.!!Adjust if cells are noncubic
           temperature_ptr++;
+          abskg_ptr++;
           ii++;
         }
       }
@@ -174,8 +169,8 @@ Ray::rayTrace( const ProcessorGroup* pc,
 
     ix = 0;  //This now represents the current cell in 1D(akin to c, not cur)
 
-   // int i_flag = 1;//visualization of chi_Iin only
-   // int rRay = 0;//visualization of rays.
+    // int i_flag = 1;//visualization of chi_Iin only
+    // int rRay = 0;//visualization of rays.
     // cell loop
     for ( k=0; k<Nz; k++){
       for ( j=0; j<Ny; j++){
@@ -185,15 +180,14 @@ Ray::rayTrace( const ProcessorGroup* pc,
           // ray loop
           for (int iRay=0; iRay < d_NoOfRays; iRay++){ //counter. goes from 0 to NoOfRays
             //if (k==_slice && j==_slice && i>18)  
-    //        int qx = 0; //for visualization
+            //        int qx = 0; //for visualization
 
-            cur[0] = i; cur[1] =j; cur[2] = k; //used to be cur = c when cur was an IntVector; since they...
-            //were both intVectors. May need to change back for face info.
+            cur[0] = i; cur[1] =j; cur[2] = k; //Use cur = c when cur is an IntVector, when using cell iterato
             //IntVector cur = c;//current will represent the current location of a ray as it is traced through the...
             //domain.  Each ray will always begin at c (the i,j,k of the iterator)
-            int cx = ix;// -1;// I changed to start at -1 so that when it gets incremented in the step process, that it still...
+            int cx = ix;//
             int cx_p;
-            // begins at 0.  I need so I can follow a ray without touching ix.(akin to cur)
+            // begins at 0. Can follow a ray without touching ix.(akin to cur)
             // picks a random spot in the cell, starting from the negative face:
             ray_location[0] =   i +  _mTwister.rand() ;//was c.x +...
             ray_location[1] =   j +  _mTwister.rand() ;
@@ -201,22 +195,18 @@ Ray::rayTrace( const ProcessorGroup* pc,
 
 
 
+            /*      //this is for visualization of the rays only.  Otherwise comment out.
 
+                    if (k==_slice && j==_slice && (i==19 || i ==21) ){
+                    RayVisX[rRay][qx]=ray_location[0];
+                    RayVisY[rRay][qx]=ray_location[1];
+                    RayVisZ[rRay][qx]=ray_location[2];
+                    if (i==21) cout << endl;
+                    cout << endl << ray_location<<  " cx " << cx << endl;
+                    qx++;
+                    }
 
-
-
-      /*      //this is for visualization of the rays only.  Otherwise comment out.
-
-            if (k==_slice && j==_slice && (i==19 || i ==21) ){
-              RayVisX[rRay][qx]=ray_location[0];
-              RayVisY[rRay][qx]=ray_location[1];
-              RayVisZ[rRay][qx]=ray_location[2];
-              if (i==21) cout << endl;
-              cout << endl << ray_location<<  " cx " << cx << endl;
-              qx++;
-            }
-
-*/
+             */
             //ray_location = + _mTwister.randVector(); Sep 27, get this to work.  I need cur to be a vector
             // see http://www.cgafaq.info/wiki/aandom_Points_On_Sphere for explanation
             Vector direction_vector;//change to capital Vector
@@ -240,11 +230,11 @@ Ray::rayTrace( const ProcessorGroup* pc,
               if (inv_direction_vector[ii]>0){
                 step[ii] = 1;
                 sign[ii] = 1;
-              //  opposite_sign[ii]=0;
+                //  opposite_sign[ii]=0;
               }
               else{
                 step[ii] = -1;
-                sign[ii] = 0;// I tested to see if the 0.5 messes things up in integer_test.cc.  This is fine
+                sign[ii] = 0;// 
                 //opposite_sign[ii]=1;
               }
             }
@@ -339,27 +329,27 @@ Ray::rayTrace( const ProcessorGroup* pc,
                 ray_location[2] = ray_location[2] + disMin * direction_vector[2];
 
 
-          /*      //For ray visualization only.
-                if (k==_slice && j==_slice && i==19  ){
-                  RayVisX[rRay][qx]=ray_location[0];
-                  RayVisY[rRay][qx]=ray_location[1];
-                  RayVisZ[rRay][qx]=ray_location[2];
-                  qx++;
-                  cout << "ray location " << ray_location << endl;
+                /*      //For ray visualization only.
+                        if (k==_slice && j==_slice && i==19  ){
+                        RayVisX[rRay][qx]=ray_location[0];
+                        RayVisY[rRay][qx]=ray_location[1];
+                        RayVisZ[rRay][qx]=ray_location[2];
+                        qx++;
+                        cout << "ray location " << ray_location << endl;
 
-                }
+                        }
 
 
                 //For ray visualization only.
                 if (k==_slice && j==_slice &&  i==21 ){
-                  RayVisX[rRay][qx]=ray_location[0];
-                  RayVisY[rRay][qx]=ray_location[1];
-                  RayVisZ[rRay][qx]=ray_location[2];
-                  qx++;
-                  cout << "ray location " << ray_location << endl;
+                RayVisX[rRay][qx]=ray_location[0];
+                RayVisY[rRay][qx]=ray_location[1];
+                RayVisZ[rRay][qx]=ray_location[2];
+                qx++;
+                cout << "ray location " << ray_location << endl;
 
                 }
-*/
+                 */
                 if (first){
                   chi = absorb_coef[ix]; 
                   first = 0;
@@ -371,7 +361,6 @@ Ray::rayTrace( const ProcessorGroup* pc,
                 //to worry about cells outside the boundary, or having to decrement opticalthickness or...
                 //intensity after I get back inside the domain.
                 optical_thickness_prev = optical_thickness;
-                // optical_thickness += dx_absorb_coef[cx]*disMin;//update Optical Thickness. was segment_length                 
                 optical_thickness += dx_absorb_coef[cx_p]*disMin;
 
 
@@ -380,23 +369,23 @@ Ray::rayTrace( const ProcessorGroup* pc,
                 size++;
 
                 //Eqn 3-15, while accounting for fs. Third term inside the parentheses is accounted for in Inet. Chi is accounted for in Inet calc.
-                chi_Iin_cv += chi * (Iout_cv[cx_p] * ( exp(-optical_thickness_prev) - exp(-optical_thickness) ) * fs );////Dec 1. Phil found the bug..
-                // Need to multiply Iin by the current chi, for each ray not just at the end of all the rays, and using the last chi, as I used to.
-                
+                chi_Iin_cv += chi * (Iout_cv[cx_p] * ( exp(-optical_thickness_prev) - exp(-optical_thickness) ) * fs );////Dec 1
+                // Multiply Iin by the current chi, for each ray not just at the end of all the rays.
 
-/*//visualization only
-                if (i ==21) {
+
+                /*//visualization only
+                  if (i ==21) {
                   if (i_flag){ 
-                    cout << endl << endl;
-                    i_flag = 0;
+                  cout << endl << endl;
+                  i_flag = 0;
                   }
-                }
-                if (k==_slice && j==_slice && (i==19 || i ==21) ){
-                cout  << "chi_Iin_cv " <<  chi_Iin_cv << " absorb_coef " << absorb_coef[cx]  << " cur " << cur[0] << " " << cur[1] << " " << cur[2] << " cx " <<cx << endl;
-                cout << "absorb3D " << absorb_coef_3D[cur[2]][cur[1]][cur[0]] << endl;
-                }
+                  }
+                  if (k==_slice && j==_slice && (i==19 || i ==21) ){
+                  cout  << "chi_Iin_cv " <<  chi_Iin_cv << " absorb_coef " << absorb_coef[cx]  << " cur " << cur[0] << " " << cur[1] << " " << cur[2] << " cx " <<cx << endl;
+                  cout << "absorb3D " << absorb_coef_3D[cur[2]][cur[1]][cur[0]] << endl;
+                  }
                 //end of visualization
-*/
+                 */
 
 
               } //end domain while loop.  ++++++ ++++++++
@@ -411,7 +400,7 @@ Ray::rayTrace( const ProcessorGroup* pc,
                 //Comment out for cold, black walls: fs*=rho;//update fs after above Iin reassignment because the reflection is not attenuated by itself.
               }//end reflection if statement
 
-              }//end threshold while loop (ends ray tracing for that ray
+            }//end threshold while loop (ends ray tracing for that ray
             // if (k==_slice && j==_slice && (i==19 || i==21) ){
             // rRay++;
             // }
@@ -421,7 +410,7 @@ Ray::rayTrace( const ProcessorGroup* pc,
           Inet_cv[ix] = Iout_cv[ix] * absorb_coef[ix] - (chi_Iin_cv/d_NoOfRays); //the last term is from Paula's eqn 3.10
 
 
-          ix++;// !! moved to _bottom of cell loop.  otherwise ix begins at 1.  
+          ix++;//bottom of bottom of cell loop. otherwise ix begins at 1.  
         }// end cell iterator i
       }// end j
     }//end k
@@ -542,7 +531,8 @@ Ray::rayTrace( const ProcessorGroup* pc,
 
 
 
-//Created Jan 19// I changed cx to be lagging.  This changed nothing in the RMS error, but may be important...
+//Created Jan 31. Cleaned up comments, removed hard coding of T and abskg 
+// Jan 19// I changed cx to be lagging.  This changed nothing in the RMS error, but may be important...
 //when referencing a non-uniform temperature.
 //Created Jan13. //  Ray_PW_const.cc Making this piecewise constant by using CC values. not interpolating
 //Removed symmetry test. 
