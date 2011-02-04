@@ -163,7 +163,7 @@
     <filebase>boundary-conditions-test.uda</filebase>
     <outputTimestepInterval>2</outputTimestepInterval>
     <outputInitTimestep/>
-    <checkpoint cycle = "2" interval = "0.01"/>
+    <checkpoint cycle = "2" interval = "0.0001"/>
     <compression>gzip</compression>
     <save label="phi-scalar"/>
     <save label="phi-x-scalar"/>
