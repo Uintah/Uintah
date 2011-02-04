@@ -194,11 +194,19 @@ Ray::rayTrace( const ProcessorGroup* pc,
             int cx_p;
             // begins at 0. Can follow a ray without touching ix.(akin to cur)
             // picks a random spot in the cell, starting from the negative face:
+            _mTwister.seed((i + j + k) * iRay +1);
+
+#if 0           
+            double a = _mTwister.rand();
+            double b = _mTwister.rand();
+            double c = _mTwister.rand();
+            cout << IntVector(i,j,k) << "randomNumbers " << a << " " << b << " " << c << endl;
+#endif            
             ray_location[0] =   i +  _mTwister.rand() ;//was c.x +...
             ray_location[1] =   j +  _mTwister.rand() ;
             ray_location[2] =   k +  _mTwister.rand() ; //Dx is specified in line 101
 
-
+            
 
             /*      //this is for visualization of the rays only.  Otherwise comment out.
 
