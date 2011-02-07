@@ -12,7 +12,8 @@ using namespace std;
 Ray::Ray( const ArchesLabel* labels ):
   d_lab(labels)
 {
-  _pi = acos(-1); 
+    d_blackBodyIntensityLabel = VarLabel::create("Intensity_BB",
+                                      CCVariable<double>::getTypeDescription());
 }
 
 //---------------------------------------------------------------------------
@@ -20,6 +21,7 @@ Ray::Ray( const ArchesLabel* labels ):
 //---------------------------------------------------------------------------
 Ray::~Ray()
 {
+  VarLabel::destroy(d_blackBodyIntensityLabel);
 }
 
 //---------------------------------------------------------------------------
@@ -30,16 +32,70 @@ Ray::problemSetup( const ProblemSpecP& inputdb )
 {
   ProblemSpecP db = inputdb;
 
-  db->getWithDefault( "NoOfRays", d_NoOfRays, 1000 );
-  db->getWithDefault( "Threshold", d_Threshold, 0.01 );  //When to terminate a ray
-  db->getWithDefault( "Alpha", _alpha, 0.2 );            //Absorption coefficient of the boundaries
-  db->getWithDefault( "Slice", _slice, 9 );              //Level in z direction of xy slice
+  db->getWithDefault( "NoOfRays",   d_NoOfRays, 1000 );
+  db->getWithDefault( "Threshold",  d_Threshold, 0.01 );                 //When to terminate a ray
+  db->getWithDefault( "Alpha",      _alpha, 0.2 );                       //Absorption coefficient of the boundaries
+  db->getWithDefault( "Slice",      _slice, 9 );                         //Level in z direction of xy slice
+  db->getWithDefault("StefanBoltzmann", d_sigma, 5.67051e-8);  // Units are W/(m^2-K)
+}
+
+//---------------------------------------------------------------------------
+// 
+//---------------------------------------------------------------------------
+  void
+Ray::sched_blackBodyIntensity( const LevelP& level, 
+                               SchedulerP& sched )
+{
+
+  std::string taskname = "Ray::blackBodyIntensity";
+  Task* tsk= scinew Task( taskname, this, &Ray::blackBodyIntensity );
+
+  tsk->requires( Task::OldDW, d_lab->d_tempINLabel,   Ghost::None, 0 ); 
+  tsk->requires( Task::OldDW, d_lab->d_abskgINLabel,  Ghost::None, 0 );
+  
+  tsk->computes(d_blackBodyIntensityLabel); 
+
+  sched->addTask( tsk, level->eachPatch(), d_lab->d_sharedState->allArchesMaterials() );
+}
+//---------------------------------------------------------------------------
+// Compute total intensity over all wave lengths (sigma * Temperature^4)
+//---------------------------------------------------------------------------
+void
+Ray::blackBodyIntensity( const ProcessorGroup*,
+                         const PatchSubset* patches,
+                         const MaterialSubset*,
+                         DataWarehouse* old_dw,
+                         DataWarehouse* new_dw )
+{
+
+  for (int p=0; p < patches->size(); p++){
+
+    const Patch* patch = patches->get(p);
+    int archIndex = 0;
+    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    
+    double sigma_over_pi = d_sigma/M_PI;
+    
+    constCCVariable<double> temp;
+    constCCVariable<double> abskg;
+    CCVariable<double> I_bb;             // sigma T ^4/pi
+    
+    old_dw->get(temp,            d_lab->d_tempINLabel,      matlIndex, patch, Ghost::None, 0);    
+    old_dw->get(abskg,           d_lab->d_abskgINLabel,     matlIndex, patch, Ghost::None, 0);    
+    new_dw->allocateAndPut(I_bb, d_blackBodyIntensityLabel, matlIndex, patch);
+
+    for (CellIterator iter = patch->getCellIterator();!iter.done();iter++){
+      const IntVector& c = *iter;
+      double T_sqrd = temp[c] * temp[c];
+      I_bb[c] = sigma_over_pi * T_sqrd * T_sqrd;
+    }
+  }
 }
 
 //---------------------------------------------------------------------------
 // Method: Schedule the ray tracer
 //---------------------------------------------------------------------------
-  void
+void
 Ray::sched_rayTrace( const LevelP& level, SchedulerP& sched )
 {
 
@@ -225,7 +281,7 @@ Ray::rayTrace( const ProcessorGroup* pc,
             Vector direction_vector;//change to capital Vector
             direction_vector[2] = 2 * _mTwister.rand() - 1;  // Uniform between -1 to 1
             double r = sqrt(1 - direction_vector[2]*direction_vector[2]); // Radius of circle at z
-            double theta = 2*_pi*_mTwister.rand(); // Uniform betwen 0-2Pi
+            double theta = 2 * M_PI * _mTwister.rand(); // Uniform betwen 0-2Pi
             direction_vector[0] = r*cos(theta); // Convert to cartesian
             direction_vector[1] = r*sin(theta);
             Vector inv_direction_vector;
@@ -441,7 +497,7 @@ Ray::rayTrace( const ProcessorGroup* pc,
     for ( j=0; j<Ny; j++){
       for ( i=0; i<Nx; i++){
         //compute flux divergence from Inet and print to file
-        fprintf(f, "%lf \t",Inet_cv[ix]*4*_pi);//The last number is 4*pi !! change to have more digits
+        fprintf(f, "%lf \t",Inet_cv[ix] * 4 * M_PI);//The last number is 4*pi !! change to have more digits
         ix++;
       }
       fprintf(f, "\n");
@@ -453,7 +509,7 @@ Ray::rayTrace( const ProcessorGroup* pc,
     f=fopen("DelDotqline41_50.txt", "w");
     ix = Nx*Ny*_slice + Ny*(Nx/2);//the last term should be Ny*((Nx-1)/2) but because Nx is an int, division by 2 gives the same result
     for (i=0; i<Nx; i++){
-      fprintf(f, "%lf \t",Inet_cv[ix]*4*_pi);//The last number is 4*pi !! change to have more digits
+      fprintf(f, "%lf \t",Inet_cv[ix] * 4 * M_PI);//The last number is 4*pi !! change to have more digits
       ix++;
     }
     fclose(f);

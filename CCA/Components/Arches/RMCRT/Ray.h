@@ -39,21 +39,32 @@ namespace Uintah{
       void  problemSetup( const ProblemSpecP& inputdb ); 
 
       /** @brief Algorithm for tracing rays through a patch */ 
-      void sched_rayTrace( const LevelP& level, SchedulerP& sched );
+      void sched_rayTrace( const LevelP& level, 
+                           SchedulerP& sched );
+      
       void rayTrace( const ProcessorGroup* pc, 
-          const PatchSubset* patches, 
-          const MaterialSubset* matls, 
-          DataWarehouse* old_dw, 
-          DataWarehouse* new_dw ); 
+                     const PatchSubset* patches, 
+                     const MaterialSubset* matls, 
+                     DataWarehouse* old_dw, 
+                     DataWarehouse* new_dw ); 
+                     
+      void sched_blackBodyIntensity( const LevelP& level, 
+                                     SchedulerP& sched );
+      
+      void blackBodyIntensity( const ProcessorGroup* pc,
+                         const PatchSubset* patches,
+                         const MaterialSubset* matls,
+                         DataWarehouse* old_dw,
+                         DataWarehouse* new_dw );
 
       //  void VecUnitize( double direction_vector, double length);
       //  void VecLength(double length);
 
     private: 
-      
-      double _pi; 
-      double _alpha;//absorptivity of the walls
+      const VarLabel* d_blackBodyIntensityLabel;
+      double _alpha;          //absorptivity of the walls
       double d_Threshold;
+      double d_sigma;          //Stefan-Boltzmann constant
       int d_NoOfRays;
       int _slice;
        // Arches labels

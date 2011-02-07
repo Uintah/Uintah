@@ -127,6 +127,7 @@
             <Threshold>0.05</Threshold>
             <Alpha>1</Alpha>
             <Slice>20</Slice>
+            <StefanBoltzmann> 5.67051e-8 </StefanBoltzmann>
           </RMCRT>
           <DORadiationModel>
             <opl>3.0</opl>
