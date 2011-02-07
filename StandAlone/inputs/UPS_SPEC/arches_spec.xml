@@ -267,26 +267,7 @@
         <variable_dt                    spec="REQUIRED BOOLEAN" />
         <EKTCorrection                  spec="OPTIONAL BOOLEAN" /> 
         <scalarUnderflowCheck           spec="OPTIONAL BOOLEAN" /> 
-        <extraProjection                spec="OPTIONAL BOOLEAN" />
-        
- <!-- Is this dead wood -Todd -->        
-        <do_standalone_RMCRT            spec="OPTIONAL BOOLEAN" />
-        <RMCRTRadiationModel            spec="OPTIONAL NO_DATA" >
-            <opl                        spec="REQUIRED DOUBLE" />
-            <const_num_rays             spec="REQUIRED INTEGER 'positive'" />
-            <rr_threshold               spec="OPTIONAL DOUBLE" /> 
-            <property_model             spec="OPTIONAL STRING 'radcoef, patchmean, wsggm, fssk, fsck'" />
-            <sampling_scheme            spec="OPTIONAL STRING 'simple_sample, RRSD, RRSDstratified'" /> 
-              <RRSDstratified           spec="OPTIONAL NO_DATA" >
-                 <x_n                   spec="REQUIRED INTEGER 'positive'" />
-                 <y_n                   spec="REQUIRED INTEGER 'positive'" />
-                 <z_n                   spec="REQUIRED INTEGER 'positive'" />
-                 <theta_n               spec="REQUIRED INTEGER '1 30'" />
-                 <phi_n                 spec="REQUIRED INTEGER '1 30'"/>
-              </RRSDstratified>
-        </RMCRTRadiationModel>
-<!--****************************-->
-
+        <extraProjection                spec="OPTIONAL BOOLEAN" /> 
         <EnthalpySolver                 spec="OPTIONAL NO_DATA" >
           <convection_scheme            spec="REQUIRED STRING 'central-upwind, flux_limited'" />
           <limiter_type                 spec="OPTIONAL STRING 'superbee, vanLeer, upwind, none'"/>
@@ -303,6 +284,7 @@
             <Alpha                      spec="OPTIONAL DOUBLE  'positive'"/>
             <Slice                      spec="OPTIONAL DOUBLE"/>
             <StefanBoltzmann            spec="OPTIONAL DOUBLE  'positive'"/>
+            <benchmark_1                spec="OPTIONAL BOOLEAN"/>
           </RMCRT>
           <DORadiationModel             spec="OPTIONAL NO_DATA" >
             <opl                        spec="REQUIRED DOUBLE" />
