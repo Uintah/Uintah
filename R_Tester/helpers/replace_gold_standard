@@ -47,7 +47,7 @@ printUsage(){
 
 #______________________________________________________________________
 # Evaluate the command line options
-INPUTS=`getopt --options=a,c,h,i,m,p,u  --longoptions=all,checkpoint,help,inputFile,memory,performance,uda -- "$@"`
+INPUTS=`getopt --options=a,c,h,i,m,p,u  --longoptions=all,checkpoints,help,inputFile,memory,performance,uda -- "$@"`
 if [ $? != 0 ] ; then 
   echo "Invalid input option.  Now exiting..." >&2 ; 
   exit 1 ; 
