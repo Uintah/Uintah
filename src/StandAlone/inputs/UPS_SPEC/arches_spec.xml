@@ -267,7 +267,9 @@
         <variable_dt                    spec="REQUIRED BOOLEAN" />
         <EKTCorrection                  spec="OPTIONAL BOOLEAN" /> 
         <scalarUnderflowCheck           spec="OPTIONAL BOOLEAN" /> 
-        <extraProjection                spec="OPTIONAL BOOLEAN" /> 
+        <extraProjection                spec="OPTIONAL BOOLEAN" />
+        
+ <!-- Is this dead wood -Todd -->        
         <do_standalone_RMCRT            spec="OPTIONAL BOOLEAN" />
         <RMCRTRadiationModel            spec="OPTIONAL NO_DATA" >
             <opl                        spec="REQUIRED DOUBLE" />
@@ -283,6 +285,8 @@
                  <phi_n                 spec="REQUIRED INTEGER '1 30'"/>
               </RRSDstratified>
         </RMCRTRadiationModel>
+<!--****************************-->
+
         <EnthalpySolver                 spec="OPTIONAL NO_DATA" >
           <convection_scheme            spec="REQUIRED STRING 'central-upwind, flux_limited'" />
           <limiter_type                 spec="OPTIONAL STRING 'superbee, vanLeer, upwind, none'"/>
@@ -298,6 +302,7 @@
             <Threshold                  spec="OPTIONAL DOUBLE  'positive'"/>
             <Alpha                      spec="OPTIONAL DOUBLE  'positive'"/>
             <Slice                      spec="OPTIONAL DOUBLE"/>
+            <StefanBoltzmann            spec="OPTIONAL DOUBLE  'positive'"/>
           </RMCRT>
           <DORadiationModel             spec="OPTIONAL NO_DATA" >
             <opl                        spec="REQUIRED DOUBLE" />
