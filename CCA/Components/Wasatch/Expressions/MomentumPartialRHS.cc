@@ -94,37 +94,38 @@ MomRHSPart<FieldT>::
 evaluate()
 {
   FieldT& result = this->value();
+  result = 0.0;
 
   SpatialOps::SpatFldPtr<FieldT> tmp = SpatialOps::SpatialFieldStore<FieldT>::self().get( result );
 
   if( cfluxXt_ != emptyTag_ ){
     divXOp_->apply_to_field( *cFluxX_, *tmp );
-    result += *tmp;
+    result -= *tmp;
   }
 
   if( cfluxYt_ != emptyTag_ ){
     divYOp_->apply_to_field( *cFluxY_, *tmp );
-    result += *tmp;
+    result -= *tmp;
   }
 
   if( cfluxZt_ != emptyTag_ ){
     divZOp_->apply_to_field( *cFluxZ_, *tmp );
-    result += *tmp;
+    result -= *tmp;
   }
 
   if( tauXt_ != emptyTag_ ){
     divXOp_->apply_to_field( *tauX_, *tmp );
-    result += *tmp;
+    result -= *tmp;
   }
 
   if( tauYt_ != emptyTag_ ){
     divYOp_->apply_to_field( *tauY_, *tmp );
-    result += *tmp;
+    result -= *tmp;
   }
 
   if( tauZt_ != emptyTag_ ){
     divZOp_->apply_to_field( *tauZ_, *tmp );
-    result += *tmp;
+    result -= *tmp;
   }
 
   if( bodyForcet_ != emptyTag_ ){

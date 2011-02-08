@@ -8,6 +8,11 @@
 /**
  *  \class MomRHS
  *  \brief Calculates the full momentum RHS
+ *
+ *  The momentum RHS is split into two contributions:
+ *   - the pressure term
+ *   - the convective, diffusive, and body force terms
+ *  These are calculated in the MomRHSPart and Pressure expressions, respectively.
  */
 template< typename FieldT >
 class MomRHS

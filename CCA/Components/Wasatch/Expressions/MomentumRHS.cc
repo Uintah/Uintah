@@ -67,10 +67,8 @@ MomRHS<FieldT>::
 evaluate()
 {
   FieldT& result = this->value();
-  SpatialOps::SpatFldPtr<FieldT> tmp = SpatialOps::SpatialFieldStore<FieldT>::self().get( result );
-
   gradOp_->apply_to_field( *pressure_, result );
-  result += *rhsPart_;
+  result <<= -1.0*result + *rhsPart_;
 }
 
 //--------------------------------------------------------------------
