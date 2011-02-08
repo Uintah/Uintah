@@ -10,6 +10,27 @@
  *  \class MomRHSPart
  *  \brief Calculates the RHS of a momentum equation excluding the pressure gradient term.
  *
+ *  \f[
+ *    \frac{\partial \rho u_i}{\partial t} =
+ *         - \nabla\cdot (\rho u_i \mathbf{u})
+ *         - \nabla\cdot \tau_{*i}
+ *         - \frac{\partial p}{\partial x_i}
+ *         - \rho g_i
+ *  \f]
+ *
+ *  where \f$\tau_{*i}\f$ is row of the stress tensor corresponding to
+ *  the component of momentum this equation is describing.  We define
+ *
+ *  \f[
+ *     F_i \equiv -\frac{\partial \rho u_i u_j}{\partial x_j} 
+ *                -\frac{\partial \tau_{ij}}{\partial x_j}
+ *                -\rho g_i
+ *  \f]
+ *  so that the momentum equations are written as 
+ *  \f[
+ *    \frac{\partial \rho u_i}{\partial t} = F_i -\frac{\partial p}{\partial x_i}
+ *  \f]
+ *  This expression calculates \f$F_i\f$.
  */
 template< typename FieldT >
 class MomRHSPart
