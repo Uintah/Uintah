@@ -31,6 +31,7 @@ DEALINGS IN THE SOFTWARE.
 #ifndef Packages_Uintah_CCA_Components_Examples_RMCRT_Test_h
 #define Packages_Uintah_CCA_Components_Examples_RMCRT_Test_h
 
+#include <CCA/Components/Arches/RMCRT/Ray.h>
 #include <CCA/Components/Examples/uintahshare.h>
 #include <CCA/Ports/SimulationInterface.h>
 #include <Core/Geometry/Vector.h>
@@ -46,6 +47,7 @@ namespace Uintah
   class ExamplesLabel;
   class VarLabel;
   class GeometryObject;
+  class Ray;
 /**************************************
 
 CLASS
@@ -106,7 +108,7 @@ WARNING
                                  DataWarehouse* new_dw );
     
     void scheduleShootRays_onCoarseLevel(SchedulerP& sched,
-                                   const PatchSet* patches,
+                                   const LevelP& level,
                                    const MaterialSet* matls);
     
     void shootRays_onCoarseLevel ( const ProcessorGroup*,
@@ -165,7 +167,7 @@ WARNING
    protected:
     const ProcessorGroup* d_myworld;
     
-
+    Ray* d_realRMCRT;
 
     ExamplesLabel*   d_examplesLabel;
     SimulationStateP d_sharedState;
@@ -173,6 +175,8 @@ WARNING
 
     VarLabel* d_colorLabel;
     VarLabel* d_sumColorDiffLabel;
+    VarLabel* d_abskgLabel;
+    VarLabel* d_absorpLabel;
 
     SCIRun::Vector d_gridMax;
     SCIRun::Vector d_gridMin;
@@ -190,6 +194,8 @@ WARNING
     int            d_matl;
     bool           d_CoarseLevelRMCRTMethod;
     bool           d_multiLevelRMCRTMethod;
+    bool           d_doFakeRMCRT;
+    bool           d_doRealRMCRT;
     
     int d_orderOfInterpolation;         // Order of interpolation for interior fine patch
     std::vector<GeometryObject*> d_refine_geom_objs;

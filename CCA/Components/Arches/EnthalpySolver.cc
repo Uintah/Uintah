@@ -130,7 +130,13 @@ EnthalpySolver::problemSetup(const ProblemSpecP& params)
   if (db->findBlock("RMCRT")){
     d_doRMCRT = true; 
     ProblemSpecP rmcrt_db = db->findBlock("RMCRT"); 
-    d_RMCRT = scinew Ray( d_lab ); 
+    d_RMCRT = scinew Ray(); 
+    int archIndex = 0;
+    d_RMCRT->registerVarLabels(d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(),
+                               d_lab->d_abskgINLabel,
+                               d_lab->d_absorpINLabel,
+                               d_lab->d_tempINLabel );
+    
     d_RMCRT->problemSetup( rmcrt_db ); 
 
   }

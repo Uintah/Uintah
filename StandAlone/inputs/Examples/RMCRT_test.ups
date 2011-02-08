@@ -84,12 +84,24 @@
   
   
   <!--__________________________________ -->
-  <RMCRT>
+  <pseudoRMCRT>
     <ballRadius>  0.1     </ballRadius>
     <orbitRadius> 0.25    </orbitRadius>
     <angularVelocity> 10  </angularVelocity>
     <CoarseLevelRMCRTMethod> false     </CoarseLevelRMCRTMethod>
-    <multiLevelRMCRTMethod>  true   </multiLevelRMCRTMethod>
+    <multiLevelRMCRTMethod>  true      </multiLevelRMCRTMethod>
+  </pseudoRMCRT>
+  
+  <!-- ray tracer  
+  <RMCRT>
+    <NoOfRays>100</NoOfRays>
+    <Threshold>0.05</Threshold>
+    <Alpha>1</Alpha>
+    <Slice>20</Slice>
+    <StefanBoltzmann> 5.67051e-8 </StefanBoltzmann>
+    <benchmark_1> true </benchmark_1>
   </RMCRT>
+  -->
+
  
 </Uintah_specification>

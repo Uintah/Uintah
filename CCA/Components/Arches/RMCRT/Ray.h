@@ -5,7 +5,6 @@
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/CCVariable.h>
-#include <CCA/Components/Arches/ArchesLabel.h>
 #include <CCA/Components/Arches/ArchesMaterial.h>
 #include <CCA/Components/Arches/RMCRT/MersenneTwister.h>
 #include <iostream>
@@ -27,12 +26,11 @@
 
 namespace Uintah{
 
-  class ArchesLabel; 
   class Ray  {
 
     public: 
 
-      Ray( const ArchesLabel* labels ); 
+      Ray(); 
       ~Ray(); 
 
       /** @brief Interface to input file information */
@@ -54,6 +52,12 @@ namespace Uintah{
 
       //  void VecUnitize( double direction_vector, double length);
       //  void VecLength(double length);
+      
+      /** @brief map the component VarLables to RMCRT VarLabels */
+     void registerVarLabels(int   matl,
+                            const VarLabel*  abskg,
+                            const VarLabel* absorp,
+                            const VarLabel* temperature );
 
     private: 
       
@@ -63,10 +67,11 @@ namespace Uintah{
       double _sigma; 
       int    _NoOfRays;
       int    _slice;
+      int    d_matl;
+      MaterialSet* d_matlSet;
+      
       const double _sigma_over_pi; // Stefan Boltzmann divided by pi (W* m-2* K-4)
 
-       // Arches labels
-      const ArchesLabel* d_lab; 
       MTRand _mTwister; 
       int i,j,k;
       bool _benchmark_1; 
@@ -74,6 +79,9 @@ namespace Uintah{
       const VarLabel* sigmaT4_label; 
       const VarLabel* divQ_label; 
       const VarLabel* d_blackBodyIntensityLabel; 
+      const VarLabel* d_abskgLabel;
+      const VarLabel* d_absorpLabel;
+      const VarLabel* d_temperatureLabel;
 
       //----------------------------------------
       void rayTrace( const ProcessorGroup* pc, 
@@ -96,6 +104,7 @@ namespace Uintah{
                          const MaterialSubset* matls,
                          DataWarehouse* old_dw,
                          DataWarehouse* new_dw );
+
 
       //double length;//this tells us the length of the direction vector.  It gets changed to unity during the VecUnitize function
       //double &length_ = length;//so we can pass length by reference
