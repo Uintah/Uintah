@@ -482,10 +482,12 @@ main( int argc, char *argv[], char *env[] )
     gethostname(name, 256);
     
     cout << "Date:    " << time_string; // has its own newline
-    cout << "Machine: " << name << endl;
+    cout << "Machine: " << name << "\n";
 
-    cout << "SVN: " << SVN_REVISION << endl;
-    cout << "SVN: " << SVN_DATE << endl;
+    cout << "SVN: " << SVN_REVISION << "\n";
+    cout << "SVN: " << SVN_DATE << "\n";
+    cout << "Assertion level: " << SCI_ASSERTION_LEVEL << "\n";
+    cout << "CFLAGS: " << CFLAGS << "\n";
 
     // Run svn commands on Packages/Uintah 
     if (do_svnDiff || do_svnStat){
