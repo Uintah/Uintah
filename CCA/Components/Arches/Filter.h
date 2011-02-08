@@ -166,19 +166,6 @@ bool applyFilter(const ProcessorGroup* ,
 #endif
   IntVector inputLo = idxLo;
   IntVector inputHi = idxHi;
-  
-  if (d_3d_periodic) {
-    const Level* level = patch->getLevel();
-    IntVector domain_low, domain_high;
-    level->findCellIndexRange(domain_low, domain_high);
-    domain_high -=IntVector(1,1,1);
-    if (idxLo.x() == domain_low.x()) inputLo -= IntVector(1,0,0);
-    if (idxLo.y() == domain_low.y()) inputLo -= IntVector(0,1,0);
-    if (idxLo.z() == domain_low.z()) inputLo -= IntVector(0,0,1);
-    if (idxHi.x() == domain_high.x()) inputHi += IntVector(1,0,0);
-    if (idxHi.y() == domain_high.y()) inputHi += IntVector(0,1,0);
-    if (idxHi.z() == domain_high.z()) inputHi += IntVector(0,0,1);
-  }
 
   double vecvaluex;
   for (int colZ = inputLo.z(); colZ <= inputHi.z(); colZ ++) {
@@ -257,7 +244,6 @@ private:
   const ArchesLabel* d_lab;
   BoundaryCondition* d_boundaryCondition;
 
-  bool d_3d_periodic;
   bool d_matrixInitialize;
   bool d_matrix_vectors_created;
 #ifdef HAVE_PETSC

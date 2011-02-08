@@ -107,9 +107,6 @@ Filter::sched_buildFilterMatrix(const LevelP& level,
   d_perproc_patches->addReference();
   const MaterialSet* matls = d_lab->d_sharedState->allArchesMaterials();
 
-  IntVector periodic_vector = level->getPeriodicBoundaries();
-  d_3d_periodic = (periodic_vector == IntVector(1,1,1));
-
   Task* tsk = scinew Task("Filter::BuildFilterMatrix",this,
                           &Filter::buildFilterMatrix);
 
@@ -137,124 +134,20 @@ void
 Filter::matrixCreate(const PatchSet* allpatches,
                      const PatchSubset* mypatches)
 {
-  // for global index get a petsc index that
-  // make it a data memeber
-  int numProcessors = d_myworld->size();
-  ASSERTEQ(numProcessors, allpatches->size());
+  int numProcs = d_myworld->size();
+  ASSERTEQ(numProcs, allpatches->size());
 
-  // number of patches for each processor
-  vector<int> numCells(numProcessors, 0);
-  vector<int> startIndex(numProcessors);
+  vector<int> numCells(numProcs, 0);
+  vector<int> startIndex(numProcs);
   int totalCells = 0;
   
-  for(int s=0;s<allpatches->size();s++){
-  
-    startIndex[s]=totalCells;
-    int mytotal = 0;
-    const PatchSubset* patches = allpatches->getSubset(s);
-  
-    for(int p=0;p<patches->size();p++){
-      const Patch* patch = patches->get(p);
-
-      // #ifdef notincludeBdry
-#if 1
-      IntVector plowIndex = patch->getFortranCellLowIndex();
-      IntVector phighIndex = patch->getFortranCellHighIndex()+IntVector(1,1,1);
-#else
-      IntVector plowIndex = patch->getExtraCellLowIndex();
-      IntVector phighIndex = patch->getExtraCellHighIndex();
-#endif
-      if (d_3d_periodic) {
-        const Level* level = patch->getLevel();
-        IntVector domain_low, domain_high;
-        level->findCellIndexRange(domain_low, domain_high);
-        if (plowIndex.x() == domain_low.x()) plowIndex -= IntVector(1,0,0);
-        if (plowIndex.y() == domain_low.y()) plowIndex -= IntVector(0,1,0);
-        if (plowIndex.z() == domain_low.z()) plowIndex -= IntVector(0,0,1);
-        if (phighIndex.x() == domain_high.x()) phighIndex += IntVector(1,0,0);
-        if (phighIndex.y() == domain_high.y()) phighIndex += IntVector(0,1,0);
-        if (phighIndex.z() == domain_high.z()) phighIndex += IntVector(0,0,1);
-      }
-
-      long nc = (phighIndex[0]-plowIndex[0])*
-                (phighIndex[1]-plowIndex[1])*
-                (phighIndex[2]-plowIndex[2]);
-      d_petscGlobalStart[patch]=totalCells;
-      totalCells+=nc;
-      mytotal+=nc;
-    }
-    numCells[s] = mytotal;
-  }
-
-  for(int p=0;p<mypatches->size();p++){
-    const Patch* patch=mypatches->get(p);
-    IntVector lowIndex = patch->getExtraCellLowIndex(Arches::ONEGHOSTCELL);
-    IntVector highIndex = patch->getExtraCellHighIndex(Arches::ONEGHOSTCELL);
-    Array3<int> l2g(lowIndex, highIndex);
-    l2g.initialize(-1234);
-    const Level* level = patch->getLevel();
-    Patch::selectType neighbors;
-    level->selectPatches(lowIndex, highIndex, neighbors);
-    for(int i=0;i<neighbors.size();i++){
-      const Patch* neighbor = neighbors[i];
-
-      // #ifdef notincludeBdry
-#if 1
-      IntVector plow = neighbor->getFortranCellLowIndex();
-      IntVector phigh = neighbor->getFortranCellHighIndex()+IntVector(1,1,1);
-#else
-      IntVector plow = neighbor->getExtraCellLowIndex();
-      IntVector phigh = neighbor->getExtraCellHighIndex();
-#endif
-      if (d_3d_periodic) {
-        const Level* level = patch->getLevel();
-        IntVector domain_low, domain_high;
-        level->findCellIndexRange(domain_low, domain_high);
-        if (plow.x() == domain_low.x()) plow -= IntVector(1,0,0);
-        if (plow.y() == domain_low.y()) plow -= IntVector(0,1,0);
-        if (plow.z() == domain_low.z()) plow -= IntVector(0,0,1);
-        if (plow.x() == domain_high.x()) plow += IntVector(1,0,0);
-        if (plow.y() == domain_high.y()) plow += IntVector(0,1,0);
-        if (plow.z() == domain_high.z()) plow += IntVector(0,0,1);
-        if (phigh.x() == domain_high.x()) phigh += IntVector(1,0,0);
-        if (phigh.y() == domain_high.y()) phigh += IntVector(0,1,0);
-        if (phigh.z() == domain_high.z()) phigh += IntVector(0,0,1);
-        if (phigh.x() == domain_low.x()) phigh -= IntVector(1,0,0);
-        if (phigh.y() == domain_low.y()) phigh -= IntVector(0,1,0);
-        if (phigh.z() == domain_low.z()) phigh -= IntVector(0,0,1);
-      }
-
-      IntVector low = Max(lowIndex, plow);
-      IntVector high= Min(highIndex, phigh);
-
-      if( ( high.x() < low.x() ) || ( high.y() < low.y() ) 
-          || ( high.z() < low.z() ) )
-        throw InternalError("Patch doesn't overlap?", __FILE__, __LINE__);
-
-      int petscglobalIndex = d_petscGlobalStart[neighbor];
-      IntVector dcells = phigh-plow;
-      IntVector start = low-plow;
-      petscglobalIndex += start.z()*dcells.x()*dcells.y()
-        +start.y()*dcells.x()+start.x();
-      for (int colZ = low.z(); colZ < high.z(); colZ ++) {
-        int idx_slab = petscglobalIndex;
-        petscglobalIndex += dcells.x()*dcells.y();
-
-        for (int colY = low.y(); colY < high.y(); colY ++) {
-          int idx = idx_slab;
-          idx_slab += dcells.x();
-          for (int colX = low.x(); colX < high.x(); colX ++) {
-            l2g[IntVector(colX, colY, colZ)] = idx++;
-          }
-        }
-      }
-    }
-    d_petscLocalToGlobal[patch].copyPointer(l2g);
-  }
-  int me = d_myworld->myrank();
-  int numlrows = numCells[me];
-  int numlcolumns = numlrows;
-  int globalrows = totalCells;
+  PetscLocalToGlobalMapping(allpatches, mypatches, numCells, totalCells,
+                            d_petscGlobalStart, d_petscLocalToGlobal, d_myworld);
+                            
+  int me            = d_myworld->myrank();
+  int numlrows      = numCells[me];
+  int numlcolumns   = numlrows;
+  int globalrows    = totalCells;
   int globalcolumns = totalCells;
   // for box filter of size 2 matrix width is 27
   d_nz = 27; // defined in Filter.h
