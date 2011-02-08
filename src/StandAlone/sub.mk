@@ -47,12 +47,11 @@ include $(SCIRUN_SCRIPTS)/recurse.mk
 COMPONENTS      = CCA/Components
 CA              = CCA/Components/Arches
 ifeq ($(BUILD_ARCHES),yes)
-  ARCHES_SUB_LIBS = $(CA)/Mixing $(CA)/fortran $(CA)/Radiation $(CA)/Radiation/fortran
+  ARCHES_SUB_LIBS = $(CA)/Mixing $(CA)/fortran 
   ifeq ($(BUILD_MPM),yes)
     MPMARCHES_LIB    = $(COMPONENTS)/MPMArches
   endif
   ARCHES_LIBS        = $(COMPONENTS)/Arches             \
-                       $(COMPONENTS)/Arches/RMCRT	\
                        $(COMPONENTS)/SpatialOps
 endif
 
