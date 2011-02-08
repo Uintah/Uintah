@@ -9,8 +9,7 @@ using namespace std;
 //---------------------------------------------------------------------------
 // Method: Constructor. he's not creating an instance to the class yet
 //---------------------------------------------------------------------------
-Ray::Ray( const ArchesLabel* labels ):
-  d_lab(labels), _sigma_over_pi(1.804944378616567e-8)
+Ray::Ray():_sigma_over_pi(1.804944378616567e-8)    // Warning hard coding!!!! -Todd
 {
 
   d_blackBodyIntensityLabel = VarLabel::create("Intensity_BB",
@@ -20,7 +19,7 @@ Ray::Ray( const ArchesLabel* labels ):
   // sigma*T^4
   sigmaT4_label = VarLabel::create( "sigmaT4", CCVariable<double>::getTypeDescription() ); 
   divQ_label = VarLabel::create( "divQ", CCVariable<double>::getTypeDescription() ); 
-
+  d_matlSet = 0;
 }
 
 //---------------------------------------------------------------------------
@@ -31,24 +30,50 @@ Ray::~Ray()
   VarLabel::destroy(d_blackBodyIntensityLabel);
   VarLabel::destroy(sigmaT4_label);
   VarLabel::destroy(divQ_label);
+  
+  if(d_matlSet && d_matlSet->removeReference()) {
+    delete d_matlSet;
+  }
 }
 
 //---------------------------------------------------------------------------
 // Method: Problem setup (access to input file information)
 //---------------------------------------------------------------------------
-  void
-Ray::problemSetup( const ProblemSpecP& inputdb ) 
+void
+Ray::problemSetup( const ProblemSpecP& inputdb) 
 {
   ProblemSpecP db = inputdb;
 
   db->getWithDefault( "NoOfRays"  , _NoOfRays  , 1000 );
-  db->getWithDefault( "Threshold" , _Threshold , 0.01 );  //When to terminate a ray
-  db->getWithDefault( "Alpha"     , _alpha     , 0.2 );   //Absorption coefficient of the boundaries
-  db->getWithDefault( "Slice"     , _slice     , 9 );     //Level in z direction of xy slice
-  db->getWithDefault( "benchmark_1" , _benchmark_1, false ); //probably need to make this smarter...
-                                                            //depending on what isaac has in mind
+  db->getWithDefault( "Threshold" , _Threshold , 0.01 );      //When to terminate a ray
+  db->getWithDefault( "Alpha"     , _alpha     , 0.2 );       //Absorption coefficient of the boundaries
+  db->getWithDefault( "Slice"     , _slice     , 9 );         //Level in z direction of xy slice
+  db->getWithDefault( "benchmark_1" , _benchmark_1, false );  //probably need to make this smarter...
+                                                              //depending on what isaac has in mind
   db->getWithDefault("StefanBoltzmann", _sigma, 5.67051e-8);  // Units are W/(m^2-K)
 
+}
+
+//______________________________________________________________________
+// Register the material index and label names
+void
+Ray::registerVarLabels(int   matlIndex,
+                       const VarLabel* abskg,
+                       const VarLabel* absorp,
+                       const VarLabel* temperature )
+{
+  d_matl             = matlIndex;
+  d_abskgLabel       = abskg;
+  d_absorpLabel      = absorp;
+  d_temperatureLabel = temperature;
+  
+  //__________________________________
+  //  define the materialSet
+  d_matlSet = scinew MaterialSet();
+  vector<int> m;
+  m.push_back(matlIndex);
+  d_matlSet->addAll(m);
+  d_matlSet->addReference();
 }
 //---------------------------------------------------------------------------
 //
@@ -60,27 +85,27 @@ Ray::sched_initProperties( const LevelP& level, SchedulerP& sched, int time_sub_
   Task* tsk = scinew Task( taskname, this, &Ray::initProperties, time_sub_step ); 
 
   if ( time_sub_step == 0 ) { 
-
-    tsk->requires( Task::OldDW, d_lab->d_abskgINLabel, Ghost::None, 0 ); 
-    tsk->requires( Task::OldDW, d_lab->d_tempINLabel, Ghost::None, 0 ); 
+    tsk->requires( Task::OldDW, d_abskgLabel,       Ghost::None, 0 ); 
+    tsk->requires( Task::OldDW, d_temperatureLabel, Ghost::None, 0 ); 
     tsk->computes( sigmaT4_label ); 
-    tsk->computes( d_lab->d_abskgINLabel ); 
-    tsk->computes( d_lab->d_absorpINLabel ); 
+    tsk->computes( d_abskgLabel ); 
+    tsk->computes( d_absorpLabel ); 
     tsk->computes( divQ_label ); 
 
   } else { 
-
-    tsk->requires( Task::NewDW, d_lab->d_tempINLabel, Ghost::None, 0 ); 
+    tsk->requires( Task::NewDW, d_temperatureLabel, Ghost::None, 0 ); 
     tsk->modifies( sigmaT4_label ); 
-    tsk->modifies( d_lab->d_abskgINLabel ); 
-    tsk->modifies( d_lab->d_absorpINLabel ); 
+    tsk->modifies( d_abskgLabel ); 
+    tsk->modifies( d_absorpLabel ); 
     tsk->modifies( divQ_label ); 
 
   }
 
-  sched->addTask( tsk, level->eachPatch(), d_lab->d_sharedState->allArchesMaterials() ); 
+  sched->addTask( tsk, level->eachPatch(), d_matlSet ); 
 
 }
+//______________________________________________________________________
+//
 void
 Ray::initProperties( const ProcessorGroup* pc,
                      const PatchSubset* patches,
@@ -93,8 +118,6 @@ Ray::initProperties( const ProcessorGroup* pc,
   for (int p=0; p < patches->size(); p++){
 
     const Patch* patch = patches->get(p);
-    int archIndex = 0;
-    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
 
     CCVariable<double> abskg; 
     CCVariable<double> absorp; 
@@ -105,24 +128,24 @@ Ray::initProperties( const ProcessorGroup* pc,
 
     if ( time_sub_step == 0 ) { 
 
-      new_dw->allocateAndPut( abskg, d_lab->d_abskgINLabel, matlIndex, patch ); 
-      new_dw->allocateAndPut( sigmaT4, sigmaT4_label, matlIndex, patch ); 
-      new_dw->allocateAndPut( absorp, d_lab->d_absorpINLabel, matlIndex, patch ); 
-      new_dw->allocateAndPut( divQ, divQ_label, matlIndex, patch ); 
+      new_dw->allocateAndPut( abskg,    d_abskgLabel,   d_matl, patch ); 
+      new_dw->allocateAndPut( sigmaT4,  sigmaT4_label,  d_matl, patch ); 
+      new_dw->allocateAndPut( absorp,   d_absorpLabel,  d_matl, patch ); 
+      new_dw->allocateAndPut( divQ,     divQ_label,     d_matl, patch ); 
 
       abskg.initialize  ( 0.0 ); 
       absorp.initialize ( 0.0 ); 
       divQ.initialize   ( 0.0 );
 
-      old_dw->get(temperature,      d_lab->d_tempINLabel,       matlIndex, patch, Ghost::None, 0);
+      old_dw->get(temperature,      d_temperatureLabel, d_matl, patch, Ghost::None, 0);
 
     } else { 
 
-      new_dw->getModifiable( sigmaT4, sigmaT4_label, matlIndex, patch ); 
-      new_dw->getModifiable( absorp, d_lab->d_absorpINLabel, matlIndex, patch ); 
-      new_dw->getModifiable( abskg, d_lab->d_abskgINLabel, matlIndex, patch ); 
-      new_dw->getModifiable( divQ, divQ_label, matlIndex, patch ); 
-      new_dw->get( temperature, d_lab->d_tempINLabel, matlIndex, patch, Ghost::None, 0 ); 
+      new_dw->getModifiable( sigmaT4, sigmaT4_label,    d_matl, patch ); 
+      new_dw->getModifiable( absorp,  d_absorpLabel,    d_matl, patch ); 
+      new_dw->getModifiable( abskg,   d_abskgLabel,     d_matl, patch ); 
+      new_dw->getModifiable( divQ,    divQ_label,       d_matl, patch ); 
+      new_dw->get( temperature,     d_temperatureLabel, d_matl, patch, Ghost::None, 0 ); 
 
       divQ.initialize(0.0); 
 
@@ -174,12 +197,12 @@ Ray::sched_blackBodyIntensity( const LevelP& level,
   std::string taskname = "Ray::blackBodyIntensity";
   Task* tsk= scinew Task( taskname, this, &Ray::blackBodyIntensity );
 
-  tsk->requires( Task::OldDW, d_lab->d_tempINLabel,   Ghost::None, 0 ); 
-  tsk->requires( Task::OldDW, d_lab->d_abskgINLabel,  Ghost::None, 0 );
+  tsk->requires( Task::OldDW, d_temperatureLabel, Ghost::None, 0 ); 
+  tsk->requires( Task::OldDW, d_abskgLabel,              Ghost::None, 0 );
   
   tsk->computes(d_blackBodyIntensityLabel); 
 
-  sched->addTask( tsk, level->eachPatch(), d_lab->d_sharedState->allArchesMaterials() );
+  sched->addTask( tsk, level->eachPatch(), d_matlSet );
 }
 //---------------------------------------------------------------------------
 // Compute total intensity over all wave lengths (sigma * Temperature^4)
@@ -195,18 +218,15 @@ Ray::blackBodyIntensity( const ProcessorGroup*,
   for (int p=0; p < patches->size(); p++){
 
     const Patch* patch = patches->get(p);
-    int archIndex = 0;
-    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
-    
     double sigma_over_pi = _sigma/M_PI;
     
     constCCVariable<double> temp;
     constCCVariable<double> abskg;
     CCVariable<double> I_bb;             // sigma T ^4/pi
     
-    old_dw->get(temp,            d_lab->d_tempINLabel,      matlIndex, patch, Ghost::None, 0);    
-    old_dw->get(abskg,           d_lab->d_abskgINLabel,     matlIndex, patch, Ghost::None, 0);    
-    new_dw->allocateAndPut(I_bb, d_blackBodyIntensityLabel, matlIndex, patch);
+    old_dw->get(temp,            d_temperatureLabel,        d_matl, patch, Ghost::None, 0);    
+    old_dw->get(abskg,           d_abskgLabel,              d_matl, patch, Ghost::None, 0);    
+    new_dw->allocateAndPut(I_bb, d_blackBodyIntensityLabel, d_matl, patch);
 
     for (CellIterator iter = patch->getCellIterator();!iter.done();iter++){
       const IntVector& c = *iter;
@@ -226,24 +246,24 @@ Ray::sched_rayTrace( const LevelP& level, SchedulerP& sched )
   std::string taskname = "Ray::rayTrace";
   Task* tsk= scinew Task( taskname, this, &Ray::rayTrace );
 
-  tsk->requires( Task::NewDW , d_lab->d_abskgINLabel  , Ghost::None , 0 );
+  tsk->requires( Task::NewDW , d_abskgLabel  , Ghost::None , 0 );
   tsk->requires( Task::NewDW , sigmaT4_label , Ghost::None , 0 );
-  tsk->requires( Task::OldDW , d_lab->d_cellTypeLabel , Ghost::None , 0 );
+//  tsk->requires( Task::OldDW , d_lab->d_cellTypeLabel , Ghost::None , 0 );
   tsk->modifies( divQ_label ); 
 
-  sched->addTask( tsk, level->eachPatch(), d_lab->d_sharedState->allArchesMaterials() );
+  sched->addTask( tsk, level->eachPatch(), d_matlSet );
 
 }
 
 //---------------------------------------------------------------------------
 // Method: The actual work of the ray tracer
 //---------------------------------------------------------------------------
-  void
+void
 Ray::rayTrace( const ProcessorGroup* pc,
-    const PatchSubset* patches,
-    const MaterialSubset* matls,
-    DataWarehouse* old_dw,
-    DataWarehouse* new_dw )
+               const PatchSubset* patches,
+               const MaterialSubset* matls,
+               DataWarehouse* old_dw,
+               DataWarehouse* new_dw )
 {
 
   double start=clock();
@@ -252,8 +272,6 @@ Ray::rayTrace( const ProcessorGroup* pc,
   for (int p=0; p < patches->size(); p++){
 
     const Patch* patch = patches->get(p);
-    int archIndex = 0;
-    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
 
     //The following will be removed when using cell iterator..
     int cur[3];//  cur represents the current location of a ray as it is traced through the domain... 
@@ -273,9 +291,9 @@ Ray::rayTrace( const ProcessorGroup* pc,
     // CCVariable<double> *ix_ptr = array_ptr; // this pointer is free to move along the members of the array
 
     //  getting the temperature from the DW
-    new_dw->get( abskg          , d_lab->d_abskgINLabel , matlIndex , patch    , Ghost::None , 0);
-    new_dw->get( sigmaT4        , sigmaT4_label         , matlIndex , patch    , Ghost::None , 0);
-    new_dw->getModifiable( divQ , divQ_label            , matlIndex , patch );
+    new_dw->get( abskg          , d_abskgLabel , d_matl , patch    , Ghost::None , 0);
+    new_dw->get( sigmaT4        , sigmaT4_label, d_matl , patch    , Ghost::None , 0);
+    new_dw->getModifiable( divQ , divQ_label,    d_matl , patch );
 
     IntVector pLow  = patch->getCellLowIndex();  // patch low index //returns 0 for edge patches
     IntVector pHigh = patch->getCellHighIndex(); // patch high index//returns index of highest cell (usually it's a ghost)

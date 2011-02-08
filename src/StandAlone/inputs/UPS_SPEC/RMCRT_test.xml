@@ -14,11 +14,14 @@
   </AMR>
   
 
-  <RMCRT                      spec="OPTIONAL NO_DATA">
+  <pseudoRMCRT                spec="OPTIONAL NO_DATA">
     <ballRadius               spec="OPTIONAL DOUBLE 'positive'"/>
     <orbitRadius              spec="OPTIONAL DOUBLE 'positive'"/>
     <angularVelocity          spec="OPTIONAL DOUBLE 'positive'"/>
     <CoarseLevelRMCRTMethod   spec="OPTIONAL BOOLEAN" />
     <multiLevelRMCRTMethod    spec="OPTIONAL BOOLEAN" />
-  </RMCRT>
+  </pseudoRMCRT>
+  
+  <include href="Models.xml"  section="Models/RMCRT" />
+
 </Uintah_Include>

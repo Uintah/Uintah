@@ -26,7 +26,6 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 
 */
-
 #include <CCA/Components/Examples/ExamplesLabel.h>
 #include <CCA/Components/Examples/RMCRT_Test.h>
 #include <CCA/Components/Regridder/PerPatchVars.h>
@@ -62,18 +61,34 @@ static DebugStream dbg("RMCRT_Test", false);
 
 namespace Uintah
 {
+//______________________________________________________________________
+//
 RMCRT_Test::RMCRT_Test ( const ProcessorGroup* myworld ): UintahParallelComponent( myworld )
 {
   //d_examplesLabel = scinew ExamplesLabel();
   d_colorLabel        = VarLabel::create("color",        CCVariable<double>::getTypeDescription());
   d_sumColorDiffLabel = VarLabel::create("sumColorDiff", CCVariable<double>::getTypeDescription());
+  d_abskgLabel        = VarLabel::create("abskg",        CCVariable<double>::getTypeDescription());
+  d_absorpLabel       = VarLabel::create("absorp",       CCVariable<double>::getTypeDescription()); 
+   
   d_gac = Ghost::AroundCells;
   d_gn  = Ghost::None;
   d_matl = 0;
+  d_doFakeRMCRT = false;
+  d_doRealRMCRT = false;
 }
-
+//______________________________________________________________________
+//
 RMCRT_Test::~RMCRT_Test ( void )
 {
+  if ( d_realRMCRT ) 
+    delete d_realRMCRT;
+    
+  VarLabel::destroy(d_colorLabel);
+  VarLabel::destroy(d_sumColorDiffLabel);
+  VarLabel::destroy(d_abskgLabel);
+  VarLabel::destroy(d_absorpLabel);
+  
   dbg << UintahParallelComponent::d_myworld->myrank() << " Doing: RMCRT destructor " << endl;
 
   for (int i = 0; i< (int)d_refine_geom_objs.size(); i++) {
@@ -97,8 +112,6 @@ void RMCRT_Test::problemSetup(const ProblemSpecP& prob_spec,
   Scheduler* sched = dynamic_cast<Scheduler*>(getPort("scheduler"));
   sched->overrideVariableBehavior("color",false, false, true);
 
-  ProblemSpecP spec = prob_spec->findBlock("RMCRT");
-
   BBox gridBoundingBox;
   grid->getSpatialRange( gridBoundingBox );
   d_gridMax = gridBoundingBox.max().asVector();
@@ -110,12 +123,33 @@ void RMCRT_Test::problemSetup(const ProblemSpecP& prob_spec,
   d_radiusOfOrbit    = 0.25 * d_gridMax.x();
   d_angularVelocity  = 10;
 
-  spec->get("ballRadius",       d_radiusOfBall);
-  spec->get("orbitRadius",      d_radiusOfOrbit);
-  spec->get("angularVelocity",  d_angularVelocity);
+  //__________________________________
+  //  pseudo RMCRT
+  if (prob_spec->findBlock("pseudoRMCRT")){
+    d_doFakeRMCRT  = true;
+    ProblemSpecP spec = prob_spec->findBlock("pseudoRMCRT");
+    spec->get("ballRadius",             d_radiusOfBall);
+    spec->get("orbitRadius",            d_radiusOfOrbit);
+    spec->get("angularVelocity",        d_angularVelocity);
+    spec->get("CoarseLevelRMCRTMethod", d_CoarseLevelRMCRTMethod);
+    spec->get("multiLevelRMCRTMethod",  d_multiLevelRMCRTMethod);
+    cout << "__________________________________ Reading in pseudoRMCRT section of ups file" << endl;
+  } 
   
-  spec->get("CoarseLevelRMCRTMethod", d_CoarseLevelRMCRTMethod);
-  spec->get("multiLevelRMCRTMethod", d_multiLevelRMCRTMethod);
+  //__________________________________
+  //  Real RMCRT
+  if (prob_spec->findBlock("RMCRT")){
+    d_doRealRMCRT  = true;
+    ProblemSpecP rmcrt_db = prob_spec->findBlock("RMCRT"); 
+    d_realRMCRT = scinew Ray(); 
+    d_realRMCRT->registerVarLabels(0,
+                                 d_abskgLabel,
+                                 d_absorpLabel,
+                                 d_colorLabel );
+    d_realRMCRT->problemSetup( rmcrt_db ); 
+    cout << "__________________________________ Reading in RMCRT section of ups file" << endl;
+  }
+  
 
   //__________________________________
   //  Read in the AMR section
@@ -247,7 +281,7 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
       const LevelP& level = grid->getLevel(l);
       const PatchSet* patches = level->eachPatch();
       scheduleCoarsen_Q (level, sched);
-      scheduleShootRays_onCoarseLevel( sched, patches, matls );
+      scheduleShootRays_onCoarseLevel( sched, level, matls );
     }
 
     for (int l = 0; l < maxLevels; l++) {
@@ -457,22 +491,30 @@ void RMCRT_Test::shootRays_multiLevel ( const ProcessorGroup*,
 //______________________________________________________________________
 //
 void RMCRT_Test::scheduleShootRays_onCoarseLevel(SchedulerP& sched,
-                                                 const PatchSet* patches,
+                                                 const LevelP& level,
                                                  const MaterialSet* matls)
 {
-  printSchedule(patches,dbg,"RMCRT_Test::scheduleShootRays_onCoarseLevel");
-  
+
+  printSchedule(level,dbg,"RMCRT_Test::scheduleShootRays_onCoarseLevel");
   Task* t = scinew Task("RMCRT_Test::shootRays_onCoarseLevel",
                   this, &RMCRT_Test::shootRays_onCoarseLevel);
+  //__________________________________
+  //  
+  if (d_doFakeRMCRT){
+    Ghost::GhostType  gn  = Ghost::None;
+    Task::DomainSpec  ND  = Task::NormalDomain;
+    #define allPatches 0
+    #define allMatls 0
 
-  Ghost::GhostType  gn  = Ghost::None;
-  Task::DomainSpec  ND  = Task::NormalDomain;
-  #define allPatches 0
-  #define allMatls 0
-
-  t->requires(Task::OldDW, d_colorLabel,  allPatches, ND,allMatls, ND, gn,0);
-  t->computes( d_sumColorDiffLabel );
-  sched->addTask(t, patches, matls);
+    t->requires(Task::OldDW, d_colorLabel,  allPatches, ND,allMatls, ND, gn,0);
+    t->computes( d_sumColorDiffLabel );
+  }
+  
+  if(d_doRealRMCRT){
+    d_realRMCRT->sched_rayTrace(level,sched);
+  }
+  
+  sched->addTask(t, level->eachPatch(), matls);
 }
   
 //______________________________________________________________________
