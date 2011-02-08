@@ -12,7 +12,7 @@
  *  \brief Calculates a component of the stress tensor.
  *
  *  The stress tensor is given as
- *  \[ \tau_{ij} = -\mu \left( \frac{\partial u_i}{\partial x_j} + \frac{\partial u_j}{\partial x_i} \right) - \frac{2}{3} \mu \delta_{ij} \frac{\partial u_k}{\partial x_k} \]
+ *  \[ \tau_{ij} = -\mu \left( \frac{\partial u_i}{\partial x_j} + \frac{\partial u_j}{\partial x_i} \right) + \frac{2}{3} \mu \delta_{ij} \frac{\partial u_k}{\partial x_k} \]
  *
  *  \tparam StressT The type of field for this stress component.
  *  \tparam Vel1T   The type of field for the first velocity component.
