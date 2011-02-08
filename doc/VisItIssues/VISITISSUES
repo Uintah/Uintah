@@ -51,3 +51,9 @@ to input the cell-centered or node centered index along with the level and
 it will display that location with a marker.  This is really handy when you
 have a complex multilevel AMR grid.  I poked around in VisIT and I couldn't
 see how to do this.  --Todd
+
+_________________________Improvement in particle rendering _____
+Jim Guilkey, 2/8/2011
+A good suggestion was made that it would be nice if particles could be rendered as polygons rather than spheres.  Namely, quads in 2D or hexahedra in 3D.  Attached is an example of rendering particles as quads that have been deformed according to their deformation gradient.  Roni Choudhury, Mike Steffen, Steve Parker and I published a paper on this last year.
+
+Rebecca's postdoc Ali made the figure CPDIsnapshot.png (you'll need to zoom in to appreciate) using Matlab.  He's offered to share those scripts if it would make someone's life easier in the implementation.
