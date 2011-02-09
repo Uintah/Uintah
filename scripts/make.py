@@ -2,6 +2,7 @@ import os,sys
 
 def build(num):
         os.system('make cleanreally')
+        os.system('make cleanreally')
 	make_command='make -j' + str(num)
 	make=os.system(make_command)
 
