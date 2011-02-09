@@ -2,8 +2,8 @@
 #define Wasatch_CoordHelper_h
 
 //-- Wasatch includes --//
-#include "FieldTypes.h"
-#include "FieldAdaptor.h"
+#include <CCA/Components/Wasatch/FieldTypes.h>
+#include <CCA/Components/Wasatch/FieldAdaptor.h>
 
 //-- Uintah Framework Includes --//
 #include <CCA/Ports/Scheduler.h>

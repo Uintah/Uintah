@@ -1,4 +1,4 @@
-#include "FieldAdaptor.h"
+#include <CCA/Components/Wasatch/FieldAdaptor.h>
 
 #include <map>
 #include <string>
