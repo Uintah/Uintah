@@ -200,8 +200,17 @@ namespace Wasatch{
         transEqnParams != 0;
         transEqnParams=transEqnParams->findNextBlock("MomentumEquations") ){
       // note - parse_momentum_equations returns a vector of equation adaptors
-      EquationAdaptors momentumAdaptors = parse_momentum_equations( transEqnParams, graphCategories_, *linSolver_);
-      adaptors_.insert(adaptors_.end(), momentumAdaptors.begin(), momentumAdaptors.end());
+      try{
+        EquationAdaptors momentumAdaptors = parse_momentum_equations( transEqnParams, graphCategories_, *linSolver_);
+        adaptors_.insert( adaptors_.end(), momentumAdaptors.begin(), momentumAdaptors.end() );
+      }
+      catch( std::runtime_error& err ){
+        std::ostringstream msg;
+        msg << endl
+            << "Problems setting up momentum transport equations.  Details follow:" << endl
+            << err.what() << endl;
+        throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+      }
     }
     
     
