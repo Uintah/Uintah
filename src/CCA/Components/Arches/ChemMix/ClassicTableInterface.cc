@@ -113,7 +113,9 @@ ClassicTableInterface::problemSetup( const ProblemSpecP& propertiesParameters )
   db_root->findBlock("PhysicalConstants")->require("reference_point", d_ijk_den_ref);  
 
   // READ TABLE: 
-  loadMixingTable( tableFileName ); 
+  cout << "----------Mixing Table Information---------------  " << endl;
+  loadMixingTable( tableFileName );
+  cout << "-------------------------------------------------  " << endl;
 
   // Extract independent and dependent variables from input file
   ProblemSpecP db_rootnode = propertiesParameters;
@@ -1304,7 +1306,7 @@ ClassicTableInterface::loadMixingTable( const string & inputfile )
   } else if ( d_indepvarscount == 3 ){ 
 
     i1 = vector<vector<double> >( d_allIndepVarNum[2] ); 
-    for ( int i = 0; i < d_varscount; i++ ){
+    for ( int i = 0; i < d_allIndepVarNum[2]; i++ ){
       i1[i] = vector<double>( d_allIndepVarNum[0] ); 
     }
   }
@@ -1379,7 +1381,7 @@ ClassicTableInterface::loadMixingTable( const string & inputfile )
     proc0cout << "Reading in the variables: " << endl;
     for (int kk=0; kk< d_varscount; kk++){
 
-      proc0cout << "--> " << d_allDepVarNames[kk] << endl;
+      proc0cout << " reading in --> " << d_allDepVarNames[kk] << endl;
       for ( int mm = 0; mm < d_allIndepVarNum[2]; mm++ ){ 
 
         for (int i = 0; i < d_allIndepVarNum[0]; i++){
