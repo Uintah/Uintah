@@ -1376,12 +1376,15 @@ ClassicTableInterface::loadMixingTable( const string & inputfile )
 
   } else if ( d_indepvarscount == 3 ){ 
 
+    proc0cout << "Reading in the variables: " << endl;
     for (int kk=0; kk< d_varscount; kk++){
+
+      proc0cout << "--> " << d_allDepVarNames[kk] << endl;
       for ( int mm = 0; mm < d_allIndepVarNum[2]; mm++ ){ 
 
         for (int i = 0; i < d_allIndepVarNum[0]; i++){
           double v = getDouble( gzFp ); 
-          i1[kk][i] = v;
+          i1[mm][i] = v;
         }
 
         for ( int jj = 0; jj < d_allIndepVarNum[1]; jj++ ){
