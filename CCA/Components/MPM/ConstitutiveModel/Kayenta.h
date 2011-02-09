@@ -27,13 +27,11 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-
 //  Kayenta.h 
 //  class ConstitutiveModel ConstitutiveModel data type -- 3D - 
-//  holds ConstitutiveModel
-//    This is for calling the Kayenta model
-//    Features:
-//      Usage:
+//  This is for calling the Kayenta model
+//  Features:
+//  Usage:
 
 
 
@@ -54,8 +52,8 @@ namespace Uintah {
     // For usage instructions, see the 'WeibullParser' function
     // header in Kayenta.cc
     struct WeibParameters {
-      bool Perturb;       // 'True' for perturbed parameter
-      double WeibMed;     // Medain distrib. value OR const value depending on bool Perturb
+      bool Perturb;           // 'True' for perturbed parameter
+      double WeibMed;         // Medain distrib. value OR const value depending on bool Perturb
       int    WeibSeed;        // seed for random number generator
       double WeibMod;         // Weibull modulus
       double WeibRefVol;      // Reference Volume
@@ -72,8 +70,12 @@ namespace Uintah {
     int d_NTHERMOPLAST;
     int d_NUMEOSINPUTS;
     int d_IEOSMGCT;
+    int d_NINSV;
 
-    double UI[190];
+    double UI[100];
+    double GC[100];
+    double DC[100];
+    double rinit[200];
     // weibull parameter set
     WeibParameters wdist;
     
@@ -81,8 +83,6 @@ namespace Uintah {
     vector<const VarLabel*> ISVLabels_preReloc;
     const VarLabel* peakI1IDistLabel;
     const VarLabel* peakI1IDistLabel_preReloc;
-    int d_NINSV;
-    double rinit[100];
     const VarLabel* pLocalizedLabel;  
     const VarLabel* pLocalizedLabel_preReloc;  
 

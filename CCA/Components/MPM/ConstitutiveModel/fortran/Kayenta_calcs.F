@@ -28,15 +28,34 @@ C
 C
 C 
 C 
-#ifndef GEO_MBF_BETA
-      SUBROUTINE KAYENTA_CALC( NBLK, NINSV, DT, PROP,
-     $                                   SIGARG, D, SVARG, USM)
+      SUBROUTINE KMMCHK ( UI, GC, DC)
 
-      CHARACTER*27 IAM
-      PARAMETER (IAM='Isotropic_Geomaterial_calcs')
+      CHARACTER*6 IAM
+      PARAMETER( IAM = 'KMMCHK' )
 
       CALL LOGMES('This model is only available to licensees')
       CALL FATERR(IAM,'See Jim Guilkey for more information')
 
       END
-#endif
+
+      SUBROUTINE KMMRXV(UI,GC,DC,
+     &  NX, NAMEA, KEYA, RINIT, RDIM, IADVCT, ITYPE)
+
+      CHARACTER*6 IAM
+      PARAMETER( IAM = 'KMMRXV' )
+
+      CALL LOGMES('This model is only available to licensees')
+      CALL FATERR(IAM,'See Jim Guilkey for more information')
+
+      END
+
+      SUBROUTINE KAYENTA_CALC( NBLK, NINSV, DT, UI, GC, DC,
+     $                                   SIGARG, D, SVARG, USM)
+
+      CHARACTER*12 IAM
+      PARAMETER (IAM='KAYENTA_CALC')
+
+      CALL LOGMES('This model is only available to licensees')
+      CALL FATERR(IAM,'See Jim Guilkey for more information')
+
+      END
