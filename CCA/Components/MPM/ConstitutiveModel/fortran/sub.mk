@@ -32,13 +32,12 @@
 
 SRCDIR   := CCA/Components/MPM/ConstitutiveModel/fortran
 
-FFLAGS += -DI1SOFTLIM -DNEWXSV -DDILAT_LIM
+#FFLAGS += -DNOEOSMOD -DGEO_MBF_BETA
 # REMOVED FOR TESTING 
-#FFLAGS += -DNOEOSMOd
 SRCS     += \
 	$(SRCDIR)/Hooke.F	\
+        $(SRCDIR)/Kayenta_chk.F   \
 	$(SRCDIR)/Kayenta_calcs.F	\
 	$(SRCDIR)/MIGUtilsF.F	\
 	$(SRCDIR)/MIGUtils.cc   \
 	$(SRCDIR)/diamm.F
-
