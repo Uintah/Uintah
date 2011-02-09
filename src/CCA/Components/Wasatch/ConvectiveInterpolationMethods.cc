@@ -24,7 +24,7 @@ namespace Wasatch {
   
   //------------------------------------------------------------------
   
-  ConvInterpMethods get_conv_interp_method ( std::string key )
+  ConvInterpMethods get_conv_interp_method ( std::string & key )
   {
     set_conv_interp_string_map();
     std::transform( key.begin(), key.end(), key.begin(), ::toupper );
