@@ -40,6 +40,12 @@ operator that uses another variable in its conditional.
 
 See: pseudoTearing.png
 
+02/09/11
+Visit 2.1.0
+Uintah r4650
+When drawing a bounding box around the colormap of a plot and 'Title' option is turned off, the bounding box is just short of the top of the colormap.  If 'Title' is on, the top of the bounding box appears to be good.
+
+See: CTOrtho.noTitle.png and CTOrtho.Title.png 
 
 3)  Additional capabilities 
 __________________________________
@@ -57,3 +63,5 @@ Jim Guilkey, 2/8/2011
 A good suggestion was made that it would be nice if particles could be rendered as polygons rather than spheres.  Namely, quads in 2D or hexahedra in 3D.  Attached is an example of rendering particles as quads that have been deformed according to their deformation gradient.  Roni Choudhury, Mike Steffen, Steve Parker and I published a paper on this last year.
 
 Rebecca's postdoc Ali made the figure CPDIsnapshot.png (you'll need to zoom in to appreciate) using Matlab.  He's offered to share those scripts if it would make someone's life easier in the implementation.
+
+
