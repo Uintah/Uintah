@@ -84,7 +84,8 @@ TabPropsEvaluator<FieldT>::
 ~TabPropsEvaluator()
 {
   for( Evaluators::iterator ieval=evaluators_.begin(); ieval!=evaluators_.end(); ++ieval ){
-    delete *ieval;
+    //jcs this was causing a segfault:
+    //    delete *ieval;
   }
 }
 
