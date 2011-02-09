@@ -31,7 +31,7 @@ DEALINGS IN THE SOFTWARE.
 #ifndef Packages_Uintah_CCA_Components_Examples_RMCRT_Test_h
 #define Packages_Uintah_CCA_Components_Examples_RMCRT_Test_h
 
-#include <CCA/Components/Arches/RMCRT/Ray.h>
+#include <CCA/Components/Models/Radiation/RMCRT/Ray.h>
 #include <CCA/Components/Examples/uintahshare.h>
 #include <CCA/Ports/SimulationInterface.h>
 #include <Core/Geometry/Vector.h>

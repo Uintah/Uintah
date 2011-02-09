@@ -45,7 +45,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Arches/Radiation/RadiationModel.h>
 #include <CCA/Components/Arches/Radiation/DORadiationModel.h>
 #include <CCA/Components/Arches/Radiation/RadLinearSolver.h>
-#include <CCA/Components/Arches/RMCRT/Ray.h>
+#include <CCA/Components/Models/Radiation/RMCRT/Ray.h>
 #ifdef HAVE_HYPRE
 #include <CCA/Components/Arches/Radiation/RadHypreSolver.h>
 #endif

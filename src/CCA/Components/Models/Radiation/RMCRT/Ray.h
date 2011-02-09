@@ -5,8 +5,7 @@
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/CCVariable.h>
-#include <CCA/Components/Arches/ArchesMaterial.h>
-#include <CCA/Components/Arches/RMCRT/MersenneTwister.h>
+#include <CCA/Components/Models/Radiation/RMCRT/MersenneTwister.h>
 #include <iostream>
 #include <cmath>
 #include <string>

@@ -1,5 +1,5 @@
 //----- Ray.cc ----------------------------------------------
-#include "CCA/Components/Arches/RMCRT/Ray.h"
+#include "CCA/Components/Models/Radiation/RMCRT/Ray.h"
 #include <time.h>
 //--------------------------------------------------------------
 //
