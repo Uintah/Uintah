@@ -41,6 +41,7 @@ namespace Wasatch{
      *  \param momName the name of the momentum component solved by this MomentumTransportEquation
      *  \param factory the Expr::ExpressionFactory that will hold expressions registered by this transport equation.
      *  \param params Parser information for this momentum equation
+     *  \param linSolver the linear solver object for the pressure solve
      */
     MomentumTransportEquation( const std::string velName,
                                const std::string momName,
@@ -69,6 +70,10 @@ namespace Wasatch{
     static std::string get_phi_name( Uintah::ProblemSpecP params );
   
   private:
+
+    const Direction dir_;
+    Expr::ExpressionID normalStressID_, normalConvFluxID_, pressureID_;
+    Expr::TagList velTags_; ///< TagList for the velocity expressions
 
   };
 

@@ -183,18 +183,17 @@ namespace Wasatch{
     Expr::TransportEquation* momtranseq = NULL;
     
     std::string xvelname, yvelname, zvelname;
+    const Uintah::ProblemSpecP doxvel = params->get( "X-Velocity", xvelname );
+    const Uintah::ProblemSpecP doyvel = params->get( "Y-Velocity", yvelname );
+    const Uintah::ProblemSpecP dozvel = params->get( "Z-Velocity", zvelname );
+
     std::string xmomname, ymomname, zmomname;
-    Uintah::ProblemSpecP doxvel,doyvel,dozvel;
-    Uintah::ProblemSpecP doxmom,doymom,dozmom;
-    doxvel = params->get( "X-Velocity", xvelname );
-    doyvel = params->get( "Y-Velocity", yvelname );
-    dozvel = params->get( "Z-Velocity", zvelname );
-    doxmom = params->get( "X-Momentum", xmomname );
-    doymom = params->get( "Y-Momentum", ymomname );
-    dozmom = params->get( "Z-Momentum", zmomname );
+    const Uintah::ProblemSpecP doxmom = params->get( "X-Momentum", xmomname );
+    const Uintah::ProblemSpecP doymom = params->get( "Y-Momentum", ymomname );
+    const Uintah::ProblemSpecP dozmom = params->get( "Z-Momentum", zmomname );
     
     // check if none of the momentum directions were specified
-    if (!(doxvel || doyvel || dozvel)) {
+    if( !(doxvel || doyvel || dozvel) ){
       std::ostringstream msg;
       msg << "ERROR: No Direction was specified for momentum equations." 
           << "Please revise your input file" << std::endl;
@@ -210,43 +209,43 @@ namespace Wasatch{
     std::cout << "------------------------------------------------" << std::endl;
     std::cout << "Creating momentum equations..." << std::endl;
     
-    if (doxvel && doxmom) {
+    if( doxvel && doxmom ){
       std::cout << "Setting up X momentum transport equation" << std::endl;
       
       typedef MomentumTransportEquation< XVolField > MomTransEq;
-      momtranseq = scinew MomTransEq( xvelname, 
+      momtranseq = scinew MomTransEq( xvelname,
                                       xmomname,
                                       *solnGraphHelper->exprFactory,
                                       params,
-                                     linSolver);
+                                      linSolver );
       adaptor = scinew EqnTimestepAdaptor< XVolField >( momtranseq, params );
       adaptors.push_back(adaptor);
-    } 
+    }
     
-    if (doyvel && doymom) {
+    if( doyvel && doymom ){
       std::cout << "Setting up Y momentum transport equation" << std::endl;
-            
+      
       typedef MomentumTransportEquation< YVolField > MomTransEq;
-      momtranseq = scinew MomTransEq( yvelname, 
+      momtranseq = scinew MomTransEq( yvelname,
                                       ymomname,
                                       *solnGraphHelper->exprFactory,
                                       params,
-                                     linSolver);
+                                      linSolver );
       adaptor = scinew EqnTimestepAdaptor< YVolField >( momtranseq, params );
-      adaptors.push_back(adaptor);            
+      adaptors.push_back(adaptor);
     }
     
-    if (dozvel && dozmom) {
+    if( dozvel && dozmom ){
       std::cout << "Setting up Z momentum transport equation" << std::endl;
       
       typedef MomentumTransportEquation< ZVolField > MomTransEq;
-      momtranseq = scinew MomTransEq( zvelname, 
+      momtranseq = scinew MomTransEq( zvelname,
                                       zmomname,
                                       *solnGraphHelper->exprFactory,
                                       params,
-                                     linSolver);
+                                      linSolver );
       adaptor = scinew EqnTimestepAdaptor< ZVolField >( momtranseq, params );
-      adaptors.push_back(adaptor);            
+      adaptors.push_back(adaptor);
     }      
     
     //
