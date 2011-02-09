@@ -4,6 +4,7 @@
 #include <map>
 #include <string>
 #include <algorithm>
+
 namespace Wasatch {
   
   enum ConvInterpMethods {
@@ -22,5 +23,7 @@ namespace Wasatch {
   };
   
   ConvInterpMethods get_conv_interp_method ( std::string key );
+
 } // namespace Wasatch
+
 #endif
