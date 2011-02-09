@@ -36,14 +36,8 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCS    += \
        $(SRCDIR)/ModelFactory.cc
 
-RADIATION :=
-
-ifeq ($(BUILD_RADIATION),yes)
-  RADIATION += $(SRCDIR)/Radiation   
-endif
-
 SUBDIRS := $(SRCDIR)/FluidsBased \
-           $(RADIATION)
+           $(SRCDIR)/Radiation
 
 PSELIBS :=              \
         Core/Exceptions \

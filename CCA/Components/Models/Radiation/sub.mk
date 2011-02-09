@@ -35,7 +35,8 @@
 
 SRCDIR   := CCA/Components/Models/Radiation
 
-SUBDIRS := $(SRCDIR)/fortran
+SUBDIRS := $(SRCDIR)/fortran $(SRCDIR)/RMCRT
+           
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
 SRCS += \

@@ -124,7 +124,6 @@ SUBDIRS := $(SRCDIR)/CoalModels        \
            $(SRCDIR)/PropertyModels    \
            $(SRCDIR)/Radiation         \
            $(SRCDIR)/Radiation/fortran \
-           $(SRCDIR)/RMCRT             \
            $(SRCDIR)/SourceTerms       \
            $(SRCDIR)/TransportEqns  
 
