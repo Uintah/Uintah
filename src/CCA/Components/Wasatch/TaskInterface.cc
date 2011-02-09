@@ -25,141 +25,120 @@ using std::endl;
 
 namespace Wasatch{
 
+  class TreeTaskExecute
+  {
+    typedef Expr::ExpressionTree::TreePtr  TreePtr;
+
+    TreePtr masterTree_;
+
+    typedef std::pair< TreePtr, Uintah::Task* > TreeTaskPair;
+    typedef std::map< int, TreeTaskPair > PatchTreeMap;
+
+    Uintah::SchedulerP& scheduler_;
+    const Uintah::PatchSet* const patches_;
+    const Uintah::MaterialSet* const materials_;
+
+    const bool createUniqueTreePerPatch_;
+
+    const std::string taskName_;        ///< the name of the task
+    const PatchInfoMap& patchInfoMap_;  ///< information for each individual patch.
+    Expr::FieldManagerList& fml_;       ///< the FieldManagerList for this TaskInterface
+
+    bool hasBeenScheduled_;
+    PatchTreeMap patchTreeMap_;
+
+    /** main execution driver - the callback function exposed to Uintah. */
+    void execute( const Uintah::ProcessorGroup* const,
+                  const Uintah::PatchSubset* const,
+                  const Uintah::MaterialSubset* const,
+                  Uintah::DataWarehouse* const,
+                  Uintah::DataWarehouse* const );
+
+  public:
+
+    TreeTaskExecute( TreePtr tree,
+                     const std::string taskName,
+                     Uintah::SchedulerP& scheduler,
+                     const Uintah::PatchSet* const patches,
+                     const Uintah::MaterialSet* const materials,
+                     const PatchInfoMap& info,
+                     const bool createUniqueTreePerPatch,
+                     Expr::FieldManagerList& fml );
+
+    ~TreeTaskExecute();
+    
+    void schedule( const std::vector<Expr::Tag>& newDWFields );
+
+  };
+
+
   //------------------------------------------------------------------
 
-  TaskInterface::TaskInterface( const Expr::ExpressionID& root,
-                                const std::string taskName,
-                                Expr::ExpressionFactory& factory,
-                                Uintah::SchedulerP& sched,
-                                const Uintah::PatchSet* const patches,
-                                const Uintah::MaterialSet* const materials,
-                                const PatchInfoMap& info,
-                                const bool createUniqueTreePerPatch,
-                                Expr::FieldManagerList* fml )
-    : scheduler_( sched ),
+  TreeTaskExecute::TreeTaskExecute( TreePtr tree,
+                                    const std::string taskName,
+                                    Uintah::SchedulerP& sched,
+                                    const Uintah::PatchSet* const patches,
+                                    const Uintah::MaterialSet* const materials,
+                                    const PatchInfoMap& info,
+                                    const bool createUniqueTreePerPatch,
+                                    Expr::FieldManagerList& fml )
+    : masterTree_( tree ),
+      scheduler_( sched ),
       patches_( patches ),
       materials_( materials ),
       createUniqueTreePerPatch_( createUniqueTreePerPatch ),
       taskName_( taskName ),
       patchInfoMap_( info ),
-      builtFML_( fml==NULL ),
-      fml_( builtFML_ ? scinew Expr::FieldManagerList( taskName ) : fml )
+      fml_( fml )
   {
     hasBeenScheduled_ = false;
-    IDSet ids; ids.insert(root);
-    setup_tree( ids, factory );
-  }
 
-  //------------------------------------------------------------------
-
-  TaskInterface::TaskInterface( const IDSet& roots,
-                                const std::string taskName,
-                                Expr::ExpressionFactory& factory,
-                                Uintah::SchedulerP& sched,
-                                const Uintah::PatchSet* patches,
-                                const Uintah::MaterialSet* const materials,
-                                const PatchInfoMap& info,
-                                const bool createUniqueTreePerPatch,
-                                Expr::FieldManagerList* fml )
-    : scheduler_( sched ),
-      patches_( patches ),
-      materials_( materials ),
-      createUniqueTreePerPatch_( createUniqueTreePerPatch ),
-      taskName_( taskName ),
-      patchInfoMap_( info ),
-      builtFML_( fml==NULL ),
-      fml_( builtFML_ ? scinew Expr::FieldManagerList( taskName ) : fml )
-  {
-    hasBeenScheduled_ = false;
-    setup_tree( roots, factory );
-  }
-
-  //------------------------------------------------------------------
-
-  void
-  TaskInterface::setup_tree( const IDSet& roots,
-                             Expr::ExpressionFactory& factory )
-  {
     if( createUniqueTreePerPatch_ ){
       for( int ipss=0; ipss!=patches_->size(); ++ipss ){
         const Uintah::PatchSubset* const pss = patches_->getSubset(ipss);
         for( int ip=0; ip<pss->size(); ++ip ){
           const Uintah::Patch* const patch = pss->get(ip);
-//           cout << "Setting up tree '" << taskName_ << "' on patch (" << patch->getID() << ")" << endl;
-          Expr::ExpressionTree* tree = scinew Expr::ExpressionTree( roots, factory, patch->getID(), taskName_ );
-          tree->register_fields( *fml_ );
-          patchTreeMap_[ patch->getID() ] = make_pair( tree,
-                                                       scinew Uintah::Task( taskName_, this, &TaskInterface::execute ) );
+ //           cout << "Setting up tree '" << taskName_ << "' on patch (" << patch->getID() << ")" << endl;
+
+          TreePtr tree( new Expr::ExpressionTree( masterTree_->get_roots(),
+                                                  masterTree_->get_expression_factory(),
+                                                  patch->getID(),
+                                                  masterTree_->name() ) );
+          tree->register_fields( fml_ );
+          patchTreeMap_[ patch->getID() ] = make_pair( tree, scinew Uintah::Task( taskName_, this, &TreeTaskExecute::execute ) );
         }
       }
     }
     else{
-      Expr::ExpressionTree* tree = scinew Expr::ExpressionTree( roots, factory, -1, taskName_ );
-      tree->register_fields( *fml_ );
-      patchTreeMap_[ -1 ] = make_pair( tree,
-                                       scinew Uintah::Task( taskName_, this, &TaskInterface::execute ) );
+      masterTree_->register_fields( fml_ );
+      patchTreeMap_[ -1 ] = make_pair( masterTree_, scinew Uintah::Task( taskName_, this, &TreeTaskExecute::execute ) );
     }
 
-    // jcs hacked diagnostics - problems in parallel.
-    std::ofstream fout( (taskName_+".dot").c_str());
-    PatchTreeMap::const_iterator iptm = patchTreeMap_.begin();
-    iptm->second.first->write_tree(fout);
+    std::ostringstream fnam;
+    fnam << tree->name() << ".dot";
+    std::ofstream fout( fnam.str().c_str() );
+    tree->write_tree(fout);
   }
 
   //------------------------------------------------------------------
 
-  TaskInterface::~TaskInterface()
+  TreeTaskExecute::~TreeTaskExecute()
   {
-    // tasks are deleted by the scheduler that they are assigned to.
-    // This means that we don't need to delete uintahTask_
-    if( builtFML_ ) delete fml_;
-
-    for( PatchTreeMap::iterator i=patchTreeMap_.begin(); i!=patchTreeMap_.end(); ++i ){
-      delete i->second.first;
-    }
+    // jcs do we need to delete the Uintah::Task?
+    //     for( PatchTreeMap::iterator i=patchTreeMap_.begin(); i!=patchTreeMap_.end(); ++i ){
+    //       delete i->second.first;
+    //     }
   }
 
   //------------------------------------------------------------------
 
   void
-  TaskInterface::schedule( const std::vector<Expr::Tag>& newDWFields )
-  {
-    ASSERT( !hasBeenScheduled_ );
-
-    const PatchTreeMap::iterator iptm = patchTreeMap_.begin();
-    ASSERT( iptm != patchTreeMap_.end() );
-
-    Uintah::Task* const task = iptm->second.second;
-    Expr::ExpressionTree* const tree = iptm->second.first;
-
-    const Uintah::MaterialSubset* const mss = materials_->getUnion();
-
-    const Uintah::PatchSubset* const pss = patches_->getUnion();
-    add_fields_to_task( *task, *tree, *fml_, pss, mss, newDWFields );
-    // jcs eachPatch vs. allPatches (gang schedule vs. independent...)
-    scheduler_->addTask( task, patches_, materials_ );
-
-    hasBeenScheduled_ = true;
-  }
-
-  //------------------------------------------------------------------
-
-  void
-  TaskInterface::schedule()
-  {
-    std::vector<Expr::Tag> newDWFields;
-    this->schedule( newDWFields );
-  }
-
-  //------------------------------------------------------------------
-
-  void
-  TaskInterface::add_fields_to_task( Uintah::Task& task,
-                                     const Expr::ExpressionTree& tree,
-                                     Expr::FieldManagerList& fml,
-                                     const Uintah::PatchSubset* const patches,
-                                     const Uintah::MaterialSubset* const materials,
-                                     const std::vector<Expr::Tag>& newDWFields )
+  add_fields_to_task( Uintah::Task& task,
+                      const Expr::ExpressionTree& tree,
+                      Expr::FieldManagerList& fml,
+                      const Uintah::PatchSubset* const patches,
+                      const Uintah::MaterialSubset* const materials,
+                      const std::vector<Expr::Tag>& newDWFields )
   {
     // this is done once when the task is scheduled.  The purpose of
     // this method is to collect the fields from the ExpressionTree
@@ -264,11 +243,34 @@ namespace Wasatch{
   //------------------------------------------------------------------
 
   void
-  TaskInterface::execute( const Uintah::ProcessorGroup* const pg,
-                          const Uintah::PatchSubset* const patches,
-                          const Uintah::MaterialSubset* const materials,
-                          Uintah::DataWarehouse* const oldDW,
-                          Uintah::DataWarehouse* const newDW )
+  TreeTaskExecute::schedule( const std::vector<Expr::Tag>& newDWFields )
+  {
+    ASSERT( !hasBeenScheduled_ );
+
+    const PatchTreeMap::iterator iptm = patchTreeMap_.begin();
+    ASSERT( iptm != patchTreeMap_.end() );
+
+    Uintah::Task* const task = iptm->second.second;
+    TreePtr tree = iptm->second.first;
+
+    const Uintah::MaterialSubset* const mss = materials_->getUnion();
+
+    const Uintah::PatchSubset* const pss = patches_->getUnion();
+    add_fields_to_task( *task, *tree, fml_, pss, mss, newDWFields );
+    // jcs eachPatch vs. allPatches (gang schedule vs. independent...)
+    scheduler_->addTask( task, patches_, materials_ );
+
+    hasBeenScheduled_ = true;
+  }
+
+  //------------------------------------------------------------------
+
+  void
+  TreeTaskExecute::execute( const Uintah::ProcessorGroup* const pg,
+                            const Uintah::PatchSubset* const patches,
+                            const Uintah::MaterialSubset* const materials,
+                            Uintah::DataWarehouse* const oldDW,
+                            Uintah::DataWarehouse* const newDW )
   {
     //
     // execute on each patch
@@ -286,7 +288,7 @@ namespace Wasatch{
       const SpatialOps::OperatorDatabase& opdb = *ipim->second.operators;
 
       // resolve the tree
-      Expr::ExpressionTree* tree = NULL;
+      TreePtr tree;
       if( createUniqueTreePerPatch_ ){
         PatchTreeMap::iterator iptm = patchTreeMap_.find( patch->getID() );
         ASSERT( iptm != patchTreeMap_.end() );
@@ -307,9 +309,9 @@ namespace Wasatch{
 //                << endl;
 
 //     fml_->dump_fields(cout);
-          fml_->allocate_fields( Expr::AllocInfo( oldDW, newDW, material, patch, pg ) );
+          fml_.allocate_fields( Expr::AllocInfo( oldDW, newDW, material, patch, pg ) );
 
-          tree->bind_fields( *fml_ );
+          tree->bind_fields( fml_ );
           tree->bind_operators( opdb );          
           tree->execute_tree();
           // get pressure expression and build coefficient matrix for pressure
@@ -320,7 +322,7 @@ namespace Wasatch{
           //}
           //
 //           cout << "Wasatch: done executing graph '" << taskName_ << "'" << endl;
-          fml_->deallocate_fields();
+          fml_.deallocate_fields();
         }
         catch( exception& e ){
           cout << e.what() << endl;
@@ -328,6 +330,90 @@ namespace Wasatch{
         }
       }
     }
+  }
+
+
+
+
+
+
+
+  //------------------------------------------------------------------
+
+  TaskInterface::TaskInterface( const Expr::ExpressionID& root,
+                                const std::string taskName,
+                                Expr::ExpressionFactory& factory,
+                                Uintah::SchedulerP& sched,
+                                const Uintah::PatchSet* const patches,
+                                const Uintah::MaterialSet* const materials,
+                                const PatchInfoMap& info,
+                                const bool createUniqueTreePerPatch,
+                                Expr::FieldManagerList* fml )
+    : builtFML_( fml==NULL ),
+      fml_( builtFML_ ? scinew Expr::FieldManagerList( taskName ) : fml )
+  {
+    typedef Expr::ExpressionTree::TreeList TreeList;
+    Expr::ExpressionTree::TreePtr tree( new Expr::ExpressionTree( root, factory, -1, taskName ) );
+    TreeList treeList = tree->split_tree();
+    for( TreeList::iterator itr=treeList.begin(); itr!=treeList.end(); ++itr ){
+      cout << "creating task executor for tree " << (*itr)->name() << endl;
+      execList_.push_back( new TreeTaskExecute( *itr, taskName, sched, patches, materials, info, createUniqueTreePerPatch, *fml_ ) );
+    }
+  }
+
+  //------------------------------------------------------------------
+
+  TaskInterface::TaskInterface( const IDSet& roots,
+                                const std::string taskName,
+                                Expr::ExpressionFactory& factory,
+                                Uintah::SchedulerP& sched,
+                                const Uintah::PatchSet* patches,
+                                const Uintah::MaterialSet* const materials,
+                                const PatchInfoMap& info,
+                                const bool createUniqueTreePerPatch,
+                                Expr::FieldManagerList* fml )
+    : builtFML_( fml==NULL ),
+      fml_( builtFML_ ? scinew Expr::FieldManagerList( taskName ) : fml )
+  {
+    typedef Expr::ExpressionTree::TreeList TreeList;
+    Expr::ExpressionTree::TreePtr tree( new Expr::ExpressionTree( roots, factory, -1, taskName ) );
+    TreeList treeList = tree->split_tree();
+    for( TreeList::iterator itr=treeList.begin(); itr!=treeList.end(); ++itr ){
+      cout << "creating task executor for tree " << (*itr)->name() << endl;
+      execList_.push_back( new TreeTaskExecute( *itr, taskName, sched, patches, materials, info, createUniqueTreePerPatch, *fml_ ) );
+    }
+  }
+
+  //------------------------------------------------------------------
+
+  TaskInterface::~TaskInterface()
+  {
+    // tasks are deleted by the scheduler that they are assigned to.
+    // This means that we don't need to delete uintahTask_
+    if( builtFML_ ) delete fml_;
+
+    for( ExecList::iterator iex=execList_.begin(); iex!=execList_.end(); ++iex ){
+      delete *iex;
+    }
+  }
+
+  //------------------------------------------------------------------
+
+  void
+  TaskInterface::schedule( const std::vector<Expr::Tag>& newDWFields )
+  {
+    for( ExecList::iterator iex=execList_.begin(); iex!=execList_.end(); ++iex ){
+      (*iex)->schedule( newDWFields );
+    }
+  }
+
+  //------------------------------------------------------------------
+
+  void
+  TaskInterface::schedule()
+  {
+    std::vector<Expr::Tag> newDWFields;
+    this->schedule( newDWFields );
   }
 
   //------------------------------------------------------------------

@@ -21,6 +21,8 @@ namespace Uintah{
 
 namespace Wasatch{
 
+  class TreeTaskExecute;
+
   /**
    *  \ingroup WasatchCore
    *  \class  TaskInterface
@@ -160,42 +162,11 @@ namespace Wasatch{
 
   private:
 
-    typedef std::pair< Expr::ExpressionTree*, Uintah::Task* > TreeTaskPair;
-    typedef std::map< int, TreeTaskPair > PatchTreeMap;
-
-    Uintah::SchedulerP& scheduler_;
-    const Uintah::PatchSet* const patches_;
-    const Uintah::MaterialSet* const materials_;
-
-    const bool createUniqueTreePerPatch_;
-    PatchTreeMap patchTreeMap_;
-
-    const std::string taskName_;        ///< the name of the task
-
-    const PatchInfoMap& patchInfoMap_;  ///< information for each individual patch.
+    typedef std::vector< TreeTaskExecute* > ExecList;
+    ExecList execList_;
 
     const bool builtFML_;               ///< true if we constructed a FieldManagerList internally.
     Expr::FieldManagerList* const fml_; ///< the FieldManagerList for this TaskInterface
-
-    bool hasBeenScheduled_;             ///< true after the call to schedule().  Must be true prior to add_fields_to_task().
-
-    void setup_tree( const IDSet& roots,
-                     Expr::ExpressionFactory& factory );
-
-    /** advertises field requirements to Uintah. */
-    static void add_fields_to_task( Uintah::Task& task,
-                                    const Expr::ExpressionTree& tree,
-                                    Expr::FieldManagerList& fml,
-                                    const Uintah::PatchSubset* const patches,
-                                    const Uintah::MaterialSubset* const materials,
-                                    const std::vector<Expr::Tag>& );
-
-    /** main execution driver - the callback function exposed to Uintah. */
-    void execute( const Uintah::ProcessorGroup* const,
-                  const Uintah::PatchSubset* const,
-                  const Uintah::MaterialSubset* const,
-                  Uintah::DataWarehouse* const,
-                  Uintah::DataWarehouse* const );
 
   };
 
