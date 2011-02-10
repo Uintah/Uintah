@@ -238,6 +238,7 @@ include $(SCIRUN_SCRIPTS)/program.mk
 # Convenience targets for Specific executables 
 
 ifeq ($(BUILD_VISIT),yes)
+  # 'visit_stuff' is defined in .../src/VisIt/udaReaderMTMD/sub.mk
   VISIT_STUFF=visit_stuff
 endif
 
