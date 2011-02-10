@@ -100,6 +100,7 @@ using std::vector;
       const VarLabel* pFiberDirLabel;
       const VarLabel* pFiberDirLabel_preReloc;
       
+      const VarLabel* gLambdaDotLabel;
       const VarLabel* gMassLabel;
       const VarLabel* gMassAllLabel;
       const VarLabel* gAccelerationLabel;

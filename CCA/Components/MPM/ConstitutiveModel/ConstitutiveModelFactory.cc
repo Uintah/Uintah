@@ -66,6 +66,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/MPM/ConstitutiveModel/Water.h>
 #include <CCA/Components/MPM/ConstitutiveModel/UCNH.h>
 #include <CCA/Components/MPM/ConstitutiveModel/ViscoPlastic.h>
+#include <CCA/Components/MPM/ConstitutiveModel/NonLocalDruckerPrager.h>
 #include <CCA/Components/MPM/MPMFlags.h>
 
 #include <Core/Exceptions/ProblemSetupException.h>
@@ -104,7 +105,9 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
 
   else if (mat_type == "comp_mooney_rivlin")
     return(scinew CompMooneyRivlin(child,flags));
-   
+  else if (mat_type == "nonlocal_drucker_prager")
+    return(scinew NonLocalDruckerPrager(child,flags));
+
   else if (mat_type ==  "comp_neo_hook") {
     if (flags->d_integrator_type == "explicit" || 
         flags->d_integrator_type == "fracture")
