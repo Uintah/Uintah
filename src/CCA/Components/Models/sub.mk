@@ -36,8 +36,15 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCS    += \
        $(SRCDIR)/ModelFactory.cc
 
+RADIATION :=
+
+ifeq ($(BUILD_MODELS_RADIATION),yes)
+  RADIATION += $(SRCDIR)/Radiation
+endif
+
+
 SUBDIRS := $(SRCDIR)/FluidsBased \
-           $(SRCDIR)/Radiation
+           $(RADIATION)
 
 PSELIBS :=              \
         Core/Exceptions \
@@ -54,8 +61,7 @@ PSELIBS :=              \
         Core/Labels        \
         Core/Parallel      \
         Core/ProblemSpec   \
-	\
-	Core/Math
+	 Core/Math
 
 ifneq ($(BUILD_ICE),no)
   PSELIBS += CCA/Components/ICE
