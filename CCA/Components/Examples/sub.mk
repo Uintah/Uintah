@@ -49,8 +49,11 @@ SRCS     += \
 	$(SRCDIR)/RegridderTest.cc \
 	$(SRCDIR)/SolverTest1.cc   \
 	$(SRCDIR)/RegionDB.cc      \
-	$(SRCDIR)/Benchmark.cc     \
-	$(SRCDIR)/RMCRT_Test.cc	
+	$(SRCDIR)/Benchmark.cc
+       
+ifeq ($(BUILD_MODELS_RADIATION),yes)
+  SRCS +=$(SRCDIR)/RMCRT_Test.cc	
+endif
 
 PSELIBS := \
        CCA/Components/Models \

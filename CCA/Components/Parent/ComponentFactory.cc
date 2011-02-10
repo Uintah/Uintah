@@ -201,9 +201,13 @@ ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world,
   if (sim_comp == "benchmark" || sim_comp == "BENCHMARK") {
     return scinew Benchmark(world);
   } 
+#ifndef NO_MODELS_RADIATION
   if (sim_comp == "RMCRT_Test") {
     return scinew RMCRT_Test(world);
   }
+#else
+  turned_off_options += "RMCRT_Test ";
+#endif
   if (sim_comp == "angio") {
     return scinew Angio(world);
   } 
