@@ -7,7 +7,7 @@
                                                                         ideal_gas, membrane, murnahanMPM, mw_visco_elastic, rigid, shell_CNH,
                                                                         small_strain_plastic, trans_iso_hyper, visco_plastic,
                                                                         visco_scram, visco_trans_iso_hyper, water, kayenta, hypo_elastic_fortran, diamm, cnh_mms, 
-                                                                        cnh_damage, cnhp_damage, UCNH, program_burn, p_alpha'">
+                                                                        cnh_damage, cnhp_damage, UCNH, program_burn, p_alpha, nonlocal_drucker_prager'">
     <A                             spec="OPTIONAL DOUBLE" />
     <allow_no_tension              spec="OPTIONAL BOOLEAN" />
     <alpha                         spec="OPTIONAL DOUBLE" />
@@ -600,6 +600,20 @@ t
     <DC11     spec="OPTIONAL DOUBLE" />
     <DC12     spec="OPTIONAL DOUBLE" />
     <DC13     spec="OPTIONAL DOUBLE" />
+  <!-- The following are for the nonlocal_drucker_prager model -->
+    <alpha                spec="OPTIONAL DOUBLE"  />
+    <alpha_p              spec="OPTIONAL DOUBLE"  />
+    <k_o                  spec="OPTIONAL DOUBLE"  />
+    <h_local              spec="OPTIONAL DOUBLE"  />
+    <h_nonlocal           spec="OPTIONAL DOUBLE"  />
+    <l_nonlocal           spec="OPTIONAL DOUBLE"/>
+    <minimum_yield_stress spec="OPTIONAL DOUBLE"/>
+    <initial_xstress      spec="OPTIONAL DOUBLE"/>
+    <initial_ystress      spec="OPTIONAL DOUBLE"/>
+    <initial_zstress      spec="OPTIONAL DOUBLE"/>
   </constitutive_model>
+
+
+
 
 </Uintah_Include>
