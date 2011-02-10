@@ -47,6 +47,21 @@ When drawing a bounding box around the colormap of a plot and 'Title' option is 
 
 See: CTOrtho.noTitle.png and CTOrtho.Title.png 
 
+10 Feb 2011 - Robert Jackson
+Visit 2.0.1
+In using "molecule" plot to plot "p.localized" with rigid body contact (MPM module) you must NOT select p.localized/*.
+For my MPM solution I was using a rigid body (platen) to compress simulated rock samples. The platen is the rigid body and therefore has no p.localized values, but if p.localized/* was selected for the plot then a warning like this is given:
+ 	
+     The compute engine running on host N04122 issued the following warning: In
+     domain 0, your nodal variaable "p.localized/*" has 3160 values, but it should
+     have 3318.  Extra 0.'s were added to ensure VisIT runs smoothly.
+
+What appears to happen is that visit reads the p.localized values first into material 0 (rigid body) and then into material 1 and since there are no values for material 0 it runs out before completing material 1 so it uses 0's to finish.  And of course the real values are not in the porper location. Select only the materials with p.localized values and it works fine 
+
+Note: this means if you have multiple materials with p.localized values you must select each of them separately and set up the appropriate properties for each separately as well which is combersome, but it works.
+
+
+
 3)  Additional capabilities 
 __________________________________
 In SCIRun you can select a point in the computational domain and the grid
@@ -65,3 +80,7 @@ A good suggestion was made that it would be nice if particles could be rendered 
 Rebecca's postdoc Ali made the figure CPDIsnapshot.png (you'll need to zoom in to appreciate) using Matlab.  He's offered to share those scripts if it would make someone's life easier in the implementation.
 
 
+10 Feb 2011 - Robert Jackson
+1. It would be nice to have the Uintah-Visit interface be able to recognize when variables are not applicable/available for given materials (see my note above on issues), so that Visit doesn't try and read in data to the wrong material points.
+
+2. The "molecule" option for material points (in MPM module) works but often takes a bit of trial and error to arrive at the right "atom/molecule" size so that plots look good when rendered.  It would be nice to have an option to automatically size the material points based on the mesh and the resolution of material points.  
