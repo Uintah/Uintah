@@ -1085,7 +1085,7 @@ AC_SUBST(MALLOC_TRACE_LIB_FLAG)
 AC_SUBST(MALLOC_TRACE_LIB_DIR_FLAG)
 AC_SUBST(MALLOC_TRACE_LIB_MPI_FLAG)
 
-##  --  Check for 64 vs 80 bit floating point number storage in register precission error ------------------------
+##  --  Check for 64 vs 80 bit floating point number storage in register precision error ------------------------
 
 # In other words, the processor may use 80 bit floating point number registers, and as long as the
 # data is kept on the processor (in registers) then you get extra precission... however, as soon as
