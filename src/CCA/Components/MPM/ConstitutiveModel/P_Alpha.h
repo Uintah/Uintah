@@ -55,12 +55,14 @@ namespace Uintah {
   public:
     struct CMData {
       // For P-alpha response
-      double Ps;
-      double Pe;
-      double rhoS;
-      double alpha0;
-      double K0;
-      double Ks;
+      double Ps;  // Press. at which material reaches full density (alpha=1)
+      double Pe;  // Press. at which initial elastic response starts to yield
+      double rhoS;// Solid material density (corresponds to Ps)
+      double alpha0; // Initial value of alpha for virgin material
+      double K0;  // Initial bulk modulus in elastic region
+      double Ks;  // Bulk modulus of fully densified material
+      double Ku;  // Bulk modulus in unloading for alpha > alpha0, or p <= 0
+                  // Ku defaults to .1*K0
       // For Mie-Gruneisen response
       double T_0;
       double C_0;
@@ -71,6 +73,8 @@ namespace Uintah {
     const VarLabel* alphaLabel;
     const VarLabel* alphaMinLabel;
     const VarLabel* alphaMinLabel_preReloc;
+    const VarLabel* tempAlpha1Label;
+    const VarLabel* tempAlpha1Label_preReloc;
 
   private:
     CMData d_initialData;

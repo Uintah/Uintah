@@ -56,23 +56,29 @@ P_Alpha::P_Alpha(ProblemSpecP& ps,MPMFlags* Mflag)
   : ConstitutiveModel(Mflag)
 {
   //  For P-alpha part of response
-  ps->require("Ps",      d_initialData.Ps);
-  ps->require("Pe",      d_initialData.Pe);
-  ps->require("rhoS",    d_initialData.rhoS);
-  ps->require("alpha0",  d_initialData.alpha0);
-  ps->require("K0",      d_initialData.K0);
-  ps->require("Ks",      d_initialData.Ks);
+  ps->require("Ps",        d_initialData.Ps);
+  ps->require("Pe",        d_initialData.Pe);
+  ps->require("rhoS",      d_initialData.rhoS);
+  ps->require("alpha0",    d_initialData.alpha0);
+  ps->require("K0",        d_initialData.K0);
+  ps->require("Ks",        d_initialData.Ks);
   //  For M-G part of response
-  ps->require("T_0",     d_initialData.T_0);
-  ps->require("C_0",     d_initialData.C_0);
-  ps->require("Gamma_0", d_initialData.Gamma_0);
-  ps->require("S_alpha", d_initialData.S_alpha);
+  ps->require("T_0",       d_initialData.T_0);
+  ps->require("C_0",       d_initialData.C_0);
+  ps->require("Gamma_0",   d_initialData.Gamma_0);
+  ps->require("S_alpha",   d_initialData.S_alpha);
+  // For the unloading response
+  ps->getWithDefault("Ku", d_initialData.Ku,.1*d_initialData.K0);
 
   alphaLabel              = VarLabel::create("p.alpha",
                             ParticleVariable<double>::getTypeDescription());
   alphaMinLabel           = VarLabel::create("p.alphaMin",
                             ParticleVariable<double>::getTypeDescription());
   alphaMinLabel_preReloc  = VarLabel::create("p.alphaMin+",
+                            ParticleVariable<double>::getTypeDescription());
+  tempAlpha1Label           = VarLabel::create("p.tempAlpha1",
+                            ParticleVariable<double>::getTypeDescription());
+  tempAlpha1Label_preReloc  = VarLabel::create("p.tempAlpha1+",
                             ParticleVariable<double>::getTypeDescription());
 }
 
@@ -84,6 +90,7 @@ P_Alpha::P_Alpha(const P_Alpha* cm) : ConstitutiveModel(cm)
   d_initialData.alpha0 = cm->d_initialData.alpha0;
   d_initialData.K0     = cm->d_initialData.K0;
   d_initialData.Ks     = cm->d_initialData.Ks;
+  d_initialData.Ku     = cm->d_initialData.Ku;
 
   d_initialData.T_0    = cm->d_initialData.T_0;
   d_initialData.C_0    = cm->d_initialData.C_0;
@@ -96,6 +103,8 @@ P_Alpha::~P_Alpha()
   VarLabel::destroy(alphaLabel);
   VarLabel::destroy(alphaMinLabel);
   VarLabel::destroy(alphaMinLabel_preReloc);
+  VarLabel::destroy(tempAlpha1Label);
+  VarLabel::destroy(tempAlpha1Label_preReloc);
 }
 
 void P_Alpha::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
@@ -112,6 +121,7 @@ void P_Alpha::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
   cm_ps->appendElement("alpha0",  d_initialData.alpha0);
   cm_ps->appendElement("K0",      d_initialData.K0);
   cm_ps->appendElement("Ks",      d_initialData.Ks);
+  cm_ps->appendElement("Ku",      d_initialData.Ku);
   cm_ps->appendElement("T_0",     d_initialData.T_0);
   cm_ps->appendElement("C_0",     d_initialData.C_0);
   cm_ps->appendElement("Gamma_0", d_initialData.Gamma_0);
@@ -143,9 +153,13 @@ void P_Alpha::initializeCMData(const Patch* patch,
 
   ParticleVariable<double>      alpha_min;
   new_dw->allocateAndPut(alpha_min, alphaMinLabel, pset);
+  ParticleVariable<double>      tAlpha1;
+  new_dw->allocateAndPut(tAlpha1, tempAlpha1Label, pset);
+
 
   for(ParticleSubset::iterator iter = pset->begin();iter != pset->end();iter++){
-     alpha_min[*iter]      = d_initialData.alpha0;
+     alpha_min[*iter]    = d_initialData.alpha0;
+     tAlpha1[*iter]      = d_initialData.T_0;
   }
 
   computeStableTimestep(patch, matl, new_dw);
@@ -180,13 +194,14 @@ void P_Alpha::allocateCMDataAdd(DataWarehouse* new_dw,
   // be deleted to the particles to be added
 }
 
-
 void P_Alpha::addParticleState(std::vector<const VarLabel*>& from,
                                 std::vector<const VarLabel*>& to)
 {
   // Add the local particle state data for this constitutive model.
   from.push_back(alphaMinLabel);
   to.push_back(alphaMinLabel_preReloc);
+  from.push_back(tempAlpha1Label);
+  to.push_back(tempAlpha1Label_preReloc);
 }
 
 void P_Alpha::computeStableTimestep(const Patch* patch,
@@ -259,9 +274,9 @@ void P_Alpha::computeStressTensor(const PatchSubset* patches,
     constParticleVariable<Matrix3> deformationGradient;
     ParticleVariable<Matrix3> pstress;
     constParticleVariable<double> pmass;
-    constParticleVariable<double> alpha_min_old, ptemperature;
+    constParticleVariable<double> alpha_min_old, ptemperature, tempAlpha1_old;
     ParticleVariable<double> pvolume;
-    ParticleVariable<double> alpha_min_new, alpha_new;
+    ParticleVariable<double> alpha_min_new, alpha_new, tempAlpha1;
     constParticleVariable<Vector> pvelocity, psize;
     constNCVariable<Vector> gvelocity;
     ParticleVariable<double> pdTdt,p_q;
@@ -280,6 +295,7 @@ void P_Alpha::computeStressTensor(const PatchSubset* patches,
     old_dw->get(ptemperature,                lb->pTemperatureLabel,       pset);
     old_dw->get(deformationGradient,         lb->pDeformationMeasureLabel,pset);
     old_dw->get(alpha_min_old,               alphaMinLabel,               pset);
+    old_dw->get(tempAlpha1_old,              tempAlpha1Label,             pset);
 
     new_dw->allocateAndPut(pstress,          lb->pStressLabel_preReloc,   pset);
     new_dw->allocateAndPut(pvolume,          lb->pVolumeLabel_preReloc,   pset);
@@ -289,6 +305,7 @@ void P_Alpha::computeStressTensor(const PatchSubset* patches,
                                    lb->pDeformationMeasureLabel_preReloc, pset);
     new_dw->allocateAndPut(alpha_min_new,     alphaMinLabel_preReloc,     pset);
     new_dw->allocateAndPut(alpha_new,         alphaLabel,                 pset);
+    new_dw->allocateAndPut(tempAlpha1,        tempAlpha1Label_preReloc,   pset);
 
     // Temporary Allocations
     new_dw->allocateTemporary(velGrad,                                    pset);
@@ -298,6 +315,7 @@ void P_Alpha::computeStressTensor(const PatchSubset* patches,
     double alpha0 = d_initialData.alpha0;
     double K0 = d_initialData.K0;
     double Ks = d_initialData.Ks;
+    double Ku = d_initialData.Ku;
     double rhoS = d_initialData.rhoS;
 
     double rho_orig = matl->getInitialDensity();
@@ -395,12 +413,14 @@ void P_Alpha::computeStressTensor(const PatchSubset* patches,
       pvolume[idx]=pmass[idx]/rhoM;
 
       double alpha = rhoS/rhoM;
+      alpha_min_new[idx]=min(alpha,alpha_min_old[idx]);
+      alpha_new[idx]=alpha;
 
       double p=0.;
       double dAel_dp=0.;
-      double c = sqrt(Ks/rhoS);
       double cs=sqrt(Ks/rhoS);
       double ce=sqrt(K0/rho_orig);
+      double c = cs; // default to unstressed solid material speed of sound
       double dTdt_plas=0., dTdt_MG=0.;
 
       if(alpha < alpha0 && alpha >= 1.0){
@@ -411,6 +431,7 @@ void P_Alpha::computeStressTensor(const PatchSubset* patches,
           c = sqrt(K0/rhoM);
         }
         else if(alpha <= alphaP && alpha > 1.0){
+          // crushing out the voids
           p= Ps - (Ps-Pe)*sqrt((alpha - 1.)/(alphaP - 1.0));
           c = cs + (ce - cs)*((alpha - 1.)/(alpha0 - 1.));
           dTdt_plas = (-p)*(Jinc-1.)*(1./(rhoM*cv))/delT;
@@ -426,59 +447,58 @@ void P_Alpha::computeStressTensor(const PatchSubset* patches,
           p= Ps - (Ps-Pe)*sqrt((alpha - 1.)/(alphaP - 1.0));
           double h = 1. + (ce - cs)*(alpha - 1.0)/(cs*(alpha0-1.));
           dAel_dp = ((alpha*alpha)/Ks)*(1. - 1./(h*h));
+          // Limit the unloading modulus, mostly to avoid numerical issues
+          dAel_dp = min(dAel_dp, -1./Ks);
           double dPel = (alpha - alpha_min_old[idx])/dAel_dp;
           p += dPel;
           c = cs + (ce - cs)*((alpha - 1.)/(alpha0 - 1.));
         }
        }
+       tempAlpha1[idx] = ptemperature[idx];
       }
-      else if(alpha<1.0){
-#if 0
-        p = Ps+Ks*(1.-alpha);
-        c = cs;
-#endif
-#if 1
-       // Get the state data
-       double T_0 = d_initialData.T_0; // 300.0
-       double Gamma_0 = d_initialData.Gamma_0; //1.54
-       double C_0 = d_initialData.C_0; //4029.
-       double S_alpha = d_initialData.S_alpha; //1.237;
 
-       // Calc. zeta
-       double zeta = (rhoM/rhoS - 1.0);
+      // Mie-Gruneisen response for fully densified solid
+      if(alpha < 1.0 || alpha_min_new[idx] < 1.0){
+        // Get the state data
+        double Gamma_0 = d_initialData.Gamma_0; //1.54
+        double C_0 = d_initialData.C_0; //4029.
+        double S_alpha = d_initialData.S_alpha; //1.237;
 
-       // Calculate internal energy E
-       double E = (cv)*(ptemperature[idx] - T_0)*rhoS;
+        // Calc. zeta
+        double zeta = (rhoM/rhoS - 1.0);
 
-       // Calculate the pressure
-       p = Gamma_0*E;
-       if (rhoM != rhoS) {
-         double numer = rhoS*(C_0*C_0)*(1.0/zeta+
-                              (1.0-0.5*Gamma_0));
-         double denom = 1.0/zeta - (S_alpha-1.0);
-         if (denom == 0.0) {
-           cout << "rho_0 = " << rhoS << " zeta = " << zeta
-                << " numer = " << numer << endl;
-           denom = 1.0e-5;
+        // Calculate internal energy E
+        double E = (cv)*(ptemperature[idx] - tempAlpha1_old[idx])*rhoS;
+
+        // Calculate the pressure
+        p = Gamma_0*E;
+        if (rhoM != rhoS) {
+          double numer = rhoS*(C_0*C_0)*(1.0/zeta+
+                               (1.0-0.5*Gamma_0));
+          double denom = 1.0/zeta - (S_alpha-1.0);
+          if (denom == 0.0) {
+            cout << "rho_0 = " << rhoS << " zeta = " << zeta
+                 << " numer = " << numer << endl;
+            denom = 1.0e-5;
+          }
+           p += numer/(denom*denom);
          }
-          p += numer/(denom*denom);
-        }
-        p = Ps + p;
+         p = Ps + p;
 
-        double DTrace=velGrad[idx].Trace();
-        dTdt_MG = -ptemperature[idx]*Gamma_0*rhoS*DTrace/rhoM;
-#endif
+         double DTrace=velGrad[idx].Trace();
+         dTdt_MG = -ptemperature[idx]*Gamma_0*rhoS*DTrace/rhoM;
+         tempAlpha1[idx] = tempAlpha1_old[idx];
       }
 
-      alpha_min_new[idx]=min(alpha,alpha_min_old[idx]);
-      alpha_new[idx]=alpha;
-
-      if(alpha > alpha0 || p < 0.){
+      // Unloading cases that get into either alpha > alpha0, or negative P
+      if(alpha > alpha0){
+          // This still may need some work - Jim (2/11/2011)
           double rho_max = rhoS/alpha_min_new[idx];
-          p = .5*K0*(1.-rho_max/rhoM);
+          p = Ku*(1.-rho_max/rhoM);
       }
-
-//      p=max(p,0.0);
+      else if(p < 0.){
+          p = Ku*(1.-rhoS/rhoM);
+      }
 
 //      double etime = d_sharedState->getElapsedTime();
 //      cout << "12345 " << " " << etime << " " << alpha << " " << ptemperature[idx] << " " << p << endl;
@@ -499,7 +519,6 @@ void P_Alpha::computeStressTensor(const PatchSubset* patches,
       pdTdt[idx] = dTdt_plas + dTdt_MG;
 
       Vector pvelocity_idx = pvelocity[idx];
-//      c_dil = sqrt(K0/rhoM);
       c_dil = c;
       WaveSpeed=Vector(Max(c_dil+fabs(pvelocity_idx.x()),WaveSpeed.x()),
                        Max(c_dil+fabs(pvelocity_idx.y()),WaveSpeed.y()),
@@ -533,6 +552,8 @@ void P_Alpha::addComputesAndRequires(Task* task,
   task->requires(Task::OldDW, alphaMinLabel,  matlset, gnone);
   task->computes(alphaMinLabel_preReloc,      matlset);
   task->computes(alphaLabel,                  matlset);
+  task->requires(Task::OldDW, tempAlpha1Label,  matlset, gnone);
+  task->computes(tempAlpha1Label_preReloc,      matlset);
 }
 
 void 
