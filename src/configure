@@ -905,6 +905,7 @@ with_fortran
 with_ofed
 with_mx
 with_mpi
+with_mpi_extra_libs
 with_mpiuni
 with_hypre
 with_petsc
@@ -1622,6 +1623,9 @@ Optional Packages:
 --with-mx=DIR           Specify that mx - Myrinet - is needed for the mpi
                           installation
 --with-mpi=DIR          Use the mpi installation in DIR
+--with-mpi-extra-libs=/path/to/lib1.so
+                          Use this additional library(or libraries - comma
+                          separated) for mpi linking
 --with-mpiuni=DIR       Use the mpiuni installation in DIR
 --with-hypre=DIR        Use the hypre installation in DIR
 --with-petsc=DIR        Use the petsc installation in DIR
@@ -2745,7 +2749,7 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
 
-##  require autoconf version 2.61
+##  require autoconf version 2.67
 ##     The reason to require the latest autoconf is to try and get everyone who
 ##     updates configure to use the same version.  By doing so, the SVN diffs
 ##     don't look completely different from minor changes.  (This happens
@@ -2753,8 +2757,6 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 ##
 ##     type "autoconf --version" to find out what version you have.
 ##
-##     Note, 2.63+ is actually the latest, but many machines don't have it, so
-##     going to use 2.61 for now.
 ##     On blaze you can find 2.67 in /usr/local/share/bin
 ##
 
@@ -3187,6 +3189,21 @@ fi
   sci_arg_with_list="$sci_arg_with_list --with-mpi --without-mpi"
   if test -n "$mpi" -a ! -e "$mpi"; then
     as_fn_error $? "The file or directory parameter ($mpi) specified for --with-mpi does not exist!  Please verify that the path and file are correct." "$LINENO" 5
+  fi
+
+
+
+
+# Check whether --with-mpi_extra_libs was given.
+if test "${with_mpi_extra_libs+set}" = set; then :
+  withval=$with_mpi_extra_libs; with_mpi_extra_libs="$withval"
+else
+  with_mpi_extra_libs=""
+fi
+
+  sci_arg_with_list="$sci_arg_with_list --with-mpi_extra_libs --without-mpi_extra_libs"
+  if test -n "$mpi_extra_libs" -a ! -e "$mpi_extra_libs"; then
+    as_fn_error $? "The file or directory parameter ($mpi_extra_libs) specified for --with-mpi_extra_libs does not exist!  Please verify that the path and file are correct." "$LINENO" 5
   fi
 
 
@@ -3896,7 +3913,6 @@ if test -z "$NUM_CPUS"; then
 fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $NUM_CPUS" >&5
 $as_echo "$NUM_CPUS" >&6; }
-
 
 ##  ----------  determine if this is a 32 or 64 bit machine
 ac_ext=c
@@ -6603,7 +6619,7 @@ fi
 
 
 
-##  --  Check for 64 vs 80 bit floating point number storage in register precission error ------------------------
+##  --  Check for 64 vs 80 bit floating point number storage in register precision error ------------------------
 
 # In other words, the processor may use 80 bit floating point number registers, and as long as the
 # data is kept on the processor (in registers) then you get extra precission... however, as soon as
@@ -33500,6 +33516,30 @@ fi
 
 sci_defs_files="$sci_defs_files include/sci_defs/lapack_testdefs.h"
 
+##  --  allow for extra mpi libraries  -----------------------------------
+
+# If --with-mpi-extra-libs is set, then it will be one or more
+# absolute paths to additionaly libraries necessary to link MPI.  This
+# code parses the given library (libraries) and adds (through the
+# MPI_EXTRA flags) to the MPI test link line.
+
+if test "$with_mpi_extra_libs"; then
+   the_libs=$(echo $with_mpi_extra_libs | tr "," "\n")
+   for lib in $the_libs; do
+      if test ! -f "$lib"; then
+         as_fn_error $? "Extra MPI lib '$lib' does not exist..." "$LINENO" 5
+      else
+         the_dir=`dirname $lib`
+         if test "$the_dir" == "."; then
+            as_fn_error $? "Extra MPI lib '$lib' must include an absolute path..." "$LINENO" 5
+         fi
+         the_base=`basename $lib | cut -f"1" -d"." | sed 's/lib//g'`
+         MPI_EXTRA_LIB_FLAG="$MPI_EXTRA_LIB_FLAG -l$the_base"
+         MPI_EXTRA_LIB_DIR="$MPI_EXTRA_LIB_DIR -L$the_dir"
+      fi
+   done
+fi
+
 ##  --  search for mpi  --------------------------------------------------
 sci_required_mpi="yes"
 if test "$sci_required_mpi" = "yes"; then
@@ -40569,6 +40609,9 @@ $as_echo "Found Boost" >&6; }
   fi
   HAVE_BOOST="yes"
 fi
+
+
+
 
 
 
