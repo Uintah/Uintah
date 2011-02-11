@@ -64,7 +64,7 @@
 ##  initialize configure 
 AC_INIT([Uintah],[1.25],[csafe-homebrew@cs.utah.edu])
 
-##  require autoconf version 2.61
+##  require autoconf version 2.67
 ##     The reason to require the latest autoconf is to try and get everyone who
 ##     updates configure to use the same version.  By doing so, the SVN diffs
 ##     don't look completely different from minor changes.  (This happens
@@ -72,8 +72,6 @@ AC_INIT([Uintah],[1.25],[csafe-homebrew@cs.utah.edu])
 ##
 ##     type "autoconf --version" to find out what version you have.
 ##
-##     Note, 2.63+ is actually the latest, but many machines don't have it, so
-##     going to use 2.61 for now.
 ##     On blaze you can find 2.67 in /usr/local/share/bin
 ##
 AC_PREREQ(2.67)
@@ -296,6 +294,11 @@ SCI_ARG_WITH(mpi,
   [with_mpi="$withval"
    sci_required_mpi=yes],
   [with_mpi=""])
+SCI_ARG_WITH(mpi_extra_libs,
+  AC_HELP_STRING(--with-mpi-extra-libs=/path/to/lib1.so,
+                 Use this additional library(or libraries - comma separated) for mpi linking),
+  [with_mpi_extra_libs="$withval"],
+  [with_mpi_extra_libs=""])
 SCI_ARG_WITH(mpiuni,
   AC_HELP_STRING(--with-mpiuni=DIR,
                  Use the mpiuni installation in DIR),
@@ -643,7 +646,6 @@ if test -z "$NUM_CPUS"; then
   NUM_CPUS="1"
 fi
 AC_MSG_RESULT($NUM_CPUS)
-
 
 ##  ----------  determine if this is a 32 or 64 bit machine
 AC_LANG([C])
@@ -2922,6 +2924,30 @@ AC_SUBST(HAVE_LAPACKMP)
 AC_SUBST(LAPACKMP_LIB_FLAG)
 AC_SUBST(LAPACKMP_LIB_DIR_FLAG)
 sci_defs_files="$sci_defs_files include/sci_defs/lapack_testdefs.h"
+
+##  --  allow for extra mpi libraries  -----------------------------------
+
+# If --with-mpi-extra-libs is set, then it will be one or more
+# absolute paths to additionaly libraries necessary to link MPI.  This
+# code parses the given library (libraries) and adds (through the
+# MPI_EXTRA flags) to the MPI test link line.
+
+if test "$with_mpi_extra_libs"; then
+   the_libs=$(echo $with_mpi_extra_libs | tr "," "\n")
+   for lib in $the_libs; do
+      if test ! -f "$lib"; then
+         AC_MSG_ERROR(Extra MPI lib '$lib' does not exist...)
+      else
+         the_dir=`dirname $lib`
+         if test "$the_dir" == "."; then
+            AC_MSG_ERROR(Extra MPI lib '$lib' must include an absolute path...)
+         fi
+         the_base=`basename $lib | cut -f"1" -d"." | sed 's/lib//g'` 
+         MPI_EXTRA_LIB_FLAG="$MPI_EXTRA_LIB_FLAG -l$the_base"
+         MPI_EXTRA_LIB_DIR="$MPI_EXTRA_LIB_DIR -L$the_dir"
+      fi
+   done
+fi
 
 ##  --  search for mpi  --------------------------------------------------
 sci_required_mpi="yes"
