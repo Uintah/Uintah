@@ -144,6 +144,7 @@
     <K                             spec="OPTIONAL DOUBLE" />
     <K0                            spec="OPTIONAL DOUBLE" />
     <Ks                            spec="OPTIONAL DOUBLE" />
+    <Ku                            spec="OPTIONAL DOUBLE" />
     <n                             spec="OPTIONAL DOUBLE" />
     <meanstrain_nucleation         spec="OPTIONAL DOUBLE" />
     <melting_temp_model            spec="OPTIONAL NO_DATA"
