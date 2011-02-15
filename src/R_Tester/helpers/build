@@ -14,8 +14,7 @@ mode=$1 # dbg or opt
 #__________________________________
 # construct the configure_command file
 
-if [ "$OS" == "Linux" ]; then
-  export PETSC_ARCH=linux-gnu-amd64
+if [ "$OS" = "Linux" ]; then
   
   
   DBG_CONFIGURE="    --enable-debug \\
@@ -27,20 +26,17 @@ if [ "$OS" == "Linux" ]; then
       --enable-assertion-level=0 \\
      '--enable-optimize=-O3 -mfpmath=sse' \\"
       
-  COMMON="      --with-mpi=/usr/lib/openmpi \\
-       --with-petsc=/usr/ \\
-       --with-hypre=/usr/ \\
+  COMMON="     --with-boost=/usr  \\
        --with-hdf5 \\
-       --with-boost=/usr/local/share/wasatch/Boost-Install/1.44/gcc4.3.2 \\
        --enable-wasatch_3p \\
        USE_WASATCH=yes \\"
   
-  ENV="      CC=gcc-4.2 \\
-       CXX=g++-4.2 \\
-       F77=gfortran-4.2"
+  ENV="      CC=gcc \\
+       CXX=g++ \\
+       F77=gfortran"
        
   
-elif [ "$OS" == "Darwin" ]; then
+elif [ "$OS" = "Darwin" ]; then
   export PETSC_ARCH=darwin9.4.0-c-real-opt
   COMMON="    --enable-package='Uintah Teem' \\
        --with-petsc=/usr/sci/projects/Uintah/Thirdparty/1.0.0/Darwin/PPC-9.4.0/gcc-4.0.1-openmpi-32bit \\
@@ -84,9 +80,9 @@ retval=$?
 which gmake
 retval1=$?
 
-if [ $retval == "0" ]; then
+if [ $retval -eq 0 ]; then
   MAKE=make
-elif [ $retval1 == "0" ]; then
+elif [ $retval1 -eq 0 ]; then
   MAKE=gmake
 fi
 
@@ -96,13 +92,13 @@ rm -f "$BUILDROOT"/${mode}/configure.log
 ./configure_command > "$BUILDROOT"/${mode}/configure.log 2>&1
 retval=$?
 
-chgrp csafe *
+chgrp uintah *
 chmod g+rwX * 
 
 
 #__________________________________
 # configure:  failed
-if [ $retval != "0" ]; then
+if [ $retval -ne 0 ]; then
   echo "Configure failed:" >> $HTMLLOG
   cat "${BUILDROOT}"/"${mode}"/configure.log >> $HTMLLOG
 
