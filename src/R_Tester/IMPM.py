@@ -17,7 +17,7 @@ from helpers.runSusTests import runSusTests
 #       abs_tolerance=[double]  - absolute tolerance used in comparison
 #       rel_tolerance=[double]  - relative tolerance used in comparison
 #       exactComparison         - set absolute/relative tolerance = 0  for uda comparisons
-#       startFromCheckpoint     - start test from checkpoint. (/usr/local/home/csafe-tester/CheckPoints/..../testname.uda.000)
+#       startFromCheckpoint     - start test from checkpoint. (/home/csafe-tester/CheckPoints/..../testname.uda.000)
 #
 #  Notes: 
 #  1) The "folder name" must be the same as input file without the extension.
