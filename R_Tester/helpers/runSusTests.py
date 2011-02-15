@@ -388,7 +388,7 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
 
   chdir("..")
 
-  system("chgrp -R csafe %s > /dev/null 2>&1" % resultsdir)
+  system("chgrp -R uintah %s > /dev/null 2>&1" % resultsdir)
   system("chmod -R g+rwX %s > /dev/null 2>&1" % resultsdir)
 
   # copied results - permissions

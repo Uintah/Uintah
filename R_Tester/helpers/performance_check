@@ -12,7 +12,7 @@ fi
 if [ ! -f $COMPARISON_TIMEFILE ]; then
     echo "No previous performance output.  Storing results."
     cp $TEST_TIMEFILE $COMPARISON_TIMEFILE
-    chgrp csafe $COMPARISON_TIMEFILE
+    chgrp uintah $COMPARISON_TIMEFILE
     chmod g+rw $COMPARISON_TIMEFILE
     exit -1
 fi
@@ -35,7 +35,7 @@ elif [ $percent -lt "0" ]; then
 	echo "Preformance passed with some improvement!!"
 	echo " -- Performance improved by %$percent_improvement, replacing timestamp" > performance_shortmessage.txt
 	cp $TEST_TIMEFILE $COMPARISON_TIMEFILE
-	chgrp csafe $COMPARISON_TIMEFILE
+	chgrp uintah $COMPARISON_TIMEFILE
 	chmod g+rw $COMPARISON_TIMEFILE
     else
 	echo " -- Performance improved by %$percent_improvement" > performance_shortmessage.txt
