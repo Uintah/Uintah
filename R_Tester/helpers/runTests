@@ -30,7 +30,7 @@ rm -f "$BUILDROOT"/dbg/log "$BUILDROOT"/opt/log "$BUILDROOT"/dbg/summary_log "$B
 
 #__________________________________
 # debug tests
-if [ "$DO_DBG" == "1" ]; then
+if [ "$DO_DBG" = "1" ]; then
   echo "" >> "$HTMLLOG"
   echo "/--------------------------\\" >> "$HTMLLOG"
   echo "|    DEBUG TEST SUMMARY    |" >> "$HTMLLOG"
@@ -54,7 +54,7 @@ fi
 
 #__________________________________
 # optimized
-if [ "$DO_OPT" == "1" ]; then
+if [ "$DO_OPT" = "1" ]; then
   echo "" >> "$HTMLLOG"
   echo "/--------------------------\\" >> "$HTMLLOG"
   echo "|  OPTIMIZED TEST SUMMARY   |" >> "$HTMLLOG"
@@ -85,7 +85,7 @@ fi
 # Build the log that will be sent out in the email
 echo "" >> "$BUILDROOT"/log
 
-if [ "$DO_DBG" == "1" ]; then
+if [ "$DO_DBG" = "1" ]; then
   echo "/--------------------------\\" >> "$BUILDROOT"/log
   echo "| DEBUG TESTS - $dbg_passFail     |" >> "$BUILDROOT"/log
   echo "\\--------------------------/" >> "$BUILDROOT"/log
@@ -96,7 +96,7 @@ if [ "$DO_DBG" == "1" ]; then
   echo "" >> "$BUILDROOT"/log
 fi
 
-if [ "$DO_OPT" == "1" ]; then
+if [ "$DO_OPT" = "1" ]; then
   echo "/--------------------------\\" >> "$BUILDROOT"/log
   echo "| OPTIMIZED TESTS - $opt_passFail |" >> "$BUILDROOT"/log
   echo "\\--------------------------/" >> "$BUILDROOT"/log
