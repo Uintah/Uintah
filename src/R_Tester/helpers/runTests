@@ -44,7 +44,7 @@ if [ "$DO_DBG" = "1" ]; then
   fi
   
   # set flags
-  if [ $? != 0 ]; then
+  if [ $? -ne 0 ]; then
     failed=1
     dbg_failed=1
     dbg_passFail="failed"
@@ -68,7 +68,7 @@ if [ "$DO_OPT" = "1" ]; then
   fi
 
   retval=$?
-  if [ $retval != 0 ]; then
+  if [ $retval -ne 0 ]; then
     failed=1
     opt_failed=1
     opt_passFail="failed"
