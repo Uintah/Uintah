@@ -32,7 +32,9 @@ namespace Uintah {
 //---------------------------------------------------------------------------
 // Builder
 class ModelBase; 
-
+class Devolatilization;
+class CharOxidation;
+class HeatTransfer;
 class ModelBuilder
 {
 public:
@@ -89,7 +91,10 @@ class CoalModelFactory
 public:
   
   typedef std::map< std::string, ModelBase*> ModelMap;
-  
+  typedef std::map< std::string, Devolatilization*> DevolModelMap;
+  typedef std::map< std::string, CharOxidation*> CharOxiModelMap;
+  typedef std::map< std::string, HeatTransfer*> HeatTransferModelMap;
+
   /** @brief	Obtain a reference to the CoalModelFactory. */
   static CoalModelFactory& self();
 
@@ -137,6 +142,18 @@ public:
   ModelMap& retrieve_all_models() {
     return models_; }; 
 
+  /** @brief  Get all models in a ModelMap */
+  DevolModelMap& retrieve_devol_models() {
+    return devolmodels_; };
+
+  /** @brief  Get all models in a ModelMap */
+  CharOxiModelMap& retrieve_charoxi_models() {
+    return charoximodels_; };
+
+  /** @brief  Get all models in a ModelMap */
+  HeatTransferModelMap& retrieve_heattransfer_models() {
+    return heatmodels_; };
+
 	/** @brief	Get the initial composition vector for the coal particles */
 	vector<double> getInitialCoalComposition() {
 		return yelem; };
@@ -147,15 +164,17 @@ public:
     b_labelSet = true;
   }
 
-
 private:
 
   typedef std::map< std::string, ModelBuilder* > BuildMap;
 
   BuildMap builders_;
   ModelMap models_;
+  DevolModelMap devolmodels_;
+  CharOxiModelMap charoximodels_;
+  HeatTransferModelMap heatmodels_;
 
-	bool b_coupled_physics;		///< Boolean: use coupled physics and iterative procedure?
+  bool b_coupled_physics;		///< Boolean: use coupled physics and iterative procedure?
   bool b_labelSet;          ///< Boolean: has the ArchesLabel been set using setArchesLabel()?
   bool d_unweighted;
 

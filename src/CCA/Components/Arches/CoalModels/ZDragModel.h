@@ -78,6 +78,8 @@ public:
                  DataWarehouse        * old_dw, 
                  DataWarehouse        * new_dw );
 
+  void sched_dummyInit( const LevelP& level, SchedulerP& sched );
+
   /** @brief  Actually do dummy solve (sched_dummyInit is defined in ModelBase parent class) */
   void dummyInit( const ProcessorGroup* pc, 
                   const PatchSubset* patches, 
