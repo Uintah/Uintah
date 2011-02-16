@@ -81,8 +81,7 @@ evaluate()
   stress += *tmp;
 
   viscInterpOp_->apply_to_field( *visc_, *tmp );
-  stress *= *tmp;
-  stress *= -1.0;
+  stress <<= stress * (-1.0 * *tmp);
 }
 
 //--------------------------------------------------------------------
