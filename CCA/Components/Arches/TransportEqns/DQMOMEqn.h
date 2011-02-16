@@ -157,10 +157,6 @@ public:
   inline const vector<string> getModelsList(){
     return d_models; };
 
-  /** @brief  Add a VarLabel* pointer to a model term to the vector of model labels */
-  inline void addModel( string model_name ) {
-    d_models.push_back( model_name ); }
-
   /** @brief Return the VarLabel for this equation's source term. */ 
   inline const VarLabel* getSourceLabel(){
     return d_sourceLabel; };

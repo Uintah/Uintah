@@ -293,9 +293,8 @@ XDragModel::sched_computeModel( const LevelP& level, SchedulerP& sched, int time
   d_w_scaling_factor = weight_eqn.getScalingConstant();
   tsk->requires( Task::OldDW, d_weight_label, gn, 0);
 
-
-  // require gas velocity
   tsk->requires( Task::OldDW, d_fieldLabels->d_newCCVelocityLabel, gn, 0 );
+  tsk->requires(Task::OldDW, d_fieldLabels->d_densityCPLabel, Ghost::None, 0);
 
   // require particle velocity
   ArchesLabel::PartVelMap::const_iterator i = d_fieldLabels->partVel.find(d_quadNode);
@@ -399,6 +398,9 @@ XDragModel::computeModel( const ProcessorGroup* pc,
     constCCVariable<Vector> gasVel;
     old_dw->get( gasVel, d_fieldLabels->d_newCCVelocityLabel, matlIndex, patch, gn, 0 );
 
+    constCCVariable<double> den;
+    old_dw->get(den, d_fieldLabels->d_densityCPLabel, matlIndex, patch, gn, 0 );
+
     constCCVariable<Vector> partVel;
     ArchesLabel::PartVelMap::const_iterator iter = d_fieldLabels->partVel.find(d_quadNode);
     old_dw->get(partVel, iter->second, matlIndex, patch, gn, 0);
@@ -437,7 +439,7 @@ XDragModel::computeModel( const ProcessorGroup* pc,
         sphPart = cart2sph( cartPart );
 
         double diff = sphGas.z() - sphPart.z();
-        double Re  = abs(diff)*length / (kvisc/1.18);
+        double Re  = abs(diff)*length / (kvisc/den[c]);
         double phi;
 
         if(Re < 1) {
