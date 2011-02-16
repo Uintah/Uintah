@@ -7,10 +7,13 @@ SRCS += \
   $(SRCDIR)/ModelBase.cc \
   $(SRCDIR)/PartVel.cc \
   $(SRCDIR)/Devolatilization.cc \
+  $(SRCDIR)/CharOxidation.cc \
   $(SRCDIR)/KobayashiSarofimDevol.cc \
+  $(SRCDIR)/CharOxidationShaddix.cc \
   $(SRCDIR)/ConstantModel.cc  \
   $(SRCDIR)/HeatTransfer.cc \
   $(SRCDIR)/SimpleHeatTransfer.cc \
+  $(SRCDIR)/ShaddixHeatTransfer.cc \
   $(SRCDIR)/XDragModel.cc \
   $(SRCDIR)/YDragModel.cc \
   $(SRCDIR)/ZDragModel.cc \

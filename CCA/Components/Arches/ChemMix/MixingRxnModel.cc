@@ -126,6 +126,12 @@ MixingRxnModel::setMixDVMap( const ProblemSpecP& root_params )
     var_name = "CO2"; 
     insertIntoMap( var_name ); 
     var_name = "H2O"; 
+    insertIntoMap( var_name );
+    var_name = "O2";
+    insertIntoMap( var_name );
+    var_name = "N2";
+    insertIntoMap( var_name );
+    var_name = "mixture_molecular_weight";
     insertIntoMap( var_name ); 
   }
 

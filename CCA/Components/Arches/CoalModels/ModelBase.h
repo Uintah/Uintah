@@ -59,7 +59,7 @@ public:
   /** @brief  Schedule dummy initialization for MPMARCHES; the schedule task is the same for all models,
               but the implementation must be done by each model, since knowledge of the model's data type is required.
       @see    ExplicitSolver::noSolve() */
-  void sched_dummyInit( const LevelP& level, SchedulerP& sched );
+  virtual void sched_dummyInit( const LevelP& level, SchedulerP& sched ) = 0;
 
   /** @breif  Pure virtual function: actually do the dummy initialization */
   virtual void dummyInit( const ProcessorGroup * pc, 
@@ -101,6 +101,14 @@ public:
   /** @brief  Return the VarLabel for the model term for gas */
   inline const VarLabel* getGasSourceLabel() {
     return d_gasLabel; }; 
+
+  /** @brief  Return the VarLabel for the model term for char */
+  //virtual const VarLabel* getCharSourceLabel() = 0;
+
+
+  /** @brief  Return the quadrature node */
+  inline int getquadNode() {
+    return d_quadNode; };
  
   inline void setUnweightedAbscissas(bool d_unw){
     d_unweighted = d_unw;

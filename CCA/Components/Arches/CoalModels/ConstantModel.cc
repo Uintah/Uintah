@@ -71,6 +71,25 @@ ConstantModel::problemSetup(const ProblemSpecP& inputdb, int qn)
 
 }
 
+void
+ConstantModel::sched_dummyInit( const LevelP& level, SchedulerP& sched )
+{
+  string taskname = "ConstantModel::dummyInit"; 
+
+  Ghost::GhostType  gn = Ghost::None;
+
+  Task* tsk = scinew Task(taskname, this, &ConstantModel::dummyInit);
+
+  tsk->requires( Task::OldDW, d_modelLabel, gn, 0);
+  tsk->requires( Task::OldDW, d_gasLabel,   gn, 0);
+
+  tsk->computes(d_modelLabel);
+  tsk->computes(d_gasLabel); 
+
+  sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
+
+}
+
 //-------------------------------------------------------------------------
 // Method: Actually do the dummy initialization
 //-------------------------------------------------------------------------

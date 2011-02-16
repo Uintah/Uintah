@@ -1,10 +1,9 @@
-#ifndef Uintah_Component_Arches_Devolatilization_h
-#define Uintah_Component_Arches_Devolatilization_h
+#ifndef Uintah_Component_Arches_CharOxidation_h
+#define Uintah_Component_Arches_CharOxidation_h
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/SimulationStateP.h>
 #include <CCA/Components/Arches/CoalModels/ModelBase.h>
 #include <CCA/Components/Arches/CoalModels/CoalModelFactory.h>
-
 #include <CCA/Components/Arches/ArchesVariables.h>
 
 #include <vector>
@@ -13,40 +12,40 @@
 //===========================================================================
 
 /**
-  * @class    Devolatilization
-  * @author   Charles Reid
-  * @date     October 2009
+  * @class    CharOxidation
+  * @author   Julien Pedel
+  * @date     Feb 2011
   *
-  * @brief    A parent class for devolatilization models
+  * @brief    A parent class for CharOxidation models
   *
   */
 
 namespace Uintah{
 
-class Devolatilization: public ModelBase {
+class CharOxidation: public ModelBase {
 public: 
 
-  Devolatilization( std::string modelName, 
+  CharOxidation( std::string modelName, 
                          SimulationStateP& shared_state, 
                          const ArchesLabel* fieldLabels,
                          vector<std::string> reqICLabelNames, 
                          vector<std::string> reqScalarLabelNames,
                          int qn );
 
-  virtual ~Devolatilization();
+  virtual ~CharOxidation();
 
   ///////////////////////////////////////////////
   // Initialization methods
 
-  /** @brief  Grab model-independent devolatilization parameters */
+  /** @brief  Grab model-independent CharOxidation parameters */
   void problemSetup(const ProblemSpecP& db, int qn);
 
   /** @brief Schedule the initialization of special/local variables unique to model; 
-             blank for Devolatilization parent class, intended to be re-defined by child classes if needed. */
+             blank for CharOxidation parent class, intended to be re-defined by child classes if needed. */
   void sched_initVars( const LevelP& level, SchedulerP& sched );
 
   /** @brief  Actually initialize special variables unique to model; 
-              blank for Devolatilization parent class, intended to be re-defined by child classes if needed. */
+              blank for CharOxidation parent class, intended to be re-defined by child classes if needed. */
   void initVars( const ProcessorGroup * pc, 
                  const PatchSubset    * patches, 
                  const MaterialSubset * matls, 
@@ -62,23 +61,28 @@ public:
                   DataWarehouse* old_dw, 
                   DataWarehouse* new_dw );
 
+  ///////////////////////////////////////////////////
+  // Access methods
 
-  /** @brief  Return a string containing the model type ("Devolatilization") */
+  /** @brief  Return a string containing the model type ("CharOxidation") */
   inline string getType() {
-    return "Devolatilization"; }
+    return "CharOxidation"; }
 
   /** @brief  Return the VarLabel for the model term for char */
-  inline const VarLabel* getCharSourceLabel() {
-    return d_charLabel; };
-   
+  inline const VarLabel* getParticleTempSourceLabel() {
+    return d_particletempLabel; };
 
+  /** @brief  Return the VarLabel for the model term for char */
+  inline const VarLabel* getSurfaceRateLabel() {
+    return d_surfacerateLabel; };
 
 protected:
 
-  const VarLabel* d_charLabel;
-  double d_w_scaling_factor; 
+  const VarLabel* d_particletempLabel;
+  const VarLabel* d_surfacerateLabel;
+  double d_w_scaling_constant; 
   double d_w_small; // "small" clip value for zero weights
 
-}; // end Devolatilization
+}; // end CharOxidation
 } // end namespace Uintah
 #endif

@@ -144,6 +144,25 @@ YDragModel::problemSetup(const ProblemSpecP& params, int qn)
 
 }
 
+void
+YDragModel::sched_dummyInit( const LevelP& level, SchedulerP& sched )
+{
+  string taskname = "YDragModel::dummyInit";
+
+  Ghost::GhostType  gn = Ghost::None;
+
+  Task* tsk = scinew Task(taskname, this, &YDragModel::dummyInit);
+
+  tsk->requires( Task::OldDW, d_modelLabel, gn, 0);
+  tsk->requires( Task::OldDW, d_gasLabel,   gn, 0);
+
+  tsk->computes(d_modelLabel);
+  tsk->computes(d_gasLabel);
+
+  sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
+
+}
+
 //-------------------------------------------------------------------------
 // Method: Actually do the dummy initialization
 //-------------------------------------------------------------------------
@@ -417,7 +436,7 @@ YDragModel::computeModel( const ProcessorGroup* pc,
         sphPart = cart2sph( cartPart );
 
         double diff = sphGas.z() - sphPart.z();
-        double Re  = abs(diff)*length / kvisc;
+        double Re  = abs(diff)*length / (kvisc/1.18);
         double phi;
 
         if(Re < 1) {

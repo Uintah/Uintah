@@ -48,9 +48,12 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Arches/CoalModels/PartVel.h>
 #include <CCA/Components/Arches/CoalModels/ConstantModel.h>
 #include <CCA/Components/Arches/CoalModels/Devolatilization.h>
+#include <CCA/Components/Arches/CoalModels/CharOxidation.h>
 #include <CCA/Components/Arches/CoalModels/KobayashiSarofimDevol.h>
 #include <CCA/Components/Arches/CoalModels/HeatTransfer.h>
 #include <CCA/Components/Arches/CoalModels/SimpleHeatTransfer.h>
+#include <CCA/Components/Arches/CoalModels/ShaddixHeatTransfer.h>
+#include <CCA/Components/Arches/CoalModels/CharOxidationShaddix.h>
 #include <CCA/Components/Arches/CoalModels/XDragModel.h>
 #include <CCA/Components/Arches/CoalModels/YDragModel.h>
 #include <CCA/Components/Arches/CoalModels/ZDragModel.h>
@@ -66,7 +69,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Arches/PropertyModels/ExtentRxn.h>
 #include <CCA/Components/Arches/PropertyModels/TabStripFactor.h>
 #if HAVE_TABPROPS
-# include <CCA/Components/Arches/ChemMix/TabPropsInterface.h>
+#  include <CCA/Components/Arches/ChemMix/TabPropsInterface.h>
 #endif 
 
 #include <CCA/Components/Arches/Arches.h>
@@ -589,7 +592,7 @@ Arches::problemSetup(const ProblemSpecP& params,
     DQMOMEqnFactory& eqn_factory = DQMOMEqnFactory::self(); 
     const int numQuadNodes = eqn_factory.get_quad_nodes();  
 
-    model_factory.setArchesLabel( d_lab ); 
+    model_factory.setArchesLabel( d_lab );
 
     ProblemSpecP w_db = dqmom_db->findBlock("Weights");
 
@@ -1848,6 +1851,20 @@ Arches::sched_weightedAbsInit( const LevelP& level,
     tsk->computes( modelLabel );
     tsk->computes( gasmodelLabel );  
 
+    string modelType = model->getType();
+    if( modelType == "Devolatilization" ) {
+      Devolatilization* devolmodel = dynamic_cast<Devolatilization*>(model);
+      const VarLabel* charmodelLabel = devolmodel->getCharSourceLabel();
+      tsk->computes( charmodelLabel );
+    } else if( modelType == "CharOxidation" ) {
+      CharOxidation* charoxymodel = dynamic_cast<CharOxidation*>(model);
+      const VarLabel* particletempLabel = charoxymodel->getParticleTempSourceLabel();
+      tsk->computes( particletempLabel );
+      const VarLabel* surfacerateLabel = charoxymodel->getSurfaceRateLabel();
+      tsk->computes( surfacerateLabel );
+
+    }
+
     model->sched_initVars( level, sched ); 
 
   }
@@ -1978,6 +1995,25 @@ Arches::weightedAbsInit( const ProcessorGroup* ,
       new_dw->allocateAndPut( gas_source, gasModelLabel, matlIndex, patch ); 
       gas_source.initialize(0.0); 
 
+      string modelType = model->getType();
+      if( modelType == "Devolatilization" ) {
+        Devolatilization* devolmodel = dynamic_cast<Devolatilization*>(model);
+        const VarLabel* charmodelLabel = devolmodel->getCharSourceLabel();
+        CCVariable<double> char_source;
+        new_dw->allocateAndPut( char_source, charmodelLabel, matlIndex, patch );
+        char_source.initialize(0.0);
+      } else if( modelType == "CharOxidation" ) {
+        CharOxidation* charoxymodel = dynamic_cast<CharOxidation*>(model);
+        const VarLabel* particletempLabel = charoxymodel->getParticleTempSourceLabel();
+        CCVariable<double> particle_temp_source;
+        new_dw->allocateAndPut( particle_temp_source, particletempLabel, matlIndex, patch );
+        particle_temp_source.initialize(0.0);
+        const VarLabel* surfacerateLabel = charoxymodel->getSurfaceRateLabel();
+        CCVariable<double> surface_rate;
+        new_dw->allocateAndPut( surface_rate, surfacerateLabel, matlIndex, patch );
+        surface_rate.initialize(0.0);
+
+      }
     }
   }
   proc0cout << endl;
@@ -2623,8 +2659,14 @@ void Arches::registerModels(ProblemSpecP& db)
 	      //} else if ( model_type == "HeatTransfer" ) {
         //  ModelBuilder* modelBuilder = scinew HeatTransferBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
         //  model_factory.register_model( temp_model_name, modelBuilder );
+        } else if ( model_type == "CharOxidationShaddix" ) {
+          ModelBuilder* modelBuilder = scinew CharOxidationShaddixBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
+          model_factory.register_model( temp_model_name, modelBuilder );
         } else if ( model_type == "SimpleHeatTransfer" ) {
           ModelBuilder* modelBuilder = scinew SimpleHeatTransferBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
+          model_factory.register_model( temp_model_name, modelBuilder );
+        } else if ( model_type == "ShaddixHeatTransfer" ) {
+          ModelBuilder* modelBuilder = scinew ShaddixHeatTransferBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
           model_factory.register_model( temp_model_name, modelBuilder );
         } else if ( model_type == "XDrag" ) {
           ModelBuilder* modelBuilder = scinew XDragModelBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
