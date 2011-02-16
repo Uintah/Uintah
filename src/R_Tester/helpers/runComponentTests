@@ -1,5 +1,5 @@
 
-#!/bin/sh#
+#!/bin/sh
 #______________________________________________________________________
 # run:  This shell script
 #         - runs a component's test
@@ -22,11 +22,17 @@ fi
 # create the do<component>tests  python script
 cd "${BUILDROOT}/${mode}"
 doTestScript="do${componentTest}tests"
-echo "#!/bin/tcsh"                                         > "$doTestScript"
-echo "setenv PATH $PATH"                                   >> "$doTestScript"
-echo "setenv OS $OS"                                       >> "$doTestScript"
-echo "setenv SCI_DEBUG \"\""                               >> "$doTestScript"
-echo "setenv LOCAL_OR_NIGHTLY_TEST $LOCAL_OR_NIGHTLY_TEST" >> "$doTestScript"
+#echo "#!/bin/tcsh"                                         > "$doTestScript"
+#echo "setenv PATH $PATH"                                   >> "$doTestScript"
+#echo "setenv OS $OS"                                       >> "$doTestScript"
+#echo "setenv SCI_DEBUG \"\""                               >> "$doTestScript"
+#echo "setenv LOCAL_OR_NIGHTLY_TEST $LOCAL_OR_NIGHTLY_TEST" >> "$doTestScript"
+
+echo "#!/bin/sh"                                         > "$doTestScript"
+echo "PATH=$PATH"                                   >> "$doTestScript"
+echo "OS=$OS"                                       >> "$doTestScript"
+echo "SCI_DEBUG=' \"\"' "                              >> "$doTestScript"
+echo "LOCAL_OR_NIGHTLY_TEST=$LOCAL_OR_NIGHTLY_TEST" >> "$doTestScript"
 
 echo "python TestScripts/$componentTest.py susdir inputs goldStandard $mode $PARALLELISM "'$1' >> "$doTestScript"
 
