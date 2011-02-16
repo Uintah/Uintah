@@ -46,7 +46,7 @@ elif [ "$OS" = "Darwin" ]; then
   OPT_CONFIGURE="$COMMON '--enable-optimize=-mcpu=7450 -O2 -fsigned-char -maltivec -mabi=altivec -mpowerpc-gfxopt' $OPT_CONFIGURE"
 fi
 
-#echo "#!/bin/csh" > configure_command
+echo "#!/bin/csh" > configure_command
 echo "../../src/configure --enable-package=Uintah \\" >> configure_command
  
 if [ "$mode" = "dbg" ]; then
