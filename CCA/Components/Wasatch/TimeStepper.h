@@ -36,7 +36,7 @@ namespace Wasatch{
    */
   class TimeStepper
   {
-
+  public:
     /**
      *  \ingroup WasatchCore
      *  \struct FieldInfo
@@ -59,6 +59,8 @@ namespace Wasatch{
         : varname( name ), varLabel( vl ), rhsLabel( rhsl )
       {}
     };
+
+  private:
 
     typedef std::vector< FieldInfo<SpatialOps::structured::SVolField> > ScalarFields;
     typedef std::vector< FieldInfo<SpatialOps::structured::XVolField> > XVolFields;
