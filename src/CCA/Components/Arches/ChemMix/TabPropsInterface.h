@@ -149,14 +149,6 @@ public:
                              DataWarehouse* old_dw, 
                              DataWarehouse* new_dw ); 
 
-  /** @brief    Load list of dependent variables from the table 
-      @returns  A vector<string>& that is a reference to the list of all dependent variables */
-  const vector<string> & getAllDepVars();
-
-  /** @brief    Load list of independent variables from the table
-      @returns  A vector<string>& that is a reference to the list of all independent variables */ 
-  const vector<string> & getAllIndepVars();
-
   /** @brief      Returns a single dependent variable, given a vector of independent variable values
       @param dv   The name of the dependent variable to look up in the table
       @param iv   The vector of indepenent variable values */
@@ -215,7 +207,6 @@ private:
 
   IntVector d_ijk_den_ref;                ///< Reference density location
 
-  vector<string> d_allDepVarNames;        ///< Vector storing all dependent variable names from the table file
 
   vector<string> d_allUserDepVarNames;    ///< Vector storing all independent varaible names requested in input file
 
