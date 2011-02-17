@@ -810,7 +810,6 @@ ClassicTableInterface::computeFirstEnthalpy( const ProcessorGroup* pc,
       }
     }
 
-
     for (CellIterator iter=patch->getCellIterator(0); !iter.done(); iter++){
       IntVector c = *iter; 
 
@@ -1405,4 +1404,11 @@ ClassicTableInterface::loadMixingTable( const string & inputfile )
 
   proc0cout << "Table successfully loaded into memory!" << endl;
 
+}
+
+double ClassicTableInterface::getTableValue( std::vector<double> iv, std::string variable )
+{
+  IndexMap::iterator i_index = d_enthalpyVarIndexMap.find( variable ); 
+  double value    = tableLookUp( iv, i_index->second ); 
+  return value; 
 }

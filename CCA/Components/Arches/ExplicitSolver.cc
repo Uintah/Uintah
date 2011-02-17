@@ -541,7 +541,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
 
     string mixmodel = d_props->getMixingModelType(); 
-    if ( mixmodel != "TabProps" && mixmodel != "ClassicTable")
+    if ( mixmodel != "TabProps" && mixmodel != "ClassicTable" && mixmodel != "ColdFlow")
       d_props->sched_reComputeProps(sched, patches, matls,
                                     d_timeIntegratorLabels[curr_level],
                                     true, false,
@@ -616,7 +616,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
                                             d_EKTCorrection, doing_EKT_now);
       }
     
-      if (mixmodel != "TabProps" && mixmodel != "ClassicTable")
+      if (mixmodel != "TabProps" && mixmodel != "ClassicTable" && mixmodel != "ColdFlow")
         d_props->sched_reComputeProps(sched, patches, matls,
                                       d_timeIntegratorLabels[curr_level],
                                       false, false,
@@ -682,9 +682,6 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     sched_updatePressure(sched, patches, matls,
                                  d_timeIntegratorLabels[curr_level]);
 
-    if(d_turbinlet){
-      d_boundaryCondition->sched_setTurbulence(sched, patches, matls);
-    }
     //if (curr_level == numTimeIntegratorLevels - 1) {
     if (d_boundaryCondition->anyArchesPhysicalBC()) {
 

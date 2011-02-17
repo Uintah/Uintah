@@ -233,7 +233,6 @@ public:
 
   void sched_doTPDummyInit( const LevelP&, SchedulerP& ); 
 
-
 protected :
 
 private:
@@ -311,8 +310,6 @@ private:
   //        const Properties&   
 
   Properties& operator=(const Properties&);
-
-
 
 private:
 

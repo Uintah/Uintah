@@ -36,6 +36,7 @@ DEALINGS IN THE SOFTWARE.
 #if HAVE_TABPROPS
 # include <CCA/Components/Arches/ChemMix/TabPropsInterface.h>
 # include <CCA/Components/Arches/ChemMix/ClassicTableInterface.h>
+# include <CCA/Components/Arches/ChemMix/ColdFlow.h>
 #endif
 #include <CCA/Components/Arches/Mixing/MixingModel.h>
 #include <CCA/Components/Arches/Mixing/ColdflowMixingModel.h>
@@ -146,6 +147,8 @@ Properties::problemSetup(const ProblemSpecP& params)
     mixModel = "TabProps";
   else if (db->findBlock("ClassicTable"))
     mixModel = "ClassicTable";
+	else if (db->findBlock("ColdFlow"))
+		mixModel = "ColdFlow";
 #endif
   else
     throw InvalidValue("ERROR!: No mixing/reaction table specified! If you are attempting to use the new TabProps interface, ensure that you configured properly with TabProps.",__FILE__,__LINE__);
@@ -200,6 +203,9 @@ Properties::problemSetup(const ProblemSpecP& params)
     // New Classic interface
     d_mixingRxnTable = scinew ClassicTableInterface( d_lab, d_MAlab ); 
     d_mixingRxnTable->problemSetup( db ); 
+	} else if (mixModel == "ColdFlow") {
+		d_mixingRxnTable = scinew ColdFlow( d_lab, d_MAlab ); 
+		d_mixingRxnTable->problemSetup( db ); 
   }
 #endif
   else if (mixModel == "pdfMixingModel" || mixModel == "SteadyFlameletsTable"
@@ -210,7 +216,7 @@ Properties::problemSetup(const ProblemSpecP& params)
     throw InvalidValue("Mixing Model not supported: " + mixModel, __FILE__, __LINE__);
   }
  
-  if (mixModel != "TabProps" && mixModel != "ClassicTable") {
+  if (mixModel != "TabProps" && mixModel != "ClassicTable" && mixModel != "ColdFlow") {
     d_mixingModel->problemSetup(db);
 
     if (d_calcEnthalpy){
@@ -302,6 +308,8 @@ Properties::computeInletProperties(const InletStream& inStream,
     d_mixingRxnTable->oldTableHack( inStream, outStream, d_calcEnthalpy, bc_type ); 
   } else if ( mixModel == "ClassicTable"){
     d_mixingRxnTable->oldTableHack( inStream, outStream, d_calcEnthalpy, bc_type ); 
+  } else if ( mixModel == "ColdFlow" ) {
+		// nothing to do here -- put here as a place holder until Properties is deleted
   }
 #endif
   else {

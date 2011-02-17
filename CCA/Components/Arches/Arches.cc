@@ -409,24 +409,15 @@ Arches::problemSetup(const ProblemSpecP& params,
                               d_calcReactingScalar, 
                               d_calcEnthalpy, d_calcVariance, d_myworld);
 
-  d_props->setCalcExtraScalars(d_calcExtraScalars);
-
-  if (d_calcExtraScalars){
-    d_props->setExtraScalars(&d_extraScalars);
-  }
-  
   d_props->problemSetup(db);
 
   // read boundary condition information 
   d_boundaryCondition = scinew BoundaryCondition(d_lab, d_MAlab, d_physicalConsts,
                                                  d_props, d_calcReactingScalar,
                                                  d_calcEnthalpy, d_calcVariance);
+
   // send params, boundary type defined at the level of Grid
   d_boundaryCondition->setMMS(d_doMMS);
-  d_boundaryCondition->setCalcExtraScalars(d_calcExtraScalars);
-  if (d_calcExtraScalars){
-    d_boundaryCondition->setExtraScalars(&d_extraScalars);
-  }
   d_boundaryCondition->problemSetup(db);
 
   d_carbon_balance_es = d_boundaryCondition->getCarbonBalanceES();
@@ -698,6 +689,7 @@ Arches::scheduleInitialize(const LevelP& level,
   // require : NONE
   // compute : cellType
   d_boundaryCondition->sched_cellTypeInit(sched, patches, matls);
+  //d_boundaryCondition->sched_cellTypeInit__NEW( sched, patches, matls ); 
 
   // computing flow inlet areas
   if (d_boundaryCondition->getInletBC()){
@@ -744,7 +736,7 @@ Arches::scheduleInitialize(const LevelP& level,
 
   // Table Lookup 
   string mixmodel = d_props->getMixingModelType(); 
-  if ( mixmodel != "TabProps" && mixmodel != "ClassicTable")
+  if ( mixmodel != "TabProps" && mixmodel != "ClassicTable" && mixmodel != "ColdFlow")
     d_props->sched_reComputeProps(sched, patches, matls,
                                 init_timelabel, true, true, false,false);
   else {
@@ -755,7 +747,11 @@ Arches::scheduleInitialize(const LevelP& level,
     d_props->sched_reComputeProps_new( level, sched, init_timelabel, initialize_it, modify_ref_den ); 
   }
 
+  //d_boundaryCondition->sched_computeBCArea__NEW( sched, patches, matls ); 
+  //d_boundaryCondition->sched_setupBCInletVelocities__NEW( sched, patches, matls ); 
+
   d_boundaryCondition->sched_initInletBC(sched, patches, matls);
+  //d_boundaryCondition->sched_setInitProfile__NEW( sched, patches, matls ); 
 
   sched_getCCVelocities(level, sched);
   // Compute Turb subscale model (output Varlabel have CTS appended to them)

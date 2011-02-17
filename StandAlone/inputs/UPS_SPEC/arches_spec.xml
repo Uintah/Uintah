@@ -109,7 +109,7 @@
       </Turbulence>
 
       <Properties                       spec="REQUIRED NO_DATA"
-                                          children1="ONE_OF(CHILD ColdFlowMixingModel, NewStaticMixingTable, TabProps, ClassicTable)" >
+                                          children1="ONE_OF(CHILD ColdFlowMixingModel, NewStaticMixingTable, TabProps, ClassicTable, ColdFlow)" >
 
         <use_mixing_model               spec="REQUIRED BOOLEAN" /> 
         <empirical_soot                 spec="OPTIONAL BOOLEAN" />
@@ -127,6 +127,18 @@
             <temperature                spec="REQUIRED DOUBLE" />
           </Stream>
         </ColdFlowMixingModel>
+
+        <ColdFlow                       spec="OPTIONAL NO_DATA" >
+          <mixture_fraction_label       spec="REQUIRED STRING"/>
+          <Stream_1                     spec="MULTIPLE NO_DATA">
+            <density                    spec="REQUIRED DOUBLE 'positive'"/>
+            <temperature                spec="REQUIRED DOUBLE 'positive'"/>
+          </Stream_1>
+          <Stream_2                     spec="MULTIPLE NO_DATA">
+            <density                    spec="REQUIRED DOUBLE 'positive'"/>
+            <temperature                spec="REQUIRED DOUBLE 'positive'"/>
+          </Stream_2>
+        </ColdFlow>
 
         <NewStaticMixingTable           spec="OPTIONAL NO_DATA" >
           <co_output                    spec="OPTIONAL BOOLEAN" />
@@ -181,9 +193,7 @@
           </scalar>
         </ScalarEfficiency>
         <carbon_balance                 spec="OPTIONAL BOOLEAN" />
-        <carbon_balance_es              spec="OPTIONAL BOOLEAN" />
         <sulfur_balance                 spec="OPTIONAL BOOLEAN" />
-        <sulfur_balance_es              spec="OPTIONAL BOOLEAN" />
         <ramping_inlet_flowrate         spec="OPTIONAL BOOLEAN" />
         <FlowInlet                      spec="MULTIPLE NO_DATA" >
           <velocity_type                spec="OPTIONAL STRING 'flat, function, vector, file, geometry'"/>

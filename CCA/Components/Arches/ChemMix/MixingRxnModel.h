@@ -126,9 +126,21 @@ public:
   virtual void oldTableHack( const InletStream&, Stream&, bool, const std::string ) = 0; 
 
   /** @brief Needed for dumb MPMArches */ 
-
   virtual void sched_dummyInit( const LevelP& level, 
                                     SchedulerP& sched ) = 0;
+
+	/** @brief Returns the value of a single variable given the iv vector 
+	 * This will be useful for other classes to have access to */
+	virtual double getTableValue( std::vector<double>, std::string ) = 0; 
+
+	/** @brief Return a reference to the independent variables */
+	inline const VarMap getIVVars(){ return d_ivVarMap; }; 
+
+	/** @brief Return a reference to the dependent variables */ 
+	inline const VarMap getDVVars(){ return d_dvVarMap; }; 
+
+	/** @brief Return a string list of all independent variable names in order */ 
+	inline std::vector<string> getIVVarNames(){ return d_allIndepVarNames; };
 
 protected :
 
@@ -138,18 +150,17 @@ protected :
   /** @brief Sets the mixing table's dependent variable list. */
   void setMixDVMap( const ProblemSpecP& root_params ); 
 
-  const ArchesLabel* d_lab;       ///< Arches labels
-  const MPMArchesLabel* d_MAlab;  ///< MPMArches labels 
+  const ArchesLabel* d_lab;               /// < Arches labels
+  const MPMArchesLabel* d_MAlab;          /// < MPMArches labels
 
-  bool d_coldflow;          ///< Will not compute heat loss and will not initialized ethalpy
-  bool d_adiabatic;         ///< Will not compute heat loss
-  bool d_coal_table;        ///< Flagged as a coal table or not  
-  bool d_use_mixing_model;  ///< Turn on/off mixing model
+  bool d_coldflow;                        /// < Will not compute heat loss and will not initialized ethalpy
+  bool d_adiabatic;                       /// < Will not compute heat loss
+  bool d_coal_table;                      /// < Flagged as a coal table or not
+  bool d_use_mixing_model;                /// < Turn on/off mixing model
 
-  std::string d_fp_label;   ///< Primary mixture fraction name for a coal table
-  std::string d_eta_label;  ///< Eta mixture fraction name for a coal table
-
-private:
+  std::string d_fp_label;                 /// < Primary mixture fraction name for a coal table
+  std::string d_eta_label;                /// < Eta mixture fraction name for a coal table
+  std::vector<string> d_allIndepVarNames; /// < Vector storing all independent variable names from table file
 
   /** @brief  Insert the name of a dependent variable into the dependent variable map (dvVarMap), which maps strings to VarLabels */
   inline void insertIntoMap( const string var_name ){
@@ -167,6 +178,8 @@ private:
     } 
     return; 
   };
+
+private:
 
 
 }; // end class MixingRxnModel
