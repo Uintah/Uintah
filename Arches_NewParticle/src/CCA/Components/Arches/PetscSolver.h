@@ -49,8 +49,6 @@ namespace Uintah {
 
 class ProcessorGroup;
 
-using namespace SCIRun;
-
 /**************************************
 CLASS
    PetscSolver
@@ -92,8 +90,6 @@ public:
 
   void problemSetup(const ProblemSpecP& params);
 
-  void finalizeSolver();
-
   virtual void matrixCreate(const PatchSet* allpatches,
                             const PatchSubset* mypatches);
                             
@@ -107,8 +103,8 @@ public:
   virtual bool pressLinearSolve();
   
   virtual void copyPressSoln(const Patch* patch, ArchesVariables* vars);
-  
-   virtual void destroyMatrix();
+ 
+  virtual void destroyMatrix();
 protected:
 
 private:
@@ -117,7 +113,6 @@ private:
   int d_overlap;
   int d_fill;
   int d_maxSweeps;
-  double d_convgTol; // convergence tolerence
   double d_residual;
   const ProcessorGroup* d_myworld;
   

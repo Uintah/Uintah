@@ -74,8 +74,9 @@ AC_INIT([Uintah],[1.25],[csafe-homebrew@cs.utah.edu])
 ##
 ##     Note, 2.63+ is actually the latest, but many machines don't have it, so
 ##     going to use 2.61 for now.
+##     On blaze you can find 2.67 in /usr/local/share/bin
 ##
-AC_PREREQ(2.61)
+AC_PREREQ(2.67)
 
 AC_COPYRIGHT(
 ##
@@ -969,21 +970,21 @@ fi
 BUILD_ARCHES=yes
 BUILD_ICE=yes
 BUILD_MPM=yes
-BUILD_RADIATION=yes
+BUILD_MODELS_RADIATION=yes
 BUILD_WASATCH=no
 DEF_ARCHES=""
 DEF_ICE=""
 DEF_MPM=""
-DEF_RADIATION=""
+DEF_MODELS_RADIATION=""
 DEF_WASATCH=""
 
 if test "$USE_ARCHES" = no; then BUILD_ARCHES=no; DEF_ARCHES="#define NO_ARCHES"; fi
 if test "$USE_ICE" = no; then BUILD_ICE=no; DEF_ICE="#define NO_ICE"; fi
 if test "$USE_MPM" = no; then BUILD_MPM=no; DEF_MPM="#define NO_MPM"; fi
-if test "$USE_RADIATION" = no; then BUILD_RADIATION=no; DEF_RADIATION="#define NO_RADIATION"; fi
+if test "$USE_MODELS_RADIATION" = no; then BUILD_MODELS_RADIATION=no; DEF_MODELS_RADIATION="#define NO_MODELS_RADIATION"; fi
 if test "$with_fortran" = no; then 
-            BUILD_ARCHES=no; BUILD_RADIATION=no;
-            DEF_RADIATION="#define NO_RADIATION"; DEF_ARCHES="#define NO_ARCHES";
+            BUILD_ARCHES=no;
+            DEF_ARCHES="#define NO_ARCHES";
             DEF_NO_FORTRAN="#define NO_FORTRAN";
             NO_FORTRAN="yes";
 fi
@@ -993,16 +994,16 @@ fi
 AC_SUBST(BUILD_ARCHES)
 AC_SUBST(BUILD_ICE)
 AC_SUBST(BUILD_MPM)
-AC_SUBST(BUILD_RADIATION)
+AC_SUBST(BUILD_MODELS_RADIATION)
 AC_SUBST(DEF_ARCHES)
 AC_SUBST(DEF_ICE)
 AC_SUBST(DEF_MPM)
 AC_SUBST(DEF_NO_FORTRAN)
-AC_SUBST(DEF_RADIATION)
+AC_SUBST(DEF_MODELS_RADIATION)
 AC_SUBST(DEF_WASATCH)
 AC_SUBST(NO_FORTRAN)
 
-if test "$BUILD_ARCHES" = no -a "$BUILD_RADIATION" = no; then
+if test "$BUILD_ARCHES" = no -a "$BUILD_MODELS_RADIATION" = no; then
   sci_required_fortran=no
 else
   if test "$with_fortran" != no; then

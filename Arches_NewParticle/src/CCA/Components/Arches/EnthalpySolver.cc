@@ -45,6 +45,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Arches/Radiation/RadiationModel.h>
 #include <CCA/Components/Arches/Radiation/DORadiationModel.h>
 #include <CCA/Components/Arches/Radiation/RadLinearSolver.h>
+#include <CCA/Components/Models/Radiation/RMCRT/Ray.h>
 #ifdef HAVE_HYPRE
 #include <CCA/Components/Arches/Radiation/RadHypreSolver.h>
 #endif
@@ -94,6 +95,7 @@ EnthalpySolver::EnthalpySolver(const ArchesLabel* label,
   d_radCalcFreq = 0; 
   d_DORadiationCalc = false;
   d_radiationCalc = false; 
+  d_doRMCRT = false; 
 
 }
 
@@ -106,6 +108,8 @@ EnthalpySolver::~EnthalpySolver()
   delete d_source;
   delete d_rhsSolver;
   delete d_DORadiation;
+  if ( d_doRMCRT ) 
+    delete d_RMCRT; 
   if(d_perproc_patches && d_perproc_patches->removeReference())
     delete d_perproc_patches;
 
@@ -121,6 +125,20 @@ EnthalpySolver::problemSetup(const ProblemSpecP& params)
   if (db->findBlock("DORadiationModel")) {
     d_DORadiationCalc = true;
     d_radiationCalc = true; 
+  }
+
+  if (db->findBlock("RMCRT")){
+    d_doRMCRT = true; 
+    ProblemSpecP rmcrt_db = db->findBlock("RMCRT"); 
+    d_RMCRT = scinew Ray(); 
+    int archIndex = 0;
+    d_RMCRT->registerVarLabels(d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(),
+                               d_lab->d_abskgINLabel,
+                               d_lab->d_absorpINLabel,
+                               d_lab->d_tempINLabel );
+    
+    d_RMCRT->problemSetup( rmcrt_db ); 
+
   }
 
   if (d_radiationCalc) {
@@ -274,6 +292,16 @@ EnthalpySolver::solve(const LevelP& level,
     src.sched_computeSource( level, sched, timeSubStep );
   }
 
+  // RMCRT Solve: 
+  if ( d_doRMCRT ) {
+    int sub_step = 0; 
+    if ( timelabels->integrator_step_number != TimeIntegratorStepNumber::First ) 
+      sub_step = 1; // at this point it is either zero or something greater than zero where this matters
+
+    d_RMCRT->sched_initProperties( level, sched, sub_step ); 
+    d_RMCRT->sched_rayTrace( level, sched );
+
+  }
 
   //computes stencil coefficients and source terms
   // requires : enthalpyIN, [u,v,w]VelocitySPBC, densityIN, viscosityIN
@@ -386,10 +414,13 @@ EnthalpySolver::sched_buildLinearMatrix(const LevelP& level,
 
   if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
       &&((!(d_EKTCorrection))||((d_EKTCorrection)&&(doing_EKT_now)))) {
+
     if (d_radiationCalc) {
+
       if (!d_DORadiationCalc){
         tsk->requires(Task::OldDW, d_lab->d_absorpINLabel, gn, 0);
       }
+
       if (d_DORadiationCalc) {
         tsk->requires(Task::OldDW, d_lab->d_radiationSRCINLabel,    gn, 0);
         tsk->requires(Task::OldDW, d_lab->d_radiationFluxEINLabel,  gn, 0);
@@ -406,12 +437,15 @@ EnthalpySolver::sched_buildLinearMatrix(const LevelP& level,
         */
       }
     } 
-  }
-  else {
+  } else {
+
     if (d_radiationCalc) {
+
       if (!d_DORadiationCalc)
         tsk->requires(Task::NewDW, d_lab->d_absorpINLabel, gn, 0);
+
     } 
+
   }
 
   if (d_MAlab && d_boundaryCondition->getIfCalcEnergyExchange()) {
@@ -436,8 +470,11 @@ EnthalpySolver::sched_buildLinearMatrix(const LevelP& level,
 
   if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
       &&((!(d_EKTCorrection))||((d_EKTCorrection)&&(doing_EKT_now)))) {
+
      if (d_radiationCalc) {
+
       if (d_DORadiationCalc) {
+
         tsk->computes(d_lab->d_abskgINLabel);
         tsk->computes(d_lab->d_radiationSRCINLabel);
         tsk->computes(d_lab->d_radiationFluxEINLabel);
@@ -448,6 +485,7 @@ EnthalpySolver::sched_buildLinearMatrix(const LevelP& level,
         tsk->computes(d_lab->d_radiationFluxBINLabel);
         //tsk->computes(d_lab->d_radiationVolqINLabel);
         tsk->modifies(d_lab->d_radiationVolqINLabel);
+
       }
     }
     // Adding new sources from factory:
@@ -460,8 +498,7 @@ EnthalpySolver::sched_buildLinearMatrix(const LevelP& level,
       tsk->requires(Task::NewDW, srcLabel, gn, 0); 
 
     }
-  }
-  else {
+  } else {
    if (d_radiationCalc) {
     if (d_DORadiationCalc) {
       tsk->modifies(d_lab->d_abskgINLabel);
@@ -474,6 +511,7 @@ EnthalpySolver::sched_buildLinearMatrix(const LevelP& level,
       tsk->modifies(d_lab->d_radiationFluxBINLabel);
       tsk->modifies(d_lab->d_radiationVolqINLabel);
     }
+
    }
    // Adding new sources from factory:
    SourceTermFactory& factory = SourceTermFactory::self(); 
@@ -741,8 +779,7 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
           new_dw->allocateAndPut(enthalpyVars.ABSKG, d_lab->d_abskgINLabel,indx, patch);
           old_dw->copyOut(enthalpyVars.ABSKG,        d_lab->d_abskgINLabel,indx, patch, gac, 1);
           */
-        }
-        else {
+        } else {
           new_dw->getModifiable(enthalpyVars.qfluxe, d_lab->d_radiationFluxEINLabel,indx, patch);
           new_dw->getModifiable(enthalpyVars.qfluxw, d_lab->d_radiationFluxWINLabel,indx, patch);
           new_dw->getModifiable(enthalpyVars.qfluxn, d_lab->d_radiationFluxNINLabel,indx, patch);

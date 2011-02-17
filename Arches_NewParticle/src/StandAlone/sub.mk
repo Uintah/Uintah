@@ -77,21 +77,18 @@ SRCS := $(SRCDIR)/sus.cc
 PROGRAM := StandAlone/sus
 
 ifeq ($(IS_STATIC_BUILD),yes)
+  # WARNING: THESE LIBRARIES ARE LISTED IN A SPECIFIC ORDER TO SATISFY
+  #          THE NEEDS OF STATIC LINKING.  DO NOT ALPHABETIZE THEM!
   PSELIBS := \
     CCA/Components/Parent               \
     CCA/Components/Solvers              \
     CCA/Components/DataArchiver         \
-    CCA/Components/Schedulers           \
     CCA/Components/SimulationController \
     CCA/Components/Regridder            \
     CCA/Components/LoadBalancers        \
     CCA/Components/SwitchingCriteria    \
     CCA/Components/Examples             \
     CCA/Components/Angio                \
-    CCA/Components/MPMICE               \
-    CCA/Components/ICE                  \
-    CCA/Components/MPM                  \
-    CCA/Components/OnTheFlyAnalysis     \
                                         \
     $(ARCHES_LIBS)                      \
     $(ARCHES_SUB_LIBS)                  \
@@ -101,6 +98,8 @@ ifeq ($(IS_STATIC_BUILD),yes)
     $(MPMICE_LIB)                       \
     $(WASATCH_LIB)                      \
                                         \
+    CCA/Components/Schedulers           \
+    CCA/Components/OnTheFlyAnalysis     \
     CCA/Components/Models               \
     CCA/Components/PatchCombiner        \
                                         \

@@ -216,6 +216,13 @@ public:
   inline const string getMixingModelType(){
     return mixModel; 
   }
+#if HAVE_TABPROPS
+  /** @brief  Return the TabProps interface object; this method is added 
+              as a kludge and will go away when Properties goes away */
+  inline MixingRxnModel* getMixRxnModel(){
+    return d_mixingRxnTable; 
+  }
+#endif
 
   //for the new table:
   void sched_reComputeProps_new( const LevelP&,
@@ -226,14 +233,8 @@ public:
 
   void sched_initEnthalpy( const LevelP&, SchedulerP& ); 
 
-#if HAVE_TABPROPS
-  /** @brief  Return the TabProps interface object; this method is added 
-              as a kludge and will go away when Properties goes away */
-  TabPropsInterface* getMixingRxnModel() {
-    return d_mixingRxnTable; }
-#endif
-
   void sched_doTPDummyInit( const LevelP&, SchedulerP& ); 
+
 
 protected :
 
@@ -338,9 +339,8 @@ private:
       IntVector d_denRef;
       
       MixingModel* d_mixingModel;
-      //MixingRxnTable* d_mixingRxnTable;
 #if HAVE_TABPROPS
-      TabPropsInterface* d_mixingRxnTable;
+      MixingRxnModel* d_mixingRxnTable;
 #endif
       BoundaryCondition* d_bc;
       bool d_empirical_soot;

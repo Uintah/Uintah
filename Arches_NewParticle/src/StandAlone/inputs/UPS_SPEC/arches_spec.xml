@@ -111,7 +111,7 @@
       </Turbulence>
 
       <Properties                       spec="REQUIRED NO_DATA"
-                                          children1="ONE_OF(CHILD ColdFlowMixingModel, NewStaticMixingTable, TabProps)" >
+                                          children1="ONE_OF(CHILD ColdFlowMixingModel, NewStaticMixingTable, TabProps, ClassicTable)" >
 
         <use_mixing_model               spec="REQUIRED BOOLEAN" /> 
         <empirical_soot                 spec="OPTIONAL BOOLEAN" />
@@ -129,6 +129,18 @@
             <temperature                spec="REQUIRED DOUBLE" />
           </Stream>
         </ColdFlowMixingModel>
+
+        <ColdFlow                       spec="OPTIONAL NO_DATA" >
+          <mixture_fraction_label       spec="REQUIRED STRING"/>
+          <Stream_1                     spec="MULTIPLE NO_DATA">
+            <density                    spec="REQUIRED DOUBLE 'positive'"/>
+            <temperature                spec="REQUIRED DOUBLE 'positive'"/>
+          </Stream_1>
+          <Stream_2                     spec="MULTIPLE NO_DATA">
+            <density                    spec="REQUIRED DOUBLE 'positive'"/>
+            <temperature                spec="REQUIRED DOUBLE 'positive'"/>
+          </Stream_2>
+        </ColdFlow>
 
         <NewStaticMixingTable           spec="OPTIONAL NO_DATA" >
           <co_output                    spec="OPTIONAL BOOLEAN" />
@@ -149,6 +161,13 @@
                                         attribute1="fp_label REQUIRED STRING"     
                                         attribute2="eta_label REQUIRED STRING"/> <!-- Attributes must match the transported IVs specified in the TransportEqn node --> 
         </TabProps>
+
+        <ClassicTable                   spec="OPTIONAL NO_DATA">
+          <inputfile                   spec="REQUIRED STRING"/>
+          <coal                         spec="OPTIONAL NO_DATA" 
+                                        attribute1="fp_label REQUIRED STRING"     
+                                        attribute2="eta_label REQUIRED STRING"/> <!-- Attributes must match the transported IVs specified in the TransportEqn node --> 
+        </ClassicTable>
 
         <emperical_soot               spec="OPTIONAL BOOLEAN" />
         <soot_factor                  spec="OPTIONAL DOUBLE '0,100'"/>
@@ -176,9 +195,7 @@
           </scalar>
         </ScalarEfficiency>
         <carbon_balance                 spec="OPTIONAL BOOLEAN" />
-        <carbon_balance_es              spec="OPTIONAL BOOLEAN" />
         <sulfur_balance                 spec="OPTIONAL BOOLEAN" />
-        <sulfur_balance_es              spec="OPTIONAL BOOLEAN" />
         <ramping_inlet_flowrate         spec="OPTIONAL BOOLEAN" />
         <FlowInlet                      spec="MULTIPLE NO_DATA" >
           <velocity_type                spec="OPTIONAL STRING 'flat, function, vector, file, geometry'"/>
@@ -208,7 +225,7 @@
         </FlowInlet>
 
         <intrusions                     spec="OPTIONAL NO_DATA" >
-          <geom_object />
+          <geom_object                  spec="MULTIPLE"/>
         </intrusions>
 
         <PressureBC                     spec="OPTIONAL NO_DATA" >
@@ -266,21 +283,6 @@
         <EKTCorrection                  spec="OPTIONAL BOOLEAN" /> 
         <scalarUnderflowCheck           spec="OPTIONAL BOOLEAN" /> 
         <extraProjection                spec="OPTIONAL BOOLEAN" /> 
-        <do_standalone_RMCRT            spec="OPTIONAL BOOLEAN" />
-        <RMCRTRadiationModel            spec="OPTIONAL NO_DATA" >
-            <opl                        spec="REQUIRED DOUBLE" />
-            <const_num_rays             spec="REQUIRED INTEGER 'positive'" />
-            <rr_threshold               spec="OPTIONAL DOUBLE" /> 
-            <property_model             spec="OPTIONAL STRING 'radcoef, patchmean, wsggm, fssk, fsck'" />
-            <sampling_scheme            spec="OPTIONAL STRING 'simple_sample, RRSD, RRSDstratified'" /> 
-              <RRSDstratified           spec="OPTIONAL NO_DATA" >
-                 <x_n                   spec="REQUIRED INTEGER 'positive'" />
-                 <y_n                   spec="REQUIRED INTEGER 'positive'" />
-                 <z_n                   spec="REQUIRED INTEGER 'positive'" />
-                 <theta_n               spec="REQUIRED INTEGER '1 30'" />
-                 <phi_n                 spec="REQUIRED INTEGER '1 30'"/>
-              </RRSDstratified>
-        </RMCRTRadiationModel>
         <EnthalpySolver                 spec="OPTIONAL NO_DATA" >
           <convection_scheme            spec="REQUIRED STRING 'central-upwind, flux_limited'" />
           <limiter_type                 spec="OPTIONAL STRING 'superbee, vanLeer, upwind, none'"/>
@@ -291,6 +293,9 @@
           <radCalcForAllImplicitSteps   spec="OPTIONAL BOOLEAN" />
           <src                          spec="MULTIPLE NO_DATA" 
                                         attribute1="label REQUIRED STRING"/>
+          
+          <include href="Models.xml"    section="Models/RMCRT" />
+          
           <DORadiationModel             spec="OPTIONAL NO_DATA" >
             <opl                        spec="REQUIRED DOUBLE" />
             <ordinates                  spec="OPTIONAL INTEGER" />

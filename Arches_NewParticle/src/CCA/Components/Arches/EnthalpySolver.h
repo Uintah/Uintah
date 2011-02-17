@@ -224,6 +224,9 @@ private:
   PhysicalConstants* d_physicalConsts;
   // radiation model
   RadiationModel* d_DORadiation;
+  // RMCRT radiation model 
+  Ray* d_RMCRT;
+
   int d_radCounter; //to decide how often radiation calc is done
   int d_radCalcFreq;
   bool d_radiationCalc;
@@ -244,6 +247,7 @@ private:
   int d_iteration_number;
   double d_H_air;
   bool d_doMMS;
+  bool d_doRMCRT; 
 
   vector<string> d_new_sources; 
 

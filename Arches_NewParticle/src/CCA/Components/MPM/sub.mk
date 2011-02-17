@@ -88,4 +88,8 @@ ifeq ($(HAVE_PETSC),yes)
   LIBS := $(LIBS) $(PETSC_LIBRARY) 
 endif
 
+ifneq ($(NO_FORTRAN),yes)
+  LIBS := $(LIBS) $(F_LIBRARY) 
+endif
+
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

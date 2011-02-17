@@ -33,6 +33,7 @@ DEALINGS IN THE SOFTWARE.
 #include <sci_defs/hypre_defs.h>
 
 #include <CCA/Components/Arches/PressureSolver.h>
+#include <CCA/Components/Arches/PetscCommon.h>
 #include <CCA/Components/Arches/ArchesLabel.h>
 #include <CCA/Components/Arches/ArchesMaterial.h>
 #include <CCA/Components/Arches/ArchesVariables.h>

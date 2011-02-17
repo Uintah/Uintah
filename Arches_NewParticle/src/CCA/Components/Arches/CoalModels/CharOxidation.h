@@ -19,6 +19,7 @@ namespace Uintah{
   *
   */
 
+class TabPropsInterface;
 class CharOxidation: public ModelBase {
 public: 
 

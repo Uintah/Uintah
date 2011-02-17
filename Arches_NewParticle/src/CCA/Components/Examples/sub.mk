@@ -35,34 +35,39 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := CCA/Components/Examples
 
 SRCS     += \
-	$(SRCDIR)/AMRWave.cc \
-	$(SRCDIR)/Wave.cc \
-	$(SRCDIR)/Poisson1.cc \
-	$(SRCDIR)/Poisson2.cc \
-	$(SRCDIR)/Poisson4.cc \
-	$(SRCDIR)/Burger.cc \
-	$(SRCDIR)/HeatEquation.cc \
-	$(SRCDIR)/Poisson3.cc \
+	$(SRCDIR)/AMRWave.cc       \
+	$(SRCDIR)/Wave.cc          \
+	$(SRCDIR)/Poisson1.cc      \
+	$(SRCDIR)/Poisson2.cc      \
+	$(SRCDIR)/Poisson4.cc      \
+	$(SRCDIR)/Burger.cc        \
+	$(SRCDIR)/HeatEquation.cc  \
+	$(SRCDIR)/Poisson3.cc      \
 	$(SRCDIR)/ParticleTest1.cc \
-	$(SRCDIR)/Interpolator.cc \
+	$(SRCDIR)/Interpolator.cc  \
 	$(SRCDIR)/ExamplesLabel.cc \
 	$(SRCDIR)/RegridderTest.cc \
-	$(SRCDIR)/SolverTest1.cc \
-	$(SRCDIR)/RegionDB.cc \
-	$(SRCDIR)/Benchmark.cc 		
+	$(SRCDIR)/SolverTest1.cc   \
+	$(SRCDIR)/RegionDB.cc      \
+	$(SRCDIR)/Benchmark.cc
+       
+ifeq ($(BUILD_MODELS_RADIATION),yes)
+  SRCS +=$(SRCDIR)/RMCRT_Test.cc	
+endif
 
 PSELIBS := \
-	Core/Geometry \
-	Core/Util \
-	Core/Exceptions                   \
-	CCA/Ports         \
-	Core/Grid         \
-	Core/Util         \
-	Core/ProblemSpec  \
-	Core/GeometryPiece  \
-	Core/Exceptions   \
-	Core/Disclosure   \
-	Core/Math         \
+       CCA/Components/Models \
+	CCA/Ports             \
+	Core/Geometry         \
+	Core/Util             \
+	Core/Exceptions       \
+	Core/Grid             \
+	Core/Util             \
+	Core/ProblemSpec      \
+	Core/GeometryPiece    \
+	Core/Exceptions       \
+	Core/Disclosure       \
+	Core/Math             \
 	Core/Parallel
 
 LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)

@@ -17,6 +17,8 @@
 #include <CCA/Components/Arches/CoalModels/ConstantDensityInert.h>
 #include <CCA/Components/Arches/CoalModels/CharOxidation.h> 
 #include <CCA/Components/Arches/CoalModels/GlobalCharOxidation.h> 
+#include <CCA/Components/Arches/ChemMix/MixingRxnModel.h>
+#include <CCA/Components/Arches/ChemMix/TabPropsInterface.h>
 #include <CCA/Components/Arches/ArchesLabel.h>
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Exceptions/ProblemSetupException.h>
@@ -401,7 +403,12 @@ CoalModelFactory::register_model( const std::string name,
   if( modelType == "CharOxidation" ) {
     d_useCharOxidationModel = true;
     CharOxidation* char_model = dynamic_cast<CharOxidation*>(model);
-    char_model->setTabPropsInterface( d_TabPropsInterface );
+    TabPropsInterface* interface = dynamic_cast<TabPropsInterface*>(d_MixingRxnModel);
+    if( interface == 0 ) {
+      throw InvalidValue("ERROR: Arches: CoalModelFactory: Cannot register CharOxidation model.  You must be using a TabProps mixing-reaction model if you are using a char oxidation model. This is to ensure the char oxidation model can request the species it needs.\n",__FILE__,__LINE__);
+    } else {
+      char_model->setTabPropsInterface( interface );
+    }
   }
 }
 

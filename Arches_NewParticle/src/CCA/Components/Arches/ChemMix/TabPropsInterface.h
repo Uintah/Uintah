@@ -34,11 +34,8 @@ DEALINGS IN THE SOFTWARE.
 #define Uintah_Component_Arches_TabPropsInterface_h
 
 #include <tabprops/StateTable.h>
-#include <CCA/Components/Arches/Mixing/InletStream.h>
-#include <CCA/Components/Arches/Mixing/Stream.h>
 #include <CCA/Components/Arches/ArchesMaterial.h>
 #include <CCA/Components/Arches/TimeIntegratorLabel.h>
-#include <Core/Util/DebugStream.h>
 
 
 /**
@@ -85,9 +82,6 @@ The UPS interface for TabProps is:
 
 
 namespace Uintah {
-
-// setenv SCI_DEBUG TABLE_DEBUG:+ 
-static DebugStream cout_tabledbg("TABLE_DEBUG",false);
 
 class ArchesLabel; 
 class MPMArchesLabel; 

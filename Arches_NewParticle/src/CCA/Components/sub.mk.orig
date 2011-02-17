@@ -40,17 +40,24 @@ ADIR = $(SRCDIR)/Arches
 # do not modify...
 #
 
+ifeq ($(BUILD_WASATCH),yes)
+  WASATCH := $(SRCDIR)/Wasatch
+endif
+
 ifeq ($(BUILD_MPM),yes)
-  MPM         := $(SRCDIR)/MPM
+  MPM      := $(SRCDIR)/MPM
   ifeq ($(BUILD_ICE),yes)
-    MPMICE    := $(SRCDIR)/MPMICE
+    MPMICE := $(SRCDIR)/MPMICE
   endif
 endif
 ifeq ($(BUILD_ICE),yes)
-  ICE         := $(SRCDIR)/ICE
+  ICE      := $(SRCDIR)/ICE
 endif
 ifeq ($(BUILD_ARCHES),yes)
-  ARCHES      := $(SRCDIR)/Arches $(ADIR)/TabProps $(ADIR)/fortran $(ADIR)/Mixing $(ADIR)/Radiation $(ADIR)/Radiation/fortran $(ADIR)/MCRT/ArchesRMCRT
+  ARCHES   := $(SRCDIR)/Arches \
+	      $(ADIR)/fortran           $(ADIR)/Mixing \
+	      $(ADIR)/Radiation        $(ADIR)/Radiation/fortran $(ADIR)/MCRT/ArchesRMCRT \
+              $(SRCDIR)/SpatialOps 
   ifeq ($(BUILD_MPM),yes)
     MPMARCHES := $(SRCDIR)/MPMArches
   endif
@@ -69,8 +76,8 @@ SUBDIRS := \
         $(MPMICE)         \
         $(ARCHES)         \
         $(MPMARCHES)      \
+        $(WASATCH)        \
         $(SRCDIR)/Angio   \
-        $(SRCDIR)/SpatialOps   \
         $(SRCDIR)/ProblemSpecification \
         $(SRCDIR)/PatchCombiner \
         $(SRCDIR)/Solvers \

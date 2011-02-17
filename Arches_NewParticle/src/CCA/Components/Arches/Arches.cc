@@ -80,6 +80,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Variables/VarTypes.h>
+#include <Core/Grid/DbgOutput.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Parallel/Parallel.h>
 
@@ -96,6 +97,9 @@ using namespace Uintah;
 #ifdef PetscFilter
 #include <CCA/Components/Arches/Filter.h>
 #endif
+
+
+static DebugStream dbg("ARCHES", false);
 
 const int Arches::NDIM = 3;
 
@@ -133,6 +137,7 @@ Arches::Arches(const ProcessorGroup* myworld) :
   dqmomfactory.set_quad_nodes(0);
   d_doDQMOM = false; 
   d_doMMS = false;
+  d_myworld = myworld;
   
 }
 
@@ -400,7 +405,7 @@ Arches::problemSetup(const ProblemSpecP& params,
   
   d_props->problemSetup(db);
 
-  coalFactory.setTabPropsInterface( d_props->getMixingRxnModel() );
+  coalFactory.setMixingRxnModel( d_props->getMixRxnModel() );
 
   // TODO
   // Looping over all <DQMOM> blocks will require changing DQMOMEqnFactory
@@ -671,7 +676,7 @@ Arches::scheduleInitialize(const LevelP& level,
 
   // Table Lookup 
   string mixmodel = d_props->getMixingModelType(); 
-  if ( mixmodel != "TabProps") {
+  if ( mixmodel != "TabProps" && mixmodel != "ClassicTable") {
     d_props->sched_reComputeProps(sched, patches, matls,
                                 init_timelabel, true, true, false,false);
   } else {
@@ -758,6 +763,8 @@ Arches::sched_paramInit(const LevelP& level,
     // primitive variable initialization
     Task* tsk = scinew Task( "Arches::paramInit",
                        this, &Arches::paramInit);
+
+    printSchedule(level,dbg,"Arches::paramInit");
 
     tsk->computes(d_lab->d_cellInfoLabel);
     tsk->computes(d_lab->d_uVelocitySPBCLabel);
@@ -1139,7 +1146,9 @@ Arches::scheduleComputeStableTimestep(const LevelP& level,
   // primitive variable initialization
   Task* tsk = scinew Task( "Arches::computeStableTimeStep",this, 
                            &Arches::computeStableTimeStep);
-  
+                           
+  printSchedule(level,dbg, "Arches::computeStableTimeStep");
+ 
   Ghost::GhostType  gac = Ghost::AroundCells;
   Ghost::GhostType  gaf = Ghost::AroundFaces;
   Ghost::GhostType  gn = Ghost::None;
@@ -1458,6 +1467,9 @@ Arches::sched_readCCInitialCondition(const LevelP& level,
     // primitive variable initialization
     Task* tsk = scinew Task( "Arches::readCCInitialCondition",
                             this, &Arches::readCCInitialCondition);
+
+    printSchedule(level,dbg,"Arches::readCCInitialCondition");
+                            
     tsk->modifies(d_lab->d_newCCUVelocityLabel);
     tsk->modifies(d_lab->d_newCCVVelocityLabel);
     tsk->modifies(d_lab->d_newCCWVelocityLabel);
@@ -1542,6 +1554,9 @@ Arches::sched_mmsInitialCondition(const LevelP& level,
   // primitive variable initialization
   Task* tsk = scinew Task( "Arches::mmsInitialCondition",
                           this, &Arches::mmsInitialCondition);
+                          
+  printSchedule(level,dbg,"Arches::mmsInitialCondition");
+                          
   tsk->modifies(d_lab->d_uVelocitySPBCLabel);
   tsk->modifies(d_lab->d_vVelocitySPBCLabel);
   tsk->modifies(d_lab->d_wVelocitySPBCLabel);
@@ -1672,6 +1687,9 @@ Arches::sched_interpInitialConditionToStaggeredGrid(const LevelP& level,
   // primitive variable initialization
   Task* tsk = scinew Task( "Arches::interpInitialConditionToStaggeredGrid",
                      this, &Arches::interpInitialConditionToStaggeredGrid);
+                     
+  printSchedule(level,dbg,"Arches::interpInitialConditionToStaggeredGrid");
+                       
   Ghost::GhostType  gac = Ghost::AroundCells;   
                       
   tsk->requires(Task::NewDW, d_lab->d_newCCUVelocityLabel, gac, 1);
@@ -1743,6 +1761,8 @@ Arches::sched_getCCVelocities(const LevelP& level, SchedulerP& sched)
 {
   Task* tsk = scinew Task("Arches::getCCVelocities", this, 
                           &Arches::getCCVelocities);
+                          
+  printSchedule(level,dbg,"Arches::getCCVelocities");
                           
   Ghost::GhostType  gaf = Ghost::AroundFaces;
   tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel, gaf, 1);
