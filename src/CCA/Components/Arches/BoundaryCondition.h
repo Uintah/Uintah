@@ -38,6 +38,7 @@
 #include <Core/Grid/Variables/CCVariable.h>
 #include <CCA/Components/Arches/Mixing/Stream.h>
 #include <CCA/Components/Arches/Mixing/InletStream.h>
+#include <Core/Exceptions/InvalidValue.h>
 
 #include <Core/Grid/Variables/SFCXVariable.h>
 #include <Core/Grid/Variables/SFCYVariable.h>
@@ -1178,6 +1179,9 @@ namespace Uintah {
         break; 
       case Patch::zplus: 
         the_norm = 2; 
+        break; 
+      default : 
+        throw InvalidValue("In BoundaryCondition::getNormal, face not recognized.", __FILE__, __LINE__);
         break; 
     }
     return the_norm; 

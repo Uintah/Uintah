@@ -5107,9 +5107,7 @@ BoundaryCondition::getScalarEfficiency(const ProcessorGroup*,
     double totalEnthalpyFlowRate = 0.0;
     double scalarEfficiency = 0.0;
     double carbonEfficiency = 0.0;
-    double carbonEfficiencyES = 0.0;
     double sulfurEfficiency = 0.0;
-    double sulfurEfficiencyES = 0.0;
     double enthalpyEfficiency = 0.0;
     double totalRadSrc = 0.0;
     double normTotalRadSrc = 0.0;
