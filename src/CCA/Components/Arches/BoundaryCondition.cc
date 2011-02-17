@@ -6789,6 +6789,7 @@ BoundaryCondition::sched_setInitProfile__NEW(SchedulerP& sched,
                                        const PatchSet* patches,
                                        const MaterialSet* matls)
 {
+#if HAVE_TABPROPS
   // cell type initialization
   Task* tsk = scinew Task("BoundaryCondition::setInitProfile__NEW",
                           this, &BoundaryCondition::setInitProfile__NEW);
@@ -6819,6 +6820,7 @@ BoundaryCondition::sched_setInitProfile__NEW(SchedulerP& sched,
   }
 
   sched->addTask(tsk, patches, matls);
+#endif 
 }
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void 
@@ -6828,6 +6830,7 @@ BoundaryCondition::setInitProfile__NEW(const ProcessorGroup*,
                                 DataWarehouse*,
                                 DataWarehouse* new_dw)
 {
+#if HAVE_TABPROPS
   for (int p = 0; p < patches->size(); p++) {
 
     const Patch* patch = patches->get(p);
@@ -6919,12 +6922,14 @@ BoundaryCondition::setInitProfile__NEW(const ProcessorGroup*,
     wRhoHat.copyData( wVelocity ); 
 
   }
+#endif
 }
 
 void BoundaryCondition::setEnthalpy__NEW( const Patch* patch, const Patch::FaceType& face, 
     CCVariable<double>& enthalpy, BoundaryCondition::HelperMap ivGridVarMap, BoundaryCondition::HelperVec allIndepVarNames, 
     Iterator bound_ptr)
 {
+#if HAVE_TABPROPS
   //get the face direction
   IntVector insideCellDir = patch->faceDirection(face);
   MixingRxnModel* mixingTable = d_props->getMixRxnModel(); 
@@ -6955,6 +6960,7 @@ void BoundaryCondition::setEnthalpy__NEW( const Patch* patch, const Patch::FaceT
     enthalpy[c] = h_a - hl * h_s;
 
   }
+#endif
 }
 
 void BoundaryCondition::setEnthalpyFromInput__NEW( const Patch* patch, const Patch::FaceType& face, 
