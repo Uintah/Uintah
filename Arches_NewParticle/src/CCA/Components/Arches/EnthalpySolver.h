@@ -88,6 +88,7 @@ namespace Uintah {
   class BoundaryCondition;
   class RHSSolver;
   class RadiationModel;
+  class Ray; 
   class TimeIntegratorLabel;
 
 class EnthalpySolver {
