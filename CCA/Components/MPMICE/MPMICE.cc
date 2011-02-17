@@ -1957,8 +1957,9 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
      // If the pressure solution has stalled out 
      //  then try a binary search
      if(count >= d_ice->d_max_iter_equilibration) {
+        int lev = patch->getLevel()->getIndex();
         cout << "WARNING:MPMICE:ComputeEquilibrationPressure "
-             << " Cell : " << c << " having a difficutlt time converging. \n"
+             << " Cell : " << c << " on level " << lev << " having a difficult time converging. \n"
              << " Now performing a binary pressure search " << endl;
              
         binaryPressureSearch( Temp, rho_micro, vol_frac, rho_CC_new,
