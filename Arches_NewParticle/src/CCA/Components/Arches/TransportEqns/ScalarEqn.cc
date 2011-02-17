@@ -529,8 +529,12 @@ ScalarEqn::solveTransportEqn( const ProcessorGroup* pc,
 
     //----COPY averaged phi into oldphi
     if( copyOldIntoNew ) {
+      /*
+      // Commenting out, as per Jeremy's suggestion
+
       // this is NOT the last time substep
       phi_at_j.copyData(phi_at_jp1); 
+      */
 
     } else {
       // this IS the last time substep

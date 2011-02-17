@@ -704,8 +704,12 @@ DQMOMEqn::solveTransportEqn( const ProcessorGroup* pc,
 
     // copy averaged phi into oldphi, unless it's the last time substep (in which case we need info for time substep jp1 and j)
     if( copyOldIntoNew ) {
+      /*
+      // Commenting out, as per Jeremy's suggestion
+
       // This is NOT the last time substep
       phi_at_j.copyData(phi_at_jp1); 
+      */
 
     } else {
       // this IS the last time sub-step

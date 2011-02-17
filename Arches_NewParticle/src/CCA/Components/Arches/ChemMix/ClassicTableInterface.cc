@@ -1,0 +1,1408 @@
+/*
+
+   The MIT License
+
+   Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+   Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
+   University of Utah.
+
+   License for the specific language governing rights and limitations under
+   Permission is hereby granted, free of charge, to any person obtaining a 
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation 
+   the rights to use, copy, modify, merge, publish, distribute, sublicense, 
+   and/or sell copies of the Software, and to permit persons to whom the 
+   Software is furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included 
+   in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS 
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL 
+   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
+   DEALINGS IN THE SOFTWARE.
+
+*/
+
+
+//----- ClassicTableInterface.cc --------------------------------------------------
+
+// includes for Arches
+#include <CCA/Components/Arches/ChemMix/MixingRxnModel.h>
+#include <CCA/Components/Arches/ChemMix/ClassicTableInterface.h>
+#include <CCA/Components/Arches/TransportEqns/EqnFactory.h>
+#include <CCA/Components/Arches/TransportEqns/EqnBase.h>
+#include <CCA/Components/Arches/PropertyModels/PropertyModelBase.h>
+#include <CCA/Components/Arches/PropertyModels/PropertyModelFactory.h>
+
+// includes for Uintah
+#include <CCA/Ports/Scheduler.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/Variables/VarTypes.h>
+#include <Core/Exceptions/InvalidValue.h>
+#include <Core/Parallel/Parallel.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/Parallel/Parallel.h>
+#include <Core/IO/UintahZlibUtil.h>
+
+
+using namespace std;
+using namespace Uintah;
+
+//--------------------------------------------------------------------------- 
+// Default Constructor 
+//--------------------------------------------------------------------------- 
+ClassicTableInterface::ClassicTableInterface( const ArchesLabel* labels, const MPMArchesLabel* MAlabels ) :
+  MixingRxnModel( labels, MAlabels )
+{}
+
+//--------------------------------------------------------------------------- 
+// Default Destructor
+//--------------------------------------------------------------------------- 
+ClassicTableInterface::~ClassicTableInterface()
+{}
+
+//--------------------------------------------------------------------------- 
+// Problem Setup
+//--------------------------------------------------------------------------- 
+  void
+ClassicTableInterface::problemSetup( const ProblemSpecP& propertiesParameters )
+{
+  // Create sub-ProblemSpecP object
+  string tableFileName;
+  ProblemSpecP db_tabprops = propertiesParameters->findBlock("ClassicTable");
+  ProblemSpecP db_properties_root = propertiesParameters; 
+
+  // Obtain object parameters
+  db_tabprops->require( "inputfile", tableFileName );
+  db_tabprops->getWithDefault( "hl_scalar_init", d_hl_scalar_init, 0.0); 
+  db_tabprops->getWithDefault( "cold_flow", d_coldflow, false); 
+  db_properties_root->getWithDefault( "use_mixing_model", d_use_mixing_model, false ); 
+
+  // only solve for heat loss if a working radiation model is found
+  const ProblemSpecP params_root = db_tabprops->getRootNode();
+  ProblemSpecP db_enthalpy  =  params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ExplicitSolver")->findBlock("EnthalpySolver");
+  if (db_enthalpy) { 
+    ProblemSpecP db_radiation = params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ExplicitSolver")->findBlock("EnthalpySolver")->findBlock("DORadiationModel");
+    d_adiabatic = true; 
+    if (db_radiation) { 
+      proc0cout << "Found a working radiation model -- will implement case with heat loss" << endl;
+      d_adiabatic = false; 
+    } else { 
+      proc0cout << "No working radiation model found -- will NOT implement case with heat loss" << endl;
+      d_adiabatic = true; 
+    }
+  } else {
+    d_adiabatic = true; 
+  }
+
+  d_coal_table = false; 
+  if ( db_tabprops->findBlock("coal") ) { 
+    d_coal_table = true; 
+    db_tabprops->findBlock("coal")->getAttribute("fp_label",d_fp_label);
+    db_tabprops->findBlock("coal")->getAttribute("eta_label",d_eta_label); 
+  }
+
+  // need the reference denisty point: (also in PhysicalPropteries object but this was easier than passing it around)
+  const ProblemSpecP db_root = db_tabprops->getRootNode(); 
+  db_root->findBlock("PhysicalConstants")->require("reference_point", d_ijk_den_ref);  
+
+  // READ TABLE: 
+  cout << "----------Mixing Table Information---------------  " << endl;
+  loadMixingTable( tableFileName );
+  cout << "-------------------------------------------------  " << endl;
+
+  // Extract independent and dependent variables from input file
+  ProblemSpecP db_rootnode = propertiesParameters;
+  db_rootnode = db_rootnode->getRootNode();
+
+  proc0cout << endl;
+  proc0cout << "--- Classic Arches table information --- " << endl;
+  proc0cout << endl;
+
+  // This sets the table lookup variables and saves them in a map
+  // Map<string name, Label>
+  setMixDVMap( db_rootnode ); 
+
+  proc0cout << "  Now matching user-defined IV's with table IV's" << endl;
+  proc0cout << "     Note: If sus crashes here, check to make sure your" << endl;
+  proc0cout << "           <TransportEqns><eqn> names match those in the table. " << endl;
+
+  cout_tabledbg << " Creating the independent variable map " << endl;
+
+  for ( unsigned int i = 0; i < d_allIndepVarNames.size(); ++i ){
+
+    //put the right labels in the label map
+    string varName = d_allIndepVarNames[i];  
+
+    // !! need to add support for variance !!
+    if (varName == "heat_loss" || varName == "HeatLoss") {
+
+      cout_tabledbg << " Heat loss being inserted into the indep. var map. " << endl;
+
+      d_ivVarMap.insert(make_pair(varName, d_lab->d_heatLossLabel)).first; 
+
+    } else if ( varName == "scalar_variance" || varName == "MixtureFractionVariance" ) {
+
+      cout_tabledbg << " Scalar variance being inserted into the indep. var map. " << endl;
+
+      d_ivVarMap.insert(make_pair(varName, d_lab->d_normalizedScalarVarLabel)).first; 
+
+    } else if ( varName == "DissipationRate") {
+
+      cout_tabledbg << " Scalar dissipation rate being inserted into the indep. var map. " << endl;
+
+      // dissipation rate comes from a property model 
+      PropertyModelFactory& prop_factory = PropertyModelFactory::self(); 
+      PropertyModelBase& prop = prop_factory.retrieve_property_model( "scalar_dissipation_rate");
+      d_ivVarMap.insert( make_pair( varName, prop.getPropLabel()) ).first; 
+
+    } else {
+
+      cout_tabledbg << " Variable: " << varName << " being inserted into the indep. var map"<< endl; 
+
+      // then it must be a mixture fraction 
+      EqnFactory& eqn_factory = EqnFactory::self();
+      EqnBase& eqn = eqn_factory.retrieve_scalar_eqn( varName );
+      d_ivVarMap.insert(make_pair(varName, eqn.getTransportEqnLabel())).first; 
+
+    }
+  }
+
+  proc0cout << "  Matching sucessful!" << endl;
+  proc0cout << endl;
+
+  // Confirm that table has been loaded into memory
+  d_table_isloaded = true;
+
+  // Match the requested dependent variables with their table index:
+  getIndexInfo(); 
+  getEnthalpyIndexInfo();
+
+  proc0cout << "--- End Classic Arches table information --- " << endl;
+  proc0cout << endl;
+}
+
+//--------------------------------------------------------------------------- 
+// schedule get State
+//--------------------------------------------------------------------------- 
+  void 
+ClassicTableInterface::sched_getState( const LevelP& level, 
+    SchedulerP& sched, 
+    const TimeIntegratorLabel* time_labels, 
+    const bool initialize_me,
+    const bool with_energy_exch, 
+    const bool modify_ref_den )
+
+{
+  string taskname = "ClassicTableInterface::getState"; 
+  Ghost::GhostType  gn = Ghost::None;
+
+  Task* tsk = scinew Task(taskname, this, &ClassicTableInterface::getState, time_labels, initialize_me, with_energy_exch, modify_ref_den );
+
+  // independent variables :: these must have been computed previously 
+  for ( MixingRxnModel::VarMap::iterator i = d_ivVarMap.begin(); i != d_ivVarMap.end(); ++i ) {
+
+    tsk->requires( Task::NewDW, i->second, gn, 0 ); 
+
+  }
+
+  // dependent variables
+  if ( initialize_me ) {
+
+    for ( MixingRxnModel::VarMap::iterator i = d_dvVarMap.begin(); i != d_dvVarMap.end(); ++i ) {
+      tsk->computes( i->second ); 
+    }
+
+    tsk->computes( d_lab->d_drhodfCPLabel ); // I don't think this is used anywhere...maybe in coldflow? 
+    if (!d_coldflow) { 
+      // other dependent vars:
+      tsk->computes( d_lab->d_tempINLabel ); // lame ... fix me
+      tsk->computes( d_lab->d_cpINLabel ); 
+      tsk->computes( d_lab->d_co2INLabel ); 
+      tsk->computes( d_lab->d_h2oINLabel ); 
+      tsk->computes( d_lab->d_sootFVINLabel ); 
+    }
+
+    if (d_MAlab)
+      tsk->computes( d_lab->d_densityMicroLabel ); 
+
+  } else {
+
+    for ( MixingRxnModel::VarMap::iterator i = d_dvVarMap.begin(); i != d_dvVarMap.end(); ++i ) {
+      tsk->modifies( i->second ); 
+    }
+
+    tsk->modifies( d_lab->d_drhodfCPLabel ); // I don't think this is used anywhere...maybe in coldflow? 
+    if (!d_coldflow) { 
+      // other dependent vars:
+      tsk->modifies( d_lab->d_tempINLabel );     // lame .... fix me
+      tsk->modifies( d_lab->d_cpINLabel ); 
+      tsk->modifies( d_lab->d_co2INLabel ); 
+      tsk->modifies( d_lab->d_h2oINLabel ); 
+      tsk->modifies( d_lab->d_sootFVINLabel ); 
+    }
+
+    if (d_MAlab)
+      tsk->modifies( d_lab->d_densityMicroLabel ); 
+
+  }
+
+  // other variables 
+  tsk->modifies( d_lab->d_densityCPLabel );  // lame .... fix me
+  if ( modify_ref_den )
+    tsk->computes(time_labels->ref_density); 
+
+
+  sched->addTask( tsk, level->eachPatch(), d_lab->d_sharedState->allArchesMaterials() ); 
+}
+
+//--------------------------------------------------------------------------- 
+// get State
+//--------------------------------------------------------------------------- 
+  void 
+ClassicTableInterface::getState( const ProcessorGroup* pc, 
+    const PatchSubset* patches, 
+    const MaterialSubset* matls, 
+    DataWarehouse* old_dw, 
+    DataWarehouse* new_dw, 
+    const TimeIntegratorLabel* time_labels, 
+    const bool initialize_me, 
+    const bool with_energy_exch, 
+    const bool modify_ref_den )
+{
+  for (int p=0; p < patches->size(); p++){
+
+    Ghost::GhostType gn = Ghost::None; 
+    const Patch* patch = patches->get(p); 
+    int archIndex = 0; 
+    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+
+    //independent variables:
+    std::vector<constCCVariable<double> > indep_storage; 
+
+    int coal_fp_index  = -1; 
+    int coal_eta_index = -1; 
+
+    for ( int i = 0; i < (int) d_allIndepVarNames.size(); i++ ){
+
+      VarMap::iterator ivar = d_ivVarMap.find( d_allIndepVarNames[i] ); 
+
+      constCCVariable<double> the_var; 
+      new_dw->get( the_var, ivar->second, matlIndex, patch, gn, 0 );
+      indep_storage.push_back( the_var ); 
+
+      if (d_coal_table) {
+        if ( d_allIndepVarNames[i] == d_fp_label )
+          coal_fp_index = i;
+        if ( d_allIndepVarNames[i] == d_eta_label ) 
+          coal_eta_index = i; 
+      }
+    }
+
+    if ( d_coal_table && coal_fp_index == -1 ) {
+
+      proc0cout << "Could not match PRIMARY mixture fraction label to table variables!" << endl;
+      throw InvalidValue("Error: Please make sure that the label attribute for the coal node child of <TabProps> matches a <TransportEqn> label.", __FILE__, __LINE__);  
+
+    }
+    if ( d_coal_table && coal_eta_index == -1 ) {
+
+      proc0cout << "Could not match ETA mixture fraction label to table variables!" << endl;
+      throw InvalidValue("Error: Please make sure that the label attribute for the coal node child of <TabProps> matches a <TransportEqn> label.", __FILE__, __LINE__);  
+
+    }
+
+    // dependent variables:
+    CCVariable<double> arches_temperature; 
+    CCVariable<double> arches_cp; 
+    CCVariable<double> arches_co2; 
+    CCVariable<double> arches_h2o; 
+    CCVariable<double> arches_soot; 
+    CCVariable<double> mpmarches_denmicro; 
+
+    DepVarMap depend_storage; 
+    if ( initialize_me ) {
+
+      for ( VarMap::iterator i = d_dvVarMap.begin(); i != d_dvVarMap.end(); ++i ){
+
+        DepVarCont storage;
+
+        storage.var = new CCVariable<double>; 
+        new_dw->allocateAndPut( *storage.var, i->second, matlIndex, patch ); 
+        (*storage.var).initialize(0.0);
+
+        IndexMap::iterator i_index = d_depVarIndexMap.find( i->first ); 
+        storage.index = i_index->second; 
+
+        depend_storage.insert( make_pair( i->first, storage )).first; 
+
+      }
+
+      // others: 
+      CCVariable<double> drho_df; 
+
+      new_dw->allocateAndPut( drho_df, d_lab->d_drhodfCPLabel, matlIndex, patch ); 
+      if (!d_coldflow) { 
+        new_dw->allocateAndPut( arches_temperature, d_lab->d_tempINLabel, matlIndex, patch ); 
+        new_dw->allocateAndPut( arches_cp, d_lab->d_cpINLabel, matlIndex, patch ); 
+        new_dw->allocateAndPut( arches_co2, d_lab->d_co2INLabel, matlIndex, patch ); 
+        new_dw->allocateAndPut( arches_h2o, d_lab->d_h2oINLabel, matlIndex, patch ); 
+        new_dw->allocateAndPut( arches_soot, d_lab->d_sootFVINLabel, matlIndex, patch ); 
+      }
+      if (d_MAlab) {
+        new_dw->allocateAndPut( mpmarches_denmicro, d_lab->d_densityMicroLabel, matlIndex, patch ); 
+        mpmarches_denmicro.initialize(0.0);
+      }
+
+      drho_df.initialize(0.0);  // this variable might not be actually used anywhere and may just be polution  
+      if ( !d_coldflow ) { 
+        arches_temperature.initialize(0.0); 
+        arches_cp.initialize(0.0); 
+        arches_co2.initialize(0.0); 
+        arches_h2o.initialize(0.0);
+        arches_soot.initialize(0.0); 
+      }
+
+    } else { 
+
+      for ( VarMap::iterator i = d_dvVarMap.begin(); i != d_dvVarMap.end(); ++i ){
+
+        DepVarCont storage;
+
+        storage.var = new CCVariable<double>; 
+        new_dw->getModifiable( *storage.var, i->second, matlIndex, patch ); 
+
+        IndexMap::iterator i_index = d_depVarIndexMap.find( i->first ); 
+        storage.index = i_index->second; 
+
+        depend_storage.insert( make_pair( i->first, storage )).first; 
+
+      }
+
+      // others:
+      CCVariable<double> drho_dw; 
+      new_dw->getModifiable( drho_dw, d_lab->d_drhodfCPLabel, matlIndex, patch ); 
+      if (!d_coldflow) { 
+        new_dw->getModifiable( arches_temperature, d_lab->d_tempINLabel, matlIndex, patch ); 
+        new_dw->getModifiable( arches_cp, d_lab->d_cpINLabel, matlIndex, patch ); 
+        new_dw->getModifiable( arches_co2, d_lab->d_co2INLabel, matlIndex, patch ); 
+        new_dw->getModifiable( arches_h2o, d_lab->d_h2oINLabel, matlIndex, patch ); 
+        new_dw->getModifiable( arches_soot, d_lab->d_sootFVINLabel, matlIndex, patch ); 
+      }
+      if (d_MAlab) 
+        new_dw->getModifiable( mpmarches_denmicro, d_lab->d_densityMicroLabel, matlIndex, patch ); 
+    }
+
+    CCVariable<double> arches_density; 
+    new_dw->getModifiable( arches_density, d_lab->d_densityCPLabel, matlIndex, patch ); 
+
+    // Go through the patch and populate the requested state variables
+    for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
+
+      IntVector c = *iter; 
+
+      // fill independent variables
+      std::vector<double> iv; 
+      for ( std::vector<constCCVariable<double> >::iterator i = indep_storage.begin(); i != indep_storage.end(); ++i ) {
+        iv.push_back( (*i)[c] );
+      }
+
+      if ( d_coal_table ) { 
+
+        // we transport f_p and eta for coal
+        // need to compute f_p and pass that rather than f 
+        // here we replace the value of f_p with the derived f
+        // please see the white coal book for questions
+
+        double f = 0.0; 
+
+        if ( iv[coal_eta_index] < 1.0 ) {
+
+          f = iv[coal_fp_index] / ( 1.0 - iv[coal_eta_index] ); 
+
+          if ( f < 0.0 )
+            f = 0.0;
+          if ( f > 1.0 )
+            f = 1.0; 
+
+        } else { 
+
+          f = 0.0; 
+
+        }
+
+        iv[coal_fp_index] = f;
+
+      }
+
+      // retrieve all depenedent variables from table
+      for ( DepVarMap::iterator i = depend_storage.begin(); i != depend_storage.end(); ++i ){
+
+        double table_value = tableLookUp( iv, i->second.index ); 
+        (*i->second.var)[c] = table_value;
+
+        if (i->first == "density") {
+          arches_density[c] = table_value; 
+          if (d_MAlab)
+            mpmarches_denmicro[c] = table_value; 
+        } else if (i->first == "temperature" && !d_coldflow) {
+          arches_temperature[c] = table_value; 
+          //} else if (i->first == "heat_capacity" && !d_coldflow) {
+      } else if (i->first == "specificheat" && !d_coldflow) {
+        arches_cp[c] = table_value; 
+      } else if (i->first == "CO2" && !d_coldflow) {
+        arches_co2[c] = table_value; 
+      } else if (i->first == "H2O" && !d_coldflow) {
+        arches_h2o[c] = table_value; 
+      }
+
+      }
+    }
+
+    // set boundary property values: 
+    vector<Patch::FaceType> bf;
+    vector<Patch::FaceType>::const_iterator bf_iter;
+    patch->getBoundaryFaces(bf);
+
+    // Loop over all boundary faces on this patch
+    for (bf_iter = bf.begin(); bf_iter != bf.end(); bf_iter++){
+
+      Patch::FaceType face = *bf_iter; 
+      IntVector insideCellDir = patch->faceDirection(face);
+
+      int numChildren = patch->getBCDataArray(face)->getNumberChildren(matlIndex);
+      for (int child = 0; child < numChildren; child++){
+
+        std::vector<double> iv; 
+        Iterator nu;
+        Iterator bound_ptr; 
+
+        std::vector<ClassicTableInterface::BoundaryType> which_bc;
+        std::vector<double> bc_values;
+
+        // look to make sure every variable has a BC set:
+        for ( int i = 0; i < (int) d_allIndepVarNames.size(); i++ ){
+          std::string variable_name = d_allIndepVarNames[i]; 
+
+          const BoundCondBase* bc = patch->getArrayBCValues( face, matlIndex,
+              variable_name, bound_ptr,
+              nu, child );
+
+          const BoundCond<double> *new_bcs =  dynamic_cast<const BoundCond<double> *>(bc);
+          if ( new_bcs == 0 ) {
+            cout << "Error: For variable named " << variable_name << endl;
+            throw InvalidValue( "Error: When trying to compute properties at a boundary, found boundary specification missing in the <Grid> section of the input file.", __FILE__, __LINE__); 
+          }
+
+          double bc_value     = new_bcs->getValue(); 
+          std::string bc_kind = new_bcs->getBCType__NEW(); 
+
+          if ( bc_kind == "Dirichlet" ) {
+            which_bc.push_back(ClassicTableInterface::DIRICHLET); 
+          } else if (bc_kind == "Neumann" ) { 
+            which_bc.push_back(ClassicTableInterface::NEUMANN); 
+          } else
+            throw InvalidValue( "Error: BC type not supported for property calculation", __FILE__, __LINE__ ); 
+
+          // currently assuming a constant value across the mesh. 
+          bc_values.push_back( bc_value ); 
+
+          bc_values.push_back(0.0);
+          which_bc.push_back(ClassicTableInterface::DIRICHLET);
+
+        }
+
+        // now use the last bound_ptr to loop over all boundary cells: 
+        for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++){
+
+          IntVector c   =   *bound_ptr; 
+          IntVector cp1 = ( *bound_ptr - insideCellDir ); 
+
+          // again loop over iv's and fill iv vector
+          for ( int i = 0; i < (int) d_allIndepVarNames.size(); i++ ){
+
+            switch (which_bc[i]) { 
+              case ClassicTableInterface::DIRICHLET:
+                iv.push_back( bc_values[i] ); 
+                break; 
+              case ClassicTableInterface::NEUMANN:
+                iv.push_back(0.5*(indep_storage[i][c] + indep_storage[i][cp1]));  
+                break; 
+              default: 
+                throw InvalidValue( "Error: BC type not supported for property calculation", __FILE__, __LINE__ ); 
+            }
+          }
+
+          // if this is coal, we need to compute f from f_p and eta
+          if ( d_coal_table ) { 
+
+            double f = 0.0; 
+
+            if ( iv[coal_eta_index] < 1.0 ) {
+
+              f = iv[coal_fp_index] / ( 1.0 - iv[coal_eta_index] ); 
+
+              if ( f < 0.0 )
+                f = 0.0;
+              if ( f > 1.0 )
+                f = 1.0; 
+
+            } else { 
+
+              f = 0.0; 
+
+            }
+
+            iv[coal_fp_index] = f;
+
+          } 
+
+          // now get state for boundary cell: 
+          for ( DepVarMap::iterator i = depend_storage.begin(); i != depend_storage.end(); ++i ){
+
+            double table_value = tableLookUp( iv, i->second.index ); 
+            (*i->second.var)[c] = table_value;
+
+            if (i->first == "density") {
+              //double ghost_value = 2.0*table_value - arches_density[cp1];
+              arches_density[c] = table_value;
+              //arches_density[c] = ghost_value; 
+              if (d_MAlab)
+                mpmarches_denmicro[c] = table_value; 
+            } else if (i->first == "temperature" && !d_coldflow) {
+              arches_temperature[c] = table_value; 
+              //} else if (i->first == "heat_capacity" && !d_coldflow) {
+          } else if (i->first == "specificheat" && !d_coldflow) {
+            arches_cp[c] = table_value; 
+          } else if (i->first == "CO2" && !d_coldflow) {
+            arches_co2[c] = table_value; 
+          } else if (i->first == "H2O" && !d_coldflow) {
+            arches_h2o[c] = table_value; 
+          }
+          }
+          iv.clear(); 
+        }
+      }
+    }
+
+    for ( DepVarMap::iterator i = depend_storage.begin(); i != depend_storage.end(); ++i ){
+      delete i->second.var;
+    }
+
+    // reference density modification 
+    if ( modify_ref_den ) {
+
+      double den_ref = 0.0;
+
+      if (patch->containsCell(d_ijk_den_ref)) {
+
+        den_ref = arches_density[d_ijk_den_ref];
+        cerr << "Modified reference density to: density_ref = " << den_ref << endl;
+
+      }
+      new_dw->put(sum_vartype(den_ref),time_labels->ref_density);
+    }
+  }
+}
+
+//--------------------------------------------------------------------------- 
+// schedule Compute Heat Loss
+//--------------------------------------------------------------------------- 
+  void 
+ClassicTableInterface::sched_computeHeatLoss( const LevelP& level, SchedulerP& sched, const bool initialize_me, const bool calcEnthalpy )
+{
+  string taskname = "ClassicTableInterface::computeHeatLoss"; 
+  Ghost::GhostType  gn = Ghost::None;
+
+  Task* tsk = scinew Task(taskname, this, &ClassicTableInterface::computeHeatLoss, initialize_me, calcEnthalpy );
+
+  // independent variables
+  for (MixingRxnModel::VarMap::iterator i = d_ivVarMap.begin(); i != d_ivVarMap.end(); ++i) {
+
+    const VarLabel* the_label = i->second;
+    if (i->first != "heat_loss" && i->first != "HeatLoss" ) 
+      tsk->requires( Task::NewDW, the_label, gn, 0 ); 
+  }
+
+  // heat loss must be computed if this is the first FE step 
+  if (initialize_me)
+    tsk->computes( d_lab->d_heatLossLabel );
+  else 
+    tsk->modifies( d_lab->d_heatLossLabel ); 
+
+  if ( calcEnthalpy )
+    tsk->requires( Task::NewDW, d_lab->d_enthalpySPLabel, gn, 0 ); 
+
+  sched->addTask( tsk, level->eachPatch(), d_lab->d_sharedState->allArchesMaterials() ); 
+}
+
+//--------------------------------------------------------------------------- 
+// Compute Heat Loss
+//--------------------------------------------------------------------------- 
+  void 
+ClassicTableInterface::computeHeatLoss( const ProcessorGroup* pc, 
+    const PatchSubset* patches, 
+    const MaterialSubset* matls, 
+    DataWarehouse* old_dw, 
+    DataWarehouse* new_dw, 
+    const bool initialize_me,
+    const bool calcEnthalpy )
+{
+  for (int p=0; p < patches->size(); p++){
+
+    Ghost::GhostType gn = Ghost::None; 
+    const Patch* patch = patches->get(p); 
+    int archIndex = 0; 
+    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+
+    CCVariable<double> heat_loss; 
+    if ( initialize_me )
+      new_dw->allocateAndPut( heat_loss, d_lab->d_heatLossLabel, matlIndex, patch ); 
+    else 
+      new_dw->getModifiable ( heat_loss, d_lab->d_heatLossLabel, matlIndex, patch ); 
+    heat_loss.initialize(0.0); 
+
+    constCCVariable<double> enthalpy; 
+    if ( calcEnthalpy ) 
+      new_dw->get(enthalpy, d_lab->d_enthalpySPLabel, matlIndex, patch, gn, 0 ); 
+
+    std::vector<constCCVariable<double> > the_variables; 
+
+    // exceptions for cold flow or adiabatic cases
+    bool compute_heatloss = true; 
+    if ( d_coldflow ) 
+      compute_heatloss = false; 
+    if ( d_adiabatic ) 
+      compute_heatloss = false; 
+
+    if ( compute_heatloss ) { 
+
+      for ( int i = 0; i < (int) d_allIndepVarNames.size(); i++ ){
+
+        VarMap::iterator ivar = d_ivVarMap.find( d_allIndepVarNames[i] ); 
+        if ( ivar->first != "heat_loss" && ivar->first != "HeatLoss" ){
+          constCCVariable<double> test_Var; 
+          new_dw->get( test_Var, ivar->second, matlIndex, patch, gn, 0 );  
+
+          the_variables.push_back( test_Var ); 
+        } else {
+          constCCVariable<double> a_null_var; 
+          the_variables.push_back( a_null_var ); // to preserve the total number of IV otherwise you will have problems below
+        }
+      }
+
+      for (CellIterator iter=patch->getCellIterator(0); !iter.done(); iter++){
+        IntVector c = *iter; 
+
+        vector<double> iv; 
+        int index = 0; 
+        for ( std::vector<constCCVariable<double> >::iterator i = the_variables.begin(); i != the_variables.end(); i++){
+
+          if ( d_allIndepVarNames[index] != "heat_loss" && d_allIndepVarNames[index] != "HeatLoss" ) 
+            iv.push_back( (*i)[c] );
+          else 
+            iv.push_back( 0.0 ); 
+
+          index++; 
+        }
+
+        // actually compute the heat loss: 
+        IndexMap::iterator i_index = d_enthalpyVarIndexMap.find( "sensibleenthalpy" ); 
+        double sensible_enthalpy    = tableLookUp( iv, i_index->second ); 
+        i_index = d_enthalpyVarIndexMap.find( "adiabaticenthalpy" ); 
+        double adiabatic_enthalpy = tableLookUp( iv, i_index->second ); 
+        double current_heat_loss  = 0.0;
+        double small = 1e-10; 
+        if ( calcEnthalpy )
+          current_heat_loss = ( adiabatic_enthalpy - enthalpy[c] ) / ( sensible_enthalpy + small ); 
+
+        if ( current_heat_loss < -1.0 )
+          current_heat_loss = -1.0; 
+        else if ( current_heat_loss > 1.0 ) 
+          current_heat_loss = 1.0; 
+
+        heat_loss[c] = current_heat_loss; 
+
+      }
+    }
+  }
+}
+
+//--------------------------------------------------------------------------- 
+// schedule Compute First Enthalpy
+//--------------------------------------------------------------------------- 
+  void 
+ClassicTableInterface::sched_computeFirstEnthalpy( const LevelP& level, SchedulerP& sched )
+{
+  string taskname = "ClassicTableInterface::computeFirstEnthalpy"; 
+  Ghost::GhostType  gn = Ghost::None;
+
+  Task* tsk = scinew Task(taskname, this, &ClassicTableInterface::computeFirstEnthalpy );
+
+  tsk->modifies( d_lab->d_enthalpySPLabel ); 
+
+  // independent variables
+  for (MixingRxnModel::VarMap::iterator i = d_ivVarMap.begin(); i != d_ivVarMap.end(); ++i) {
+
+    const VarLabel* the_label = i->second;
+    if (i->first != "heat_loss" && i->first != "HeatLoss") 
+      tsk->requires( Task::NewDW, the_label, gn, 0 ); 
+  }
+
+  sched->addTask( tsk, level->eachPatch(), d_lab->d_sharedState->allArchesMaterials() ); 
+
+}
+
+//--------------------------------------------------------------------------- 
+// Compute First Enthalpy
+//--------------------------------------------------------------------------- 
+  void 
+ClassicTableInterface::computeFirstEnthalpy( const ProcessorGroup* pc, 
+    const PatchSubset* patches, 
+    const MaterialSubset* matls, 
+    DataWarehouse* old_dw, 
+    DataWarehouse* new_dw ) 
+{
+
+  for (int p=0; p < patches->size(); p++){
+
+    cout_tabledbg << " In ClassicTableInterface::getFirstEnthalpy " << endl;
+
+    Ghost::GhostType gn = Ghost::None; 
+    const Patch* patch = patches->get(p); 
+    int archIndex = 0; 
+    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+
+    CCVariable<double> enthalpy; 
+    new_dw->getModifiable( enthalpy, d_lab->d_enthalpySPLabel, matlIndex, patch ); 
+
+    std::vector<constCCVariable<double> > the_variables; 
+
+    for ( vector<string>::iterator i = d_allIndepVarNames.begin(); i != d_allIndepVarNames.end(); i++){
+
+      const VarMap::iterator iv_iter = d_ivVarMap.find( *i ); 
+
+      if ( iv_iter == d_ivVarMap.end() ) {
+        cout << " For variable named: " << *i << endl;
+        throw InternalError("Error: Could not map this label to the correct Uintah grid variable." ,__FILE__,__LINE__);
+      }
+
+      if ( *i != "heat_loss" && *i != "HeatLoss" ) { // heat loss hasn't been computed yet so this is why 
+        // we have an "if" here.
+        cout_tabledbg << " Found label = " << iv_iter->first << endl;
+        constCCVariable<double> test_Var;
+        new_dw->get( test_Var, iv_iter->second, matlIndex, patch, gn, 0 ); 
+
+        the_variables.push_back( test_Var ); 
+
+      } else {
+
+        constCCVariable<double> a_null_var;
+        the_variables.push_back( a_null_var ); // to preserve the total number of 
+        // IV otherwise you will have problems below
+
+      }
+    }
+
+
+    for (CellIterator iter=patch->getCellIterator(0); !iter.done(); iter++){
+      IntVector c = *iter; 
+
+      vector<double> iv; 
+      int index = 0; 
+      for ( std::vector<constCCVariable<double> >::iterator i = the_variables.begin(); i != the_variables.end(); i++){
+
+        if ( d_allIndepVarNames[index] != "heat_loss" && d_allIndepVarNames[index] != "HeatLoss") 
+          iv.push_back( (*i)[c] );
+        else 
+          iv.push_back( d_hl_scalar_init ); 
+
+        index++; 
+      }
+
+      double current_heat_loss = d_hl_scalar_init; // may want to make this more sophisticated later(?)
+      IndexMap::iterator i_index = d_enthalpyVarIndexMap.find( "sensibleenthalpy" ); 
+      double sensible_enthalpy    = tableLookUp( iv, i_index->second ); 
+      i_index = d_enthalpyVarIndexMap.find( "adiabaticenthalpy" ); 
+      double adiabatic_enthalpy = tableLookUp( iv, i_index->second ); 
+      enthalpy[c]     = adiabatic_enthalpy - current_heat_loss * sensible_enthalpy; 
+
+    }
+  }
+}
+
+//--------------------------------------------------------------------------- 
+// Old Table Hack -- to be removed with Properties.cc
+//--------------------------------------------------------------------------- 
+  void 
+ClassicTableInterface::oldTableHack( const InletStream& inStream, Stream& outStream, bool calcEnthalpy, const string bc_type )
+{
+
+  cout_tabledbg << " In method ClassicTableInterface::OldTableHack " << endl;
+
+  //This is a temporary hack to get the table stuff working with the new interface
+  std::vector<double> iv(d_allIndepVarNames.size());
+
+  for ( int i = 0; i < (int) d_allIndepVarNames.size(); i++){
+
+    if ( (d_allIndepVarNames[i] == "mixture_fraction") || (d_allIndepVarNames[i] == "coal_gas_mix_frac") || (d_allIndepVarNames[i] == "MixtureFraction")){
+      iv[i] = inStream.d_mixVars[0]; 
+    } else if (d_allIndepVarNames[i] == "mixture_fraction_variance") {
+      iv[i] = 0.0;
+    } else if (d_allIndepVarNames[i] == "mixture_fraction_2") {
+      iv[i] = 0.0; // set below if there is one...just want to make sure it is initialized properly
+    } else if (d_allIndepVarNames[i] == "mixture_fraction_variance_2") {
+      iv[i] = 0.0; 
+    } else if (d_allIndepVarNames[i] == "heat_loss" || d_allIndepVarNames[i] == "HeatLoss") {
+      if ( bc_type == "scalar_init" )
+        iv[i] = d_hl_scalar_init; 
+      else
+        iv[i] = 0.0; 
+      if (!calcEnthalpy) {
+        iv[i] = 0.0; // override any user input because case is adiabatic
+        if ( d_hl_scalar_init > 0.0 )
+          proc0cout << "NOTICE!: Case is adiabatic so we will ignore your heat loss initialization." << endl;
+      }
+    }
+  }
+
+  double f                 = 0.0; 
+  double f_2               = 0.0; 
+  double adiab_enthalpy    = 0.0; 
+  double current_heat_loss = 0.0;
+  double init_enthalpy     = 0.0; 
+
+  f  = inStream.d_mixVars[0]; 
+  if (inStream.d_has_second_mixfrac){
+    f_2 = inStream.d_f2; 
+  }
+
+  if (calcEnthalpy) {
+
+    // non-adiabatic case
+    double enthalpy          = 0.0; 
+    double sensible_enthalpy = 0.0; 
+
+    IndexMap::iterator i_index = d_enthalpyVarIndexMap.find( "sensibleenthalpy" ); 
+    sensible_enthalpy    = tableLookUp( iv, i_index->second ); 
+    i_index = d_enthalpyVarIndexMap.find( "adiabaticenthalpy" ); 
+    adiab_enthalpy = tableLookUp( iv, i_index->second ); 
+
+    enthalpy          = inStream.d_enthalpy; 
+
+    if ( inStream.d_initEnthalpy || ((abs(adiab_enthalpy - enthalpy)/abs(adiab_enthalpy) < 1.0e-4 ) && f < 1.0e-4) ) {
+
+      if ( bc_type == "scalar_init" )
+        current_heat_loss = d_hl_scalar_init; 
+      else
+        current_heat_loss = 0.0; 
+
+      init_enthalpy = adiab_enthalpy - current_heat_loss * sensible_enthalpy; 
+
+    } else {
+
+      throw ProblemSetupException("ERROR! I shouldn't be in this part of the code.", __FILE__, __LINE__); 
+
+    }
+  } else {
+
+    // adiabatic case
+    init_enthalpy = 0.0;
+    current_heat_loss = 0.0; 
+
+  }
+
+  IndexMap::iterator i_index = d_depVarIndexMap.find( "density" );
+  outStream.d_density = tableLookUp( iv, i_index->second ); 
+  if (!d_coldflow) { 
+    i_index = d_depVarIndexMap.find( "temperature" );
+    outStream.d_temperature = tableLookUp( iv, i_index->second ); 
+    i_index = d_depVarIndexMap.find( "specificheat" );
+    outStream.d_cp          = tableLookUp( iv, i_index->second ); 
+    i_index = d_depVarIndexMap.find( "H2O" );
+    outStream.d_h2o         = tableLookUp( iv, i_index->second ); 
+    i_index = d_depVarIndexMap.find( "CO2" );
+    outStream.d_co2         = tableLookUp( iv, i_index->second ); 
+    outStream.d_heatLoss    = current_heat_loss; 
+    if (inStream.d_initEnthalpy) outStream.d_enthalpy = init_enthalpy; 
+  }
+
+  cout_tabledbg << " Leaving method ClassicTableInterface::OldTableHack " << endl;
+}
+
+//--------------------------------------------------------------------------- 
+// Get all Dependent variables 
+//--------------------------------------------------------------------------- 
+/** @details
+
+  This method will first check to see if the table is loaded; if it is, it
+  will return a reference to d_allDepVarNames, which is a private vector<string>
+  of the ClassicTableInterface class
+  */
+  const vector<string> &
+ClassicTableInterface::getAllDepVars()
+{
+  if( d_table_isloaded == true ) {
+    vector<string>& d_allDepVarNames_ref(d_allDepVarNames);
+    return d_allDepVarNames_ref;
+  } else {
+    ostringstream exception;
+    exception << "Error: You requested a list of dependent variables " <<
+      "before specifying the table that you were using. " << endl;
+    throw InternalError(exception.str(),__FILE__,__LINE__);
+  }
+}
+
+//--------------------------------------------------------------------------- 
+// Get all independent Variables
+//--------------------------------------------------------------------------- 
+/** @details
+  This method will first check to see if the table is loaded; if it is, it
+  will return a reference to d_allIndepVarNames, which is a private
+  vector<string> of the ClassicTableInterface class
+  */
+  const vector<string> &
+ClassicTableInterface::getAllIndepVars()
+{
+  if( d_table_isloaded == true ) {
+    vector<string>& allIndepVarNames_ref(d_allIndepVarNames);
+    return allIndepVarNames_ref;
+  } 
+  else {
+    ostringstream exception;
+    exception << "Error: You requested a list of independent variables " <<
+      "before specifying the table that you were using. " << endl;
+    throw InternalError(exception.str(),__FILE__,__LINE__);
+  }
+}
+
+//--------------------------------------------------------------------------- 
+// schedule Dummy Init
+//--------------------------------------------------------------------------- 
+  void 
+ClassicTableInterface::sched_dummyInit( const LevelP& level, 
+    SchedulerP& sched )
+
+{
+  string taskname = "ClassicTableInterface::dummyInit"; 
+  //Ghost::GhostType  gn = Ghost::None;
+
+  Task* tsk = scinew Task(taskname, this, &ClassicTableInterface::dummyInit ); 
+
+  // dependent variables
+  for ( MixingRxnModel::VarMap::iterator i = d_dvVarMap.begin(); i != d_dvVarMap.end(); ++i ) {
+    tsk->computes( i->second ); 
+    tsk->requires( Task::OldDW, i->second, Ghost::None, 0 ); 
+  }
+
+  sched->addTask( tsk, level->eachPatch(), d_lab->d_sharedState->allArchesMaterials() ); 
+}
+
+//--------------------------------------------------------------------------- 
+// Dummy Init
+//--------------------------------------------------------------------------- 
+  void 
+ClassicTableInterface::dummyInit( const ProcessorGroup* pc, 
+    const PatchSubset* patches, 
+    const MaterialSubset* matls, 
+    DataWarehouse* old_dw, 
+    DataWarehouse* new_dw )
+{
+  for (int p=0; p < patches->size(); p++){
+
+    //Ghost::GhostType gn = Ghost::None; 
+    const Patch* patch = patches->get(p); 
+    int archIndex = 0; 
+    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+
+
+    // dependent variables:
+    for ( VarMap::iterator i = d_dvVarMap.begin(); i != d_dvVarMap.end(); ++i ){
+
+      cout_tabledbg << " In TabProps::dummyInit, getting " << i->first << " for initializing. " << endl;
+      CCVariable<double>* the_var = new CCVariable<double>; 
+      new_dw->allocateAndPut( *the_var, i->second, matlIndex, patch ); 
+      (*the_var).initialize(0.0);
+      constCCVariable<double> old_var; 
+      old_dw->get(old_var, i->second, matlIndex, patch, Ghost::None, 0 ); 
+
+      the_var->copyData( old_var ); 
+
+    }
+  }
+}
+
+//-------------------------------------
+  void 
+ClassicTableInterface::getIndexInfo()
+{
+  for ( MixingRxnModel::VarMap::iterator i = d_dvVarMap.begin(); i != d_dvVarMap.end(); ++i ){ 
+
+    std::string name = i->first; 
+    int index = findIndex( name ); 
+
+    IndexMap::iterator iter = d_depVarIndexMap.find( name );   
+    // Only insert variable if it isn't already there. 
+    if ( iter == d_depVarIndexMap.end() ) {
+
+      cout_tabledbg << " Inserting " << name << " index information into storage." << endl;
+      iter = d_depVarIndexMap.insert( make_pair( name, index ) ).first; 
+
+    }
+  }
+}
+
+//-------------------------------------
+  void 
+ClassicTableInterface::getEnthalpyIndexInfo()
+{
+  cout_tabledbg << "ClassicTableInterface::getEnthalpyIndexInfo(): Looking up sensible enthalpy" << endl;
+  int index = findIndex( "sensibleenthalpy" ); 
+
+  d_enthalpyVarIndexMap.insert( make_pair( "sensibleenthalpy", index )).first; 
+
+  cout_tabledbg << "ClassicTableInterface::getEnthalpyIndexInfo(): Looking up adiabatic enthalpy" << endl;
+  index = findIndex( "adiabaticenthalpy" ); 
+  d_enthalpyVarIndexMap.insert( make_pair( "adiabaticenthalpy", index )).first; 
+}
+
+//-------------------------------------
+  double
+ClassicTableInterface::tableLookUp( std::vector<double> iv, int var_index)
+{
+
+  if ( var_index > d_varscount ) {
+    ostringstream exception;
+    exception << "Error: Attempted to lookup a variable with an index out of range: " << var_index << endl;
+    throw InternalError(exception.str(),__FILE__,__LINE__);
+  }
+
+  double small = 1.0e-10;
+
+  double fmg=0.0, fpmg=0.0,s1=0.0,s2=0.0,var_value=0.0;
+  int nhl_lo, nhl_hi; 
+  double dhl_lo, dhl_hi; 
+
+  // compute index of iv3:
+  if ( d_indepvarscount == 3 ){ 
+
+    for(int hl_index=0; hl_index < d_allIndepVarNum[2] - 1; hl_index++){
+
+      dhl_lo = i3[hl_index]   - iv[2];
+      dhl_hi = i3[hl_index+1] - iv[2];
+
+      if((dhl_lo*dhl_hi) == 0.0 && hl_index != 0){
+
+        nhl_lo=hl_index+1;
+        nhl_hi=nhl_lo;
+        break;
+
+      } else if( ( dhl_lo * dhl_hi ) <= 0.0) {
+
+        nhl_lo = hl_index;
+        nhl_hi = nhl_lo + 1;
+        break;
+      }
+    }
+  } else {
+
+    nhl_lo = 0; 
+    nhl_hi = 0; 
+    dhl_lo = 0.0; 
+    dhl_hi = 1.0; 
+
+  }
+
+
+  // Main loop
+  for ( int m_index = nhl_lo; m_index <= nhl_hi; m_index++ ) { 
+
+    int nx_lo=0, nx_hi=0;
+
+    //Non-uniform iv1
+    double df1=0.0, df2=0.0;
+
+    for ( int index=0; index < d_allIndepVarNum[0]-1; index++ ) {
+
+      df1 = i1[var_index][index]   - iv[0];
+      df2 = i1[var_index][index+1] - iv[0];
+
+      if((df1*df2) == 0.0 && index != 0){
+
+        nx_lo=index+1;
+        nx_hi=nx_lo;
+        break;
+
+      } else if((df1*df2) <= 0.0) {
+
+        nx_lo=index;
+        nx_hi=nx_lo+1;
+        break;
+
+      }
+    }
+
+    // Supports non-uniform normalized variance lookup  
+    // Normalized variance
+    double g=0.0;
+    //Index for variances
+    int k1=0,k2=0;
+    //Weighing factors for variance
+    double dk1=0.0,dk2=0.0;
+
+    if ( d_indepvarscount > 1 ) {  
+
+      if( iv[1] <= small ){
+        // Set the values to get the first entry
+        g=0.0;
+        k1=0;
+        k2=0;
+        dk1=0.0;
+        dk2=1.0;
+
+      } else {
+
+        g = iv[1];
+        // Finding the table entry
+
+        for(int index=0; index < d_allIndepVarNum[1]-1; index++){
+
+          dk1 = i2[index]-g;
+          dk2 = i2[index+1]-g;
+
+        //cout << "dk2 = " << dk2 << endl;
+
+          if((dk1*dk2) == 0.0 && index != 0){
+
+            k1=index+1;
+            k2=k1;
+            break;
+
+          } else if ( (dk1*dk2) <= 0.0){
+
+            k1=index;
+            k2=k1+1;
+            break;
+
+          }
+        }
+      }
+    } else { 
+
+      // Set the values to get the first entry
+      g=0.0;
+      k1=0;
+      k2=0;
+      dk1=0.0;
+      dk2=1.0;
+
+    }
+
+    //Interpolating the values
+    fmg = ( dk1 * table[var_index][m_index*d_allIndepVarNum[0] * d_allIndepVarNum[1] + k2*d_allIndepVarNum[0] + nx_lo] - 
+        dk2 * table[var_index][m_index*d_allIndepVarNum[0] * d_allIndepVarNum[1] + k1*d_allIndepVarNum[0] + nx_lo])/(dk1-dk2);
+
+    fpmg = ( dk1 * table[var_index][m_index*d_allIndepVarNum[0] * d_allIndepVarNum[1] + k2*d_allIndepVarNum[0] + nx_hi] - 
+        dk2 * table[var_index][m_index*d_allIndepVarNum[0] * d_allIndepVarNum[1] + k1*d_allIndepVarNum[0] + nx_hi])/(dk1-dk2);
+
+    if(nhl_lo==nhl_hi){
+
+      s1=(df1*fpmg-df2*fmg)/(df1-df2);
+      s2=s1;
+      break;
+
+    } else if(m_index == nhl_lo) {
+      s1=(df1*fpmg-df2*fmg)/(df1-df2);
+    } else {
+      s2=(df1*fpmg-df2*fmg)/(df1-df2);
+    }
+  }
+
+  var_value = (dhl_lo*s2-dhl_hi*s1)/(dhl_lo-dhl_hi);
+  return var_value; 
+
+}
+//-----------------------------------------
+  void
+ClassicTableInterface::loadMixingTable( const string & inputfile )
+{
+
+  proc0cout << " Preparing to read the table inputfile:   " << inputfile << "\n";
+  gzFile gzFp = gzopen( inputfile.c_str(), "r" );
+
+  if( gzFp == NULL ) {
+    // If errno is 0, then not enough memory to uncompress file.
+    proc0cout << "Error with gz in opening file: " << inputfile << ". Errno: " << errno << "\n"; 
+    throw ProblemSetupException("Unable to open the given input file: " + inputfile, __FILE__, __LINE__);
+  }
+
+  double not_used; 
+  //d_f_stoich       = getDouble( gzFp );
+  //d_H_fuel         = getDouble( gzFp );
+  //d_H_air          = getDouble( gzFp );
+  //not_used         = getDouble( gzFp );
+  //not_used         = getDouble( gzFp );
+  d_indepvarscount = getInt(    gzFp );
+
+  proc0cout << " Total number of independent variables: " << d_indepvarscount << endl;
+
+  d_allIndepVarNames = vector<std::string>(d_indepvarscount);
+  for (int ii = 0; ii < d_indepvarscount; ii++) {
+    string varname = getString( gzFp );
+    d_allIndepVarNames[ii] =  varname ; 
+  }
+
+  d_allIndepVarNum = vector<int>(d_indepvarscount);
+  for (int ii = 0; ii < d_indepvarscount; ii++) {
+    int grid_size = getInt( gzFp ); 
+    d_allIndepVarNum[ii] =  grid_size ; 
+  }
+
+  for (int ii = 0; ii < d_indepvarscount; ii++){
+    proc0cout << " Independent variable: " << d_allIndepVarNames[ii] << " has a grid size of: " << d_allIndepVarNum[ii] << endl;
+  }
+
+  // Total number of variables in the table: non-adaibatic table has sensibile enthalpy too
+  d_varscount = getInt( gzFp );
+  proc0cout << " Total dependent variables in table: " << d_varscount << endl;
+
+  d_allDepVarNames = vector<std::string>(d_varscount); 
+  for (int ii = 0; ii < d_varscount; ii++) {
+
+    std::string variable; 
+    variable = getString( gzFp );
+    d_allDepVarNames[ii] = variable ; 
+
+    proc0cout << "  " << d_allDepVarNames[ii] << endl;
+
+  }
+
+  // Units
+  d_allDepVarUnits = vector<std::string>(d_varscount); 
+  for (int ii = 0; ii < d_varscount; ii++) {
+    std::string units = getString( gzFp );
+    d_allDepVarUnits[ii] =  units ; 
+  }
+
+  // Allocate independent variable grids
+  if ( d_indepvarscount == 1 ) {
+
+    i1 = vector<vector<double> >(0);
+    i1[0] = vector<double>( d_allIndepVarNum[0] ); 
+
+  } else if ( d_indepvarscount == 2 ){ 
+
+    i1 = vector<vector<double> >( d_allIndepVarNum[1] ); 
+    for ( int i = 0; i < d_varscount; i++ ){
+      i1[i] = vector<double>( d_allIndepVarNum[0] ); 
+    }
+
+  } else if ( d_indepvarscount == 3 ){ 
+
+    i1 = vector<vector<double> >( d_allIndepVarNum[2] ); 
+    for ( int i = 0; i < d_allIndepVarNum[2]; i++ ){
+      i1[i] = vector<double>( d_allIndepVarNum[0] ); 
+    }
+  }
+
+  if ( d_indepvarscount > 1 )
+    i2=vector<double>(d_allIndepVarNum[1]);
+  if ( d_indepvarscount > 2 )
+    i3=vector<double>(d_allIndepVarNum[2]); 
+
+  if ( d_indepvarscount == 3 ) {
+    for (int i = 0; i < d_allIndepVarNum[2]; i++){
+      double v = getDouble( gzFp ); 
+      i3[i] = v; 
+    }
+  }
+
+  if ( d_indepvarscount > 1 ) { 
+    for (int i = 0; i < d_allIndepVarNum[1]; i++){ 
+      double v = getDouble( gzFp ); 
+      i2[i] = v; 
+    }
+  }
+
+  int size=0;
+  if ( d_indepvarscount == 1 ) 
+    size = d_allIndepVarNum[0]; 
+  else if ( d_indepvarscount == 2 ) 
+    size = d_allIndepVarNum[0]*
+      d_allIndepVarNum[1]; 
+  else if ( d_indepvarscount == 3 )
+    size = d_allIndepVarNum[0]*
+      d_allIndepVarNum[1]*
+      d_allIndepVarNum[2]; 
+
+  table = vector<vector<double> >(d_varscount); 
+  for ( int i = 0; i < d_varscount; i++ ){ 
+    table[i] = vector<double>(size);
+  }
+
+  if ( d_indepvarscount == 1 ){
+
+    for (int kk=0; kk< d_varscount; kk++){
+
+      for (int i = 0; i < d_allIndepVarNum[0]; i++){
+        double v = getDouble( gzFp ); 
+        i1[kk][i] = v;
+      }
+
+      for ( int ii = 0; ii < d_allIndepVarNum[0]; ii++ ){
+        table[kk][ii] = getDouble( gzFp ); 
+      }
+    }
+
+  } else if ( d_indepvarscount == 2 ){
+
+    for (int kk=0; kk< d_varscount; kk++){
+
+      for (int i = 0; i < d_allIndepVarNum[0]; i++){
+        double v = getDouble( gzFp ); 
+        i1[kk][i] = v;
+      }
+
+      for ( int jj = 0; jj < d_allIndepVarNum[1]; jj++ ){
+        for ( int ii = 0; ii < d_allIndepVarNum[0]; ii++ ){
+          table[kk][ii + jj*d_allIndepVarNum[0]] = getDouble( gzFp ); 
+        }
+      }
+    }
+
+  } else if ( d_indepvarscount == 3 ){ 
+
+    proc0cout << "Reading in the variables: " << endl;
+    for (int kk=0; kk< d_varscount; kk++){
+
+      proc0cout << " reading in --> " << d_allDepVarNames[kk] << endl;
+      for ( int mm = 0; mm < d_allIndepVarNum[2]; mm++ ){ 
+
+        for (int i = 0; i < d_allIndepVarNum[0]; i++){
+          double v = getDouble( gzFp ); 
+          i1[mm][i] = v;
+        }
+
+        for ( int jj = 0; jj < d_allIndepVarNum[1]; jj++ ){
+          for ( int ii = 0; ii < d_allIndepVarNum[0]; ii++ ){
+            double v = getDouble( gzFp ); 
+            table[kk][ii + jj*d_allIndepVarNum[0] + mm*d_allIndepVarNum[0]*d_allIndepVarNum[1]] = v; 
+          }
+        }
+      }
+    }
+
+  }
+
+  // Closing the file pointer
+  gzclose( gzFp );
+
+  proc0cout << "Table successfully loaded into memory!" << endl;
+
+}
