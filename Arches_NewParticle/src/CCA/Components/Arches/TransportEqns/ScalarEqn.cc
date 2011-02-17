@@ -461,11 +461,11 @@ void
 ScalarEqn::sched_solveTransportEqn( const LevelP& level,
                                     SchedulerP& sched, 
                                     int timeSubStep, 
-                                    bool copyOldIntoNew )
+                                    bool lastTimeSubstep )
 {
   string taskname = "ScalarEqn::solveTransportEqn";
 
-  Task* tsk = scinew Task(taskname, this, &ScalarEqn::solveTransportEqn, timeSubStep, copyOldIntoNew);
+  Task* tsk = scinew Task(taskname, this, &ScalarEqn::solveTransportEqn, timeSubStep, lastTimeSubstep );
 
   tsk->modifies(d_transportVarLabel);
   tsk->modifies(d_oldtransportVarLabel); 
@@ -489,7 +489,7 @@ ScalarEqn::solveTransportEqn( const ProcessorGroup* pc,
                               DataWarehouse* old_dw, 
                               DataWarehouse* new_dw,
                               int timeSubStep,
-                              bool copyOldIntoNew )
+                              bool lastTimeSubstep )
 {
   //patch loop
   for (int p=0; p < patches->size(); p++){
@@ -527,18 +527,7 @@ ScalarEqn::solveTransportEqn( const ProcessorGroup* pc,
     // Time averaging will occur separately, and later
     // (see ExplicitSolver::nonLinearSolve)
 
-    //----COPY averaged phi into oldphi
-    if( copyOldIntoNew ) {
-      /*
-      // Commenting out, as per Jeremy's suggestion
-
-      // this is NOT the last time substep
-      phi_at_j.copyData(phi_at_jp1); 
-      */
-
-    } else {
-      // this IS the last time substep
-
+    if( lastTimeSubstep ) {
       // The procedure looks like this:
       // 1. Compute the error between the last RK substeps
       // 2. Use error to estimate new minimum timeestep

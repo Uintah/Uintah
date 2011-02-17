@@ -262,7 +262,7 @@ EqnFactory::sched_evalTransportEqns( const LevelP& level,
       if( iEqn->second->getDensityGuessBool() == evalDensityGuessEqns ) {
         // Step 4
         // only solve scalar transport eqns that guess density
-        iEqn->second->sched_solveTransportEqn( level, sched, timeSubStep, !lastTimeSubstep );
+        iEqn->second->sched_solveTransportEqn( level, sched, timeSubStep, lastTimeSubstep );
 
         // Step 5
         // clip
@@ -281,7 +281,7 @@ EqnFactory::sched_evalTransportEqns( const LevelP& level,
       if( iEqn->second->getDensityGuessBool() == evalDensityGuessEqns ) {
         // Step 4
         // only solve scalar transport eqns that don't guess density
-        iEqn->second->sched_solveTransportEqn( level, sched, timeSubStep, !lastTimeSubstep );
+        iEqn->second->sched_solveTransportEqn( level, sched, timeSubStep, lastTimeSubstep );
 
         // Step 5
         // clip

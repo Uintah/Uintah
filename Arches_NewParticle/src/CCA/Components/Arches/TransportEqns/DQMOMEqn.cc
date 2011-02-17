@@ -599,11 +599,11 @@ void
 DQMOMEqn::sched_solveTransportEqn( const LevelP& level, 
                                    SchedulerP& sched, 
                                    int timeSubStep, 
-                                   bool copyOldIntoNew )
+                                   bool lastTimeSubstep )
 {
   string taskname = "DQMOMEqn::solveTransportEqn";
 
-  Task* tsk = scinew Task(taskname, this, &DQMOMEqn::solveTransportEqn, timeSubStep, copyOldIntoNew);
+  Task* tsk = scinew Task(taskname, this, &DQMOMEqn::solveTransportEqn, timeSubStep, lastTimeSubstep );
 
   // modifies
   tsk->modifies(d_transportVarLabel);
@@ -628,7 +628,7 @@ DQMOMEqn::solveTransportEqn( const ProcessorGroup* pc,
                              DataWarehouse* old_dw, 
                              DataWarehouse* new_dw, 
                              int timeSubStep,
-                             bool copyOldIntoNew )
+                             bool lastTimeSubstep )
 {
   //patch loop
   for (int p=0; p < patches->size(); p++){
@@ -702,18 +702,7 @@ DQMOMEqn::solveTransportEqn( const ProcessorGroup* pc,
     // ---------------------------------
     // Stable timestep calculation
 
-    // copy averaged phi into oldphi, unless it's the last time substep (in which case we need info for time substep jp1 and j)
-    if( copyOldIntoNew ) {
-      /*
-      // Commenting out, as per Jeremy's suggestion
-
-      // This is NOT the last time substep
-      phi_at_j.copyData(phi_at_jp1); 
-      */
-
-    } else {
-      // this IS the last time sub-step
-
+    if( lastTimeSubstep ) {
       // The calculation procedure looks something like this:
       // 1. Compute the "error" between the last two Runge Kutta time substeps
       // 2. Use this error to estimate a new minimum timestep, and store that minimum timestep
