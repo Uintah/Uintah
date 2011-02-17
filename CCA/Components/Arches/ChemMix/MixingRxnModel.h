@@ -104,12 +104,6 @@ public:
                                 const bool with_energy_exch,
                                 const bool modify_ref_den ) = 0;
 
-  /** @brief Returns a list of dependent variables */
-  virtual const std::vector<std::string> & getAllDepVars() = 0;
-
-  /** @brief Returns a list of independent variables */ 
-  virtual const std::vector<std::string> & getAllIndepVars() = 0;
-
   /** @brief Computes the heat loss value */ 
   virtual void sched_computeHeatLoss( const LevelP& level, 
                                       SchedulerP& sched,
@@ -139,8 +133,11 @@ public:
 	/** @brief Return a reference to the dependent variables */ 
 	inline const VarMap getDVVars(){ return d_dvVarMap; }; 
 
-	/** @brief Return a string list of all independent variable names in order */ 
-	inline std::vector<string> getIVVarNames(){ return d_allIndepVarNames; };
+  /** @brief Return a string list of all independent variable names in order */ 
+  inline std::vector<string>& getAllIndepVars(){ return d_allIndepVarNames; }; 
+
+  /** @brief Return a string list of dependent variables names in the order they were read */ 
+  inline std::vector<string>& getAllDepVars(){ return d_allDepVarNames; };
 
 protected :
 
@@ -150,17 +147,18 @@ protected :
   /** @brief Sets the mixing table's dependent variable list. */
   void setMixDVMap( const ProblemSpecP& root_params ); 
 
-  const ArchesLabel* d_lab;               /// < Arches labels
-  const MPMArchesLabel* d_MAlab;          /// < MPMArches labels
+  const ArchesLabel* d_lab;               ///< Arches labels
+  const MPMArchesLabel* d_MAlab;          ///< MPMArches labels
 
-  bool d_coldflow;                        /// < Will not compute heat loss and will not initialized ethalpy
-  bool d_adiabatic;                       /// < Will not compute heat loss
-  bool d_coal_table;                      /// < Flagged as a coal table or not
-  bool d_use_mixing_model;                /// < Turn on/off mixing model
+  bool d_coldflow;                        ///< Will not compute heat loss and will not initialized ethalpy
+  bool d_adiabatic;                       ///< Will not compute heat loss
+  bool d_coal_table;                      ///< Flagged as a coal table or not
+  bool d_use_mixing_model;                ///< Turn on/off mixing model
 
-  std::string d_fp_label;                 /// < Primary mixture fraction name for a coal table
-  std::string d_eta_label;                /// < Eta mixture fraction name for a coal table
-  std::vector<string> d_allIndepVarNames; /// < Vector storing all independent variable names from table file
+  std::string d_fp_label;                 ///< Primary mixture fraction name for a coal table
+  std::string d_eta_label;                ///< Eta mixture fraction name for a coal table
+  std::vector<string> d_allIndepVarNames; ///< Vector storing all independent variable names from table file
+  std::vector<string> d_allDepVarNames;   ///< Vector storing all dependent variable names from the table file
 
   /** @brief  Insert the name of a dependent variable into the dependent variable map (dvVarMap), which maps strings to VarLabels */
   inline void insertIntoMap( const string var_name ){

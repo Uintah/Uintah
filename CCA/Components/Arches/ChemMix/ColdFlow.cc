@@ -86,7 +86,7 @@ ColdFlow::problemSetup( const ProblemSpecP& propertiesParameters )
 	db_coldflow->findBlock( "Stream_1" )->require( "density", d_stream[0][0] ); 
 	db_coldflow->findBlock( "Stream_1" )->require( "temperature", d_stream[1][0] ); 
 	db_coldflow->findBlock( "Stream_2" )->require( "density", d_stream[0][1] ); 
-	db_coldflow->findBlock( "Stream_2" )->require( "temperature", d_stream[2][1] ); 
+	db_coldflow->findBlock( "Stream_2" )->require( "temperature", d_stream[1][1] ); 
   db_coldflow->require( "mixture_fraction_label", d_cold_flow_mixfrac ); 
 
   // Extract independent and dependent variables from input file

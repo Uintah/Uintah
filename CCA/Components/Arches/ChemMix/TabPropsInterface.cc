@@ -943,52 +943,6 @@ TabPropsInterface::oldTableHack( const InletStream& inStream, Stream& outStream,
 }
 
 //--------------------------------------------------------------------------- 
-// Get all Dependent variables 
-//--------------------------------------------------------------------------- 
-/** @details
-
-This method will first check to see if the table is loaded; if it is, it
-will return a reference to d_allDepVarNames, which is a private vector<string>
-of the TabPropsInterface class
-*/
-const vector<string> &
-TabPropsInterface::getAllDepVars()
-{
-  if( d_table_isloaded == true ) {
-    vector<string>& d_allDepVarNames_ref(d_allDepVarNames);
-    return d_allDepVarNames_ref;
-  } else {
-    ostringstream exception;
-    exception << "Error: You requested a list of dependent variables " <<
-                 "before specifying the table that you were using. " << endl;
-    throw InternalError(exception.str(),__FILE__,__LINE__);
-  }
-}
-
-//--------------------------------------------------------------------------- 
-// Get all independent Variables
-//--------------------------------------------------------------------------- 
-/** @details
-This method will first check to see if the table is loaded; if it is, it
-will return a reference to d_allIndepVarNames, which is a private
-vector<string> of the TabPropsInterface class
-*/
-const vector<string> &
-TabPropsInterface::getAllIndepVars()
-{
-  if( d_table_isloaded == true ) {
-    vector<string>& allIndepVarNames_ref(d_allIndepVarNames);
-    return allIndepVarNames_ref;
-  } 
-  else {
-    ostringstream exception;
-    exception << "Error: You requested a list of independent variables " <<
-                 "before specifying the table that you were using. " << endl;
-    throw InternalError(exception.str(),__FILE__,__LINE__);
-  }
-}
-
-//--------------------------------------------------------------------------- 
 // Get Spline information
 //--------------------------------------------------------------------------- 
 void 

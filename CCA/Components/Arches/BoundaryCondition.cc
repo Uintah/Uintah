@@ -6860,7 +6860,7 @@ BoundaryCondition::setInitProfile__NEW(const ProcessorGroup*,
 
     // Get the independent variable information for table lookup
     BoundaryCondition::HelperMap ivGridVarMap; 
-    BoundaryCondition::HelperVec allIndepVarNames = mixingTable->getIVVarNames(); 
+    BoundaryCondition::HelperVec allIndepVarNames = mixingTable->getAllIndepVars(); 
 
     for ( MixingRxnModel::VarMap::iterator i = iv_vars.begin(); i != iv_vars.end(); i++ ){ 
       constCCVariable<double> variable; 
