@@ -70,14 +70,11 @@ public:
                          DataWarehouse* new_dw, 
                          int timeSubStep );
 
-  /** @brief Schedule the solution the transport equation
-      @param  copyOldIntoNew    Boolean: should the new phi's (phi_jp1) be copied into the old phi's (phi_j)? This should only be false on the last time substep, 
-                                so that phi_j and phi_jp1 can both be accessed for the last time substep (this is important information for several calculations)  
-  */ 
+  /** @brief Schedule the solution the transport equation */
   void sched_solveTransportEqn(const LevelP& level, 
                                 SchedulerP& sched, 
                                 int timeSubStep,
-                                bool copyOldIntoNew );
+                                bool lastTimeSubstep );
 
   /** @brief Solve the transport equation */ 
   void solveTransportEqn(const ProcessorGroup*, 
@@ -86,7 +83,7 @@ public:
                          DataWarehouse* old_dw, 
                          DataWarehouse* new_dw,
                          int timeSubStep,
-                         bool copyOldIntoNew );
+                         bool lastTimeSubstep );
 
   /** @brief Schedule the initialization of the variables */ 
   void sched_initializeVariables( const LevelP& level, SchedulerP& sched );

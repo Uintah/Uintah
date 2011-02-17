@@ -523,7 +523,7 @@ DQMOMEqnFactory::sched_evalTransportEqns( const LevelP& level,
     iEqn->second->sched_buildTransportEqn( level, sched, timeSubStep );
 
     DQMOMEqn* dqmom_eqn = dynamic_cast<DQMOMEqn*>(iEqn->second);
-    dqmom_eqn->sched_solveTransportEqn( level, sched, timeSubStep, !lastTimeSubstep );
+    dqmom_eqn->sched_solveTransportEqn( level, sched, timeSubStep, lastTimeSubstep );
   }
 
   if( d_dqmomSolver->getSaveMoments() ) {

@@ -2,8 +2,8 @@
 #define UT_DQMOMEqnFactory_h
 
 #include <CCA/Components/Arches/ArchesLabel.h>
-#include <CCA/Components/Arches/ExplicitTimeInt.h> // should this be here?  -Jeremy
 #include <Core/Grid/Variables/VarLabel.h>
+#include <CCA/Components/Arches/ExplicitTimeInt.h>
 #include <Core/Math/MinMax.h>
 
 namespace Uintah {

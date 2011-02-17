@@ -83,7 +83,7 @@ public:
   void sched_solveTransportEqn(const LevelP& level, 
                                 SchedulerP& sched, 
                                 int timeSubStep,
-                                bool copyOldIntoNew );
+                                bool lastTimeSubstep );
 
   /** @brief  Solve the transport equation */ 
   void solveTransportEqn(const ProcessorGroup*, 
@@ -92,7 +92,7 @@ public:
                          DataWarehouse* old_dw, 
                          DataWarehouse* new_dw,
                          int timeSubStep, 
-                         bool copyOldIntoNew );
+                         bool lastTimeSubstep );
 
   /** @brief Schedule the initialization of the variables */ 
   void sched_initializeVariables( const LevelP& level, SchedulerP& sched );
