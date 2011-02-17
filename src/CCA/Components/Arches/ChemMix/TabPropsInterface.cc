@@ -1085,3 +1085,10 @@ TabPropsInterface::dummyInit( const ProcessorGroup* pc,
     }
   }
 }
+//-----------------------------------------------------------------------------------
+//
+double TabPropsInterface::getTableValue( std::vector<double> iv, std::string variable )
+{
+	double value = getSingleState( variable, iv ); 
+	return value; 
+}

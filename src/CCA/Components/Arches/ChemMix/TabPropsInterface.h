@@ -203,6 +203,8 @@ public:
 
   typedef std::map<string, DepVarCont >       DepVarMap;
 
+	double getTableValue( std::vector<double>, std::string ); 
+
 protected :
 
 private:
@@ -213,7 +215,6 @@ private:
 
   IntVector d_ijk_den_ref;                ///< Reference density location
 
-  vector<string> d_allIndepVarNames;      ///< Vector storing all independent variable names from table file
   vector<string> d_allDepVarNames;        ///< Vector storing all dependent variable names from the table file
 
   vector<string> d_allUserDepVarNames;    ///< Vector storing all independent varaible names requested in input file
