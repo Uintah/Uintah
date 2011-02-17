@@ -30,8 +30,6 @@
 # 
 # Makefile fragment for this subdirectory
 
-include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
-
 SRCDIR   := CCA/Components/Arches/Radiation/fortran
 
 SRCS += \
@@ -59,12 +57,6 @@ SRCS += \
 	$(SRCDIR)/rshsolve.F \
 	$(SRCDIR)/rshresults.F \
 	$(SRCDIR)/soot.F
-
-PSELIBS := 
-
-LIBS := $(F_LIBRARY) $(M_LIBRARY)
-
-include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
 $(SRCDIR)/radarray.$(OBJEXT): $(SRCDIR)/radarray_fort.h
 $(SRCDIR)/radcal.$(OBJEXT): $(SRCDIR)/radcal_fort.h

@@ -35,6 +35,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Arches/ArchesLabel.h>
 #if HAVE_TABPROPS
 # include <CCA/Components/Arches/ChemMix/TabPropsInterface.h>
+# include <CCA/Components/Arches/ChemMix/ClassicTableInterface.h>
 #endif
 #include <CCA/Components/Arches/Mixing/MixingModel.h>
 #include <CCA/Components/Arches/Mixing/ColdflowMixingModel.h>
@@ -143,6 +144,8 @@ Properties::problemSetup(const ProblemSpecP& params)
 #if HAVE_TABPROPS
   else if (db->findBlock("TabProps"))
     mixModel = "TabProps";
+  else if (db->findBlock("ClassicTable"))
+    mixModel = "ClassicTable";
 #endif
   else
     throw InvalidValue("ERROR!: No mixing/reaction table specified! If you are attempting to use the new TabProps interface, ensure that you configured properly with TabProps.",__FILE__,__LINE__);
@@ -193,6 +196,10 @@ Properties::problemSetup(const ProblemSpecP& params)
       proc0cout << "Warning!: The tabulated soot mechanism (tabulated_soot) is not active yet when using TabProps.  I am going to set it to false. " << endl;
       d_tabulated_soot  = false;
     }
+  } else if (mixModel == "ClassicTable") { 
+    // New Classic interface
+    d_mixingRxnTable = scinew ClassicTableInterface( d_lab, d_MAlab ); 
+    d_mixingRxnTable->problemSetup( db ); 
   }
 #endif
   else if (mixModel == "pdfMixingModel" || mixModel == "SteadyFlameletsTable"
@@ -203,7 +210,7 @@ Properties::problemSetup(const ProblemSpecP& params)
     throw InvalidValue("Mixing Model not supported: " + mixModel, __FILE__, __LINE__);
   }
  
-  if (mixModel != "TabProps") {
+  if (mixModel != "TabProps" && mixModel != "ClassicTable") {
     d_mixingModel->problemSetup(db);
 
     if (d_calcEnthalpy){
@@ -292,6 +299,8 @@ Properties::computeInletProperties(const InletStream& inStream,
   }
 #if HAVE_TABPROPS
   else if ( mixModel == "TabProps"){
+    d_mixingRxnTable->oldTableHack( inStream, outStream, d_calcEnthalpy, bc_type ); 
+  } else if ( mixModel == "ClassicTable"){
     d_mixingRxnTable->oldTableHack( inStream, outStream, d_calcEnthalpy, bc_type ); 
   }
 #endif

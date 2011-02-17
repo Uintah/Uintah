@@ -107,7 +107,7 @@ class HeatTransfer;
 class ParticleVelocity;
 class ParticleDensity;
 class CharOxidation;
-class TabPropsInterface;
+class MixingRxnModel;
 
 class CoalModelFactory
 {
@@ -192,9 +192,9 @@ public:
 
   /** @brief  Set the MixingRxnModel so that child classes that need a chemical species can request it.
               This method will go away when Properties goes away. */
-  void setTabPropsInterface( TabPropsInterface* mixing_rxn_model ) {
-    d_TabPropsInterface = mixing_rxn_model;
-    d_TabPropsInterfaceSet = true;
+  void setMixingRxnModel( MixingRxnModel* mixing_rxn_model ) {
+    d_MixingRxnModel = mixing_rxn_model;
+    d_MixingRxnModelSet = true;
   };
 
   // ------------------------------------
@@ -293,12 +293,12 @@ private:
   BuildMap builders_;
   ModelMap models_;
 
-  ArchesLabel* d_fieldLabels;
-  TabPropsInterface* d_TabPropsInterface;
+  ArchesLabel*      d_fieldLabels;
+  MixingRxnModel*   d_MixingRxnModel;
 
-  bool d_TabPropsInterfaceSet; ///< Boolean: has the MixingRxnModel been set using setMixingRxnModel() method?
-  bool d_coupled_physics;       ///< Boolean: use coupled physics and iterative procedure?
-  bool d_labelSet;              ///< Boolean: has the ArchesLabel been set using setArchesLabel() method?
+  bool d_MixingRxnModelSet;  ///< Boolean: has the MixingRxnModel been set using setMixingRxnModel() method?
+  bool d_coupled_physics;    ///< Boolean: use coupled physics and iterative procedure?
+  bool d_labelSet;           ///< Boolean: has the ArchesLabel been set using setArchesLabel() method?
   bool d_unweighted;
 
   int numQuadNodes;         ///< Number of quadrature nodes

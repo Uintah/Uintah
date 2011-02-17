@@ -3,10 +3,9 @@
 SRCDIR   := CCA/Components/Arches/TransportEqns
 
 SRCS += \
-  $(SRCDIR)/EqnFactory.cc \
-  $(SRCDIR)/DQMOMEqnFactory.cc \
-  $(SRCDIR)/EqnBase.cc \
-  $(SRCDIR)/ScalarEqn.cc \
-	$(SRCDIR)/Discretization_new.cc \
-  $(SRCDIR)/DQMOMEqn.cc
-
+  $(SRCDIR)/Discretization_new.cc \
+  $(SRCDIR)/DQMOMEqn.cc           \
+  $(SRCDIR)/DQMOMEqnFactory.cc    \
+  $(SRCDIR)/EqnBase.cc            \
+  $(SRCDIR)/EqnFactory.cc         \
+  $(SRCDIR)/ScalarEqn.cc          

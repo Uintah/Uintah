@@ -430,17 +430,7 @@ public:
                                    DataWarehouse* fine_old_dw,
                                    DataWarehouse* fine_new_dw);
 
-private:
-                        
-  void printSchedule(const PatchSet* patches,
-                     const string& where);
-                     
-  void printSchedule(const LevelP& level,
-                     const string& where); 
-                     
-  void printTask(const PatchSubset* patches,
-                 const Patch* patch,
-                 const string& where);                         
+private:                        
      
   enum bctype { NONE=0,
                 FIXED,
