@@ -48,7 +48,7 @@ namespace Wasatch {
 
   template < typename FieldT, typename BCOpT >
   void set_bc( const Uintah::Patch* const patch,
-               const GraphHelper& graph,
+               const GraphHelper& gh,
                const std::string& phiName,
                const SpatialOps::structured::IntVec& bcPointIndex,
                const SpatialOps::structured::IntVec& patchDim, //send in the patch dimension to avoid calculating it for every point!
@@ -60,11 +60,11 @@ namespace Wasatch {
                const SpatialOps::OperatorDatabase& opdb )
   {
     typedef typename BCOpT::BCEvalT BCEvaluator;
-    Expr::ExpressionFactory& factory = *graph.exprFactory;
+    Expr::ExpressionFactory& factory = *gh.exprFactory;
     const Expr::Tag phiLabel( phiName, Expr::STATE_N );
-    const Expr::ExpressionID phiID = factory.get_registry().get_id(phiLabel);  
-    Expr::Expression<FieldT>& phiExpr = dynamic_cast<Expr::Expression<FieldT>&> ( factory.retrieve_expression( phiID, patch->getID(), true ) );
-    //
+    const Expr::ExpressionID phiID = factory.get_registry().get_id(phiLabel);
+    Expr::Expression<FieldT>& phiExpr = dynamic_cast<Expr::Expression<FieldT>&>( factory.retrieve_expression( phiID, patch->getID(), true ) );
+    cout << "setting bc on expression '" << phiExpr.name() << "' with address " << &phiExpr << endl;
     BCOpT bcOp( patchDim, bcx, bcy, bcz, bcPointIndex, bcSide, BCEvaluator(bcValue), opdb );
     phiExpr.process_after_evaluate( bcOp );
   }
@@ -73,14 +73,14 @@ namespace Wasatch {
   
   template <typename T>
   bool get_iter_bcval_bckind( const Uintah::Patch* patch, 
-                                 const Uintah::Patch::FaceType face,
-                                 const int child,
-                                 const std::string& desc,
-                                 const int mat_id,
-                                 T& bc_value,
-                                 SCIRun::Iterator& bound_ptr,
-                                 std::string& bc_kind )
-  {  
+                              const Uintah::Patch::FaceType face,
+                              const int child,
+                              const std::string& desc,
+                              const int mat_id,
+                              T& bc_value,
+                              SCIRun::Iterator& bound_ptr,
+                              std::string& bc_kind )
+  {
     SCIRun::Iterator nu;
     const Uintah::BoundCondBase* bc = patch->getArrayBCValues(face, mat_id,
                                                               desc, bound_ptr,
@@ -106,7 +106,7 @@ namespace Wasatch {
   
   //-----------------------------------------------------------------------------
   
-  void build_bcs( const std::vector<EqnTimestepAdaptorBase*>& eqnAdaptors, 
+  void build_bcs( const std::vector<EqnTimestepAdaptorBase*>& eqnAdaptors,
                   const GraphHelper& graphHelper,
                   const Uintah::PatchSet* const localPatches,
                   const PatchInfoMap& patchInfoMap,
@@ -547,9 +547,9 @@ namespace Wasatch {
                             set_bc< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::NeumannZ >(patch, graphHelper, phiName, bcPointIJK, patchDim, bcx, bcy, bcz, SS::Z_PLUS_SIDE, bc_value, opdb);
                             
                           } else { // Scalar Volume Field
-                            typedef SS::SVolField  FieldT;                          
+                            typedef SS::SVolField  FieldT;
                             set_bc< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::NeumannZ >(patch, graphHelper, phiName, bcPointIJK, patchDim, bcx, bcy, bcz, SS::Z_PLUS_SIDE, bc_value, opdb);
-                          }                                                    
+                          }                     
                           
                         }
                         break;
