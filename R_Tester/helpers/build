@@ -69,7 +69,7 @@ echo "==================================" >> $HTMLLOG
 echo "" >> $HTMLLOG
 echo "Starting configure on `date`" >> $HTMLLOG
 echo "  with command" >> $HTMLLOG
-grep configure configure_command >> $HTMLLOG
+cat configure_command >> $HTMLLOG
 echo "" >> $HTMLLOG
 
 
