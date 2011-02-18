@@ -226,8 +226,7 @@ DORadiationModel::computeRadiationProps(const ProcessorGroup*,
                                         const Patch* patch,
                                         CellInformation* cellinfo, 
                                         ArchesVariables* vars,
-                                        ArchesConstVariables* constvars,
-                                        bool d_abskp)
+                                        ArchesConstVariables* constvars)
 
 {
 
@@ -270,9 +269,9 @@ DORadiationModel::computeRadiationProps(const ProcessorGroup*,
 
     fort_radcoef(idxLo, idxHi, vars->temperature, 
                  constvars->co2, constvars->h2o, constvars->cellType, ffield, 
-                 d_opl, constvars->sootFV, constvars->ABSKP, vars->ABSKG, vars->ESRCG, vars->shgamma,
+                 d_opl, constvars->sootFV, vars->ABSKG, vars->ESRCG, vars->shgamma,
                  cellinfo->xx, cellinfo->yy, cellinfo->zz, fraction, fractiontwo,
-                 lprobone, lprobtwo, lprobthree, lambda, lradcal, d_abskp);
+                 lprobone, lprobtwo, lprobthree, lambda, lradcal);
 
 }
 
