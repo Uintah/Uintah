@@ -243,37 +243,37 @@ namespace Uintah {
       ////////////////////////////////////////////////////////////////////////
       // flowfield cell id
       inline int flowCellType() const {
-        //return d_flowfieldCellTypeVal;
-        return -1; 
+        return d_flowfieldCellTypeVal;
+        //return -1; 
       }
 
       ////////////////////////////////////////////////////////////////////////
       // Wall boundary ID
       inline int wallCellType() const { 
-        // int wall_celltypeval = -10;
-        // if (d_wallBoundary){ 
-        //   wall_celltypeval = d_wallBdry->d_cellTypeID; 
-        // }
-        // return wall_celltypeval;
-        return WALL; 
+        int wall_celltypeval = -10;
+        if (d_wallBoundary){ 
+          wall_celltypeval = d_wallBdry->d_cellTypeID; 
+        }
+        return wall_celltypeval;
+        //return WALL; 
       }
 
       ////////////////////////////////////////////////////////////////////////
       // Pressure boundary ID
       inline int pressureCellType() const {
-        // int pressure_celltypeval = -10;
-        // if (d_pressureBoundary) pressure_celltypeval = d_pressureBC->d_cellTypeID; 
-        // return pressure_celltypeval;
-        return PRESSURE; 
+        int pressure_celltypeval = -10;
+        if (d_pressureBoundary) pressure_celltypeval = d_pressureBC->d_cellTypeID; 
+        return pressure_celltypeval;
+        //return PRESSURE; 
       }
 
       ////////////////////////////////////////////////////////////////////////
       // Outlet boundary ID
       inline int outletCellType() const { 
-        // int outlet_celltypeval = -10;
-        // if (d_outletBoundary) outlet_celltypeval = d_outletBC->d_cellTypeID;
-        // return outlet_celltypeval; 
-        return OUTLET; 
+        int outlet_celltypeval = -10;
+        if (d_outletBoundary) outlet_celltypeval = d_outletBC->d_cellTypeID;
+        return outlet_celltypeval; 
+        //return OUTLET; 
       }
       ////////////////////////////////////////////////////////////////////////
       // sets boolean for energy exchange between solid and fluid
