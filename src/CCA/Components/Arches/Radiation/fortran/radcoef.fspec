@@ -6,7 +6,6 @@ void radcoef(IntVector idxlo, IntVector idxhi,
              int ffield,
 	     double opl,
 	     constCCVariable<double> sfv,
-             constCCVariable<double> abskp,
 	     CCVariable<double> abskg, CCVariable<double> esrcg,
 	     CCVariable<double> shgamma,
 	     OffsetArray1<double> xx,
@@ -15,4 +14,4 @@ void radcoef(IntVector idxlo, IntVector idxhi,
 	     OffsetArray1<double> fraction, 
 	     OffsetArray1<double> fractiontwo, 
 	     bool lprobone, bool lprobtwo, bool lprobthree, 
-	     int lambda, bool lradcal, bool d_abskp);
+	     int lambda, bool lradcal);
