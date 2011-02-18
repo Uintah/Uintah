@@ -98,10 +98,14 @@ void sched_dummyInit( const LevelP& level, SchedulerP& sched );
   inline bool getRadiationFlag(){
     return b_radiation; };   
 
+  /** @brief  Return the VarLabel for the model term for absorption coefficient */
+  inline const VarLabel* getabskpLabel() {
+    return d_abskpLabel; };
+
 protected:
 
   bool b_radiation;
-
+  const VarLabel* d_abskpLabel;
   double d_w_scaling_constant;
   double d_w_small; // "small" clip value for zero weights
 
