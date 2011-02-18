@@ -149,7 +149,7 @@ namespace Wasatch{
      *  This sets all field requirements for the Uintah task and
      *  scheduled it for execution.
      */
-    void schedule( const std::vector<Expr::Tag>& newDWFields );
+    void schedule( const Expr::TagSet& newDWFields );
 
 
     /**

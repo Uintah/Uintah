@@ -340,9 +340,9 @@ namespace Wasatch{
     //________________________________________________________________
     // Several expressions require ghost updates after they are calculated
     // jcs note that we need to set BCs on these quantities as well.
-//     factory.cleave_from_parents( normalStressID_   );
-//     factory.cleave_from_parents( normalConvFluxID_ );
-//     factory.cleave_from_parents( pressureID_       );
+    factory.cleave_from_parents( normalStressID_   );
+    factory.cleave_from_parents( normalConvFluxID_ );
+    factory.cleave_from_parents( pressureID_       );
   }
 
   //------------------------------------------------------------------
