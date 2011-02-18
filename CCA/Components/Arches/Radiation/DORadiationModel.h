@@ -108,8 +108,7 @@ public:
                                          const Patch* patch,
                                          CellInformation* cellinfo,
                                          ArchesVariables* vars,
-                                         ArchesConstVariables* constvars,
-                                         bool d_abskp);
+                                         ArchesConstVariables* constvars);
       //
       /////////////////////////////////////////////////////////////////////////
       
