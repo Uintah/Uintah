@@ -23,8 +23,16 @@
 using std::cout;
 using std::endl;
 
+#define WASATCH_TASK_DIAGNOSTICS
+#define WASATCH_TASK_FIELD_DIAGNOSTICS
+
 namespace Wasatch{
 
+  /**
+   *  \class TreeTaskExecute
+   *  \author James C. Sutherland
+   *  \brief Handles execution of a Expr::ExpressionTree object on a set of patches.
+   */
   class TreeTaskExecute
   {
     typedef Expr::ExpressionTree::TreePtr  TreePtr;
@@ -42,7 +50,7 @@ namespace Wasatch{
 
     const std::string taskName_;        ///< the name of the task
     const PatchInfoMap& patchInfoMap_;  ///< information for each individual patch.
-    Expr::FieldManagerList& fml_;       ///< the FieldManagerList for this TaskInterface
+    Expr::FieldManagerList* fml_;       ///< the FieldManagerList for this TaskInterface
 
     bool hasBeenScheduled_;
     PatchTreeMap patchTreeMap_;
@@ -62,15 +70,13 @@ namespace Wasatch{
                      const Uintah::PatchSet* const patches,
                      const Uintah::MaterialSet* const materials,
                      const PatchInfoMap& info,
-                     const bool createUniqueTreePerPatch,
-                     Expr::FieldManagerList& fml );
+                     const bool createUniqueTreePerPatch );
 
     ~TreeTaskExecute();
     
-    void schedule( const std::vector<Expr::Tag>& newDWFields );
+    void schedule( Expr::TagSet newDWFields );
 
   };
-
 
   //------------------------------------------------------------------
 
@@ -80,8 +86,7 @@ namespace Wasatch{
                                     const Uintah::PatchSet* const patches,
                                     const Uintah::MaterialSet* const materials,
                                     const PatchInfoMap& info,
-                                    const bool createUniqueTreePerPatch,
-                                    Expr::FieldManagerList& fml )
+                                    const bool createUniqueTreePerPatch )
     : masterTree_( tree ),
       scheduler_( sched ),
       patches_( patches ),
@@ -89,7 +94,7 @@ namespace Wasatch{
       createUniqueTreePerPatch_( createUniqueTreePerPatch ),
       taskName_( taskName ),
       patchInfoMap_( info ),
-      fml_( fml )
+      fml_( scinew Expr::FieldManagerList(taskName) )
   {
     hasBeenScheduled_ = false;
 
@@ -98,19 +103,16 @@ namespace Wasatch{
         const Uintah::PatchSubset* const pss = patches_->getSubset(ipss);
         for( int ip=0; ip<pss->size(); ++ip ){
           const Uintah::Patch* const patch = pss->get(ip);
- //           cout << "Setting up tree '" << taskName_ << "' on patch (" << patch->getID() << ")" << endl;
-
-          TreePtr tree( new Expr::ExpressionTree( masterTree_->get_roots(),
-                                                  masterTree_->get_expression_factory(),
-                                                  patch->getID(),
-                                                  masterTree_->name() ) );
-          tree->register_fields( fml_ );
+          //cout << "Setting up tree '" << taskName_ << "' on patch (" << patch->getID() << ")" << endl;
+          TreePtr tree( new Expr::ExpressionTree( *masterTree_ ) );
+          tree->set_patch_id( patch->getID() );
+          tree->register_fields( *fml_ );
           patchTreeMap_[ patch->getID() ] = make_pair( tree, scinew Uintah::Task( taskName_, this, &TreeTaskExecute::execute ) );
         }
       }
     }
     else{
-      masterTree_->register_fields( fml_ );
+      masterTree_->register_fields( *fml_ );
       patchTreeMap_[ -1 ] = make_pair( masterTree_, scinew Uintah::Task( taskName_, this, &TreeTaskExecute::execute ) );
     }
 
@@ -124,10 +126,11 @@ namespace Wasatch{
 
   TreeTaskExecute::~TreeTaskExecute()
   {
-    // jcs do we need to delete the Uintah::Task?
-    //     for( PatchTreeMap::iterator i=patchTreeMap_.begin(); i!=patchTreeMap_.end(); ++i ){
-    //       delete i->second.first;
-    //     }
+    delete fml_;
+//     // jcs do we need to delete the Uintah::Task?
+//         for( PatchTreeMap::iterator i=patchTreeMap_.begin(); i!=patchTreeMap_.end(); ++i ){
+//           delete i->second.second;
+//         }
   }
 
   //------------------------------------------------------------------
@@ -138,7 +141,7 @@ namespace Wasatch{
                       Expr::FieldManagerList& fml,
                       const Uintah::PatchSubset* const patches,
                       const Uintah::MaterialSubset* const materials,
-                      const std::vector<Expr::Tag>& newDWFields )
+                      const Expr::TagSet& newDWFields )
   {
     // this is done once when the task is scheduled.  The purpose of
     // this method is to collect the fields from the ExpressionTree
@@ -154,6 +157,13 @@ namespace Wasatch{
     //    not.  Currently, we don't have any scratch fields.  Not sure
     //    where those would be added.
     //
+
+#   ifdef WASATCH_TASK_FIELD_DIAGNOSTICS
+    cout << "Field requirements for task '" << tree.name() << "'" << endl
+         << setw(10) << "Mode " << left << setw(20) << "Field Name"
+         << "DW  #Ghost PatchID" << endl
+         << "-----------------------------------------------------------------------" << endl;
+#   endif
 
     //______________________________
     // cycle through each field type
@@ -171,34 +181,33 @@ namespace Wasatch{
 
         Expr::FieldInfo& fieldInfo = ii->second;
 
+        // see if this field is required by the given tree
+        const Expr::Tag fieldTag( fieldInfo.varlabel->getName(), fieldInfo.context );
+        if( !tree.has_field( fieldTag ) )  continue;
+
         //________________
         // set field mode 
-        {
-          const Expr::Tag fieldTag(fieldInfo.varlabel->getName(), fieldInfo.context );
-
-          if( tree.has_expression( fieldTag ) ){
-            if( tree.get_expression(fieldTag).is_placeholder() ){
-              fieldInfo.mode = Expr::REQUIRES;
-              if( find( newDWFields.begin(), newDWFields.end(), fieldTag ) == newDWFields.end() )
-                fieldInfo.useOldDataWarehouse = true;
-            }
-            else
-              fieldInfo.mode = Expr::COMPUTES;
-          }
-          else{
-            fieldInfo.mode = Expr::REQUIRES;
-          }
+        if( tree.computes_field( fieldTag ) ){
+          fieldInfo.mode = Expr::COMPUTES;
+        }
+        else{
+          fieldInfo.mode = Expr::REQUIRES;
+          if( newDWFields.find( fieldTag ) == newDWFields.end() )
+            fieldInfo.useOldDataWarehouse = true;
+          else
+            fieldInfo.useOldDataWarehouse = false;
         }
 
         // jcs : old dw is (should be) read only.
         Uintah::Task::WhichDW dw = Uintah::Task::NewDW;
         if( fieldInfo.useOldDataWarehouse ) dw = Uintah::Task::OldDW;
 
-//         cout << "Task '" << tree.name() << "' "; // jcs diagnostic
         switch( fieldInfo.mode ){
 
         case Expr::COMPUTES:
-//           cout << "COMPUTES";  // jcs diagnostic
+#         ifdef WASATCH_TASK_FIELD_DIAGNOSTICS
+          cout << setw(10) << "COMPUTES";
+#         endif
           ASSERT( dw == Uintah::Task::NewDW );
           // jcs note that we need ghost information on the computes fields as well!
           task.computes( fieldInfo.varlabel,
@@ -207,7 +216,9 @@ namespace Wasatch{
           break;
 
         case Expr::REQUIRES:
-//           cout << "REQUIRES";  // jcs diagnostic
+#         ifdef WASATCH_TASK_FIELD_DIAGNOSTICS
+          cout << setw(10) << "REQUIRES";
+#         endif
           task.requires( dw,
                          fieldInfo.varlabel,
                          patches, Uintah::Task::NormalDomain,
@@ -216,36 +227,43 @@ namespace Wasatch{
           break;
 
         case Expr::MODIFIES:
-//           cout << "MODIFIES"; // jcs diagnostic
+#         ifdef WASATCH_TASK_FIELD_DIAGNOSTICS
+          cout << setw(10) << "MODIFIES";
+#         endif
           ASSERT( dw == Uintah::Task::NewDW );
           task.modifies( fieldInfo.varlabel,
                          patches, Uintah::Task::NormalDomain,
                          materials, Uintah::Task::NormalDomain );
           break;
         } // switch
-        
-        //==================== <diagnostics> ====================
-//         cout << " '"  << fieldInfo.varlabel->getName() << "' ("
-//              << fieldInfo.context << ") in ";
-//         if( fieldInfo.useOldDataWarehouse ) cout << "OLD";
-//         else cout << "NEW";
-//         cout << " data warehouse"
-//              << " with " << fieldInfo.nghost << " ghosts on patches "
-//              << *patches
-//              << endl;
-        //==================== </diagnostics> ====================
 
+#       ifdef WASATCH_TASK_FIELD_DIAGNOSTICS
+        cout << setw(20) << left << fieldInfo.varlabel->getName();
+        if( fieldInfo.useOldDataWarehouse ) cout << "OLD   ";
+        else cout << "NEW   ";
+        cout << left << setw(5) << fieldInfo.nghost
+             << *patches << endl;
+#       endif
 
       } // field loop
     } // field type loop
+
+#   ifdef WASATCH_TASK_FIELD_DIAGNOSTICS
+    cout << endl;
+#   endif
+
   }
 
   //------------------------------------------------------------------
 
   void
-  TreeTaskExecute::schedule( const std::vector<Expr::Tag>& newDWFields )
+  TreeTaskExecute::schedule( Expr::TagSet newDWFields )
   {
     ASSERT( !hasBeenScheduled_ );
+
+#   ifdef WASATCH_TASK_DIAGNOSTICS
+    cout << "Scheduling task '" << taskName_ << "'" << endl;
+#   endif
 
     const PatchTreeMap::iterator iptm = patchTreeMap_.begin();
     ASSERT( iptm != patchTreeMap_.end() );
@@ -254,9 +272,23 @@ namespace Wasatch{
     TreePtr tree = iptm->second.first;
 
     const Uintah::MaterialSubset* const mss = materials_->getUnion();
-
     const Uintah::PatchSubset* const pss = patches_->getUnion();
-    add_fields_to_task( *task, *tree, fml_, pss, mss, newDWFields );
+
+    // augment newDWFields to include any fields that are a result of tree cleaving
+    {
+      for( Expr::ExpressionTree::ExprFieldMap::const_iterator imp=tree->field_map().begin(); imp!=tree->field_map().end(); ++imp ){
+        const Expr::FieldDeps::FldHelpers& fh = imp->second->field_helpers();
+        for( Expr::FieldDeps::FldHelpers::const_iterator ifld=fh.begin(); ifld!=fh.end(); ++ifld ){
+          const Expr::FieldDeps::FieldHelperBase& fhb = **ifld;
+          const Expr::Tag tag( fhb.name(),fhb.context() );
+          if( tree->get_expression( tag ).is_placeholder() ) continue;
+          newDWFields.insert( tag );
+        }
+      }
+    }
+
+    add_fields_to_task( *task, *tree, *fml_, pss, mss, newDWFields );
+
     // jcs eachPatch vs. allPatches (gang schedule vs. independent...)
     scheduler_->addTask( task, patches_, materials_ );
 
@@ -309,9 +341,9 @@ namespace Wasatch{
 //                << endl;
 
 //     fml_->dump_fields(cout);
-          fml_.allocate_fields( Expr::AllocInfo( oldDW, newDW, material, patch, pg ) );
+          fml_->allocate_fields( Expr::AllocInfo( oldDW, newDW, material, patch, pg ) );
 
-          tree->bind_fields( fml_ );
+          tree->bind_fields( *fml_ );
           tree->bind_operators( opdb );          
           tree->execute_tree();
           // get pressure expression and build coefficient matrix for pressure
@@ -322,7 +354,7 @@ namespace Wasatch{
           //}
           //
 //           cout << "Wasatch: done executing graph '" << taskName_ << "'" << endl;
-          fml_.deallocate_fields();
+          fml_->deallocate_fields();
         }
         catch( exception& e ){
           cout << e.what() << endl;
@@ -331,11 +363,6 @@ namespace Wasatch{
       }
     }
   }
-
-
-
-
-
 
 
   //------------------------------------------------------------------
@@ -355,9 +382,16 @@ namespace Wasatch{
     typedef Expr::ExpressionTree::TreeList TreeList;
     Expr::ExpressionTree::TreePtr tree( new Expr::ExpressionTree( root, factory, -1, taskName ) );
     TreeList treeList = tree->split_tree();
+    if( treeList.size() > 1 ){
+      std::ostringstream fnam;
+      fnam << tree->name() << "_original.dot";
+      cout << "writing pre-cleave tree to " << fnam.str() << endl;
+      std::ofstream fout( fnam.str().c_str() );
+      tree->write_tree(fout);
+    }
     for( TreeList::iterator itr=treeList.begin(); itr!=treeList.end(); ++itr ){
-      cout << "creating task executor for tree " << (*itr)->name() << endl;
-      execList_.push_back( new TreeTaskExecute( *itr, taskName, sched, patches, materials, info, createUniqueTreePerPatch, *fml_ ) );
+      Expr::ExpressionTree::TreePtr tr = *itr;
+      execList_.push_back( new TreeTaskExecute( tr, tr->name(), sched, patches, materials, info, createUniqueTreePerPatch ) );
     }
   }
 
@@ -378,9 +412,16 @@ namespace Wasatch{
     typedef Expr::ExpressionTree::TreeList TreeList;
     Expr::ExpressionTree::TreePtr tree( new Expr::ExpressionTree( roots, factory, -1, taskName ) );
     TreeList treeList = tree->split_tree();
+    if( treeList.size() > 1 ){
+      std::ostringstream fnam;
+      fnam << tree->name() << "_original.dot";
+      cout << "writing pre-cleave tree to " << fnam.str() << endl;
+      std::ofstream fout( fnam.str().c_str() );
+      tree->write_tree(fout);
+    }
     for( TreeList::iterator itr=treeList.begin(); itr!=treeList.end(); ++itr ){
-      cout << "creating task executor for tree " << (*itr)->name() << endl;
-      execList_.push_back( new TreeTaskExecute( *itr, taskName, sched, patches, materials, info, createUniqueTreePerPatch, *fml_ ) );
+      Expr::ExpressionTree::TreePtr tr = *itr;
+      execList_.push_back( new TreeTaskExecute( tr, tr->name(), sched, patches, materials, info, createUniqueTreePerPatch ) );
     }
   }
 
@@ -400,7 +441,7 @@ namespace Wasatch{
   //------------------------------------------------------------------
 
   void
-  TaskInterface::schedule( const std::vector<Expr::Tag>& newDWFields )
+  TaskInterface::schedule( const Expr::TagSet& newDWFields )
   {
     for( ExecList::iterator iex=execList_.begin(); iex!=execList_.end(); ++iex ){
       (*iex)->schedule( newDWFields );
@@ -412,7 +453,7 @@ namespace Wasatch{
   void
   TaskInterface::schedule()
   {
-    std::vector<Expr::Tag> newDWFields;
+    Expr::TagSet newDWFields;
     this->schedule( newDWFields );
   }
 
