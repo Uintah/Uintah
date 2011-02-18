@@ -114,6 +114,7 @@ namespace Uintah {
       constCCVariable<double> sootFV;
       constCCVariable<double> h2o;
       constCCVariable<double> co2;
+      constCCVariable<double> ABSKP;
       constCCVariable<double> reactscalarSRC;
       StencilMatrix<constCCVariable<double> > scalarCoeff; //7 point stencil
       StencilMatrix<constCCVariable<double> > reactscalarCoeff;//7 pt stencil

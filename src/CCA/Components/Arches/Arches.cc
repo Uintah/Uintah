@@ -37,6 +37,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Arches/SourceTerms/MMS1.h>
 #include <CCA/Components/Arches/SourceTerms/TabRxnRate.h>
 #include <CCA/Components/Arches/SourceTerms/CoalGasDevol.h>
+#include <CCA/Components/Arches/SourceTerms/CoalGasOxi.h>
 #include <CCA/Components/Arches/SourceTerms/CoalGasHeat.h>
 #include <CCA/Components/Arches/SourceTerms/CoalGasMomentum.h> 
 #include <CCA/Components/Arches/SourceTerms/WestbrookDryer.h>
@@ -66,6 +67,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Arches/PropertyModels/ConstProperty.h>
 #include <CCA/Components/Arches/PropertyModels/LaminarPrNo.h>
 #include <CCA/Components/Arches/PropertyModels/ScalarDiss.h>
+#include <CCA/Components/Arches/PropertyModels/ABSKP.h>
 #include <CCA/Components/Arches/PropertyModels/ExtentRxn.h>
 #include <CCA/Components/Arches/PropertyModels/TabStripFactor.h>
 #if HAVE_TABPROPS
@@ -1858,7 +1860,10 @@ Arches::sched_weightedAbsInit( const LevelP& level,
       tsk->computes( particletempLabel );
       const VarLabel* surfacerateLabel = charoxymodel->getSurfaceRateLabel();
       tsk->computes( surfacerateLabel );
-
+    } else if( modelType == "HeatTransfer" ) {
+      HeatTransfer* heatmodel = dynamic_cast<HeatTransfer*>(model);
+      const VarLabel* abskpLabel = heatmodel->getabskpLabel();
+      tsk->computes( abskpLabel );
     }
 
     model->sched_initVars( level, sched ); 
@@ -2008,6 +2013,12 @@ Arches::weightedAbsInit( const ProcessorGroup* ,
         CCVariable<double> surface_rate;
         new_dw->allocateAndPut( surface_rate, surfacerateLabel, matlIndex, patch );
         surface_rate.initialize(0.0);
+      } else if( modelType == "HeatTransfer" ) {
+        HeatTransfer* heatmodel = dynamic_cast<HeatTransfer*>(model);
+        const VarLabel* abskpLabel = heatmodel->getabskpLabel();
+        CCVariable<double> abskp;
+        new_dw->allocateAndPut( abskp, abskpLabel, matlIndex, patch );
+        abskp.initialize(0.0);
 
       }
     }
@@ -2434,6 +2445,11 @@ void Arches::registerUDSources(ProblemSpecP& db)
         SourceTermBase::Builder* src_builder = scinew CoalGasDevol::Builder(src_name, required_varLabels, d_lab->d_sharedState);
         factory.register_source_term( src_name, src_builder ); 
 
+      } else if (src_type == "coal_gas_oxi"){
+        // Sums up the devol. model terms * weights
+        SourceTermBase::Builder* src_builder = scinew CoalGasOxi::Builder(src_name, required_varLabels, d_lab->d_sharedState);
+        factory.register_source_term( src_name, src_builder );
+
       } else if (src_type == "coal_gas_heat"){
         SourceTermBase::Builder* src_builder = scinew CoalGasHeat::Builder(src_name, required_varLabels, d_lab->d_sharedState);
         factory.register_source_term( src_name, src_builder );
@@ -2771,6 +2787,13 @@ void Arches::registerPropertyModels(ProblemSpecP& db)
           proc0cout << "Note:  " << prop_name  << " renamed to scalar_dissipation_rate. " << endl;
         PropertyModelBase::Builder* the_builder = new ScalarDiss::Builder( "scalar_dissipation_rate", d_sharedState ); 
         prop_factory.register_property_model( prop_name, the_builder ); 
+
+      } else if ( prop_type == "absorption_coefficient" ) {
+        // Coal particles absorption coefficient rate calculation 
+        if ( prop_name != "abskp" )
+          proc0cout << "Note:  " << prop_name  << " renamed to abskp. " << endl;
+        PropertyModelBase::Builder* the_builder = new ABSKP::Builder( "abskp", d_sharedState ); 
+        prop_factory.register_property_model( prop_name, the_builder );
 
       } else if ( prop_type == "extent_rxn" ) {
 
