@@ -15,7 +15,7 @@ echo
 echo "Checking input files"
 echo
 
-if [ -a $TEST_UDADIR/input.xml.orig ]; then
+if [ -s $TEST_UDADIR/input.xml.orig ]; then
   echo "comparing input.xml.orig"
   sdiff -Ws $TEST_UDADIR/input.xml.orig $COMPARE_UDADIR/input.xml.orig
 else

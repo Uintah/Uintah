@@ -44,8 +44,8 @@ if [ -d "$TEST_UDADIR" ]; then
     fi
     
     # copy text files to the goldStandard
-    cp $TEST_DIR/sus.log.txt  $TEST_DIR/timestamp $TEST_DIR/restart_timestamp $COMPARE_ROOT/$TEST >/dev/null
-    cp $TEST_DIR/malloc_stats $TEST_DIR/restart_malloc_stats $COMPARE_ROOT/$TEST >/dev/null
+    cp $TEST_DIR/sus.log.txt  $TEST_DIR/timestamp $TEST_DIR/restart_timestamp $COMPARE_ROOT/$TEST >/dev/null 2>&1
+    cp $TEST_DIR/malloc_stats $TEST_DIR/restart_malloc_stats $COMPARE_ROOT/$TEST >/dev/null 2>&1
 
     chgrp -R uintah "$COMPARE_ROOT/$TEST"
     chmod -R g+rwX "$COMPARE_ROOT/$TEST"
