@@ -227,13 +227,6 @@ public:
   inline void setExtraScalars(vector<ExtraScalarSolver*>* extraScalars) {
   }
 
-  inline void setCarbonBalanceES(bool carbon_balance_es){
-    d_carbon_balance_es = carbon_balance_es;
-  }
-  inline void setSulfurBalanceES(bool sulfur_balance_es){
-    d_sulfur_balance_es = sulfur_balance_es;
-  }
-
   void setPartVel( PartVel* partVel ) {
     d_partVel = partVel; };
 
@@ -399,8 +392,6 @@ private:
   bool d_extraProjection;
   bool d_EKTCorrection;
   bool d_KE_fromFC;
-  bool d_carbon_balance_es;
-  bool d_sulfur_balance_es;
 
   PartVel* d_partVel; 
   DQMOM* d_dqmomSolver; 
