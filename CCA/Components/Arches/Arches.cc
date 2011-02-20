@@ -422,11 +422,6 @@ Arches::problemSetup(const ProblemSpecP& params,
   d_boundaryCondition->setMMS(d_doMMS);
   d_boundaryCondition->problemSetup(db);
 
-  d_carbon_balance_es = d_boundaryCondition->getCarbonBalanceES();
-  d_sulfur_balance_es = d_boundaryCondition->getSulfurBalanceES();
-  d_props->setCarbonBalanceES(d_carbon_balance_es);        
-  d_props->setSulfurBalanceES(d_sulfur_balance_es);
-
   ProblemSpecP turb_db = db->findBlock("Turbulence");
   turb_db->getAttribute("model", d_whichTurbModel); 
 
@@ -516,8 +511,6 @@ Arches::problemSetup(const ProblemSpecP& params,
   d_nlSolver->setEKTCorrection(d_EKTCorrection);
   d_nlSolver->setMMS(d_doMMS);
   d_nlSolver->problemSetup(db);
-  d_nlSolver->setCarbonBalanceES(d_carbon_balance_es);
-  d_nlSolver->setSulfurBalanceES(d_sulfur_balance_es);
   d_timeIntegratorType = d_nlSolver->getTimeIntegratorType();
   d_nlSolver->setCalcExtraScalars(d_calcExtraScalars);
   if (d_calcExtraScalars) d_nlSolver->setExtraScalars(&d_extraScalars);

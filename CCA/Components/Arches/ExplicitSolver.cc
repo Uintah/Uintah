@@ -289,8 +289,6 @@ ExplicitSolver::problemSetup(const ProblemSpecP& params)
       throw InvalidValue("current MMS "
                          "not supported: " + d_mms, __FILE__, __LINE__);
 
-    d_carbon_balance_es = d_boundaryCondition->getCarbonBalanceES();        
-    d_numSourceBoundaries = d_boundaryCondition->getNumSourceBndry();
   }
 }
 
@@ -988,21 +986,7 @@ ExplicitSolver::sched_setInitialGuess(SchedulerP& sched,
   }
   //Helper variable
   tsk->computes(d_lab->d_zerosrcVarLabel);
-
-  //__________________________________
-  if (d_carbon_balance_es){        
-    //CO2 Rate term for CO2 scalar equation
-    tsk->computes(d_lab->d_co2RateLabel); //new one
-    tsk->requires(Task::OldDW, d_lab->d_co2RateLabel, gn, 0);
-  }
-  
-  //__________________________________
-  if (d_sulfur_balance_es){        
-    //SO2 Rate term for SO2 scalar equation 
-    tsk->computes(d_lab->d_so2RateLabel); //new one
-    tsk->requires(Task::OldDW, d_lab->d_so2RateLabel, gn, 0);
-  }
-  
+ 
   sched->addTask(tsk, patches, matls);
 }
 
@@ -2100,24 +2084,6 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
     CCVariable<double> zerosrcVar;
     new_dw->allocateAndPut(zerosrcVar, d_lab->d_zerosrcVarLabel, indx, patch);
     zerosrcVar.initialize(0.0);
-
-    if (d_carbon_balance_es){  
-      constCCVariable<double> co2Rate_old;
-      CCVariable<double> co2Rate;
- 
-      old_dw->get(co2Rate_old,        d_lab->d_co2RateLabel, indx, patch, gn, 0);
-      new_dw->allocateAndPut(co2Rate, d_lab->d_co2RateLabel, indx, patch);
-      co2Rate.initialize(0.0);
-      co2Rate.copyData(co2Rate_old);
-    }
-    if (d_sulfur_balance_es){  
-      constCCVariable<double> so2Rate_old;
-      CCVariable<double> so2Rate;
-      old_dw->get(so2Rate_old,        d_lab->d_so2RateLabel, indx, patch, gn, 0);
-      new_dw->allocateAndPut(so2Rate, d_lab->d_so2RateLabel, indx, patch);
-      so2Rate.initialize(0.0);
-      so2Rate.copyData(so2Rate_old);
-    }
 
     CCVariable<double> scalarBoundarySrc;
     CCVariable<double> enthalpyBoundarySrc;
