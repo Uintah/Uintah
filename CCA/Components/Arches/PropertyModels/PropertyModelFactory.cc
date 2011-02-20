@@ -76,3 +76,23 @@ PropertyModelFactory::retrieve_property_model( const std::string name )
 
   return *prop;
 }
+
+//---------------------------------------------------------------------------
+// Method: Find if a property model is included in the map. 
+//---------------------------------------------------------------------------
+bool
+PropertyModelFactory::find_property_model( const std::string name )
+{
+  bool return_value;
+
+  const PropMap::iterator isource= _property_models.find( name );
+
+  if( isource != _property_models.end() ) {
+    return_value = true;
+  } else {
+    return_value = false;
+  }
+    
+  return return_value;
+}
+

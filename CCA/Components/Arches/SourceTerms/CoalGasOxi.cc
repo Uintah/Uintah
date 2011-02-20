@@ -3,11 +3,11 @@
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/CCVariable.h>
-#include <CCA/Components/Arches/SourceTerms/CoalGasDevol.h>
+#include <CCA/Components/Arches/SourceTerms/CoalGasOxi.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqnFactory.h>
 #include <CCA/Components/Arches/CoalModels/CoalModelFactory.h>
 #include <CCA/Components/Arches/CoalModels/ModelBase.h>
-#include <CCA/Components/Arches/CoalModels/KobayashiSarofimDevol.h>
+#include <CCA/Components/Arches/CoalModels/CharOxidationShaddix.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
 
 //===========================================================================
@@ -15,25 +15,25 @@
 using namespace std;
 using namespace Uintah; 
 
-CoalGasDevol::CoalGasDevol( std::string src_name, vector<std::string> label_names, SimulationStateP& shared_state ) 
+CoalGasOxi::CoalGasOxi( std::string src_name, vector<std::string> label_names, SimulationStateP& shared_state ) 
 : SourceTermBase( src_name, shared_state, label_names )
 {
   _label_sched_init = false; 
   _src_label = VarLabel::create( src_name, CCVariable<double>::getTypeDescription() ); 
 }
 
-CoalGasDevol::~CoalGasDevol()
+CoalGasOxi::~CoalGasOxi()
 {}
 //---------------------------------------------------------------------------
 // Method: Problem Setup
 //---------------------------------------------------------------------------
 void 
-CoalGasDevol::problemSetup(const ProblemSpecP& inputdb)
+CoalGasOxi::problemSetup(const ProblemSpecP& inputdb)
 {
 
   ProblemSpecP db = inputdb; 
 
-  db->require( "devol_model_name", _devol_model_name ); 
+  db->require( "char_oxidation_model_name", _oxi_model_name ); 
 
   _source_type = CC_SRC; 
 
@@ -42,10 +42,10 @@ CoalGasDevol::problemSetup(const ProblemSpecP& inputdb)
 // Method: Schedule the calculation of the source term 
 //---------------------------------------------------------------------------
 void 
-CoalGasDevol::sched_computeSource( const LevelP& level, SchedulerP& sched, int timeSubStep )
+CoalGasOxi::sched_computeSource( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
-  std::string taskname = "CoalGasDevol::eval";
-  Task* tsk = scinew Task(taskname, this, &CoalGasDevol::computeSource, timeSubStep);
+  std::string taskname = "CoalGasOxi::eval";
+  Task* tsk = scinew Task(taskname, this, &CoalGasOxi::computeSource, timeSubStep);
 
   if (timeSubStep == 0 && !_label_sched_init) {
     // Every source term needs to set this flag after the varLabel is computed. 
@@ -62,11 +62,11 @@ CoalGasDevol::sched_computeSource( const LevelP& level, SchedulerP& sched, int t
 
   for (int iqn = 0; iqn < dqmomFactory.get_quad_nodes(); iqn++){
 
-    std::string model_name = _devol_model_name; 
+    std::string model_name = _oxi_model_name; 
     std::string node;  
     std::stringstream out; 
     out << iqn; 
-    node = out.str();  
+    node = out.str(); 
     model_name += "_qn";
     model_name += node; 
 
@@ -84,7 +84,7 @@ CoalGasDevol::sched_computeSource( const LevelP& level, SchedulerP& sched, int t
 // Method: Actually compute the source term 
 //---------------------------------------------------------------------------
 void
-CoalGasDevol::computeSource( const ProcessorGroup* pc, 
+CoalGasOxi::computeSource( const ProcessorGroup* pc, 
                    const PatchSubset* patches, 
                    const MaterialSubset* matls, 
                    DataWarehouse* old_dw, 
@@ -105,13 +105,13 @@ CoalGasDevol::computeSource( const ProcessorGroup* pc,
     DQMOMEqnFactory& dqmomFactory  = DQMOMEqnFactory::self(); 
     CoalModelFactory& modelFactory = CoalModelFactory::self(); 
 
-    CCVariable<double> devolSrc; 
+    CCVariable<double> oxiSrc; 
     if ( new_dw->exists(_src_label, matlIndex, patch ) ){
-      new_dw->getModifiable( devolSrc, _src_label, matlIndex, patch ); 
-      devolSrc.initialize(0.0);
+      new_dw->getModifiable( oxiSrc, _src_label, matlIndex, patch ); 
+      oxiSrc.initialize(0.0);
     } else {
-      new_dw->allocateAndPut( devolSrc, _src_label, matlIndex, patch );
-      devolSrc.initialize(0.0);
+      new_dw->allocateAndPut( oxiSrc, _src_label, matlIndex, patch );
+      oxiSrc.initialize(0.0);
     } 
 
 
@@ -120,7 +120,7 @@ CoalGasDevol::computeSource( const ProcessorGroup* pc,
 
 
       for (int iqn = 0; iqn < dqmomFactory.get_quad_nodes(); iqn++){
-        std::string model_name = _devol_model_name; 
+        std::string model_name = _oxi_model_name; 
         std::string node;  
         std::stringstream out; 
         out << iqn; 
@@ -130,12 +130,12 @@ CoalGasDevol::computeSource( const ProcessorGroup* pc,
 
         ModelBase& model = modelFactory.retrieve_model( model_name ); 
 
-        constCCVariable<double> qn_gas_devol;
+        constCCVariable<double> qn_gas_oxi;
         const VarLabel* gasModelLabel = model.getGasSourceLabel(); 
  
-        old_dw->get( qn_gas_devol, gasModelLabel, matlIndex, patch, gn, 0 );
+        old_dw->get( qn_gas_oxi, gasModelLabel, matlIndex, patch, gn, 0 );
 
-        devolSrc[c] += qn_gas_devol[c]; // All the work is performed in Devol model
+        oxiSrc[c] += qn_gas_oxi[c]; // All the work is performed in Char Oxidation model
       }
     }
   }
@@ -144,11 +144,11 @@ CoalGasDevol::computeSource( const ProcessorGroup* pc,
 // Method: Schedule dummy initialization
 //---------------------------------------------------------------------------
 void
-CoalGasDevol::sched_dummyInit( const LevelP& level, SchedulerP& sched )
+CoalGasOxi::sched_dummyInit( const LevelP& level, SchedulerP& sched )
 {
-  string taskname = "CoalGasDevol::dummyInit"; 
+  string taskname = "CoalGasOxi::dummyInit"; 
 
-  Task* tsk = scinew Task(taskname, this, &CoalGasDevol::dummyInit);
+  Task* tsk = scinew Task(taskname, this, &CoalGasOxi::dummyInit);
 
   tsk->computes(_src_label);
 
@@ -160,7 +160,7 @@ CoalGasDevol::sched_dummyInit( const LevelP& level, SchedulerP& sched )
 
 }
 void 
-CoalGasDevol::dummyInit( const ProcessorGroup* pc, 
+CoalGasOxi::dummyInit( const ProcessorGroup* pc, 
                          const PatchSubset* patches, 
                          const MaterialSubset* matls, 
                          DataWarehouse* old_dw, 
