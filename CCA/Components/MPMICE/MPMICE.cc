@@ -161,6 +161,9 @@ void MPMICE::problemSetup(const ProblemSpecP& prob_spec,
   d_mpm->setWithICE();
   d_ice->setMPMICELabel(MIlb);
   d_ice->setWithMPM();
+  if(d_rigidMPM){
+   d_ice->setWithRigidMPM();
+  }
   d_mpm->attachPort("output",dataArchiver);
   d_mpm->attachPort("scheduler",sched);
   d_mpm->problemSetup(prob_spec, restart_prob_spec,grid, d_sharedState);
@@ -1961,13 +1964,12 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
         cout << "WARNING:MPMICE:ComputeEquilibrationPressure "
              << " Cell : " << c << " on level " << lev << " having a difficult time converging. \n"
              << " Now performing a binary pressure search " << endl;
-             
+
         binaryPressureSearch( Temp, rho_micro, vol_frac, rho_CC_new,
                               speedSound,  dp_drho,  dp_de, 
                               press_eos, press, press_new, press_ref,
                               cv, gamma, convergence_crit, 
                               numALLMatls, count, sum, c);
-
      }
      test_max_iter = std::max(test_max_iter, count);
 

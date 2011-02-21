@@ -87,7 +87,7 @@ void ExchangeCoefficients::problemSetup(ProblemSpecP& ps,
     // Bullet Proofing
     for (int i = 0; i<(int)d_K_mom.size(); i++) {
       cout_norm << "K_mom = " << d_K_mom[i] << endl;
-      if( d_K_mom[i] < 0.0 || d_K_mom[i] > 1e15 ) {
+      if( d_K_mom[i] < 0.0 || d_K_mom[i] > 1e20 ) {
         ostringstream warn;
         warn<<"ERROR\n Momentum exchange coef. is either too big or negative\n";
         throw ProblemSetupException(warn.str(), __FILE__, __LINE__);

@@ -121,6 +121,7 @@ ICE::ICE(const ProcessorGroup* myworld, const bool doAMR) :
   d_recompile               = false;
   d_canAddICEMaterial       = false;
   d_with_mpm                = false;
+  d_with_rigid_mpm          = false;
   d_clampSpecificVolume     = false;
   
   d_exchCoeff = scinew ExchangeCoefficients();
@@ -3454,7 +3455,7 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
       
       sp_vol_XFC[m].initialize(0.0, lowIndex,patch->getExtraSFCXHighIndex());
       sp_vol_YFC[m].initialize(0.0, lowIndex,patch->getExtraSFCYHighIndex());
-      sp_vol_ZFC[m].initialize(0.0, lowIndex,patch->getExtraSFCZHighIndex());     
+      sp_vol_ZFC[m].initialize(0.0, lowIndex,patch->getExtraSFCZHighIndex());
     }   
     
     vector<IntVector> adj_offset(3);
