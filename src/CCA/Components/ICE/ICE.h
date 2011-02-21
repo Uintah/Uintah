@@ -353,9 +353,12 @@ namespace Uintah {
        MIlb = mil;
       };
 
-       void setWithMPM()
-       {
+       void setWithMPM() {
          d_with_mpm = true;
+       };
+
+       void setWithRigidMPM() {
+         d_with_rigid_mpm = true;
        };
 
       
@@ -862,6 +865,7 @@ namespace Uintah {
       bool d_recompile;
       bool d_canAddICEMaterial;
       bool d_with_mpm;
+      bool d_with_rigid_mpm;
       
       int d_max_iter_equilibration;
       int d_max_iter_implicit;
