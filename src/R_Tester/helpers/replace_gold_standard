@@ -27,6 +27,16 @@ do_input="false"
 do_checkpoint="false"
 
 #__________________________________
+# Machine specific variables
+MACHINE=`hostname`
+if [ "$MACHINE" == "rt" ]; then
+  GROUP="uintah"
+fi
+if [ "$MACHINE" == "blaze" ]; then
+  GROUP="csafe"
+fi
+
+#__________________________________
 # usage
 printUsage(){
   echo "replace_gold_standard  [options] <new goldStandard uda> < gold Standard Dir> <test name>"
@@ -342,7 +352,7 @@ if [ "$do_uda" = "true" -o "$do_mem" = "true" -o "$do_perf" = "true" -o "$do_inp
 
   find "$gold_standard_dir/$testname" -user `whoami` -exec chmod g+wrX {} \;
   find "$gold_standard_dir/$testname" -user `whoami` -exec chmod o+rX {}  \; 
-  find "$gold_standard_dir/$testname" -user `whoami` -exec chgrp uintah {} > /dev/null 2>&1 \;
+  find "$gold_standard_dir/$testname" -user `whoami` -exec chgrp $GROUP {} > /dev/null 2>&1 \;
 
 
 fi

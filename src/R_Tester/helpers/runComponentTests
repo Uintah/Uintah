@@ -12,8 +12,8 @@ failed=0
 
 #__________________________________
 # bulletproof the inputs
-if [ "$BUILDROOT" = "" -o "$PARALLELISM" = "" -o "$OS" = "" ]; then
-  echo "ERROR:run  One of the environmental variables (BUILDROOT, PARALLELISM, OS) has not been set"
+if [ "$BUILDROOT" = "" -o "$PARALLELISM" = "" -o "$OS" = "" -o "$GROUP"  = "" ]; then
+  echo "ERROR:run  One of the environmental variables (BUILDROOT, PARALLELISM, OS, GROUP) has not been set"
   exit -1
 fi
 
