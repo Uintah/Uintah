@@ -46,6 +46,13 @@ ShaddixHeatTransfer::ShaddixHeatTransfer( std::string modelName,
                                         int qn ) 
 : HeatTransfer(modelName, sharedState, fieldLabels, icLabelNames, scalarLabelNames, qn)
 {
+  // Create a label for this model
+  d_modelLabel = VarLabel::create( modelName, CCVariable<double>::getTypeDescription() );
+
+  // Create the gas phase source term associated with this model
+  std::string gasSourceName = modelName + "_gasSource";
+  d_gasLabel = VarLabel::create( gasSourceName, CCVariable<double>::getTypeDescription() );
+
   // Set constants
   Pr = 0.7;
   sigma = 5.67e-8;   // [=] J/s/m^2/K^4 : Stefan-Boltzmann constant (from white book)
@@ -54,6 +61,7 @@ ShaddixHeatTransfer::ShaddixHeatTransfer( std::string modelName,
 
 ShaddixHeatTransfer::~ShaddixHeatTransfer()
 {
+  VarLabel::destroy(d_abskp);
 }
 
 //---------------------------------------------------------------------------
@@ -218,6 +226,12 @@ ShaddixHeatTransfer::problemSetup(const ProblemSpecP& params, int qn)
   std::stringstream out;
   out << qn; 
   string node = out.str();
+
+  // Absorption coefficient of particle
+  std::string abskpName = "abskp_qn";
+  abskpName += node; 
+  d_abskp = VarLabel::create(abskpName, CCVariable<double>::getTypeDescription());
+
 }
 
 //---------------------------------------------------------------------------
@@ -228,6 +242,8 @@ ShaddixHeatTransfer::sched_initVars( const LevelP& level, SchedulerP& sched )
 {
   std::string taskname = "ShaddixHeatTransfer::initVars";
   Task* tsk = scinew Task(taskname, this, &ShaddixHeatTransfer::initVars);
+
+  tsk->computes(d_abskp);
 
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials()); 
 }
@@ -242,14 +258,17 @@ ShaddixHeatTransfer::initVars( const ProcessorGroup * pc,
                               DataWarehouse        * old_dw, 
                               DataWarehouse        * new_dw )
 {
-  /*
   for( int p=0; p < patches->size(); p++ ) {  // Patch loop
 
     const Patch* patch = patches->get(p);
     int archIndex = 0;
     int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+
+    CCVariable<double> abskp; 
+    new_dw->allocateAndPut( abskp, d_abskp, matlIndex, patch ); 
+    abskp.initialize(0.0);
+
   }
-  */
 }
 
 //---------------------------------------------------------------------------
@@ -270,11 +289,11 @@ ShaddixHeatTransfer::sched_computeModel( const LevelP& level, SchedulerP& sched,
 
     tsk->computes(d_modelLabel);
     tsk->computes(d_gasLabel); 
-    tsk->computes(d_abskpLabel);
+    tsk->computes(d_abskp);
   } else {
     tsk->modifies(d_modelLabel);
     tsk->modifies(d_gasLabel);  
-    tsk->modifies(d_abskpLabel);
+    tsk->modifies(d_abskp);
   }
 
   DQMOMEqnFactory& dqmom_eqn_factory = DQMOMEqnFactory::self();
@@ -472,10 +491,10 @@ ShaddixHeatTransfer::computeModel( const ProcessorGroup * pc,
     }
     
     CCVariable<double> abskp; 
-    if( new_dw->exists( d_abskpLabel, matlIndex, patch) ) {
-      new_dw->getModifiable( abskp, d_abskpLabel, matlIndex, patch ); 
+    if( new_dw->exists( d_abskp, matlIndex, patch) ) {
+      new_dw->getModifiable( abskp, d_abskp, matlIndex, patch ); 
     } else {
-      new_dw->allocateAndPut( abskp, d_abskpLabel, matlIndex, patch );
+      new_dw->allocateAndPut( abskp, d_abskp, matlIndex, patch );
       abskp.initialize(0.0);
     }
     
@@ -691,7 +710,6 @@ ShaddixHeatTransfer::computeModel( const ProcessorGroup * pc,
 
         heat_rate_ = (Q_convection + Q_radiation + Q_reaction)/(mp_Cp*d_pt_scaling_constant);
         //cout << "Qconv " << Q_convection << " Qrad " << Q_radiation << " Qreac " << Q_reaction << " blow " << blow << endl;
-        //cout << "abskp " << abskp_ << endl;
         gas_heat_rate_ = -unscaled_weight*Q_convection;
  
       }

@@ -195,6 +195,8 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
   {
     db->getWithDefault("carbon_balance", d_carbon_balance, false);
     db->getWithDefault("sulfur_balance", d_sulfur_balance, false);
+    db->getWithDefault("carbon_balance_es", d_carbon_balance_es, false);
+    db->getWithDefault("sulfur_balance_es", d_sulfur_balance_es, false);
     //--- instrusions with boundary sources -----
     if (ProblemSpecP intrusionbcs_db = db->findBlock("IntrusionWithBCSource")){
       for (ProblemSpecP intrusionbcs_db = db->findBlock("IntrusionWithBCSource");

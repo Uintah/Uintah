@@ -33,17 +33,10 @@ HeatTransfer::HeatTransfer( std::string modelName,
   // Create the gas phase source term associated with this model
   std::string gasSourceName = modelName + "_gasSource";
   d_gasLabel = VarLabel::create( gasSourceName, CCVariable<double>::getTypeDescription() );
-
-  // Create the absorption coefficient term associated with this model
-  std::string abskpName = modelName + "_abskp";
-  d_abskpLabel = VarLabel::create( abskpName, CCVariable<double>::getTypeDescription() );
-
 }
 
 HeatTransfer::~HeatTransfer()
-{
-  VarLabel::destroy(d_abskpLabel);
-}
+{}
 
 //---------------------------------------------------------------------------
 // Method: Problem Setup
@@ -108,11 +101,9 @@ HeatTransfer::sched_dummyInit( const LevelP& level, SchedulerP& sched )
 
   tsk->requires( Task::OldDW, d_modelLabel, gn, 0);
   tsk->requires( Task::OldDW, d_gasLabel,   gn, 0);
-  tsk->requires( Task::OldDW, d_abskpLabel,   gn, 0);
 
   tsk->computes(d_modelLabel);
   tsk->computes(d_gasLabel); 
-  tsk->computes(d_abskpLabel);
 
   sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
 
@@ -149,24 +140,18 @@ HeatTransfer::dummyInit( const ProcessorGroup* pc,
 
     CCVariable<double> ModelTerm;
     CCVariable<double> GasModelTerm;
-    CCVariable<double> abskpTerm;
-
+    
     constCCVariable<double> oldModelTerm;
     constCCVariable<double> oldGasModelTerm;
-    constCCVariable<double> oldabskpTerm;
 
     new_dw->allocateAndPut( ModelTerm,    d_modelLabel, matlIndex, patch );
     new_dw->allocateAndPut( GasModelTerm, d_gasLabel,   matlIndex, patch ); 
-    new_dw->allocateAndPut( abskpTerm, d_abskpLabel,   matlIndex, patch );
 
     old_dw->get( oldModelTerm,    d_modelLabel, matlIndex, patch, gn, 0 );
     old_dw->get( oldGasModelTerm, d_gasLabel,   matlIndex, patch, gn, 0 );
-    old_dw->get( oldabskpTerm, d_abskpLabel,   matlIndex, patch, gn, 0 );
     
     ModelTerm.copyData(oldModelTerm);
     GasModelTerm.copyData(oldGasModelTerm);
-    abskpTerm.copyData(oldabskpTerm);
-
   }
 }
 

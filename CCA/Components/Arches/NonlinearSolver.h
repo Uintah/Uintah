@@ -146,6 +146,9 @@ public:
 
   virtual void setExtraScalars(vector<ExtraScalarSolver*>* extraScalars) = 0;
 
+  virtual void setCarbonBalanceES(bool carbon_balance_es) = 0;
+  virtual void setSulfurBalanceES(bool sulfur_balance_es) = 0;
+
   virtual void setPartVel(PartVel* partVel) = 0; 
 
   virtual void setDQMOMSolver(DQMOM* dqmomSolver) = 0;
