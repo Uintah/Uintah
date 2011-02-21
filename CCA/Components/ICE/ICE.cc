@@ -2990,9 +2990,15 @@ template<class T> void ICE::computeVelFace(int dir,
                                            constCCVariable<Vector>& vel_CC,
                                            constCCVariable<double>& press_CC,
                                            T& vel_FC,
-                                           T& grad_P_FC)
+                                           T& grad_P_FC,
+                                           bool include_acc)
 {
   double inv_dx = 1.0/dx;
+
+  double one_or_zero=1.;
+  if(!include_acc){
+    one_or_zero=0.0;
+  }
   
   for(;!it.done(); it++){
     IntVector R = *it;
@@ -3023,7 +3029,7 @@ template<class T> void ICE::computeVelFace(int dir,
     // gravity term
     double term3 =  delT * gravity;
     
-    vel_FC[R] = term1- term2 + term3;
+    vel_FC[R] = term1 - one_or_zero*(term2 + term3);
   } 
 }
                   
@@ -3060,6 +3066,7 @@ void ICE::computeVel_FC(const ProcessorGroup*,
       Material* matl = d_sharedState->getMaterial( m );
       int indx = matl->getDWIndex();
       ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
+      MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl); 
       constCCVariable<double> rho_CC, sp_vol_CC;
       constCCVariable<Vector> vel_CC;
       if(ice_matl){
@@ -3111,22 +3118,28 @@ void ICE::computeVel_FC(const ProcessorGroup*,
       CellIterator XFC_iterator = patch->getSFCXIterator();
       CellIterator YFC_iterator = patch->getSFCYIterator();
       CellIterator ZFC_iterator = patch->getSFCZIterator();
+
+      bool include_acc = true;
+      if(mpm_matl && d_with_rigid_mpm){
+        include_acc = false;
+      }
+
       //__________________________________
       //  Compute vel_FC for each face
       computeVelFace<SFCXVariable<double> >(0, XFC_iterator,
                                        adj_offset[0],dx[0],delT,gravity[0],
                                        rho_CC,sp_vol_CC,vel_CC,press_CC,
-                                       uvel_FC, grad_P_XFC);
+                                       uvel_FC, grad_P_XFC, include_acc);
 
       computeVelFace<SFCYVariable<double> >(1, YFC_iterator,
                                        adj_offset[1],dx[1],delT,gravity[1],
                                        rho_CC,sp_vol_CC,vel_CC,press_CC,
-                                       vvel_FC, grad_P_YFC);
+                                       vvel_FC, grad_P_YFC, include_acc);
 
       computeVelFace<SFCZVariable<double> >(2, ZFC_iterator,
                                        adj_offset[2],dx[2],delT,gravity[2],
                                        rho_CC,sp_vol_CC,vel_CC,press_CC,
-                                       wvel_FC, grad_P_ZFC);
+                                       wvel_FC, grad_P_ZFC, include_acc);
 
       //__________________________________
       // (*)vel_FC BC are updated in 
