@@ -207,7 +207,12 @@ public:
   inline void setExtraScalars(vector<ExtraScalarSolver*>* extraScalars) {
     d_extraScalars = extraScalars;
   }
-
+  inline void setCarbonBalanceES(bool carbon_balance_es){
+        d_carbon_balance_es = carbon_balance_es;
+  }
+  inline void setSulfurBalanceES(bool sulfur_balance_es){
+        d_sulfur_balance_es = sulfur_balance_es;
+  }
   inline const string getMixingModelType(){
     return mixModel; 
   }
@@ -347,6 +352,8 @@ private:
 #endif
       bool d_calcExtraScalars;
       vector<ExtraScalarSolver*>* d_extraScalars;
+      bool d_carbon_balance_es;        
+      bool d_sulfur_balance_es;
 
       const ProcessorGroup* d_myworld;
 

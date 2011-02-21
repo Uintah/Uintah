@@ -28,23 +28,23 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-//----- PicardNonlinearSolver.h -----------------------------------------------
+//----- ExplicitSolver.h -----------------------------------------------
 
-#ifndef Uintah_Component_Arches_PicardNonlinearSolver_h
-#define Uintah_Component_Arches_PicardNonlinearSolver_h
+#ifndef Uintah_Component_Arches_ExplicitSolver_h
+#define Uintah_Component_Arches_ExplicitSolver_h
 
 /**************************************
 CLASS
    NonlinearSolver
    
-   Class PicardNonlinearSolver is a subclass of NonlinearSolver
-   implicit iteration.
+   Class ExplicitSolver is a subclass of NonlinearSolver
+   which implements the Forward Euler/RK2/ RK3 methods
 
 GENERAL INFORMATION
-   PicardNonlinearSolver.h - declaration of the class
+   ExplicitSolver.h - declaration of the class
    
    Author: Rajesh Rawat (rawat@crsim.utah.edu)
-   Author of current implicit formulation: Stanislav Borodai (borodai@crsim.utah.edu)
+   Author of RK2/RK3 implementation: Stanislav Borodai (borodai@crsim.utah.edu)
    
    Creation Date:   Mar 1, 2000
    
@@ -57,6 +57,7 @@ KEYWORDS
 
 
 DESCRIPTION
+   Class ExplicitSolver implements ...
 
 WARNING
    none
@@ -72,37 +73,40 @@ class PressureSolver;
 class MomentumSolver;
 class ScalarSolver;
 class ReactiveScalarSolver; 
+class ExtraScalarSolver; 
 class TurbulenceModel;
+class ScaleSimilarityModel;
 class Properties;
 class BoundaryCondition;
 class PhysicalConstants;
 class EnthalpySolver;
-class ExtraScalarSolver;
+class RMCRTRadiationModel; 
 class PartVel; 
 class DQMOM; 
-class PicardNonlinearSolver: public NonlinearSolver {
+class ExplicitSolver: public NonlinearSolver {
 
 public:
   
   // GROUP: Constructors:
   ////////////////////////////////////////////////////////////////////////
   // Solver initialized with all input data 
-  PicardNonlinearSolver(const ArchesLabel* label,
-                        const MPMArchesLabel* MAlb,
-                        Properties* props, 
-                        BoundaryCondition* bc,
-                        TurbulenceModel* turbModel, 
-                        PhysicalConstants* physConst,
-                        bool calcScalar,
-                        bool calcReactscalar,
-                        bool calcEnthalpy,
-                        bool calcVariance,
-                        const ProcessorGroup* myworld);
+  ExplicitSolver(const ArchesLabel* label,
+                 const MPMArchesLabel* MAlb,
+                 Properties* props, 
+                 BoundaryCondition* bc,
+                 TurbulenceModel* turbModel, 
+                 ScaleSimilarityModel* scaleSimilarityModel, 
+                 PhysicalConstants* physConst,
+                 bool calcScalar,
+                 bool calcReactscalar,
+                 bool calcEnthalpy,
+                 bool calcVariance,
+                 const ProcessorGroup* myworld);
 
   // GROUP: Destructors:
   ////////////////////////////////////////////////////////////////////////
-  // Virtual destructor for PicardNonlinearSolver.
-  virtual ~PicardNonlinearSolver();
+  // Virtual destructor for ExplicitSolver.
+  virtual ~ExplicitSolver();
 
 
   // GROUP: Problem Setup :
@@ -134,7 +138,8 @@ public:
   // Schedule the Initialization of non linear solver
   //    [in] 
   //        data User data needed for solve 
-  void sched_setInitialGuess(SchedulerP&, const PatchSet* patches,
+  void sched_setInitialGuess(SchedulerP&, 
+                             const PatchSet* patches,
                              const MaterialSet* matls);
 
   ///////////////////////////////////////////////////////////////////////
@@ -154,7 +159,7 @@ public:
                                    const MaterialSet* matls,
                                    const TimeIntegratorLabel* timelabels);
 
-  void sched_probeData(SchedulerP& sched, 
+  void sched_probeData(SchedulerP&, 
                        const PatchSet* patches,
                        const MaterialSet* matls);
 
@@ -179,15 +184,31 @@ public:
                           const MaterialSet* matls,
                           const TimeIntegratorLabel* timelabels);
 
+  void sched_computeDensityLag(SchedulerP&, 
+                               const PatchSet* patches,
+                               const MaterialSet* matls,
+                               const TimeIntegratorLabel* timelabels,
+                               bool after_average);
+
   void sched_getDensityGuess(SchedulerP&, 
                              const PatchSet* patches,
                              const MaterialSet* matls,
-                             const TimeIntegratorLabel* timelabels);
+                             const TimeIntegratorLabel* timelabels,
+                             bool EKTCorrection, 
+                             bool doing_EKT_now);
 
   void sched_checkDensityGuess(SchedulerP&, 
                                const PatchSet* patches,
                                const MaterialSet* matls,
-                               const TimeIntegratorLabel* timelabels);
+                               const TimeIntegratorLabel* timelabels,
+                               bool EKTCorrection, 
+                               bool doing_EKT_now);
+
+  void sched_checkDensityLag(SchedulerP&, 
+                             const PatchSet* patches,
+                             const MaterialSet* matls,
+                             const TimeIntegratorLabel* timelabels,
+                             bool after_average);
 
   void sched_updateDensityGuess(SchedulerP&, 
                                 const PatchSet* patches,
@@ -198,6 +219,11 @@ public:
                       const PatchSet* patches,
                       const MaterialSet* matls,
                       const TimeIntegratorLabel* timelabels);
+
+  void sched_computeMMSError(SchedulerP&, 
+                             const PatchSet* patches,
+                             const MaterialSet* matls,
+                             const TimeIntegratorLabel* timelabels);
 
   inline double recomputeTimestep(double current_dt) {
     return current_dt/2;
@@ -223,131 +249,162 @@ public:
     d_EKTCorrection=EKTCorrection;
   }
   inline void setCalcExtraScalars(bool calcExtraScalars) {
+    d_calcExtraScalars=calcExtraScalars;
   }
   inline void setExtraScalars(vector<ExtraScalarSolver*>* extraScalars) {
+    d_extraScalars = extraScalars;
   }
-
   inline void setCarbonBalanceES(bool carbon_balance_es){
     d_carbon_balance_es = carbon_balance_es;
   }
   inline void setSulfurBalanceES(bool sulfur_balance_es){
     d_sulfur_balance_es = sulfur_balance_es;
   }
+  inline void setNumSourceBoundaries(int numSourceBoundaries){
+    d_numSourceBoundaries = numSourceBoundaries;
+  }
+
+protected :
+
+private:
+
+  // GROUP: Constructors (private):
+  ////////////////////////////////////////////////////////////////////////
+  // Should never be used
+  ExplicitSolver();
+
+  // GROUP: Action Methods (private) :
+  ///////////////////////////////////////////////////////////////////////
+  // Actually Initialize the non linear solver
+  //    [in] 
+  //        data User data needed for solve 
+  void setInitialGuess(const ProcessorGroup* pc,
+                       const PatchSubset* patches,
+                       const MaterialSubset* matls,
+                       DataWarehouse* old_dw,
+                       DataWarehouse* new_dw);
+
+  ///////////////////////////////////////////////////////////////////////
+  // actual data copy for first time step of MPMArches to overcome
+  // scheduler limitation on getting pset from old_dw
+
+  void dummySolve(const ProcessorGroup* pc,
+                  const PatchSubset* patches,
+                  const MaterialSubset* matls,
+                  DataWarehouse* old_dw,
+                  DataWarehouse* new_dw);
+
+  ///////////////////////////////////////////////////////////////////////
+  // Actually Interpolate from SFCX, SFCY, SFCZ to CC<Vector>
+  //    [in] 
+  void interpolateFromFCToCC(const ProcessorGroup* pc,
+                             const PatchSubset* patches,
+                             const MaterialSubset* matls,
+                             DataWarehouse* old_dw,
+                             DataWarehouse* new_dw,
+                             const TimeIntegratorLabel* timelabels);
+
+  void computeVorticity(const ProcessorGroup* pc,
+                        const PatchSubset* patches,
+                        const MaterialSubset* matls,
+                        DataWarehouse* old_dw,
+                        DataWarehouse* new_dw,
+                        const TimeIntegratorLabel* timelabels);
+
+  void probeData(const ProcessorGroup* pc,
+                 const PatchSubset* patches,
+                 const MaterialSubset* matls,
+                 DataWarehouse* old_dw,
+                 DataWarehouse* new_dw);
+
+  void printTotalKE(const ProcessorGroup* ,
+                    const PatchSubset* patches,
+                    const MaterialSubset*,
+                    DataWarehouse*,
+                    DataWarehouse* new_dw,
+                    const TimeIntegratorLabel* timelabels);
+
+  void updatePressure(const ProcessorGroup* ,
+                      const PatchSubset* patches,
+                      const MaterialSubset*,
+                      DataWarehouse* old_dw,
+                      DataWarehouse* new_dw,
+                      const TimeIntegratorLabel* timelabels);
+
+  void saveTempCopies(const ProcessorGroup*,
+                      const PatchSubset* patches,
+                      const MaterialSubset* matls,
+                      DataWarehouse* old_dw,
+                      DataWarehouse* new_dw,
+                      const TimeIntegratorLabel* timelabels);
+
+  void saveFECopies(const ProcessorGroup*,
+                      const PatchSubset* patches,
+                      const MaterialSubset* matls,
+                      DataWarehouse* old_dw,
+                      DataWarehouse* new_dw,
+                      const TimeIntegratorLabel* timelabels);
+
+  void computeDensityLag(const ProcessorGroup*,
+                      const PatchSubset* patches,
+                      const MaterialSubset* matls,
+                      DataWarehouse* old_dw,
+                      DataWarehouse* new_dw,
+                      const TimeIntegratorLabel* timelabels,
+                      bool after_average);
+
+  void getDensityGuess(const ProcessorGroup*,
+                      const PatchSubset* patches,
+                      const MaterialSubset* matls,
+                      DataWarehouse* old_dw,
+                      DataWarehouse* new_dw,
+                      const TimeIntegratorLabel* timelabels,
+                      bool EKTCorrection,
+                      bool doing_EKT_now);
+
+  void checkDensityGuess(const ProcessorGroup*,
+                      const PatchSubset* patches,
+                      const MaterialSubset* matls,
+                      DataWarehouse* old_dw,
+                      DataWarehouse* new_dw,
+                      const TimeIntegratorLabel* timelabels,
+                      bool EKTCorrection,
+                      bool doing_EKT_now);
+
+  void checkDensityLag(const ProcessorGroup*,
+                      const PatchSubset* patches,
+                      const MaterialSubset* matls,
+                      DataWarehouse* old_dw,
+                      DataWarehouse* new_dw,
+                      const TimeIntegratorLabel* timelabels,
+                      bool after_average);
+
+  void updateDensityGuess(const ProcessorGroup*,
+                      const PatchSubset* patches,
+                      const MaterialSubset* matls,
+                      DataWarehouse* old_dw,
+                      DataWarehouse* new_dw,
+                      const TimeIntegratorLabel* timelabels);
+
+  void syncRhoF(const ProcessorGroup*,
+                      const PatchSubset* patches,
+                      const MaterialSubset* matls,
+                      DataWarehouse* old_dw,
+                      DataWarehouse* new_dw,
+                      const TimeIntegratorLabel* timelabels);
+
+  void computeMMSError(const ProcessorGroup*,
+                      const PatchSubset* patches,
+                      const MaterialSubset* matls,
+                      DataWarehouse* old_dw,
+                      DataWarehouse* new_dw,
+                      const TimeIntegratorLabel* timelabels);
 
   void setPartVel( PartVel* partVel ) {
     d_partVel = partVel; };
 
   void setDQMOMSolver( DQMOM* dqmomSolver ) { 
     d_dqmomSolver = dqmomSolver; }; 
-
-protected :
-
-private:
-   
-   // GROUP: Constructors (private):
-   ////////////////////////////////////////////////////////////////////////
-   // Should never be used
-   PicardNonlinearSolver();
-
-   // GROUP: Action Methods (private) :
-   ///////////////////////////////////////////////////////////////////////
-   // Actually Initialize the non linear solver
-   //    [in] 
-   //        data User data needed for solve 
-   void setInitialGuess(const ProcessorGroup* pc,
-                        const PatchSubset* patches,
-                        const MaterialSubset* matls,
-                        DataWarehouse* old_dw,
-                        DataWarehouse* new_dw);
-
-   ///////////////////////////////////////////////////////////////////////
-   // actual data copy for first time step of MPMArches to overcome
-   // scheduler limitation on getting pset from old_dw
-
-   void dummySolve(const ProcessorGroup* pc,
-                   const PatchSubset* patches,
-                   const MaterialSubset* matls,
-                   DataWarehouse* old_dw,
-                   DataWarehouse* new_dw);
-
-   ///////////////////////////////////////////////////////////////////////
-   // Actually Interpolate from SFCX, SFCY, SFCZ to CC<Vector>
-   //    [in] 
-   void interpolateFromFCToCC(const ProcessorGroup* pc,
-                              const PatchSubset* patches,
-                              const MaterialSubset* matls,
-                              DataWarehouse* old_dw,
-                              DataWarehouse* new_dw,
-                              const TimeIntegratorLabel* timelabels);
-
-   void probeData(const ProcessorGroup* pc,
-                  const PatchSubset* patches,
-                  const MaterialSubset* matls,
-                  DataWarehouse* old_dw,
-                  DataWarehouse* new_dw);
-
-   void printTotalKE(const ProcessorGroup* ,
-                     const PatchSubset* patches,
-                     const MaterialSubset*,
-                     DataWarehouse*,
-                     DataWarehouse* new_dw,
-                     const TimeIntegratorLabel* timelabels);
-
-   void updatePressure(const ProcessorGroup* ,
-                       const PatchSubset* patches,
-                       const MaterialSubset*,
-                       DataWarehouse* old_dw,
-                       DataWarehouse* new_dw,
-                       const TimeIntegratorLabel* timelabels);
- 
-   void saveTempCopies(const ProcessorGroup*,
-                       const PatchSubset* patches,
-                       const MaterialSubset* matls,
-                       DataWarehouse* old_dw,
-                       DataWarehouse* new_dw,
-                       const TimeIntegratorLabel* timelabels);
-
-   void saveFECopies(const ProcessorGroup*,
-                     const PatchSubset* patches,
-                     const MaterialSubset* matls,
-                     DataWarehouse* old_dw,
-                     DataWarehouse* new_dw,
-                     const TimeIntegratorLabel* timelabels);
-
-   void recursiveSolver(const ProcessorGroup* pg,
-                        const PatchSubset* patches,
-                        const MaterialSubset* matls,
-                        DataWarehouse* old_dw,
-                        DataWarehouse* new_dw,
-                        LevelP level, Scheduler* sched);
-
-   void getDensityGuess(const ProcessorGroup*,
-                       const PatchSubset* patches,
-                       const MaterialSubset* matls,
-                       DataWarehouse* old_dw,
-                       DataWarehouse* new_dw,
-                       const TimeIntegratorLabel* timelabels);
-
-   void checkDensityGuess(const ProcessorGroup*,
-                          const PatchSubset* patches,
-                          const MaterialSubset* matls,
-                          DataWarehouse* old_dw,
-                          DataWarehouse* new_dw,
-                          const TimeIntegratorLabel* timelabels);
-
-   void updateDensityGuess(const ProcessorGroup*,
-                           const PatchSubset* patches,
-                           const MaterialSubset* matls,
-                           DataWarehouse* old_dw,
-                           DataWarehouse* new_dw,
-                           const TimeIntegratorLabel* timelabels);
-
-   void syncRhoF(const ProcessorGroup*,
-                 const PatchSubset* patches,
-                 const MaterialSubset* matls,
-                 DataWarehouse* old_dw,
-                 DataWarehouse* new_dw,
-                 const TimeIntegratorLabel* timelabels);
 
 private:
   // const VarLabel*
@@ -365,15 +422,14 @@ private:
   BoundaryCondition* d_boundaryCondition;
   // Turbulence Model
   TurbulenceModel* d_turbModel;
+  ScaleSimilarityModel* d_scaleSimilarityModel;
+  bool d_mixedModel;
+
   bool d_calScalar;
   bool d_reactingScalarSolve;
   bool d_enthalpySolve;
   bool d_calcVariance;
-  bool d_radiationCalc;
-  bool d_DORadiationCalc;
   vector<IntVector> d_probePoints;
-  // nonlinear residual tolerance
-  double d_resTol;
   // Pressure Eqn Solver
   PressureSolver* d_pressSolver;
   // Momentum Eqn Solver 
@@ -390,21 +446,46 @@ private:
   int numTimeIntegratorLevels;
   bool nosolve_timelabels_allocated;
   bool d_pressure_correction;
-  const PatchSet* d_perproc_patches;
   bool d_3d_periodic;
-  double d_u_norm,d_v_norm,d_w_norm, d_rho_norm;
   bool d_dynScalarModel;
+  int d_turbModelCalcFreq;
+  bool d_turbModelRKsteps;
+  int d_turbCounter;
   double d_H_air;
   bool d_doMMS;
+  bool d_restart_on_negative_density_guess;
+  string d_mms;
+  string d_mmsErrorType;
+  double d_airDensity, d_heDensity;
+  Vector d_gravity;
+  double d_viscosity;
+
   bool d_extraProjection;
   bool d_EKTCorrection;
   bool d_KE_fromFC;
+  double d_maxDensityLag;
+
+  //linear mms
+  double cu, cv, cw, cp, phi0;
+  // sine mms
+  double amp;
+  bool d_calcExtraScalars;
+  vector<ExtraScalarSolver*>* d_extraScalars;
+
   bool d_carbon_balance_es;
   bool d_sulfur_balance_es;
+  int d_numSourceBoundaries;
 
+  //RMCRT Stuff
+  bool d_standAloneRMCRT; 
+  RMCRTRadiationModel* d_RMCRTRadiationModel;  
+
+  //DQMOM 
+  bool d_doDQMOM; 
   PartVel* d_partVel; 
   DQMOM* d_dqmomSolver; 
-}; // End class PicardNonlinearSolver
+
+}; // End class ExplicitSolver
 } // End namespace Uintah
 
 

@@ -248,8 +248,6 @@ C	Calculate absorption coefficient from Bouguer's Law
 C
 
 	          ABSKG(I,J,K) = -DLOG (1.0d0 - EMG) / OPL
-C                  print*,'ABSKP ', ABSKP(I,J,K)
-                  ABSKG(I,J,K) = ABSKG(I,J,K) + ABSKP(I,J,K)
 
 C-----------------------------------------------------------------------
 C	Soot model is based on a correlation given by Sarofim and Hottel
