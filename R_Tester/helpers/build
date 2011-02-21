@@ -10,6 +10,7 @@
 
 export OS
 mode=$1 # dbg or opt
+MACHINE=`hostname`
 
 #__________________________________
 # construct the configure_command file
@@ -25,17 +26,34 @@ if [ "$OS" = "Linux" ]; then
   OPT_CONFIGURE="    --enable-64bit \\
       --enable-assertion-level=0 \\
      '--enable-optimize=-O3 -mfpmath=sse' \\"
-      
-  COMMON="     --with-boost=/usr  \\
+  #
+  #  machine specific variables
+  if [ "$MACHINE" == "rt" ]; then    
+    COMMON="     --with-boost=/usr  \\
+         --with-hdf5 \\
+         --enable-wasatch_3p \\
+        USE_WASATCH=yes \\"
+  
+    ENV="      CC=gcc \\
+         CXX=g++ \\
+         F77=gfortran"
+  fi
+  
+  if [ "$MACHINE" == "blaze" ]; then  
+    export PETSC_ARCH=linux-gnu-amd64
+    COMMON="      --with-mpi=/usr/lib/openmpi \\
+       --with-petsc=/usr/ \\
+       --with-hypre=/usr/ \\
        --with-hdf5 \\
+       --with-boost=/usr/local/share/wasatch/Boost-Install/1.44/gcc4.3.2 \\
        --enable-wasatch_3p \\
        USE_WASATCH=yes \\"
-  
-  ENV="      CC=gcc \\
-       CXX=g++ \\
-       F77=gfortran"
-       
-  
+
+    ENV="      CC=gcc-4.2 \\
+       CXX=g++-4.2 \\
+       F77=gfortran-4.2"
+  fi
+      
 elif [ "$OS" = "Darwin" ]; then
   export PETSC_ARCH=darwin9.4.0-c-real-opt
   COMMON="    --enable-package='Uintah Teem' \\
@@ -46,6 +64,8 @@ elif [ "$OS" = "Darwin" ]; then
   OPT_CONFIGURE="$COMMON '--enable-optimize=-mcpu=7450 -O2 -fsigned-char -maltivec -mabi=altivec -mpowerpc-gfxopt' $OPT_CONFIGURE"
 fi
 
+
+#__________________________________
 echo "#!/bin/csh" > configure_command
 echo "../../src/configure --enable-package=Uintah \\" >> configure_command
  
@@ -92,7 +112,7 @@ rm -f "$BUILDROOT"/${mode}/configure.log
 ./configure_command > "$BUILDROOT"/${mode}/configure.log 2>&1
 retval=$?
 
-chgrp uintah *
+chgrp $GROUP *
 chmod g+rwX * 
 
 

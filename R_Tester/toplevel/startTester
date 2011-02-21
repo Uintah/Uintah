@@ -13,18 +13,45 @@ NOTESTS="0"
 OS=`uname -s`
 PARALLELISM=0
 REPLY_TO="uintah-developer@gforge.sci.utah.edu"
-SCRIPT_DIR=/home/csafe-tester/scripts
+
 SEND_MAIL_TO=""
 USE_DEFAULT_BUILD="yes"
 USE_DEFAULT_TEST_DATA="yes"
 USE_PREVTREE="no"
 USE_TREE="new"
 VERBOSE="no"
+GROUP=""
+CHECKPOINTS=""
+
+#__________________________________
+# Machine specific variables
+MACHINE=`hostname`
+if [ "$MACHINE" == "rt" ]; then
+  GROUP="uintah"
+  BUILD_DIR=/home/csafe-tester/"$OS"
+  TEST_DATA=/home/csafe-tester/"$OS"/TestData
+  TEMP_DIR=/home/csafe-tester/"$OS"
+  SCRIPT_DIR=/home/csafe-tester/scripts
+  CHECKPOINTS=/home/csafe-tester/CheckPoints
+  
+  # where the webpage will be, and init webpage
+  HTMLLOG=/home/csafe-tester/public_html/SCIRun.${ID}.html
+  WEBLOG=http://www.uintah.utah.edu:8050/~csafe-tester/SCIRun.${ID}.html
+fi
+if [ "$MACHINE" == "blaze" ]; then
+  GROUP="csafe"
+  BUILD_DIR=/usr/local/home/csafe-tester/"$OS"
+  TEST_DATA=/usr/local/home/csafe-tester/"$OS"/TestData
+  TEMP_DIR=/usr/local/home/csafe-tester/"$OS"
+  SCRIPT_DIR=/usr/local/home/csafe-tester/scripts
+  CHECKPOINTS=/usr/local/home/csafe-tester/CheckPoints
+  
+  # where the webpage will be, and init webpage
+  HTMLLOG=/usr/local/home/csafe-tester/public_html/SCIRun.${ID}.html
+  WEBLOG=http://blaze.sci.utah.edu/~csafe-tester/SCIRun.${ID}.html
+fi
 
 
-BUILD_DIR=/home/csafe-tester/"$OS"
-TEST_DATA=/home/csafe-tester/"$OS"/TestData
-TEMP_DIR=/home/csafe-tester/"$OS"
 
 # test OS
 if [ "$OS" != "Linux" ]; then
@@ -141,7 +168,7 @@ fi
 
 
 PATH="$PATH":"$SCRIPT_DIR":/usr/bin:/local/bin:/usr/sci/local/bin/:/usr/gnu/bin:/usr/local/bin:/bin:/usr/lib:.
-export PATH NOTESTS COMPILE LOCAL_OR_NIGHTLY_TEST
+export PATH NOTESTS COMPILE LOCAL_OR_NIGHTLY_TEST GROUP CHECKPOINTS
 
 # set number of processors to use when building
 if [ $PARALLELISM -eq 0 ]; then
@@ -284,10 +311,6 @@ if [ "$USE_TREE" = "new" -a "$USE_PREVTREE" = "no" -a `date +%d` = "01" -a "$MON
   fi
   ln -s "$BUILDROOT" "${BUILD_DIR}/1_month.lock" 
 fi
-
-# where the webpage will be, and init webpage
-HTMLLOG=/home/csafe-tester/public_html/SCIRun.${ID}.html
-WEBLOG=http://www.uintah.utah.edu:8050/~csafe-tester/SCIRun.${ID}.html
 
 #__________________________________
 # create html web page

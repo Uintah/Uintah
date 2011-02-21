@@ -3,7 +3,13 @@
 #  This script calls two separate scripts to 
 #  compile the code and run the regression testss
 #
-# $BUILD_DIR $BUILDROOT, $HTMLLOG, $NOTESTS, $PARALLELISM, $COMPILE, and $MAKE_PARALLELISM must be set
+#__________________________________
+# bulletproof the inputs
+if [ "$BUILDROOT" = "" -o "$COMPILE" = "" -o "$NOTESTS" = "" -o "$GROUP"  = "" -o "$CHECKPOINTS" = "" -o "$TEST_DATA" = "" ]; then
+  echo "ERROR:build_and_run  One of the environmental variables has not been set"
+  echo "BUILDROOT: $BUILDROOT, COMPILE: $COMPILE, NOTESTS: $NOTESTS, GROUP: $GROUP, CHECKPOINTS: $CHECKPOINTS, TEST_DATA: $TEST_DATA"
+  exit -1
+fi
 
 mode=$1 # dbg or opt
 didCompile=0
@@ -23,7 +29,7 @@ if [ "$COMPILE" = "yes" ]; then
   
   #change the permissions
   echo "Changing permissions in `pwd`"
-  chgrp -R uintah .
+  chgrp -R $GROUP .
   chmod -R g+rwX . 
 fi
 
@@ -56,7 +62,7 @@ if [ ! -d inputs ]; then
 fi
 
 if [ ! -d CheckPoints ]; then
-  ln -s /home/csafe-tester/CheckPoints CheckPoints
+  ln -s  $CHECKPOINTS CheckPoints
 fi
 
 # remove this in case it points to the wrong place
