@@ -1433,7 +1433,9 @@ void MPMICE::computeLagrangianValuesMPM(const ProcessorGroup*,
           int_eng_L_mpm +=gtempstar[nodeIdx[in]] * cv * NC_CCw_mass;
         }
         int_eng_L_mpm += int_eng_src[c];
-        cmomentum_mpm += mom_source[c];
+        if(!d_rigidMPM){
+          cmomentum_mpm += mom_source[c];
+        }
         //__________________________________
         // set cmomentum/int_eng_L to either 
         // what's calculated from mpm or 
