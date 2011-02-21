@@ -420,11 +420,6 @@ Arches::problemSetup(const ProblemSpecP& params,
   d_boundaryCondition->setMMS(d_doMMS);
   d_boundaryCondition->problemSetup(db);
 
-  d_carbon_balance_es = d_boundaryCondition->getCarbonBalanceES();
-  d_sulfur_balance_es = d_boundaryCondition->getSulfurBalanceES();
-  d_props->setCarbonBalanceES(d_carbon_balance_es);        
-  d_props->setSulfurBalanceES(d_sulfur_balance_es);
-
   ProblemSpecP turb_db = db->findBlock("Turbulence");
   turb_db->getAttribute("model", d_whichTurbModel); 
 
@@ -514,8 +509,6 @@ Arches::problemSetup(const ProblemSpecP& params,
   d_nlSolver->setEKTCorrection(d_EKTCorrection);
   d_nlSolver->setMMS(d_doMMS);
   d_nlSolver->problemSetup(db);
-  d_nlSolver->setCarbonBalanceES(d_carbon_balance_es);
-  d_nlSolver->setSulfurBalanceES(d_sulfur_balance_es);
   d_timeIntegratorType = d_nlSolver->getTimeIntegratorType();
   d_nlSolver->setCalcExtraScalars(d_calcExtraScalars);
   if (d_calcExtraScalars) d_nlSolver->setExtraScalars(&d_extraScalars);
@@ -917,12 +910,6 @@ Arches::sched_paramInit(const LevelP& level,
         tsk->computes(d_extraScalars[i]->getScalarLabel());
       }
     }
-    if (d_carbon_balance_es){
-      tsk->computes(d_lab->d_co2RateLabel);
-    }
-    if (d_sulfur_balance_es){
-      tsk->computes(d_lab->d_so2RateLabel);                
-    }
     tsk->computes(d_lab->d_scalarBoundarySrcLabel);
     tsk->computes(d_lab->d_enthalpyBoundarySrcLabel);
     tsk->computes(d_lab->d_umomBoundarySrcLabel);
@@ -987,19 +974,6 @@ Arches::paramInit(const ProcessorGroup* pg,
     new_dw->allocateAndPut( areaFraction, d_lab->d_areaFractionLabel, indx, patch ); 
     areaFraction.initialize(Vector(1.,1.,1.)); 
    
-    if (d_calcExtraScalars){
-      if (d_carbon_balance_es){ 
-        CCVariable<double> co2Rate;
-        new_dw->allocateAndPut(co2Rate, d_lab->d_co2RateLabel, indx, patch);
-        co2Rate.initialize(0.0);
-      }
-      if (d_sulfur_balance_es){ 
-        CCVariable<double> so2Rate;
-        new_dw->allocateAndPut(so2Rate, d_lab->d_so2RateLabel, indx, patch);
-        so2Rate.initialize(0.0);
-      }
-    }        
-
     CCVariable<double> scalarBoundarySrc;
     CCVariable<double> enthalpyBoundarySrc;
     SFCXVariable<double> umomBoundarySrc;
