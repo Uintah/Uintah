@@ -389,9 +389,6 @@ private:
     ExtraScalarSolver* d_extraScalarSolver;
     vector<ExtraScalarSolver*> d_extraScalars;
 
-    bool d_carbon_balance_es;        
-    bool d_sulfur_balance_es;        
-
     // Variables----
     vector<string> d_scalarEqnNames; 
     bool d_doDQMOM; // do we need this as a private member?

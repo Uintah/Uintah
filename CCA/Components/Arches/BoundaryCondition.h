@@ -319,16 +319,9 @@ namespace Uintah {
         return d_carbon_balance;
       }
 
-      inline bool getCarbonBalanceES() const{
-        return d_carbon_balance_es;
-      }
-
       inline bool getSulfurBalance() const{
         return d_sulfur_balance;
       } 
-      inline bool getSulfurBalanceES() const{
-        return d_sulfur_balance_es;
-      }     
       // GROUP:  Schedule tasks :
       ////////////////////////////////////////////////////////////////////////
       // Initialize cell types
@@ -1082,9 +1075,7 @@ namespace Uintah {
       IntrusionBdry* d_intrusionBC;
 
       bool d_carbon_balance;    //Use table value of CO2
-      bool d_carbon_balance_es; //Extra scalar for carbon balance
       bool d_sulfur_balance;
-      bool d_sulfur_balance_es; //Extra scalar for sulfur balance
       string d_mms;
       double d_airDensity, d_heDensity;
       Vector d_gravity;

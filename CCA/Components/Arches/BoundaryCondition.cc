@@ -188,15 +188,11 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
     d_intrusionBoundary = false;
     d_carbon_balance=false;
     d_sulfur_balance=false;
-    d_carbon_balance_es=false;
-    d_sulfur_balance_es=false;
   }
   else
   {
     db->getWithDefault("carbon_balance", d_carbon_balance, false);
     db->getWithDefault("sulfur_balance", d_sulfur_balance, false);
-    db->getWithDefault("carbon_balance_es", d_carbon_balance_es, false);
-    db->getWithDefault("sulfur_balance_es", d_sulfur_balance_es, false);
     //--- instrusions with boundary sources -----
     if (ProblemSpecP intrusionbcs_db = db->findBlock("IntrusionWithBCSource")){
       for (ProblemSpecP intrusionbcs_db = db->findBlock("IntrusionWithBCSource");
@@ -4914,15 +4910,9 @@ BoundaryCondition::sched_getScalarFlowRate(SchedulerP& sched,
   if (d_carbon_balance){
     tsk->computes(d_lab->d_CO2FlowRateLabel);
   }
-  if (d_carbon_balance_es){
-    tsk->computes(d_lab->d_CO2FlowRateESLabel);
-  }
   if (d_sulfur_balance){
     tsk->computes(d_lab->d_SO2FlowRateLabel);
   }
-  if (d_sulfur_balance_es){
-    tsk->computes(d_lab->d_SO2FlowRateESLabel);
-  }                  
   if (d_enthalpySolve){
     tsk->computes(d_lab->d_enthalpyFlowRateLabel);
   }
@@ -5049,17 +5039,9 @@ void BoundaryCondition::sched_getScalarEfficiency(SchedulerP& sched,
     tsk->requires(Task::NewDW, d_lab->d_CO2FlowRateLabel);
     tsk->computes(d_lab->d_carbonEfficiencyLabel);
   }
-  if (d_carbon_balance_es) {
-    tsk->requires(Task::NewDW, d_lab->d_CO2FlowRateESLabel);
-    tsk->computes(d_lab->d_carbonEfficiencyESLabel);
-  }
   if (d_sulfur_balance) {
     tsk->requires(Task::NewDW, d_lab->d_SO2FlowRateLabel);
     tsk->computes(d_lab->d_sulfurEfficiencyLabel);
-  }
-  if (d_sulfur_balance_es) {
-    tsk->requires(Task::NewDW, d_lab->d_SO2FlowRateESLabel);
-    tsk->computes(d_lab->d_sulfurEfficiencyESLabel);
   }
   if (d_enthalpySolve) {
     tsk->requires(Task::NewDW, d_lab->d_enthalpyFlowRateLabel);
@@ -5118,18 +5100,10 @@ BoundaryCondition::getScalarEfficiency(const ProcessorGroup*,
       new_dw->get(sum_CO2FlowRate, d_lab->d_CO2FlowRateLabel);
       CO2FlowRate = sum_CO2FlowRate;
     }
-    if (d_carbon_balance_es) {
-      new_dw->get(sum_CO2FlowRateES, d_lab->d_CO2FlowRateESLabel);
-      CO2FlowRateES = sum_CO2FlowRateES;
-    }
 
     if (d_sulfur_balance) {
       new_dw->get(sum_SO2FlowRate, d_lab->d_SO2FlowRateLabel);
       SO2FlowRate = sum_SO2FlowRate;
-    }
-    if (d_sulfur_balance_es) {
-      new_dw->get(sum_SO2FlowRateES, d_lab->d_SO2FlowRateESLabel);
-      SO2FlowRateES = sum_SO2FlowRateES;
     }
     if (d_enthalpySolve) {
       new_dw->get(sum_enthalpyFlowRate, d_lab->d_enthalpyFlowRateLabel);
@@ -5148,12 +5122,8 @@ BoundaryCondition::getScalarEfficiency(const ProcessorGroup*,
           totalFlowRate += fi->flowRate;
       if ((d_carbon_balance)&&(scalarValue > 0.0))
             totalCarbonFlowRate += fi->flowRate * fi->fcr;
-      if ((d_carbon_balance_es)&&(scalarValue > 0.0))
-            totalCarbonFlowRateES += fi->flowRate * fi->fcr;
       if ((d_sulfur_balance)&&(scalarValue > 0.0))
             totalSulfurFlowRate += fi->flowRate * fi->fsr;
-      if ((d_sulfur_balance_es)&&(scalarValue > 0.0))
-            totalSulfurFlowRateES += fi->flowRate * fi->fsr;
       if ((d_enthalpySolve)&&(scalarValue > 0.0))
             totalEnthalpyFlowRate += fi->flowRate * fi->calcStream.getEnthalpy();
     }
