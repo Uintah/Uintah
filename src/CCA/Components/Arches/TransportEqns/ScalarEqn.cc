@@ -13,6 +13,7 @@ using namespace Uintah;
 
 //---------------------------------------------------------------------------
 // Builder:
+//
 CCScalarEqnBuilder::CCScalarEqnBuilder( ArchesLabel* fieldLabels, 
                                         ExplicitTimeInt* timeIntegrator,
                                         string eqnName ) : 
