@@ -3029,7 +3029,7 @@ template<class T> void ICE::computeVelFace(int dir,
     // gravity term
     double term3 =  delT * gravity;
     
-    vel_FC[R] = term1 - one_or_zero*(term2 + term3);
+    vel_FC[R] = term1 - one_or_zero*term2 + one_or_zero*term3;
   } 
 }
                   
