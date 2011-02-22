@@ -433,7 +433,8 @@ namespace Uintah {
                                        constCCVariable<Vector>& vel_CC,
                                        constCCVariable<double>& press_CC,
                                        T& vel_FC,
-                                       T& gradP_FC);
+                                       T& gradP_FC,
+                                       bool include_acc);
                                        
       template<class T> void updateVelFace(int dir, CellIterator it,
                                        IntVector adj_offset,double dx,
