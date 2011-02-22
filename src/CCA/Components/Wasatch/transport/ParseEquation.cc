@@ -176,7 +176,6 @@ namespace Wasatch{
                                                     GraphCategories& gc,
                                                     Uintah::SolverInterface& linSolver )
   {
-    const StringNames& sName = StringNames::self();
     typedef std::vector<EqnTimestepAdaptorBase*> EquationAdaptors;
     EquationAdaptors adaptors;
     EqnTimestepAdaptorBase* adaptor = NULL;
