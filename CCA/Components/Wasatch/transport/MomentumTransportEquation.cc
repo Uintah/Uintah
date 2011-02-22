@@ -2,24 +2,6 @@
 
 // -- Uintah includes --//
 #include <CCA/Ports/SolverInterface.h>
-//#include <CCA/Ports/SimulationInterface.h>
-//#include <CCA/Ports/Scheduler.h>
-//#include <CCA/Ports/LoadBalancer.h>
-//#include <CCA/Ports/Scheduler.h>
-//#include <Core/Grid/AMR.h>
-//#include <Core/Grid/Task.h>
-//#include <Core/Grid/SimulationState.h>
-//#include <Core/Grid/Variables/CellIterator.h>
-//#include <Core/Grid/Variables/VarTypes.h>
-//#include <Core/Exceptions/ConvergenceFailure.h>
-//#include <Core/Exceptions/ProblemSetupException.h> 
-//#include <Core/Exceptions/InvalidValue.h>
-//#include <Core/Parallel/ProcessorGroup.h>
-//#include <Core/Parallel/UintahParallelPort.h>
-//#include <Core/Util/DebugStream.h>
-//#include <Core/Math/MiscMath.h>
-//#include <Core/Exceptions/InternalError.h>
-//#include <Core/Parallel/Parallel.h>
 
 //-- Wasatch includes --//
 #include <CCA/Components/Wasatch/Expressions/MomentumPartialRHS.h>
@@ -31,6 +13,7 @@
 #include <CCA/Components/Wasatch/Expressions/Pressure.h>
 #include <CCA/Components/Wasatch/FieldTypes.h>
 #include <CCA/Components/Wasatch/ParseTools.h>
+
 
 using std::string;
 
@@ -98,11 +81,9 @@ namespace Wasatch{
   template< typename FieldT >
   Direction set_direction()
   {
-    switch( FieldT::Location::StagLoc::value ){
-    case SpatialOps::XDIR::value: return XDIR;
-    case SpatialOps::YDIR::value: return YDIR;
-    case SpatialOps::ZDIR::value: return ZDIR;
-    }
+    if     ( SpatialOps::CompareDirection< typename FieldT::Location::StagLoc, typename SpatialOps::XDIR >::same() ) return XDIR;
+    else if( SpatialOps::CompareDirection< typename FieldT::Location::StagLoc, typename SpatialOps::YDIR >::same() ) return YDIR;
+    else if( SpatialOps::CompareDirection< typename FieldT::Location::StagLoc, typename SpatialOps::ZDIR >::same() ) return ZDIR;
     return NODIR;
   }
 
@@ -111,11 +92,9 @@ namespace Wasatch{
   template< typename FieldT >
   string get_mom_dir_name()
   {
-    switch( FieldT::Location::StagLoc::value ){
-    case SpatialOps::XDIR::value:  return "x";
-    case SpatialOps::YDIR::value:  return "y";
-    case SpatialOps::ZDIR::value:  return "z";
-    }
+    if     ( SpatialOps::CompareDirection< typename FieldT::Location::StagLoc, typename SpatialOps::XDIR >::same() ) return "x";
+    else if( SpatialOps::CompareDirection< typename FieldT::Location::StagLoc, typename SpatialOps::YDIR >::same() ) return "y";
+    else if( SpatialOps::CompareDirection< typename FieldT::Location::StagLoc, typename SpatialOps::ZDIR >::same() ) return "z";
     return "-INVALID-";
   }
 
@@ -189,12 +168,12 @@ namespace Wasatch{
     doxvel = params->get( "X-Velocity", xvelname );
     doyvel = params->get( "Y-Velocity", yvelname );
     dozvel = params->get( "Z-Velocity", zvelname );
-    if (doxvel) velTags.push_back( Expr::Tag(xvelname, Expr::STATE_NONE) );
-    else velTags.push_back( Expr::Tag() );
-    if (doyvel) velTags.push_back( Expr::Tag(yvelname, Expr::STATE_NONE) );
-    else velTags.push_back( Expr::Tag() );
-    if (dozvel) velTags.push_back( Expr::Tag(zvelname, Expr::STATE_NONE) );
-    else velTags.push_back( Expr::Tag() );
+    if( doxvel ) velTags.push_back( Expr::Tag(xvelname, Expr::STATE_NONE) );
+    else         velTags.push_back( Expr::Tag() );
+    if( doyvel ) velTags.push_back( Expr::Tag(yvelname, Expr::STATE_NONE) );
+    else         velTags.push_back( Expr::Tag() );
+    if( dozvel ) velTags.push_back( Expr::Tag(zvelname, Expr::STATE_NONE) );
+    else         velTags.push_back( Expr::Tag() );
   }
 
   //==================================================================

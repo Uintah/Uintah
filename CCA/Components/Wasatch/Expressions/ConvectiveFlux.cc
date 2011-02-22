@@ -97,7 +97,7 @@ template< typename PhiInterpT, typename VelInterpT >
 ConvectiveFluxLimiter<PhiInterpT, VelInterpT>::
 ConvectiveFluxLimiter( const Expr::Tag phiTag,
                        const Expr::Tag velTag,
-                      Wasatch::ConvInterpMethods limiterType,
+                       const Wasatch::ConvInterpMethods limiterType,
                        const Expr::ExpressionID& id,
                        const Expr::ExpressionRegistry& reg )
   : Expr::Expression<PhiFaceT>(id,reg),
@@ -161,13 +161,11 @@ ConvectiveFluxLimiter<PhiInterpT, VelInterpT>::evaluate()
   SpatialOps::SpatFldPtr<VelFaceT> velInterp = SpatialOps::SpatialFieldStore<VelFaceT>::self().get( result );
   
   // move the velocity from staggered volume to phi faces
-  this->velInterpOp_->apply_to_field( *this->vel_, *velInterp );
-  
-  this->phiInterpOp_->set_advective_velocity( *velInterp );
-  
-  this->phiInterpOp_->set_flux_limiter_type( this->limiterType_ );
-  
-  this->phiInterpOp_->apply_to_field( *this->phi_, result );
+  velInterpOp_->apply_to_field( *vel_, *velInterp );
+
+  phiInterpOp_->set_advective_velocity( *velInterp );
+  phiInterpOp_->set_flux_limiter_type( limiterType_ );
+  phiInterpOp_->apply_to_field( *phi_, result );
   
   result *= *velInterp;
 }

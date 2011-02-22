@@ -114,28 +114,31 @@ public:
  *
  *  \par Template Parameters
  *  <ul>
- *  <li> \b PhiInterpT The type of operator used in forming 
- *       \f$\frac{\partial \phi}{\partial x}\f$
+ *  <li> \b PhiInterpT The type of operator used in forming
+ *       \f$\frac{\partial \phi}{\partial x}\f$.  Interpolates from
+ *       staggered or non-staggered volume field to staggered or
+ *       non-staggered face field
  *  <li> \b VelInterpT The type of operator used in interpolating the
- *        velocity from volume to face fields
+ *        velocity from volume to face fields. Interpolates from
+ *        staggered volume field to scalar face field
  *  </ul>
  */
 template< typename PhiInterpT, typename VelInterpT > // scalar interpolant and velocity interpolant
 class ConvectiveFluxLimiter
   : public Expr::Expression<typename PhiInterpT::DestFieldType>
 {  
-  // PhiInterpT: an interpolant from staggered or non-staggered volume field to staggered or non-staggered face field
   typedef typename PhiInterpT::SrcFieldType  PhiVolT; // source field is a scalar volume
   typedef typename PhiInterpT::DestFieldType PhiFaceT; // destination field is scalar face
   
-  // VelInterpT: an interpolant from Staggered volume field to scalar face field
   typedef typename VelInterpT::SrcFieldType  VelVolT; // source field is always a staggered volume field.
   typedef typename VelInterpT::DestFieldType VelFaceT;
-  //std::string limiterType_;
-  Wasatch::ConvInterpMethods limiterType_;
+
   const Expr::Tag phiTag_, velTag_;
+  const Wasatch::ConvInterpMethods limiterType_;
+
   const PhiVolT* phi_;
   const VelVolT* vel_;
+
   PhiInterpT* phiInterpOp_;
   const VelInterpT* velInterpOp_;
 

@@ -6,6 +6,7 @@
  *  \brief Defines field types for use in Wasatch.
  */
 
+#include <spatialops/SpatialOpsDefs.h>
 #include <spatialops/structured/FVStaggeredFieldTypes.h>
 
 
