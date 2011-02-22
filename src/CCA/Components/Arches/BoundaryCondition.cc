@@ -176,7 +176,7 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
   d_newBC = scinew BoundaryCondition_new( d_lab ); // need to declare a new boundary condition here 
                                                    // while transition to new code is taking place
   // new bc:                                                 
-  setupBCs( db_params );
+  // setupBCs( db_params );
  
   if(db.get_rep()==0)
   {
