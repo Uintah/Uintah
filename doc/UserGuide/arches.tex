@@ -821,6 +821,19 @@ If the $<$DORadiationModel$>$ section is found, the model is activated and the r
 \end{enumerate}
 
 \subsection{Initial and Boundary Conditions} 
+% 
+\subsubsection{Solid Intrusions (MPMArches only)}
+One may specify solid intrusions that intersect the physical domain.  Intrusions will be treated with a stationary wall boundary condition.  
+
+The options for the \verb=<Arches>=$\rightarrow$\verb=<BoundaryConditions>=$\rightarrow$\verb=<intrusions>= section are as follows:
+%
+\begin{enumerate}
+\item Geometry object: \verb=<geom_object>= \\
+{\bf Input Type}: {\it XML node} \\
+{\bf Default}: NA \\
+{\bf Description}: All geometry objects are specified within this single \verb=<geom_object>= tag.  
+\end{enumerate}
+ 
 %
 \subsubsection{Species Efficiency Calculations}
 %
