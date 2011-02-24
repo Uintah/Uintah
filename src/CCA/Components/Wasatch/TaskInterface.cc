@@ -296,14 +296,14 @@ namespace Wasatch{
 
     add_fields_to_task( *task, *tree, *fml_, pss, mss, newDWFields );
 
+    // jcs eachPatch vs. allPatches (gang schedule vs. independent...)
+    scheduler_->addTask( task, patches_, materials_ );
+
     if( hasPressureExpression_ ){
       Pressure& pexpr = dynamic_cast<Pressure&>( tree->get_expression( pressure_tag() ) );
       pexpr.schedule_solver( Uintah::getLevelP(pss), scheduler_, materials_ );
       pexpr.declare_uintah_vars( *task, pss, mss );
     }
-
-    // jcs eachPatch vs. allPatches (gang schedule vs. independent...)
-    scheduler_->addTask( task, patches_, materials_ );
 
     hasBeenScheduled_ = true;
   }
