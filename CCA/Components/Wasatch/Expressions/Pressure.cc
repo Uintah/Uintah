@@ -41,11 +41,11 @@ Pressure::Pressure( const Expr::Tag& fxtag,
     // note that this does not provide any ghost entries in the matrix...
     matrixLabel_  ( Uintah::VarLabel::create( "pressure_matrix", Uintah::CCVariable<Uintah::Stencil7>::getTypeDescription() ) ),
     pressureLabel_( Uintah::VarLabel::create( "pressure", 
-                                           Wasatch::getUintahFieldTypeDescriptor<SVolField>(),
-                                           Wasatch::getUintahGhostDescriptor<SVolField>() ) ),
+                                              Wasatch::getUintahFieldTypeDescriptor<SVolField>(),
+                                              Wasatch::getUintahGhostDescriptor<SVolField>() ) ),
     prhsLabel_    ( Uintah::VarLabel::create( "pressure_rhs", 
-                                           Wasatch::getUintahFieldTypeDescriptor<SVolField>(),
-                                           Wasatch::getUintahGhostDescriptor<SVolField>() ) )
+                                              Wasatch::getUintahFieldTypeDescriptor<SVolField>(),
+                                              Wasatch::getUintahGhostDescriptor<SVolField>() ) )
 {
 }
 
@@ -61,9 +61,9 @@ Pressure::~Pressure()
 //--------------------------------------------------------------------
 
 void
-Pressure::schedule_solver( const Uintah::LevelP& level,
-                          Uintah::SchedulerP& sched,
-                          const Uintah::MaterialSet* materials )
+Pressure::schedule_solver( const Uintah::constLevelP level,
+                           Uintah::SchedulerP sched,
+                           const Uintah::MaterialSet* const materials )
 {
   // need to get the pressure label...
   // need to get the pressure rhs label...
@@ -88,8 +88,8 @@ Pressure::declare_uintah_vars( Uintah::Task& task,
 
 void
 Pressure::bind_uintah_vars( Uintah::DataWarehouse* const dw,
-                           const Uintah::Patch* const patch,
-                           const int material)
+                            const Uintah::Patch* const patch,
+                            const int material )
 {
   // We should probably move the matrix construction to the evaluate() method.
   // need a way to get access to the patch so that we can loop over the cells.
