@@ -12,10 +12,14 @@
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Material.h>
 #include <Core/Grid/Variables/ComputeSet.h>
+#include <Core/Grid/Level.h>
 
 
 //-- Wasatch includes --//
 #include "TaskInterface.h"
+#include <CCA/Components/Wasatch/Expressions/Pressure.h>
+
+#include <CCA/Components/Wasatch/transport/MomentumTransportEquation.h>
 #include <CCA/Components/Wasatch/Expressions/Pressure.h>
 
 #include <stdexcept>
@@ -42,7 +46,7 @@ namespace Wasatch{
     typedef std::pair< TreePtr, Uintah::Task* > TreeTaskPair;
     typedef std::map< int, TreeTaskPair > PatchTreeMap;
 
-    Uintah::SchedulerP& scheduler_;
+    Uintah::SchedulerP scheduler_;
     const Uintah::PatchSet* const patches_;
     const Uintah::MaterialSet* const materials_;
 
@@ -50,7 +54,9 @@ namespace Wasatch{
 
     const std::string taskName_;        ///< the name of the task
     const PatchInfoMap& patchInfoMap_;  ///< information for each individual patch.
-    Expr::FieldManagerList* fml_;       ///< the FieldManagerList for this TaskInterface
+    Expr::FieldManagerList* const fml_; ///< the FieldManagerList for this TaskInterface
+
+    const bool hasPressureExpression_;
 
     bool hasBeenScheduled_;
     PatchTreeMap patchTreeMap_;
@@ -66,7 +72,7 @@ namespace Wasatch{
 
     TreeTaskExecute( TreePtr tree,
                      const std::string taskName,
-                     Uintah::SchedulerP& scheduler,
+                     Uintah::SchedulerP scheduler,
                      const Uintah::PatchSet* const patches,
                      const Uintah::MaterialSet* const materials,
                      const PatchInfoMap& info,
@@ -82,7 +88,7 @@ namespace Wasatch{
 
   TreeTaskExecute::TreeTaskExecute( TreePtr tree,
                                     const std::string taskName,
-                                    Uintah::SchedulerP& sched,
+                                    Uintah::SchedulerP sched,
                                     const Uintah::PatchSet* const patches,
                                     const Uintah::MaterialSet* const materials,
                                     const PatchInfoMap& info,
@@ -94,7 +100,8 @@ namespace Wasatch{
       createUniqueTreePerPatch_( createUniqueTreePerPatch ),
       taskName_( taskName ),
       patchInfoMap_( info ),
-      fml_( scinew Expr::FieldManagerList(taskName) )
+      fml_( scinew Expr::FieldManagerList(taskName) ),
+      hasPressureExpression_( tree->computes_field( pressure_tag() ) )
   {
     hasBeenScheduled_ = false;
 
@@ -289,6 +296,12 @@ namespace Wasatch{
 
     add_fields_to_task( *task, *tree, *fml_, pss, mss, newDWFields );
 
+    if( hasPressureExpression_ ){
+      Pressure& pexpr = dynamic_cast<Pressure&>( tree->get_expression( pressure_tag() ) );
+      pexpr.schedule_solver( Uintah::getLevelP(pss), scheduler_, materials_ );
+      pexpr.declare_uintah_vars( *task, pss, mss );
+    }
+
     // jcs eachPatch vs. allPatches (gang schedule vs. independent...)
     scheduler_->addTask( task, patches_, materials_ );
 
@@ -343,16 +356,14 @@ namespace Wasatch{
 //     fml_->dump_fields(cout);
           fml_->allocate_fields( Expr::AllocInfo( oldDW, newDW, material, patch, pg ) );
 
+          if( hasPressureExpression_ ){
+            Pressure& pexpr = dynamic_cast<Pressure&>( tree->get_expression( pressure_tag() ) );
+            pexpr.bind_uintah_vars( newDW, patch, material );
+          }
+
           tree->bind_fields( *fml_ );
           tree->bind_operators( opdb );          
           tree->execute_tree();
-          // get pressure expression and build coefficient matrix for pressure
-          //const Expr::Tag pressuret("pressure", Expr::STATE_NONE );
-          //if( tree->has_expression( pressuret ) ){
-          //  Pressure& pressureExpr = dynamic_cast<Pressure&> (tree->get_expression(pressuret));
-          //  pressureExpr.bind_uintah_vars(newDW, patch, material);
-          //}
-          //
 //           cout << "Wasatch: done executing graph '" << taskName_ << "'" << endl;
           fml_->deallocate_fields();
         }
