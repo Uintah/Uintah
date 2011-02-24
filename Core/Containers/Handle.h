@@ -118,12 +118,21 @@ public:
 
   void detach();
 
-  inline T* operator->() const {
+  inline T* operator->() {
     ASSERT(rep != 0);
     return rep;
   }
 
-  inline T* get_rep() const {
+  inline T* get_rep() {
+    return rep;
+  }
+
+  inline const T* operator->() const {
+    ASSERT(rep != 0);
+    return rep;
+  }
+
+  inline const T* get_rep() const {
     return rep;
   }
 
