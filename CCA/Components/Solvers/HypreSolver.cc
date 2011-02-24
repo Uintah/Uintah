@@ -106,13 +106,13 @@ namespace Uintah {
   template<class Types>
   class HypreStencil7 : public RefCounted {
   public:
-    HypreStencil7(const Level* const level,
-                  const MaterialSet* const matlset,
-                  const VarLabel* const A, const Task::WhichDW which_A_dw,
-                  const VarLabel* const x, const bool modifies_x,
-                  const VarLabel* const b, const Task::WhichDW which_b_dw,
-                  const VarLabel* const guess, const Task::WhichDW which_guess_dw,
-                  const HypreSolver2Params* const params)
+    HypreStencil7(const Level* level,
+                  const MaterialSet* matlset,
+                  const VarLabel* A, Task::WhichDW which_A_dw,
+                  const VarLabel* x, bool modifies_x,
+                  const VarLabel* b, Task::WhichDW which_b_dw,
+                  const VarLabel* guess, Task::WhichDW which_guess_dw,
+                  const HypreSolver2Params* params)
       : level(level), matlset(matlset),
         A_label(A), which_A_dw(which_A_dw),
         X_label(x), 
@@ -744,17 +744,17 @@ namespace Uintah {
     }
   //______________________________________________________________________
   private:
-    const Level* const level;
-    const MaterialSet* const matlset;
-    const VarLabel* const A_label;
-    const Task::WhichDW which_A_dw;
-    const VarLabel* const X_label;
-    const VarLabel* const B_label;
-    const Task::WhichDW which_b_dw;
-    const bool modifies_x;
-    const VarLabel* const guess_label;
-    const Task::WhichDW which_guess_dw;
-    const HypreSolver2Params* const params;
+    const Level* level;
+    const MaterialSet* matlset;
+    const VarLabel* A_label;
+    Task::WhichDW which_A_dw;
+    const VarLabel* X_label;
+    const VarLabel* B_label;
+    Task::WhichDW which_b_dw;
+    bool modifies_x;
+    const VarLabel* guess_label;
+    Task::WhichDW which_guess_dw;
+    const HypreSolver2Params* params;
   };
   
   //______________________________________________________________________
@@ -797,7 +797,7 @@ namespace Uintah {
   }
   
   //______________________________________________________________________
-  void HypreSolver2::scheduleSolve(const constLevelP& level, SchedulerP& sched,
+  void HypreSolver2::scheduleSolve(const LevelP& level, SchedulerP& sched,
                                    const MaterialSet* matls,
                                    const VarLabel* A,    Task::WhichDW which_A_dw,  
                                    const VarLabel* x,
