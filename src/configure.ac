@@ -79,7 +79,7 @@ AC_INIT([SCIRun],[1.25],[scirun-users@sci.utah.edu])
 ##
 ##     type "autoconf --version" to find out what version you have.
 ##
-AC_PREREQ(2.61)
+AC_PREREQ(2.67)
 
 AC_COPYRIGHT(
 ##
@@ -4839,6 +4839,7 @@ AC_SUBST(INC_FREETYPE_H)
 
 
 ##  --  search for ftgl stuff  -------------------------------------------
+AC_LANG([C++])
 _sci_lib=
 _sci_inc=
 _sci_optional=optional
@@ -4851,7 +4852,7 @@ elif test "$with_ftgl"; then
   _sci_optional=specific
 fi
 
-SCI_TRY_LINK(FTGL,ftgl library,FTGL/FTGLTextureFont.h,$_sci_inc,ftgl,$_sci_lib,$INC_FREETYPE_H $FREETYPE_LIB_DIR_FLAG $FREETYPE_LIB_FLAG,,$_sci_optional)
+SCI_TRY_LINK(FTGL,ftgl library,FTGL/FTGLTextureFont.h,$_sci_inc,ftgl,$_sci_lib,$GL_LIB_DIR_FLAG $GL_LIB_FLAG $INC_FREETYPE_H $FREETYPE_LIB_DIR_FLAG $FREETYPE_LIB_FLAG,,$_sci_optional)
 
 if test "$HAVE_FTGL" = "yes"; then
   DEF_FTGL="#define HAVE_FTGL 1"
@@ -4869,6 +4870,7 @@ AC_SUBST(INC_FTGL_H)
 
 sci_defs_files="$sci_defs_files include/sci_defs/ogl_testdefs.h"
 
+AC_LANG([C])
 
 ##  --  search for audio  -----------------------------------------------
 
