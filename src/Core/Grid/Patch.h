@@ -1284,6 +1284,11 @@ WARNING
         return d_grid->getLevel(d_patchState.levelIndex).get_rep();
       }
 
+      inline const LevelP getLevelP() const 
+      {
+        return d_grid->getLevel(d_patchState.levelIndex);
+      }
+
       /**
        * Returns the domain coordinates of the node idx
        */
