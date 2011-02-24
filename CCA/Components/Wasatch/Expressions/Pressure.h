@@ -109,9 +109,7 @@ public:
    *         expression the information requried to schedule the
    *         linear solver.
    */
-  void schedule_solver( const Uintah::constLevelP level,
-                        Uintah::SchedulerP sched,
-                        const Uintah::MaterialSet* const materials );
+  void schedule_solver( const Uintah::LevelP& level, Uintah::SchedulerP& sched, const Uintah::MaterialSet* materials );
 
   /**
    *  \brief allows Wasatch::TaskInterface to reach in and provide
@@ -135,8 +133,8 @@ public:
    *  through the advertise_dependents method.
    */
   void bind_uintah_vars( Uintah::DataWarehouse* const dw,
-                         const Uintah::Patch* const patch,
-                         const int material );
+                             const Uintah::Patch* const patch,
+                        const int material);
   
   //void bind_uintah_vars( Uintah::DataWarehouse* const dw,
   //                       const Uintah::PatchSubset* const patches,

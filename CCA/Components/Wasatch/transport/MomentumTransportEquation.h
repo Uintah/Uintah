@@ -16,11 +16,6 @@
 namespace Wasatch{
 
   /**
-   *  \obtain the tag for the pressure
-   */
-  Expr::Tag pressure_tag();
-
-  /**
    *  \ingroup WasatchCore
    *  \class MomentumTransportEquation
    *  \author James C. Sutherland
