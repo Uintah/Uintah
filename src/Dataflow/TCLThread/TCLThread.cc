@@ -226,7 +226,8 @@ TCLThread::startNetworkEditor()
   {
     printf("tk, ");
     if (Tk_Init(the_interp) == TCL_ERROR) {
-      printf("Tk_Init() failed.  Is the DISPLAY environment variable set properly?\n");
+      printf("Tk_Init() failed.  Is the DISPLAY environment variable set properly? %s\n",
+             the_interp->result);
 
       Thread::exitAll(0);//exit_all_threads(TCL_ERROR);
     }
