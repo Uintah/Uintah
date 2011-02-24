@@ -43,7 +43,7 @@ namespace Uintah {
     virtual SolverParameters* readParameters(ProblemSpecP& params,
                                              const std::string& name);
 
-    virtual void scheduleSolve(const LevelP& level, SchedulerP& sched,
+    virtual void scheduleSolve(const constLevelP& level, SchedulerP& sched,
                                const MaterialSet* matls,
                                const VarLabel* A,    
                                Task::WhichDW which_A_dw,  
