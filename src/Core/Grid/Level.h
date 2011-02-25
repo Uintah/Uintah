@@ -317,7 +317,7 @@ private:
   UINTAHSHARE const Level* getLevel(const PatchSubset* subset);
   UINTAHSHARE const Level* getLevel(const PatchSet* set);
 
-  UINTAHSHARE const LevelP getLevelP(const PatchSubset* subset);
+  UINTAHSHARE const LevelP& getLevelP(const PatchSubset* subset);
 
 } // End namespace Uintah
 
