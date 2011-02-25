@@ -20,6 +20,36 @@
 
 namespace Wasatch {
 
+//
+// this macro will be unwrapped inside the build_bcs method.  The
+// variable names correspond to those defined within the appropriate
+// scope of that method.
+//
+#define SET_BC( BCEvalT,      /* type of bc evaluator */                \
+                BCT,          /* type of BC */                          \
+                SIDE )                                                  \
+  std::cout<<"SETTING BOUNDARY CONDITION ON "<< phiName <<std::endl; \
+  for( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {            \
+    SCIRun::IntVector bc_point_indices(*bound_ptr);                     \
+    const SS::IntVec bcPointIJK(bc_point_indices[0],bc_point_indices[1],bc_point_indices[2]); \
+    if( staggeredDirection=="X" ){                                      \
+      typedef SS::XVolField FieldT;                                     \
+      set_bc< FieldT, BCOpTypeSelector<FieldT,BCEvalT>::BCT >( patch, graphHelper, phiName, bcPointIJK, patchDim, bcx, bcy, bcz, SIDE, bc_value, opdb ); \
+    }                                                                   \
+    else if( staggeredDirection=="Y" ){                                 \
+      typedef SS::YVolField  FieldT;                                    \
+      set_bc< FieldT, BCOpTypeSelector<FieldT,BCEvalT>::BCT >( patch, graphHelper, phiName, bcPointIJK, patchDim, bcx, bcy, bcz, SIDE, bc_value, opdb ); \
+    }                                                                   \
+    else if( staggeredDirection=="Z" ){                                 \
+      typedef SS::ZVolField  FieldT;                                    \
+      set_bc< FieldT, BCOpTypeSelector<FieldT,BCEvalT>::BCT >( patch, graphHelper, phiName, bcPointIJK, patchDim, bcx, bcy, bcz, SIDE, bc_value, opdb ); \
+    }                                                                   \
+    else{                                                               \
+      typedef SS::SVolField  FieldT;                                    \
+      set_bc< FieldT, BCOpTypeSelector<FieldT,BCEvalT>::BCT >( patch, graphHelper, phiName, bcPointIJK, patchDim, bcx, bcy, bcz, SIDE, bc_value, opdb ); \
+    }                                                                   \
+  }
+
   //-----------------------------------------------------------------------------
   
   /**
@@ -201,375 +231,73 @@ namespace Wasatch {
                 if (foundIterator) {
 
                   if (bc_kind == "Dirichlet") {
-                    switch (face) {
-                        
-                      case Uintah::Patch::xminus:
 
-                        std::cout<<"SETTING DIRICHLET BOUNDARY CONDITIONS ON X-MINUS FACE FOR "<< phiName <<std::endl;
-                        
-                        for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
-                          SCIRun::IntVector bc_point_indices(*bound_ptr); 
-                          const SS::IntVec bcPointIJK(bc_point_indices[0],bc_point_indices[1],bc_point_indices[2]);                          
-                          //
-                          if ( staggeredDirection=="X" ) { // X Volume Field
-                            typedef SS::XVolField FieldT;
-                            set_bc< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::DirichletX >(patch, graphHelper, phiName, bcPointIJK, patchDim, bcx, bcy, bcz, SS::X_MINUS_SIDE, bc_value, opdb );
-                           
-                          } else if (staggeredDirection=="Y") { // Y Volume Field
-                            typedef SS::YVolField  FieldT;                          
-                            set_bc< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::DirichletX >(patch, graphHelper, phiName, bcPointIJK, patchDim, bcx, bcy, bcz, SS::X_MINUS_SIDE, bc_value, opdb );
-                            
-                          } else if (staggeredDirection=="Z") { // Z Volume Field
-                            typedef SS::ZVolField  FieldT;                          
-                            set_bc< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::DirichletX >(patch, graphHelper, phiName, bcPointIJK, patchDim, bcx, bcy, bcz, SS::X_MINUS_SIDE, bc_value, opdb );
-                            
-                          } else { // Scalar Volume Field
-                            typedef SS::SVolField  FieldT;            
-                            set_bc< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::DirichletX >(patch, graphHelper, phiName, bcPointIJK, patchDim, bcx, bcy, bcz, SS::X_MINUS_SIDE, bc_value, opdb );
-                          }                                                    
-                          
-                        }
-                        break;
-                        
-                      case Uintah::Patch::xplus:
-                        
-                        std::cout<<"SETTING DIRICHLET BOUNDARY CONDITIONS ON X-PLUS FACE FOR "<< phiName <<std::endl;
-                        
-                        for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
-                          SCIRun::IntVector bc_point_indices(*bound_ptr); 
-                          const SS::IntVec bcPointIJK(bc_point_indices[0],bc_point_indices[1],bc_point_indices[2]);
-                          
-                          if ( staggeredDirection=="X" ) { // X Volume Field
-                            typedef SS::XVolField  FieldT;                          
-                            set_bc< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::DirichletX >(patch, graphHelper, phiName, bcPointIJK, patchDim, bcx, bcy, bcz, SS::X_PLUS_SIDE, bc_value, opdb);
-                            
-                          } else if (staggeredDirection=="Y") { // Y Volume Field
-                            typedef SS::YVolField  FieldT;                          
-                            set_bc< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::DirichletX >(patch, graphHelper, phiName, bcPointIJK, patchDim, bcx, bcy, bcz, SS::X_PLUS_SIDE, bc_value, opdb);
-                            
-                          } else if (staggeredDirection=="Z") { // Z Volume Field
-                            typedef SS::ZVolField  FieldT;     
-                            set_bc< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::DirichletX >(patch, graphHelper, phiName, bcPointIJK, patchDim, bcx, bcy, bcz, SS::X_PLUS_SIDE, bc_value, opdb);
-                            
-                          } else { // Scalar Volume Field
-                            typedef SS::SVolField  FieldT;
-                            set_bc< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::DirichletX >(patch, graphHelper, phiName, bcPointIJK, patchDim, bcx, bcy, bcz, SS::X_PLUS_SIDE, bc_value, opdb);
-                          }                                                    
-                          
-                          
-                        }
-                        break;
-                        
-                      case Uintah::Patch::yminus:
+                    switch( face ){
+                    case Uintah::Patch::xminus:
+                      SET_BC( BCEvaluator, DirichletX, SpatialOps::structured::X_MINUS_SIDE );
+                      break;
+                    case Uintah::Patch::xplus:
+                      SET_BC( BCEvaluator, DirichletX, SpatialOps::structured::X_PLUS_SIDE );
+                      break;
+                    case Uintah::Patch::yminus:
+                      SET_BC( BCEvaluator, DirichletY, SpatialOps::structured::Y_MINUS_SIDE );
+                      break;
+                    case Uintah::Patch::yplus:
+                      SET_BC( BCEvaluator, DirichletY, SpatialOps::structured::Y_PLUS_SIDE );
+                      break;
+                    case Uintah::Patch::zminus:
+                      SET_BC( BCEvaluator, DirichletZ, SpatialOps::structured::Z_MINUS_SIDE );
+                      break;
+                    case Uintah::Patch::zplus:
+                      SET_BC( BCEvaluator, DirichletZ, SpatialOps::structured::Z_PLUS_SIDE );
+                      break;
+                    case Uintah::Patch::numFaces:
+                      throw Uintah::ProblemSetupException( "numFaces is not a valid face", __FILE__, __LINE__ );
+                      break;
+                    case Uintah::Patch::invalidFace:
+                      throw Uintah::ProblemSetupException( "invalidFace is not a valid face", __FILE__, __LINE__ );
+                      break;
+                    }
 
-                        std::cout<<"SETTING DIRICHLET BOUNDARY CONDITIONS ON Y-MINUS FACE FOR "<< phiName <<std::endl;
+                  } else if (bc_kind == "Neumann") {
 
-                        for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
-                          SCIRun::IntVector insideCellDir = patch->faceDirection(face);
-                          SCIRun::IntVector bc_point_indices(*bound_ptr); 
-                          const SS::IntVec bcPointIJK(bc_point_indices[0],bc_point_indices[1],bc_point_indices[2]);
-                          
-                          if ( staggeredDirection=="X" ) { // X Volume Field
-                            typedef SS::XVolField  FieldT;  
-                            set_bc< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::DirichletY >(patch, graphHelper, phiName, bcPointIJK, patchDim, bcx, bcy, bcz, SS::Y_MINUS_SIDE, bc_value, opdb);
-                            
-                          } else if (staggeredDirection=="Y") { // Y Volume Field
-                            typedef SS::YVolField  FieldT;                      
-                            set_bc< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::DirichletY >(patch, graphHelper, phiName, bcPointIJK, patchDim, bcx, bcy, bcz, SS::Y_MINUS_SIDE, bc_value, opdb);
-                            
-                          } else if (staggeredDirection=="Z") { // Z Volume Field
-                            typedef SS::ZVolField  FieldT;                          
-                            set_bc< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::DirichletY >(patch, graphHelper, phiName, bcPointIJK, patchDim, bcx, bcy, bcz, SS::Y_MINUS_SIDE, bc_value, opdb);
-                            
-                          } else { // Scalar Volume Field
-                            typedef SS::SVolField  FieldT;       
-                            set_bc< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::DirichletY >(patch, graphHelper, phiName, bcPointIJK, patchDim, bcx, bcy, bcz, SS::Y_MINUS_SIDE, bc_value, opdb);
-                          }                                                    
-                        }
-                        break;
-                        
-                      case Uintah::Patch::yplus:
-
-                        std::cout<<"SETTING DIRICHLET BOUNDARY CONDITIONS ON Y-PLUS FACE FOR "<< phiName <<std::endl;
-
-                        for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
-                          SCIRun::IntVector insideCellDir = patch->faceDirection(face);
-                          SCIRun::IntVector bc_point_indices(*bound_ptr); 
-                          const SS::IntVec bcPointIJK(bc_point_indices[0],bc_point_indices[1],bc_point_indices[2]);
-                          
-                          if ( staggeredDirection=="X" ) { // X Volume Field
-                            typedef SS::XVolField  FieldT;  
-                            set_bc< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::DirichletY >(patch, graphHelper, phiName, bcPointIJK, patchDim, bcx, bcy, bcz, SS::Y_PLUS_SIDE, bc_value, opdb);
-                            
-                          } else if (staggeredDirection=="Y") { // Y Volume Field
-                            typedef SS::YVolField  FieldT;                      
-                            set_bc< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::DirichletY >(patch, graphHelper, phiName, bcPointIJK, patchDim, bcx, bcy, bcz, SS::Y_PLUS_SIDE, bc_value, opdb);
-                            
-                          } else if (staggeredDirection=="Z") { // Z Volume Field
-                            typedef SS::ZVolField  FieldT;                          
-                            set_bc< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::DirichletY >(patch, graphHelper, phiName, bcPointIJK, patchDim, bcx, bcy, bcz, SS::Y_PLUS_SIDE, bc_value, opdb);
-                            
-                          } else { // Scalar Volume Field
-                            typedef SS::SVolField  FieldT;       
-                            set_bc< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::DirichletY >(patch, graphHelper, phiName, bcPointIJK, patchDim, bcx, bcy, bcz, SS::Y_PLUS_SIDE, bc_value, opdb);
-                          }                                                                              
-                        }
-                        break;
-                        
-                      case Uintah::Patch::zminus:
-                        
-                        std::cout<<"SETTING DIRICHLET BOUNDARY CONDITIONS ON Z-MINUS FACE FOR "<< phiName <<std::endl;
-                        
-                        for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
-                          SCIRun::IntVector bc_point_indices(*bound_ptr); 
-                          const SS::IntVec bcPointIJK(bc_point_indices[0],bc_point_indices[1],bc_point_indices[2]);
-                          
-                          if ( staggeredDirection=="X" ) { // X Volume Field
-                            typedef SS::XVolField  FieldT;
-                            set_bc< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::DirichletZ >(patch, graphHelper, phiName, bcPointIJK, patchDim, bcx, bcy, bcz, SS::Z_MINUS_SIDE, bc_value, opdb);
-                                                        
-                          } else if (staggeredDirection=="Y") { // Y Volume Field
-                            typedef SS::YVolField  FieldT;                          
-                            set_bc< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::DirichletZ >(patch, graphHelper, phiName, bcPointIJK, patchDim, bcx, bcy, bcz, SS::Z_MINUS_SIDE, bc_value, opdb);
-                            
-                          } else if (staggeredDirection=="Z") { // Z Volume Field
-                            typedef SS::ZVolField  FieldT;                          
-                            set_bc< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::DirichletZ >(patch, graphHelper, phiName, bcPointIJK, patchDim, bcx, bcy, bcz, SS::Z_MINUS_SIDE, bc_value, opdb);
-                            
-                          } else { // Scalar Volume Field
-                            typedef SS::SVolField  FieldT;                      
-                            set_bc< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::DirichletZ >(patch, graphHelper, phiName, bcPointIJK, patchDim, bcx, bcy, bcz, SS::Z_MINUS_SIDE, bc_value, opdb);
-                          }                                                    
-                          
-                        }
-                        break;
-                        
-                      case Uintah::Patch::zplus:
-                        
-                        std::cout<<"SETTING DIRICHLET BOUNDARY CONDITIONS ON Z-PLUS FACE FOR "<< phiName <<std::endl;
-
-                        for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
-                          SCIRun::IntVector bc_point_indices(*bound_ptr); 
-                          const SS::IntVec bcPointIJK(bc_point_indices[0],bc_point_indices[1],bc_point_indices[2]);
-                          
-                          if ( staggeredDirection=="X" ) { // X Volume Field
-                            typedef SS::XVolField  FieldT;
-                            set_bc< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::DirichletZ >(patch, graphHelper, phiName, bcPointIJK, patchDim, bcx, bcy, bcz, SS::Z_PLUS_SIDE, bc_value, opdb);
-                            
-                          } else if (staggeredDirection=="Y") { // Y Volume Field
-                            typedef SS::YVolField  FieldT;                      
-                            set_bc< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::DirichletZ >(patch, graphHelper, phiName, bcPointIJK, patchDim, bcx, bcy, bcz, SS::Z_PLUS_SIDE, bc_value, opdb);
-                            
-                          } else if (staggeredDirection=="Z") { // Z Volume Field
-                            typedef SS::ZVolField  FieldT;                          
-                            set_bc< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::DirichletZ >(patch, graphHelper, phiName, bcPointIJK, patchDim, bcx, bcy, bcz, SS::Z_PLUS_SIDE, bc_value, opdb);
-                            
-                          } else { // Scalar Volume Field
-                            typedef SS::SVolField  FieldT;                          
-                            set_bc< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::DirichletZ >(patch, graphHelper, phiName, bcPointIJK, patchDim, bcx, bcy, bcz, SS::Z_PLUS_SIDE, bc_value, opdb);
-                          }                                                    
-                          
-                        }
-                        break;
-                        
-                      case Uintah::Patch::numFaces:
-                        throw Uintah::ProblemSetupException( "numFaces is not a valid face", __FILE__, __LINE__ );
-                        break;
-                        
-                      case Uintah::Patch::invalidFace:
-                        throw Uintah::ProblemSetupException( "invalidFace is not a valid face", __FILE__, __LINE__ );
-                        break;
+                    switch( face ){
+                    case Uintah::Patch::xminus:
+                      SET_BC( BCEvaluator, NeumannX, SpatialOps::structured::X_MINUS_SIDE );
+                      break;
+                    case Uintah::Patch::xplus:
+                      SET_BC( BCEvaluator, NeumannX, SpatialOps::structured::X_PLUS_SIDE );
+                      break;
+                    case Uintah::Patch::yminus:
+                      SET_BC( BCEvaluator, NeumannY, SpatialOps::structured::Y_MINUS_SIDE );
+                      break;
+                    case Uintah::Patch::yplus:
+                      SET_BC( BCEvaluator, NeumannY, SpatialOps::structured::Y_PLUS_SIDE );
+                      break;
+                    case Uintah::Patch::zminus:
+                      SET_BC( BCEvaluator, NeumannZ, SpatialOps::structured::Z_MINUS_SIDE );
+                      break;
+                    case Uintah::Patch::zplus:
+                      SET_BC( BCEvaluator, NeumannZ, SpatialOps::structured::Z_PLUS_SIDE );
+                      break;
+                    case Uintah::Patch::numFaces:
+                      throw Uintah::ProblemSetupException( "numFaces is not a valid face", __FILE__, __LINE__ );
+                      break;
+                    case Uintah::Patch::invalidFace:
+                      throw Uintah::ProblemSetupException( "invalidFace is not a valid face", __FILE__, __LINE__ );
+                      break;
                     }
                     
-                  } else if (bc_kind == "Neumann") {
-                    
-                    switch (face) {
-                        
-                      case Uintah::Patch::xminus:
-
-                        std::cout<<"SETTING NEUMANN BOUNDARY CONDITIONS ON X-MINUS FACE FOR "<< phiName <<std::endl;
-
-                        for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
-                          SCIRun::IntVector bc_point_indices(*bound_ptr); 
-                          const SS::IntVec bcPointIJK(bc_point_indices[0],bc_point_indices[1],bc_point_indices[2]);
-                          
-                          //
-                          if ( staggeredDirection=="X" ) { // X Volume Field
-                            typedef SS::XVolField FieldT;
-                            set_bc< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::NeumannX >(patch, graphHelper, phiName, bcPointIJK, patchDim, bcx, bcy, bcz, SS::X_MINUS_SIDE, bc_value, opdb);
-                            
-                          } else if (staggeredDirection=="Y") { // Y Volume Field
-                            typedef SS::YVolField  FieldT;                          
-                            set_bc< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::NeumannX >(patch, graphHelper, phiName, bcPointIJK, patchDim, bcx, bcy, bcz, SS::X_MINUS_SIDE, bc_value, opdb);
-                            
-                          } else if (staggeredDirection=="Z") { // Z Volume Field
-                            typedef SS::ZVolField  FieldT;                      
-                            set_bc< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::NeumannX >(patch, graphHelper, phiName, bcPointIJK, patchDim, bcx, bcy, bcz, SS::X_MINUS_SIDE, bc_value, opdb);
-                            
-                          } else { // Scalar Volume Field
-                            typedef SS::SVolField  FieldT;            
-                            set_bc< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::NeumannX >(patch, graphHelper, phiName, bcPointIJK, patchDim, bcx, bcy, bcz, SS::X_MINUS_SIDE, bc_value, opdb);
-                          }                                                    
-                          
-                        }
-                        break;
-                        
-                      case Uintah::Patch::xplus:
-                        
-                        std::cout<<"SETTING NEUMANN BOUNDARY CONDITIONS ON X-PLUS FACE FOR "<< phiName <<std::endl;
-                        
-                        for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
-                          SCIRun::IntVector bc_point_indices(*bound_ptr); 
-                          const SS::IntVec bcPointIJK(bc_point_indices[0],bc_point_indices[1],bc_point_indices[2]);
-                          
-                          if ( staggeredDirection=="X" ) { // X Volume Field
-                            typedef SS::XVolField  FieldT; 
-                            set_bc< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::NeumannX >(patch, graphHelper, phiName, bcPointIJK, patchDim, bcx, bcy, bcz, SS::X_PLUS_SIDE, bc_value, opdb);
-                            
-                          } else if (staggeredDirection=="Y") { // Y Volume Field
-                            typedef SS::YVolField  FieldT;                          
-                            set_bc< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::NeumannX >(patch, graphHelper, phiName, bcPointIJK, patchDim, bcx, bcy, bcz, SS::X_PLUS_SIDE, bc_value, opdb);
-                            
-                          } else if (staggeredDirection=="Z") { // Z Volume Field
-                            typedef SS::ZVolField  FieldT;     
-                            set_bc< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::NeumannX >(patch, graphHelper, phiName, bcPointIJK, patchDim, bcx, bcy, bcz, SS::X_PLUS_SIDE, bc_value, opdb);
-                            
-                          } else { // Scalar Volume Field
-                            typedef SS::SVolField  FieldT;
-                            set_bc< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::NeumannX >(patch, graphHelper, phiName, bcPointIJK, patchDim, bcx, bcy, bcz, SS::X_PLUS_SIDE, bc_value, opdb);
-                          }                                                    
-                          
-                          
-                        }
-                        break;
-                        
-                      case Uintah::Patch::yminus:
-                        
-                        std::cout<<"SETTING NEUMANN BOUNDARY CONDITIONS ON Y-MINUS FACE FOR "<< phiName <<std::endl;
-                        
-                        for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
-                          SCIRun::IntVector bc_point_indices(*bound_ptr); 
-                          const SS::IntVec bcPointIJK(bc_point_indices[0],bc_point_indices[1],bc_point_indices[2]);
-                          
-                          if ( staggeredDirection=="X" ) { // X Volume Field
-                            typedef SS::XVolField  FieldT;  
-                            set_bc< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::NeumannY >(patch, graphHelper, phiName, bcPointIJK, patchDim, bcx, bcy, bcz, SS::Y_MINUS_SIDE, bc_value, opdb);
-                            
-                          } else if (staggeredDirection=="Y") { // Y Volume Field
-                            typedef SS::YVolField  FieldT;                          
-                            set_bc< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::NeumannY >(patch, graphHelper, phiName, bcPointIJK, patchDim, bcx, bcy, bcz, SS::Y_MINUS_SIDE, bc_value, opdb);
-                            
-                          } else if (staggeredDirection=="Z") { // Z Volume Field
-                            typedef SS::ZVolField  FieldT;                      
-                            set_bc< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::NeumannY >(patch, graphHelper, phiName, bcPointIJK, patchDim, bcx, bcy, bcz, SS::Y_MINUS_SIDE, bc_value, opdb);
-                            
-                          } else { // Scalar Volume Field
-                            typedef SS::SVolField  FieldT;       
-                            set_bc< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::NeumannY >(patch, graphHelper, phiName, bcPointIJK, patchDim, bcx, bcy, bcz, SS::Y_MINUS_SIDE, bc_value, opdb);
-                          }                                                    
-                        }
-                        break;
-                        
-                      case Uintah::Patch::yplus:
-                        
-                        std::cout<<"SETTING NEUMANN BOUNDARY CONDITIONS ON Y-PLUS FACE FOR "<< phiName <<std::endl;
-                        
-                        for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
-                          SCIRun::IntVector bc_point_indices(*bound_ptr); 
-                          const SS::IntVec bcPointIJK(bc_point_indices[0],bc_point_indices[1],bc_point_indices[2]);
-                          
-                          if ( staggeredDirection=="X" ) { // X Volume Field
-                            typedef SS::XVolField  FieldT;  
-                            set_bc< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::NeumannY >(patch, graphHelper, phiName, bcPointIJK, patchDim, bcx, bcy, bcz, SS::Y_PLUS_SIDE, bc_value, opdb);
-                            
-                          } else if (staggeredDirection=="Y") { // Y Volume Field
-                            typedef SS::YVolField  FieldT;    
-                            set_bc< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::NeumannY >(patch, graphHelper, phiName, bcPointIJK, patchDim, bcx, bcy, bcz, SS::Y_PLUS_SIDE, bc_value, opdb);
-                            
-                          } else if (staggeredDirection=="Z") { // Z Volume Field
-                            typedef SS::ZVolField  FieldT;                          
-                            set_bc< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::NeumannY >(patch, graphHelper, phiName, bcPointIJK, patchDim, bcx, bcy, bcz, SS::Y_PLUS_SIDE, bc_value, opdb);
-                            
-                          } else { // Scalar Volume Field
-                            typedef SS::SVolField  FieldT;       
-                            set_bc< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::NeumannY >(patch, graphHelper, phiName, bcPointIJK, patchDim, bcx, bcy, bcz, SS::Y_PLUS_SIDE, bc_value, opdb);
-                          }                                                    
-                          
-                        }
-                        break;
-                        
-                      case Uintah::Patch::zminus:
-                        
-                        std::cout<<"SETTING NEUMANN BOUNDARY CONDITIONS ON Z-MINUS FACE FOR "<< phiName <<std::endl;
-                        
-                        for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
-                          SCIRun::IntVector bc_point_indices(*bound_ptr); 
-                          const SS::IntVec bcPointIJK(bc_point_indices[0],bc_point_indices[1],bc_point_indices[2]);
-                          
-                          if ( staggeredDirection=="X" ) { // X Volume Field
-                            typedef SS::XVolField  FieldT;
-                            set_bc< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::NeumannZ >(patch, graphHelper, phiName, bcPointIJK, patchDim, bcx, bcy, bcz, SS::Z_MINUS_SIDE, bc_value, opdb);
-                            
-                          } else if (staggeredDirection=="Y") { // Y Volume Field
-                            typedef SS::YVolField  FieldT;                          
-                            set_bc< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::NeumannZ >(patch, graphHelper, phiName, bcPointIJK, patchDim, bcx, bcy, bcz, SS::Z_MINUS_SIDE, bc_value, opdb);
-                            
-                          } else if (staggeredDirection=="Z") { // Z Volume Field
-                            typedef SS::ZVolField  FieldT;                      
-                            set_bc< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::NeumannZ >(patch, graphHelper, phiName, bcPointIJK, patchDim, bcx, bcy, bcz, SS::Z_MINUS_SIDE, bc_value, opdb);
-                            
-                          } else { // Scalar Volume Field
-                            typedef SS::SVolField  FieldT;                          
-                            set_bc< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::NeumannZ >(patch, graphHelper, phiName, bcPointIJK, patchDim, bcx, bcy, bcz, SS::Z_MINUS_SIDE, bc_value, opdb);
-                          }                                                    
-                          
-                        }
-                        break;
-                        
-                      case Uintah::Patch::zplus:
-                        
-                        std::cout<<"SETTING NEUMANN BOUNDARY CONDITIONS ON Z-PLUS FACE FOR "<< phiName <<std::endl;
-                        
-                        for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
-                          SCIRun::IntVector bc_point_indices(*bound_ptr); 
-                          const SS::IntVec bcPointIJK(bc_point_indices[0],bc_point_indices[1],bc_point_indices[2]);
-                          
-                          if ( staggeredDirection=="X" ) { // X Volume Field
-                            typedef SS::XVolField  FieldT;
-                            set_bc< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::NeumannZ >(patch, graphHelper, phiName, bcPointIJK, patchDim, bcx, bcy, bcz, SS::Z_PLUS_SIDE, bc_value, opdb);
-                            
-                          } else if (staggeredDirection=="Y") { // Y Volume Field
-                            typedef SS::YVolField  FieldT;                          
-                            set_bc< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::NeumannZ >(patch, graphHelper, phiName, bcPointIJK, patchDim, bcx, bcy, bcz, SS::Z_PLUS_SIDE, bc_value, opdb);
-                            
-                          } else if (staggeredDirection=="Z") { // Z Volume Field
-                            typedef SS::ZVolField  FieldT;                          
-                            set_bc< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::NeumannZ >(patch, graphHelper, phiName, bcPointIJK, patchDim, bcx, bcy, bcz, SS::Z_PLUS_SIDE, bc_value, opdb);
-                            
-                          } else { // Scalar Volume Field
-                            typedef SS::SVolField  FieldT;
-                            set_bc< FieldT, BCOpTypeSelector<FieldT,BCEvaluator>::NeumannZ >(patch, graphHelper, phiName, bcPointIJK, patchDim, bcx, bcy, bcz, SS::Z_PLUS_SIDE, bc_value, opdb);
-                          }                     
-                          
-                        }
-                        break;
-                        
-                      case Uintah::Patch::numFaces:
-                        throw Uintah::ProblemSetupException( "numFaces is not a valid face", __FILE__, __LINE__ );
-                        break;
-                        
-                      case Uintah::Patch::invalidFace:
-                        throw Uintah::ProblemSetupException( "invalidFace is not a valid face", __FILE__, __LINE__ );
-                        break;
-                    }                    
                   }
                 }
-              }
-            }
-          }
-        }  
-      }
-    }
+              } // child loop
+            } // face loop
+          } // material loop
+        } // patch subset loop
+      } // local patch loop
+    } // equation loop
+
   }
-  // ------------------------
+
+
 } // namespace wasatch
