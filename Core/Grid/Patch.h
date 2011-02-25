@@ -1284,7 +1284,7 @@ WARNING
         return d_grid->getLevel(d_patchState.levelIndex).get_rep();
       }
 
-      inline const LevelP getLevelP() const 
+      inline const LevelP& getLevelP() const 
       {
         return d_grid->getLevel(d_patchState.levelIndex);
       }

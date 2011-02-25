@@ -1030,10 +1030,10 @@ namespace Uintah {
     return level;
   }
 
-  const LevelP getLevelP(const PatchSubset* subset)
+  const LevelP& getLevelP(const PatchSubset* subset)
   {
     ASSERT(subset->size()>0);
-    const LevelP level = subset->get(0)->getLevelP();
+    const LevelP& level = subset->get(0)->getLevelP();
 #if SCI_ASSERTION_LEVEL>0
     for(int i=1;i<subset->size();i++){
       ASSERT(level == subset->get(i)->getLevelP());
