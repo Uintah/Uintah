@@ -46,7 +46,7 @@ namespace Wasatch{
     typedef std::pair< TreePtr, Uintah::Task* > TreeTaskPair;
     typedef std::map< int, TreeTaskPair > PatchTreeMap;
 
-    Uintah::SchedulerP scheduler_;
+    Uintah::SchedulerP& scheduler_;
     const Uintah::PatchSet* const patches_;
     const Uintah::MaterialSet* const materials_;
 
@@ -72,7 +72,7 @@ namespace Wasatch{
 
     TreeTaskExecute( TreePtr tree,
                      const std::string taskName,
-                     Uintah::SchedulerP scheduler,
+                     Uintah::SchedulerP& scheduler,
                      const Uintah::PatchSet* const patches,
                      const Uintah::MaterialSet* const materials,
                      const PatchInfoMap& info,
@@ -88,7 +88,7 @@ namespace Wasatch{
 
   TreeTaskExecute::TreeTaskExecute( TreePtr tree,
                                     const std::string taskName,
-                                    Uintah::SchedulerP sched,
+                                    Uintah::SchedulerP& sched,
                                     const Uintah::PatchSet* const patches,
                                     const Uintah::MaterialSet* const materials,
                                     const PatchInfoMap& info,
