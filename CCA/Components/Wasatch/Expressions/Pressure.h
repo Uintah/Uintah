@@ -109,7 +109,7 @@ public:
    *         expression the information requried to schedule the
    *         linear solver.
    */
-  void schedule_solver( const Uintah::LevelP level,
+  void schedule_solver( const Uintah::LevelP& level,
                         Uintah::SchedulerP sched,
                         const Uintah::MaterialSet* const materials );
 

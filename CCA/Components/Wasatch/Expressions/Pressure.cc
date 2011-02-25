@@ -61,7 +61,7 @@ Pressure::~Pressure()
 //--------------------------------------------------------------------
 
 void
-Pressure::schedule_solver( const Uintah::LevelP level,
+Pressure::schedule_solver( const Uintah::LevelP& level,
                            Uintah::SchedulerP sched,
                            const Uintah::MaterialSet* const materials )
 {
