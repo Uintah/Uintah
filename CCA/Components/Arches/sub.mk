@@ -98,6 +98,7 @@ PSELIBS := \
         Core/Exceptions    \
         Core/Geometry      \
         Core/GeometryPiece \
+        Core/IO            \
         Core/Grid          \
         Core/Math          \
         Core/Parallel      \
