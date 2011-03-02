@@ -72,27 +72,6 @@ extern int create_tau_mapping( const string & taskname,
 
 ofstream wout;
 
-static
-void
-printTask( ostream& out, DetailedTask* task )
-{
-  out << task->getTask()->getName();
-  if(task->getPatches()){
-    out << " \t on patches ";
-    const PatchSubset* patches = task->getPatches();
-    for(int p=0;p<patches->size();p++){
-      if(p != 0)
-	out << ", ";
-      out << patches->get(p)->getID();
-    }
-    
-    if (task->getTask()->getType() != Task::OncePerProc) {
-      const Level* level = getLevel(patches);
-      out << "\t  L-"<< level->getIndex();
-    }
-  }
-}
-
 DynamicMPIScheduler::DynamicMPIScheduler( const ProcessorGroup * myworld,
 			          Output         * oport,
 			          DynamicMPIScheduler   * parentScheduler) :
