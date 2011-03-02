@@ -46,6 +46,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/AMR.h>
+#include <Core/Grid/AMR_CoarsenRefine.h>
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Variables/NodeIterator.h>
@@ -2740,39 +2741,7 @@ void MPMICE::refineVariableCC(const ProcessorGroup*,
   }
 }
 
-//______________________________________________________________________
-//
-template<typename T>
-void MPMICE::coarsenDriver_std(IntVector cl, 
-                               IntVector ch,
-                               IntVector fl,
-                               IntVector fh,
-                               IntVector refinementRatio,
-                               double ratio,
-                               const Level* coarseLevel,
-                               constCCVariable<T>& fine_q_CC,
-                               CCVariable<T>& coarse_q_CC )
-{
-  T zero(0.0);
-  // iterate over coarse level cells
-  for(CellIterator iter(cl, ch); !iter.done(); iter++){
-    IntVector c = *iter;
-    T q_CC_tmp(zero);
-    IntVector fineStart = coarseLevel->mapCellToFiner(c);
 
-    // for each coarse level cell iterate over the fine level cells   
-    for(CellIterator inside(IntVector(0,0,0),refinementRatio );
-        !inside.done(); inside++){
-      IntVector fc = fineStart + *inside;
-      
-      if( fc.x() >= fl.x() && fc.y() >= fl.y() && fc.z() >= fl.z() &&
-          fc.x() <= fh.x() && fc.y() <= fh.y() && fc.z() <= fh.z() ) {
-        q_CC_tmp += fine_q_CC[fc];
-      }
-    }
-    coarse_q_CC[c] =q_CC_tmp*ratio;
-  }
-}
 
 //__________________________________
 //
@@ -2816,43 +2785,6 @@ void MPMICE::coarsenDriver_stdNC(IntVector cl,
       q_NC_tmp += fine_q_NC[fc]*weight;
     }
     coarse_q_NC[c] =q_NC_tmp;
-  }
-}
-
-//__________________________________
-//
-template<typename T>
-void MPMICE::coarsenDriver_massWeighted(IntVector cl, 
-                                        IntVector ch,
-                                        IntVector fl,
-                                        IntVector fh,
-                                        IntVector refinementRatio,
-                                        const Level* coarseLevel,
-                                        constCCVariable<double>& cMass,
-                                        constCCVariable<T>& fine_q_CC,
-                                        CCVariable<T>& coarse_q_CC )
-{
-  T zero(0.0);
-  // iterate over coarse level cells
-  for(CellIterator iter(cl, ch); !iter.done(); iter++){
-    IntVector c = *iter;
-    T q_CC_tmp(zero);
-    double mass_CC_tmp=0.;
-    IntVector fineStart = coarseLevel->mapCellToFiner(c);
-
-    // for each coarse level cell iterate over the fine level cells   
-    for(CellIterator inside(IntVector(0,0,0),refinementRatio );
-        !inside.done(); inside++){
-      IntVector fc = fineStart + *inside;
-      
-      if( fc.x() >= fl.x() && fc.y() >= fl.y() && fc.z() >= fl.z() &&
-          fc.x() <= fh.x() && fc.y() <= fh.y() && fc.z() <= fh.z() ) {
-        q_CC_tmp += fine_q_CC[fc]*cMass[fc];
-        mass_CC_tmp += cMass[fc];
-      }
-      
-    }
-    coarse_q_CC[c] =q_CC_tmp/mass_CC_tmp;
   }
 }
 
