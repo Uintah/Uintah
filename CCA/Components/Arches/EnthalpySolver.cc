@@ -298,7 +298,7 @@ EnthalpySolver::solve(const LevelP& level,
       sub_step = 1; // at this point it is either zero or something greater than zero where this matters
 
     d_RMCRT->sched_initProperties( level, sched, sub_step ); 
-    d_RMCRT->sched_rayTrace( level, sched );
+    d_RMCRT->sched_rayTrace( level, sched, sub_step);
 
   }
 

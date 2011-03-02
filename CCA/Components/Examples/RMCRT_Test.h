@@ -98,7 +98,7 @@ WARNING
     void initialize ( const ProcessorGroup*,
                       const PatchSubset* patches, 
                       const MaterialSubset* matls,
-                       DataWarehouse* old_dw, 
+                      DataWarehouse* old_dw, 
                       DataWarehouse* new_dw );
 
     void computeStableTimestep ( const ProcessorGroup*,
@@ -138,14 +138,25 @@ WARNING
                   DataWarehouse*,
                   DataWarehouse* new_dw);
                   
-    void scheduleCoarsen_Q( const LevelP& level, 
-                            SchedulerP& scheduler );
+    // coarsen all variables              
+    void scheduleCoarsenAll( const LevelP& coarseLevel, 
+                            SchedulerP& sched );
+                          
+    // coarsen a single variable                      
+    void scheduleCoarsen_Q( const LevelP& coarseLevel,
+                            SchedulerP& scheduler,
+                            Task::WhichDW this_dw,
+                            const bool modifies,
+                            const VarLabel* variable);
                   
     void coarsen_Q ( const ProcessorGroup*,
                      const PatchSubset* patches,
                      const MaterialSubset* matls,
                      DataWarehouse*, 
-                     DataWarehouse* new_dw);
+                     DataWarehouse* new_dw,
+                     const VarLabel* variable,
+                     const bool modifies,
+                     Task::WhichDW this_dw);
                                                     
     void schedulePseudoCFD(SchedulerP& sched,
                            const PatchSet* patches,
@@ -174,9 +185,10 @@ WARNING
     SimpleMaterial*  d_material;
 
     VarLabel* d_colorLabel;
-    VarLabel* d_sumColorDiffLabel;
+    VarLabel* d_divQLabel;
     VarLabel* d_abskgLabel;
     VarLabel* d_absorpLabel;
+    VarLabel* d_sigmaT4Label;
 
     SCIRun::Vector d_gridMax;
     SCIRun::Vector d_gridMin;
@@ -191,6 +203,7 @@ WARNING
     double         d_radiusOfBall;
     double         d_radiusOfOrbit;
     double         d_angularVelocity;
+    double         d_initColor;
     int            d_matl;
     bool           d_CoarseLevelRMCRTMethod;
     bool           d_multiLevelRMCRTMethod;
