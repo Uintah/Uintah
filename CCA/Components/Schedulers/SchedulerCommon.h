@@ -39,6 +39,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Schedulers/OnDemandDataWarehouseP.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/SimulationStateP.h>
+#include <Core/Util/DebugStream.h>
 
 #include   <iosfwd>
 #include   <set>
@@ -236,6 +237,22 @@ WARNING
     enum { PRINT_BEFORE_COMM = 1, PRINT_BEFORE_EXEC = 2, PRINT_AFTER_EXEC = 4};
     void printTrackedVars(DetailedTask* dt, int when);
     
+   
+    /**
+    * output the task name and the level it's executing on.
+    * and each of the patches
+    */
+    void printTask( ostream& out, DetailedTask* task );
+    
+    /**
+    *  Output the task name and the level it's executing on
+    *  only first patch of that level
+    */
+    void printTaskLevels( const ProcessorGroup* d_myworld, 
+                          DebugStream & out, 
+                          DetailedTask* task );
+    
+    
     virtual void verifyChecksum() = 0;
 
     vector<TaskGraph*> graphs;
@@ -280,6 +297,7 @@ WARNING
 
     // treat variable as an "old" var - will be checkpointed, copied, and only scrubbed from an OldDW
     set<string> treatAsOldVars_;
+    
   private:
 
     SchedulerCommon(const SchedulerCommon&);
