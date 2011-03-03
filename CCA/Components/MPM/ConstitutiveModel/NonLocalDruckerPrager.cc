@@ -65,13 +65,13 @@ NonLocalDruckerPrager::NonLocalDruckerPrager(ProblemSpecP& ps, MPMFlags* Mflag)
   ps->require("k_o",d_initialData.k_o);
   ps->require("bulk_modulus",d_initialData.bulk_modulus);
   ps->require("shear_modulus",d_initialData.shear_modulus);
-  ps->require("l_nonlocal",d_initialData.l_nonlocal);
-  ps->require("h_local",d_initialData.h_local);
-  ps->require("h_nonlocal",d_initialData.h_nonlocal);
-  ps->require("minimum_yield_stress",d_initialData.minimum_yield_stress);
-  ps->require("initial_xstress",d_initialData.initial_xstress);
-  ps->require("initial_ystress",d_initialData.initial_ystress);
-  ps->require("initial_zstress",d_initialData.initial_zstress);
+  ps->getWithDefault("l_nonlocal",d_initialData.l_nonlocal,0.0);
+  ps->getWithDefault("h_local",d_initialData.h_local,0.0);
+  ps->getWithDefault("h_nonlocal",d_initialData.h_nonlocal,0.0);
+  ps->getWithDefault("minimum_yield_stress",d_initialData.minimum_yield_stress,0.0);
+  ps->getWithDefault("initial_xstress",d_initialData.initial_xstress,0.0);
+  ps->getWithDefault("initial_ystress",d_initialData.initial_ystress,0.0);
+  ps->getWithDefault("initial_zstress",d_initialData.initial_zstress,0.0);
   initializeLocalMPMLabels();
 }
 
@@ -434,7 +434,7 @@ void NonLocalDruckerPrager::computeStressTensor(const PatchSubset* patches,
 	Matrix3 A,M;
 	//comput M and N using the new stress estimate:
 	M = Identity*alpha_p + S_trial*(1.0/(sqrt_two*sqrt_J2_trial))*(1.0-alpha_p);
-	A = M*2.0*shear*(1.0-alpha_p) + Identity*3.0*bulk*alpha_p;
+	A = (Identity*lame*(M.Trace()) + M*2.0*shear);
 	double dlambda_old=0.0;
 	double dlambda_new=0.0;
 	double tolerance = 1e-15;
