@@ -605,6 +605,7 @@ t
     <alpha                spec="OPTIONAL DOUBLE"  />
     <alpha_p              spec="OPTIONAL DOUBLE"  />
     <k_o                  spec="OPTIONAL DOUBLE"  />
+    <k_o_dist             spec="OPTIONAL STRING"  />
     <h_local              spec="OPTIONAL DOUBLE"  />
     <h_nonlocal           spec="OPTIONAL DOUBLE"  />
     <l_nonlocal           spec="OPTIONAL DOUBLE"/>

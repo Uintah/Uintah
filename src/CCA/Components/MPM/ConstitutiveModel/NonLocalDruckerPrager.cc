@@ -46,10 +46,12 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Malloc/Allocator.h>
-
+#include <Core/Math/Weibull.h>
 #include <sci_values.h>
 #include <iostream>
-
+#include <fstream>
+#include<string>
+#include<cstring>
 using std::cerr;
 
 using namespace Uintah;
@@ -72,6 +74,9 @@ NonLocalDruckerPrager::NonLocalDruckerPrager(ProblemSpecP& ps, MPMFlags* Mflag)
   ps->getWithDefault("initial_xstress",d_initialData.initial_xstress,0.0);
   ps->getWithDefault("initial_ystress",d_initialData.initial_ystress,0.0);
   ps->getWithDefault("initial_zstress",d_initialData.initial_zstress,0.0);
+  ps->get("k_o_dist",wdist.WeibDist);
+  WeibullParser(wdist);
+
   initializeLocalMPMLabels();
 }
 
@@ -91,6 +96,15 @@ NonLocalDruckerPrager::NonLocalDruckerPrager(const NonLocalDruckerPrager* cm)
   d_initialData.initial_ystress = cm->d_initialData.initial_ystress;
   d_initialData.initial_zstress = cm->d_initialData.initial_zstress;
 
+
+  wdist.WeibMed    = cm->wdist.WeibMed;
+  wdist.WeibMod    = cm->wdist.WeibMod;
+  wdist.WeibRefVol = cm->wdist.WeibRefVol;
+  wdist.WeibSeed   = cm->wdist.WeibSeed;
+  wdist.Perturb    = cm->wdist.Perturb;
+  wdist.WeibDist   = cm->wdist.WeibDist;
+
+
   initializeLocalMPMLabels();
 }
 
@@ -102,6 +116,8 @@ NonLocalDruckerPrager::~NonLocalDruckerPrager()
   VarLabel::destroy(eta_nlLabel_preReloc);
   VarLabel::destroy(pPlasticStrainLabel);
   VarLabel::destroy(pPlasticStrainLabel_preReloc);
+  VarLabel::destroy(k_o_distLabel);
+  VarLabel::destroy(k_o_distLabel_preReloc);
 }
 
 
@@ -125,6 +141,12 @@ void NonLocalDruckerPrager::outputProblemSpec(ProblemSpecP& ps,bool output_cm_ta
   cm_ps->appendElement("initial_xstress",d_initialData.initial_xstress);
   cm_ps->appendElement("initial_ystress",d_initialData.initial_ystress);
   cm_ps->appendElement("initial_zstress",d_initialData.initial_zstress);
+    cm_ps->appendElement("k_o_Perturb", wdist.Perturb);
+  cm_ps->appendElement("k_o_Med",     wdist.WeibMed);
+  cm_ps->appendElement("k_o_Mod",     wdist.WeibMod);
+  cm_ps->appendElement("k_o_RefVol",  wdist.WeibRefVol);
+  cm_ps->appendElement("k_o_Seed",    wdist.WeibSeed);
+  cm_ps->appendElement("k_o_dist",    wdist.WeibDist);
 }
 
 NonLocalDruckerPrager* NonLocalDruckerPrager::clone()
@@ -139,19 +161,44 @@ NonLocalDruckerPrager::initializeCMData(const Patch* patch,
 {
   // Initialize the variables shared by all constitutive models
   // This method is defined in the ConstitutiveModel base class.
+
   initSharedDataForExplicit(patch, matl, new_dw);
   ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(),patch);
+
+  SCIRun::Weibull weibGen(wdist.WeibMed,wdist.WeibMod,wdist.WeibRefVol,wdist.WeibSeed,wdist.WeibMod);
+  cout << "Weibull Variables for PEAKI1I: (initialize CMData)\n"
+       << "Median:            " << wdist.WeibMed
+       << "\nModulus:         " << wdist.WeibMod
+       << "\nReference Vol:   " << wdist.WeibRefVol
+       << "\nSeed:            " << wdist.WeibSeed
+       << "\nPerturb?:        " << wdist.Perturb << std::endl;
+
+  constParticleVariable<double>pVolume;
+  new_dw->get(pVolume, lb->pVolumeLabel, pset);
+
+
+
   ParticleVariable<double> eta,eta_nl,pPlasticStrain;
+  ParticleVariable<double> k_o_dist;
   new_dw->allocateAndPut(eta, etaLabel, pset);
   new_dw->allocateAndPut(eta_nl, eta_nlLabel, pset);
   new_dw->allocateAndPut(pPlasticStrain,     pPlasticStrainLabel, pset);
-
+  new_dw->allocateAndPut(k_o_dist, k_o_distLabel, pset);
   ParticleSubset::iterator iter = pset->begin();
   for(;iter != pset->end();iter++){
     eta[*iter]=0.0;
     eta_nl[*iter]=0.0;
     pPlasticStrain[*iter] = 0.0;
+    if(wdist.Perturb){
+      k_o_dist[*iter] = weibGen.rand(pVolume[*iter]);
+    }
   }
+
+
+
+
+
+
   computeStableTimestep(patch, matl, new_dw);
 }
 
@@ -173,6 +220,7 @@ NonLocalDruckerPrager::allocateCMDataAddRequires(Task* task,
   addSharedRForConvertExplicit(task, matlset, patches);
   task->requires(Task::NewDW, etaLabel_preReloc, matlset, Ghost::None);
   task->requires(Task::NewDW, eta_nlLabel_preReloc, matlset, Ghost::None);
+  task->requires(Task::NewDW, k_o_distLabel_preReloc,matlset,Ghost::None);
 
 }
 
@@ -273,6 +321,8 @@ void NonLocalDruckerPrager::computeStressTensor(const PatchSubset* patches,
     ParticleVariable<double> eta_nl_new;
     constParticleVariable<double> pPlasticStrain;
     ParticleVariable<double>  pPlasticStrain_new;
+    constParticleVariable<double> k_o_dist;
+    ParticleVariable<double> k_o_dist_new;
 
     delt_vartype delT;
     old_dw->get(delT, lb->delTLabel, getLevel(patches));
@@ -288,6 +338,7 @@ void NonLocalDruckerPrager::computeStressTensor(const PatchSubset* patches,
     old_dw->get(stress_old,             lb->pStressLabel,                   pset);
     old_dw->get(eta_old,             etaLabel,                           pset);
     old_dw->get(eta_nl_old,             eta_nlLabel,                           pset);
+    old_dw->get(k_o_dist,             k_o_distLabel,                           pset);
     new_dw->allocateAndPut(stress_new,  lb->pStressLabel_preReloc,      pset);
     new_dw->allocateAndPut(pvolume,  lb->pVolumeLabel_preReloc,          pset);
     new_dw->allocateAndPut(pdTdt,    lb->pdTdtLabel_preReloc,            pset);
@@ -297,10 +348,15 @@ void NonLocalDruckerPrager::computeStressTensor(const PatchSubset* patches,
 
     new_dw->allocateAndPut(eta_new,  etaLabel_preReloc,                  pset);
     new_dw->allocateAndPut(eta_nl_new,  eta_nlLabel_preReloc,                  pset);
+    new_dw->allocateAndPut(k_o_dist_new,  k_o_distLabel_preReloc,                  pset);
+
+    k_o_dist_new.copyData(k_o_dist);
 
     ParticleVariable<Matrix3> velGrad,rotation,trial_stress;
     ParticleVariable<double> f_trial,pdlambda,rho_cur;
     ParticleVariable<int> softened;
+    ParticleVariable<double> k_o;
+    new_dw->allocateTemporary(k_o, pset);
     new_dw->allocateTemporary(velGrad,      pset);
     new_dw->allocateTemporary(rotation,     pset);
     new_dw->allocateTemporary(pdlambda,     pset);
@@ -311,13 +367,13 @@ void NonLocalDruckerPrager::computeStressTensor(const PatchSubset* patches,
 
     const double alpha = d_initialData.alpha;
     const double alpha_p = d_initialData.alpha_p;
-    const double k_o = d_initialData.k_o;
+    const double k_o_const = d_initialData.k_o;
     const double bulk = d_initialData.bulk_modulus;
     const double shear= d_initialData.shear_modulus;
     const double l_nonlocal = d_initialData.l_nonlocal;
     double h_local = d_initialData.h_local;
     double h_nonlocal = d_initialData.h_nonlocal;
-    const double minimum_yield_stress = d_initialData.minimum_yield_stress;
+    double minimum_yield_stress = d_initialData.minimum_yield_stress;
     double initial_xstress = d_initialData.initial_xstress;
     double initial_ystress = d_initialData.initial_ystress;
     double initial_zstress = d_initialData.initial_zstress;
@@ -403,13 +459,18 @@ void NonLocalDruckerPrager::computeStressTensor(const PatchSubset* patches,
       // unrotated tensorSig=R^T*pstress*R
       Matrix3 unrotated_stress = (tensorR.Transpose())*((stress_old[idx]+initial_stress)*tensorR);
       D = (tensorR.Transpose())*(D*tensorR);
+      if (wdist.Perturb){
+	k_o[idx] = k_o_dist[idx];
+      }else{
+	k_o[idx] = k_o_const;
+      }
       double lame = bulk - 2.0/3.0*shear;
       double eta_in = eta_old[idx];
       double eta_nl_in = eta_nl_old[idx];
       trial_stress[idx] = unrotated_stress + (Identity*lame*(D.Trace()*delT) + D*delT*2.0*shear);
 
       // evaluate yield function:
-      f_trial[idx] = YieldFunction(trial_stress[idx],alpha,k_o,eta_in,eta_nl_in);
+      f_trial[idx] = YieldFunction(trial_stress[idx],alpha,k_o[idx],eta_in,eta_nl_in);
       eta_new[idx] = eta_old[idx];
       eta_nl_new[idx] = eta_nl_old[idx];
       pPlasticStrain_new[idx] = pPlasticStrain[idx];
@@ -445,7 +506,7 @@ void NonLocalDruckerPrager::computeStressTensor(const PatchSubset* patches,
 	for(i=0;i<imax;i++){
 	  dlambda_new = (f_trial[idx]  )/(2.0/sqrt(2.0)*shear*(1.0-alpha_p)+alpha*9.0*bulk*alpha_p + h_local);
 	  //dlambda_new = (sqrt(J2_trial)+alpha*I1_trial -k_o -eta_old[idx]  - h_local*dlambda_old )/(2.0/sqrt(2.0)*shear*(1.0-alpha_p)+alpha*9.0*bulk*alpha_p);
-	  current_yield_strength = k_o + (eta_old[idx]+h_local*dlambda_new);
+	  current_yield_strength = k_o[idx] + (eta_old[idx]+h_local*dlambda_new);
 	  if (current_yield_strength<minimum_yield_stress){
 	    dlambda_new = (f_trial[idx] )/(2.0/sqrt(2.0)*shear*(1.0-alpha_p)+alpha*9.0*bulk*alpha_p);
 	  }
@@ -459,7 +520,7 @@ void NonLocalDruckerPrager::computeStressTensor(const PatchSubset* patches,
 	  cerr<<"fixed-point scheme did not converge"<<endl;
 	}
 	//update the stress using the the last estimate for lambda_dot
-	current_yield_strength = k_o + (eta_old[idx]+h_local*dlambda_new);
+	current_yield_strength = k_o[idx] + (eta_old[idx]+h_local*dlambda_new);
 	if (current_yield_strength<minimum_yield_stress){
 	  eta_new[idx] = eta_old[idx];	  
 	}else{
@@ -472,7 +533,7 @@ void NonLocalDruckerPrager::computeStressTensor(const PatchSubset* patches,
 	if (current_yield_strength<minimum_yield_stress){
 	  f_new=YieldFunction(stress_new[idx],alpha,minimum_yield_stress,0.0,0.0);
 	}else{
-	  f_new=YieldFunction(stress_new[idx],alpha,k_o,eta_new[idx],eta_nl_new[idx]);
+	  f_new=YieldFunction(stress_new[idx],alpha,k_o[idx],eta_new[idx],eta_nl_new[idx]);
 	}
 
 	if (abs(f_new)>10.0){
@@ -589,7 +650,7 @@ void NonLocalDruckerPrager::computeStressTensor(const PatchSubset* patches,
 	  dlambda_nl = dlambda_nl/V_alpha;
 	  eta_nl_new[idx] = eta_nl_old[idx] + h_nonlocal*dlambda_nl;
 	  if (softened[idx]==1){
-	    f_trial[idx] = YieldFunction(trial_stress[idx],alpha,k_o,eta_old[idx],eta_nl_new[idx]);
+	    f_trial[idx] = YieldFunction(trial_stress[idx],alpha,k_o[idx],eta_old[idx],eta_nl_new[idx]);
 	  }
 	  if(f_trial[idx]>0){
 	    pdlambda[idx] = (f_trial[idx] - h_nonlocal*dlambda_nl)/(2.0/sqrt_two*shear*(1.0-alpha_p)+alpha*9.0*bulk*alpha_p + h_local);
@@ -597,7 +658,7 @@ void NonLocalDruckerPrager::computeStressTensor(const PatchSubset* patches,
 	    pdlambda[idx] = 0.0;
 	  }
 	  // check if we have over-softened
-	  double current_yield_strength = k_o + (eta_old[idx]+h_local*pdlambda[idx]) + (eta_nl_old[idx]+h_nonlocal*dlambda_nl);
+	  double current_yield_strength = k_o[idx] + (eta_old[idx]+h_local*pdlambda[idx]) + (eta_nl_old[idx]+h_nonlocal*dlambda_nl);
 	  if(current_yield_strength<minimum_yield_stress){
 
 	    eta_new[idx] = eta_old[idx];
@@ -624,11 +685,11 @@ void NonLocalDruckerPrager::computeStressTensor(const PatchSubset* patches,
 	  //compute a new estimate for the stress
 	  stress_new[idx] = trial_stress[idx] - A*pdlambda[idx];
 	  double f_new;
-	  current_yield_strength = k_o + (eta_old[idx]+h_local*pdlambda[idx]) + (eta_nl_old[idx]+h_nonlocal*dlambda_nl);
+	  current_yield_strength = k_o[idx] + (eta_old[idx]+h_local*pdlambda[idx]) + (eta_nl_old[idx]+h_nonlocal*dlambda_nl);
 	  if (current_yield_strength<minimum_yield_stress){
 	    f_new=YieldFunction(stress_new[idx],alpha,minimum_yield_stress,0.0,0.0);
 	  }else{
-	    f_new=YieldFunction(stress_new[idx],alpha,k_o,eta_new[idx],eta_nl_new[idx]);
+	    f_new=YieldFunction(stress_new[idx],alpha,k_o[idx],eta_new[idx],eta_nl_new[idx]);
 	  }
 
 	  //cerr<<"yield function value after nonlocal iteration "<<q-1<<" is "<<f_new<<endl;
@@ -666,7 +727,7 @@ void NonLocalDruckerPrager::computeStressTensor(const PatchSubset* patches,
 	  //evaluate the maximum potential value for eta_nl_new
 	  double eta_nl_trial = eta_nl_new[idx] + h_nonlocal*dlambda_max;
 	  //now evaluate the yield function with this value for eta_nl
-	  double f_max = YieldFunction(stress_new[idx],alpha,k_o,eta_new[idx],eta_nl_trial);
+	  double f_max = YieldFunction(stress_new[idx],alpha,k_o[idx],eta_new[idx],eta_nl_trial);
 	  if (f_max>0.0){
 	    softened[idx] = 1;
 	    soften_elastic = true;
@@ -780,7 +841,7 @@ void NonLocalDruckerPrager::computeInvariants(const Matrix3& stress, Matrix3& S,
 
 }
 
- double NonLocalDruckerPrager::YieldFunction(Matrix3& stress, const double& alpha, const double&k_o,double& eta,double& eta_nl){
+ double NonLocalDruckerPrager::YieldFunction(Matrix3& stress, const double& alpha, double&k_o,double& eta,double& eta_nl){
 
   Matrix3 S;
   double I1,J2;
@@ -789,7 +850,7 @@ void NonLocalDruckerPrager::computeInvariants(const Matrix3& stress, Matrix3& S,
 
 }
 
- double NonLocalDruckerPrager::YieldFunction(const Matrix3& stress, const double& alpha, const double&k_o,const double& eta,const double& eta_nl){
+ double NonLocalDruckerPrager::YieldFunction(const Matrix3& stress, const double& alpha, double&k_o,const double& eta,const double& eta_nl){
 
   Matrix3 S;
   double I1,J2;
@@ -798,7 +859,7 @@ void NonLocalDruckerPrager::computeInvariants(const Matrix3& stress, Matrix3& S,
 
  }
 
- double NonLocalDruckerPrager::YieldFunction(Matrix3& stress, const double& alpha, const double&k_o,const double& eta,const double& eta_nl){
+ double NonLocalDruckerPrager::YieldFunction(Matrix3& stress, const double& alpha, double&k_o,const double& eta,const double& eta_nl){
 
   Matrix3 S;
   double I1,J2;
@@ -841,9 +902,12 @@ void NonLocalDruckerPrager::addParticleState(std::vector<const VarLabel*>& from,
   from.push_back(etaLabel);
   from.push_back(eta_nlLabel);
   from.push_back(pPlasticStrainLabel);
+  from.push_back(k_o_distLabel);
   to.push_back(etaLabel_preReloc);
   to.push_back(eta_nlLabel_preReloc);
   to.push_back(pPlasticStrainLabel_preReloc);
+  to.push_back(k_o_distLabel_preReloc);
+  
 
 
 
@@ -862,6 +926,7 @@ void NonLocalDruckerPrager::addInitialComputesAndRequires(Task* task,
   task->computes(etaLabel,        matlset);
   task->computes(eta_nlLabel,     matlset);
   task->computes(pPlasticStrainLabel, matlset);
+  task->computes(k_o_distLabel,   matlset);
 
 }
 
@@ -879,9 +944,11 @@ void NonLocalDruckerPrager::addComputesAndRequires(Task* task,
   task->requires(Task::OldDW, etaLabel, matlset, Ghost::None);
   task->requires(Task::OldDW, eta_nlLabel, matlset, Ghost::None);
   task->requires(Task::OldDW, pPlasticStrainLabel,    matlset, Ghost::None);
+  task->requires(Task::OldDW,k_o_distLabel, matlset, Ghost::None);
   task->computes(etaLabel_preReloc,matlset);
   task->computes(eta_nlLabel_preReloc,matlset);
   task->computes(pPlasticStrainLabel_preReloc,  matlset);
+  task->computes(k_o_distLabel_preReloc, matlset);
 
 
 }
@@ -961,5 +1028,119 @@ NonLocalDruckerPrager::initializeLocalMPMLabels()
     ParticleVariable<double>::getTypeDescription());
   pPlasticStrainLabel_preReloc = VarLabel::create("p.plasticStrain+",
     ParticleVariable<double>::getTypeDescription());
+  k_o_distLabel = VarLabel::create("k_o_dist",
+                     ParticleVariable<double>::getTypeDescription());
+  k_o_distLabel_preReloc = VarLabel::create("k_o_dist+",
+                     ParticleVariable<double>::getTypeDescription());
 
+}
+
+// Weibull input parser that accepts a structure of input
+// parameters defined as:
+//
+// bool Perturb        'True' for perturbed parameter
+// double WeibMed       Medain distrib. value OR const value
+//                         depending on bool Perturb
+// double WeibMod       Weibull modulus
+// double WeibRefVol    Reference Volume
+// int    WeibSeed      Seed for random number generator
+// std::string WeibDist  String for Distribution
+//
+// the string 'WeibDist' accepts strings of the following form
+// when a perturbed value is desired:
+//
+// --Distribution--|-Median-|-Modulus-|-Reference Vol -|- Seed -|
+// "    weibull,      45e6,      4,        0.0001,          0"
+//
+// or simply a number if no perturbed value is desired.
+
+void
+NonLocalDruckerPrager::WeibullParser(WeibParameters &iP)
+{
+
+  // Remove all unneeded characters
+  // only remaining are alphanumeric '.' and ','
+  for ( int i = iP.WeibDist.length()-1; i >= 0; i--) {
+    iP.WeibDist[i] = tolower(iP.WeibDist[i]);
+    if ( !isalnum(iP.WeibDist[i]) && 
+       iP.WeibDist[i] != '.' &&
+       iP.WeibDist[i] != ',' &&
+       iP.WeibDist[i] != '-' &&
+       iP.WeibDist[i] != EOF) {
+         iP.WeibDist.erase(i,1);
+    }
+  } // End for
+
+  if (iP.WeibDist.substr(0,4) == "weib") {
+    iP.Perturb = true;
+  } else {
+    iP.Perturb = false;
+  }
+
+  // ######
+  // If perturbation is NOT desired
+  // ######
+  if ( !iP.Perturb ) {
+    bool escape = false;
+    int num_of_e = 0;
+    int num_of_periods = 0;
+    for ( unsigned int i = 0; i < iP.WeibDist.length(); i++) {
+      if ( iP.WeibDist[i] != '.'
+           && iP.WeibDist[i] != 'e'
+           && iP.WeibDist[i] != '-'
+           && !isdigit(iP.WeibDist[i]) ) escape = true;
+
+      if ( iP.WeibDist[i] == 'e' ) num_of_e += 1;
+
+      if ( iP.WeibDist[i] == '.' ) num_of_periods += 1;
+
+      if ( num_of_e > 1 || num_of_periods > 1 || escape ) {
+        std::cerr << "\n\nERROR:\nInput value cannot be parsed. Please\n"
+                     "check your input values.\n" << std::endl;
+        exit (1);
+      }
+    } // end for(int i = 0;....)
+
+    if ( escape ) exit (1);
+
+    iP.WeibMed  = atof(iP.WeibDist.c_str());
+  }
+
+  // ######
+  // If perturbation IS desired
+  // ######
+  if ( iP.Perturb ) {
+    int weibValues[4];
+    int weibValuesCounter = 0;
+
+    for ( unsigned int r = 0; r < iP.WeibDist.length(); r++) {
+      if ( iP.WeibDist[r] == ',' ) {
+        weibValues[weibValuesCounter] = r;
+        weibValuesCounter += 1;
+      } // end if(iP.WeibDist[r] == ',')
+    } // end for(int r = 0; ...... )
+
+    if (weibValuesCounter != 4) {
+      std::cerr << "\n\nERROR:\nWeibull perturbed input string must contain\n"
+                   "exactly 4 commas. Verify that your input string is\n"
+                   "of the form 'weibull, 45e6, 4, 0.001, 1'.\n" << std::endl;
+      exit (1);
+    } // end if(weibValuesCounter != 4)
+
+    std::string weibMedian;
+    std::string weibModulus;
+    std::string weibRefVol;
+    std::string weibSeed;
+
+    weibMedian  = iP.WeibDist.substr(weibValues[0]+1,weibValues[1]-weibValues[0]-1);
+    weibModulus = iP.WeibDist.substr(weibValues[1]+1,weibValues[2]-weibValues[1]-1);
+    weibRefVol  = iP.WeibDist.substr(weibValues[2]+1,weibValues[3]-weibValues[2]-1);
+    weibSeed    = iP.WeibDist.substr(weibValues[3]+1);
+
+    iP.WeibMed    = atof(weibMedian.c_str());
+    iP.WeibMod    = atof(weibModulus.c_str());
+    iP.WeibRefVol = atof(weibRefVol.c_str());
+    iP.WeibSeed   = atoi(weibSeed.c_str());
+    
+  } // End if (iP.Perturb)
 }
