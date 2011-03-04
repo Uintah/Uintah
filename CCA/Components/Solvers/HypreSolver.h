@@ -33,6 +33,18 @@ DEALINGS IN THE SOFTWARE.
 
 #include <CCA/Ports/SolverInterface.h>
 #include <Core/Parallel/UintahParallelComponent.h>
+/**
+ *  @class  HypreSolver2
+ *  @author Steve Parker
+ *  @author Todd Haraman
+ *  @author John Schmidt
+ *  @author James Sutherland
+ *  @author Oren Livne
+ *  @brief  Uintah hypre solver interface.
+ *  Allows the solution of a linear system of the form \[ \mathbf{A} \mathbf{x} = \mathbf{b}\] where \[\mathbf{A}\] is
+ *  stencil7 matrix.
+ *
+ */
 
 namespace Uintah {
   class HypreSolver2 : public SolverInterface, public UintahParallelComponent {
@@ -42,7 +54,28 @@ namespace Uintah {
 
     virtual SolverParameters* readParameters(ProblemSpecP& params,
                                              const std::string& name);
-
+    
+    /**
+     *  @brief Schedules the solution of the linear system \[ \mathbf{A} \mathbf{x} = \mathbf{b}\].
+     *
+     *  @param level A reference to the level on which the system is solved.
+     *  @param sched A reference to the Uintah scheduler.
+     *  @param matls A pointer to the MaterialSet.
+     *  @param A Varlabel of the coefficient matrix \[\mathbf{A}\]
+     *  @param which_A_dw The datawarehouse in which the coefficient matrix lives.
+     *  @param x The varlabel of the solution vector.
+     *  @param modifies_x A boolean that specifies the behaviour of the task 
+                          associated with the ScheduleSolve. If set to true,
+                          then the task will only modify x. Otherwise, it will
+                          compute x. This is a key option when you are computing
+                          x in another place.
+     * @param b The VarLabel of the right hand side vector.
+     * @param which_b_dw Specifies the datawarehouse in which b lives.
+     * @param guess VarLabel of the initial guess.
+     * @param guess_dw Specifies the datawarehouse of the initial guess.
+     * @param params Specifies the solver parameters usually parsed from the input file.
+     *
+     */    
     virtual void scheduleSolve(const LevelP& level, SchedulerP& sched,
                                const MaterialSet* matls,
                                const VarLabel* A,    
