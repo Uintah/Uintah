@@ -50,11 +50,23 @@ namespace Uintah {
   class NonLocalDruckerPrager : public ConstitutiveModel {
     // Create datatype for storing model parameters
   public:
+    // For usage instructions, see the 'WeibullParser' function
+    // header in Kayenta.cc
+    struct WeibParameters {
+      bool Perturb;           // 'True' for perturbed parameter
+      double WeibMed;         // Medain distrib. value OR const value depending on bool Perturb
+      int    WeibSeed;        // seed for random number generator
+      double WeibMod;         // Weibull modulus
+      double WeibRefVol;      // Reference Volume
+      std::string WeibDist;   // String for Distribution
+    };
+
+
     struct CMData {
       double alpha;
       double alpha_p;
-      double k_o;
       double bulk_modulus;
+      double k_o;
       double shear_modulus;
       double l_nonlocal;
       double h_local;
@@ -70,6 +82,9 @@ namespace Uintah {
     const VarLabel* eta_nlLabel_preReloc;
     const VarLabel* pPlasticStrainLabel;  
     const VarLabel* pPlasticStrainLabel_preReloc;  
+    const VarLabel* k_o_distLabel;
+    const VarLabel* k_o_distLabel_preReloc;
+    WeibParameters wdist;
   private:
     CMData d_initialData;
          
@@ -109,12 +124,12 @@ namespace Uintah {
 
     void computeInvariants(const Matrix3& stress, Matrix3& S,  double& I1, double& J2);
 
-    double YieldFunction(Matrix3& stress, const double& alpha, const double& k_o, double& eta, double& eta_nl);
+    double YieldFunction(Matrix3& stress, const double& alpha, double& k_o, double& eta, double& eta_nl);
 
-    double YieldFunction(const Matrix3& stress, const double& alpha, const double& k_o, const double& eta, const double& eta_nl);
+    double YieldFunction(const Matrix3& stress, const double& alpha, double& k_o, const double& eta, const double& eta_nl);
 
 
-    double YieldFunction(Matrix3& stress, const double& alpha, const double&k_o,const double& eta,const double& eta_nl);
+    double YieldFunction(Matrix3& stress, const double& alpha, double&k_o,const double& eta,const double& eta_nl);
 
     double alpha_nl(const Point& x, Point& s,const vector<double>& l_nl);
 
@@ -175,6 +190,17 @@ namespace Uintah {
                                    double temperature);
          
     virtual double getCompressibility();
+
+    // Weibull input parser that accepts a structure of input
+    // parameters defined as:
+    //
+    // bool Perturb        'True' for perturbed parameter
+    // double WeibMed       Medain distrib. value OR const value
+    //                         depending on bool Perturb
+    // double WeibMod       Weibull modulus
+    // double WeibScale     Scale parameter
+    // std::string WeibDist  String for Distribution
+    virtual void WeibullParser(WeibParameters &iP);
 
 
   };
