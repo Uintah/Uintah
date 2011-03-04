@@ -1100,6 +1100,7 @@ void setSpecificVolBC(CCVariable<double>& sp_vol_CC,
                << " nCellsTouched: " << nCells << endl;
     //__________________________________
     //  bulletproofing
+#if 0
     Patch::FaceIteratorType type = Patch::ExtraPlusEdgeCells;
     int nFaceCells = numFaceCells(patch,  type, face);
                         
@@ -1110,6 +1111,7 @@ void setSpecificVolBC(CCVariable<double>& sp_vol_CC,
            << " nCells Touched: " << nCells << " nCells on boundary: "<< nFaceCells<<") " << endl;
       throw InternalError(warn.str(), __FILE__, __LINE__);
     }
+#endif
   }  // faces loop
 }
 
@@ -1242,7 +1244,7 @@ void BC_bulletproofing(const ProblemSpecP& prob_spec,
     isBC_set["Temperature"] =false;
     isBC_set["Density"]     =false;
     isBC_set["Velocity"]    =false;            
-    isBC_set["SpecificVol"] =false;  
+    isBC_set["SpecificVol"] =true;  
     isBC_set["Symmetric"]   =false;    
                       
     map<string,string> face;
