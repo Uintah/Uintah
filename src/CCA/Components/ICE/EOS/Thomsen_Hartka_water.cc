@@ -70,7 +70,8 @@ void Thomsen_Hartka_water::outputProblemSpec(ProblemSpecP& ps)
 double Thomsen_Hartka_water::computeRhoMicro(double press, double gamma,
                                  double cv, double Temp, double)
 {
-  return  1/(d_vo*(1 - d_ko * press + d_L * pow( d_a * press + Temp - d_To,2) ) );
+  double x = d_a * press + Temp - d_To;
+  return  1./(d_vo*(1. - d_ko * press + d_L * x*x ) );
 }
 
 //__________________________________
@@ -90,10 +91,9 @@ void Thomsen_Hartka_water::computeTempCC(const Patch* patch,
       double P           = press[c];
       double rhoM        = rho_micro[c];
       double vo_rhoM     = d_vo * rhoM;
-      double L_vo_rhoM   = d_L * d_vo * rhoM;
-      double numerator   = L_vo_rhoM * (1 + vo_rhoM * ( d_ko * P - 1 ));
+      double numerator   = (1. + vo_rhoM * ( d_ko * P - 1. ));
       
-      Temp[c] = -d_a * P + d_To + sqrt(numerator/L_vo_rhoM);
+      Temp[c] = -d_a * P + d_To + sqrt(numerator);
     }
   } 
   // Although this isn't currently being used
@@ -107,10 +107,9 @@ void Thomsen_Hartka_water::computeTempCC(const Patch* patch,
       double P           = press[c];
       double rhoM        = rho_micro[c];
       double vo_rhoM     = d_vo * rhoM;
-      double L_vo_rhoM   = d_L * d_vo * rhoM;
-      double numerator   = L_vo_rhoM * (1 + vo_rhoM * ( d_ko * P - 1 ));
+      double numerator   = (1. + vo_rhoM * ( d_ko * P - 1. ));
       
-      Temp[c] = -d_a * P + d_To + sqrt(numerator/L_vo_rhoM);
+      Temp[c] = -d_a * P + d_To + sqrt(numerator);
     }
   }
 }
@@ -127,10 +126,10 @@ void Thomsen_Hartka_water::computePressEOS(double rhoM, double gamma,
  double vo_rhoM = d_vo * rhoM;  // common
  double a_L     = d_a * d_L;
  
- double term1 = 1/(2 * a_L * d_a * vo_rhoM);
- double term2 = ( d_ko + 2 * a_L * (d_To - Temp) ) * vo_rhoM;
+ double term1 = 1./(2. * a_L * d_a * vo_rhoM);
+ double term2 = ( d_ko + 2. * a_L * (d_To - Temp) ) * vo_rhoM;
  double term3 = d_ko * d_ko * vo_rhoM;
- double term4 = 4 * a_L * (d_a - ( d_a + (Temp - d_To) * d_ko ) * vo_rhoM );
+ double term4 = 4. * a_L * (d_a - ( d_a + (Temp - d_To) * d_ko ) * vo_rhoM );
  
  press  = term1 * (term2 - sqrt( vo_rhoM * (term3 + term4 ) ) );
  
@@ -140,17 +139,19 @@ void Thomsen_Hartka_water::computePressEOS(double rhoM, double gamma,
  double a_press      = d_a * press;
  double a_press_temp = a_press + Temp;
 
- double numerator    = pow(1 - d_ko * press + pow( a_press_temp - d_To, 2) * d_L, 2) * d_vo;
- double denominator  = ( d_ko - 2 * a_L * (a_press_temp - d_To) );
+ double x = a_press_temp - d_To;
+ double y = 1. - d_ko * press + x*x * d_L;
+ double numerator    = y * y * d_vo;
+ double denominator  = ( d_ko - 2. * a_L * (a_press_temp - d_To) );
  
  dp_drho = numerator/denominator; 
  
  //__________________________________
  //  dp_de
- numerator   = 2 * d_L * (a_press_temp - d_To);
+ numerator   = 2. * d_L * (a_press_temp - d_To);
  
- double d1   = d_ko - 2 * a_L * (a_press_temp - d_To);
- double d2   = d_co + d_b * ( d_To - Temp) + 2 * press * d_L * d_vo * (-a_press + d_To - 2 * Temp);
+ double d1   = d_ko - 2. * a_L * (a_press_temp - d_To);
+ double d2   = d_co + d_b * ( d_To - Temp) + 2. * press * d_L * d_vo * (-a_press + d_To - 2. * Temp);
  denominator = (d1 * d2 );
  
  dp_de = numerator/denominator;
@@ -162,7 +163,9 @@ void Thomsen_Hartka_water::computePressEOS(double rhoM, double gamma,
 // See "ICE/EOS/Thomsen&Hartka_notebook.pdf"
 double Thomsen_Hartka_water::getAlpha(double Temp, double , double P, double )
 {
-  double beta = 2 * d_L * (d_a * P + Temp - d_To)/( 1 - d_ko * P + d_L * pow(d_a * P + Temp - d_To,2)); 
+  double x = d_a * P + Temp - d_To;
+  double beta = 2. * d_L * (d_a * P + Temp - d_To)/( 1. - d_ko * P + d_L * x*x);
+
   return  beta;
 }
 
