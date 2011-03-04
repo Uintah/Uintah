@@ -98,13 +98,14 @@ WARNING
                                      const Vector& dx,
                                      CCVariable<double>& Temp_CC);
      private:
-       double   d_a;
-       double   d_b;
-       double   d_k;
-       double   d_T0;
-       double   d_S;
-       double   d_S0;
-       double   d_rho0;
+                      // Typical values
+       double   d_a;  // -0.15 kg/(m^3 C)
+       double   d_b;  //  0.78 kg/(m^3 PSU) PSU = Practical Salinity Unit
+       double   d_k;  //  4.5e-7 kg/(m^3 Pa)
+       double   d_T0; //  10 C = 283.15 K
+       double   d_S;  //  For 3% KCl, take d_S = 30
+       double   d_S0; // 35 PSU
+       double   d_rho0; // 1027 kg/m^3
   };
 } // End namespace Uintah
       
