@@ -103,6 +103,7 @@ WARNING
        double   d_b;  //  0.78 kg/(m^3 PSU) PSU = Practical Salinity Unit
        double   d_k;  //  4.5e-7 kg/(m^3 Pa)
        double   d_T0; //  10 C = 283.15 K
+       double   d_P0; //  101325 Pa
        double   d_S;  //  For 3% KCl, take d_S = 30
        double   d_S0; // 35 PSU
        double   d_rho0; // 1027 kg/m^3
