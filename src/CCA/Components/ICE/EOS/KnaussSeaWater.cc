@@ -38,13 +38,14 @@ using namespace Uintah;
 KnaussSeaWater::KnaussSeaWater(ProblemSpecP& ps)
 {
   // Constructor
-  ps->require("a", d_a);
-  ps->require("b", d_b);
-  ps->require("k", d_k);
-  ps->require("T0",d_T0);
-  ps->require("S", d_S);
-  ps->require("S0",d_S0);
-  ps->require("rho0", d_rho0);
+  ps->getWithDefault("a", d_a,         -0.15);
+  ps->getWithDefault("b", d_b,          0.0);
+  ps->getWithDefault("K", d_k,          4.5e-7);
+  ps->getWithDefault("T0",d_T0,       283.15);
+  ps->getWithDefault("P0",d_P0,    101325.0);
+  ps->getWithDefault("S", d_S,         35.0);
+  ps->getWithDefault("S0",d_S0,        35.0);
+  ps->getWithDefault("rho0", d_rho0, 1027.0);
 }
 
 KnaussSeaWater::~KnaussSeaWater()
@@ -54,14 +55,15 @@ KnaussSeaWater::~KnaussSeaWater()
 void KnaussSeaWater::outputProblemSpec(ProblemSpecP& ps)
 {
   ProblemSpecP eos_ps = ps->appendChild("EOS");
-  eos_ps->setAttribute("type","knauss_sea_water");
-  eos_ps->require("a", d_a);
-  eos_ps->require("b", d_b);
-  eos_ps->require("k", d_k);
-  eos_ps->require("T0",d_T0);
-  eos_ps->require("S", d_S);
-  eos_ps->require("S0",d_S0);
-  eos_ps->require("rho0", d_rho0);
+  eos_ps->setAttribute("type","KnaussSeaWater");
+  eos_ps->appendElement("a", d_a);
+  eos_ps->appendElement("b", d_b);
+  eos_ps->appendElement("k", d_k);
+  eos_ps->appendElement("T0",d_T0);
+  eos_ps->appendElement("P0",d_T0);
+  eos_ps->appendElement("S", d_S);
+  eos_ps->appendElement("S0",d_S0);
+  eos_ps->appendElement("rho0", d_rho0);
 }
 
 //__________________________________
@@ -69,7 +71,7 @@ double KnaussSeaWater::computeRhoMicro(double press, double gamma,
                                  double cv, double Temp, double)
 {
   // Pointwise computation of microscopic density
-  return d_rho0 + d_a*(Temp - d_T0) + d_b*(d_S - d_S0) + d_k*press;
+  return d_rho0 + d_a*(Temp - d_T0) + d_b*(d_S - d_S0) + d_k*(press-d_P0);
 }
 
 //__________________________________
@@ -86,7 +88,7 @@ void KnaussSeaWater::computeTempCC(const Patch* patch,
     for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
       IntVector c = *iter;
       Temp[c]= d_T0 + (1./d_a)*
-                        ((rho_micro[c]-d_rho0) - d_b*(d_S-d_S0) - d_k*press[c]);
+                 ((rho_micro[c]-d_rho0) - d_b*(d_S-d_S0) - d_k*(press[c]-d_P0));
     }
   } 
   // Although this isn't currently being used
@@ -98,7 +100,7 @@ void KnaussSeaWater::computeTempCC(const Patch* patch,
          !iter.done();iter++) {
       IntVector c = *iter;                    
       Temp[c]= d_T0 + (1./d_a)*
-                        ((rho_micro[c]-d_rho0) - d_b*(d_S-d_S0) - d_k*press[c]);
+                 ((rho_micro[c]-d_rho0) - d_b*(d_S-d_S0) - d_k*(press[c]-d_P0));
     }
   }
 }
@@ -109,7 +111,13 @@ void KnaussSeaWater::computePressEOS(double rhoM, double gamma,
                             double& press, double& dp_drho, double& dp_de)
 {
   // Pointwise computation of thermodynamic quantities
-  press   = (1./d_k)*((rhoM - d_rho0) - d_a*(Temp - d_T0) - d_b*(d_S-d_S0));
+  press   = d_P0 + (1./d_k)*((rhoM-d_rho0) - d_a*(Temp-d_T0) - d_b*(d_S-d_S0));
+//  cout << "press = " << press << endl;
+//  cout << "Temp = " << Temp << endl;
+//  cout << "rhoM = " << rhoM << endl;
+//  cout << "T0 = " << d_T0 << endl;
+//  cout << "rho0 = " << d_rho0 << endl;
+//  cout << "b = " << d_b << endl;
   dp_drho = 1./d_k;
   dp_de   = -d_a/d_k;
 
@@ -122,7 +130,7 @@ void KnaussSeaWater::computePressEOS(double rhoM, double gamma,
 // Return (1/v)*(dv/dT)  (constant pressure thermal expansivity)
 double KnaussSeaWater::getAlpha(double Temp, double , double press, double )
 {
-  return  -d_a/(d_rho0 + d_a*(Temp-d_T0) + d_b*(d_S-d_S0) + d_k*press);
+  return  -d_a/(d_rho0 + d_a*(Temp-d_T0) + d_b*(d_S-d_S0) + d_k*(press-d_P0));
 }
 
 //______________________________________________________________________
