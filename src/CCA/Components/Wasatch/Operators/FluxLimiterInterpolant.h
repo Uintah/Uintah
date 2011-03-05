@@ -70,6 +70,10 @@ private:
   std::vector<size_t> bndVolIncr_;
   std::vector<size_t> bndFaceIncr_;
   
+  //
+  int calculate_stride(const std::vector<int>& dim,
+                       const std::vector<bool> hasPlusFace) const;
+  
   
 public:
   
