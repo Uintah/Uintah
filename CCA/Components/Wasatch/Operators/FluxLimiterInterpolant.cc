@@ -4,7 +4,6 @@
 #include <cmath>
 #include "spatialops/SpatialOpsDefs.h"
 #include "spatialops/structured/FVTools.h"
-#include "spatialops/structured/matrix/FVStaggeredIndexHelper.h"
 
 //--------------------------------------------------------------------
 
@@ -13,8 +12,7 @@ FluxLimiterInterpolant<PhiVolT,PhiFaceT>::
 FluxLimiterInterpolant( const std::vector<int>& dim,
                     const std::vector<bool> hasPlusFace )
 {
-  const SpatialOps::structured::IndexHelper<PhiVolT,PhiFaceT> indexHelper( dim, hasPlusFace[0], hasPlusFace[1], hasPlusFace[2] );
-  stride_ = indexHelper.calculate_stride();
+  stride_ = calculate_stride(dim, hasPlusFace);
   
   faceCount_.resize(3);
   volIncr_.resize(3);
@@ -388,6 +386,28 @@ apply_to_field( const PhiVolT &src, PhiFaceT &dest ) const
 }
 
 //--------------------------------------------------------------------
+
+template<typename PhiVolT, typename PhiFaceT>
+int 
+FluxLimiterInterpolant<PhiVolT,PhiFaceT>::
+calculate_stride(const std::vector<int>& dim,
+                 const std::vector<bool> hasPlusFace) const
+{
+  const size_t direction = PhiFaceT::Location::FaceDir::value;
+  int n = 0;
+  switch (direction) {
+    case SpatialOps::XDIR::value:
+      n=1;
+      break;
+    case SpatialOps::YDIR::value:
+      n = SpatialOps::structured::get_nx_with_ghost<PhiVolT>(dim[0],hasPlusFace[0]);
+      break;
+    case SpatialOps::ZDIR::value:
+      n = SpatialOps::structured::get_nx_with_ghost<PhiVolT>(dim[0],hasPlusFace[0]) * SpatialOps::structured::get_ny_with_ghost<PhiVolT>(dim[1],hasPlusFace[1]);
+      break;
+  }
+  return n;
+}
 
 //==================================================================
 // Explicit template instantiation
