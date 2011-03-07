@@ -618,15 +618,6 @@ CharOxidationShaddix::computeModel( const ProcessorGroup * pc,
 
           particle_temp_rate_ = -pi*(pow(unscaled_length,2.0))*q/(1.0+CO2CO)*(CO2CO*HF_CO2 + HF_CO); // in J/s
 
-          if(isnan(char_reaction_rate_)){
-            cout << " char_reaction_rate_ is nan " << endl;
-            cout << "O2 " << O2[c] << " MWmix " << MWmix[c] << " Conc " << Conc << " DO2 " << DO2 << " q " << q << endl;
-            cout << " PO2_inf " << PO2_inf << " PO2_surf " << PO2_surf << " f1 " << f1 << " f2 " << f2 << " f3 " << f3 << " icount " << icount << endl;
-
-          } else if(isnan(char_production_rate_)){
-            cout << "char_production_rate_ is nan" << endl;
-          }
-
           /*
           cout << "O2 " << O2[c] << " MWmix " << MWmix[c] << " Conc " << Conc << " DO2 " << DO2 << " q " << q << endl;
           cout << " PO2_inf " << PO2_inf << " PO2_surf " << PO2_surf << " f1 " << f1 << " f2 " << f2 << " f3 " << f3 << " icount " << icount << endl;
