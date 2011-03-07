@@ -429,6 +429,14 @@ void PartVel::ComputePartVel( const ProcessorGroup* pc,
             ux = vel_x[c]*eqn3.getScalingConstant();
             uy = vel_y[c]*eqn4.getScalingConstant();
             uz = vel_z[c]*eqn5.getScalingConstant();
+            if(isnan(ux)){
+              cout << "ux is nan" << vel_x[c] << " " << eqn3.getScalingConstant() << "node " << node << endl;
+            } else if(isnan(uy)){
+              cout << "uy is nan" << vel_y[c] << " " << eqn4.getScalingConstant() << endl;
+            } else if(isnan(uz)){
+              cout << "uz is nan" << vel_z[c] << " " << eqn5.getScalingConstant() << endl;
+            }
+
           } else {
             if( weight[c] < small_weight ) {
               ux = 0;
