@@ -691,9 +691,6 @@ ShaddixHeatTransfer::computeModel( const ProcessorGroup * pc,
         Q_reaction = 0.0;
 
         heat_rate_ = (Q_convection + Q_radiation + Q_reaction)/(mp_Cp*d_pt_scaling_constant);
-        if(isnan(heat_rate_)){
-          cout << "heat_rate_ is nan " << Q_convection << " " << Q_radiation << endl;
-        }
 
         //cout << "Qconv " << Q_convection << " Qrad " << Q_radiation << " Qreac " << Q_reaction << " blow " << blow << endl;
         //cout << "abskp " << abskp_ << endl;
