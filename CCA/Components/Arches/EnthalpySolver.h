@@ -249,7 +249,8 @@ private:
   double d_H_air;
   bool d_doMMS;
   bool d_doRMCRT; 
-
+  bool d_use_abskp;
+  const VarLabel* d_abskpLabel;
   vector<string> d_new_sources; 
 
 }; // End class EnthalpySolver

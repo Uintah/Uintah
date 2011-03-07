@@ -513,7 +513,8 @@ CharOxidationShaddix::computeModel( const ProcessorGroup * pc,
           unscaled_char_mass = (w_char_mass[c]*d_rh_scaling_constant)/scaled_weight;
         } 
 
-        if((unscaled_raw_coal_mass+unscaled_char_mass) > 0) {
+        double small = 1e-16;
+        if((unscaled_raw_coal_mass+unscaled_char_mass-small) > 0) {
           char_reaction_rate_ = 0.0;
           char_production_rate_ = 0.0;
           gas_char_rate_ = 0.0;     
@@ -537,7 +538,7 @@ CharOxidationShaddix::computeModel( const ProcessorGroup * pc,
 
           // Solving diffusion of O2:
           // Newton_Raphson method - faster does not always converge 
- 
+          /* 
           for ( int iter = 0; iter < 10; iter++) {
             icount++;
             CO2CO = 0.02*(pow(PO2_surf,0.21))*exp(-3070.0/unscaled_particle_temperature);
@@ -561,7 +562,7 @@ CharOxidationShaddix::computeModel( const ProcessorGroup * pc,
             PO2_surf -= delta + f1*delta/(f2-f1);
             PO2_surf = min(PO2_inf,max(0.0,PO2_surf));
           }
-         
+          */
           if(abs(f1) > d_tol){ //switching to bisection technique
             lower_bound = 0.0;
             upper_bound = PO2_inf;
@@ -617,6 +618,15 @@ CharOxidationShaddix::computeModel( const ProcessorGroup * pc,
 
           particle_temp_rate_ = -pi*(pow(unscaled_length,2.0))*q/(1.0+CO2CO)*(CO2CO*HF_CO2 + HF_CO); // in J/s
 
+          if(isnan(char_reaction_rate_)){
+            cout << " char_reaction_rate_ is nan " << endl;
+            cout << "O2 " << O2[c] << " MWmix " << MWmix[c] << " Conc " << Conc << " DO2 " << DO2 << " q " << q << endl;
+            cout << " PO2_inf " << PO2_inf << " PO2_surf " << PO2_surf << " f1 " << f1 << " f2 " << f2 << " f3 " << f3 << " icount " << icount << endl;
+
+          } else if(isnan(char_production_rate_)){
+            cout << "char_production_rate_ is nan" << endl;
+          }
+
           /*
           cout << "O2 " << O2[c] << " MWmix " << MWmix[c] << " Conc " << Conc << " DO2 " << DO2 << " q " << q << endl;
           cout << " PO2_inf " << PO2_inf << " PO2_surf " << PO2_surf << " f1 " << f1 << " f2 " << f2 << " f3 " << f3 << " icount " << icount << endl;
@@ -628,6 +638,7 @@ CharOxidationShaddix::computeModel( const ProcessorGroup * pc,
           char_rate[c] = (char_reaction_rate_ + char_production_rate_)/d_rh_scaling_constant;
           gas_char_rate[c] = -char_reaction_rate_*unscaled_weight;
           particle_temp_rate[c] = particle_temp_rate_;
+          //particle_temp_rate[c] = 0.0;
           surface_rate[c] = WC*q;  // in kg/s/m^2
         } else {
           char_rate[c] = 0.0;

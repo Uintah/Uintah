@@ -154,6 +154,7 @@ namespace Uintah {
       CCVariable<double> h2o;
       CCVariable<double> co2;
       CCVariable<double> ABSKG;
+      CCVariable<double> ABSKP;
       CCVariable<double> ESRCG;
       CCVariable<double> src;
       CCVariable<double> cenint;

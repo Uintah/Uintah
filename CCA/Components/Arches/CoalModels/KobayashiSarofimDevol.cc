@@ -529,7 +529,10 @@ KobayashiSarofimDevol::computeModel( const ProcessorGroup * pc,
             char_rate_ = 0.0;
           }
         }
-       
+      
+        if(isnan(devol_rate_)){
+          cout << "devol_rate_ is nan" << endl;
+        } 
         //cout << "devol_rate_ " << devol_rate_ << " char_rate_ " << char_rate_ << " unscaled_char_mass " << unscaled_char_mass
         //     << " unscaled_raw_coal_mass " << unscaled_raw_coal_mass << endl;
 
