@@ -64,6 +64,7 @@ fi
 
 
 componentTest=`dialog --stdout --separate-output --checklist "Select the component for local regression testing" 20 61 15 $list`
+
 if [ $? != 0 ] ; then
   echo "Cancel selected..." > /dev/stderr
   exit 1
