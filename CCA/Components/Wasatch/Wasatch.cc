@@ -369,13 +369,6 @@ namespace Wasatch{
     build_bcs( adaptors_, *gh, localPatches, patchInfoMap_, materials->getUnion() );
   }
   
-  //--------------------------------------------------------------------  
-  
-  double Wasatch::recomputeTimestep(double current_dt)
-  {
-    return current_dt * 0.95;
-  }
-  
   //--------------------------------------------------------------------
 
   void
