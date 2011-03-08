@@ -71,7 +71,6 @@
           <cw                           spec="REQUIRED DOUBLE" />
           <cp                           spec="REQUIRED DOUBLE" />
           <phi0                         spec="REQUIRED DOUBLE" />
-          <esphi0                       spec="REQUIRED DOUBLE" />
         </constantMMS>
         <almgrenMMS                     spec="OPTIONAL NO_DATA" need_applies_to="whichMMS almgrenMMS" >
           <amplitude                    spec="REQUIRED DOUBLE" />
