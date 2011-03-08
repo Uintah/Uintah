@@ -202,6 +202,12 @@ namespace Wasatch{
     void scheduleTimeAdvance( const Uintah::LevelP& level, 
                               Uintah::SchedulerP& );
 
+    /**
+     *  \brief Implements a time step recalculation required by certain interfaces
+     *  in Uintah, e.g. the CGSolver interface.
+     */    
+    double recomputeTimestep(double current_dt);
+
   private:
 
     Uintah::SimulationStateP sharedState_; ///< access to some common things like the current timestep.
