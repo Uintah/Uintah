@@ -294,6 +294,18 @@ SCI_ARG_WITH(mpi,
   [with_mpi="$withval"
    sci_required_mpi=yes],
   [with_mpi=""])
+SCI_ARG_WITH(mpi_lib,
+  AC_HELP_STRING(--with-mpi-lib=DIR,
+                 Use the mpi libraries installed in DIR),
+  [with_mpi_lib="$withval"
+   sci_required_mpi=yes],
+  [with_mpi_lib=""])
+SCI_ARG_WITH(mpi_include,
+  AC_HELP_STRING(--with-mpi-include=DIR,
+                 Use the mpi include files installed in DIR),
+  [with_mpi_include="$withval"
+   sci_required_mpi=yes],
+  [with_mpi_include=""])
 SCI_ARG_WITH(mpi_extra_libs,
   AC_HELP_STRING(--with-mpi-extra-libs=/path/to/lib1.so,
                  Use this additional library(or libraries - comma separated) for mpi linking),
@@ -2956,6 +2968,27 @@ if test "$sci_required_mpi" = "yes"; then
   AS_MESSAGE(checking for required MPI components......)
   echo
 
+  if test "$with_mpi" -a \( "$with_mpi_include" -o "$with_mpi_lib" \); then
+    AC_MSG_ERROR( [Please use either --with-mpi or --with-mpi-lib/include, but not both.] )
+  fi
+  if test "$with_mpi_include" = "yes"; then
+    AC_MSG_ERROR( [--with-mpi-include=DIR must specify a DIRectory.] )
+  fi
+  if test "$with_mpi_lib" = "yes"; then
+    AC_MSG_ERROR( [--with-mpi-lib=DIR must specify a DIRectory.] )
+  fi
+  if test \( "$with_mpi_lib" -a "$with_mpi_include" = "" \) -o \( "$with_mpi_lib" = "" -a "$with_mpi_include" \); then
+    AC_MSG_ERROR( [Both --with-mpi-lib=DIR and --with-mpi-include=DIR must be specified...] )
+  fi
+  if test "$with_mpi_include"; then
+    if ! test -d "$with_mpi_include"; then
+      AC_MSG_ERROR( [The directory specified with --with-mpi-include=DIR is not valid: $with_mpi_include] )
+    fi
+    if ! test -d "$with_mpi_lib"; then
+      AC_MSG_ERROR( [The directory specified with --with-mpi-lib=DIR is not valid: $with_mpi_lib] )
+    fi
+  fi
+
   case $host in
   #  *aix*)
         # On LLNL blue pacific, the "mp" compilers (build_scripts) automagically
@@ -2988,6 +3021,11 @@ if test "$sci_required_mpi" = "yes"; then
               # Account for lib64 or lib32 or just lib...
               BASE_LIB_PATH(_sci_lib,$with_mpi)
            fi
+        else
+          if test "$with_mpi_lib"; then
+            _sci_inc="$with_mpi_include"
+            _sci_lib="$with_mpi_lib"
+          fi
         fi
 
 	# After each attempt to locate mpi, we need to verify that the mpi it
