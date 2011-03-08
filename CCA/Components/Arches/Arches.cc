@@ -289,7 +289,6 @@ Arches::problemSetup(const ProblemSpecP& params,
       db_mms0->getWithDefault("cw",d_cw,0.0);
       db_mms0->getWithDefault("cp",d_cp,0.0);
       db_mms0->getWithDefault("phi0",d_phi0,0.0);
-      db_mms0->getWithDefault("esphi0",d_esphi0,0.0);
     }
     else if (d_mms == "almgrenMMS") {
       ProblemSpecP db_mms3 = db_mms->findBlock("almgrenMMS");

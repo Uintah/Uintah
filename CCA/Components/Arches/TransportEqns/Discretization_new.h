@@ -403,6 +403,659 @@ namespace Uintah{
           return face_values; 
         }
 
+      //---------------------------------------------------------------------------
+      // Interpolation Class
+      //
+      /** @brief Calls the specific interpolant */ 
+      template <typename operT, typename phiT>
+      class ConvHelper1 { 
+        public: 
+          ConvHelper1<operT, phiT>( operT* opr, phiT& phi ) : _opr(opr), _phi(phi){};
+          ~ConvHelper1(){}; 
+
+          // FaceData1D no_bc( const IntVector c, const IntVector coord, FaceData1D vel, constCCVariable<Vector>& area_fraction ){ 
+          //   FaceData1D result = _opr->do_interpolation_nobc( c, coord, _phi, vel, area_fraction ); 
+          //   return result; 
+          // }; 
+
+          // FaceData1D with_bc( const IntVector c, const IntVector coord, FaceData1D vel, constCCVariable<Vector>& area_fraction, FaceBoundaryBool isBoundary ){ 
+          //   FaceData1D result = _opr->do_interpolation_withbc( c, coord, _phi, vel, area_fraction, isBoundary ); 
+          //   return result; 
+          // }; 
+
+          //----------------------------------------------------------------------------------
+          // With explicit density treatment
+          //
+          /** @brief actual computes the convection term with the specified operator */ 
+          template <class uT, class vT, class wT, class fT> 
+          void do_convection( const Patch* p, fT& Fconv, uT& uVel, vT& vVel, wT& wVel, 
+              constCCVariable<double>& den, constCCVariable<Vector>& area_fraction, Discretization_new* D){
+
+            Vector Dx = p->dCell(); 
+            CellIterator iIter  = D->getInteriorCellIterator( p ); 
+           //-------------------- Interior 
+           for (iIter.begin(); !iIter.done(); iIter++){
+
+             IntVector c   = *iIter;
+
+             Discretization_new::FaceData1D face_den;
+             Discretization_new::FaceData1D face_phi; 
+             Discretization_new::FaceData1D face_vel;
+             double area; 
+             IntVector coord; 
+
+             //X-dimension
+             coord[0] = 1; coord[1] = 0; coord[2] = 0; 
+             area = Dx.y()*Dx.z();
+
+             face_den       = D->getDensityOnFace( c, coord, Fconv, den ); 
+             face_vel       = D->getFaceVelocity( c, Fconv, uVel ); 
+             face_phi       = _opr->no_bc( c, coord, _phi, face_vel, area_fraction ); 
+             Fconv[c]       = D->getFlux( area, face_den, face_vel, face_phi, area_fraction, coord, c ); 
+#ifdef YDIM
+             //Y-dimension
+             coord[0] = 0; coord[1] = 1; coord[2] = 0; 
+             area = Dx.x()*Dx.z(); 
+
+             face_den       = D->getDensityOnFace( c, coord, Fconv, den ); 
+             face_vel       = D->getFaceVelocity( c, Fconv, vVel ); 
+             face_phi       = _opr->no_bc( c, coord, _phi, face_vel, area_fraction ); 
+             Fconv[c]      += D->getFlux( area, face_den, face_vel, face_phi, area_fraction, coord, c ); 
+
+#endif 
+#ifdef ZDIM
+             //Z-dimension
+             coord[0] = 0; coord[1] = 0; coord[2] = 1; 
+             area = Dx.x()*Dx.y(); 
+
+             face_den       = D->getDensityOnFace( c, coord, Fconv, den ); 
+             face_vel       = D->getFaceVelocity( c, Fconv, wVel ); 
+             face_phi       = _opr->no_bc( c, coord, _phi, face_vel, area_fraction ); 
+             Fconv[c]      += D->getFlux( area, face_den, face_vel, face_phi, area_fraction, coord, c ); 
+
+#endif
+            }
+
+            //--------------- Boundaries
+            vector<Patch::FaceType> bf;
+            vector<Patch::FaceType>::const_iterator bf_iter;
+            p->getBoundaryFaces(bf);
+
+            // Loop over all boundary faces on this patch
+            for (bf_iter = bf.begin(); bf_iter != bf.end(); bf_iter++){
+
+             Patch::FaceType face = *bf_iter; 
+             IntVector inside = p->faceDirection(face); 
+             CellIterator c_iter = D->getInteriorBoundaryCellIterator( p, bf_iter ); 
+             Discretization_new::FaceBoundaryBool faceIsBoundary; 
+
+             for (c_iter.begin(); !c_iter.done(); c_iter++){
+
+               IntVector c = *c_iter - inside; 
+
+               Discretization_new::FaceData1D face_den;
+               Discretization_new::FaceData1D face_phi; 
+               Discretization_new::FaceData1D face_vel;
+               double area; 
+               IntVector coord; 
+
+               //X-dimension
+               coord[0] = 1; coord[1] = 0; coord[2] = 0; 
+               area = Dx.y()*Dx.z();            
+
+               faceIsBoundary = D->checkFacesForBoundaries( p, c, coord ); 
+               face_den       = D->getDensityOnFace( c, coord, Fconv, den ); 
+               face_vel       = D->getFaceVelocity( c, Fconv, uVel ); 
+               face_phi       = _opr->with_bc( c, coord, _phi, face_vel, area_fraction, faceIsBoundary ); 
+               Fconv[c]       = D->getFlux( area, face_den, face_vel, face_phi, area_fraction, coord, c ); 
+
+#ifdef YDIM
+               //Y-dimension
+               coord[0] = 0; coord[1] = 1; coord[2] = 0; 
+               area = Dx.x()*Dx.z(); 
+
+               faceIsBoundary = D->checkFacesForBoundaries( p, c, coord ); 
+               face_den       = D->getDensityOnFace( c, coord, Fconv, den ); 
+               face_vel       = D->getFaceVelocity( c, Fconv, vVel ); 
+               face_phi       = _opr->with_bc( c, coord, _phi, face_vel, area_fraction, faceIsBoundary ); 
+               Fconv[c]      += D->getFlux( area, face_den, face_vel, face_phi, area_fraction, coord, c ); 
+
+#endif 
+#ifdef ZDIM
+               //Z-dimension
+               coord[0] = 0; coord[1] = 0; coord[2] = 1; 
+               area = Dx.x()*Dx.y(); 
+
+               faceIsBoundary = D->checkFacesForBoundaries( p, c, coord ); 
+               face_den       = D->getDensityOnFace( c, coord, Fconv, den ); 
+               face_vel       = D->getFaceVelocity( c, Fconv, wVel ); 
+               face_phi       = _opr->with_bc( c, coord, _phi, face_vel, area_fraction, faceIsBoundary ); 
+               Fconv[c]      += D->getFlux( area, face_den, face_vel, face_phi, area_fraction, coord, c ); 
+
+#endif
+              }
+            }
+          }
+
+          //--------------------------------------------------------------------------
+          // no explicit density representation 
+          //
+          /** @brief Actually computers the convection term without density rep. */ 
+          template <class uT, class vT, class wT, class fT> 
+          void do_convection( const Patch* p, fT& Fconv, uT& uVel, vT& vVel, wT& wVel, 
+              constCCVariable<Vector>& area_fraction, Discretization_new* D){
+
+            Vector Dx = p->dCell(); 
+            CellIterator iIter  = D->getInteriorCellIterator( p ); 
+           //-------------------- Interior 
+           for (iIter.begin(); !iIter.done(); iIter++){
+
+             IntVector c   = *iIter;
+
+             Discretization_new::FaceData1D face_phi; 
+             Discretization_new::FaceData1D face_vel;
+             double area; 
+             IntVector coord; 
+
+             //X-dimension
+             coord[0] = 1; coord[1] = 0; coord[2] = 0; 
+             area = Dx.y()*Dx.z();
+
+             face_vel       = D->getFaceVelocity( c, Fconv, uVel ); 
+             face_phi       = _opr->no_bc( c, coord, _phi, face_vel, area_fraction ); 
+             Fconv[c]       = D->getFlux( area, face_vel, face_phi, area_fraction, coord, c ); 
+#ifdef YDIM
+             //Y-dimension
+             coord[0] = 0; coord[1] = 1; coord[2] = 0; 
+             area = Dx.x()*Dx.z(); 
+
+             face_vel       = D->getFaceVelocity( c, Fconv, vVel ); 
+             face_phi       = _opr->no_bc( c, coord, _phi, face_vel, area_fraction ); 
+             Fconv[c]      += D->getFlux( area, face_vel, face_phi, area_fraction, coord, c ); 
+
+#endif 
+#ifdef ZDIM
+             //Z-dimension
+             coord[0] = 0; coord[1] = 0; coord[2] = 1; 
+             area = Dx.x()*Dx.y(); 
+
+             face_vel       = D->getFaceVelocity( c, Fconv, wVel ); 
+             face_phi       = _opr->no_bc( c, coord, _phi, face_vel, area_fraction ); 
+             Fconv[c]      += D->getFlux( area, face_vel, face_phi, area_fraction, coord, c ); 
+
+#endif
+            }
+
+            //--------------- Boundaries
+            vector<Patch::FaceType> bf;
+            vector<Patch::FaceType>::const_iterator bf_iter;
+            p->getBoundaryFaces(bf);
+
+            // Loop over all boundary faces on this patch
+            for (bf_iter = bf.begin(); bf_iter != bf.end(); bf_iter++){
+
+             Patch::FaceType face = *bf_iter; 
+             IntVector inside = p->faceDirection(face); 
+             CellIterator c_iter = D->getInteriorBoundaryCellIterator( p, bf_iter ); 
+             Discretization_new::FaceBoundaryBool faceIsBoundary; 
+
+             for (c_iter.begin(); !c_iter.done(); c_iter++){
+
+               IntVector c = *c_iter - inside; 
+
+               Discretization_new::FaceData1D face_phi; 
+               Discretization_new::FaceData1D face_vel;
+               double area; 
+               IntVector coord; 
+
+               //X-dimension
+               coord[0] = 1; coord[1] = 0; coord[2] = 0; 
+               area = Dx.y()*Dx.z();            
+
+               faceIsBoundary = D->checkFacesForBoundaries( p, c, coord ); 
+               face_vel       = D->getFaceVelocity( c, Fconv, uVel ); 
+               face_phi       = _opr->with_bc( c, coord, _phi, face_vel, area_fraction, faceIsBoundary ); 
+               Fconv[c]       = D->getFlux( area, face_vel, face_phi, area_fraction, coord, c ); 
+
+#ifdef YDIM
+               //Y-dimension
+               coord[0] = 0; coord[1] = 1; coord[2] = 0; 
+               area = Dx.x()*Dx.z(); 
+
+               faceIsBoundary = D->checkFacesForBoundaries( p, c, coord ); 
+               face_vel       = D->getFaceVelocity( c, Fconv, vVel ); 
+               face_phi       = _opr->with_bc( c, coord, _phi, face_vel, area_fraction, faceIsBoundary ); 
+               Fconv[c]      += D->getFlux( area, face_vel, face_phi, area_fraction, coord, c ); 
+
+#endif 
+#ifdef ZDIM
+               //Z-dimension
+               coord[0] = 0; coord[1] = 0; coord[2] = 1; 
+               area = Dx.x()*Dx.y(); 
+
+               faceIsBoundary = D->checkFacesForBoundaries( p, c, coord ); 
+               face_vel       = D->getFaceVelocity( c, Fconv, wVel ); 
+               face_phi       = _opr->with_bc( c, coord, _phi, face_vel, area_fraction, faceIsBoundary ); 
+               Fconv[c]      += D->getFlux( area, face_vel, face_phi, area_fraction, coord, c ); 
+
+#endif
+              }
+            }
+          }
+
+          //--------------------------------------------------------------------------
+          // Speicalized for dqmom 
+          //
+          /** @brief Actually computers the convection term without density rep. */ 
+          template <class uT, class vT, class wT, class fT> 
+          void do_convection( const Patch* p, fT& Fconv, uT& uVel, vT& vVel, wT& wVel, 
+              constCCVariable<Vector>& partVel, 
+              constCCVariable<Vector>& area_fraction, Discretization_new* D){
+
+            Vector Dx = p->dCell(); 
+            CellIterator iIter  = D->getInteriorCellIterator( p ); 
+           //-------------------- Interior 
+           for (iIter.begin(); !iIter.done(); iIter++){
+
+             IntVector c   = *iIter;
+
+             Discretization_new::FaceData1D face_phi; 
+             Discretization_new::FaceData1D face_vel;
+             double area; 
+             IntVector coord; 
+
+             //X-dimension
+             coord[0] = 1; coord[1] = 0; coord[2] = 0; 
+             area = Dx.y()*Dx.z();
+
+             face_vel       = D->getFaceVelocity( c, Fconv, partVel, coord ); 
+             face_phi       = _opr->no_bc( c, coord, _phi, face_vel, area_fraction ); 
+             Fconv[c]       = D->getFlux( area, face_vel, face_phi, area_fraction, coord, c ); 
+#ifdef YDIM
+             //Y-dimension
+             coord[0] = 0; coord[1] = 1; coord[2] = 0; 
+             area = Dx.x()*Dx.z(); 
+
+             face_vel       = D->getFaceVelocity( c, Fconv, partVel, coord ); 
+             face_phi       = _opr->no_bc( c, coord, _phi, face_vel, area_fraction ); 
+             Fconv[c]      += D->getFlux( area, face_vel, face_phi, area_fraction, coord, c ); 
+
+#endif 
+#ifdef ZDIM
+             //Z-dimension
+             coord[0] = 0; coord[1] = 0; coord[2] = 1; 
+             area = Dx.x()*Dx.y(); 
+
+             face_vel       = D->getFaceVelocity( c, Fconv, partVel, coord ); 
+             face_phi       = _opr->no_bc( c, coord, _phi, face_vel, area_fraction ); 
+             Fconv[c]      += D->getFlux( area, face_vel, face_phi, area_fraction, coord, c ); 
+
+#endif
+            }
+
+            //--------------- Boundaries
+            vector<Patch::FaceType> bf;
+            vector<Patch::FaceType>::const_iterator bf_iter;
+            p->getBoundaryFaces(bf);
+
+            // Loop over all boundary faces on this patch
+            for (bf_iter = bf.begin(); bf_iter != bf.end(); bf_iter++){
+
+             Patch::FaceType face = *bf_iter; 
+             IntVector inside = p->faceDirection(face); 
+             CellIterator c_iter = D->getInteriorBoundaryCellIterator( p, bf_iter ); 
+             Discretization_new::FaceBoundaryBool faceIsBoundary; 
+
+             for (c_iter.begin(); !c_iter.done(); c_iter++){
+
+               IntVector c = *c_iter - inside; 
+
+               Discretization_new::FaceData1D face_phi; 
+               Discretization_new::FaceData1D face_vel;
+               double area; 
+               IntVector coord; 
+
+               //X-dimension
+               coord[0] = 1; coord[1] = 0; coord[2] = 0; 
+               area = Dx.y()*Dx.z();            
+
+               faceIsBoundary = D->checkFacesForBoundaries( p, c, coord ); 
+               face_vel       = D->getFaceVelocity( c, Fconv, partVel, coord ); 
+               face_phi       = _opr->with_bc( c, coord, _phi, face_vel, area_fraction, faceIsBoundary ); 
+               Fconv[c]       = D->getFlux( area, face_vel, face_phi, area_fraction, coord, c ); 
+
+#ifdef YDIM
+               //Y-dimension
+               coord[0] = 0; coord[1] = 1; coord[2] = 0; 
+               area = Dx.x()*Dx.z(); 
+
+               faceIsBoundary = D->checkFacesForBoundaries( p, c, coord ); 
+               face_vel       = D->getFaceVelocity( c, Fconv, partVel, coord ); 
+               face_phi       = _opr->with_bc( c, coord, _phi, face_vel, area_fraction, faceIsBoundary ); 
+               Fconv[c]      += D->getFlux( area, face_vel, face_phi, area_fraction, coord, c ); 
+
+#endif 
+#ifdef ZDIM
+               //Z-dimension
+               coord[0] = 0; coord[1] = 0; coord[2] = 1; 
+               area = Dx.x()*Dx.y(); 
+
+               faceIsBoundary = D->checkFacesForBoundaries( p, c, coord ); 
+               face_vel       = D->getFaceVelocity( c, Fconv, partVel, coord ); 
+               face_phi       = _opr->with_bc( c, coord, _phi, face_vel, area_fraction, faceIsBoundary ); 
+               Fconv[c]      += D->getFlux( area, face_vel, face_phi, area_fraction, coord, c ); 
+
+#endif
+              }
+            }
+          }
+
+        private: 
+          phiT& _phi; 
+          operT* _opr; 
+
+      };
+
+      // ---------------------------------------------------------------------------
+      // Upwind Interpolation 
+      //
+      /** @brief Upwind interolation -- should work for all cell types */ 
+      template <typename phiT>
+      class UpwindInterpolation { 
+
+        public: 
+
+        UpwindInterpolation(){};
+        ~UpwindInterpolation(){}; 
+
+        FaceData1D no_bc( const IntVector c, const IntVector coord, phiT& phi, 
+            FaceData1D vel, constCCVariable<Vector>& areaFraction ) 
+        { 
+          Discretization_new::FaceData1D face_values; 
+          face_values.minus = 0.0;
+          face_values.plus = 0.0;
+
+          IntVector cxp = c + coord; 
+          IntVector cxm = c - coord; 
+
+          // - FACE 
+          if ( vel.minus > 0.0 )
+            face_values.minus = phi[cxm];
+          else if ( vel.minus <= 0.0 )
+            face_values.minus = phi[c]; 
+
+          // + FACE 
+          if ( vel.plus >= 0.0 )
+            face_values.plus = phi[c]; 
+          else if ( vel.plus < 0.0 )
+            face_values.plus = phi[cxp]; 
+
+          return face_values; 
+        }; 
+
+        FaceData1D inline with_bc( const IntVector c, const IntVector coord, phiT& phi, 
+            FaceData1D vel, constCCVariable<Vector>& areaFraction, FaceBoundaryBool isBoundary ) 
+        { 
+          Discretization_new::FaceData1D face_values; 
+          face_values.minus = 0.0;
+          face_values.plus = 0.0;
+
+          IntVector cxp = c + coord; 
+          IntVector cxm = c - coord; 
+
+          // - FACE 
+          if (isBoundary.minus)
+            face_values.minus = 0.5*(phi[c] + phi[cxm]);
+          else {
+            if ( vel.minus > 0.0 )
+              face_values.minus = phi[cxm];
+            else if ( vel.minus <= 0.0 )
+              face_values.minus = phi[c]; 
+          }
+
+          // + FACE 
+          if (isBoundary.plus)
+            face_values.plus = 0.5*(phi[c] + phi[cxp]);
+          else {
+            if ( vel.plus >= 0.0 )
+              face_values.plus = phi[c]; 
+            else if ( vel.plus < 0.0 )
+              face_values.plus = phi[cxp]; 
+          }
+
+          return face_values; 
+        }; 
+      }; 
+
+      // ---------------------------------------------------------------------------
+      // Central Interpolation 
+      //
+      /** @brief Cell-centered interolation -- should work for all cell types */ 
+      template <typename phiT>
+      class CentralInterpolation { 
+
+        public: 
+
+        CentralInterpolation(){};
+        ~CentralInterpolation(){}; 
+
+        FaceData1D inline no_bc( const IntVector c, const IntVector coord, phiT& phi, 
+            FaceData1D vel, constCCVariable<Vector>& areaFraction ) 
+        { 
+          IntVector cxp = c + coord; 
+          IntVector cxm = c - coord; 
+
+          FaceData1D face_values; 
+
+          face_values.minus = 0.5 * ( phi[c] + phi[cxm] ); 
+          face_values.plus  = 0.5 * ( phi[c] + phi[cxp] ); 
+
+          return face_values; 
+        }; 
+
+        FaceData1D inline with_bc( const IntVector c, const IntVector coord, phiT& phi, 
+            FaceData1D vel, constCCVariable<Vector>& areaFraction, FaceBoundaryBool isBoundary ) 
+        { 
+          IntVector cxp = c + coord; 
+          IntVector cxm = c - coord; 
+
+          FaceData1D face_values; 
+
+          face_values.minus = 0.5 * ( phi[c] + phi[cxm] ); 
+          face_values.plus  = 0.5 * ( phi[c] + phi[cxp] ); 
+
+          return face_values; 
+        }; 
+      }; 
+      
+      // ---------------------------------------------------------------------------
+      // Super Bee interpolator
+      //
+      /** @brief Super Bee Interpolation */ 
+      template <typename phiT>
+      class SuperBeeInterpolation { 
+
+        public: 
+
+        SuperBeeInterpolation(){};
+        ~SuperBeeInterpolation(){}; 
+
+        FaceData1D inline no_bc( const IntVector c, const IntVector coord, phiT& phi, 
+            FaceData1D vel, constCCVariable<Vector>& areaFraction ) 
+        { 
+          FaceData1D face_values;
+          face_values.plus  = 0.0;
+          face_values.minus = 0.0;
+
+          double r=0.0; 
+          double psi; 
+          double Sup;
+          double Sdn;
+          const double tiny = 1.0e-16; 
+
+          IntVector cxp  = c + coord; 
+          IntVector cxpp = c + coord + coord; 
+          IntVector cxm  = c - coord; 
+          IntVector cxmm = c - coord - coord; 
+
+          int dim = 0; 
+          if (coord[0] == 1)
+            dim =0; 
+          else if (coord[1] == 1)
+            dim = 1; 
+          else 
+            dim = 2; 
+
+          // - FACE
+          if ( vel.minus > 0.0 ) {
+            Sup = phi[cxm];
+            Sdn = phi[c];
+            r = ( phi[cxm] - phi[cxmm] ) / ( phi[c] - phi[cxm] );
+
+            if ( areaFraction[cxm][dim] < tiny || areaFraction[c][dim] < tiny )
+              r = 0.0;
+
+          } else if ( vel.minus < 0.0 ) {
+            Sup = phi[c];
+            Sdn = phi[cxm];
+            r = ( phi[cxp] - phi[c] ) / ( phi[c] - phi[cxm] );
+
+            if ( areaFraction[cxp][dim] < tiny || areaFraction[c][dim] < tiny )
+              r = 0.0;
+
+          } else { 
+            Sup = 0.0;
+            Sdn = 0.0; 
+            psi = 0.0;
+          }
+          psi = max( min(2.0*r, 1.0), min(r, 2.0) );
+          psi = max( 0.0, psi );
+
+          face_values.minus = Sup + 0.5*psi*( Sdn - Sup );
+
+          // + FACE
+          if ( vel.plus > 0.0 ) {
+            r = ( phi[c] - phi[cxm] ) / ( phi[cxp] - phi[c] );
+            Sup = phi[c];
+            Sdn = phi[cxp];
+
+            if ( areaFraction[c][dim] < tiny || areaFraction[cxp][dim] < tiny )
+              r = 0.0;
+
+          } else if ( vel.plus < 0.0 ) {
+            r = ( phi[cxpp] - phi[cxp] ) / ( phi[cxp] - phi[c] );
+            Sup = phi[cxp];
+            Sdn = phi[c]; 
+
+            if ( areaFraction[cxpp][dim] < tiny || areaFraction[cxp][dim] < tiny )
+              r = 0.0; 
+
+          } else {
+            Sup = 0.0;
+            Sdn = 0.0; 
+            psi = 0.0;
+          }
+          psi = max( min(2.0*r, 1.0), min(r, 2.0) );
+          psi = max( 0.0, psi );
+
+          face_values.plus = Sup + 0.5*psi*( Sdn - Sup );
+
+          return face_values; 
+        }; 
+
+        FaceData1D inline with_bc( const IntVector c, const IntVector coord, phiT& phi, 
+            FaceData1D vel, constCCVariable<Vector>& areaFraction, FaceBoundaryBool isBoundary ) 
+        { 
+          FaceData1D face_values;
+          face_values.plus  = 0.0;
+          face_values.minus = 0.0;
+
+          double r = 0; 
+          double psi; 
+          double Sup;
+          double Sdn;
+          const double tiny = 1.0e-16; 
+
+          IntVector cxp  = c + coord; 
+          IntVector cxpp = c + coord + coord; 
+          IntVector cxm  = c - coord; 
+          IntVector cxmm = c - coord - coord; 
+
+          int dim = 0; 
+          if (coord[0] == 1)
+            dim =0; 
+          else if (coord[1] == 1)
+            dim = 1; 
+          else 
+            dim = 2; 
+
+          // - FACE
+          if (isBoundary.minus) 
+            face_values.minus = 0.5*(phi[c]+phi[cxm]);
+          else { 
+            if ( vel.minus > 0.0 ) {
+              Sup = phi[cxm];
+              Sdn = phi[c];
+              r = ( phi[cxm] - phi[cxmm] ) / ( phi[c] - phi[cxm] ); 
+
+            if ( areaFraction[cxm][dim] < tiny || areaFraction[c][dim] < tiny )
+              r = 0.0;
+
+            } else if ( vel.minus < 0.0 ) {
+              Sup = phi[c];
+              Sdn = phi[cxm];
+              r = ( phi[cxp] - phi[c] ) / ( phi[c] - phi[cxm] );
+
+            if ( areaFraction[cxp][dim] < tiny || areaFraction[c][dim] < tiny )
+              r = 0.0;
+
+            } else { 
+              Sup = 0.0;
+              Sdn = 0.0; 
+              psi = 0.0;
+            }
+            psi = max( min(2.0*r, 1.0), min(r, 2.0) );
+            psi = max( 0.0, psi );
+
+            face_values.minus = Sup + 0.5*psi*( Sdn - Sup );
+          }
+
+          // + FACE
+          if (isBoundary.plus)
+            face_values.plus = 0.5*(phi[c] + phi[cxp]);
+          else { 
+            if ( vel.plus > 0.0 ) {
+              r = ( phi[c] - phi[cxm] ) / ( phi[cxp] - phi[c] );
+              Sup = phi[c];
+              Sdn = phi[cxp];
+
+            if ( areaFraction[c][dim] < tiny || areaFraction[cxp][dim] < tiny )
+              r = 0.0;
+
+            } else if ( vel.plus < 0.0 ) {
+              r = ( phi[cxpp] - phi[cxp] ) / ( phi[cxp] - phi[c] );
+              Sup = phi[cxp];
+              Sdn = phi[c]; 
+
+            if ( areaFraction[cxpp][dim] < tiny || areaFraction[cxp][dim] < tiny )
+              r = 0.0; 
+
+            } else {
+              Sup = 0.0;
+              Sdn = 0.0; 
+              psi = 0.0;
+            }
+            psi = max( min(2.0*r, 1.0), min(r, 2.0) );
+            psi = max( 0.0, psi );
+
+            face_values.plus = Sup + 0.5*psi*( Sdn - Sup );
+          }
+
+          return face_values; 
+        };
+      }; 
+
+
       /** @brief Cell-centered interolation -- should work for all cell types */ 
       template< class phiT >
         inline FaceData1D centralInterp( const IntVector c, const IntVector coord, phiT& phi )
@@ -740,301 +1393,48 @@ namespace Uintah{
   //---------------------------------------------------------------------------
   template <class fT, class oldPhiT, class uT, class vT, class wT> void 
     Discretization_new::computeConv(const Patch* p, fT& Fconv, oldPhiT& oldPhi, 
-        uT& uVel, vT& vVel, 
-        wT& wVel, constCCVariable<double>& den, constCCVariable<Vector>& areaFraction, 
+        uT& uVel, vT& vVel, wT& wVel, 
+        constCCVariable<double>& den, constCCVariable<Vector>& areaFraction, 
         std::string convScheme ) 
     {
-      // This class computes convection without assumptions about the boundary conditions 
-      // (ie, it doesn't adjust values of fluxes on the boundaries but assume you have 
-      // done so previously or that you will go back and repair them)
-      Vector Dx = p->dCell(); 
 
-      // get the cell interior iterator
-      CellIterator iIter  = Discretization_new::getInteriorCellIterator( p ); 
+      if (convScheme == "upwind") { 
 
-      if (convScheme == "upwind") {
+       UpwindInterpolation<oldPhiT>* the_interpolant = scinew UpwindInterpolation<oldPhiT>(); 
+       ConvHelper1<UpwindInterpolation<oldPhiT>, oldPhiT>* convection_helper = 
+         scinew ConvHelper1<UpwindInterpolation<oldPhiT>, oldPhiT>(the_interpolant, oldPhi);
 
-        for (iIter.begin(); !iIter.done(); iIter++){
+       convection_helper->do_convection( p, Fconv, uVel, vVel, wVel, den, areaFraction, this ); 
 
-          IntVector c   = *iIter;
-          IntVector cxp = c + IntVector(1,0,0);
-          IntVector cxm = c - IntVector(1,0,0);
-          IntVector cyp = c + IntVector(0,1,0);
-          IntVector cym = c - IntVector(0,1,0);
-          IntVector czp = c + IntVector(0,0,1);
-          IntVector czm = c - IntVector(0,0,1);
-
-          FaceData1D face_den;
-          FaceData1D face_phi; 
-          FaceData1D face_vel;
-          double area; 
-          IntVector coord; 
-
-          //X-dimension
-          coord[0] = 1; coord[1] = 0; coord[2] = 0; 
-          area = Dx.y()*Dx.z();
-
-          face_den       = getDensityOnFace( c, coord, Fconv, den ); 
-          face_vel       = getFaceVelocity( c, Fconv, uVel ); 
-          face_phi       = upwindInterp( c, coord, oldPhi, face_vel ); 
-          Fconv[c]       = getFlux( area, face_den, face_vel, face_phi, areaFraction, coord, c ); 
-
-#ifdef YDIM
-          //Y-dimension
-          coord[0] = 0; coord[1] = 1; coord[2] = 0; 
-          area = Dx.x()*Dx.z(); 
-
-          face_den       = getDensityOnFace( c, coord, Fconv, den ); 
-          face_vel       = getFaceVelocity( c, Fconv, vVel ); 
-          face_phi       = upwindInterp( c, coord, oldPhi, face_vel ); 
-          Fconv[c]      += getFlux( area, face_den, face_vel, face_phi, areaFraction, coord, c ); 
-
-#endif 
-#ifdef ZDIM
-          //Z-dimension
-          coord[0] = 0; coord[1] = 0; coord[2] = 1; 
-          area = Dx.x()*Dx.y(); 
-
-          face_den       = getDensityOnFace( c, coord, Fconv, den ); 
-          face_vel       = getFaceVelocity( c, Fconv, wVel ); 
-          face_phi       = upwindInterp( c, coord, oldPhi, face_vel ); 
-          Fconv[c]      += getFlux( area, face_den, face_vel, face_phi, areaFraction, coord, c ); 
-
-#endif
-        }
-        
-        // Boundaries
-        vector<Patch::FaceType> bf;
-        vector<Patch::FaceType>::const_iterator bf_iter;
-        p->getBoundaryFaces(bf);
-
-        // Loop over all boundary faces on this patch
-        for (bf_iter = bf.begin(); bf_iter != bf.end(); bf_iter++){
-
-          Patch::FaceType face = *bf_iter; 
-          IntVector inside = p->faceDirection(face); 
-          CellIterator c_iter = getInteriorBoundaryCellIterator( p, bf_iter ); 
-          FaceBoundaryBool faceIsBoundary; 
-
-          for (c_iter.begin(); !c_iter.done(); c_iter++){
-
-            IntVector c = *c_iter - inside; 
-            IntVector cxp = c + IntVector(1,0,0);
-            IntVector cxm = c - IntVector(1,0,0); 
-            IntVector cyp = c + IntVector(0,1,0); 
-            IntVector cym = c - IntVector(0,1,0);
-            IntVector czp = c + IntVector(0,0,1);
-            IntVector czm = c - IntVector(0,0,1);
-
-            FaceData1D face_den;
-            FaceData1D face_phi; 
-            FaceData1D face_vel;
-            double area; 
-            IntVector coord; 
-
-            //X-dimension
-            coord[0] = 1; coord[1] = 0; coord[2] = 0; 
-            area = Dx.y()*Dx.z();            
-
-            faceIsBoundary = checkFacesForBoundaries( p, c, coord ); 
-            face_den       = getDensityOnFace( c, coord, Fconv, den ); 
-            face_vel       = getFaceVelocity( c, Fconv, uVel ); 
-            face_phi       = upwindInterp( c, coord, oldPhi, face_vel, faceIsBoundary ); 
-            Fconv[c]       = getFlux( area, face_den, face_vel, face_phi, areaFraction, coord, c ); 
-
-#ifdef YDIM
-            //Y-dimension
-            coord[0] = 0; coord[1] = 1; coord[2] = 0; 
-            area = Dx.x()*Dx.z(); 
-
-            faceIsBoundary = checkFacesForBoundaries( p, c, coord ); 
-            face_den       = getDensityOnFace( c, coord, Fconv, den ); 
-            face_vel       = getFaceVelocity( c, Fconv, vVel ); 
-            face_phi       = upwindInterp( c, coord, oldPhi, face_vel, faceIsBoundary ); 
-            Fconv[c]      += getFlux( area, face_den, face_vel, face_phi, areaFraction, coord, c ); 
-
-#endif 
-#ifdef ZDIM
-            //Z-dimension
-            coord[0] = 0; coord[1] = 0; coord[2] = 1; 
-            area = Dx.x()*Dx.y(); 
-
-            faceIsBoundary = checkFacesForBoundaries( p, c, coord ); 
-            face_den       = getDensityOnFace( c, coord, Fconv, den ); 
-            face_vel       = getFaceVelocity( c, Fconv, wVel ); 
-            face_phi       = upwindInterp( c, coord, oldPhi, face_vel, faceIsBoundary ); 
-            Fconv[c]      += getFlux( area, face_den, face_vel, face_phi, areaFraction, coord, c ); 
-
-#endif
-          }
-        }
+       delete convection_helper; 
+       delete the_interpolant; 
 
       } else if (convScheme == "super_bee") { 
 
-        for (iIter.begin(); !iIter.done(); iIter++){
+       SuperBeeInterpolation<oldPhiT>* the_interpolant = scinew SuperBeeInterpolation<oldPhiT>(); 
+       ConvHelper1<SuperBeeInterpolation<oldPhiT>, oldPhiT>* convection_helper = 
+         scinew ConvHelper1<SuperBeeInterpolation<oldPhiT>, oldPhiT>(the_interpolant, oldPhi);
 
-          IntVector c   = *iIter;
-          IntVector cxp = c + IntVector(1,0,0);
-          IntVector cxm = c - IntVector(1,0,0);
-          IntVector cyp = c + IntVector(0,1,0);
-          IntVector cym = c - IntVector(0,1,0);
-          IntVector czp = c + IntVector(0,0,1);
-          IntVector czm = c - IntVector(0,0,1);
+       convection_helper->do_convection( p, Fconv, uVel, vVel, wVel, den, areaFraction, this ); 
 
-          FaceData1D face_den;
-          FaceData1D face_phi; 
-          FaceData1D face_vel;
-          double area; 
-          IntVector coord; 
-
-          //X-dimension
-          coord[0] = 1; coord[1] = 0; coord[2] = 0; 
-          area = Dx.y()*Dx.z(); 
-
-          face_den       = getDensityOnFace( c, coord, Fconv, den ); 
-          face_vel       = getFaceVelocity( c, Fconv, uVel ); 
-          face_phi       = superBeeInterp( c, coord, oldPhi, face_vel, areaFraction ); 
-          Fconv[c]       = getFlux( area, face_den, face_vel, face_phi, areaFraction, coord, c ); 
-
-#ifdef YDIM
-          //Y-dimension
-          coord[0] = 0; coord[1] = 1; coord[2] = 0; 
-          area = Dx.x()*Dx.z(); 
-
-          face_den       = getDensityOnFace( c, coord, Fconv, den ); 
-          face_vel       = getFaceVelocity( c, Fconv, vVel ); 
-          face_phi       = superBeeInterp( c, coord, oldPhi, face_vel, areaFraction ); 
-          Fconv[c]      += getFlux( area, face_den, face_vel, face_phi, areaFraction, coord, c ); 
-#endif 
-#ifdef ZDIM
-          //Z-dimension
-          coord[0] = 0; coord[1] = 0; coord[2] = 1; 
-          area = Dx.x()*Dx.y(); 
-
-          face_den       = getDensityOnFace( c, coord, Fconv, den ); 
-          face_vel       = getFaceVelocity( c, Fconv, wVel ); 
-          face_phi       = superBeeInterp( c, coord, oldPhi, face_vel, areaFraction ); 
-          Fconv[c]      += getFlux( area, face_den, face_vel, face_phi, areaFraction, coord, c ); 
-#endif
-        }
-        // Boundaries
-        vector<Patch::FaceType> bf;
-        vector<Patch::FaceType>::const_iterator bf_iter;
-        p->getBoundaryFaces(bf);
-
-        // Loop over all boundary faces on this patch
-        for (bf_iter = bf.begin(); bf_iter != bf.end(); bf_iter++){
-
-          Patch::FaceType face = *bf_iter; 
-          IntVector inside = p->faceDirection(face); 
-          CellIterator c_iter = getInteriorBoundaryCellIterator( p, bf_iter ); 
-          FaceBoundaryBool faceIsBoundary; 
-
-          for (c_iter.begin(); !c_iter.done(); c_iter++){
-
-            IntVector c = *c_iter - inside; 
-            IntVector cxp = c + IntVector(1,0,0);
-            IntVector cxm = c - IntVector(1,0,0); 
-            IntVector cyp = c + IntVector(0,1,0); 
-            IntVector cym = c - IntVector(0,1,0);
-            IntVector czp = c + IntVector(0,0,1);
-            IntVector czm = c - IntVector(0,0,1);
-
-            FaceData1D face_den;
-            FaceData1D face_phi; 
-            FaceData1D face_vel;
-            double area; 
-            IntVector coord; 
-
-            //X-dimension
-            coord[0] = 1; coord[1] = 0; coord[2] = 0; 
-            area = Dx.y()*Dx.z(); 
-
-            faceIsBoundary = checkFacesForBoundaries( p, c, coord ); 
-            face_den       = getDensityOnFace( c, coord, Fconv, den ); 
-            face_vel       = getFaceVelocity( c, Fconv, uVel ); 
-            face_phi       = superBeeInterp( c, coord, oldPhi, face_vel, faceIsBoundary, areaFraction ); 
-            Fconv[c]       = getFlux( area, face_den, face_vel, face_phi, areaFraction, coord, c ); 
-
-#ifdef YDIM
-            //Y-dimension
-            coord[0] = 0; coord[1] = 1; coord[2] = 0; 
-            area = Dx.x()*Dx.z(); 
-
-            faceIsBoundary = checkFacesForBoundaries( p, c, coord ); 
-            face_den       = getDensityOnFace( c, coord, Fconv, den ); 
-            face_vel       = getFaceVelocity( c, Fconv, vVel ); 
-            face_phi       = superBeeInterp( c, coord, oldPhi, face_vel, faceIsBoundary, areaFraction ); 
-            Fconv[c]      += getFlux( area, face_den, face_vel, face_phi, areaFraction, coord, c ); 
-
-#endif 
-#ifdef ZDIM
-            //Z-dimension
-            coord[0] = 0; coord[1] = 0; coord[2] = 1; 
-            area = Dx.x()*Dx.y(); 
-
-            faceIsBoundary = checkFacesForBoundaries( p, c, coord ); 
-            face_den       = getDensityOnFace( c, coord, Fconv, den ); 
-            face_vel       = getFaceVelocity( c, Fconv, wVel ); 
-            face_phi       = superBeeInterp( c, coord, oldPhi, face_vel, faceIsBoundary, areaFraction ); 
-            Fconv[c]      += getFlux( area, face_den, face_vel, face_phi, areaFraction, coord, c ); 
-
-#endif
-          }
-        }
+       delete convection_helper; 
+       delete the_interpolant; 
 
       } else if (convScheme == "central") {
 
-        for (CellIterator iter=p->getCellIterator(); !iter.done(); iter++){
+       CentralInterpolation<oldPhiT>* the_interpolant = scinew CentralInterpolation<oldPhiT>(); 
+       ConvHelper1<CentralInterpolation<oldPhiT>, oldPhiT>* convection_helper = 
+         scinew ConvHelper1<CentralInterpolation<oldPhiT>, oldPhiT>(the_interpolant, oldPhi);
 
-          IntVector c = *iter; 
-          IntVector cxp = c + IntVector(1,0,0);
-          IntVector cxm = c - IntVector(1,0,0);
-          IntVector cyp = c + IntVector(0,1,0);
-          IntVector cym = c - IntVector(0,1,0);
-          IntVector czp = c + IntVector(0,0,1);
-          IntVector czm = c - IntVector(0,0,1);
+       convection_helper->do_convection( p, Fconv, uVel, vVel, wVel, den, areaFraction, this ); 
 
-          IntVector coord; 
+       delete convection_helper; 
+       delete the_interpolant; 
 
-          FaceData1D face_den;
-          FaceData1D face_phi; 
-          FaceData1D face_vel; 
-          double area; 
+      } else if (convScheme == "vanleer") {
 
-          //X-FACES
-          coord[0] = 1; coord[1] = 0; coord[2] = 0; 
-          area = Dx.y()*Dx.z();
+      } else if (convScheme == "l2up") { 
 
-          face_den = getDensityOnFace( c, coord, Fconv, den ); 
-          face_vel = getFaceVelocity( c, Fconv, uVel ); 
-          face_phi = centralInterp( c, coord, oldPhi ); 
-
-          Fconv[c] = getFlux( area, face_den, face_vel, face_phi, areaFraction, coord, c );
-#ifdef YDIM
-          //Y-FACES
-          coord[0] = 0; coord[1] = 1; coord[2] = 0; 
-          area = Dx.x()*Dx.z();
-
-          face_den  = getDensityOnFace( c, coord, Fconv, den ); 
-          face_vel  = getFaceVelocity( c, Fconv, vVel ); 
-          face_phi  = centralInterp( c, coord, oldPhi ); 
-
-          Fconv[c] += getFlux( area, face_den, face_vel, face_phi, areaFraction, coord, c );
-#endif
-
-#ifdef ZDIM
-          //Z-FACES
-          coord[0] = 0; coord[1] = 0; coord[2] = 1; 
-          area = Dx.x()*Dx.y();
-
-          face_den = getDensityOnFace( c, coord, Fconv, den ); 
-          face_vel = getFaceVelocity( c, Fconv, wVel ); 
-          face_phi = centralInterp( c, coord, oldPhi ); 
-
-          Fconv[c] += getFlux( area, face_den, face_vel, face_phi, areaFraction, coord, c );
-#endif
-        }
       }
     }
 
@@ -1047,277 +1447,44 @@ namespace Uintah{
         constSFCZVariable<double>& wVel, constCCVariable<Vector>& areaFraction, 
         std::string convScheme ) 
     {
-      // This class computes convection without assumptions about the boundary conditions 
-      // (ie, it doens't adjust values of fluxes on the boundaries but assume you have 
-      // done so previously)
-      Vector Dx = p->dCell(); 
 
-      // get the cell interior iterator
-      CellIterator iIter  = Discretization_new::getInteriorCellIterator( p ); 
+      if (convScheme == "upwind") { 
 
-      if (convScheme == "upwind") {
+       UpwindInterpolation<oldPhiT>* the_interpolant = scinew UpwindInterpolation<oldPhiT>(); 
+       ConvHelper1<UpwindInterpolation<oldPhiT>, oldPhiT>* convection_helper = 
+         scinew ConvHelper1<UpwindInterpolation<oldPhiT>, oldPhiT>(the_interpolant, oldPhi);
 
-        for (iIter.begin(); !iIter.done(); iIter++){
+       convection_helper->do_convection( p, Fconv, uVel, vVel, wVel, areaFraction, this ); 
 
-          IntVector c   = *iIter;
-          IntVector cxp = c + IntVector(1,0,0);
-          IntVector cxm = c - IntVector(1,0,0);
-          IntVector cyp = c + IntVector(0,1,0);
-          IntVector cym = c - IntVector(0,1,0);
-          IntVector czp = c + IntVector(0,0,1);
-          IntVector czm = c - IntVector(0,0,1);
-
-          FaceData1D face_phi; 
-          FaceData1D face_vel;
-          double area; 
-          IntVector coord; 
-
-          //X-dimension
-          coord[0] = 1; coord[1] = 0; coord[2] = 0; 
-          area = Dx.y()*Dx.z(); 
-
-          face_vel       = getFaceVelocity( c, Fconv, uVel ); 
-          face_phi       = upwindInterp( c, coord, oldPhi, face_vel ); 
-          Fconv[c]       = getFlux( area, face_vel, face_phi, areaFraction, coord, c ); 
-
-#ifdef YDIM
-          //Y-dimension
-          coord[0] = 0; coord[1] = 1; coord[2] = 0; 
-          area = Dx.x()*Dx.z(); 
-
-          face_vel       = getFaceVelocity( c, Fconv, vVel ); 
-          face_phi       = upwindInterp( c, coord, oldPhi, face_vel ); 
-          Fconv[c]      += getFlux( area, face_vel, face_phi, areaFraction, coord, c ); 
-
-#endif 
-#ifdef ZDIM
-          //Z-dimension
-          coord[0] = 0; coord[1] = 0; coord[2] = 1; 
-          area = Dx.x()*Dx.y(); 
-
-          face_vel       = getFaceVelocity( c, Fconv, wVel ); 
-          face_phi       = upwindInterp( c, coord, oldPhi, face_vel ); 
-          Fconv[c]      += getFlux( area, face_vel, face_phi, areaFraction, coord, c ); 
-
-#endif
-        }
-        // Boundaries
-        vector<Patch::FaceType> bf;
-        vector<Patch::FaceType>::const_iterator bf_iter;
-        p->getBoundaryFaces(bf);
-
-        // Loop over all boundary faces on this patch
-        for (bf_iter = bf.begin(); bf_iter != bf.end(); bf_iter++){
-
-          Patch::FaceType face = *bf_iter; 
-          IntVector inside = p->faceDirection(face); 
-          CellIterator c_iter = getInteriorBoundaryCellIterator( p, bf_iter ); 
-          FaceBoundaryBool faceIsBoundary; 
-
-          for (c_iter.begin(); !c_iter.done(); c_iter++){
-
-            IntVector c = *c_iter - inside; 
-            IntVector cxp = c + IntVector(1,0,0);
-            IntVector cxm = c - IntVector(1,0,0); 
-            IntVector cyp = c + IntVector(0,1,0); 
-            IntVector cym = c - IntVector(0,1,0);
-            IntVector czp = c + IntVector(0,0,1);
-            IntVector czm = c - IntVector(0,0,1);
-
-            FaceData1D face_phi; 
-            FaceData1D face_vel;
-            double area; 
-            IntVector coord; 
-
-            //X-dimension
-            coord[0] = 1; coord[1] = 0; coord[2] = 0; 
-            area = Dx.y()*Dx.z(); 
-
-            faceIsBoundary = checkFacesForBoundaries( p, c, coord ); 
-            face_vel       = getFaceVelocity( c, Fconv, uVel ); 
-            face_phi       = upwindInterp( c, coord, oldPhi, face_vel, faceIsBoundary ); 
-            Fconv[c]       = getFlux( area, face_vel, face_phi, areaFraction, coord, c ); 
-
-#ifdef YDIM
-            //Y-dimension
-            coord[0] = 0; coord[1] = 1; coord[2] = 0; 
-            area = Dx.x()*Dx.z(); 
-
-            faceIsBoundary = checkFacesForBoundaries( p, c, coord ); 
-            face_vel       = getFaceVelocity( c, Fconv, vVel ); 
-            face_phi       = upwindInterp( c, coord, oldPhi, face_vel, faceIsBoundary ); 
-            Fconv[c]      += getFlux( area, face_vel, face_phi, areaFraction, coord, c ); 
-
-#endif 
-#ifdef ZDIM
-            //Z-dimension
-            coord[0] = 0; coord[1] = 0; coord[2] = 1; 
-            area = Dx.x()*Dx.y(); 
-
-            faceIsBoundary = checkFacesForBoundaries( p, c, coord ); 
-            face_vel       = getFaceVelocity( c, Fconv, wVel ); 
-            face_phi       = upwindInterp( c, coord, oldPhi, face_vel, faceIsBoundary ); 
-            Fconv[c]      += getFlux( area, face_vel, face_phi, areaFraction, coord, c ); 
-
-#endif
-          }
-        }
+       delete convection_helper; 
+       delete the_interpolant; 
 
       } else if (convScheme == "super_bee") { 
 
-        for (iIter.begin(); !iIter.done(); iIter++){
+       SuperBeeInterpolation<oldPhiT>* the_interpolant = scinew SuperBeeInterpolation<oldPhiT>(); 
+       ConvHelper1<SuperBeeInterpolation<oldPhiT>, oldPhiT>* convection_helper = 
+         scinew ConvHelper1<SuperBeeInterpolation<oldPhiT>, oldPhiT>(the_interpolant, oldPhi);
 
-          IntVector c   = *iIter;
-          IntVector cxp = c + IntVector(1,0,0);
-          IntVector cxm = c - IntVector(1,0,0);
-          IntVector cyp = c + IntVector(0,1,0);
-          IntVector cym = c - IntVector(0,1,0);
-          IntVector czp = c + IntVector(0,0,1);
-          IntVector czm = c - IntVector(0,0,1);
+       convection_helper->do_convection( p, Fconv, uVel, vVel, wVel, areaFraction, this ); 
 
-          FaceData1D face_phi; 
-          FaceData1D face_vel;
-          double area; 
-          IntVector coord; 
-
-          //X-dimension
-          coord[0] = 1; coord[1] = 0; coord[2] = 0; 
-          area = Dx.y()*Dx.z(); 
-
-          face_vel       = getFaceVelocity( c, Fconv, uVel ); 
-          face_phi       = superBeeInterp( c, coord, oldPhi, face_vel, areaFraction ); 
-          Fconv[c]       = getFlux( area, face_vel, face_phi, areaFraction, coord, c ); 
-
-#ifdef YDIM
-          //Y-dimension
-          coord[0] = 0; coord[1] = 1; coord[2] = 0; 
-          area = Dx.x()*Dx.z(); 
-
-          face_vel       = getFaceVelocity( c, Fconv, vVel ); 
-          face_phi       = superBeeInterp( c, coord, oldPhi, face_vel, areaFraction ); 
-          Fconv[c]      += getFlux( area, face_vel, face_phi, areaFraction, coord, c ); 
-#endif 
-#ifdef ZDIM
-          //Z-dimension
-          coord[0] = 0; coord[1] = 0; coord[2] = 1; 
-          area = Dx.x()*Dx.y(); 
-
-          face_vel       = getFaceVelocity( c, Fconv, wVel ); 
-          face_phi       = superBeeInterp( c, coord, oldPhi, face_vel, areaFraction ); 
-          Fconv[c]      += getFlux( area, face_vel, face_phi, areaFraction, coord, c  ); 
-#endif
-        }
-        // Boundaries
-        vector<Patch::FaceType> bf;
-        vector<Patch::FaceType>::const_iterator bf_iter;
-        p->getBoundaryFaces(bf);
-
-        // Loop over all boundary faces on this patch
-        for (bf_iter = bf.begin(); bf_iter != bf.end(); bf_iter++){
-
-          Patch::FaceType face = *bf_iter; 
-          IntVector inside = p->faceDirection(face); 
-          CellIterator c_iter = getInteriorBoundaryCellIterator( p, bf_iter ); 
-          FaceBoundaryBool faceIsBoundary; 
-
-          for (c_iter.begin(); !c_iter.done(); c_iter++){
-
-            IntVector c = *c_iter - inside; 
-            IntVector cxp = c + IntVector(1,0,0);
-            IntVector cxm = c - IntVector(1,0,0); 
-            IntVector cyp = c + IntVector(0,1,0); 
-            IntVector cym = c - IntVector(0,1,0);
-            IntVector czp = c + IntVector(0,0,1);
-            IntVector czm = c - IntVector(0,0,1);
-
-            FaceData1D face_phi; 
-            FaceData1D face_vel;
-            double area; 
-            IntVector coord; 
-
-            //X-dimension
-            coord[0] = 1; coord[1] = 0; coord[2] = 0; 
-            area = Dx.y()*Dx.z(); 
-
-            faceIsBoundary = checkFacesForBoundaries( p, c, coord ); 
-            face_vel       = getFaceVelocity( c, Fconv, uVel ); 
-            face_phi       = superBeeInterp( c, coord, oldPhi, face_vel, faceIsBoundary, areaFraction ); 
-            Fconv[c]       = getFlux( area, face_vel, face_phi, areaFraction, coord, c ); 
-
-#ifdef YDIM
-            //Y-dimension
-            coord[0] = 0; coord[1] = 1; coord[2] = 0; 
-            area = Dx.x()*Dx.z(); 
-
-            faceIsBoundary = checkFacesForBoundaries( p, c, coord ); 
-            face_vel       = getFaceVelocity( c, Fconv, vVel ); 
-            face_phi       = superBeeInterp( c, coord, oldPhi, face_vel, faceIsBoundary, areaFraction ); 
-            Fconv[c]      += getFlux( area, face_vel, face_phi, areaFraction, coord, c ); 
-
-#endif 
-#ifdef ZDIM
-            //Z-dimension
-            coord[0] = 0; coord[1] = 0; coord[2] = 1; 
-            area = Dx.x()*Dx.y(); 
-
-            faceIsBoundary = checkFacesForBoundaries( p, c, coord ); 
-            face_vel       = getFaceVelocity( c, Fconv, wVel ); 
-            face_phi       = superBeeInterp( c, coord, oldPhi, face_vel, faceIsBoundary, areaFraction ); 
-            Fconv[c]      += getFlux( area, face_vel, face_phi, areaFraction, coord, c  ); 
-
-#endif
-          }
-        }
+       delete convection_helper; 
+       delete the_interpolant; 
 
       } else if (convScheme == "central") {
 
-        for (CellIterator iter=p->getCellIterator(); !iter.done(); iter++){
+       CentralInterpolation<oldPhiT>* the_interpolant = scinew CentralInterpolation<oldPhiT>(); 
+       ConvHelper1<CentralInterpolation<oldPhiT>, oldPhiT>* convection_helper = 
+         scinew ConvHelper1<CentralInterpolation<oldPhiT>, oldPhiT>(the_interpolant, oldPhi);
 
-          IntVector c = *iter; 
-          IntVector cxp = c + IntVector(1,0,0);
-          IntVector cxm = c - IntVector(1,0,0);
-          IntVector cyp = c + IntVector(0,1,0);
-          IntVector cym = c - IntVector(0,1,0);
-          IntVector czp = c + IntVector(0,0,1);
-          IntVector czm = c - IntVector(0,0,1);
+       convection_helper->do_convection( p, Fconv, uVel, vVel, wVel, areaFraction, this ); 
 
-          IntVector coord; 
+       delete convection_helper; 
+       delete the_interpolant; 
 
-          FaceData1D face_phi; 
-          FaceData1D face_vel; 
-          FaceData1D face_af; 
-          double area; 
+      } else if (convScheme == "vanleer") {
 
-          //X-FACES
-          coord[0] = 1; coord[1] = 0; coord[2] = 0; 
-          area = Dx.y()*Dx.z();
+      } else if (convScheme == "l2up") { 
 
-          face_vel = getFaceVelocity( c, Fconv, uVel ); 
-          face_phi = centralInterp( c, coord, oldPhi ); 
-
-          Fconv[c] = getFlux( area, face_vel, face_phi, areaFraction, coord, c );
-#ifdef YDIM
-          //Y-FACES
-          coord[0] = 0; coord[1] = 1; coord[2] = 0; 
-          area = Dx.x()*Dx.z();
-
-          face_vel  = getFaceVelocity( c, Fconv, vVel ); 
-          face_phi  = centralInterp( c, coord, oldPhi ); 
-
-          Fconv[c] += getFlux( area, face_vel, face_phi, areaFraction, coord, c );
-#endif
-
-#ifdef ZDIM
-          //Z-FACES
-          coord[0] = 0; coord[1] = 0; coord[2] = 1; 
-          area = Dx.x()*Dx.y();
-
-          face_vel = getFaceVelocity( c, Fconv, wVel ); 
-          face_phi = centralInterp( c, coord, oldPhi ); 
-
-          Fconv[c] += getFlux( area, face_vel, face_phi, areaFraction, coord, c );
-#endif
-        }
       }
     }
 
@@ -1332,276 +1499,43 @@ namespace Uintah{
         constCCVariable<Vector>& areaFraction, 
         std::string convScheme ) 
     {
-      // This class computes convection without assumptions about the boundary conditions 
-      // (ie, it doens't adjust values of fluxes on the boundaries but assume you have 
-      // done so previously)
-      Vector Dx = p->dCell(); 
+      if (convScheme == "upwind") { 
 
-      // get the cell interior iterator
-      CellIterator iIter  = Discretization_new::getInteriorCellIterator( p ); 
+       UpwindInterpolation<oldPhiT>* the_interpolant = scinew UpwindInterpolation<oldPhiT>(); 
+       ConvHelper1<UpwindInterpolation<oldPhiT>, oldPhiT>* convection_helper = 
+         scinew ConvHelper1<UpwindInterpolation<oldPhiT>, oldPhiT>(the_interpolant, oldPhi);
 
-      if (convScheme == "upwind") {
+       convection_helper->do_convection( p, Fconv, uVel, vVel, wVel, partVel, areaFraction, this ); 
 
-        for (iIter.begin(); !iIter.done(); iIter++){
-
-          IntVector c   = *iIter;
-          IntVector cxp = c + IntVector(1,0,0);
-          IntVector cxm = c - IntVector(1,0,0);
-          IntVector cyp = c + IntVector(0,1,0);
-          IntVector cym = c - IntVector(0,1,0);
-          IntVector czp = c + IntVector(0,0,1);
-          IntVector czm = c - IntVector(0,0,1);
-
-          FaceData1D face_phi; 
-          FaceData1D face_vel;
-          double area; 
-          IntVector coord; 
-
-          //X-dimension
-          coord[0] = 1; coord[1] = 0; coord[2] = 0; 
-          area = Dx.y()*Dx.z(); 
-
-          face_vel       = getFaceVelocity( c, Fconv, partVel, coord ); 
-          face_phi       = upwindInterp( c, coord, oldPhi, face_vel ); 
-          Fconv[c]       = getFlux( area, face_vel, face_phi, areaFraction, coord, c ); 
-
-#ifdef YDIM
-          //Y-dimension
-          coord[0] = 0; coord[1] = 1; coord[2] = 0; 
-          area = Dx.x()*Dx.z(); 
-
-          face_vel       = getFaceVelocity( c, Fconv, partVel, coord ); 
-          face_phi       = upwindInterp( c, coord, oldPhi, face_vel ); 
-          Fconv[c]      += getFlux( area, face_vel, face_phi, areaFraction, coord, c ); 
-
-#endif 
-#ifdef ZDIM
-          //Z-dimension
-          coord[0] = 0; coord[1] = 0; coord[2] = 1; 
-          area = Dx.x()*Dx.y(); 
-
-          face_vel       = getFaceVelocity( c, Fconv, partVel, coord ); 
-          face_phi       = upwindInterp( c, coord, oldPhi, face_vel ); 
-          Fconv[c]      += getFlux( area, face_vel, face_phi, areaFraction, coord, c ); 
-
-#endif
-        }
-        // Boundaries
-        vector<Patch::FaceType> bf;
-        vector<Patch::FaceType>::const_iterator bf_iter;
-        p->getBoundaryFaces(bf);
-
-        // Loop over all boundary faces on this patch
-        for (bf_iter = bf.begin(); bf_iter != bf.end(); bf_iter++){
-
-          Patch::FaceType face = *bf_iter; 
-          IntVector inside = p->faceDirection(face); 
-          CellIterator c_iter = getInteriorBoundaryCellIterator( p, bf_iter ); 
-          FaceBoundaryBool faceIsBoundary; 
-
-          for (c_iter.begin(); !c_iter.done(); c_iter++){
-
-            IntVector c = *c_iter - inside; 
-            IntVector cxp = c + IntVector(1,0,0);
-            IntVector cxm = c - IntVector(1,0,0); 
-            IntVector cyp = c + IntVector(0,1,0); 
-            IntVector cym = c - IntVector(0,1,0);
-            IntVector czp = c + IntVector(0,0,1);
-            IntVector czm = c - IntVector(0,0,1);
-
-            FaceData1D face_phi; 
-            FaceData1D face_vel;
-            double area; 
-            IntVector coord; 
-
-            //X-dimension
-            coord[0] = 1; coord[1] = 0; coord[2] = 0; 
-            area = Dx.y()*Dx.z(); 
-
-            faceIsBoundary = checkFacesForBoundaries( p, c, coord ); 
-            face_vel       = getFaceVelocity( c, Fconv, partVel, coord ); 
-            face_phi       = upwindInterp( c, coord, oldPhi, face_vel, faceIsBoundary ); 
-            Fconv[c]       = getFlux( area, face_vel, face_phi, areaFraction, coord, c ); 
-
-#ifdef YDIM
-            //Y-dimension
-            coord[0] = 0; coord[1] = 1; coord[2] = 0; 
-            area = Dx.x()*Dx.z(); 
-
-            faceIsBoundary = checkFacesForBoundaries( p, c, coord ); 
-            face_vel       = getFaceVelocity( c, Fconv, partVel, coord ); 
-            face_phi       = upwindInterp( c, coord, oldPhi, face_vel, faceIsBoundary ); 
-            Fconv[c]      += getFlux( area, face_vel, face_phi, areaFraction, coord, c ); 
-
-#endif 
-#ifdef ZDIM
-            //Z-dimension
-            coord[0] = 0; coord[1] = 0; coord[2] = 1; 
-            area = Dx.x()*Dx.y(); 
-
-            faceIsBoundary = checkFacesForBoundaries( p, c, coord ); 
-            face_vel       = getFaceVelocity( c, Fconv, partVel, coord ); 
-            face_phi       = upwindInterp( c, coord, oldPhi, face_vel, faceIsBoundary ); 
-            Fconv[c]      += getFlux( area, face_vel, face_phi, areaFraction, coord, c ); 
-
-#endif
-          }
-        }
+       delete convection_helper; 
+       delete the_interpolant; 
 
       } else if (convScheme == "super_bee") { 
 
-        for (iIter.begin(); !iIter.done(); iIter++){
+       SuperBeeInterpolation<oldPhiT>* the_interpolant = scinew SuperBeeInterpolation<oldPhiT>(); 
+       ConvHelper1<SuperBeeInterpolation<oldPhiT>, oldPhiT>* convection_helper = 
+         scinew ConvHelper1<SuperBeeInterpolation<oldPhiT>, oldPhiT>(the_interpolant, oldPhi);
 
-          IntVector c   = *iIter;
-          IntVector cxp = c + IntVector(1,0,0);
-          IntVector cxm = c - IntVector(1,0,0);
-          IntVector cyp = c + IntVector(0,1,0);
-          IntVector cym = c - IntVector(0,1,0);
-          IntVector czp = c + IntVector(0,0,1);
-          IntVector czm = c - IntVector(0,0,1);
+       convection_helper->do_convection( p, Fconv, uVel, vVel, wVel, partVel, areaFraction, this ); 
 
-          FaceData1D face_phi; 
-          FaceData1D face_vel;
-          double area; 
-          IntVector coord; 
-
-          //X-dimension
-          coord[0] = 1; coord[1] = 0; coord[2] = 0; 
-          area = Dx.y()*Dx.z(); 
-
-          face_vel       = getFaceVelocity( c, Fconv, partVel, coord ); 
-          face_phi       = superBeeInterp( c, coord, oldPhi, face_vel, areaFraction ); 
-          Fconv[c]       = getFlux( area, face_vel, face_phi, areaFraction, coord, c ); 
-
-#ifdef YDIM
-          //Y-dimension
-          coord[0] = 0; coord[1] = 1; coord[2] = 0; 
-          area = Dx.x()*Dx.z(); 
-
-          face_vel       = getFaceVelocity( c, Fconv, partVel, coord ); 
-          face_phi       = superBeeInterp( c, coord, oldPhi, face_vel, areaFraction ); 
-          Fconv[c]      += getFlux( area, face_vel, face_phi, areaFraction, coord, c ); 
-#endif 
-#ifdef ZDIM
-          //Z-dimension
-          coord[0] = 0; coord[1] = 0; coord[2] = 1; 
-          area = Dx.x()*Dx.y(); 
-
-          face_vel       = getFaceVelocity( c, Fconv, partVel, coord ); 
-          face_phi       = superBeeInterp( c, coord, oldPhi, face_vel, areaFraction ); 
-          Fconv[c]      += getFlux( area, face_vel, face_phi, areaFraction, coord, c ); 
-#endif
-        }
-        // Boundaries
-        vector<Patch::FaceType> bf;
-        vector<Patch::FaceType>::const_iterator bf_iter;
-        p->getBoundaryFaces(bf);
-
-        // Loop over all boundary faces on this patch
-        for (bf_iter = bf.begin(); bf_iter != bf.end(); bf_iter++){
-
-          Patch::FaceType face = *bf_iter; 
-          IntVector inside = p->faceDirection(face); 
-          CellIterator c_iter = getInteriorBoundaryCellIterator( p, bf_iter ); 
-          FaceBoundaryBool faceIsBoundary; 
-
-          for (c_iter.begin(); !c_iter.done(); c_iter++){
-
-            IntVector c = *c_iter - inside; 
-            IntVector cxp = c + IntVector(1,0,0);
-            IntVector cxm = c - IntVector(1,0,0); 
-            IntVector cyp = c + IntVector(0,1,0); 
-            IntVector cym = c - IntVector(0,1,0);
-            IntVector czp = c + IntVector(0,0,1);
-            IntVector czm = c - IntVector(0,0,1);
-
-            FaceData1D face_phi; 
-            FaceData1D face_vel;
-            double area; 
-            IntVector coord; 
-
-            //X-dimension
-            coord[0] = 1; coord[1] = 0; coord[2] = 0; 
-            area = Dx.y()*Dx.z(); 
-
-            faceIsBoundary = checkFacesForBoundaries( p, c, coord ); 
-            face_vel       = getFaceVelocity( c, Fconv, partVel, coord ); 
-            face_phi       = superBeeInterp( c, coord, oldPhi, face_vel, faceIsBoundary, areaFraction ); 
-            Fconv[c]       = getFlux( area, face_vel, face_phi, areaFraction, coord, c ); 
-
-#ifdef YDIM
-            //Y-dimension
-            coord[0] = 0; coord[1] = 1; coord[2] = 0; 
-            area = Dx.x()*Dx.z(); 
-
-            faceIsBoundary = checkFacesForBoundaries( p, c, coord ); 
-            face_vel       = getFaceVelocity( c, Fconv, partVel, coord ); 
-            face_phi       = superBeeInterp( c, coord, oldPhi, face_vel, faceIsBoundary, areaFraction ); 
-            Fconv[c]      += getFlux( area, face_vel, face_phi, areaFraction, coord, c ); 
-
-#endif 
-#ifdef ZDIM
-            //Z-dimension
-            coord[0] = 0; coord[1] = 0; coord[2] = 1; 
-            area = Dx.x()*Dx.y(); 
-
-            faceIsBoundary = checkFacesForBoundaries( p, c, coord ); 
-            face_vel       = getFaceVelocity( c, Fconv, partVel, coord ); 
-            face_phi       = superBeeInterp( c, coord, oldPhi, face_vel, faceIsBoundary, areaFraction ); 
-            Fconv[c]      += getFlux( area, face_vel, face_phi, areaFraction, coord, c ); 
-
-#endif
-          }
-        }
+       delete convection_helper; 
+       delete the_interpolant; 
 
       } else if (convScheme == "central") {
 
-        for (CellIterator iter=p->getCellIterator(); !iter.done(); iter++){
+       CentralInterpolation<oldPhiT>* the_interpolant = scinew CentralInterpolation<oldPhiT>(); 
+       ConvHelper1<CentralInterpolation<oldPhiT>, oldPhiT>* convection_helper = 
+         scinew ConvHelper1<CentralInterpolation<oldPhiT>, oldPhiT>(the_interpolant, oldPhi);
 
-          IntVector c = *iter; 
-          IntVector cxp = c + IntVector(1,0,0);
-          IntVector cxm = c - IntVector(1,0,0);
-          IntVector cyp = c + IntVector(0,1,0);
-          IntVector cym = c - IntVector(0,1,0);
-          IntVector czp = c + IntVector(0,0,1);
-          IntVector czm = c - IntVector(0,0,1);
+       convection_helper->do_convection( p, Fconv, uVel, vVel, wVel, partVel, areaFraction, this ); 
 
-          IntVector coord; 
+       delete convection_helper; 
+       delete the_interpolant; 
 
-          FaceData1D face_phi; 
-          FaceData1D face_vel; 
-          double area; 
+      } else if (convScheme == "vanleer") {
 
-          //X-FACES
-          coord[0] = 1; coord[1] = 0; coord[2] = 0; 
-          area = Dx.y()*Dx.z();
+      } else if (convScheme == "l2up") { 
 
-          face_vel = getFaceVelocity( c, Fconv, uVel ); 
-          face_phi = centralInterp( c, coord, oldPhi ); 
-
-          Fconv[c] = getFlux( area, face_vel, face_phi, areaFraction, coord, c );
-#ifdef YDIM
-          //Y-FACES
-          coord[0] = 0; coord[1] = 1; coord[2] = 0; 
-          area = Dx.x()*Dx.z();
-
-          face_vel  = getFaceVelocity( c, Fconv, vVel ); 
-          face_phi  = centralInterp( c, coord, oldPhi ); 
-
-          Fconv[c] += getFlux( area, face_vel, face_phi, areaFraction, coord, c );
-#endif
-
-#ifdef ZDIM
-          //Z-FACES
-          coord[0] = 0; coord[1] = 0; coord[2] = 1; 
-          area = Dx.x()*Dx.y();
-
-          face_vel = getFaceVelocity( c, Fconv, wVel ); 
-          face_phi = centralInterp( c, coord, oldPhi ); 
-
-          Fconv[c] += getFlux( area, face_vel, face_phi, areaFraction, coord, c );
-#endif
-        }
       }
     }
 
