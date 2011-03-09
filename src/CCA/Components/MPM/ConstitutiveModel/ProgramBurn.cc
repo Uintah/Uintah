@@ -76,6 +76,7 @@ ProgramBurn::ProgramBurn(ProblemSpecP& ps, MPMFlags* Mflag)
   ps->require("D",                  d_initialData.d_D); // Detonation velocity
   ps->getWithDefault("direction_if_plane", d_initialData.d_direction,
                                                               Vector(0.,0.,0.));
+  ps->getWithDefault("T0", d_initialData.d_T0, 0.0);
 
   pProgressFLabel          = VarLabel::create("p.progressF",
                                ParticleVariable<double>::getTypeDescription());
@@ -136,6 +137,7 @@ void ProgramBurn::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
   cm_ps->appendElement("starting_location",  d_initialData.d_start_place);
   cm_ps->appendElement("direction_if_plane", d_initialData.d_direction);
   cm_ps->appendElement("D",                  d_initialData.d_D);
+  cm_ps->appendElement("T0",                 d_initialData.d_T0);
 }
 
 ProgramBurn* ProgramBurn::clone()
@@ -298,7 +300,7 @@ void ProgramBurn::computeStressTensor(const PatchSubset* patches,
     constNCVariable<Vector> gvelocity;
     new_dw->get(gvelocity, lb->gVelocityStarLabel, dwi, patch, gac, NGN);
 
-    double time = d_sharedState->getElapsedTime();
+    double time = d_sharedState->getElapsedTime() - d_initialData.d_T0;
 
     double K = d_initialData.d_K;
     double n = d_initialData.d_n;
