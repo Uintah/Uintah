@@ -120,6 +120,7 @@ WARNING
    bool d_includeFlowWork;
    double d_specificHeat;
    double d_thermalConductivity;
+   double d_tiny_rho;
 
    std::vector<GeometryObject*> d_geom_objs;
 
