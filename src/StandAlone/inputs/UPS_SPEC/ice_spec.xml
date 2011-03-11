@@ -145,6 +145,7 @@
           
         </EOS>
         <gamma                spec="REQUIRED DOUBLE 'positive'" />
+        <tiny_rho             spec="OPTIONAL DOUBLE 'positive'" />
         <geom_object          spec="MULTIPLE" />
         <includeFlowWork      spec="OPTIONAL BOOLEAN" />
         <isSurroundingMatl    spec="OPTIONAL BOOLEAN" />  <!-- FIXME: What is the default? -->
