@@ -23,6 +23,7 @@
 #include <CCA/Components/Wasatch/Expressions/Pressure.h>
 
 #include <stdexcept>
+#include <fstream>
 
 using std::cout;
 using std::endl;

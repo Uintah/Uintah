@@ -66,9 +66,10 @@ void
 MomRHS<FieldT>::
 evaluate()
 {
+  using namespace SpatialOps;
   FieldT& result = this->value();
   gradOp_->apply_to_field( *pressure_, result );
-  result <<= -1.0*result + *rhsPart_;
+  result <<= -result + *rhsPart_;
 }
 
 //--------------------------------------------------------------------

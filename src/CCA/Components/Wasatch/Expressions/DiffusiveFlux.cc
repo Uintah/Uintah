@@ -82,6 +82,7 @@ void
 DiffusiveFlux<GradT>::
 evaluate()
 {
+  using namespace SpatialOps;
   FluxT& result = this->value();
 
   gradOp_->apply_to_field( *phi_, result );  // J = grad(phi)
@@ -89,7 +90,7 @@ evaluate()
     result *= -coefVal_;  // J = -gamma * grad(phi)
   }
   else{
-    result <<= result * -1.0 * *coef_;  // J =  - gamma * grad(phi)
+    result <<= -result * *coef_;  // J =  - gamma * grad(phi)
   }
 }
 
@@ -156,14 +157,14 @@ void
 DiffusiveFlux2<GradT,InterpT>::
 evaluate()
 {
+  using namespace SpatialOps;
   FluxT& result = this->value();
 
-  SpatialOps::SpatFldPtr<FluxT> fluxTmp = SpatialOps::SpatialFieldStore<FluxT>::self().get( result );
+  SpatFldPtr<FluxT> fluxTmp = SpatialFieldStore<FluxT>::self().get( result );
 
   gradOp_  ->apply_to_field( *phi_, *fluxTmp );  // J = grad(phi)
   interpOp_->apply_to_field( *coef_, result  );
-  result *= *fluxTmp;                            // J =   gamma * grad(phi)
-  result *= -1.0;                                // J = - gamma * grad(phi)
+  result <<= -result * *fluxTmp;                 // J = - gamma * grad(phi)
 }
 
 //--------------------------------------------------------------------

@@ -72,8 +72,9 @@ void
 Stress<StressT,Vel1T,Vel2T,ViscT>::
 evaluate()
 {
+  using namespace SpatialOps;
   StressT& stress = this->value();
-  SpatialOps::SpatFldPtr<StressT> tmp = SpatialOps::SpatialFieldStore<StressT>::self().get( stress );
+  SpatFldPtr<StressT> tmp = SpatialFieldStore<StressT>::self().get( stress );
 
   vel1GradOp_->apply_to_field( *vel1_, stress );
   vel2GradOp_->apply_to_field( *vel2_, *tmp   );
@@ -81,7 +82,7 @@ evaluate()
   stress += *tmp;
 
   viscInterpOp_->apply_to_field( *visc_, *tmp );
-  stress <<= stress * (-1.0 * *tmp);
+  stress <<= -stress * *tmp;
 }
 
 //--------------------------------------------------------------------
@@ -177,9 +178,11 @@ void
 Stress<StressT,VelT,VelT,ViscT>::
 evaluate()
 {
+  using namespace SpatialOps;
+
   StressT& stress = this->value();
-  SpatialOps::SpatFldPtr<StressT> velgrad = SpatialOps::SpatialFieldStore<StressT>::self().get( stress );
-  SpatialOps::SpatFldPtr<StressT> dilatation = SpatialOps::SpatialFieldStore<StressT>::self().get( stress );
+  SpatFldPtr<StressT> velgrad    = SpatialFieldStore<StressT>::self().get( stress );
+  SpatFldPtr<StressT> dilatation = SpatialFieldStore<StressT>::self().get( stress );
 
   velGradOp_   ->apply_to_field( *vel_, *velgrad    );
   viscInterpOp_->apply_to_field( *visc_, stress     );

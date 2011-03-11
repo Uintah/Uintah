@@ -181,7 +181,7 @@ ConvectiveFluxLimiter<PhiInterpT, VelInterpT>::evaluate()
 
 using Wasatch::OpTypes;
 
-#define CONV_FLUX_DECLARE( VOL )	\
+#define CONV_FLUX_DECLARE( VOL )                                        \
   template class ConvectiveFlux< OpTypes<VOL>::InterpC2FX, OperatorTypeBuilder<Interpolant,XVolField,FaceTypes<VOL>::XFace>::type >; \
   template class ConvectiveFlux< OpTypes<VOL>::InterpC2FY, OperatorTypeBuilder<Interpolant,YVolField,FaceTypes<VOL>::YFace>::type >; \
   template class ConvectiveFlux< OpTypes<VOL>::InterpC2FZ, OperatorTypeBuilder<Interpolant,ZVolField,FaceTypes<VOL>::ZFace>::type >;
@@ -191,9 +191,9 @@ CONV_FLUX_DECLARE( XVolField );
 CONV_FLUX_DECLARE( YVolField );
 CONV_FLUX_DECLARE( ZVolField );
 
-#define CONV_FLUX_DECLARE_UPW( VOL )                           \
+#define CONV_FLUX_DECLARE_UPW( VOL )                                    \
   template class ConvectiveFluxLimiter< OpTypes<VOL>::InterpC2FXUpwind, OperatorTypeBuilder<Interpolant,XVolField,FaceTypes<VOL>::XFace>::type >; \
-  template class ConvectiveFluxLimiter< OpTypes<VOL>::InterpC2FYUpwind, OperatorTypeBuilder<Interpolant,YVolField,FaceTypes<VOL>::YFace>::type >;	\
+  template class ConvectiveFluxLimiter< OpTypes<VOL>::InterpC2FYUpwind, OperatorTypeBuilder<Interpolant,YVolField,FaceTypes<VOL>::YFace>::type >; \
   template class ConvectiveFluxLimiter< OpTypes<VOL>::InterpC2FZUpwind, OperatorTypeBuilder<Interpolant,ZVolField,FaceTypes<VOL>::ZFace>::type >;
 
 CONV_FLUX_DECLARE_UPW( SVolField );
@@ -201,10 +201,10 @@ CONV_FLUX_DECLARE_UPW( XVolField );
 CONV_FLUX_DECLARE_UPW( YVolField );
 CONV_FLUX_DECLARE_UPW( ZVolField );
 
-#define CONV_FLUX_LIMITER_DECLARE_LIMITER( VOL )	\
-template class ConvectiveFluxLimiter< OpTypes<VOL>::InterpC2FXLimiter, OperatorTypeBuilder<Interpolant,XVolField,FaceTypes<VOL>::XFace>::type >;	\
-template class ConvectiveFluxLimiter< OpTypes<VOL>::InterpC2FYLimiter, OperatorTypeBuilder<Interpolant,YVolField,FaceTypes<VOL>::YFace>::type >;	\
-template class ConvectiveFluxLimiter< OpTypes<VOL>::InterpC2FZLimiter, OperatorTypeBuilder<Interpolant,ZVolField,FaceTypes<VOL>::ZFace>::type >;
+#define CONV_FLUX_LIMITER_DECLARE_LIMITER( VOL )                        \
+  template class ConvectiveFluxLimiter< OpTypes<VOL>::InterpC2FXLimiter, OperatorTypeBuilder<Interpolant,XVolField,FaceTypes<VOL>::XFace>::type >; \
+  template class ConvectiveFluxLimiter< OpTypes<VOL>::InterpC2FYLimiter, OperatorTypeBuilder<Interpolant,YVolField,FaceTypes<VOL>::YFace>::type >; \
+  template class ConvectiveFluxLimiter< OpTypes<VOL>::InterpC2FZLimiter, OperatorTypeBuilder<Interpolant,ZVolField,FaceTypes<VOL>::ZFace>::type >;
 
 CONV_FLUX_LIMITER_DECLARE_LIMITER( SVolField );
 CONV_FLUX_LIMITER_DECLARE_LIMITER( XVolField );

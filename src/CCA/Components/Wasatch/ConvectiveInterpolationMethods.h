@@ -22,7 +22,7 @@ namespace Wasatch {
     HQUICK
   };
   
-  ConvInterpMethods get_conv_interp_method ( std::string & key );
+  ConvInterpMethods get_conv_interp_method( std::string key );
 
 } // namespace Wasatch
 

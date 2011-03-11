@@ -20,10 +20,26 @@ PrimVar( const Expr::Tag rhoPhiTag,
     rhot_( rhoTag )
 {}
 
+template< typename FieldT >
+PrimVar<FieldT,FieldT>::
+PrimVar( const Expr::Tag rhoPhiTag,
+         const Expr::Tag rhoTag,
+         const Expr::ExpressionID& id,
+         const Expr::ExpressionRegistry& reg  )
+  : Expr::Expression<FieldT>(id,reg),
+    rhophit_( rhoPhiTag ),
+    rhot_( rhoTag )
+{}
+
 //--------------------------------------------------------------------
 
 template< typename FieldT, typename DensT >
 PrimVar<FieldT,DensT>::
+~PrimVar()
+{}
+
+template< typename FieldT >
+PrimVar<FieldT,FieldT>::
 ~PrimVar()
 {}
 
@@ -32,6 +48,15 @@ PrimVar<FieldT,DensT>::
 template< typename FieldT, typename DensT >
 void
 PrimVar<FieldT,DensT>::
+advertise_dependents( Expr::ExprDeps& exprDeps )
+{
+  exprDeps.requires_expression( rhophit_ );
+  exprDeps.requires_expression( rhot_    );
+}
+
+template< typename FieldT >
+void
+PrimVar<FieldT,FieldT>::
 advertise_dependents( Expr::ExprDeps& exprDeps )
 {
   exprDeps.requires_expression( rhophit_ );
@@ -52,6 +77,16 @@ bind_fields( const Expr::FieldManagerList& fml )
   rho_    = &denfm.field_ref( rhot_    );
 }
 
+template< typename FieldT >
+void
+PrimVar<FieldT,FieldT>::
+bind_fields( const Expr::FieldManagerList& fml )
+{
+  const Expr::FieldManager<FieldT>& phifm = fml.template field_manager<FieldT>();
+  rhophi_ = &phifm.field_ref( rhophit_ );
+  rho_    = &phifm.field_ref( rhot_    );
+}
+
 //--------------------------------------------------------------------
 
 template< typename FieldT, typename DensT >
@@ -63,12 +98,6 @@ bind_operators( const SpatialOps::OperatorDatabase& opDB )
   interpOp_ = opDB.retrieve_operator<InterpT>();
 }
 
-template<>
-void
-PrimVar<SVolField,SVolField>::
-bind_operators( const SpatialOps::OperatorDatabase& opDB )
-{}
-
 //--------------------------------------------------------------------
 
 template< typename FieldT, typename DensT >
@@ -76,6 +105,7 @@ void
 PrimVar<FieldT,DensT>::
 evaluate()
 {
+  using namespace SpatialOps;
   FieldT& phi = this->value();
 
   SpatialOps::SpatFldPtr<FieldT> tmp = SpatialOps::SpatialFieldStore<FieldT>::self().get( phi );
@@ -84,12 +114,13 @@ evaluate()
   phi <<= *rhophi_ / *tmp;
 }
 
-template<>
+template< typename FieldT >
 void
-PrimVar<SVolField,SVolField>::
+PrimVar<FieldT,FieldT>::
 evaluate()
 {
-  SVolField& phi = this->value();
+  using namespace SpatialOps;
+  FieldT& phi = this->value();
   phi <<= *rhophi_ / *rho_;
 }
 
@@ -97,6 +128,14 @@ evaluate()
 
 template< typename FieldT, typename DensT >
 PrimVar<FieldT,DensT>::
+Builder::Builder( const Expr::Tag rhoPhiTag,
+                  const Expr::Tag rhoTag )
+  : rhophit_( rhoPhiTag ),
+    rhot_   ( rhoTag    )
+{}
+
+template< typename FieldT >
+PrimVar<FieldT,FieldT>::
 Builder::Builder( const Expr::Tag rhoPhiTag,
                   const Expr::Tag rhoTag )
   : rhophit_( rhoPhiTag ),
@@ -112,6 +151,15 @@ Builder::build( const Expr::ExpressionID& id,
                 const Expr::ExpressionRegistry& reg ) const
 {
   return new PrimVar<FieldT,DensT>( rhophit_, rhot_, id, reg );
+}
+
+template< typename FieldT >
+Expr::ExpressionBase*
+PrimVar<FieldT,FieldT>::
+Builder::build( const Expr::ExpressionID& id,
+                const Expr::ExpressionRegistry& reg ) const
+{
+  return new PrimVar<FieldT,FieldT>( rhophit_, rhot_, id, reg );
 }
 
 //====================================================================
