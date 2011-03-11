@@ -65,7 +65,8 @@ ClassicTableInterface::ClassicTableInterface( const ArchesLabel* labels, const M
 // Default Destructor
 //--------------------------------------------------------------------------- 
 ClassicTableInterface::~ClassicTableInterface()
-{}
+{
+}
 
 //--------------------------------------------------------------------------- 
 // Problem Setup
@@ -99,13 +100,6 @@ ClassicTableInterface::problemSetup( const ProblemSpecP& propertiesParameters )
     }
   } else {
     d_adiabatic = true; 
-  }
-
-  d_coal_table = false; 
-  if ( db_tabprops->findBlock("coal") ) { 
-    d_coal_table = true; 
-    db_tabprops->findBlock("coal")->getAttribute("fp_label",d_fp_label);
-    db_tabprops->findBlock("coal")->getAttribute("eta_label",d_eta_label); 
   }
 
   // need the reference denisty point: (also in PhysicalPropteries object but this was easier than passing it around)
@@ -176,6 +170,17 @@ ClassicTableInterface::problemSetup( const ProblemSpecP& propertiesParameters )
 
   proc0cout << "  Matching sucessful!" << endl;
   proc0cout << endl;
+
+  // create a transform object
+  if ( db_tabprops->findBlock("coal") ) {
+    _iv_transform = scinew CoalTransform(); 
+  } else { 
+    _iv_transform = scinew NoTransform();
+  }
+  bool check_transform = _iv_transform->problemSetup( db_tabprops, d_allIndepVarNames ); 
+  if ( !check_transform ){ 
+    throw ProblemSetupException( "Could not properly setup independent variable transform based on input.",__FILE__,__LINE__); 
+  }
 
   // Confirm that table has been loaded into memory
   d_table_isloaded = true;
@@ -286,9 +291,6 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
     //independent variables:
     std::vector<constCCVariable<double> > indep_storage; 
 
-    int coal_fp_index  = -1; 
-    int coal_eta_index = -1; 
-
     for ( int i = 0; i < (int) d_allIndepVarNames.size(); i++ ){
 
       VarMap::iterator ivar = d_ivVarMap.find( d_allIndepVarNames[i] ); 
@@ -296,25 +298,6 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
       constCCVariable<double> the_var; 
       new_dw->get( the_var, ivar->second, matlIndex, patch, gn, 0 );
       indep_storage.push_back( the_var ); 
-
-      if (d_coal_table) {
-        if ( d_allIndepVarNames[i] == d_fp_label )
-          coal_fp_index = i;
-        if ( d_allIndepVarNames[i] == d_eta_label ) 
-          coal_eta_index = i; 
-      }
-    }
-
-    if ( d_coal_table && coal_fp_index == -1 ) {
-
-      proc0cout << "Could not match PRIMARY mixture fraction label to table variables!" << endl;
-      throw InvalidValue("Error: Please make sure that the label attribute for the coal node child of <TabProps> matches a <TransportEqn> label.", __FILE__, __LINE__);  
-
-    }
-    if ( d_coal_table && coal_eta_index == -1 ) {
-
-      proc0cout << "Could not match ETA mixture fraction label to table variables!" << endl;
-      throw InvalidValue("Error: Please make sure that the label attribute for the coal node child of <TabProps> matches a <TransportEqn> label.", __FILE__, __LINE__);  
 
     }
 
@@ -413,33 +396,8 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
         iv.push_back( (*i)[c] );
       }
 
-      if ( d_coal_table ) { 
-
-        // we transport f_p and eta for coal
-        // need to compute f_p and pass that rather than f 
-        // here we replace the value of f_p with the derived f
-        // please see the white coal book for questions
-
-        double f = 0.0; 
-
-        if ( iv[coal_eta_index] < 1.0 ) {
-
-          f = iv[coal_fp_index] / ( 1.0 - iv[coal_eta_index] ); 
-
-          if ( f < 0.0 )
-            f = 0.0;
-          if ( f > 1.0 )
-            f = 1.0; 
-
-        } else { 
-
-          f = 0.0; 
-
-        }
-
-        iv[coal_fp_index] = f;
-
-      }
+      // do a variable transform (if specified)
+      _iv_transform->transform( iv ); 
 
       // retrieve all depenedent variables from table
       for ( DepVarMap::iterator i = depend_storage.begin(); i != depend_storage.end(); ++i ){
@@ -539,29 +497,7 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
             }
           }
 
-          // if this is coal, we need to compute f from f_p and eta
-          if ( d_coal_table ) { 
-
-            double f = 0.0; 
-
-            if ( iv[coal_eta_index] < 1.0 ) {
-
-              f = iv[coal_fp_index] / ( 1.0 - iv[coal_eta_index] ); 
-
-              if ( f < 0.0 )
-                f = 0.0;
-              if ( f > 1.0 )
-                f = 1.0; 
-
-            } else { 
-
-              f = 0.0; 
-
-            }
-
-            iv[coal_fp_index] = f;
-
-          } 
+          _iv_transform->transform( iv ); 
 
           // now get state for boundary cell: 
           for ( DepVarMap::iterator i = depend_storage.begin(); i != depend_storage.end(); ++i ){
@@ -712,6 +648,8 @@ ClassicTableInterface::computeHeatLoss( const ProcessorGroup* pc,
           index++; 
         }
 
+        _iv_transform->transform( iv ); 
+
         // actually compute the heat loss: 
         IndexMap::iterator i_index = d_enthalpyVarIndexMap.find( "sensibleenthalpy" ); 
         double sensible_enthalpy    = tableLookUp( iv, i_index->second ); 
@@ -825,6 +763,8 @@ ClassicTableInterface::computeFirstEnthalpy( const ProcessorGroup* pc,
         index++; 
       }
 
+      _iv_transform->transform( iv ); 
+
       double current_heat_loss = d_hl_scalar_init; // may want to make this more sophisticated later(?)
       IndexMap::iterator i_index = d_enthalpyVarIndexMap.find( "sensibleenthalpy" ); 
       double sensible_enthalpy    = tableLookUp( iv, i_index->second ); 
@@ -855,32 +795,25 @@ ClassicTableInterface::oldTableHack( const InletStream& inStream, Stream& outStr
     } else if (d_allIndepVarNames[i] == "mixture_fraction_variance") {
       iv[i] = 0.0;
     } else if (d_allIndepVarNames[i] == "mixture_fraction_2") {
-      iv[i] = 0.0; // set below if there is one...just want to make sure it is initialized properly
+      iv[i] = inStream.d_f2; // set below if there is one...just want to make sure it is initialized properly
     } else if (d_allIndepVarNames[i] == "mixture_fraction_variance_2") {
       iv[i] = 0.0; 
     } else if (d_allIndepVarNames[i] == "heat_loss" || d_allIndepVarNames[i] == "HeatLoss") {
-      if ( bc_type == "scalar_init" )
-        iv[i] = d_hl_scalar_init; 
-      else
-        iv[i] = 0.0; 
+      iv[i] = inStream.d_heatloss; 
       if (!calcEnthalpy) {
         iv[i] = 0.0; // override any user input because case is adiabatic
-        if ( d_hl_scalar_init > 0.0 )
-          proc0cout << "NOTICE!: Case is adiabatic so we will ignore your heat loss initialization." << endl;
       }
     }
   }
 
+  _iv_transform->transform( iv ); 
+
   double f                 = 0.0; 
-  double f_2               = 0.0; 
   double adiab_enthalpy    = 0.0; 
   double current_heat_loss = 0.0;
   double init_enthalpy     = 0.0; 
 
   f  = inStream.d_mixVars[0]; 
-  if (inStream.d_has_second_mixfrac){
-    f_2 = inStream.d_f2; 
-  }
 
   if (calcEnthalpy) {
 
