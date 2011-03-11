@@ -2322,7 +2322,9 @@ Properties::addLookupSpecies( ){
 
   if ( mixModel == "ClassicTable"  || mixModel == "TabProps" ) { 
     for ( vector<string>::iterator i = sps.begin(); i != sps.end(); i++ ){
+#ifdef HAVE_TABPROPS
       d_mixingRxnTable->insertIntoMap( *i ); 
+#endif
     }
   }
 }
