@@ -517,6 +517,13 @@ namespace Uintah {
 
       const VarLabel* d_areaFractionLabel; 
 
+      std::vector<std::string> model_req_species;
+
+      inline void add_species( std::string s ) { 
+        model_req_species.push_back( s ); };
+
+      inline std::vector<std::string> get_species( ) { return model_req_species; }; 
+
     }; // End class ArchesLabel
 } // End namespace Uintah
 
