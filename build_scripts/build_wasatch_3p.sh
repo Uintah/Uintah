@@ -91,7 +91,6 @@ SPATIAL_OPS_INSTALL_DIR=$1/Wasatch3P/install/SpatialOps
 run \
 "cmake \
  -DENABLE_TESTS=OFF \
- -DBOOST_CMAKE=OFF \
  -DBOOST_ROOT=$BOOST_DIR \
  \
  -DSpatialOps_DIR=${SPATIAL_OPS_INSTALL_DIR}/share \
