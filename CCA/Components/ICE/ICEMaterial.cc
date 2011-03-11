@@ -133,6 +133,7 @@ ProblemSpecP ICEMaterial::outputProblemSpec(ProblemSpecP& ps)
   ice_ps->appendElement("gamma",d_gamma);
   ice_ps->appendElement("isSurroundingMatl",d_isSurroundingMatl);
   ice_ps->appendElement("includeFlowWork",d_includeFlowWork);
+  ice_ps->appendElement("tiny_rho",d_tiny_rho);
     
   for (vector<GeometryObject*>::const_iterator it = d_geom_objs.begin();
        it != d_geom_objs.end(); it++) {
