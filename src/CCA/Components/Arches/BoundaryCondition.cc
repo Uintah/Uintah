@@ -2442,6 +2442,7 @@ BoundaryCondition::FlowInlet::problemSetup(ProblemSpecP& params)
   if ( input_type == "flat" ) {
 
     double mixfrac;
+    double heatloss; 
     double mixfrac2; 
     mixfrac2 = 0.0; 
 
@@ -2454,6 +2455,9 @@ BoundaryCondition::FlowInlet::problemSetup(ProblemSpecP& params)
       streamMixturefraction.d_f2 = mixfrac2; 
       streamMixturefraction.d_has_second_mixfrac = true;
     }
+
+    params->getWithDefault("heat_loss", heatloss, 0); 
+    streamMixturefraction.d_heatloss = heatloss; 
 
     d_inletScalarType = FlowInlet::SCALAR_FLAT_PROFILE;
 

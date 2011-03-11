@@ -209,6 +209,7 @@
           <InletVelocity                spec="OPTIONAL DOUBLE" />
           <mixture_fraction             spec="REQUIRED DOUBLE" />
           <mixture_fraction_2           spec="OPTIONAL DOUBLE" />
+          <heat_loss                    spec="OPTIONAL DOUBLE" />
           <Prefill                      spec="OPTIONAL NO_DATA"
                                           attribute1="direction REQUIRED STRING 'X, Y, Z'" >
             <geom_object />
