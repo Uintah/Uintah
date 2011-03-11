@@ -70,13 +70,13 @@ MixingRxnModel::MixingRxnModel( const ArchesLabel* labels, const MPMArchesLabel*
 //---------------------------------------------------------------------------
 MixingRxnModel::~MixingRxnModel()
 {
-
   for ( VarMap::iterator i = d_dvVarMap.begin(); i != d_dvVarMap.end(); ++i ){
     VarLabel::destroy( i->second ); 
   }
   for ( VarMap::iterator i = d_ivVarMap.begin(); i != d_ivVarMap.end(); ++i ){
     VarLabel::destroy( i->second ); 
   }
+  delete _iv_transform; 
 }
 
 //---------------------------------------------------------------------------
