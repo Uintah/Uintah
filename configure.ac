@@ -3782,8 +3782,8 @@ if test "$with_spatialops"; then
     fi
     SPOPS_INCLUDE_DIR="include/spatialops"
     # Check includes
-    for file in FieldFunctions.h LinAlgTrilinos.h LinAlgUBlas.h LinearSystem.h OperatorDatabase.h \
-                SpatialOperator.h SpatialOpsConfigure.h SpatialOpsDefs.h SpatialOpsTools.h \
+    for file in FieldExpressions.h FieldFunctions.h OperatorDatabase.h \
+                structured/SpatialField.h SpatialOpsConfigure.h SpatialOpsDefs.h SpatialOpsTools.h \
                 particles structured; do
       if test ! -e $with_spatialops/$SPOPS_INCLUDE_DIR/$file; then
         echo ""
@@ -3800,7 +3800,7 @@ if test "$with_spatialops"; then
   DEF_SPATIALOPS="#define HAVE_SPATIALOPS 1"
   INC_SPATIALOPS_H="-I$with_spatialops/include"
   SPATIALOPS_LIB_DIR_FLAG="-L$with_spatialops/lib/spatialops"
-  SPATIALOPS_LIB_FLAG="-lspatialops"
+  SPATIALOPS_LIB_FLAG="-lspatialops -lspatialops-stencil"
   HAVE_SPATIALOPS="yes"
 fi
 AC_SUBST(HAVE_SPATIALOPS)

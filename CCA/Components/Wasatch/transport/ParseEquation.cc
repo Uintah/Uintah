@@ -173,8 +173,8 @@ namespace Wasatch{
   //==================================================================
   
   std::vector<EqnTimestepAdaptorBase*> parse_momentum_equations( Uintah::ProblemSpecP params,
-                                                    GraphCategories& gc,
-                                                    Uintah::SolverInterface& linSolver )
+                                                                 GraphCategories& gc,
+                                                                 Uintah::SolverInterface& linSolver )
   {
     typedef std::vector<EqnTimestepAdaptorBase*> EquationAdaptors;
     EquationAdaptors adaptors;

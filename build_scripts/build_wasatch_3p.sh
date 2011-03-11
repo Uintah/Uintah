@@ -125,7 +125,7 @@ run \
   -DCMAKE_CXX_LINK_FLAGS=\"-lpthread -lz\" \
   ."
 
-run "make -j4 VERBOSE=true"
+run "make -j4"
 run "make install"
 
 ############################################################################

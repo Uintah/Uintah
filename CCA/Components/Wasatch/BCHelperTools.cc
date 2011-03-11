@@ -27,25 +27,25 @@ namespace Wasatch {
 #define SET_BC( BCEvalT,      /* type of bc evaluator */                \
                 BCT,          /* type of BC */                          \
                 SIDE )                                                  \
-  std::cout<<"SETTING BOUNDARY CONDITION ON "<< phiName <<std::endl; \
+  std::cout<<"SETTING BOUNDARY CONDITION ON "<< phiName <<std::endl;    \
   for( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {            \
     SCIRun::IntVector bc_point_indices(*bound_ptr);                     \
     const SS::IntVec bcPointIJK(bc_point_indices[0],bc_point_indices[1],bc_point_indices[2]); \
     if( staggeredDirection=="X" ){                                      \
       typedef SS::XVolField FieldT;                                     \
-      set_bc< FieldT, BCOpTypeSelector<FieldT,BCEvalT>::BCT >( patch, graphHelper, phiName, bcPointIJK, patchDim, bcx, bcy, bcz, SIDE, bc_value, opdb ); \
+      set_bc< FieldT, BCOpTypeSelector<FieldT,BCEvalT>::BCT >( patch, graphHelper, phiName, bcPointIJK, SIDE, bc_value, opdb ); \
     }                                                                   \
     else if( staggeredDirection=="Y" ){                                 \
       typedef SS::YVolField  FieldT;                                    \
-      set_bc< FieldT, BCOpTypeSelector<FieldT,BCEvalT>::BCT >( patch, graphHelper, phiName, bcPointIJK, patchDim, bcx, bcy, bcz, SIDE, bc_value, opdb ); \
+      set_bc< FieldT, BCOpTypeSelector<FieldT,BCEvalT>::BCT >( patch, graphHelper, phiName, bcPointIJK, SIDE, bc_value, opdb ); \
     }                                                                   \
     else if( staggeredDirection=="Z" ){                                 \
       typedef SS::ZVolField  FieldT;                                    \
-      set_bc< FieldT, BCOpTypeSelector<FieldT,BCEvalT>::BCT >( patch, graphHelper, phiName, bcPointIJK, patchDim, bcx, bcy, bcz, SIDE, bc_value, opdb ); \
+      set_bc< FieldT, BCOpTypeSelector<FieldT,BCEvalT>::BCT >( patch, graphHelper, phiName, bcPointIJK, SIDE, bc_value, opdb ); \
     }                                                                   \
     else{                                                               \
       typedef SS::SVolField  FieldT;                                    \
-      set_bc< FieldT, BCOpTypeSelector<FieldT,BCEvalT>::BCT >( patch, graphHelper, phiName, bcPointIJK, patchDim, bcx, bcy, bcz, SIDE, bc_value, opdb ); \
+      set_bc< FieldT, BCOpTypeSelector<FieldT,BCEvalT>::BCT >( patch, graphHelper, phiName, bcPointIJK, SIDE, bc_value, opdb ); \
     }                                                                   \
   }
 
@@ -80,10 +80,6 @@ namespace Wasatch {
                const GraphHelper& gh,
                const std::string& phiName,
                const SpatialOps::structured::IntVec& bcPointIndex,
-               const SpatialOps::structured::IntVec& patchDim, //send in the patch dimension to avoid calculating it for every point!
-               const bool bcx,
-               const bool bcy,
-               const bool bcz,
                const SpatialOps::structured::BCSide bcSide,
                const double bcValue,
                const SpatialOps::OperatorDatabase& opdb )
@@ -93,8 +89,7 @@ namespace Wasatch {
     const Expr::Tag phiLabel( phiName, Expr::STATE_N );
     const Expr::ExpressionID phiID = factory.get_registry().get_id(phiLabel);
     Expr::Expression<FieldT>& phiExpr = dynamic_cast<Expr::Expression<FieldT>&>( factory.retrieve_expression( phiID, patch->getID(), true ) );
-    cout << "setting bc on expression '" << phiExpr.name() << "' with address " << &phiExpr << endl;
-    BCOpT bcOp( patchDim, bcx, bcy, bcz, bcPointIndex, bcSide, BCEvaluator(bcValue), opdb );
+    BCOpT bcOp( bcPointIndex, bcSide, BCEvaluator(bcValue), opdb );
     phiExpr.process_after_evaluate( bcOp );
   }
   
@@ -111,26 +106,21 @@ namespace Wasatch {
                               std::string& bc_kind )
   {
     SCIRun::Iterator nu;
-    const Uintah::BoundCondBase* bc = patch->getArrayBCValues(face, mat_id,
-                                                              desc, bound_ptr,
-                                                              nu, child);
-    const Uintah::BoundCond<T>* new_bcs;
-    new_bcs =  dynamic_cast<const Uintah::BoundCond<T> *>(bc);
+    const Uintah::BoundCondBase* bc = patch->getArrayBCValues( face, mat_id,
+                                                               desc, bound_ptr,
+                                                               nu, child );
+    const Uintah::BoundCond<T>* new_bcs = dynamic_cast<const Uintah::BoundCond<T>*>(bc);
     
     bc_value=T(-9);
     bc_kind="NotSet";
     if (new_bcs != 0) {      // non-symmetric
       bc_value = new_bcs->getValue();
       bc_kind =  new_bcs->getBCType__NEW();
-    }        
+    }
     delete bc;
     
     // Did I find an iterator
-    if( bc_kind == "NotSet" ){
-      return false;
-    }else{
-      return true;
-    }
+    return( bc_kind != "NotSet" );
   }
   
   //-----------------------------------------------------------------------------
@@ -187,44 +177,32 @@ namespace Wasatch {
           // get a pointer to the current patch
           const Uintah::Patch* const patch = patches->get(ipss);          
           
-          //
-          const IntVector lo = patch->getCellLowIndex();
-          const IntVector hi = patch->getCellHighIndex();
-          const IntVector uintahPatchDim = hi - lo;
-          const SS::IntVec patchDim( uintahPatchDim[0], uintahPatchDim[1], uintahPatchDim[2] );
-          
-          // get plus face information
-          const bool bcx = (*patch).getBCType(Uintah::Patch::xplus) != Uintah::Patch::Neighbor;
-          const bool bcy = (*patch).getBCType(Uintah::Patch::yplus) != Uintah::Patch::Neighbor;
-          const bool bcz = (*patch).getBCType(Uintah::Patch::zplus) != Uintah::Patch::Neighbor;          
-          
-          // setup some info
-          std::vector<Uintah::Patch::FaceType>::const_iterator faceIterator;
-          std::vector<Uintah::Patch::FaceType> bndFaces;
-          patch->getBoundaryFaces(bndFaces);
-          
           // get the patch info from which we can get the operators database
           const PatchInfoMap::const_iterator ipi = patchInfoMap.find( patch->getID() );
           assert( ipi != patchInfoMap.end() );
-          const SpatialOps::OperatorDatabase& opdb = *(ipi->second.operators);          
+          const SpatialOps::OperatorDatabase& opdb = *(ipi->second.operators);
           
           // loop over materials
           for( int im=0; im<materials->size(); ++im ){
             
             const int materialID = materials->get(im);
+
+            std::vector<Uintah::Patch::FaceType> bndFaces;
+            patch->getBoundaryFaces(bndFaces);
+            std::vector<Uintah::Patch::FaceType>::const_iterator faceIterator = bndFaces.begin();
                         
-            // now loop over the boundary faces
-            for (faceIterator = bndFaces.begin(); faceIterator !=bndFaces.end(); faceIterator++){
+            // loop over the boundary faces
+            for( ; faceIterator!=bndFaces.end(); ++faceIterator ){
               Uintah::Patch::FaceType face = *faceIterator;
               
               //get the number of children
-              int numChildren = patch->getBCDataArray(face)->getNumberChildren(materialID);
+              const int numChildren = patch->getBCDataArray(face)->getNumberChildren(materialID);
               
-              for (int child = 0; child < numChildren; child++){
-                //
+              for( int child = 0; child<numChildren; ++child ){
+
                 double bc_value = -9; 
                 std::string bc_kind = "NotSet";
-                SCIRun::Iterator bound_ptr;                
+                SCIRun::Iterator bound_ptr;
                 bool foundIterator = get_iter_bcval_bckind( patch, face, child, phiName, materialID, bc_value, bound_ptr, bc_kind);
                 
                 if (foundIterator) {
@@ -232,24 +210,12 @@ namespace Wasatch {
                   if (bc_kind == "Dirichlet") {
 
                     switch( face ){
-                    case Uintah::Patch::xminus:
-                      SET_BC( BCEvaluator, DirichletX, SpatialOps::structured::X_MINUS_SIDE );
-                      break;
-                    case Uintah::Patch::xplus:
-                      SET_BC( BCEvaluator, DirichletX, SpatialOps::structured::X_PLUS_SIDE );
-                      break;
-                    case Uintah::Patch::yminus:
-                      SET_BC( BCEvaluator, DirichletY, SpatialOps::structured::Y_MINUS_SIDE );
-                      break;
-                    case Uintah::Patch::yplus:
-                      SET_BC( BCEvaluator, DirichletY, SpatialOps::structured::Y_PLUS_SIDE );
-                      break;
-                    case Uintah::Patch::zminus:
-                      SET_BC( BCEvaluator, DirichletZ, SpatialOps::structured::Z_MINUS_SIDE );
-                      break;
-                    case Uintah::Patch::zplus:
-                      SET_BC( BCEvaluator, DirichletZ, SpatialOps::structured::Z_PLUS_SIDE );
-                      break;
+                    case Uintah::Patch::xminus:  SET_BC( BCEvaluator, DirichletX, SpatialOps::structured::X_MINUS_SIDE );  break;
+                    case Uintah::Patch::xplus :  SET_BC( BCEvaluator, DirichletX, SpatialOps::structured::X_PLUS_SIDE  );  break;
+                    case Uintah::Patch::yminus:  SET_BC( BCEvaluator, DirichletY, SpatialOps::structured::Y_MINUS_SIDE );  break;
+                    case Uintah::Patch::yplus :  SET_BC( BCEvaluator, DirichletY, SpatialOps::structured::Y_PLUS_SIDE  );  break;
+                    case Uintah::Patch::zminus:  SET_BC( BCEvaluator, DirichletZ, SpatialOps::structured::Z_MINUS_SIDE );  break;
+                    case Uintah::Patch::zplus :  SET_BC( BCEvaluator, DirichletZ, SpatialOps::structured::Z_PLUS_SIDE  );  break;
                     case Uintah::Patch::numFaces:
                       throw Uintah::ProblemSetupException( "numFaces is not a valid face", __FILE__, __LINE__ );
                       break;
@@ -261,24 +227,12 @@ namespace Wasatch {
                   } else if (bc_kind == "Neumann") {
 
                     switch( face ){
-                    case Uintah::Patch::xminus:
-                      SET_BC( BCEvaluator, NeumannX, SpatialOps::structured::X_MINUS_SIDE );
-                      break;
-                    case Uintah::Patch::xplus:
-                      SET_BC( BCEvaluator, NeumannX, SpatialOps::structured::X_PLUS_SIDE );
-                      break;
-                    case Uintah::Patch::yminus:
-                      SET_BC( BCEvaluator, NeumannY, SpatialOps::structured::Y_MINUS_SIDE );
-                      break;
-                    case Uintah::Patch::yplus:
-                      SET_BC( BCEvaluator, NeumannY, SpatialOps::structured::Y_PLUS_SIDE );
-                      break;
-                    case Uintah::Patch::zminus:
-                      SET_BC( BCEvaluator, NeumannZ, SpatialOps::structured::Z_MINUS_SIDE );
-                      break;
-                    case Uintah::Patch::zplus:
-                      SET_BC( BCEvaluator, NeumannZ, SpatialOps::structured::Z_PLUS_SIDE );
-                      break;
+                    case Uintah::Patch::xminus:  SET_BC( BCEvaluator, NeumannX, SpatialOps::structured::X_MINUS_SIDE );  break;
+                    case Uintah::Patch::xplus :  SET_BC( BCEvaluator, NeumannX, SpatialOps::structured::X_PLUS_SIDE  );  break;
+                    case Uintah::Patch::yminus:  SET_BC( BCEvaluator, NeumannY, SpatialOps::structured::Y_MINUS_SIDE );  break;
+                    case Uintah::Patch::yplus :  SET_BC( BCEvaluator, NeumannY, SpatialOps::structured::Y_PLUS_SIDE  );  break;
+                    case Uintah::Patch::zminus:  SET_BC( BCEvaluator, NeumannZ, SpatialOps::structured::Z_MINUS_SIDE );  break;
+                    case Uintah::Patch::zplus :  SET_BC( BCEvaluator, NeumannZ, SpatialOps::structured::Z_PLUS_SIDE  );  break;
                     case Uintah::Patch::numFaces:
                       throw Uintah::ProblemSetupException( "numFaces is not a valid face", __FILE__, __LINE__ );
                       break;

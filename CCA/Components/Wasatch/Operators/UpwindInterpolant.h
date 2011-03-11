@@ -42,27 +42,13 @@
 template < typename PhiVolT, typename PhiFaceT >
 class UpwindInterpolant {
   
-private:
-  
   // Here, the advectivevelocity has been already interpolated to the phi cell 
   // faces. The destination field should be of the same type as the advective 
   // velocity, i.e. a staggered, cell centered field.
   const PhiFaceT* advectiveVelocity_; 
-  // An integer denoting the offset for the face index owned by the control 
-  // volume in question. For the x direction, theStride = 0. 
-  // For the y direction, stride_ = nx. For the z direction, stride_=nx*ny.
-  size_t stride_; 
-  // some counters to help in the evaluate member function
-  std::vector<size_t> faceCount_;
-  std::vector<size_t> volIncr_;
-  std::vector<size_t> faceIncr_;
   
 public:
   
-  typedef typename PhiVolT::Ghost      SrcGhost;
-  typedef typename PhiVolT::Location   SrcLocation;
-  typedef typename PhiFaceT::Ghost     DestGhost;
-  typedef typename PhiFaceT::Location  DestLocation;
   typedef PhiVolT SrcFieldType;
   typedef PhiFaceT DestFieldType;
   
@@ -73,8 +59,7 @@ public:
    *  \param hasPlusFace: Determines if this patch has a physical
    *         boundary on its plus side.
    */
-  UpwindInterpolant( const std::vector<int>& dim,
-                     const std::vector<bool> hasPlusFace );
+  UpwindInterpolant();
   
   /**
    *  \brief Destructor for upwind interpolant.
@@ -88,13 +73,13 @@ public:
    *         velocity field. This must be of the same type as the
    *         destination field, i.e. a face centered field.
    */
-  void set_advective_velocity (const PhiFaceT &theAdvectiveVelocity);
+  void set_advective_velocity( const PhiFaceT &theAdvectiveVelocity );
   
   /**
    *   \brief Sets the flux limiter type to be used by this interpolant.
    *   \param limiterType: An enum that holds the limiter name.
    */
-  void set_flux_limiter_type (Wasatch::ConvInterpMethods limiterType){}
+  void set_flux_limiter_type( Wasatch::ConvInterpMethods limiterType ){}
   
   /**
    *  \brief Applies the Upwind interpolation to the source field.
@@ -106,7 +91,7 @@ public:
    *         hold the convective flux \phi*u_i in the direction i. It
    *         will be stored on the staggered cell centers.
    */
-  void apply_to_field(const PhiVolT &src, PhiFaceT &dest) const; 
+  void apply_to_field( const PhiVolT &src, PhiFaceT &dest );
   
 };
 

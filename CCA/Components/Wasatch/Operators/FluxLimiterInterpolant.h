@@ -92,7 +92,7 @@ public:
    *         boundary on its plus side.
    */
   FluxLimiterInterpolant( const std::vector<int>& dim,
-                      const std::vector<bool> hasPlusFace );
+                          const std::vector<bool> hasPlusFace );
   
   /**
    *  \brief Destructor for flux limiter interpolant.

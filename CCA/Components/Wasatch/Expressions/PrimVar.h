@@ -57,4 +57,42 @@ public:
 
 };
 
+
+
+template< typename FieldT >
+class PrimVar<FieldT,FieldT>
+ : public Expr::Expression<FieldT>
+{
+  const Expr::Tag rhophit_, rhot_;
+
+  const FieldT* rho_;
+  const FieldT* rhophi_;
+
+  PrimVar( const Expr::Tag rhoPhiTag,
+           const Expr::Tag rhoTag,
+           const Expr::ExpressionID& id,
+           const Expr::ExpressionRegistry& reg );
+
+public:
+  class Builder : public Expr::ExpressionBuilder
+  {
+  public:
+    Builder( const Expr::Tag rhoPhiTag,
+             const Expr::Tag rhoTag );
+    
+    Expr::ExpressionBase*
+    build( const Expr::ExpressionID& id,
+           const Expr::ExpressionRegistry& reg ) const;
+
+  private:
+  const Expr::Tag rhophit_, rhot_;
+  };
+
+  ~PrimVar();
+
+  void advertise_dependents( Expr::ExprDeps& exprDeps );
+  void bind_fields( const Expr::FieldManagerList& fml );
+  void evaluate();
+};
+
 #endif // PrimVar_Expr_h

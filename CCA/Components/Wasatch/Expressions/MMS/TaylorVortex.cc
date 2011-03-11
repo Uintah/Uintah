@@ -51,6 +51,7 @@ void
 VelocityX<ValT>::
 evaluate()
 {
+  using namespace SpatialOps;
   ValT& phi = this->value();
   phi <<= 1.0 - A_ * cos( *x_ - *t_ ) * sin( *y_ - *t_ ) * exp( -2.0 * nu_ * *t_ );
 }
@@ -135,6 +136,7 @@ void
 VelocityY<ValT>::
 evaluate()
 {
+  using namespace SpatialOps;
   ValT& phi = this->value();
   phi <<= 1.0 + A_ * sin( *x_ - *t_ ) * cos( *y_ - *t_ ) * exp( -2.0*nu_ * *t_ );
 }
@@ -219,6 +221,7 @@ void
 GradPX<ValT>::
 evaluate()
 {
+  using namespace SpatialOps;
   ValT& phi = this->value();
   phi <<= -1.0*(A_*A_/2.0) * sin( 2.0*( *x_ - *t_ ) ) * exp( -4.0*nu_ * *t_ );
 }
@@ -303,6 +306,7 @@ void
 GradPY<ValT>::
 evaluate()
 {
+  using namespace SpatialOps;
   ValT& phi = this->value();
   phi <<= -1.0*(A_*A_/2.0) * sin( 2.0*(*y_-*t_) ) * exp(-4.0 * nu_ * *t_);
 }
