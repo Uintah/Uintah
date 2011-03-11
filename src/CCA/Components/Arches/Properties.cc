@@ -89,7 +89,7 @@ Properties::Properties(const ArchesLabel* label,
                        d_calcReactingScalar(calcReactingScalar),
                        d_calcEnthalpy(calcEnthalpy),
                        d_calcVariance(calcVariance),
-                                           d_myworld(myworld)
+                       d_myworld(myworld)
 {
   d_DORadiationCalc = false;
   d_radiationCalc = false;
@@ -203,6 +203,20 @@ Properties::problemSetup(const ProblemSpecP& params)
     // New Classic interface
     d_mixingRxnTable = scinew ClassicTableInterface( d_lab, d_MAlab ); 
     d_mixingRxnTable->problemSetup( db ); 
+    // At this time, these all need to be false:
+    d_co_output       = false;
+    if (d_sulfur_chem) {
+      proc0cout << "Warning!: The old sulfur_chem boolean is not compatible with TabProps.  I am going to set it to false. " << endl;
+      d_sulfur_chem     = false;
+    }
+    if (d_soot_precursors) {
+      proc0cout << "Warning!: The soot_precursors boolean is not compatible with TabProps.  I am going to set it to false. " << endl; 
+      d_soot_precursors = false;
+    }
+    if (d_tabulated_soot) {
+      proc0cout << "Warning!: The tabulated soot mechanism (tabulated_soot) is not active yet when using TabProps.  I am going to set it to false. " << endl;
+      d_tabulated_soot  = false;
+    }
 	} else if (mixModel == "ColdFlow") {
 		d_mixingRxnTable = scinew ColdFlow( d_lab, d_MAlab ); 
 		d_mixingRxnTable->problemSetup( db ); 
@@ -2299,4 +2313,16 @@ Properties::sched_doTPDummyInit( const LevelP& level, SchedulerP& sched )
 #if HAVE_TABPROPS
   d_mixingRxnTable->sched_dummyInit( level, sched ); 
 #endif 
+}
+void 
+Properties::addLookupSpecies( ){
+
+  std::vector<std::string> sps; 
+  sps = d_lab->model_req_species; 
+
+  if ( mixModel == "ClassicTable"  || mixModel == "TabProps" ) { 
+    for ( vector<string>::iterator i = sps.begin(); i != sps.end(); i++ ){
+      d_mixingRxnTable->insertIntoMap( *i ); 
+    }
+  }
 }

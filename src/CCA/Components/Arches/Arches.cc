@@ -650,6 +650,9 @@ Arches::problemSetup(const ProblemSpecP& params,
 
   // register any other source terms:
   registerSources(); 
+
+  // Add extra species to table lookup as required by models
+  d_props->addLookupSpecies(); 
 }
 
 // ****************************************************************************

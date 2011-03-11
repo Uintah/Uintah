@@ -139,6 +139,23 @@ namespace Uintah {
       /** @brief Return a string list of dependent variables names in the order they were read */ 
       inline std::vector<string>& getAllDepVars(){ return d_allDepVarNames; };
 
+      /** @brief  Insert the name of a dependent variable into the dependent variable map (dvVarMap), which maps strings to VarLabels */
+      inline void insertIntoMap( const string var_name ){
+
+        VarMap::iterator i = d_dvVarMap.find( var_name ); 
+
+        if ( i == d_dvVarMap.end() ) {
+
+          const VarLabel* the_label = VarLabel::create( var_name, CCVariable<double>::getTypeDescription() ); 
+
+          i = d_dvVarMap.insert( make_pair( var_name, the_label ) ).first; 
+
+          proc0cout << "    ---> " << var_name << endl; 
+
+        } 
+        return; 
+      };
+
     protected :
 
       class TransformBase { 
@@ -247,22 +264,6 @@ namespace Uintah {
       std::vector<string> d_allIndepVarNames; ///< Vector storing all independent variable names from table file
       std::vector<string> d_allDepVarNames;   ///< Vector storing all dependent variable names from the table file
 
-      /** @brief  Insert the name of a dependent variable into the dependent variable map (dvVarMap), which maps strings to VarLabels */
-      inline void insertIntoMap( const string var_name ){
-
-        VarMap::iterator i = d_dvVarMap.find( var_name ); 
-
-        if ( i == d_dvVarMap.end() ) {
-
-          const VarLabel* the_label = VarLabel::create( var_name, CCVariable<double>::getTypeDescription() ); 
-
-          i = d_dvVarMap.insert( make_pair( var_name, the_label ) ).first; 
-
-          proc0cout << "    ---> " << var_name << endl; 
-
-        } 
-        return; 
-      };
 
       /** @brief Insert a varLabel into the map where the varlabel has been created elsewhere */ 
       inline void insertExisitingLabelIntoMap( const string var_name ){ 

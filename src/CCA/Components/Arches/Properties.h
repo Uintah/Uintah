@@ -216,6 +216,8 @@ public:
   }
 #endif
 
+  void addLookupSpecies( ); 
+
   //for the new table:
   void sched_reComputeProps_new( const LevelP&,
                                  SchedulerP&,
