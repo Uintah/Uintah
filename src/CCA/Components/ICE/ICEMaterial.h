@@ -100,7 +100,8 @@ WARNING
    double getSpecificHeat() const;
    double getThermalConductivity() const;
    double getInitialDensity() const;
-   
+   double getTinyRho() const;
+
    void initializeCells(CCVariable<double>& rhom,
                      CCVariable<double>& rhC,
                      CCVariable<double>& temp, 

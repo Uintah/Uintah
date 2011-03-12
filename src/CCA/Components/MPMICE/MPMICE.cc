@@ -113,8 +113,9 @@ MPMICE::MPMICE(const ProcessorGroup* myworld,
   Mlb=d_mpm->lb;
 
   d_SMALL_NUM = d_ice->d_SMALL_NUM;
-  d_TINY_RHO  = d_ice->d_TINY_RHO;
-  
+  d_TINY_RHO  = 1.e-12;  // Note, within MPMICE, d_TINY_RHO is only applied
+                         // to MPM materials, for which its value is hardcoded,
+                         // unlike the situation for ice materials
 
   d_switchCriteria = 0;
   d_analysisModule = 0;
@@ -1478,7 +1479,7 @@ void MPMICE::computeLagrangianValuesMPM(const ProcessorGroup*,
                                                     iter++){
           IntVector c = *iter;
           //  must have a minimum mass
-          double min_mass = d_TINY_RHO * cellVol;
+          double min_mass = very_small_mass;
           double inv_cmass = 1.0/cmass[c];
           mass_L[c] = std::max( (cmass[c] + modelMass_src[c] ), min_mass);
 

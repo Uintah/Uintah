@@ -114,7 +114,6 @@ ICE::ICE(const ProcessorGroup* myworld, const bool doAMR) :
   d_dbgVar2   = 0;
   d_EVIL_NUM  = -9.99e30;                                                    
   d_SMALL_NUM = 1.0e-100;                                                   
-  d_TINY_RHO  = 1.0e-12;   // also defined ICEMaterial.cc and MPMMaterial.cc   
   d_modelInfo = 0;
   d_modelSetup = 0;
   d_analysisModule = 0;
@@ -4258,9 +4257,11 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,
      CCVariable<Vector> mom_L; 
      CCVariable<double> int_eng_L; 
      CCVariable<double> mass_L;
+     double tiny_rho = 1.e-12;
      if(ice_matl)  {               //  I C E
       constCCVariable<double> rho_CC, temp_CC, cv, int_eng_source;
       constCCVariable<Vector> vel_CC, mom_source, mom_comb;
+      tiny_rho = ice_matl->getTinyRho();
 
       Ghost::GhostType  gn = Ghost::None;
       new_dw->get(cv,             lb->specific_heatLabel,    indx,patch,gn,0);
@@ -4310,7 +4311,7 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,
          IntVector c = *iter;
            //  must have a minimum mass
           double mass = rho_CC[c] * vol;
-          double min_mass = d_TINY_RHO * vol;
+          double min_mass = tiny_rho * vol;
 
           mass_L[c] = std::max( (mass + modelMass_src[c] ), min_mass);
 
@@ -4488,6 +4489,11 @@ void ICE::computeLagrangianSpecificVolume(const ProcessorGroup*,
       new_dw->allocateAndPut(sp_vol_L,  lb->sp_vol_L_CCLabel,   indx,patch);
       new_dw->allocateAndPut(sp_vol_src,lb->sp_vol_src_CCLabel, indx,patch);
       sp_vol_src.initialize(0.);
+      double tiny_rho = 1.e-12;
+      ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
+      if (ice_matl) {
+        tiny_rho = ice_matl->getTinyRho();
+      }
 
       new_dw->get(sp_vol_CC,  lb->sp_vol_CCLabel,     indx,patch,gn, 0);
       new_dw->get(rho_CC,     lb->rho_CCLabel,        indx,patch,gn, 0);
@@ -4543,7 +4549,7 @@ void ICE::computeLagrangianSpecificVolume(const ProcessorGroup*,
         for(CellIterator iter=patch->getCellIterator();!iter.done();iter++){
           IntVector c = *iter;
 /*`==========TESTING==========*/
-          sp_vol_L[c] = max(sp_vol_L[c], d_TINY_RHO * vol * sp_vol_CC[c]);
+          sp_vol_L[c] = max(sp_vol_L[c], tiny_rho * vol * sp_vol_CC[c]);
 /*==========TESTING==========`*/
         }
       }

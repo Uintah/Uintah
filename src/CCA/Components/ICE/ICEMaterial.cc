@@ -154,6 +154,11 @@ double ICEMaterial::getGamma() const
   return d_gamma;
 }
 
+double ICEMaterial::getTinyRho() const
+{
+  return d_tiny_rho;
+}
+
 double ICEMaterial::getViscosity() const
 {
   return d_viscosity;
