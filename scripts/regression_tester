@@ -398,8 +398,12 @@ compare_results () {
     # gold standard uda and pass it to compare_uda
     
     uda_tmp=`echo $uda |tr "[/]" "[ ]"`  # eliminate "/" from $uda
-    goldStandard=`find $test_dir/$DIR/$CASE/$n -maxdepth 3 -type d -name $uda_tmp`
 
+    goldStandard=`find $test_dir/$DIR/$CASE/$n -maxdepth 3 -type d -name $uda_tmp`
+    if [ $? -eq 1 ]; then
+    	goldStandard=`find $test_dir/$DIR/$CASE/ -maxdepth 3 -type d -name $uda_tmp`
+    fi
+    
     echo "Comparing $uda results against '$goldStandard'"
         
     echo   "Running command: ../compare_uda $compare_uda_options $goldStandard $uda"
