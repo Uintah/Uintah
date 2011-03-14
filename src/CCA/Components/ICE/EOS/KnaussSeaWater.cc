@@ -112,19 +112,8 @@ void KnaussSeaWater::computePressEOS(double rhoM, double gamma,
 {
   // Pointwise computation of thermodynamic quantities
   press   = d_P0 + (1./d_k)*((rhoM-d_rho0) - d_a*(Temp-d_T0) - d_b*(d_S-d_S0));
-//  cout << "press = " << press << endl;
-//  cout << "Temp = " << Temp << endl;
-//  cout << "rhoM = " << rhoM << endl;
-//  cout << "T0 = " << d_T0 << endl;
-//  cout << "rho0 = " << d_rho0 << endl;
-//  cout << "b = " << d_b << endl;
   dp_drho = 1./d_k;
   dp_de   = -d_a/d_k;
-
-//  press   = (gamma - 1.0)*rhoM*cv*Temp;
-//  dp_drho = (gamma - 1.0)*cv*Temp;
-//  dp_de   = (gamma - 1.0)*rhoM;
-
 }
 //__________________________________
 // Return (1/v)*(dv/dT)  (constant pressure thermal expansivity)
