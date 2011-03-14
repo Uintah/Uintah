@@ -7,7 +7,7 @@ SRCS += \
         $(SRCDIR)/ClassicTableInterface.cc \
 				$(SRCDIR)/ColdFlow.cc 
 
-ifeq ($(HAVE_TABPROPS),yes)
+ifeq ($(HAVE_TABPROPS_FIX),yes)
 	SRCS += $(SRCDIR)/TabPropsInterface.cc
 endif
 
