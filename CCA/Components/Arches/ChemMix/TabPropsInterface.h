@@ -34,6 +34,7 @@ DEALINGS IN THE SOFTWARE.
 #define Uintah_Component_Arches_TabPropsInterface_h
 
 #include <tabprops/StateTable.h>
+#include <tabprops/Archive.h>
 #include <CCA/Components/Arches/ArchesMaterial.h>
 #include <CCA/Components/Arches/TimeIntegratorLabel.h>
 

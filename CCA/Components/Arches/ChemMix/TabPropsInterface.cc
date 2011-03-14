@@ -107,16 +107,20 @@ TabPropsInterface::problemSetup( const ProblemSpecP& propertiesParameters )
   const ProblemSpecP db_root = db_tabprops->getRootNode(); 
   db_root->findBlock("PhysicalConstants")->require("reference_point", d_ijk_den_ref);  
 
-  // Check for and deal with filename extension
-  // - if table file name has .h5 extension, remove it
-  // - otherwise, assume it is an .h5 file but no extension was given
-  string extension (tableFileName.end()-3,tableFileName.end());
-  if( extension == ".h5" || extension == ".H5" ) {
-    tableFileName = tableFileName.substr( 0, tableFileName.size() - 3 );
-  }
-  
-  // Load data from HDF5 file into StateTable
-  d_statetbl.read_hdf5(tableFileName);
+  // // Check for and deal with filename extension
+  // // - if table file name has .h5 extension, remove it
+  // // - otherwise, assume it is an .h5 file but no extension was given
+  // string extension (tableFileName.end()-3,tableFileName.end());
+  // if( extension == ".h5" || extension == ".H5" ) {
+  //   tableFileName = tableFileName.substr( 0, tableFileName.size() - 3 );
+  // }
+  // 
+  // // Load data from HDF5 file into StateTable
+  // d_statetbl.read_hdf5(tableFileName);
+
+  std::ifstream inFile( tableFileName.c_str(), std::ios_base::in ); 
+  InputArchive ia( inFile );
+  ia >> BOOST_SERIALIZATION_NVP( d_statetbl ); 
 
   // Extract independent and dependent variables from input file
   ProblemSpecP db_rootnode = propertiesParameters;
