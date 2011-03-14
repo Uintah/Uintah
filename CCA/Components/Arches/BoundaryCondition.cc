@@ -6761,7 +6761,6 @@ BoundaryCondition::sched_setInitProfile__NEW(SchedulerP& sched,
                                        const PatchSet* patches,
                                        const MaterialSet* matls)
 {
-#if HAVE_TABPROPS
   // cell type initialization
   Task* tsk = scinew Task("BoundaryCondition::setInitProfile__NEW",
                           this, &BoundaryCondition::setInitProfile__NEW);
@@ -6792,7 +6791,6 @@ BoundaryCondition::sched_setInitProfile__NEW(SchedulerP& sched,
   }
 
   sched->addTask(tsk, patches, matls);
-#endif 
 }
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void 

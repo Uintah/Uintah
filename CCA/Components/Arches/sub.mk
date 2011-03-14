@@ -126,11 +126,8 @@ SUBDIRS := $(SRCDIR)/CoalModels        \
            $(SRCDIR)/Radiation         \
            $(SRCDIR)/Radiation/fortran \
            $(SRCDIR)/SourceTerms       \
-           $(SRCDIR)/TransportEqns  
-
-ifeq ($(HAVE_TABPROPS),yes)
-  SUBDIRS += $(SRCDIR)/ChemMix
-endif
+           $(SRCDIR)/TransportEqns  \
+					 $(SRCDIR)/ChemMix
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 #### End handle subdirs

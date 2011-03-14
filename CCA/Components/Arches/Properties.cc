@@ -35,9 +35,9 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Arches/ArchesLabel.h>
 #if HAVE_TABPROPS
 # include <CCA/Components/Arches/ChemMix/TabPropsInterface.h>
+#endif 
 # include <CCA/Components/Arches/ChemMix/ClassicTableInterface.h>
 # include <CCA/Components/Arches/ChemMix/ColdFlow.h>
-#endif
 #include <CCA/Components/Arches/Mixing/MixingModel.h>
 #include <CCA/Components/Arches/Mixing/ColdflowMixingModel.h>
 #include <CCA/Components/Arches/Mixing/MOMColdflowMixingModel.h>
@@ -145,11 +145,11 @@ Properties::problemSetup(const ProblemSpecP& params)
 #if HAVE_TABPROPS
   else if (db->findBlock("TabProps"))
     mixModel = "TabProps";
+#endif 
   else if (db->findBlock("ClassicTable"))
     mixModel = "ClassicTable";
 	else if (db->findBlock("ColdFlow"))
 		mixModel = "ColdFlow";
-#endif
   else
     throw InvalidValue("ERROR!: No mixing/reaction table specified! If you are attempting to use the new TabProps interface, ensure that you configured properly with TabProps.",__FILE__,__LINE__);
 
@@ -199,7 +199,9 @@ Properties::problemSetup(const ProblemSpecP& params)
       proc0cout << "Warning!: The tabulated soot mechanism (tabulated_soot) is not active yet when using TabProps.  I am going to set it to false. " << endl;
       d_tabulated_soot  = false;
     }
-  } else if (mixModel == "ClassicTable") { 
+  }
+#endif 
+  else if (mixModel == "ClassicTable") { 
     // New Classic interface
     d_mixingRxnTable = scinew ClassicTableInterface( d_lab, d_MAlab ); 
     d_mixingRxnTable->problemSetup( db ); 
@@ -221,7 +223,6 @@ Properties::problemSetup(const ProblemSpecP& params)
 		d_mixingRxnTable = scinew ColdFlow( d_lab, d_MAlab ); 
 		d_mixingRxnTable->problemSetup( db ); 
   }
-#endif
   else if (mixModel == "pdfMixingModel" || mixModel == "SteadyFlameletsTable"
         || mixModel == "flameletModel"  || mixModel == "StaticMixingTable"
         || mixModel == "meanMixingModel" ){
@@ -320,12 +321,13 @@ Properties::computeInletProperties(const InletStream& inStream,
 #if HAVE_TABPROPS
   else if ( mixModel == "TabProps"){
     d_mixingRxnTable->oldTableHack( inStream, outStream, d_calcEnthalpy, bc_type ); 
-  } else if ( mixModel == "ClassicTable"){
+  }
+#endif 
+  else if ( mixModel == "ClassicTable"){
     d_mixingRxnTable->oldTableHack( inStream, outStream, d_calcEnthalpy, bc_type ); 
   } else if ( mixModel == "ColdFlow" ) {
 		// nothing to do here -- put here as a place holder until Properties is deleted
   }
-#endif
   else {
     throw InvalidValue("Mixing Model not supported", __FILE__, __LINE__);
   }
@@ -2292,27 +2294,21 @@ Properties::sched_reComputeProps_new( const LevelP& level,
                                       const bool initialize, 
                                       const bool modify_ref_den )
 {
-#if HAVE_TABPROPS
   // this method is temporary while we get rid of properties.cc 
   d_mixingRxnTable->sched_computeHeatLoss( level, sched, initialize, d_calcEnthalpy );
 
   d_mixingRxnTable->sched_getState( level, sched, time_labels, initialize, d_calcEnthalpy, modify_ref_den ); 
-#endif  
 }
 
 void 
 Properties::sched_initEnthalpy( const LevelP& level, SchedulerP& sched )
 {
-#if HAVE_TABPROPS
   d_mixingRxnTable->sched_computeFirstEnthalpy( level, sched ) ; 
-#endif
 }
 void 
 Properties::sched_doTPDummyInit( const LevelP& level, SchedulerP& sched )
 {
-#if HAVE_TABPROPS
   d_mixingRxnTable->sched_dummyInit( level, sched ); 
-#endif 
 }
 void 
 Properties::addLookupSpecies( ){
@@ -2322,9 +2318,7 @@ Properties::addLookupSpecies( ){
 
   if ( mixModel == "ClassicTable"  || mixModel == "TabProps" ) { 
     for ( vector<string>::iterator i = sps.begin(); i != sps.end(); i++ ){
-#ifdef HAVE_TABPROPS
       d_mixingRxnTable->insertIntoMap( *i ); 
-#endif
     }
   }
 }

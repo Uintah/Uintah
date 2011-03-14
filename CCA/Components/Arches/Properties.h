@@ -210,11 +210,9 @@ public:
   inline const string getMixingModelType(){
     return mixModel; 
   }
-#if HAVE_TABPROPS
   inline MixingRxnModel* getMixRxnModel(){
     return d_mixingRxnTable; 
   }
-#endif
 
   void addLookupSpecies( ); 
 
@@ -332,9 +330,8 @@ private:
       IntVector d_denRef;
       
       MixingModel* d_mixingModel;
-#if HAVE_TABPROPS
       MixingRxnModel* d_mixingRxnTable;
-#endif
+
       BoundaryCondition* d_bc;
       bool d_empirical_soot;
       double d_sootFactor;

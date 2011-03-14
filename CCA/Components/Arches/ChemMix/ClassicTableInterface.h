@@ -33,7 +33,6 @@ DEALINGS IN THE SOFTWARE.
 #ifndef Uintah_Component_Arches_ClassicTableInterface_h
 #define Uintah_Component_Arches_ClassicTableInterface_h
 
-#include <tabprops/StateTable.h>
 #include <CCA/Components/Arches/Mixing/InletStream.h>
 #include <CCA/Components/Arches/Mixing/Stream.h>
 #include <CCA/Components/Arches/ArchesMaterial.h>
