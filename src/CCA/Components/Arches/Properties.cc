@@ -33,7 +33,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Arches/Properties.h>
 #include <CCA/Components/Arches/Arches.h>
 #include <CCA/Components/Arches/ArchesLabel.h>
-#if HAVE_TABPROPS
+#if HAVE_TABPROPS_FIX
 # include <CCA/Components/Arches/ChemMix/TabPropsInterface.h>
 #endif 
 # include <CCA/Components/Arches/ChemMix/ClassicTableInterface.h>
@@ -142,7 +142,7 @@ Properties::problemSetup(const ProblemSpecP& params)
     mixModel = "StandardTable"; 
   else if (db->findBlock("MOMColdFlowMixingModel"))
     mixModel = "MOMcoldFlowMixingModel"; 
-#if HAVE_TABPROPS
+#if HAVE_TABPROPS_FIX
   else if (db->findBlock("TabProps"))
     mixModel = "TabProps";
 #endif 
@@ -180,7 +180,7 @@ Properties::problemSetup(const ProblemSpecP& params)
                                                   d_calcVariance);
     d_reactingFlow = false;
   }
-#if HAVE_TABPROPS
+#if HAVE_TABPROPS_FIX
   else if (mixModel == "TabProps") {
     // New TabPropsInterface stuff...
     d_mixingRxnTable = scinew TabPropsInterface( d_lab, d_MAlab );
@@ -318,7 +318,7 @@ Properties::computeInletProperties(const InletStream& inStream,
   else if (dynamic_cast<const StandardTable*>(d_mixingModel)) {
     d_mixingModel->computeProps(inStream, outStream);
   }
-#if HAVE_TABPROPS
+#if HAVE_TABPROPS_FIX
   else if ( mixModel == "TabProps"){
     d_mixingRxnTable->oldTableHack( inStream, outStream, d_calcEnthalpy, bc_type ); 
   }

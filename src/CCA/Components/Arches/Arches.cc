@@ -70,7 +70,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Arches/PropertyModels/ABSKP.h>
 #include <CCA/Components/Arches/PropertyModels/ExtentRxn.h>
 #include <CCA/Components/Arches/PropertyModels/TabStripFactor.h>
-#if HAVE_TABPROPS
+#if HAVE_TABPROPS_FIX
 #  include <CCA/Components/Arches/ChemMix/TabPropsInterface.h>
 #endif 
 
