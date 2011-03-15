@@ -6,12 +6,10 @@
 #
 # $1 - location to build the 3P
 # $2 - boost location
-# $3 - hdf5 location
 #
 
 BASE_BUILD_DIR=$1
 BOOST_DIR=$2
-HDF5_DIR=$3
 
 ############################################################################
 
@@ -44,7 +42,6 @@ echo "------------------------------------------------------------------"
 echo "Building Wasatch Thirdparty Libraries..."
 echo ""
 echo "  Using Boost: $BOOST_DIR"
-echo "  Using HDF5:  $HDF5_DIR"
 echo ""
 
 ############################################################################
@@ -69,7 +66,6 @@ run \
  -DENABLE_TESTS=OFF \
  -DENABLE_STENCIL=ON \
  -DBOOST_ROOT=$BOOST_DIR \
- -DHDF5_DIR=$HDF5_DIR \
  -DCMAKE_INSTALL_PREFIX=${INSTALL_HERE} \
  -DCMAKE_CXX_FLAGS="-fPIC" \
  ."
@@ -119,7 +115,7 @@ run \
 "cmake \
   -DTabProps_PREPROCESSOR=OFF \
   -DBoostOutput=ON \
-  -DHDF5_DIR=$HDF5_DIR \
+  -DBOOST_ROOT=$BOOST_DIR \
   -DCMAKE_INSTALL_PREFIX=${INSTALL_HERE} \
   -DCMAKE_CXX_FLAGS=-fPIC \
   -DCMAKE_CXX_LINK_FLAGS=\"-lpthread -lz\" \
