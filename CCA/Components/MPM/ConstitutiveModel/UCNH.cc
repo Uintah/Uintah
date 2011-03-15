@@ -727,7 +727,14 @@ void UCNH::initializeCMData(const Patch* patch,
     }  else if (d_epsf.dist == "gauss"){
       // Initialize a gaussian random number generator
 
-     SCIRun::Gaussian gaussGen(d_epsf.mean,d_epsf.std,d_epsf.seed,
+      // Make the seed differ for each patch, otherwise each patch gets the
+      // same set of random #s.
+      int patchID = patch->getID();
+      int patch_div_32 = patchID/32;
+      patchID = patchID%32;
+      unsigned int unique_seed = ((d_epsf.seed+patch_div_32+1) << patchID);
+
+     SCIRun::Gaussian gaussGen(d_epsf.mean,d_epsf.std,unique_seed,
                                 d_epsf.refVol,d_epsf.exponent);
       
       for(;iter != pset->end();iter++){
@@ -737,8 +744,16 @@ void UCNH::initializeCMData(const Patch* patch,
       }
     } else if (d_epsf.dist == "weibull"){
       // Initialize a weibull random number generator
+
+      // Make the seed differ for each patch, otherwise each patch gets the
+      // same set of random #s.
+      int patchID = patch->getID();
+      int patch_div_32 = patchID/32;
+      patchID = patchID%32;
+      unsigned int unique_seed = ((d_epsf.seed+patch_div_32+1) << patchID);
+
       SCIRun::Weibull weibGen(d_epsf.mean,d_epsf.std,d_epsf.refVol,
-                              d_epsf.seed,d_epsf.exponent);
+                              unique_seed,d_epsf.exponent);
       
       for(;iter != pset->end();iter++){
         pBeBar[*iter]         = Identity;
