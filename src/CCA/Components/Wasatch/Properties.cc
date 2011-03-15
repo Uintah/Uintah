@@ -7,9 +7,14 @@
 //--- ExprLib includes ---//
 #include <expression/ExpressionFactory.h>
 
+//--- TabProps includes ---//
+#include <tabprops/Archive.h>
+
 //--- Uintah includes ---//
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
+
+#include <fstream>
 
 using std::cout;
 using std::endl;
@@ -29,12 +34,14 @@ namespace Wasatch{
 
     StateTable table;
     try{
-      table.read_hdf5( fileName );
+      std::ifstream inFile( (fileName+".tbl").c_str(), std::ios_base::in );
+      InputArchive ia(inFile);
+      ia >> BOOST_SERIALIZATION_NVP(table);
     }
     catch( std::exception& e ){
       std::ostringstream msg;
       msg << e.what() << std::endl << std::endl
-          << "Could not open TabProps file '" << fileName << ".h5'" << std::endl
+          << "Could not open TabProps file '" << fileName << ".tbl'" << std::endl
           << "Check to ensure that the file exists in the run dir." << std::endl
           << std::endl;
       throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );

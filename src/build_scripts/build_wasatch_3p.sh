@@ -118,7 +118,7 @@ INSTALL_HERE=$1/Wasatch3P/install/TabProps
 run \
 "cmake \
   -DTabProps_PREPROCESSOR=OFF \
-  -DBoostOutput=OFF \
+  -DBoostOutput=ON \
   -DHDF5_DIR=$HDF5_DIR \
   -DCMAKE_INSTALL_PREFIX=${INSTALL_HERE} \
   -DCMAKE_CXX_FLAGS=-fPIC \
