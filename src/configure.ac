@@ -3739,9 +3739,9 @@ if test "$wasatch_3p" = "yes"; then
   if test "$HAVE_BOOST" != "yes"; then
       AC_MSG_ERROR( Option --enable-wasatch_3p requires Boost... <--with-boost=DIR> )
   fi
-  if test "$HAVE_HDF5" != "yes"; then
-      AC_MSG_ERROR( Option --enable-wasatch_3p requires HDF5... <--with-hdf5=DIR> )
-  fi
+#  if test "$HAVE_HDF5" != "yes"; then
+#      AC_MSG_ERROR( Option --enable-wasatch_3p requires HDF5... <--with-hdf5=DIR> )
+#  fi
   if test "$with_tabprops"; then
      AC_MSG_ERROR( Do NOT specify both --with-tabprops and --enable-wasatch_3p )
   fi
