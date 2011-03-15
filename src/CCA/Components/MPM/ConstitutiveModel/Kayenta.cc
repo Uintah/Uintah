@@ -362,7 +362,15 @@ void Kayenta::initializeCMData(const Patch* patch,
   ParticleVariable<double> peakI1IDist;
   new_dw->allocateAndPut(peakI1IDist, peakI1IDistLabel, pset);
   if ( wdist.Perturb){
-    SCIRun::Weibull weibGen(wdist.WeibMed,wdist.WeibMod,wdist.WeibRefVol,wdist.WeibSeed,wdist.WeibMod);
+      // Make the seed differ for each patch, otherwise each patch gets the
+      // same set of random #s.
+      int patchID = patch->getID();
+      int patch_div_32 = patchID/32;
+      patchID = patchID%32;
+      unsigned int unique_seed = ((wdist.WeibSeed+patch_div_32+1) << patchID);
+
+    SCIRun::Weibull weibGen(wdist.WeibMed,wdist.WeibMod,wdist.WeibRefVol,
+                            unique_seed,wdist.WeibMod);
     proc0cout << "Weibull Variables for PEAKI1I: (initialize CMData)\n"
             << "Median:            " << wdist.WeibMed
             << "\nModulus:         " << wdist.WeibMod
