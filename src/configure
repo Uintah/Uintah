@@ -40698,7 +40698,7 @@ if test "$wasatch_3p" = "yes"; then
   fi
 
   mkdir -p Wasatch3P
-  $path_to_src/build_scripts/build_wasatch_3p.sh `$sci_pwd` "$with_boost" "$with_hdf5"
+  $path_to_src/build_scripts/build_wasatch_3p.sh `$sci_pwd` "$with_boost"
 
   if test $? != 0; then
      as_fn_error $? "Failed to build Wasatch 3p libraries... " "$LINENO" 5
@@ -40845,8 +40845,8 @@ fi
 ##  --  Determine whether we can use WASATCH OR NOT ----------------------
 
 if test "$USE_WASATCH" = yes; then
-  if test "$HAVE_HDF5" = "yes" &&
-     test "$HAVE_BOOST" = "yes" &&
+#  if test "$HAVE_HDF5" = "yes" &&
+   if test "$HAVE_BOOST" = "yes" &&
      test "$HAVE_TABPROPS" = "yes" &&
      test "$HAVE_SPATIALOPS" = "yes" &&
      test "$HAVE_EXPRLIB" = "yes"; then
@@ -40855,8 +40855,8 @@ if test "$USE_WASATCH" = yes; then
     as_fn_error $? "You specified the use of the Wasatch component but do not have all the of the prereqs: HDF5 ($HAVE_HDF5); Boost ($HAVE_BOOST); TabProps ($HAVE_TABPROPS); SpatialOps ($HAVE_SPATIALOPS); and ExprLib ($HAVE_EXPRLIB)." "$LINENO" 5
   fi
 else
-  if test "$HAVE_HDF5" = "yes" &&
-     test "$HAVE_BOOST" = "yes" &&
+#  if test "$HAVE_HDF5" = "yes" &&
+  if test "$HAVE_BOOST" = "yes" &&
      test "$HAVE_TABPROPS" = "yes" &&
      test "$HAVE_SPATIALOPS" = "yes" &&
      test "$HAVE_EXPRLIB" = "yes"; then
