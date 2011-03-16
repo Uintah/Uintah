@@ -659,6 +659,9 @@ void Kayenta::computeStressTensor(const PatchSubset* patches,
 
     peakI1IDist_new.copyData(peakI1IDist);
 
+    constParticleVariable<long64> pParticleID;
+    old_dw->get(pParticleID, lb->pParticleIDLabel, pset);
+
     StaticArray<ParticleVariable<double> > ISVs_new(d_NINSV+1);
     for(int i=0;i<d_NINSV;i++){
       new_dw->allocateAndPut(ISVs_new[i],ISVLabels_preReloc[i], pset);
@@ -815,10 +818,12 @@ void Kayenta::computeStressTensor(const PatchSubset* patches,
 	    // Compute the local sound speed
 	    double rho_cur = rho_orig/J;
 
-	    // NEED TO FIND R
-	    Matrix3 tensorR, tensorU;
-      //Comment by KC: Computing tensorR at the beginning of the time-step
-	    deformationGradient[idx].polarDecompositionRMB(tensorU, tensorR);
+            // NEED TO FIND R
+            Matrix3 tensorR, tensorU;
+
+            //Comment by KC: Computing tensorR at the beginning of the timestep
+            deformationGradient[idx].polarDecompositionAFFinvTran(tensorU,
+                                                                  tensorR);
 
 	    // This is the previous timestep Cauchy stress
 	    // unrotated tensorSig=R^T*pstress*R
@@ -853,11 +858,9 @@ void Kayenta::computeStressTensor(const PatchSubset* patches,
 	    for(int i=0;i<d_NINSV;i++){
 	      svarg[i]=ISVs[i][idx];
 	    }
-	    constParticleVariable<long64> pParticleID;
-	    old_dw->get(pParticleID, lb->pParticleIDLabel, pset);
-
 	    // 'Hijack' UI[42] with perturbed value if desired
 	    // put real value of UI[42] in tmp var just in case
+            //cout << pParticleID[idx] << endl;
 	    if (wdist.Perturb){
 	      double tempVar = UI[42];
 	      UI[42] = peakI1IDist[idx];
@@ -888,8 +891,9 @@ void Kayenta::computeStressTensor(const PatchSubset* patches,
 	    tensorSig(2,0) = sigarg[5];
 	    tensorSig(0,2) = sigarg[5];
 
-      //Comment by KC : Computing tensorR at the end of the time-step
-	    deformationGradient_new[idx].polarDecompositionRMB(tensorU, tensorR);
+           //Comment by KC : Computing tensorR at the end of the time-step
+           deformationGradient_new[idx].polarDecompositionAFFinvTran(tensorU,
+                                                                     tensorR);
 
 	    // ROTATE pstress_new: S=R*tensorSig*R^T
 	    pstress_new[idx] = (tensorR*tensorSig)*(tensorR.Transpose());
