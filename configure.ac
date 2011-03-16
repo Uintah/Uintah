@@ -3893,8 +3893,8 @@ AC_SUBST(TABPROPS_LIB_DIR_FLAG)
 ##  --  Determine whether we can use WASATCH OR NOT ----------------------
 
 if test "$USE_WASATCH" = yes; then
-  if test "$HAVE_HDF5" = "yes" &&
-     test "$HAVE_BOOST" = "yes" &&
+#  if test "$HAVE_HDF5" = "yes" &&
+   if test "$HAVE_BOOST" = "yes" &&
      test "$HAVE_TABPROPS" = "yes" &&
      test "$HAVE_SPATIALOPS" = "yes" &&
      test "$HAVE_EXPRLIB" = "yes"; then
@@ -3903,8 +3903,8 @@ if test "$USE_WASATCH" = yes; then
     AC_MSG_ERROR(You specified the use of the Wasatch component but do not have all the of the prereqs: HDF5 ($HAVE_HDF5); Boost ($HAVE_BOOST); TabProps ($HAVE_TABPROPS); SpatialOps ($HAVE_SPATIALOPS); and ExprLib ($HAVE_EXPRLIB).)
   fi
 else
-  if test "$HAVE_HDF5" = "yes" &&
-     test "$HAVE_BOOST" = "yes" &&
+#  if test "$HAVE_HDF5" = "yes" &&
+  if test "$HAVE_BOOST" = "yes" &&
      test "$HAVE_TABPROPS" = "yes" &&
      test "$HAVE_SPATIALOPS" = "yes" &&
      test "$HAVE_EXPRLIB" = "yes"; then
