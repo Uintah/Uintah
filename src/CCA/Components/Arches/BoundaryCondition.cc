@@ -6800,7 +6800,7 @@ BoundaryCondition::setInitProfile__NEW(const ProcessorGroup*,
                                 DataWarehouse*,
                                 DataWarehouse* new_dw)
 {
-#if HAVE_TABPROPS_FIX
+#if HAVE_TABPROPS
   for (int p = 0; p < patches->size(); p++) {
 
     const Patch* patch = patches->get(p);
@@ -6899,7 +6899,7 @@ void BoundaryCondition::setEnthalpy__NEW( const Patch* patch, const Patch::FaceT
     CCVariable<double>& enthalpy, BoundaryCondition::HelperMap ivGridVarMap, BoundaryCondition::HelperVec allIndepVarNames, 
     Iterator bound_ptr)
 {
-#if HAVE_TABPROPS_FIX
+#if HAVE_TABPROPS
   //get the face direction
   IntVector insideCellDir = patch->faceDirection(face);
   MixingRxnModel* mixingTable = d_props->getMixRxnModel(); 
