@@ -167,14 +167,17 @@ namespace Uintah {
     // Returns right stretch and rotation if rightFlag == true
     // Returns left stretch and rotation if rightFlag == false
     UINTAHSHARE void polarDecomposition(Matrix3& stretch,
-                            Matrix3& rotation,
-                            double tolerance,
-                            bool rightFlag) const;
+                                        Matrix3& rotation,
+                                        double tolerance,
+                                        bool rightFlag) const;
 
-    UINTAHSHARE void polarDecompositionRMB(Matrix3& U,
-                                    Matrix3& R) const;
+    UINTAHSHARE void polarDecompositionRMB(Matrix3& U, Matrix3& R) const;
 
     UINTAHSHARE void polarRotationRMB(Matrix3& R) const;
+
+    UINTAHSHARE void polarDecompositionAFFinvTran(Matrix3& U, Matrix3& R) const;
+
+    UINTAHSHARE void polarRotationAFFinvTran(Matrix3& R) const;
 
     // Returns number of real, unique eigen values and passes
     // back the values.  If it returns 1, the value is passed back
