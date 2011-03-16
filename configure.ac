@@ -3858,12 +3858,6 @@ AC_SUBST(EXPRLIB_LIB_DIR_FLAG)
 
 if test "$with_tabprops"; then
 
-  if test "$HAVE_HDF5" != "yes"; then
-    # I think HDF5 is optional now for TabProps, but am not quite sure... 
-    AC_MSG_WARN( --with-tabprops=DIR might require HDF5... )
-    add_important_warning "--with-tabprops was specified, but HDF5 was not... this might cause a problem."
-  fi
-
   if test "$with_tabprops" = "yes"; then
     AC_MSG_ERROR( --with-tabprops=DIR requires a DIRectory be provided. )
   else
@@ -3893,17 +3887,15 @@ AC_SUBST(TABPROPS_LIB_DIR_FLAG)
 ##  --  Determine whether we can use WASATCH OR NOT ----------------------
 
 if test "$USE_WASATCH" = yes; then
-#  if test "$HAVE_HDF5" = "yes" &&
    if test "$HAVE_BOOST" = "yes" &&
      test "$HAVE_TABPROPS" = "yes" &&
      test "$HAVE_SPATIALOPS" = "yes" &&
      test "$HAVE_EXPRLIB" = "yes"; then
     BUILD_WASATCH=yes
   else
-    AC_MSG_ERROR(You specified the use of the Wasatch component but do not have all the of the prereqs: HDF5 ($HAVE_HDF5); Boost ($HAVE_BOOST); TabProps ($HAVE_TABPROPS); SpatialOps ($HAVE_SPATIALOPS); and ExprLib ($HAVE_EXPRLIB).)
+    AC_MSG_ERROR(You specified the use of the Wasatch component but do not have all the of the prereqs: Boost ($HAVE_BOOST); TabProps ($HAVE_TABPROPS); SpatialOps ($HAVE_SPATIALOPS); and ExprLib ($HAVE_EXPRLIB).)
   fi
 else
-#  if test "$HAVE_HDF5" = "yes" &&
   if test "$HAVE_BOOST" = "yes" &&
      test "$HAVE_TABPROPS" = "yes" &&
      test "$HAVE_SPATIALOPS" = "yes" &&

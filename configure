@@ -40807,13 +40807,6 @@ fi
 
 if test "$with_tabprops"; then
 
-  if test "$HAVE_HDF5" != "yes"; then
-    # I think HDF5 is optional now for TabProps, but am not quite sure...
-    { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: --with-tabprops=DIR might require HDF5... " >&5
-$as_echo "$as_me: WARNING: --with-tabprops=DIR might require HDF5... " >&2;}
-    add_important_warning "--with-tabprops was specified, but HDF5 was not... this might cause a problem."
-  fi
-
   if test "$with_tabprops" = "yes"; then
     as_fn_error $? "--with-tabprops=DIR requires a DIRectory be provided. " "$LINENO" 5
   else
@@ -40845,17 +40838,15 @@ fi
 ##  --  Determine whether we can use WASATCH OR NOT ----------------------
 
 if test "$USE_WASATCH" = yes; then
-#  if test "$HAVE_HDF5" = "yes" &&
    if test "$HAVE_BOOST" = "yes" &&
      test "$HAVE_TABPROPS" = "yes" &&
      test "$HAVE_SPATIALOPS" = "yes" &&
      test "$HAVE_EXPRLIB" = "yes"; then
     BUILD_WASATCH=yes
   else
-    as_fn_error $? "You specified the use of the Wasatch component but do not have all the of the prereqs: HDF5 ($HAVE_HDF5); Boost ($HAVE_BOOST); TabProps ($HAVE_TABPROPS); SpatialOps ($HAVE_SPATIALOPS); and ExprLib ($HAVE_EXPRLIB)." "$LINENO" 5
+    as_fn_error $? "You specified the use of the Wasatch component but do not have all the of the prereqs: Boost ($HAVE_BOOST); TabProps ($HAVE_TABPROPS); SpatialOps ($HAVE_SPATIALOPS); and ExprLib ($HAVE_EXPRLIB)." "$LINENO" 5
   fi
 else
-#  if test "$HAVE_HDF5" = "yes" &&
   if test "$HAVE_BOOST" = "yes" &&
      test "$HAVE_TABPROPS" = "yes" &&
      test "$HAVE_SPATIALOPS" = "yes" &&
