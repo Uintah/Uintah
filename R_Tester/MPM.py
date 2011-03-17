@@ -30,7 +30,7 @@ NIGHTLYTESTS = [
                  ("heatcond2mat",                   "heatcond2mat.ups",                   1,  "Linux", ["exactComparison"]),    \
                  ("inclined_plane_sphere",          "inclined_plane_sphere.ups",          1,  "Linux", ["exactComparison"]),    \
                  ("foam_crush",                     "foam_crush.ups",                     4,  "Linux", ["exactComparison"]),    \
-                 ("periodic_disks",                 "periodic_disks.ups",                 6,  "Linux", ["exactComparison"]),    \
+                 ("periodic_disks",                 "periodic_disks.ups",                 1,  "Linux", ["exactComparison"]),    \
                  ("periodic_spheres3D",             "periodic_spheres3D.ups",             8,  "Linux", ["exactComparison"]),    \
                  ("const_test_hypo",                "const_test_hypo.ups",                1,  "Linux", ["exactComparison"]),    \
                  ("const_test_cmr",                 "const_test_cmr.ups",                 1,  "Linux", ["exactComparison"]),    \
@@ -67,7 +67,7 @@ LOCALTESTS = [
                  ("heatcond2mat",                   "heatcond2mat.ups",                   1,  "Linux", ["exactComparison"]),    \
                  ("inclined_plane_sphere",          "inclined_plane_sphere.ups",          1,  "Linux", ["exactComparison"]),    \
                  ("foam_crush",                     "foam_crush.ups",                     4,  "Linux", ["exactComparison"]),    \
-                 ("periodic_disks",                 "periodic_disks.ups",                 6,  "Linux", ["exactComparison"]),    \
+                 ("periodic_disks",                 "periodic_disks.ups",                 1,  "Linux", ["exactComparison"]),    \
                  ("periodic_spheres3D",             "periodic_spheres3D.ups",             8,  "Linux", ["exactComparison"]),    \
                  ("const_test_hypo",                "const_test_hypo.ups",                1,  "Linux", ["exactComparison"]),    \
                  ("const_test_cmr",                 "const_test_cmr.ups",                 1,  "Linux", ["exactComparison"]),    \
