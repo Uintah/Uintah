@@ -7,6 +7,7 @@ DEFAULT_REMAKE_LOG_TO="dav@cs.utah.edu"
 DO_DBG="1"
 DO_OPT="1"
 LOCAL_OR_NIGHTLY_TEST="nightly"
+WHICH_TESTS="nightly"
 MAIL_REMAKE_LOG_TO=""
 MONTHLYBACKUP="no"
 NOTESTS="0"
@@ -168,7 +169,7 @@ fi
 
 
 PATH="$PATH":"$SCRIPT_DIR":/usr/bin:/local/bin:/usr/sci/local/bin/:/usr/gnu/bin:/usr/local/bin:/bin:/usr/lib:.
-export PATH NOTESTS COMPILE LOCAL_OR_NIGHTLY_TEST GROUP CHECKPOINTS
+export PATH NOTESTS COMPILE LOCAL_OR_NIGHTLY_TEST WHICH_TESTS GROUP CHECKPOINTS
 
 # set number of processors to use when building
 if [ $PARALLELISM -eq 0 ]; then
