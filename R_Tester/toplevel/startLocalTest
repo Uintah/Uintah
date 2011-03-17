@@ -157,8 +157,7 @@ for componentTest in $selectedCompTests; do
   # tests for that component
 
   "./$doTestScript" | tee "${componentTest}.log"
-
-  retval=$?
+  retval=${PIPESTATUS[0]}
 
   echo ""
   echo ""
