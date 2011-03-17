@@ -8,12 +8,14 @@
 # define environmental variables and export them
 HTMLLOG=""
 LOCAL_OR_NIGHTLY_TEST="local"
+WHICH_TESTS=${WHICH_TESTS:="local"}  #default value is local, it can be set by the buildbot
 OS=`uname -s`
 PARALLELISM=8
 WEBLOG=""
 BUILD_DIR=/dev/null
 
-export BUILD_DIR  HTMLLOG WEBLOG LOCAL_OR_NIGHTLY_TEST OS
+echo "WHICH_TESTS: $WHICH_TESTS"
+export BUILD_DIR  HTMLLOG WEBLOG LOCAL_OR_NIGHTLY_TEST WHICH_TESTS OS
 
 #__________________________________
 unset SHELL
