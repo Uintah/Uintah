@@ -601,13 +601,21 @@ BoundaryCondition::cellTypeInit(const ProcessorGroup*,
         GeometryPieceP  piece = d_intrusionBC->d_geomPiece[ii];
         Box geomBox = piece->getBoundingBox();
         Box b = geomBox.intersect(patchInteriorBox);
-        if (!(b.degenerate())) {
+        if ( !(b.degenerate()) && !d_intrusionBC->inverse ) {
           for (CellIterator iter = patch->getCellCenterIterator(b);!iter.done(); iter++) {
             Point p = patch->cellPosition(*iter);
-            if (piece->inside(p)) 
+            if ( piece->inside(p) ) {
               cellType[*iter] = d_intrusionBC->d_cellTypeID;
+            } 
           }
-        }
+        } else if ( d_intrusionBC->inverse ) { 
+          for (CellIterator iter = patch->getCellIterator();!iter.done(); iter++) {
+            Point p = patch->cellPosition(*iter);
+            if ( !piece->inside(p) ) {
+              cellType[*iter] = d_intrusionBC->d_cellTypeID;
+            } 
+          }
+        } 
       }
     }
   }
@@ -2285,6 +2293,11 @@ BoundaryCondition::IntrusionBdry::problemSetup(ProblemSpecP& params)
     d_temperature = 300;
   ProblemSpecP geomObjPS = params->findBlock("geom_object");
   GeometryPieceFactory::create(geomObjPS, d_geomPiece);
+
+  inverse = false; 
+
+  if ( params->findBlock( "inverse" ) )
+    inverse = true; 
 
 }
 

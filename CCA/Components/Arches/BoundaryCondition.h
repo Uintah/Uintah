@@ -937,6 +937,7 @@ namespace Uintah {
         int d_cellTypeID;
         double area;
         double d_temperature;
+        bool inverse; 
         // stores the geometry information, read from problem specs
         std::vector<GeometryPieceP> d_geomPiece;
         IntrusionBdry(int cellID);
