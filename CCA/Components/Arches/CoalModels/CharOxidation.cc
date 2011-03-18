@@ -18,7 +18,7 @@ using namespace Uintah;
 
 CharOxidation::CharOxidation( std::string modelName, 
                                               SimulationStateP& sharedState,
-                                              const ArchesLabel* fieldLabels,
+                                              ArchesLabel* fieldLabels,
                                               vector<std::string> icLabelNames, 
                                               vector<std::string> scalarLabelNames,
                                               int qn ) 
@@ -77,6 +77,7 @@ CharOxidation::problemSetup(const ProblemSpecP& params, int qn)
 
   d_w_small = weight_eqn.getSmallClip();
   d_w_scaling_constant = weight_eqn.getScalingConstant();
+
 }
 
 void

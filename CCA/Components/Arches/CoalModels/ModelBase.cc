@@ -9,7 +9,7 @@ using namespace Uintah;
 
 ModelBase::ModelBase( std::string modelName, 
                       SimulationStateP& sharedState,
-                      const ArchesLabel* fieldLabels,
+                      ArchesLabel* fieldLabels,
                       vector<std::string> reqICLabelNames, 
                       vector<std::string> reqScalarLabelNames,
                       int qn ) : 
