@@ -224,6 +224,8 @@
 
         <intrusions                     spec="OPTIONAL NO_DATA" >
           <geom_object                  spec="MULTIPLE"/>
+          <temperature                  spec="OPTIONAL DOUBLE 'positive'"/>
+          <inverse                      spec="OPTIONAL NO_DATA"/>
         </intrusions>
 
         <PressureBC                     spec="OPTIONAL NO_DATA" >
