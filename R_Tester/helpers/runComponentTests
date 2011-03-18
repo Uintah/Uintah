@@ -4,7 +4,7 @@
 # run:  This shell script
 #         - runs a component's test
 #         - set locks if a component's tests fails.
-# environmental Variables: $OS $BUILD_DIR, $BUILDROOT, $HTMLLOG, $PARALLELISM, $WEBLOG
+# environmental Variables: $OS $BUILD_DIR, $BUILDROOT, $HTMLLOG, $PARALLELISM, $WEBLOG $LOCAL_OR_NIGHTLY_TEST $WHICH_TEST
 
 mode=$1
 componentTest=$2
@@ -27,12 +27,7 @@ echo "setenv PATH $PATH"                                   >> "$doTestScript"
 echo "setenv OS $OS"                                       >> "$doTestScript"
 echo "setenv SCI_DEBUG \"\""                               >> "$doTestScript"
 echo "setenv LOCAL_OR_NIGHTLY_TEST $LOCAL_OR_NIGHTLY_TEST" >> "$doTestScript"
-
-#echo "#!/bin/sh"                                         > "$doTestScript"
-#echo "PATH=$PATH"                                   >> "$doTestScript"
-#echo "OS=$OS"                                       >> "$doTestScript"
-#echo "SCI_DEBUG=' \"\"' "                              >> "$doTestScript"
-#echo "LOCAL_OR_NIGHTLY_TEST=$LOCAL_OR_NIGHTLY_TEST" >> "$doTestScript"
+echo "setenv WHICH_TESTS $WHICH_TESTS"                     >> "$doTestScript"
 
 echo "python TestScripts/$componentTest.py susdir inputs goldStandard $mode $PARALLELISM "'$1' >> "$doTestScript"
 
