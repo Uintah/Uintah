@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 import os
 import shutil
+import platform
 from optparse import OptionParser
 from sys import argv, exit
 from string import upper
@@ -19,12 +20,13 @@ if os.sys.version_info <= (2,4):
 
 import subprocess
 
-from helpers.runSusTests import nameoftest, input, num_processes, testOS, setGeneratingGoldStandards
+from helpers.runSusTests import nameoftest, testOS, input, num_processes, testOS, setGeneratingGoldStandards
 
 ####################################################################################
 
 sus    = ""   # full path to sus executable
 inputs = ""   # full path to src/Standalone/inputs/
+OS     = platform.system()
 
 ####################################################################################
 
@@ -236,13 +238,27 @@ def generateGS() :
             print "Python importing " + component + ".py"
         THE_COMPONENT = __import__( component )
 
-        tests = THE_COMPONENT.getLocalTests()
+        # determine which tests (local/nightly) to run default is local
+        whichTests = os.getenv( 'WHICH_TESTS', "local" )
         
+        print "Which_tests: %s " % whichTests
+        if whichTests == "local" :
+            tests = THE_COMPONENT.getLocalTests()
+        elif whichTests == "nightly" :
+            tests = THE_COMPONENT.getNightlyTests()
+        else :
+            print "\nThe environmental variable WHICH_TESTS:(%s) is not valid" % whichTests
+            print "the valid options are local or nightly. \n"
+            exit (-1)
+          
+                  
         if options.verbose :
             print "About to run tests for: " + component
 
         for test in tests :
-
+            if testOS( test ) != upper( OS ) and testOS( test ) != "ALL":
+                continue
+              
             # FIXME: NOT SURE IF THIS IS RIGHT, BUT IT APPEARS TO MATCH WHAT THE RUN TESTS SCRIPT NEEDS:
             print "About to run test: " + nameoftest( test )
             os.mkdir( nameoftest( test ) )
