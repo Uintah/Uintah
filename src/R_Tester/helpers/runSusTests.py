@@ -186,7 +186,7 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
     #__________________________________
     # defaults
     do_uda_comparisons = 1
-    do_memory      = 1
+    do_memory      = 0      #<<<<<<<<<<<HARD CODED TO 0 
     do_restart     = 1
     do_performance = 0
     do_debug = 1
@@ -629,8 +629,8 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
     if do_uda_comparison_test == 1:
       print "\tComparing udas"
 
-      if dbg_opt == "dbg":
-        environ['MALLOC_STATS'] = "compare_uda_malloc_stats"
+      #if dbg_opt == "dbg":                                       <<<<<<<<<<  HARD CODED OFF
+      #  environ['MALLOC_STATS'] = "compare_uda_malloc_stats"     <<<<<<<<<<< HARD CODED OFF
 
       abs_tol= tolerances[0]
       rel_tol= tolerances[1]
