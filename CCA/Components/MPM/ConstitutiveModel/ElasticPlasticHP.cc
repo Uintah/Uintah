@@ -904,7 +904,6 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
 
       // Compute rate of change of specific volume
       double Vdot = (pVolume_deformed[idx] - pVolume[idx])/(pMass[idx]*delT);
-      double sp_vol = 1./rho_cur;
 
       // Compute polar decomposition of F (F = RU)
       pDeformGrad[idx].polarDecompositionRMB(tensorU, tensorR);
@@ -1209,18 +1208,6 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
       double Tdot_AV = de_s/state->specificHeat;
       pdTdt[idx] += Tdot_AV;
 
-      double dev_se = (tensorS(0,0)*tensorEta(0,0) +
-                       tensorS(1,1)*tensorEta(1,1) +
-                       tensorS(2,2)*tensorEta(2,2) +
-                  2.0*(tensorS(0,1)*tensorEta(0,1) + 
-                       tensorS(0,2)*tensorEta(0,2) +
-                       tensorS(1,2)*tensorEta(1,2)));
-
-      // This has units (in MKS) of (N*m)/(kg*s) aka Watts/kg
-      double edot = -(p + p_q[idx])*Vdot + dev_se*sp_vol;
-
-      pEnergy_new[idx] = pEnergy[idx] + edot*delT;
-
       Matrix3 tensorHy = one*p;
    
       // Calculate the total stress
@@ -1408,15 +1395,20 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
       // Compute the strain energy for non-localized particles
       if(pLocalized_new[idx] == 0){
         Matrix3 avgStress = (pStress_new[idx] + pStress[idx])*0.5;
-        double pStrainEnergy = (tensorD(0,0)*avgStress(0,0) +
+	double avgVolume = (pVolume_deformed[idx]+pVolume[idx])*0.5;
+        double pSpecificStrainEnergy = (tensorD(0,0)*avgStress(0,0) +
                                 tensorD(1,1)*avgStress(1,1) +
                                 tensorD(2,2)*avgStress(2,2) +
                                 2.0*(tensorD(0,1)*avgStress(0,1) + 
                                      tensorD(0,2)*avgStress(0,2) +
                                      tensorD(1,2)*avgStress(1,2)))*
-          pVolume_deformed[idx]*delT;
-        totalStrainEnergy += pStrainEnergy;
-      }
+                                     avgVolume*delT/pMass[idx];
+
+	pEnergy_new[idx] = pEnergy[idx] + pSpecificStrainEnergy 
+                                        - p_q[idx]*Vdot*delT;
+
+        totalStrainEnergy += pSpecificStrainEnergy*pMass[idx];
+      }          
 
       // Compute wave speed at each particle, store the maximum
       Vector pVel = pVelocity[idx];
