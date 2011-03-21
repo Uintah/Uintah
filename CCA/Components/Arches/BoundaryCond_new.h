@@ -77,7 +77,7 @@ public:
     Iterator nu;  // not used
 
     const BoundCondBase* bc = patch->getArrayBCValues(face,mat_id,
-		                                          		    desc, bound_ptr,
+                                                                            desc, bound_ptr,
                                                       nu, child);
     const BoundCond<T> *new_bcs =  dynamic_cast<const BoundCond<T> *>(bc);
 

@@ -95,12 +95,12 @@ public:
   typedef std::map< std::string, CharOxidation*> CharOxiModelMap;
   typedef std::map< std::string, HeatTransfer*> HeatTransferModelMap;
 
-  /** @brief	Obtain a reference to the CoalModelFactory. */
+  /** @brief    Obtain a reference to the CoalModelFactory. */
   static CoalModelFactory& self();
 
-	/** @brief	Grab input parameters from the ups file. */
-	void problemSetup( const ProblemSpecP & params);
-		
+        /** @brief      Grab input parameters from the ups file. */
+        void problemSetup( const ProblemSpecP & params);
+                
   /**
    *  @brief Register a source term on the specified transport equation.
    *
@@ -135,8 +135,8 @@ public:
                                 DataWarehouse        * old_dw, 
                                 DataWarehouse        * new_dw );
 
-	////////////////////////////////////////////////
-	// Get/set methods
+        ////////////////////////////////////////////////
+        // Get/set methods
 
   /** @brief  Get all models in a ModelMap */
   ModelMap& retrieve_all_models() {
@@ -154,9 +154,9 @@ public:
   HeatTransferModelMap& retrieve_heattransfer_models() {
     return heatmodels_; };
 
-	/** @brief	Get the initial composition vector for the coal particles */
-	vector<double> getInitialCoalComposition() {
-		return yelem; };
+        /** @brief      Get the initial composition vector for the coal particles */
+        vector<double> getInitialCoalComposition() {
+                return yelem; };
 
   /** @brief  Set the ArchesLabel class so that CoalModelFactory can use field labels from Arches */
   void setArchesLabel( ArchesLabel * fieldLabels ) {
@@ -174,11 +174,11 @@ private:
   CharOxiModelMap charoximodels_;
   HeatTransferModelMap heatmodels_;
 
-  bool b_coupled_physics;		///< Boolean: use coupled physics and iterative procedure?
+  bool b_coupled_physics;               ///< Boolean: use coupled physics and iterative procedure?
   bool b_labelSet;          ///< Boolean: has the ArchesLabel been set using setArchesLabel()?
   bool d_unweighted;
 
-  vector<double> yelem;			///< Vector containing initial composition of coal particle
+  vector<double> yelem;                 ///< Vector containing initial composition of coal particle
   ArchesLabel* d_fieldLabels;
   
   // If using coupled physics, specific internal coordinates are needed.
@@ -228,7 +228,7 @@ private:
  
   CoalModelFactory();
   ~CoalModelFactory();
-	
+        
 }; // class CoalModelFactory
 }  //Namespace Uintah
 #endif

@@ -40,22 +40,22 @@ SRCS += $(SRCDIR)/Arches.cc                    \
         $(SRCDIR)/ArchesMaterial.cc            \
         $(SRCDIR)/ArchesVariables.cc           \
         $(SRCDIR)/BoundaryCondition.cc         \
-	$(SRCDIR)/BoundaryCond_new.cc          \
+        $(SRCDIR)/BoundaryCond_new.cc          \
         $(SRCDIR)/CO2RateSrc.cc                \
         $(SRCDIR)/CellInformation.cc           \
         $(SRCDIR)/CompDynamicProcedure.cc      \
         $(SRCDIR)/CompLocalDynamicProcedure.cc \
         $(SRCDIR)/Discretization.cc            \
-	$(SRCDIR)/DQMOM.cc                     \
+        $(SRCDIR)/DQMOM.cc                     \
         $(SRCDIR)/EnthalpySolver.cc            \
         $(SRCDIR)/ExplicitSolver.cc            \
-	$(SRCDIR)/ExplicitTimeInt.cc           \
+        $(SRCDIR)/ExplicitTimeInt.cc           \
         $(SRCDIR)/ExtraScalarSolver.cc         \
         $(SRCDIR)/ExtraScalarSrc.cc            \
         $(SRCDIR)/ExtraScalarSrcFactory.cc     \
         $(SRCDIR)/IncDynamicProcedure.cc       \
         $(SRCDIR)/LinearSolver.cc              \
-	$(SRCDIR)/LU.cc                        \
+        $(SRCDIR)/LU.cc                        \
         $(SRCDIR)/MomentumSolver.cc            \
         $(SRCDIR)/NonlinearSolver.cc           \
         $(SRCDIR)/OdtClosure.cc                \
@@ -76,7 +76,7 @@ SRCS += $(SRCDIR)/Arches.cc                    \
 
 ifeq ($(HAVE_PETSC),yes)
   SRCS += $(SRCDIR)/PetscCommon.cc \
-	  $(SRCDIR)/PetscSolver.cc \
+          $(SRCDIR)/PetscSolver.cc \
           $(SRCDIR)/Filter.cc      
 else
   SRCS += $(SRCDIR)/FakePetscSolver.cc
@@ -116,7 +116,7 @@ endif
 
 LIBS := $(LIBS) $(XML2_LIBRARY) $(F_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) \
         $(LAPACK_LIBRARY) $(BLAS_LIBRARY) $(THREAD_LIBRARY) $(TABPROPS_LIBRARY) \
-	$(BOOST_LIBRARY)
+        $(BOOST_LIBRARY)
 
 INCLUDES := $(INCLUDES) $(BOOST_INCLUDE) $(TABPROPS_INCLUDE)
 
@@ -127,7 +127,7 @@ SUBDIRS := $(SRCDIR)/CoalModels        \
            $(SRCDIR)/Radiation/fortran \
            $(SRCDIR)/SourceTerms       \
            $(SRCDIR)/TransportEqns  \
-					 $(SRCDIR)/ChemMix
+                                         $(SRCDIR)/ChemMix
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 #### End handle subdirs
