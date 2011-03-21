@@ -66,17 +66,17 @@ DEALINGS IN THE SOFTWARE.
 extern "C"{
 
 #if defined( FORTRAN_UNDERSCORE_END )
-#  define KMMCHK kmmchk_
+#  define KAYENTA_CHK kayenta_chk_
 #  define KAYENTA_CALC kayenta_calc_
-#  define KMMRXV kmmrxv_
+#  define KAYENTA_RXV kayenta_rxv_
 #elif defined( FORTRAN_UNDERSCORE_LINUX )
-#  define KMMCHK kmmchk_
-#  define KMMRXV kmmrxv_
+#  define KAYENTA_CHK kayenta_chk_
+#  define KAYENTA_RXV kayenta_rxv_
 #  define KAYENTA_CALC kayenta_calc__
 #else // NONE
-#  define KMMCHK kmmchk
+#  define KAYENTA_CHK kayenta_chk
 #  define KAYENTA_CALC kayenta_calc
-#  define KMMRXV kmmrxv
+#  define KAYENTA_RXV kayenta_rxv
 #endif
 
 //#define KMM_ORTHOTROPIC
@@ -84,13 +84,13 @@ extern "C"{
 //#define KMM_ANISOTROPIC
 //#undef KMM_ANISOTROPIC
 
-   void KMMCHK( double UI[], double GC[], double DC[] );
-   void KAYENTA_CALC( int &nblk, int &ninsv, double &dt,
-                double UI[], double GC[], double DC[], double stress[], double D[],
-                double svarg[], double &USM );
-   void KMMRXV( double UI[], double GC[], double DC[], int &nx, char namea[],
-                char keya[], double rinit[], double rdim[], int iadvct[], 
-                int itype[] );
+   void KAYENTA_CHK( double UI[], double GC[], double DC[] );
+   void KAYENTA_CALC(int &nblk, int &ninsv, double &dt,
+                     double UI[], double GC[], double DC[], double stress[],
+                     double D[], double svarg[], double &USM );
+   void KAYENTA_RXV( double UI[], double GC[], double DC[], int &nx,
+                     char namea[], char keya[], double rinit[], double rdim[],
+                     int iadvct[], int itype[] );
 }
 
 // End fortran functions.
@@ -135,9 +135,9 @@ Kayenta::Kayenta(ProblemSpecP& ps,MPMFlags* Mflag)
      proc0cout << "UI[" << i << "] = " << UI[i] << endl;
   }
 
-  KMMCHK(UI,GC,DC);
+  KAYENTA_CHK(UI,GC,DC);
 
-  //Now, print out the UI values after alteration by KMMCHK
+  //Now, print out the UI values after alteration by KAYENTA_CHK
   proc0cout << "Modified UI values" << endl;
   for(int i = 0; i<d_NKMMPROP; i++){
      proc0cout << "UI[" << i << "] = " << UI[i] << endl;
@@ -152,7 +152,7 @@ Kayenta::Kayenta(ProblemSpecP& ps,MPMFlags* Mflag)
   int iadvct[100];
   int itype[100];
   
-  KMMRXV( UI, GC, DC, nx, namea, keya, rinit, rdim, iadvct, itype );
+  KAYENTA_RXV( UI, GC, DC, nx, namea, keya, rinit, rdim, iadvct, itype );
 
   //Print out the Derived Constants
 //  proc0cout << "Derived Constants" << endl;
@@ -1230,7 +1230,7 @@ Kayenta::initializeLocalMPMLabels()
   int iadvct[100];
   int itype[100];
   
-  KMMRXV( UI, GC, DC, nx, namea, keya, rinit, rdim, iadvct, itype );
+  KAYENTA_RXV( UI, GC, DC, nx, namea, keya, rinit, rdim, iadvct, itype );
 
   char *ISV[d_NINSV];
   ISV[0] = strtok(keya, "|"); // Splits | between words in string
