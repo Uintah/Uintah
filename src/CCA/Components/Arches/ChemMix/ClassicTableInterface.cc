@@ -107,9 +107,9 @@ ClassicTableInterface::problemSetup( const ProblemSpecP& propertiesParameters )
   db_root->findBlock("PhysicalConstants")->require("reference_point", d_ijk_den_ref);  
 
   // READ TABLE: 
-  cout << "----------Mixing Table Information---------------  " << endl;
+  proc0cout << "----------Mixing Table Information---------------  " << endl;
   loadMixingTable( tableFileName );
-  cout << "-------------------------------------------------  " << endl;
+  proc0cout << "-------------------------------------------------  " << endl;
 
   // Extract independent and dependent variables from input file
   ProblemSpecP db_rootnode = propertiesParameters;
