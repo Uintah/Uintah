@@ -1015,11 +1015,9 @@ ClassicTableInterface::tableLookUp( std::vector<double> iv, int var_index)
     throw InternalError(exception.str(),__FILE__,__LINE__);
   }
 
-  double small = 1.0e-10;
-
   double fmg=0.0, fpmg=0.0,s1=0.0,s2=0.0,var_value=0.0;
-  int nhl_lo, nhl_hi; 
-  double dhl_lo, dhl_hi; 
+  double dhl_lo=0.0, dhl_hi=0.0; 
+  int nhl_lo=0, nhl_hi=0; 
 
   // compute index of iv3:
   if ( d_indepvarscount == 3 ){ 
@@ -1090,39 +1088,28 @@ ClassicTableInterface::tableLookUp( std::vector<double> iv, int var_index)
 
     if ( d_indepvarscount > 1 ) {  
 
-      if( iv[1] <= small ){
-        // Set the values to get the first entry
-        g=0.0;
-        k1=0;
-        k2=0;
-        dk1=0.0;
-        dk2=1.0;
+      g = iv[1];
+      // Finding the table entry
 
-      } else {
+      for(int index=0; index < d_allIndepVarNum[1]-1; index++){
 
-        g = iv[1];
-        // Finding the table entry
+        dk1 = i2[index]-g;
+        dk2 = i2[index+1]-g;
 
-        for(int index=0; index < d_allIndepVarNum[1]-1; index++){
+      //cout << "dk2 = " << dk2 << endl;
 
-          dk1 = i2[index]-g;
-          dk2 = i2[index+1]-g;
+        if((dk1*dk2) == 0.0 && index != 0){
 
-        //cout << "dk2 = " << dk2 << endl;
+          k1=index+1;
+          k2=k1;
+          break;
 
-          if((dk1*dk2) == 0.0 && index != 0){
+        } else if ( (dk1*dk2) <= 0.0){
 
-            k1=index+1;
-            k2=k1;
-            break;
+          k1=index;
+          k2=k1+1;
+          break;
 
-          } else if ( (dk1*dk2) <= 0.0){
-
-            k1=index;
-            k2=k1+1;
-            break;
-
-          }
         }
       }
     } else { 
@@ -1174,7 +1161,7 @@ ClassicTableInterface::loadMixingTable( const string & inputfile )
     throw ProblemSetupException("Unable to open the given input file: " + inputfile, __FILE__, __LINE__);
   }
 
-  double not_used; 
+  //double not_used; 
   //d_f_stoich       = getDouble( gzFp );
   //d_H_fuel         = getDouble( gzFp );
   //d_H_air          = getDouble( gzFp );
@@ -1211,7 +1198,7 @@ ClassicTableInterface::loadMixingTable( const string & inputfile )
     variable = getString( gzFp );
     d_allDepVarNames[ii] = variable ; 
 
-    proc0cout << "  " << d_allDepVarNames[ii] << endl;
+    //proc0cout << "  " << d_allDepVarNames[ii] << endl;
 
   }
 
