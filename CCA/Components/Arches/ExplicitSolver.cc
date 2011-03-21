@@ -802,7 +802,7 @@ int ExplicitSolver::noSolve(const LevelP& level,
   }
 
   string mixmodel = d_props->getMixingModelType(); 
-  if ( mixmodel == "TabProps" )
+  if ( mixmodel == "TabProps"  || mixmodel == "ClassicTable" )
     d_props->sched_doTPDummyInit( level, sched ); 
 
   d_props->sched_computePropsFirst_mm(                    sched, patches, matls);
