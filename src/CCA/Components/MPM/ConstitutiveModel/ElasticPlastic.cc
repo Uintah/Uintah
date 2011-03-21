@@ -741,7 +741,7 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
     // Get the particle stress and temperature
     constParticleVariable<Matrix3> pStress;
     constParticleVariable<double> pTempPrev, pTemperature;
-    old_dw->get(pStress, lb->pStressLabel, pset);
+    old_dw->get(pStress,      lb->pStressLabel,       pset);
     old_dw->get(pTempPrev,    lb->pTempPreviousLabel, pset); 
     old_dw->get(pTemperature, lb->pTemperatureLabel,  pset);
 
@@ -1007,7 +1007,7 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
 
         // Evaluate yield condition
         double traceOfTrialStress = 3.0*pressure + 
-          tensorD.Trace()*(2.0*mu_cur*delT);
+                                        tensorD.Trace()*(2.0*mu_cur*delT);
         double Phi = d_yield->evalYieldCondition(equivStress, flowStress,
                                                  traceOfTrialStress, 
                                                  porosity, state->yieldStress);
@@ -1408,7 +1408,7 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
       tensorD = (tensorR*tensorD)*(tensorR.Transpose());
 
       // Compute the strain energy for non-localized particles
-        if(pLocalized_new[idx] == 0){
+      if(pLocalized_new[idx] == 0){
         Matrix3 avgStress = (pStress_new[idx] + pStress[idx])*0.5;
         double pStrainEnergy = (tensorD(0,0)*avgStress(0,0) +
                                 tensorD(1,1)*avgStress(1,1) +
@@ -1417,8 +1417,8 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
                                      tensorD(0,2)*avgStress(0,2) +
                                      tensorD(1,2)*avgStress(1,2)))*
           pVolume_deformed[idx]*delT;
-        totalStrainEnergy += pStrainEnergy; 
-      }                 
+        totalStrainEnergy += pStrainEnergy;
+      }
 
       // Compute wave speed at each particle, store the maximum
       Vector pVel = pVelocity[idx];
@@ -1908,11 +1908,10 @@ ElasticPlastic::computeStressTensorImplicit(const PatchSubset* patches,
                                      incStrain(0,2)*avgStress(0,2) +
                                      incStrain(1,2)*avgStress(1,2)))*
           pVolume_deformed[idx]*delT;
-        totalStrainEnergy += pStrainEnergy;                  
+        totalStrainEnergy += pStrainEnergy;
       }
       delete state;
     }
-//    new_dw->put(sum_vartype(totalStrainEnergy), lb->StrainEnergyLabel);
     delete interpolator;
   }
 }
@@ -1946,7 +1945,7 @@ ElasticPlastic::addComputesAndRequires(Task* task,
     task->requires(Task::OldDW, pPlasticStrainLabel,     matlset, gnone);
     task->requires(Task::OldDW, pPlasticStrainRateLabel, matlset, gnone);
     task->requires(Task::OldDW, pPorosityLabel,          matlset, gnone);
-  } 
+  }
 
   // Add internal evolution variables computed by plasticity model
   d_plastic->addComputesAndRequires(task, matl, patches, recurse, SchedParent);
@@ -3132,7 +3131,7 @@ ElasticPlastic::carryForward(const PatchSubset* patches,
     
     if (flag->d_reductionVars->accStrainEnergy ||
         flag->d_reductionVars->strainEnergy) {
-      new_dw->put(sum_vartype(0.),     lb->StrainEnergyLabel);
+      new_dw->put(sum_vartype(0.),   lb->StrainEnergyLabel);
     }
   }
 }
