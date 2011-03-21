@@ -1446,7 +1446,7 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
                                      avgVolume*delT/pMass[idx];
 
 	pEnergy_new[idx] = pEnergy[idx] + pSpecificStrainEnergy 
-                                        - p_q[idx]*Vdot*delT;
+                                        - p_q[idx]*Vdot*delT*include_AV_heating;
 
         totalStrainEnergy += pSpecificStrainEnergy*pMass[idx];
       }          
