@@ -28,22 +28,21 @@ C
 C
 C 
 C 
-      SUBROUTINE KMMCHK ( UI, GC, DC)
+      SUBROUTINE KAYENTA_CHK ( UI, GC, DC)
 
       CHARACTER*6 IAM
-      PARAMETER( IAM = 'KMMCHK' )
+      PARAMETER( IAM = 'KAYENTA_CHK' )
 
       CALL LOGMES('This model is only available to licensees')
       CALL FATERR(IAM,'See Jim Guilkey for more information')
 
       END
 
-      SUBROUTINE KMMRXV(UI,GC,DC,
+      SUBROUTINE KAYENTA_RXV(UI,GC,DC,
      &  NX, NAMEA, KEYA, RINIT, RDIM, IADVCT, ITYPE)
 
       CHARACTER*6 IAM
-      PARAMETER( IAM = 'KMMRXV' )
-
+      PARAMETER( IAM = 'KAYENTA_RXV' ) 
       CALL LOGMES('This model is only available to licensees')
       CALL FATERR(IAM,'See Jim Guilkey for more information')
 
