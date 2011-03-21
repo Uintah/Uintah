@@ -210,6 +210,7 @@ ElasticPlasticHP::ElasticPlasticHP(const ElasticPlasticHP* cm) :
 
   d_setStressToZero = cm->d_setStressToZero;
   d_allowNoTension = cm->d_allowNoTension;
+  d_allowNoShear = cm->d_allowNoShear;
 
   d_evolvePorosity = cm->d_evolvePorosity;
   d_porosity.f0 = cm->d_porosity.f0 ;
@@ -441,9 +442,12 @@ ElasticPlasticHP::setErosionAlgorithm()
 {
   d_setStressToZero = false;
   d_allowNoTension = false;
+  d_allowNoShear = false;
   if (flag->d_doErosion) {
     if (flag->d_erosionAlgorithm == "AllowNoTension") 
       d_allowNoTension = true;
+    else if (flag->d_erosionAlgorithm == "AllowNoShear") 
+      d_allowNoShear = true;
     else if (flag->d_erosionAlgorithm == "ZeroStress") 
       d_setStressToZero = true;
   }
@@ -650,6 +654,7 @@ ElasticPlasticHP::addComputesAndRequires(Task* task,
   task->requires(Task::OldDW, pDamageLabel,           matlset, gnone);
   task->requires(Task::OldDW, pPorosityLabel,         matlset, gnone);
   task->requires(Task::OldDW, pLocalizedLabel,        matlset, gnone);
+  task->requires(Task::OldDW, lb->pParticleIDLabel,   matlset, gnone);
   task->requires(Task::OldDW, pEnergyLabel,           matlset, gnone);
 
   task->computes(pRotationLabel_preReloc,       matlset);
@@ -773,6 +778,10 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
       new_dw->get(pgCode, lb->pgCodeLabel, pset);
       new_dw->get(GVelocity,lb->GVelocityStarLabel, dwi, patch, gac, NGN);
     }
+    double include_AV_heating=0.0;
+    if (flag->d_artificial_viscosity_heating) {
+      include_AV_heating=1.0;
+    }
 
     // GET LOCAL DATA 
 
@@ -793,6 +802,10 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
     // Get the particle localization state
     constParticleVariable<int> pLocalized;
     old_dw->get(pLocalized, pLocalizedLabel, pset);
+
+    // Get the particle IDs, useful in case a simulation goes belly up
+    constParticleVariable<long64> pParticleID; 
+    old_dw->get(pParticleID, lb->pParticleIDLabel, pset);
 
     // Create and allocate arrays for storing the updated information
     // GLOBAL
@@ -883,19 +896,30 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
         J = pDeformGrad[idx].Determinant();
       }
 
+      if(pLocalized[idx] && J <=0.0){
+        pDeformGrad_new[idx] = one;
+        tensorF_new = one;
+        J = 1.0;
+        cerr << " neg J in particle " << pParticleID[idx] << endl;
+        cerr << " reseting the deformation and moving on, " << endl;
+        cerr << " but the code is still probably going to crash soon." << endl;
+      }
+
       // Check 1: Look at Jacobian
       if (!(J > 0.0)) {
-        cerr << getpid() 
-             << "**ERROR** Negative Jacobian of deformation gradient" 
-             << " in particle " << idx << endl;
+        cerr << "**ERROR** Negative Jacobian of deformation gradient" 
+             << " in particle " << pParticleID[idx] << endl;
         cerr << "l = " << tensorL << endl;
         cerr << "F_old = " << pDeformGrad[idx] << endl;
+        cerr << "J_old = " << pDeformGrad[idx].Determinant() << endl;
         cerr << "F_inc = " << tensorFinc << endl;
         cerr << "F_new = " << tensorF_new << endl;
         cerr << "J = " << J << endl;
-        cerr << "T = " << pTemperature[idx] << endl;
+        cerr << "Temp = " << pTemperature[idx] << endl;
+        cerr << "Tm = " << Tm << endl;
+        cerr << "DWI = " << matl->getDWIndex() << endl;
         cerr << "X = " << px[idx] << endl;
-        throw ParameterNotFound("**ERROR**:ElasticPlasticHP", __FILE__, __LINE__);
+        throw InternalError("Negative Jacobian",__FILE__,__LINE__);
       }
 
       // Calculate the current density and deformed volume
@@ -1206,7 +1230,7 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
 
       // Calculate Tdot due to artificial viscosity
       double Tdot_AV = de_s/state->specificHeat;
-      pdTdt[idx] += Tdot_AV;
+      pdTdt[idx] += Tdot_AV*include_AV_heating;
 
       Matrix3 tensorHy = one*p;
    
@@ -1217,10 +1241,19 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
       if (flag->d_doErosion) {
         if (pLocalized[idx]) {
           if (d_allowNoTension) {
-            if (p > 0.0) tensorSig = zero;
-            else tensorSig = tensorHy;
+            if (p > 0.0){
+               tensorSig = zero;
+            }
+            else{
+               tensorSig = tensorHy;
+            }
           }
-          else if (d_setStressToZero) tensorSig = zero;
+          if(d_allowNoShear){
+            tensorSig = tensorHy;
+          }
+          else if (d_setStressToZero){
+             tensorSig = zero;
+          }
         }
       }
 
@@ -1349,14 +1382,13 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
           }
         }
 
-        // Use erosion algorithms to treat localized particles
+        // Use erosion algorithms to treat newly localized particles
         if (isLocalized) {
 
           // If the localized particles fail again then set their stress to zero
           if (pLocalized[idx]) {
             pDamage_new[idx] = 0.0;
             pPorosity_new[idx] = 0.0;
-            tensorSig = zero;
           } else {
             // set the particle localization flag to true  
             pLocalized_new[idx] = 1;
@@ -1364,11 +1396,20 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
             pPorosity_new[idx] = 0.0;
 
             // Apply various erosion algorithms
-            if (d_allowNoTension) {
-              if (p > 0.0) tensorSig = zero;
-              else tensorSig = tensorHy;
+            if (d_allowNoTension){
+              if (p > 0.0){
+                tensorSig = zero;
+              }
+              else{
+                tensorSig = tensorHy;
+              }
             }
-            else if (d_setStressToZero) tensorSig = zero;
+            else if (d_allowNoShear){
+              tensorSig = tensorHy;
+            }
+            else if (d_setStressToZero){
+              tensorSig = zero;
+            }
           }
         }
       }
