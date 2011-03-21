@@ -182,7 +182,7 @@ public:
   typedef std::map<string, DepVarCont >       DepVarMap;
   typedef std::map<string, int >               IndexMap; 
 
-	double getTableValue( std::vector<double>, std::string ); 
+        double getTableValue( std::vector<double>, std::string ); 
 
 protected :
 

@@ -46,17 +46,17 @@ SRCS += \
         $(SRCDIR)/Stream.cc                 
 
 PSELIBS := \
-	Core/Exceptions       \
-	Core/IO               \
-	Core/Math             \
-	Core/ProblemSpec      \
+        Core/Exceptions       \
+        Core/IO               \
+        Core/Math             \
+        Core/ProblemSpec      \
   Core/Grid          \
-	Core/Util             \
-	CCA/Components/Models \
-	Core/Exceptions \
-	Core/Thread     \
-	Core/Parallel \
-	Core/Geometry   
+        Core/Util             \
+        CCA/Components/Models \
+        Core/Exceptions \
+        Core/Thread     \
+        Core/Parallel \
+        Core/Geometry   
 
 LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(F_LIBRARY)
 

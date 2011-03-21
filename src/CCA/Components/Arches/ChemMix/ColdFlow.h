@@ -136,7 +136,7 @@ public:
                   DataWarehouse* old_dw, 
                   DataWarehouse* new_dw );
 
-	/** @brief Compute cold flow density and temperature for simple two stream mixing */ 
+        /** @brief Compute cold flow density and temperature for simple two stream mixing */ 
   double coldFlowMixing( std::vector<double>& iv, int pos );
 
   enum BoundaryType { DIRICHLET, NEUMANN };
@@ -154,19 +154,19 @@ public:
   /** @brief A temporary solution to deal with boundary conditions on properties until Properties.cc is eliminated */ 
   void oldTableHack( const InletStream& inStream, Stream& outStream, bool calcEnthalpy, const string bc_type ){};
 
-	double getTableValue( std::vector<double>, std::string ); 
+        double getTableValue( std::vector<double>, std::string ); 
 
 protected :
 
 private:
 
-	double d_stream[2][2];
+        double d_stream[2][2];
   
   IntVector d_ijk_den_ref;                ///< Reference density location
 
   vector<string> d_allUserDepVarNames;    ///< Vector storing all independent varaible names requested in input file
 
-	std::string d_cold_flow_mixfrac; 
+        std::string d_cold_flow_mixfrac; 
 
 }; // end class ColdFlow
   

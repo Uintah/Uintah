@@ -2645,7 +2645,7 @@ void Arches::registerModels(ProblemSpecP& db)
           // Kobayashi Sarofim devolatilization model
           ModelBuilder* modelBuilder = scinew KobayashiSarofimDevolBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
           model_factory.register_model( temp_model_name, modelBuilder );
-	      //} else if ( model_type == "HeatTransfer" ) {
+              //} else if ( model_type == "HeatTransfer" ) {
         //  ModelBuilder* modelBuilder = scinew HeatTransferBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
         //  model_factory.register_model( temp_model_name, modelBuilder );
         } else if ( model_type == "CharOxidationShaddix" ) {

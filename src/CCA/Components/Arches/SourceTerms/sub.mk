@@ -3,18 +3,18 @@
 SRCDIR   := CCA/Components/Arches/SourceTerms
 
 SRCS += \
-	$(SRCDIR)/SourceTermFactory.cc \
-	$(SRCDIR)/SourceTermBase.cc \
-	$(SRCDIR)/CoalGasDevol.cc \
+        $(SRCDIR)/SourceTermFactory.cc \
+        $(SRCDIR)/SourceTermBase.cc \
+        $(SRCDIR)/CoalGasDevol.cc \
         $(SRCDIR)/CoalGasOxi.cc \
         $(SRCDIR)/CoalGasHeat.cc \
-	$(SRCDIR)/ConstSrcTerm.cc \
+        $(SRCDIR)/ConstSrcTerm.cc \
         $(SRCDIR)/UnweightedSrcTerm.cc \
         $(SRCDIR)/WestbrookDryer.cc \
-	$(SRCDIR)/CoalGasMomentum.cc \
-	$(SRCDIR)/Inject.cc \
-	$(SRCDIR)/TabRxnRate.cc \
-	$(SRCDIR)/IntrusionInlet.cc \
+        $(SRCDIR)/CoalGasMomentum.cc \
+        $(SRCDIR)/Inject.cc \
+        $(SRCDIR)/TabRxnRate.cc \
+        $(SRCDIR)/IntrusionInlet.cc \
         $(SRCDIR)/MMS1.cc
 
 
