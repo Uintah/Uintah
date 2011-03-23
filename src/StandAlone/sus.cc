@@ -75,10 +75,13 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Util/Environment.h>
 #include <Core/Util/FileUtils.h>
 
-#include <sci_defs/uintah_defs.h>
-#include <sci_defs/mpi_defs.h>
 #include <sci_defs/hypre_defs.h>
+#include <sci_defs/malloc_defs.h>
+#include <sci_defs/mpi_defs.h>
+#include <sci_defs/uintah_defs.h>
+
 #include <svn_info.h>
+
 #include <Core/Malloc/Allocator.h>
 
 #ifdef USE_VAMPIR
@@ -194,6 +197,31 @@ usage( const std::string & message,
 }
 
 void
+sanityChecks()
+{
+#if defined( DISABLE_SCI_MALLOC )
+  if( getenv("MALLOC_STATS") ) {
+    printf( "\nERROR:\n" );
+    printf( "ERROR: Environment variable MALLOC_STATS set, but SCI Malloc was not configured...\n" );
+    printf( "ERROR:\n\n" );
+    Thread::exitAll( 1 );
+  }
+  if( getenv("MALLOC_TRACE") ) {
+    printf( "\nERROR:\n" );
+    printf( "ERROR: Environment variable MALLOC_TRACE set, but SCI Malloc was not configured...\n" );
+    printf( "ERROR:\n\n" );
+    Thread::exitAll( 1 );
+  }
+  if( getenv("MALLOC_STRICT") ) {
+    printf( "\nERROR:\n" );
+    printf( "ERROR: Environment variable MALLOC_STRICT set, but SCI Malloc was not configured...\n" );
+    printf( "ERROR:\n\n" );
+    Thread::exitAll( 1 );
+  }
+#endif
+}
+
+void
 abortCleanupFunc()
 {
   Uintah::Parallel::finalizeManager( Uintah::Parallel::Abort );
@@ -202,6 +230,8 @@ abortCleanupFunc()
 int
 main( int argc, char *argv[], char *env[] )
 {
+  sanityChecks();
+
   string oldTag;
   MALLOC_TRACE_TAG_SCOPE("main()");
 
@@ -379,15 +409,6 @@ main( int argc, char *argv[], char *env[] )
   // Pass the env into the sci env so it can be used there...
   create_sci_environment( env, 0, true );
 
-  // Uncomment the following to see what the environment is... this is useful to figure out
-  // what environment variable can be checked for (in Uintah/Core/Parallel/Parallel.cc)
-  // to automatically determine that sus is running under MPI (instead of having to
-  // be explicit with the "-mpi" arg):
-  //
-  // if( Uintah::Parallel::getMPIRank() == 0 ) {
-  //   show_env();
-  // }
-
   if( filename == "" ){
     usage("No input file specified", "", argv[0]);
   }
@@ -451,70 +472,77 @@ main( int argc, char *argv[], char *env[] )
   Thread::disallow_sgi_OpenGL_page0_sillyness();
 #endif
 
-#ifndef HAVE_MPICH
-  // If regular MPI, then initialize after parsing the args...
-  Uintah::Parallel::initializeManager( argc, argv, "");
-#endif
-
-  if( !validateUps ) {
-    // Print out warning message here (after Parallel::initializeManager()), so that
-    // proc0cout works correctly.
-    proc0cout << "\n";
-    proc0cout << "WARNING: You have turned OFF .ups file validation... this may cause many unforeseen problems\n";
-    proc0cout << "         with your simulation run.  It is strongly suggested that you leave validation on!\n";
-    proc0cout << "\n";
-  }
-
   bool thrownException = false;
-  
-#if defined(MALLOC_TRACE)
-  ostringstream traceFilename;
-  traceFilename << "mallocTrace-" << Uintah::Parallel::getMPIRank();
-  MALLOC_TRACE_LOG_FILE( traceFilename.str().c_str() );
-  //mallocTraceInfo.setTracingState( false );
-#endif
 
- if( Uintah::Parallel::getMPIRank() == 0 ) {
-    // helpful for cleaning out old stale udas
-    time_t t = time(NULL) ;
-    string time_string(ctime(&t));
-    char name[256];
-    gethostname(name, 256);
-    
-    cout << "Date:    " << time_string; // has its own newline
-    cout << "Machine: " << name << "\n";
-
-    cout << "SVN: " << SVN_REVISION << "\n";
-    cout << "SVN: " << SVN_DATE << "\n";
-    cout << "Assertion level: " << SCI_ASSERTION_LEVEL << "\n";
-    cout << "CFLAGS: " << CFLAGS << "\n";
-
-    // Run svn commands on Packages/Uintah 
-    if (do_svnDiff || do_svnStat){
-#if defined(REDSTORM)
-      cout << "WARNING:  SVN DIFF is disabled.\n";
-#else
-      cout << "____SVN_____________________________________________________________\n";
-      string sdir = string(sci_getenv("SCIRUN_SRCDIR"));
-      if(do_svnDiff){
-        string cmd = "svn diff " + sdir;
-        system(cmd.c_str());
-      }
-      if(do_svnStat){
-        string cmd = "svn info " + sdir;
-        system(cmd.c_str());
-        cmd = "svn stat -u " + sdir;
-        system(cmd.c_str());
-      }
-      cout << "____SVN_______________________________________________________________\n";
-#endif
-    }
-  }
- 
-    MALLOC_TRACE_TAG("main():create components");
-  //______________________________________________________________________
-  // Create the components
   try {
+
+#ifndef HAVE_MPICH
+    // If regular MPI, then initialize after parsing the args...
+    printf("INITIALIZEMANAGER\n");
+    Uintah::Parallel::initializeManager( argc, argv, "");
+#endif
+
+    // Uncomment the following to see what the environment is... this is useful to figure out
+    // what environment variable can be checked for (in Uintah/Core/Parallel/Parallel.cc)
+    // to automatically determine that sus is running under MPI (instead of having to
+    // be explicit with the "-mpi" arg):
+    //
+    //if( Uintah::Parallel::getMPIRank() == 0 ) {
+    //  show_env();
+    //}
+
+    if( !validateUps ) {
+      // Print out warning message here (after Parallel::initializeManager()), so that
+      // proc0cout works correctly.
+      proc0cout << "\n";
+      proc0cout << "WARNING: You have turned OFF .ups file validation... this may cause many unforeseen problems\n";
+      proc0cout << "         with your simulation run.  It is strongly suggested that you leave validation on!\n";
+      proc0cout << "\n";
+    }
+
+#if defined(MALLOC_TRACE)
+    ostringstream traceFilename;
+    traceFilename << "mallocTrace-" << Uintah::Parallel::getMPIRank();
+    MALLOC_TRACE_LOG_FILE( traceFilename.str().c_str() );
+    //mallocTraceInfo.setTracingState( false );
+#endif
+
+    if( Uintah::Parallel::getMPIRank() == 0 ) {
+      // helpful for cleaning out old stale udas
+      time_t t = time(NULL) ;
+      string time_string(ctime(&t));
+      char name[256];
+      gethostname(name, 256);
+    
+      cout << "Date:    " << time_string; // has its own newline
+      cout << "Machine: " << name << "\n";
+
+      cout << "SVN: " << SVN_REVISION << "\n";
+      cout << "SVN: " << SVN_DATE << "\n";
+      cout << "Assertion level: " << SCI_ASSERTION_LEVEL << "\n";
+      cout << "CFLAGS: " << CFLAGS << "\n";
+
+      // Run svn commands on Packages/Uintah 
+      if (do_svnDiff || do_svnStat){
+#if defined(REDSTORM)
+        cout << "WARNING:  SVN DIFF is disabled.\n";
+#else
+        cout << "____SVN_____________________________________________________________\n";
+        string sdir = string(sci_getenv("SCIRUN_SRCDIR"));
+        if(do_svnDiff){
+          string cmd = "svn diff " + sdir;
+          system(cmd.c_str());
+        }
+        if(do_svnStat){
+          string cmd = "svn info " + sdir;
+          system(cmd.c_str());
+          cmd = "svn stat -u " + sdir;
+          system(cmd.c_str());
+        }
+        cout << "____SVN_______________________________________________________________\n";
+#endif
+      }
+    }
 
 #if !defined(REDSTORM)
     char * st = getenv( "INITIAL_SLEEP_TIME" );
@@ -572,6 +600,10 @@ main( int argc, char *argv[], char *env[] )
     solve = SolverFactory::create(ups, world, solver);
     if(Uintah::Parallel::getMPIRank() == 0 && solve!=0)
       cout << "Implicit Solver:" << solve->getName() << endl;
+
+    MALLOC_TRACE_TAG("main():create components");
+    //______________________________________________________________________
+    // Create the components
 
     //__________________________________
     // Component

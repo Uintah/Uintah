@@ -277,6 +277,15 @@ Parallel::initializeManager(int& argc, char**& argv, const string & scheduler)
 int
 Parallel::getMPIRank()
 {
+  if( worldRank == -1 ) {
+    // Can't throw an exception here because it won't get trapped
+    // properly because 'getMPIRank()' is called in the exception
+    // handler...
+    cout << "ERROR:\n";
+    cout << "ERROR: getMPIRank() called before initializeManager()...\n";
+    cout << "ERROR:\n";
+    Thread::exitAll(1);
+  }
   return worldRank;
 }
 
