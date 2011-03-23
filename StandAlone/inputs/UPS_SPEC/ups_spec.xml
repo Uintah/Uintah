@@ -849,7 +849,7 @@
       <norm                   spec="OPTIONAL STRING 'LInfinity linfinity L1 l1 L2 l2'" />       
       <npost                  spec="REQUIRED INTEGER" />                                        
       <npre                   spec="REQUIRED INTEGER" />                                        
-      <preconditioner         spec="REQUIRED STRING 'none, pfmg'" />                            
+      <preconditioner         spec="REQUIRED STRING 'none, pfmg, smg'" />                            
       <outputEquations        spec="OPTIONAL BOOLEAN" />                                        
       <skip                   spec="REQUIRED INTEGER" />                                        
       <solver                 spec="REQUIRED STRING 'smg, SMG, PFMG, pfmg, SparseMSG, sparsemsg, CG, cg, Hybrid, hybrid, GMRES, gmres amg'" />                               
