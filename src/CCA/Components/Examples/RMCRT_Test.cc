@@ -78,6 +78,9 @@ RMCRT_Test::RMCRT_Test ( const ProcessorGroup* myworld ): UintahParallelComponen
   d_doFakeRMCRT = false;
   d_doRealRMCRT = false;
   d_initColor = -9;
+  d_orderOfInterpolation = -9;
+  d_CoarseLevelRMCRTMethod = true;
+  d_multiLevelRMCRTMethod  = false;
 }
 //______________________________________________________________________
 //
@@ -162,67 +165,68 @@ void RMCRT_Test::problemSetup(const ProblemSpecP& prob_spec,
   ProblemSpecP amr_ps = prob_spec->findBlock("AMR");
   if (amr_ps){
     rmcrt_ps = amr_ps->findBlock("RMCRT");
-  }
 
-  if(!rmcrt_ps){
-    string warn;
-    warn ="\n INPUT FILE ERROR:\n <RMCRT>  block not found inside of <AMR> block \n";
-    throw ProblemSetupException(warn, __FILE__, __LINE__);
-  }
 
-  rmcrt_ps->require( "orderOfInterpolation", d_orderOfInterpolation);
-
-  rmcrt_ps->require("CoarseLevelRMCRTMethod", d_CoarseLevelRMCRTMethod);
-  rmcrt_ps->require("multiLevelRMCRTMethod",  d_multiLevelRMCRTMethod);
-  //__________________________________
-  // read in the regions that user would like 
-  // refined if the grid has not been setup manually
-  bool manualGrid;
-  rmcrt_ps->getWithDefault("manualGrid", manualGrid, false);
-
-  if(!manualGrid){
-    ProblemSpecP refine_ps = rmcrt_ps->findBlock("Refine_Regions");
-    if(!refine_ps ){
+    if(!rmcrt_ps){
       string warn;
-      warn ="\n INPUT FILE ERROR:\n <Refine_Regions> "
-           " block not found inside of <RMCRT> block \n";
+      warn ="\n INPUT FILE ERROR:\n <RMCRT>  block not found inside of <AMR> block \n";
       throw ProblemSetupException(warn, __FILE__, __LINE__);
     }
 
-    // Read in the refined regions geometry objects
-    int piece_num = 0;
-    list<GeometryObject::DataItem> geom_obj_data;
-    geom_obj_data.push_back(GeometryObject::DataItem("level", GeometryObject::Integer));
+    rmcrt_ps->require( "orderOfInterpolation", d_orderOfInterpolation);
 
-    for (ProblemSpecP geom_obj_ps = refine_ps->findBlock("geom_object");
-          geom_obj_ps != 0;
-          geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
+    rmcrt_ps->require("CoarseLevelRMCRTMethod", d_CoarseLevelRMCRTMethod);
+    rmcrt_ps->require("multiLevelRMCRTMethod",  d_multiLevelRMCRTMethod);
+    //__________________________________
+    // read in the regions that user would like 
+    // refined if the grid has not been setup manually
+    bool manualGrid;
+    rmcrt_ps->getWithDefault("manualGrid", manualGrid, false);
 
-        vector<GeometryPieceP> pieces;
-        GeometryPieceFactory::create(geom_obj_ps, pieces);
+    if(!manualGrid){
+      ProblemSpecP refine_ps = rmcrt_ps->findBlock("Refine_Regions");
+      if(!refine_ps ){
+        string warn;
+        warn ="\n INPUT FILE ERROR:\n <Refine_Regions> "
+             " block not found inside of <RMCRT> block \n";
+        throw ProblemSetupException(warn, __FILE__, __LINE__);
+      }
 
-        GeometryPieceP mainpiece;
-        if(pieces.size() == 0){
-           throw ParameterNotFound("No piece specified in geom_object", __FILE__, __LINE__);
-        } else if(pieces.size() > 1){
-           mainpiece = scinew UnionGeometryPiece(pieces);
-        } else {
-           mainpiece = pieces[0];
-        }
-        piece_num++;
-        d_refine_geom_objs.push_back(scinew GeometryObject(mainpiece,geom_obj_ps,geom_obj_data));
+      // Read in the refined regions geometry objects
+      int piece_num = 0;
+      list<GeometryObject::DataItem> geom_obj_data;
+      geom_obj_data.push_back(GeometryObject::DataItem("level", GeometryObject::Integer));
+
+      for (ProblemSpecP geom_obj_ps = refine_ps->findBlock("geom_object");
+            geom_obj_ps != 0;
+            geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
+
+          vector<GeometryPieceP> pieces;
+          GeometryPieceFactory::create(geom_obj_ps, pieces);
+
+          GeometryPieceP mainpiece;
+          if(pieces.size() == 0){
+             throw ParameterNotFound("No piece specified in geom_object", __FILE__, __LINE__);
+          } else if(pieces.size() > 1){
+             mainpiece = scinew UnionGeometryPiece(pieces);
+          } else {
+             mainpiece = pieces[0];
+          }
+          piece_num++;
+          d_refine_geom_objs.push_back(scinew GeometryObject(mainpiece,geom_obj_ps,geom_obj_data));
+       }
      }
-   }
 
-  //__________________________________
-  //  bulletproofing
-  if(!d_sharedState->isLockstepAMR()){
-    ostringstream msg;
-    msg << "\n ERROR: You must add \n"
-        << " <useLockStep> true </useLockStep> \n"
-        << " inside of the <AMR> section. \n"; 
-    throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
-  }  
+    //__________________________________
+    //  bulletproofing
+    if(!d_sharedState->isLockstepAMR()){
+      ostringstream msg;
+      msg << "\n ERROR: You must add \n"
+          << " <useLockStep> true </useLockStep> \n"
+          << " inside of the <AMR> section. \n"; 
+      throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
+    }  
+  }
 }
   
 //______________________________________________________________________
