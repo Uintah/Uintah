@@ -41,7 +41,6 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/PlasticityModelFactory.h>
 #include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/DamageModelFactory.h>
 #include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/MPMEquationOfStateFactory.h>
-#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/MieGruneisenEOSEnergy.h>
 #include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/ShearModulusModelFactory.h>
 #include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/MeltingTempModelFactory.h>
 #include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/SpecificHeatModelFactory.h>
@@ -141,28 +140,12 @@ ElasticPlasticHP::ElasticPlasticHP(ProblemSpecP& ps,MPMFlags* Mflag)
     throw ParameterNotFound(desc.str(), __FILE__, __LINE__);
   }
   
-   ProblemSpecP child = ps->findBlock("equation_of_state");
-   if(!child) {
-      cerr << "**WARNING** Creating default MieGruneisenEOSEnergy of state" 
-           << endl;
-      d_eos = scinew MieGruneisenEOSEnergy(child);
-   }
-   string mat_type;
-   if(!child->getAttribute("type", mat_type))
-      throw ProblemSetupException("No type for equation_of_state", __FILE__, __LINE__);
-
-   if (mat_type == "mie_gruneisen")
-      d_eos = scinew MieGruneisenEOSEnergy(child);
-   else if (mat_type == "mie_gruneisen_energy")
-      d_eos = scinew MieGruneisenEOSEnergy(child);
-   else {
-      throw ProblemSetupException("With ElasticPlasticHP, you must use the mie_gruneisen energy form EOS ("+mat_type+")", __FILE__, __LINE__);
-   }
-
+  d_eos = MPMEquationOfStateFactory::create(ps);
   if(!d_eos){
     ostringstream desc;
-    desc << "An error occured in creating the MieGruneisenEOSEnergy \n"
-         << "Please tell Jim \n";
+    desc << "An error occured in the EquationOfStateFactory that has \n"
+         << " slipped through the existing bullet proofing. Please tell \n"
+         << " Jim.  "<< endl;
     throw ParameterNotFound(desc.str(), __FILE__, __LINE__);
   }
 
