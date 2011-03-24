@@ -371,6 +371,14 @@ namespace Uintah {
           }  // initialGuess
         } // patch loop
         HYPRE_StructVectorAssemble(HX);
+        
+#if 0   
+        //__________________________________
+        //   Debugging      
+        HYPRE_StructMatrixPrint("out.A", HA, 0);
+        HYPRE_StructVectorPrint("out.b", HB, 0);
+        HYPRE_StructVectorPrint("out.x", HX, 0);
+#endif  
 
         double solve_start = Time::currentSeconds();
         int num_iterations;
