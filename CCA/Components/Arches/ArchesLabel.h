@@ -516,6 +516,7 @@ namespace Uintah {
       MomentMap DQMOMMoments;
 
       const VarLabel* d_areaFractionLabel; 
+      const VarLabel* d_volFractionLabel; 
 
       std::vector<std::string> model_req_species;
 

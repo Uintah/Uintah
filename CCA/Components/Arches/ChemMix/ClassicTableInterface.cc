@@ -266,6 +266,7 @@ ClassicTableInterface::sched_getState( const LevelP& level,
   tsk->modifies( d_lab->d_densityCPLabel );  // lame .... fix me
   if ( modify_ref_den )
     tsk->computes(time_labels->ref_density); 
+  tsk->requires( Task::NewDW, d_lab->d_volFractionLabel, gn, 0 ); 
 
   sched->addTask( tsk, level->eachPatch(), d_lab->d_sharedState->allArchesMaterials() ); 
 }
@@ -290,6 +291,10 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
     const Patch* patch = patches->get(p); 
     int archIndex = 0; 
     int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+
+    // volume fraction: 
+    constCCVariable<double> eps_vol; 
+    new_dw->get( eps_vol, d_lab->d_volFractionLabel, matlIndex, patch, gn, 0 ); 
 
     //independent variables:
     std::vector<constCCVariable<double> > indep_storage; 
@@ -406,6 +411,7 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
       for ( DepVarMap::iterator i = depend_storage.begin(); i != depend_storage.end(); ++i ){
 
           double table_value = tableLookUp( iv, i->second.index ); 
+          table_value *= eps_vol[c]; 
           (*i->second.var)[c] = table_value;
 
           if (i->first == "density") {
@@ -505,6 +511,7 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
           for ( DepVarMap::iterator i = depend_storage.begin(); i != depend_storage.end(); ++i ){
 
               double table_value = tableLookUp( iv, i->second.index ); 
+              table_value *= eps_vol[c]; 
               (*i->second.var)[c] = table_value;
 
               if (i->first == "density") {
@@ -852,10 +859,7 @@ ClassicTableInterface::oldTableHack( const InletStream& inStream, Stream& outStr
 
     if ( inStream.d_initEnthalpy || ((abs(adiab_enthalpy - enthalpy)/abs(adiab_enthalpy) < 1.0e-4 ) && f < 1.0e-4) ) {
 
-      if ( bc_type == "scalar_init" )
-        current_heat_loss = d_hl_scalar_init; 
-      else
-        current_heat_loss = 0.0; 
+      current_heat_loss = inStream.d_heatloss; 
 
       init_enthalpy = adiab_enthalpy - current_heat_loss * sensible_enthalpy; 
 
@@ -1349,10 +1353,10 @@ ClassicTableInterface::loadMixingTable( const string & inputfile )
 
   } else if ( d_indepvarscount == 3 ){ 
 
-    proc0cout << "Reading in the variables: " << endl;
+    proc0cout << "Reading in the dependent variables: " << endl;
     for (int kk=0; kk< d_varscount; kk++){
 
-      proc0cout << " reading in --> " << d_allDepVarNames[kk] << endl;
+      proc0cout << " loading --> " << d_allDepVarNames[kk] << endl;
       for ( int mm = 0; mm < d_allIndepVarNum[2]; mm++ ){ 
 
         for (int i = 0; i < d_allIndepVarNum[0]; i++){

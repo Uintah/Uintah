@@ -448,6 +448,7 @@ void BoundaryCondition_new::setVectorValueBC( const ProcessorGroup*,
 void BoundaryCondition_new::setAreaFraction( 
     const Patch* patch,
     CCVariable<Vector>& areaFraction, 
+    CCVariable<double>&  volFraction, 
     constCCVariable<int>& cellType, 
     const int wallType, 
     const int flowType )
@@ -457,6 +458,8 @@ void BoundaryCondition_new::setAreaFraction(
   // areaFraction.x = xminus area fraction
   // areaFraction.y = yminus area fraction
   // areaFraction.z = zminus area fraction 
+  //
+  // volFraction is the GAS volume fraction
 
   for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
     
@@ -466,8 +469,10 @@ void BoundaryCondition_new::setAreaFraction(
     IntVector czm = *iter - IntVector(0,0,1); 
 
     // curr cell is a wall 
-    if ( cellType[c] == wallType )
+    if ( cellType[c] == wallType ) {
       areaFraction[c] = Vector(0.,0.,0.);
+      volFraction[c]  = 0.0;
+    }
 
     // x-minus is a wall but curr cell is flow 
     if ( cellType[c] == flowType && cellType[cxm] == wallType ) {
