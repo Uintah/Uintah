@@ -30,6 +30,7 @@ DEALINGS IN THE SOFTWARE.
 
 #include <CCA/Components/Solvers/HypreSolver.h>
 #include <CCA/Components/Solvers/MatrixUtil.h>
+#include <Core/Grid/DbgOutput.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Variables/NCVariable.h>
@@ -138,7 +139,7 @@ namespace Uintah {
                Handle<HypreStencil7<Types> >)
     {
       typedef typename Types::sol_type sol_type;
-      cout_doing << "HypreSolver2::solve" << endl;
+
 
       DataWarehouse* A_dw = new_dw->getOtherDataWarehouse(which_A_dw);
       DataWarehouse* b_dw = new_dw->getOtherDataWarehouse(which_b_dw);
@@ -225,7 +226,7 @@ namespace Uintah {
 
         for(int p=0;p<patches->size();p++){
           const Patch* patch = patches->get(p);
-
+          printTask( patches, patch, cout_doing, "HypreSolver:solve: Create Matrix" );
           //__________________________________
           // Get A matrix from the DW
           typename Types::matrix_type A;
@@ -297,6 +298,7 @@ namespace Uintah {
 
         for(int p=0;p<patches->size();p++){
           const Patch* patch = patches->get(p);
+          printTask( patches, patch, cout_doing, "HypreSolver:solve: Create RHS" );
 
           //__________________________________
           // Get the B vector from the DW
@@ -337,7 +339,8 @@ namespace Uintah {
 
         for(int p=0;p<patches->size();p++){
           const Patch* patch = patches->get(p);
-
+          printTask( patches, patch, cout_doing, "HypreSolver:solve: Create X" );
+          
           //__________________________________
           // Get the initial guess
           if(guess_label){
@@ -372,13 +375,7 @@ namespace Uintah {
         } // patch loop
         HYPRE_StructVectorAssemble(HX);
         
-#if 0   
-        //__________________________________
-        //   Debugging      
-        HYPRE_StructMatrixPrint("out.A", HA, 0);
-        HYPRE_StructVectorPrint("out.b", HB, 0);
-        HYPRE_StructVectorPrint("out.x", HX, 0);
-#endif  
+  
 
         double solve_start = Time::currentSeconds();
         int num_iterations;
@@ -653,6 +650,16 @@ namespace Uintah {
           throw InternalError("Unknown solver type: "+params->solvertype, __FILE__, __LINE__);
         }
         
+        
+#if 0 
+        //__________________________________
+        //   Debugging      
+        HYPRE_StructMatrixPrint("out.A", HA, 0);
+        HYPRE_StructVectorPrint("out.b", HB, 0);
+        HYPRE_StructVectorPrint("out.x", HX, 0);
+#endif
+        
+        printTask( patches, patches->get(0), cout_doing, "HypreSolver:solve: testConvergence" );
         //__________________________________
         // Test for convergence
         if(final_res_norm > params->tolerance || finite(final_res_norm) == 0){
@@ -675,7 +682,7 @@ namespace Uintah {
 
         for(int p=0;p<patches->size();p++){
           const Patch* patch = patches->get(p);
-
+          printTask( patches, patch, cout_doing, "HypreSolver:solve: copy solution" );
           Patch::VariableBasis basis = Patch::translateTypeToBasis(sol_type::getTypeDescription()->getType(), true);
 
           IntVector l,h;
@@ -894,6 +901,7 @@ namespace Uintah {
                                    const VarLabel* guess,Task::WhichDW which_guess_dw,
                                    const SolverParameters* params)
   {
+    printSchedule(level, cout_doing, "HypreSolver:scheduleSolve");
     Task* task;
     // The extra handle arg ensures that the stencil7 object will get freed
     // when the task gets freed.  The downside is that the refcount gets
@@ -902,7 +910,7 @@ namespace Uintah {
     TypeDescription::Type domtype = A->typeDescription()->getType();
     ASSERTEQ(domtype, x->typeDescription()->getType());
     ASSERTEQ(domtype, b->typeDescription()->getType());
-    
+
     //__________________________________
     // bulletproofing
     IntVector periodic = level->getPeriodicBoundaries();
@@ -977,6 +985,7 @@ namespace Uintah {
 
     task->requires(which_b_dw, b, Ghost::None, 0);
     LoadBalancer* lb = sched->getLoadBalancer();
+    
     sched->addTask(task, lb->getPerProcessorPatchSet(level), matls);
   }
   
