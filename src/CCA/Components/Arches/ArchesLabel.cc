@@ -512,6 +512,7 @@ ArchesLabel::ArchesLabel()
   
   // Boundary condition variables
   d_areaFractionLabel         = VarLabel::create("areaFraction", CC_Vector); 
+  d_volFractionLabel          = VarLabel::create("volFraction", CC_double); 
 }
 
 //****************************************************************************
@@ -821,6 +822,7 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_tempFzLabel);
 
   VarLabel::destroy(d_areaFractionLabel); 
+  VarLabel::destroy(d_volFractionLabel); 
 
   for (PartVelMap::iterator i = partVel.begin(); i != partVel.end(); i++){
     VarLabel::destroy(i->second); 

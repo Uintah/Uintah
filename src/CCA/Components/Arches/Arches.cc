@@ -846,6 +846,8 @@ Arches::sched_paramInit(const LevelP& level,
     tsk->computes(d_lab->d_newCCWVelocityLabel);
     tsk->computes(d_lab->d_pressurePSLabel);
     tsk->computes(d_lab->d_areaFractionLabel); 
+    tsk->computes(d_lab->d_volFractionLabel); 
+
     if ((d_extraProjection)||(d_EKTCorrection)){
       tsk->computes(d_lab->d_pressureExtraProjectionLabel);
     }
@@ -975,9 +977,12 @@ Arches::paramInit(const ProcessorGroup* pg,
     CCVariable<double> pPlusHydro;
     CCVariable<double> mmgasVolFrac;
     CCVariable<Vector> areaFraction; 
+    CCVariable<double> volFraction; 
 
     new_dw->allocateAndPut( areaFraction, d_lab->d_areaFractionLabel, indx, patch ); 
+    new_dw->allocateAndPut( volFraction, d_lab->d_volFractionLabel, indx, patch ); 
     areaFraction.initialize(Vector(1.,1.,1.));         
+    volFraction.initialize(1.0);
 
     CCVariable<double> scalarBoundarySrc;
     CCVariable<double> enthalpyBoundarySrc;

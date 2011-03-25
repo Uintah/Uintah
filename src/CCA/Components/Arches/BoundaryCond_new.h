@@ -53,6 +53,7 @@ public:
   void setAreaFraction( 
     const Patch* patch,
     CCVariable<Vector>& areaFraction, 
+    CCVariable<double>& volFraction, 
     constCCVariable<int>& pcell, 
     const int wallType, 
     const int flowType );

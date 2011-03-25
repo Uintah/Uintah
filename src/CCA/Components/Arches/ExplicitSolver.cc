@@ -913,6 +913,7 @@ ExplicitSolver::sched_setInitialGuess(SchedulerP& sched,
   tsk->requires(Task::OldDW, d_lab->d_viscosityCTSLabel,  gn, 0);
   tsk->requires(Task::OldDW, d_lab->d_newCCVelocityLabel, gn, 0);
   tsk->requires(Task::OldDW, d_lab->d_areaFractionLabel,  gn, 0); 
+  tsk->requires(Task::OldDW, d_lab->d_volFractionLabel,   gn, 0); 
 
   if (!(d_MAlab))
     tsk->computes(d_lab->d_cellInfoLabel);
@@ -935,6 +936,7 @@ ExplicitSolver::sched_setInitialGuess(SchedulerP& sched,
   tsk->computes(d_lab->d_wmomBoundarySrcLabel); 
   tsk->computes(d_lab->d_viscosityCTSLabel);
   tsk->computes(d_lab->d_areaFractionLabel); 
+  tsk->computes(d_lab->d_volFractionLabel); 
   
   //__________________________________
   if (d_MAlab){
@@ -1937,6 +1939,7 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
     constCCVariable<double> reactscalardiff;
     constCCVariable<Vector> ccVel; 
     constCCVariable<Vector> old_areaFraction; 
+    constCCVariable<double> old_volFraction; 
     constCCVariable<double> old_volq;
  
     old_dw->get(uVelocity, d_lab->d_uVelocitySPBCLabel, indx, patch, gn, 0);
@@ -1947,6 +1950,7 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
     old_dw->get(viscosity, d_lab->d_viscosityCTSLabel,  indx, patch, gn, 0);
     old_dw->get(ccVel,     d_lab->d_newCCVelocityLabel, indx, patch, gn, 0);
     old_dw->get(old_areaFraction, d_lab->d_areaFractionLabel, indx, patch, gn, 0); 
+    old_dw->get(old_volFraction, d_lab->d_volFractionLabel, indx, patch, gn, 0); 
 
     if (d_enthalpySolve){
       old_dw->get(enthalpy, d_lab->d_enthalpySPLabel, indx, patch, gn, 0);
@@ -2008,7 +2012,10 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
     CCVariable<Vector> new_areaFraction; 
     new_dw->allocateAndPut(new_areaFraction, d_lab->d_areaFractionLabel, indx, patch); 
     new_areaFraction.copyData(old_areaFraction); // copy old into new
-   
+
+    CCVariable<double> new_volFraction; 
+    new_dw->allocateAndPut( new_volFraction, d_lab->d_volFractionLabel, indx, patch ); 
+    new_volFraction.copyData( old_volFraction ); // copy old into new
  
     new_dw->allocateAndPut(scalar_temp, d_lab->d_scalarTempLabel, indx, patch);
     scalar_temp.copyData(scalar); // copy old into new

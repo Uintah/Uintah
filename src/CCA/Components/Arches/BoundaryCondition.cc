@@ -6331,6 +6331,7 @@ void BoundaryCondition::sched_setAreaFraction(SchedulerP& sched,
   Task* tsk = scinew Task( "BoundaryCondition::setAreaFraction",this, &BoundaryCondition::setAreaFraction);
 
   tsk->modifies(d_lab->d_areaFractionLabel); 
+  tsk->modifies(d_lab->d_volFractionLabel); 
   tsk->requires( Task::NewDW, d_lab->d_cellTypeLabel, Ghost::AroundCells, 1 ); 
  
   sched->addTask(tsk, patches, matls);
@@ -6348,20 +6349,22 @@ BoundaryCondition::setAreaFraction( const ProcessorGroup*,
     int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
     CCVariable<Vector>   areaFraction; 
+    CCVariable<double>   volFraction; 
     constCCVariable<int> cellType; 
 
     new_dw->get( cellType, d_lab->d_cellTypeLabel, indx, patch, Ghost::AroundCells, 1 ); 
     new_dw->getModifiable( areaFraction, d_lab->d_areaFractionLabel, indx, patch );  
+    new_dw->getModifiable( volFraction, d_lab->d_volFractionLabel, indx, patch );  
 
     int flowType = -1; 
     if (d_intrusionBoundary) 
-      d_newBC->setAreaFraction( patch, areaFraction, cellType, d_intrusionBC->d_cellTypeID, flowType ); 
+      d_newBC->setAreaFraction( patch, areaFraction, volFraction, cellType, d_intrusionBC->d_cellTypeID, flowType ); 
 
     if (d_MAlab)
-      d_newBC->setAreaFraction( patch, areaFraction, cellType, d_mmWallID, flowType ); 
+      d_newBC->setAreaFraction( patch, areaFraction, volFraction, cellType, d_mmWallID, flowType ); 
 
     if (d_wallBdry) 
-      d_newBC->setAreaFraction( patch, areaFraction, cellType, d_wallBdry->d_cellTypeID, flowType ); 
+      d_newBC->setAreaFraction( patch, areaFraction, volFraction, cellType, d_wallBdry->d_cellTypeID, flowType ); 
 
   }
 }
