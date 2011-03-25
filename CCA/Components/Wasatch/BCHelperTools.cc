@@ -159,7 +159,8 @@ namespace Wasatch {
       
       // get the variable name
       std::string phiName;
-      transEqnParams->get("SolutionVariable",phiName);
+      Expr::TransportEquation* transEq = adaptor->equation();
+      phiName = transEq->solution_variable_name();
       
       // find out if this corresponds to a staggered or non-staggered field
       std::string staggeredDirection;
