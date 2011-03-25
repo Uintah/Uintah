@@ -85,6 +85,10 @@ ClassicTableInterface::problemSetup( const ProblemSpecP& propertiesParameters )
   db_tabprops->getWithDefault( "cold_flow", d_coldflow, false); 
   db_properties_root->getWithDefault( "use_mixing_model", d_use_mixing_model, false ); 
 
+  d_noisy_hl_warning = false; 
+  if ( ProblemSpecP temp = db_tabprops->findBlock("noisy_hl_warning") ) 
+    d_noisy_hl_warning = true; 
+
   // only solve for heat loss if a working radiation model is found
   const ProblemSpecP params_root = db_tabprops->getRootNode();
   ProblemSpecP db_enthalpy  =  params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ExplicitSolver")->findBlock("EnthalpySolver");
@@ -263,7 +267,6 @@ ClassicTableInterface::sched_getState( const LevelP& level,
   if ( modify_ref_den )
     tsk->computes(time_labels->ref_density); 
 
-
   sched->addTask( tsk, level->eachPatch(), d_lab->d_sharedState->allArchesMaterials() ); 
 }
 
@@ -402,23 +405,22 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
       // retrieve all depenedent variables from table
       for ( DepVarMap::iterator i = depend_storage.begin(); i != depend_storage.end(); ++i ){
 
-        double table_value = tableLookUp( iv, i->second.index ); 
-        (*i->second.var)[c] = table_value;
+          double table_value = tableLookUp( iv, i->second.index ); 
+          (*i->second.var)[c] = table_value;
 
-        if (i->first == "density") {
-          arches_density[c] = table_value; 
-          if (d_MAlab)
-            mpmarches_denmicro[c] = table_value; 
-        } else if (i->first == "temperature" && !d_coldflow) {
-          arches_temperature[c] = table_value; 
-          //} else if (i->first == "heat_capacity" && !d_coldflow) {
-      } else if (i->first == "specificheat" && !d_coldflow) {
-        arches_cp[c] = table_value; 
-      } else if (i->first == "CO2" && !d_coldflow) {
-        arches_co2[c] = table_value; 
-      } else if (i->first == "H2O" && !d_coldflow) {
-        arches_h2o[c] = table_value; 
-      }
+          if (i->first == "density") {
+            arches_density[c] = table_value; 
+            if (d_MAlab)
+              mpmarches_denmicro[c] = table_value; 
+          } else if (i->first == "temperature" && !d_coldflow) {
+            arches_temperature[c] = table_value; 
+          } else if (i->first == "specificheat" && !d_coldflow) {
+            arches_cp[c] = table_value; 
+          } else if (i->first == "CO2" && !d_coldflow) {
+            arches_co2[c] = table_value; 
+          } else if (i->first == "H2O" && !d_coldflow) {
+            arches_h2o[c] = table_value; 
+          }
 
       }
     }
@@ -502,25 +504,24 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
           // now get state for boundary cell: 
           for ( DepVarMap::iterator i = depend_storage.begin(); i != depend_storage.end(); ++i ){
 
-            double table_value = tableLookUp( iv, i->second.index ); 
-            (*i->second.var)[c] = table_value;
+              double table_value = tableLookUp( iv, i->second.index ); 
+              (*i->second.var)[c] = table_value;
 
-            if (i->first == "density") {
-              //double ghost_value = 2.0*table_value - arches_density[cp1];
-              arches_density[c] = table_value;
-              //arches_density[c] = ghost_value; 
-              if (d_MAlab)
-                mpmarches_denmicro[c] = table_value; 
-            } else if (i->first == "temperature" && !d_coldflow) {
-              arches_temperature[c] = table_value; 
-              //} else if (i->first == "heat_capacity" && !d_coldflow) {
-          } else if (i->first == "specificheat" && !d_coldflow) {
-            arches_cp[c] = table_value; 
-          } else if (i->first == "CO2" && !d_coldflow) {
-            arches_co2[c] = table_value; 
-          } else if (i->first == "H2O" && !d_coldflow) {
-            arches_h2o[c] = table_value; 
-          }
+              if (i->first == "density") {
+                //double ghost_value = 2.0*table_value - arches_density[cp1];
+                arches_density[c] = table_value;
+                //arches_density[c] = ghost_value; 
+                if (d_MAlab)
+                  mpmarches_denmicro[c] = table_value; 
+              } else if (i->first == "temperature" && !d_coldflow) {
+                arches_temperature[c] = table_value; 
+              } else if (i->first == "specificheat" && !d_coldflow) {
+                arches_cp[c] = table_value; 
+              } else if (i->first == "CO2" && !d_coldflow) {
+                arches_co2[c] = table_value; 
+              } else if (i->first == "H2O" && !d_coldflow) {
+                arches_h2o[c] = table_value; 
+              }
           }
           iv.clear(); 
         }
@@ -633,6 +634,9 @@ ClassicTableInterface::computeHeatLoss( const ProcessorGroup* pc,
         }
       }
 
+      bool lower_hl_exceeded = false; 
+      bool upper_hl_exceeded = false;
+
       for (CellIterator iter=patch->getCellIterator(0); !iter.done(); iter++){
         IntVector c = *iter; 
 
@@ -660,14 +664,32 @@ ClassicTableInterface::computeHeatLoss( const ProcessorGroup* pc,
         if ( calcEnthalpy )
           current_heat_loss = ( adiabatic_enthalpy - enthalpy[c] ) / ( sensible_enthalpy + small ); 
 
-        if ( current_heat_loss < -1.0 )
-          current_heat_loss = -1.0; 
-        else if ( current_heat_loss > 1.0 ) 
-          current_heat_loss = 1.0; 
+        if ( current_heat_loss < d_hl_lower_bound ) {
+
+          current_heat_loss = d_hl_lower_bound; 
+          lower_hl_exceeded = true; 
+
+        } else if ( current_heat_loss > d_hl_upper_bound ) { 
+
+          current_heat_loss = d_hl_upper_bound; 
+          upper_hl_exceeded = true; 
+
+        }
 
         heat_loss[c] = current_heat_loss; 
 
       }
+
+      if ( d_noisy_hl_warning ) { 
+       
+        if ( upper_hl_exceeded || lower_hl_exceeded ) {  
+          cout << "Patch with bounds: " << patch->getCellLowIndex() << " to " << patch->getCellHighIndex()  << endl;
+          if ( lower_hl_exceeded ) 
+            cout << "   --> lower heat loss exceeded. " << endl;
+          if ( upper_hl_exceeded ) 
+            cout << "   --> upper heat loss exceeded. " << endl;
+        } 
+      } 
     }
   }
 }
@@ -1172,15 +1194,23 @@ ClassicTableInterface::loadMixingTable( const string & inputfile )
   proc0cout << " Total number of independent variables: " << d_indepvarscount << endl;
 
   d_allIndepVarNames = vector<std::string>(d_indepvarscount);
+  int index_is_hl = -1; 
+  int hl_grid_size = -1; 
+ 
   for (int ii = 0; ii < d_indepvarscount; ii++) {
     string varname = getString( gzFp );
-    d_allIndepVarNames[ii] =  varname ; 
+    d_allIndepVarNames[ii] =  varname ;
+    if ( varname == "heat_loss" ) 
+      index_is_hl = ii;  
   }
 
   d_allIndepVarNum = vector<int>(d_indepvarscount);
   for (int ii = 0; ii < d_indepvarscount; ii++) {
     int grid_size = getInt( gzFp ); 
     d_allIndepVarNum[ii] =  grid_size ; 
+
+    if ( ii == index_is_hl ) 
+      hl_grid_size = grid_size - 1; 
   }
 
   for (int ii = 0; ii < d_indepvarscount; ii++){
@@ -1259,6 +1289,28 @@ ClassicTableInterface::loadMixingTable( const string & inputfile )
     size = d_allIndepVarNum[0]*
       d_allIndepVarNum[1]*
       d_allIndepVarNum[2]; 
+
+  // getting heat loss bounds: 
+  if ( index_is_hl != -1 ) { 
+    if ( index_is_hl == 0 ) {
+
+      //d_hl_lower_bound = double(i1[0]);
+      //d_hl_upper_bound = double(i1[hl_grid_size]);
+
+    } else if ( index_is_hl == 1 ) { 
+
+      d_hl_lower_bound = i2[0];
+      d_hl_upper_bound = i2[hl_grid_size];
+
+    } else if ( index_is_hl == 2 ) { 
+
+      d_hl_lower_bound = i3[0];
+      d_hl_upper_bound = i3[hl_grid_size];
+
+    } 
+    proc0cout << " Lower bounds on heat loss = " << d_hl_lower_bound << endl;
+    proc0cout << " Upper bounds on heat loss = " << d_hl_upper_bound << endl;
+  } 
 
   table = vector<vector<double> >(d_varscount); 
   for ( int i = 0; i < d_varscount; i++ ){ 

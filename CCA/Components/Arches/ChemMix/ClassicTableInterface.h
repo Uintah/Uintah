@@ -189,12 +189,15 @@ protected :
 private:
 
   bool d_table_isloaded;    ///< Boolean: has the table been loaded?
+  bool d_noisy_hl_warning;  ///< Provide information about heat loss clipping
   
   double d_hl_scalar_init;  ///< Heat loss value for non-adiabatic conditions
   // Specifically for the classic table: 
   double d_f_stoich;        ///< Stoichiometric mixture fraction 
   double d_H_fuel;          ///< Fuel Enthalpy
   double d_H_air;           ///< Oxidizer Enthalpy
+  double d_hl_lower_bound;  ///< Heat loss lower bound
+  double d_hl_upper_bound;  ///< Heat loss upper bound
   
   int d_indepvarscount;     ///< Number of independent variables
   int d_varscount;          ///< Total dependent variables
@@ -215,7 +218,6 @@ private:
   std::vector<double> i2; 
   std::vector<double> i3; 
   std::vector <std::vector <double> > table;
-
 
   /// A dependent variable wrapper
   struct ADepVar {
