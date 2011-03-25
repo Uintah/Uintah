@@ -10,7 +10,10 @@ Dilatation( const Expr::Tag vel1tag,
             const Expr::Tag vel3tag,
             const Expr::ExpressionID& id,
             const Expr::ExpressionRegistry& reg  )
-  : Expr::Expression<FieldT>(id,reg)
+  : Expr::Expression<FieldT>(id,reg),
+  vel1t_( vel1tag ),
+  vel2t_( vel2tag ),
+  vel3t_( vel3tag )
 {}
 
 //--------------------------------------------------------------------
