@@ -160,7 +160,8 @@
         </TabProps>
 
         <ClassicTable                   spec="OPTIONAL NO_DATA">
-          <inputfile                   spec="REQUIRED STRING"/>
+          <inputfile                    spec="REQUIRED STRING"/>
+          <noisy_hl_warning             spec="OPTIONAL NO_DATA"/>
           <coal                         spec="OPTIONAL NO_DATA" 
                                         attribute1="fp_label REQUIRED STRING"     
                                         attribute2="eta_label REQUIRED STRING"/> <!-- Attributes must match the transported IVs specified in the TransportEqn node --> 
