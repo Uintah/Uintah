@@ -76,21 +76,21 @@ ClassicTableInterface::problemSetup( const ProblemSpecP& propertiesParameters )
 {
   // Create sub-ProblemSpecP object
   string tableFileName;
-  ProblemSpecP db_tabprops = propertiesParameters->findBlock("ClassicTable");
+  ProblemSpecP db_classic = propertiesParameters->findBlock("ClassicTable");
   ProblemSpecP db_properties_root = propertiesParameters; 
 
   // Obtain object parameters
-  db_tabprops->require( "inputfile", tableFileName );
-  db_tabprops->getWithDefault( "hl_scalar_init", d_hl_scalar_init, 0.0); 
-  db_tabprops->getWithDefault( "cold_flow", d_coldflow, false); 
+  db_classic->require( "inputfile", tableFileName );
+  db_classic->getWithDefault( "hl_scalar_init", d_hl_scalar_init, 0.0); 
+  db_classic->getWithDefault( "cold_flow", d_coldflow, false); 
   db_properties_root->getWithDefault( "use_mixing_model", d_use_mixing_model, false ); 
 
   d_noisy_hl_warning = false; 
-  if ( ProblemSpecP temp = db_tabprops->findBlock("noisy_hl_warning") ) 
+  if ( ProblemSpecP temp = db_classic->findBlock("noisy_hl_warning") ) 
     d_noisy_hl_warning = true; 
 
   // only solve for heat loss if a working radiation model is found
-  const ProblemSpecP params_root = db_tabprops->getRootNode();
+  const ProblemSpecP params_root = db_classic->getRootNode();
   ProblemSpecP db_enthalpy  =  params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ExplicitSolver")->findBlock("EnthalpySolver");
   if (db_enthalpy) { 
     ProblemSpecP db_radiation = params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ExplicitSolver")->findBlock("EnthalpySolver")->findBlock("DORadiationModel");
@@ -107,7 +107,7 @@ ClassicTableInterface::problemSetup( const ProblemSpecP& propertiesParameters )
   }
 
   // need the reference denisty point: (also in PhysicalPropteries object but this was easier than passing it around)
-  const ProblemSpecP db_root = db_tabprops->getRootNode(); 
+  const ProblemSpecP db_root = db_classic->getRootNode(); 
   db_root->findBlock("PhysicalConstants")->require("reference_point", d_ijk_den_ref);  
 
   // READ TABLE: 
@@ -176,12 +176,12 @@ ClassicTableInterface::problemSetup( const ProblemSpecP& propertiesParameters )
   proc0cout << endl;
 
   // create a transform object
-  if ( db_tabprops->findBlock("coal") ) {
+  if ( db_classic->findBlock("coal") ) {
     _iv_transform = scinew CoalTransform(); 
   } else { 
     _iv_transform = scinew NoTransform();
   }
-  bool check_transform = _iv_transform->problemSetup( db_tabprops, d_allIndepVarNames ); 
+  bool check_transform = _iv_transform->problemSetup( db_classic, d_allIndepVarNames ); 
   if ( !check_transform ){ 
     throw ProblemSetupException( "Could not properly setup independent variable transform based on input.",__FILE__,__LINE__); 
   }

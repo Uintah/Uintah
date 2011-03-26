@@ -670,7 +670,6 @@ Arches::scheduleInitialize(const LevelP& level,
   // compute : [u,v,w]VelocityIN, pressureIN, scalarIN, densityIN,
   //           viscosityIN
   sched_paramInit(level, sched);
-  sched_scalarInit(level, sched);
 
   if (d_set_initial_condition) {
     sched_readCCInitialCondition(level, sched);
@@ -687,6 +686,12 @@ Arches::scheduleInitialize(const LevelP& level,
   // compute : cellType
   d_boundaryCondition->sched_cellTypeInit(sched, patches, matls);
   //d_boundaryCondition->sched_cellTypeInit__NEW( sched, patches, matls ); 
+  //
+  // compute the cell area fraction 
+  d_boundaryCondition->sched_setAreaFraction( sched, patches, matls ); 
+
+  sched_scalarInit(level, sched);
+
 
   // computing flow inlet areas
   if (d_boundaryCondition->getInletBC()){
@@ -808,9 +813,6 @@ Arches::scheduleInitialize(const LevelP& level,
     EqnBase* eqn = ieqn->second; 
     eqn->sched_checkBCs( level, sched ); 
   }
-
-  // compute the cell area fraction 
-  d_boundaryCondition->sched_setAreaFraction( sched, patches, matls ); 
 
 }
 
@@ -1602,6 +1604,8 @@ Arches::sched_scalarInit( const LevelP& level,
 
   }
 
+  tsk->requires( Task::NewDW, d_lab->d_volFractionLabel, Ghost::None ); 
+
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
 
 }
@@ -1633,14 +1637,16 @@ Arches::scalarInit( const ProcessorGroup* ,
 
       CCVariable<double> phi; 
       CCVariable<double> oldPhi; 
+      constCCVariable<double> eps_v; 
       new_dw->allocateAndPut( phi, phiLabel, matlIndex, patch ); 
       new_dw->allocateAndPut( oldPhi, oldPhiLabel, matlIndex, patch ); 
+      new_dw->get( eps_v, d_lab->d_volFractionLabel, matlIndex, patch, Ghost::None, 0 ); 
     
       phi.initialize(0.0);
       oldPhi.initialize(0.0); 
 
       // initialize to something other than zero if desired. 
-      eqn->initializationFunction( patch, phi ); 
+      eqn->initializationFunction( patch, phi, eps_v ); 
 
       oldPhi.copyData(phi);
 
@@ -1708,6 +1714,8 @@ Arches::sched_weightInit( const LevelP& level,
     }
   } 
 
+  tsk->requires( Task::NewDW, d_lab->d_volFractionLabel, Ghost::None ); 
+
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
 }
 //______________________________________________________________________
@@ -1737,6 +1745,9 @@ Arches::weightInit( const ProcessorGroup* ,
     const Patch* patch=patches->get(p);
 
     CCVariable<Vector> partVel; 
+    constCCVariable<double> eps_v; 
+
+    new_dw->get( eps_v, d_lab->d_volFractionLabel, matlIndex, patch, Ghost::None, 0 ); 
 
     DQMOMEqnFactory& dqmomFactory = DQMOMEqnFactory::self(); 
     DQMOMEqnFactory::EqnMap& dqmom_eqns = dqmomFactory.retrieve_all_eqns(); 
@@ -1772,7 +1783,7 @@ Arches::weightInit( const ProcessorGroup* ,
         phi_icv.initialize(0.0);
       
         // initialize phi
-        eqn->initializationFunction( patch, phi );
+        eqn->initializationFunction( patch, phi, eps_v );
 
         // do boundary conditions
         eqn->computeBCs( patch, eqn_name, phi );
@@ -1852,6 +1863,8 @@ Arches::sched_weightedAbsInit( const LevelP& level,
 
   }
 
+  tsk->requires( Task::NewDW, d_lab->d_volFractionLabel, Ghost::None ); 
+
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
 }
 //______________________________________________________________________
@@ -1881,8 +1894,11 @@ Arches::weightedAbsInit( const ProcessorGroup* ,
     const Patch* patch=patches->get(p);
 
     CCVariable<Vector> partVel;
+    constCCVariable<double> eps_v; 
 
     Ghost::GhostType  gn = Ghost::None;
+
+    new_dw->get( eps_v, d_lab->d_volFractionLabel, matlIndex, patch, gn, 0 ); 
 
     DQMOMEqnFactory& dqmomFactory = DQMOMEqnFactory::self(); 
     DQMOMEqnFactory::EqnMap& dqmom_eqns = dqmomFactory.retrieve_all_eqns(); 
@@ -1931,9 +1947,9 @@ Arches::weightedAbsInit( const ProcessorGroup* ,
       
         // initialize phi
         if( d_which_dqmom == "unweightedAbs" ){
-          eqn->initializationFunction( patch, phi);
+          eqn->initializationFunction( patch, phi, eps_v);
         } else {
-          eqn->initializationFunction( patch, phi, weight );
+          eqn->initializationFunction( patch, phi, weight, eps_v );
         }
 
         // do boundary conditions
