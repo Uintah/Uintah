@@ -92,11 +92,11 @@ public:
   template <class phiType> void computeBCs( const Patch* patch, string varName, phiType& phi );
 
   /** @brief Set the initial value of the transported variable to some function */
-  template <class phiType> void initializationFunction( const Patch* patch, phiType& phi ); 
+  template <class phiType> void initializationFunction( const Patch* patch, phiType& phi, constCCVariable<double>& eps_v ); 
   
   /** @brief Set the initial value of the DQMOM transported variable to some function */
   template <class phiType, class constPhiType>  
-  void initializationFunction( const Patch* patch, phiType& phi, constPhiType& weight  );
+  void initializationFunction( const Patch* patch, phiType& phi, constPhiType& weight, constCCVariable<double>& eps_v  );
 
   // Access functions:
   /** @brief Set the boundary condition object associated with this transport equation object */
@@ -223,7 +223,7 @@ private:
 // DQMOM Weighted Abscissa
 //---------------------------------------------------------------------------
 template <class phiType, class constPhiType>  
-void EqnBase::initializationFunction( const Patch* patch, phiType& phi, constPhiType& weight  ) 
+void EqnBase::initializationFunction( const Patch* patch, phiType& phi, constPhiType& weight, constCCVariable<double>& eps_v  ) 
 {
   proc0cout << "initializing scalar equation " << d_eqnName << endl;
 
@@ -308,6 +308,7 @@ void EqnBase::initializationFunction( const Patch* patch, phiType& phi, constPhi
 
     }//end d_initFunction types
 
+    phi[c] *= eps_v[c];
 
   }
 }
@@ -316,7 +317,7 @@ void EqnBase::initializationFunction( const Patch* patch, phiType& phi, constPhi
 // Standard Scalar, DQMOM Weight
 //---------------------------------------------------------------------------
 template <class phiType>  
-void EqnBase::initializationFunction( const Patch* patch, phiType& phi ) 
+void EqnBase::initializationFunction( const Patch* patch, phiType& phi, constCCVariable<double>& eps_v ) 
 {
   proc0cout << "initializing scalar equation " << d_eqnName << endl;
 
@@ -424,6 +425,7 @@ void EqnBase::initializationFunction( const Patch* patch, phiType& phi )
 
     }//end d_initFunction types
 
+    phi[c] *= eps_v[c]; 
 
   }
 }
