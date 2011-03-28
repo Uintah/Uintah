@@ -87,7 +87,7 @@ foreach indx ($choices[*]:q)
   set comp = `grep ^$indx $tmpFile | cut -f2 -d" "`
   set test = `grep ^$indx $tmpFile | cut -f3 -d" "`
   if ( $#opts > 0 )  then
-    echo Replacing GS for $comp $test
+    echo "Replacing GS for $comp $test"
     set message = ($message $comp "----" $test "\n")
   endif
 end                           
@@ -108,7 +108,7 @@ foreach indx ($choices[*]:q)
   set comp = `grep ^$indx $tmpFile | cut -f2 -d" "`
   set test = `grep ^$indx $tmpFile | cut -f3 -d" "`
   if ( $#opts > 0 )  then
-    echo $opts
+    echo "Replacing GS for $comp : $test  $opts"
     set cmd = "$TS/helpers/replace_gold_standard $opts $GS/$comp $here/$comp-results  $test $logMessage"
     $cmd
   endif
