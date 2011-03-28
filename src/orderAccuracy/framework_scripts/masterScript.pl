@@ -160,13 +160,13 @@ system("which sus") == 0 ||  die("Cannot find the command sus $@");
      
      # make a symbolic link to sus
      my $sus = `which sus`;
-     system("ln -s $sus");
+     system("ln -s $sus >&/dev/null");
      
      # make any symbolic Links needed by that component
      my $j = 0;
      foreach $j (@symLinks) {
        if( $j gt "" && $j ne "."){
-         system("ln -s $j");
+         system("ln -s $j >&/dev/null");
        }
      }
      
