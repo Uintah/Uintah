@@ -4,8 +4,32 @@
 <symbolicLinks> </symbolicLinks>
 
 <test>
-  <name>AA_MMS</name>
+  <name>3rdorderBS_AA_MMS</name>
   <ups>AA.ups</ups>
-  <tst>dx.tst</tst>
+  <tst>3rdorderBS_dx.tst</tst>
+</test>
+
+<test>
+  <name>cpdi_AA_MMS</name>
+  <ups>AA.ups</ups>
+  <tst>cpdi_dx.tst</tst>
+</test>
+
+<test>
+  <name>fastcpdi_AA_MMS</name>
+  <ups>AA.ups</ups>
+  <tst>fastcpdi_dx.tst</tst>
+</test>
+
+<test>
+  <name>gimp_AA_MMS</name>
+  <ups>AA.ups</ups>
+  <tst>gimp_dx.tst</tst>
+</test>
+
+<test>
+  <name>linear_AA_MMS</name>
+  <ups>AA.ups</ups>
+  <tst>linear_dx.tst</tst>
 </test>
 </config>
