@@ -107,6 +107,14 @@ Uintah::AA_MMS( DataArchive * da, CommandLineFlags & clf )
       
     }   // for levels
     cout << "time: " << time << " , L_inf Error: " << max_error << " , Worst particle: " << worstPos << endl;
+    
+    // write data to file (L_inf)
+    FILE *outFile;
+    outFile = fopen("L_inf","w");
+    fprintf(outFile, "%16.16le\n",max_error );
+    fclose(outFile); 
+    
+    
   }
 } // end AA_MMS()
 
