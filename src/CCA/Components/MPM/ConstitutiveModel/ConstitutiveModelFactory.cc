@@ -211,7 +211,7 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
     return(scinew HypoElasticPlastic(child,flags));
 
   else if (mat_type ==  "elastic_plastic")
-    return(scinew ElasticPlastic(child,flags));
+    return(scinew ElasticPlasticHP(child,flags));
 
   else if (mat_type ==  "elastic_plastic_hp")
     return(scinew ElasticPlasticHP(child,flags));
