@@ -1,5 +1,6 @@
 #include <CCA/Components/Arches/CoalModels/ShaddixHeatTransfer.h>
 #include <CCA/Components/Arches/CoalModels/CharOxidation.h>
+#include <CCA/Components/Arches/CoalModels/Devolatilization.h>
 #include <CCA/Components/Arches/CoalModels/PartVel.h>
 #include <CCA/Components/Arches/TransportEqns/EqnFactory.h>
 #include <CCA/Components/Arches/TransportEqns/EqnBase.h>
@@ -285,8 +286,19 @@ ShaddixHeatTransfer::sched_computeModel( const LevelP& level, SchedulerP& sched,
     if( modelNode == d_quadNode) {
       d_surfacerateLabel = iModel->second->getSurfaceRateLabel();
       d_charoxiTempLabel = iModel->second->getParticleTempSourceLabel();
+      d_chargasLabel = iModel->second->getGasSourceLabel();
       tsk->requires( Task::OldDW, d_surfacerateLabel, Ghost::None, 0 );
       tsk->requires( Task::OldDW, d_charoxiTempLabel, Ghost::None, 0 );
+      tsk->requires( Task::OldDW, d_chargasLabel, Ghost::None, 0 );
+    }
+  }
+
+  DevolModelMap devolmodels_ = modelFactory.retrieve_devol_models();
+  for( DevolModelMap::iterator iModel = devolmodels_.begin(); iModel != devolmodels_.end(); ++iModel ) {
+    int modelNode = iModel->second->getquadNode();
+    if( modelNode == d_quadNode) {
+      d_devolgasLabel = iModel->second->getGasSourceLabel();
+      tsk->requires( Task::OldDW, d_devolgasLabel, Ghost::None, 0 );
     }
   }
 
@@ -512,6 +524,8 @@ ShaddixHeatTransfer::computeModel( const ProcessorGroup * pc,
     constCCVariable<double> w_char_mass;
     constCCVariable<double> weight;
     constCCVariable<double> charoxi_temp_source;
+    constCCVariable<double> devol_gas_source;
+    constCCVariable<double> chargas_source;
     constCCVariable<double> surface_rate;
 
     old_dw->get( temperature, d_fieldLabels->d_tempINLabel, matlIndex, patch, gn, 0 );
@@ -521,6 +535,8 @@ ShaddixHeatTransfer::computeModel( const ProcessorGroup * pc,
     old_dw->get( w_char_mass, d_char_mass_label, matlIndex, patch, gn, 0 );
     old_dw->get( weight, d_weight_label, matlIndex, patch, gn, 0 );
     old_dw->get( charoxi_temp_source, d_charoxiTempLabel, matlIndex, patch, gn, 0 );
+    old_dw->get( devol_gas_source, d_devolgasLabel, matlIndex, patch, gn, 0 );
+    old_dw->get( chargas_source, d_chargasLabel, matlIndex, patch, gn, 0 );
     old_dw->get( surface_rate, d_surfacerateLabel, matlIndex, patch, gn, 0 );
 
     constCCVariable<double> specific_heat;
@@ -665,10 +681,10 @@ ShaddixHeatTransfer::computeModel( const ProcessorGroup * pc,
         rkg = props(gas_temperature, unscaled_particle_temperature); // [=] J/s/m/K
 
         // A BLOWING CORRECTION TO THE HEAT TRANSFER MODEL IS EMPLOYED
-        if(abs(surface_rate[c]) < 1e-16){
+        kappa =  -surface_rate[c]*unscaled_length*specific_heat[c]/(2*rkg);
+        if(abs(exp(kappa)-1) < 1e-16){
           blow = 1.0;
         } else {
-          kappa =  -surface_rate[c]*unscaled_length*specific_heat[c]/(2*rkg);
           blow = kappa/(exp(kappa)-1);
         }
         // Q_convection (see Section 5.4 of LES_Coal document)
@@ -686,15 +702,54 @@ ShaddixHeatTransfer::computeModel( const ProcessorGroup * pc,
         } else {
           abskp_ = 0.0;
         }
-      
-        //Q_reaction = charoxi_temp_source[c];
-        Q_reaction = 0.0;
+
+        // Calculate particle enthalpy using composite Simpson's rule
+        int ni = 3;
+        ni *= 2;
+        ai = 298.0;
+        bi = unscaled_particle_temperature;
+        hi = (bi-ai)/ni;
+        Cpci = heatcp(ai);
+        Cphi = heatcph(ai);
+        Cpai = heatap(ai);
+
+        for(int i = 1; i < ni-1; i = i + 2){
+          xi = ai + hi*i;
+          Cpci += 4.0*heatcp(xi);
+          Cphi += 4.0*heatcph(xi);
+          Cpai += 4.0*heatap(xi);
+        }
+        for(int i = 2; i < ni-2; i = i + 2){
+          xi = ai + hi*i;
+          Cpci += 2.0*heatcp(xi);
+          Cphi += 2.0*heatcph(xi);
+          Cpai += 2.0*heatap(xi);
+        }
+
+        Cpci += heatcp(bi);
+        Cphi += heatcph(bi);
+        Cpai += heatap(bi);
+        Hc = hi*Cpci/3;
+        Hh = hi*Cphi/3;
+        Ha = hi*Cpai/3;
+
+        // Particle enthalpy in J/kg
+        if((unscaled_raw_coal_mass + max(0.0,unscaled_char_mass) + unscaled_ash_mass) > 0.0){
+          Particle_enthalpy = (Hc*unscaled_raw_coal_mass + Hh*max(0.0,unscaled_char_mass) + Ha*unscaled_ash_mass)/
+                                   (unscaled_raw_coal_mass + max(0.0,unscaled_char_mass) + unscaled_ash_mass);
+        } else {
+          Particle_enthalpy = 0.0;
+        }
+
+        Q_reaction = charoxi_temp_source[c];
 
         heat_rate_ = (Q_convection + Q_radiation + Q_reaction)/(mp_Cp*d_pt_scaling_constant);
 
         //cout << "Qconv " << Q_convection << " Qrad " << Q_radiation << " Qreac " << Q_reaction << " blow " << blow << endl;
         //cout << "abskp " << abskp_ << endl;
-        gas_heat_rate_ = -unscaled_weight*Q_convection;
+        //cout << "Particle_enthalpy " << Particle_enthalpy << " Cpc " << Cpc << " Cph " << Cph << " Cpa " << Cpa << endl;
+
+        gas_heat_rate_ = -unscaled_weight*Q_convection + (devol_gas_source[c] + chargas_source[c])*Particle_enthalpy;
  
       }
 
