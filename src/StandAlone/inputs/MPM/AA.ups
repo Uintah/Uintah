@@ -5,8 +5,9 @@
     <Meta>
         <title>Axis aligned MMS</title>
     </Meta>
+<!--______________________________________________________________________
 
-<!--  Running this simulation properly will require some changes
+  Running this simulation properly will require some changes
       to the source code:
 
       1.  to src/CCA/Components/MPM/ParticleCreator/ParticleCreator.cc
@@ -56,18 +57,8 @@
 
       2.  to src/Packages/Uintah/CCA/Components/MPM/SerialMPM.cc
 
-          A.  at about line 83:
-
-# define M_PI           3.14159265358979323846  /* pi */
-
-          B.  in scheduleInterpolateToParticlesAndUpdate, about line 1049:
-
-
-          t->requires(Task::NewDW, lb->pDeformationMeasureLabel_preReloc,gnone);
-
-
-          C.  in applyExternalLoads, replace:
-
+           -In applyExternalLoads, replace:
+      __________________________________
       } else {
         // Get the external force data and allocate new space for
         // external force and copy the data
@@ -84,9 +75,10 @@
                   pExternalForce[idx]*flags->d_forceIncrementFactor;
         }
       }
-
+      __________________________________
           with:
-
+      __________________________________
+      
       } else {
         // Get the external force data and allocate new space for
         // external force and copy the data
@@ -134,8 +126,9 @@
           pExternalForce_new[idx] = pmass[idx]*Vector(bx,by,bz);
         }
       }
-
-        D.  in interpolateToParticlesAndUpdate, declare and get pFnew (again,
+      __________________________________
+      
+        -  In interpolateToParticlesAndUpdate, declare and get pFnew (again,
         the first line is for context):
 
       constParticleVariable<double> pErosion;
@@ -154,7 +147,8 @@
 
       With those runs made, use puda -AA_MMS to determine the error in the
       solution.
--->
+
+______________________________________________________________________-->
 
    <SimulationComponent type="mpm" />
 
@@ -164,7 +158,7 @@
         <delt_min>1.e-6</delt_min>
         <delt_max>1.e-2</delt_max>
         <timestep_multiplier>.2</timestep_multiplier>
-        <max_Timesteps>60000</max_Timesteps>
+        <max_Timesteps>10</max_Timesteps>
     </Time>
     <MPM>
         <time_integrator>explicit</time_integrator>
@@ -174,11 +168,13 @@
     </MPM>
     <DataArchiver>
         <filebase>AA_MMS.uda</filebase>
-        <outputInterval>0.001</outputInterval>
+        <!-- <outputInterval>0.001</outputInterval> -->
+        <outputTimestepInterval>2</outputTimestepInterval>
         <save label="p.x"></save>
         <save label="p.volume"></save>
         <save label="p.displacement"></save>
         <save label="g.mass"></save>
+        <!--<checkpoint cycle = "2" timestepInterval = "2"/>-->
     </DataArchiver>
     <PhysicalConstants>
         <gravity>[0,0,0]</gravity>
