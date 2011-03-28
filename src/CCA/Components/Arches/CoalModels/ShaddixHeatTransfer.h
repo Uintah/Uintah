@@ -53,6 +53,7 @@ class ShaddixHeatTransfer: public HeatTransfer {
 public: 
 
   typedef std::map< std::string, CharOxidation*> CharOxiModelMap;
+  typedef std::map< std::string, Devolatilization*> DevolModelMap;
 
   ShaddixHeatTransfer( std::string modelName, 
                 SimulationStateP& shared_state, 
@@ -156,6 +157,8 @@ private:
  
   const VarLabel* d_charoxiTempLabel; 
   const VarLabel* d_surfacerateLabel;
+  const VarLabel* d_chargasLabel;
+  const VarLabel* d_devolgasLabel;
   const VarLabel* d_raw_coal_mass_label;        ///< Label for raw coal mass
   const VarLabel* d_char_mass_label;
   const VarLabel* d_particle_temperature_label; ///< Label for particle temperature
@@ -174,6 +177,18 @@ private:
   double kappa;
   double sigma;
   double pi;
+
+  double ai;
+  double bi;
+  double hi;
+  double Cpci;
+  double Cphi;
+  double Cpai;
+  double xi;
+  double Hc;
+  double Hh;
+  double Ha;
+  double Particle_enthalpy;
 
   double d_rc_scaling_constant;   ///< Scaling factor for raw coal
   double d_rh_scaling_constant;

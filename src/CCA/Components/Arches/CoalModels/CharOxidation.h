@@ -72,14 +72,17 @@ public:
   inline const VarLabel* getParticleTempSourceLabel() {
     return d_particletempLabel; };
 
-  /** @brief  Return the VarLabel for the model term for char */
   inline const VarLabel* getSurfaceRateLabel() {
     return d_surfacerateLabel; };
+
+  inline const VarLabel* getPO2surfLabel() {
+    return d_PO2surfLabel; };
 
 protected:
 
   const VarLabel* d_particletempLabel;
   const VarLabel* d_surfacerateLabel;
+  const VarLabel* d_PO2surfLabel;
   double d_w_scaling_constant; 
   double d_w_small; // "small" clip value for zero weights
 

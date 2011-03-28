@@ -63,6 +63,18 @@ CharOxidationShaddix::CharOxidationShaddix( std::string modelName,
   Es = 45.5e3; // J/mol
   n = 0.18;
 
+  // Eastern bituminous coal, Hurt & Mitchell
+  //As = 94.0;  // mol/s.m^2.atm^n
+  //Es = 10.4e3; // J/mol
+  //n = 0.5;
+
+  // Eastern bituminous coal, non-linear regression, LH expression
+  //A1 = 61.0;
+  //E1 = 0.5e3;
+  //n = 0.1;
+  //A2 = 20.0;
+  //E2 = 107.4e3;
+
   // Enthalpy of formation (J/mol)
   HF_CO2 = -393509.0;
   HF_CO  = -110525.0;
@@ -81,6 +93,17 @@ CharOxidationShaddix::problemSetup(const ProblemSpecP& params, int qn)
   CharOxidation::problemSetup( params, qn );
 
   ProblemSpecP db = params; 
+
+  //std::string s = "N2";
+
+  //d_fieldLabels->add_species(s);
+
+  std::string N2name = "N2";
+  d_fieldLabels->add_species(N2name);
+  std::string O2name = "O2";
+  d_fieldLabels->add_species(O2name);
+  std::string MWname = "mixture_molecular_weight";
+  d_fieldLabels->add_species(MWname);
   
   // check for viscosity
   const ProblemSpecP params_root = db->getRootNode(); 
@@ -216,11 +239,13 @@ CharOxidationShaddix::sched_computeModel( const LevelP& level, SchedulerP& sched
     tsk->computes(d_gasLabel); 
     tsk->computes(d_particletempLabel);
     tsk->computes(d_surfacerateLabel);
+    tsk->computes(d_PO2surfLabel);
   } else {
     tsk->modifies(d_modelLabel);
     tsk->modifies(d_gasLabel);  
     tsk->modifies(d_particletempLabel);
     tsk->modifies(d_surfacerateLabel);
+    tsk->modifies(d_PO2surfLabel);
   }
  
   DQMOMEqnFactory& dqmom_eqn_factory = DQMOMEqnFactory::self();
@@ -250,6 +275,7 @@ CharOxidationShaddix::sched_computeModel( const LevelP& level, SchedulerP& sched
   // always require the gas-phase temperature
   tsk->requires(Task::OldDW, d_fieldLabels->d_tempINLabel, Ghost::None, 0);
   tsk->requires(Task::OldDW, d_fieldLabels->d_densityCPLabel, Ghost::None, 0);
+  tsk->requires(Task::OldDW, d_PO2surfLabel, Ghost::None, 0);
 
   const VarLabel* d_O2_label = VarLabel::find("O2");
   tsk->requires(Task::OldDW, d_O2_label, Ghost::None, 0 );
@@ -424,6 +450,14 @@ CharOxidationShaddix::computeModel( const ProcessorGroup * pc,
       surface_rate.initialize(0.0);
     }
 
+    CCVariable<double> PO2surf_;
+    if( new_dw->exists( d_PO2surfLabel, matlIndex, patch) ) {
+      new_dw->getModifiable( PO2surf_, d_PO2surfLabel, matlIndex, patch );
+    } else {
+      new_dw->allocateAndPut(PO2surf_, d_PO2surfLabel, matlIndex, patch );
+      PO2surf_.initialize(0.0);
+    }
+
     constCCVariable<double> den;
     old_dw->get(den, d_fieldLabels->d_densityCPLabel, matlIndex, patch, gn, 0 ); 
 
@@ -439,6 +473,7 @@ CharOxidationShaddix::computeModel( const ProcessorGroup * pc,
     constCCVariable<double> N2;
     constCCVariable<double> MWmix;
     constCCVariable<double> devolChar;
+    constCCVariable<double> oldPO2surf_;
 
     old_dw->get( temperature, d_fieldLabels->d_tempINLabel, matlIndex, patch, gn, 0 );
     old_dw->get( w_particle_temperature, d_particle_temperature_label, matlIndex, patch, gn, 0 );
@@ -447,7 +482,7 @@ CharOxidationShaddix::computeModel( const ProcessorGroup * pc,
     old_dw->get( w_char_mass, d_char_mass_label, matlIndex, patch, gn, 0 );
     old_dw->get( weight, d_weight_label, matlIndex, patch, gn, 0 );
     old_dw->get( devolChar, d_devolCharLabel, matlIndex, patch, gn, 0 );
-
+    old_dw->get( oldPO2surf_, d_PO2surfLabel, matlIndex, patch, gn, 0 );
 
     const VarLabel* d_O2_label = VarLabel::find("O2");
     old_dw->get( O2, d_O2_label, matlIndex, patch, gn, 0 );
@@ -514,18 +549,22 @@ CharOxidationShaddix::computeModel( const ProcessorGroup * pc,
         } 
 
         double small = 1e-16;
-        if((unscaled_raw_coal_mass+unscaled_char_mass-small) > 0) {
+        //double MW_mix; // in g/mol
+        //MW_mix = 1.0/(O2[c]/WO2 + CO2[c]/WCO2 + H2O[c]/WH2O);
+ 
+        PO2_inf = O2[c]/WO2/MWmix[c];
+
+        if((unscaled_raw_coal_mass+unscaled_char_mass-small) > 0 && PO2_inf > 1e-6) {
           char_reaction_rate_ = 0.0;
           char_production_rate_ = 0.0;
           gas_char_rate_ = 0.0;     
           particle_temp_rate_ = 0.0;
 
-          PO2_inf = O2[c]/WO2/MWmix[c];
-          PO2_surf = PO2_inf/2;
+          PO2_surf = oldPO2surf_[c];
 
-          d_totIter = 100;
-          delta = 1e-3;
-          d_tol = 1e-12;
+          d_totIter = 1000;
+          delta = PO2_inf/100.0;
+          d_tol = 1e-15;
           f1 = 1.0;
           icount = 0;
      
@@ -534,7 +573,7 @@ CharOxidationShaddix::computeModel( const ProcessorGroup * pc,
                 (pow((temperature[c]/T0),1.5));
 
           // Concentration C = P/RT
-          Conc = MWmix[c]*1000.0*den[c];
+          Conc = MWmix[c]*den[c]*1000.0;
 
           // Solving diffusion of O2:
           // Newton_Raphson method - faster does not always converge 
@@ -546,6 +585,9 @@ CharOxidationShaddix::computeModel( const ProcessorGroup * pc,
             gamma = -(1.0-OF);
             ks = As*exp(-Es/(R*unscaled_particle_temperature));
             q = ks*(pow(PO2_surf,n));
+            //k1 = A1*exp(-E1/(R*unscaled_particle_temperature));
+            //k2 = A2*exp(-E2/(R*unscaled_particle_temperature));
+            //q = k1*k2*(pow(PO2_surf,n))/(k1*(pow(PO2_surf,n))+k2);
             f1 = PO2_surf - gamma - (PO2_inf-gamma)*exp(-(q*unscaled_length)/(2*Conc*DO2));
 
             if (abs(f1) < d_tol)
@@ -557,13 +599,16 @@ CharOxidationShaddix::computeModel( const ProcessorGroup * pc,
             gamma = -(1.0-OF);
             ks = As*exp(-Es/(R*unscaled_particle_temperature));
             q = ks*(pow(PO2_surf,n));
+            //k1 = A1*exp(-E1/(R*unscaled_particle_temperature));
+            //k2 = A2*exp(-E2/(R*unscaled_particle_temperature));
+            //q = k1*k2*(pow(PO2_surf,n))/(k1*(pow(PO2_surf,n))+k2);
             f2 = PO2_surf - gamma - (PO2_inf-gamma)*exp(-(q*unscaled_length)/(2*Conc*DO2));
 
             PO2_surf -= delta + f1*delta/(f2-f1);
             PO2_surf = min(PO2_inf,max(0.0,PO2_surf));
           }
           */
-          if(abs(f1) > d_tol){ //switching to bisection technique
+          if(abs(f1) > d_tol || isnan(f1)){ //switching to bisection technique
             lower_bound = 0.0;
             upper_bound = PO2_inf;
             for ( int iter = 0; iter < d_totIter; iter++) {
@@ -573,6 +618,9 @@ CharOxidationShaddix::computeModel( const ProcessorGroup * pc,
               OF = 0.5*(1.0 + CO2CO*(1+CO2CO));
               gamma = -(1.0-OF);
               ks = As*exp(-Es/(R*unscaled_particle_temperature));
+              //k1 = A1*exp(-E1/(R*unscaled_particle_temperature));
+              //k2 = A2*exp(-E2/(R*unscaled_particle_temperature));
+              //q = k1*k2*(pow(PO2_surf,n))/(k1*(pow(PO2_surf,n))+k2);
               q = ks*(pow(PO2_surf,n));
               f3 = PO2_surf - gamma - (PO2_inf-gamma)*exp(-(q*unscaled_length)/(2*Conc*DO2));
 
@@ -582,7 +630,14 @@ CharOxidationShaddix::computeModel( const ProcessorGroup * pc,
               gamma = -(1.0-OF);
               ks = As*exp(-Es/(R*unscaled_particle_temperature));
               q = ks*(pow(PO2_surf,n));
+              //k1 = A1*exp(-E1/(R*unscaled_particle_temperature));
+              //k2 = A2*exp(-E2/(R*unscaled_particle_temperature));
+              //q = k1*k2*(pow(PO2_surf,n))/(k1*(pow(PO2_surf,n))+k2);
               f2 = PO2_surf - gamma - (PO2_inf-gamma)*exp(-(q*unscaled_length)/(2*Conc*DO2));
+
+              if (abs(f2) < d_tol){
+                break;
+              }
 
               PO2_surf = 0.5*(lower_bound+upper_bound);
               CO2CO = 0.02*(pow(PO2_surf,0.21))*exp(-3070.0/unscaled_particle_temperature);
@@ -590,9 +645,21 @@ CharOxidationShaddix::computeModel( const ProcessorGroup * pc,
               gamma = -(1.0-OF);
               ks = As*exp(-Es/(R*unscaled_particle_temperature));
               q = ks*(pow(PO2_surf,n));
+              //k1 = A1*exp(-E1/(R*unscaled_particle_temperature));
+              //k2 = A2*exp(-E2/(R*unscaled_particle_temperature));
+              //q = k1*k2*(pow(PO2_surf,n))/(k1*(pow(PO2_surf,n))+k2);
               f1 = PO2_surf - gamma - (PO2_inf-gamma)*exp(-(q*unscaled_length)/(2*Conc*DO2));
 
               if (abs(f1) < d_tol){
+                break;
+              }
+
+              if(icount > d_totIter-2) {
+                cout << "CharOxidationShaddix::computeModel : problem with bisection convergence, reaction rate set to zero" << endl;
+                cout << "icount " << icount << " f1 " << f1 << " f2 " << f2 << " f3 " << f3 << " PO2_inf " << PO2_inf << " PO2_surf " << PO2_surf << endl;
+                PO2_surf = 0.0;
+                CO2CO = 0.0;
+                q = 0.0;
                 break;
               }
 
@@ -602,6 +669,8 @@ CharOxidationShaddix::computeModel( const ProcessorGroup * pc,
                  upper_bound = PO2_surf;
               } else {
                 cout << "CharOxidationShaddix::computeModel : problem with bisection, reaction rate set to zero" << endl;
+                cout << "icount " << icount << " f1 " << f1 << " f2 " << f2 << " f3 " << f3 << " PO2_inf " << PO2_inf << " PO2_surf " << PO2_surf << endl;
+                cout << "gamma " << gamma << " q " << q << " unscaled_length " << unscaled_length << endl;
                 PO2_surf = 0.0;
                 CO2CO = 0.0;
                 q = 0.0;
@@ -611,31 +680,34 @@ CharOxidationShaddix::computeModel( const ProcessorGroup * pc,
             }
           }              
               
-
           char_reaction_rate_ = -pi*(pow(unscaled_length,2.0))*WC*q;
 
           char_production_rate_ = devolChar[c];
 
           particle_temp_rate_ = -pi*(pow(unscaled_length,2.0))*q/(1.0+CO2CO)*(CO2CO*HF_CO2 + HF_CO); // in J/s
 
-          /*
-          cout << "O2 " << O2[c] << " MWmix " << MWmix[c] << " Conc " << Conc << " DO2 " << DO2 << " q " << q << endl;
-          cout << " PO2_inf " << PO2_inf << " PO2_surf " << PO2_surf << " f1 " << f1 << " f2 " << f2 << " f3 " << f3 << " icount " << icount << endl;
-          cout << " devol " << devol[c] << " devolgas " << devolGas[c] << " weight " << unscaled_weight << endl;
-          cout << "char_reaction_rate_ " << char_reaction_rate_ << " char_production_rate_ " << char_production_rate_ << 
-               " particle_temp_rate_ " << particle_temp_rate_ <<endl;
-          */
+          
+          //cout << "O2 " << O2[c] << " CO2 " << CO2[c] << " H2O " << H2O[c] << " N2 " << N2[c] << " MW_mix " << MW_mix << " Conc " << Conc << " DO2 " << DO2 << " q " << q << endl;
+          //if(abs(PO2_surf/PO2_inf -1.0) > 0.01){
+          //  cout << " PO2_inf " << PO2_inf << " PO2_surf " << PO2_surf << " MWmix " << MWmix[c] << " f1 " << f1 << " f2 " << f2 << " f3 " << f3 << " icount " << icount << endl;
+          //}
+          //cout << " devol " << devol[c] << " devolgas " << devolGas[c] << " weight " << unscaled_weight << endl;
+          //cout << "char_reaction_rate_ " << char_reaction_rate_ << " char_production_rate_ " << char_production_rate_ << 
+          //     " particle_temp_rate_ " << particle_temp_rate_ <<endl;
+          
 
           char_rate[c] = (char_reaction_rate_ + char_production_rate_)/d_rh_scaling_constant;
           gas_char_rate[c] = -char_reaction_rate_*unscaled_weight;
           particle_temp_rate[c] = particle_temp_rate_;
-          //particle_temp_rate[c] = 0.0;
           surface_rate[c] = WC*q;  // in kg/s/m^2
+          PO2surf_[c] = PO2_surf;
+
         } else {
           char_rate[c] = 0.0;
           gas_char_rate[c] = 0.0;
           particle_temp_rate[c] = 0.0;
           surface_rate[c] = 0.0;
+          PO2surf_[c] = 0.0;
         }
       }
 

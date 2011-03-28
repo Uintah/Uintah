@@ -108,6 +108,12 @@ private:
   double As;
   double Es;
   double n;
+  double A1;
+  double A2;
+  double E1;
+  double E2;
+  double k1;
+  double k2;
   double R;
   double HF_CO2;
   double HF_CO;

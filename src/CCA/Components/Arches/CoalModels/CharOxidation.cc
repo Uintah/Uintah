@@ -41,12 +41,17 @@ CharOxidation::CharOxidation( std::string modelName,
   std::string surfacerateName = modelName + "_surfacerate";
   d_surfacerateLabel = VarLabel::create( surfacerateName, CCVariable<double>::getTypeDescription() );
 
+  // Create the char oxidation PO2 surf term associated with this model
+  std::string PO2surfName = modelName + "_PO2surf";
+  d_PO2surfLabel = VarLabel::create( PO2surfName, CCVariable<double>::getTypeDescription() );
+
 }
 
 CharOxidation::~CharOxidation()
 {
   VarLabel::destroy(d_particletempLabel);
   VarLabel::destroy(d_surfacerateLabel);
+  VarLabel::destroy(d_PO2surfLabel);
 }
 
 //---------------------------------------------------------------------------
@@ -77,7 +82,6 @@ CharOxidation::problemSetup(const ProblemSpecP& params, int qn)
 
   d_w_small = weight_eqn.getSmallClip();
   d_w_scaling_constant = weight_eqn.getScalingConstant();
-
 }
 
 void
@@ -93,11 +97,13 @@ CharOxidation::sched_dummyInit( const LevelP& level, SchedulerP& sched )
   tsk->requires( Task::OldDW, d_gasLabel,   gn, 0);
   tsk->requires( Task::OldDW, d_particletempLabel,   gn, 0);
   tsk->requires( Task::OldDW, d_surfacerateLabel,   gn, 0);
+  tsk->requires( Task::OldDW, d_PO2surfLabel,   gn, 0);
 
   tsk->computes(d_modelLabel);
   tsk->computes(d_gasLabel); 
   tsk->computes(d_particletempLabel);
   tsk->computes(d_surfacerateLabel);
+  tsk->computes(d_PO2surfLabel);
 
   sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
 
@@ -136,26 +142,32 @@ CharOxidation::dummyInit( const ProcessorGroup* pc,
     CCVariable<double> GasModelTerm;
     CCVariable<double> ParticleTempModelTerm;
     CCVariable<double> SurfaceRateModelTerm;
+    CCVariable<double> PO2surfModelTerm;
+
 
     constCCVariable<double> oldModelTerm;
     constCCVariable<double> oldGasModelTerm;
     constCCVariable<double> oldParticleTempModelTerm;
     constCCVariable<double> oldSurfaceRateModelTerm;
+    constCCVariable<double> oldPO2surfModelTerm;
 
     new_dw->allocateAndPut( ModelTerm,    d_modelLabel, matlIndex, patch );
     new_dw->allocateAndPut( GasModelTerm, d_gasLabel,   matlIndex, patch ); 
     new_dw->allocateAndPut( ParticleTempModelTerm, d_particletempLabel,   matlIndex, patch );
     new_dw->allocateAndPut( SurfaceRateModelTerm, d_surfacerateLabel,   matlIndex, patch );
+    new_dw->allocateAndPut( PO2surfModelTerm, d_PO2surfLabel,   matlIndex, patch );
 
     old_dw->get( oldModelTerm,    d_modelLabel, matlIndex, patch, gn, 0 );
     old_dw->get( oldGasModelTerm, d_gasLabel,   matlIndex, patch, gn, 0 );
     old_dw->get( oldParticleTempModelTerm, d_particletempLabel,   matlIndex, patch, gn, 0 );
     old_dw->get( oldSurfaceRateModelTerm, d_surfacerateLabel,   matlIndex, patch, gn, 0 );
+    old_dw->get( oldPO2surfModelTerm, d_PO2surfLabel,   matlIndex, patch, gn, 0 );
 
     ModelTerm.copyData(oldModelTerm);
     GasModelTerm.copyData(oldGasModelTerm);
     ParticleTempModelTerm.copyData(oldParticleTempModelTerm);
     SurfaceRateModelTerm.copyData(oldSurfaceRateModelTerm);
+    PO2surfModelTerm.copyData(oldPO2surfModelTerm);
 
   }
 }

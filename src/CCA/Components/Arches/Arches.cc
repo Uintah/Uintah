@@ -1853,6 +1853,8 @@ Arches::sched_weightedAbsInit( const LevelP& level,
       tsk->computes( particletempLabel );
       const VarLabel* surfacerateLabel = charoxymodel->getSurfaceRateLabel();
       tsk->computes( surfacerateLabel );
+      const VarLabel* PO2surfLabel = charoxymodel->getPO2surfLabel();
+      tsk->computes( PO2surfLabel );
     } else if( modelType == "HeatTransfer" ) {
       HeatTransfer* heatmodel = dynamic_cast<HeatTransfer*>(model);
       const VarLabel* abskpLabel = heatmodel->getabskpLabel();
@@ -2011,6 +2013,10 @@ Arches::weightedAbsInit( const ProcessorGroup* ,
         CCVariable<double> surface_rate;
         new_dw->allocateAndPut( surface_rate, surfacerateLabel, matlIndex, patch );
         surface_rate.initialize(0.0);
+        const VarLabel* PO2surfLabel = charoxymodel->getPO2surfLabel();
+        CCVariable<double> PO2surf;
+        new_dw->allocateAndPut( PO2surf, PO2surfLabel, matlIndex, patch );
+        PO2surf.initialize(0.0);
       } else if( modelType == "HeatTransfer" ) {
         HeatTransfer* heatmodel = dynamic_cast<HeatTransfer*>(model);
         const VarLabel* abskpLabel = heatmodel->getabskpLabel();
