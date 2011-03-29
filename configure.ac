@@ -1079,8 +1079,14 @@ if test "$with_malloc_trace"; then
     if test ! -d $with_malloc_trace; then
       AC_MSG_ERROR( '$with_malloc_trace' directory does not exist. )
     fi
-    if test ! -f $with_malloc_trace/lib/shared/libMallocTrace.so; then
-      AC_MSG_ERROR( '$with_malloc_trace/lib/shared/libMallocTrace.so' does not exist. )
+    if test "$IS_STATIC_BUILD" = "yes"; then
+       if test ! -f $with_malloc_trace/lib/libMallocTrace.a; then
+       	  AC_MSG_ERROR( '$with_malloc_trace/lib/libMallocTrace.a' does not exist. )
+       fi
+    else
+	if test ! -f $with_malloc_trace/lib/shared/libMallocTrace.so; then
+      	   AC_MSG_ERROR( '$with_malloc_trace/lib/shared/libMallocTrace.so' does not exist. )
+    	fi
     fi
     if test ! -f $with_malloc_trace/include/MallocTrace.h; then
       AC_MSG_ERROR( '$with_malloc_trace/include/MallocTrace.h' does not exist. )
@@ -1088,7 +1094,11 @@ if test "$with_malloc_trace"; then
     AC_MSG_RESULT(yes)
     DEF_MALLOC_TRACE="#define MALLOC_TRACE 1"
     INC_MALLOC_TRACE_H="-I$with_malloc_trace/include"
-    MALLOC_TRACE_LIB_DIR_FLAG="$LDRUN_PREFIX$with_malloc_trace/lib/shared -L$with_malloc_trace/lib/shared"
+    if test "$IS_STATIC_BUILD" = "yes"; then
+       MALLOC_TRACE_LIB_DIR_FLAG="$LDRUN_PREFIX$with_malloc_trace/lib -L$with_malloc_trace/lib"
+    else								     
+       MALLOC_TRACE_LIB_DIR_FLAG="$LDRUN_PREFIX$with_malloc_trace/lib/shared -L$with_malloc_trace/lib/shared"
+    fi
     MALLOC_TRACE_LIB_FLAG="-lMallocTrace"
     MALLOC_TRACE_LIB_MPI_FLAG="-lMallocTraceMPI"
   fi
