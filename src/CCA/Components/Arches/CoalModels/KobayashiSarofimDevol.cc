@@ -63,7 +63,7 @@ KobayashiSarofimDevol::KobayashiSarofimDevol( std::string modelName,
   R   =  1.987;       // [=] kcal/kmol; ideal gas constant
 
   // Y values from white book:
-  Y1_ = 0.4; // volatile fraction from proximate analysis
+  Y1_ = 0.3; // volatile fraction from proximate analysis
   Y2_ = 1.0; // fraction devolatilized at higher temperatures
 
   /*
