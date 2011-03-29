@@ -749,7 +749,7 @@ ShaddixHeatTransfer::computeModel( const ProcessorGroup * pc,
         //cout << "abskp " << abskp_ << endl;
         //cout << "Particle_enthalpy " << Particle_enthalpy << " Cpc " << Cpc << " Cph " << Cph << " Cpa " << Cpa << endl;
 
-        gas_heat_rate_ = -unscaled_weight*Q_convection + unscaled_weight*(devol_gas_source[c] + chargas_source[c])*Particle_enthalpy;
+        gas_heat_rate_ = -unscaled_weight*Q_convection + (devol_gas_source[c] + chargas_source[c])*Particle_enthalpy;
  
       }
 
