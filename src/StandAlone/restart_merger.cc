@@ -136,7 +136,7 @@ main( int argc, char *argv[], char *env[] )
   string new_uda_dir;
   try {
     ProblemSpecP ups = ProblemSpecReader().readInputFile( ups_filename );
-    Uintah::Parallel::initializeManager(argc, argv, "");
+    Uintah::Parallel::initializeManager(argc, argv);
     const ProcessorGroup* world = Uintah::Parallel::getRootProcessorGroup();
 
     UintahParallelComponent * comp = ComponentFactory::create( ups, world, false, udafile[0] );
