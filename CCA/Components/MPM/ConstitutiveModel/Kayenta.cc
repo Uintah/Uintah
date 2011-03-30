@@ -623,6 +623,7 @@ void Kayenta::computeStressTensor(const PatchSubset* patches,
     delt_vartype delT;
     constParticleVariable<int> pLocalized;
     ParticleVariable<int>     pLocalized_new;
+    constParticleVariable<long64> pParticleID;
 
     old_dw->get(pLocalized, pLocalizedLabel, pset);
     new_dw->allocateAndPut(pLocalized_new,pLocalizedLabel_preReloc, pset);
@@ -639,6 +640,7 @@ void Kayenta::computeStressTensor(const PatchSubset* patches,
     old_dw->get(ptemperature,        lb->pTemperatureLabel,        pset);
     old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
     old_dw->get(peakI1IDist,         peakI1IDistLabel,             pset);
+    old_dw->get(pParticleID,         lb->pParticleIDLabel,         pset);
 
     StaticArray<constParticleVariable<double> > ISVs(d_NINSV+1);
     for(int i=0;i<d_NINSV;i++){
@@ -658,9 +660,6 @@ void Kayenta::computeStressTensor(const PatchSubset* patches,
     new_dw->allocateAndPut(peakI1IDist_new, peakI1IDistLabel_preReloc,   pset);
 
     peakI1IDist_new.copyData(peakI1IDist);
-
-    constParticleVariable<long64> pParticleID;
-    old_dw->get(pParticleID, lb->pParticleIDLabel, pset);
 
     StaticArray<ParticleVariable<double> > ISVs_new(d_NINSV+1);
     for(int i=0;i<d_NINSV;i++){
@@ -737,8 +736,6 @@ void Kayenta::computeStressTensor(const PatchSubset* patches,
 
 	// the 
       }else{
-
-    
 	  // Compute the deformation gradient increment using the time_step
 	  // velocity gradient
 	  // F_n^np1 = dudx * dt + Identity
@@ -752,19 +749,20 @@ void Kayenta::computeStressTensor(const PatchSubset* patches,
 
 	  // get the volumetric part of the deformation
 	  double J = deformationGradient_new[idx].Determinant();
+
 	  // Check 1: Look at Jacobian
 	  if (J<=0.0||J>20.0) {
-	      cout<<"negative or huge J encountered (J="<<J<<", deleting particle" << endl;
+            double Jold = deformationGradient[idx].Determinant();
+	    cout<<"negative or huge J encountered J="<<J<<", Jold = " << Jold << " deleting particle" << endl;
+            cout << "pos = " << px[idx] << endl;
 
-	    constParticleVariable<long64> pParticleID;
-	    old_dw->get(pParticleID, lb->pParticleIDLabel, pset);
 	    if(d_allowNoTension){
 	      pLocalized_new[idx]=1;
 	      cout<< "localizing (viscous) particle "<<pParticleID[idx]<<endl;
 	    }else if(d_removeMass){
 	      pLocalized_new[idx]=-999;
 	      cout<< "localizing (deleting) particle "<<pParticleID[idx]<<endl;
-              cout<< "material = " << dwi << ", Momentum deleted = " 
+              cout<< "material = " << dwi << endl << "Momentum deleted = " 
                                           << pvelocity[idx]*pmass[idx] <<endl;
 	    }else{
 	      cerr << getpid() 
