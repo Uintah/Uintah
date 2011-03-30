@@ -411,11 +411,10 @@ ConstitutiveModel::computeDeformationGradientFromDisplacement(
     double J = Fnew[idx].Determinant();
     if (!(J > 0)) {
       ostringstream warn;
-      warn << "**ERROR** CompNeoHook: Negative or zero determinant of Jacobian."
-             << " Particle has inverted." << endl;
-      warn << "     Particle = " << idx << " J = " << J << " position = " << endl;
-      warn << "          Disp Grad = " << dispGrad << endl; 
-      warn << "          F_new = " << Fnew[idx] << endl; 
+      warn << "**ERROR** : ConstitutiveModel::computeDeformationGradientFromDisplacement" << endl << "Negative or zero determinant of Jacobian." << endl;
+      warn << "     Particle = " << idx << " J = " << J << " position = " << px[idx] << endl;
+      warn << "     Disp Grad = " << dispGrad << endl; 
+      warn << "     F_new = " << Fnew[idx] << endl; 
       throw InvalidValue(warn.str(), __FILE__, __LINE__);
     }
   }
