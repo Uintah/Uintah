@@ -751,7 +751,7 @@ void Kayenta::computeStressTensor(const PatchSubset* patches,
 	  double J = deformationGradient_new[idx].Determinant();
 
 	  // Check 1: Look at Jacobian
-	  if (J<=0.0||J>20.0) {
+	  if (J<=0.0 || J > d_hugeJ) {
             double Jold = deformationGradient[idx].Determinant();
 	    cout<<"negative or huge J encountered J="<<J<<", Jold = " << Jold << " deleting particle" << endl;
             cout << "pos = " << px[idx] << endl;
@@ -1198,6 +1198,7 @@ Kayenta::getInputParameters(ProblemSpecP& ps)
   //    Uintah Variability Variables
   ps->get("PEAKI1IDIST",wdist.WeibDist);
   WeibullParser(wdist);
+  ps->getWithDefault("hugeJ", d_hugeJ, 20.0);
   
 //  proc0cout << "Weibull Variables for PEAKI1I (getInputParameters):\n"
 //            << "Median:            " << wdist.WeibMed
