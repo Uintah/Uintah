@@ -2070,11 +2070,20 @@ and generality -- no assumption of constant specific heat is needed.
 
   The inputs for this model are of the form
   \begin{Verbatim}[fontsize=\footnotesize]
-    <bcc_or_fcc> fcc </bcc_or_fcc>
-    <c2> </c2>
-    <c3> </c3>
-    <c4> </c4>
-    <n> </n>
+    
+    <plasticity_model type="zerilli_armstrong">
+       <sigma_g>     50.0e6   </sigma_g>
+       <k_H>         5.0e6    </k_H>
+       <sqrt_l_inv>  5.0      </sqrt_l_inv>
+       <B>           25.0e6   </B>
+       <beta_0>      0.0      </beta_0>
+       <beta_1>      0.0      </beta_1>
+       <B_0>         0.0      </B_0>
+       <alpha_0>     0.0      </alpha_0>
+       <alpha_1>     0.0      </alpha_1>
+       <K>           5.0e9    </K>
+       <n>           1.0      </n>
+     </plasticity_model>
   \end{Verbatim}
 
   \subparagraph{MTS Flow Stress Model}
