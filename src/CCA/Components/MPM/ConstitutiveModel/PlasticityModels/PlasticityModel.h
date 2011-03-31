@@ -71,49 +71,48 @@ namespace Uintah {
     // Computes and requires for internal evolution variables
     virtual void addInitialComputesAndRequires(Task* task,
                                                const MPMMaterial* matl,
-                                               const PatchSet* patches) 
-                                               const = 0;
+                                               const PatchSet* patches) {};
 
     virtual void addComputesAndRequires(Task* task,
                                         const MPMMaterial* matl,
-                                        const PatchSet* patches) const = 0;
+                                        const PatchSet* patches) {};
 
     virtual void addComputesAndRequires(Task* task,
                                         const MPMMaterial* matl,
                                         const PatchSet* patches,
                                         bool recurse,
-                                        bool SchedParent) const = 0;
+                                        bool SchedParent) {};
 
     virtual void allocateCMDataAddRequires(Task* task, const MPMMaterial* matl,
                                            const PatchSet* patch, 
-                                           MPMLabel* lb) const = 0;
+                                           MPMLabel* lb){};
 
     virtual void allocateCMDataAdd(DataWarehouse* new_dw,
                                    ParticleSubset* addset,
                                    map<const VarLabel*, 
                                      ParticleVariableBase*>* newState,
                                    ParticleSubset* delset,
-                                   DataWarehouse* old_dw) = 0;
+                                   DataWarehouse* old_dw){};
 
     virtual void addParticleState(std::vector<const VarLabel*>& from,
-                                  std::vector<const VarLabel*>& to) = 0;
+                                  std::vector<const VarLabel*>& to){};
 
     virtual void initializeInternalVars(ParticleSubset* pset,
-                                        DataWarehouse* new_dw) = 0;
+                                        DataWarehouse* new_dw){};
 
     virtual void getInternalVars(ParticleSubset* pset,
-                                 DataWarehouse* old_dw) = 0;
+                                 DataWarehouse* old_dw){};
 
     virtual void allocateAndPutInternalVars(ParticleSubset* pset,
-                                            DataWarehouse* new_dw) = 0; 
+                                            DataWarehouse* new_dw){}; 
 
     virtual void allocateAndPutRigid(ParticleSubset* pset,
-                                     DataWarehouse* new_dw) = 0; 
+                                     DataWarehouse* new_dw){}; 
 
-    virtual void updateElastic(const particleIndex idx) = 0;
+    virtual void updateElastic(const particleIndex idx){};
 
     virtual void updatePlastic(const particleIndex idx, 
-                               const double& delGamma) = 0;
+                               const double& delGamma){};
 
     //////////
     /*! \brief Calculate the flow stress */
@@ -153,7 +152,7 @@ namespace Uintah {
                                        const MPMMaterial* matl,
                                        const particleIndex idx,
                                        TangentModulusTensor& Ce,
-                                       TangentModulusTensor& Cep) = 0;
+                                       TangentModulusTensor& Cep){};
 
     ///////////////////////////////////////////////////////////////////////////
     /*!
@@ -168,7 +167,7 @@ namespace Uintah {
     ///////////////////////////////////////////////////////////////////////////
     virtual void evalDerivativeWRTScalarVars(const PlasticityState* state,
                                              const particleIndex idx,
-                                             Vector& derivs) = 0;
+                                             Vector& derivs) {};
 
     ///////////////////////////////////////////////////////////////////////////
     /*!

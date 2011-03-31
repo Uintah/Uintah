@@ -142,52 +142,6 @@ namespace Uintah {
     virtual ~ZAPlastic();
 
     virtual void outputProblemSpec(ProblemSpecP& ps);
-         
-    // Computes and requires for internal evolution variables
-    virtual void addInitialComputesAndRequires(Task* task,
-                                               const MPMMaterial* matl,
-                                               const PatchSet* patches) const;
-
-    virtual void addComputesAndRequires(Task* task,
-                                        const MPMMaterial* matl,
-                                        const PatchSet* patches) const;
-
-    virtual void addComputesAndRequires(Task* task,
-                                        const MPMMaterial* matl,
-                                        const PatchSet* patches,
-                                        bool recurse,
-                                        bool SchedParent) const;
-
-
-    virtual void allocateCMDataAddRequires(Task* task, const MPMMaterial* matl,
-                                           const PatchSet* patch, 
-                                           MPMLabel* lb) const;
-
-    virtual void allocateCMDataAdd(DataWarehouse* new_dw,
-                                   ParticleSubset* addset,
-                                   map<const VarLabel*, 
-                                     ParticleVariableBase*>* newState,
-                                   ParticleSubset* delset,
-                                   DataWarehouse* old_dw);
-
-    virtual void addParticleState(std::vector<const VarLabel*>& from,
-                                  std::vector<const VarLabel*>& to);
-
-    virtual void initializeInternalVars(ParticleSubset* pset,
-                                        DataWarehouse* new_dw);
-
-    virtual void getInternalVars(ParticleSubset* pset,
-                                 DataWarehouse* old_dw);
-
-    virtual void allocateAndPutInternalVars(ParticleSubset* pset,
-                                            DataWarehouse* new_dw); 
-
-    virtual void allocateAndPutRigid(ParticleSubset* pset,
-                                     DataWarehouse* new_dw); 
-
-    virtual void updateElastic(const particleIndex idx);
-
-    virtual void updatePlastic(const particleIndex idx, const double& delGamma);
 
     ///////////////////////////////////////////////////////////////////////////
     /*! \brief  compute the flow stress */
