@@ -10,6 +10,7 @@
 //-- SpatialOps Includes --//
 #include <spatialops/OperatorDatabase.h>
 #include <spatialops/structured/SpatialFieldStore.h>
+#include <spatialops/structured/MemoryWindow.h>
 
 namespace Wasatch {
 
@@ -34,16 +35,18 @@ Pressure::Pressure( const Expr::Tag& fxtag,
     doZ_( fztag != Expr::Tag() ),
 
     doDens_( d2rhodt2tag != Expr::Tag() ),
+  
+    didAllocateMatrix_(false),
 
     solverParams_( solverParams ),
     solver_( solver ),
 
     // note that this does not provide any ghost entries in the matrix...
     matrixLabel_  ( Uintah::VarLabel::create( "pressure_matrix", Uintah::CCVariable<Uintah::Stencil7>::getTypeDescription() ) ),
-    pressureLabel_( Uintah::VarLabel::create( "pressure", 
+    pressureLabel_( Uintah::VarLabel::create( (this->names())[0].name(), 
                                               Wasatch::getUintahFieldTypeDescriptor<SVolField>(),
                                               Wasatch::getUintahGhostDescriptor<SVolField>() ) ),
-    prhsLabel_    ( Uintah::VarLabel::create( "pressure_rhs", 
+    prhsLabel_    ( Uintah::VarLabel::create( (this->names())[1].name(), 
                                               Wasatch::getUintahFieldTypeDescriptor<SVolField>(),
                                               Wasatch::getUintahGhostDescriptor<SVolField>() ) )
 {
@@ -65,12 +68,8 @@ Pressure::schedule_solver( const Uintah::LevelP& level,
                            Uintah::SchedulerP sched,
                            const Uintah::MaterialSet* const materials )
 {
-  // need to get the pressure label...
-  // need to get the pressure rhs label...
-  //const Uintah::VarLabel* pressure_lbl;
-  //const Uintah::VarLabel* rhs_lbl;
-  //solver->scheduleSolve( level, sched, materials, matrixLabel_, 
-  //                      Task::NewDW, pressureLabel_, false, prshLabel_, Task::NewDW, 0, Task::OldDW, solverParams_ );
+  solver_.scheduleSolve( level, sched, materials, matrixLabel_, 
+                         Uintah::Task::NewDW, pressureLabel_, true, prhsLabel_, Uintah::Task::NewDW, 0, Uintah::Task::OldDW, &solverParams_ );
 }
 
 //--------------------------------------------------------------------
@@ -80,68 +79,29 @@ Pressure::declare_uintah_vars( Uintah::Task& task,
                                const Uintah::PatchSubset* const patches,
                                const Uintah::MaterialSubset* const materials )
 {
-  // need to verify that this is consistent with what is being done in the solver test...
   task.computes( matrixLabel_, patches, Uintah::Task::NormalDomain, materials, Uintah::Task::NormalDomain );
 }
 
 //--------------------------------------------------------------------
-
+  
 void
 Pressure::bind_uintah_vars( Uintah::DataWarehouse* const dw,
-                            const Uintah::Patch* const patch,
-                            const int material )
-{
-  // We should probably move the matrix construction to the evaluate() method.
-  // need a way to get access to the patch so that we can loop over the cells.
-  // p is current cell
-  double p = 0.0;
-  // n: north, s: south, e: east, w: west, t: top, b: bottom coefficient
-  double n=0.0, s=0.0, e=0.0, w=0.0, t=0.0, b=0.0;
-  
-  if (doX_) {
-    //p += 2;
-    e = -1.0;
-    w = -1.0;
-  }
-  if (doY_) {
-    //p += 2;
-    n = -1.0;
-    s = -1.0;
-  }
-  if (doZ_) {
-    //p += 2;
-    t = -1.0;
-    b = -1.0;
-  }
-  
-  //
-  //for( int ip=0; ip<patches->size(); ++ip ){
-  //  const Uintah::Patch* const patch = patches->get( ip );
-    const Uintah::Vector spacing = patch->dCell();
-    const double dx2 = spacing[0]*spacing[0];
-    const double dy2 = spacing[1]*spacing[1];
-    const double dz2 = spacing[2]*spacing[2];
-    if (doX_) p += 2.0/dx2;
-    if (doY_) p += 2.0/dy2;
-    if (doZ_) p += 2.0/dz2;
-   // for( int im=0; im<materials->size(); ++im ){
-   //   const int material = materials->get( im );
-      dw->allocateAndPut( matrix_, matrixLabel_, material, patch );
-  //dw->allocateAndPut( rhs_, prhsLabel_, material, patch);
-      //
-      // construct the coefficient matrix: \nabla^2
-      for(Uintah::CellIterator iter(patch->getExtraCellIterator()); !iter.done(); iter++){
-        IntVector iCell = *iter;
-        Uintah::Stencil7&  coefs = matrix_[iCell];
-        coefs.p = p; 
-        coefs.e = e/dx2;   coefs.w = w/dx2; 
-        coefs.n = n/dy2;   coefs.s = s/dy2;
-        coefs.t = t/dz2;   coefs.b = b/dz2;
-      }
-//    }
-//  }
+                           const Uintah::Patch* const patch,
+                           const int material)
+{ 
+  std::cout<<"Patch ID "<< patch->getID() <<std::endl;
+  if (didAllocateMatrix_) {
+    //oldDw->getModifiable( matrix_, &(*matrixLabel_), theMaterial, patch );
+    dw->put( matrix_, matrixLabel_, material, patch ); 
+    // I don't think that we need to setup the matrix at every time step.
+    //setup_matrix(patch);    
+  } else {
+    dw->allocateAndPut( matrix_, matrixLabel_, material, patch );    
+    setup_matrix(patch);
+    didAllocateMatrix_=true;
+  }    
 }
-
+  
 //--------------------------------------------------------------------
 
 void
@@ -177,10 +137,65 @@ Pressure::bind_operators( const SpatialOps::OperatorDatabase& opDB )
   interpX_ = opDB.retrieve_operator<fxInterp>();
   interpY_ = opDB.retrieve_operator<fyInterp>();
   interpZ_ = opDB.retrieve_operator<fzInterp>();
+  
+  divXOp_ = opDB.retrieve_operator<DivX>();
+  divYOp_ = opDB.retrieve_operator<DivY>();
+  divZOp_ = opDB.retrieve_operator<DivZ>();
+  
 }
 
 //--------------------------------------------------------------------
 
+void
+Pressure::setup_matrix(const Uintah::Patch* const patch) 
+{
+  // construct the coefficient matrix: \nabla^2
+  // We should probably move the matrix construction to the evaluate() method.
+  // need a way to get access to the patch so that we can loop over the cells.
+  // p is current cell
+  double p = 0.0;
+  // n: north, s: south, e: east, w: west, t: top, b: bottom coefficient
+  double n=0.0, s=0.0, e=0.0, w=0.0, t=0.0, b=0.0;
+  
+  IntVector l,h;
+  l = patch->getCellLowIndex();
+  h = patch->getCellHighIndex();
+  const Uintah::Vector spacing = patch->dCell();
+  
+  if (doX_) {
+    const double dx2 = spacing[0]*spacing[0];
+    e = 1.0/dx2;
+    w = 1.0/dx2;
+    p -= 2.0/dx2;
+  }
+  if (doY_) {
+    const double dy2 = spacing[1]*spacing[1];
+    n = 1.0/dy2;
+    s = 1.0/dy2;
+    p -= 2.0/dy2;
+  }
+  if (doZ_) {
+    const double dz2 = spacing[2]*spacing[2];
+    t = 1.0/dz2;
+    b = 1.0/dz2;
+    p -= 2.0/dz2;
+  }
+
+  for(Uintah::CellIterator iter(patch->getCellIterator()); !iter.done(); iter++){    
+    IntVector iCell = *iter;
+    Uintah::Stencil7&  coefs = matrix_[iCell];
+    coefs.w = w;
+    coefs.e = e;
+    coefs.n = n;
+    coefs.s = s;
+    coefs.b = b;
+    coefs.t = t;
+    coefs.p = p;           
+  }
+}
+    
+//--------------------------------------------------------------------
+    
 void
 Pressure::evaluate()
 {
@@ -189,28 +204,37 @@ Pressure::evaluate()
 
   // jcs: can we do the linear solve in place? We probably can. If so,
   // we would only need one field, not two...
-  SVolField* p = results[0];
-  SVolField* r = results[1];
-  SVolField& pressure = *p;
-  SVolField& rhs = *r;
-  SpatialOps::SpatFldPtr<SVolField> tmp = SpatialOps::SpatialFieldStore<SVolField>::self().get( pressure );
-
+  //SVolField* p = results[0];
+  //SVolField* r = results[1];
+  //SVolField& pressure = *p;
+  //SVolField& rhs = *r;
+  SVolField& rhs = *results[1];
+  rhs = 0.0;
+  namespace SS = SpatialOps::structured;
+  const SS::MemoryWindow& w = rhs.window_with_ghost();
+  SpatialOps::SpatFldPtr<SS::SSurfXField> tmpx  = SpatialOps::SpatialFieldStore<SS::SSurfXField >::self().get( w );
+  SpatialOps::SpatFldPtr<SS::SSurfYField> tmpy  = SpatialOps::SpatialFieldStore<SS::SSurfYField >::self().get( w );
+  SpatialOps::SpatFldPtr<SS::SSurfZField> tmpz  = SpatialOps::SpatialFieldStore<SS::SSurfZField >::self().get( w );
+  SpatialOps::SpatFldPtr<SVolField> tmp = SpatialOps::SpatialFieldStore<SVolField>::self().get( rhs );
   //___________________________________________________
   // calculate the RHS field for the poisson solve.
   // Note that this is "automagically" plugged into
   // the solver in the "schedule_solver" method.
   if( doX_ ){
-    interpX_->apply_to_field( *fx_, *tmp );
+    interpX_->apply_to_field( *fx_, *tmpx );
+    divXOp_->apply_to_field( *tmpx, *tmp );
     rhs += *tmp;
   }
 
   if( doY_ ){
-    interpY_->apply_to_field( *fy_, *tmp );
+    interpY_->apply_to_field( *fy_, *tmpy );
+    divYOp_->apply_to_field( *tmpy, *tmp );
     rhs += *tmp;
   }
 
   if( doZ_ ){
-    interpZ_->apply_to_field( *fz_, *tmp );
+    interpZ_->apply_to_field( *fz_, *tmpz );
+    divZOp_->apply_to_field( *tmpz, *tmp );
     rhs += *tmp;
   }
 

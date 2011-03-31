@@ -71,7 +71,7 @@ Dilatation<FieldT,Vel1T,Vel2T,Vel3T>::
 evaluate()
 {
   FieldT& dil = this->value();
-
+  dil=0.0;
   if( vel1t_ != Expr::Tag() ){
     vel1GradOp_->apply_to_field( *vel1_, dil );
   }

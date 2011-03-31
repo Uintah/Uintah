@@ -107,9 +107,7 @@ evaluate()
 {
   using namespace SpatialOps;
   FieldT& phi = this->value();
-
   SpatialOps::SpatFldPtr<FieldT> tmp = SpatialOps::SpatialFieldStore<FieldT>::self().get( phi );
-
   interpOp_->apply_to_field( *rho_, *tmp );
   phi <<= *rhophi_ / *tmp;
 }
