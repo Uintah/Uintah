@@ -1606,7 +1606,7 @@ ElasticPlasticHP::computeStressTensorImplicit(const PatchSubset* patches,
   constParticleVariable<double>  pMass, pVolume,
                                  pTempPrev, pTemperature,
                                  pPlasticStrain, pDamage, pPorosity, 
-                                 pStrainRate, pPlasticStrainRate;
+                                 pStrainRate, pPlasticStrainRate,pEnergy;
 
   constParticleVariable<Point>   px;
   constParticleVariable<Vector>  psize;
@@ -1617,7 +1617,7 @@ ElasticPlasticHP::computeStressTensorImplicit(const PatchSubset* patches,
   ParticleVariable<Matrix3>      pDeformGrad_new, pStress_new, pRotation_new;
   ParticleVariable<double>       pVolume_deformed, pPlasticStrain_new, 
                                  pDamage_new, pPorosity_new, pStrainRate_new,
-                                 pPlasticStrainRate_new, pdTdt;
+                                 pPlasticStrainRate_new, pdTdt,pEnergy_new;
 
   // Local variables
   Matrix3 DispGrad(0.0); // Displacement gradient
@@ -1668,6 +1668,7 @@ ElasticPlasticHP::computeStressTensorImplicit(const PatchSubset* patches,
     old_dw->get(pStrainRate,         pStrainRateLabel,         pset);
     old_dw->get(pPorosity,           pPorosityLabel,           pset);
     old_dw->get(pLocalized,          pLocalizedLabel,          pset);
+    old_dw->get(pEnergy,             pEnergyLabel,             pset);
 
     // Create and allocate arrays for storing the updated information
     // GLOBAL
@@ -1694,6 +1695,8 @@ ElasticPlasticHP::computeStressTensorImplicit(const PatchSubset* patches,
                            pPorosityLabel_preReloc,               pset);
     new_dw->allocateAndPut(pLocalized_new,      
                            pLocalizedLabel_preReloc,              pset);
+    new_dw->allocateAndPut(pEnergy_new,      
+                           pEnergyLabel_preReloc,                 pset);
 
     // Get the plastic strain
     d_plastic->getInternalVars(pset, old_dw);
@@ -1735,6 +1738,7 @@ ElasticPlasticHP::computeStressTensorImplicit(const PatchSubset* patches,
 
       // Assign zero internal heating by default - modify if necessary.
       pdTdt[idx] = 0.0;
+      pEnergy_new[idx] = pEnergy[idx];
 
       // Calculate the displacement gradient
       interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],pDeformGrad[idx]);
@@ -1812,6 +1816,7 @@ ElasticPlasticHP::computeStressTensorImplicit(const PatchSubset* patches,
       state->meltingTemp = Tm ;
       state->initialMeltTemp = Tm;
       state->specificHeat = matl->getSpecificHeat();
+      state->energy = pEnergy[idx];
 
       // Get or compute the specific heat
       if (d_computeSpecificHeat) {
@@ -1918,10 +1923,10 @@ ElasticPlasticHP::computeStressTensorImplicit(const PatchSubset* patches,
         double pStrainEnergy = (incStrain(0,0)*avgStress(0,0) +
                                 incStrain(1,1)*avgStress(1,1) +
                                 incStrain(2,2)*avgStress(2,2) +
-                                2.0*(incStrain(0,1)*avgStress(0,1) + 
-                                     incStrain(0,2)*avgStress(0,2) +
-                                     incStrain(1,2)*avgStress(1,2)))*
-          pVolume_deformed[idx]*delT;
+                           2.0*(incStrain(0,1)*avgStress(0,1) + 
+                                incStrain(0,2)*avgStress(0,2) +
+                                incStrain(1,2)*avgStress(1,2)))
+                               *pVolume_deformed[idx]*delT;
         totalStrainEnergy += pStrainEnergy;
       }
       delete state;
