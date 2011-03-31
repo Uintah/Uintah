@@ -340,6 +340,7 @@
   <!-- The following are for the Kayenta model -->
   <!-- IF YOU ADD  A VALUE FOR THE KAYENTA MODEL, ADD IT FOR THE
        PERTURBED KAYENTA MODEL BELOW!!! -->
+    <hugeJ    spec="OPTIONAL DOUBLE" /> <!-- max J val before part deletion-->
     <B0       spec="OPTIONAL DOUBLE" /> <!-- initial bulk modulus (stress) -->
     <B1       spec="OPTIONAL DOUBLE" /> <!-- nonlinear bulk mod param (stress) -->
     <B2       spec="OPTIONAL DOUBLE" /> <!-- nonlinear bulk mod param (stress) -->
