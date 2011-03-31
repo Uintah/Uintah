@@ -355,4 +355,5 @@ using namespace Wasatch;
 DECLARE_TAYLOR_MMS( SVolField );
 DECLARE_TAYLOR_MMS( XVolField );
 DECLARE_TAYLOR_MMS( YVolField );
+DECLARE_TAYLOR_MMS( ZVolField );
 //==========================================================================
