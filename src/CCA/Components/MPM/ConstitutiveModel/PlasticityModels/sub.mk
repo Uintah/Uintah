@@ -50,6 +50,7 @@ SRCS   += \
 	$(SRCDIR)/IsoHardeningPlastic.cc \
 	$(SRCDIR)/JohnsonCookPlastic.cc \
 	$(SRCDIR)/ZAPlastic.cc\
+	$(SRCDIR)/ZAPolymer.cc\
 	$(SRCDIR)/MTSPlastic.cc \
 	$(SRCDIR)/SCGPlastic.cc \
 	$(SRCDIR)/PTWPlastic.cc \
