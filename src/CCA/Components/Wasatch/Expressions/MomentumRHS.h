@@ -21,7 +21,7 @@ class MomRHS
   typedef SpatialOps::structured::SVolField PFieldT;
   typedef typename SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Gradient, PFieldT, FieldT >::type Grad;
 
-  const Expr::Tag pressuret_, rhsPartt_;
+  const Expr::Tag pressuret_, rhsPartt_, emptyTag_;
 
   const FieldT *rhsPart_;
   const PFieldT *pressure_;

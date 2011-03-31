@@ -14,7 +14,8 @@ MomRHS( const Expr::Tag& pressure,
         const Expr::ExpressionRegistry& reg )
   : Expr::Expression<FieldT>(id,reg),
     pressuret_( pressure ),
-    rhsPartt_( partRHS )
+    rhsPartt_( partRHS ),
+   emptyTag_( Expr::Tag() )
 {}
 
 //--------------------------------------------------------------------
@@ -30,8 +31,8 @@ template< typename FieldT >
 void
 MomRHS<FieldT>::
 advertise_dependents( Expr::ExprDeps& exprDeps )
-{
-  exprDeps.requires_expression( pressuret_ );
+{  
+  if( pressuret_ != emptyTag_ )    exprDeps.requires_expression( pressuret_ );;
   exprDeps.requires_expression( rhsPartt_ );
 }
 
@@ -46,7 +47,7 @@ bind_fields( const Expr::FieldManagerList& fml )
   rhsPart_ = &fm.field_ref( rhsPartt_ );
 
   const Expr::FieldManager<PFieldT>& pfm = fml.template field_manager<PFieldT>();
-  pressure_ = &pfm.field_ref( pressuret_ );
+  if( pressuret_ != emptyTag_ )    pressure_ = &pfm.field_ref( pressuret_ );
 }
 
 //--------------------------------------------------------------------
@@ -68,8 +69,12 @@ evaluate()
 {
   using namespace SpatialOps;
   FieldT& result = this->value();
-  gradOp_->apply_to_field( *pressure_, result );
-  result <<= -result + *rhsPart_;
+  //result = 0.0;
+  result <<= *rhsPart_;
+  if ( pressuret_ != emptyTag_ ){
+    gradOp_->apply_to_field( *pressure_, result );    
+    result <<= -result;
+  }
 }
 
 //--------------------------------------------------------------------

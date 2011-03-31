@@ -51,6 +51,7 @@ class Pressure
   const Expr::Tag fxt_, fyt_, fzt_, d2rhodt2t_;
 
   const bool doX_, doY_, doZ_, doDens_;
+  bool didAllocateMatrix_;
 
   const Uintah::SolverParameters& solverParams_;
   Uintah::SolverInterface& solver_;
@@ -64,12 +65,21 @@ class Pressure
   const ZVolField* fz_;
 
   // build interpolant operators
-  typedef OperatorTypeBuilder< Interpolant, XVolField, SVolField >::type  fxInterp;
-  typedef OperatorTypeBuilder< Interpolant, YVolField, SVolField >::type  fyInterp;
-  typedef OperatorTypeBuilder< Interpolant, ZVolField, SVolField >::type  fzInterp;
+  typedef OperatorTypeBuilder< Interpolant, XVolField, SpatialOps::structured::SSurfXField >::type  fxInterp;
+  typedef OperatorTypeBuilder< Interpolant, YVolField, SpatialOps::structured::SSurfYField >::type  fyInterp;
+  typedef OperatorTypeBuilder< Interpolant, ZVolField, SpatialOps::structured::SSurfZField >::type  fzInterp;
   const fxInterp* interpX_;
   const fyInterp* interpY_;
   const fzInterp* interpZ_;
+
+  // divergence operators
+  typedef SpatialOps::structured::BasicOpTypes<SVolField>  OpTypes;
+  typedef OpTypes::DivX  DivX;
+  typedef OpTypes::DivY  DivY;
+  typedef OpTypes::DivZ  DivZ;
+  const DivX* divXOp_;
+  const DivY* divYOp_;
+  const DivZ* divZOp_;  
   
   typedef Uintah::CCVariable<Uintah::Stencil7> MatType;
   MatType matrix_;
@@ -137,11 +147,10 @@ public:
   void bind_uintah_vars( Uintah::DataWarehouse* const dw,
                          const Uintah::Patch* const patch,
                          const int material );
-  
-  //void bind_uintah_vars( Uintah::DataWarehouse* const dw,
-  //                       const Uintah::PatchSubset* const patches,
-  //                       const Uintah::MaterialSubset* const materials );
-  
+  /**
+   * \brief Calculates pressure coefficient matrix.
+   */
+  void setup_matrix(const Uintah::Patch* const patch);
 
   void advertise_dependents( Expr::ExprDeps& exprDeps );
   void bind_fields( const Expr::FieldManagerList& fml );

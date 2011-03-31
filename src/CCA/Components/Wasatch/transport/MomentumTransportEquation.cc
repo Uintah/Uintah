@@ -27,51 +27,64 @@ namespace Wasatch{
   // must be consistent with the order of the velocity tags passed
   // into the stress constructor.
   template< typename FaceT > struct StressHelper;
-
+  // nomenclature: XSurfXField - first letter is volume type: S, X, Y, Z
+  // then it is followed by the field type
   template<> struct StressHelper<SpatialOps::structured::XSurfXField>
   {
+    // XSurfXField - XVol-XSurf
+    // tau_xx
     typedef XVolField Vel1T;
     typedef XVolField Vel2T;
   };
   template<> struct StressHelper<SpatialOps::structured::XSurfYField>
   {
+    // XSurfYField - XVol-YSurf
+    // tau_yx (tau on a y face in the x direction)
     typedef XVolField Vel1T;
     typedef YVolField Vel2T;
   };
   template<> struct StressHelper<SpatialOps::structured::XSurfZField>
   {
+    // XSurfZField - XVol-ZSurf
+    // tau_zx (tau on a z face in the x direction)
     typedef XVolField Vel1T;
     typedef ZVolField Vel2T;
   };
 
   template<> struct StressHelper<SpatialOps::structured::YSurfXField>
   {
+    // tau_xy
     typedef YVolField Vel1T;
     typedef XVolField Vel2T;
   };
   template<> struct StressHelper<SpatialOps::structured::YSurfYField>
   {
+    // tau_yy
     typedef YVolField Vel1T;
     typedef YVolField Vel2T;
   };
   template<> struct StressHelper<SpatialOps::structured::YSurfZField>
   {
+    // tau_zy
     typedef YVolField Vel1T;
     typedef ZVolField Vel2T;
   };
 
   template<> struct StressHelper<SpatialOps::structured::ZSurfXField>
   {
+    // tau_xz
     typedef ZVolField Vel1T;
     typedef XVolField Vel2T;
   };
   template<> struct StressHelper<SpatialOps::structured::ZSurfYField>
   {
+    // tau_yz
     typedef ZVolField Vel1T;
     typedef YVolField Vel2T;
   };
   template<> struct StressHelper<SpatialOps::structured::ZSurfZField>
   {
+    // tau_zz
     typedef ZVolField Vel1T;
     typedef ZVolField Vel2T;
   };
@@ -135,7 +148,7 @@ namespace Wasatch{
   {
     typedef typename StressHelper<FaceFieldT>::Vel1T Vel1T;  // type of velocity component 1
     typedef typename StressHelper<FaceFieldT>::Vel2T Vel2T;  // type of velocity component 2
-    typedef SVolField                                ViscT;  // type of velocity component 3
+    typedef SVolField                                ViscT;  // type of viscosity
 
     typedef typename Stress< FaceFieldT, Vel1T, Vel2T, ViscT >::Builder StressT;
 
@@ -176,6 +189,47 @@ namespace Wasatch{
     else         velTags.push_back( Expr::Tag() );
   }
 
+  //==================================================================
+  
+  template< typename FieldT >
+  void 
+  set_tau_tags( Uintah::ProblemSpecP params,
+                    Expr::TagList& tauTags )
+  {
+    std::string xmomname, ymomname, zmomname; 
+    Uintah::ProblemSpecP doxmom,doymom,dozmom;
+    doxmom = params->get( "X-Momentum", xmomname );
+    doymom = params->get( "Y-Momentum", ymomname );
+    dozmom = params->get( "Z-Momentum", zmomname );
+    //
+    if( doxmom ) tauTags.push_back( Expr::Tag("tau_x" + get_mom_dir_name<FieldT>() , Expr::STATE_NONE) );
+    else         tauTags.push_back( Expr::Tag() );
+    if( doymom ) tauTags.push_back( Expr::Tag("tau_y" + get_mom_dir_name<FieldT>() , Expr::STATE_NONE) );
+    else         tauTags.push_back( Expr::Tag() );
+    if( dozmom ) tauTags.push_back( Expr::Tag("tau_z" + get_mom_dir_name<FieldT>() , Expr::STATE_NONE) );
+    else         tauTags.push_back( Expr::Tag() );
+  }
+  
+  //==================================================================
+  
+  void set_convflux_tags( Uintah::ProblemSpecP params,
+               Expr::TagList& cfTags,
+               const Expr::Tag thisMomTag )
+  {
+    std::string xmomname, ymomname, zmomname; 
+    Uintah::ProblemSpecP doxmom,doymom,dozmom;
+    doxmom = params->get( "X-Momentum", xmomname );
+    doymom = params->get( "Y-Momentum", ymomname );
+    dozmom = params->get( "Z-Momentum", zmomname );
+    //
+    if( doxmom ) cfTags.push_back( Expr::Tag(thisMomTag.name() + "_convFlux_x", Expr::STATE_NONE) );
+    else         cfTags.push_back( Expr::Tag() );
+    if( doymom ) cfTags.push_back( Expr::Tag(thisMomTag.name() + "_convFlux_y", Expr::STATE_NONE) );
+    else         cfTags.push_back( Expr::Tag() );
+    if( dozmom ) cfTags.push_back( Expr::Tag(thisMomTag.name() + "_convFlux_z", Expr::STATE_NONE) );
+    else         cfTags.push_back( Expr::Tag() );
+  }
+  
   //==================================================================
 
   template< typename FieldT >
@@ -219,6 +273,13 @@ namespace Wasatch{
     typedef typename SpatialOps::structured::FaceTypes<FieldT>::XFace XFace;
     typedef typename SpatialOps::structured::FaceTypes<FieldT>::YFace YFace;
     typedef typename SpatialOps::structured::FaceTypes<FieldT>::ZFace ZFace;
+    //__________________
+    // dilatation
+    const Expr::Tag dilTag( "dilatation", Expr::STATE_N );    
+    if( !factory.get_registry().have_entry( dilTag ) ){
+      // if dilatation expression has not been registered, then register it
+      const Expr::ExpressionID dilID = factory.register_expression( dilTag, new typename Dilatation<SVolField,XVolField,YVolField,ZVolField>::Builder(velTags_[0],velTags_[1],velTags_[2]));
+    }    
 
     //___________________________________
     // diffusive flux (stress components)
@@ -227,11 +288,12 @@ namespace Wasatch{
     doxmom = params->get( "X-Momentum", xmomname );
     doymom = params->get( "Y-Momentum", ymomname );
     dozmom = params->get( "Z-Momentum", zmomname );
-    const Expr::Tag tauxt( "tau_" + get_mom_dir_name<FieldT>() + "x", Expr::STATE_NONE );
-    const Expr::Tag tauyt( "tau_" + get_mom_dir_name<FieldT>() + "y", Expr::STATE_NONE );
-    const Expr::Tag tauzt( "tau_" + get_mom_dir_name<FieldT>() + "z", Expr::STATE_NONE );
-
-    const Expr::Tag dilTag( "dilatation", Expr::STATE_N );    
+    Expr::TagList tauTags;
+    set_tau_tags<FieldT>( params, tauTags );
+    const Expr::Tag tauxt = tauTags[0];
+    const Expr::Tag tauyt = tauTags[1];
+    const Expr::Tag tauzt = tauTags[2];
+    
     const Expr::Tag viscTag = parse_nametag( params->findBlock("Viscosity")->findBlock("NameTag") );
 
     if( doxmom ){
@@ -249,9 +311,11 @@ namespace Wasatch{
 
     //__________________
     // convective fluxes
-    const Expr::Tag cfxt( thisMomTag.name() + "_convFlux_x", Expr::STATE_NONE );
-    const Expr::Tag cfyt( thisMomTag.name() + "_convFlux_y", Expr::STATE_NONE );
-    const Expr::Tag cfzt( thisMomTag.name() + "_convFlux_z", Expr::STATE_NONE );
+    Expr::TagList cfTags;
+    set_convflux_tags( params, cfTags, thisMomTag );
+    const Expr::Tag cfxt = cfTags[0];
+    const Expr::Tag cfyt = cfTags[1];
+    const Expr::Tag cfzt = cfTags[2];
 
     if( doxmom ){
       const Expr::ExpressionID id = setup_convective_flux< XFace, XVolField >( cfxt, thisMomTag, velTags_[0], factory );
@@ -266,13 +330,6 @@ namespace Wasatch{
       if( dir_ == ZDIR )  normalConvFluxID_ = id;
     }
         
-    //__________________
-    // dilatation
-    if( !factory.get_registry().have_entry( dilTag ) ){
-      // if dilatation expression has not been registered, then register it
-      factory.register_expression( dilTag, new typename Dilatation<SVolField,XVolField,YVolField,ZVolField>::Builder(velTags_[0],velTags_[1],velTags_[2]));
-    }
-
     /*
       jcs still to do:
       - create expression for body force
@@ -294,8 +351,8 @@ namespace Wasatch{
     // THIS SECTION IS TEMPORARY TO TEST THINGS OUT - MUST SPECIFY DENSITY
     // IN INPUT FILE AT THIS POINT
     const Expr::Tag densT( "density", Expr::STATE_N );
-    factory.register_expression( thisVelTag, new typename PrimVar<FieldT,SVolField>::Builder( thisMomTag, densT));
-    
+    Expr::ExpressionID thisVelID= factory.register_expression( thisVelTag, new typename PrimVar<FieldT,SVolField>::Builder( thisMomTag, densT));
+
     //__________________
     // pressure    
     Uintah::ProblemSpecP pressureParams = params->findBlock( "Pressure" );
@@ -307,8 +364,12 @@ namespace Wasatch{
       Expr::Tag fxt, fyt, fzt;
       if( doxmom )  fxt = Expr::Tag( xmomname + "_rhs_partial", Expr::STATE_NONE );
       if( doymom )  fyt = Expr::Tag( ymomname + "_rhs_partial", Expr::STATE_NONE );
-      if( dozmom )  fzt = Expr::Tag( zmomname + "_rhs_partial", Expr::STATE_NONE );      
-      pressureID_ = factory.register_expression( pressure_tag(),
+      if( dozmom )  fzt = Expr::Tag( zmomname + "_rhs_partial", Expr::STATE_NONE );   
+            
+      Expr::TagList ptags;
+      ptags.push_back( pressure_tag() );
+      ptags.push_back( Expr::Tag( pressure_tag().name() + "_rhs", pressure_tag().context() ) );            
+      pressureID_ = factory.register_expression( ptags,
                                                  new typename Pressure::Builder( fxt, fyt, fzt,
                                                                                  d2rhodt2t, *sparams, linSolver) );
     }
@@ -319,9 +380,12 @@ namespace Wasatch{
     //________________________________________________________________
     // Several expressions require ghost updates after they are calculated
     // jcs note that we need to set BCs on these quantities as well.
-    factory.cleave_from_parents( normalStressID_   );
-    factory.cleave_from_parents( normalConvFluxID_ );
+    factory.cleave_from_children( pressureID_   );
     factory.cleave_from_parents( pressureID_       );
+    factory.cleave_from_children( normalStressID_   );
+    factory.cleave_from_parents( normalStressID_   );
+    factory.cleave_from_children( normalConvFluxID_   );
+    factory.cleave_from_parents( normalConvFluxID_ );
   }
 
   //------------------------------------------------------------------

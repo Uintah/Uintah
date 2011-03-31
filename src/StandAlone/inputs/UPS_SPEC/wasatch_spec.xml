@@ -130,7 +130,7 @@
       </Viscosity>
       <Pressure         spec="OPTIONAL NO_DATA">
           <Parameters       spec="OPTIONAL NO_DATA">      
-            <criteria       spec="OPTIONAL STRING 'Absolute relative'" />                     
+            <criteria       spec="OPTIONAL STRING 'Absolute absolute Relative relative'" />                     
             <jump           spec="OPTIONAL INTEGER" />                                        
             <logging        spec="OPTIONAL INTEGER 'positive'" />                             
             <maxiterations          spec="OPTIONAL INTEGER 'positive'" />                             

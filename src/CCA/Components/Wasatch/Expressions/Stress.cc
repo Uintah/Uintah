@@ -76,13 +76,13 @@ evaluate()
   StressT& stress = this->value();
   SpatFldPtr<StressT> tmp = SpatialFieldStore<StressT>::self().get( stress );
 
-  vel1GradOp_->apply_to_field( *vel1_, stress );
-  vel2GradOp_->apply_to_field( *vel2_, *tmp   );
-
-  stress += *tmp;
-
+  vel1GradOp_->apply_to_field( *vel1_, stress ); // dui/dxj
+  vel2GradOp_->apply_to_field( *vel2_, *tmp   ); // duj/dxi
+  
+  stress += *tmp; // dui/dxj + duj/dxi
+  
   viscInterpOp_->apply_to_field( *visc_, *tmp );
-  stress <<= -stress * *tmp;
+  stress <<= -stress * *tmp; // -mu * (dui/dxj + duj/dxi)
 }
 
 //--------------------------------------------------------------------
