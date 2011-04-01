@@ -157,7 +157,7 @@
     <plasticity_model              spec="OPTIONAL NO_DATA"
                                      attribute1="type REQUIRED STRING 'isotropic_hardening, johnson_cook, mts_model,
                                                                        preston_tonks_wallace, steinberg_cochran_guinan,
-                                                                       zerilli_armstrong'" >
+                                                                       zerilli_armstrong, zerilli_armstrong_polymer'" >
       <A                           spec="OPTIONAL DOUBLE" />
       <a                           spec="OPTIONAL DOUBLE" />
       <a_0                         spec="OPTIONAL DOUBLE" />
@@ -169,7 +169,13 @@
       <alpha_1                     spec="OPTIONAL DOUBLE" />
       <alphap                      spec="OPTIONAL DOUBLE" />
       <B                           spec="OPTIONAL DOUBLE" />
+      <B_pa                        spec="OPTIONAL DOUBLE" />
+      <B_pb                        spec="OPTIONAL DOUBLE" />
+      <B_pn                        spec="OPTIONAL DOUBLE" />
       <B_0                         spec="OPTIONAL DOUBLE" />
+      <B_0pa                       spec="OPTIONAL DOUBLE" />
+      <B_0pb                       spec="OPTIONAL DOUBLE" />
+      <B_0pn                       spec="OPTIONAL DOUBLE" />
       <beta                        spec="OPTIONAL DOUBLE" />
       <beta_0                      spec="OPTIONAL DOUBLE" />
       <beta_1                      spec="OPTIONAL DOUBLE" />
@@ -195,6 +201,9 @@
       <kappa                       spec="OPTIONAL DOUBLE" />
       <koverbcubed                 spec="OPTIONAL DOUBLE" />
       <n                           spec="OPTIONAL DOUBLE" />
+      <omega_a                     spec="OPTIONAL DOUBLE" />
+      <omega_b                     spec="OPTIONAL DOUBLE" />
+      <omega_p                     spec="OPTIONAL DOUBLE" />
       <m                           spec="OPTIONAL DOUBLE" />
       <M                           spec="OPTIONAL DOUBLE" />
       <mu_0                        spec="OPTIONAL DOUBLE" />
