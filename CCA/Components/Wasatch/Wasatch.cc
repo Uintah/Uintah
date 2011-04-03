@@ -63,6 +63,7 @@
 #include "Expressions/BasicExprBuilder.h"
 #include "Expressions/SetCurrentTime.h"
 #include "transport/ParseEquation.h"
+#include "transport/TransportEquation.h"
 #include "BCHelperTools.h"
 
 namespace Wasatch{
@@ -186,22 +187,22 @@ namespace Wasatch{
     // Build transport equations.  This registers all expressions as
     // appropriate for solution of each transport equation.
     //
-    for( Uintah::ProblemSpecP momEqnParams=wasatchParams->findBlock("TransportEquation");
-         momEqnParams != 0;
-         momEqnParams=momEqnParams->findNextBlock("TransportEquation") ){
-      adaptors_.push_back( parse_equation( momEqnParams, graphCategories_ ) );
+    for( Uintah::ProblemSpecP transEqnParams=wasatchParams->findBlock("TransportEquation");
+         transEqnParams != 0;
+         transEqnParams=transEqnParams->findNextBlock("TransportEquation") ){
+      adaptors_.push_back( parse_equation( transEqnParams, graphCategories_ ) );
     }
     
     //
     // Build momentum transport equations.  This registers all expressions 
     // required for solution of each momentum equation.
     //
-    for( Uintah::ProblemSpecP transEqnParams=wasatchParams->findBlock("MomentumEquations");
-        transEqnParams != 0;
-        transEqnParams=transEqnParams->findNextBlock("MomentumEquations") ){
+    for( Uintah::ProblemSpecP momEqnParams=wasatchParams->findBlock("MomentumEquations");
+        momEqnParams != 0;
+        momEqnParams=momEqnParams->findNextBlock("MomentumEquations") ){
       // note - parse_momentum_equations returns a vector of equation adaptors
       try{
-        EquationAdaptors momentumAdaptors = parse_momentum_equations( transEqnParams, graphCategories_, *linSolver_);
+        EquationAdaptors momentumAdaptors = parse_momentum_equations( momEqnParams, graphCategories_, *linSolver_);
         adaptors_.insert( adaptors_.end(), momentumAdaptors.begin(), momentumAdaptors.end() );
       }
       catch( std::runtime_error& err ){
@@ -366,7 +367,29 @@ namespace Wasatch{
     // BOUNDARY CONDITIONS TREATMENT
     // -----------------------------------------------------------------------
     const GraphHelper* gh = graphCategories_[ ADVANCE_SOLUTION ];
-    build_bcs( adaptors_, *gh, localPatches, patchInfoMap_, materials->getUnion() );
+    //Expr::ExpressionFactory& exprFactory = *gh->exprFactory;
+    //build_bcs( adaptors_, *gh, localPatches, patchInfoMap_, materials->getUnion() );
+    typedef std::vector<EqnTimestepAdaptorBase*> EquationAdaptors;
+    
+    for( EquationAdaptors::const_iterator ia=adaptors_.begin(); ia!=adaptors_.end(); ++ia ){
+      EqnTimestepAdaptorBase* const adaptor = *ia;
+      TransportEquation* transEq = adaptor->equation();
+      std::string eqnLabel = transEq->solution_variable_name();
+      //______________________________________________________
+      // set up boundary conditions on this transport equation
+      try{
+        std::cout << "Setting BCs for transport equation '" << eqnLabel << "'" << std::endl;
+        transEq->setup_boundary_conditions(*gh, localPatches, patchInfoMap_, materials->getUnion());
+      }
+      catch( std::runtime_error& e ){
+        std::ostringstream msg;
+        msg << e.what()
+        << std::endl
+        << "ERORR while setting boundary conditions on equation '" << eqnLabel << "'"
+        << std::endl;
+        throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+      }
+    }
   }
   
   //--------------------------------------------------------------------

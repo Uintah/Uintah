@@ -2,10 +2,11 @@
 #define Wasatch_MomentumTransportEquation_h
 
 //-- ExprLib includes --//
-#include <expression/TransportEquation.h>
+#include <CCA/Components/Wasatch/transport/TransportEquation.h>
 
 //-- Wasatch includes --//
 #include <CCA/Components/Wasatch/FieldTypes.h>
+#include <CCA/Components/Wasatch/BCHelperTools.h>
 
 //-- Uintah includes --//
 #include <Core/ProblemSpec/ProblemSpecP.h>
@@ -32,7 +33,7 @@ namespace Wasatch{
    *  \todo Allow more flexibility in specifying initial and boundary conditions for momentum.
    */
   template< typename FieldT >
-  class MomentumTransportEquation : public Expr::TransportEquation
+  class MomentumTransportEquation : public Wasatch::TransportEquation
   {
   public:
 
@@ -59,8 +60,10 @@ namespace Wasatch{
     /**
      *  \brief setup the boundary conditions associated with this momentum equation
      */
-    void setup_boundary_conditions( Expr::ExpressionFactory& factory );
-
+    void setup_boundary_conditions( const GraphHelper& graphHelper,
+                                           const Uintah::PatchSet* const localPatches,
+                                           const PatchInfoMap& patchInfoMap,
+                                           const Uintah::MaterialSubset* const materials);    
     /**
      *  \brief setup the initial conditions for this momentum equation.
      */

@@ -254,7 +254,7 @@ namespace Wasatch{
                              Expr::ExpressionFactory& factory,
                              Uintah::ProblemSpecP params,
                              Uintah::SolverInterface& linSolver)
-    : Expr::TransportEquation( momName,
+    : Wasatch::TransportEquation( momName,
                                get_mom_rhs_id<FieldT>( factory,
                                                        velName,
                                                        momName,
@@ -399,10 +399,13 @@ namespace Wasatch{
 
   template< typename FieldT >
   void
-  MomentumTransportEquation<FieldT>::
-  setup_boundary_conditions( Expr::ExpressionFactory& factory )
+  MomentumTransportEquation<FieldT>::  
+  setup_boundary_conditions( const GraphHelper& graphHelper,
+                                 const Uintah::PatchSet* const localPatches,
+                                 const PatchInfoMap& patchInfoMap,
+                                 const Uintah::MaterialSubset* const materials)
   {}
-
+  
   //------------------------------------------------------------------
 
   template< typename FieldT >

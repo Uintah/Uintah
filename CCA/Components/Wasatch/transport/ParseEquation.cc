@@ -15,7 +15,7 @@
 #include <Core/ProblemSpec/ProblemSpecP.h>
 
 //-- Expression Library includes --//
-#include <expression/TransportEquation.h>
+#include <CCA/Components/Wasatch/transport/TransportEquation.h>
 
 #include <iostream>
 
@@ -35,7 +35,7 @@ namespace Wasatch{
   class EqnTimestepAdaptor : public EqnTimestepAdaptorBase
   {
   public:
-    EqnTimestepAdaptor( Expr::TransportEquation* eqn, Uintah::ProblemSpecP transEqnParams ) : EqnTimestepAdaptorBase(eqn, transEqnParams) {}
+    EqnTimestepAdaptor( Wasatch::TransportEquation* eqn, Uintah::ProblemSpecP transEqnParams ) : EqnTimestepAdaptorBase(eqn, transEqnParams) {}
     void hook( TimeStepper& ts ) const
     {
       ts.add_equation<FieldT>( eqn_->solution_variable_name(),
@@ -45,7 +45,7 @@ namespace Wasatch{
 
   //==================================================================
 
-  EqnTimestepAdaptorBase::EqnTimestepAdaptorBase( Expr::TransportEquation* eqn,
+  EqnTimestepAdaptorBase::EqnTimestepAdaptorBase( Wasatch::TransportEquation* eqn,
                                                  Uintah::ProblemSpecP transEqnParams)
     : eqn_(eqn), transEqnParams_(transEqnParams)
   {}
@@ -65,7 +65,7 @@ namespace Wasatch{
     const StringNames& sName = StringNames::self();
 
     EqnTimestepAdaptorBase* adaptor = NULL;
-    Expr::TransportEquation* transeqn = NULL;
+    Wasatch::TransportEquation* transeqn = NULL;
 
     std::string eqnLabel, solnVariable;
 
@@ -152,20 +152,6 @@ namespace Wasatch{
       throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
     }
 
-    //______________________________________________________
-    // set up boundary conditions on this transport equation
-    try{
-      std::cout << "Setting BCs for transport equation '" << eqnLabel << "'" << std::endl;
-      transeqn->setup_boundary_conditions( *solnGraphHelper->exprFactory );
-    }
-    catch( std::runtime_error& e ){
-      std::ostringstream msg;
-      msg << e.what()
-          << std::endl
-          << "ERORR while setting boundary conditions on equation '" << eqnLabel << "'"
-          << std::endl;
-      throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
-    }
     std::cout << "------------------------------------------------" << std::endl;
     return adaptor;
   }
@@ -179,7 +165,7 @@ namespace Wasatch{
     typedef std::vector<EqnTimestepAdaptorBase*> EquationAdaptors;
     EquationAdaptors adaptors;
     EqnTimestepAdaptorBase* adaptor = NULL;
-    Expr::TransportEquation* momtranseq = NULL;
+    Wasatch::TransportEquation* momtranseq = NULL;
     
     std::string xvelname, yvelname, zvelname;
     const Uintah::ProblemSpecP doxvel = params->get( "X-Velocity", xvelname );
@@ -251,7 +237,7 @@ namespace Wasatch{
     // loop over the local adaptors and set the initial and boundary conditions on each equation attached to that adaptor
     for( EquationAdaptors::const_iterator ia=adaptors.begin(); ia!=adaptors.end(); ++ia ){
       EqnTimestepAdaptorBase* const adaptor = *ia;
-      Expr::TransportEquation* momtranseq = adaptor->equation();
+      Wasatch::TransportEquation* momtranseq = adaptor->equation();
       //_____________________________________________________
       // set up initial conditions on this momentum equation
       try{
@@ -266,23 +252,6 @@ namespace Wasatch{
         << std::endl
         << "ERORR while setting initial conditions on momentum equation"
         << momtranseq->solution_variable_name()
-        << std::endl;
-        throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
-      }
-      
-      //______________________________________________________
-      // set up boundary conditions on this momentum equation
-      try{
-        std::cout << "Setting BCs for momentum equation: " 
-                  <<momtranseq->solution_variable_name()
-                  << std::endl;
-        momtranseq->setup_boundary_conditions( *solnGraphHelper->exprFactory );
-      }
-      catch( std::runtime_error& e ){
-        std::ostringstream msg;
-        msg << e.what()
-        << std::endl
-        << "ERORR while setting boundary conditions on momentum equation"
         << std::endl;
         throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
       }
