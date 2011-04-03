@@ -31,12 +31,13 @@ UNUSED_TESTS = []
 NIGHTLYTESTS = [
   ("BasicScalarTransportEquation",      "BasicScalarTransportEquation.ups",     1,      "Linux",        ["exactComparison","no_restart","no_memoryTest"] ), \
   ("TabPropsInterface",                 "TabPropsInterface.ups",                1,      "Linux",        ["exactComparison","no_restart","no_memoryTest"] ), \
-  ("convection-test2", 			"convection-test2.ups", 		2,	"Linux",	["exactComparison","no_restart","no_memoryTest","no_dbg"] ), \
-  ("convection-test", 			"convection-test.ups", 			3,	"Linux",	["exactComparison","no_restart","no_memoryTest"] ), \
-  ("convection-test3", 			"convection-test3.ups",			1,	"Linux",	["exactComparison","no_restart","no_memoryTest"] ), \
-  ("convection-superbee", 			"convection-test-superbee.ups",			1,	"Linux",	["exactComparison","no_restart","no_memoryTest"] ), \
-  ("boundary-conditions", 			"boundary-conditions-test.ups",			1,	"Linux",	["exactComparison","no_restart","no_memoryTest"] ), \
-  ("ScalarTransportEquation", 		"ScalarTransportEquation.ups",		1,	"Linux",	["exactComparison","no_restart","no_memoryTest","no_dbg"] )
+  ("convection-test2", 			"convection-test2.ups", 		2,	"Linux",	["exactComparison","no_restart","no_memoryTest","no_dbg"] ),                \
+  ("convection-test", 			"convection-test.ups", 			3,	"Linux",	["exactComparison","no_restart","no_memoryTest"] ),                         \
+  ("convection-test3", 			"convection-test3.ups",			1,	"Linux",	["exactComparison","no_restart","no_memoryTest"] ),                         \
+  ("convection-superbee", 			"convection-test-superbee.ups",			1,	"Linux",	["exactComparison","no_restart","no_memoryTest"] ),             \
+  ("boundary-conditions", 			"boundary-conditions-test.ups",			1,	"Linux",	["exactComparison","no_restart","no_memoryTest"] ),             \
+  ("ScalarTransportEquation", 		"ScalarTransportEquation.ups",		1,	"Linux",	["exactComparison","no_restart","no_memoryTest","no_dbg"] ),        \
+  ("momentum-test-mms", 		"momentum-test-mms.ups",		1,	"Linux",	["exactComparison","no_restart","no_memoryTest","no_dbg"] )
 ]
 
 
@@ -44,12 +45,13 @@ NIGHTLYTESTS = [
 LOCALTESTS = [
   ("BasicScalarTransportEquation",      "BasicScalarTransportEquation.ups",     1,      "All",	["exactComparison","no_restart","no_memoryTest"] ), \
   ("TabPropsInterface",                 "TabPropsInterface.ups",                1,      "All",	["exactComparison","no_restart","no_memoryTest"] ), \
-  ("convection-test2", 			"convection-test2.ups", 		2,	"All",	["exactComparison","no_restart","no_memoryTest","no_dbg"] ), \
-  ("convection-test", 			"convection-test.ups", 			3,	"All",	["exactComparison","no_restart","no_memoryTest"] ), \
-  ("convection-test3", 			"convection-test3.ups",			1,	"All",	["exactComparison","no_restart","no_memoryTest"] ), \
-  ("convection-superbee", 			"convection-test-superbee.ups",			1,	"All",	["exactComparison","no_restart","no_memoryTest"] ), \
-  ("boundary-conditions", 			"boundary-conditions-test.ups",			1,	"All",	["exactComparison","no_restart","no_memoryTest"] ), \
-  ("ScalarTransportEquation", 		"ScalarTransportEquation.ups",		1,	"All",	["exactComparison","no_restart","no_memoryTest","no_dbg"] )
+  ("convection-test2", 			"convection-test2.ups", 		2,	"All",	["exactComparison","no_restart","no_memoryTest","no_dbg"] ),            \
+  ("convection-test", 			"convection-test.ups", 			3,	"All",	["exactComparison","no_restart","no_memoryTest"] ),                     \
+  ("convection-test3", 			"convection-test3.ups",			1,	"All",	["exactComparison","no_restart","no_memoryTest"] ),                     \
+  ("convection-superbee", 			"convection-test-superbee.ups",			1,	"All",	["exactComparison","no_restart","no_memoryTest"] ),         \
+  ("boundary-conditions", 			"boundary-conditions-test.ups",			1,	"All",	["exactComparison","no_restart","no_memoryTest"] ),         \
+  ("ScalarTransportEquation", 		"ScalarTransportEquation.ups",		1,	"All",	["exactComparison","no_restart","no_memoryTest","no_dbg"] ),    \
+  ("momentum-test-mms", 		"momentum-test-mms.ups",		1,	"Linux",	["exactComparison","no_restart","no_memoryTest","no_dbg"] )
 ]
 
 #__________________________________

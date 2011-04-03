@@ -1,15 +1,14 @@
 <Uintah_specification>
 
   <Meta>
-    <title>Momentum Test with Taylor Vortex MMS</title>
+    <title>Momentum Test with Taylor-Green Vortex MMS</title>
   </Meta>
 
   <SimulationComponent type="wasatch"/>
-
+   <Solver type="CGSolver" />
   <Wasatch>
 
-    <!-- Set the initial condition for non-staggered scalar -->
-    <!-- Set the initial condition expression for VelX -->
+    <!-- Set the initial condition expression for x-momentum -->
     <TaylorVortexMMS type="XVOL">
       <TaskList>initialization</TaskList>
       <NameTag name="x-mom" state="STATE_N" />
@@ -19,7 +18,7 @@
       </VelocityX>
     </TaylorVortexMMS>
 
-    <!-- Set the initial condition for VelY -->
+    <!-- Set the initial condition for y-momentum -->
     <TaylorVortexMMS type="YVOL">
       <TaskList>initialization</TaskList>
       <NameTag name="y-mom" state="STATE_N" />
@@ -28,38 +27,7 @@
         <YCoordinate> <NameTag name="YYVOL" state="STATE_NONE"/> </YCoordinate>
       </VelocityY>
     </TaylorVortexMMS>
-
-    <!-- BasicExpression type="XVOL">
-      <TaskList>initialization</TaskList>
-      <NameTag name="x-mom" state="STATE_N" />
-      <SineFunction amplitude="1.0" frequency="1.0" offset="0.0">
-        <NameTag name="XXVOL" state="STATE_NONE" />
-      </SineFunction>
-    </BasicExpression>
-    
-    <BasicExpression type="YVOL">
-      <TaskList>initialization</TaskList>
-      <NameTag name="y-mom" state="STATE_N" />
-      <SineFunction amplitude="0.0" frequency="1.0" offset="0.0">
-        <NameTag name="XYVOL" state="STATE_NONE" />
-      </SineFunction>
-    </BasicExpression-->
-
-
-    
-    <!-- Set the initial condition for non-staggered scalar -->
-    <BasicExpression type="ZVOL">
-      <TaskList>initialization</TaskList>
-      <NameTag name="z-mom" state="STATE_N" />
-      <Constant>0.0</Constant>
-    </BasicExpression>
-    
-    <!-- BasicExpression type="SVOL">
-      <TaskList>initialization</TaskList>
-      <NameTag name="pressure" state="STATE_N" />
-      <Constant>1.0</Constant>
-    </BasicExpression>    
-    
+                
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
       <NameTag name="density" state="STATE_N" />
@@ -71,55 +39,7 @@
       <NameTag name="viscosity" state="STATE_N" />
       <Constant>0.001</Constant>
     </BasicExpression>
-
-    <BasicExpression type="XVOL">
-      <TaskList>initialization</TaskList>
-      <NameTag name="tau_xx" state="STATE_N" />
-      <Constant>1</Constant>
-    </BasicExpression>
-    <BasicExpression type="YVOL">
-      <TaskList>initialization</TaskList>
-      <NameTag name="tau_yy" state="STATE_N" />
-      <Constant>1</Constant>
-    </BasicExpression>
-    <BasicExpression type="ZVOL">
-      <TaskList>initialization</TaskList>
-      <NameTag name="tau_zz" state="STATE_N" />
-      <Constant>1</Constant>
-    </BasicExpression>
-
-    <BasicExpression type="XVOL">
-      <TaskList>initialization</TaskList>
-      <NameTag name="u" state="STATE_N" />
-      <Constant>1</Constant>
-    </BasicExpression>
-    <BasicExpression type="YVOL">
-      <TaskList>initialization</TaskList>
-      <NameTag name="v" state="STATE_N" />
-      <Constant>1</Constant>
-    </BasicExpression>
-    <BasicExpression type="ZVOL">
-      <TaskList>initialization</TaskList>
-      <NameTag name="w" state="STATE_N" />
-      <Constant>1</Constant>
-    </BasicExpression -->
     
-    <!--BasicExpression type="SVOL">
-      <TaskList>advance_solution</TaskList>
-      <NameTag name="body-force" state="STATE_NONE" />
-      <GaussianFunction amplitude="0.2" deviation="4.0" mean="10.0" baseline="0.1">
-        <NameTag name="XSVOL" state="STATE_NONE" />
-      </GaussianFunction>
-    </BasicExpression>
-    
-    <BasicExpression type="SVOL">
-      <TaskList>advance_solution</TaskList>
-      <NameTag name="density-acceleration" state="STATE_NONE" />
-      <GaussianFunction amplitude="0.2" deviation="4.0" mean="10.0" baseline="0.1">
-        <NameTag name="XSVOL" state="STATE_NONE" />
-      </GaussianFunction>
-    </BasicExpression-->
-
     <BasicExpression type="SVOL">
       <TaskList>advance_solution</TaskList>
       <NameTag name="viscosity" state="STATE_N" />
@@ -138,8 +58,6 @@
       <X-Momentum>x-mom</X-Momentum>
       <Y-Velocity>v</Y-Velocity>
       <Y-Momentum>y-mom</Y-Momentum>
-      <!--Z-Velocity>w</Z-Velocity>
-      <Z-Momentum>z-mom</Z-Momentum-->            
       <Viscosity>
         <NameTag name="viscosity" state="STATE_N" />
       </Viscosity>
@@ -154,7 +72,7 @@
             <!-- Hypre options -->
             <solver>         cg      </solver>
             <preconditioner> pfmg    </preconditioner>
-            <tolerance>      1.e-8  </tolerance>
+            <tolerance>      1.e-6  </tolerance>
             <maxiterations>  1000    </maxiterations>
             <npre>           1       </npre>
             <npost>          1       </npost>
@@ -170,19 +88,19 @@
 
 
   <Time>
-    <maxTime>1.0</maxTime>
+    <maxTime>0.01</maxTime>
     <initTime>0.0</initTime>
-    <delt_min>0.005</delt_min>
-    <delt_max>0.005</delt_max>
+    <delt_min>0.001</delt_min>
+    <delt_max>0.001</delt_max>
     <timestep_multiplier>1.0</timestep_multiplier>
   </Time>
 
 
   <DataArchiver>
-    <filebase>momentum-test-mms.uda</filebase>
+    <filebase>momentum-test-mms-CGSolver.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
     <outputInitTimestep/>
-    <checkpoint cycle = "2" interval = "0.2"/>
+    <checkpoint cycle = "2" interval = "0.001"/>
     <compression>gzip</compression>
     <save label="x-mom"/>
     <save label="y-mom"/>
@@ -222,10 +140,9 @@
       <Level>
       <Box label="1">
         <lower>[0,0,0]</lower>
-        <upper>[6.283185307179586,6.283185307179586,2]</upper>
-
-        <resolution>[100,100,4]</resolution>
-        <patches>[1,1,1]</patches>
+        <upper>[6.283185307179586,6.283185307179586,0.01]</upper>
+        <resolution>[60,60,2]</resolution>
+        <patches>[3,3,1]</patches>
       </Box>
       <periodic>[1,1,1]</periodic>
     </Level>
