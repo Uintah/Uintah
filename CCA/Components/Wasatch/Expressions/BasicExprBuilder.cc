@@ -225,6 +225,7 @@ namespace Wasatch{
       case SVOL : builder = build_taylor_vortex_mms_expr< SVolField >( exprParams );  break;
       case XVOL : builder = build_taylor_vortex_mms_expr< XVolField >( exprParams );  break;
       case YVOL : builder = build_taylor_vortex_mms_expr< YVolField >( exprParams );  break;
+      case ZVOL : builder = build_taylor_vortex_mms_expr< ZVolField >( exprParams );  break;
       default:
         std::ostringstream msg;
         msg << "ERROR: unsupported field type '" << fieldType << "'" << endl
