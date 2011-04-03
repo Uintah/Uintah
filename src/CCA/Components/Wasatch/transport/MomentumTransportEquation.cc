@@ -102,17 +102,6 @@ namespace Wasatch{
 
   //==================================================================
 
-  template< typename FieldT >
-  string get_mom_dir_name()
-  {
-    if     ( SpatialOps::CompareDirection< typename FieldT::Location::StagLoc, typename SpatialOps::XDIR >::same() ) return "x";
-    else if( SpatialOps::CompareDirection< typename FieldT::Location::StagLoc, typename SpatialOps::YDIR >::same() ) return "y";
-    else if( SpatialOps::CompareDirection< typename FieldT::Location::StagLoc, typename SpatialOps::ZDIR >::same() ) return "z";
-    return "-INVALID-";
-  }
-
-  //==================================================================
-
   Expr::Tag mom_tag( const std::string& momName )
   {
     return Expr::Tag( momName, Expr::STATE_N );
@@ -194,7 +183,8 @@ namespace Wasatch{
   template< typename FieldT >
   void 
   set_tau_tags( Uintah::ProblemSpecP params,
-                    Expr::TagList& tauTags )
+                    Expr::TagList& tauTags,
+               const std::string thisMomDirName)
   {
     std::string xmomname, ymomname, zmomname; 
     Uintah::ProblemSpecP doxmom,doymom,dozmom;
@@ -202,11 +192,11 @@ namespace Wasatch{
     doymom = params->get( "Y-Momentum", ymomname );
     dozmom = params->get( "Z-Momentum", zmomname );
     //
-    if( doxmom ) tauTags.push_back( Expr::Tag("tau_x" + get_mom_dir_name<FieldT>() , Expr::STATE_NONE) );
+    if( doxmom ) tauTags.push_back( Expr::Tag("tau_x" + thisMomDirName , Expr::STATE_NONE) );
     else         tauTags.push_back( Expr::Tag() );
-    if( doymom ) tauTags.push_back( Expr::Tag("tau_y" + get_mom_dir_name<FieldT>() , Expr::STATE_NONE) );
+    if( doymom ) tauTags.push_back( Expr::Tag("tau_y" + thisMomDirName , Expr::STATE_NONE) );
     else         tauTags.push_back( Expr::Tag() );
-    if( dozmom ) tauTags.push_back( Expr::Tag("tau_z" + get_mom_dir_name<FieldT>() , Expr::STATE_NONE) );
+    if( dozmom ) tauTags.push_back( Expr::Tag("tau_z" + thisMomDirName , Expr::STATE_NONE) );
     else         tauTags.push_back( Expr::Tag() );
   }
   
@@ -255,11 +245,12 @@ namespace Wasatch{
                              Uintah::ProblemSpecP params,
                              Uintah::SolverInterface& linSolver)
     : Wasatch::TransportEquation( momName,
-                               get_mom_rhs_id<FieldT>( factory,
+                                  get_mom_rhs_id<FieldT>( factory,
                                                        velName,
                                                        momName,
                                                        params,
-                                                       linSolver) ),
+                                                       linSolver),
+                                  get_staggered_location<FieldT>() ),
       dir_( set_direction<FieldT>() ),
       normalStressID_  ( Expr::ExpressionID::null_id() ),
       normalConvFluxID_( Expr::ExpressionID::null_id() ),
@@ -289,7 +280,8 @@ namespace Wasatch{
     doymom = params->get( "Y-Momentum", ymomname );
     dozmom = params->get( "Z-Momentum", zmomname );
     Expr::TagList tauTags;
-    set_tau_tags<FieldT>( params, tauTags );
+    const std::string thisMomDirName = this->dir_name();
+    set_tau_tags<FieldT>( params, tauTags, thisMomDirName );
     const Expr::Tag tauxt = tauTags[0];
     const Expr::Tag tauyt = tauTags[1];
     const Expr::Tag tauzt = tauTags[2];

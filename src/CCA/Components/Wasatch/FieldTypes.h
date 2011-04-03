@@ -35,7 +35,9 @@ namespace Wasatch{
     NODIR = SpatialOps::NODIR::value
   };
 
-
+  /**
+   *  \brief returns the staggered location of type FieldT.
+   */  
   template< typename FieldT >
   Direction get_staggered_location()
   {

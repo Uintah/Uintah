@@ -3,28 +3,14 @@
 
 #include <string>
 
+//-- ExprLib includes --//
 #include <expression/Tag.h>
 #include <expression/ExpressionFactory.h>
 #include <expression/Expr_ExpressionID.h>
 #include <expression/Expr_Context.h>
 
 //-- Uintah framework includes --//
-#include <CCA/Ports/Scheduler.h>
-#include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
-#include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Grid/SimulationState.h>
-#include <Core/Grid/Level.h>
-#include <Core/Grid/Variables/VarTypes.h>
-
-#include <Core/Grid/SimpleMaterial.h>
-#include <Core/Grid/Task.h>
-#include <Core/Parallel/ProcessorGroup.h>
-#include <Core/Malloc/Allocator.h>
-#include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/Patch.h>
-#include <Core/Grid/BoundaryConditions/BCDataArray.h>
-#include <Core/Grid/BoundaryConditions/BoundCond.h>
-
 
 //-- Wasatch includes --//
 #include <CCA/Components/Wasatch/FieldTypes.h>
@@ -111,7 +97,31 @@ namespace Wasatch{
      */
     const std::string& solution_variable_name() const{ return solnVarName_; }
     
+    /**
+     *  @brief Obtain the staggered location of the solution variable that is
+     *  governed by this transport equation.
+     */    
     const Direction staggered_location() const{ return stagLoc_; }
+    
+    /**
+     *  @brief Obtain the name (i.e. string) staggered location of the solution 
+     *  variable that is governed by this transport equation.
+     */    
+    const std::string dir_name() const {
+      switch (stagLoc_) {
+        case XDIR:
+          return "x";
+          break;
+        case YDIR:
+          return "y";
+        case ZDIR:
+          return "z";
+        case NODIR:
+          return "";
+        default:
+          break;
+      }
+    }
     
     Expr::ExpressionID get_rhs_id() const{ return rhsExprID_; }
     
