@@ -51,7 +51,7 @@ LOCALTESTS = [
   ("convection-superbee", 			"convection-test-superbee.ups",			1,	"All",	["exactComparison","no_restart","no_memoryTest"] ),         \
   ("boundary-conditions", 			"boundary-conditions-test.ups",			1,	"All",	["exactComparison","no_restart","no_memoryTest"] ),         \
   ("ScalarTransportEquation", 		"ScalarTransportEquation.ups",		1,	"All",	["exactComparison","no_restart","no_memoryTest","no_dbg"] ),    \
-  ("momentum-test-mms", 		"momentum-test-mms.ups",		1,	"Linux",	["exactComparison","no_restart","no_memoryTest","no_dbg"] )
+  ("momentum-test-mms", 		"momentum-test-mms.ups",		1,	"All",	["exactComparison","no_restart","no_memoryTest","no_dbg"] )
 ]
 
 #__________________________________
