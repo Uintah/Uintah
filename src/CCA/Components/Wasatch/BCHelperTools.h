@@ -8,7 +8,7 @@
  ##     ## ##             ##    ##     ## ##     ## ##             ## 
  ##     ## ##    ##       ##    ##     ## ##     ## ##       ##    ## 
  ########   ######        ##     #######   #######  ########  ######  
-------------------------------------------------------------------------------*/
+ ------------------------------------------------------------------------------*/
 
 //-- Uintah framework includes --//
 #include <Core/Grid/Patch.h>
@@ -17,7 +17,7 @@
 //-- Wasatch includes --//
 #include "PatchInfo.h"
 #include "FieldAdaptor.h"
-#include "transport/ParseEquation.h"
+#include "GraphHelperTools.h"
 
 /**
  *  \file BCHelperTools.h
@@ -28,8 +28,9 @@
  */
 
 namespace Wasatch {
- 
-  class GraphHelper; //forward declaration
+  
+  //class GraphHelper; //forward declaration
+  //class TransportEquation;
   
   /**
    *  \function   buildBoundaryConditions
@@ -52,11 +53,13 @@ namespace Wasatch {
    *
    *  \param materials a pointer to the Uintah::MaterialSubset.
    */
-  void build_bcs( const std::vector<EqnTimestepAdaptorBase*>& eqnAdaptors, 
-                  const GraphHelper& graphHelper,
-                  const Uintah::PatchSet* const localPatches,
-                  const PatchInfoMap& patchInfoMap,
-                  const Uintah::MaterialSubset* const materials );
+  
+  void build_bcs( const std::string phiName,
+                     const Direction staggeredLocation,
+                     const GraphHelper& graphHelper,
+                     const Uintah::PatchSet* const localPatches,
+                     const PatchInfoMap& patchInfoMap,
+                     const Uintah::MaterialSubset* const materials );  
 }
 
 #endif // Wasatch_BCHelperTools_h

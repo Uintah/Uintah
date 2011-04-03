@@ -89,12 +89,10 @@ Pressure::bind_uintah_vars( Uintah::DataWarehouse* const dw,
                            const Uintah::Patch* const patch,
                            const int material)
 { 
-  std::cout<<"Patch ID "<< patch->getID() <<std::endl;
   if (didAllocateMatrix_) {
-    //oldDw->getModifiable( matrix_, &(*matrixLabel_), theMaterial, patch );
+    // Todd: instead of checking for allocation - check for new timestep or some other ingenious solution
+    // check for transferfrom - transfer matrix from old to new DW
     dw->put( matrix_, matrixLabel_, material, patch ); 
-    // I don't think that we need to setup the matrix at every time step.
-    //setup_matrix(patch);    
   } else {
     dw->allocateAndPut( matrix_, matrixLabel_, material, patch );    
     setup_matrix(patch);

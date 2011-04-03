@@ -14,41 +14,64 @@
 //-- Wasatch includes --//
 #include "Operators/OperatorTypes.h"
 #include "FieldTypes.h"
-#include "GraphHelperTools.h"
 #include "BCHelperTools.h"
 
 namespace Wasatch {
-
-//
-// this macro will be unwrapped inside the build_bcs method.  The
-// variable names correspond to those defined within the appropriate
-// scope of that method.
-//
-#define SET_BC( BCEvalT,      /* type of bc evaluator */                \
-                BCT,          /* type of BC */                          \
-                SIDE )                                                  \
-  std::cout<<"SETTING BOUNDARY CONDITION ON "<< phiName <<std::endl;    \
-  for( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {            \
-    SCIRun::IntVector bc_point_indices(*bound_ptr);                     \
-    const SS::IntVec bcPointIJK(bc_point_indices[0],bc_point_indices[1],bc_point_indices[2]); \
-    if( staggeredDirection=="X" ){                                      \
-      typedef SS::XVolField FieldT;                                     \
-      set_bc< FieldT, BCOpTypeSelector<FieldT,BCEvalT>::BCT >( patch, graphHelper, phiName, bcPointIJK, SIDE, bc_value, opdb ); \
-    }                                                                   \
-    else if( staggeredDirection=="Y" ){                                 \
-      typedef SS::YVolField  FieldT;                                    \
-      set_bc< FieldT, BCOpTypeSelector<FieldT,BCEvalT>::BCT >( patch, graphHelper, phiName, bcPointIJK, SIDE, bc_value, opdb ); \
-    }                                                                   \
-    else if( staggeredDirection=="Z" ){                                 \
-      typedef SS::ZVolField  FieldT;                                    \
-      set_bc< FieldT, BCOpTypeSelector<FieldT,BCEvalT>::BCT >( patch, graphHelper, phiName, bcPointIJK, SIDE, bc_value, opdb ); \
-    }                                                                   \
-    else{                                                               \
-      typedef SS::SVolField  FieldT;                                    \
-      set_bc< FieldT, BCOpTypeSelector<FieldT,BCEvalT>::BCT >( patch, graphHelper, phiName, bcPointIJK, SIDE, bc_value, opdb ); \
-    }                                                                   \
+  
+  //
+  // this macro will be unwrapped inside the build_bcs method.  The
+  // variable names correspond to those defined within the appropriate
+  // scope of that method.
+  //
+  
+  #define SET_BC( BCEvalT,      /* type of bc evaluator */                \
+                  BCT,          /* type of BC */                          \
+                  SIDE )                                                  \
+    std::cout<<"SETTING BOUNDARY CONDITION ON "<< phiName <<std::endl;    \
+    for( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {            \
+      SCIRun::IntVector bc_point_indices(*bound_ptr);                     \
+      const SS::IntVec bcPointIJK(bc_point_indices[0],bc_point_indices[1],bc_point_indices[2]); \
+      switch (staggeredLocation) {                                        \
+      case XDIR:                                                          \
+        typedef SS::XVolField  XFieldT;                                    \
+        set_bc< XFieldT, BCOpTypeSelector<XFieldT,BCEvalT>::BCT >( patch, graphHelper, phiName, bcPointIJK, SIDE, bc_value, opdb ); \
+        break;                                                            \
+      case YDIR:                                                          \
+        typedef SS::YVolField  YFieldT;                                    \
+        set_bc< YFieldT, BCOpTypeSelector<YFieldT,BCEvalT>::BCT >( patch, graphHelper, phiName, bcPointIJK, SIDE, bc_value, opdb ); \
+        break;																														\
+      case ZDIR:																													\
+        typedef SS::ZVolField  ZFieldT;                                    \
+        set_bc< ZFieldT, BCOpTypeSelector<ZFieldT,BCEvalT>::BCT >( patch, graphHelper, phiName, bcPointIJK, SIDE, bc_value, opdb ); \
+        break;																														\
+      case NODIR:																													\
+        typedef SS::SVolField  SFieldT;                                   \
+        set_bc< SFieldT, BCOpTypeSelector<SFieldT,BCEvalT>::BCT >( patch, graphHelper, phiName, bcPointIJK, SIDE, bc_value, opdb ); \
+        break;																														\
+      default:																														\
+        break;																														\
+    }																																		  \
   }
-
+  
+  //-----------------------------------------------------------------------------
+  template < typename FieldT, typename BCOpT >
+  void set_bc( const Uintah::Patch* const patch,
+                  const GraphHelper& gh,
+                  const std::string& phiName,
+                  const SpatialOps::structured::IntVec& bcPointIndex,
+                  const SpatialOps::structured::BCSide bcSide,
+                  const double bcValue,
+                  const SpatialOps::OperatorDatabase& opdb )
+  {
+    typedef typename BCOpT::BCEvalT BCEvaluator;
+    const Expr::Tag phiLabel( phiName, Expr::STATE_N );
+    Expr::ExpressionFactory& factory = *gh.exprFactory;
+    const Expr::ExpressionID phiID = factory.get_registry().get_id(phiLabel);
+    Expr::Expression<FieldT>& phiExpr = dynamic_cast<Expr::Expression<FieldT>&>( factory.retrieve_expression( phiID, patch->getID(), true ) );
+    BCOpT bcOp( bcPointIndex, bcSide, BCEvaluator(bcValue), opdb );
+    phiExpr.process_after_evaluate( bcOp );
+  }
+  
   //-----------------------------------------------------------------------------
   
   /**
@@ -74,41 +97,21 @@ namespace Wasatch {
   };
   
   //-----------------------------------------------------------------------------
-
-  template < typename FieldT, typename BCOpT >
-  void set_bc( const Uintah::Patch* const patch,
-               const GraphHelper& gh,
-               const std::string& phiName,
-               const SpatialOps::structured::IntVec& bcPointIndex,
-               const SpatialOps::structured::BCSide bcSide,
-               const double bcValue,
-               const SpatialOps::OperatorDatabase& opdb )
-  {
-    typedef typename BCOpT::BCEvalT BCEvaluator;
-    Expr::ExpressionFactory& factory = *gh.exprFactory;
-    const Expr::Tag phiLabel( phiName, Expr::STATE_N );
-    const Expr::ExpressionID phiID = factory.get_registry().get_id(phiLabel);
-    Expr::Expression<FieldT>& phiExpr = dynamic_cast<Expr::Expression<FieldT>&>( factory.retrieve_expression( phiID, patch->getID(), true ) );
-    BCOpT bcOp( bcPointIndex, bcSide, BCEvaluator(bcValue), opdb );
-    phiExpr.process_after_evaluate( bcOp );
-  }
-  
-  //-----------------------------------------------------------------------------
   
   template <typename T>
   bool get_iter_bcval_bckind( const Uintah::Patch* patch, 
-                              const Uintah::Patch::FaceType face,
-                              const int child,
-                              const std::string& desc,
-                              const int mat_id,
-                              T& bc_value,
-                              SCIRun::Iterator& bound_ptr,
-                              std::string& bc_kind )
+                             const Uintah::Patch::FaceType face,
+                             const int child,
+                             const std::string& desc,
+                             const int mat_id,
+                             T& bc_value,
+                             SCIRun::Iterator& bound_ptr,
+                             std::string& bc_kind )
   {
     SCIRun::Iterator nu;
     const Uintah::BoundCondBase* bc = patch->getArrayBCValues( face, mat_id,
-                                                               desc, bound_ptr,
-                                                               nu, child );
+                                                              desc, bound_ptr,
+                                                              nu, child );
     const Uintah::BoundCond<T>* new_bcs = dynamic_cast<const Uintah::BoundCond<T>*>(bc);
     
     bc_value=T(-9);
@@ -123,94 +126,72 @@ namespace Wasatch {
     return( bc_kind != "NotSet" );
   }
   
-  //-----------------------------------------------------------------------------
-  
-  void build_bcs( const std::vector<EqnTimestepAdaptorBase*>& eqnAdaptors,
-                  const GraphHelper& graphHelper,
-                  const Uintah::PatchSet* const localPatches,
-                  const PatchInfoMap& patchInfoMap,
-                  const Uintah::MaterialSubset* const materials )
+  //
+  void build_bcs( const std::string phiName,
+                     const Direction staggeredLocation,
+                     const GraphHelper& graphHelper,
+                     const Uintah::PatchSet* const localPatches,
+                     const PatchInfoMap& patchInfoMap,
+                     const Uintah::MaterialSubset* const materials )
   {
-     /*
+    /*
      ALGORITHM:
-     Note: Adaptors have been modified to save the parameters of the transport
-     equation that they save.
-     1. Loop over adaptors
-       2. For each adaptor, get the solution variable name
-       3. For each adaptor, get the staggering direction
-       4. For each adaptor, loop over the patches
-          5. For each patch, loop over materials
-             6. For each material, loop over boundary faces
-                7. For each boundary face, loop over its children
-                   8. For each child, get the cell faces and set appropriate
-                        boundary conditions
-    */
+     1. loop over the patches
+     2. For each patch, loop over materials
+     3. For each material, loop over boundary faces
+     4. For each boundary face, loop over its children
+     5. For each child, get the cell faces and set appropriate
+     boundary conditions
+     */
     // loop over all patches, and for each patch set boundary conditions  
     
     namespace SS = SpatialOps::structured;
     typedef SS::ConstValEval BCEvaluator; // basic functor for constant functions.
-    typedef std::vector<EqnTimestepAdaptorBase*> EquationAdaptors;
-    
-    for( EquationAdaptors::const_iterator ia=eqnAdaptors.begin(); ia!=eqnAdaptors.end(); ++ia ){
-      EqnTimestepAdaptorBase* const adaptor = *ia;
+    // loop over local patches
+    for( int ip=0; ip<localPatches->size(); ++ip ){
       
-      // get the input parameters corresponding to this transport equation
-      Uintah::ProblemSpecP transEqnParams = adaptor->transEqnParams();
+      // get the patch subset
+      const Uintah::PatchSubset* const patches = localPatches->getSubset(ip);
       
-      // get the variable name
-      std::string phiName;
-      Expr::TransportEquation* transEq = adaptor->equation();
-      phiName = transEq->solution_variable_name();
-      
-      // find out if this corresponds to a staggered or non-staggered field
-      std::string staggeredDirection;
-      Uintah::ProblemSpecP scalarStaggeredParams = transEqnParams->get( "StaggeredDirection", staggeredDirection );
-      
-      // loop over local patches
-      for( int ip=0; ip<localPatches->size(); ++ip ){
+      // loop over every patch in the patch subset
+      for( int ipss=0; ipss<patches->size(); ++ipss ){          
         
-        // get the patch subset
-        const Uintah::PatchSubset* const patches = localPatches->getSubset(ip);
+        // get a pointer to the current patch
+        const Uintah::Patch* const patch = patches->get(ipss);          
         
-        // loop over every patch in the patch subset
-        for( int ipss=0; ipss<patches->size(); ++ipss ){          
+        // get the patch info from which we can get the operators database
+        const PatchInfoMap::const_iterator ipi = patchInfoMap.find( patch->getID() );
+        assert( ipi != patchInfoMap.end() );
+        const SpatialOps::OperatorDatabase& opdb = *(ipi->second.operators);
+        
+        // loop over materials
+        for( int im=0; im<materials->size(); ++im ){
           
-          // get a pointer to the current patch
-          const Uintah::Patch* const patch = patches->get(ipss);          
+          const int materialID = materials->get(im);
           
-          // get the patch info from which we can get the operators database
-          const PatchInfoMap::const_iterator ipi = patchInfoMap.find( patch->getID() );
-          assert( ipi != patchInfoMap.end() );
-          const SpatialOps::OperatorDatabase& opdb = *(ipi->second.operators);
+          std::vector<Uintah::Patch::FaceType> bndFaces;
+          patch->getBoundaryFaces(bndFaces);
+          std::vector<Uintah::Patch::FaceType>::const_iterator faceIterator = bndFaces.begin();
           
-          // loop over materials
-          for( int im=0; im<materials->size(); ++im ){
+          // loop over the boundary faces
+          for( ; faceIterator!=bndFaces.end(); ++faceIterator ){
+            Uintah::Patch::FaceType face = *faceIterator;
             
-            const int materialID = materials->get(im);
-
-            std::vector<Uintah::Patch::FaceType> bndFaces;
-            patch->getBoundaryFaces(bndFaces);
-            std::vector<Uintah::Patch::FaceType>::const_iterator faceIterator = bndFaces.begin();
-                        
-            // loop over the boundary faces
-            for( ; faceIterator!=bndFaces.end(); ++faceIterator ){
-              Uintah::Patch::FaceType face = *faceIterator;
+            //get the number of children
+            const int numChildren = patch->getBCDataArray(face)->getNumberChildren(materialID);
+            
+            for( int child = 0; child<numChildren; ++child ){
               
-              //get the number of children
-              const int numChildren = patch->getBCDataArray(face)->getNumberChildren(materialID);
+              double bc_value = -9; 
+              std::string bc_kind = "NotSet";
+              SCIRun::Iterator bound_ptr;
+              bool foundIterator = get_iter_bcval_bckind( patch, face, child, phiName, materialID, bc_value, bound_ptr, bc_kind);
               
-              for( int child = 0; child<numChildren; ++child ){
-
-                double bc_value = -9; 
-                std::string bc_kind = "NotSet";
-                SCIRun::Iterator bound_ptr;
-                bool foundIterator = get_iter_bcval_bckind( patch, face, child, phiName, materialID, bc_value, bound_ptr, bc_kind);
+              if (foundIterator) {
                 
-                if (foundIterator) {
-
-                  if (bc_kind == "Dirichlet") {
-
-                    switch( face ){
+                if (bc_kind == "Dirichlet") {
+                  
+                  switch( face ){
                     case Uintah::Patch::xminus:  SET_BC( BCEvaluator, DirichletX, SpatialOps::structured::X_MINUS_SIDE );  break;
                     case Uintah::Patch::xplus :  SET_BC( BCEvaluator, DirichletX, SpatialOps::structured::X_PLUS_SIDE  );  break;
                     case Uintah::Patch::yminus:  SET_BC( BCEvaluator, DirichletY, SpatialOps::structured::Y_MINUS_SIDE );  break;
@@ -223,11 +204,11 @@ namespace Wasatch {
                     case Uintah::Patch::invalidFace:
                       throw Uintah::ProblemSetupException( "invalidFace is not a valid face", __FILE__, __LINE__ );
                       break;
-                    }
-
-                  } else if (bc_kind == "Neumann") {
-
-                    switch( face ){
+                  }
+                  
+                } else if (bc_kind == "Neumann") {
+                  
+                  switch( face ){
                     case Uintah::Patch::xminus:  SET_BC( BCEvaluator, NeumannX, SpatialOps::structured::X_MINUS_SIDE );  break;
                     case Uintah::Patch::xplus :  SET_BC( BCEvaluator, NeumannX, SpatialOps::structured::X_PLUS_SIDE  );  break;
                     case Uintah::Patch::yminus:  SET_BC( BCEvaluator, NeumannY, SpatialOps::structured::Y_MINUS_SIDE );  break;
@@ -240,18 +221,15 @@ namespace Wasatch {
                     case Uintah::Patch::invalidFace:
                       throw Uintah::ProblemSetupException( "invalidFace is not a valid face", __FILE__, __LINE__ );
                       break;
-                    }
-                    
                   }
+                  
                 }
-              } // child loop
-            } // face loop
-          } // material loop
-        } // patch subset loop
-      } // local patch loop
-    } // equation loop
-
+              }
+            } // child loop
+          } // face loop
+        } // material loop
+      } // patch subset loop
+    } // local patch loop
   }
-
-
+  
 } // namespace wasatch
