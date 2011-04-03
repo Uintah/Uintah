@@ -3,7 +3,7 @@
 <Study>Res.Study</Study>
 <gnuplot>
   <script>plotScript.gp</script>s
-  <title>MPM:Axis Alignmed MMS, 10 timeteps, Linear</title>
+  <title>MPM:Axis Aligned MMS, 10 timeteps, Linear</title>
   <ylabel>L2 Error</ylabel>
   <xlabel>Resolution</xlabel>
 </gnuplot>
