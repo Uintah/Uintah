@@ -49,20 +49,34 @@ Uintah::AA_MMS( DataArchive * da, CommandLineFlags & clf )
 
     //__________________________________
     //  hard coded constants!!!!
-    double error, max_error=0.;
+
     double mu    = 3846.;
     double bulk  = 8333.;
     double E     = 9.*bulk*mu/(3.*bulk+mu);
     double rho0  = 1.0;
     double c     = sqrt(E/rho0);
     double A     = 1e-2;
-    Point worstPos = Point(-9,-9,-9);
+    int    TotalNumParticles  = 0;   
+    Point  worstPosAllLevels  = Point(-9,-9,-9);
+    double max_errorAllLevels = 0.0;
+    double TotalSumError      = 0.0;
+    
+    int numLevels = grid->numLevels();
+    vector<double> LinfLevel(numLevels);
+    vector<double> L2normLevel(numLevels);
+    vector<Point> worstPosLevel(numLevels);
     
     //__________________________________
     //  Level loop
-    for(int l=0;l<grid->numLevels();l++){
+    for(int l=0;l<numLevels;l++){
       LevelP level = grid->getLevel(l);
     
+      double sumError  = 0.0;
+      double max_error = 0;
+      int numParticles = 0;
+      Point worstPos   = Point(-9,-9,-9);
+    
+      //__________________________________
       // Patch loop
       for(Level::const_patchIterator iter = level->patchesBegin();
           iter != level->patchesEnd(); iter++){
@@ -77,6 +91,7 @@ Uintah::AA_MMS( DataArchive * da, CommandLineFlags & clf )
         da->query(value_disp, "p.displacement",matl, patch, t);
           
         ParticleSubset* pset = value_pos.getParticleSubset(); 
+        numParticles += pset->numParticles();
         
         //__________________________________
         //  Compute the error.       
@@ -92,8 +107,9 @@ Uintah::AA_MMS( DataArchive * da, CommandLineFlags & clf )
                                       sin(M_PI * refx.y()) * sin( (2./3.) * M_PI + c * M_PI * time),
                                       sin(M_PI * refx.z()) * sin( (4./3.) * M_PI + c * M_PI * time));
             
-            error = (u_exact - value_disp[*iter]).length();
-            
+            double error = (u_exact - value_disp[*iter]).length();
+            sumError += error*error;
+                
             if (error>max_error){
               max_error = error;
               worstPos  = value_pos[*iter];
@@ -102,19 +118,41 @@ Uintah::AA_MMS( DataArchive * da, CommandLineFlags & clf )
             
         }  //if
       }  // for patches
+      LinfLevel[l]      = max_error;
+      L2normLevel[l]    = sqrt( sumError/(double)numParticles );
+      worstPosLevel[l]  = worstPos;
       
-      cout << "     Level: " << level->getIndex() << " L_inf Error: " << max_error << endl;
+      cout << "     Level: " << level->getIndex() << " L_inf Error: " << LinfLevel[l] << ", L2norm: " << L2normLevel[l] << " , Worst particle: " << worstPos << endl;
       
+      TotalSumError     += sumError;
+      TotalNumParticles += numParticles;
+      
+      if (max_error > max_errorAllLevels) {
+        max_errorAllLevels = max_error;
+        worstPosAllLevels  = worstPos;
+      }
     }   // for levels
-    cout << "time: " << time << " , L_inf Error: " << max_error << " , Worst particle: " << worstPos << endl;
+    double L2norm = sqrt( TotalSumError /(double)TotalNumParticles );
     
-    // write data to file (L_inf)
+    cout << "time: " << time << " , L_inf Error: " << max_errorAllLevels << " , L2norm Error: "<< L2norm << " , Worst particle: " << worstPosAllLevels << endl;
+    
+    //__________________________________
+    // write data to the files (L_norms & L_normsPerLevels)
     FILE *outFile;
-    outFile = fopen("L_inf","w");
-    fprintf(outFile, "%16.16le\n",max_error );
+    
+    // output level information
+    outFile = fopen("L_normsPerLevel","w");
+    fprintf(outFile, "#Time,  Level,   L_inf,    L2norm\n");
+    for(int l=0;l<numLevels;l++){
+      fprintf(outFile, "%16.16le, %i,  %16.16le,  %16.16le\n", time, l, LinfLevel[l], L2normLevel[l]);
+    }
+    fclose(outFile);
+    
+    // overall 
+    outFile = fopen("L_norms","w");
+    fprintf(outFile, "#Time,    L_inf,    L2norm\n");
+    fprintf(outFile, "%16.16le, %16.16le, %16.16le\n", time, max_errorAllLevels, L2norm);
     fclose(outFile); 
-    
-    
   }
 } // end AA_MMS()
 

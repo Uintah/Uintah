@@ -15,6 +15,7 @@ function Usage
   printf('options:\n')                                                                                       
   printf('  -uda  <udaFileName> - name of the uda file \n')                                                  
   printf('  -ts                 - Timestep to compute L-inf error, default is the last timestep\n') 
+  printf('  -norm  (Linf or L2)- prints Linf the output file \n')
   printf('  -o <fname>          - Dump the output (LInfError) to a file\n')           
 end 
 
@@ -22,7 +23,7 @@ end
 % defaults
 ts          = 999;
 output_file = 'L_inf';
-L           = 0;
+whichNorm   = 'L2';
 
 %________________________________            
 % Parse User inputs  
@@ -44,8 +45,17 @@ for i = 1:2:nargin
   elseif (strcmp(option,"-ts") )
     ts = str2num(opt_value);                  
   elseif (strcmp(option,"-o") )  
-    output_file = opt_value;    
-  end                                      
+    output_file = opt_value;     
+  elseif (strcmp(option,"-norm") )  
+    whichNorm = opt_value;
+  end         
+end
+
+if( strcmp(whichNorm,"L2")==0 && strcmp(whichNorm,"Linf")== 0)
+  disp( 'compare_MPM_AA_MMS.m: invalid norm option');
+  Usage
+  disp( 'Now exiting....');
+  exit(-1)
 end
 
 %________________________________
@@ -72,13 +82,22 @@ endif
 % compute error
 c1 = sprintf('puda -timesteplow %i -AA_MMS %s  >& tmp',ts-1,uda);
 [s1, r1] = unix(c1);
-L_inf = load('L_inf'); 
 
-% write L_inf to a file
+data = load('L_norms'); 
+
+norm = -9;
+if( strcmp(whichNorm, "Linf") )
+  norm = data(2);
+elseif(  strcmp(whichNorm, "L2") )
+  norm = data(3);
+end
+
+
+% write data to the output file
 nargv = length(output_file);
 if (nargv > 0)
   fid = fopen(output_file, 'w');
-  fprintf(fid,'%g\n',L_inf);
+  fprintf(fid,'%g\n',norm);
   fclose(fid);
 end
 
