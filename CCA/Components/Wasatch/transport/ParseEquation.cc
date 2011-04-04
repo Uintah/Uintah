@@ -35,7 +35,7 @@ namespace Wasatch{
   class EqnTimestepAdaptor : public EqnTimestepAdaptorBase
   {
   public:
-    EqnTimestepAdaptor( Wasatch::TransportEquation* eqn, Uintah::ProblemSpecP transEqnParams ) : EqnTimestepAdaptorBase(eqn, transEqnParams) {}
+    EqnTimestepAdaptor( Wasatch::TransportEquation* eqn ) : EqnTimestepAdaptorBase(eqn) {}
     void hook( TimeStepper& ts ) const
     {
       ts.add_equation<FieldT>( eqn_->solution_variable_name(),
@@ -45,9 +45,8 @@ namespace Wasatch{
 
   //==================================================================
 
-  EqnTimestepAdaptorBase::EqnTimestepAdaptorBase( Wasatch::TransportEquation* eqn,
-                                                 Uintah::ProblemSpecP transEqnParams)
-    : eqn_(eqn), transEqnParams_(transEqnParams)
+  EqnTimestepAdaptorBase::EqnTimestepAdaptorBase( Wasatch::TransportEquation* eqn )
+    : eqn_(eqn)
   {}
 
   //------------------------------------------------------------------
@@ -96,21 +95,21 @@ namespace Wasatch{
           typedef ScalarTransportEquation< XVolField > ScalarTransEqn;
           transeqn = scinew ScalarTransEqn( ScalarTransEqn::get_phi_name( params ),
                                             ScalarTransEqn::get_rhs_expr_id( *solnGraphHelper->exprFactory, params ) );
-          adaptor = scinew EqnTimestepAdaptor< XVolField >( transeqn, params );
+          adaptor = scinew EqnTimestepAdaptor< XVolField >( transeqn );
           
         } else if ( staggeredDirection=="Y" ) {
           std::cout << "Setting up staggered scalar transport equation in direction: '" << staggeredDirection << "'" << std::endl;
           typedef ScalarTransportEquation< YVolField > ScalarTransEqn;
           transeqn = scinew ScalarTransEqn( ScalarTransEqn::get_phi_name( params ),
                                             ScalarTransEqn::get_rhs_expr_id( *solnGraphHelper->exprFactory, params ) );
-          adaptor = scinew EqnTimestepAdaptor< YVolField >( transeqn, params );
+          adaptor = scinew EqnTimestepAdaptor< YVolField >( transeqn );
           
         } else if (staggeredDirection=="Z") {
           std::cout << "Setting up staggered scalar transport equation in direction: '" << staggeredDirection << "'" << std::endl;
           typedef ScalarTransportEquation< ZVolField > ScalarTransEqn;
           transeqn = scinew ScalarTransEqn( ScalarTransEqn::get_phi_name( params ),
                                             ScalarTransEqn::get_rhs_expr_id( *solnGraphHelper->exprFactory, params ) );
-          adaptor = scinew EqnTimestepAdaptor< ZVolField >( transeqn, params );
+          adaptor = scinew EqnTimestepAdaptor< ZVolField >( transeqn );
           
         } else {
           std::ostringstream msg;
@@ -124,12 +123,12 @@ namespace Wasatch{
         typedef ScalarTransportEquation< SVolField > ScalarTransEqn;
         transeqn = scinew ScalarTransEqn( ScalarTransEqn::get_phi_name( params ),
                                        ScalarTransEqn::get_rhs_expr_id( *solnGraphHelper->exprFactory, params ) );
-        adaptor = scinew EqnTimestepAdaptor< SVolField >( transeqn, params );
+        adaptor = scinew EqnTimestepAdaptor< SVolField >( transeqn );
       }
       
     } else if( eqnLabel == sName.temperature ){
       transeqn = scinew TemperatureTransportEquation( *solnGraphHelper->exprFactory );
-      adaptor = scinew EqnTimestepAdaptor< TemperatureTransportEquation::FieldT >( transeqn, params );
+      adaptor = scinew EqnTimestepAdaptor< TemperatureTransportEquation::FieldT >( transeqn );
       
     } else {
       std::ostringstream msg;
@@ -203,7 +202,7 @@ namespace Wasatch{
                                       *solnGraphHelper->exprFactory,
                                       params,
                                       linSolver );
-      adaptor = scinew EqnTimestepAdaptor< XVolField >( momtranseq, params );
+      adaptor = scinew EqnTimestepAdaptor< XVolField >( momtranseq );
       adaptors.push_back(adaptor);
     }
     
@@ -216,7 +215,7 @@ namespace Wasatch{
                                       *solnGraphHelper->exprFactory,
                                       params,
                                       linSolver );
-      adaptor = scinew EqnTimestepAdaptor< YVolField >( momtranseq, params );
+      adaptor = scinew EqnTimestepAdaptor< YVolField >( momtranseq );
       adaptors.push_back(adaptor);
     }
     
@@ -229,7 +228,7 @@ namespace Wasatch{
                                       *solnGraphHelper->exprFactory,
                                       params,
                                       linSolver );
-      adaptor = scinew EqnTimestepAdaptor< ZVolField >( momtranseq, params );
+      adaptor = scinew EqnTimestepAdaptor< ZVolField >( momtranseq );
       adaptors.push_back(adaptor);
     }      
     
