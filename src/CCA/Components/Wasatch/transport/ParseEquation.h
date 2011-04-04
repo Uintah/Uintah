@@ -35,16 +35,14 @@ namespace Wasatch{
   class EqnTimestepAdaptorBase
   {
   protected:
-    EqnTimestepAdaptorBase( TransportEquation* eqn, 
-                           Uintah::ProblemSpecP transEqnParams );
+    EqnTimestepAdaptorBase( TransportEquation* eqn);
     TransportEquation* const eqn_;
-    Uintah::ProblemSpecP transEqnParams_;
+
   public:
     virtual ~EqnTimestepAdaptorBase();
     virtual void hook( TimeStepper& ts ) const = 0;
     TransportEquation* equation(){ return eqn_; }
     const TransportEquation* equation() const{ return eqn_; }
-    Uintah::ProblemSpecP transEqnParams() { return transEqnParams_;}
   };
 
 
