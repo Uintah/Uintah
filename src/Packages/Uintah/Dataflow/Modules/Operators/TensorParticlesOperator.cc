@@ -117,8 +117,8 @@ TensorParticlesOperator::execute(void)
   case 3: // equivalent stress 
     computeScalars(pTP, pSP, EquivalentStressOp());
     break;
-  case 4: // Octahedral shear stress
-    computeScalars(pTP, pSP, OctShearStressOp());
+  case 4: // Determinant shear stress
+    computeScalars(pTP, pSP, Determinant());
     break;
   case 5: // n . sigma. t
     {

@@ -224,8 +224,8 @@ void TensorFieldOperatorAlgo::performOperation(TensorField* tensorField,
   case 3: // equivalent stress 
     computeScalars(tensorField, scalarField, EquivalentStressOp());
     break;
-  case 4: // Octahedral shear stress
-    computeScalars(tensorField, scalarField, OctShearStressOp());
+  case 4: // Determinant
+    computeScalars(tensorField, scalarField, Determinant());
     break;
   case 5: // n . sigma. t
     {

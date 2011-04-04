@@ -83,13 +83,13 @@ itcl_class Uintah_Operators_TensorOperator {
 	radiobutton $w.top.calc.eqivstress -text "Equivalent Stress" \
 		-variable $this-operation -value 3 \
             -command "$this select_equivalent_stress; $n"
-	radiobutton $w.top.calc.octshearstress -text "Octahedral Shear Stress" \
+	radiobutton $w.top.calc.determinant -text "Determinant" \
 		-variable $this-operation -value 4 \
-            -command "$this select_oct_shear_stress; $n"
+            -command "$this select_determinant; $n"
 	radiobutton $w.top.calc.nst -text "n . sigma. t" \
 		-variable $this-operation -value 5 \
             -command "$this select_nst; $n"
-	pack $w.top.calc.l $w.top.calc.elem $w.top.calc.eigen2D $w.top.calc.pressure $w.top.calc.eqivstress $w.top.calc.octshearstress $w.top.calc.nst -anchor w
+	pack $w.top.calc.l $w.top.calc.elem $w.top.calc.eigen2D $w.top.calc.pressure $w.top.calc.eqivstress $w.top.calc.determinant $w.top.calc.nst -anchor w
 	
 
 	if { [set $this-operation] == 0} {
@@ -101,7 +101,7 @@ itcl_class Uintah_Operators_TensorOperator {
 	} elseif { [set $this-operation] == 3} {
 	    select_equivalent_stress
 	} elseif { [set $this-operation] == 4} {
-	    select_oct_shear_stress
+	    select_determinant
 	} elseif { [set $this-operation] == 5} {
 	    select_nst
 	}
@@ -149,11 +149,11 @@ itcl_class Uintah_Operators_TensorOperator {
 	equivalent_stress_ui $w.top.opts
 	pack $w.top.opts -padx 2 -pady 2 -fill both -expand yes
     }
-    method select_oct_shear_stress {} {
+    method select_determinant {} {
 	set w .ui[modname]
 	destroy $w.top.opts
 	frame $w.top.opts -relief sunken -bd 1
-	oct_shear_stress_ui $w.top.opts
+	determinant_ui $w.top.opts
 	pack $w.top.opts -padx 2 -pady 2 -fill both -expand yes
     }
     method select_nst {} {
@@ -227,16 +227,10 @@ itcl_class Uintah_Operators_TensorOperator {
 	pack $w.l2 -anchor c -expand yes
     }
 
-    method oct_shear_stress_ui {w} {
-	label $w.l1 -text "Octahedral Shear Stress Tensor Operation"
+    method determinant_ui {w} {
+	label $w.l1 -text "Determinant Operation"
 	label $w.l2 -text \
-	"OSS = sqrt( (stress00-stress11)*(stress00-stress11)+
-(stress11-stress22)*(stress11-stress22)+
-(stress22-stress00)*(stress22-stress00)+
-6*(stress01*stress01+stress12*stress12+stress02*stress02))
-____________________________________________
-            3.0"
-
+	"Det = Determinant(M)"
         pack $w.l1 
 	pack $w.l2 -anchor c -expand yes
     }

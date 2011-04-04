@@ -138,6 +138,13 @@ struct OctShearStressOp
 		 )/3.0; }
 };
 
+struct Determinant
+{
+  Determinant() {}
+  inline double operator()(Matrix3 M)
+  { return M.Determinant();}
+};
+
 struct NDotSigmaDotTOp
 {
   NDotSigmaDotTOp(double nx, double ny, double nz, 
