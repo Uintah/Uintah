@@ -14,12 +14,16 @@
 
           in initializeParticles(...), the first and last lines are included as context:
 {
+
+  Vector dx = patch->dCell();             // you need to normalize the variable A by the 
+  double normalization = dx.length();    // cell spacing so the Linear interpolation will work
+  double A=1e-2 * normalization;
+    
   double mu = 3846.;
   double bulk = 8333.;
   double E = 9.*bulk*mu/(3.*bulk+mu);
   double rho0=matl->getInitialDensity();
   double c = sqrt(E/rho0);
-  double A=.1;
   double U = 0.;
   double V = A*sin(M_PI*p.y())*sin(M_PI*(2./3.));
   double W = A*sin(M_PI*p.z())*sin(M_PI*(4./3.));

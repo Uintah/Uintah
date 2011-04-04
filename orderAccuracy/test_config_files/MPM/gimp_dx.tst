@@ -9,7 +9,10 @@
 </gnuplot>
 
 <AllTests>
+  <replace_lines>
     <interpolator>gimp</interpolator>
+    <extraCells>[1,1,1]</extraCells>
+  </replace_lines>
 </AllTests>
 
 
@@ -56,6 +59,18 @@
     <replace_lines>
       <patches>      [2,2,2]            </patches>
       <resolution>   [64,64,64]         </resolution>
+    </replace_lines>
+</Test>
+
+<Test>
+    <Title>96</Title>
+    <sus_cmd>nice mpirun -np 8 sus </sus_cmd>
+    <Study>Res.Study</Study>
+    <postProcess_cmd>compare_MPM_AA_MMS.m -norm L2 </postProcess_cmd>
+    <x>96</x>
+    <replace_lines>
+      <patches>      [2,2,2]            </patches>
+      <resolution>   [96,96,96]         </resolution>
     </replace_lines>
 </Test>
 
