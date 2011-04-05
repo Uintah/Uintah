@@ -119,8 +119,12 @@ TabPropsInterface::problemSetup( const ProblemSpecP& propertiesParameters )
   // d_statetbl.read_hdf5(tableFileName);
 
   std::ifstream inFile( tableFileName.c_str(), std::ios_base::in ); 
-  InputArchive ia( inFile );
-  ia >> BOOST_SERIALIZATION_NVP( d_statetbl ); 
+  try {
+    InputArchive ia( inFile );
+    ia >> BOOST_SERIALIZATION_NVP( d_statetbl ); 
+  } catch (...) { 
+    throw ProblemSetupException( "Could not open table file "+tableFileName+": Boost error opening file.",__FILE__,__LINE__);
+  }
 
   // Extract independent and dependent variables from input file
   ProblemSpecP db_rootnode = propertiesParameters;
