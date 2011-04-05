@@ -2211,7 +2211,6 @@ ExplicitSolver::dummySolve(const ProcessorGroup* ,
     double flowOUToutbc = 0.0;
     double denAccum = 0.0;
     double carbon_efficiency = 0.0;
-    double carbon_efficiency_es = 0.0;
     double sulfur_efficiency = 0.0;
     double scalar_efficiency = 0.0;
     double enthalpy_efficiency = 0.0;
