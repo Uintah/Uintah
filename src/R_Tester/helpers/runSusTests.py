@@ -254,7 +254,7 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
       continue
     
       
-    if dbg_opt == "opt":
+    if dbg_opt == "opt" or dbg_opt == "unknown":               ### DAV we will need to change this
       do_memory = 0
       
     tests_to_do = [do_uda_comparisons, do_memory, do_performance]
