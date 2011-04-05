@@ -751,8 +751,8 @@ namespace Uintah{
           }
 
         private: 
-          phiT& _phi; 
           operT* _opr; 
+          phiT& _phi; 
 
       };
 

@@ -5089,20 +5089,15 @@ BoundaryCondition::getScalarEfficiency(const ProcessorGroup*,
                                        DataWarehouse* new_dw)
 {
     sum_vartype sum_scalarFlowRate, sum_CO2FlowRate, sum_SO2FlowRate, sum_enthalpyFlowRate;
-    sum_vartype sum_CO2FlowRateES, sum_SO2FlowRateES;
     sum_vartype sum_totalRadSrc;
     delt_vartype flowRate;
     double scalarFlowRate = 0.0;
     double CO2FlowRate = 0.0;
-    double CO2FlowRateES = 0.0;
     double SO2FlowRate = 0.0;
-    double SO2FlowRateES = 0.0;
     double enthalpyFlowRate = 0.0;
     double totalFlowRate = 0.0;
     double totalCarbonFlowRate = 0.0;
-    double totalCarbonFlowRateES = 0.0;
     double totalSulfurFlowRate = 0.0;
-    double totalSulfurFlowRateES = 0.0;
     double totalEnthalpyFlowRate = 0.0;
     double scalarEfficiency = 0.0;
     double carbonEfficiency = 0.0;
@@ -6872,7 +6867,7 @@ BoundaryCondition::setInitProfile__NEW(const ProcessorGroup*,
         for (int child = 0; child < numChildren; child++){
 
           double bc_value = 0;
-          int norm = getNormal( face ); 
+          //int norm = getNormal( face ); 
           
           string bc_kind = "NotSet";
           Iterator bound_ptr;

@@ -609,7 +609,7 @@ DQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
            new_dw->get(extra_src, temp_src.getSrcLabel(), matlIndex, patch, gn, 0);
 
            // Add to the RHS
-           RHS[c] += extra_src[c]*vol; 
+           RHS[c] -= extra_src[c]*vol; 
           }            
         }
 #endif
