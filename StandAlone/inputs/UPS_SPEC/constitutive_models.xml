@@ -7,13 +7,14 @@
                                                                         ideal_gas, membrane, murnahanMPM, mw_visco_elastic, rigid, shell_CNH,
                                                                         small_strain_plastic, trans_iso_hyper, visco_plastic,
                                                                         visco_scram, visco_trans_iso_hyper, water, kayenta, hypo_elastic_fortran, diamm, cnh_mms, 
-                                                                        cnh_damage, cnhp_damage, UCNH, program_burn, p_alpha, nonlocal_drucker_prager'">
+                                                                        cnh_damage, cnhp_damage, UCNH, program_burn,jwlpp_mpm, p_alpha, nonlocal_drucker_prager'">
     <A                             spec="OPTIONAL DOUBLE" />
     <allow_no_tension              spec="OPTIONAL BOOLEAN" />
     <alpha                         spec="OPTIONAL DOUBLE" />
     <alpha0                        spec="OPTIONAL DOUBLE" />
     <Pe                            spec="OPTIONAL DOUBLE" />
     <Ps                            spec="OPTIONAL DOUBLE" />
+    <b                             spec="OPTIONAL DOUBLE" />
     <B                             spec="OPTIONAL DOUBLE" />
     <Beta                          spec="OPTIONAL DOUBLE" />
     <bulk_modulus                  spec="OPTIONAL DOUBLE" />
