@@ -61,6 +61,7 @@ SRCS   += \
         $(SRCDIR)/ViscoPlastic.cc               \
         $(SRCDIR)/MurnahanMPM.cc                \
         $(SRCDIR)/ProgramBurn.cc                \
+        $(SRCDIR)/JWLppMPM.cc                   \
         $(SRCDIR)/UCNH.cc                       \
         $(SRCDIR)/P_Alpha.cc                    \
         $(SRCDIR)/SoilFoam.cc	                \
