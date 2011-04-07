@@ -33,46 +33,23 @@ DEALINGS IN THE SOFTWARE.
 #ifndef Uintah_Component_Arches_IncDynamicProcedure_h
 #define Uintah_Component_Arches_IncDynamicProcedure_h
 
-/**************************************
-CLASS
-   IncDynamicProcedure
-   
-   Class IncDynamicProcedure is an LES model for
-   computing sub-grid scale turbulent viscosity.
-
-
-GENERAL INFORMATION
-   IncDynamicProcedure.h - declaration of the class
-   
-   Author: Rajesh Rawat (rawat@crsim.utah.edu)
-
-   All major modifications since 01.01.2004 done by:
-   Stanislav Borodai(borodai@crsim.utah.edu)
-      
-   Creation Date:   Mar 1, 2000
-   
-   C-SAFE 
-   
-   Copyright U of U 2000
-
-KEYWORDS
-
-
-DESCRIPTION
-   Class IncDynamicProcedure is an LES model for
-   computing sub-grid scale turbulent viscosity.
-
-
-WARNING
-   none
-****************************************/
-
 #include <CCA/Components/Arches/Arches.h>
 #include <CCA/Components/Arches/TurbulenceModel.h>
 #include <iostream>
 using namespace std;
 
 namespace Uintah {
+
+/** 
+  @class  IncDynamicProcedure
+  @author Rajesh Rawat, Stanislav Borodai
+  @date   March 2000
+  
+  @brief  An LES model for computing the subgrid scale stress term 
+          \f$ \tau_{SGS} \f$ for incompressible flows.
+  
+  */
+
 class PhysicalConstants;
 class BoundaryCondition;
 

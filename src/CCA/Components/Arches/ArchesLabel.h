@@ -38,6 +38,8 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Util/Handle.h>
 #include <map>
 
+namespace Uintah {
+
 /**
   @class    ArchesLabel
   @author   Biswajit Banerjee
@@ -58,7 +60,6 @@ DEALINGS IN THE SOFTWARE.
   @seealso For EKT: Direct and large-eddy simulation V: proceedings of the fifth international ERCOFTAC Workshop on Direct and Large-eddy simulation, held at the Munich University of Technology, August 27-29, 2003, Volume 2003
 */
 
-namespace Uintah {
   class VarLabel;
     class ArchesLabel {
     public:
@@ -126,12 +127,9 @@ namespace Uintah {
       // in pressureSolver::linearizeMatrix
       const VarLabel* d_presNonLinSrcPBLMLabel;
 
-      // U-Velocity Labels
-      const VarLabel* d_uVelocitySPBCLabel;
-      // V-Velocity Labels
-      const VarLabel* d_vVelocitySPBCLabel;
-      // W-Velocity Labels
-      const VarLabel* d_wVelocitySPBCLabel;
+      const VarLabel* d_uVelocitySPBCLabel; ///< U velocity labels
+      const VarLabel* d_vVelocitySPBCLabel; ///< V velocity labels
+      const VarLabel* d_wVelocitySPBCLabel; ///< W velocity labels
 
       const VarLabel* d_uVelocityEKTLabel;
       const VarLabel* d_vVelocityEKTLabel;
@@ -224,13 +222,12 @@ namespace Uintah {
 
       // labels for nonlinear residuals
 
-      // For storing the interpolated CC Velocity Variables
-      const VarLabel* d_oldCCVelocityLabel;
-      const VarLabel* d_newCCVelocityLabel;
-      const VarLabel* d_newCCVelMagLabel;
-      const VarLabel* d_newCCUVelocityLabel;
-      const VarLabel* d_newCCVVelocityLabel;
-      const VarLabel* d_newCCWVelocityLabel;
+      const VarLabel* d_oldCCVelocityLabel;       ///< Stores old interpolated velocity
+      const VarLabel* d_newCCVelocityLabel;       ///< Stores new interpolated velocity
+      const VarLabel* d_newCCVelMagLabel;         ///< Stores new interpolated velocity magnitude
+      const VarLabel* d_newCCUVelocityLabel;      ///< Stores new interpolated U velocity
+      const VarLabel* d_newCCVVelocityLabel;      ///< Stores new interpolated V velocity
+      const VarLabel* d_newCCWVelocityLabel;      ///< Stores new interpolated W velocity
 
       // for multimaterial
       const VarLabel* d_mmcellTypeLabel;
@@ -282,78 +279,66 @@ namespace Uintah {
       const VarLabel* d_densityMicroLabel;
       const VarLabel* d_densityMicroINLabel;
       const VarLabel* d_pressPlusHydroLabel;
-      // predicted
 
-      // for outlet bc
-      const VarLabel* d_uvwoutLabel;
-      // pred-corr labels
+      const VarLabel* d_uvwoutLabel;                ///< For outlet BC
 
       // labels for pressure solver
-      const VarLabel* d_uVelRhoHatLabel;
-      const VarLabel* d_vVelRhoHatLabel;
-      const VarLabel* d_wVelRhoHatLabel;
+      const VarLabel* d_uVelRhoHatLabel;            ///< Labels for pressure solver
+      const VarLabel* d_vVelRhoHatLabel;            ///< Labels for pressure solver 
+      const VarLabel* d_wVelRhoHatLabel;            ///< Labels for pressure solver 
 
       const VarLabel* d_uVelRhoHat_CCLabel;
       const VarLabel* d_vVelRhoHat_CCLabel;
       const VarLabel* d_wVelRhoHat_CCLabel;
 
-      // divergence constraint
-      const VarLabel* d_divConstraintLabel;
+      const VarLabel* d_divConstraintLabel;         ///< Divergence constraint
 
       const VarLabel* d_pressurePredLabel;
 
-      // for enthalpy equation
-      const VarLabel* d_enthalpySPLabel;
-      const VarLabel* d_enthalpyEKTLabel;
-      const VarLabel* d_enthalpyTempLabel;
-      const VarLabel* d_enthalpyFELabel;
+      const VarLabel* d_enthalpySPLabel;            ///< Enthalpy equation  
+      const VarLabel* d_enthalpyEKTLabel;           ///< Enthalpy equation  
+      const VarLabel* d_enthalpyTempLabel;          ///< Enthalpy equation    
+      const VarLabel* d_enthalpyFELabel;            ///< Enthalpy equation  
       
-      // for validation
-      const VarLabel* d_enthalpyRXNLabel;
+      const VarLabel* d_enthalpyRXNLabel;           ///< Validation
 
 
-      // Enthalpy Coef
-      const VarLabel* d_enthCoefSBLMLabel;
+      const VarLabel* d_enthCoefSBLMLabel;          ///< Enthalpy Coef
 
-      // Enthalpy NonLinear Src
-      const VarLabel* d_enthNonLinSrcSBLMLabel;
+      const VarLabel* d_enthNonLinSrcSBLMLabel;     ///< Enthalpy NonLinear Src
 
       // for radiation
-      const VarLabel* d_fvtfiveINLabel;
-      const VarLabel* d_tfourINLabel;
-      const VarLabel* d_tfiveINLabel;
-      const VarLabel* d_tnineINLabel;
-      const VarLabel* d_qrgINLabel;
-      const VarLabel* d_qrsINLabel;
-      const VarLabel* d_absorpINLabel;
-      const VarLabel* d_sootFVINLabel;
-      const VarLabel* d_abskgINLabel;
-      const VarLabel* d_radiationSRCINLabel;
-      const VarLabel* d_radiationFluxEINLabel;
-      const VarLabel* d_radiationFluxWINLabel;
-      const VarLabel* d_radiationFluxNINLabel;
-      const VarLabel* d_radiationFluxSINLabel;
-      const VarLabel* d_radiationFluxTINLabel;
-      const VarLabel* d_radiationFluxBINLabel;
-      const VarLabel* d_radiationVolqINLabel;
+      const VarLabel* d_fvtfiveINLabel;             ///< Radiation
+      const VarLabel* d_tfourINLabel;               ///< Radiation            
+      const VarLabel* d_tfiveINLabel;               ///< Radiation            
+      const VarLabel* d_tnineINLabel;               ///< Radiation            
+      const VarLabel* d_qrgINLabel;                 ///< Radiation          
+      const VarLabel* d_qrsINLabel;                 ///< Radiation          
+      const VarLabel* d_absorpINLabel;              ///< Radiation
+      const VarLabel* d_sootFVINLabel;              ///< Radiation
+      const VarLabel* d_abskgINLabel;               ///< Radiation
+      const VarLabel* d_radiationSRCINLabel;        ///< Radiation      
+      const VarLabel* d_radiationFluxEINLabel;      ///< Radiation        
+      const VarLabel* d_radiationFluxWINLabel;      ///< Radiation        
+      const VarLabel* d_radiationFluxNINLabel;      ///< Radiation        
+      const VarLabel* d_radiationFluxSINLabel;      ///< Radiation        
+      const VarLabel* d_radiationFluxTINLabel;      ///< Radiation        
+      const VarLabel* d_radiationFluxBINLabel;      ///< Radiation        
+      const VarLabel* d_radiationVolqINLabel;       ///< Radiation      
  
-      // reactive scalar source term from properties
-      const VarLabel* d_reactscalarSRCINLabel;
+      const VarLabel* d_reactscalarSRCINLabel;      ///< Reactive scalar source term from properties
       
-
-      // runge-kutta 3d order properties labels
-      const VarLabel* d_refDensityInterm_label;
+      const VarLabel* d_refDensityInterm_label;     ///< Runge-Kutta 3rd order properties labels
       
-      // runge-kutta 3d order pressure and momentum labels
-      const VarLabel* d_pressureIntermLabel;
-      const VarLabel* d_velocityDivergenceLabel;
-      const VarLabel* d_vorticityXLabel;
-      const VarLabel* d_vorticityYLabel;
-      const VarLabel* d_vorticityZLabel;
-      const VarLabel* d_vorticityLabel;
-      const VarLabel* d_velDivResidualLabel;
-      const VarLabel* d_velocityDivergenceBCLabel;
-      const VarLabel* d_continuityResidualLabel;
+      const VarLabel* d_pressureIntermLabel;        ///< Runge-Kutta 3rd order pressure and momentum labels        
+      const VarLabel* d_velocityDivergenceLabel;    ///< Runge-Kutta 3rd order pressure and momentum labels            
+      const VarLabel* d_vorticityXLabel;            ///< Runge-Kutta 3rd order pressure and momentum labels    
+      const VarLabel* d_vorticityYLabel;            ///< Runge-Kutta 3rd order pressure and momentum labels    
+      const VarLabel* d_vorticityZLabel;            ///< Runge-Kutta 3rd order pressure and momentum labels    
+      const VarLabel* d_vorticityLabel;             ///< Runge-Kutta 3rd order pressure and momentum labels  
+      const VarLabel* d_velDivResidualLabel;        ///< Runge-Kutta 3rd order pressure and momentum labels        
+      const VarLabel* d_velocityDivergenceBCLabel;  ///< Runge-Kutta 3rd order pressure and momentum labels              
+      const VarLabel* d_continuityResidualLabel;    ///< Runge-Kutta 3rd order pressure and momentum labels            
 
       const VarLabel* d_InitNormLabel;
       const VarLabel* d_ScalarClippedLabel;
@@ -380,14 +365,13 @@ namespace Uintah {
       const VarLabel* d_totalKineticEnergyPredLabel;
       const VarLabel* d_totalKineticEnergyIntermLabel;
       
-      // scalar mms Ln error
-      const VarLabel* d_smmsLnErrorLabel;
-      const VarLabel* d_totalsmmsLnErrorLabel;
-      const VarLabel* d_totalsmmsLnErrorPredLabel;
-      const VarLabel* d_totalsmmsLnErrorIntermLabel;
-      const VarLabel* d_totalsmmsExactSolLabel;
-      const VarLabel* d_totalsmmsExactSolPredLabel;
-      const VarLabel* d_totalsmmsExactSolIntermLabel;
+      const VarLabel* d_smmsLnErrorLabel;             ///< Scalar MMS Ln error
+      const VarLabel* d_totalsmmsLnErrorLabel;        ///< Scalar MMS Ln error      
+      const VarLabel* d_totalsmmsLnErrorPredLabel;    ///< Scalar MMS Ln error          
+      const VarLabel* d_totalsmmsLnErrorIntermLabel;  ///< Scalar MMS Ln error            
+      const VarLabel* d_totalsmmsExactSolLabel;       ///< Scalar MMS Ln error      
+      const VarLabel* d_totalsmmsExactSolPredLabel;   ///< Scalar MMS Ln error          
+      const VarLabel* d_totalsmmsExactSolIntermLabel; ///< Scalar MMS Ln error          
       
       // grad P mms Ln error
       const VarLabel* d_gradpmmsLnErrorLabel;
@@ -398,32 +382,29 @@ namespace Uintah {
       const VarLabel* d_totalgradpmmsExactSolPredLabel;
       const VarLabel* d_totalgradpmmsExactSolIntermLabel;
       
-      // u mms Ln error
-      const VarLabel* d_ummsLnErrorLabel;
-      const VarLabel* d_totalummsLnErrorLabel;
-      const VarLabel* d_totalummsLnErrorPredLabel;
-      const VarLabel* d_totalummsLnErrorIntermLabel;
-      const VarLabel* d_totalummsExactSolLabel;
-      const VarLabel* d_totalummsExactSolPredLabel;
-      const VarLabel* d_totalummsExactSolIntermLabel;
+      const VarLabel* d_ummsLnErrorLabel;             ///< U velocity MMS Ln error 
+      const VarLabel* d_totalummsLnErrorLabel;        ///< U velocity MMS Ln error 
+      const VarLabel* d_totalummsLnErrorPredLabel;    ///< U velocity MMS Ln error 
+      const VarLabel* d_totalummsLnErrorIntermLabel;  ///< U velocity MMS Ln error 
+      const VarLabel* d_totalummsExactSolLabel;       ///< U velocity MMS Ln error 
+      const VarLabel* d_totalummsExactSolPredLabel;   ///< U velocity MMS Ln error 
+      const VarLabel* d_totalummsExactSolIntermLabel; ///< U velocity MMS Ln error 
       
-      // v mms Ln error
-      const VarLabel* d_vmmsLnErrorLabel;
-      const VarLabel* d_totalvmmsLnErrorLabel;
-      const VarLabel* d_totalvmmsLnErrorPredLabel;
-      const VarLabel* d_totalvmmsLnErrorIntermLabel;
-      const VarLabel* d_totalvmmsExactSolLabel;
-      const VarLabel* d_totalvmmsExactSolPredLabel;
-      const VarLabel* d_totalvmmsExactSolIntermLabel;
+      const VarLabel* d_vmmsLnErrorLabel;             ///< V velocity MMS Ln error  
+      const VarLabel* d_totalvmmsLnErrorLabel;        ///< V velocity MMS Ln error    
+      const VarLabel* d_totalvmmsLnErrorPredLabel;    ///< V velocity MMS Ln error    
+      const VarLabel* d_totalvmmsLnErrorIntermLabel;  ///< V velocity MMS Ln error    
+      const VarLabel* d_totalvmmsExactSolLabel;       ///< V velocity MMS Ln error  
+      const VarLabel* d_totalvmmsExactSolPredLabel;   ///< V velocity MMS Ln error  
+      const VarLabel* d_totalvmmsExactSolIntermLabel; ///< V velocity MMS Ln error  
 
-      // w mms Ln error
-      const VarLabel* d_wmmsLnErrorLabel;
-      const VarLabel* d_totalwmmsLnErrorLabel;
-      const VarLabel* d_totalwmmsLnErrorPredLabel;
-      const VarLabel* d_totalwmmsLnErrorIntermLabel;
-      const VarLabel* d_totalwmmsExactSolLabel;
-      const VarLabel* d_totalwmmsExactSolPredLabel;
-      const VarLabel* d_totalwmmsExactSolIntermLabel;
+      const VarLabel* d_wmmsLnErrorLabel;             ///< W velocity MMS Ln error
+      const VarLabel* d_totalwmmsLnErrorLabel;        ///< W velocity MMS Ln error 
+      const VarLabel* d_totalwmmsLnErrorPredLabel;    ///< W velocity MMS Ln error 
+      const VarLabel* d_totalwmmsLnErrorIntermLabel;  ///< W velocity MMS Ln error 
+      const VarLabel* d_totalwmmsExactSolLabel;       ///< W velocity MMS Ln error 
+      const VarLabel* d_totalwmmsExactSolPredLabel;   ///< W velocity MMS Ln error 
+      const VarLabel* d_totalwmmsExactSolIntermLabel; ///< W velocity MMS Ln error 
 
       // mass balance labels for RK
       const VarLabel* d_totalflowINPredLabel;
@@ -470,18 +451,14 @@ namespace Uintah {
       const VarLabel* d_ShRFLabel;
       const VarLabel* d_CO2FlowRateLabel;
       const VarLabel* d_SO2FlowRateLabel;
-      const VarLabel* d_SO2FlowRateESLabel;
-      const VarLabel* d_CO2FlowRateESLabel;
       const VarLabel* d_carbonEfficiencyLabel;
       const VarLabel* d_sulfurEfficiencyLabel;
-      const VarLabel* d_sulfurEfficiencyESLabel;
       const VarLabel* d_scalarFlowRateLabel;
       const VarLabel* d_scalarEfficiencyLabel;
       const VarLabel* d_enthalpyFlowRateLabel;
       const VarLabel* d_enthalpyEfficiencyLabel;
       const VarLabel* d_totalRadSrcLabel;
       const VarLabel* d_normTotalRadSrcLabel;
-      const VarLabel* d_carbonEfficiencyESLabel;
 
       //mms force term labels
       const VarLabel* d_uFmmsLabel;
@@ -502,8 +479,19 @@ namespace Uintah {
       const VarLabel* d_vmomBoundarySrcLabel;
       const VarLabel* d_wmomBoundarySrcLabel;
       
-      // area fraction
-      const VarLabel* d_areaFractionLabel; 
+      const VarLabel* d_areaFractionLabel;  ///< Cell area fraction
+      const VarLabel* d_volFractionLabel;   ///< Cell volume fraction
+
+      std::vector<std::string> model_req_species; ///< Vector containing all species required by models
+
+      /** @brief    Add species to the list of species required by models */
+      inline void add_species( std::string s ) { 
+        model_req_species.push_back( s ); };
+
+      /** @brief    Get the list of species required by models */
+      inline std::vector<std::string> get_species( ) { 
+        return model_req_species; 
+      }; 
 
     }; // End class ArchesLabel
 } // End namespace Uintah

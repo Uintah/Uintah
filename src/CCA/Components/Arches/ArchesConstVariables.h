@@ -71,6 +71,15 @@ WARNING
 
 namespace Uintah {
 
+/** 
+  @class  ArchesConstVariables
+  @author Stanislav Borodai
+  @date   July 2000
+  
+  @brief This class is based on ArchesVariables, it creates and stores the CarConstVariables used in Arches.
+  
+  */
+
   class ArchesConstVariables {
     public:
       ArchesConstVariables();
@@ -84,7 +93,7 @@ namespace Uintah {
       constCCVariable<double> scalar;
       constCCVariable<double> diffusivity;
       constCCVariable<double> drhodf;
-      StencilMatrix<constCCVariable<double> > scalarDiffusionCoeff; //7 pt stl
+      StencilMatrix<constCCVariable<double> > scalarDiffusionCoeff; ///< 7 point stencil
       constCCVariable<double> scalarDiffNonlinearSrc;
       
       constSFCXVariable<double> uVelocity;
@@ -98,7 +107,7 @@ namespace Uintah {
       constCCVariable<double> old_density;
       constCCVariable<double> old_old_density;
       constCCVariable<int> cellType;
-      constCCVariable<double> filterdrhodt; //add to the RHS of the pres eqn
+      constCCVariable<double> filterdrhodt; ///< add to the RHS of the pres eqn
       
       constSFCXVariable<double> uVelRhoHat;
       constSFCYVariable<double> vVelRhoHat;
@@ -114,14 +123,15 @@ namespace Uintah {
       constCCVariable<double> sootFV;
       constCCVariable<double> h2o;
       constCCVariable<double> co2;
+      constCCVariable<double> ABSKP;
       constCCVariable<double> reactscalarSRC;
-      StencilMatrix<constCCVariable<double> > scalarCoeff; //7 point stencil
-      StencilMatrix<constCCVariable<double> > reactscalarCoeff;//7 pt stencil
+      StencilMatrix<constCCVariable<double> > scalarCoeff;      ///< 7 point stencil
+      StencilMatrix<constCCVariable<double> > reactscalarCoeff; ///< 7 point stencil
       constCCVariable<double> scalarNonlinearSrc;
       constCCVariable<double> reactscalarNonlinearSrc;
       // New scalar Coef---
       constCCVariable<Stencil7> scalarTotCoef; 
-      constCCVariable<Stencil7>  pressCoeff; //7 point stencil
+      constCCVariable<Stencil7>  pressCoeff; ///< 7 point stencil
       constCCVariable<double> pressNonlinearSrc;
       constCCVariable<double> voidFraction;
       

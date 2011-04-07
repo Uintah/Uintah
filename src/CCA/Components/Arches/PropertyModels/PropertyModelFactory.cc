@@ -5,6 +5,7 @@
 #include <CCA/Components/Arches/PropertyModels/LaminarPrNo.h>
 #include <CCA/Components/Arches/PropertyModels/ScalarDiss.h>
 #include <CCA/Components/Arches/PropertyModels/TabStripFactor.h>
+#include <CCA/Components/Arches/PropertyModels/ABSKP.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Exceptions/ProblemSetupException.h>
@@ -82,6 +83,14 @@ PropertyModelFactory::problemSetup(const ProblemSpecP& params)
           proc0cout << "WARNING: PropertyModelFactory::problemSetup(): " << prop_name  << " renamed to scalar_dissipation_rate. " << endl;
         }
         propBuilder = new ScalarDiss::Builder( "scalar_dissipation_rate", d_fieldLabels->d_sharedState ); 
+
+      } else if ( prop_type == "absorption_coefficient" ) {
+        // Coal particles absorption coefficient rate calculation 
+        if ( prop_name != "abskp" ) {
+          proc0cout << "Note:  " << prop_name  << " renamed to abskp. " << endl;
+        }
+        //propBuilder the_builder = new ABSKP::Builder( prop_name, d_sharedState );
+        propBuilder = new ABSKP::Builder( "abskp", d_fieldLabels->d_sharedState );
 
       } else if ( prop_type == "extent_rxn" ) {
 
@@ -163,8 +172,7 @@ PropertyModelFactory::register_property_model( const std::string name,
   BuildMap::iterator iBuilder = _builders.find( name );
   if( iBuilder == _builders.end() ){
     iBuilder = _builders.insert( std::make_pair(name,builder) ).first;
-  }
-  else{
+  } else{
     string errmsg = "ERROR: Arches: PropertyModelBuilder: A duplicate PropertyModelBuilder object already exists: "+name + ". This is forbidden.\n";
     throw InvalidValue(errmsg,__FILE__,__LINE__);
   }
@@ -191,8 +199,27 @@ PropertyModelFactory::retrieve_property_model( const std::string name )
   if( iProp != _property_models.end() ) {
     return *(iProp->second);
   } else {
-    string err_msg = "ERROR: Arches: PropertyModelFactory: No property model regisetered for "+name+"\n";
+    string err_msg = "ERROR: Arches: PropertyModelFactory: No property model registered for "+name+"\n";
     throw InvalidValue(err_msg,__FILE__,__LINE__);
   }
+}
+
+//---------------------------------------------------------------------------
+// Method: Find if a property model is included in the map. 
+//---------------------------------------------------------------------------
+bool
+PropertyModelFactory::find_property_model( const std::string name )
+{
+  bool return_value;
+
+  const PropMap::iterator isource= _property_models.find( name );
+
+  if( isource != _property_models.end() ) {
+    return_value = true;
+  } else {
+    return_value = false;
+  }
+    
+  return return_value;
 }
 

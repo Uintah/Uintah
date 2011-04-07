@@ -33,45 +33,22 @@ DEALINGS IN THE SOFTWARE.
 #ifndef Uintah_Component_Arches_CompLocalDynamicProcedure_h
 #define Uintah_Component_Arches_CompLocalDynamicProcedure_h
 
-/**************************************
-CLASS
-   CompLocalDynamicProcedure
-   
-   Class CompLocalDynamicProcedure is an LES model for
-   computing sub-grid scale turbulent viscosity.
-
-
-GENERAL INFORMATION
-   CompLocalDynamicProcedure.h - declaration of the class
-   
-   Author: Rajesh Rawat (rawat@crsim.utah.edu)
-      
-   Creation Date:   Mar 1, 2000
-   
-   Last Modified by Zhaosheng Gao (zgao@crsim.utah.edu) on  May 19, 2005
-   
-   C-SAFE 
-   
-   Copyright U of U 2000-2005
-
-KEYWORDS
-
-
-DESCRIPTION
-   Class CompLocalDynamicProcedure is an LES model for
-   computing sub-grid scale turbulent viscosity.
-
-
-WARNING
-   none
-****************************************/
-
 #include <CCA/Components/Arches/Arches.h>
 #include <CCA/Components/Arches/TurbulenceModel.h>
 #include <iostream>
 using namespace std;
 
 namespace Uintah {
+
+/** 
+  @class  CompLocalDynamicProcedure
+  @author Rajesh Rawat, Zhaosheng Gao
+  @date   March 2000, May 2005
+  
+  @brief  An LES model for computing the subgrid scale stress term \f$ \tau_{SGS} \f$.
+  
+  */
+
 class PhysicalConstants;
 class BoundaryCondition;
 

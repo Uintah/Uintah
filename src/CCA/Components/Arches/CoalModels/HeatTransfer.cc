@@ -18,7 +18,7 @@ using namespace Uintah;
 
 HeatTransfer::HeatTransfer( std::string modelName, 
                             SimulationStateP& sharedState,
-                            const ArchesLabel* fieldLabels,
+                            ArchesLabel* fieldLabels,
                             vector<std::string> icLabelNames, 
                             vector<std::string> scalarLabelNames,
                             int qn ) 

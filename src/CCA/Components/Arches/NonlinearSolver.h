@@ -144,9 +144,6 @@ public:
 
   virtual void setExtraScalars(vector<ExtraScalarSolver*>* extraScalars) = 0;
 
-  virtual void setCarbonBalanceES(bool carbon_balance_es) = 0;
-  virtual void setSulfurBalanceES(bool sulfur_balance_es) = 0;
-
 protected:
    const ProcessorGroup* d_myworld;
    string d_timeIntegratorType;

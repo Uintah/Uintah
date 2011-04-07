@@ -5,16 +5,18 @@
 #include <Core/Grid/BoundaryConditions/BoundCond.h>
 #include <CCA/Components/Arches/Directives.h>
 
+namespace Uintah {
+
 //===========================================================================
 
 /**
-*   @class BoundaryCondition 
-*   @author Jeremy Thornock
-*   @brief This class sets the boundary conditions for scalars. 
-*
-*/
+  @class  BoundaryCondition 
+  @date   
+  @author Jeremy Thornock
 
-namespace Uintah {
+  @brief This class sets the boundary conditions for scalars. 
+
+*/
 
 class ArchesLabel; 
 class BoundaryCondition_new {
@@ -24,8 +26,10 @@ public:
   BoundaryCondition_new(const ArchesLabel* fieldLabels);
 
   ~BoundaryCondition_new();
+
   /** @brief Interface for the input file and set constants */ 
   void problemSetup();
+
   /** @brief This method sets the boundary value of a scalar to 
              a value such that the interpolated value on the face results
              in the actual boundary condition. */   
@@ -33,6 +37,7 @@ public:
                         const Patch* patch,
                         CCVariable<double>& scalar, 
                         string varname );
+
   /** @brief This method set the boundary values of a vector to a 
    * value such that the interpolation or gradient computed between the 
    * interior cell and boundary cell match the boundary condition. */ 
@@ -40,6 +45,7 @@ public:
     const Patch* patch,
     CCVariable<Vector>& vec, 
     string varname );
+
   /** @brief This method set the boundary values of a vector to a 
    * value such that the interpolation or gradient computed between the 
    * interior cell and boundary cell match the boundary condition. This is 
@@ -50,12 +56,12 @@ public:
     string varname );
 
   /** @brief Sets the area fraction for each minus face according to the boundaries */
-  void setAreaFraction( 
-    const Patch* patch,
-    CCVariable<Vector>& areaFraction, 
-    constCCVariable<int>& pcell, 
-    const int wallType, 
-    const int flowType );
+  void setAreaFraction( const Patch* patch,
+                        CCVariable<Vector>& areaFraction, 
+                        CCVariable<double>& volFraction, 
+                        constCCVariable<int>& pcell, 
+                        const int wallType, 
+                        const int flowType );
 
   // The stuff below needs better commenting when I have this figured out. 
   /* --------------------------------------------------------------------- 

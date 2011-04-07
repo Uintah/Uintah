@@ -29,7 +29,8 @@ DEALINGS IN THE SOFTWARE.
 
 
 //----- EnthalpySolver.cc ----------------------------------------------
-
+//
+// Arches includes
 #include <CCA/Components/Arches/Arches.h>
 #include <CCA/Components/Arches/ArchesLabel.h>
 #include <CCA/Components/Arches/ArchesMaterial.h>
@@ -49,8 +50,14 @@ DEALINGS IN THE SOFTWARE.
 #ifdef HAVE_HYPRE
 #include <CCA/Components/Arches/Radiation/RadHypreSolver.h>
 #endif
-#include <CCA/Components/MPMArches/MPMArchesLabel.h>
+#include <CCA/Components/Arches/SourceTerms/SourceTermFactory.h>
+#include <CCA/Components/Arches/SourceTerms/SourceTermBase.h>
 #include <CCA/Components/Arches/TimeIntegratorLabel.h>
+#include <CCA/Components/Arches/PropertyModels/PropertyModelFactory.h>
+#include <CCA/Components/Arches/PropertyModels/PropertyModelBase.h>
+
+// Uintah level includes
+#include <CCA/Components/MPMArches/MPMArchesLabel.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Ports/LoadBalancer.h>
 #include <CCA/Ports/Scheduler.h>
@@ -64,8 +71,6 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <CCA/Components/Arches/SourceTerms/SourceTermFactory.h>
-#include <CCA/Components/Arches/SourceTerms/SourceTermBase.h>
 
 using namespace Uintah;
 using namespace std;
@@ -96,6 +101,7 @@ EnthalpySolver::EnthalpySolver(const ArchesLabel* label,
   d_DORadiationCalc = false;
   d_radiationCalc = false; 
   d_doRMCRT = false; 
+  d_use_abskp = false;
 
 }
 
@@ -247,6 +253,14 @@ EnthalpySolver::problemSetup(const ProblemSpecP& params)
 
   d_discretize->setTurbulentPrandtlNumber(d_turbPrNo);
 
+  // See if particle absorption coefficient is used
+  PropertyModelFactory& prop_factory = PropertyModelFactory::self();
+  d_use_abskp = prop_factory.find_property_model( "abskp");
+  if(d_use_abskp){
+    PropertyModelBase& abskpModel = prop_factory.retrieve_property_model( "abskp");
+    d_abskpLabel = abskpModel.getPropLabel();
+  }
+
 // ++ jeremy ++ 
   d_source->setBoundary(d_boundaryCondition);
 // -- jeremy --        
@@ -299,7 +313,7 @@ EnthalpySolver::solve(const LevelP& level,
       sub_step = 1; // at this point it is either zero or something greater than zero where this matters
 
     d_RMCRT->sched_initProperties( level, sched, sub_step ); 
-    d_RMCRT->sched_rayTrace( level, sched );
+    d_RMCRT->sched_rayTrace( level, sched, sub_step);
 
   }
 
@@ -379,6 +393,10 @@ EnthalpySolver::sched_buildLinearMatrix(const LevelP& level,
   tsk->requires(old_values_dw, d_lab->d_densityCPLabel,   gn, 0);
   
   tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, gn);
+
+  if(d_use_abskp){
+    tsk->requires(Task::OldDW, d_abskpLabel, gn, 0);
+  }
 
   if (d_dynScalarModel)
     tsk->requires(Task::NewDW, d_lab->d_enthalpyDiffusivityLabel, gac, 2);
@@ -627,6 +645,10 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
 
     // from new_dw get DEN, VIS, F, U, V, W
     new_dw->get(constEnthalpyVars.density, d_lab->d_densityCPLabel, indx, patch,  gac, 2);
+
+    if(d_use_abskp){
+      old_dw->get(constEnthalpyVars.ABSKP, d_abskpLabel, indx, patch, gn, 0);
+    }
 
     if (d_dynScalarModel)
       new_dw->get(constEnthalpyVars.viscosity,
@@ -934,7 +956,7 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
         enthalpyVars.ABSKG.initialize(0.0);
 
         d_DORadiation->computeRadiationProps(pc, patch, cellinfo,
-                                             &enthalpyVars, &constEnthalpyVars);
+                                             &enthalpyVars, &constEnthalpyVars, d_use_abskp);
         d_DORadiation->boundarycondition(pc, patch, cellinfo,
                                          &enthalpyVars, &constEnthalpyVars);
 

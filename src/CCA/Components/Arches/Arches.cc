@@ -167,7 +167,6 @@ Arches::~Arches()
       delete d_extraScalars[i];
 
   delete d_timeIntegrator; 
-
   if (d_doDQMOM) { 
     delete d_dqmomSolver; 
   }
@@ -255,11 +254,6 @@ Arches::problemSetup(const ProblemSpecP& params,
   }
 
   if(db->findBlock("MMS")) {
-/*
-    //cmr
-    d_useMMSScalar = false;
-    d_useMMSTable = false;
-*/
     d_doMMS = true;
     ProblemSpecP db_mms = db->findBlock("MMS");
     if( !db_mms->getAttribute( "whichMMS", d_mms ) ) {
@@ -272,22 +266,6 @@ Arches::problemSetup(const ProblemSpecP& params,
       db_mms0->getWithDefault("cw",d_cw,0.0);
       db_mms0->getWithDefault("cp",d_cp,0.0);
       db_mms0->getWithDefault("phi0",d_phi0,0.0);
-      
-      /*
-      //cmr
-
-      // Allow a choice to either specify mixture fraction or specify a table 
-      if( db_mms0->findBlock("phi0") ) {
-        db_mms0->getWithDefault("phi0",d_phi0,0.0);
-        d_useMMSScalar = true;
-      } else if( db_mms0->findBlock("useTable") ) {
-        d_useMMSTable = true;
-      } else {
-        throw ProblemSetupException("ERROR: Arches: You must specify either an MMS scalar using <phi0>, or an MMS table using <useTable>, but you did not specify either!\n",__FILE__,__LINE__);
-      }
-      */
-
-      db_mms0->getWithDefault("esphi0",d_esphi0,0.0);
     }
     else if (d_mms == "almgrenMMS") {
       ProblemSpecP db_mms3 = db_mms->findBlock("almgrenMMS");
@@ -397,12 +375,6 @@ Arches::problemSetup(const ProblemSpecP& params,
                               d_calcReactingScalar, 
                               d_calcEnthalpy, d_calcVariance, d_myworld);
 
-  d_props->setCalcExtraScalars(d_calcExtraScalars);
-
-  if (d_calcExtraScalars){
-    d_props->setExtraScalars(&d_extraScalars);
-  }
-  
   d_props->problemSetup(db);
 
   coalFactory.setMixingRxnModel( d_props->getMixRxnModel() );
@@ -459,18 +431,10 @@ Arches::problemSetup(const ProblemSpecP& params,
   d_boundaryCondition = scinew BoundaryCondition(d_lab, d_MAlab, d_physicalConsts,
                                                  d_props, d_calcReactingScalar,
                                                  d_calcEnthalpy, d_calcVariance);
+
   // send params, boundary type defined at the level of Grid
   d_boundaryCondition->setMMS(d_doMMS);
-  d_boundaryCondition->setCalcExtraScalars(d_calcExtraScalars);
-  if (d_calcExtraScalars){
-    d_boundaryCondition->setExtraScalars(&d_extraScalars);
-  }
   d_boundaryCondition->problemSetup(db);
-
-  d_carbon_balance_es = d_boundaryCondition->getCarbonBalanceES();
-  d_sulfur_balance_es = d_boundaryCondition->getSulfurBalanceES();
-  d_props->setCarbonBalanceES(d_carbon_balance_es);        
-  d_props->setSulfurBalanceES(d_sulfur_balance_es);
 
   ProblemSpecP turb_db = db->findBlock("Turbulence");
   turb_db->getAttribute("model", d_whichTurbModel); 
@@ -492,6 +456,7 @@ Arches::problemSetup(const ProblemSpecP& params,
     throw InvalidValue("Turbulence Model not supported" + d_whichTurbModel, __FILE__, __LINE__);
   }
 
+//  if (d_turbModel)
   d_turbModel->modelVariance(d_calcVariance);
   d_turbModel->problemSetup(db);
   d_dynScalarModel = d_turbModel->getDynScalarModel();
@@ -528,14 +493,14 @@ Arches::problemSetup(const ProblemSpecP& params,
   }
 
   if(nlSolver == "picard") {
-    d_nlSolver = scinew PicardNonlinearSolver( d_lab, d_MAlab, d_props, 
-                                               d_boundaryCondition,
-                                               d_turbModel, d_physicalConsts,
-                                               d_calcScalar,
-                                               d_calcReactingScalar,
-                                               d_calcEnthalpy,
-                                               d_calcVariance,
-                                               d_myworld);
+    d_nlSolver = scinew PicardNonlinearSolver(d_lab, d_MAlab, d_props, 
+                                              d_boundaryCondition,
+                                              d_turbModel, d_physicalConsts,
+                                              d_calcScalar,
+                                              d_calcReactingScalar,
+                                              d_calcEnthalpy,
+                                              d_calcVariance,
+                                              d_myworld);
     if (d_calcExtraScalars){
       throw InvalidValue("Transport of extra scalars by picard solver is not implemented", __FILE__, __LINE__);
     }
@@ -558,8 +523,6 @@ Arches::problemSetup(const ProblemSpecP& params,
   d_nlSolver->setEKTCorrection(d_EKTCorrection);
   d_nlSolver->setMMS(d_doMMS);
   d_nlSolver->problemSetup(db);
-  d_nlSolver->setCarbonBalanceES(d_carbon_balance_es);
-  d_nlSolver->setSulfurBalanceES(d_sulfur_balance_es);
   d_timeIntegratorType = d_nlSolver->getTimeIntegratorType();
   d_nlSolver->setCalcExtraScalars(d_calcExtraScalars);
   if (d_calcExtraScalars) {
@@ -588,7 +551,8 @@ Arches::problemSetup(const ProblemSpecP& params,
     d_analysisModule->problemSetup(params, grid, sharedState);
   }
 
-
+  // Add extra species to table lookup as required by models
+  d_props->addLookupSpecies(); 
 }
 
 // ****************************************************************************
@@ -637,6 +601,10 @@ Arches::scheduleInitialize(const LevelP& level,
   // require : NONE
   // compute : cellType
   d_boundaryCondition->sched_cellTypeInit(sched, patches, matls);
+  //d_boundaryCondition->sched_cellTypeInit__NEW( sched, patches, matls ); 
+  //
+  // compute the cell area fraction 
+  d_boundaryCondition->sched_setAreaFraction( sched, patches, matls ); 
 
   // computing flow inlet areas
   if (d_boundaryCondition->getInletBC()){
@@ -676,7 +644,7 @@ Arches::scheduleInitialize(const LevelP& level,
 
   // Table Lookup 
   string mixmodel = d_props->getMixingModelType(); 
-  if ( mixmodel != "TabProps" && mixmodel != "ClassicTable") {
+  if ( mixmodel != "TabProps" && mixmodel != "ClassicTable" && mixmodel != "ColdFlow") {
     d_props->sched_reComputeProps(sched, patches, matls,
                                 init_timelabel, true, true, false,false);
   } else {
@@ -687,7 +655,11 @@ Arches::scheduleInitialize(const LevelP& level,
     d_props->sched_reComputeProps_new( level, sched, init_timelabel, initialize_it, modify_ref_den ); 
   }
 
+  //d_boundaryCondition->sched_computeBCArea__NEW( sched, patches, matls ); 
+  //d_boundaryCondition->sched_setupBCInletVelocities__NEW( sched, patches, matls ); 
+
   d_boundaryCondition->sched_initInletBC(sched, patches, matls);
+  //d_boundaryCondition->sched_setInitProfile__NEW( sched, patches, matls ); 
 
   sched_getCCVelocities(level, sched);
   // Compute Turb subscale model (output Varlabel have CTS appended to them)
@@ -722,7 +694,6 @@ Arches::scheduleInitialize(const LevelP& level,
     d_analysisModule->scheduleInitialize(sched, level);
   }
 
-
   //----------------------
   //DQMOM initialization 
   if(d_doDQMOM) {
@@ -742,9 +713,6 @@ Arches::scheduleInitialize(const LevelP& level,
     // initialize DQMOM models
     model_factory.sched_modelInit(level, sched);
   }
-
-  // compute the cell area fraction 
-  d_boundaryCondition->sched_setAreaFraction( sched, patches, matls ); 
 }
 
 void
@@ -779,6 +747,8 @@ Arches::sched_paramInit(const LevelP& level,
     tsk->computes(d_lab->d_newCCWVelocityLabel);
     tsk->computes(d_lab->d_pressurePSLabel);
     tsk->computes(d_lab->d_areaFractionLabel); 
+    tsk->computes(d_lab->d_volFractionLabel); 
+
     if ((d_extraProjection)||(d_EKTCorrection)){
       tsk->computes(d_lab->d_pressureExtraProjectionLabel);
     }
@@ -847,12 +817,7 @@ Arches::sched_paramInit(const LevelP& level,
         tsk->computes(d_extraScalars[i]->getScalarLabel());
       }
     }
-    if (d_carbon_balance_es){
-      tsk->computes(d_lab->d_co2RateLabel);
-    }
-    if (d_sulfur_balance_es){
-      tsk->computes(d_lab->d_so2RateLabel);                
-    }
+
     tsk->computes(d_lab->d_scalarBoundarySrcLabel);
     tsk->computes(d_lab->d_enthalpyBoundarySrcLabel);
     tsk->computes(d_lab->d_umomBoundarySrcLabel);
@@ -913,22 +878,12 @@ Arches::paramInit(const ProcessorGroup* pg,
     CCVariable<double> pPlusHydro;
     CCVariable<double> mmgasVolFrac;
     CCVariable<Vector> areaFraction; 
+    CCVariable<double> volFraction; 
 
     new_dw->allocateAndPut( areaFraction, d_lab->d_areaFractionLabel, indx, patch ); 
-    areaFraction.initialize(Vector(1.,1.,1.)); 
-   
-    if (d_calcExtraScalars){
-      if (d_carbon_balance_es){ 
-        CCVariable<double> co2Rate;
-        new_dw->allocateAndPut(co2Rate, d_lab->d_co2RateLabel, indx, patch);
-        co2Rate.initialize(0.0);
-      }
-      if (d_sulfur_balance_es){ 
-        CCVariable<double> so2Rate;
-        new_dw->allocateAndPut(so2Rate, d_lab->d_so2RateLabel, indx, patch);
-        so2Rate.initialize(0.0);
-      }
-    }        
+    new_dw->allocateAndPut( volFraction, d_lab->d_volFractionLabel, indx, patch ); 
+    areaFraction.initialize(Vector(1.,1.,1.));         
+    volFraction.initialize(1.0);
 
     CCVariable<double> scalarBoundarySrc;
     CCVariable<double> enthalpyBoundarySrc;
@@ -1196,6 +1151,7 @@ Arches::computeStableTimeStep(const ProcessorGroup* ,
     constCCVariable<double> den;
     constCCVariable<double> visc;
     constCCVariable<int> cellType;
+
 
     Ghost::GhostType  gac = Ghost::AroundCells;
     Ghost::GhostType  gaf = Ghost::AroundFaces;

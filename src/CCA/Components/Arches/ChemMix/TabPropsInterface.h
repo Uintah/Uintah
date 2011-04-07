@@ -33,7 +33,11 @@ DEALINGS IN THE SOFTWARE.
 #ifndef Uintah_Component_Arches_TabPropsInterface_h
 #define Uintah_Component_Arches_TabPropsInterface_h
 
+// TabProps includes
 #include <tabprops/StateTable.h>
+#include <tabprops/Archive.h>
+
+// Arches includes
 #include <CCA/Components/Arches/ArchesMaterial.h>
 #include <CCA/Components/Arches/TimeIntegratorLabel.h>
 
@@ -149,14 +153,6 @@ public:
                              DataWarehouse* old_dw, 
                              DataWarehouse* new_dw ); 
 
-  /** @brief    Load list of dependent variables from the table 
-      @returns  A vector<string>& that is a reference to the list of all dependent variables */
-  const vector<string> & getAllDepVars();
-
-  /** @brief    Load list of independent variables from the table
-      @returns  A vector<string>& that is a reference to the list of all independent variables */ 
-  const vector<string> & getAllIndepVars();
-
   /** @brief      Returns a single dependent variable, given a vector of independent variable values
       @param dv   The name of the dependent variable to look up in the table
       @param iv   The vector of indepenent variable values */
@@ -187,6 +183,7 @@ public:
 
   /** @brief Gets the Spline information for TabProps.  Spline info is used because it is more efficient that passing strings */
   void getSplineInfo(); 
+
   /** @brief Gets the Spline information for TabProps.  This is specific to the enthalpy vars */ 
   void getEnthalpySplineInfo(); 
 
@@ -203,6 +200,9 @@ public:
 
   typedef std::map<string, DepVarCont >       DepVarMap;
 
+  /** @brief PLEASE DOCUMENT ME */
+  double getTableValue( std::vector<double>, std::string ); 
+
 protected :
 
 private:
@@ -212,9 +212,6 @@ private:
   double d_hl_scalar_init;  ///< Heat loss value for non-adiabatic conditions
 
   IntVector d_ijk_den_ref;                ///< Reference density location
-
-  vector<string> d_allIndepVarNames;      ///< Vector storing all independent variable names from table file
-  vector<string> d_allDepVarNames;        ///< Vector storing all dependent variable names from the table file
 
   vector<string> d_allUserDepVarNames;    ///< Vector storing all independent varaible names requested in input file
 
@@ -235,11 +232,8 @@ private:
     SplineMap::iterator i = d_depVarSpline.find( var_name ); 
 
     if ( i == d_depVarSpline.end() ) {
-
       cout_tabledbg << "Inserting " << var_name << " spline information into storage." << endl;
-
       i = d_depVarSpline.insert( make_pair( var_name, spline ) ).first; 
-
     } 
     return; 
   };
