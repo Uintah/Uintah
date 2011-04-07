@@ -6,7 +6,6 @@
 #include <CCA/Components/Arches/ArchesLabel.h>
 #include <CCA/Components/Arches/Directives.h>
 #include <CCA/Components/Arches/ChemMix/MixingRxnModel.h>
-#include <CCA/Components/Arches/ChemMix/TabPropsInterface.h>
 
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <CCA/Ports/Scheduler.h>
@@ -26,7 +25,7 @@ using namespace Uintah;
 GlobalCharOxidationBuilder::GlobalCharOxidationBuilder( const std::string         & modelName,
                                                         const vector<std::string> & reqICLabelNames,
                                                         const vector<std::string> & reqScalarLabelNames,
-                                                        const ArchesLabel         * fieldLabels,
+                                                        ArchesLabel         * fieldLabels,
                                                         SimulationStateP          & sharedState,
                                                         int qn ) :
   ModelBuilder( modelName, reqICLabelNames, reqScalarLabelNames, fieldLabels, sharedState, qn )
@@ -43,7 +42,7 @@ ModelBase* GlobalCharOxidationBuilder::build() {
 
 GlobalCharOxidation::GlobalCharOxidation( std::string modelName, 
                                           SimulationStateP& sharedState,
-                                          const ArchesLabel* fieldLabels,
+                                          ArchesLabel* fieldLabels,
                                           vector<std::string> icLabelNames, 
                                           vector<std::string> scalarLabelNames,
                                           int qn ) 
@@ -159,7 +158,7 @@ GlobalCharOxidation::problemSetup(const ProblemSpecP& params)
   // call parent's method first
   CharOxidation::problemSetup(params);
 
-  d_TabPropsInterface->addAdditionalDV(oxidizer_name_);
+  d_MixingRxnModel->addAdditionalDV(oxidizer_name_);
   for( vector<string>::iterator iOxidizer = oxidizer_name_.begin(); iOxidizer != oxidizer_name_.end(); ++iOxidizer ) {
     const VarLabel* temp_label = VarLabel::find( *iOxidizer );
     OxidizerLabels_.push_back( temp_label );

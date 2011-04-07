@@ -45,7 +45,7 @@ public:
   ConstantDensityInertBuilder( const std::string          & modelName,
                           const vector<std::string>  & reqICLabelNames,
                           const vector<std::string>  & reqScalarLabelNames,
-                          const ArchesLabel          * fieldLabels,
+                          ArchesLabel          * fieldLabels,
                           SimulationStateP           & sharedState,
                           int qn );
 
@@ -65,7 +65,7 @@ public:
 
   ConstantDensityInert( std::string modelName, 
                    SimulationStateP& shared_state, 
-                   const ArchesLabel* fieldLabels,
+                   ArchesLabel* fieldLabels,
                    vector<std::string> reqICLabelNames, 
                    vector<std::string> reqScalarLabelNames,
                    int qn );

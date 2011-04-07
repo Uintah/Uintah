@@ -36,7 +36,7 @@ public:
   CoalParticleHeatTransferBuilder( const std::string          & modelName,
                              const vector<std::string>  & reqICLabelNames,
                              const vector<std::string>  & reqScalarLabelNames,
-                             const ArchesLabel          * fieldLabels,
+                             ArchesLabel          * fieldLabels,
                              SimulationStateP           & sharedState,
                              int qn );
 
@@ -56,7 +56,7 @@ public:
 
   CoalParticleHeatTransfer( std::string modelName, 
                 SimulationStateP& shared_state, 
-                const ArchesLabel* fieldLabels,
+                ArchesLabel* fieldLabels,
                 vector<std::string> reqICLabelNames, 
                 vector<std::string> reqScalarLabelNames, 
                 int qn );
@@ -127,14 +127,6 @@ public:
 
   /////////////////////////////////////////////////
   // Access methods
-
-  /** @brief  Access function for thermal conductivity of particles */
-  inline const VarLabel* getabskp(){
-    return d_abskp; };  
-  
-  /** @brief  Access function for radiation flag (on/off) */
-  inline const bool getRadiationFlag(){
-    return b_radiation; };   
 
 
 private:

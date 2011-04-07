@@ -33,44 +33,23 @@ DEALINGS IN THE SOFTWARE.
 #ifndef Uintah_Component_Arches_CompDynamicProcedure_h
 #define Uintah_Component_Arches_CompDynamicProcedure_h
 
-/**************************************
-CLASS
-   CompDynamicProcedure
-   
-   Class CompDynamicProcedure is an LES model for
-   computing sub-grid scale turbulent viscosity.
-
-
-GENERAL INFORMATION
-   CompDynamicProcedure.h - declaration of the class
-   
-   Author: Stanislav Borodai (borodai@crsim.utah.edu), developed based on
-   IncDynamicProcedure
-      
-   Creation Date:   Mar 1, 2000
-   
-   C-SAFE 
-   
-   Copyright U of U 2000
-
-KEYWORDS
-
-
-DESCRIPTION
-   Class CompDynamicProcedure is an LES model for
-   computing sub-grid scale turbulent viscosity.
-
-
-WARNING
-   none
-****************************************/
-
 #include <CCA/Components/Arches/Arches.h>
 #include <CCA/Components/Arches/TurbulenceModel.h>
 #include <iostream>
 using namespace std;
 
 namespace Uintah {
+
+/** 
+  @class  CompDynamicProcedure
+  @author Rajesh Rawat, Stanislav Borodai
+  @date   March 2000
+  
+  @brief  An LES model for computing the subgrid scale stress term 
+          \f$ \tau_{SGS} \f$ for compressible flows, based on IncDynamicProcedure.
+  
+  */
+
 class PhysicalConstants;
 class BoundaryCondition;
 

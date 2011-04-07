@@ -37,6 +37,7 @@
 #include <CCA/Components/Arches/TransportEqns/EqnBase.h>
 #include <CCA/Components/Arches/PropertyModels/PropertyModelBase.h>
 #include <CCA/Components/Arches/PropertyModels/PropertyModelFactory.h>
+#include <CCA/Components/Arches/Directives.h>
 
 // includes for Uintah
 #include <CCA/Ports/Scheduler.h>
@@ -65,7 +66,8 @@ ClassicTableInterface::ClassicTableInterface( const ArchesLabel* labels, const M
 // Default Destructor
 //--------------------------------------------------------------------------- 
 ClassicTableInterface::~ClassicTableInterface()
-{}
+{
+}
 
 //--------------------------------------------------------------------------- 
 // Problem Setup
@@ -75,17 +77,21 @@ ClassicTableInterface::problemSetup( const ProblemSpecP& propertiesParameters )
 {
   // Create sub-ProblemSpecP object
   string tableFileName;
-  ProblemSpecP db_tabprops = propertiesParameters->findBlock("ClassicTable");
+  ProblemSpecP db_classic = propertiesParameters->findBlock("ClassicTable");
   ProblemSpecP db_properties_root = propertiesParameters; 
 
   // Obtain object parameters
-  db_tabprops->require( "inputfile", tableFileName );
-  db_tabprops->getWithDefault( "hl_scalar_init", d_hl_scalar_init, 0.0); 
-  db_tabprops->getWithDefault( "cold_flow", d_coldflow, false); 
+  db_classic->require( "inputfile", tableFileName );
+  db_classic->getWithDefault( "hl_scalar_init", d_hl_scalar_init, 0.0); 
+  db_classic->getWithDefault( "cold_flow", d_coldflow, false); 
   db_properties_root->getWithDefault( "use_mixing_model", d_use_mixing_model, false ); 
 
+  d_noisy_hl_warning = false; 
+  if ( ProblemSpecP temp = db_classic->findBlock("noisy_hl_warning") ) 
+    d_noisy_hl_warning = true; 
+
   // only solve for heat loss if a working radiation model is found
-  const ProblemSpecP params_root = db_tabprops->getRootNode();
+  const ProblemSpecP params_root = db_classic->getRootNode();
   ProblemSpecP db_enthalpy  =  params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ExplicitSolver")->findBlock("EnthalpySolver");
   if (db_enthalpy) { 
     ProblemSpecP db_radiation = params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ExplicitSolver")->findBlock("EnthalpySolver")->findBlock("DORadiationModel");
@@ -101,21 +107,14 @@ ClassicTableInterface::problemSetup( const ProblemSpecP& propertiesParameters )
     d_adiabatic = true; 
   }
 
-  d_coal_table = false; 
-  if ( db_tabprops->findBlock("coal") ) { 
-    d_coal_table = true; 
-    db_tabprops->findBlock("coal")->getAttribute("fp_label",d_fp_label);
-    db_tabprops->findBlock("coal")->getAttribute("eta_label",d_eta_label); 
-  }
-
   // need the reference denisty point: (also in PhysicalPropteries object but this was easier than passing it around)
-  const ProblemSpecP db_root = db_tabprops->getRootNode(); 
+  const ProblemSpecP db_root = db_classic->getRootNode(); 
   db_root->findBlock("PhysicalConstants")->require("reference_point", d_ijk_den_ref);  
 
   // READ TABLE: 
-  cout << "----------Mixing Table Information---------------  " << endl;
+  proc0cout << "----------Mixing Table Information---------------  " << endl;
   loadMixingTable( tableFileName );
-  cout << "-------------------------------------------------  " << endl;
+  proc0cout << "-------------------------------------------------  " << endl;
 
   // Extract independent and dependent variables from input file
   ProblemSpecP db_rootnode = propertiesParameters;
@@ -176,6 +175,17 @@ ClassicTableInterface::problemSetup( const ProblemSpecP& propertiesParameters )
 
   proc0cout << "  Matching sucessful!" << endl;
   proc0cout << endl;
+
+  // create a transform object
+  if ( db_classic->findBlock("coal") ) {
+    _iv_transform = scinew CoalTransform(); 
+  } else { 
+    _iv_transform = scinew NoTransform();
+  }
+  bool check_transform = _iv_transform->problemSetup( db_classic, d_allIndepVarNames ); 
+  if ( !check_transform ){ 
+    throw ProblemSetupException( "Could not properly setup independent variable transform based on input.",__FILE__,__LINE__); 
+  }
 
   // Confirm that table has been loaded into memory
   d_table_isloaded = true;
@@ -255,9 +265,10 @@ ClassicTableInterface::sched_getState( const LevelP& level,
 
   // other variables 
   tsk->modifies( d_lab->d_densityCPLabel );  // lame .... fix me
-  if ( modify_ref_den )
+  if ( modify_ref_den ) {
     tsk->computes(time_labels->ref_density); 
-
+  }
+  tsk->requires( Task::NewDW, d_lab->d_volFractionLabel, gn, 0 );
 
   sched->addTask( tsk, level->eachPatch(), d_lab->d_sharedState->allArchesMaterials() ); 
 }
@@ -267,14 +278,14 @@ ClassicTableInterface::sched_getState( const LevelP& level,
 //--------------------------------------------------------------------------- 
   void 
 ClassicTableInterface::getState( const ProcessorGroup* pc, 
-    const PatchSubset* patches, 
-    const MaterialSubset* matls, 
-    DataWarehouse* old_dw, 
-    DataWarehouse* new_dw, 
-    const TimeIntegratorLabel* time_labels, 
-    const bool initialize_me, 
-    const bool with_energy_exch, 
-    const bool modify_ref_den )
+                                 const PatchSubset* patches, 
+                                 const MaterialSubset* matls, 
+                                 DataWarehouse* old_dw, 
+                                 DataWarehouse* new_dw, 
+                                 const TimeIntegratorLabel* time_labels, 
+                                 const bool initialize_me, 
+                                 const bool with_energy_exch, 
+                                 const bool modify_ref_den )
 {
   for (int p=0; p < patches->size(); p++){
 
@@ -283,11 +294,12 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
     int archIndex = 0; 
     int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
+    // volume fraction: 
+    constCCVariable<double> eps_vol; 
+    new_dw->get( eps_vol, d_lab->d_volFractionLabel, matlIndex, patch, gn, 0 ); 
+
     //independent variables:
     std::vector<constCCVariable<double> > indep_storage; 
-
-    int coal_fp_index  = -1; 
-    int coal_eta_index = -1; 
 
     for ( int i = 0; i < (int) d_allIndepVarNames.size(); i++ ){
 
@@ -296,25 +308,6 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
       constCCVariable<double> the_var; 
       new_dw->get( the_var, ivar->second, matlIndex, patch, gn, 0 );
       indep_storage.push_back( the_var ); 
-
-      if (d_coal_table) {
-        if ( d_allIndepVarNames[i] == d_fp_label )
-          coal_fp_index = i;
-        if ( d_allIndepVarNames[i] == d_eta_label ) 
-          coal_eta_index = i; 
-      }
-    }
-
-    if ( d_coal_table && coal_fp_index == -1 ) {
-
-      proc0cout << "Could not match PRIMARY mixture fraction label to table variables!" << endl;
-      throw InvalidValue("Error: Please make sure that the label attribute for the coal node child of <TabProps> matches a <TransportEqn> label.", __FILE__, __LINE__);  
-
-    }
-    if ( d_coal_table && coal_eta_index == -1 ) {
-
-      proc0cout << "Could not match ETA mixture fraction label to table variables!" << endl;
-      throw InvalidValue("Error: Please make sure that the label attribute for the coal node child of <TabProps> matches a <TransportEqn> label.", __FILE__, __LINE__);  
 
     }
 
@@ -413,38 +406,14 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
         iv.push_back( (*i)[c] );
       }
 
-      if ( d_coal_table ) { 
-
-        // we transport f_p and eta for coal
-        // need to compute f_p and pass that rather than f 
-        // here we replace the value of f_p with the derived f
-        // please see the white coal book for questions
-
-        double f = 0.0; 
-
-        if ( iv[coal_eta_index] < 1.0 ) {
-
-          f = iv[coal_fp_index] / ( 1.0 - iv[coal_eta_index] ); 
-
-          if ( f < 0.0 )
-            f = 0.0;
-          if ( f > 1.0 )
-            f = 1.0; 
-
-        } else { 
-
-          f = 0.0; 
-
-        }
-
-        iv[coal_fp_index] = f;
-
-      }
+      // do a variable transform (if specified)
+      _iv_transform->transform( iv ); 
 
       // retrieve all depenedent variables from table
       for ( DepVarMap::iterator i = depend_storage.begin(); i != depend_storage.end(); ++i ){
 
         double table_value = tableLookUp( iv, i->second.index ); 
+        table_value *= eps_vol[c]; 
         (*i->second.var)[c] = table_value;
 
         if (i->first == "density") {
@@ -453,14 +422,13 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
             mpmarches_denmicro[c] = table_value; 
         } else if (i->first == "temperature" && !d_coldflow) {
           arches_temperature[c] = table_value; 
-          //} else if (i->first == "heat_capacity" && !d_coldflow) {
-      } else if (i->first == "specificheat" && !d_coldflow) {
-        arches_cp[c] = table_value; 
-      } else if (i->first == "CO2" && !d_coldflow) {
-        arches_co2[c] = table_value; 
-      } else if (i->first == "H2O" && !d_coldflow) {
-        arches_h2o[c] = table_value; 
-      }
+        } else if (i->first == "specificheat" && !d_coldflow) {
+          arches_cp[c] = table_value; 
+        } else if (i->first == "CO2" && !d_coldflow) {
+          arches_co2[c] = table_value; 
+        } else if (i->first == "H2O" && !d_coldflow) {
+          arches_h2o[c] = table_value; 
+        }
 
       }
     }
@@ -539,34 +507,13 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
             }
           }
 
-          // if this is coal, we need to compute f from f_p and eta
-          if ( d_coal_table ) { 
-
-            double f = 0.0; 
-
-            if ( iv[coal_eta_index] < 1.0 ) {
-
-              f = iv[coal_fp_index] / ( 1.0 - iv[coal_eta_index] ); 
-
-              if ( f < 0.0 )
-                f = 0.0;
-              if ( f > 1.0 )
-                f = 1.0; 
-
-            } else { 
-
-              f = 0.0; 
-
-            }
-
-            iv[coal_fp_index] = f;
-
-          } 
+          _iv_transform->transform( iv ); 
 
           // now get state for boundary cell: 
           for ( DepVarMap::iterator i = depend_storage.begin(); i != depend_storage.end(); ++i ){
 
             double table_value = tableLookUp( iv, i->second.index ); 
+            table_value *= eps_vol[c]; 
             (*i->second.var)[c] = table_value;
 
             if (i->first == "density") {
@@ -577,14 +524,13 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
                 mpmarches_denmicro[c] = table_value; 
             } else if (i->first == "temperature" && !d_coldflow) {
               arches_temperature[c] = table_value; 
-              //} else if (i->first == "heat_capacity" && !d_coldflow) {
-          } else if (i->first == "specificheat" && !d_coldflow) {
-            arches_cp[c] = table_value; 
-          } else if (i->first == "CO2" && !d_coldflow) {
-            arches_co2[c] = table_value; 
-          } else if (i->first == "H2O" && !d_coldflow) {
-            arches_h2o[c] = table_value; 
-          }
+            } else if (i->first == "specificheat" && !d_coldflow) {
+              arches_cp[c] = table_value; 
+            } else if (i->first == "CO2" && !d_coldflow) {
+              arches_co2[c] = table_value; 
+            } else if (i->first == "H2O" && !d_coldflow) {
+              arches_h2o[c] = table_value; 
+            }
           }
           iv.clear(); 
         }
@@ -697,6 +643,9 @@ ClassicTableInterface::computeHeatLoss( const ProcessorGroup* pc,
         }
       }
 
+      bool lower_hl_exceeded = false; 
+      bool upper_hl_exceeded = false;
+
       for (CellIterator iter=patch->getCellIterator(0); !iter.done(); iter++){
         IntVector c = *iter; 
 
@@ -712,24 +661,43 @@ ClassicTableInterface::computeHeatLoss( const ProcessorGroup* pc,
           index++; 
         }
 
+        _iv_transform->transform( iv ); 
+
         // actually compute the heat loss: 
         IndexMap::iterator i_index = d_enthalpyVarIndexMap.find( "sensibleenthalpy" ); 
         double sensible_enthalpy    = tableLookUp( iv, i_index->second ); 
         i_index = d_enthalpyVarIndexMap.find( "adiabaticenthalpy" ); 
         double adiabatic_enthalpy = tableLookUp( iv, i_index->second ); 
         double current_heat_loss  = 0.0;
-        double small = 1e-10; 
         if ( calcEnthalpy )
-          current_heat_loss = ( adiabatic_enthalpy - enthalpy[c] ) / ( sensible_enthalpy + small ); 
+          current_heat_loss = ( adiabatic_enthalpy - enthalpy[c] ) / ( sensible_enthalpy + TINY ); 
 
-        if ( current_heat_loss < -1.0 )
-          current_heat_loss = -1.0; 
-        else if ( current_heat_loss > 1.0 ) 
-          current_heat_loss = 1.0; 
+        if ( current_heat_loss < d_hl_lower_bound ) {
+
+          current_heat_loss = d_hl_lower_bound; 
+          lower_hl_exceeded = true; 
+
+        } else if ( current_heat_loss > d_hl_upper_bound ) { 
+
+          current_heat_loss = d_hl_upper_bound; 
+          upper_hl_exceeded = true; 
+
+        }
 
         heat_loss[c] = current_heat_loss; 
 
       }
+
+      if ( d_noisy_hl_warning ) { 
+       
+        if ( upper_hl_exceeded || lower_hl_exceeded ) {  
+          cout << "Patch with bounds: " << patch->getCellLowIndex() << " to " << patch->getCellHighIndex()  << endl;
+          if ( lower_hl_exceeded ) 
+            cout << "   --> lower heat loss exceeded. " << endl;
+          if ( upper_hl_exceeded ) 
+            cout << "   --> upper heat loss exceeded. " << endl;
+        } 
+      } 
     }
   }
 }
@@ -810,7 +778,6 @@ ClassicTableInterface::computeFirstEnthalpy( const ProcessorGroup* pc,
       }
     }
 
-
     for (CellIterator iter=patch->getCellIterator(0); !iter.done(); iter++){
       IntVector c = *iter; 
 
@@ -825,6 +792,8 @@ ClassicTableInterface::computeFirstEnthalpy( const ProcessorGroup* pc,
 
         index++; 
       }
+
+      _iv_transform->transform( iv ); 
 
       double current_heat_loss = d_hl_scalar_init; // may want to make this more sophisticated later(?)
       IndexMap::iterator i_index = d_enthalpyVarIndexMap.find( "sensibleenthalpy" ); 
@@ -856,32 +825,25 @@ ClassicTableInterface::oldTableHack( const InletStream& inStream, Stream& outStr
     } else if (d_allIndepVarNames[i] == "mixture_fraction_variance") {
       iv[i] = 0.0;
     } else if (d_allIndepVarNames[i] == "mixture_fraction_2") {
-      iv[i] = 0.0; // set below if there is one...just want to make sure it is initialized properly
+      iv[i] = inStream.d_f2; // set below if there is one...just want to make sure it is initialized properly
     } else if (d_allIndepVarNames[i] == "mixture_fraction_variance_2") {
       iv[i] = 0.0; 
     } else if (d_allIndepVarNames[i] == "heat_loss" || d_allIndepVarNames[i] == "HeatLoss") {
-      if ( bc_type == "scalar_init" )
-        iv[i] = d_hl_scalar_init; 
-      else
-        iv[i] = 0.0; 
+      iv[i] = inStream.d_heatloss; 
       if (!calcEnthalpy) {
         iv[i] = 0.0; // override any user input because case is adiabatic
-        if ( d_hl_scalar_init > 0.0 )
-          proc0cout << "NOTICE!: Case is adiabatic so we will ignore your heat loss initialization." << endl;
       }
     }
   }
 
+  _iv_transform->transform( iv ); 
+
   double f                 = 0.0; 
-  double f_2               = 0.0; 
   double adiab_enthalpy    = 0.0; 
   double current_heat_loss = 0.0;
   double init_enthalpy     = 0.0; 
 
   f  = inStream.d_mixVars[0]; 
-  if (inStream.d_has_second_mixfrac){
-    f_2 = inStream.d_f2; 
-  }
 
   if (calcEnthalpy) {
 
@@ -898,10 +860,7 @@ ClassicTableInterface::oldTableHack( const InletStream& inStream, Stream& outStr
 
     if ( inStream.d_initEnthalpy || ((abs(adiab_enthalpy - enthalpy)/abs(adiab_enthalpy) < 1.0e-4 ) && f < 1.0e-4) ) {
 
-      if ( bc_type == "scalar_init" )
-        current_heat_loss = d_hl_scalar_init; 
-      else
-        current_heat_loss = 0.0; 
+      current_heat_loss = inStream.d_heatloss; 
 
       init_enthalpy = adiab_enthalpy - current_heat_loss * sensible_enthalpy; 
 
@@ -1083,11 +1042,9 @@ ClassicTableInterface::tableLookUp( std::vector<double> iv, int var_index)
     throw InternalError(exception.str(),__FILE__,__LINE__);
   }
 
-  double small = 1.0e-10;
-
   double fmg=0.0, fpmg=0.0,s1=0.0,s2=0.0,var_value=0.0;
-  int nhl_lo, nhl_hi; 
-  double dhl_lo, dhl_hi; 
+  double dhl_lo=0.0, dhl_hi=0.0; 
+  int nhl_lo=0, nhl_hi=0; 
 
   // compute index of iv3:
   if ( d_indepvarscount == 3 ){ 
@@ -1158,39 +1115,28 @@ ClassicTableInterface::tableLookUp( std::vector<double> iv, int var_index)
 
     if ( d_indepvarscount > 1 ) {  
 
-      if( iv[1] <= small ){
-        // Set the values to get the first entry
-        g=0.0;
-        k1=0;
-        k2=0;
-        dk1=0.0;
-        dk2=1.0;
+      g = iv[1];
+      // Finding the table entry
 
-      } else {
+      for(int index=0; index < d_allIndepVarNum[1]-1; index++){
 
-        g = iv[1];
-        // Finding the table entry
+        dk1 = i2[index]-g;
+        dk2 = i2[index+1]-g;
 
-        for(int index=0; index < d_allIndepVarNum[1]-1; index++){
+      //cout << "dk2 = " << dk2 << endl;
 
-          dk1 = i2[index]-g;
-          dk2 = i2[index+1]-g;
+        if((dk1*dk2) == 0.0 && index != 0){
 
-        //cout << "dk2 = " << dk2 << endl;
+          k1=index+1;
+          k2=k1;
+          break;
 
-          if((dk1*dk2) == 0.0 && index != 0){
+        } else if ( (dk1*dk2) <= 0.0){
 
-            k1=index+1;
-            k2=k1;
-            break;
+          k1=index;
+          k2=k1+1;
+          break;
 
-          } else if ( (dk1*dk2) <= 0.0){
-
-            k1=index;
-            k2=k1+1;
-            break;
-
-          }
         }
       }
     } else { 
@@ -1242,7 +1188,7 @@ ClassicTableInterface::loadMixingTable( const string & inputfile )
     throw ProblemSetupException("Unable to open the given input file: " + inputfile, __FILE__, __LINE__);
   }
 
-  double not_used; 
+  //double not_used; 
   //d_f_stoich       = getDouble( gzFp );
   //d_H_fuel         = getDouble( gzFp );
   //d_H_air          = getDouble( gzFp );
@@ -1253,18 +1199,28 @@ ClassicTableInterface::loadMixingTable( const string & inputfile )
   proc0cout << " Total number of independent variables: " << d_indepvarscount << endl;
 
   d_allIndepVarNames = vector<std::string>(d_indepvarscount);
+  int index_is_hl = -1; 
+  int hl_grid_size = -1; 
+ 
   for (int ii = 0; ii < d_indepvarscount; ii++) {
     string varname = getString( gzFp );
-    d_allIndepVarNames[ii] =  varname ; 
+    d_allIndepVarNames[ii] = varname;
+    if ( varname == "heat_loss" ) {
+      index_is_hl = ii;  
+    }
   }
 
   d_allIndepVarNum = vector<int>(d_indepvarscount);
   for (int ii = 0; ii < d_indepvarscount; ii++) {
     int grid_size = getInt( gzFp ); 
     d_allIndepVarNum[ii] =  grid_size ; 
+
+    if ( ii == index_is_hl ) {
+      hl_grid_size = grid_size - 1; 
+    }
   }
 
-  for (int ii = 0; ii < d_indepvarscount; ii++){
+  for (int ii = 0; ii < d_indepvarscount; ii++) {
     proc0cout << " Independent variable: " << d_allIndepVarNames[ii] << " has a grid size of: " << d_allIndepVarNum[ii] << endl;
   }
 
@@ -1279,7 +1235,7 @@ ClassicTableInterface::loadMixingTable( const string & inputfile )
     variable = getString( gzFp );
     d_allDepVarNames[ii] = variable ; 
 
-    proc0cout << "  " << d_allDepVarNames[ii] << endl;
+    //proc0cout << "  " << d_allDepVarNames[ii] << endl;
 
   }
 
@@ -1341,6 +1297,28 @@ ClassicTableInterface::loadMixingTable( const string & inputfile )
       d_allIndepVarNum[1]*
       d_allIndepVarNum[2]; 
 
+  // getting heat loss bounds: 
+  if ( index_is_hl != -1 ) { 
+    if ( index_is_hl == 0 ) {
+
+      //d_hl_lower_bound = double(i1[0]);
+      //d_hl_upper_bound = double(i1[hl_grid_size]);
+
+    } else if ( index_is_hl == 1 ) { 
+
+      d_hl_lower_bound = i2[0];
+      d_hl_upper_bound = i2[hl_grid_size];
+
+    } else if ( index_is_hl == 2 ) { 
+
+      d_hl_lower_bound = i3[0];
+      d_hl_upper_bound = i3[hl_grid_size];
+
+    } 
+    proc0cout << " Lower bounds on heat loss = " << d_hl_lower_bound << endl;
+    proc0cout << " Upper bounds on heat loss = " << d_hl_upper_bound << endl;
+  } 
+
   table = vector<vector<double> >(d_varscount); 
   for ( int i = 0; i < d_varscount; i++ ){ 
     table[i] = vector<double>(size);
@@ -1378,10 +1356,10 @@ ClassicTableInterface::loadMixingTable( const string & inputfile )
 
   } else if ( d_indepvarscount == 3 ){ 
 
-    proc0cout << "Reading in the variables: " << endl;
+    proc0cout << "Reading in the dependent variables: " << endl;
     for (int kk=0; kk< d_varscount; kk++){
 
-      proc0cout << " reading in --> " << d_allDepVarNames[kk] << endl;
+      proc0cout << " loading --> " << d_allDepVarNames[kk] << endl;
       for ( int mm = 0; mm < d_allIndepVarNum[2]; mm++ ){ 
 
         for (int i = 0; i < d_allIndepVarNum[0]; i++){
@@ -1405,4 +1383,11 @@ ClassicTableInterface::loadMixingTable( const string & inputfile )
 
   proc0cout << "Table successfully loaded into memory!" << endl;
 
+}
+
+double ClassicTableInterface::getTableValue( std::vector<double> iv, std::string variable )
+{
+  IndexMap::iterator i_index = d_enthalpyVarIndexMap.find( variable ); 
+  double value    = tableLookUp( iv, i_index->second ); 
+  return value; 
 }

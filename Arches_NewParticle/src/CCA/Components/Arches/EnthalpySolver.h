@@ -33,41 +33,6 @@ DEALINGS IN THE SOFTWARE.
 #ifndef Uintah_Component_Arches_EnthalpySolver_h
 #define Uintah_Component_Arches_EnthalpySolver_h
 
-/**************************************
-CLASS
-   EnthalpySolver
-   
-   Class EnthalpySolver linearizes and solves momentum
-   equation on a grid hierarchy
-
-
-GENERAL INFORMATION
-   EnthalpySolver.h - declaration of the class
-   
-   Author: Rajesh Rawat (rawat@crsim.utah.edu)
-
-   All major modifications since 01.01.2004 done by:
-   Stanislav Borodai(borodai@crsim.utah.edu)
-   
-   Creation Date:   Mar 1, 2000
-   
-   C-SAFE 
-   
-   Copyright U of U 2000
-
-KEYWORDS
-
-
-DESCRIPTION
-   Class EnthalpySolver linearizes and solves scalar
-   equation on a grid hierarchy
-
-
-WARNING
-   none
-
-************************************************************************/
-
 #include <CCA/Ports/SchedulerP.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <CCA/Ports/DataWarehouseP.h>
@@ -78,6 +43,16 @@ WARNING
 #include <CCA/Components/Arches/ArchesConstVariables.h>
 
 namespace Uintah {
+
+/** 
+  @class  Arches
+  @author Rajesh Rawat, Stanislav Borodai
+  @date   March 2000
+  
+  @brief  Linearizes and solves enthalpy equation on a grid hierarchy.
+  
+  */
+
   class ArchesLabel;
   class MPMArchesLabel;
   class ProcessorGroup;
@@ -249,7 +224,8 @@ private:
   double d_H_air;
   bool d_doMMS;
   bool d_doRMCRT; 
-
+  bool d_use_abskp;
+  const VarLabel* d_abskpLabel;
   vector<string> d_new_sources; 
 
 }; // End class EnthalpySolver

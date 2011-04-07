@@ -35,8 +35,9 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Arches/ArchesLabel.h>
 #if HAVE_TABPROPS
 # include <CCA/Components/Arches/ChemMix/TabPropsInterface.h>
-# include <CCA/Components/Arches/ChemMix/ClassicTableInterface.h>
 #endif
+# include <CCA/Components/Arches/ChemMix/ClassicTableInterface.h>
+# include <CCA/Components/Arches/ChemMix/ColdFlow.h>
 #include <CCA/Components/Arches/Mixing/MixingModel.h>
 #include <CCA/Components/Arches/Mixing/ColdflowMixingModel.h>
 #include <CCA/Components/Arches/Mixing/MOMColdflowMixingModel.h>
@@ -88,7 +89,7 @@ Properties::Properties(const ArchesLabel* label,
                        d_calcReactingScalar(calcReactingScalar),
                        d_calcEnthalpy(calcEnthalpy),
                        d_calcVariance(calcVariance),
-                                           d_myworld(myworld)
+                       d_myworld(myworld)
 {
   d_DORadiationCalc = false;
   d_radiationCalc = false;
@@ -144,9 +145,11 @@ Properties::problemSetup(const ProblemSpecP& params)
 #if HAVE_TABPROPS
   else if (db->findBlock("TabProps"))
     mixModel = "TabProps";
+#endif
   else if (db->findBlock("ClassicTable"))
     mixModel = "ClassicTable";
-#endif
+	else if (db->findBlock("ColdFlow"))
+		mixModel = "ColdFlow";
   else
     throw InvalidValue("ERROR!: No mixing/reaction table specified! If you are attempting to use the new TabProps interface, ensure that you configured properly with TabProps.",__FILE__,__LINE__);
 
@@ -196,12 +199,30 @@ Properties::problemSetup(const ProblemSpecP& params)
       proc0cout << "Warning!: The tabulated soot mechanism (tabulated_soot) is not active yet when using TabProps.  I am going to set it to false. " << endl;
       d_tabulated_soot  = false;
     }
-  } else if (mixModel == "ClassicTable") { 
+  }
+#endif
+  else if (mixModel == "ClassicTable") { 
     // New Classic interface
     d_mixingRxnTable = scinew ClassicTableInterface( d_lab, d_MAlab ); 
     d_mixingRxnTable->problemSetup( db ); 
+    // At this time, these all need to be false:
+    d_co_output       = false;
+    if (d_sulfur_chem) {
+      proc0cout << "Warning!: The old sulfur_chem boolean is not compatible with TabProps.  I am going to set it to false. " << endl;
+      d_sulfur_chem     = false;
+    }
+    if (d_soot_precursors) {
+      proc0cout << "Warning!: The soot_precursors boolean is not compatible with TabProps.  I am going to set it to false. " << endl; 
+      d_soot_precursors = false;
+    }
+    if (d_tabulated_soot) {
+      proc0cout << "Warning!: The tabulated soot mechanism (tabulated_soot) is not active yet when using TabProps.  I am going to set it to false. " << endl;
+      d_tabulated_soot  = false;
+    }
+	} else if (mixModel == "ColdFlow") {
+		d_mixingRxnTable = scinew ColdFlow( d_lab, d_MAlab ); 
+		d_mixingRxnTable->problemSetup( db ); 
   }
-#endif
   else if (mixModel == "pdfMixingModel" || mixModel == "SteadyFlameletsTable"
         || mixModel == "flameletModel"  || mixModel == "StaticMixingTable"
         || mixModel == "meanMixingModel" ){
@@ -210,7 +231,7 @@ Properties::problemSetup(const ProblemSpecP& params)
     throw InvalidValue("Mixing Model not supported: " + mixModel, __FILE__, __LINE__);
   }
  
-  if (mixModel != "TabProps" && mixModel != "ClassicTable") {
+  if (mixModel != "TabProps" && mixModel != "ClassicTable" && mixModel != "ColdFlow") {
     d_mixingModel->problemSetup(db);
 
     if (d_calcEnthalpy){
@@ -300,10 +321,13 @@ Properties::computeInletProperties(const InletStream& inStream,
 #if HAVE_TABPROPS
   else if ( mixModel == "TabProps"){
     d_mixingRxnTable->oldTableHack( inStream, outStream, d_calcEnthalpy, bc_type ); 
-  } else if ( mixModel == "ClassicTable"){
-    d_mixingRxnTable->oldTableHack( inStream, outStream, d_calcEnthalpy, bc_type ); 
   }
 #endif
+  else if ( mixModel == "ClassicTable"){
+    d_mixingRxnTable->oldTableHack( inStream, outStream, d_calcEnthalpy, bc_type ); 
+  } else if ( mixModel == "ColdFlow" ) {
+		// nothing to do here -- put here as a place holder until Properties is deleted
+  }
   else {
     throw InvalidValue("Mixing Model not supported", __FILE__, __LINE__);
   }
@@ -459,12 +483,6 @@ Properties::sched_reComputeProps(SchedulerP& sched,
       tsk->computes(d_lab->d_sootFVINLabel);
     }
 
-    if (d_carbon_balance_es){        
-      tsk->modifies(d_lab->d_co2RateLabel);
-    }
-    if (d_sulfur_balance_es){
-      tsk->modifies(d_lab->d_so2RateLabel);                
-    }
   }
   else {
     tsk->modifies(d_lab->d_drhodfCPLabel);
@@ -523,11 +541,6 @@ Properties::sched_reComputeProps(SchedulerP& sched,
       tsk->modifies(d_lab->d_sootFVINLabel);
     }
 
-    if (d_carbon_balance_es)        
-      tsk->modifies(d_lab->d_co2RateLabel);
-      if (d_sulfur_balance_es)
-        tsk->modifies(d_lab->d_so2RateLabel);                
-  
     //tsk->modifies(d_lab->d_tabReactionRateLabel);
   }
 
@@ -641,9 +654,6 @@ Properties::reComputeProps(const ProcessorGroup* pc,
 
     CCVariable<double> c2h2;
     CCVariable<double> ch4;
-
-    CCVariable<double> co2Rate;
-    CCVariable<double> so2Rate;
 
     bool foundExtrascalar = false;
     bool usemeforden = false;
@@ -796,12 +806,6 @@ Properties::reComputeProps(const ProcessorGroup* pc,
         new_dw->allocateAndPut(sootFV, d_lab->d_sootFVINLabel, indx,patch);
       }
 
-      if (d_carbon_balance_es){       
-        new_dw->getModifiable(co2Rate, d_lab->d_co2RateLabel, indx, patch);
-      }
-      if (d_sulfur_balance_es){
-        new_dw->getModifiable(so2Rate, d_lab->d_so2RateLabel, indx, patch);
-      }
     }
     else {
       new_dw->getModifiable(drhodf, d_lab->d_drhodfCPLabel, indx, patch);
@@ -863,12 +867,6 @@ Properties::reComputeProps(const ProcessorGroup* pc,
         new_dw->getModifiable(sootFV,       d_lab->d_sootFVINLabel, indx,patch);
       }
 
-      if (d_carbon_balance_es){
-        new_dw->getModifiable(co2Rate, d_lab->d_co2RateLabel, indx, patch);
-      }
-      if (d_sulfur_balance_es){
-        new_dw->getModifiable(so2Rate, d_lab->d_so2RateLabel, indx, patch);                  
-      }
     }
     drhodf.initialize(0.0);
     
@@ -925,13 +923,6 @@ Properties::reComputeProps(const ProcessorGroup* pc,
       if (!d_DORadiationCalc)
         absorption.initialize(0.0);
       sootFV.initialize(0.0);
-    }
-
-    if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First)){
-      if (d_carbon_balance_es)
-        co2Rate.initialize(0.0);
-      if (d_sulfur_balance_es)
-        so2Rate.initialize(0.0);
     }
 
     if (d_MAlab && !initialize) {
@@ -1122,14 +1113,6 @@ Properties::reComputeProps(const ProcessorGroup* pc,
           // density underrelaxation is bogus here and has been removed
           new_density[currCell] = local_den;
 
-          //write the rates:
-
-          if (d_carbon_balance_es){
-            co2Rate[currCell] = outStream.getCO2RATE();
-          }
-          if (d_sulfur_balance_es){
-            so2Rate[currCell] = outStream.getSO2RATE();         
-          }     
         }
       }
     }
@@ -2311,27 +2294,33 @@ Properties::sched_reComputeProps_new( const LevelP& level,
                                       const bool initialize, 
                                       const bool modify_ref_den )
 {
-#if HAVE_TABPROPS
   // this method is temporary while we get rid of properties.cc 
   d_mixingRxnTable->sched_computeHeatLoss( level, sched, initialize, d_calcEnthalpy );
 
   d_mixingRxnTable->sched_getState( level, sched, time_labels, initialize, d_calcEnthalpy, modify_ref_den ); 
-#endif  
 }
 
 void 
 Properties::sched_initEnthalpy( const LevelP& level, SchedulerP& sched )
 {
-#if HAVE_TABPROPS
   d_mixingRxnTable->sched_computeFirstEnthalpy( level, sched ) ; 
-#endif
 }
 
 void 
 Properties::sched_doTPDummyInit( const LevelP& level, SchedulerP& sched )
 {
-#if HAVE_TABPROPS
   d_mixingRxnTable->sched_dummyInit( level, sched );
-#endif 
 }
 
+void 
+Properties::addLookupSpecies( ){
+
+  std::vector<std::string> sps; 
+  sps = d_lab->model_req_species; 
+
+  if ( mixModel == "ClassicTable"  || mixModel == "TabProps" ) { 
+    for ( vector<string>::iterator i = sps.begin(); i != sps.end(); i++ ){
+      d_mixingRxnTable->insertIntoMap( *i ); 
+    }
+  }
+}

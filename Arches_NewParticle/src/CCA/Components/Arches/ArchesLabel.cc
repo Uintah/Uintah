@@ -481,13 +481,9 @@ ArchesLabel::ArchesLabel()
   
   // carbon balance labels
   d_CO2FlowRateLabel         =  VarLabel::create("CO2FlowRate",         sum_variable);
-  d_CO2FlowRateESLabel       =  VarLabel::create("CO2FlowRateES",       sum_variable);
   d_SO2FlowRateLabel         =  VarLabel::create("SO2FlowRate",         sum_variable);
-  d_SO2FlowRateESLabel       =  VarLabel::create("SO2FlowRateES",       sum_variable);
   d_carbonEfficiencyLabel    =  VarLabel::create("carbonEfficiency",    min_variable);
-  d_carbonEfficiencyESLabel  =  VarLabel::create("carbonEfficiencyES",  min_variable);
   d_sulfurEfficiencyLabel    =  VarLabel::create("sulfurEfficiency",    min_variable);
-  d_sulfurEfficiencyESLabel  =  VarLabel::create("sulfurEfficiencyES",  min_variable);
   d_scalarFlowRateLabel      =  VarLabel::create("scalarFlowRate",      sum_variable);
   d_scalarEfficiencyLabel    =  VarLabel::create("scalarEfficiency",    min_variable);
   d_enthalpyFlowRateLabel    =  VarLabel::create("enthalpyFlowRate",    sum_variable);
@@ -518,6 +514,7 @@ ArchesLabel::ArchesLabel()
   
   // Boundary condition variables
   d_areaFractionLabel         = VarLabel::create("areaFraction", CC_Vector); 
+  d_volFractionLabel          = VarLabel::create("volFraction", CC_double); 
 }
 
 //****************************************************************************
@@ -756,13 +753,9 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_ShELabel);
   VarLabel::destroy(d_ShRFLabel);
   VarLabel::destroy(d_CO2FlowRateLabel);
-  VarLabel::destroy(d_CO2FlowRateESLabel);
   VarLabel::destroy(d_carbonEfficiencyLabel);
-  VarLabel::destroy(d_carbonEfficiencyESLabel);
   VarLabel::destroy(d_SO2FlowRateLabel);
-  VarLabel::destroy(d_SO2FlowRateESLabel);
   VarLabel::destroy(d_sulfurEfficiencyLabel);
-  VarLabel::destroy(d_sulfurEfficiencyESLabel);
   VarLabel::destroy(d_scalarFlowRateLabel);
   VarLabel::destroy(d_scalarEfficiencyLabel);
   VarLabel::destroy(d_enthalpyFlowRateLabel);
@@ -831,6 +824,7 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_tempFzLabel);
 
   VarLabel::destroy(d_areaFractionLabel); 
+  VarLabel::destroy(d_volFractionLabel); 
 
 }           
 

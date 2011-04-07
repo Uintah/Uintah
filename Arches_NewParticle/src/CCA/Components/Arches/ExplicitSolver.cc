@@ -128,10 +128,12 @@ ExplicitSolver::~ExplicitSolver()
   delete d_scalarSolver;
   delete d_reactingScalarSolver;
   delete d_enthalpySolver;
-  for (int curr_level = 0; curr_level < numTimeIntegratorLevels; curr_level ++)
+  for (int curr_level = 0; curr_level < numTimeIntegratorLevels; curr_level ++) {
     delete d_timeIntegratorLabels[curr_level];
-  if (nosolve_timelabels_allocated)
+  }
+  if (nosolve_timelabels_allocated) {
     delete nosolve_timelabels;
+  }
 }
 
 // ****************************************************************************
@@ -140,7 +142,7 @@ ExplicitSolver::~ExplicitSolver()
 void 
 ExplicitSolver::problemSetup(const ProblemSpecP& params)
   // MultiMaterialInterface* mmInterface
-{
+{ 
   ProblemSpecP db = params->findBlock("ExplicitSolver");
   ProblemSpecP test_probe_db = db->findBlock("ProbePoints"); 
   if ( test_probe_db ) {
@@ -288,7 +290,6 @@ ExplicitSolver::problemSetup(const ProblemSpecP& params)
       throw InvalidValue("current MMS "
                          "not supported: " + d_mms, __FILE__, __LINE__);
 
-    d_carbon_balance_es = d_boundaryCondition->getCarbonBalanceES();        
     d_numSourceBoundaries = d_boundaryCondition->getNumSourceBndry();
   }
 }
@@ -324,8 +325,9 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 #ifdef PetscFilter
   if (d_turbModel->getFilter()) {
     // if the matrix is not initialized
-    if (!d_turbModel->getFilter()->isInitialized()) 
+    if (!d_turbModel->getFilter()->isInitialized()) {
       d_turbModel->sched_initFilterMatrix(level, sched, patches, matls);
+    }
   }
 #endif
   if (d_boundaryCondition->getNumSourceBndry() > 0){
@@ -426,7 +428,8 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       doing_EKT_now = false;
     }
 
-    
+
+
     sched_getDensityGuess(sched, patches, matls,
                                       d_timeIntegratorLabels[curr_level],
                                       d_EKTCorrection, doing_EKT_now);
@@ -481,6 +484,18 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
                                            d_EKTCorrection, doing_EKT_now);
     }
 
+//    d_props->sched_reComputeProps(sched, patches, matls,
+//             d_timeIntegratorLabels[curr_level], false, false);
+//    sched_syncRhoF(sched, patches, matls, d_timeIntegratorLabels[curr_level]);
+//    sched_updateDensityGuess(sched, patches, matls,
+//                                    d_timeIntegratorLabels[curr_level]);
+//    d_timeIntegratorLabels[curr_level]->integrator_step_number = TimeIntegratorStepNumber::Second;
+//    d_props->sched_reComputeProps(sched, patches, matls,
+//             d_timeIntegratorLabels[curr_level], false, false);
+//    sched_syncRhoF(sched, patches, matls, d_timeIntegratorLabels[curr_level]);
+//    sched_updateDensityGuess(sched, patches, matls,
+//                                    d_timeIntegratorLabels[curr_level]);
+
     // Property models needed before table lookup: 
     for ( PropertyModelFactory::PropMap::iterator iprop = all_prop_models.begin(); 
           iprop != all_prop_models.end(); iprop++){
@@ -493,7 +508,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
 
     string mixmodel = d_props->getMixingModelType(); 
-    if ( mixmodel != "TabProps" && mixmodel != "ClassicTable") {
+    if ( mixmodel != "TabProps" && mixmodel != "ClassicTable" && mixmodel != "ColdFlow") {
       d_props->sched_reComputeProps(sched, patches, matls,
                                     d_timeIntegratorLabels[curr_level],
                                     true, false,
@@ -569,7 +584,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
                                             d_EKTCorrection, doing_EKT_now);
       }
     
-      if (mixmodel != "TabProps" && mixmodel != "ClassicTable") {
+      if (mixmodel != "TabProps" && mixmodel != "ClassicTable" && mixmodel != "ColdFlow") {
         d_props->sched_reComputeProps(sched, patches, matls,
                                       d_timeIntegratorLabels[curr_level],
                                       false, false,
@@ -635,9 +650,6 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     sched_updatePressure(sched, patches, matls,
                                  d_timeIntegratorLabels[curr_level]);
 
-    if(d_turbinlet){
-      d_boundaryCondition->sched_setTurbulence(sched, patches, matls);
-    }
     //if (curr_level == numTimeIntegratorLevels - 1) {
     if (d_boundaryCondition->anyArchesPhysicalBC()) {
 
@@ -753,8 +765,9 @@ int ExplicitSolver::noSolve(const LevelP& level,
   eqnFactory.sched_dummyInit( level, sched );
 
   string mixmodel = d_props->getMixingModelType(); 
-  if ( mixmodel == "TabProps" )
+  if ( mixmodel == "TabProps"  || mixmodel == "ClassicTable" ) {
     d_props->sched_doTPDummyInit( level, sched ); 
+  }
 
   d_props->sched_computePropsFirst_mm(                    sched, patches, matls);
 
@@ -833,6 +846,7 @@ ExplicitSolver::sched_setInitialGuess(SchedulerP& sched,
   tsk->requires(Task::OldDW, d_lab->d_viscosityCTSLabel,  gn, 0);
   tsk->requires(Task::OldDW, d_lab->d_newCCVelocityLabel, gn, 0);
   tsk->requires(Task::OldDW, d_lab->d_areaFractionLabel,  gn, 0); 
+  tsk->requires(Task::OldDW, d_lab->d_volFractionLabel,   gn, 0); 
 
   if (!(d_MAlab))
     tsk->computes(d_lab->d_cellInfoLabel);
@@ -855,6 +869,7 @@ ExplicitSolver::sched_setInitialGuess(SchedulerP& sched,
   tsk->computes(d_lab->d_wmomBoundarySrcLabel); 
   tsk->computes(d_lab->d_viscosityCTSLabel);
   tsk->computes(d_lab->d_areaFractionLabel); 
+  tsk->computes(d_lab->d_volFractionLabel); 
   
   //__________________________________
   if (d_MAlab){
@@ -908,20 +923,6 @@ ExplicitSolver::sched_setInitialGuess(SchedulerP& sched,
   //Helper variable
   tsk->computes(d_lab->d_zerosrcVarLabel);
 
-  //__________________________________
-  if (d_carbon_balance_es){        
-    //CO2 Rate term for CO2 scalar equation
-    tsk->computes(d_lab->d_co2RateLabel); //new one
-    tsk->requires(Task::OldDW, d_lab->d_co2RateLabel, gn, 0);
-  }
-  
-  //__________________________________
-  if (d_sulfur_balance_es){        
-    //SO2 Rate term for SO2 scalar equation 
-    tsk->computes(d_lab->d_so2RateLabel); //new one
-    tsk->requires(Task::OldDW, d_lab->d_so2RateLabel, gn, 0);
-  }
-  
   sched->addTask(tsk, patches, matls);
 }
 
@@ -1871,6 +1872,7 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
     constCCVariable<double> reactscalardiff;
     constCCVariable<Vector> ccVel; 
     constCCVariable<Vector> old_areaFraction; 
+    constCCVariable<double> old_volFraction; 
     constCCVariable<double> old_volq;
  
     old_dw->get(uVelocity, d_lab->d_uVelocitySPBCLabel, indx, patch, gn, 0);
@@ -1881,6 +1883,7 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
     old_dw->get(viscosity, d_lab->d_viscosityCTSLabel,  indx, patch, gn, 0);
     old_dw->get(ccVel,     d_lab->d_newCCVelocityLabel, indx, patch, gn, 0);
     old_dw->get(old_areaFraction, d_lab->d_areaFractionLabel, indx, patch, gn, 0); 
+    old_dw->get(old_volFraction, d_lab->d_volFractionLabel, indx, patch, gn, 0); 
 
     if (d_enthalpySolve){
       old_dw->get(enthalpy, d_lab->d_enthalpySPLabel, indx, patch, gn, 0);
@@ -1942,7 +1945,10 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
     CCVariable<Vector> new_areaFraction; 
     new_dw->allocateAndPut(new_areaFraction, d_lab->d_areaFractionLabel, indx, patch); 
     new_areaFraction.copyData(old_areaFraction); // copy old into new
-   
+
+    CCVariable<double> new_volFraction; 
+    new_dw->allocateAndPut( new_volFraction, d_lab->d_volFractionLabel, indx, patch ); 
+    new_volFraction.copyData( old_volFraction ); // copy old into new
  
     new_dw->allocateAndPut(scalar_temp, d_lab->d_scalarTempLabel, indx, patch);
     scalar_temp.copyData(scalar); // copy old into new
@@ -2020,24 +2026,6 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
     new_dw->allocateAndPut(zerosrcVar, d_lab->d_zerosrcVarLabel, indx, patch);
     zerosrcVar.initialize(0.0);
 
-    if (d_carbon_balance_es){  
-      constCCVariable<double> co2Rate_old;
-      CCVariable<double> co2Rate;
- 
-      old_dw->get(co2Rate_old,        d_lab->d_co2RateLabel, indx, patch, gn, 0);
-      new_dw->allocateAndPut(co2Rate, d_lab->d_co2RateLabel, indx, patch);
-      co2Rate.initialize(0.0);
-      co2Rate.copyData(co2Rate_old);
-    }
-    if (d_sulfur_balance_es){  
-      constCCVariable<double> so2Rate_old;
-      CCVariable<double> so2Rate;
-      old_dw->get(so2Rate_old,        d_lab->d_so2RateLabel, indx, patch, gn, 0);
-      new_dw->allocateAndPut(so2Rate, d_lab->d_so2RateLabel, indx, patch);
-      so2Rate.initialize(0.0);
-      so2Rate.copyData(so2Rate_old);
-    }
-
     CCVariable<double> scalarBoundarySrc;
     CCVariable<double> enthalpyBoundarySrc;
     SFCXVariable<double> umomBoundarySrc;
@@ -2094,9 +2082,7 @@ ExplicitSolver::sched_dummySolve(SchedulerP& sched,
   tsk->computes(d_lab->d_scalarEfficiencyLabel);
   tsk->computes(d_lab->d_enthalpyEfficiencyLabel);
   tsk->computes(d_lab->d_carbonEfficiencyLabel);
-  tsk->computes(d_lab->d_carbonEfficiencyESLabel);
   tsk->computes(d_lab->d_sulfurEfficiencyLabel);
-  tsk->computes(d_lab->d_sulfurEfficiencyESLabel);
   tsk->computes(d_lab->d_CO2FlowRateLabel);
   tsk->computes(d_lab->d_SO2FlowRateLabel);
   tsk->computes(d_lab->d_scalarFlowRateLabel);
@@ -2158,7 +2144,6 @@ ExplicitSolver::dummySolve(const ProcessorGroup* ,
     double flowOUToutbc = 0.0;
     double denAccum = 0.0;
     double carbon_efficiency = 0.0;
-    double carbon_efficiency_es = 0.0;
     double sulfur_efficiency = 0.0;
     double scalar_efficiency = 0.0;
     double enthalpy_efficiency = 0.0;
@@ -2172,7 +2157,6 @@ ExplicitSolver::dummySolve(const ProcessorGroup* ,
     new_dw->put(delt_vartype(flowOUToutbc),   d_lab->d_netflowOUTBCLabel);
     new_dw->put(delt_vartype(denAccum),       d_lab->d_denAccumLabel);
     new_dw->put(delt_vartype(carbon_efficiency),   d_lab->d_carbonEfficiencyLabel);
-    new_dw->put(delt_vartype(carbon_efficiency_es),d_lab->d_carbonEfficiencyESLabel);
     new_dw->put(delt_vartype(sulfur_efficiency),   d_lab->d_sulfurEfficiencyLabel);
     new_dw->put(delt_vartype(enthalpy_efficiency), d_lab->d_enthalpyEfficiencyLabel);
     new_dw->put(delt_vartype(scalar_efficiency),   d_lab->d_scalarEfficiencyLabel);

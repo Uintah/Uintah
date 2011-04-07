@@ -207,22 +207,18 @@ public:
   inline void setExtraScalars(vector<ExtraScalarSolver*>* extraScalars) {
     d_extraScalars = extraScalars;
   }
-  inline void setCarbonBalanceES(bool carbon_balance_es){
-        d_carbon_balance_es = carbon_balance_es;
-  }
-  inline void setSulfurBalanceES(bool sulfur_balance_es){
-        d_sulfur_balance_es = sulfur_balance_es;
-  }
   inline const string getMixingModelType(){
     return mixModel; 
   }
-#if HAVE_TABPROPS
+
   /** @brief  Return the TabProps interface object; this method is added 
               as a kludge and will go away when Properties goes away */
   inline MixingRxnModel* getMixRxnModel(){
     return d_mixingRxnTable; 
   }
-#endif
+
+  /** @brief  DOCUMENT ME PLEASE */
+  void addLookupSpecies( ); 
 
   //for the new table:
   void sched_reComputeProps_new( const LevelP&,
@@ -234,7 +230,6 @@ public:
   void sched_initEnthalpy( const LevelP&, SchedulerP& ); 
 
   void sched_doTPDummyInit( const LevelP&, SchedulerP& ); 
-
 
 protected :
 
@@ -339,9 +334,8 @@ private:
       IntVector d_denRef;
       
       MixingModel* d_mixingModel;
-#if HAVE_TABPROPS
       MixingRxnModel* d_mixingRxnTable;
-#endif
+
       BoundaryCondition* d_bc;
       bool d_empirical_soot;
       double d_sootFactor;
@@ -355,8 +349,6 @@ private:
 #endif
       bool d_calcExtraScalars;
       vector<ExtraScalarSolver*>* d_extraScalars;
-      bool d_carbon_balance_es;        
-      bool d_sulfur_balance_es;
 
       const ProcessorGroup* d_myworld;
 

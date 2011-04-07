@@ -29,7 +29,7 @@ public:
 
   ModelBase( std::string modelName, 
              SimulationStateP& sharedState, 
-             const ArchesLabel* fieldLabels,
+             ArchesLabel* fieldLabels,
              vector<std::string> icLabelNames, 
              vector<std::string> scalarLabelNames, 
              int qn );
@@ -115,7 +115,7 @@ protected:
   std::string d_modelName;            ///< Name of model (this includes the _qn# suffix)
 
   SimulationStateP& d_sharedState; 
-  const ArchesLabel* d_fieldLabels;
+  ArchesLabel* d_fieldLabels;
 
   vector<string> d_icLabels;          ///< All required internal coordinate labels (from DQMOM factory) needed to compute this model
   vector<string> d_scalarLabels;      ///< All required scalar labels (from scalarFactory) needed to compute this model

@@ -70,13 +70,13 @@ MixingRxnModel::MixingRxnModel( const ArchesLabel* labels, const MPMArchesLabel*
 //---------------------------------------------------------------------------
 MixingRxnModel::~MixingRxnModel()
 {
-
   for ( VarMap::iterator i = d_dvVarMap.begin(); i != d_dvVarMap.end(); ++i ){
     VarLabel::destroy( i->second ); 
   }
   for ( VarMap::iterator i = d_ivVarMap.begin(); i != d_ivVarMap.end(); ++i ){
     VarLabel::destroy( i->second ); 
   }
+  delete _iv_transform; 
 }
 
 //---------------------------------------------------------------------------
@@ -120,13 +120,24 @@ MixingRxnModel::setMixDVMap( const ProblemSpecP& root_params )
   if ( !d_coldflow ){ 
     var_name = "temperature"; 
     insertIntoMap( var_name ); 
-    //var_name = "heat_capacity"; 
+ 
     var_name = "specificheat"; 
     insertIntoMap( var_name ); 
+
     var_name = "CO2"; 
     insertIntoMap( var_name ); 
+
     var_name = "H2O"; 
-    insertIntoMap( var_name ); 
+    insertIntoMap( var_name );
+
+    var_name = "O2";
+    insertIntoMap( var_name );
+
+    var_name = "N2";
+    insertIntoMap( var_name );
+
+    var_name = "mixture_molecular_weight";
+    insertIntoMap( var_name );
   }
 
   proc0cout << endl;
@@ -144,3 +155,9 @@ MixingRxnModel::addAdditionalDV( std::vector<string>& vars )
 
   }
 }
+MixingRxnModel::TransformBase::TransformBase(){}
+MixingRxnModel::TransformBase::~TransformBase(){}
+MixingRxnModel::NoTransform::NoTransform(){}
+MixingRxnModel::NoTransform::~NoTransform(){}
+MixingRxnModel::CoalTransform::CoalTransform(){}
+MixingRxnModel::CoalTransform::~CoalTransform(){}

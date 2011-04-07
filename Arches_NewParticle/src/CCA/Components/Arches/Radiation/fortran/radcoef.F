@@ -249,6 +249,11 @@ C
 
 	          ABSKG(I,J,K) = -DLOG (1.0d0 - EMG) / OPL
 
+              IF(D_ABSKP) THEN
+C               print*,'ABSKP ', ABSKP(I,J,K)
+                ABSKG(I,J,K) = ABSKG(I,J,K) + ABSKP(I,J,K)
+              END IF
+
 C-----------------------------------------------------------------------
 C	Soot model is based on a correlation given by Sarofim and Hottel
 C	in "Radiative Transfer in Combustion Chambers: Influence of 

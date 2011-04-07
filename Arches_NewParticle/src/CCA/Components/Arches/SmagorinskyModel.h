@@ -33,44 +33,20 @@ DEALINGS IN THE SOFTWARE.
 #ifndef Uintah_Component_Arches_SmagorinskyModel_h
 #define Uintah_Component_Arches_SmagorinskyModel_h
 
-/**************************************
-CLASS
-   SmagorinskyModel
-   
-   Class SmagorinskyModel is an LES model for
-   computing sub-grid scale turbulent viscosity.
-
-
-GENERAL INFORMATION
-   SmagorinskyModel.h - declaration of the class
-   
-   Author: Rajesh Rawat (rawat@crsim.utah.edu)
-
-   All major modifications since 01.01.2004 done by:
-   Stanislav Borodai(borodai@crsim.utah.edu)
-      
-   Creation Date:   Mar 1, 2000
-   
-   C-SAFE 
-   
-   Copyright U of U 2000
-
-KEYWORDS
-
-
-DESCRIPTION
-   Class SmagorinskyModel is an LES model for
-   computing sub-grid scale turbulent viscosity.
-
-
-WARNING
-   none
-****************************************/
-
 #include <CCA/Components/Arches/Arches.h>
 #include <CCA/Components/Arches/TurbulenceModel.h>
 
 namespace Uintah {
+
+/** 
+  @class  SmagorinskyModel
+  @author Rajesh Rawat, Stanislav Borodai
+  @date   March 2000
+  
+  @brief  An LES model for computing the subgrid scale stress term \f$ \tau_{SGS} \f$.
+  
+  */
+
 class PhysicalConstants;
 class BoundaryCondition;
 

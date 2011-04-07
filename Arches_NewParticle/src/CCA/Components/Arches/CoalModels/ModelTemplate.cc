@@ -23,7 +23,7 @@ using namespace Uintah;
 TemplateNameBuilder::TemplateNameBuilder( const std::string         & modelName,
                                                             const vector<std::string> & reqICLabelNames,
                                                             const vector<std::string> & reqScalarLabelNames,
-                                                            const ArchesLabel         * fieldLabels,
+                                                            ArchesLabel         * fieldLabels,
                                                             SimulationStateP          & sharedState,
                                                             int qn ) :
   ModelBuilder( modelName, reqICLabelNames, reqScalarLabelNames, fieldLabels, sharedState, qn )
@@ -40,7 +40,7 @@ ModelBase* TemplateNameBuilder::build() {
 
 TemplateName::TemplateName( std::string modelName, 
                                               SimulationStateP& sharedState,
-                                              const ArchesLabel* fieldLabels,
+                                              ArchesLabel* fieldLabels,
                                               vector<std::string> icLabelNames, 
                                               vector<std::string> scalarLabelNames,
                                               int qn ) 

@@ -45,38 +45,6 @@ DEALINGS IN THE SOFTWARE.
 #ifndef Uintah_Component_Arches_Arches_h
 #define Uintah_Component_Arches_Arches_h
 
-/**************************************
-
-CLASS
-   Arches
-   
-   Short description...
-
-GENERAL INFORMATION
-
-   Arches.h
-
-   Author: Rajesh Rawat (rawat@crsim.utah.edu)
-   Department of Chemical Engineering
-   University of Utah
-
-   All major modifications since 01.01.2004 done by:
-   Stanislav Borodai(borodai@crsim.utah.edu)
-
-   Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
-  
-   Copyright (C) 2000 University of Utah
-
-KEYWORDS
-   Arches
-
-DESCRIPTION
-   Long description...
-  
-WARNING
-  
-****************************************/
-
 #include <sci_defs/petsc_defs.h>
 #include <CCA/Components/OnTheFlyAnalysis/AnalysisModule.h>
 #include <Core/Parallel/UintahParallelComponent.h>
@@ -95,7 +63,6 @@ WARNING
 // Exact Initialization for first time step in
 // MPMArches problem, to eliminate problem of
 // sudden appearance of mass in second step
-//
 // #define ExactMPMArchesInitialize
 
 
@@ -106,6 +73,15 @@ WARNING
 // Filtering of drhodt is now an input parameter for Properties
 
 namespace Uintah {
+
+/** 
+  @class  Arches
+  @author Rajesh Rawat
+  @date   2000
+  
+  @brief This is the main class for the Arches component of the Uintah framework.
+  
+  */
 
   class VarLabel;
   class PhysicalConstants;
@@ -299,8 +275,6 @@ private:
       bool d_calcVariance;
       bool d_mixedModel;
       bool d_doMMS;
-      bool d_useMMSScalar;
-      bool d_useMMSTable; 
       bool d_extraProjection;
       bool d_EKTCorrection;
       ScaleSimilarityModel* d_scaleSimilarityModel;
@@ -347,9 +321,6 @@ private:
     bool d_calcExtraScalars;
     ExtraScalarSolver* d_extraScalarSolver;
     vector<ExtraScalarSolver*> d_extraScalars;
-
-    bool d_carbon_balance_es;        
-    bool d_sulfur_balance_es;        
 
     // Variables----
     vector<string> d_scalarEqnNames; 

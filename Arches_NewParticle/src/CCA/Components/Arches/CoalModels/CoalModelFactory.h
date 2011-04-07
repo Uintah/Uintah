@@ -42,7 +42,7 @@ public:
   ModelBuilder( const std::string   & model_name, 
                 vector<std::string>   icLabelNames, 
                 vector<std::string>   scalarLabelNames, 
-                const ArchesLabel   * fieldLabels,
+                ArchesLabel   * fieldLabels,
                 SimulationStateP    & sharedState,
                 int                   qn ) : 
     d_modelName( model_name ), 
@@ -64,7 +64,7 @@ protected:
   std::string        d_modelName;
   vector<string>     d_icLabels;
   vector<string>     d_scalarLabels;
-  const ArchesLabel* d_fieldLabels;
+  ArchesLabel* d_fieldLabels;
   SimulationStateP & d_sharedState; 
   int                d_quadNode; 
 
@@ -206,22 +206,24 @@ public:
 
   /** @brief    Return label for particle velocity vector */
   const VarLabel* getParticleVelocityLabel( int qn ) {
-    if( d_useParticleVelocityModel ) {
+    // This "if d_useParticleVelocityModel" can't be done here... 
+    // it has to be done by the user by first checking useParticleVelocityModel() 
+    //
+    //if( d_useParticleVelocityModel ) {
       vector<ParticleVelocity*>::iterator iPV = d_ParticleVelocityModel.begin() + qn;
       return (*iPV)->getParticleVelocityLabel();
-    } else {
-      return d_fieldLabels->d_newCCVelocityLabel;
-    }
+    //}
   };
 
   /** @brief    Return the model object for particle velocity model */
   ParticleVelocity* getParticleVelocityModel( int qn ) {
-    if( d_useParticleVelocityModel ) {
+    // This "if d_useParticleVelocityModel" can't be done here... 
+    // it has to be done by the user by first checking useParticleVelocityModel() 
+    //
+    //if( d_useParticleVelocityModel ) {
       vector<ParticleVelocity*>::iterator iPV = d_ParticleVelocityModel.begin() + qn;
       return (*iPV);
-    } else {
-      return NULL;
-    }
+    //}
   };
 
   // --------------------------------------
@@ -233,22 +235,26 @@ public:
 
   /** @brief  Return the vector containing the particle density VarLabel for quad node "qn" */
   const VarLabel* getParticleDensityLabel( int qn ) {
-    if( d_useParticleDensityModel ) {
+    // This "if d_useParticleDensityModel" can't be done here... 
+    // it has to be done by the user by first checking useParticleDensityModel() 
+    //
+    //if( d_useParticleDensityModel ) {
       vector<ParticleDensity*>::iterator iPD = d_ParticleDensityModel.begin() + qn;
       return (*iPD)->getParticleDensityLabel();
-    } else {
-      throw InvalidValue("ERROR: Arches: CoalModelFactory: You asked for density of the dispersed phase, but no dispersed phase density model was specified in the input file.\n",__FILE__,__LINE__);
-    }
+    //} else {
+    //  throw InvalidValue("ERROR: Arches: CoalModelFactory: You asked for density of the dispersed phase, but no dispersed phase density model was specified in the input file.\n",__FILE__,__LINE__);
+    //}
   };
 
   /** @brief    Return the model object for particle density model */
   ParticleDensity* getParticleDensityModel( int qn ) {
-    if( d_useParticleDensityModel ) {
+    // This "if d_useParticleDensityModel" can't be done here... 
+    // it has to be done by the user by first checking useParticleDensityModel() 
+    //
+    //if( d_useParticleDensityModel ) {
       vector<ParticleDensity*>::iterator iPD = d_ParticleDensityModel.begin() + qn;
       return (*iPD);
-    } else {
-      return NULL;
-    }
+    //}
   };
 
   // ------------------------------------
@@ -258,14 +264,15 @@ public:
   const inline bool useDevolatilizationModel() {
     return d_useDevolatilizationModel; }
 
-  /** @brief    Return the model object for heat transfer model */
+  /** @brief    Return the model object for devolatilization model */
   Devolatilization* getDevolatilizationModel( int qn ) {
-    if( d_useDevolatilizationModel ) {
+    // This "if d_useDevolatilizationModel" can't be done here... 
+    // it has to be done by the user by first checking useDevolatilizationModel() 
+    //
+    //if( d_useDevolatilizationModel ) {
       vector<Devolatilization*>::iterator iD = d_DevolatilizationModel.begin() + qn;
       return (*iD);
-    } else {
-      return NULL;
-    }
+    //}
   };
 
   // ------------------------------------
@@ -277,12 +284,25 @@ public:
 
   /** @brief    Return the model object for heat transfer model */
   HeatTransfer* getHeatTransferModel( int qn ) {
-    if( d_useHeatTransferModel ) {
+    // This "if d_useHeatTransferModel" can't be done here... 
+    // it has to be done by the user by first checking useHeatTransferModel() 
+    //
+    //if( d_useHeatTransferModel ) {
       vector<HeatTransfer*>::iterator iHT = d_HeatTransferModel.begin() + qn;
       return (*iHT);
-    } else {
-      return NULL;
-    }
+    //}
+  };
+
+  /** @brief    Return the vector of model objects for heat transfer models; 
+   *            called by ABSKP property class to get abskp labels from each 
+   *            heat transfer model */
+  vector<HeatTransfer*> getHeatTransferModels() {
+    // This "if d_useHeatTransferModel" can't be done here... 
+    // it has to be done by the user by first checking useHeatTransferModel() 
+    //
+    //if( d_useHeatTransferModel ) {
+      return d_HeatTransferModel;
+    //}
   };
 
 

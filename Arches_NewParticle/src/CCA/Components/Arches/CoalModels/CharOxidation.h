@@ -19,13 +19,13 @@ namespace Uintah{
   *
   */
 
-class TabPropsInterface;
+class MixingRxnModel;
 class CharOxidation: public ModelBase {
 public: 
 
   CharOxidation( std::string modelName, 
                  SimulationStateP& shared_state, 
-                 const ArchesLabel* fieldLabels,
+                 ArchesLabel* fieldLabels,
                  vector<std::string> reqICLabelNames, 
                  vector<std::string> reqScalarLabelNames,
                  int qn );
@@ -84,9 +84,9 @@ public:
   inline const VarLabel* getH2OGasSourceLabel() {
     return d_H2OGasModelLabel; }
 
-  /** @brief    Set the TabPropsInterface so char oxidation methods can request species labels */
-  inline void setTabPropsInterface( TabPropsInterface* interface ) {
-    d_TabPropsInterface = interface; }
+  /** @brief    Set the mixing and reaction interface so char oxidation methods can request species labels */
+  inline void setMixingRxnInterface( MixingRxnModel* interface ) {
+    d_MixingRxnModel = interface; }
 
   /** @brief    Given an oxidizer species, return the VarLabel for the gas source term associated with that char reaction 
       @param    species_name  Name of oxidizer species (identifies the char reaction) 
@@ -101,7 +101,7 @@ public:
 
 protected:
 
-  TabPropsInterface* d_TabPropsInterface; ///< TabProps interface object, used to request specific species from the table
+  MixingRxnModel*    d_MixingRxnModel; ///< Mixing and reaction interface object, used to request specific species from the table
 
   // ---------------------------
   // Model labels
@@ -123,7 +123,7 @@ protected:
   // Gas species labels
 
   vector<string> oxidizer_name_;    ///< Vector of strings containing the name of oxidizer species for each char reaction
-                                    ///  (These are requested from the TabProps interface later, once the table has been read)
+                                    ///  (These are requested from the mixing and reaction interface later, once the table has been read)
   vector<const VarLabel*> OxidizerLabels_; ///< Vector of variable labels for oxidizer concentrations for each char reaction
 
   // ----------------------------

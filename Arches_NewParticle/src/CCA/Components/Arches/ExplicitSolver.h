@@ -33,42 +33,21 @@ DEALINGS IN THE SOFTWARE.
 #ifndef Uintah_Component_Arches_ExplicitSolver_h
 #define Uintah_Component_Arches_ExplicitSolver_h
 
-/**************************************
-CLASS
-   NonlinearSolver
-   
-   Class ExplicitSolver is a subclass of NonlinearSolver
-   which implements the Forward Euler/RK2/ RK3 methods
-
-GENERAL INFORMATION
-   ExplicitSolver.h - declaration of the class
-   
-   Author: Rajesh Rawat (rawat@crsim.utah.edu)
-   Author of RK2/RK3 implementation: Stanislav Borodai (borodai@crsim.utah.edu)
-   
-   Creation Date:   Mar 1, 2000
-   
-   C-SAFE 
-   
-   Copyright U of U 2000
-
-
-KEYWORDS
-
-
-DESCRIPTION
-   Class ExplicitSolver implements ...
-
-WARNING
-   none
-****************************************/
-
 #include <CCA/Components/Arches/Arches.h>
 #include <CCA/Components/Arches/NonlinearSolver.h>
 #include <CCA/Ports/DataWarehouseP.h>
 
 namespace Uintah {
-  using namespace SCIRun;
+
+/** 
+  @class  ExplicitSolver
+  @author Rajesh Rawat, Stanislav Borodai, Jeremy Thornock
+  @date   March 2000
+  
+  @brief  Subclass of NonlinearSolver class implementing forward Euler, RK2, and RK3 methods.
+  
+  */
+
 class PressureSolver;
 class MomentumSolver;
 class ScalarSolver;
@@ -253,12 +232,6 @@ public:
   }
   inline void setExtraScalars(vector<ExtraScalarSolver*>* extraScalars) {
     d_extraScalars = extraScalars;
-  }
-  inline void setCarbonBalanceES(bool carbon_balance_es){
-    d_carbon_balance_es = carbon_balance_es;
-  }
-  inline void setSulfurBalanceES(bool sulfur_balance_es){
-    d_sulfur_balance_es = sulfur_balance_es;
   }
   inline void setNumSourceBoundaries(int numSourceBoundaries){
     d_numSourceBoundaries = numSourceBoundaries;
@@ -479,9 +452,6 @@ private:
   bool d_standAloneRMCRT; 
   RMCRTRadiationModel* d_RMCRTRadiationModel;  
 
-  //DQMOM 
-  //bool d_doDQMOM; 
-  //DQMOM* d_dqmomSolver; 
 
 }; // End class ExplicitSolver
 } // End namespace Uintah

@@ -79,6 +79,7 @@ namespace Uintah {
       int d_axialLoc;
       double d_scalarDisp;
       double cellvolume;
+      double d_heatloss;
     
       IntVector d_currentCell;
 
