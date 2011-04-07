@@ -58,6 +58,17 @@ namespace Wasatch{
       builder = new Builder( indepVarTag, amplitude, frequency, offset);
     }
     
+    else if ( params->findBlock("ParabolicFunction") ) {
+      double a, b, c;
+      Uintah::ProblemSpecP valParams = params->findBlock("ParabolicFunction");
+      valParams->getAttribute("a",a);
+      valParams->getAttribute("b",b);
+      valParams->getAttribute("c",c);
+      const Expr::Tag indepVarTag = parse_nametag( valParams->findBlock("NameTag") );
+      typedef typename Expr::ParabolicFunction<FieldT>::Builder Builder;
+      builder = scinew Builder( indepVarTag, a, b, c);
+    }    
+    
     else if ( params->findBlock("GaussianFunction") ) {
       double amplitude, deviation, mean, baseline;
       Uintah::ProblemSpecP valParams = params->findBlock("GaussianFunction");

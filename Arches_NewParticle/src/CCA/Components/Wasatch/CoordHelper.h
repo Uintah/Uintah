@@ -47,7 +47,7 @@ namespace Wasatch{
     Uintah::VarLabel *xYVol_, *yYVol_, *zYVol_;
     Uintah::VarLabel *xZVol_, *yZVol_, *zZVol_;
 
-    std::vector<Expr::Tag> fieldTags_;
+    Expr::TagSet fieldTags_;
 
     /** \brief sets the requested grid variables - callback for an initialization task */
     void set_grid_variables( const Uintah::ProcessorGroup* const pg,
@@ -98,7 +98,7 @@ namespace Wasatch{
                       const Uintah::PatchSet* patches,
                       const Uintah::MaterialSet* materials );
 
-    const std::vector<Expr::Tag>& field_tags() const{ return fieldTags_; }
+    const Expr::TagSet& field_tags() const{ return fieldTags_; }
 
   };
 
@@ -115,7 +115,7 @@ namespace Wasatch{
     vl = Uintah::VarLabel::create( tag.field_name(),
                                    getUintahFieldTypeDescriptor<FieldT>(),
                                    getUintahGhostDescriptor<FieldT>() );
-    fieldTags_.push_back( tag );
+    fieldTags_.insert( tag );
     task.computes( vl, pss, domain, mss, domain );
   }
 

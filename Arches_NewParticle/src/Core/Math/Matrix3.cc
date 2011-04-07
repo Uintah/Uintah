@@ -495,6 +495,8 @@ void Matrix3::polarRotationRMB(Matrix3& R) const
   double det = F.Determinant();
   if ( det <= 0.0 ) {
     cerr << "Singular matrix in polar decomposition..." << endl;
+    cerr << "F = " << F << endl;
+    cerr << "det = " << det << endl;
     exit(1);
   }
 
@@ -561,15 +563,13 @@ void Matrix3::polarRotationRMB(Matrix3& R) const
 // If new error equals or exceeds old error, we have reached
 // machine precision accuracy.
     if(ERR>=ERRZ || ERR+1.0 == 1.0){
-//    if(ERR>=ERRZ){
       converged = true;
     }
     double old_ERRZ=ERRZ;
     ERRZ=ERR;
 
-    cerr.precision(15);
-
     if(num_iters==200){
+      cerr.precision(15);
       cerr << "Matrix3::polarRotationRMB not converging with Matrix:" << endl;
       cerr << F << endl;
       cerr << "ERR = " << ERR << endl;
@@ -584,6 +584,51 @@ void Matrix3::polarRotationRMB(Matrix3& R) const
 // Load converged rotation into R;
    R=A;
 }
+
+void Matrix3::polarDecompositionAFFinvTran(Matrix3& U,
+                                           Matrix3& R) const
+{
+  Matrix3 F = *this;
+
+  // Get the rotation
+  F.polarRotationAFFinvTran(R);
+
+  // Stretch: U=R^T*F
+  U=R.Transpose()*F;
+}
+
+void Matrix3::polarRotationAFFinvTran(Matrix3& R) const
+{
+
+  bool converged = false;
+  int num_iters=0;
+  Matrix3 F = *this;
+  R=F;
+  while(!converged){
+    // Compute inverse of R
+    Matrix3 RI = R.Inverse();
+
+    // Compute error as the norm of R-Inverse - R-Transpose
+    double ERR = (RI - R.Transpose()).Norm();
+    if(ERR/10. + 1.0 == 1.0){
+      converged = true;
+    }
+
+    // Average R with its inverse-transpose to get a new estimate of R
+    R = (R+RI.Transpose())*0.5;
+
+    num_iters++;
+    if(num_iters==200){
+      cerr.precision(15);
+      cerr << "Matrix3::polarRotationAFFinv not converging. Matrix = " << endl;
+      cerr << F << endl;
+      cerr << "ERR = " << ERR << endl;
+      exit(1);
+    }
+  }
+  return;
+}
+
 
 // Polar decomposition of a non-singular square matrix
 // If rightFlag == true return right stretch and rotation

@@ -98,7 +98,7 @@ int main(int argc, char *argv[])
   try {
     // Do some Uintah initialization
     Uintah::Parallel::determineIfRunningUnderMPI( argc, argv );
-    Uintah::Parallel::initializeManager( argc, argv, "" );
+    Uintah::Parallel::initializeManager( argc, argv );
 
     string infile;
     bool binmode = false;

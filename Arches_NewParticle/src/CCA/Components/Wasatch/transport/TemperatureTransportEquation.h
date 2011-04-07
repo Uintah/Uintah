@@ -30,7 +30,7 @@ namespace Wasatch{
    *  \brief A basic transport equation for temperature.
    *
    */
-  class TemperatureTransportEquation : public Expr::TransportEquation
+  class TemperatureTransportEquation : public Wasatch::TransportEquation
   {
   public:
 
@@ -44,8 +44,11 @@ namespace Wasatch{
 
     ~TemperatureTransportEquation();
 
-    void setup_boundary_conditions( Expr::ExpressionFactory& factory );
-
+    void setup_boundary_conditions( const GraphHelper& graphHelper,
+                                   const Uintah::PatchSet* const localPatches,
+                                   const PatchInfoMap& patchInfoMap,
+                                   const Uintah::MaterialSubset* const materials);
+    
     Expr::ExpressionID initial_condition( Expr::ExpressionFactory& icFactory );
 
   private:

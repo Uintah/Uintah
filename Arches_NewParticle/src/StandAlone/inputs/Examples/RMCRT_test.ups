@@ -9,41 +9,44 @@
   <SimulationComponent type="RMCRT_Test" />
   <!--__________________________________-->
   <Time>
-    <maxTime>       10.0       </maxTime>
+    <maxTime>       10.0      </maxTime>
     <initTime>      0.0       </initTime>
     <delt_min>      0.00001   </delt_min>
     <delt_max>      1         </delt_max>
-    <max_Timesteps> 100       </max_Timesteps>
+    <max_Timesteps> 1         </max_Timesteps>
     <timestep_multiplier>  1  </timestep_multiplier>
   </Time>
   <!--__________________________________-->
   <Grid>
     <Level>
       <Box label = "0">                              
-         <lower>     [-1,-1,-0.01]  </lower>         
-         <upper>     [ 1, 1, 0.01]  </upper>         
-         <resolution>[10,10,1]     </resolution>    
-         <patches>   [2,2,1]       </patches> 
-         <extraCells> [1,1,1]      </extraCells>      
+         <lower>      [0,0,0]     </lower>         
+         <upper>      [1, 1, 1]   </upper>         
+         <resolution> [10,10,10]  </resolution>    
+         <patches>    [1,1,1]     </patches> 
+         <extraCells> [1,1,1]     </extraCells>      
       </Box>                                         
     </Level>
+
     <Level>
       <Box label = "1">                              
-         <lower>     [ -1,-1,-0.01]  </lower>         
-         <upper>     [  1, 1, 0.01]  </upper>         
-         <resolution>[20,20,1]      </resolution>        
-         <patches>   [5,5,1]        </patches>   
-         <extraCells> [1,1,1]      </extraCells>         
+         <lower>      [ 0,0,0]      </lower>         
+         <upper>      [1, 1, 1]     </upper>         
+         <resolution> [20,20,20]    </resolution>        
+         <patches>    [1,1,1]       </patches>   
+         <extraCells> [1,1,1]       </extraCells>         
       </Box>                                         
     </Level>
-    
+
   </Grid>
   <!--__________________________________-->
   <AMR>
     <useLockStep> true </useLockStep>
     <RMCRT>
-      <orderOfInterpolation> 1    </orderOfInterpolation>
-      <manualGrid>           true </manualGrid>
+      <orderOfInterpolation>    1    </orderOfInterpolation>
+      <manualGrid>             true  </manualGrid>
+      <CoarseLevelRMCRTMethod> true  </CoarseLevelRMCRTMethod>
+      <multiLevelRMCRTMethod>  false </multiLevelRMCRTMethod>
     </RMCRT>
     
     <!--
@@ -74,9 +77,17 @@
   <DataArchiver>
   <filebase>rmcrtTest.uda</filebase>
       <outputTimestepInterval>1</outputTimestepInterval>
-      
-      <save label = "color" />
-      <save label = "sumColorDiff" levels="1"/>
+      <!--  1L
+      <save label = "color"   />
+      <save label = "divQ"    />
+      <save label = "abskg"   />
+      <save label = "sigmaT4" />
+      -->  
+      <!--  2L -->
+      <save label = "color"   levels="-1"/>
+      <save label = "divQ"  />
+      <save label = "abskg" />
+      <save label = "sigmaT4" levels="1"/>
       
       <!--<save label = "refineFlag"/> -->
       <checkpoint cycle = "2" timestepInterval = "1"/>
@@ -94,12 +105,13 @@
   
   <!-- ray tracer  
   <RMCRT>
-    <NoOfRays>100</NoOfRays>
-    <Threshold>0.05</Threshold>
-    <Alpha>1</Alpha>
-    <Slice>20</Slice>
-    <StefanBoltzmann> 5.67051e-8 </StefanBoltzmann>
-    <benchmark_1> true </benchmark_1>
+    <Temperature>       1        </Temperature>
+    <NoOfRays>          100        </NoOfRays>
+    <Threshold>         0.05      </Threshold>
+    <Alpha>             1          </Alpha>
+    <Slice>             20         </Slice>
+    <StefanBoltzmann>   5.67051e-8 </StefanBoltzmann>
+    <benchmark_1>       true       </benchmark_1>
   </RMCRT>
   -->
 

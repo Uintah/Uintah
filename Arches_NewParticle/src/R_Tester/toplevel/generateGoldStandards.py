@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 import os
 import shutil
+import platform
 from optparse import OptionParser
 from sys import argv, exit
 from string import upper
@@ -16,12 +17,13 @@ if os.sys.version_info <= (2,4):
 
 import subprocess
 
-from helpers.runSusTests import nameoftest, input, num_processes, testOS, setGeneratingGoldStandards
+from helpers.runSusTests import nameoftest, testOS, input, num_processes, testOS, setGeneratingGoldStandards
 
 ####################################################################################
 
 sus    = ""   # full path to sus executable
 inputs = ""   # full path to src/Standalone/inputs/
+OS     = platform.system()
 
 ####################################################################################
 
@@ -116,17 +118,19 @@ def generateGS() :
     
     #__________________________________
     # Does mpirun command exist or has the environmental variable been set?
-    MPIRUN = "mpirun"
-    rc = os.system("which mpirun>&/dev/null")
+    try :
+      MPIRUN = os.environ['MPIRUN']    # first try the environmental variable
+    except :
+      MPIRUN = "mpirun"
+      rc = os.system("which mpirun>&/dev/null")
 
-    if rc == 256:  # mpirun not found
-      try:
-        MPIRUN = os.environ['MPIRUN']
-      except Exception:
-        print "ERROR:generateGoldStandards.py  mpirun command not found."
-        print "Please set the environmental variable MPIRUN or add mpirun to your path"
+      if rc == 256:
+        print "ERROR:generateGoldStandards.py "
+        print "      mpirun command was not found and the environmental variable MPIRUN was not set."
+        print "      You must either put mpirun in your path or set the environmental variable"
         exit (1)
-
+    print "Using mpirun: %s " % MPIRUN
+        
     if options.verbose :
         print "Building Gold Standards in " + os.getcwd()
 
@@ -231,13 +235,27 @@ def generateGS() :
             print "Python importing " + component + ".py"
         THE_COMPONENT = __import__( component )
 
-        tests = THE_COMPONENT.getLocalTests()
+        # determine which tests (local/nightly) to run default is local
+        whichTests = os.getenv( 'WHICH_TESTS', "local" )
         
+        print "Which_tests: %s " % whichTests
+        if whichTests == "local" :
+            tests = THE_COMPONENT.getLocalTests()
+        elif whichTests == "nightly" :
+            tests = THE_COMPONENT.getNightlyTests()
+        else :
+            print "\nThe environmental variable WHICH_TESTS:(%s) is not valid" % whichTests
+            print "the valid options are local or nightly. \n"
+            exit (-1)
+          
+                  
         if options.verbose :
             print "About to run tests for: " + component
 
         for test in tests :
-
+            if testOS( test ) != upper( OS ) and testOS( test ) != "ALL":
+                continue
+              
             # FIXME: NOT SURE IF THIS IS RIGHT, BUT IT APPEARS TO MATCH WHAT THE RUN TESTS SCRIPT NEEDS:
             print "About to run test: " + nameoftest( test )
             os.mkdir( nameoftest( test ) )

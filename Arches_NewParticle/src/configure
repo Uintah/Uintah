@@ -905,6 +905,9 @@ with_fortran
 with_ofed
 with_mx
 with_mpi
+with_mpi_lib
+with_mpi_include
+with_mpi_extra_libs
 with_mpiuni
 with_hypre
 with_petsc
@@ -1622,6 +1625,11 @@ Optional Packages:
 --with-mx=DIR           Specify that mx - Myrinet - is needed for the mpi
                           installation
 --with-mpi=DIR          Use the mpi installation in DIR
+--with-mpi-lib=DIR      Use the mpi libraries installed in DIR
+--with-mpi-include=DIR  Use the mpi include files installed in DIR
+--with-mpi-extra-libs=/path/to/lib1.so
+                          Use this additional library(or libraries - comma
+                          separated) for mpi linking
 --with-mpiuni=DIR       Use the mpiuni installation in DIR
 --with-hypre=DIR        Use the hypre installation in DIR
 --with-petsc=DIR        Use the petsc installation in DIR
@@ -2655,7 +2663,7 @@ $as_echo "$as_me: loading site script $ac_site_file" >&6;}
       || { { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
 $as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
 as_fn_error $? "failed to load site script $ac_site_file
-See \`config.log' for more details" "$LINENO" 5; }
+See \`config.log' for more details" "$LINENO" 5 ; }
   fi
 done
 
@@ -2745,7 +2753,7 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
 
-##  require autoconf version 2.61
+##  require autoconf version 2.67
 ##     The reason to require the latest autoconf is to try and get everyone who
 ##     updates configure to use the same version.  By doing so, the SVN diffs
 ##     don't look completely different from minor changes.  (This happens
@@ -2753,8 +2761,6 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 ##
 ##     type "autoconf --version" to find out what version you have.
 ##
-##     Note, 2.63+ is actually the latest, but many machines don't have it, so
-##     going to use 2.61 for now.
 ##     On blaze you can find 2.67 in /usr/local/share/bin
 ##
 
@@ -2901,7 +2907,7 @@ fi
 $as_echo "$ac_cv_build" >&6; }
 case $ac_cv_build in
 *-*-*) ;;
-*) as_fn_error $? "invalid value of canonical build" "$LINENO" 5;;
+*) as_fn_error $? "invalid value of canonical build" "$LINENO" 5 ;;
 esac
 build=$ac_cv_build
 ac_save_IFS=$IFS; IFS='-'
@@ -2934,7 +2940,7 @@ fi
 $as_echo "$ac_cv_host" >&6; }
 case $ac_cv_host in
 *-*-*) ;;
-*) as_fn_error $? "invalid value of canonical host" "$LINENO" 5;;
+*) as_fn_error $? "invalid value of canonical host" "$LINENO" 5 ;;
 esac
 host=$ac_cv_host
 ac_save_IFS=$IFS; IFS='-'
@@ -3187,6 +3193,53 @@ fi
   sci_arg_with_list="$sci_arg_with_list --with-mpi --without-mpi"
   if test -n "$mpi" -a ! -e "$mpi"; then
     as_fn_error $? "The file or directory parameter ($mpi) specified for --with-mpi does not exist!  Please verify that the path and file are correct." "$LINENO" 5
+  fi
+
+
+
+
+# Check whether --with-mpi_lib was given.
+if test "${with_mpi_lib+set}" = set; then :
+  withval=$with_mpi_lib; with_mpi_lib="$withval"
+   sci_required_mpi=yes
+else
+  with_mpi_lib=""
+fi
+
+  sci_arg_with_list="$sci_arg_with_list --with-mpi_lib --without-mpi_lib"
+  if test -n "$mpi_lib" -a ! -e "$mpi_lib"; then
+    as_fn_error $? "The file or directory parameter ($mpi_lib) specified for --with-mpi_lib does not exist!  Please verify that the path and file are correct." "$LINENO" 5
+  fi
+
+
+
+
+# Check whether --with-mpi_include was given.
+if test "${with_mpi_include+set}" = set; then :
+  withval=$with_mpi_include; with_mpi_include="$withval"
+   sci_required_mpi=yes
+else
+  with_mpi_include=""
+fi
+
+  sci_arg_with_list="$sci_arg_with_list --with-mpi_include --without-mpi_include"
+  if test -n "$mpi_include" -a ! -e "$mpi_include"; then
+    as_fn_error $? "The file or directory parameter ($mpi_include) specified for --with-mpi_include does not exist!  Please verify that the path and file are correct." "$LINENO" 5
+  fi
+
+
+
+
+# Check whether --with-mpi_extra_libs was given.
+if test "${with_mpi_extra_libs+set}" = set; then :
+  withval=$with_mpi_extra_libs; with_mpi_extra_libs="$withval"
+else
+  with_mpi_extra_libs=""
+fi
+
+  sci_arg_with_list="$sci_arg_with_list --with-mpi_extra_libs --without-mpi_extra_libs"
+  if test -n "$mpi_extra_libs" -a ! -e "$mpi_extra_libs"; then
+    as_fn_error $? "The file or directory parameter ($mpi_extra_libs) specified for --with-mpi_extra_libs does not exist!  Please verify that the path and file are correct." "$LINENO" 5
   fi
 
 
@@ -3897,7 +3950,6 @@ fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $NUM_CPUS" >&5
 $as_echo "$NUM_CPUS" >&6; }
 
-
 ##  ----------  determine if this is a 32 or 64 bit machine
 ac_ext=c
 ac_cpp='$CPP $CPPFLAGS'
@@ -4211,7 +4263,7 @@ fi
 test -z "$CC" && { { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
 $as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
 as_fn_error $? "no acceptable C compiler found in \$PATH
-See \`config.log' for more details" "$LINENO" 5; }
+See \`config.log' for more details" "$LINENO" 5 ; }
 
 # Provide some information about the compiler.
 $as_echo "$as_me:${as_lineno-$LINENO}: checking for C compiler version" >&5
@@ -4326,7 +4378,7 @@ sed 's/^/| /' conftest.$ac_ext >&5
 { { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
 $as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
 as_fn_error 77 "C compiler cannot create executables
-See \`config.log' for more details" "$LINENO" 5; }
+See \`config.log' for more details" "$LINENO" 5 ; }
 else
   { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 $as_echo "yes" >&6; }
@@ -4369,7 +4421,7 @@ else
   { { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
 $as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
 as_fn_error $? "cannot compute suffix of executables: cannot compile and link
-See \`config.log' for more details" "$LINENO" 5; }
+See \`config.log' for more details" "$LINENO" 5 ; }
 fi
 rm -f conftest conftest$ac_cv_exeext
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_exeext" >&5
@@ -4428,7 +4480,7 @@ $as_echo "$ac_try_echo"; } >&5
 $as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
 as_fn_error $? "cannot run C compiled programs.
 If you meant to cross compile, use \`--host'.
-See \`config.log' for more details" "$LINENO" 5; }
+See \`config.log' for more details" "$LINENO" 5 ; }
     fi
   fi
 fi
@@ -4480,7 +4532,7 @@ sed 's/^/| /' conftest.$ac_ext >&5
 { { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
 $as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
 as_fn_error $? "cannot compute suffix of object files: cannot compile
-See \`config.log' for more details" "$LINENO" 5; }
+See \`config.log' for more details" "$LINENO" 5 ; }
 fi
 rm -f conftest.$ac_cv_objext conftest.$ac_ext
 fi
@@ -4829,7 +4881,7 @@ else
   { { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
 $as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
 as_fn_error $? "C preprocessor \"$CPP\" fails sanity check
-See \`config.log' for more details" "$LINENO" 5; }
+See \`config.log' for more details" "$LINENO" 5 ; }
 fi
 
 ac_ext=c
@@ -5114,7 +5166,7 @@ else
      { { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
 $as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
 as_fn_error 77 "cannot compute sizeof (void*)
-See \`config.log' for more details" "$LINENO" 5; }
+See \`config.log' for more details" "$LINENO" 5 ; }
    else
      ac_cv_sizeof_voidp=0
    fi
@@ -5195,7 +5247,7 @@ else
      { { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
 $as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
 as_fn_error 77 "cannot compute sizeof (long long)
-See \`config.log' for more details" "$LINENO" 5; }
+See \`config.log' for more details" "$LINENO" 5 ; }
    else
      ac_cv_sizeof_long_long=0
    fi
@@ -5385,7 +5437,7 @@ fi
 test -z "$CC" && { { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
 $as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
 as_fn_error $? "no acceptable C compiler found in \$PATH
-See \`config.log' for more details" "$LINENO" 5; }
+See \`config.log' for more details" "$LINENO" 5 ; }
 
 # Provide some information about the compiler.
 $as_echo "$as_me:${as_lineno-$LINENO}: checking for C compiler version" >&5
@@ -6582,8 +6634,14 @@ $as_echo_n "checking for MallocTrace files (For now we are just verifying the ex
     if test ! -d $with_malloc_trace; then
       as_fn_error $? "'$with_malloc_trace' directory does not exist. " "$LINENO" 5
     fi
-    if test ! -f $with_malloc_trace/lib/shared/libMallocTrace.so; then
-      as_fn_error $? "'$with_malloc_trace/lib/shared/libMallocTrace.so' does not exist. " "$LINENO" 5
+    if test "$IS_STATIC_BUILD" = "yes"; then
+       if test ! -f $with_malloc_trace/lib/libMallocTrace.a; then
+       	  as_fn_error $? "'$with_malloc_trace/lib/libMallocTrace.a' does not exist. " "$LINENO" 5
+       fi
+    else
+	if test ! -f $with_malloc_trace/lib/shared/libMallocTrace.so; then
+      	   as_fn_error $? "'$with_malloc_trace/lib/shared/libMallocTrace.so' does not exist. " "$LINENO" 5
+    	fi
     fi
     if test ! -f $with_malloc_trace/include/MallocTrace.h; then
       as_fn_error $? "'$with_malloc_trace/include/MallocTrace.h' does not exist. " "$LINENO" 5
@@ -6592,7 +6650,11 @@ $as_echo_n "checking for MallocTrace files (For now we are just verifying the ex
 $as_echo "yes" >&6; }
     DEF_MALLOC_TRACE="#define MALLOC_TRACE 1"
     INC_MALLOC_TRACE_H="-I$with_malloc_trace/include"
-    MALLOC_TRACE_LIB_DIR_FLAG="$LDRUN_PREFIX$with_malloc_trace/lib/shared -L$with_malloc_trace/lib/shared"
+    if test "$IS_STATIC_BUILD" = "yes"; then
+       MALLOC_TRACE_LIB_DIR_FLAG="$LDRUN_PREFIX$with_malloc_trace/lib -L$with_malloc_trace/lib"
+    else
+       MALLOC_TRACE_LIB_DIR_FLAG="$LDRUN_PREFIX$with_malloc_trace/lib/shared -L$with_malloc_trace/lib/shared"
+    fi
     MALLOC_TRACE_LIB_FLAG="-lMallocTrace"
     MALLOC_TRACE_LIB_MPI_FLAG="-lMallocTraceMPI"
   fi
@@ -6603,7 +6665,7 @@ fi
 
 
 
-##  --  Check for 64 vs 80 bit floating point number storage in register precission error ------------------------
+##  --  Check for 64 vs 80 bit floating point number storage in register precision error ------------------------
 
 # In other words, the processor may use 80 bit floating point number registers, and as long as the
 # data is kept on the processor (in registers) then you get extra precission... however, as soon as
@@ -7219,7 +7281,7 @@ else
   { { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
 $as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
 as_fn_error $? "C preprocessor \"$CPP\" fails sanity check
-See \`config.log' for more details" "$LINENO" 5; }
+See \`config.log' for more details" "$LINENO" 5 ; }
 fi
 
 ac_ext=cpp
@@ -7352,7 +7414,7 @@ else
   { { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
 $as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
 as_fn_error $? "C++ preprocessor \"$CXXCPP\" fails sanity check
-See \`config.log' for more details" "$LINENO" 5; }
+See \`config.log' for more details" "$LINENO" 5 ; }
 fi
 
 ac_ext=cpp
@@ -7885,7 +7947,7 @@ else
   { { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
 $as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
 as_fn_error $? "C preprocessor \"$CPP\" fails sanity check
-See \`config.log' for more details" "$LINENO" 5; }
+See \`config.log' for more details" "$LINENO" 5 ; }
 fi
 
 ac_ext=cpp
@@ -8018,7 +8080,7 @@ else
   { { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
 $as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
 as_fn_error $? "C++ preprocessor \"$CXXCPP\" fails sanity check
-See \`config.log' for more details" "$LINENO" 5; }
+See \`config.log' for more details" "$LINENO" 5 ; }
 fi
 
 ac_ext=cpp
@@ -33500,6 +33562,30 @@ fi
 
 sci_defs_files="$sci_defs_files include/sci_defs/lapack_testdefs.h"
 
+##  --  allow for extra mpi libraries  -----------------------------------
+
+# If --with-mpi-extra-libs is set, then it will be one or more
+# absolute paths to additionaly libraries necessary to link MPI.  This
+# code parses the given library (libraries) and adds (through the
+# MPI_EXTRA flags) to the MPI test link line.
+
+if test "$with_mpi_extra_libs"; then
+   the_libs=$(echo $with_mpi_extra_libs | tr "," "\n")
+   for lib in $the_libs; do
+      if test ! -f "$lib"; then
+         as_fn_error $? "Extra MPI lib '$lib' does not exist..." "$LINENO" 5
+      else
+         the_dir=`dirname $lib`
+         if test "$the_dir" == "."; then
+            as_fn_error $? "Extra MPI lib '$lib' must include an absolute path..." "$LINENO" 5
+         fi
+         the_base=`basename $lib | cut -f"1" -d"." | sed 's/lib//g'`
+         MPI_EXTRA_LIB_FLAG="$MPI_EXTRA_LIB_FLAG -l$the_base"
+         MPI_EXTRA_LIB_DIR="$MPI_EXTRA_LIB_DIR -L$the_dir"
+      fi
+   done
+fi
+
 ##  --  search for mpi  --------------------------------------------------
 sci_required_mpi="yes"
 if test "$sci_required_mpi" = "yes"; then
@@ -33507,6 +33593,27 @@ if test "$sci_required_mpi" = "yes"; then
   { $as_echo "$as_me:${as_lineno-$LINENO}: checking for required MPI components......" >&5
 $as_echo "$as_me: checking for required MPI components......" >&6;}
   echo
+
+  if test "$with_mpi" -a \( "$with_mpi_include" -o "$with_mpi_lib" \); then
+    as_fn_error $? "Please use either --with-mpi or --with-mpi-lib/include, but not both. " "$LINENO" 5
+  fi
+  if test "$with_mpi_include" = "yes"; then
+    as_fn_error $? "--with-mpi-include=DIR must specify a DIRectory. " "$LINENO" 5
+  fi
+  if test "$with_mpi_lib" = "yes"; then
+    as_fn_error $? "--with-mpi-lib=DIR must specify a DIRectory. " "$LINENO" 5
+  fi
+  if test \( "$with_mpi_lib" -a "$with_mpi_include" = "" \) -o \( "$with_mpi_lib" = "" -a "$with_mpi_include" \); then
+    as_fn_error $? "Both --with-mpi-lib=DIR and --with-mpi-include=DIR must be specified... " "$LINENO" 5
+  fi
+  if test "$with_mpi_include"; then
+    if ! test -d "$with_mpi_include"; then
+      as_fn_error $? "The directory specified with --with-mpi-include=DIR is not valid: $with_mpi_include " "$LINENO" 5
+    fi
+    if ! test -d "$with_mpi_lib"; then
+      as_fn_error $? "The directory specified with --with-mpi-lib=DIR is not valid: $with_mpi_lib " "$LINENO" 5
+    fi
+  fi
 
   case $host in
   #  *aix*)
@@ -33576,6 +33683,11 @@ $as_echo "$as_me: checking for required MPI components......" >&6;}
   eval _sci_lib='"$_new_lib_path"'
 
            fi
+        else
+          if test "$with_mpi_lib"; then
+            _sci_inc="$with_mpi_include"
+            _sci_lib="$with_mpi_lib"
+          fi
         fi
 
 	# After each attempt to locate mpi, we need to verify that the mpi it
@@ -40572,6 +40684,9 @@ fi
 
 
 
+
+
+
 ##  --  Handle --enable-wasatch_3p... ------------------------
 
 if test "$wasatch_3p" = "yes"; then
@@ -40579,9 +40694,9 @@ if test "$wasatch_3p" = "yes"; then
   if test "$HAVE_BOOST" != "yes"; then
       as_fn_error $? "Option --enable-wasatch_3p requires Boost... <--with-boost=DIR> " "$LINENO" 5
   fi
-  if test "$HAVE_HDF5" != "yes"; then
-      as_fn_error $? "Option --enable-wasatch_3p requires HDF5... <--with-hdf5=DIR> " "$LINENO" 5
-  fi
+#  if test "$HAVE_HDF5" != "yes"; then
+#      AC_MSG_ERROR( Option --enable-wasatch_3p requires HDF5... <--with-hdf5=DIR> )
+#  fi
   if test "$with_tabprops"; then
      as_fn_error $? "Do NOT specify both --with-tabprops and --enable-wasatch_3p " "$LINENO" 5
   fi
@@ -40593,7 +40708,7 @@ if test "$wasatch_3p" = "yes"; then
   fi
 
   mkdir -p Wasatch3P
-  $path_to_src/build_scripts/build_wasatch_3p.sh `$sci_pwd` "$with_boost" "$with_hdf5"
+  $path_to_src/build_scripts/build_wasatch_3p.sh `$sci_pwd` "$with_boost"
 
   if test $? != 0; then
      as_fn_error $? "Failed to build Wasatch 3p libraries... " "$LINENO" 5
@@ -40623,8 +40738,8 @@ $as_echo_n "checking for SpatialOps files (For now we are just verifying the exi
     fi
     SPOPS_INCLUDE_DIR="include/spatialops"
     # Check includes
-    for file in FieldFunctions.h LinAlgTrilinos.h LinAlgUBlas.h LinearSystem.h OperatorDatabase.h \
-                SpatialOperator.h SpatialOpsConfigure.h SpatialOpsDefs.h SpatialOpsTools.h \
+    for file in FieldExpressions.h FieldFunctions.h OperatorDatabase.h \
+                structured/SpatialField.h SpatialOpsConfigure.h SpatialOpsDefs.h SpatialOpsTools.h \
                 particles structured; do
       if test ! -e $with_spatialops/$SPOPS_INCLUDE_DIR/$file; then
         echo ""
@@ -40642,7 +40757,7 @@ $as_echo "yes" >&6; }
   DEF_SPATIALOPS="#define HAVE_SPATIALOPS 1"
   INC_SPATIALOPS_H="-I$with_spatialops/include"
   SPATIALOPS_LIB_DIR_FLAG="-L$with_spatialops/lib/spatialops"
-  SPATIALOPS_LIB_FLAG="-lspatialops"
+  SPATIALOPS_LIB_FLAG="-lspatialops -lspatialops-stencil"
   HAVE_SPATIALOPS="yes"
 fi
 
@@ -40670,7 +40785,7 @@ $as_echo_n "checking for Exprlib files (For now we are just verifying the existe
     fi
     SPOPS_INCLUDE_DIR="include/expression"
     # Check includes
-    for file in ExecuteExpression.h ExprDeps.h ExprLib.h Expr_Context.h Expr_Expression.h Expr_ExpressionID.h Expr_FieldManagerList.h \
+    for file in ExprDeps.h ExprLib.h Expr_Context.h Expr_Expression.h Expr_ExpressionID.h Expr_FieldManagerList.h \
                 ExpressionBase.h ExpressionFactory.h ExpressionRegistry.h ExpressionTree.h FieldDeps.h FieldManager.h FieldManagerBase.h \
                 Functions.h PlaceHolderExpr.h Tag.h TransportEquation.h uintah; do
       if test ! -e $with_exprlib/$SPOPS_INCLUDE_DIR/$file; then
@@ -40701,13 +40816,6 @@ fi
 ##  --  search for TabProps ------------------------
 
 if test "$with_tabprops"; then
-
-  if test "$HAVE_HDF5" != "yes"; then
-    # I think HDF5 is optional now for TabProps, but am not quite sure...
-    { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: --with-tabprops=DIR might require HDF5... " >&5
-$as_echo "$as_me: WARNING: --with-tabprops=DIR might require HDF5... " >&2;}
-    add_important_warning "--with-tabprops was specified, but HDF5 was not... this might cause a problem."
-  fi
 
   if test "$with_tabprops" = "yes"; then
     as_fn_error $? "--with-tabprops=DIR requires a DIRectory be provided. " "$LINENO" 5
@@ -40740,18 +40848,16 @@ fi
 ##  --  Determine whether we can use WASATCH OR NOT ----------------------
 
 if test "$USE_WASATCH" = yes; then
-  if test "$HAVE_HDF5" = "yes" &&
-     test "$HAVE_BOOST" = "yes" &&
+   if test "$HAVE_BOOST" = "yes" &&
      test "$HAVE_TABPROPS" = "yes" &&
      test "$HAVE_SPATIALOPS" = "yes" &&
      test "$HAVE_EXPRLIB" = "yes"; then
     BUILD_WASATCH=yes
   else
-    as_fn_error $? "You specified the use of the Wasatch component but do not have all the of the prereqs: HDF5 ($HAVE_HDF5); Boost ($HAVE_BOOST); TabProps ($HAVE_TABPROPS); SpatialOps ($HAVE_SPATIALOPS); and ExprLib ($HAVE_EXPRLIB)." "$LINENO" 5
+    as_fn_error $? "You specified the use of the Wasatch component but do not have all the of the prereqs: Boost ($HAVE_BOOST); TabProps ($HAVE_TABPROPS); SpatialOps ($HAVE_SPATIALOPS); and ExprLib ($HAVE_EXPRLIB)." "$LINENO" 5
   fi
 else
-  if test "$HAVE_HDF5" = "yes" &&
-     test "$HAVE_BOOST" = "yes" &&
+  if test "$HAVE_BOOST" = "yes" &&
      test "$HAVE_TABPROPS" = "yes" &&
      test "$HAVE_SPATIALOPS" = "yes" &&
      test "$HAVE_EXPRLIB" = "yes"; then
@@ -42062,7 +42168,7 @@ do
     "tools/fspec.pl") CONFIG_FILES="$CONFIG_FILES tools/fspec.pl" ;;
     "do_stamp") CONFIG_COMMANDS="$CONFIG_COMMANDS do_stamp" ;;
 
-  *) as_fn_error $? "invalid argument: \`$ac_config_target'" "$LINENO" 5;;
+  *) as_fn_error $? "invalid argument: \`$ac_config_target'" "$LINENO" 5 ;;
   esac
 done
 
@@ -42378,7 +42484,7 @@ do
   esac
   case $ac_mode$ac_tag in
   :[FHL]*:*);;
-  :L* | :C*:*) as_fn_error $? "invalid tag \`$ac_tag'" "$LINENO" 5;;
+  :L* | :C*:*) as_fn_error $? "invalid tag \`$ac_tag'" "$LINENO" 5 ;;
   :[FH]-) ac_tag=-:-;;
   :[FH]*) ac_tag=$ac_tag:$ac_tag.in;;
   esac
@@ -42406,7 +42512,7 @@ do
 	   [\\/$]*) false;;
 	   *) test -f "$srcdir/$ac_f" && ac_f="$srcdir/$ac_f";;
 	   esac ||
-	   as_fn_error 1 "cannot find input file: \`$ac_f'" "$LINENO" 5;;
+	   as_fn_error 1 "cannot find input file: \`$ac_f'" "$LINENO" 5 ;;
       esac
       case $ac_f in *\'*) ac_f=`$as_echo "$ac_f" | sed "s/'/'\\\\\\\\''/g"`;; esac
       as_fn_append ac_file_inputs " '$ac_f'"
@@ -42433,7 +42539,7 @@ $as_echo "$as_me: creating $ac_file" >&6;}
 
     case $ac_tag in
     *:-:* | *:-) cat >"$tmp/stdin" \
-      || as_fn_error $? "could not create $ac_file" "$LINENO" 5 ;;
+      || as_fn_error $? "could not create $ac_file" "$LINENO" 5  ;;
     esac
     ;;
   esac

@@ -1365,7 +1365,7 @@ TaskGraph::createDetailedDependencies(DetailedTask* task,
                       warn.invoke();
                       if (dbg.active())
                         dbg << d_myworld->myrank() << " Task that requires with ghost cells and modifies\n";
-                      cout <<  d_myworld->myrank() << " RGM: var: " << *req->var << " compute: " 
+                        dbg <<  d_myworld->myrank() << " RGM: var: " << *req->var << " compute: " 
                         << *creator << " mod " << *task << " PRT " << *prevReqTask << " " << from_l << " " << from_h << endl;
                     }
                   } else {

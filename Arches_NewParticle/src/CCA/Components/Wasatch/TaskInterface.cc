@@ -175,6 +175,13 @@ namespace Wasatch{
     //    where those would be added.
     //
 
+#   ifdef WASATCH_TASK_FIELD_DIAGNOSTICS
+    cout << "Field requirements for task '" << tree.name() << "'" << endl
+         << setw(10) << "Mode " << left << setw(20) << "Field Name"
+         << "DW  #Ghost PatchID" << endl
+         << "-----------------------------------------------------------------------" << endl;
+#   endif
+
     //______________________________
     // cycle through each field type
     for( Expr::FieldManagerList::iterator ifm=fml.begin(); ifm!=fml.end(); ++ifm ){
@@ -191,34 +198,33 @@ namespace Wasatch{
 
         Expr::FieldInfo& fieldInfo = ii->second;
 
+        // see if this field is required by the given tree
+        const Expr::Tag fieldTag( fieldInfo.varlabel->getName(), fieldInfo.context );
+        if( !tree.has_field( fieldTag ) )  continue;
+
         //________________
         // set field mode 
-        {
-          const Expr::Tag fieldTag(fieldInfo.varlabel->getName(), fieldInfo.context );
-
-          if( tree.has_expression( fieldTag ) ){
-            if( tree.get_expression(fieldTag).is_placeholder() ){
-              fieldInfo.mode = Expr::REQUIRES;
-              if( find( newDWFields.begin(), newDWFields.end(), fieldTag ) == newDWFields.end() )
-                fieldInfo.useOldDataWarehouse = true;
-            }
-            else
-              fieldInfo.mode = Expr::COMPUTES;
-          }
-          else{
-            fieldInfo.mode = Expr::REQUIRES;
-          }
+        if( tree.computes_field( fieldTag ) ){
+          fieldInfo.mode = Expr::COMPUTES;
+        }
+        else{
+          fieldInfo.mode = Expr::REQUIRES;
+          if( newDWFields.find( fieldTag ) == newDWFields.end() )
+            fieldInfo.useOldDataWarehouse = true;
+          else
+            fieldInfo.useOldDataWarehouse = false;
         }
 
         // jcs : old dw is (should be) read only.
         Uintah::Task::WhichDW dw = Uintah::Task::NewDW;
         if( fieldInfo.useOldDataWarehouse ) dw = Uintah::Task::OldDW;
 
-//         cout << "Task '" << tree.name() << "' "; // jcs diagnostic
         switch( fieldInfo.mode ){
 
         case Expr::COMPUTES:
-//           cout << "COMPUTES";  // jcs diagnostic
+#         ifdef WASATCH_TASK_FIELD_DIAGNOSTICS
+          cout << setw(10) << "COMPUTES";
+#         endif
           ASSERT( dw == Uintah::Task::NewDW );
           // jcs note that we need ghost information on the computes fields as well!
           task.computes( fieldInfo.varlabel,
@@ -227,7 +233,9 @@ namespace Wasatch{
           break;
 
         case Expr::REQUIRES:
-//           cout << "REQUIRES";  // jcs diagnostic
+#         ifdef WASATCH_TASK_FIELD_DIAGNOSTICS
+          cout << setw(10) << "REQUIRES";
+#         endif
           task.requires( dw,
                          fieldInfo.varlabel,
                          patches, Uintah::Task::NormalDomain,

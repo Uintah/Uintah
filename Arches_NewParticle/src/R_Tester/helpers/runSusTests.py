@@ -459,16 +459,17 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
     output_to_browser=0
   
   #__________________________________
-  # Does mpirun command exist or has the environmental variable been set?
-  MPIRUN = "mpirun"
-  rc = system("which mpirun>&/dev/null")
-  
-  if rc == 256:  # mpirun not found
-    try:
-      MPIRUN = environ['MPIRUN']
-    except Exception:
-      print "ERROR:runSusTests.py  mpirun command not found."
-      print "Please set the environmental variable MPIRUN or add mpirun to your path"
+  # Does mpirun command exist or has the environmental variable been set? 
+  try :
+    MPIRUN = environ['MPIRUN']    # first try the environmental variable
+  except :
+    MPIRUN = "mpirun"
+    rc = system("which mpirun>&/dev/null")
+
+    if rc == 256:
+      print "ERROR:runSusTests.py "
+      print "      mpirun command was not found and the environmental variable MPIRUN was not set."
+      print "      You must either put mpirun in your path or set the environmental variable"
       exit (1)
       
   MPIHEAD="%s -np" % MPIRUN

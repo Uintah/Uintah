@@ -62,7 +62,9 @@ SRCS   += \
         $(SRCDIR)/MurnahanMPM.cc                \
         $(SRCDIR)/ProgramBurn.cc                \
         $(SRCDIR)/UCNH.cc                       \
-        $(SRCDIR)/SoilFoam.cc
+        $(SRCDIR)/P_Alpha.cc                    \
+        $(SRCDIR)/SoilFoam.cc	                \
+	$(SRCDIR)/NonLocalDruckerPrager.cc
 
 ifneq ($(NO_FORTRAN),yes)
   SRCS   += \

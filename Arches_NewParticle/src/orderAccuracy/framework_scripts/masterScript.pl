@@ -58,6 +58,7 @@ my $base_path             = $ARGV[0];    # path to orderAccuracy scripts
 my $config_files_path     = $base_path . "/test_config_files";  # configurations files
 my $scripts_path          = $base_path . "/framework_scripts";  # framework scripts 
 my $postProcessCmd_path   = $base_path . "/postProcessTools";    # postProcessing 
+my $here_path             = cwd;
 
 if (! -e $base_path."/framework_scripts" ){
   print "\n\nError: You must specify the path to the orderAccuracy directory ($base_path)\n";
@@ -72,7 +73,6 @@ mkdir("order_of_accuracy") || die "cannot mkdir(order_of_accuracy) $!";
 chdir("order_of_accuracy");
 my $curr_path = cwd;
 
-
 #__________________________________
 # read in components.xml
 my $xml = $simple->XMLin($config_files_path . "/components.xml");
@@ -84,7 +84,7 @@ my $extraScripts_path = $xml->{scripts_path}[0];
 #__________________________________
 # add compare_path:sus_path and framework_scripts to the path
 my $orgPath = $ENV{"PATH"};
-$ENV{"PATH"} = "$postProcessCmd_path:$sus_path:$scripts_path:$extraScripts_path:$orgPath";
+$ENV{"PATH"} = "$postProcessCmd_path:$sus_path:$scripts_path:$extraScripts_path:$orgPath:$here_path";
 
 system("which sus") == 0 ||  die("Cannot find the command sus $@");
 
@@ -160,13 +160,13 @@ system("which sus") == 0 ||  die("Cannot find the command sus $@");
      
      # make a symbolic link to sus
      my $sus = `which sus`;
-     system("ln -s $sus");
+     system("ln -s $sus >&/dev/null");
      
      # make any symbolic Links needed by that component
      my $j = 0;
      foreach $j (@symLinks) {
        if( $j gt "" && $j ne "."){
-         system("ln -s $j");
+         system("ln -s $j >&/dev/null");
        }
      }
      

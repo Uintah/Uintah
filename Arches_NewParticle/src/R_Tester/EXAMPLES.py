@@ -24,7 +24,7 @@ def getLocalTests() :
 #__________________________________
 
 if __name__ == "__main__":
-  if environ['LOCAL_OR_NIGHTLY_TEST'] == "local":
+  if environ['WHICH_TESTS'] == "local":
     TESTS = LOCALTESTS
   else:
     TESTS = NIGHTLYTESTS

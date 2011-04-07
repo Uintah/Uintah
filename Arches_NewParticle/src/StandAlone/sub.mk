@@ -47,12 +47,11 @@ include $(SCIRUN_SCRIPTS)/recurse.mk
 COMPONENTS      = CCA/Components
 CA              = CCA/Components/Arches
 ifeq ($(BUILD_ARCHES),yes)
-  ARCHES_SUB_LIBS = $(CA)/Mixing $(CA)/fortran $(CA)/Radiation $(CA)/Radiation/fortran
+  ARCHES_SUB_LIBS = $(CA)/Mixing $(CA)/fortran 
   ifeq ($(BUILD_MPM),yes)
     MPMARCHES_LIB    = $(COMPONENTS)/MPMArches
   endif
-  ARCHES_LIBS        = $(COMPONENTS)/Arches                  \
-                       $(COMPONENTS)/Arches/MCRT/ArchesRMCRT \
+  ARCHES_LIBS        = $(COMPONENTS)/Arches             \
                        $(COMPONENTS)/SpatialOps
 endif
 
@@ -168,10 +167,10 @@ ifeq ($(IS_STATIC_BUILD),yes)
           $(HDF5_LIBRARY) $(BOOST_LIBRARY)         \
           $(EXPRLIB_LIBRARY) $(SPATIALOPS_LIBRARY) $(TABPROPS_LIBRARY)
 else
-  LIBS := $(XML2_LIBRARY) $(F_LIBRARY) $(HYPRE_LIBRARY)      \
+  LIBS := $(MPI_LIBRARY) $(XML2_LIBRARY) $(F_LIBRARY) $(HYPRE_LIBRARY)      \
           $(CANTERA_LIBRARY) $(ZOLTAN_LIBRARY)               \
           $(PETSC_LIBRARY) $(BLAS_LIBRARY) $(LAPACK_LIBRARY) \
-          $(MPI_LIBRARY) $(M_LIBRARY) $(THREAD_LIBRARY) $(Z_LIBRARY) \
+          $(M_LIBRARY) $(THREAD_LIBRARY) $(Z_LIBRARY) \
           $(TEEM_LIBRARY) $(PNG_LIBRARY) \
           $(BOOST_LIBRARY)
 endif
@@ -239,6 +238,7 @@ include $(SCIRUN_SCRIPTS)/program.mk
 # Convenience targets for Specific executables 
 
 ifeq ($(BUILD_VISIT),yes)
+  # 'visit_stuff' is defined in .../src/VisIt/udaReaderMTMD/sub.mk
   VISIT_STUFF=visit_stuff
 endif
 
@@ -246,6 +246,7 @@ uintah: sus \
         puda \
         dumpfields \
         compare_uda \
+        compute_Lnorm_udas \
         restart_merger \
         partextract \
         partvarRange \
@@ -325,13 +326,15 @@ ifeq ($(IS_REDSTORM),yes)
 	@echo "Built sus"
 endif
 
-tools: puda dumpfields compare_uda restart_merger partextract partvarRange selectpart async_mpi_test mpi_test extractV extractF extractS gambitFileReader slb pfs pfs2 timeextract faceextract lineextract compare_mms compare_scalar fsspeed
+tools: puda dumpfields compare_uda compute_Lnorm_udas restart_merger partextract partvarRange selectpart async_mpi_test mpi_test extractV extractF extractS gambitFileReader slb pfs pfs2 timeextract faceextract lineextract compare_mms compare_scalar fsspeed
 
 puda: prereqs StandAlone/tools/puda/puda
 
 dumpfields: prereqs StandAlone/tools/dumpfields/dumpfields
 
 compare_uda: prereqs StandAlone/compare_uda
+
+compute_Lnorm_udas: prereqs StandAlone/tools/compute_Lnorm_udas
 
 restart_merger: prereqs StandAlone/restart_merger
 

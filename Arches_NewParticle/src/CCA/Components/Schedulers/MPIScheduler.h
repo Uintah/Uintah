@@ -38,7 +38,6 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Schedulers/OnDemandDataWarehouseP.h>
 #include <CCA/Ports/DataWarehouseP.h>
 #include <Core/Parallel/PackBufferInfo.h>
-#include <Core/Util/DebugStream.h>
  
 #include <Core/Grid/Task.h>
 #include <Core/Parallel/BufferInfo.h>

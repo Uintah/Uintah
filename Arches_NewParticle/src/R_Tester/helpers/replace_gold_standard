@@ -27,6 +27,16 @@ do_input="false"
 do_checkpoint="false"
 
 #__________________________________
+# Machine specific variables
+MACHINE=`hostname`
+if [ "$MACHINE" == "rt" ]; then
+  GROUP="uintah"
+fi
+if [ "$MACHINE" == "blaze" ]; then
+  GROUP="csafe"
+fi
+
+#__________________________________
 # usage
 printUsage(){
   echo "replace_gold_standard  [options] <new goldStandard uda> < gold Standard Dir> <test name>"
@@ -326,10 +336,8 @@ if [ "$do_uda" = "true" -o "$do_mem" = "true" -o "$do_perf" = "true" -o "$do_inp
 
   #__________________________________
   # Email John whenever there is a change to a GS
-  # and the GS was owned by csafe-tester
-  owner=`stat --format=%U $gold_standard_dir/$testname`
-  
-  if [[ "$replaced_uda" = "true" && "$owner" = "csafe-tester" ]]; then
+  if [[ "$replaced_uda" = "true" && "$MACHINE" = "rt" ]]; then
+    echo "Now sending mail to John indicating that the GS has been replaced"
     tail -1 $logfile > message
     mutt  -s "GoldStandard Change:$testname" john.schmidt@utah.edu < message
     /bin/rm message

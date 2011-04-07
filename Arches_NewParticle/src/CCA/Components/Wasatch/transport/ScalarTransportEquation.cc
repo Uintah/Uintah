@@ -238,7 +238,7 @@ namespace Wasatch{
   ScalarTransportEquation<FieldT>::
   ScalarTransportEquation( const std::string phiName,
                            const Expr::ExpressionID rhsID )
-    : Expr::TransportEquation( phiName, rhsID )
+    : Wasatch::TransportEquation( phiName, rhsID, get_staggered_location<FieldT>() )
   {}
   
   //------------------------------------------------------------------
@@ -249,9 +249,19 @@ namespace Wasatch{
   
   //------------------------------------------------------------------
   
-  template< typename FieldT >
-  void ScalarTransportEquation<FieldT>::setup_boundary_conditions( Expr::ExpressionFactory& exprFactory )
-  {}
+  template< typename FieldT >  
+  void ScalarTransportEquation<FieldT>::setup_boundary_conditions(const GraphHelper& graphHelper,
+                                         const Uintah::PatchSet* const localPatches,
+                                         const PatchInfoMap& patchInfoMap,
+                                         const Uintah::MaterialSubset* const materials)
+  {
+    build_bcs( this->solution_variable_name(),
+                  this->staggered_location(),
+                  graphHelper,
+                  localPatches,
+                  patchInfoMap,
+                  materials );    
+  }
   
   //------------------------------------------------------------------
   

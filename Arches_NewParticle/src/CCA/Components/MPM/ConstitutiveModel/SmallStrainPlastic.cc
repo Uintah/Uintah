@@ -824,7 +824,7 @@ SmallStrainPlastic::computeStressTensorExplicit(const PatchSubset* patches,
       pVol_new[idx]=pMass[idx]/rho_cur;
 
       // Compute polar decomposition of F (F = RU)
-      defGrad_new.polarDecomposition(rightStretch, rotation, d_tol, true);
+      pDefGrad[idx].polarDecompositionRMB(rightStretch, rotation);
 
       // Calculate rate of deformation tensor (D)
       rateOfDef_new = (velGrad + velGrad.Transpose())*0.5;
@@ -1275,6 +1275,10 @@ SmallStrainPlastic::computeStressTensorExplicit(const PatchSubset* patches,
       //-----------------------------------------------------------------------
       // Rotate the stress/backStress back to the laboratory coordinates
       // Update the stress/back stress
+
+      // Use new rotation
+      defGrad_new.polarDecompositionRMB(rightStretch, rotation);
+
       backStress_new = (rotation*backStress_new)*(rotation.Transpose());
       sigma_new = (rotation*sigma_new)*(rotation.Transpose());
       d_kinematic->updateBackStress(idx, backStress_new);
@@ -1302,8 +1306,6 @@ SmallStrainPlastic::computeStressTensorExplicit(const PatchSubset* patches,
                        Max(c_dil+fabs(pVel.y()),waveSpeed.y()),
                        Max(c_dil+fabs(pVel.z()),waveSpeed.z()));
 
-      delete state;
-
       // Compute artificial viscosity term
       double de_s=0.;
       if (flag->d_artificial_viscosity) {
@@ -1318,6 +1320,8 @@ SmallStrainPlastic::computeStressTensorExplicit(const PatchSubset* patches,
         de_s = 0.;
       }
       pdTdt[idx] += de_s/state->specificHeat;
+
+      delete state;
     }  // end loop over particles
 
     waveSpeed = dx/waveSpeed;
@@ -1704,5 +1708,3 @@ void SmallStrainPlastic::checkNeedAddMPMMaterial(const PatchSubset* patches,
 
   new_dw->put(sum_vartype(need_add),     lb->NeedAddMPMMaterialLabel);
 }
-
-

@@ -37,14 +37,15 @@ namespace Uintah{
 
       /** @brief Algorithm for tracing rays through a patch */ 
       void sched_rayTrace( const LevelP& level, 
-                           SchedulerP& sched );
+                           SchedulerP& sched, 
+                           const int time_sub_step );
 
       /** @brief Schedule compute of blackbody intensity */ 
       void sched_blackBodyIntensity( const LevelP& level, 
                                      SchedulerP& sched );
 
       /** @brief Initializes properties for the algorithm */ 
-      void sched_initProperties( const LevelP&, SchedulerP& sched, int time_sub_step );
+      void sched_initProperties( const LevelP&, SchedulerP& sched, const int time_sub_step );
 
       /** @brief Give access to the flux divergence term */
       inline const VarLabel* getDivQLabel() { return divQ_label; };  
@@ -56,7 +57,8 @@ namespace Uintah{
      void registerVarLabels(int   matl,
                             const VarLabel*  abskg,
                             const VarLabel* absorp,
-                            const VarLabel* temperature );
+                            const VarLabel* temperature,
+                            const VarLabel* sigmaT4 = NULL);
 
     private: 
       
@@ -87,7 +89,8 @@ namespace Uintah{
           const PatchSubset* patches, 
           const MaterialSubset* matls, 
           DataWarehouse* old_dw, 
-          DataWarehouse* new_dw ); 
+          DataWarehouse* new_dw,
+          const int time_sub_step ); 
       
       //----------------------------------------
       void initProperties( const ProcessorGroup* pc, 

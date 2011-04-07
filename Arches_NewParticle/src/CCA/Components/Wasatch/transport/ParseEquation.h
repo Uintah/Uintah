@@ -5,18 +5,17 @@
 #include <Core/ProblemSpec/ProblemSpecP.h>
 
 #include "../GraphHelperTools.h"
-
+#include <CCA/Components/Wasatch/transport/TransportEquation.h>
 
 /**
  *  \file ParseEquation.h
  *  \brief Parser tools for transport equations.
  */
 
-namespace Expr{ class TransportEquation; }
-
 namespace Wasatch{
 
   class TimeStepper;
+  class TransportEquation;
 
   /** \addtogroup WasatchParser
    *  @{
@@ -35,16 +34,14 @@ namespace Wasatch{
   class EqnTimestepAdaptorBase
   {
   protected:
-    EqnTimestepAdaptorBase( Expr::TransportEquation* eqn, 
-                           Uintah::ProblemSpecP transEqnParams );
-    Expr::TransportEquation* const eqn_;
-    Uintah::ProblemSpecP transEqnParams_;
+    EqnTimestepAdaptorBase( TransportEquation* eqn);
+    TransportEquation* const eqn_;
+
   public:
     virtual ~EqnTimestepAdaptorBase();
     virtual void hook( TimeStepper& ts ) const = 0;
-    Expr::TransportEquation* equation(){ return eqn_; }
-    const Expr::TransportEquation* equation() const{ return eqn_; }
-    Uintah::ProblemSpecP transEqnParams() { return transEqnParams_;}
+    TransportEquation* equation(){ return eqn_; }
+    const TransportEquation* equation() const{ return eqn_; }
   };
 
 

@@ -47,7 +47,7 @@ DEALINGS IN THE SOFTWARE.
 #include <iostream>
 #include <CCA/Components/ICE/EOS/EquationOfStateFactory.h>
 
-#define d_TINY_RHO 1.0e-12 // also defined ICE.cc and MPMMaterial.cc 
+//#define d_TINY_RHO 1.0e-12 // also defined ICE.cc and MPMMaterial.cc 
 
 using namespace std;
 using namespace Uintah;
@@ -73,6 +73,7 @@ ICEMaterial::ICEMaterial(ProblemSpecP& ps): Material(ps)
    ps->require("specific_heat",d_specificHeat);
    ps->require("dynamic_viscosity",d_viscosity);
    ps->require("gamma",d_gamma);
+   ps->getWithDefault("tiny_rho",d_tiny_rho,1.e-12);
    
    d_isSurroundingMatl = false;
    ps->get("isSurroundingMatl",d_isSurroundingMatl);
@@ -132,6 +133,7 @@ ProblemSpecP ICEMaterial::outputProblemSpec(ProblemSpecP& ps)
   ice_ps->appendElement("gamma",d_gamma);
   ice_ps->appendElement("isSurroundingMatl",d_isSurroundingMatl);
   ice_ps->appendElement("includeFlowWork",d_includeFlowWork);
+  ice_ps->appendElement("tiny_rho",d_tiny_rho);
     
   for (vector<GeometryObject*>::const_iterator it = d_geom_objs.begin();
        it != d_geom_objs.end(); it++) {
@@ -150,6 +152,11 @@ EquationOfState * ICEMaterial::getEOS() const
 double ICEMaterial::getGamma() const
 {
   return d_gamma;
+}
+
+double ICEMaterial::getTinyRho() const
+{
+  return d_tiny_rho;
 }
 
 double ICEMaterial::getViscosity() const
@@ -246,7 +253,7 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
       press_CC[*iter]   = d_geom_objs[obj]->getInitialData_double("pressure");
       vel_CC[*iter]     = d_geom_objs[obj]->getInitialData_Vector("velocity");
       rho_micro[*iter]  = d_geom_objs[obj]->getInitialData_double("density");
-      rho_CC[*iter]     = rho_micro[*iter] + d_TINY_RHO*rho_micro[*iter];
+      rho_CC[*iter]     = rho_micro[*iter] + d_tiny_rho*rho_micro[*iter];
       temp[*iter]       = d_geom_objs[obj]->getInitialData_double("temperature");
       IveBeenHere[*iter]= 1;
     }
@@ -265,7 +272,7 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
 
     for(CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
       rho_CC[*iter]     = rho_micro[*iter] * vol_frac_CC[*iter] +
-                          d_TINY_RHO*rho_micro[*iter];
+                          d_tiny_rho*rho_micro[*iter];
     }
 
    } else {
@@ -296,7 +303,7 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
           press_CC[*iter]   = d_geom_objs[obj]->getInitialData_double("pressure");
           vel_CC[*iter]     = d_geom_objs[obj]->getInitialData_Vector("velocity");
           rho_micro[*iter]  = d_geom_objs[obj]->getInitialData_double("density");
-          rho_CC[*iter]     = rho_micro[*iter] + d_TINY_RHO*rho_micro[*iter];
+          rho_CC[*iter]     = rho_micro[*iter] + d_tiny_rho*rho_micro[*iter];
           temp[*iter]       = d_geom_objs[obj]->getInitialData_double("temperature");
           IveBeenHere[*iter]= 1;
         }
@@ -309,7 +316,7 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
           vel_CC[*iter]     = d_geom_objs[obj]->getInitialData_Vector("velocity");
           rho_micro[*iter]  = d_geom_objs[obj]->getInitialData_double("density");
           rho_CC[*iter]     = rho_micro[*iter] * vol_frac_CC[*iter] +
-                            d_TINY_RHO*rho_micro[*iter];
+                            d_tiny_rho*rho_micro[*iter];
           temp[*iter]       = d_geom_objs[obj]->getInitialData_double("temperature");
           IveBeenHere[*iter]= obj; 
         }
@@ -321,7 +328,7 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
           vel_CC[*iter]     = d_geom_objs[obj]->getInitialData_Vector("velocity");
           rho_micro[*iter]  = d_geom_objs[obj]->getInitialData_double("density");
           rho_CC[*iter]     = rho_micro[*iter] * vol_frac_CC[*iter] +
-                            d_TINY_RHO*rho_micro[*iter];
+                            d_tiny_rho*rho_micro[*iter];
           temp[*iter]       = d_geom_objs[obj]->getInitialData_double("temperature");
           IveBeenHere[*iter]= obj; 
         }

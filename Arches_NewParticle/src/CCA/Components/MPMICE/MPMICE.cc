@@ -46,6 +46,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/AMR.h>
+#include <Core/Grid/AMR_CoarsenRefine.h>
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Variables/NodeIterator.h>
@@ -112,8 +113,9 @@ MPMICE::MPMICE(const ProcessorGroup* myworld,
   Mlb=d_mpm->lb;
 
   d_SMALL_NUM = d_ice->d_SMALL_NUM;
-  d_TINY_RHO  = d_ice->d_TINY_RHO;
-  
+  d_TINY_RHO  = 1.e-12;  // Note, within MPMICE, d_TINY_RHO is only applied
+                         // to MPM materials, for which its value is hardcoded,
+                         // unlike the situation for ice materials
 
   d_switchCriteria = 0;
   d_analysisModule = 0;
@@ -161,6 +163,9 @@ void MPMICE::problemSetup(const ProblemSpecP& prob_spec,
   d_mpm->setWithICE();
   d_ice->setMPMICELabel(MIlb);
   d_ice->setWithMPM();
+  if(d_rigidMPM){
+   d_ice->setWithRigidMPM();
+  }
   d_mpm->attachPort("output",dataArchiver);
   d_mpm->attachPort("scheduler",sched);
   d_mpm->problemSetup(prob_spec, restart_prob_spec,grid, d_sharedState);
@@ -1430,7 +1435,9 @@ void MPMICE::computeLagrangianValuesMPM(const ProcessorGroup*,
           int_eng_L_mpm +=gtempstar[nodeIdx[in]] * cv * NC_CCw_mass;
         }
         int_eng_L_mpm += int_eng_src[c];
-        cmomentum_mpm += mom_source[c];
+        if(!d_rigidMPM){
+          cmomentum_mpm += mom_source[c];
+        }
         //__________________________________
         // set cmomentum/int_eng_L to either 
         // what's calculated from mpm or 
@@ -1472,7 +1479,7 @@ void MPMICE::computeLagrangianValuesMPM(const ProcessorGroup*,
                                                     iter++){
           IntVector c = *iter;
           //  must have a minimum mass
-          double min_mass = d_TINY_RHO * cellVol;
+          double min_mass = very_small_mass;
           double inv_cmass = 1.0/cmass[c];
           mass_L[c] = std::max( (cmass[c] + modelMass_src[c] ), min_mass);
 
@@ -1957,16 +1964,16 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
      // If the pressure solution has stalled out 
      //  then try a binary search
      if(count >= d_ice->d_max_iter_equilibration) {
+        int lev = patch->getLevel()->getIndex();
         cout << "WARNING:MPMICE:ComputeEquilibrationPressure "
-             << " Cell : " << c << " having a difficutlt time converging. \n"
+             << " Cell : " << c << " on level " << lev << " having a difficult time converging. \n"
              << " Now performing a binary pressure search " << endl;
-             
+
         binaryPressureSearch( Temp, rho_micro, vol_frac, rho_CC_new,
                               speedSound,  dp_drho,  dp_de, 
                               press_eos, press, press_new, press_ref,
                               cv, gamma, convergence_crit, 
                               numALLMatls, count, sum, c);
-
      }
      test_max_iter = std::max(test_max_iter, count);
 
@@ -2735,39 +2742,7 @@ void MPMICE::refineVariableCC(const ProcessorGroup*,
   }
 }
 
-//______________________________________________________________________
-//
-template<typename T>
-void MPMICE::coarsenDriver_std(IntVector cl, 
-                               IntVector ch,
-                               IntVector fl,
-                               IntVector fh,
-                               IntVector refinementRatio,
-                               double ratio,
-                               const Level* coarseLevel,
-                               constCCVariable<T>& fine_q_CC,
-                               CCVariable<T>& coarse_q_CC )
-{
-  T zero(0.0);
-  // iterate over coarse level cells
-  for(CellIterator iter(cl, ch); !iter.done(); iter++){
-    IntVector c = *iter;
-    T q_CC_tmp(zero);
-    IntVector fineStart = coarseLevel->mapCellToFiner(c);
 
-    // for each coarse level cell iterate over the fine level cells   
-    for(CellIterator inside(IntVector(0,0,0),refinementRatio );
-        !inside.done(); inside++){
-      IntVector fc = fineStart + *inside;
-      
-      if( fc.x() >= fl.x() && fc.y() >= fl.y() && fc.z() >= fl.z() &&
-          fc.x() <= fh.x() && fc.y() <= fh.y() && fc.z() <= fh.z() ) {
-        q_CC_tmp += fine_q_CC[fc];
-      }
-    }
-    coarse_q_CC[c] =q_CC_tmp*ratio;
-  }
-}
 
 //__________________________________
 //
@@ -2811,43 +2786,6 @@ void MPMICE::coarsenDriver_stdNC(IntVector cl,
       q_NC_tmp += fine_q_NC[fc]*weight;
     }
     coarse_q_NC[c] =q_NC_tmp;
-  }
-}
-
-//__________________________________
-//
-template<typename T>
-void MPMICE::coarsenDriver_massWeighted(IntVector cl, 
-                                        IntVector ch,
-                                        IntVector fl,
-                                        IntVector fh,
-                                        IntVector refinementRatio,
-                                        const Level* coarseLevel,
-                                        constCCVariable<double>& cMass,
-                                        constCCVariable<T>& fine_q_CC,
-                                        CCVariable<T>& coarse_q_CC )
-{
-  T zero(0.0);
-  // iterate over coarse level cells
-  for(CellIterator iter(cl, ch); !iter.done(); iter++){
-    IntVector c = *iter;
-    T q_CC_tmp(zero);
-    double mass_CC_tmp=0.;
-    IntVector fineStart = coarseLevel->mapCellToFiner(c);
-
-    // for each coarse level cell iterate over the fine level cells   
-    for(CellIterator inside(IntVector(0,0,0),refinementRatio );
-        !inside.done(); inside++){
-      IntVector fc = fineStart + *inside;
-      
-      if( fc.x() >= fl.x() && fc.y() >= fl.y() && fc.z() >= fl.z() &&
-          fc.x() <= fh.x() && fc.y() <= fh.y() && fc.z() <= fh.z() ) {
-        q_CC_tmp += fine_q_CC[fc]*cMass[fc];
-        mass_CC_tmp += cMass[fc];
-      }
-      
-    }
-    coarse_q_CC[c] =q_CC_tmp/mass_CC_tmp;
   }
 }
 

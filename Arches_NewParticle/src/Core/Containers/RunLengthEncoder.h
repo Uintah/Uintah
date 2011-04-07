@@ -181,7 +181,7 @@ private:
     bool isRun() const 
     { return data_.size() == 1 && length_ > 1; }
 
-    vector<T> data_;
+    std::vector<T> data_;
 
     // If the group is a sequence then then data_[0] and rule_ are
     // used to find the element of the sequence for any index
@@ -322,7 +322,7 @@ public:
       return seekPriv<false>(fd, index, swapBytes, nByteMode);
   }
  
-  void testPrint(std::ostream& out);
+  void testPrint( std::ostream & out );
 
 private:
 
@@ -786,7 +786,7 @@ long RunLengthEncoder<T, Sequencer>::readPriv(std::istream& in, bool swapBytes,
     throw InternalError("Invalid RunLengthEncoded data", __FILE__, __LINE__);
    
   unsigned long num_runs_left = header_size / header_item_size - 1;
-  vector<bool> usesDefaultRule(num_runs_left, false);
+  std::vector<bool> usesDefaultRule(num_runs_left, false);
 
   // read the header
   int i = 0;
@@ -819,7 +819,7 @@ long RunLengthEncoder<T, Sequencer>::readPriv(std::istream& in, bool swapBytes,
   i = 0;
   for (typename std::list<Group>::iterator groupIter = groups_.begin();
        groupIter != groups_.end(); groupIter++, i++) {      
-    vector<T>& data = (*groupIter).data_;
+    std::vector<T>& data = (*groupIter).data_;
     if ((*groupIter).isRun()) {
       in.read((char*)&data[0], sizeof(T));
       if (needConversion && swapBytes) SCIRun::swapbytes(data[0]);

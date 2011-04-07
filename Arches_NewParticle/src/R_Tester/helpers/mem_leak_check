@@ -26,7 +26,7 @@ fi
 
 #__________________________________
 # The malloc stats data are stored in separate files for each process id. Merge them
-ls $MALLOC_STATS.* >/dev/null
+ls $MALLOC_STATS.* >/dev/null 2>&1
 retval=$?
 
 if [ $retval = "0" ]; then

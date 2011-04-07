@@ -348,7 +348,7 @@ void IdealGasMP::computeStressTensor(const PatchSubset* patches,
       }
 
       // Compute artificial viscosity term
-#if 0
+#if 0 // Why is this commented out?
       if (flag->d_artificial_viscosity) {
         double dx_ave = (dx.x() + dx.y() + dx.z())/3.0;
         //double c_bulk = sqrt(bulk/rho_cur);

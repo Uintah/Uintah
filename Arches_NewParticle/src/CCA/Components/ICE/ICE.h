@@ -353,9 +353,12 @@ namespace Uintah {
        MIlb = mil;
       };
 
-       void setWithMPM()
-       {
+       void setWithMPM() {
          d_with_mpm = true;
+       };
+
+       void setWithRigidMPM() {
+         d_with_rigid_mpm = true;
        };
 
       
@@ -430,7 +433,8 @@ namespace Uintah {
                                        constCCVariable<Vector>& vel_CC,
                                        constCCVariable<double>& press_CC,
                                        T& vel_FC,
-                                       T& gradP_FC);
+                                       T& gradP_FC,
+                                       bool include_acc);
                                        
       template<class T> void updateVelFace(int dir, CellIterator it,
                                        IntVector adj_offset,double dx,
@@ -862,6 +866,7 @@ namespace Uintah {
       bool d_recompile;
       bool d_canAddICEMaterial;
       bool d_with_mpm;
+      bool d_with_rigid_mpm;
       
       int d_max_iter_equilibration;
       int d_max_iter_implicit;
@@ -977,7 +982,6 @@ namespace Uintah {
       bool d_recompileSubsched;
       double d_EVIL_NUM;
       double d_SMALL_NUM; 
-      double d_TINY_RHO;
       double d_CFL;
       double d_delT_knob;
       int d_max_iceMatl_indx;

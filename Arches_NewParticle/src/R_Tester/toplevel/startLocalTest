@@ -8,12 +8,14 @@
 # define environmental variables and export them
 HTMLLOG=""
 LOCAL_OR_NIGHTLY_TEST="local"
+WHICH_TESTS=${WHICH_TESTS:="local"}  #default value is local, it can be set by the buildbot
 OS=`uname -s`
 PARALLELISM=8
 WEBLOG=""
 BUILD_DIR=/dev/null
 
-export BUILD_DIR  HTMLLOG WEBLOG LOCAL_OR_NIGHTLY_TEST OS
+echo "WHICH_TESTS: $WHICH_TESTS"
+export BUILD_DIR  HTMLLOG WEBLOG LOCAL_OR_NIGHTLY_TEST WHICH_TESTS OS
 
 #__________________________________
 unset SHELL
@@ -38,7 +40,7 @@ TEST_DATA="${BUILD_DIR}/TestData"
 #__________________________________
 #    - generate the symbolic links
 #    - check for the goldStandards
-mkdir local_RT >& /dev/null
+mkdir local_RT > /dev/null 2>&1
 cd    local_RT
 
 if [ ! -d TestScripts ]; then
@@ -136,8 +138,8 @@ for componentTest in $selectedCompTests; do
   echo "Running $componentTest Tests"
 
   # clean up old test results
-  /bin/rm -f $componentTest.log >/dev/null
-  /bin/rm -rf $componentTest-results >/dev/null
+  /bin/rm -f $componentTest.log >/dev/null 2>&1
+  /bin/rm -rf $componentTest-results >/dev/null 2>&1
 
   # create the do<component>tests  python script
   doTestScript="do${componentTest}tests"
@@ -155,8 +157,7 @@ for componentTest in $selectedCompTests; do
   # tests for that component
 
   "./$doTestScript" | tee "${componentTest}.log"
-
-  retval=$?
+  retval=${PIPESTATUS[0]}
 
   echo ""
   echo ""

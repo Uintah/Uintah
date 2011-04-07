@@ -6,6 +6,7 @@
 #include <set>
 
 #include <expression/Expr_ExpressionID.h>
+#include <CCA/Components/Wasatch/transport/TransportEquation.h>
 
 /**
  *  \file GraphHelperTools.h
@@ -17,10 +18,11 @@
 namespace Expr{
   class ExpressionBuilder;
   class ExpressionFactory;
-  class TransportEquation;
 }
 
 namespace Wasatch{
+
+  class TransportEquation;
 
   /** \addtogroup WasatchGraph
    *  @{
@@ -44,7 +46,7 @@ namespace Wasatch{
   /**
    *  \brief a list of transport equations to be solved.
    */
-  typedef std::list<Expr::TransportEquation*> TransEqns;
+  typedef std::list<Wasatch::TransportEquation*> TransEqns;
 
   /**
    *  \brief a set of ExpressionID generally to be used to store the
