@@ -36,7 +36,6 @@ namespace Uintah {
    template<class T> class Handle;
    class Level;
    typedef Handle<Level> LevelP;
-   typedef Handle<const Level> constLevelP;
 }
 
 #endif

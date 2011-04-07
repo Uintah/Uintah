@@ -43,6 +43,7 @@ include $(SCIRUN_SCRIPTS)/recurse.mk
 
 SRCS += \
         $(SRCDIR)/AMR.cc                   \
+        $(SRCDIR)/AMR_CoarsenRefine.cc     \
         $(SRCDIR)/Box.cc                   \
         $(SRCDIR)/BSplineInterpolator.cc   \
         $(SRCDIR)/DbgOutput.cc             \
@@ -61,17 +62,17 @@ SRCS += \
         $(SRCDIR)/Task.cc                  \
         $(SRCDIR)/TOBSplineInterpolator.cc \
         $(SRCDIR)/UnknownVariable.cc       \
-	$(SRCDIR)/cpdiInterpolator.cc  \
-        $(SRCDIR)/fastCpdiInterpolator.cc \
-	$(SRCDIR)/axiCpdiInterpolator.cc \
+        $(SRCDIR)/cpdiInterpolator.cc      \
+        $(SRCDIR)/fastCpdiInterpolator.cc  \
+        $(SRCDIR)/axiCpdiInterpolator.cc   \
         $(SRCDIR)/fastAxiCpdiInterpolator.cc
 
 PSELIBS := \
-        Core/Geometry   \
-        Core/Exceptions \
-        Core/Thread     \
-        Core/Util       \
-        Core/Containers \
+        Core/Geometry    \
+        Core/Exceptions  \
+        Core/Thread      \
+        Core/Util        \
+        Core/Containers  \
         Core/Parallel    \
         Core/ProblemSpec \
         Core/Exceptions  \

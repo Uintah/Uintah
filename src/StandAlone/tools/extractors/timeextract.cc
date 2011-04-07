@@ -268,14 +268,17 @@ main(int argc, char** argv)
     //__________________________________
     //  Bullet proofing
     if (!var_found) {
-      cerr << "Variable \"" << variable_name << "\" was not found.\n";
-      cerr << "If a variable name was not specified try -var [name].\n";
+      cerr << "\n\n";
+      cerr << "ERROR: Variable \"" << variable_name << "\" was not found.\n";
+      cerr << "If a variable name was not specified try -v [name].\n";
       cerr << "Possible variable names are:\n";
       var_index = 0;
       for (;var_index < vars.size(); var_index++) {
         cout << "vars[" << var_index << "] = " << vars[var_index] << endl;
       }
-      cerr << "Aborting!!\n";
+      cerr << "\n";
+      cerr << "Goodbye!!\n";
+      cerr << "\n";
       exit(-1);
       //      var = vars[0];
     }
@@ -302,6 +305,20 @@ main(int argc, char** argv)
     // get type and subtype of data
     const Uintah::TypeDescription* td = types[var_index];
     const Uintah::TypeDescription* subtype = td->getSubType();
+
+    if( subtype == NULL ) {
+      cout << "\n";
+      cout << "An ERROR occurred.  Subtype is NULL.  Most likely this means that the automatic\n";
+      cout << "type instantiation is not working... Are you running on a strange architecture?\n";
+      cout << "Types should be constructed when global static variables of each type are instantiated\n";
+      cout << "automatically when the program loads.  The registering of the types occurs in:\n";
+      cout << "src/Core/Disclosure/TypeDescription.cc in register_type() (called from the\n";
+      cout << "TypeDescription() constructor(s).  However, I'm not quite sure where the variables\n";
+      cout << "are initially (or in this case not initially) instantiated...  Need to track\n";
+      cout << "that down and force them to be created... Dd.\n";
+      cout << "\n";
+      exit( 1 );
+    }
 
     // Open output file, call printData with it's ofstream
     // if no output file, call with cout

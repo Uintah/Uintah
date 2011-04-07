@@ -10,6 +10,7 @@
 
 export OS
 mode=$1 # dbg or opt
+MACHINE=`hostname`
 
 #__________________________________
 # construct the configure_command file
@@ -50,6 +51,8 @@ elif [ "$OS" == "Darwin" ]; then
   OPT_CONFIGURE="$COMMON '--enable-optimize=-mcpu=7450 -O2 -fsigned-char -maltivec -mabi=altivec -mpowerpc-gfxopt' $OPT_CONFIGURE"
 fi
 
+
+#__________________________________
 echo "#!/bin/csh" > configure_command
 echo "../../src/configure --enable-package=Uintah \\" >> configure_command
  
@@ -73,7 +76,7 @@ echo "==================================" >> $HTMLLOG
 echo "" >> $HTMLLOG
 echo "Starting configure on `date`" >> $HTMLLOG
 echo "  with command" >> $HTMLLOG
-grep configure configure_command >> $HTMLLOG
+cat configure_command >> $HTMLLOG
 echo "" >> $HTMLLOG
 
 

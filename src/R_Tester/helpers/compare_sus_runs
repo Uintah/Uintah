@@ -15,6 +15,7 @@ command
 TEST_UDADIR=$TEST_DIR/$UDADIR
 COMPARE_UDADIR=$COMPARE_ROOT/$TEST/$UDADIR
 
+
 if [ -d "$TEST_UDADIR" ]; then
   if [ ! -d "$COMPARE_ROOT" ]; then
     echo "Creating $COMPARE_ROOT directory"

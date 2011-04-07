@@ -35,6 +35,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/ICE/EOS/TST.h>
 #include <CCA/Components/ICE/EOS/JWLC.h>
 #include <CCA/Components/ICE/EOS/Murnahan.h>
+#include <CCA/Components/ICE/EOS/KnaussSeaWater.h>
 #include <CCA/Components/ICE/EOS/Gruneisen.h>
 #include <CCA/Components/ICE/EOS/Tillotson.h>
 #include <CCA/Components/ICE/EOS/Thomsen_Hartka_water.h>
@@ -97,6 +98,8 @@ EquationOfState* EquationOfStateFactory::create(ProblemSpecP& ps)
     return(scinew Tillotson(EOS_ps));    
   else if (EOS == "Thomsen_Hartka_water") 
     return(scinew Thomsen_Hartka_water(EOS_ps));    
+  else if (EOS == "KnaussSeaWater") 
+    return(scinew KnaussSeaWater(EOS_ps));    
   else{
     ostringstream warn;
     warn << "ERROR ICE: Unknown Equation of State ("<< EOS << " )\n"
@@ -108,6 +111,7 @@ EquationOfState* EquationOfStateFactory::create(ProblemSpecP& ps)
          << "Murnahan\n"
          << "Gruneisen\n"
          << "Tillotson\n"
+         << "KnaussSeaWater\n"
          << "Thomsen_Hartka_water" << endl;
     throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
   }

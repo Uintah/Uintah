@@ -8,7 +8,7 @@
  ##     ## ##             ##    ##     ## ##     ## ##             ## 
  ##     ## ##    ##       ##    ##     ## ##     ## ##       ##    ## 
  ########   ######        ##     #######   #######  ########  ######  
-------------------------------------------------------------------------------*/
+ ------------------------------------------------------------------------------*/
 
 //-- Uintah framework includes --//
 #include <Core/Grid/Patch.h>
@@ -17,7 +17,7 @@
 //-- Wasatch includes --//
 #include "PatchInfo.h"
 #include "FieldAdaptor.h"
-#include "transport/ParseEquation.h"
+#include "GraphHelperTools.h"
 
 /**
  *  \file BCHelperTools.h
@@ -28,8 +28,9 @@
  */
 
 namespace Wasatch {
- 
-  class GraphHelper; //forward declaration
+  
+  //class GraphHelper; //forward declaration
+  //class TransportEquation;
   
   /**
    *  @function   buildBoundaryConditions

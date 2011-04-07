@@ -66,16 +66,21 @@ namespace Uintah
 RMCRT_Test::RMCRT_Test ( const ProcessorGroup* myworld ): UintahParallelComponent( myworld )
 {
   //d_examplesLabel = scinew ExamplesLabel();
-  d_colorLabel        = VarLabel::create("color",        CCVariable<double>::getTypeDescription());
-  d_sumColorDiffLabel = VarLabel::create("sumColorDiff", CCVariable<double>::getTypeDescription());
-  d_abskgLabel        = VarLabel::create("abskg",        CCVariable<double>::getTypeDescription());
-  d_absorpLabel       = VarLabel::create("absorp",       CCVariable<double>::getTypeDescription()); 
+  d_colorLabel   = VarLabel::create("color",    CCVariable<double>::getTypeDescription());           
+  d_divQLabel    = VarLabel::create("divQ",     CCVariable<double>::getTypeDescription());           
+  d_abskgLabel   = VarLabel::create("abskg",    CCVariable<double>::getTypeDescription());           
+  d_absorpLabel  = VarLabel::create("absorp",   CCVariable<double>::getTypeDescription());
+  d_sigmaT4Label = VarLabel::create("sigmaT4",  CCVariable<double>::getTypeDescription()); 
    
   d_gac = Ghost::AroundCells;
   d_gn  = Ghost::None;
   d_matl = 0;
   d_doFakeRMCRT = false;
   d_doRealRMCRT = false;
+  d_initColor = -9;
+  d_orderOfInterpolation = -9;
+  d_CoarseLevelRMCRTMethod = true;
+  d_multiLevelRMCRTMethod  = false;
 }
 //______________________________________________________________________
 //
@@ -85,9 +90,10 @@ RMCRT_Test::~RMCRT_Test ( void )
     delete d_realRMCRT;
     
   VarLabel::destroy(d_colorLabel);
-  VarLabel::destroy(d_sumColorDiffLabel);
+  VarLabel::destroy(d_divQLabel);
   VarLabel::destroy(d_abskgLabel);
   VarLabel::destroy(d_absorpLabel);
+  VarLabel::destroy(d_sigmaT4Label);
   
   dbg << UintahParallelComponent::d_myworld->myrank() << " Doing: RMCRT destructor " << endl;
 
@@ -131,8 +137,6 @@ void RMCRT_Test::problemSetup(const ProblemSpecP& prob_spec,
     spec->get("ballRadius",             d_radiusOfBall);
     spec->get("orbitRadius",            d_radiusOfOrbit);
     spec->get("angularVelocity",        d_angularVelocity);
-    spec->get("CoarseLevelRMCRTMethod", d_CoarseLevelRMCRTMethod);
-    spec->get("multiLevelRMCRTMethod",  d_multiLevelRMCRTMethod);
     cout << "__________________________________ Reading in pseudoRMCRT section of ups file" << endl;
   } 
   
@@ -141,95 +145,101 @@ void RMCRT_Test::problemSetup(const ProblemSpecP& prob_spec,
   if (prob_spec->findBlock("RMCRT")){
     d_doRealRMCRT  = true;
     ProblemSpecP rmcrt_db = prob_spec->findBlock("RMCRT"); 
+    
     d_realRMCRT = scinew Ray(); 
     d_realRMCRT->registerVarLabels(0,
                                  d_abskgLabel,
                                  d_absorpLabel,
-                                 d_colorLabel );
-    d_realRMCRT->problemSetup( rmcrt_db ); 
+                                 d_colorLabel,
+                                 d_sigmaT4Label );
+                                 
+    rmcrt_db->get("Temperature",  d_initColor);
+    
+    d_realRMCRT->problemSetup( rmcrt_db );
     cout << "__________________________________ Reading in RMCRT section of ups file" << endl;
   }
   
-
   //__________________________________
   //  Read in the AMR section
   ProblemSpecP rmcrt_ps;
   ProblemSpecP amr_ps = prob_spec->findBlock("AMR");
   if (amr_ps){
     rmcrt_ps = amr_ps->findBlock("RMCRT");
-  }
 
-  if(!rmcrt_ps){
-    string warn;
-    warn ="\n INPUT FILE ERROR:\n <RMCRT>  block not found inside of <AMR> block \n";
-    throw ProblemSetupException(warn, __FILE__, __LINE__);
-  }
 
-  rmcrt_ps->require( "orderOfInterpolation", d_orderOfInterpolation);
-
-  //__________________________________
-  // read in the regions that user would like 
-  // refined if the grid has not been setup manually
-  bool manualGrid;
-  rmcrt_ps->getWithDefault("manualGrid", manualGrid, false);
-
-  if(!manualGrid){
-    ProblemSpecP refine_ps = rmcrt_ps->findBlock("Refine_Regions");
-    if(!refine_ps ){
+    if(!rmcrt_ps){
       string warn;
-      warn ="\n INPUT FILE ERROR:\n <Refine_Regions> "
-           " block not found inside of <RMCRT> block \n";
+      warn ="\n INPUT FILE ERROR:\n <RMCRT>  block not found inside of <AMR> block \n";
       throw ProblemSetupException(warn, __FILE__, __LINE__);
     }
 
-    // Read in the refined regions geometry objects
-    int piece_num = 0;
-    list<GeometryObject::DataItem> geom_obj_data;
-    geom_obj_data.push_back(GeometryObject::DataItem("level", GeometryObject::Integer));
+    rmcrt_ps->require( "orderOfInterpolation", d_orderOfInterpolation);
 
-    for (ProblemSpecP geom_obj_ps = refine_ps->findBlock("geom_object");
-          geom_obj_ps != 0;
-          geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
+    rmcrt_ps->require("CoarseLevelRMCRTMethod", d_CoarseLevelRMCRTMethod);
+    rmcrt_ps->require("multiLevelRMCRTMethod",  d_multiLevelRMCRTMethod);
+    //__________________________________
+    // read in the regions that user would like 
+    // refined if the grid has not been setup manually
+    bool manualGrid;
+    rmcrt_ps->getWithDefault("manualGrid", manualGrid, false);
 
-        vector<GeometryPieceP> pieces;
-        GeometryPieceFactory::create(geom_obj_ps, pieces);
+    if(!manualGrid){
+      ProblemSpecP refine_ps = rmcrt_ps->findBlock("Refine_Regions");
+      if(!refine_ps ){
+        string warn;
+        warn ="\n INPUT FILE ERROR:\n <Refine_Regions> "
+             " block not found inside of <RMCRT> block \n";
+        throw ProblemSetupException(warn, __FILE__, __LINE__);
+      }
 
-        GeometryPieceP mainpiece;
-        if(pieces.size() == 0){
-           throw ParameterNotFound("No piece specified in geom_object", __FILE__, __LINE__);
-        } else if(pieces.size() > 1){
-           mainpiece = scinew UnionGeometryPiece(pieces);
-        } else {
-           mainpiece = pieces[0];
-        }
-        piece_num++;
-        d_refine_geom_objs.push_back(scinew GeometryObject(mainpiece,geom_obj_ps,geom_obj_data));
+      // Read in the refined regions geometry objects
+      int piece_num = 0;
+      list<GeometryObject::DataItem> geom_obj_data;
+      geom_obj_data.push_back(GeometryObject::DataItem("level", GeometryObject::Integer));
+
+      for (ProblemSpecP geom_obj_ps = refine_ps->findBlock("geom_object");
+            geom_obj_ps != 0;
+            geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
+
+          vector<GeometryPieceP> pieces;
+          GeometryPieceFactory::create(geom_obj_ps, pieces);
+
+          GeometryPieceP mainpiece;
+          if(pieces.size() == 0){
+             throw ParameterNotFound("No piece specified in geom_object", __FILE__, __LINE__);
+          } else if(pieces.size() > 1){
+             mainpiece = scinew UnionGeometryPiece(pieces);
+          } else {
+             mainpiece = pieces[0];
+          }
+          piece_num++;
+          d_refine_geom_objs.push_back(scinew GeometryObject(mainpiece,geom_obj_ps,geom_obj_data));
+       }
      }
-   }
 
-  //__________________________________
-  //  bulletproofing
-  if(!d_sharedState->isLockstepAMR()){
-    ostringstream msg;
-    msg << "\n ERROR: You must add \n"
-        << " <useLockStep> true </useLockStep> \n"
-        << " inside of the <AMR> section. \n"; 
-    throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
-  }  
+    //__________________________________
+    //  bulletproofing
+    if(!d_sharedState->isLockstepAMR()){
+      ostringstream msg;
+      msg << "\n ERROR: You must add \n"
+          << " <useLockStep> true </useLockStep> \n"
+          << " inside of the <AMR> section. \n"; 
+      throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
+    }  
+  }
 }
   
 //______________________________________________________________________
 void RMCRT_Test::scheduleInitialize ( const LevelP& level, 
-                                      SchedulerP& scheduler )
+                                      SchedulerP& sched )
 {
-  
   printSchedule(level,dbg,"RMCRT_Test::scheduleInitialize");
 
   Task* task = scinew Task( "RMCRT_Test::initialize", this, 
                             &RMCRT_Test::initialize );
 
   task->computes( d_colorLabel );
-  scheduler->addTask( task, level->eachPatch(), d_sharedState->allMaterials() );
+  sched->addTask( task, level->eachPatch(), d_sharedState->allMaterials() );
 }
 
 //______________________________________________________________________
@@ -262,7 +272,7 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
   if(d_multiLevelRMCRTMethod){
     for (int l = 0; l < maxLevels-1; l++) {
       const LevelP& level = grid->getLevel(l);
-      scheduleCoarsen_Q (level, sched);
+      scheduleCoarsenAll (level, sched);
     }
     
     // only schedule RMCRT and pseudoCFD on the finest level
@@ -276,11 +286,20 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
   //  If the RMCRT is performed on only the coarse level
   // and the results are interpolated to the fine level
   if(d_CoarseLevelRMCRTMethod){
-    // pseudo RMCRT
-    for (int l = 0; l < maxLevels-1; l++) {
+    const LevelP& fineLevel = grid->getLevel(maxLevels-1);
+    const PatchSet* finestPatches = fineLevel->eachPatch();
+   
+    // compute Radiative properties on the finest level
+    if(d_doRealRMCRT){
+      int time_sub_step = 0;
+      d_realRMCRT->sched_initProperties( fineLevel, sched, time_sub_step );
+    }
+    
+    
+    for (int l = 0; l <= maxLevels-1; l++) {
       const LevelP& level = grid->getLevel(l);
-      const PatchSet* patches = level->eachPatch();
-      scheduleCoarsen_Q (level, sched);
+      cout << " here " << endl;
+      scheduleCoarsenAll (level, sched);
       scheduleShootRays_onCoarseLevel( sched, level, matls );
     }
 
@@ -291,9 +310,7 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
     }
 
     // only schedule CFD on the finest level
-    const LevelP& fineLevel = grid->getLevel(maxLevels-1);
-    const PatchSet* patches = fineLevel->eachPatch();
-    schedulePseudoCFD( sched, patches, matls );
+    schedulePseudoCFD( sched, finestPatches, matls );
   }
 }
 //______________________________________________________________________
@@ -306,8 +323,8 @@ void RMCRT_Test::schedulePseudoCFD(SchedulerP& sched,
   
   Task* t = scinew Task("RMCRT_Test::pseudoCFD",
                   this, &RMCRT_Test::pseudoCFD);
-  t->requires(Task::NewDW, d_sumColorDiffLabel, d_gn, 0);
-  t->requires(Task::OldDW, d_colorLabel,        d_gn, 0);
+  t->requires(Task::NewDW, d_divQLabel,   d_gn, 0);
+  t->requires(Task::OldDW, d_colorLabel,  d_gn, 0);
   
   t->computes( d_colorLabel );
 
@@ -327,18 +344,18 @@ void RMCRT_Test::pseudoCFD ( const ProcessorGroup*,
 
     for(int m = 0;m<matls->size();m++){
       CCVariable<double> color;
-      constCCVariable<double> sumDiffColor;
+      constCCVariable<double> divQ;
       constCCVariable<double> color_old;
       
-      new_dw->allocateAndPut(color, d_colorLabel,       d_matl, patch);
-      new_dw->get(sumDiffColor,     d_sumColorDiffLabel,d_matl, patch,d_gn,0);
-      old_dw->get(color_old,        d_colorLabel,       d_matl, patch,d_gn,0);
+      new_dw->allocateAndPut(color, d_colorLabel, d_matl, patch);              
+      new_dw->get(divQ,       d_divQLabel,  d_matl, patch, d_gn,0);      
+      old_dw->get(color_old,  d_colorLabel, d_matl, patch, d_gn,0);       
       
       color.initialize(0.0);
 
       for ( CellIterator iter(patch->getExtraCellIterator()); !iter.done(); iter++) {
         IntVector c(*iter);
-        color[c] = color_old[c] + 0.01 * sumDiffColor[c];
+        color[c] = color_old[c] + 0.01 * divQ[c];
       }
     }
   }
@@ -362,7 +379,7 @@ void RMCRT_Test::scheduleShootRays_multiLevel(SchedulerP& sched,
   t->requires(Task::OldDW, d_colorLabel,  d_gn, 0);
   t->requires(Task::OldDW, d_colorLabel,  allPatches, Task::CoarseLevel,allMatls, ND, d_gn, 0);
   
-  t->computes( d_sumColorDiffLabel );
+  t->computes( d_divQLabel );
   sched->addTask(t, patches, matls);
 }
 //______________________________________________________________________
@@ -390,8 +407,8 @@ void RMCRT_Test::shootRays_multiLevel ( const ProcessorGroup*,
 
     CCVariable<double> sumColorDiff;
     constCCVariable<double> colorFine;
-    new_dw->allocateAndPut(sumColorDiff, d_sumColorDiffLabel, d_matl,finePatch);
-    old_dw->get(colorFine,               d_colorLabel,       d_matl, finePatch, d_gn, 0);
+    new_dw->allocateAndPut(sumColorDiff, d_divQLabel, d_matl, finePatch);
+    old_dw->get(colorFine,               d_colorLabel,d_matl, finePatch, d_gn, 0);
     
     sumColorDiff.initialize(0.0);
     
@@ -494,27 +511,31 @@ void RMCRT_Test::scheduleShootRays_onCoarseLevel(SchedulerP& sched,
                                                  const LevelP& level,
                                                  const MaterialSet* matls)
 {
-
-  printSchedule(level,dbg,"RMCRT_Test::scheduleShootRays_onCoarseLevel");
-  Task* t = scinew Task("RMCRT_Test::shootRays_onCoarseLevel",
-                  this, &RMCRT_Test::shootRays_onCoarseLevel);
-  //__________________________________
-  //  
-  if (d_doFakeRMCRT){
-    Ghost::GhostType  gn  = Ghost::None;
-    Task::DomainSpec  ND  = Task::NormalDomain;
-    #define allPatches 0
-    #define allMatls 0
-
-    t->requires(Task::OldDW, d_colorLabel,  allPatches, ND,allMatls, ND, gn,0);
-    t->computes( d_sumColorDiffLabel );
-  }
+  GridP grid = level->getGrid();
+  int maxLevels = level->getGrid()->numLevels();
   
-  if(d_doRealRMCRT){
-    d_realRMCRT->sched_rayTrace(level,sched);
+  if(level->hasFinerLevel() || maxLevels == 1){
+    printSchedule(level,dbg,"RMCRT_Test::scheduleShootRays_onCoarseLevel");
+    Task* t = scinew Task("RMCRT_Test::shootRays_onCoarseLevel",
+                    this, &RMCRT_Test::shootRays_onCoarseLevel);
+    //__________________________________
+    //  
+    if (d_doFakeRMCRT){
+      Ghost::GhostType  gn  = Ghost::None;
+      Task::DomainSpec  ND  = Task::NormalDomain;
+      #define allPatches 0
+      #define allMatls 0
+
+      t->requires(Task::OldDW, d_colorLabel,  allPatches, ND,allMatls, ND, gn,0);
+      t->computes( d_divQLabel );
+      sched->addTask(t, level->eachPatch(), matls);
+    }
+
+    if(d_doRealRMCRT){
+      int time_sub_step = 0;
+      d_realRMCRT->sched_rayTrace(level,sched,time_sub_step);
+    }  
   }
-  
-  sched->addTask(t, level->eachPatch(), matls);
 }
   
 //______________________________________________________________________
@@ -538,9 +559,9 @@ void RMCRT_Test::shootRays_onCoarseLevel ( const ProcessorGroup*,
 
     printTask(patches, patch,dbg,"shootRays_onCoarseLevel");
 
-    CCVariable<double> sumColorDiff;
-    new_dw->allocateAndPut(sumColorDiff, d_sumColorDiffLabel, d_matl, patch);
-    sumColorDiff.initialize(0.0);
+    CCVariable<double> divQ;
+    new_dw->allocateAndPut(divQ, d_divQLabel, d_matl, patch);
+    divQ.initialize(0.0);
 #if 0
     IntVector P_lo = patch->getCellLowIndex();
     IntVector P_hi = patch->getCellHighIndex();
@@ -555,14 +576,14 @@ void RMCRT_Test::shootRays_onCoarseLevel ( const ProcessorGroup*,
       for(int i=L_lo.x(); i<L_hi.x(); i++){      
         IntVector h (i,j,k);                     
         //cout << "    " << h << endl;             
-        sumColorDiff[c] += color[h] - color[c];  
+        divQ[c] += color[h] - color[c];  
       }                                          
       // Ray in Y dir                            
       int i = c.x();                             
       k = c.z();                                 
       for(int j=L_lo.y(); j<L_hi.y(); j++){      
         IntVector h (i,j,k);                     
-        sumColorDiff[c] += color[h] - color[c];  
+        divQ[c] += color[h] - color[c];  
       }                                          
 
       // Ray in Z dir                            
@@ -570,7 +591,7 @@ void RMCRT_Test::shootRays_onCoarseLevel ( const ProcessorGroup*,
       j = c.y();                                 
       for(int k=L_lo.z(); k<L_hi.z(); k++){      
         IntVector h (i,j,k);                     
-        sumColorDiff[c] += color[h] - color[c];  
+        divQ[c] += color[h] - color[c];  
       } 
     }
   }
@@ -593,9 +614,9 @@ void RMCRT_Test::scheduleRefine_Q(SchedulerP& sched,
     Task::DomainSpec  ND  = Task::NormalDomain;
     #define allPatches 0
     #define allMatls 0
-    task->requires(Task::NewDW, d_sumColorDiffLabel, allPatches, Task::CoarseLevel, allMatls, ND, d_gn,0);
+    task->requires(Task::NewDW, d_divQLabel, allPatches, Task::CoarseLevel, allMatls, ND, d_gn,0);
      
-    task->computes(d_sumColorDiffLabel);
+    task->computes(d_divQLabel);
     sched->addTask(task, patches, matls);
   }
 }
@@ -619,7 +640,7 @@ void RMCRT_Test::refine_Q(const ProcessorGroup*,
     finePatch->getCoarseLevelPatches(coarsePatches);
 
     CCVariable<double> sumColorDiff_fine;
-    new_dw->allocateAndPut(sumColorDiff_fine, d_sumColorDiffLabel, d_matl, finePatch);
+    new_dw->allocateAndPut(sumColorDiff_fine, d_divQLabel, d_matl, finePatch);
     sumColorDiff_fine.initialize(0);
     
     IntVector refineRatio = fineLevel->getRefinementRatio();
@@ -638,7 +659,7 @@ void RMCRT_Test::refine_Q(const ProcessorGroup*,
         <<" coarseRegion " << cl << " " << ch <<endl;
 
     constCCVariable<double> sumColorDiff_coarse;
-    new_dw->getRegion(sumColorDiff_coarse, d_sumColorDiffLabel, d_matl, coarseLevel, cl, ch);
+    new_dw->getRegion(sumColorDiff_coarse, d_divQLabel, d_matl, coarseLevel, cl, ch);
 
     selectInterpolator(sumColorDiff_coarse, d_orderOfInterpolation, coarseLevel, fineLevel,
                        refineRatio, fl, fh,sumColorDiff_fine);
@@ -694,9 +715,9 @@ void RMCRT_Test::scheduleRefineInterface ( const LevelP&,
 }
 //______________________________________________________________________
 void RMCRT_Test::initialize (const ProcessorGroup*,
-                             const PatchSubset* patches, 
+                             const PatchSubset* patches,
                              const MaterialSubset* matls,
-                             DataWarehouse*, 
+                             DataWarehouse*,
                              DataWarehouse* new_dw)
 {
 
@@ -713,11 +734,17 @@ void RMCRT_Test::initialize (const ProcessorGroup*,
       new_dw->allocateAndPut(color, d_colorLabel, matl, patch);
 
      for ( CellIterator iter(patch->getExtraCellIterator()); !iter.done(); iter++) {
-
-       IntVector idx(*iter);
-        Vector whereThisCellIs( patch->cellPosition( idx ) );
-        Vector distanceToCenterOfDomain = whereThisCellIs - d_centerOfBall;
-        color[idx] = distanceToCenterOfDomain.length();
+        IntVector idx(*iter);
+        
+        if( d_doFakeRMCRT ){
+          Vector whereThisCellIs( patch->cellPosition( idx ) );
+          Vector distanceToCenterOfDomain = whereThisCellIs - d_centerOfBall;
+          color[idx] = distanceToCenterOfDomain.length();
+        }
+        
+        if( d_doRealRMCRT ){
+          color[idx] = d_initColor;
+        }
       }
     }
   }
@@ -830,30 +857,72 @@ void RMCRT_Test::errorEstimate ( const ProcessorGroup*,
     }  // patch loop
   }  // not initial timestep
 }
+
+
 //______________________________________________________________________
-void RMCRT_Test::scheduleCoarsen_Q ( const LevelP& coarseLevel, SchedulerP& scheduler )
+void RMCRT_Test::scheduleCoarsenAll( const LevelP& coarseLevel, 
+                                     SchedulerP& sched )
 {
-  printSchedule(coarseLevel,dbg,"RMCRT_Test::scheduleCoarsen_Q");
+  if(coarseLevel->hasFinerLevel()){
+    printSchedule(coarseLevel,dbg,"RMCRT_Test::scheduleCoarsenAll");
+    bool modifies = false;
 
-  Task* task = scinew Task( "RMCRT_Test::coarsen_Q", this, 
-                            &RMCRT_Test::coarsen_Q );
+    if(d_doFakeRMCRT){
+      scheduleCoarsen_Q(coarseLevel, sched,Task::OldDW, modifies, d_colorLabel);
+    }
 
-  task->requires(Task::OldDW, d_colorLabel, 0, Task::FineLevel, 0, Task::NormalDomain, d_gn, 0);
-  task->computes(d_colorLabel);
-
-  scheduler->addTask( task, coarseLevel->eachPatch(), d_sharedState->allMaterials() );
+    if(d_doRealRMCRT){
+      modifies = false;
+      scheduleCoarsen_Q(coarseLevel, sched, Task::NewDW, modifies, d_abskgLabel);
+      scheduleCoarsen_Q(coarseLevel, sched, Task::NewDW, modifies, d_sigmaT4Label);
+    }
+  }
 }
+
+//______________________________________________________________________
+void RMCRT_Test::scheduleCoarsen_Q ( const LevelP& coarseLevel, 
+                                     SchedulerP& sched,
+                                     Task::WhichDW this_dw,
+                                     const bool modifies,
+                                     const VarLabel* variable)
+{ 
+  string taskname = "        Coarsen_Q_" + variable->getName();
+  printSchedule(coarseLevel,dbg,taskname);
+
+  Task* t = scinew Task( taskname, this, &RMCRT_Test::coarsen_Q, 
+                         variable, modifies, this_dw );
+  
+  if(modifies){
+    t->modifies(variable);
+  }else{
+    t->requires(this_dw, variable, 0, Task::FineLevel, 0, Task::NormalDomain, d_gn, 0);
+    t->computes(variable);
+  }
+  sched->addTask( t, coarseLevel->eachPatch(), d_sharedState->allMaterials() );
+}
+
+
 //______________________________________________________________________
 void RMCRT_Test::coarsen_Q ( const ProcessorGroup*,
                              const PatchSubset* patches,
                              const MaterialSubset* matls,
                              DataWarehouse* old_dw, 
-                             DataWarehouse* new_dw )
+                             DataWarehouse* new_dw,
+                             const VarLabel* variable,
+                             const bool modifies,
+                             Task::WhichDW which_dw )
 {
   const Level* coarseLevel = getLevel(patches);
   const LevelP fineLevel = coarseLevel->getFinerLevel();
   IntVector rr(fineLevel->getRefinementRatio());
   double ratio = 1./(rr.x()*rr.y()*rr.z());
+  
+  DataWarehouse* this_dw = new_dw;
+  
+  if( which_dw == Task::OldDW ){
+    this_dw = old_dw;
+  }
+  
 
   for(int p=0;p<patches->size();p++){  
     const Patch* coarsePatch = patches->get(p);
@@ -867,15 +936,19 @@ void RMCRT_Test::coarsen_Q ( const ProcessorGroup*,
     for(int m = 0;m<matls->size();m++){
       int matl = matls->get(m);
 
-      CCVariable<double> color_coarse;
-      new_dw->allocateAndPut(color_coarse, d_colorLabel, matl, coarsePatch);
-      color_coarse.initialize(0.0);
+      CCVariable<double> Q_coarse;
+      if(modifies){
+        new_dw->getModifiable(Q_coarse,  variable, matl, coarsePatch);
+      }else{
+        new_dw->allocateAndPut(Q_coarse, variable, matl, coarsePatch);
+      }
+      Q_coarse.initialize(0.0);
 
       for(int i=0;i<finePatches.size();i++){
         const Patch* finePatch = finePatches[i];
 
-        constCCVariable<double> color_fine;
-        old_dw->get(color_fine, d_colorLabel, matl, finePatch, d_gn, 0);
+        constCCVariable<double> Q_fine;
+        this_dw->get(Q_fine, variable, matl, finePatch, d_gn, 0);
 
         IntVector fl(finePatch->getCellLowIndex());
         IntVector fh(finePatch->getCellHighIndex());
@@ -889,14 +962,14 @@ void RMCRT_Test::coarsen_Q ( const ProcessorGroup*,
         for(CellIterator iter(l, h); !iter.done(); iter++){
           IntVector c = *iter;
 
-          double sumColorDiff=0;
+          double sumQ=0;
           IntVector fineStart(coarseLevel->mapCellToFiner(c));
 
           for(CellIterator inside(IntVector(0,0,0), fineLevel->getRefinementRatio());
               !inside.done(); inside++){
-            sumColorDiff += color_fine[fineStart+*inside];
+            sumQ += Q_fine[fineStart+*inside];
           }
-          color_coarse[c]=sumColorDiff*ratio;
+          Q_coarse[c]=sumQ*ratio;
         }  // intersection loop
       }  // fine patch loop
     }

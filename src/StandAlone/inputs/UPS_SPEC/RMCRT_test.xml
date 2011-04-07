@@ -6,6 +6,8 @@
       <min_grid_level         spec="OPTIONAL INTEGER" />            
       <max_grid_level         spec="OPTIONAL INTEGER" />            
       <manualGrid             spec="OPTIONAL BOOLEAN" />            
+      <CoarseLevelRMCRTMethod spec="OPTIONAL BOOLEAN" />
+      <multiLevelRMCRTMethod  spec="OPTIONAL BOOLEAN" />
       
       <Refine_Regions         spec="OPTIONAL NO_DATA" >             
         <geom_object          spec="MULTIPLE" />                 
@@ -18,8 +20,6 @@
     <ballRadius               spec="OPTIONAL DOUBLE 'positive'"/>
     <orbitRadius              spec="OPTIONAL DOUBLE 'positive'"/>
     <angularVelocity          spec="OPTIONAL DOUBLE 'positive'"/>
-    <CoarseLevelRMCRTMethod   spec="OPTIONAL BOOLEAN" />
-    <multiLevelRMCRTMethod    spec="OPTIONAL BOOLEAN" />
   </pseudoRMCRT>
   
   <include href="Models.xml"  section="Models/RMCRT" />

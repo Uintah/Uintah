@@ -45,55 +45,62 @@ namespace Uintah {
     University of Utah
     Copyright (C) 2005 University of Utah
    
-    Zerilli-Armstrong Plasticity Model \n
-    (Zerilli, F.J. and Armstrong, R.W., 1987, J. Appl. Phys. 61(5), p.1816)\n
+    Zerilli-Armstrong Plasticity Model 
+    (Zerilli, F.J. and Armstrong, R.W., 1987, J. Appl. Phys. 61(5), p.1816)
     (Zerilli, F.J., 2004, Metall. Materials Trans. A, v. 35A, p.2547)
 
-    Flow rule: (the general form) \n
+    Flow rule: (the general form implemented in Uintah) 
+	
+	sigma = sigma_a + B*exp(-beta*T) + B_0*sqrt(ep)*exp(-alpha*T)
 
-    \f[
-      \sigma = \sigma_a + B exp(-\beta T) + B_0 \epsilon_p^{1/2} exp(-\alpha T)
-    \f]
-    where, \n
-    \f$ \sigma_a = \sigma_g + k_H l^{1/2} + K \epsilon_p^n \f$, \n
-    \f$ \alpha = \alpha_0 - \alpha_1 \ln(\dot\epsilon_p) \f$, \n
-    \f$ \beta = \beta - \beta_1 \ln(\dot\epsilon_p) \f$, \n
+	where 
+		if(c_0 == 0)
+			sigma_a = sigma_g + (k_H/sqrt(l)) + K*(ep)^n;
+		else
+			sigma_a = c_0 + K*(ep)^n;
+		end
+		beta = beta_0 - beta_1*ln(epdot);
+		alpha = alpha_0 - alpha1*ln(epdot)
 
-    For FCC metals, \n
-    \f$ B = 0, \beta_0 = 0, \beta_1 = 0, K = 0 \f$  and \n
-    \f$ B_0 = c_2, \alpha_0 = c_3, \alpha_1 = c_4, 
-        \sigma_g = \Delta\sigma_{G}', k_H = k\f$. \n
+   Flow rule : Original form (1987)
 
-    For BCC metals, \n
-    \f$ B_0 = 0, \alpha_0 = 0, \alpha_1 = 0 \f$  and \n
-    \f$ B = c_1, \beta_0 = c_3, \beta_1 = c_4, K = c_5, 
-        \sigma_g = \Delta\sigma_{G}', k_H = k\f$. \n
+	Y =  A + (C1 + C2*sqrt(ep))*(exp(-C3 + C4*ln(epdot))*T) + C5*(ep)^n
 
-    For HCP metals and alloys (such as HY 100 steel) \n
-    all the constants are non-zero.
+  Corelation between these  two forms:
+		A  = c_0
+		C1 = B
+		C2 = B_0
+		C3 = beta_0 = alpha_0
+		C4 = beta_1 = alpha_1
+		C5 = K
 
-    For comparison, the original form of the flow rule (1987) \n
-
-    For FCC metals,\n
-    \f[
-     \sigma = {\Delta} {\sigma}_{G}' + c_2 {\epsilon^{1/2}}e^{(-{c_3} T + 
-               c_4 T \ln{\dot{\epsilon}})} + kl^{-1/2}
-    \f]
-
-    For BCC metals,\n
-    \f[
-    \sigma = {\Delta} {\sigma}_{G}' + c_1 e^{(-{c_3} T + c_4 T 
-              \ln{\dot{\epsilon}})} + c_5 {\epsilon}^n + kl^{-1/2}
-    \f]
-
-    where \f$\sigma\f$  = equivalent stress \n
-    \f$ \epsilon\f$  = plastic strain \n
-    \f$ \dot{\epsilon}\f$ = plastic strain rate \n 
-    \f$ c_1, c_2, c_3, c_4, c_5, n \f$ are material constants \n
-    k is microstructural stress intensity \n
-    l is average grain diameter \n
-    T is the absolute temperature \n
    
+  FCC Metals :
+
+	General Form : B = 0 ; K = 0; beta_0 = beta_1 = 0
+	Original From : C1 = 0; C5 = 0;
+
+  BCC Metals :
+
+	General Form : B_0 = 0 ; alpha_0 = alpha_1 = 0
+	Original From : C2 = 0; 
+
+  HCP Metals :
+
+	All constants are non-zero
+
+
+  Terms :
+
+	ep    =  equvivalent plastic strain
+	epdot =  equvivalent plastic strain rate
+        C1, C2, C3, C4, C5, A =  Constants, choose appropriately according to the model (fcc or bcc or hcp)
+	T     = Temperature
+	sigma_a = athermal component of the flow stress
+	k_H   = Microstructural stress intensity
+	l     = Average grain diameter
+	sigma_g = stres contribution due to solutes and initial dislocation density
+
   */
   /////////////////////////////////////////////////////////////////////////////
 
@@ -135,52 +142,6 @@ namespace Uintah {
     virtual ~ZAPlastic();
 
     virtual void outputProblemSpec(ProblemSpecP& ps);
-         
-    // Computes and requires for internal evolution variables
-    virtual void addInitialComputesAndRequires(Task* task,
-                                               const MPMMaterial* matl,
-                                               const PatchSet* patches) const;
-
-    virtual void addComputesAndRequires(Task* task,
-                                        const MPMMaterial* matl,
-                                        const PatchSet* patches) const;
-
-    virtual void addComputesAndRequires(Task* task,
-                                        const MPMMaterial* matl,
-                                        const PatchSet* patches,
-                                        bool recurse,
-                                        bool SchedParent) const;
-
-
-    virtual void allocateCMDataAddRequires(Task* task, const MPMMaterial* matl,
-                                           const PatchSet* patch, 
-                                           MPMLabel* lb) const;
-
-    virtual void allocateCMDataAdd(DataWarehouse* new_dw,
-                                   ParticleSubset* addset,
-                                   map<const VarLabel*, 
-                                     ParticleVariableBase*>* newState,
-                                   ParticleSubset* delset,
-                                   DataWarehouse* old_dw);
-
-    virtual void addParticleState(std::vector<const VarLabel*>& from,
-                                  std::vector<const VarLabel*>& to);
-
-    virtual void initializeInternalVars(ParticleSubset* pset,
-                                        DataWarehouse* new_dw);
-
-    virtual void getInternalVars(ParticleSubset* pset,
-                                 DataWarehouse* old_dw);
-
-    virtual void allocateAndPutInternalVars(ParticleSubset* pset,
-                                            DataWarehouse* new_dw); 
-
-    virtual void allocateAndPutRigid(ParticleSubset* pset,
-                                     DataWarehouse* new_dw); 
-
-    virtual void updateElastic(const particleIndex idx);
-
-    virtual void updatePlastic(const particleIndex idx, const double& delGamma);
 
     ///////////////////////////////////////////////////////////////////////////
     /*! \brief  compute the flow stress */

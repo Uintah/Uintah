@@ -75,19 +75,18 @@ namespace Uintah {
   struct ScatterRecord {
     const Patch* fromPatch;
     const Patch* toPatch;    
-    Vector vectorToNeighbor;
-    int matl;    
+    IntVector vectorToNeighbor;
+    int matl;
+    int levelIndex;
     ParticleSubset* send_pset;
     
-    ScatterRecord(const Patch* fromPatch, const Patch* toPatch, int matl)
-      : fromPatch(fromPatch), toPatch(toPatch), matl(matl), send_pset(0)
+    ScatterRecord(const Patch* fromPatch, const Patch* toPatch, int matl, int levelIndex)
+      : fromPatch(fromPatch), toPatch(toPatch), matl(matl), levelIndex(levelIndex), send_pset(0)
     {
       ASSERT(fromPatch != 0);
       ASSERT(toPatch != 0);
       
-      Point to_pt   = toPatch->getCellPosition(toPatch->getExtraCellLowIndex());
-      Point from_pt = fromPatch->getCellPosition(fromPatch->getExtraCellLowIndex());
-      vectorToNeighbor=to_pt - from_pt;
+      vectorToNeighbor = toPatch->getExtraCellLowIndex() - fromPatch->getExtraCellLowIndex();
     }
 
     // Note that when the ScatterRecord going from a real patch to
@@ -103,6 +102,7 @@ namespace Uintah {
     out.setf(ios::scientific,ios::floatfield);
     out.precision(4);
     out << " Scatter Record, matl: " << r.matl
+        << " Level: " << r.levelIndex
         << " numParticles " << r.send_pset->numParticles()
         << " (Particle moving from Patch " << r.fromPatch->getID() 
         << ", to Patch " <<  r.toPatch->getID() << ")"
@@ -123,10 +123,10 @@ namespace Uintah {
       ((sr1->toPatch->getRealPatch() != sr2->toPatch->getRealPatch()) ?
        (sr1->toPatch->getRealPatch() <  sr2->toPatch->getRealPatch()) :
        ((sr1->matl != sr2->matl)     ? (sr1->matl < sr2->matl) :
-    compareVector(sr1->vectorToNeighbor, sr2->vectorToNeighbor)));
+    compareIntVector(sr1->vectorToNeighbor, sr2->vectorToNeighbor)));
     }
     
-    bool compareVector(const Vector& v1, const Vector& v2) const
+    bool compareIntVector(const IntVector& v1, const IntVector& v2) const
     {
       return (v1.x() != v2.x()) ? (v1.x() < v2.x()) :
             ((v1.y() != v2.y()) ? (v1.y() < v2.y()) : 
@@ -163,8 +163,8 @@ namespace Uintah {
     
     procmaptype procs;
 
-    ScatterRecord* findOrInsertRecord(const Patch* from, const Patch* to, int matl, ParticleSubset* pset);
-    ScatterRecord* findRecord(const Patch* from, const Patch* to, int matl);
+    ScatterRecord* findOrInsertRecord(const Patch* from, const Patch* to, int matl, int curLevelIndex, ParticleSubset* pset);
+    ScatterRecord* findRecord(const Patch* from, const Patch* to, int matl, int curLevelIndex);
     
     void addNeighbor(LoadBalancer* lb, const ProcessorGroup* pg, const Patch* to);
 
@@ -296,64 +296,71 @@ MPIRecvBuffer* MPIScatterRecords::findRecv(const Patch* to, int matl)
 }
 //______________________________________________________________________
 //
-ScatterRecord* MPIScatterRecords::findOrInsertRecord(const Patch* from,
-                                                     const Patch* to, 
+ScatterRecord* MPIScatterRecords::findOrInsertRecord(const Patch* fromPatch,
+                                                     const Patch* toPatch, 
                                                      int matl,
+                                                     int curLevelIndex,
                                                      ParticleSubset* pset)
 {
-  ASSERT(to != 0);
-  Point to_pt   = to->getCellPosition(to->getExtraCellLowIndex());
-  Point from_pt = from->getCellPosition(from->getExtraCellLowIndex());
- 
-  Vector vectorToNeighbor(to_pt - from_pt);
- 
-  const Patch* realTo = to->getRealPatch();
-
-  pair<maptype::iterator, maptype::iterator> pr = records.equal_range(make_pair(realTo, matl));
+  ASSERT(toPatch != 0);
+  IntVector vectorToNeighbor = toPatch->getExtraCellLowIndex() - fromPatch->getExtraCellLowIndex();
+  const Patch* realToPatch = toPatch->getRealPatch();
   
-  // does the record exist if so return.
+  pair<maptype::iterator, maptype::iterator> pr = records.equal_range(make_pair(realToPatch, matl));
+  
+  //__________________________________
+  // loop over all scatter records
+  // Does this record exist if so return.
   for(;pr.first != pr.second;pr.first++){
-    if(pr.first->second->vectorToNeighbor == vectorToNeighbor){
-      break;
+    ScatterRecord* sr = pr.first->second;
+
+    if((realToPatch == sr->toPatch->getRealPatch()) && 
+       (curLevelIndex == sr->levelIndex) && 
+       (vectorToNeighbor == sr->vectorToNeighbor) ){
+      return sr;
     }
   }
   
+  //__________________________________
+  //  Create a new record and insert it into
+  //  all records
   if(pr.first == pr.second){
-    ScatterRecord* rec = scinew ScatterRecord(from, to, matl);
+    ScatterRecord* rec = scinew ScatterRecord(fromPatch, toPatch, matl, curLevelIndex);
     rec->send_pset = scinew ParticleSubset(0, -1, 0);
-    records.insert(maptype::value_type(make_pair(realTo, matl), rec));
+    records.insert(maptype::value_type(make_pair(realToPatch, matl), rec));
     return rec;
-  } else {
-    ASSERT(pr.first->second->equivalent(ScatterRecord(from, to, matl)));
-    return pr.first->second;
   }
 }
 //______________________________________________________________________
 //
-ScatterRecord* MPIScatterRecords::findRecord(const Patch* from,
-                                             const Patch* to, 
-                                             int matl)
+ScatterRecord* MPIScatterRecords::findRecord(const Patch* fromPatch,
+                                             const Patch* toPatch,
+                                             int matl, 
+                                             int curLevelIndex)
 {
-  ASSERT(to != 0);
+  ASSERT(toPatch != 0);
   
-  Point to_pt   = to->getCellPosition(to->getExtraCellLowIndex());
-  Point from_pt = from->getCellPosition(from->getExtraCellLowIndex());
- 
-  Vector vectorToNeighbor(to_pt - from_pt);
-  
-  const Patch* realTo = to->getRealPatch();
+  IntVector vectorToNeighbor = toPatch->getExtraCellLowIndex() - fromPatch->getExtraCellLowIndex();
+  const Patch* realToPatch = toPatch->getRealPatch();
 
-  pair<maptype::iterator, maptype::iterator> pr = records.equal_range(make_pair(realTo, matl));
+  pair<maptype::iterator, maptype::iterator> pr = records.equal_range(make_pair(realToPatch, matl));
   
+  //__________________________________
+  // loop over all scatter records
+  // Does this record exist if so return.
   for(;pr.first != pr.second;pr.first++){
-    if(pr.first->second->vectorToNeighbor == vectorToNeighbor){
-      break;
+    ScatterRecord* sr = pr.first->second;
+
+    if((realToPatch      == sr->toPatch->getRealPatch()) && 
+       (curLevelIndex     == sr->levelIndex) && 
+       (matl             == sr->matl) &&
+       (vectorToNeighbor == sr->vectorToNeighbor) ){
+      return sr;
     }
   }
+  
   if(pr.first == pr.second){
     return 0;
-  } else {
-    return pr.first->second;
   }
 }
 //______________________________________________________________________
@@ -927,7 +934,8 @@ Relocate::relocateParticles(const ProcessorGroup* pg,
           // going to be moved to, add it to a scatter record
           if (toPatch) {
             total_reloc[0]++;
-            ScatterRecord* record = scatter_records.findOrInsertRecord(patch, toPatch, matl, pset);
+            int toLevelIndex = toPatch->getLevel()->getIndex();
+            ScatterRecord* record = scatter_records.findOrInsertRecord(patch, toPatch, matl, toLevelIndex, pset);
             record->send_pset->addParticle(idx);
           }
         }  // pset loop
@@ -957,6 +965,7 @@ Relocate::relocateParticles(const ProcessorGroup* pg,
 
       // AMR related
       const Level* curLevel = toPatch->getLevel();
+      int curLevelIndex     = curLevel->getIndex();
       bool hasFiner   = curLevel->hasFinerLevel();
       bool hasCoarser = curLevel->hasCoarserLevel() && curLevel->getIndex() > coarsestLevel->getIndex();
       Level* fineLevel=0;
@@ -995,7 +1004,7 @@ Relocate::relocateParticles(const ProcessorGroup* pg,
           ASSERTRANGE(fromProc, 0, pg->size());
           
           if(fromProc == me){
-            ScatterRecord* record = scatter_records.findRecord(fromPatch, toPatch, matl);
+            ScatterRecord* record = scatter_records.findRecord(fromPatch, toPatch, matl, curLevelIndex);
             if(record){
               fromPatches.push_back(fromPatch);
               subsets.push_back(record->send_pset);

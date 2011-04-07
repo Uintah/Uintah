@@ -1513,3 +1513,60 @@ void SchedulerCommon::overrideVariableBehavior(string var, bool treatAsOld,
   }
 }
 
+//______________________________________________________________________
+// output the task name and the level it's executing on.
+// and each of the patches
+void
+SchedulerCommon::printTask( ostream& out, DetailedTask* task )
+{
+  out << left;
+  out.width(70);
+  out << task->getTask()->getName();
+  if(task->getPatches()){
+
+    out << " \t on patches ";
+    const PatchSubset* patches = task->getPatches();
+    for(int p=0;p<patches->size();p++){
+      if(p != 0)
+	out << ", ";
+      out << patches->get(p)->getID();
+    }
+    
+    if (task->getTask()->getType() != Task::OncePerProc) {
+      const Level* level = getLevel(patches);
+      out << "\t  L-"<< level->getIndex();
+    }
+  }
+}
+
+
+//______________________________________________________________________
+//  Output the task name and the level it's executing on
+//  only first patch of that level
+void 
+SchedulerCommon::printTaskLevels( const ProcessorGroup* d_myworld, 
+                                  DebugStream & out, 
+                                  DetailedTask* task )
+{
+  if(out.active() ){
+    if(task->getPatches()){
+
+      if (task->getTask()->getType() != Task::OncePerProc) {
+      
+        const PatchSubset* taskPatches = task->getPatches();
+        
+        const Level* level = getLevel(taskPatches);
+        const Patch* firstPatch = level->getPatch(0);
+        
+        if(taskPatches->contains(firstPatch)){
+        
+          out << d_myworld->myrank() << "   ";
+          out << left;
+          out.width(70);
+          out << task->getTask()->getName();
+          out << " \t  Patch " << firstPatch->getGridIndex() << "\t L-"<< level->getIndex() << "\n";
+        }
+      }
+    }
+  }  //debugstream active
+} 

@@ -68,10 +68,11 @@ for ($k = $startLoop; $k<=$endLoop; $k++){
   # bulletproofing
   my @stripped_cmd = split(/ /,$postProc_cmd[$k]);  # remove command options
   if (! -e $stripped_cmd[0] ){
+    my $mypath = $ENV{"PATH"};
     print "\n\n__________________________________\n";
     print "ERROR:analyze_results:\n";
     print "The comparison utility: $stripped_cmd[0]";
-    print " doesn't exist.  Now exiting\n\n\n";
+    print " doesn't exist in path \n $mypath \n Now exiting\n\n\n";
     die
   }
   #__________________________________

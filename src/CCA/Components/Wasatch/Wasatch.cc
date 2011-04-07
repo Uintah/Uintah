@@ -64,6 +64,7 @@
 #include "Expressions/BasicExprBuilder.h"
 #include "Expressions/SetCurrentTime.h"
 #include "transport/ParseEquation.h"
+#include "transport/TransportEquation.h"
 #include "BCHelperTools.h"
 
 namespace Wasatch{

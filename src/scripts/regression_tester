@@ -241,11 +241,11 @@ smpm_test_cases="test_plane_shell_punch test_sphere_shell_compress"
 impm_test_cases="billet.static adiCuJC01s296K adiCuMTS01s296K adiCuPTW01s296K adiCuSCG01s296K adiCuZA01s296K"
 #arches_test_cases="constantMMS almgrenMMS periodic methane_explicit_table methane8patch"
 #arches_test_cases="dqmom_test_1 dqmom_test_2a dqmom_test_2b dqmom_test_2c dqmom_test_3 dqmom_test_4 dqmom_test_5 constantMMS almgrenMMS periodic methane_explicit_table methane8patch"
-arches_test_cases="dqmom_test_1 dqmom_test_2a dqmom_test_2b dqmom_test_3 dqmom_test_4 dqmom_test_5 constantMMS almgrenMMS periodic methane_explicit_table methane8patch"
+arches_test_cases="dqmom_test_1 dqmom_test_2a dqmom_test_2b dqmom_test_2c dqmom_test_3 dqmom_test_4 dqmom_test_5 constantMMS almgrenMMS periodic methane_explicit_table methane8patch"
 mpmarches_test_cases="mpmpipe_test methaneFireWContainer"
 examples_test_cases="poisson1"
 ucf_test_cases="LBwoRegrid icePerformanceTest mpmicePerformanceTest"
-wasatch_test_cases="BasicScalarTransportEquation"
+wasatch_test_cases="BasicScalarTransportEquation TabPropsInterface convection-test convection-test2 convection-test3 convection-test-superbee boundary-conditions-test"
 
 # Check if the applications sus and compare_uda are available
 
@@ -398,8 +398,12 @@ compare_results () {
     # gold standard uda and pass it to compare_uda
     
     uda_tmp=`echo $uda |tr "[/]" "[ ]"`  # eliminate "/" from $uda
-    goldStandard=`find $test_dir/$DIR/$CASE/$n -maxdepth 3 -type d -name $uda_tmp`
 
+    goldStandard=`find $test_dir/$DIR/$CASE/$n -maxdepth 3 -type d -name $uda_tmp`
+    if [ $? -eq 1 ]; then
+    	goldStandard=`find $test_dir/$DIR/$CASE/ -maxdepth 3 -type d -name $uda_tmp`
+    fi
+    
     echo "Comparing $uda results against '$goldStandard'"
         
     echo   "Running command: ../compare_uda $compare_uda_options $goldStandard $uda"

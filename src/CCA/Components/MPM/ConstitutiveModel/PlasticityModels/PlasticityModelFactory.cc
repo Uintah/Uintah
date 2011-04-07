@@ -32,6 +32,7 @@ DEALINGS IN THE SOFTWARE.
 #include "IsoHardeningPlastic.h"
 #include "JohnsonCookPlastic.h"
 #include "ZAPlastic.h"
+#include "ZAPolymer.h"
 #include "MTSPlastic.h"
 #include "SCGPlastic.h"
 #include "PTWPlastic.h"
@@ -61,6 +62,8 @@ PlasticityModel* PlasticityModelFactory::create(ProblemSpecP& ps)
       return(scinew JohnsonCookPlastic(child));
    else if (mat_type == "zerilli_armstrong")
       return(scinew ZAPlastic(child));
+   else if (mat_type == "zerilli_armstrong_polymer")
+      return(scinew ZAPolymer(child));
    else if (mat_type == "mts_model")
       return(scinew MTSPlastic(child));
    else if (mat_type == "steinberg_cochran_guinan")
@@ -87,6 +90,9 @@ PlasticityModelFactory::createCopy(const PlasticityModel* pm)
 
    else if (dynamic_cast<const ZAPlastic*>(pm))
       return(scinew ZAPlastic(dynamic_cast<const ZAPlastic*>(pm)));
+      
+   else if (dynamic_cast<const ZAPolymer*>(pm))
+      return(scinew ZAPolymer(dynamic_cast<const ZAPolymer*>(pm)));
 
    else if (dynamic_cast<const MTSPlastic*>(pm))
       return(scinew MTSPlastic(dynamic_cast<const MTSPlastic*>(pm)));

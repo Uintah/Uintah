@@ -72,9 +72,9 @@ UCNH::UCNH(ProblemSpecP& ps, MPMFlags* Mflag)
     ps->require("hardening_modulus",  d_initialData.K);
       
     pPlasticStrain_label          = VarLabel::create("p.pPlasticStrain_cnhp",
-                                         ParticleVariable<double>::getTypeDescription());
+                                ParticleVariable<double>::getTypeDescription());
     pPlasticStrain_label_preReloc = VarLabel::create("p.pPlasticStrain_cnhp+",
-                                         ParticleVariable<double>::getTypeDescription());
+                                ParticleVariable<double>::getTypeDescription());
   } // End Plasticity
   
   // Damage
@@ -103,7 +103,7 @@ UCNH::UCNH(ProblemSpecP& ps, MPMFlags* Mflag)
   pDeformRateLabel           = VarLabel::create("p.deformRate",
                                ParticleVariable<Matrix3>::getTypeDescription());
   pDeformRateLabel_preReloc  = VarLabel::create("p.deformRate+",
-                               ParticleVariable<Matrix3>::getTypeDescription());    
+                               ParticleVariable<Matrix3>::getTypeDescription());
 }
 
 UCNH::UCNH(ProblemSpecP& ps, MPMFlags* Mflag, bool plas, bool dam)
@@ -727,7 +727,14 @@ void UCNH::initializeCMData(const Patch* patch,
     }  else if (d_epsf.dist == "gauss"){
       // Initialize a gaussian random number generator
 
-     SCIRun::Gaussian gaussGen(d_epsf.mean,d_epsf.std,d_epsf.seed,
+      // Make the seed differ for each patch, otherwise each patch gets the
+      // same set of random #s.
+      int patchID = patch->getID();
+      int patch_div_32 = patchID/32;
+      patchID = patchID%32;
+      unsigned int unique_seed = ((d_epsf.seed+patch_div_32+1) << patchID);
+
+     SCIRun::Gaussian gaussGen(d_epsf.mean,d_epsf.std,unique_seed,
                                 d_epsf.refVol,d_epsf.exponent);
       
       for(;iter != pset->end();iter++){
@@ -737,8 +744,16 @@ void UCNH::initializeCMData(const Patch* patch,
       }
     } else if (d_epsf.dist == "weibull"){
       // Initialize a weibull random number generator
+
+      // Make the seed differ for each patch, otherwise each patch gets the
+      // same set of random #s.
+      int patchID = patch->getID();
+      int patch_div_32 = patchID/32;
+      patchID = patchID%32;
+      unsigned int unique_seed = ((d_epsf.seed+patch_div_32+1) << patchID);
+
       SCIRun::Weibull weibGen(d_epsf.mean,d_epsf.std,d_epsf.refVol,
-                              d_epsf.seed,d_epsf.exponent);
+                              unique_seed,d_epsf.exponent);
       
       for(;iter != pset->end();iter++){
         pBeBar[*iter]         = Identity;
@@ -1237,7 +1252,7 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
       J               = defGrad.Determinant();
       double rho_cur  = rho_orig/J;
       pVolume_new[idx]= (pMass[idx]/rho_orig)*J;
-      
+
       // Check 1: Look at Jacobian
       if (!(J > 0.0)) {
         cerr << getpid() ;
@@ -1302,7 +1317,7 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
       
       // compute the total stress (volumetric + deviatoric)
       pStress[idx] = Identity*p + tauDev/J;
-      
+
       if( d_useDamage){
         // Modify the stress if particle has failed/damaged
 	if (d_brittleDamage) {
@@ -1314,9 +1329,9 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
           //cout << "pLocalized[idx]= " << pLocalized[idx] << endl;
 	}
 	else {
-        updateFailedParticlesAndModifyStress(defGrad, pFailureStrain[idx], 
-                                             pLocalized[idx], pLocalized_new[idx],
-                                             pStress[idx], pParticleID[idx]);
+          updateFailedParticlesAndModifyStress(defGrad, pFailureStrain[idx], 
+                                           pLocalized[idx], pLocalized_new[idx],
+                                           pStress[idx], pParticleID[idx]);
           if (pLocalized_new[idx]>0) totalLocalizedParticle+=1;
         }
       }

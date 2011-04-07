@@ -64,7 +64,7 @@
 ##  initialize configure 
 AC_INIT([Uintah],[1.25],[csafe-homebrew@cs.utah.edu])
 
-##  require autoconf version 2.61
+##  require autoconf version 2.67
 ##     The reason to require the latest autoconf is to try and get everyone who
 ##     updates configure to use the same version.  By doing so, the SVN diffs
 ##     don't look completely different from minor changes.  (This happens
@@ -72,8 +72,6 @@ AC_INIT([Uintah],[1.25],[csafe-homebrew@cs.utah.edu])
 ##
 ##     type "autoconf --version" to find out what version you have.
 ##
-##     Note, 2.63+ is actually the latest, but many machines don't have it, so
-##     going to use 2.61 for now.
 ##     On blaze you can find 2.67 in /usr/local/share/bin
 ##
 AC_PREREQ(2.67)
@@ -296,6 +294,23 @@ SCI_ARG_WITH(mpi,
   [with_mpi="$withval"
    sci_required_mpi=yes],
   [with_mpi=""])
+SCI_ARG_WITH(mpi_lib,
+  AC_HELP_STRING(--with-mpi-lib=DIR,
+                 Use the mpi libraries installed in DIR),
+  [with_mpi_lib="$withval"
+   sci_required_mpi=yes],
+  [with_mpi_lib=""])
+SCI_ARG_WITH(mpi_include,
+  AC_HELP_STRING(--with-mpi-include=DIR,
+                 Use the mpi include files installed in DIR),
+  [with_mpi_include="$withval"
+   sci_required_mpi=yes],
+  [with_mpi_include=""])
+SCI_ARG_WITH(mpi_extra_libs,
+  AC_HELP_STRING(--with-mpi-extra-libs=/path/to/lib1.so,
+                 Use this additional library(or libraries - comma separated) for mpi linking),
+  [with_mpi_extra_libs="$withval"],
+  [with_mpi_extra_libs=""])
 SCI_ARG_WITH(mpiuni,
   AC_HELP_STRING(--with-mpiuni=DIR,
                  Use the mpiuni installation in DIR),
@@ -424,7 +439,7 @@ SCI_ARG_WITH(visit,
 
 SCI_ARG_ENABLE(wasatch_3p,
   AC_HELP_STRING(--enable-wasatch_3p,
-                 Download and build the Wasatch Thirdparty libraries - TabProps, ExprLib, SpatialOps),
+                 Download and build the Wasatch Thirdparty libraries - TabProps oExprLibs SpatialOps.),
   [wasatch_3p="yes"],
   [wasatch_3p=="no"])
 
@@ -643,7 +658,6 @@ if test -z "$NUM_CPUS"; then
   NUM_CPUS="1"
 fi
 AC_MSG_RESULT($NUM_CPUS)
-
 
 ##  ----------  determine if this is a 32 or 64 bit machine
 AC_LANG([C])
@@ -1065,8 +1079,14 @@ if test "$with_malloc_trace"; then
     if test ! -d $with_malloc_trace; then
       AC_MSG_ERROR( '$with_malloc_trace' directory does not exist. )
     fi
-    if test ! -f $with_malloc_trace/lib/shared/libMallocTrace.so; then
-      AC_MSG_ERROR( '$with_malloc_trace/lib/shared/libMallocTrace.so' does not exist. )
+    if test "$IS_STATIC_BUILD" = "yes"; then
+       if test ! -f $with_malloc_trace/lib/libMallocTrace.a; then
+       	  AC_MSG_ERROR( '$with_malloc_trace/lib/libMallocTrace.a' does not exist. )
+       fi
+    else
+	if test ! -f $with_malloc_trace/lib/shared/libMallocTrace.so; then
+      	   AC_MSG_ERROR( '$with_malloc_trace/lib/shared/libMallocTrace.so' does not exist. )
+    	fi
     fi
     if test ! -f $with_malloc_trace/include/MallocTrace.h; then
       AC_MSG_ERROR( '$with_malloc_trace/include/MallocTrace.h' does not exist. )
@@ -1074,7 +1094,11 @@ if test "$with_malloc_trace"; then
     AC_MSG_RESULT(yes)
     DEF_MALLOC_TRACE="#define MALLOC_TRACE 1"
     INC_MALLOC_TRACE_H="-I$with_malloc_trace/include"
-    MALLOC_TRACE_LIB_DIR_FLAG="$LDRUN_PREFIX$with_malloc_trace/lib/shared -L$with_malloc_trace/lib/shared"
+    if test "$IS_STATIC_BUILD" = "yes"; then
+       MALLOC_TRACE_LIB_DIR_FLAG="$LDRUN_PREFIX$with_malloc_trace/lib -L$with_malloc_trace/lib"
+    else								     
+       MALLOC_TRACE_LIB_DIR_FLAG="$LDRUN_PREFIX$with_malloc_trace/lib/shared -L$with_malloc_trace/lib/shared"
+    fi
     MALLOC_TRACE_LIB_FLAG="-lMallocTrace"
     MALLOC_TRACE_LIB_MPI_FLAG="-lMallocTraceMPI"
   fi
@@ -1085,7 +1109,7 @@ AC_SUBST(MALLOC_TRACE_LIB_FLAG)
 AC_SUBST(MALLOC_TRACE_LIB_DIR_FLAG)
 AC_SUBST(MALLOC_TRACE_LIB_MPI_FLAG)
 
-##  --  Check for 64 vs 80 bit floating point number storage in register precission error ------------------------
+##  --  Check for 64 vs 80 bit floating point number storage in register precision error ------------------------
 
 # In other words, the processor may use 80 bit floating point number registers, and as long as the
 # data is kept on the processor (in registers) then you get extra precission... however, as soon as
@@ -2145,9 +2169,16 @@ else
       found_xml2_config="yes"
       AC_MSG_WARN(Using $_sci_lib/../bin/xml2-config to set libxml2 variables.)
 
+      xml2_static=`xml2-config | grep static`
+
       if test "$IS_STATIC_BUILD" = "yes" -a "$IS_OSX" != "yes"; then
-        STATIC_FLAG=--static
+        if test -n "$xml2_static"; then
+           STATIC_FLAG=--static
+        else
+           STATIC_FLAG=''
+        fi
       fi
+
 
       XML2_LIB_DIR_FLAG=`$_sci_lib/../bin/xml2-config --libs $STATIC_FLAG`
       XML2_LDFLAGS=""
@@ -2916,12 +2947,57 @@ AC_SUBST(LAPACKMP_LIB_FLAG)
 AC_SUBST(LAPACKMP_LIB_DIR_FLAG)
 sci_defs_files="$sci_defs_files include/sci_defs/lapack_testdefs.h"
 
+##  --  allow for extra mpi libraries  -----------------------------------
+
+# If --with-mpi-extra-libs is set, then it will be one or more
+# absolute paths to additionaly libraries necessary to link MPI.  This
+# code parses the given library (libraries) and adds (through the
+# MPI_EXTRA flags) to the MPI test link line.
+
+if test "$with_mpi_extra_libs"; then
+   the_libs=$(echo $with_mpi_extra_libs | tr "," "\n")
+   for lib in $the_libs; do
+      if test ! -f "$lib"; then
+         AC_MSG_ERROR(Extra MPI lib '$lib' does not exist...)
+      else
+         the_dir=`dirname $lib`
+         if test "$the_dir" == "."; then
+            AC_MSG_ERROR(Extra MPI lib '$lib' must include an absolute path...)
+         fi
+         the_base=`basename $lib | cut -f"1" -d"." | sed 's/lib//g'` 
+         MPI_EXTRA_LIB_FLAG="$MPI_EXTRA_LIB_FLAG -l$the_base"
+         MPI_EXTRA_LIB_DIR="$MPI_EXTRA_LIB_DIR -L$the_dir"
+      fi
+   done
+fi
+
 ##  --  search for mpi  --------------------------------------------------
 sci_required_mpi="yes"
 if test "$sci_required_mpi" = "yes"; then
   echo
   AS_MESSAGE(checking for required MPI components......)
   echo
+
+  if test "$with_mpi" -a \( "$with_mpi_include" -o "$with_mpi_lib" \); then
+    AC_MSG_ERROR( [Please use either --with-mpi or --with-mpi-lib/include, but not both.] )
+  fi
+  if test "$with_mpi_include" = "yes"; then
+    AC_MSG_ERROR( [--with-mpi-include=DIR must specify a DIRectory.] )
+  fi
+  if test "$with_mpi_lib" = "yes"; then
+    AC_MSG_ERROR( [--with-mpi-lib=DIR must specify a DIRectory.] )
+  fi
+  if test \( "$with_mpi_lib" -a "$with_mpi_include" = "" \) -o \( "$with_mpi_lib" = "" -a "$with_mpi_include" \); then
+    AC_MSG_ERROR( [Both --with-mpi-lib=DIR and --with-mpi-include=DIR must be specified...] )
+  fi
+  if test "$with_mpi_include"; then
+    if ! test -d "$with_mpi_include"; then
+      AC_MSG_ERROR( [The directory specified with --with-mpi-include=DIR is not valid: $with_mpi_include] )
+    fi
+    if ! test -d "$with_mpi_lib"; then
+      AC_MSG_ERROR( [The directory specified with --with-mpi-lib=DIR is not valid: $with_mpi_lib] )
+    fi
+  fi
 
   case $host in
   #  *aix*)
@@ -2955,6 +3031,11 @@ if test "$sci_required_mpi" = "yes"; then
               # Account for lib64 or lib32 or just lib...
               BASE_LIB_PATH(_sci_lib,$with_mpi)
            fi
+        else
+          if test "$with_mpi_lib"; then
+            _sci_inc="$with_mpi_include"
+            _sci_lib="$with_mpi_lib"
+          fi
         fi
 
 	# After each attempt to locate mpi, we need to verify that the mpi it
@@ -3668,9 +3749,9 @@ if test "$wasatch_3p" = "yes"; then
   if test "$HAVE_BOOST" != "yes"; then
       AC_MSG_ERROR( Option --enable-wasatch_3p requires Boost... <--with-boost=DIR> )
   fi
-  if test "$HAVE_HDF5" != "yes"; then
-      AC_MSG_ERROR( Option --enable-wasatch_3p requires HDF5... <--with-hdf5=DIR> )
-  fi
+#  if test "$HAVE_HDF5" != "yes"; then
+#      AC_MSG_ERROR( Option --enable-wasatch_3p requires HDF5... <--with-hdf5=DIR> )
+#  fi
   if test "$with_tabprops"; then
      AC_MSG_ERROR( Do NOT specify both --with-tabprops and --enable-wasatch_3p )
   fi
@@ -3682,7 +3763,7 @@ if test "$wasatch_3p" = "yes"; then
   fi
 
   mkdir -p Wasatch3P
-  $path_to_src/build_scripts/build_wasatch_3p.sh `$sci_pwd` "$with_boost" "$with_hdf5"
+  $path_to_src/build_scripts/build_wasatch_3p.sh `$sci_pwd` "$with_boost"
 
   if test $? != 0; then
      AC_MSG_ERROR( Failed to build Wasatch 3p libraries... )
@@ -3711,8 +3792,8 @@ if test "$with_spatialops"; then
     fi
     SPOPS_INCLUDE_DIR="include/spatialops"
     # Check includes
-    for file in FieldFunctions.h LinAlgTrilinos.h LinAlgUBlas.h LinearSystem.h OperatorDatabase.h \
-                SpatialOperator.h SpatialOpsConfigure.h SpatialOpsDefs.h SpatialOpsTools.h \
+    for file in FieldExpressions.h FieldFunctions.h OperatorDatabase.h \
+                structured/SpatialField.h SpatialOpsConfigure.h SpatialOpsDefs.h SpatialOpsTools.h \
                 particles structured; do
       if test ! -e $with_spatialops/$SPOPS_INCLUDE_DIR/$file; then
         echo ""
@@ -3729,7 +3810,7 @@ if test "$with_spatialops"; then
   DEF_SPATIALOPS="#define HAVE_SPATIALOPS 1"
   INC_SPATIALOPS_H="-I$with_spatialops/include"
   SPATIALOPS_LIB_DIR_FLAG="-L$with_spatialops/lib/spatialops"
-  SPATIALOPS_LIB_FLAG="-lspatialops"
+  SPATIALOPS_LIB_FLAG="-lspatialops -lspatialops-stencil"
   HAVE_SPATIALOPS="yes"
 fi
 AC_SUBST(HAVE_SPATIALOPS)
@@ -3756,7 +3837,7 @@ if test "$with_exprlib"; then
     fi
     SPOPS_INCLUDE_DIR="include/expression"
     # Check includes
-    for file in ExecuteExpression.h ExprDeps.h ExprLib.h Expr_Context.h Expr_Expression.h Expr_ExpressionID.h Expr_FieldManagerList.h \
+    for file in ExprDeps.h ExprLib.h Expr_Context.h Expr_Expression.h Expr_ExpressionID.h Expr_FieldManagerList.h \
                 ExpressionBase.h ExpressionFactory.h ExpressionRegistry.h ExpressionTree.h FieldDeps.h FieldManager.h FieldManagerBase.h \
                 Functions.h PlaceHolderExpr.h Tag.h TransportEquation.h uintah; do
       if test ! -e $with_exprlib/$SPOPS_INCLUDE_DIR/$file; then
@@ -3787,12 +3868,6 @@ AC_SUBST(EXPRLIB_LIB_DIR_FLAG)
 
 if test "$with_tabprops"; then
 
-  if test "$HAVE_HDF5" != "yes"; then
-    # I think HDF5 is optional now for TabProps, but am not quite sure... 
-    AC_MSG_WARN( --with-tabprops=DIR might require HDF5... )
-    add_important_warning "--with-tabprops was specified, but HDF5 was not... this might cause a problem."
-  fi
-
   if test "$with_tabprops" = "yes"; then
     AC_MSG_ERROR( --with-tabprops=DIR requires a DIRectory be provided. )
   else
@@ -3822,18 +3897,16 @@ AC_SUBST(TABPROPS_LIB_DIR_FLAG)
 ##  --  Determine whether we can use WASATCH OR NOT ----------------------
 
 if test "$USE_WASATCH" = yes; then
-  if test "$HAVE_HDF5" = "yes" &&
-     test "$HAVE_BOOST" = "yes" &&
+   if test "$HAVE_BOOST" = "yes" &&
      test "$HAVE_TABPROPS" = "yes" &&
      test "$HAVE_SPATIALOPS" = "yes" &&
      test "$HAVE_EXPRLIB" = "yes"; then
     BUILD_WASATCH=yes
   else
-    AC_MSG_ERROR(You specified the use of the Wasatch component but do not have all the of the prereqs: HDF5 ($HAVE_HDF5); Boost ($HAVE_BOOST); TabProps ($HAVE_TABPROPS); SpatialOps ($HAVE_SPATIALOPS); and ExprLib ($HAVE_EXPRLIB).)
+    AC_MSG_ERROR(You specified the use of the Wasatch component but do not have all the of the prereqs: Boost ($HAVE_BOOST); TabProps ($HAVE_TABPROPS); SpatialOps ($HAVE_SPATIALOPS); and ExprLib ($HAVE_EXPRLIB).)
   fi
 else
-  if test "$HAVE_HDF5" = "yes" &&
-     test "$HAVE_BOOST" = "yes" &&
+  if test "$HAVE_BOOST" = "yes" &&
      test "$HAVE_TABPROPS" = "yes" &&
      test "$HAVE_SPATIALOPS" = "yes" &&
      test "$HAVE_EXPRLIB" = "yes"; then

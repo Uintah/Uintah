@@ -57,10 +57,10 @@ UpwindInterpolant( const std::vector<int>& dim,
 template< typename PhiVolT, typename PhiFaceT >
 void
 UpwindInterpolant<PhiVolT,PhiFaceT>::
-set_advective_velocity( const PhiFaceT &theAdvectiveVelocity )
+set_advective_velocity( const PhiFaceT& theAdvectiveVelocity )
 {
   // !!! NOT THREAD SAFE !!! USE LOCK
-  advectiveVelocity_ = &theAdvectiveVelocity;  
+  advectiveVelocity_ = &theAdvectiveVelocity;
 }
 
 //--------------------------------------------------------------------

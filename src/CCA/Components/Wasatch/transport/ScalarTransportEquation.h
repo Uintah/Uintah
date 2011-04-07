@@ -57,7 +57,7 @@ namespace Wasatch{
    *  \todo Need to hook in parser support for boundary and initial conditions.
    */
   template<typename FieldT>
-  class ScalarTransportEquation : public Expr::TransportEquation
+  class ScalarTransportEquation : public Wasatch::TransportEquation
   {
   public:
 
@@ -83,8 +83,11 @@ namespace Wasatch{
     /**
      *  \brief setup the boundary conditions associated with this transport equation
      */
-    void setup_boundary_conditions( Expr::ExpressionFactory& factory );
-
+    void setup_boundary_conditions( const GraphHelper& graphHelper,
+                                           const Uintah::PatchSet* const localPatches,
+                                           const PatchInfoMap& patchInfoMap,
+                                           const Uintah::MaterialSubset* const materials);
+    
     /**
      *  \brief setup the initial conditions for this transport equation.
      */

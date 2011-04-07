@@ -34,11 +34,8 @@ DEALINGS IN THE SOFTWARE.
 //    Features:
 //      Usage:
 
-
-
 #ifndef __PROGRAM_BURN_CONSTITUTIVE_MODEL_H__
 #define __PROGRAM_BURN_CONSTITUTIVE_MODEL_H__
-
 
 #include <cmath>
 #include "ConstitutiveModel.h"  
@@ -70,6 +67,7 @@ namespace Uintah {
       Point  d_start_place; // Starting point of the detonation
       Vector d_direction;   // Direction if starting from a plane (point-normal)
       double d_D;           // Detonation velocity
+      double d_T0;          // Detonation initiation time
     };
 
     const VarLabel* pProgressFLabel;
@@ -141,6 +139,10 @@ namespace Uintah {
                                         const MPMMaterial* matl,
                                         const PatchSet* patches,
                                         const bool recursion) const;
+
+    virtual void addInitialComputesAndRequires(Task* task,
+                                               const MPMMaterial* matl,
+                                               const PatchSet* patches) const;
 
     virtual double computeRhoMicroCM(double pressure,
                                      const double p_ref,

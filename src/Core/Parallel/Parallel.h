@@ -90,13 +90,8 @@ WARNING
 
       //////////
 
-      // Initializes MPI if necessary.  "scheduler" is used to tell
-      // MPI to initialize the thread safety MPI libs (ie: MPI lib
-      // thread safety is requested if (scheduler ==
-      // "MixedScheduler")) If MPI thread safety is not needed, then
-      // in theory MPI uses a faster library.
-      static void initializeManager( int& argc, char**& argv, 
-				     const std::string & scheduler );
+      // Initializes MPI if necessary. 
+      static void initializeManager( int& argc, char**& arg );
 
       // check to see whether initializeManager has been called
       static bool isInitialized();

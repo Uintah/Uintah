@@ -100,7 +100,8 @@ WARNING
    double getSpecificHeat() const;
    double getThermalConductivity() const;
    double getInitialDensity() const;
-   
+   double getTinyRho() const;
+
    void initializeCells(CCVariable<double>& rhom,
                      CCVariable<double>& rhC,
                      CCVariable<double>& temp, 
@@ -120,6 +121,7 @@ WARNING
    bool d_includeFlowWork;
    double d_specificHeat;
    double d_thermalConductivity;
+   double d_tiny_rho;
 
    std::vector<GeometryObject*> d_geom_objs;
 

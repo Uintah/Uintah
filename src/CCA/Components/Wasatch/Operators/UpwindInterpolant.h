@@ -72,8 +72,7 @@ public:
    *  \param hasPlusFace: Determines if this patch has a physical
    *         boundary on its plus side.
    */
-  UpwindInterpolant( const std::vector<int>& dim,
-                     const std::vector<bool> hasPlusFace );
+  UpwindInterpolant();
   
   /**
    *  \brief Destructor for upwind interpolant.
@@ -99,7 +98,7 @@ public:
    *         hold the convective flux \phi*u_i in the direction i. It
    *         will be stored on the staggered cell centers.
    */
-  void apply_to_field(const PhiVolT &src, PhiFaceT &dest) const; 
+  void apply_to_field( const PhiVolT &src, PhiFaceT &dest );
   
 };
 

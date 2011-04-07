@@ -17,6 +17,27 @@
 
 namespace Wasatch{
 
+#define BUILD_UPWIND( VOLT )                                            \
+  {                                                                     \
+    typedef UpwindInterpolant<VOLT,FaceTypes<VOLT>::XFace> OpX;         \
+    typedef UpwindInterpolant<VOLT,FaceTypes<VOLT>::YFace> OpY;         \
+    typedef UpwindInterpolant<VOLT,FaceTypes<VOLT>::ZFace> OpZ;         \
+    opDB.register_new_operator<OpX>( scinew OpX() );                    \
+    opDB.register_new_operator<OpY>( scinew OpY() );                    \
+    opDB.register_new_operator<OpZ>( scinew OpZ() );                    \
+  }
+
+#define BUILD_UPWIND_LIMITER( VOLT )                                    \
+  {                                                                     \
+    typedef FluxLimiterInterpolant<VOLT,FaceTypes<VOLT>::XFace> OpX;    \
+    typedef FluxLimiterInterpolant<VOLT,FaceTypes<VOLT>::YFace> OpY;    \
+    typedef FluxLimiterInterpolant<VOLT,FaceTypes<VOLT>::ZFace> OpZ;    \
+    opDB.register_new_operator<OpX>( scinew OpX(dim,bcPlus) );          \
+    opDB.register_new_operator<OpY>( scinew OpY(dim,bcPlus) );          \
+    opDB.register_new_operator<OpZ>( scinew OpZ(dim,bcPlus) );          \
+  }
+
+
   void build_operators( const Uintah::Patch& patch,
                         SpatialOps::OperatorDatabase& opDB )
   {

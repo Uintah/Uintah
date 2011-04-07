@@ -372,16 +372,7 @@ public:
                           DataWarehouse* new_dw,
                           const VarLabel* variable);
 
-  template<typename T>                                 
-    void coarsenDriver_std(IntVector cl, 
-                           IntVector ch,
-                           IntVector fl,
-                           IntVector fh,
-                           IntVector refinementRatio,
-                           double ratio,
-                           const Level* coarseLevel,
-                           constCCVariable<T>& fine_q_CC,
-                           CCVariable<T>& coarse_q_CC );
+//
   template<typename T>
     void coarsenDriver_stdNC(IntVector cl,
                              IntVector ch,
@@ -391,16 +382,7 @@ public:
                              constNCVariable<T>& fine_q_NC,
                              NCVariable<T>& coarse_q_NC );
 
-  template<typename T>
-    void coarsenDriver_massWeighted(IntVector cl, 
-                                    IntVector ch,
-                                    IntVector fl,
-                                    IntVector fh,
-                                    IntVector refinementRatio,
-                                    const Level* coarseLevel,
-                                    constCCVariable<double>& cMass,
-                                    constCCVariable<T>& fine_q_CC,
-                                    CCVariable<T>& coarse_q_CC );
+
 
   template<typename T>
     void coarsenVariableCC(const ProcessorGroup*,
