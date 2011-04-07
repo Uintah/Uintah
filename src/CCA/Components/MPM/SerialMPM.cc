@@ -2722,6 +2722,10 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
           }
         }
       } // faces
+      
+    string interp_type = flags->d_interpolator_type;
+    MPMBoundCond bc;
+    bc.setBoundaryCondition(patch,dwi,"Symmetric",internalforce,interp_type);
     }
 
     for(NodeIterator iter = patch->getNodeIterator();!iter.done();iter++){
