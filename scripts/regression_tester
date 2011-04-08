@@ -337,6 +337,9 @@ run_test () {
     if [ $n = "explode2D_amr" ]; then
         numproc=8
         opts="-restart"
+    elif [ $n = "periodic_disks" ]; then
+	numproc=4
+	opts=""
     else
         cp $in_file .
         num_proc
