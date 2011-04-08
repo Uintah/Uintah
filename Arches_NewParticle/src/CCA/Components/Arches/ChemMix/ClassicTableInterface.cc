@@ -475,8 +475,9 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
             which_bc.push_back(ClassicTableInterface::DIRICHLET); 
           } else if (bc_kind == "Neumann" ) { 
             which_bc.push_back(ClassicTableInterface::NEUMANN); 
-          } else
+          } else {
             throw InvalidValue( "Error: BC type not supported for property calculation", __FILE__, __LINE__ ); 
+          }
 
           // currently assuming a constant value across the mesh. 
           bc_values.push_back( bc_value ); 
@@ -577,13 +578,15 @@ ClassicTableInterface::sched_computeHeatLoss( const LevelP& level, SchedulerP& s
   }
 
   // heat loss must be computed if this is the first FE step 
-  if (initialize_me)
+  if (initialize_me) {
     tsk->computes( d_lab->d_heatLossLabel );
-  else 
+  } else {
     tsk->modifies( d_lab->d_heatLossLabel ); 
+  }
 
-  if ( calcEnthalpy )
+  if ( calcEnthalpy ) {
     tsk->requires( Task::NewDW, d_lab->d_enthalpySPLabel, gn, 0 ); 
+  }
 
   sched->addTask( tsk, level->eachPatch(), d_lab->d_sharedState->allArchesMaterials() ); 
 }
@@ -593,12 +596,12 @@ ClassicTableInterface::sched_computeHeatLoss( const LevelP& level, SchedulerP& s
 //--------------------------------------------------------------------------- 
   void 
 ClassicTableInterface::computeHeatLoss( const ProcessorGroup* pc, 
-    const PatchSubset* patches, 
-    const MaterialSubset* matls, 
-    DataWarehouse* old_dw, 
-    DataWarehouse* new_dw, 
-    const bool initialize_me,
-    const bool calcEnthalpy )
+                                        const PatchSubset* patches, 
+                                        const MaterialSubset* matls, 
+                                        DataWarehouse* old_dw, 
+                                        DataWarehouse* new_dw, 
+                                        const bool initialize_me,
+                                        const bool calcEnthalpy )
 {
   for (int p=0; p < patches->size(); p++){
 
@@ -608,24 +611,29 @@ ClassicTableInterface::computeHeatLoss( const ProcessorGroup* pc,
     int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
     CCVariable<double> heat_loss; 
-    if ( initialize_me )
+    if ( initialize_me ) {
       new_dw->allocateAndPut( heat_loss, d_lab->d_heatLossLabel, matlIndex, patch ); 
-    else 
+    } else {
       new_dw->getModifiable ( heat_loss, d_lab->d_heatLossLabel, matlIndex, patch ); 
+    }
     heat_loss.initialize(0.0); 
 
     constCCVariable<double> enthalpy; 
-    if ( calcEnthalpy ) 
+    if ( calcEnthalpy ) {
       new_dw->get(enthalpy, d_lab->d_enthalpySPLabel, matlIndex, patch, gn, 0 ); 
+    }
 
     std::vector<constCCVariable<double> > the_variables; 
 
     // exceptions for cold flow or adiabatic cases
     bool compute_heatloss = true; 
-    if ( d_coldflow ) 
+    if ( d_coldflow ) {
       compute_heatloss = false; 
-    if ( d_adiabatic ) 
+    }
+
+    if ( d_adiabatic ) {
       compute_heatloss = false; 
+    }
 
     if ( compute_heatloss ) { 
 
@@ -653,10 +661,11 @@ ClassicTableInterface::computeHeatLoss( const ProcessorGroup* pc,
         int index = 0; 
         for ( std::vector<constCCVariable<double> >::iterator i = the_variables.begin(); i != the_variables.end(); i++){
 
-          if ( d_allIndepVarNames[index] != "heat_loss" && d_allIndepVarNames[index] != "HeatLoss" ) 
+          if ( d_allIndepVarNames[index] != "heat_loss" && d_allIndepVarNames[index] != "HeatLoss" ) {
             iv.push_back( (*i)[c] );
-          else 
+          }else {
             iv.push_back( 0.0 ); 
+          }
 
           index++; 
         }
@@ -669,8 +678,9 @@ ClassicTableInterface::computeHeatLoss( const ProcessorGroup* pc,
         i_index = d_enthalpyVarIndexMap.find( "adiabaticenthalpy" ); 
         double adiabatic_enthalpy = tableLookUp( iv, i_index->second ); 
         double current_heat_loss  = 0.0;
-        if ( calcEnthalpy )
+        if ( calcEnthalpy ) {
           current_heat_loss = ( adiabatic_enthalpy - enthalpy[c] ) / ( sensible_enthalpy + TINY ); 
+        }
 
         if ( current_heat_loss < d_hl_lower_bound ) {
 
@@ -692,10 +702,12 @@ ClassicTableInterface::computeHeatLoss( const ProcessorGroup* pc,
        
         if ( upper_hl_exceeded || lower_hl_exceeded ) {  
           cout << "Patch with bounds: " << patch->getCellLowIndex() << " to " << patch->getCellHighIndex()  << endl;
-          if ( lower_hl_exceeded ) 
+          if ( lower_hl_exceeded ) {
             cout << "   --> lower heat loss exceeded. " << endl;
-          if ( upper_hl_exceeded ) 
+          }
+          if ( upper_hl_exceeded ) {
             cout << "   --> upper heat loss exceeded. " << endl;
+          }
         } 
       } 
     }
@@ -719,8 +731,9 @@ ClassicTableInterface::sched_computeFirstEnthalpy( const LevelP& level, Schedule
   for (MixingRxnModel::VarMap::iterator i = d_ivVarMap.begin(); i != d_ivVarMap.end(); ++i) {
 
     const VarLabel* the_label = i->second;
-    if (i->first != "heat_loss" && i->first != "HeatLoss") 
+    if (i->first != "heat_loss" && i->first != "HeatLoss") {
       tsk->requires( Task::NewDW, the_label, gn, 0 ); 
+    }
   }
 
   sched->addTask( tsk, level->eachPatch(), d_lab->d_sharedState->allArchesMaterials() ); 
@@ -785,10 +798,11 @@ ClassicTableInterface::computeFirstEnthalpy( const ProcessorGroup* pc,
       int index = 0; 
       for ( std::vector<constCCVariable<double> >::iterator i = the_variables.begin(); i != the_variables.end(); i++){
 
-        if ( d_allIndepVarNames[index] != "heat_loss" && d_allIndepVarNames[index] != "HeatLoss") 
+        if ( d_allIndepVarNames[index] != "heat_loss" && d_allIndepVarNames[index] != "HeatLoss") {
           iv.push_back( (*i)[c] );
-        else 
+        } else {
           iv.push_back( d_hl_scalar_init ); 
+        }
 
         index++; 
       }
@@ -889,7 +903,9 @@ ClassicTableInterface::oldTableHack( const InletStream& inStream, Stream& outStr
     i_index = d_depVarIndexMap.find( "CO2" );
     outStream.d_co2         = tableLookUp( iv, i_index->second ); 
     outStream.d_heatLoss    = current_heat_loss; 
-    if (inStream.d_initEnthalpy) outStream.d_enthalpy = init_enthalpy; 
+    if (inStream.d_initEnthalpy) {
+      outStream.d_enthalpy = init_enthalpy; 
+    }
   }
 
   cout_tabledbg << " Leaving method ClassicTableInterface::OldTableHack " << endl;
@@ -932,8 +948,7 @@ ClassicTableInterface::getAllIndepVars()
   if( d_table_isloaded == true ) {
     vector<string>& allIndepVarNames_ref(d_allIndepVarNames);
     return allIndepVarNames_ref;
-  } 
-  else {
+  } else {
     ostringstream exception;
     exception << "Error: You requested a list of independent variables " <<
       "before specifying the table that you were using. " << endl;
@@ -1267,10 +1282,13 @@ ClassicTableInterface::loadMixingTable( const string & inputfile )
     }
   }
 
-  if ( d_indepvarscount > 1 )
+  if ( d_indepvarscount > 1 ) {
     i2=vector<double>(d_allIndepVarNum[1]);
-  if ( d_indepvarscount > 2 )
+  }
+
+  if ( d_indepvarscount > 2 ){
     i3=vector<double>(d_allIndepVarNum[2]); 
+  }
 
   if ( d_indepvarscount == 3 ) {
     for (int i = 0; i < d_allIndepVarNum[2]; i++){
@@ -1287,15 +1305,13 @@ ClassicTableInterface::loadMixingTable( const string & inputfile )
   }
 
   int size=0;
-  if ( d_indepvarscount == 1 ) 
+  if ( d_indepvarscount == 1 ) {
     size = d_allIndepVarNum[0]; 
-  else if ( d_indepvarscount == 2 ) 
-    size = d_allIndepVarNum[0]*
-      d_allIndepVarNum[1]; 
-  else if ( d_indepvarscount == 3 )
-    size = d_allIndepVarNum[0]*
-      d_allIndepVarNum[1]*
-      d_allIndepVarNum[2]; 
+  } else if ( d_indepvarscount == 2 ) {
+    size = d_allIndepVarNum[0]*d_allIndepVarNum[1]; 
+  } else if ( d_indepvarscount == 3 ) {
+    size = d_allIndepVarNum[0]*d_allIndepVarNum[1]*d_allIndepVarNum[2]; 
+  }
 
   // getting heat loss bounds: 
   if ( index_is_hl != -1 ) { 

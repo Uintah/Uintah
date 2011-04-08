@@ -201,7 +201,7 @@ public:
   // Get methods for particle velocity 
 
   /** @brief   Returns true if there is a particle velocity model specified in the input file. */
-  const inline bool useParticleVelocityModel() {
+  inline bool useParticleVelocityModel() {
     return d_useParticleVelocityModel; }
 
   /** @brief    Return label for particle velocity vector */
@@ -230,7 +230,7 @@ public:
   // Get methods for particle density
 
   /* @brief   Returns true if there is a particle density model specified in the input file. */
-  const inline bool useParticleDensityModel() {
+  inline bool useParticleDensityModel() {
     return d_useParticleDensityModel; }
 
   /** @brief  Return the vector containing the particle density VarLabel for quad node "qn" */
@@ -261,7 +261,7 @@ public:
   // Get methods for particle devolatilization
 
   /** @brief   Returns true if there is a devolatilization model specified in the input file. */
-  const inline bool useDevolatilizationModel() {
+  inline bool useDevolatilizationModel() {
     return d_useDevolatilizationModel; }
 
   /** @brief    Return the model object for devolatilization model */
@@ -279,7 +279,7 @@ public:
   // Get methods for particle heat transfer
 
   /** @brief   Returns true if there is a particle temperature (heat transfer) model specified in the input file. */
-  const inline bool useHeatTransferModel() {
+  inline bool useHeatTransferModel() {
     return d_useHeatTransferModel; }
 
   /** @brief    Return the model object for heat transfer model */

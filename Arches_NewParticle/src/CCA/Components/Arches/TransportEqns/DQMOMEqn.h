@@ -192,11 +192,11 @@ public:
       return 0.0; } }; 
 
   /** @brief Get the quadrature node value. */
-  inline const int getQuadNode(){
+  inline int getQuadNode(){
     return d_quadNode; };
 
   /** @brief  Get boolean: add extra sources?  */
-  inline const bool getAddExtraSources() {
+  inline bool getAddExtraSources() {
     return d_addExtraSources; };
 
  

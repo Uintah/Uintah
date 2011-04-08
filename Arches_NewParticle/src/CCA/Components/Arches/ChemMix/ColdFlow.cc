@@ -266,18 +266,17 @@ ColdFlow::getState( const ProcessorGroup* pc,
         new_dw->getModifiable( mpmarches_denmicro, d_lab->d_densityMicroLabel, matlIndex, patch ); 
     }
 
-                std::map< std::string, int> iter_to_index;  
+    std::map< std::string, int> iter_to_index;  
     for ( DepVarMap::iterator i = depend_storage.begin(); i != depend_storage.end(); ++i ){
 
-                        // this just maps the iterator to an index so that density and temperature can be 
-                        // easily identified: 
-                  if ( i->first == "density" )
-                                iter_to_index.insert( make_pair( i->first, 0 )).first;
-                        else if ( i->first == "temperature" )
-                                iter_to_index.insert( make_pair( i->first, 1 )).first;
-
-                }
-
+      // this just maps the iterator to an index so that density and temperature can be 
+      // easily identified: 
+      if ( i->first == "density" ) {
+        iter_to_index.insert( make_pair( i->first, 0 )).first;
+      } else if ( i->first == "temperature" ) {
+        iter_to_index.insert( make_pair( i->first, 1 )).first;
+      }
+    }
 
     CCVariable<double> arches_density; 
     new_dw->getModifiable( arches_density, d_lab->d_densityCPLabel, matlIndex, patch ); 
@@ -296,16 +295,17 @@ ColdFlow::getState( const ProcessorGroup* pc,
       // retrieve all depenedent variables from table
       for ( DepVarMap::iterator i = depend_storage.begin(); i != depend_storage.end(); ++i ){
 
-                                std::map< std::string, int>::iterator i_to_i = iter_to_index.find( i->first ); 
-                                double table_value = coldFlowMixing( iv, i_to_i->second ); 
+        std::map< std::string, int>::iterator i_to_i = iter_to_index.find( i->first ); 
+        double table_value = coldFlowMixing( iv, i_to_i->second ); 
 
         (*i->second.var)[c] = table_value;
 
         if (i->first == "density") {
           arches_density[c] = table_value; 
-          if (d_MAlab)
+          if (d_MAlab) {
             mpmarches_denmicro[c] = table_value; 
-                                }
+          }
+        }
       }
     }
 
@@ -351,8 +351,9 @@ ColdFlow::getState( const ProcessorGroup* pc,
             which_bc.push_back(ColdFlow::DIRICHLET); 
           } else if (bc_kind == "Neumann" ) { 
             which_bc.push_back(ColdFlow::NEUMANN); 
-          } else
+          } else {
             throw InvalidValue( "Error: BC type not supported for property calculation", __FILE__, __LINE__ ); 
+          }
 
           // currently assuming a constant value across the mesh. 
           bc_values.push_back( bc_value ); 
@@ -386,8 +387,8 @@ ColdFlow::getState( const ProcessorGroup* pc,
           // now get state for boundary cell: 
           for ( DepVarMap::iterator i = depend_storage.begin(); i != depend_storage.end(); ++i ){
 
-                                                std::map< std::string, int>::iterator i_to_i = iter_to_index.find( i->first ); 
-                                                double table_value = coldFlowMixing( iv, i_to_i->second ); 
+            std::map< std::string, int>::iterator i_to_i = iter_to_index.find( i->first ); 
+            double table_value = coldFlowMixing( iv, i_to_i->second ); 
 
             (*i->second.var)[c] = table_value;
 
@@ -395,9 +396,10 @@ ColdFlow::getState( const ProcessorGroup* pc,
               //double ghost_value = 2.0*table_value - arches_density[cp1];
               arches_density[c] = table_value;
               //arches_density[c] = ghost_value; 
-              if (d_MAlab)
+              if (d_MAlab) {
                 mpmarches_denmicro[c] = table_value; 
-                                                }
+              }
+            }
           }
           iv.clear(); 
         }
@@ -414,11 +416,10 @@ ColdFlow::getState( const ProcessorGroup* pc,
       double den_ref = 0.0;
 
       if (patch->containsCell(d_ijk_den_ref)) {
-
         den_ref = arches_density[d_ijk_den_ref];
         cerr << "Modified reference density to: density_ref = " << den_ref << endl;
-
       }
+
       new_dw->put(sum_vartype(den_ref),time_labels->ref_density);
     }
   }
@@ -510,24 +511,24 @@ ColdFlow::coldFlowMixing( std::vector<double>& iv, int pos )
 double ColdFlow::getTableValue( std::vector<double> iv, std::string variable )
 {
 
-        if ( variable == "density" ){ 
+  if ( variable == "density" ){ 
 
-                int pos = 0; 
-                double value = coldFlowMixing( iv, pos );  
-                return value; 
+    int pos = 0; 
+    double value = coldFlowMixing( iv, pos );  
+    return value; 
 
-        } else if ( variable == "temperature" ) { 
+  } else if ( variable == "temperature" ) { 
 
-                int pos = 1; 
-                double value = coldFlowMixing( iv, pos );  
-                return value; 
+    int pos = 1; 
+    double value = coldFlowMixing( iv, pos );  
+    return value; 
 
-        } else { 
+  } else { 
 
-                // a bit dangerous?
-                //
-                double value = 0;
-                return value; 
+    // a bit dangerous?
+    //
+    double value = 0;
+    return value; 
 
-        }
+  }
 }

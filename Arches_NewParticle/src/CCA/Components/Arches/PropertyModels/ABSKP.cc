@@ -58,7 +58,7 @@ void ABSKP::sched_computeProp( const LevelP& level, SchedulerP& sched, int time_
     CoalModelFactory& modelFactory = CoalModelFactory::self();
     heatmodels_ = modelFactory.getHeatTransferModels();
     for( vector<HeatTransfer*>::iterator iModel = heatmodels_.begin(); iModel != heatmodels_.end(); ++iModel ) {
-      const VarLabel* tempabskpLabel;// = iModel->getabskp();
+      const VarLabel* tempabskpLabel = (*iModel)->getabskp();
       tsk->requires( Task::OldDW, tempabskpLabel, Ghost::None, 0 );
     }
     
@@ -100,7 +100,7 @@ void ABSKP::computeProp(const ProcessorGroup* pc,
     for (iter.begin(); !iter.done(); iter++){
 
       for( vector<HeatTransfer*>::iterator iModel = heatmodels_.begin(); iModel != heatmodels_.end(); ++iModel ) {
-        const VarLabel* tempabskpLabel;// = iModel->getabskp();
+        const VarLabel* tempabskpLabel = (*iModel)->getabskp();
         constCCVariable<double> abskp;
         old_dw->get( abskp, tempabskpLabel, matlIndex, patch, gn, 0 );
         prop[*iter] += abskp[*iter];

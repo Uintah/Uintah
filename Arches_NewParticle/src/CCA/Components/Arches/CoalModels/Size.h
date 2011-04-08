@@ -44,7 +44,7 @@ public:
   // Initialization stuff
 
   /** @brief  Grab model-independent length parameters */
-  void problemSetup(const ProblemSpecP& db, int qn);
+  void problemSetup(const ProblemSpecP& db);
 
   /** @brief Schedule the initialization of special/local variables unique to model */
   void sched_initVars( const LevelP& level, SchedulerP& sched );
