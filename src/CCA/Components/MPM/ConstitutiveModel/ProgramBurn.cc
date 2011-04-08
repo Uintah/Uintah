@@ -474,9 +474,6 @@ void ProgramBurn::computeStressTensor(const PatchSubset* patches,
         deformationGradient_new[idx]*=cbrt(J_CC[cell_index])/cbrt(J);
         J=J_CC[cell_index];
       }
-//      if (J>=2000.0) {
-//        cout<<"huge J in ProgramBurn, J="<<J<<", pID = " << pParticleID[idx] << endl << "F = " << deformationGradient_new[idx] << endl;
-//      }
       if (J<=0.0) {
         double Jold = deformationGradient[idx].Determinant();
         cout<<"negative J in ProgramBurn, J="<<J<<", Jold = " << Jold << endl;
@@ -525,9 +522,6 @@ void ProgramBurn::computeStressTensor(const PatchSubset* patches,
                        Max(c_dil+fabs(pvelocity_idx.y()),WaveSpeed.y()),
                        Max(c_dil+fabs(pvelocity_idx.z()),WaveSpeed.z()));
                                                                                 
-    if (c_dil>1.e4){
-       cout << "c_dil = " << c_dil << ", pvolume = " << pvolume[idx] << ", J = " << J << ", rho_cur = " << rho_cur << ", pmass = " << pmass[idx] << endl;
-    }
       // Compute artificial viscosity term
       if (flag->d_artificial_viscosity) {
         double dx_ave = (dx.x() + dx.y() + dx.z())/3.0;
