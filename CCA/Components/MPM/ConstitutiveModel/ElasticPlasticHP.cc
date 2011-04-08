@@ -1419,7 +1419,7 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
       // Compute the strain energy for non-localized particles
       if(pLocalized_new[idx] == 0){
         Matrix3 avgStress = (pStress_new[idx] + pStress[idx])*0.5;
-	double avgVolume = (pVolume_deformed[idx]+pVolume[idx])*0.5;
+        double avgVolume = (pVolume_deformed[idx]+pVolume[idx])*0.5;
         double pSpecificStrainEnergy = (tensorD(0,0)*avgStress(0,0) +
                                 tensorD(1,1)*avgStress(1,1) +
                                 tensorD(2,2)*avgStress(2,2) +
@@ -1428,11 +1428,13 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
                                      tensorD(1,2)*avgStress(1,2)))*
                                      avgVolume*delT/pMass[idx];
 
-	pEnergy_new[idx] = pEnergy[idx] + pSpecificStrainEnergy 
+        pEnergy_new[idx] = pEnergy[idx] + pSpecificStrainEnergy 
                                         - p_q[idx]*Vdot*delT*include_AV_heating;
 
         totalStrainEnergy += pSpecificStrainEnergy*pMass[idx];
-      }          
+      }else{
+        pEnergy_new[idx] = pEnergy[idx];
+      }
 
       // Compute wave speed at each particle, store the maximum
       Vector pVel = pVelocity[idx];
