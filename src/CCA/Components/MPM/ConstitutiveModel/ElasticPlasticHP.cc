@@ -85,7 +85,7 @@ ElasticPlasticHP::ElasticPlasticHP(ProblemSpecP& ps,MPMFlags* Mflag)
   ps->require("bulk_modulus",d_initialData.Bulk);
   ps->require("shear_modulus",d_initialData.Shear);
 
-  d_initialData.alpha = 1.0e-5; // default is per K
+  d_initialData.alpha = 0.0; // default is per K.  Only used in implicit code
   ps->get("coeff_thermal_expansion", d_initialData.alpha);
   d_initialData.Chi = 0.9;
   ps->get("taylor_quinney_coeff",d_initialData.Chi);
@@ -688,18 +688,12 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
 
   double bulk  = d_initialData.Bulk;
   double shear = d_initialData.Shear;
-  double alpha = d_initialData.alpha;
   double rho_0 = matl->getInitialDensity();
   double Tm = matl->getMeltTemperature();
   double sqrtTwo = sqrt(2.0);
   double sqrtThreeTwo = sqrt(1.5);
   double sqrtTwoThird = 1.0/sqrtThreeTwo;
   double totalStrainEnergy = 0.0;
-
-  // Do thermal expansion?
-  if(!flag->d_doThermalExpansion){
-    alpha = 0;
-  }
 
   // Loop thru patches
   for(int patchIndex=0; patchIndex<patches->size(); patchIndex++){
