@@ -82,6 +82,10 @@ ProgramBurn::ProgramBurn(ProblemSpecP& ps, MPMFlags* Mflag)
                                ParticleVariable<double>::getTypeDescription());
   pProgressFLabel_preReloc = VarLabel::create("p.progressF+",
                                ParticleVariable<double>::getTypeDescription());
+  pLocalizedLabel = VarLabel::create("p.localized",
+                               ParticleVariable<int>::getTypeDescription());
+  pLocalizedLabel_preReloc = VarLabel::create("p.localized+",
+                               ParticleVariable<int>::getTypeDescription());
 }
 
 ProgramBurn::ProgramBurn(const ProgramBurn* cm) : ConstitutiveModel(cm)
@@ -107,12 +111,18 @@ ProgramBurn::ProgramBurn(const ProgramBurn* cm) : ConstitutiveModel(cm)
                                ParticleVariable<double>::getTypeDescription());
   pProgressFLabel_preReloc = VarLabel::create("p.progressF+",
                                ParticleVariable<double>::getTypeDescription());
+  pLocalizedLabel = VarLabel::create("p.localized",
+                               ParticleVariable<int>::getTypeDescription());
+  pLocalizedLabel_preReloc = VarLabel::create("p.localized+",
+                               ParticleVariable<int>::getTypeDescription());
 }
 
 ProgramBurn::~ProgramBurn()
 {
   VarLabel::destroy(pProgressFLabel);
   VarLabel::destroy(pProgressFLabel_preReloc);
+  VarLabel::destroy(pLocalizedLabel);
+  VarLabel::destroy(pLocalizedLabel_preReloc);
 }
 
 void ProgramBurn::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
@@ -155,9 +165,13 @@ void ProgramBurn::initializeCMData(const Patch* patch,
   ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
 
   ParticleVariable<double> pProgress;
+  ParticleVariable<int>     pLocalized;
   new_dw->allocateAndPut(pProgress,pProgressFLabel,pset);
+  new_dw->allocateAndPut(pLocalized,         pLocalizedLabel, pset);
+
   for(ParticleSubset::iterator iter=pset->begin();iter != pset->end(); iter++){
     pProgress[*iter] = 0.;
+    pLocalized[*iter] = 0;
   }
 
   computeStableTimestep(patch, matl, new_dw);
@@ -174,6 +188,8 @@ void ProgramBurn::allocateCMDataAddRequires(Task* task,
   // for the particle convert operation
   // This method is defined in the ConstitutiveModel base class.
   addSharedRForConvertExplicit(task, matlset, patches);
+  task->requires(Task::NewDW, pLocalizedLabel_preReloc,   matlset,Ghost::None);
+
 }
 
 
@@ -188,9 +204,19 @@ void ProgramBurn::allocateCMDataAdd(DataWarehouse* new_dw,
   // deleted to the particle to be added. 
   // This method is defined in the ConstitutiveModel base class.
   copyDelToAddSetForConvertExplicit(new_dw, delset, addset, newState);
+
+  ParticleVariable<int>      pLocalized;
+  constParticleVariable<int> o_Localized;
+  new_dw->allocateTemporary(pLocalized,addset);
+  new_dw->get(o_Localized,pLocalizedLabel_preReloc,delset);
   
   // Copy the data local to this constitutive model from the particles to 
   // be deleted to the particles to be added
+  ParticleSubset::iterator o,n = addset->begin();
+  for (o=delset->begin(); o != delset->end(); o++, n++) {
+    pLocalized[*n] = o_Localized[*o];
+  }
+  (*newState)[pLocalizedLabel]=pLocalized.clone();
 }
 
 void ProgramBurn::addParticleState(std::vector<const VarLabel*>& from,
@@ -199,6 +225,9 @@ void ProgramBurn::addParticleState(std::vector<const VarLabel*>& from,
   // Add the local particle state data for this constitutive model.
   from.push_back(pProgressFLabel);
   to.push_back(pProgressFLabel_preReloc);
+
+  from.push_back(pLocalizedLabel);
+  to.push_back(pLocalizedLabel_preReloc);
 }
 
 void ProgramBurn::computeStableTimestep(const Patch* patch,
@@ -273,7 +302,9 @@ void ProgramBurn::computeStressTensor(const PatchSubset* patches,
     constParticleVariable<Vector> psize;
     ParticleVariable<double> pdTdt,p_q,pProgressF_new;
     ParticleVariable<Matrix3> velGrad;
-
+    constParticleVariable<int> pLocalized;
+    ParticleVariable<int>      pLocalized_new;
+    constParticleVariable<long64> pParticleID;
 
     delt_vartype delT;
     old_dw->get(delT, lb->delTLabel, getLevel(patches));
@@ -285,6 +316,8 @@ void ProgramBurn::computeStressTensor(const PatchSubset* patches,
     old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
     old_dw->get(psize,               lb->pSizeLabel,               pset);
     old_dw->get(pProgressF,          pProgressFLabel,              pset);
+    old_dw->get(pLocalized,          pLocalizedLabel,              pset);
+    old_dw->get(pParticleID,         lb->pParticleIDLabel,         pset);
     
     new_dw->allocateAndPut(pstress,          lb->pStressLabel_preReloc,   pset);
     new_dw->allocateAndPut(pvolume,          lb->pVolumeLabel_preReloc,   pset);
@@ -294,8 +327,10 @@ void ProgramBurn::computeStressTensor(const PatchSubset* patches,
                                   lb->pDeformationMeasureLabel_preReloc,  pset);
 
     new_dw->allocateAndPut(pProgressF_new,    pProgressFLabel_preReloc,   pset);
+    new_dw->allocateAndPut(pLocalized_new,    pLocalizedLabel_preReloc,   pset);
 
     new_dw->allocateTemporary(velGrad,                             pset);
+
 
     constNCVariable<Vector> gvelocity;
     new_dw->get(gvelocity, lb->gVelocityStarLabel, dwi, patch, gac, NGN);
@@ -337,6 +372,8 @@ void ProgramBurn::computeStressTensor(const PatchSubset* patches,
     for(ParticleSubset::iterator iter = pset->begin();
         iter != pset->end(); iter++){
       particleIndex idx = *iter;
+
+      pLocalized_new[idx] = pLocalized[idx];
 
       Point p = px[idx];
 
@@ -437,6 +474,20 @@ void ProgramBurn::computeStressTensor(const PatchSubset* patches,
         deformationGradient_new[idx]*=cbrt(J_CC[cell_index])/cbrt(J);
         J=J_CC[cell_index];
       }
+//      if (J>=2000.0) {
+//        cout<<"huge J in ProgramBurn, J="<<J<<", pID = " << pParticleID[idx] << endl << "F = " << deformationGradient_new[idx] << endl;
+//      }
+      if (J<=0.0) {
+        double Jold = deformationGradient[idx].Determinant();
+        cout<<"negative J in ProgramBurn, J="<<J<<", Jold = " << Jold << endl;
+        cout << "pos = " << px[idx] << endl;
+        pLocalized_new[idx]=-999;
+        cout<< "localizing (deleting) particle "<<pParticleID[idx]<<endl;
+        cout<< "material = " << dwi << endl << "Momentum deleted = "
+                                    << pvelocity[idx]*pmass[idx] <<endl;
+        J=1;
+      }
+
 
       //  The following computes a pressure for partially burned particles
       //  as a mixture of Murnahan and JWL pressures, based on pProgressF
@@ -474,6 +525,9 @@ void ProgramBurn::computeStressTensor(const PatchSubset* patches,
                        Max(c_dil+fabs(pvelocity_idx.y()),WaveSpeed.y()),
                        Max(c_dil+fabs(pvelocity_idx.z()),WaveSpeed.z()));
                                                                                 
+    if (c_dil>1.e4){
+       cout << "c_dil = " << c_dil << ", pvolume = " << pvolume[idx] << ", J = " << J << ", rho_cur = " << rho_cur << ", pmass = " << pmass[idx] << endl;
+    }
       // Compute artificial viscosity term
       if (flag->d_artificial_viscosity) {
         double dx_ave = (dx.x() + dx.y() + dx.z())/3.0;
@@ -532,8 +586,11 @@ void ProgramBurn::addComputesAndRequires(Task* task,
   const MaterialSubset* matlset = matl->thisMaterial();
   addSharedCRForExplicit(task, matlset, patches);
 
-  task->requires(Task::OldDW, pProgressFLabel,   matlset, Ghost::None);
-  task->computes(pProgressFLabel_preReloc,       matlset);
+  task->requires(Task::OldDW, pProgressFLabel,         matlset, Ghost::None);
+  task->requires(Task::OldDW, lb->pParticleIDLabel,   matlset, Ghost::None);
+  task->requires(Task::OldDW, pLocalizedLabel,        matlset, Ghost::None);
+  task->computes(pProgressFLabel_preReloc,            matlset);
+  task->computes(pLocalizedLabel_preReloc,            matlset);
 }
 
 void ProgramBurn::addInitialComputesAndRequires(Task* task,
@@ -542,6 +599,22 @@ void ProgramBurn::addInitialComputesAndRequires(Task* task,
 { 
   const MaterialSubset* matlset = matl->thisMaterial();
   task->computes(pProgressFLabel,       matlset);
+}
+
+void ProgramBurn::getDamageParameter(const Patch* patch,
+                                   ParticleVariable<int>& damage,
+                                   int dwi,
+                                   DataWarehouse* old_dw,
+                                   DataWarehouse* new_dw)
+{
+  ParticleSubset* pset = old_dw->getParticleSubset(dwi,patch);
+  constParticleVariable<int> pLocalized;
+  new_dw->get(pLocalized, pLocalizedLabel_preReloc, pset);
+
+  ParticleSubset::iterator iter;
+  for (iter = pset->begin(); iter != pset->end(); iter++) {
+    damage[*iter] = pLocalized[*iter];
+  }
 }
 
 void 
