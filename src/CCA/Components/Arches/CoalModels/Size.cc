@@ -42,7 +42,7 @@ Size::~Size()
 // Method: Problem Setup
 //---------------------------------------------------------------------------
   void 
-Size::problemSetup(const ProblemSpecP& params, int qn)
+Size::problemSetup(const ProblemSpecP& params)
 {
   // This method is called by all length classes' problemSetup()
 

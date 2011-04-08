@@ -163,20 +163,20 @@ public:
     return d_initFunction; }; 
 
   /** @brief  Return initialization value for constant initialization function */
-  inline const double getInitializationConstant() {
+  inline double getInitializationConstant() {
     return d_constant_init; };
 
   /** @brief Return the scaling constant for the given equation. */
-  inline const double getScalingConstant(){
+  inline double getScalingConstant(){
     return d_scalingConstant; };
 
   /** @brief Return the density guess boolean */
-  inline const bool getDensityGuessBool(){
+  inline bool getDensityGuessBool(){
     return d_use_density_guess; 
   };
 
   /** @brief  Return a boolean: add sources? */
-  inline const bool getAddSources() {
+  inline bool getAddSources() {
     return d_addSources; };
 
   /** @brief  Get boolean: do low clipping? */

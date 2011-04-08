@@ -151,7 +151,7 @@ public:
   };
 
   /** @brief  Get the number of quadrature nodes */ 
-  inline const int get_quad_nodes() {
+  inline int get_quad_nodes() {
     return d_quadNodes; };
 
   /** @brief  Set number quadrature nodes */ 

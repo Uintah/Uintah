@@ -94,7 +94,7 @@ public:
     return "HeatTransfer"; }
 
   /** @brief  Access function for radiation flag (on/off) */
-  inline const bool getRadiationFlag(){
+  inline bool getRadiationFlag(){
     return b_radiation; };   
 
   /** @brief  Access function for thermal conductivity of particles */

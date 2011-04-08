@@ -1125,7 +1125,8 @@ OdtClosure::sched_computeScalarVariance(SchedulerP& sched,
                                         const PatchSet* patches,
                                         const MaterialSet* matls,
                                         const TimeIntegratorLabel* timelabels,
-                                        bool d_EKTCorrection)
+                                        bool d_EKTCorrection,
+                                        bool doing_EKT_now)
 {
   string taskname =  "OdtClosure::computeScalarVaraince" +
                      timelabels->integrator_step_name;
@@ -1243,7 +1244,8 @@ OdtClosure::sched_computeScalarDissipation(SchedulerP& sched,
                                            const PatchSet* patches,
                                            const MaterialSet* matls,
                                            const TimeIntegratorLabel* timelabels,
-                                           bool d_EKTCorrection)
+                                           bool d_EKTCorrection,
+                                           bool doing_EKT_now)
 {
   string taskname =  "OdtClosure::computeScalarDissipation" +
                      timelabels->integrator_step_name;

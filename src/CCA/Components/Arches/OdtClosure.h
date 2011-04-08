@@ -126,13 +126,15 @@ public:
                                            const PatchSet* patches,
                                            const MaterialSet* matls,
                                            const TimeIntegratorLabel* timelabels,
-                                           bool d_EKTCorrection);
+                                           bool d_EKTCorrection,
+                                           bool doing_EKT_now);
 
   virtual void sched_computeScalarDissipation(SchedulerP&,
                                               const PatchSet* patches,
                                               const MaterialSet* matls,
                                               const TimeIntegratorLabel* timelabels,
-                                              bool d_EKTCorrection);
+                                              bool d_EKTCorrection,
+                                              bool doing_EKT_now);
 
 protected:
       int d_odtPoints; // number of odt Points at each LES cell
