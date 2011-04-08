@@ -319,7 +319,12 @@ LoadBalancerCommon::createNeighborhood(const GridP& grid, const GridP& oldGrid)
           IntVector ratio = level->getRefinementRatio();
 
           // we can require up to 1 ghost cell from a coarse patch
-          int ngc = 1 * Max(Max(ratio.x(), ratio.y()), ratio.z());
+          // If any direction's refinement ratio is 1, we will need 2 ghost cells
+          int ngc;
+          if (Min(Min(ratio.x(), ratio.y()), ratio.z()) == 1) 
+            ngc = 2 * Max(Max(ratio.x(), ratio.y()), ratio.z());
+          else ngc = 1 * Max(Max(ratio.x(), ratio.y()), ratio.z());
+
           IntVector ghost(ngc,ngc,ngc);
           coarseLevel->selectPatches(level->mapCellToCoarser(low-ghost), 
               level->mapCellToCoarser(high+ghost), coarse);
