@@ -338,7 +338,8 @@ run_test () {
         numproc=8
         opts="-restart"
     elif [ $n = "periodic_disks" ]; then
-	numproc=4
+	cp $in_file .
+	numproc=1
 	opts=""
     else
         cp $in_file .
