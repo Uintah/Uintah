@@ -455,9 +455,15 @@ Material* SimulationState::parseAndLookupMaterial(ProblemSpecP& params,
       throw ProblemSetupException("Cannot find material section", __FILE__, __LINE__);
     }
 
+    // try getting the material by name
     result = getMaterialByName(matlname);
     if(!result){ 
-      throw ProblemSetupException("Cannot find a material named:"+matlname, __FILE__, __LINE__);
+      // try getting the material by number
+      int matlnum = atoi(matlname.c_str());
+      result = getMaterial(matlnum);
+      if(!result){
+        throw ProblemSetupException("Cannot find a material named:"+matlname, __FILE__, __LINE__);
+      }
     }
   }
   return result;
