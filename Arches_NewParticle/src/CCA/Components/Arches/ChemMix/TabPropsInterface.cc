@@ -190,7 +190,7 @@ TabPropsInterface::problemSetup( const ProblemSpecP& propertiesParameters )
     }
   }
 
-  proc0cout << "  Matching sucessful!" << endl;
+  proc0cout << "  Matching successful!" << endl;
   proc0cout << endl;
 
   // create a transform object
