@@ -46,16 +46,17 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Parallel/Parallel.h>
 
 // includes for C++
-#include <fstream>
-#include <iomanip>
-#include <iostream>
-#include <sstream>
-#include <fcntl.h>
-#include <cmath>
-#include <cstdio>
-#include <cstdlib>
-#include <time.h>
-#include <unistd.h>
+//#include <fstream>
+//#include <iomanip>
+//#include <iostream>
+//#include <sstream>
+//#include <fcntl.h>
+//#include <cmath>
+//#include <cstdio>
+//#include <cstdlib>
+//#include <time.h>
+//#include <unistd.h>
+
 //======================================================
 
 using namespace std;

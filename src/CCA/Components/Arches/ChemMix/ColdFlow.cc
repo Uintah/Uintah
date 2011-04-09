@@ -119,7 +119,7 @@ ColdFlow::problemSetup( const ProblemSpecP& propertiesParameters )
         EqnBase& eqn = eqn_factory.retrieve_scalar_eqn( varName );
         d_ivVarMap.insert(make_pair(varName, eqn.getTransportEqnLabel())).first; 
 
-  proc0cout << "  Matching sucessful!" << endl;
+  proc0cout << "  Matching successful!" << endl;
   proc0cout << endl;
 
   proc0cout << "--- End Cold Flow information --- " << endl;

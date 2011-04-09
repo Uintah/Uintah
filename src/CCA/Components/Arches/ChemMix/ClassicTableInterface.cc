@@ -112,17 +112,15 @@ ClassicTableInterface::problemSetup( const ProblemSpecP& propertiesParameters )
   db_root->findBlock("PhysicalConstants")->require("reference_point", d_ijk_den_ref);  
 
   // READ TABLE: 
-  proc0cout << "----------Mixing Table Information---------------  " << endl;
+  proc0cout << endl << "----------Mixing Table Information---------------  " << endl << endl;
   loadMixingTable( tableFileName );
-  proc0cout << "-------------------------------------------------  " << endl;
+  proc0cout << endl << "-------------------------------------------------  " << endl << endl;
 
   // Extract independent and dependent variables from input file
   ProblemSpecP db_rootnode = propertiesParameters;
   db_rootnode = db_rootnode->getRootNode();
 
-  proc0cout << endl;
-  proc0cout << "--- Classic Arches table information --- " << endl;
-  proc0cout << endl;
+  proc0cout << endl << "--- Classic Arches table information --- " << endl << endl;
 
   // This sets the table lookup variables and saves them in a map
   // Map<string name, Label>
@@ -173,7 +171,7 @@ ClassicTableInterface::problemSetup( const ProblemSpecP& propertiesParameters )
     }
   }
 
-  proc0cout << "  Matching sucessful!" << endl;
+  proc0cout << "  Matching successful!" << endl;
   proc0cout << endl;
 
   // create a transform object
@@ -1190,7 +1188,7 @@ ClassicTableInterface::tableLookUp( std::vector<double> iv, int var_index)
 
 }
 //-----------------------------------------
-  void
+void
 ClassicTableInterface::loadMixingTable( const string & inputfile )
 {
 
@@ -1198,8 +1196,11 @@ ClassicTableInterface::loadMixingTable( const string & inputfile )
   gzFile gzFp = gzopen( inputfile.c_str(), "r" );
 
   if( gzFp == NULL ) {
-    // If errno is 0, then not enough memory to uncompress file.
     proc0cout << "Error with gz in opening file: " << inputfile << ". Errno: " << errno << "\n"; 
+    if( errno == 0 ) {
+      // If errno is 0, then not enough memory to uncompress file.
+      proc0cout << "Not enough memory to uncompress file." << endl;
+    }
     throw ProblemSetupException("Unable to open the given input file: " + inputfile, __FILE__, __LINE__);
   }
 
