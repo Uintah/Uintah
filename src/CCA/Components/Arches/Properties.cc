@@ -134,32 +134,32 @@ Properties::problemSetup(const ProblemSpecP& params)
   }
 
   // read type of mixing model
-  if (db->findBlock("NewStaticMixingTable"))
+  if (db->findBlock("NewStaticMixingTable")) {
     mixModel = "NewStaticMixingTable"; 
-  else if (db->findBlock("ColdFlowMixingModel"))
+  } else if (db->findBlock("ColdFlowMixingModel")) {
     mixModel = "ColdFlowMixingModel"; 
-  else if (db->findBlock("StandardTable"))
+  } else if (db->findBlock("StandardTable")) {
     mixModel = "StandardTable"; 
-  else if (db->findBlock("MOMColdFlowMixingModel"))
+  } else if (db->findBlock("MOMColdFlowMixingModel")) {
     mixModel = "MOMcoldFlowMixingModel"; 
 #if HAVE_TABPROPS
-  else if (db->findBlock("TabProps"))
+  } else if (db->findBlock("TabProps")) {
     mixModel = "TabProps";
 #endif
-  else if (db->findBlock("ClassicTable"))
+  } else if (db->findBlock("ClassicTable")) {
     mixModel = "ClassicTable";
-	else if (db->findBlock("ColdFlow"))
+	} else if (db->findBlock("ColdFlow")) {
 		mixModel = "ColdFlow";
-  else
+  } else {
     throw InvalidValue("ERROR!: No mixing/reaction table specified! If you are attempting to use the new TabProps interface, ensure that you configured properly with TabProps.",__FILE__,__LINE__);
+  }
 
   if (mixModel == "ColdFlowMixingModel") {
     d_mixingModel = scinew ColdflowMixingModel(d_calcReactingScalar,
                                                d_calcEnthalpy,
                                                d_calcVariance);
     d_reactingFlow = false;
-  }
-  else if (mixModel == "NewStaticMixingTable"){
+  } else if (mixModel == "NewStaticMixingTable"){
     d_mixingModel = scinew NewStaticMixingTable(d_calcReactingScalar,
                                                 d_calcEnthalpy,
                                                 d_calcVariance,
@@ -168,20 +168,17 @@ Properties::problemSetup(const ProblemSpecP& params)
     d_mixingModel->setCalcExtraScalars(d_calcExtraScalars);
     d_mixingModel->setExtraScalars(d_extraScalars);
     d_mixingModel->setNonAdiabPartBool(d_adiabGas_nonadiabPart); 
-  }
-  else if (mixModel == "StandardTable"){
+  } else if (mixModel == "StandardTable"){
     d_mixingModel = scinew StandardTable(d_calcReactingScalar,
                                          d_calcEnthalpy,
                                          d_calcVariance);
-  }
-  else if (mixModel == "MOMColdFlowMixingModel"){
+  } else if (mixModel == "MOMColdFlowMixingModel"){
     d_mixingModel = scinew MOMColdflowMixingModel(d_calcReactingScalar,
                                                   d_calcEnthalpy,
                                                   d_calcVariance);
     d_reactingFlow = false;
-  }
 #if HAVE_TABPROPS
-  else if (mixModel == "TabProps") {
+  } else if (mixModel == "TabProps") {
     // New TabPropsInterface stuff...
     d_mixingRxnTable = scinew TabPropsInterface( d_lab, d_MAlab );
     d_mixingRxnTable->problemSetup( db ); 
@@ -199,9 +196,8 @@ Properties::problemSetup(const ProblemSpecP& params)
       proc0cout << "Warning!: The tabulated soot mechanism (tabulated_soot) is not active yet when using TabProps.  I am going to set it to false. " << endl;
       d_tabulated_soot  = false;
     }
-  }
 #endif
-  else if (mixModel == "ClassicTable") { 
+  } else if (mixModel == "ClassicTable") { 
     // New Classic interface
     d_mixingRxnTable = scinew ClassicTableInterface( d_lab, d_MAlab ); 
     d_mixingRxnTable->problemSetup( db ); 
@@ -222,12 +218,11 @@ Properties::problemSetup(const ProblemSpecP& params)
 	} else if (mixModel == "ColdFlow") {
 		d_mixingRxnTable = scinew ColdFlow( d_lab, d_MAlab ); 
 		d_mixingRxnTable->problemSetup( db ); 
-  }
-  else if (mixModel == "pdfMixingModel" || mixModel == "SteadyFlameletsTable"
+  } else if (mixModel == "pdfMixingModel" || mixModel == "SteadyFlameletsTable"
         || mixModel == "flameletModel"  || mixModel == "StaticMixingTable"
         || mixModel == "meanMixingModel" ){
     throw InvalidValue("DEPRECATED: Mixing Model no longer supported: " + mixModel, __FILE__, __LINE__);
-  }else{
+  } else {
     throw InvalidValue("Mixing Model not supported: " + mixModel, __FILE__, __LINE__);
   }
  
