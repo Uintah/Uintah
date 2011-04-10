@@ -955,6 +955,8 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
         enthalpyVars.qfluxb.initialize(0.0);
         enthalpyVars.ABSKG.initialize(0.0);
 
+//        d_DORadiation->computeRadiationProps(pc, patch, cellinfo,
+//                                             &enthalpyVars, &constEnthalpyVars, d_use_abskp);
         d_DORadiation->computeRadiationProps(pc, patch, cellinfo,
                                              &enthalpyVars, &constEnthalpyVars, d_use_abskp);
         d_DORadiation->boundarycondition(pc, patch, cellinfo,
