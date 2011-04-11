@@ -87,7 +87,7 @@ TabPropsInterface::problemSetup( const ProblemSpecP& propertiesParameters )
   db_properties_root->getWithDefault( "use_mixing_model", d_use_mixing_model, false ); 
 
   d_noisy_hl_warning = false; 
-  if ( ProblemSpecP temp = db_classic->findBlock("noisy_hl_warning") ) 
+  if ( ProblemSpecP temp = db_tabprops->findBlock("noisy_hl_warning") ) 
     d_noisy_hl_warning = true; 
   db_tabprops->getWithDefault("lower_hl_bound", d_hl_lower_bound, -1.0); 
   db_tabprops->getWithDefault("upper_hl_bound", d_hl_upper_bound, 1.0); 
