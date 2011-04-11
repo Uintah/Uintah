@@ -107,17 +107,7 @@ TabPropsInterface::problemSetup( const ProblemSpecP& propertiesParameters )
   const ProblemSpecP db_root = db_tabprops->getRootNode(); 
   db_root->findBlock("PhysicalConstants")->require("reference_point", d_ijk_den_ref);  
 
-  // // Check for and deal with filename extension
-  // // - if table file name has .h5 extension, remove it
-  // // - otherwise, assume it is an .h5 file but no extension was given
-  // string extension (tableFileName.end()-3,tableFileName.end());
-  // if( extension == ".h5" || extension == ".H5" ) {
-  //   tableFileName = tableFileName.substr( 0, tableFileName.size() - 3 );
-  // }
-  // 
-  // // Load data from HDF5 file into StateTable
-  // d_statetbl.read_hdf5(tableFileName);
-
+  // READ TABLE: 
   std::ifstream inFile( tableFileName.c_str(), std::ios_base::in ); 
   try {
     InputArchive ia( inFile );
@@ -278,7 +268,7 @@ TabPropsInterface::sched_getState( const LevelP& level,
   tsk->modifies( d_lab->d_densityCPLabel );  // lame .... fix me
   if ( modify_ref_den )
     tsk->computes(time_labels->ref_density); 
-   
+  tsk->requires( Task::NewDW, d_lab->d_volFractionLabel, gn, 0 ); 
 
   sched->addTask( tsk, level->eachPatch(), d_lab->d_sharedState->allArchesMaterials() ); 
 }
@@ -304,6 +294,10 @@ TabPropsInterface::getState( const ProcessorGroup* pc,
     int archIndex = 0; 
     int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
+    // volume fraction: 
+    constCCVariable<double> eps_vol; 
+    new_dw->get( eps_vol, d_lab->d_volFractionLabel, matlIndex, patch, gn, 0 ); 
+
     //independent variables:
     std::vector<constCCVariable<double> > indep_storage; 
 
@@ -327,11 +321,11 @@ TabPropsInterface::getState( const ProcessorGroup* pc,
 
     DepVarMap depend_storage; 
     if ( initialize_me ) {
-    
+
       for ( VarMap::iterator i = d_dvVarMap.begin(); i != d_dvVarMap.end(); ++i ){
 
         DepVarCont storage;
-       
+
         storage.var = new CCVariable<double>; 
         new_dw->allocateAndPut( *storage.var, i->second, matlIndex, patch ); 
         (*storage.var).initialize(0.0);
@@ -341,9 +335,6 @@ TabPropsInterface::getState( const ProcessorGroup* pc,
 
         depend_storage.insert( make_pair( i->first, storage )).first; 
 
-
-        //depend_storage.insert( make_pair( i->first, the_var )).first; 
-        
       }
 
       // others: 
@@ -376,7 +367,7 @@ TabPropsInterface::getState( const ProcessorGroup* pc,
       for ( VarMap::iterator i = d_dvVarMap.begin(); i != d_dvVarMap.end(); ++i ){
 
         DepVarCont storage;
-       
+
         storage.var = new CCVariable<double>; 
         new_dw->getModifiable( *storage.var, i->second, matlIndex, patch ); 
 
@@ -384,7 +375,7 @@ TabPropsInterface::getState( const ProcessorGroup* pc,
         storage.spline = i_spline->second; 
 
         depend_storage.insert( make_pair( i->first, storage )).first; 
-        
+
       }
 
       // others:
@@ -421,6 +412,7 @@ TabPropsInterface::getState( const ProcessorGroup* pc,
       for ( DepVarMap::iterator i = depend_storage.begin(); i != depend_storage.end(); ++i ){
 
         double table_value = getSingleState( i->second.spline, i->first, iv ); 
+          table_value *= eps_vol[c]; 
         (*i->second.var)[c] = table_value;
 
         if (i->first == "density") {
@@ -429,7 +421,6 @@ TabPropsInterface::getState( const ProcessorGroup* pc,
             mpmarches_denmicro[c] = table_value; 
         } else if (i->first == "temperature" && !d_coldflow) {
           arches_temperature[c] = table_value; 
-        //} else if (i->first == "heat_capacity" && !d_coldflow) {
         } else if (i->first == "specificheat" && !d_coldflow) {
           arches_cp[c] = table_value; 
         } else if (i->first == "CO2" && !d_coldflow) {
@@ -519,8 +510,9 @@ TabPropsInterface::getState( const ProcessorGroup* pc,
 
           // now get state for boundary cell: 
           for ( DepVarMap::iterator i = depend_storage.begin(); i != depend_storage.end(); ++i ){
-  
+
             double table_value = getSingleState( i->second.spline, i->first, iv ); 
+            table_value *= eps_vol[c]; 
             (*i->second.var)[c] = table_value;
 
             if (i->first == "density") {
@@ -531,7 +523,6 @@ TabPropsInterface::getState( const ProcessorGroup* pc,
                 mpmarches_denmicro[c] = table_value; 
             } else if (i->first == "temperature" && !d_coldflow) {
               arches_temperature[c] = table_value; 
-            //} else if (i->first == "heat_capacity" && !d_coldflow) {
             } else if (i->first == "specificheat" && !d_coldflow) {
               arches_cp[c] = table_value; 
             } else if (i->first == "CO2" && !d_coldflow) {
@@ -651,6 +642,9 @@ TabPropsInterface::computeHeatLoss( const ProcessorGroup* pc,
         }
       }
 
+      bool lower_hl_exceeded = false; 
+      bool upper_hl_exceeded = false;
+
       for (CellIterator iter=patch->getCellIterator(0); !iter.done(); iter++){
         IntVector c = *iter; 
 
@@ -678,14 +672,32 @@ TabPropsInterface::computeHeatLoss( const ProcessorGroup* pc,
         if ( calcEnthalpy )
           current_heat_loss = ( adiabatic_enthalpy - enthalpy[c] ) / ( sensible_enthalpy + small ); 
 
-        if ( current_heat_loss < -1.0 )
-          current_heat_loss = -1.0; 
-        else if ( current_heat_loss > 1.0 ) 
-          current_heat_loss = 1.0; 
+        if ( current_heat_loss < d_hl_lower_bound ) {
+
+          current_heat_loss = d_hl_lower_bound; 
+          lower_hl_exceeded = true; 
+
+        } else if ( current_heat_loss > d_hl_upper_bound ) { 
+
+          current_heat_loss = d_hl_upper_bound; 
+          upper_hl_exceeded = true; 
+
+        }
 
         heat_loss[c] = current_heat_loss; 
 
       }
+
+      if ( d_noisy_hl_warning ) { 
+       
+        if ( upper_hl_exceeded || lower_hl_exceeded ) {  
+          cout << "Patch with bounds: " << patch->getCellLowIndex() << " to " << patch->getCellHighIndex()  << endl;
+          if ( lower_hl_exceeded ) 
+            cout << "   --> lower heat loss exceeded. " << endl;
+          if ( upper_hl_exceeded ) 
+            cout << "   --> upper heat loss exceeded. " << endl;
+        } 
+      } 
     }
   }
 }
@@ -737,13 +749,13 @@ TabPropsInterface::computeFirstEnthalpy( const ProcessorGroup* pc,
 
     CCVariable<double> enthalpy; 
     new_dw->getModifiable( enthalpy, d_lab->d_enthalpySPLabel, matlIndex, patch ); 
-      
+
     std::vector<constCCVariable<double> > the_variables; 
 
     for ( vector<string>::iterator i = d_allIndepVarNames.begin(); i != d_allIndepVarNames.end(); i++){
 
       const VarMap::iterator iv_iter = d_ivVarMap.find( *i ); 
-      
+
       if ( iv_iter == d_ivVarMap.end() ) {
         cout << " For variable named: " << *i << endl;
         throw InternalError("Error: Could not map this label to the correct Uintah grid variable." ,__FILE__,__LINE__);
@@ -765,7 +777,6 @@ TabPropsInterface::computeFirstEnthalpy( const ProcessorGroup* pc,
 
       }
     }
-
 
     for (CellIterator iter=patch->getCellIterator(0); !iter.done(); iter++){
       IntVector c = *iter; 
