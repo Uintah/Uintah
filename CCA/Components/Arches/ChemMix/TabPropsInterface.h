@@ -203,8 +203,11 @@ protected :
 private:
 
   bool d_table_isloaded;    ///< Boolean: has the table been loaded?
+  bool d_noisy_hl_warning;  ///< Provide information about heat loss clipping
   
   double d_hl_scalar_init;  ///< Heat loss value for non-adiabatic conditions
+  double d_hl_lower_bound;  ///< Heat loss lower bound
+  double d_hl_upper_bound;  ///< Heat loss upper bound
 
   IntVector d_ijk_den_ref;                ///< Reference density location
 

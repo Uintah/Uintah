@@ -123,7 +123,7 @@
         <ColdFlowMixingModel            spec="OPTIONAL NO_DATA" >
           <Stream                       spec="MULTIPLE NO_DATA" >
             <density                    spec="REQUIRED DOUBLE 'positive'" />
-            <temperature                spec="REQUIRED DOUBLE" />
+            <temperature                spec="REQUIRED DOUBLE 'positive'" />
           </Stream>
         </ColdFlowMixingModel>
 
@@ -151,18 +151,22 @@
         <optically_thin_model_opl      spec="OPTIONAL DOUBLE" />
 
         <TabProps                       spec="OPTIONAL NO_DATA" >
-          <inputfile                    spec="REQUIRED STRING" />
-          <cold_flow                    spec="OPTIONAL BOOLEAN"/>
-          <hl_scalar_init               spec="OPTIONAL DOUBLE" />
+          <inputfile                    spec="REQUIRED STRING" /> <!-- table to be opened --> 
+          <cold_flow                    spec="OPTIONAL BOOLEAN"/> <!-- use when no rxn is occuring --> 
+          <hl_scalar_init               spec="OPTIONAL DOUBLE" /> <!-- initial heat loss value in the domain --> 
+          <noisy_hl_warning             spec="OPTIONAL NO_DATA"/> <!-- warn when heat loss is clipped to bounds --> 
+          <lower_hl_bound               spec="OPTIONAL DOUBLE"/> <!-- In the property table, the lower bound for heat loss.  default = -1 --> 
+          <upper_hl_bound               spec="OPTIONAL DOUBLE"/> <!-- In the property table, the upper bound for heat loss.  default = +1 --> 
           <coal                         spec="OPTIONAL NO_DATA" 
                                         attribute1="fp_label REQUIRED STRING"     
                                         attribute2="eta_label REQUIRED STRING"/> <!-- Attributes must match the transported IVs specified in the TransportEqn node --> 
         </TabProps>
 
         <ClassicTable                   spec="OPTIONAL NO_DATA">
-          <inputfile                    spec="REQUIRED STRING"/>
-          <noisy_hl_warning             spec="OPTIONAL NO_DATA"/>
-          <hl_scalar_init               spec="OPTIONAL DOUBLE" />
+          <inputfile                    spec="REQUIRED STRING" /> <!-- table to be opened --> 
+          <cold_flow                    spec="OPTIONAL BOOLEAN"/> <!-- use when no rxn is occuring --> 
+          <noisy_hl_warning             spec="OPTIONAL NO_DATA"/> <!-- warn when heat loss is clipped to bounds --> 
+          <hl_scalar_init               spec="OPTIONAL DOUBLE" /> <!-- initial heat loss value in the domain --> 
           <coal                         spec="OPTIONAL NO_DATA" 
                                         attribute1="fp_label REQUIRED STRING"     
                                         attribute2="eta_label REQUIRED STRING"/> <!-- Attributes must match the transported IVs specified in the TransportEqn node --> 

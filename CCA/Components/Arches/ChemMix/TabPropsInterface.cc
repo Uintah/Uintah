@@ -86,6 +86,12 @@ TabPropsInterface::problemSetup( const ProblemSpecP& propertiesParameters )
   db_tabprops->getWithDefault( "cold_flow", d_coldflow, false); 
   db_properties_root->getWithDefault( "use_mixing_model", d_use_mixing_model, false ); 
 
+  d_noisy_hl_warning = false; 
+  if ( ProblemSpecP temp = db_classic->findBlock("noisy_hl_warning") ) 
+    d_noisy_hl_warning = true; 
+  db_tabprops->getWithDefault("lower_hl_bound", d_hl_lower_bound, -1.0); 
+  db_tabprops->getWithDefault("upper_hl_bound", d_hl_upper_bound, 1.0); 
+
   // only solve for heat loss if a working radiation model is found
   const ProblemSpecP params_root = db_tabprops->getRootNode();
   ProblemSpecP db_enthalpy  =  params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ExplicitSolver")->findBlock("EnthalpySolver");
