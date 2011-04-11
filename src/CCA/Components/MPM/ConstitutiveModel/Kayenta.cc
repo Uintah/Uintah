@@ -349,14 +349,13 @@ void Kayenta::initializeCMData(const Patch* patch,
     for(;iter != pset->end(); iter++){
       ISVs[i][*iter] = rinit[i];
     }
-//    cout << "RINIT[" << i << "] = " << rinit[i] << endl;
   }
 
   ParticleVariable<int>     pLocalized;
   new_dw->allocateAndPut(pLocalized,         pLocalizedLabel, pset);
   ParticleSubset::iterator iter = pset->begin();
   for(;iter != pset->end();iter++){
-  pLocalized[*iter] = 0;
+    pLocalized[*iter] = 0;
   }
   
   ParticleVariable<double> peakI1IDist;
@@ -452,7 +451,6 @@ void Kayenta::allocateCMDataAdd(DataWarehouse* new_dw,
   
   for (o=delset->begin(); o != delset->end(); o++, n++) {
     pLocalized[*n] = o_Localized[*o];
-  
   }
   (*newState)[pLocalizedLabel]=pLocalized.clone();
 
@@ -767,17 +765,14 @@ void Kayenta::computeStressTensor(const PatchSubset* patches,
 	    }else{
 	      cerr << getpid() 
 		   << "**ERROR** Negative Jacobian of deformation gradient, no erosion algorithm set" << endl;
-	      throw InternalError("Negative Jacobian",__FILE__,__LINE__);	      
+	      throw InternalError("Negative Jacobian",__FILE__,__LINE__);
 	    }
 
-
 	    // the particle is localized and will be updated using a viscous model
-	    // we need to caluclate: pstress_new, pvolume_new, deformationGradient_new
+	    // we need to calculate: pstress_new, pvolume_new, deformationGradient_new
 	    // we have available pstress, pmass, pvolume, ptemperature, deformationGradient,
 	    double viscosity = 1e-3;
-	    double USM;
-	    double rho_cur;
-	    double dt;
+	    double USM,rho_cur,dt;
 	    viscousStressUpdate( D, pstress[idx], rho_orig, pvolume[idx], UI[0],viscosity,dt, pstress_new[idx],deformationGradient_new[idx],rho_cur,pvolume_new[idx],USM,c_dil);
 
 	    // Compute The Strain Energy for all the particles
@@ -807,9 +802,6 @@ void Kayenta::computeStressTensor(const PatchSubset* patches,
 	    } else {
 	      p_q[idx] = 0.;
 	    }
-
-
-
 	  }else{
 	    pvolume_new[idx]=Jinc*pvolume[idx];
 
@@ -858,7 +850,6 @@ void Kayenta::computeStressTensor(const PatchSubset* patches,
 	    }
 	    // 'Hijack' UI[42] with perturbed value if desired
 	    // put real value of UI[42] in tmp var just in case
-            //cout << pParticleID[idx] << endl;
 	    if (wdist.Perturb){
 	      double tempVar = UI[42];
 	      UI[42] = peakI1IDist[idx];
@@ -1213,9 +1204,9 @@ Kayenta::initializeLocalMPMLabels()
 
   // create a localized variable
   pLocalizedLabel = VarLabel::create("p.localized",
- ParticleVariable<int>::getTypeDescription());
+                  ParticleVariable<int>::getTypeDescription());
   pLocalizedLabel_preReloc = VarLabel::create("p.localized+",
-					      ParticleVariable<int>::getTypeDescription());
+                  ParticleVariable<int>::getTypeDescription());
  vector<string> ISVNames;
 
 // These lines of code are added by KC to replace the currently hard-coded
@@ -1363,6 +1354,6 @@ Kayenta::WeibullParser(WeibParameters &iP)
     iP.WeibMod    = atof(weibModulus.c_str());
     iP.WeibRefVol = atof(weibRefVol.c_str());
     iP.WeibSeed   = atoi(weibSeed.c_str());
-    
+    UI[42]=iP.WeibMed;  // Set this here to satisfy KAYENTA_CHK
   } // End if (iP.Perturb)
 }
