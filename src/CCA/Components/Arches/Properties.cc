@@ -151,7 +151,7 @@ Properties::problemSetup(const ProblemSpecP& params)
 	else if (db->findBlock("ColdFlow"))
 		mixModel = "ColdFlow";
   else
-    throw InvalidValue("ERROR!: No mixing/reaction table specified! If you are attempting to use the new TabProps interface, ensure that you configured properly with TabProps.",__FILE__,__LINE__);
+    throw InvalidValue("ERROR!: No mixing/reaction table specified! If you are attempting to use the new TabProps interface, ensure that you configured properly with TabProps and Boost libs.",__FILE__,__LINE__);
 
   if (mixModel == "ColdFlowMixingModel") {
     d_mixingModel = scinew ColdflowMixingModel(d_calcReactingScalar,
