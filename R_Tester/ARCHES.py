@@ -50,11 +50,11 @@ NIGHTLYTESTS = [
    ("methane8patch",           "methane8patch.ups",                    8,   "Linux",   ["exactComparison"]),
    ("methane8patch",           "methane8patch.ups",                    8,   "Darwin",  ["doesTestRun"]),
    ("methanePetscRadSolver",    methanePetscRadSolver_ups ,            8,   "Linux",   ["exactComparison"]),
-   ("dqmom_test_1",            "DQMOM_regression/dqmom_test_1.ups",   1.1,  "Linux",   ["doesTestRun"]),
-   ("dqmom_test_2",            "DQMOM_regression/dqmom_test_2.ups",  1.1,  "Linux",    ["doesTestRun"]),
-   ("dqmom_test_3",            "DQMOM_regression/dqmom_test_3.ups",   1.1,  "Linux",   ["doesTestRun"]),
-   ("dqmom_test_4",            "DQMOM_regression/dqmom_test_4.ups",   1.1,  "Linux",   ["doesTestRun"]),
-   ("dqmom_test_5",            "DQMOM_regression/dqmom_test_5.ups",   1.1,  "Linux",   ["doesTestRun"])
+   ("dqmom_test_1",            "DQMOM_regression/dqmom_test_1.ups",   1.1,  "Linux",   ["exactComparison"]),
+   ("dqmom_test_2",            "DQMOM_regression/dqmom_test_2.ups",  1.1,  "Linux",    ["exactComparison"]),
+   ("dqmom_test_3",            "DQMOM_regression/dqmom_test_3.ups",   1.1,  "Linux",   ["exactComparison"]),
+   ("dqmom_test_4",            "DQMOM_regression/dqmom_test_4.ups",   1.1,  "Linux",   ["exactComparison"]),
+   ("dqmom_test_5",            "DQMOM_regression/dqmom_test_5.ups",   1.1,  "Linux",   ["exactComparison"])
 ]
 
 # Tests that are run during local regression testing
@@ -66,11 +66,11 @@ LOCALTESTS = [
    ("methane_explicit_table",  "methane_explicit_table.ups",          1.1,  "All",   ["exactComparison"]),
    ("methane8patch",           "methane8patch.ups",                   8,    "All",   ["exactComparison"]),
    ("methanePetscRadSolver",    methanePetscRadSolver_ups ,            8,   "All",   ["exactComparison"]),
-   ("dqmom_test_1",            "DQMOM_regression/dqmom_test_1.ups",   1.1,  "All",   ["doesTestRun"]),
-   ("dqmom_test_2",            "DQMOM_regression/dqmom_test_2.ups",  1.1,  "All",    ["doesTestRun"]),
-   ("dqmom_test_3",            "DQMOM_regression/dqmom_test_3.ups",   1.1,  "All",   ["doesTestRun"]),
-   ("dqmom_test_4",            "DQMOM_regression/dqmom_test_4.ups",   1.1,  "All",   ["doesTestRun"]),
-   ("dqmom_test_5",            "DQMOM_regression/dqmom_test_5.ups",   1.1,  "All",   ["doesTestRun"])
+   ("dqmom_test_1",            "DQMOM_regression/dqmom_test_1.ups",   1.1,  "All",   ["exactComparison"]),
+   ("dqmom_test_2",            "DQMOM_regression/dqmom_test_2.ups",  1.1,  "All",    ["exactComparison"]),
+   ("dqmom_test_3",            "DQMOM_regression/dqmom_test_3.ups",   1.1,  "All",   ["exactComparison"]),
+   ("dqmom_test_4",            "DQMOM_regression/dqmom_test_4.ups",   1.1,  "All",   ["exactComparison"]),
+   ("dqmom_test_5",            "DQMOM_regression/dqmom_test_5.ups",   1.1,  "All",   ["exactComparison"])
 ]
 
 #__________________________________
