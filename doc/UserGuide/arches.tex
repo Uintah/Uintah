@@ -1026,6 +1026,7 @@ The tolerance set by this tag will enforce the following condition
 \item ``Lapack-invert'' - uses a Lapack routine to invert $\mathbf{A}$, which is then multiplied by $\mathbf{B}$
 \item ``Lapack-svd'' - uses a Lapack routine to calculate the singular value decomposition (SVD) of $\mathbf{A}$
 \item ``LU'' - LU decomposition solver using the Crout's Method algorithm
+\item ``Optimize'' - uses sets of optimal moments and optimal abscissas to get a well conditioned matrix
 \end{itemize}
 %
 \item {\bf  Maximum allowable condition number for $\mathbf{A}$}: \verb=<maxConditionNumber>= \\
@@ -1037,6 +1038,13 @@ The tolerance set by this tag will enforce the following condition
 {\bf Input type}: {\it Optional, boolean} \\
 {\bf Default}: {\it false} \\
 {\bf Description }: If {\it true}, the condition number is calculated using singular value decomposition.  Note, this calculation is very expensive and should probably only be done when the ``Lapack-svd'' solver option is being used.  An error is thrown if this is true and the ``LU'' (Crout's Method) solver option is chosen.
+%
+\item {\bf Using the "Optimize" solver}: \verb=<Optimization>= \\
+{\bf Description }: This section must be specified to use the "Optimize" solver. The section must contain specification of the optimal abscissas: \\
+\verb=<Optimal_abscissas>= \\
+{\bf Input type}: {\it Required, Vector} \\
+{\bf Default}: {\it none} \\
+{\bf Description }: The optimal abscissas should be specified as a vector (within brackets) and separated by comas. The set of moments chosen by the user should be consistent with the set of otpimal absissas. The number of optimal abscissas to specify is Nic*Nqn.  The user can use the matlab script located in $/src/StandAlone/inputs/ARCHES/matlab/find_optmoments.m$ to determine a set of optimal moments and absissas given a number of internal coordinates and quadrature nodes. After running the script, the set of optimal abscissas is stored in Xgood and the corresponding set of optimal moments is stored in Momentsgood. Note, the order of the abscissas and the moments matters and should not be changed. Also, the following options are irrelevent for the "Optimize" solver: tolerance, maxConditionNumber, calcConditionNumber. \\
 %
 \end{enumerate}
 
