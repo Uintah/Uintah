@@ -40,18 +40,20 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Dataflow/Network/Ports/Port.h>
-#include <Dataflow/Network/Connection.h>
-#include <Dataflow/Network/Module.h>
-#include <iostream>
-#include <sstream>
-
 #include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/String.h>
 #include <Core/Datatypes/NrrdData.h>
+#include <Core/Volume/ColorMap2.h>
+
+#include <Dataflow/Network/Connection.h>
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Network/Ports/Port.h>
 #include <Dataflow/Network/Ports/ColorMapPort.h>
 #include <Dataflow/Network/Ports/GeometryPort.h>
 #include <Dataflow/Network/Ports/MatrixPort.h>
+
+#include <iostream>
+#include <sstream>
 
 using namespace std;
 using namespace SCIRun;
@@ -287,9 +289,13 @@ template void cast_here< SimpleOPort<MatrixHandle> >( Port *, SimpleOPort<Matrix
 template void cast_here< SimpleIPort<ColorMapHandle> >( Port *, SimpleIPort<ColorMapHandle> *& );
 template void cast_here< SimpleOPort<ColorMapHandle> >( Port *, SimpleOPort<ColorMapHandle> *& );
 
+template void cast_here< SimpleIPort<ColorMap2Handle> >( Port *, SimpleIPort<ColorMap2Handle> *& );
+template void cast_here< SimpleOPort<ColorMap2Handle> >( Port *, SimpleOPort<ColorMap2Handle> *& );
+
 template void cast_here< SimpleIPort<StringHandle> >( Port *, SimpleIPort<StringHandle> *& );
 template void cast_here< SimpleOPort<StringHandle> >( Port *, SimpleOPort<StringHandle> *& );
 
+template void cast_here< SimpleIPort<NrrdDataHandle> >( Port*, SimpleIPort< NrrdDataHandle >*&);
 template void cast_here< SimpleOPort<NrrdDataHandle> >( Port*, SimpleOPort< NrrdDataHandle >*&);
 
 template void cast_here< GeometryOPort >( Port *, GeometryOPort *& );

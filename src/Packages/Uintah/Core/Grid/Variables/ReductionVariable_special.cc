@@ -242,7 +242,7 @@ ReductionVariable<bool, Reductions::And<bool> >
   index += sizeof(char);
 }
 
-#if !defined( SCI_32BITS ) && !defined(__APPLE__)
+#if defined( SCI_32BITS ) || !defined(__APPLE__)
 #  if defined( REDSTORM ) || !defined( __PGI ) 
 // We reduce a "long", not a long64 because on 2/24/03, LAM-MPI did not
 // support MPI_Reduce for LONG_LONG_INT.  We could use MPI_Create_op instead?
@@ -288,7 +288,7 @@ ReductionVariable<long64, Reductions::Sum<long64> >
   index += sizeof(long);
 }
 
-#if !defined( SCI_32BITS ) && !defined(__APPLE__)
+#if defined( SCI_32BITS ) || !defined(__APPLE__)
 #  if defined( REDSTORM ) || !defined( __PGI )
 #    if !defined( SCI_32BITS )
 #      if !defined(__digital__) || defined(__GNUC__)

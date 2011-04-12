@@ -40,7 +40,7 @@
  */
 
 #ifdef _WIN32
-#pragma warning(disable:4355)
+#  pragma warning(disable:4355)
 #endif
 
 #include <Dataflow/Network/Module.h>
@@ -53,8 +53,9 @@
 #include <Dataflow/Network/Ports/ColorMapPort.h>
 #include <Dataflow/Network/Ports/GeometryPort.h>
 #include <Dataflow/Network/Ports/MatrixPort.h>
-#include <Core/Datatypes/String.h>
 #include <Core/Datatypes/Field.h>
+#include <Core/Datatypes/NrrdData.h>
+#include <Core/Datatypes/String.h>
 
 #include <Core/Containers/StringUtil.h>
 #include <Core/GuiInterface/GuiContext.h>
@@ -64,6 +65,8 @@
 #include <Core/Math/MiscMath.h>
 #include <Core/Util/soloader.h>
 #include <Core/Util/Environment.h>
+#include <Core/Volume/ColorMap2.h>
+
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -562,8 +565,10 @@ Module::get_input_handle(std::string name,
 
 // Explicitly instantiate the get_input_handle() functions that we need:
 template bool Module::get_input_handle< ColorMapHandle >(std::string, ColorMapHandle & handle, bool required);
+template bool Module::get_input_handle< ColorMap2Handle >(std::string, ColorMap2Handle & handle, bool required);
 template bool Module::get_input_handle< FieldHandle >(std::string, FieldHandle & handle, bool required);
 template bool Module::get_input_handle< MatrixHandle >(std::string, MatrixHandle & handle, bool required);
+template bool Module::get_input_handle< NrrdDataHandle >(std::string, NrrdDataHandle & handle, bool required);
 template bool Module::get_input_handle< StringHandle >(std::string, StringHandle & handle, bool required);
 
 
