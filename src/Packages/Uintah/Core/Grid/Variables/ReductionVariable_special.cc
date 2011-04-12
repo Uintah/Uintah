@@ -242,12 +242,13 @@ ReductionVariable<bool, Reductions::And<bool> >
   index += sizeof(char);
 }
 
-#if defined( REDSTORM ) || !defined( __PGI ) 
+#if !defined( SCI_32BITS ) && !defined(__APPLE__)
+#  if defined( REDSTORM ) || !defined( __PGI ) 
 // We reduce a "long", not a long64 because on 2/24/03, LAM-MPI did not
 // support MPI_Reduce for LONG_LONG_INT.  We could use MPI_Create_op instead?
-  #if !defined(__digital__) || defined(__GNUC__)
+#    if !defined(__digital__) || defined(__GNUC__)
 template<>
-  #endif
+#    endif
 UINTAHSHARE void
 ReductionVariable<long64, Reductions::Sum<long64> >
 ::getMPIInfo(int& count, MPI_Datatype& datatype, MPI_Op& op)
@@ -256,12 +257,12 @@ ReductionVariable<long64, Reductions::Sum<long64> >
    count = 1;
    op = MPI_SUM;
 }
-#endif
-
-#if defined( REDSTORM) || !defined( __PGI )
-#  if !defined(__digital__) || defined(__GNUC__)
-template<>
 #  endif
+
+#  if defined( REDSTORM) || !defined( __PGI )
+#    if !defined(__digital__) || defined(__GNUC__)
+template<>
+#    endif
 UINTAHSHARE void
 ReductionVariable<long64, Reductions::Sum<long64> >
 ::getMPIData(vector<char>& data, int& index)
@@ -271,6 +272,7 @@ ReductionVariable<long64, Reductions::Sum<long64> >
   *ptr = value;
   index += sizeof(long);
 }
+#  endif
 #endif
 
 #if !defined(__digital__) || defined(__GNUC__)
@@ -286,11 +288,12 @@ ReductionVariable<long64, Reductions::Sum<long64> >
   index += sizeof(long);
 }
 
-#if defined( REDSTORM ) || !defined( __PGI )
-#  if !defined( SCI_32BITS )
-#    if !defined(__digital__) || defined(__GNUC__)
+#if !defined( SCI_32BITS ) && !defined(__APPLE__)
+#  if defined( REDSTORM ) || !defined( __PGI )
+#    if !defined( SCI_32BITS )
+#      if !defined(__digital__) || defined(__GNUC__)
 template<>
-#    endif
+#      endif
 UINTAHSHARE void
 ReductionVariable<long long, Reductions::Sum<long long> >
 ::putMPIData(vector<char>& data, int& index)
@@ -300,6 +303,7 @@ ReductionVariable<long long, Reductions::Sum<long long> >
   value = *ptr;
   index += sizeof(long long);
 }
+#    endif
 #  endif
 #endif
 

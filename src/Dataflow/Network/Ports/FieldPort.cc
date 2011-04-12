@@ -39,6 +39,11 @@
 #include <Dataflow/Network/Ports/FieldPort.h>
 #include <Core/Malloc/Allocator.h>
 
+#include <Core/Datatypes/Matrix.h>
+#include <Core/Datatypes/String.h>
+#include <Core/Geom/ColorMap.h>
+#include <Dataflow/Network/Ports/GeometryPort.h>
+
 #undef SCISHARE
 #ifdef _WIN32
 #define SCISHARE __declspec(dllexport)
@@ -49,12 +54,17 @@
 namespace SCIRun {
 
 extern "C" {
-SCISHARE IPort* make_FieldIPort(Module* module, const string& name) {
-  return scinew SimpleIPort<FieldHandle>(module,name);
-}
-SCISHARE OPort* make_FieldOPort(Module* module, const string& name) {
-  return scinew SimpleOPort<FieldHandle>(module,name);
-}
+  SCISHARE IPort* make_FieldIPort(Module* module, const string& name)
+  {
+    IPort * port = scinew SimpleIPort<FieldHandle>(module,name);
+    SimpleIPort<FieldHandle> *dataport = dynamic_cast<SimpleIPort<FieldHandle>*>(port);
+    return port;
+  }
+  
+  SCISHARE OPort* make_FieldOPort(Module* module, const string& name)
+  {
+    return scinew SimpleOPort<FieldHandle>(module,name);
+  }
 }
 
 template<> string SimpleIPort<FieldHandle>::port_type_("Field");

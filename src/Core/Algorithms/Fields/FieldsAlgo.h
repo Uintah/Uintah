@@ -33,12 +33,13 @@
 #include <Core/Algorithms/Util/AlgoLibrary.h>
 
 #include <sgi_stl_warnings_off.h>
-#include <string>
-#include <list>
-#include <vector>
+#include   <string>
+#include   <list>
+#include   <vector>
 #include <sgi_stl_warnings_on.h>
 
 #include <Core/Algorithms/Fields/share.h>
+#include <Core/Datatypes/Field.h>
 
 namespace SCIRunAlgo {
 
@@ -246,7 +247,10 @@ class SCISHARE FieldsAlgo : public AlgoLibrary {
     
 };
 
-
 } // end namespace 
+
+template<class T>
+void
+cast_to_mesh_here( void * in_mesh, T *& out_mesh );
 
 #endif

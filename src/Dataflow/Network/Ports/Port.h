@@ -144,4 +144,6 @@ protected:
 
 }
 
+template<class T> void cast_here( SCIRun::Port * in_port, T *& out_port );
+
 #endif

@@ -42,6 +42,8 @@
 #include <sci_hash_map.h>
 #include <cfloat> // for DBL_MAX
 
+#include <Core/Algorithms/Fields/FieldsAlgo.h>
+
 namespace SCIRun {
 
 class DirectMappingAlgo : public DynamicAlgoBase
@@ -240,11 +242,19 @@ DirectMappingAlgoT<FSRC, LSRC, FOUT, LDST>::parallel_execute(int proc,
   int np = d->np;
   FieldHandle out_fieldH = d->out_fieldH;
   
-  FSRC *src_field = dynamic_cast<FSRC *>(src_fieldH.get_rep());
+  //FSRC *src_field = dynamic_cast<FSRC *>(src_fieldH.get_rep());
+
+  FSRC * src_field;
+  cast_to_mesh_here( src_fieldH.get_rep(), src_field );
+
   typename FSRC::mesh_type *src_mesh = src_field->get_typed_mesh().get_rep();
+
   typename FOUT::mesh_type *dst_mesh = 
     dynamic_cast<typename FOUT::mesh_type *>(dst_meshH.get_rep());
-  FOUT *out_field = dynamic_cast<FOUT *>(out_fieldH.get_rep());
+
+  //FOUT *out_field = dynamic_cast<FOUT *>(out_fieldH.get_rep());
+  FOUT * out_field;
+  cast_to_mesh_here( out_fieldH.get_rep(), out_field );
 
   src_mesh->synchronize(Mesh::LOCATE_E);
   dst_mesh->synchronize(Mesh::LOCATE_E);

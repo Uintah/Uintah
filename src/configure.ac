@@ -1521,7 +1521,9 @@ case $host in
     SCI_CHECK_VERSION($CC,--version,4.0.0,GCC_VERSION=4.0,)
 
     if test "$GCC_VERSION" = "4.0"; then
-       CFLAGS="$CFLAGS $extra_cflags -fno-common -dynamic -Wno-long-double "
+#      The newest (64 bit) version of OSX gcc compiler does not use/need -Wno-long-double
+#      CFLAGS="$CFLAGS $extra_cflags -fno-common -dynamic -Wno-long-double "
+       CFLAGS="$CFLAGS $extra_cflags -fno-common -dynamic "
     else
        CFLAGS="$CFLAGS $extra_cflags -fno-common -dynamic -Wno-long-double -fcoalesce-templates"
     fi   

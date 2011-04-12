@@ -131,7 +131,8 @@ BinaryPiostream::BinaryPiostream(const string& filename, Direction dir,
 
     if (version() > 1)
     {
-      char hdr[16];
+      // write out 16 bytes, but we need 17 for \0
+      char hdr[17];
       sprintf(hdr, "SCI\nBIN\n%03d\n%s", version_, endianness());
 
       if (!fwrite(hdr, 1, 16, fp_))
@@ -143,9 +144,10 @@ BinaryPiostream::BinaryPiostream(const string& filename, Direction dir,
     }
     else
     {
-      char hdr[12];
+      // write out 12 bytes, but we need 13 for \0
+      char hdr[13];
       sprintf(hdr, "SCI\nBIN\n%03d\n", version_);
-      if (!fwrite(hdr, 1, 12, fp_))
+      if (!fwrite(hdr, 1, 13, fp_))
       {
 	reporter_->error("Header write failed.");
 	err = true;
@@ -428,7 +430,11 @@ BinaryPiostream::io(long& data)
   }
   else
   {
-    gen_io(data, "long");
+    // For 32bits for now (we need to update this later in the next
+    // version of Pio)
+    int tmp = data;
+    gen_io(tmp, "long");
+    data = tmp;
   }
 }
 
@@ -447,7 +453,11 @@ BinaryPiostream::io(unsigned long& data)
   }
   else
   {
-    gen_io(data, "unsigned long");
+    // For 32bits for now (we need to update this later in the next
+    // version of Pio)
+    unsigned int tmp = data;
+    gen_io(tmp, "unsigned long");
+    data = tmp;
   }
 }
 

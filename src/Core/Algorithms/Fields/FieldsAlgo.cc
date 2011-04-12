@@ -55,6 +55,19 @@
 #include <Core/Algorithms/Fields/ToPointCloud.h>
 #include <Core/Algorithms/Fields/Unstructure.h>
 
+#include <Core/Datatypes/GenericField.h>
+#include <Core/Datatypes/TetVolMesh.h>
+#include <Core/Datatypes/TriSurfMesh.h>
+#include <Core/Datatypes/CurveMesh.h>
+#include <Core/Datatypes/ImageMesh.h>
+#include <Core/Datatypes/LatVolMesh.h>
+#include <Core/Basis/Constant.h>
+#include <Core/Basis/CrvLinearLgn.h>
+#include <Core/Basis/QuadBilinearLgn.h>
+#include <Core/Basis/HexTrilinearLgn.h>
+#include <Core/Basis/TetLinearLgn.h>
+#include <Core/Basis/TriLinearLgn.h>
+
 #include <sgi_stl_warnings_off.h>
 #include <sstream>
 #include <sgi_stl_warnings_on.h>
@@ -409,3 +422,19 @@ bool FieldsAlgo::SignedDistanceField(FieldHandle input, FieldHandle& output, Fie
 
 } // end namespace SCIRunAlgo
 
+using namespace SCIRun;
+
+template<class T>
+void
+cast_to_mesh_here( void * in_mesh, T *& out_mesh )
+{
+  out_mesh = dynamic_cast<T*>( (T*)in_mesh );
+}
+
+template void cast_to_mesh_here< GenericField<TetVolMesh<TetLinearLgn<Point> >, TetLinearLgn<double>, std::vector<double, std::allocator<double> > > >( void *, GenericField<TetVolMesh<TetLinearLgn<Point> >, TetLinearLgn<double>, std::vector<double, std::allocator<double> > > *& );
+template void cast_to_mesh_here< GenericField<TriSurfMesh<TriLinearLgn<Point> >, TriLinearLgn<double>, std::vector<double, std::allocator<double> > > >( void *, GenericField<TriSurfMesh<TriLinearLgn<Point> >, TriLinearLgn<double>, std::vector<double, std::allocator<double> > > *& );
+template void cast_to_mesh_here< TriSurfMesh<TriLinearLgn<Point> > >( void *, TriSurfMesh<TriLinearLgn<Point> > *& );
+
+template void cast_to_mesh_here<GenericField<LatVolMesh<HexTrilinearLgn<Point> >, ConstantBasis<float>, FData3d<float, LatVolMesh<HexTrilinearLgn<Point> > > > >(void*, GenericField<LatVolMesh<HexTrilinearLgn<Point> >, ConstantBasis<float>, FData3d<float, LatVolMesh<HexTrilinearLgn<Point> > > >*&);
+template void cast_to_mesh_here<GenericField<ImageMesh<QuadBilinearLgn<Point> >, ConstantBasis<float>, FData2d<float, ImageMesh<QuadBilinearLgn<Point> > > > >(void*, GenericField<ImageMesh<QuadBilinearLgn<Point> >, ConstantBasis<float>, FData2d<float, ImageMesh<QuadBilinearLgn<Point> > > >*&);
+template void cast_to_mesh_here<GenericField<CurveMesh<CrvLinearLgn<Point> >, CrvLinearLgn<double>, std::vector<double, std::allocator<double> > > >(void*, GenericField<CurveMesh<CrvLinearLgn<Point> >, CrvLinearLgn<double>, std::vector<double, std::allocator<double> > >*&);

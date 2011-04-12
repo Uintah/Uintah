@@ -75,6 +75,7 @@ using std::cerr;
 
 
 #include <Core/Algorithms/Visualization/share.h>
+#include <Core/Algorithms/Fields/FieldsAlgo.h>
 
 namespace SCIRun {
 class GeomEllipsoid;
@@ -390,7 +391,12 @@ RenderField<Fld, Loc>::render(FieldHandle fh,  bool nodes,
 			      unsigned div, bool fut)
 
 {
-  Fld *fld = dynamic_cast<Fld*>(fh.get_rep());
+  Fld *fld;
+
+  //cast_to_mesh_here<Fld*>( (void*)fh.get_rep(), fld );
+  cast_to_mesh_here( (void*)fh.get_rep(), fld );
+
+  //Fld *fld = dynamic_cast<Fld*>(fh.get_rep());
   ASSERT(fld != 0);
   
   typename Fld::mesh_handle_type mesh = fld->get_typed_mesh();

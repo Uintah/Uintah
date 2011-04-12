@@ -40,6 +40,8 @@
 #include <Core/Geometry/Tensor.h>
 #include <Core/Datatypes/Matrix.h>
 
+#include <Core/Algorithms/Fields/FieldsAlgo.h>
+
 #include <Dataflow/Modules/Fields/share.h>
 
 namespace SCIRun {
@@ -91,8 +93,8 @@ ApplyMappingMatrixAlgoT<FSRC, LSRC,
 						   MeshHandle dst_h,
 						   MatrixHandle mapping)
 {
-  typename FDST::mesh_type *dstmesh =
-    dynamic_cast<typename FDST::mesh_type *>(dst_h.get_rep());
+  typename FDST::mesh_type *dstmesh;
+  cast_to_mesh_here( (void*)(dst_h.get_rep()), dstmesh );
 
   FieldHandle ofield = scinew FDST(dstmesh);
   execute_aux(reporter, src_h, ofield, mapping);
@@ -109,8 +111,12 @@ ApplyMappingMatrixAlgoT<FSRC, LSRC,
 						       FieldHandle dst_h,
 						       MatrixHandle mapping)
 {
-  FSRC *fsrc = dynamic_cast<FSRC *>(src_h.get_rep());
-  FDST *fdst = dynamic_cast<FDST *>(dst_h.get_rep());
+  FSRC *fsrc; // = dynamic_cast<FSRC *>(src_h.get_rep());
+  FDST *fdst; // = dynamic_cast<FDST *>(dst_h.get_rep());
+
+  cast_to_mesh_here( (void*)src_h.get_rep(), fsrc );
+  cast_to_mesh_here( (void*)dst_h.get_rep(), fdst );
+
   typename FSRC::mesh_handle_type msrc = fsrc->get_typed_mesh();
 
   ASSERT((unsigned int)(mapping->nrows()) == fdst->fdata().size())

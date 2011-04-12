@@ -46,6 +46,13 @@
 #include <iostream>
 #include <sstream>
 
+#include <Core/Datatypes/Field.h>
+#include <Core/Datatypes/String.h>
+#include <Core/Datatypes/NrrdData.h>
+#include <Dataflow/Network/Ports/ColorMapPort.h>
+#include <Dataflow/Network/Ports/GeometryPort.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
+
 using namespace std;
 using namespace SCIRun;
 
@@ -261,3 +268,28 @@ bool OPort::cache_flag_supported() { return false; }
 bool OPort::get_cache() { return true; }
 void OPort::set_cache(bool cache) {}
 
+template<class T>
+void
+cast_here( Port * in_port, T *& out_port )
+{
+  out_port = dynamic_cast<T*>( in_port );
+}
+
+// Explicitly instantiate the cast functions we use... (from other libraries).
+//   Note, putting these here for now though perhaps they should be placed in their
+//   specific files...?
+template void cast_here< SimpleIPort<FieldHandle> >( Port *, SimpleIPort<FieldHandle> *& );
+template void cast_here< SimpleOPort<FieldHandle> >( Port *, SimpleOPort<FieldHandle> *& );
+
+template void cast_here< SimpleIPort<MatrixHandle> >( Port *, SimpleIPort<MatrixHandle> *& );
+template void cast_here< SimpleOPort<MatrixHandle> >( Port *, SimpleOPort<MatrixHandle> *& );
+
+template void cast_here< SimpleIPort<ColorMapHandle> >( Port *, SimpleIPort<ColorMapHandle> *& );
+template void cast_here< SimpleOPort<ColorMapHandle> >( Port *, SimpleOPort<ColorMapHandle> *& );
+
+template void cast_here< SimpleIPort<StringHandle> >( Port *, SimpleIPort<StringHandle> *& );
+template void cast_here< SimpleOPort<StringHandle> >( Port *, SimpleOPort<StringHandle> *& );
+
+template void cast_here< SimpleOPort<NrrdDataHandle> >( Port*, SimpleOPort< NrrdDataHandle >*&);
+
+template void cast_here< GeometryOPort >( Port *, GeometryOPort *& );

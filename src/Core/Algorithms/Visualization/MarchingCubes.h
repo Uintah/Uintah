@@ -44,6 +44,7 @@
 #include <vector>
 #include <sgi_stl_warnings_on.h>
 
+#include <Core/Algorithms/Fields/FieldsAlgo.h>
 #include <Core/Algorithms/Visualization/share.h>
 
 namespace SCIRun {
@@ -134,7 +135,10 @@ template<class Tesselator>
 void 
 MarchingCubes<Tesselator>::set_field( Field *f )
 {
-  if ( field_type *field = dynamic_cast<field_type *>(f) ) {
+  field_type * field; // = dynamic_cast<field_type *>(f)
+  cast_to_mesh_here( f, field );
+
+  if ( field ) {
     for (int i=0; i<np_; i++) {
       if ( tess_[i] ) delete tess_[i];
       tess_[i] = scinew Tesselator( field );

@@ -99,7 +99,12 @@ public:
 
   virtual ScalarFieldInterfaceHandle make(FieldHandle field)
   {
-    F *tfield = dynamic_cast<F *>(field.get_rep());
+    // This used to be a dynamic_cast, but that causes failure on new
+    // 64 bit macs... however, I don't think it needs to be a
+    // dynamic_cast as this function only gets called (because it is
+    // templated for a specific field) if the Field is already of the
+    // right type, thus the static_cast should be safe.
+    F *tfield = static_cast<F *>(field.get_rep());
     ASSERT(tfield);
     
     return ScalarFieldInterfaceHandle(scinew SFInterface<F, L>(tfield));

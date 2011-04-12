@@ -49,7 +49,13 @@
 #include <Dataflow/Network/PackageDB.h>
 #include <Dataflow/Network/Scheduler.h>
 #include <Dataflow/Network/Network.h>
+
+#include <Dataflow/Network/Ports/ColorMapPort.h>
 #include <Dataflow/Network/Ports/GeometryPort.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
+#include <Core/Datatypes/String.h>
+#include <Core/Datatypes/Field.h>
+
 #include <Core/Containers/StringUtil.h>
 #include <Core/GuiInterface/GuiContext.h>
 #include <Core/GuiInterface/GuiInterface.h>
@@ -501,6 +507,66 @@ Module::remove_iport(int which)
   gui_->execute("drawPorts "+id_+" i");
 }
 
+
+//! Used to get handles with error checking.
+template<class DH>
+bool
+Module::get_input_handle(std::string name,
+			 DH& handle,
+			 bool required)
+{
+  update_state(NeedData);
+
+  bool return_state = false;
+
+  handle = 0;
+
+  IPort* port = get_iport(name);
+
+  //! We always require the port to be there.
+  //if( !(dataport = dynamic_cast<SimpleIPort<DH>*>(port)) )
+  //if( !(dataport = static_cast<SimpleIPort<DH>*>(port)) )
+
+  SimpleIPort<DH> *dataport;
+
+  cast_here< SimpleIPort<DH> >(port,dataport);
+
+  if( !dataport )
+    {
+      throw "get_input_handle(): Incorrect data type sent to input port '" + name +
+        "' (dynamic_cast failed).";
+    }
+ 
+  //! Get the handle and check for data.
+  else if (dataport->get(handle) && handle.get_rep())
+    {
+      //! See if the data has changed. Note only change the boolean if
+      //! it is false this way it can be cascaded with other handle gets.
+      if( inputs_changed_ == false ) {
+        inputs_changed_ = dataport->changed();
+      }
+      //! we have a valid handle, return true.
+      return_state = true;
+    }
+
+  else if( required )
+  {
+    //! The first input on the port was required to have a valid
+    //! handle and data so report an error.
+    error( "No handle or representation for input port '" +
+           name + "'."  );
+  }
+
+  return return_state;
+}
+
+// Explicitly instantiate the get_input_handle() functions that we need:
+template bool Module::get_input_handle< ColorMapHandle >(std::string, ColorMapHandle & handle, bool required);
+template bool Module::get_input_handle< FieldHandle >(std::string, FieldHandle & handle, bool required);
+template bool Module::get_input_handle< MatrixHandle >(std::string, MatrixHandle & handle, bool required);
+template bool Module::get_input_handle< StringHandle >(std::string, StringHandle & handle, bool required);
+
+
 port_range_type
 Module::get_iports(const string &name)
 {
@@ -910,6 +976,7 @@ Module::error(const string& str)
     cout << id_ + ":" + newstr;
     cout.flush();
   }
+
   msg_stream_flush();
   gui_->execute(id_ + " append_log_msg {" + esc_brackets(newstr) + "} red");
   update_msg_state(Error); 
@@ -1139,7 +1206,7 @@ Module::send_output_handle( string port_name,
 
   // We always require the port to be there.
   if ( !(dataport = dynamic_cast<GeometryOPort*>(get_oport(port_name))) ) {
-    throw "Incorrect data type sent to output port '" + port_name +
+    throw "Send_output_handle(): Incorrect data type sent to output port '" + port_name +
       "' (dynamic_cast failed).";
     return false;
   }
@@ -1168,8 +1235,13 @@ Module::send_output_handle( string port_name,
   GeometryOPort *dataport;
 
   // We always require the port to be there.
-  if ( !(dataport = dynamic_cast<GeometryOPort*>(get_oport(port_name))) ) {
-    throw "Incorrect data type sent to output port '" + port_name +
+
+  cast_here<GeometryOPort>( get_oport(port_name), dataport );  // dataport = dynamic_cast<GeometryOPort*>())
+
+  //printf("Module.cc: %p, %s, %p\n", get_oport(port_name), port_name.c_str(), dataport );
+
+  if ( !dataport ) {
+    throw "Send_output_handle() 2: Incorrect data type sent to output port '" + port_name +
       "' (dynamic_cast failed).";
     return false;
   }

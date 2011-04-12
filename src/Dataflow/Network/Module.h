@@ -404,52 +404,6 @@ private:
 
 
 //! Used to get handles with error checking.
-template<class DH>
-bool
-Module::get_input_handle(std::string name,
-			 DH& handle,
-			 bool required)
-{
-  update_state(NeedData);
-
-  bool return_state = false;
-
-  SimpleIPort<DH> *dataport;
-
-  handle = 0;
-
-  //! We always require the port to be there.
-  if( !(dataport = dynamic_cast<SimpleIPort<DH>*>(get_iport(name))) )
-  {
-    throw "Incorrect data type sent to input port '" + name +
-      "' (dynamic_cast failed).";
-  }
- 
-  //! Get the handle and check for data.
-  else if (dataport->get(handle) && handle.get_rep())
-  {
-    //! See if the data has changed. Note only change the boolean if
-    //! it is false this way it can be cascaded with other handle gets.
-    if( inputs_changed_ == false ) {
-      inputs_changed_ = dataport->changed();
-    }
-    //! we have a valid handle, return true.
-    return_state = true;
-  }
-
-  else if( required )
-  {
-    //! The first input on the port was required to have a valid
-    //! handle and data so report an error.
-    error( "No handle or representation for input port '" +
-           name + "'."  );
-  }
-
-  return return_state;
-}
-
-
-//! Used to get handles with error checking.
 //! If valid handles are set in the vector, return true.
 //! Only put valid handles in the vector.
 template<class DH>
@@ -479,7 +433,9 @@ Module::get_dynamic_input_handles(std::string name,
     while (pi != range.second)
     {
       SimpleIPort<DH> *dataport;
-      dataport = dynamic_cast<SimpleIPort<DH>*>(get_iport(pi->second));
+
+      cast_here(get_iport(pi->second),dataport); // dataport = dynamic_cast<SimpleIPort<DH>*>(get_iport(pi->second));
+
       //! We always require the port to be there.
       if(!dataport)
       {
@@ -544,11 +500,12 @@ Module::send_output_handle(string name, DH& handle,
   if (!handle.get_rep()) return false;
 
   SimpleOPort<DH> *dataport;
+  cast_here(get_oport(name),dataport); //dataport = dynamic_cast<SimpleOPort<DH>*>(get_oport(name))
 
   //! We always require the port to be there.
-  if ( !(dataport = dynamic_cast<SimpleOPort<DH>*>(get_oport(name))) )
+  if ( !dataport )
   {
-    throw "Incorrect data type sent to output port '" + name +
+    throw "send_output_handle() 3: Incorrect data type sent to output port '" + name +
       "' (dynamic_cast failed).";
     return false;
   }

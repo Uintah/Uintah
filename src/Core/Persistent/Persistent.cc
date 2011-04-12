@@ -54,9 +54,9 @@
 #include <sci_defs/teem_defs.h>
 
 #ifdef HAVE_TEEM
-#include <teem/nrrd.h>
+#  include <teem/nrrd.h>
 #else
-#include <Core/Util/Endian.cc>
+#  include <Core/Util/Endian.cc>
 #endif
 
 using namespace std;

@@ -127,6 +127,7 @@ PSELIBS := \
 	Core/GuiInterface        \
 	Core/ImportExport        \
 	Core/Math                \
+	Dataflow/Network         \
 	Core/Persistent          \
 	Core/Thread              \
 	Core/TkExtensions        \

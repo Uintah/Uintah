@@ -49,6 +49,7 @@
 #include <Core/Datatypes/Matrix.h>
 
 #include <Core/Algorithms/Visualization/share.h>
+#include <Core/Algorithms/Fields/FieldsAlgo.h>
 
 namespace SCIRun {
 
@@ -157,7 +158,10 @@ void Noise<Tesselator>::release()
 template<class Tesselator>
 void Noise<Tesselator>::set_field( Field *f )
 {
-  if ( field_type *field = dynamic_cast<field_type *>(f) ) {
+  field_type * field; // = dynamic_cast<field_type *>(f)
+  cast_to_mesh_here( f, field );
+
+  if ( field ) {
     if ( tess_ ) delete tess_;
     tess_ = new Tesselator( field );
     if ( !field->get_property( "spanspace", space_ ) )
@@ -173,8 +177,10 @@ void Noise<Tesselator>::set_field( Field *f )
 template<class Tesselator>
 void NoiseFace<Tesselator>::set_field( Field *f )
 {
-  if ( field_type *field = dynamic_cast<field_type *>(f) )
-  {
+  field_type * field; // = dynamic_cast<field_type *>(f)
+  cast_to_mesh_here( f, field );
+
+  if ( field ) {
     if ( this->tess_ ) delete this->tess_;
     this->tess_ = new Tesselator( field );
     if ( !field->get_property( "spanspace", this->space_ ) )
@@ -191,8 +197,10 @@ void NoiseFace<Tesselator>::set_field( Field *f )
 template<class Tesselator>
 void NoiseCell<Tesselator>::set_field( Field *f )
 {
-  if ( field_type *field = dynamic_cast<field_type *>(f) )
-  {
+  field_type * field; // = dynamic_cast<field_type *>(f)
+  cast_to_mesh_here( f, field );
+
+  if ( field ) {
     if ( this->tess_ ) delete this->tess_;
     this->tess_ = new Tesselator( field );
     if ( !field->get_property( "spanspace", this->space_ ) )

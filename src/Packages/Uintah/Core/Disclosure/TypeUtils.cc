@@ -141,7 +141,8 @@ const TypeDescription* fun_getTypeDescription(long64*)
 }
 
 
-#if !defined( SCI_32BITS )
+#if !defined( SCI_32BITS ) && !defined(__APPLE__)
+#  if !defined( SCI_32BITS )
 const TypeDescription* fun_getTypeDescription(long long*)
 {
    static TypeDescription* td;
@@ -151,6 +152,7 @@ const TypeDescription* fun_getTypeDescription(long long*)
    }
    return td;
 }
+#  endif
 #endif
 
 const TypeDescription* fun_getTypeDescription(bool*)
@@ -225,8 +227,10 @@ void fun_getSmallValue(bool* val)
   *val = false;
 }
 void fun_getZeroValue(  double  * val ) { *val = 0; }
-#if !defined( SCI_32BITS )
+#if !defined( SCI_32BITS ) && !defined(__APPLE__)
+#  if !defined( SCI_32BITS )
 void fun_getZeroValue(  long long * val ) { *val = 0; }
+#  endif
 #endif
 void fun_getZeroValue(  bool    * val ) { *val = false; }
 void fun_getZeroValue(  long64  * val ) { *val = 0; }

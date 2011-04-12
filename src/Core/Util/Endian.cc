@@ -43,7 +43,9 @@ void swapbytes(int16_t& i) { SWAP_2(i); }
 void swapbytes(uint16_t& i) { SWAP_2(i); }
 void swapbytes(int32_t& i) { SWAP_4(i); }
 void swapbytes(uint32_t& i) { SWAP_4(i); }
+#if !defined( SCI_64BITS ) || !defined( __APPLE__ )
 void swapbytes(int64_t& i) { SWAP_8(i); }
+#endif
 void swapbytes(uint64_t& i) { SWAP_8(i); }
 void swapbytes(float& i){SWAP_4(i);}
 void swapbytes(double& i){SWAP_8(i);}
