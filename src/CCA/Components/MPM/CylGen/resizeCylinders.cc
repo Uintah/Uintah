@@ -1,3 +1,26 @@
+// This code takes the output from cylgen (Position_Radius.txt) and attempts
+// to increase the packing fraction by increasing each cylinder slightly,
+// rechecking for intersections, and increasing further, or stopping if any
+// overlap is detected.
+
+// To compile:
+
+// >g++ -O3 -o resizeCylinders resizeCylinders.cc
+
+// To run:
+
+// >resizeCylinder
+
+// Note that this can be run successively (with diminishing returns) by
+// moving the output from this program (Position_Radius.RS.txt) to the
+// filename of the original distribution (Position_Radius.txt) and rerunning.
+
+// i.e.
+
+//  mv Position_Radius.RS.txt Position_Radius.txt
+
+// >resizeCylinder
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <iostream>
@@ -104,7 +127,7 @@ int main()
   }
 
   cout << "numInts = " << numInts << endl;
-  cout << "Spheres out of RVE = " << outOfRVE << endl;
+  cout << "Cylinders out of RVE = " << outOfRVE << endl;
   cout << "Total cylinder area orig = " << total_cyl_area_orig << endl;
   cout << "Total cylinder area new  = " << total_cyl_area_new  << endl;
   cout << "New Maximum Diameter = " << diam_max << endl;
