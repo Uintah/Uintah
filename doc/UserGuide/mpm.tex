@@ -1939,12 +1939,13 @@ and generality -- no assumption of constant specific heat is needed.
   The inputs can be found in \verb|.../MPM/ConstitutiveModel/PlasticityModel/PTWShear.h|.
 
   \paragraph{Flow Stress}
-  We have explored five temperature and strain rate dependent
+  We have explored six temperature and strain rate dependent
   models that can be used to compute the flow stress:
   \begin{enumerate}
     \item the Johnson-Cook (JC) model
     \item the Steinberg-Cochran-Guinan-Lund (SCG) model.
     \item the Zerilli-Armstrong (ZA) model.
+    \item the Zerilli-Armstrong for polymers model (which also has pressure dependence).
     \item the Mechanical Threshold Stress (MTS) model.
     \item the Preston-Tonks-Wallace (PTW) model.
   \end{enumerate}
@@ -2084,6 +2085,63 @@ and generality -- no assumption of constant specific heat is needed.
        <K>           5.0e9    </K>
        <n>           1.0      </n>
      </plasticity_model>
+  \end{Verbatim}
+
+  \subparagraph{ZA for Polymers Flow Stress Model}
+  The Zerilli-Armstrong flow stress model for polymers(\cite{Zerilli07})
+  is a modification to the ZA flow stress model for metals motivated by considering
+  thermally activated processess appropriate to polymers, in place of
+  dislocations.  The ZA flow stress function for polymers has three terms.  
+  The first term accounts for a saturation of the flow stress to finite stress 
+  at higher temperatures (Although such stress component is specified as ``athermal'' 
+  it should follow the generally weaker temperature dependence of the elastic 
+  shear modulus, hence the subscript ``g''). The second gives the yield stress as 
+  a function of temperature and plastic strain rate. The third gives an increment 
+  due to strain hardening, influenced by the pressure. The general form of the
+  equation for the flow stress implemented in Uintah is
+  \begin{equation}
+    \sigma_y(\Ep,\Epdot{},p,T) = 
+      \sigma_g + B\exp(-\beta(T-T_0)) + 
+                           B_0\sqrt{\omega\Ep}\exp(-\alpha(T-T_0))
+  \end{equation}
+  where it should be noted that the equation is slightly modified from the
+  original to include a reference temperature $T_0$ and an athermal stress, 
+  $\sigma_g$, which is a constant.  The other terms are specified via
+  \begin{equation}
+    B=B_{pa}(1+B_{pb}p)^{B_{pn}};\quad
+    B_0=B_{0pa}(1+B_{0pb}p)^{B_{0pn}};\quad
+    \omega=\omega_a+\omega_b\ln(\Epdot{})+\omega_p p
+  \end{equation}
+  where $B_{pa}$, $B_{pb}$, $B_{pn}$, $B_{0pa}$, $B_{0pb}$, $B_{0pn}$, $\omega_a$, $\omega_b$, 
+  and $\omega_p$ are material parameters.  The functional forms of the exponents
+  $\alpha$ and $\beta$ are (as in the original)
+  \begin{equation}
+    \alpha = \alpha_0 - \alpha_1 \ln(\Epdot{}); \quad
+    \beta = \beta_0 - \beta_1 \ln(\Epdot{}); 
+  \end{equation}
+  where $\alpha_0, \alpha_1, \beta_0, \beta_1$ are material parameters.
+
+  The inputs for this model are of the form
+  \begin{Verbatim}[fontsize=\footnotesize]
+    
+         <plasticity_model type="zerilli_armstrong_polymer">
+           <sigma_g>     50.0e6      </sigma_g>
+           <B_pa>        0.0      </B_pa>
+           <B_pb>        0.0      </B_pb>
+           <B_pn>        0.0      </B_pn>
+           <beta_0>      0.0      </beta_0>
+           <beta_1>      0.0      </beta_1>
+           <T_0>         0.0      </T_0>
+           <B_0pa>       500.0e6      </B_0pa>
+           <B_0pb>       0.0      </B_0pb>
+           <B_0pn>       0.0      </B_0pn>
+           <omega_a>     1.0      </omega_a>
+           <omega_b>     0.0      </omega_b>
+           <omega_p>     0.0      </omega_p>
+           <alpha_0>     0.0      </alpha_0>
+           <alpha_1>     0.0      </alpha_1>
+         </plasticity_model>
+
   \end{Verbatim}
 
   \subparagraph{MTS Flow Stress Model}
