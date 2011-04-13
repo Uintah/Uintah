@@ -90,6 +90,15 @@ inline float Min(float d1, float d2)
   return d1<d2?d1:d2;
 }
 
+inline long long int Min(long long int d1, long long int d2)
+{
+  return d1<d2?d1:d2;
+}
+inline long long int Max(long long int d1, long long int d2)
+{
+  return d1>d2?d1:d2;
+}
+
 // 2 doubles
 inline double Max(double d1, double d2)
 {
