@@ -6614,7 +6614,8 @@ BoundaryCondition::computeBCArea__NEW(const ProcessorGroup*,
           bool foundIterator = 
             getIteratorBCValueBCKind( patch, face, child, bc_iter->second.name, matl_index, bc_value, bound_ptr, bc_kind); 
 
-          double dx_1, dx_2; 
+          double dx_1 = 0.0;
+          double dx_2 = 0.0; 
 
           if ( foundIterator ) {
 
