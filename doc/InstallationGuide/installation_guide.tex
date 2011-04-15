@@ -574,6 +574,9 @@ libraries.):
 ./build_visit --makeflags -j# --no-visit
 \end{verbatim}
 
+Note: An alternate simpler way (but less flexible) is mentioned at the end
+of this section.
+
 Replace '\#' with the number of processors you want to use.  This
 will launch the normal dialog window, where you should select
 the ``Parallel'' option.  (Use the arrow keys and the space bar.)
@@ -631,8 +634,8 @@ may need to be root to install it, depending on where your
 As usual, cross your fingers. If everything goes fine, you can find
 the visit executable in ``visit\_bin\_dir''/bin.
 
-\emph{WARNING: Until a bug in the VisIt make system is fixed, you have
-to manually update
+\emph{WARNING: A bug in the VisIt make system was fixed in version 2.2.2, 
+for earlier versions you will have to manually update
 /path/to/installation/2.0.2/linux-x86\_64/include/PluginVsInstall.cmake
 and comment out these lines:}
 
@@ -647,6 +650,18 @@ and comment out these lines:}
 #ENDIF(EXISTS /usr/bin/g++4)
 \end{verbatim}
 
+And alternate way to build is to omit the --no-visit flag.  This will
+give the build script the okay to build visit.
+
+\begin{verbatim}
+./build_visit --makeflags -j#
+\end{verbatim}
+
+Once the script is finished you will need to package up the build.  
+This can be done by navigating to /path/to/build\_script/visit2.2.0/src.
+And running "make package".  This will package up the files into a tar
+file.  Once this is done the same instructions in 7.2.2 will work.  Just
+use visit-install to install the package to your desired location.
 
 
 \subsubsection{Parallel OS X build}
@@ -1055,6 +1070,8 @@ everything in the correct places.  Extract using:
 	tar -xvf gfortran-*-bin.tar.gz
 \end{verbatim}
 
+Note: If the Uintah builds correctly, but you are receiving link errors, see section 10.2.
+
 \subsection{Installing Subversion/libpng3/libxml2/other dependencies}
 As mentioned above, several libraries are required for Uintah, and may
 need to be updated or installed depending on the version of Mac
@@ -1331,6 +1348,7 @@ make -j#
 		\begin{verbatim}
 			export PATH=/usr/local/bin:$PATH
 		\end{verbatim}
+		Note: If the Uintah builds correctly, but you receive a dynamic link error from fortran when you try to load a uda, the links in fortran library may be pointing to the wrong place.  This can easily be fixed by navigating to the fortran library and using "otool -L" to recognize the problem, then using install\_name\_tool to fix the problem.  Both are included in the mac developer tools.
 	
 	\subsection{openmpi}
 		Download the latest version of openmpi from: \url{http://www.open-mpi.org/}. Then configure using:
@@ -1392,6 +1410,7 @@ make -j#
 			mkdir ~/uintah/mac64opt
 		\end{verbatim}} %
 		\noindent Now browse to the mac64opt directory and configure Uintah using the following:
+		\emph{Note, under Mac OSX 10.6, the build has to be 64-bit.}
 		{\small
 		\begin{verbatim}
 			cd ~/uintah/mac64opt
