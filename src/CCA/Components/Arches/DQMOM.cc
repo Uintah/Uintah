@@ -75,6 +75,11 @@ DQMOM::~DQMOM()
   VarLabel::destroy(d_normResNormalizedLabelB);
   VarLabel::destroy(d_normResNormalizedLabelX);
   VarLabel::destroy(d_conditionNumberLabel);
+
+ if( d_solverType == "Optimize" ) {
+   delete AAopt; 
+ }
+
 }
 //---------------------------------------------------------------------------
 // Method: Problem setup
