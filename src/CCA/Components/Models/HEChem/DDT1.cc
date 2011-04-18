@@ -364,7 +364,7 @@ void DDT1::scheduleComputeModelSources(SchedulerP& sched,
     t->requires(Task::OldDW, Mlb->pXLabel,            mpm_matls,  gn);
     t->requires(Task::OldDW, pCrackRadiusLabel,       react_matl, gn);
     t->requires(Task::OldDW, detLocalToLabel,         react_matl, oms, gac,1);
-    t->requires(Task::NewDW, crackedEnoughLabel,        react_matl, gac,1);
+    t->requires(Task::NewDW, crackedEnoughLabel,      react_matl, gac,1);
   }
   
   sched->addTask(t1, level->eachPatch(), d_mymatls);
@@ -670,7 +670,6 @@ void DDT1::computeModelSources(const ProcessorGroup*,
           
           /* test whether the current cell satisfies burning criteria */
           bool   burning = 0;
-          bool   detonatingLocalTo = 0;
           double maxProductVolFrac  = -1.0;
           double maxReactantVolFrac = -1.0;
           double productPress = 0.0;
@@ -724,8 +723,10 @@ void DDT1::computeModelSources(const ProcessorGroup*,
           }//end 1st for
 
           // Burn mass if necessary
-          if(((burning == 1 && productPress >= d_thresholdPress_SB) || (d_useCrackModel && 
-             (crackedEnough[c]))) && !detonatingLocalTo){
+          if(((burning == 1 && productPress >= d_thresholdPress_SB)  // burning occurs if either the surface burning criteria is met...
+             || (d_useCrackModel && (crackedEnough[c])))             // or if the bulk burning criteria is met.
+             && !detLocalTo[c]){	// this prevents burning right in front of a detonation
+
               burningCell[c]=1.0;
               Vector rhoGradVector = computeDensityGradientVector(nodeIdx,
                                                                   rctMass_NC, NC_CCweight,dx);
@@ -735,8 +736,9 @@ void DDT1::computeModelSources(const ProcessorGroup*,
               
               double solidMass = rctRho[c]/rctVolFrac[c];
               double burnedMass = 0.0;
-              if(burning == 1 && productPress >= d_thresholdPress_SB){                  
-                computeBurnedMass(Tzero, Tsurf, productPress,
+
+              if(burning == 1 && productPress >= d_thresholdPress_SB){                 
+                burnedMass = computeBurnedMass(Tzero, Tsurf, productPress,
                                   rctSpvol[c], surfArea, delT,
                                   solidMass);
               }
