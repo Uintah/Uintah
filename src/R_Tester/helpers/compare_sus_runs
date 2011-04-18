@@ -48,7 +48,7 @@ if [ -d "$TEST_UDADIR" ]; then
     cp $TEST_DIR/sus.log.txt  $TEST_DIR/timestamp $TEST_DIR/restart_timestamp $COMPARE_ROOT/$TEST >/dev/null 2>&1
     cp $TEST_DIR/malloc_stats $TEST_DIR/restart_malloc_stats $COMPARE_ROOT/$TEST >/dev/null 2>&1
 
-    chgrp -R $GROUP "$COMPARE_ROOT/$TEST"
+    chgrp -R $COMMON_GROUP "$COMPARE_ROOT/$TEST"
     chmod -R g+rwX "$COMPARE_ROOT/$TEST"
 
     exit -2

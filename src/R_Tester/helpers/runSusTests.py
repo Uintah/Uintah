@@ -388,7 +388,8 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
 
   chdir("..")
 
-  system("chgrp -R uintah %s > /dev/null 2>&1" % resultsdir)
+  common_group = "%s" % (environ['COMMON_GROUP'])
+  system("chgrp -R %s %s > /dev/null 2>&1" % (common_group, resultsdir) )
   system("chmod -R g+rwX %s > /dev/null 2>&1" % resultsdir)
 
   # copied results - permissions

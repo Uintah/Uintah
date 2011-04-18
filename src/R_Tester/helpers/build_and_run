@@ -5,9 +5,9 @@
 #
 #__________________________________
 # bulletproof the inputs
-if [ "$BUILDROOT" = "" -o "$COMPILE" = "" -o "$NOTESTS" = "" -o "$GROUP"  = "" -o "$CHECKPOINTS" = "" -o "$TEST_DATA" = "" ]; then
+if [ "$BUILDROOT" = "" -o "$COMPILE" = "" -o "$NOTESTS" = "" -o "$COMMON_GROUP"  = "" -o "$CHECKPOINTS" = "" -o "$TEST_DATA" = "" ]; then
   echo "ERROR:build_and_run  One of the environmental variables has not been set"
-  echo "BUILDROOT: $BUILDROOT, COMPILE: $COMPILE, NOTESTS: $NOTESTS, GROUP: $GROUP, CHECKPOINTS: $CHECKPOINTS, TEST_DATA: $TEST_DATA"
+  echo "BUILDROOT: $BUILDROOT, COMPILE: $COMPILE, NOTESTS: $NOTESTS, GROUP: $COMMON_GROUP, CHECKPOINTS: $CHECKPOINTS, TEST_DATA: $TEST_DATA"
   exit -1
 fi
 
@@ -29,7 +29,7 @@ if [ "$COMPILE" = "yes" ]; then
   
   #change the permissions
   echo "Changing permissions in `pwd`"
-  chgrp -R $GROUP .
+  chgrp -R $COMMON_GROUP .
   chmod -R g+rwX . 
 fi
 
