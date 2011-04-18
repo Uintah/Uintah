@@ -21,14 +21,14 @@ USE_DEFAULT_TEST_DATA="yes"
 USE_PREVTREE="no"
 USE_TREE="new"
 VERBOSE="no"
-GROUP=""
+COMMON_GROUP=""
 CHECKPOINTS=""
 
 #__________________________________
 # Machine specific variables
 MACHINE=`hostname`
 if [ "$MACHINE" == "rt" ]; then
-  GROUP="uintah"
+  COMMON_GROUP="uintah"
   BUILD_DIR=/home/csafe-tester/"$OS"
   TEST_DATA=/home/csafe-tester/"$OS"/TestData
   TEMP_DIR=/home/csafe-tester/"$OS"
@@ -40,7 +40,7 @@ if [ "$MACHINE" == "rt" ]; then
   WEBLOG=http://www.uintah.utah.edu:8050/~csafe-tester/SCIRun.${ID}.html
 fi
 if [ "$MACHINE" == "blaze" ]; then
-  GROUP="csafe"
+  COMMON_GROUP="sci"
   BUILD_DIR=/usr/local/home/csafe-tester/"$OS"
   TEST_DATA=/usr/local/home/csafe-tester/"$OS"/TestData
   TEMP_DIR=/usr/local/home/csafe-tester/"$OS"
@@ -51,7 +51,7 @@ if [ "$MACHINE" == "blaze" ]; then
   HTMLLOG=/usr/local/home/csafe-tester/public_html/SCIRun.${ID}.html
   WEBLOG=http://blaze.sci.utah.edu/~csafe-tester/SCIRun.${ID}.html
 fi
-
+#______________________________________________________________________
 
 
 # test OS
@@ -169,7 +169,7 @@ fi
 
 
 PATH="$PATH":"$SCRIPT_DIR":/usr/bin:/local/bin:/usr/sci/local/bin/:/usr/gnu/bin:/usr/local/bin:/bin:/usr/lib:.
-export PATH NOTESTS COMPILE LOCAL_OR_NIGHTLY_TEST WHICH_TESTS GROUP CHECKPOINTS
+export PATH NOTESTS COMPILE LOCAL_OR_NIGHTLY_TEST WHICH_TESTS COMMON_GROUP CHECKPOINTS
 
 # set number of processors to use when building
 if [ $PARALLELISM -eq 0 ]; then
@@ -336,7 +336,7 @@ fi
 runTests
 retval=$?
 
-chgrp -R uintah $BUILDROOT > /dev/null 2>&1
+chgrp -R $COMMON_GROUP $BUILDROOT > /dev/null 2>&1
 chmod -R g+w $BUILDROOT > /dev/null 2>&1
 
 
