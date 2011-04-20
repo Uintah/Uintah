@@ -100,7 +100,12 @@ public:
                               ArchesVariables* vars,
                               ArchesConstVariables* constvars,
                               const ArchesLabel* lab);
-   
+
+  virtual void setPressRHS(const ProcessorGroup* pc, 
+                           const Patch* patch,
+                           ArchesVariables* vars,
+                           ArchesConstVariables* constvars,
+                           const ArchesLabel* lab);
 
   virtual bool pressLinearSolve();
   virtual void copyPressSoln(const Patch* patch, ArchesVariables* vars);

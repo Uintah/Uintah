@@ -200,15 +200,6 @@ PetscSolver::matrixCreate(const PatchSet* perproc_patches,
 // ****************************************************************************
 // Fill linear parallel matrix
 // ****************************************************************************
-void 
-PetscSolver::setPressMatrix(const ProcessorGroup* ,
-                            const Patch* patch,
-                            ArchesVariables* vars,
-                            ArchesConstVariables* constvars,
-                            const ArchesLabel*)
-{
-  double solve_start = Time::currentSeconds();
-
   /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
      Compute the matrix and right-hand-side vector that define
      the linear system, Ax = b.
@@ -228,6 +219,13 @@ PetscSolver::setPressMatrix(const ProcessorGroup* ,
      MatCreateMPIBAIJ() - parallel block AIJ
      See the matrix chapter of the users manual for details.
      */
+void 
+PetscSolver::setPressMatrix(const ProcessorGroup* ,
+                            const Patch* patch,
+                            ArchesVariables* vars,
+                            ArchesConstVariables* constvars,
+                            const ArchesLabel*)
+{
   int ierr;
   int col[7];
   double value[7];
@@ -274,6 +272,32 @@ PetscSolver::setPressMatrix(const ProcessorGroup* ,
       }
     }
   }
+}
+// ****************************************************************************
+// Fill linear parallel RHS
+// ****************************************************************************
+void 
+PetscSolver::setPressRHS(const ProcessorGroup* ,
+                         const Patch* patch,
+                         ArchesVariables* vars,
+                         ArchesConstVariables* constvars,
+                         const ArchesLabel*)
+{
+  double solve_start = Time::currentSeconds();
+  int ierr;
+  int col[7];
+  double value[7];
+  // fill matrix for internal patches
+  // make sure that sizeof(d_petscIndex) is the last patch, i.e., appears last in the
+  // petsc matrix
+  IntVector lowIndex  = patch->getExtraCellLowIndex(Arches::ONEGHOSTCELL);
+  IntVector highIndex = patch->getExtraCellHighIndex(Arches::ONEGHOSTCELL);
+  
+  IntVector idxLo = patch->getFortranCellLowIndex();
+  IntVector idxHi = patch->getFortranCellHighIndex();
+  
+  Array3<int> l2g(lowIndex, highIndex);
+  l2g.copy(d_petscLocalToGlobal[patch]);
 
   // assemble right hand side and solution vector
   double vecvalueb, vecvaluex;
@@ -297,10 +321,6 @@ PetscSolver::setPressMatrix(const ProcessorGroup* ,
           throw UintahPetscError(ierr, "VecSetValue", __FILE__, __LINE__);
       }
     }
-  }
-  int me = d_myworld->myrank();
-  if(me == 0) {
-    cerr << "Time in PETSC Assemble: " << Time::currentSeconds()-solve_start << " seconds\n";
   }
 }
 

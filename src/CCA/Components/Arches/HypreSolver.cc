@@ -332,22 +332,6 @@ HypreSolver::setPressMatrix(const ProcessorGroup* pc,
     A[i+2] = -constvars->pressCoeff[c].w; //[-1,0,0]
     A[i+3] =  constvars->pressCoeff[c].p; //[0,0,0]
 
-    //---- temporary until we can figure out why Hypre randomly segfaults --- 
-    if (abs(A[i]) > 1e30){
-      cout << "For cell " << c << endl;
-      throw InvalidValue("Found a nan in pressure matrix, A[i]",__FILE__,__LINE__);
-    } else if (abs(A[i+1]) > 1e30){
-      cout << "For cell " << c << endl;
-      throw InvalidValue("Found a nan in pressure matrix, A[i+1]",__FILE__,__LINE__);
-    } else if (abs(A[i+2]) > 1e30){
-      cout << "For cell " << c << endl;
-      throw InvalidValue("Found a nan in pressure matrix, A[i+2]",__FILE__,__LINE__);
-    } else if (abs(A[i+3]) > 1e30){
-      cout << "For cell " << c << endl;
-      throw InvalidValue("Found a nan in pressure matrix, A[i+3]",__FILE__,__LINE__);
-    }
-    //------------------ end temporary ----------------------------------------
-
     i = i + d_stencilSize;
   }
   
@@ -359,21 +343,38 @@ HypreSolver::setPressMatrix(const ProcessorGroup* pc,
   HYPRE_StructMatrixAssemble(d_A);
   hypre_TFree(A);
 
+}
+// ****************************************************************************
+// Fill linear parallel matrix
+// ****************************************************************************
+void 
+HypreSolver::setPressRHS(const ProcessorGroup* pc,
+                         const Patch* patch,
+                         ArchesVariables* vars,
+                         ArchesConstVariables* constvars,
+                         const ArchesLabel*)
+{ 
+  gridSetup(pc, patch);
+   /*-----------------------------------------------------------
+    * Set up the linear system (b & x)
+    *-----------------------------------------------------------*/
+   HYPRE_StructVectorCreate(MPI_COMM_WORLD, d_grid, &d_b);
+   HYPRE_StructVectorInitialize(d_b);
+   HYPRE_StructVectorCreate(MPI_COMM_WORLD, d_grid, &d_x);
+   HYPRE_StructVectorInitialize(d_x);
+ 
+  /* Set the coefficients for the grid */
+  int i = 0;
+
   // assemble right hand side and solution vector
   double * B = hypre_CTAlloc(double, d_volume);
   double * X = hypre_CTAlloc(double, d_volume);
 
-  // X
+  // B
   i = 0;
   for(CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
     IntVector c = *iter;
     B[i] = constvars->pressNonlinearSrc[c];
-    //------ temporary until we can figure out why the Hypre solver randomly segfaults -- 
-    if (abs(B[i]) > 1e30){
-      cout << "For cell " << c << endl;
-      throw InvalidValue("Found a nan in pressure source, B[i]",__FILE__,__LINE__); 
-    }
-    //--------------------- end temporary -------------------------------------------------
     i++;
   }
     
@@ -381,17 +382,11 @@ HypreSolver::setPressMatrix(const ProcessorGroup* pc,
     HYPRE_StructVectorSetBoxValues(d_b, d_ilower[ib], d_iupper[ib], B);
   }
 
-  // B
+  // X
   i = 0;
   for(CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
     IntVector c = *iter;
     X[i] = vars->pressure[c];
-    //------ temporary until we can figure out why the Hypre solver randomly segfaults -- 
-    if (abs(X[i])>1e30){
-      cout << "For cell " << c << endl;
-      throw InvalidValue("Found a nan in pressure guess, X[i]",__FILE__,__LINE__); 
-    }
-    //--------------------- end temporary -------------------------------------------------
     i++;
   }
     
