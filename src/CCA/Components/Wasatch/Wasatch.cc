@@ -194,6 +194,27 @@ namespace Wasatch{
     }
     
     //
+    // Build coupled transport equations scalability test for wasatch.
+    //
+    for( Uintah::ProblemSpecP scalEqnParams=wasatchParams->findBlock("ScalabilityTest");
+        scalEqnParams != 0;
+        scalEqnParams=scalEqnParams->findNextBlock("ScalabilityTest") ) {
+      try{
+        // note - parse_scalability_test returns a vector of equation adaptors
+        EquationAdaptors scalEqnAdaptors = parse_scalability_test( scalEqnParams, graphCategories_ );
+        adaptors_.insert( adaptors_.end(), scalEqnAdaptors.begin(), scalEqnAdaptors.end() );
+      }
+      catch( std::runtime_error& err ){
+        std::ostringstream msg;
+        msg << endl
+        << "Problems setting up scalability test equations.  Details follow:" << endl
+        << err.what() << endl;
+        throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+      }
+      
+    }    
+
+    //
     // Build momentum transport equations.  This registers all expressions 
     // required for solution of each momentum equation.
     //
