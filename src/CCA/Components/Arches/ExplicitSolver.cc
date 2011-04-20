@@ -88,7 +88,7 @@ static DebugStream dbg("ARCHES", false);
 // Default constructor for ExplicitSolver
 // ****************************************************************************
 ExplicitSolver::
-ExplicitSolver(const ArchesLabel* label, 
+ExplicitSolver(ArchesLabel* label, 
                const MPMArchesLabel* MAlb,
                Properties* props, 
                BoundaryCondition* bc,

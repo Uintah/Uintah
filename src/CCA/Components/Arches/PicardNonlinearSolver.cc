@@ -76,7 +76,7 @@ using namespace Uintah;
 // Default constructor for PicardNonlinearSolver
 // ****************************************************************************
 PicardNonlinearSolver::
-PicardNonlinearSolver(const ArchesLabel* label, 
+PicardNonlinearSolver(ArchesLabel* label, 
                       const MPMArchesLabel* MAlb,
                       Properties* props, 
                       BoundaryCondition* bc,

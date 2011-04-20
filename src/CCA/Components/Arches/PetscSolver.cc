@@ -226,7 +226,7 @@ PetscSolver::setPressMatrix(const ProcessorGroup* ,
                             ArchesConstVariables* constvars,
                             const ArchesLabel*)
 {
-  int ierr;
+  int ierr = 0;
   int col[7];
   double value[7];
   // fill matrix for internal patches
@@ -250,10 +250,10 @@ PetscSolver::setPressMatrix(const ProcessorGroup* ,
       
         IntVector c(colX, colY, colZ);
       
-        col[0] = l2g[IntVector(colX,  colY,   colZ-1)]; //ab
+        col[0] = l2g[IntVector(colX,  colY,   colZ-1)]; // ab
         col[1] = l2g[IntVector(colX,  colY-1, colZ)];   // as
         col[2] = l2g[IntVector(colX-1,colY,   colZ)];   // aw
-        col[3] = l2g[IntVector(colX,  colY,   colZ)];   //ap
+        col[3] = l2g[IntVector(colX,  colY,   colZ)];   // ap
         col[4] = l2g[IntVector(colX+1,colY,   colZ)];   // ae
         col[5] = l2g[IntVector(colX,  colY+1, colZ)];   // an
         col[6] = l2g[IntVector(colX,  colY,   colZ+1)]; // at
