@@ -39,6 +39,7 @@ SRCS     +=                             \
 	$(SRCDIR)/MomentumRHS.cc 	\
 	$(SRCDIR)/PrimVar.cc		\
 	$(SRCDIR)/ScalarRHS.cc		\
+  $(SRCDIR)/ScalabilityTestSrc.cc		\
 	$(SRCDIR)/SetCurrentTime.cc	\
 	$(SRCDIR)/Stress.cc \
   $(SRCDIR)/Pressure.cc

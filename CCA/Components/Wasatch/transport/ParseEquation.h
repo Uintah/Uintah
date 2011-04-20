@@ -72,6 +72,20 @@ namespace Wasatch{
    *  \return an EqnTimestepAdaptorBase object that can be used to
    *          plug this transport equation into a TimeStepper.
    */  
+  std::vector<EqnTimestepAdaptorBase*> parse_scalability_test( Uintah::ProblemSpecP params,
+                                                                GraphCategories& gc );  
+  
+  /**
+   *  \brief Build the momentum equation specified by "params"
+   *
+   *  \param params The XML block from the input file specifying the
+   *         momentum equation. This will be <MomentumEquations>.
+   *
+   *  \param gc The GraphCategories.
+   *
+   *  \return an EqnTimestepAdaptorBase object that can be used to
+   *          plug this transport equation into a TimeStepper.
+   */  
   std::vector<EqnTimestepAdaptorBase*> parse_momentum_equations( Uintah::ProblemSpecP params,
                                                    GraphCategories& gc,
                                                    Uintah::SolverInterface& linSolver);

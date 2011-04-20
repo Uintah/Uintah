@@ -34,4 +34,5 @@ SRCS	+=                             		\
 	$(SRCDIR)/ScalarTransportEquation.cc		\
 	$(SRCDIR)/TemperatureTransportEquation.cc	\
 	$(SRCDIR)/MomentumTransportEquation.cc		\
+  $(SRCDIR)/ScalabilityTestTransportEquation.cc		\
 	$(SRCDIR)/ParseEquation.cc

@@ -117,7 +117,24 @@
 
     </TransportEquation>
 
-   
+    <ScalabilityTest spec="OPTIONAL NO_DATA">
+        <SolutionVariable		spec="REQUIRED STRING" />
+        <NumberOfEquations spec="REQUIRED INTEGER"/>
+        <StaggeredDirection spec="OPTIONAL STRING 'X,Y,Z'"/>
+        <DoDiffusion spec="REQUIRED BOOLEAN"/>
+        <DoConvection spec="REQUIRED BOOLEAN"/>
+        <X-Velocity  spec="OPTIONAL NO_DATA"> 
+            <NameTag spec="REQUIRED"/> 
+        </X-Velocity>
+        <Y-Velocity  spec="OPTIONAL NO_DATA">
+            <NameTag spec="REQUIRED"/>
+        </Y-Velocity>
+        <Z-Velocity  spec="OPTIONAL NO_DATA"> 
+            <NameTag spec="REQUIRED"/>
+        </Z-Velocity>        
+        <DoSourceTerm spec="REQUIRED BOOLEAN"/>
+    </ScalabilityTest>
+    
     <MomentumEquations	spec="OPTIONAL NO_DATA">
       <X-Velocity		spec="OPTIONAL STRING" />
       <Y-Velocity		spec="OPTIONAL STRING" />
