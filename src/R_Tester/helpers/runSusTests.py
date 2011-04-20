@@ -386,10 +386,14 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
     #__________________________________
     # end of test loop
 
+  # change the group on the results directory to a common group name 
   chdir("..")
+  try:
+    common_group = "%s" % (environ['COMMON_GROUP'])
+    system("chgrp -R %s %s > /dev/null 2>&1" % (common_group, resultsdir) )  
+  except:
+    pass
 
-  common_group = "%s" % (environ['COMMON_GROUP'])
-  system("chgrp -R %s %s > /dev/null 2>&1" % (common_group, resultsdir) )
   system("chmod -R g+rwX %s > /dev/null 2>&1" % resultsdir)
 
   # copied results - permissions
