@@ -150,8 +150,7 @@ void RMCRT_Test::problemSetup(const ProblemSpecP& prob_spec,
     d_realRMCRT->registerVarLabels(0,
                                  d_abskgLabel,
                                  d_absorpLabel,
-                                 d_colorLabel,
-                                 d_sigmaT4Label );
+                                 d_colorLabel );
                                  
     rmcrt_db->get("Temperature",  d_initColor);
     
@@ -533,6 +532,7 @@ void RMCRT_Test::scheduleShootRays_onCoarseLevel(SchedulerP& sched,
 
     if(d_doRealRMCRT){
       int time_sub_step = 0;
+      d_realRMCRT->sched_sigmaT4(level,sched);
       d_realRMCRT->sched_rayTrace(level,sched,time_sub_step);
     }  
   }
