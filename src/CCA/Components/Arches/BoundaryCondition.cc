@@ -6784,7 +6784,7 @@ BoundaryCondition::sched_setInitProfile__NEW(SchedulerP& sched,
   tsk->modifies(d_lab->d_wVelRhoHatLabel);
 
   MixingRxnModel* mixingTable = d_props->getMixRxnModel(); 
-  MixingRxnModel::VarMap iv_vars = mixingTable->getIVVars(); 
+  MixingRxnModel::VarMap iv_vars = mixingTable->getIndepVarMap(); 
 
   for ( MixingRxnModel::VarMap::iterator i = iv_vars.begin(); i != iv_vars.end(); i++ ){ 
 
@@ -6838,7 +6838,7 @@ BoundaryCondition::setInitProfile__NEW(const ProcessorGroup*,
       new_dw->getModifiable( enthalpy, d_lab->d_enthalpySPLabel, matl_index, patch ); 
 
     MixingRxnModel* mixingTable = d_props->getMixRxnModel(); 
-    MixingRxnModel::VarMap iv_vars = mixingTable->getIVVars(); 
+    MixingRxnModel::VarMap iv_vars = mixingTable->getIndepVarMap(); 
 
     // Get the independent variable information for table lookup
     BoundaryCondition::HelperMap ivGridVarMap; 

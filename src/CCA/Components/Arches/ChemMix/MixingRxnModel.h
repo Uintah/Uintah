@@ -128,10 +128,10 @@ class MixingRxnModel{
     virtual double getTableValue( std::vector<double>, std::string ) = 0; 
 
     /** @brief Return a reference to the independent variables */
-    inline const VarMap getIVVars(){ return d_ivVarMap; }; 
+    inline const VarMap getIndepVarMap() { return d_ivVarMap; };
 
     /** @brief Return a reference to the dependent variables */ 
-    inline const VarMap getDVVars(){ return d_dvVarMap; }; 
+    inline const VarMap getDepVarMap() { return d_dvVarMap; };
 
     /** @brief Return a string list of all independent variable names in order */ 
     inline std::vector<string>& getAllIndepVars(){ return d_allIndepVarNames; }; 
@@ -144,10 +144,10 @@ class MixingRxnModel{
       VarMap::iterator i = d_dvVarMap.find( var_name ); 
       if ( i == d_dvVarMap.end() ) {
         const VarLabel* the_label = VarLabel::create( var_name, CCVariable<double>::getTypeDescription() ); 
-        i = d_dvVarMap.insert( make_pair( var_name, the_label ) ).first; 
+        d_dvVarMap[var_name] = the_label;
         proc0cout << "    ---> " << var_name << endl; 
-      } 
-      return; 
+      }
+      return;
     };
 
   protected:
@@ -260,11 +260,11 @@ class MixingRxnModel{
 
 
     /** @brief Insert a varLabel into the map where the varlabel has been created elsewhere */ 
-    inline void insertExisitingLabelIntoMap( const string var_name ){ 
+    inline void insertExistingLabelIntoMap( const string var_name ){ 
       VarMap::iterator i = d_dvVarMap.find( var_name ); 
       if ( i == d_dvVarMap.end() ) {
         const VarLabel* the_label = VarLabel::find(var_name); 
-        i = d_dvVarMap.insert( make_pair( var_name, the_label ) ).first; 
+        d_dvVarMap[var_name] = the_label;
         proc0cout << "    ---> " << var_name << endl; 
       } 
       return; 

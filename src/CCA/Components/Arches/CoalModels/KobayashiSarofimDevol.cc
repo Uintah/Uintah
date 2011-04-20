@@ -208,7 +208,7 @@ KobayashiSarofimDevol::problemSetup(const ProblemSpecP& params)
     } else if( eqn_factory.find_scalar_eqn(iter->first) ) {
       current_eqn = &(eqn_factory.retrieve_scalar_eqn(iter->first));
     } else {
-      string errmsg = "ERROR: Arches: CoalParticleHeatTransfer: Invalid variable \"" + iter->first + "\" given for \""+iter->second+"\" role, could not find in EqnFactory or DQMOMEqnFactory!";
+      string errmsg = "ERROR: Arches: KobayashiSarofimDevol: Invalid variable \"" + iter->first + "\" given for \""+iter->second+"\" role, could not find in EqnFactory or DQMOMEqnFactory!";
       throw ProblemSetupException(errmsg,__FILE__,__LINE__);
     }
 
@@ -254,7 +254,9 @@ KobayashiSarofimDevol::sched_initVars( const LevelP& level, SchedulerP& sched )
 
   tsk->computes( d_modelLabel );
   tsk->computes( d_gasLabel   );
-  tsk->computes( d_charModelLabel );
+  if( d_useChar ) {
+    tsk->computes( d_charModelLabel );
+  }
 
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
 }
@@ -284,8 +286,10 @@ KobayashiSarofimDevol::initVars( const ProcessorGroup * pc,
     gas_value.initialize(0.0);
 
     CCVariable<double> char_model_value; 
-    new_dw->allocateAndPut( char_model_value, d_charModelLabel, matlIndex, patch ); 
-    char_model_value.initialize(0.0);
+    if( d_useChar ) {
+      new_dw->allocateAndPut( char_model_value, d_charModelLabel, matlIndex, patch ); 
+      char_model_value.initialize(0.0);
+    }
   }
 }
 
@@ -534,4 +538,93 @@ KobayashiSarofimDevol::computeModel( const ProcessorGroup * pc,
   }//end patch loop
 }
 
+
+//---------------------------------------------------------------------------
+// Method: Schedule dummy initialization
+//---------------------------------------------------------------------------
+/** @details  
+This method is a dummy initialization required by MPMArches. 
+All models must be required() and computed() to copy them over 
+without actually doing anything.  (Silly, isn't it?)
+ */
+void
+KobayashiSarofimDevol::sched_dummyInit( const LevelP& level, SchedulerP& sched )
+{
+  string taskname = "KobayashiSarofimDevol::dummyInit"; 
+
+  Ghost::GhostType  gn = Ghost::None;
+
+  Task* tsk = scinew Task(taskname, this, &KobayashiSarofimDevol::dummyInit);
+
+  tsk->requires( Task::OldDW, d_modelLabel,     gn, 0);
+  tsk->requires( Task::OldDW, d_gasLabel,       gn, 0);
+  if( d_useChar ) {
+    tsk->requires( Task::OldDW, d_charModelLabel, gn, 0);
+  }
+
+  tsk->computes(d_modelLabel);
+  tsk->computes(d_gasLabel); 
+  if( d_useChar ) {
+    tsk->computes(d_charModelLabel);
+  }
+
+  sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
+}
+
+
+//-------------------------------------------------------------------------
+// Method: Actually do the dummy initialization
+//-------------------------------------------------------------------------
+/** @details
+ This is called from ExplicitSolver::noSolve(), which skips the first timestep
+ so that the initial conditions are correct.
+
+This method was originally in ModelBase, but it requires creating CCVariables
+ for the model and gas source terms, and the CCVariable type (double, Vector, &c.)
+ is model-dependent.  Putting the method here eliminates if statements in 
+ ModelBase and keeps the ModelBase class as generic as possible.
+
+@see ExplicitSolver::noSolve()
+
+ */
+void
+KobayashiSarofimDevol::dummyInit( const ProcessorGroup* pc,
+                                  const PatchSubset* patches, 
+                                  const MaterialSubset* matls, 
+                                  DataWarehouse* old_dw, 
+                                  DataWarehouse* new_dw )
+{
+  for( int p=0; p < patches->size(); ++p ) {
+
+    Ghost::GhostType  gn = Ghost::None;
+
+    const Patch* patch = patches->get(p);
+    int archIndex = 0;
+    int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+
+    CCVariable<double> ModelTerm;
+    CCVariable<double> GasModelTerm;
+    CCVariable<double> CharModelTerm;
+    
+    constCCVariable<double> oldModelTerm;
+    constCCVariable<double> oldGasModelTerm;
+    constCCVariable<double> oldCharModelTerm;
+
+    new_dw->allocateAndPut( ModelTerm,    d_modelLabel,     matlIndex, patch );
+    new_dw->allocateAndPut( GasModelTerm, d_gasLabel,       matlIndex, patch ); 
+
+    old_dw->get( oldModelTerm,     d_modelLabel,      matlIndex, patch, gn, 0 );
+    old_dw->get( oldGasModelTerm,  d_gasLabel,        matlIndex, patch, gn, 0 );
+    
+    ModelTerm.copyData(oldModelTerm);
+    GasModelTerm.copyData(oldGasModelTerm);
+
+    if( d_useChar ) {
+      new_dw->allocateAndPut( CharModelTerm,d_charModelLabel, matlIndex, patch );
+      old_dw->get( oldCharModelTerm, d_charModelLabel,  matlIndex, patch, gn, 0 );
+      CharModelTerm.copyData(oldCharModelTerm);
+    }
+
+  }
+}
 

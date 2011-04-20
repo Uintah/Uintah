@@ -334,6 +334,9 @@ ConstantModel::computeModel( const ProcessorGroup* pc,
     }
 
     model.initialize( d_constant );
+    if( d_useGasSource ) {
+      gas_source.initialize( d_constant );
+    }
     
     for( CellIterator iter = patch->getCellIterator(); !iter.done(); ++iter ) {
       IntVector c = *iter;

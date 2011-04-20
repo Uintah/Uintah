@@ -159,9 +159,9 @@ void DQMOM::problemSetup(const ProblemSpecP& params)
   }
   */
 
-  db->getWithDefault("save_moments", b_save_moments, true);
+  db->getWithDefault("save_moments", d_save_moments, false);
 #if defined(VERIFY_AB_CONSTRUCTION) || defined(VERIFY_LINEAR_SOLVER)
-  b_save_moments = false;
+  d_save_moments = false;
 #endif
 
   // This block puts the labels in the same order as the input file, so the moment indices match up OK
@@ -206,7 +206,7 @@ void DQMOM::problemSetup(const ProblemSpecP& params)
   }
   
   proc0cout << "Size of momentIndexes is " << momentIndexes.size() << ", should be " << N_*(N_xi+1) << endl;
-  if( b_save_moments ) {
+  if( d_save_moments ) {
     proc0cout << "Saving all moments." << endl;
   } else {
     proc0cout << "Saving only 0th, 1st, and 2nd moments." << endl;
@@ -225,7 +225,7 @@ void DQMOM::problemSetup(const ProblemSpecP& params)
   }
 
   bool use_all_moments;
-  if( b_save_moments ) {
+  if( d_save_moments ) {
     use_all_moments = true;
     DQMOM::populateMomentsMap(momentIndexes, use_all_moments);
   } else {

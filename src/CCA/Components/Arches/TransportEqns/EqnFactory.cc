@@ -149,7 +149,7 @@ EqnFactory::scalarInit( const ProcessorGroup* ,
   double delta_t = 1.0e16;
   new_dw->put( min_vartype(delta_t), d_fieldLabels->d_MinScalarTimestepLabel );
 
-  proc0cout << "Initializing all scalar equations." << endl;
+  //proc0cout << "Initializing all scalar equations." << endl;
   for (int p = 0; p < patches->size(); p++){
     //assume only one material for now
     int archIndex = 0;

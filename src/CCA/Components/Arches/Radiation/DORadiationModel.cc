@@ -51,6 +51,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Exceptions/InvalidValue.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <Core/Parallel/ProcessorGroup.h>
+#include <Core/Parallel/Parallel.h>
 #include <cmath>
 #include <Core/Math/MiscMath.h>
 

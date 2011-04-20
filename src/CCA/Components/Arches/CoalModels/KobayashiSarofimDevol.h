@@ -69,6 +69,16 @@ public:
   /** @brief Interface for the inputfile and set constants */ 
   void problemSetup(const ProblemSpecP& db);
 
+  /** @brief Schedule the dummy initialization required by MPMArches */
+  void sched_dummyInit( const LevelP& level, SchedulerP& sched );
+
+  /** @brief  Actually do dummy initialization */
+  void dummyInit( const ProcessorGroup* pc, 
+                  const PatchSubset* patches, 
+                  const MaterialSubset* matls, 
+                  DataWarehouse* old_dw, 
+                  DataWarehouse* new_dw );
+
   /** @brief Schedule the initialization of special/local variables unique to model */
   void sched_initVars( const LevelP& level, SchedulerP& sched );
 

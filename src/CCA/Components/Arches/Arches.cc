@@ -378,6 +378,7 @@ Arches::problemSetup(const ProblemSpecP& params,
   d_props->problemSetup(db);
 
   coalFactory.setMixingRxnModel( d_props->getMixRxnModel() );
+  coalFactory.setPropertyLabels();
 
   // TODO
   // Looping over all <DQMOM> blocks will require changing DQMOMEqnFactory
@@ -650,8 +651,9 @@ Arches::scheduleInitialize(const LevelP& level,
   } else {
     bool initialize_it = true; 
     bool modify_ref_den = true; 
-    if ( d_calcEnthalpy) 
+    if ( d_calcEnthalpy) {
       d_props->sched_initEnthalpy( level, sched ); 
+    }
     d_props->sched_reComputeProps_new( level, sched, init_timelabel, initialize_it, modify_ref_den ); 
   }
 

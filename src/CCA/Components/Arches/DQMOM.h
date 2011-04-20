@@ -6,11 +6,9 @@
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/VarLabel.h>
-//#include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Datatypes/DenseMatrix.h>
-#include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <CCA/Components/Arches/Directives.h>
 #include <numeric>
@@ -125,7 +123,7 @@ public:
 
     /** @brief Access function for boolean: calculate/save moments? */
     bool getSaveMoments() {
-      return b_save_moments; }
+      return d_save_moments; }
   
     /** @brief  Access function for boolean: is the DQMOM solver type "unweighted"? */
     bool isUnweighted() {
@@ -222,7 +220,7 @@ private:
   unsigned int N_;    ///< Number of quadrature nodes
   
   int d_timeSubStep;
-  bool b_save_moments; ///< boolean - calculate & save moments?
+  bool d_save_moments; ///< boolean - calculate & save moments?
 
   double d_solver_tolerance;
   double d_maxConditionNumber;

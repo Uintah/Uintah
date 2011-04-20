@@ -112,6 +112,7 @@ Properties::Properties(const ArchesLabel* label,
 Properties::~Properties()
 {
   delete d_mixingModel;
+  delete d_mixingRxnTable;
 }
 
 //****************************************************************************
@@ -253,8 +254,9 @@ Properties::problemSetup(const ProblemSpecP& params)
     const ProblemSpecP params_root = params_non_constant->getRootNode();
     ProblemSpecP db_enthalpy_solver=params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ExplicitSolver");
   
-    if (!db_enthalpy_solver)
+    if (!db_enthalpy_solver) {
       db_enthalpy_solver=params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("PicardSolver");
+    }
     if (!db_enthalpy_solver) {
       ostringstream exception;
       exception << "Radiation information needed by Properties " <<
@@ -264,30 +266,34 @@ Properties::problemSetup(const ProblemSpecP& params)
     }
     db_enthalpy_solver = db_enthalpy_solver->findBlock("EnthalpySolver");
 
-    if (db_enthalpy_solver->findBlock("DORadiationModel"))
+    if (db_enthalpy_solver->findBlock("DORadiationModel")) {
       d_radiationCalc = true; 
-    else 
+    } else {
       proc0cout << "ATTENTION: NO WORKING RADIATION MODEL TURNED ON!" << endl; 
+    }
 
     if (d_radiationCalc) {
 
-      if (db_enthalpy_solver->findBlock("DORadiationModel"))
+      if (db_enthalpy_solver->findBlock("DORadiationModel")) {
         d_DORadiationCalc = true; 
+      }
 
       d_opl = 0.0;
 
-      if (!d_DORadiationCalc)
+      if (!d_DORadiationCalc) {
         db->require("optically_thin_model_opl",d_opl);
+      }
       if (d_tabulated_soot) {
         db->getWithDefault("empirical_soot",d_empirical_soot,false);
-        if (d_empirical_soot)
+        if (d_empirical_soot) {
           throw InvalidValue("Table has soot, do not use empirical soot model!",
                              __FILE__, __LINE__);
-      }
-      else {
+        }
+      } else {
         db->getWithDefault("empirical_soot",d_empirical_soot,true);
-        if (d_empirical_soot) 
+        if (d_empirical_soot) {
           db->getWithDefault("soot_factor", d_sootFactor, 1.0);
+        }
 
       }
     }
@@ -302,28 +308,23 @@ void
 Properties::computeInletProperties(const InletStream& inStream, 
                                    Stream& outStream, const string bc_type)
 {
-  if (dynamic_cast<const ColdflowMixingModel*>(d_mixingModel))
+  if (dynamic_cast<const ColdflowMixingModel*>(d_mixingModel)) {
     d_mixingModel->computeProps(inStream, outStream);
-  else if (dynamic_cast<const MOMColdflowMixingModel*>(d_mixingModel)){
+  } else if (dynamic_cast<const MOMColdflowMixingModel*>(d_mixingModel)){
     d_mixingModel->computeProps(inStream, outStream);
-  }
-  else if (dynamic_cast<const NewStaticMixingTable*>(d_mixingModel)) {
+  } else if (dynamic_cast<const NewStaticMixingTable*>(d_mixingModel)) {
     d_mixingModel->computeProps(inStream, outStream);
-  }
-  else if (dynamic_cast<const StandardTable*>(d_mixingModel)) {
+  } else if (dynamic_cast<const StandardTable*>(d_mixingModel)) {
     d_mixingModel->computeProps(inStream, outStream);
-  }
 #if HAVE_TABPROPS
-  else if ( mixModel == "TabProps"){
+  } else if ( mixModel == "TabProps"){
     d_mixingRxnTable->oldTableHack( inStream, outStream, d_calcEnthalpy, bc_type ); 
-  }
 #endif
-  else if ( mixModel == "ClassicTable"){
+  } else if ( mixModel == "ClassicTable"){
     d_mixingRxnTable->oldTableHack( inStream, outStream, d_calcEnthalpy, bc_type ); 
   } else if ( mixModel == "ColdFlow" ) {
 		// nothing to do here -- put here as a place holder until Properties is deleted
-  }
-  else {
+  } else {
     throw InvalidValue("Mixing Model not supported", __FILE__, __LINE__);
   }
 }
@@ -390,8 +391,7 @@ Properties::sched_reComputeProps(SchedulerP& sched,
 #else
     tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,      gn, 0);
 #endif
-  }
-  else{
+  } else {
     tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,      gn, 0);
   }
   
