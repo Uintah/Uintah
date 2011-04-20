@@ -65,7 +65,7 @@ using namespace std;
 // ****************************************************************************
 // Default constructor for PressureSolver
 // ****************************************************************************
-PressureSolver::PressureSolver(ArchesLabel* label,
+PressureSolver::PressureSolver(const ArchesLabel* label,
                                const MPMArchesLabel* MAlb,
                                BoundaryCondition* bndry_cond,
                                PhysicalConstants* phys_const,
@@ -79,7 +79,6 @@ PressureSolver::PressureSolver(ArchesLabel* label,
   d_discretize = 0;
   d_source = 0;
   d_linearSolver = 0; 
-  d_construct_solver_obj = true; 
 }
 
 // ****************************************************************************
@@ -87,9 +86,6 @@ PressureSolver::PressureSolver(ArchesLabel* label,
 // ****************************************************************************
 PressureSolver::~PressureSolver()
 {
-  // destroy A, x, and B
-  d_linearSolver->destroyMatrix();
-
   if(d_perproc_patches && d_perproc_patches->removeReference())
     delete d_perproc_patches;
   delete d_discretize;
@@ -107,9 +103,6 @@ PressureSolver::problemSetup(const ProblemSpecP& params)
   d_pressRef = d_physicalConsts->getRefPoint();
   db->getWithDefault("normalize_pressure",      d_norm_pres, false);
   db->getWithDefault("do_only_last_projection", d_do_only_last_projection, false);
-
-  db->getWithDefault( "always_construct_A", d_always_construct_A, true ); 
-  d_construct_A = true;  // Must always be true @ start.  
 
   d_discretize = scinew Discretization();
 
@@ -445,10 +438,7 @@ PressureSolver::pressureLinearSolve_all(const ProcessorGroup* pg,
   ArchesVariables pressureVars;
   int me = pg->myrank();
   // initializeMatrix...
-  if ( d_construct_solver_obj )  {
-    d_linearSolver->matrixCreate(d_perproc_patches, patches);
-    d_construct_solver_obj = false; // deleted in the destructor
-  }
+  d_linearSolver->matrixCreate(d_perproc_patches, patches);
   for (int p = 0; p < patches->size(); p++) {
     const Patch *patch = patches->get(p);
     // This calls fillRows on linear(petsc) solver
@@ -469,11 +459,7 @@ PressureSolver::pressureLinearSolve_all(const ProcessorGroup* pg,
     }
     throw InternalError("pressure solver is diverging", __FILE__, __LINE__);
   }
-
-  if ( !d_always_construct_A && d_construct_A ) {
-    d_construct_A = false; 
-    d_lab->recompile_taskgraph = true; 
-  }
+  
   
   double init_norm = d_linearSolver->getInitNorm();
   if (timelabels->recursion){
@@ -512,6 +498,8 @@ PressureSolver::pressureLinearSolve_all(const ProcessorGroup* pg,
       }
     }
   }
+  // destroy matrix
+  d_linearSolver->destroyMatrix();
 }
 
 
@@ -559,11 +547,8 @@ PressureSolver::pressureLinearSolve(const ProcessorGroup* pc,
   // will make the following subroutine separate
   // get patch numer ***warning****
   // sets matrix
-  if ( d_construct_A ) { 
-    d_linearSolver->setPressMatrix(pc, patch,&pressureVars, &constPressureVars, d_lab); 
-  }
+  d_linearSolver->setPressMatrix(pc, patch,&pressureVars, &constPressureVars, d_lab);
   d_linearSolver->setPressRHS(pc, patch,&pressureVars, &constPressureVars, d_lab);
-
 }
 
 // ************************************************************************
