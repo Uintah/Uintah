@@ -344,7 +344,6 @@
         </MomentumSolver>
 
         <PressureSolver                 spec="REQUIRED NO_DATA" >
-          <always_construct_A           spec="OPTIONAL BOOLEAN" /> <!-- default=true. Determines if Pressure matrix is recreated every time step. --> 
           <do_only_last_projection      spec="OPTIONAL BOOLEAN" />
           <normalize_pressure           spec="OPTIONAL BOOLEAN" />
           <linear_solver                spec="REQUIRED STRING 'hypre, petsc'" />
