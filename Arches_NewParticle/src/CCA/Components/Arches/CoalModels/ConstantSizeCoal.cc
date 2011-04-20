@@ -142,7 +142,7 @@ ConstantSizeCoal::problemSetup(const ProblemSpecP& params)
 
   /*
   // -----------------------------------------------------------------
-  // Look for required scalars
+  // Look for required scalars (ConstantSizeCoal model doesn't use any... for now)
   ProblemSpecP db_scalarvars = params->findBlock("scalarVars");
   if (db_scalarvars) {
     for( ProblemSpecP variable = db_scalarvars->findBlock("variable");
@@ -365,27 +365,20 @@ ConstantSizeCoal::computeParticleDensity( const ProcessorGroup* pc,
 
         if( d_unweighted ) {
           unscaled_length = length[c]*d_length_scaling_constant;
+          unscaled_rc_mass = raw_coal_mass[c]*d_rc_scaling_constant;
+          if( d_useChar ) {
+            unscaled_char_mass = char_mass[c]*d_char_scaling_constant;
+          }
+          if( d_useMoisture ) {
+            unscaled_moisture_mass = moisture_mass[c]*d_moisture_scaling_constant;
+          }
         } else {
           unscaled_length = (length[c]*d_length_scaling_constant)/weight[c];
-        }
-
-        if( d_unweighted ) {
-          unscaled_rc_mass = raw_coal_mass[c]*d_rc_scaling_constant;
-        } else {
           unscaled_rc_mass = (raw_coal_mass[c]*d_rc_scaling_constant)/weight[c];
-        }
-
-        if(d_useChar) {
-          if( d_unweighted ) {
-            unscaled_char_mass = char_mass[c]*d_char_scaling_constant;
-          } else {
+          if( d_useChar ) {
             unscaled_char_mass = (char_mass[c]*d_char_scaling_constant)/weight[c];
           }
-        }
-        if(d_useMoisture) {
-          if( d_unweighted ) {
-            unscaled_moisture_mass = moisture_mass[c]*d_moisture_scaling_constant;
-          } else {
+          if( d_useMoisture ) {
             unscaled_moisture_mass = (moisture_mass[c]*d_moisture_scaling_constant)/weight[c];
           }
         }

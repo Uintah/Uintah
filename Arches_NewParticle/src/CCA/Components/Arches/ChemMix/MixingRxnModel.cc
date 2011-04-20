@@ -151,11 +151,11 @@ MixingRxnModel::addAdditionalDV( std::vector<string>& vars )
 {
   proc0cout << "  Adding these additional variables for table lookup: " << endl; 
   for ( std::vector<string>::iterator ivar = vars.begin(); ivar != vars.end(); ivar++ ) { 
-
+    proc0cout << "  --> " << *ivar << endl;
     insertIntoMap( *ivar ); 
-
   }
 }
+
 MixingRxnModel::TransformBase::TransformBase(){}
 MixingRxnModel::TransformBase::~TransformBase(){}
 MixingRxnModel::NoTransform::NoTransform(){}

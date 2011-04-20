@@ -111,7 +111,7 @@
       </Turbulence>
 
       <Properties                       spec="REQUIRED NO_DATA"
-                                          children1="ONE_OF(CHILD ColdFlowMixingModel, NewStaticMixingTable, TabProps, ClassicTable)" >
+                                          children1="ONE_OF(CHILD ColdFlowMixingModel, NewStaticMixingTable, TabProps, ClassicTable, ColdFlow)" >
 
         <use_mixing_model               spec="REQUIRED BOOLEAN" /> 
         <empirical_soot                 spec="OPTIONAL BOOLEAN" />
@@ -309,7 +309,7 @@
                                         attribute1="type REQUIRED STRING 'hypre, petsc'">
               <res_tol                  spec="REQUIRED DOUBLE" />
               <ksptype                  spec="REQUIRED STRING 'gmres'" />
-              <pctype                   spec="REQUIRED STRING 'jacobi, blockjacobi'" />
+              <pctype                   spec="REQUIRED STRING 'jacobi, blockjacobi, smg, pfmg'" />
               <max_iter                 spec="REQUIRED INTEGER" />
             </LinearSolver>
             <spherical_harmonics        spec="OPTIONAL BOOLEAN" />

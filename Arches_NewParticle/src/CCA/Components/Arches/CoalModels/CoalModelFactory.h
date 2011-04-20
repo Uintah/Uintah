@@ -124,6 +124,9 @@ public:
 	/** @brief	Grab input parameters from the ups file. */
 	void problemSetup( const ProblemSpecP & params);
 
+  /** @brief  Set property labels for any models that need them */
+  void setPropertyLabels();
+
   /** @brief  Schedule initialization of models */
   void sched_modelInit( const LevelP& level, SchedulerP& ); 
   
@@ -325,16 +328,17 @@ private:
 
   vector<double> yelem;			///< Vector containing initial composition of coal particle
 
-  bool d_useParticleVelocityModel;  ///< Boolean: using a particle velocity model?
   bool d_useParticleDensityModel;   ///< Boolean: using a particle density model? (This is set automatically, based on whether any models require a particle density)
+  bool d_useParticleVelocityModel;  ///< Boolean: using a particle velocity model?
   bool d_useHeatTransferModel;      ///< Boolean: using a heat transfer model?
   bool d_useDevolatilizationModel;  ///< Boolean: using a devolatilization model? (used to see whether there should be a <src> tag in the <MixtureFractionSolver> block)
   bool d_useCharOxidationModel;     ///< Boolean: using a char oxidation model? (used to see whether there should be a <src> tag in the <MixtureFractionSolver> block)
 
-  vector<ParticleVelocity*> d_ParticleVelocityModel; ///< Vector containing particle velocity models for each environment 
   vector<ParticleDensity*>  d_ParticleDensityModel;  ///< Vector containing particle density models for each environment 
+  vector<ParticleVelocity*> d_ParticleVelocityModel; ///< Vector containing particle velocity models for each environment 
   vector<HeatTransfer*>     d_HeatTransferModel;     ///< Vector containing particle density models for each environment 
   vector<Devolatilization*> d_DevolatilizationModel; ///< Vector containing particle devolatilization models for each environment
+  vector<CharOxidation*>    d_CharOxidationModel;    ///< Vector containing particle char oxidation models for each environment
   
   CoalModelFactory();
   ~CoalModelFactory();

@@ -277,7 +277,7 @@ DQMOMEqnFactory::abscissaInit( const ProcessorGroup* ,
                                DataWarehouse* old_dw,
                                DataWarehouse* new_dw )
 {
-  proc0cout << "Initializing DQMOM abscissa equations." << endl;
+  //proc0cout << "Initializing DQMOM abscissa equations." << endl;
 
   for (int p=0; p<patches->size(); ++p) {
     //assume only 1 material for now

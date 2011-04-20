@@ -718,7 +718,7 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
 
       SourceTermBase& src = factory.retrieve_source_term( *iter ); 
       const VarLabel* srcLabel = src.getSrcLabel(); 
-      // here we have made the assumption that the momentum source is always a vector... 
+      // here we have made the assumption that the enthalpy source is always a double... 
       // and that we only have one.  probably want to fix this. 
       new_dw->get( enthalpyVars.otherSource, srcLabel, indx, patch, Ghost::None, 0); 
     }

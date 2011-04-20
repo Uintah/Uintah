@@ -51,6 +51,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Parallel/ProcessorGroup.h>
+#include <Core/Parallel/Parallel.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 
 #include <cstdlib>
@@ -529,6 +530,11 @@ RadHypreSolver::radLinearSolve()
                            (HYPRE_Solver) precond);
       //      cerr << "SMG Precond time = " << Time::currentSeconds()-start_time << endl;
     }
+
+    //HYPRE_StructMatrixPrint("Amatrix", d_A, 1);
+    //HYPRE_StructVectorPrint("Bvector", d_b, 1);
+    //HYPRE_StructVectorPrint("Xvector", d_x, 1);
+
     //double dummy_start = Time::currentSeconds();
     HYPRE_GMRESSetup
       ( (HYPRE_Solver)solver, (HYPRE_Matrix)d_A, (HYPRE_Vector)d_b, (HYPRE_Vector)d_x );
@@ -635,9 +641,12 @@ RadHypreSolver::radLinearSolve()
 
   if(me == 0) {
     final_res_norm *= sum_b;          
-    cerr << "hypre: final_res_norm: " << final_res_norm << ", iterations: " << num_iterations << ", solver time: " << Time::currentSeconds()-start_time << " seconds\n";
-    cerr << "Init Norm: " << init_norm << " Error reduced by: " <<  final_res_norm/(init_norm+1.0e-20) << endl;
-    cerr << "Sum of RHS vector: " << sum_b << endl;
+    //cerr << "hypre: final_res_norm: " << final_res_norm << ", iterations: " << num_iterations << ", solver time: " << Time::currentSeconds()-start_time << " seconds\n";
+    //cerr << "Init Norm: " << init_norm << " Error reduced by: " <<  final_res_norm/(init_norm+1.0e-20) << endl;
+    //cerr << "Sum of RHS vector: " << sum_b << endl;
+    proc0cout << "hypre: final_res_norm: " << final_res_norm << ", iterations: " << num_iterations << ", solver time: " << Time::currentSeconds()-start_time << " seconds\n";
+    proc0cout << "Init Norm: " << init_norm << " Error reduced by: " <<  final_res_norm/(init_norm+1.0e-20) << endl;
+    proc0cout << "Sum of RHS vector: " << sum_b << endl;
   }
   if (((final_res_norm/(init_norm+1.0e-20) < 1.0) && (final_res_norm < 2.0))||
      ((final_res_norm<d_residual)&&(init_norm<d_residual)))

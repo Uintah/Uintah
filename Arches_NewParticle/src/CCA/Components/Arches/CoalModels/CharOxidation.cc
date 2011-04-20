@@ -3,6 +3,7 @@
 #include <CCA/Components/Arches/TransportEqns/EqnBase.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
 #include <CCA/Components/Arches/ArchesLabel.h>
+#include <CCA/Components/Arches/ChemMix/MixingRxnModel.h>
 
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <CCA/Ports/Scheduler.h>

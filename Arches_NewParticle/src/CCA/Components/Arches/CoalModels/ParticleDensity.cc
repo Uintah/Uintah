@@ -18,11 +18,11 @@ using namespace std;
 using namespace Uintah; 
 
 ParticleDensity::ParticleDensity( std::string modelName, 
-                  SimulationStateP& sharedState,
-                  ArchesLabel* fieldLabels,
-                  vector<std::string> icLabelNames, 
-                  vector<std::string> scalarLabelNames,
-                  int qn ) 
+                                  SimulationStateP& sharedState,
+                                  ArchesLabel* fieldLabels,
+                                  vector<std::string> icLabelNames, 
+                                  vector<std::string> scalarLabelNames,
+                                  int qn ) 
 : ModelBase(modelName, sharedState, fieldLabels, icLabelNames, scalarLabelNames, qn)
 {
   d_quadNode = qn;

@@ -35,6 +35,7 @@ CoalModelFactory::CoalModelFactory()
   d_useParticleDensityModel = false;
   d_useHeatTransferModel = false;
   d_useDevolatilizationModel = false;
+  d_useCharOxidationModel = false;
 
 }
 
@@ -83,6 +84,7 @@ void CoalModelFactory::problemSetup(const ProblemSpecP& params)
   d_ParticleDensityModel.resize(numQuadNodes);
   d_HeatTransferModel.resize(numQuadNodes);
   d_DevolatilizationModel.resize(numQuadNodes);
+  d_CharOxidationModel.resize(numQuadNodes);
 
   // ----------------------------------------------
   // Step 1: CoalModelFactory problem setup
@@ -248,22 +250,17 @@ void CoalModelFactory::problemSetup(const ProblemSpecP& params)
 
         } else if ( model_type == "KobayashiSarofimDevol" ) {
           modelBuilder = scinew KobayashiSarofimDevolBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_fieldLabels, d_fieldLabels->d_sharedState, iqn);
-          //what about computedVarLabels?
-          d_useDevolatilizationModel = true;
 
 //-------- Heat transfer models
         } else if ( model_type == "CoalParticleHeatTransfer" ) {
           modelBuilder = scinew CoalParticleHeatTransferBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_fieldLabels, d_fieldLabels->d_sharedState, iqn);
-          d_useHeatTransferModel = true;
 
 //-------- Velocity models
         } else if (model_type == "DragModel" ) {
           modelBuilder = scinew DragModelBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_fieldLabels, d_fieldLabels->d_sharedState, iqn);
-          d_useParticleVelocityModel = true;
 
         } else if (model_type == "Balachandar" ) {
           modelBuilder = scinew BalachandarBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_fieldLabels, d_fieldLabels->d_sharedState, iqn);
-          d_useParticleVelocityModel = true;
         
 //-------- Char oxidation models
         } else if (model_type == "GlobalCharOxidation" ) {
@@ -400,9 +397,25 @@ CoalModelFactory::register_model( const std::string name,
   }
 
   if( modelType == "CharOxidation" ) {
+    d_CharOxidationModel[quad_node] = dynamic_cast<CharOxidation*>(model);
     d_useCharOxidationModel = true;
-    CharOxidation* char_model = dynamic_cast<CharOxidation*>(model);
-    char_model->setMixingRxnInterface(d_MixingRxnModel);
+  }
+}
+
+//---------------------------------------------------------------------------
+// Method: Set property labels for any models that need them
+//---------------------------------------------------------------------------
+void
+CoalModelFactory::setPropertyLabels()
+{
+  for( vector<CharOxidation*>::iterator iC = d_CharOxidationModel.begin(); iC != d_CharOxidationModel.end(); ++iC ) {
+    if( !d_MixingRxnModelSet ) {
+      throw ProblemSetupException("ERROR: CoalModelFactory: setPropertyLabels(): the mixing and reaction model has not been set yet! No property labels can be set until the mixing and reaction model is set.",__FILE__,__LINE__);
+    }
+    if( dynamic_cast<GlobalCharOxidation*>(*iC) ) {
+      (*iC)->setMixingRxnModel(d_MixingRxnModel);
+      (*iC)->setPropertyLabels();
+    }
   }
 }
 

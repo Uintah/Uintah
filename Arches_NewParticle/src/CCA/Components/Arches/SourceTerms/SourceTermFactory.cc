@@ -270,7 +270,7 @@ SourceTermFactory::sourceInit( const ProcessorGroup* ,
                                DataWarehouse* old_dw,
                                DataWarehouse* new_dw )
 {
-  proc0cout << "Initializing all scalar equation source terms." << endl;
+  //proc0cout << "Initializing all scalar equation source terms." << endl;
   for (int p=0; p<patches->size(); p++) {
     // assume 1 material for now
     int archIndex = 0;

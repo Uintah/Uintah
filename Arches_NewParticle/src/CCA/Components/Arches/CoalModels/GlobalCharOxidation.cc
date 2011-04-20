@@ -158,12 +158,6 @@ GlobalCharOxidation::problemSetup(const ProblemSpecP& params)
   // call parent's method first
   CharOxidation::problemSetup(params);
 
-  d_MixingRxnModel->addAdditionalDV(oxidizer_name_);
-  for( vector<string>::iterator iOxidizer = oxidizer_name_.begin(); iOxidizer != oxidizer_name_.end(); ++iOxidizer ) {
-    const VarLabel* temp_label = VarLabel::find( *iOxidizer );
-    OxidizerLabels_.push_back( temp_label );
-  }
-
   ProblemSpecP db = params; 
 
   std::stringstream out;
@@ -315,6 +309,28 @@ GlobalCharOxidation::problemSetup(const ProblemSpecP& params)
 
 }
 
+//---------------------------------------------------------------------
+// Set property labels (this is not in problemSetup because it has to go
+// after the Properties/MixingRxnModel's problemSetup is called
+//---------------------------------------------------------------------
+void
+GlobalCharOxidation::setPropertyLabels()
+{
+  proc0cout << endl << "Setting property labels for char oxidation model..." << endl;
+
+  d_MixingRxnModel->addAdditionalDV(oxidizer_name_);
+
+  MixingRxnModel::VarMap dvVarMap = d_MixingRxnModel->getDepVarMap();
+
+  for( vector<string>::iterator ioxidizer = oxidizer_name_.begin(); ioxidizer != oxidizer_name_.end(); ++ioxidizer ) {
+    proc0cout << "Looking for VarLabel " << *ioxidizer << endl;
+    MixingRxnModel::VarMap::iterator iDV = dvVarMap.find( *ioxidizer );
+    OxidizerLabels_.push_back( iDV->second );
+  }
+
+  proc0cout << "Done setting property labels." << endl << endl;
+}
+
 
 
 //-----------------------------------------------------------------------------
@@ -342,6 +358,7 @@ GlobalCharOxidation::sched_computeModel( const LevelP& level, SchedulerP& sched,
   if( timeSubStep == 0 ) {
 
     tsk->computes( d_modelLabel );
+    tsk->computes( d_gasLabel );
 
     for( vector<const VarLabel*>::iterator i = GasModelLabels_.begin(); i != GasModelLabels_.end(); ++i ) { 
       tsk->computes( *i );
@@ -351,9 +368,9 @@ GlobalCharOxidation::sched_computeModel( const LevelP& level, SchedulerP& sched,
       tsk->requires(Task::OldDW, *i, gn, 0 );
     }
 
-    tsk->requires(Task::OldDW, d_weight_label, gn, 0);
-    tsk->requires(Task::OldDW, d_length_label, gn, 0);
-    tsk->requires(Task::OldDW,d_char_mass_label, gn, 0);
+    tsk->requires(Task::OldDW, d_weight_label,    gn, 0);
+    tsk->requires(Task::OldDW, d_length_label,    gn, 0);
+    tsk->requires(Task::OldDW, d_char_mass_label, gn, 0);
 
     if(d_useTparticle) {
       tsk->requires(Task::OldDW, d_particle_temperature_label, gn, 0);
@@ -366,6 +383,7 @@ GlobalCharOxidation::sched_computeModel( const LevelP& level, SchedulerP& sched,
   } else {
 
     tsk->modifies( d_modelLabel );
+    tsk->modifies( d_gasLabel );
 
     for( vector<const VarLabel*>::iterator i = GasModelLabels_.begin(); i != GasModelLabels_.end(); ++i ) {
       tsk->modifies( *i );
@@ -420,16 +438,21 @@ GlobalCharOxidation::computeModel( const ProcessorGroup * pc,
     constCCVariable<double> turbulent_viscosity;
 
     CCVariable<double> char_model;
+    CCVariable<double> char_model_gasSource;
     vector< CCVariable<double>* > gasModelCCVars;
     vector< constCCVariable<double>* > oxidizerCCVars;
 
 
+    int zz;
     if( timeSubStep == 0 ) {
 
-      new_dw->allocateAndPut( char_model,      d_modelLabel, matlIndex, patch );
+      new_dw->allocateAndPut( char_model, d_modelLabel, matlIndex, patch );
       char_model.initialize(0.0);
 
-      int zz = 0;
+      new_dw->allocateAndPut( char_model_gasSource, d_gasLabel, matlIndex, patch );
+      char_model_gasSource.initialize(0.0);
+
+      zz = 0;
       for( vector<const VarLabel*>::iterator iLabel = GasModelLabels_.begin(); iLabel != GasModelLabels_.end(); ++iLabel, ++zz ) {
         gasModelCCVars.push_back( scinew CCVariable<double> );
         new_dw->allocateAndPut( *(gasModelCCVars[zz]), *iLabel, matlIndex, patch );
@@ -453,9 +476,10 @@ GlobalCharOxidation::computeModel( const ProcessorGroup * pc,
       
     } else {
 
-      new_dw->getModifiable( char_model,      d_modelLabel, matlIndex, patch );
+      new_dw->getModifiable( char_model,            d_modelLabel, matlIndex, patch );
+      new_dw->getModifiable( char_model_gasSource,  d_gasLabel, matlIndex, patch );
 
-      int zz = 0;
+      zz = 0;
       for( vector<const VarLabel*>::iterator iLabel = GasModelLabels_.begin(); iLabel != GasModelLabels_.end(); ++iLabel, ++zz ) {
         gasModelCCVars.push_back( scinew CCVariable<double> );
         new_dw->getModifiable( *(gasModelCCVars[zz]), *iLabel, matlIndex, patch );
@@ -489,7 +513,7 @@ GlobalCharOxidation::computeModel( const ProcessorGroup * pc,
         unscaled_char_mass = (char_mass[c]/weight[c])*d_char_scaling_constant;
       }
 
-      bool weight_is_small = (weight[c] < d_w_small) || (weight[c] == 0.0) || (unscaled_char_mass < TINY);
+      bool weight_is_small = (weight[c] < d_w_small) || (weight[c] == 0.0);
       bool char_is_small = (unscaled_char_mass < TINY);
 
       double char_rxn_rate_ = 0.0;
@@ -497,8 +521,8 @@ GlobalCharOxidation::computeModel( const ProcessorGroup * pc,
       if( (!d_unweighted && weight_is_small) || char_is_small ) {
         
         // set gas model terms (3 of them) equal to 0
-        int z=0;
-        for( vector< CCVariable<double>* >::iterator iGasModel = gasModelCCVars.begin(); iGasModel != gasModelCCVars.end(); ++iGasModel, ++z) {
+        zz=0;
+        for( vector< CCVariable<double>* >::iterator iGasModel = gasModelCCVars.begin(); iGasModel != gasModelCCVars.end(); ++iGasModel, ++zz) {
           (**iGasModel)[c] = 0.0;
         }
 
@@ -515,8 +539,6 @@ GlobalCharOxidation::computeModel( const ProcessorGroup * pc,
         vector<double> k_m( GasModelLabels_.size() ); ///< Mass transfer coefficient array for each of the 4 char reactions: O2, H2, CO2, H2O
         vector<double> k_r( GasModelLabels_.size() ); ///< Reaction rate constants array for each of the 4 char reactions: O2, H2, CO2, H2O
  
-        int z;
-
         unscaled_weight = weight[c]*d_w_scaling_constant;
 
         if (d_useTparticle) {
@@ -547,30 +569,31 @@ GlobalCharOxidation::computeModel( const ProcessorGroup * pc,
         xi_p = 1.0;
 
         // Mass transfer coefficients
-        z=0;
+        zz=0;
         vector< constCCVariable<double>* >::iterator iOxidizer = oxidizerCCVars.begin();
         for( vector< CCVariable<double>* >::iterator iGasModel = gasModelCCVars.begin(); 
-             iGasModel != gasModelCCVars.end(); ++iGasModel, ++iOxidizer, ++z) {
+             iGasModel != gasModelCCVars.end(); ++iGasModel, ++iOxidizer, ++zz) {
           /// Mass transfer coefficients for char oxidation reactions are given by the expression:
           /// \f$ k_{m} = \frac{ 2 D_{om} }{ d_{p} } = \frac{ 2 \nu_{T,fluid} }
-          k_m[z] = 2*(turbulent_viscosity[c]/Sc_[z])/unscaled_length;
+          k_m[zz] = 2*(turbulent_viscosity[c]/Sc_[zz])/unscaled_length;
 
           /// Rate constant for char oxidation reactions are given by the rate constant:
           /// \f$ k_{r} = A T^{n} exp \left( -\frac{E}{RT} \right) \left[ \mbox{Oxidizer Conc.} \right] \f$
           /// (Note: n=1 for all the char oxidation reactions... This is implicit in the code.)
-          k_r[z] = A_[z] * unscaled_temperature * exp( - E_[z] / R_ / unscaled_temperature )*(**iOxidizer)[c];
+          k_r[zz] = A_[zz] * unscaled_temperature * exp( - E_[zz] / R_ / unscaled_temperature )*(**iOxidizer)[c];
 
-          double rate = ( A_p*nu[z]*MW_carbon*xi_p*k_r[z]*k_m[z] )/( k_m[z] + k_r[z]*xi_p + TINY );
+          double rate = ( A_p*nu[zz]*MW_carbon*xi_p*k_r[zz]*k_m[zz] )/( k_m[zz] + k_r[zz]*xi_p + TINY );
 
           (**iGasModel)[c] = unscaled_weight*rate;
+          char_model_gasSource[c] += unscaled_weight*rate;
 
           char_rxn_rate_ += (-rate/d_char_scaling_constant);
 
 #ifdef DEBUG_MODELS
-          if( c == IntVector(1,2,3) ) {
-            cout << "Char QN " << d_quadNode << " oxidation by " << oxidizer_name_[z] << ": Setting k_m[z] = 2*(turb visc/Sc)/unscaled_length = (" << 2*turbulent_viscosity[c] << "/" << Sc_[z] << ")/" << unscaled_length << " = " << k_m[z] << endl;
-            cout << "Char QN " << d_quadNode << " oxidation by " << oxidizer_name_[z] << ": Setting k_r[z] = A_[z] * unscaled_temperature * exp( -E_[z]/R_/unscaled_temperature) * [Oxidizer] = " << A_[z] << "*" << unscaled_temperature << "*exp(" << -E_[z] << "/" << R_ << "/" << unscaled_temperature << ")*[" << (**iOxidizer)[c] << "] = " << k_r[z] << endl;
-            cout << "Char QN " << d_quadNode << " oxidation by " << oxidizer_name_[z] << ": reaction rate = ( A_p*nu[z]*MW_carbon*xi_p*k_r[z]*k_m[z])/(k_m[z] + k_r[z]*xi_p) = (" << A_p << "*" << nu[z] << "*" << MW_carbon << "*" << xi_p << "*" << k_r[z] << "*" << k_m[z] << ")/(" << k_m[z] << " + " << k_r[z] << "*" << xi_p << ") = " << rate << endl;
+          if( c == IntVector(1,35,35) ) {
+            cout << "Char QN " << d_quadNode << " oxidation by " << oxidizer_name_[zz] << ": Setting k_m[zz] = 2*(turb visc/Sc)/unscaled_length = (" << 2*turbulent_viscosity[c] << "/" << Sc_[zz] << ")/" << unscaled_length << " = " << k_m[zz] << endl;
+            cout << "Char QN " << d_quadNode << " oxidation by " << oxidizer_name_[zz] << ": Setting k_r[zz] = A_[zz] * unscaled_temperature * exp( -E_[zz]/R_/unscaled_temperature) * [Oxidizer] = " << A_[zz] << "*" << unscaled_temperature << "*exp(" << -E_[zz] << "/" << R_ << "/" << unscaled_temperature << ")*[" << (**iOxidizer)[c] << "] = " << k_r[zz] << endl;
+            cout << "Char QN " << d_quadNode << " oxidation by " << oxidizer_name_[zz] << ": reaction rate = ( A_p*nu[zz]*MW_carbon*xi_p*k_r[zz]*k_m[zz])/(k_m[zz] + k_r[zz]*xi_p) = (" << A_p << "*" << nu[zz] << "*" << MW_carbon << "*" << xi_p << "*" << k_r[zz] << "*" << k_m[zz] << ")/(" << k_m[zz] << " + " << k_r[zz] << "*" << xi_p << ") = " << rate << endl;
             cout << "    Gas reaction rate = " << unscaled_weight*rate << endl;
             cout << "    Particle reaction rate = " << char_rxn_rate_ << endl;
             cout << "    Weight = " << unscaled_weight << endl;
@@ -579,10 +602,6 @@ GlobalCharOxidation::computeModel( const ProcessorGroup * pc,
         }
 
       }//end if small weight
-
-#ifdef DEBUG_MODELS
-      if(c==IntVector(1,2,3)){cout << endl;}
-#endif
 
       char_model[c] = char_rxn_rate_;
 

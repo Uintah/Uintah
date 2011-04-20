@@ -37,6 +37,9 @@ public:
 
   /** @brief  Grab model-independent devolatilization parameters */
   void problemSetup(const ProblemSpecP& db);
+  
+  /** @brief  Set the (species) property labels needed by the char oxidation model */
+  virtual void setPropertyLabels() = 0;
 
   /** @brief Schedule the initialization of special/local variables unique to model */
   void sched_initVars( const LevelP& level, SchedulerP& sched );
@@ -85,7 +88,7 @@ public:
     return d_H2OGasModelLabel; }
 
   /** @brief    Set the mixing and reaction interface so char oxidation methods can request species labels */
-  inline void setMixingRxnInterface( MixingRxnModel* interface ) {
+  inline void setMixingRxnModel( MixingRxnModel* interface ) {
     d_MixingRxnModel = interface; }
 
   /** @brief    Given an oxidizer species, return the VarLabel for the gas source term associated with that char reaction 

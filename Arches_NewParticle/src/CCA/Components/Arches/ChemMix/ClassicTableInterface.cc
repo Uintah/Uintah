@@ -92,7 +92,16 @@ ClassicTableInterface::problemSetup( const ProblemSpecP& propertiesParameters )
 
   // only solve for heat loss if a working radiation model is found
   const ProblemSpecP params_root = db_classic->getRootNode();
-  ProblemSpecP db_enthalpy  =  params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ExplicitSolver")->findBlock("EnthalpySolver");
+  ProblemSpecP db_enthalpy;
+  if( params_root->findBlock("CFD") ) {
+    if( params_root->findBlock("CFD")->findBlock("ARCHES") ) {
+      if( params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ExplicitSolver") ) {
+        if( params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ExplicitSolver")->findBlock("EnthalpySolver") ) {
+          db_enthalpy = params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ExplicitSolver")->findBlock("EnthalpySolver");
+        }
+      }
+    }
+  }
   if (db_enthalpy) { 
     ProblemSpecP db_radiation = params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ExplicitSolver")->findBlock("EnthalpySolver")->findBlock("DORadiationModel");
     d_adiabatic = true; 
@@ -1196,11 +1205,8 @@ ClassicTableInterface::loadMixingTable( const string & inputfile )
   gzFile gzFp = gzopen( inputfile.c_str(), "r" );
 
   if( gzFp == NULL ) {
+    // If errno is 0, then not enough memory to uncompress file.
     proc0cout << "Error with gz in opening file: " << inputfile << ". Errno: " << errno << "\n"; 
-    if( errno == 0 ) {
-      // If errno is 0, then not enough memory to uncompress file.
-      proc0cout << "Not enough memory to uncompress file." << endl;
-    }
     throw ProblemSetupException("Unable to open the given input file: " + inputfile, __FILE__, __LINE__);
   }
 

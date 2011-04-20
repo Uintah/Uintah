@@ -78,6 +78,9 @@ public:
   /** @brief Interface for the inputfile and set constants */ 
   void problemSetup(const ProblemSpecP& db);
 
+  /** @brief  Set the (species) property labels needed by the char oxidation model */
+  void setPropertyLabels();
+
   ////////////////////////////////////////////////
   // Model computation method
 
