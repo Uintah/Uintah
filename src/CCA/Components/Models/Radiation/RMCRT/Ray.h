@@ -41,8 +41,8 @@ namespace Uintah{
                            const int time_sub_step );
 
       /** @brief Schedule compute of blackbody intensity */ 
-      void sched_blackBodyIntensity( const LevelP& level, 
-                                     SchedulerP& sched );
+      void sched_sigmaT4( const LevelP& level, 
+                          SchedulerP& sched );
 
       /** @brief Initializes properties for the algorithm */ 
       void sched_initProperties( const LevelP&, SchedulerP& sched, const int time_sub_step );
@@ -57,8 +57,7 @@ namespace Uintah{
      void registerVarLabels(int   matl,
                             const VarLabel*  abskg,
                             const VarLabel* absorp,
-                            const VarLabel* temperature,
-                            const VarLabel* sigmaT4 = NULL);
+                            const VarLabel* temperature);
 
     private: 
       
@@ -71,15 +70,14 @@ namespace Uintah{
       int    d_matl;
       MaterialSet* d_matlSet;
       
-      const double _sigma_over_pi; // Stefan Boltzmann divided by pi (W* m-2* K-4)
+      double _sigma_over_pi; // Stefan Boltzmann divided by pi (W* m-2* K-4)
 
       MTRand _mTwister; 
       int i,j,k;
       bool _benchmark_1; 
 
-      const VarLabel* sigmaT4_label; 
-      const VarLabel* divQ_label; 
-      const VarLabel* d_blackBodyIntensityLabel; 
+      const VarLabel* d_sigmaT4_label; 
+      const VarLabel* divQ_label;
       const VarLabel* d_abskgLabel;
       const VarLabel* d_absorpLabel;
       const VarLabel* d_temperatureLabel;
@@ -101,18 +99,18 @@ namespace Uintah{
           int time_sub_step ); 
 
       //----------------------------------------
-      void blackBodyIntensity( const ProcessorGroup* pc,
-                         const PatchSubset* patches,
-                         const MaterialSubset* matls,
-                         DataWarehouse* old_dw,
-                         DataWarehouse* new_dw );
+      void sigmaT4( const ProcessorGroup* pc,
+                    const PatchSubset* patches,
+                    const MaterialSubset* matls,
+                    DataWarehouse* old_dw,
+                    DataWarehouse* new_dw );
 
 
       //double length;//this tells us the length of the direction vector.  It gets changed to unity during the VecUnitize function
       //double &length_ = length;//so we can pass length by reference
       //Vector &A_ = direction_vector; //so directionVector can be passed by reference to VecUnitize
       // Vector emiss_point;
-      }; // class Ray
+  }; // class Ray
 } // namespace Uintah
 
 #endif
