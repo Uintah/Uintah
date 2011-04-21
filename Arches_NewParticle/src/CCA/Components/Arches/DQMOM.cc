@@ -2323,35 +2323,26 @@ DQMOM::calculateMoments( const ProcessorGroup* pc,
     }
 
     // Put the moment/mean moment CCVariables in a vector
+    const VarLabel* moment_label;
+    const VarLabel* mean_moment_label;
+
     counter = 0;
-    for( vector<MomentVector>::iterator iAllMoments = momentIndexes.begin(); iAllMoments != momentIndexes.end(); ++iAllMoments ) {
+    for( MomentMap::iterator iM = DQMOMMoments.begin(); iM != DQMOMMoments.end(); ++iM ) {
+      moment_label = iM->second;
 
-      MomentVector thisMoment = (*iAllMoments);
-
-      const VarLabel* moment_label;
-      MomentMap::iterator iMoment = DQMOMMoments.find( thisMoment );
-      
-      const VarLabel* mean_moment_label;
-      MomentMap::iterator iMeanMoment = DQMOMMomentsMean.find( thisMoment );
-
-      if( iMoment != DQMOMMoments.end() && iMeanMoment != DQMOMMomentsMean.end() ) {
-        moment_label = iMoment->second;
-        mean_moment_label = iMeanMoment->second;
-      } else {
-        stringstream out;
-        out << "ERROR: DQMOM: calculateMoments: could not find moment index [";
-        for( MomentVector::iterator iMomentIndex = thisMoment.begin(); iMomentIndex != thisMoment.end(); ++iMomentIndex ) {
-          out << (*iMomentIndex) << " ";
-        }
-        out << "] in DQMOMMoment map/DQMOMMeanMoment map!  If you are running verification, you must turn off calculation of moments using <calculate_moments>false</calculate_moments>";
-        throw InvalidValue( out.str(),__FILE__,__LINE__);
-      }
-      
       if( new_dw->exists(moment_label, matlIndex, patch) ) {
         new_dw->getModifiable( (*momentCCVars[counter]), moment_label, matlIndex, patch );
       } else {
         new_dw->allocateAndPut( (*momentCCVars[counter]), moment_label, matlIndex, patch );
       }
+
+      (*momentCCVars[counter]).initialize(0.0);
+      ++counter;
+    }
+
+    counter = 0;
+    for( MomentMap::iterator iMM = DQMOMMomentsMean.begin(); iMM != DQMOMMomentsMean.end(); ++iMM ) {
+      mean_moment_label = iMM->second;
 
       if( new_dw->exists(mean_moment_label, matlIndex, patch) ) {
         new_dw->getModifiable( (*meanMomentCCVars[counter]), mean_moment_label, matlIndex, patch );
@@ -2359,12 +2350,9 @@ DQMOM::calculateMoments( const ProcessorGroup* pc,
         new_dw->allocateAndPut( (*meanMomentCCVars[counter]), mean_moment_label, matlIndex, patch );
       }
 
-      (*momentCCVars[counter]).initialize(0.0);
       (*meanMomentCCVars[counter]).initialize(0.0);
-
       ++counter;
     }
-
 
     // Cell iterator
     for ( CellIterator iter = patch->getCellIterator();
@@ -2394,8 +2382,17 @@ DQMOM::calculateMoments( const ProcessorGroup* pc,
       counter = 0;
       vector< CCVariable<double>* >::iterator iter1 = momentCCVars.begin();
       vector< CCVariable<double>* >::iterator iter2 = meanMomentCCVars.begin();
-      for( vector<MomentVector>::iterator iAllMoments = momentIndexes.begin(); 
-           iAllMoments != momentIndexes.end(); ++iAllMoments, ++iter1, ++iter2 ) {
+
+      // either calculating all moments, or only 0th/1st/2nd order moments
+      vector<MomentVector>::iterator iAllMoments = momentIndexes.begin();
+      vector<MomentVector>::iterator iEnd;
+      if( d_save_moments ) {
+        iEnd = momentIndexes.end();
+      } else {
+        iEnd = iAllMoments + 1 + 2*N_xi;
+      }
+
+      for( ; iAllMoments != iEnd; ++iAllMoments ) {
 
         MomentVector thisMoment = (*iAllMoments);
 
