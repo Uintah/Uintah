@@ -526,9 +526,7 @@ DQMOMEqnFactory::sched_evalTransportEqns( const LevelP& level,
     dqmom_eqn->sched_solveTransportEqn( level, sched, timeSubStep, lastTimeSubstep );
   }
 
-  if( d_dqmomSolver->getSaveMoments() ) {
-    d_dqmomSolver->sched_calculateMoments( level, sched, timeSubStep );
-  }
+  d_dqmomSolver->sched_calculateMoments( level, sched, timeSubStep );
   
   if( lastTimeSubstep ) {
     for( EqnMap::iterator iEqn = eqns_.begin(); iEqn != eqns_.end(); ++iEqn ) {
