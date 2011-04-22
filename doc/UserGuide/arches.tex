@@ -895,32 +895,88 @@ The \verb=<ScalarEfficiency>= node is a child of the \verb=<BoundaryCondition>= 
 % 
 Typically, subgrid mixing and reaction processes of the gas phase are described using pre-computed and tabulated mixing and reaction chemistry tables.  These tables consists of the thermo-chemical state-space (density, temperature, species) as a function of a few independent parameters (e.g., mixture fraction, heat loss, scalar variance).  In the \verb=<Properties>= child of the \verb=<ARCHES>= node, the inputs for the mixing and reaction models are specified, including additional information affecting various gas property models (e.g., empirical soot model).  
 
+To use tabulated chemistry, one must specify
+\begin{enumerate}
+\item Transport equations for any independent mixture fraction or other grid resolved species equation that parameterizes the table
+\item Boundary conditions for every independent variable, including heat loss, scalar variance, and mixture fraction/species equations
+\item A table specific node in the \verb=<Properties>= section of the input file defining which table mechanism is being used 
+\end{enumerate}
+Information on specifying transport equations and boundary conditions is found in Section (ADD SECTION).    
+
 ARCHES currently has three tabulated property formats that can be interpreted: 
 \begin{enumerate} 
 \item Classic Mixing Table 
 \item New Static Mixing Table 
 \item TabProps
 \end{enumerate} 
-One way conversion from New Static Mixing Table to Classic Mixing Table to TabProps format is possible.  To convert from a New Static Mixing Table to a Classic Table, use the \verb=newstatic_to_classic.m= matlab script found in the \verb=matlab= directory of the ARCHES input directory.  Classic formatted tables can be pre-processed by the standalone TabProps library to produce a format readable by TabProps during runtime.   
+One way conversion from New Static Mixing Table to Classic Mixing Table to TabProps format is possible.  To convert from a New Static Mixing Table to a Classic Table, use the \verb=newstatic_to_classic.m= matlab script found in the \verb=matlab= directory of the ARCHES input directory.  Classic formatted tables can be pre-processed by the standalone TabProps library to produce a format readable by TabProps during runtime.   Information on TabProps is found at \\
+\verb=https://software.crsim.utah.edu/trac/wiki/TabProps=.
+
+Tables formatted in the Classic form are activated by using the following 
+%
+\begin{Verbatim}[fontsize=\footnotesize]
+<ClassicTable>
+  <inputfile>REQUIRED STRING<inputfile/> 
+  <cold_flow>OPTIONAL BOOLEAN</cold_flow> 
+  <noisy_hl_warning>OPTIONAL BOOLEAN</noisy_hl_warning>  
+  <hl_scalar_init>OPTIONAL DOUBLE</hl_scalar_init> 
+  <coal  fp_label="REQUIRED STRING" eta_label="REQUIRED STRING"/> 
+</ClassicTable>
+\end{Verbatim} 
+%
+The \verb=<cold_flow>= tag is used when the table does not involve a typical combustion process, as in mixing of two non-reacting streams or acid-base chemistry.  The \verb=<noisy_hl_warning>= option provides verbose output during runtime if computed heat losses are exceeding the table bounds.  The \verb=<hl_scalar_init>= option initializes the domain at the first time step with the specified value for heat loss.  
+
+If one is using a coal table which requires a transformation of mixture fractions, the \verb=<coal>= tag with its attributes defines how the third mixture fraction is computed from the following relationship, 
+\begin{equation}
+f = \frac{ f_p }{(1 - \eta_c) }.
+\end{equation}   
+This identifies the mapping for the transformation of the transported $f_p$ (primary mixture fraction) and  $eta_c$ (coal gas mixture fraction) equations that must be defined in the \verb=<TransportEqn>= section of the input file.  
+
+Tables formatted in the TabProps form are activated by using the following
+%
+\begin{Verbatim}[fontsize=\footnotesize]
+<TabProps>
+  <inputfile>REQUIRED STRING</inputfile> 
+  <cold_flow>OPTIONAL BOOLEAN</cold_flow>
+  <hl_scalar_init>OPTIONAL DOUBLE</hl_scalar_init> 
+  <noisy_hl_warning>OPTIONAL NO_DATA<noisy_hl_warning> 
+  <lower_hl_bound>OPTIONAL DOUBLE</lower_hl_bound>
+  <upper_hl_bound>OPTIONAL DOUBLE</lower_hl_bound>
+  <coal  fp_label="REQUIRED STRING" eta_label="REQUIRED STRING"/> 
+</TabProps>
+\end{Verbatim}
+%
+where the same description of the tags for the Classic Tables applies to the TabProps tables.  Note that the TabProps tables do not automatically determine the bounds for the heat loss grid, thus one must explicitly set the lower and upper bounds for heat loss if they differ from $(-1, +1)$ for strict error checking.  
+
+For both the Classic and TabProps tables, any dependent variable in the table is saved by specifying the following in the \verb=<DataArchiver>= section of the input file: 
+%
+\begin{Verbatim}[fontsize=\footnotesize]
+<DataArchiver>
+    <save name=STRING table_lookup="true"> 
+</DataArchiver>
+\end{Verbatim} 
+%
+where the additional \verb=table_lookup= attribute is specified to signify to ARCHES that the variable is found in the table.  Note that the string name must match exactly the name in table.  
 
 In addition to the pre-tabulated chemistry, cold-flow mixing is available for simple two-stream mixing.  The cold two-stream mixing is activated by
 %
 \begin{Verbatim}[fontsize=\footnotesize]
-<Properties>
-  <ColdFlowMixingModel>
-    <Stream>
-      <density> REQUIRED DOUBLE, POSITIVE </density>
-      <temperature>REQUIRED DOUBLE, POSITIVE</temperature>
-    </Stream>
-     <Stream>
-      <density> REQUIRED DOUBLE, POSITIVE </density>
-      <temperature>REQUIRED DOUBLE, POSITIVE</temperature>
-    </Stream>
-  </ColdFlowMixingModel>
-</Properties>
+<ColdFlow>
+  <mixture_fraction_label>REQUIRED STRING</mixture_fraction_label>
+  <Stream_1>
+    <density>REQUIRED DOUBLE POSITIVE</density>
+    <temperature>REQUIRED DOUBLE POSITIVE</temperature>
+  </Stream_1>
+  <Stream_2>
+    <density>REQUIRED DOUBLE POSITIVE</density>
+    <temperature>REQUIRED DOUBLE POSITIVE</temperature>
+  </Stream_2>
+</ColdFlow>
 \end{Verbatim}
 % 
-where each section enclosed by the \verb=<Stream>= tag defines one of the individual streams.  Note that only two streams are allowed. 
+where \verb=<mixture_fraction_label>= is the name given to the mixture fraction equation defined in the \verb=<TransportEqns>= section.  A mixture fraction of, $f=1$ represents a mixture of pure Stream 1 and conversely a mixture fraction of, $f=0$, is pure Stream 2.  
+
+
 
 %\subsection{Extra Scalar Solvers}
 %This section and all options will soon be replaced with Section \ref{Sec:AddTransEqn}. 

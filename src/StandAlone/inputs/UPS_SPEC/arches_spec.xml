@@ -152,7 +152,7 @@
 
         <TabProps                       spec="OPTIONAL NO_DATA" >
           <inputfile                    spec="REQUIRED STRING" /> <!-- table to be opened --> 
-          <cold_flow                    spec="OPTIONAL BOOLEAN"/> <!-- use when no rxn is occuring --> 
+          <cold_flow                    spec="OPTIONAL BOOLEAN"/> <!-- used for simple stream mixing (no rxn) --> 
           <hl_scalar_init               spec="OPTIONAL DOUBLE" /> <!-- initial heat loss value in the domain --> 
           <noisy_hl_warning             spec="OPTIONAL NO_DATA"/> <!-- warn when heat loss is clipped to bounds --> 
           <lower_hl_bound               spec="OPTIONAL DOUBLE"/> <!-- In the property table, the lower bound for heat loss.  default = -1 --> 
@@ -164,7 +164,7 @@
 
         <ClassicTable                   spec="OPTIONAL NO_DATA">
           <inputfile                    spec="REQUIRED STRING" /> <!-- table to be opened --> 
-          <cold_flow                    spec="OPTIONAL BOOLEAN"/> <!-- use when no rxn is occuring --> 
+          <cold_flow                    spec="OPTIONAL BOOLEAN"/> <!-- use for simple two stream mixing --> 
           <noisy_hl_warning             spec="OPTIONAL NO_DATA"/> <!-- warn when heat loss is clipped to bounds --> 
           <hl_scalar_init               spec="OPTIONAL DOUBLE" /> <!-- initial heat loss value in the domain --> 
           <coal                         spec="OPTIONAL NO_DATA" 

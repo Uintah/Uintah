@@ -59,18 +59,22 @@ This code checks for the following tags/attributes in the input file:
 The UPS interface for TabProps is: 
 
 \code
-    <Properties>
-        <TabProps>
-            <inputfile>REQUIRED STRING</inputfile>
-            <hl_pressure>OPTIONAL DOUBLE</hl_pressure> 
-            <hl_outlet>OPTIONAL DOUBLE</hl_outlet> 
-            <hl_scalar_init>OPTIONAL DOUBLE</hl_scalar_init>
-        </TabProps>
-    </Properties>
+<TabProps                       spec="OPTIONAL NO_DATA" >
+  <inputfile                    spec="REQUIRED STRING" /> <!-- table to be opened --> 
+  <cold_flow                    spec="OPTIONAL BOOLEAN"/> <!-- used for simple stream mixing (no rxn) --> 
+  <hl_scalar_init               spec="OPTIONAL DOUBLE" /> <!-- initial heat loss value in the domain --> 
+  <noisy_hl_warning             spec="OPTIONAL NO_DATA"/> <!-- warn when heat loss is clipped to bounds --> 
+  <lower_hl_bound               spec="OPTIONAL DOUBLE"/> <!-- In the property table, the lower bound for heat loss.  default = -1 --> 
+  <upper_hl_bound               spec="OPTIONAL DOUBLE"/> <!-- In the property table, the upper bound for heat loss.  default = +1 --> 
+  <coal                         spec="OPTIONAL NO_DATA" 
+                                attribute1="fp_label REQUIRED STRING"     
+                                attribute2="eta_label REQUIRED STRING"/> 
+                                <!-- Attributes must match the transported IVs specified in the TransportEqn node --> 
+</TabProps>
 
-    <DataArchiver>
-        <save name=STRING table_lookup="true"> <!-- note that STRING must match the name in the table -->
-    </DataArchiver>
+<DataArchiver>
+    <save name=STRING table_lookup="true"> <!-- note that STRING must match the name in the table -->
+</DataArchiver>
 \endcode
 
  * Any variable that is saved to the UDA in the dataarchiver block is automatically given a VarLabel.  
