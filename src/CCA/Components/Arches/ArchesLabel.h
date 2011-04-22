@@ -75,6 +75,9 @@ namespace Uintah {
      
       SimulationStateP d_sharedState;
 
+      // recompile task graph flag
+      bool recompile_taskgraph; 
+
       // material subset for stencils
       MaterialSubset* d_stencilMatl;
 
@@ -498,7 +501,6 @@ namespace Uintah {
       const VarLabel* d_umomBoundarySrcLabel;
       const VarLabel* d_vmomBoundarySrcLabel;
       const VarLabel* d_wmomBoundarySrcLabel;
-
 
       // DQMOM Variables:
 

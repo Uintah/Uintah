@@ -256,7 +256,7 @@ Arches::problemSetup(const ProblemSpecP& params,
     // db->require("model_mixture_fraction_variance", d_calcVariance);
   }
   db->getWithDefault("turnonMixedModel",    d_mixedModel,false);
-  db->getWithDefault("recompileTaskgraph",  d_recompile,false);
+  db->getWithDefault("recompileTaskgraph",  d_lab->recompile_taskgraph,false);
 
   string nlSolver;
   if (db->findBlock("ExplicitSolver")){
@@ -1456,7 +1456,7 @@ Arches::scheduleTimeAdvance( const LevelP& level,
       }
       d_boundaryCondition->sched_setProfile(sched, patches, matls); 
       d_doingRestart = false;
-      d_recompile = true; //This will be set to false after the first timestep.
+      d_lab->recompile_taskgraph = true; 
     }
   }
 }
@@ -1467,16 +1467,15 @@ Arches::scheduleTimeAdvance( const LevelP& level,
 bool Arches::needRecompile(double time, double dt, 
                             const GridP& grid) {
   bool temp; 
-  if ( d_recompile ) {
-   temp = d_recompile;
-   proc0cout << endl;
-   proc0cout << "NOTICE!:Recompile Taskgraph is set to true.  Taskgraph will be recompiled once first timestep but not after." << endl; 
-   proc0cout << endl;
-   d_recompile = false; 
-   return temp; 
+  if ( d_lab->recompile_taskgraph ) {
+    //Currently turning off recompile after. 
+    temp = d_lab->recompile_taskgraph;
+    proc0cout << "\n NOTICE: Recompiling task graph. \n \n";
+    d_lab->recompile_taskgraph = false; 
+    return temp; 
   }
   else 
-    return d_recompile;
+    return d_lab->recompile_taskgraph;
 }
 // ****************************************************************************
 // schedule reading of initial condition for velocity and pressure
