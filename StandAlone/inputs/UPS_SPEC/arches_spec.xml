@@ -346,6 +346,7 @@
         <PressureSolver                 spec="REQUIRED NO_DATA" >
           <do_only_last_projection      spec="OPTIONAL BOOLEAN" />
           <normalize_pressure           spec="OPTIONAL BOOLEAN" />
+          <always_construct_A           spec="OPTIONAL BOOLEAN" /> <!-- default=true. Determines if Pressure matrix is recreated every time step. --> 
           <linear_solver                spec="REQUIRED STRING 'hypre, petsc'" />
           <parameters                   spec="REQUIRED NO_DATA" >
             <max_iter                   spec="REQUIRED INTEGER 'positive'" />
