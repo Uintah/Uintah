@@ -26,12 +26,16 @@ from helpers.modUPS import modUPS
 #  3) Performance_tests are not run on a debug build.
 #______________________________________________________________________
 
-NIGHTLYTESTS = [  ("mpmpipe_test",           "mpmpipe_test.ups",          8,  "Linux", ["exactComparison"]),
-                  ("methaneFireWContainer", "methaneFireWContainer.ups", 1.1, "Linux", ["exactComparison","no_restart"])
+NIGHTLYTESTS = [  
+									("mpmpipe_test"          , "mpmpipe_test.ups"          , 8   , "Linux" , ["exactComparison"]) , 
+									("methaneFireWContainer" , "methaneFireWContainer.ups" , 1.1 , "Linux" , ["exactComparison"   , "no_restart"]) , 
+									("heptane_pipe"          , "heptane_pipe.ups"          , 1.1 , "Linux" , ["doesTestRun"])
                ]
                
-LOCALTESTS =   [  ("mpmpipe_test",           "mpmpipe_test.ups",          8,  "Linux", ["exactComparison"]),
-                  ("methaneFireWContainer", "methaneFireWContainer.ups", 1.1, "Linux", ["exactComparison","no_restart"])
+LOCALTESTS =   [  
+									("mpmpipe_test"          , "mpmpipe_test.ups"          , 8   , "All" , ["exactComparison"]) , 
+									("methaneFireWContainer" , "methaneFireWContainer.ups" , 1.1 , "All" , ["exactComparison"   , "no_restart"]) , 
+									("heptane_pipe"          , "heptane_pipe.ups"          , 1.1 , "All" , ["doesTestRun"])
                ]  
 
 #__________________________________

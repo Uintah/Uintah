@@ -891,7 +891,36 @@ The \verb=<ScalarEfficiency>= node is a child of the \verb=<BoundaryCondition>= 
 
 %\subsection{Turbulence Models}
 
-%\subsection{Properties, Reaction and Sub-Grid Mixing}
+\subsection{Properties, Reaction and Sub-Grid Mixing}
+% 
+Typically, subgrid mixing and reaction processes of the gas phase are described using pre-computed and tabulated mixing and reaction chemistry tables.  These tables consists of the thermo-chemical state-space (density, temperature, species) as a function of a few independent parameters (e.g., mixture fraction, heat loss, scalar variance).  In the \verb=<Properties>= child of the \verb=<ARCHES>= node, the inputs for the mixing and reaction models are specified, including additional information affecting various gas property models (e.g., empirical soot model).  
+
+ARCHES currently has three tabulated property formats that can be interpreted: 
+\begin{enumerate} 
+\item Classic Mixing Table 
+\item New Static Mixing Table 
+\item TabProps
+\end{enumerate} 
+One way conversion from New Static Mixing Table to Classic Mixing Table to TabProps format is possible.  To convert from a New Static Mixing Table to a Classic Table, use the \verb=newstatic_to_classic.m= matlab script found in the \verb=matlab= directory of the ARCHES input directory.  Classic formatted tables can be pre-processed by the standalone TabProps library to produce a format readable by TabProps during runtime.   
+
+In addition to the pre-tabulated chemistry, cold-flow mixing is available for simple two-stream mixing.  The cold two-stream mixing is activated by
+%
+\begin{Verbatim}[fontsize=\footnotesize]
+<Properties>
+  <ColdFlowMixingModel>
+    <Stream>
+      <density> REQUIRED DOUBLE, POSITIVE </density>
+      <temperature>REQUIRED DOUBLE, POSITIVE</temperature>
+    </Stream>
+     <Stream>
+      <density> REQUIRED DOUBLE, POSITIVE </density>
+      <temperature>REQUIRED DOUBLE, POSITIVE</temperature>
+    </Stream>
+  </ColdFlowMixingModel>
+</Properties>
+\end{Verbatim}
+% 
+where each section enclosed by the \verb=<Stream>= tag defines one of the individual streams.  Note that only two streams are allowed. 
 
 %\subsection{Extra Scalar Solvers}
 %This section and all options will soon be replaced with Section \ref{Sec:AddTransEqn}. 
