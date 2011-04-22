@@ -57,19 +57,14 @@ This code checks for the following tags/attributes in the input file:
 The UPS interface is: 
 
 \code
-    <Properties>
-      <ColdFlow>
-        <inputfile>REQUIRED STRING</inputfile>
-      </ColdFlow>
-    </Properties>
-
-    <DataArchiver>
-        <save name=STRING table_lookup="true"> <!-- note that STRING must match the name in the table -->
-    </DataArchiver>
+<ColdFlowMixingModel            spec="OPTIONAL NO_DATA" >
+  <Stream                       spec="MULTIPLE NO_DATA" >
+    <density                    spec="REQUIRED DOUBLE 'positive'" />
+    <temperature                spec="REQUIRED DOUBLE 'positive'" />
+  </Stream>
+</ColdFlowMixingModel>
 \endcode
 
- * Any variable that is saved to the UDA in the dataarchiver block is automatically given a VarLabel.  
- *
  * If you have trouble reading your table, you can "setenv SCI_DEBUG TABLE_DEBUG:+" to get a 
  * report of what is going on in the table reader.
  *
