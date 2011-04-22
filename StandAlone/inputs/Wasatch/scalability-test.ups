@@ -60,7 +60,6 @@
     <filebase>wasatch-scalability-test.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
     <outputInitTimestep/>
-    <checkpoint cycle = "1" interval = "2"/>
     <compression>gzip</compression>
     <save label="phi0" />
   </DataArchiver> 
