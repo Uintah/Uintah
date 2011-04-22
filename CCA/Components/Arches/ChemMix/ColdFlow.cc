@@ -58,7 +58,7 @@ using namespace Uintah;
 ColdFlow::ColdFlow( const ArchesLabel* labels, const MPMArchesLabel* MAlabels ) :
   MixingRxnModel( labels, MAlabels )
 {
-        d_coldflow = true; 
+  d_coldflow = true; 
 }
 
 //--------------------------------------------------------------------------- 
@@ -82,11 +82,11 @@ ColdFlow::problemSetup( const ProblemSpecP& propertiesParameters )
   const ProblemSpecP db_root = db_coldflow->getRootNode(); 
   db_root->findBlock("PhysicalConstants")->require("reference_point", d_ijk_den_ref);  
 
-        // d_stream[ kind index (density, temperature) ][ stream index ( 0,1) ]
-        db_coldflow->findBlock( "Stream_1" )->require( "density", d_stream[0][0] ); 
-        db_coldflow->findBlock( "Stream_1" )->require( "temperature", d_stream[1][0] ); 
-        db_coldflow->findBlock( "Stream_2" )->require( "density", d_stream[0][1] ); 
-        db_coldflow->findBlock( "Stream_2" )->require( "temperature", d_stream[1][1] ); 
+  // d_stream[ kind index (density, temperature) ][ stream index ( 0,1) ]
+  db_coldflow->findBlock( "Stream_1" )->require( "density", d_stream[0][0] ); 
+  db_coldflow->findBlock( "Stream_1" )->require( "temperature", d_stream[1][0] ); 
+  db_coldflow->findBlock( "Stream_2" )->require( "density", d_stream[0][1] ); 
+  db_coldflow->findBlock( "Stream_2" )->require( "temperature", d_stream[1][1] ); 
   db_coldflow->require( "mixture_fraction_label", d_cold_flow_mixfrac ); 
 
   // Extract independent and dependent variables from input file
@@ -99,8 +99,8 @@ ColdFlow::problemSetup( const ProblemSpecP& propertiesParameters )
 
   // This sets the table lookup variables and saves them in a map
   // Map<string name, Label>
-        insertIntoMap( "density" ); 
-        insertIntoMap( "temperature" ); 
+  insertIntoMap( "density" ); 
+  insertIntoMap( "temperature" ); 
 
   proc0cout << "  Now matching user-defined IV's with table IV's" << endl;
   proc0cout << "     Note: If sus crashes here, check to make sure your" << endl;
@@ -108,16 +108,16 @@ ColdFlow::problemSetup( const ProblemSpecP& propertiesParameters )
 
   cout_tabledbg << " Creating the independent variable map " << endl;
 
-        d_allIndepVarNames.push_back( d_cold_flow_mixfrac ); 
+  d_allIndepVarNames.push_back( d_cold_flow_mixfrac ); 
 
   //put the right labels in the label map
   string varName = d_allIndepVarNames[0];  
 
   cout_tabledbg << " Variable: " << varName << " being inserted into the indep. var map"<< endl; 
 
-        EqnFactory& eqn_factory = EqnFactory::self();
-        EqnBase& eqn = eqn_factory.retrieve_scalar_eqn( varName );
-        d_ivVarMap.insert(make_pair(varName, eqn.getTransportEqnLabel())).first; 
+  EqnFactory& eqn_factory = EqnFactory::self();
+  EqnBase& eqn = eqn_factory.retrieve_scalar_eqn( varName );
+  d_ivVarMap.insert(make_pair(varName, eqn.getTransportEqnLabel())).first; 
 
   proc0cout << "  Matching sucessful!" << endl;
   proc0cout << endl;
@@ -129,13 +129,13 @@ ColdFlow::problemSetup( const ProblemSpecP& propertiesParameters )
 //--------------------------------------------------------------------------- 
 // schedule get State
 //--------------------------------------------------------------------------- 
-void 
+  void 
 ColdFlow::sched_getState( const LevelP& level, 
-                                                                                        SchedulerP& sched, 
-                                                                                        const TimeIntegratorLabel* time_labels, 
-                                                                                        const bool initialize_me,
-                                                                                        const bool with_energy_exch, 
-                                                                                        const bool modify_ref_den )
+    SchedulerP& sched, 
+    const TimeIntegratorLabel* time_labels, 
+    const bool initialize_me,
+    const bool with_energy_exch, 
+    const bool modify_ref_den )
 {
   string taskname = "ColdFlow::getState"; 
   Ghost::GhostType  gn = Ghost::None;
@@ -205,8 +205,8 @@ ColdFlow::getState( const ProcessorGroup* pc,
     //independent variables:
     std::vector<constCCVariable<double> > indep_storage; 
 
-        // dependent variables
-        CCVariable<double> mpmarches_denmicro; 
+    // dependent variables
+    CCVariable<double> mpmarches_denmicro; 
 
     for ( int i = 0; i < (int) d_allIndepVarNames.size(); i++ ){
 
@@ -266,17 +266,17 @@ ColdFlow::getState( const ProcessorGroup* pc,
         new_dw->getModifiable( mpmarches_denmicro, d_lab->d_densityMicroLabel, matlIndex, patch ); 
     }
 
-                std::map< std::string, int> iter_to_index;  
+    std::map< std::string, int> iter_to_index;  
     for ( DepVarMap::iterator i = depend_storage.begin(); i != depend_storage.end(); ++i ){
 
-                        // this just maps the iterator to an index so that density and temperature can be 
-                        // easily identified: 
-                  if ( i->first == "density" )
-                                iter_to_index.insert( make_pair( i->first, 0 )).first;
-                        else if ( i->first == "temperature" )
-                                iter_to_index.insert( make_pair( i->first, 1 )).first;
+      // this just maps the iterator to an index so that density and temperature can be 
+      // easily identified: 
+      if ( i->first == "density" )
+        iter_to_index.insert( make_pair( i->first, 0 )).first;
+      else if ( i->first == "temperature" )
+        iter_to_index.insert( make_pair( i->first, 1 )).first;
 
-                }
+    }
 
 
     CCVariable<double> arches_density; 
@@ -296,8 +296,8 @@ ColdFlow::getState( const ProcessorGroup* pc,
       // retrieve all depenedent variables from table
       for ( DepVarMap::iterator i = depend_storage.begin(); i != depend_storage.end(); ++i ){
 
-                                std::map< std::string, int>::iterator i_to_i = iter_to_index.find( i->first ); 
-                                double table_value = coldFlowMixing( iv, i_to_i->second ); 
+        std::map< std::string, int>::iterator i_to_i = iter_to_index.find( i->first ); 
+        double table_value = coldFlowMixing( iv, i_to_i->second ); 
 
         (*i->second.var)[c] = table_value;
 
@@ -305,7 +305,7 @@ ColdFlow::getState( const ProcessorGroup* pc,
           arches_density[c] = table_value; 
           if (d_MAlab)
             mpmarches_denmicro[c] = table_value; 
-                                }
+        }
       }
     }
 
@@ -386,8 +386,8 @@ ColdFlow::getState( const ProcessorGroup* pc,
           // now get state for boundary cell: 
           for ( DepVarMap::iterator i = depend_storage.begin(); i != depend_storage.end(); ++i ){
 
-                                                std::map< std::string, int>::iterator i_to_i = iter_to_index.find( i->first ); 
-                                                double table_value = coldFlowMixing( iv, i_to_i->second ); 
+            std::map< std::string, int>::iterator i_to_i = iter_to_index.find( i->first ); 
+            double table_value = coldFlowMixing( iv, i_to_i->second ); 
 
             (*i->second.var)[c] = table_value;
 
@@ -397,7 +397,7 @@ ColdFlow::getState( const ProcessorGroup* pc,
               //arches_density[c] = ghost_value; 
               if (d_MAlab)
                 mpmarches_denmicro[c] = table_value; 
-                                                }
+            }
           }
           iv.clear(); 
         }
@@ -430,7 +430,7 @@ ColdFlow::getState( const ProcessorGroup* pc,
   void 
 ColdFlow::sched_computeHeatLoss( const LevelP& level, SchedulerP& sched, const bool initialize_me, const bool calcEnthalpy )
 {
-        // nothing to do here. 
+  // nothing to do here. 
 }
 
 //--------------------------------------------------------------------------- 
@@ -439,7 +439,7 @@ ColdFlow::sched_computeHeatLoss( const LevelP& level, SchedulerP& sched, const b
   void 
 ColdFlow::sched_computeFirstEnthalpy( const LevelP& level, SchedulerP& sched )
 {
-        // nothing to do here. 
+  // nothing to do here. 
 }
 
 //--------------------------------------------------------------------------- 
@@ -498,36 +498,36 @@ ColdFlow::dummyInit( const ProcessorGroup* pc,
   }
 }
 
-double
+  double
 ColdFlow::coldFlowMixing( std::vector<double>& iv, int pos )
 {
 
   double value = iv[0] * d_stream[pos][0] + ( 1 - iv[0] ) * d_stream[pos][1]; 
-        return value; 
+  return value; 
 
 }
 
 double ColdFlow::getTableValue( std::vector<double> iv, std::string variable )
 {
 
-        if ( variable == "density" ){ 
+  if ( variable == "density" ){ 
 
-                int pos = 0; 
-                double value = coldFlowMixing( iv, pos );  
-                return value; 
+    int pos = 0; 
+    double value = coldFlowMixing( iv, pos );  
+    return value; 
 
-        } else if ( variable == "temperature" ) { 
+  } else if ( variable == "temperature" ) { 
 
-                int pos = 1; 
-                double value = coldFlowMixing( iv, pos );  
-                return value; 
+    int pos = 1; 
+    double value = coldFlowMixing( iv, pos );  
+    return value; 
 
-        } else { 
+  } else { 
 
-                // a bit dangerous?
-                //
-                double value = 0;
-                return value; 
+    // a bit dangerous?
+    //
+    double value = 0;
+    return value; 
 
-        }
+  }
 }

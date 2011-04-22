@@ -57,12 +57,17 @@ This code checks for the following tags/attributes in the input file:
 The UPS interface is: 
 
 \code
-<ColdFlowMixingModel            spec="OPTIONAL NO_DATA" >
-  <Stream                       spec="MULTIPLE NO_DATA" >
-    <density                    spec="REQUIRED DOUBLE 'positive'" />
-    <temperature                spec="REQUIRED DOUBLE 'positive'" />
-  </Stream>
-</ColdFlowMixingModel>
+<ColdFlow                       spec="OPTIONAL NO_DATA" >
+  <mixture_fraction_label       spec="REQUIRED STRING"/>
+  <Stream_1                     spec="MULTIPLE NO_DATA">
+    <density                    spec="REQUIRED DOUBLE 'positive'"/>
+    <temperature                spec="REQUIRED DOUBLE 'positive'"/>
+  </Stream_1>
+  <Stream_2                     spec="MULTIPLE NO_DATA">
+    <density                    spec="REQUIRED DOUBLE 'positive'"/>
+    <temperature                spec="REQUIRED DOUBLE 'positive'"/>
+  </Stream_2>
+</ColdFlow>
 \endcode
 
  * If you have trouble reading your table, you can "setenv SCI_DEBUG TABLE_DEBUG:+" to get a 
