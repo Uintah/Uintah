@@ -160,6 +160,7 @@ WARNING
     ProblemSpecP d_params;
     const Material* d_matl0;
     const Material* d_matl1;
+    const Material* d_matl2;
     SimulationStateP d_sharedState;   
 
     ICELabel* Ilb;
@@ -169,7 +170,7 @@ WARNING
     MaterialSubset* d_one_matl;
    
 
-    string fromMaterial, toMaterial;
+    string fromMaterial, toMaterial, burnMaterial;
     // Detonation Model
     double d_G;
     double d_b;
