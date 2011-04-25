@@ -72,6 +72,7 @@
       <ActEnergyCondPh        spec="OPTIONAL DOUBLE" />
       <BoundaryParticles      spec="OPTIONAL INTEGER" />
       <BurnCoeff              spec="OPTIONAL DOUBLE" />
+      <burnMaterial           spec="OPTIONAL STRING" /> <!-- FIXME: really optional?  default? [P,p]roduct? -->
       <BurnrateModCoef        spec="OPTIONAL DOUBLE" />
       <CondPhaseHeat          spec="OPTIONAL DOUBLE" />
       <CondUnsteadyCoef       spec="OPTIONAL DOUBLE" />
@@ -163,7 +164,6 @@
       </table>
       <tableValue             spec="MULTIPLE STRING 'CO2, H2O, Temp, density'" />
       <toMaterial             spec="OPTIONAL STRING" /> <!-- FIXME: really optional?  default? [P,p]roduct? -->
-      <burnMaterial           spec="OPTIONAL STRING" /> <!-- FIXME: really optional?  default? [P,p]roduct? -->
       <ThresholdPressure      spec="OPTIONAL DOUBLE 'positive'" />
       <ThresholdvolFrac       spec="OPTIONAL DOUBLE 'positive'" />
       <ThresholdPressureJWL   spec="OPTIONAL DOUBLE 'positive'"/>
