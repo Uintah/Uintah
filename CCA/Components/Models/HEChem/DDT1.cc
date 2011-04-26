@@ -683,12 +683,13 @@ void DDT1::computeModelSources(const ProcessorGroup*,
           double minOverMax = MinMass/MaxMass;
           
           /* test whether the current cell satisfies burning criteria */
-          bool   burning = 0;
-          double maxProductVolFrac  = -1.0;
-          double maxReactantVolFrac = -1.0;
-          double productPress = 0.0;
-          double Tzero = 0.0;
-          double temp_vf = 0.0;      
+          bool   burning = 0;            // flag that indicates whether surface burning is occuring
+          double maxProductVolFrac  = -1.0;  // used for surface area calculation
+          double maxReactantVolFrac = -1.0;  // used for surface area calculation
+          double productPress = 0.0;     // the product pressure above the surface, used in WSB
+          double Tzero = 0.0;            // the temperature of the PBX in the cell, used in WSB
+          double temp_vf = 0.0;
+          bool temperatureExceeded = 0;  // tells whether the temperature in the cell exceeded the threshold regardless of surface burning
           /*if( (MaxMass-MinMass)/MaxMass>0.4 && (MaxMass-MinMass)/MaxMass<1.0 && pFlag[c]>0 ){ */
           /* near interface and containing particles */
           for(int i = -1; i<=1; i++){
@@ -717,7 +718,9 @@ void DDT1::computeModelSources(const ProcessorGroup*,
                       if(vol_frac_CC[m][cell] > 0.2 && temp_CC[m][cell] > ignitionTemp){
                         burning = 1;
                          break;
-                      } // endif ignited
+                      } else if(temp_CC[m][cell] > ignitionTemp) {
+                         temperatureExceeded = 1;
+                      }
                     } // end material for
                    } //endif
                  } // endif Surface Burning
@@ -782,8 +785,8 @@ void DDT1::computeModelSources(const ProcessorGroup*,
               double createdVolx  = burnedMass * rctSpvol[c];
               sp_vol_src_0[c]    -= createdVolx;
               sp_vol_src_2[c]    += createdVolx;
-          }  else if ((d_useCrackModel && (crackedEnough[c]))             // or if the bulk burning criteria is met.
-                       && !detLocalTo[c]) // if there is detonation in neighboring cell, don't burn
+          }  else if (!detLocalTo[c] &&    // escape early if there is a detonation next to the current cell 
+                      (d_useCrackModel && crackedEnough[c] && temperatureExceeded))
           {
               burningCell[c]=1.0;
               double solidMass = rctRho[c]/rctVolFrac[c];
