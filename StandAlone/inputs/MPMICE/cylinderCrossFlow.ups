@@ -30,12 +30,14 @@
     <!--____________________________________________________________________-->
     <Grid>
     <BoundaryConditions>
+<!--
       <LODI>
         <press_infinity> 1.01325e+05             </press_infinity>
         <sigma>          0.27                    </sigma>
         <material> atmosphere                    </material>
         <Li_scale>    0.1                        </Li_scale>
       </LODI>
+-->
 
       <!--  pseudo dye injection jet -->
       <Face circle = "x-" origin = "-0.1 0.0 0.0" radius = ".001">
@@ -57,9 +59,11 @@
         <BCType id = "1"    label = "Density"           var = "Dirichlet">
                               <value> 1.1792946927374306  </value>
         </BCType>
+<!--
         <BCType id = "all"  label = "SpecificVol"       var = "computeFromDensity">
                               <value> 0.0  </value>
         </BCType>
+-->
         <BCType id = "1"    label = "scalar-f"          var = "Dirichlet">
                               <value> 0.0</value>
         </BCType>
@@ -81,34 +85,39 @@
         <BCType id = "1"    label = "Density"           var = "Dirichlet">
                               <value> 1.1792946927374306  </value>
         </BCType>
+<!--
         <BCType id = "all"  label = "SpecificVol"       var = "computeFromDensity">
                               <value> 0.0  </value>
         </BCType>
+-->
         <BCType id = "1"    label = "scalar-f"          var = "Dirichlet">
                               <value> 0.0</value>
         </BCType>
       </Face>
       <Face side = "x+">
-        <BCType id = "0"    label = "Pressure"        var = "LODI">
-                              <value> 0.0   </value>
+        <BCType id = "0"    label = "Pressure"        var = "Dirichlet">
+                              <value> 101325.0   </value>
         </BCType>
-        <BCType id = "1"  label = "Velocity"          var = "LODI">
+        <BCType id = "all"  label = "Velocity"          var = "Neumann">
                               <value> [0.,0.,0.] </value>
         </BCType>
-        <BCType id = "1"  label = "Temperature"       var = "LODI">
+        <BCType id = "all"  label = "Temperature"       var = "Neumann">
                               <value> 0.0  </value>
         </BCType>
-        <BCType id = "1"  label = "Density"           var = "LODI">
+        <BCType id = "all"  label = "Density"           var = "Neumann">
                               <value> 0.0  </value>
         </BCType>
+<!--
         <BCType id = "1"  label = "SpecificVol"       var = "computeFromDensity">
                               <value> 0.0  </value>
         </BCType>
-        <BCType id = "1"    label = "scalar-f"        var = "Dirichlet">
+-->
+        <BCType id = "1"    label = "scalar-f"        var = "Neumann">
                               <value> 0.0</value>
         </BCType>
       </Face>
 
+<!--
       <Face side = "x+">
         <BCType id = "0"  label = "Velocity"          var = "Neumann">
                               <value> [0.,0.,0.] </value>
@@ -126,6 +135,7 @@
                               <value> 0.0</value>
         </BCType>
       </Face>
+-->
       
       <Face side = "y-">
         <BCType id = "0"    label = "Pressure"        var = "Neumann">
@@ -140,9 +150,11 @@
         <BCType id = "all" label = "Density"          var = "Neumann">
                               <value> 0.0  </value>
         </BCType>
+<!--
         <BCType id = "all" label = "SpecificVol"      var = "computeFromDensity">
                               <value> 0.0  </value>
         </BCType>
+-->
         <BCType id = "1"    label = "scalar-f"           var = "Dirichlet">
                               <value> 0.0</value>
         </BCType>
@@ -160,9 +172,11 @@
         <BCType id = "all" label = "Density"          var = "Neumann">
                               <value> 0.0  </value>
         </BCType>
+<!--
         <BCType id = "all" label = "SpecificVol"      var = "computeFromDensity">
                               <value> 0.0  </value>
         </BCType>
+-->
         <BCType id = "1"    label = "scalar-f"         var = "Dirichlet">
                               <value> 0.0</value>
         </BCType>
@@ -204,9 +218,11 @@
       <save label = "temp_CC"/>
       <save label = "delP_Dilatate"/>
       <save label = "scalar-f"/>
+<!--
       <save label = "rhs"/>
       <save label = "Li1"/>
       <save label = "Li5"/>
+-->
       <save label = "TotalMass"/>
       <save label = "TotalMomentum"/>
       <save label = "p.x"             levels = "-1"/>
@@ -342,6 +358,8 @@
     </MaterialProperties>
     <!--____________________________________________________________________-->
     <!--  Use passiveScalar model to advect a scalar around                -->
+<!--
+-->
     <Models>
        <Model type="PassiveScalar">
         <material>atmosphere</material>
