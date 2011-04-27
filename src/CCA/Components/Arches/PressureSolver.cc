@@ -87,8 +87,10 @@ PressureSolver::PressureSolver(ArchesLabel* label,
 // ****************************************************************************
 PressureSolver::~PressureSolver()
 {
-  // destroy A, x, and B
-  d_linearSolver->destroyMatrix();
+  if ( !d_always_construct_A ) { 
+    // destroy A, x, and B
+    d_linearSolver->destroyMatrix();
+  }
 
   if(d_perproc_patches && d_perproc_patches->removeReference())
     delete d_perproc_patches;
@@ -445,9 +447,11 @@ PressureSolver::pressureLinearSolve_all(const ProcessorGroup* pg,
   ArchesVariables pressureVars;
   int me = pg->myrank();
   // initializeMatrix...
-  if ( d_construct_solver_obj )  {
+  if ( d_construct_solver_obj && !d_always_construct_A )  {
     d_linearSolver->matrixCreate(d_perproc_patches, patches);
     d_construct_solver_obj = false; // deleted in the destructor
+  } else {
+    d_linearSolver->matrixCreate(d_perproc_patches, patches); 
   }
   for (int p = 0; p < patches->size(); p++) {
     const Patch *patch = patches->get(p);
@@ -511,6 +515,9 @@ PressureSolver::pressureLinearSolve_all(const ProcessorGroup* pg,
         throw InvalidValue("Projection can only be skipped for RK SSP methods",__FILE__, __LINE__); 
       }
     }
+  }
+  if ( d_always_construct_A ) { 
+    d_linearSolver->destroyMatrix(); 
   }
 }
 
