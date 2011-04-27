@@ -253,7 +253,7 @@
             <Properties>
                 <use_mixing_model>true</use_mixing_model>
                 <ClassicTable>
-                  <inputfile>inputs/ARCHES/ClassicTables/heptane/C7H16_flmlt_nonadiabatic.mix</inputfile>
+                  <inputfile>inputs/ARCHES/ClassicMixingTables/heptane/C7H16_flmlt_nonadiabatic.mix</inputfile>
                 </ClassicTable>
             </Properties>
             
