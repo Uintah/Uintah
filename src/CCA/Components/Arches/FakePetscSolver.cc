@@ -82,6 +82,15 @@ PetscSolver::setPressMatrix(const ProcessorGroup* ,
   throw InternalError("PetscSolver not configured", __FILE__, __LINE__);
 }
 
+void
+PetscSolver::setPressRHS( const ProcessorGroup * pc, 
+                          const Patch          * patch,
+                          ArchesVariables      * vars,
+                          ArchesConstVariables * constvars,
+                          const ArchesLabel    * lab )
+{
+  throw InternalError("setPressRHS(): PetscSolver not configured", __FILE__, __LINE__);
+}
 
 bool
 PetscSolver::pressLinearSolve()
