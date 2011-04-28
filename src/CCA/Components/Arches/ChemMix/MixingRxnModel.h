@@ -191,7 +191,7 @@ namespace Uintah {
       class CoalTransform : public TransformBase {
 
         public: 
-          CoalTransform(); 
+          CoalTransform( double constant ); 
           ~CoalTransform(); 
 
           bool problemSetup( const ProblemSpecP& ps, std::vector<std::string> names ){
@@ -232,7 +232,7 @@ namespace Uintah {
             double f = 0.0; 
             if ( iv[_index_2] < 1.0 ){
 
-              f = iv[_index_1] / ( 1.0 - iv[_index_2] ); 
+              f = ( iv[_index_1] - d_constant * iv[_index_2] ) / ( 1.0 - iv[_index_2] ); 
 
               if ( f < 0.0 )
                 f = 0.0;
@@ -242,6 +242,10 @@ namespace Uintah {
             iv[_index_1] = f; 
           
           }; 
+
+        private: 
+
+          double d_constant; 
       };
 
 

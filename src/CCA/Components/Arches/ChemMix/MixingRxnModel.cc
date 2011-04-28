@@ -148,5 +148,5 @@ MixingRxnModel::TransformBase::TransformBase(){}
 MixingRxnModel::TransformBase::~TransformBase(){}
 MixingRxnModel::NoTransform::NoTransform(){}
 MixingRxnModel::NoTransform::~NoTransform(){}
-MixingRxnModel::CoalTransform::CoalTransform(){}
+MixingRxnModel::CoalTransform::CoalTransform( double constant ) : d_constant(constant){}
 MixingRxnModel::CoalTransform::~CoalTransform(){}

@@ -113,6 +113,7 @@ ClassicTableInterface::problemSetup( const ProblemSpecP& propertiesParameters )
   // READ TABLE: 
   proc0cout << "----------Mixing Table Information---------------  " << endl;
   loadMixingTable( tableFileName );
+  checkForConstants( tableFileName );
   proc0cout << "-------------------------------------------------  " << endl;
 
   // Extract independent and dependent variables from input file
@@ -177,7 +178,16 @@ ClassicTableInterface::problemSetup( const ProblemSpecP& propertiesParameters )
 
   // create a transform object
   if ( db_classic->findBlock("coal") ) {
-    _iv_transform = scinew CoalTransform(); 
+    double constant = 0.0; 
+    _iv_transform = scinew CoalTransform( constant ); 
+  } else if ( db_classic->findBlock("acidbase") ) {
+    doubleMap::iterator iter = d_constants.find( "transform_constant" ); 
+    if ( iter == d_constants.end() ) {
+      throw ProblemSetupException( "Could not find transform_constant for the acid/base table.",__FILE__, __LINE__ ); 
+    } else { 
+      double constant = iter->second; 
+      _iv_transform = scinew CoalTransform( constant ); 
+    }
   } else { 
     _iv_transform = scinew NoTransform();
   }
@@ -1187,12 +1197,6 @@ ClassicTableInterface::loadMixingTable( const string & inputfile )
     throw ProblemSetupException("Unable to open the given input file: " + inputfile, __FILE__, __LINE__);
   }
 
-  //double not_used; 
-  //d_f_stoich       = getDouble( gzFp );
-  //d_H_fuel         = getDouble( gzFp );
-  //d_H_air          = getDouble( gzFp );
-  //not_used         = getDouble( gzFp );
-  //not_used         = getDouble( gzFp );
   d_indepvarscount = getInt(    gzFp );
 
   proc0cout << " Total number of independent variables: " << d_indepvarscount << endl;
@@ -1249,14 +1253,14 @@ ClassicTableInterface::loadMixingTable( const string & inputfile )
     i1 = vector<vector<double> >(0);
     i1[0] = vector<double>( d_allIndepVarNum[0] ); 
 
-  } else if ( d_indepvarscount == 2 ){ 
+  } else if ( d_indepvarscount == 2 ) { 
 
     i1 = vector<vector<double> >( d_allIndepVarNum[1] ); 
-    for ( int i = 0; i < d_varscount; i++ ){
+    for ( int i = 0; i < d_allIndepVarNum[1]; i++ ){
       i1[i] = vector<double>( d_allIndepVarNum[0] ); 
     }
 
-  } else if ( d_indepvarscount == 3 ){ 
+  } else if ( d_indepvarscount == 3 ) { 
 
     i1 = vector<vector<double> >( d_allIndepVarNum[2] ); 
     for ( int i = 0; i < d_allIndepVarNum[2]; i++ ){
@@ -1339,14 +1343,17 @@ ClassicTableInterface::loadMixingTable( const string & inputfile )
 
     for (int kk=0; kk< d_varscount; kk++){
 
-      for (int i = 0; i < d_allIndepVarNum[0]; i++){
-        double v = getDouble( gzFp ); 
-        i1[kk][i] = v;
-      }
+      for ( int mm = 0; mm < d_allIndepVarNum[1]; mm++ ){ 
 
-      for ( int jj = 0; jj < d_allIndepVarNum[1]; jj++ ){
-        for ( int ii = 0; ii < d_allIndepVarNum[0]; ii++ ){
-          table[kk][ii + jj*d_allIndepVarNum[0]] = getDouble( gzFp ); 
+        for (int i = 0; i < d_allIndepVarNum[0]; i++){
+          double v = getDouble( gzFp ); 
+          i1[mm][i] = v;
+        }
+
+        for ( int jj = 0; jj < d_allIndepVarNum[1]; jj++ ){
+          for ( int ii = 0; ii < d_allIndepVarNum[0]; ii++ ){
+            table[kk][ii + jj*d_allIndepVarNum[0]] = getDouble( gzFp ); 
+          }
         }
       }
     }
@@ -1387,4 +1394,75 @@ double ClassicTableInterface::getTableValue( std::vector<double> iv, std::string
   IndexMap::iterator i_index = d_enthalpyVarIndexMap.find( variable ); 
   double value    = tableLookUp( iv, i_index->second ); 
   return value; 
+}
+
+void ClassicTableInterface::checkForConstants( const string & inputfile ) { 
+
+  proc0cout << "\n Looking for constants in the header... " << endl;
+
+  gzFile gzFp = gzopen( inputfile.c_str(), "r" );
+
+  if( gzFp == NULL ) {
+    // If errno is 0, then not enough memory to uncompress file.
+    proc0cout << "Error with gz in opening file: " << inputfile << ". Errno: " << errno << "\n"; 
+    throw ProblemSetupException("Unable to open the given input file: " + inputfile, __FILE__, __LINE__);
+  }
+
+  bool look = true; 
+  while ( look ){ 
+
+    char ch = gzgetc( gzFp ); 
+
+    if ( ch == '#' ) { 
+
+      char key = gzgetc( gzFp );
+
+      if ( key == 'K' ) {
+        for (int i = 0; i < 3; i++ ){
+          key = gzgetc( gzFp ); // reading the word KEY and space
+        }
+
+        string name; 
+        while ( true ) {
+          key = gzgetc( gzFp ); 
+          if ( key == '=' ) { 
+            break; 
+          }
+          name.push_back( key );  // reading in the token's key name
+        }
+
+        string value_s; 
+        while ( true ) { 
+          key = gzgetc( gzFp ); 
+          if ( key == '\n' || key == '\t' || key == ' ' ) { 
+            break; 
+          }
+          value_s.push_back( key ); // reading in the token's value
+        }
+
+        double value; 
+        sscanf( value_s.c_str(), "%lf", &value );
+
+        proc0cout << " KEY found: " << name << " = " << value << endl;
+
+        d_constants.insert( make_pair( name, value ) ); 
+
+      } else { 
+        while ( true ) { 
+          ch = gzgetc( gzFp ); // skipping this line
+          if ( ch == '\n' || ch == '\t' ) { 
+            break; 
+          }
+        }
+      }
+
+    } else {
+
+      look = false; 
+
+    }
+  }
+
+  // Closing the file pointer
+  gzclose( gzFp );
 }
