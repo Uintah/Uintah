@@ -186,8 +186,10 @@ public:
 
   typedef std::map<string, DepVarCont >       DepVarMap;
   typedef std::map<string, int >               IndexMap; 
+  typedef std::map<string, double >           doubleMap; 
 
-        double getTableValue( std::vector<double>, std::string ); 
+  double getTableValue( std::vector<double>, std::string ); 
+
 
 protected :
 
@@ -212,11 +214,15 @@ private:
   IndexMap d_depVarIndexMap;              ///< Reference to the integer location of the variable
   IndexMap d_enthalpyVarIndexMap;         ///< Referece to the integer location of variables for heat loss calculation
 
+  doubleMap d_constants;                  ///< List of constants in table header
+
   std::vector<int>    d_allIndepVarNum;        ///< Vector storing the grid size for the Independant variables
   std::vector<string> d_allDepVarNames;        ///< Vector storing all dependent variable names from the table file
   std::vector<string> d_allDepVarUnits;        ///< Units for the dependent variables 
 
   vector<string> d_allUserDepVarNames;    ///< Vector storing all independent varaible names requested in input file
+
+  void checkForConstants( const string & inputfile );
 
   //previous Arches specific variables: 
   std::vector<std::vector<double> > i1; 
@@ -229,6 +235,7 @@ private:
     string name; 
     CCVariable<double> data; 
   };
+
 
   /// @brief Method to find the index for any dependent variable.  
   int inline findIndex( std::string name ){ 

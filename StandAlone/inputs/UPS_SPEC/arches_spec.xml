@@ -170,6 +170,9 @@
           <coal                         spec="OPTIONAL NO_DATA" 
                                         attribute1="fp_label REQUIRED STRING"     
                                         attribute2="eta_label REQUIRED STRING"/> <!-- Attributes must match the transported IVs specified in the TransportEqn node --> 
+          <acidbase                     spec="OPTIONAL NO_DATA" 
+                                        attribute1="fp_label REQUIRED STRING"     
+                                        attribute2="eta_label REQUIRED STRING"/> <!-- Attributes must match the transported IVs specified in the TransportEqn node --> 
         </ClassicTable>
 
         <emperical_soot               spec="OPTIONAL BOOLEAN" />
