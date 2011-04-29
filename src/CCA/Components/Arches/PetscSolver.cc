@@ -222,9 +222,7 @@ PetscSolver::matrixCreate(const PatchSet* perproc_patches,
 void 
 PetscSolver::setPressMatrix(const ProcessorGroup* ,
                             const Patch* patch,
-                            ArchesVariables* vars,
-                            ArchesConstVariables* constvars,
-                            const ArchesLabel*)
+                            ArchesConstVariables* constvars)
 {
   int ierr = 0;
   int col[7];
@@ -277,11 +275,10 @@ PetscSolver::setPressMatrix(const ProcessorGroup* ,
 // Fill linear parallel RHS
 // ****************************************************************************
 void 
-PetscSolver::setPressRHS(const ProcessorGroup* ,
-                         const Patch* patch,
-                         ArchesVariables* vars,
-                         ArchesConstVariables* constvars,
-                         const ArchesLabel*)
+PetscSolver::setRHS_X(const ProcessorGroup* ,
+                      const Patch* patch,
+                      ArchesVariables* vars,
+                      ArchesConstVariables* constvars)
 {
   double solve_start = Time::currentSeconds();
   int ierr;

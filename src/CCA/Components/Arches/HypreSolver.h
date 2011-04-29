@@ -97,15 +97,12 @@ public:
                             
   virtual void setPressMatrix(const ProcessorGroup* pc, 
                               const Patch* patch,
-                              ArchesVariables* vars,
-                              ArchesConstVariables* constvars,
-                              const ArchesLabel* lab);
+                              ArchesConstVariables* constvars);
 
-  virtual void setPressRHS(const ProcessorGroup* pc, 
-                           const Patch* patch,
-                           ArchesVariables* vars,
-                           ArchesConstVariables* constvars,
-                           const ArchesLabel* lab);
+  virtual void setRHS_X(const ProcessorGroup* pc, 
+                        const Patch* patch,
+                        ArchesVariables* vars,
+                        ArchesConstVariables* constvars);
 
   virtual bool pressLinearSolve();
   virtual void copyPressSoln(const Patch* patch, ArchesVariables* vars);

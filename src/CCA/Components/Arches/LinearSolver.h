@@ -110,15 +110,12 @@ public:
                             
   virtual void setPressMatrix(const ProcessorGroup* pc, 
                               const Patch* patch,
-                              ArchesVariables* vars,
-                              ArchesConstVariables* constvars,
-                              const ArchesLabel* lab) = 0;
+                              ArchesConstVariables* constvars) = 0;
 
-  virtual void setPressRHS(const ProcessorGroup* pc, 
-                           const Patch* patch,
-                           ArchesVariables* vars,
-                           ArchesConstVariables* constvars,
-                           const ArchesLabel* lab) = 0;
+  virtual void setRHS_X(const ProcessorGroup* pc, 
+                        const Patch* patch,
+                        ArchesVariables* vars,
+                        ArchesConstVariables* constvars) = 0;
 
 
   virtual bool pressLinearSolve() = 0;

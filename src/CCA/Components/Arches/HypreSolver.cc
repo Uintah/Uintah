@@ -294,9 +294,7 @@ HypreSolver::gridSetup(const ProcessorGroup*,
 void 
 HypreSolver::setPressMatrix(const ProcessorGroup* pc,
                             const Patch* patch,
-                            ArchesVariables* vars,
-                            ArchesConstVariables* constvars,
-                            const ArchesLabel*)
+                            ArchesConstVariables* constvars)
 { 
   gridSetup(pc, patch);
   /*-----------------------------------------------------------
@@ -348,11 +346,10 @@ HypreSolver::setPressMatrix(const ProcessorGroup* pc,
 // Fill linear parallel matrix
 // ****************************************************************************
 void 
-HypreSolver::setPressRHS(const ProcessorGroup* pc,
-                         const Patch* patch,
-                         ArchesVariables* vars,
-                         ArchesConstVariables* constvars,
-                         const ArchesLabel*)
+HypreSolver::setRHS_X(const ProcessorGroup* pc,
+                      const Patch* patch,
+                      ArchesVariables* vars,
+                      ArchesConstVariables* constvars)
 { 
   gridSetup(pc, patch);
    /*-----------------------------------------------------------
