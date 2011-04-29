@@ -155,16 +155,16 @@ private:
 
   /** @brief    Construct the A matrix (DenseMatrix) for the optimized DQMOM linear system */
   void constructAopt( DenseMatrix*   &AA,
-                      vector<double> &Abscissas);
+                      vector<int>    &Abscissas);
 
   /** @brief    Construct the coefficient matrix A (DenseMatrix) for the optimized DQMOM linear system */
   void constructAopt_unw( DenseMatrix*   &AA,
-                          vector<double> &Abscissas);
+                          vector<int>    &Abscissas);
 
   /** @brief    Construct the RHS vector (ColumnMatrix) for the optimized DQMOM linear system */
   void constructBopt( ColumnMatrix*  &BB,
                       vector<double> &weights,
-                      vector<double> &Abscissas,
+                      vector<int>    &Abscissas,
                       vector<double> &models);
 
   /** @brief    Do a quick calculation of the powers of optimal abscissas (possible because optimal abscissas have values of -1, 0, or 1)
@@ -202,7 +202,7 @@ private:
     
   /** @brief    Construct the RHS vector (ColumnMatrix) for the optimized DQMOM linear system using unweighted abscissas */
   void constructBopt_unw( ColumnMatrix*  &BB,
-                          vector<double> &Abscissas,
+                          vector<int>    &Abscissas,
                           vector<double> &models);
 
 
@@ -227,7 +227,7 @@ private:
   double d_w_small;
   double d_weight_scaling_constant;
   vector<double> d_abscissa_scaling_constants;
-  vector<double> d_opt_abscissas;
+  vector<int> d_opt_abscissas;
   DenseMatrix* AAopt;
 
   const VarLabel* d_normXLabel; 
