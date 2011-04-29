@@ -292,9 +292,9 @@ HypreSolver::gridSetup(const ProcessorGroup*,
 // Fill linear parallel matrix
 // ****************************************************************************
 void 
-HypreSolver::setPressMatrix(const ProcessorGroup* pc,
-                            const Patch* patch,
-                            ArchesConstVariables* constvars)
+HypreSolver::setMatrix(const ProcessorGroup* pc,
+                       const Patch* patch,
+                       constCCVariable<Stencil7>& coeff)
 { 
   gridSetup(pc, patch);
   /*-----------------------------------------------------------
@@ -325,10 +325,10 @@ HypreSolver::setPressMatrix(const ProcessorGroup* pc,
   
   for(CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
     IntVector c = *iter;
-    A[i]   = -constvars->pressCoeff[c].b; //[0,0,-1]
-    A[i+1] = -constvars->pressCoeff[c].s; //[0,-1,0]
-    A[i+2] = -constvars->pressCoeff[c].w; //[-1,0,0]
-    A[i+3] =  constvars->pressCoeff[c].p; //[0,0,0]
+    A[i]   = -coeff[c].b; //[0,0,-1]
+    A[i+1] = -coeff[c].s; //[0,-1,0]
+    A[i+2] = -coeff[c].w; //[-1,0,0]
+    A[i+3] =  coeff[c].p; //[0,0,0]
 
     i = i + d_stencilSize;
   }
@@ -348,8 +348,8 @@ HypreSolver::setPressMatrix(const ProcessorGroup* pc,
 void 
 HypreSolver::setRHS_X(const ProcessorGroup* pc,
                       const Patch* patch,
-                      ArchesVariables* vars,
-                      ArchesConstVariables* constvars)
+                      CCVariable<double>& guess,
+                      constCCVariable<double>& rhs)
 { 
   gridSetup(pc, patch);
    /*-----------------------------------------------------------
@@ -371,7 +371,7 @@ HypreSolver::setRHS_X(const ProcessorGroup* pc,
   i = 0;
   for(CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
     IntVector c = *iter;
-    B[i] = constvars->pressNonlinearSrc[c];
+    B[i] = rhs[c];
     i++;
   }
     
@@ -383,7 +383,7 @@ HypreSolver::setRHS_X(const ProcessorGroup* pc,
   i = 0;
   for(CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
     IntVector c = *iter;
-    X[i] = vars->pressure[c];
+    X[i] = guess[c];
     i++;
   }
     

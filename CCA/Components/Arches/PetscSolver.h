@@ -93,14 +93,14 @@ public:
   virtual void matrixCreate(const PatchSet* allpatches,
                             const PatchSubset* mypatches);
                             
-  virtual void setPressMatrix(const ProcessorGroup* pc, 
-                              const Patch* patch,
-                              ArchesConstVariables* constvars);
+  virtual void setMatrix(const ProcessorGroup* pc, 
+                         const Patch* patch,
+                         constCCVariable<Stencil7>& coeff);
 
   virtual void setRHS_X(const ProcessorGroup* pc, 
                         const Patch* patch,
-                        ArchesVariables* vars,
-                        ArchesConstVariables* constvars);
+                        CCVariable<double>& guess,
+                        constCCVariable<double>& rhs);
 
 
   virtual bool pressLinearSolve();
