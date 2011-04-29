@@ -32,6 +32,8 @@ TabRxnRate::problemSetup(const ProblemSpecP& inputdb)
   db->require("rxn_rate",_rxn_rate); 
 
   _source_type = CC_SRC; 
+
+	_table_lookup_species.push_back(_rxn_rate); 
 }
 //---------------------------------------------------------------------------
 // Method: Schedule the calculation of the source term 

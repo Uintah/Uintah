@@ -73,7 +73,11 @@ public:
   inline const vector<const VarLabel*> getExtraLocalLabels(){
     return _extra_local_labels; }; 
 
+	/** @brief Return the type of source (CC, FCX, etc... ) */
   inline MY_TYPE getSourceType(){ return _source_type; };
+
+	/** @brief Return the list of table lookup species needed for this source term */ 
+	inline std::vector<std::string> get_tablelookup_species(){ return _table_lookup_species; };  
 
   /** @brief Builder class containing instructions on how to build the property model */ 
   class Builder { 
@@ -99,9 +103,10 @@ protected:
   SimulationStateP& _shared_state;                   ///< Local copy of sharedState
   vector<std::string> _required_labels;              ///< Vector of required labels
   vector<const VarLabel*> _extra_local_labels;       ///< Extra labels that might be useful for storage
+	vector<std::string> _table_lookup_species;         ///< List of table lookup species
   MY_TYPE _source_type;                              ///< Source type
 
-                                          
+
 
 }; // end SourceTermBase
 }  // end namespace Uintah

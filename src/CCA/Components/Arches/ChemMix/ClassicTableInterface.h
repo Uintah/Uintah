@@ -190,6 +190,8 @@ public:
 
   double getTableValue( std::vector<double>, std::string ); 
 
+	void tableMatching(); 
+
 
 protected :
 

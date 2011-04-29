@@ -173,6 +173,9 @@
           <acidbase                     spec="OPTIONAL NO_DATA" 
                                         attribute1="fp_label REQUIRED STRING"     
                                         attribute2="eta_label REQUIRED STRING"/> <!-- Attributes must match the transported IVs specified in the TransportEqn node --> 
+          <acidbase                     spec="OPTIONAL NO_DATA" 
+                                        attribute1="fp_label REQUIRED STRING"     
+                                        attribute2="eta_label REQUIRED STRING"/> <!-- Attributes must match the transported IVs specified in the TransportEqn node --> 
         </ClassicTable>
 
         <emperical_soot               spec="OPTIONAL BOOLEAN" />
@@ -412,14 +415,28 @@
         <Sources                        spec="OPTIONAL NO_DATA">
           <src                          spec="MULTIPLE NO_DATA"
                                         attribute1="label REQUIRED STRING"
-                                        attribute2="type REQUIRED STRING 'coal_gas_devol, constant_src, 
-                                        westbrook_dryer, cc_inject_src, fx_inject_src, 
-                                        fy_inject_src, fz_inject_src, tab_rxn_rate, 
-                                        cc_intrusion_inlet, fx_intrusion_inlet, 
-                                        fy_intrusion_inlet, fz_intrusion_inlet'">
+                                        attribute2="type REQUIRED STRING 
+																				'constant_src, 
+                                        westbrook_dryer, 
+																				coal_gas_oxi, 
+																				coal_gas_heat, 
+																				coal_gas_devol, 
+																				coal_gas_momentum,
+																				cc_inject_src, 
+																				fx_inject_src, 
+                                        fy_inject_src, 
+																				fz_inject_src, 
+																				tab_rxn_rate, 
+                                        cc_intrusion_inlet, 
+																				fx_intrusion_inlet, 
+                                        fy_intrusion_inlet, 
+																				fz_intrusion_inlet'">
 
             <!-- Specs for coal gas devol model -->
             <devol_model_name           spec="OPTIONAL STRING" />
+
+						<!-- Spec for the heat transfer source --> 
+						<heat_model_name 					  spec="OPTIONAL STRING" />
 
             <!-- Tabulated reaction rate --> 
             <rxn_rate                   spec="OPTIONAL STRING" />

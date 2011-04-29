@@ -200,7 +200,9 @@ public:
 
   typedef std::map<string, DepVarCont >       DepVarMap;
 
-        double getTableValue( std::vector<double>, std::string ); 
+  double getTableValue( std::vector<double>, std::string ); 
+
+	void tableMatching(){}; 
 
 protected :
 

@@ -68,9 +68,9 @@ CoalGasHeat::sched_computeSource( const LevelP& level, SchedulerP& sched, int ti
     std::stringstream out; 
     out << iqn; 
     node = out.str(); 
-    weight_name += node; 
-    model_name += "_qn";
-    model_name += node; 
+    weight_name += node;
+    model_name  += "_qn";
+    model_name  += node;
 
     EqnBase& eqn = dqmomFactory.retrieve_scalar_eqn( weight_name );
 
