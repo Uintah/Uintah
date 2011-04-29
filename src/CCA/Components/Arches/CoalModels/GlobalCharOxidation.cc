@@ -316,7 +316,7 @@ GlobalCharOxidation::problemSetup(const ProblemSpecP& params)
 void
 GlobalCharOxidation::setPropertyLabels()
 {
-  proc0cout << endl << "Setting property labels for char oxidation model..." << endl;
+  proc0cout << endl << "Setting property labels for char oxidation model, environment " << d_quadNode << "..." << endl;
 
   d_MixingRxnModel->addAdditionalDV(oxidizer_name_);
 
