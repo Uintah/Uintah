@@ -200,10 +200,22 @@ namespace Uintah {
           bool problemSetup( const ProblemSpecP& ps, std::vector<std::string> names ){
             bool coal_table_on = false; 
             ProblemSpecP p = ps; 
+            bool doit = false; 
             if ( p->findBlock("coal") ){
 
               p->findBlock("coal")->getAttribute("fp_label", _index_1_name );
               p->findBlock("coal")->getAttribute("eta_label", _index_2_name ); 
+              doit = true; 
+
+            } else if ( p->findBlock("acidbase") ){
+
+              p->findBlock("acidbase")->getAttribute("fp_label", _index_1_name );
+              p->findBlock("acidbase")->getAttribute("eta_label", _index_2_name ); 
+              doit = true; 
+
+            } 
+
+            if ( doit ) { 
 
               _index_1 = -1; 
               _index_2 = -1; 
