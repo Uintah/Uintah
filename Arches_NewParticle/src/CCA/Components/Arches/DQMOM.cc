@@ -574,6 +574,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
 {
   double start_solveLinearSystemTime = Time::currentSeconds();
 #if !defined(VERIFY_LINEAR_SOLVER) && !defined(VERIFY_AB_CONSTRUCTION)
+  /*
   //cmr 
 
   // timing:
@@ -591,6 +592,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
   double total_MultiplicationTime = 0.0;
 
   int numtimesB = 0;
+  */
 
   bool do_iterative_refinement = false;
 #if defined(DEBUG_MATRICES)
@@ -606,7 +608,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
     int archIndex = 0;
     int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
-    double start_GetPutTime=Time::currentSeconds();//timing
+    //double start_GetPutTime=Time::currentSeconds();//timing
 
     // get/allocate normB label
     CCVariable<double> normB; 
@@ -662,7 +664,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
     }
     conditionNumber.initialize(0.0);
 
-    total_GetPutTime += (Time::currentSeconds() - start_GetPutTime);//timing
+    //total_GetPutTime += (Time::currentSeconds() - start_GetPutTime);//timing
 
     ////////////////////////////////////////////////////////
     // Put CCVariables associated with weights, weighted abscissas, 
@@ -804,13 +806,13 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
      
       if (b_optimize == true) {
 
-        double start_MatMultTime = Time::currentSeconds(); //timing
+        //double start_MatMultTime = Time::currentSeconds(); //timing
 
         ColumnMatrix* BB = scinew ColumnMatrix( dimension );
         ColumnMatrix* XX = scinew ColumnMatrix( dimension );
         BB->zero();
 
-        double start_ConstructionTime = Time::currentSeconds();
+        //double start_ConstructionTime = Time::currentSeconds();
 
         if(d_unweighted == true){
           constructBopt_unw( BB, d_opt_abscissas, models );
@@ -818,16 +820,16 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
           constructBopt( BB, weights, d_opt_abscissas, models );
         }
 
-        total_ConstructionTime += (Time::currentSeconds() - start_ConstructionTime);
-        ++numtimesB; //timing
+        //total_ConstructionTime += (Time::currentSeconds() - start_ConstructionTime);
+        //++numtimesB; //timing
 
-        double start_MultiplicationTime = Time::currentSeconds(); //timing
+        //double start_MultiplicationTime = Time::currentSeconds(); //timing
         Mult( (*XX), (*AAopt), (*BB) ); // AAopt is already inverted 
-        total_MultiplicationTime += (Time::currentSeconds() - start_MultiplicationTime); //timing
+        //total_MultiplicationTime += (Time::currentSeconds() - start_MultiplicationTime); //timing
 
-        total_MatMultTime += (Time::currentSeconds() - start_MatMultTime); //timing
+        //total_MatMultTime += (Time::currentSeconds() - start_MatMultTime); //timing
 
-        double start_OtherTime = Time::currentSeconds();
+        //double start_OtherTime = Time::currentSeconds();
 
         // norm of B
         double this_normB = 0;
@@ -927,7 +929,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
         }
 #endif
 
-        double start_OtherTime1 = Time::currentSeconds(); //timing
+        //double start_OtherTime1 = Time::currentSeconds(); //timing
 
         // Weights:
         for( vector< CCVariable<double>* >::iterator iter = weightSourceCCVars.begin();
@@ -944,9 +946,9 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
           ++z;
         }
 
-        total_OtherTime1 += (Time::currentSeconds() - start_OtherTime1); //timing
+        //total_OtherTime1 += (Time::currentSeconds() - start_OtherTime1); //timing
 
-        double start_OtherTime2 = Time::currentSeconds(); //timing
+        //double start_OtherTime2 = Time::currentSeconds(); //timing
 
         // Weighted abscissas:
         for( vector< CCVariable<double>* >::iterator iter = abscissaSourceCCVars.begin();
@@ -963,12 +965,12 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
           ++z;
         }
 
-        total_OtherTime2 += (Time::currentSeconds() - start_OtherTime2); //timing
+        //total_OtherTime2 += (Time::currentSeconds() - start_OtherTime2); //timing
 
         delete BB;
         delete XX;
       
-        total_OtherTime += (Time::currentSeconds() - start_OtherTime); //timing
+        //total_OtherTime += (Time::currentSeconds() - start_OtherTime); //timing
         
 
       } else if( b_useLapack == false ) {
@@ -982,22 +984,22 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
         vector<long double> Xlong( dimension, 0.0 );
         vector<double> Resid( dimension, 0.0 );
   
-        double start_AXBConstructionTime = Time::currentSeconds(); //timing
+        //double start_AXBConstructionTime = Time::currentSeconds(); //timing
   
         constructLinearSystem( A, B, weights, abscissas, models);
   
-        total_AXBConstructionTime += Time::currentSeconds() - start_AXBConstructionTime; //timing
+        //total_AXBConstructionTime += Time::currentSeconds() - start_AXBConstructionTime; //timing
   
         // Save original A before decomposition into LU
         LU Aorig( A );
   
-        double start_SolveTime = Time::currentSeconds(); //timing
+        //double start_SolveTime = Time::currentSeconds(); //timing
   
         // Solve linear system
         A.decompose();
         A.back_subs( &B[0], &Xdoub[0] );
   
-        total_SolveTime += (Time::currentSeconds() - start_SolveTime); //timing
+        //total_SolveTime += (Time::currentSeconds() - start_SolveTime); //timing
   
         for( unsigned int j=0; j < Xdoub.size(); ++j ) {
           Xlong[j] = Xdoub[j];
@@ -1027,13 +1029,13 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
         // -------------------------------------------------
         // If there is a solution to linear system...
         } else {
-          double start_SolveTime = Time::currentSeconds(); //timing
+          //double start_SolveTime = Time::currentSeconds(); //timing
           
           if( do_iterative_refinement ) {
             A.iterative_refinement( Aorig, &B[0], &Xdoub[0], &Xlong[0] );
           }
   
-          total_SolveTime += Time::currentSeconds() - start_SolveTime; //timing
+          //total_SolveTime += Time::currentSeconds() - start_SolveTime; //timing
   
           // get residual vector
           Aorig.getResidual( &B[0], &Xlong[0], &Resid[0] );
@@ -1198,11 +1200,11 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
   
         do_iterative_refinement = false;
   
-        double start_AXBConstructionTime = Time::currentSeconds(); //timing
+        //double start_AXBConstructionTime = Time::currentSeconds(); //timing
   
         constructLinearSystem( AA, BB, weights, abscissas, models ); 
   
-        total_AXBConstructionTime += Time::currentSeconds() - start_AXBConstructionTime; //timing
+        //total_AXBConstructionTime += Time::currentSeconds() - start_AXBConstructionTime; //timing
   
         // save original A before solving
         DenseMatrix* AAorig = AA->clone();
@@ -1229,9 +1231,9 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
           ColumnMatrix* XXsvd2 = scinew ColumnMatrix( dimension );
           Sinv->zero();
 
-          double start_SolveTime = Time::currentSeconds(); //timing
+          //double start_SolveTime = Time::currentSeconds(); //timing
           AAsvd->svd( *U, *S, *V );
-          total_SolveTime += ( Time::currentSeconds() - start_SolveTime); //timing
+          //total_SolveTime += ( Time::currentSeconds() - start_SolveTime); //timing
           conditionNumber_ = (S->a[0]/S->a[dimension-1]);
 
           for(int kk=0;kk<dimension;kk++){
@@ -1326,9 +1328,9 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
             SparseRowMatrix* S = scinew SparseRowMatrix( dimension, dimension, rows, cols, dimension, a); // makes an identity matrix
             DenseMatrix* V = scinew DenseMatrix( dimension, dimension );
 
-            double start_SVDTime = Time::currentSeconds(); //timing
+            //double start_SVDTime = Time::currentSeconds(); //timing
             AAsvd->svd( *U, *S, *V );
-            total_SVDTime += ( Time::currentSeconds() - start_SVDTime); //timing
+            //total_SVDTime += ( Time::currentSeconds() - start_SVDTime); //timing
             conditionNumber_ = (S->a[0]/S->a[dimension-1]);
 
             delete AAsvd;
@@ -1341,13 +1343,13 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
           }
 
           // Solve linear system
-          double start_SolveTime = Time::currentSeconds(); //timing
+          //double start_SolveTime = Time::currentSeconds(); //timing
           bool success = AA->invert();
           if (!success) {
             //proc0cout << "WARNING: Arches: DQMOM: A is singular at cell c = " << c << endl;
           }
           Mult( (*XX), (*AA), (*BB) );
-          total_SolveTime += (Time::currentSeconds() - start_SolveTime); //timing
+          //total_SolveTime += (Time::currentSeconds() - start_SolveTime); //timing
         } 
 
         conditionNumber[c] = conditionNumber_;
@@ -1581,7 +1583,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
 
     }//end for cells
 
-    double start_DeleteTime = Time::currentSeconds(); //timing
+    //double start_DeleteTime = Time::currentSeconds(); //timing
 
     // CCVariables were created using "scinew" so must be deleted using "delete"
     for( vector< constCCVariable<double>* >::iterator iter = weightCCVars.begin();
@@ -1610,7 +1612,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
       delete *iter;
     }
 
-    total_DeleteTime += (Time::currentSeconds() - start_DeleteTime); //timing
+    //total_DeleteTime += (Time::currentSeconds() - start_DeleteTime); //timing
 
   }//end per patch
 
@@ -1638,6 +1640,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
   proc0cout << "    Time for file write: " << total_FileWriteTime << " seconds\n";
 #endif
 
+  /*
   //cmr
   // for printing much more extensive timing info
 
@@ -1668,6 +1671,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
     proc0cout << "    Time for Crout's Method solution: " << total_SolveTime << " seconds\n";
 
   }
+  */
 
 #endif
 }
@@ -1792,7 +1796,7 @@ Construct the A matrix for the optimized linear system A* X = B*.
 */
 void
 DQMOM::constructAopt( DenseMatrix*   &AA,
-                      vector<double> &Abscissas)
+                      vector<int> &Abscissas)
 {
   for ( unsigned int k = 0; k < momentIndexes.size(); ++k) {
     MomentVector thisMoment = momentIndexes[k];
@@ -1859,7 +1863,7 @@ Construct the optimized B vector for the optimized linear system A* X = B*.
 void
 DQMOM::constructBopt( ColumnMatrix*  &BB,
                       vector<double> &weights,
-                      vector<double> &Abscissas,
+                      vector<int>    &Abscissas,
                       vector<double> &models)
 {
   // 0th moments
@@ -1908,70 +1912,6 @@ DQMOM::constructBopt( ColumnMatrix*  &BB,
 
 }
 
-/*
-void
-DQMOM::constructBopt( ColumnMatrix*  &BB,
-                      vector<double> &weights,
-                      vector<double> &Abscissas,
-                      vector<double> &models)
-{
-  for ( unsigned int k = 0; k < momentIndexes.size(); ++k) {
-    MomentVector thisMoment = momentIndexes[k];
-
-    // weighted abscissas
-    double totalsumS = 0;
-    for( unsigned int j = 0; j < N_xi; ++j ) {
-      double prefixS    = 1;
-      double productS   = 1;
-      double modelsumS  = 0;
-
-      double quadsumS = 0;
-      for( unsigned int alpha = 0; alpha < N_; ++alpha ) {
-        if (weights[alpha] == 0) {
-          prefixS = 0;
-          productS = 0;
-        } else if ( Abscissas[j*(N_)+alpha] == 0 && thisMoment[j] == 0) {
-          //FIXME:
-          // both prefixes contain 0^(-1)
-          prefixS = 0;
-        } else {
-          // Appendix C, C.11 (A_j+1 matrix)
-          double base = Abscissas[j*(N_)+alpha];
-          double exponent = thisMoment[j] - 1;
-
-          // Appendix C, C.16 (S matrix)
-          prefixS = -(thisMoment[j])*(pow(base, exponent));
-          productS = 1;
-
-          // calculate product containing all internal coordinates except j
-          for (unsigned int n = 0; n < N_xi; ++n) {
-            if (n != j) {
-              // the if statements checking these same conditions (above) are only
-              // checking internal coordinate j, so we need them again for internal
-              // coordinate n
-              if (weights[alpha] == 0) {
-                productS = 0;
-              } else {
-                double base2 = Abscissas[n*(N_)+alpha];
-                double exponent2 = thisMoment[n];
-                productS = productS*( pow(base2, exponent2));
-              }//end divide by zero conditionals
-            }
-          }//end int coord n
-        }//end divide by zero conditionals
-
-
-        modelsumS = - models[j*(N_)+alpha];
-        quadsumS = quadsumS + weights[alpha]*modelsumS*prefixS*productS;
-      }//end quad nodes
-      totalsumS = totalsumS + quadsumS;
-    }//end int coords j sub-matrix
-
-    (*BB)[k] = totalsumS;
-  } // end moments
-}
-*/
-
 /** 
 @details
 Construct the A matrix for the DQMOM linear system AX=B given a set of matrices that use Lapack, DenseMatrix and ColumnMatrix.
@@ -1979,7 +1919,7 @@ This constructs A given a vector<double> of unweighted abscissas.
 */
 void
 DQMOM::constructAopt_unw( DenseMatrix*   &AA,
-                          vector<double> &Abscissas)
+                          vector<int> &Abscissas)
 {
   for ( unsigned int k = 0; k < momentIndexes.size(); ++k) {
     MomentVector thisMoment = momentIndexes[k];
@@ -2044,7 +1984,7 @@ This constructs B given a vector<double> of unweighted abscissas.
 */
 void
 DQMOM::constructBopt_unw( ColumnMatrix*  &BB,
-                          vector<double> &Abscissas,
+                          vector<int> &Abscissas,
                           vector<double> &models)
 {
 
@@ -2071,7 +2011,7 @@ DQMOM::constructBopt_unw( ColumnMatrix*  &BB,
     // It was previously calculated inside the quad nodes loop, but this was
     // repetitive and costly. Moving it outside the loop greatly improves speed 
     // (approx. factor of 5)
-    vector<int> innerProduct(N_,0.0);                                
+    vector<int> innerProduct(N_,0); 
     for( unsigned int alpha = 0; alpha < N_; ++alpha ) {             
       int tempProduct = 1;
       for( unsigned int n = 0; n < N_xi; ++n ) {
@@ -2082,9 +2022,7 @@ DQMOM::constructBopt_unw( ColumnMatrix*  &BB,
 
     double totalsumS = 0;
     for( unsigned int j = 0; j < N_xi; ++j ) {
-      double modelSum = 0;
       double Sstuff;
-
       // this is the improved way...
       for( unsigned int alpha = 0; alpha < N_; ++alpha ) {
         // Note: this is faster if all the optimal abscissas are non-zero (i.e. +1 or -1)
