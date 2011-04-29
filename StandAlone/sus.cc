@@ -180,7 +180,7 @@ usage( const std::string & message,
       cerr << "Valid options are:\n";
       cerr << "-h[elp]              : This usage information.\n";
       cerr << "-AMR                 : use AMR simulation controller\n";
-      cerr << "-nthreads <#>        : Only good with MixedScheduler\n";
+      cerr << "-nthreads <#>        : number of threads per MPI process, require a multi-thread scheduler\n";
       cerr << "-layout NxMxO        : Eg: 2x1x1.  MxNxO must equal number\n";
       cerr << "                           of boxes you are using.\n";
       cerr << "-emit_taskgraphs     : Output taskgraph information\n";
@@ -327,6 +327,8 @@ main( int argc, char *argv[], char *env[] )
               arg, argv[0]);
       }
       numThreads = atoi(argv[i]);
+      if ( numThreads< 2 || numThreads>32 ) 
+        usage("number of threads is out of range 2...32", arg, argv[0]);
       Uintah::Parallel::setMaxThreads(numThreads);
     } else if(arg == "-threadmpi"){
       //used threaded mpi (this option is handled in MPI_Communicator.cc  MPI_Init_thread

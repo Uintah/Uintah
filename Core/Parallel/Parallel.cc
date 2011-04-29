@@ -99,6 +99,7 @@ Parallel::getMaxThreads()
 void
 Parallel::setMaxThreads( int maxNumThreads )
 {
+  
    ::maxThreads = maxNumThreads;
    //::allowThreads = true;
 }
@@ -256,7 +257,7 @@ Parallel::initializeManager(int& argc, char**& argv)
      SCIRun::AllocatorMallocStatsAppendNumber(worldRank);
 #endif
      rootContext = scinew ProcessorGroup(0, worldComm, true,
-					 worldRank,worldSize);
+					 worldRank,worldSize, ::maxThreads);
 
      if(rootContext->myrank() == 0){
        cout << "Parallel: " << rootContext->size() 
@@ -269,7 +270,7 @@ Parallel::initializeManager(int& argc, char**& argv)
      //MPI_Errhandler_set(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
    } else {
      worldRank = 0;
-     rootContext = scinew ProcessorGroup(0,0, false, 0, 1);
+     rootContext = scinew ProcessorGroup(0,0, false, 0, 1, 0);
    }
 }
 

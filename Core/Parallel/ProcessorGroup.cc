@@ -30,15 +30,34 @@ DEALINGS IN THE SOFTWARE.
 
 
 #include <Core/Parallel/ProcessorGroup.h>
+#include <Core/Thread/Thread.h>
+#include   <iostream>
+
 
 using namespace Uintah;
+using std::cerr;
+using SCIRun::Thread;
 
 ProcessorGroup::ProcessorGroup(const ProcessorGroup* parent,
 			       MPI_Comm comm, bool allmpi,
-			       int rank, int size)
-   : d_parent(parent), d_rank(rank), d_size(size),
-     d_comm(comm), d_allmpi(allmpi)
+			       int rank, int size, int threads)
+   : d_parent(parent), d_rank(rank), d_size(size),  d_threads(threads),
+     d_comm(comm),  d_allmpi(allmpi)
 {
+  int status;
+  if (d_threads > 0){
+    d_gComms.resize(d_threads);
+    for (int i=0; i< d_threads; i++){
+     if((status=MPI_Comm_dup(comm, &d_gComms[i])) != MPI_SUCCESS){
+       /*char string_name[1000];
+       int resultlen=1000;
+       MPI_Error_string(status, string_name, &resultlen);
+       cerr << "MPI Error in MPI_Comm_dup: " << string_name << '\n';*/
+       cerr << "MPI Error in MPI_Comm_dup\n" ;
+       Thread::exitAll(1);
+     }
+    }
+  }
 }
 
 ProcessorGroup::~ProcessorGroup()

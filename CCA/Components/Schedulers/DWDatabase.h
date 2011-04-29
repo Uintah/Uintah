@@ -358,6 +358,8 @@ inline
 Variable*
 DWDatabase<DomainType>::get( const VarLabel* label, int matlIndex, const DomainType* dom ) const
 {
+  VarLabelMatl<DomainType> v(label, matlIndex, getRealDomain(dom));
+  ASSERT(vars.count(v) == 1 ) // should call getlist() on possible foregin vars
   const DataItem& dataItem = getDataItem(label, matlIndex, dom);
   ASSERT(dataItem.var != 0); // should have thrown an exception before
   return dataItem.var;

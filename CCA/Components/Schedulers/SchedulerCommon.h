@@ -223,6 +223,8 @@ WARNING
     const set<string>& getCopyDataVars() { return copyDataVars_;}
 
     virtual bool useInternalDeps();
+    
+    const VarLabel * reloc_new_posLabel_;
   protected:
     void finalizeTimestep();
     
@@ -260,7 +262,6 @@ WARNING
     int numTasks_;
     int d_generation;
 
-    const VarLabel * reloc_new_posLabel_;
 
     SimulationStateP d_sharedState;
 
