@@ -191,7 +191,7 @@ TabPropsInterface::problemSetup( const ProblemSpecP& propertiesParameters )
   if ( db_tabprops->findBlock("coal") ) {
     double constant = 0.0; 
     _iv_transform = scinew CoalTransform( constant ); 
-  } else if ( db_tabprops->findBlock("acidbase") { 
+  } else if ( db_tabprops->findBlock("acidbase") ) { 
       throw ProblemSetupException( "Acid base transform not implemented yet for TabProps",__FILE__,__LINE__); 
   } else { 
     _iv_transform = scinew NoTransform();
