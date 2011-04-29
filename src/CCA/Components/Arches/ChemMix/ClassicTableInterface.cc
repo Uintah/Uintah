@@ -204,7 +204,8 @@ ClassicTableInterface::problemSetup( const ProblemSpecP& propertiesParameters )
 
   // Match the requested dependent variables with their table index:
   getIndexInfo(); 
-  getEnthalpyIndexInfo();
+  if (!d_coldflow) 
+    getEnthalpyIndexInfo();
 }
 
 void ClassicTableInterface::tableMatching(){ 
