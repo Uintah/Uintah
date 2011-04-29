@@ -311,7 +311,7 @@ public:
    void recvMPI(DependencyBatch* batch, BufferInfo& buffer,
 	        OnDemandDataWarehouse* old_dw, const DetailedDep* dep, LoadBalancer* lb);
    void reduceMPI(const VarLabel* label, const Level* level,
-		  const MaterialSubset* matls);
+		  const MaterialSubset* matls, int nComm);
 
    // Scrub counter manipulator functions -- when the scrub count goes to
    // zero, the data is deleted

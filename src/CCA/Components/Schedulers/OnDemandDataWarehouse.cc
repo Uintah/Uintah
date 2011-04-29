@@ -142,6 +142,7 @@ OnDemandDataWarehouse::~OnDemandDataWarehouse()
 //
 void OnDemandDataWarehouse::clear()
 {
+   d_lock.writeLock();
   for (dataLocationDBtype::const_iterator iter = d_dataLocation.begin();
        iter != d_dataLocation.end(); iter++) {
     for (size_t i = 0; i<iter->second->size(); i++ )
@@ -171,6 +172,7 @@ void OnDemandDataWarehouse::clear()
   }
   d_varDB.clear();
   d_levelDB.clear();
+   d_lock.writeUnlock();
 }
 //__________________________________
 //
@@ -614,7 +616,6 @@ OnDemandDataWarehouse::recvMPI(DependencyBatch* batch,
       if(recvset->numParticles() > 0 && !(lb && lb->getOldProcessorAssignment(0, patch, 0) == d_myworld->myrank() && this == old_dw)){
         var->getMPIBuffer(buffer, recvset);
       }
-
     }
     break;
   case TypeDescription::NCVariable:
@@ -651,7 +652,8 @@ OnDemandDataWarehouse::recvMPI(DependencyBatch* batch,
 void
 OnDemandDataWarehouse::reduceMPI(const VarLabel* label,
                                  const Level* level,
-                                 const MaterialSubset* inmatls)
+                                 const MaterialSubset* inmatls,
+                                 int nComm)
 {
   const MaterialSubset* matls;
   if(!inmatls){
@@ -668,7 +670,7 @@ OnDemandDataWarehouse::reduceMPI(const VarLabel* label,
   MPI_Op op = MPI_OP_NULL;
   MPI_Datatype datatype = MPI_DATATYPE_NULL;
 
-  d_lock.readLock();
+  d_lock.writeLock();
   for(int m=0;m<nmatls;m++){
     int matlIndex = matls->get(m);
 
@@ -709,11 +711,13 @@ OnDemandDataWarehouse::reduceMPI(const VarLabel* label,
     }
     count += sendcount;
   }
+   d_lock.writeUnlock();
   int packsize;
-  MPI_Pack_size(count, datatype, d_myworld->getComm(), &packsize);
+  MPI_Pack_size(count, datatype, d_myworld->getgComm(nComm), &packsize);
   vector<char> sendbuf(packsize);
 
   int packindex=0;
+  d_lock.readLock();
   for(int m=0;m<nmatls;m++){
     int matlIndex = matls->get(m);
 
@@ -737,7 +741,7 @@ OnDemandDataWarehouse::reduceMPI(const VarLabel* label,
 
   mpidbg << d_myworld->myrank() << " allreduce, name " << label->getName() << " level " << (level?level->getID():-1) << endl;
   int error = MPI_Allreduce(&sendbuf[0], &recvbuf[0], count, datatype, op,
-                            d_myworld->getComm());
+                            d_myworld->getgComm(nComm));
 
   mpidbg << d_myworld->myrank() << " allreduce, done " << label->getName() << " level " << (level?level->getID():-1) << endl;
   if( mixedDebug.active() ) {
@@ -766,9 +770,9 @@ OnDemandDataWarehouse::reduceMPI(const VarLabel* label,
     }
     var->putMPIData(recvbuf, unpackindex);
   }
-  d_lock.writeUnlock();
   if(matls != inmatls)
     delete matls;
+  d_lock.writeUnlock();
 }
 //______________________________________________________________________
 //
@@ -1545,6 +1549,7 @@ OnDemandDataWarehouse:: allocateTemporary(GridVariableBase& var,
                                           Ghost::GhostType gtype, 
                                           int numGhostCells )
 {
+ d_lock.writeLock();  
   IntVector boundaryLayer(0, 0, 0); // Is this right?
 
   MALLOC_TRACE_TAG_SCOPE("OnDemandDataWarehouse::allocateTemporary(Grid Variable)");
@@ -1557,6 +1562,7 @@ OnDemandDataWarehouse:: allocateTemporary(GridVariableBase& var,
   patch->computeExtents(basis, boundaryLayer, lowOffset, highOffset,lowIndex, highIndex);
 
   var.allocate(lowIndex, highIndex);
+ d_lock.writeUnlock();  
 }
 //______________________________________________________________________
 //
@@ -1840,10 +1846,12 @@ void OnDemandDataWarehouse::copyOut(GridVariableBase& var,
                                     int numGhostCells)
 {
   MALLOC_TRACE_TAG_SCOPE("OnDemandDataWarehouse::copyOut(Grid Variable):" + label->getName());
+ d_lock.readLock();
   GridVariableBase* tmpVar = var.cloneType();
   getGridVar(*tmpVar, label, matlIndex, patch, gtype, numGhostCells);
   var.copyData(tmpVar);
   delete tmpVar;
+ d_lock.readUnlock();
 }
 //______________________________________________________________________
 //
@@ -1856,11 +1864,13 @@ OnDemandDataWarehouse::getCopy(GridVariableBase& var,
                                int numGhostCells)
 {
   MALLOC_TRACE_TAG_SCOPE("OnDemandDataWarehouse::getCopy(Grid Variable):" + label->getName());
+ d_lock.readLock();
   GridVariableBase* tmpVar = var.cloneType();
   getGridVar(*tmpVar, label, matlIndex, patch, gtype, numGhostCells);
   var.allocate(tmpVar);
   var.copyData(tmpVar);
   delete tmpVar;
+ d_lock.readUnlock();
 }
 
 
@@ -1875,9 +1885,9 @@ OnDemandDataWarehouse::put(GridVariableBase& var,
 {
   MALLOC_TRACE_TAG_SCOPE("OnDemandDataWarehouse::put(Grid Variable):" + label->getName());
   ASSERT(!d_finalized);
+ d_lock.writeLock();  
   Patch::VariableBasis basis = Patch::translateTypeToBasis(label->typeDescription()->getType(), false);
   ASSERTEQ(basis, Patch::translateTypeToBasis(var.virtualGetTypeDescription()->getType(), true));    
- d_lock.writeLock();  
 
  checkPutAccess(label, matlIndex, patch, replace);
 
@@ -1933,10 +1943,10 @@ OnDemandDataWarehouse::put(PerPatchBase& var,
 {
   MALLOC_TRACE_TAG_SCOPE("OnDemandDataWarehouse::put(Per Patch Variable):" + label->getName());
   ASSERT(!d_finalized);  
+  d_lock.writeLock();
   //checkPutAccess(label, replace);
   checkPutAccess(label, matlIndex, patch, replace);
   
-  d_lock.writeLock();
 
    // Error checking
    if(!replace && d_varDB.exists(label, matlIndex, patch))
@@ -1958,6 +1968,7 @@ OnDemandDataWarehouse::getRegion(constGridVariableBase& constVar,
                                  bool useBoundaryCells /*=true*/)
 {
   MALLOC_TRACE_TAG_SCOPE("OnDemandDataWarehouse::getRegion(Grid Variable):" + label->getName());
+  d_lock.writeLock();
   GridVariableBase* var = constVar.cloneType();
   var->allocate(low, high);
   Patch::VariableBasis basis = Patch::translateTypeToBasis(label->typeDescription()->getType(), false);
@@ -1984,7 +1995,6 @@ OnDemandDataWarehouse::getRegion(constGridVariableBase& constVar,
   IntVector tmpHigh(high+adjustment);
   level->selectPatches(tmpLow, tmpHigh, patches);
   
-  d_lock.readLock();
   int totalCells=0;
   for(int i=0;i<patches.size();i++){
     const Patch* patch = patches[i];
@@ -2063,7 +2073,7 @@ OnDemandDataWarehouse::getRegion(constGridVariableBase& constVar,
 
   constVar = *dynamic_cast<GridVariableBase*>(var);
   delete var;
-  d_lock.readUnlock();
+  d_lock.writeUnlock();
  
 }
 //______________________________________________________________________

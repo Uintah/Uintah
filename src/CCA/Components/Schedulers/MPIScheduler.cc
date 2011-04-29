@@ -355,11 +355,11 @@ MPIScheduler::runReductionTask( DetailedTask         * task )
   ASSERT(!mod->next);
   
   OnDemandDataWarehouse* dw = dws[mod->mapDataWarehouse()].get_rep();
-  dw->reduceMPI(mod->var, mod->reductionLevel, mod->matls);
+  dw->reduceMPI(mod->var, mod->reductionLevel, mod->matls, task->getTask()->d_phase);
   task->done(dws);
 
-  taskdbg << d_myworld->myrank() << " Completed: \t";
-  printTask(taskdbg, task); taskdbg << '\n';
+  cerrLock.lock(); taskdbg << d_myworld->myrank() << " Completed: \t";
+  printTask(taskdbg, task); taskdbg << '\n'; cerrLock.unlock();
 
 }
 

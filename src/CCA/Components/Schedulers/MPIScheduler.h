@@ -158,13 +158,15 @@ WARNING
         }
       }
     }
+    mpi_timing_info_s     mpi_info_;
+    MPIScheduler* parentScheduler;
+    // Performs the reduction task. (In Mixed, gives the task to a thread.)    
+    virtual void initiateReduction( DetailedTask          * task );    
   protected:
     // Runs the task. (In Mixed, gives the task to a thread.)
     virtual void initiateTask( DetailedTask          * task,
 			       bool only_old_recvs, int abort_point, int iteration);
 
-    // Performs the reduction task. (In Mixed, gives the task to a thread.)    
-    virtual void initiateReduction( DetailedTask          * task );    
 
     // Waits until all tasks have finished.  In the MPI Scheduler,
     // this is basically a nop, for the mixed, it talks to the ThreadPool 
@@ -174,11 +176,9 @@ WARNING
     virtual void verifyChecksum();
     MessageLog log;
 
-    MPIScheduler* parentScheduler;
 
     Output*       oport_;
 
-    mpi_timing_info_s     mpi_info_;
     CommRecMPI            sends_;
     CommRecMPI            recvs_;
 
