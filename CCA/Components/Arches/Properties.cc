@@ -2322,3 +2322,10 @@ Properties::addLookupSpecies( ){
     }
   }
 }
+
+void 
+Properties::doTableMatching(){ 
+
+	d_mixingRxnTable->tableMatching(); 
+
+}

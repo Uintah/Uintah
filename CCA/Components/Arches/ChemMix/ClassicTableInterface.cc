@@ -199,12 +199,18 @@ ClassicTableInterface::problemSetup( const ProblemSpecP& propertiesParameters )
   // Confirm that table has been loaded into memory
   d_table_isloaded = true;
 
+  proc0cout << "--- End Classic Arches table information --- " << endl;
+  proc0cout << endl;
+
   // Match the requested dependent variables with their table index:
   getIndexInfo(); 
   getEnthalpyIndexInfo();
+}
 
-  proc0cout << "--- End Classic Arches table information --- " << endl;
-  proc0cout << endl;
+void ClassicTableInterface::tableMatching(){ 
+  // Match the requested dependent variables with their table index:
+	// Must do this again in case a source or model added more species -- 
+  getIndexInfo(); 
 }
 
 //--------------------------------------------------------------------------- 

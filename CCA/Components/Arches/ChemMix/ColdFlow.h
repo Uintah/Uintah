@@ -154,7 +154,9 @@ public:
   /** @brief A temporary solution to deal with boundary conditions on properties until Properties.cc is eliminated */ 
   void oldTableHack( const InletStream& inStream, Stream& outStream, bool calcEnthalpy, const string bc_type ){};
 
-        double getTableValue( std::vector<double>, std::string ); 
+  double getTableValue( std::vector<double>, std::string ); 
+
+	void tableMatching(){}; 
 
 protected :
 

@@ -225,7 +225,9 @@ public:
 
   void sched_initEnthalpy( const LevelP&, SchedulerP& ); 
 
-  void sched_doTPDummyInit( const LevelP&, SchedulerP& ); 
+  void sched_doTPDummyInit( const LevelP&, SchedulerP& );
+
+	void doTableMatching(); 
 
 protected :
 

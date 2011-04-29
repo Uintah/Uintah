@@ -126,6 +126,9 @@ namespace Uintah {
       /** @brief Returns the value of a single variable given the iv vector 
        * This will be useful for other classes to have access to */
       virtual double getTableValue( std::vector<double>, std::string ) = 0; 
+			
+			/** @brief For efficiency: Matches tables lookup species with pointers/index/etc */
+			virtual void tableMatching() = 0; 
 
       /** @brief Return a reference to the independent variables */
       inline const VarMap getIVVars(){ return d_ivVarMap; }; 
