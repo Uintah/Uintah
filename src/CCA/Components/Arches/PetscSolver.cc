@@ -220,9 +220,9 @@ PetscSolver::matrixCreate(const PatchSet* perproc_patches,
      See the matrix chapter of the users manual for details.
      */
 void 
-PetscSolver::setPressMatrix(const ProcessorGroup* ,
-                            const Patch* patch,
-                            ArchesConstVariables* constvars)
+PetscSolver::setMatrix(const ProcessorGroup* ,
+                       const Patch* patch,
+                       constCCVariable<Stencil7>& coeff)
 {
   int ierr = 0;
   int col[7];
@@ -256,13 +256,13 @@ PetscSolver::setPressMatrix(const ProcessorGroup* ,
         col[5] = l2g[IntVector(colX,  colY+1, colZ)];   // an
         col[6] = l2g[IntVector(colX,  colY,   colZ+1)]; // at
         
-        value[0] = -constvars->pressCoeff[c].b;
-        value[1] = -constvars->pressCoeff[c].s;
-        value[2] = -constvars->pressCoeff[c].w;
-        value[3] =  constvars->pressCoeff[c].p;
-        value[4] = -constvars->pressCoeff[c].e;
-        value[5] = -constvars->pressCoeff[c].n;
-        value[6] = -constvars->pressCoeff[c].t;
+        value[0] = -coeff[c].b;
+        value[1] = -coeff[c].s;
+        value[2] = -coeff[c].w;
+        value[3] =  coeff[c].p;
+        value[4] = -coeff[c].e;
+        value[5] = -coeff[c].n;
+        value[6] = -coeff[c].t;
         int row = col[3];
         ierr = MatSetValues(A,1,&row,7,col,value,INSERT_VALUES);
         if(ierr)
@@ -277,8 +277,8 @@ PetscSolver::setPressMatrix(const ProcessorGroup* ,
 void 
 PetscSolver::setRHS_X(const ProcessorGroup* ,
                       const Patch* patch,
-                      ArchesVariables* vars,
-                      ArchesConstVariables* constvars)
+                      CCVariable<double>& guess,
+                      constCCVariable<double>& rhs)
 {
   double solve_start = Time::currentSeconds();
   int ierr;
@@ -303,8 +303,8 @@ PetscSolver::setRHS_X(const ProcessorGroup* ,
       for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
         IntVector c(colX, colY, colZ);
         
-        vecvalueb = constvars->pressNonlinearSrc[c];
-        vecvaluex = vars->pressure[c];
+        vecvalueb = rhs[c];
+        vecvaluex = guess[c];
         int row = l2g[c];   
         
         ierr = VecSetValue(d_b, row, vecvalueb, INSERT_VALUES);

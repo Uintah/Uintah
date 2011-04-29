@@ -567,9 +567,9 @@ PressureSolver::pressureLinearSolve(const ProcessorGroup* pc,
   // get patch numer ***warning****
   // sets matrix
   if ( d_construct_A ) { 
-    d_linearSolver->setPressMatrix(pc, patch, &constPressureVars); 
+    d_linearSolver->setMatrix(pc, patch, constPressureVars.pressCoeff); 
   }
-  d_linearSolver->setRHS_X(pc, patch,&pressureVars, &constPressureVars);
+  d_linearSolver->setRHS_X(pc, patch,pressureVars.pressure, constPressureVars.pressNonlinearSrc);
 
 }
 
