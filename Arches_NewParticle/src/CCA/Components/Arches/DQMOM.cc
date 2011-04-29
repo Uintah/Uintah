@@ -2069,7 +2069,7 @@ DQMOM::constructBopt_unw( ColumnMatrix*  &BB,
     // This is a product common to several terms (see FORMULA 2), with the exception
     // of needing to be multiplied and divided by two terms (FORMULA 1).
     // It was previously calculated inside the quad nodes loop, but this was
-    // repetitive. Moving it outside the loop greatly improves speed 
+    // repetitive and costly. Moving it outside the loop greatly improves speed 
     // (approx. factor of 5)
     vector<int> innerProduct(N_,0.0);                                
     for( unsigned int alpha = 0; alpha < N_; ++alpha ) {             
@@ -2089,14 +2089,14 @@ DQMOM::constructBopt_unw( ColumnMatrix*  &BB,
       for( unsigned int alpha = 0; alpha < N_; ++alpha ) {
         // Note: this is faster if all the optimal abscissas are non-zero (i.e. +1 or -1)
         if( Abscissas[j*(N_)+alpha] != 0 ) {
-          Sstuff = innerProduct[alpha]*( -thisMoment[j] )*(1.0 / Abscissas[j*(N_)+alpha]);
+          Sstuff = innerProduct[alpha]*( -thisMoment[j] )*(1.0 / Abscissas[j*(N_)+alpha]); // FORMULA 1
           totalsumS += -models[j*(N_)+alpha]*Sstuff;
         } else {
           // If any optimal abscissas are 0, the "common product" calculated above will usually be wrong,
           // and must be calculated.
           // This is how the calculation was being done before, and so is slow, but since this is only done
           // when the optimal abscissas are 0, it still saves time.
-          Sstuff = -(thisMoment[j])*(my_pow(Abscissas[j*(N_)+alpha], thisMoment[j]-1)); // FORMULA 1
+          Sstuff = -(thisMoment[j])*(my_pow(Abscissas[j*(N_)+alpha], thisMoment[j]-1));
           for (unsigned int n = 0; n < N_xi; ++n) {
             if (n != j) {
               Sstuff *= my_pow(Abscissas[n*(N_)+alpha], thisMoment[n]); // FORMULA 2
