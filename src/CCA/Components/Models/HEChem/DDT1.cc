@@ -718,26 +718,31 @@ void DDT1::computeModelSources(const ProcessorGroup*,
                       if(vol_frac_CC[m][cell] > 0.2 && temp_CC[m][cell] > ignitionTemp){
                         burning = 1;
                          break;
-                      } else if(temp_CC[m][cell] > ignitionTemp) {
-                         temperatureExceeded = 1;
                       }
                     } // end material for
                    } //endif
                  } // endif Surface Burning
- 
+                 else if(d_useCrackModel){
                  // Used to prevent cracked burning right next to a detonating cell
                  //  as it has caused a speedup phenomenon at the front of the 
                  //  detonation front
-                 if(d_useCrackModel){
                    // Detect detonation within one cell
                    if( press_CC[cell] > d_threshold_press_JWL || 
                        (crackedEnough[cell] && previousDetLocal[cell])) {
                      detLocalTo[c] = 1;
-                   } // endif
-                 } // endif detonating local to
-               }//end 3rd for
-            }//end 2nd for
-          }//end 1st for
+                   } // end if detonation next to cell
+
+                   // make sure the temperature exceeded value is set
+                   for (int m = 0; m < numAllMatls; m++){
+                     if(vol_frac_CC[m][cell] > 0.2 && temp_CC[m][cell] > ignitionTemp){
+                        temperatureExceeded = 1;
+                         break;
+                      } // end if for temperature test
+                   } // end material for
+                 } // end crack burning if
+               }//end 3rd for (z)
+            }//end 2nd for (y)
+          }//end 1st for (x)
 
           // Burn mass if necessary
           if(burning == 1 && productPress >= d_thresholdPress_SB)  // burning occurs if either the surface burning criteria is met...
