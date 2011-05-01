@@ -722,16 +722,17 @@ void DDT1::computeModelSources(const ProcessorGroup*,
                     } // end material for
                    } //endif
                  } // endif Surface Burning
-                 else if(d_useCrackModel){
-                 // Used to prevent cracked burning right next to a detonating cell
-                 //  as it has caused a speedup phenomenon at the front of the 
-                 //  detonation front
-                   // Detect detonation within one cell
-                   if( press_CC[cell] > d_threshold_press_JWL || 
-                       (crackedEnough[cell] && previousDetLocal[cell])) {
-                     detLocalTo[c] = 1;
-                   } // end if detonation next to cell
 
+                 // Used to prevent cracked burning right next to a detonating cell
+                 //  as it has caused a speedup phenomenon at the front of the
+                 //  detonation front
+                 // Detect detonation within one cell
+                 if( press_CC[cell] > d_threshold_press_JWL) {
+                   detLocalTo[c] = 1;
+                 } // end if detonation next to cell
+
+
+                 if(d_useCrackModel){
                    // make sure the temperature exceeded value is set
                    for (int m = 0; m < numAllMatls; m++){
                      if(vol_frac_CC[m][cell] > 0.2 && temp_CC[m][cell] > ignitionTemp){
@@ -745,7 +746,7 @@ void DDT1::computeModelSources(const ProcessorGroup*,
           }//end 1st for (x)
 
           // Burn mass if necessary
-          if(burning == 1 && productPress >= d_thresholdPress_SB)  // burning occurs if either the surface burning criteria is met...
+          if(!detLocalTo[c] && (burning == 1 && productPress >= d_thresholdPress_SB) )  // burning occurs if either the surface burning criteria is met...
   	  {
 
               burningCell[c]=1.0;
@@ -761,8 +762,7 @@ void DDT1::computeModelSources(const ProcessorGroup*,
               burnedMass = computeBurnedMass(Tzero, Tsurf, productPress,
                                   rctSpvol[c], surfArea, delT,
                                   solidMass);
-             
-
+            
               // Clamp burned mass to total convertable mass in cell
               if(burnedMass + MIN_MASS_IN_A_CELL > solidMass){
                  burnedMass = solidMass - MIN_MASS_IN_A_CELL;
