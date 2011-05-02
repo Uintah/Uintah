@@ -75,6 +75,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Math/Matrix3.h>
 
 #include <StandAlone/tools/puda/asci.h>
+#include <StandAlone/tools/puda/monica1.h>
 #include <StandAlone/tools/puda/jim1.h>
 #include <StandAlone/tools/puda/jim2.h>
 #include <StandAlone/tools/puda/AA_MMS.h>
@@ -128,6 +129,7 @@ usage( const std::string& badarg, const std::string& progname )
   cerr << "  -brief - Makes varsummary print out a subset of information.\n";
   cerr << "  -jim1\n";
   cerr << "  -jim2\n";
+  cerr << "  -monica1  - Finds the maximum pressure in the domain.\n";
   cerr << "  -AA_MMS\n";
   cerr << "  -partvar <variable name>\n";
   cerr << "  -asci\n";
@@ -277,6 +279,8 @@ main(int argc, char** argv)
       clf.do_varsummary = true;
     } else if(s == "-brief" ) {
       clf.be_brief = true;
+    } else if(s == "-monica1"){
+      clf.do_monica1 = true;
     } else if(s == "-jim1"){
       clf.do_jim1 = true;
     } else if(s == "-jim2"){
@@ -452,6 +456,10 @@ main(int argc, char** argv)
     //              V A R S U M M A R Y   O P T I O N
     if(clf.do_varsummary){
       varsummary( da, clf, mat );
+    }
+
+    if( clf.do_monica1 ){
+      monica1( da, clf );
     }
 
     if( clf.do_jim1 ){
