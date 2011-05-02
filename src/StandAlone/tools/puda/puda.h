@@ -42,6 +42,7 @@ namespace Uintah {
     bool do_listvars;
     bool do_varsummary;
     bool be_brief;
+    bool do_monica1;
     bool do_jim1;
     bool do_AA_MMS;
     bool do_jim2;
