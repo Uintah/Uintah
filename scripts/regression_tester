@@ -230,7 +230,7 @@ echo "Using the >> $DIR << gold standard directory."
 
 # Set up the various test cases
 
-mpm_test_cases="disks2mat4patch heatcond2mat inclined_plane_sphere foam_crush periodic_disks const_test_hypo const_test_cmr const_test_nhp const_test_vs adiCuJC4000s696K adiCuMTS4000s696K adiCuPTW4000s696K adiCuSCG4000s696K adiCuZA4000s696K test_corrug_plate test_cyl_pene_no_ero test_gurson_beckerdrucker_mts"
+mpm_test_cases="disks2mat4patch heatcond2mat inclined_plane_sphere foam_crush periodic_disks const_test_hypo const_test_cmr const_test_nhp const_test_vs adiCuJC4000s696K adiCuMTS4000s696K adiCuPTW4000s696K adiCuSCG4000s696K adiCuZA4000s696K test_corrug_plate test_cyl_pene_no_ero test_gurson_beckerdrucker_mts advect_3L_3D"
 mpmf_test_cases="regressionFMPM"
 ice_test_cases="advect riemann_sm impHotBlob hotBlob2mat hotBlob2mat_sym hotBlob2mat8patch"
 ice_amr_test_cases="hotBlob_AMR advect2matAMR"
@@ -340,6 +340,11 @@ run_test () {
     elif [ $n = "periodic_disks" ]; then
 	cp $in_file .
 	numproc=1
+	opts=""
+    elif [ $n = "advect_3L_3D" ]; then
+	cp $in_file .
+	numproc=1
+        do_restart=0
 	opts=""
     else
         cp $in_file .
