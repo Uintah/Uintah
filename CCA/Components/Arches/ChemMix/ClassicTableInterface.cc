@@ -1103,8 +1103,8 @@ ClassicTableInterface::tableLookUp( std::vector<double> iv, int var_index)
 
     for ( int index=0; index < d_allIndepVarNum[0]-1; index++ ) {
 
-      df1 = i1[var_index][index]   - iv[0];
-      df2 = i1[var_index][index+1] - iv[0];
+      df1 = i1[nhl_lo][index]   - iv[0];
+      df2 = i1[nhl_lo][index+1] - iv[0];
 
       if((df1*df2) == 0.0 && index != 0){
 

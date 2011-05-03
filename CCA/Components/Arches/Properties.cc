@@ -185,6 +185,7 @@ Properties::problemSetup(const ProblemSpecP& params)
     // New TabPropsInterface stuff...
     d_mixingRxnTable = scinew TabPropsInterface( d_lab, d_MAlab );
     d_mixingRxnTable->problemSetup( db ); 
+    d_reactingFlow    = d_mixingRxnTable->is_not_cold(); 
     // At this time, these all need to be false:
     d_co_output       = false;
     if (d_sulfur_chem) {
@@ -207,21 +208,24 @@ Properties::problemSetup(const ProblemSpecP& params)
     d_mixingRxnTable->problemSetup( db ); 
     // At this time, these all need to be false:
     d_co_output       = false;
+    d_reactingFlow    = d_mixingRxnTable->is_not_cold(); 
+
     if (d_sulfur_chem) {
-      proc0cout << "Warning!: The old sulfur_chem boolean is not compatible with TabProps.  I am going to set it to false. " << endl;
+      proc0cout << "Warning!: The old sulfur_chem boolean is not compatible with ClassicTable.  I am going to set it to false. " << endl;
       d_sulfur_chem     = false;
     }
     if (d_soot_precursors) {
-      proc0cout << "Warning!: The soot_precursors boolean is not compatible with TabProps.  I am going to set it to false. " << endl; 
+      proc0cout << "Warning!: The soot_precursors boolean is not compatible with ClassicTable.  I am going to set it to false. " << endl; 
       d_soot_precursors = false;
     }
     if (d_tabulated_soot) {
-      proc0cout << "Warning!: The tabulated soot mechanism (tabulated_soot) is not active yet when using TabProps.  I am going to set it to false. " << endl;
+      proc0cout << "Warning!: The tabulated soot mechanism (tabulated_soot) is not active yet when using ClassicTable.  I am going to set it to false. " << endl;
       d_tabulated_soot  = false;
     }
 	} else if (mixModel == "ColdFlow") {
 		d_mixingRxnTable = scinew ColdFlow( d_lab, d_MAlab ); 
 		d_mixingRxnTable->problemSetup( db ); 
+    d_reactingFlow = false;
   }
   else if (mixModel == "pdfMixingModel" || mixModel == "SteadyFlameletsTable"
         || mixModel == "flameletModel"  || mixModel == "StaticMixingTable"
