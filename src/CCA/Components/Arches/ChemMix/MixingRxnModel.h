@@ -159,6 +159,11 @@ namespace Uintah {
         return; 
       };
 
+      /** @brief Returns false if flow is changing temperature */ 
+      // In other words, is temperature changing? 
+      // The strange logic is to make the logic less confusing in Properties.cc
+      bool is_not_cold(){ if (d_coldflow){ return false; }else{ return true; }};
+
     protected :
 
       class TransformBase { 
@@ -257,6 +262,7 @@ namespace Uintah {
             iv[_index_1] = f; 
           
           }; 
+
 
         private: 
 
