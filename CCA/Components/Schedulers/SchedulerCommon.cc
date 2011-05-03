@@ -892,7 +892,8 @@ SchedulerCommon::logMemoryUse()
       name=const_cast<char*>("NewDW");
     else
       name=const_cast<char*>("IntermediateDW");
-    dws[i]->logMemoryUse(*memlogfile, total, name);
+    if (dws[i])
+    	dws[i]->logMemoryUse(*memlogfile, total, name);
   }
   
   for (unsigned i = 0; i < graphs.size(); i++) {
