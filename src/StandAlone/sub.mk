@@ -130,31 +130,28 @@ else
     PSELIBS := Packages/Uintah
   else
     PSELIBS := \
-        Core/Containers   \
-        Core/Exceptions   \
-        Core/Geometry     \
-        Core/Math         \
-        Core/Persistent   \
-        Core/Thread       \
-        Core/Util         \
-        Core/DataArchive  \
-        Core/Disclosure   \
-        Core/Exceptions   \
-        Core/GeometryPiece\
-        Core/Grid         \
-        Core/Labels       \
-        Core/Math         \
-        Core/OS           \
-        Core/Parallel     \
-        Core/Tracker      \
-        Core/Util         \
-        CCA/Ports         \
+        Core/Containers    \
+        Core/DataArchive   \
+        Core/Disclosure    \
+        Core/Exceptions    \
+        Core/Geometry      \
+        Core/GeometryPiece \
+        Core/Grid          \
+        Core/Labels        \
+        Core/Math          \
+        Core/OS            \
+        Core/Parallel      \
+        Core/Persistent    \
+        Core/ProblemSpec   \
+        Core/Thread        \
+        Core/Tracker       \
+        Core/Util          \
+        CCA/Ports          \
         CCA/Components/Parent               \
         CCA/Components/Models               \
         CCA/Components/DataArchiver         \
         CCA/Components/LoadBalancers        \
         CCA/Components/Regridder            \
-        Core/ProblemSpec                    \
         CCA/Components/SimulationController \
         CCA/Components/Schedulers           \
         CCA/Components/ProblemSpecification \
