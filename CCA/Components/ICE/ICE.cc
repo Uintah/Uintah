@@ -5904,38 +5904,7 @@ IntVector ICE::upwindCell_Z(const IntVector& c,
   IntVector tmp = c + IntVector(0,0,one_or_zero);
   return tmp;
 }
-/*_____________________________________________________________________
- Function~  ICE::areAllValuesPositive--
- _____________________________________________________________________  */
-bool ICE::areAllValuesPositive( CCVariable<double> & src, IntVector& neg_cell )
-{ 
-  double numCells = 0;
-  double sum_src = 0;
-  int sumNan = 0;
-  IntVector l = src.getLowIndex();
-  IntVector h = src.getHighIndex();
-  CellIterator iterLim = CellIterator(l,h);
-  
-  for(CellIterator iter=iterLim; !iter.done();iter++) {
-    IntVector c = *iter;
-    sumNan += isnan(src[c]);       // check for nans
-    sum_src += src[c]/(fabs(src[c]) + d_SMALL_NUM);
-    numCells++;
-  }
 
-  // now find the first cell where the value is < 0   
-  if ( (fabs(sum_src - numCells) > 1.0e-2) || sumNan !=0) {
-    for(CellIterator iter=iterLim; !iter.done();iter++) {
-      IntVector c = *iter;
-      if (src[c] < 0.0 || isnan(src[c]) !=0) {
-        neg_cell = c;
-        return false;
-      }
-    }
-  } 
-  neg_cell = IntVector(0,0,0); 
-  return true;      
-} 
 //______________________________________________________________________
 //  Models
 ICE::ICEModelSetup::ICEModelSetup()

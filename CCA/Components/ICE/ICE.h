@@ -51,6 +51,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/Variables/SFCXVariable.h>
 #include <Core/Grid/Variables/SFCYVariable.h>
 #include <Core/Grid/Variables/SFCZVariable.h>
+#include <Core/Grid/Variables/Utils.h>
 #include <Core/Labels/ICELabel.h>
 #include <Core/Labels/MPMICELabel.h>
 #include <Core/Parallel/UintahParallelComponent.h>
@@ -800,9 +801,6 @@ namespace Uintah {
                                            FastMatrix& H,
                                            IntVector & c,
                                            StaticArray<constCCVariable<double> >& mass  );
-                                           
-      bool areAllValuesPositive( CCVariable<double> & src, 
-                                 IntVector& neg_cell );
                                                                        
       IntVector upwindCell_X(const IntVector& c, 
                              const double& var,              

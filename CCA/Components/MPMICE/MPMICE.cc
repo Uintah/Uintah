@@ -52,6 +52,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/Variables/NodeIterator.h>
 #include <Core/Grid/Variables/SoleVariable.h>
 #include <Core/Grid/Variables/VarTypes.h>
+#include <Core/Grid/Variables/Utils.h>
 #include <Core/Grid/DbgOutput.h>
 #include <Core/Labels/ICELabel.h>
 #include <Core/Labels/MPMICELabel.h>
@@ -1082,17 +1083,17 @@ void MPMICE::actuallyInitialize(const ProcessorGroup*,
       //    B U L L E T   P R O O F I N G
       IntVector neg_cell;
       ostringstream warn;
-      if( !d_ice->areAllValuesPositive(rho_CC, neg_cell) ) {
+      if( !areAllValuesPositive(rho_CC, neg_cell) ) {
         warn<<"ERROR MPMICE::actuallyInitialize, mat "<<indx<< " cell "
             <<neg_cell << " rho_CC is negative\n";
         throw ProblemSetupException(warn.str(), __FILE__, __LINE__ );
       }
-      if( !d_ice->areAllValuesPositive(Temp_CC, neg_cell) ) {
+      if( !areAllValuesPositive(Temp_CC, neg_cell) ) {
         warn<<"ERROR MPMICE::actuallyInitialize, mat "<<indx<< " cell "
             <<neg_cell << " Temp_CC is negative\n";
         throw ProblemSetupException(warn.str(), __FILE__, __LINE__ );
       }
-      if( !d_ice->areAllValuesPositive(sp_vol_CC, neg_cell) ) {
+      if( !areAllValuesPositive(sp_vol_CC, neg_cell) ) {
         warn<<"ERROR MPMICE::actuallyInitialize, mat "<<indx<< " cell "
             <<neg_cell << " sp_vol_CC is negative\n";
         throw ProblemSetupException(warn.str(), __FILE__, __LINE__ );
@@ -1334,19 +1335,19 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
       
       int L = getLevel(patches)->getIndex();
       if(d_testForNegTemps_mpm){
-        if (!d_ice->areAllValuesPositive(Temp_CC, neg_cell) && !tsr) {
+        if (!areAllValuesPositive(Temp_CC, neg_cell) && !tsr) {
           warn <<"ERROR MPMICE:("<< L<<"):interpolateNCToCC_0, mat "<< indx 
                <<" cell "
                << neg_cell << " Temp_CC " << Temp_CC[neg_cell] << "\n ";
           throw InvalidValue(warn.str(), __FILE__, __LINE__);
         }
       }
-      if (!d_ice->areAllValuesPositive(rho_CC, neg_cell) && !tsr) {
+      if (!areAllValuesPositive(rho_CC, neg_cell) && !tsr) {
         warn <<"ERROR MPMICE:("<< L<<"):interpolateNCToCC_0, mat "<< indx 
              <<" cell " << neg_cell << " rho_CC " << rho_CC[neg_cell]<< "\n ";
         throw InvalidValue(warn.str(), __FILE__, __LINE__);
       }
-      if (!d_ice->areAllValuesPositive(sp_vol_CC, neg_cell) && !tsr) {
+      if (!areAllValuesPositive(sp_vol_CC, neg_cell) && !tsr) {
         warn <<"ERROR MPMICE:("<< L<<"):interpolateNCToCC_0, mat "<< indx 
              <<" cell "
              << neg_cell << " sp_vol_CC " << sp_vol_CC[neg_cell]<<"\n ";
@@ -1527,7 +1528,7 @@ void MPMICE::computeLagrangianValuesMPM(const ProcessorGroup*,
       bool tsr = new_dw->timestepRestarted();
       
       if(d_testForNegTemps_mpm){
-        if (!d_ice->areAllValuesPositive(int_eng_L, neg_cell) && !tsr) {
+        if (!areAllValuesPositive(int_eng_L, neg_cell) && !tsr) {
           int L = getLevel(patches)->getIndex();
           warn <<"ERROR MPMICE:("<< L<<"):computeLagrangianValuesMPM, mat "
                << indx<<" cell "
@@ -2673,17 +2674,17 @@ MPMICE::refine(const ProcessorGroup*,
       //    B U L L E T   P R O O F I N G
       IntVector neg_cell;
       ostringstream warn;
-      if( !d_ice->areAllValuesPositive(rho_CC, neg_cell) ) {
+      if( !areAllValuesPositive(rho_CC, neg_cell) ) {
         warn<<"ERROR MPMICE::actuallyInitialize, mat "<<dwi<< " cell "
             <<neg_cell << " rho_CC is negative\n";
         throw ProblemSetupException(warn.str(), __FILE__, __LINE__ );
       }
-      if( !d_ice->areAllValuesPositive(Temp_CC, neg_cell) ) {
+      if( !areAllValuesPositive(Temp_CC, neg_cell) ) {
         warn<<"ERROR MPMICE::actuallyInitialize, mat "<<dwi<< " cell "
             <<neg_cell << " Temp_CC is negative\n";
         throw ProblemSetupException(warn.str(), __FILE__, __LINE__ );
       }
-      if( !d_ice->areAllValuesPositive(sp_vol_CC, neg_cell) ) {
+      if( !areAllValuesPositive(sp_vol_CC, neg_cell) ) {
         warn<<"ERROR MPMICE::actuallyInitialize, mat "<<dwi<< " cell "
             <<neg_cell << " sp_vol_CC is negative\n";
         throw ProblemSetupException(warn.str(), __FILE__, __LINE__ );
