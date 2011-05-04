@@ -242,6 +242,8 @@
 
         <PressureBC                     spec="OPTIONAL NO_DATA" >
           <mixture_fraction             spec="REQUIRED DOUBLE 'positive'" />
+          <mixture_fraction_2           spec="OPTIONAL DOUBLE" />
+          <heat_loss                    spec="OPTIONAL DOUBLE" />
           <geom_object/>
           <ExtraScalars                  spec="OPTIONAL NO_DATA">
             <scalar                      spec="MULTIPLE NO_DATA"
@@ -253,6 +255,8 @@
 
         <OutletBC                       spec="OPTIONAL NO_DATA" >
           <mixture_fraction             spec="REQUIRED DOUBLE 'positive'" />
+          <mixture_fraction_2           spec="OPTIONAL DOUBLE" />
+          <heat_loss                    spec="OPTIONAL DOUBLE" />
           <geom_object/>
           <ExtraScalars                  spec="OPTIONAL NO_DATA">
             <scalar                      spec="MULTIPLE NO_DATA"
