@@ -52,6 +52,8 @@ DEALINGS IN THE SOFTWARE.
 using std::cerr;
 using namespace Uintah;
 
+//#define Comer
+#undef Comer
 
 // Constructors //
 //////////////////
@@ -1152,7 +1154,14 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
       pdTdt[idx] = 0.0;
       // Initialize velocity gradient
       Matrix3 velGrad_new(0.0);
-      
+
+#ifdef Comer
+      // gcd change to set shear = pcolor for each particle
+      if(flag->d_with_color) {
+          shear = pcolor[idx];
+      }
+#endif
+
       if(!flag->d_axisymmetric){
         // Get the node indices that surround the cell
         interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,pSize[idx],

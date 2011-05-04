@@ -317,6 +317,3 @@ IsoHardeningPlastic::evalDerivativeWRTAlpha(const PlasticityState* ,
 {
   return d_CM.K;
 }
-
-
-
