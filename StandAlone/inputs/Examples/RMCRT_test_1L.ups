@@ -22,9 +22,9 @@
       <Box label = "0">                              
          <lower>      [0,0,0]     </lower>         
          <upper>      [1, 1, 1]   </upper>         
-         <resolution> [10,10,10]  </resolution>    
+         <resolution> [41,41,41]  </resolution>    
          <patches>    [1,1,1]     </patches> 
-         <extraCells> [1,1,1]     </extraCells>      
+         <extraCells> [0,0,0]     </extraCells>      
       </Box>                                         
     </Level>
   </Grid>
@@ -42,9 +42,9 @@
   
   <!--__________________________________ -->
   <RMCRT>
-    <Temperature>       1        </Temperature>
+    <Temperature>       64.804     </Temperature>
     <NoOfRays>          100        </NoOfRays>
-    <Threshold>         0.05      </Threshold>
+    <Threshold>         0.05       </Threshold>
     <Alpha>             1          </Alpha>
     <Slice>             20         </Slice>
     <StefanBoltzmann>   5.67051e-8 </StefanBoltzmann>
