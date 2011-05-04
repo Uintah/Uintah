@@ -3,17 +3,19 @@
 <Uintah_specification>
 
   <Meta>
-      <title>test</title>
+      <title>RMCRT</title>
   </Meta>
 
   <SimulationComponent type="RMCRT_Test" />
   <!--__________________________________-->
+  <!-- run for 10 timesteps for RT memory -->
+  <!-- and checkpoint testing             -->
   <Time>
     <maxTime>       10.0      </maxTime>
     <initTime>      0.0       </initTime>
     <delt_min>      0.00001   </delt_min>
     <delt_max>      1         </delt_max>
-    <max_Timesteps> 1         </max_Timesteps>
+    <max_Timesteps> 10         </max_Timesteps>
     <timestep_multiplier>  1  </timestep_multiplier>
   </Time>
   <!--__________________________________-->
@@ -36,14 +38,14 @@
       <save label = "divQ"    />
       <save label = "abskg"   />
       <save label = "sigmaT4" />
-      <checkpoint cycle = "2" timestepInterval = "1"/>
+      <checkpoint cycle = "2" timestepInterval = "2"/>
   </DataArchiver>
   
   
   <!--__________________________________ -->
   <RMCRT>
     <Temperature>       64.804     </Temperature>
-    <NoOfRays>          100        </NoOfRays>
+    <NoOfRays>          25        </NoOfRays>
     <Threshold>         0.05       </Threshold>
     <Alpha>             1          </Alpha>
     <Slice>             20         </Slice>
