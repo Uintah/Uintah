@@ -64,8 +64,9 @@ SRCS   += \
         $(SRCDIR)/JWLppMPM.cc                   \
         $(SRCDIR)/UCNH.cc                       \
         $(SRCDIR)/P_Alpha.cc                    \
-        $(SRCDIR)/SoilFoam.cc	                \
-	$(SRCDIR)/NonLocalDruckerPrager.cc
+        $(SRCDIR)/SoilFoam.cc	                  \
+       	$(SRCDIR)/NonLocalDruckerPrager.cc      \
+        $(SRCDIR)/simplifiedGeoModel.cc
 
 ifneq ($(NO_FORTRAN),yes)
   SRCS   += \
