@@ -26,21 +26,29 @@ DEALINGS IN THE SOFTWARE.
 
 */
 #include <Core/Grid/Variables/Utils.h>
-#include <Core/Grid/Variables/CellIterator.h>
-#include <math.h>
-#define d_SMALLNUM 1e-100
 
+#include <Core/Grid/Variables/CellIterator.h>
+#include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/Variables/SFCXVariable.h>
+#include <Core/Grid/Variables/SFCYVariable.h>
+#include <Core/Grid/Variables/SFCZVariable.h>
+
+#include <math.h>
+
+#define d_SMALLNUM 1e-100
 
 namespace Uintah {
 //______________________________________________________________________
 //   This function examines all the values for being positive.  If a 
 //   negative value or nan is found the function returns false along 
 //   with the first cell index.
-bool areAllValuesPositive( CCVariable<double> & src, IntVector& neg_cell )
+template< class T >
+bool
+areAllValuesPositive( T & src, IntVector & neg_cell )
 { 
-  double numCells = 0;
-  double sum_src = 0;
-  int sumNan = 0;
+  double    numCells = 0;
+  double    sum_src = 0;
+  int       sumNan = 0;
   IntVector l = src.getLowIndex();
   IntVector h = src.getHighIndex();
   CellIterator iterLim = CellIterator(l,h);
@@ -65,4 +73,11 @@ bool areAllValuesPositive( CCVariable<double> & src, IntVector& neg_cell )
   neg_cell = IntVector(0,0,0); 
   return true;      
 }
-} 
+
+// Explicit template instantiations:
+template bool areAllValuesPositive( CCVariable<double> &, IntVector & );
+template bool areAllValuesPositive( SFCXVariable<double> &, IntVector & );
+template bool areAllValuesPositive( SFCYVariable<double> &, IntVector & );
+template bool areAllValuesPositive( SFCZVariable<double> &, IntVector & );
+
+} // end namespace Uintah
