@@ -515,8 +515,7 @@ void RMCRT_Test::scheduleShootRays_onCoarseLevel(SchedulerP& sched,
   
   if(level->hasFinerLevel() || maxLevels == 1){
     printSchedule(level,dbg,"RMCRT_Test::scheduleShootRays_onCoarseLevel");
-    Task* t = scinew Task("RMCRT_Test::shootRays_onCoarseLevel",
-                    this, &RMCRT_Test::shootRays_onCoarseLevel);
+
     //__________________________________
     //  
     if (d_doFakeRMCRT){
@@ -524,7 +523,10 @@ void RMCRT_Test::scheduleShootRays_onCoarseLevel(SchedulerP& sched,
       Task::DomainSpec  ND  = Task::NormalDomain;
       #define allPatches 0
       #define allMatls 0
-
+      
+      Task* t = scinew Task("RMCRT_Test::shootRays_onCoarseLevel",
+                      this, &RMCRT_Test::shootRays_onCoarseLevel);
+      
       t->requires(Task::OldDW, d_colorLabel,  allPatches, ND,allMatls, ND, gn,0);
       t->computes( d_divQLabel );
       sched->addTask(t, level->eachPatch(), matls);
