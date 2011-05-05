@@ -305,14 +305,6 @@ HypreSolver::setMatrix(const ProcessorGroup* pc,
   HYPRE_StructMatrixSetSymmetric(d_A, 1);
   HYPRE_StructMatrixSetNumGhost(d_A, d_A_num_ghost);
   HYPRE_StructMatrixInitialize(d_A); 
-
-   /*-----------------------------------------------------------
-    * Set up the linear system (b & x)
-    *-----------------------------------------------------------*/
-   HYPRE_StructVectorCreate(MPI_COMM_WORLD, d_grid, &d_b);
-   HYPRE_StructVectorInitialize(d_b);
-   HYPRE_StructVectorCreate(MPI_COMM_WORLD, d_grid, &d_x);
-   HYPRE_StructVectorInitialize(d_x);
  
   double *A = hypre_CTAlloc(double, (d_stencilSize)*d_volume);
   
@@ -351,7 +343,7 @@ HypreSolver::setRHS_X(const ProcessorGroup* pc,
                       CCVariable<double>& guess,
                       constCCVariable<double>& rhs)
 { 
-  gridSetup(pc, patch);
+   // gridSetup(pc, patch);
    /*-----------------------------------------------------------
     * Set up the linear system (b & x)
     *-----------------------------------------------------------*/
