@@ -810,8 +810,7 @@ void UCNH::addComputesAndRequires(Task* task,
   Ghost::GhostType  gnone = Ghost::None;
   
   // Plasticity
-  if(d_usePlasticity)
-  {
+  if(d_usePlasticity) {
     task->requires(Task::OldDW, pPlasticStrain_label,   matlset, gnone);
     task->computes(pPlasticStrain_label_preReloc,       matlset);
   }
@@ -831,6 +830,10 @@ void UCNH::addComputesAndRequires(Task* task,
     task->computes(pLocalizedLabel_preReloc,                    matlset);
     task->computes(pDamageLabel_preReloc,                       matlset);
     task->computes(lb->TotalLocalizedParticleLabel);   
+  }
+
+  if(flag->d_with_color) {
+    task->requires(Task::OldDW, lb->pColorLabel,  Ghost::None);
   }
   
   // Universal
@@ -1063,7 +1066,7 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
     constParticleVariable<int>     pLocalized;
     constParticleVariable<Short27> pgCode;
     constParticleVariable<double>  pFailureStrain, pMass, pDamage;
-    constParticleVariable<double>  pPlasticStrain_old;
+    constParticleVariable<double>  pPlasticStrain_old,pcolor;
     constParticleVariable<long64>  pParticleID;
     constParticleVariable<Point>   px;
     constParticleVariable<Matrix3> pBeBar, pDefGrad, bElBar;
@@ -1145,6 +1148,10 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
                             lb->pDeformationMeasureLabel_preReloc, pset);
     // Temporary Allocations
     new_dw->allocateTemporary(velGrad,                             pset);
+
+    if(flag->d_with_color) {
+      old_dw->get(pcolor,      lb->pColorLabel,  pset);
+    }
 
     ParticleSubset::iterator iter = pset->begin();
     for(; iter != pset->end(); iter++){
