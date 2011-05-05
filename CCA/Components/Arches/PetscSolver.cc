@@ -278,7 +278,8 @@ void
 PetscSolver::setRHS_X(const ProcessorGroup* ,
                       const Patch* patch,
                       CCVariable<double>& guess,
-                      constCCVariable<double>& rhs)
+                      constCCVariable<double>& rhs, 
+                      bool construct_A )
 {
   double solve_start = Time::currentSeconds();
   int ierr;
