@@ -341,16 +341,21 @@ void
 HypreSolver::setRHS_X(const ProcessorGroup* pc,
                       const Patch* patch,
                       CCVariable<double>& guess,
-                      constCCVariable<double>& rhs)
+                      constCCVariable<double>& rhs, 
+                      bool construct_A )
 { 
    // gridSetup(pc, patch);
    /*-----------------------------------------------------------
     * Set up the linear system (b & x)
     *-----------------------------------------------------------*/
-   HYPRE_StructVectorCreate(MPI_COMM_WORLD, d_grid, &d_b);
-   HYPRE_StructVectorInitialize(d_b);
-   HYPRE_StructVectorCreate(MPI_COMM_WORLD, d_grid, &d_x);
-   HYPRE_StructVectorInitialize(d_x);
+   if ( construct_A ) { 
+     // These objects should only be constructed if A is constructed. 
+     // Otherwise they are reused. 
+     HYPRE_StructVectorCreate(MPI_COMM_WORLD, d_grid, &d_b);
+     HYPRE_StructVectorInitialize(d_b);
+     HYPRE_StructVectorCreate(MPI_COMM_WORLD, d_grid, &d_x);
+     HYPRE_StructVectorInitialize(d_x);
+   }
  
   /* Set the coefficients for the grid */
   int i = 0;

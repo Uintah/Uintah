@@ -102,7 +102,8 @@ public:
   virtual void setRHS_X(const ProcessorGroup* pc, 
                         const Patch* patch,
                         CCVariable<double>& guess,
-                        constCCVariable<double>& rhs);
+                        constCCVariable<double>& rhs, 
+                        bool construct_A );
 
   virtual bool pressLinearSolve();
   virtual void copyPressSoln(const Patch* patch, ArchesVariables* vars);
