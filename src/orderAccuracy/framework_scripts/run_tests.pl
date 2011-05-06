@@ -43,6 +43,7 @@ my $data = $simple->XMLin("$tstFile");
 #__________________________________
 # copy gnuplot script
 my $gpFile = $data->{gnuplot}[0]->{script}[0];
+chomp($gpFile);
 
 if($gpFile ne ""){                
   $gpFile    = $config_files_path."/".$gpFile;
@@ -52,6 +53,7 @@ if($gpFile ne ""){
 #__________________________________
 # determing the ups basename
 $upsFile         =$data->{upsFile}->[0];
+chomp($upsFile);
 my $ups_basename = $upsFile;
 $ups_basename    =~ s/.ups//;                     # Removing the extension .ups so that we can use this to build our uda file names
 
@@ -73,11 +75,11 @@ for($i = 0; $i<=$#tests; $i++){
 $num_of_tests=$#tests;
 
 #__________________________________
-# make a symbolic link to the compareUtils
+# make a symbolic link to the post processing command
 for ($i=0;$i<=$num_of_tests;$i++){
    if( $postProc_cmd[$i] ne ''){
     my @stripped_cmd = split(/ /,$postProc_cmd[$i]);  # remove command options
-    my $cmd = `which $stripped_cmd[0]`;
+    my $cmd = `which --skip-dot $stripped_cmd[0]`;
     system("ln -fs $cmd");
   }
 }
@@ -119,6 +121,7 @@ while ($line=<tstFile>){
     if ($line=~ /\<replace_lines\>/){       # find <replace_lines>
       $nLine=0;
       while (($line=<tstFile>) !~ /\<\/replace_lines\>/){
+        chomp($line);
         $global_replaceLines[$nLine]=$line;
         $nLine++;
       }
@@ -130,6 +133,7 @@ while ($line=<tstFile>){
     if ($line=~ /\<replace_lines\>/){       # find <replace_lines>
       $nLine=0;
       while (($line=<tstFile>) !~ /\<\/replace_lines\>/){
+        chomp($line);
         $replaceLines[$nTest][$nLine]=$line;
         $nLine++;
       }
@@ -143,9 +147,8 @@ close(tstFile);
 # Globally, replace lines in the main ups file before each test.
 @replacementPatterns = (@global_replaceLines);
 foreach $rp (@global_replaceLines){
-  chomp($rp);
-  system("replace_XML_line", "$rp", "$upsFile");
-  print "\t\t$rp\n"
+  system("replace_XML_line", "$rp", "$upsFile") ==0 ||  die("Error replacing $rp in file $upsFile \n $@");
+  print "\t\t$rp\n";
 }
 
 #__________________________________
@@ -181,14 +184,14 @@ for ($i=0;$i<=$num_of_tests;$i++){
   
   system(" cp $upsFile $test_ups");
   my $fn = "<filebase>".$udaFilename."</filebase>";
-  system("replace_XML_line", "$fn", "$test_ups");
+  system("replace_XML_line", "$fn", "$test_ups")==0 ||  die("Error replacing $fn in file $test_ups \n $@");
   print "\t\t$fn\n";
   
   # replace lines in the ups files
   @replacementPatterns = (@{$replaceLines[$i]});
   foreach $rp (@replacementPatterns){
     chomp($rp);
-    system("replace_XML_line", "$rp", "$test_ups");
+    system("replace_XML_line", "$rp", "$test_ups")==0 ||  die("Error replacing $rp in file $test_ups \n $@");
     print "\t\t$rp\n"
   }
   
