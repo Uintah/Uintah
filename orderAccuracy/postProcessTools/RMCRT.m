@@ -1,4 +1,4 @@
-#! /usr/bin/octave -qf
+#! /usr/bin/env octaveWrap
 %_________________________________
 % This octave file plots the radiative flux divergence (deldotq)
 % of a 2D center slice of a 3D domainprofile and computes
@@ -19,13 +19,12 @@ function Usage
   printf(' -mat - material index \n') 
   printf(' -plot <true, false> - produce a plot \n') 
   printf(' -ts - Timestep to compute L2 error, default is the last timestep\n') 
-  printf(' -o <fname> - Dump the output (L2Error) to a file\n') 
+  printf(' -o <fname> - Dump the output (L2norm) to a file\n') 
   printf('----------------------------------------------------------\n')
 end 
 
 %________________________________ 
 % Parse User inputs 
-%echo
 nargin = length(argv);
 if (nargin == 0)
   Usage
@@ -37,7 +36,7 @@ endif
 symbol      = {'+','*r','xg'};     %????
 pDir        = 1;
 mat         = 0;
-makePlot    = "true";
+makePlot    = "false";
 ts          = 999;
 output_file = 'L2norm';
 L           = 0;                     %%%%%%   Warning this is hardcoded
@@ -62,7 +61,6 @@ for i = 1:2:nargin
     output_file = opt_value; 
   end 
 end
-
 
 %________________________________
 % do the Uintah utilities exist
@@ -145,31 +143,6 @@ for q=1:20
   j=j-1;
 end
 
-%__________________________________
-% TESTING
-%From here to $$, is not necessary if pchip works
-if(0)
-Exact_interp = zeros(41);
-Exact_interp(resolution(pDir)/2) = ExactSol(21);
-
-i=20;
-jj=39;
-while i>0
-  Exact_interp(i) = (Exact(i)-Exact(i+1))*( (jj/82 - i/40)/-.025 ) + Exact(i+1);
-  i=i-1;
-  jj=jj-2;
-end
-
-j=20;
-for q=22:41
-  Exact_interp(q) = Exact_interp(j);
-  j=j-1; 
-end % $$
-end
-% TESTING
-
-
-
 %Do a pchip interpolation to any resolution
 divQ_exact = interp1(x_exactSol, ExactSol, x_CC, 'pchip');
 
@@ -190,7 +163,7 @@ if (nargv > 0)
 end
 
 % cleanup 
-%unix('/bin/rm divQ.dat tmp');% !! 
+unix('/bin/rm divQ.dat tmp');% !! 
 divQ_sim
 divQ_exact
 
