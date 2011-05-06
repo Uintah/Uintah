@@ -36,7 +36,7 @@ endif
 symbol      = {'+','*r','xg'};     %????
 pDir        = 1;
 mat         = 0;
-makePlot    = "false";
+makePlot    = "true";
 ts          = 999;
 output_file = 'L2norm';
 L           = 0;                     %%%%%%   Warning this is hardcoded

@@ -1,15 +1,14 @@
 <config>  
- <!-- spaces are not allowed in component names -->
+ <!-- spaces are not allowed in component names
  <component>Arches</component>
  <component>ICE</component>
+ <!--<component>Examples</component>-->
  <!--<component>MPM</component> -->
  <!--<component>MPMICE</component>-->
- <sus_path>/usr/local/home/harman/Builds/Fresh/NB/opt_Linux/StandAlone/</sus_path>
+ <sus_path></sus_path>
  
  <!-- path to any additional scripts that may be needed by all the components-->
- <scripts_path>/usr/local/home/harman/Builds/Fresh/NB/src/scripts
-               /usr/local/home/harman/Builds/Fresh/NB/src/scripts/ICE
- </scripts_path>
+ <scripts_path>/uufs/chpc.utah.edu/sys/pkg/octave/std/bin/</scripts_path>
  
  
 </config>
