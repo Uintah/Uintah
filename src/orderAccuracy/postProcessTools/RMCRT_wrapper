@@ -26,9 +26,12 @@ set out_x = `echo $out`_x
 set out_y = `echo $out`_y
 set out_z = `echo $out`_z
 
-echo "Now running RMCRT scripts in each direction (X,Y,Z) ($out, $uda)"
+echo "Now running RMCRT scripts in each direction ($out, $uda)"
+echo "X-dir"
 `RMCRT.m -o "$out_x" -uda $uda -pDir 1`
+echo "Y-dir"
 `RMCRT.m -o "$out_y" -uda $uda -pDir 2`
+echo "Z-dir"
 `RMCRT.m -o "$out_z" -uda $uda -pDir 3`
 
 paste $out_x $out_y $out_z > $out
