@@ -358,7 +358,6 @@
           <normalize_pressure           spec="OPTIONAL BOOLEAN" />
           <always_construct_A           spec="OPTIONAL BOOLEAN" /> <!-- default=true. Determines if Pressure matrix is recreated every time step. --> 
           <linear_solver                spec="REQUIRED STRING 'hypre, petsc'" />
-          <always_construct_A           spec="OPTIONAL BOOLEAN"/>
           <parameters                   spec="REQUIRED NO_DATA" >
             <max_iter                   spec="REQUIRED INTEGER 'positive'" />
             <preconditioner             spec="REQUIRED STRING 'jacobi, pfmg'" />
