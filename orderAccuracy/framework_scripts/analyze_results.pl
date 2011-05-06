@@ -67,7 +67,8 @@ for ($k = $startLoop; $k<=$endLoop; $k++){
   #__________________________________
   # bulletproofing
   my @stripped_cmd = split(/ /,$postProc_cmd[$k]);  # remove command options
-  if (! -e $stripped_cmd[0] ){
+  
+  if ( ! system( "which",$stripped_cmd[0])==0 ){
     my $mypath = $ENV{"PATH"};
     print "\n\n__________________________________\n";
     print "ERROR:analyze_results:\n";
