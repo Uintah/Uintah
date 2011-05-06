@@ -280,12 +280,14 @@
       <union                  spec="MULTIPLE" />
       <parallelepiped         spec="MULTIPLE" />
 
-      <file                   spec="OPTIONAL NO_DATA" >
-        <name                 spec="REQUIRED STRING" />
+      <file                    spec="OPTIONAL NO_DATA"
+                                attribute1="label    OPTIONAL STRING" >
+        <name                 spec="OPTIONAL STRING" />
         <var                  spec="MULTIPLE STRING" />
         <format               spec="OPTIONAL STRING" />
       </file>
-      <image                   spec="OPTIONAL NO_DATA" >
+      
+      <image                  spec="OPTIONAL NO_DATA" >
         <name                 spec="REQUIRED STRING" />
         <res                  spec="OPTIONAL VECTOR" />
         <threshold            spec="OPTIONAL MULTIPLE_DOUBLES" />
