@@ -89,19 +89,6 @@ ScalarEqn::problemSetup(const ProblemSpecP& inputdb)
   //Keep USE_DENSITY_GUESS set to true until the algorithmic details are settled. - Jeremy 
   d_use_density_guess = true; // use the density guess rather than the new density from the table...implies that the equation is updated BEFORE properties are computed. 
 
-  // Source terms:
-  proc0cout << "ScalarEqn: retrieving source terms associated with this scalar eqn." << endl;
-  SourceTermFactory& srcFactory = SourceTermFactory::self();
-  if (db->findBlock("src")){
-    string srcname; 
-    for (ProblemSpecP src_db = db->findBlock("src"); src_db != 0; src_db = src_db->findNextBlock("src")){
-      src_db->getAttribute("label", srcname);
-      //which sources are turned on for this equation
-      d_sources.push_back( srcFactory.retrieve_source_term(srcname).getSrcLabel() ); 
-
-    }
-  }
-
   // Clipping:
   d_doClipping = false; 
   ProblemSpecP db_clipping = db->findBlock("Clipping");
@@ -170,6 +157,27 @@ ScalarEqn::problemSetup(const ProblemSpecP& inputdb)
   }
 }
 
+void
+ScalarEqn::problemSetupSources( const ProblemSpecP& db )
+{
+  // Source terms:
+  SourceTermFactory& srcFactory = SourceTermFactory::self();
+  for( ProblemSpecP eqn_db  = db->findBlock("Eqn"); eqn_db != 0; eqn_db=eqn_db->findNextBlock("Eqn")) {
+    std::string eqn_name;
+    eqn_db->getAttribute("label", eqn_name);
+    if( eqn_name == d_eqnName ) {
+      if( eqn_db->findBlock("src") ) {
+        string srcname; 
+        for (ProblemSpecP src_db = eqn_db->findBlock("src"); src_db != 0; src_db = src_db->findNextBlock("src")){
+          src_db->getAttribute("label", srcname);
+          //which sources are turned on for this equation
+          d_sources.push_back( srcFactory.retrieve_source_term(srcname).getSrcLabel() ); 
+        }
+      }
+    }
+  }
+}
+
 
 //---------------------------------------------------------------------------
 // Method: Schedule clean up. 
@@ -202,6 +210,7 @@ void ScalarEqn::cleanUp( const ProcessorGroup* pc,
     }
   }
 }
+
 
 //---------------------------------------------------------------------------
 // Method: Schedule the intialization of the variables. 
@@ -390,8 +399,8 @@ ScalarEqn::buildTransportEqn( const ProcessorGroup* pc,
     new_dw->get(den,          d_fieldLabels->d_densityCPLabel, matlIndex, patch, gac, 1); 
     new_dw->get(mu_t,         d_fieldLabels->d_viscosityCTSLabel, matlIndex, patch, gac, 1); 
     new_dw->get(uVel,         d_fieldLabels->d_uVelocitySPBCLabel, matlIndex, patch, gac, 1); 
-    old_dw->get(areaFraction, d_fieldLabels->d_areaFractionLabel, matlIndex, patch, gac, 2); 
     new_dw->get(prNumber,     d_prNo_label, matlIndex, patch, gn, 0); 
+    old_dw->get(areaFraction, d_fieldLabels->d_areaFractionLabel, matlIndex, patch, gac, 2); 
 
     double vol = Dx.x();
 #ifdef YDIM
@@ -437,11 +446,15 @@ ScalarEqn::buildTransportEqn( const ProcessorGroup* pc,
       RHS[c] += Fdiff[c] - Fconv[c];
 
       //-----SUM UP EXTRA SOURCES
+      double source_sum = 0;
       if( d_addSources ) {
         for( vector< constCCVariable<double>* >::iterator iS = sourceVars.begin(); iS != sourceVars.end(); ++iS ) {
-          RHS[c] += (**iS)[c]*vol;
+          source_sum += (**iS)[c]*vol;
         }
       }
+      RHS[c] += source_sum;
+      
+      //proc0cout << "Scalar " << d_eqnName << ": Cell [" << c << "]: RHS = Fdiff - Fconv + Src = " << Fdiff[c] << " - " << Fconv[c] << " + " << source_sum << " = " << RHS[c] << endl;;
 
     }//end cells
 
@@ -470,7 +483,6 @@ ScalarEqn::sched_solveTransportEqn( const LevelP& level,
   tsk->modifies(d_transportVarLabel);
   tsk->modifies(d_oldtransportVarLabel); 
   tsk->requires(Task::NewDW, d_RHSLabel, Ghost::None, 0);
-
   tsk->requires(Task::NewDW, d_fieldLabels->d_densityGuessLabel, Ghost::None, 0);
   tsk->requires(Task::NewDW, d_fieldLabels->d_densityCPLabel, Ghost::None, 0);
 
@@ -513,8 +525,8 @@ ScalarEqn::solveTransportEqn( const ProcessorGroup* pc,
     constCCVariable<double> old_den; 
     constCCVariable<double> new_den; 
 
-    new_dw->getModifiable( phi_at_jp1, d_transportVarLabel,    matlIndex, patch);
-    new_dw->getModifiable( phi_at_j,   d_oldtransportVarLabel, matlIndex, patch);
+    new_dw->getModifiable(phi_at_jp1, d_transportVarLabel,    matlIndex, patch);
+    new_dw->getModifiable(phi_at_j,   d_oldtransportVarLabel, matlIndex, patch);
     old_dw->get(rk1_phi, d_transportVarLabel, matlIndex, patch, gn, 0);
     new_dw->get(RHS, d_RHSLabel, matlIndex, patch, gn, 0);
 
@@ -527,6 +539,7 @@ ScalarEqn::solveTransportEqn( const ProcessorGroup* pc,
     // Time averaging will occur separately, and later
     // (see ExplicitSolver::nonLinearSolve)
 
+    /*
     if( lastTimeSubstep ) {
       // The procedure looks like this:
       // 1. Compute the error between the last RK substeps
@@ -559,6 +572,7 @@ ScalarEqn::solveTransportEqn( const ProcessorGroup* pc,
       }
 
     }
+    */
 
   }
 }
@@ -580,12 +594,14 @@ ScalarEqn::sched_timeAveraging( const LevelP& level, SchedulerP& sched, int time
 
   //Old
   tsk->requires(Task::OldDW, d_transportVarLabel, Ghost::None, 0);
-  tsk->requires(Task::NewDW, d_RHSLabel, Ghost::None, 0);
+  tsk->requires(Task::OldDW, d_fieldLabels->d_densityCPLabel, Ghost::None, 0); 
+  /*
   if( timeSubStep == 0 ) {
     tsk->requires(Task::OldDW, d_fieldLabels->d_densityCPLabel, Ghost::None, 0); 
   } else {
     tsk->requires(Task::NewDW, d_fieldLabels->d_densityTempLabel, Ghost::None, 0);
   }
+  */
   tsk->requires(Task::OldDW, d_fieldLabels->d_sharedState->get_delt_label(), Ghost::None, 0);
 
   sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
@@ -618,25 +634,27 @@ ScalarEqn::timeAveraging( const ProcessorGroup* pc,
     double factor = d_timeIntegrator->time_factor[timeSubStep]; 
     curr_ssp_time = curr_time + factor * dt;
 
-    // Here, j is the rk step and n is the time step.  
-    //
-    CCVariable<double> phi_at_jp1;   // phi^{(j+1)}
-    constCCVariable<double> phi_at_j; // phi^{n}
-    constCCVariable<double> RHS; 
-    constCCVariable<double> old_den; 
+    // j is the rk step and n is the time step.  
+    CCVariable<double> phi_at_jp1;    // phi^{(j+1)} (new_phi)
+    CCVariable<double> phi_at_n;      // phi^{n} (last_rk_phi)
+    constCCVariable<double> phi_at_j; // phi^{j} (old_phi)
     constCCVariable<double> new_den; 
+    constCCVariable<double> old_den; 
 
     new_dw->getModifiable(phi_at_jp1, d_transportVarLabel, matlIndex, patch);
     old_dw->get(phi_at_j, d_transportVarLabel, matlIndex, patch, gn, 0);
-    new_dw->get(RHS, d_RHSLabel, matlIndex, patch, gn, 0);
+    new_dw->getModifiable(phi_at_n, d_oldtransportVarLabel, matlIndex, patch);
 
     new_dw->get(new_den, d_fieldLabels->d_densityCPLabel, matlIndex, patch, gn, 0);
+    old_dw->get(old_den, d_fieldLabels->d_densityCPLabel, matlIndex, patch, gn, 0); 
 
+    /*
     if ( timeSubStep == 0 ) {
       old_dw->get(old_den, d_fieldLabels->d_densityCPLabel, matlIndex, patch, gn, 0);
     } else {
       new_dw->get(old_den, d_fieldLabels->d_densityTempLabel, matlIndex, patch, gn, 0); 
     }
+    */
 
     //----Time averaging done here. 
     d_timeIntegrator->timeAvePhi( patch, phi_at_jp1, phi_at_j, new_den, old_den, timeSubStep, curr_ssp_time ); 
@@ -644,6 +662,13 @@ ScalarEqn::timeAveraging( const ProcessorGroup* pc,
     //----BOUNDARY CONDITIONS
     //    must update BCs for next substep
     computeBCs( patch, d_eqnName, phi_at_jp1 );
+
+
+
+
+    //----COPY averaged phi into oldphi
+    //  I don't think this is needed but keeping it until it is proven...
+    phi_at_n.copyData(phi_at_jp1); 
 
   }
 }
@@ -698,24 +723,35 @@ void ScalarEqn::clipPhi( const ProcessorGroup* pc,
 
     if( d_doLowClip ) {
       for( CellIterator iter = patch->getCellIterator(); !iter.done(); ++iter ) {
+        // Branch if:
         if( phi[*iter] < d_lowClip || old_phi[*iter] < d_lowClip ) {
           phi[*iter] = d_lowClip;
         }
+
+        //// Trunk if:
+        //if( phi[*iter] < d_lowClip ) {
+        //  phi[*iter] = d_lowClip;
+        //}
       }//end cells
     }//end if low clip
 
     if( d_doHighClip ) {
       for( CellIterator iter = patch->getCellIterator(); !iter.done(); ++iter ) {
+        // Branch if:
         if( phi[*iter] > d_highClip || old_phi[*iter] > d_highClip) {
           phi[*iter] = d_highClip;
         }
+
+        //// Trunk if:
+        //if( phi[*iter] > d_highClip ) {
+        //  phi[*iter] = d_highClip;
+        //}
       }//end cells
     }//end if high clip
 
   }//end patches
 
 }
-
 
 //---------------------------------------------------------------------------
 // Method: Schedule dummy initialization
@@ -778,4 +814,3 @@ ScalarEqn::dummyInit( const ProcessorGroup* pc,
 
   }
 }
-

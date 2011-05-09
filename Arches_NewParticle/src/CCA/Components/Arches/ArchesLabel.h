@@ -70,6 +70,9 @@ namespace Uintah {
      
       SimulationStateP d_sharedState;
 
+      // recompile task graph flag
+      bool recompile_taskgraph; 
+
       // material subset for stencils
       MaterialSubset* d_stencilMatl;
 

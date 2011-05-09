@@ -126,6 +126,9 @@ class MixingRxnModel{
     /** @brief Returns the value of a single variable given the iv vector 
      * This will be useful for other classes to have access to */
     virtual double getTableValue( std::vector<double>, std::string ) = 0; 
+			
+			/** @brief For efficiency: Matches tables lookup species with pointers/index/etc */
+			virtual void tableMatching() = 0; 
 
     /** @brief Return a reference to the independent variables */
     inline const VarMap getIndepVarMap() { return d_ivVarMap; };
@@ -148,6 +151,17 @@ class MixingRxnModel{
         proc0cout << "    ---> " << var_name << endl; 
       }
       return;
+    };
+
+    /** @brief Returns false if flow is changing temperature */ 
+    // In other words, is temperature changing? 
+    // The strange logic is to make the logic less confusing in Properties.cc
+    bool is_not_cold(){ 
+      if (d_coldflow){ 
+        return false; 
+      } else { 
+        return true; 
+      }
     };
 
   protected:
@@ -185,16 +199,28 @@ class MixingRxnModel{
     class CoalTransform : public TransformBase {
 
       public: 
-        CoalTransform(); 
+        CoalTransform( double constant ); 
         ~CoalTransform(); 
 
         bool problemSetup( const ProblemSpecP& ps, std::vector<std::string> names ){
           bool coal_table_on = false; 
+          bool do_transform = false;
           ProblemSpecP p = ps; 
           if ( p->findBlock("coal") ){
 
-            p->findBlock("coal")->getAttribute("fp_label", _index_1_name );
-            p->findBlock("coal")->getAttribute("eta_label", _index_2_name ); 
+            p->findBlock("coal")->getAttribute("fp_label", _index_1_name);
+            p->findBlock("coal")->getAttribute("eta_label", _index_2_name); 
+            do_transform = true;
+
+          } else if ( p->findBlock("acidbase") ) {
+
+            p->findBlock("acidbase")->getAttribute("fp_label",_index_1_name);
+            p->findBlock("acidbase")->getAttribute("eta_label",_index_2_name);
+            do_transform = true;
+
+          }
+
+          if( do_transform ) {
 
             _index_1 = -1; 
             _index_2 = -1; 
@@ -202,10 +228,12 @@ class MixingRxnModel{
             int index = 0; 
             for ( std::vector<std::string>::iterator i = names.begin(); i != names.end(); i++ ){
 
-              if ( *i == _index_1_name ) 
+              if ( *i == _index_1_name ) {
                 _index_1 = index; 
-              if ( *i == _index_2_name )
+              }
+              if ( *i == _index_2_name ) {
                 _index_2 = index; 
+              }
               index++; 
 
             }
@@ -228,14 +256,20 @@ class MixingRxnModel{
 
             f = iv[_index_1] / ( 1.0 - iv[_index_2] ); 
 
-            if ( f < 0.0 )
+            if ( f < 0.0 ) {
               f = 0.0;
-            if ( f > 1.0 )
+            }
+            if ( f > 1.0 ) {
               f = 1.0; 
+            }
           }
           iv[_index_1] = f; 
         
         }; 
+
+      private:
+
+        double d_constant;
     };
 
 

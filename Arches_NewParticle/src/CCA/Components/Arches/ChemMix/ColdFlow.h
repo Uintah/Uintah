@@ -59,7 +59,15 @@ The UPS interface is:
 \code
     <Properties>
       <ColdFlow>
-        <inputfile>REQUIRED STRING</inputfile>
+        <mixture_fraction_label       spec="REQUIRED STRING"/>
+        <Stream_1                     spec="MULTIPLE NO_DATA">
+          <density                    spec="REQUIRED DOUBLE 'positive'"/>
+          <temperature                spec="REQUIRED DOUBLE 'positive'"/>
+        </Stream_1>
+        <Stream_2                     spec="MULTIPLE NO_DATA">
+          <density                    spec="REQUIRED DOUBLE 'positive'"/>
+          <temperature                spec="REQUIRED DOUBLE 'positive'"/>
+        </Stream_2>
       </ColdFlow>
     </Properties>
 
@@ -155,6 +163,8 @@ public:
   void oldTableHack( const InletStream& inStream, Stream& outStream, bool calcEnthalpy, const string bc_type ){};
 
   double getTableValue( std::vector<double>, std::string ); 
+
+  void tableMatching(){};
 
 protected :
 

@@ -163,7 +163,7 @@ StandardTable::computeProps(const InletStream& inStream,
   if(var_limit > 0.9){
     mixFracVars=(2.0/3.0)*mixFracVars;
   }
-  // normilizing varaince
+  // normalizing variance
   mixFracVars=min(mixFracVars,mixFrac*(1.0-mixFrac));
   if (mixFracVars <= small)
     mixFracVars=0.0;

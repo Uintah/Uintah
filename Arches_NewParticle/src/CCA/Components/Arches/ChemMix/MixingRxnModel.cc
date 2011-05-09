@@ -45,18 +45,6 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Parallel/Parallel.h>
 
-// includes for C++
-//#include <fstream>
-//#include <iomanip>
-//#include <iostream>
-//#include <sstream>
-//#include <fcntl.h>
-//#include <cmath>
-//#include <cstdio>
-//#include <cstdlib>
-//#include <time.h>
-//#include <unistd.h>
-
 //======================================================
 
 using namespace std;
@@ -137,8 +125,8 @@ MixingRxnModel::setMixDVMap( const ProblemSpecP& root_params )
     var_name = "N2";
     insertIntoMap( var_name );
 
-    var_name = "mixture_molecular_weight";
-    insertIntoMap( var_name );
+    //var_name = "mixture_molecular_weight";
+    //insertIntoMap( var_name );
   }
 
   proc0cout << endl;
@@ -160,5 +148,5 @@ MixingRxnModel::TransformBase::TransformBase(){}
 MixingRxnModel::TransformBase::~TransformBase(){}
 MixingRxnModel::NoTransform::NoTransform(){}
 MixingRxnModel::NoTransform::~NoTransform(){}
-MixingRxnModel::CoalTransform::CoalTransform(){}
+MixingRxnModel::CoalTransform::CoalTransform(double constant){}
 MixingRxnModel::CoalTransform::~CoalTransform(){}
