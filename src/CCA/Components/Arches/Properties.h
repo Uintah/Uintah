@@ -217,7 +217,6 @@ public:
     return d_mixingRxnTable; 
   }
 
-  /** @brief  DOCUMENT ME PLEASE */
   void addLookupSpecies( ); 
 
   //for the new table:
@@ -230,6 +229,8 @@ public:
   void sched_initEnthalpy( const LevelP&, SchedulerP& ); 
 
   void sched_doTPDummyInit( const LevelP&, SchedulerP& ); 
+
+	void doTableMatching(); 
 
 protected :
 

@@ -6,7 +6,6 @@
 #include <CCA/Components/Arches/ExplicitTimeInt.h>
 #include <CCA/Components/Arches/ArchesLabel.h>
 #include <Core/Exceptions/InvalidValue.h>
-#include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Parallel/Parallel.h>
 
 //===========================================================================
@@ -69,9 +68,9 @@ void EqnFactory::problemSetup(const ProblemSpecP& params)
       std::string eqn_type;
       eqn_db->getAttribute("type", eqn_type);
 
-      if( eqn_name != "" )
-
-      proc0cout << "Found an equation: " << eqn_name << endl;
+      if( eqn_name != "" ) {
+        proc0cout << "Found an equation: " << eqn_name << endl;
+      }
 
       // Here we actually register the equations based on their types.
       // This is only done once and so the "if" statement is ok.
@@ -92,7 +91,7 @@ void EqnFactory::problemSetup(const ProblemSpecP& params)
 
       
       // ---------------------------------------------------------
-      // Step 2: run EqnBase::problemSetup() for each abscissa equation
+      // Step 2: run EqnBase::problemSetup() for each scalar equation
 
       EqnMap::iterator iE = eqns_.find(eqn_name);
       if( iE != eqns_.end() ) {
@@ -109,6 +108,15 @@ void EqnFactory::problemSetup(const ProblemSpecP& params)
 
   proc0cout << endl;
 
+}
+
+void
+EqnFactory::problemSetupSources( const ProblemSpecP& inputdb ) 
+{
+  for( EqnMap::iterator iEqn = eqns_.begin(); iEqn != eqns_.end(); ++iEqn ) {
+    ScalarEqn* eqn = dynamic_cast<ScalarEqn*>(iEqn->second);
+    eqn->problemSetupSources( inputdb );
+  }
 }
 
 //---------------------------------------------------------------------------

@@ -598,8 +598,6 @@ This method is called by each DQMOMEqn object at the last RK time substep, after
 The reason this method is used, rather than having each DQMOMEqn modify a variable that is in the data warehouse, is because after about 10 "modifies" calls, 
 the memory usage of the program during the taskgraph compilation spikes extreemely high (i.e. > 2 GB).
 
-I don't know why this happens, but this is a (hopefully!) temporary and somewhat unelegant workaround.
-
 -Charles
  */
 void

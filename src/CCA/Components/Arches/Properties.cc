@@ -112,7 +112,6 @@ Properties::Properties(const ArchesLabel* label,
 Properties::~Properties()
 {
   delete d_mixingModel;
-  delete d_mixingRxnTable;
 }
 
 //****************************************************************************
@@ -183,6 +182,7 @@ Properties::problemSetup(const ProblemSpecP& params)
     // New TabPropsInterface stuff...
     d_mixingRxnTable = scinew TabPropsInterface( d_lab, d_MAlab );
     d_mixingRxnTable->problemSetup( db ); 
+    d_reactingFlow    = d_mixingRxnTable->is_not_cold(); 
     // At this time, these all need to be false:
     d_co_output       = false;
     if (d_sulfur_chem) {
@@ -204,6 +204,8 @@ Properties::problemSetup(const ProblemSpecP& params)
     d_mixingRxnTable->problemSetup( db ); 
     // At this time, these all need to be false:
     d_co_output       = false;
+    d_reactingFlow    = d_mixingRxnTable->is_not_cold(); 
+
     if (d_sulfur_chem) {
       proc0cout << "Warning!: The old sulfur_chem boolean is not compatible with TabProps.  I am going to set it to false. " << endl;
       d_sulfur_chem     = false;
@@ -219,6 +221,7 @@ Properties::problemSetup(const ProblemSpecP& params)
 	} else if (mixModel == "ColdFlow") {
 		d_mixingRxnTable = scinew ColdFlow( d_lab, d_MAlab ); 
 		d_mixingRxnTable->problemSetup( db ); 
+    d_reactingFlow = false;
   } else if (mixModel == "pdfMixingModel" || mixModel == "SteadyFlameletsTable"
         || mixModel == "flameletModel"  || mixModel == "StaticMixingTable"
         || mixModel == "meanMixingModel" ){
@@ -2318,4 +2321,11 @@ Properties::addLookupSpecies( ){
       d_mixingRxnTable->insertIntoMap( *i ); 
     }
   }
+}
+
+void 
+Properties::doTableMatching(){ 
+
+	d_mixingRxnTable->tableMatching(); 
+
 }

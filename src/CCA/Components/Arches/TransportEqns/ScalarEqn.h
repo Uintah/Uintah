@@ -62,11 +62,14 @@ public:
 
   /** @brief Set any parameters from input file, initialize any constants, etc.. */
   void problemSetup(const ProblemSpecP& inputdb);
+
+  /** @brief  Set up the extra source terms (if necessary) */
+  void problemSetupSources( const ProblemSpecP& inputdb );
   
 
   ////////////////////////////////////////////////
   // Calculation methods
-  
+
   /** @brief Schedule the build for the terms needed in the transport equation */
   void sched_buildTransportEqn( const LevelP& level, 
                                 SchedulerP& sched, int timeSubStep );

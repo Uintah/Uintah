@@ -232,7 +232,7 @@ Arches::problemSetup(const ProblemSpecP& params,
     // db->require("model_mixture_fraction_variance", d_calcVariance);
   }
   db->getWithDefault("turnonMixedModel",    d_mixedModel,false);
-  db->getWithDefault("recompileTaskgraph",  d_recompile,false);
+  db->getWithDefault("recompileTaskgraph",  d_lab->recompile_taskgraph,false);
 
   // Shouldn't this block go in the nonlinear solver's problemSetup()?
   string nlSolver;
@@ -326,6 +326,10 @@ Arches::problemSetup(const ProblemSpecP& params,
   CoalModelFactory& coalFactory = CoalModelFactory::self();
   coalFactory.setArchesLabel( d_lab );
 
+  // register transport eqns
+  ProblemSpecP transportEqn_db = db->findBlock("TransportEqns");
+  eqnFactory.problemSetup(transportEqn_db);
+
   // If there is at least one DQMOM block, set up the DQMOM equation factory
   ProblemSpecP dqmom_db = db->findBlock("DQMOM");
   if ( dqmom_db ) {
@@ -343,7 +347,6 @@ Arches::problemSetup(const ProblemSpecP& params,
     d_dqmomSolver->problemSetup( dqmom_db ); 
 
     dqmomFactory.setDQMOMSolver( d_dqmomSolver );
-
   }
 
   SourceTermFactory& srcFactory = SourceTermFactory::self();
@@ -351,6 +354,7 @@ Arches::problemSetup(const ProblemSpecP& params,
   if( db->findBlock("TransportEqns") ) {
     ProblemSpecP sources_db = db->findBlock("TransportEqns")->findBlock("Sources");
     srcFactory.problemSetup( sources_db );
+    eqnFactory.problemSetupSources( transportEqn_db );
   }
 
   if( dqmom_db ) {
@@ -361,10 +365,6 @@ Arches::problemSetup(const ProblemSpecP& params,
 
   PropertyModelFactory& propertyFactory = PropertyModelFactory::self();
   propertyFactory.setArchesLabel( d_lab );
-
-  ProblemSpecP transportEqn_db = db->findBlock("TransportEqns");
-  // register transport eqns
-  eqnFactory.problemSetup(transportEqn_db);
 
   ProblemSpecP propmodels_db = db->findBlock("PropertyModels"); 
   propertyFactory.problemSetup( propmodels_db );
@@ -651,6 +651,7 @@ Arches::scheduleInitialize(const LevelP& level,
   } else {
     bool initialize_it = true; 
     bool modify_ref_den = true; 
+	  d_props->doTableMatching(); 
     if ( d_calcEnthalpy) {
       d_props->sched_initEnthalpy( level, sched ); 
     }
@@ -1404,6 +1405,16 @@ Arches::scheduleTimeAdvance( const LevelP& level,
 bool Arches::needRecompile(double time, double dt, 
                             const GridP& grid) {
   bool temp; 
+  if ( d_lab->recompile_taskgraph ) {
+    //Currently turning off recompile after. 
+    temp = d_lab->recompile_taskgraph;
+    proc0cout << "\n NOTICE: Recompiling task graph. \n \n";
+    d_lab->recompile_taskgraph = false; 
+    return temp; 
+  } else {
+    return d_lab->recompile_taskgraph;
+  }
+  /*
   if ( d_recompile ) {
    temp = d_recompile;
    proc0cout << endl;
@@ -1411,9 +1422,10 @@ bool Arches::needRecompile(double time, double dt,
    proc0cout << endl;
    d_recompile = false; 
    return temp; 
-  }
-  else 
+  } else {
     return d_recompile;
+  }
+  */
 }
 // ****************************************************************************
 // schedule reading of initial condition for velocity and pressure

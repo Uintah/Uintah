@@ -88,6 +88,12 @@ TabPropsInterface::problemSetup( const ProblemSpecP& propertiesParameters )
   db_tabprops->getWithDefault( "cold_flow", d_coldflow, false); 
   db_properties_root->getWithDefault( "use_mixing_model", d_use_mixing_model, false ); 
 
+  d_noisy_hl_warning = false; 
+  if ( ProblemSpecP temp = db_tabprops->findBlock("noisy_hl_warning") ) 
+    d_noisy_hl_warning = true; 
+  db_tabprops->getWithDefault("lower_hl_bound", d_hl_lower_bound, -1.0); 
+  db_tabprops->getWithDefault("upper_hl_bound", d_hl_upper_bound, 1.0); 
+
   // only solve for heat loss if a working radiation model is found
   const ProblemSpecP params_root = db_tabprops->getRootNode();
   ProblemSpecP db_enthalpy  =  params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ExplicitSolver")->findBlock("EnthalpySolver");
@@ -195,7 +201,10 @@ TabPropsInterface::problemSetup( const ProblemSpecP& propertiesParameters )
 
   // create a transform object
   if ( db_tabprops->findBlock("coal") ) {
-    _iv_transform = scinew CoalTransform(); 
+    double constant = 0.0;
+    _iv_transform = scinew CoalTransform( constant ); 
+  } else if( db_tabprops->findBlock("acidbase") ) {
+      throw ProblemSetupException( "Acid base transform not implemented yet for TabProps",__FILE__,__LINE__); 
   } else { 
     _iv_transform = scinew NoTransform();
   }
@@ -280,7 +289,7 @@ TabPropsInterface::sched_getState( const LevelP& level,
   tsk->modifies( d_lab->d_densityCPLabel );  // lame .... fix me
   if ( modify_ref_den )
     tsk->computes(time_labels->ref_density); 
-   
+  tsk->requires( Task::NewDW, d_lab->d_volFractionLabel, gn, 0 ); 
 
   sched->addTask( tsk, level->eachPatch(), d_lab->d_sharedState->allArchesMaterials() ); 
 }
@@ -305,6 +314,10 @@ TabPropsInterface::getState( const ProcessorGroup* pc,
     const Patch* patch = patches->get(p); 
     int archIndex = 0; 
     int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+
+    // volume fraction: 
+    constCCVariable<double> eps_vol; 
+    new_dw->get( eps_vol, d_lab->d_volFractionLabel, matlIndex, patch, gn, 0 ); 
 
     //independent variables:
     std::vector<constCCVariable<double> > indep_storage; 
@@ -343,9 +356,6 @@ TabPropsInterface::getState( const ProcessorGroup* pc,
 
         depend_storage.insert( make_pair( i->first, storage )).first; 
 
-
-        //depend_storage.insert( make_pair( i->first, the_var )).first; 
-        
       }
 
       // others: 
@@ -378,7 +388,7 @@ TabPropsInterface::getState( const ProcessorGroup* pc,
       for ( VarMap::iterator i = d_dvVarMap.begin(); i != d_dvVarMap.end(); ++i ){
 
         DepVarCont storage;
-       
+
         storage.var = new CCVariable<double>; 
         new_dw->getModifiable( *storage.var, i->second, matlIndex, patch ); 
 
@@ -423,6 +433,7 @@ TabPropsInterface::getState( const ProcessorGroup* pc,
       for ( DepVarMap::iterator i = depend_storage.begin(); i != depend_storage.end(); ++i ){
 
         double table_value = getSingleState( i->second.spline, i->first, iv ); 
+          table_value *= eps_vol[c]; 
         (*i->second.var)[c] = table_value;
 
         if (i->first == "density") {
@@ -431,7 +442,6 @@ TabPropsInterface::getState( const ProcessorGroup* pc,
             mpmarches_denmicro[c] = table_value; 
         } else if (i->first == "temperature" && !d_coldflow) {
           arches_temperature[c] = table_value; 
-        //} else if (i->first == "heat_capacity" && !d_coldflow) {
         } else if (i->first == "specificheat" && !d_coldflow) {
           arches_cp[c] = table_value; 
         } else if (i->first == "CO2" && !d_coldflow) {
@@ -523,6 +533,7 @@ TabPropsInterface::getState( const ProcessorGroup* pc,
           for ( DepVarMap::iterator i = depend_storage.begin(); i != depend_storage.end(); ++i ){
   
             double table_value = getSingleState( i->second.spline, i->first, iv ); 
+            table_value *= eps_vol[c]; 
             (*i->second.var)[c] = table_value;
 
             if (i->first == "density") {
@@ -533,7 +544,6 @@ TabPropsInterface::getState( const ProcessorGroup* pc,
                 mpmarches_denmicro[c] = table_value; 
             } else if (i->first == "temperature" && !d_coldflow) {
               arches_temperature[c] = table_value; 
-            //} else if (i->first == "heat_capacity" && !d_coldflow) {
             } else if (i->first == "specificheat" && !d_coldflow) {
               arches_cp[c] = table_value; 
             } else if (i->first == "CO2" && !d_coldflow) {
@@ -653,6 +663,9 @@ TabPropsInterface::computeHeatLoss( const ProcessorGroup* pc,
         }
       }
 
+      bool lower_hl_exceeded = false; 
+      bool upper_hl_exceeded = false;
+
       for (CellIterator iter=patch->getCellIterator(0); !iter.done(); iter++){
         IntVector c = *iter; 
 
@@ -680,14 +693,26 @@ TabPropsInterface::computeHeatLoss( const ProcessorGroup* pc,
         if ( calcEnthalpy )
           current_heat_loss = ( adiabatic_enthalpy - enthalpy[c] ) / ( sensible_enthalpy + small ); 
 
-        if ( current_heat_loss < -1.0 )
-          current_heat_loss = -1.0; 
-        else if ( current_heat_loss > 1.0 ) 
-          current_heat_loss = 1.0; 
-
+        if ( current_heat_loss < d_hl_lower_bound ) {
+          current_heat_loss = d_hl_lower_bound; 
+          lower_hl_exceeded = true; 
+        } else if ( current_heat_loss > d_hl_upper_bound ) { 
+          current_heat_loss = d_hl_upper_bound; 
+          upper_hl_exceeded = true; 
+        }
         heat_loss[c] = current_heat_loss; 
-
       }
+
+      if ( d_noisy_hl_warning ) { 
+       
+        if ( upper_hl_exceeded || lower_hl_exceeded ) {  
+          cout << "Patch with bounds: " << patch->getCellLowIndex() << " to " << patch->getCellHighIndex()  << endl;
+          if ( lower_hl_exceeded ) 
+            cout << "   --> lower heat loss exceeded. " << endl;
+          if ( upper_hl_exceeded ) 
+            cout << "   --> upper heat loss exceeded. " << endl;
+        } 
+      } 
     }
   }
 }
@@ -767,7 +792,6 @@ TabPropsInterface::computeFirstEnthalpy( const ProcessorGroup* pc,
 
       }
     }
-
 
     for (CellIterator iter=patch->getCellIterator(0); !iter.done(); iter++){
       IntVector c = *iter; 

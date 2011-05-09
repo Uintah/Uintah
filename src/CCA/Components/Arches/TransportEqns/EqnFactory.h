@@ -17,8 +17,6 @@ namespace Uintah {
   * be used with the EqnFactory. 
   *
   */
-class ExplicitTimeInt;
-class ArchesLabel;
 class EqnBase; 
 class ArchesLabel;
 class ExplicitTimeInt;
@@ -72,6 +70,9 @@ public:
 
   /** @brief  Grab input parameters from the ups file */
   void problemSetup( const ProblemSpecP & params );
+
+  /** @brief  Set up the extra source terms (if necessary) */
+  void problemSetupSources( const ProblemSpecP& inputdb );
 
   /** @brief  Schedule initialization of scalar equations */
   void sched_scalarInit( const LevelP& level, 
