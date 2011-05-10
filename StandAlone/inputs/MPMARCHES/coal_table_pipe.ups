@@ -267,7 +267,7 @@
             <Properties>
                 <use_mixing_model>true</use_mixing_model>
                 <ClassicTable>
-                  <inputfile>input/oxy-coal.mix</inputfile>
+                  <inputfile>inputs/ARCHES/ClassicMixingTables/coal/oxy-coal.mix.gz</inputfile>
                   <coal fp_label="mixture_fraction_2" eta_label="coal_gas_mix_frac"/>
                 </ClassicTable>
             </Properties>
