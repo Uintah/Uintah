@@ -1,9 +1,12 @@
+//May 6, 2011 This version was checked out from SCIRun/UintahFresh/src/CCA/Components/Models/Radiation/RMCRT which
+// was updated on Fri May 4 at 1ish pm.  I will now switch from cell iterator to i,j,k.  Eventually
+// I will also switch from the flat arrays to 3D arrays.
 //----- Ray.cc ----------------------------------------------
 #include <CCA/Components/Models/Radiation/RMCRT/Ray.h>
+#include <Core/Exceptions/InternalError.h>
 #include <Core/Grid/DbgOutput.h>
 #include <time.h>
 
-//#define RAYVIZ
 //--------------------------------------------------------------
 //
 using namespace Uintah;
@@ -162,9 +165,9 @@ Ray::initProperties( const ProcessorGroup* pc,
       IntVector c = *iter; 
 
       if ( _benchmark_1 ) { 
-        abskg[c] = 0.90 * ( 1.0 - 2.0 * fabs( ( c.x() - (Nx - 1.0) /2.0) * Dx[0]) )
-                        * ( 1.0 - 2.0 * fabs( ( c.y() - (Ny - 1.0) /2.0) * Dx[1]) )
-                        * ( 1.0 - 2.0 * fabs( ( c.z() - (Nz - 1.0) /2.0) * Dx[2]) ) 
+        abskg[c] = 0.90 * ( 1.0 - 2.0 * fabs( ( c[0] - (Nx - 1.0) /2.0) * Dx[0]) )
+                        * ( 1.0 - 2.0 * fabs( ( c[1] - (Ny - 1.0) /2.0) * Dx[1]) )
+                        * ( 1.0 - 2.0 * fabs( ( c[2] - (Nz - 1.0) /2.0) * Dx[2]) ) 
                         + 0.1;
 
       } else { 
@@ -276,9 +279,6 @@ Ray::rayTrace( const ProcessorGroup* pc,
     const Patch* patch = patches->get(p);
     printTask(patches,patch,dbg,"Doing Ray::rayTrace");
     
-    //The following will be removed when using cell iterator..
-    int cur[3];//  cur represents the current location of a ray as it is traced through the domain... 
-    //Each ray will always begin at c (the i,j,k of the iterator)
     Vector ray_location;
     Vector ray_location_prev;
 
@@ -296,14 +296,15 @@ Ray::rayTrace( const ProcessorGroup* pc,
     //  getting the temperature from the DW
     new_dw->get( abskg          , d_abskgLabel ,   d_matl , patch , Ghost::None , 0);
     new_dw->get( sigmaT4        , d_sigmaT4_label, d_matl , patch , Ghost::None , 0);
+    
     if( time_sub_step == 0 ){
       new_dw->allocateAndPut( divQ, divQ_label, d_matl, patch );
       divQ.initialize( 0.0 );
     }else{
       old_dw->getModifiable( divQ,  divQ_label, d_matl, patch );
     }
-    IntVector pLow  = patch->getCellLowIndex();  // patch low index //returns 0 for edge patches
-    IntVector pHigh = patch->getCellHighIndex(); // patch high index//returns index of highest cell (usually it's a ghost)
+    IntVector pLow  = patch->getCellLowIndex();
+    IntVector pHigh = patch->getCellHighIndex(); 
     int ii;//used as an index when creating 1D arrays out of 3d arrays
 
     int Nx = pHigh[0] - pLow[0];
@@ -311,22 +312,6 @@ Ray::rayTrace( const ProcessorGroup* pc,
     int Nz = pHigh[2] - pLow[2];   
     int ix =(Nx)*(Ny)*(Nz);
 
-#ifdef RAYVIZ
-    //For visualization of rays in a single line in Nx X Ny slice
-    double RayVisX[_NoOfRays*2][Nx*3];
-    double RayVisY[_NoOfRays*2][Nx*3];
-    double RayVisZ[_NoOfRays*2][Nx*3];
-
-    //For visualization of Rays only. Initialize
-
-    for (int rRay=0; rRay < _NoOfRays*2; rRay++){
-      for (int qx=0; qx < Nx*3; qx++){
-        RayVisX[rRay][qx] = -1.0;
-        RayVisY[rRay][qx] = -1.0;
-        RayVisZ[rRay][qx] = -1.0;   
-      }  
-    }
-#endif 
 
     double absorb_coef[ix];                            // represents the fraction absorbed per cell length through a control volume
                                                        // the data warehouse values begin at zero
@@ -336,7 +321,6 @@ Ray::rayTrace( const ProcessorGroup* pc,
     double chi_Iin_cv;                                 // Iin multiplied by its respective chi.
     double Inet_cv[ix];                                // separate Inet necessary for surfaces. !! I don't think I need an array for this
     double chi;                                        // the absorption coefficient multiplied of the origin cell
-    bool   first;                                      // used to determine chi.
     double fs;                                         // fraction remaining after all current reflections
     unsigned int size = 0;                             // current size of PathIndex !!move to Ray.h
     double rho = 1.0 - _alpha;                         // reflectivity
@@ -350,6 +334,14 @@ Ray::rayTrace( const ProcessorGroup* pc,
     const double* sigmaT4_ptr = const_cast<double*>( sigmaT4.getPointer() );
     const double* abskg_ptr = const_cast<double*>( abskg.getPointer() );
 
+
+/*`==========TESTING==========*/
+if( ( Dx.x() != Dx.y() ) || ( Dx.x() != Dx.z() ) || ( Dx.y() != Dx.z() ) ) {
+  throw InternalError("rayTrace:: only works if dx == dy == dz", __FILE__, __LINE__);
+} 
+/*===========TESTING==========`*/
+
+
     //double absorb_coef_3D[Nz][Ny][Nx];
 
     //Make Iout a 1D while referencing temperature which is a 3D array. This pre-computes Iout since it gets referenced so much
@@ -358,6 +350,7 @@ Ray::rayTrace( const ProcessorGroup* pc,
     for ( k=0; k<Nz; k++){//the indeces of the cells
       for ( j=0; j<Ny; j++){
         for ( i=0; i<Nx; i++){
+         
           Iout_cv[ii] = *sigmaT4_ptr; 
           absorb_coef[ii] = *abskg_ptr;//make 1D from 3D
           //for benchmark case, temperature is 64.804 everywhere
@@ -365,6 +358,8 @@ Ray::rayTrace( const ProcessorGroup* pc,
           // absorb_coef[ii] = 0.9*(1-2*fabs((i -(Nx-1)/2.0)*Dx[0]))*(1-2*fabs((j -(Ny-1)/2.0)*Dx[1]))*(1-2*fabs((k -(Nz-1)/2.0)*Dx[2])) +0.1;//benchmark 99
           //next line is for visualization only.
           dx_absorb_coef[ii] = Dx.x()*absorb_coef[ii];//Used in optical thickness calculation.!!Adjust if cells are noncubic
+                            // ^^^^  FIX ME
+          
           sigmaT4_ptr++;
           abskg_ptr++;
           ii++;
@@ -372,301 +367,189 @@ Ray::rayTrace( const ProcessorGroup* pc,
       }
     }
 
-    for ( CellIterator iter = patch->getCellIterator(); !iter.done(); iter++ ){ 
-
-     // cout << " from here I get: " << abskg[*iter] << endl;
-
-    } 
-
     ix = 0;  //This now represents the current cell in 1D(akin to c, not cur)
 
-#ifdef RAYVIZ
-    int i_flag = 1;//visualization of chi_Iin only
-    int rRay = 0;//visualization of rays.
-#endif
+    //__________________________________
+    //
+    for (CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){ 
 
-    // cell loop
-    for ( k=0; k<Nz; k++){
-      for ( j=0; j<Ny; j++){
-        for ( i=0; i<Nx; i++){
-          chi_Iin_cv = 0; 
+      IntVector origin = *iter; 
+      int i = origin.x();
+      int j = origin.y();
+      int k = origin.z();
 
-          // ray loop
-          for (int iRay=0; iRay < _NoOfRays; iRay++){ //counter. goes from 0 to NoOfRays
+      chi_Iin_cv = 0; 
+      chi = absorb_coef[ix];
+      
+      // ray loop
+      for (int iRay=0; iRay < _NoOfRays; iRay++){
 
-#ifdef RAYVIZ
-            if (k==_slice && j==_slice && i>18)  {
-              int qx = 0; //for visualization
-            }
-#endif
+        IntVector cur = origin;
 
-            cur[0] = i; cur[1] =j; cur[2] = k; //Use cur = c when cur is an IntVector, when using cell iterato
-            //IntVector cur = c;//current will represent the current location of a ray as it is traced through the...
-            //domain.  Each ray will always begin at c (the i,j,k of the iterator)
-            int cx = ix;//
-            int cx_p;
-            // begins at 0. Can follow a ray without touching ix.(akin to cur)
-            // picks a random spot in the cell, starting from the negative face:
-            _mTwister.seed((i + j + k) * iRay +1); 
+        //  Each ray will always begin at origin
+        int cx = ix;
+        int cx_p;
+        // begins at 0. Can follow a ray without touching ix.(akin to cur)
 
-#if 0           
-            double a = _mTwister.rand();
-            double b = _mTwister.rand();
-            double c = _mTwister.rand();
-            cout << IntVector(i,j,k) << "randomNumbers " << a << " " << b << " " << c << endl;
-#endif            
+        _mTwister.seed((i + j +k) * iRay +1); 
 
-            ray_location[0] =   i +  _mTwister.rand() ;//was c.x +...
-            ray_location[1] =   j +  _mTwister.rand() ;
-            ray_location[2] =   k +  _mTwister.rand() ; //Dx is specified in line 101
+        ray_location[0] =   i +  _mTwister.rand() ;
+        ray_location[1] =   j +  _mTwister.rand() ;
+        ray_location[2] =   k +  _mTwister.rand() ;
 
+        // see http://www.cgafaq.info/wiki/aandom_Points_On_Sphere for explanation
 
+        double plusMinus_one = 2 * _mTwister.rand() - 1;
+        double r = sqrt(1 - plusMinus_one * plusMinus_one);    // Radius of circle at z
+        double theta = 2 * M_PI * _mTwister.rand();            // Uniform betwen 0-2Pi
 
-#ifdef RAYVIZ
-            if (k==_slice && j==_slice && (i==19 || i ==21) ){
-              RayVisX[rRay][qx]=ray_location[0];
-              RayVisY[rRay][qx]=ray_location[1];
-              RayVisZ[rRay][qx]=ray_location[2];
-              if (i==21) { cout << endl; }
-              cout << endl << ray_location<<  " cx " << cx << endl;
-              qx++;
-            }
-#endif
+        Vector direction_vector;
+        direction_vector[0] = r*cos(theta);                   // Convert to cartesian
+        direction_vector[1] = r*sin(theta);
+        direction_vector[2] = plusMinus_one;                  // Uniform between -1 to 1
 
-            //ray_location = + _mTwister.randVector(); Sep 27, get this to work.  I need cur to be a vector
-            // see http://www.cgafaq.info/wiki/aandom_Points_On_Sphere for explanation
-            Vector direction_vector;//change to capital Vector
-            direction_vector[2] = 2 * _mTwister.rand() - 1;  // Uniform between -1 to 1
-            double r = sqrt(1 - direction_vector[2]*direction_vector[2]); // Radius of circle at z
-            double theta = 2 * M_PI * _mTwister.rand(); // Uniform betwen 0-2Pi
-            //double theta        = 2*_pi*_mTwister.rand(); // Uniform betwen 0-2Pi
-            direction_vector[0] = r*cos(theta); // Convert to cartesian
-            direction_vector[1] = r*sin(theta);
-            Vector inv_direction_vector;
+        Vector inv_direction_vector = Vector(1.0)/direction_vector;
 
-            inv_direction_vector[0] = 1.0/direction_vector[0];
-            inv_direction_vector[1] = 1.0/direction_vector[1];
-            inv_direction_vector[2] = 1.0/direction_vector[2];
-            //inv_direction_vector = Vector(1)/direction_vector;  //!! try this way, easier to read
+        int step[3];                                          // Gives +1 or -1 based on sign
+        bool sign[3];                 // **** Why is this a bool?  --Todd
 
-            int step[3];//this can be a Vector in arches. Gives +1 or -1 based on sign
-            bool sign[3];
+        //bool opposite_sign[3];
+        for ( ii= 0; ii<3; ii++){
+          if (inv_direction_vector[ii]>0){
+            step[ii] = 1;
+            sign[ii] = 1;
+            //  opposite_sign[ii]=0;
+          }
+          else{
+            step[ii] = -1;
+            sign[ii] = 0;// 
+            //opposite_sign[ii]=1;
+          }
+        }
 
-            //bool opposite_sign[3];
-            for ( ii= 0; ii<3; ii++){
-              if (inv_direction_vector[ii]>0){
-                step[ii] = 1;
-                sign[ii] = 1;
-                //  opposite_sign[ii]=0;
+        double tMaxX = (i + sign[0] - ray_location[0]) * inv_direction_vector[0];
+        double tMaxY = (j + sign[1] - ray_location[1]) * inv_direction_vector[1];
+        double tMaxZ = (k + sign[2] - ray_location[2]) * inv_direction_vector[2];
+
+        //Length of t to traverse one cell
+        double tDeltaX = abs(inv_direction_vector[0]);
+        double tDeltaY = abs(inv_direction_vector[1]);
+        double tDeltaZ = abs(inv_direction_vector[2]);
+        double tMax_prev = 0;
+        bool in_domain = true;
+
+        //Initializes the following values for each ray
+        double intensity = 1.0;     
+        optical_thickness = 0;
+        fs = 1;
+        
+        //+++++++Begin ray tracing+++++++++++++++++++
+
+        Vector temp_direction = direction_vector;   // **** Is this used anywhere?
+        
+        //save the direction vector so that it can get modified by...
+        //the 2nd switch statement for reflections, but so that we can get the ray_location back into...
+        //the domain after it was updated following the first switch statement.         
+
+        //Threshold while loop
+        while (intensity > _Threshold){
+
+          //Domain while loop 
+          while (in_domain){
+
+            size++;
+            cx_p =cx;
+
+            //__________________________________
+            //  Determine which cell the ray will enter next
+            if (tMaxX < tMaxY){
+              if (tMaxX < tMaxZ){
+                cx        = cx + step[0];
+                cur[0]    = cur[0] + step[0];
+                disMin    = tMaxX - tMax_prev;
+                tMax_prev = tMaxX;
+                tMaxX     = tMaxX + tDeltaX;
               }
-              else{
-                step[ii] = -1;
-                sign[ii] = 0;// 
-                //opposite_sign[ii]=1;
+              else {
+                cx        = cx + Nx*Ny*step[2];
+                cur[2]    = cur[2] + step[2];
+                disMin    = tMaxZ - tMax_prev;
+                tMax_prev = tMaxZ;
+                tMaxZ     = tMaxZ + tDeltaZ;
               }
             }
+            else {
+              if(tMaxY <tMaxZ){
+                cx        = cx + Nx*step[1];
+                cur[1]    = cur[1] + step[1];
+                disMin    = tMaxY - tMax_prev;
+                tMax_prev = tMaxY;
+                tMaxY     = tMaxY + tDeltaY;
+              }
+              else {
+                cx        = cx + Nx*Ny*step[2];
+                cur[2]    = cur[2] + step[2];
+                disMin    = tMaxZ - tMax_prev;
+                tMax_prev = tMaxZ;
+                tMaxZ     = tMaxZ + tDeltaZ;
+              }
+            }
+            
+            // Is this cell in the domain
+            if( (cur[0] > Nx-1 || cur[0] < 0) ||
+                (cur[1] > Ny-1 || cur[1] < 0) ||
+                (cur[2] > Nz-1 || cur[2] < 0) ){
+              in_domain = false; 
+            }
 
-            double tMaxX = (i +sign[0] - ray_location[0]) * inv_direction_vector[0];
-            double tMaxY = (j +sign[1] - ray_location[1]) * inv_direction_vector[1];
-            double tMaxZ = (k +sign[2] - ray_location[2]) * inv_direction_vector[2];
+            //__________________________________
+            //  Update the ray location
+            //this is necessary to find the absorb_coef at the endpoints of each step
+            ray_location_prev = ray_location;                                  // ****** Is this used anywhere??
+            ray_location      = ray_location + (disMin * direction_vector);
 
+            //Because I do these next three lines before the switch statement, I will never have...
+            //to worry about cells outside the boundary, or having to decrement opticalthickness or...
+            //intensity after I get back inside the domain.
+            optical_thickness_prev = optical_thickness;
+            optical_thickness += dx_absorb_coef[cx_p]*disMin;
 
-            double tDeltaX = abs(inv_direction_vector[0]);//Tells us the lenght of t to traverse one cell
-            double tDeltaY = abs(inv_direction_vector[1]);
-            double tDeltaZ = abs(inv_direction_vector[2]);
-            double tMax_prev = 0;
-            bool in_domain = 1;
+            intensity = intensity*exp(-optical_thickness);  //update intensity by Beer's Law
 
-            //Initializes the following values for each ray
-            double intensity = 1.0;     
-            optical_thickness = 0;
-            first = 1;
-            fs = 1;
-            //+++++++Begin ray tracing+++++++++++++++++++
+            size++;
 
-            Vector temp_direction = direction_vector;//save the direction vector so that it can get modified by...
-            //the 2nd switch statement for reflections, but so that we can get the ray_location back into...
-            //the domain after it was updated following the first switch statement.         
+            //Eqn 3-15, while accounting for fs. 
+            //Third term inside the parentheses is accounted for in Inet. Chi is accounted for in Inet calc.
+            chi_Iin_cv += chi * (Iout_cv[cx_p] * ( exp(-optical_thickness_prev) - exp(-optical_thickness) ) * fs );
+            // Multiply Iin by the current chi, for each ray not just at the end of all the rays.
 
-            //Threshold while loop
-            while (intensity > _Threshold){
+          } //end domain while loop.  ++++++++++++++
 
-              //Domain while loop 
-              while (in_domain){
+          //__________________________________
+          //  Reflections
+          if (intensity > _Threshold){
 
-                size++;
-                cx_p =cx;//cx previous.  Jan 19
-                if (tMaxX < tMaxY){
-                  if (tMaxX < tMaxZ){
-                    cx = cx +step[0];
-                    cur[0] += step[0];
-                    if (cur[0] > Nx-1 || cur[0] < 0){
-                      in_domain = 0; 
-                    }
-                    disMin = tMaxX - tMax_prev;
-                    tMax_prev = tMaxX;
-                    tMaxX = tMaxX +tDeltaX;
-                  }
-                  else {
-                    cx = cx + Nx*Ny*step[2];
-                    cur[2] = cur[2] +step[2];
+            //puts ray back inside the domain...; 
+            intensity*=rho;
+            //comment out for cold wall:  Iin_cv += _alpha * Iout_cv[cx] * exp(-optical_thickness)*fs;//!! Right now the temperature of the...
+            //boundary is simply the temp of the cell just inside the wall.This is accounting for emission from the walls reacing the origin
+            //for non-cold wall, make this a chi_Iin_cv.
+            //Comment out for cold, black walls: fs*=rho;//update fs after above Iin reassignment because the reflection is not attenuated by itself.
+          }  //end reflection if statement
 
-                    if (cur[2] > Nz-1 || cur[2] <0){
-                      in_domain = 0; 
-                    }
-                    disMin = tMaxZ - tMax_prev;
-                    tMax_prev = tMaxZ;
-                    tMaxZ = tMaxZ+tDeltaZ;
+        }  // end threshold while loop (ends ray tracing for that ray
+      }  // Ray loop
 
-                  }
-                }
+      //__________________________________
+      //  Compute divQ & Inet.  
+      //  Iout is blackbody and must be multiplied by absorb_coef. absorb_coef is the kappa of 9.53.
+      Inet_cv[ix] = Iout_cv[ix] * absorb_coef[ix] - (chi_Iin_cv/_NoOfRays); //the last term is from Paula's eqn 3.10
+      
+      divQ[origin] = Inet_cv[ix] * 4.0 * _pi; 
 
-                else {
-                  if(tMaxY <tMaxZ){
-                    cx = cx + Nx*step[1];
-                    cur[1] = cur[1] +step[1];
-
-                    if (cur[1] > Ny-1 || cur[1] < 0){
-                      in_domain = 0;  
-                    }
-                    disMin = tMaxY - tMax_prev;
-                    tMax_prev = tMaxY;
-                    tMaxY = tMaxY +tDeltaY;
-                  }
-                  else {
-                    cx = cx +Nx*Ny*step[2];
-                    cur[2] = cur[2] +step[2];
-
-                    if (cur[2] > Nz-1 || cur[2] < 0){
-                      in_domain = 0;  
-                    }
-                    disMin = tMaxZ - tMax_prev;
-                    tMax_prev = tMaxZ;
-                    tMaxZ = tMaxZ +tDeltaZ;
-                  }
-                }
-                //this is necessary to find the absorb_coef at the endpoints of each step
-
-                //if (in_domain) this probably is necessary. Dec 20
-                ray_location_prev[0] = ray_location[0];
-                ray_location_prev[1] = ray_location[1];
-                ray_location_prev[2] = ray_location[2];
-
-                ray_location[0] = ray_location[0] + disMin * direction_vector[0];
-                ray_location[1] = ray_location[1] + disMin * direction_vector[1];
-                ray_location[2] = ray_location[2] + disMin * direction_vector[2];
-
-
-#ifdef RAYVIZ
-                if (k==_slice && j==_slice && i==19  ){
-                  RayVisX[rRay][qx]=ray_location[0];
-                  RayVisY[rRay][qx]=ray_location[1];
-                  RayVisZ[rRay][qx]=ray_location[2];
-                  qx++;
-                  cout << "ray location " << ray_location << endl;
-
-                }
-
-                if (k==_slice && j==_slice &&  i==21 ){
-                  RayVisX[rRay][qx]=ray_location[0];
-                  RayVisY[rRay][qx]=ray_location[1];
-                  RayVisZ[rRay][qx]=ray_location[2];
-                  qx++;
-                  cout << "ray location " << ray_location << endl;
-
-                }
-#endif
-                if (first){
-                  chi = absorb_coef[ix]; 
-                  first = 0;
-                }//end if(first)
-
-                //Because I do these next three lines before the switch statement, I will never have...
-                //to worry about cells outside the boundary, or having to decrement opticalthickness or...
-                //intensity after I get back inside the domain.
-                optical_thickness_prev = optical_thickness;
-                optical_thickness += dx_absorb_coef[cx_p]*disMin;
-
-                intensity = intensity*exp(-optical_thickness);//update intensity by Beer's Law
-
-                size++;
-
-                //Eqn 3-15, while accounting for fs. 
-                //Third term inside the parentheses is accounted for in Inet. Chi is accounted for in Inet calc.
-                chi_Iin_cv += chi * (Iout_cv[cx_p] * ( exp(-optical_thickness_prev) - exp(-optical_thickness) ) * fs );////Dec 1
-                // Multiply Iin by the current chi, for each ray not just at the end of all the rays.
-
-
-#ifdef RAYVIZ
-                  if (i ==21) {
-                  if (i_flag){ 
-                  cout << endl << endl;
-                  i_flag = 0;
-                  }
-                  }
-                  if (k==_slice && j==_slice && (i==19 || i ==21) ){
-                  cout  << "chi_Iin_cv " <<  chi_Iin_cv << " absorb_coef " << absorb_coef[cx]  << " cur " << cur[0] << " " << cur[1] << " " << cur[2] << " cx " <<cx << endl;
-                  cout << "absorb3D " << absorb_coef_3D[cur[2]][cur[1]][cur[0]] << endl;
-                  }
-#endif
-
-              } //end domain while loop.  ++++++++++++++
-
-              if (intensity > _Threshold){//i.e. if we're doing a reflection
-
-                //puts ray back inside the domain...; 
-                intensity*=rho;
-                //comment out for cold wall:  Iin_cv += _alpha * Iout_cv[cx] * exp(-optical_thickness)*fs;//!! Right now the temperature of the...
-                //boundary is simply the temp of the cell just inside the wall.This is accounting for emission from the walls reacing the origin
-                //for non-cold wall, make this a chi_Iin_cv.
-                //Comment out for cold, black walls: fs*=rho;//update fs after above Iin reassignment because the reflection is not attenuated by itself.
-              }//end reflection if statement
-
-            }//end threshold while loop (ends ray tracing for that ray
-            // if (k==_slice && j==_slice && (i==19 || i==21) ){
-            // rRay++;
-            // }
-          }//end N number of rays per cell      
-
-          //Compute Inet.  Iout is blackbody and must be multiplied by absorb_coef. absorb_coef is the kappa of 9.53.
-          Inet_cv[ix] = Iout_cv[ix] * absorb_coef[ix] - (chi_Iin_cv/_NoOfRays); //the last term is from Paula's eqn 3.10
-
-          IntVector c(i,j,k);
-
-          divQ[c] = Inet_cv[ix] * 4.0 * _pi; 
-
-          ix++;//bottom of bottom of cell loop. otherwise ix begins at 1.  
-
-        }// end cell iterator i
-      }// end j
-    }//end k
-
-#ifdef RAYVIZ
-    if (_slice > Nx) cout << endl <<"Slice is outside Domain! " << endl << "FIX SLICE!!" << endl;
-    if (_slice != Nx/2) cout << endl<<"SLICE IS NOT CENTERED! " << endl;
-
-     //visualize the rays
-     int qx = 0;
-     fx=fopen("RayVisX.txt", "w");
-     fy=fopen("RayVisY.txt", "w");
-     fz=fopen("RayVisZ.txt", "w");
-
-     for(int rr = 0; rr<2*_NoOfRays;rr++){
-     for (qx = 0; qx<Nx*3; qx++){
-     fprintf(fx, "%+14.8E  \t",RayVisX[rr][qx]);
-     fprintf(fy, "%+14.8E  \t",RayVisY[rr][qx]);
-     fprintf(fz, "%+14.8E  \t",RayVisZ[rr][qx]);
-     }
-     fprintf(fx, "\n");
-     fprintf(fy, "\n");
-     fprintf(fz, "\n");
-
-     }
-
-     fclose(fx);
-     fclose(fy);
-     fclose(fz);
-#endif
+      ix++;   // update flat array index
+      
+    }  // end cell iterator 
 
     double end =clock();
     double efficiency = size/((end-start)/ CLOCKS_PER_SEC);
@@ -682,7 +565,10 @@ Ray::rayTrace( const ProcessorGroup* pc,
 } // end ray trace method
 
 
+
+//______________________________________________________________________
 // ISAAC's NOTES: 
+//May 6. Changed to cell iterator
 //Created Jan 31. Cleaned up comments, removed hard coding of T and abskg 
 // Jan 19// I changed cx to be lagging.  This changed nothing in the RMS error, but may be important...
 //when referencing a non-uniform temperature.
@@ -719,9 +605,4 @@ Ray::rayTrace( const ProcessorGroup* pc,
 //is just (NxNyNz) rather than (xNxxNyxNz).  absorbing media. reflections, and simplified while 
 //(w/precompute) loop. ray_location now represents what was formally called emiss_point.  It is by
 // cell index, not by physical location.
-
-
-
-//Jeremy to do list
-//Regression Testing Gold standards
 
