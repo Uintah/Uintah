@@ -281,10 +281,10 @@ PetscSolver::setRHS_X(const ProcessorGroup* ,
                       constCCVariable<double>& rhs, 
                       bool construct_A )
 {
-  double solve_start = Time::currentSeconds();
+  //double solve_start = Time::currentSeconds();
   int ierr;
-  int col[7];
-  double value[7];
+  //int col[7];
+  //double value[7];
   // fill matrix for internal patches
   // make sure that sizeof(d_petscIndex) is the last patch, i.e., appears last in the
   // petsc matrix
