@@ -319,8 +319,8 @@
             <LinearSolver               spec="OPTIONAL NO_DATA" 
                                         attribute1="type REQUIRED STRING 'hypre, petsc'">
               <res_tol                  spec="REQUIRED DOUBLE" />
-              <ksptype                  spec="REQUIRED STRING 'gmres'" />
-              <pctype                   spec="REQUIRED STRING 'jacobi, blockjacobi'" />
+              <ksptype                  spec="REQUIRED STRING 'gmres, pfmg, smg, cg'" />
+              <pctype                   spec="REQUIRED STRING 'jacobi, smg, pfmg'" />
               <max_iter                 spec="REQUIRED INTEGER" />
             </LinearSolver>
             <spherical_harmonics        spec="OPTIONAL BOOLEAN" />
