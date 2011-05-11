@@ -2583,6 +2583,21 @@ BoundaryCondition::PressureInlet::problemSetup(ProblemSpecP& params)
   if (d_calcVariance){
     streamMixturefraction.d_mixVarVariance.push_back(0.0);
   }
+
+  if (params->findBlock("mixture_fraction_2")){
+    double mixfrac2; 
+    params->require("mixture_fraction_2", mixfrac2); 
+    streamMixturefraction.d_f2 = mixfrac2; 
+    streamMixturefraction.d_has_second_mixfrac = true;
+  } else { 
+    streamMixturefraction.d_has_second_mixfrac = false; 
+    streamMixturefraction.d_f2 = 0.0; 
+  }
+
+  double heatloss; 
+  params->getWithDefault("heat_loss", heatloss, 0); 
+  streamMixturefraction.d_heatloss = heatloss; 
+
   double reactscalar;
   if (d_reactingScalarSolve) {
     params->require("reacting_scalar", reactscalar);
@@ -2626,6 +2641,21 @@ BoundaryCondition::FlowOutlet::problemSetup(ProblemSpecP& params)
   double mixfrac;
   params->require("mixture_fraction", mixfrac);
   streamMixturefraction.d_mixVars.push_back(mixfrac);
+
+  if (params->findBlock("mixture_fraction_2")){
+    double mixfrac2; 
+    params->require("mixture_fraction_2", mixfrac2); 
+    streamMixturefraction.d_f2 = mixfrac2; 
+    streamMixturefraction.d_has_second_mixfrac = true;
+  } else { 
+    streamMixturefraction.d_has_second_mixfrac = false; 
+    streamMixturefraction.d_f2 = 0.0; 
+  }
+
+  double heatloss; 
+  params->getWithDefault("heat_loss", heatloss, 0); 
+  streamMixturefraction.d_heatloss = heatloss; 
+
   if (d_calcVariance)
     streamMixturefraction.d_mixVarVariance.push_back(0.0);
   double reactscalar;
@@ -5086,7 +5116,6 @@ BoundaryCondition::getScalarEfficiency(const ProcessorGroup*,
                                        DataWarehouse* new_dw)
 {
     sum_vartype sum_scalarFlowRate, sum_CO2FlowRate, sum_SO2FlowRate, sum_enthalpyFlowRate;
-    sum_vartype sum_CO2FlowRateES, sum_SO2FlowRateES;
     sum_vartype sum_totalRadSrc;
     delt_vartype flowRate;
     double scalarFlowRate = 0.0;
@@ -6612,7 +6641,8 @@ BoundaryCondition::computeBCArea__NEW(const ProcessorGroup*,
           bool foundIterator = 
             getIteratorBCValueBCKind( patch, face, child, bc_iter->second.name, matl_index, bc_value, bound_ptr, bc_kind); 
 
-          double dx_1, dx_2; 
+          double dx_1 = 0.0;
+          double dx_2 = 0.0; 
 
           if ( foundIterator ) {
 

@@ -848,7 +848,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
           }
         }
         normX[c] = this_normX;
-        
+ 
 #if defined(DEBUG_MATRICES)
 
         //if( pc->myrank() == 0 ) {
@@ -2348,7 +2348,7 @@ DQMOM::calculateMoments( const ProcessorGroup* pc,
         iEnd = iAllMoments + 1 + 2*N_xi;
       }
 
-      for( ; iAllMoments != iEnd; ++iAllMoments ) {
+      for( ; iAllMoments != iEnd; ++iAllMoments, ++iter1, ++iter2 ) {
 
         MomentVector thisMoment = (*iAllMoments);
 

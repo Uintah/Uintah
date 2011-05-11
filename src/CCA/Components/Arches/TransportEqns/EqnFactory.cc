@@ -128,6 +128,7 @@ EqnFactory::sched_scalarInit( const LevelP& level, SchedulerP& sched )
   Task* tsk = scinew Task("EqnFactory::scalarInit", this, &EqnFactory::scalarInit);
 
   tsk->computes(d_fieldLabels->d_MinScalarTimestepLabel);
+  tsk->requires( Task::NewDW, d_fieldLabels->d_volFractionLabel, Ghost::None ); 
 
   for( EqnMap::iterator iEqn = eqns_.begin(); iEqn != eqns_.end(); ++iEqn ){
     EqnBase* eqn = iEqn->second;
@@ -164,6 +165,9 @@ EqnFactory::scalarInit( const ProcessorGroup* ,
     int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
     const Patch* patch=patches->get(p);
 
+    constCCVariable<double> eps_v;
+    new_dw->get( eps_v, d_fieldLabels->d_volFractionLabel, matlIndex, patch, Ghost::None, 0 ); 
+
     for (EqnMap::iterator iEqn=eqns_.begin(); iEqn != eqns_.end(); iEqn++){
       EqnBase* eqn = iEqn->second; 
       string eqn_name = iEqn->first;
@@ -178,7 +182,7 @@ EqnFactory::scalarInit( const ProcessorGroup* ,
       oldPhi.initialize(0.0); 
 
       // initialize the equation using its initialization function
-      eqn->initializationFunction( patch, phi ); 
+      eqn->initializationFunction( patch, phi, eps_v ); 
 
       oldPhi.copyData(phi);
 

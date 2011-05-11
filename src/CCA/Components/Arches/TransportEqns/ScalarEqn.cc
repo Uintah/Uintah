@@ -539,7 +539,6 @@ ScalarEqn::solveTransportEqn( const ProcessorGroup* pc,
     // Time averaging will occur separately, and later
     // (see ExplicitSolver::nonLinearSolve)
 
-    /*
     if( lastTimeSubstep ) {
       // The procedure looks like this:
       // 1. Compute the error between the last RK substeps
@@ -572,7 +571,6 @@ ScalarEqn::solveTransportEqn( const ProcessorGroup* pc,
       }
 
     }
-    */
 
   }
 }
@@ -595,13 +593,6 @@ ScalarEqn::sched_timeAveraging( const LevelP& level, SchedulerP& sched, int time
   //Old
   tsk->requires(Task::OldDW, d_transportVarLabel, Ghost::None, 0);
   tsk->requires(Task::OldDW, d_fieldLabels->d_densityCPLabel, Ghost::None, 0); 
-  /*
-  if( timeSubStep == 0 ) {
-    tsk->requires(Task::OldDW, d_fieldLabels->d_densityCPLabel, Ghost::None, 0); 
-  } else {
-    tsk->requires(Task::NewDW, d_fieldLabels->d_densityTempLabel, Ghost::None, 0);
-  }
-  */
   tsk->requires(Task::OldDW, d_fieldLabels->d_sharedState->get_delt_label(), Ghost::None, 0);
 
   sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
@@ -647,14 +638,6 @@ ScalarEqn::timeAveraging( const ProcessorGroup* pc,
 
     new_dw->get(new_den, d_fieldLabels->d_densityCPLabel, matlIndex, patch, gn, 0);
     old_dw->get(old_den, d_fieldLabels->d_densityCPLabel, matlIndex, patch, gn, 0); 
-
-    /*
-    if ( timeSubStep == 0 ) {
-      old_dw->get(old_den, d_fieldLabels->d_densityCPLabel, matlIndex, patch, gn, 0);
-    } else {
-      new_dw->get(old_den, d_fieldLabels->d_densityTempLabel, matlIndex, patch, gn, 0); 
-    }
-    */
 
     //----Time averaging done here. 
     d_timeIntegrator->timeAvePhi( patch, phi_at_jp1, phi_at_j, new_den, old_den, timeSubStep, curr_ssp_time ); 
@@ -727,11 +710,6 @@ void ScalarEqn::clipPhi( const ProcessorGroup* pc,
         if( phi[*iter] < d_lowClip || old_phi[*iter] < d_lowClip ) {
           phi[*iter] = d_lowClip;
         }
-
-        //// Trunk if:
-        //if( phi[*iter] < d_lowClip ) {
-        //  phi[*iter] = d_lowClip;
-        //}
       }//end cells
     }//end if low clip
 
@@ -741,11 +719,6 @@ void ScalarEqn::clipPhi( const ProcessorGroup* pc,
         if( phi[*iter] > d_highClip || old_phi[*iter] > d_highClip) {
           phi[*iter] = d_highClip;
         }
-
-        //// Trunk if:
-        //if( phi[*iter] > d_highClip ) {
-        //  phi[*iter] = d_highClip;
-        //}
       }//end cells
     }//end if high clip
 

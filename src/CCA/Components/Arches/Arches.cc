@@ -380,54 +380,6 @@ Arches::problemSetup(const ProblemSpecP& params,
   coalFactory.setMixingRxnModel( d_props->getMixRxnModel() );
   coalFactory.setPropertyLabels();
 
-  // TODO
-  // Looping over all <DQMOM> blocks will require changing DQMOMEqnFactory
-  // (e.g. getting the number of quad nodes)
-  //
-  // Will also require changing all the classes that are using DQMOMEqnFactory...
-  // (particularly those grabbing # quad nodes)
-  //
-  // cmr
-
-  // Loop through alll <DQMOM> blocks to create a model factory for each
-  /*
-  for( ProblemSpecP dqmom_db = db->findBlock("DQMOM"); 
-       dqmom_db != 0; dqmom_db = dqmom_db->findNextBlock("DQMOM")) {
-
-    if( !time_db ) {
-      throw ProblemSetupException("ERROR: Arches: <DQMOM> block used without a <TimeIntegrator> block. You must add a time integrator to use DQMOM.",__FILE__,__LINE__);
-    }
-
-    d_doDQMOM = true;
-
-    // Figure out what kind of DQMOM factory to create
-    string dqmom_physics;
-    dqmom_db->getWithDefault("physics",dqmom_physics,"none");
-
-    // Depending on the type, need to initialize different model factories
-    if( dqmom_physics == "coal" ) {
-      // Set up coal model factory
-      CoalModelFactory& model_factory = CoalModelFactory::self();
-      model_factory.setArchesLabel( d_lab ); 
-      model_factory.problemSetup(dqmom_db);
-
-    } else if (dqmom_physics == "soot" ) {
-      throw ProblemSetupException("ERROR: Arches: DQMOM for soot is not currently supported.",__FILE__,__LINE__);
-
-    } else if (dqmom_physics == "none" ) {
-      // TODO 
-      // add a generic DQMOM models folder
-      // with a generic DQMOM models factory
-    }
-
-    // Set up the DQMOM linear solver:
-    DQMOM* dqmomSolver = scinew DQMOM(d_lab);
-    dqmomSolver->problemSetup( dqmom_db ); 
-    d_dqmomSolvers.push_back(dqmomSolver);
-  }
-  */
-
-
   // read boundary condition information 
   d_boundaryCondition = scinew BoundaryCondition(d_lab, d_MAlab, d_physicalConsts,
                                                  d_props, d_calcReactingScalar,
@@ -572,21 +524,6 @@ Arches::scheduleInitialize(const LevelP& level,
   //           viscosityIN
   sched_paramInit(level, sched);
 
-  // -----------------------------------
-  // Scalar equations (and source terms) initialization
-  EqnFactory& eqnFactory = EqnFactory::self(); 
-  eqnFactory.sched_scalarInit(level, sched);
-
-  // check to make sure that all the scalar variables have BCs set. 
-  EqnFactory::EqnMap& scalar_eqns = eqnFactory.retrieve_all_eqns(); 
-  for (EqnFactory::EqnMap::iterator ieqn=scalar_eqns.begin(); ieqn != scalar_eqns.end(); ieqn++){
-    EqnBase* eqn = ieqn->second; 
-    eqn->sched_checkBCs( level, sched ); 
-  }
-
-  SourceTermFactory& sourceFactory = SourceTermFactory::self();
-  sourceFactory.sched_sourceInit(level, sched);
-
   // ----------------------------------
   if (d_set_initial_condition) {
     sched_readCCInitialCondition(level, sched);
@@ -606,6 +543,21 @@ Arches::scheduleInitialize(const LevelP& level,
   //
   // compute the cell area fraction 
   d_boundaryCondition->sched_setAreaFraction( sched, patches, matls ); 
+
+  // -----------------------------------
+  // Scalar equations (and source terms) initialization
+  EqnFactory& eqnFactory = EqnFactory::self(); 
+  eqnFactory.sched_scalarInit(level, sched);
+
+  // check to make sure that all the scalar variables have BCs set. 
+  EqnFactory::EqnMap& scalar_eqns = eqnFactory.retrieve_all_eqns(); 
+  for (EqnFactory::EqnMap::iterator ieqn=scalar_eqns.begin(); ieqn != scalar_eqns.end(); ieqn++){
+    EqnBase* eqn = ieqn->second; 
+    eqn->sched_checkBCs( level, sched ); 
+  }
+
+  SourceTermFactory& sourceFactory = SourceTermFactory::self();
+  sourceFactory.sched_sourceInit(level, sched);
 
   // computing flow inlet areas
   if (d_boundaryCondition->getInletBC()){
