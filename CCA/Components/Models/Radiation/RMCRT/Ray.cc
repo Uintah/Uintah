@@ -278,24 +278,13 @@ Ray::rayTrace( const ProcessorGroup* pc,
 
     const Patch* patch = patches->get(p);
     printTask(patches,patch,dbg,"Doing Ray::rayTrace");
-    
-    Vector ray_location;
-    Vector ray_location_prev;
 
-    // since we are only requiring temperature, we get it as a const.  !!May need to remove the const part...
-    //because *ix_ptr will be changed.
     constCCVariable<double> sigmaT4;
     constCCVariable<double> abskg;
     CCVariable<double> divQ;
 
-    double disMin;
-
-    // CCVariable<double> *array_ptr = temperature; // this is the pointer to the start of the 3D "CCVariable" array
-    // CCVariable<double> *ix_ptr = array_ptr; // this pointer is free to move along the members of the array
-
-    //  getting the temperature from the DW
-    new_dw->get( abskg          , d_abskgLabel ,   d_matl , patch , Ghost::None , 0);
-    new_dw->get( sigmaT4        , d_sigmaT4_label, d_matl , patch , Ghost::None , 0);
+    new_dw->get( abskg   , d_abskgLabel ,   d_matl , patch , Ghost::None , 0);
+    new_dw->get( sigmaT4 , d_sigmaT4_label, d_matl , patch , Ghost::None , 0);
     
     if( time_sub_step == 0 ){
       new_dw->allocateAndPut( divQ, divQ_label, d_matl, patch );
@@ -303,36 +292,19 @@ Ray::rayTrace( const ProcessorGroup* pc,
     }else{
       old_dw->getModifiable( divQ,  divQ_label, d_matl, patch );
     }
+    
+    // Determine the size of the domain.
     IntVector pLow  = patch->getCellLowIndex();
     IntVector pHigh = patch->getCellHighIndex(); 
-    int ii;//used as an index when creating 1D arrays out of 3d arrays
 
     int Nx = pHigh[0] - pLow[0];
     int Ny = pHigh[1] - pLow[1];
     int Nz = pHigh[2] - pLow[2];   
-    int ix =(Nx)*(Ny)*(Nz);
 
-
-    double absorb_coef[ix];                            // represents the fraction absorbed per cell length through a control volume
-                                                       // the data warehouse values begin at zero
-    double dx_absorb_coef[ix];                         // Dx multiplied by the absorption coefficient
-    double Iout_cv[ix];                                // Array because each cell's intensity will be referenced so many...
-                                                       // times through all the paths of other cell's rays
-    double chi_Iin_cv;                                 // Iin multiplied by its respective chi.
-    double Inet_cv[ix];                                // separate Inet necessary for surfaces. !! I don't think I need an array for this
-    double chi;                                        // the absorption coefficient multiplied of the origin cell
     double fs;                                         // fraction remaining after all current reflections
-    unsigned int size = 0;                             // current size of PathIndex !!move to Ray.h
+    unsigned int size = 0;                             // current size of PathIndex
     double rho = 1.0 - _alpha;                         // reflectivity
-    double optical_thickness;                          // The running total of alpha*length !!move to Ray.h
-    double optical_thickness_prev;                     // The running total of alpha*length !!move to Ray.h
     Vector Dx = patch->dCell();                        // cell spacing
-
-    //double abskg1D[ix];                              // !! used to visualize abskg only.  otherwise comment out
-    //int netFaceFlux[ix][6]; // net radiative flux on each face of each cell //0:_bottom, 1:_top; 2:_south, 3:_north; 4:_west, 5:_east
-
-    const double* sigmaT4_ptr = const_cast<double*>( sigmaT4.getPointer() );
-    const double* abskg_ptr = const_cast<double*>( abskg.getPointer() );
 
 
 /*`==========TESTING==========*/
@@ -340,34 +312,6 @@ if( ( Dx.x() != Dx.y() ) || ( Dx.x() != Dx.z() ) || ( Dx.y() != Dx.z() ) ) {
   throw InternalError("rayTrace:: only works if dx == dy == dz", __FILE__, __LINE__);
 } 
 /*===========TESTING==========`*/
-
-
-    //double absorb_coef_3D[Nz][Ny][Nx];
-
-    //Make Iout a 1D while referencing temperature which is a 3D array. This pre-computes Iout since it gets referenced so much
-    //Pointer way
-    ii=0;    
-    for ( k=0; k<Nz; k++){//the indeces of the cells
-      for ( j=0; j<Ny; j++){
-        for ( i=0; i<Nx; i++){
-         
-          Iout_cv[ii] = *sigmaT4_ptr; 
-          absorb_coef[ii] = *abskg_ptr;//make 1D from 3D
-          //for benchmark case, temperature is 64.804 everywhere
-          //Iout_cv[ii] = 64.804361 * 64.804361 * 64.804361 * 64.804361 * _sigma_over_pi;//T^4*sigma/pi
-          // absorb_coef[ii] = 0.9*(1-2*fabs((i -(Nx-1)/2.0)*Dx[0]))*(1-2*fabs((j -(Ny-1)/2.0)*Dx[1]))*(1-2*fabs((k -(Nz-1)/2.0)*Dx[2])) +0.1;//benchmark 99
-          //next line is for visualization only.
-          dx_absorb_coef[ii] = Dx.x()*absorb_coef[ii];//Used in optical thickness calculation.!!Adjust if cells are noncubic
-                            // ^^^^  FIX ME
-          
-          sigmaT4_ptr++;
-          abskg_ptr++;
-          ii++;
-        }
-      }
-    }
-
-    ix = 0;  //This now represents the current cell in 1D(akin to c, not cur)
 
     //__________________________________
     //
@@ -378,21 +322,18 @@ if( ( Dx.x() != Dx.y() ) || ( Dx.x() != Dx.z() ) || ( Dx.y() != Dx.z() ) ) {
       int j = origin.y();
       int k = origin.z();
 
-      chi_Iin_cv = 0; 
-      chi = absorb_coef[ix];
+      double chi_Iin_cv = 0;
+      double chi = abskg[origin];
       
       // ray loop
       for (int iRay=0; iRay < _NoOfRays; iRay++){
 
         IntVector cur = origin;
 
-        //  Each ray will always begin at origin
-        int cx = ix;
-        int cx_p;
-        // begins at 0. Can follow a ray without touching ix.(akin to cur)
-
         _mTwister.seed((i + j +k) * iRay +1); 
-
+       
+        Vector ray_location;
+        Vector ray_location_prev;
         ray_location[0] =   i +  _mTwister.rand() ;
         ray_location[1] =   j +  _mTwister.rand() ;
         ray_location[2] =   k +  _mTwister.rand() ;
@@ -414,7 +355,7 @@ if( ( Dx.x() != Dx.y() ) || ( Dx.x() != Dx.z() ) || ( Dx.y() != Dx.z() ) ) {
         bool sign[3];                 // **** Why is this a bool?  --Todd
 
         //bool opposite_sign[3];
-        for ( ii= 0; ii<3; ii++){
+        for ( int ii= 0; ii<3; ii++){
           if (inv_direction_vector[ii]>0){
             step[ii] = 1;
             sign[ii] = 1;
@@ -440,7 +381,7 @@ if( ( Dx.x() != Dx.y() ) || ( Dx.x() != Dx.z() ) || ( Dx.y() != Dx.z() ) ) {
 
         //Initializes the following values for each ray
         double intensity = 1.0;     
-        optical_thickness = 0;
+        double optical_thickness = 0;
         fs = 1;
         
         //+++++++Begin ray tracing+++++++++++++++++++
@@ -458,20 +399,19 @@ if( ( Dx.x() != Dx.y() ) || ( Dx.x() != Dx.z() ) || ( Dx.y() != Dx.z() ) ) {
           while (in_domain){
 
             size++;
-            cx_p =cx;
+            IntVector prevCell = cur;
+            double disMin = -9;          // We need a more descriptive variable name.
 
             //__________________________________
             //  Determine which cell the ray will enter next
             if (tMaxX < tMaxY){
               if (tMaxX < tMaxZ){
-                cx        = cx + step[0];
                 cur[0]    = cur[0] + step[0];
                 disMin    = tMaxX - tMax_prev;
                 tMax_prev = tMaxX;
                 tMaxX     = tMaxX + tDeltaX;
               }
               else {
-                cx        = cx + Nx*Ny*step[2];
                 cur[2]    = cur[2] + step[2];
                 disMin    = tMaxZ - tMax_prev;
                 tMax_prev = tMaxZ;
@@ -480,14 +420,12 @@ if( ( Dx.x() != Dx.y() ) || ( Dx.x() != Dx.z() ) || ( Dx.y() != Dx.z() ) ) {
             }
             else {
               if(tMaxY <tMaxZ){
-                cx        = cx + Nx*step[1];
                 cur[1]    = cur[1] + step[1];
                 disMin    = tMaxY - tMax_prev;
                 tMax_prev = tMaxY;
                 tMaxY     = tMaxY + tDeltaY;
               }
               else {
-                cx        = cx + Nx*Ny*step[2];
                 cur[2]    = cur[2] + step[2];
                 disMin    = tMaxZ - tMax_prev;
                 tMax_prev = tMaxZ;
@@ -511,8 +449,10 @@ if( ( Dx.x() != Dx.y() ) || ( Dx.x() != Dx.z() ) || ( Dx.y() != Dx.z() ) ) {
             //Because I do these next three lines before the switch statement, I will never have...
             //to worry about cells outside the boundary, or having to decrement opticalthickness or...
             //intensity after I get back inside the domain.
-            optical_thickness_prev = optical_thickness;
-            optical_thickness += dx_absorb_coef[cx_p]*disMin;
+            // The running total of alpha*length
+            double optical_thickness_prev = optical_thickness;
+            optical_thickness += Dx.x() * abskg[prevCell]*disMin;
+                              //^^^^^^^^ FIX ME!!!
 
             intensity = intensity*exp(-optical_thickness);  //update intensity by Beer's Law
 
@@ -520,8 +460,7 @@ if( ( Dx.x() != Dx.y() ) || ( Dx.x() != Dx.z() ) || ( Dx.y() != Dx.z() ) ) {
 
             //Eqn 3-15, while accounting for fs. 
             //Third term inside the parentheses is accounted for in Inet. Chi is accounted for in Inet calc.
-            chi_Iin_cv += chi * (Iout_cv[cx_p] * ( exp(-optical_thickness_prev) - exp(-optical_thickness) ) * fs );
-            // Multiply Iin by the current chi, for each ray not just at the end of all the rays.
+            chi_Iin_cv += chi * (sigmaT4[prevCell] * ( exp(-optical_thickness_prev) - exp(-optical_thickness) ) * fs );
 
           } //end domain while loop.  ++++++++++++++
 
@@ -540,15 +479,10 @@ if( ( Dx.x() != Dx.y() ) || ( Dx.x() != Dx.z() ) || ( Dx.y() != Dx.z() ) ) {
         }  // end threshold while loop (ends ray tracing for that ray
       }  // Ray loop
 
-      //__________________________________
-      //  Compute divQ & Inet.  
-      //  Iout is blackbody and must be multiplied by absorb_coef. absorb_coef is the kappa of 9.53.
-      Inet_cv[ix] = Iout_cv[ix] * absorb_coef[ix] - (chi_Iin_cv/_NoOfRays); //the last term is from Paula's eqn 3.10
-      
-      divQ[origin] = Inet_cv[ix] * 4.0 * _pi; 
 
-      ix++;   // update flat array index
-      
+      //__________________________________
+      //  Compute divQ
+      divQ[origin] = 4.0 * _pi * ( sigmaT4[origin] * abskg[origin] - (chi_Iin_cv/_NoOfRays) );
     }  // end cell iterator 
 
     double end =clock();
