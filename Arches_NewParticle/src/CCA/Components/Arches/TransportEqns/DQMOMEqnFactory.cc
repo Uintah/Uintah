@@ -158,6 +158,7 @@ DQMOMEqnFactory::sched_weightInit( const LevelP& level, SchedulerP& sched)
   Task* tsk = scinew Task("DQMOMEqnFactory::weightInit",this,&DQMOMEqnFactory::weightInit);
 
   tsk->computes(d_fieldLabels->d_MinDQMOMTimestepLabel);
+  tsk->requires( Task::NewDW, d_fieldLabels->d_volFractionLabel, Ghost::None ); 
 
   for(EqnMap::iterator iEqn = eqns_.begin(); iEqn != eqns_.end(); ++iEqn) {
     DQMOMEqn* eqn = dynamic_cast<DQMOMEqn*>( iEqn->second );
@@ -197,6 +198,9 @@ DQMOMEqnFactory::weightInit( const ProcessorGroup* ,
     int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
     const Patch* patch = patches->get(p);
 
+    constCCVariable<double> eps_v;
+    new_dw->get( eps_v, d_fieldLabels->d_volFractionLabel, matlIndex, patch, Ghost::None, 0 ); 
+
     for( EqnMap::iterator iEqn = eqns_.begin(); iEqn != eqns_.end(); ++iEqn) {
 
       DQMOMEqn* eqn = dynamic_cast<DQMOMEqn*>(iEqn->second);
@@ -225,7 +229,7 @@ DQMOMEqnFactory::weightInit( const ProcessorGroup* ,
         phi_icv.initialize(0.0);
         
         // initialize phi
-        eqn->initializationFunction( patch, phi );
+        eqn->initializationFunction( patch, phi, eps_v );
 
         // do boundary conditions
         eqn->computeBCs( patch, eqn_name, phi );
@@ -244,6 +248,8 @@ DQMOMEqnFactory::sched_abscissaInit( const LevelP& level, SchedulerP& sched)
   Task* tsk = scinew Task("DQMOMEqnFactory::abscissaInit",this,&DQMOMEqnFactory::abscissaInit);
 
   EqnMap& dqmom_eqns = retrieve_all_eqns();
+
+  tsk->requires( Task::NewDW, d_fieldLabels->d_volFractionLabel, Ghost::None ); 
 
   for(EqnMap::iterator iEqn = dqmom_eqns.begin(); iEqn != dqmom_eqns.end(); ++iEqn) {
     DQMOMEqn* eqn = dynamic_cast<DQMOMEqn*>( iEqn->second );
@@ -285,6 +291,9 @@ DQMOMEqnFactory::abscissaInit( const ProcessorGroup* ,
     int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
     const Patch* patch = patches->get(p);
 
+    constCCVariable<double> eps_v;
+    new_dw->get( eps_v, d_fieldLabels->d_volFractionLabel, matlIndex, patch, Ghost::None, 0 ); 
+
     for( EqnMap::iterator iEqn = eqns_.begin(); iEqn != eqns_.end(); ++iEqn) {
 
       DQMOMEqn* eqn = dynamic_cast<DQMOMEqn*>(iEqn->second);
@@ -313,7 +322,7 @@ DQMOMEqnFactory::abscissaInit( const ProcessorGroup* ,
         phi_icv.initialize(0.0);
       
         // initialize phi
-        eqn->initializationFunction( patch, phi );
+        eqn->initializationFunction( patch, phi, eps_v );
 
         // do boundary conditions
         eqn->computeBCs( patch, eqn_name, phi );

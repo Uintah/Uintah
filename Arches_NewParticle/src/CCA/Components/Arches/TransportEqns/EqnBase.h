@@ -107,11 +107,11 @@ public:
 
   /** @brief Set the initial value of the transported variable to some function */
   template <class phiType> 
-  void initializationFunction( const Patch* patch, phiType& phi ); 
+  void initializationFunction( const Patch* patch, phiType& phi, constCCVariable<double>& eps_v ); 
   
   /** @brief Set the initial value of the DQMOM transported variable to some function */
   template <class phiType, class constPhiType>  
-  void initializationFunction( const Patch* patch, phiType& phi, constPhiType& weight  );
+  void initializationFunction( const Patch* patch, phiType& phi, constPhiType& weight, constCCVariable<double>& eps_v  );
 
   /** @brief Compute the boundary conditions for this transport equation object */
   template<class phiType> void
@@ -279,8 +279,10 @@ private:
 // DQMOM Weighted Abscissa
 //---------------------------------------------------------------------------
 template <class phiType, class constPhiType>  
-void EqnBase::initializationFunction( const Patch* patch, phiType& phi, constPhiType& weight  ) 
+void EqnBase::initializationFunction( const Patch* patch, phiType& phi, constPhiType& weight, constCCVariable<double>& eps_v  ) 
 {
+  proc0cout << "initializing scalar equation " << d_eqnName << endl;
+
   // Initialization function bullet proofing 
   if( d_initFunction == "step" || d_initFunction == "env_step" ) {
     if( d_step_dir == "y" ) {
@@ -362,6 +364,7 @@ void EqnBase::initializationFunction( const Patch* patch, phiType& phi, constPhi
 
     }//end d_initFunction types
 
+    phi[c] *= eps_v[c];
 
   }
 }
@@ -370,8 +373,10 @@ void EqnBase::initializationFunction( const Patch* patch, phiType& phi, constPhi
 // Standard Scalar, DQMOM Weight
 //---------------------------------------------------------------------------
 template <class phiType>  
-void EqnBase::initializationFunction( const Patch* patch, phiType& phi ) 
+void EqnBase::initializationFunction( const Patch* patch, phiType& phi, constCCVariable<double>& eps_v ) 
 {
+  proc0cout << "initializing scalar equation " << d_eqnName << endl;
+
   // Initialization function bullet proofing 
   if( d_initFunction == "step" || d_initFunction == "env_step" ) {
     if( d_step_dir == "y" ) {
@@ -476,6 +481,7 @@ void EqnBase::initializationFunction( const Patch* patch, phiType& phi )
 
     }//end d_initFunction types
 
+    phi[c] *= eps_v[c]; 
 
   }
 }
