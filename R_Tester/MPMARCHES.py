@@ -29,13 +29,15 @@ from helpers.modUPS import modUPS
 NIGHTLYTESTS = [  
 									("mpmpipe_test"          , "mpmpipe_test.ups"          , 8   , "Linux" , ["exactComparison"]) , 
 									("methaneFireWContainer" , "methaneFireWContainer.ups" , 1.1 , "Linux" , ["exactComparison"   , "no_restart"]) , 
-									("heptane_pipe"          , "heptane_pipe.ups"          , 1.1 , "Linux" , ["doesTestRun"])
+									("heptane_pipe"          , "heptane_pipe.ups"          , 1.1 , "Linux" , ["exactComparison"]), 
+                  ("coal_table_pipe"       , "coal_table_pipe.ups"       , 1.1 , "Linux" , ["exactComparison"])
                ]
                
 LOCALTESTS =   [  
 									("mpmpipe_test"          , "mpmpipe_test.ups"          , 8   , "All" , ["exactComparison"]) , 
 									("methaneFireWContainer" , "methaneFireWContainer.ups" , 1.1 , "All" , ["exactComparison"   , "no_restart"]) , 
-									("heptane_pipe"          , "heptane_pipe.ups"          , 1.1 , "All" , ["doesTestRun"])
+									("heptane_pipe"          , "heptane_pipe.ups"          , 1.1 , "All" , ["exactComparison"]),
+                  ("coal_table_pipe"       , "coal_table_pipe.ups"       , 1.1 , "All" , ["exactComparison"])
                ]  
 
 #__________________________________
