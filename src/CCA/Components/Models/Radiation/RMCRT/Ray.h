@@ -105,11 +105,11 @@ namespace Uintah{
                     DataWarehouse* old_dw,
                     DataWarehouse* new_dw );
 
+      //__________________________________
+      inline bool containsCell(const IntVector &low, 
+                               const IntVector &high, 
+                               const IntVector &cell);
 
-      //double length;//this tells us the length of the direction vector.  It gets changed to unity during the VecUnitize function
-      //double &length_ = length;//so we can pass length by reference
-      //Vector &A_ = direction_vector; //so directionVector can be passed by reference to VecUnitize
-      // Vector emiss_point;
   }; // class Ray
 } // namespace Uintah
 
