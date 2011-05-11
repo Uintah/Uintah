@@ -246,8 +246,13 @@ Ray::sched_rayTrace( const LevelP& level, SchedulerP& sched, const int time_sub_
   Task* tsk= scinew Task( taskname, this, &Ray::rayTrace, time_sub_step );
   printSchedule(level,dbg,taskname);
 
-  tsk->requires( Task::NewDW , d_abskgLabel  ,   Ghost::None , 0 );
-  tsk->requires( Task::NewDW , d_sigmaT4_label , Ghost::None , 0 );
+  Ghost::GhostType  gn  = Ghost::None;
+  Task::DomainSpec  ND  = Task::NormalDomain;
+  #define allPatches 0
+  #define allMatls 0
+  
+  tsk->requires( Task::NewDW , d_abskgLabel  ,   allPatches, ND,allMatls, ND, gn,0);
+  tsk->requires( Task::NewDW , d_sigmaT4_label , allPatches, ND,allMatls, ND, gn,0);
 //  tsk->requires( Task::OldDW , d_lab->d_cellTypeLabel , Ghost::None , 0 );
 
   if( time_sub_step == 0 ){
@@ -270,7 +275,21 @@ Ray::rayTrace( const ProcessorGroup* pc,
                DataWarehouse* new_dw,
                const int time_sub_step )
 {
-
+  cout << " Top rayTrace: "<< endl;
+  
+  const Level* level = getLevel(patches);
+  int maxLevels = level->getGrid()->numLevels();
+  
+  // Determine the size of the domain.
+  IntVector domainLo, domainHi;
+  level->findInteriorCellIndexRange(domainLo, domainHi);
+ 
+  constCCVariable<double> sigmaT4;
+  constCCVariable<double> abskg;
+  new_dw->getRegion( abskg   , d_abskgLabel ,   d_matl , level, domainLo, domainHi);
+  new_dw->getRegion( sigmaT4 , d_sigmaT4_label, d_matl , level, domainLo, domainHi);
+  
+  
   double start=clock();
 
   // patch loop
@@ -279,27 +298,13 @@ Ray::rayTrace( const ProcessorGroup* pc,
     const Patch* patch = patches->get(p);
     printTask(patches,patch,dbg,"Doing Ray::rayTrace");
 
-    constCCVariable<double> sigmaT4;
-    constCCVariable<double> abskg;
-    CCVariable<double> divQ;
-
-    new_dw->get( abskg   , d_abskgLabel ,   d_matl , patch , Ghost::None , 0);
-    new_dw->get( sigmaT4 , d_sigmaT4_label, d_matl , patch , Ghost::None , 0);
-    
+    CCVariable<double> divQ;    
     if( time_sub_step == 0 ){
       new_dw->allocateAndPut( divQ, divQ_label, d_matl, patch );
       divQ.initialize( 0.0 );
     }else{
       old_dw->getModifiable( divQ,  divQ_label, d_matl, patch );
     }
-    
-    // Determine the size of the domain.
-    IntVector pLow  = patch->getCellLowIndex();
-    IntVector pHigh = patch->getCellHighIndex(); 
-
-    int Nx = pHigh[0] - pLow[0];
-    int Ny = pHigh[1] - pLow[1];
-    int Nz = pHigh[2] - pLow[2];   
 
     double fs;                                         // fraction remaining after all current reflections
     unsigned int size = 0;                             // current size of PathIndex
@@ -433,12 +438,7 @@ if( ( Dx.x() != Dx.y() ) || ( Dx.x() != Dx.z() ) || ( Dx.y() != Dx.z() ) ) {
               }
             }
             
-            // Is this cell in the domain
-            if( (cur[0] > Nx-1 || cur[0] < 0) ||
-                (cur[1] > Ny-1 || cur[1] < 0) ||
-                (cur[2] > Nz-1 || cur[2] < 0) ){
-              in_domain = false; 
-            }
+            in_domain = containsCell(domainLo, domainHi, cur);
 
             //__________________________________
             //  Update the ray location
@@ -499,6 +499,18 @@ if( ( Dx.x() != Dx.y() ) || ( Dx.x() != Dx.z() ) || ( Dx.y() != Dx.z() ) ) {
 } // end ray trace method
 
 
+
+//______________________________________________________________________
+inline bool 
+Ray::containsCell(const IntVector &low, const IntVector &high, const IntVector &cell)
+{
+  return  low.x() <= cell.x() && 
+          low.y() <= cell.y() &&
+          low.z() <= cell.z() &&
+          high.x() > cell.x() && 
+          high.y() > cell.y() &&
+          high.z() > cell.z();
+}
 
 //______________________________________________________________________
 // ISAAC's NOTES: 

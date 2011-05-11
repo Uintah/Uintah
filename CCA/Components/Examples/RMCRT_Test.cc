@@ -297,7 +297,6 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
     
     for (int l = 0; l <= maxLevels-1; l++) {
       const LevelP& level = grid->getLevel(l);
-      cout << " here " << endl;
       scheduleCoarsenAll (level, sched);
       scheduleShootRays_onCoarseLevel( sched, level, matls );
     }
@@ -534,7 +533,7 @@ void RMCRT_Test::scheduleShootRays_onCoarseLevel(SchedulerP& sched,
 
     if(d_doRealRMCRT){
       int time_sub_step = 0;
-      d_realRMCRT->sched_sigmaT4(level,sched);
+      //d_realRMCRT->sched_sigmaT4(level,sched);
       d_realRMCRT->sched_rayTrace(level,sched,time_sub_step);
     }  
   }
