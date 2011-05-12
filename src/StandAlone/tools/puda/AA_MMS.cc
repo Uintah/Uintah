@@ -56,14 +56,16 @@ Uintah::AA_MMS( DataArchive * da, CommandLineFlags & clf )
     double c     = sqrt(E/rho0);
     double A     = 1e-2;                    // << This is normalized below
     int    TotalNumParticles  = 0;   
-    Point  worstPosAllLevels  = Point(-9,-9,-9);
     double max_errorAllLevels = 0.0;
     double TotalSumError      = 0.0;
+    Point  worstPosAllLevels  = Point(-9,-9,-9);
+    IntVector worstCellAllLevels = IntVector(-9,-9,-9);
     
     int numLevels = grid->numLevels();
-    vector<double> LinfLevel(numLevels);
-    vector<double> L2normLevel(numLevels);
-    vector<Point> worstPosLevel(numLevels);
+    vector<double>    LinfLevel(numLevels);
+    vector<double>    L2normLevel(numLevels);
+    vector<Point>     worstPosLevel(numLevels);
+    vector<IntVector> worstCellLevel(numLevels);
     
     //__________________________________
     //  Level loop
@@ -74,6 +76,7 @@ Uintah::AA_MMS( DataArchive * da, CommandLineFlags & clf )
       double max_error = 0;
       int numParticles = 0;
       Point worstPos   = Point(-9,-9,-9);
+      IntVector worstCell(-9,-9,-9);
       
       Vector dx = level->dCell();             // you need to normalize the variable A by the 
       double normalization = dx.length();    // cell spacing so the Linear interpolation will work
@@ -115,6 +118,7 @@ Uintah::AA_MMS( DataArchive * da, CommandLineFlags & clf )
             if (error>max_error){
               max_error = error;
               worstPos  = value_pos[*iter];
+              worstCell = patch->getCellIndex(worstPos);
             }
           }  // particle Loop
             
@@ -123,8 +127,10 @@ Uintah::AA_MMS( DataArchive * da, CommandLineFlags & clf )
       LinfLevel[l]      = max_error;
       L2normLevel[l]    = sqrt( sumError/(double)numParticles );
       worstPosLevel[l]  = worstPos;
+      worstCellLevel[l] = worstCell;
       
-      cout << "     Level: " << level->getIndex() << " L_inf Error: " << LinfLevel[l] << ", L2norm: " << L2normLevel[l] << " , Worst particle: " << worstPos << endl;
+      cout << "     Level: " << level->getIndex() << " L_inf Error: " << LinfLevel[l] << ", L2norm: " << L2normLevel[l] 
+           << " , Worst particle: " << worstPos << ", " << worstCell << endl;
       
       TotalSumError     += sumError;
       TotalNumParticles += numParticles;
@@ -132,11 +138,12 @@ Uintah::AA_MMS( DataArchive * da, CommandLineFlags & clf )
       if (max_error > max_errorAllLevels) {
         max_errorAllLevels = max_error;
         worstPosAllLevels  = worstPos;
+        worstCellAllLevels = worstCell;
       }
     }   // for levels
     double L2norm = sqrt( TotalSumError /(double)TotalNumParticles );
     
-    cout << "time: " << time << " , L_inf Error: " << max_errorAllLevels << " , L2norm Error: "<< L2norm << " , Worst particle: " << worstPosAllLevels << endl;
+    cout << "time: " << time << " , L_inf Error: " << max_errorAllLevels << " , L2norm Error: "<< L2norm << " , Worst particle: " << worstPosAllLevels << " " << worstCellAllLevels << endl;
     
     //__________________________________
     // write data to the files (L_norms & L_normsPerLevels)
