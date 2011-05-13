@@ -84,7 +84,8 @@ void
 PetscSolver::setRHS_X( const ProcessorGroup * pc, 
                        const Patch          * patch,
                        CCVariable<double>& guess,
-                       constCCVariable<double>& rhs )
+                       constCCVariable<double>& rhs,
+                       bool construct_A )
 {
   throw InternalError("set RHS_X(): PetscSolver not configured", __FILE__, __LINE__);
 }
