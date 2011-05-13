@@ -624,6 +624,12 @@ t
     <initial_xstress      spec="OPTIONAL DOUBLE"/>
     <initial_ystress      spec="OPTIONAL DOUBLE"/>
     <initial_zstress      spec="OPTIONAL DOUBLE"/>
+  <!-- The floowing are for the simplifiedGeoModel -->
+    <kappa_initial        spec="OPTIONAL DOUBLE"  />
+    <cap_radius           spec="OPTIONAL DOUBLE"  />
+    <p0_crush_curve       spec="OPTIONAL DOUBLE"  />
+    <p1_crush_curve       spec="OPTIONAL DOUBLE"  />
+    <p3_crush_curve       spec="OPTIONAL DOUBLE"  />
   </constitutive_model>
 
 

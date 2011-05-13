@@ -53,16 +53,22 @@ namespace Uintah {
     struct CMData {
       double alpha;
       double alpha_p;
+      double hardening_modulus;
+      double kappa_initial;
+      double cap_radius;
+      double p0_crush_curve;
+      double p1_crush_curve;
+      double p3_crush_curve;
       double k_o;
       double bulk_modulus;
       double shear_modulus;
     };
     const VarLabel* pPlasticStrainLabel;
     const VarLabel* pPlasticStrainLabel_preReloc;
-    const VarLabel* p_qs_PlasticStrainLabel;
-    const VarLabel* p_qs_PlasticStrainLabel_preReloc;
-    const VarLabel* qs_stressLabel;
-    const VarLabel* qs_stressLabel_preReloc;
+    const VarLabel* pPlasticStrainVolLabel;
+    const VarLabel* pPlasticStrainVolLabel_preReloc;
+    const VarLabel* pKappaLabel;
+    const VarLabel* pKappaLabel_preReloc;
   private:
     CMData d_initialData;
 
@@ -103,16 +109,10 @@ namespace Uintah {
     void computeInvariants(const Matrix3& stress, Matrix3& S,  double& I1, double& J2);
 
 
-    double YieldFunction(const Matrix3& stress, const double& alpha, const double& k_o);
+    double YieldFunction(const Matrix3& stress, const double& alpha, const double& kappa_initial, const double& cap_radius, const double& k_o);
 
 
-    double YieldFunction(Matrix3& stress, const double& alpha, const double&k_o);
-
-
-
-
-
-
+    double YieldFunction(Matrix3& stress, const double& alpha, const double& kappa_initial, const double& cap_radius, const double&k_o);
 
 
     // carry forward CM data for RigidMPM
