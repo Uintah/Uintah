@@ -1281,6 +1281,48 @@ an obscene number of input parameters which are best covered in the users
 guide for this model.  For a simple list, see the source code in
 \tt Kayenta.cc. \normalfont
 
+\item{\bf Simplified Geomodel} This is a simplified model which has the basic features
+needed for geomaterials. The yield function of this model is a two-surface plasticity model 
+which includes a linear Drucker-Prager part and a cap yield function. The “cap” part reflects
+the fact that plastic deformations can occur even under purely hydrostatic compression as
+a consequence of void collapse. It means that the simplified geomodel considers the presence 
+of both microscale flaws such as porosity and networks of microcracks. This mdel uses a 
+multi-stage return algorithm proposed in \cite{brannon10}. Usage is as follows:
+\begin{Verbatim}[fontsize=\footnotesize]
+        <constitutive_model type="simplified_geo_model">
+            <bulk_modulus>10000</bulk_modulus>
+            <shear_modulus>3750</shear_modulus>
+            <hardening_modulus>400.0</hardening_modulus>
+            <alpha> 0.057735026919 </alpha>
+            <alpha_p> 0.057735026919 </alpha_p>
+            <k_o>35.355339059327378</k_o>
+            <kappa_initial> -612.3724 </kappa_initial>
+            <cap_radius> 1224.7 </cap_radius>
+            <p0_crush_curve> -1837.0724 </p0_crush_curve>
+            <p1_crush_curve> 6.666666666666666e-4 </p1_crush_curve>
+            <p3_crush_curve> 0.5 </p3_crush_curve>
+        </constitutive_model>
+\end{Verbatim}
+where \tt <bulk\_modulus> \normalfont and \tt <shear\_modulus> \normalfont are the bulk and 
+shear moduli of the material, \tt <hardening\_modulus> \normalfont is the ensemble hardening 
+modulus, \tt <alpha> \normalfont is the tangent of the friction angle of the Drucker-Prager
+part, \tt <alpha\_p> \normalfont is the tangent of the dilation angle of the Drucker-Prager
+part, \tt <k\_o> \normalfont is a constant in the Drucker-Prager yield criterion, $\sqrt{J_2}
++\alpha I_1-k_o=0$, \tt <kappa\_initial> \normalfont is the initial value for the internal 
+state variable $\kappa$ which determines the cap yield surface position, \tt <cap\_radius> 
+\normalfont is $\kappa-X$ in which $X$ is the value of the first stress invariant at the 
+intersection of the cap yield surface and the mean pressure axis, \tt <p0\_crush\_curve> 
+\normalfont, \tt <p1\_crush\_curve> \normalfont, and \tt <p3\_crush\_curve> \normalfont are the
+constants in the fitted post yielding part of the crush curve $p_3-\bar{\epsilon}_v^p=p_3
+\exp{-3p_1(\bar{p}-p_0)}$ in which $\bar{p}$ is the pressure.
+
+This model is under development and more features will be added in near future.
+
+           
+
+
+
+
 \item{\bf Water}  This is a model for water, reported in \cite{water_model_ref}.
 The P-V relationship is given by:
 \begin{equation}
