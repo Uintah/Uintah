@@ -54,7 +54,7 @@ Uintah::AA_MMS( DataArchive * da, CommandLineFlags & clf )
     double E     = 9.*bulk*mu/(3.*bulk+mu);
     double rho0  = 1.0;
     double c     = sqrt(E/rho0);
-    double A     = 1e-2;                    // << This is normalized below
+    double A0     = 1e-2;                    // << This is normalized below
     int    TotalNumParticles  = 0;   
     double max_errorAllLevels = 0.0;
     double TotalSumError      = 0.0;
@@ -80,7 +80,7 @@ Uintah::AA_MMS( DataArchive * da, CommandLineFlags & clf )
       
       Vector dx = level->dCell();             // you need to normalize the variable A by the 
       double normalization = dx.length();    // cell spacing so the Linear interpolation will work
-      A = A * normalization;
+      double A = A0 * normalization;
       //__________________________________
       // Patch loop
       for(Level::const_patchIterator iter = level->patchesBegin();
