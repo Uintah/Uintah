@@ -76,11 +76,12 @@ $num_of_tests=$#tests;
 
 #__________________________________
 # make a symbolic link to the post processing command
+# Note Debian doesn't have the --skip-dot option
 for ($i=0;$i<=$num_of_tests;$i++){
    if( $postProc_cmd[$i] ne ''){
     my @stripped_cmd = split(/ /,$postProc_cmd[$i]);  # remove command options
-    my $cmd = `which --skip-dot $stripped_cmd[0]`;
-    system("ln -fs $cmd");
+    my $cmd = `which --skip-dot $stripped_cmd[0] >&/dev/null`;
+    system("ln -fs $cmd >&/dev/null");
   }
 }
 
@@ -120,6 +121,7 @@ while ($line=<tstFile>){
   if($insideAllTest && !$insideComment){
     if ($line=~ /\<replace_lines\>/){       # find <replace_lines>
       $nLine=0;
+
       while (($line=<tstFile>) !~ /\<\/replace_lines\>/){
         chomp($line);
         $global_replaceLines[$nLine]=$line;
@@ -132,9 +134,20 @@ while ($line=<tstFile>){
   if($insideTest && !$insideComment){
     if ($line=~ /\<replace_lines\>/){       # find <replace_lines>
       $nLine=0;
+
       while (($line=<tstFile>) !~ /\<\/replace_lines\>/){
         chomp($line);
         $replaceLines[$nTest][$nLine]=$line;
+        $nLine++;
+      }
+      $nTest++;
+    }
+    
+    if ($line=~ /\<replace_values\>/){       # find <replace_values>
+      $nLine=0;
+      while (($line=<tstFile>) !~ /\<\/replace_values\>/){
+        chomp($line);
+        $replaceValues[$nTest][$nLine]=$line;
         $nLine++;
       }
       $nTest++;
@@ -184,15 +197,29 @@ for ($i=0;$i<=$num_of_tests;$i++){
   
   system(" cp $upsFile $test_ups");
   my $fn = "<filebase>".$udaFilename."</filebase>";
-  system("replace_XML_line", "$fn", "$test_ups")==0 ||  die("Error replacing $fn in file $test_ups \n $@");
-  print "\t\t$fn\n";
+  system("replace_XML_line", "$fn", "$test_ups")==0 ||  die("Error replace_XML_line $fn in file $test_ups \n $@");
+  print "\t\treplace_XML_line $fn\n";
   
   # replace lines in the ups files
-  @replacementPatterns = (@{$replaceLines[$i]});
-  foreach $rp (@replacementPatterns){
-    chomp($rp);
-    system("replace_XML_line", "$rp", "$test_ups")==0 ||  die("Error replacing $rp in file $test_ups \n $@");
-    print "\t\t$rp\n"
+  if( defined $replaceLines[$i] ){
+    @replacementPatterns = (@{$replaceLines[$i]});
+    foreach $rp (@replacementPatterns){
+      chomp($rp);
+      system("replace_XML_line", "$rp", "$test_ups")==0 ||  die("Error replacing_XML_line $rp in file $test_ups \n $@");
+      print "\t\treplace_XML_line $rp\n";
+    }
+  }
+  
+  # replace values in the ups files
+  if( defined $replaceValues[$i] ){
+    @replacementValues = (@{$replaceValues[$i]});
+    foreach $rv (@replacementValues){
+      @tmp = split(/:/,$rv);
+      $xmlPath = $tmp[0];       # you must use a : to separate the xmlPath and value
+      $value   = $tmp[1];
+      system("replace_XML_value", "$xmlPath", "$value", "$test_ups")==0 ||  die("Error: replace_XML_value $xmlPath $value $test_ups \n $@");
+      print "\t\treplace_XML_value $xmlPath $value\n";
+    }
   }
   
   #__________________________________
