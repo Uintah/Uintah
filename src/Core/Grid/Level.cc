@@ -266,34 +266,34 @@ void Level::findNodeIndexRange(IntVector& lowIndex,IntVector& highIndex) const
   Vector l=(d_spatial_range.min()-d_anchor)/d_dcell;
   Vector h=(d_spatial_range.max()-d_anchor)/d_dcell+Vector(1,1,1);
 
-  lowIndex=IntVector((int)l.x(),(int)l.y(),(int)l.z());
-  highIndex=IntVector((int)h.x(),(int)h.y(),(int)h.z());
+  lowIndex  = roundNearest(l);
+  highIndex = roundNearest(h);
 }
 void Level::findCellIndexRange(IntVector& lowIndex,IntVector& highIndex) const
 {
   Vector l=(d_spatial_range.min()-d_anchor)/d_dcell;
-  Vector h=(d_spatial_range.max()-d_anchor)/d_dcell;
+  Vector h=(d_spatial_range.max()-d_anchor)/d_dcell; 
 
-  lowIndex=IntVector((int)l.x(),(int)l.y(),(int)l.z());
-  highIndex=IntVector((int)h.x(),(int)h.y(),(int)h.z());
+  lowIndex  = roundNearest(l);
+  highIndex = roundNearest(h);
 }
 
 void Level::findInteriorCellIndexRange(IntVector& lowIndex,IntVector& highIndex) const
 {
   Vector l=(d_int_spatial_range.min()-d_anchor)/d_dcell;
   Vector h=(d_int_spatial_range.max()-d_anchor)/d_dcell;
-
-  lowIndex=IntVector((int)l.x(),(int)l.y(),(int)l.z());
-  highIndex=IntVector((int)h.x(),(int)h.y(),(int)h.z());
+  
+  lowIndex  = roundNearest(l);
+  highIndex = roundNearest(h);
 }
 
 void Level::findInteriorNodeIndexRange(IntVector& lowIndex,IntVector& highIndex) const
 {
   Vector l=(d_int_spatial_range.min()-d_anchor)/d_dcell;
   Vector h=(d_int_spatial_range.max()-d_anchor)/d_dcell+Vector(1,1,1);
-
-  lowIndex=IntVector((int)l.x(),(int)l.y(),(int)l.z());
-  highIndex=IntVector((int)h.x(),(int)h.y(),(int)h.z());
+  
+  lowIndex  = roundNearest(l);
+  highIndex = roundNearest(h);
 }
 
 long Level::totalCells() const
