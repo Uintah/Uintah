@@ -183,8 +183,6 @@ ThreadedMPIScheduler::problemSetup(const ProblemSpecP& prob_spec,
 
 ThreadedMPIScheduler::~ThreadedMPIScheduler()
 {
-  if ( d_myworld->myrank()==0)
-    cout <<"QUIT AviableThreads : " << getAviableThreadNum() << endl;
   for( int i = 0; i < numThreads_; i++ ){
     t_worker[i]->d_runmutex.lock();
     t_worker[i]->quit();
@@ -573,8 +571,8 @@ ThreadedMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
   }
   d_nextmutex.unlock();
 
-  if (me==0)
-    cout <<"AviableThreads : " << getAviableThreadNum()  << ", task worked: " << numTasksDone << endl;
+  //if (me==0)
+  //  cout <<"AviableThreads : " << getAviableThreadNum()  << ", task worked: " << numTasksDone << endl;
 
   //if (d_generation > 2)
   //dws[dws.size()-2]->printParticleSubsets();
