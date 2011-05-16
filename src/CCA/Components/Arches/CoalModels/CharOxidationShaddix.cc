@@ -580,7 +580,7 @@ CharOxidationShaddix::computeModel( const ProcessorGroup * pc,
           /* 
           for ( int iter = 0; iter < 10; iter++) {
             icount++;
-            CO2CO = 0.02*(pow(PO2_surf,0.21))*exp(-3070.0/unscaled_particle_temperature);
+            CO2CO = 0.02*(pow(PO2_surf,0.21))*exp(3070.0/unscaled_particle_temperature);
             OF = 0.5*(1.0 + CO2CO*(1+CO2CO));
             gamma = -(1.0-OF);
             ks = As*exp(-Es/(R*unscaled_particle_temperature));
@@ -594,7 +594,7 @@ CharOxidationShaddix::computeModel( const ProcessorGroup * pc,
               break;
 
             PO2_surf += delta;
-            CO2CO = 0.02*(pow(PO2_surf,0.21))*exp(-3070.0/unscaled_particle_temperature);
+            CO2CO = 0.02*(pow(PO2_surf,0.21))*exp(3070.0/unscaled_particle_temperature);
             OF = 0.5*(1.0 + CO2CO*(1+CO2CO));
             gamma = -(1.0-OF);
             ks = As*exp(-Es/(R*unscaled_particle_temperature));
@@ -614,7 +614,7 @@ CharOxidationShaddix::computeModel( const ProcessorGroup * pc,
             for ( int iter = 0; iter < d_totIter; iter++) {
               icount++;
               PO2_surf = lower_bound;
-              CO2CO = 0.02*(pow(PO2_surf,0.21))*exp(-3070.0/unscaled_particle_temperature);
+              CO2CO = 0.02*(pow(PO2_surf,0.21))*exp(3070.0/unscaled_particle_temperature);
               OF = 0.5*(1.0 + CO2CO*(1+CO2CO));
               gamma = -(1.0-OF);
               ks = As*exp(-Es/(R*unscaled_particle_temperature));
@@ -625,7 +625,7 @@ CharOxidationShaddix::computeModel( const ProcessorGroup * pc,
               f3 = PO2_surf - gamma - (PO2_inf-gamma)*exp(-(q*unscaled_length)/(2*Conc*DO2));
 
               PO2_surf = upper_bound;
-              CO2CO = 0.02*(pow(PO2_surf,0.21))*exp(-3070.0/unscaled_particle_temperature);
+              CO2CO = 0.02*(pow(PO2_surf,0.21))*exp(3070.0/unscaled_particle_temperature);
               OF = 0.5*(1.0 + CO2CO*(1+CO2CO));
               gamma = -(1.0-OF);
               ks = As*exp(-Es/(R*unscaled_particle_temperature));
@@ -640,7 +640,7 @@ CharOxidationShaddix::computeModel( const ProcessorGroup * pc,
               }
 
               PO2_surf = 0.5*(lower_bound+upper_bound);
-              CO2CO = 0.02*(pow(PO2_surf,0.21))*exp(-3070.0/unscaled_particle_temperature);
+              CO2CO = 0.02*(pow(PO2_surf,0.21))*exp(3070.0/unscaled_particle_temperature);
               OF = 0.5*(1.0 + CO2CO*(1+CO2CO));
               gamma = -(1.0-OF);
               ks = As*exp(-Es/(R*unscaled_particle_temperature));
