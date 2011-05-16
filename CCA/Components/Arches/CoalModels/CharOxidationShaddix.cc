@@ -655,8 +655,8 @@ CharOxidationShaddix::computeModel( const ProcessorGroup * pc,
               }
 
               if(icount > d_totIter-2) {
-                cout << "CharOxidationShaddix::computeModel : problem with bisection convergence, reaction rate set to zero" << endl;
-                cout << "icount " << icount << " f1 " << f1 << " f2 " << f2 << " f3 " << f3 << " PO2_inf " << PO2_inf << " PO2_surf " << PO2_surf << endl;
+                //cout << "CharOxidationShaddix::computeModel : problem with bisection convergence, reaction rate set to zero" << endl;
+                //cout << "icount " << icount << " f1 " << f1 << " f2 " << f2 << " f3 " << f3 << " PO2_inf " << PO2_inf << " PO2_surf " << PO2_surf << endl;
                 PO2_surf = 0.0;
                 CO2CO = 0.0;
                 q = 0.0;
@@ -668,9 +668,9 @@ CharOxidationShaddix::computeModel( const ProcessorGroup * pc,
               } else if(f1*f3<0){
                  upper_bound = PO2_surf;
               } else {
-                cout << "CharOxidationShaddix::computeModel : problem with bisection, reaction rate set to zero" << endl;
-                cout << "icount " << icount << " f1 " << f1 << " f2 " << f2 << " f3 " << f3 << " PO2_inf " << PO2_inf << " PO2_surf " << PO2_surf << endl;
-                cout << "gamma " << gamma << " q " << q << " unscaled_length " << unscaled_length << endl;
+                //cout << "CharOxidationShaddix::computeModel : problem with bisection, reaction rate set to zero" << endl;
+                //cout << "icount " << icount << " f1 " << f1 << " f2 " << f2 << " f3 " << f3 << " PO2_inf " << PO2_inf << " PO2_surf " << PO2_surf << endl;
+                //cout << "gamma " << gamma << " q " << q << " unscaled_length " << unscaled_length << endl;
                 PO2_surf = 0.0;
                 CO2CO = 0.0;
                 q = 0.0;
