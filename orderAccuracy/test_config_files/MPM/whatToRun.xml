@@ -33,4 +33,10 @@
   <tst>linear_dx.tst</tst>
 </test>
 
+<test>
+  <name>linear_AA_MMS_2L</name>
+  <ups>AA_MMS_3L.ups</ups>
+  <tst>linear_dx_3L.tst</tst>
+</test>
+
 </config>
