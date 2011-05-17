@@ -480,6 +480,8 @@ TabPropsInterface::getState( const ProcessorGroup* pc,
           bc_values.push_back(0.0);
           which_bc.push_back(TabPropsInterface::DIRICHLET);
 
+          delete bc; 
+
         }
 
         // now use the last bound_ptr to loop over all boundary cells: 
