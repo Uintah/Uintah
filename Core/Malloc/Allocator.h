@@ -106,6 +106,12 @@ void        AllocatorResetDefaultTagLineNumber();
 const char* AllocatorSetDefaultTag(const char* tag);
 void        AllocatorResetDefaultTag();
 
+// The MPI that comes with the Ubuntu Lenny kernel, for whatever reason, calls atexit(), which, if
+// we are in a sci-malloc enabled build, causes our malloc to kick off (for the very first time), which
+// causes us to call atexit(), which deadlocks and hangs.  This hack avoids that.  For most OSes, this
+// should just be commented out.
+#define USE_LENNY_HACK 
+
 // append the num to the MallocStats file if MallocStats are dumped to a file
 // (negative appends nothing)
 void AllocatorMallocStatsAppendNumber(int num);

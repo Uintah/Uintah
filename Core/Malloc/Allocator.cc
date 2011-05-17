@@ -53,6 +53,8 @@
 
 #include <Core/Malloc/Allocator.h>
 
+// USE_LENNY_HACK: See Allocator.h for mor information:
+
 #if !defined( DISABLE_SCI_MALLOC )
 
 //#define ALIGN 16
@@ -183,7 +185,9 @@ static void account_bin(Allocator* a, AllocBin* bin, FILE* out,
     }
 }
 
+#if !defined( USE_LENNY_HACK )
 static
+#endif
 void
 shutdown()
 {
@@ -557,8 +561,10 @@ Allocator* MakeAllocator()
     if(a->trace_out){
       if(!a->stats_out){
         a->stats_out=a->trace_out;
+#if !defined( USE_LENNY_HACK )
         atexit(shutdown);
         atexit_added=true;
+#endif
       }
     }
   } else {
@@ -583,7 +589,9 @@ Allocator* MakeAllocator()
       a->stats_out = 0;
     }
     if((a->stats_out || statsfile) && !atexit_added){
+#if !defined( USE_LENNY_HACK )	
       atexit(shutdown);
+#endif
     }
   } else {
     a->stats_out=0;
