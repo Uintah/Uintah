@@ -864,8 +864,10 @@ fi
 LARGESOS=$largesos
 
 if test "$enable_sci_malloc" = "yes"; then
+  SCI_MALLOC_ON="yes"
   DEF_MALLOC=""
 else
+  SCI_MALLOC_ON="no"
   DEF_MALLOC="#define DISABLE_SCI_MALLOC 1"
 fi
 
@@ -881,12 +883,12 @@ else
   DEF_MALLOC_LINENUMBERS=""
 fi
 
-
 AC_SUBST(NOPRINTDIR)
 AC_SUBST(EXENAME)
 AC_SUBST(LARGESOS)
 AC_SUBST(TIME_IMPL)
 
+AC_SUBST(SCI_MALLOC_ON)
 AC_SUBST(DEF_MALLOC)
 AC_SUBST(DEF_MALLOC_LINENUMBERS)
 sci_defs_files="$sci_defs_files include/sci_defs/malloc_testdefs.h"

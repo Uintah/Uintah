@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-from os import environ,rmdir,mkdir,path,system,chdir,stat,getcwd,pathsep,symlink
+from os import environ,unsetenv,rmdir,mkdir,path,system,chdir,stat,getcwd,pathsep,symlink
 from time import asctime,localtime,strftime,time
 from sys import argv,exit,stdout
 from string import upper,rstrip,rsplit
@@ -253,8 +253,10 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
       print "\nWARNING: skipping this test (do_opt: %s, dbg_opt: %s)\n" % (do_opt, dbg_opt)
       continue
     
-      
-    if dbg_opt == "opt" or dbg_opt == "unknown":               ### DAV we will need to change this
+    if dbg_opt == "opt" : # qwerty: Think this is right now...
+      do_memory = 0
+
+    if environ['SCI_MALLOC_ENABLED'] != "yes" :
       do_memory = 0
       
     tests_to_do = [do_uda_comparisons, do_memory, do_performance]
@@ -476,6 +478,9 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
       print "      mpirun command was not found and the environmental variable MPIRUN was not set."
       print "      You must either put mpirun in your path or set the environmental variable"
       exit (1)
+
+  if not do_memory_test :
+      unsetenv('MALLOC_STATS')
       
   MPIHEAD="%s -np" % MPIRUN
   if environ['OS'] == "Linux":
@@ -496,13 +501,15 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
     inputxml = path.basename(inputxml)
 
 
+  SVN_OPTIONS = "-svnStat -svnDiff"
+
   # set the command for sus, based on # of processors
   # the /usr/bin/time is to tell how long it took
   if np == 1:
-    command = "/usr/bin/time -p %s/sus -svnStat -svnDiff" % (susdir)
+    command = "/usr/bin/time -p %s/sus %s" % (susdir, SVN_OPTIONS)
     mpimsg = ""
   else:
-    command = "/usr/bin/time -p %s %s %s/sus -svnStat -svnDiff -mpi" % (MPIHEAD, int(np), susdir)
+    command = "/usr/bin/time -p %s %s %s/sus %s -mpi" % (MPIHEAD, int(np), susdir, SVN_OPTIONS)
     mpimsg = " (mpi %s proc)" % (int(np))
 
   time0 =time()  #timer
