@@ -21,13 +21,19 @@ export BUILD_DIR  HTMLLOG WEBLOG LOCAL_OR_NIGHTLY_TEST WHICH_TESTS OS
 unset SHELL
 umask 002
 
-if [ "$#" != 2 ]; then
-  echo "Usage: startLocalTest <Path to Build Directory> <path to src directory>"
+if [ "$#" != 4 ]; then
+  echo ""
+  echo "Usage: startLocalTest <Path to Build Directory> <path to src directory> <is_debug_build> <sci_malloc_enabled>"
+  echo "           <is_debug_build>     : 'yes' or 'no'"
+  echo "           <sci_malloc_enabled> : 'yes' or 'no'"
+  echo ""
   exit
 fi
 
 BUILD_DIR="$1"
 SRCTOP="$2"
+IS_DEBUG_BUILD="$3"     # Will be 'yes', or 'no'
+SCI_MALLOC_ENABLED="$4" # Will be 'yes', or 'no'
 
 if [ ! -d "${BUILD_DIR}" ]; then
   echo "ERROR: The build directory $BUILD_DIR does not exist.  Now exiting"
@@ -148,7 +154,14 @@ for componentTest in $selectedCompTests; do
   echo "setenv OS $OS"                                       >> "$doTestScript"
   echo "setenv SCI_DEBUG \"\""                               >> "$doTestScript"
   echo "setenv LOCAL_OR_NIGHTLY_TEST $LOCAL_OR_NIGHTLY_TEST" >> "$doTestScript"
-  echo "python -u TestScripts/$componentTest.py susdir inputs goldStandard unknown $PARALLELISM "'$1' >> "$doTestScript"
+  echo "setenv SCI_MALLOC_ENABLED $SCI_MALLOC_ENABLED"       >> "$doTestScript"
+
+  BUILD_TYPE="opt"
+  if [ "$IS_DEBUG_BUILD" = 'yes' ]; then
+      BUILD_TYPE="dbg"
+  fi
+
+  echo "python -u TestScripts/$componentTest.py susdir inputs goldStandard $BUILD_TYPE $PARALLELISM "'$1' >> "$doTestScript"
 
   /bin/chmod a+x "$doTestScript"
 

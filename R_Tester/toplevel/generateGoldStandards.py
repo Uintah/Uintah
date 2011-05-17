@@ -24,9 +24,11 @@ from helpers.runSusTests import nameoftest, testOS, input, num_processes, testOS
 
 ####################################################################################
 
-sus    = ""   # full path to sus executable
-inputs = ""   # full path to src/Standalone/inputs/
-OS     = platform.system()
+sus           = ""   # full path to sus executable
+inputs        = ""   # full path to src/Standalone/inputs/
+OS            = platform.system()
+debug_build   = ""
+no_sci_malloc = ""
 
 ####################################################################################
 
@@ -41,18 +43,26 @@ parser = OptionParser( usage, add_help_option=False )
 parser.set_defaults( verbose=False, 
                      parallelism=1 )
 
-parser.add_option( "-v", action="store_true", dest="verbose", help="Enable verbosity" )
-parser.add_option( "-j", type="int", dest="parallelism",      help="Set make parallelism" )
+parser.add_option( "-b", dest="build_directory",              help="Uintah build directory [REQUIRED]",
+                   action="store", type="string" )
+
+parser.add_option( "-d", dest="is_debug",                     help="Whether this is a debug build (use 'yes' or 'no')",
+                   action="store", type="string" )
+
 parser.add_option( "-h", "--help", action="help",             help="Show this help message" )
 
-parser.add_option( "-t", dest="test_file",                    help="Name of specific test script (eg: ICE) [REQUIRED/Multiple allowed]",
-                   action="append", type="string" )
+parser.add_option( "-j", type="int", dest="parallelism",      help="Set make parallelism" )
 
-parser.add_option( "-b", dest="build_directory",              help="Uintah build directory [REQUIRED]",
+parser.add_option( "-m", dest="sci_malloc_on",                help="Whether this is build has sci-malloc turned on (use 'yes' or 'no')",
                    action="store", type="string" )
 
 parser.add_option( "-s", dest="src_directory",                help="Uintah src directory [defaults to .../bin/../src]",
                    action="store", type="string" )
+
+parser.add_option( "-t", dest="test_file",                    help="Name of specific test script (eg: ICE) [REQUIRED/Multiple allowed]",
+                   action="append", type="string" )
+
+parser.add_option( "-v", action="store_true", dest="verbose", help="Enable verbosity" )
 
 ####################################################################################
 
@@ -67,7 +77,7 @@ def error( error_msg ) :
 ####################################################################################
 
 def validateArgs( options, args ) :
-    global sus, inputs
+    global sus, inputs, debug_build, no_sci_malloc
 
     if len( args ) > 0 :
         error( "Unknown command line args: " + str( args ) )
@@ -91,6 +101,26 @@ def validateArgs( options, args ) :
     if not os.path.isfile( sus ) :
         error( "'sus' not here: '" + sus + "'" )
 
+    if not options.sci_malloc_on :
+        error( "Whether this is build has sci-malloc turned on is not specified.  Please use <-m yes/no>." )
+    else :
+        if options.sci_malloc_on == "yes" :
+            no_sci_malloc = False
+        elif options.sci_malloc_on == "no" :
+            no_sci_malloc = True
+        else :
+            error( "-d requires 'yes' or 'no'." )
+
+    if not options.is_debug :
+        error( "debug/optimized not specified.  Please use <-d yes/no>." )
+    else :
+        if options.is_debug == "yes" :
+            debug_build = True
+        elif options.is_debug == "no" :
+            debug_build = False
+        else :
+            error( "-d requires 'yes' or 'no'." )
+
     if not options.src_directory :
         # Cut off the <bin> and replace it with 'src'
         last_slash = options.build_directory.rfind( "/" )
@@ -110,7 +140,7 @@ def validateArgs( options, args ) :
 
 def generateGS() :
 
-    global sus, inputs
+    global sus, inputs, debug_build, no_sci_malloc
     try :
         (options, leftover_args ) = parser.parse_args()
     except :
@@ -130,7 +160,7 @@ def generateGS() :
       if rc == 256:
         print "ERROR:generateGoldStandards.py "
         print "      mpirun command was not found and the environmental variable MPIRUN was not set."
-        print "      You must either put mpirun in your path or set the environmental variable"
+        print "      You must either add mpirun to your path, or set the 'MPIRUN' environment variable."
         exit (1)
     print "Using mpirun: %s " % MPIRUN
         
@@ -224,6 +254,19 @@ def generateGS() :
 
     for component in components :
 
+        # Pull the list of tests from the the 'component's python module's 'TESTS' variable:
+        # (Need to 'import' the module first.)
+        if options.verbose :
+            print "Python importing " + component + ".py"
+
+        try :
+          THE_COMPONENT = __import__( component )
+        except :
+          print ""
+          print "Error: Component '%s' does not exist!  Goodbye." % component
+          print ""
+          exit( -1 )
+
         os.mkdir( component )
         os.chdir( component )
 
@@ -232,11 +275,6 @@ def generateGS() :
         if not os.path.islink( "inputs" ) :
             os.symlink( inputs, "inputs" )
 
-        # Pull the list of tests from the the 'component's python module's 'TESTS' variable:
-        # (Need to 'import' the module first.)
-        if options.verbose :
-            print "Python importing " + component + ".py"
-        THE_COMPONENT = __import__( component )
 
         # determine which tests (local/nightly) to run default is local
         whichTests = os.getenv( 'WHICH_TESTS', "local" )
@@ -253,7 +291,7 @@ def generateGS() :
           
                   
         if options.verbose :
-            print "About to run tests for: " + component
+            print "About to run tests for component: " + component
 
         for test in tests :
             if testOS( test ) != upper( OS ) and testOS( test ) != "ALL":
@@ -271,11 +309,27 @@ def generateGS() :
 
             np = float( num_processes( test ) )
             mpirun = ""
+
+            
+            MALLOC_FLAG = ""
+
+            if debug_build :
+                if no_sci_malloc :
+                    print ""
+                    print "WARNING!!! The build was not built with SCI Malloc on...  Memory tests will not be run."
+                    print "WARNING!!! If you wish to perform memory checks, you must re-configure your debug build"
+                    print "WARNING!!! with '--enable-sci-malloc', run 'make cleanreally', and re-compile everything."
+                    print ""
+                else :
+                    os.environ['MALLOC_STRICT'] = "set"
+                    os.environ['MALLOC_STATS'] = "malloc_stats"
+                    MALLOC_FLAG = " -x MALLOC_STATS "
+
             if np > 1.0 :
                 np = int( np )
                 mpirun = "%s -np %s  " % (MPIRUN,np)
 
-                command = mpirun + sus + " -svnStat -svnDiff " + inputs + "/" + component + "/" + input( test )  + " >> sus_log.txt " 
+                command = mpirun + MALLOC_FLAG + sus + " -svnStat -svnDiff " + inputs + "/" + component + "/" + input( test )  + " >> sus_log.txt " 
             else :
                 command = sus + " -svnStat -svnDiff " + inputs + "/" + component + "/" + input( test )  + " >> sus_log.txt " 
 

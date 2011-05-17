@@ -38,12 +38,6 @@ SRCS     += $(SRCDIR)/Allocator.cc \
             $(SRCDIR)/malloc.cc    \
             $(SRCDIR)/new.cc
 
-ifneq ($(IS_OSX),yes)
-   ifeq ($(MALLOC_TRACE_ON),yes)
-      SRCS  += $(SRCDIR)/Trace.cc
-   endif
-endif
-
 PSELIBS := 
 LIBS := $(THREAD_LIBRARY)
 
