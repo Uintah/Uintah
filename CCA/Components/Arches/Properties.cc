@@ -112,6 +112,10 @@ Properties::Properties(const ArchesLabel* label,
 Properties::~Properties()
 {
   delete d_mixingModel;
+
+  if ( mixModel == "TabProps" || mixModel == "ClassicTable" ){ 
+    delete d_mixingRxnTable; 
+  }
 }
 
 //****************************************************************************
