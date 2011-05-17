@@ -120,10 +120,17 @@ using namespace std;
 #  define UINTAHSHARE
 #endif
 
+#if defined( USE_LENNY_HACK )
+  // See Core/Malloc/Allocator.cc for more info.
+  namespace SCIRun {
+    extern void shutdown();
+  };
+#endif
+
 // If we are using MPICH version 1, 
 // we must call MPI_Init() before parsing args
 #if defined(HAVE_MPICH) && !defined(MPICH2)
-#define HAVE_MPICH_OLD
+#  define HAVE_MPICH_OLD
 #endif
 
 
@@ -237,6 +244,10 @@ abortCleanupFunc()
 int
 main( int argc, char *argv[], char *env[] )
 {
+#if defined( USE_LENNY_HACK )
+  atexit( SCIRun::shutdown );
+#endif
+
   sanityChecks();
 
   string oldTag;
@@ -809,4 +820,3 @@ extern "C" {
 }
 #endif
 */
-

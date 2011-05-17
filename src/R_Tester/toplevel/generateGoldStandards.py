@@ -325,13 +325,15 @@ def generateGS() :
                     os.environ['MALLOC_STATS'] = "malloc_stats"
                     MALLOC_FLAG = " -x MALLOC_STATS "
 
+            SVN_FLAGS = " -svnStat -svnDiff "
+
             if np > 1.0 :
                 np = int( np )
                 mpirun = "%s -np %s  " % (MPIRUN,np)
 
-                command = mpirun + MALLOC_FLAG + sus + " -svnStat -svnDiff " + inputs + "/" + component + "/" + input( test )  + " >> sus_log.txt " 
+                command = mpirun + MALLOC_FLAG + sus + SVN_FLAGS + inputs + "/" + component + "/" + input( test )  #+ " >> sus_log.txt " 
             else :
-                command = sus + " -svnStat -svnDiff " + inputs + "/" + component + "/" + input( test )  + " >> sus_log.txt " 
+                command = sus + SVN_FLAGS + inputs + "/" + component + "/" + input( test )  #+ " >> sus_log.txt " 
 
             print "Running command: " + command
 
