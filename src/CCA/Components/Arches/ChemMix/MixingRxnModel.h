@@ -88,6 +88,7 @@ namespace Uintah {
       // Useful typedefs
       typedef std::map<string, const VarLabel* >           VarMap;
       typedef std::map<string, CCVariable<double>* >       CCMap; 
+      typedef std::map<string, double >           doubleMap; 
 
       MixingRxnModel( const ArchesLabel* labels, const MPMArchesLabel* MAlabels );
 
@@ -270,11 +271,15 @@ namespace Uintah {
       };
 
 
-      VarMap d_dvVarMap;   ///< Dependent variable map
-      VarMap d_ivVarMap;   ///< Independent variable map
+      VarMap d_dvVarMap;         ///< Dependent variable map
+      VarMap d_ivVarMap;         ///< Independent variable map
+      doubleMap d_constants;     ///< List of constants in table header
 
       /** @brief Sets the mixing table's dependent variable list. */
       void setMixDVMap( const ProblemSpecP& root_params ); 
+
+      /** @brief Common problem setup work */ 
+      void problemSetupCommon( const ProblemSpecP& params ); 
 
       const ArchesLabel* d_lab;               ///< Arches labels
       const MPMArchesLabel* d_MAlab;          ///< MPMArches labels

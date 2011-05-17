@@ -80,6 +80,44 @@ MixingRxnModel::~MixingRxnModel()
 }
 
 //---------------------------------------------------------------------------
+void 
+MixingRxnModel::problemSetupCommon( const ProblemSpecP& params )
+{
+
+  ProblemSpecP db = params; 
+
+  // create a transform object
+  if ( db->findBlock("coal") ) {
+
+    double constant = 0.0; 
+    _iv_transform = scinew CoalTransform( constant ); 
+
+  } else if ( db->findBlock("acidbase") ) {
+
+    doubleMap::iterator iter = d_constants.find( "transform_constant" ); 
+
+    if ( iter == d_constants.end() ) {
+      throw ProblemSetupException( "Could not find transform_constant for the acid/base table.",__FILE__, __LINE__ ); 
+    } else { 
+      double constant = iter->second; 
+      _iv_transform = scinew CoalTransform( constant ); 
+    }
+
+  } else { 
+
+    _iv_transform = scinew NoTransform();
+
+  }
+
+  bool check_transform = _iv_transform->problemSetup( db, d_allIndepVarNames ); 
+
+  if ( !check_transform ){ 
+    throw ProblemSetupException( "Could not properly setup independent variable transform based on input.",__FILE__,__LINE__); 
+  }
+
+}
+
+//---------------------------------------------------------------------------
 // Set Mix Dependent Variable Map
 //---------------------------------------------------------------------------
 void 

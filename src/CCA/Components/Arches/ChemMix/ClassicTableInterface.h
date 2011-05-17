@@ -186,7 +186,6 @@ public:
 
   typedef std::map<string, DepVarCont >       DepVarMap;
   typedef std::map<string, int >               IndexMap; 
-  typedef std::map<string, double >           doubleMap; 
 
   double getTableValue( std::vector<double>, std::string ); 
 
@@ -215,8 +214,6 @@ private:
 
   IndexMap d_depVarIndexMap;              ///< Reference to the integer location of the variable
   IndexMap d_enthalpyVarIndexMap;         ///< Referece to the integer location of variables for heat loss calculation
-
-  doubleMap d_constants;                  ///< List of constants in table header
 
   std::vector<int>    d_allIndepVarNum;        ///< Vector storing the grid size for the Independant variables
   std::vector<string> d_allDepVarNames;        ///< Vector storing all dependent variable names from the table file
