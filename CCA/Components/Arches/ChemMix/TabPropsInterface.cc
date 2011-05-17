@@ -187,19 +187,7 @@ TabPropsInterface::problemSetup( const ProblemSpecP& propertiesParameters )
   proc0cout << "  Matching sucessful!" << endl;
   proc0cout << endl;
 
-  // create a transform object
-  if ( db_tabprops->findBlock("coal") ) {
-    double constant = 0.0; 
-    _iv_transform = scinew CoalTransform( constant ); 
-  } else if ( db_tabprops->findBlock("acidbase") ) { 
-      throw ProblemSetupException( "Acid base transform not implemented yet for TabProps",__FILE__,__LINE__); 
-  } else { 
-    _iv_transform = scinew NoTransform();
-  }
-  bool check_transform = _iv_transform->problemSetup( db_tabprops, d_allIndepVarNames ); 
-  if ( !check_transform ){ 
-    throw ProblemSetupException( "Could not properly setup independent variable transform based on input.",__FILE__,__LINE__); 
-  }
+  problemSetupCommon( db_tabprops ); 
 
   // Confirm that table has been loaded into memory
   d_table_isloaded = true;
