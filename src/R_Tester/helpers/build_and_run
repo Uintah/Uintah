@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #______________________________________________________________________
 #  This script calls two separate scripts to 
 #  compile the code and run the regression testss

@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #______________________________________________________________________
 # This script does the following:
 #   - create a configure_command file

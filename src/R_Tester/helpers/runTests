@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # should have the environmental variables:
 # PATH, OS, PARALLELISM, TMPDIR, BUILD_DIR, VERBOSE,

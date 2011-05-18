@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 TEST_NAME=$1
 TEST_TIMEFILE=$2

@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 TEST=$1
 MALLOC_STATS=$2
