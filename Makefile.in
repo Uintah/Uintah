@@ -259,7 +259,7 @@ gold_standards :
 	@mkdir -p $(OBJTOP_ABS)/TestData;                    \
          cd $(OBJTOP_ABS)/TestData;                          \
 	 components=`$(SRCTOP_ABS)/R_Tester/helpers/selectComponents.sh $(SRCTOP_ABS)/R_Tester`; \
-	 if test "$$?" == 0; then                            \
+	 if test "$$?" -eq 0; then                            \
             export PYTHONPATH="$(SRCTOP_ABS)/R_Tester/toplevel:$(SRCTOP_ABS)/R_Tester"; \
             $(SRCTOP_ABS)/R_Tester/toplevel/generateGoldStandards.py \
 	                                           -d $(IS_DEBUG) -b $(OBJTOP_ABS) -s $(SRCTOP_ABS) $$components \

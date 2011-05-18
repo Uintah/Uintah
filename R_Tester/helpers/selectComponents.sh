@@ -1,4 +1,4 @@
-#! /bin/sh
+#! /bin/bash
 
 #
 # This script asks the user (using a textual 'dialog' box) which RT

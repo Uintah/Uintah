@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # to differentiate among the build names & even directories
 COMPILE="yes"
