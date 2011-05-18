@@ -225,6 +225,9 @@ WARNING
     virtual bool useInternalDeps();
     
     const VarLabel * reloc_new_posLabel_;
+    
+    int getMaxGhost() {return maxGhost;}
+
   protected:
     void finalizeTimestep();
     
@@ -328,6 +331,9 @@ WARNING
     vector<const Task::Dependency*> d_initRequires;
     set<const VarLabel*, VarLabel::Compare> d_initRequiredVars;
     set<const VarLabel*, VarLabel::Compare> d_computedVars;
+
+    //max ghost cells of all tasks - will be used for loadbalancer to create neighorhood
+    int maxGhost;
   };
 } // End namespace Uintah
 

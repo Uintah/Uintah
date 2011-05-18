@@ -111,6 +111,7 @@ SchedulerCommon::SchedulerCommon(const ProcessorGroup* myworld, Output* oport)
 
   m_locallyComputedPatchVarMap = scinew LocallyComputedPatchVarMap;
   reloc_new_posLabel_ = 0;
+  maxGhost=0;
 }
 
 SchedulerCommon::~SchedulerCommon()
@@ -661,6 +662,8 @@ SchedulerCommon::addTask(Task* task, const PatchSet* patches,
   graphs[graphs.size()-1]->addTask(task, patches, matls);
   numTasks_++;
 
+  if (task->maxGhostCells > maxGhost) maxGhost = task->maxGhostCells;
+
   // add to init-requires.  These are the vars which require from the OldDW that we'll
   // need for checkpointing, switching, and the like.
   // In the case of treatAsOld Vars, we handle them because something external to the taskgraph
@@ -876,7 +879,7 @@ SchedulerCommon::logMemoryUse()
 {
   if(!memlogfile){
     ostringstream fname;
-    fname << "uintah_memuse.log.p" << setw(5) << setfill('0') << d_myworld->myrank();
+    fname << "uintah_memuse.log.p" << setw(5) << setfill('0') << d_myworld->myrank() << "." << d_myworld->size();
     memlogfile = scinew ofstream(fname.str().c_str());
     if(!*memlogfile){
       cerr << "Error opening file: " << fname.str() << '\n';

@@ -60,6 +60,7 @@ void Task::initialize()
     dwmap[i]=Task::InvalidDW;
   sortedOrder=-1;
   d_phase=-1;
+  maxGhostCells=0;
 }
 
 Task::ActionBase::~ActionBase()
@@ -173,6 +174,9 @@ Task::requires(WhichDW dw,
   Dependency* dep = scinew Dependency(Requires, this, dw, var, oldTG, patches, matls,
                                       patches_dom, matls_dom,
                                       gtype, numGhostCells);
+
+  if (numGhostCells > maxGhostCells) maxGhostCells=numGhostCells;
+
   dep->next=0;
   if(req_tail)
     req_tail->next=dep;

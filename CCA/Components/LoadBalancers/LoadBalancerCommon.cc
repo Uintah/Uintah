@@ -246,7 +246,8 @@ LoadBalancerCommon::createNeighborhood(const GridP& grid, const GridP& oldGrid)
 {
   int me = d_myworld->myrank();
   // WARNING - this should be determined from the taskgraph? - Steve
-  int maxGhost = 2;
+  // Now maxGhost is from taskgraph 
+  int maxGhost = d_scheduler->getMaxGhost();
   d_neighbors.clear();
   d_neighborProcessors.clear();
   
