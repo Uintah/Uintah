@@ -92,7 +92,7 @@ for ($k = $startLoop; $k<=$endLoop; $k++){
   $L2norm = `cat $comp_output`;
   chomp($L2norm);
   `echo $x[$k] $L2norm >> L2norm.dat`;
-  system("rm $comp_output");
+  #system("rm $comp_output");
 }
 
 #______________________________________________________________________
