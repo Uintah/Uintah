@@ -98,6 +98,8 @@ my $insideComment=0;
 open(tstFile, "$ARGV[0]") or die("ERROR(run_tests.pl): $ARGV[0], File not found");
 
 while ($line=<tstFile>){
+  $blankLine=0;
+  
   if($line=~ /\<!--/){
     $insideComment=1;
   }
@@ -115,23 +117,42 @@ while ($line=<tstFile>){
   }
   if($line=~ /\<\/Test\>/){
     $insideTest=0;
-  } 
+  }
+  if ($line=~ /^\s*$/ ) {
+    $blankLine=1;
+  }
+  
   
   # inside of <AllTests>
-  if($insideAllTest && !$insideComment){
+  if($insideAllTest && !$insideComment && !$blankLine){
     if ($line=~ /\<replace_lines\>/){       # find <replace_lines>
       $nLine=0;
 
       while (($line=<tstFile>) !~ /\<\/replace_lines\>/){
         chomp($line);
-        $global_replaceLines[$nLine]=$line;
-        $nLine++;
+        
+        if ($line !~ /^\s*$/ ) {      # ignore blank lines
+          $global_replaceLines[$nLine]=$line;
+          $nLine++;
+        }
+      }
+    }
+    
+    if ($line=~ /\<replace_values\>/){       # find <replace_values>
+      $nLine=0;
+      while (($line=<tstFile>) !~ /\<\/replace_values\>/){
+        chomp($line);
+        
+        if ($line !~ /^\s*$/ ) {      # ignore blank lines
+          $global_replaceValues[$nLine]=$line;
+          $nLine++;
+        }
       }
     }
   }
   
   # inside each <Test>
-  if($insideTest && !$insideComment){
+  if($insideTest && !$insideComment && !$blankLine){
     if ($line=~ /\<replace_lines\>/){       # find <replace_lines>
       $nLine=0;
 
@@ -160,9 +181,20 @@ close(tstFile);
 # Globally, replace lines in the main ups file before each test.
 @replacementPatterns = (@global_replaceLines);
 foreach $rp (@global_replaceLines){
-  system("replace_XML_line", "$rp", "$upsFile") ==0 ||  die("Error replacing $rp in file $upsFile \n $@");
-  print "\t\t$rp\n";
+  system("replace_XML_line", "$rp", "$upsFile") ==0 ||  die("Error replacing_XML_line $rp in file $upsFile \n $@");
+  print "\t\treplace_XML_line $rp\n";
 }
+
+# replace the values globally
+@replacementPatterns = (@global_replaceValues);
+foreach $rv (@global_replaceValues){
+  @tmp = split(/:/,$rv);
+  $xmlPath = $tmp[0];       # you must use a : to separate the xmlPath and value
+  $value   = $tmp[1];
+  system("replace_XML_value", "$xmlPath", "$value", "$upsFile")==0 ||  die("Error: replace_XML_value $xmlPath $value $upsFile \n $@");
+  print "\t\treplace_XML_value $xmlPath $value\n";
+}
+
 
 #__________________________________
 # Globally perform substitutions in the main ups
