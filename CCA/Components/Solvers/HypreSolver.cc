@@ -921,7 +921,7 @@ namespace Uintah {
       if( fmodf(range.x(),2) !=0 || fmodf(range.y(),2) != 0 || fmodf(range.z(),2) != 0) {
         ostringstream warn;
         warn << "\nINPUT FILE ERROR: hypre solver: \n"
-             << "With periodic boundary conditions the resolution of your grid "<<range<<", in each direction, must be a multiple of 2, \n"
+             << "With periodic boundary conditions the resolution of your grid "<<range<<", in each direction, must be a power of 2 (i.e. 2^n), \n"
              << "e.g., 16,32,64,128....";
             
         throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
