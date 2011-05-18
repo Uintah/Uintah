@@ -454,16 +454,21 @@
 
             <!-- Westbrook Dryer Global Hydrocarbon reaction rate model -->
             <!-- see Turns, pg. 156-157 -->
-            <A                          spec="OPTIONAL DOUBLE" />
-            <E_R                        spec="OPTIONAL DOUBLE" />
-            <X                          spec="OPTIONAL DOUBLE" />
-            <Y                          spec="OPTIONAL DOUBLE" />
-            <m                          spec="OPTIONAL DOUBLE" />
-            <n                          spec="OPTIONAL DOUBLE" />
-            <fuel_mass_fraction         spec="OPTIONAL DOUBLE" />
-            <oxidizer_O2_mass_fraction  spec="OPTIONAL DOUBLE" />
-            <scalar_label               spec="OPTIONAL STRING" />
-            <mw_label                   spec="OPTIONAL STRING" />
+            <A                          spec="OPTIONAL DOUBLE" /> <!-- Pre-exponential factor --> 
+            <E_R                        spec="OPTIONAL DOUBLE" /> <!-- Activation temperature --> 
+            <X                          spec="OPTIONAL DOUBLE" /> <!-- C_xH_y --> 
+            <Y                          spec="OPTIONAL DOUBLE" /> <!-- C_xH_y --> 
+            <m                          spec="OPTIONAL DOUBLE" /> <!-- [C_xH_y]^m --> 
+            <n                          spec="OPTIONAL DOUBLE" /> <!-- [O_2]^n --> 
+            <fuel_mass_fraction         spec="OPTIONAL DOUBLE" /> <!-- Mass fraction of hydrocarbon in the fuel stream --> 
+            <oxidizer_O2_mass_fraction  spec="OPTIONAL DOUBLE" /> <!-- Mass fraction of O2 in the oxidizer stream --> 
+            <mix_frac_label             spec="OPTIONAL STRING" /> <!-- Mixture fraction label --> 
+            <hc_frac_label              spec="OPTIONAL STRING" /> <!-- Hydrocarbon mass fraction label --> 
+            <mw_label                   spec="OPTIONAL STRING" /> <!-- mixture molecular weight label --> 
+            <temperature_label          spec="OPTIONAL STRING" /> <!-- temperature label, default = "temperature" --> 
+            <density_label              spec="OPTIONAL STRING" /> <!-- density label, default = "density" --> 
+            <pos                        spec="OPTIONAL NO_DATA" /> <!-- source term is positive --> 
+					
 
             <!-- Intrusion inlets --> 
             <intrusion                  spec="OPTIONAL NO_DATA">
