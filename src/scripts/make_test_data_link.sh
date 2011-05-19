@@ -1,9 +1,9 @@
 #!/bin/sh
 
-mkdir TestData
+mkdir -p TestData
 cd TestData/
 for i in /usr/local/TestData/opt/*; 
-	do ln -s $i .; 
+	do ln -sf $i .; 
 done
 
 exit
