@@ -246,13 +246,11 @@ Ray::sched_rayTrace( const LevelP& level, SchedulerP& sched, const int time_sub_
   Task* tsk= scinew Task( taskname, this, &Ray::rayTrace, time_sub_step );
   printSchedule(level,dbg,taskname);
 
-  Ghost::GhostType  gn  = Ghost::None;
-  Task::DomainSpec  ND  = Task::NormalDomain;
-  #define allPatches 0
-  #define allMatls 0
-  
-  tsk->requires( Task::NewDW , d_abskgLabel  ,   allPatches, ND,allMatls, ND, gn,0);
-  tsk->requires( Task::NewDW , d_sigmaT4_label , allPatches, ND,allMatls, ND, gn,0);
+  // require an infinite number of ghost cells so  you can access
+  // the entire domain.
+  Ghost::GhostType  gac  = Ghost::AroundCells;
+  tsk->requires( Task::NewDW , d_abskgLabel  ,  gac, SHRT_MAX);
+  tsk->requires( Task::NewDW , d_sigmaT4_label, gac, SHRT_MAX);
 //  tsk->requires( Task::OldDW , d_lab->d_cellTypeLabel , Ghost::None , 0 );
 
   if( time_sub_step == 0 ){
@@ -274,9 +272,7 @@ Ray::rayTrace( const ProcessorGroup* pc,
                DataWarehouse* old_dw,
                DataWarehouse* new_dw,
                const int time_sub_step )
-{
-  cout << " Top rayTrace: "<< endl;
-  
+{ 
   const Level* level = getLevel(patches);
   int maxLevels = level->getGrid()->numLevels();
   
@@ -487,13 +483,14 @@ if( ( Dx.x() != Dx.y() ) || ( Dx.x() != Dx.z() ) || ( Dx.y() != Dx.z() ) ) {
 
     double end =clock();
     double efficiency = size/((end-start)/ CLOCKS_PER_SEC);
-
-    cout<< endl;
-    cout << " RMCRT REPORT: " << endl;
-    cout << " Used "<< (end-start) * 1000 / CLOCKS_PER_SEC<< " milliseconds of CPU time. \n" << endl;// Convert time to ms 
-    cout << " Size: " << size << endl;
-    cout << " Efficiency: " << efficiency << " steps per sec" << endl;
-    cout << endl; 
+    if (patch->getGridIndex() == 0) {
+      cout<< endl;
+      cout << " RMCRT REPORT: Patch 0" << endl;
+      cout << " Used "<< (end-start) * 1000 / CLOCKS_PER_SEC<< " milliseconds of CPU time. \n" << endl;// Convert time to ms 
+      cout << " Size: " << size << endl;
+      cout << " Efficiency: " << efficiency << " steps per sec" << endl;
+      cout << endl; 
+    }
 
   }//end patch loop
 } // end ray trace method
