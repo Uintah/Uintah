@@ -36,8 +36,8 @@ NIGHTLYTESTS = [
 LOCALTESTS =   [  
 									("mpmpipe_test"          , "mpmpipe_test.ups"          , 8   , "All" , ["exactComparison"]) , 
 									("methaneFireWContainer" , "methaneFireWContainer.ups" , 1.1 , "All" , ["exactComparison", "no_restart"]), 
-									("heptane_pipe"          , "heptane_pipe.ups"          , 1.1 , "All" , ["exactComparison", "no_restart"]),
-                  ("coal_table_pipe"       , "coal_table_pipe.ups"       , 1.1 , "All" , ["exactComparison", "no_restart"])
+									("heptane_pipe"          , "heptane_pipe.ups"          , 1.1 , "All" , ["exactComparison", "no_restart", "no_memoryTest"]),
+                  ("coal_table_pipe"       , "coal_table_pipe.ups"       , 1.1 , "All" , ["exactComparison", "no_restart", "no_memoryTest"])
                ]  
 
 #__________________________________
