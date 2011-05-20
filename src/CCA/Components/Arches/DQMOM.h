@@ -120,51 +120,18 @@ private:
                               int              verbosity=0);
 
   void constructAopt( DenseMatrix*   &AA,
-                      vector<int> &Abscissas);
+                      vector<double> &Abscissas);
 
   void constructAopt_unw( DenseMatrix*   &AA,
-                          vector<int> &Abscissas);
+                          vector<double> &Abscissas);
 
   void constructBopt( ColumnMatrix*  &BB,
                       vector<double> &weights,
-                      vector<int> &Abscissas,
+                      vector<double> &Abscissas,
                       vector<double> &models);
 
-
-  /** @brief    Do a quick calculation of the powers of optimal abscissas (possible because optimal abscissas have values of -1, 0, or 1)
-      @details
-      This is a much faster "power" function for the optimal DQMOM abscissas.
-      Since the optimal abscissas are KNOWN to be -1, 0, or 1, 
-      calculating the powers of the optimal abscissas is very easy and doesn't need 
-      to incur the cost of the actual power function pow().
-      */
-  inline int my_pow( int abscissa, int power )
-  {
-    int return_var = 0;
-    switch( abscissa ) {
-      case -1:
-        if( power%2 == 0 ) {
-          return_var = 1;
-        } else if( abs(power%2) == 1 ) {
-          return_var = -1;
-        }
-        break;
-      case 0:
-        if( power == 0 ) {
-          return_var = 1;
-        } else {
-          return_var = 0;
-        }
-        break;
-      case 1:
-        return_var = abscissa;
-        break;
-    }
-    return return_var;
-  }
-
   void constructBopt_unw( ColumnMatrix*  &BB,
-                          vector<int> &Abscissas,
+                          vector<double> &Abscissas,
                           vector<double> &models);
 
 
@@ -190,7 +157,7 @@ private:
   double d_w_small;
   double d_weight_scaling_constant;
   vector<double> d_weighted_abscissa_scaling_constants;
-  vector<int> d_opt_abscissas;
+  vector<double> d_opt_abscissas;
   DenseMatrix* AAopt;
 
   const VarLabel* d_normBLabel; 

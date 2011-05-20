@@ -1,5 +1,4 @@
 #include <CCA/Components/Arches/DQMOM.h>
-
 #include <CCA/Components/Arches/ArchesLabel.h>
 #include <CCA/Components/Arches/CoalModels/CoalModelFactory.h>
 #include <CCA/Components/Arches/CoalModels/ModelBase.h>
@@ -7,9 +6,7 @@
 #include <CCA/Components/Arches/LU.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermBase.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
-
 #include <CCA/Ports/Scheduler.h>
-
 #include <Core/Exceptions/FileNotFound.h>
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Exceptions/ProblemSetupException.h>
@@ -1492,7 +1489,7 @@ DQMOM::constructLinearSystem( LU             &A,
 // **********************************************
 void
 DQMOM::constructAopt( DenseMatrix*   &AA,
-                      vector<int> &Abscissas)
+                      vector<double> &Abscissas)
 {
   for ( unsigned int k = 0; k < momentIndexes.size(); ++k) {
     MomentVector thisMoment = momentIndexes[k];
@@ -1549,68 +1546,78 @@ DQMOM::constructAopt( DenseMatrix*   &AA,
   } // end moments
 }
 
-/**
-@details
-Construct the optimized B vector for the optimized linear system A* X = B*.
-*/
+// **********************************************
+// Construct B optimized
+// **********************************************
 void
 DQMOM::constructBopt( ColumnMatrix*  &BB,
                       vector<double> &weights,
-                      vector<int>    &Abscissas,
+                      vector<double> &Abscissas,
                       vector<double> &models)
 {
-  // 0th moments
-  unsigned int kk=0;
-  (*BB)[kk] = 0.0;
-
-  // 1st moments
-  int c=1;
-  for( unsigned int k = N_xi; k >= 1; k--, c++ ) {
-    double sum = 0.0;
-    for( unsigned int alpha = 0; alpha < N_; ++alpha ) {
-      sum += weights[alpha]*models[(k-1)*(N_)+alpha];
-    }
-    (*BB)[c] = sum;
-  }
-
-  // the rest of the moments
-  for( unsigned int k = (N_xi+1); k < momentIndexes.size(); ++k) {
-    vector<int> thisMoment = momentIndexes[k];
+  for ( unsigned int k = 0; k < momentIndexes.size(); ++k) {
+    MomentVector thisMoment = momentIndexes[k];
 
     // weighted abscissas
     double totalsumS = 0;
     for( unsigned int j = 0; j < N_xi; ++j ) {
-      double Sstuff;
+      double prefixS    = 1;
+      double productS   = 1;
+      double modelsumS  = 0;
+
+      double quadsumS = 0;
       for( unsigned int alpha = 0; alpha < N_; ++alpha ) {
-        if ( Abscissas[j*(N_)+alpha] == 0 && thisMoment[j] == 0) {
-          Sstuff = 0;
+        if (weights[alpha] == 0) {
+          prefixS = 0;
+          productS = 0;
+        } else if ( Abscissas[j*(N_)+alpha] == 0 && thisMoment[j] == 0) {
+          //FIXME:
+          // both prefixes contain 0^(-1)
+          prefixS = 0;
         } else {
-          Sstuff = -(thisMoment[j])*(my_pow((int)Abscissas[j*(N_)+alpha], thisMoment[j]-1));
+          // Appendix C, C.11 (A_j+1 matrix)
+          double base = Abscissas[j*(N_)+alpha];
+          double exponent = thisMoment[j] - 1;
+
+          // Appendix C, C.16 (S matrix)
+          prefixS = -(thisMoment[j])*(pow(base, exponent));
+          productS = 1;
 
           // calculate product containing all internal coordinates except j
           for (unsigned int n = 0; n < N_xi; ++n) {
             if (n != j) {
-              Sstuff *= my_pow((int)Abscissas[n*(N_)+alpha], thisMoment[n]);
+              // the if statements checking these same conditions (above) are only
+              // checking internal coordinate j, so we need them again for internal
+              // coordinate n
+              if (weights[alpha] == 0) {
+                productS = 0;
+              } else {
+                double base2 = Abscissas[n*(N_)+alpha];
+                double exponent2 = thisMoment[n];
+                productS = productS*( pow(base2, exponent2));
+              }//end divide by zero conditionals
             }
           }//end int coord n
         }//end divide by zero conditionals
 
-        totalsumS += weights[alpha]*-models[j*(N_)+alpha]*Sstuff;
 
+        modelsumS = - models[j*(N_)+alpha];
+        quadsumS = quadsumS + weights[alpha]*modelsumS*prefixS*productS;
       }//end quad nodes
+      totalsumS = totalsumS + quadsumS;
     }//end int coords j sub-matrix
 
     (*BB)[k] = totalsumS;
   } // end moments
-
 }
+  
 
 // **********************************************
 // Construct A optimized for unweighted abscissas
 // **********************************************
 void
 DQMOM::constructAopt_unw( DenseMatrix*   &AA,
-                          vector<int> &Abscissas)
+                          vector<double> &Abscissas)
 {
   for ( unsigned int k = 0; k < momentIndexes.size(); ++k) {
     MomentVector thisMoment = momentIndexes[k];
@@ -1667,81 +1674,62 @@ DQMOM::constructAopt_unw( DenseMatrix*   &AA,
   } // end moments
 }
 
-
-
-/** 
-@details
-Construct the B vector for the DQMOM linear system AX=B given a set of matrices that use Lapack, DenseMatrix and ColumnMatrix.
-This constructs B given a vector<double> of unweighted abscissas.
-*/
+// **********************************************
+// Construct B optimized for unweighted abscissas
+// **********************************************
 void
 DQMOM::constructBopt_unw( ColumnMatrix*  &BB,
-                          vector<int> &Abscissas,
+                          vector<double> &Abscissas,
                           vector<double> &models)
 {
+  for ( unsigned int k = 0; k < momentIndexes.size(); ++k) {
+    MomentVector thisMoment = momentIndexes[k];
 
-  // 0th moments
-  unsigned int kk=0;
-  (*BB)[kk] = 0.0;
-
-  // 1st moments
-  int c=1;
-  for( unsigned int k = N_xi; k >= 1; k--, c++ ) {
-    double sum = 0.0;
-    for( unsigned int alpha = 0; alpha < N_; ++alpha ) {
-      sum += models[(k-1)*(N_)+alpha];
-    }
-    (*BB)[c] = sum;
-  }
-
-  // the rest of the moments
-  for( unsigned int k = (N_xi+1); k < momentIndexes.size(); ++k) {
-    vector<int> thisMoment = momentIndexes[k];
-
-    // This is a product common to several terms (see FORMULA 2), with the exception
-    // of needing to be multiplied and divided by two terms (FORMULA 1).
-    // It was previously calculated inside the quad nodes loop, but this was
-    // repetitive and costly. Moving it outside the loop greatly improves speed 
-    // (approx. factor of 5)
-    vector<int> innerProduct(N_,0);
-    for( unsigned int alpha = 0; alpha < N_; ++alpha ) {
-      int tempProduct = 1;
-      for( unsigned int n = 0; n < N_xi; ++n ) {
-        tempProduct *= my_pow( Abscissas[n*(N_)+alpha], thisMoment[n] );
-      }
-      innerProduct[alpha] = tempProduct;
-    }
     double totalsumS = 0;
     for( unsigned int j = 0; j < N_xi; ++j ) {
-      double Sstuff;
-      // this is the improved way...
+      double prefixS    = 1;
+      double productS   = 1;
+      double modelsumS  = 0;
+
+      double quadsumS = 0;
       for( unsigned int alpha = 0; alpha < N_; ++alpha ) {
-        // Note: this is faster if all the optimal abscissas are non-zero (i.e. +1 or -1)
-        if( Abscissas[j*(N_)+alpha] != 0 ) {
-          Sstuff = innerProduct[alpha]*( -thisMoment[j] )*(1.0 / Abscissas[j*(N_)+alpha]); // FORMULA 1
-          totalsumS += -models[j*(N_)+alpha]*Sstuff;
+        if ( Abscissas[j*(N_)+alpha] == 0 && thisMoment[j] == 0) {
+          //FIXME:
+          // both prefixes contain 0^(-1)
+          prefixS = 0;
         } else {
-          // If any optimal abscissas are 0, the "common product" calculated above will usually be wrong,
-          // and must be calculated.
-          // This is how the calculation was being done before, and so is slow, but since this is only done
-          // when the optimal abscissas are 0, it still saves time.
-          Sstuff = -(thisMoment[j])*(my_pow(Abscissas[j*(N_)+alpha], thisMoment[j]-1));
+          // Appendix C, C.11 (A_j+1 matrix)
+          double base = Abscissas[j*(N_)+alpha];
+          double exponent = thisMoment[j] - 1;
+
+          // Appendix C, C.16 (S matrix)
+          prefixS = -(thisMoment[j])*(pow(base, exponent));
+          productS = 1;
+          // calculate product containing all internal coordinates except j
           for (unsigned int n = 0; n < N_xi; ++n) {
             if (n != j) {
-              Sstuff *= my_pow(Abscissas[n*(N_)+alpha], thisMoment[n]); // FORMULA 2
+              // the if statements checking these same conditions (above) are only
+              // checking internal coordinate j, so we need them again for internal
+              // coordinate n
+              double base2 = Abscissas[n*(N_)+alpha];
+              double exponent2 = thisMoment[n];
+              productS = productS*( pow(base2, exponent2));
             }
-          }
-          totalsumS += -models[j*(N_)+alpha]*Sstuff;
-        }
+          }//end int coord n
+        }//end divide by zero conditionals
+
+        modelsumS = - models[j*(N_)+alpha];
+        //quadsumS = quadsumS + weights[alpha]*modelsumS*prefixS*productS;
+        quadsumS = quadsumS + modelsumS*prefixS*productS;
       }//end quad nodes
-
-
+      totalsumS = totalsumS + quadsumS;
     }//end int coords j sub-matrix
 
     (*BB)[k] = totalsumS;
   } // end moments
-
 }
+
+
 
 // **********************************************
 // Construct A and B matrices for DQMOM
