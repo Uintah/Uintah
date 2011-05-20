@@ -270,6 +270,58 @@ namespace Uintah {
           double d_constant; 
       };
 
+      class SlowFastTransform : public TransformBase {
+
+        public: 
+          SlowFastTransform(); 
+          ~SlowFastTransform(); 
+
+          bool problemSetup( const ProblemSpecP& ps, std::vector<std::string> names ){
+            bool transform_on = false; 
+            ProblemSpecP p = ps; 
+            bool doit = false; 
+            if ( p->findBlock("slowfastchem") ){
+
+              p->findBlock("slowfastchem")->getAttribute("fp_label", _index_1_name );
+              p->findBlock("slowfastchem")->getAttribute("eta_label", _index_2_name ); 
+              doit = true; 
+
+            } 
+
+            if ( doit ) { 
+
+              _index_1 = -1; 
+              _index_2 = -1; 
+
+              int index = 0; 
+              for ( std::vector<std::string>::iterator i = names.begin(); i != names.end(); i++ ){
+
+                if ( *i == _index_1_name ) 
+                  _index_1 = index; 
+                if ( *i == _index_2_name )
+                  _index_2 = index; 
+                index++; 
+
+              }
+              transform_on = true; 
+              if ( _index_1 == -1 ) {
+                proc0cout << "Warning: Could not match PRIMARY mixture fraction label to table variables!" << endl;
+                transform_on = false; 
+              }
+              if ( _index_2 == -1 ) {
+                proc0cout << "Warning: Could not match ETA mixture fraction label to table variables!" << endl;
+                transform_on = false; 
+              }
+            } 
+            return transform_on; 
+          };  
+
+          void inline transform( std::vector<double>& iv ){
+            iv[_index_2] = iv[_index_1];
+            iv[_index_1] = 0.0; 
+          }; 
+      };
+
 
       VarMap d_dvVarMap;         ///< Dependent variable map
       VarMap d_ivVarMap;         ///< Independent variable map
