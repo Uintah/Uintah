@@ -100,6 +100,10 @@ MixingRxnModel::problemSetupCommon( const ProblemSpecP& params )
       _iv_transform = scinew CoalTransform( constant ); 
     }
 
+  } else if ( db->findBlock("slowfastchem") ) { 
+
+    _iv_transform = scinew SlowFastTransform(); 
+
   } else { 
 
     _iv_transform = scinew NoTransform();
@@ -185,3 +189,6 @@ MixingRxnModel::NoTransform::NoTransform(){}
 MixingRxnModel::NoTransform::~NoTransform(){}
 MixingRxnModel::CoalTransform::CoalTransform( double constant ) : d_constant(constant){}
 MixingRxnModel::CoalTransform::~CoalTransform(){}
+MixingRxnModel::SlowFastTransform::SlowFastTransform(){}
+MixingRxnModel::SlowFastTransform::~SlowFastTransform(){}
+
