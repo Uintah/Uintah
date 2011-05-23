@@ -471,7 +471,7 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
     MPIRUN = environ['MPIRUN']    # first try the environmental variable
   except :
     MPIRUN = "mpirun"
-    rc = system("which mpirun>&/dev/null")
+    rc = system("which mpirun>/dev/null")
 
     if rc == 256:
       print "ERROR:runSusTests.py "
