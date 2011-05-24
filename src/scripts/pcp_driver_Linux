@@ -1,0 +1,40 @@
+#_____________________________________________________________________.
+#      pcp_driver
+# This make file does a parallel copy of a uda file.
+#_____________________________________________________________________.
+
+FILES      := $(shell cat $(PCP_FILES))
+TAR_FILES  := $(wildcard *.tar)
+          
+SRCS =   $(shell for i in $(FILES) ; do \
+              echo $$i ;\
+          done) 
+          
+DESTS := $(patsubst %,$(STAMP_DIR)/stamp/%,$(SRCS))
+
+all: $(STAMP_DIR)/stamp $(DESTS)
+	@echo "Blowing away the list of transferred files as they have all been sent..."
+	rm -rf $(STAMP_DIR)
+
+$(STAMP_DIR)/stamp:
+	mkdir $@
+
+$(STAMP_DIR)/stamp/./checkpoints/% : 
+	@mkdir -p $(STAMP_DIR)/stamp/checkpoints
+	@echo "sending checkpoints/`basename $@`"
+       
+#	@${TAR} -cf - checkpoints/`basename $@` | (cd $(REMOTEDIR) && tar -xf -)
+#	@cp -rp checkpoints/`basename $@` $(REMOTEDIR)
+	@rsync -a checkpoints/`basename $@` $(REMOTEDIR)
+
+	@touch $(STAMP_DIR)/stamp/checkpoints/`basename $@`
+
+$(STAMP_DIR)/stamp/% : 
+	@echo "sending `basename $@`"
+           
+#	@${TAR} -cf - `basename $@` | (cd $(REMOTEDIR) && tar -xf -)
+#	@cp -rp `basename $@` $(REMOTEDIR)
+	@rsync -a `basename $@` $(REMOTEDIR)
+       
+	@touch $(STAMP_DIR)/stamp/`basename $@`
+
