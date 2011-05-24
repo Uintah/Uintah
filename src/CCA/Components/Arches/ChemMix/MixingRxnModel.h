@@ -317,7 +317,7 @@ namespace Uintah {
           };  
 
           void inline transform( std::vector<double>& iv ){
-            iv[_index_2] = iv[_index_1];
+            iv[_index_2] = iv[_index_1] + iv[_index_2];
             iv[_index_1] = 0.0; 
           }; 
       };
