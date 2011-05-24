@@ -92,6 +92,7 @@ namespace Uintah {
       do_jim1       = false;
       do_AA_MMS     = false;
       do_jim2       = false;
+      do_monica1    = false;
       do_partvar    = false;
       do_asci       = false;
       do_cell_stresses = false;
