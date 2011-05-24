@@ -1,0 +1,234 @@
+#! /bin/bash
+#
+#______________________________________________________________________
+# Parallel copy (cp)
+# pcp <num Processors> <transfer entire uda (y/n)> < remove remote directory> < localDirectory>
+
+#______________________________________________________________________
+#echo $argv
+#
+#------------------
+# unalias commands
+unalias -a rm
+unalias -a cd
+
+#------------------
+# error checking
+if test "$#" -ne 5; then
+  echo ""
+  echo "Usage: pcp < number of Processes> <transfer entire uda (y/n) > < remove remote directory (y/n) > < local dir to be copied> <remote dir>"
+  echo ""
+  exit 1
+fi
+
+# Need /usr/bin/which as the shell which doesn't give us the full path...
+if test ! -x /usr/bin/which; then
+  echo ""
+  echo "Error:  Can't find /usr/bin/which...  Goodbye."
+  echo ""
+  exit 1
+fi
+
+pcpfulldir=`readlink -f $0`
+pcpdir=`dirname $pcpfulldir`
+
+nproc=$1
+transferWholeUda=$2
+rmDir=$3
+localDir=$4
+uda=`basename $localDir`
+REMOTEDIR=$5
+
+OS=`uname`
+if test "$OS" == "Darwin"; then
+  # Darwin and Linux are similar enought that this works...
+  OS="Linux"
+fi
+
+if test `echo $localDir | cut -c1` != "/"; then
+  # Not absolute path... fix it.
+  localDir=`pwd`/$4
+fi
+
+
+export PCP_FILES=/tmp/pcp_files_`basename $localDir`_`whoami`
+
+echo "_____________________________________"
+echo "Inputs:"
+echo "	# processes:           $nproc"
+echo "	transfer whole uda:    $transferWholeUda"
+echo "	localDir:              $localDir"
+echo "	remoteDir:             $REMOTEDIR"
+echo "	remove the remote directory?: " $rmDir
+echo "	PCP_FILES:            $PCP_FILES"
+echo "	pcpdir:               $pcpdir"
+echo "_____________________________________"
+echo ""
+#------------------
+# Bulletproofing
+echo "Bullet proof tests:"
+
+validateTransferredFilesDir()
+{
+  if test -d "$STAMP_DIR"; then
+    echo ""
+    echo "  WARNING: It appears that these files were in the process of being transferred"
+    echo "           but were interrupted.  The list of files that were already transferred can"
+    echo "           be found in the $STAMP_DIR/stamp directory."
+    echo ""
+    echo "  MORE WARNING: It is possible, though unlikely, that some of the files listed"
+    echo "                as transferred were not successfully sent.  Please validate your"
+    echo "                UDA once all files have been transferred."
+    echo ""
+    echo "  Do you wish to continue (with the transfer of the remaining files)? (y/n)"
+    echo "     (If not, manually remove the following directory and run this script again:"
+    echo "           $STAMP_DIR)"
+    echo ""
+    echo -n " Please answer y/n: "
+    read answer
+    echo ""
+    if test "$answer" != "y"; then
+      echo "Goodbye."
+      echo ""
+      exit 1
+    fi
+    if test "$rmDir" == "y" -o "$rmDir" == "Y"; then
+      echo ""
+      echo "ERROR: You just said that you wanted to continue the transfer, but you've also"
+      echo "       requested that I delete the already existing remote directory.  I don't"
+      echo "       think this is what you really want, so I'm exiting now... Goodbye."
+      echo ""
+      exit
+    fi
+  else
+    mkdir $STAMP_DIR
+  fi
+}
+
+export STAMP_DIR=$localDir/.transferred_files
+validateTransferredFilesDir
+
+if test ! -d "$STAMP_DIR"; then
+  # Didn't have permissions to make the directory... so place it in tmp
+  echo ""
+  echo "  WARNING: Was not able to create $STAMP_DIR directory (bad permissions?)."
+  export STAMP_DIR=/tmp/.transferred_files_`basename $localDir`_`whoami`
+  echo "           Placing it in $STAMP_DIR instead."
+  echo ""
+  validateTransferredFilesDir
+fi
+
+if test ! -d "$STAMP_DIR"; then
+  echo ""
+  echo "  ERROR: Did not have permissions to create $STAMP_DIR directory.  Goodbye."
+  echo ""
+fi
+
+if test "$localDir" == "."; then
+  echo ""
+  echo "  ERROR: You can't set the local dir to '.'"
+  echo ""
+  exit 1
+fi
+
+echo -n "  Testing: does the local folder ($localDir) exist... "
+if test ! -e $localDir; then
+  echo ""
+  echo ""
+  echo "  ERROR: Local directory '$localDir' does not exist"
+  echo ""
+  exit 1
+fi
+echo "yes."
+
+echo -n "  Testing: does the remote folder ($REMOTEDIR) exist..... "
+if test ! -d "$REMOTEDIR"; then
+  echo ""
+  echo ""
+  echo "  ERROR:  The destination remote directory '$REMOTEDIR' does not exist..."
+  echo "          Are you sure you typed it in correctly?"
+  echo ""
+  echo ""
+  exit
+fi
+echo "yes."
+
+if test ! -e $pcpdir/pcp_driver_$OS; then
+  echo ""
+  echo ""
+  echo " ERROR: the driver file $pcpdir/pcp_driver_$OS does not exist..."
+  echo ""
+  echo ""
+fi
+echo "_____________________________________"
+
+#--------------------------------------------------------------------------
+# Now do the work
+
+#--------------------------------------------------------------------------
+# record some info for posterity
+
+DATA_TRANSFER_RECORD=$localDir/data_transfer_record
+
+touch $DATA_TRANSFER_RECORD
+
+if test ! -f $DATA_TRANSFER_RECORD; then
+  # Can't write to that directory... just place it in tmp for now.
+  DATA_TRANSFER_RECORD=/tmp/data_transfer_record_`whoami`
+fi
+
+echo "--------------------------------" >> $DATA_TRANSFER_RECORD
+echo "Data transferred from: $HOSTNAME" >> $DATA_TRANSFER_RECORD
+echo "on `date`."                       >> $DATA_TRANSFER_RECORD
+echo "Data originally in $localDir"     >> $DATA_TRANSFER_RECORD
+echo "Copied to $REMOTEDIR"             >> $DATA_TRANSFER_RECORD
+echo ""                                 >> $DATA_TRANSFER_RECORD
+
+# remove the remote directory
+if test "$rmDir" == "y" -o "$rmDir" == "Y"; then
+  echo "Now removing $REMOTEDIR/$uda if it exists..."
+  /bin/rm -rf $REMOTEDIR/$uda; mkdir $REMOTEDIR/$uda
+else
+  cp $DATA_TRANSFER_RECORD $REMOTEDIR/$uda
+fi
+
+REMOTEDIR="$REMOTEDIR/$uda/"
+cd $localDir
+
+#-------------------------------
+# make a sorted list of potential files to copy
+# let the user edit that file with vi
+/bin/rm -f $PCP_FILES
+
+FIND=find
+$FIND .             -maxdepth 1 -type f -exec basename {} \; | grep -v .transferred_files > $PCP_FILES
+$FIND ./t*          -maxdepth 0 -type d -exec basename {} \; | sort -r                    >>$PCP_FILES
+$FIND ./checkpoints -maxdepth 1                                                           >>$PCP_FILES
+
+
+if test "$transferWholeUda" == "n" -o "$transferWholeUda" == "N"; then
+  echo "Now starting an editor:  Remove the files you don't want transferred"
+
+  if test ! $?EDITOR || test "$EDITOR" == ""; then
+    echo
+    echo WARNING: \$EDITOR is not defined... defaulting to 'vi'
+    echo "And 'vi' sometimes doesn't work well..."
+    export EDITOR=vi
+  fi
+fi
+
+$EDITOR $PCP_FILES
+chmod ug+rw $PCP_FILES
+ 
+echo
+echo -n "Starting at: "
+date
+echo 
+echo "/usr/bin/time -p make TAR=tar --file $pcpdir/pcp_driver_$OS -j $nproc"
+
+/usr/bin/time -p make TAR=tar --file $pcpdir/pcp_driver_$OS REMOTEDIR=$REMOTEDIR -j $nproc
+
+echo
+echo -n "Ending at: "
+date
+echo
