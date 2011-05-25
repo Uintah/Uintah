@@ -23,9 +23,9 @@ $(STAMP_DIR)/stamp/./checkpoints/% :
 	@mkdir -p $(STAMP_DIR)/stamp/checkpoints
 	@echo "sending checkpoints/`basename $@`"
        
-#	@${TAR} -cf - checkpoints/`basename $@` | (cd $(REMOTEDIR) && tar -xf -)
-#	@cp -rp checkpoints/`basename $@` $(REMOTEDIR)
-	@rsync -a checkpoints/`basename $@` $(REMOTEDIR)
+#	@${TAR} -cf - checkpoints/`basename $@` | (cd $(REMOTEDIR)/checkpoints/ && tar -xf -)
+#	@cp -rp checkpoints/`basename $@` $(REMOTEDIR)/checkpoints/
+	@rsync -a checkpoints/`basename $@` $(REMOTEDIR)/checkpoints/
 
 	@touch $(STAMP_DIR)/stamp/checkpoints/`basename $@`
 
