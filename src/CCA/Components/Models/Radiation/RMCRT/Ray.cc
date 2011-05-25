@@ -242,13 +242,11 @@ Ray::sched_rayTrace( const LevelP& level, SchedulerP& sched, const int time_sub_
   Task* tsk= scinew Task( taskname, this, &Ray::rayTrace, time_sub_step );
   printSchedule(level,dbg,taskname);
 
-  Ghost::GhostType  gn  = Ghost::None;
-  Task::DomainSpec  ND  = Task::NormalDomain;
-  #define allPatches 0
-  #define allMatls 0
-  
-  tsk->requires( Task::NewDW , d_abskgLabel  ,   allPatches, ND,allMatls, ND, gn,0);
-  tsk->requires( Task::NewDW , d_sigmaT4_label , allPatches, ND,allMatls, ND, gn,0);
+  // require an infinite number of ghost cells so  you can access
+  // the entire domain.
+  Ghost::GhostType  gac  = Ghost::AroundCells;
+  tsk->requires( Task::NewDW , d_abskgLabel  ,  gac, SHRT_MAX);
+  tsk->requires( Task::NewDW , d_sigmaT4_label, gac, SHRT_MAX);
 //  tsk->requires( Task::OldDW , d_lab->d_cellTypeLabel , Ghost::None , 0 );
 
   if( time_sub_step == 0 ){
@@ -270,9 +268,7 @@ Ray::rayTrace( const ProcessorGroup* pc,
                DataWarehouse* old_dw,
                DataWarehouse* new_dw,
                const int time_sub_step )
-{
-  cout << " Top rayTrace: "<< endl;
-  
+{ 
   const Level* level = getLevel(patches);
   int maxLevels = level->getGrid()->numLevels();
   
@@ -353,8 +349,7 @@ if( ( Dx.x() != Dx.y() ) || ( Dx.x() != Dx.z() ) || ( Dx.y() != Dx.z() ) ) {
         Vector inv_direction_vector = Vector(1.0)/direction_vector;
 
         int step[3];                                          // Gives +1 or -1 based on sign
-        bool sign[3];                                         // Gives 0 or 1 based on sign 
-
+        bool sign[3];                
         //bool opposite_sign[3];
         for ( int ii= 0; ii<3; ii++){
           if (inv_direction_vector[ii]>0){
@@ -437,7 +432,7 @@ if( ( Dx.x() != Dx.y() ) || ( Dx.x() != Dx.z() ) || ( Dx.y() != Dx.z() ) ) {
             //__________________________________
             //  Update the ray location
             //this is necessary to find the absorb_coef at the endpoints of each step
-            ray_location_prev = ray_location;                                   
+            ray_location_prev = ray_location;   
             ray_location      = ray_location + (disMin * direction_vector);
 
             // The running total of alpha*length
@@ -449,7 +444,7 @@ if( ( Dx.x() != Dx.y() ) || ( Dx.x() != Dx.z() ) || ( Dx.y() != Dx.z() ) ) {
 
             size++;
 
-            //Paula's Eqn 3-15, while accounting for fs. 
+            //Eqn 3-15(see below reference) while accounting for fs. 
             //Third term inside the parentheses is accounted for in Inet. Chi is accounted for in Inet calc.
             chi_Iin_cv += chi * (sigmaT4[prevCell] * ( exp(-optical_thickness_prev) - exp(-optical_thickness) ) * fs );
 
@@ -478,13 +473,14 @@ if( ( Dx.x() != Dx.y() ) || ( Dx.x() != Dx.z() ) || ( Dx.y() != Dx.z() ) ) {
 
     double end =clock();
     double efficiency = size/((end-start)/ CLOCKS_PER_SEC);
-
-    cout<< endl;
-    cout << " RMCRT REPORT: " << endl;
-    cout << " Used "<< (end-start) * 1000 / CLOCKS_PER_SEC<< " milliseconds of CPU time. \n" << endl;// Convert time to ms 
-    cout << " Size: " << size << endl;
-    cout << " Efficiency: " << efficiency << " steps per sec" << endl;
-    cout << endl; 
+    if (patch->getGridIndex() == 0) {
+      cout<< endl;
+      cout << " RMCRT REPORT: Patch 0" << endl;
+      cout << " Used "<< (end-start) * 1000 / CLOCKS_PER_SEC<< " milliseconds of CPU time. \n" << endl;// Convert time to ms 
+      cout << " Size: " << size << endl;
+      cout << " Efficiency: " << efficiency << " steps per sec" << endl;
+      cout << endl; 
+    }
 
   }//end patch loop
 } // end ray trace method
@@ -505,7 +501,7 @@ Ray::containsCell(const IntVector &low, const IntVector &high, const IntVector &
 
 //______________________________________________________________________
 // ISAAC's NOTES: 
-//May 18 cleaned up comments
+//May 18. cleaned up comments
 //May 6. Changed to cell iterator
 //Created Jan 31. Cleaned up comments, removed hard coding of T and abskg 
 // Jan 19// I changed cx to be lagging.  This changed nothing in the RMS error, but may be important...
@@ -543,6 +539,5 @@ Ray::containsCell(const IntVector &low, const IntVector &high, const IntVector &
 //is just (NxNyNz) rather than (xNxxNyxNz).  absorbing media. reflections, and simplified while 
 //(w/precompute) loop. ray_location now represents what was formally called emiss_point.  It is by
 // cell index, not by physical location.
-//NOTE Paula's equations are from the dissertation of Xiaojing Sun...
-// "REVERSE MONTE CARLO RAY-TRACING FOR RADIATIVE HEAT TRANSFER IN COMBUSTION SYSTEMS"
-
+//NOTE equations are from the dissertation of Xiaojing Sun... 
+//"REVERSE MONTE CARLO RAY-TRACING FOR RADIATIVE HEAT TRANSFER IN COMBUSTION SYSTEMS 
