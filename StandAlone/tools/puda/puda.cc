@@ -126,28 +126,29 @@ usage( const std::string& badarg, const std::string& progname )
   cerr << "  -gridstats\n";
   cerr << "  -listvariables\n";
   cerr << "  -varsummary\n";
-  cerr << "  -brief - Makes varsummary print out a subset of information.\n";
+  cerr << "  -brief               (Makes varsummary print out a subset of information.\n)";
   cerr << "  -jim1\n";
   cerr << "  -jim2\n";
-  cerr << "  -monica1  - Finds the maximum pressure in the domain.\n";
-  cerr << "  -AA_MMS\n";
+  cerr << "  -monica1             (Finds the maximum pressure in the domain.)\n";
+  cerr << "  -AA_MMS_1            (1D periodic bar MMS)\n";
+  cerr << "  -AA_MMS_2            (3D Axis aligned MMS)\n";
   cerr << "  -partvar <variable name>\n";
   cerr << "  -asci\n";
   cerr << "  -tecplot <variable name>\n";
-  cerr << "  -no_extra_cells     (Excludes extra cells when iterating over cells.\n";
-  cerr << "                       Default is to include extra cells.)\n";
+  cerr << "  -no_extra_cells      (Excludes extra cells when iterating over cells.\n";
+  cerr << "                        Default is to include extra cells.)\n";
   cerr << "  -cell_stresses\n";
   cerr << "  -rtdata <output directory>\n";
   cerr << "  -PTvar\n";
-  cerr << "  -ptonly             (prints out only the point location\n";
-  cerr << "  -patch              (outputs patch id with data)\n";
-  cerr << "  -material           (outputs material number with data)\n";
-  cerr << "  -NCvar <double | float | point | vector>\n";
-  cerr << "  -CCvar <double | float | point | vector>\n";
-  cerr << "  -verbose            (prints status of output)\n";
-  cerr << "  -timesteplow <int>  (only outputs timestep from int)\n";
-  cerr << "  -timestephigh <int> (only outputs timesteps upto int)\n";
-  cerr << "  -matl,mat <int>         (only outputs data for matl)\n";
+  cerr << "  -ptonly              (prints out only the point location)\n";
+  cerr << "  -patch               (outputs patch id with data)\n";
+  cerr << "  -material            (outputs material number with data)\n";
+  cerr << "  -NCvar               (double | float | point | vector)\n";
+  cerr << "  -CCvar               (double | float | point | vector)\n";
+  cerr << "  -verbose             (prints status of output)\n";
+  cerr << "  -timesteplow <int>   (only outputs timestep from int)\n";
+  cerr << "  -timestephigh <int>  (only outputs timesteps upto int)\n";
+  cerr << "  -matl,mat <int>      (only outputs data for matl)\n";
   cerr << "*NOTE* to use -PTvar or -NVvar -rtdata must be used\n";
   cerr << "*NOTE* ptonly, patch, material, timesteplow, timestephigh "
        << "are used in conjuntion with -PTvar.\n\n";
@@ -285,8 +286,10 @@ main(int argc, char** argv)
       clf.do_jim1 = true;
     } else if(s == "-jim2"){
       clf.do_jim2 = true;
-    } else if(s == "-AA_MMS"){
-      clf.do_AA_MMS = true;
+    } else if(s == "-AA_MMS_1"){
+      clf.do_AA_MMS_1 = true;
+    } else if(s == "-AA_MMS_2"){
+      clf.do_AA_MMS_2 = true;
     } else if(s == "-partvar"){
       clf.do_partvar = true;
       clf.particleVariable = argv[++i]; 
@@ -470,7 +473,7 @@ main(int argc, char** argv)
       jim2( da, clf );
     }
 
-    if( clf.do_AA_MMS ){
+    if( clf.do_AA_MMS_1 || clf.do_AA_MMS_2 ){
       AA_MMS( da, clf );
     }
 
