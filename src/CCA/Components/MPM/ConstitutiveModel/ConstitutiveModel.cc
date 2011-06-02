@@ -461,10 +461,15 @@ ConstitutiveModel::computeDeformationGradientFromVelocity(
         warn << "**ERROR** CompNeoHook: Negative or zero determinant of Jacobian."
              << " Particle has inverted." << endl;
         warn << "     Particle = " << idx << ", J = " << J << ", position = " << px[idx]<<endl;
-        warn << "          Vel Grad = " << velGrad << endl; 
-        warn << "          F_inc = " << deformationGradientInc << endl; 
-        warn << "          F_old = " << Fold[idx] << endl; 
-        warn << "          F_new = " << Fnew[idx] << endl; 
+        warn << "          Vel Grad = \n" << velGrad << endl; 
+        warn << "          F_inc = \n" << deformationGradientInc << endl; 
+        warn << "          F_old = \n" << Fold[idx] << endl; 
+        warn << "          F_new = \n" << Fnew[idx] << endl; 
+        warn << "          gVelocity:" << endl;
+        for(int k = 0; k < flag->d_8or27; k++) {
+          warn<< "             node: " << ni[k] << " vel: " << gVel[ni[k]] << endl;
+        }
+        
         throw InvalidValue(warn.str(), __FILE__, __LINE__);
       }
 
