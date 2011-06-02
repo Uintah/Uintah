@@ -1,4 +1,13 @@
-set term png 
+set term png
+set output "orderAccuracy.png"
+
+# uncomment below for post script output
+#set terminal postscript color solid "Times-Roman" 14
+#set output "orderAccuracy.ps"
+#set style line 1  lt 1 lw 0.6 lc 1
+#set style line 2  lt 1 lw 0.6 lc 3
+#set style line 3  lt 1 lw 0.6 lc 5
+ 
 set autoscale
 set logscale x
 set logscale y
@@ -7,7 +16,6 @@ set grid xtics ytics
 #title
 #xlabel
 #ylabel
-set output "orderAccuracy.png"
 
 # generate the x_curvefit
 f1(x) = a1*x**b1               # define the function to be fit
