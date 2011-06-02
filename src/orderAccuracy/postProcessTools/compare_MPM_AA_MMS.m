@@ -15,7 +15,9 @@ function Usage
   printf('options:\n')                                                                                       
   printf('  -uda  <udaFileName> - name of the uda file \n')                                                  
   printf('  -ts                 - Timestep to compute L-inf error, default is the last timestep\n') 
-  printf('  -norm  (Linf or L2)- prints Linf the output file \n')
+  printf('  -norm  (Linf or L2) - prints Linf the output file \n')
+  printf('  -MMS  (1 or 2)      - 1:  1D Periodic Bar MMS \n')
+  printf('                      - 2:  3D Axis-Aligned  MMS \n')
   printf('  -o <fname>          - Dump the output (LInfError) to a file\n')           
 end 
 
@@ -24,6 +26,7 @@ end
 ts          = 999;
 output_file = 'L_inf';
 whichNorm   = 'L2';
+MMS         = 999;
 
 %________________________________            
 % Parse User inputs  
@@ -48,11 +51,20 @@ for i = 1:2:nargin
     output_file = opt_value;     
   elseif (strcmp(option,"-norm") )  
     whichNorm = opt_value;
+  elseif (strcmp(option,"-MMS") )  
+    MMS = str2num(opt_value);
   end         
 end
 
 if( strcmp(whichNorm,"L2")==0 && strcmp(whichNorm,"Linf")== 0)
   disp( 'compare_MPM_AA_MMS.m: invalid norm option');
+  Usage
+  disp( 'Now exiting....');
+  exit(-1)
+end
+
+if( MMS != 1 && MMS != 2)
+  disp( 'compare_MPM_AA_MMS.m: invalid (MMS) option');
   Usage
   disp( 'Now exiting....');
   exit(-1)
@@ -80,7 +92,7 @@ endif
 
 %__________________________________
 % compute error
-c1 = sprintf('puda -timesteplow %i -AA_MMS %s  >& tmp',ts-1,uda);
+c1 = sprintf('puda -timesteplow %i -AA_MMS_%i %s  >& tmp',ts-1,MMS,uda);
 [s1, r1] = unix(c1);
 
 data = load('L_norms'); 
