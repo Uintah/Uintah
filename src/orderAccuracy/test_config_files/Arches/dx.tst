@@ -1,6 +1,5 @@
 <start>
 <upsFile>almgrenMMS.ups</upsFile>
-<Study>Res.Study</Study>
 <gnuplot>
   <script>plotScript.gp</script>s
   <title>Arches:MMS:almgren:Spatial order-of-accuracy \\n 1 timestep,dt = 1e-5</title>
@@ -18,7 +17,6 @@
 <Test>
     <Title>8</Title>
     <sus_cmd>mpirun -np 1 sus -mpi</sus_cmd>
-    <Study>Res.Study</Study>
     <postProcess_cmd>arches_mms.m </postProcess_cmd>
     <x>8</x>
     <replace_lines>
@@ -29,7 +27,6 @@
 <Test>
     <Title>16</Title>
     <sus_cmd>mpirun -np 1 sus -mpi</sus_cmd>
-    <Study>Res.Study</Study>
     <postProcess_cmd>arches_mms.m  </postProcess_cmd>
     <x>16</x>
     <replace_lines>
@@ -40,7 +37,6 @@
 <Test>
     <Title>32</Title>
     <sus_cmd>mpirun -np 1 sus -mpi</sus_cmd>
-    <Study>Res.Study</Study>
     <postProcess_cmd>arches_mms.m </postProcess_cmd>
     <x>32</x>
     <replace_lines>
@@ -51,7 +47,6 @@
 <Test>
     <Title>64</Title>
     <sus_cmd>mpirun -np 1 sus -mpi</sus_cmd>
-    <Study>Res.Study</Study>
     <postProcess_cmd>arches_mms.m </postProcess_cmd>
     <x>64</x>
     <replace_lines>
@@ -62,7 +57,6 @@
 <Test>
     <Title>128</Title>
     <sus_cmd>mpirun -np 1 sus -mpi</sus_cmd>
-    <Study>Res.Study</Study>
     <postProcess_cmd>arches_mms.m </postProcess_cmd>
     <x>128</x>
     <replace_lines>
