@@ -26,6 +26,6 @@ set label 'Error = a * (Spatial Resolution)^b' at screen 0.2,0.4
 set label 'a = %3.5g',a1      at screen 0.2,0.375
 set label 'b = %3.5g',b1      at screen 0.2,0.35
 
-plot 'L2norm.dat' using 1:2 t 'Current test' with linespoints,\
+plot 'L2norm.dat' using 1:2 t 'Current test' with points,\
       f1(x) title "curve fit'
 
