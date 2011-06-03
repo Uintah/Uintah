@@ -2,7 +2,7 @@
 <postProcessCmd_path>orderAccuracy/postProcessTools/compare_MPM_AA_MMS</postProcessCmd_path>
 
 <symbolicLinks> </symbolicLinks>
-
+<!--
 <test>
   <name>3rdorderBS_AA_MMS</name>
   <ups>AA.ups</ups>
@@ -37,6 +37,13 @@
   <name>linear_AA_MMS_2L</name>
   <ups>AA_MMS_3L.ups</ups>
   <tst>linear_dx_3L.tst</tst>
+</test>
+-->
+
+<test>
+  <name>1D_MMS</name>
+  <ups>AA.ups</ups>
+  <tst>1D_MMS_Z.tst</tst>
 </test>
 
 </config>
