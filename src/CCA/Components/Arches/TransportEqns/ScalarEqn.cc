@@ -4,13 +4,18 @@
 #include <CCA/Components/Arches/Directives.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Grid/Level.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Parallel/Parallel.h>
+#include <Core/Parallel/ProcessorGroup.h>
+#include <Core/Grid/DbgOutput.h>
 
 using namespace std;
 using namespace Uintah;
+
+static DebugStream dbg("ARCHES", false);
 
 //---------------------------------------------------------------------------
 // Builder:
@@ -51,6 +56,20 @@ EqnBase( fieldLabels, timeIntegrator, eqnName )
   varname = eqnName+"_scalar_prNo"; 
   d_prNo_label = VarLabel::create( varname, 
             CCVariable<double>::getTypeDescription()); 
+  
+#ifdef VERIFICATION
+  varname = eqnName+"_MMSError";
+  d_MMSErrorLabel = VarLabel::create( varname, CCVariable<double>::getTypeDescription() );
+
+  varname = eqnName + "_MMSExact";
+  d_MMSExactLabel = VarLabel::create( varname, CCVariable<double>::getTypeDescription() );
+
+  varname = eqnName+"_MMSError_L2Norm";
+  d_MMSErrorL2Label = VarLabel::create( varname, sum_vartype::getTypeDescription() );
+
+  varname = eqnName+"_MMSError_LInfNorm";
+  d_MMSErrorLInfLabel = VarLabel::create( varname, sum_vartype::getTypeDescription() );
+#endif
 }
 
 ScalarEqn::~ScalarEqn()
@@ -61,6 +80,13 @@ ScalarEqn::~ScalarEqn()
   VarLabel::destroy(d_transportVarLabel);
   VarLabel::destroy(d_oldtransportVarLabel);
   VarLabel::destroy(d_prNo_label); 
+
+#ifdef VERIFICATION
+  VarLabel::destroy(d_MMSErrorLabel);
+  VarLabel::destroy(d_MMSExactLabel);
+  VarLabel::destroy(d_MMSErrorL2Label);
+  VarLabel::destroy(d_MMSErrorLInfLabel);
+#endif
 }
 //---------------------------------------------------------------------------
 // Method: Problem Setup 
@@ -141,8 +167,14 @@ ScalarEqn::problemSetup(const ProblemSpecP& inputdb)
         db_initialValue->require("step_cellend", d_step_cellend);
       }
 
-    } else if (d_initFunction == "mms1") {
-      //currently nothing to do here. 
+    } else if (d_initFunction == "mms_x") {
+
+    } else if (d_initFunction == "mms_y") {
+
+    } else if (d_initFunction == "mms_z") {
+
+    } else if (d_initFunction == "mms_xyz") {
+
     } else if (d_initFunction == "geometry_fill") {
 
       db_initialValue->require("constant", d_constant_init); // going to full with this constant 
@@ -219,7 +251,11 @@ void
 ScalarEqn::sched_initializeVariables( const LevelP& level, SchedulerP& sched )
 {
   string taskname = "ScalarEqn::initializeVariables";
+
   Task* tsk = scinew Task(taskname, this, &ScalarEqn::initializeVariables);
+
+  printSchedule(level,dbg, taskname);
+
   Ghost::GhostType gn = Ghost::None;
   
   // New DW
@@ -229,6 +265,13 @@ ScalarEqn::sched_initializeVariables( const LevelP& level, SchedulerP& sched )
   tsk->computes(d_FconvLabel);
   tsk->computes(d_FdiffLabel);
   tsk->computes(d_prNo_label); 
+
+#ifdef VERIFICATION
+  tsk->computes(d_MMSErrorLabel);
+  tsk->computes(d_MMSExactLabel);
+  tsk->computes(d_MMSErrorL2Label);
+  tsk->computes(d_MMSErrorLInfLabel);
+#endif
 
   //Old DW
   tsk->requires(Task::OldDW, d_transportVarLabel, gn, 0);
@@ -241,14 +284,17 @@ ScalarEqn::sched_initializeVariables( const LevelP& level, SchedulerP& sched )
   sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
 }
 
-//---------------------------------------------------------------------------
-// Method: Actually initialize the variables. 
-//---------------------------------------------------------------------------
+/** @details
+Actually initialize the variables used in the solution of the
+scalar transport equations. This is performed each timestep.
+
+@seealso EqnFactory
+*/
 void ScalarEqn::initializeVariables( const ProcessorGroup* pc, 
-                              const PatchSubset* patches, 
-                              const MaterialSubset* matls, 
-                              DataWarehouse* old_dw, 
-                              DataWarehouse* new_dw )
+                                     const PatchSubset* patches, 
+                                     const MaterialSubset* matls, 
+                                     DataWarehouse* old_dw, 
+                                     DataWarehouse* new_dw )
 {
 
   //patch loop
@@ -299,6 +345,19 @@ void ScalarEqn::initializeVariables( const ProcessorGroup* pc,
     curr_time = d_fieldLabels->d_sharedState->getElapsedTime(); 
     curr_ssp_time = curr_time; 
 
+#ifdef VERIFICATION
+    CCVariable<double> MMSError;
+    new_dw->allocateAndPut( MMSError, d_MMSErrorLabel, matlIndex, patch );
+    MMSError.initialize(0.0);
+
+    CCVariable<double> MMSExact;
+    new_dw->allocateAndPut( MMSExact, d_MMSExactLabel, matlIndex, patch );
+    MMSExact.initialize(0.0);
+
+    new_dw->put( sum_vartype(0.0), d_MMSErrorL2Label );
+    new_dw->put( sum_vartype(0.0), d_MMSErrorLInfLabel );
+#endif
+
   }
 }
 //---------------------------------------------------------------------------
@@ -327,6 +386,8 @@ ScalarEqn::sched_buildTransportEqn( const LevelP& level, SchedulerP& sched, int 
   string taskname = "ScalarEqn::buildTransportEqn"; 
 
   Task* tsk = scinew Task(taskname, this, &ScalarEqn::buildTransportEqn, timeSubStep);
+
+  printSchedule(level,dbg, taskname);
 
   //----NEW----
   // note that rho and U are copied into new DW in ExplicitSolver::setInitialGuess
@@ -449,12 +510,10 @@ ScalarEqn::buildTransportEqn( const ProcessorGroup* pc,
       double source_sum = 0;
       if( d_addSources ) {
         for( vector< constCCVariable<double>* >::iterator iS = sourceVars.begin(); iS != sourceVars.end(); ++iS ) {
-          source_sum += (**iS)[c]*vol;
+          source_sum += (**iS)[c];
         }
       }
-      RHS[c] += source_sum;
-      
-      //proc0cout << "Scalar " << d_eqnName << ": Cell [" << c << "]: RHS = Fdiff - Fconv + Src = " << Fdiff[c] << " - " << Fconv[c] << " + " << source_sum << " = " << RHS[c] << endl;;
+      RHS[c] += source_sum*vol;
 
     }//end cells
 
@@ -479,6 +538,8 @@ ScalarEqn::sched_solveTransportEqn( const LevelP& level,
   string taskname = "ScalarEqn::solveTransportEqn";
 
   Task* tsk = scinew Task(taskname, this, &ScalarEqn::solveTransportEqn, timeSubStep, lastTimeSubstep );
+
+  printSchedule(level,dbg, taskname);
 
   tsk->modifies(d_transportVarLabel);
   tsk->modifies(d_oldtransportVarLabel); 
@@ -579,16 +640,30 @@ ScalarEqn::solveTransportEqn( const ProcessorGroup* pc,
 // Method: Schedule Time averaging 
 //---------------------------------------------------------------------------
 void
-ScalarEqn::sched_timeAveraging( const LevelP& level, SchedulerP& sched, int timeSubStep )
+ScalarEqn::sched_timeAveraging( const LevelP& level, 
+                                SchedulerP& sched, 
+                                int timeSubStep, 
+                                bool lastTimeSubstep )
 {
   string taskname = "ScalarEqn::timeAveraging";
 
-  Task* tsk = scinew Task(taskname, this, &ScalarEqn::timeAveraging, timeSubStep);
+  Task* tsk = scinew Task(taskname, this, &ScalarEqn::timeAveraging, timeSubStep, lastTimeSubstep);
+
+  grid = level->getGrid();
 
   //New
   tsk->modifies(d_transportVarLabel);
   tsk->modifies(d_oldtransportVarLabel);
   tsk->requires(Task::NewDW, d_fieldLabels->d_densityCPLabel, Ghost::None, 0);
+
+#ifdef VERIFICATION
+  if( lastTimeSubstep ) {
+    tsk->modifies(d_MMSErrorLabel);
+    tsk->modifies(d_MMSExactLabel);
+    tsk->modifies(d_MMSErrorL2Label);
+    tsk->modifies(d_MMSErrorLInfLabel);
+  }
+#endif
 
   //Old
   tsk->requires(Task::OldDW, d_transportVarLabel, Ghost::None, 0);
@@ -606,11 +681,14 @@ ScalarEqn::timeAveraging( const ProcessorGroup* pc,
                           const MaterialSubset* matls, 
                           DataWarehouse* old_dw, 
                           DataWarehouse* new_dw,
-                          int timeSubStep )
+                          int timeSubStep,
+                          bool lastTimeSubstep )
 {
+  Vector Ltot = Vector(0.0,0.0,0.0);
+  grid->getLength( Ltot );
+
   //patch loop
   for (int p=0; p < patches->size(); p++){
-
     Ghost::GhostType  gn  = Ghost::None;
 
     const Patch* patch = patches->get(p);
@@ -639,6 +717,19 @@ ScalarEqn::timeAveraging( const ProcessorGroup* pc,
     new_dw->get(new_den, d_fieldLabels->d_densityCPLabel, matlIndex, patch, gn, 0);
     old_dw->get(old_den, d_fieldLabels->d_densityCPLabel, matlIndex, patch, gn, 0); 
 
+#ifdef VERIFICATION
+    if( lastTimeSubstep ) {
+      computeMMSError( patches, patch, 
+                       matlIndex, 
+                       old_dw, new_dw, 
+                       &phi_at_jp1,
+                       timeSubStep, 
+                       Ltot );
+    }
+    
+    //phi_at_jp1.copyData(phi_at_j);
+#endif
+
     //----Time averaging done here. 
     d_timeIntegrator->timeAvePhi( patch, phi_at_jp1, phi_at_j, new_den, old_den, timeSubStep, curr_ssp_time ); 
 
@@ -646,14 +737,19 @@ ScalarEqn::timeAveraging( const ProcessorGroup* pc,
     //    must update BCs for next substep
     computeBCs( patch, d_eqnName, phi_at_jp1 );
 
-
-
-
     //----COPY averaged phi into oldphi
-    //  I don't think this is needed but keeping it until it is proven...
     phi_at_n.copyData(phi_at_jp1); 
-
   }
+
+#ifdef VERIFICATION
+  // L2 norm of error should be normalized
+  // by number of total cells
+  int num_cells=0;
+  const Patch* patch = patches->get(0);
+  num_cells = patch->getNumCells();
+  num_cells *= pc->size();
+  printMMSError( new_dw, lastTimeSubstep, num_cells );
+#endif
 }
 
 
@@ -736,6 +832,8 @@ ScalarEqn::sched_dummyInit( const LevelP& level, SchedulerP& sched )
 
   Task* tsk = scinew Task(taskname, this, &ScalarEqn::dummyInit);
 
+  printSchedule(level,dbg, taskname);
+
   Ghost::GhostType  gn = Ghost::None;
 
   tsk->requires(Task::OldDW, d_transportVarLabel, gn, 0); 
@@ -744,10 +842,17 @@ ScalarEqn::sched_dummyInit( const LevelP& level, SchedulerP& sched )
   tsk->computes(d_FconvLabel); 
   tsk->computes(d_FdiffLabel); 
   tsk->computes(d_RHSLabel); 
+  tsk->computes(d_prNo_label); 
+
+#ifdef VERIFICATION
+  tsk->computes(d_MMSErrorLabel);
+  tsk->computes(d_MMSExactLabel);
+#endif
 
   sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
 
 }
+
 void 
 ScalarEqn::dummyInit( const ProcessorGroup* pc, 
                      const PatchSubset* patches, 
@@ -767,6 +872,7 @@ ScalarEqn::dummyInit( const ProcessorGroup* pc,
     CCVariable<double> RHS; 
     CCVariable<double> Fconv; 
     CCVariable<double> Fdiff; 
+    CCVariable<double> PrNumber; 
     constCCVariable<double> old_phi; 
 
     new_dw->allocateAndPut( phi, d_transportVarLabel, matlIndex, patch ); 
@@ -774,6 +880,7 @@ ScalarEqn::dummyInit( const ProcessorGroup* pc,
     new_dw->allocateAndPut( RHS, d_RHSLabel, matlIndex, patch); 
     new_dw->allocateAndPut( Fconv, d_FconvLabel, matlIndex, patch); 
     new_dw->allocateAndPut( Fdiff, d_FdiffLabel, matlIndex, patch); 
+    new_dw->allocateAndPut( PrNumber, d_prNo_label, matlIndex, patch); 
 
     old_dw->get( old_phi, d_transportVarLabel, matlIndex, patch, Ghost::None, 0); 
 
@@ -782,8 +889,181 @@ ScalarEqn::dummyInit( const ProcessorGroup* pc,
     RHS.initialize(0.0);
     phi.initialize(0.0); 
     rkold_phi.initialize(0.0); 
+    PrNumber.initialize(0.0);
 
     phi.copyData(old_phi);
 
+#ifdef VERIFICATION
+    CCVariable<double> MMSError;
+    new_dw->allocateAndPut( MMSError, d_MMSErrorLabel, matlIndex, patch );
+    MMSError.initialize(0.0);
+
+    CCVariable<double> MMSExact;
+    new_dw->allocateAndPut( MMSExact, d_MMSExactLabel, matlIndex, patch );
+    MMSExact.initialize(0.0);
+#endif
+
   }
 }
+
+#ifdef VERIFICATION
+
+/** @details
+This method computes the MMS error associated with the computed solution.
+It calculates the \f$L_{\infty}\f$ and \f$L_2\f$ norm of the error.
+
+The error in the computed solution of a field \f$ \phi \f$ is defined as:
+
+\f[
+\epsilon = \phi_{e} - \phi_{M}
+\f] 
+
+where \f$ \phi_{e} \f$ is the exact solution and \f$ \phi_{M} \f$ is the 
+computational model's approximation of the solution.
+
+The error is a vector, with one value for each cell.
+
+The norms are defined as:
+
+\f[
+L_{\infty} = \mbox{max} ( \boldsymbol{\epsilon} )
+\f]
+
+and 
+
+\f[
+L_{2} = \left( \sum_{i=1}^{N_{cells}} \epsilon_{i}^{2} \right)^{\frac{1}{2}}
+\f]
+
+*/
+void 
+ScalarEqn::computeMMSError( const PatchSubset* patches, 
+                            const Patch* patch,
+                            const int matlIndex, 
+                            DataWarehouse* old_dw, 
+                            DataWarehouse* new_dw,
+                            CCVariable<double>* phi_at_jp1,
+                            int timeSubStep,
+                            Vector domain_size )
+{
+  CCVariable<double> abs_error;
+  new_dw->getModifiable( abs_error, d_MMSErrorLabel, matlIndex, patch );
+
+  CCVariable<double> exact;
+  new_dw->getModifiable( exact, d_MMSExactLabel, matlIndex, patch );
+
+  sum_vartype LInfErrNorm;
+  new_dw->get(LInfErrNorm, d_MMSErrorLInfLabel);
+  double LInfErrorNorm = LInfErrNorm;
+
+  sum_vartype L2ErrNorm;
+  new_dw->get(L2ErrNorm, d_MMSErrorL2Label);
+  double L2ErrorNorm = L2ErrNorm;
+
+  if( d_initFunction == "mms_x" || d_initFunction == "MMS_X" ) {
+    for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
+      double x,y,z,computed;
+      IntVector c = *iter; 
+      Vector Dx = patch->dCell(); 
+      x = c[0]*Dx.x() + Dx.x()/2.; 
+      y = c[1]*Dx.y() + Dx.y()/2.; 
+      z = c[2]*Dx.z() + Dx.z()/2.; 
+
+      exact[c] = MMS_X::evaluate_MMS( x, y, z, domain_size );
+      computed = (*phi_at_jp1)[c];
+      abs_error[c] = fabs( exact[c] - computed );
+
+      LInfErrorNorm = max( LInfErrorNorm, abs_error[c] );
+      L2ErrorNorm += abs_error[c]*abs_error[c];
+    }
+  }
+
+  if( d_initFunction == "mms_y" || d_initFunction == "MMS_Y" ) {
+    for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
+      double x,y,z,computed;
+      IntVector c = *iter; 
+      Vector Dx = patch->dCell(); 
+      x = c[0]*Dx.x() + Dx.x()/2.; 
+      y = c[1]*Dx.y() + Dx.y()/2.; 
+      z = c[2]*Dx.z() + Dx.z()/2.; 
+
+      exact[c] = MMS_Y::evaluate_MMS( x, y, z, domain_size );
+      computed = (*phi_at_jp1)[c];
+      abs_error[c] = fabs( exact[c] - computed );
+
+      LInfErrorNorm = max( LInfErrorNorm, abs_error[c] );
+      L2ErrorNorm += abs_error[c]*abs_error[c];
+    }
+  }
+
+  if( d_initFunction == "mms_z" || d_initFunction == "MMS_Z" ) {
+    for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
+      double x,y,z,computed;
+      IntVector c = *iter; 
+      Vector Dx = patch->dCell(); 
+      x = c[0]*Dx.x() + Dx.x()/2.; 
+      y = c[1]*Dx.y() + Dx.y()/2.; 
+      z = c[2]*Dx.z() + Dx.z()/2.; 
+
+      exact[c] = MMS_Z::evaluate_MMS( x, y, z, domain_size );
+      computed = (*phi_at_jp1)[c];
+      abs_error[c] = fabs( exact[c] - computed );
+
+      LInfErrorNorm = max( LInfErrorNorm, abs_error[c] );
+      L2ErrorNorm += abs_error[c]*abs_error[c];
+    }
+  }
+
+  if( d_initFunction == "mms_xyz" || d_initFunction == "MMS_XYZ" ) {
+    for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
+      double x,y,z,computed;
+      IntVector c = *iter; 
+      Vector Dx = patch->dCell(); 
+      x = c[0]*Dx.x() + Dx.x()/2.; 
+      y = c[1]*Dx.y() + Dx.y()/2.; 
+      z = c[2]*Dx.z() + Dx.z()/2.;
+
+      exact[c] = MMS_XYZ::evaluate_MMS( x, y, z, domain_size ); 
+      computed = (*phi_at_jp1)[c];
+      abs_error[c] = fabs( exact[c] - computed );
+
+      LInfErrorNorm = max( LInfErrorNorm, abs_error[c] );
+      L2ErrorNorm += abs_error[c]*abs_error[c];
+    }
+  }
+
+  L2ErrorNorm = sqrt(L2ErrorNorm);
+
+  new_dw->put( sum_vartype(LInfErrorNorm), d_MMSErrorLInfLabel );
+  new_dw->put( sum_vartype(L2ErrorNorm),   d_MMSErrorL2Label );
+}
+
+void
+ScalarEqn::printMMSError( DataWarehouse* new_dw,
+                          bool lastTimeSubstep,
+                          int num_cells )
+{
+  if( lastTimeSubstep ) {
+    sum_vartype LInfErrNorm;
+    new_dw->get(LInfErrNorm, d_MMSErrorLInfLabel);
+    sum_vartype L2ErrNorm;
+    new_dw->get(L2ErrNorm, d_MMSErrorL2Label);
+
+    double L2ErrNorm_Normalized = L2ErrNorm;
+    L2ErrNorm_Normalized /= num_cells;
+    new_dw->put(sum_vartype(L2ErrNorm_Normalized), d_MMSErrorL2Label);
+
+    proc0cout << endl;
+    proc0cout << "***********************************************" << endl;
+    proc0cout << "MMS Error Calculation: " << d_initFunction << endl << endl;
+    proc0cout << "Absolute error = [exact solution] - [computed solution]" << endl;
+    proc0cout << "L-inf norm of absolute error: \t" << LInfErrNorm << endl;
+    proc0cout << "L-2 norm of absolute error: \t" << L2ErrNorm_Normalized << endl;
+    proc0cout << "Num cells = " << num_cells << endl;
+    proc0cout << "***********************************************" << endl;
+    proc0cout << endl;
+  }
+}
+
+#endif
+

@@ -109,7 +109,7 @@ public:
   void sched_cleanUp( const LevelP&, SchedulerP& sched ); 
 
   /** @brief Time averaging method required by base class. This method is empty (not needed) at the moment */
-  void sched_timeAveraging( const LevelP& level, SchedulerP& sched, int timeSubStep ){};
+  void sched_timeAveraging( const LevelP& level, SchedulerP& sched, int timeSubStep, bool lastTimeSubstep ){};
 
   /** @brief Actually clean up after the equation. This just reinitializes 
              source term booleans so that the code can determine if the source

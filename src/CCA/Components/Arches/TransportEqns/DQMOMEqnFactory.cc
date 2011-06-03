@@ -157,6 +157,8 @@ DQMOMEqnFactory::sched_weightInit( const LevelP& level, SchedulerP& sched)
 {
   Task* tsk = scinew Task("DQMOMEqnFactory::weightInit",this,&DQMOMEqnFactory::weightInit);
 
+  grid = level->getGrid();
+
   tsk->computes(d_fieldLabels->d_MinDQMOMTimestepLabel);
   tsk->requires( Task::NewDW, d_fieldLabels->d_volFractionLabel, Ghost::None ); 
 
@@ -191,6 +193,9 @@ DQMOMEqnFactory::weightInit( const ProcessorGroup* ,
 {
   double delta_t = 1.0e16;
   new_dw->put( min_vartype(delta_t), d_fieldLabels->d_MinDQMOMTimestepLabel );
+
+  Vector Ltot = Vector(0.0,0.0,0.0);
+  grid->getLength(Ltot);
   
   for (int p=0; p<patches->size(); ++p) {
     //assume only 1 material for now
@@ -229,7 +234,7 @@ DQMOMEqnFactory::weightInit( const ProcessorGroup* ,
         phi_icv.initialize(0.0);
         
         // initialize phi
-        eqn->initializationFunction( patch, phi, eps_v );
+        eqn->initializationFunction( patch, phi, eps_v, Ltot );
 
         // do boundary conditions
         eqn->computeBCs( patch, eqn_name, phi );
@@ -248,6 +253,8 @@ DQMOMEqnFactory::sched_abscissaInit( const LevelP& level, SchedulerP& sched)
   Task* tsk = scinew Task("DQMOMEqnFactory::abscissaInit",this,&DQMOMEqnFactory::abscissaInit);
 
   EqnMap& dqmom_eqns = retrieve_all_eqns();
+
+  grid = level->getGrid();
 
   tsk->requires( Task::NewDW, d_fieldLabels->d_volFractionLabel, Ghost::None ); 
 
@@ -283,7 +290,8 @@ DQMOMEqnFactory::abscissaInit( const ProcessorGroup* ,
                                DataWarehouse* old_dw,
                                DataWarehouse* new_dw )
 {
-  //proc0cout << "Initializing DQMOM abscissa equations." << endl;
+  Vector Ltot = Vector(0.0,0.0,0.0);
+  grid->getLength(Ltot);
 
   for (int p=0; p<patches->size(); ++p) {
     //assume only 1 material for now
@@ -322,7 +330,7 @@ DQMOMEqnFactory::abscissaInit( const ProcessorGroup* ,
         phi_icv.initialize(0.0);
       
         // initialize phi
-        eqn->initializationFunction( patch, phi, eps_v );
+        eqn->initializationFunction( patch, phi, eps_v, Ltot );
 
         // do boundary conditions
         eqn->computeBCs( patch, eqn_name, phi );
@@ -346,6 +354,8 @@ DQMOMEqnFactory::sched_weightedAbscissaInit( const LevelP& level, SchedulerP& sc
   Task* tsk = scinew Task("DQMOMEqnFactory::weightedAbscissaInit",this,&DQMOMEqnFactory::weightedAbscissaInit);
 
   EqnMap& dqmom_eqns = retrieve_all_eqns();
+
+  grid = level->getGrid();
 
   for(EqnMap::iterator iEqn = dqmom_eqns.begin(); iEqn != dqmom_eqns.end(); ++iEqn) {
     DQMOMEqn* eqn = dynamic_cast<DQMOMEqn*>( iEqn->second );
@@ -380,8 +390,9 @@ DQMOMEqnFactory::weightedAbscissaInit( const ProcessorGroup* ,
                                        DataWarehouse* old_dw,
                                        DataWarehouse* new_dw )
 {
-  proc0cout << "Initializing DQMOM weighted abscissa equations." << endl;
-
+  Vector Ltot = Vector(0.0,0.0,0.0);
+  grid->getLength(Ltot);
+  
   for (int p=0; p<patches->size(); ++p) {
     //assume only 1 material for now
     int archIndex = 0;
@@ -429,7 +440,7 @@ DQMOMEqnFactory::weightedAbscissaInit( const ProcessorGroup* ,
         phi_icv.initialize(0.0);
       
         // initialize phi
-        eqn->initializationFunction( patch, phi, weight );
+        eqn->initializationFunction( patch, phi, weight, Ltot );
 
         // do boundary conditions
         eqn->computeBCs( patch, eqn_name, phi );

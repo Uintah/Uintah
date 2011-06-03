@@ -53,17 +53,24 @@ namespace Uintah{
 
       /** @brief Computes the convection term.  This method is overloaded.  */
       template <class fT, class oldPhiT, class uT, class vT, class wT> void 
-        computeConv(const Patch* p, fT& Fconv, oldPhiT& oldPhi, 
-            uT& uVel, vT& vVel, 
-            wT& wVel, constCCVariable<double>& den, constCCVariable<Vector>& areaFraction, 
-            std::string convScheme);
+        computeConv(const Patch* p, 
+                    fT& Fconv, 
+                    oldPhiT& oldPhi, 
+                    uT& uVel, vT& vVel, wT& wVel, 
+                    constCCVariable<double>& den, 
+                    constCCVariable<Vector>& areaFraction, 
+                    std::string convScheme);
 
       /** @brief Computes the convection term (no density term). This method is overloaded */
       template <class fT, class oldPhiT> void 
-        computeConv(const Patch* p, fT& Fconv, oldPhiT& oldPhi, 
-            constSFCXVariable<double>& uVel, constSFCYVariable<double>& vVel, 
-            constSFCZVariable<double>& wVel, constCCVariable<Vector>& areaFraction, 
-            std::string convScheme);
+        computeConv(const Patch* p, 
+                    fT& Fconv, 
+                    oldPhiT& oldPhi, 
+                    constSFCXVariable<double>& uVel, 
+                    constSFCYVariable<double>& vVel, 
+                    constSFCZVariable<double>& wVel, 
+                    constCCVariable<Vector>& areaFraction, 
+                    std::string convScheme);
 
       /** @brief Computes the convection term without density and using a special 
        *         particle velocity vector (or any type of CC velocity vector) instead 
@@ -79,15 +86,26 @@ namespace Uintah{
        * \f$ \int_{S} \nabla \phi \cdot dS \f$ 
        * for a non-constant pr number */
       template <class fT, class oldPhiT, class gammaT> void 
-        computeDiff( const Patch* p, fT& Fdiff, oldPhiT& oldPhi, gammaT& gamma,
-        constCCVariable<Vector>& areaFraction, constCCVariable<double>& prNo, int mat_id, string varName );
+        computeDiff( const Patch* p, 
+                     fT& Fdiff, 
+                     oldPhiT& oldPhi, 
+                     gammaT& gamma,
+                     constCCVariable<Vector>& areaFraction, 
+                     constCCVariable<double>& prNo, 
+                     int mat_id, 
+                     string varName );
 
       /** @brief Computes the diffusion term for a scalar:
        * \f$ \int_{S} \nabla \phi \cdot dS \f$
        * assuming a constant pr number */
       template <class fT, class oldPhiT, class gammaT> void 
-        computeDiff( const Patch* p, fT& Fdiff, oldPhiT& oldPhi, gammaT& gamma,
-        constCCVariable<Vector>& areaFraction, double const_prNo, int mat_id, string varName );
+        computeDiff( const Patch* p, 
+                     fT& Fdiff, 
+                     oldPhiT& oldPhi, 
+                     gammaT& gamma,
+                     constCCVariable<Vector>& areaFraction, 
+                     double const_prNo, 
+                     int mat_id, string varName );
 
       //---------------------------------------------------------------------------
       // Custom Data Managers
@@ -147,7 +165,7 @@ namespace Uintah{
 
       /** @brief Returns an iterator for all cell touching a domain boundary */ 
       inline CellIterator getInteriorBoundaryCellIterator( const Patch* p, 
-          const vector<Patch::FaceType>::const_iterator bf_iter ) const 
+                                                           const vector<Patch::FaceType>::const_iterator bf_iter ) const 
       {
 
         Patch::FaceType face = *bf_iter; 
@@ -208,7 +226,9 @@ namespace Uintah{
       }
 
       /** @brief Checks if cell has a face on a boundary in a given absolute normal direction (coord) */
-      inline FaceBoundaryBool checkFacesForBoundaries( const Patch* p, const IntVector c, const IntVector coord )
+      inline FaceBoundaryBool checkFacesForBoundaries( const Patch* p, 
+                                                       const IntVector c, 
+                                                       const IntVector coord )
       {
 
         FaceBoundaryBool b;
@@ -245,8 +265,13 @@ namespace Uintah{
 
       /** @brief Computes the flux term, \f$ int_A div{\rho u \phi} \cdot dA \f$, where u is the velocity
        *          in the normal (coord) direction.  Note version has density. */
-      inline double getFlux( const double area, FaceData1D den, FaceData1D vel, 
-          FaceData1D phi, constCCVariable<Vector>& areaFraction, IntVector coord, IntVector c )
+      inline double getFlux( const double area, 
+                             FaceData1D den, 
+                             FaceData1D vel, 
+                             FaceData1D phi, 
+                             constCCVariable<Vector>& areaFraction, 
+                             IntVector coord, 
+                             IntVector c )
       {
         double F; 
         FaceData1D areaFrac;
@@ -269,8 +294,11 @@ namespace Uintah{
       }
       /** @brief Computes the flux term, \f$ int_A div{u \phi} \cdot dA \f$, where u is the velocity
        *          in the normal (coord) direction.  Note version does not have density. */
-      inline double getFlux( const double area, FaceData1D vel, FaceData1D phi, 
-          constCCVariable<Vector>& areaFraction, IntVector coord, IntVector c )
+      inline double getFlux( const double area, 
+                             FaceData1D vel, 
+                             FaceData1D phi, 
+                             constCCVariable<Vector>& areaFraction, 
+                             IntVector coord, IntVector c )
       {
         double F; 
         FaceData1D areaFrac;
@@ -298,8 +326,10 @@ namespace Uintah{
       // --------------------------------------------------------------------------
       
       /** @brief Return the face velocity for a CC cell given a CC velocity VECTOR */
-      inline FaceData1D getFaceVelocity( const IntVector c, const CCVariable<double>& F, 
-          constCCVariable<Vector>& vel, const IntVector coord ){
+      inline FaceData1D getFaceVelocity( const IntVector c, 
+                                         const CCVariable<double>& F, 
+                                         constCCVariable<Vector>& vel, 
+                                         const IntVector coord ){
 
         FaceData1D the_vel;
         the_vel.minus = 0.0;
@@ -347,8 +377,9 @@ namespace Uintah{
       }
 
       /** @brief Return the face velocity for a CC cell given an FCX vel */
-      inline FaceData1D getFaceVelocity( const IntVector c, const CCVariable<double>& F, 
-          constSFCXVariable<double>& vel ){
+      inline FaceData1D getFaceVelocity( const IntVector c, 
+                                         const CCVariable<double>& F, 
+                                         constSFCXVariable<double>& vel ){
         // cell-centered, x-direction
         FaceData1D the_vel; 
         the_vel.minus = vel[c];
@@ -357,8 +388,9 @@ namespace Uintah{
         return the_vel; 
       }
       /** @brief Return the face velocity for a CC cell given an FCY vel */
-      inline FaceData1D getFaceVelocity( const IntVector c, const CCVariable<double>& F, 
-          constSFCYVariable<double>& vel ){
+      inline FaceData1D getFaceVelocity( const IntVector c, 
+                                         const CCVariable<double>& F, 
+                                         constSFCYVariable<double>& vel ){
         // cell-centered, y-direction
         FaceData1D the_vel; 
         the_vel.minus = vel[c];
@@ -367,8 +399,9 @@ namespace Uintah{
         return the_vel; 
       }
       /** @brief Return the face velocity for a CC cell given an FCZ vel */
-      inline FaceData1D getFaceVelocity( const IntVector c, const CCVariable<double>& F, 
-          constSFCZVariable<double>& vel ){
+      inline FaceData1D getFaceVelocity( const IntVector c, 
+                                         const CCVariable<double>& F, 
+                                         constSFCZVariable<double>& vel ){
         // cell-centered, z-direction
         FaceData1D the_vel; 
         the_vel.minus = vel[c];
@@ -379,8 +412,10 @@ namespace Uintah{
 
       /** @brief Return the face density for all cell types */
       template< class phiT > 
-        inline FaceData1D getDensityOnFace( const IntVector c, const IntVector coord, 
-            phiT& phi, constCCVariable<double>& den ){
+        inline FaceData1D getDensityOnFace( const IntVector c, 
+                                            const IntVector coord, 
+                                            phiT& phi, 
+                                            constCCVariable<double>& den ){
 
           FaceData1D face_values; 
           face_values.minus = 0.0;
@@ -430,8 +465,12 @@ namespace Uintah{
           //
           /** @brief actual computes the convection term with the specified operator */ 
           template <class uT, class vT, class wT, class fT> 
-          void do_convection( const Patch* p, fT& Fconv, uT& uVel, vT& vVel, wT& wVel, 
-              constCCVariable<double>& den, constCCVariable<Vector>& area_fraction, Discretization_new* D){
+          void do_convection( const Patch* p, 
+                              fT& Fconv, 
+                              uT& uVel, vT& vVel, wT& wVel, 
+                              constCCVariable<double>& den, 
+                              constCCVariable<Vector>& area_fraction, 
+                              Discretization_new* D){
 
             Vector Dx = p->dCell(); 
             CellIterator iIter  = D->getInteriorCellIterator( p ); 
@@ -544,8 +583,11 @@ namespace Uintah{
           //
           /** @brief Actually computers the convection term without density rep. */ 
           template <class uT, class vT, class wT, class fT> 
-          void do_convection( const Patch* p, fT& Fconv, uT& uVel, vT& vVel, wT& wVel, 
-              constCCVariable<Vector>& area_fraction, Discretization_new* D){
+          void do_convection( const Patch* p, 
+                              fT& Fconv, 
+                              uT& uVel, vT& vVel, wT& wVel, 
+                              constCCVariable<Vector>& area_fraction, 
+                              Discretization_new* D){
 
             Vector Dx = p->dCell(); 
             CellIterator iIter  = D->getInteriorCellIterator( p ); 
@@ -650,9 +692,12 @@ namespace Uintah{
           //
           /** @brief Actually computers the convection term without density rep. */ 
           template <class uT, class vT, class wT, class fT> 
-          void do_convection( const Patch* p, fT& Fconv, uT& uVel, vT& vVel, wT& wVel, 
-              constCCVariable<Vector>& partVel, 
-              constCCVariable<Vector>& area_fraction, Discretization_new* D){
+          void do_convection( const Patch* p, 
+                              fT& Fconv, 
+                              uT& uVel, vT& vVel, wT& wVel, 
+                              constCCVariable<Vector>& partVel, 
+                              constCCVariable<Vector>& area_fraction, 
+                              Discretization_new* D){
 
             Vector Dx = p->dCell(); 
             CellIterator iIter  = D->getInteriorCellIterator( p ); 
@@ -770,8 +815,11 @@ namespace Uintah{
         UpwindInterpolation(){};
         ~UpwindInterpolation(){}; 
 
-        FaceData1D no_bc( const IntVector c, const IntVector coord, phiT& phi, 
-            FaceData1D vel, constCCVariable<Vector>& areaFraction ) 
+        FaceData1D no_bc( const IntVector c, 
+                          const IntVector coord, 
+                          phiT& phi, 
+                          FaceData1D vel, 
+                          constCCVariable<Vector>& areaFraction ) 
         { 
           Discretization_new::FaceData1D face_values; 
           face_values.minus = 0.0;
@@ -795,8 +843,12 @@ namespace Uintah{
           return face_values; 
         }; 
 
-        FaceData1D inline with_bc( const IntVector c, const IntVector coord, phiT& phi, 
-            FaceData1D vel, constCCVariable<Vector>& areaFraction, FaceBoundaryBool isBoundary ) 
+        FaceData1D inline with_bc( const IntVector c, 
+                                   const IntVector coord, 
+                                   phiT& phi, 
+                                   FaceData1D vel, 
+                                   constCCVariable<Vector>& areaFraction, 
+                                   FaceBoundaryBool isBoundary ) 
         { 
           Discretization_new::FaceData1D face_values; 
           face_values.minus = 0.0;
@@ -841,8 +893,11 @@ namespace Uintah{
         CentralInterpolation(){};
         ~CentralInterpolation(){}; 
 
-        FaceData1D inline no_bc( const IntVector c, const IntVector coord, phiT& phi, 
-            FaceData1D vel, constCCVariable<Vector>& areaFraction ) 
+        FaceData1D inline no_bc( const IntVector c, 
+                                 const IntVector coord, 
+                                 phiT& phi, 
+                                 FaceData1D vel, 
+                                 constCCVariable<Vector>& areaFraction ) 
         { 
           IntVector cxp = c + coord; 
           IntVector cxm = c - coord; 
@@ -855,8 +910,12 @@ namespace Uintah{
           return face_values; 
         }; 
 
-        FaceData1D inline with_bc( const IntVector c, const IntVector coord, phiT& phi, 
-            FaceData1D vel, constCCVariable<Vector>& areaFraction, FaceBoundaryBool isBoundary ) 
+        FaceData1D inline with_bc( const IntVector c, 
+                                   const IntVector coord, 
+                                   phiT& phi, 
+                                   FaceData1D vel, 
+                                   constCCVariable<Vector>& areaFraction, 
+                                   FaceBoundaryBool isBoundary ) 
         { 
           IntVector cxp = c + coord; 
           IntVector cxm = c - coord; 
@@ -882,8 +941,11 @@ namespace Uintah{
         SuperBeeInterpolation(){};
         ~SuperBeeInterpolation(){}; 
 
-        FaceData1D inline no_bc( const IntVector c, const IntVector coord, phiT& phi, 
-            FaceData1D vel, constCCVariable<Vector>& areaFraction ) 
+        FaceData1D inline no_bc( const IntVector c, 
+                                 const IntVector coord, 
+                                 phiT& phi, 
+                                 FaceData1D vel, 
+                                 constCCVariable<Vector>& areaFraction ) 
         { 
           FaceData1D face_values;
           face_values.plus  = 0.0;
@@ -965,8 +1027,12 @@ namespace Uintah{
           return face_values; 
         }; 
 
-        FaceData1D inline with_bc( const IntVector c, const IntVector coord, phiT& phi, 
-            FaceData1D vel, constCCVariable<Vector>& areaFraction, FaceBoundaryBool isBoundary ) 
+        FaceData1D inline with_bc( const IntVector c, 
+                                   const IntVector coord, 
+                                   phiT& phi, 
+                                   FaceData1D vel, 
+                                   constCCVariable<Vector>& areaFraction, 
+                                   FaceBoundaryBool isBoundary ) 
         { 
           FaceData1D face_values;
           face_values.plus  = 0.0;
@@ -1069,8 +1135,11 @@ namespace Uintah{
         OldSuperBeeInterpolation(){};
         ~OldSuperBeeInterpolation(){}; 
 
-        FaceData1D inline no_bc( const IntVector c, const IntVector coord, phiT& phi, 
-            FaceData1D vel, constCCVariable<Vector>& areaFraction ) 
+        FaceData1D inline no_bc( const IntVector c, 
+                                 const IntVector coord, 
+                                 phiT& phi, 
+                                 FaceData1D vel, 
+                                 constCCVariable<Vector>& areaFraction ) 
         { 
           FaceData1D face_values;
           face_values.plus  = 0.0;
@@ -1152,8 +1221,11 @@ namespace Uintah{
           return face_values; 
         }; 
 
-        FaceData1D inline with_bc( const IntVector c, const IntVector coord, phiT& phi, 
-            FaceData1D vel, constCCVariable<Vector>& areaFraction, FaceBoundaryBool isBoundary ) 
+        FaceData1D inline with_bc( const IntVector c, 
+                                   const IntVector coord, phiT& phi, 
+                                   FaceData1D vel, 
+                                   constCCVariable<Vector>& areaFraction, 
+                                   FaceBoundaryBool isBoundary ) 
         { 
           FaceData1D face_values;
           face_values.plus  = 0.0;
@@ -1164,11 +1236,6 @@ namespace Uintah{
           double Sup;
           double Sdn;
           const double tiny = 1.0e-16; 
-          if ( c == IntVector(0,7,7) ) 
-          { 
-            cout << "I want some food" << endl; 
-          } 
-
 
           IntVector cxp  = c + coord; 
           IntVector cxpp = c + coord + coord; 
@@ -1261,7 +1328,9 @@ namespace Uintah{
 
       /** @brief Cell-centered interolation -- should work for all cell types */ 
       template< class phiT >
-        inline FaceData1D centralInterp( const IntVector c, const IntVector coord, phiT& phi )
+        inline FaceData1D centralInterp( const IntVector c, 
+                                         const IntVector coord, 
+                                         phiT& phi )
         {
           IntVector cxp = c + coord; 
           IntVector cxm = c - coord; 
@@ -1278,8 +1347,11 @@ namespace Uintah{
       /** @brief Super Bee Interpolation -- should work for all cell types.
        *      This function does not have boundary checking (for speed). */
       template< class phiT >
-        inline FaceData1D superBeeInterp( const IntVector c, const IntVector coord, phiT& phi, 
-            FaceData1D vel, constCCVariable<Vector>& areaFraction ) {
+        inline FaceData1D superBeeInterp( const IntVector c, 
+                                          const IntVector coord, 
+                                          phiT& phi, 
+                                          FaceData1D vel, 
+                                          constCCVariable<Vector>& areaFraction ) {
 
           FaceData1D face_values;
           face_values.plus  = 0.0;
@@ -1364,8 +1436,12 @@ namespace Uintah{
       /** @brief Super Bee Interpolation -- should work for all cell types. 
        *       This function includes boundary checking (slower).  */ 
       template< class phiT >
-        inline FaceData1D superBeeInterp( const IntVector c, const IntVector coord, phiT& phi, 
-            FaceData1D vel, FaceBoundaryBool isBoundary, constCCVariable<Vector>& areaFraction ) {
+        inline FaceData1D superBeeInterp( const IntVector c, 
+                                          const IntVector coord, 
+                                          phiT& phi, 
+                                          FaceData1D vel, 
+                                          FaceBoundaryBool isBoundary, 
+                                          constCCVariable<Vector>& areaFraction ) {
 
           FaceData1D face_values;
           face_values.plus  = 0.0;
@@ -1458,8 +1534,10 @@ namespace Uintah{
       /* @brief Upwind interpolation -- should work for all data types. 
        *      This function does not have boundary checking (for speed). */ 
       template< class phiT >
-        inline FaceData1D upwindInterp( const IntVector c, const IntVector coord, phiT& phi, 
-            FaceData1D vel) {
+        inline FaceData1D upwindInterp( const IntVector c, 
+                                        const IntVector coord, 
+                                        phiT& phi, 
+                                        FaceData1D vel) {
 
           Discretization_new::FaceData1D face_values; 
           face_values.minus = 0.0;
@@ -1487,8 +1565,11 @@ namespace Uintah{
       /* @brief Upwind interpolation -- should work for all data types. 
        *      This function includes boundary checking (slower). */ 
       template< class phiT >
-        inline FaceData1D upwindInterp( const IntVector c, const IntVector coord, phiT& phi, 
-            FaceData1D vel, FaceBoundaryBool isBoundary ) {
+        inline FaceData1D upwindInterp( const IntVector c, 
+                                        const IntVector coord, 
+                                        phiT& phi, 
+                                        FaceData1D vel, 
+                                        FaceBoundaryBool isBoundary ) {
 
           Discretization_new::FaceData1D face_values; 
           face_values.minus = 0.0;
@@ -1528,7 +1609,10 @@ namespace Uintah{
 
       /* @brief Computes the gradient of a scalar. */
       template <class phiT> 
-        inline FaceData1D gradPtoF( const IntVector c, phiT& phi, const double dx, const IntVector coord )
+        inline FaceData1D gradPtoF( const IntVector c, 
+                                    phiT& phi, 
+                                    const double dx, 
+                                    const IntVector coord )
         {
           Discretization_new::FaceData1D face_dx; 
           face_dx.plus = 0.0; 
@@ -1545,7 +1629,11 @@ namespace Uintah{
         /* @brief Computes the gradient of a scalar, returning zero gradient if the face
          *         is a boundary cell that is set by a scalar dirichet condition. */
       template <class phiT> 
-        inline FaceData1D gradPtoF( const IntVector c, phiT& phi, const double dx, const IntVector coord, FaceBoundaryBool isBoundary )
+        inline FaceData1D gradPtoF( const IntVector c, 
+                                    phiT& phi, 
+                                    const double dx, 
+                                    const IntVector coord, 
+                                    FaceBoundaryBool isBoundary )
         {
           Discretization_new::FaceData1D face_dx; 
           face_dx.plus = 0.0; 
@@ -1595,10 +1683,13 @@ namespace Uintah{
   // Method: Compute the convection term (with explicit Density interpolation) 
   //---------------------------------------------------------------------------
   template <class fT, class oldPhiT, class uT, class vT, class wT> void 
-    Discretization_new::computeConv(const Patch* p, fT& Fconv, oldPhiT& oldPhi, 
-        uT& uVel, vT& vVel, wT& wVel, 
-        constCCVariable<double>& den, constCCVariable<Vector>& areaFraction, 
-        std::string convScheme ) 
+    Discretization_new::computeConv( const Patch* p, 
+                                     fT& Fconv, 
+                                     oldPhiT& oldPhi, 
+                                     uT& uVel, vT& vVel, wT& wVel, 
+                                     constCCVariable<double>& den, 
+                                     constCCVariable<Vector>& areaFraction, 
+                                     std::string convScheme ) 
     {
 
       if (convScheme == "upwind") { 
@@ -1656,10 +1747,14 @@ namespace Uintah{
   // Method: Compute the convection term (no explicit density)
   //---------------------------------------------------------------------------
   template <class fT, class oldPhiT> void 
-    Discretization_new::computeConv( const Patch* p, fT& Fconv, oldPhiT& oldPhi, 
-        constSFCXVariable<double>& uVel, constSFCYVariable<double>& vVel, 
-        constSFCZVariable<double>& wVel, constCCVariable<Vector>& areaFraction, 
-        std::string convScheme ) 
+    Discretization_new::computeConv( const Patch* p, 
+                                     fT& Fconv, 
+                                     oldPhiT& oldPhi, 
+                                     constSFCXVariable<double>& uVel, 
+                                     constSFCYVariable<double>& vVel, 
+                                     constSFCZVariable<double>& wVel, 
+                                     constCCVariable<Vector>& areaFraction, 
+                                     std::string convScheme ) 
     {
 
       if (convScheme == "upwind") { 
@@ -1707,11 +1802,15 @@ namespace Uintah{
   // Specialized for DQMOM
   //---------------------------------------------------------------------------
   template <class fT, class oldPhiT> void 
-    Discretization_new::computeConv( const Patch* p, fT& Fconv, oldPhiT& oldPhi, 
-        constSFCXVariable<double>& uVel, constSFCYVariable<double>& vVel, 
-        constSFCZVariable<double>& wVel, constCCVariable<Vector>& partVel, 
-        constCCVariable<Vector>& areaFraction, 
-        std::string convScheme ) 
+    Discretization_new::computeConv( const Patch* p, 
+                                     fT& Fconv, 
+                                     oldPhiT& oldPhi, 
+                                     constSFCXVariable<double>& uVel, 
+                                     constSFCYVariable<double>& vVel, 
+                                     constSFCZVariable<double>& wVel, 
+                                     constCCVariable<Vector>& partVel, 
+                                     constCCVariable<Vector>& areaFraction, 
+                                     std::string convScheme ) 
     {
       if (convScheme == "upwind") { 
 
@@ -1760,8 +1859,14 @@ namespace Uintah{
   // Simple diffusion term: \f$ \int_{S} \nabla \phi \cdot dS \f$ 
   //---------------------------------------------------------------------------
   template <class fT, class oldPhiT, class gammaT> void 
-    Discretization_new::computeDiff( const Patch* p, fT& Fdiff, oldPhiT& oldPhi, gammaT& gamma,
-        constCCVariable<Vector>& areaFraction, constCCVariable<double>& prNo, int mat_id, string varName )
+    Discretization_new::computeDiff( const Patch* p, 
+                                     fT& Fdiff, 
+                                     oldPhiT& oldPhi, 
+                                     gammaT& gamma, 
+                                     constCCVariable<Vector>& areaFraction, 
+                                     constCCVariable<double>& prNo, 
+                                     int mat_id, 
+                                     string varName )
     {
 
       Vector Dx = p->dCell(); //assuming uniform grid
@@ -2015,8 +2120,14 @@ namespace Uintah{
   // Simple diffusion term: \f$ \int_{S} \nabla \phi \cdot dS \f$
   //---------------------------------------------------------------------------
   template <class fT, class oldPhiT, class gammaT> void 
-    Discretization_new::computeDiff( const Patch* p, fT& Fdiff, oldPhiT& oldPhi, gammaT& gamma,
-        constCCVariable<Vector>& areaFraction, double const_prNo , int mat_id, string varName )
+    Discretization_new::computeDiff( const Patch* p, 
+                                     fT& Fdiff, 
+                                     oldPhiT& oldPhi, 
+                                     gammaT& gamma,
+                                     constCCVariable<Vector>& areaFraction, 
+                                     double const_prNo, 
+                                     int mat_id, 
+                                     string varName )
     {
 
       Vector Dx = p->dCell(); //assuming uniform grid

@@ -73,7 +73,6 @@
           <cp                           spec="OPTIONAL DOUBLE" />
           <phi0                         spec="OPTIONAL DOUBLE" />
           <useTable                     spec="OPTIONAL NO_DATA" />
-          <esphi0                       spec="OPTIONAL DOUBLE" />
         </constantMMS>
         <almgrenMMS                     spec="OPTIONAL NO_DATA" need_applies_to="whichMMS almgrenMMS" >
           <amplitude                    spec="REQUIRED DOUBLE" />
@@ -157,6 +156,9 @@
           <inputfile                    spec="REQUIRED STRING" />
           <cold_flow                    spec="OPTIONAL BOOLEAN"/>
           <hl_scalar_init               spec="OPTIONAL DOUBLE" />
+          <noisy_hl_warning             spec="OPTIONAL NO_DATA"/> <!-- warn when heat loss is clipped to bounds --> 
+          <lower_hl_bound               spec="OPTIONAL DOUBLE"/> <!-- In the property table, the lower bound for heat loss.  default = -1 --> 
+          <upper_hl_bound               spec="OPTIONAL DOUBLE"/> <!-- In the property table, the upper bound for heat loss.  default = +1 --> 
           <coal                         spec="OPTIONAL NO_DATA" 
                                         attribute1="fp_label REQUIRED STRING"     
                                         attribute2="eta_label REQUIRED STRING"/> <!-- Attributes must match the transported IVs specified in the TransportEqn node --> 
@@ -164,6 +166,7 @@
 
         <ClassicTable                   spec="OPTIONAL NO_DATA">
           <inputfile                    spec="REQUIRED STRING"/>
+          <cold_flow                    spec="OPTIONAL BOOLEAN"/> <!-- use when no rxn is occuring --> 
           <noisy_hl_warning             spec="OPTIONAL NO_DATA"/>
           <hl_scalar_init               spec="OPTIONAL DOUBLE" />
           <coal                         spec="OPTIONAL NO_DATA" 
@@ -235,6 +238,8 @@
 
         <PressureBC                     spec="OPTIONAL NO_DATA" >
           <mixture_fraction             spec="REQUIRED DOUBLE 'positive'" />
+          <mixture_fraction_2           spec="OPTIONAL DOUBLE" />
+          <heat_loss                    spec="OPTIONAL DOUBLE" />
           <geom_object/>
           <ExtraScalars                  spec="OPTIONAL NO_DATA">
             <scalar                      spec="MULTIPLE NO_DATA"
@@ -246,6 +251,8 @@
 
         <OutletBC                       spec="OPTIONAL NO_DATA" >
           <mixture_fraction             spec="REQUIRED DOUBLE 'positive'" />
+          <mixture_fraction_2           spec="OPTIONAL DOUBLE" />
+          <heat_loss                    spec="OPTIONAL DOUBLE" />
           <geom_object/>
           <ExtraScalars                  spec="OPTIONAL NO_DATA">
             <scalar                      spec="MULTIPLE NO_DATA"
@@ -383,7 +390,7 @@
           <src                          spec="MULTIPLE NO_DATA" 
                                         attribute1="label REQUIRED STRING"/>
           <initialization               spec="OPTIONAL NO_DATA"
-                                        attribute1="type REQUIRED STRING 'constant, step, geometry_fill, mms1'">
+                                        attribute1="type REQUIRED STRING 'constant, step, geometry_fill, mms_x, mms_y, mms_z, mms_xyz'">
             <!-- constant value initialization -->
             <constant                   spec="OPTIONAL DOUBLE"/>
             <!-- constant within a geometry piece (geometry_fill) -->
@@ -408,13 +415,16 @@
           <src                          spec="MULTIPLE NO_DATA"
                                         attribute1="label REQUIRED STRING"
                                         attribute2="type REQUIRED STRING 'ConstantSourceTerm, DevolMixtureFraction, CharOxidationMixtureFraction, 
-                                                                          WestbrookDryer, MMS1, ParticleGasMomentumSource, ParticleGasHeat,
+                                                                          WestbrookDryer, MMS_X, MMS_Y, MMS_Z, MMS_XYZ, ParticleGasMomentumSource, ParticleGasHeat,
                                                                           fy_inject_src, fz_inject_src, tab_rxn_rate,
                                                                           cc_intrusion_inlet, fx_intrusion_inlet,
                                                                           fy_intrusion_inlet, fz_intrusion_inlet'">
 
             <!-- Specs for coal gas devol mixture fraction source term -->
             <devol_model_name           spec="OPTIONAL STRING" />
+
+            <!-- Tabulated reaction rate --> 
+            <rxn_rate                   spec="OPTIONAL STRING" />
 
             <!-- specs for char oxidation mixture fraction source term -->
             <char_model_name            spec="OPTIONAL STRING" />

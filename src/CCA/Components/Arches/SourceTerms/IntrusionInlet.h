@@ -224,11 +224,11 @@ namespace Uintah{
   //---------------------------------------------------------------------------
   template <typename sT>
     void IntrusionInlet<sT>::computeSource( const ProcessorGroup* pc, 
-        const PatchSubset* patches, 
-        const MaterialSubset* matls, 
-        DataWarehouse* old_dw, 
-        DataWarehouse* new_dw, 
-        int timeSubStep )
+                                            const PatchSubset* patches, 
+                                            const MaterialSubset* matls, 
+                                            DataWarehouse* old_dw, 
+                                            DataWarehouse* new_dw, 
+                                            int timeSubStep )
     {
       //patch loop
       for (int p=0; p < patches->size(); p++){
@@ -240,11 +240,11 @@ namespace Uintah{
         Vector Dx = patch->dCell(); 
 
         sT src; 
-        if ( new_dw->exists( _src_label, matlIndex, patch ) ){
-          new_dw->getModifiable( src, _src_label, matlIndex, patch ); 
-        } else {
+        if( timeSubStep == 0 ) {
           new_dw->allocateAndPut( src, _src_label, matlIndex, patch ); 
           src.initialize(0.0); 
+        } else {
+          new_dw->getModifiable( src, _src_label, matlIndex, patch ); 
         }
 
         // DEVELOPER'S NOTE:

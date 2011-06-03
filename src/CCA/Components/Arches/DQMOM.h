@@ -229,6 +229,7 @@ private:
   vector<double> d_abscissa_scaling_constants;
   vector<int> d_opt_abscissas;
   DenseMatrix* AAopt;
+  DenseMatrix* AAoptinv;
 
   const VarLabel* d_normXLabel; 
   const VarLabel* d_normResLabel;

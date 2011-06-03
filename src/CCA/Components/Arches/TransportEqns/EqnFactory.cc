@@ -7,6 +7,7 @@
 #include <CCA/Components/Arches/ArchesLabel.h>
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Parallel/Parallel.h>
+#include <Core/Grid/Level.h>
 
 //===========================================================================
 
@@ -127,6 +128,8 @@ EqnFactory::sched_scalarInit( const LevelP& level, SchedulerP& sched )
 {
   Task* tsk = scinew Task("EqnFactory::scalarInit", this, &EqnFactory::scalarInit);
 
+  grid = level->getGrid();
+
   tsk->computes(d_fieldLabels->d_MinScalarTimestepLabel);
   tsk->requires( Task::NewDW, d_fieldLabels->d_volFractionLabel, Ghost::None ); 
 
@@ -158,6 +161,9 @@ EqnFactory::scalarInit( const ProcessorGroup* ,
   double delta_t = 1.0e16;
   new_dw->put( min_vartype(delta_t), d_fieldLabels->d_MinScalarTimestepLabel );
 
+  Vector Ltot = Vector(0.0,0.0,0.0);
+  grid->getLength(Ltot);
+
   //proc0cout << "Initializing all scalar equations." << endl;
   for (int p = 0; p < patches->size(); p++){
     //assume only one material for now
@@ -182,7 +188,7 @@ EqnFactory::scalarInit( const ProcessorGroup* ,
       oldPhi.initialize(0.0); 
 
       // initialize the equation using its initialization function
-      eqn->initializationFunction( patch, phi, eps_v ); 
+      eqn->initializationFunction( patch, phi, eps_v, Ltot ); 
 
       oldPhi.copyData(phi);
 
@@ -275,14 +281,6 @@ EqnFactory::sched_evalTransportEqns( const LevelP& level,
         // Step 4
         // only solve scalar transport eqns that guess density
         iEqn->second->sched_solveTransportEqn( level, sched, timeSubStep, lastTimeSubstep );
-
-        // Step 5
-        // clip
-        if( lastTimeSubstep ) {
-          if( iEqn->second->doLowClip() || iEqn->second->doHighClip() ) {
-            iEqn->second->sched_clipPhi( level, sched );
-          }
-        }
       }
 
     }
@@ -294,14 +292,6 @@ EqnFactory::sched_evalTransportEqns( const LevelP& level,
         // Step 4
         // only solve scalar transport eqns that don't guess density
         iEqn->second->sched_solveTransportEqn( level, sched, timeSubStep, lastTimeSubstep );
-
-        // Step 5
-        // clip
-        if( lastTimeSubstep ) {
-          if( iEqn->second->doLowClip() || iEqn->second->doHighClip() ) {
-            iEqn->second->sched_clipPhi( level, sched );
-          }
-        }
       }
     }
   }
@@ -322,10 +312,17 @@ algorithmic issues are settled.
 -- Jeremy
 */
 void
-EqnFactory::sched_timeAveraging(const LevelP& level, SchedulerP& sched, int timeSubStep)
+EqnFactory::sched_timeAveraging(const LevelP& level, SchedulerP& sched, int timeSubStep, bool lastTimeSubstep )
 {
   for( EqnMap::iterator iEqn = eqns_.begin(); iEqn != eqns_.end(); ++iEqn ) {
-    iEqn->second->sched_timeAveraging( level, sched, timeSubStep );
+    iEqn->second->sched_timeAveraging( level, sched, timeSubStep, lastTimeSubstep );
+
+    if( lastTimeSubstep ) {
+      if( iEqn->second->doLowClip() || iEqn->second->doHighClip() ) {
+        iEqn->second->sched_clipPhi( level, sched );
+      }
+    }
+
   }
 }
 

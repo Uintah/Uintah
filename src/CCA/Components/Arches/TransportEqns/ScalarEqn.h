@@ -1,16 +1,18 @@
 #ifndef Uintah_Component_Arches_ScalarEqn_h
 #define Uintah_Component_Arches_ScalarEqn_h
+#include <CCA/Components/Arches/TransportEqns/EqnBase.h>
+#include <CCA/Components/Arches/TransportEqns/EqnFactory.h>
+#include <CCA/Components/Arches/Directives.h>
+#include <CCA/Components/Arches/SourceTerms/MMS_X.h>
+#include <CCA/Components/Arches/SourceTerms/MMS_XYZ.h>
 
-#include <CCA/Ports/Scheduler.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Variables/SFCXVariable.h>
 #include <Core/Grid/Variables/SFCYVariable.h>
 #include <Core/Grid/Variables/SFCZVariable.h>
-#include <CCA/Components/Arches/TransportEqns/EqnBase.h>
-#include <CCA/Components/Arches/TransportEqns/EqnFactory.h>
-#include <CCA/Components/Arches/Directives.h>
+#include <CCA/Ports/Scheduler.h>
 
 namespace Uintah{
 
@@ -132,14 +134,30 @@ public:
                 DataWarehouse* old_dw, 
                 DataWarehouse* new_dw  ); 
 
-  void sched_timeAveraging( const LevelP& level, SchedulerP& sched, int timeSubStep );
+  void sched_timeAveraging( const LevelP& level, SchedulerP& sched, int timeSubStep, bool lastTimeSubstep );
 
   void timeAveraging( const ProcessorGroup* pc, 
                       const PatchSubset* patches, 
                       const MaterialSubset* matls, 
                       DataWarehouse* old_dw, 
                       DataWarehouse* new_dw,
-                      int timeSubStep );
+                      int timeSubStep,
+                      bool lastTimeSubstep );
+
+  /** @brief  This method computes the error in the solution when using an MMS. */
+  void computeMMSError( const PatchSubset* patches,
+                        const Patch* patch,
+                        const int matlIndex,
+                        DataWarehouse* old_dw,
+                        DataWarehouse* new_dw,
+                        CCVariable<double>* phi_at_jp1,
+                        int timeSubStep,
+                        Vector domain_size );
+
+  /** @brief  This method prints a summary of the computed error when using an MMS. */
+  void printMMSError( DataWarehouse* new_dw,
+                      bool lastTimeSubstep,
+                      int num_cells );
 
   // ---------------------------------
   // Access functions:
@@ -174,7 +192,15 @@ private:
 
   bool d_laminar_pr; 
 
-  const VarLabel* d_prNo_label;       ///< Label for the Prandlt number 
+  const VarLabel* d_prNo_label;         ///< Label for the Prandlt number 
+  GridP grid;
+
+#ifdef VERIFICATION
+  const VarLabel* d_MMSErrorLabel;      ///< Label: Absolute error for MMS (i.e. [exact solution] - [computed solution])
+  const VarLabel* d_MMSExactLabel;      ///< Label: Exact solution for MMS
+  const VarLabel* d_MMSErrorL2Label;    ///< Label: L2 norm of absolute error (single value) 
+  const VarLabel* d_MMSErrorLInfLabel;  ///< Label: L-inf norm of absolute error (single value)
+#endif
 
 }; // class ScalarEqn
 } // namespace Uintah

@@ -184,6 +184,7 @@ private:
   ArchesLabel* d_fieldLabels;
   ExplicitTimeInt* d_timeIntegrator;
   DQMOM* d_dqmomSolver;
+  GridP grid;
 
   double d_MinTimestepVar;  ///< Since we can't modify a variable multiple times (the memory usage spikes after you modify a variable ~10 or more times), 
                             ///  we have to modify a private member, then put that private member in a data warehouse variable ONCE

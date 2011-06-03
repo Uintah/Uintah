@@ -144,19 +144,8 @@ WestbrookDryer::computeSource( const ProcessorGroup* pc,
     CCVariable<double> E; // extent of reaction 
     CCVariable<double> w_o2; // mass fraction of O2
     CCVariable<double> ver; 
-    
-    if ( new_dw->exists(_src_label, matlIndex, patch ) ){
-      new_dw->getModifiable( CxHyRate, _src_label, matlIndex, patch ); 
-      new_dw->getModifiable( S, d_WDstrippingLabel, matlIndex, patch ); 
-      new_dw->getModifiable( E, d_WDextentLabel, matlIndex, patch ); 
-      new_dw->getModifiable( w_o2, d_WDO2Label, matlIndex, patch ); 
-      new_dw->getModifiable( ver, d_WDverLabel, matlIndex, patch );  
-      CxHyRate.initialize(0.0);
-      S.initialize(0.0);
-      E.initialize(0.0); 
-      w_o2.initialize(0.0); 
-      ver.initialize(0.0); 
-    } else {
+
+    if( timeSubStep == 0 ) {
       new_dw->allocateAndPut( CxHyRate, _src_label, matlIndex, patch );
       new_dw->allocateAndPut( S, d_WDstrippingLabel, matlIndex, patch );
       new_dw->allocateAndPut( E, d_WDextentLabel, matlIndex, patch );
@@ -168,13 +157,25 @@ WestbrookDryer::computeSource( const ProcessorGroup* pc,
       E.initialize(0.0); 
       w_o2.initialize(0.0); 
       ver.initialize(0.0); 
-    } 
+    } else {
+      new_dw->getModifiable( CxHyRate, _src_label, matlIndex, patch ); 
+      new_dw->getModifiable( S, d_WDstrippingLabel, matlIndex, patch ); 
+      new_dw->getModifiable( E, d_WDextentLabel, matlIndex, patch ); 
+      new_dw->getModifiable( w_o2, d_WDO2Label, matlIndex, patch ); 
+      new_dw->getModifiable( ver, d_WDverLabel, matlIndex, patch );  
 
-    for (vector<std::string>::iterator iter = _required_labels.begin(); 
-         iter != _required_labels.end(); iter++) { 
-      //CCVariable<double> temp; 
-      //old_dw->get( *iter.... ); 
+      CxHyRate.initialize(0.0);
+      S.initialize(0.0);
+      E.initialize(0.0); 
+      w_o2.initialize(0.0); 
+      ver.initialize(0.0); 
     }
+    
+    //for (vector<std::string>::iterator iter = _required_labels.begin(); 
+    //     iter != _required_labels.end(); iter++) { 
+    //  //CCVariable<double> temp; 
+    //  //old_dw->get( *iter.... ); 
+    //}
 
     constCCVariable<double> T;     // temperature 
     constCCVariable<double> f;     // mixture fraction

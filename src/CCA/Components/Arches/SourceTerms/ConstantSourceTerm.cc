@@ -95,7 +95,9 @@ ConstantSourceTerm::sched_computeSource( const LevelP& level, SchedulerP& sched,
     // Every source term needs to set this flag after the varLabel is computed. 
     // transportEqn.cleanUp should reinitialize this flag at the end of the time step. 
     _label_sched_init = true;
+  }
 
+  if( timeSubStep == 0 ) {
     tsk->computes(_src_label);
   } else {
     tsk->modifies(_src_label); 
@@ -115,11 +117,11 @@ ConstantSourceTerm::sched_computeSource( const LevelP& level, SchedulerP& sched,
 //---------------------------------------------------------------------------
 void
 ConstantSourceTerm::computeSource( const ProcessorGroup* pc, 
-                   const PatchSubset* patches, 
-                   const MaterialSubset* matls, 
-                   DataWarehouse* old_dw, 
-                   DataWarehouse* new_dw, 
-                   int timeSubStep )
+                                   const PatchSubset* patches, 
+                                   const MaterialSubset* matls, 
+                                   DataWarehouse* old_dw, 
+                                   DataWarehouse* new_dw, 
+                                   int timeSubStep )
 {
   //patch loop
   for (int p=0; p < patches->size(); p++){
@@ -129,13 +131,11 @@ ConstantSourceTerm::computeSource( const ProcessorGroup* pc,
     int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex(); 
 
     CCVariable<double> constSrc; 
-    if ( new_dw->exists(_src_label, matlIndex, patch ) ){
-      new_dw->getModifiable( constSrc, _src_label, matlIndex, patch ); 
-      constSrc.initialize(0.0);
-    } else {
+    if( timeSubStep == 0 ) {
       new_dw->allocateAndPut( constSrc, _src_label, matlIndex, patch );
-      constSrc.initialize(0.0);
-    } 
+    } else {
+      new_dw->getModifiable( constSrc, _src_label, matlIndex, patch ); 
+    }
 
     //for (vector<std::string>::iterator iter = _required_labels.begin(); 
     //     iter != _required_labels.end(); iter++) { 
@@ -143,9 +143,13 @@ ConstantSourceTerm::computeSource( const ProcessorGroup* pc,
     //  //old_dw->get( *iter.... ); 
     //}
 
+    //constSrc.initialize(d_constant);
+    proc0cout << "Initializing source term to " << d_constant << endl;
+
     for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
       IntVector c = *iter; 
-      constSrc[c] += d_constant; 
+      constSrc[c] = d_constant; 
     }
   }
 }
+

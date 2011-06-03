@@ -20,6 +20,7 @@
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Datatypes/Matrix.h>
+#include <Core/Datatypes/MatrixOperations.h>
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Datatypes/SparseRowMatrix.h>
@@ -284,7 +285,15 @@ void DQMOM::problemSetup(const ProblemSpecP& params)
         } else {
           constructAopt( AAopt, d_opt_abscissas );
         }
-        AAopt->invert();
+
+        AAoptinv = scinew DenseMatrix((N_xi+1)*N_,(N_xi+1)*N_);
+        AAoptinv->zero();
+        if(d_unweighted == true){
+          constructAopt_unw( AAoptinv, d_opt_abscissas );
+        } else {
+          constructAopt( AAoptinv, d_opt_abscissas );
+        }
+        AAoptinv->invert();
 
       }
 
@@ -824,7 +833,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
         //++numtimesB; //timing
 
         //double start_MultiplicationTime = Time::currentSeconds(); //timing
-        Mult( (*XX), (*AAopt), (*BB) ); // AAopt is already inverted 
+        Mult( (*XX), (*AAoptinv), (*BB) );
         //total_MultiplicationTime += (Time::currentSeconds() - start_MultiplicationTime); //timing
 
         //total_MatMultTime += (Time::currentSeconds() - start_MatMultTime); //timing
@@ -848,10 +857,21 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
           }
         }
         normX[c] = this_normX;
+
+        ColumnMatrix* Prod = scinew ColumnMatrix( dimension );
+        ColumnMatrix* ResVec = scinew ColumnMatrix( dimension );
+        Mult( (*Prod), (*AAopt), (*XX) );
+        for( int ii=0; ii < dimension; ++ii ) {
+          (*ResVec)[ii] = (*Prod)[ii] - (*BB)[ii];
+        }
+        normRes[c] = ResVec->vector_norm();
+        normResNormalizedB[c] = normRes[c]/(normB[c]+TINY);
+        normResNormalizedX[c] = normRes[c]/(normX[c]+TINY);
+        delete ResVec;
+        delete Prod;
  
 #if defined(DEBUG_MATRICES)
 
-        //if( pc->myrank() == 0 ) {
         if( c == IntVector(1,2,3) ) {
           if( b_writefile ) {
             char filename[28];
@@ -931,6 +951,10 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
 
         //double start_OtherTime1 = Time::currentSeconds(); //timing
 
+        if( normRes[c] > 1.0e-5 ) {
+          XX->zero();
+        }
+
         // Weights:
         for( vector< CCVariable<double>* >::iterator iter = weightSourceCCVars.begin();
              iter != weightSourceCCVars.end(); ++iter ) {
@@ -950,7 +974,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
 
         //double start_OtherTime2 = Time::currentSeconds(); //timing
 
-        // Weighted abscissas:
+        // Abscissas:
         for( vector< CCVariable<double>* >::iterator iter = abscissaSourceCCVars.begin();
              iter != abscissaSourceCCVars.end(); ++iter ) {
 
