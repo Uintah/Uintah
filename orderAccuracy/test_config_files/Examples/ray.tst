@@ -1,6 +1,5 @@
 <start>
 <upsFile>RMCRT_test_1L.ups</upsFile>
-<Study>Res.Study</Study>
 <gnuplot>
   <script>plotScript.gp</script>s
   <title>RMCRT order-of-accuracy \\n 1 timestep (41^3)</title>
@@ -17,7 +16,6 @@
 <Test>
     <Title>8</Title>
     <sus_cmd> sus </sus_cmd>
-    <Study>Res.Study</Study>
     <postProcess_cmd>RMCRT_wrapper </postProcess_cmd>
     <x>8</x>
     <replace_lines>
@@ -28,7 +26,6 @@
 <Test>
     <Title>16</Title>
     <sus_cmd> sus </sus_cmd>
-    <Study>Res.Study</Study>
     <postProcess_cmd>RMCRT_wrapper  </postProcess_cmd>
     <x>16</x>
     <replace_lines>
@@ -39,7 +36,6 @@
 <Test>
     <Title>32</Title>
     <sus_cmd> sus </sus_cmd>
-    <Study>Res.Study</Study>
     <postProcess_cmd>RMCRT_wrapper </postProcess_cmd>
     <x>32</x>
     <replace_lines>
@@ -50,7 +46,6 @@
 <Test>
     <Title>64</Title>
     <sus_cmd> sus </sus_cmd>
-    <Study>Res.Study</Study>
     <postProcess_cmd>RMCRT_wrapper </postProcess_cmd>
     <x>64</x>
     <replace_lines>
@@ -61,7 +56,6 @@
 <Test>
     <Title>128</Title>
     <sus_cmd> sus </sus_cmd>
-    <Study>Res.Study</Study>
     <postProcess_cmd>RMCRT_wrapper </postProcess_cmd>
     <x>128</x>
     <replace_lines>
