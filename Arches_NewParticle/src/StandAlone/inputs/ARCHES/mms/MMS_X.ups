@@ -5,40 +5,53 @@
 <Uintah_specification>
   
     <Meta>
-        <title>Arches "2D" Periodic Box Almgren MMS </title>
+        <title>1D Verification</title>
     </Meta>
+
+    <!-- 
+    NOTE: In order to perform verification, you must first
+          define the VERIFICATION macro in CCA/Components/Arches/Directives.h
+          Otherwise, you will encounter an error.
+    -->
 
     <SimulationComponent type="arches" />
 
     <Time>
-        <maxTime>0.1</maxTime>
+        <maxTime>0.10</maxTime>
+        <max_Timesteps>5</max_Timesteps>
         <initTime>0.0</initTime>
-        <delt_min>0.00001</delt_min>
-        <delt_max>5</delt_max>
-        <timestep_multiplier>0.1</timestep_multiplier>
+        <delt_min>0.0005</delt_min>
+        <delt_max>0.0005</delt_max>
+        <timestep_multiplier>0.5</timestep_multiplier>
     </Time>
 
     <DataArchiver>
-        <filebase>constantMMS.uda</filebase>
-        <outputInterval>0.01</outputInterval>
+        <filebase>uda_mms_x.uda</filebase>
+        <outputTimestepInterval>1</outputTimestepInterval>
+        <outputInitTimestep />
 
-        <save label = "totalKineticEnergy"/>
-        <save label = "totalummsLnError"/>
-        <save label = "totalummsExactSol"/>
-        <save label = "pressurePS"/>
-        <save label = "scalarSP"/>
+        <save label = "mms_scalar" />
+        <save label = "mms_scalar_Fconv" />
+        <save label = "mms_scalar_RHS" />
+
+        <save label = "mms_scalar_MMSExact" />
+        <save label = "mms_scalar_MMSError" />
+        <save label = "mms_scalar_MMSError_L2Norm" />
+        <save label = "mms_scalar_MMSError_LInfNorm" />
+
+        <save label = "manufactured" />
+
         <save label = "newCCUVelocity"/>  
         <save label = "newCCVVelocity"/>  
-        <save label = "newCCWVelocity"/>  
-        <save label = "uVelocitySPBC"/>
-        <save label = "vVelocitySPBC"/>
-        <save label = "wVelocitySPBC"/>
-        <save label = "densityCP"/>
-        <save label = "viscosityCTS"/>
-        <save label = "continuityResidual"/>
-        <save label = "velocityDivergence"/>
+        <save label = "totalKineticEnergy"/>
+
+        <save label = "totalummsLnError"/>
+        <save label = "totalvmmsLnError"/>
+        <save label = "totalummsExactSol"/>
+        <save label = "totalvmmsExactSol"/>
+
         <save label = "ummsLnError"/>
-        <!--save label = "test1"/-->
+        <save label = "vmmsLnError"/>
         <checkpoint cycle = "2" interval = "0.05"/>
         <compression>gzip</compression>
     </DataArchiver>
@@ -47,11 +60,8 @@
         <Level>
             <Box label = "1">
                 <lower>[0,0,0]</lower>
-                <upper>[1.0,1.0,3.0]</upper>
-                <!-- NOTE: Due to a problem in the pressure solver, 
-                           the number of cells must be a power of 2 
-                           (for most cases of Ncells > 16). -->
-                <resolution>[8,8,8]</resolution>
+                <upper>[0.05,0.05,0.05]</upper>
+                <resolution>[32,32,32]</resolution>
                 <extraCells>[0,0,0]</extraCells>
                 <patches>[1,1,1]</patches>
             </Box>
@@ -62,26 +72,42 @@
     <PhysicalConstants>
         <gravity>[0,0,0]</gravity>
         <reference_point>[0,0,0]</reference_point>
-        <viscosity>0.0</viscosity>
+        <viscosity>0.0002</viscosity>
     </PhysicalConstants>
 
     <CFD>
 
         <!-- ARCHES specification -->
         <ARCHES>
+
             <MMS whichMMS="constantMMS" >
                 <mmsErrorType>Linf</mmsErrorType>
                 <constantMMS>
                     <cu>1.0</cu>
-                    <cv>11.0</cv>
-                    <cw>.1</cw>
+                    <cv>0.0</cv>
+                    <cw>0.0</cw>
                     <cp>100</cp>
                     <phi0>0.3</phi0>
-                    <esphi0>0.0</esphi0>
                 </constantMMS>
             </MMS>
 
-          
+            <TransportEqns>
+
+                <Eqn label="mms_scalar" type="CCscalar">
+                    <addSources>true</addSources>
+                    <doDiff>false</doDiff>
+                    <doConv>true</doConv>
+                    <conv_scheme>upwind</conv_scheme>
+                    <initialization type="mms_x" />
+                    <src label="manufactured" />
+                </Eqn>
+
+                <Sources>
+                    <src label="manufactured" type="MMS_X" />
+                </Sources>
+
+            </TransportEqns>
+        
             <Turbulence model = "smagorinsky">
                 <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
                 <cf>0.0</cf>
@@ -103,25 +129,12 @@
                     </Stream>
                 </ColdFlowMixingModel>
             </Properties>
-
-            <ExtraScalars>
-                <scalar label="test1">
-                    <initial_value>.0</initial_value>
-                    <convection_scheme>central-upwind</convection_scheme>
-                    <diffusion>true</diffusion>
-                    <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
-                    <density_weighted>false</density_weighted>
-                    <sources>
-                        <source label="zero_src"/>
-                    </sources>
-                </scalar>
-            </ExtraScalars>
-    
+            
             <ExplicitSolver>
-
+                
                 <initial_dt>1</initial_dt>
                 <variable_dt>true</variable_dt>
-                <timeIntegratorType>FE</timeIntegratorType> 
+                <timeIntegratorType>RK2SSP</timeIntegratorType> 
 
                 <PressureSolver>
                     <linear_solver>hypre</linear_solver>
@@ -134,11 +147,11 @@
                 </PressureSolver>
 
                 <MomentumSolver>
-                    <convection_scheme>central</convection_scheme>
+                      <convection_scheme>central</convection_scheme>
                 </MomentumSolver>
 
                 <MixtureFractionSolver>
-                    <convection_scheme>central-upwind</convection_scheme>
+                      <convection_scheme>central-upwind</convection_scheme>
                 </MixtureFractionSolver>
 
             </ExplicitSolver>

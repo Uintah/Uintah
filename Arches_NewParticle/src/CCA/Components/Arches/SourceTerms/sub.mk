@@ -7,7 +7,10 @@ SRCS += \
 	$(SRCDIR)/CharOxidationMixtureFraction.cc \
 	$(SRCDIR)/ConstantSourceTerm.cc \
 	$(SRCDIR)/WestbrookDryer.cc \
-	$(SRCDIR)/MMS1.cc \
+	$(SRCDIR)/MMS_X.cc \
+	$(SRCDIR)/MMS_Y.cc \
+	$(SRCDIR)/MMS_Z.cc \
+	$(SRCDIR)/MMS_XYZ.cc \
 	$(SRCDIR)/ParticleGasMomentum.cc \
 	$(SRCDIR)/ParticleGasHeat.cc \
 	$(SRCDIR)/UnweightedSrcTerm.cc \

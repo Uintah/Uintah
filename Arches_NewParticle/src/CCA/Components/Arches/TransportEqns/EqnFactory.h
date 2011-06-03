@@ -128,7 +128,8 @@ public:
 
   void sched_timeAveraging( const LevelP& level,
                             SchedulerP&,
-                            int timeSubStep );
+                            int timeSubStep,
+                            bool lastTimeSubstep );
 
   void cleanUp( const LevelP& level,
                 SchedulerP& );
@@ -178,6 +179,7 @@ private:
 
   ArchesLabel* d_fieldLabels;
   ExplicitTimeInt* d_timeIntegrator;
+  GridP grid;
 
   double d_MinTimestepVar;  ///< Since we can't modify a variable multiple times (the memory usage spikes after you modify a variable ~10 or more times), 
                             ///  we have to modify a private member, then put that private member in a data warehouse variable ONCE

@@ -197,13 +197,13 @@ private:
       Box patchInteriorBox = patch->getBox(); 
   
       sT constSrc; 
-      if ( new_dw->exists(_src_label, matlIndex, patch ) ){
-        new_dw->getModifiable( constSrc, _src_label, matlIndex, patch ); 
-        constSrc.initialize(0.0);
-      } else {
+      if( timeSubStep == 0 ) {
         new_dw->allocateAndPut( constSrc, _src_label, matlIndex, patch );
         constSrc.initialize(0.0);
-      } 
+      } else {
+        new_dw->getModifiable( constSrc, _src_label, matlIndex, patch ); 
+        constSrc.initialize(0.0);
+      }
   
       // not sure which logic is best...
       // currently assuming that the # of geometry pieces is a small # so checking for patch/geometry piece 

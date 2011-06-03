@@ -567,7 +567,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     }
 
     // time-averaging for scalar equations
-    eqnFactory.sched_timeAveraging( level, sched, curr_level );
+    eqnFactory.sched_timeAveraging( level, sched, curr_level, lastTimeSubstep );
 
     // averaging for RKSSP
     if ((curr_level>0)&&(!((d_timeIntegratorType == "RK2")||(d_timeIntegratorType == "BEEmulation")))) {
@@ -3024,7 +3024,7 @@ ExplicitSolver::computeMMSError(const ProcessorGroup*,
 {
 
   proc0cout << "***START of MMS ERROR CALC***" << endl;
-  proc0cout << "  Using Error norm = "  << d_mmsErrorType << endl;
+  proc0cout << "  Using error norm = "  << d_mmsErrorType << endl;
 
   for (int p = 0; p < patches->size(); p++) {
 
@@ -3098,8 +3098,6 @@ ExplicitSolver::computeMMSError(const ProcessorGroup*,
     double time=d_lab->d_sharedState->getElapsedTime();
     time = time + delT;
 
-    proc0cout << "THE CURRENT TIME IN ERROR CALC IS: " << time << endl;
-
     double pi = acos(-1.0);
 
     //__________________________________
@@ -3116,18 +3114,19 @@ ExplicitSolver::computeMMSError(const ProcessorGroup*,
       if (d_mms == "constantMMS"){
         mmsvalue = phi0;
       }
-      else if (d_mms == "almgrenMMS"){
-        // not filled in
-      }
+      // else if (d_mms == "almgrenMMS"){
+      //   // not filled in
+      // }
 
       // compute the L-2 or L-infinity error.
       if (d_mmsErrorType == "L2"){
+
         double diff = scalar[c] - mmsvalue;
         snumeratordiff += diff * diff;
         sdenomexact    += mmsvalue*mmsvalue;
-        smmsLnError[c]  = pow(diff * diff/(mmsvalue*mmsvalue),1.0/2.0);
-      }
-      else if (d_mmsErrorType == "Linf"){
+        smmsLnError[c]  = sqrt(diff * diff/(mmsvalue*mmsvalue));
+
+      } else if (d_mmsErrorType == "Linf"){
 
         testvalue = Abs(scalar[c] - mmsvalue);
 
@@ -3157,8 +3156,8 @@ ExplicitSolver::computeMMSError(const ProcessorGroup*,
 
       if (d_mms == "constantMMS"){
         mmsvalue = cu;
-      }
-      else if (d_mms == "almgrenMMS"){
+
+      } else if (d_mms == "almgrenMMS"){
 
         mmsvalue = 1 - amp * cos(2.0*pi*(cellinfo->xu[colX] - time))
           * sin(2.0*pi*(cellinfo->yy[colY] - time))*exp(-2.0*d_viscosity*time);
@@ -3168,12 +3167,13 @@ ExplicitSolver::computeMMSError(const ProcessorGroup*,
       }
 
       if (d_mmsErrorType == "L2"){
+
         double diff = uVelocity[c] - mmsvalue;
         unumeratordiff += diff * diff;
         udenomexact    += mmsvalue*mmsvalue;
         ummsLnError[c]  = diff*diff;
-      }
-      else if (d_mmsErrorType == "Linf"){
+
+      } else if (d_mmsErrorType == "Linf"){
 
         testvalue = Abs(uVelocity[c] - mmsvalue);
 
@@ -3201,8 +3201,8 @@ ExplicitSolver::computeMMSError(const ProcessorGroup*,
 
       if (d_mms == "constantMMS"){
         mmsvalue = cv;
-      }
-      else if (d_mms == "almgrenMMS"){
+
+      } else if (d_mms == "almgrenMMS"){
 
         mmsvalue = 1 + amp * sin(2.0*pi*(cellinfo->xx[colX] - time))
           * cos(2.0*pi*(cellinfo->yv[colY] - time)) * exp(-2.0*d_viscosity*time);
@@ -3210,12 +3210,14 @@ ExplicitSolver::computeMMSError(const ProcessorGroup*,
       }
 
       if (d_mmsErrorType == "L2"){
+
         double diff = vVelocity[c] - mmsvalue;
         vnumeratordiff += diff*diff;
         vdenomexact    += mmsvalue*mmsvalue;
         vmmsLnError[c]  = diff*diff;
-      }
-      else if (d_mmsErrorType == "Linf"){
+
+      } else if (d_mmsErrorType == "Linf"){
+
         testvalue = Abs(vVelocity[c] - mmsvalue);
 
         if (testvalue > vnumeratordiff){
@@ -3239,19 +3241,19 @@ ExplicitSolver::computeMMSError(const ProcessorGroup*,
 
       if (d_mms == "constantMMS"){
         mmsvalue = cw;
+      // } else if (d_mms == "almgrenMMS"){
+      //   //nothing for now since sine-cos is in x-y plane
       }
-      else if (d_mms == "almgrenMMS"){
-        //nothing for now since sine-cos is in x-y plane
-      }
-      //__________________________________
+
       if (d_mmsErrorType == "L2"){
+
         double diff = wVelocity[c] - mmsvalue;
         wnumeratordiff += diff * diff;
         wdenomexact    += mmsvalue*mmsvalue;
         wmmsLnError[c]  = pow(diff * diff/(mmsvalue*mmsvalue),1.0/2.0);
 
-      }
-      else if (d_mmsErrorType == "Linf"){
+      } else if (d_mmsErrorType == "Linf"){
+
         testvalue = Abs(wVelocity[c] - mmsvalue);
 
         if (testvalue > wnumeratordiff){

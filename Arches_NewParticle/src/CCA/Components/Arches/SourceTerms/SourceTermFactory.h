@@ -3,6 +3,7 @@
 #include <CCA/Components/Arches/ArchesLabel.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermBase.h>
 #include <CCA/Components/Arches/ArchesVariables.h>
+#include <CCA/Components/Arches/Directives.h>
 #include <CCA/Ports/DataWarehouseP.h>
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Variables/VarTypes.h>

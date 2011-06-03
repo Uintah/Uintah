@@ -78,12 +78,12 @@ TabRxnRate::computeSource( const ProcessorGroup* pc,
     int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex(); 
 
     CCVariable<double> rateSrc; 
-    if ( new_dw->exists(_src_label, matlIndex, patch ) ){
-      new_dw->getModifiable( rateSrc, _src_label, matlIndex, patch ); 
+    if( timeSubStep == 0 ) {
+      new_dw->allocateAndPut( rateSrc, _src_label, matlIndex, patch );
       rateSrc.initialize(0.0);
     } else {
-      new_dw->allocateAndPut( rateSrc, _src_label, matlIndex, patch );
-    } 
+      new_dw->getModifiable( rateSrc, _src_label, matlIndex, patch ); 
+    }
 
     constCCVariable<double> rxn_rate; 
     const VarLabel* the_label = VarLabel::find(_rxn_rate); 

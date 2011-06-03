@@ -1,21 +1,26 @@
 #ifndef Uintah_Component_Arches_TransportEquationBase_h
 #define Uintah_Component_Arches_TransportEquationBase_h
-#include <Core/ProblemSpec/ProblemSpec.h>
 #include <CCA/Ports/Scheduler.h>
+#include <CCA/Components/Arches/BoundaryCond_new.h>
+#include <CCA/Components/Arches/ExplicitTimeInt.h>
+#include <CCA/Components/Arches/TransportEqns/Discretization_new.h>
+#include <CCA/Components/Arches/ArchesMaterial.h>
+#include <CCA/Components/Arches/Directives.h>
+#include <CCA/Components/Arches/SourceTerms/MMS_X.h>
+#include <CCA/Components/Arches/SourceTerms/MMS_Y.h>
+#include <CCA/Components/Arches/SourceTerms/MMS_Z.h>
+#include <CCA/Components/Arches/SourceTerms/MMS_XYZ.h>
+
+#include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/GeometryPiece/GeometryPiece.h>
 #include <Core/GeometryPiece/GeometryPieceFactory.h>
 #include <Core/GeometryPiece/UnionGeometryPiece.h>
 #include <Core/Grid/Box.h>
-#include <CCA/Components/Arches/BoundaryCond_new.h>
-#include <CCA/Components/Arches/ExplicitTimeInt.h>
-#include <CCA/Components/Arches/TransportEqns/Discretization_new.h>
-#include <CCA/Components/Arches/ArchesMaterial.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Exceptions/ParameterNotFound.h>
-#include <CCA/Components/Arches/Directives.h>
 
 namespace Uintah {
 
@@ -75,7 +80,7 @@ public:
                                         bool copyOldIntoNew ) = 0;
 
   /** @brief Time averaging */ 
-  virtual void sched_timeAveraging( const LevelP&, SchedulerP& sched, int timeSubStep ) = 0; 
+  virtual void sched_timeAveraging( const LevelP&, SchedulerP& sched, int timeSubStep, bool lastTimeSubstep ) = 0; 
 
   /** @brief Checks that boundary conditions for this variable are set for every 
    * face for every child */ 
@@ -107,11 +112,17 @@ public:
 
   /** @brief Set the initial value of the transported variable to some function */
   template <class phiType> 
-  void initializationFunction( const Patch* patch, phiType& phi, constCCVariable<double>& eps_v ); 
+  void initializationFunction( const Patch* patch, 
+                               phiType& phi, 
+                               constCCVariable<double>& eps_v,
+                               Vector domain_size ); 
   
   /** @brief Set the initial value of the DQMOM transported variable to some function */
   template <class phiType, class constPhiType>  
-  void initializationFunction( const Patch* patch, phiType& phi, constPhiType& weight, constCCVariable<double>& eps_v  );
+  void initializationFunction( const Patch* patch, 
+                               phiType& phi, 
+                               constPhiType& weight, 
+                               constCCVariable<double>& eps_v  );
 
   /** @brief Compute the boundary conditions for this transport equation object */
   template<class phiType> void
@@ -353,10 +364,6 @@ void EqnBase::initializationFunction( const Patch* patch, phiType& phi, constPhi
           phi[c] = 0.0;
         }
       }
-    } else if ( d_initFunction == "mms1" ) {
-      //======= an MMS with the function phi = sin(2*pi*x)cos(2*pi*y)tan(2*pi*z) ======
-      phi[c] = sin(2.0 * pi * x)*cos(2.0 * pi * y)* weight[c];
-
     // ======= add other initialization functions below here ======
     } else {
 
@@ -373,7 +380,10 @@ void EqnBase::initializationFunction( const Patch* patch, phiType& phi, constPhi
 // Standard Scalar, DQMOM Weight
 //---------------------------------------------------------------------------
 template <class phiType>  
-void EqnBase::initializationFunction( const Patch* patch, phiType& phi, constCCVariable<double>& eps_v ) 
+void EqnBase::initializationFunction( const Patch* patch, 
+                                      phiType& phi, 
+                                      constCCVariable<double>& eps_v,
+                                      Vector domain_size ) 
 {
   proc0cout << "initializing scalar equation " << d_eqnName << endl;
 
@@ -400,8 +410,6 @@ void EqnBase::initializationFunction( const Patch* patch, phiType& phi, constCCV
       // otherwise do nothing
     }
   }
-
-  double pi = acos(-1.0); 
 
   Box patchInteriorBox = patch->getBox(); 
 
@@ -449,9 +457,18 @@ void EqnBase::initializationFunction( const Patch* patch, phiType& phi, constCCV
           phi[c] = 0.0;
         }
       }
-    } else if ( d_initFunction == "mms1" ) {
-      //======= an MMS with the function phi = sin(2*pi*x)cos(2*pi*y) ======
-      phi[c] = sin(2.0 * pi * x)*cos(2.0 * pi * y);
+
+    } else if ( d_initFunction == "mms_x" ) {
+      phi[c] = MMS_X::evaluate_MMS( x, y, z, domain_size );
+
+    } else if ( d_initFunction == "mms_y" ) {
+      phi[c] = MMS_Y::evaluate_MMS( x, y, z, domain_size );
+
+    } else if ( d_initFunction == "mms_z" ) {
+      phi[c] = MMS_Z::evaluate_MMS( x, y, z, domain_size );
+
+    } else if ( d_initFunction == "mms_xyz" ) {
+      phi[c] = MMS_XYZ::evaluate_MMS( x, y, z, domain_size );
 
     } else if (d_initFunction == "geometry_fill") {
       //======= Fills a geometry piece with the value of d_constant_init ======

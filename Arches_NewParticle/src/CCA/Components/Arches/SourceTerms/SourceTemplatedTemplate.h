@@ -124,9 +124,9 @@ CLASSNAME<TEMP_PARAMS>::CLASSNAME( std::string src_name, SimulationStateP& share
     _source_type = FY_SRC; 
   else if ( typeid(sT) == typeid(SFCZVariable<double>) )
     _source_type = FZ_SRC; 
-  else if ( typeid(sT) == typeid(CCVariable<double> ) ) {
+  } else if ( typeid(sT) == typeid(CCVariable<double> ) ) {
     _source_type = CC_SRC; 
-  else if ( typeid(sT) 
+  //} else if ( typeid(sT) ) {
   } else {
     throw InvalidValue( "Error: Attempting to instantiate source (IntrusionInlet) with unrecognized type.", __FILE__, __LINE__); 
   }
@@ -216,11 +216,11 @@ void CLASSNAME<TEMP_PARAMS>::computeSource( const ProcessorGroup* pc,
     int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex(); 
 
     sT src; 
-    if ( new_dw->exists( _src_label, matlIndex, patch ) ){
-      new_dw->getModifiable( src, _src_label, matlIndex, patch ); 
-    } else {
+    if( timeSubStep == 0 ) {
       new_dw->allocateAndPut( src, _src_label, matlIndex, patch ); 
       src.initialize(0.0); 
+    } else {
+      new_dw->getModifiable( src, _src_label, matlIndex, patch ); 
     }
 
     // DEVELOPER'S NOTE:

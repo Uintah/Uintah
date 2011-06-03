@@ -2,7 +2,10 @@
 #include <CCA/Components/Arches/SourceTerms/DevolMixtureFraction.h> 
 #include <CCA/Components/Arches/SourceTerms/CharOxidationMixtureFraction.h> 
 #include <CCA/Components/Arches/SourceTerms/ConstantSourceTerm.h>
-#include <CCA/Components/Arches/SourceTerms/MMS1.h>
+#include <CCA/Components/Arches/SourceTerms/MMS_X.h>
+#include <CCA/Components/Arches/SourceTerms/MMS_Y.h>
+#include <CCA/Components/Arches/SourceTerms/MMS_Z.h>
+#include <CCA/Components/Arches/SourceTerms/MMS_XYZ.h>
 #include <CCA/Components/Arches/SourceTerms/ParticleGasMomentum.h>
 #include <CCA/Components/Arches/SourceTerms/ParticleGasHeat.h>
 #include <CCA/Components/Arches/SourceTerms/UnweightedSrcTerm.h>
@@ -128,10 +131,37 @@ void SourceTermFactory::problemSetup(const ProblemSpecP& params)
         SourceTermBase::Builder* srcBuilder = scinew WestbrookDryer::Builder(srcName, required_varLabels, d_fieldLabels->d_sharedState); 
         register_source_term( srcName, srcBuilder ); 
       
-      } else if (src_type == "MMS1" || src_type == "mms1"){
-        // MMS1 builder 
-        SourceTermBase::Builder* srcBuilder = scinew MMS1::Builder(srcName, required_varLabels, d_fieldLabels->d_sharedState);
+      } else if (src_type == "MMS_X" ){
+#ifdef VERIFICATION
+        SourceTermBase::Builder* srcBuilder = scinew MMS_X::Builder(srcName, required_varLabels, d_fieldLabels->d_sharedState);
         register_source_term( srcName, srcBuilder ); 
+#else
+        throw ProblemSetupException("ERROR: Arches: SourceTermFactory: You specified an MMS source term, but did not turn on verification in CCA/Components/Arches/Directives.h . You must define the VERIFICATION variable to perform verification with MMS source terms.",__FILE__,__LINE__);
+#endif
+
+      } else if (src_type == "MMS_Y" ){
+#ifdef VERIFICATION
+        SourceTermBase::Builder* srcBuilder = scinew MMS_Y::Builder(srcName, required_varLabels, d_fieldLabels->d_sharedState);
+        register_source_term( srcName, srcBuilder ); 
+#else
+        throw ProblemSetupException("ERROR: Arches: SourceTermFactory: You specified an MMS source term, but did not turn on verification in CCA/Components/Arches/Directives.h . You must define the VERIFICATION variable to perform verification with MMS source terms.",__FILE__,__LINE__);
+#endif
+
+      } else if (src_type == "MMS_Z" ){
+#ifdef VERIFICATION
+        SourceTermBase::Builder* srcBuilder = scinew MMS_Z::Builder(srcName, required_varLabels, d_fieldLabels->d_sharedState);
+        register_source_term( srcName, srcBuilder ); 
+#else
+        throw ProblemSetupException("ERROR: Arches: SourceTermFactory: You specified an MMS source term, but did not turn on verification in CCA/Components/Arches/Directives.h . You must define the VERIFICATION variable to perform verification with MMS source terms.",__FILE__,__LINE__);
+#endif
+
+      } else if (src_type == "MMS_XYZ" ){
+#ifdef VERIFICATION
+        SourceTermBase::Builder* srcBuilder = scinew MMS_XYZ::Builder(srcName, required_varLabels, d_fieldLabels->d_sharedState);
+        register_source_term( srcName, srcBuilder ); 
+#else
+        throw ProblemSetupException("ERROR: Arches: SourceTermFactory: You specified an MMS source term, but did not turn on verification in CCA/Components/Arches/Directives.h . You must define the VERIFICATION variable to perform verification with MMS source terms.",__FILE__,__LINE__);
+#endif
 
       } else if (src_type == "ParticleGasMomentumSource" ) {
         // Add a momentum source term due to particle-gas momentum coupling
