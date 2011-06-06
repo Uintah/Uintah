@@ -174,7 +174,6 @@ void printData(DataArchive* archive, string& variable_name, const Uintah::TypeDe
   out.setf(ios::scientific,ios::floatfield);
   out.precision(16);
   
-  bool cellNotFound = false;
   //__________________________________
   // loop over timesteps
   for (unsigned long time_step = time_start; time_step <= time_end; time_step++) {
@@ -249,54 +248,74 @@ void printData(DataArchive* archive, string& variable_name, const Uintah::TypeDe
           
         }
 
+
         for (CellIterator ci(var_start, var_end + IntVector(1,1,1)); !ci.done(); ci++) {
           IntVector c = *ci;
 
-          // find out which patch it's on (to keep the printing in sorted order.
-          // alternatively, we could just iterate through the patches)
+          // find out which patch the variable is on
           int p = 0;
           for (; p < patches.size(); p++) {
-            if (!patches[p]->isVirtual() && patches[p]->containsCell(c))
-              break;
-          }
-          if (p == patches.size()) {
-            cellNotFound = true;
-            continue;
-          }
-          
-          T val = T();
-          Vector dx = patches[p]->dCell();
-          Vector shift(0,0,0);  // shift the cellPosition if it's a (X,Y,Z)FC variable
-          switch (variable_type->getType()) {
-          case Uintah::TypeDescription::CCVariable: 
-            val = (*dynamic_cast<CCVariable<T>*>(vars[p]))[c]; 
-          break;
-          case Uintah::TypeDescription::NCVariable: 
-            val = (*dynamic_cast<NCVariable<T>*>(vars[p]))[c]; 
-          break;
-          case Uintah::TypeDescription::SFCXVariable: 
-            val = (*dynamic_cast<SFCXVariable<T>*>(vars[p]))[c];
-            shift.x(-dx.x()/2.0); 
-          break;
-          case Uintah::TypeDescription::SFCYVariable: 
-            val = (*dynamic_cast<SFCYVariable<T>*>(vars[p]))[c];
-            shift.y(-dx.y()/2.0); 
-          break;
-          case Uintah::TypeDescription::SFCZVariable: 
-            val = (*dynamic_cast<SFCZVariable<T>*>(vars[p]))[c];
-            shift.z(-dx.z()/2.0); 
-          break;
-          default: break;
-          }
-          
-         if(d_printCell_coords){
-            Point point = level->getCellPosition(c);
-            Vector here = point.asVector() + shift;
-            out << here.x() << " "<< here.y() << " " << here.z() << " "<<val << endl;;
-          }else{
-            out << c.x() << " "<< c.y() << " " << c.z() << " "<< val << endl;;
-          }
-        }
+            const Patch* patch = patches[p];
+            
+            if(patch->isVirtual()){
+              continue;
+            }
+            
+            T val = T();
+            Vector dx = patch->dCell();
+            Vector shift(0,0,0);  // shift the cellPosition if it's a (X,Y,Z)FC variable
+            bool foundCell = false;
+            
+            switch (variable_type->getType()) {
+            case Uintah::TypeDescription::CCVariable: 
+              if(patch->containsCell(c)){
+                val = (*dynamic_cast<CCVariable<T>*>(vars[p]))[c];
+                foundCell = true; 
+              }
+            break;
+            case Uintah::TypeDescription::NCVariable: 
+              if(patch->containsNode(c)){
+                val = (*dynamic_cast<NCVariable<T>*>(vars[p]))[c];
+                foundCell = true; 
+              }
+            break;
+            case Uintah::TypeDescription::SFCXVariable: 
+              if(patch->containsSFCX(c)){
+                val = (*dynamic_cast<SFCXVariable<T>*>(vars[p]))[c];
+                shift.x(-dx.x()/2.0);
+                foundCell = true;
+              } 
+            break;
+            case Uintah::TypeDescription::SFCYVariable:
+              if(patch->containsSFCY(c)){ 
+                val = (*dynamic_cast<SFCYVariable<T>*>(vars[p]))[c];
+                shift.y(-dx.y()/2.0); 
+                foundCell = true;
+              }
+            break;
+            case Uintah::TypeDescription::SFCZVariable: 
+              if(patch->containsSFCY(c)){
+                val = (*dynamic_cast<SFCZVariable<T>*>(vars[p]))[c];
+                shift.z(-dx.z()/2.0); 
+                foundCell = true;
+              }
+            break;
+            default: break;
+            }
+            
+            if(foundCell){
+             if(d_printCell_coords){
+                Point point = level->getCellPosition(c);
+                Vector here = point.asVector() + shift;
+                out << here.x() << " "<< here.y() << " " << here.z() << " "<<val << endl;;
+              }else{
+                out << c.x() << " "<< c.y() << " " << c.z() << " "<< val << endl;;
+              }
+            }
+          } // patch loop
+        }  // cell iterator
+        
+        
         for (unsigned i = 0; i < vars.size(); i++)
           delete vars[i];
       }
@@ -417,7 +436,6 @@ void printData_PV(DataArchive* archive, string& variable_name, const Uintah::Typ
   out.setf(ios::scientific,ios::floatfield);
   out.precision(16);
   
-  bool cellNotFound = false;
   //__________________________________
   // loop over timesteps
   for (unsigned long time_step = time_start; time_step <= time_end; time_step++) {
@@ -491,7 +509,6 @@ void printData_PV(DataArchive* archive, string& variable_name, const Uintah::Typ
               break;
           }
           if (p == patches.size()) {
-            cellNotFound = true;
             continue;
           }
           
@@ -524,7 +541,6 @@ void printData_PV(DataArchive* archive, string& variable_name, const Uintah::Typ
               break;
           }
           if (p == patches.size()) {
-            cellNotFound = true;
             continue;
           }
           
