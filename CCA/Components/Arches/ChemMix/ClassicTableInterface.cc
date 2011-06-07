@@ -1352,15 +1352,25 @@ ClassicTableInterface::loadMixingTable( const string & inputfile )
   } else if ( d_indepvarscount == 3 ){ 
 
     proc0cout << "Reading in the dependent variables: " << endl;
+    bool read_assign = true; 
     for (int kk=0; kk< d_varscount; kk++){
 
       proc0cout << " loading --> " << d_allDepVarNames[kk] << endl;
       for ( int mm = 0; mm < d_allIndepVarNum[2]; mm++ ){ 
 
-        for (int i = 0; i < d_allIndepVarNum[0]; i++){
-          double v = getDouble( gzFp ); 
-          i1[mm][i] = v;
+        if ( read_assign ) { 
+          for (int i = 0; i < d_allIndepVarNum[0]; i++){
+            double v = getDouble( gzFp ); 
+            i1[mm][i] = v;
+          }
+        } else { 
+          for (int i = 0; i < d_allIndepVarNum[0]; i++){
+            double v = getDouble( gzFp ); 
+            // read but don't assign 
+            // doing this for now because it was causing some weirdness 
+          }
         }
+
 
         for ( int jj = 0; jj < d_allIndepVarNum[1]; jj++ ){
           for ( int ii = 0; ii < d_allIndepVarNum[0]; ii++ ){
@@ -1369,6 +1379,7 @@ ClassicTableInterface::loadMixingTable( const string & inputfile )
           }
         }
       }
+      if ( read_assign ) { read_assign = false; }
     }
 
   }
