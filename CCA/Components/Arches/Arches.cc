@@ -692,8 +692,12 @@ Arches::scheduleInitialize(const LevelP& level,
   // schedule init of cell type
   // require : NONE
   // compute : cellType
-  d_boundaryCondition->sched_cellTypeInit(sched, patches, matls);
-  //d_boundaryCondition->sched_cellTypeInit__NEW( sched, patches, matls ); 
+  
+  if ( d_boundaryCondition->isUsingNewBC() ) { 
+    d_boundaryCondition->sched_cellTypeInit__NEW( sched, patches, matls ); 
+  } else { 
+    d_boundaryCondition->sched_cellTypeInit(sched, patches, matls);
+  }
   //
   // compute the cell area fraction 
   d_boundaryCondition->sched_setAreaFraction( sched, patches, matls ); 
@@ -758,11 +762,14 @@ Arches::scheduleInitialize(const LevelP& level,
     d_props->sched_reComputeProps_new( level, sched, init_timelabel, initialize_it, modify_ref_den ); 
   }
 
-  //d_boundaryCondition->sched_computeBCArea__NEW( sched, patches, matls ); 
-  //d_boundaryCondition->sched_setupBCInletVelocities__NEW( sched, patches, matls ); 
 
   d_boundaryCondition->sched_initInletBC(sched, patches, matls);
-  //d_boundaryCondition->sched_setInitProfile__NEW( sched, patches, matls ); 
+
+  if ( d_boundaryCondition->isUsingNewBC() ) { 
+    d_boundaryCondition->sched_computeBCArea__NEW( sched, level, patches, matls ); 
+    d_boundaryCondition->sched_setupBCInletVelocities__NEW( sched, patches, matls ); 
+    d_boundaryCondition->sched_setInitProfile__NEW( sched, patches, matls ); 
+  }
 
   sched_getCCVelocities(level, sched);
   // Compute Turb subscale model (output Varlabel have CTS appended to them)
