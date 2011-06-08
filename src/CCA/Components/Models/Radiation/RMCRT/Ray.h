@@ -46,18 +46,13 @@ namespace Uintah{
 
       /** @brief Initializes properties for the algorithm */ 
       void sched_initProperties( const LevelP&, SchedulerP& sched, const int time_sub_step );
-
-      /** @brief Give access to the flux divergence term */
-      inline const VarLabel* getDivQLabel() { return divQ_label; };  
-
-      //  void VecUnitize( double direction_vector, double length);
-      //  void VecLength(double length);
       
-      /** @brief map the component VarLables to RMCRT VarLabels */
+      /** @brief map the component VarLabels to RMCRT VarLabels */
      void registerVarLabels(int   matl,
                             const VarLabel*  abskg,
                             const VarLabel* absorp,
-                            const VarLabel* temperature);
+                            const VarLabel* temperature,
+                            const VarLabel* divQ);
 
     private: 
       
@@ -73,14 +68,13 @@ namespace Uintah{
       double _sigma_over_pi; // Stefan Boltzmann divided by pi (W* m-2* K-4)
 
       MTRand _mTwister; 
-      int i,j,k;
       bool _benchmark_1; 
 
       const VarLabel* d_sigmaT4_label; 
-      const VarLabel* divQ_label;
       const VarLabel* d_abskgLabel;
       const VarLabel* d_absorpLabel;
       const VarLabel* d_temperatureLabel;
+      const VarLabel* d_divQLabel;
 
       //----------------------------------------
       void rayTrace( const ProcessorGroup* pc, 

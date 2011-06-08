@@ -150,7 +150,8 @@ void RMCRT_Test::problemSetup(const ProblemSpecP& prob_spec,
     d_realRMCRT->registerVarLabels(0,
                                  d_abskgLabel,
                                  d_absorpLabel,
-                                 d_colorLabel );
+                                 d_colorLabel,
+                                 d_divQLabel );
                                  
     rmcrt_db->get("Temperature",  d_initColor);
     
