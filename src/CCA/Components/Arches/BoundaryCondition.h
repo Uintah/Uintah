@@ -39,6 +39,7 @@
 #include <CCA/Components/Arches/Mixing/Stream.h>
 #include <CCA/Components/Arches/Mixing/InletStream.h>
 #include <Core/Exceptions/InvalidValue.h>
+#include <Core/Grid/LevelP.h>
 
 #include <Core/Grid/Variables/SFCXVariable.h>
 #include <Core/Grid/Variables/SFCYVariable.h>
@@ -124,13 +125,16 @@ namespace Uintah {
                                 DataWarehouse* new_dw);
 
      void sched_computeBCArea__NEW(SchedulerP& sched,
+                                      const LevelP& level, 
                                       const PatchSet* patches,
                                       const MaterialSet* matls);
      void computeBCArea__NEW(const ProcessorGroup*,
                                 const PatchSubset* patches,
                                 const MaterialSubset*,
                                 DataWarehouse*,
-                                DataWarehouse* new_dw);
+                                DataWarehouse* new_dw, 
+                                const IntVector lo, 
+                                const IntVector hi);
 
      void sched_setupBCInletVelocities__NEW(SchedulerP& sched,
                                       const PatchSet* patches,
@@ -154,6 +158,7 @@ namespace Uintah {
 
       void setVel__NEW( const Patch* patch, const Patch::FaceType& face, 
         SFCXVariable<double>& uVel, SFCYVariable<double>& vVel, SFCZVariable<double>& wVel, 
+        constCCVariable<double>& density, 
         Iterator bound_iter, Vector value );
 
       void setVelFromInput__NEW( const Patch* patch, const Patch::FaceType& face, 
@@ -166,6 +171,14 @@ namespace Uintah {
 
       void setEnthalpyFromInput__NEW( const Patch* patch, const Patch::FaceType& face, 
         CCVariable<double>& enthalpy, HelperMap ivGridVarMap, HelperVec ivNames, Iterator bound_ptr );
+
+      void velocityOutletPressureBC__NEW( const Patch* patch, 
+                                          SFCXVariable<double>& uvel, 
+                                          SFCYVariable<double>& vvel, 
+                                          SFCZVariable<double>& wvel, 
+                                          constSFCXVariable<double>& old_uvel, 
+                                          constSFCYVariable<double>& old_vvel, 
+                                          constSFCZVariable<double>& old_wvel );
 
       std::map<IntVector, double>
       readInputFile__NEW( std::string );
@@ -254,8 +267,12 @@ namespace Uintah {
         if (d_wallBoundary){ 
           wall_celltypeval = d_wallBdry->d_cellTypeID; 
         }
-        return wall_celltypeval;
-        //return WALL; 
+
+        if ( d_use_new_bcs ) { 
+          return WALL; 
+        } else { 
+          return wall_celltypeval; 
+        } 
       }
 
       ////////////////////////////////////////////////////////////////////////
@@ -263,8 +280,11 @@ namespace Uintah {
       inline int pressureCellType() const {
         int pressure_celltypeval = -10;
         if (d_pressureBoundary) pressure_celltypeval = d_pressureBC->d_cellTypeID; 
-        return pressure_celltypeval;
-        //return PRESSURE; 
+        if ( d_use_new_bcs ) { 
+          return PRESSURE; 
+        } else { 
+          return pressure_celltypeval; 
+        } 
       }
 
       ////////////////////////////////////////////////////////////////////////
@@ -272,8 +292,11 @@ namespace Uintah {
       inline int outletCellType() const { 
         int outlet_celltypeval = -10;
         if (d_outletBoundary) outlet_celltypeval = d_outletBC->d_cellTypeID;
-        return outlet_celltypeval; 
-        //return OUTLET; 
+        if ( d_use_new_bcs ) { 
+          return OUTLET; 
+        } else { 
+          return outlet_celltypeval; 
+        } 
       }
       ////////////////////////////////////////////////////////////////////////
       // sets boolean for energy exchange between solid and fluid
@@ -567,11 +590,17 @@ namespace Uintah {
       void velRhoHatInletBC(const Patch* patch,
           ArchesVariables* vars,
           ArchesConstVariables* constvars,
+          const int matl_index, 
           double time_shift);
 
-      void velRhoHatOutletPressureBC(const Patch* patch,
-          ArchesVariables* vars,
-          ArchesConstVariables* constvars);
+      void velRhoHatOutletPressureBC( const Patch* patch,
+                                      SFCXVariable<double>& uvel, 
+                                      SFCYVariable<double>& vvel, 
+                                      SFCZVariable<double>& wvel, 
+                                      constSFCXVariable<double>& old_uvel, 
+                                      constSFCYVariable<double>& old_vvel, 
+                                      constSFCZVariable<double>& old_wvel, 
+                                      constCCVariable<int>& cellType );
 
       void velocityOutletPressureTangentBC(const Patch* patch,
           ArchesVariables* vars,
@@ -651,6 +680,7 @@ namespace Uintah {
           const PatchSet* patches, 
           const MaterialSet* matls );
 
+      /** @brief The struct to hold all needed information for each boundary spec */
       struct BCInfo { 
   
         BC_TYPE type; 
@@ -677,14 +707,17 @@ namespace Uintah {
       typedef std::map<BC_TYPE, std::string> BCNameMap;
       typedef std::map<int, BCInfo>      BCInfoMap;
 
+      /** @brief Using the new BC mechanism? */
+      inline bool isUsingNewBC(){ return d_use_new_bcs; }; 
 
     private:
 
+      /** @brief Setup new boundary conditions specified under the <Grid><BoundaryCondition> section */
       void setupBCs( ProblemSpecP& db ); 
 
-      BCInfoMap d_bc_information;
-      BCNameMap d_bc_type_to_string; 
-      int d_bc_type_index; 
+      BCInfoMap d_bc_information;                           ///< Contains information about each boundary condition spec. (from UPS)
+      BCNameMap d_bc_type_to_string;                        ///< Matches the BC integer ID with the string name
+      bool d_use_new_bcs;                                   ///< Turn on/off the new BC mech. 
 
       ////////////////////////////////////////////////////////////////////////
       // Call Fortran to compute u velocity BC terms
