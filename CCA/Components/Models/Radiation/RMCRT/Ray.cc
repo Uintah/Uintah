@@ -17,7 +17,6 @@ Ray::Ray()
   _pi = acos(-1); 
 
   d_sigmaT4_label = VarLabel::create( "sigmaT4", CCVariable<double>::getTypeDescription() ); 
-  divQ_label      = VarLabel::create( "divQ",    CCVariable<double>::getTypeDescription() ); 
   d_matlSet = 0;
 }
 
@@ -27,7 +26,6 @@ Ray::Ray()
 Ray::~Ray()
 {
   VarLabel::destroy(d_sigmaT4_label);
-  VarLabel::destroy(divQ_label);
   
   if(d_matlSet && d_matlSet->removeReference()) {
     delete d_matlSet;
@@ -59,12 +57,14 @@ void
 Ray::registerVarLabels(int   matlIndex,
                        const VarLabel* abskg,
                        const VarLabel* absorp,
-                       const VarLabel* temperature )
+                       const VarLabel* temperature,
+                       const VarLabel* divQ)
 {
   d_matl             = matlIndex;
   d_abskgLabel       = abskg;
   d_absorpLabel      = absorp;
   d_temperatureLabel = temperature;
+  d_divQLabel        = divQ;
   
   //__________________________________
   //  define the materialSet
@@ -250,9 +250,9 @@ Ray::sched_rayTrace( const LevelP& level, SchedulerP& sched, const int time_sub_
 //  tsk->requires( Task::OldDW , d_lab->d_cellTypeLabel , Ghost::None , 0 );
 
   if( time_sub_step == 0 ){
-    tsk->computes( divQ_label ); 
+    tsk->computes( d_divQLabel ); 
   } else {
-    tsk->modifies( divQ_label );
+    tsk->modifies( d_divQLabel );
   }
   sched->addTask( tsk, level->eachPatch(), d_matlSet );
 
@@ -292,10 +292,10 @@ Ray::rayTrace( const ProcessorGroup* pc,
 
     CCVariable<double> divQ;    
     if( time_sub_step == 0 ){
-      new_dw->allocateAndPut( divQ, divQ_label, d_matl, patch );
+      new_dw->allocateAndPut( divQ, d_divQLabel, d_matl, patch );
       divQ.initialize( 0.0 );
     }else{
-      old_dw->getModifiable( divQ,  divQ_label, d_matl, patch );
+      old_dw->getModifiable( divQ,  d_divQLabel, d_matl, patch );
     }
 
     double fs;                                         // fraction remaining after all current reflections

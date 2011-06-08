@@ -138,7 +138,8 @@ EnthalpySolver::problemSetup(const ProblemSpecP& params)
     d_RMCRT->registerVarLabels(d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(),
                                d_lab->d_abskgINLabel,
                                d_lab->d_absorpINLabel,
-                               d_lab->d_tempINLabel );
+                               d_lab->d_tempINLabel,
+                               d_lab->d_enthNonLinSrcSBLMLabel );
     
     d_RMCRT->problemSetup( rmcrt_db ); 
 
