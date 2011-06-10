@@ -304,12 +304,6 @@ Ray::rayTrace( const ProcessorGroup* pc,
     Vector Dx = patch->dCell();                        // cell spacing
 
 
-/*`==========TESTING==========*/
-if( ( Dx.x() != Dx.y() ) || ( Dx.x() != Dx.z() ) || ( Dx.y() != Dx.z() ) ) {
-  throw InternalError("rayTrace:: only works if dx == dy == dz", __FILE__, __LINE__);
-} 
-/*===========TESTING==========`*/
-
     //__________________________________
     //
     for (CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){ 
@@ -329,11 +323,16 @@ if( ( Dx.x() != Dx.y() ) || ( Dx.x() != Dx.z() ) || ( Dx.y() != Dx.z() ) ) {
 
         _mTwister.seed((i + j +k) * iRay +1); 
        
+
+			  double DyDxRatio = Dx.y() / Dx.x(); //noncubic
+				double DzDxRatio = Dx.z() / Dx.x(); //noncubic
+
+
         Vector ray_location;
         Vector ray_location_prev;
         ray_location[0] =   i +  _mTwister.rand() ;
-        ray_location[1] =   j +  _mTwister.rand() ;
-        ray_location[2] =   k +  _mTwister.rand() ;
+        ray_location[1] =   j +  _mTwister.rand() * DyDxRatio ; //noncubic
+        ray_location[2] =   k +  _mTwister.rand() * DzDxRatio ; //noncubic
 
         // see http://www.cgafaq.info/wiki/aandom_Points_On_Sphere for explanation
 
@@ -363,13 +362,13 @@ if( ( Dx.x() != Dx.y() ) || ( Dx.x() != Dx.z() ) || ( Dx.y() != Dx.z() ) ) {
         }
 
         double tMaxX = (i + sign[0] - ray_location[0]) * inv_direction_vector[0];
-        double tMaxY = (j + sign[1] - ray_location[1]) * inv_direction_vector[1];
-        double tMaxZ = (k + sign[2] - ray_location[2]) * inv_direction_vector[2];
+        double tMaxY = (j + sign[1] * DyDxRatio - ray_location[1]) * inv_direction_vector[1]; //noncubic
+        double tMaxZ = (k + sign[2] * DzDxRatio - ray_location[2]) * inv_direction_vector[2]; //noncubic
 
         //Length of t to traverse one cell
         double tDeltaX = abs(inv_direction_vector[0]);
-        double tDeltaY = abs(inv_direction_vector[1]);
-        double tDeltaZ = abs(inv_direction_vector[2]);
+        double tDeltaY = abs(inv_direction_vector[1]) * DyDxRatio; //noncubic
+        double tDeltaZ = abs(inv_direction_vector[2]) * DzDxRatio; //noncubic
         double tMax_prev = 0;
         bool in_domain = true;
 
@@ -380,7 +379,7 @@ if( ( Dx.x() != Dx.y() ) || ( Dx.x() != Dx.z() ) || ( Dx.y() != Dx.z() ) ) {
         
         //+++++++Begin ray tracing+++++++++++++++++++
 
-        Vector temp_direction = direction_vector;   // **** Is this used anywhere?
+        Vector temp_direction = direction_vector;   // Used for reflections
         
         //save the direction vector so that it can get modified by...
         //the 2nd switch statement for reflections, but so that we can get the ray_location back into...
@@ -394,7 +393,7 @@ if( ( Dx.x() != Dx.y() ) || ( Dx.x() != Dx.z() ) || ( Dx.y() != Dx.z() ) ) {
 
             size++;
             IntVector prevCell = cur;
-            double disMin = -9;          // We need a more descriptive variable name.
+            double disMin = -9;  // Common variable name in ray tracing. Represents ray segment length.
 
             //__________________________________
             //  Determine which cell the ray will enter next
@@ -437,8 +436,8 @@ if( ( Dx.x() != Dx.y() ) || ( Dx.x() != Dx.z() ) || ( Dx.y() != Dx.z() ) ) {
 
             // The running total of alpha*length
             double optical_thickness_prev = optical_thickness;
-            optical_thickness += Dx.x() * abskg[prevCell]*disMin;
-                              //^^^^^^^^ FIX ME!!!
+            optical_thickness += Dx.x() * abskg[prevCell]*disMin; //as long as tDeltaY,Z tMaxY,Z and ray_location[1],[2]..            // were adjusted by DyDxRatio or DzDxRatio, this line is now correct for noncubic domains.  
+                              
 
             intensity = intensity*exp(-optical_thickness);  //update intensity by Beer's Law
 
@@ -482,25 +481,29 @@ if( ( Dx.x() != Dx.y() ) || ( Dx.x() != Dx.z() ) || ( Dx.y() != Dx.z() ) ) {
       cout << endl; 
     }
 
-  }//end patch loop
+
+
+
+}//end patch loop
 } // end ray trace method
 
 
 
 //______________________________________________________________________
-inline bool 
+	inline bool 
 Ray::containsCell(const IntVector &low, const IntVector &high, const IntVector &cell)
 {
-  return  low.x() <= cell.x() && 
-          low.y() <= cell.y() &&
-          low.z() <= cell.z() &&
-          high.x() > cell.x() && 
-          high.y() > cell.y() &&
-          high.z() > cell.z();
+	return  low.x() <= cell.x() && 
+		low.y() <= cell.y() &&
+		low.z() <= cell.z() &&
+		high.x() > cell.x() && 
+		high.y() > cell.y() &&
+		high.z() > cell.z();
 }
 
 //______________________________________________________________________
 // ISAAC's NOTES: 
+//Jun 9. Ray_noncubic.cc now handles non-cubic cells. Created from Ray.cc as it was in the repository on Jun 9, 2011.
 //May 18. cleaned up comments
 //May 6. Changed to cell iterator
 //Created Jan 31. Cleaned up comments, removed hard coding of T and abskg 
