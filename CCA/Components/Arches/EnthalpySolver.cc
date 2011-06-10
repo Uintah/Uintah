@@ -139,7 +139,7 @@ EnthalpySolver::problemSetup(const ProblemSpecP& params)
                                 d_lab->d_abskgINLabel,
                                 d_lab->d_absorpINLabel,
                                 d_lab->d_tempINLabel,
-                                d_lab->d_radiationVolqINLabel ) ; 
+                                d_lab->d_radiationSRCINLabel ) ; 
     
     d_RMCRT->problemSetup( rmcrt_db ); 
 
