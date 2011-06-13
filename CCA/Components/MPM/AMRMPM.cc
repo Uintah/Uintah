@@ -371,6 +371,7 @@ void AMRMPM::scheduleTimeAdvance(const LevelP & level,
   for (int l = 0; l < maxLevels; l++) {
     const LevelP& level = grid->getLevel(l);
     const PatchSet* patches = level->eachPatch();
+    schedulePartitionOfUnity(               sched, patches, matls);
     scheduleComputeZoneOfInfluence(         sched, patches, matls);
     scheduleApplyExternalLoads(             sched, patches, matls);
   }
@@ -464,6 +465,23 @@ void AMRMPM::scheduleFinalizeTimestep( const LevelP& level, SchedulerP& sched)
                                       lb->pParticleIDLabel, matls);
   }
 }
+
+//______________________________________________________________________
+//
+void AMRMPM::schedulePartitionOfUnity(SchedulerP& sched,
+                                      const PatchSet* patches,
+                                      const MaterialSet* matls)
+{
+  printSchedule(patches,cout_doing,"AMRMPM::partitionOfUnity");
+  Task* t = scinew Task("AMRMPM::partitionOfUnity",
+                  this, &AMRMPM::partitionOfUnity);
+                  
+  t->requires(Task::OldDW, lb->pXLabel,    Ghost::None);
+  t->requires(Task::OldDW, lb->pSizeLabel, Ghost::None);
+  t->computes(lb->pPartitionUnityLabel);
+  sched->addTask(t, patches, matls);
+}
+
 
 //______________________________________________________________________
 //
@@ -1093,7 +1111,54 @@ void AMRMPM::actuallyComputeStableTimestep(const ProcessorGroup*,
                                            DataWarehouse*)
 {
 }
+//______________________________________________________________________
+//  This task computes the partition of unity for each particle
+//
+void AMRMPM::partitionOfUnity(const ProcessorGroup*,
+                              const PatchSubset* patches,
+                              const MaterialSubset* ,
+                              DataWarehouse* old_dw,
+                              DataWarehouse* new_dw)
+{
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
 
+    printTask(patches,patch,cout_doing,"Doing AMRMPM::partitionOfUnity");
+
+    int numMatls = d_sharedState->getNumMPMMatls();
+    ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
+    vector<IntVector> ni(interpolator->size());
+    vector<double> S(interpolator->size());
+    const Matrix3 notUsed;
+
+    for(int m = 0; m < numMatls; m++){
+      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      int dwi = mpm_matl->getDWIndex();
+      
+      ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
+      constParticleVariable<Point> px;
+      constParticleVariable<Vector> psize;
+      ParticleVariable<double>p_partitionUnity;
+    
+      old_dw->get(px,     lb->pXLabel,     pset);
+      old_dw->get(psize,  lb->pSizeLabel,  pset);
+      new_dw->allocateAndPut(p_partitionUnity,  lb->pPartitionUnityLabel, pset);
+      
+      int n8or27=flags->d_8or27;
+
+      for (ParticleSubset::iterator iter = pset->begin();iter != pset->end(); iter++){
+        particleIndex idx = *iter;
+        interpolator->findCellAndWeights(px[idx],ni,S,psize[idx],notUsed);
+
+        p_partitionUnity[idx] = 0;
+         
+        for(int k = 0; k < n8or27; k++) {
+          p_partitionUnity[idx] += S[k];
+        }
+      }
+    }
+  }
+}
 //______________________________________________________________________
 //
 void AMRMPM::interpolateParticlesToGrid(const ProcessorGroup*,
@@ -1135,8 +1200,8 @@ void AMRMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       old_dw->get(pTemperature,         lb->pTemperatureLabel,        pset);
       old_dw->get(psize,                lb->pSizeLabel,               pset);
       old_dw->get(pDeformationMeasure,  lb->pDeformationMeasureLabel, pset);
-      new_dw->get(pexternalforce,       lb->pExtForceLabel_preReloc, pset);
-
+      new_dw->get(pexternalforce,       lb->pExtForceLabel_preReloc,  pset);
+      
       // Create arrays for the grid data
       NCVariable<double> gmass;
       NCVariable<double> gvolume;
@@ -1149,6 +1214,7 @@ void AMRMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       new_dw->allocateAndPut(gvelocity,        lb->gVelocityLabel,     dwi,patch);
       new_dw->allocateAndPut(gTemperature,     lb->gTemperatureLabel,  dwi,patch);
       new_dw->allocateAndPut(gexternalforce,   lb->gExternalForceLabel,dwi,patch);
+      
       
       gmass.initialize(d_SMALL_NUM_MPM);
       gvolume.initialize(d_SMALL_NUM_MPM);
@@ -1167,7 +1233,7 @@ void AMRMPM::interpolateParticlesToGrid(const ProcessorGroup*,
         interpolator->findCellAndWeights(px[idx],ni,S,psize[idx],pDeformationMeasure[idx]);
 
         pmom = pvelocity[idx]*pmass[idx];
-
+        
         // Add each particles contribution to the local mass & velocity 
         IntVector node;
         for(int k = 0; k < n8or27; k++) {

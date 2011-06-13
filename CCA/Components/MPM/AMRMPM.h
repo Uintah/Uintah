@@ -141,7 +141,13 @@ protected:
                                      const MaterialSubset* matls,
                                      DataWarehouse* old_dw,
                                      DataWarehouse* new_dw);
-
+                                     
+  void partitionOfUnity(const ProcessorGroup*,
+                        const PatchSubset* patches,
+                        const MaterialSubset* ,
+                        DataWarehouse* old_dw,
+                        DataWarehouse* new_dw);
+                        
   virtual void computeZoneOfInfluence(const ProcessorGroup*,
                                       const PatchSubset* patches,
                                       const MaterialSubset* matls,
@@ -246,6 +252,12 @@ protected:
                             DataWarehouse*,
                             DataWarehouse* new_dw);
 
+  //______________________________________________________________________
+  //
+  void schedulePartitionOfUnity(SchedulerP&, 
+                                const PatchSet*,
+                                const MaterialSet*);
+                                  
   virtual void scheduleComputeZoneOfInfluence(SchedulerP&, 
                                               const PatchSet*,
                                               const MaterialSet*);
