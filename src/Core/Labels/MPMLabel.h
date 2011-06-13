@@ -63,6 +63,7 @@ using std::vector;
       const VarLabel* pVolumeDeformedLabel;
       const VarLabel* TotalVolumeDeformedLabel;
       const VarLabel* pXXLabel;
+      const VarLabel* pPartitionUnityLabel;
 
       //PermanentParticleState
       const VarLabel* pDeformationMeasureLabel;

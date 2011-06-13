@@ -85,6 +85,9 @@ MPMLabel::MPMLabel()
                      
   pColorLabel_preReloc  = VarLabel::create( "p.color+",
 			ParticleVariable<double>::getTypeDescription() );
+                     
+  pPartitionUnityLabel   = VarLabel::create( "p.partitionUnity",
+			ParticleVariable<double>::getTypeDescription() );
   
   //PermanentParticleState
   pDeformationMeasureLabel = VarLabel::create("p.deformationMeasure",
@@ -685,6 +688,7 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(pFiberDirLabel);
   VarLabel::destroy(p_qLabel);
   VarLabel::destroy(p_qLabel_preReloc);
+  VarLabel::destroy(pPartitionUnityLabel);
 
   VarLabel::destroy(gAccelerationLabel);
   VarLabel::destroy(gMassLabel);
