@@ -72,8 +72,6 @@ AC_INIT([Uintah],[1.25],[csafe-homebrew@cs.utah.edu])
 ##
 ##     type "autoconf --version" to find out what version you have.
 ##
-##     On blaze you can find 2.67 in /usr/local/share/bin
-##
 AC_PREREQ(2.67)
 
 AC_COPYRIGHT(
@@ -826,12 +824,11 @@ TEMPLATE_BOX="<>"
 case $host in
      *-darwin*)
 	SO_OR_ARCHIVE_EXTENSION=dylib
-	if test "$enable_sci_malloc" = "yes"; then
-	   AC_MSG_WARN(sci_malloc does not work under mac osx. use --enable-sci-malloc=force)
-	   AC_MSG_WARN(sci-malloc disabled)
-	   enable_sci_malloc="no"
+        if test "$enable_sci_malloc" = "yes"; then
+           AC_MSG_ERROR(sci_malloc does not work under mac osx. Though you can try to use: --enable-sci-malloc=force)
+           enable_sci_malloc="no"
         elif test "$enable_sci_malloc" = "force"; then
-	   enable_sci_malloc="yes"
+           enable_sci_malloc="yes"
         fi
 	;;
 	
