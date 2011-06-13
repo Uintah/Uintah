@@ -54,6 +54,9 @@
 
     <AMR>
       <useLockStep> true </useLockStep>
+      <MPM>
+        <manualGrid> true </manualGrid>
+      </MPM>
     </AMR>    
     <PhysicalConstants>
        <gravity>[0,0,0]</gravity>
