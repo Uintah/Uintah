@@ -222,8 +222,10 @@ echo ""                                 >> $data_transfer_record
 # remove the remote directory
 if test "$rmDir" == "y" -o "$rmDir" == "Y"; then
   echo "Now removing $REMOTEDIR/$uda if it exists..."
-  /bin/rm -rf $REMOTEDIR/$uda; mkdir $REMOTEDIR/$uda
+  /bin/rm -rf $REMOTEDIR/$uda
+  mkdir $REMOTEDIR/$uda
 else
+  mkdir $REMOTEDIR/$uda
   cp $data_transfer_record $REMOTEDIR/$uda
 fi
 
