@@ -349,7 +349,7 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
     // Calculate Pressure Diagonal
     d_discretize->calculatePressDiagonal(patch,&pressureVars);
 
-    d_boundaryCondition->pressureBC(patch, &pressureVars,&constPressureVars);
+    d_boundaryCondition->pressureBC(patch, indx, &pressureVars,&constPressureVars);
   }
 
 }

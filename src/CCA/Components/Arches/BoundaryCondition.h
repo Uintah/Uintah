@@ -45,6 +45,7 @@
 #include <Core/Grid/Variables/SFCYVariable.h>
 #include <Core/Grid/Variables/SFCZVariable.h>
 #include <Core/Grid/BoundaryConditions/BoundCond.h>
+#include <Core/Grid/BoundaryConditions/BCDataArray.h>
 #include   <vector>
 
 /**************************************
@@ -113,6 +114,68 @@ namespace Uintah {
 
       typedef std::map<std::string, constCCVariable<double> > HelperMap; 
       typedef std::vector<string> HelperVec;  
+			
+			/** @brief Stuct for hold face centered offsets relative to the cell centered boundary index. */
+			struct FaceOffSets { 
+				// Locations are determined by: 
+				//   (i,j,k) location = boundary_index - offset;
+				
+				public: 
+					IntVector io; 		///< Interior cell offset 
+					IntVector bo;     ///< Boundary cell offset 
+					IntVector eo; 		///< Extra cell offset
+
+				  int sign;         ///< Sign of the normal for the face (ie, -1 for minus faces and +1 for plus faces )
+
+					double dx; 				///< cell size in the dimension of face normal (ie, distance between cell centers)
+
+			};
+
+		 inline const FaceOffSets getFaceOffsets( const IntVector& face_normal, const Patch::FaceType face, const Vector Dx ){  
+
+			 FaceOffSets offsets; 
+			 offsets.io = IntVector(0,0,0);
+			 offsets.bo = IntVector(0,0,0); 
+			 offsets.eo = IntVector(0,0,0); 
+
+			 if ( face == Patch::xminus || face == Patch::yminus || face == Patch::zminus ) { 
+
+				 offsets.bo = face_normal; 
+				 offsets.sign = -1; 
+
+			 } else { 
+
+				 offsets.io = face_normal; 
+				 offsets.eo = IntVector( -1*face_normal.x(), -1*face_normal.y(), -1*face_normal.z() ); 
+				 offsets.sign = +1; 
+
+			 } 
+
+			 if ( face == Patch::xminus || face == Patch::xplus) { 
+				 offsets.dx = Dx.x(); 
+			 } else if ( face == Patch::yminus || face == Patch::yplus ) { 
+				 offsets.dx = Dx.y(); 
+			 } else { 
+				 offsets.dx = Dx.z(); 
+			 } 
+
+			 return offsets; 
+
+		 };
+
+      inline bool typeMatch( BC_TYPE check_type, std::vector<BC_TYPE >& type_list ){ 
+
+        bool found_match = false; 
+
+        for ( std::vector<BC_TYPE>::iterator iter = type_list.begin(); iter != type_list.end(); ++iter ) { 
+          if ( *iter == check_type ) {
+            found_match = true; 
+            return found_match; 
+          } 
+        } 
+
+        return found_match; 
+      };
 
      void sched_cellTypeInit__NEW(SchedulerP& sched,
                                       const PatchSet* patches,
@@ -173,12 +236,30 @@ namespace Uintah {
         CCVariable<double>& enthalpy, HelperMap ivGridVarMap, HelperVec ivNames, Iterator bound_ptr );
 
       void velocityOutletPressureBC__NEW( const Patch* patch, 
+                                       		int  matl_index, 
                                           SFCXVariable<double>& uvel, 
                                           SFCYVariable<double>& vvel, 
                                           SFCZVariable<double>& wvel, 
                                           constSFCXVariable<double>& old_uvel, 
                                           constSFCYVariable<double>& old_vvel, 
                                           constSFCZVariable<double>& old_wvel );
+
+			template <class velType>
+			void delPForOutletPressure__NEW( const Patch* patch, 
+                                       int  matl_index, 
+                                       double dt, 
+																			 Patch::FaceType mface,
+																			 Patch::FaceType pface, 
+																			 velType& vel, 
+                                       constCCVariable<double>& P,
+                                       constCCVariable<double>& density );
+
+      template <class stencilType> 
+      void zeroStencilDirection( const Patch* patch, 
+                                 const int  matl_index, 
+                                 const int sign, 
+                                 stencilType& A, 
+                                 std::vector<BC_TYPE>& types );
 
       std::map<IntVector, double>
       readInputFile__NEW( std::string );
@@ -455,9 +536,9 @@ namespace Uintah {
           double time_shift,
           double dt);
 
-      ///////////////////////////////////////////////////////////////////////
-      // Actually compute pressure BC terms
+      /** @brief Applies boundary conditions to A matrix for boundary conditions */
       void pressureBC(const Patch* patch,
+          const int matl_index, 
           ArchesVariables* vars,
           ArchesConstVariables* constvars);
 
@@ -1213,6 +1294,131 @@ namespace Uintah {
   };
 
   }; // End of class BoundaryCondition
+
+
+/** @brief Zeroes out contribution to a stencil in a specified direction.  Also removes it from the diagonal, typically used for BCs */
+template <class stencilType> void
+BoundaryCondition::zeroStencilDirection( const Patch* patch, 
+                                         const int  matl_index, 
+                                         const int  sign, 
+                                         stencilType& A, 
+                                         std::vector<BC_TYPE>& types )
+
+{
+  vector<Patch::FaceType>::const_iterator bf_iter;
+  vector<Patch::FaceType> bf;
+  patch->getBoundaryFaces(bf);
+  Vector Dx = patch->dCell(); 
+
+  for ( BCInfoMap::iterator bc_iter = d_bc_information.begin(); 
+        bc_iter != d_bc_information.end(); bc_iter++){
+
+     if ( typeMatch( bc_iter->second.type, types ) ) { 
+
+       for ( bf_iter = bf.begin(); bf_iter !=bf.end(); bf_iter++ ){
+
+         Patch::FaceType face    = *bf_iter;
+         IntVector insideCellDir = patch->faceDirection(face); 
+
+         //get the number of children
+         int numChildren = patch->getBCDataArray(face)->getNumberChildren(matl_index); //assumed one material
+
+         for (int child = 0; child < numChildren; child++){
+
+           double bc_value = 0;
+           string bc_kind = "NotSet";
+           Iterator bound_ptr;
+
+           bool foundIterator = 
+             getIteratorBCValueBCKind( patch, face, child, bc_iter->second.name, matl_index, bc_value, bound_ptr, bc_kind); 
+
+           if ( foundIterator ) {
+
+             for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
+               IntVector c = *bound_ptr; 
+               c -= insideCellDir; //because we are adjusting the interior stencil values. 
+
+               A[c].p = A[c].p + ( sign * A[c][face] );
+               A[c][face] = 0.0;
+
+             }
+           }
+         }
+       }
+     }
+   }
+  IntVector xx = IntVector(0,7,7); 
+  Patch::FaceType face = Patch::xminus; 
+}
+
+/** @brief Adds grad(P) to velocity on outlet or pressure boundaries */
+template <class velType> void
+BoundaryCondition::delPForOutletPressure__NEW( const Patch* patch, 
+                                               int  matl_index, 
+                                               double dt,
+                                               Patch::FaceType mface, 
+                                               Patch::FaceType pface, 
+                                               velType& vel, 
+                                               constCCVariable<double>& P,
+                                               constCCVariable<double>& density )
+{
+
+  vector<Patch::FaceType>::const_iterator bf_iter;
+  vector<Patch::FaceType> bf;
+  patch->getBoundaryFaces(bf);
+  Vector Dx = patch->dCell(); 
+
+  for ( BCInfoMap::iterator bc_iter = d_bc_information.begin(); 
+        bc_iter != d_bc_information.end(); bc_iter++){
+
+    if ( bc_iter->second.type == OUTLET || bc_iter->second.type == PRESSURE ) { 
+
+      for ( bf_iter = bf.begin(); bf_iter !=bf.end(); bf_iter++ ){
+
+        //get the face
+        Patch::FaceType face    = *bf_iter;
+        IntVector insideCellDir = patch->faceDirection(face); 
+
+        if ( face == mface || face == pface ) { 
+
+          //get the number of children
+          int numChildren = patch->getBCDataArray(face)->getNumberChildren(matl_index); //assumed one material
+
+          for (int child = 0; child < numChildren; child++){
+
+            double bc_value = 0;
+            string bc_kind = "NotSet";
+            Iterator bound_ptr;
+
+            bool foundIterator = 
+              getIteratorBCValueBCKind( patch, face, child, bc_iter->second.name, matl_index, bc_value, bound_ptr, bc_kind); 
+
+            if ( foundIterator ) {
+
+              const FaceOffSets FOS = getFaceOffsets( insideCellDir, face, Dx ); 
+
+               for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
+
+                 IntVector c = *bound_ptr; 
+
+                 double ave_density = 0.5 * ( density[c] + density[c - insideCellDir] ); 
+
+                 double gradP = FOS.sign * 2.0 * dt * P[c - insideCellDir] / ( FOS.dx * ave_density ); 
+
+                 vel[c - FOS.bo] += gradP; 
+
+                 vel[c - FOS.eo] = vel[c - FOS.bo]; 
+
+               }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+
 } // End namespace Uintah
 
 #endif  

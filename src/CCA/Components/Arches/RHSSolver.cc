@@ -95,39 +95,6 @@ RHSSolver::calculateHatVelocity(const Patch* patch,
                                vars->uVelocityCoeff,                    
                                cellinfo->sewu, cellinfo->sns, cellinfo->stb,          
                                delta_t);
-
-                                                   
-  //MMS conv and diff force term collection
-  // Since the collection (along with velFmms allocation) 
-  // is conditional on d_doMMS, 
-  // I put the force term calculation in the fortran 
-  // and hence the "verification" doesn't completely 
-  // check the explicit update!
-  if (d_doMMS) {
-    for (; !iter.done(); iter++){
-      IntVector c = *iter;
-      int i = c.x();
-      int j = c.y();
-      int k = c.z();
-
-      IntVector E(i+1, j, k);    IntVector W(i-1, j, k);
-      IntVector N(i, j+1, k);    IntVector S(i, j-1, k);
-      IntVector T(i, j, k+1);    IntVector B(i, j, k-1);
-
-      vars->uFmms[c] = vars->uVelocityCoeff[Arches::AE][c]*constvars->uVelocity[E] +
-        vars->uVelocityCoeff[Arches::AW][c]*constvars->uVelocity[W] +
-        vars->uVelocityCoeff[Arches::AN][c]*constvars->uVelocity[N] +
-        vars->uVelocityCoeff[Arches::AS][c]*constvars->uVelocity[S] +
-        vars->uVelocityCoeff[Arches::AT][c]*constvars->uVelocity[T] +
-        vars->uVelocityCoeff[Arches::AB][c]*constvars->uVelocity[B] - 
-        vars->uVelocityCoeff[Arches::AP][c]*constvars->uVelocity[c] +
-        vars->uVelNonlinearSrc[c] - 
-        0.5*(constvars->new_density[c] + constvars->new_density[W])*constvars->uVelocity[c];
-
-      vars->uFmms[c] = vars->uFmms[c]/cellinfo->sew[i]*cellinfo->sns[j]*cellinfo->stb[k];
-
-    }
-  }
   //__________________________________
   //    Y dir
   shift = IntVector(0,-1,0);  // one cell inward.  Only offset at the edge of the computational domain.
@@ -143,37 +110,6 @@ RHSSolver::calculateHatVelocity(const Patch* patch,
                                vars->vVelocityCoeff,                    
                                cellinfo->sew, cellinfo->snsv, cellinfo->stb,          
                                delta_t);
-
-
-  //MMS conv and diff force term collection
-  // Since the collection (along with velFmms allocation) 
-  // is conditional on d_doMMS, 
-  // I put the force term caluculation in the fortran 
-  // and hence the "verification" doesn't completely 
-  // check the explicit update!
-  if (d_doMMS) {
-    for (; !iter.done(); iter++){
-      IntVector c = *iter;
-      int i = c.x();
-      int j = c.y();
-      int k = c.z();
-
-      IntVector E(i+1, j, k);    IntVector W(i-1, j, k);
-      IntVector N(i, j+1, k);    IntVector S(i, j-1, k);
-      IntVector T(i, j, k+1);    IntVector B(i, j, k-1);
-
-      vars->vFmms[c] = vars->vVelocityCoeff[Arches::AE][c]*constvars->vVelocity[E] +
-        vars->vVelocityCoeff[Arches::AW][c]*constvars->vVelocity[W] +
-        vars->vVelocityCoeff[Arches::AN][c]*constvars->vVelocity[N] +
-        vars->vVelocityCoeff[Arches::AS][c]*constvars->vVelocity[S] +
-        vars->vVelocityCoeff[Arches::AT][c]*constvars->vVelocity[T] +
-        vars->vVelocityCoeff[Arches::AB][c]*constvars->vVelocity[B] - 
-        vars->vVelocityCoeff[Arches::AP][c]*constvars->vVelocity[c] +
-        vars->vVelNonlinearSrc[c] - 
-        0.5*(constvars->new_density[c] + constvars->new_density[S])*constvars->vVelocity[c]/delta_t;
-    }
-  }
-
   //__________________________________
   //    Z dir       
   shift = IntVector(0,0,-1); //one cell inward.  Only offset at the edge of the computational domain. 
@@ -190,34 +126,6 @@ RHSSolver::calculateHatVelocity(const Patch* patch,
                                cellinfo->sew, cellinfo->sns, cellinfo->stbw,          
                                delta_t);
 
-  //MMS conv and diff force term collection
-  // Since the collection (along with velFmms allocation) 
-  // is conditional on d_doMMS, 
-  // I put the force term caluculation in the fortran 
-  // and hence the "verification" doesn't completely 
-  // check the explicit update!
-  if (d_doMMS) {
-    for (; !iter.done(); iter++){
-      IntVector c = *iter;
-      int i = c.x();
-      int j = c.y();
-      int k = c.z();
-
-      IntVector E(i+1, j, k);    IntVector W(i-1, j, k);
-      IntVector N(i, j+1, k);    IntVector S(i, j-1, k);
-      IntVector T(i, j, k+1);    IntVector B(i, j, k-1);
-
-      vars->wFmms[c] = vars->wVelocityCoeff[Arches::AE][c]*constvars->wVelocity[E] +
-        vars->wVelocityCoeff[Arches::AW][c]*constvars->wVelocity[W] +
-        vars->wVelocityCoeff[Arches::AN][c]*constvars->wVelocity[N] +
-        vars->wVelocityCoeff[Arches::AS][c]*constvars->wVelocity[S] +
-        vars->wVelocityCoeff[Arches::AT][c]*constvars->wVelocity[T] +
-        vars->wVelocityCoeff[Arches::AB][c]*constvars->wVelocity[B] - 
-        vars->wVelocityCoeff[Arches::AP][c]*constvars->wVelocity[c] +
-        vars->wVelNonlinearSrc[c] - 
-        0.5*(constvars->new_density[c] + constvars->new_density[B])*constvars->wVelocity[c]/delta_t;
-    }
-  }
 }
 
 //****************************************************************************

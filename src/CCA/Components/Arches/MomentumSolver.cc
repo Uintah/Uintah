@@ -301,14 +301,44 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
     }
     
     // boundary condition
-    if ((d_boundaryCondition->getOutletBC())||(d_boundaryCondition->getPressureBC())){
-      d_boundaryCondition->addPresGradVelocityOutletPressureBC(patch, cellinfo,
-                                                                delta_t, &velocityVars,
-                                                                &constVelocityVars);
-                                                                
-      d_boundaryCondition->velocityOutletPressureTangentBC(patch, 
-                                            &velocityVars, &constVelocityVars);
-    }
+		if ( !d_boundaryCondition->isUsingNewBC() ) { 
+    	if ((d_boundaryCondition->getOutletBC())||(d_boundaryCondition->getPressureBC())){
+
+    	  d_boundaryCondition->addPresGradVelocityOutletPressureBC(patch, cellinfo,
+    	                                                            delta_t, &velocityVars,
+    	                                                            &constVelocityVars);
+    	  d_boundaryCondition->velocityOutletPressureTangentBC(patch, 
+    	                                        &velocityVars, &constVelocityVars);
+
+    	}
+		} else { 
+
+				Patch::FaceType mface = Patch::xminus; 
+				Patch::FaceType pface = Patch::xplus; 
+				d_boundaryCondition->delPForOutletPressure__NEW( patch, indx, delta_t, 
+																												 mface, pface, 
+																												 velocityVars.uVelRhoHat, 
+																												 constVelocityVars.pressure, 
+																												 constVelocityVars.density ); 
+				mface = Patch::yminus; 
+				pface = Patch::yplus; 
+				d_boundaryCondition->delPForOutletPressure__NEW( patch, indx, delta_t, 
+																												 mface, pface, 
+																												 velocityVars.vVelRhoHat, 
+																												 constVelocityVars.pressure, 
+																												 constVelocityVars.density ); 
+				mface = Patch::zminus; 
+				pface = Patch::zplus; 
+				d_boundaryCondition->delPForOutletPressure__NEW( patch, indx, delta_t, 
+																												 mface, pface, 
+																												 velocityVars.wVelRhoHat, 
+																												 constVelocityVars.pressure, 
+																												 constVelocityVars.density ); 
+
+    	  d_boundaryCondition->velocityOutletPressureTangentBC(patch, 
+    	                                        &velocityVars, &constVelocityVars);
+
+		} 
 
     SFCXVariable<double> uVel_EKT;
     SFCYVariable<double> vVel_EKT;
@@ -646,6 +676,12 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
       new_dw->allocateTemporary(velocityVars.uVelocityConvectCoeff[ii],  patch);
       new_dw->allocateTemporary(velocityVars.vVelocityConvectCoeff[ii],  patch);
       new_dw->allocateTemporary(velocityVars.wVelocityConvectCoeff[ii],  patch);
+      velocityVars.uVelocityCoeff[ii].initialize(0.0); 
+      velocityVars.vVelocityCoeff[ii].initialize(0.0); 
+      velocityVars.wVelocityCoeff[ii].initialize(0.0); 
+      velocityVars.uVelocityConvectCoeff[ii].initialize(0.0); 
+      velocityVars.vVelocityConvectCoeff[ii].initialize(0.0); 
+      velocityVars.wVelocityConvectCoeff[ii].initialize(0.0); 
     }
    
     new_dw->allocateTemporary(velocityVars.uVelLinearSrc,     patch);
@@ -917,6 +953,16 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
 #endif
       }*/
     }
+
+    if (d_boundaryCondition->isUsingNewBC()) {
+
+      if (!d_doMMS) {
+        d_boundaryCondition->velocityBC(patch,
+                                      cellinfo, &velocityVars,
+                                      &constVelocityVars);
+      }
+    }
+
     // apply multimaterial velocity bc
     // treats multimaterial wall as intrusion
     if (d_MAlab){
@@ -971,26 +1017,47 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
     //__________________________________
     //
     double time_shift = 0.0;
-    if (d_boundaryCondition->getInletBC()) {
-    time_shift = delta_t * timelabels->time_position_multiplier_before_average;
-    d_boundaryCondition->velRhoHatInletBC(patch,
-                                          &velocityVars, &constVelocityVars,
-                                          indx, 
-                                          time_shift);
-    }
+    if ( d_boundaryCondition->getInletBC() ) {
 
-    if ((d_boundaryCondition->getOutletBC())||
-        (d_boundaryCondition->getPressureBC())) {
+      time_shift = delta_t * timelabels->time_position_multiplier_before_average;
+      d_boundaryCondition->velRhoHatInletBC(patch,
+                                            &velocityVars, &constVelocityVars,
+                                            indx, 
+                                            time_shift);
+    } else if ( d_boundaryCondition->isUsingNewBC() ) { 
 
-        d_boundaryCondition->velRhoHatOutletPressureBC( patch, 
-                                                        velocityVars.uVelRhoHat, 
-                                                        velocityVars.vVelRhoHat, 
-                                                        velocityVars.wVelRhoHat, 
-                                                        constVelocityVars.old_uVelocity, 
-                                                        constVelocityVars.old_vVelocity, 
-                                                        constVelocityVars.old_wVelocity, 
-                                                        constVelocityVars.cellType ); 
-    }
+      time_shift = delta_t * timelabels->time_position_multiplier_before_average;
+      d_boundaryCondition->velRhoHatInletBC(patch,
+                                            &velocityVars, &constVelocityVars,
+                                            indx, 
+                                            time_shift);
+
+    } 
+
+		if ( !d_boundaryCondition->isUsingNewBC() ) { 
+    	if ((d_boundaryCondition->getOutletBC())||
+    	    (d_boundaryCondition->getPressureBC())) {
+
+    	    d_boundaryCondition->velRhoHatOutletPressureBC( patch, 
+    	                                                    velocityVars.uVelRhoHat, 
+    	                                                    velocityVars.vVelRhoHat, 
+    	                                                    velocityVars.wVelRhoHat, 
+    	                                                    constVelocityVars.old_uVelocity, 
+    	                                                    constVelocityVars.old_vVelocity, 
+    	                                                    constVelocityVars.old_wVelocity, 
+    	                                                    constVelocityVars.cellType ); 
+    	}
+		} else { 
+    	    d_boundaryCondition->velocityOutletPressureBC__NEW( patch, 
+																															indx, 
+    	                                                    		velocityVars.uVelRhoHat, 
+    	                                                    		velocityVars.vVelRhoHat, 
+    	                                                    		velocityVars.wVelRhoHat, 
+    	                                                    		constVelocityVars.old_uVelocity, 
+    	                                                    		constVelocityVars.old_vVelocity, 
+    	                                                    		constVelocityVars.old_wVelocity ); 
+		} 
+
 
 //#ifdef divergenceconstraint    
     // compute divergence constraint to use in pressure equation
@@ -1167,14 +1234,24 @@ MomentumSolver::averageRKHatVelocities(const ProcessorGroup*,
     
 //__________________________________
 // Apply boundary conditions
-    if (d_boundaryCondition->anyArchesPhysicalBC()) {
+    if ( !d_boundaryCondition->isUsingNewBC() ) { 
+    	if (d_boundaryCondition->anyArchesPhysicalBC()) {
 
-      d_boundaryCondition->velRhoHatOutletPressureBC( patch, 
-                                                      new_uvel, new_vvel, new_wvel,
-                                                      old_uvel, old_vvel, old_wvel, 
-                                                      cellType ); 
+    	  d_boundaryCondition->velRhoHatOutletPressureBC( patch, 
+    	                                                  new_uvel, new_vvel, new_wvel,
+    	                                                  old_uvel, old_vvel, old_wvel, 
+    	                                                  cellType ); 
+			} 
+		} else { 
 
-    }  // any physical BC
+    	  d_boundaryCondition->velocityOutletPressureBC__NEW( patch, 
+																														indx, 
+    	                                                  		new_uvel, new_vvel, new_wvel,
+    	                                                  		old_uvel, old_vvel, old_wvel ); 
+
+		}
+
+
   }  // patches
 }
 // ****************************************************************************
