@@ -48,7 +48,6 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Ports/DataWarehouse.h>
 
-#include <Core/Grid/BoundaryConditions/BCDataArray.h>
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Exceptions/ParameterNotFound.h>
 #include <Core/Exceptions/VariableNotFoundInGrid.h>
@@ -1613,6 +1612,7 @@ BoundaryCondition::velocityBC(const Patch* patch,
 
 void 
 BoundaryCondition::pressureBC(const Patch* patch,
+                              const int matl_index, 
                               ArchesVariables* vars,
                               ArchesConstVariables* constvars)
 {
@@ -1644,66 +1644,88 @@ BoundaryCondition::pressureBC(const Patch* patch,
     }
   }
 
-  //__________________________________
-  //  Pressure, outlet, and wall BC
-  vector<Patch::FaceType> bf;
-  patch->getBoundaryFaces(bf);
-  
-  for( vector<Patch::FaceType>::const_iterator itr = bf.begin(); itr != bf.end(); ++itr ){
-    Patch::FaceType face = *itr;
-    
-    IntVector offset = patch->faceDirection(face);
-    
-    CellIterator iter = patch->getFaceIterator(face, Patch::InteriorFaceCells);
-    
-    //face:       -x +x -y +y -z +z
-    //Stencil 7   w, e, s, n, b, t;
-    for(;!iter.done(); iter++){
-      IntVector c = *iter;
-      IntVector adj = c + offset;
-      
-      if( cellType[adj] == pressure_BC ||
-          cellType[adj] == outlet_BC){
-        // dirichlet_BC
-        A[c].p = A[c].p +  A[c][face];
-        A[c][face] = 0.0;
-      }
 
-      if( cellType[adj] == wall_BC){
-        // Neumann zero gradient BC
-        A[c].p = A[c].p - A[c][face];
-        A[c][face] = 0.0;
-      }
-    }
-  }
-  
-  //__________________________________
-  //  Inlets
-  // This assumes that all inlets have Neumann (zero gradient) pressure BCs
-  for (int ii = 0; ii < d_numInlets; ii++) {
+  if ( !d_use_new_bcs ) { 
+    //__________________________________
+    //  Pressure, outlet, and wall BC
+    vector<Patch::FaceType> bf;
+    patch->getBoundaryFaces(bf);
     
     for( vector<Patch::FaceType>::const_iterator itr = bf.begin(); itr != bf.end(); ++itr ){
       Patch::FaceType face = *itr;
-
+      
       IntVector offset = patch->faceDirection(face);
-
+      
       CellIterator iter = patch->getFaceIterator(face, Patch::InteriorFaceCells);
-
+      
       //face:       -x +x -y +y -z +z
       //Stencil 7   w, e, s, n, b, t;
       for(;!iter.done(); iter++){
         IntVector c = *iter;
         IntVector adj = c + offset;
         
-        if( cellType[adj] == d_flowInlets[ii]->d_cellTypeID){
+        if( cellType[adj] == pressure_BC ||
+            cellType[adj] == outlet_BC){
+          // dirichlet_BC
+          A[c].p = A[c].p +  A[c][face];
+          A[c][face] = 0.0;
+        }
+
+        if( cellType[adj] == wall_BC){
           // Neumann zero gradient BC
-          
-          A[c].p = A[c].p -  A[c][face];
+          A[c].p = A[c].p - A[c][face];
           A[c][face] = 0.0;
         }
       }
     }
-  }
+    
+    //__________________________________
+    //  Inlets
+    // This assumes that all inlets have Neumann (zero gradient) pressure BCs
+    for (int ii = 0; ii < d_numInlets; ii++) {
+      
+      for( vector<Patch::FaceType>::const_iterator itr = bf.begin(); itr != bf.end(); ++itr ){
+        Patch::FaceType face = *itr;
+
+        IntVector offset = patch->faceDirection(face);
+
+        CellIterator iter = patch->getFaceIterator(face, Patch::InteriorFaceCells);
+
+        //face:       -x +x -y +y -z +z
+        //Stencil 7   w, e, s, n, b, t;
+        for(;!iter.done(); iter++){
+          IntVector c = *iter;
+          IntVector adj = c + offset;
+          
+          if( cellType[adj] == d_flowInlets[ii]->d_cellTypeID){
+            // Neumann zero gradient BC
+            
+            A[c].p = A[c].p -  A[c][face];
+            A[c][face] = 0.0;
+          }
+        }
+      }
+    }
+  } else { 
+
+    std::vector<BC_TYPE> add_types; 
+    add_types.push_back( OUTLET ); 
+    add_types.push_back( PRESSURE ); 
+    int sign = 1; 
+
+    zeroStencilDirection( patch, matl_index, sign, A, add_types ); 
+
+    std::vector<BC_TYPE> sub_types; 
+    sub_types.push_back( WALL ); 
+    sub_types.push_back( MASSFLOW_INLET ); 
+    sub_types.push_back( VELOCITY_INLET ); 
+    sub_types.push_back( VELOCITY_FILE ); 
+    sub_types.push_back( MASSFLOW_FILE ); 
+    sign = -1;
+
+    zeroStencilDirection( patch, matl_index, sign, A, sub_types ); 
+
+  } 
 }
 
 //****************************************************************************
@@ -7357,6 +7379,7 @@ BoundaryCondition::readInputFile__NEW( std::string file_name )
 
 void 
 BoundaryCondition::velocityOutletPressureBC__NEW( const Patch* patch, 
+                                                  int  matl_index, 
                                                   SFCXVariable<double>& uvel, 
                                                   SFCYVariable<double>& vvel, 
                                                   SFCZVariable<double>& wvel, 
@@ -7364,9 +7387,230 @@ BoundaryCondition::velocityOutletPressureBC__NEW( const Patch* patch,
                                                   constSFCYVariable<double>& old_vvel, 
                                                   constSFCZVariable<double>& old_wvel ) 
 {
+  vector<Patch::FaceType>::const_iterator bf_iter;
+  vector<Patch::FaceType> bf;
+  patch->getBoundaryFaces(bf);
 
+  // This business is to get the outlet/pressure bcs to behave like the 
+  // original arches outlet/pressure bc
+  bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
+  bool xplus =  patch->getBCType(Patch::xplus)  != Patch::Neighbor;
+  bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
+  bool yplus =  patch->getBCType(Patch::yplus)  != Patch::Neighbor;
+  bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
+  bool zplus =  patch->getBCType(Patch::zplus)  != Patch::Neighbor;
 
+  IntVector idxLo = patch->getFortranCellLowIndex();
+  IntVector idxHi = patch->getFortranCellHighIndex();
 
+  for ( BCInfoMap::iterator bc_iter = d_bc_information.begin(); 
+        bc_iter != d_bc_information.end(); bc_iter++){
 
+    if ( bc_iter->second.type == OUTLET || bc_iter->second.type == PRESSURE ) { 
+
+      for ( bf_iter = bf.begin(); bf_iter !=bf.end(); bf_iter++ ){
+
+        //get the face
+        Patch::FaceType face = *bf_iter;
+        IntVector insideCellDir = patch->faceDirection(face); 
+
+        //get the number of children
+        int numChildren = patch->getBCDataArray(face)->getNumberChildren(matl_index); //assumed one material
+
+        for (int child = 0; child < numChildren; child++){
+
+          double bc_value = 0;
+          //int norm = getNormal( face ); 
+          
+          string bc_kind = "NotSet";
+          Iterator bound_ptr;
+
+          bool foundIterator = 
+            getIteratorBCValueBCKind( patch, face, child, bc_iter->second.name, matl_index, bc_value, bound_ptr, bc_kind); 
+
+          if ( foundIterator ) {
+
+            bound_ptr.reset();
+            double negsmall = -1.0E-10;
+            double zero     = 0.0E0; 
+            int sign        = 1;
+
+            if ( bc_iter->second.type == PRESSURE ) { 
+              sign = -1; 
+            }
+
+            switch (face) {
+
+              case Patch::xminus:
+
+                for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
+
+                  IntVector c   = *bound_ptr; 
+                  IntVector cp  = *bound_ptr - insideCellDir; 
+                  IntVector cpp = cp - insideCellDir; 
+
+                  if ( (zminus && (c.z() == idxLo.z())) ||
+                       (zplus  && (c.z() == idxHi.z())) ||
+                       (yminus && (c.y() == idxLo.y())) ||
+                       (yplus  && (c.y() == idxHi.y())) ){ 
+
+                    uvel[cp] = zero; 
+
+                  } else {
+
+                    if ( sign * old_uvel[cp] < negsmall ) { 
+                      uvel[cp] = uvel[cpp]; 
+                    } else {
+                      uvel[cp] = zero; 
+                    }
+                    uvel[c] = uvel[cp]; 
+                  }
+                }
+                break; 
+
+              case Patch::xplus:
+
+                for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
+
+                  IntVector c   = *bound_ptr; 
+                  IntVector cp  = *bound_ptr - insideCellDir; 
+                  IntVector cm  = c + insideCellDir; 
+
+                  if ( (zminus && (c.z() == idxLo.z())) ||
+                       (zplus  && (c.z() == idxHi.z())) ||
+                       (yminus && (c.y() == idxLo.y())) ||
+                       (yplus  && (c.y() == idxHi.y())) ){ 
+
+                    uvel[c] = zero; 
+
+                  } else {
+
+                    if ( sign * old_uvel[c] > negsmall ) { 
+                      uvel[c] = uvel[cp]; 
+                    } else {
+                      uvel[c] = zero; 
+                    }
+                    uvel[cm] = uvel[c]; 
+                  }
+
+                }
+                break; 
+
+              case Patch::yminus:
+
+                for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
+
+                  IntVector c   = *bound_ptr; 
+                  IntVector cp  = *bound_ptr - insideCellDir; 
+                  IntVector cpp = cp - insideCellDir; 
+
+                  if ( (zminus && (c.z() == idxLo.z())) ||
+                       (zplus  && (c.z() == idxHi.z())) ||
+                       (xminus && (c.x() == idxLo.x())) ||
+                       (xplus  && (c.x() == idxHi.x())) ){ 
+
+                    vvel[cp] = zero; 
+
+                  } else {
+
+                    if ( sign * old_vvel[cp] < negsmall ) { 
+                      vvel[cp] = vvel[cpp]; 
+                    } else {
+                      vvel[cp] = zero; 
+                    }
+                    vvel[c] = vvel[cp]; 
+                  }
+                }
+                break; 
+
+              case Patch::yplus: 
+
+                for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
+
+                  IntVector c   = *bound_ptr; 
+                  IntVector cp  = *bound_ptr - insideCellDir; 
+                  IntVector cm  = c + insideCellDir; 
+
+                  if ( (zminus && (c.z() == idxLo.z())) ||
+                       (zplus  && (c.z() == idxHi.z())) ||
+                       (xminus && (c.x() == idxLo.x())) ||
+                       (xplus  && (c.x() == idxHi.x())) ){ 
+
+                    vvel[c] = zero; 
+
+                  } else {
+
+                    if ( sign * old_vvel[c] > negsmall ) { 
+                      vvel[c] = vvel[cp]; 
+                    } else {
+                      vvel[c] = zero; 
+                    }
+                    vvel[cm] = vvel[c]; 
+                  }
+                }
+                break; 
+
+              case Patch::zminus: 
+
+                for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
+
+                  IntVector c   = *bound_ptr; 
+                  IntVector cp  = *bound_ptr - insideCellDir; 
+                  IntVector cpp = cp - insideCellDir; 
+
+                  if ( (xminus && (c.x() == idxLo.x())) ||
+                       (xplus  && (c.x() == idxHi.x())) ||
+                       (yminus && (c.y() == idxLo.y())) ||
+                       (yplus  && (c.y() == idxHi.y())) ){ 
+
+                    wvel[cp] = zero; 
+
+                  } else {
+
+                    if ( sign * old_wvel[cp] < negsmall ) { 
+                      wvel[cp] = wvel[cpp]; 
+                    } else {
+                      wvel[cp] = zero; 
+                    }
+                    wvel[c] = wvel[cp]; 
+                  }
+                }
+                break; 
+
+              case Patch::zplus:
+
+                for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
+
+                  IntVector c   = *bound_ptr; 
+                  IntVector cp  = *bound_ptr - insideCellDir; 
+                  IntVector cm  = c + insideCellDir; 
+
+                  if ( (xminus && (c.x() == idxLo.x())) ||
+                       (xplus  && (c.x() == idxHi.x())) ||
+                       (yminus && (c.y() == idxLo.y())) ||
+                       (yplus  && (c.y() == idxHi.y())) ){ 
+
+                    wvel[c] = zero; 
+
+                  } else {
+
+                    if ( sign * old_wvel[c] > negsmall ) { 
+                      wvel[c] = wvel[cp]; 
+                    } else {
+                      wvel[c] = zero; 
+                    }
+                    wvel[cm] = wvel[c]; 
+                  }
+                }
+                break; 
+
+              default: 
+                throw InvalidValue("Error: Face type not recognized: " + face, __FILE__, __LINE__); 
+                break; 
+            }
+          }
+        }
+      }
+    }
+  }
 }
-
