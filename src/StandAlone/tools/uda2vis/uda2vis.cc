@@ -189,7 +189,7 @@ getCycleTimes(DataArchive *archive) {
 // including variable/material info, and level/patch info
 extern "C"
 TimeStepInfo*
-getTimeStepInfo(DataArchive *archive, GridP *grid, int timestep) {
+getTimeStepInfo(DataArchive *archive, GridP *grid, int timestep, bool useExtraCells) {
   int numLevels = (*grid)->numLevels();
   TimeStepInfo *stepInfo = new TimeStepInfo;
   stepInfo->levelInfo.resize(numLevels);
@@ -235,6 +235,10 @@ getTimeStepInfo(DataArchive *archive, GridP *grid, int timestep) {
     copyVector(levelInfo.spacing, level->dCell());
     copyVector(levelInfo.anchor, level->getAnchor());
 
+    int extra_low = 0, extra_high = 0;
+    if ( useExtraCells )
+      extra_low = extra_high = max(max(levelInfo.extraCells[0], levelInfo.extraCells[1]), levelInfo.extraCells[2]);
+
     // patch info
     int numPatches = level->numPatches();
     levelInfo.patchInfo.resize(numPatches);
@@ -244,16 +248,16 @@ getTimeStepInfo(DataArchive *archive, GridP *grid, int timestep) {
       PatchInfo &patchInfo = levelInfo.patchInfo[p];
 
       // cc indices
-      copyIntVector(patchInfo.cc_low, patch->getCellLowIndex());
-      copyIntVector(patchInfo.cc_high, patch->getCellHighIndex());
-      copyIntVector(patchInfo.cc_extra_low, patch->getExtraCellLowIndex());
-      copyIntVector(patchInfo.cc_extra_high, patch->getExtraCellHighIndex());
+      copyIntVector(patchInfo.cc_low, patch->getCellLowIndex(extra_low));
+      copyIntVector(patchInfo.cc_high, patch->getCellHighIndex(extra_high));
+      copyIntVector(patchInfo.cc_extra_low, patch->getExtraCellLowIndex(extra_low));
+      copyIntVector(patchInfo.cc_extra_high, patch->getExtraCellHighIndex(extra_high));
 
       // nc indices
-      copyIntVector(patchInfo.nc_low, patch->getNodeLowIndex());
-      copyIntVector(patchInfo.nc_high, patch->getNodeHighIndex());
-      copyIntVector(patchInfo.nc_extra_low, patch->getExtraNodeLowIndex());
-      copyIntVector(patchInfo.nc_extra_high, patch->getExtraNodeHighIndex());
+      copyIntVector(patchInfo.nc_low, patch->getNodeLowIndex(extra_low));
+      copyIntVector(patchInfo.nc_high, patch->getNodeHighIndex(extra_high));
+      copyIntVector(patchInfo.nc_extra_low, patch->getExtraNodeLowIndex(extra_low));
+      copyIntVector(patchInfo.nc_extra_high, patch->getExtraNodeHighIndex(extra_high));
 
       patchInfo.proc_id = archive->queryPatchwiseProcessor(patch, timestep);
     }
