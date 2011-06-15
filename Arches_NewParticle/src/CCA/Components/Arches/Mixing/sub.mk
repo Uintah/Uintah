@@ -40,7 +40,6 @@ SRCS += \
         $(SRCDIR)/ColdflowMixingModel.cc    \
         $(SRCDIR)/InletStream.cc            \
         $(SRCDIR)/MixingModel.cc            \
-        $(SRCDIR)/MOMColdflowMixingModel.cc \
         $(SRCDIR)/NewStaticMixingTable.cc   \
         $(SRCDIR)/StandardTable.cc          \
         $(SRCDIR)/Stream.cc                 
