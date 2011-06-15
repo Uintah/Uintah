@@ -69,6 +69,48 @@ MixingRxnModel::~MixingRxnModel()
 }
 
 //---------------------------------------------------------------------------
+void 
+MixingRxnModel::problemSetupCommon( const ProblemSpecP& params )
+{
+
+  ProblemSpecP db = params; 
+
+  // create a transform object
+  if ( db->findBlock("coal") ) {
+
+    double constant = 0.0; 
+    _iv_transform = scinew CoalTransform( constant ); 
+
+  } else if ( db->findBlock("acidbase") ) {
+
+    doubleMap::iterator iter = d_constants.find( "transform_constant" ); 
+
+    if ( iter == d_constants.end() ) {
+      throw ProblemSetupException( "Could not find transform_constant for the acid/base table.",__FILE__, __LINE__ ); 
+    } else { 
+      double constant = iter->second; 
+      _iv_transform = scinew CoalTransform( constant ); 
+    }
+
+  } else if ( db->findBlock("slowfastchem") ) { 
+
+    _iv_transform = scinew SlowFastTransform(); 
+
+  } else { 
+
+    _iv_transform = scinew NoTransform();
+
+  }
+
+  bool check_transform = _iv_transform->problemSetup( db, d_allIndepVarNames ); 
+
+  if ( !check_transform ){ 
+    throw ProblemSetupException( "Could not properly setup independent variable transform based on input.",__FILE__,__LINE__); 
+  }
+
+}
+
+//---------------------------------------------------------------------------
 // Set Mix Dependent Variable Map
 //---------------------------------------------------------------------------
 void 
@@ -118,15 +160,6 @@ MixingRxnModel::setMixDVMap( const ProblemSpecP& root_params )
 
     var_name = "H2O"; 
     insertIntoMap( var_name );
-
-    var_name = "O2";
-    insertIntoMap( var_name );
-
-    var_name = "N2";
-    insertIntoMap( var_name );
-
-    //var_name = "mixture_molecular_weight";
-    //insertIntoMap( var_name );
   }
 
   proc0cout << endl;
@@ -139,7 +172,6 @@ MixingRxnModel::addAdditionalDV( std::vector<string>& vars )
 {
   proc0cout << "  Adding these additional variables for table lookup: " << endl; 
   for ( std::vector<string>::iterator ivar = vars.begin(); ivar != vars.end(); ivar++ ) { 
-    proc0cout << "  --> " << *ivar << endl;
     insertIntoMap( *ivar ); 
   }
 }
@@ -148,5 +180,7 @@ MixingRxnModel::TransformBase::TransformBase(){}
 MixingRxnModel::TransformBase::~TransformBase(){}
 MixingRxnModel::NoTransform::NoTransform(){}
 MixingRxnModel::NoTransform::~NoTransform(){}
-MixingRxnModel::CoalTransform::CoalTransform(double constant){}
+MixingRxnModel::CoalTransform::CoalTransform( double constant ) : d_constant(constant){}
 MixingRxnModel::CoalTransform::~CoalTransform(){}
+MixingRxnModel::SlowFastTransform::SlowFastTransform(){}
+MixingRxnModel::SlowFastTransform::~SlowFastTransform(){}

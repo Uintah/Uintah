@@ -57,20 +57,20 @@ This code checks for the following tags/attributes in the input file:
 The UPS interface is: 
 
 \code
-    <Properties>
-      <ClassicTable>
-        <cold_flow                    spec="OPTIONAL BOOLEAN"/> <!-- use for simple two stream mixing --> 
-        <noisy_hl_warning             spec="OPTIONAL NO_DATA"/> <!-- warn when heat loss is clipped to bounds --> 
-        <hl_scalar_init               spec="OPTIONAL DOUBLE" /> <!-- initial heat loss value in the domain --> 
-        <coal                         spec="OPTIONAL NO_DATA" 
-                                      attribute1="fp_label REQUIRED STRING"     
-                                      attribute2="eta_label REQUIRED STRING"/> 
-      </ClassicTable>
-    </Properties>
+<ClassicTable                   spec="OPTIONAL NO_DATA">
+  <inputfile                    spec="REQUIRED STRING" /> <!-- table to be opened --> 
+  <cold_flow                    spec="OPTIONAL BOOLEAN"/> <!-- use for simple two stream mixing --> 
+  <noisy_hl_warning             spec="OPTIONAL NO_DATA"/> <!-- warn when heat loss is clipped to bounds --> 
+  <hl_scalar_init               spec="OPTIONAL DOUBLE" /> <!-- initial heat loss value in the domain --> 
+  <coal                         spec="OPTIONAL NO_DATA" 
+                                attribute1="fp_label REQUIRED STRING"     
+                                attribute2="eta_label REQUIRED STRING"/> 
+                                <!-- Attributes must match the transported IVs specified in the TransportEqn node --> 
+</ClassicTable>
 
-    <DataArchiver>
-        <save name=STRING table_lookup="true"> <!-- note that STRING must match the name in the table -->
-    </DataArchiver>
+<DataArchiver>
+    <save name=STRING table_lookup="true"> <!-- note that STRING must match the name in the table -->
+</DataArchiver>
 \endcode
 
  * Any variable that is saved to the UDA in the dataarchiver block is automatically given a VarLabel.  
@@ -186,7 +186,6 @@ public:
 
   typedef std::map<string, DepVarCont >       DepVarMap;
   typedef std::map<string, int >               IndexMap; 
-  typedef std::map<string, double >           doubleMap; 
 
   double getTableValue( std::vector<double>, std::string ); 
 
@@ -215,8 +214,6 @@ private:
 
   IndexMap d_depVarIndexMap;              ///< Reference to the integer location of the variable
   IndexMap d_enthalpyVarIndexMap;         ///< Referece to the integer location of variables for heat loss calculation
-
-  doubleMap d_constants;                  ///< List of constants in table header
 
   std::vector<int>    d_allIndepVarNum;        ///< Vector storing the grid size for the Independant variables
   std::vector<string> d_allDepVarNames;        ///< Vector storing all dependent variable names from the table file
