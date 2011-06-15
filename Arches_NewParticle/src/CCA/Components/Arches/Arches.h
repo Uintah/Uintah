@@ -94,7 +94,6 @@ namespace Uintah {
   class MPMArchesLabel;
   class ArchesLabel;
   class TimeIntegratorLabel;
-  class ExtraScalarSolver;
   class ExplicitTimeInt; 
   class DQMOM; 
 #ifdef PetscFilter
@@ -316,9 +315,6 @@ private:
     double d_cu,d_cv,d_cw,d_cp,d_phi0,d_esphi0;
     //sine mms
     double d_amp;
-    bool d_calcExtraScalars;
-    ExtraScalarSolver* d_extraScalarSolver;
-    vector<ExtraScalarSolver*> d_extraScalars;
 
     // Variables----
     vector<string> d_scalarEqnNames; 

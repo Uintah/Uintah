@@ -67,7 +67,6 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Arches/IncDynamicProcedure.h>
 #include <CCA/Components/Arches/CompDynamicProcedure.h>
 #include <CCA/Components/Arches/CompLocalDynamicProcedure.h>
-#include <CCA/Components/Arches/ExtraScalarSolver.h>
 #include <CCA/Components/Arches/OdtClosure.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Ports/Scheduler.h>
@@ -129,8 +128,6 @@ Arches::Arches(const ProcessorGroup* myworld) :
   nofTimeSteps = 0;
   init_timelabel_allocated = false;
   d_analysisModule = false;
-  d_calcExtraScalars = false;
-  d_extraScalarSolver = 0;
   d_set_initial_condition = false;
 
   DQMOMEqnFactory& dqmomfactory = DQMOMEqnFactory::self(); 
@@ -162,9 +159,6 @@ Arches::~Arches()
   if (d_analysisModule) {
     delete d_analysisModule;
   }
-  if (d_calcExtraScalars)
-    for (int i=0; i < static_cast<int>(d_extraScalars.size()); i++)
-      delete d_extraScalars[i];
 
   delete d_timeIntegrator; 
   if (d_doDQMOM) { 
@@ -280,18 +274,6 @@ Arches::problemSetup(const ProblemSpecP& params,
   d_physicalConsts = scinew PhysicalConstants();
   const ProblemSpecP db_root = db->getRootNode();
   d_physicalConsts->problemSetup(db_root);
-
-  if (db->findBlock("ExtraScalars")) {
-    d_calcExtraScalars = true; 
-    ProblemSpecP extra_sc_db = db->findBlock("ExtraScalars");
-    for (ProblemSpecP scalar_db = extra_sc_db->findBlock("scalar");
-         scalar_db != 0; scalar_db = scalar_db->findNextBlock("scalar")) {
-      d_extraScalarSolver = scinew ExtraScalarSolver(d_lab, d_MAlab,
-                                                     d_physicalConsts);
-      d_extraScalarSolver->problemSetup(scalar_db);
-      d_extraScalars.push_back(d_extraScalarSolver);
-    }
-  }
 
   //create a time integrator.
   d_timeIntegrator = scinew ExplicitTimeInt(d_lab);
@@ -438,13 +420,6 @@ Arches::problemSetup(const ProblemSpecP& params,
 
   d_props->setBC(d_boundaryCondition);
 
-  if (d_calcExtraScalars){
-    for (int i=0; i < static_cast<int>(d_extraScalars.size()); i++) {
-      d_extraScalars[i]->setTurbulenceModel(d_turbModel);
-      d_extraScalars[i]->setBoundaryCondition(d_boundaryCondition);
-    }
-  }
-
   if(nlSolver == "picard") {
     d_nlSolver = scinew PicardNonlinearSolver(d_lab, d_MAlab, d_props, 
                                               d_boundaryCondition,
@@ -454,9 +429,6 @@ Arches::problemSetup(const ProblemSpecP& params,
                                               d_calcEnthalpy,
                                               d_calcVariance,
                                               d_myworld);
-    if (d_calcExtraScalars){
-      throw InvalidValue("Transport of extra scalars by picard solver is not implemented", __FILE__, __LINE__);
-    }
   } else if (nlSolver == "explicit") {
     d_nlSolver = scinew ExplicitSolver( d_lab, d_MAlab, d_props,
                                         d_boundaryCondition,
@@ -477,10 +449,6 @@ Arches::problemSetup(const ProblemSpecP& params,
   d_nlSolver->setMMS(d_doMMS);
   d_nlSolver->problemSetup(db);
   d_timeIntegratorType = d_nlSolver->getTimeIntegratorType();
-  d_nlSolver->setCalcExtraScalars(d_calcExtraScalars);
-  if (d_calcExtraScalars) {
-    d_nlSolver->setExtraScalars(&d_extraScalars);
-  }
 
 
   //__________________
@@ -774,12 +742,6 @@ Arches::sched_paramInit(const LevelP& level,
       tsk->computes(d_lab->d_wFmmsLabel);
     }
     
-    if (d_calcExtraScalars){
-      for (int i=0; i < static_cast<int>(d_extraScalars.size()); i++){
-        tsk->computes(d_extraScalars[i]->getScalarLabel());
-      }
-    }
-
     tsk->computes(d_lab->d_scalarBoundarySrcLabel);
     tsk->computes(d_lab->d_enthalpyBoundarySrcLabel);
     tsk->computes(d_lab->d_umomBoundarySrcLabel);
@@ -1041,15 +1003,6 @@ Arches::paramInit(const ProcessorGroup* pg,
       }
     }
 
-    if (d_calcExtraScalars) {
-
-      for (int i=0; i < static_cast<int>(d_extraScalars.size()); i++) {
-        CCVariable<double> extra_scalar;
-        new_dw->allocateAndPut(extra_scalar,
-                               d_extraScalars[i]->getScalarLabel(), indx, patch);
-        extra_scalar.initialize(d_extraScalars[i]->getScalarInitValue());
-      }
-    }  
   } // patches
 }
 
@@ -1481,12 +1434,6 @@ Arches::sched_mmsInitialCondition(const LevelP& level,
   tsk->modifies(d_lab->d_scalarSPLabel);
   tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, Ghost::None);
 
-  if (d_calcExtraScalars){
-    for (int i=0; i < static_cast<int>(d_extraScalars.size()); i++){
-      tsk->modifies(d_extraScalars[i]->getScalarLabel());
-    }
-  }
-
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
 }
 
@@ -1530,15 +1477,6 @@ Arches::mmsInitialCondition(const ProcessorGroup* ,
       if (d_mms == "constantMMS") { 
         pressure[*iter] = d_cp;
         scalar[*iter]   = d_phi0;
-        if (d_calcExtraScalars) {
-      
-          for (int i=0; i < static_cast<int>(d_extraScalars.size()); i++) {
-           CCVariable<double> extra_scalar;
-           new_dw->allocateAndPut(extra_scalar,
-                                  d_extraScalars[i]->getScalarLabel(),indx, patch);
-           extra_scalar.initialize(d_esphi0);
-         }
-        }
       } else if (d_mms == "almgrenMMS") {         
         pressure[*iter] = -d_amp*d_amp/4 * (cos(4.0*pi*cellinfo->xx[currCell.x()])
                           + cos(4.0*pi*cellinfo->yy[currCell.y()]));

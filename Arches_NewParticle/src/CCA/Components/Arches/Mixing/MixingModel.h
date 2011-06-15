@@ -71,7 +71,6 @@ POSSIBLE REVISIONS
 #include <string>
 
 namespace Uintah {
-  class ExtraScalarSolver;
 class MixingModel {
 
 public:
@@ -119,8 +118,6 @@ public:
       virtual bool getSulfurChem() const = 0;
       virtual bool getSootPrecursors() const = 0;
       virtual bool getTabulatedSoot() const = 0;
-      virtual void setCalcExtraScalars(bool calcExtraScalars) = 0; 
-      virtual void setExtraScalars(std::vector<ExtraScalarSolver*>* extraScalars) = 0;  
 
 
       inline void setNonAdiabPartBool( bool adiabGas_nonadiabPart ) {
