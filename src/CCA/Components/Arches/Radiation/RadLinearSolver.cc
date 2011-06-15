@@ -197,7 +197,7 @@ RadLinearSolver::setMatrix(const ProcessorGroup* ,
                            CCVariable<double>& AT)
 
 {
-  cout << d_myworld->myrank() <<"    RadLinearSolver::setMatrix " << patch->getGridIndex() <<  endl;
+  //cout << d_myworld->myrank() <<"    RadLinearSolver::setMatrix " << patch->getGridIndex() <<  endl;
 
   //__________________________________
   //  create the Petsc matrix A and vectors X, B and U.  This routine is called
@@ -364,7 +364,7 @@ RadLinearSolver::setMatrix(const ProcessorGroup* ,
 bool
 RadLinearSolver::radLinearSolve()
 {
-  cout << d_myworld->myrank() <<"    RadLinearSolver::radLinearSolve "<<  endl;
+  //cout << d_myworld->myrank() <<"    RadLinearSolver::radLinearSolve "<<  endl;
   bool test;
   test = PetscLinearSolve(A, d_b, d_x, d_u,
                           d_pcType, d_kspType, d_overlap,

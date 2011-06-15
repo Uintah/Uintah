@@ -61,7 +61,6 @@ SRCS += $(SRCDIR)/Arches.cc                    \
         $(SRCDIR)/PressureSolver.cc            \
         $(SRCDIR)/Properties.cc                \
         $(SRCDIR)/RHSSolver.cc                 \
-        $(SRCDIR)/ReactiveScalarSolver.cc      \
         $(SRCDIR)/ScalarSolver.cc              \
         $(SRCDIR)/ScaleSimilarityModel.cc      \
         $(SRCDIR)/SmagorinskyModel.cc          \

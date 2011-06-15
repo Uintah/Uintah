@@ -389,7 +389,6 @@ private:
   bool d_mixedModel;
 
   bool d_calScalar;
-  bool d_reactingScalarSolve;
   bool d_enthalpySolve;
   bool d_calcVariance;
   vector<IntVector> d_probePoints;
@@ -399,8 +398,6 @@ private:
   MomentumSolver* d_momSolver;
   // Scalar solver
   ScalarSolver* d_scalarSolver;
-  // reacting scalar solver
-  ReactiveScalarSolver* d_reactingScalarSolver;
   // physcial constatns
   PhysicalConstants* d_physicalConsts;
 
