@@ -48,7 +48,6 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Ports/DataWarehouse.h>
 
-#include <Core/Grid/BoundaryConditions/BCDataArray.h>
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Exceptions/ParameterNotFound.h>
 #include <Core/Exceptions/VariableNotFoundInGrid.h>
@@ -167,7 +166,7 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
 {
 
   ProblemSpecP db_params = params; 
-  ProblemSpecP db = db_params->findBlock("BoundaryConditions");
+  ProblemSpecP db = params->findBlock("BoundaryConditions");
   d_flowfieldCellTypeVal = -1;
   d_numInlets = 0;
   d_numSourceBoundaries = 0;
@@ -185,9 +184,20 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
     d_intrusionBoundary = false;
     d_carbon_balance=false;
     d_sulfur_balance=false;
+    d_use_new_bcs = false; 
   }
   else
   {
+
+     d_use_new_bcs = false; 
+     if ( db->findBlock("use_new_bcs") ) { 
+       d_use_new_bcs = true; 
+     }
+     // new bc:                                                 
+     if ( d_use_new_bcs ) { 
+       setupBCs( db_params );
+     }
+
     db->getWithDefault("carbon_balance", d_carbon_balance, false);
     db->getWithDefault("sulfur_balance", d_sulfur_balance, false);
     //--- instrusions with boundary sources -----
@@ -1602,6 +1612,7 @@ BoundaryCondition::velocityBC(const Patch* patch,
 
 void 
 BoundaryCondition::pressureBC(const Patch* patch,
+                              const int matl_index, 
                               ArchesVariables* vars,
                               ArchesConstVariables* constvars)
 {
@@ -1633,66 +1644,88 @@ BoundaryCondition::pressureBC(const Patch* patch,
     }
   }
 
-  //__________________________________
-  //  Pressure, outlet, and wall BC
-  vector<Patch::FaceType> bf;
-  patch->getBoundaryFaces(bf);
-  
-  for( vector<Patch::FaceType>::const_iterator itr = bf.begin(); itr != bf.end(); ++itr ){
-    Patch::FaceType face = *itr;
-    
-    IntVector offset = patch->faceDirection(face);
-    
-    CellIterator iter = patch->getFaceIterator(face, Patch::InteriorFaceCells);
-    
-    //face:       -x +x -y +y -z +z
-    //Stencil 7   w, e, s, n, b, t;
-    for(;!iter.done(); iter++){
-      IntVector c = *iter;
-      IntVector adj = c + offset;
-      
-      if( cellType[adj] == pressure_BC ||
-          cellType[adj] == outlet_BC){
-        // dirichlet_BC
-        A[c].p = A[c].p +  A[c][face];
-        A[c][face] = 0.0;
-      }
 
-      if( cellType[adj] == wall_BC){
-        // Neumann zero gradient BC
-        A[c].p = A[c].p - A[c][face];
-        A[c][face] = 0.0;
-      }
-    }
-  }
-  
-  //__________________________________
-  //  Inlets
-  // This assumes that all inlets have Neumann (zero gradient) pressure BCs
-  for (int ii = 0; ii < d_numInlets; ii++) {
+  if ( !d_use_new_bcs ) { 
+    //__________________________________
+    //  Pressure, outlet, and wall BC
+    vector<Patch::FaceType> bf;
+    patch->getBoundaryFaces(bf);
     
     for( vector<Patch::FaceType>::const_iterator itr = bf.begin(); itr != bf.end(); ++itr ){
       Patch::FaceType face = *itr;
-
+      
       IntVector offset = patch->faceDirection(face);
-
+      
       CellIterator iter = patch->getFaceIterator(face, Patch::InteriorFaceCells);
-
+      
       //face:       -x +x -y +y -z +z
       //Stencil 7   w, e, s, n, b, t;
       for(;!iter.done(); iter++){
         IntVector c = *iter;
         IntVector adj = c + offset;
         
-        if( cellType[adj] == d_flowInlets[ii]->d_cellTypeID){
+        if( cellType[adj] == pressure_BC ||
+            cellType[adj] == outlet_BC){
+          // dirichlet_BC
+          A[c].p = A[c].p +  A[c][face];
+          A[c][face] = 0.0;
+        }
+
+        if( cellType[adj] == wall_BC){
           // Neumann zero gradient BC
-          
-          A[c].p = A[c].p -  A[c][face];
+          A[c].p = A[c].p - A[c][face];
           A[c][face] = 0.0;
         }
       }
     }
-  }
+    
+    //__________________________________
+    //  Inlets
+    // This assumes that all inlets have Neumann (zero gradient) pressure BCs
+    for (int ii = 0; ii < d_numInlets; ii++) {
+      
+      for( vector<Patch::FaceType>::const_iterator itr = bf.begin(); itr != bf.end(); ++itr ){
+        Patch::FaceType face = *itr;
+
+        IntVector offset = patch->faceDirection(face);
+
+        CellIterator iter = patch->getFaceIterator(face, Patch::InteriorFaceCells);
+
+        //face:       -x +x -y +y -z +z
+        //Stencil 7   w, e, s, n, b, t;
+        for(;!iter.done(); iter++){
+          IntVector c = *iter;
+          IntVector adj = c + offset;
+          
+          if( cellType[adj] == d_flowInlets[ii]->d_cellTypeID){
+            // Neumann zero gradient BC
+            
+            A[c].p = A[c].p -  A[c][face];
+            A[c][face] = 0.0;
+          }
+        }
+      }
+    }
+  } else { 
+
+    std::vector<BC_TYPE> add_types; 
+    add_types.push_back( OUTLET ); 
+    add_types.push_back( PRESSURE ); 
+    int sign = 1; 
+
+    zeroStencilDirection( patch, matl_index, sign, A, add_types ); 
+
+    std::vector<BC_TYPE> sub_types; 
+    sub_types.push_back( WALL ); 
+    sub_types.push_back( MASSFLOW_INLET ); 
+    sub_types.push_back( VELOCITY_INLET ); 
+    sub_types.push_back( VELOCITY_FILE ); 
+    sub_types.push_back( MASSFLOW_FILE ); 
+    sign = -1;
+
+    zeroStencilDirection( patch, matl_index, sign, A, sub_types ); 
+
+  } 
 }
 
 //****************************************************************************
@@ -3667,6 +3700,7 @@ void
 BoundaryCondition::velRhoHatInletBC(const Patch* patch,
                                     ArchesVariables* vars,
                                     ArchesConstVariables* constvars,
+                                    const int matl_index, 
                                     double time_shift)
 {
   double time = d_lab->d_sharedState->getElapsedTime();
@@ -3675,44 +3709,96 @@ BoundaryCondition::velRhoHatInletBC(const Patch* patch,
   IntVector idxLo = patch->getFortranCellLowIndex();
   IntVector idxHi = patch->getFortranCellHighIndex();
   // stores cell type info for the patch with the ghost cell type
-  for (int indx = 0; indx < d_numInlets; indx++) {
-    // Get a copy of the current flow inlet
-    FlowInlet* fi = d_flowInlets[indx];
-    
-    // assign flowType the value that corresponds to flow
-    //CellTypeInfo flowType = FLOW;
-    bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
-    bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
-    bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
-    bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
-    bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
-    bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
+  
+  if ( !d_use_new_bcs ) { 
+    for (int indx = 0; indx < d_numInlets; indx++) {
+      // Get a copy of the current flow inlet
+      FlowInlet* fi = d_flowInlets[indx];
+      
+      // assign flowType the value that corresponds to flow
+      //CellTypeInfo flowType = FLOW;
+      bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
+      bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
+      bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
+      bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
+      bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
+      bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
 
-    fort_inlbcs(vars->uVelRhoHat, vars->vVelRhoHat, vars->wVelRhoHat,
-                idxLo, idxHi, constvars->new_density, constvars->cellType, 
-                fi->d_cellTypeID, current_time,
-                xminus, xplus, yminus, yplus, zminus, zplus,
-                fi->d_ramping_inlet_flowrate);
-  }
+      fort_inlbcs(vars->uVelRhoHat, vars->vVelRhoHat, vars->wVelRhoHat,
+                  idxLo, idxHi, constvars->new_density, constvars->cellType, 
+                  fi->d_cellTypeID, current_time,
+                  xminus, xplus, yminus, yplus, zminus, zplus,
+                  fi->d_ramping_inlet_flowrate);
+    }
+  } else { 
+
+    vector<Patch::FaceType>::const_iterator bf_iter;
+    vector<Patch::FaceType> bf;
+    patch->getBoundaryFaces(bf);
+
+    for ( BCInfoMap::iterator bc_iter = d_bc_information.begin(); 
+          bc_iter != d_bc_information.end(); bc_iter++){
+
+      for ( bf_iter = bf.begin(); bf_iter !=bf.end(); bf_iter++ ){
+
+        //get the face
+        Patch::FaceType face = *bf_iter;
+        IntVector insideCellDir = patch->faceDirection(face); 
+
+        //get the number of children
+        int numChildren = patch->getBCDataArray(face)->getNumberChildren(matl_index); //assumed one material
+
+        for (int child = 0; child < numChildren; child++){
+
+          double bc_value = 0;
+          string bc_kind = "NotSet";
+          Iterator bound_ptr;
+
+          bool foundIterator = 
+            getIteratorBCValueBCKind( patch, face, child, bc_iter->second.name, matl_index, bc_value, bound_ptr, bc_kind); 
+
+          if ( foundIterator ) {
+
+            bound_ptr.reset(); 
+
+            if ( bc_iter->second.type == VELOCITY_INLET || bc_iter->second.type == MASSFLOW_INLET ) { 
+              //---- set velocities
+              setVel__NEW( patch, face, vars->uVelRhoHat, vars->vVelRhoHat, vars->wVelRhoHat, constvars->new_density, bound_ptr, bc_iter->second.velocity ); 
+            } else if ( bc_iter->second.type == VELOCITY_FILE ) {
+              //---- set velocities
+              //setVelFromInput__NEW( patch, face, uVelocity, vVelocity, wVelocity, bound_ptr, bc_iter->second.filename ); 
+              //---- set the enthalpy
+              //if ( d_enthalpySolve ) 
+              //  setEnthalpyFromInput__NEW( patch, face, enthalpy, ivGridVarMap, allIndepVarNames, bound_ptr ); 
+            }
+
+          }
+        }
+      }
+    }
+  } 
   
 }
 
 //****************************************************************************
 // Set hat velocity at the outlet
-// Tangential bc's are not needed to be set for hat velocities
-// Commented them out to avoid confusion
 //****************************************************************************
 void 
-BoundaryCondition::velRhoHatOutletPressureBC(const Patch* patch,
-                                             ArchesVariables* vars,
-                                             ArchesConstVariables* constvars)
+BoundaryCondition::velRhoHatOutletPressureBC( const Patch* patch,
+                                              SFCXVariable<double>& uvel, 
+                                              SFCYVariable<double>& vvel, 
+                                              SFCZVariable<double>& wvel, 
+                                              constSFCXVariable<double>& old_uvel, 
+                                              constSFCYVariable<double>& old_vvel, 
+                                              constSFCZVariable<double>& old_wvel, 
+                                              constCCVariable<int>& cellType )  
 {
   // Get the low and high index for the patch
   IntVector idxLo = patch->getFortranCellLowIndex();
   IntVector idxHi = patch->getFortranCellHighIndex();
 
-  int outlet_celltypeval = outletCellType();
-  int pressure_celltypeval = pressureCellType();
+  int outlet_type = outletCellType();
+  int pressure_type = pressureCellType();
 
   bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
   bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
@@ -3730,26 +3816,22 @@ BoundaryCondition::velRhoHatOutletPressureBC(const Patch* patch,
         IntVector currCell(colX, colY, colZ);
         IntVector xminusCell(colX-1, colY, colZ);
         IntVector xplusCell(colX+1, colY, colZ);
-        if ((constvars->cellType[xminusCell] == outlet_celltypeval)||
-            (constvars->cellType[xminusCell] == pressure_celltypeval)) {
+        if ((cellType[xminusCell] == outlet_type)||
+            (cellType[xminusCell] == pressure_type)) {
           if ((zminus && (colZ == idxLo.z()))||(zplus && (colZ == idxHi.z()))
               ||(yminus && (colY == idxLo.y()))||(yplus && (colY == idxHi.y())))
-            vars->uVelRhoHat[currCell] = 0.0;
+            uvel[currCell] = 0.0;
           else {
-          if (constvars->cellType[xminusCell] == outlet_celltypeval)
+          if (cellType[xminusCell] == outlet_type)
             sign = 1;
           else
             sign = -1;
-          if (sign * constvars->old_uVelocity[currCell] < -1.0e-10)
-            vars->uVelRhoHat[currCell] = vars->uVelRhoHat[xplusCell];
+          if (sign * old_uvel[currCell] < -1.0e-10)
+            uvel[currCell] = uvel[xplusCell];
           else
-            vars->uVelRhoHat[currCell] = 0.0;
+            uvel[currCell] = 0.0;
           }
-          vars->uVelRhoHat[xminusCell] = vars->uVelRhoHat[currCell];
- /*         if (!(yminus && (colY == idxLo.y())))
-            vars->vVelRhoHat[xminusCell] = vars->vVelRhoHat[currCell];
-          if (!(zminus && (colZ == idxLo.z())))
-            vars->wVelRhoHat[xminusCell] = vars->wVelRhoHat[currCell];*/
+          uvel[xminusCell] = uvel[currCell];
         }
       }
     }
@@ -3761,26 +3843,22 @@ BoundaryCondition::velRhoHatOutletPressureBC(const Patch* patch,
         IntVector currCell(colX, colY, colZ);
         IntVector xplusCell(colX+1, colY, colZ);
         IntVector xplusplusCell(colX+2, colY, colZ);
-        if ((constvars->cellType[xplusCell] == outlet_celltypeval)||
-            (constvars->cellType[xplusCell] == pressure_celltypeval)) {
+        if ((cellType[xplusCell] == outlet_type)||
+            (cellType[xplusCell] == pressure_type)) {
           if ((zminus && (colZ == idxLo.z()))||(zplus && (colZ == idxHi.z()))
               ||(yminus && (colY == idxLo.y()))||(yplus && (colY == idxHi.y())))
-            vars->uVelRhoHat[xplusCell] = 0.0;
+            uvel[xplusCell] = 0.0;
           else {
-          if (constvars->cellType[xplusCell] == outlet_celltypeval)
+          if (cellType[xplusCell] == outlet_type)
             sign = 1;
           else
             sign = -1;
-          if (sign * constvars->old_uVelocity[xplusCell] > 1.0e-10)
-            vars->uVelRhoHat[xplusCell] = vars->uVelRhoHat[currCell];
+          if (sign * old_uvel[xplusCell] > 1.0e-10)
+            uvel[xplusCell] = uvel[currCell];
           else
-            vars->uVelRhoHat[xplusCell] = 0.0;
+            uvel[xplusCell] = 0.0;
           }
-          vars->uVelRhoHat[xplusplusCell] = vars->uVelRhoHat[xplusCell];
-   /*       if (!(yminus && (colY == idxLo.y())))
-            vars->vVelRhoHat[xplusCell] = vars->vVelRhoHat[currCell];
-          if (!(zminus && (colZ == idxLo.z())))
-            vars->wVelRhoHat[xplusCell] = vars->wVelRhoHat[currCell];*/
+          uvel[xplusplusCell] = uvel[xplusCell];
         }
       }
     }
@@ -3792,26 +3870,22 @@ BoundaryCondition::velRhoHatOutletPressureBC(const Patch* patch,
         IntVector currCell(colX, colY, colZ);
         IntVector yminusCell(colX, colY-1, colZ);
         IntVector yplusCell(colX, colY+1, colZ);
-        if ((constvars->cellType[yminusCell] == outlet_celltypeval)||
-            (constvars->cellType[yminusCell] == pressure_celltypeval)) {
-     /*     if (!(xminus && (colX == idxLo.x())))
-            vars->uVelRhoHat[yminusCell] = vars->uVelRhoHat[currCell];*/
+        if ((cellType[yminusCell] == outlet_type)||
+            (cellType[yminusCell] == pressure_type)) {
           if ((zminus && (colZ == idxLo.z()))||(zplus && (colZ == idxHi.z()))
               ||(xminus && (colX == idxLo.x()))||(xplus && (colX == idxHi.x())))
-            vars->vVelRhoHat[currCell] = 0.0;
+            vvel[currCell] = 0.0;
           else {
-          if (constvars->cellType[yminusCell] == outlet_celltypeval)
+          if (cellType[yminusCell] == outlet_type)
             sign = 1;
           else
             sign = -1;
-          if (sign * constvars->old_vVelocity[currCell] < -1.0e-10)
-            vars->vVelRhoHat[currCell] = vars->vVelRhoHat[yplusCell];
+          if (sign * old_vvel[currCell] < -1.0e-10)
+            vvel[currCell] = vvel[yplusCell];
           else
-            vars->vVelRhoHat[currCell] = 0.0;
+            vvel[currCell] = 0.0;
           }
-          vars->vVelRhoHat[yminusCell] = vars->vVelRhoHat[currCell];
-     /*     if (!(zminus && (colZ == idxLo.z())))
-            vars->wVelRhoHat[yminusCell] = vars->wVelRhoHat[currCell];*/
+          vvel[yminusCell] = vvel[currCell];
         }
       }
     }
@@ -3823,26 +3897,22 @@ BoundaryCondition::velRhoHatOutletPressureBC(const Patch* patch,
         IntVector currCell(colX, colY, colZ);
         IntVector yplusCell(colX, colY+1, colZ);
         IntVector yplusplusCell(colX, colY+2, colZ);
-        if ((constvars->cellType[yplusCell] == outlet_celltypeval)||
-            (constvars->cellType[yplusCell] == pressure_celltypeval)) {
-      /*    if (!(xminus && (colX == idxLo.x())))
-            vars->uVelRhoHat[yplusCell] = vars->uVelRhoHat[currCell];*/
+        if ((cellType[yplusCell] == outlet_type)||
+            (cellType[yplusCell] == pressure_type)) {
           if ((zminus && (colZ == idxLo.z()))||(zplus && (colZ == idxHi.z()))
               ||(xminus && (colX == idxLo.x()))||(xplus && (colX == idxHi.x())))
-            vars->vVelRhoHat[yplusCell] = 0.0;
+            vvel[yplusCell] = 0.0;
           else {
-          if (constvars->cellType[yplusCell] == outlet_celltypeval)
+          if (cellType[yplusCell] == outlet_type)
             sign = 1;
           else
             sign = -1;
-          if (sign * constvars->old_vVelocity[yplusCell] > 1.0e-10)
-            vars->vVelRhoHat[yplusCell] = vars->vVelRhoHat[currCell];
+          if (sign * old_vvel[yplusCell] > 1.0e-10)
+            vvel[yplusCell] = vvel[currCell];
           else
-            vars->vVelRhoHat[yplusCell] = 0.0;
+            vvel[yplusCell] = 0.0;
           }
-          vars->vVelRhoHat[yplusplusCell] = vars->vVelRhoHat[yplusCell];
-       /*   if (!(zminus && (colZ == idxLo.z())))
-            vars->wVelRhoHat[yplusCell] = vars->wVelRhoHat[currCell];*/
+          vvel[yplusplusCell] = vvel[yplusCell];
         }
       }
     }
@@ -3854,26 +3924,22 @@ BoundaryCondition::velRhoHatOutletPressureBC(const Patch* patch,
         IntVector currCell(colX, colY, colZ);
         IntVector zminusCell(colX, colY, colZ-1);
         IntVector zplusCell(colX, colY, colZ+1);
-        if ((constvars->cellType[zminusCell] == outlet_celltypeval)||
-            (constvars->cellType[zminusCell] == pressure_celltypeval)) {
-      /*    if (!(xminus && (colX == idxLo.x())))
-            vars->uVelRhoHat[zminusCell] = vars->uVelRhoHat[currCell];
-          if (!(yminus && (colY == idxLo.y())))
-            vars->vVelRhoHat[zminusCell] = vars->vVelRhoHat[currCell];*/
+        if ((cellType[zminusCell] == outlet_type)||
+            (cellType[zminusCell] == pressure_type)) {
           if ((yminus && (colY == idxLo.y()))||(yplus && (colY == idxHi.y()))
               ||(xminus && (colX == idxLo.x()))||(xplus && (colX == idxHi.x())))
-            vars->wVelRhoHat[currCell] = 0.0;
+            wvel[currCell] = 0.0;
           else {
-          if (constvars->cellType[zminusCell] == outlet_celltypeval)
+          if (cellType[zminusCell] == outlet_type)
             sign = 1;
           else
             sign = -1;
-          if (sign * constvars->old_wVelocity[currCell] < -1.0e-10)
-            vars->wVelRhoHat[currCell] = vars->wVelRhoHat[zplusCell];
+          if (sign * old_wvel[currCell] < -1.0e-10)
+            wvel[currCell] = wvel[zplusCell];
           else
-            vars->wVelRhoHat[currCell] = 0.0;
+            wvel[currCell] = 0.0;
           }
-          vars->wVelRhoHat[zminusCell] = vars->wVelRhoHat[currCell];
+          wvel[zminusCell] = wvel[currCell];
         }
       }
     }
@@ -3885,31 +3951,29 @@ BoundaryCondition::velRhoHatOutletPressureBC(const Patch* patch,
         IntVector currCell(colX, colY, colZ);
         IntVector zplusCell(colX, colY, colZ+1);
         IntVector zplusplusCell(colX, colY, colZ+2);
-        if ((constvars->cellType[zplusCell] == outlet_celltypeval)||
-            (constvars->cellType[zplusCell] == pressure_celltypeval)) {
-       /*   if (!(xminus && (colX == idxLo.x())))
-            vars->uVelRhoHat[zplusCell] = vars->uVelRhoHat[currCell];
-          if (!(yminus && (colY == idxLo.y())))
-            vars->vVelRhoHat[zplusCell] = vars->vVelRhoHat[currCell];*/
+        if ((cellType[zplusCell] == outlet_type)||
+            (cellType[zplusCell] == pressure_type)) {
           if ((yminus && (colY == idxLo.y()))||(yplus && (colY == idxHi.y()))
               ||(xminus && (colX == idxLo.x()))||(xplus && (colX == idxHi.x())))
-            vars->wVelRhoHat[zplusCell] = 0.0;
+            wvel[zplusCell] = 0.0;
           else {
-          if (constvars->cellType[zplusCell] == outlet_celltypeval)
+          if (cellType[zplusCell] == outlet_type)
             sign = 1;
           else
             sign = -1;
-          if (sign * constvars->old_wVelocity[zplusCell] > 1.0e-10)
-            vars->wVelRhoHat[zplusCell] = vars->wVelRhoHat[currCell];
+          if (sign * old_wvel[zplusCell] > 1.0e-10)
+            wvel[zplusCell] = wvel[currCell];
           else
-            vars->wVelRhoHat[zplusCell] = 0.0;
+            wvel[zplusCell] = 0.0;
           }
-          vars->wVelRhoHat[zplusplusCell] = vars->wVelRhoHat[zplusCell];
+          wvel[zplusplusCell] = wvel[zplusCell];
         }
       }
     }
   }
 }
+
+
 //****************************************************************************
 // Set zero gradient for tangent velocity on outlet and pressure bc
 //****************************************************************************
@@ -6400,7 +6464,7 @@ BoundaryCondition::setupBCs( ProblemSpecP& db )
  
   ProblemSpecP db_root = db->getRootNode();
   ProblemSpecP db_bc   = db_root->findBlock("Grid")->findBlock("BoundaryConditions"); 
-  d_bc_type_index = 0; 
+  int bc_type_index = 0; 
 
   //Map types to strings:
   d_bc_type_to_string.insert( std::make_pair( VELOCITY_INLET , "VelocityInlet" ) );
@@ -6426,7 +6490,7 @@ BoundaryCondition::setupBCs( ProblemSpecP& db )
         db_BCType->getAttribute("var", type); 
         my_info.name = name;
         std::stringstream color; 
-        color << d_bc_type_index; 
+        color << bc_type_index; 
         my_info.total_area_label = VarLabel::create( "bc_area"+color.str(), ReductionVariable<double, Reductions::Sum<double> >::getTypeDescription());
 
         if ( type == "VelocityInlet" ){
@@ -6485,8 +6549,8 @@ BoundaryCondition::setupBCs( ProblemSpecP& db )
         }
 
         if ( found_bc ) {
-          d_bc_information.insert( std::make_pair(d_bc_type_index, my_info)).first;
-          d_bc_type_index++; 
+          d_bc_information.insert( std::make_pair(bc_type_index, my_info)).first;
+          bc_type_index++; 
         }
 
       }
@@ -6581,12 +6645,16 @@ BoundaryCondition::cellTypeInit__NEW(const ProcessorGroup*,
 //
 void 
 BoundaryCondition::sched_computeBCArea__NEW(SchedulerP& sched,
+                                      const LevelP& level, 
                                       const PatchSet* patches,
                                       const MaterialSet* matls)
 {
+  IntVector lo, hi;
+  level->findInteriorCellIndexRange(lo,hi);
+
   // cell type initialization
   Task* tsk = scinew Task("BoundaryCondition::computeBCArea__NEW",
-                          this, &BoundaryCondition::computeBCArea__NEW);
+                          this, &BoundaryCondition::computeBCArea__NEW, lo, hi);
 
   for ( BCInfoMap::iterator bc_iter = d_bc_information.begin(); 
         bc_iter != d_bc_information.end(); bc_iter++){
@@ -6604,7 +6672,9 @@ BoundaryCondition::computeBCArea__NEW(const ProcessorGroup*,
                                 const PatchSubset* patches,
                                 const MaterialSubset*,
                                 DataWarehouse*,
-                                DataWarehouse* new_dw)
+                                DataWarehouse* new_dw, 
+                                const IntVector lo, 
+                                const IntVector hi )
 {
 
   for (int p = 0; p < patches->size(); p++) {
@@ -6643,6 +6713,7 @@ BoundaryCondition::computeBCArea__NEW(const ProcessorGroup*,
 
           double dx_1 = 0.0;
           double dx_2 = 0.0; 
+          IntVector shift; 
 
           if ( foundIterator ) {
 
@@ -6650,26 +6721,32 @@ BoundaryCondition::computeBCArea__NEW(const ProcessorGroup*,
               case Patch::xminus:
                 dx_1 = Dx.y();
                 dx_2 = Dx.z(); 
+                shift = IntVector( 1, 0, 0);
                 break;
               case Patch::xplus:
                 dx_1 = Dx.y();
                 dx_2 = Dx.z(); 
+                shift = IntVector( 1, 0, 0);
                 break;
               case Patch::yminus:
                 dx_1 = Dx.x();
                 dx_2 = Dx.z(); 
+                shift = IntVector( 0, 1, 0);
                 break;
               case Patch::yplus:
                 dx_1 = Dx.x();
                 dx_2 = Dx.z(); 
+                shift = IntVector( 0, 1, 0);
                 break;
               case Patch::zminus: 
                 dx_1 = Dx.y();
                 dx_2 = Dx.x(); 
+                shift = IntVector( 0, 0, 1);
                 break;
               case Patch::zplus:
                 dx_1 = Dx.y();
                 dx_2 = Dx.x(); 
+                shift = IntVector( 0, 0, 1);
                 break;
               default:
                 break;
@@ -6677,15 +6754,24 @@ BoundaryCondition::computeBCArea__NEW(const ProcessorGroup*,
 
             for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
 
-              area += dx_1*dx_2;
+              IntVector c = *bound_ptr; 
 
+              // "if" needed to ensure that extra cell contributions aren't added
+              if ( c.x() >= lo.x() - shift.x() && c.x() < hi.x() + shift.x() ){ 
+                if ( c.y() >= lo.y() - shift.y() && c.y() < hi.y() + shift.y() ){ 
+                  if ( c.z() >= lo.z() - shift.z() && c.z() < hi.z() + shift.z() ){ 
+
+                    area += dx_1*dx_2;
+                  }
+                }
+              }
             }
+
+            new_dw->put( sum_vartype(area), bc_iter->second.total_area_label );
+
           }
         }
       }
-
-      new_dw->put( sum_vartype(area), bc_iter->second.total_area_label );
-
     }
   }
 }
@@ -6735,6 +6821,8 @@ BoundaryCondition::setupBCInletVelocities__NEW(const ProcessorGroup*,
     constCCVariable<double> density; 
     new_dw->get( density, d_lab->d_densityCPLabel, matl_index, patch, Ghost::None, 0 ); 
 
+    proc0cout << "\nBoundary condition summary for inlets: \n";
+
     for ( BCInfoMap::iterator bc_iter = d_bc_information.begin(); 
           bc_iter != d_bc_information.end(); bc_iter++){
 
@@ -6771,12 +6859,15 @@ BoundaryCondition::setupBCInletVelocities__NEW(const ProcessorGroup*,
             switch ( bc_iter->second.type ) {
 
               case ( VELOCITY_INLET ): 
+                proc0cout << " Velocity inlet found for face: " << face << " with area = " << area << endl;
                 bc_iter->second.mass_flow_rate = bc_iter->second.velocity[norm] * area * density[*bound_ptr];
                 break;
               case ( MASSFLOW_INLET ): 
+                proc0cout << " Massflow inlet found for face: " << face << " with area = " << area << endl;
                 bc_iter->second.mass_flow_rate = bc_value; 
                 bc_iter->second.velocity[norm] = bc_iter->second.mass_flow_rate / 
                                                  ( area * density[*bound_ptr] );
+                proc0cout << "     Computed velocity from rho = " << density[*bound_ptr] << " is v = " << bc_iter->second.velocity[norm] << endl;
                 break;
               case ( VELOCITY_FILE ): 
                 // here we should read in the file 
@@ -6790,6 +6881,7 @@ BoundaryCondition::setupBCInletVelocities__NEW(const ProcessorGroup*,
         }
       }
     }
+    proc0cout << endl;
   }
 }
 //--------------------------------------------------------------------------------
@@ -6812,6 +6904,9 @@ BoundaryCondition::sched_setInitProfile__NEW(SchedulerP& sched,
   tsk->modifies(d_lab->d_uVelRhoHatLabel);
   tsk->modifies(d_lab->d_vVelRhoHatLabel);
   tsk->modifies(d_lab->d_wVelRhoHatLabel);
+
+  // Density
+  tsk->requires(Task::NewDW, d_lab->d_densityCPLabel, Ghost::AroundCells, 0); 
 
   MixingRxnModel* mixingTable = d_props->getMixRxnModel(); 
   MixingRxnModel::VarMap iv_vars = mixingTable->getIndepVarMap(); 
@@ -6839,7 +6934,6 @@ BoundaryCondition::setInitProfile__NEW(const ProcessorGroup*,
                                 DataWarehouse*,
                                 DataWarehouse* new_dw)
 {
-#if HAVE_TABPROPS
   for (int p = 0; p < patches->size(); p++) {
 
     const Patch* patch = patches->get(p);
@@ -6857,6 +6951,7 @@ BoundaryCondition::setInitProfile__NEW(const ProcessorGroup*,
     SFCYVariable<double> vRhoHat; 
     SFCZVariable<double> wRhoHat; 
     CCVariable<double> enthalpy; 
+    constCCVariable<double> density; 
 
     new_dw->getModifiable( uVelocity, d_lab->d_uVelocitySPBCLabel, matl_index, patch ); 
     new_dw->getModifiable( vVelocity, d_lab->d_vVelocitySPBCLabel, matl_index, patch ); 
@@ -6866,6 +6961,7 @@ BoundaryCondition::setInitProfile__NEW(const ProcessorGroup*,
     new_dw->getModifiable( wRhoHat, d_lab->d_wVelRhoHatLabel, matl_index, patch ); 
     if ( d_enthalpySolve )
       new_dw->getModifiable( enthalpy, d_lab->d_enthalpySPLabel, matl_index, patch ); 
+    new_dw->get( density, d_lab->d_densityCPLabel, matl_index, patch, Ghost::None, 0 ); 
 
     MixingRxnModel* mixingTable = d_props->getMixRxnModel(); 
     MixingRxnModel::VarMap iv_vars = mixingTable->getIndepVarMap(); 
@@ -6909,7 +7005,7 @@ BoundaryCondition::setInitProfile__NEW(const ProcessorGroup*,
 
             if ( bc_iter->second.type != VELOCITY_FILE ) { 
               //---- set velocities
-              setVel__NEW( patch, face, uVelocity, vVelocity, wVelocity, bound_ptr, bc_iter->second.velocity ); 
+              setVel__NEW( patch, face, uVelocity, vVelocity, wVelocity, density, bound_ptr, bc_iter->second.velocity ); 
               //---- set the enthalpy
               if ( d_enthalpySolve ) 
                 setEnthalpy__NEW( patch, face, enthalpy, ivGridVarMap, allIndepVarNames, bound_ptr ); 
@@ -6931,14 +7027,12 @@ BoundaryCondition::setInitProfile__NEW(const ProcessorGroup*,
     wRhoHat.copyData( wVelocity ); 
 
   }
-#endif
 }
 
 void BoundaryCondition::setEnthalpy__NEW( const Patch* patch, const Patch::FaceType& face, 
     CCVariable<double>& enthalpy, BoundaryCondition::HelperMap ivGridVarMap, BoundaryCondition::HelperVec allIndepVarNames, 
     Iterator bound_ptr)
 {
-#if HAVE_TABPROPS
   //get the face direction
   IntVector insideCellDir = patch->faceDirection(face);
   MixingRxnModel* mixingTable = d_props->getMixRxnModel(); 
@@ -6969,7 +7063,6 @@ void BoundaryCondition::setEnthalpy__NEW( const Patch* patch, const Patch::FaceT
     enthalpy[c] = h_a - hl * h_s;
 
   }
-#endif
 }
 
 void BoundaryCondition::setEnthalpyFromInput__NEW( const Patch* patch, const Patch::FaceType& face, 
@@ -6980,6 +7073,7 @@ void BoundaryCondition::setEnthalpyFromInput__NEW( const Patch* patch, const Pat
 
 void BoundaryCondition::setVel__NEW( const Patch* patch, const Patch::FaceType& face, 
         SFCXVariable<double>& uVel, SFCYVariable<double>& vVel, SFCZVariable<double>& wVel,
+        constCCVariable<double>& density, 
         Iterator bound_ptr, Vector value )
 {
 
@@ -6988,37 +7082,47 @@ void BoundaryCondition::setVel__NEW( const Patch* patch, const Patch::FaceType& 
 
  switch ( face ) {
 
-   case Patch::xminus:
+   case Patch::xminus :
 
      for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
 
-       uVel[*bound_ptr] = value.x();
-       uVel[*bound_ptr - insideCellDir] = value.x(); 
+       IntVector c  = *bound_ptr; 
+       IntVector cp = *bound_ptr - insideCellDir; 
 
-       vVel[*bound_ptr] = value.y(); 
-       wVel[*bound_ptr] = value.z(); 
+       uVel[c]  = value.x();
+       uVel[cp] = value.x() * density[c] / ( 0.5 * ( density[c] + density[cp] )); 
+
+       vVel[c] = value.y(); 
+       wVel[c] = value.z(); 
      }
 
      break; 
    case Patch::xplus: 
 
      for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
-       uVel[*bound_ptr] = value.x();
-       uVel[*bound_ptr - insideCellDir] = value.x(); 
 
-       vVel[*bound_ptr] = value.y(); 
-       wVel[*bound_ptr] = value.z(); 
+       IntVector c  = *bound_ptr; 
+       IntVector cp = *bound_ptr - insideCellDir; 
+
+       uVel[c]  = value.x();
+       uVel[cp] = value.x() * density[c] / ( 0.5 * ( density[c] + density[cp] )); 
+
+       vVel[c] = value.y(); 
+       wVel[c] = value.z(); 
      }
      break; 
    case Patch::yminus: 
 
      for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
 
-       vVel[*bound_ptr] = value.y();
-       vVel[*bound_ptr - insideCellDir] = value.y(); 
+       IntVector c  = *bound_ptr; 
+       IntVector cp = *bound_ptr - insideCellDir; 
 
-       uVel[*bound_ptr] = value.x(); 
-       wVel[*bound_ptr] = value.z(); 
+       vVel[c] = value.y();
+       vVel[cp] = value.y() * density[c] / ( 0.5 * ( density[c] + density[cp] )); 
+
+       uVel[c] = value.x(); 
+       wVel[c] = value.z(); 
 
      }
      break; 
@@ -7026,11 +7130,14 @@ void BoundaryCondition::setVel__NEW( const Patch* patch, const Patch::FaceType& 
 
      for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
 
-       vVel[*bound_ptr] = value.y();
-       vVel[*bound_ptr - insideCellDir] = value.y(); 
+       IntVector c  = *bound_ptr; 
+       IntVector cp = *bound_ptr - insideCellDir; 
 
-       uVel[*bound_ptr] = value.x(); 
-       wVel[*bound_ptr] = value.z(); 
+       vVel[c] = value.y();
+       vVel[cp] = value.y() * density[c] / ( 0.5 * ( density[c] + density[cp] )); 
+
+       uVel[c] = value.x(); 
+       wVel[c] = value.z(); 
 
      }
      break; 
@@ -7038,11 +7145,14 @@ void BoundaryCondition::setVel__NEW( const Patch* patch, const Patch::FaceType& 
 
      for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
 
-       wVel[*bound_ptr] = value.z();
-       wVel[*bound_ptr - insideCellDir] = value.z(); 
+       IntVector c  = *bound_ptr; 
+       IntVector cp = *bound_ptr - insideCellDir; 
 
-       uVel[*bound_ptr] = value.x(); 
-       vVel[*bound_ptr] = value.y(); 
+       wVel[c] = value.z();
+       wVel[cp] = value.z() * density[c] / ( 0.5 * ( density[c] + density[cp] )); 
+
+       uVel[c] = value.x(); 
+       vVel[c] = value.y(); 
 
      }
      break; 
@@ -7050,11 +7160,14 @@ void BoundaryCondition::setVel__NEW( const Patch* patch, const Patch::FaceType& 
 
      for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
 
-       wVel[*bound_ptr] = value.z();
-       wVel[*bound_ptr - insideCellDir] = value.z(); 
+       IntVector c  = *bound_ptr; 
+       IntVector cp = *bound_ptr - insideCellDir; 
 
-       uVel[*bound_ptr] = value.x(); 
-       vVel[*bound_ptr] = value.y(); 
+       wVel[c] = value.z();
+       wVel[cp] = value.z() * density[c] / ( 0.5 * ( density[c] + density[cp] )); 
+
+       uVel[c] = value.x(); 
+       vVel[c] = value.y(); 
 
      }
      break; 
@@ -7232,8 +7345,6 @@ void BoundaryCondition::setVelFromInput__NEW( const Patch* patch, const Patch::F
      break;
 
  }
-
-
 }
 
 std::map<IntVector, double>
@@ -7264,4 +7375,242 @@ BoundaryCondition::readInputFile__NEW( std::string file_name )
 
   gzclose( file ); 
   return result; 
+}
+
+void 
+BoundaryCondition::velocityOutletPressureBC__NEW( const Patch* patch, 
+                                                  int  matl_index, 
+                                                  SFCXVariable<double>& uvel, 
+                                                  SFCYVariable<double>& vvel, 
+                                                  SFCZVariable<double>& wvel, 
+                                                  constSFCXVariable<double>& old_uvel, 
+                                                  constSFCYVariable<double>& old_vvel, 
+                                                  constSFCZVariable<double>& old_wvel ) 
+{
+  vector<Patch::FaceType>::const_iterator bf_iter;
+  vector<Patch::FaceType> bf;
+  patch->getBoundaryFaces(bf);
+
+  // This business is to get the outlet/pressure bcs to behave like the 
+  // original arches outlet/pressure bc
+  bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
+  bool xplus =  patch->getBCType(Patch::xplus)  != Patch::Neighbor;
+  bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
+  bool yplus =  patch->getBCType(Patch::yplus)  != Patch::Neighbor;
+  bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
+  bool zplus =  patch->getBCType(Patch::zplus)  != Patch::Neighbor;
+
+  IntVector idxLo = patch->getFortranCellLowIndex();
+  IntVector idxHi = patch->getFortranCellHighIndex();
+
+  for ( BCInfoMap::iterator bc_iter = d_bc_information.begin(); 
+        bc_iter != d_bc_information.end(); bc_iter++){
+
+    if ( bc_iter->second.type == OUTLET || bc_iter->second.type == PRESSURE ) { 
+
+      for ( bf_iter = bf.begin(); bf_iter !=bf.end(); bf_iter++ ){
+
+        //get the face
+        Patch::FaceType face = *bf_iter;
+        IntVector insideCellDir = patch->faceDirection(face); 
+
+        //get the number of children
+        int numChildren = patch->getBCDataArray(face)->getNumberChildren(matl_index); //assumed one material
+
+        for (int child = 0; child < numChildren; child++){
+
+          double bc_value = 0;
+          //int norm = getNormal( face ); 
+          
+          string bc_kind = "NotSet";
+          Iterator bound_ptr;
+
+          bool foundIterator = 
+            getIteratorBCValueBCKind( patch, face, child, bc_iter->second.name, matl_index, bc_value, bound_ptr, bc_kind); 
+
+          if ( foundIterator ) {
+
+            bound_ptr.reset();
+            double negsmall = -1.0E-10;
+            double zero     = 0.0E0; 
+            int sign        = 1;
+
+            if ( bc_iter->second.type == PRESSURE ) { 
+              sign = -1; 
+            }
+
+            switch (face) {
+
+              case Patch::xminus:
+
+                for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
+
+                  IntVector c   = *bound_ptr; 
+                  IntVector cp  = *bound_ptr - insideCellDir; 
+                  IntVector cpp = cp - insideCellDir; 
+
+                  if ( (zminus && (c.z() == idxLo.z())) ||
+                       (zplus  && (c.z() == idxHi.z())) ||
+                       (yminus && (c.y() == idxLo.y())) ||
+                       (yplus  && (c.y() == idxHi.y())) ){ 
+
+                    uvel[cp] = zero; 
+
+                  } else {
+
+                    if ( sign * old_uvel[cp] < negsmall ) { 
+                      uvel[cp] = uvel[cpp]; 
+                    } else {
+                      uvel[cp] = zero; 
+                    }
+                    uvel[c] = uvel[cp]; 
+                  }
+                }
+                break; 
+
+              case Patch::xplus:
+
+                for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
+
+                  IntVector c   = *bound_ptr; 
+                  IntVector cp  = *bound_ptr - insideCellDir; 
+                  IntVector cm  = c + insideCellDir; 
+
+                  if ( (zminus && (c.z() == idxLo.z())) ||
+                       (zplus  && (c.z() == idxHi.z())) ||
+                       (yminus && (c.y() == idxLo.y())) ||
+                       (yplus  && (c.y() == idxHi.y())) ){ 
+
+                    uvel[c] = zero; 
+
+                  } else {
+
+                    if ( sign * old_uvel[c] > negsmall ) { 
+                      uvel[c] = uvel[cp]; 
+                    } else {
+                      uvel[c] = zero; 
+                    }
+                    uvel[cm] = uvel[c]; 
+                  }
+
+                }
+                break; 
+
+              case Patch::yminus:
+
+                for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
+
+                  IntVector c   = *bound_ptr; 
+                  IntVector cp  = *bound_ptr - insideCellDir; 
+                  IntVector cpp = cp - insideCellDir; 
+
+                  if ( (zminus && (c.z() == idxLo.z())) ||
+                       (zplus  && (c.z() == idxHi.z())) ||
+                       (xminus && (c.x() == idxLo.x())) ||
+                       (xplus  && (c.x() == idxHi.x())) ){ 
+
+                    vvel[cp] = zero; 
+
+                  } else {
+
+                    if ( sign * old_vvel[cp] < negsmall ) { 
+                      vvel[cp] = vvel[cpp]; 
+                    } else {
+                      vvel[cp] = zero; 
+                    }
+                    vvel[c] = vvel[cp]; 
+                  }
+                }
+                break; 
+
+              case Patch::yplus: 
+
+                for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
+
+                  IntVector c   = *bound_ptr; 
+                  IntVector cp  = *bound_ptr - insideCellDir; 
+                  IntVector cm  = c + insideCellDir; 
+
+                  if ( (zminus && (c.z() == idxLo.z())) ||
+                       (zplus  && (c.z() == idxHi.z())) ||
+                       (xminus && (c.x() == idxLo.x())) ||
+                       (xplus  && (c.x() == idxHi.x())) ){ 
+
+                    vvel[c] = zero; 
+
+                  } else {
+
+                    if ( sign * old_vvel[c] > negsmall ) { 
+                      vvel[c] = vvel[cp]; 
+                    } else {
+                      vvel[c] = zero; 
+                    }
+                    vvel[cm] = vvel[c]; 
+                  }
+                }
+                break; 
+
+              case Patch::zminus: 
+
+                for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
+
+                  IntVector c   = *bound_ptr; 
+                  IntVector cp  = *bound_ptr - insideCellDir; 
+                  IntVector cpp = cp - insideCellDir; 
+
+                  if ( (xminus && (c.x() == idxLo.x())) ||
+                       (xplus  && (c.x() == idxHi.x())) ||
+                       (yminus && (c.y() == idxLo.y())) ||
+                       (yplus  && (c.y() == idxHi.y())) ){ 
+
+                    wvel[cp] = zero; 
+
+                  } else {
+
+                    if ( sign * old_wvel[cp] < negsmall ) { 
+                      wvel[cp] = wvel[cpp]; 
+                    } else {
+                      wvel[cp] = zero; 
+                    }
+                    wvel[c] = wvel[cp]; 
+                  }
+                }
+                break; 
+
+              case Patch::zplus:
+
+                for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
+
+                  IntVector c   = *bound_ptr; 
+                  IntVector cp  = *bound_ptr - insideCellDir; 
+                  IntVector cm  = c + insideCellDir; 
+
+                  if ( (xminus && (c.x() == idxLo.x())) ||
+                       (xplus  && (c.x() == idxHi.x())) ||
+                       (yminus && (c.y() == idxLo.y())) ||
+                       (yplus  && (c.y() == idxHi.y())) ){ 
+
+                    wvel[c] = zero; 
+
+                  } else {
+
+                    if ( sign * old_wvel[c] > negsmall ) { 
+                      wvel[c] = wvel[cp]; 
+                    } else {
+                      wvel[c] = zero; 
+                    }
+                    wvel[cm] = wvel[c]; 
+                  }
+                }
+                break; 
+
+              default: 
+                throw InvalidValue("Error: Face type not recognized: " + face, __FILE__, __LINE__); 
+                break; 
+            }
+          }
+        }
+      }
+    }
+  }
 }

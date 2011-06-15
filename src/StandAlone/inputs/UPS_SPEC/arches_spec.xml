@@ -180,6 +180,8 @@
       </Properties>
 
       <BoundaryConditions               spec="OPTIONAL NO_DATA" > 
+
+        <use_new_bcs                    spec="OPTIONAL NO_DATA"/>
         
         <TurbulentInlet			spec="OPTIONAL NO_DATA" >
           <cell_low			spec="REQUIRED INTEGER"/>

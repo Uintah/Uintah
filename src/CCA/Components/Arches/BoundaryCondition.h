@@ -39,26 +39,50 @@
 #include <CCA/Components/Arches/Mixing/Stream.h>
 #include <CCA/Components/Arches/Mixing/InletStream.h>
 #include <Core/Exceptions/InvalidValue.h>
+#include <Core/Grid/LevelP.h>
 
 #include <Core/Grid/Variables/SFCXVariable.h>
 #include <Core/Grid/Variables/SFCYVariable.h>
 #include <Core/Grid/Variables/SFCZVariable.h>
 #include <Core/Grid/BoundaryConditions/BoundCond.h>
+#include <Core/Grid/BoundaryConditions/BCDataArray.h>
 #include   <vector>
+
+/**************************************
+  CLASS
+  BoundaryCondition
+
+  Class BoundaryCondition applies boundary conditions
+  at physical boundaries. For boundary cell types it
+  modifies stencil coefficients and source terms.
+
+  GENERAL INFORMATION
+  BoundaryCondition.h - declaration of the class
+
+Author: Rajesh Rawat (rawat@crsim.utah.edu)
+Author of current BC formulation: Stanislav Borodai (borodai@crsim.utah.edu)
+
+Creation Date:   Mar 1, 2000
+
+C-SAFE 
+
+Copyright U of U 2000
+
+KEYWORDS
+
+
+DESCRIPTION
+Class BoundaryCondition applies boundary conditions
+at physical boundaries. For boundary cell types it
+modifies stencil coefficients and source terms. 
+
+WARNING
+none
+ ****************************************/
 
 namespace Uintah {
 
-/** 
-  @class  BoundaryCondition
-  @author Rajesh Rawat, Stanislav Borodai
-  @date   March 2000
-  
-  @brief  Applies boundary conditions at physical boundaries. 
-          For boundary cell types it modifies stencil coefficients
-          and source terms.
-  
-  */
-
+  using namespace SCIRun;
   class ArchesVariables;
   class ArchesConstVariables;
   class CellInformation;
@@ -80,13 +104,78 @@ namespace Uintah {
 
       enum BC_TYPE { VELOCITY_INLET, MASSFLOW_INLET, VELOCITY_FILE, MASSFLOW_FILE, PRESSURE, OUTLET, WALL }; 
 
-      ////////////////////////////////////////////////////////////////////////
       // GROUP: Constructors:
-
+      ////////////////////////////////////////////////////////////////////////
+      // Construct an instance of a BoundaryCondition.
+      // PRECONDITIONS
+      // POSTCONDITIONS
+      // Default constructor.
       BoundaryCondition();
 
       typedef std::map<std::string, constCCVariable<double> > HelperMap; 
       typedef std::vector<string> HelperVec;  
+			
+			/** @brief Stuct for hold face centered offsets relative to the cell centered boundary index. */
+			struct FaceOffSets { 
+				// Locations are determined by: 
+				//   (i,j,k) location = boundary_index - offset;
+				
+				public: 
+					IntVector io; 		///< Interior cell offset 
+					IntVector bo;     ///< Boundary cell offset 
+					IntVector eo; 		///< Extra cell offset
+
+				  int sign;         ///< Sign of the normal for the face (ie, -1 for minus faces and +1 for plus faces )
+
+					double dx; 				///< cell size in the dimension of face normal (ie, distance between cell centers)
+
+			};
+
+		 inline const FaceOffSets getFaceOffsets( const IntVector& face_normal, const Patch::FaceType face, const Vector Dx ){  
+
+			 FaceOffSets offsets; 
+			 offsets.io = IntVector(0,0,0);
+			 offsets.bo = IntVector(0,0,0); 
+			 offsets.eo = IntVector(0,0,0); 
+
+			 if ( face == Patch::xminus || face == Patch::yminus || face == Patch::zminus ) { 
+
+				 offsets.bo = face_normal; 
+				 offsets.sign = -1; 
+
+			 } else { 
+
+				 offsets.io = face_normal; 
+				 offsets.eo = IntVector( -1*face_normal.x(), -1*face_normal.y(), -1*face_normal.z() ); 
+				 offsets.sign = +1; 
+
+			 } 
+
+			 if ( face == Patch::xminus || face == Patch::xplus) { 
+				 offsets.dx = Dx.x(); 
+			 } else if ( face == Patch::yminus || face == Patch::yplus ) { 
+				 offsets.dx = Dx.y(); 
+			 } else { 
+				 offsets.dx = Dx.z(); 
+			 } 
+
+			 return offsets; 
+
+		 };
+
+      inline bool typeMatch( BC_TYPE check_type, std::vector<BC_TYPE >& type_list ){ 
+
+        bool found_match = false; 
+
+        for ( std::vector<BC_TYPE>::iterator iter = type_list.begin(); iter != type_list.end(); ++iter ) { 
+          if ( *iter == check_type ) {
+            found_match = true; 
+            return found_match; 
+          } 
+        } 
+
+        return found_match; 
+      };
 
      void sched_cellTypeInit__NEW(SchedulerP& sched,
                                       const PatchSet* patches,
@@ -99,13 +188,16 @@ namespace Uintah {
                                 DataWarehouse* new_dw);
 
      void sched_computeBCArea__NEW(SchedulerP& sched,
+                                      const LevelP& level, 
                                       const PatchSet* patches,
                                       const MaterialSet* matls);
      void computeBCArea__NEW(const ProcessorGroup*,
                                 const PatchSubset* patches,
                                 const MaterialSubset*,
                                 DataWarehouse*,
-                                DataWarehouse* new_dw);
+                                DataWarehouse* new_dw, 
+                                const IntVector lo, 
+                                const IntVector hi);
 
      void sched_setupBCInletVelocities__NEW(SchedulerP& sched,
                                       const PatchSet* patches,
@@ -129,6 +221,7 @@ namespace Uintah {
 
       void setVel__NEW( const Patch* patch, const Patch::FaceType& face, 
         SFCXVariable<double>& uVel, SFCYVariable<double>& vVel, SFCZVariable<double>& wVel, 
+        constCCVariable<double>& density, 
         Iterator bound_iter, Vector value );
 
       void setVelFromInput__NEW( const Patch* patch, const Patch::FaceType& face, 
@@ -141,6 +234,32 @@ namespace Uintah {
 
       void setEnthalpyFromInput__NEW( const Patch* patch, const Patch::FaceType& face, 
         CCVariable<double>& enthalpy, HelperMap ivGridVarMap, HelperVec ivNames, Iterator bound_ptr );
+
+      void velocityOutletPressureBC__NEW( const Patch* patch, 
+                                       		int  matl_index, 
+                                          SFCXVariable<double>& uvel, 
+                                          SFCYVariable<double>& vvel, 
+                                          SFCZVariable<double>& wvel, 
+                                          constSFCXVariable<double>& old_uvel, 
+                                          constSFCYVariable<double>& old_vvel, 
+                                          constSFCZVariable<double>& old_wvel );
+
+			template <class velType>
+			void delPForOutletPressure__NEW( const Patch* patch, 
+                                       int  matl_index, 
+                                       double dt, 
+																			 Patch::FaceType mface,
+																			 Patch::FaceType pface, 
+																			 velType& vel, 
+                                       constCCVariable<double>& P,
+                                       constCCVariable<double>& density );
+
+      template <class stencilType> 
+      void zeroStencilDirection( const Patch* patch, 
+                                 const int  matl_index, 
+                                 const int sign, 
+                                 stencilType& A, 
+                                 std::vector<BC_TYPE>& types );
 
       std::map<IntVector, double>
       readInputFile__NEW( std::string );
@@ -156,16 +275,18 @@ namespace Uintah {
           bool calcEnthalpy, 
           bool calcVariance);
 
-      ////////////////////////////////////////////////////////////////////////
       // GROUP: Destructors:
+      ////////////////////////////////////////////////////////////////////////
+      // Destructor
       ~BoundaryCondition();
 
+      // GROUP: Problem Steup:
       ////////////////////////////////////////////////////////////////////////
-      // GROUP: Problem Setup:
+      // Details here
       void problemSetup(const ProblemSpecP& params);
 
-      ////////////////////////////////////////////////////////////////////////
       // GROUP: Access functions
+      ////////////////////////////////////////////////////////////////////////
       int getNumSourceBndry() {
         return d_numSourceBoundaries;
       }
@@ -201,81 +322,102 @@ namespace Uintah {
         return ((d_wallBoundary)||(d_inletBoundary)||(d_pressureBoundary)||(d_outletBoundary)||(d_intrusionBoundary)); 
       }
 
-      /** @brief  Get the number of inlets (primary + secondary) */
+      ////////////////////////////////////////////////////////////////////////
+      // Get the number of inlets (primary + secondary)
       int getNumInlets() { 
         return d_numInlets; 
       }
 
-      /** @brief  Get the mm Wall boundary ID */
+      ////////////////////////////////////////////////////////////////////////
+      // mm Wall boundary ID
       int getMMWallId() const {
         return d_mmWallID;
       }
 
-      /** @brief  Get the flowfield cell ID */
+      ////////////////////////////////////////////////////////////////////////
+      // flowfield cell id
       inline int flowCellType() const {
         return d_flowfieldCellTypeVal;
         //return -1; 
       }
 
-      /** @brief  Get the wall boundary ID */
+      ////////////////////////////////////////////////////////////////////////
+      // Wall boundary ID
       inline int wallCellType() const { 
         int wall_celltypeval = -10;
         if (d_wallBoundary){ 
           wall_celltypeval = d_wallBdry->d_cellTypeID; 
         }
-        return wall_celltypeval;
-        //return WALL; 
+
+        if ( d_use_new_bcs ) { 
+          return WALL; 
+        } else { 
+          return wall_celltypeval; 
+        } 
       }
 
-      /** @brief  Get the pressure boundary ID */
+      ////////////////////////////////////////////////////////////////////////
+      // Pressure boundary ID
       inline int pressureCellType() const {
         int pressure_celltypeval = -10;
         if (d_pressureBoundary) pressure_celltypeval = d_pressureBC->d_cellTypeID; 
-        return pressure_celltypeval;
-        //return PRESSURE; 
+        if ( d_use_new_bcs ) { 
+          return PRESSURE; 
+        } else { 
+          return pressure_celltypeval; 
+        } 
       }
 
-      /** @brief  Get the outlet boundary ID */
+      ////////////////////////////////////////////////////////////////////////
+      // Outlet boundary ID
       inline int outletCellType() const { 
         int outlet_celltypeval = -10;
         if (d_outletBoundary) outlet_celltypeval = d_outletBC->d_cellTypeID;
-        return outlet_celltypeval; 
-        //return OUTLET; 
+        if ( d_use_new_bcs ) { 
+          return OUTLET; 
+        } else { 
+          return outlet_celltypeval; 
+        } 
       }
-
-      /** @brief  Set the boolean for the energy exchange between solid and fluid */
+      ////////////////////////////////////////////////////////////////////////
+      // sets boolean for energy exchange between solid and fluid
       void setIfCalcEnergyExchange(bool calcEnergyExchange){
         d_calcEnergyExchange = calcEnergyExchange;
       }
 
-      /** @brief  Determie whether calculating energy exchange (multimaterial) */ 
+      ////////////////////////////////////////////////////////////////////////
+      // Access function for calcEnergyExchange (multimaterial)
       inline bool getIfCalcEnergyExchange() const{
         return d_calcEnergyExchange;
       }      
 
-      /** @brief  Set boolean for fixing gas temperature in multimaterial cells */
+      ////////////////////////////////////////////////////////////////////////
+      // sets boolean for fixing gas temperature in multimaterial cells
       void setIfFixTemp(bool fixTemp){
         d_fixTemp = fixTemp;
       }
 
-      /** @brief  Get boolean: is gas temperature fixed in multimaterial cells? */
+      ////////////////////////////////////////////////////////////////////////
+      // Access function for d_fixTemp (multimaterial)
       inline bool getIfFixTemp() const{
         return d_fixTemp;
       }      
 
-      /** @brief  Set boolean for cut cells */
+      ////////////////////////////////////////////////////////////////////////
+      // sets boolean for cut cells
       void setCutCells(bool cutCells){
         d_cutCells = cutCells;
       }
-      
-      /** @brief  Get boolean: are there are cut cells (multimaterial) */
-      inline bool getCutCells() const{
-        return d_cutCells;
-      }      
 
       inline double getIntrusionSourceVelocity(int whichIntrusion) {
         return d_sourceBoundaryInfo[whichIntrusion]->totalVelocity;
       }
+
+      ////////////////////////////////////////////////////////////////////////
+      // Access function for d_cutCells (multimaterial)
+      inline bool getCutCells() const{
+        return d_cutCells;
+      }      
 
       inline bool getCarbonBalance() const{
         return d_carbon_balance;
@@ -284,11 +426,9 @@ namespace Uintah {
       inline bool getSulfurBalance() const{
         return d_sulfur_balance;
       } 
-
-      ////////////////////////////////////////////////////////////////////////
       // GROUP:  Schedule tasks :
-
-      /** @brief  initialize cell types */
+      ////////////////////////////////////////////////////////////////////////
+      // Initialize cell types
       void sched_cellTypeInit(SchedulerP&, 
           const PatchSet* patches,
           const MaterialSet* matls);
@@ -297,25 +437,29 @@ namespace Uintah {
           const PatchSet* patches,
           const MaterialSet* matls);
 
-      /** @brief  Initialize inlet area */
+      ////////////////////////////////////////////////////////////////////////
+      // Initialize inlet area
+      // Details here
       void sched_calculateArea(SchedulerP&, 
           const PatchSet* patches,
           const MaterialSet* matls);
 
-      /** @brief  Schedule computation of pressure boundary condition terms */
+      ////////////////////////////////////////////////////////////////////////
+      // Schedule Computation of Pressure boundary conditions terms. 
       void sched_computePressureBC(SchedulerP&, 
           const PatchSet* patches,
           const MaterialSet* matls);
 
-      /** @brief  Schedule set profile BCs - initializes velocities, scalars and properties
-        *         at the boundary, assigns flat velocity profiles for primary and secondary inlets,
-        *         and sets flat profiles for density; properties profile not done yet 
-        */
+      ////////////////////////////////////////////////////////////////////////
+      // Schedule Set Profile BCS
+      // initializes velocities, scalars and properties at the bndry
+      // assigns flat velocity profiles for primary and secondary inlets
+      // Also sets flat profiles for density
+      // ** WARNING ** Properties profile not done yet
       void sched_setProfile(SchedulerP&, 
           const PatchSet* patches,
           const MaterialSet* matls);
 
-      /** @brief  Schedule prefill of geometry */
       void sched_Prefill(SchedulerP&, 
           const PatchSet* patches,
           const MaterialSet* matls);
@@ -333,28 +477,30 @@ namespace Uintah {
             V& A,  T& AP, T& AE, T& AW,
             T& AN, T& AS, T& AT, T& AB);
 
-      /** @brief  Initialize multimaterial wall cell types */
+      ////////////////////////////////////////////////////////////////////////
+      // Initialize multimaterial wall cell types
       void sched_mmWallCellTypeInit( SchedulerP&, 
           const PatchSet* patches,
           const MaterialSet* matls, 
           bool fixCellType);
 
-      /** @brief  Initialize multimaterial wall cell types for first time step */
+      ////////////////////////////////////////////////////////////////////////
+      // Initialize multimaterial wall cell types for first time step
       void sched_mmWallCellTypeInit_first( SchedulerP&, 
           const PatchSet* patches,
           const MaterialSet* matls);
 
-      ////////////////////////////////////////////////////////////////////////
       // GROUP:  Actual Computations :
-
-      /** @brief  Initialize celltyping */
+      ////////////////////////////////////////////////////////////////////////
+      // Initialize celltyping
       void cellTypeInit(const ProcessorGroup*,
           const PatchSubset* patches,
           const MaterialSubset* matls,
           DataWarehouse* old_dw,
           DataWarehouse* new_dw);
-
-      /** @brief  Computing inlet areas */
+      ////////////////////////////////////////////////////////////////////////
+      // computing inlet areas
+      // Details here
       void computeInletFlowArea(const ProcessorGroup*,
           const PatchSubset* patches,
           const MaterialSubset* matls,
@@ -374,7 +520,8 @@ namespace Uintah {
           ArchesVariables* vars,
           ArchesConstVariables* constvars);
 
-      /** @brief  Actually compute mms velocity BC terms */
+      ////////////////////////////////////////////////////////////////////////
+      // Actually compute mms velocity BC terms
       void mmsvelocityBC(const Patch* patch,
           CellInformation* cellinfo,
           ArchesVariables* vars,
@@ -389,12 +536,14 @@ namespace Uintah {
           double time_shift,
           double dt);
 
-      /** @brief  Actually compute pressure BC terms */
+      /** @brief Applies boundary conditions to A matrix for boundary conditions */
       void pressureBC(const Patch* patch,
+          const int matl_index, 
           ArchesVariables* vars,
           ArchesConstVariables* constvars);
 
-      /** @brief  Actually compute scalar BC terms */
+      ////////////////////////////////////////////////////////////////////////
+      // Actually compute scalar BC terms
       void scalarBC(const Patch* patch,
           ArchesVariables* vars,
           ArchesConstVariables* constvars);
@@ -404,7 +553,9 @@ namespace Uintah {
           ArchesConstVariables* constvars);
 
 
-      /** @brief  Initialize multi-material wall celltyping and void fraction calculation */
+      ////////////////////////////////////////////////////////////////////////
+      // Initialize multi-material wall celltyping and void fraction 
+      // calculation
       void mmWallCellTypeInit(const ProcessorGroup*,
           const PatchSubset* patches,
           const MaterialSubset* matls,
@@ -412,14 +563,15 @@ namespace Uintah {
           DataWarehouse* new_dw,
           bool fixCellType);
 
-      /** @brief  Initialize multi-material wall celltyping and void fraction calculation for first time step */
+      ////////////////////////////////////////////////////////////////////////
+      // Initialize multi-material wall celltyping and void fraction 
+      // calculation for first time step
       void mmWallCellTypeInit_first(const ProcessorGroup*,
           const PatchSubset* patches,
           const MaterialSubset* matls,
           DataWarehouse* old_dw,
           DataWarehouse* new_dw);
-
-      /** @brief  Compute intrusion BCs */
+      // for computing intrusion bc's
       void intrusionTemperatureBC(const Patch* patch,
           constCCVariable<int>& cellType,
           CCVariable<double>& temperature);
@@ -458,7 +610,7 @@ namespace Uintah {
           ArchesVariables* vars,
           ArchesConstVariables* constvars);
 
-      /** @brief  Compute multimaterial wall bc */
+      // compute multimaterial wall bc
       void mmvelocityBC(const Patch* patch,
           CellInformation* cellinfo,
           ArchesVariables* vars,
@@ -468,14 +620,12 @@ namespace Uintah {
           const Patch* patch,
           ArchesVariables* vars,
           ArchesConstVariables* constvars);
-
-      /** @brief  Applies multimaterial bc's for scalars and pressure */
+      // applies multimaterial bc's for scalars and pressure
       void mmscalarWallBC( const Patch* patch,
           CellInformation*, 
           ArchesVariables* vars,
           ArchesConstVariables* constvars);
-
-      /** @brief  Applies multimaterial bc's for scalars and pressure */
+      // applies multimaterial bc's for scalars and pressure
       void mmscalarWallBC__new( const Patch* patch,
           CellInformation*, 
           ArchesVariables* vars,
@@ -488,7 +638,8 @@ namespace Uintah {
           ArchesVariables* vars,
           ArchesConstVariables* constvars);
 
-      /** @brief  Calculate uhat for multimaterial case (only for nonintrusion cells) */
+      ////////////////////////////////////////////////////////////////////////
+      // Calculate uhat for multimaterial case (only for nonintrusion cells)
       void calculateVelRhoHat_mm(const Patch* patch,
           double delta_t,
           CellInformation* cellinfo,
@@ -512,8 +663,7 @@ namespace Uintah {
           ArchesVariables* vars,
           ArchesConstVariables* constvars,
           CellInformation* cellinfo);
-
-      /** @brief  New boundary conditions */
+      // New boundary conditions
       void scalarOutletPressureBC(const Patch* patch,
           ArchesVariables* vars,
           ArchesConstVariables* constvars);
@@ -521,11 +671,17 @@ namespace Uintah {
       void velRhoHatInletBC(const Patch* patch,
           ArchesVariables* vars,
           ArchesConstVariables* constvars,
+          const int matl_index, 
           double time_shift);
 
-      void velRhoHatOutletPressureBC(const Patch* patch,
-          ArchesVariables* vars,
-          ArchesConstVariables* constvars);
+      void velRhoHatOutletPressureBC( const Patch* patch,
+                                      SFCXVariable<double>& uvel, 
+                                      SFCYVariable<double>& vvel, 
+                                      SFCZVariable<double>& wvel, 
+                                      constSFCXVariable<double>& old_uvel, 
+                                      constSFCYVariable<double>& old_vvel, 
+                                      constSFCZVariable<double>& old_wvel, 
+                                      constCCVariable<int>& cellType );
 
       void velocityOutletPressureTangentBC(const Patch* patch,
           ArchesVariables* vars,
@@ -587,7 +743,7 @@ namespace Uintah {
         return d_doMMS;
       }
 
-      /** @brief  Boundary source term methods */
+      //boundary source term methods
       void sched_computeScalarSourceTerm(SchedulerP& sched,
           const PatchSet* patches,
           const MaterialSet* matls);
@@ -605,11 +761,13 @@ namespace Uintah {
           const PatchSet* patches, 
           const MaterialSet* matls );
 
+      /** @brief The struct to hold all needed information for each boundary spec */
       struct BCInfo { 
   
         BC_TYPE type; 
 
         // Common: 
+        //int id; 
         std::string name; 
 
         // Inlets: 
@@ -630,27 +788,33 @@ namespace Uintah {
       typedef std::map<BC_TYPE, std::string> BCNameMap;
       typedef std::map<int, BCInfo>      BCInfoMap;
 
+      /** @brief Using the new BC mechanism? */
+      inline bool isUsingNewBC(){ return d_use_new_bcs; }; 
 
     private:
 
+      /** @brief Setup new boundary conditions specified under the <Grid><BoundaryCondition> section */
       void setupBCs( ProblemSpecP& db ); 
 
-      BCInfoMap d_bc_information;
-      BCNameMap d_bc_type_to_string; 
-      int d_bc_type_index; 
+      BCInfoMap d_bc_information;                           ///< Contains information about each boundary condition spec. (from UPS)
+      BCNameMap d_bc_type_to_string;                        ///< Matches the BC integer ID with the string name
+      bool d_use_new_bcs;                                   ///< Turn on/off the new BC mech. 
 
-      /** @brief  Call Fortran to compute u velocity BC terms */
+      ////////////////////////////////////////////////////////////////////////
+      // Call Fortran to compute u velocity BC terms
       void intrusionuVelocityBC(const Patch* patch,
           ArchesVariables* vars,
           ArchesConstVariables* constvars);
 
 
-      /** @brief  Call Fortran to compute v velocity BC terms */
+      ////////////////////////////////////////////////////////////////////////
+      // Call Fortran to compute v velocity BC terms
       void intrusionvVelocityBC(const Patch* patch,
           ArchesVariables* vars,
           ArchesConstVariables* constvars);
 
-      /** @brief  Call Fortran to compute w velocity BC terms */
+      ////////////////////////////////////////////////////////////////////////
+      // Call Fortran to compute w velocity BC terms
       void intrusionwVelocityBC(const Patch* patch,
           ArchesVariables* vars,
           ArchesConstVariables* constvars);
@@ -672,14 +836,16 @@ namespace Uintah {
           ArchesConstVariables* constvars);
 
 
-      /** @brief  Actually calculate pressure bcs */
+      ////////////////////////////////////////////////////////////////////////
+      // Actually calculate pressure bcs
       void computePressureBC(const PatchSubset* patches,
           const MaterialSubset* matls,
           DataWarehouse* old_dw,
           DataWarehouse* new_dw);
 
 
-      /** @brief  Actually set the velocity, density and props flat profile */
+      ////////////////////////////////////////////////////////////////////////
+      // Actually set the velocity, density and props flat profile
       void setProfile(const ProcessorGroup*,
           const PatchSubset* patches,
           const MaterialSubset* matls,
@@ -699,7 +865,7 @@ namespace Uintah {
           DataWarehouse* old_dw,
           DataWarehouse* new_dw);
 
-      /** @brief  New boundary conditions */
+      // New boundary conditions
       void getFlowINOUT(const ProcessorGroup*,
           const PatchSubset* patches,
           const MaterialSubset* matls,
@@ -835,7 +1001,8 @@ namespace Uintah {
           string d_inlet_name; 
       };
 
-      /// PressureInlet
+      ////////////////////////////////////////////////////////////////////////
+      // PressureInlet
       struct PressureInlet {
         int d_cellTypeID;
         bool d_calcVariance;
@@ -850,7 +1017,8 @@ namespace Uintah {
         void problemSetup(ProblemSpecP& params);
       };
 
-      /// FlowOutlet
+      ////////////////////////////////////////////////////////////////////////
+      // FlowOutlet
       struct FlowOutlet {
         int d_cellTypeID;
         bool d_calcVariance;
@@ -865,7 +1033,8 @@ namespace Uintah {
         void problemSetup(ProblemSpecP& params);
       };
 
-      /// Wall Boundary
+      ////////////////////////////////////////////////////////////////////////
+      // Wall Boundary
       struct WallBdry {
         int d_cellTypeID;
         double area;
@@ -876,7 +1045,8 @@ namespace Uintah {
         void problemSetup(ProblemSpecP& params);
       };
 
-      /// Intrusion Boundary
+      ////////////////////////////////////////////////////////////////////////
+      // Intrusion Boundary
       struct IntrusionBdry {
         int d_cellTypeID;
         double area;
@@ -889,8 +1059,12 @@ namespace Uintah {
         void problemSetup(ProblemSpecP& params);
       };
 
-      /// Struct to hold information from a specific geometry piece that applies
-      /// a specific source term on the surface of itself
+      //*-------------------------------------*
+      // BCSourceInfo
+      // a struct to hold infromation for a specific
+      // geometry piece that applies a source term 
+      // on the surface of itself
+      //*-------------------------------------*
       class BCSourceInfo
       {
         public:
@@ -901,32 +1075,34 @@ namespace Uintah {
           //The geometry piece          
           std::vector<GeometryPieceP> d_geomPiece;
           //Area information
-          double area_x;              ///< total area with normals in the x-direction
-          double area_y;              ///< total area with normals in the y-direction
-          double area_z;              ///< total area with normals in the z-direction
-          VarLabel* total_area_label; ///< total area of all directions
+          double area_x; //total area with normals in the x-direction
+          double area_y; //total area with normals in the y-direction
+          double area_z; //total area with normals in the z-direction
+          VarLabel* total_area_label; //total area of all directions
           double summed_area;
-          bool computedArea;          ///< a bool to tell the code if the area has been computed for this particular object 
+          bool computedArea; //a bool to tell the code if the area has 
+          // been computed for this particular object 
 
           //Normal information
           Vector normal;
           //Flux information
-          double umom_flux; ///< velocities
-          double vmom_flux; 
-          double wmom_flux; 
-          double f_flux;    ///< mixture fraction
-          double h_flux;    ///< enthalpy
+          double umom_flux; //velocities
+          double vmom_flux;
+          double wmom_flux;
+          double f_flux;   //mixture fraction
+          double h_flux;   //enthalpy
           double totalMassFlux;
           double totalVelocity;
           double totalFlowArea;
           string velocityType;
           string velocityRelation;
-          InletStream streamMixturefraction; ///< inlet values
-          Stream calcStream;                 ///< calculated values
+          InletStream streamMixturefraction; //inlet values
+          Stream calcStream; // calculated values
           bool d_calcVariance;
           bool d_reactingScalarSolve;
 
-          double mixfrac_inlet; ///< Mixture fraction inlet value
+          //Mixture fraction inlet value
+          double mixfrac_inlet;
 
           //relational information
           Vector axisStart;
@@ -934,7 +1110,8 @@ namespace Uintah {
           Vector point;
           bool doAreaCalc;
 
-          /** @brief  Problem setup method for BCSourceInfo struct */
+          //---methods---                
+          //Problem setup
           void problemSetup(ProblemSpecP& params);
       };
 
@@ -951,13 +1128,13 @@ namespace Uintah {
           DataWarehouse* new_dw);
 
 
-      /// Efficiency Variables
+      // Efficiency Variables
       struct EfficiencyInfo {
-        const VarLabel* label; ///< efficiency label
+        const VarLabel* label; //efficiency label
         vector<std::string> species; 
         double fuel_ratio; 
         double air_ratio; 
-        std::vector<string> which_inlets; ///< inlets needed for this calculation
+        std::vector<string> which_inlets; //inlets needed for this calculation
       };
 
       struct SpeciesEfficiencyInfo {
@@ -970,23 +1147,31 @@ namespace Uintah {
       void insertIntoSpeciesMap ( std::string name, double mol_ratio );
     private:
 
-      // const VarLabel* inputs:
+      // const VarLabel* inputs
       const ArchesLabel* d_lab;
-      const MPMArchesLabel* d_MAlab; ///< for multimaterial
+      // for multimaterial
+      const MPMArchesLabel* d_MAlab;
       int d_mmWallID;
-      double MM_CUTOFF_VOID_FRAC; ///< cutoff for void fraction rqd to determine multimaterial wall
+      // cutoff for void fraction rqd to determine multimaterial wall
+      double MM_CUTOFF_VOID_FRAC;
       bool d_calcEnergyExchange;
       bool d_fixTemp;
       bool d_cutCells;
 
-      PhysicalConstants* d_physicalConsts; ///< used for calculating wall boundary conditions
-      Properties* d_props;        ///< used to get properties of different streams
-      double d_uvwout;            ///< mass flow
+      // used for calculating wall boundary conditions
+      PhysicalConstants* d_physicalConsts;
+      // used to get properties of different streams
+      Properties* d_props;
+      // mass flow
+      double d_uvwout;
       double d_overallMB;
-      bool d_reactingScalarSolve; ///< for reacting scalar
-      bool d_enthalpySolve;       ///< for enthalpy solve 
+      // for reacting scalar
+      bool d_reactingScalarSolve;
+      // for enthalpy solve 
+      bool d_enthalpySolve;
       bool d_calcVariance;
-      int d_flowfieldCellTypeVal; ///< variable labels
+      // variable labels
+      int d_flowfieldCellTypeVal;
 
       bool d_wallBoundary;
       WallBdry* d_wallBdry;
@@ -1004,15 +1189,17 @@ namespace Uintah {
       bool d_intrusionBoundary;
       IntrusionBdry* d_intrusionBC;
 
-      bool d_carbon_balance;    ///< Use table value of CO2
+      bool d_carbon_balance;    //Use table value of CO2
       bool d_sulfur_balance;
       string d_mms;
       double d_airDensity, d_heDensity;
       Vector d_gravity;
       double d_viscosity;
 
-      double cu, cv, cw, cp, phi0;  ///< linear mms
-      double amp;                   ///< sine mms
+      //linear mms
+      double cu, cv, cw, cp, phi0;
+      // sine mms
+      double amp;
 
       double d_turbPrNo;
       bool d_doMMS;
@@ -1024,7 +1211,7 @@ namespace Uintah {
       };
       vector<d_extraScalarBC*> d_extraScalarBCs; 
 
-      /// BC source term stuff
+      //BC source term stuff
       std::vector<BCSourceInfo* > d_sourceBoundaryInfo;
       int d_numSourceBoundaries;
 
@@ -1036,7 +1223,10 @@ namespace Uintah {
 
       BoundaryCondition_new* d_newBC; 
 
-  /** @brief  This does the actual work (what work?) */
+  /* --------------------------------------------------------------------- 
+  Function~  getIteratorBCValueBCKind--
+  Purpose~   does the actual work
+  ---------------------------------------------------------------------  */
   template <class T>
   bool getIteratorBCValueBCKind( const Patch* patch, 
                                  const Patch::FaceType face,
@@ -1104,6 +1294,131 @@ namespace Uintah {
   };
 
   }; // End of class BoundaryCondition
+
+
+/** @brief Zeroes out contribution to a stencil in a specified direction.  Also removes it from the diagonal, typically used for BCs */
+template <class stencilType> void
+BoundaryCondition::zeroStencilDirection( const Patch* patch, 
+                                         const int  matl_index, 
+                                         const int  sign, 
+                                         stencilType& A, 
+                                         std::vector<BC_TYPE>& types )
+
+{
+  vector<Patch::FaceType>::const_iterator bf_iter;
+  vector<Patch::FaceType> bf;
+  patch->getBoundaryFaces(bf);
+  Vector Dx = patch->dCell(); 
+
+  for ( BCInfoMap::iterator bc_iter = d_bc_information.begin(); 
+        bc_iter != d_bc_information.end(); bc_iter++){
+
+     if ( typeMatch( bc_iter->second.type, types ) ) { 
+
+       for ( bf_iter = bf.begin(); bf_iter !=bf.end(); bf_iter++ ){
+
+         Patch::FaceType face    = *bf_iter;
+         IntVector insideCellDir = patch->faceDirection(face); 
+
+         //get the number of children
+         int numChildren = patch->getBCDataArray(face)->getNumberChildren(matl_index); //assumed one material
+
+         for (int child = 0; child < numChildren; child++){
+
+           double bc_value = 0;
+           string bc_kind = "NotSet";
+           Iterator bound_ptr;
+
+           bool foundIterator = 
+             getIteratorBCValueBCKind( patch, face, child, bc_iter->second.name, matl_index, bc_value, bound_ptr, bc_kind); 
+
+           if ( foundIterator ) {
+
+             for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
+               IntVector c = *bound_ptr; 
+               c -= insideCellDir; //because we are adjusting the interior stencil values. 
+
+               A[c].p = A[c].p + ( sign * A[c][face] );
+               A[c][face] = 0.0;
+
+             }
+           }
+         }
+       }
+     }
+   }
+  IntVector xx = IntVector(0,7,7); 
+  Patch::FaceType face = Patch::xminus; 
+}
+
+/** @brief Adds grad(P) to velocity on outlet or pressure boundaries */
+template <class velType> void
+BoundaryCondition::delPForOutletPressure__NEW( const Patch* patch, 
+                                               int  matl_index, 
+                                               double dt,
+                                               Patch::FaceType mface, 
+                                               Patch::FaceType pface, 
+                                               velType& vel, 
+                                               constCCVariable<double>& P,
+                                               constCCVariable<double>& density )
+{
+
+  vector<Patch::FaceType>::const_iterator bf_iter;
+  vector<Patch::FaceType> bf;
+  patch->getBoundaryFaces(bf);
+  Vector Dx = patch->dCell(); 
+
+  for ( BCInfoMap::iterator bc_iter = d_bc_information.begin(); 
+        bc_iter != d_bc_information.end(); bc_iter++){
+
+    if ( bc_iter->second.type == OUTLET || bc_iter->second.type == PRESSURE ) { 
+
+      for ( bf_iter = bf.begin(); bf_iter !=bf.end(); bf_iter++ ){
+
+        //get the face
+        Patch::FaceType face    = *bf_iter;
+        IntVector insideCellDir = patch->faceDirection(face); 
+
+        if ( face == mface || face == pface ) { 
+
+          //get the number of children
+          int numChildren = patch->getBCDataArray(face)->getNumberChildren(matl_index); //assumed one material
+
+          for (int child = 0; child < numChildren; child++){
+
+            double bc_value = 0;
+            string bc_kind = "NotSet";
+            Iterator bound_ptr;
+
+            bool foundIterator = 
+              getIteratorBCValueBCKind( patch, face, child, bc_iter->second.name, matl_index, bc_value, bound_ptr, bc_kind); 
+
+            if ( foundIterator ) {
+
+              const FaceOffSets FOS = getFaceOffsets( insideCellDir, face, Dx ); 
+
+               for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
+
+                 IntVector c = *bound_ptr; 
+
+                 double ave_density = 0.5 * ( density[c] + density[c - insideCellDir] ); 
+
+                 double gradP = FOS.sign * 2.0 * dt * P[c - insideCellDir] / ( FOS.dx * ave_density ); 
+
+                 vel[c - FOS.bo] += gradP; 
+
+                 vel[c - FOS.eo] = vel[c - FOS.bo]; 
+
+               }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+
 } // End namespace Uintah
 
 #endif  
