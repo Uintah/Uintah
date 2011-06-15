@@ -303,8 +303,6 @@ private:
 
     string d_timeIntegratorType;
 
-    bool d_recompile;
-
     AnalysisModule* d_analysisModule;
     
     bool d_set_initial_condition;

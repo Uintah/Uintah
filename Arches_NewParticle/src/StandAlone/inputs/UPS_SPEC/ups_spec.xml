@@ -280,12 +280,14 @@
       <union                  spec="MULTIPLE" />
       <parallelepiped         spec="MULTIPLE" />
 
-      <file                   spec="OPTIONAL NO_DATA" >
-        <name                 spec="REQUIRED STRING" />
+      <file                    spec="OPTIONAL NO_DATA"
+                                attribute1="label    OPTIONAL STRING" >
+        <name                 spec="OPTIONAL STRING" />
         <var                  spec="MULTIPLE STRING" />
         <format               spec="OPTIONAL STRING" />
       </file>
-      <image                   spec="OPTIONAL NO_DATA" >
+      
+      <image                  spec="OPTIONAL NO_DATA" >
         <name                 spec="REQUIRED STRING" />
         <res                  spec="OPTIONAL VECTOR" />
         <threshold            spec="OPTIONAL MULTIPLE_DOUBLES" />
@@ -328,7 +330,7 @@
                                                                       mpmf, mpmice, amrmpm,
                                                                       wasatch, reduce_uda,
                                                                       poisson1, poisson2, poisson3, poisson4, benchmark, rigidmpmice, 
-                                                                      rmpmice, smpm, smpmice, spatialops, switcher, wave, solvertest'" >
+                                                                      rmpmice, smpm, smpmice, spatialops, switcher, wave, solvertest, RMCRT_Test'" >
                                   <!-- The 'type' above is used in CCA/Components/Parent/ComponentFactory.cc -->
         <carry_over                 spec="MULTIPLE NO_DATA"
                                   attribute1="var   REQUIRED STRING"
@@ -568,11 +570,12 @@
                               attribute11="name          OPTIONAL STRING">
         <BCType             spec="MULTIPLE NO_DATA"
                               attribute1="id        REQUIRED STRING '0,1,2,3,4,5,6,all'"
-                              attribute2="var       REQUIRED STRING 'Neumann, Dirichlet, symmetry, LODI, computeFromDensity, Sine, creep, slip Custom'"
+                              attribute2="var       REQUIRED STRING 'Neumann, Dirichlet, symmetry, LODI, computeFromDensity, Sine, creep, slip Custom, VelocityInlet, PressureBC, WallBC, OutletBC, VelocityFileInput, MassFlowInlet  '"
                               attribute3="label     REQUIRED STRING " >
                                                                 
-          <value            spec="OPTIONAL STRING" /> <!-- ERROR... it is required for some, but not for Dirichlet!!!
-                                                         also, type can be different for different labels... how to handle? --> 
+          <value            spec="REQUIRED STRING"  need_applies_to="var Neumann Dirichlet LODI computeFromDensity Sine creep slip Custom" />
+          <inputfile        spec="OPTIONAL STRING" />
+          <vecvalue         spec="OPTIONAL VECTOR" />
         </BCType>
       </Face>
     </BoundaryConditions>
@@ -609,7 +612,7 @@
     <gravity            spec="REQUIRED VECTOR" /> <!-- THIS IS OPTIONAL IN ICE AND MPM, DEFAULT IS 0,0,0 -->
     <reference_pressure spec="OPTIONAL DOUBLE" />
     <reference_point    spec="OPTIONAL VECTOR" />
-    <viscosity          spec="OPTIONAL DOUBLE" /> <!-- [=] m^2/s : kinematic viscosity -->
+    <viscosity          spec="OPTIONAL DOUBLE" />
   </PhysicalConstants>
 
   <CFD                                  spec="OPTIONAL NO_DATA" >
@@ -704,7 +707,7 @@
   <!--__________________________________-->
   
   <Scheduler              spec="OPTIONAL NO_DATA"
-                               attribute1="type OPTIONAL STRING 'MPI DynamicMPI'">
+                               attribute1="type OPTIONAL STRING 'MPI DynamicMPI ThreadedMPI'">
     <small_messages       spec="OPTIONAL BOOLEAN" />
     <taskReadyQueueAlg     spec="OPTIONAL STRING 'MostChildren LeastChildren MostAllChildren LeastAllChildren MostL2Children LeastL2Children PatchOrder PatchOrderRandom MostMessages LeastMessages Random FCFS Stack'" />
     <VarTracker           spec="OPTIONAL NO_DATA">

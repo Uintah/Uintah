@@ -200,15 +200,6 @@ PetscSolver::matrixCreate(const PatchSet* perproc_patches,
 // ****************************************************************************
 // Fill linear parallel matrix
 // ****************************************************************************
-void 
-PetscSolver::setPressMatrix(const ProcessorGroup* ,
-                            const Patch* patch,
-                            ArchesVariables* vars,
-                            ArchesConstVariables* constvars,
-                            const ArchesLabel*)
-{
-  double solve_start = Time::currentSeconds();
-
   /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
      Compute the matrix and right-hand-side vector that define
      the linear system, Ax = b.
@@ -228,7 +219,12 @@ PetscSolver::setPressMatrix(const ProcessorGroup* ,
      MatCreateMPIBAIJ() - parallel block AIJ
      See the matrix chapter of the users manual for details.
      */
-  int ierr;
+void 
+PetscSolver::setMatrix(const ProcessorGroup* ,
+                       const Patch* patch,
+                       constCCVariable<Stencil7>& coeff)
+{
+  int ierr = 0;
   int col[7];
   double value[7];
   // fill matrix for internal patches
@@ -252,21 +248,21 @@ PetscSolver::setPressMatrix(const ProcessorGroup* ,
       
         IntVector c(colX, colY, colZ);
       
-        col[0] = l2g[IntVector(colX,  colY,   colZ-1)]; //ab
+        col[0] = l2g[IntVector(colX,  colY,   colZ-1)]; // ab
         col[1] = l2g[IntVector(colX,  colY-1, colZ)];   // as
         col[2] = l2g[IntVector(colX-1,colY,   colZ)];   // aw
-        col[3] = l2g[IntVector(colX,  colY,   colZ)];   //ap
+        col[3] = l2g[IntVector(colX,  colY,   colZ)];   // ap
         col[4] = l2g[IntVector(colX+1,colY,   colZ)];   // ae
         col[5] = l2g[IntVector(colX,  colY+1, colZ)];   // an
         col[6] = l2g[IntVector(colX,  colY,   colZ+1)]; // at
         
-        value[0] = -constvars->pressCoeff[c].b;
-        value[1] = -constvars->pressCoeff[c].s;
-        value[2] = -constvars->pressCoeff[c].w;
-        value[3] =  constvars->pressCoeff[c].p;
-        value[4] = -constvars->pressCoeff[c].e;
-        value[5] = -constvars->pressCoeff[c].n;
-        value[6] = -constvars->pressCoeff[c].t;
+        value[0] = -coeff[c].b;
+        value[1] = -coeff[c].s;
+        value[2] = -coeff[c].w;
+        value[3] =  coeff[c].p;
+        value[4] = -coeff[c].e;
+        value[5] = -coeff[c].n;
+        value[6] = -coeff[c].t;
         int row = col[3];
         ierr = MatSetValues(A,1,&row,7,col,value,INSERT_VALUES);
         if(ierr)
@@ -274,6 +270,32 @@ PetscSolver::setPressMatrix(const ProcessorGroup* ,
       }
     }
   }
+}
+// ****************************************************************************
+// Fill linear parallel RHS
+// ****************************************************************************
+void 
+PetscSolver::setRHS_X(const ProcessorGroup* ,
+                      const Patch* patch,
+                      CCVariable<double>& guess,
+                      constCCVariable<double>& rhs, 
+                      bool construct_A )
+{
+  //double solve_start = Time::currentSeconds();
+  int ierr;
+  //int col[7];
+  //double value[7];
+  // fill matrix for internal patches
+  // make sure that sizeof(d_petscIndex) is the last patch, i.e., appears last in the
+  // petsc matrix
+  IntVector lowIndex  = patch->getExtraCellLowIndex(Arches::ONEGHOSTCELL);
+  IntVector highIndex = patch->getExtraCellHighIndex(Arches::ONEGHOSTCELL);
+  
+  IntVector idxLo = patch->getFortranCellLowIndex();
+  IntVector idxHi = patch->getFortranCellHighIndex();
+  
+  Array3<int> l2g(lowIndex, highIndex);
+  l2g.copy(d_petscLocalToGlobal[patch]);
 
   // assemble right hand side and solution vector
   double vecvalueb, vecvaluex;
@@ -282,8 +304,8 @@ PetscSolver::setPressMatrix(const ProcessorGroup* ,
       for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
         IntVector c(colX, colY, colZ);
         
-        vecvalueb = constvars->pressNonlinearSrc[c];
-        vecvaluex = vars->pressure[c];
+        vecvalueb = rhs[c];
+        vecvaluex = guess[c];
         int row = l2g[c];   
         
         ierr = VecSetValue(d_b, row, vecvalueb, INSERT_VALUES);
@@ -297,10 +319,6 @@ PetscSolver::setPressMatrix(const ProcessorGroup* ,
           throw UintahPetscError(ierr, "VecSetValue", __FILE__, __LINE__);
       }
     }
-  }
-  int me = d_myworld->myrank();
-  if(me == 0) {
-    cerr << "Time in PETSC Assemble: " << Time::currentSeconds()-solve_start << " seconds\n";
   }
 }
 

@@ -48,7 +48,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Arches/PropertyModels/ExtentRxn.h>
 #include <CCA/Components/Arches/PropertyModels/TabStripFactor.h>
 #if HAVE_TABPROPS
-# include <CCA/Components/Arches/ChemMix/TabPropsInterface.h>
+#include <CCA/Components/Arches/ChemMix/TabPropsInterface.h>
 #endif 
 
 #include <CCA/Components/Arches/Arches.h>
@@ -538,8 +538,12 @@ Arches::scheduleInitialize(const LevelP& level,
   // schedule init of cell type
   // require : NONE
   // compute : cellType
-  d_boundaryCondition->sched_cellTypeInit(sched, patches, matls);
-  //d_boundaryCondition->sched_cellTypeInit__NEW( sched, patches, matls ); 
+  
+  if ( d_boundaryCondition->isUsingNewBC() ) { 
+    d_boundaryCondition->sched_cellTypeInit__NEW( sched, patches, matls ); 
+  } else { 
+    d_boundaryCondition->sched_cellTypeInit(sched, patches, matls);
+  }
   //
   // compute the cell area fraction 
   d_boundaryCondition->sched_setAreaFraction( sched, patches, matls ); 
@@ -610,11 +614,14 @@ Arches::scheduleInitialize(const LevelP& level,
     d_props->sched_reComputeProps_new( level, sched, init_timelabel, initialize_it, modify_ref_den ); 
   }
 
-  //d_boundaryCondition->sched_computeBCArea__NEW( sched, patches, matls ); 
-  //d_boundaryCondition->sched_setupBCInletVelocities__NEW( sched, patches, matls ); 
 
   d_boundaryCondition->sched_initInletBC(sched, patches, matls);
-  //d_boundaryCondition->sched_setInitProfile__NEW( sched, patches, matls ); 
+
+  if ( d_boundaryCondition->isUsingNewBC() ) { 
+    d_boundaryCondition->sched_computeBCArea__NEW( sched, level, patches, matls ); 
+    d_boundaryCondition->sched_setupBCInletVelocities__NEW( sched, patches, matls ); 
+    d_boundaryCondition->sched_setInitProfile__NEW( sched, patches, matls ); 
+  }
 
   sched_getCCVelocities(level, sched);
   // Compute Turb subscale model (output Varlabel have CTS appended to them)
@@ -1346,7 +1353,7 @@ Arches::scheduleTimeAdvance( const LevelP& level,
       }
       d_boundaryCondition->sched_setProfile(sched, patches, matls); 
       d_doingRestart = false;
-      d_recompile = true; //This will be set to false after the first timestep.
+      d_lab->recompile_taskgraph = true; 
     }
   }
 }
@@ -1366,18 +1373,6 @@ bool Arches::needRecompile(double time, double dt,
   } else {
     return d_lab->recompile_taskgraph;
   }
-  /*
-  if ( d_recompile ) {
-   temp = d_recompile;
-   proc0cout << endl;
-   proc0cout << "NOTICE!:Recompile Taskgraph is set to true.  Taskgraph will be recompiled once first timestep but not after." << endl; 
-   proc0cout << endl;
-   d_recompile = false; 
-   return temp; 
-  } else {
-    return d_recompile;
-  }
-  */
 }
 // ****************************************************************************
 // schedule reading of initial condition for velocity and pressure

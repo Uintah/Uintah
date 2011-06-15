@@ -300,14 +300,44 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
     }
     
     // boundary condition
-    if ((d_boundaryCondition->getOutletBC())||(d_boundaryCondition->getPressureBC())){
-      d_boundaryCondition->addPresGradVelocityOutletPressureBC(patch, cellinfo,
-                                                                delta_t, &velocityVars,
-                                                                &constVelocityVars);
-                                                                
-      d_boundaryCondition->velocityOutletPressureTangentBC(patch, 
-                                            &velocityVars, &constVelocityVars);
-    }
+		if ( !d_boundaryCondition->isUsingNewBC() ) { 
+    	if ((d_boundaryCondition->getOutletBC())||(d_boundaryCondition->getPressureBC())){
+
+    	  d_boundaryCondition->addPresGradVelocityOutletPressureBC(patch, cellinfo,
+    	                                                            delta_t, &velocityVars,
+    	                                                            &constVelocityVars);
+    	  d_boundaryCondition->velocityOutletPressureTangentBC(patch, 
+    	                                        &velocityVars, &constVelocityVars);
+
+    	}
+		} else { 
+
+				Patch::FaceType mface = Patch::xminus; 
+				Patch::FaceType pface = Patch::xplus; 
+				d_boundaryCondition->delPForOutletPressure__NEW( patch, indx, delta_t, 
+																												 mface, pface, 
+																												 velocityVars.uVelRhoHat, 
+																												 constVelocityVars.pressure, 
+																												 constVelocityVars.density ); 
+				mface = Patch::yminus; 
+				pface = Patch::yplus; 
+				d_boundaryCondition->delPForOutletPressure__NEW( patch, indx, delta_t, 
+																												 mface, pface, 
+																												 velocityVars.vVelRhoHat, 
+																												 constVelocityVars.pressure, 
+																												 constVelocityVars.density ); 
+				mface = Patch::zminus; 
+				pface = Patch::zplus; 
+				d_boundaryCondition->delPForOutletPressure__NEW( patch, indx, delta_t, 
+																												 mface, pface, 
+																												 velocityVars.wVelRhoHat, 
+																												 constVelocityVars.pressure, 
+																												 constVelocityVars.density ); 
+
+    	  d_boundaryCondition->velocityOutletPressureTangentBC(patch, 
+    	                                        &velocityVars, &constVelocityVars);
+
+		} 
 
     SFCXVariable<double> uVel_EKT;
     SFCYVariable<double> vVel_EKT;
@@ -644,6 +674,12 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
       new_dw->allocateTemporary(velocityVars.uVelocityConvectCoeff[ii],  patch);
       new_dw->allocateTemporary(velocityVars.vVelocityConvectCoeff[ii],  patch);
       new_dw->allocateTemporary(velocityVars.wVelocityConvectCoeff[ii],  patch);
+      velocityVars.uVelocityCoeff[ii].initialize(0.0); 
+      velocityVars.vVelocityCoeff[ii].initialize(0.0); 
+      velocityVars.wVelocityCoeff[ii].initialize(0.0); 
+      velocityVars.uVelocityConvectCoeff[ii].initialize(0.0); 
+      velocityVars.vVelocityConvectCoeff[ii].initialize(0.0); 
+      velocityVars.wVelocityConvectCoeff[ii].initialize(0.0); 
     }
    
     new_dw->allocateTemporary(velocityVars.uVelLinearSrc,     patch);
@@ -922,6 +958,16 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
 #endif
       }*/
     }
+
+    if (d_boundaryCondition->isUsingNewBC()) {
+
+      if (!d_doMMS) {
+        d_boundaryCondition->velocityBC(patch,
+                                      cellinfo, &velocityVars,
+                                      &constVelocityVars);
+      }
+    }
+
     // apply multimaterial velocity bc
     // treats multimaterial wall as intrusion
     if (d_MAlab){
@@ -976,156 +1022,47 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
     //__________________________________
     //
     double time_shift = 0.0;
-    if (d_boundaryCondition->getInletBC()) {
-    time_shift = delta_t * timelabels->time_position_multiplier_before_average;
-    d_boundaryCondition->velRhoHatInletBC(patch,
-                                          &velocityVars, &constVelocityVars,
-                                          time_shift);
-    }
-    if ((d_boundaryCondition->getOutletBC())||
-        (d_boundaryCondition->getPressureBC()))
-      d_boundaryCondition->velRhoHatOutletPressureBC(patch,
-                                           &velocityVars, &constVelocityVars);
+    if ( d_boundaryCondition->getInletBC() ) {
 
-    /*
-  if (d_pressure_correction) {
-  int outlet_celltypeval = d_boundaryCondition->outletCellType();
-  if (!(outlet_celltypeval==-10)) {
-  IntVector idxLo = patch->getFortranCellLowIndex();
-  IntVector idxHi = patch->getFortranCellHighIndex();
+      time_shift = delta_t * timelabels->time_position_multiplier_before_average;
+      d_boundaryCondition->velRhoHatInletBC(patch,
+                                            &velocityVars, &constVelocityVars,
+                                            indx, 
+                                            time_shift);
+    } else if ( d_boundaryCondition->isUsingNewBC() ) { 
 
+      time_shift = delta_t * timelabels->time_position_multiplier_before_average;
+      d_boundaryCondition->velRhoHatInletBC(patch,
+                                            &velocityVars, &constVelocityVars,
+                                            indx, 
+                                            time_shift);
 
-  bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
-  bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
-  bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
-  bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
-  bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
-  bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
+    } 
 
-  if (xminus) {
-    int colX = idxLo.x();
-    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-        IntVector currCell(colX, colY, colZ);
-        IntVector xminusCell(colX-1, colY, colZ);
-        if (constVelocityVars.cellType[xminusCell] == outlet_celltypeval) {
-           double avdenlow = 0.5 * (constVelocityVars.new_density[currCell] +
-                                    constVelocityVars.new_density[xminusCell]);
+		if ( !d_boundaryCondition->isUsingNewBC() ) { 
+    	if ((d_boundaryCondition->getOutletBC())||
+    	    (d_boundaryCondition->getPressureBC())) {
 
-           velocityVars.uVelRhoHat[currCell] -= 2.0*delta_t*
-                                 constVelocityVars.pressure[currCell]/
-                                (cellinfo->sew[colX] * avdenlow);
+    	    d_boundaryCondition->velRhoHatOutletPressureBC( patch, 
+    	                                                    velocityVars.uVelRhoHat, 
+    	                                                    velocityVars.vVelRhoHat, 
+    	                                                    velocityVars.wVelRhoHat, 
+    	                                                    constVelocityVars.old_uVelocity, 
+    	                                                    constVelocityVars.old_vVelocity, 
+    	                                                    constVelocityVars.old_wVelocity, 
+    	                                                    constVelocityVars.cellType ); 
+    	}
+		} else { 
+    	    d_boundaryCondition->velocityOutletPressureBC__NEW( patch, 
+																															indx, 
+    	                                                    		velocityVars.uVelRhoHat, 
+    	                                                    		velocityVars.vVelRhoHat, 
+    	                                                    		velocityVars.wVelRhoHat, 
+    	                                                    		constVelocityVars.old_uVelocity, 
+    	                                                    		constVelocityVars.old_vVelocity, 
+    	                                                    		constVelocityVars.old_wVelocity ); 
+		} 
 
-           velocityVars.uVelRhoHat[xminusCell] = velocityVars.uVelRhoHat[currCell];
-
-        }
-      }
-    }
-  }
-  if (xplus) {
-    int colX = idxHi.x();
-    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-        IntVector currCell(colX, colY, colZ);
-        IntVector xplusCell(colX+1, colY, colZ);
-        IntVector xplusplusCell(colX+2, colY, colZ);
-        if (constVelocityVars.cellType[xplusCell] == outlet_celltypeval) {
-           double avden = 0.5 * (constVelocityVars.new_density[xplusCell] +
-                                 constVelocityVars.new_density[currCell]);
-
-           velocityVars.uVelRhoHat[xplusCell] += 2.0*delta_t*
-                                constVelocityVars.pressure[currCell]/
-                                (cellinfo->sew[colX] * avden);
-
-           velocityVars.uVelRhoHat[xplusplusCell] = velocityVars.uVelRhoHat[xplusCell];
-        }
-      }
-    }
-  }
-  if (yminus) {
-    int colY = idxLo.y();
-    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-        IntVector currCell(colX, colY, colZ);
-        IntVector yminusCell(colX, colY-1, colZ);
-        if (constVelocityVars.cellType[yminusCell] == outlet_celltypeval) {
-           double avdenlow = 0.5 * (constVelocityVars.new_density[currCell] +
-                                    constVelocityVars.new_density[yminusCell]);
-
-           velocityVars.vVelRhoHat[currCell] -= 2.0*delta_t*
-                                 constVelocityVars.pressure[currCell]/
-                                (cellinfo->sns[colY] * avdenlow);
-
-           velocityVars.vVelRhoHat[yminusCell] = velocityVars.vVelRhoHat[currCell];
-
-        }
-      }
-    }
-  }
-  if (yplus) {
-    int colY = idxHi.y();
-    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-        IntVector currCell(colX, colY, colZ);
-        IntVector yplusCell(colX, colY+1, colZ);
-        IntVector yplusplusCell(colX, colY+2, colZ);
-        if (constVelocityVars.cellType[yplusCell] == outlet_celltypeval) {
-           double avden = 0.5 * (constVelocityVars.new_density[yplusCell] +
-                                 constVelocityVars.new_density[currCell]);
-
-           velocityVars.vVelRhoHat[yplusCell] += 2.0*delta_t*
-                                 constVelocityVars.pressure[currCell]/
-                                (cellinfo->sns[colY] * avden);
-
-           velocityVars.vVelRhoHat[yplusplusCell] = velocityVars.vVelRhoHat[yplusCell];
-
-        }
-      }
-    }
-  }
-  if (zminus) {
-    int colZ = idxLo.z();
-    for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-        IntVector currCell(colX, colY, colZ);
-        IntVector zminusCell(colX, colY, colZ-1);
-        if (constVelocityVars.cellType[zminusCell] == outlet_celltypeval) {
-           double avdenlow = 0.5 * (constVelocityVars.new_density[currCell] +
-                                    constVelocityVars.new_density[zminusCell]);
-
-           velocityVars.wVelRhoHat[currCell] -= 2.0*delta_t*
-                                 constVelocityVars.pressure[currCell]/
-                                (cellinfo->stb[colZ] * avdenlow);
-
-           velocityVars.wVelRhoHat[zminusCell] = velocityVars.wVelRhoHat[currCell];
-
-        }
-      }
-    }
-  }
-  if (zplus) {
-    int colZ = idxHi.z();
-    for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-        IntVector currCell(colX, colY, colZ);
-        IntVector zplusCell(colX, colY, colZ+1);
-        IntVector zplusplusCell(colX, colY, colZ+2);
-        if (constVelocityVars.cellType[zplusCell] == outlet_celltypeval) {
-           double avden = 0.5 * (constVelocityVars.new_density[zplusCell] +
-                                 constVelocityVars.new_density[currCell]);
-
-           velocityVars.wVelRhoHat[zplusCell] += 2.0*delta_t*
-                                 constVelocityVars.pressure[currCell]/
-                                (cellinfo->stb[colZ] * avden);
-
-           velocityVars.wVelRhoHat[zplusplusCell] = velocityVars.wVelRhoHat[zplusCell];
-
-        }
-      }
-    }
-  }
-  }
-  }*/
 
 //#ifdef divergenceconstraint    
     // compute divergence constraint to use in pressure equation
@@ -1301,198 +1238,25 @@ MomentumSolver::averageRKHatVelocities(const ProcessorGroup*,
     }
     
 //__________________________________
-//  Apply boundary conditions
-// Tangential bc's are not needed to be set for hat velocities
-// Commented them out to avoid confusion
-    if (d_boundaryCondition->anyArchesPhysicalBC()) {
-      int outlet_celltypeval = d_boundaryCondition->outletCellType();
-      int pressure_celltypeval = d_boundaryCondition->pressureCellType();
-      IntVector idxLo = patch->getFortranCellLowIndex();
-      IntVector idxHi = patch->getFortranCellHighIndex();
-      bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
-      bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
-      bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
-      bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
-      bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
-      bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
+// Apply boundary conditions
+    if ( !d_boundaryCondition->isUsingNewBC() ) { 
+    	if (d_boundaryCondition->anyArchesPhysicalBC()) {
 
-      int sign = 0;
+    	  d_boundaryCondition->velRhoHatOutletPressureBC( patch, 
+    	                                                  new_uvel, new_vvel, new_wvel,
+    	                                                  old_uvel, old_vvel, old_wvel, 
+    	                                                  cellType ); 
+			} 
+		} else { 
 
-      if (xminus) {
-        int colX = idxLo.x();
-        for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-          for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-            IntVector currCell(colX, colY, colZ);
-            IntVector xminusCell(colX-1, colY, colZ);
-            IntVector xplusCell(colX+1, colY, colZ);
+    	  d_boundaryCondition->velocityOutletPressureBC__NEW( patch, 
+																														indx, 
+    	                                                  		new_uvel, new_vvel, new_wvel,
+    	                                                  		old_uvel, old_vvel, old_wvel ); 
 
-            if ((cellType[xminusCell] == outlet_celltypeval)||
-                (cellType[xminusCell] == pressure_celltypeval)) {
-              if ((zminus && (colZ == idxLo.z()))||(zplus && (colZ == idxHi.z()))
-                  ||(yminus && (colY == idxLo.y()))||(yplus && (colY == idxHi.y())))
-                new_uvel[currCell] = 0.0;
-              else {
-              if (cellType[xminusCell] == outlet_celltypeval)
-                sign = 1;
-              else
-                sign = -1;
-              if (sign * old_uvel[currCell] < -1.0e-10)
-                new_uvel[currCell] = new_uvel[xplusCell];
-              else
-                new_uvel[currCell] = 0.0;
-              }
-              new_uvel[xminusCell] = new_uvel[currCell];
+		}
 
-            }
-          }
-        }
-      }
-      if (xplus) {
-        int colX = idxHi.x();
-        for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-          for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-            IntVector currCell(colX, colY, colZ);
-            IntVector xplusCell(colX+1, colY, colZ);
-            IntVector xplusplusCell(colX+2, colY, colZ);
 
-            if ((cellType[xplusCell] == outlet_celltypeval)||
-                (cellType[xplusCell] == pressure_celltypeval)) {
-              if ((zminus && (colZ == idxLo.z()))||(zplus && (colZ == idxHi.z()))
-                  ||(yminus && (colY == idxLo.y()))||(yplus && (colY == idxHi.y())))
-                new_uvel[xplusCell] = 0.0;
-              else {
-              if (cellType[xplusCell] == outlet_celltypeval)
-                sign = 1;
-              else
-                sign = -1;
-              if (sign * old_uvel[xplusCell] > 1.0e-10)
-                new_uvel[xplusCell] = new_uvel[currCell];
-              else
-                new_uvel[xplusCell] = 0.0;
-              }
-              new_uvel[xplusplusCell] = new_uvel[xplusCell];
-
-            }
-          }
-        }
-      }
-      if (yminus) {
-        int colY = idxLo.y();
-        for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-          for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-            IntVector currCell(colX, colY, colZ);
-            IntVector yminusCell(colX, colY-1, colZ);
-            IntVector yplusCell(colX, colY+1, colZ);
-
-            if ((cellType[yminusCell] == outlet_celltypeval)||
-                (cellType[yminusCell] == pressure_celltypeval)) {
-              if ((zminus && (colZ == idxLo.z()))||(zplus && (colZ == idxHi.z()))
-                  ||(xminus && (colX == idxLo.x()))||(xplus && (colX == idxHi.x())))
-                new_vvel[currCell] = 0.0;
-              else {
-              if (cellType[yminusCell] == outlet_celltypeval)
-                sign = 1;
-              else
-                sign = -1;
-              if (sign * old_vvel[currCell] < -1.0e-10)
-                new_vvel[currCell] = new_vvel[yplusCell];
-              else
-                new_vvel[currCell] = 0.0;
-              }
-              new_vvel[yminusCell] = new_vvel[currCell];
-
-            }
-          }
-        }
-      }
-      if (yplus) {
-        int colY = idxHi.y();
-        for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-          for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-            IntVector currCell(colX, colY, colZ);
-            IntVector yplusCell(colX, colY+1, colZ);
-            IntVector yplusplusCell(colX, colY+2, colZ);
-
-            if ((cellType[yplusCell] == outlet_celltypeval)||
-                (cellType[yplusCell] == pressure_celltypeval)) {
-              if ((zminus && (colZ == idxLo.z()))||(zplus && (colZ == idxHi.z()))
-                  ||(xminus && (colX == idxLo.x()))||(xplus && (colX == idxHi.x())))
-                new_vvel[yplusCell] = 0.0;
-              else {
-              if (cellType[yplusCell] == outlet_celltypeval)
-                sign = 1;
-              else
-                sign = -1;
-              if (sign * old_vvel[yplusCell] > 1.0e-10)
-                new_vvel[yplusCell] = new_vvel[currCell];
-              else
-                new_vvel[yplusCell] = 0.0;
-              }
-              new_vvel[yplusplusCell] = new_vvel[yplusCell];
-
-            }
-          }
-        }
-      }
-      if (zminus) {
-        int colZ = idxLo.z();
-        for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-          for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-            IntVector currCell(colX, colY, colZ);
-            IntVector zminusCell(colX, colY, colZ-1);
-            IntVector zplusCell(colX, colY, colZ+1);
-
-            if ((cellType[zminusCell] == outlet_celltypeval)||
-                (cellType[zminusCell] == pressure_celltypeval)) {
-              if ((yminus && (colY == idxLo.y()))||(yplus && (colY == idxHi.y()))
-                  ||(xminus && (colX == idxLo.x()))||(xplus && (colX == idxHi.x())))
-                new_wvel[currCell] = 0.0;
-              else {
-              if (cellType[zminusCell] == outlet_celltypeval)
-                sign = 1;
-              else
-                sign = -1;
-              if (sign * old_wvel[currCell] < -1.0e-10)
-                new_wvel[currCell] = new_wvel[zplusCell];
-              else
-                new_wvel[currCell] = 0.0;
-              }
-              new_wvel[zminusCell] = new_wvel[currCell];
-
-            }
-          }
-        }
-      }
-      if (zplus) {
-        int colZ = idxHi.z();
-        for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-          for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-            IntVector currCell(colX, colY, colZ);
-            IntVector zplusCell(colX, colY, colZ+1);
-            IntVector zplusplusCell(colX, colY, colZ+2);
-
-            if ((cellType[zplusCell] == outlet_celltypeval)||
-                (cellType[zplusCell] == pressure_celltypeval)) {
-              if ((yminus && (colY == idxLo.y()))||(yplus && (colY == idxHi.y()))
-                  ||(xminus && (colX == idxLo.x()))||(xplus && (colX == idxHi.x())))
-                new_wvel[zplusCell] = 0.0;
-              else {
-              if (cellType[zplusCell] == outlet_celltypeval)
-                sign = 1;
-              else
-                sign = -1;
-              if (sign * old_wvel[zplusCell] > 1.0e-10)
-                new_wvel[zplusCell] = new_wvel[currCell];
-              else
-                new_wvel[zplusCell] = 0.0;
-              }
-              new_wvel[zplusplusCell] = new_wvel[zplusCell];
-
-            }
-          }
-        }
-      }
-    }  // any physical BC
   }  // patches
 }
 // ****************************************************************************
@@ -1590,12 +1354,19 @@ MomentumSolver::prepareExtraProjection(const ProcessorGroup* pc,
         time_shift = delta_t * timelabels->time_position_multiplier_before_average;
         d_boundaryCondition->velRhoHatInletBC(patch,
                                               &velocityVars, &constVelocityVars,
+                                              indx, 
                                               time_shift);
       }
       if ((d_boundaryCondition->getOutletBC())||
           (d_boundaryCondition->getPressureBC()))
-        d_boundaryCondition->velRhoHatOutletPressureBC(patch,
-                                           &velocityVars, &constVelocityVars);
+        d_boundaryCondition->velRhoHatOutletPressureBC( patch, 
+                                                        velocityVars.uVelRhoHat, 
+                                                        velocityVars.vVelRhoHat, 
+                                                        velocityVars.wVelRhoHat, 
+                                                        constVelocityVars.old_uVelocity, 
+                                                        constVelocityVars.old_vVelocity, 
+                                                        constVelocityVars.old_wVelocity, 
+                                                        constVelocityVars.cellType ); 
     }
   }
 }

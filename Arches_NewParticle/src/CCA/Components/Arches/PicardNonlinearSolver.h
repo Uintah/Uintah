@@ -85,7 +85,7 @@ public:
   // GROUP: Constructors:
   ////////////////////////////////////////////////////////////////////////
   // Solver initialized with all input data 
-  PicardNonlinearSolver(const ArchesLabel* label,
+  PicardNonlinearSolver(ArchesLabel* label,
                         const MPMArchesLabel* MAlb,
                         Properties* props, 
                         BoundaryCondition* bc,
@@ -336,7 +336,7 @@ private:
 
 private:
   // const VarLabel*
-  const ArchesLabel* d_lab;
+  ArchesLabel* d_lab;
   const MPMArchesLabel* d_MAlab;
   // generation variable for DataWarehouse creation
 
