@@ -93,7 +93,7 @@ avtudaReaderMTMDFileFormat::avtudaReaderMTMDFileFormat(const char *filename, DBO
   avtMTMDFileFormat(filename),
   archive(NULL),
   grid(NULL),
-  useExtraCells(false)
+  useExtraCells(true)
 {
   debug5 << "\nIn avtudaReaderFileFormat\n";
 
@@ -176,7 +176,7 @@ avtudaReaderMTMDFileFormat::avtudaReaderMTMDFileFormat(const char *filename, DBO
     EXCEPTION1(InvalidDBTypeException, "The function getCycleTimes could not be located in the library!!!");
   }
 
-  getTimeStepInfo = (TimeStepInfo* (*)(DataArchive*, GridP*, int)) dlsym(libHandle, "getTimeStepInfo");
+  getTimeStepInfo = (TimeStepInfo* (*)(DataArchive*, GridP*, int, bool)) dlsym(libHandle, "getTimeStepInfo");
   if((error = dlerror()) != NULL) {
     EXCEPTION1(InvalidDBTypeException, "The function getTimeStepInfo could not be located in the library!!!");
   }
@@ -282,7 +282,7 @@ avtudaReaderMTMDFileFormat::ActivateTimestep(int ts)
 
   if (stepInfo)
     delete stepInfo;
-  stepInfo = (*getTimeStepInfo)(archive, grid, ts);
+  stepInfo = (*getTimeStepInfo)(archive, grid, ts, useExtraCells);
 
   currTimeStep = ts; 
 }
@@ -933,14 +933,14 @@ avtudaReaderMTMDFileFormat::GetMesh(int timestate, int domain, const char *meshn
       extra_high[i] = high[i];
     }
 
-    if (useExtraCells) {
     // If there are extra cells, we need to store them on ALL sides.
-      int nextra = max(max(levelInfo.extraCells[0], levelInfo.extraCells[1]),
-                       levelInfo.extraCells[2]);
+    int nextra = max(max(levelInfo.extraCells[0], levelInfo.extraCells[1]),
+                     levelInfo.extraCells[2]);
 
+    if( useExtraCells ) {
       for (int i=0; i<3; i++) {
-        extra_low[i]  -= nextra;
-        extra_high[i] += nextra;
+        low[i]  += nextra;
+        high[i] -= nextra;
       }
     }
 
@@ -1009,8 +1009,7 @@ avtudaReaderMTMDFileFormat::GetMesh(int timestate, int domain, const char *meshn
       coords->Delete();
     }
 
-
-    if (useExtraCells) {
+    if (nextra) {
       // If we have extra cells, we need to specify where in the data chunk
       // the interior cells lay.
       vtkIntArray *baseIndex = vtkIntArray::New();
@@ -1041,6 +1040,10 @@ avtudaReaderMTMDFileFormat::GetMesh(int timestate, int domain, const char *meshn
       unsigned char ghostInternal=0;
       avtGhostData::AddGhostZoneType(ghostInternal,
                                      DUPLICATED_ZONE_INTERNAL_TO_PROBLEM);
+
+      unsigned char ghostNA=0;
+      avtGhostData::AddGhostZoneType(ghostNA,
+                                     ZONE_NOT_APPLICABLE_TO_PROBLEM);
 
 
       vtkUnsignedCharArray *ghostCells = vtkUnsignedCharArray::New();
@@ -1193,27 +1196,10 @@ avtudaReaderMTMDFileFormat::GetVar(int timestate, int domain, const char *varnam
 
 
     int low[3], high[3];   // region that visit expects
-    int qlow[3], qhigh[3]; // region we're going to ask uintah for
-    int nextra=0;
 
     for (int i=0; i<3; i++) {
       low[i]  = patchInfo.cc_low[i];
       high[i] = patchInfo.cc_high[i];
-      qlow[i] = low[i];
-      qhigh[i] = high[i];
-    }
-
-    if (useExtraCells) {
-      // If there are extra cells, we need to query for them on ALL sides.
-      nextra = max(max(levelInfo.extraCells[0], levelInfo.extraCells[1]),
-                   levelInfo.extraCells[2]);
-
-      for (int i=0; i<3; i++) {
-        low[i]  -= nextra;
-        high[i] += nextra;
-        qlow[i]  = patchInfo.cc_extra_low[i];
-        qhigh[i] = patchInfo.cc_extra_high[i];
-      }
     }
 
 
@@ -1223,17 +1209,17 @@ avtudaReaderMTMDFileFormat::GetVar(int timestate, int domain, const char *varnam
     // patches, but there's no way around that right now.
     if (varType.find("SFCX") != string::npos ||
         varType.find("NC") != string::npos) {
-      high[0]++; qhigh[0]++;
+      high[0]++;
     }
 
     if (varType.find("SFCY") != string::npos ||
         varType.find("NC") != string::npos) {
-      high[1]++; qhigh[1]++;
+      high[1]++;
     }
 
     if (varType.find("SFCZ") != string::npos ||
         varType.find("NC") != string::npos) {
-      high[2]++; qhigh[2]++;
+      high[2]++;
     }
 
     GridDataRaw *gd=NULL;
@@ -1241,12 +1227,12 @@ avtudaReaderMTMDFileFormat::GetVar(int timestate, int domain, const char *varnam
     if (strcmp(varname, "proc_id")==0) {
       gd = new GridDataRaw;
       for (int i=0; i<3; i++) {
-        gd->low[i ] = qlow[i];
-        gd->high[i] = qhigh[i];
+        gd->low[i ] = low[i];
+        gd->high[i] = high[i];
       }
       gd->components=1;
 
-      int ncells = (qhigh[0]-qlow[0])*(qhigh[1]-qlow[1])*(qhigh[2]-qlow[2]);
+      int ncells = (high[0]-low[0])*(high[1]-low[1])*(high[2]-low[2]);
       gd->data = new float[ncells];
       for (int i=0; i<ncells; i++) 
         gd->data[i] = patchInfo.proc_id;
@@ -1280,83 +1266,15 @@ avtudaReaderMTMDFileFormat::GetVar(int timestate, int domain, const char *varnam
       if (prev>=0)
         MPI_Recv(&msg, 1, MPI_INT, prev, tag, VISIT_MPI_COMM, &status);
 
-      gd = (*getGridData)(archive, grid, level, local_patch, varName, atoi(matl.c_str()), timestate, qlow, qhigh);
+      gd = (*getGridData)(archive, grid, level, local_patch, varName, atoi(matl.c_str()), timestate, low, high);
 
       // let the next read go
       if (next>=0)
         MPI_Send(&msg, 1, MPI_INT, next, tag, VISIT_MPI_COMM);
 
 #else
-      gd = (*getGridData)(archive, grid, level, local_patch, varName, atoi(matl.c_str()), timestate, qlow, qhigh);
+      gd = (*getGridData)(archive, grid, level, local_patch, varName, atoi(matl.c_str()), timestate, low, high);
 #endif
-    }
-
-
-    bool correct_size = true;
-    for (int i=0; i<3; i++) {
-      if (qlow[i]!=gd->low[i] ||
-          qhigh[i]!=gd->high[i]) {
-        correct_size=false;
-        break;
-      }
-    }
-
-    // if we didn't query for the same size region as visit expects, we need
-    // to insert extra data
-    if (nextra) {
-      GridDataRaw *gd2 = new GridDataRaw;
-      for (int i=0; i<3; i++) {
-        gd2->low[i] = low[i];
-        gd2->high[i] = high[i];
-      }
-      gd2->components = gd->components;
-
-      int n = (gd2->high[0]-gd2->low[0])*(gd2->high[1]-gd2->low[1])*(gd2->high[2]-gd2->low[2]);
-      gd2->data = new float[n*gd2->components];
-
-      float *gdp = gd->data;
-      float *gd2p = gd2->data;
-
-      for (int z=gd2->low[2]; z<gd2->high[2]; z++) {
-        bool zoverlap = (z>=gd->low[2] && z<gd->high[2]);
-        for (int y=gd2->low[1]; y<gd2->high[1]; y++) {
-          bool yoverlap = (y>=gd->low[1] && y<gd->high[1]);
-          for (int x=gd2->low[0]; x<gd2->high[0]; x++) {
-            bool xoverlap = (x>=gd->low[0] && x<gd->high[0]);
-
-            if (zoverlap && yoverlap && xoverlap) {
-              for (int i=0; i<gd2->components; i++) {
-                *gd2p = *gdp;
-                gd2p++; gdp++;
-              }
-            }
-            else {
-              for (int i=0; i<gd2->components; i++) {
-                *gd2p = FLT_MIN;
-                gd2p++;
-              }
-            }
-          }
-        }
-      }
-
-      delete [] gd->data;
-      delete gd;
-      gd = gd2;
-    }
-
-    if (!correct_size) {
-      cerr<<"incorrect size!"<<endl;
-
-      cerr<<"expected:"<<endl;
-      cerr<<"low: "<<qlow[0]<<" "<<qlow[1]<<" "<<qlow[2]<<" "<<endl;
-      cerr<<"high: "<<qhigh[0]<<" "<<qhigh[1]<<" "<<qhigh[2]<<" "<<endl;
-
-      cerr<<"found:"<<endl;
-      cerr<<"low: "<<gd->low[0]<<" "<<gd->low[1]<<" "<<gd->low[2]<<" "<<endl;
-      cerr<<"high: "<<gd->high[0]<<" "<<gd->high[1]<<" "<<gd->high[2]<<" "<<endl;
-
-      exit(0);
     }
 
     int n = (high[0]-low[0])*(high[1]-low[1])*(high[2]-low[2]);
