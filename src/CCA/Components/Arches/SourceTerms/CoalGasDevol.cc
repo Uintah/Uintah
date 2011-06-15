@@ -7,7 +7,7 @@
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqnFactory.h>
 #include <CCA/Components/Arches/CoalModels/CoalModelFactory.h>
 #include <CCA/Components/Arches/CoalModels/ModelBase.h>
-#include <CCA/Components/Arches/CoalModels/KobayashiSarofimDevol.h>
+//#include <CCA/Components/Arches/CoalModels/KobayashiSarofimDevol.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
 
 //===========================================================================

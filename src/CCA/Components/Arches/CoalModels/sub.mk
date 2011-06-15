@@ -9,6 +9,7 @@ SRCS += \
   $(SRCDIR)/Devolatilization.cc \
   $(SRCDIR)/CharOxidation.cc \
   $(SRCDIR)/KobayashiSarofimDevol.cc \
+  $(SRCDIR)/YamamotoDevol.cc \
   $(SRCDIR)/CharOxidationShaddix.cc \
   $(SRCDIR)/ConstantModel.cc  \
   $(SRCDIR)/HeatTransfer.cc \
