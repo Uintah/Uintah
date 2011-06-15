@@ -52,7 +52,6 @@ class PressureSolver;
 class MomentumSolver;
 class ScalarSolver;
 class ReactiveScalarSolver; 
-class ExtraScalarSolver; 
 class TurbulenceModel;
 class ScaleSimilarityModel;
 class Properties;
@@ -226,12 +225,6 @@ public:
   }
   inline void setEKTCorrection(bool EKTCorrection) {
     d_EKTCorrection=EKTCorrection;
-  }
-  inline void setCalcExtraScalars(bool calcExtraScalars) {
-    d_calcExtraScalars=calcExtraScalars;
-  }
-  inline void setExtraScalars(vector<ExtraScalarSolver*>* extraScalars) {
-    d_extraScalars = extraScalars;
   }
   inline void setNumSourceBoundaries(int numSourceBoundaries){
     d_numSourceBoundaries = numSourceBoundaries;
