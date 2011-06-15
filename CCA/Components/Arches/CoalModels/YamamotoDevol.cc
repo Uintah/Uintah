@@ -89,7 +89,7 @@ YamamotoDevol::problemSetup(const ProblemSpecP& params, int qn)
     ProblemSpecP db_coal = params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("Coal_Properties");
     db_coal->require("initial_rawcoal_mass", rc_mass_init);
   } else {
-    throw InvalidValue("ERROR: ShaddixHeatTransfer: problemSetup(): Missing <Coal_Properties> section in input file!",__FILE__,__LINE__);
+    throw InvalidValue("ERROR: YamamotoDevol: problemSetup(): Missing <initial_rawcoal_mass> in <Coal_Properties> section in input file!",__FILE__,__LINE__);
   }
 
 
