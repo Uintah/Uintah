@@ -115,17 +115,6 @@ TabPropsInterface::problemSetup( const ProblemSpecP& propertiesParameters )
   const ProblemSpecP db_root = db_tabprops->getRootNode(); 
   db_root->findBlock("PhysicalConstants")->require("reference_point", d_ijk_den_ref);  
 
-  // // Check for and deal with filename extension
-  // // - if table file name has .h5 extension, remove it
-  // // - otherwise, assume it is an .h5 file but no extension was given
-  // string extension (tableFileName.end()-3,tableFileName.end());
-  // if( extension == ".h5" || extension == ".H5" ) {
-  //   tableFileName = tableFileName.substr( 0, tableFileName.size() - 3 );
-  // }
-  // 
-  // // Load data from HDF5 file into StateTable
-  // d_statetbl.read_hdf5(tableFileName);
-
   std::ifstream inFile( tableFileName.c_str(), std::ios_base::in ); 
   try {
     InputArchive ia( inFile );
@@ -199,19 +188,7 @@ TabPropsInterface::problemSetup( const ProblemSpecP& propertiesParameters )
   proc0cout << "  Matching successful!" << endl;
   proc0cout << endl;
 
-  // create a transform object
-  if ( db_tabprops->findBlock("coal") ) {
-    double constant = 0.0;
-    _iv_transform = scinew CoalTransform( constant ); 
-  } else if( db_tabprops->findBlock("acidbase") ) {
-      throw ProblemSetupException( "Acid base transform not implemented yet for TabProps",__FILE__,__LINE__); 
-  } else { 
-    _iv_transform = scinew NoTransform();
-  }
-  bool check_transform = _iv_transform->problemSetup( db_tabprops, d_allIndepVarNames ); 
-  if ( !check_transform ){ 
-    throw ProblemSetupException( "Could not properly setup independent variable transform based on input.",__FILE__,__LINE__); 
-  }
+  problemSetupCommon( db_tabprops ); 
 
   // Confirm that table has been loaded into memory
   d_table_isloaded = true;
@@ -504,6 +481,8 @@ TabPropsInterface::getState( const ProcessorGroup* pc,
           bc_values.push_back(0.0);
           which_bc.push_back(TabPropsInterface::DIRICHLET);
 
+          delete bc; 
+
         }
 
         // now use the last bound_ptr to loop over all boundary cells: 
@@ -764,13 +743,13 @@ TabPropsInterface::computeFirstEnthalpy( const ProcessorGroup* pc,
 
     CCVariable<double> enthalpy; 
     new_dw->getModifiable( enthalpy, d_lab->d_enthalpySPLabel, matlIndex, patch ); 
-      
+
     std::vector<constCCVariable<double> > the_variables; 
 
     for ( vector<string>::iterator i = d_allIndepVarNames.begin(); i != d_allIndepVarNames.end(); i++){
 
       const VarMap::iterator iv_iter = d_ivVarMap.find( *i ); 
-      
+
       if ( iv_iter == d_ivVarMap.end() ) {
         cout << " For variable named: " << *i << endl;
         throw InternalError("Error: Could not map this label to the correct Uintah grid variable." ,__FILE__,__LINE__);

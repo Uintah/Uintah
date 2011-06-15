@@ -92,16 +92,7 @@ ClassicTableInterface::problemSetup( const ProblemSpecP& propertiesParameters )
 
   // only solve for heat loss if a working radiation model is found
   const ProblemSpecP params_root = db_classic->getRootNode();
-  ProblemSpecP db_enthalpy;
-  if( params_root->findBlock("CFD") ) {
-    if( params_root->findBlock("CFD")->findBlock("ARCHES") ) {
-      if( params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ExplicitSolver") ) {
-        if( params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ExplicitSolver")->findBlock("EnthalpySolver") ) {
-          db_enthalpy = params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ExplicitSolver")->findBlock("EnthalpySolver");
-        }
-      }
-    }
-  }
+  ProblemSpecP db_enthalpy  =  params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ExplicitSolver")->findBlock("EnthalpySolver");
   if (db_enthalpy) { 
     ProblemSpecP db_radiation = params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ExplicitSolver")->findBlock("EnthalpySolver")->findBlock("DORadiationModel");
     d_adiabatic = true; 
@@ -121,16 +112,16 @@ ClassicTableInterface::problemSetup( const ProblemSpecP& propertiesParameters )
   db_root->findBlock("PhysicalConstants")->require("reference_point", d_ijk_den_ref);  
 
   // READ TABLE: 
-  proc0cout << endl << "----------Mixing Table Information---------------  " << endl << endl;
+  proc0cout << "\n ----------Mixing Table Information---------------  \n \n";
   loadMixingTable( tableFileName );
   checkForConstants( tableFileName );
-  proc0cout << endl << "-------------------------------------------------  " << endl << endl;
+  proc0cout << "\n -------------------------------------------------  \n \n";
 
   // Extract independent and dependent variables from input file
   ProblemSpecP db_rootnode = propertiesParameters;
   db_rootnode = db_rootnode->getRootNode();
 
-  proc0cout << endl << "--- Classic Arches table information --- " << endl << endl;
+  proc0cout << endl << "--- Classic Arches table information --- \n \n";
 
   // This sets the table lookup variables and saves them in a map
   // Map<string name, Label>
@@ -184,37 +175,17 @@ ClassicTableInterface::problemSetup( const ProblemSpecP& propertiesParameters )
   proc0cout << "  Matching successful!" << endl;
   proc0cout << endl;
 
-  // create a transform object
-  if ( db_classic->findBlock("coal") ) {
-    double constant = 0.0; 
-    _iv_transform = scinew CoalTransform( constant ); 
-  } else if ( db_classic->findBlock("acidbase") ) {
-    doubleMap::iterator iter = d_constants.find( "transform_constant" ); 
-    if ( iter == d_constants.end() ) {
-      throw ProblemSetupException( "Could not find transform_constant for the acid/base table.",__FILE__, __LINE__ ); 
-    } else { 
-      double constant = iter->second; 
-      _iv_transform = scinew CoalTransform( constant ); 
-    }
-  } else { 
-    _iv_transform = scinew NoTransform();
-  }
-  bool check_transform = _iv_transform->problemSetup( db_classic, d_allIndepVarNames ); 
-  if ( !check_transform ){ 
-    throw ProblemSetupException( "Could not properly setup independent variable transform based on input.",__FILE__,__LINE__); 
-  }
-
   // Confirm that table has been loaded into memory
   d_table_isloaded = true;
 
+  problemSetupCommon( db_classic ); 
+
+  proc0cout << "--- End Classic Arches table information --- \n \n";
+
   // Match the requested dependent variables with their table index:
   getIndexInfo(); 
-  if(!d_coldflow) {
-  getEnthalpyIndexInfo();
-  }
-
-  proc0cout << "--- End Classic Arches table information --- " << endl;
-  proc0cout << endl;
+  if (!d_coldflow) 
+    getEnthalpyIndexInfo();
 }
 
 void ClassicTableInterface::tableMatching(){ 
@@ -509,6 +480,8 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
 
           bc_values.push_back(0.0);
           which_bc.push_back(ClassicTableInterface::DIRICHLET);
+
+          delete bc; 
 
         }
 
@@ -1384,11 +1357,10 @@ ClassicTableInterface::loadMixingTable( const string & inputfile )
           i1[mm][i] = v;
         }
 
-      }
-
-      for ( int jj = 0; jj < d_allIndepVarNum[1]; jj++ ){
-        for ( int ii = 0; ii < d_allIndepVarNum[0]; ii++ ){
-          table[kk][ii + jj*d_allIndepVarNum[0]] = getDouble( gzFp ); 
+        for ( int jj = 0; jj < d_allIndepVarNum[1]; jj++ ){
+          for ( int ii = 0; ii < d_allIndepVarNum[0]; ii++ ){
+            table[kk][ii + jj*d_allIndepVarNum[0]] = getDouble( gzFp ); 
+          }
         }
       }
     }
@@ -1396,14 +1368,23 @@ ClassicTableInterface::loadMixingTable( const string & inputfile )
   } else if ( d_indepvarscount == 3 ){ 
 
     proc0cout << "Reading in the dependent variables: " << endl;
+    bool read_assign = true; 
     for (int kk=0; kk< d_varscount; kk++){
 
       proc0cout << " loading --> " << d_allDepVarNames[kk] << endl;
       for ( int mm = 0; mm < d_allIndepVarNum[2]; mm++ ){ 
 
-        for (int i = 0; i < d_allIndepVarNum[0]; i++){
-          double v = getDouble( gzFp ); 
-          i1[mm][i] = v;
+        if ( read_assign ) { 
+          for (int i = 0; i < d_allIndepVarNum[0]; i++){
+            double v = getDouble( gzFp ); 
+            i1[mm][i] = v;
+          }
+        } else { 
+          for (int i = 0; i < d_allIndepVarNum[0]; i++){
+            double v = getDouble( gzFp ); 
+            // read but don't assign 
+            // doing this for now because it was causing some weirdness 
+          }
         }
 
         for ( int jj = 0; jj < d_allIndepVarNum[1]; jj++ ){
@@ -1413,6 +1394,7 @@ ClassicTableInterface::loadMixingTable( const string & inputfile )
           }
         }
       }
+      if ( read_assign ) { read_assign = false; }
     }
 
   }
