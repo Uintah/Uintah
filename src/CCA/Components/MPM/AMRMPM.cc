@@ -1156,8 +1156,9 @@ void AMRMPM::partitionOfUnity(const ProcessorGroup*,
           p_partitionUnity[idx] += S[k];
         }
       }
-    }
-  }
+    }  // loop over materials
+    delete interpolator;
+  }  // loop over patches
 }
 //______________________________________________________________________
 //
@@ -2258,8 +2259,6 @@ void AMRMPM::interpolateToParticlesAndUpdate_CFI(const ProcessorGroup*,
                                                  DataWarehouse* new_dw)
 {
   const Level* coarseLevel = getLevel(coarsePatches);
-  const Level* fineLevel = coarseLevel->getFinerLevel().get_rep();
-  
   delt_vartype delT;
   old_dw->get(delT, d_sharedState->get_delt_label(), coarseLevel );
   
