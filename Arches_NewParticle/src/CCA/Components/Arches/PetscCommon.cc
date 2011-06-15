@@ -86,6 +86,30 @@ bool PetscLinearSolve(Mat& A,
     throw UintahPetscError(ierr, "VecAssemblyEnd", __FILE__, __LINE__);
   }
   
+  //__________________________________
+  //Debugging output Matrix & rhs.
+#if 0
+  char matrix_file[100],RHS_file[100], X_file[100];
+  
+  sprintf(RHS_file,   "RHS.proc_%d_iter",   myworld->myrank());
+  sprintf(X_file,     "X_proc_%d_iter",     myworld->myrank());
+  sprintf(matrix_file,"matrix_proc_%d",myworld->myrank());
+  
+  PetscViewer RHS_view;
+  PetscViewerASCIIOpen(PETSC_COMM_WORLD,RHS_file,&RHS_view);
+  VecView(B,RHS_view);
+  PetscViewerDestroy(RHS_view);
+  
+  PetscViewer X_view;
+  PetscViewerASCIIOpen(PETSC_COMM_WORLD,X_file,&X_view);
+  VecView(X,X_view);
+  PetscViewerDestroy(X_view);
+  
+  PetscViewer matrix_view;
+  PetscViewerASCIIOpen(PETSC_COMM_WORLD,matrix_file,&matrix_view);
+  MatView(A, matrix_view);
+  PetscViewerDestroy(matrix_view);
+#endif
   
   //__________________________________
   // compute the initial error
