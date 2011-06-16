@@ -177,6 +177,7 @@ ThreadedMPIScheduler::problemSetup(const ProblemSpecP& prob_spec,
   
   log.problemSetup(prob_spec);
   SchedulerCommon::problemSetup(prob_spec, state);
+  Thread::self()->set_affinity(0); //bind main thread to cpu 0
 
 }
 
@@ -256,12 +257,12 @@ ThreadedMPIScheduler::runTask( DetailedTask         * task, int iteration, int t
   
   double dtask = Time::currentSeconds()-taskstart;
  
+  dlbLock.lock();
   if(execout.active())
   {
     exectimes[task->getTask()->getName()]+=dtask;
   }
 
-  dlbLock.lock();
   //if i do not have a sub scheduler 
   if(!task->getTask()->getHasSubScheduler())
   {
@@ -965,7 +966,7 @@ TaskWorker::TaskWorker(ThreadedMPIScheduler* scheduler, int id ) :
 void
 TaskWorker::run()
 {
-  
+  Thread::self()->set_affinity(d_id+1);
   while(true) {
     //wait for main thread signal
     d_runsignal.wait(d_runmutex);
