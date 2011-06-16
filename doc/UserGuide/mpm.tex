@@ -1290,39 +1290,88 @@ of both microscale flaws such as porosity and networks of microcracks. This mdel
 multi-stage return algorithm proposed in \cite{brannon10}. Usage is as follows:
 \begin{Verbatim}[fontsize=\footnotesize]
         <constitutive_model type="simplified_geo_model">
-            <bulk_modulus>10000</bulk_modulus>
-            <shear_modulus>3750</shear_modulus>
-            <hardening_modulus>400.0</hardening_modulus>
-            <alpha> 0.057735026919 </alpha>
-            <alpha_p> 0.057735026919 </alpha_p>
-            <k_o>35.355339059327378</k_o>
+            <B0>10000</B0>
+            <G0>3750</G0>
+            <hardening_modulus>0.0</hardening_modulus>
+            <FSLOPE> 0.057735026919 </FSLOPE>
+            <FSLOPE_p> 0.057735026919 </FSLOPE_p>
+            <PEAKI1> 612.3724356953976 </PEAKI1>
             <kappa_initial> -612.3724 </kappa_initial>
             <cap_radius> 1224.7 </cap_radius>
             <p0_crush_curve> -1837.0724 </p0_crush_curve>
             <p1_crush_curve> 6.666666666666666e-4 </p1_crush_curve>
             <p3_crush_curve> 0.5 </p3_crush_curve>
+            <p4_fluid_effect> 0.2 </p4_fluid_effect>
+            <fluid_B0> 0.0 </fluid_B0>
+            <fluid_pressur_initial> 0.0 </fluid_pressur_initial>
+            <kinematic_hardening_constant> 0.0 </kinematic_hardening_constant>
         </constitutive_model>
 \end{Verbatim}
-where \tt <bulk\_modulus> \normalfont and \tt <shear\_modulus> \normalfont are the bulk and 
-shear moduli of the material, \tt <hardening\_modulus> \normalfont is the ensemble hardening 
-modulus, \tt <alpha> \normalfont is the tangent of the friction angle of the Drucker-Prager
-part, \tt <alpha\_p> \normalfont is the tangent of the dilation angle of the Drucker-Prager
-part, \tt <k\_o> \normalfont is a constant in the Drucker-Prager yield criterion, $\sqrt{J_2}
-+\alpha I_1-k_o=0$, \tt <kappa\_initial> \normalfont is the initial value for the internal 
+where \tt <B0> \normalfont and \tt <G0> \normalfont are the bulk and 
+shear moduli of the material, \tt <FSLOPE> \normalfont is the tangent of the friction angle 
+of the Drucker-Prager part, \tt <FSLOPE\_p> \normalfont is the tangent of the dilation angle 
+of the Drucker-Prager part, \tt <hardening\_modulus> \normalfont is the ensemble hardening 
+modulus, and \tt <PEAKI1> \normalfont is the initial tensile limit of the 
+first stress invariant, $I_1$. The Drucker-Prager yield criterion is given as
+\begin{equation}
+\sqrt{J_2}+FSLOPE \times (I_1-PEAKI1)=0,
+\end{equation}
+\tt <kappa\_initial> \normalfont is the initial value for the internal 
 state variable $\kappa$ which determines the cap yield surface position, \tt <cap\_radius> 
 \normalfont is $\kappa-X$ in which $X$ is the value of the first stress invariant at the 
 intersection of the cap yield surface and the mean pressure axis, \tt <p0\_crush\_curve> 
 \normalfont, \tt <p1\_crush\_curve> \normalfont, and \tt <p3\_crush\_curve> \normalfont are the
-constants in the fitted post yielding part of the crush curve $p_3-\bar{\epsilon}_v^p=p_3
-\exp{-3p_1(\bar{p}-p_0)}$ in which $\bar{p}$ is the pressure.
+constants in the fitted post yielding part of the crush curve
+\begin{equation}
+p_3-\bar{\epsilon}_v^p=p_3\exp{-3p_1(\bar{p}-p_0)}
+\end{equation}
+in which $\bar{p}$ is the pressure.
 
-This model is under development and more features will be added in near future.
+In pure kinematic hardening the center of the yield surface changes with its size and
+shape remaining unchanged.
+Generally, kinematic hardening is modeled by introducing the back stress tensor, and defining
+an appropriate evolution rule for it. In the simplified geomodel, linear Ziegler’s rule is used:
+\begin{equation}
+\dot{\alpha}_{ij}=\dot{\mu}(\Bsig_{ij}-\alpha_{ij})
+\end{equation}
+in which $\alpha_{ij}$ is the back stress tensor, $\dot{\alpha}_{ij}$ is time derivative of 
+the back stress tensor, and
+\begin{equation}
+\dot{\mu}=c\dot{\xi}^p
+\end{equation}
+where $\dot{\xi}^p$ is the deviatoric invariant of the rate of plastic strain and $c$ is a 
+constant defined yb the user as \tt <kinematic\_hardening\_constant> \normalfont.
 
+Based on the research work done by M. Homel at the University of Utah, the following equations
+are used in the simplified geomodel to consider the fluid-filled porous effects:
+\begin{eqnarray}
+\frac{\partial X}{\partial\varepsilon^p_v}=
+&& \frac{1}{p_1p_3}\exp{(-p_1X-p_0)}
+-\frac{3K_f\left(\exp(p_3+p_4)-1\right)\exp(p_3+p_4+\varepsilon^p_v)}
+{\left(\exp(p_3+p_4+\varepsilon^p_v)-1\right)^2} \nonumber \\
+&& +\frac{3K_f\left(\exp(p_3+p_4)-1\right)\exp(p_3+\varepsilon^p_v)}
+{\left(\exp(p_3+\varepsilon^p_v)-1\right)^2}
+\end{eqnarray}
+in which $K_f$ is the fluid bulk modulus, which is defined by the user as \tt <fluid\_B0>\normalfont, 
+$\varepsilon^p_v$ is the volumetric part 
+of the plastic strain, and $p_4$ is a constant defined by the user as 
+\tt <p4\_fluid\_effect>\normalfont. The isotropic part of the back stress tensor
+is updated using the following equation
+\begin{equation}
+\alpha^{\mathrm{iso}}_{n+1}=\alpha^{\mathrm{iso}}_{n}+
+\frac{3K_f\exp(p_3)\left(\exp(p_4)-\exp(\varepsilon^p_v)\right)}
+{\left(\exp(p_3+\varepsilon^p_v)-1\right)}
+\dot{\varepsilon}^p_v\Delta t ~\Bone
+\end{equation}
+in which $~\Bone$ is the second-order identity tensor. Also, the effective bulk modulus 
+is calculated as
+\begin{equation}
+K_e=B0+
+\frac{K_f\left(\exp(p_3+p_4)-1\right)\exp(p_3+p_4+\varepsilon^e_v+\varepsilon^p_v)}
+{\left(\exp(p_3+p_4+\varepsilon^e_v+\varepsilon^p_v)-1\right)^2}
+\end{equation}
+in which $\varepsilon^e_v$ is the volumetric part of the elastic strain.
            
-
-
-
-
 \item{\bf Water}  This is a model for water, reported in \cite{water_model_ref}.
 The P-V relationship is given by:
 \begin{equation}
