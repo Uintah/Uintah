@@ -230,18 +230,19 @@ echo "Using the >> $DIR << gold standard directory."
 
 # Set up the various test cases
 
-mpm_test_cases="disks2mat4patch heatcond2mat inclined_plane_sphere foam_crush periodic_disks const_test_hypo const_test_cmr const_test_nhp const_test_vs adiCuJC4000s696K adiCuMTS4000s696K adiCuPTW4000s696K adiCuSCG4000s696K adiCuZA4000s696K test_corrug_plate test_cyl_pene_no_ero test_gurson_beckerdrucker_mts"
+mpm_test_cases="disks2mat4patch heatcond2mat inclined_plane_sphere foam_crush periodic_disks const_test_hypo const_test_cmr const_test_nhp const_test_vs adiCuJC4000s696K adiCuMTS4000s696K adiCuPTW4000s696K adiCuSCG4000s696K adiCuZA4000s696K test_corrug_plate test_cyl_pene_no_ero test_gurson_beckerdrucker_mts advect_3L_3D"
 mpmf_test_cases="regressionFMPM"
 ice_test_cases="advect riemann_sm impHotBlob hotBlob2mat hotBlob2mat_sym hotBlob2mat8patch"
 ice_amr_test_cases="hotBlob_AMR advect2matAMR"
 mpmice_test_cases="massX guni2dRT SteadyBurn_2dRT TBurner_2dRT TRWnoz testConvertMPMICEAdd"
-mpmice_amr_test_cases="advect_2L_MI explode2D_amr"
+#mpmice_amr_test_cases="advect_2L_MI explode2D_amr"
+mpmice_amr_test_cases="advect_2L_MI"
 model_test_cases="HePlume JP8_Radiation"
 smpm_test_cases="test_plane_shell_punch test_sphere_shell_compress"
 impm_test_cases="billet.static adiCuJC01s296K adiCuMTS01s296K adiCuPTW01s296K adiCuSCG01s296K adiCuZA01s296K"
 #arches_test_cases="constantMMS almgrenMMS periodic methane_explicit_table methane8patch"
-#arches_test_cases="dqmom_test_1 dqmom_test_2a dqmom_test_2b dqmom_test_2c dqmom_test_3 dqmom_test_4 dqmom_test_5 constantMMS almgrenMMS periodic methane_explicit_table methane8patch"
-arches_test_cases="dqmom_test_1 dqmom_test_2a dqmom_test_2b dqmom_test_2c dqmom_test_3 dqmom_test_4 dqmom_test_5 constantMMS almgrenMMS periodic methane_explicit_table methane8patch"
+#arches_test_cases="dqmom_test_1 dqmom_test_2 dqmom_test_3 dqmom_test_4 dqmom_test_5 constantMMS almgrenMMS periodic methane_explicit_table methane8patch"
+arches_test_cases="dqmom_test_1 dqmom_test_2 dqmom_test_3 dqmom_test_4 dqmom_test_5 constantMMS almgrenMMS periodic methane_explicit_table methane8patch"
 mpmarches_test_cases="mpmpipe_test methaneFireWContainer"
 examples_test_cases="poisson1"
 ucf_test_cases="LBwoRegrid icePerformanceTest mpmicePerformanceTest"
@@ -337,6 +338,15 @@ run_test () {
     if [ $n = "explode2D_amr" ]; then
         numproc=8
         opts="-restart"
+    elif [ $n = "periodic_disks" ]; then
+	cp $in_file .
+	numproc=1
+	opts=""
+    elif [ $n = "advect_3L_3D" ]; then
+	cp $in_file .
+	numproc=1
+        do_restart=0
+	opts=""
     else
         cp $in_file .
         num_proc
