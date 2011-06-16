@@ -339,6 +339,7 @@ DESCRIPTION
     // This only has an effect for the last thread that exits.
     static void setCallExit(bool new_val) { callExit = new_val; }
     static bool getCallExit() { return callExit; }
+    static void set_affinity(int cpu);
 
   private:
     // If you loaded the thread library (via dlopen for example), and
@@ -406,6 +407,7 @@ DESCRIPTION
                            const char* why);
     static void pop_bstack(Thread_private*, int oldstate);
     static void print_threads();
+
 
     // Cannot copy them
     Thread(const Thread&);
