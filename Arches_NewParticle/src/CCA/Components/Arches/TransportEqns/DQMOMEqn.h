@@ -132,6 +132,11 @@ public:
                     DataWarehouse* old_dw, 
                     DataWarehouse* new_dw );
 
+  /** @brief Clip values of phi that are too high or too low (after RK time averaging). */
+  template<class phiType>
+  void clipPhi( const Patch* p, 
+                     phiType& phi );
+
   /** @brief  Schedule dummy initialization for MPMArches. */
   void sched_dummyInit( const LevelP& level, SchedulerP& sched );
   
@@ -141,15 +146,6 @@ public:
                   const MaterialSubset* matls, 
                   DataWarehouse* old_dw, 
                   DataWarehouse* new_dw );
-
-  /** @brief Clip values of phi that are too high or too low (after RK time averaging). */
-  void sched_clipPhi( const LevelP& level, SchedulerP& sched );
-
-  void clipPhi( const ProcessorGroup* pc, 
-                const PatchSubset* patches, 
-                const MaterialSubset* matls, 
-                DataWarehouse* old_dw, 
-                DataWarehouse* new_dw );
 
   ////////////////////////////////////////////
   // Get/set methods

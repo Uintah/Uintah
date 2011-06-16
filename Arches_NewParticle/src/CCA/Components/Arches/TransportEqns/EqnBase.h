@@ -133,17 +133,6 @@ public:
     d_boundaryCond->setScalarValueBC( 0, patch, phi, varName ); 
   }
 
-
-  /** @brief Clip values of phi that are too high or too low (after RK time averaging). */
-  virtual void sched_clipPhi( const LevelP& level, SchedulerP& sched ) = 0;
-
-  virtual void clipPhi( const ProcessorGroup* pc, 
-                        const PatchSubset* patches, 
-                        const MaterialSubset* matls, 
-                        DataWarehouse* old_dw, 
-                        DataWarehouse* new_dw ) = 0;
-
-
   ////////////////////////////////////////////
   // Get/set methods
 
@@ -229,7 +218,7 @@ protected:
   ExplicitTimeInt* d_timeIntegrator;      ///< Time integrator object associated with equation object
   Discretization_new* d_disc;             ///< Discretization object associated with equation object
 
-  vector<const VarLabel*> d_sources;  ///< List of variable labels corresponding to source terms for this DQMOM internal coordinate/environment
+  vector<const VarLabel*> d_sources;      ///< List of variable labels corresponding to source terms for this DQMOM internal coordinate/environment
 
   const VarLabel* d_transportVarLabel;    ///< Label for scalar being transported, in NEW data warehouse
   const VarLabel* d_oldtransportVarLabel; ///< Label for scalar being transported, in OLD data warehouse ("old" refers to old value within RK substeps)
