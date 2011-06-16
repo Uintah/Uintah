@@ -552,11 +552,8 @@ DQMOMEqnFactory::sched_evalTransportEqns( const LevelP& level,
     for( EqnMap::iterator iEqn = eqns_.begin(); iEqn != eqns_.end(); ++iEqn ) {
       DQMOMEqn* dqmom_eqn = dynamic_cast<DQMOMEqn*>(iEqn->second);
 
-      // Step 5
-      if( dqmom_eqn->doLowClip() || dqmom_eqn->doHighClip() ) {
-        dqmom_eqn->sched_clipPhi( level, sched );
-      }
-
+      // Step 5  <--- removed because it was in the wrong place. 
+      //
       // Step 6
       dqmom_eqn->sched_cleanUp( level, sched );
       dqmom_eqn->sched_getUnscaledValues( level, sched );

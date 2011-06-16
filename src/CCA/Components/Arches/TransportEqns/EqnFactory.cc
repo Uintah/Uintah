@@ -317,12 +317,6 @@ EqnFactory::sched_timeAveraging(const LevelP& level, SchedulerP& sched, int time
   for( EqnMap::iterator iEqn = eqns_.begin(); iEqn != eqns_.end(); ++iEqn ) {
     iEqn->second->sched_timeAveraging( level, sched, timeSubStep, lastTimeSubstep );
 
-    if( lastTimeSubstep ) {
-      if( iEqn->second->doLowClip() || iEqn->second->doHighClip() ) {
-        iEqn->second->sched_clipPhi( level, sched );
-      }
-    }
-
   }
 }
 

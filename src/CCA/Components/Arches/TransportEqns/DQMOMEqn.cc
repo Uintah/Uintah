@@ -676,6 +676,8 @@ DQMOMEqn::solveTransportEqn( const ProcessorGroup* pc,
     // update to get phi^{(j+1)}
     d_timeIntegrator->singlePatchFEUpdate( patch, phi_at_jp1, RHS, dt, curr_ssp_time, d_eqnName );
 
+    if (d_doClipping) 
+      clipPhi( patch, phi_at_jp1 ); 
 
 #ifdef DEBUG_MODELS
     // print what phi is after the FE update
@@ -684,8 +686,6 @@ DQMOMEqn::solveTransportEqn( const ProcessorGroup* pc,
     // Compute the current RK time
     double factor = d_timeIntegrator->time_factor[timeSubStep]; 
     curr_ssp_time = curr_time + factor * dt; 
-
-    // Don't think time averaging should occur here
 
     /// For the RK Averaging procedure, computing the time averaged phi^{time averaged}.
     /// Here, for convenience we assign the time averaged phi to phi_at_jp1, so:
@@ -699,42 +699,48 @@ DQMOMEqn::solveTransportEqn( const ProcessorGroup* pc,
     // For first time step, bc's have been set in dqmomInit
     computeBCs( patch, d_eqnName, phi_at_jp1 );
 
-    // ---------------------------------
-    // Stable timestep calculation
+    if (d_doClipping) 
+      clipPhi( patch, phi_at_jp1 ); 
+    
+    // copy averaged phi into oldphi
+    phi_at_j.copyData(phi_at_jp1); 
 
-    if( lastTimeSubstep ) {
-      // The calculation procedure looks something like this:
-      // 1. Compute the "error" between the last two Runge Kutta time substeps
-      // 2. Use this error to estimate a new minimum timestep, and store that minimum timestep
-      
-      double new_min_delta_t = 1e16;
-      for( CellIterator iter = patch->getCellIterator(); !iter.done(); ++iter ) {
-        IntVector c = *iter;
-
-        /// Step 1: Compute error
-        /// \f$ Err = \frac{ ( \phi^{(1)} - \phi^{n} ) }{ \Delta t } - RHS( \phi^{(1)} ) \f$
-        double error = (phi_at_j[c] - rk1_phi[c])/dt - RHS[c];
-        double deltat = fabs( phi_at_jp1[c]/(error+TINY) );
-
-        // Step 2: Estimate new min. timestep
-        // \f$ \Delta t_{min,stable} = \frac{ phi^{j+1} }{ Err } \f$
-        // Units: \f$ \frac{ \phi }{ \frac{phi}{time} } [=] time \f$
-        if( fabs(error) > TINY ) {
-          new_min_delta_t = min( deltat, new_min_delta_t);
-        }
-
-      }//end cells
-
-      //cout << "DQMOMEqn: " << d_eqnName << ": Setting delta t = " << new_min_delta_t << "*" << d_timestepMultiplier;
-      new_min_delta_t *= d_timestepMultiplier;
-      //cout << " = " << new_min_delta_t << endl;
-
-      DQMOMEqnFactory& dqmomFactory  = DQMOMEqnFactory::self(); 
-      if( new_min_delta_t != 0.0) {
-        dqmomFactory.setMinTimestepVar( d_eqnName, new_min_delta_t );
-      }
-
-    }
+//    // ---------------------------------
+//    // Stable timestep calculation
+//
+//    if( lastTimeSubstep ) {
+//      // The calculation procedure looks something like this:
+//      // 1. Compute the "error" between the last two Runge Kutta time substeps
+//      // 2. Use this error to estimate a new minimum timestep, and store that minimum timestep
+//      
+//      double new_min_delta_t = 1e16;
+//      for( CellIterator iter = patch->getCellIterator(); !iter.done(); ++iter ) {
+//        IntVector c = *iter;
+//
+//        /// Step 1: Compute error
+//        /// \f$ Err = \frac{ ( \phi^{(1)} - \phi^{n} ) }{ \Delta t } - RHS( \phi^{(1)} ) \f$
+//        double error = (phi_at_j[c] - rk1_phi[c])/dt - RHS[c];
+//        double deltat = fabs( phi_at_jp1[c]/(error+TINY) );
+//
+//        // Step 2: Estimate new min. timestep
+//        // \f$ \Delta t_{min,stable} = \frac{ phi^{j+1} }{ Err } \f$
+//        // Units: \f$ \frac{ \phi }{ \frac{phi}{time} } [=] time \f$
+//        if( fabs(error) > TINY ) {
+//          new_min_delta_t = min( deltat, new_min_delta_t);
+//        }
+//
+//      }//end cells
+//
+//      //cout << "DQMOMEqn: " << d_eqnName << ": Setting delta t = " << new_min_delta_t << "*" << d_timestepMultiplier;
+//      new_min_delta_t *= d_timestepMultiplier;
+//      //cout << " = " << new_min_delta_t << endl;
+//
+//      DQMOMEqnFactory& dqmomFactory  = DQMOMEqnFactory::self(); 
+//      if( new_min_delta_t != 0.0) {
+//        dqmomFactory.setMinTimestepVar( d_eqnName, new_min_delta_t );
+//      }
+//
+//    }
 
   }//end patches
 
@@ -877,65 +883,28 @@ DQMOMEqn::getUnscaledValues( const ProcessorGroup* pc,
   }//end patches
 }
 
-
 //---------------------------------------------------------------------------
-// Method: schedule clipping
+// Method: Clip the scalar 
 //---------------------------------------------------------------------------
-void DQMOMEqn::sched_clipPhi( const LevelP& level,
-                              SchedulerP& sched )
+template<class phiType> void
+DQMOMEqn::clipPhi( const Patch* p, 
+                       phiType& phi )
 {
-  string taskname = "DQMOMEqn::clipPhi"; 
+  // probably should put these "if"s outside the loop   
+  for (CellIterator iter=p->getCellIterator(0); !iter.done(); iter++){
 
-  Task* tsk = scinew Task(taskname, this, &DQMOMEqn::clipPhi);
+    IntVector c = *iter; 
 
-  tsk->modifies(d_transportVarLabel);
+    if (d_doLowClip) {
+      if (phi[c] < d_lowClip) 
+        phi[c] = d_lowClip; 
+    }
 
-  tsk->requires(Task::NewDW, d_oldtransportVarLabel, Ghost::None, 0);
-
-  sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
-}
-
-void DQMOMEqn::clipPhi( const ProcessorGroup* pc,
-                        const PatchSubset* patches,
-                        const MaterialSubset* matls,
-                        DataWarehouse* old_dw,
-                        DataWarehouse* new_dw )
-{
-
-  for (int p=0; p < patches->size(); p++){
-
-    Ghost::GhostType  gn  = Ghost::None;
-
-    const Patch* patch = patches->get(p);
-    int archIndex = 0;
-    int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
-
-    CCVariable<double> phi;
-    new_dw->getModifiable( phi, d_transportVarLabel, matlIndex, patch );
-
-    constCCVariable<double> old_phi;
-    new_dw->get( old_phi, d_oldtransportVarLabel, matlIndex, patch, gn, 0 );
-
-    if( d_doLowClip ) {
-      for( CellIterator iter = patch->getCellIterator(); !iter.done(); ++iter ) {
-        IntVector c = *iter;
-        
-        if( phi[*iter] < d_lowClip+TINY || old_phi[*iter] < d_lowClip+TINY ) {
-          phi[*iter] = d_lowClip;
-        }
-      }//end cells
-    }//end if low clip
-
-    if( d_doHighClip ) {
-      for( CellIterator iter = patch->getCellIterator(); !iter.done(); ++iter ) {
-        if( phi[*iter] > d_highClip || old_phi[*iter] > d_highClip ) {
-          phi[*iter] = d_highClip;
-        }
-      }//end cells
-    }//end if high clip
-
-  }//end patches
-
+    if (d_doHighClip) { 
+      if (phi[c] > d_highClip) 
+        phi[c] = d_highClip; 
+    } 
+  }
 }
 
 

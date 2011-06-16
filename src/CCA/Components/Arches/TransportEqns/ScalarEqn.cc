@@ -254,7 +254,7 @@ ScalarEqn::sched_initializeVariables( const LevelP& level, SchedulerP& sched )
 
   Task* tsk = scinew Task(taskname, this, &ScalarEqn::initializeVariables);
 
-  printSchedule(level,dbg, taskname);
+  printSchedule(level, dbg, taskname);
 
   Ghost::GhostType gn = Ghost::None;
   
@@ -387,7 +387,7 @@ ScalarEqn::sched_buildTransportEqn( const LevelP& level, SchedulerP& sched, int 
 
   Task* tsk = scinew Task(taskname, this, &ScalarEqn::buildTransportEqn, timeSubStep);
 
-  printSchedule(level,dbg, taskname);
+  printSchedule(level, dbg, taskname);
 
   //----NEW----
   // note that rho and U are copied into new DW in ExplicitSolver::setInitialGuess
@@ -580,14 +580,14 @@ ScalarEqn::solveTransportEqn( const ProcessorGroup* pc,
     // Here, j is the rk step and n is the time step.  
     //
     CCVariable<double> phi_at_jp1;   // phi^{(j+1)}
-    CCVariable<double> phi_at_j;     // phi^{(j)}
+//    CCVariable<double> phi_at_j;     // phi^{(j)}
     constCCVariable<double> rk1_phi; // phi^{n}
     constCCVariable<double> RHS; 
     constCCVariable<double> old_den; 
     constCCVariable<double> new_den; 
 
     new_dw->getModifiable(phi_at_jp1, d_transportVarLabel,    matlIndex, patch);
-    new_dw->getModifiable(phi_at_j,   d_oldtransportVarLabel, matlIndex, patch);
+//    new_dw->getModifiable(phi_at_j,   d_oldtransportVarLabel, matlIndex, patch);
     old_dw->get(rk1_phi, d_transportVarLabel, matlIndex, patch, gn, 0);
     new_dw->get(RHS, d_RHSLabel, matlIndex, patch, gn, 0);
 
@@ -597,41 +597,43 @@ ScalarEqn::solveTransportEqn( const ProcessorGroup* pc,
     // update to get phi^{(j+1)}
     d_timeIntegrator->singlePatchFEUpdate( patch, phi_at_jp1, old_den, new_den, RHS, dt, curr_ssp_time, d_eqnName);
 
-    // Time averaging will occur separately, and later
-    // (see ExplicitSolver::nonLinearSolve)
-
-    if( lastTimeSubstep ) {
-      // The procedure looks like this:
-      // 1. Compute the error between the last RK substeps
-      // 2. Use error to estimate new minimum timeestep
-
-      double new_min_delta_t = 1e16;
-
-      for( CellIterator iter = patch->getCellIterator(); !iter.done(); ++iter ) {
-        IntVector c = *iter;
-        
-        // Step 1: Compute error
-        // error = ( phi^{(1)}-phi^{n} )/delta_t - RHS(\phi^{(1)})
-        double error = (phi_at_j[c] - rk1_phi[c])/dt - RHS[c];
-        double deltat = fabs( phi_at_jp1[c]/(error+TINY) );
-
-        // Step 2: Estimate new min. timestep
-        // min_delta_t_stable = phi^{j+1} / error [=] phi/(phi/time) [=] time
-        if( fabs(error) > TINY ) {
-          new_min_delta_t = min( deltat, new_min_delta_t);
-        }
-        
-      }//end cells
-      
-      new_min_delta_t *= d_timestepMultiplier;
-      EqnFactory& eqnFactory  = EqnFactory::self(); 
-
-      //cout << "Hi from equation " << d_eqnName << ", about to set minimum timestep var to " << new_min_delta_t << endl;
-      if( new_min_delta_t != 0.0 ) {
-        eqnFactory.setMinTimestepVar( d_eqnName, new_min_delta_t );
-      }
-
-    }
+    if (d_doClipping) 
+      clipPhi( patch, phi_at_jp1 ); 
+//    // Time averaging will occur separately, and later
+//    // (see ExplicitSolver::nonLinearSolve)
+//
+//    if( lastTimeSubstep ) {
+//      // The procedure looks like this:
+//      // 1. Compute the error between the last RK substeps
+//      // 2. Use error to estimate new minimum timeestep
+//
+//      double new_min_delta_t = 1e16;
+//
+//      for( CellIterator iter = patch->getCellIterator(); !iter.done(); ++iter ) {
+//        IntVector c = *iter;
+//        
+//        // Step 1: Compute error
+//        // error = ( phi^{(1)}-phi^{n} )/delta_t - RHS(\phi^{(1)})
+//        double error = (phi_at_j[c] - rk1_phi[c])/dt - RHS[c];
+//        double deltat = fabs( phi_at_jp1[c]/(error+TINY) );
+//
+//        // Step 2: Estimate new min. timestep
+//        // min_delta_t_stable = phi^{j+1} / error [=] phi/(phi/time) [=] time
+//        if( fabs(error) > TINY ) {
+//          new_min_delta_t = min( deltat, new_min_delta_t);
+//        }
+//        
+//      }//end cells
+//      
+//      new_min_delta_t *= d_timestepMultiplier;
+//      EqnFactory& eqnFactory  = EqnFactory::self(); 
+//
+//      //cout << "Hi from equation " << d_eqnName << ", about to set minimum timestep var to " << new_min_delta_t << endl;
+//      if( new_min_delta_t != 0.0 ) {
+//        eqnFactory.setMinTimestepVar( d_eqnName, new_min_delta_t );
+//      }
+//
+//    }
 
   }
 }
@@ -704,18 +706,17 @@ ScalarEqn::timeAveraging( const ProcessorGroup* pc,
     curr_ssp_time = curr_time + factor * dt;
 
     // j is the rk step and n is the time step.  
-    CCVariable<double> phi_at_jp1;    // phi^{(j+1)} (new_phi)
-    CCVariable<double> phi_at_n;      // phi^{n} (last_rk_phi)
-    constCCVariable<double> phi_at_j; // phi^{j} (old_phi)
+    CCVariable<double> new_phi; 
+    CCVariable<double> last_rk_phi; 
+    constCCVariable<double> old_phi;
     constCCVariable<double> new_den; 
     constCCVariable<double> old_den; 
 
-    new_dw->getModifiable(phi_at_jp1, d_transportVarLabel, matlIndex, patch);
-    old_dw->get(phi_at_j, d_transportVarLabel, matlIndex, patch, gn, 0);
-    new_dw->getModifiable(phi_at_n, d_oldtransportVarLabel, matlIndex, patch);
-
-    new_dw->get(new_den, d_fieldLabels->d_densityCPLabel, matlIndex, patch, gn, 0);
-    old_dw->get(old_den, d_fieldLabels->d_densityCPLabel, matlIndex, patch, gn, 0); 
+    new_dw->getModifiable( new_phi, d_transportVarLabel, matlIndex, patch ); 
+    new_dw->getModifiable( last_rk_phi, d_oldtransportVarLabel, matlIndex, patch ); 
+    old_dw->get( old_phi, d_transportVarLabel, matlIndex, patch, gn, 0 ); 
+    new_dw->get( new_den, d_fieldLabels->d_densityCPLabel, matlIndex, patch, gn, 0); 
+    old_dw->get( old_den, d_fieldLabels->d_densityCPLabel, matlIndex, patch, gn, 0); 
 
 #ifdef VERIFICATION
     if( lastTimeSubstep ) {
@@ -731,14 +732,18 @@ ScalarEqn::timeAveraging( const ProcessorGroup* pc,
 #endif
 
     //----Time averaging done here. 
-    d_timeIntegrator->timeAvePhi( patch, phi_at_jp1, phi_at_j, new_den, old_den, timeSubStep, curr_ssp_time ); 
+    d_timeIntegrator->timeAvePhi( patch, new_phi, old_phi, new_den, old_den, timeSubStep, curr_ssp_time ); 
 
     //----BOUNDARY CONDITIONS
     //    must update BCs for next substep
-    computeBCs( patch, d_eqnName, phi_at_jp1 );
+    computeBCs( patch, d_eqnName, new_phi );
+
+    if (d_doClipping) 
+      clipPhi( patch, new_phi ); 
 
     //----COPY averaged phi into oldphi
-    phi_at_n.copyData(phi_at_jp1); 
+    last_rk_phi.copyData(new_phi); 
+
   }
 
 #ifdef VERIFICATION
@@ -763,63 +768,28 @@ ScalarEqn::computeBCs( const Patch* patch,
 {
   d_boundaryCond->setScalarValueBC( 0, patch, phi, varName ); 
 }
-
-
 //---------------------------------------------------------------------------
-// Method: schedule clipping
+// Method: Clip the scalar 
 //---------------------------------------------------------------------------
-void ScalarEqn::sched_clipPhi( const LevelP& level,
-                               SchedulerP& sched )
+template<class phiType> void
+ScalarEqn::clipPhi( const Patch* p, 
+                       phiType& phi )
 {
-  string taskname = "ScalarEqn::clipPhi"; 
+  // probably should put these "if"s outside the loop   
+  for (CellIterator iter=p->getCellIterator(0); !iter.done(); iter++){
 
-  Task* tsk = scinew Task(taskname, this, &ScalarEqn::clipPhi);
+    IntVector c = *iter; 
 
-  tsk->modifies(d_transportVarLabel);
-  tsk->requires(Task::NewDW, d_oldtransportVarLabel, Ghost::None, 0);
+    if (d_doLowClip) {
+      if (phi[c] < d_lowClip) 
+        phi[c] = d_lowClip; 
+    }
 
-  sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
-}
-
-void ScalarEqn::clipPhi( const ProcessorGroup* pc,
-                         const PatchSubset* patches,
-                         const MaterialSubset* matls,
-                         DataWarehouse* old_dw,
-                         DataWarehouse* new_dw )
-{
-
-  for (int p=0; p < patches->size(); p++){
-
-    const Patch* patch = patches->get(p);
-    int archIndex = 0;
-    int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
-
-    CCVariable<double> phi;
-    new_dw->getModifiable( phi, d_transportVarLabel, matlIndex, patch );
-
-    constCCVariable<double> old_phi;
-    new_dw->get( old_phi, d_oldtransportVarLabel, matlIndex, patch, Ghost::None, 0 );
-
-    if( d_doLowClip ) {
-      for( CellIterator iter = patch->getCellIterator(); !iter.done(); ++iter ) {
-        // Branch if:
-        if( phi[*iter] < d_lowClip || old_phi[*iter] < d_lowClip ) {
-          phi[*iter] = d_lowClip;
-        }
-      }//end cells
-    }//end if low clip
-
-    if( d_doHighClip ) {
-      for( CellIterator iter = patch->getCellIterator(); !iter.done(); ++iter ) {
-        // Branch if:
-        if( phi[*iter] > d_highClip || old_phi[*iter] > d_highClip) {
-          phi[*iter] = d_highClip;
-        }
-      }//end cells
-    }//end if high clip
-
-  }//end patches
-
+    if (d_doHighClip) { 
+      if (phi[c] > d_highClip) 
+        phi[c] = d_highClip; 
+    } 
+  }
 }
 
 //---------------------------------------------------------------------------
