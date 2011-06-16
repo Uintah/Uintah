@@ -625,11 +625,20 @@ t
     <initial_ystress      spec="OPTIONAL DOUBLE"/>
     <initial_zstress      spec="OPTIONAL DOUBLE"/>
   <!-- The floowing are for the simplifiedGeoModel -->
-    <kappa_initial        spec="OPTIONAL DOUBLE"  />
-    <cap_radius           spec="OPTIONAL DOUBLE"  />
-    <p0_crush_curve       spec="OPTIONAL DOUBLE"  />
-    <p1_crush_curve       spec="OPTIONAL DOUBLE"  />
-    <p3_crush_curve       spec="OPTIONAL DOUBLE"  />
+    <FSLOPE                        spec="OPTIONAL DOUBLE"  />
+    <FSLOPE_p                      spec="OPTIONAL DOUBLE"  />
+    <B0                            spec="OPTIONAL DOUBLE"  />
+    <G0                            spec="OPTIONAL DOUBLE"  />
+    <PEAKI1                        spec="OPTIONAL DOUBLE"  />
+    <kappa_initial                 spec="OPTIONAL DOUBLE"  />
+    <cap_radius                    spec="OPTIONAL DOUBLE"  />
+    <p0_crush_curve                spec="OPTIONAL DOUBLE"  />
+    <p1_crush_curve                spec="OPTIONAL DOUBLE"  />
+    <p3_crush_curve                spec="OPTIONAL DOUBLE"  />
+    <p4_fluid_effect               spec="OPTIONAL DOUBLE"  />
+    <kinematic_hardening_constant  spec="OPTIONAL DOUBLE"  />
+    <fluid_B0                      spec="OPTIONAL DOUBLE"  />
+    <fluid_pressur_initial         spec="OPTIONAL DOUBLE"  />
   </constitutive_model>
 
 

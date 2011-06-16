@@ -58,34 +58,42 @@ simplifiedGeoModel::simplifiedGeoModel(ProblemSpecP& ps, MPMFlags* Mflag)
   : ConstitutiveModel(Mflag)
 {
 
-  ps->require("alpha",d_initialData.alpha);
-  ps->require("alpha_p",d_initialData.alpha_p);
+  ps->require("FSLOPE",d_initialData.FSLOPE);
+  ps->require("FSLOPE_p",d_initialData.FSLOPE_p);
   ps->require("hardening_modulus",d_initialData.hardening_modulus);
   ps->require("kappa_initial",d_initialData.kappa_initial);
   ps->require("cap_radius",d_initialData.cap_radius);
   ps->require("p0_crush_curve",d_initialData.p0_crush_curve);
   ps->require("p1_crush_curve",d_initialData.p1_crush_curve);
   ps->require("p3_crush_curve",d_initialData.p3_crush_curve);
-  ps->require("k_o",d_initialData.k_o);
-  ps->require("bulk_modulus",d_initialData.bulk_modulus);
-  ps->require("shear_modulus",d_initialData.shear_modulus);
+  ps->require("p4_fluid_effect",d_initialData.p4_fluid_effect);
+  ps->require("fluid_B0",d_initialData.fluid_B0);
+  ps->require("fluid_pressur_initial",d_initialData.fluid_pressur_initial);
+  ps->require("kinematic_hardening_constant",d_initialData.kinematic_hardening_constant);
+  ps->require("PEAKI1",d_initialData.PEAKI1);
+  ps->require("B0",d_initialData.B0);
+  ps->require("G0",d_initialData.G0);
   initializeLocalMPMLabels();
 }
 
 simplifiedGeoModel::simplifiedGeoModel(const simplifiedGeoModel* cm)
   : ConstitutiveModel(cm)
 {
-  d_initialData.alpha = cm->d_initialData.alpha;
-  d_initialData.alpha_p = cm->d_initialData.alpha_p;
+  d_initialData.FSLOPE = cm->d_initialData.FSLOPE;
+  d_initialData.FSLOPE_p = cm->d_initialData.FSLOPE_p;
   d_initialData.hardening_modulus = cm->d_initialData.hardening_modulus;
   d_initialData.kappa_initial = cm->d_initialData.kappa_initial;
   d_initialData.cap_radius = cm->d_initialData.cap_radius;
   d_initialData.p0_crush_curve = cm->d_initialData.p0_crush_curve;
   d_initialData.p1_crush_curve = cm->d_initialData.p1_crush_curve;
   d_initialData.p3_crush_curve = cm->d_initialData.p3_crush_curve;
-  d_initialData.k_o = cm->d_initialData.k_o;
-  d_initialData.bulk_modulus = cm->d_initialData.bulk_modulus;
-  d_initialData.shear_modulus = cm->d_initialData.shear_modulus;
+  d_initialData.p4_fluid_effect = cm->d_initialData.p4_fluid_effect;
+  d_initialData.fluid_B0 = cm->d_initialData.fluid_B0;
+  d_initialData.fluid_pressur_initial = cm->d_initialData.fluid_pressur_initial;
+  d_initialData.kinematic_hardening_constant = cm->d_initialData.kinematic_hardening_constant;
+  d_initialData.PEAKI1 = cm->d_initialData.PEAKI1;
+  d_initialData.B0 = cm->d_initialData.B0;
+  d_initialData.G0 = cm->d_initialData.G0;
   initializeLocalMPMLabels();
 }
 
@@ -96,8 +104,14 @@ simplifiedGeoModel::~simplifiedGeoModel()
   VarLabel::destroy(pPlasticStrainLabel_preReloc);
   VarLabel::destroy(pPlasticStrainVolLabel);
   VarLabel::destroy(pPlasticStrainVolLabel_preReloc);
+  VarLabel::destroy(pElasticStrainVolLabel);
+  VarLabel::destroy(pElasticStrainVolLabel_preReloc);
   VarLabel::destroy(pKappaLabel);
   VarLabel::destroy(pKappaLabel_preReloc);
+  VarLabel::destroy(pBackStressLabel);
+  VarLabel::destroy(pBackStressLabel_preReloc);
+  VarLabel::destroy(pBackStressIsoLabel);
+  VarLabel::destroy(pBackStressIsoLabel_preReloc);
 
 }
 
@@ -109,17 +123,21 @@ void simplifiedGeoModel::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
     cm_ps->setAttribute("type","simplified_geo_model");
   }
 
-  cm_ps->appendElement("alpha",d_initialData.alpha);
-  cm_ps->appendElement("alpha_p",d_initialData.alpha_p);
+  cm_ps->appendElement("FSLOPE",d_initialData.FSLOPE);
+  cm_ps->appendElement("FSLOPE_p",d_initialData.FSLOPE_p);
   cm_ps->appendElement("hardening_modulus",d_initialData.hardening_modulus);
   cm_ps->appendElement("kappa_initial",d_initialData.kappa_initial);
   cm_ps->appendElement("cap_radius",d_initialData.cap_radius);
   cm_ps->appendElement("p0_crush_curve",d_initialData.p0_crush_curve);
   cm_ps->appendElement("p1_crush_curve",d_initialData.p1_crush_curve);
   cm_ps->appendElement("p3_crush_curve",d_initialData.p3_crush_curve);
-  cm_ps->appendElement("k_o",d_initialData.k_o);
-  cm_ps->appendElement("bulk_modulus",d_initialData.bulk_modulus);
-  cm_ps->appendElement("shear_modulus",d_initialData.shear_modulus);
+  cm_ps->appendElement("p4_fluid_effect",d_initialData.p4_fluid_effect);
+  cm_ps->appendElement("fluid_B0",d_initialData.fluid_B0);
+  cm_ps->appendElement("fluid_pressur_initial",d_initialData.fluid_pressur_initial);
+  cm_ps->appendElement("kinematic_hardening_constant",d_initialData.kinematic_hardening_constant);
+  cm_ps->appendElement("PEAKI1",d_initialData.PEAKI1);
+  cm_ps->appendElement("B0",d_initialData.B0);
+  cm_ps->appendElement("G0",d_initialData.G0);
 
 }
 
@@ -138,16 +156,27 @@ void simplifiedGeoModel::initializeCMData(const Patch* patch,
   ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(),patch);
   ParticleVariable<double> pPlasticStrain;
   ParticleVariable<double> pPlasticStrainVol;
+  ParticleVariable<double> pElasticStrainVol;
   ParticleVariable<double> pKappa;
+  ParticleVariable<Matrix3> pBackStress;
+  ParticleVariable<Matrix3> pBackStressIso;
   new_dw->allocateAndPut(pPlasticStrain,     pPlasticStrainLabel, pset);
   new_dw->allocateAndPut(pPlasticStrainVol,     pPlasticStrainVolLabel, pset);
+  new_dw->allocateAndPut(pElasticStrainVol,     pElasticStrainVolLabel, pset);
   new_dw->allocateAndPut(pKappa,     pKappaLabel, pset);
+  new_dw->allocateAndPut(pBackStress,     pBackStressLabel, pset);
+  new_dw->allocateAndPut(pBackStressIso,  pBackStressIsoLabel, pset);
 
   ParticleSubset::iterator iter = pset->begin();
+  Matrix3 Identity;
+  Identity.Identity();
   for(;iter != pset->end();iter++){
     pPlasticStrain[*iter] = 0.0;
     pPlasticStrainVol[*iter] = 0.0;
+    pElasticStrainVol[*iter] = 0.0;
     pKappa[*iter] = d_initialData.kappa_initial;
+    pBackStress[*iter].set(0.0);
+    pBackStressIso[*iter] = Identity*d_initialData.fluid_pressur_initial;
   }
   computeStableTimestep(patch, matl, new_dw);
 }
@@ -194,8 +223,8 @@ void simplifiedGeoModel::computeStableTimestep(const Patch* patch,
 
   double c_dil = 0.0;
   Vector WaveSpeed(1.e-12,1.e-12,1.e-12);
-  double bulk = d_initialData.bulk_modulus;
-  double shear= d_initialData.shear_modulus;
+  double bulk = d_initialData.B0;
+  double shear= d_initialData.G0;
   for(ParticleSubset::iterator iter = pset->begin();
       iter != pset->end(); iter++){
      particleIndex idx = *iter;
@@ -253,16 +282,28 @@ void simplifiedGeoModel::computeStressTensor(const PatchSubset* patches,
     ParticleVariable<double>  pPlasticStrain_new;
     constParticleVariable<double> pPlasticStrainVol;
     ParticleVariable<double>  pPlasticStrainVol_new;
+    constParticleVariable<double> pElasticStrainVol;
+    ParticleVariable<double>  pElasticStrainVol_new;
     constParticleVariable<double> pKappa;
     ParticleVariable<double>  pKappa_new;
+    constParticleVariable<Matrix3> pBackStress;
+    ParticleVariable<Matrix3>  pBackStress_new;
+    constParticleVariable<Matrix3> pBackStressIso;
+    ParticleVariable<Matrix3>  pBackStressIso_new;
     delt_vartype delT;
     old_dw->get(delT, lb->delTLabel, getLevel(patches));
     old_dw->get(pPlasticStrain, pPlasticStrainLabel, pset);
     old_dw->get(pPlasticStrainVol, pPlasticStrainVolLabel, pset);
+    old_dw->get(pElasticStrainVol, pElasticStrainVolLabel, pset);
     old_dw->get(pKappa, pKappaLabel, pset);
+    old_dw->get(pBackStress, pBackStressLabel, pset);
+    old_dw->get(pBackStressIso, pBackStressIsoLabel, pset);
     new_dw->allocateAndPut(pPlasticStrain_new,pPlasticStrainLabel_preReloc,pset);
     new_dw->allocateAndPut(pPlasticStrainVol_new,pPlasticStrainVolLabel_preReloc,pset);
+    new_dw->allocateAndPut(pElasticStrainVol_new,pElasticStrainVolLabel_preReloc,pset);
     new_dw->allocateAndPut(pKappa_new,pKappaLabel_preReloc,pset);
+    new_dw->allocateAndPut(pBackStress_new,pBackStressLabel_preReloc,pset);
+    new_dw->allocateAndPut(pBackStressIso_new,pBackStressIsoLabel_preReloc,pset);
     Ghost::GhostType  gac   = Ghost::AroundCells;
     old_dw->get(px,                  lb->pXLabel,                        pset);
     old_dw->get(pmass,               lb->pMassLabel,                     pset);
@@ -285,16 +326,20 @@ void simplifiedGeoModel::computeStressTensor(const PatchSubset* patches,
     new_dw->allocateTemporary(f_trial, pset);
     new_dw->allocateTemporary(rho_cur,pset);
 
-    const double alpha = d_initialData.alpha;
-    const double alpha_p = d_initialData.alpha_p;
+    const double FSLOPE = d_initialData.FSLOPE;
+    const double FSLOPE_p = d_initialData.FSLOPE_p;
     const double hardening_modulus = d_initialData.hardening_modulus;
     const double cap_radius = d_initialData.cap_radius;
     const double p0_crush_curve = d_initialData.p0_crush_curve;
     const double p1_crush_curve = d_initialData.p1_crush_curve;
     const double p3_crush_curve = d_initialData.p3_crush_curve;
-    const double k_o = d_initialData.k_o;
-    const double bulk = d_initialData.bulk_modulus;
-    const double shear= d_initialData.shear_modulus;
+    const double p4_fluid_effect = d_initialData.p4_fluid_effect;
+    const double fluid_B0 = d_initialData.fluid_B0;
+    const double fluid_pressur_initial = d_initialData.fluid_pressur_initial;
+    const double kinematic_hardening_constant = d_initialData.kinematic_hardening_constant;
+    const double PEAKI1 = d_initialData.PEAKI1;
+    double bulk = d_initialData.B0;
+    const double shear= d_initialData.G0;
 
     // create node data for the plastic multiplier field
     double rho_orig = matl->getInitialDensity();
@@ -343,7 +388,7 @@ void simplifiedGeoModel::computeStressTensor(const PatchSubset* patches,
       particleIndex idx = *iter;
 
       pdTdt[idx] = 0.0;
-      const double k_o_hardening = k_o + hardening_modulus*pPlasticStrain[idx];
+      const double PEAKI1_hardening = PEAKI1*FSLOPE + hardening_modulus*pPlasticStrain[idx];
 
       // Compute the rate of deformation tensor
       Matrix3 D = (velGrad[idx] + velGrad[idx].Transpose())*.5;
@@ -351,18 +396,30 @@ void simplifiedGeoModel::computeStressTensor(const PatchSubset* patches,
       deformationGradient_new[idx].polarDecompositionRMB(tensorU, tensorR);
       rotation[idx]=tensorR;
       D = (tensorR.Transpose())*(D*tensorR);
+
+      // modify the bulk modulus based on the fluid effects
+      bulk = bulk + fluid_B0*
+           (exp(p3_crush_curve+p4_fluid_effect)-1.0)*
+           exp(p3_crush_curve+p4_fluid_effect+pPlasticStrainVol[idx]+pElasticStrainVol[idx])
+           /(exp(p3_crush_curve+p4_fluid_effect+pPlasticStrainVol[idx]+pElasticStrainVol[idx])-1.0)
+           /(exp(p3_crush_curve+p4_fluid_effect+pPlasticStrainVol[idx]+pElasticStrainVol[idx])-1.0);
+
       double lame = bulk - 2.0/3.0*shear;
 
       // update the actual stress:
       Matrix3 unrotated_stress = (tensorR.Transpose())*(stress_old[idx]*tensorR);
       trial_stress[idx] = unrotated_stress + (Identity*lame*(D.Trace()*delT) + D*delT*2.0*shear);
 
+      // compute shifted stress
+      trial_stress[idx] = trial_stress[idx] - pBackStress[idx];
+
       // compute the value of the yield function for the trial stress
-      f_trial[idx] = YieldFunction(trial_stress[idx],alpha,pKappa[idx],cap_radius,k_o_hardening);
+      f_trial[idx] = YieldFunction(trial_stress[idx],FSLOPE,pKappa[idx],cap_radius,PEAKI1_hardening);
 
       // initial assignment for the plastic strains and the position of the cap function
       pPlasticStrain_new[idx] = pPlasticStrain[idx];
       pPlasticStrainVol_new[idx] = pPlasticStrainVol[idx];
+      pElasticStrainVol_new[idx] = pElasticStrainVol[idx] + D.Trace()*delT;
       pKappa_new[idx] = pKappa[idx];
 
       // compute stress invariants for the trial stress
@@ -372,14 +429,18 @@ void simplifiedGeoModel::computeStressTensor(const PatchSubset* patches,
 
       // check if the stress is elastic or plastic: If it is elastic the new stres is equal
       // to trial stress otherwise, the plasticity return algrithm would be used.
+      Matrix3 deltaBackStress;
+      Matrix3 deltaBackStressIso;
 	     if (f_trial[idx]<0){
 	       stress_new[idx] = trial_stress[idx];
+	       deltaBackStress.set(0.0);
+	       deltaBackStressIso.set(0.0);
 	     }else{
         // plasticity vertex treatment begins
 	       int condition_return_to_vertex=0;
-	       if (I1_trial>k_o_hardening/alpha){
+	       if (I1_trial>PEAKI1_hardening/FSLOPE){
 	         if (J2_trial<0.00000001){
-            stress_new[idx] = Identity*k_o_hardening/alpha/3.0;
+            stress_new[idx] = Identity*PEAKI1_hardening/FSLOPE/3.0;
             condition_return_to_vertex = 1;
 	         }else{
 	           int counter_1_fix=0;
@@ -391,12 +452,12 @@ void simplifiedGeoModel::computeStressTensor(const PatchSubset* patches,
 	           Matrix3 unit_tensor_vertex_2;
 	           Matrix3 P,M,P_deviatoric;
             // compute the relative trial stress in respect with the vertex
-	           relative_stress_to_vertex = trial_stress[idx] - Identity*k_o_hardening/alpha/3.0;
+	           relative_stress_to_vertex = trial_stress[idx] - Identity*PEAKI1_hardening/FSLOPE/3.0;
             // compute two unit tensors of the stress space
 	           unit_tensor_vertex_1 = Identity/sqrt(3.0);
 	           unit_tensor_vertex_2 = S_trial/sqrt(2.0*J2_trial);
             // compute the unit tensor in the direction of the plastic strain
-            M = ( Identity*alpha_p + S_trial*(1.0/(2*sqrt(J2_trial))) )/sqrt(3*alpha_p*alpha_p + 0.5);
+            M = ( Identity*FSLOPE_p + S_trial*(1.0/(2*sqrt(J2_trial))) )/sqrt(3*FSLOPE_p*FSLOPE_p + 0.5);
             // compute the projection direction tensor
             P = (Identity*lame*(M.Trace()) + M*2.0*shear);
             // compute the components of P tensor in respect with two unit_tensor_vertex
@@ -416,15 +477,15 @@ void simplifiedGeoModel::computeStressTensor(const PatchSubset* patches,
             // calculation of the components of relative_stress_to_vertex
             // in respect with two unit_tensor_vertex
             relative_stress_to_vertex_1 = relative_stress_to_vertex.Trace()/sqrt(3.0);
-            relative_stress_to_vertex_deviatoric = relative_stress_to_vertex - 
+            relative_stress_to_vertex_deviatoric = relative_stress_to_vertex -
                                                    unit_tensor_vertex_1*relative_stress_to_vertex_1;
             relative_stress_to_vertex_2 = relative_stress_to_vertex_deviatoric(counter_1_fix,counter_2_fix)/
                                           unit_tensor_vertex_2(counter_1_fix,counter_2_fix);
             // condition to determine if the stress_trial is in the vertex zone or not?
             if ( ((relative_stress_to_vertex_1*P_component_2 + relative_stress_to_vertex_2*P_component_1)/
-               (P_component_1*P_component_1) >=0 ) && ((relative_stress_to_vertex_1*P_component_2 + 
+               (P_component_1*P_component_1) >=0 ) && ((relative_stress_to_vertex_1*P_component_2 +
                relative_stress_to_vertex_2*(-1.0)*P_component_1)/(P_component_1*P_component_1) >=0 ) ){
-              stress_new[idx] = Identity*k_o_hardening/alpha/3.0;
+              stress_new[idx] = Identity*PEAKI1_hardening/FSLOPE/3.0;
               condition_return_to_vertex = 1;
             }
 	         }
@@ -437,7 +498,7 @@ void simplifiedGeoModel::computeStressTensor(const PatchSubset* patches,
 	         double gamma = 0.0;;
 	         double gamma_old;
 	         double I1_iteration,J2_iteration;
-	         double beta_cap,alpha_cap;
+	         double beta_cap,FSLOPE_cap;
 	         int max_number_of_iterations = 1000;
 	         int counter = 0;
 	         Matrix3 P,M,G;
@@ -449,9 +510,9 @@ void simplifiedGeoModel::computeStressTensor(const PatchSubset* patches,
 	           // fast return algorithm to the yield surface
             // compute the invariants of the trial stres in the loop
 	           computeInvariants(stress_iteration, S_iteration, I1_iteration, J2_iteration);
-	           if (I1_iteration>k_o_hardening/alpha){
-              stress_iteration = stress_iteration + Identity*I1_iteration/3.0*((k_o_hardening-sqrt(J2_iteration))/
-                                 (alpha*I1_iteration)-1);
+	           if (I1_iteration>PEAKI1_hardening/FSLOPE){
+              stress_iteration = stress_iteration + Identity*I1_iteration/3.0*((PEAKI1_hardening-sqrt(J2_iteration))/
+                                 (FSLOPE*I1_iteration)-1);
             }else if (I1_iteration<pKappa[idx]-0.9*cap_radius){
               stress_iteration = stress_iteration + Identity*I1_iteration/3.0*((pKappa[idx]-
                                  sqrt(cap_radius*cap_radius-J2_iteration))/I1_iteration-1);
@@ -459,16 +520,16 @@ void simplifiedGeoModel::computeStressTensor(const PatchSubset* patches,
               beta_cap = sqrt( 1.0 - (pKappa[idx]-I1_iteration)/(cap_radius)*
                          (pKappa[idx]-I1_iteration)/(cap_radius) );
               if (J2_iteration>0.00000001){
-                stress_iteration = stress_iteration + S_iteration*((k_o_hardening-alpha*I1_iteration)*
+                stress_iteration = stress_iteration + S_iteration*((PEAKI1_hardening-FSLOPE*I1_iteration)*
                                    beta_cap/sqrt(J2_iteration)-1);
               }
             }else if (I1_iteration<pKappa[idx]){
               beta_cap = sqrt( 1.0 - (pKappa[idx]-I1_iteration)/(cap_radius)*(pKappa[idx]-I1_iteration)/
                          (cap_radius) );
-              stress_iteration = stress_iteration + S_iteration*((k_o_hardening-alpha*I1_iteration)*
+              stress_iteration = stress_iteration + S_iteration*((PEAKI1_hardening-FSLOPE*I1_iteration)*
                                  beta_cap/sqrt(J2_iteration)-1);
             }else{
-	            stress_iteration = stress_iteration + S_iteration*((k_o_hardening-alpha*I1_iteration)/
+	            stress_iteration = stress_iteration + S_iteration*((PEAKI1_hardening-FSLOPE*I1_iteration)/
                                 sqrt(J2_iteration)-1);
             }
 	           // compute the invariants of the trial stres in the loop returned to the yield surface
@@ -476,10 +537,10 @@ void simplifiedGeoModel::computeStressTensor(const PatchSubset* patches,
             // check if the stress state is in the cap zone or not?
 	           if (I1_iteration>=pKappa[idx]){
               // compute the gradient of the plastic potential
-	             G = Identity*alpha + S_iteration*(1.0/(2*sqrt(J2_iteration)));
+	             G = Identity*FSLOPE + S_iteration*(1.0/(2*sqrt(J2_iteration)));
               // compute the unit tensor in the direction of the plastic strain
-	             M = ( Identity*alpha_p + S_iteration*(1.0/(2*sqrt(J2_iteration))) )/
-                  sqrt(3*alpha_p*alpha_p + 0.5);
+	             M = ( Identity*FSLOPE_p + S_iteration*(1.0/(2*sqrt(J2_iteration))) )/
+                  sqrt(3*FSLOPE_p*FSLOPE_p + 0.5);
 	           }else{
               if (J2_iteration<0.00000001){
                 // compute the gradient of the plastic potential
@@ -489,13 +550,13 @@ void simplifiedGeoModel::computeStressTensor(const PatchSubset* patches,
               }else{
                 beta_cap = sqrt( 1.0 - (pKappa[idx]-I1_iteration)/(cap_radius)*
                           (pKappa[idx]-I1_iteration)/(cap_radius) );
-                alpha_cap = (alpha*I1_iteration-k_o_hardening)*(pKappa[idx]-I1_iteration)/
-                            cap_radius/cap_radius/beta_cap + alpha*beta_cap;
+                FSLOPE_cap = (FSLOPE*I1_iteration-PEAKI1_hardening)*(pKappa[idx]-I1_iteration)/
+                            cap_radius/cap_radius/beta_cap + FSLOPE*beta_cap;
                 // compute the gradient of the plastic potential
-                G = Identity*alpha_cap + S_iteration*(1.0/(2*sqrt(J2_iteration)));
+                G = Identity*FSLOPE_cap + S_iteration*(1.0/(2*sqrt(J2_iteration)));
                 // compute the unit tensor in the direction of the plastic strain
-                M = ( Identity*alpha_cap + S_iteration*(1.0/(2*sqrt(J2_iteration))) )/
-                    sqrt(3*alpha_cap*alpha_cap + 0.5);
+                M = ( Identity*FSLOPE_cap + S_iteration*(1.0/(2*sqrt(J2_iteration))) )/
+                    sqrt(3*FSLOPE_cap*FSLOPE_cap + 0.5);
 	             }
 	           }
             // compute the projection direction tensor
@@ -506,7 +567,7 @@ void simplifiedGeoModel::computeStressTensor(const PatchSubset* patches,
 	           gamma = ( G.Contract(trial_stress[idx]-stress_iteration) )/( G.Contract(P) );
             // compute new trial stress in the loop
 	           stress_iteration = trial_stress[idx] - P*gamma;
-            // compute the changes of gamma in order to control converging 
+            // compute the changes of gamma in order to control converging
             del_gamma = (gamma-gamma_old)/gamma;
 	        }
          // Multi-stage return loop ends
@@ -515,7 +576,7 @@ void simplifiedGeoModel::computeStressTensor(const PatchSubset* patches,
        }
 	      double f_new;
        // compute the value of the yield function for the new stress
-	      f_new=YieldFunction(stress_new[idx],alpha,pKappa[idx],cap_radius,k_o_hardening);
+	      f_new=YieldFunction(stress_new[idx],FSLOPE,pKappa[idx],cap_radius,PEAKI1_hardening);
        // send an error message to the host code if the new stress is not on the yield surface
 	      if (abs(f_new)>10.0){
 	        cerr<<"ERROR!  did not return to yield surface"<<endl;
@@ -527,18 +588,48 @@ void simplifiedGeoModel::computeStressTensor(const PatchSubset* patches,
 	      }
 	      double shear_inverse = 1.0/2.0/shear;
 	      double lame_inverse = 1.0/6.0/bulk/shear * ( 2.0/3.0*shear - bulk );
-       Matrix3 diff_stress_iteration = trial_stress[idx] - stress_new[idx];
-	      Matrix3 strain_iteration = (Identity*lame_inverse*(diff_stress_iteration.Trace()) + 
+        Matrix3 diff_stress_iteration = trial_stress[idx] - stress_new[idx];
+	      Matrix3 strain_iteration = (Identity*lame_inverse*(diff_stress_iteration.Trace()) +
                                   diff_stress_iteration*2.0*shear_inverse);
-       // update total plastic strain magnitude
+        // update total plastic strain magnitude
 	      pPlasticStrain_new[idx] = pPlasticStrain[idx] + strain_iteration.Norm();
        // update volumetric part of the plastic strain magnitude
        pPlasticStrainVol_new[idx] = pPlasticStrainVol[idx] + strain_iteration.Trace();
+       // update volumetric part of the elastic strain magnitude
+       pElasticStrainVol_new[idx] = pElasticStrainVol_new[idx] - strain_iteration.Trace();
        // update the position of the cap
-       pKappa_new[idx] = pKappa[idx] + 1.0/p3_crush_curve/p1_crush_curve * 
-                         exp(-p1_crush_curve*(pKappa[idx]-cap_radius-p0_crush_curve))*
+       pKappa_new[idx] = pKappa[idx] + ( 1.0/p3_crush_curve/p1_crush_curve *
+                         exp(-p1_crush_curve*(pKappa[idx]-cap_radius-p0_crush_curve)) -
+                         3.0*fluid_B0*
+                         (exp(p3_crush_curve+p4_fluid_effect)-1.0)*
+                         exp(p3_crush_curve+p4_fluid_effect+pPlasticStrainVol[idx])
+                         /(exp(p3_crush_curve+p4_fluid_effect+pPlasticStrainVol[idx])-1.0)
+                         /(exp(p3_crush_curve+p4_fluid_effect+pPlasticStrainVol[idx])-1.0) +
+                         3.0*fluid_B0*
+                         (exp(p3_crush_curve+p4_fluid_effect)-1.0)*
+                         exp(p3_crush_curve+pPlasticStrainVol[idx])
+                         /(exp(p3_crush_curve+pPlasticStrainVol[idx])-1.0)
+                         /(exp(p3_crush_curve+pPlasticStrainVol[idx])-1.0) )*
                          strain_iteration.Trace();
+
+       // compute invariants of the plastic strain rate
+       double I1_plasStrain,J2_plasStrain;
+       Matrix3 S_plasStrain;
+       computeInvariants(strain_iteration, S_plasStrain, I1_plasStrain, J2_plasStrain);
+       // update the backstress
+       deltaBackStress = stress_new[idx]*kinematic_hardening_constant*sqrt(J2_plasStrain);
+       deltaBackStressIso = Identity*( 3.0*fluid_B0*
+                            (exp(p3_crush_curve+p4_fluid_effect)-1.0)*
+                            exp(p3_crush_curve+pPlasticStrainVol[idx])
+                            /(exp(p3_crush_curve+pPlasticStrainVol[idx])-1.0)
+                            /(exp(p3_crush_curve+pPlasticStrainVol[idx])-1.0) )*
+                            strain_iteration.Trace();
+
      } // nested return algorithm ends
+     // compute stress from the shifted stress
+     stress_new[idx] = stress_new[idx] + pBackStress[idx];
+     pBackStress_new[idx] = pBackStress[idx] + deltaBackStress + deltaBackStressIso;
+     pBackStressIso_new[idx] = pBackStressIso[idx] + deltaBackStressIso;
 
     }//end loop over particles
 
@@ -609,17 +700,17 @@ void simplifiedGeoModel::computeInvariants(const Matrix3& stress, Matrix3& S,  d
 
 }
 
- double simplifiedGeoModel::YieldFunction(const Matrix3& stress, const double& alpha, const double& kappa, const double& cap_radius, const double&k_o){
+ double simplifiedGeoModel::YieldFunction(const Matrix3& stress, const double& FSLOPE, const double& kappa, const double& cap_radius, const double&PEAKI1){
 
   Matrix3 S;
   double I1,J2,b;
   computeInvariants(stress,S,I1,J2);
   if (I1>kappa){
-    return sqrt(J2) + alpha*I1 - k_o;
+    return sqrt(J2) + FSLOPE*I1 - PEAKI1;
   }else{
     b = 1.0 - (kappa-I1)/(cap_radius)*(kappa-I1)/(cap_radius);
     if (b>0.0){
-      return sqrt(J2) + alpha*I1*sqrt(b) - k_o*sqrt(b);
+      return sqrt(J2) + FSLOPE*I1*sqrt(b) - PEAKI1*sqrt(b);
     }else{
       return 1.0;
     }
@@ -627,17 +718,17 @@ void simplifiedGeoModel::computeInvariants(const Matrix3& stress, Matrix3& S,  d
 
  }
 
- double simplifiedGeoModel::YieldFunction(Matrix3& stress, const double& alpha, const double& kappa, const double& cap_radius, const double&k_o){
+ double simplifiedGeoModel::YieldFunction(Matrix3& stress, const double& FSLOPE, const double& kappa, const double& cap_radius, const double&PEAKI1){
 
   Matrix3 S;
   double I1,J2,b;
   computeInvariants(stress,S,I1,J2);
   if (I1>kappa){
-    return sqrt(J2) + alpha*I1 - k_o;
+    return sqrt(J2) + FSLOPE*I1 - PEAKI1;
   }else{
     b = 1.0 - (kappa-I1)/(cap_radius)*(kappa-I1)/(cap_radius);
     if (b>0.0){
-      return sqrt(J2) + alpha*I1*sqrt(b) - k_o*sqrt(b);
+      return sqrt(J2) + FSLOPE*I1*sqrt(b) - PEAKI1*sqrt(b);
     }else{
       return 1.0;
     }
@@ -677,10 +768,16 @@ void simplifiedGeoModel::addParticleState(std::vector<const VarLabel*>& from,
 
   from.push_back(pPlasticStrainLabel);
   from.push_back(pPlasticStrainVolLabel);
+  from.push_back(pElasticStrainVolLabel);
   from.push_back(pKappaLabel);
+  from.push_back(pBackStressLabel);
+  from.push_back(pBackStressIsoLabel);
   to.push_back(pPlasticStrainLabel_preReloc);
   to.push_back(pPlasticStrainVolLabel_preReloc);
+  to.push_back(pElasticStrainVolLabel_preReloc);
   to.push_back(pKappaLabel_preReloc);
+  to.push_back(pBackStressLabel_preReloc);
+  to.push_back(pBackStressIsoLabel_preReloc);
 
 }
 
@@ -697,7 +794,10 @@ void simplifiedGeoModel::addInitialComputesAndRequires(Task* task,
 
   task->computes(pPlasticStrainLabel, matlset);
   task->computes(pPlasticStrainVolLabel, matlset);
+  task->computes(pElasticStrainVolLabel, matlset);
   task->computes(pKappaLabel, matlset);
+  task->computes(pBackStressLabel, matlset);
+  task->computes(pBackStressIsoLabel, matlset);
 
 }
 
@@ -713,10 +813,16 @@ void simplifiedGeoModel::addComputesAndRequires(Task* task,
   addSharedCRForHypoExplicit(task, matlset, patches);
   task->requires(Task::OldDW, pPlasticStrainLabel,    matlset, Ghost::None);
   task->requires(Task::OldDW, pPlasticStrainVolLabel,    matlset, Ghost::None);
+  task->requires(Task::OldDW, pElasticStrainVolLabel,    matlset, Ghost::None);
   task->requires(Task::OldDW, pKappaLabel,    matlset, Ghost::None);
+  task->requires(Task::OldDW, pBackStressLabel,    matlset, Ghost::None);
+  task->requires(Task::OldDW, pBackStressIsoLabel,    matlset, Ghost::None);
   task->computes(pPlasticStrainLabel_preReloc,  matlset);
   task->computes(pPlasticStrainVolLabel_preReloc,  matlset);
+  task->computes(pElasticStrainVolLabel_preReloc,  matlset);
   task->computes(pKappaLabel_preReloc,  matlset);
+  task->computes(pBackStressLabel_preReloc,  matlset);
+  task->computes(pBackStressIsoLabel_preReloc,  matlset);
 
 }
 
@@ -737,7 +843,7 @@ double simplifiedGeoModel::computeRhoMicroCM(double pressure,
   double rho_orig = matl->getInitialDensity();
   double p_gauge = pressure - p_ref;
   double rho_cur;
-  double bulk = d_initialData.bulk_modulus;
+  double bulk = d_initialData.B0;
 
   rho_cur = rho_orig/(1-p_gauge/bulk);
 
@@ -756,8 +862,8 @@ void simplifiedGeoModel::computePressEOSCM(double rho_cur,double& pressure,
                                          double temperature)
 {
 
-  double bulk = d_initialData.bulk_modulus;
-  double shear = d_initialData.shear_modulus;
+  double bulk = d_initialData.B0;
+  double shear = d_initialData.G0;
   double rho_orig = matl->getInitialDensity();
 
   double p_g = .5*bulk*(rho_cur/rho_orig - rho_orig/rho_cur);
@@ -789,9 +895,21 @@ simplifiedGeoModel::initializeLocalMPMLabels()
     ParticleVariable<double>::getTypeDescription());
   pPlasticStrainVolLabel_preReloc = VarLabel::create("p.plasticStrainVol+",
     ParticleVariable<double>::getTypeDescription());
+  pElasticStrainVolLabel = VarLabel::create("p.elasticStrainVol",
+    ParticleVariable<double>::getTypeDescription());
+  pElasticStrainVolLabel_preReloc = VarLabel::create("p.elasticStrainVol+",
+    ParticleVariable<double>::getTypeDescription());
   pKappaLabel = VarLabel::create("p.kappa",
     ParticleVariable<double>::getTypeDescription());
   pKappaLabel_preReloc = VarLabel::create("p.kappa+",
     ParticleVariable<double>::getTypeDescription());
+  pBackStressLabel = VarLabel::create("p.BackStress",
+    ParticleVariable<Matrix3>::getTypeDescription());
+  pBackStressLabel_preReloc = VarLabel::create("p.BackStress+",
+    ParticleVariable<Matrix3>::getTypeDescription());
+  pBackStressIsoLabel = VarLabel::create("p.BackStressIso",
+    ParticleVariable<Matrix3>::getTypeDescription());
+  pBackStressIsoLabel_preReloc = VarLabel::create("p.BackStressIso+",
+    ParticleVariable<Matrix3>::getTypeDescription());
 
 }
