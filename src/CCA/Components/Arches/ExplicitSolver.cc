@@ -55,8 +55,6 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Arches/PressureSolver.h>
 #include <CCA/Components/Arches/Properties.h>
 #include <CCA/Components/Arches/ScalarSolver.h>
-#include <CCA/Components/Arches/ExtraScalarSolver.h>
-#include <CCA/Components/Arches/ReactiveScalarSolver.h>
 #include <CCA/Components/Arches/ScaleSimilarityModel.h>
 #include <CCA/Components/Arches/TimeIntegratorLabel.h>
 #include <CCA/Components/MPMArches/MPMArchesLabel.h>
@@ -96,7 +94,6 @@ ExplicitSolver(ArchesLabel* label,
                ScaleSimilarityModel* scaleSimilarityModel, 
                PhysicalConstants* physConst,
                bool calc_Scalar,
-               bool calc_reactingScalar,
                bool calc_enthalpy,
                bool calc_variance,
                const ProcessorGroup* myworld): 
@@ -105,7 +102,6 @@ ExplicitSolver(ArchesLabel* label,
                d_boundaryCondition(bc), d_turbModel(turbModel),
                d_scaleSimilarityModel(scaleSimilarityModel), 
                d_calScalar(calc_Scalar),
-               d_reactingScalarSolve(calc_reactingScalar),
                d_enthalpySolve(calc_enthalpy),
                d_calcVariance(calc_variance),
                d_physicalConsts(physConst)
@@ -113,7 +109,6 @@ ExplicitSolver(ArchesLabel* label,
   d_pressSolver = 0;
   d_momSolver = 0;
   d_scalarSolver = 0;
-  d_reactingScalarSolver = 0;
   d_enthalpySolver = 0;
   nosolve_timelabels_allocated = false;
   d_probe_data = false;
@@ -127,7 +122,6 @@ ExplicitSolver::~ExplicitSolver()
   delete d_pressSolver;
   delete d_momSolver;
   delete d_scalarSolver;
-  delete d_reactingScalarSolver;
   delete d_enthalpySolver;
   for (int curr_level = 0; curr_level < numTimeIntegratorLevels; curr_level ++)
     delete d_timeIntegratorLabels[curr_level];
@@ -178,14 +172,6 @@ ExplicitSolver::problemSetup(const ProblemSpecP& params)
     d_scalarSolver->setMMS(d_doMMS);
     d_scalarSolver->problemSetup(db);
   }
-  if (d_reactingScalarSolve) {
-    d_reactingScalarSolver = scinew ReactiveScalarSolver(d_lab, d_MAlab,
-                                             d_turbModel, d_boundaryCondition,
-                                             d_physicalConsts);
-    d_reactingScalarSolver->setMMS(d_doMMS);
-    d_reactingScalarSolver->problemSetup(db);
-  }
-
   if (d_enthalpySolve) {
     d_enthalpySolver = scinew EnthalpySolver(d_lab, d_MAlab,
                                              d_turbModel, d_boundaryCondition,
@@ -425,14 +411,6 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
                                       d_timeIntegratorLabels[curr_level],
                                       d_EKTCorrection, doing_EKT_now);
 
-      if (d_reactingScalarSolve) {
-        d_reactingScalarSolver->solve(sched, patches, matls,
-                                      d_timeIntegratorLabels[curr_level],
-                                      d_EKTCorrection, doing_EKT_now);
-      }
-
-
-
       if (d_enthalpySolve)
         d_enthalpySolver->solve(level, sched, patches, matls,
                                       d_timeIntegratorLabels[curr_level],
@@ -488,24 +466,10 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
         eqn->sched_evalTransportEqn( level, sched, curr_level ); 
     }
 
-    if (d_reactingScalarSolve) {
-      // in this case we're only solving for one scalar...but
-      // the same subroutine can be used to solve multiple scalars
-      d_reactingScalarSolver->solve(sched, patches, matls,
-                                    d_timeIntegratorLabels[curr_level],
-                                    d_EKTCorrection, doing_EKT_now);
-    }
-
     if (d_enthalpySolve)
       d_enthalpySolver->solve(level, sched, patches, matls,
                               d_timeIntegratorLabels[curr_level],
                               d_EKTCorrection, doing_EKT_now);
-
-    if (d_calcExtraScalars)
-      for (int i=0; i < static_cast<int>(d_extraScalars->size()); i++)
-        d_extraScalars->at(i)->solve(sched, patches, matls, 
-                                     d_timeIntegratorLabels[curr_level],
-                                     false, false);
 
     if (d_calcVariance) {
       d_turbModel->sched_computeScalarVariance(sched, patches, matls,
@@ -765,14 +729,6 @@ int ExplicitSolver::noSolve(const LevelP& level,
      //add other ones here too.
   }
 
-  //setting initial guess for extra scalars
-  if (d_calcExtraScalars){
-    for (int i=0; i < static_cast<int>(d_extraScalars->size()); i++){
-      d_extraScalars->at(i)->sched_setInitialGuess(       sched, patches, matls, 
-                                                            nosolve_timelabels);        
-    }
-  }
-
 
   // check if filter is defined...
 #ifdef PetscFilter
@@ -946,13 +902,6 @@ ExplicitSolver::sched_setInitialGuess(SchedulerP& sched,
   }
 
   //__________________________________
-  if (d_reactingScalarSolve) {
-    tsk->requires(Task::OldDW, d_lab->d_reactscalarSPLabel, gn, 0);
-    tsk->computes(d_lab->d_reactscalarSPLabel);
-    tsk->computes(d_lab->d_reactscalarTempLabel);
-  }
-
-  //__________________________________
   if (d_enthalpySolve){
     tsk->requires(Task::OldDW, d_lab->d_enthalpySPLabel, gn, 0);
     tsk->requires(Task::OldDW, d_lab->d_radiationVolqINLabel,  gn, 0); 
@@ -970,10 +919,6 @@ ExplicitSolver::sched_setInitialGuess(SchedulerP& sched,
     if (d_enthalpySolve){
       tsk->requires(Task::OldDW, d_lab->d_enthalpyDiffusivityLabel, gn, 0);
       tsk->computes(d_lab->d_enthalpyDiffusivityLabel);
-    }
-    if (d_reactingScalarSolve){
-      tsk->requires(Task::OldDW, d_lab->d_reactScalarDiffusivityLabel,gn, 0);
-      tsk->computes(d_lab->d_reactScalarDiffusivityLabel);
     }
   }
   
@@ -1965,8 +1910,6 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
         old_dw->get(scalardiff,      d_lab->d_scalarDiffusivityLabel,     indx, patch, gn, 0);
       if (d_enthalpySolve)
         old_dw->get(enthalpydiff,    d_lab->d_enthalpyDiffusivityLabel,   indx, patch, gn, 0);
-      if (d_reactingScalarSolve)
-        old_dw->get(reactscalardiff, d_lab->d_reactScalarDiffusivityLabel,indx, patch, gn, 0);
     }
 
   // Create vars for new_dw ***warning changed new_dw to old_dw...check
@@ -2023,13 +1966,6 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
     constCCVariable<double> reactscalar;
     CCVariable<double> new_reactscalar;
     CCVariable<double> temp_reactscalar;
-    if (d_reactingScalarSolve) {
-      old_dw->get(reactscalar,                 d_lab->d_reactscalarSPLabel, indx, patch, gn, 0);
-      new_dw->allocateAndPut(new_reactscalar,  d_lab->d_reactscalarSPLabel, indx, patch);
-      new_reactscalar.copyData(reactscalar);
-      new_dw->allocateAndPut(temp_reactscalar, d_lab->d_reactscalarTempLabel, indx, patch);
-      temp_reactscalar.copyData(reactscalar);
-    }
 
     CCVariable<double> new_enthalpy;
     CCVariable<double> temp_enthalpy;
@@ -2064,10 +2000,6 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
       if (d_enthalpySolve) {
         new_dw->allocateAndPut(enthalpydiff_new,    d_lab->d_enthalpyDiffusivityLabel, indx, patch);
         enthalpydiff_new.copyData(enthalpydiff); // copy old into new
-      }
-      if (d_reactingScalarSolve) {
-        new_dw->allocateAndPut(reactscalardiff_new, d_lab->d_reactScalarDiffusivityLabel, indx, patch);
-        reactscalardiff_new.copyData(reactscalardiff); // copy old into new
       }
     }
 
@@ -2348,11 +2280,6 @@ ExplicitSolver::sched_saveTempCopies(SchedulerP& sched,
   tsk->modifies(d_lab->d_densityTempLabel);
   tsk->modifies(d_lab->d_scalarTempLabel);
   
-  if (d_reactingScalarSolve){
-    tsk->requires(Task::NewDW, d_lab->d_reactscalarSPLabel, gn, 0);
-    tsk->modifies(d_lab->d_reactscalarTempLabel);
-  }
-    
   if (d_enthalpySolve){
     tsk->requires(Task::NewDW, d_lab->d_enthalpySPLabel,    gn, 0);
     tsk->modifies(d_lab->d_enthalpyTempLabel);
@@ -2389,10 +2316,6 @@ ExplicitSolver::saveTempCopies(const ProcessorGroup*,
     new_dw->copyOut(temp_density,       d_lab->d_densityCPLabel,  indx, patch);
     new_dw->copyOut(temp_scalar,        d_lab->d_scalarSPLabel,   indx, patch);
     
-    if (d_reactingScalarSolve) {
-      new_dw->getModifiable(temp_reactscalar, d_lab->d_reactscalarTempLabel,indx, patch);
-      new_dw->copyOut(temp_reactscalar,       d_lab->d_reactscalarSPLabel,  indx, patch);
-    }
     if (d_enthalpySolve) {
       new_dw->getModifiable(temp_enthalpy, d_lab->d_enthalpyTempLabel,indx, patch);
       new_dw->copyOut(temp_enthalpy,       d_lab->d_enthalpySPLabel, indx, patch);
@@ -2874,8 +2797,6 @@ ExplicitSolver::sched_syncRhoF(SchedulerP& sched,
   tsk->requires(Task::NewDW, d_lab->d_densityCPLabel,    Ghost::None, 0);
 
   tsk->modifies(d_lab->d_scalarSPLabel);
-  if (d_reactingScalarSolve)
-    tsk->modifies(d_lab->d_reactscalarSPLabel);
   if (d_enthalpySolve)
     tsk->modifies(d_lab->d_enthalpySPLabel);
 
@@ -2909,10 +2830,6 @@ ExplicitSolver::syncRhoF(const ProcessorGroup*,
     new_dw->get(density,      d_lab->d_densityCPLabel,    indx, patch, Ghost::None, 0);
     new_dw->getModifiable(scalar, d_lab->d_scalarSPLabel, indx, patch);
     
-    if (d_reactingScalarSolve){
-      new_dw->getModifiable(reactscalar, d_lab->d_reactscalarSPLabel, indx, patch);
-    }
-    
     if (d_enthalpySolve){
       new_dw->getModifiable(enthalpy,    d_lab->d_enthalpySPLabel,    indx, patch);
     }
@@ -2932,14 +2849,6 @@ ExplicitSolver::syncRhoF(const ProcessorGroup*,
           else if (scalar[currCell] < 0.0)
               scalar[currCell] = 0.0;
 
-          if (d_reactingScalarSolve) {
-            reactscalar[currCell] = reactscalar[currCell] * densityGuess[currCell] /
-                               density[currCell];
-            if (reactscalar[currCell] > 1.0)
-              reactscalar[currCell] = 1.0;
-            else if (reactscalar[currCell] < 0.0)
-              reactscalar[currCell] = 0.0;
-          }
           if (d_enthalpySolve)
             enthalpy[currCell] = enthalpy[currCell] * densityGuess[currCell] /
                                density[currCell];
@@ -2967,14 +2876,10 @@ ExplicitSolver::sched_saveFECopies(SchedulerP& sched,
   Ghost::GhostType  gn = Ghost::None;
   tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel, gn, 0);
   
-  if (d_reactingScalarSolve)
-    tsk->requires(Task::NewDW, d_lab->d_reactscalarSPLabel, gn, 0);
   if (d_enthalpySolve)
     tsk->requires(Task::NewDW, d_lab->d_enthalpySPLabel, gn, 0);
  
   tsk->computes(d_lab->d_scalarFELabel);
-  if (d_reactingScalarSolve)
-    tsk->computes(d_lab->d_reactscalarFELabel);
   if (d_enthalpySolve)
     tsk->computes(d_lab->d_enthalpyFELabel);
 
@@ -3004,10 +2909,6 @@ ExplicitSolver::saveFECopies(const ProcessorGroup*,
     new_dw->allocateAndPut(temp_scalar, d_lab->d_scalarFELabel, indx, patch);
     new_dw->copyOut(temp_scalar,        d_lab->d_scalarSPLabel, indx, patch);
     
-    if (d_reactingScalarSolve) {
-      new_dw->allocateAndPut(temp_reactscalar, d_lab->d_reactscalarFELabel, indx, patch);
-      new_dw->copyOut(temp_reactscalar,        d_lab->d_reactscalarSPLabel, indx, patch);
-    }
     if (d_enthalpySolve) {
       new_dw->allocateAndPut(temp_enthalpy, d_lab->d_enthalpyFELabel,indx, patch);
       new_dw->copyOut(temp_enthalpy,        d_lab->d_enthalpySPLabel,indx, patch);

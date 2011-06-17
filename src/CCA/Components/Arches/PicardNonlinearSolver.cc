@@ -43,7 +43,6 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Arches/PressureSolver.h>
 #include <CCA/Components/Arches/Properties.h>
 #include <CCA/Components/Arches/ScalarSolver.h>
-#include <CCA/Components/Arches/ReactiveScalarSolver.h>
 #include <CCA/Components/Arches/ScaleSimilarityModel.h>
 #include <CCA/Components/Arches/TimeIntegratorLabel.h>
 #include <CCA/Components/MPMArches/MPMArchesLabel.h>
@@ -83,7 +82,6 @@ PicardNonlinearSolver(ArchesLabel* label,
                       TurbulenceModel* turbModel,
                       PhysicalConstants* physConst,
                       bool calc_Scalar,
-                      bool calc_reactingScalar,
                       bool calc_enthalpy,
                       bool calc_variance,
                       const ProcessorGroup* myworld):
@@ -91,7 +89,6 @@ PicardNonlinearSolver(ArchesLabel* label,
                       d_lab(label), d_MAlab(MAlb), d_props(props), 
                       d_boundaryCondition(bc), d_turbModel(turbModel),
                       d_calScalar(calc_Scalar),
-                      d_reactingScalarSolve(calc_reactingScalar),
                       d_enthalpySolve(calc_enthalpy),
                       d_calcVariance(calc_variance),
                       d_physicalConsts(physConst)
@@ -100,7 +97,6 @@ PicardNonlinearSolver(ArchesLabel* label,
   d_pressSolver = 0;
   d_momSolver = 0;
   d_scalarSolver = 0;
-  d_reactingScalarSolver = 0;
   d_enthalpySolver = 0;
   nosolve_timelabels_allocated = false;
 }
@@ -113,7 +109,6 @@ PicardNonlinearSolver::~PicardNonlinearSolver()
   delete d_pressSolver;
   delete d_momSolver;
   delete d_scalarSolver;
-  delete d_reactingScalarSolver;
   delete d_enthalpySolver;
   for (int curr_level = 0; curr_level < numTimeIntegratorLevels; curr_level ++)
     delete d_timeIntegratorLabels[curr_level];
@@ -163,12 +158,6 @@ PicardNonlinearSolver::problemSetup(const ProblemSpecP& params)
                                          d_turbModel, d_boundaryCondition,
                                          d_physicalConsts);
     d_scalarSolver->problemSetup(db);
-  }
-  if (d_reactingScalarSolve) {
-    d_reactingScalarSolver = scinew ReactiveScalarSolver(d_lab, d_MAlab,
-                                             d_turbModel, d_boundaryCondition,
-                                             d_physicalConsts);
-    d_reactingScalarSolver->problemSetup(db);
   }
   d_radiationCalc = false;
   d_DORadiationCalc = false;
@@ -263,12 +252,6 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
   }
   
   //__________________________________
-  if (d_reactingScalarSolve) {
-    tsk->requires(Task::OldDW, d_lab->d_reactscalarSPLabel,    gn, 0);
-    tsk->requires(Task::OldDW, d_lab->d_reactscalarSRCINLabel, gn, 0);
-  }
-
-  //__________________________________
   if (d_enthalpySolve) {
     tsk->requires(Task::OldDW, d_lab->d_enthalpySPLabel, gn,  0);
     tsk->requires(Task::OldDW, d_lab->d_tempINLabel,     gac, 1);
@@ -299,9 +282,6 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
     }
     if (d_enthalpySolve){
       tsk->requires(Task::OldDW, d_lab->d_enthalpyDiffusivityLabel,   gn, 0);
-    }
-    if (d_reactingScalarSolve){
-      tsk->requires(Task::OldDW, d_lab->d_reactScalarDiffusivityLabel,gn, 0);
     }
   }
   
@@ -335,10 +315,6 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
   // warning **only works for one scalarVar
   if (d_calcVariance) {
     tsk->computes(d_lab->d_scalarVarSPLabel);
-  }
-  if (d_reactingScalarSolve) {
-    tsk->computes(d_lab->d_reactscalarSPLabel);
-    tsk->computes(d_lab->d_reactscalarSRCINLabel);
   }
   
   //__________________________________
@@ -377,10 +353,6 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
     if (d_enthalpySolve) {
       tsk->computes(d_lab->d_enthalpyDiffusivityLabel);
       tsk->computes(d_lab->d_ShELabel);
-    }
-    if (d_reactingScalarSolve) {
-      tsk->computes(d_lab->d_reactScalarDiffusivityLabel);
-      tsk->computes(d_lab->d_ShRFLabel);
     }
   }
   //__________________________________
@@ -485,12 +457,6 @@ PicardNonlinearSolver::recursiveSolver(const ProcessorGroup* pg,
   d_scalarSolver->solve(                     subsched, local_patches, local_matls, 
                                              d_timeIntegratorLabels[curr_level],
                                                                     false, false);
-
-  if (d_reactingScalarSolve) {
-    d_reactingScalarSolver->solve(           subsched, local_patches, local_matls,
-                                             d_timeIntegratorLabels[curr_level],
-                                                                   false, false);
-  }
 
   if (d_enthalpySolve){
     d_enthalpySolver->solve(          level, subsched, local_patches, local_matls,
@@ -633,11 +599,6 @@ PicardNonlinearSolver::recursiveSolver(const ProcessorGroup* pg,
   subsched->get_dw(3)->transferFrom(old_dw, d_lab->d_divConstraintLabel, patches, matls); 
   subsched->get_dw(3)->transferFrom(old_dw, d_lab->d_scalarSPLabel,      patches, matls);
   
-  if (d_reactingScalarSolve) {
-    subsched->get_dw(3)->transferFrom(old_dw, d_lab->d_reactscalarSPLabel,    patches, matls); 
-    subsched->get_dw(3)->transferFrom(old_dw, d_lab->d_reactscalarSRCINLabel, patches, matls); 
-  }
-  
   if (d_enthalpySolve) {
     subsched->get_dw(3)->transferFrom(old_dw, d_lab->d_enthalpySPLabel, patches, matls); 
     subsched->get_dw(3)->transferFrom(old_dw, d_lab->d_tempINLabel,     patches, matls); 
@@ -669,8 +630,6 @@ PicardNonlinearSolver::recursiveSolver(const ProcessorGroup* pg,
       subsched->get_dw(3)->transferFrom(old_dw, d_lab->d_scalarDiffusivityLabel,      patches, matls);
     if (d_enthalpySolve)
       subsched->get_dw(3)->transferFrom(old_dw, d_lab->d_enthalpyDiffusivityLabel,    patches, matls);
-    if (d_reactingScalarSolve)
-      subsched->get_dw(3)->transferFrom(old_dw, d_lab->d_reactScalarDiffusivityLabel, patches, matls);
   }
   do{
     subsched->advanceDataWarehouse(grid);
@@ -702,11 +661,6 @@ PicardNonlinearSolver::recursiveSolver(const ProcessorGroup* pg,
     max_vartype rsc;
     subsched->get_dw(3)->get(sc, d_lab->d_ScalarClippedLabel);
     scalar_clipped = sc;
-    
-    if (d_reactingScalarSolve) {
-      subsched->get_dw(3)->get(rsc, d_lab->d_ReactScalarClippedLabel);
-      reactscalar_clipped = rsc;
-    }
 
     ++nlIterations;
   
@@ -757,10 +711,6 @@ PicardNonlinearSolver::recursiveSolver(const ProcessorGroup* pg,
     new_dw->transferFrom(subsched->get_dw(3), d_lab->d_scalarVarSPLabel,      patches, matls); 
   }
   
-  if (d_reactingScalarSolve) {
-    new_dw->transferFrom(subsched->get_dw(3), d_lab->d_reactscalarSPLabel,    patches, matls); 
-    new_dw->transferFrom(subsched->get_dw(3), d_lab->d_reactscalarSRCINLabel, patches, matls); 
-  }
   
   //__________________________________
   if (d_enthalpySolve) {
@@ -805,10 +755,6 @@ PicardNonlinearSolver::recursiveSolver(const ProcessorGroup* pg,
     if (d_enthalpySolve) {
       new_dw->transferFrom(subsched->get_dw(3), d_lab->d_enthalpyDiffusivityLabel,    patches, matls);
       new_dw->transferFrom(subsched->get_dw(3), d_lab->d_ShELabel,                    patches, matls);
-    }
-    if (d_reactingScalarSolve) {
-      new_dw->transferFrom(subsched->get_dw(3), d_lab->d_reactScalarDiffusivityLabel, patches, matls);
-      new_dw->transferFrom(subsched->get_dw(3), d_lab->d_ShRFLabel,                   patches, matls);
     }
   }
   
@@ -986,10 +932,6 @@ PicardNonlinearSolver::sched_setInitialGuess(SchedulerP& sched,
   tsk->requires(Task::OldDW, d_lab->d_densityCPLabel,       gn, 0);
   tsk->requires(Task::OldDW, d_lab->d_viscosityCTSLabel,    gn, 0);
 
-  if (d_reactingScalarSolve) {
-    tsk->requires(Task::OldDW, d_lab->d_reactscalarSPLabel, gn, 0);
-  }
-
   if (d_enthalpySolve){
     tsk->requires(Task::OldDW, d_lab->d_enthalpySPLabel,    gn, 0);
   }
@@ -1000,9 +942,6 @@ PicardNonlinearSolver::sched_setInitialGuess(SchedulerP& sched,
     }
     if (d_enthalpySolve){
       tsk->requires(Task::OldDW, d_lab->d_enthalpyDiffusivityLabel,   gn, 0);
-    }
-    if (d_reactingScalarSolve){
-      tsk->requires(Task::OldDW, d_lab->d_reactScalarDiffusivityLabel,gn, 0);
     }
   }
   
@@ -1021,13 +960,6 @@ PicardNonlinearSolver::sched_setInitialGuess(SchedulerP& sched,
   if (d_timeIntegratorLabels[0]->multiple_steps)
     tsk->computes(d_lab->d_scalarTempLabel);
 
-  if (d_reactingScalarSolve) {
-    tsk->computes(d_lab->d_reactscalarSPLabel);
-    if (d_timeIntegratorLabels[0]->multiple_steps){
-      tsk->computes(d_lab->d_reactscalarTempLabel);
-    }
-  }
-  
   if (d_enthalpySolve) {
     tsk->computes(d_lab->d_enthalpySPLabel);
     if (d_timeIntegratorLabels[0]->multiple_steps){
@@ -1051,9 +983,6 @@ PicardNonlinearSolver::sched_setInitialGuess(SchedulerP& sched,
       tsk->computes(d_lab->d_enthalpyDiffusivityLabel);
     }
     
-    if (d_reactingScalarSolve){
-      tsk->computes(d_lab->d_reactScalarDiffusivityLabel);
-    }
   }  
   if (d_MAlab){
     tsk->computes(d_lab->d_densityMicroINLabel);
@@ -1995,9 +1924,6 @@ PicardNonlinearSolver::setInitialGuess(const ProcessorGroup* ,
       if (d_enthalpySolve){
        old_dw->get(enthalpydiff,    d_lab->d_enthalpyDiffusivityLabel,  indx, patch, gn, 0);
       }
-      if (d_reactingScalarSolve){
-       old_dw->get(reactscalardiff, d_lab->d_reactScalarDiffusivityLabel,indx, patch, gn, 0);
-      }
     }
 
 
@@ -2061,16 +1987,6 @@ PicardNonlinearSolver::setInitialGuess(const ProcessorGroup* ,
     constCCVariable<double> reactscalar;
     CCVariable<double> new_reactscalar;
     CCVariable<double> temp_reactscalar;
-    if (d_reactingScalarSolve) {
-      old_dw->get(reactscalar, d_lab->d_reactscalarSPLabel, indx, patch, gn, 0);
-      new_dw->allocateAndPut(new_reactscalar,   d_lab->d_reactscalarSPLabel,  indx,patch);
-      new_reactscalar.copyData(reactscalar);
-      
-      if (d_timeIntegratorLabels[0]->multiple_steps) {
-      new_dw->allocateAndPut(temp_reactscalar,  d_lab->d_reactscalarTempLabel, indx,patch);
-      temp_reactscalar.copyData(reactscalar);
-      }
-    }
 
 
     CCVariable<double> new_enthalpy;
@@ -2110,11 +2026,6 @@ PicardNonlinearSolver::setInitialGuess(const ProcessorGroup* ,
         new_dw->allocateAndPut(enthalpydiff_new,
                         d_lab->d_enthalpyDiffusivityLabel, indx, patch);
         enthalpydiff_new.copyData(enthalpydiff); // copy old into new
-      }
-      if (d_reactingScalarSolve) {
-        new_dw->allocateAndPut(reactscalardiff_new,
-                        d_lab->d_reactScalarDiffusivityLabel, indx, patch);
-        reactscalardiff_new.copyData(reactscalardiff); // copy old into new
       }
     }
   }
@@ -2316,9 +2227,6 @@ PicardNonlinearSolver::sched_saveTempCopies(SchedulerP& sched,
   tsk->requires(Task::NewDW, d_lab->d_densityCPLabel, gn, 0);
   tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel,  gn, 0);
   
-  if (d_reactingScalarSolve){
-    tsk->requires(Task::NewDW, d_lab->d_reactscalarSPLabel, gn, 0);
-  }
   if (d_enthalpySolve){
     tsk->requires(Task::NewDW, d_lab->d_enthalpySPLabel,    gn, 0);
   }
@@ -2326,9 +2234,6 @@ PicardNonlinearSolver::sched_saveTempCopies(SchedulerP& sched,
   tsk->modifies(d_lab->d_densityTempLabel);
   tsk->modifies(d_lab->d_scalarTempLabel);
   
-  if (d_reactingScalarSolve){
-    tsk->modifies(d_lab->d_reactscalarTempLabel);
-  }
   if (d_enthalpySolve){
     tsk->modifies(d_lab->d_enthalpyTempLabel);
   }
@@ -2363,10 +2268,6 @@ PicardNonlinearSolver::saveTempCopies(const ProcessorGroup*,
     new_dw->copyOut(temp_density,       d_lab->d_densityCPLabel,    indx, patch);
     new_dw->copyOut(temp_scalar,        d_lab->d_scalarSPLabel,     indx, patch);
     
-    if (d_reactingScalarSolve) {
-      new_dw->getModifiable(temp_reactscalar, d_lab->d_reactscalarTempLabel,indx, patch);
-      new_dw->copyOut(temp_reactscalar,       d_lab->d_reactscalarSPLabel,  indx, patch);
-    }
     if (d_enthalpySolve) {
       new_dw->getModifiable(temp_enthalpy, d_lab->d_enthalpyTempLabel,indx, patch);
       new_dw->copyOut(temp_enthalpy,       d_lab->d_enthalpySPLabel,  indx, patch);
@@ -2772,9 +2673,6 @@ PicardNonlinearSolver::sched_syncRhoF(SchedulerP& sched,
   tsk->requires(Task::NewDW, d_lab->d_densityCPLabel,   gn,0);
   tsk->modifies(d_lab->d_scalarSPLabel);
   
-  if (d_reactingScalarSolve){
-    tsk->modifies(d_lab->d_reactscalarSPLabel);
-  }
   if (d_enthalpySolve){
     tsk->modifies(d_lab->d_enthalpySPLabel);
   }
@@ -2809,9 +2707,6 @@ PicardNonlinearSolver::syncRhoF(const ProcessorGroup*,
     new_dw->get(density,          d_lab->d_densityCPLabel,    indx, patch, gn, 0);
     new_dw->getModifiable(scalar, d_lab->d_scalarSPLabel,     indx, patch);
     
-    if (d_reactingScalarSolve){
-      new_dw->getModifiable(reactscalar, d_lab->d_reactscalarSPLabel,indx, patch);
-    }
     if (d_enthalpySolve){
       new_dw->getModifiable(enthalpy,    d_lab->d_enthalpySPLabel,   indx, patch);
     }
@@ -2832,17 +2727,6 @@ PicardNonlinearSolver::syncRhoF(const ProcessorGroup*,
               scalar[currCell] = 0.0;
             }
             
-            if (d_reactingScalarSolve) {
-              reactscalar[currCell] = reactscalar[currCell] * densityGuess[currCell] /
-                                 density[currCell];
-              
-              if (reactscalar[currCell] > 1.0){
-                reactscalar[currCell] = 1.0;
-              }else if (reactscalar[currCell] < 0.0){
-                reactscalar[currCell] = 0.0;
-              }
-              
-            }
             if (d_enthalpySolve){
               enthalpy[currCell] = enthalpy[currCell] * densityGuess[currCell] /
                                  density[currCell];
@@ -2870,17 +2754,11 @@ PicardNonlinearSolver::sched_saveFECopies(SchedulerP& sched,
 
   Ghost::GhostType  gn = Ghost::None;
   tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel, gn, 0);
-  if (d_reactingScalarSolve){
-    tsk->requires(Task::NewDW, d_lab->d_reactscalarSPLabel, gn, 0);
-  }
   if (d_enthalpySolve){
     tsk->requires(Task::NewDW, d_lab->d_enthalpySPLabel,    gn, 0);
   }
  
   tsk->computes(d_lab->d_scalarFELabel);
-  if (d_reactingScalarSolve){
-    tsk->computes(d_lab->d_reactscalarFELabel);
-  }
   if (d_enthalpySolve){
     tsk->computes(d_lab->d_enthalpyFELabel);
   }
@@ -2912,10 +2790,6 @@ PicardNonlinearSolver::saveFECopies(const ProcessorGroup*,
     new_dw->allocateAndPut(temp_scalar, d_lab->d_scalarFELabel,indx, patch);
     new_dw->copyOut(temp_scalar,        d_lab->d_scalarSPLabel,indx, patch);
     
-    if (d_reactingScalarSolve) {
-      new_dw->allocateAndPut(temp_reactscalar, d_lab->d_reactscalarFELabel, indx, patch);
-      new_dw->copyOut(temp_reactscalar,        d_lab->d_reactscalarSPLabel, indx, patch);
-    }
     if (d_enthalpySolve) {
       new_dw->allocateAndPut(temp_enthalpy, d_lab->d_enthalpyFELabel,indx, patch);
       new_dw->copyOut(temp_enthalpy,        d_lab->d_enthalpySPLabel,indx, patch);

@@ -40,10 +40,8 @@ DEALINGS IN THE SOFTWARE.
 # include <CCA/Components/Arches/ChemMix/ColdFlow.h>
 #include <CCA/Components/Arches/Mixing/MixingModel.h>
 #include <CCA/Components/Arches/Mixing/ColdflowMixingModel.h>
-#include <CCA/Components/Arches/Mixing/MOMColdflowMixingModel.h>
 #include <CCA/Components/Arches/Mixing/NewStaticMixingTable.h>
 #include <CCA/Components/Arches/Mixing/StandardTable.h>
-#include <CCA/Components/Arches/ExtraScalarSolver.h>
 #include <CCA/Components/Arches/ArchesMaterial.h>
 #include <CCA/Components/Arches/CellInformationP.h>
 #include <CCA/Components/Arches/CellInformation.h>
@@ -97,7 +95,6 @@ Properties::Properties(const ArchesLabel* label,
   d_sulfur_chem     = false;
   d_soot_precursors = false;
   d_tabulated_soot  = false;
-  d_calcExtraScalars= false;
   d_bc = 0;
 #ifdef PetscFilter
   d_filter = 0;
@@ -144,8 +141,6 @@ Properties::problemSetup(const ProblemSpecP& params)
     mixModel = "ColdFlowMixingModel"; 
   else if (db->findBlock("StandardTable"))
     mixModel = "StandardTable"; 
-  else if (db->findBlock("MOMColdFlowMixingModel"))
-    mixModel = "MOMcoldFlowMixingModel"; 
 #if HAVE_TABPROPS
   else if (db->findBlock("TabProps"))
     mixModel = "TabProps";
@@ -168,21 +163,12 @@ Properties::problemSetup(const ProblemSpecP& params)
                                                 d_calcEnthalpy,
                                                 d_calcVariance,
                                                 d_myworld);
-                                                
-    d_mixingModel->setCalcExtraScalars(d_calcExtraScalars);
-    d_mixingModel->setExtraScalars(d_extraScalars);
     d_mixingModel->setNonAdiabPartBool(d_adiabGas_nonadiabPart); 
   }
   else if (mixModel == "StandardTable"){
     d_mixingModel = scinew StandardTable(d_calcReactingScalar,
                                          d_calcEnthalpy,
                                          d_calcVariance);
-  }
-  else if (mixModel == "MOMColdFlowMixingModel"){
-    d_mixingModel = scinew MOMColdflowMixingModel(d_calcReactingScalar,
-                                                  d_calcEnthalpy,
-                                                  d_calcVariance);
-    d_reactingFlow = false;
   }
 #if HAVE_TABPROPS
   else if (mixModel == "TabProps") {
@@ -252,7 +238,6 @@ Properties::problemSetup(const ProblemSpecP& params)
       d_carbon_air  = d_mixingModel->getCarbonAir();
     }
 
-    d_mixingModel->setCalcExtraScalars(d_calcExtraScalars);
     d_co_output       = d_mixingModel->getCOOutput();
     d_sulfur_chem     = d_mixingModel->getSulfurChem();
     d_soot_precursors = d_mixingModel->getSootPrecursors();
@@ -315,12 +300,9 @@ void
 Properties::computeInletProperties(const InletStream& inStream, 
                                    Stream& outStream, const string bc_type)
 {
-  if (dynamic_cast<const ColdflowMixingModel*>(d_mixingModel))
+  if (dynamic_cast<const ColdflowMixingModel*>(d_mixingModel)){
     d_mixingModel->computeProps(inStream, outStream);
-  else if (dynamic_cast<const MOMColdflowMixingModel*>(d_mixingModel)){
-    d_mixingModel->computeProps(inStream, outStream);
-  }
-  else if (dynamic_cast<const NewStaticMixingTable*>(d_mixingModel)) {
+  } else if (dynamic_cast<const NewStaticMixingTable*>(d_mixingModel)) {
     d_mixingModel->computeProps(inStream, outStream);
   }
   else if (dynamic_cast<const StandardTable*>(d_mixingModel)) {
@@ -560,12 +542,6 @@ Properties::sched_reComputeProps(SchedulerP& sched,
       tsk->modifies(d_lab->d_densityMicroLabel);
   }
 
-  if (d_calcExtraScalars)
-    for (int i=0; i < static_cast<int>(d_extraScalars->size()); i++) {
-      tsk->requires(Task::NewDW, d_extraScalars->at(i)->getScalarLabel(), 
-                    gn, 0);
-    } 
-
   sched->addTask(tsk, patches, matls);
 }
 
@@ -684,36 +660,10 @@ Properties::reComputeProps(const ProcessorGroup* pc,
       new_dw->get(cellType, d_lab->d_cellTypeLabel,   indx, patch, gn, 0);
     }
 
-    //WARNING!
-    //THIS is messy for extra scalars and will need to be fixed for EKT!!!!
     if (doing_EKT_now) {
       new_dw->getModifiable(scalar, d_lab->d_scalarEKTLabel, indx, patch);
       std::cout << "DANGER!  Extra scalars not supported for EKT yet" << endl;
-    }
-    //ExtraScalar for Density
-    else if (d_calcExtraScalars){     
-      for (int i=0; i < static_cast<int>(d_extraScalars->size()); i++) {
-        usemeforden = d_extraScalars->at(i)->useforDen();
-        if (usemeforden) {
-                indexforden = i;
-                foundExtrascalar = true;
-        }
-      } 
-      
-
-      if (foundExtrascalar){
-        //found an extra scalar for density
-        const VarLabel* extrascalarlabel;
-        extrascalarlabel = d_extraScalars->at(indexforden)->getScalarLabel();
-        new_dw->getModifiable(extrascalar, extrascalarlabel,indx, patch);
-      }
-      else { //Standard scalar
-        //Default to the standard scalar if no extrascalar 
-        // is found that is labeled to be used for density
-        new_dw->getModifiable(scalar, d_lab->d_scalarSPLabel, indx, patch);
-      }
-    }
-    else {
+    } else {
         new_dw->getModifiable(scalar, d_lab->d_scalarSPLabel, indx, patch);
     }
 
@@ -978,14 +928,8 @@ Properties::reComputeProps(const ProcessorGroup* pc,
           
           inStream.d_currentCell = currCell;
           
-          //This is a bit messy, but we can make this more efficient later
-          if (d_calcExtraScalars && foundExtrascalar){
-            inStream.d_mixVars[0] = extrascalar[currCell];
-          }
-          else{
-            //Mixture fraction 
-            inStream.d_mixVars[0] = scalar[currCell];
-          }
+          //Mixture fraction 
+          inStream.d_mixVars[0] = scalar[currCell];
           
           if (d_calcVariance) {
             // Variance passed in has already been normalized !!!
@@ -1830,13 +1774,6 @@ Properties::sched_averageRKProps(SchedulerP& sched, const PatchSet* patches,
     tsk->requires(Task::NewDW, d_lab->d_enthalpyFELabel,   gn, 0);
     tsk->modifies(d_lab->d_enthalpySPLabel);
   }
-  
-  if (d_calcExtraScalars){
-    for (int i=0; i < static_cast<int>(d_extraScalars->size()); i++) {
-      tsk->requires(Task::OldDW, d_extraScalars->at(i)->getScalarLabel(), gn, 0);
-      tsk->modifies(d_extraScalars->at(i)->getScalarLabel());
-    }
-  }
 
   sched->addTask(tsk, patches, matls);
 }
@@ -1992,42 +1929,6 @@ Properties::averageRKProps(const ProcessorGroup*,
               }
             }
             density_guess[currCell] = predicted_density;
-          }
-        }
-      }
-    }
-
-    if( d_calcExtraScalars ) {
-      for (int i=0; i < static_cast<int>(d_extraScalars->size()); i++) {
-        constCCVariable<double> old_extra_scalar;
-        CCVariable<double> new_extra_scalar;
-        old_dw->get(old_extra_scalar, d_extraScalars->at(i)->getScalarLabel(), 
-                    indx, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-        new_dw->getModifiable(new_extra_scalar,
-                              d_extraScalars->at(i)->getScalarLabel(), 
-                              indx, patch);
-        bool scalar_density_weighted = d_extraScalars->at(i)->isDensityWeighted();
-        for (int colZ = indexLow.z(); colZ < indexHigh.z(); colZ ++) {
-          for (int colY = indexLow.y(); colY < indexHigh.y(); colY ++) {
-            for (int colX = indexLow.x(); colX < indexHigh.x(); colX ++) {
-              IntVector currCell(colX, colY, colZ);
-              
-              if (new_density[currCell] > 0.0) {
-                if (scalar_density_weighted) {
-                  new_extra_scalar[currCell] = 
-                    (factor_old*old_density[currCell]*
-                     old_extra_scalar[currCell] + 
-                     factor_new*new_density[currCell]*
-                     new_extra_scalar[currCell])/
-                    (factor_divide* density_guess[currCell]);
-                }
-                else {
-                  new_extra_scalar[currCell] = (factor_old*
-                                                old_extra_scalar[currCell] + factor_new*
-                                                new_extra_scalar[currCell])/(factor_divide);
-                }
-              }
-            }
           }
         }
       }

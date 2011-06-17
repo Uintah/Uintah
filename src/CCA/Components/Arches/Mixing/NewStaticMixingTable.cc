@@ -32,8 +32,6 @@ DEALINGS IN THE SOFTWARE.
 
 #include <CCA/Components/Arches/Mixing/NewStaticMixingTable.h>
 #include <CCA/Components/Arches/Mixing/InletStream.h>
-#include <CCA/Components/Arches/ExtraScalarSolver.h>
-#include <CCA/Components/Arches/ExtraScalarSrc.h>
 #include <CCA/Components/Arches/Arches.h>
 
 #include <Core/ProblemSpec/ProblemSpecP.h>
@@ -524,29 +522,6 @@ NewStaticMixingTable::readMixingTable( const string & inputfile )
       ch4_index = ii;
     else if(vars_names[ii] == "sootFV")
       soot_index = ii;
-
-    if (d_calcExtraScalars){
-      //This is going to be very source term specific.  
-      //It might be nice to make this more generic in the future.
-
-      vector<ExtraScalarSolver*>::iterator iss; 
-      for ( iss=d_extraScalars->begin(); iss!=d_extraScalars->end(); ++iss ){
-
-        std::vector<ExtraScalarSrc*> extraScalarSources = (*iss)->getExtraScalarSources();
-        std::vector<ExtraScalarSrc*>::iterator j;
-        for (j=extraScalarSources.begin(); j!=extraScalarSources.end(); ++j ){
-          const string myname = (*j)->getTableName();
-          if (vars_names[ii]==myname){
-            (*j)->setTableIndex(ii);
-            //there has to be a better way to do this!
-            if ( myname == "rate_CO2" )
-              co2rate_index = ii;
-            if ( myname == "rate_SO2" )
-              so2rate_index = ii;                  
-          }
-        }
-      }
-    }
 
     if( d_myworld->myrank() == 0 ) {
       cout<<vars_names[ii]<<endl;

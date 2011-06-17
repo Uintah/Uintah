@@ -41,7 +41,6 @@ SRCS += $(SRCDIR)/Arches.cc                    \
         $(SRCDIR)/ArchesVariables.cc           \
         $(SRCDIR)/BoundaryCondition.cc         \
         $(SRCDIR)/BoundaryCond_new.cc          \
-        $(SRCDIR)/CO2RateSrc.cc                \
         $(SRCDIR)/CellInformation.cc           \
         $(SRCDIR)/CompDynamicProcedure.cc      \
         $(SRCDIR)/CompLocalDynamicProcedure.cc \
@@ -50,9 +49,6 @@ SRCS += $(SRCDIR)/Arches.cc                    \
         $(SRCDIR)/EnthalpySolver.cc            \
         $(SRCDIR)/ExplicitSolver.cc            \
         $(SRCDIR)/ExplicitTimeInt.cc           \
-        $(SRCDIR)/ExtraScalarSolver.cc         \
-        $(SRCDIR)/ExtraScalarSrc.cc            \
-        $(SRCDIR)/ExtraScalarSrcFactory.cc     \
         $(SRCDIR)/IncDynamicProcedure.cc       \
         $(SRCDIR)/LinearSolver.cc              \
         $(SRCDIR)/LU.cc                        \
@@ -65,14 +61,11 @@ SRCS += $(SRCDIR)/Arches.cc                    \
         $(SRCDIR)/PressureSolver.cc            \
         $(SRCDIR)/Properties.cc                \
         $(SRCDIR)/RHSSolver.cc                 \
-        $(SRCDIR)/ReactiveScalarSolver.cc      \
-        $(SRCDIR)/SO2RateSrc.cc                \
         $(SRCDIR)/ScalarSolver.cc              \
         $(SRCDIR)/ScaleSimilarityModel.cc      \
         $(SRCDIR)/SmagorinskyModel.cc          \
         $(SRCDIR)/Source.cc                    \
-        $(SRCDIR)/TurbulenceModel.cc           \
-        $(SRCDIR)/ZeroExtraScalarSrc.cc        
+        $(SRCDIR)/TurbulenceModel.cc           
 
 ifeq ($(HAVE_PETSC),yes)
   SRCS += $(SRCDIR)/PetscCommon.cc \
