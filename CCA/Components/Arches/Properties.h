@@ -84,7 +84,6 @@ class MixingRxnTable;
 class TabPropsInterface;
 class MixingRxnModel; 
 class TimeIntegratorLabel;
-class ExtraScalarSolver;
 class PhysicalConstants;
 class Properties {
 
@@ -200,12 +199,6 @@ public:
 
   inline double getCarbonContent(double f) const{
     return d_carbon_fuel*f+d_carbon_air*(1.0-f);
-  }
-  inline void setCalcExtraScalars(bool calcExtraScalars) {
-    d_calcExtraScalars=calcExtraScalars;
-  }
-  inline void setExtraScalars(vector<ExtraScalarSolver*>* extraScalars) {
-    d_extraScalars = extraScalars;
   }
   inline const string getMixingModelType(){
     return mixModel; 
@@ -345,9 +338,6 @@ private:
 #ifdef PetscFilter
       Filter* d_filter;
 #endif
-      bool d_calcExtraScalars;
-      vector<ExtraScalarSolver*>* d_extraScalars;
-
       const ProcessorGroup* d_myworld;
 
       // New Table Interface Stuff:

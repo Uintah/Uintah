@@ -72,7 +72,6 @@ WARNING
 namespace Uintah {
 class EnthalpySolver;
 class TimeIntegratorLabel;
-class ExtraScalarSolver;
 class PartVel; 
 class DQMOM; 
 class NonlinearSolver {
@@ -141,10 +140,6 @@ public:
   virtual void setExtraProjection(bool extraProjection) = 0;
 
   virtual void setEKTCorrection(bool EKTCorrection) = 0;
-
-  virtual void setCalcExtraScalars(bool calcExtraScalars) = 0;
-
-  virtual void setExtraScalars(vector<ExtraScalarSolver*>* extraScalars) = 0;
 
   virtual void setPartVel(PartVel* partVel) = 0; 
 

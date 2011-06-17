@@ -71,7 +71,6 @@ namespace Uintah {
 class PressureSolver;
 class MomentumSolver;
 class ScalarSolver;
-class ReactiveScalarSolver; 
 class TurbulenceModel;
 class Properties;
 class BoundaryCondition;
@@ -94,7 +93,6 @@ public:
                         TurbulenceModel* turbModel, 
                         PhysicalConstants* physConst,
                         bool calcScalar,
-                        bool calcReactscalar,
                         bool calcEnthalpy,
                         bool calcVariance,
                         const ProcessorGroup* myworld);
@@ -359,7 +357,6 @@ private:
   // Turbulence Model
   TurbulenceModel* d_turbModel;
   bool d_calScalar;
-  bool d_reactingScalarSolve;
   bool d_enthalpySolve;
   bool d_calcVariance;
   bool d_radiationCalc;
@@ -373,8 +370,6 @@ private:
   MomentumSolver* d_momSolver;
   // Scalar solver
   ScalarSolver* d_scalarSolver;
-  // reacting scalar solver
-  ReactiveScalarSolver* d_reactingScalarSolver;
   // physcial constatns
   PhysicalConstants* d_physicalConsts;
 

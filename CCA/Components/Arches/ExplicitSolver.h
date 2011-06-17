@@ -72,7 +72,6 @@ namespace Uintah {
 class PressureSolver;
 class MomentumSolver;
 class ScalarSolver;
-class ReactiveScalarSolver; 
 class ExtraScalarSolver; 
 class TurbulenceModel;
 class ScaleSimilarityModel;
@@ -98,7 +97,6 @@ public:
                  ScaleSimilarityModel* scaleSimilarityModel, 
                  PhysicalConstants* physConst,
                  bool calcScalar,
-                 bool calcReactscalar,
                  bool calcEnthalpy,
                  bool calcVariance,
                  const ProcessorGroup* myworld);
@@ -247,12 +245,6 @@ public:
   }
   inline void setEKTCorrection(bool EKTCorrection) {
     d_EKTCorrection=EKTCorrection;
-  }
-  inline void setCalcExtraScalars(bool calcExtraScalars) {
-    d_calcExtraScalars=calcExtraScalars;
-  }
-  inline void setExtraScalars(vector<ExtraScalarSolver*>* extraScalars) {
-    d_extraScalars = extraScalars;
   }
   inline void setNumSourceBoundaries(int numSourceBoundaries){
     d_numSourceBoundaries = numSourceBoundaries;
@@ -420,7 +412,6 @@ private:
   bool d_mixedModel;
 
   bool d_calScalar;
-  bool d_reactingScalarSolve;
   bool d_enthalpySolve;
   bool d_calcVariance;
   vector<IntVector> d_probePoints;
@@ -430,8 +421,6 @@ private:
   MomentumSolver* d_momSolver;
   // Scalar solver
   ScalarSolver* d_scalarSolver;
-  // reacting scalar solver
-  ReactiveScalarSolver* d_reactingScalarSolver;
   // physcial constatns
   PhysicalConstants* d_physicalConsts;
 
@@ -464,8 +453,6 @@ private:
   double cu, cv, cw, cp, phi0;
   // sine mms
   double amp;
-  bool d_calcExtraScalars;
-  vector<ExtraScalarSolver*>* d_extraScalars;
 
   bool d_carbon_balance_es;
   bool d_sulfur_balance_es;
