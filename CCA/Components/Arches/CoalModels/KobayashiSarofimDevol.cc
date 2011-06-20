@@ -64,7 +64,7 @@ KobayashiSarofimDevol::KobayashiSarofimDevol( std::string modelName,
 
   // Y values from white book:
   Y1_ = 0.3; // volatile fraction from proximate analysis
-  Y2_ = 1.0; // fraction devolatilized at higher temperatures
+  Y2_ = 0.3; // fraction devolatilized at higher temperatures
 
   /*
   // Y values from Ubhayakar (1976):
@@ -509,29 +509,23 @@ KobayashiSarofimDevol::computeModel( const ProcessorGroup * pc,
         k2 = A2*exp(-E2/(R*unscaled_temperature)); // [=] 1/s
         
         double testVal_part = -(k1+k2)*(unscaled_raw_coal_mass + min(0.0,unscaled_char_mass))/d_rc_scaling_factor;
+        double testVal_gas = (Y1_*k1 + Y2_*k2)*(unscaled_raw_coal_mass+ min(0.0,unscaled_char_mass))*unscaled_weight;
+        double testVal_char = ((1-Y1_)*k1 + (1-Y2_)*k2)*(unscaled_raw_coal_mass + min(0.0,unscaled_char_mass));
+
         if( testVal_part < -1e-16 ) {
           devol_rate_ = testVal_part;
+          gas_devol_rate_ = testVal_gas;
+          char_rate_ = testVal_char;
         } else {
           devol_rate_ = 0.0;
-        }
-
-        double testVal_gas = (Y1_*k1 + Y2_*k2)*(unscaled_raw_coal_mass+ min(0.0,unscaled_char_mass))*unscaled_weight;
-        if( testVal_gas > 1e-16 ) {
-          gas_devol_rate_ = testVal_gas;
-        } else {
           gas_devol_rate_ = 0.0;
+          char_rate_ = 0.0;
         }
+      }      
 
-        double testVal_char = ((1-Y1_)*k1 + (1-Y2_)*k2)*(unscaled_raw_coal_mass + min(0.0,unscaled_char_mass));
-          if( testVal_gas > 1e-16 ) {
-            char_rate_ = testVal_char;
-          } else {
-            char_rate_ = 0.0;
-          }
-        }
-       
-        //cout << "devol_rate_ " << devol_rate_ << " char_rate_ " << char_rate_ << " unscaled_char_mass " << unscaled_char_mass
-        //     << " unscaled_raw_coal_mass " << unscaled_raw_coal_mass << endl;
+      //cout << "devol_rate_ " << devol_rate_ << " char_rate_ " << char_rate_ << " unscaled_char_mass " << unscaled_char_mass
+      //     << " unscaled_raw_coal_mass " << unscaled_raw_coal_mass << endl;
+ 
 
 #if defined(VERIFY_KOBAYASHI_MODEL)
       proc0cout << "****************************************************************" << endl;
