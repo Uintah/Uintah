@@ -64,7 +64,7 @@ KobayashiSarofimDevol::KobayashiSarofimDevol( std::string modelName,
 
   // Y values from white book:
   Y1_ = 0.3; // volatile fraction from proximate analysis
-  Y2_ = 0.3; // fraction devolatilized at higher temperatures
+  Y2_ = 1.0; // fraction devolatilized at higher temperatures
 
   /*
   // Y values from Ubhayakar (1976):
