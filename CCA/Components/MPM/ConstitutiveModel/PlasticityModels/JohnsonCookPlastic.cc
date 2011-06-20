@@ -91,14 +91,14 @@ void JohnsonCookPlastic::outputProblemSpec(ProblemSpecP& ps)
 void 
 JohnsonCookPlastic::addInitialComputesAndRequires(Task* ,
                                            const MPMMaterial* ,
-                                           const PatchSet*) const
+                                           const PatchSet*)
 {
 }
 
 void 
 JohnsonCookPlastic::addComputesAndRequires(Task* ,
                                     const MPMMaterial* ,
-                                    const PatchSet*) const
+                                    const PatchSet*)
 {
 }
 
@@ -107,7 +107,7 @@ JohnsonCookPlastic::addComputesAndRequires(Task* task,
                                    const MPMMaterial* matl,
                                    const PatchSet*,
                                    bool /*recurse*/,
-                                   bool /*SchedParent*/) const
+                                   bool /*SchedParent*/)
 {
 }
 
@@ -121,7 +121,7 @@ void
 JohnsonCookPlastic::allocateCMDataAddRequires(Task* ,
                                               const MPMMaterial* ,
                                               const PatchSet* ,
-                                              MPMLabel* ) const
+                                              MPMLabel* )
 {
 }
 
@@ -133,7 +133,6 @@ void JohnsonCookPlastic::allocateCMDataAdd(DataWarehouse* ,
                                            DataWarehouse* )
 {
 }
-
 
 void 
 JohnsonCookPlastic::initializeInternalVars(ParticleSubset* ,
