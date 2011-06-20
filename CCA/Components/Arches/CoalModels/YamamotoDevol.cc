@@ -488,23 +488,15 @@ YamamotoDevol::computeModel( const ProcessorGroup * pc,
         kv = exp(Fv)*Av*exp(-Ev/(R*unscaled_temperature));
  
         double testVal_part = -kv*(unscaled_raw_coal_mass + min(0.0,unscaled_char_mass))/d_rc_scaling_factor;
-        if( (testVal_part < -1e-16)) {
-          devol_rate_ = testVal_part;
-        } else {
-          devol_rate_ = 0.0;
-        }
-
         double testVal_gas = (Yv*kv)*(unscaled_raw_coal_mass+ min(0.0,unscaled_char_mass))*unscaled_weight;
-        if( (testVal_part < -1e-16)) {
-          gas_devol_rate_ = testVal_gas;
-        } else {
-          gas_devol_rate_ = 0.0;
-        }
-
         double testVal_char = (1-Yv)*kv*(unscaled_raw_coal_mass + min(0.0,unscaled_char_mass));
         if( (testVal_part < -1e-16)) {
+          devol_rate_ = testVal_part;
+          gas_devol_rate_ = testVal_gas;
           char_rate_ = testVal_char;
         } else {
+          devol_rate_ = 0.0;
+          gas_devol_rate_ = 0.0;
           char_rate_ = 0.0;
         }
           
