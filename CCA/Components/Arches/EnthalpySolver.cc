@@ -1015,6 +1015,17 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
       }*/
     }
 
+    if (d_boundaryCondition->isUsingNewBC()) {
+      d_boundaryCondition->scalarBC(patch, &enthalpyVars, &constEnthalpyVars);
+
+      /*if (d_boundaryCondition->getIntrusionBC()) {
+        d_boundaryCondition->intrusionEnergyExBC(pc, patch, cellinfo,
+                                              &enthalpyVars,&constEnthalpyVars);
+        d_boundaryCondition->intrusionEnthalpyBC(pc, patch, delta_t, cellinfo,
+                                              &enthalpyVars,&constEnthalpyVars);
+      }*/
+    }
+
     // apply multimaterial intrusion wallbc
     if (d_MAlab)
       d_boundaryCondition->mmscalarWallBC( patch, cellinfo,
@@ -1190,9 +1201,14 @@ EnthalpySolver::enthalpyLinearSolve(const ProcessorGroup* pc,
 
 // Outlet bc is done here not to change old enthalpy
     if ((d_boundaryCondition->getOutletBC())||
-        (d_boundaryCondition->getPressureBC()))
-    d_boundaryCondition->scalarOutletPressureBC(patch,
-                                          &enthalpyVars, &constEnthalpyVars);
+        (d_boundaryCondition->getPressureBC())) {
+      d_boundaryCondition->scalarOutletPressureBC(patch,
+                                            &enthalpyVars, &constEnthalpyVars);
+    }
 
+    if ( d_boundaryCondition->isUsingNewBC() ){ 
+      d_boundaryCondition->scalarOutletPressureBC(patch,
+                                            &enthalpyVars, &constEnthalpyVars);
+    }
   }
 }

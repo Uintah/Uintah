@@ -243,6 +243,14 @@ Properties::problemSetup(const ProblemSpecP& params)
     d_soot_precursors = d_mixingModel->getSootPrecursors();
     d_tabulated_soot  = d_mixingModel->getTabulatedSoot();  
     d_radiationCalc = false;
+  } else { 
+
+    if ( d_calcEnthalpy ) { 
+
+      d_H_air = d_mixingRxnTable->get_ox_enthalpy(); 
+
+
+    } 
   } 
 
 
@@ -1900,24 +1908,6 @@ Properties::averageRKProps(const ProcessorGroup*,
               }
             }
             
-            if (d_calcReactingScalar) {
-              if (!average_failed) {
-                new_reactScalar[currCell] = (factor_old *
-                                             old_density[currCell]*old_reactScalar[currCell] +
-                                             factor_new*new_density[currCell]*
-                                             new_reactScalar[currCell]) / ( factor_divide*predicted_density );
-                if (new_reactScalar[currCell] > 1.0) {
-                  new_reactScalar[currCell] = 1.0;
-                }
-                else if (new_reactScalar[currCell] < 0.0) {
-                  new_reactScalar[currCell] = 0.0;
-                }
-              }
-              else {
-                new_reactScalar[currCell] = fe_reactScalar[currCell];
-              }
-            }
-
             if( d_calcEnthalpy ) {
               if( !average_failed ) {
                 new_enthalpy[currCell] = (factor_old*old_density[currCell]*

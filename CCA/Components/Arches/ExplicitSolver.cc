@@ -2477,7 +2477,7 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
             IntVector yminusCell(colX, colY-1, colZ);
             IntVector zplusCell(colX, colY, colZ+1);
             IntVector zminusCell(colX, colY, colZ-1);
-          
+
 
             densityGuess[currCell] -= delta_t * 0.5* (
             ((density[currCell]+density[xplusCell])*uVelocity[xplusCell] -
@@ -2503,6 +2503,17 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
       } 
 
       if (negativeDensityGuess == 1.0 && !(d_noisyDensityGuess)) proc0cout << "NOTICE: Negative density guess occured on this patch.  Set <NoisyDensityGuess> to true to get full details." << endl;
+
+      // This replaces the ->anyArchesPhysicalBC if statement below when new BCs take over 
+      if ( d_boundaryCondition->isUsingNewBC() ) { 
+
+        std::vector<BoundaryCondition::BC_TYPE> bc_types; 
+        bc_types.push_back( BoundaryCondition::OUTLET ); 
+        bc_types.push_back( BoundaryCondition::PRESSURE );
+
+        d_boundaryCondition->zeroGradientBC( patch, indx, densityGuess, bc_types ); 
+
+      } 
 
       if (d_boundaryCondition->anyArchesPhysicalBC()) {
         bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;

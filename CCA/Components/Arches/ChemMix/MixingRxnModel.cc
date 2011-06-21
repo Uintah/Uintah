@@ -116,6 +116,13 @@ MixingRxnModel::problemSetupCommon( const ProblemSpecP& params )
     throw ProblemSetupException( "Could not properly setup independent variable transform based on input.",__FILE__,__LINE__); 
   }
 
+  doubleMap::iterator iter = d_constants.find("H_ox");
+  if ( iter == d_constants.end() ){ 
+    proc0cout << " Error: Cannot find #KEY H_ox=*value* in the table.\n"; 
+    throw ProblemSetupException( "H_ox (pure oxidizer enthalpy) required as an input.",__FILE__,__LINE__);
+  } else { 
+    _H_ox = iter->second; 
+  }
 }
 
 //---------------------------------------------------------------------------
