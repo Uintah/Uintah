@@ -249,5 +249,72 @@ private:
   const ValT* y_;	
   const double* t_;
 };
+
+/**
+ *  \class VelX3D
+ *  \author Tony Saad
+ *  \date June, 2011
+ *  \brief Implements the generalized Taylor-Green vortex three dimensional
+velocity field. This is usually used as an initial condition for the velocity.
+ *
+ *  The taylor vortex velocity field in x direction is given as
+ *  \f[
+ *    u(x,y,z)= \frac{2}{\sqrt{3}} \sin(\theta + 2\frac{2\pi}{3}) \sin x \cos y \cos z
+ *  \f]
+ *  \f[
+ *    v(x,y,z)= \frac{2}{\sqrt{3}} \sin(\theta - 2\frac{2\pi}{3}) \sin y \cos x \cos z
+ *  \f]
+ *  \f[
+ *    w(x,y,z)= \frac{2}{\sqrt{3}} \sin(\theta) \sin z \cos x \cos y
+ *  \f]
+ *  where
+ *   - \f$\theta\f$ is some angle specified by the user
+ *  Note: that we implement only one expression for this velocity field. By merely
+ *  shuffling the coordinates, we can generate all velocity components. This
+ *  should be in processing the user input.
+ */
+template< typename ValT >
+class TaylorGreenVel3D : public Expr::Expression<ValT>
+{
+public:
+  
+  /**
+   *  \brief Builds a Taylor Vortex velocity function in x direction Expression.
+   */
+  struct Builder : public Expr::ExpressionBuilder
+  {
+    Builder( const Expr::Tag xTag,  ///< x coordinate
+            const Expr::Tag yTag,  ///< y coordinate
+            const Expr::Tag zTag,  ///< z
+            const double angle=0.1    ///< Kinematic viscosity of the fluid
+            );
+    Expr::ExpressionBase* build( const Expr::ExpressionID& id,
+                                const Expr::ExpressionRegistry& reg ) const;
+  private:
+    const double angle_;
+    const Expr::Tag xt_, yt_, zt_;
+  };
+  
+  void advertise_dependents( Expr::ExprDeps& exprDeps );
+  void bind_fields( const Expr::FieldManagerList& fml );
+  void evaluate();
+  
+private:
+  
+  TaylorGreenVel3D( const Expr::Tag& xTag,
+            const Expr::Tag& yTag,
+            const Expr::Tag& zTag,
+            const double angle,
+            const Expr::ExpressionID& id,
+            const Expr::ExpressionRegistry& reg);
+  const double angle_;
+  const Expr::Tag xTag_, yTag_, zTag_;
+  const ValT* x_;
+  const ValT* y_;	
+  const ValT* z_;	  
+};
+
+//====================================================================
+
 	
 #endif // Wasatch_Taylor_Vortex

@@ -15,6 +15,7 @@
 
 
 #include <string>
+#define PI 3.1415926535897932384626433832795
 
 namespace Wasatch{
 
@@ -154,6 +155,28 @@ namespace Wasatch{
       builder = scinew Builder( indepVarTag1, indepVarTag2, timeVarTag, amplitude, viscosity );
     }
 	  
+    else if( params->findBlock("TGVel3D") ){
+      double angle;
+      std::string velComponent;
+      Uintah::ProblemSpecP valParams = params->findBlock("TGVel3D");
+      valParams->getAttribute("angle",angle);
+      valParams->get("VelComponent", velComponent);
+      const Expr::Tag XCoordinate = parse_nametag( valParams->findBlock("XCoordinate")->findBlock("NameTag") );
+      const Expr::Tag YCoordinate = parse_nametag( valParams->findBlock("YCoordinate")->findBlock("NameTag") );
+      const Expr::Tag ZCoordinate = parse_nametag( valParams->findBlock("ZCoordinate")->findBlock("NameTag") );
+      typedef typename TaylorGreenVel3D<FieldT>::Builder Builder;
+      // shuffle the x, y, and z coordinates based on the velocity component
+      if (velComponent=="X") {
+        angle += 2*PI/3.0;
+        builder = scinew Builder( XCoordinate, YCoordinate, ZCoordinate, angle );
+      } else if (velComponent=="Y") {
+        angle -= 2*PI/3.0;
+        builder = scinew Builder( YCoordinate, XCoordinate, ZCoordinate, angle );
+      } else if (velComponent=="Z") {
+        builder = scinew Builder( ZCoordinate, XCoordinate, YCoordinate, angle );
+      }
+    }
+    
     return builder;
   }
 
