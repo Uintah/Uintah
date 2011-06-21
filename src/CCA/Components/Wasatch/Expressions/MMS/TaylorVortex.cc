@@ -340,8 +340,88 @@ build( const Expr::ExpressionID& id,
 	
 //--------------------------------------------------------------------
 
+//==========================================================================
+
+//--------------------------------------------------------------------
+
+template<typename ValT>
+TaylorGreenVel3D<ValT>::
+TaylorGreenVel3D( const Expr::Tag& xtag,
+          const Expr::Tag& ytag,
+          const Expr::Tag& ztag,
+          const double angle,
+          const Expr::ExpressionID& id,
+          const Expr::ExpressionRegistry& reg )
+: Expr::Expression<ValT>( id, reg ),
+angle_(angle), xTag_( xtag ), yTag_( ytag ), zTag_( ztag )
+{}
+
+//--------------------------------------------------------------------
+
+template< typename ValT >
+void
+TaylorGreenVel3D<ValT>::
+advertise_dependents( Expr::ExprDeps& exprDeps )
+{
+  exprDeps.requires_expression( xTag_ );
+  exprDeps.requires_expression( yTag_ );
+  exprDeps.requires_expression( zTag_ );
+}
+
+//--------------------------------------------------------------------
+
+template< typename ValT >
+void
+TaylorGreenVel3D<ValT>::
+bind_fields( const Expr::FieldManagerList& fml )
+{
+  const Expr::FieldManager<ValT>& fm = fml.template field_manager<ValT>();
+  x_ = &fm.field_ref( xTag_ );
+  y_ = &fm.field_ref( yTag_ );
+  z_ = &fm.field_ref( zTag_ );  	
+}
+
+//--------------------------------------------------------------------
+
+template< typename ValT >
+void
+TaylorGreenVel3D<ValT>::
+evaluate()
+{
+  using namespace SpatialOps;
+  ValT& phi = this->value();
+  phi <<= (2/sqrt(3.0))*sin(angle_) * sin(*x_) * cos( *y_ ) * cos(*z_);
+}
+
+//--------------------------------------------------------------------
+
+template< typename ValT >
+TaylorGreenVel3D<ValT>::Builder::
+Builder( const Expr::Tag xtag,
+        const Expr::Tag ytag,
+        const Expr::Tag ztag,
+        const double angle)
+: angle_(angle),
+xt_( xtag ),
+yt_( ytag ),
+zt_( ztag )
+{}
+
+//--------------------------------------------------------------------
+
+template< typename ValT >
+Expr::ExpressionBase*
+TaylorGreenVel3D<ValT>::Builder::
+build( const Expr::ExpressionID& id,
+      const Expr::ExpressionRegistry& reg ) const
+{
+  return new TaylorGreenVel3D<ValT>( xt_, yt_, zt_, angle_, id, reg );
+}
+
+//--------------------------------------------------------------------
 
 //==========================================================================
+
 // Explicit template instantiation for supported versions of this expression
 #include <CCA/Components/Wasatch/FieldTypes.h>
 using namespace Wasatch;
@@ -349,6 +429,7 @@ using namespace Wasatch;
 #define DECLARE_TAYLOR_MMS( VOL ) 	\
   template class VelocityX< VOL >;	\
   template class VelocityY< VOL >;	\
+  template class TaylorGreenVel3D< VOL >;	\
   template class GradPX< VOL >;		\
   template class GradPY< VOL >;
 
