@@ -8,9 +8,25 @@
     <!-- Spec for Taylor Vortex MMS types -->
     <TaylorVortexMMS			spec="MULTIPLE NO_DATA"
                                         attribute1="type REQUIRED STRING 'SVOL,XVOL,YVOL,ZVOL"
-                                        children1="ONE_OF(CHILD VelocityX,VelocityY,GradPX,GradPY)" >
+                                        children1="ONE_OF(CHILD VelocityX,VelocityY,GradPX,GradPY,TGVel3D)" >
       <TaskList				spec="REQUIRED STRING 'initialization,timestep_size,advance_solution'" />
       <NameTag				spec="REQUIRED" />
+      
+      <!-- Taylor Green Vortex generalized Velocity field !-->
+      <TGVel3D    spec="OPTIONAL NO_DATA"
+                  attribute1="angle REQUIRED DOUBLE">
+        <VelComponent      spec="REQUIRED STRING 'X,Y,Z'"/> <!-- SPECIFY THE VELOCITY COMPONENT -->                    
+        <XCoordinate           spec="REQUIRED NO_DATA">
+          <NameTag             spec="REQUIRED"/>
+        </XCoordinate>
+        <YCoordinate           spec="REQUIRED NO_DATA">
+          <NameTag             spec="REQUIRED"/>
+        </YCoordinate>
+        <ZCoordinate           spec="REQUIRED NO_DATA">
+          <NameTag             spec="REQUIRED"/>
+        </ZCoordinate>
+      </TGVel3D>
+
       
       <!-- Taylor Vortex Velocity field function in x direction with amplitude kinematic viscosity!-->
       <VelocityX    spec="OPTIONAL NO_DATA"
