@@ -93,6 +93,7 @@
                                         attribute1="model REQUIRED STRING 'compdynamicprocedure, dynamicprocedure, smagorinsky'" >
 
         <variance_coefficient           spec="OPTIONAL DOUBLE" />
+        <mixture_fraction_label         spec="OPTIONAL STRING" /> <!-- for matching scalar with its label for variance calculation --> 
         <!--smagorinsky -->
         <cf                             spec="OPTIONAL DOUBLE 'positive'" />  
         <fac_mesh                       spec="OPTIONAL DOUBLE 'positive'" />

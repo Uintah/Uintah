@@ -131,6 +131,7 @@ public:
         d_calcEnthalpy = calcEnthalpy;
         d_calcReactingScalar = calcReactingScalar;
       }
+
       inline void modelVariance(bool calcVariance) {
         d_calcVariance = calcVariance;
       }
@@ -174,6 +175,9 @@ public:
 #endif
       bool d_calcScalar, d_calcEnthalpy, d_calcReactingScalar;
       bool d_calcVariance;
+      std::string d_mix_frac_label_name; 
+      const VarLabel* d_mf_label;
+
 private:
 bool d_mixedModel;
 #ifdef PetscFilter

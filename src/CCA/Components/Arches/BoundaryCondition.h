@@ -260,6 +260,12 @@ namespace Uintah {
                                  const int sign, 
                                  stencilType& A, 
                                  std::vector<BC_TYPE>& types );
+      
+      template <class varType> void
+      zeroGradientBC( const Patch* patch, 
+                        const int  matl_index, 
+                        varType& phi, 
+                        std::vector<BC_TYPE>& types );
 
       std::map<IntVector, double>
       readInputFile__NEW( std::string );
@@ -1296,6 +1302,56 @@ namespace Uintah {
   }; // End of class BoundaryCondition
 
 
+/** @brief Applies a zero gradient Neumann condition. This is a specialized case of a Neumann condition needed for old Arches code. */
+template <class varType> void
+BoundaryCondition::zeroGradientBC( const Patch* patch, 
+                                   const int  matl_index, 
+                                   varType& phi, 
+                                   std::vector<BC_TYPE>& types )
+
+{
+  vector<Patch::FaceType>::const_iterator bf_iter;
+  vector<Patch::FaceType> bf;
+  patch->getBoundaryFaces(bf);
+  Vector Dx = patch->dCell(); 
+
+  for ( BCInfoMap::iterator bc_iter = d_bc_information.begin(); 
+        bc_iter != d_bc_information.end(); bc_iter++){
+
+     if ( typeMatch( bc_iter->second.type, types ) ) { 
+
+       for ( bf_iter = bf.begin(); bf_iter !=bf.end(); bf_iter++ ){
+
+         Patch::FaceType face    = *bf_iter;
+         IntVector insideCellDir = patch->faceDirection(face); 
+
+         //get the number of children
+         int numChildren = patch->getBCDataArray(face)->getNumberChildren(matl_index); //assumed one material
+
+         for (int child = 0; child < numChildren; child++){
+
+           double bc_value = 0;
+           string bc_kind = "NotSet";
+           Iterator bound_ptr;
+
+           bool foundIterator = 
+             getIteratorBCValueBCKind( patch, face, child, bc_iter->second.name, matl_index, bc_value, bound_ptr, bc_kind); 
+
+           if ( foundIterator ) {
+
+             for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
+               IntVector c = *bound_ptr; 
+               IntVector c_int = *bound_ptr - insideCellDir; 
+
+               phi[c] = phi[c_int]; 
+
+             }
+           }
+         }
+       }
+     }
+   }
+}
 /** @brief Zeroes out contribution to a stencil in a specified direction.  Also removes it from the diagonal, typically used for BCs */
 template <class stencilType> void
 BoundaryCondition::zeroStencilDirection( const Patch* patch, 
@@ -1347,8 +1403,6 @@ BoundaryCondition::zeroStencilDirection( const Patch* patch,
        }
      }
    }
-  IntVector xx = IntVector(0,7,7); 
-  Patch::FaceType face = Patch::xminus; 
 }
 
 /** @brief Adds grad(P) to velocity on outlet or pressure boundaries */

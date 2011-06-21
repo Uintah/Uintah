@@ -165,6 +165,8 @@ namespace Uintah {
       // The strange logic is to make the logic less confusing in Properties.cc
       bool is_not_cold(){ if (d_coldflow){ return false; }else{ return true; }};
 
+      double get_ox_enthalpy(){ return _H_ox; }; 
+
     protected :
 
       class TransformBase { 
@@ -346,6 +348,7 @@ namespace Uintah {
       std::vector<string> d_allIndepVarNames; ///< Vector storing all independent variable names from table file
       std::vector<string> d_allDepVarNames;   ///< Vector storing all dependent variable names from the table file
 
+      double _H_ox;                          ///< Adiabatic air enthalpy
 
       /** @brief Insert a varLabel into the map where the varlabel has been created elsewhere */ 
       inline void insertExisitingLabelIntoMap( const string var_name ){ 
