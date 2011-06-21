@@ -279,7 +279,8 @@ namespace Wasatch{
                                          const PatchInfoMap& patchInfoMap,
                                          const Uintah::MaterialSubset* const materials)
   {
-    build_bcs( this->solution_variable_name(),
+    build_bcs( Expr::Tag( this->solution_variable_name(),
+                         Expr::STATE_N ),
                   this->staggered_location(),
                   graphHelper,
                   localPatches,

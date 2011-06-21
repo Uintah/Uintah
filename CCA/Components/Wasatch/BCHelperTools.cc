@@ -34,19 +34,19 @@ namespace Wasatch {
       switch (staggeredLocation) {                                        \
       case XDIR:                                                          \
         typedef SS::XVolField  XFieldT;                                    \
-        set_bc< XFieldT, BCOpTypeSelector<XFieldT,BCEvalT>::BCT >( patch, graphHelper, phiName, bcPointIJK, SIDE, bc_value, opdb ); \
+        set_bc< XFieldT, BCOpTypeSelector<XFieldT,BCEvalT>::BCT >( patch, graphHelper, phiTag, bcPointIJK, SIDE, bc_value, opdb ); \
         break;                                                            \
       case YDIR:                                                          \
         typedef SS::YVolField  YFieldT;                                    \
-        set_bc< YFieldT, BCOpTypeSelector<YFieldT,BCEvalT>::BCT >( patch, graphHelper, phiName, bcPointIJK, SIDE, bc_value, opdb ); \
+        set_bc< YFieldT, BCOpTypeSelector<YFieldT,BCEvalT>::BCT >( patch, graphHelper, phiTag, bcPointIJK, SIDE, bc_value, opdb ); \
         break;																														\
       case ZDIR:																													\
         typedef SS::ZVolField  ZFieldT;                                    \
-        set_bc< ZFieldT, BCOpTypeSelector<ZFieldT,BCEvalT>::BCT >( patch, graphHelper, phiName, bcPointIJK, SIDE, bc_value, opdb ); \
+        set_bc< ZFieldT, BCOpTypeSelector<ZFieldT,BCEvalT>::BCT >( patch, graphHelper, phiTag, bcPointIJK, SIDE, bc_value, opdb ); \
         break;																														\
       case NODIR:																													\
         typedef SS::SVolField  SFieldT;                                   \
-        set_bc< SFieldT, BCOpTypeSelector<SFieldT,BCEvalT>::BCT >( patch, graphHelper, phiName, bcPointIJK, SIDE, bc_value, opdb ); \
+        set_bc< SFieldT, BCOpTypeSelector<SFieldT,BCEvalT>::BCT >( patch, graphHelper, phiTag, bcPointIJK, SIDE, bc_value, opdb ); \
         break;																														\
       default:																														\
         break;																														\
@@ -57,16 +57,16 @@ namespace Wasatch {
   template < typename FieldT, typename BCOpT >
   void set_bc( const Uintah::Patch* const patch,
                   const GraphHelper& gh,
-                  const std::string& phiName,
+		              const Expr::Tag phiTag,
                   const SpatialOps::structured::IntVec& bcPointIndex,
                   const SpatialOps::structured::BCSide bcSide,
                   const double bcValue,
                   const SpatialOps::OperatorDatabase& opdb )
   {
     typedef typename BCOpT::BCEvalT BCEvaluator;
-    const Expr::Tag phiLabel( phiName, Expr::STATE_N );
+    //const Expr::Tag phiLabel( phiName, Expr::STATE_N );
     Expr::ExpressionFactory& factory = *gh.exprFactory;
-    const Expr::ExpressionID phiID = factory.get_registry().get_id(phiLabel);
+    const Expr::ExpressionID phiID = factory.get_registry().get_id(phiTag);
     Expr::Expression<FieldT>& phiExpr = dynamic_cast<Expr::Expression<FieldT>&>( factory.retrieve_expression( phiID, patch->getID(), true ) );
     BCOpT bcOp( bcPointIndex, bcSide, BCEvaluator(bcValue), opdb );
     phiExpr.process_after_evaluate( bcOp );
@@ -126,8 +126,9 @@ namespace Wasatch {
     return( bc_kind != "NotSet" );
   }
   
-  //
-  void build_bcs( const std::string phiName,
+  //-----------------------------------------------------------------------------
+
+  void build_bcs( const Expr::Tag phiTag,
                      const Direction staggeredLocation,
                      const GraphHelper& graphHelper,
                      const Uintah::PatchSet* const localPatches,
@@ -147,6 +148,7 @@ namespace Wasatch {
     
     namespace SS = SpatialOps::structured;
     typedef SS::ConstValEval BCEvaluator; // basic functor for constant functions.
+    const std::string phiName = phiTag.name();
     // loop over local patches
     for( int ip=0; ip<localPatches->size(); ++ip ){
       
@@ -199,10 +201,10 @@ namespace Wasatch {
                     case Uintah::Patch::zminus:  SET_BC( BCEvaluator, DirichletZ, SpatialOps::structured::Z_MINUS_SIDE );  break;
                     case Uintah::Patch::zplus :  SET_BC( BCEvaluator, DirichletZ, SpatialOps::structured::Z_PLUS_SIDE  );  break;
                     case Uintah::Patch::numFaces:
-                      throw Uintah::ProblemSetupException( "numFaces is not a valid face", __FILE__, __LINE__ );
+                      throw Uintah::ProblemSetupException( "An invalid face Patch::numFaces was encountered while setting boundary conditions", __FILE__, __LINE__ );
                       break;
                     case Uintah::Patch::invalidFace:
-                      throw Uintah::ProblemSetupException( "invalidFace is not a valid face", __FILE__, __LINE__ );
+                      throw Uintah::ProblemSetupException( "An invalid face Patch::invalidFace was encountered while setting boundary conditions", __FILE__, __LINE__ );
                       break;
                   }
                   
@@ -216,10 +218,10 @@ namespace Wasatch {
                     case Uintah::Patch::zminus:  SET_BC( BCEvaluator, NeumannZ, SpatialOps::structured::Z_MINUS_SIDE );  break;
                     case Uintah::Patch::zplus :  SET_BC( BCEvaluator, NeumannZ, SpatialOps::structured::Z_PLUS_SIDE  );  break;
                     case Uintah::Patch::numFaces:
-                      throw Uintah::ProblemSetupException( "numFaces is not a valid face", __FILE__, __LINE__ );
+                      throw Uintah::ProblemSetupException( "An invalid face Patch::numFaces was encountered while setting boundary conditions", __FILE__, __LINE__ );
                       break;
                     case Uintah::Patch::invalidFace:
-                      throw Uintah::ProblemSetupException( "invalidFace is not a valid face", __FILE__, __LINE__ );
+                      throw Uintah::ProblemSetupException( "An invalid face Patch::invalidFace was encountered while setting boundary conditions", __FILE__, __LINE__ );
                       break;
                   }
                   

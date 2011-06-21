@@ -14,6 +14,9 @@
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Material.h>
 
+//-- ExprLib includes --//
+#include <expression/ExprLib.h>
+
 //-- Wasatch includes --//
 #include "PatchInfo.h"
 #include "FieldAdaptor.h"
@@ -54,7 +57,7 @@ namespace Wasatch {
    *  \param materials a pointer to the Uintah::MaterialSubset.
    */
   
-  void build_bcs( const std::string phiName,
+  void build_bcs( const Expr::Tag phiTag,
                      const Direction staggeredLocation,
                      const GraphHelper& graphHelper,
                      const Uintah::PatchSet* const localPatches,
