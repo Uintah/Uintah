@@ -140,6 +140,7 @@ fi
 echo ""
 echo ""
 date
+let retval=0;
 for componentTest in $selectedCompTests; do
   echo "Running $componentTest Tests"
 
@@ -167,13 +168,20 @@ for componentTest in $selectedCompTests; do
 
   #__________________________________
   # run the python script that contains all the
-  # tests for that component
+  # tests for that component. If the return code != 0 capture it
 
   "./$doTestScript" | tee "${componentTest}.log"
-  retval=${PIPESTATUS[0]}
+  
+  exitCode=${PIPESTATUS[0]}
+  echo "$componentTest exit Code: $exitCode"
+  
+  if test $exitCode != "0"; then
+    retval=$exitCode
+  fi
 
   echo ""
   echo ""
 done
+echo "return code: $retval"
 exit $retval
 
