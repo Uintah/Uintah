@@ -465,7 +465,7 @@ EnthalpySolver::sched_buildLinearMatrix(const LevelP& level,
 
   if (d_MAlab && d_boundaryCondition->getIfCalcEnergyExchange()) {
     tsk->requires(Task::NewDW, d_MAlab->d_enth_mmLinSrc_CCLabel,   gn, 0);
-    tsk->requires(Task::NewDW, d_MAlab->d_enth_mmNonLinSrc_CCLabel,gn, 0);
+    tsk->requires(Task::NewDW, d_MAlab->d_enth_mmNonLinSrc_tmp_CCLabel,gn, 0);
   }
 
   if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
@@ -844,7 +844,7 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
     }
 
     if (d_MAlab && d_boundaryCondition->getIfCalcEnergyExchange()) {
-      new_dw->get(constEnthalpyVars.mmEnthSu, d_MAlab->d_enth_mmNonLinSrc_CCLabel,indx, patch, gn, 0);
+      new_dw->get(constEnthalpyVars.mmEnthSu, d_MAlab->d_enth_mmNonLinSrc_tmp_CCLabel,indx, patch, gn, 0);
       new_dw->get(constEnthalpyVars.mmEnthSp, d_MAlab->d_enth_mmLinSrc_CCLabel,   indx, patch, gn, 0);
     }
 

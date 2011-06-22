@@ -479,7 +479,6 @@ ScalarEqn::sched_solveTransportEqn( const LevelP& level, SchedulerP& sched, int 
 
   //New
   tsk->modifies(d_transportVarLabel);
-  tsk->modifies(d_oldtransportVarLabel); 
   tsk->requires(Task::NewDW, d_RHSLabel, Ghost::None, 0);
   tsk->requires(Task::NewDW, d_fieldLabels->d_densityGuessLabel, Ghost::None, 0);
   tsk->requires(Task::NewDW, d_fieldLabels->d_densityCPLabel, Ghost::None, 0);
@@ -516,13 +515,11 @@ ScalarEqn::solveTransportEqn( const ProcessorGroup* pc,
     // Here, j is the rk step and n is the time step.  
     //
     CCVariable<double> phi_at_jp1;   // phi^{(j+1)}
-    constCCVariable<double> rk1_phi; // phi^{n}
     constCCVariable<double> RHS; 
     constCCVariable<double> old_den; 
     constCCVariable<double> new_den; 
 
     new_dw->getModifiable(phi_at_jp1, d_transportVarLabel, matlIndex, patch);
-    old_dw->get(rk1_phi, d_transportVarLabel, matlIndex, patch, gn, 0);
     new_dw->get(RHS, d_RHSLabel, matlIndex, patch, gn, 0);
 
     new_dw->get(new_den, d_fieldLabels->d_densityGuessLabel, matlIndex, patch, gn, 0); 
