@@ -40,7 +40,8 @@ NIGHTLYTESTS = [
   ("momentum-test-mms-xy", 		"momentum-test-mms-xy.ups",		1,	"Linux",	["exactComparison","no_restart","no_memoryTest","no_dbg"] ),                \
   ("momentum-test-mms-xz", 		"momentum-test-mms-xz.ups",		1,	"Linux",	["exactComparison","no_restart","no_memoryTest","no_dbg"] ),                \
   ("momentum-test-mms-yz", 		"momentum-test-mms-yz.ups",		1,	"Linux",	["exactComparison","no_restart","no_memoryTest","no_dbg"] ),                \
-  ("scalability-test", 		"scalability-test.ups",		1,	"Linux",	["exactComparison","no_restart","no_memoryTest","no_dbg"] )  
+  ("scalability-test", 		"scalability-test.ups",		1,	"Linux",	["exactComparison","no_restart","no_memoryTest","no_dbg"] ),                        \
+  ("momentum-test-mms-3D", 		"momentum-test-mms-3D.ups",		4,	"Linux",	["exactComparison","no_restart","no_memoryTest","no_dbg"] )    
 ]
 
 
@@ -57,7 +58,8 @@ LOCALTESTS = [
   ("momentum-test-mms-xy", 		"momentum-test-mms-xy.ups",		1,	"All",	["exactComparison","no_restart","no_memoryTest","no_dbg"] ),            \
   ("momentum-test-mms-xz", 		"momentum-test-mms-xz.ups",		1,	"All",	["exactComparison","no_restart","no_memoryTest","no_dbg"] ),            \
   ("momentum-test-mms-yz", 		"momentum-test-mms-yz.ups",		1,	"All",	["exactComparison","no_restart","no_memoryTest","no_dbg"] ),            \
-  ("scalability-test", 		"scalability-test.ups",		1,	"All",	["exactComparison","no_restart","no_memoryTest","no_dbg"] )
+  ("scalability-test", 		"scalability-test.ups",		1,	"All",	["exactComparison","no_restart","no_memoryTest","no_dbg"] ),                    \
+  ("momentum-test-mms-3D", 		"momentum-test-mms-3D.ups",		4,	"All",	["exactComparison","no_restart","no_memoryTest","no_dbg"] )  
 ]
 
 #__________________________________
