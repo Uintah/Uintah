@@ -5,7 +5,7 @@
   </Meta>
 
   <SimulationComponent type="wasatch"/>
-   <Solver type="hypre" />
+   <Solver type="CGSolver" />
   <Wasatch>
 
     <!-- Set the initial condition expression for x-momentum -->
@@ -161,7 +161,7 @@
         <lower>[0,0,0]</lower>
         <upper>[6.283185307179586,6.283185307179586,6.283185307179586]</upper>
         <resolution>[32,32,32]</resolution>
-        <patches>[1,1,1]</patches>
+        <patches>[2,1,2]</patches>
       </Box>
       <periodic>[1,1,1]</periodic>
     </Level>
