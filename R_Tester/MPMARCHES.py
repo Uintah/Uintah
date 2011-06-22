@@ -30,14 +30,16 @@ NIGHTLYTESTS = [
 									("mpmpipe_test"          , "mpmpipe_test.ups"          , 8   , "Linux" , ["exactComparison"]) , 
 									("methaneFireWContainer" , "methaneFireWContainer.ups" , 1.1 , "Linux" , ["exactComparison", "no_restart"]), 
 									("heptane_pipe"          , "heptane_pipe.ups"          , 1.1 , "Linux" , ["exactComparison", "no_restart", "no_memoryTest"]), 
-                  ("coal_table_pipe"       , "coal_table_pipe.ups"       , 1.1 , "Linux" , ["exactComparison", "no_restart", "no_memoryTest"])
+                  ("coal_table_pipe"       , "coal_table_pipe.ups"       , 1.1 , "Linux" , ["exactComparison", "no_restart", "no_memoryTest"]),
+                  ("hot_block"             , "hot_block.ups"                 , 1.1 , "Linux" , ["doesTestRun"])
                ]
                
 LOCALTESTS =   [  
 									("mpmpipe_test"          , "mpmpipe_test.ups"          , 8   , "All" , ["exactComparison"]) , 
 									("methaneFireWContainer" , "methaneFireWContainer.ups" , 1.1 , "All" , ["exactComparison", "no_restart"]), 
 									("heptane_pipe"          , "heptane_pipe.ups"          , 1.1 , "All" , ["exactComparison", "no_restart", "no_memoryTest"]),
-                  ("coal_table_pipe"       , "coal_table_pipe.ups"       , 1.1 , "All" , ["exactComparison", "no_restart", "no_memoryTest"])
+                  ("coal_table_pipe"       , "coal_table_pipe.ups"       , 1.1 , "All" , ["exactComparison", "no_restart", "no_memoryTest"]),
+                  ("hot_block"             , "hot_block.ups"                 , 1.1 , "All" , ["doesTestRun"])
                ]  
 
 #__________________________________

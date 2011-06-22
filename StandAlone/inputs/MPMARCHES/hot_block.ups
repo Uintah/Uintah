@@ -44,7 +44,7 @@
         <save label = "density" table_lookup = "true"/>
         <save label = "temperature" table_lookup = "true"/>
 
-        <checkpoint cycle = "2" interval = "0.2"/>
+        <checkpoint cycle = "2" interval = "0.08"/>
         <compression>gzip</compression>
     </DataArchiver>
     
@@ -282,7 +282,7 @@
                 
                 <intrusions>
                     <geom_object>
-                      <cylinder label = "hot object"/>
+                      <cylinder label = "hot block"/>
                     </geom_object>
                 </intrusions>
                 
