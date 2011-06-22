@@ -15,10 +15,11 @@ endif
 if ( $opts == "1" ) then
   echo "make gold_standards" 
   make gold_standards
+  set rc = $status
 endif
 if ( $opts == "2" ) then
   echo "make runLocalRT"
   make runLocalRT
+  set rc = $status
 endif
-
-exit()
+exit($rc)
