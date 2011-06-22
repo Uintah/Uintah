@@ -1009,7 +1009,7 @@ WARNING
       } 
 
       /**
-       * Returns the number of cells excluding extra cells
+       * Returns the number of cells excluding extra cells and ghost cells
        */
       inline int getNumCells() const
       {
