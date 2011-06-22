@@ -461,6 +461,10 @@ c     as well.
                      htflux_radX(i,j,k) =
      $                    htflux_radX(i,j,k) + qflux
                      htfluxX(i,j,k) = htfluxX(i,j,k) + qflux
+
+                     sug_cc(i-1,j,k) = sug_cc(i-1,j,k) + 
+     $                     sigma*ts_fcx(i,j,k)**4*areayz
+
 #endif
 
 #if 0
@@ -558,6 +562,9 @@ c     as well.
      $                    htflux_radX(i+1,j,k) + qflux
                      htfluxX(i+1,j,k) = 
      $                    htfluxX(i+1,j,k) + qflux
+
+                     sug_cc(i+1,j,k) = sug_cc(i+1,j,k) + 
+     $                     sigma*ts_fcx(i,j,k)**4*areayz
 #endif
 
 #if 0
@@ -650,6 +657,9 @@ c     as well.
                      htflux_radY(i,j,k) = 
      $                    htflux_radY(i,j,k) + qflux
                      htfluxY(i,j,k) = htfluxY(i,j,k) + qflux
+
+                     sug_cc(i,j-1,k) = sug_cc(i,j-1,k) + 
+     $                     sigma*ts_fcx(i,j,k)**4*areaxz
 #endif
 
 #if 0
@@ -715,7 +725,6 @@ c     as well.
                      htflux_convY(i,j+1,k) = 
      $                    htflux_convY(i,j+1,k) + qflux
                      htfluxY(i,j+1,k) = htfluxY(i,j+1,k) + qflux
-
 #else
 
 c     need to put stuff in here
@@ -745,6 +754,9 @@ c     as well.
                      htflux_radY(i,j+1,k) = 
      $                    htflux_radY(i,j+1,k) + qflux
                      htfluxY(i,j+1,k) = htfluxY(i,j+1,k) + qflux
+
+                     sug_cc(i,j+1,k) = sug_cc(i,j+1,k) + 
+     $                     sigma*ts_fcx(i,j,k)**4*areaxz
 #endif
 
 #if 0
@@ -840,6 +852,9 @@ c     as well.
                      htflux_radZ(i,j,k) = 
      $                    htflux_radZ(i,j,k) + qflux
                      htfluxZ(i,j,k) = htfluxZ(i,j,k) + qflux
+
+                     sug_cc(i,j,k-1) = sug_cc(i,j,k-1) + 
+     $                     sigma*ts_fcx(i,j,k)**4*areaxy
 #endif
 
 #if 0
@@ -938,6 +953,9 @@ c     as well.
      $                    htflux_radZ(i,j,k+1) + qflux
                      htfluxZ(i,j,k+1) = htfluxZ(i,j,k+1) +
      $                    qflux
+
+                     sug_cc(i,j,k+1) = sug_cc(i,j,k+1) + 
+     $                     sigma*ts_fcx(i,j,k)**4*areaxy
 #endif
 
 #if 0
