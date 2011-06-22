@@ -129,12 +129,11 @@ Required libraries:
 
 Useful libraries:
 \begin{itemize}
-\item Hypre v2.4 (\url{https://computation.llnl.gov/casc/hypre/software.html})
+\item Hypre v2.7.0b (\url{https://computation.llnl.gov/casc/hypre/software.html})
 \item PETSc v3.0 (\url{http://www.mcs.anl.gov/petsc/petsc-as/download/index.html})
 \end{itemize}
 
-Note, Uintah recently upgraded from using Hypre v2.0 and PETSc
-v2.3.3.  (July 22, 2009)
+Note, we suggestion using Hypre v2.7.0b and PETSc v3.1-p8.  (Jun, 2011)
 
 The Wasatch component requires the following:
 \begin{itemize}
@@ -296,12 +295,12 @@ Hypre can be installed by executing the following simplified
 instructions, however, if you encounter problems please refer to the
 hypre website for troubleshooting.
 
-Download hypre-2.4 from
-\url{https://computation.llnl.gov/casc/hypre/download/hypre-2.4.0b\_reg.html}
+Download hypre-2.7.0b from
+\url{https://computation.llnl.gov/casc/hypre/software.html}
 
 If installing hypre on a 64bit platform, hypre must be modified to add
 the -fPIC compile option.  After unpacking the hypre tar file, edit
-the Makefile in \tt hypre-2.4.0/src/lapack \normalfont and add the
+the Makefile in \tt hypre-2.7.0b/src/lapack \normalfont and add the
 -fPIC to line 128.  It should look like the following:
 
 \emph{Note: This may have been fixed... if there is
@@ -320,16 +319,42 @@ ${CC} -c -fPIC dlamch.c
 
 Depending on the location of the MPI libraries, i.e. location of mpi.h
 and libmpi.so, the configure line for hypre should look like this:
+
+For *nix:
+
 \begin{verbatim}
-cd hypre-2.4.0/src
+cd hypre-2.7.0b/src
 
 ./configure \
   --enable-shared \
   --with-MPI-include=/usr/local/openmpi/include \
   --with-MPI-lib-dirs=/usr/local/openmpi/lib \
   --with-MPI-libs="mpi pmpi util" \
-  --prefix=/usr/local/ CFLAGS=-DMPIPP_H CXXFLAGS=-DMPIPP_H
+  CFLAGS=-DMPIPP_H CXXFLAGS=-DMPIPP_H \
+  --prefix=/usr/local
+\end{verbatim}
 
+For OSX (Macs):
+
+\begin{verbatim}
+cd hypre-2.7.0b/src
+
+./configure \
+  --prefix=/usr/local \
+  CC=/usr/bin/gcc \
+  CXX=/usr/bin/g++ \
+  CFLAGS=-DMPIPP_H CXXFLAGS=-DMPIPP_H \
+  F77=/usr/local/bin/gfortran \
+  FLIBS="-lcrt1.10.6.o"
+
+\end{verbatim}
+
+(Note, under OSX, you will not be builing a shared library version of
+Hypre.  Also, the 'FLIBS' line is required for use with some 
+gfortran compilers as they try to use crt1.10.5.o (which causes
+duplicate symbol errors).)
+
+\begin{verbatim}
 make
 make install
 \end{verbatim}
