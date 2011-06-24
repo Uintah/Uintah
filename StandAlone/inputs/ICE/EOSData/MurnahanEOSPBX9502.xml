@@ -1,0 +1,12 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<Uintah_Include>
+  <EOS type="Murnahan">
+    <!-- PBX 9502 Parameters 
+      Fit to data from LASL Shock Hugoniot Data.
+    -->
+    <K>         3.0412e-10 </K>
+    <n>         6.2        </n>
+    <P0>   101325.0        </P0>
+    <rho0>   1896.0        </rho0>
+  </EOS>
+</Uintah_Include>
