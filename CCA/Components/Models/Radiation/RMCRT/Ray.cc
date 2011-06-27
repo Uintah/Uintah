@@ -299,7 +299,7 @@ Ray::rayTrace( const ProcessorGroup* pc,
     }
 
     double fs;                                         // fraction remaining after all current reflections
-    unsigned int size = 0;                             // current size of PathIndex
+    unsigned long int size = 0;                        // current size of PathIndex
     double rho = 1.0 - _alpha;                         // reflectivity
     Vector Dx = patch->dCell();                        // cell spacing
 
@@ -321,12 +321,10 @@ Ray::rayTrace( const ProcessorGroup* pc,
 
         IntVector cur = origin;
 
-        _mTwister.seed((i + j +k) * iRay +1); 
-       
+        _mTwister.seed((i + j +k) * iRay +1);        
 
-			  double DyDxRatio = Dx.y() / Dx.x(); //noncubic
-				double DzDxRatio = Dx.z() / Dx.x(); //noncubic
-
+        double DyDxRatio = Dx.y() / Dx.x(); //noncubic
+        double DzDxRatio = Dx.z() / Dx.x(); //noncubic
 
         Vector ray_location;
         Vector ray_location_prev;
@@ -436,11 +434,11 @@ Ray::rayTrace( const ProcessorGroup* pc,
 
             // The running total of alpha*length
             double optical_thickness_prev = optical_thickness;
-            optical_thickness += Dx.x() * abskg[prevCell]*disMin; //as long as tDeltaY,Z tMaxY,Z and ray_location[1],[2]..            // were adjusted by DyDxRatio or DzDxRatio, this line is now correct for noncubic domains.  
+            optical_thickness += Dx.x() * abskg[prevCell]*disMin; //as long as tDeltaY,Z tMaxY,Z and ray_location[1],[2]..            
+                                                                  // were adjusted by DyDxRatio or DzDxRatio, this line is now correct for noncubic domains.  
                               
 
             intensity = intensity*exp(-optical_thickness);  //update intensity by Beer's Law
-
             size++;
 
             //Eqn 3-15(see below reference) while accounting for fs. 
@@ -480,25 +478,21 @@ Ray::rayTrace( const ProcessorGroup* pc,
       cout << " Efficiency: " << efficiency << " steps per sec" << endl;
       cout << endl; 
     }
-
-
-
-
-}//end patch loop
-} // end ray trace method
+  }  //end patch loop
+}  // end ray trace method
 
 
 
 //______________________________________________________________________
-	inline bool 
+        inline bool 
 Ray::containsCell(const IntVector &low, const IntVector &high, const IntVector &cell)
 {
-	return  low.x() <= cell.x() && 
-		low.y() <= cell.y() &&
-		low.z() <= cell.z() &&
-		high.x() > cell.x() && 
-		high.y() > cell.y() &&
-		high.z() > cell.z();
+   return  low.x() <= cell.x() && 
+           low.y() <= cell.y() &&
+           low.z() <= cell.z() &&
+           high.x() > cell.x() && 
+           high.y() > cell.y() &&
+           high.z() > cell.z();
 }
 
 //______________________________________________________________________
