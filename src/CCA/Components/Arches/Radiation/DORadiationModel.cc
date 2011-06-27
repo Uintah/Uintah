@@ -82,6 +82,9 @@ DORadiationModel::DORadiationModel(BoundaryCondition* bndry_cond,
                                    d_myworld(myworld)
 {
   d_linearSolver = 0;
+  _props_calculator = 0;
+  _using_props_calculator = false; 
+
 }
 
 //****************************************************************************
@@ -90,6 +93,7 @@ DORadiationModel::DORadiationModel(BoundaryCondition* bndry_cond,
 DORadiationModel::~DORadiationModel()
 {
   delete d_linearSolver;
+  delete _props_calculator; 
 }
 
 //****************************************************************************
@@ -103,6 +107,33 @@ DORadiationModel::problemSetup(const ProblemSpecP& params)
   ProblemSpecP db = params->findBlock("DORadiationModel");
 
   string prop_model;
+
+  if ( db->findBlock("property_calculator") ){ 
+
+    std::string calculator_type; 
+    db->findBlock("property_calculator")->getAttribute("type",calculator_type);
+
+    if ( calculator_type == "constant" ){ 
+
+      _props_calculator = scinew ConstantProperties(); 
+
+    } else if ( calculator_type == "burns_christon" ){ 
+
+      _props_calculator = scinew BurnsChriston(); 
+
+    } else { 
+
+      throw InvalidValue("Error: Property calculator not recognized.",__FILE__, __LINE__); 
+
+    } 
+
+    ProblemSpecP db_pc = db->findBlock("property_calculator"); 
+    _using_props_calculator = _props_calculator->problemSetup( db_pc );
+
+    if ( !_using_props_calculator ) {
+      throw InvalidValue("Error: Property calculator specified in input file but I was unable to setup your calculator!",__FILE__, __LINE__); 
+    } 
+  } 
 
   if (db) {
     db->getWithDefault("ordinates",d_sn,2);
@@ -271,6 +302,13 @@ DORadiationModel::computeRadiationProps(const ProcessorGroup*,
                  d_opl, constvars->sootFV, vars->ABSKP, vars->ABSKG, vars->ESRCG, vars->shgamma,
                  cellinfo->xx, cellinfo->yy, cellinfo->zz, fraction, fractiontwo,
                  lprobone, lprobtwo, lprobthree, lambda, lradcal);
+
+    if (_using_props_calculator){ 
+
+      _props_calculator->computeProps( patch, vars->ABSKG );
+
+    } 
+
 
 }
 
@@ -526,6 +564,12 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
     */
   } 
 }
+DORadiationModel::PropertyCalculatorBase::PropertyCalculatorBase(){};
+DORadiationModel::PropertyCalculatorBase::~PropertyCalculatorBase(){};
+DORadiationModel::ConstantProperties::ConstantProperties(){};
+DORadiationModel::ConstantProperties::~ConstantProperties(){};
+DORadiationModel::BurnsChriston::BurnsChriston(){};
+DORadiationModel::BurnsChriston::~BurnsChriston(){};
 
 
 
