@@ -7432,6 +7432,7 @@ BoundaryCondition::velocityOutletPressureBC__NEW( const Patch* patch,
 
             bound_ptr.reset();
             double negsmall = -1.0E-10;
+            double possmall =  1.0E-10;
             double zero     = 0.0E0; 
             int sign        = 1;
 
@@ -7485,7 +7486,7 @@ BoundaryCondition::velocityOutletPressureBC__NEW( const Patch* patch,
 
                   } else {
 
-                    if ( sign * old_uvel[c] > negsmall ) { 
+                    if ( sign * old_uvel[c] > possmall ) { 
                       uvel[c] = uvel[cp]; 
                     } else {
                       uvel[c] = zero; 
@@ -7540,7 +7541,7 @@ BoundaryCondition::velocityOutletPressureBC__NEW( const Patch* patch,
 
                   } else {
 
-                    if ( sign * old_vvel[c] > negsmall ) { 
+                    if ( sign * old_vvel[c] > possmall ) { 
                       vvel[c] = vvel[cp]; 
                     } else {
                       vvel[c] = zero; 
@@ -7594,7 +7595,7 @@ BoundaryCondition::velocityOutletPressureBC__NEW( const Patch* patch,
 
                   } else {
 
-                    if ( sign * old_wvel[c] > negsmall ) { 
+                    if ( sign * old_wvel[c] > possmall ) { 
                       wvel[c] = wvel[cp]; 
                     } else {
                       wvel[c] = zero; 
