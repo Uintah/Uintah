@@ -1,6 +1,9 @@
 <?xml version='1.0' encoding='ISO-8859-1' ?>
 <Uintah_Include>
-      <!-- Fit to data from LASL Explosive Property Data report.
+      <!-- Fit to velocity and pressure data from:
+           Gibbs, T.R., Popalato, A. LASL Explosive Property Data. Berkeley: University of California Press, 1980.
+          
+           Simulated values:
            Detonation Velocity = 7589 m/s
            CJ Pressure = 29.75 GPa
       -->
