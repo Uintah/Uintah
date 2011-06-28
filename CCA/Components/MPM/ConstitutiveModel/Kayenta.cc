@@ -727,26 +727,41 @@ void Kayenta::computeStressTensor(const PatchSubset* patches,
 	  double dx_ave = (dx.x() + dx.y() + dx.z())/3.0;
 	  double c_bulk = sqrt(UI[0]/rho_cur);
 	  Matrix3 D=(velGrad + velGrad.Transpose())*0.5;
-	  p_q[idx] = artificialBulkViscosity(D.Trace(), c_bulk, rho_cur, dx_ave);
+	  p_q[idx] = artificialBulkViscosity(D.Trace(),c_bulk, rho_cur, dx_ave);
 	} else {
 	  p_q[idx] = 0.;
 	}
-
-	// the 
-      }else{
+      } else {  // particle is not previously localized
 	  // Compute the deformation gradient increment using the time_step
 	  // velocity gradient
 	  // F_n^np1 = dudx * dt + Identity
-	  deformationGradientInc = velGrad * delT + Identity;
 
-	  Jinc = deformationGradientInc.Determinant();
+          double J;
+//          if(velGrad.Norm() > 1e-10){
+//            Matrix3 F=deformationGradient[idx];
+//            int num_scs = 10;
+//            double dtsc = delT/(double (num_scs));
+//            Matrix3 finc = (Identity+velGrad*dtsc);
+//            for(int n=0;n<num_scs;n++){
+//              F=finc*F;
+//            }   
+//            deformationGradient_new[idx] = F;
+//	    J = deformationGradient_new[idx].Determinant();
+//            double Jold = deformationGradient[idx].Determinant();
+//            Jinc = J/Jold;
+//          }
+//          else{
+            deformationGradientInc = velGrad * delT + Identity;
 
-	  // Update the deformation gradient tensor to its time n+1 value.
-	  deformationGradient_new[idx] = deformationGradientInc *
-					 deformationGradient[idx];
+            Jinc = deformationGradientInc.Determinant();
 
-	  // get the volumetric part of the deformation
-	  double J = deformationGradient_new[idx].Determinant();
+            // Update the deformation gradient tensor to its time n+1 value.
+            deformationGradient_new[idx] = deformationGradientInc *
+                                           deformationGradient[idx];
+
+            // get the volumetric part of the deformation
+            J = deformationGradient_new[idx].Determinant();
+//          }
 
 	  // Check 1: Look at Jacobian
 	  if (J<=0.0 || J > d_hugeJ) {
@@ -850,20 +865,23 @@ void Kayenta::computeStressTensor(const PatchSubset* patches,
 	    }
 	    // 'Hijack' UI[42] with perturbed value if desired
 	    // put real value of UI[42] in tmp var just in case
+            double TFAIL_tmp = UI[27];
+    
+            // Scale T1 according to a characteristic particle length
+            UI[27]*=cbrt(pvolume_new[idx]);
 	    if (wdist.Perturb){
 	      double tempVar = UI[42];
 	      UI[42] = peakI1IDist[idx];
-
-
-	      KAYENTA_CALC(nblk, d_NINSV, dt, UI, GC, DC, sigarg, Darray, svarg, USM);
+	      KAYENTA_CALC(nblk, d_NINSV, dt, UI, GC, DC, sigarg,
+                                 Darray, svarg, USM);
 	      UI[42]=tempVar;
 	    } else {
-	      KAYENTA_CALC(nblk, d_NINSV, dt, UI, GC, DC, sigarg, Darray, svarg, USM);
+	      KAYENTA_CALC(nblk, d_NINSV, dt, UI, GC, DC, sigarg,
+                                 Darray, svarg, USM);
 	    }
+            // Put T1 back for now
+            UI[27]=TFAIL_tmp;
 
-	    if(sigarg[1]>1e19){
-	      cout<<"huge stress (sig22="<<sigarg[1]<<") in particle "<<pParticleID[idx]<<endl;
-	    }
 	    // Unload ISVs from 1D array into ISVs_new 
 	    for(int i=0;i<d_NINSV;i++){
 	      ISVs_new[i][idx]=svarg[i];
