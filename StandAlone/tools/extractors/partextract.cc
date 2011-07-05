@@ -316,7 +316,7 @@ getParticleStrains(DataArchive* da, int mat, long64 particleID, string flag) {
   vector<double> times;
   da->queryTimesteps(index, times);
   ASSERTEQ(index.size(), times.size());
-  cerr << "There are " << index.size() << " timesteps:\n";
+//  cerr << "There are " << index.size() << " timesteps:\n";
       
   unsigned long time_step_lower = 0;
   unsigned long time_step_upper = times.size() - 1 ;
