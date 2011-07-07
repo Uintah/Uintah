@@ -74,6 +74,7 @@ NonLocalDruckerPrager::NonLocalDruckerPrager(ProblemSpecP& ps, MPMFlags* Mflag)
   ps->getWithDefault("initial_xstress",d_initialData.initial_xstress,0.0);
   ps->getWithDefault("initial_ystress",d_initialData.initial_ystress,0.0);
   ps->getWithDefault("initial_zstress",d_initialData.initial_zstress,0.0);
+  ps->getWithDefault("hardening_type",d_initialData.hardening_type,0);
   ps->get("k_o_dist",wdist.WeibDist);
   WeibullParser(wdist);
 
@@ -95,6 +96,7 @@ NonLocalDruckerPrager::NonLocalDruckerPrager(const NonLocalDruckerPrager* cm)
   d_initialData.initial_xstress = cm->d_initialData.initial_xstress;
   d_initialData.initial_ystress = cm->d_initialData.initial_ystress;
   d_initialData.initial_zstress = cm->d_initialData.initial_zstress;
+  d_initialData.hardening_type = cm->d_initialData.hardening_type;
 
 
   wdist.WeibMed    = cm->wdist.WeibMed;
@@ -141,6 +143,7 @@ void NonLocalDruckerPrager::outputProblemSpec(ProblemSpecP& ps,bool output_cm_ta
   cm_ps->appendElement("initial_xstress",d_initialData.initial_xstress);
   cm_ps->appendElement("initial_ystress",d_initialData.initial_ystress);
   cm_ps->appendElement("initial_zstress",d_initialData.initial_zstress);
+  cm_ps->appendElement("hardening_type",d_initialData.hardening_type);
     cm_ps->appendElement("k_o_Perturb", wdist.Perturb);
   cm_ps->appendElement("k_o_Med",     wdist.WeibMed);
   cm_ps->appendElement("k_o_Mod",     wdist.WeibMod);
@@ -377,6 +380,7 @@ void NonLocalDruckerPrager::computeStressTensor(const PatchSubset* patches,
     double initial_xstress = d_initialData.initial_xstress;
     double initial_ystress = d_initialData.initial_ystress;
     double initial_zstress = d_initialData.initial_zstress;
+    int hardening_type = d_initialData.hardening_type;
 
     //assemble the initial stress tensor
     Matrix3 initial_stress(0.0);
@@ -422,8 +426,18 @@ void NonLocalDruckerPrager::computeStressTensor(const PatchSubset* patches,
         }
         velGrad[idx]=tensorL;
 
-        deformationGradient_new[idx]=(tensorL*delT+Identity)
-	  *deformationGradient[idx];
+	// try subcycling to update the deformation gradient:
+	//double delTsub= delT/20.0;
+	int nsubs=1;
+	double delTsub= delT/float(nsubs);
+	Matrix3 incF;
+	incF.Identity();
+	for(int i=0;i<(nsubs);i++){
+	  incF= (tensorL*delTsub+Identity)*incF;
+	}
+
+	deformationGradient_new[idx]=incF*deformationGradient[idx];
+
 
 	J = deformationGradient_new[idx].Determinant();
 	if (J<=0){
@@ -463,6 +477,7 @@ void NonLocalDruckerPrager::computeStressTensor(const PatchSubset* patches,
 	k_o[idx] = k_o_dist[idx];
       }else{
 	k_o[idx] = k_o_const;
+	k_o_dist_new[idx] = k_o_const;
       }
       double lame = bulk - 2.0/3.0*shear;
       double eta_in = eta_old[idx];
@@ -470,7 +485,7 @@ void NonLocalDruckerPrager::computeStressTensor(const PatchSubset* patches,
       trial_stress[idx] = unrotated_stress + (Identity*lame*(D.Trace()*delT) + D*delT*2.0*shear);
 
       // evaluate yield function:
-      f_trial[idx] = YieldFunction(trial_stress[idx],alpha,k_o[idx],eta_in,eta_nl_in);
+      f_trial[idx] = YieldFunction(trial_stress[idx],alpha,k_o[idx],eta_in,eta_nl_in,hardening_type);
       eta_new[idx] = eta_old[idx];
       eta_nl_new[idx] = eta_nl_old[idx];
       pPlasticStrain_new[idx] = pPlasticStrain[idx];
@@ -482,8 +497,7 @@ void NonLocalDruckerPrager::computeStressTensor(const PatchSubset* patches,
 
 	//define frequently used constants:
 
-	double sqrt_one_half = 1.0/sqrt(2.0);
-	double sqrt_two = 1.0/sqrt_one_half;
+
 	double I1_trial,J2_trial;
 	Matrix3 S_trial;
 	Matrix3 S_old;
@@ -491,35 +505,26 @@ void NonLocalDruckerPrager::computeStressTensor(const PatchSubset* patches,
 	computeInvariants(trial_stress[idx], S_trial, I1_trial, J2_trial);
 	computeInvariants(stress_old[idx],S_old,I1_old,J2_old);
 
-	double sqrt_J2_trial = sqrt(J2_trial);
+
 	Matrix3 A,M;
 	//comput M and N using the new stress estimate:
-	M = Identity*alpha_p + S_trial*(1.0/(sqrt_two*sqrt_J2_trial))*(1.0-alpha_p);
+	//M = Identity*alpha_p + S_trial*(1.0/(sqrt_two*sqrt_J2_trial))*(1.0-alpha_p);
+	Matrix3 Strial_hat = S_trial*(1.0/sqrt(2.0*J2_trial));
+	M = (Identity*alpha_p + Strial_hat*(sqrt(2.0)/2.0) )*(1.0/sqrt(0.5+3.0*alpha_p*alpha_p));
 	A = (Identity*lame*(M.Trace()) + M*2.0*shear);
-	double dlambda_old=0.0;
 	double dlambda_new=0.0;
-	double tolerance = 1e-15;
-	int imax = 100;
-	int i;
+
 	double current_yield_strength;
 	// do a local iteration in order to provide a good initial guess for the nonlocal iteration
-	for(i=0;i<imax;i++){
-	  dlambda_new = (f_trial[idx]  )/(2.0/sqrt(2.0)*shear*(1.0-alpha_p)+alpha*9.0*bulk*alpha_p + h_local);
-	  //dlambda_new = (sqrt(J2_trial)+alpha*I1_trial -k_o -eta_old[idx]  - h_local*dlambda_old )/(2.0/sqrt(2.0)*shear*(1.0-alpha_p)+alpha*9.0*bulk*alpha_p);
-	  current_yield_strength = k_o[idx] + (eta_old[idx]+h_local*dlambda_new);
-	  if (current_yield_strength<minimum_yield_stress){
-	    dlambda_new = (f_trial[idx] )/(2.0/sqrt(2.0)*shear*(1.0-alpha_p)+alpha*9.0*bulk*alpha_p);
-	  }
-	  if (abs(dlambda_new-dlambda_old)<tolerance){
-	    break;
-	  }
-	  dlambda_old = dlambda_new;
-	}
+	double factorp = sqrt(0.5 + 3.0*alpha_p*alpha_p);
+	dlambda_new = (f_trial[idx]  )/( shear/factorp + alpha*9.0*bulk*alpha_p/factorp + h_local);
+	  
+	current_yield_strength = k_o[idx] + (eta_old[idx]+h_local*dlambda_new);
+	
 	pdlambda[idx] = dlambda_new;
-	if (i>=99){
-	  cerr<<"fixed-point scheme did not converge"<<endl;
-	}
-	//update the stress using the the last estimate for lambda_dot
+
+
+	//update the stress using the the last estimate for dlambda
 	current_yield_strength = k_o[idx] + (eta_old[idx]+h_local*dlambda_new);
 	if (current_yield_strength<minimum_yield_stress){
 	  eta_new[idx] = eta_old[idx];	  
@@ -529,23 +534,36 @@ void NonLocalDruckerPrager::computeStressTensor(const PatchSubset* patches,
 
 	// compute a new stress estimate
 	stress_new[idx] = trial_stress[idx] - A*pdlambda[idx];
-	double f_new;
-	if (current_yield_strength<minimum_yield_stress){
-	  f_new=YieldFunction(stress_new[idx],alpha,minimum_yield_stress,0.0,0.0);
-	}else{
-	  f_new=YieldFunction(stress_new[idx],alpha,k_o[idx],eta_new[idx],eta_nl_new[idx]);
+	
+	//see if we are beyond the vertex
+	double J2_new,I1_new;
+	Matrix3 S_new;
+	computeInvariants(stress_new[idx], S_new, I1_new, J2_new);
+	if (current_yield_strength<0){
+	  cout<<"zero yield strength detected"<<endl;
+	  //just set deviator to zero (von-Mise ONLY!!)
+	  stress_new[idx] = Identity*(1.0/3.0)*trial_stress[idx].Trace();
+	}else if(alpha*I1_new>current_yield_strength){
+	  //just put the stress on the vertex
+	  cout<<"stress on yield vertex"<<endl;
+	  stress_new[idx] = Identity*(1.0/(3.0*alpha))*current_yield_strength;
+
 	}
 
-	if (abs(f_new)>10.0){
+	double f_new;
+	if (current_yield_strength<minimum_yield_stress){
+	  f_new=YieldFunction(stress_new[idx],alpha,minimum_yield_stress,0.0,0.0,hardening_type);
+	}else{
+	  f_new=YieldFunction(stress_new[idx],alpha,k_o[idx],eta_new[idx],eta_nl_new[idx],hardening_type);
+	}
+	// this is just generating an initial estimate, so it doesn't need to actually hit the yield surface
+	/*if (abs(f_new)>10.0){
 	  cerr<<"ERROR!  did not return to yield surface"<<endl;
 	  cerr<<"eta_new[idx]= "<<eta_new[idx]<<endl;
-	  double J2_new,I1_new;
-	  Matrix3 S_new;
-	  computeInvariants(stress_new[idx], S_new, I1_new, J2_new);
 	  cerr<<"sqrt(J2_new)= "<<sqrt(J2_new)<<endl;
 	  cerr<<"I1_new= "<<I1_new<<endl;
 	  cerr<<"current_yield_strength= "<<current_yield_strength<<endl;
-	}
+	  }*/
 	//cerr<<"final increment in plastic strain is"<<dlambda_new<<endl;
 
       }
@@ -581,7 +599,7 @@ void NonLocalDruckerPrager::computeStressTensor(const PatchSubset* patches,
 
     bool done=false;
 
-    double sqrt_two = sqrt(2.0);
+
     //now begin iteration
     int q=0;
     while(!done){
@@ -594,10 +612,7 @@ void NonLocalDruckerPrager::computeStressTensor(const PatchSubset* patches,
       double dlambda_max = 0.0;
       double dlambda_nl=0.0;
       double V_alpha=0.0;
-      vector<double> l_nonlocal_index(3);
-      l_nonlocal_index[0] = l_nonlocal/dx.x();
-      l_nonlocal_index[1] = l_nonlocal/dx.y();
-      l_nonlocal_index[2] = l_nonlocal/dx.z();
+
       //loop over particles
       for(ParticleSubset::iterator iter = pset->begin();iter!=pset->end();iter++){
 	particleIndex idx = *iter;
@@ -607,53 +622,15 @@ void NonLocalDruckerPrager::computeStressTensor(const PatchSubset* patches,
 	  double dlambda_old = pdlambda[idx];
 	  //evaluate nonlocal average
 	  //if l_nonlocal is less than the cell spacing, just stick with the local value:
-	  if (min(min(dx[0],dx[1]),dx[2])>2.0*l_nonlocal){
-	    dlambda_nl = pdlambda[idx];
-	    V_alpha=1;
-	  }else{
-	    Point px_index = patch->getLevel()->positionToIndex(px[idx]);
-	    //loop over grid nodes within the nonlocal support domain:
-	    double pxx = px[idx].x();
-	    double pxy = px[idx].y();
-	    double pxz = px[idx].z();
-	    Point nl_upper_corner(pxx+l_nonlocal, pxy+l_nonlocal, pxz+l_nonlocal);
-	    Point nl_lower_corner(pxx-l_nonlocal, pxy-l_nonlocal, pxz-l_nonlocal);
-	    Point nl_upper_index = patch->getLevel()->positionToIndex(nl_upper_corner);
-	    Point nl_lower_index = patch->getLevel()->positionToIndex(nl_lower_corner);
-	    int xmax_index = Floor(nl_upper_index.x());
-	    int xmin_index = ceil(nl_lower_index.x());
-	    int ymax_index = Floor(nl_upper_index.y());
-	    int ymin_index = ceil(nl_lower_index.y());
-	    int zmax_index = Floor(nl_upper_index.z());
-	    int zmin_index = ceil(nl_lower_index.z());
-	    dlambda_nl = 0.0;
-	    V_alpha=0.0;
-	     
-	    for(int i=xmin_index;i<xmax_index+1;i++){
-	      for(int j=ymin_index;j<ymax_index+1;j++){
-		for(int k=zmin_index;k<zmax_index+1;k++){
-		  IntVector index_ijk(i,j,k);
-		  if(patch->containsNode(index_ijk)){
-		    Point x_ijk(i,j,k);
-		    double alpha_ijk = alpha_nl(px_index,x_ijk,l_nonlocal_index)*gmat[index_ijk];
-		    V_alpha +=alpha_ijk;
-		    if(gmat[index_ijk]>1e-10){
-		      dlambda_nl+= alpha_ijk*gdlambda[index_ijk]/gmat[index_ijk];
-		    }
-		  }
-		}// end z-loop
-	      }// end y-loop
-	    }//end x-loop
-
-	  }// end loop over nodes in nonlocal support
-
-	  dlambda_nl = dlambda_nl/V_alpha;
+	  EvaluateNonLocalAverage(dlambda_nl,V_alpha,pdlambda,px,gdlambda,gmat,patch,idx,l_nonlocal);
 	  eta_nl_new[idx] = eta_nl_old[idx] + h_nonlocal*dlambda_nl;
 	  if (softened[idx]==1){
-	    f_trial[idx] = YieldFunction(trial_stress[idx],alpha,k_o[idx],eta_old[idx],eta_nl_new[idx]);
+	    f_trial[idx] = YieldFunction(trial_stress[idx],alpha,k_o[idx],eta_old[idx],eta_nl_new[idx],hardening_type);
 	  }
 	  if(f_trial[idx]>0){
-	    pdlambda[idx] = (f_trial[idx] - h_nonlocal*dlambda_nl)/(2.0/sqrt_two*shear*(1.0-alpha_p)+alpha*9.0*bulk*alpha_p + h_local);
+	    double factorp = sqrt(0.5 + 3.0*alpha_p*alpha_p);
+	    pdlambda[idx] = (f_trial[idx] - h_nonlocal*dlambda_nl  )/( shear/factorp + alpha*9.0*bulk*alpha_p/factorp + h_local);
+
 	  }else{
 	    pdlambda[idx] = 0.0;
 	  }
@@ -664,8 +641,11 @@ void NonLocalDruckerPrager::computeStressTensor(const PatchSubset* patches,
 	    eta_new[idx] = eta_old[idx];
 	    eta_nl_new[idx] = eta_nl_old[idx];
 
-	    double f_trial_min = YieldFunction(trial_stress[idx],alpha,minimum_yield_stress,0.0,0.0);
-	    pdlambda[idx] = (f_trial_min)/(2.0/sqrt_two*shear*(1.0-alpha_p)+alpha*9.0*bulk*alpha_p);
+	    double f_trial_min = YieldFunction(trial_stress[idx],alpha,minimum_yield_stress,0.0,0.0,hardening_type);
+	    double factorp = sqrt(0.5 + 3.0*alpha_p*alpha_p);
+	    pdlambda[idx] = (f_trial_min )/( shear/factorp + alpha*9.0*bulk*alpha_p/factorp );
+
+
 	    
 	  }else{
 	    eta_new[idx] = eta_old[idx] + h_local*pdlambda[idx];
@@ -680,16 +660,21 @@ void NonLocalDruckerPrager::computeStressTensor(const PatchSubset* patches,
 	  Matrix3 S_trial;
 	  double I1_trial,J2_trial;
 	  computeInvariants(trial_stress[idx],S_trial,I1_trial,J2_trial);
-	  Matrix3	M = Identity*alpha_p + S_trial*(1.0/(sqrt_two*sqrt(J2_trial)))*(1.0-alpha_p);
-	  Matrix3 A = M*2.0*shear*(1.0-alpha_p) + Identity*3.0*bulk*alpha_p;
+	  Matrix3 Strial_hat = S_trial*(1.0/sqrt(2.0*J2_trial));
+	  double factorp = sqrt(0.5 + 3.0*alpha_p*alpha_p);
+	  Matrix3 M = (Identity*alpha_p + Strial_hat*(sqrt(2.0)/2.0))*(1.0/factorp);	
+	  double lame = bulk - 2.0/3.0*shear;
+	  Matrix3 A = (Identity*lame*(M.Trace()) + M*2.0*shear);
 	  //compute a new estimate for the stress
 	  stress_new[idx] = trial_stress[idx] - A*pdlambda[idx];
+	  
+
 	  double f_new;
 	  current_yield_strength = k_o[idx] + (eta_old[idx]+h_local*pdlambda[idx]) + (eta_nl_old[idx]+h_nonlocal*dlambda_nl);
 	  if (current_yield_strength<minimum_yield_stress){
-	    f_new=YieldFunction(stress_new[idx],alpha,minimum_yield_stress,0.0,0.0);
+	    f_new=YieldFunction(stress_new[idx],alpha,minimum_yield_stress,0.0,0.0,hardening_type);
 	  }else{
-	    f_new=YieldFunction(stress_new[idx],alpha,k_o[idx],eta_new[idx],eta_nl_new[idx]);
+	    f_new=YieldFunction(stress_new[idx],alpha,k_o[idx],eta_new[idx],eta_nl_new[idx],hardening_type);
 	  }
 
 	  //cerr<<"yield function value after nonlocal iteration "<<q-1<<" is "<<f_new<<endl;
@@ -724,10 +709,11 @@ void NonLocalDruckerPrager::computeStressTensor(const PatchSubset* patches,
 	  
 
 	}else{	
-	  //evaluate the maximum potential value for eta_nl_new
-	  double eta_nl_trial = eta_nl_new[idx] + h_nonlocal*dlambda_max;
+	  //update the nonlocal isv for the elastic particles
+	  EvaluateNonLocalAverage(dlambda_nl,V_alpha,pdlambda,px,gdlambda,gmat,patch,idx,l_nonlocal);	  
+	  eta_nl_new[idx] = eta_nl_old[idx] + h_nonlocal*dlambda_nl;
 	  //now evaluate the yield function with this value for eta_nl
-	  double f_max = YieldFunction(stress_new[idx],alpha,k_o[idx],eta_new[idx],eta_nl_trial);
+	  double f_max = YieldFunction(stress_new[idx],alpha,k_o[idx],eta_new[idx],eta_nl_new[idx],hardening_type);
 	  if (f_max>0.0){
 	    softened[idx] = 1;
 	    soften_elastic = true;
@@ -806,6 +792,67 @@ void NonLocalDruckerPrager::computeStressTensor(const PatchSubset* patches,
 
 }
 
+
+void NonLocalDruckerPrager::EvaluateNonLocalAverage(double& dlambda_nl,double& V_alpha, ParticleVariable<double>& pdlambda, constParticleVariable<Point>& px, NCVariable<double>& gdlambda,NCVariable<double>& gmat,const Patch*& patch,particleIndex& idx, const double& l_nonlocal){
+  Vector dx = patch->dCell();
+  vector<double> l_nonlocal_index(3);
+  l_nonlocal_index[0] = l_nonlocal/dx.x();
+  l_nonlocal_index[1] = l_nonlocal/dx.y();
+  l_nonlocal_index[2] = l_nonlocal/dx.z();
+  if (min(min(dx[0],dx[1]),dx[2])>2.0*l_nonlocal){
+    dlambda_nl = pdlambda[idx];
+
+    V_alpha=1;
+  }else{
+    Point px_index = patch->getLevel()->positionToIndex(px[idx]);
+    //loop over grid nodes within the nonlocal support domain:
+    double pxx = px[idx].x();
+    double pxy = px[idx].y();
+    double pxz = px[idx].z();
+    Point nl_upper_corner(pxx+l_nonlocal, pxy+l_nonlocal, pxz+l_nonlocal);
+    Point nl_lower_corner(pxx-l_nonlocal, pxy-l_nonlocal, pxz-l_nonlocal);
+    Point nl_upper_index = patch->getLevel()->positionToIndex(nl_upper_corner);
+    Point nl_lower_index = patch->getLevel()->positionToIndex(nl_lower_corner);
+    /*
+    int xmax_index = Floor(nl_upper_index.x());
+    int xmin_index = ceil(nl_lower_index.x());
+    int ymax_index = Floor(nl_upper_index.y());
+    int ymin_index = ceil(nl_lower_index.y());
+    int zmax_index = Floor(nl_upper_index.z());
+    int zmin_index = ceil(nl_lower_index.z());
+    */
+    int xmax_index = ceil(nl_upper_index.x());
+    int xmin_index = floor(nl_lower_index.x());
+    int ymax_index = ceil(nl_upper_index.y());
+    int ymin_index = floor(nl_lower_index.y());
+    int zmax_index = ceil(nl_upper_index.z());
+    int zmin_index = floor(nl_lower_index.z());
+    dlambda_nl = 0.0;
+    V_alpha=0.0;
+    for(int i=xmin_index;i<xmax_index+1;i++){
+      for(int j=ymin_index;j<ymax_index+1;j++){
+	for(int k=zmin_index;k<zmax_index+1;k++){
+	  IntVector index_ijk(i,j,k);
+	  if(patch->containsNode(index_ijk)){
+	    Point x_ijk(i,j,k);
+	    double alpha_ijk = alpha_nl(px_index,x_ijk,l_nonlocal_index)*gmat[index_ijk];
+	    V_alpha +=alpha_ijk;
+
+	    if(gmat[index_ijk]>1e-10){
+	      dlambda_nl+= alpha_ijk*gdlambda[index_ijk]/gmat[index_ijk];
+	    }
+	  }
+	}// end z-loop
+      }// end y-loop
+    }//end x-loop
+
+  }// end loop over nodes in nonlocal support
+
+  dlambda_nl = dlambda_nl/V_alpha;
+
+}
+
+
 double NonLocalDruckerPrager::alpha_nl(const Point& x, Point& s, const vector<double>& l_nl){
   if (l_nl[0]<1e-14) return 1.0;
   double pi = 3.14159265358979323;
@@ -841,7 +888,7 @@ void NonLocalDruckerPrager::computeInvariants(const Matrix3& stress, Matrix3& S,
 
 }
 
- double NonLocalDruckerPrager::YieldFunction(Matrix3& stress, const double& alpha, double&k_o,double& eta,double& eta_nl){
+ double NonLocalDruckerPrager::YieldFunction(Matrix3& stress, const double& alpha, double&k_o,double& eta,double& eta_nl, const int& hardening_type){
 
   Matrix3 S;
   double I1,J2;
@@ -850,7 +897,7 @@ void NonLocalDruckerPrager::computeInvariants(const Matrix3& stress, Matrix3& S,
 
 }
 
- double NonLocalDruckerPrager::YieldFunction(const Matrix3& stress, const double& alpha, double&k_o,const double& eta,const double& eta_nl){
+ double NonLocalDruckerPrager::YieldFunction(const Matrix3& stress, const double& alpha, double&k_o,const double& eta,const double& eta_nl, const int& hardening_type){
 
   Matrix3 S;
   double I1,J2;
@@ -859,7 +906,7 @@ void NonLocalDruckerPrager::computeInvariants(const Matrix3& stress, Matrix3& S,
 
  }
 
- double NonLocalDruckerPrager::YieldFunction(Matrix3& stress, const double& alpha, double&k_o,const double& eta,const double& eta_nl){
+ double NonLocalDruckerPrager::YieldFunction(Matrix3& stress, const double& alpha, double&k_o,const double& eta,const double& eta_nl, const int& hardening_type){
 
   Matrix3 S;
   double I1,J2;
