@@ -1,0 +1,89 @@
+#!/bin/bash
+
+TEST=$1
+MALLOC_STATS=$2
+COMPARISON_MALLOC_STATS=$3
+TMPDIR=$4
+error=1
+
+#__________________________________
+# define the stat command
+if [ $OS = "Linux" ]; then
+  STAT_CMD="stat --format %s"
+fi
+if [ $OS = "Darwin" ]; then 
+  STAT_CMD="stat -f %z"
+fi
+
+#__________________________________
+# bulletproofing
+if [ ! -f $MALLOC_STATS ]  && [ ! -f $MALLOC_STATS.0 ]; then
+  echo "The malloc stats file(s) is missing.  Can't perform memory leak test."
+  echo "Verify that you've configured with"
+  echo "  --enable-sci-malloc"
+  exit 5
+fi
+
+#__________________________________
+# The malloc stats data are stored in separate files for each process id. Merge them
+ls $MALLOC_STATS.* >/dev/null 2>&1
+retval=$?
+
+if [ $retval = "0" ]; then
+  cat $MALLOC_STATS.* > $MALLOC_STATS
+  echo "Merging malloc stats files from multiple processes."
+  if [ `$STAT_CMD $MALLOC_STATS` = "0" ]; then
+    echo "No malloc_stats information found.  Can't do memory leak test."
+    exit 5
+  fi
+fi
+
+#__________________________________
+echo "Checking $TEST for scinew memory leaks"
+grep '\.' $MALLOC_STATS > $TMPDIR/scinew_malloc_stats
+retval=$?
+
+if [ $retval = "0" ]; then
+  echo "***Memory leaks found***"
+  echo "Here are the object allocated with scinew but not deleted."
+  echo
+  cat $TMPDIR/scinew_malloc_stats
+  exit 1
+fi
+
+
+echo "Memory leak test passed -- no scinew memory leaks found"
+if [ ! -f $COMPARISON_MALLOC_STATS ]; then
+  echo "Storing $MALLOC_STATS in $COMPARISON_MALLOC_STATS"
+  cp $MALLOC_STATS $COMPARISON_MALLOC_STATS
+  exit -1
+fi
+
+#__________________________________
+echo "Performing highwater memory usage check"
+
+meminfo=`highwater_percent.pl $MALLOC_STATS $COMPARISON_MALLOC_STATS`
+percent=`echo $meminfo | cut -d " " -f 1`
+abs=`echo $meminfo | cut -d " " -f 2`
+
+if [ $percent -gt "10" -a $abs -gt "1000000" ]; then
+  echo "***Highwater memory usage test failed"
+  echo " -- memory usage increased by %$percent ($abs bytes)" > $TMPDIR/highwater_shortmessage.txt
+  exit 2
+
+elif [ $percent -gt "0" ]; then
+  echo " -- memory usage increased by %$percent ($abs bytes)" > $TMPDIR/highwater_shortmessage.txt
+  exit 0
+elif [ $percent -lt "0" ]; then
+  let percent_improvement=-$percent;
+  echo " -- memory usage improved by %$percent_improvement ($abs bytes)" > $TMPDIR/highwater_shortmessage.txt
+  exit 0
+else
+  echo "" > $TMPDIR/highwater_shortmessage.txt
+  echo "Highwater memory usage check passed!"
+  exit 0
+
+fi
+
+
+exit $error

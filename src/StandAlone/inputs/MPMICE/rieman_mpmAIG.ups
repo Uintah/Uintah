@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+
+
+
+<Uintah_specification> 
+<!--Please use a consistent set of units, (mks, cgs,...)-->
+
+   <Meta>
+       <title>Advection test</title>
+   </Meta>    
+
+   <SimulationComponent type="mpmice" />
+    <!--____________________________________________________________________-->
+    <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
+    <!--____________________________________________________________________-->
+   <Time>
+       <maxTime>            0.001      </maxTime>
+       <initTime>           0.0         </initTime>
+       <delt_min>           0.0         </delt_min>
+       <delt_max>           1.0         </delt_max>
+       <delt_init>          1.0e-9      </delt_init>
+       <timestep_multiplier>1.0         </timestep_multiplier>
+   </Time>
+    <!--____________________________________________________________________-->
+    <!--      G  R  I  D     V  A  R  I  A  B  L  E  S                      -->
+    <!--____________________________________________________________________-->
+    <Grid>
+    <BoundaryConditions>
+      <Face side = "x-">
+        <BCType id = "all"   label = "Symmetric" var = "symmetry">
+        </BCType>
+      </Face>
+      <Face side = "x+">
+        <BCType id = "all"   label = "Symmetric" var = "symmetry">
+        </BCType>
+      </Face>
+      <Face side = "y-">
+        <BCType id = "all"   label = "Symmetric" var = "symmetry">
+        </BCType>
+      </Face>                  
+      <Face side = "y+">
+        <BCType id = "all"   label = "Symmetric" var = "symmetry">
+        </BCType>
+      </Face>
+      <Face side = "z-">
+        <BCType id = "all"   label = "Symmetric" var = "symmetry">
+        </BCType>
+      </Face>
+      <Face side = "z+">
+        <BCType id = "all"   label = "Symmetric" var = "symmetry">
+        </BCType>
+      </Face>
+    </BoundaryConditions>
+       <Level>
+           <Box label="1">
+              <lower>      [0.0,0,0]    </lower>
+              <upper>      [2.0,1,1]    </upper>
+              <extraCells> [1,1,1]         </extraCells>
+              <patches>    [1,1,1]    </patches>
+           </Box>
+           <spacing>[0.02,1,1] </spacing>
+       </Level>
+    </Grid>    
+    <!--____________________________________________________________________-->
+    <!--      O  U  P  U  T     V  A  R  I  A  B  L  E  S                   -->
+    <!--____________________________________________________________________-->
+   <DataArchiver>
+      <filebase>riemanMPM.uda</filebase>
+      <outputInterval>.000001</outputInterval>
+      <save label = "vel_CC"/>
+      <save label = "press_CC"/>
+      <save label = "delP_Dilatate"/>
+      <save label = "rho_CC"/>
+      <save label = "vol_frac_CC"/>
+      <save label = "temp_CC"/>
+      <save label = "int_eng_L_CC"/>
+      <save label = "mom_source_CC"/>
+      <save label = "g.mass"/>
+      <save label = "g.velocity"/>
+      <save label = "g.acceleration"/>
+      <save label = "g.internalforce"/>
+      <save label = "gradPAccNC"/>
+      <save label = "p.x"/>
+      <save label = "p.volume"/>
+      <save label = "p.velocity"/>
+      <save label = "p.temperature"/>
+      <save label = "p.stress+"/>
+      <save label = "p.pressure"/>
+   </DataArchiver>
+
+    <!--____________________________________________________________________-->
+    <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
+    <!--____________________________________________________________________-->
+    <CFD>
+         <cfl>0.5</cfl>
+       <ICE>
+        <advection type = "FirstOrder" />
+      </ICE>        
+    </CFD>
+    <MPM>
+        <time_integrator>explicit</time_integrator>
+    </MPM>
+    <!--____________________________________________________________________-->
+    <!--     P  H  Y  S  I  C  A  L     C  O  N  S  T  A  N  T  S           -->
+    <!--____________________________________________________________________-->   
+    <PhysicalConstants>
+       <gravity>            [0,0,0]   </gravity>
+       <reference_pressure> 0.0  </reference_pressure>
+    </PhysicalConstants>
+
+    <!--____________________________________________________________________-->
+    <!--     Material Properties and Initial Conditions                     -->
+    <!--____________________________________________________________________-->
+    <MaterialProperties>
+       <ICE>
+         <material>
+           <EOS type = "ideal_gas">                     </EOS>
+           <dynamic_viscosity>      0.0                 </dynamic_viscosity>
+           <thermal_conductivity>   0.0                 </thermal_conductivity>
+           <specific_heat>          717.5               </specific_heat>
+           <gamma>                  1.4                  </gamma>
+           <geom_object>
+                <box label="rightpartition">
+                    <min>[ 2.9, -1.0, -1.0 ]</min>
+                    <max>[ 3.0, 2.0,   2.0 ]</max>
+                </box>
+                <res>           [4,1,1]                 </res>
+               <velocity>       [0.0,0.0,0.0]           </velocity>
+               <temperature>    300.0                   </temperature>
+               <density>        .11768292682926831000   </density>
+               <pressure>       10132.50                </pressure>
+           </geom_object>
+         </material>
+      </ICE>       
+       <MPM>
+         <material>
+              <density>   1.1768292682926831   </density>
+              <constitutive_model type="ideal_gas">
+                  <specific_heat>  716.0        </specific_heat>
+              </constitutive_model>
+              <thermal_conductivity>    0.0           </thermal_conductivity>
+              <specific_heat>         716.0           </specific_heat>
+              <geom_object>
+               <box label="leftpartition">
+                    <min>           [-1.0, -1.0, -1.0 ]   </min>
+                    <max>           [ 1.0,  2.0, 2.0 ]   </max>
+                </box> 
+                <res>               [4,1,1]         </res>
+                <velocity>          [0.0,0.0,0.0]   </velocity>
+                <temperature>       300             </temperature>
+              </geom_object>
+         </material>
+         <material>
+              <density>   1.05914634146         </density>
+              <constitutive_model type="ideal_gas">
+                  <specific_heat>  716.0        </specific_heat>
+              </constitutive_model>
+              <thermal_conductivity>    0.0           </thermal_conductivity>
+              <specific_heat>         716.0           </specific_heat>
+              <geom_object>
+               <box label="leftpartition">
+                    <min>           [ 1.0, -1.0, -1.0 ]   </min>
+                    <max>           [ 2.0,  2.0, 2.0 ]   </max>
+                </box> 
+                <res>               [4,1,1]         </res>
+                <velocity>          [0.0,0.0,0.0]   </velocity>
+                <temperature>       300             </temperature>
+              </geom_object>
+         </material>
+
+         <contact>
+            <type>null</type>
+            <materials>              [0]         </materials>
+         </contact>
+      </MPM>
+        <exchange_properties> 
+         <exchange_coefficients>
+            <momentum>          [1e15,1e15,1e15]       </momentum>
+            <heat>              [1e15,1e15,1e15]       </heat>
+        </exchange_coefficients>
+        </exchange_properties> 
+    </MaterialProperties>  
+
+                     
+</Uintah_specification>

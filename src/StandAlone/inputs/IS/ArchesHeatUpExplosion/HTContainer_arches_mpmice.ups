@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- @version: -->
+<Uintah_specification>
+
+  <Meta>
+    <title>none</title>
+  </Meta>
+  <!--____________________________________________________________________-->
+  <!--         C O M P O N E N T   S W I T C H E R                        -->
+  <!--____________________________________________________________________-->
+  <SimulationComponent type="switcher" >
+
+        <subcomponent>
+            <SimulationComponent type="mpmice" />
+            <input_file> inputs/IS/ArchesHeatUpExplosion/JP8_fire.ups</input_file>
+            
+            <SwitchCriteria type = "Timestep">
+               <timestep> 1 </timestep>
+            </SwitchCriteria>
+        </subcomponent>
+
+        <subcomponent>
+            <SimulationComponent type="impm" />
+            <input_file> inputs/IS/ArchesHeatUpExplosion/HTContainer_heatup.ups</input_file>
+            
+            <SwitchCriteria type = "steadyBurn">
+               <reactant_material>    1    </reactant_material>
+               <BoundaryParticles>    3    </BoundaryParticles>
+               <ThresholdTemperature> 515  </ThresholdTemperature>
+            </SwitchCriteria>
+            
+            <!--
+            <SwitchCriteria type = "simpleBurn">
+               <reactant_material>    1    </reactant_material>
+               <ThresholdTemperature> 450  </ThresholdTemperature>
+            </SwitchCriteria>
+            -->
+            
+            <init var = "p.acceleration"     matls = "mpm_matls" levels="-1"/>
+            <init var = "p.externalHeatFlux" matls = "mpm_matls" levels="-1"/>
+            <init var = "g.temperature"      matls = "mpm_matls" levels="-1"/>
+        </subcomponent>
+       
+        <subcomponent>
+            <SimulationComponent type="mpmice" />
+            <input_file> inputs/IS/ArchesHeatUpExplosion/Explode_IS.ups</input_file>
+        </subcomponent>
+
+        <carry_over var="press_CC" matls="0" />
+        <carry_over var="temp_CC" />
+        <carry_over var="rho_CC" />
+        <carry_over var="sp_vol_CC" />
+        <carry_over var="vel_CC" />
+        <carry_over var="NC_CCweight" />
+        <carry_over var="heatRate_CC" matls="0,1" level="finest" />
+        <carry_over var="vol_frac_CC"/>     <!-- needed by steady burn-->
+
+  </SimulationComponent>
+   
+  <!--____________________________________________________________________-->
+  <!--      LOAD BALANCER (only turn this on during the explosion phase)  -->
+  <!--____________________________________________________________________-->   
+  <LoadBalancer type="DLB">
+    <dynamicAlgorithm> patchFactorParticles</dynamicAlgorithm>
+    <doSpaceCurve>         true            </doSpaceCurve>
+    <timestepInterval>     100             </timestepInterval>
+  </LoadBalancer> 
+   
+  <!--____________________________________________________________________-->
+  <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
+  <!--____________________________________________________________________-->
+  <Time>
+    <maxTime>          10000.0       </maxTime>
+    <initTime>           0.0         </initTime>
+    <delt_min>           .01         </delt_min>
+    <delt_max>           1.0         </delt_max>
+    <delt_init>          0.01        </delt_init>
+    <timestep_multiplier>1.0         </timestep_multiplier>
+    <max_Timesteps>         200         </max_Timesteps> 
+  </Time>
+
+  <!--____________________________________________________________________-->
+  <!--      G  R  I  D     V  A  R  I  A  B  L  E  S                      -->
+  <!--____________________________________________________________________-->
+  <include href="Grid.xml"/>
+
+  <!--____________________________________________________________________-->
+  <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
+  <!--____________________________________________________________________-->
+  <DataArchiver>  
+    <filebase>HTContainer_arches_mpmice.uda</filebase>
+    <outputInterval> 0.0 </outputInterval> <!-- (Explicitly) don't save any data... -->
+  </DataArchiver>
+
+  <MPM>
+    <time_integrator>               implicit </time_integrator>
+    <dynamic>                       true     </dynamic>
+    <solver>                        petsc       </solver>
+    <DoMechanics>                   false    </DoMechanics>
+    <convergence_criteria_disp>     1.e-5    </convergence_criteria_disp>
+    <convergence_criteria_energy>   4.e-5    </convergence_criteria_energy>
+    <iters_before_timestep_restart> 12       </iters_before_timestep_restart>
+    <num_iters_to_decrease_delT>    9        </num_iters_to_decrease_delT>
+    <num_iters_to_increase_delT>    5        </num_iters_to_increase_delT>
+    <delT_decrease_factor>          0.4      </delT_decrease_factor>
+    <delT_increase_factor>          2.0      </delT_increase_factor>
+    <do_grid_reset>                 true     </do_grid_reset>
+    <DoImplicitHeatConduction>      true     </DoImplicitHeatConduction>
+    <DoTransientImplicitHeatConduction>true</DoTransientImplicitHeatConduction>
+    <temperature_solve>             false    </temperature_solve>
+    <use_load_curves>               true     </use_load_curves>
+    <DoThermalExpansion>            false    </DoThermalExpansion>
+    <testForNegTemps_mpm>           false    </testForNegTemps_mpm>
+  </MPM>
+  <!--____________________________________________________________________-->
+  <!--     A M R                                                          -->
+  <!--____________________________________________________________________--> 
+  <doAMR>true</doAMR>
+  <AMR>
+    <ICE>
+      <do_Refluxing>        false </do_Refluxing>
+      <orderOfInterpolation>1     </orderOfInterpolation>
+
+      <!--<Refinement_Criteria_Thresholds>
+      </Refinement_Criteria_Thresholds> -->
+    </ICE>
+    <MPM>
+      <min_grid_level>-1</min_grid_level>
+      <max_grid_level>-1</max_grid_level>
+    </MPM>
+    <useLockStep>  true </useLockStep>
+    
+    <Regridder type="BNR">
+      <adaptive>false</adaptive>
+      <min_patch_size> [[8,8,8]] </min_patch_size>
+      <patch_ratio_to_target>1</patch_ratio_to_target>
+      <max_levels>                  3       </max_levels>
+      <cell_refinement_ratio>    [[4,4,4]]  </cell_refinement_ratio>
+      <cell_stability_dilation>   [1,1,1]   </cell_stability_dilation>
+      <cell_regrid_dilation>      [1,1,1]   </cell_regrid_dilation>
+      <min_boundary_cells>        [1,1,1]   </min_boundary_cells>
+      <max_timestep_interval>    100 </max_timestep_interval>
+    </Regridder>
+    
+  </AMR>
+
+
+  <!--____________________________________________________________________-->
+  <!--     P  H  Y  S  I  C  A  L     C  O  N  S  T  A  N  T  S           -->
+  <!--____________________________________________________________________-->   
+  <PhysicalConstants>
+    <gravity>            [0,0.0,0]   </gravity>
+    <reference_pressure> 101325.0  </reference_pressure>
+  </PhysicalConstants>
+
+  <!--____________________________________________________________________-->
+  <!--    MATERIAL PROPERTIES INITIAL CONDITIONS                          -->
+  <!--____________________________________________________________________-->
+  <!-- Warning: you must have a link of these xml files in the sus directory-->
+  <include href="materialProperties.xml"/>
+  
+  <include href="physicalBC.xml"/>
+
+</Uintah_specification>

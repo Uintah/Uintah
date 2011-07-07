@@ -1,0 +1,6 @@
+This directory contains all of the post processing scripts used during the tests.
+The post processing scripts or <postProcess_cmds> must be executable.  If not
+ you'll see command not found
+
+ERROR:analyze_results:
+The comparison utility: <your utility> doesn't exist.  Now exiting
