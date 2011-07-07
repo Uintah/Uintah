@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- Half Hard Copper -->
+<Uintah_Include>
+  <shear_modulus>45.45e9</shear_modulus>
+  <bulk_modulus>136.35e9</bulk_modulus>
+</Uintah_Include>
+

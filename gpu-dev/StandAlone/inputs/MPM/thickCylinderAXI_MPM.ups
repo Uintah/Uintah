@@ -1,0 +1,266 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- @version: -->
+<Uintah_specification>
+
+<!-- Steel Cylinder subject to internal pressurization, modeled using
+     axi-symmetry.  At the bottom of this input file are some code and
+     script snippets to help one analyze their results.
+-->
+
+   <Meta>
+       <title>Thick cylinder with internal pressure from MPM</title>
+   </Meta>    
+
+   <SimulationComponent type="mpm" />
+
+   <Time>
+       <maxTime>            0.05     </maxTime>
+       <initTime>           0.0         </initTime>
+       <delt_min>           0.0         </delt_min>
+       <delt_max>           1e-5        </delt_max>
+       <delt_init>          1.0e-9      </delt_init>
+       <timestep_multiplier>0.4         </timestep_multiplier>
+   </Time>    
+
+   <DataArchiver>
+      <filebase>thickCylinderAXI.uda</filebase>
+      <outputInterval> 1.0e-2 </outputInterval>
+      <save label = "p.x"/>
+      <save label = "p.volume"/>
+      <save label = "p.stress"/>
+      <save label = "p.velocity"/>
+      <save label = "p.loadCurveID"/>
+      <save label = "p.externalforce"/>
+      <save label = "p.deformationMeasure"/>
+      <checkpoint cycle = "2" interval = "2.0e-3"/>
+   </DataArchiver>
+
+   <MPM>
+     <interpolator>gimp</interpolator>
+     <minimum_particle_mass> 1.0e-8</minimum_particle_mass>
+     <maximum_particle_velocity> 1.0e8</maximum_particle_velocity>
+     <use_load_curves> true </use_load_curves>
+     <axisymmetric> true </axisymmetric>
+   </MPM>
+
+   <PhysicalConstants>
+      <gravity>            [0,0,0]   </gravity>
+      <reference_pressure> 101325.0  </reference_pressure>
+   </PhysicalConstants>
+
+   <MaterialProperties>
+     <MPM>
+       <material>
+         <density>7830.0</density>
+         <thermal_conductivity>38</thermal_conductivity>
+         <specific_heat>477</specific_heat>
+         <constitutive_model type="comp_neo_hook">
+           <shear_modulus>80.0e9</shear_modulus>
+           <bulk_modulus>60.0e9</bulk_modulus>
+         </constitutive_model>
+           <geom_object>
+               <difference>
+                  <cylinder label = "outer cylinder">
+                     <bottom>           [0.0,0.0,0.0]   </bottom>
+                     <top>              [0.0,0.0,.02]   </top>
+                     <radius>           1.0             </radius>
+                  </cylinder>
+                  <cylinder label = "inner cylinder">
+                     <bottom>           [0.0,0.0,0.0]   </bottom>
+                     <top>              [0.0,0.0,.02]   </top>
+                     <radius>           0.5             </radius>
+                  </cylinder>
+               </difference>
+               <res>                 [2,1,1]         </res>
+               <velocity>            [0.0,0.0,0.0]   </velocity>
+               <temperature>         300             </temperature>
+           </geom_object>
+         </material>
+         <contact>
+           <type>null</type>
+           <materials>              [0,1]         </materials>
+         </contact>
+     </MPM>
+   </MaterialProperties>
+
+   <PhysicalBC>
+     <MPM>
+       <pressure>
+         <geom_object>
+           <cylinder label = "inner cylinder">
+             <bottom>           [0.0,0.0,0.0]   </bottom>
+             <top>              [0.0,0.0,.02]   </top>
+             <radius>           0.5             </radius>
+           </cylinder>
+         </geom_object>
+         <load_curve>
+           <id>1</id>
+           <time_point>
+             <time> 0 </time>
+             <load> 0 </load>
+           </time_point>
+           <time_point>
+             <time> 3.0e-2 </time>
+             <load> 1.0e7 </load>
+             <!-- Note that because the axi-symmetric formulation assumes
+              that the circumferential extent of the wedge that is being
+              simulated is 1 radian, the load specified here must be multiplied
+              by 2*PI in creating an exact solution against which to compare-->
+           </time_point>
+           <time_point>
+             <time> 1.0e-1 </time>
+             <load> 1.0e7 </load>
+           </time_point>
+         </load_curve>
+       </pressure>
+<!--
+       <pressure>
+         <geom_object>
+           <cylinder label = "outer cylinder">
+             <bottom>           [0.0,0.0,0.0]   </bottom>
+             <top>              [0.0,0.0,.02]   </top>
+             <radius>           1.0             </radius>
+           </cylinder>
+         </geom_object>
+         <load_curve>
+           <id>2</id>
+           <time_point>
+             <time> 0 </time>
+             <load> 0 </load>
+           </time_point>
+           <time_point>
+             <time> 1.0e-5 </time>
+             <load> -0.0 </load>
+           </time_point>
+         </load_curve>
+       </pressure>
+-->
+     </MPM>
+   </PhysicalBC>
+
+   <Grid>
+     <Level>
+       <Box label = "1">
+         <lower>        [0.0,0.0, 0.0]    </lower>
+         <upper>        [1.2,0.02,0.02]    </upper>
+         <patches>      [1,1,1]     </patches>
+        <extraCells>[1, 1, 1]</extraCells>
+       </Box>
+       <spacing>   [0.02,0.02,0.02]  </spacing>
+     </Level>
+     <BoundaryConditions>
+      <Face side = "x-">
+        <BCType id = "0" label = "Symmetric" var = "symmetry"> </BCType>
+      </Face>
+      <Face side = "x+">
+        <BCType id = "0" label = "Symmetric" var = "symmetry"> </BCType>
+      </Face>
+      <Face side = "y-">
+        <BCType id = "0" label = "Symmetric" var = "symmetry"> </BCType>
+      </Face>                  
+      <Face side = "y+">
+        <BCType id = "0" label = "Symmetric" var = "symmetry"> </BCType>
+      </Face>
+      <Face side = "z-">
+        <BCType id = "0" label = "Symmetric" var = "symmetry"> </BCType>
+      </Face>                  
+      <Face side = "z+">
+        <BCType id = "0" label = "Symmetric" var = "symmetry"> </BCType>
+      </Face>
+     </BoundaryConditions>
+   </Grid>
+
+   <!-- Paste the following into jim1.cc (StandAlone/tools/puda/jim1.cc)
+        to replace the corresponding code.  (There should be enough context
+        for it to be clear.)
+
+    for(int l=0;l<grid->numLevels();l++){
+      LevelP level = grid->getLevel(l);
+      cout << "Level: " <<  endl;
+      for(Level::const_patchIterator iter = level->patchesBegin();
+          iter != level->patchesEnd(); iter++){
+        const Patch* patch = *iter;
+        int matl = clf.matl_jim;
+        //__________________________________
+        //   P A R T I C L E   V A R I A B L E
+        ParticleVariable<Point> value_pos;
+        ParticleVariable<Matrix3> value_strs;
+        da->query(value_pos, "p.x",          matl, patch, t);
+        da->query(value_strs,"p.stress",     matl, patch, t);
+        ParticleSubset* pset = value_pos.getParticleSubset();
+        if(pset->numParticles() > 0){
+          ParticleSubset::iterator iter = pset->begin();
+          for(;iter != pset->end(); iter++){
+            partfile << value_pos[*iter].x() << " " << value_strs[*iter](0,0) << " " << value_strs[*iter](1,1) << " " << value_strs[*iter](2,2) << endl;
+          }
+        }  //if
+      }  // for patches
+    }   // for levels
+
+
+        Recompile puda, and then do:
+
+        >cd thickCylinderAXI.uda
+        >../tools/puda/puda -jim1 .
+
+        This will generate partout000* files that contain the radial
+        position and and the stresses in the rr, zz and theta-theta
+        directions, respectively.  See the following section for a
+        gnuplot script to plot these data to see the quasi-static
+        solution compared to the exact solution.  (See next snippet.)
+    -->
+
+    <!-- This is a gnuplot script which can be used to view your results
+         Just copy the following into a file (e.g. inplot) and do:
+
+         >gnuplot inplot
+  
+         And you should get a graph of your computed results along with
+         the exact solution.
+
+set term X11                   
+#set term png
+#set output "out.png"
+set noclip points
+set clip one
+set noclip two
+set dummy x
+set format x "%g"
+set format y "%g"
+set nogrid
+set key
+set noarrow
+set nologscale x
+set nologscale y
+set zero 1e-40
+set offsets 0,0,0,0
+set nopolar
+set samples 5000
+set size 1,1
+set data style points
+set function style points
+set tics in
+set key bottom left
+set xtics
+set ytics
+set notime
+set title ""
+set xlabel "radius"
+a=1.0
+b=0.5
+set xrange [b:a]
+set yrange [:]
+
+pi=6.283e7
+
+set ylabel "radial stress"
+plot pi*b*b/(a*a - b*b)*(1.-a*a/(x*x)), 'thickCylinderAXI.uda/partout0005' using 1:2 w points pointtype 5 pointsize 2 linecolor "black"
+pause -1
+
+set ylabel "hoop stress"
+plot pi*(b*b)/(a*a - b*b)*(1.+(a*a)/(x*x)), 'thickCylinderAXI.uda/partout0005' using 1:4 w points pointtype 5 pointsize 2 linecolor "black"
+pause -1
+
+    -->
+
+</Uintah_specification>

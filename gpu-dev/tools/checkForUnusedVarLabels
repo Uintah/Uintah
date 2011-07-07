@@ -1,0 +1,86 @@
+#!/bin/csh
+#
+#_____________________________________________________________________.
+#  This script is used to check for unused varLabels that are 
+#  left in the code.  You input the name of the label file that you want
+#  to check and the .cc files
+#   usage;    checkForUnusedVarLabels <name of Label file> < files to check>
+#
+#  For example to check all ICELabels:
+#  checkForUnusedVarLabels ICE/ICELabel.cc ICE/ICE.cc ICE/impICE.cc ICE/ICERF.cc MPMICE/MPMICE.cc MPMICE/MPMICERF.cc MPM/SerialMPM.cc
+#
+#  To check all MPMLabels:
+#  cd <to components>
+#  set files = ( MPM/SerialMPM.cc MPMICE/MPMICE.cc MPMArches/MPMArches.cc `find . -name "*.cc" | grep Constitutive` )
+#  SCIRun/src/Packages/Uintah/tools/checkForUnusedVarLabels MPM/MPMLabel.cc $files
+#
+#
+#  NOTE: This script need gnu grep to work.  Simply
+#  setenv GNUGREP <path to gnu grep>
+#_____________________________________________________________________.
+if ( $#argv == 0 ) then 
+  echo "checkForUnusedVarLabels <name of Label file> < files to check> "
+endif
+
+
+echo $argv
+set labelFile = $argv[1]
+set files     = ""
+foreach file ( $argv[*]:q )
+ if ( $file != $labelFile) then
+ set files = ( $files $file)
+ endif
+end
+
+#__________________________________
+# bullet proofing
+echo $files $labelFile
+if ( ! -e $labelFile ) then
+  echo "$labelFile doesn't exist"
+  exit(1)
+endif
+foreach file ( $files[*]:q )
+  if ( ! -e $file ) then
+    echo "$file doesn't exist"
+    exit(1)
+  endif
+end
+
+
+#______________________________________________________________________
+# find all the varLabels
+#set varLabels = (`grep "create.*" $labelFile| cut -d\" -f2 | grep -v destroy` )
+set varLabels = (`grep "Label.*=" $labelFile| cut -d= -f1`)
+echo "I'm examing the following variables \n "
+set suspectLabel = ""
+#__________________________________
+# Loop over all varLabels
+# - count up the number of times a varLabel is used
+# - If (number of hits is less than 1 ) put that
+#   varLabel on the suspect list
+# - Keep searching the files
+foreach XXX ( $varLabels[*]:q )
+  echo " Now searching for all uses of $XXX"
+  @ numHits = 0
+  
+  foreach file ( $files[*]:q ) 
+    echo "in file $file"
+    @ numHits += `grep -w -c $XXX $file`
+  end
+  
+  if ( $numHits < 1 ) then
+   echo $XXX "------------------ wasn't used"
+   set suspectLabel = ($suspectLabel $XXX)
+  endif
+end
+
+#__________________________________
+# spew out the suspects
+echo ""
+echo "__________________________________"
+echo "Here are the suspect labels"
+foreach XXX ($suspectLabel[*]:q )
+ echo $XXX
+end
+
+exit
