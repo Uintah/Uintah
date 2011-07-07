@@ -76,20 +76,18 @@ inline Point CreatePoint(unsigned int n, vector<int>& res, double dx, double dy,
 
 //-----------------------------------------------------------------------------------------
 /*
-pfs2 is used in conjunction with particle geometries derived by 
-thresholding image data. (pfs=Particle File Splitter)  
-Given an raw file pfs2 reads an input file which contains an "image"
-geometry piece description, and it also reads in the data in the raw file
-and the intensity range associated with that
-geometry.  pfs2 then creates a separate file for each patch, and places
-in that file those points which lie within that patch.  These individual 
-files may be ASCII or binary.  All of this is 
-done to prevent numerous procs from trying to access the same file, which is
-hard on file systems.
+pfs2 is used in conjunction with particle geometries derived by thresholding image
+data. (pfs=Particle File Splitter) Given an raw file pfs2 reads an input file which contains
+an "image" geometry piece description, and it also reads in the data in the raw file and the
+intensity range associated with that geometry.  pfs2 then creates a separate file for each patch,
+and places in that file those points which lie within that patch.  These individual files may
+be ASCII or binary.  All of this is done to prevent numerous procs from trying to access the
+same file, which is hard on file systems.
 
-Can create a cylinder out of the image data given the coordinates of the
-bottom and top, and the radius of the cylinder. The cylinder must be inside
-the image data. Note that the bounding box is not changed.
+Can create a cylinder out of the image data given the coordinates of the bottom and top, and
+the radius of the cylinder. The cylinder must be inside the image data. Note that the bounding
+box is not changed.
+
 */
 // function main : main entry point of application
 //
@@ -110,43 +108,47 @@ int main(int argc, char *argv[])
     double xb = 0.0, yb = 0.0, zb = 0.0; //coordinates of the bottom
     double xt = 1.0, yt = 1.0, zt = 1.0; //coordinates of the top
     double radius = 1.0;                 //radius of the cylinder
-
+    
+    //__________________________________
     // parse the command arguments
     for (int i=1; i<argc; i++){
-        string s=argv[i];
-        if (s == "-b" || s == "-B") {
-          binmode = true;
-        } else if (s == "-cyl") {
-            do_cylinder = true;
-            xb = atof(argv[++i]);
-            yb = atof(argv[++i]);
-            zb = atof(argv[++i]);
-            xt = atof(argv[++i]);
-            yt = atof(argv[++i]);
-            zt = atof(argv[++i]);
-            radius = atof(argv[++i]);
-        }
+      string s=argv[i];
+      if (s == "-b" || s == "-B") {
+        binmode = true;
+      } else if (s == "-cyl") {
+        do_cylinder = true;        
+        xb = atof(argv[++i]);      
+        yb = atof(argv[++i]);      
+        zb = atof(argv[++i]);      
+        xt = atof(argv[++i]);      
+        yt = atof(argv[++i]);      
+        zt = atof(argv[++i]);      
+        radius = atof(argv[++i]);  
+      }
     }
     
     infile = argv[argc-1];
 
-    if( argc < 2 || argc > 11 ) usage( argv[0] );
-
+    if( argc < 2 || argc > 11 ){ 
+      usage( argv[0] );
+    }
+    
     if (do_cylinder) {
-        try {
-            Point bottom(xb,yb,zb);
-            Point top(xt,yt,zt);
-            cylinder = scinew CylinderGeometryPiece(top, bottom, radius);
-            fprintf(stderr, "Cylinder height, volume: %g, %g\n", cylinder->height(), cylinder->volume());
-        } catch (Exception& e) {
-            cerr << "Caught exception: " << e.message() << endl;
-            abort();
-        } catch(...){
-            cerr << "Caught unknown exception\n";
-            abort();
-        }
+      try {                                                                                                
+        Point bottom(xb,yb,zb);                                                                          
+        Point top(xt,yt,zt);                                                                             
+        cylinder = scinew CylinderGeometryPiece(top, bottom, radius);                                    
+        fprintf(stderr, "Cylinder height, volume: %g, %g\n", cylinder->height(), cylinder->volume());    
+      } catch (Exception& e) {                                                                             
+        cerr << "Caught exception: " << e.message() << endl;                                             
+        abort();                                                                                         
+      } catch(...){                                                                                        
+        cerr << "Caught unknown exception\n";                                                            
+        abort();                                                                                         
+      }                                                                                                    
     }
 
+    //__________________________________
     // Get the problem specification
     ProblemSpecP ups = ProblemSpecReader().readInputFile( infile );
 
@@ -170,19 +172,25 @@ int main(int argc, char *argv[])
 
       fprintf(stderr, "Voxel size : %g, %g, %g\n", DX.x(), DX.y(), DX.z());      
 
+      // bulletproofing
       // make sure the grid level is one that we can handle
       IntVector low, high;
       level->findCellIndexRange(low, high);
       IntVector diff = high-low;
       long cells = diff.x()*diff.y()*diff.z();
-      if(cells != level->totalCells())
+      
+      if(cells != level->totalCells()){
         throw ProblemSetupException("pfs can only handle square grids", __FILE__, __LINE__);
-
+      }
+      
+      
       // Parse the geometry from the UPS
       ProblemSpecP mp = ups->findBlockWithOutAttribute("MaterialProperties");
       ProblemSpecP mpm = mp->findBlock("MPM");
+      
       for (ProblemSpecP child = mpm->findBlock("material"); child != 0;
                         child = child->findNextBlock("material")) {
+      
         for (ProblemSpecP geom_obj_ps = child->findBlock("geom_object");
           geom_obj_ps != 0;
           geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
@@ -211,21 +219,23 @@ int main(int argc, char *argv[])
                            child = child->findNextBlock()){
             std::string go_type = child->getNodeName();
 
-          // get the image data
-          if (go_type == "image") {
-              child->require("name", imgname);
-              cout << "Image name : " << imgname << endl;
-              child->require("res", res);
-              cout << "Resolution : " << res[0] << ", " << res[1] << ", " << res[2] << endl;
-              child->require("threshold", L);
-              cout << "Min threshold : " << L[0] << endl;
-              cout << "Max threshold : " << L[1] << endl;
-              ncheck++;
-          }
+            // get the image data
+            if (go_type == "image") {
+                child->require("name", imgname);
+                child->require("res", res);
+                child->require("threshold", L);
+                
+                cout << "Image name : " << imgname << endl;
+                cout << "Resolution : " << res[0] << ", " << res[1] << ", " << res[2] << endl;
+                cout << "Min threshold : " << L[0] << endl;
+                cout << "Max threshold : " << L[1] << endl;
+                ncheck++;
+            }
             
             // Read the output file data
             if (go_type == "file"){
               child->require("name",f_name);
+              
               // count number of vars, and their sizes
               for(ProblemSpecP varblock = child->findBlock("var");
                   varblock;varblock=varblock->findNextBlock("var")) {
@@ -250,16 +260,19 @@ int main(int argc, char *argv[])
             fprintf(stderr, "  ...Skipping\n");
             continue;
           }
-
+          
+          //__________________________________
           // read the image data
           unsigned int nsize = res[0]*res[1]*res[2];
           cout << "Reading " << nsize << " bytes\n";
           byte* pimg = scinew byte[nsize];
+          
           if (ReadImage(imgname.c_str(), nsize, pimg) == false) {
             cout << "FATAL ERROR : Failed reading image data" << endl;
             exit(0);
           }
           cout << "Done reading " << nsize << " bytes\n";
+
 
           // these points define the extremas of the grid
           Point minP(1.e30,1.e30,1.e30),maxP(-1.e30,-1.e30,-1.e30);
@@ -269,8 +282,8 @@ int main(int argc, char *argv[])
           // a lot of memory. To reduce memory we don't store the
           // actual points anymore but an index that can be used
           // to recreate the points
+          
           int npatches = level->numPatches();
-          //vector< vector<Point> > points(npatches);
           vector< vector<int> > points(npatches);
           vector<int> sizes(npatches);
 
@@ -280,13 +293,17 @@ int main(int argc, char *argv[])
           byte* pb = pimg;
 
           // first determine the nr of points for each patch
-          for (i=0; i<npatches; i++) sizes[i] = 0;
-
+          for (i=0; i<npatches; i++){
+            sizes[i] = 0;
+          }
+          
           const Patch* currentpatch;
           n = 0;
+          
           for (k=0; k<res[2]; k++) {
             for (j=0; j<res[1]; j++) {
               for (i=0; i<res[0]; i++, pb++, n++) {
+              
                 if ((*pb >= L[0]) && (*pb <= L[1])) {
                   pt = CreatePoint(n, res, dx, dy, dz);
                   currentpatch = level->selectPatchForCellIndex(level->getCellIndex(pt));
@@ -349,29 +366,32 @@ int main(int argc, char *argv[])
               cout << "FATAL ERROR : Failed opening points file" << endl;
               exit(0);
             }
+            
             double x[6];
             x[0] = minP.x(), x[1] = minP.y(), x[2] = minP.z();
             x[3] = maxP.x(), x[4] = maxP.y(), x[5] = maxP.z();
+            
             if(binmode) {
               fwrite(x, sizeof(double),6,dest);
             } else {
               fprintf(dest, "%g %g %g %g %g %g\n", x[0],x[1],x[2],x[3],x[4],x[5]);
             }
+            
             for (int I = 0; I < sizes[pid]; I++) {
-                  pt = CreatePoint(points[pid][I], res, dx, dy, dz);
-                  x[0] = pt.x();
-                  x[1] = pt.y();
-                  x[2] = pt.z();
-                  
-                  //points outside the cylinder are ignored.
-                  if (do_cylinder && !cylinder->inside(pt)) continue;
+              pt = CreatePoint(points[pid][I], res, dx, dy, dz);
+              x[0] = pt.x();
+              x[1] = pt.y();
+              x[2] = pt.z();
 
-                  // FIXME: should have way of specifying endiness
-                  if(binmode) {
-                    fwrite(x, sizeof(double), 3, dest);
-                  } else {
-                    fprintf(dest, "%g %g %g\n", x[0], x[1], x[2]);
-                  }
+              //points outside the cylinder are ignored.
+              if (do_cylinder && !cylinder->inside(pt)) continue;
+
+              // FIXME: should have way of specifying endiness
+              if(binmode) {
+                fwrite(x, sizeof(double), 3, dest);
+              } else {
+                fprintf(dest, "%g %g %g\n", x[0], x[1], x[2]);
+              }
             }
             fclose(dest);
           } // loop over patches
@@ -436,8 +456,10 @@ void usage( char *prog_name )
 bool ReadImage(const char* szfile, unsigned int nsize, byte* pb)
 {
   FILE* fp = fopen(szfile, "rb");
-  if (fp == 0) return false;
-
+  if (fp == 0){ 
+    return false;
+  }
+  
   unsigned int nread = fread(pb, sizeof(byte), nsize, fp);
   fclose(fp);
 
