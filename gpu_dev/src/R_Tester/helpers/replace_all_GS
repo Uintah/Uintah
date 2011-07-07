@@ -1,0 +1,127 @@
+#!/bin/csh -f
+#______________________________________________________________________
+# This script is a gui for replacing the gold standards
+
+#__________________________________
+# bulletproofing
+@ numFiles = `find . -maxdepth 1 -name "*-short.log" | wc -w`
+if ( $numFiles == 0 ) then
+  echo "ERROR:Replace_all_GS: couldn't find any failed regression tests. Now exiting"
+  exit
+endif
+
+if (! -e goldStandard ) then
+  echo "ERROR:Replace_all_GS: I couldn't find the goldStandard directory. Now exiting"
+  exit
+endif
+
+if (! -e TestScripts ) then
+  echo "ERROR:Replace_all_GS: I couldn't find the TestScripts directory. Now exiting"
+  exit
+endif
+
+#__________________________________
+# set defaults
+set tmpFile = .tmpReplaceGS
+set failedTestList = ""
+@ n = 1
+/bin/rm -f $tmpFile
+
+#__________________________________
+# parse the *-short.log files for tests that have failed
+# create a list of failed tests
+# create a tmp file with a list of failed tests and component
+
+foreach X (*-short.log)
+  set component = `echo $X | cut -f1 -d "-"`
+  set these = (`grep failed $X | cut -f2 -d\: | uniq`)
+
+  foreach test ( $these[*]:q )
+    set label = "$component--$test"
+    set failedTestList = ($failedTestList $n "$label" off)
+    echo "$n $component $test" >> $tmpFile
+    @ n = $n + 1
+  end
+end
+
+label begin
+#__________________________________
+# open dialog box for user to select which tests to replace
+set choices = (`/usr/bin/dialog --stdout --separate-output --checklist "The following regression tests have failed.  Please select the tests which you'd like to replace" 20 50 40 $failedTestList`)
+if( $status != 0 ) then
+  echo "cancel selected"
+  exit
+endif
+
+#__________________________________
+# which part of the gold standards to replace
+set opts = (`/usr/bin/dialog --stdout --separate-output --checklist "Select what you want to replace" 20 50 40 "uda" "" off, "checkpoints" "" off, "memory" "" off, "performance" "" off, "inputFile" "" off, "all" "" on`)
+
+if( $status != 0 ) then
+  echo "cancel selected"
+  exit
+endif
+
+set tmp = ""
+foreach X ( $opts[*]:q )
+  set tmp = ( $tmp `echo $X|sed s/^/\ --/` )
+end
+set opts = ($tmp)
+
+#__________________________________
+# input the log message
+# message must say something
+set logMessage = ""
+while ( `echo $logMessage |wc -w` == 0 )
+  set logMessage = `dialog --stdout --inputbox "Mandatory: Enter goldStandard log message:" 8 80`
+  if( $status != 0 ) then
+    echo "cancel selected"
+    exit
+  endif
+end
+
+#__________________________________
+# Verify the user inputs
+set message = "\n "
+foreach indx ($choices[*]:q) 
+
+  #parse the temp file for the component and test
+  set comp = `awk -v n=$indx -- '{if ($1 == n) print $2}' $tmpFile`
+  set test = `awk -v n=$indx -- '{if ($1 == n) print $3}' $tmpFile`
+  
+  if ( $#opts > 0 )  then
+    echo "Replacing GS for $comp $test"
+    set message = ($message $comp "----" $test "\n")
+  endif
+end 
+
+dialog --stdout --yesno "Replace the following tests:\n $message \n Log message: $logMessage \n Replacing: $opts\n\n Is this correct?" 15 61
+
+if ($status != 0) then
+  goto begin
+endif
+clear
+
+#__________________________________
+#  Replace the Gold Standards 
+set GS = `readlink goldStandard`
+set TS = `readlink TestScripts`
+set here = `pwd`
+
+foreach indx ($choices[*]:q)  
+
+  #parse the temp file for the component and test
+  set comp = `awk -v n=$indx -- '{if ($1 == n) print $2}' $tmpFile`
+  set test = `awk -v n=$indx -- '{if ($1 == n) print $3}' $tmpFile`
+  
+  if ( $#opts > 0 )  then
+    echo "Replacing GS for $comp : $test  $opts"
+    set cmd = "$TS/helpers/replace_gold_standard $opts $GS/$comp $here/$comp-results  $test $logMessage"
+    $cmd
+  endif
+end 
+
+
+# cleanup
+#/bin/rm $tmpFile
+

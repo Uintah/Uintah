@@ -1,0 +1,14 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<Uintah_Include>
+  <EOS type="JWLC">
+    <!-- ANFO parameters -->
+    <!-- From Souer's paper on JWL++ -->
+    <A>2.9867e11</A>
+    <B>4.11706e9</B>
+    <C>7.206147e8</C>
+    <R1>4.95</R1>
+    <R2>1.15</R2>
+    <om>0.35</om>
+    <rho0>1160.0</rho0>
+  </EOS>
+</Uintah_Include>
