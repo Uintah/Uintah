@@ -1,9 +1,0 @@
-#
-# Common expressions that are always loaded with an uda.
-# There is one line for each expression, with the syntax: <name> <type> <definition>
-# these three pieces of information map directly to the visit expression editor.
-# Type can be: scalar, vector, tensor, symtensor, array, curve.
-#
-
-# for example:
-# rho_sqrt/0 scalar sqrt(<rho_CC/0>)
