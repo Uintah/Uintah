@@ -427,8 +427,8 @@
             <n                          spec="OPTIONAL DOUBLE" /> <!-- [O_2]^n --> 
             <fuel_mass_fraction         spec="OPTIONAL DOUBLE" /> <!-- Mass fraction of hydrocarbon in the fuel stream --> 
             <oxidizer_O2_mass_fraction  spec="OPTIONAL DOUBLE" /> <!-- Mass fraction of O2 in the oxidizer stream --> 
-            <mix_frac_label             spec="OPTIONAL STRING" /> <!-- Mixture fraction label --> 
-            <hc_frac_label              spec="OPTIONAL STRING" /> <!-- Hydrocarbon mass fraction label --> 
+            <cstar_fraction_label       spec="OPTIONAL STRING" /> <!-- C*H mass fraction label --> 
+            <equil_fraction_label       spec="OPTIONAL STRING" /> <!-- CH mass fraction label (equilibrium calc) --> 
             <mw_label                   spec="OPTIONAL STRING" /> <!-- mixture molecular weight label --> 
             <temperature_label          spec="OPTIONAL STRING" /> <!-- temperature label, default = "temperature" --> 
             <density_label              spec="OPTIONAL STRING" /> <!-- density label, default = "density" --> 
