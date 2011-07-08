@@ -67,10 +67,10 @@ WestbrookDryer::problemSetup(const ProblemSpecP& inputdb)
   db->require("fuel_mass_fraction", d_MF_HC_f1);           // Mass fraction of C_xH_y when f=1
   db->require("oxidizer_O2_mass_fraction", d_MF_O2_f0);    // Mass fraction of O2 when f=0
   // labels: 
-  db->require("mix_frac_label", d_mf_label);     // The name of the mixture fraction label
   db->getWithDefault("temperature_label", d_T_label, "temperature");     // The name of the mixture fraction label
   db->getWithDefault("density_label", d_rho_label, "density"); 
-  db->require("hc_frac_label", d_hc_label);     // The name of the mixture fraction label
+  db->require("cstar_fraction_label", d_cstar_label);    // The name of the C* mixture fraction label
+  db->require("equil_fraction_label", d_ceq_label);    // The name of the secondary mixture fraciton label 
   db->require("mw_label", d_mw_label);           // The name of the MW label
 
   if ( db->findBlock("pos") ) { 
@@ -120,16 +120,16 @@ WestbrookDryer::sched_computeSource( const LevelP& level, SchedulerP& sched, int
     //tsk->requires( Task::OldDW, .... ); 
   }
 
-  _temperatureLabel = VarLabel::find( d_T_label );
-  _fLabel           = VarLabel::find( d_mf_label );
-  _mixMWLabel       = VarLabel::find( d_mw_label );
-  _denLabel         = VarLabel::find( d_rho_label );
-  _hcMassFracLabel  = VarLabel::find( d_hc_label );
+  _temperatureLabel   = VarLabel::find( d_T_label );
+  _mixMWLabel         = VarLabel::find( d_mw_label );
+  _denLabel           = VarLabel::find( d_rho_label );
+  _CstarMassFracLabel = VarLabel::find( d_cstar_label );
+  _CEqMassFracLabel   = VarLabel::find( d_ceq_label );
 
   tsk->requires( Task::OldDW, _temperatureLabel, Ghost::None, 0 ); 
-  tsk->requires( Task::OldDW, _fLabel,           Ghost::None, 0 ); 
   tsk->requires( Task::OldDW, _mixMWLabel,       Ghost::None, 0 ); 
-  tsk->requires( Task::OldDW, _hcMassFracLabel,  Ghost::None, 0 ); 
+  tsk->requires( Task::OldDW, _CstarMassFracLabel,  Ghost::None, 0 ); 
+  tsk->requires( Task::OldDW, _CEqMassFracLabel, Ghost::None, 0 ); 
   tsk->requires( Task::OldDW, _denLabel,         Ghost::None, 0 ); 
 
   sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials()); 
@@ -190,31 +190,42 @@ WestbrookDryer::computeSource( const ProcessorGroup* pc,
       //old_dw->get( *iter.... ); 
     }
 
-    constCCVariable<double> T;     // temperature 
-    constCCVariable<double> f;     // mixture fraction
-    constCCVariable<double> den;   // mixture density
-    constCCVariable<double> mixMW; // mixture molecular weight (assumes that the table value is an inverse)
-    constCCVariable<double> hcMF;  // mass fraction of the hydrocarbon
+    constCCVariable<double> T;      // temperature 
+    constCCVariable<double> den;    // mixture density
+    constCCVariable<double> mixMW;  // mixture molecular weight (assumes that the table value is an inverse)
+    constCCVariable<double> Cstar;  // mass fraction of the hydrocarbon
+    constCCVariable<double> Ceq;    // mass fraction of hydrocarbon for equilibrium
 
-    old_dw->get( T     , _temperatureLabel , matlIndex , patch , Ghost::None , 0 );
-    old_dw->get( f     , _fLabel           , matlIndex , patch , Ghost::None , 0 );
-    old_dw->get( mixMW , _mixMWLabel       , matlIndex , patch , Ghost::None , 0 );
-    old_dw->get( den   , _denLabel         , matlIndex , patch , Ghost::None , 0 );
-    old_dw->get( hcMF  , _hcMassFracLabel  , matlIndex , patch , Ghost::None , 0 );
+    old_dw->get( T     , _temperatureLabel   , matlIndex , patch , Ghost::None , 0 );
+    old_dw->get( mixMW , _mixMWLabel         , matlIndex , patch , Ghost::None , 0 );
+    old_dw->get( den   , _denLabel           , matlIndex , patch , Ghost::None , 0 );
+    old_dw->get( Cstar , _CstarMassFracLabel , matlIndex , patch , Ghost::None , 0 );
+    old_dw->get( Ceq   , _CEqMassFracLabel   , matlIndex , patch , Ghost::None , 0 );
 
     for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
       IntVector c = *iter; 
 
       // Step 1: Compute the stripping fraction 
+      double f = 0;
+      if ( Ceq[c] < 1.0 ) { 
+        f = Cstar[c] / ( 1.0 - Ceq[c] ); 
+        // bulletproofing needed? 
+        if ( f > 1.0 ) { 
+          f = 1.0; 
+        } else if ( f < 0.0 ) { 
+          f = 0.0; 
+        } 
+      }
+
       double small =  1.0e-16; 
       S[c] = 0.0; 
-      double hc_wo_rxn = f[c] * d_MF_HC_f1; //fuel as if no rxn occured (computed from mixture fraction)  
+      double hc_wo_rxn = f * d_MF_HC_f1; //fuel as if no rxn occured (computed from mixture fraction)  
       
-      if ( hcMF[c] > hc_wo_rxn ) 
-        hc_wo_rxn = hcMF[c];   
+      if ( Cstar[c] > hc_wo_rxn ) 
+        hc_wo_rxn = Cstar[c];   
 
-      if ( hcMF[c] > small ) 
-        S[c] = hcMF[c] / hc_wo_rxn; 
+      if ( Cstar[c] > small ) 
+        S[c] = Cstar[c] / hc_wo_rxn; 
 
       double f_loc = hc_wo_rxn / d_MF_HC_f1; 
 
@@ -231,7 +242,7 @@ WestbrookDryer::computeSource( const ProcessorGroup* pc,
       conc_O2 *= 1.0e-6; // to convert to gmol/cm^3
 
       // Step 5: Computes the concentration of the HydroCarbon
-      double conc_HC = hcMF[c] * 1.0/mixMW[c] * 1.0/d_MW_HC * d_Press / ( d_R * T[c] ); 
+      double conc_HC = Cstar[c] * 1.0/mixMW[c] * 1.0/d_MW_HC * d_Press / ( d_R * T[c] ); 
       conc_HC *= 1.0e-6; // to convert to gmol/cm^3
 
       // Step 6: Compute the rate term 
@@ -247,7 +258,6 @@ WestbrookDryer::computeSource( const ProcessorGroup* pc,
       CxHyRate[c] *= den[c] * 1.0e6; // to get [kg HC/time/vol]
       CxHyRate[c] *= d_sign; // pick the sign. 
 
-      //if (isnan(CxHyRate[c])) {
       // Checking for NaN
       if ( CxHyRate[c] != CxHyRate[c] ) {
         CxHyRate[c] = 0.0; 

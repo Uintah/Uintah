@@ -118,8 +118,8 @@ private:
   const VarLabel* d_WDverLabel; 
   // * but stored in the new_Dw
 
-  std::string d_hc_label; 
-  std::string d_mf_label; 
+  std::string d_cstar_label; 
+  std::string d_ceq_label; 
   std::string d_mw_label; 
   std::string d_rho_label; 
   std::string d_T_label; 
@@ -128,7 +128,8 @@ private:
   const VarLabel* _fLabel;           
   const VarLabel* _mixMWLabel;       
   const VarLabel* _denLabel;         
-  const VarLabel* _hcMassFracLabel;  
+  const VarLabel* _CstarMassFracLabel;  
+  const VarLabel* _CEqMassFracLabel; 
 
   double d_sign; 
 
