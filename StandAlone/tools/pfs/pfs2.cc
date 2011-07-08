@@ -56,13 +56,21 @@ DEALINGS IN THE SOFTWARE.
 using namespace Uintah;
 using namespace std;
 
-typedef unsigned char byte;
+#if 1
+  typedef unsigned char pixel;       // 8bit images
+  int scale = 1;
+#else
+  typedef unsigned short pixel;      // 16bit images
+  int scale = 256;
+#endif
+
 
 // forwared function declarations
 void usage( char *prog_name );
-//void parseArgs( int argc, char* argv[], string & infile, bool & binmode);
+
 GridP CreateGrid(ProblemSpecP ups);
-bool ReadImage(const char* szfile, unsigned int nsize, byte* pb);
+
+bool ReadImage(const char* szfile, unsigned int nPixels, pixel* pix);
 
 inline Point CreatePoint(unsigned int n, vector<int>& res, double dx, double dy, double dz)
 {
@@ -263,15 +271,15 @@ int main(int argc, char *argv[])
           
           //__________________________________
           // read the image data
-          unsigned int nsize = res[0]*res[1]*res[2];
-          cout << "Reading " << nsize << " bytes\n";
-          byte* pimg = scinew byte[nsize];
+          unsigned int nPixels = res[0]*res[1]*res[2];
+          cout << "Reading " << nPixels << " nPixels\n";
+          pixel* pimg = scinew pixel[nPixels];
           
-          if (ReadImage(imgname.c_str(), nsize, pimg) == false) {
+          if (ReadImage(imgname.c_str(), nPixels, pimg) == false) {
             cout << "FATAL ERROR : Failed reading image data" << endl;
             exit(0);
           }
-          cout << "Done reading " << nsize << " bytes\n";
+          cout << "Done reading " << nPixels << " pixels\n";
 
 
           // these points define the extremas of the grid
@@ -290,7 +298,7 @@ int main(int argc, char *argv[])
           int i, j, k;
           unsigned int n;
           Point pt;
-          byte* pb = pimg;
+          pixel* pb = pimg;
 
           // first determine the nr of points for each patch
           for (i=0; i<npatches; i++){
@@ -304,7 +312,10 @@ int main(int argc, char *argv[])
             for (j=0; j<res[1]; j++) {
               for (i=0; i<res[0]; i++, pb++, n++) {
               
-                if ((*pb >= L[0]) && (*pb <= L[1])) {
+                int pixelValue = *pb/scale;
+                
+                if ((pixelValue >= L[0]) && (pixelValue <= L[1])) {
+                  
                   pt = CreatePoint(n, res, dx, dy, dz);
                   currentpatch = level->selectPatchForCellIndex(level->getCellIndex(pt));
                   int pid = currentpatch->getID();
@@ -328,7 +339,9 @@ int main(int argc, char *argv[])
           for (k=0; k<res[2]; k++) {
             for (j=0; j<res[1]; j++) {
               for (i=0; i<res[0]; i++, pb++, n++) {
-                if ((*pb >= L[0])  && (*pb <= L[1])) {
+              
+                int pixelValue = *pb/scale;
+                if ((pixelValue >= L[0])  && (pixelValue <= L[1])) {
 
                   pt = CreatePoint(n, res, dx, dy, dz);
 
@@ -453,15 +466,16 @@ void usage( char *prog_name )
 //-----------------------------------------------------------------------------------------------
 // function ReadImage : Reads the image data from file and stores it in a buffer
 //
-bool ReadImage(const char* szfile, unsigned int nsize, byte* pb)
+bool ReadImage(const char* szfile, unsigned int nPixels, pixel* pb)
 {
   FILE* fp = fopen(szfile, "rb");
   if (fp == 0){ 
     return false;
   }
   
-  unsigned int nread = fread(pb, sizeof(byte), nsize, fp);
+  unsigned int nread = fread(pb, sizeof(pixel), nPixels, fp);
   fclose(fp);
 
-  return (nread == nsize);  
+  cout << szfile << " Bytes per pixel " << sizeof(pixel) << " nPixels " << nPixels << " Nread " << nread << endl;
+  return (nread == nPixels);  
 }
