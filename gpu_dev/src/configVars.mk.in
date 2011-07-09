@@ -191,6 +191,12 @@ MPI_INCLUDE := @INC_MPI_H@
 # not blank.  Its "value" is not useful.
 HAVE_MPI := @HAVE_MPI@
 
+HAVE_CUDA        := @HAVE_CUDA@
+CUDA_INCLUDE     := @INC_CUDA_H@
+CUDA_SDK_INCLUDE := @INC_CUDA_SDK_H@
+CUDA_LIBRARY     := @CUDA_LIB_DIR_FLAG@ @CUDA_LIB_FLAG@
+CUDA_SDK_LIBRARY := @CUDA_SDK_LIB_DIR_FLAG@ @CUDA_SDK_LIB_FLAG@
+
 MDSPLUS_LIBRARY := @MDSPLUS_LIB_DIR_FLAG@ @MDSPLUS_LIB_FLAG@
 MDSPLUS_INCLUDE := @INC_MDSPLUS_H@
 
@@ -285,6 +291,7 @@ CORE_STATIC_LIBS := \
 
 CC              := @CC@
 CXX             := @CXX@
+NVCC			:= @NVCC@
 AS              := @AS@
 LD              := @LD@
 CFLAGS          := @CFLAGS@ $(CFLAGS) @WOFF_STRING@

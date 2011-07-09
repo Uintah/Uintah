@@ -62,7 +62,7 @@
 ##  --------------------------------------------------------------------
 
 ##  initialize configure 
-AC_INIT([Uintah],[1.25],[csafe-homebrew@cs.utah.edu])
+AC_INIT([Uintah],[1.31],[csafe-homebrew@cs.utah.edu])
 
 ##  require autoconf version 2.67
 ##     The reason to require the latest autoconf is to try and get everyone who
@@ -315,6 +315,18 @@ SCI_ARG_WITH(mpiuni,
   [with_mpiuni="$withval"
    sci_required_mpiuni=yes],
   [with_mpiuni=""])
+SCI_ARG_WITH(cuda,
+  AC_HELP_STRING(--with-cuda=DIR,
+                 Use the CUDA installation in DIR),
+  [with_cuda="$withval"
+   sci_required_cuda=yes],
+  [with_cuda=""])  
+SCI_ARG_WITH(cuda_sdk,
+  AC_HELP_STRING(--with-cuda-sdk=DIR,
+                 Use the CUDA SDK installation in DIR),
+  [with_cuda_sdk="$withval"
+   sci_required_cuda_sdk=yes],
+  [with_cuda_sdk=""])    
 SCI_ARG_WITH(hypre,
   AC_HELP_STRING(--with-hypre=DIR,
                  Use the hypre installation in DIR),
@@ -3199,6 +3211,44 @@ AC_SUBST(INC_MPI_H)
 AC_SUBST(MPI_LIB_FLAG)
 AC_SUBST(MPI_LIB_DIR_FLAG)
 sci_defs_files="$sci_defs_files include/sci_defs/mpi_testdefs.h"
+
+##  --  search for cuda stuff  ------------------------------------------
+sci_required_cuda="yes"
+if test "$sci_required_cuda" = "yes"; then
+
+  echo
+  AS_MESSAGE(checking for required CUDA components......)
+  echo
+
+  if test \( "$with_cuda" -a "$with_cuda_sdk" = "no" \) -o \( "$with_cuda" = "no" -a "$with_cuda_sdk" \) ; then
+    AC_MSG_ERROR( [Both --with-cuda=DIR and --with-cuda-sdk=DIR must be specified...] )
+  fi
+    if test \( "$with_cuda" -a "$with_cuda_sdk" = "" \) -o \( "$with_cuda" = "" -a "$with_cuda_sdk" \); then
+    AC_MSG_ERROR( [Both --with-cuda=DIR and --with-cuda-sdk=DIR must be specified...] )
+  fi
+  
+  if ! test -d "$with_cuda"; then
+    AC_MSG_ERROR( [The directory specified with --with-cuda=DIR is not valid: $with_cuda] )
+  fi
+
+  if ! test -d "$with_cuda_sdk"; then
+    AC_MSG_ERROR( [The directory specified with --with-cuda_sdk=DIR is not valid: $with_cuda_sdk] )
+  fi
+
+fi #end sci_required_cuda
+
+AC_SUBST(HAVE_CUDA)
+AC_SUBST(DEF_CUDA)
+AC_SUBST(INC_CUDA_H)
+AC_SUBST(CUDA_LIB_FLAG)
+AC_SUBST(CUDA_LIB_DIR_FLAG)
+sci_defs_files="$sci_defs_files include/sci_defs/cuda_testdefs.h"
+
+
+
+
+
+
 
 ##  --  search for petsc stuff  ------------------------------------------
 # a required check for an optional library for base scirun, due to that 
