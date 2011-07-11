@@ -2762,15 +2762,13 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
 
-##  require autoconf version 2.67
+##  require autoconf version 2.68
 ##     The reason to require the latest autoconf is to try and get everyone who
 ##     updates configure to use the same version.  By doing so, the SVN diffs
 ##     don't look completely different from minor changes.  (This happens
 ##     if people switch back and forth between different versions of autoconf.)
 ##
 ##     type "autoconf --version" to find out what version you have.
-##
-##     On blaze you can find 2.67 in /usr/local/share/bin
 ##
 
 
@@ -6082,14 +6080,11 @@ TEMPLATE_BOX="<>"
 case $host in
      *-darwin*)
 	SO_OR_ARCHIVE_EXTENSION=dylib
-	if test "$enable_sci_malloc" = "yes"; then
-	   { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: sci_malloc does not work under mac osx. use --enable-sci-malloc=force" >&5
-$as_echo "$as_me: WARNING: sci_malloc does not work under mac osx. use --enable-sci-malloc=force" >&2;}
-	   { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: sci-malloc disabled" >&5
-$as_echo "$as_me: WARNING: sci-malloc disabled" >&2;}
-	   enable_sci_malloc="no"
+        if test "$enable_sci_malloc" = "yes"; then
+           as_fn_error $? "sci_malloc does not work under mac osx. Though you can try to use: --enable-sci-malloc=force" "$LINENO" 5
+           enable_sci_malloc="no"
         elif test "$enable_sci_malloc" = "force"; then
-	   enable_sci_malloc="yes"
+           enable_sci_malloc="yes"
         fi
 	;;
 
@@ -41604,7 +41599,8 @@ if test "$wasatch_3p" = "yes"; then
   fi
 
   mkdir -p Wasatch3P
-  $path_to_src/build_scripts/build_wasatch_3p.sh `$sci_pwd` "$with_boost"
+
+  $path_to_src/build_scripts/build_wasatch_3p.sh `$sci_pwd` "$with_boost" "$debug"
 
   if test $? != 0; then
      as_fn_error $? "Failed to build Wasatch 3p libraries... " "$LINENO" 5
