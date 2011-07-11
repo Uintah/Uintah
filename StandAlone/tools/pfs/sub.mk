@@ -75,6 +75,14 @@ PROGRAM := $(SRCDIR)/pfs2
 
 include $(SCIRUN_SCRIPTS)/program.mk
 
+
+###############################################
+# rawToUniqueGrains
+SRCS    := $(SRCDIR)/rawToUniqueGrains.cc
+PROGRAM := $(SRCDIR)/rawToUniqueGrains
+
+include $(SCIRUN_SCRIPTS)/program.mk
+
 ###############################################
 # ImageFromGeom
 

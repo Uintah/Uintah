@@ -726,8 +726,20 @@
     </VarTracker>
   </Scheduler>
 
-
-
+  <!--__________________________________-->
+  <!-- image or preprocessing specs     -->
+  <PreprocessTools        spec="OPTIONAL NO_DATA" >
+    <rawToUniqueGrains    spec="OPTIONAL NO_DATA" >
+      <numGrainMatls      spec="REQUIRED INTEGER 'positive'" />
+      <image              spec="REQUIRED STRING" />
+      <ppc                spec="REQUIRED VECTOR 'positive'" />
+      <res                spec="REQUIRED VECTOR 'positive'" />
+      <threshold          spec="REQUIRED MULTIPLE_DOUBLES" />
+      <outputBasename     spec="REQUIRED STRING" />
+    </rawToUniqueGrains>
+  </PreprocessTools>
+  
+  <!--__________________________________-->
   <LoadBalancer            spec="OPTIONAL NO_DATA" 
                              attribute1="type REQUIRED STRING 'DLB PLB SimpleLoadBalancer'" >
                              
