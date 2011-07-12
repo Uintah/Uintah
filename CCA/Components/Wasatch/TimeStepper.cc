@@ -15,7 +15,7 @@
 #include <Core/Grid/Material.h>
 #include <Core/Grid/Variables/VarTypes.h>  // delt_vartype
 #include <Core/Exceptions/ProblemSetupException.h>
-
+#include <Core/Parallel/Parallel.h>
 
 namespace SO=SpatialOps::structured;
 
@@ -56,11 +56,11 @@ namespace Wasatch{
   {
     typedef typename std::vector< TimeStepper::FieldInfo<FieldT> > Fields;
     for( typename Fields::const_iterator ifld = fields.begin(); ifld!=fields.end(); ++ifld ){
-//       cout << "timestepper COMPUTES '" << ifld->varLabel->getName() << "' in NEW DW" << endl
-//            << "            REQUIRES '" << ifld->varLabel->getName() << "' in OLD DW" << endl
-//            << "            REQUIRES '" << ifld->rhsLabel->getName() << "' in NEW DW" << endl
-//            << "            patches: " << *pss
-//            << endl;
+//       proc0cout << "timestepper COMPUTES '" << ifld->varLabel->getName() << "' in NEW DW" << endl
+//                 << "            REQUIRES '" << ifld->varLabel->getName() << "' in OLD DW" << endl
+//                 << "            REQUIRES '" << ifld->rhsLabel->getName() << "' in NEW DW" << endl
+//                 << "            patches: " << *pss
+//                 << endl;
       task->computes( ifld->varLabel );
       // jcs for some reason this one does not work:
       //       task->computes( ifld->varLabel,
@@ -241,7 +241,7 @@ namespace Wasatch{
         
         const int material = materials->get(im);
 
-//         std::cout << std::endl
+//         proc0cout << std::endl
 //                   << "Wasatch: executing 'TimeStepper::update_variables()' on patch "
 //                   << patch->getID() << " and material " << material
 //                   << std::endl;
@@ -252,7 +252,7 @@ namespace Wasatch{
         //newDW->get( deltat, deltaTLabel_, Uintah::getLevel(patches), material );
         oldDW->get( deltat, deltaTLabel_ );
         
-//         cout << "TimeStepper::update_variables() : dt = " << deltat << endl;
+//         proc0cout << "TimeStepper::update_variables() : dt = " << deltat << endl;
 
         //____________________________________________
         // update variables on this material and patch

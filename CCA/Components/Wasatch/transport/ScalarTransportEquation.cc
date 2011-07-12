@@ -10,6 +10,7 @@
 #include <expression/ExprLib.h>
 
 //-- Uintah includes --//
+#include <Core/Parallel/Parallel.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 
@@ -167,7 +168,7 @@ namespace Wasatch{
       Expr::ExpressionBuilder* builder = NULL;
       
       if( dir=="X" ){
-        cout << "SETTING UP CONVECTIVE FLUX EXPRESSION IN X DIRECTION USING " << interpMethod << std::endl;
+        proc0cout << "SETTING UP CONVECTIVE FLUX EXPRESSION IN X DIRECTION USING " << interpMethod << std::endl;
         typedef typename OperatorTypeBuilder<Interpolant,XVolField,typename FaceTypes<FieldT>::XFace>::type VelInterpOpT;
 
         switch (convInterpMethod) {
@@ -189,7 +190,7 @@ namespace Wasatch{
         }
       }
       else if( dir=="Y" ){
-        cout << "SETTING UP CONVECTIVE FLUX EXPRESSION IN Y DIRECTION USING " << interpMethod << std::endl;
+        proc0cout << "SETTING UP CONVECTIVE FLUX EXPRESSION IN Y DIRECTION USING " << interpMethod << std::endl;
         typedef typename OperatorTypeBuilder<Interpolant,YVolField,typename FaceTypes<FieldT>::YFace>::type VelInterpOpT;
         
         switch (convInterpMethod) {
@@ -211,7 +212,7 @@ namespace Wasatch{
         }        
       }
       else if( dir=="Z") {
-        cout << "SETTING UP CONVECTIVE FLUX EXPRESSION IN Z DIRECTION USING " << interpMethod << std::endl;
+        proc0cout << "SETTING UP CONVECTIVE FLUX EXPRESSION IN Z DIRECTION USING " << interpMethod << std::endl;
         typedef typename OperatorTypeBuilder<Interpolant,ZVolField,typename FaceTypes<FieldT>::ZFace>::type VelInterpOpT;
         
         switch (convInterpMethod) {
