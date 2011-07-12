@@ -55,12 +55,14 @@
 #include <Core/Algorithms/Fields/ToPointCloud.h>
 #include <Core/Algorithms/Fields/Unstructure.h>
 
-#include <Core/Datatypes/GenericField.h>
-#include <Core/Datatypes/TetVolMesh.h>
-#include <Core/Datatypes/TriSurfMesh.h>
 #include <Core/Datatypes/CurveMesh.h>
+#include <Core/Datatypes/GenericField.h>
 #include <Core/Datatypes/ImageMesh.h>
 #include <Core/Datatypes/LatVolMesh.h>
+#include <Core/Datatypes/PointCloudMesh.h>
+#include <Core/Datatypes/TetVolMesh.h>
+#include <Core/Datatypes/TriSurfMesh.h>
+
 #include <Core/Basis/Constant.h>
 #include <Core/Basis/CrvLinearLgn.h>
 #include <Core/Basis/QuadBilinearLgn.h>
@@ -430,6 +432,8 @@ cast_to_mesh_here( void * in_mesh, T *& out_mesh )
 {
   out_mesh = dynamic_cast<T*>( (T*)in_mesh );
 }
+
+template void cast_to_mesh_here< GenericField<PointCloudMesh<ConstantBasis<Point> >, ConstantBasis<double>, std::vector<double, std::allocator<double> > > >( void *, GenericField<PointCloudMesh<ConstantBasis<Point> >, ConstantBasis<double>, std::vector<double, std::allocator<double> > > *& );
 
 template void cast_to_mesh_here< GenericField<TetVolMesh<TetLinearLgn<Point> >, TetLinearLgn<double>, std::vector<double, std::allocator<double> > > >( void *, GenericField<TetVolMesh<TetLinearLgn<Point> >, TetLinearLgn<double>, std::vector<double, std::allocator<double> > > *& );
 template void cast_to_mesh_here< GenericField<TriSurfMesh<TriLinearLgn<Point> >, TriLinearLgn<double>, std::vector<double, std::allocator<double> > > >( void *, GenericField<TriSurfMesh<TriLinearLgn<Point> >, TriLinearLgn<double>, std::vector<double, std::allocator<double> > > *& );
