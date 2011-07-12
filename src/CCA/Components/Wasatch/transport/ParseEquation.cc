@@ -14,6 +14,7 @@
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/Parallel/Parallel.h>
 
 //-- Expression Library includes --//
 #include <CCA/Components/Wasatch/transport/TransportEquation.h>
@@ -78,8 +79,8 @@ namespace Wasatch{
     //___________________________________________________________________________
     // resolve the transport equation to be solved and create the adaptor for it.
     //
-    std::cout << "------------------------------------------------" << std::endl;
-    std::cout << "Creating transport equation for '" << eqnLabel << "'" << std::endl;
+    proc0cout << "------------------------------------------------" << std::endl;
+    proc0cout << "Creating transport equation for '" << eqnLabel << "'" << std::endl;
 
     if( eqnLabel == "generic" ){
        // find out if this corresponds to a staggered or non-staggered field
@@ -88,25 +89,25 @@ namespace Wasatch{
       
       if ( scalarStaggeredParams ) {
         // if staggered, then determine the staggering direction
-        std::cout << "Detected staggered scalar '" << eqnLabel << "'" << std::endl;
+        proc0cout << "Detected staggered scalar '" << eqnLabel << "'" << std::endl;
         
         // make proper calls based on the direction
         if ( staggeredDirection=="X" ) {
-          std::cout << "Setting up staggered scalar transport equation in direction: '" << staggeredDirection << "'" << std::endl;
+          proc0cout << "Setting up staggered scalar transport equation in direction: '" << staggeredDirection << "'" << std::endl;
           typedef ScalarTransportEquation< XVolField > ScalarTransEqn;
           transeqn = scinew ScalarTransEqn( ScalarTransEqn::get_phi_name( params ),
                                             ScalarTransEqn::get_rhs_expr_id( *solnGraphHelper->exprFactory, params ) );
           adaptor = scinew EqnTimestepAdaptor< XVolField >( transeqn );
           
         } else if ( staggeredDirection=="Y" ) {
-          std::cout << "Setting up staggered scalar transport equation in direction: '" << staggeredDirection << "'" << std::endl;
+          proc0cout << "Setting up staggered scalar transport equation in direction: '" << staggeredDirection << "'" << std::endl;
           typedef ScalarTransportEquation< YVolField > ScalarTransEqn;
           transeqn = scinew ScalarTransEqn( ScalarTransEqn::get_phi_name( params ),
                                             ScalarTransEqn::get_rhs_expr_id( *solnGraphHelper->exprFactory, params ) );
           adaptor = scinew EqnTimestepAdaptor< YVolField >( transeqn );
           
         } else if (staggeredDirection=="Z") {
-          std::cout << "Setting up staggered scalar transport equation in direction: '" << staggeredDirection << "'" << std::endl;
+          proc0cout << "Setting up staggered scalar transport equation in direction: '" << staggeredDirection << "'" << std::endl;
           typedef ScalarTransportEquation< ZVolField > ScalarTransEqn;
           transeqn = scinew ScalarTransEqn( ScalarTransEqn::get_phi_name( params ),
                                             ScalarTransEqn::get_rhs_expr_id( *solnGraphHelper->exprFactory, params ) );
@@ -120,7 +121,7 @@ namespace Wasatch{
         
       } else if ( !scalarStaggeredParams ) {
         // in this case, the scalar field is not staggered
-        std::cout << "Detected non-staggered scalar '" << eqnLabel << "'" << std::endl;
+        proc0cout << "Detected non-staggered scalar '" << eqnLabel << "'" << std::endl;
         typedef ScalarTransportEquation< SVolField > ScalarTransEqn;
         transeqn = scinew ScalarTransEqn( ScalarTransEqn::get_phi_name( params ),
                                        ScalarTransEqn::get_rhs_expr_id( *solnGraphHelper->exprFactory, params ) );
@@ -140,7 +141,7 @@ namespace Wasatch{
     //_____________________________________________________
     // set up initial conditions on this transport equation
     try{
-      std::cout << "Setting initial conditions for transport equation '" << eqnLabel << "'" << std::endl;
+      proc0cout << "Setting initial conditions for transport equation '" << eqnLabel << "'" << std::endl;
       icGraphHelper->rootIDs.insert( transeqn->initial_condition( *icGraphHelper->exprFactory ) );
     }
     catch( std::runtime_error& e ){
@@ -152,7 +153,7 @@ namespace Wasatch{
       throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
     }
 
-    std::cout << "------------------------------------------------" << std::endl;
+    proc0cout << "------------------------------------------------" << std::endl;
     return adaptor;
   }
   
@@ -292,7 +293,7 @@ namespace Wasatch{
       //_____________________________________________________
       // set up initial conditions on this momentum equation
       try{
-        std::cout << "Setting initial conditions for scalability test equation: "
+        proc0cout << "Setting initial conditions for scalability test equation: "
         << scaltesteqn->solution_variable_name()
         << std::endl;
         icGraphHelper->rootIDs.insert( scaltesteqn->initial_condition( *icGraphHelper->exprFactory ) );
@@ -306,7 +307,7 @@ namespace Wasatch{
         << std::endl;
         throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
       }
-      std::cout << "------------------------------------------------" << std::endl;      
+      proc0cout << "------------------------------------------------" << std::endl;      
     }
     //
     return adaptors;
@@ -347,11 +348,11 @@ namespace Wasatch{
     //___________________________________________________________________________
     // resolve the momentum equation to be solved and create the adaptor for it.
     //
-    std::cout << "------------------------------------------------" << std::endl;
-    std::cout << "Creating momentum equations..." << std::endl;
+    proc0cout << "------------------------------------------------" << std::endl;
+    proc0cout << "Creating momentum equations..." << std::endl;
     
     if( doxvel && doxmom ){
-      std::cout << "Setting up X momentum transport equation" << std::endl;
+      proc0cout << "Setting up X momentum transport equation" << std::endl;
       
       typedef MomentumTransportEquation< XVolField > MomTransEq;
       momtranseq = scinew MomTransEq( xvelname,
@@ -364,7 +365,7 @@ namespace Wasatch{
     }
     
     if( doyvel && doymom ){
-      std::cout << "Setting up Y momentum transport equation" << std::endl;
+      proc0cout << "Setting up Y momentum transport equation" << std::endl;
       
       typedef MomentumTransportEquation< YVolField > MomTransEq;
       momtranseq = scinew MomTransEq( yvelname,
@@ -377,7 +378,7 @@ namespace Wasatch{
     }
     
     if( dozvel && dozmom ){
-      std::cout << "Setting up Z momentum transport equation" << std::endl;
+      proc0cout << "Setting up Z momentum transport equation" << std::endl;
       
       typedef MomentumTransportEquation< ZVolField > MomTransEq;
       momtranseq = scinew MomTransEq( zvelname,
@@ -397,7 +398,7 @@ namespace Wasatch{
       //_____________________________________________________
       // set up initial conditions on this momentum equation
       try{
-        std::cout << "Setting initial conditions for momentum equation: "
+        proc0cout << "Setting initial conditions for momentum equation: "
                   << momtranseq->solution_variable_name()
                   << std::endl;
         icGraphHelper->rootIDs.insert( momtranseq->initial_condition( *icGraphHelper->exprFactory ) );
@@ -411,7 +412,7 @@ namespace Wasatch{
         << std::endl;
         throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
       }
-      std::cout << "------------------------------------------------" << std::endl;      
+      proc0cout << "------------------------------------------------" << std::endl;      
     }
     //
     return adaptors;

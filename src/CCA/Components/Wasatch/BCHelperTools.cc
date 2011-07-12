@@ -1,4 +1,5 @@
 //-- Uintah framework includes --//
+#include <Core/Parallel/Parallel.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/BoundaryConditions/BCDataArray.h>
@@ -27,7 +28,7 @@ namespace Wasatch {
   #define SET_BC( BCEvalT,      /* type of bc evaluator */                \
                   BCT,          /* type of BC */                          \
                   SIDE )                                                  \
-    std::cout<<"SETTING BOUNDARY CONDITION ON "<< phiName <<std::endl;    \
+    proc0cout << "SETTING BOUNDARY CONDITION ON "<< phiName <<std::endl;    \
     for( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {            \
       SCIRun::IntVector bc_point_indices(*bound_ptr);                     \
       const SS::IntVec bcPointIJK(bc_point_indices[0],bc_point_indices[1],bc_point_indices[2]); \

@@ -11,12 +11,12 @@
 #include <tabprops/Archive.h>
 
 //--- Uintah includes ---//
+#include <Core/Parallel/Parallel.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 
 #include <fstream>
 
-using std::cout;
 using std::endl;
 using std::flush;
 
@@ -30,7 +30,7 @@ namespace Wasatch{
     std::string fileName;
     params->get("FileNamePrefix",fileName);
 
-    std::cout << "Loading TabProps file '" << fileName << "' ... " << std::flush;
+    proc0cout << "Loading TabProps file '" << fileName << "' ... " << std::flush;
 
     StateTable table;
     try{
@@ -47,7 +47,7 @@ namespace Wasatch{
       throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
     }
 
-    std::cout << "done" << std::endl;
+    proc0cout << "done" << std::endl;
 
     //___________________________________________________________
     // get information for the independent variables in the table
@@ -96,7 +96,7 @@ namespace Wasatch{
         throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
       }
 
-      std::cout << "Constructing property evaluator for '" << dvarTag
+      proc0cout << "Constructing property evaluator for '" << dvarTag
                 << "' from file '" << fileName << "'." << std::endl;
 
       const BSpline* const spline = table.find_entry( dvarTableName );

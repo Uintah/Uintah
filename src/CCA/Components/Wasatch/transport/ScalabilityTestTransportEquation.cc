@@ -11,6 +11,7 @@
 #include <expression/ExprLib.h>
 
 //-- Uintah includes --//
+#include <Core/Parallel/Parallel.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 
@@ -91,14 +92,14 @@ namespace Wasatch{
       Expr::ExpressionBuilder* builder = NULL;
       
       if( dir=="X" ){
-        cout << "SETTING UP X-CONVECTIVE-FLUX EXPRESSION USING CENTRAL DIFFERENCING"  << std::endl;
+        proc0cout << "SETTING UP X-CONVECTIVE-FLUX EXPRESSION USING CENTRAL DIFFERENCING"  << std::endl;
         typedef typename OperatorTypeBuilder<Interpolant,XVolField,typename FaceTypes<FieldT>::XFace>::type VelInterpOpT;                            
             typedef typename ConvectiveFlux< typename Ops::InterpC2FX, VelInterpOpT >::Builder convFluxCent;
             builder = scinew convFluxCent(phiTag, advVelocityTag);
             
       }
       else if( dir=="Y" ){
-        cout << "SETTING UP Y-CONVECTIVE-FLUX EXPRESSION USING CENTRAL DIFFERENCING"  << std::endl;
+        proc0cout << "SETTING UP Y-CONVECTIVE-FLUX EXPRESSION USING CENTRAL DIFFERENCING"  << std::endl;
         typedef typename OperatorTypeBuilder<Interpolant,YVolField,typename FaceTypes<FieldT>::YFace>::type VelInterpOpT;
         
             typedef typename ConvectiveFlux< typename Ops::InterpC2FY, VelInterpOpT >::Builder convFluxCent;
@@ -106,7 +107,7 @@ namespace Wasatch{
             
       }
       else if( dir=="Z") {
-        cout << "SETTING UP Z-CONVECTIVE-FLUX EXPRESSION USING CENTRAL DIFFERENCING"  << std::endl;
+        proc0cout << "SETTING UP Z-CONVECTIVE-FLUX EXPRESSION USING CENTRAL DIFFERENCING"  << std::endl;
         typedef typename OperatorTypeBuilder<Interpolant,ZVolField,typename FaceTypes<FieldT>::ZFace>::type VelInterpOpT;
         
             typedef typename ConvectiveFlux< typename Ops::InterpC2FZ, VelInterpOpT >::Builder convFluxCent;

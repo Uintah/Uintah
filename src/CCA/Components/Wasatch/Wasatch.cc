@@ -37,6 +37,7 @@
 
 #include <Core/Grid/SimpleMaterial.h>
 #include <Core/Grid/Task.h>
+#include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Exceptions/ProblemSetupException.h>
@@ -172,7 +173,7 @@ namespace Wasatch{
     if(!linSolver_) {
       throw Uintah::InternalError("Wasatch: couldn't get solver port", __FILE__, __LINE__);
     } else if (linSolver_) {
-      std::cout << "Detected solver port... \n";
+      proc0cout << "Detected solver port... \n";
     }
     
     //
@@ -302,7 +303,7 @@ namespace Wasatch{
       taskInterfaceList_.push_back( task );
     }
     if( d_myworld->myrank() == 0 )
-      std::cout << "Wasatch: done creating initialization task(s)" << std::endl;
+      proc0cout << "Wasatch: done creating initialization task(s)" << std::endl;
   }
 
   //--------------------------------------------------------------------
@@ -351,7 +352,7 @@ namespace Wasatch{
     }
 
     if( d_myworld->myrank() == 0 )
-      std::cout << "Wasatch: done creating timestep task(s)" << std::endl;
+      proc0cout << "Wasatch: done creating timestep task(s)" << std::endl;
   }
 
   //--------------------------------------------------------------------
@@ -368,7 +369,7 @@ namespace Wasatch{
     create_timestepper_on_patches( localPatches, materials, sched );
     
     if( d_myworld->myrank() == 0 )
-      std::cout << "Wasatch: done creating solution task(s)" << std::endl;
+      proc0cout << "Wasatch: done creating solution task(s)" << std::endl;
 
     // jcs notes:
     //
@@ -399,7 +400,7 @@ namespace Wasatch{
       //______________________________________________________
       // set up boundary conditions on this transport equation
       try{
-        std::cout << "Setting BCs for transport equation '" << eqnLabel << "'" << std::endl;
+        proc0cout << "Setting BCs for transport equation '" << eqnLabel << "'" << std::endl;
         transEq->setup_boundary_conditions(*gh, localPatches, patchInfoMap_, materials->getUnion());
       }
       catch( std::runtime_error& e ){
@@ -483,7 +484,7 @@ namespace Wasatch{
   {
     const double deltat = 1.0; // jcs should get this from an input file possibly?
 
-//       std::cout << std::endl
+//       proc0cout << std::endl
 //                 << "Wasatch: executing 'Wasatch::computeDelT()' on all patches"
 //                 << std::endl;
 

@@ -13,6 +13,7 @@
 #include <Core/Grid/Material.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/Level.h>
+#include <Core/Parallel/Parallel.h>
 
 
 //-- Wasatch includes --//
@@ -25,7 +26,6 @@
 #include <stdexcept>
 #include <fstream>
 
-using std::cout;
 using std::endl;
 
 #define WASATCH_TASK_DIAGNOSTICS
@@ -111,7 +111,7 @@ namespace Wasatch{
         const Uintah::PatchSubset* const pss = patches_->getSubset(ipss);
         for( int ip=0; ip<pss->size(); ++ip ){
           const Uintah::Patch* const patch = pss->get(ip);
-          //cout << "Setting up tree '" << taskName_ << "' on patch (" << patch->getID() << ")" << endl;
+          //proc0cout << "Setting up tree '" << taskName_ << "' on patch (" << patch->getID() << ")" << endl;
           TreePtr tree( new Expr::ExpressionTree( *masterTree_ ) );
           tree->set_patch_id( patch->getID() );
           tree->register_fields( *fml_ );
@@ -167,10 +167,10 @@ namespace Wasatch{
     //
 
 #   ifdef WASATCH_TASK_FIELD_DIAGNOSTICS
-    cout << "Field requirements for task '" << tree.name() << "'" << endl
-         << setw(10) << "Mode " << left << setw(20) << "Field Name"
-         << "DW  #Ghost PatchID" << endl
-         << "-----------------------------------------------------------------------" << endl;
+    proc0cout << "Field requirements for task '" << tree.name() << "'" << endl
+              << setw(10) << "Mode " << left << setw(20) << "Field Name"
+              << "DW  #Ghost PatchID" << endl
+              << "-----------------------------------------------------------------------" << endl;
 #   endif
 
     //______________________________
@@ -214,7 +214,7 @@ namespace Wasatch{
 
         case Expr::COMPUTES:
 #         ifdef WASATCH_TASK_FIELD_DIAGNOSTICS
-          cout << setw(10) << "COMPUTES";
+          proc0cout << setw(10) << "COMPUTES";
 #         endif
           ASSERT( dw == Uintah::Task::NewDW );
           // jcs note that we need ghost information on the computes fields as well!
@@ -225,7 +225,7 @@ namespace Wasatch{
 
         case Expr::REQUIRES:
 #         ifdef WASATCH_TASK_FIELD_DIAGNOSTICS
-          cout << setw(10) << "REQUIRES";
+          proc0cout << setw(10) << "REQUIRES";
 #         endif
           task.requires( dw,
                          fieldInfo.varlabel,
@@ -236,7 +236,7 @@ namespace Wasatch{
 
         case Expr::MODIFIES:
 #         ifdef WASATCH_TASK_FIELD_DIAGNOSTICS
-          cout << setw(10) << "MODIFIES";
+          proc0cout << setw(10) << "MODIFIES";
 #         endif
           ASSERT( dw == Uintah::Task::NewDW );
           task.modifies( fieldInfo.varlabel,
@@ -246,18 +246,18 @@ namespace Wasatch{
         } // switch
 
 #       ifdef WASATCH_TASK_FIELD_DIAGNOSTICS
-        cout << setw(20) << left << fieldInfo.varlabel->getName();
-        if( fieldInfo.useOldDataWarehouse ) cout << "OLD   ";
-        else cout << "NEW   ";
-        cout << left << setw(5) << fieldInfo.nghost
-             << *patches << endl;
+        proc0cout << setw(20) << left << fieldInfo.varlabel->getName();
+        if( fieldInfo.useOldDataWarehouse ) proc0cout << "OLD   ";
+        else proc0cout << "NEW   ";
+        proc0cout << left << setw(5) << fieldInfo.nghost
+                  << *patches << endl;
 #       endif
 
       } // field loop
     } // field type loop
 
 #   ifdef WASATCH_TASK_FIELD_DIAGNOSTICS
-    cout << endl;
+    proc0cout << endl;
 #   endif
 
   }
@@ -270,7 +270,7 @@ namespace Wasatch{
     ASSERT( !hasBeenScheduled_ );
 
 #   ifdef WASATCH_TASK_DIAGNOSTICS
-    cout << "Scheduling task '" << taskName_ << "'" << endl;
+    proc0cout << "Scheduling task '" << taskName_ << "'" << endl;
 #   endif
 
     const PatchTreeMap::iterator iptm = patchTreeMap_.begin();
@@ -348,13 +348,13 @@ namespace Wasatch{
 
         const int material = materials->get(im);
         try{
-//           cout << endl
-//                << "Wasatch: executing graph '" << taskName_
-//                << "' for patch " << patch->getID()
-//                << " and material " << material
-//                << endl;
+//           proc0cout << endl
+//                     << "Wasatch: executing graph '" << taskName_
+//                     << "' for patch " << patch->getID()
+//                     << " and material " << material
+//                     << endl;
 
-//     fml_->dump_fields(cout);
+//     fml_->dump_fields(proc0cout);
           fml_->allocate_fields( Expr::AllocInfo( oldDW, newDW, material, patch, pg ) );
 
           if( hasPressureExpression_ ){
@@ -365,11 +365,11 @@ namespace Wasatch{
           tree->bind_fields( *fml_ );
           tree->bind_operators( opdb );          
           tree->execute_tree();
-//           cout << "Wasatch: done executing graph '" << taskName_ << "'" << endl;
+//           proc0cout << "Wasatch: done executing graph '" << taskName_ << "'" << endl;
           fml_->deallocate_fields();
         }
         catch( exception& e ){
-          cout << e.what() << endl;
+          proc0cout << e.what() << endl;
           throw std::runtime_error( "Error" );
         }
       }
@@ -397,7 +397,7 @@ namespace Wasatch{
     if( treeList.size() > 1 ){
       std::ostringstream fnam;
       fnam << tree->name() << "_original.dot";
-      cout << "writing pre-cleave tree to " << fnam.str() << endl;
+      proc0cout << "writing pre-cleave tree to " << fnam.str() << endl;
       std::ofstream fout( fnam.str().c_str() );
       tree->write_tree(fout);
     }
@@ -427,7 +427,7 @@ namespace Wasatch{
     if( treeList.size() > 1 ){
       std::ostringstream fnam;
       fnam << tree->name() << "_original.dot";
-      cout << "writing pre-cleave tree to " << fnam.str() << endl;
+      proc0cout << "writing pre-cleave tree to " << fnam.str() << endl;
       std::ofstream fout( fnam.str().c_str() );
       tree->write_tree(fout);
     }
