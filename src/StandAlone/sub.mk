@@ -51,8 +51,7 @@ ifeq ($(BUILD_ARCHES),yes)
   ifeq ($(BUILD_MPM),yes)
     MPMARCHES_LIB    = $(COMPONENTS)/MPMArches
   endif
-  ARCHES_LIBS        = $(COMPONENTS)/Arches             \
-                       $(COMPONENTS)/SpatialOps
+  ARCHES_LIBS        = $(COMPONENTS)/Arches
 endif
 
 ifeq ($(BUILD_MPM),yes)
