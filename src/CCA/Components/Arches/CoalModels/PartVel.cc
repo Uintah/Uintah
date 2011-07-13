@@ -216,6 +216,8 @@ void PartVel::ComputePartVel( const ProcessorGroup* pc,
                               DataWarehouse* old_dw, 
                               DataWarehouse* new_dw, const int rkStep )
 {
+  using std::abs;
+
    //patch loop
   for (int p=0; p < patches->size(); p++){
     

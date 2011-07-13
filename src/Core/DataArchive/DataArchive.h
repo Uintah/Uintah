@@ -65,8 +65,6 @@ DEALINGS IN THE SOFTWARE.
 namespace Uintah {
 
   using namespace SCIRun;
-  using std::string;
-  using std::vector;
 
   class VarLabel;
   class DataWarehouse;
@@ -117,8 +115,8 @@ namespace Uintah {
 
       // store these in separate arrays so we don't have to store nearly as many of them
       struct VarData {
-        string type;
-        string compression;
+        std::string type;
+        std::string compression;
         IntVector boundaryLayer;
       };
 
@@ -126,7 +124,7 @@ namespace Uintah {
         PatchData() : parsed(false), proc(-1) {}
         bool parsed;
         int proc;
-        string datafilename;
+        std::string datafilename;
       };
 
       typedef HashTable<VarnameMatlPatch, DataFileInfo> VarHashMap;
@@ -136,9 +134,9 @@ namespace Uintah {
       //! - containing data for each time step.
       class TimeData {
         public:    
-          TimeData(DataArchive* da, ProblemSpecP timestepDoc, string timestepURL);
+          TimeData(DataArchive* da, ProblemSpecP timestepDoc, std::string timestepURL);
           ~TimeData();
-          VarData& findVariableInfo(const string& name, const Patch* patch, int matl);
+          VarData& findVariableInfo(const std::string& name, const Patch* patch, int matl);
 
           // reads timestep.xml and prepares the data xml files to be read
           void init();
@@ -149,7 +147,7 @@ namespace Uintah {
           void parsePatch(const Patch* patch);
 
           // parse an individual data file and load appropriate storage
-          void parseFile(string file, int levelNum, int basePatch);
+          void parseFile(std::string file, int levelNum, int basePatch);
 
           // This would be private data, except we want DataArchive to have access,
           // so we would mark DataArchive as 'friend', but we're already a private
@@ -162,19 +160,19 @@ namespace Uintah {
           // Gets expanded and proc is set during queryGrid.  Other fields are set
           // when parsed
           // Organized in a contiguous array, by patch-level-index
-          vector<vector<PatchData> > d_patchInfo; 
+          std::vector<std::vector<PatchData> > d_patchInfo; 
 
           // Wheter a material is active per level
-          vector<vector<bool> > d_matlInfo;
+          std::vector<std::vector<bool> > d_matlInfo;
 
           // var info - type, compression, and boundary layer
-          map<string, VarData> d_varInfo; 
+          std::map<std::string, VarData> d_varInfo; 
 
           // xml urls referred to in timestep.xml
-          vector<vector<string> > d_xmlUrls;
-          vector<vector<bool> > d_xmlParsed;
+          std::vector<std::vector<std::string> > d_xmlUrls;
+          std::vector<std::vector<bool> > d_xmlParsed;
 
-          string d_globaldata;
+          std::string d_globaldata;
 
           ConsecutiveRangeSet matls;  // materials available this timestep
 
@@ -189,7 +187,7 @@ namespace Uintah {
       };
 
     public:
-      DataArchive(const string& filebase,
+      DataArchive(const std::string& filebase,
           int processor = 0 /* use if you want to different processors
                                to read different parts of the archive */,
           int numProcessors = 1,
@@ -223,12 +221,12 @@ namespace Uintah {
       // variables. We also need to determine the type of each variable.
       // Get a list of scalar or vector variable names and  
       // a list of corresponding data types
-      void queryVariables( vector< string>& names,
-          vector< const TypeDescription *>&  );
-      void queryGlobals( vector< string>& names,
-          vector< const TypeDescription *>&  );
-      void queryTimesteps( vector<int>& index,
-          vector<double>& times );
+      void queryVariables( std::vector< std::string>& names,
+          std::vector< const TypeDescription *>&  );
+      void queryGlobals( std::vector< std::string>& names,
+          std::vector< const TypeDescription *>&  );
+      void queryTimesteps( std::vector<int>& index,
+          std::vector<double>& times );
 
       //! the ups is for the assignBCS that needs to happen
       //! if we are reading the simulation grid from the uda,
@@ -241,7 +239,7 @@ namespace Uintah {
 #if 0
       //////////
       // Does a variable exist in a particular patch?
-      bool exists(const string&, const Patch*, int) {
+      bool exists(const std::string&, const Patch*, int) {
         return true;
       }
 #endif
@@ -254,7 +252,7 @@ namespace Uintah {
       // how long does a patch live?  Not variable specific
       void queryLifetime( double& min, double& max, const Patch* patch);
 
-      ConsecutiveRangeSet queryMaterials(const string& varname,
+      ConsecutiveRangeSet queryMaterials(const std::string& varname,
           const Patch* patch, int index);
 
       int queryNumMaterials(const Patch* patch, int index);
@@ -262,14 +260,14 @@ namespace Uintah {
       // Queries a variable for a material, patch, and index in time.
       // Optionally pass in DataFileInfo if you're iterating over
       // entries in the hash table (like restartInitialize does)
-      void query( Variable& var, const string& name, int matlIndex, 
+      void query( Variable& var, const std::string& name, int matlIndex, 
           const Patch* patch, int timeIndex, DataFileInfo* dfi = 0);
 
-      void query( Variable& var, const string& name, int matlIndex, 
+      void query( Variable& var, const std::string& name, int matlIndex, 
           const Patch* patch, int timeIndex,
           Ghost::GhostType, int ngc);
 
-      void queryRegion( Variable& var, const string& name, int matlIndex, 
+      void queryRegion( Variable& var, const std::string& name, int matlIndex, 
           const Level* level, int timeIndex, IntVector low, IntVector high );
 
       //////////
@@ -277,7 +275,7 @@ namespace Uintah {
       // T = double/float/vector/Tensor I'm not sure of the proper
       // syntax.
       template<class T>
-        void query( ParticleVariable< T >&, const string& name, int matlIndex,
+        void query( ParticleVariable< T >&, const std::string& name, int matlIndex,
             particleId id,
             double min, double max);
 
@@ -286,7 +284,7 @@ namespace Uintah {
       // T = double/float/vector/Tensor I'm not sure of the proper
       // syntax.
       template<class T>
-        void query( NCVariable< T >&, const string& name, int matlIndex,
+        void query( NCVariable< T >&, const std::string& name, int matlIndex,
             const IntVector& index,
             double min, double max);
 
@@ -295,21 +293,21 @@ namespace Uintah {
       // T = double/float/vector/Tensor I'm not sure of the proper
       // syntax.
       template<class T>
-        void query( CCVariable< T >&, const string& name, int matlIndex,
+        void query( CCVariable< T >&, const std::string& name, int matlIndex,
             const IntVector& index,
             double min, double max);
 
       //////////
       // query the variable value for a particular particle  overtime;
       template<class T>
-        void query(vector<T>& values, const string& name,
+        void query(std::vector<T>& values, const std::string& name,
             int matlIndex, long64 particleID, int levelIndex,
             double startTime, double endTime) ;
       //////////
       // similarly, we want to be able to track variable values in a particular
       // patch cell over time.
       template<class T>
-        void query(vector<T>& values, const string& name, int matlIndex,
+        void query(std::vector<T>& values, const std::string& name, int matlIndex,
             IntVector loc, double startTime, double endTime, int level=-1);
 
       //////////
@@ -321,7 +319,7 @@ namespace Uintah {
       // In other cases we will have noticed something interesting and we
       // will want to access some small portion of a patch.  We will need
       // to request some range of data in index space.
-      template<class T> void get(T& data, const string& name,
+      template<class T> void get(T& data, const std::string& name,
           const Patch* patch, cellIndex min, cellIndex max);
 #endif
 
@@ -368,26 +366,26 @@ namespace Uintah {
       DataArchive(const DataArchive&);
       DataArchive& operator=(const DataArchive&);
 
-      void queryVariables( const ProblemSpecP vars, vector<string>& names,
-          vector<const TypeDescription*>& types);
+      void queryVariables( const ProblemSpecP vars, std::vector<std::string>& names,
+          std::vector<const TypeDescription*>& types);
 
       std::string d_filebase;  
       ProblemSpecP d_indexDoc;
       ProblemSpecP d_restartTimestepDoc;
-      string d_restartTimestepURL;
+      std::string d_restartTimestepURL;
 
       bool d_simRestart;
       Vector d_cell_scale; //used for scaling the physical data size
 
-      vector<TimeData> d_timeData;
+      std::vector<TimeData> d_timeData;
       std::vector<int> d_tsindex;
       std::vector<double> d_tstimes;
 
       // global bits and endianness - read from index.xml ONLY if not in timestep.xml
-      string d_globalEndianness;
+      std::string d_globalEndianness;
       int d_globalNumBits;
 
-      typedef map<pair<int, const Patch*>, Handle<ParticleSubset> > psetDBType;
+      typedef std::map<std::pair<int, const Patch*>, Handle<ParticleSubset> > psetDBType;
       psetDBType d_psetDB;
 
       // if used, different processors read different parts of the archive
@@ -405,7 +403,7 @@ namespace Uintah {
 
 
   template<class T>
-    void DataArchive::query( NCVariable< T >&, const string& name, int matlIndex,
+    void DataArchive::query( NCVariable< T >&, const std::string& name, int matlIndex,
         const IntVector& index,
         double min, double max)
     {
@@ -413,7 +411,7 @@ namespace Uintah {
     }
 
   template<class T>
-    void DataArchive::query( CCVariable< T >&, const string& name, int matlIndex,
+    void DataArchive::query( CCVariable< T >&, const std::string& name, int matlIndex,
         const IntVector& index,
         double min, double max)
     {
@@ -421,7 +419,7 @@ namespace Uintah {
     }
 
   template<class T>
-    void DataArchive::query(ParticleVariable< T >& var, const string& name,
+    void DataArchive::query(ParticleVariable< T >& var, const std::string& name,
         int matlIndex, particleId id,
         double min, double max)
     {
@@ -430,24 +428,24 @@ namespace Uintah {
 
 
   template<class T>
-    void DataArchive::query(vector<T>& values, const string& name,
+    void DataArchive::query(std::vector<T>& values, const std::string& name,
         int matlIndex, long64 particleID,
         int levelIndex,
         double startTime, double endTime)
     {
       double call_start = SCIRun::Time::currentSeconds();
 
-      vector<int> index;
-      vector<double> times;
+      std::vector<int> index;
+      std::vector<double> times;
       queryTimesteps(index, times); // build timesteps if not already done
 
       // figure out what kind of variable we're looking for
-      vector<string> type_names;
-      vector<const TypeDescription*> type_descriptions;
+      std::vector<std::string> type_names;
+      std::vector<const TypeDescription*> type_descriptions;
       queryVariables(type_names, type_descriptions);
       const TypeDescription* type = NULL;
-      vector<string>::iterator name_iter = type_names.begin();
-      vector<const TypeDescription*>::iterator type_iter = type_descriptions.begin();
+      std::vector<std::string>::iterator name_iter = type_names.begin();
+      std::vector<const TypeDescription*>::iterator type_iter = type_descriptions.begin();
       for ( ; name_iter != type_names.end() && type == NULL;
           name_iter++, type_iter++) {
         if (*name_iter == name)
@@ -489,24 +487,24 @@ namespace Uintah {
     }  
 
   template<class T>
-    void DataArchive::query(vector<T>& values, const string& name,
+    void DataArchive::query(std::vector<T>& values, const std::string& name,
         int matlIndex, IntVector loc,
         double startTime, double endTime,
         int levelIndex /*=-1*/)
     {
       double call_start = SCIRun::Time::currentSeconds();
 
-      vector<int> index;
-      vector<double> times;
+      std::vector<int> index;
+      std::vector<double> times;
       queryTimesteps(index, times); // build timesteps if not already done
 
       // figure out what kind of variable we're looking for
-      vector<string> type_names;
-      vector<const TypeDescription*> type_descriptions;
+      std::vector<std::string> type_names;
+      std::vector<const TypeDescription*> type_descriptions;
       queryVariables(type_names, type_descriptions);
       const TypeDescription* type = NULL;
-      vector<string>::iterator name_iter = type_names.begin();
-      vector<const TypeDescription*>::iterator type_iter = type_descriptions.begin();
+      std::vector<std::string>::iterator name_iter = type_names.begin();
+      std::vector<const TypeDescription*>::iterator type_iter = type_descriptions.begin();
       for ( ; name_iter != type_names.end() && type == NULL;
           name_iter++, type_iter++) {
         if (*name_iter == name)
