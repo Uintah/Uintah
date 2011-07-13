@@ -39,6 +39,8 @@ DEALINGS IN THE SOFTWARE.
 #include <iostream>
 #include <algorithm>
 
+using namespace std;
+
 using namespace SCIRun;
 using namespace Uintah;
 

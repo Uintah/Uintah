@@ -137,7 +137,7 @@ ParticleSubset::sort(ParticleVariableBase* particleIDs)
   if (pIDs == 0)
     SCI_THROW(InternalError("particleID variable must be ParticleVariable<long64>", __FILE__, __LINE__));
   compareIDFunctor comp(pIDs);
-  ::sort(d_particles, d_particles+d_numParticles, comp);
+  std::sort(d_particles, d_particles+d_numParticles, comp);
 }
 
 void

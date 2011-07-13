@@ -73,13 +73,13 @@ namespace Uintah {
    ****************************************/
 
   class UINTAHSHARE DifferenceIterator : public ListOfCellsIterator {
-    friend ostream& operator<<(std::ostream& out, const Uintah::DifferenceIterator& b);
+    friend std::ostream& operator<<(std::ostream& out, const Uintah::DifferenceIterator& b);
     public:
 
     DifferenceIterator(Iterator iter1, Iterator iter2);
 
 
-    ostream& put(std::ostream& out) const
+    std::ostream& put(std::ostream& out) const
     {
       out << *this;
       return out;

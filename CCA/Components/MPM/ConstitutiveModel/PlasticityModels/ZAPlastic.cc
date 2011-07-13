@@ -41,6 +41,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Exceptions/ProblemSetupException.h>
 
 
+using namespace std;
 using namespace Uintah;
 ////////////////////////////////////////////////////////////////////////////////
 

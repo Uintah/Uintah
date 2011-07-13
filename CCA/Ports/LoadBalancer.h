@@ -130,7 +130,7 @@ WARNING
     virtual bool isDynamic() { return false; }
 
     //! returns all processors in this processors neighborhood
-    virtual const set<int>& getNeighborhoodProcessors() = 0;
+    virtual const std::set<int>& getNeighborhoodProcessors() = 0;
 
     //! Asks if a patch in the patch subset is in the neighborhood.
     virtual bool inNeighborhood(const PatchSubset*) = 0;
@@ -154,7 +154,7 @@ WARNING
     virtual int getOutputProc(const Patch* patch) = 0;
 
     //! Tells the load balancer on which procs data was output.
-    virtual void restartInitialize(DataArchive* archive, int time_index, ProblemSpecP& pspec, string, const GridP& grid) {}
+    virtual void restartInitialize(DataArchive* archive, int time_index, ProblemSpecP& pspec, std::string, const GridP& grid) {}
     
     // state variables
     enum {

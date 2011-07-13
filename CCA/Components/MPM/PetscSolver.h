@@ -50,10 +50,6 @@ extern "C" {
 }
 #endif
 
-using std::set;
-using std::map;
-using std::vector;
-using namespace std;
 
 namespace Uintah {
 

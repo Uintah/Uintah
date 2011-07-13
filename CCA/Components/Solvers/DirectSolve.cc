@@ -51,6 +51,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Util/DebugStream.h>
 #include <iomanip>
 
+using std::cout;
 using namespace Uintah;
 //__________________________________
 //  To turn on normal output

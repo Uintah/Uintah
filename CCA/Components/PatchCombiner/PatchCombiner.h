@@ -42,8 +42,6 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/PatchCombiner/uintahshare.h>
 namespace Uintah {
 
-  using namespace std;
-
   class Scheduler;
 
 /**************************************
@@ -140,13 +138,13 @@ WARNING
      string udaDir_;
      DataArchive* dataArchive_;
      const ProcessorGroup* world_;
-     vector<int> timesteps_;
-     vector<double> times_;
-     map<const Patch*, list<const Patch*> > new2OldPatchMap_;
+     std::vector<int> timesteps_;
+     std::vector<double> times_;
+     std::map<const Patch*, std::list<const Patch*> > new2OldPatchMap_;
      int timeIndex_;
      GridP oldGrid_;
      VarLabel* delt_label;
-     vector<VarLabel*> labels_;
+     std::vector<VarLabel*> labels_;
      SimulationStateP d_sharedState;
      SchedulerP d_subsched;
    };

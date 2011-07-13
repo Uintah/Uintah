@@ -74,7 +74,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Exceptions/InvalidValue.h>
 
 
-using std::cerr;
+using namespace std;
 using namespace Uintah;
 
 static DebugStream cout_EP("SSEP",false);

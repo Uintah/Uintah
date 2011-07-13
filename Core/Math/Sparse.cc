@@ -32,6 +32,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Math/Rand48.h>
 #include <iostream>
 
+using namespace std;
 using namespace Uintah;
 
 

@@ -56,7 +56,7 @@ DEALINGS IN THE SOFTWARE.
 #include <iomanip>
 
 
-using std::cerr;
+using namespace std;
 using namespace Uintah;
 
 static DebugStream dbg("VS", false);

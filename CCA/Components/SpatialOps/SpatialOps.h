@@ -104,7 +104,7 @@ private:
   int d_tOrder;
   vector<string> d_scalarEqnNames; 
 
-  typedef map< string, EqnBase* > EqnList; //a map of equations and their names
+  typedef std::map< string, EqnBase* > EqnList; //a map of equations and their names
   EqnList d_myEqnList; 
   EqnBase* d_transportEqn; 
   EqnFactory* d_scalarFactory; 

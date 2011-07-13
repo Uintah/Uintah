@@ -47,8 +47,7 @@ DEALINGS IN THE SOFTWARE.
 using namespace Uintah;
 using namespace SCIRun;
 
-using std::cerr;
-using std::find;
+using namespace std;
 
 static Mutex send_data( "MPIScheduler::send_data" );
 

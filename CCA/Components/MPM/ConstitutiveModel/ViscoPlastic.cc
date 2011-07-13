@@ -71,7 +71,7 @@ DEALINGS IN THE SOFTWARE.
 #include <iostream>
 
 
-using std::cerr;
+using namespace std;
 using namespace Uintah;
 
 static DebugStream cout_CST("HEP",false);

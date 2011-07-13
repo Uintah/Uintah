@@ -567,19 +567,19 @@ protected:
   int              NGP;      // Number of ghost particles needed.
   int              NGN;      // Number of ghost nodes     needed.
   
-  list<Patch::FaceType>  d_bndy_traction_faces; // list of xminus, xplus, yminus, ...
-  vector<MPMPhysicalBC*> d_physicalBCs;
+  std::list<Patch::FaceType>  d_bndy_traction_faces; // list of xminus, xplus, yminus, ...
+  std::vector<MPMPhysicalBC*> d_physicalBCs;
 
-  vector<double>   d_prescribedTimes;    // These three are used only if
-  vector<double>  d_prescribedAngle;  // d_prescribeDeformation
-  vector<Vector>  d_prescribedRotationAxis; // is "true".  It is "false" by default.
-  vector<Matrix3>  d_prescribedF;
+  std::vector<double>   d_prescribedTimes;    // These three are used only if
+  std::vector<double>  d_prescribedAngle;  // d_prescribeDeformation
+  std::vector<Vector>  d_prescribedRotationAxis; // is "true".  It is "false" by default.
+  std::vector<Matrix3>  d_prescribedF;
 
   // The following are used iff the d_insertParticles flag is true.
-  vector<double> d_IPTimes;
-  vector<double> d_IPColor;
-  vector<Vector> d_IPTranslate;
-  vector<Vector> d_IPVelNew;
+  std::vector<double> d_IPTimes;
+  std::vector<double> d_IPColor;
+  std::vector<Vector> d_IPTranslate;
+  std::vector<Vector> d_IPVelNew;
 
 
 

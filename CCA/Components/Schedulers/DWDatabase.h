@@ -214,7 +214,7 @@ decrementScrubCount(const VarLabel* label, int matlIndex, const DomainType* dom)
   //   after a task has used the var, it will call decrementScrubCount
   //   If scrubCount then is equal to 0, the var is scrubbed.
 
-  USE_IF_ASSERTS_ON(if (data.scrubCount <= 0) { cerr << "Var: " << *label << " matl " << matlIndex << " patch " << dom->getID() << endl; })
+  USE_IF_ASSERTS_ON(if (data.scrubCount <= 0) { std::cerr << "Var: " << *label << " matl " << matlIndex << " patch " << dom->getID() << std::endl; })
   ASSERT(data.scrubCount > 0);
   int count = data.scrubCount-1;
   if(!--data.scrubCount)
@@ -247,7 +247,7 @@ DWDatabase<DomainType>::scrub(const VarLabel* label, int matlIndex, const Domain
   SCI_THROW(InternalError(msgstr.str(), __FILE__, __LINE__));
   }
 #endif
-  pair<typename varDBtype::const_iterator, typename varDBtype::const_iterator> ret = vars.equal_range(v);
+  std::pair<typename varDBtype::const_iterator, typename varDBtype::const_iterator> ret = vars.equal_range(v);
   for (typename varDBtype::const_iterator iter=ret.first; iter!=ret.second; ++iter){
     delete iter->second.var;
   }
@@ -318,7 +318,7 @@ DWDatabase<DomainType>::put( const VarLabel* label, int matlIndex,const DomainTy
     } 
   }
   if (count == 0) {
-    typename varDBtype::iterator iter = vars.insert(pair<VarLabelMatl<DomainType>, DataItem>(v, DataItem()));
+    typename varDBtype::iterator iter = vars.insert(std::pair<VarLabelMatl<DomainType>, DataItem>(v, DataItem()));
     iter->second.var=var; 
   }
 }
@@ -332,7 +332,7 @@ DWDatabase<DomainType>::putForeign( const VarLabel* label, int matlIndex,const D
   ASSERT(matlIndex >= -1);
   
   VarLabelMatl<DomainType> v(label, matlIndex, getRealDomain(dom));
-  typename varDBtype::iterator iter = vars.insert(pair<VarLabelMatl<DomainType>, DataItem>(v, DataItem()));
+  typename varDBtype::iterator iter = vars.insert(std::pair<VarLabelMatl<DomainType>, DataItem>(v, DataItem()));
   iter->second.var=var; 
   iter->second.version=vars.count(v)-1;
 }
@@ -343,7 +343,7 @@ DWDatabase<DomainType>::getDataItem( const VarLabel* label, int matlIndex, const
 {
   ASSERT(matlIndex >= -1);
   VarLabelMatl<DomainType> v(label, matlIndex, getRealDomain(dom));
-  pair<typename varDBtype::const_iterator, typename varDBtype::const_iterator> ret = vars.equal_range(v);
+  std::pair<typename varDBtype::const_iterator, typename varDBtype::const_iterator> ret = vars.equal_range(v);
   for (typename varDBtype::const_iterator iter=ret.first; iter!=ret.second; ++iter){
     if (iter->second.version == 0 ) {
       return iter->second;
@@ -384,7 +384,7 @@ DWDatabase<DomainType>::getlist( const VarLabel* label,
 				      vector<Variable*>& varlist ) const
 {
   VarLabelMatl<DomainType> v(label, matlIndex, getRealDomain(dom));
-  pair<typename varDBtype::const_iterator, typename varDBtype::const_iterator> ret = vars.equal_range(v);
+  std::pair<typename varDBtype::const_iterator, typename varDBtype::const_iterator> ret = vars.equal_range(v);
 
   varlist.resize(vars.count(v));
   for (typename varDBtype::const_iterator iter=ret.first; iter!=ret.second; ++iter)
@@ -450,7 +450,7 @@ namespace __gnu_cxx
   using Uintah::DWDatabase;
   using Uintah::VarLabelMatl;
   template <class DomainType>
-  struct hash<VarLabelMatl<DomainType> > : public unary_function<VarLabelMatl<DomainType>, size_t>
+  struct hash<VarLabelMatl<DomainType> > : public std::unary_function<VarLabelMatl<DomainType>, size_t>
   {
     size_t operator()(const VarLabelMatl<DomainType>& v) const
     {

@@ -46,7 +46,6 @@ DEALINGS IN THE SOFTWARE.
 
 namespace Uintah {
 
-using namespace std;
 
 class Output;
 class DetailedTask;
@@ -126,11 +125,11 @@ WARNING
 
     /// Get all of the requires needed from the old data warehouse
     /// (carried forward).
-    virtual const vector<const Task::Dependency*>& getInitialRequires()
+    virtual const std::vector<const Task::Dependency*>& getInitialRequires()
       { return d_initRequires; }
-    virtual const set<const VarLabel*, VarLabel::Compare>& getInitialRequiredVars() const
+    virtual const std::set<const VarLabel*, VarLabel::Compare>& getInitialRequiredVars() const
        { return d_initRequiredVars; }
-    virtual const set<const VarLabel*, VarLabel::Compare>& getComputedVars() const
+    virtual const std::set<const VarLabel*, VarLabel::Compare>& getComputedVars() const
        { return d_computedVars; }
 
     virtual LoadBalancer* getLoadBalancer();
@@ -159,7 +158,7 @@ WARNING
     // the expected ghost cells (requiredLow, requiredHigh) and the requested
     // ghost cells as well (requestedLow, requestedHigh) for each of the
     // patches.  Required and requested will besame if requestedNumGCells = 0.
-    virtual const vector<const Patch*>*
+    virtual const std::vector<const Patch*>*
     getSuperPatchExtents(const VarLabel* label, int matlIndex,
 			 const Patch* patch, Ghost::GhostType requestedGType,
 			 int requestedNumGCells, IntVector& requiredLow,
@@ -170,7 +169,7 @@ WARNING
     // Makes and returns a map that maps strings to VarLabels of
     // that name and a list of material indices for which that
     // variable is valid (at least according to d_allcomps).
-    typedef map< string, list<int> > VarLabelMaterialMap;
+    typedef std::map< std::string, std::list<int> > VarLabelMaterialMap;
     virtual VarLabelMaterialMap* makeVarLabelMaterialMap();
 
     virtual bool isOldDW(int idx) const;
@@ -195,9 +194,9 @@ WARNING
     // Insert Documentation Here:
     virtual void scheduleParticleRelocation(const LevelP& level,
 					    const VarLabel* old_posLabel,
-					    const vector<vector<const VarLabel*> >& old_labels,
+					    const std::vector<std::vector<const VarLabel*> >& old_labels,
 					    const VarLabel* new_posLabel,
-					    const vector<vector<const VarLabel*> >& new_labels,
+					    const std::vector<std::vector<const VarLabel*> >& new_labels,
 					    const VarLabel* particleIDLabel,
 					    const MaterialSet* matls,int which);
 
@@ -205,9 +204,9 @@ WARNING
     // Insert Documentation Here:
     virtual void scheduleParticleRelocation(const LevelP& level,
 					    const VarLabel* old_posLabel,
-					    const vector<vector<const VarLabel*> >& old_labels,
+					    const std::vector<std::vector<const VarLabel*> >& old_labels,
 					    const VarLabel* new_posLabel,
-					    const vector<vector<const VarLabel*> >& new_labels,
+					    const std::vector<std::vector<const VarLabel*> >& new_labels,
 					    const VarLabel* particleIDLabel,
 					    const MaterialSet* matls);
     
@@ -216,11 +215,11 @@ WARNING
     virtual void scheduleAndDoDataCopy(const GridP& grid, SimulationInterface* sim);
 
     //! override default behavior of copying, scrubbing, and such
-    virtual void overrideVariableBehavior(string var, bool treatAsOld, 
+    virtual void overrideVariableBehavior(std::string var, bool treatAsOld, 
                                           bool copyData, bool noScrub);
 
-    const set<string>& getNoScrubVars() { return noScrubVars_;}
-    const set<string>& getCopyDataVars() { return copyDataVars_;}
+    const std::set<std::string>& getNoScrubVars() { return noScrubVars_;}
+    const std::set<std::string>& getCopyDataVars() { return copyDataVars_;}
 
     virtual bool useInternalDeps();
     
@@ -260,7 +259,7 @@ WARNING
     
     virtual void verifyChecksum() = 0;
 
-    vector<TaskGraph*> graphs;
+    std::vector<TaskGraph*> graphs;
     int currentTG_;
     int numTasks_;
     int d_generation;
@@ -278,9 +277,9 @@ WARNING
 
     //! These are so we can track certain variables over the taskgraph's
     //! execution.
-    vector<string> trackingVars_;
-    vector<string> trackingTasks_;
-    vector<Task::WhichDW> trackingDWs_;
+    std::vector<std::string> trackingVars_;
+    std::vector<std::string> trackingTasks_;
+    std::vector<Task::WhichDW> trackingDWs_;
     int trackingVarsPrintLocation_;
     int trackingPatchID_;
     double trackingStartTime_;
@@ -293,14 +292,14 @@ WARNING
     Ghost::GhostType particleGhostType_;
 
     // so we can manually copy vars between AMR levels
-    set<string> copyDataVars_;
+    std::set<std::string> copyDataVars_;
 
     // vars manually set not to scrub (normally when needed between a normal taskgraph
     // and the regridding phase)
-    set<string> noScrubVars_;
+    std::set<std::string> noScrubVars_;
 
     // treat variable as an "old" var - will be checkpointed, copied, and only scrubbed from an OldDW
-    set<string> treatAsOldVars_;
+    std::set<std::string> treatAsOldVars_;
     
   private:
 
@@ -312,7 +311,7 @@ WARNING
 
     ProblemSpecP m_graphDoc;
     ProblemSpecP m_nodes;
-    ofstream* memlogfile;
+    std::ofstream* memlogfile;
     bool emit_taskgraph;
     LocallyComputedPatchVarMap* m_locallyComputedPatchVarMap;
     Relocate         reloc1_;
@@ -324,13 +323,13 @@ WARNING
     //! These are to store which vars we have to copy to the new grid
     //! in a copy data task.  Set in scheduleDataCopy and used in
     //! copyDataToNewGrid.
-    typedef map<const VarLabel*, MaterialSubset*, VarLabel::Compare> label_matl_map;
-    vector<label_matl_map> label_matls_;
+    typedef std::map<const VarLabel*, MaterialSubset*, VarLabel::Compare> label_matl_map;
+    std::vector<label_matl_map> label_matls_;
 
     //! set in addTask - can be used until initialize is called...
-    vector<const Task::Dependency*> d_initRequires;
-    set<const VarLabel*, VarLabel::Compare> d_initRequiredVars;
-    set<const VarLabel*, VarLabel::Compare> d_computedVars;
+    std::vector<const Task::Dependency*> d_initRequires;
+    std::set<const VarLabel*, VarLabel::Compare> d_initRequiredVars;
+    std::set<const VarLabel*, VarLabel::Compare> d_computedVars;
 
     //max ghost cells of all tasks - will be used for loadbalancer to create neighorhood
     int maxGhost;

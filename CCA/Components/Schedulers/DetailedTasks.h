@@ -98,7 +98,7 @@ namespace Uintah {
     DetailedDep* next;
     Task::Dependency* comp;
     Task::Dependency* req;
-    list<DetailedTask*> toTasks;
+    std::list<DetailedTask*> toTasks;
     const Patch* fromPatch;
     IntVector low, high;
     int matl;
@@ -150,23 +150,23 @@ namespace Uintah {
     //DependencyBatch* req_next;
     DependencyBatch* comp_next;
     DetailedTask* fromTask;
-    list<DetailedTask*> toTasks;
+    std::list<DetailedTask*> toTasks;
     DetailedDep* head;
     int messageTag;
     int to;
 
     //scratch pad to store wait times for debugging
-    static map<string,double> waittimes;
+    static std::map<string,double> waittimes;
   private:
     volatile bool received_;
     volatile bool madeMPIRequest_;
     Mutex* lock_;
-    set<int> receiveListeners_;
+    std::set<int> receiveListeners_;
 
     DependencyBatch(const DependencyBatch&);
     DependencyBatch& operator=(const DependencyBatch&);
     
-    vector<Variable*> toVars;
+    std::vector<Variable*> toVars;
   };
 
   struct InternalDependency {
@@ -182,7 +182,7 @@ namespace Uintah {
     
     DetailedTask* prerequisiteTask;
     DetailedTask* dependentTask;
-    set<const VarLabel*, VarLabel::Compare> vars;
+    std::set<const VarLabel*, VarLabel::Compare> vars;
     unsigned long satisfiedGeneration;
   };
 
@@ -196,14 +196,14 @@ namespace Uintah {
    
     void setProfileType(ProfileType type) {d_profileType=type;}
     ProfileType getProfileType() {return d_profileType;}
-    void doit(const ProcessorGroup* pg, vector<OnDemandDataWarehouseP>& oddws,
-	      vector<DataWarehouseP>& dws);
+    void doit(const ProcessorGroup* pg, std::vector<OnDemandDataWarehouseP>& oddws,
+	      std::vector<DataWarehouseP>& dws);
     // Called after doit and mpi data sent (packed in buffers) finishes.
     // Handles internal dependencies and scrubbing.
     // Called after doit finishes.
-    void done(vector<OnDemandDataWarehouseP>& dws);
+    void done(std::vector<OnDemandDataWarehouseP>& dws);
 
-    string getName() const;
+    std::string getName() const;
     
     const Task* getTask() const {
       return task;
@@ -224,7 +224,7 @@ namespace Uintah {
      return taskGroup;
     }
 
-    map<DependencyBatch*, DependencyBatch*>& getRequires() {
+    std::map<DependencyBatch*, DependencyBatch*>& getRequires() {
       return reqs;
     }
     DependencyBatch* getComputes() const {
@@ -232,7 +232,7 @@ namespace Uintah {
     }
 
     void findRequiringTasks(const VarLabel* var,
-			    list<DetailedTask*>& requiringTasks);
+			    std::list<DetailedTask*>& requiringTasks);
 
     void emitEdges(ProblemSpecP edgesElement);
 
@@ -259,12 +259,12 @@ namespace Uintah {
     friend class TaskGraph;
   private:
     // called by done()
-    void scrub(vector<OnDemandDataWarehouseP>&);
+    void scrub(std::vector<OnDemandDataWarehouseP>&);
 
     Task* task;
     const PatchSubset* patches;
     const MaterialSubset* matls;
-    map<DependencyBatch*, DependencyBatch*> reqs;
+    std::map<DependencyBatch*, DependencyBatch*> reqs;
     DependencyBatch* comp_head;
     DetailedTasks* taskGroup;
 
@@ -272,7 +272,7 @@ namespace Uintah {
     bool externallyReady_;
     int externalDependencyCount_;
 
-    mutable string name_; /* doesn't get set until getName() is called
+    mutable std::string name_; /* doesn't get set until getName() is called
 			     the first time. */
 
     // Called when prerequisite tasks (dependencies) call done.
@@ -280,11 +280,11 @@ namespace Uintah {
 
     
     // Internal dependencies are dependencies within the same process.
-    list<InternalDependency> internalDependencies;
+    std::list<InternalDependency> internalDependencies;
     
     // internalDependents will point to InternalDependency's in the
     // internalDependencies list of the requiring DetailedTasks.
-    map<DetailedTask*, InternalDependency*> internalDependents;
+    std::map<DetailedTask*, InternalDependency*> internalDependents;
     
     unsigned long numPendingInternalDependencies;
     Mutex internalDependencyLock;
@@ -312,7 +312,7 @@ namespace Uintah {
   class DetailedTasks {
   public:
     DetailedTasks(SchedulerCommon* sc, const ProcessorGroup* pg,
-		  DetailedTasks* first, const TaskGraph* taskgraph, const set<int> &neighborhood_processors,
+		  DetailedTasks* first, const TaskGraph* taskgraph, const std::set<int> &neighborhood_processors,
 		  bool mustConsiderInternalDependencies = false);
     ~DetailedTasks();
 
@@ -327,7 +327,7 @@ namespace Uintah {
 
     void assignMessageTags(int me);
 
-    void initializeScrubs(vector<OnDemandDataWarehouseP>& dws, int dwmap[]);
+    void initializeScrubs(std::vector<OnDemandDataWarehouseP>& dws, int dwmap[]);
 
     void possiblyCreateDependency(DetailedTask* from, Task::Dependency* comp,
 				  const Patch* fromPatch,
@@ -372,7 +372,7 @@ namespace Uintah {
       return taskgraph_;
     }
     void setScrubCount(const Task::Dependency* req, int matl, const Patch* patch,
-                       vector<OnDemandDataWarehouseP>& dws);
+                       std::vector<OnDemandDataWarehouseP>& dws);
 
     int getExtraCommunication() { return extraCommunication_; }
 
@@ -393,7 +393,7 @@ namespace Uintah {
       return sc_;
     }
   private:
-    map<int,int> sendoldmap;
+    std::map<int,int> sendoldmap;
     ParticleExchangeVar particleSends_;
     ParticleExchangeVar particleRecvs_;
 
@@ -417,14 +417,14 @@ namespace Uintah {
     const ProcessorGroup* d_myworld;
     // store the first so we can share the scrubCountTable
     DetailedTasks* first;
-    vector<DetailedTask*> tasks_;
+    std::vector<DetailedTask*> tasks_;
 #if 0
-    vector<DetailedReq*> initreqs_;
+    std::vector<DetailedReq*> initreqs_;
 #endif
     const TaskGraph* taskgraph_;
     Task* stask_;
-    vector<DetailedTask*> localtasks_;
-    vector<DependencyBatch*> batches_;
+    std::vector<DetailedTask*> localtasks_;
+    std::vector<DependencyBatch*> batches_;
     DetailedDep* initreq_;
     
     // True for mixed scheduler which needs to keep track of internal
@@ -437,8 +437,8 @@ namespace Uintah {
     // first topological order.
     //typedef priority_queue<DetailedTask*, vector<DetailedTask*>, TaskNumberCompare> TaskQueue;    
     QueueAlg taskPriorityAlg_;
-    typedef queue<DetailedTask*> TaskQueue;
-    typedef priority_queue<DetailedTask*, vector<DetailedTask*>, DetailedTaskPriorityComparison> TaskPQueue;
+    typedef std::queue<DetailedTask*> TaskQueue;
+    typedef std::priority_queue<DetailedTask*, vector<DetailedTask*>, DetailedTaskPriorityComparison> TaskPQueue;
     
     TaskQueue readyTasks_; 
     TaskQueue initiallyReadyTasks_;

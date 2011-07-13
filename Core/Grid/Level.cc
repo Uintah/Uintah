@@ -70,6 +70,7 @@ DEALINGS IN THE SOFTWARE.
 #define rint(x) (int)((x>0) ? x+.5 : x-.5)
 #endif
 
+using namespace std;
 using namespace Uintah;
 using namespace SCIRun;
 

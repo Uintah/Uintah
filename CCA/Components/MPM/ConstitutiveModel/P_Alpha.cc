@@ -49,7 +49,7 @@ DEALINGS IN THE SOFTWARE.
 #include <fstream>
 #include <iostream>
 
-using std::cerr;
+using namespace std;
 using namespace Uintah;
 
 P_Alpha::P_Alpha(ProblemSpecP& ps,MPMFlags* Mflag)

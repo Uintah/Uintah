@@ -37,6 +37,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Malloc/Allocator.h>
 #include <iostream>
 
+using namespace std;
 using namespace Uintah;
 using namespace SCIRun;
 

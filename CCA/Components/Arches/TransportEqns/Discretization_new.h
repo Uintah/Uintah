@@ -928,8 +928,8 @@ namespace Uintah{
             Sdn = 0.0; 
             psi = 0.0;
           }
-          psi = max( min(2.0*r, 1.0), min(r, 2.0) );
-          psi = max( 0.0, psi );
+          psi = std::max( std::min(2.0*r, 1.0), std::min(r, 2.0) );
+          psi = std::max( 0.0, psi );
 
           face_values.minus = Sup + 0.5*psi*( Sdn - Sup );
 
@@ -955,8 +955,8 @@ namespace Uintah{
             Sdn = 0.0; 
             psi = 0.0;
           }
-          psi = max( min(2.0*r, 1.0), min(r, 2.0) );
-          psi = max( 0.0, psi );
+          psi = std::max( std::min(2.0*r, 1.0), std::min(r, 2.0) );
+          psi = std::max( 0.0, psi );
 
           face_values.plus = Sup + 0.5*psi*( Sdn - Sup );
 
@@ -1014,8 +1014,8 @@ namespace Uintah{
               Sdn = 0.0; 
               psi = 0.0;
             }
-            psi = max( min(2.0*r, 1.0), min(r, 2.0) );
-            psi = max( 0.0, psi );
+            psi = std::max( std::min(2.0*r, 1.0), std::min(r, 2.0) );
+            psi = std::max( 0.0, psi );
 
             face_values.minus = Sup + 0.5*psi*( Sdn - Sup );
           }
@@ -1045,8 +1045,8 @@ namespace Uintah{
               Sdn = 0.0; 
               psi = 0.0;
             }
-            psi = max( min(2.0*r, 1.0), min(r, 2.0) );
-            psi = max( 0.0, psi );
+            psi = std::max( std::min(2.0*r, 1.0), std::min(r, 2.0) );
+            psi = std::max( 0.0, psi );
 
             face_values.plus = Sup + 0.5*psi*( Sdn - Sup );
           }
@@ -1115,8 +1115,8 @@ namespace Uintah{
             Sdn = 0.0; 
             psi = 0.0;
           }
-          psi = max( min(2.0*r, 1.0), min(r, 2.0) );
-          psi = max( 0.0, psi );
+          psi = std::max( std::min(2.0*r, 1.0), std::min(r, 2.0) );
+          psi = std::max( 0.0, psi );
 
           face_values.minus = Sup + 0.5*psi*( Sdn - Sup );
 
@@ -1142,8 +1142,8 @@ namespace Uintah{
             Sdn = 0.0; 
             psi = 0.0;
           }
-          psi = max( min(2.0*r, 1.0), min(r, 2.0) );
-          psi = max( 0.0, psi );
+          psi = std::max( std::min(2.0*r, 1.0), std::min(r, 2.0) );
+          psi = std::max( 0.0, psi );
 
           face_values.plus = Sup + 0.5*psi*( Sdn - Sup );
 
@@ -1164,7 +1164,7 @@ namespace Uintah{
           const double tiny = 1.0e-16; 
           if ( c == IntVector(0,7,7) ) 
           { 
-            cout << "I want some food" << endl; 
+            std::cout << "I want some food" << std::endl; 
           } 
 
 
@@ -1211,8 +1211,8 @@ namespace Uintah{
               Sdn = 0.0; 
               psi = 0.0;
             }
-            psi = max( min(2.0*r, 1.0), min(r, 2.0) );
-            psi = max( 0.0, psi );
+            psi = std::max( std::min(2.0*r, 1.0), std::min(r, 2.0) );
+            psi = std::max( 0.0, psi );
 
             face_values.minus = Sup + 0.5*psi*( Sdn - Sup );
           }
@@ -1247,8 +1247,8 @@ namespace Uintah{
               Sdn = 0.0; 
               psi = 0.0;
             }
-            psi = max( min(2.0*r, 1.0), min(r, 2.0) );
-            psi = max( 0.0, psi );
+            psi = std::max( std::min(2.0*r, 1.0), std::min(r, 2.0) );
+            psi = std::max( 0.0, psi );
 
             face_values.plus = Sup + 0.5*psi*( Sdn - Sup );
           }
@@ -1324,8 +1324,8 @@ namespace Uintah{
             Sdn = 0.0; 
             psi = 0.0;
           }
-          psi = max( min(2.0*r, 1.0), min(r, 2.0) );
-          psi = max( 0.0, psi );
+          psi = std::max( std::min(2.0*r, 1.0), std::min(r, 2.0) );
+          psi = std::max( 0.0, psi );
 
           face_values.minus = Sup + 0.5*psi*( Sdn - Sup );
 
@@ -1351,8 +1351,8 @@ namespace Uintah{
             Sdn = 0.0; 
             psi = 0.0;
           }
-          psi = max( min(2.0*r, 1.0), min(r, 2.0) );
-          psi = max( 0.0, psi );
+          psi = std::max( std::min(2.0*r, 1.0), std::min(r, 2.0) );
+          psi = std::max( 0.0, psi );
 
           face_values.plus = Sup + 0.5*psi*( Sdn - Sup );
 
@@ -1413,8 +1413,8 @@ namespace Uintah{
               Sdn = 0.0; 
               psi = 0.0;
             }
-            psi = max( min(2.0*r, 1.0), min(r, 2.0) );
-            psi = max( 0.0, psi );
+            psi = std::max( std::min(2.0*r, 1.0), std::min(r, 2.0) );
+            psi = std::max( 0.0, psi );
 
             face_values.minus = Sup + 0.5*psi*( Sdn - Sup );
           }
@@ -1444,8 +1444,8 @@ namespace Uintah{
               Sdn = 0.0; 
               psi = 0.0;
             }
-            psi = max( min(2.0*r, 1.0), min(r, 2.0) );
-            psi = max( 0.0, psi );
+            psi = std::max( std::min(2.0*r, 1.0), std::min(r, 2.0) );
+            psi = std::max( 0.0, psi );
 
             face_values.plus = Sup + 0.5*psi*( Sdn - Sup );
           }
@@ -1840,9 +1840,9 @@ namespace Uintah{
             bc_kind = new_bcs->getBCType__NEW(); 
             bc_value = new_bcs->getValue();
           } else {
-            cout << "Warning!  Boundary condition not set for: " << endl;
-            cout << "variable = " << varName << endl;
-            cout << "face = " << face << endl;
+            std::cout << "Warning!  Boundary condition not set for: " << std::endl
+                      << "variable = " << varName << std::endl
+                      << "face = " << face << std::endl;
           }
 
           delete bc; 
@@ -2093,9 +2093,9 @@ namespace Uintah{
           if (new_bcs != 0) 
             bc_kind = new_bcs->getBCType__NEW(); 
           else {
-            cout << "Warning!  Boundary condition not set for: " << endl;
-            cout << "variable = " << varName << endl;
-            cout << "face = " << face << endl;
+            std::cout << "Warning!  Boundary condition not set for: " << std::endl
+                      << "variable = " << varName << std::endl
+                      << "face = " << face << std::endl;
           }
 
           delete bc; 

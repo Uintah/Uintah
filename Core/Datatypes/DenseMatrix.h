@@ -137,10 +137,10 @@ public:
   static DenseMatrix *identity(int size);
 
   virtual void    print() const;
-  virtual void    print(ostream&) const;
+  virtual void    print(std::ostream&) const;
   
   //! Persistent representation...
-  virtual string type_name() { return "DenseMatrix"; }
+  virtual std::string type_name() { return "DenseMatrix"; }
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
 

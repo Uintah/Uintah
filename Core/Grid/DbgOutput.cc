@@ -30,6 +30,8 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/DbgOutput.h>
 #include <Core/Parallel/Parallel.h>
 
+using namespace std;
+
 namespace Uintah{
 
 //__________________________________

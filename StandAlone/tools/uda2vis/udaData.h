@@ -32,9 +32,6 @@
 
 #include <string>
 #include <vector>
-using namespace std;
-
-
 
 class PatchInfo {
 public:
@@ -77,7 +74,7 @@ public:
 
 class LevelInfo {
 public:
-  vector<PatchInfo> patchInfo;
+  std::vector<PatchInfo> patchInfo;
   int refinementRatio[3];
   int extraCells[3];
   double spacing[3];
@@ -88,16 +85,16 @@ public:
 
 class VariableInfo {
 public:
-  string name;
-  string type;
-  vector<int> materials;
+  std::string name;
+  std::string type;
+  std::vector<int> materials;
 };
 
 
 class TimeStepInfo {
 public:
-  vector<LevelInfo> levelInfo;
-  vector<VariableInfo> varInfo;
+  std::vector<LevelInfo> levelInfo;
+  std::vector<VariableInfo> varInfo;
 };
 
 

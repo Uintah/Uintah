@@ -191,7 +191,7 @@ protected:
             for (CellIterator iter = patch->getCellIterator(); !iter.done(); ++iter){ 
 
               IntVector c = *iter; 
-              cout << abskg[c] << endl;
+              std::cout << abskg[c] << std::endl;
               abskg[c] = 0.90 * ( 1.0 - 2.0 * fabs( ( c[0] - (grid.x() - 1.0) /2.0) * Dx[0]) )
                               * ( 1.0 - 2.0 * fabs( ( c[1] - (grid.y() - 1.0) /2.0) * Dx[1]) )
                               * ( 1.0 - 2.0 * fabs( ( c[2] - (grid.z() - 1.0) /2.0) * Dx[2]) ) 

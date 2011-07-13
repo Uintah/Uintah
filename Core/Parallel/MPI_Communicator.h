@@ -29,8 +29,6 @@ DEALINGS IN THE SOFTWARE.
 
 
 #include <sci_defs/mpi_defs.h> // For MPIPP_H on SGI
-#include <iostream>
-#include <vector>
 #include <queue>
 #include <unistd.h>
 #include <cstdlib>
@@ -45,7 +43,6 @@ int WAIT_TIME_DEFAULT   = 10000; //how many microseconds to sleep before trigger
 int NUM_IPROBES_DEFAULT = 15;    //how many Iprobes to do inside of the progress loop
 
 
-using namespace std;
 using namespace SCIRun;
 
 class MpiCall {
@@ -116,7 +113,7 @@ public:
   pthread_key_t   thread_running;
 
 private:
-  queue<MpiCall*> mpiCallQueue;
+  std::queue<MpiCall*> mpiCallQueue;
   Thread *MPIThread;
 
   Mutex mutey; //mutey("MPI call queue");

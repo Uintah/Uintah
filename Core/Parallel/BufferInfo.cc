@@ -28,7 +28,6 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-
 #include <Core/Parallel/BufferInfo.h>
 #include <Core/Util/RefCounted.h>
 #include <Core/Util/Assert.h>
@@ -37,6 +36,7 @@ DEALINGS IN THE SOFTWARE.
 
 #include <Core/Parallel/uintahshare.h>
 using namespace Uintah;
+using std::vector;
 
 UINTAHSHARE SCIRun::Mutex MPITypeLock( "MPITypeLock" );
 

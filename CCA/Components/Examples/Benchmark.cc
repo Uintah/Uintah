@@ -45,6 +45,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/BoundaryConditions/BCDataArray.h>
 #include <Core/Grid/BoundaryConditions/BoundCond.h>
 
+using namespace std;
 using namespace Uintah;
 
 Benchmark::Benchmark(const ProcessorGroup* myworld)

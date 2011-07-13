@@ -42,9 +42,8 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <string>
-using std::cerr;
 
-
+using namespace std;
 using namespace Uintah;
 
 Contact* ContactFactory::create(const ProcessorGroup* myworld,

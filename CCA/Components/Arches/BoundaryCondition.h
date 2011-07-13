@@ -314,7 +314,7 @@ namespace Uintah {
       }
 
       bool getIntrusionBC() { 
-        cout << "Intrusion machinery has been disabled" << endl;
+        std::cout << "Intrusion machinery has been disabled" << std::endl;
         exit(1);
         return 1;
         //return d_intrusionBoundary; 

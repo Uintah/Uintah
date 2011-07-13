@@ -46,7 +46,7 @@ ConvergenceFailure::ConvergenceFailure(const string& message,
                                        const char* file,
                                        int line)
 {
-  ostringstream s;
+  std::ostringstream s;
   s << "A ConvergenceFailure exception was thrown.\n"
     << file << ":" << line << "\n"
     << message << " failed to converge in " << numiterations << " iterations"

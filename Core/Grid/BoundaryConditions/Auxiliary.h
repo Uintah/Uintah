@@ -34,9 +34,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/BoundaryConditions/BoundCondBase.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Malloc/Allocator.h>
-#include <iostream>
 
-using namespace std;
 
 namespace Uintah {
    

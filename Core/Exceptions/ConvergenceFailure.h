@@ -50,10 +50,10 @@ DEALINGS IN THE SOFTWARE.
 
 #include <Core/Exceptions/uintahshare.h>
 namespace Uintah {
-  using namespace std;
+
   class UINTAHSHARE ConvergenceFailure : public SCIRun::Exception {
   public:
-    ConvergenceFailure(const string& msg,
+    ConvergenceFailure(const std::string& msg,
 		       int numiterations, double final_residual,
 		       double target_residual,
                        const char* file, int line);

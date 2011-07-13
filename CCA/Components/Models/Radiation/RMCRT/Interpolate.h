@@ -3,7 +3,6 @@
 #include <iostream>
 #include <cmath>
 
-using namespace std;
 
 double Interpolate(double value000, double value001, double value010, double value011,
     double value100, double value101, double value110, double value111,
@@ -27,11 +26,11 @@ double Interpolate(double value000, double value001, double value010, double val
   interped_value = (line_value[1] - line_value[0])*cc_ray_location[2]/k_dist + line_value[0];
 
 /*  if (k==4){
-  //  cout << "face_values " << face_value[0] << "  " << face_value[1] << "  " <<face_value[2] << " " << face_value[3] <<endl;
+  //  std::cout << "face_values " << face_value[0] << "  " << face_value[1] << "  " <<face_value[2] << " " << face_value[3] << std::endl;
 //  }
   if (k==4){
-  //  cout << "line_values " << line_value[0] << "  " << line_value[1] << endl;
-    cout << "interped_value " << interped_value << endl;
+  //  std::cout << "line_values " << line_value[0] << "  " << line_value[1] << endl;
+    std::cout << "interped_value " << interped_value << std::endl;
   }
 */
 

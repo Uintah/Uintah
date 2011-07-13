@@ -42,6 +42,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/GeometryPiece/SphereMembraneGeometryPiece.h>
 #include <iostream>
 
+using namespace std;
 using namespace Uintah;
 
 MembraneParticleCreator::MembraneParticleCreator(MPMMaterial* matl,

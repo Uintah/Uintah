@@ -78,6 +78,7 @@ DEALINGS IN THE SOFTWARE.
 
 #include <cmath>
 
+using namespace std;
 using namespace Uintah;
 
 static DebugStream dbg("ARCHES", false);

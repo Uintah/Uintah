@@ -33,6 +33,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/PatchRangeTree.h>
 #include <list>
 
+using namespace std;
 using namespace Uintah;
 using namespace SCIRun;
 

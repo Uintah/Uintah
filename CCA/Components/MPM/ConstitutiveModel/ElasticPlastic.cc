@@ -71,7 +71,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Exceptions/ParameterNotFound.h>
 
 
-using std::cerr;
+using namespace std;
 using namespace Uintah;
 
 static DebugStream cout_EP("EP",false);

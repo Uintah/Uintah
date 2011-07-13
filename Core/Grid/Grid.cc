@@ -44,6 +44,7 @@ DEALINGS IN THE SOFTWARE.
 #include <iostream>
 #include <sci_values.h>
 
+using namespace std;
 using namespace Uintah;
 using namespace SCIRun;
 

@@ -41,9 +41,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <iostream>
 
-using std::cerr;
-using std::endl;
-
+using namespace std;
 using namespace Uintah;
 
 SchedulerCommon* SchedulerFactory::create(ProblemSpecP& ps, 
