@@ -39,6 +39,8 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Parallel/uintahshare.h>
 namespace Uintah {
 
+  using namespace std;
+
   class RefCounted;
   class ProcessorGroup;
 
