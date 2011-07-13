@@ -35,6 +35,7 @@ DEALINGS IN THE SOFTWARE.
 
 #include <Core/Geometry/Point.h>
 
+using namespace std;
 using namespace SCIRun;
 
 //////////////////////////////////////////////////////////////////////////////////

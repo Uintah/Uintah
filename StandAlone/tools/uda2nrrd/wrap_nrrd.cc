@@ -48,6 +48,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Geometry/Point.h>
 #include <Core/Util/TypeDescription.h>
 
+using namespace std;
 using namespace SCIRun;
 using namespace Uintah;
 
