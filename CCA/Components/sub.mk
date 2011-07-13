@@ -52,7 +52,7 @@ ifeq ($(BUILD_ICE),yes)
   ICE      := $(SRCDIR)/ICE
 endif
 ifeq ($(BUILD_ARCHES),yes)
-  ARCHES   := $(SRCDIR)/Arches $(SRCDIR)/SpatialOps
+  ARCHES   := $(SRCDIR)/Arches
   ifeq ($(BUILD_MPM),yes)
     MPMARCHES := $(SRCDIR)/MPMArches
   endif

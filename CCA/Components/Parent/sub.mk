@@ -38,10 +38,6 @@ COMPONENTS := CCA/Components
 SRCS := $(SRCDIR)/Switcher.cc \
         $(SRCDIR)/ComponentFactory.cc
 
-ifeq ($(BUILD_ARCHES),yes)
-  MORE_LIBS := $(COMPONENTS)/SpatialOps
-endif
-
 # ARCHES et. al. should have been seen by CCA/Components/sub.mk
 PSELIBS := \
         Core/Containers  \
