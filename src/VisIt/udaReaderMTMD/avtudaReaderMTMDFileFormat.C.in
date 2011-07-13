@@ -75,6 +75,9 @@
 #include <DBOptionsAttributes.h>
 
 
+using std::max;
+using std::min;
+
 //#ifdef PARALLEL
 // we only get the option for  serialized reads if compiling the parallel version
 //#  define SERIALIZED_READS
