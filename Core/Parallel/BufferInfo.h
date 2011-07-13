@@ -1,3 +1,6 @@
+#ifndef UINTAH_HOMEBREW_BufferInfo_H
+#define UINTAH_HOMEBREW_BufferInfo_H
+
 /*
 
 The MIT License
@@ -27,19 +30,13 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-
-
-#ifndef UINTAH_HOMEBREW_BufferInfo_H
-#define UINTAH_HOMEBREW_BufferInfo_H
-
 #include <sci_defs/mpi_defs.h> // For mpi.h
 
-#include   <vector>
-
 #include <Core/Parallel/uintahshare.h>
-namespace Uintah {
 
-  using namespace std;
+#include <vector>
+
+namespace Uintah {
 
   class RefCounted;
   class ProcessorGroup;

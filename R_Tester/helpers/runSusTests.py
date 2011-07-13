@@ -143,7 +143,7 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
     mkdir(resultsdir)
   except Exception:
     if solotest == "":
-      print "Remove %s before running this test" % resultsdir
+      print "Remove %s before running this test\n" % resultsdir
       exit(1)
 
   chdir(resultsdir)
@@ -502,6 +502,7 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
 
 
   SVN_OPTIONS = "-svnStat -svnDiff"
+  #SVN_OPTIONS = "" # When debugging, if you don't want to spend time waiting for SVN, uncomment this line.
 
   # set the command for sus, based on # of processors
   # the /usr/bin/time is to tell how long it took

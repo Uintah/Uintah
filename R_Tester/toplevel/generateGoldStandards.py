@@ -326,14 +326,15 @@ def generateGS() :
                     MALLOC_FLAG = " -x MALLOC_STATS "
 
             SVN_FLAGS = " -svnStat -svnDiff "
+            #SVN_FLAGS = "" # When debugging, if you don't want to spend time waiting for SVN, uncomment this line.
 
             if np > 1.0 :
                 np = int( np )
                 mpirun = "%s -np %s  " % (MPIRUN,np)
 
-                command = mpirun + MALLOC_FLAG + sus + SVN_FLAGS + inputs + "/" + component + "/" + input( test )  #+ " >> sus_log.txt " 
+                command = mpirun + MALLOC_FLAG + sus + SVN_FLAGS + " " + inputs + "/" + component + "/" + input( test )  #+ " >> sus_log.txt " 
             else :
-                command = sus + SVN_FLAGS + inputs + "/" + component + "/" + input( test )  #+ " >> sus_log.txt " 
+                command = sus + SVN_FLAGS + " " + inputs + "/" + component + "/" + input( test )  #+ " >> sus_log.txt " 
 
             print "Running command: " + command
 
