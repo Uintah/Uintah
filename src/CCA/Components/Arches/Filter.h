@@ -175,7 +175,7 @@ bool applyFilter(const ProcessorGroup* ,
         vecvaluex = var[IntVector(colX, colY, colZ)];
         int row = l2g[IntVector(colX, colY, colZ)];         
         
-        ASSERT(!isnan(vecvaluex));
+        ASSERT(!std::isnan(vecvaluex));
         ierr = VecSetValue(d_x, row, vecvaluex, INSERT_VALUES);
         if(ierr)
           throw UintahPetscError(ierr, "VecSetValue", __FILE__, __LINE__);
