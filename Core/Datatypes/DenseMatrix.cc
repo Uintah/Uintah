@@ -61,7 +61,10 @@
 #  include <Core/Math/sci_lapack.h>
 #endif
 
-using namespace std;
+using std::cout;
+using std::endl;
+using std::vector;
+//using namespace std;
 
 namespace SCIRun {
 
@@ -653,7 +656,7 @@ DenseMatrix::print() const
 
 
 void
-DenseMatrix::print(ostream& ostr) const
+DenseMatrix::print(std::ostream& ostr) const
 {
   for (int i=0; i<nrows_; i++)
   {
@@ -739,7 +742,7 @@ DenseMatrix::io(Piostream& stream)
         {
           const string errmsg = "Error reading separated file '" +
             raw_filename_ + "'";
-          cerr << errmsg << "\n";
+          std::cerr << errmsg << "\n";
           throw FileNotFound(errmsg, __FILE__, __LINE__);
         }
       }
