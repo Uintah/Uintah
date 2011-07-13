@@ -122,7 +122,7 @@ WARNING
     void runTask( DetailedTask* task, int iteration );
     void runReductionTask( DetailedTask* task );        
 
-    void addToSendList(const MPI_Request& request, int bytes, AfterCommunicationHandler* buf, const string& var);
+    void addToSendList(const MPI_Request& request, int bytes, AfterCommunicationHandler* buf, const std::string& var);
 
     // get the processor group executing with (only valid during execute())
     const ProcessorGroup* getProcessorGroup()
@@ -183,8 +183,8 @@ WARNING
     CommRecMPI            recvs_;
 
     double           d_lasttime;
-    vector<const char*>    d_labels;
-    vector<double>   d_times;
+    std::vector<const char*>    d_labels;
+    std::vector<double>   d_times;
     ofstream         timingStats, avgStats, maxStats;
 
     void emitTime(const char* label);
