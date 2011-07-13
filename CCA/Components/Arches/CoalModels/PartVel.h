@@ -44,7 +44,7 @@ public:
 
   /** @brief  Sets the velocity vector boundary condtions */
   void computeBCs( const Patch* patch, 
-                   string varName, 
+                   std::string varName, 
                    CCVariable<Vector>& vel ){
     d_boundaryCond->setVectorValueBC( 0, patch, vel, varName ); 
   };
@@ -117,8 +117,8 @@ private:
   bool d_gasBC;           ///< Boolean: Use gas velocity boundary conditions for particle velocity boundary conditions?
   double d_min_vel_ratio; ///< Min ratio allow for the velocity difference. 
 
-  vector<double> d_wlo;   ///< Initial value of weighted abscissa for length internal coordinate
-  vector<double> d_wo;    ///< Initial value of weight
+  std::vector<double> d_wlo;   ///< Initial value of weighted abscissa for length internal coordinate
+  std::vector<double> d_wo;    ///< Initial value of weight
 
   BoundaryCondition_new* d_boundaryCond; 
 
