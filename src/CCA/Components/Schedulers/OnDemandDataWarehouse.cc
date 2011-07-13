@@ -75,12 +75,8 @@ DEALINGS IN THE SOFTWARE.
 #include <cstring>
 
 
-using std::cerr;
-using std::string;
-using std::vector;
-
+using namespace std;
 using namespace SCIRun;
-
 using namespace Uintah;
 
 #undef UINTAHSHARE

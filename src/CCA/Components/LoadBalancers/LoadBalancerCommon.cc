@@ -45,6 +45,7 @@ DEALINGS IN THE SOFTWARE.
 #include <sstream>
 
 using namespace Uintah;
+using namespace std;
 
 #undef UINTAHSHARE
 #if defined(_WIN32) && !defined(BUILD_UINTAH_STATIC)

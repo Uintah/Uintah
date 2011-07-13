@@ -33,6 +33,8 @@ DEALINGS IN THE SOFTWARE.
 #include <string>
 #include <cassert>
 
+using namespace std;
+
 // construct a Suite with the given name
 Suite::Suite(const string& name)
 : myName(name)

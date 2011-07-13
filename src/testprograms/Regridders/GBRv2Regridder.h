@@ -39,7 +39,7 @@ DEALINGS IN THE SOFTWARE.
 #include <vector>
 #include <algorithm>
 #include <iomanip>
-using namespace std;
+
 #include <testprograms/Regridders/BNRTask.h>
 
 namespace Uintah {
@@ -81,8 +81,8 @@ WARNING
     GBRv2Regridder(double tol, IntVector rr, int rank, int numprocs);
     ~GBRv2Regridder() {};
     //! Create a new Grid
-    void regrid(const vector<IntVector> &flags, vector<Region> &patches);
-    void RunBR(vector<IntVector> &flags, vector<Region> &patches);
+    void regrid(const std::vector<IntVector> &flags, std::vector<Region> &patches);
+    void RunBR(std::vector<IntVector> &flags, std::vector<Region> &patches);
 
   protected:
     bool getTags(int &tag1, int &tag2);
@@ -94,17 +94,17 @@ WARNING
     int free_tag_start_, free_tag_end_;
      
     //queues for tasks
-    list<BNRTask> tasks_;				    //list of tasks created throughout the run
-    queue<BNRTask*> immediate_q_;   //tasks that are always ready to run
-    queue<BNRTask*> tag_q_;				  //tasks that are waiting for tags to continue
-    queue<int> tags_;							  //available tags
+    std::list<BNRTask> tasks_;				    //list of tasks created throughout the run
+    std::queue<BNRTask*> immediate_q_;   //tasks that are always ready to run
+    std::queue<BNRTask*> tag_q_;				  //tasks that are waiting for tags to continue
+    std::queue<int> tags_;							  //available tags
 
     //request handeling variables
-    vector<MPI_Request> requests_;    //MPI requests
-    vector<MPI_Status>  statuses_;     //MPI statuses
-    vector<int> indicies_;            //return value from waitsome
-    vector<BNRTask*> request_to_task_;//maps requests to tasks using the indicies returned from waitsome
-    queue<int>  free_requests_;       //list of free requests
+    std::vector<MPI_Request> requests_;    //MPI requests
+    std::vector<MPI_Status>  statuses_;     //MPI statuses
+    std::vector<int> indicies_;            //return value from waitsome
+    std::vector<BNRTask*> request_to_task_;//maps requests to tasks using the indicies returned from waitsome
+    std::queue<int>  free_requests_;       //list of free requests
 
     int rank, numprocs;
     IntVector rr;

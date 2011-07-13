@@ -53,6 +53,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/DbgOutput.h>
 #include <Core/Parallel/ProcessorGroup.h>
 
+using namespace std;
 using SCIRun::Point;
 using SCIRun::Vector;
 using SCIRun::DebugStream;

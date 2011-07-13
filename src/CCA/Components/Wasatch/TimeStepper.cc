@@ -17,6 +17,7 @@
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Parallel/Parallel.h>
 
+using std::endl;
 namespace SO=SpatialOps::structured;
 
 

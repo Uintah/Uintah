@@ -3,7 +3,7 @@
 #include <testprograms/Regridders/BNRRegridder.h>
 #include "mpi.h"
 #include <vector>
-using namespace std;
+
 using namespace SCIRun;
 using namespace Uintah;
 
@@ -28,15 +28,15 @@ class GBRv1Regridder : public BNRRegridder
     };
 
   private:
-    Region computeBounds(list<IntVector> &flags);
-    void computeHistogram(list<IntVector> &flags, const Region &bounds, vector<vector<unsigned int> > &hist);
-    int computeNumFlags(list<IntVector> &flags);
+    Region computeBounds(std::list<IntVector> &flags);
+    void computeHistogram(std::list<IntVector> &flags, const Region &bounds, std::vector<std::vector<unsigned int> > &hist);
+    int computeNumFlags(std::list<IntVector> &flags);
     int rank,num_procs;
     MPI_Op BOUNDS_OP;
   
 };
 
-Region GBRv1Regridder::computeBounds(list<IntVector> &flags)
+Region GBRv1Regridder::computeBounds(std::list<IntVector> &flags)
 {
   Region bounds=BNRRegridder::computeBounds(flags);
   
@@ -44,7 +44,7 @@ Region GBRv1Regridder::computeBounds(list<IntVector> &flags)
     bounds=Region(IntVector(INT_MAX,INT_MAX,INT_MAX),IntVector(INT_MIN,INT_MIN,INT_MIN));
 
   //cout << getpid() << " local flags: " << endl;
-  //for(list<IntVector>::iterator iter=flags.begin();iter!=flags.end();iter++)
+  //for(std::list<IntVector>::iterator iter=flags.begin();iter!=flags.end();iter++)
   //  cout << "      " << getpid() << " " << *iter << endl;
   //cout << getpid() << " local bounds: " << bounds << endl;
  
@@ -55,7 +55,7 @@ Region GBRv1Regridder::computeBounds(list<IntVector> &flags)
   return gbounds;
 }
     
-int GBRv1Regridder::computeNumFlags(list<IntVector> &flags)
+int GBRv1Regridder::computeNumFlags(std::list<IntVector> &flags)
 {
   unsigned int nflags=flags.size();
   unsigned int ngflags;
@@ -66,9 +66,9 @@ int GBRv1Regridder::computeNumFlags(list<IntVector> &flags)
   return ngflags;
 }
     
-void GBRv1Regridder::computeHistogram(list<IntVector> &flags, const Region &bounds, vector<vector<unsigned int> > &hist)
+void GBRv1Regridder::computeHistogram(std::list<IntVector> &flags, const Region &bounds, std::vector<std::vector<unsigned int> > &hist)
 {
-  vector<vector<unsigned int> > lhist;
+  std::vector<std::vector<unsigned int> > lhist;
   BNRRegridder::computeHistogram(flags,bounds,lhist);
  
   hist.resize(lhist.size());

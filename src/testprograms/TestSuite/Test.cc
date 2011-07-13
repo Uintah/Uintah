@@ -30,7 +30,7 @@ DEALINGS IN THE SOFTWARE.
 
 #include "Test.h"
 
-Test::Test(const string name)
+Test::Test(const std::string name)
 : myName(name),
   myHasBeenRun(false),
   myHasPassed(false)

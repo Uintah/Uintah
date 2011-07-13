@@ -50,6 +50,7 @@ DEALINGS IN THE SOFTWARE.
 #include <cstdio>
 #include <map>
 
+using namespace std;
 using namespace SCIRun;
 using namespace Uintah;
 

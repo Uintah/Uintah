@@ -27,11 +27,6 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-
-#include <string>
-#include <cstdlib>
-using namespace std;
-
 class Point
 {
 public:

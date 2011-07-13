@@ -40,6 +40,7 @@ DEALINGS IN THE SOFTWARE.
 #include <set>
 
 
+using namespace std;
 using namespace Uintah;
 using namespace SCIRun;
 

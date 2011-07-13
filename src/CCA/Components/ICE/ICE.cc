@@ -77,11 +77,7 @@ DEALINGS IN THE SOFTWARE.
 
 #define SET_CFI_BC 0
 
-using std::vector;
-using std::max;
-using std::min;
-using std::istringstream;
- 
+using namespace std;
 using namespace Uintah;
 
 //__________________________________
@@ -372,7 +368,7 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
     ps = ps->findNextBlock("material") ) {
     string index("");
     ps->getAttribute("index",index);
-    stringstream id(index);
+    std::stringstream id(index);
 
     const int DEFAULT_VALUE = -1;
 

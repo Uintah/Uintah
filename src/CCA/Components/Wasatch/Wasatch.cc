@@ -67,6 +67,9 @@
 #include "transport/TransportEquation.h"
 #include "BCHelperTools.h"
 
+using std::endl;
+using std::cout;
+
 namespace Wasatch{
 
   //--------------------------------------------------------------------

@@ -53,7 +53,7 @@ DEALINGS IN THE SOFTWARE.
 
 
 using namespace Uintah;
-using std::string;
+using namespace std;
 
 #ifdef _WIN32
 #  include <io.h>

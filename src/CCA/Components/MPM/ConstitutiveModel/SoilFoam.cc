@@ -51,8 +51,7 @@ DEALINGS IN THE SOFTWARE.
 #include <sci_values.h>
 #include <iostream>
 
-using std::cerr;
-
+using namespace std;
 using namespace Uintah;
 
 SoilFoam::SoilFoam(ProblemSpecP& ps, MPMFlags* Mflag) 

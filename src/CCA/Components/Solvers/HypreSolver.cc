@@ -67,6 +67,7 @@ DEALINGS IN THE SOFTWARE.
 #endif
 #endif
 
+using std::cout;
 using namespace Uintah;
 //__________________________________
 //  To turn on normal output

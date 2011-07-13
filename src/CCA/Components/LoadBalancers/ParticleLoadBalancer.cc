@@ -59,7 +59,7 @@ DEALINGS IN THE SOFTWARE.
 #include <vector>
 using namespace Uintah;
 using namespace SCIRun;
-using std::cerr;
+using namespace std;
 static DebugStream doing("ParticleLoadBalancer_doing", false);
 static DebugStream lb("ParticleLoadBalancer_lb", false);
 static DebugStream dbg("ParticleLoadBalancer", false);

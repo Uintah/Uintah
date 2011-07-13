@@ -61,9 +61,7 @@
 #  include <Core/Math/sci_lapack.h>
 #endif
 
-using std::cout;
-using std::endl;
-using std::vector;
+using namespace std;
 
 namespace SCIRun {
 

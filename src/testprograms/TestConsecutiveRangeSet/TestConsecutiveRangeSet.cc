@@ -40,6 +40,7 @@ DEALINGS IN THE SOFTWARE.
 #endif
 #include <climits>
 
+using namespace std;
 using namespace SCIRun;
 
 list<int> getRandomList(int size, int min, int max);

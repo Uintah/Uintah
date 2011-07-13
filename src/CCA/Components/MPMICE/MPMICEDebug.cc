@@ -43,8 +43,7 @@ DEALINGS IN THE SOFTWARE.
 #include <iostream>
 #include <fstream>
 
-using std::ifstream;
-using std::cerr;
+using namespace std;
 using namespace SCIRun;
 using namespace Uintah;
 

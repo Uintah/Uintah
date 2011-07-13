@@ -39,6 +39,7 @@ DEALINGS IN THE SOFTWARE.
 #include <cmath>
 
 
+using namespace std;
 using namespace Uintah;
 
 JohnsonCookPlastic::JohnsonCookPlastic(ProblemSpecP& ps)

@@ -35,6 +35,8 @@ DEALINGS IN THE SOFTWARE.
 
 #include <math.h>
 
+using namespace std;
+
 #define d_SMALLNUM 1e-100
 
 namespace Uintah {

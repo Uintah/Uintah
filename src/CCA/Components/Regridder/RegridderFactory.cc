@@ -34,6 +34,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Regridder/TiledRegridder.h>
 #include <Core/Parallel/ProcessorGroup.h>
 
+using namespace std;
 using namespace Uintah;
 
 RegridderCommon* RegridderFactory::create(ProblemSpecP& ps, 

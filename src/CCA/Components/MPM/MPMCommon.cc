@@ -35,6 +35,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/Level.h>
 
+using namespace std;
 using namespace Uintah;
 
 MPMCommon::MPMCommon(const ProcessorGroup* myworld)

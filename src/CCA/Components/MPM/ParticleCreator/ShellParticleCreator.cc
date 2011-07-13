@@ -41,6 +41,8 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/GeometryPiece/GeometryPiece.h>
 #include <Core/GeometryPiece/ShellGeometryPiece.h>
 #include <iostream>
+
+using namespace std;
 using namespace Uintah;
 
 

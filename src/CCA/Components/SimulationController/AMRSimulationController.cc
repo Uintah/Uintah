@@ -73,9 +73,7 @@ DEALINGS IN THE SOFTWARE.
 #include <iostream>
 #include <iomanip>
 
-using std::cerr;
-using std::cout;
-
+using namespace std;
 using namespace SCIRun;
 using namespace Uintah;
 

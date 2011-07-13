@@ -52,8 +52,7 @@ DEALINGS IN THE SOFTWARE.
 #include <cstdio>
 
 
-using std::cerr;
-
+using namespace std;
 using namespace Uintah;
 using namespace SCIRun;
 

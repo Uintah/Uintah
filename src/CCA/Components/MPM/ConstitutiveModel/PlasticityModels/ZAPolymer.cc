@@ -31,6 +31,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <cmath>
 
+using namespace std;
 using namespace Uintah;
 //______________________________________________________________________
 

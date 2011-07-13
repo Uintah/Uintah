@@ -116,7 +116,7 @@ WARNING
     //////////
     // Computes the length of the grid
     void getLength(SCIRun::Vector& length,
-                   const string flag = "plusExtraCells") const;
+                   const std::string flag = "plusExtraCells") const;
     
     //////////
     // Problem setup functions called from simulation controller

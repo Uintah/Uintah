@@ -38,7 +38,7 @@ DEALINGS IN THE SOFTWARE.
 
 #include <Core/Parallel/uintahshare.h>
 namespace Uintah {
-  using namespace std;
+
   class RefCounted;
   class ProcessorGroup;
 
@@ -82,10 +82,10 @@ namespace Uintah {
 
   protected:
     Sendlist* sendlist;
-    vector<void*> startbufs;
-    vector<int> counts;
-    vector<MPI_Datatype> datatypes;
-    vector<bool> free_datatypes;
+    std::vector<void*> startbufs;
+    std::vector<int> counts;
+    std::vector<MPI_Datatype> datatypes;
+    std::vector<bool> free_datatypes;
 
     void* buf;
     int cnt;

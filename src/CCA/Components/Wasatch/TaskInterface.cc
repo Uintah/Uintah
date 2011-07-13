@@ -115,13 +115,13 @@ namespace Wasatch{
           TreePtr tree( new Expr::ExpressionTree( *masterTree_ ) );
           tree->set_patch_id( patch->getID() );
           tree->register_fields( *fml_ );
-          patchTreeMap_[ patch->getID() ] = make_pair( tree, scinew Uintah::Task( taskName_, this, &TreeTaskExecute::execute ) );
+          patchTreeMap_[ patch->getID() ] = std::make_pair( tree, scinew Uintah::Task( taskName_, this, &TreeTaskExecute::execute ) );
         }
       }
     }
     else{
       masterTree_->register_fields( *fml_ );
-      patchTreeMap_[ -1 ] = make_pair( masterTree_, scinew Uintah::Task( taskName_, this, &TreeTaskExecute::execute ) );
+      patchTreeMap_[ -1 ] = std::make_pair( masterTree_, scinew Uintah::Task( taskName_, this, &TreeTaskExecute::execute ) );
     }
 
     std::ostringstream fnam;
@@ -168,7 +168,7 @@ namespace Wasatch{
 
 #   ifdef WASATCH_TASK_FIELD_DIAGNOSTICS
     proc0cout << "Field requirements for task '" << tree.name() << "'" << endl
-              << setw(10) << "Mode " << left << setw(20) << "Field Name"
+              << std::setw(10) << "Mode " << std::left << std::setw(20) << "Field Name"
               << "DW  #Ghost PatchID" << endl
               << "-----------------------------------------------------------------------" << endl;
 #   endif
@@ -214,7 +214,7 @@ namespace Wasatch{
 
         case Expr::COMPUTES:
 #         ifdef WASATCH_TASK_FIELD_DIAGNOSTICS
-          proc0cout << setw(10) << "COMPUTES";
+          proc0cout << std::setw(10) << "COMPUTES";
 #         endif
           ASSERT( dw == Uintah::Task::NewDW );
           // jcs note that we need ghost information on the computes fields as well!
@@ -225,7 +225,7 @@ namespace Wasatch{
 
         case Expr::REQUIRES:
 #         ifdef WASATCH_TASK_FIELD_DIAGNOSTICS
-          proc0cout << setw(10) << "REQUIRES";
+          proc0cout << std::setw(10) << "REQUIRES";
 #         endif
           task.requires( dw,
                          fieldInfo.varlabel,
@@ -236,7 +236,7 @@ namespace Wasatch{
 
         case Expr::MODIFIES:
 #         ifdef WASATCH_TASK_FIELD_DIAGNOSTICS
-          proc0cout << setw(10) << "MODIFIES";
+          proc0cout << std::setw(10) << "MODIFIES";
 #         endif
           ASSERT( dw == Uintah::Task::NewDW );
           task.modifies( fieldInfo.varlabel,
@@ -246,10 +246,10 @@ namespace Wasatch{
         } // switch
 
 #       ifdef WASATCH_TASK_FIELD_DIAGNOSTICS
-        proc0cout << setw(20) << left << fieldInfo.varlabel->getName();
+        proc0cout << std::setw(20) << std::left << fieldInfo.varlabel->getName();
         if( fieldInfo.useOldDataWarehouse ) proc0cout << "OLD   ";
         else proc0cout << "NEW   ";
-        proc0cout << left << setw(5) << fieldInfo.nghost
+        proc0cout << std::left << std::setw(5) << fieldInfo.nghost
                   << *patches << endl;
 #       endif
 
@@ -368,7 +368,7 @@ namespace Wasatch{
 //           proc0cout << "Wasatch: done executing graph '" << taskName_ << "'" << endl;
           fml_->deallocate_fields();
         }
-        catch( exception& e ){
+        catch( std::exception& e ){
           proc0cout << e.what() << endl;
           throw std::runtime_error( "Error" );
         }

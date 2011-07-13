@@ -56,7 +56,6 @@
 
 namespace SCIRun {
 
-using namespace std;
 
 class SCISHARE PropertyBase : public Datatype {
 public:
@@ -99,7 +98,7 @@ public:
   virtual PropertyBase *clone() const 
   { return scinew Property(obj_, transient()); }
 
-  static const string type_name(int n = -1);
+  static const std::string type_name(int n = -1);
   virtual void io(Piostream &stream);
   static  PersistentTypeID type_id;
 
@@ -145,14 +144,14 @@ const int PROPERTY_VERSION = 2;
  */
 
 template<class T>
-const string Property<T>::type_name(int n)
+const std::string Property<T>::type_name(int n)
 {
   if ( n == -1 ) {
-    static const string name = type_name(0) + FTNS + type_name(1) + FTNE;
+    static const std::string name = type_name(0) + FTNS + type_name(1) + FTNE;
     return name;
   }
   else if ( n == 0 ) {
-    static const string nm("Property");
+    static const std::string nm("Property");
     return nm;
   }
   else
@@ -207,11 +206,11 @@ public:
   bool operator==(const PropertyManager &pm);
   bool operator!=(const PropertyManager &pm);
   
-  template<class T> void set_property(const string &, const T &,
+  template<class T> void set_property(const std::string &, const T &,
 				      bool is_transient);
-  template<class T> bool get_property( const string &, T &);
-  bool is_property( const string & );
-  string get_property_name( size_t index );
+  template<class T> bool get_property( const std::string &, T &);
+  bool is_property( const std::string & );
+  std::string get_property_name( size_t index );
 
 
   //! -- mutability --
@@ -225,7 +224,7 @@ public:
   //! query frozen state of a PropertyManager.
   bool is_frozen() const { return frozen_; }
 
-  void remove_property( const string & );
+  void remove_property( const std::string & );
   size_t nproperties() const { return properties_.size(); }
 
   void    io(Piostream &stream);
@@ -238,7 +237,7 @@ public:
 
 private:
 
-  typedef map<string, PropertyBase *> map_type;
+  typedef std::map<std::string, PropertyBase *> map_type;
   map_type properties_;
 
 protected:
@@ -252,12 +251,12 @@ protected:
 
 template<class T>
 void 
-PropertyManager::set_property(const string &name,  const T& obj,
+PropertyManager::set_property(const std::string &name,  const T& obj,
 			      bool is_transient)
 {
   if (is_transient && (! is_frozen())) {
-    cerr << "WARNING::PropertyManager must be frozen to store transient data" 
-	 <<" freezing now!" << std::endl;
+    std::cerr << "WARNING::PropertyManager must be frozen to store transient data" 
+              <<" freezing now!" << std::endl;
     freeze();
   }
   pmlock_.lock();
@@ -273,7 +272,7 @@ PropertyManager::set_property(const string &name,  const T& obj,
 
 template<class T>
 bool 
-PropertyManager::get_property(const string &name, T &ref)
+PropertyManager::get_property(const std::string &name, T &ref)
 {
   pmlock_.lock();
 

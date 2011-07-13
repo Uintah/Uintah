@@ -31,6 +31,7 @@ DEALINGS IN THE SOFTWARE.
 // Implementation of TangentModulusTensor
 #include <Core/Math/TangentModulusTensor.h>
 
+using namespace std;
 using namespace Uintah;
 
 // Default constructor 

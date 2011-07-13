@@ -34,6 +34,7 @@ DEALINGS IN THE SOFTWARE.
 
 #include <vector>
 
+using namespace std;
 using namespace Uintah;
 
 

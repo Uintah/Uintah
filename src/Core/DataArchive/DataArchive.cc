@@ -60,7 +60,7 @@ DEALINGS IN THE SOFTWARE.
 #endif
 
 
-
+using namespace std;
 using namespace Uintah;
 using namespace SCIRun;
 

@@ -35,6 +35,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Parallel/Parallel.h>
 #include <Core/Exceptions/InternalError.h>
 
+using namespace std;
 using namespace Uintah;
 using namespace SCIRun;
 

@@ -1,11 +1,8 @@
 #ifndef ParticleInstancingRenderer_h
 #define ParticleInstancingRenderer_h
 
-#include <iostream>
 #include <vector>
 #include <DebugStream.h>
-
-using namespace std;
 
 #ifndef VTK_IMPLEMENT_MESA_CXX
   #if defined(__APPLE__) && (defined(VTK_USE_CARBON) || defined(VTK_USE_COCOA))

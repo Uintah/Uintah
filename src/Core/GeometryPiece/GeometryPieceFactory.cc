@@ -59,6 +59,7 @@ DEALINGS IN THE SOFTWARE.
 #include   <iostream>
 #include   <string>
 
+using namespace std;
 using namespace Uintah;
 
 

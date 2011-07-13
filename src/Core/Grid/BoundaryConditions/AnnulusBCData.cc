@@ -36,6 +36,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Util/DebugStream.h>
 #include <iostream>
 
+using namespace std;
 using namespace SCIRun;
 using namespace Uintah;
 

@@ -350,7 +350,7 @@ namespace Uintah {
       // only the last timestep_cache_size timesteps is stored, unless
       // timestep_cache_size is less than or equal to zero then the size
       // is unbounded.
-      list<int> d_lastNtimesteps;
+      std::list<int> d_lastNtimesteps;
 
       // Tells you the number of timesteps to cache. Less than or equal to
       // zero means to cache all of them.
@@ -409,7 +409,7 @@ namespace Uintah {
         const IntVector& index,
         double min, double max)
     {
-      cerr << "DataArchive::query not finished\n";
+      std::cerr << "DataArchive::query not finished\n";
     }
 
   template<class T>
@@ -417,7 +417,7 @@ namespace Uintah {
         const IntVector& index,
         double min, double max)
     {
-      cerr << "DataArchive::query not finished\n";
+      std::cerr << "DataArchive::query not finished\n";
     }
 
   template<class T>
@@ -425,7 +425,7 @@ namespace Uintah {
         int matlIndex, particleId id,
         double min, double max)
     {
-      cerr << "DataArchive::query not finished\n";
+      std::cerr << "DataArchive::query not finished\n";
     }
 
 
@@ -472,7 +472,7 @@ namespace Uintah {
         Patch* patch = NULL;
         GridP grid = queryGrid( ts);
         findPatchAndIndex(grid, patch, idx, particleID, matlIndex, levelIndex, ts);
-        //    cerr <<" Patch = 0x"<<hex<<patch<<dec<<", index = "<<idx;
+        //    std::cerr <<" Patch = 0x"<<hex<<patch<<dec<<", index = "<<idx;
         if (patch == NULL)
           throw VariableNotFoundInGrid(name,particleID,matlIndex,
               "DataArchive::query", __FILE__, __LINE__);
@@ -480,7 +480,7 @@ namespace Uintah {
         ParticleVariable<T> var;
         query(var, name, matlIndex, patch, ts);
         //now find the index that corresponds to the particleID
-        //cerr <<" time = "<<t<<",  value = "<<var[idx]<<endl;
+        //std::cerr <<" time = "<<t<<",  value = "<<var[idx]<<std::endl;
         values.push_back(var[idx]);
 
       }
@@ -593,7 +593,7 @@ namespace Uintah {
               break;
 
             default:
-              cerr << "Variable of unsupported type for this cell-based query: " << type->getType() << '\n';
+              std::cerr << "Variable of unsupported type for this cell-based query: " << type->getType() << '\n';
               break;
           }
         }
@@ -636,7 +636,7 @@ namespace Uintah {
                                               // Dd: Is this correct?  Error here?
                                               break;
         }
-        //cerr << "DataArchive::query:data extracted" << endl;
+        //std::cerr << "DataArchive::query:data extracted" << std::endl;
       }
 
       dbg << "DataArchive::query(values) completed in "

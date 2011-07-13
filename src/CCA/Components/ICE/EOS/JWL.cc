@@ -35,6 +35,8 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Exceptions/InternalError.h>
 #include <iostream>
 #include <iomanip>
+
+using namespace std;
 using namespace Uintah;
 
 

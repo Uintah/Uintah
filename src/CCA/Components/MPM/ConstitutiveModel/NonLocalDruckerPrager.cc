@@ -52,8 +52,8 @@ DEALINGS IN THE SOFTWARE.
 #include <fstream>
 #include<string>
 #include<cstring>
-using std::cerr;
 
+using namespace std;
 using namespace Uintah;
 
 

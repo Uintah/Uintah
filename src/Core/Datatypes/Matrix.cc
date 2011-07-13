@@ -47,6 +47,8 @@
 #include <Core/Math/MiscMath.h>
 #include <Core/Util/Assert.h>
 
+using namespace std;
+
 namespace SCIRun {
 
 PersistentTypeID Matrix::type_id("Matrix", "PropertyManager", 0);

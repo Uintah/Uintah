@@ -35,6 +35,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Util/FancyAssert.h>
 #include <Core/Parallel/ProcessorGroup.h>
 
+using namespace std;
 using namespace Uintah;
 using namespace SCIRun;
 

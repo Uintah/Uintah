@@ -34,8 +34,6 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/PatchBVH/PatchBVHBase.h>
 #include <vector>
 
-#include <iostream>
-using namespace std;
 namespace Uintah {
 
   /**************************************

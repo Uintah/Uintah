@@ -15,6 +15,7 @@
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 
+using std::endl;
 
 namespace Wasatch{
   
