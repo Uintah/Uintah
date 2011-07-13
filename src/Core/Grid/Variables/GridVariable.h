@@ -133,10 +133,10 @@ WARNING
     virtual void getSizes(IntVector& low, IntVector& high,
                           IntVector& dataLow, IntVector& siz,
                           IntVector& strides) const;
-    virtual void getSizeInfo(string& elems, unsigned long& totsize,
+    virtual void getSizeInfo(std::string& elems, unsigned long& totsize,
                              void*& ptr) const {
       IntVector siz = this->size();
-      ostringstream str;
+      std::ostringstream str;
       str << siz.x() << "x" << siz.y() << "x" << siz.z();
       elems=str.str();
       totsize=siz.x()*siz.y()*siz.z()*sizeof(T);
@@ -145,7 +145,7 @@ WARNING
     virtual IntVector getLow() const {  return this->getLowIndex(); }
     virtual IntVector getHigh() const { return this->getHighIndex(); }
 
-    virtual void emitNormal(ostream& out, const IntVector& l, const IntVector& h,
+    virtual void emitNormal(std::ostream& out, const IntVector& l, const IntVector& h,
                             ProblemSpecP /*varnode*/, bool outputDoubleAsFloat)
     {
       const TypeDescription* td = fun_getTypeDescription((T*)0);
@@ -155,7 +155,7 @@ WARNING
         SCI_THROW(InternalError("Cannot yet write non-flat objects!\n", __FILE__, __LINE__));
     }
 
-    virtual bool emitRLE(ostream& out, const IntVector& l, const IntVector& h,
+    virtual bool emitRLE(std::ostream& out, const IntVector& l, const IntVector& h,
                          ProblemSpecP /*varnode*/)
     {
       const TypeDescription* td = fun_getTypeDescription((T*)0);
@@ -169,7 +169,7 @@ WARNING
       return true;
     }
 
-    virtual void readNormal(istream& in, bool swapBytes)
+    virtual void readNormal(std::istream& in, bool swapBytes)
     {
       const TypeDescription* td = fun_getTypeDescription((T*)0);
       if(td->isFlat())
@@ -178,7 +178,7 @@ WARNING
         SCI_THROW(InternalError("Cannot yet read non-flat objects!\n", __FILE__, __LINE__));
     }
       
-    virtual void readRLE(istream& in, bool swapBytes, int nByteMode)
+    virtual void readRLE(std::istream& in, bool swapBytes, int nByteMode)
     {
       const TypeDescription* td = fun_getTypeDescription((T*)0);
       if(td->isFlat()){

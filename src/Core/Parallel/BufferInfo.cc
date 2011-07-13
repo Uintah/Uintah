@@ -109,7 +109,7 @@ BufferInfo::get_type(void*& out_buf, int& out_count,
       datatype=datatypes[0];
       free_datatype=false; // Will get freed with array
     } else {
-      vector<MPI_Aint> indices(count());
+      std::vector<MPI_Aint> indices(count());
       for(int i=0;i<(int)startbufs.size();i++)
 	      indices[i]=(MPI_Aint)startbufs[i];
       MPI_Type_struct(count(), &counts[0], &indices[0], &datatypes[0],
