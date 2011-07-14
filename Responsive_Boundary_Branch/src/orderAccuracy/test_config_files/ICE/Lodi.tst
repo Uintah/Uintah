@@ -1,14 +1,12 @@
 <?xml version='1.0'?>
 <start>
 <upsFile>Lodi_pulse.ups</upsFile>
-<Study>Res.Study</Study>
 <gnuplot></gnuplot>
 
 <!--
 <Test>
     <Title>0.0</Title>
     <sus_cmd>sus </sus_cmd>
-    <Study>Res.Study</Study>
     <postProcess_cmd>movie_lineExtract.csh</postProcess_cmd>
     <x>0.0</x>
     <replace_lines>
@@ -18,7 +16,6 @@
 <Test>
     <Title>0.01</Title>
     <sus_cmd>sus </sus_cmd>
-    <Study>Res.Study</Study>
     <postProcess_cmd>movie_lineExtract.csh</postProcess_cmd>
     <x>0.01</x>
     <replace_lines>
@@ -29,7 +26,6 @@
 <Test>
     <Title>0.1</Title>
     <sus_cmd>sus </sus_cmd>
-    <Study>Res.Study</Study>
     <postProcess_cmd>movie_lineExtract.csh</postProcess_cmd>
     <x>0.1</x>
     <replace_lines>
@@ -40,7 +36,6 @@
 <Test>
     <Title>0.2</Title>
     <sus_cmd>sus </sus_cmd>
-    <Study>Res.Study</Study>
     <postProcess_cmd>movie_lineExtract.csh</postProcess_cmd>
     <x>0.2</x>
     <replace_lines>
@@ -50,7 +45,6 @@
 <Test>
     <Title>0.4</Title>
     <sus_cmd>sus </sus_cmd>
-    <Study>Res.Study</Study>
     <postProcess_cmd>movie_lineExtract.csh</postProcess_cmd>
     <x>0.4</x>
     <replace_lines>
@@ -60,7 +54,6 @@
 <Test>
     <Title>0.6</Title>
     <sus_cmd>sus </sus_cmd>
-    <Study>Res.Study</Study>
     <postProcess_cmd>movie_lineExtract.csh</postProcess_cmd>
     <x>0.6</x>
     <replace_lines>

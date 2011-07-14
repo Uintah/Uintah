@@ -51,7 +51,6 @@
 #include <Core/Datatypes/share.h>
 
 namespace SCIRun {
-using namespace std;
 
 
 class SparseRowMatrix;
@@ -161,23 +160,23 @@ public:
   // Separate raw files.
   void set_raw(bool v) { separate_raw_ = v; }
   bool get_raw() { return separate_raw_; }
-  void set_raw_filename( string &f )
+  void set_raw_filename( std::string &f )
   { raw_filename_ = f; separate_raw_ = true; }
-  const string get_raw_filename() const { return raw_filename_; }
+  const std::string get_raw_filename() const { return raw_filename_; }
 
-  virtual void print(ostream&) const {}
+  virtual void print(std::ostream&) const {}
   virtual void print() const {}
 
   // Persistent representation.
-  virtual string type_name() { return "Matrix"; }
+  virtual std::string type_name() { return "Matrix"; }
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
 
 protected:
-  int      nrows_;
-  int      ncols_;
-  int      separate_raw_;
-  string   raw_filename_;
+  int          nrows_;
+  int          ncols_;
+  int          separate_raw_;
+  std::string  raw_filename_;
 };
 
 

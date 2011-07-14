@@ -34,11 +34,8 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Regridder/BNRTask.h>
 #include <CCA/Components/Regridder/PatchFixer.h>
 #include <queue>
-#include <stack>
 #include <list>
 #include <set>
-#include <fstream>
-using namespace std;
 
 namespace Uintah {
 
@@ -87,21 +84,21 @@ WARNING
 			      const SimulationStateP& state);
 
     /***** these should be private (public for testing)*******/
-    void RunBR(vector<IntVector> &flags, vector<Region> &patches);
-    void PostFixup(vector<Region> &patches);
-    vector<IntVector> getMinPatchSize() {return d_minPatchSize;}
+    void RunBR(std::vector<IntVector> &flags, std::vector<Region> &patches);
+    void PostFixup(std::vector<Region> &patches);
+    std::vector<IntVector> getMinPatchSize() {return d_minPatchSize;}
 
     //! create and compare a checksum for the grid across all processors
     bool verifyGrid(Grid *grid);
   protected:
     void problemSetup_BulletProofing(const int k);
-    void AddSafetyLayer(const vector<Region> patches, set<IntVector> &coarse_flags,
-                        const vector<const Patch*>& coarse_patches, int level);
-    void CreateCoarseFlagSets(Grid *oldGrid, vector<set<IntVector> > &coarse_flag_sets);
-    Grid* CreateGrid(Grid* oldGrid, vector< vector<Region> > &patch_sets );
+    void AddSafetyLayer(const std::vector<Region> patches, std::set<IntVector> &coarse_flags,
+                        const std::vector<const Patch*>& coarse_patches, int level);
+    void CreateCoarseFlagSets(Grid *oldGrid, std::vector<std::set<IntVector> > &coarse_flag_sets);
+    Grid* CreateGrid(Grid* oldGrid, std::vector< std::vector<Region> > &patch_sets );
     
     bool getTags(int &tag1, int &tag2);
-    void OutputGridStats(vector< vector<Region> > &patch_sets, Grid* newGrid);
+    void OutputGridStats(std::vector< std::vector<Region> > &patch_sets, Grid* newGrid);
 
     bool d_loadBalance;             //should the regridder call the load balancer before creating the grid
 
@@ -114,19 +111,19 @@ WARNING
     int free_tag_start_, free_tag_end_;
      
     //queues for tasks
-    list<BNRTask> tasks_;				    //list of tasks created throughout the run
-    queue<BNRTask*> immediate_q_;   //tasks that are always ready to run
-    queue<BNRTask*> tag_q_;				  //tasks that are waiting for tags to continue
-    queue<int> tags_;							  //available tags
+    std::list<BNRTask> tasks_;				    //list of tasks created throughout the run
+    std::queue<BNRTask*> immediate_q_;   //tasks that are always ready to run
+    std::queue<BNRTask*> tag_q_;				  //tasks that are waiting for tags to continue
+    std::queue<int> tags_;							  //available tags
     PatchFixer patchfixer_;         //Fixup class
     SizeList d_minPatchSize;       //minimum patch size in each dimension
 
     //request handeling variables
-    vector<MPI_Request> requests_;    //MPI requests
-    vector<MPI_Status>  statuses_;     //MPI statuses
-    vector<int> indicies_;            //return value from waitsome
-    vector<BNRTask*> request_to_task_;//maps requests to tasks using the indicies returned from waitsome
-    queue<int>  free_requests_;       //list of free requests
+    std::vector<MPI_Request> requests_;    //MPI requests
+    std::vector<MPI_Status>  statuses_;     //MPI statuses
+    std::vector<int> indicies_;            //return value from waitsome
+    std::vector<BNRTask*> request_to_task_;//maps requests to tasks using the indicies returned from waitsome
+    std::queue<int>  free_requests_;       //list of free requests
   };
 
 } // End namespace Uintah

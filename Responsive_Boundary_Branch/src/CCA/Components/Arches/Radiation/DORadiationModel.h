@@ -130,6 +130,81 @@ protected:
        // boundary condition
       BoundaryCondition* d_boundaryCondition;
 
+      /// For other analytical properties.
+      class PropertyCalculatorBase { 
+
+        public: 
+          PropertyCalculatorBase(); 
+          virtual ~PropertyCalculatorBase(); 
+
+          virtual bool problemSetup( const ProblemSpecP& db )=0; 
+          virtual void computeProps( const Patch* patch, CCVariable<double>& abskg )=0;  // for now only assume abskg
+      };
+
+      class ConstantProperties : public PropertyCalculatorBase  { 
+
+        public: 
+          ConstantProperties();
+          ~ConstantProperties();
+
+          bool problemSetup( const ProblemSpecP& db ) {
+              
+            bool property_on = false; 
+            ProblemSpecP db_prop = db; 
+
+            db_prop->getWithDefault("abskg",_value,1.0); 
+            property_on = true; 
+
+            return property_on; 
+          };
+
+          void computeProps( const Patch* patch, CCVariable<double>& abskg ){ 
+            abskg.initialize(_value); 
+
+          }; 
+
+        private: 
+          double _value; 
+      }; 
+
+      class  BurnsChriston : public PropertyCalculatorBase  { 
+
+        public: 
+          BurnsChriston();
+          ~BurnsChriston();
+
+          bool problemSetup( const ProblemSpecP& db ) {
+            
+            bool property_on = false; 
+            ProblemSpecP db_prop = db; 
+
+            db_prop->require("grid",grid); 
+            property_on = true; 
+
+            return property_on; 
+          };
+
+          void computeProps( const Patch* patch, CCVariable<double>& abskg ){ 
+
+            Vector Dx = patch->dCell(); 
+
+            for (CellIterator iter = patch->getCellIterator(); !iter.done(); ++iter){ 
+
+              IntVector c = *iter; 
+              std::cout << abskg[c] << std::endl;
+              abskg[c] = 0.90 * ( 1.0 - 2.0 * fabs( ( c[0] - (grid.x() - 1.0) /2.0) * Dx[0]) )
+                              * ( 1.0 - 2.0 * fabs( ( c[1] - (grid.y() - 1.0) /2.0) * Dx[1]) )
+                              * ( 1.0 - 2.0 * fabs( ( c[2] - (grid.z() - 1.0) /2.0) * Dx[2]) ) 
+                              + 0.1;
+
+            } 
+          }; 
+
+        private: 
+          double _value; 
+          IntVector grid; 
+      }; 
+
 private:
 
       double d_xumax;
@@ -151,6 +226,7 @@ private:
       int pbcfld;
       int outletfield;
       bool d_SHRadiationCalc, lprobone, lprobtwo, lprobthree, lradcal, lwsgg, lplanckmean, lpatchmean;
+      bool _using_props_calculator; 
 
       OffsetArray1<double> fraction;
       OffsetArray1<double> fractiontwo;
@@ -173,6 +249,9 @@ private:
       OffsetArray1<double> srcpone;
       OffsetArray1<double> qfluxbbm;
       const ProcessorGroup* d_myworld;
+
+      PropertyCalculatorBase* _props_calculator; 
+
 
 
 }; // end class RadiationModel

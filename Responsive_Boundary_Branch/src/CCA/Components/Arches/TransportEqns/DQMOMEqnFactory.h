@@ -79,7 +79,7 @@ public:
     n_quad_ = qn; };
 
   /** @brief Get the number of quadrature nodes */ 
-  inline const int get_quad_nodes() {
+  inline int get_quad_nodes() {
     return n_quad_; };
 
 private:

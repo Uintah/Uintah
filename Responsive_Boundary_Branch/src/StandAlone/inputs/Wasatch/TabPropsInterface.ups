@@ -16,7 +16,7 @@
 
     <!-- Set up a tabular property evaluation -->
     <TabProps>
-      <FileNamePrefix>AdiabaticEquil</FileNamePrefix>
+      <FileNamePrefix>inputs/Wasatch/AdiabaticEquil</FileNamePrefix>
       <IndependentVariable>
         <NameTag name="mixture fraction" state="STATE_N" />
         <NameInTable>MixtureFraction</NameInTable>
@@ -85,7 +85,6 @@
         <lower>[0,0,0]</lower>
         <upper>[1,1,1]</upper>
         <resolution>[20,10,10]</resolution>
-        <!--         <extraCells>[0,0,0]</extraCells> -->
         <patches>[1,1,1]</patches>
       </Box>
       <periodic>[1,1,1]</periodic>

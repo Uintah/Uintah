@@ -32,7 +32,7 @@ DEALINGS IN THE SOFTWARE.
 #include "MPMEquationOfStateFactory.h"
 #include "DefaultHypoElasticEOS.h"
 #include "HyperElasticEOS.h"
-#include "MieGruneisenEOS.h"
+#include "MieGruneisenEOSEnergy.h"
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Malloc/Allocator.h>
@@ -58,7 +58,7 @@ MPMEquationOfState* MPMEquationOfStateFactory::create(ProblemSpecP& ps)
       throw ProblemSetupException("No type for equation_of_state", __FILE__, __LINE__);
    
    if (mat_type == "mie_gruneisen")
-      return(scinew MieGruneisenEOS(child));
+      return(scinew MieGruneisenEOSEnergy(child));
    else if (mat_type == "default_hypo")
       return(scinew DefaultHypoElasticEOS(child));
    else if (mat_type == "default_hyper")
@@ -76,8 +76,8 @@ MPMEquationOfState* MPMEquationOfStateFactory::create(ProblemSpecP& ps)
 MPMEquationOfState* 
 MPMEquationOfStateFactory::createCopy(const MPMEquationOfState* eos)
 {
-   if (dynamic_cast<const MieGruneisenEOS*>(eos))
-      return(scinew MieGruneisenEOS(dynamic_cast<const MieGruneisenEOS*>(eos)));
+   if (dynamic_cast<const MieGruneisenEOSEnergy*>(eos))
+      return(scinew MieGruneisenEOSEnergy(dynamic_cast<const MieGruneisenEOSEnergy*>(eos)));
 
    else if (dynamic_cast<const DefaultHypoElasticEOS*>(eos))
       return(scinew DefaultHypoElasticEOS(dynamic_cast<const DefaultHypoElasticEOS*>(eos)));

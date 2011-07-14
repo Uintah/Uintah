@@ -84,7 +84,6 @@ class MixingRxnTable;
 class TabPropsInterface;
 class MixingRxnModel; 
 class TimeIntegratorLabel;
-class ExtraScalarSolver;
 class PhysicalConstants;
 class Properties {
 
@@ -201,26 +200,14 @@ public:
   inline double getCarbonContent(double f) const{
     return d_carbon_fuel*f+d_carbon_air*(1.0-f);
   }
-  inline void setCalcExtraScalars(bool calcExtraScalars) {
-    d_calcExtraScalars=calcExtraScalars;
-  }
-  inline void setExtraScalars(vector<ExtraScalarSolver*>* extraScalars) {
-    d_extraScalars = extraScalars;
-  }
-  inline void setCarbonBalanceES(bool carbon_balance_es){
-        d_carbon_balance_es = carbon_balance_es;
-  }
-  inline void setSulfurBalanceES(bool sulfur_balance_es){
-        d_sulfur_balance_es = sulfur_balance_es;
-  }
   inline const string getMixingModelType(){
     return mixModel; 
   }
-#if HAVE_TABPROPS
-  inline TabPropsInterface* getMixRxnModel(){
+  inline MixingRxnModel* getMixRxnModel(){
     return d_mixingRxnTable; 
   }
-#endif
+
+  void addLookupSpecies( ); 
 
   //for the new table:
   void sched_reComputeProps_new( const LevelP&,
@@ -231,8 +218,9 @@ public:
 
   void sched_initEnthalpy( const LevelP&, SchedulerP& ); 
 
-  void sched_doTPDummyInit( const LevelP&, SchedulerP& ); 
+  void sched_doTPDummyInit( const LevelP&, SchedulerP& );
 
+	void doTableMatching(); 
 
 protected :
 
@@ -312,8 +300,6 @@ private:
 
   Properties& operator=(const Properties&);
 
-
-
 private:
 
       // Variable labels used by simulation controller
@@ -339,10 +325,8 @@ private:
       IntVector d_denRef;
       
       MixingModel* d_mixingModel;
-      //MixingRxnTable* d_mixingRxnTable;
-#if HAVE_TABPROPS
-      TabPropsInterface* d_mixingRxnTable;
-#endif
+      MixingRxnModel* d_mixingRxnTable;
+
       BoundaryCondition* d_bc;
       bool d_empirical_soot;
       double d_sootFactor;
@@ -354,11 +338,6 @@ private:
 #ifdef PetscFilter
       Filter* d_filter;
 #endif
-      bool d_calcExtraScalars;
-      vector<ExtraScalarSolver*>* d_extraScalars;
-      bool d_carbon_balance_es;        
-      bool d_sulfur_balance_es;
-
       const ProcessorGroup* d_myworld;
 
       // New Table Interface Stuff:

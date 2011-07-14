@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # BUILDROOT, VERBOSE need to be set
 

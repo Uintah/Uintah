@@ -34,11 +34,9 @@ DEALINGS IN THE SOFTWARE.
 #define Uintah_Component_Arches_TabPropsInterface_h
 
 #include <tabprops/StateTable.h>
-#include <CCA/Components/Arches/Mixing/InletStream.h>
-#include <CCA/Components/Arches/Mixing/Stream.h>
+#include <tabprops/Archive.h>
 #include <CCA/Components/Arches/ArchesMaterial.h>
 #include <CCA/Components/Arches/TimeIntegratorLabel.h>
-#include <Core/Util/DebugStream.h>
 
 
 /**
@@ -61,18 +59,22 @@ This code checks for the following tags/attributes in the input file:
 The UPS interface for TabProps is: 
 
 \code
-    <Properties>
-        <TabProps>
-            <inputfile>REQUIRED STRING</inputfile>
-            <hl_pressure>OPTIONAL DOUBLE</hl_pressure> 
-            <hl_outlet>OPTIONAL DOUBLE</hl_outlet> 
-            <hl_scalar_init>OPTIONAL DOUBLE</hl_scalar_init>
-        </TabProps>
-    </Properties>
+<TabProps                       spec="OPTIONAL NO_DATA" >
+  <inputfile                    spec="REQUIRED STRING" /> <!-- table to be opened --> 
+  <cold_flow                    spec="OPTIONAL BOOLEAN"/> <!-- used for simple stream mixing (no rxn) --> 
+  <hl_scalar_init               spec="OPTIONAL DOUBLE" /> <!-- initial heat loss value in the domain --> 
+  <noisy_hl_warning             spec="OPTIONAL NO_DATA"/> <!-- warn when heat loss is clipped to bounds --> 
+  <lower_hl_bound               spec="OPTIONAL DOUBLE"/> <!-- In the property table, the lower bound for heat loss.  default = -1 --> 
+  <upper_hl_bound               spec="OPTIONAL DOUBLE"/> <!-- In the property table, the upper bound for heat loss.  default = +1 --> 
+  <coal                         spec="OPTIONAL NO_DATA" 
+                                attribute1="fp_label REQUIRED STRING"     
+                                attribute2="eta_label REQUIRED STRING"/> 
+                                <!-- Attributes must match the transported IVs specified in the TransportEqn node --> 
+</TabProps>
 
-    <DataArchiver>
-        <save name=STRING table_lookup="true"> <!-- note that STRING must match the name in the table -->
-    </DataArchiver>
+<DataArchiver>
+    <save name=STRING table_lookup="true"> <!-- note that STRING must match the name in the table -->
+</DataArchiver>
 \endcode
 
  * Any variable that is saved to the UDA in the dataarchiver block is automatically given a VarLabel.  
@@ -86,9 +88,6 @@ The UPS interface for TabProps is:
 
 namespace Uintah {
 
-// setenv SCI_DEBUG TABLE_DEBUG:+ 
-static DebugStream cout_tabledbg("TABLE_DEBUG",false);
-
 class ArchesLabel; 
 class MPMArchesLabel; 
 class TimeIntegratorLabel; 
@@ -99,7 +98,6 @@ public:
   TabPropsInterface( const ArchesLabel* labels, const MPMArchesLabel* MAlabels );
 
   ~TabPropsInterface();
-
 
   void problemSetup( const ProblemSpecP& params );
   
@@ -156,21 +154,22 @@ public:
                              DataWarehouse* old_dw, 
                              DataWarehouse* new_dw ); 
 
-  /** @brief    Load list of dependent variables from the table 
-      @returns  A vector<string>& that is a reference to the list of all dependent variables */
-  const vector<string> & getAllDepVars();
-
-  /** @brief    Load list of independent variables from the table
-      @returns  A vector<string>& that is a reference to the list of all independent variables */ 
-  const vector<string> & getAllIndepVars();
-
   /** @brief      Returns a single dependent variable, given a vector of independent variable values
       @param dv   The name of the dependent variable to look up in the table
       @param iv   The vector of indepenent variable values */
   inline double getSingleState( string dv, vector<double> iv ) {
     double result = 0.0; 
-    cout_tabledbg << "From your table, looking up: " << dv << endl;
+    //cout_tabledbg << "From your table, looking up: " << dv << endl;
     return result = d_statetbl.query(  dv, &iv[0] ); 
+  };
+
+  /** @brief          Returns a single dependent variable, given a vector of independent variable values
+      @param spline   The spline information for the dep. var. 
+      @param iv       The vector of indepenent variable values */
+  inline double getSingleState( const BSpline* spline, std::string dv, vector<double> iv ) {
+    double result = 0.0; 
+    //cout_tabledbg << "From your table, looking up a variable using spline information: " << dv << endl;
+    return result = d_statetbl.query(  spline, &iv[0] ); 
   };
 
   /** @brief Dummy initialization as required by MPMArches */
@@ -183,29 +182,68 @@ public:
                   DataWarehouse* old_dw, 
                   DataWarehouse* new_dw );
 
+  /** @brief Gets the Spline information for TabProps.  Spline info is used because it is more efficient that passing strings */
+  void getSplineInfo(); 
+  /** @brief Gets the Spline information for TabProps.  This is specific to the enthalpy vars */ 
+  void getEnthalpySplineInfo(); 
+
+  typedef std::map<std::string, const BSpline*>   SplineMap; 
+
+  enum BoundaryType { DIRICHLET, NEUMANN };
+
+  struct DepVarCont {
+
+    CCVariable<double>* var; 
+    const BSpline* spline; 
+
+  }; 
+
+  typedef std::map<string, DepVarCont >       DepVarMap;
+
+  double getTableValue( std::vector<double>, std::string ); 
+
+	void tableMatching(){}; 
+
 protected :
 
 private:
 
   bool d_table_isloaded;    ///< Boolean: has the table been loaded?
+  bool d_noisy_hl_warning;  ///< Provide information about heat loss clipping
   
-  double d_hl_outlet;       ///< Heat loss value for non-adiabatic conditions
-  double d_hl_pressure;     ///< Heat loss value for non-adiabatic conditions
   double d_hl_scalar_init;  ///< Heat loss value for non-adiabatic conditions
+  double d_hl_lower_bound;  ///< Heat loss lower bound
+  double d_hl_upper_bound;  ///< Heat loss upper bound
 
   IntVector d_ijk_den_ref;                ///< Reference density location
 
-  vector<string> d_allIndepVarNames;      ///< Vector storing all independent variable names from table file
-  vector<string> d_allDepVarNames;        ///< Vector storing all dependent variable names from the table file
 
   vector<string> d_allUserDepVarNames;    ///< Vector storing all independent varaible names requested in input file
 
   StateTable d_statetbl;                  ///< StateTable object to represent the table data
+  SplineMap  d_depVarSpline;              ///< Map of spline information for each dependent var
+  SplineMap  d_enthalpyVarSpline;         ///< Holds the sensible and adiabatic enthalpy spline information
+                                          // note that this ^^^ is a bit of a quick fix. Should find a better way later. 
 
   /// A dependent variable wrapper
   struct ADepVar {
     string name; 
     CCVariable<double> data; 
+  };
+
+  /** @brief  Helper for filling the spline map */
+  inline void insertIntoSplineMap( const string var_name, const BSpline* spline ){
+
+    SplineMap::iterator i = d_depVarSpline.find( var_name ); 
+
+    if ( i == d_depVarSpline.end() ) {
+
+      cout_tabledbg << "Inserting " << var_name << " spline information into storage." << endl;
+
+      i = d_depVarSpline.insert( make_pair( var_name, spline ) ).first; 
+
+    } 
+    return; 
   };
 
 }; // end class TabPropsInterface

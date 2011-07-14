@@ -38,6 +38,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Arches/ArchesMaterial.h>
 #include <CCA/Components/Arches/TimeIntegratorLabel.h>
 #include <Core/Grid/Level.h>
+#include <Core/Parallel/Parallel.h>
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <Core/Grid/Task.h>
@@ -100,11 +101,15 @@ SmagorinskyModel::problemSetup(const ProblemSpecP& params)
   db->require("fac_mesh", d_factorMesh);
   db->require("filterl", d_filterl);
   if (d_calcVariance) {
-    cout << "Smagorinsky type model will be used to model variance" << endl;
+    proc0cout << "Smagorinsky type model will be used to model variance" << endl;
     db->require("variance_coefficient",d_CFVar); // const reqd by variance eqn
+
+    db->getWithDefault("mixture_fraction_label",d_mix_frac_label_name, "scalarSP"); 
+    d_mf_label = VarLabel::find( d_mix_frac_label_name );
+    cout << "Using " << *d_mf_label << " to compute scalar variance." << endl;
     
-    cout << "WARNING! Scalar filtering for variance limit is not supported" << endl;
-    cout << "by this model. Possibly high variance values would be generated" << endl;
+    proc0cout << "WARNING! Scalar filtering for variance limit is not supported" << endl;
+    proc0cout << "by this model. Possibly high variance values would be generated" << endl;
   }
 
   // actually, Shmidt number, not Prandtl number
@@ -366,7 +371,7 @@ SmagorinskyModel::sched_computeScalarVariance(SchedulerP& sched,
   if (doing_EKT_now){
     tsk->requires(Task::NewDW, d_lab->d_scalarEKTLabel, gac, 1);
   }else{
-    tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel,  gac, 1);
+    tsk->requires(Task::NewDW, d_mf_label,  gac, 1);
   }
 
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, gac, 1);
@@ -414,7 +419,7 @@ SmagorinskyModel::computeScalarVariance(const ProcessorGroup*,
     if (doing_EKT_now){
       new_dw->get(scalar, d_lab->d_scalarEKTLabel, indx, patch,gac, 1);
     }else{
-      new_dw->get(scalar, d_lab->d_scalarSPLabel,  indx, patch,gac, 1);
+      new_dw->get(scalar, d_mf_label,  indx, patch,gac, 1);
     }
     
     if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First) 
@@ -611,7 +616,7 @@ SmagorinskyModel::sched_computeScalarDissipation(SchedulerP& sched,
   if (doing_EKT_now){
     tsk->requires(Task::NewDW, d_lab->d_scalarEKTLabel,gac, 1);
   }else{
-    tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel, gac, 1);
+    tsk->requires(Task::NewDW, d_mf_label, gac, 1);
   }
   tsk->requires(Task::NewDW, d_lab->d_viscosityCTSLabel,gac, 1);
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,    gac, 1);
@@ -654,7 +659,7 @@ SmagorinskyModel::computeScalarDissipation(const ProcessorGroup*,
     if (doing_EKT_now){
       new_dw->get(scalar, d_lab->d_scalarEKTLabel, indx, patch, gac, 1);
     }else{
-      new_dw->get(scalar, d_lab->d_scalarSPLabel,  indx, patch, gac, 1);
+      new_dw->get(scalar, d_mf_label,  indx, patch, gac, 1);
     }              
                   
     new_dw->get(viscosity, d_lab->d_viscosityCTSLabel, indx, patch,gac, 1);

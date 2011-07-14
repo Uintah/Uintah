@@ -57,8 +57,7 @@ DEALINGS IN THE SOFTWARE.
 #include <iostream>
 
 #include <Core/Grid/uintahshare.h>
-using std::cout;
-using std::endl;
+
 namespace Uintah {
 
   using SCIRun::InternalError;

@@ -47,6 +47,7 @@ DEALINGS IN THE SOFTWARE.
 
 using namespace SCIRun;
 using namespace Uintah;
+using std::endl;
 
 
 // export SCI_DEBUG="BCDA_DBG:+"

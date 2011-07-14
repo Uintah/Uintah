@@ -262,6 +262,17 @@ inline bool doesIntersect(const IntVector& low1, const IntVector &high1, const I
          high1.z()>low2.z();     // and high1 is greater than their low2
 }
 
+// This will round the Vector v to the nearest integer
+inline IntVector roundNearest(const Vector& v)
+{
+   int x =  (v.x() < 0) ? (int) (v.x() - 0.5) : (int) (v.x() +0.5);
+   int y =  (v.y() < 0) ? (int) (v.y() - 0.5) : (int) (v.y() +0.5);
+   int z =  (v.z() < 0) ? (int) (v.z() - 0.5) : (int) (v.z() +0.5);
+   
+   IntVector ret(x,y,z);
+   return ret;
+}
+
 } // End namespace SCIRun
 
 #endif

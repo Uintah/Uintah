@@ -56,6 +56,7 @@ DEALINGS IN THE SOFTWARE.
 #include   <iterator>
 #include   <set>
 
+using namespace std;
 
 using namespace Uintah;
 
@@ -149,6 +150,7 @@ BCGeomBase* BoundCondReader::createBoundaryConditionFace(ProblemSpecP& face_ps,
   std::string fc;
   int plusMinusFaces, p_dir;
   BCGeomBase* bcGeom;
+
   if (values.find("side") != values.end()) {
     fc = values["side"];
     whichPatchFace(fc, face_side, plusMinusFaces, p_dir);
@@ -159,15 +161,15 @@ BCGeomBase* BoundCondReader::createBoundaryConditionFace(ProblemSpecP& face_ps,
     whichPatchFace(fc, face_side, plusMinusFaces, p_dir);
     string origin = values["origin"];
     string radius = values["radius"];
-    stringstream origin_stream(origin);
-    stringstream radius_stream(radius);
+    std::stringstream origin_stream(origin);
+    std::stringstream radius_stream(radius);
     double r,o[3];
     radius_stream >> r;
     origin_stream >> o[0] >> o[1] >> o[2];
     Point p(o[0],o[1],o[2]);
 
     if( !radius_stream || !origin_stream ) {
-      cout <<  "WARNING: BoundCondReader.cc: stringstream failed..." << endl;
+      std::cout <<  "WARNING: BoundCondReader.cc: stringstream failed..." << std::endl;
     }    
     
     //  bullet proofing-- origin must be on the same plane as the face
@@ -204,9 +206,9 @@ BCGeomBase* BoundCondReader::createBoundaryConditionFace(ProblemSpecP& face_ps,
     string origin = values["origin"];
     string in_radius = values["inner_radius"];
     string out_radius = values["outer_radius"];
-    stringstream origin_stream(origin);
-    stringstream in_radius_stream(in_radius);
-    stringstream out_radius_stream(out_radius);
+    std::stringstream origin_stream(origin);
+    std::stringstream in_radius_stream(in_radius);
+    std::stringstream out_radius_stream(out_radius);
     double i_r,o_r,o[3];
     in_radius_stream >> i_r;
     out_radius_stream >> o_r;
@@ -243,7 +245,7 @@ BCGeomBase* BoundCondReader::createBoundaryConditionFace(ProblemSpecP& face_ps,
     whichPatchFace(fc, face_side, plusMinusFaces, p_dir);
     string low = values["lower"];
     string up = values["upper"];
-    stringstream low_stream(low), up_stream(up);
+    std::stringstream low_stream(low), up_stream(up);
     double lower[3],upper[3];
     low_stream >> lower[0] >> lower[1] >> lower[2];
     up_stream >> upper[0] >> upper[1] >> upper[2];
@@ -283,7 +285,14 @@ BCGeomBase* BoundCondReader::createBoundaryConditionFace(ProblemSpecP& face_ps,
       " Valid options (side, circle, rectangle, annulus";
     throw ProblemSetupException(warn.str(), __FILE__, __LINE__);  
   }
-  
+
+  // name the boundary condition object:
+  std::string bcname; 
+  if (values.find("name") != values.end()){
+    std::string name = values["name"];
+    BCR_dbg << "Setting name to: " << name << endl;
+    bcGeom->setBCName( name ); 
+  }
 
   BCR_dbg << "Face = " << fc << endl;
   return bcGeom;
@@ -315,7 +324,7 @@ BoundCondReader::read(ProblemSpecP& bc_ps, const ProblemSpecP& grid_ps)
     BCR_dbg << endl << endl << "Face = " << face_side << " Geometry type = " 
       << typeid(*bcGeom).name() << " " << bcGeom << endl;
 
-    multimap<int, BoundCondBase*> bctype_data;
+    std::multimap<int, BoundCondBase*> bctype_data;
 
     for (ProblemSpecP child = face_ps->findBlock("BCType"); child != 0;
         child = child->findNextBlock("BCType")) {
@@ -698,6 +707,9 @@ void BoundCondReader::combineBCS_NEW()
           other_bc = (*other_index)->clone();
 
           diff_bc = scinew DifferenceBCData(side_bc,other_bc);
+
+          diff_bc->setBCName( side_bc->getBCName() ); //make sure the new piece has the right name
+
           rearranged.addBCData(mat_id,diff_bc->clone());
           rearranged.addBCData(mat_id,other_bc->clone());
           delete diff_bc;
@@ -715,6 +727,9 @@ void BoundCondReader::combineBCS_NEW()
 
           side_bc = dynamic_cast<SideBCData*>((*side_index)->clone());
           diff_bc = scinew DifferenceBCData(side_bc,union_bc->clone());
+
+          diff_bc->setBCName( side_bc->getBCName() ); //make sure the new piece has the right name
+
           rearranged.addBCData(mat_id,diff_bc->clone());
           delete side_bc;
           delete diff_bc;

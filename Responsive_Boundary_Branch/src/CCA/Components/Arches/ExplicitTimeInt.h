@@ -167,9 +167,9 @@ private:
                                     int step, double time )
   {
 
-		for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
+                for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
       IntVector c = *iter; 
-			phi[*iter] = ssp_alpha[step]*old_phi[c] + ssp_beta[step]*phi[c];	
+                        phi[*iter] = ssp_alpha[step]*old_phi[c] + ssp_beta[step]*phi[c];        
     }
 
 
@@ -218,15 +218,15 @@ private:
                                     int step, double time )
   {
 
-		for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
+                for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
 
       IntVector c = *iter; 
 
       double pred_density = ssp_alpha[step]*old_den[c] + ssp_beta[step]*new_den[c]; 
 
       if ( pred_density > 0 ) { 
-			  phi[*iter] = ( ssp_alpha[step] * (old_den[c] * old_phi[c])
-                   +   ssp_beta[step]  * (new_den[c] * phi[c]) ) / pred_density;	
+                          phi[*iter] = ( ssp_alpha[step] * (old_den[c] * old_phi[c])
+                   +   ssp_beta[step]  * (new_den[c] * phi[c]) ) / pred_density;        
       }
 
     }

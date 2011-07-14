@@ -45,6 +45,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Arches/Radiation/RadiationModel.h>
 #include <CCA/Components/Arches/Radiation/DORadiationModel.h>
 #include <CCA/Components/Arches/Radiation/RadLinearSolver.h>
+#include <CCA/Components/Models/Radiation/RMCRT/Ray.h>
 #ifdef HAVE_HYPRE
 #include <CCA/Components/Arches/Radiation/RadHypreSolver.h>
 #endif
@@ -65,6 +66,8 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermFactory.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermBase.h>
+#include <CCA/Components/Arches/PropertyModels/PropertyModelBase.h>
+#include <CCA/Components/Arches/PropertyModels/PropertyModelFactory.h>
 
 using namespace Uintah;
 using namespace std;
@@ -93,7 +96,9 @@ EnthalpySolver::EnthalpySolver(const ArchesLabel* label,
   d_radCounter = -1; //to decide how often radiation calc is done
   d_radCalcFreq = 0; 
   d_DORadiationCalc = false;
-  d_radiationCalc = false; 
+  d_radiationCalc = false;
+  d_doRMCRT = false; 
+  d_use_abskp = false;
 
 }
 
@@ -106,9 +111,11 @@ EnthalpySolver::~EnthalpySolver()
   delete d_source;
   delete d_rhsSolver;
   delete d_DORadiation;
+  if ( d_doRMCRT ) 
+    delete d_RMCRT; 
   if(d_perproc_patches && d_perproc_patches->removeReference())
     delete d_perproc_patches;
-
+  //VarLabel::destroy(d_abskpLabel);
 }
 
 //****************************************************************************
@@ -121,6 +128,21 @@ EnthalpySolver::problemSetup(const ProblemSpecP& params)
   if (db->findBlock("DORadiationModel")) {
     d_DORadiationCalc = true;
     d_radiationCalc = true; 
+  }
+
+  if (db->findBlock("RMCRT")){
+    d_doRMCRT = true; 
+    ProblemSpecP rmcrt_db = db->findBlock("RMCRT"); 
+    d_RMCRT = scinew Ray(); 
+    int archIndex = 0;
+    d_RMCRT->registerVarLabels( d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(),
+                                d_lab->d_abskgINLabel,
+                                d_lab->d_absorpINLabel,
+                                d_lab->d_tempINLabel,
+                                d_lab->d_radiationSRCINLabel ) ; 
+    
+    d_RMCRT->problemSetup( rmcrt_db ); 
+
   }
 
   if (d_radiationCalc) {
@@ -229,6 +251,14 @@ EnthalpySolver::problemSetup(const ProblemSpecP& params)
 
   d_discretize->setTurbulentPrandtlNumber(d_turbPrNo);
 
+  // See if particle absorption coefficient is used  
+  PropertyModelFactory& prop_factory = PropertyModelFactory::self();
+  d_use_abskp = prop_factory.find_property_model( "abskp");
+  if(d_use_abskp){
+    PropertyModelBase& abskpModel = prop_factory.retrieve_property_model( "abskp");
+    d_abskpLabel = abskpModel.getPropLabel(); 
+  }
+
 // ++ jeremy ++ 
   d_source->setBoundary(d_boundaryCondition);
 // -- jeremy --        
@@ -273,6 +303,15 @@ EnthalpySolver::solve(const LevelP& level,
     src.sched_computeSource( level, sched, timeSubStep );
   }
 
+  // RMCRT Solve: 
+  if ( d_doRMCRT ) {
+    int sub_step = 0; 
+    if ( timelabels->integrator_step_number != TimeIntegratorStepNumber::First ) 
+      sub_step = 1; // at this point it is either zero or something greater than zero where this matters
+
+    d_RMCRT->sched_initProperties( level, sched, sub_step ); 
+    d_RMCRT->sched_rayTrace( level, sched, sub_step);
+  }
 
   //computes stencil coefficients and source terms
   // requires : enthalpyIN, [u,v,w]VelocitySPBC, densityIN, viscosityIN
@@ -351,6 +390,11 @@ EnthalpySolver::sched_buildLinearMatrix(const LevelP& level,
   
   tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, gn);
 
+  if(d_use_abskp){
+    tsk->requires(Task::OldDW, d_abskpLabel,   gn, 0);
+  }
+
+
   if (d_dynScalarModel)
     tsk->requires(Task::NewDW, d_lab->d_enthalpyDiffusivityLabel, gac, 2);
   else
@@ -385,10 +429,13 @@ EnthalpySolver::sched_buildLinearMatrix(const LevelP& level,
 
   if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
       &&((!(d_EKTCorrection))||((d_EKTCorrection)&&(doing_EKT_now)))) {
+
     if (d_radiationCalc) {
+
       if (!d_DORadiationCalc){
         tsk->requires(Task::OldDW, d_lab->d_absorpINLabel, gn, 0);
       }
+
       if (d_DORadiationCalc) {
         tsk->requires(Task::OldDW, d_lab->d_radiationSRCINLabel,    gn, 0);
         tsk->requires(Task::OldDW, d_lab->d_radiationFluxEINLabel,  gn, 0);
@@ -405,17 +452,20 @@ EnthalpySolver::sched_buildLinearMatrix(const LevelP& level,
         */
       }
     } 
-  }
-  else {
+  } else {
+
     if (d_radiationCalc) {
+
       if (!d_DORadiationCalc)
         tsk->requires(Task::NewDW, d_lab->d_absorpINLabel, gn, 0);
+
     } 
+
   }
 
   if (d_MAlab && d_boundaryCondition->getIfCalcEnergyExchange()) {
     tsk->requires(Task::NewDW, d_MAlab->d_enth_mmLinSrc_CCLabel,   gn, 0);
-    tsk->requires(Task::NewDW, d_MAlab->d_enth_mmNonLinSrc_CCLabel,gn, 0);
+    tsk->requires(Task::NewDW, d_MAlab->d_enth_mmNonLinSrc_tmp_CCLabel,gn, 0);
   }
 
   if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
@@ -435,8 +485,11 @@ EnthalpySolver::sched_buildLinearMatrix(const LevelP& level,
 
   if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
       &&((!(d_EKTCorrection))||((d_EKTCorrection)&&(doing_EKT_now)))) {
+
      if (d_radiationCalc) {
+
       if (d_DORadiationCalc) {
+
         tsk->computes(d_lab->d_abskgINLabel);
         tsk->computes(d_lab->d_radiationSRCINLabel);
         tsk->computes(d_lab->d_radiationFluxEINLabel);
@@ -447,6 +500,7 @@ EnthalpySolver::sched_buildLinearMatrix(const LevelP& level,
         tsk->computes(d_lab->d_radiationFluxBINLabel);
         //tsk->computes(d_lab->d_radiationVolqINLabel);
         tsk->modifies(d_lab->d_radiationVolqINLabel);
+
       }
     }
     // Adding new sources from factory:
@@ -459,8 +513,7 @@ EnthalpySolver::sched_buildLinearMatrix(const LevelP& level,
       tsk->requires(Task::NewDW, srcLabel, gn, 0); 
 
     }
-  }
-  else {
+  } else {
    if (d_radiationCalc) {
     if (d_DORadiationCalc) {
       tsk->modifies(d_lab->d_abskgINLabel);
@@ -473,6 +526,7 @@ EnthalpySolver::sched_buildLinearMatrix(const LevelP& level,
       tsk->modifies(d_lab->d_radiationFluxBINLabel);
       tsk->modifies(d_lab->d_radiationVolqINLabel);
     }
+
    }
    // Adding new sources from factory:
    SourceTermFactory& factory = SourceTermFactory::self(); 
@@ -510,6 +564,8 @@ EnthalpySolver::sched_buildLinearMatrix(const LevelP& level,
 
   //  sched->addTask(tsk, patches, matls);
   sched->addTask(tsk, d_perproc_patches, matls);
+
+
 }
 
       
@@ -588,6 +644,15 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
 
     // from new_dw get DEN, VIS, F, U, V, W
     new_dw->get(constEnthalpyVars.density, d_lab->d_densityCPLabel, indx, patch,  gac, 2);
+
+
+    enthalpyVars.ABSKP.allocate(patch->getExtraCellLowIndex(),
+                                     patch->getExtraCellHighIndex());
+    if(d_use_abskp){
+      old_dw->copyOut(enthalpyVars.ABSKP, d_abskpLabel,indx, patch, gn, 0);
+    } else {
+      enthalpyVars.ABSKP.initialize(0.0);
+    }
 
     if (d_dynScalarModel)
       new_dw->get(constEnthalpyVars.viscosity,
@@ -736,12 +801,12 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
 
           new_dw->allocateAndPut(enthalpyVars.ABSKG, d_lab->d_abskgINLabel,indx, patch);
           old_dw->copyOut(enthalpyVars.ABSKG,        d_lab->d_abskgINLabel,indx, patch, gn, 0);
+
           /*
           new_dw->allocateAndPut(enthalpyVars.ABSKG, d_lab->d_abskgINLabel,indx, patch);
           old_dw->copyOut(enthalpyVars.ABSKG,        d_lab->d_abskgINLabel,indx, patch, gac, 1);
           */
-        }
-        else {
+        } else {
           new_dw->getModifiable(enthalpyVars.qfluxe, d_lab->d_radiationFluxEINLabel,indx, patch);
           new_dw->getModifiable(enthalpyVars.qfluxw, d_lab->d_radiationFluxWINLabel,indx, patch);
           new_dw->getModifiable(enthalpyVars.qfluxn, d_lab->d_radiationFluxNINLabel,indx, patch);
@@ -779,7 +844,7 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
     }
 
     if (d_MAlab && d_boundaryCondition->getIfCalcEnergyExchange()) {
-      new_dw->get(constEnthalpyVars.mmEnthSu, d_MAlab->d_enth_mmNonLinSrc_CCLabel,indx, patch, gn, 0);
+      new_dw->get(constEnthalpyVars.mmEnthSu, d_MAlab->d_enth_mmNonLinSrc_tmp_CCLabel,indx, patch, gn, 0);
       new_dw->get(constEnthalpyVars.mmEnthSp, d_MAlab->d_enth_mmLinSrc_CCLabel,   indx, patch, gn, 0);
     }
 
@@ -897,6 +962,7 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
 
         d_DORadiation->computeRadiationProps(pc, patch, cellinfo,
                                              &enthalpyVars, &constEnthalpyVars);
+        
         d_DORadiation->boundarycondition(pc, patch, cellinfo,
                                          &enthalpyVars, &constEnthalpyVars);
 
@@ -939,6 +1005,17 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
     // inputs : enthalpySP, scalCoefSBLM
     // outputs: scalCoefSBLM
     if (d_boundaryCondition->anyArchesPhysicalBC()) {
+      d_boundaryCondition->scalarBC(patch, &enthalpyVars, &constEnthalpyVars);
+
+      /*if (d_boundaryCondition->getIntrusionBC()) {
+        d_boundaryCondition->intrusionEnergyExBC(pc, patch, cellinfo,
+                                              &enthalpyVars,&constEnthalpyVars);
+        d_boundaryCondition->intrusionEnthalpyBC(pc, patch, delta_t, cellinfo,
+                                              &enthalpyVars,&constEnthalpyVars);
+      }*/
+    }
+
+    if (d_boundaryCondition->isUsingNewBC()) {
       d_boundaryCondition->scalarBC(patch, &enthalpyVars, &constEnthalpyVars);
 
       /*if (d_boundaryCondition->getIntrusionBC()) {
@@ -1124,9 +1201,14 @@ EnthalpySolver::enthalpyLinearSolve(const ProcessorGroup* pc,
 
 // Outlet bc is done here not to change old enthalpy
     if ((d_boundaryCondition->getOutletBC())||
-        (d_boundaryCondition->getPressureBC()))
-    d_boundaryCondition->scalarOutletPressureBC(patch,
-                                          &enthalpyVars, &constEnthalpyVars);
+        (d_boundaryCondition->getPressureBC())) {
+      d_boundaryCondition->scalarOutletPressureBC(patch,
+                                            &enthalpyVars, &constEnthalpyVars);
+    }
 
+    if ( d_boundaryCondition->isUsingNewBC() ){ 
+      d_boundaryCondition->scalarOutletPressureBC(patch,
+                                            &enthalpyVars, &constEnthalpyVars);
+    }
   }
 }

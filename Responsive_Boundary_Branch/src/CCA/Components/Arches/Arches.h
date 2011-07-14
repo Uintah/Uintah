@@ -393,8 +393,6 @@ private:
 
     string d_timeIntegratorType;
 
-    bool d_recompile;
-
     AnalysisModule* d_analysisModule;
     
     bool d_set_initial_condition;
@@ -408,12 +406,6 @@ private:
     double d_cu,d_cv,d_cw,d_cp,d_phi0,d_esphi0;
     //sine mms
     double d_amp;
-    bool d_calcExtraScalars;
-    ExtraScalarSolver* d_extraScalarSolver;
-    vector<ExtraScalarSolver*> d_extraScalars;
-
-    bool d_carbon_balance_es;        
-    bool d_sulfur_balance_es;        
 
     // Variables----
     vector<string> d_scalarEqnNames; 

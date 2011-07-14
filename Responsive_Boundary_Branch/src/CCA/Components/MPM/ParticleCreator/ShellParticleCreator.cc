@@ -41,6 +41,8 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/GeometryPiece/GeometryPiece.h>
 #include <Core/GeometryPiece/ShellGeometryPiece.h>
 #include <iostream>
+
+using namespace std;
 using namespace Uintah;
 
 
@@ -115,8 +117,8 @@ ShellParticleCreator::createParticles(MPMMaterial* matl,
 
     // Find volume of influence of each particle as a
     // fraction of the cell size
-    IntVector ppc = (*obj)->getNumParticlesPerCell();
-    Vector dxpp = patch->dCell()/(*obj)->getNumParticlesPerCell();
+    IntVector ppc = (*obj)->getInitialData_IntVector("res");
+    Vector dxpp = patch->dCell()/(*obj)->getInitialData_IntVector("res");
     Vector dcorner = dxpp*0.5;
     Vector size(1./((double) ppc.x()), 1./((double) ppc.y()),
                 1./((double) ppc.z()));
@@ -139,8 +141,8 @@ ShellParticleCreator::createParticles(MPMMaterial* matl,
       // (declared in the ParticleCreator class)
       for (int idx = 0; idx < numP; idx++) {
         particleIndex pidx = start+idx;
-        pvelocity[pidx]=(*obj)->getInitialVelocity();
-        ptemperature[pidx]=(*obj)->getInitialData("temperature");
+        pvelocity[pidx]=(*obj)->getInitialData_Vector ("velocity");
+        ptemperature[pidx]=(*obj)->getInitialData_double("temperature");
         pdisp[pidx] = Vector(0.,0.,0.);
         pfiberdir[pidx] = Vector(0.0,0.0,0.0);
 
@@ -237,8 +239,8 @@ ShellParticleCreator::createParticles(MPMMaterial* matl,
                 position[pidx]=p;
                 pdisp[pidx] = Vector(0.,0.,0.);
                 pvolume[pidx]=dxpp.x()*dxpp.y()*dxpp.z();
-                pvelocity[pidx]=(*obj)->getInitialVelocity();
-                ptemperature[pidx]=(*obj)->getInitialData("temperature");
+                pvelocity[pidx]=(*obj)->getInitialData_Vector("velocity");
+                ptemperature[pidx]=(*obj)->getInitialData_double("temperature");
                 psp_vol[pidx]=1.0/matl->getInitialDensity(); 
                 pfiberdir[pidx] = Vector(0.0,0.0,0.0);
 

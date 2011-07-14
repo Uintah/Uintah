@@ -49,6 +49,7 @@ DEALINGS IN THE SOFTWARE.
 //#define DELT_METHOD
 #undef DELT_METHOD
 
+using namespace std;
 using namespace Uintah;
 namespace Uintah {
 //__________________________________

@@ -37,7 +37,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Arches/ArchesVariables.h>
 #include <CCA/Components/Arches/BoundaryCondition.h>
 #include <CCA/Components/Arches/Discretization.h>
-#include <CCA/Components/Arches/PressureSolver.h>
+#include <CCA/Components/Arches/PetscCommon.h>
 #include <CCA/Components/Arches/Source.h>
 #include <CCA/Components/Arches/StencilMatrix.h>
 #include <CCA/Ports/DataWarehouse.h>
@@ -50,11 +50,6 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
-
-// If I'm not mistaken, this #define replaces the CHKERRQ() from PETSc itself...                                           
-#undef CHKERRQ
-#define CHKERRQ(x) if(x) throw PetscError(x, __FILE__, __FILE__, __LINE__);
-
 #include <vector>
 
 using namespace std;
@@ -74,8 +69,7 @@ RadLinearSolver::RadLinearSolver(const ProcessorGroup* myworld)
 // ****************************************************************************
 RadLinearSolver::~RadLinearSolver()
 {
-// Comment out the following till better place to finalize PETSC is found
-//  finalizeSolver();
+  //finalizePetscSolver();
 }
 
 // ****************************************************************************
@@ -93,26 +87,37 @@ RadLinearSolver::problemSetup(const ProblemSpecP& params)
       else
         d_shsolver = false;
       */
-      if (db->findBlock("max_iter"))
+      if (db->findBlock("max_iter")){
         db->require("max_iter", d_maxSweeps);
-      else
+      }else{
         d_maxSweeps = 75;
-      if (db->findBlock("ksptype"))
+      }
+      
+      if (db->findBlock("ksptype")){
         db->require("ksptype",d_kspType);
-      else
+      }else{
         d_kspType = "gmres";
-      if (db->findBlock("res_tol"))
+      }
+      
+      if (db->findBlock("res_tol")){
         db->require("res_tol",d_tolerance);
-      else
+      }else{
         d_tolerance = 1.e-08;
-      if (db->findBlock("pctype"))
+      }
+           
+      if (db->findBlock("pctype")){
         db->require("pctype", d_pcType);
-      else
+      }else{
         d_pcType = "blockjacobi";
-      if (d_pcType == "asm")
+      }
+      
+      if (d_pcType == "asm"){
         db->require("overlap",d_overlap);
-      if (d_pcType == "ilu")
+      }
+        
+      if (d_pcType == "ilu"){
         db->require("fill",d_fill);
+      }
     }
     else {
       d_maxSweeps = 75;
@@ -137,107 +142,40 @@ RadLinearSolver::problemSetup(const ProblemSpecP& params)
   int ierr = PetscInitialize(&argc, &argv, PETSC_NULL, PETSC_NULL);
   if(ierr)
     throw UintahPetscError(ierr, "PetscInitialize", __FILE__, __LINE__);
+  
+  delete argv;
 }
 
 
+//______________________________________________________________________
+// This function creates the Petsc local to global mapping and some global
+// vector/matrix size parameters
 void 
 RadLinearSolver::matrixCreate(const PatchSet* allpatches,
                               const PatchSubset* mypatches)
 {
+
+  //cout << d_myworld->myrank() <<"    RadLinearSolver::matrixCreate " << *mypatches << endl;
   // for global index get a petsc index that
   // make it a data memeber
-  int numProcessors = d_myworld->size();
-  ASSERTEQ(numProcessors, allpatches->size());
+  int numProcs = d_myworld->size();
+  ASSERTEQ(numProcs, allpatches->size());
 
-  // number of patches for each processor
-  vector<int> numCells(numProcessors, 0);
-  vector<int> startIndex(numProcessors);
+  vector<int> numCells(numProcs, 0);
+  vector<int> startIndex(numProcs);
   int totalCells = 0;
-  for(int s=0;s<allpatches->size();s++){
-    startIndex[s]=totalCells;
-    int mytotal = 0;
-    const PatchSubset* patches = allpatches->getSubset(s);
-    
-    for(int p=0;p<patches->size();p++){
-      const Patch* patch = patches->get(p);
-      IntVector plowIndex = patch->getFortranCellLowIndex();
-      IntVector phighIndex = patch->getFortranCellHighIndex()+IntVector(1,1,1);
   
-      long nc = (phighIndex[0]-plowIndex[0])*
-                (phighIndex[1]-plowIndex[1])*
-                (phighIndex[2]-plowIndex[2]);
-                
-      d_petscGlobalStart[patch]=totalCells;
-      totalCells+=nc;
-      mytotal+=nc;
-    }
-    numCells[s] = mytotal;
-  }
+  PetscLocalToGlobalMapping(allpatches, mypatches, numCells, totalCells,
+                            d_petscGlobalStart, d_petscLocalToGlobal, d_myworld);
 
-  for(int p=0;p<mypatches->size();p++){
-    const Patch* patch=mypatches->get(p);
-    IntVector lowIndex  = patch->getExtraCellLowIndex(Arches::ONEGHOSTCELL);
-    IntVector highIndex = patch->getExtraCellHighIndex(Arches::ONEGHOSTCELL);
-    
-    Array3<int> l2g(lowIndex, highIndex);
-    l2g.initialize(-1234);
-    long totalCells=0;
-    const Level* level = patch->getLevel();
-    Patch::selectType neighbors;
-    level->selectPatches(lowIndex, highIndex, neighbors);
-    
-    for(int i=0;i<neighbors.size();i++){
-      const Patch* neighbor = neighbors[i];
+  int me          = d_myworld->myrank();
+  d_numlrows      = numCells[me];
+  d_numlcolumns   = d_numlrows;
+  d_globalrows    = (int)totalCells;
+  d_globalcolumns = (int)totalCells;
 
-      IntVector plow = neighbor->getFortranCellLowIndex();
-      IntVector phigh = neighbor->getFortranCellHighIndex()+IntVector(1,1,1);
-      IntVector low = Max(lowIndex, plow);
-      IntVector high= Min(highIndex, phigh);
-
-      if( ( high.x() < low.x() ) || ( high.y() < low.y() ) || ( high.z() < low.z() ) ){
-        throw InternalError("Patch doesn't overlap?", __FILE__, __LINE__);
-      }
-      
-      int petscglobalIndex = d_petscGlobalStart[neighbor];
-      IntVector dcells = phigh-plow;
-      IntVector start = low-plow;
-      petscglobalIndex += start.z()*dcells.x()*dcells.y()
-                         +start.y()*dcells.x()+start.x();
-                         
-      for (int colZ = low.z(); colZ < high.z(); colZ ++) {
-        int idx_slab = petscglobalIndex;
-        petscglobalIndex += dcells.x()*dcells.y();
-        
-        for (int colY = low.y(); colY < high.y(); colY ++) {
-          int idx = idx_slab;
-          idx_slab += dcells.x();
-          for (int colX = low.x(); colX < high.x(); colX ++) {
-            l2g[IntVector(colX, colY, colZ)] = idx++;
-          }
-        }
-      }
-      IntVector d = high-low;
-      totalCells+=d.x()*d.y()*d.z();
-    }
-    d_petscLocalToGlobal[patch].copyPointer(l2g);
-  }
-  int me = d_myworld->myrank();
-  numlrows = numCells[me];
-  numlcolumns = numlrows;
-  globalrows = (int)totalCells;
-  globalcolumns = (int)totalCells;
-  /*
-  if(d_shsolver){
-
-  d_nz = 7;
-  o_nz = 6;
-  }
-  else {
-  */
   d_nz = 4;
   o_nz = 3;
-  //  }
-
 }
 
 // ****************************************************************************
@@ -258,37 +196,40 @@ RadLinearSolver::setMatrix(const ProcessorGroup* ,
                            CCVariable<double>& AT)
 
 {
+  //cout << d_myworld->myrank() <<"    RadLinearSolver::setMatrix " << patch->getGridIndex() <<  endl;
+
+  //__________________________________
+  //  create the Petsc matrix A and vectors X, B and U.  This routine is called
+  // multiple times per radiation solve.
   int ierr;
-  ierr = MatCreateMPIAIJ(PETSC_COMM_WORLD, numlrows, numlcolumns, globalrows,
-                             globalcolumns, d_nz, PETSC_NULL, o_nz, PETSC_NULL, &A);
+  ierr = MatCreateMPIAIJ(PETSC_COMM_WORLD, d_numlrows, d_numlcolumns, d_globalrows,
+                         d_globalcolumns, d_nz, PETSC_NULL, o_nz, PETSC_NULL, &A);
   if(ierr)
     throw UintahPetscError(ierr, "MatCreateMPIAIJ", __FILE__, __LINE__);
 
-  /* 
-     Create vectors.  Note that we form 1 vector from scratch and
-     then duplicate as needed.
-  */
-  ierr = VecCreateMPI(PETSC_COMM_WORLD,numlrows, globalrows,&d_x);
+  //__________________________________
+  //  Create Petsc vectors.  Note that we form 1 vector from scratch and
+  //  then duplicate as needed.
+  ierr = VecCreateMPI(PETSC_COMM_WORLD,d_numlrows, d_globalrows,&d_x);
   if(ierr)
     throw UintahPetscError(ierr, "VecCreateMPI", __FILE__, __LINE__);
+    
   ierr = VecSetFromOptions(d_x);
   if(ierr)
     throw UintahPetscError(ierr, "VecSetFromOptions", __FILE__, __LINE__);
+  
   ierr = VecDuplicate(d_x,&d_b);
   if(ierr)
     throw UintahPetscError(ierr, "VecDuplicate(d_b)", __FILE__, __LINE__);
+  
   ierr = VecDuplicate(d_x,&d_u);
   if(ierr)
     throw UintahPetscError(ierr, "VecDuplicate(d_u)", __FILE__, __LINE__);
 
-  // Get the patch bounds and the variable bounds
-  IntVector idxLo = patch->getFortranCellLowIndex();
-  IntVector idxHi = patch->getFortranCellHighIndex();
   /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
          Compute the matrix and right-hand-side vector that define
          the linear system, Ax = b.
-     - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-    /* 
+         
      Create parallel matrix, specifying only its global dimensions.
      When using MatCreate(), the matrix format can be specified at
      runtime. Also, the parallel partitioning of the matrix is
@@ -318,18 +259,23 @@ RadLinearSolver::setMatrix(const ProcessorGroup* ,
   // petsc matrix
   IntVector lowIndex  = patch->getExtraCellLowIndex(Arches::ONEGHOSTCELL);
   IntVector highIndex = patch->getExtraCellHighIndex(Arches::ONEGHOSTCELL);
+  
+  IntVector idxLo = patch->getFortranCellLowIndex();
+  IntVector idxHi = patch->getFortranCellHighIndex();
 
   Array3<int> l2g(lowIndex, highIndex);
   l2g.copy(d_petscLocalToGlobal[patch]);
-  MatZeroEntries(A);
+//  MatZeroEntries(A);
   double vecvalueb, vecvaluex;
   
   int facX = 1;
   if (plusX)
     facX = -1;
+    
   int facY = 1;
   if (plusY)
     facY = -1;
+    
   int facZ = 1;
   if (plusZ)
     facZ = -1;
@@ -337,9 +283,12 @@ RadLinearSolver::setMatrix(const ProcessorGroup* ,
   for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
     for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
       for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+        IntVector c(colX, colY, colZ);
+        
         int ii = colX+facX;
         int jj = colY+facY;
         int kk = colZ+facZ;
+        
         /*
         if(d_shsolver){
         col[0] = l2g[IntVector(colX,colY,colZ-1)];  //ab
@@ -371,10 +320,10 @@ RadLinearSolver::setMatrix(const ProcessorGroup* ,
         }
         else{
         */
-        value[0] = -AB[IntVector(colX,colY,colZ)];
-        value[1] = -AS[IntVector(colX,colY,colZ)];
-        value[2] = -AW[IntVector(colX,colY,colZ)];
-        value[3] =  AP[IntVector(colX,colY,colZ)];
+        value[0] = -AB[c];
+        value[1] = -AS[c];
+        value[2] = -AW[c];
+        value[3] =  AP[c];
         //        }
 
         int row = col[3];
@@ -384,20 +333,26 @@ RadLinearSolver::setMatrix(const ProcessorGroup* ,
         }
         else{
         */
-        ierr = MatSetValues(A,1,&row,4,col,value,INSERT_VALUES);
+        int ierr = MatSetValues(A,1,&row,4,col,value,INSERT_VALUES);
         //        }
 
         if(ierr)
           throw UintahPetscError(ierr, "MatSetValues", __FILE__, __LINE__);
-        vecvalueb = SU[IntVector(colX,colY,colZ)];
-        vecvaluex = vars->cenint[IntVector(colX, colY, colZ)];
+        
+        //__________________________________
+        //  Fill in B and X  
+        vecvalueb = SU[c];
+        vecvaluex = vars->cenint[c];
+        
         ierr = VecSetValue(d_b, row, vecvalueb, INSERT_VALUES);
-        if(ierr)
+        if(ierr){
           throw UintahPetscError(ierr, "VecSetValue", __FILE__, __LINE__);
+        }
+        
         ierr = VecSetValue(d_x, row, vecvaluex, INSERT_VALUES);
-        if(ierr)
+        if(ierr){
           throw UintahPetscError(ierr, "VecSetValue", __FILE__, __LINE__);
-
+        }
       }
     }
   }
@@ -408,194 +363,12 @@ RadLinearSolver::setMatrix(const ProcessorGroup* ,
 bool
 RadLinearSolver::radLinearSolve()
 {
-  double solve_start = Time::currentSeconds();
-  KSP solver;
-  PC peqnpc; // pressure eqn pc
- 
-  int ierr;
-  ierr = MatAssemblyBegin(A,MAT_FINAL_ASSEMBLY);
-  if(ierr)
-    throw UintahPetscError(ierr, "MatAssemblyBegin", __FILE__, __LINE__);
-  ierr = MatAssemblyEnd(A,MAT_FINAL_ASSEMBLY);
-  if(ierr)
-    throw UintahPetscError(ierr, "MatAssemblyEnd", __FILE__, __LINE__);
-  ierr = VecAssemblyBegin(d_b);
-  if(ierr)
-    throw UintahPetscError(ierr, "VecAssemblyBegin", __FILE__, __LINE__);
-  ierr = VecAssemblyEnd(d_b);
-  if(ierr)
-    throw UintahPetscError(ierr, "VecAssemblyEnd", __FILE__, __LINE__);
-  ierr = VecAssemblyBegin(d_x);
-  if(ierr)
-    throw UintahPetscError(ierr, "VecAssemblyBegin", __FILE__, __LINE__);
-  ierr = VecAssemblyEnd(d_x);
-  if(ierr)
-    throw UintahPetscError(ierr, "VecAssemblyEnd", __FILE__, __LINE__);
-  // compute the initial error
-  double neg_one = -1.0;
-  double init_norm;
-  double sum_b;
-  ierr = VecSum(d_b, &sum_b);
-  Vec u_tmp;
-  ierr = VecDuplicate(d_x,&u_tmp);
-  if(ierr)
-    throw UintahPetscError(ierr, "VecDuplicate", __FILE__, __LINE__);
-  ierr = MatMult(A, d_x, u_tmp);
-  if(ierr)
-    throw UintahPetscError(ierr, "MatMult", __FILE__, __LINE__);
-#if (PETSC_VERSION_MAJOR == 2 && PETSC_VERSION_MINOR == 2)
-  ierr = VecAXPY(&neg_one, d_b, u_tmp);
-#else
-  ierr = VecAXPY(u_tmp,neg_one,d_b);
-#endif
-  if(ierr)
-    throw UintahPetscError(ierr, "VecAXPY", __FILE__, __LINE__);
-  ierr  = VecNorm(u_tmp,NORM_2,&init_norm);
-#if 0
-  cerr << "initnorm" << init_norm << endl;
-#endif
-  if(ierr)
-    throw UintahPetscError(ierr, "VecNorm", __FILE__, __LINE__);
-  ierr = VecDestroy(u_tmp);
-  if(ierr)
-    throw UintahPetscError(ierr, "VecDestroy", __FILE__, __LINE__);
-  /* debugging - steve */
-  double norm;
-
-  /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-                Create the linear solver and set various options
-     - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-  ierr = KSPCreate(PETSC_COMM_WORLD,&solver);
-
-  if(ierr)
-    throw UintahPetscError(ierr, "KSPCreate", __FILE__, __LINE__);
-  ierr = KSPSetOperators(solver,A,A,DIFFERENT_NONZERO_PATTERN);
-  if(ierr)
-    throw UintahPetscError(ierr, "KSPSetOperators", __FILE__, __LINE__);
-
-  ierr = KSPGetPC(solver, &peqnpc);
-  if(ierr)
-    throw UintahPetscError(ierr, "KSPGetPC", __FILE__, __LINE__);
-  if (d_pcType == "jacobi") {
-    ierr = PCSetType(peqnpc, PCJACOBI);
-    if(ierr)
-      throw UintahPetscError(ierr, "PCSetType", __FILE__, __LINE__);
-  }
-  else if (d_pcType == "asm") {
-    ierr = PCSetType(peqnpc, PCASM);
-    if(ierr)
-      throw UintahPetscError(ierr, "PCSetType", __FILE__, __LINE__);
-    ierr = PCASMSetOverlap(peqnpc, d_overlap);
-    if(ierr)
-      throw UintahPetscError(ierr, "PCASMSetOverlap", __FILE__, __LINE__);
-  }
-  else if (d_pcType == "ilu") {
-    ierr = PCSetType(peqnpc, PCILU);
-    if(ierr)
-      throw UintahPetscError(ierr, "PCSetType", __FILE__, __LINE__);
-#if (PETSC_VERSION_MAJOR == 2)
-  #if (PETSC_VERSION_MINOR == 3 && PETSC_VERSION_SUBMINOR >= 1) // 2.3.1
-    ierr = PCFactorSetFill(peqnpc, d_fill);
-    if(ierr)
-      throw UintahPetscError(ierr, "PCFactorSetFill", __FILE__, __LINE__);
-  #else
-    ierr = PCILUSetFill(peqnpc, d_fill);
-    if(ierr)
-      throw UintahPetscError(ierr, "PCILUSetFill", __FILE__, __LINE__);
-  #endif
-#else //3.*.*
-    ierr = PCFactorSetFill(peqnpc, d_fill);
-    if(ierr)
-      throw UintahPetscError(ierr, "PCFactorSetFill", __FILE__, __LINE__);
-#endif
-  }
-  else {
-    ierr = PCSetType(peqnpc, PCBJACOBI);
-    if(ierr)
-      throw UintahPetscError(ierr, "PCSetType", __FILE__, __LINE__);
-  }
-  if (d_kspType == "cg") {
-    ierr = KSPSetType(solver, KSPCG);
-    if(ierr)
-      throw UintahPetscError(ierr, "KSPSetType", __FILE__, __LINE__);
-  }
-  else {
-    ierr = KSPSetType(solver, KSPGMRES);
-    if(ierr)
-      throw UintahPetscError(ierr, "KSPSetType", __FILE__, __LINE__);
-  }
-  ierr = KSPSetTolerances(solver,1.0e-50, d_tolerance, PETSC_DEFAULT, PETSC_DEFAULT);
-  if(ierr)
-    throw UintahPetscError(ierr, "KSPSetTolerances", __FILE__, __LINE__);
-
-  ierr = KSPSetInitialGuessNonzero(solver, PETSC_TRUE);
-  if(ierr)
-    throw UintahPetscError(ierr, "KSPSetInitialGuessNonzero", __FILE__, __LINE__);
-  
-  ierr = KSPSetFromOptions(solver);
-  if(ierr)
-    throw UintahPetscError(ierr, "KSPSetFromOptions", __FILE__, __LINE__);
-
-  /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-                      Solve the linear system
-     - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-  int its;
-  ierr = KSPSolve(solver,d_b,d_x);
-  if(ierr)
-    throw UintahPetscError(ierr, "KSPSolve", __FILE__, __LINE__);
-  ierr = KSPGetIterationNumber(solver,&its);
-  if (ierr)
-    throw UintahPetscError(ierr, "KSPGetIterationNumber", __FILE__, __LINE__);
-  int me = d_myworld->myrank();
-
-  ierr = VecNorm(d_x,NORM_1,&norm);
-  if(ierr)
-    throw UintahPetscError(ierr, "VecNorm", __FILE__, __LINE__);
-
-  // check the error
-  ierr = MatMult(A, d_x, d_u);
-  if(ierr)
-    throw UintahPetscError(ierr, "MatMult", __FILE__, __LINE__);
-#if (PETSC_VERSION_MAJOR== 2 && PETSC_VERSION_MINOR == 2)
-  ierr = VecAXPY(&neg_one, d_b, d_u);
-#else
-  ierr = VecAXPY(d_u,neg_one, d_b);
-#endif
-  if(ierr)
-    throw UintahPetscError(ierr, "VecAXPY", __FILE__, __LINE__);
-  ierr  = VecNorm(d_u,NORM_2,&norm);
-  if(ierr)
-    throw UintahPetscError(ierr, "VecNorm", __FILE__, __LINE__);
-
-  if(me == 0) {
-     cerr << "KSPSolve: Norm of error: " << norm << ", iterations: " << its << ", time: " << Time::currentSeconds()-solve_start << " seconds\n";
-     cerr << "Init Norm: " << init_norm << " Error reduced by: " << norm/(init_norm+1.0e-20) << endl;
-     cerr << "Sum of RHS vector: " << sum_b << endl;
-  }
-#if 1
-  ierr = KSPDestroy(solver);
-  if(ierr)
-    throw UintahPetscError(ierr, "KSPDestroy", __FILE__, __LINE__);
-#endif
-#if 0
-  ierr = VecDestroy(d_u);
-  if(ierr)
-    throw UintahPetscError(ierr, "VecDestroy", __FILE__, __LINE__);
-  ierr = VecDestroy(d_b);
-  if(ierr)
-    throw UintahPetscError(ierr, "VecDestroy", __FILE__, __LINE__);
-  ierr = VecDestroy(d_x);
-  if(ierr)
-    throw UintahPetscError(ierr, "VecDestroy", __FILE__, __LINE__);
-  ierr = MatDestroy(A);
-  if(ierr)
-    throw UintahPetscError(ierr, "MatDestroy", __FILE__, __LINE__);
-
-#endif
-  if ((norm/(init_norm+1.0e-20) < 1.0)&& (norm < 2.0))
-    return true;
-  else
-    return false;
+  //cout << d_myworld->myrank() <<"    RadLinearSolver::radLinearSolve "<<  endl;
+  bool test;
+  test = PetscLinearSolve(A, d_b, d_x, d_u,
+                          d_pcType, d_kspType, d_overlap,
+                          d_fill, d_tolerance, d_myworld);
+  return test;
 }
 
 //______________________________________________________________________
@@ -603,85 +376,12 @@ RadLinearSolver::radLinearSolve()
 void
 RadLinearSolver::copyRadSoln(const Patch* patch, ArchesVariables* vars)
 {
-  // copy solution vector back into the array
-  IntVector idxLo = patch->getFortranCellLowIndex();
-  IntVector idxHi = patch->getFortranCellHighIndex();
-  double* xvec;
-  
-  PetscInt begin, end;
-  //get the ownership range so we know where the local indicing on this processor begins
-  VecGetOwnershipRange(d_x, &begin, &end);
-  
-  int ierr;
-  ierr = VecGetArray(d_x, &xvec);
-  if(ierr)
-    throw UintahPetscError(ierr, "VecGetArray", __FILE__, __LINE__);
-  Array3<int> l2g = d_petscLocalToGlobal[patch];
-  for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-    for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-        ASSERTRANGE(l2g[IntVector(colX,colY,colZ)],begin,end);
-        int row = l2g[IntVector(colX, colY, colZ)]-begin;
-        vars->cenint[IntVector(colX, colY, colZ)] = xvec[row];
-      }
-    }
-  }
-#if 0
-  cerr << "Print computed pressure" << endl;
-  vars->pressure.print(cerr);
-#endif
-  ierr = VecRestoreArray(d_x, &xvec);
-  if(ierr)
-    throw UintahPetscError(ierr, "VecRestoreArray", __FILE__, __LINE__);
+  PetscToUintah_Vector(patch, vars->cenint, d_x, d_petscLocalToGlobal);
 }
 //______________________________________________________________________
-//  
+//  Destroy Petsc objects
 void
 RadLinearSolver::destroyMatrix() 
 {
-  /* 
-     Free work space.  All PETSc objects should be destroyed when they
-     are no longer needed.
-  */
-#if 1
-  int ierr;
-  ierr = VecDestroy(d_u);
-  if(ierr)
-    throw UintahPetscError(ierr, "VecDestroy", __FILE__, __LINE__);
-  ierr = VecDestroy(d_b);
-  if(ierr)
-    throw UintahPetscError(ierr, "VecDestroy", __FILE__, __LINE__);
-  ierr = VecDestroy(d_x);
-  if(ierr)
-    throw UintahPetscError(ierr, "VecDestroy", __FILE__, __LINE__);
-  ierr = MatDestroy(A);
-  if(ierr)
-    throw UintahPetscError(ierr, "MatDestroy", __FILE__, __LINE__);
-#endif
+  destroyPetscObjects(A, d_x, d_b, d_u);
 }
-
-
-// Shutdown PETSc
-void RadLinearSolver::finalizeSolver()
-{
-// The following is to enable PETSc memory logging
-//  int ierrd = PetscTrDump(NULL);
-//  if(ierrd)
-//    throw UintahPetscError(ierrd, "PetscTrDump");
-  int ierr = PetscFinalize();
-  if(ierr)
-    throw UintahPetscError(ierr, "PetscFinalize", __FILE__, __LINE__);
-}
-
-
-
-
-
-
-
-
-
-
-
-
-

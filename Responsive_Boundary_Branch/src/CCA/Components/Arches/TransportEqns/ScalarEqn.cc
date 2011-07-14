@@ -13,6 +13,7 @@ using namespace Uintah;
 
 //---------------------------------------------------------------------------
 // Builder:
+//
 CCScalarEqnBuilder::CCScalarEqnBuilder( ArchesLabel* fieldLabels, 
                                         ExplicitTimeInt* timeIntegrator,
                                         string eqnName ) : 
@@ -216,6 +217,7 @@ ScalarEqn::sched_evalTransportEqn( const LevelP& level,
   if (d_use_density_guess)
     sched_solveTransportEqn( level, sched, timeSubStep );
   // else we have to do it in ExplicitSolver.cc after properties are updated.
+
 }
 //---------------------------------------------------------------------------
 // Method: Schedule the intialization of the variables. 
@@ -367,7 +369,7 @@ ScalarEqn::sched_buildTransportEqn( const LevelP& level, SchedulerP& sched, int 
   }
   
   //-----OLD-----
-  tsk->requires(Task::OldDW, d_fieldLabels->d_areaFractionLabel, Ghost::AroundCells, 1); 
+  tsk->requires(Task::OldDW, d_fieldLabels->d_areaFractionLabel, Ghost::AroundCells, 2); 
 
   sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
 }
@@ -413,7 +415,7 @@ ScalarEqn::buildTransportEqn( const ProcessorGroup* pc,
     new_dw->get(mu_t,         d_fieldLabels->d_viscosityCTSLabel, matlIndex, patch, gac, 1); 
     new_dw->get(uVel,         d_fieldLabels->d_uVelocitySPBCLabel, matlIndex, patch, gac, 1); 
     new_dw->get(prNo, d_prNo_label, matlIndex, patch, gn, 0); 
-    old_dw->get(areaFraction, d_fieldLabels->d_areaFractionLabel, matlIndex, patch, gac, 1); 
+    old_dw->get(areaFraction, d_fieldLabels->d_areaFractionLabel, matlIndex, patch, gac, 2); 
 
     double vol = Dx.x();
 #ifdef YDIM
@@ -477,7 +479,6 @@ ScalarEqn::sched_solveTransportEqn( const LevelP& level, SchedulerP& sched, int 
 
   //New
   tsk->modifies(d_transportVarLabel);
-  tsk->modifies(d_oldtransportVarLabel); 
   tsk->requires(Task::NewDW, d_RHSLabel, Ghost::None, 0);
   tsk->requires(Task::NewDW, d_fieldLabels->d_densityGuessLabel, Ghost::None, 0);
   tsk->requires(Task::NewDW, d_fieldLabels->d_densityCPLabel, Ghost::None, 0);
@@ -514,13 +515,11 @@ ScalarEqn::solveTransportEqn( const ProcessorGroup* pc,
     // Here, j is the rk step and n is the time step.  
     //
     CCVariable<double> phi_at_jp1;   // phi^{(j+1)}
-    constCCVariable<double> rk1_phi; // phi^{n}
     constCCVariable<double> RHS; 
     constCCVariable<double> old_den; 
     constCCVariable<double> new_den; 
 
     new_dw->getModifiable(phi_at_jp1, d_transportVarLabel, matlIndex, patch);
-    old_dw->get(rk1_phi, d_transportVarLabel, matlIndex, patch, gn, 0);
     new_dw->get(RHS, d_RHSLabel, matlIndex, patch, gn, 0);
 
     new_dw->get(new_den, d_fieldLabels->d_densityGuessLabel, matlIndex, patch, gn, 0); 
@@ -529,6 +528,9 @@ ScalarEqn::solveTransportEqn( const ProcessorGroup* pc,
     // ----FE UPDATE
     //     to get phi^{(j+1)}
     d_timeIntegrator->singlePatchFEUpdate( patch, phi_at_jp1, old_den, new_den, RHS, dt, curr_ssp_time, d_eqnName);
+
+    if (d_doClipping) 
+      clipPhi( patch, phi_at_jp1 ); 
 
   }
 }

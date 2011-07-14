@@ -25,17 +25,25 @@
 * The input file interface for this property should like this in your UPS file: 
 * \code 
 *   <Sources>
-*     <src label="my_source" type="westbrook_dryer">
-*       <X>INTEGER</X>                  <!-- number of carbon atoms --> 
-*       <Y>INTEGER</Y>                  <!-- number of hydrogen atoms --> 
-*       <A>DOUBLE</A>                   <!-- Pre-exponential factor [(gmol/cm^3)^{1-m-n}/s]--> 
-*       <E_R>DOUBLE</E_R>               <!-- "Activiation Temperature" (E/R, [kcal/gmol]) -->
-*       <fuel_mass_fraction>DOUBLE</fuel_mass_fraction>          <!-- mass fraction of hydrocarbon at f=1 --> 
-*       <oxidizer_O2_mass_fraction>DOUBLE</oxidizer_O2_mass_fraction> <!-- mass fraction of o2 when f=0 --> 
-*       <m>DOUBLE</m>                   <!-- [C_xH_y]^m (per the model -- see table in turns or paper) --> 
-*       <n>DOUBLE</n>                   <!-- [O_2]^n (per the model -- see table in turns or paper) --> 
-*     </src>
-*   </Sources>
+*     <src label = "my_source" type = "westbrook_dryer" > 
+        <!-- Westbrook Dryer Global Hydrocarbon reaction rate model -->
+        <!-- see Turns, pg. 156-157 -->
+        <A                          spec="OPTIONAL DOUBLE" /> <!-- Pre-exponential factor --> 
+        <E_R                        spec="OPTIONAL DOUBLE" /> <!-- Activation temperature --> 
+        <X                          spec="OPTIONAL DOUBLE" /> <!-- C_xH_y --> 
+        <Y                          spec="OPTIONAL DOUBLE" /> <!-- C_xH_y --> 
+        <m                          spec="OPTIONAL DOUBLE" /> <!-- [C_xH_y]^m --> 
+        <n                          spec="OPTIONAL DOUBLE" /> <!-- [O_2]^n --> 
+        <fuel_mass_fraction         spec="OPTIONAL DOUBLE" /> <!-- Mass fraction of hydrocarbon in the fuel stream --> 
+        <oxidizer_O2_mass_fraction  spec="OPTIONAL DOUBLE" /> <!-- Mass fraction of O2 in the oxidizer stream --> 
+        <mix_frac_label             spec="OPTIONAL STRING" /> <!-- Mixture fraction label --> 
+				<hc_frac_label 							spec="OPTIONAL STRING" /> <!-- Hydrocarbon mass fraction label --> 
+        <mw_label                   spec="OPTIONAL STRING" /> <!-- mixture molecular weight label --> 
+				<temperature_label 					spec="OPTIONAL STRING" /> <!-- temperature label, default = "temperature" --> 
+				<density_label 							spec="OPTIONAL STRING" /> <!-- density label, default = "density" --> 
+				<pos 												spec="OPTIONAL NODATA" /> <!-- source term is positive --> 
+      </src>
+    </Sources>
 * \endcode 
 *  
 */ 
@@ -109,6 +117,21 @@ private:
   const VarLabel* d_WDO2Label;        ///< kg O2 / total kg -- consistent with the model
   const VarLabel* d_WDverLabel; 
   // * but stored in the new_Dw
+
+  std::string d_cstar_label; 
+  std::string d_ceq_label; 
+  std::string d_mw_label; 
+  std::string d_rho_label; 
+  std::string d_T_label; 
+
+  const VarLabel* _temperatureLabel; 
+  const VarLabel* _fLabel;           
+  const VarLabel* _mixMWLabel;       
+  const VarLabel* _denLabel;         
+  const VarLabel* _CstarMassFracLabel;  
+  const VarLabel* _CEqMassFracLabel; 
+
+  double d_sign; 
 
 }; // end WestbrookDryer
 } // end namespace Uintah

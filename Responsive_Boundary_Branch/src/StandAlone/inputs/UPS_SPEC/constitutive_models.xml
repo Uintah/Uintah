@@ -6,11 +6,15 @@
                                                                         elastic_plastic, hypo_elastic, hypoelastic_plastic, elastic_plastic_hp,
                                                                         ideal_gas, membrane, murnahanMPM, mw_visco_elastic, rigid, shell_CNH,
                                                                         small_strain_plastic, trans_iso_hyper, visco_plastic,
-                                                                        visco_scram, visco_trans_iso_hyper, water, kayenta, diamm, cnh_mms, 
-                                                                        cnh_damage, cnhp_damage, UCNH'">
+                                                                        visco_scram, visco_trans_iso_hyper, water, kayenta, hypo_elastic_fortran, diamm, cnh_mms, 
+                                                                        cnh_damage, cnhp_damage, UCNH, program_burn,jwlpp_mpm, p_alpha, nonlocal_drucker_prager, simplified_geo_model'">
     <A                             spec="OPTIONAL DOUBLE" />
     <allow_no_tension              spec="OPTIONAL BOOLEAN" />
     <alpha                         spec="OPTIONAL DOUBLE" />
+    <alpha0                        spec="OPTIONAL DOUBLE" />
+    <Pe                            spec="OPTIONAL DOUBLE" />
+    <Ps                            spec="OPTIONAL DOUBLE" />
+    <b                             spec="OPTIONAL DOUBLE" />
     <B                             spec="OPTIONAL DOUBLE" />
     <Beta                          spec="OPTIONAL DOUBLE" />
     <bulk_modulus                  spec="OPTIONAL DOUBLE" />
@@ -73,6 +77,9 @@
       <D5                          spec="OPTIONAL DOUBLE" />
     </damage_model>
     <DCp_DTemperature              spec="OPTIONAL DOUBLE" />
+    <D                             spec="OPTIONAL DOUBLE" />  <!-- FIXME: what are these for? -->
+    <starting_location             spec="OPTIONAL VECTOR" />  <!-- FIXME: what are these for? -->
+    <direction_if_plane            spec="OPTIONAL VECTOR" />  <!-- FIXME: what are these for? -->
     <delH                          spec="OPTIONAL DOUBLE" /> <!-- FIXME: what is this for? -->
     <direction_of_symm             spec="OPTIONAL VECTOR" />
     <do_melting                    spec="OPTIONAL BOOLEAN" />
@@ -136,6 +143,10 @@
     <initial_std_scalar_damage     spec="OPTIONAL DOUBLE" />
     <isothermal                    spec="OPTIONAL BOOLEAN" />
     <K                             spec="OPTIONAL DOUBLE" />
+    <K0                            spec="OPTIONAL DOUBLE" />
+    <Ks                            spec="OPTIONAL DOUBLE" />
+    <Ku                            spec="OPTIONAL DOUBLE" />
+    <n                             spec="OPTIONAL DOUBLE" />
     <meanstrain_nucleation         spec="OPTIONAL DOUBLE" />
     <melting_temp_model            spec="OPTIONAL NO_DATA"
                                      attribute1="type REQUIRED STRING 'constant_Tm, scg_Tm'" >
@@ -147,7 +158,7 @@
     <plasticity_model              spec="OPTIONAL NO_DATA"
                                      attribute1="type REQUIRED STRING 'isotropic_hardening, johnson_cook, mts_model,
                                                                        preston_tonks_wallace, steinberg_cochran_guinan,
-                                                                       zerilli_armstrong'" >
+                                                                       zerilli_armstrong, zerilli_armstrong_polymer'" >
       <A                           spec="OPTIONAL DOUBLE" />
       <a                           spec="OPTIONAL DOUBLE" />
       <a_0                         spec="OPTIONAL DOUBLE" />
@@ -159,7 +170,13 @@
       <alpha_1                     spec="OPTIONAL DOUBLE" />
       <alphap                      spec="OPTIONAL DOUBLE" />
       <B                           spec="OPTIONAL DOUBLE" />
+      <B_pa                        spec="OPTIONAL DOUBLE" />
+      <B_pb                        spec="OPTIONAL DOUBLE" />
+      <B_pn                        spec="OPTIONAL DOUBLE" />
       <B_0                         spec="OPTIONAL DOUBLE" />
+      <B_0pa                       spec="OPTIONAL DOUBLE" />
+      <B_0pb                       spec="OPTIONAL DOUBLE" />
+      <B_0pn                       spec="OPTIONAL DOUBLE" />
       <beta                        spec="OPTIONAL DOUBLE" />
       <beta_0                      spec="OPTIONAL DOUBLE" />
       <beta_1                      spec="OPTIONAL DOUBLE" />
@@ -185,6 +202,9 @@
       <kappa                       spec="OPTIONAL DOUBLE" />
       <koverbcubed                 spec="OPTIONAL DOUBLE" />
       <n                           spec="OPTIONAL DOUBLE" />
+      <omega_a                     spec="OPTIONAL DOUBLE" />
+      <omega_b                     spec="OPTIONAL DOUBLE" />
+      <omega_p                     spec="OPTIONAL DOUBLE" />
       <m                           spec="OPTIONAL DOUBLE" />
       <M                           spec="OPTIONAL DOUBLE" />
       <mu_0                        spec="OPTIONAL DOUBLE" />
@@ -244,6 +264,7 @@
     <randomize_parameters          spec="OPTIONAL BOOLEAN" />
     <reduction_factor              spec="OPTIONAL DOUBLE" />
     <rho0                          spec="OPTIONAL DOUBLE" />
+    <rhoS                          spec="OPTIONAL DOUBLE" />
     <R1                            spec="OPTIONAL DOUBLE" />
     <R2                            spec="OPTIONAL DOUBLE" />
     <RTau1                         spec="OPTIONAL DOUBLE" />
@@ -283,6 +304,10 @@
     <strain_limit                  spec="OPTIONAL DOUBLE" />
     <StressIntensityF              spec="OPTIONAL DOUBLE" />
     <T0                            spec="OPTIONAL DOUBLE" />
+    <T_0                           spec="OPTIONAL DOUBLE" />
+    <C_0                           spec="OPTIONAL DOUBLE" />
+    <Gamma_0                       spec="OPTIONAL DOUBLE" />
+    <S_alpha                       spec="OPTIONAL DOUBLE" />
     <t1                            spec="OPTIONAL DOUBLE" />
     <t2                            spec="OPTIONAL DOUBLE" />
     <t3                            spec="OPTIONAL DOUBLE" />
@@ -325,145 +350,219 @@
   <!-- The following are for the Kayenta model -->
   <!-- IF YOU ADD  A VALUE FOR THE KAYENTA MODEL, ADD IT FOR THE
        PERTURBED KAYENTA MODEL BELOW!!! -->
-    <B0        spec="OPTIONAL DOUBLE" /> <!--initial bulk modulus (stress) -->
-    <B1        spec="OPTIONAL DOUBLE" /> <!--nonlinear bulk mod param (stress) -->
-    <B2        spec="OPTIONAL DOUBLE" /> <!-- nonlinear bulk mod param (stress) -->
-    <B3        spec="OPTIONAL DOUBLE" /> <!-- nonlinear bulk mod param (stress) -->
-    <B4        spec="OPTIONAL DOUBLE" /> <!-- nonlinear bulk mod param (dim. less) -->
-    <G0        spec="OPTIONAL DOUBLE" /> <!-- initial shear modulus (stress) -->
-    <G1        spec="OPTIONAL DOUBLE" /> <!-- nonlinear shear mod param (dim. less) -->
-    <G2        spec="OPTIONAL DOUBLE" /> <!-- nonlinear shear mod param (1/stress) -->
-    <G3        spec="OPTIONAL DOUBLE" /> <!-- nonlinear shear mod param (stress) -->
-    <G4        spec="OPTIONAL DOUBLE" /> <!-- nonlinear shear mod param (dim. less) -->
-    <RJS       spec="OPTIONAL DOUBLE" /> <!-- joint spacing (iso. joint set)  -->
-    <RKS       spec="OPTIONAL DOUBLE" /> <!-- joint shear stiffness (iso. case) (stress/length) -->
-    <RKN       spec="OPTIONAL DOUBLE" /> <!-- joint normal stiffness (iso. case) (stress/length) -->
-
+    <hugeJ    spec="OPTIONAL DOUBLE" /> <!-- max J val before part deletion-->
+    <B0       spec="OPTIONAL DOUBLE" /> <!-- initial bulk modulus (stress) -->
+    <B1       spec="OPTIONAL DOUBLE" /> <!-- nonlinear bulk mod param (stress) -->
+    <B2       spec="OPTIONAL DOUBLE" /> <!-- nonlinear bulk mod param (stress) -->
+    <B3       spec="OPTIONAL DOUBLE" /> <!-- nonlinear bulk mod param (stress) -->
+    <B4       spec="OPTIONAL DOUBLE" /> <!-- nonlinear bulk mod param (dim. less) -->
+    <G0       spec="OPTIONAL DOUBLE" /> <!-- initial shear modulus (stress) -->
+    <G1       spec="OPTIONAL DOUBLE" /> <!-- nonlinear shear mod param (dim. less) -->
+    <G2       spec="OPTIONAL DOUBLE" /> <!-- nonlinear shear mod param (1/stress) -->
+    <G3       spec="OPTIONAL DOUBLE" /> <!-- nonlinear shear mod param (stress) -->
+    <G4       spec="OPTIONAL DOUBLE" /> <!-- nonlinear shear mod param (dim. less) -->
+    <RJS      spec="OPTIONAL DOUBLE" /> <!-- joint spacing (iso. joint set)  -->
+    <RKS      spec="OPTIONAL DOUBLE" /> <!-- joint shear stiffness (iso. case) (stress/length) -->
+    <RKN      spec="OPTIONAL DOUBLE" /> <!-- joint normal stiffness (iso. case) (stress/length) -->
     <A1       spec="OPTIONAL DOUBLE" /> <!-- meridional yld prof param (stress)-->
     <A2       spec="OPTIONAL DOUBLE" /> <!-- meridional yld prof param (1/stress)-->
     <A3       spec="OPTIONAL DOUBLE" /> <!-- meridional yld prof param (stress)-->
     <A4       spec="OPTIONAL DOUBLE" /> <!-- meridional yld prof param (dim. less)-->
-
     <P0       spec="OPTIONAL DOUBLE" /> <!-- init hydrostatic crush press (stress)-->
     <P1       spec="OPTIONAL DOUBLE" /> <!-- crush curve parameter (1/stress)-->
     <P2       spec="OPTIONAL DOUBLE" /> <!-- crush curve parameter (1/stress^2)-->
     <P3       spec="OPTIONAL DOUBLE" /> <!-- crush curve parameter (strain)-->
-
     <CR       spec="OPTIONAL DOUBLE" /> <!-- cap curvature parameter (dim. less)-->
     <RK       spec="OPTIONAL DOUBLE" /> <!-- TXE/TXC strength ratio (dim. less)-->
     <RN       spec="OPTIONAL DOUBLE" /> <!-- TXE/TXC strength ratio (stress)-->
     <HC       spec="OPTIONAL DOUBLE" /> <!-- kinematic hardening modulus (stress)-->
-
-    <CTI1       spec="OPTIONAL DOUBLE" /> <!--Tension I1 cut-off (stress)-->
-    <CTPS       spec="OPTIONAL DOUBLE" /> <!--Tension prin. stress cut-off (stress)-->
-
-    <T1       spec="OPTIONAL DOUBLE" /> <!--rate dep. primary relax. time (time)-->
-    <T2       spec="OPTIONAL DOUBLE" /> <!--rate dep. nonlinear param (1/time)-->
-    <T3       spec="OPTIONAL DOUBLE" /> <!--rate dep. nonlinear param (dim. less)-->
-    <T4       spec="OPTIONAL DOUBLE" /> <!--not used (1/time)-->
-    <T5       spec="OPTIONAL DOUBLE" /> <!--not used (stress)-->
-    <T6       spec="OPTIONAL DOUBLE" /> <!--rate dep. nonlinear param (time)-->
-    <T7       spec="OPTIONAL DOUBLE" /> <!--rate dep. nonlinear param (1/stress)-->
-    <J3TYPE       spec="OPTIONAL DOUBLE" /> <!-- octahedral profile shape option (dim. less) -->
+    <CTI1     spec="OPTIONAL DOUBLE" /> <!-- tension I1 cut-off (stress)-->
+    <CTPS     spec="OPTIONAL DOUBLE" /> <!-- tension prin. stress cut-off (stress)-->
+    <T1       spec="OPTIONAL DOUBLE" /> <!-- rate dep. primary relax. time (time)-->
+    <T2       spec="OPTIONAL DOUBLE" /> <!-- rate dep. nonlinear param (1/time)-->
+    <T3       spec="OPTIONAL DOUBLE" /> <!-- rate dep. nonlinear param (dim. less)-->
+    <T4       spec="OPTIONAL DOUBLE" /> <!-- not used (1/time)-->
+    <T5       spec="OPTIONAL DOUBLE" /> <!-- not used (stress)-->
+    <T6       spec="OPTIONAL DOUBLE" /> <!-- rate dep. nonlinear param (time)-->
+    <T7       spec="OPTIONAL DOUBLE" /> <!-- rate dep. nonlinear param (1/stress)-->
+    <J3TYPE   spec="OPTIONAL DOUBLE" /> <!-- octahedral profile shape option (dim. less) -->
     <A2PF     spec="OPTIONAL DOUBLE" /> <!-- flow potential analog of A2 -->
     <A4PF     spec="OPTIONAL DOUBLE" /> <!-- flow potential analog of A4 -->
     <CRPF     spec="OPTIONAL DOUBLE" /> <!-- flow potential analog of CR -->
     <RKPF     spec="OPTIONAL DOUBLE" /> <!-- flow potential analog of RK -->
     <SUBX     spec="OPTIONAL DOUBLE" /> <!-- subcycle control exponent (dim. less) -->
-    <DEJAVU   spec="OPTIONAL DOUBLE" />
-    <FSPEED   spec="OPTIONAL DOUBLE" />
-    <PEAKI1I  spec="OPTIONAL DOUBLE" />
-    <STRENI   spec="OPTIONAL DOUBLE" />
-    <FSLOPEI  spec="OPTIONAL DOUBLE" />
-    <PEAKI1F  spec="OPTIONAL DOUBLE" />
-    <STRENF   spec="OPTIONAL DOUBLE" />
-    <JOBFAIL  spec="OPTIONAL DOUBLE" />
-    <FSLOPEF  spec="OPTIONAL DOUBLE" />
-    <FAILSTAT spec="OPTIONAL DOUBLE" />
-    <FREE01   spec="OPTIONAL DOUBLE" />
-    <FREE02   spec="OPTIONAL DOUBLE" />
-    <FREE03   spec="OPTIONAL DOUBLE" />
-    <FREE04   spec="OPTIONAL DOUBLE" />
-    <FREE05   spec="OPTIONAL DOUBLE" />
-    <FREE06   spec="OPTIONAL DOUBLE" />
-    <FREE07   spec="OPTIONAL DOUBLE" />
-    <FREE08   spec="OPTIONAL DOUBLE" />
-    <YSLOPEI  spec="OPTIONAL DOUBLE" />
-    <YSLOPEF  spec="OPTIONAL DOUBLE" />
+    <DEJAVU   spec="OPTIONAL DOUBLE" /> <!-- =1 if parameters have been checked -->
+    <FSPEED   spec="OPTIONAL DOUBLE" /> <!-- failure speed (time) -->
+    <PEAKI1I  spec="OPTIONAL DOUBLE" /> <!-- Peak I1 hydrostatic tension strength -->
+    <STRENI   spec="OPTIONAL DOUBLE" /> <!-- Peak (high pressure) shear strength -->
+    <FSLOPEI  spec="OPTIONAL DOUBLE" /> <!-- Initial slope of limit surface at PEAKI1I -->
+    <PEAKI1F  spec="OPTIONAL DOUBLE" /> <!-- same as PEAKI1I, but for failed surface -->
+    <STRENF   spec="OPTIONAL DOUBLE" /> <!-- same as STRENI, but for failed surface -->
+    <JOBFAIL  spec="OPTIONAL DOUBLE" /> <!-- failure handling option -->
+    <FSLOPEF  spec="OPTIONAL DOUBLE" /> <!-- same as FSLOPEI, but for failed surface -->
+    <FAILSTAT spec="OPTIONAL DOUBLE" /> <!-- >0= failure statistics -->
+    <EOSID    spec="OPTIONAL DOUBLE" /> <!-- equation of state id -->
+    <USEHOSTEOS spec="OPTIONAL DOUBLE" /> <!-- boolean for using EOS --> 
+    <FREE01   spec="OPTIONAL DOUBLE" /> <!-- unused -->
+    <FREE02   spec="OPTIONAL DOUBLE" /> <!-- unused -->
+    <FREE03   spec="OPTIONAL DOUBLE" /> <!-- unused -->
+    <FREE04   spec="OPTIONAL DOUBLE" /> <!-- unused -->
+    <FREE05   spec="OPTIONAL DOUBLE" /> <!-- unused -->
+    <CTPSF    spec="OPTIONAL DOUBLE" /> <!-- fracture cutoff of principal stress (stress) -->
+    <YSLOPEI  spec="OPTIONAL DOUBLE" /> <!-- intact high pressure slope -->
+    <YSLOPEF  spec="OPTIONAL DOUBLE" /> <!-- failed high pressure slope -->
+    <!-- Kayenta EOSMG input paramaters -->
+    <TMPRXP   spec="OPTIONAL DOUBLE" /> <!--  -->
+    <THERM01  spec="OPTIONAL DOUBLE" /> <!--  -->
+    <THERM02  spec="OPTIONAL DOUBLE" /> <!--  -->
+    <THERM03  spec="OPTIONAL DOUBLE" /> <!--  -->
+    <TMPRM0   spec="OPTIONAL DOUBLE" /> <!--  -->
+    <RHO0     spec="OPTIONAL DOUBLE" /> <!--  -->
+    <TMPR0    spec="OPTIONAL DOUBLE" /> <!--  -->
+    <SNDSP0   spec="OPTIONAL DOUBLE" /> <!--  -->
+    <S1MG     spec="OPTIONAL DOUBLE" /> <!--  -->
+    <GRPAR    spec="OPTIONAL DOUBLE" /> <!--  -->
+    <CV       spec="OPTIONAL DOUBLE" /> <!--  -->
+    <ESFT     spec="OPTIONAL DOUBLE" /> <!--  -->
+    <RP       spec="OPTIONAL DOUBLE" /> <!--  -->
+    <PS       spec="OPTIONAL DOUBLE" /> <!--  -->
+    <PE       spec="OPTIONAL DOUBLE" /> <!--  -->
+    <CE       spec="OPTIONAL DOUBLE" /> <!--  -->
+    <NSUB     spec="OPTIONAL DOUBLE" /> <!--  -->
+    <S2MG     spec="OPTIONAL DOUBLE" /> <!--  -->
+    <TYP      spec="OPTIONAL DOUBLE" /> <!--  -->
+    <RO       spec="OPTIONAL DOUBLE" /> <!--  -->
+    <TO       spec="OPTIONAL DOUBLE" /> <!--  -->
+    <S        spec="OPTIONAL DOUBLE" /> <!--  -->
+    <GRPARO   spec="OPTIONAL DOUBLE" /> <!--  -->
+    <B        spec="OPTIONAL DOUBLE" /> <!--  -->
+    <XB       spec="OPTIONAL DOUBLE" /> <!--  -->
+    <NB       spec="OPTIONAL DOUBLE" /> <!--  -->
+    <PWR      spec="OPTIONAL DOUBLE" /> <!--  -->
+    <!-- Kayenta EOSMG derived paramaters -->
+    <A1MG     spec="OPTIONAL DOUBLE" /> <!--  -->
+    <A2MG     spec="OPTIONAL DOUBLE" /> <!--  -->
+    <A3MG     spec="OPTIONAL DOUBLE" /> <!--  -->
+    <A4MG     spec="OPTIONAL DOUBLE" /> <!--  -->
+    <A5MG     spec="OPTIONAL DOUBLE" /> <!--  -->
+    <A0MG     spec="OPTIONAL DOUBLE" /> <!--  -->
+    <AEMG     spec="OPTIONAL DOUBLE" /> <!--  -->
+    <FK0      spec="OPTIONAL DOUBLE" /> <!--  -->
+    <AF       spec="OPTIONAL DOUBLE" /> <!--  -->
+    <PF       spec="OPTIONAL DOUBLE" /> <!--  -->
+    <XF       spec="OPTIONAL DOUBLE" /> <!--  -->
+    <CF       spec="OPTIONAL DOUBLE" /> <!--  -->
+    <RMX      spec="OPTIONAL DOUBLE" /> <!--  -->
 
-
+t
   <!-- The following are for the PERTURBED Kayenta model -->
   <!-- IF YOU ADD  A VALUE FOR THE PERTURBED KAYENTA MODEL, ADD IT FOR THE
        REGULAR KAYENTA MODEL ABOVE!!! -->
-    <WB0       spec="OPTIONAL STRING" /> <!--initial bulk modulus (stress) -->
-    <WB1       spec="OPTIONAL STRING" /> <!--nonlinear bulk mod param (stress) -->
-    <WB2       spec="OPTIONAL STRING" /> <!-- nonlinear bulk mod param (stress) -->
-    <WB3       spec="OPTIONAL STRING" /> <!-- nonlinear bulk mod param (stress) -->
-    <WB4       spec="OPTIONAL STRING" /> <!-- nonlinear bulk mod param (dim. less) -->
-    <WG0       spec="OPTIONAL STRING" /> <!-- initial shear modulus (stress) -->
-    <WG1       spec="OPTIONAL STRING" /> <!-- nonlinear shear mod param (dim. less) -->
-    <WG2       spec="OPTIONAL STRING" /> <!-- nonlinear shear mod param (1/stress) -->
-    <WG3       spec="OPTIONAL STRING" /> <!-- nonlinear shear mod param (stress) -->
-    <WG4       spec="OPTIONAL STRING" /> <!-- nonlinear shear mod param (dim. less) -->
-    <WRJS      spec="OPTIONAL STRING" /> <!-- joint spacing (iso. joint set)  -->
-    <WRKS      spec="OPTIONAL STRING" /> <!-- joint shear stiffness (iso. case) (stress/length) -->
-    <WRKN      spec="OPTIONAL STRING" /> <!-- joint normal stiffness (iso. case) (stress/length) -->
+    <WB0       spec="OPTIONAL DOUBLE" /> <!-- initial bulk modulus (stress) -->
+    <WB1       spec="OPTIONAL DOUBLE" /> <!-- nonlinear bulk mod param (stress) -->
+    <WB2       spec="OPTIONAL DOUBLE" /> <!-- nonlinear bulk mod param (stress) -->
+    <WB3       spec="OPTIONAL DOUBLE" /> <!-- nonlinear bulk mod param (stress) -->
+    <WB4       spec="OPTIONAL DOUBLE" /> <!-- nonlinear bulk mod param (dim. less) -->
+    <WG0       spec="OPTIONAL DOUBLE" /> <!-- initial shear modulus (stress) -->
+    <WG1       spec="OPTIONAL DOUBLE" /> <!-- nonlinear shear mod param (dim. less) -->
+    <WG2       spec="OPTIONAL DOUBLE" /> <!-- nonlinear shear mod param (1/stress) -->
+    <WG3       spec="OPTIONAL DOUBLE" /> <!-- nonlinear shear mod param (stress) -->
+    <WG4       spec="OPTIONAL DOUBLE" /> <!-- nonlinear shear mod param (dim. less) -->
+    <WRJS      spec="OPTIONAL DOUBLE" /> <!-- joint spacing (iso. joint set)  -->
+    <WRKS      spec="OPTIONAL DOUBLE" /> <!-- joint shear stiffness (iso. case) (stress/length) -->
+    <WRKN      spec="OPTIONAL DOUBLE" /> <!-- joint normal stiffness (iso. case) (stress/length) -->
+    <WA1       spec="OPTIONAL DOUBLE" /> <!-- meridional yld prof param (stress)-->
+    <WA2       spec="OPTIONAL DOUBLE" /> <!-- meridional yld prof param (1/stress)-->
+    <WA3       spec="OPTIONAL DOUBLE" /> <!-- meridional yld prof param (stress)-->
+    <WA4       spec="OPTIONAL DOUBLE" /> <!-- meridional yld prof param (dim. less)-->
+    <WP0       spec="OPTIONAL DOUBLE" /> <!-- init hydrostatic crush press (stress)-->
+    <WP1       spec="OPTIONAL DOUBLE" /> <!-- crush curve parameter (1/stress)-->
+    <WP2       spec="OPTIONAL DOUBLE" /> <!-- crush curve parameter (1/stress^2)-->
+    <WP3       spec="OPTIONAL DOUBLE" /> <!-- crush curve parameter (strain)-->
+    <WCR       spec="OPTIONAL DOUBLE" /> <!-- cap curvature parameter (dim. less)-->
+    <WRK       spec="OPTIONAL DOUBLE" /> <!-- TXE/TXC strength ratio (dim. less)-->
+    <WRN       spec="OPTIONAL DOUBLE" /> <!-- TXE/TXC strength ratio (stress)-->
+    <WHC       spec="OPTIONAL DOUBLE" /> <!-- kinematic hardening modulus (stress)-->
+    <WCTI1     spec="OPTIONAL DOUBLE" /> <!-- tension I1 cut-off (stress)-->
+    <WCTPS     spec="OPTIONAL DOUBLE" /> <!-- tension prin. stress cut-off (stress)-->
+    <WT1       spec="OPTIONAL DOUBLE" /> <!-- rate dep. primary relax. time (time)-->
+    <WT2       spec="OPTIONAL DOUBLE" /> <!-- rate dep. nonlinear param (1/time)-->
+    <WT3       spec="OPTIONAL DOUBLE" /> <!-- rate dep. nonlinear param (dim. less)-->
+    <WT4       spec="OPTIONAL DOUBLE" /> <!-- not used (1/time)-->
+    <WT5       spec="OPTIONAL DOUBLE" /> <!-- not used (stress)-->
+    <WT6       spec="OPTIONAL DOUBLE" /> <!-- rate dep. nonlinear param (time)-->
+    <WT7       spec="OPTIONAL DOUBLE" /> <!-- rate dep. nonlinear param (1/stress)-->
+    <WJ3TYPE   spec="OPTIONAL DOUBLE" /> <!-- octahedral profile shape option (dim. less) -->
+    <WA2PF     spec="OPTIONAL DOUBLE" /> <!-- flow potential analog of A2 -->
+    <WA4PF     spec="OPTIONAL DOUBLE" /> <!-- flow potential analog of A4 -->
+    <WCRPF     spec="OPTIONAL DOUBLE" /> <!-- flow potential analog of CR -->
+    <WRKPF     spec="OPTIONAL DOUBLE" /> <!-- flow potential analog of RK -->
+    <WSUBX     spec="OPTIONAL DOUBLE" /> <!-- subcycle control exponent (dim. less) -->
+    <WDEJAVU   spec="OPTIONAL DOUBLE" /> <!-- =1 if parameters have been checked -->
+    <WFSPEED   spec="OPTIONAL DOUBLE" /> <!-- failure speed (time) -->
+    <WPEAKI1I  spec="OPTIONAL DOUBLE" /> <!-- Peak I1 hydrostatic tension strength -->
+    <WSTRENI   spec="OPTIONAL DOUBLE" /> <!-- Peak (high pressure) shear strength -->
+    <WFSLOPEI  spec="OPTIONAL DOUBLE" /> <!-- Initial slope of limit surface at PEAKI1I -->
+    <WPEAKI1F  spec="OPTIONAL DOUBLE" /> <!-- same as PEAKI1I, but for failed surface -->
+    <WSTRENF   spec="OPTIONAL DOUBLE" /> <!-- same as STRENI, but for failed surface -->
+    <WJOBFAIL  spec="OPTIONAL DOUBLE" /> <!-- failure handling option -->
+    <WFSLOPEF  spec="OPTIONAL DOUBLE" /> <!-- same as FSLOPEI, but for failed surface -->
+    <WFAILSTAT spec="OPTIONAL DOUBLE" /> <!-- >0= failure statistics -->
+    <WEOSID    spec="OPTIONAL DOUBLE" /> <!-- equation of state id -->
+    <WUSEHOSTEOS spec="OPTIONAL DOUBLE" /> <!-- boolean for using EOS --> 
+    <WFREE01   spec="OPTIONAL DOUBLE" /> <!-- unused -->
+    <WFREE02   spec="OPTIONAL DOUBLE" /> <!-- unused -->
+    <WFREE03   spec="OPTIONAL DOUBLE" /> <!-- unused -->
+    <WFREE04   spec="OPTIONAL DOUBLE" /> <!-- unused -->
+    <WFREE05   spec="OPTIONAL DOUBLE" /> <!-- unused -->
+    <WCTPSF    spec="OPTIONAL DOUBLE" /> <!-- fracture cutoff of principal stress (stress) -->
+    <WYSLOPEI  spec="OPTIONAL DOUBLE" /> <!-- intact high pressure slope -->
+    <WYSLOPEF  spec="OPTIONAL DOUBLE" /> <!-- failed high pressure slope -->
+        <!-- Kayenta EOSMG input paramaters -->
+    <WTMPRXP   spec="OPTIONAL DOUBLE" /> <!--  -->
+    <WTHERM01  spec="OPTIONAL DOUBLE" /> <!--  -->
+    <WTHERM02  spec="OPTIONAL DOUBLE" /> <!--  -->
+    <WTHERM03  spec="OPTIONAL DOUBLE" /> <!--  -->
+    <WTMPRM0   spec="OPTIONAL DOUBLE" /> <!--  -->
+    <WRHO0     spec="OPTIONAL DOUBLE" /> <!--  -->
+    <WTMPR0    spec="OPTIONAL DOUBLE" /> <!--  -->
+    <WSNDSP0   spec="OPTIONAL DOUBLE" /> <!--  -->
+    <WS1MG     spec="OPTIONAL DOUBLE" /> <!--  -->
+    <WGRPAR    spec="OPTIONAL DOUBLE" /> <!--  -->
+    <WCV       spec="OPTIONAL DOUBLE" /> <!--  -->
+    <WESFT     spec="OPTIONAL DOUBLE" /> <!--  -->
+    <WRP       spec="OPTIONAL DOUBLE" /> <!--  -->
+    <WPS       spec="OPTIONAL DOUBLE" /> <!--  -->
+    <WPE       spec="OPTIONAL DOUBLE" /> <!--  -->
+    <WCE       spec="OPTIONAL DOUBLE" /> <!--  -->
+    <WNSUB     spec="OPTIONAL DOUBLE" /> <!--  -->
+    <WS2MG     spec="OPTIONAL DOUBLE" /> <!--  -->
+    <WTYP      spec="OPTIONAL DOUBLE" /> <!--  -->
+    <WRO       spec="OPTIONAL DOUBLE" /> <!--  -->
+    <WTO       spec="OPTIONAL DOUBLE" /> <!--  -->
+    <WS        spec="OPTIONAL DOUBLE" /> <!--  -->
+    <WGRPARO   spec="OPTIONAL DOUBLE" /> <!--  -->
+    <WB        spec="OPTIONAL DOUBLE" /> <!--  -->
+    <WXB       spec="OPTIONAL DOUBLE" /> <!--  -->
+    <WNB       spec="OPTIONAL DOUBLE" /> <!--  -->
+    <WPWR      spec="OPTIONAL DOUBLE" /> <!--  -->
+    <!-- Kayenta EOSMG derived paramaters -->
+    <WA1MG     spec="OPTIONAL DOUBLE" /> <!--  -->
+    <WA2MG     spec="OPTIONAL DOUBLE" /> <!--  -->
+    <WA3MG     spec="OPTIONAL DOUBLE" /> <!--  -->
+    <WA4MG     spec="OPTIONAL DOUBLE" /> <!--  -->
+    <WA5MG     spec="OPTIONAL DOUBLE" /> <!--  -->
+    <WA0MG     spec="OPTIONAL DOUBLE" /> <!--  -->
+    <WAEMG     spec="OPTIONAL DOUBLE" /> <!--  -->
+    <WFK0      spec="OPTIONAL DOUBLE" /> <!--  -->
+    <WAF       spec="OPTIONAL DOUBLE" /> <!--  -->
+    <WPF       spec="OPTIONAL DOUBLE" /> <!--  -->
+    <WXF       spec="OPTIONAL DOUBLE" /> <!--  -->
+    <WCF       spec="OPTIONAL DOUBLE" /> <!--  -->
+    <WRMX      spec="OPTIONAL DOUBLE" /> <!--  -->
 
-    <WA1       spec="OPTIONAL STRING" /> <!-- meridional yld prof param (stress)-->
-    <WA2       spec="OPTIONAL STRING" /> <!-- meridional yld prof param (1/stress)-->
-    <WA3       spec="OPTIONAL STRING" /> <!-- meridional yld prof param (stress)-->
-    <WA4       spec="OPTIONAL STRING" /> <!-- meridional yld prof param (dim. less)-->
-
-    <WP0       spec="OPTIONAL STRING" /> <!-- init hydrostatic crush press (stress)-->
-    <WP1       spec="OPTIONAL STRING" /> <!-- crush curve parameter (1/stress)-->
-    <WP2       spec="OPTIONAL STRING" /> <!-- crush curve parameter (1/stress^2)-->
-    <WP3       spec="OPTIONAL STRING" /> <!-- crush curve parameter (strain)-->
-
-    <WCR       spec="OPTIONAL STRING" /> <!-- cap curvature parameter (dim. less)-->
-    <WRK       spec="OPTIONAL STRING" /> <!-- TXE/TXC strength ratio (dim. less)-->
-    <WRN       spec="OPTIONAL STRING" /> <!-- TXE/TXC strength ratio (stress)-->
-    <WHC       spec="OPTIONAL STRING" /> <!-- kinematic hardening modulus (stress)-->
-
-    <WCTI1     spec="OPTIONAL STRING" /> <!--Tension I1 cut-off (stress)-->
-    <WCTPS     spec="OPTIONAL STRING" /> <!--Tension prin. stress cut-off (stress)-->
-
-    <WT1       spec="OPTIONAL STRING" /> <!--rate dep. primary relax. time (time)-->
-    <WT2       spec="OPTIONAL STRING" /> <!--rate dep. nonlinear param (1/time)-->
-    <WT3       spec="OPTIONAL STRING" /> <!--rate dep. nonlinear param (dim. less)-->
-    <WT4       spec="OPTIONAL STRING" /> <!--not used (1/time)-->
-    <WT5       spec="OPTIONAL STRING" /> <!--not used (stress)-->
-    <WT6       spec="OPTIONAL STRING" /> <!--rate dep. nonlinear param (time)-->
-    <WT7       spec="OPTIONAL STRING" /> <!--rate dep. nonlinear param (1/stress)-->
-    <WJ3TYPE   spec="OPTIONAL STRING" /> <!-- octahedral profile shape option (dim. less) -->
-    <WA2PF     spec="OPTIONAL STRING" /> <!-- flow potential analog of A2 -->
-    <WA4PF     spec="OPTIONAL STRING" /> <!-- flow potential analog of A4 -->
-    <WCRPF     spec="OPTIONAL STRING" /> <!-- flow potential analog of CR -->
-    <WRKPF     spec="OPTIONAL STRING" /> <!-- flow potential analog of RK -->
-    <WSUBX     spec="OPTIONAL STRING" /> <!-- subcycle control exponent (dim. less) -->
-    <WDEJAVU   spec="OPTIONAL STRING" />
-    <WFSPEED   spec="OPTIONAL STRING" />
-    <WPEAKI1I  spec="OPTIONAL STRING" />
-    <WSTRENI   spec="OPTIONAL STRING" />
-    <WFSLOPEI  spec="OPTIONAL STRING" />
-    <WPEAKI1F  spec="OPTIONAL STRING" />
-    <WSTRENF   spec="OPTIONAL STRING" />
-    <WJOBFAIL  spec="OPTIONAL STRING" />
-    <WFSLOPEF  spec="OPTIONAL STRING" />
-    <WFAILSTAT spec="OPTIONAL STRING" />
-    <WFREE01   spec="OPTIONAL STRING" />
-    <WFREE02   spec="OPTIONAL STRING" />
-    <WFREE03   spec="OPTIONAL STRING" />
-    <WFREE04   spec="OPTIONAL STRING" />
-    <WFREE05   spec="OPTIONAL STRING" />
-    <WFREE06   spec="OPTIONAL STRING" />
-    <WFREE07   spec="OPTIONAL STRING" />
-    <WFREE08   spec="OPTIONAL STRING" />
-    <WYSLOPEI  spec="OPTIONAL STRING" />
-    <WYSLOPEF  spec="OPTIONAL STRING" />
-
-
-
-    <PEAKI1IDIST spec="OPTIONAL STRING" />
+    <!-- Kayenta variability plotting -->
+    <PEAKI1IDIST spec="OPTIONAL STRING" /> <!-- plotable PEAKI1I distribution variable -->
 
   <!-- The following are for the Diamm model -->
     <B0       spec="OPTIONAL DOUBLE" />
@@ -513,6 +612,36 @@
     <DC11     spec="OPTIONAL DOUBLE" />
     <DC12     spec="OPTIONAL DOUBLE" />
     <DC13     spec="OPTIONAL DOUBLE" />
+  <!-- The following are for the nonlocal_drucker_prager model -->
+    <alpha                spec="OPTIONAL DOUBLE"  />
+    <alpha_p              spec="OPTIONAL DOUBLE"  />
+    <k_o                  spec="OPTIONAL DOUBLE"  />
+    <k_o_dist             spec="OPTIONAL STRING"  />
+    <h_local              spec="OPTIONAL DOUBLE"  />
+    <h_nonlocal           spec="OPTIONAL DOUBLE"  />
+    <l_nonlocal           spec="OPTIONAL DOUBLE"/>
+    <minimum_yield_stress spec="OPTIONAL DOUBLE"/>
+    <initial_xstress      spec="OPTIONAL DOUBLE"/>
+    <initial_ystress      spec="OPTIONAL DOUBLE"/>
+    <initial_zstress      spec="OPTIONAL DOUBLE"/>
+  <!-- The floowing are for the simplifiedGeoModel -->
+    <FSLOPE                        spec="OPTIONAL DOUBLE"  />
+    <FSLOPE_p                      spec="OPTIONAL DOUBLE"  />
+    <B0                            spec="OPTIONAL DOUBLE"  />
+    <G0                            spec="OPTIONAL DOUBLE"  />
+    <PEAKI1                        spec="OPTIONAL DOUBLE"  />
+    <kappa_initial                 spec="OPTIONAL DOUBLE"  />
+    <cap_radius                    spec="OPTIONAL DOUBLE"  />
+    <p0_crush_curve                spec="OPTIONAL DOUBLE"  />
+    <p1_crush_curve                spec="OPTIONAL DOUBLE"  />
+    <p3_crush_curve                spec="OPTIONAL DOUBLE"  />
+    <p4_fluid_effect               spec="OPTIONAL DOUBLE"  />
+    <kinematic_hardening_constant  spec="OPTIONAL DOUBLE"  />
+    <fluid_B0                      spec="OPTIONAL DOUBLE"  />
+    <fluid_pressur_initial         spec="OPTIONAL DOUBLE"  />
   </constitutive_model>
+
+
+
 
 </Uintah_Include>

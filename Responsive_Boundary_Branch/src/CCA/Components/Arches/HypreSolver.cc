@@ -292,11 +292,9 @@ HypreSolver::gridSetup(const ProcessorGroup*,
 // Fill linear parallel matrix
 // ****************************************************************************
 void 
-HypreSolver::setPressMatrix(const ProcessorGroup* pc,
-                            const Patch* patch,
-                            ArchesVariables* vars,
-                            ArchesConstVariables* constvars,
-                            const ArchesLabel*)
+HypreSolver::setMatrix(const ProcessorGroup* pc,
+                       const Patch* patch,
+                       constCCVariable<Stencil7>& coeff)
 { 
   gridSetup(pc, patch);
   /*-----------------------------------------------------------
@@ -307,14 +305,6 @@ HypreSolver::setPressMatrix(const ProcessorGroup* pc,
   HYPRE_StructMatrixSetSymmetric(d_A, 1);
   HYPRE_StructMatrixSetNumGhost(d_A, d_A_num_ghost);
   HYPRE_StructMatrixInitialize(d_A); 
-
-   /*-----------------------------------------------------------
-    * Set up the linear system (b & x)
-    *-----------------------------------------------------------*/
-   HYPRE_StructVectorCreate(MPI_COMM_WORLD, d_grid, &d_b);
-   HYPRE_StructVectorInitialize(d_b);
-   HYPRE_StructVectorCreate(MPI_COMM_WORLD, d_grid, &d_x);
-   HYPRE_StructVectorInitialize(d_x);
  
   double *A = hypre_CTAlloc(double, (d_stencilSize)*d_volume);
   
@@ -327,10 +317,11 @@ HypreSolver::setPressMatrix(const ProcessorGroup* pc,
   
   for(CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
     IntVector c = *iter;
-    A[i]   = -constvars->pressCoeff[c].b; //[0,0,-1]
-    A[i+1] = -constvars->pressCoeff[c].s; //[0,-1,0]
-    A[i+2] = -constvars->pressCoeff[c].w; //[-1,0,0]
-    A[i+3] =  constvars->pressCoeff[c].p; //[0,0,0]
+    A[i]   = -coeff[c].b; //[0,0,-1]
+    A[i+1] = -coeff[c].s; //[0,-1,0]
+    A[i+2] = -coeff[c].w; //[-1,0,0]
+    A[i+3] =  coeff[c].p; //[0,0,0]
+
     i = i + d_stencilSize;
   }
   
@@ -342,15 +333,42 @@ HypreSolver::setPressMatrix(const ProcessorGroup* pc,
   HYPRE_StructMatrixAssemble(d_A);
   hypre_TFree(A);
 
+}
+// ****************************************************************************
+// Fill linear parallel matrix
+// ****************************************************************************
+void 
+HypreSolver::setRHS_X(const ProcessorGroup* pc,
+                      const Patch* patch,
+                      CCVariable<double>& guess,
+                      constCCVariable<double>& rhs, 
+                      bool construct_A )
+{ 
+   // gridSetup(pc, patch);
+   /*-----------------------------------------------------------
+    * Set up the linear system (b & x)
+    *-----------------------------------------------------------*/
+   if ( construct_A ) { 
+     // These objects should only be constructed if A is constructed. 
+     // Otherwise they are reused. 
+     HYPRE_StructVectorCreate(MPI_COMM_WORLD, d_grid, &d_b);
+     HYPRE_StructVectorInitialize(d_b);
+     HYPRE_StructVectorCreate(MPI_COMM_WORLD, d_grid, &d_x);
+     HYPRE_StructVectorInitialize(d_x);
+   }
+ 
+  /* Set the coefficients for the grid */
+  int i = 0;
+
   // assemble right hand side and solution vector
   double * B = hypre_CTAlloc(double, d_volume);
   double * X = hypre_CTAlloc(double, d_volume);
 
-  // X
+  // B
   i = 0;
   for(CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
     IntVector c = *iter;
-    B[i] = constvars->pressNonlinearSrc[c];
+    B[i] = rhs[c];
     i++;
   }
     
@@ -358,11 +376,11 @@ HypreSolver::setPressMatrix(const ProcessorGroup* pc,
     HYPRE_StructVectorSetBoxValues(d_b, d_ilower[ib], d_iupper[ib], B);
   }
 
-  // B
+  // X
   i = 0;
   for(CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
     IntVector c = *iter;
-    X[i] = vars->pressure[c];
+    X[i] = guess[c];
     i++;
   }
     

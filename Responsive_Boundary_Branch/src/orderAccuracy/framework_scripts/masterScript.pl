@@ -49,15 +49,12 @@ if( $#ARGV == -1){
   exit;
 }
 
-# bulletproofing
-system("which octave")  == 0 ||  die("Cannot find the command octave $@");
-system("which gnuplot") == 0 ||  die("Cannot find the command gnuplot $@");
-
 # Define the paths
 my $base_path             = $ARGV[0];    # path to orderAccuracy scripts
 my $config_files_path     = $base_path . "/test_config_files";  # configurations files
-my $scripts_path          = $base_path . "/framework_scripts";  # framework scripts 
-my $postProcessCmd_path   = $base_path . "/postProcessTools";    # postProcessing 
+my $scripts_path          = $base_path . "/framework_scripts";  # framework scripts
+my $postProcessCmd_path   = $base_path . "/postProcessTools";   # postProcessing 
+my $here_path             = cwd;
 
 if (! -e $base_path."/framework_scripts" ){
   print "\n\nError: You must specify the path to the orderAccuracy directory ($base_path)\n";
@@ -72,9 +69,14 @@ mkdir("order_of_accuracy") || die "cannot mkdir(order_of_accuracy) $!";
 chdir("order_of_accuracy");
 my $curr_path = cwd;
 
-
 #__________________________________
 # read in components.xml
+if (! -e $config_files_path . "/components.xml" ){
+  print "\n\nError: Could not find $config_files_path/components.xml\n";
+  print " Now exiting\n";
+  exit
+}
+
 my $xml = $simple->XMLin($config_files_path . "/components.xml");
 my @components   = @{$xml->{component}};
 my $sus_path     = $xml->{sus_path}[0];
@@ -84,9 +86,17 @@ my $extraScripts_path = $xml->{scripts_path}[0];
 #__________________________________
 # add compare_path:sus_path and framework_scripts to the path
 my $orgPath = $ENV{"PATH"};
-$ENV{"PATH"} = "$postProcessCmd_path:$sus_path:$scripts_path:$extraScripts_path:$orgPath";
+my $syspath ="/usr/bin/:/usr/sbin:/bin";
 
-system("which sus") == 0 ||  die("Cannot find the command sus $@");
+$ENV{"PATH"} = "$postProcessCmd_path:$sus_path:$scripts_path:$extraScripts_path:$syspath:$here_path:.";
+
+# bulletproofing
+system("which sus") == 0               || die("\nCannot find the command sus $@");
+system("which octave")  == 0           || die("\nCannot find the command octave $@");
+system("which gnuplot") == 0           || die("\nCannot find the command gnuplot $@");
+system("which replace_XML_line")  == 0 || die("\nCannot find the command replace_XML_line $@");
+system("which replace_XML_value") == 0 || die("\nCannot find the command replace_XML_value $@");
+system("which findReplace")       == 0 || die("\nCannot find the command findReplace $@");
 
 #__________________________________
 # loop over each component 
@@ -127,9 +137,14 @@ system("which sus") == 0 ||  die("Cannot find the command sus $@");
      my $upsFile  = $test->{ups}[0];
      my $tstFile  = $test->{tst}[0];
      
+     #remove newline from variable if they exist
+     chomp($upsFile);
+     chomp($tstFile);
+     
      
      if($test->{otherFilesToCopy}[0] ){ 
         $otherFiles= $test->{otherFilesToCopy}[0];
+        chomp($otherFiles);
      }
     
      mkdir($testName) || die "ERROR:masterScript.pl:cannot mkdir($testName) $!";
@@ -155,18 +170,21 @@ system("which sus") == 0 ||  die("Cannot find the command sus $@");
      my $testing_path = $curr_path."/".$component."/".$testName;
      chdir($fw_path);
      system("cp -f $upsFile $tstFile $otherFiles $testing_path");
+     
+     system("echo $postProcessCmd_path> $testing_path/scriptPath");
+     
           
      chdir($testing_path);
      
      # make a symbolic link to sus
      my $sus = `which sus`;
-     system("ln -s $sus");
+     system("ln -s $sus >&/dev/null");
      
      # make any symbolic Links needed by that component
      my $j = 0;
      foreach $j (@symLinks) {
        if( $j gt "" && $j ne "."){
-         system("ln -s $j");
+         system("ln -s $j >&/dev/null");
        }
      }
      

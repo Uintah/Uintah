@@ -223,7 +223,6 @@ private:
   bool d_dynScalarModel;
   bool d_filter_var_limit_scalar;
 
-
  private:
 
  }; // End class CompDynamicProcedure

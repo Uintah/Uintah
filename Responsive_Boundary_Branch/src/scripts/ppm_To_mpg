@@ -1,5 +1,8 @@
 #!/bin/csh
-
+##########################################
+# Usage:
+#  ppm_To_mpeg <optional file name base>
+##########################################
 
 #__________________________________
 # bulletproofinG
@@ -15,8 +18,14 @@ if ( $status ) then
   exit(0)
 endif
 
+# check if there was a image frame name specified
+set imageName = movie
+if ( $#argv > 0 ) then
+  set imageName = $1
+  echo " Using $imageName as the filename base."
+endif
 
-set firstFrame = movie.0000.*
+set firstFrame = "$imageName.0000.*"
 set ext  = `echo $firstFrame | awk -F. '{print $3 }'`
 
 unalias rm
@@ -34,7 +43,7 @@ while ( $ans == "n" || $ans == "N")
   echo "Would you like to make a backup of your images?[n]"
   set backup = $<
   
-  set size_default =  `identify -verbose movie.0000.* | grep Geometry | cut -d ":" -f2`
+  set size_default =  `identify -verbose $imageName.0000.* | grep Geometry | cut -d ":" -f2`
   
   echo "Enter the size of the movie [$size_default] (note frame size must be a mutiple of 2)"
   set size = $<
@@ -197,10 +206,10 @@ rm Label*.png
 # make the movies mpg
 echo "___________________________________"
 echo "Now making the movie"
-echo "ffmpeg -qscale 1 -s $size -r $playBackSpeed -i %d.a.png -r 30 movie.$movieFormat"
+echo "ffmpeg -qscale 1 -s $size -r $playBackSpeed -i %d.a.png -r 30 $imageName.$movieFormat"
 
 rm movie.mpeg
-ffmpeg -qscale 1 -s $size -r $playBackSpeed -i %d.a.png -r 30 movie.$movieFormat
+ffmpeg -qscale 1 -s $size -r $playBackSpeed -i %d.a.png -r 30 $imageName.$movieFormat
 #ffmpeg -mbd rd -flags +trell -cmp 2 -subcmp 2 -g 100 -pass 1/2 -s $size -r $playBackSpeed -i %d.a.png -r 30 movie.mpeg
 #__________________________________
 echo "__________________________________"

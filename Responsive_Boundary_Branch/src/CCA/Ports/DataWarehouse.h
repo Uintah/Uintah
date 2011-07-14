@@ -145,14 +145,14 @@ public:
                                             IntVector low, IntVector high) = 0;
   virtual ParticleSubset* getParticleSubset(int matlIndex, const Patch*) = 0;
   virtual ParticleSubset* getDeleteSubset(int matlIndex, const Patch*) = 0;
-  virtual map<const VarLabel*, ParticleVariableBase*>* getNewParticleState(int matlIndex, const Patch*) = 0;
+  virtual std::map<const VarLabel*, ParticleVariableBase*>* getNewParticleState(int matlIndex, const Patch*) = 0;
   virtual ParticleSubset* getParticleSubset(int matlIndex, const Patch*, 
 					    Ghost::GhostType, 
 					    int numGhostCells,
 					    const VarLabel* posvar) = 0;
   virtual ParticleSubset* getParticleSubset(int matlIndex, IntVector low, IntVector high,
-                                            const Level* level, const Patch* relPatch,
-                                            const VarLabel* posvar) = 0;
+                                            const Patch* relPatch,
+                                            const VarLabel* posvar, const Level* level=0) = 0;
   virtual void allocateTemporary(ParticleVariableBase&,
 				 ParticleSubset*) = 0;
   virtual void allocateAndPut(ParticleVariableBase&, const VarLabel*,
@@ -232,7 +232,7 @@ public:
 
   // Add particles
   virtual void addParticles(const Patch* patch, int matlIndex,
-			    map<const VarLabel*, ParticleVariableBase*>* addedstate) = 0;
+			    std::map<const VarLabel*, ParticleVariableBase*>* addedstate) = 0;
 
   // Move stuff to a different data Warehouse
   virtual void transferFrom(DataWarehouse*, const VarLabel*,

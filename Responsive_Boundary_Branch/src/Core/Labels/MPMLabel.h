@@ -63,6 +63,7 @@ using std::vector;
       const VarLabel* pVolumeDeformedLabel;
       const VarLabel* TotalVolumeDeformedLabel;
       const VarLabel* pXXLabel;
+      const VarLabel* pPartitionUnityLabel;
 
       //PermanentParticleState
       const VarLabel* pDeformationMeasureLabel;
@@ -100,6 +101,7 @@ using std::vector;
       const VarLabel* pFiberDirLabel;
       const VarLabel* pFiberDirLabel_preReloc;
       
+      const VarLabel* gLambdaDotLabel;
       const VarLabel* gMassLabel;
       const VarLabel* gMassAllLabel;
       const VarLabel* gAccelerationLabel;
@@ -250,7 +252,6 @@ using std::vector;
       // Debugging Labels
       const VarLabel* pColorLabel;
       const VarLabel* pColorLabel_preReloc;
-      const VarLabel* gSumWeightsLabel;
 
       // For Cohesive Zones
       const VarLabel* czLengthLabel; 

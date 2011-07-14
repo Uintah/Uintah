@@ -55,6 +55,7 @@ static DebugStream BC_doing("ICE_BC_DOING", false);
 
 //#define TEST
 #undef TEST
+using namespace std;
 using namespace Uintah;
 namespace Uintah {
 
@@ -833,9 +834,9 @@ void setBC(CCVariable<double>& var_CC,
         if( BC_dbg.active() ) {
           bound_ptr.reset();
           cout  <<"Face: "<< patch->getFaceName(face) <<" numCellsTouched " << nCells
-               <<"\t child " << child  <<" NumChildren "<<numChildren 
-               <<"\t BC kind "<< bc_kind <<" \tBC value "<< bc_value
-               <<"\t bound_itr "<< bound_ptr << endl;
+                <<"\t child " << child  <<" NumChildren "<<numChildren 
+                <<"\t BC kind "<< bc_kind <<" \tBC value "<< bc_value
+                <<"\t bound_itr "<< bound_ptr << endl;
         }
       }  // found iterator
     }  // child loop
@@ -1100,6 +1101,7 @@ void setSpecificVolBC(CCVariable<double>& sp_vol_CC,
                << " nCellsTouched: " << nCells << endl;
     //__________________________________
     //  bulletproofing
+#if 0
     Patch::FaceIteratorType type = Patch::ExtraPlusEdgeCells;
     int nFaceCells = numFaceCells(patch,  type, face);
                         
@@ -1110,6 +1112,7 @@ void setSpecificVolBC(CCVariable<double>& sp_vol_CC,
            << " nCells Touched: " << nCells << " nCells on boundary: "<< nFaceCells<<") " << endl;
       throw InternalError(warn.str(), __FILE__, __LINE__);
     }
+#endif
   }  // faces loop
 }
 
@@ -1242,7 +1245,7 @@ void BC_bulletproofing(const ProblemSpecP& prob_spec,
     isBC_set["Temperature"] =false;
     isBC_set["Density"]     =false;
     isBC_set["Velocity"]    =false;            
-    isBC_set["SpecificVol"] =false;  
+    isBC_set["SpecificVol"] =true;  
     isBC_set["Symmetric"]   =false;    
                       
     map<string,string> face;

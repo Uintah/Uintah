@@ -53,6 +53,7 @@ public:
   void setAreaFraction( 
     const Patch* patch,
     CCVariable<Vector>& areaFraction, 
+    CCVariable<double>& volFraction, 
     constCCVariable<int>& pcell, 
     const int wallType, 
     const int flowType );
@@ -77,7 +78,7 @@ public:
     Iterator nu;  // not used
 
     const BoundCondBase* bc = patch->getArrayBCValues(face,mat_id,
-		                                          		    desc, bound_ptr,
+                                                                            desc, bound_ptr,
                                                       nu, child);
     const BoundCond<T> *new_bcs =  dynamic_cast<const BoundCond<T> *>(bc);
 
@@ -97,10 +98,25 @@ public:
     }
   }
 
+  void sched_computeBCArea( SchedulerP& sched, 
+                            const PatchSet* patches, 
+                            const MaterialSet* matls );
+
+
+  typedef std::map< std::string, const VarLabel* > LabelMap; 
+
 private: 
  
   //variables
   const ArchesLabel* d_fieldLabels;
+
+  LabelMap areaMap; 
+
+  void computeBCArea( const ProcessorGroup*, 
+                      const PatchSubset* patches, 
+                      const MaterialSubset*, 
+                      DataWarehouse*, 
+                      DataWarehouse* new_dw );
 
 
 

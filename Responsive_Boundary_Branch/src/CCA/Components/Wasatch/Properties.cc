@@ -7,11 +7,16 @@
 //--- ExprLib includes ---//
 #include <expression/ExpressionFactory.h>
 
+//--- TabProps includes ---//
+#include <tabprops/Archive.h>
+
 //--- Uintah includes ---//
+#include <Core/Parallel/Parallel.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 
-using std::cout;
+#include <fstream>
+
 using std::endl;
 using std::flush;
 
@@ -25,22 +30,24 @@ namespace Wasatch{
     std::string fileName;
     params->get("FileNamePrefix",fileName);
 
-    std::cout << "Loading TabProps file '" << fileName << "' ... " << std::flush;
+    proc0cout << "Loading TabProps file '" << fileName << "' ... " << std::flush;
 
     StateTable table;
     try{
-      table.read_hdf5( fileName );
+      std::ifstream inFile( (fileName+".tbl").c_str(), std::ios_base::in );
+      InputArchive ia(inFile);
+      ia >> BOOST_SERIALIZATION_NVP(table);
     }
     catch( std::exception& e ){
       std::ostringstream msg;
       msg << e.what() << std::endl << std::endl
-          << "Could not open TabProps file '" << fileName << ".h5'" << std::endl
+          << "Could not open TabProps file '" << fileName << ".tbl'" << std::endl
           << "Check to ensure that the file exists in the run dir." << std::endl
           << std::endl;
       throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
     }
 
-    std::cout << "done" << std::endl;
+    proc0cout << "done" << std::endl;
 
     //___________________________________________________________
     // get information for the independent variables in the table
@@ -89,7 +96,7 @@ namespace Wasatch{
         throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
       }
 
-      std::cout << "Constructing property evaluator for '" << dvarTag
+      proc0cout << "Constructing property evaluator for '" << dvarTag
                 << "' from file '" << fileName << "'." << std::endl;
 
       const BSpline* const spline = table.find_entry( dvarTableName );

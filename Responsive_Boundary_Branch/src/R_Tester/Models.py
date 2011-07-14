@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 from sys import argv,exit
 from os import environ
@@ -17,9 +17,12 @@ from helpers.runSusTests import runSusTests
 #       abs_tolerance=[double]  - absolute tolerance used in comparisons
 #       rel_tolerance=[double]  - relative tolerance used in comparisons
 #       exactComparison         - set absolute/relative tolerance = 0  for uda comparisons
-#       startFromCheckpoint     - start test from checkpoint. (/usr/local/home/csafe-tester/CheckPoints/..../testname.uda.000)
+#       startFromCheckpoint     - start test from checkpoint. (/home/csafe-tester/CheckPoints/..../testname.uda.000)
 #
-#  Note: the "folder name" must be the same as input file without the extension.
+#  Notes: 
+#  1) The "folder name" must be the same as input file without the extension.
+#  2) If the processors is > 1.0 then an mpirun command will be used
+#  3) Performance_tests are not run on a debug build.
 #______________________________________________________________________
 
 NIGHTLYTESTS = [   ("HePlume",       "HePlume.ups",     1.1, "Linux",  ["exactComparison"]), \
@@ -30,7 +33,6 @@ NIGHTLYTESTS = [   ("HePlume",       "HePlume.ups",     1.1, "Linux",  ["exactCo
                
 # Tests that are run during local regression testing               
 LOCALTESTS   = [   ("HePlume",       "HePlume.ups",     1.1, "Linux",  ["exactComparison"]), \
-                   ("HePlume",       "HePlume.ups",     1.1, "Darwin", ["doesTestRun"]), \
                    ("JP8_Radiation", "JP8_Radiation.ups", 4, "Linux",  ["exactComparison"])
     	        ]
 
@@ -46,7 +48,7 @@ def getLocalTests() :
 
 if __name__ == "__main__":
 
-  if environ['LOCAL_OR_NIGHTLY_TEST'] == "local":
+  if environ['WHICH_TESTS'] == "local":
     TESTS = LOCALTESTS
   else:
     TESTS = NIGHTLYTESTS

@@ -57,6 +57,7 @@ DEALINGS IN THE SOFTWARE.
 #  include <process.h>
 #endif
 
+using namespace std;
 using namespace Uintah;
 
 void

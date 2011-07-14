@@ -129,13 +129,18 @@ Required libraries:
 
 Useful libraries:
 \begin{itemize}
-\item Hypre v2.4 (\url{https://computation.llnl.gov/casc/hypre/software.html})
+\item Hypre v2.7.0b (\url{https://computation.llnl.gov/casc/hypre/software.html})
 \item PETSc v3.0 (\url{http://www.mcs.anl.gov/petsc/petsc-as/download/index.html})
 \end{itemize}
 
-Note, Uintah recently upgraded from using Hypre v2.0 and PETSc
-v2.3.3.  (July 22, 2009)
+Note, we suggest using Hypre v2.7.0b and PETSc v3.1-p8.  (Jun, 2011)
 
+The Wasatch component requires the following:
+\begin{itemize}
+  \item git
+  \item boost-1.46
+  \item cmake 2.8 or above
+\end{itemize}
 \section{OS Version Dependencies}
 
 \subsection{Debian Dependencies}
@@ -152,15 +157,42 @@ libxml2-dev zlib1g-dev liblapack-dev cmake libglew1.5-dev \
 libglui-dev libxmu-dev
 \end{verbatim}
 
-Once these libraries are installed, Teem and VisIt can be installed
+\noindent Optional: Additional libraries needed for the Wasatch component:
+\begin{verbatim}
+  aptitude install git-core
+\end{verbatim}  
+ \hspace{0.125in}Lenny:
+\begin{verbatim}
+  aptitude install cmake > 2.8 (from squeeze)
+  download boost-1.46 from www.boost.org
+  bootstrap.sh --prefix=path/to/installation/prefix
+  bjam threading=single install
+\end{verbatim}
+\hspace{0.125in}Squeeze:
+\begin{verbatim}
+  aptitude install cmake > 2.8 (from squeeze)
+  
+  sudo aptitude install  libboost-date-time1.46-dev \
+  libboost-date-time1.46.0          \
+  libboost-iostreams1.46.0          \   
+  libboost-program-options1.46-dev  \
+  libboost-program-options1.46.0    \
+  libboost-serialization1.46-dev    \
+  libboost-serialization1.46.0      \
+  libboost-signals1.46-dev          \
+  libboost-signals1.46.0            \
+  libboost-thread1.46-dev           \
+  libboost-thread1.46.0             \
+  libboost1.46-dev
+\end{verbatim}
+
+\noindent Once these libraries are installed, VisIt can be installed
 followed by installation of \textbf{Uintah}.
 
-To install the latest \TT{Nvidia}video drivers:
+\noindent To install the latest \TT{Nvidia}video drivers:
 \begin{verbatim}
   As root run the following commands:
   aptitude install module-assistant module-init-tools
-  
-  Change the repository in /etc/apt/sources.list from {lenny/squeeze} -> unstable
   aptitude clean
   aptitude update
   uname -r
@@ -263,12 +295,12 @@ Hypre can be installed by executing the following simplified
 instructions, however, if you encounter problems please refer to the
 hypre website for troubleshooting.
 
-Download hypre-2.4 from
-\url{https://computation.llnl.gov/casc/hypre/download/hypre-2.4.0b\_reg.html}
+Download hypre-2.7.0b from
+\url{https://computation.llnl.gov/casc/hypre/software.html}
 
 If installing hypre on a 64bit platform, hypre must be modified to add
 the -fPIC compile option.  After unpacking the hypre tar file, edit
-the Makefile in \tt hypre-2.4.0/src/lapack \normalfont and add the
+the Makefile in \tt hypre-2.7.0b/src/lapack \normalfont and add the
 -fPIC to line 128.  It should look like the following:
 
 \emph{Note: This may have been fixed... if there is
@@ -287,16 +319,42 @@ ${CC} -c -fPIC dlamch.c
 
 Depending on the location of the MPI libraries, i.e. location of mpi.h
 and libmpi.so, the configure line for hypre should look like this:
+
+For *nix:
+
 \begin{verbatim}
-cd hypre-2.4.0/src
+cd hypre-2.7.0b/src
 
 ./configure \
   --enable-shared \
   --with-MPI-include=/usr/local/openmpi/include \
   --with-MPI-lib-dirs=/usr/local/openmpi/lib \
   --with-MPI-libs="mpi pmpi util" \
-  --prefix=/usr/local/ CFLAGS=-DMPIPP_H CXXFLAGS=-DMPIPP_H
+  CFLAGS=-DMPIPP_H CXXFLAGS=-DMPIPP_H \
+  --prefix=/usr/local
+\end{verbatim}
 
+For OSX (Macs):
+
+\begin{verbatim}
+cd hypre-2.7.0b/src
+
+./configure \
+  --prefix=/usr/local \
+  CC=/usr/bin/gcc \
+  CXX=/usr/bin/g++ \
+  CFLAGS=-DMPIPP_H CXXFLAGS=-DMPIPP_H \
+  F77=/usr/local/bin/gfortran \
+  FLIBS="-lcrt1.10.6.o"
+
+\end{verbatim}
+
+(Note, under OSX, you will not be builing a shared library version of
+Hypre.  Also, the 'FLIBS' line is required for use with some 
+gfortran compilers as they try to use crt1.10.5.o (which causes
+duplicate symbol errors).)
+
+\begin{verbatim}
 make
 make install
 \end{verbatim}
@@ -541,6 +599,9 @@ libraries.):
 ./build_visit --makeflags -j# --no-visit
 \end{verbatim}
 
+Note: An alternate simpler way (but less flexible) is mentioned at the end
+of this section.
+
 Replace '\#' with the number of processors you want to use.  This
 will launch the normal dialog window, where you should select
 the ``Parallel'' option.  (Use the arrow keys and the space bar.)
@@ -598,8 +659,8 @@ may need to be root to install it, depending on where your
 As usual, cross your fingers. If everything goes fine, you can find
 the visit executable in ``visit\_bin\_dir''/bin.
 
-\emph{WARNING: Until a bug in the VisIt make system is fixed, you have
-to manually update
+\emph{WARNING: A bug in the VisIt make system was fixed in version 2.2.2, 
+for earlier versions you will have to manually update
 /path/to/installation/2.0.2/linux-x86\_64/include/PluginVsInstall.cmake
 and comment out these lines:}
 
@@ -614,6 +675,18 @@ and comment out these lines:}
 #ENDIF(EXISTS /usr/bin/g++4)
 \end{verbatim}
 
+And alternate way to build is to omit the --no-visit flag.  This will
+give the build script the okay to build visit.
+
+\begin{verbatim}
+./build_visit --makeflags -j#
+\end{verbatim}
+
+Once the script is finished you will need to package up the build.  
+This can be done by navigating to /path/to/build\_script/visit2.2.0/src.
+And running "make package".  This will package up the files into a tar
+file.  Once this is done the same instructions in 7.2.2 will work.  Just
+use visit-install to install the package to your desired location.
 
 
 \subsubsection{Parallel OS X build}
@@ -969,7 +1042,12 @@ PETSC_ARCH=linux-gnu-c-real-opt <= Specifies PETSc architecture
         USE_RADIATION=no
 
 \end{verbatim}
-
+To compile the Wasatch component add:
+\begin{verbatim}
+  --with-boost=<path to boost install>
+  --enable-wasatch_3p
+\end{verbatim}
+to the configure line.
 
 \subsection{Build}
 
@@ -978,6 +1056,7 @@ Then build the software by typing \TT{make} at the command line and create symbo
 make
 make link_inputs
 \end{verbatim}
+
 
 Please see the \textbf{User Guide}
 \url{http://www.uintah.utah.edu/trac/chrome/site/uintah.pdf} on how to use
@@ -997,7 +1076,12 @@ go to Section 10.}
 Install the suite of developer tools that are packaged with Mac OS X.
 These can be found in the "Optional Installs" directory on the Mac OS
 X Installation CD for newer versions (i.e. Tiger, Leopard) or on the
-included Developer CD if your version of OSX is older).  Double-click
+included Developer CD if your version of OSX is older). If you don't
+have the installation CD you can download older versions from:
+\begin{verbatim}
+  \url{http://connect.apple.com}
+\end{verbatim}
+ Double-click
 the XCodeTools.mpkg and follow the installer instructions.  This will
 install GCC, as well as many other useful developer tools.
 
@@ -1010,6 +1094,8 @@ everything in the correct places.  Extract using:
 \begin{verbatim}
 	tar -xvf gfortran-*-bin.tar.gz
 \end{verbatim}
+
+Note: If the Uintah builds correctly, but you are receiving link errors, see section 10.2.
 
 \subsection{Installing Subversion/libpng3/libxml2/other dependencies}
 As mentioned above, several libraries are required for Uintah, and may
@@ -1048,7 +1134,11 @@ the disk image from this site, mounting it, double-clicking the
 installer application, and following instructions.
 
 \subsection{Installing an LAM MPI}
-Download LAM MPI from \url{http://www.lam-mpi.org/7.1/download.php}
+We recommend that you avoid using fink to install LAM MPI.
+The files and libraries are installed in non-traditional locations 
+and Uintah cannot find them. (11/10/2010) \\
+
+Download LAM MPI from \url{http://www.lam-mpi.org}
 version 7.1.4 or newer.  Make a new directory in \textasciitilde/ for
 this and all of the following source packages.  This documentation
 assumes this directory is \textasciitilde/Uintah.  Inside this
@@ -1283,6 +1373,7 @@ make -j#
 		\begin{verbatim}
 			export PATH=/usr/local/bin:$PATH
 		\end{verbatim}
+		Note: If the Uintah builds correctly, but you receive a dynamic link error from fortran when you try to load a uda, the links in fortran library may be pointing to the wrong place.  This can easily be fixed by navigating to the fortran library and using "otool -L" to recognize the problem, then using install\_name\_tool to fix the problem.  Both are included in the mac developer tools.
 	
 	\subsection{openmpi}
 		Download the latest version of openmpi from: \url{http://www.open-mpi.org/}. Then configure using:
@@ -1344,13 +1435,14 @@ make -j#
 			mkdir ~/uintah/mac64opt
 		\end{verbatim}} %
 		\noindent Now browse to the mac64opt directory and configure Uintah using the following:
+		\emph{Note, under Mac OSX 10.6, the build has to be 64-bit.}
 		{\small
 		\begin{verbatim}
 			cd ~/uintah/mac64opt
 			../src/configure --with-mpi=/Users/username/uintah/packages/openmpi-1.4.1-install 
 			\--with-hypre=/Users/username/uintah/packages/hypre-2.6.0b-install 
 			\--with-petsc=/Users/username/uintah/packages/petsc-2.3.3-p15-install 
-			\--enable-optimized='-02' \--enable-64bit 
+			\--enable-optimize='-O2' \--enable-64bit 
 			CC=gcc CXX=g++ F77=gfortran CFLAGS=-m64 CXXFLAGS=-m64 FFLAGS=-m64
 			PETSC_ARCH=darwin10.3.1-c-opt USE_ICE=yes USE_MPM=yes
 		\end{verbatim}} %

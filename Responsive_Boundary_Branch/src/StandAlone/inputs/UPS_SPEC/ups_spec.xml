@@ -280,12 +280,14 @@
       <union                  spec="MULTIPLE" />
       <parallelepiped         spec="MULTIPLE" />
 
-      <file                   spec="OPTIONAL NO_DATA" >
-        <name                 spec="REQUIRED STRING" />
+      <file                    spec="OPTIONAL NO_DATA"
+                                attribute1="label    OPTIONAL STRING" >
+        <name                 spec="OPTIONAL STRING" />
         <var                  spec="MULTIPLE STRING" />
         <format               spec="OPTIONAL STRING" />
       </file>
-      <image                   spec="OPTIONAL NO_DATA" >
+      
+      <image                  spec="OPTIONAL NO_DATA" >
         <name                 spec="REQUIRED STRING" />
         <res                  spec="OPTIONAL VECTOR" />
         <threshold            spec="OPTIONAL MULTIPLE_DOUBLES" />
@@ -293,6 +295,7 @@
 
       <res                    spec="OPTIONAL VECTOR" /> <!-- FIXME: ?? These are only  optional in some cases... -->
       <velocity               spec="OPTIONAL VECTOR" /> <!--           eg, ARCHES doesn't use them... -->
+      <level                  spec="OPTIONAL INTEGER"/> 
       <temperature            spec="OPTIONAL DOUBLE" />
       <color                  spec="OPTIONAL DOUBLE" />
       <density                spec="OPTIONAL DOUBLE" />
@@ -327,7 +330,7 @@
                                                                       mpmf, mpmice, amrmpm,
                                                                       wasatch, reduce_uda,
                                                                       poisson1, poisson2, poisson3, poisson4, benchmark, rigidmpmice, 
-                                                                      rmpmice, smpm, smpmice, spatialops, switcher, wave, solvertest'" >
+                                                                      rmpmice, smpm, smpmice, switcher, wave, solvertest, RMCRT_Test'" >
                                   <!-- The 'type' above is used in CCA/Components/Parent/ComponentFactory.cc -->
         <carry_over                 spec="MULTIPLE NO_DATA"
                                   attribute1="var   REQUIRED STRING"
@@ -362,7 +365,7 @@
     <!-- Spec for basic expression types -->
     <BasicExpression			spec="MULTIPLE NO_DATA"
                                         attribute1="type REQUIRED STRING 'SVOL,XVOL,YVOL,ZVOL"
-                                        children1="ONE_OF(CHILD Constant,LinearFunction,SineFunction,GaussianFunction,DoubleTanhFunction)" >
+                                        children1="ONE_OF(CHILD Constant,LinearFunction, ParabolicFunction,SineFunction,GaussianFunction,DoubleTanhFunction)" >
       <TaskList				spec="REQUIRED STRING 'initialization,timestep_size,advance_solution'" />
       <NameTag				spec="REQUIRED" />
       <Constant				spec="OPTIONAL DOUBLE" />
@@ -372,6 +375,14 @@
         <!-- jcs need to specify independent variable for this function -->
         <NameTag			spec="REQUIRED" />
       </LinearFunction>
+      
+      <!-- parabolic function: a x^2 + b x + c !-->
+      <ParabolicFunction    spec="OPTIONAL NO_DATA"
+                                  attribute1="a REQUIRED DOUBLE"
+                                  attribute2="b REQUIRED DOUBLE"
+                                  attribute3="c REQUIRED DOUBLE">
+        <NameTag             spec="REQUIRED"/>
+      </ParabolicFunction>
       
       <!-- Sine function with frequency, amplitude, and offset !-->
       <SineFunction    spec="OPTIONAL NO_DATA"
@@ -406,10 +417,6 @@
   </CommonTags>
   <!-- End Common Block -->
   <!--===========================================================-->
-
-  <Burger                 spec="OPTIONAL NO_DATA">
-    <delt                 spec="REQUIRED DOUBLE 'positive'" />
-  </Burger>
 
   <Meta                   spec="OPTIONAL NO_DATA">
     <title                spec="OPTIONAL STRING" />
@@ -559,13 +566,16 @@
                               attribute7="radius        OPTIONAL DOUBLE 'positive'" 
                               attribute8="rectangle      OPTIONAL STRING 'x-, x+, y-, y+, z-, z+'" 
                               attribute9="lower          OPTIONAL MULTIPLE_DOUBLES" 
-                              attribute10="upper          OPTIONAL MULTIPLE_DOUBLES" >
+                              attribute10="upper          OPTIONAL MULTIPLE_DOUBLES"
+                              attribute11="name          OPTIONAL STRING">
         <BCType             spec="MULTIPLE NO_DATA"
                               attribute1="id        REQUIRED STRING '0,1,2,3,4,5,6,all'"
-                              attribute2="var       REQUIRED STRING 'Neumann, Dirichlet, symmetry, LODI, computeFromDensity, Sine, creep, slip Custom'"
+                              attribute2="var       REQUIRED STRING 'Neumann, Dirichlet, symmetry, LODI, computeFromDensity, Sine, creep, slip Custom, VelocityInlet, PressureBC, WallBC, OutletBC, VelocityFileInput, MassFlowInlet  '"
                               attribute3="label     REQUIRED STRING " >
                                                                 
           <value            spec="REQUIRED STRING"  need_applies_to="var Neumann Dirichlet LODI computeFromDensity Sine creep slip Custom" />
+          <inputfile        spec="OPTIONAL STRING" />
+          <vecvalue         spec="OPTIONAL VECTOR" />
         </BCType>
       </Face>
     </BoundaryConditions>
@@ -607,12 +617,11 @@
 
   <CFD                                  spec="OPTIONAL NO_DATA" >
 
-    <CanAddICEMaterial                  spec="OPTIONAL BOOLEAN" /> <!-- FIXME: what is the default? -->
+    <CanAddICEMaterial                  spec="OPTIONAL BOOLEAN" />            <!-- FIXME: This belongs in CFD/ICE -->
     <cfl                                spec="OPTIONAL INTEGER 'positive'" /> <!-- FIX ME: REALLY OPTIONAL??? -->
 
     <include href="ice_spec.xml"    section="CFD/ICE" />
     <include href="arches_spec.xml" section="CFD/ARCHES" />
-    <include href="spatialops_spec.xml" section="CFD/SPATIALOPS" />
 
   </CFD>
 
@@ -657,8 +666,9 @@
     <doMultiTaskgraphing                spec="OPTIONAL BOOLEAN" />
     <useLockStep                        spec="OPTIONAL BOOLEAN" /> <!-- defaults to FALSE.  FIXME: correct?  Is it optional? -->
 
-    <include href="ice_spec.xml" section="AMR/ICE" />
-    <include href="mpm_spec.xml" section="AMR/MPM" />
+    <include href="ice_spec.xml"         section="AMR/ICE" />
+    <include href="mpm_spec.xml"         section="AMR/MPM" />
+    <include href="RMCRT_test.xml"       section="AMR/RMCRT" />
 
     <Regridder                          spec="OPTIONAL NO_DATA"
                                            attribute1="type REQUIRED STRING 'BNR, Hierarchical, Tiled'" >
@@ -696,12 +706,13 @@
   <!--__________________________________-->
   
   <Scheduler              spec="OPTIONAL NO_DATA"
-                               attribute1="type OPTIONAL STRING 'MPI DynamicMPI'">
+                               attribute1="type OPTIONAL STRING 'MPI DynamicMPI ThreadedMPI'">
     <small_messages       spec="OPTIONAL BOOLEAN" />
     <taskReadyQueueAlg     spec="OPTIONAL STRING 'MostChildren LeastChildren MostAllChildren LeastAllChildren MostL2Children LeastL2Children PatchOrder PatchOrderRandom MostMessages LeastMessages Random FCFS Stack'" />
     <VarTracker           spec="OPTIONAL NO_DATA">
       <start_time         spec="REQUIRED DOUBLE" />
       <end_time           spec="REQUIRED DOUBLE" />
+      <level              spec="OPTIONAL INTEGER" />
       <start_index        spec="REQUIRED VECTOR" />
       <end_index          spec="REQUIRED VECTOR" />
       <var                spec="MULTIPLE NO_DATA"
@@ -714,18 +725,20 @@
     </VarTracker>
   </Scheduler>
 
-  <ParticleTest1          spec="OPTIONAL NO_DATA" >
-    <doOutput             spec="OPTIONAL INTEGER" />
-    <doGhostCells         spec="OPTIONAL INTEGER" />
-  </ParticleTest1>
-
-  <Wave                   spec="OPTIONAL NO_DATA" >
-    <radius               spec="OPTIONAL DOUBLE 'positive'" />
-    <initial_condition    spec="OPTIONAL STRING" />
-    <integration          spec="OPTIONAL STRING" />
-    <refine_threshold     spec="OPTIONAL INTEGER" />
-  </Wave>
-
+  <!--__________________________________-->
+  <!-- image or preprocessing specs     -->
+  <PreprocessTools        spec="OPTIONAL NO_DATA" >
+    <rawToUniqueGrains    spec="OPTIONAL NO_DATA" >
+      <numGrainMatls      spec="REQUIRED INTEGER 'positive'" />
+      <image              spec="REQUIRED STRING" />
+      <ppc                spec="REQUIRED VECTOR 'positive'" />
+      <res                spec="REQUIRED VECTOR 'positive'" />
+      <threshold          spec="REQUIRED MULTIPLE_DOUBLES" />
+      <outputBasename     spec="REQUIRED STRING" />
+    </rawToUniqueGrains>
+  </PreprocessTools>
+  
+  <!--__________________________________-->
   <LoadBalancer            spec="OPTIONAL NO_DATA" 
                              attribute1="type REQUIRED STRING 'DLB PLB SimpleLoadBalancer'" >
                              
@@ -748,23 +761,21 @@
     <particleCost          spec="OPTIONAL DOUBLE 'positive'" /> <!-- The weight per particle -->
     <patchCost             spec="OPTIONAL DOUBLE 'positive'" /> <!-- The weight per patch -->
     <extraCellCost         spec="OPTIONAL DOUBLE 'positive'" /> <!--The weight extra cell -->
-    
-
   </LoadBalancer>
 
-  <Multimaterial                                     spec="OPTIONAL NO_DATA" >
-    <fluidThermalConductivity                        spec="REQUIRED DOUBLE" />
-    <heatExchange                                    spec="REQUIRED BOOLEAN" />
-    <turbulentPrandtNo                               spec="REQUIRED DOUBLE" />
-    <fluidHeatCapacity                               spec="REQUIRED DOUBLE" />
-    <IfCutCell                                       spec="REQUIRED BOOLEAN" />
-    <StationarySolid                                 spec="REQUIRED BOOLEAN" />
-    <inviscid                                        spec="REQUIRED BOOLEAN" />
-    <restart                                         spec="REQUIRED BOOLEAN" />
-    <fixedCellType                                   spec="REQUIRED BOOLEAN" />
-    <fixedTemp                                       spec="REQUIRED BOOLEAN" />
-    <TestCutCells                                    spec="REQUIRED BOOLEAN" />
-    <stairstep                                       spec="REQUIRED BOOLEAN" />
+  <Multimaterial                       spec="OPTIONAL NO_DATA" >               
+    <fluidThermalConductivity          spec="REQUIRED DOUBLE" />               
+    <heatExchange                      spec="REQUIRED BOOLEAN" />              
+    <turbulentPrandtNo                 spec="REQUIRED DOUBLE" />               
+    <fluidHeatCapacity                 spec="REQUIRED DOUBLE" />               
+    <IfCutCell                         spec="REQUIRED BOOLEAN" />              
+    <StationarySolid                   spec="REQUIRED BOOLEAN" />              
+    <inviscid                          spec="REQUIRED BOOLEAN" />              
+    <restart                           spec="REQUIRED BOOLEAN" />              
+    <fixedCellType                     spec="REQUIRED BOOLEAN" />              
+    <fixedTemp                         spec="REQUIRED BOOLEAN" />              
+    <TestCutCells                      spec="REQUIRED BOOLEAN" />              
+    <stairstep                         spec="REQUIRED BOOLEAN" />              
   </Multimaterial>
 
   <Angio                                spec="OPTIONAL NO_DATA" >
@@ -792,206 +803,12 @@
         <fragment_file                   spec="REQUIRED STRING"/>
       </material>
     </Angio>
-
-    <exchange_properties           spec="OPTIONAL NO_DATA" >
-      <convective_fluid            spec="OPTIONAL INTEGER" /> <!-- FIXME: DOUBLE? IS THIS a Material index? -->
-      <convective_solid            spec="OPTIONAL INTEGER" /> <!-- FIXME: DOUBLE? -->
-      <do_convective_heat_transfer spec="OPTIONAL BOOLEAN" /> <!-- FIXME: What is the default? -->
-      <exchange_coefficients       spec="REQUIRED NO_DATA" >
-        <momentum                  spec="REQUIRED MULTIPLE_DOUBLES" />
-        <heat                      spec="OPTIONAL MULTIPLE_DOUBLES" />
-      </exchange_coefficients>
-      <exch_coef_after_MPM_add     spec="OPTIONAL NO_DATA" >
-        <momentum                  spec="REQUIRED MULTIPLE_DOUBLES" />
-        <heat                      spec="OPTIONAL MULTIPLE_DOUBLES" /> 
-      </exch_coef_after_MPM_add>
-      <heatExchangeCoeff           spec="OPTIONAL STRING 'variable'" />
-    </exchange_properties>
-
   </MaterialProperties>
-  <!--__________________________________-->
-  <Models                     spec="OPTIONAL NO_DATA" >
-    <Model                    spec="MULTIPLE NO_DATA"
-                                attribute1="type REQUIRED STRING 'SimpleRxn, AdiabaticTable, Gruneisen, hard_sphere_gas, IandG, JWL, JWLC, JWLpp, LightTime, Radiation, Simple_Burn, Steady_Burn, Test, Unsteady_Burn, mass_momentum_energy_src, Murnahan PassiveScalar Thomsen_Hartka_water Tillotson, flameSheet_rxn, DDT0, DDT1'" >
-
-      <Active                 spec="OPTIONAL BOOLEAN" need_applies_to="type JWLpp Simple_Burn DDT0" />
-      <b                      spec="REQUIRED DOUBLE" need_applies_to="type hard_sphere_gas JWLpp Thomsen_Hartka_water Tillotson" />
-      <E0                     spec="REQUIRED DOUBLE" need_applies_to="type JWLpp Tillotson" />
-      <energy_src             spec="REQUIRED DOUBLE" need_applies_to="type mass_momentum_energy_src"/>
-      <G                      spec="REQUIRED DOUBLE" need_applies_to="type JWLpp" />
-      <mass_src               spec="REQUIRED DOUBLE" need_applies_to="type mass_momentum_energy_src"/>
-      <momentum_src           spec="REQUIRED VECTOR" need_applies_to="type mass_momentum_energy_src"/>
-      
-      <mme_src_t_start        spec="OPTIONAL DOUBLE" need_applies_to="type mass_momentum_energy_src"/>
-      <mme_src_t_final        spec="OPTIONAL DOUBLE" need_applies_to="type mass_momentum_energy_src"/>
-      
-      
-      <!-- LightTime -->
-      <LightTime              spec="OPTIONAL NO_DATA">            
-        <fromMaterial         spec="OPTIONAL STRING" />           
-        <toMaterial           spec="OPTIONAL STRING" />           
-        <D                    spec="REQUIRED DOUBLE 'positive'"/>  
-        <E0                    spec="REQUIRED DOUBLE 'positive'"/>
-        <starting_location    spec="REQUIRED VECTOR" />           
-        <react_mixed_cells    spec="REQUIRED BOOLEAN"/>              
-        <direction_if_plane   spec="REQUIRED VECTOR"/>            
-      </LightTime>
-      
-      <!--  SimpleRxn -->
-      <SimpleRxn              spec="OPTIONAL NO_DATA">
-        <material             spec="REQUIRED STRING"/>
-        <scalar               spec="OPTIONAL NO_DATA" 
-                                attribute1="name REQUIRED STRING" >
-          <constants            spec="OPTIONAL NO_DATA">
-            <f_stoichometric    spec="REQUIRED DOUBLE '0,1'"/>   
-            <diffusivity        spec="REQUIRED DOUBLE 'positive'"/>
-            <rho_air            spec="REQUIRED DOUBLE 'positive'"/>   
-            <rho_fuel           spec="REQUIRED DOUBLE 'positive'"/>   
-            <cv_air             spec="REQUIRED DOUBLE 'positive'"/>   
-            <cv_fuel            spec="REQUIRED DOUBLE 'positive'"/>   
-            <R_air              spec="REQUIRED DOUBLE 'positive'"/>   
-            <R_fuel             spec="REQUIRED DOUBLE 'positive'"/>   
-            <thermalCond_air    spec="REQUIRED DOUBLE 'positive'"/>   
-            <thermalCond_fuel   spec="REQUIRED DOUBLE 'positive'"/>   
-            <viscosity_air      spec="REQUIRED DOUBLE 'positive'"/>   
-            <viscosity_fuel     spec="REQUIRED DOUBLE 'positive'"/>
-            <initialize_diffusion_knob  spec="REQUIRED DOUBLE 'positive'"/> 
-          </constants>
-          <geom_object          spec="MULTIPLE" />
-          <test_conservation    spec="OPTIONAL BOOLEAN"/>
-        </scalar>
-      </SimpleRxn>
-     
-      <ActEnergyCondPh        spec="OPTIONAL DOUBLE" />
-      <BoundaryParticles      spec="OPTIONAL INTEGER" />
-      <BurnCoeff              spec="OPTIONAL DOUBLE" />
-      <BurnrateModCoef        spec="OPTIONAL DOUBLE" />
-      <CondPhaseHeat          spec="OPTIONAL DOUBLE" />
-      <CondUnsteadyCoef       spec="OPTIONAL DOUBLE" />
-      <CrackVolThreshold      spec="OPTIONAL DOUBLE" />
-      
-      <Enthalpy               spec="OPTIONAL DOUBLE" />
-      <fromMaterial           spec="OPTIONAL STRING" />
-      <GasPhaseHeat           spec="OPTIONAL DOUBLE" />
-      <GasUnsteadyCoef        spec="OPTIONAL DOUBLE" />
-      <Gcrack                 spec="OPTIONAL DOUBLE" />
-      <HeatConductGasPh       spec="OPTIONAL DOUBLE" />
-      <HeatConductCondPh      spec="OPTIONAL DOUBLE" />
-      <IdealGasConst          spec="OPTIONAL DOUBLE" />
-      <IgnitionTemp           spec="OPTIONAL DOUBLE" />
-      
-      <material               spec="OPTIONAL STRING" />
-      <MoleWeightGasPh        spec="OPTIONAL DOUBLE" />
-      <nCrack                 spec="OPTIONAL DOUBLE" />
-      <PreExpCondPh           spec="OPTIONAL DOUBLE" />
-      <PreExpGasPh            spec="OPTIONAL DOUBLE" />
-      
-      <!--  Radiation  -->
-      <RadiationModel               spec="OPTIONAL NO_DATA" >
-        <radiatingGas               spec="REQUIRED STRING"/>
-        <absorbingSolid             spec="OPTIONAL STRING"/>
-        <calcFreq                   spec="OPTIONAL INTEGER" />
-        <calcInterval               spec="OPTIONAL DOUBLE" /> 
-        <table_or_ice_temp_density  spec="OPTIONAL STRING 'ice table'" />
-        <useTableValues             spec="OPTIONAL BOOLEAN" />
-        <DORadiationModel           spec="OPTIONAL NO_DATA" >
-          <ordinates                spec="REQUIRED INTEGER '2,8'" />
-          <opl                      spec="REQUIRED DOUBLE  '0,1'"/>
-          <property_model           spec="REQUIRED STRING 'radcoef patchmean wsggm'" />
-          <spherical_harmonics      spec="REQUIRED BOOLEAN" />
-          <test_problem             spec="OPTIONAL BOOLEAN" />
-          <test_problem_number      spec="OPTIONAL INTEGER" />
-          <linear_solver            spec="REQUIRED STRING 'hypre petsc'" />
-          <LinearSolver             spec="OPTIONAL NO_DATA" >
-            <solver                 spec="REQUIRED STRING 'gmres'" />
-            <preconditioner         spec="REQUIRED STRING 'jacobi'" />
-            <max_iter               spec="REQUIRED INTEGER 'positive'" />
-            <tolerance              spec="REQUIRED DOUBLE 'positive'" />
-          </LinearSolver>
-        </DORadiationModel>
-        <geom_object                spec="OPTIONAL" />
-      </RadiationModel>
-      
-      <rate                         spec="OPTIONAL DOUBLE" />
-      <refPressure                  spec="OPTIONAL DOUBLE" />
-      
-      <rho0                         spec="REQUIRED DOUBLE" need_applies_to="type Gruneisen JWL JWLC JWLpp Murnahan Tillotson" />
-      
-      <!--  Passive Scalar -->
-      <scalar                        spec="OPTIONAL NO_DATA" 
-                                       attribute1="name REQUIRED STRING" >
-        <material                    spec="OPTIONAL STRING"/>
-        <test_conservation           spec="OPTIONAL BOOLEAN"/>
-        <doTableTest                 spec="OPTIONAL BOOLEAN" />
-        <constants                   spec="OPTIONAL NO_DATA" >
-          <AMR_Refinement_Criteria   spec="OPTIONAL DOUBLE" />
-          <diffusivity               spec="OPTIONAL DOUBLE" />
-          <initialize_diffusion_knob spec="OPTIONAL DOUBLE" />
-        </constants>
-        <reaction_constants          spec="OPTIONAL NO_DATA" >
-          <f_stoichometric           spec="REQUIRED DOUBLE" />
-          <delta_H_combustion        spec="REQUIRED DOUBLE" />
-          <oxidizer_temp_infinity    spec="REQUIRED DOUBLE" />
-          <initial_fuel_temp         spec="REQUIRED DOUBLE" />
-          <diffusivity               spec="REQUIRED DOUBLE" />
-        </reaction_constants>
-        
-        <geom_object                 spec="MULTIPLE" />
-      </scalar>
-      
-      
-      <SpecificHeatBoth       spec="OPTIONAL DOUBLE" />
-      <table                  spec="OPTIONAL NO_DATA" 
-                                attribute1="name REQUIRED STRING 'adiabatic'"
-                                attribute2="type REQUIRED STRING 'Arches'" >
-
-        <defaultValue         spec="MULTIPLE DOUBLE"
-                                attribute1="name REQUIRED STRING 'heat_loss, mixture_fraction_variance'" />
-        <derivedValue         spec="MULTIPLE STRING"
-                                attribute1="name REQUIRED STRING 'heat_capac_Cv, gamma, reference_heat_capac_Cp, 
-                                                                  reference_mixture_molecular_weight, reference_heat_capac_Cv, reference_gamma'" />
-        <constantValue        spec="MULTIPLE DOUBLE"
-                                attribute1="name REQUIRED STRING 'viscosity, thermal_conductivity, reference_Temp'" />
-        <filename             spec="REQUIRED STRING" />
-      </table>
-      <tableValue             spec="MULTIPLE STRING 'CO2, H2O, Temp, density'" />
-      <toMaterial             spec="OPTIONAL STRING" /> <!-- FIXME: really optional?  default? [P,p]roduct? -->
-      <ThresholdPressure      spec="OPTIONAL DOUBLE 'positive'" />
-      <ThresholdvolFrac       spec="OPTIONAL DOUBLE 'positive'" />
-      <ThresholdPressureJWL   spec="OPTIONAL DOUBLE 'positive'"/>
-      <ThresholdPressureSB    spec="OPTIONAL DOUBLE 'positive'" />
-      <ThresholdTemp          spec="OPTIONAL DOUBLE 'positive'" />
-      <ThresholdVolFrac       spec="OPTIONAL DOUBLE 'positive'" />
-      <varianceMax            spec="OPTIONAL DOUBLE" /> <!-- FIXME: double? -->
-      <varianceScale          spec="OPTIONAL DOUBLE" /> <!-- FIXME: double? -->
-      <useCrackModel          spec="OPTIONAL BOOLEAN" />  
-     
-      <IandG                  spec="OPTIONAL NO_DATA">
-        <fromMaterial         spec="REQUIRED STRING" />
-        <toMaterial           spec="REQUIRED STRING" />
-        <I                    spec="REQUIRED DOUBLE 'positive'" />
-        <G1                   spec="REQUIRED DOUBLE 'positive'" />
-        <G2                   spec="REQUIRED DOUBLE 'positive'" />
-        <a                    spec="REQUIRED DOUBLE 'positive'" />
-        <b                    spec="REQUIRED DOUBLE 'positive'" />
-        <c                    spec="REQUIRED DOUBLE 'positive'" />
-        <d                    spec="REQUIRED DOUBLE 'positive'" />
-        <e                    spec="REQUIRED DOUBLE 'positive'" />
-        <g                    spec="REQUIRED DOUBLE 'positive'" />
-        <x                    spec="REQUIRED DOUBLE 'positive'" />
-        <y                    spec="REQUIRED DOUBLE 'positive'" />
-        <z                    spec="REQUIRED DOUBLE 'positive'" />
-        <Figmax               spec="REQUIRED DOUBLE 'positive'" />
-        <FG1max               spec="REQUIRED DOUBLE 'positive'" />
-        <FG2min               spec="REQUIRED DOUBLE 'positive'" />
-        <rho0                 spec="REQUIRED DOUBLE 'positive'" />
-        <E0                   spec="REQUIRED DOUBLE 'positive'" />
-        <ThresholdPressure    spec="REQUIRED DOUBLE 'positive'" />
-      </IandG>
-    </Model>
-  </Models>
-  <!--__________________________________-->
   
+  <!--  Models        -->
+  <include href="Models.xml" />
+  
+  <!--  MPM           -->
   <include href="mpm_spec.xml" section="Uintah_specification/PhysicalBC" />
 
   <SimulationComponent          spec="REQUIRED" />
@@ -1000,13 +817,36 @@
   <Solver                     spec="OPTIONAL NO_DATA" 
                                 attribute1="type REQUIRED STRING 'CGSolver, direct, hypre, hypreamr'" />
 
-
-
+  <!--______________________________________________________________________-->
+  <!--                 EXAMPLES                                             -->
+  
+  <!-- RMCRT_Test     -->
+  <include href="RMCRT_test.xml" section="pseudoRMCRT"/>
+  
+  <!-- Burger         -->
+  <Burger                     spec="OPTIONAL NO_DATA">
+    <delt                     spec="REQUIRED DOUBLE 'positive'" />
+  </Burger>
+  
+  <!-- Poisson        -->
   <Poisson                    spec="OPTIONAL NO_DATA" >
     <delt                     spec="REQUIRED DOUBLE" />
     <maxresidual              spec="REQUIRED DOUBLE" />
   </Poisson>
 
+  <!--  Particle Test Component -->
+  <ParticleTest1              spec="OPTIONAL NO_DATA" >
+    <doOutput                 spec="OPTIONAL INTEGER" />
+    <doGhostCells             spec="OPTIONAL INTEGER" />
+  </ParticleTest1>
+  
+  <!--  Wave  Component -->
+  <Wave                       spec="OPTIONAL NO_DATA" >
+    <radius                   spec="OPTIONAL DOUBLE 'positive'" />
+    <initial_condition        spec="OPTIONAL STRING" />
+    <integration              spec="OPTIONAL STRING" />
+    <refine_threshold         spec="OPTIONAL INTEGER" />
+  </Wave>
   <!--  Solver Test  Component -->
   <SolverTest                 spec="OPTIONAL NO_DATA">
     <delt                     spec="REQUIRED DOUBLE 'positive'" />
@@ -1022,7 +862,7 @@
       <norm                   spec="OPTIONAL STRING 'LInfinity linfinity L1 l1 L2 l2'" />       
       <npost                  spec="REQUIRED INTEGER" />                                        
       <npre                   spec="REQUIRED INTEGER" />                                        
-      <preconditioner         spec="REQUIRED STRING 'none, pfmg'" />                            
+      <preconditioner         spec="REQUIRED STRING 'none, pfmg, smg'" />                            
       <outputEquations        spec="OPTIONAL BOOLEAN" />                                        
       <skip                   spec="REQUIRED INTEGER" />                                        
       <solver                 spec="REQUIRED STRING 'smg, SMG, PFMG, pfmg, SparseMSG, sparsemsg, CG, cg, Hybrid, hybrid, GMRES, gmres amg'" />                               

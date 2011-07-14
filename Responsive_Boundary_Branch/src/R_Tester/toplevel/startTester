@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # to differentiate among the build names & even directories
 COMPILE="yes"
@@ -7,25 +7,52 @@ DEFAULT_REMAKE_LOG_TO="dav@cs.utah.edu"
 DO_DBG="1"
 DO_OPT="1"
 LOCAL_OR_NIGHTLY_TEST="nightly"
+WHICH_TESTS="nightly"
 MAIL_REMAKE_LOG_TO=""
-mallocstrict="no"
 MONTHLYBACKUP="no"
 NOTESTS="0"
 OS=`uname -s`
 PARALLELISM=0
 REPLY_TO="uintah-developer@gforge.sci.utah.edu"
-SCRIPT_DIR=/usr/local/home/csafe-tester/scripts
+
 SEND_MAIL_TO=""
 USE_DEFAULT_BUILD="yes"
 USE_DEFAULT_TEST_DATA="yes"
 USE_PREVTREE="no"
 USE_TREE="new"
 VERBOSE="no"
+COMMON_GROUP=""
+CHECKPOINTS=""
 
+#__________________________________
+# Machine specific variables
+MACHINE=`hostname`
+if [ "$MACHINE" == "rt" ]; then
+  COMMON_GROUP="uintah"
+  BUILD_DIR=/home/csafe-tester/"$OS"
+  TEST_DATA=/home/csafe-tester/"$OS"/TestData
+  TEMP_DIR=/home/csafe-tester/"$OS"
+  SCRIPT_DIR=/home/csafe-tester/scripts
+  CHECKPOINTS=/home/csafe-tester/CheckPoints
+  
+  # where the webpage will be, and init webpage
+  HTMLLOG=/home/csafe-tester/public_html/SCIRun.${ID}.html
+  WEBLOG=http://www.uintah.utah.edu:8050/~csafe-tester/SCIRun.${ID}.html
+fi
+if [ "$MACHINE" == "blaze" ]; then
+  COMMON_GROUP="sci"
+  BUILD_DIR=/usr/local/home/csafe-tester/"$OS"
+  TEST_DATA=/usr/local/home/csafe-tester/"$OS"/TestData
+  TEMP_DIR=/usr/local/home/csafe-tester/"$OS"
+  SCRIPT_DIR=/usr/local/home/csafe-tester/scripts
+  CHECKPOINTS=/usr/local/home/csafe-tester/CheckPoints
+  
+  # where the webpage will be, and init webpage
+  HTMLLOG=/usr/local/home/csafe-tester/public_html/SCIRun.${ID}.html
+  WEBLOG=http://blaze.sci.utah.edu/~csafe-tester/SCIRun.${ID}.html
+fi
+#______________________________________________________________________
 
-BUILD_DIR=/usr/local/home/csafe-tester/"$OS"
-TEST_DATA=/usr/local/home/csafe-tester/"$OS"/TestData
-TEMP_DIR=/usr/local/home/csafe-tester/"$OS"
 
 # test OS
 if [ "$OS" != "Linux" ]; then
@@ -38,7 +65,7 @@ unset SHELL
 umask 002
 
 show_help=0
-if [ "$#" == 0 ]; then
+if [ $# -eq 0 ]; then
     show_help=1
 fi
 
@@ -106,9 +133,6 @@ while [ "$#" -gt 0 ]; do
     -no_compile)
         COMPILE="no"
         ;;
-    -malloc_strict)
-        mallocstrict="yes"
-        ;;
     -help)
         show_help=1
         ;;
@@ -129,7 +153,6 @@ if [ $show_help != "0" ]; then
             -sendmail:              Send error messages to the default people
             -sendmailto "emails":   Send error messages to these people
             -j #:                   Use # number of processors maximum
-            -malloc_strict:         Have debug runs use malloc_strict 
             -use_tree "tree":       Use the given tree instead of checking one out
             -use_prevtree:          Use the previous (last_ran.lock) checkout and/or build
             -build_only:            Test the compilation only.  Don\'t run the tests.
@@ -146,10 +169,10 @@ fi
 
 
 PATH="$PATH":"$SCRIPT_DIR":/usr/bin:/local/bin:/usr/sci/local/bin/:/usr/gnu/bin:/usr/local/bin:/bin:/usr/lib:.
-export PATH mallocstrict NOTESTS COMPILE LOCAL_OR_NIGHTLY_TEST
+export PATH NOTESTS COMPILE LOCAL_OR_NIGHTLY_TEST WHICH_TESTS COMMON_GROUP CHECKPOINTS
 
 # set number of processors to use when building
-if [ "$PARALLELISM" == "0" ]; then
+if [ $PARALLELISM -eq 0 ]; then
   MAKE_PARALLELISM=1
 else
   MAKE_PARALLELISM="$PARALLELISM"
@@ -164,7 +187,7 @@ fi
 
 export BUILD_DIR BUILDROOT TEST_DATA PARALLELISM MAKE_PARALLELISM SEND_MAIL_TO MAIL_REMAKE_LOG_TO REPLY_TO
 
-if [ $VERBOSE == "yes" ]; then
+if [ $VERBOSE = "yes" ]; then
   echo "TIME STAMP: Regression Tester Starting at:"
   date
 fi
@@ -180,7 +203,7 @@ if [ $USE_TREE != "new" ]; then
   echo "Using tree at " > "$BUILDROOT"/log
   echo "$BUILDROOT" >> "$BUILDROOT"/log
   ID="$ID"-old
-elif [ $USE_PREVTREE == "yes" ]; then
+elif [ $USE_PREVTREE = "yes" ]; then
   # use the previous build of SCIRun
   if [ ! -d "${BUILD_DIR}/last_ran.lock" ]; then
       echo "No previous build found"
@@ -195,7 +218,7 @@ elif [ $USE_PREVTREE == "yes" ]; then
   ID="$ID"-old
 else
   #check out the current version
-  if [ $VERBOSE == "yes" ]; then
+  if [ $VERBOSE = "yes" ]; then
     echo "cd $BUILD_DIR"
   fi
   cd "$BUILD_DIR"
@@ -219,7 +242,7 @@ else
   fi
 
 
-  if [ $VERBOSE == "yes" ]; then
+  if [ $VERBOSE = "yes" ]; then
     echo "mkdir $BUILDROOT"
   fi
 
@@ -232,13 +255,13 @@ else
   fi
   ln -s "$BUILDROOT" "${BUILD_DIR}/last_ran.lock"
 
-  if [ $VERBOSE == "yes" ]; then
+  if [ $VERBOSE = "yes" ]; then
     echo "Checking out latest version of Uintah at `date`" 
   fi
   echo "Checking out latest version of Uintah at `date` to " > "$BUILDROOT"/log
   echo "$BUILDROOT" >> "$BUILDROOT"/log
 
-  if [ $VERBOSE == "yes" ]; then
+  if [ $VERBOSE = "yes" ]; then
     echo "TIME STAMP: SVN CHECKOUT STARTING AT:"
     date
   fi
@@ -249,11 +272,11 @@ else
   svn co https://code.sci.utah.edu/svn/uintah/trunk/src src  > "$BUILDROOT"/svn_co.log 2>&1
   retval=$?
 
-  if [ $VERBOSE == "yes" ]; then
+  if [ $VERBOSE = "yes" ]; then
     cat "$BUILDROOT"/svn_co.log
   fi
 
-  if [ $retval != "0" ]; then
+  if [ $retval -ne 0 ]; then
     echo "SVN checkout failed with code $retval"
     echo "Look at ${BUILDROOT}/svn_co.log for more information"
     exit 1
@@ -264,14 +287,14 @@ else
 
   cd "$BUILD_DIR"
 
-  if [ $VERBOSE == "yes" ]; then
+  if [ $VERBOSE = "yes" ]; then
       echo "TIME STAMP: SVN CHECKOUT DONE AT:"
       date
   fi
 fi
 
 # set a lock once a month for six months
-if [ "$USE_TREE" == "new" -a "$USE_PREVTREE" == "no" -a `date +%d` == "01" -a "$MONTHLYBACKUP" == "1" ]; then
+if [ "$USE_TREE" = "new" -a "$USE_PREVTREE" = "no" -a `date +%d` = "01" -a "$MONTHLYBACKUP" = "1" ]; then
   if [ -L "5_month.lock" ]; then
     mv -f "${BUILD_DIR}/5_month.lock" "${BUILD_DIR}/6_month.lock"
   fi
@@ -290,10 +313,6 @@ if [ "$USE_TREE" == "new" -a "$USE_PREVTREE" == "no" -a `date +%d` == "01" -a "$
   ln -s "$BUILDROOT" "${BUILD_DIR}/1_month.lock" 
 fi
 
-# where the webpage will be, and init webpage
-HTMLLOG=/usr/local/home/csafe-tester/public_html/SCIRun.${ID}.html
-WEBLOG=http://blaze.sci.utah.edu/~csafe-tester/SCIRun.${ID}.html
-
 #__________________________________
 # create html web page
 rm -f $HTMLLOG
@@ -310,18 +329,18 @@ echo "LOG: $HTMLLOG" >> $HTMLLOG
 PATH="$BUILDROOT"/src/R_Tester/helpers:"$PATH"
 export PATH DO_DBG DO_OPT HTMLLOG WEBLOG VERBOSE
 
-if [ $VERBOSE == "yes" ]; then
+if [ $VERBOSE = "yes" ]; then
    echo "Running Tests"
 fi
 
 runTests
 retval=$?
 
-chgrp -R csafe $BUILDROOT > /dev/null 2>&1
+chgrp -R $COMMON_GROUP $BUILDROOT > /dev/null 2>&1
 chmod -R g+w $BUILDROOT > /dev/null 2>&1
 
 
-if [ $VERBOSE == "yes" ]; then
+if [ $VERBOSE = "yes" ]; then
   echo "TIME STAMP: REGRESSION TESTER DONE AT:"
   date
 fi

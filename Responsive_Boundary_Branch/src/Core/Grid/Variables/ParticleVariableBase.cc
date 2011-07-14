@@ -37,8 +37,9 @@ DEALINGS IN THE SOFTWARE.
 
 #include <iostream>
 
-using namespace Uintah;
+using namespace std;
 
+using namespace Uintah;
 using namespace SCIRun;
 
 #if defined(_WIN32) && !defined(BUILD_UINTAH_STATIC)

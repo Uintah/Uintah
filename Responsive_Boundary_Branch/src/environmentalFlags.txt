@@ -5,8 +5,12 @@ ______________________________________________________________________
 
 ExecTimes         SCI_DEBUG     outputs the time for execution on each task.
 ReductionTasks    SCI_DEBUG     outputs a message on processor 0 whenever a reduction task occurs.
-RELOCATE_DBG      SCI_DEBUG     prints out debugging information in the code that finds the neighboring patches inside of particle relocation task.
+RELOCATE_DBG      SCI_DEBUG     prints out debugging information in the code that finds the neighboring
+                                patches inside of particle relocation task.
 AMR               SCI_DEBUG     prints out the patch layout
+TaskDBG           SCI_DEBUG     output the name of each task as it begins executing and when it's completed
+TaskLevel         SCI_DEBUG     output the task name and beginning patch on each level after the 
+                                task has completed.
 TaskGraph         SCI_DEBUG     prints out computes and requires for every task
 TaskGraphDetailed SCI_DEBUG     prints out internal details of computes and requires for every task
 WaitForDebugger   SCI_DEBUG     when an exception is thrown halt the program and print out
@@ -25,8 +29,6 @@ DBG_EqPress       SCI_DEBUG     Output debugging information about the iteration
                                 process in computeEquilibration if an exception is thrown.
 ARCHES:
 __________________________________
-
-
 
 
 MPM:

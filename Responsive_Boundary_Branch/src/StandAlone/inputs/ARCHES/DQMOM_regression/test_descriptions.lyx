@@ -1,4 +1,4 @@
-#LyX 1.6.4.1 created this file. For more info see http://www.lyx.org/
+#LyX 1.6.8 created this file. For more info see http://www.lyx.org/
 \lyxformat 345
 \begin_document
 \begin_header
@@ -81,7 +81,7 @@ No gas phase reaction
 \end_layout
 
 \begin_layout Itemize
-No solid-gas coupling
+No solid-gas couplingI 
 \end_layout
 
 \begin_layout Itemize
@@ -96,7 +96,7 @@ status open
 
 \begin_layout Plain Layout
 \begin_inset Tabular
-<lyxtabular version="3" rows="8" columns="8">
+<lyxtabular version="3" rows="6" columns="8">
 <features>
 <column alignment="center" valignment="top" width="0">
 <column alignment="center" valignment="top" width="0">
@@ -230,7 +230,7 @@ Periodic/Almgren Velocity
 \begin_inset Text
 
 \begin_layout Plain Layout
-Lapack-svd
+Optimized
 \end_layout
 
 \end_inset
@@ -259,81 +259,7 @@ Constant(scalar_0)
 \begin_inset Text
 
 \begin_layout Plain Layout
-2a
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
 2
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-2
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-2
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Periodic/Almgren Velocity
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-LU
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Constant(IC_1, IC_2)
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-None
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-2b
 \end_layout
 
 \end_inset
@@ -378,81 +304,7 @@ Periodic/Almgren Velocity
 \begin_inset Text
 
 \begin_layout Plain Layout
-Lapack-svd
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Constant(IC_1, IC_2)
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-None
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-2c
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-2
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-2
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-2
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Periodic/Almgren Velocity
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Lapack-invert
+Optimized
 \end_layout
 
 \end_inset
@@ -526,7 +378,7 @@ Periodic/Almgren Velocity
 \begin_inset Text
 
 \begin_layout Plain Layout
-Lapack-svd
+Optimized
 \end_layout
 
 \end_inset
@@ -600,7 +452,7 @@ Periodic/Almgren Velocity
 \begin_inset Text
 
 \begin_layout Plain Layout
-Lapack-svd
+Optimized
 \end_layout
 
 \end_inset
@@ -674,7 +526,7 @@ Periodic/Almgren Velocity
 \begin_inset Text
 
 \begin_layout Plain Layout
-LaPack-svd
+Optimized
 \end_layout
 
 \end_inset
@@ -710,8 +562,6 @@ None
 
 \begin_layout Plain Layout
 Summary of DQMOM and scalar transport regression tests.
- Note that Lapack and Lapack-svd are the same solver except that Lapack-svd
- include the condition number estimate.
 \begin_inset CommandInset label
 LatexCommand label
 name "tab:Regression_tests1"
@@ -733,10 +583,6 @@ name "tab:Regression_tests1"
 
 \begin_layout Standard
 Test 1 tests the basic scalar transport for DQMOM and the scalars.
- Tests 2a-2b test the solvers currently available.
- Tests 3-5 are higher dimensional problems.
- Note that Test 3 seems to require Lapack-svd as the solver to obtain a
- converged solution.
  
 \end_layout
 

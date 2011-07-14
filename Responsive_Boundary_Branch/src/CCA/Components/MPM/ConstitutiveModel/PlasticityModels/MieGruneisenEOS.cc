@@ -32,6 +32,7 @@ DEALINGS IN THE SOFTWARE.
 #include "MieGruneisenEOS.h"
 #include <cmath>
 
+using namespace std;
 using namespace Uintah;
 
 MieGruneisenEOS::MieGruneisenEOS(ProblemSpecP& ps)

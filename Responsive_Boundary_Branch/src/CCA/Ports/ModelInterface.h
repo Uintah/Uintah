@@ -75,7 +75,7 @@ DESCRIPTION
 WARNING
   
 ****************************************/
-  using namespace std;
+
   class DataWarehouse;
   class Material;
   class ProcessorGroup;

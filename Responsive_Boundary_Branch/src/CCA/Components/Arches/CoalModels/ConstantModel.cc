@@ -22,7 +22,7 @@ using namespace Uintah;
 ConstantModelBuilder::ConstantModelBuilder( const std::string         & modelName, 
                                             const vector<std::string> & reqICLabelNames,
                                             const vector<std::string> & reqScalarLabelNames,
-                                            const ArchesLabel         * fieldLabels,
+                                            ArchesLabel         * fieldLabels,
                                             SimulationStateP          & sharedState,
                                             int qn ) :
   ModelBuilder( modelName, reqICLabelNames, reqScalarLabelNames, fieldLabels, sharedState, qn )
@@ -39,7 +39,7 @@ ModelBase* ConstantModelBuilder::build(){
 
 ConstantModel::ConstantModel( std::string           modelName, 
                               SimulationStateP    & sharedState,
-                              const ArchesLabel   * fieldLabels,
+                              ArchesLabel   * fieldLabels,
                               vector<std::string>   icLabelNames, 
                               vector<std::string>   scalarLabelNames,
                               int qn ) 
@@ -68,6 +68,25 @@ ConstantModel::problemSetup(const ProblemSpecP& inputdb, int qn)
   ProblemSpecP db = inputdb; 
 
   db->require("constant",d_constant); 
+
+}
+
+void
+ConstantModel::sched_dummyInit( const LevelP& level, SchedulerP& sched )
+{
+  string taskname = "ConstantModel::dummyInit"; 
+
+  Ghost::GhostType  gn = Ghost::None;
+
+  Task* tsk = scinew Task(taskname, this, &ConstantModel::dummyInit);
+
+  tsk->requires( Task::OldDW, d_modelLabel, gn, 0);
+  tsk->requires( Task::OldDW, d_gasLabel,   gn, 0);
+
+  tsk->computes(d_modelLabel);
+  tsk->computes(d_gasLabel); 
+
+  sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
 
 }
 

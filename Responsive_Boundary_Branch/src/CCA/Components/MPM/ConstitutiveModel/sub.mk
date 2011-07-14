@@ -61,8 +61,12 @@ SRCS   += \
         $(SRCDIR)/ViscoPlastic.cc               \
         $(SRCDIR)/MurnahanMPM.cc                \
         $(SRCDIR)/ProgramBurn.cc                \
+        $(SRCDIR)/JWLppMPM.cc                   \
         $(SRCDIR)/UCNH.cc                       \
-        $(SRCDIR)/SoilFoam.cc
+        $(SRCDIR)/P_Alpha.cc                    \
+        $(SRCDIR)/SoilFoam.cc	                  \
+       	$(SRCDIR)/NonLocalDruckerPrager.cc      \
+        $(SRCDIR)/simplifiedGeoModel.cc
 
 ifneq ($(NO_FORTRAN),yes)
   SRCS   += \

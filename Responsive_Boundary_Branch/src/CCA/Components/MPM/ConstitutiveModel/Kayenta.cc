@@ -60,23 +60,23 @@ DEALINGS IN THE SOFTWARE.
 #include <cstring>
 ////////////////////////////////////////////////////////////////////////////////
 // The following functions are found in fortran/*.F
-//SUBROUTINE KAYENTA_CALC( NBLK, NINSV, DT, PROP,
-  //   $                                   SIGARG, D, SVARG, USM   )
+//SUBROUTINE KAYENTA_CALC( NBLK, NINSV, DT, UI, GC, DC, 
+//   $                                   SIGARG, D, SVARG, USM   )
 
 extern "C"{
 
 #if defined( FORTRAN_UNDERSCORE_END )
-#  define KMMCHK kmmchk_
+#  define KAYENTA_CHK kayenta_chk_
 #  define KAYENTA_CALC kayenta_calc_
-#  define KMMRXV kmmrxv_
+#  define KAYENTA_RXV kayenta_rxv_
 #elif defined( FORTRAN_UNDERSCORE_LINUX )
-#  define KMMCHK kmmchk_
-#  define KMMRXV kmmrxv_
+#  define KAYENTA_CHK kayenta_chk_
+#  define KAYENTA_RXV kayenta_rxv_
 #  define KAYENTA_CALC kayenta_calc__
 #else // NONE
-#  define KMMCHK kmmchk
+#  define KAYENTA_CHK kayenta_chk
 #  define KAYENTA_CALC kayenta_calc
-#  define KMMRXV kmmrxv
+#  define KAYENTA_RXV kayenta_rxv
 #endif
 
 //#define KMM_ORTHOTROPIC
@@ -84,53 +84,67 @@ extern "C"{
 //#define KMM_ANISOTROPIC
 //#undef KMM_ANISOTROPIC
 
-   void KMMCHK( double UI[], double UJ[], double UK[] );
-   void KAYENTA_CALC( int &nblk, int &ninsv, double &dt,
-                                    double UI[], double stress[], double D[],
-                                    double svarg[], double &USM );
-   void KMMRXV( double UI[], double UJ[], double UK[], int &nx, char namea[],
-                char keya[], double rinit[], double rdim[], int iadvct[], 
-                int itype[] );
+   void KAYENTA_CHK( double UI[], double GC[], double DC[] );
+   void KAYENTA_CALC(int &nblk, int &ninsv, double &dt,
+                     double UI[], double GC[], double DC[], double stress[],
+                     double D[], double svarg[], double &USM );
+   void KAYENTA_RXV( double UI[], double GC[], double DC[], int &nx,
+                     char namea[], char keya[], double rinit[], double rdim[],
+                     int iadvct[], int itype[] );
 }
 
 // End fortran functions.
 ////////////////////////////////////////////////////////////////////////////////
-using std::cerr; using namespace Uintah;
+using namespace std; using namespace Uintah;
 
 Kayenta::Kayenta(ProblemSpecP& ps,MPMFlags* Mflag)
   : ConstitutiveModel(Mflag)
 {
   // See Kayenta_pnt.Blk to see where these numbers come from
+  // User Inputs
   d_NBASICINPUTS=60;
-#ifdef KMM_ORTHOTROPIC
-  d_NUMJNTS=3;
-  d_NUMJOINTINPUTS=4*d_NUMJNTS;
-#elif KMM_ANISOTROPIC
-  d_NUMJNTS=4;
-  d_NUMJOINTINPUTS=6*d_NUMJNTS;
-#else
   d_NUMJNTS=0;
   d_NUMJOINTINPUTS=0*d_NUMJNTS;
-#endif
-
-  d_NUIEOSMG=22;d_NDCEOSMG=13;d_NVIEOSMG=5;d_NTHERMOPLAST=5;
-  d_NUMEOSINPUTS=d_NUIEOSMG+d_NDCEOSMG+d_NVIEOSMG+d_NTHERMOPLAST;
-
-// Total number of properties
-   d_NKMMPROP=d_NBASICINPUTS+d_NUMJOINTINPUTS+d_NUMEOSINPUTS;
+  d_NTHERMOPLAST=5;
+  d_NUIEOSMG=22;
+  d_IEOSMGCT=d_NBASICINPUTS+d_NTHERMOPLAST;
+  d_NUMEOSINPUTS=d_NUIEOSMG+d_NTHERMOPLAST;
+  // Total number of User Inputs
+  d_NKMMPROP=d_NBASICINPUTS+d_NUMJOINTINPUTS+d_NUMEOSINPUTS;
+  // Derived Constants 
+  d_NDCEOSMG=13;
+  // Internal State Variables
+  // d_NINSV automatically read
 
   // pre-initialize all of the user inputs to zero.
   for(int i = 0; i<d_NKMMPROP; i++){
      UI[i] = 0.;
+     GC[i] = 0.;
+  }
+  for(int i = 0; i<d_NDCEOSMG; i++){
+     DC[i] = 0.;
   }
   // Read model parameters from the input file
   getInputParameters(ps);
 
   // Check that model parameters are valid and allow model to change if needed
 
-  KMMCHK(UI,UI,UI);
+  //First, print out the UI values specified by the user
+  proc0cout << "Original UI values" << endl;
+  for(int i = 0; i<d_NKMMPROP; i++){
+     proc0cout << "UI[" << i << "] = " << UI[i] << endl;
+  }
 
-  //Create VarLabels for GeoModel internal state variables (ISVs)
+  KAYENTA_CHK(UI,GC,DC);
+
+  //Now, print out the UI values after alteration by KAYENTA_CHK
+  proc0cout << "Modified UI values" << endl;
+  for(int i = 0; i<d_NKMMPROP; i++){
+     proc0cout << "UI[" << i << "] = " << UI[i] << endl;
+  }
+  
+
+  //Create VarLabels for Kayenta internal state variables (ISVs)
   int nx;
   char namea[5000];
   char keya[5000];
@@ -138,12 +152,20 @@ Kayenta::Kayenta(ProblemSpecP& ps,MPMFlags* Mflag)
   int iadvct[100];
   int itype[100];
   
-  KMMRXV( UI, UI, UI, nx, namea, keya, rinit, rdim, iadvct, itype );
+  KAYENTA_RXV( UI, GC, DC, nx, namea, keya, rinit, rdim, iadvct, itype );
 
+  //Print out the Derived Constants
+//  proc0cout << "Derived Constants" << endl;
+//  for(int i = 0; i<d_NDCEOSMG; i++){
+//     proc0cout << "DC[" << i << "] = " << DC[i] << endl;
+//  }
+
+  // Print out Internal State Variables
   d_NINSV=nx;
-  cout << "d_NINSV = " << d_NINSV << endl;
+  proc0cout << "Internal State Variables" << endl;
+  proc0cout << "# ISVs = " << d_NINSV << endl;
 //  for(int i = 0;i<d_NINSV; i++){
-//    cout << rinit[i] << endl;
+//    proc0cout << "ISV[" << i << "] = " << rinit[i] << endl;
 //  }
   setErosionAlgorithm();
   initializeLocalMPMLabels();
@@ -162,13 +184,10 @@ Kayenta::Kayenta(const Kayenta* cm) : ConstitutiveModel(cm)
   wdist.Perturb    = cm->wdist.Perturb;
   wdist.WeibDist   = cm->wdist.WeibDist;
 
-
-
   d_allowNoTension = cm->d_allowNoTension;
   d_removeMass = cm->d_removeMass;
 
-
-  //Create VarLabels for GeoModel internal state variables (ISVs)
+  //Create VarLabels for Kayenta internal state variables (ISVs)
   initializeLocalMPMLabels();
 }
 
@@ -190,180 +209,114 @@ void Kayenta::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
     cm_ps = ps->appendChild("constitutive_model");
     cm_ps->setAttribute("type","kayenta");
   }
-
-  cm_ps->appendElement("B0",UI[0]);   // initial bulk modulus (stress)
-  cm_ps->appendElement("B1",UI[1]);   // nonlinear bulk mod param (stress)
-  cm_ps->appendElement("B2",UI[2]);   // nonlinear bulk mod param (stress)
-  cm_ps->appendElement("B3",UI[3]);   // nonlinear bulk mod param (stress)
-  cm_ps->appendElement("B4",UI[4]);   // nonlinear bulk mod param (dim-less)
-
-  cm_ps->appendElement("G0",UI[5]);   // initial shear modulus (stress)
-  cm_ps->appendElement("G1",UI[6]);   // nonlinear shear mod param
-  cm_ps->appendElement("G2",UI[7]);   // nonlinear shear mod param (1/stres)
-  cm_ps->appendElement("G3",UI[8]);   // nonlinear shear mod param (stress)
-  cm_ps->appendElement("G4",UI[9]);   // nonlinear shear mod param 
-
-  cm_ps->appendElement("RJS",UI[10]); // joint spacing (iso. joint set) 
-  cm_ps->appendElement("RKS",UI[11]); // joint shear stiffness (iso. case)
-  cm_ps->appendElement("RKN",UI[12]); // joint normal stiffness (iso. case) 
-
-  cm_ps->appendElement("A1",UI[13]);  // meridional yld prof param (stress)
-  cm_ps->appendElement("A2",UI[14]);  // meridional yld prof param (1/stres)
-  cm_ps->appendElement("A3",UI[15]);  // meridional yld prof param (stress)
-  cm_ps->appendElement("A4",UI[16]);  // meridional yld prof param
-
-  cm_ps->appendElement("P0",UI[17]);  // init hydrostatic crush press 
-  cm_ps->appendElement("P1",UI[18]);  // crush curve parameter (1/stress)
-  cm_ps->appendElement("P2",UI[19]);  // crush curve parameter (1/stress^2)
-  cm_ps->appendElement("P3",UI[20]);  // crush curve parameter (strain)
-
-  cm_ps->appendElement("CR",UI[21]);  // cap curvature parameter (dim. less)
-  cm_ps->appendElement("RK",UI[22]);  // TXE/TXC strength ratio (dim. less)
-  cm_ps->appendElement("RN",UI[23]);  // TXE/TXC strength ratio (stress)
-  cm_ps->appendElement("HC",UI[24]);  // kinematic hardening modulus (strs)
-
-  cm_ps->appendElement("CTI1",UI[25]);// Tension I1 cut-off (stress)
-  cm_ps->appendElement("CTPS",UI[26]);// Tension prin. stress cut-off (strs)
-
-  cm_ps->appendElement("T1",UI[27]);  // rate dep. primary relax. time(time)
-  cm_ps->appendElement("T2",UI[28]);  // rate dep. nonlinear param (1/time)
-  cm_ps->appendElement("T3",UI[29]);  // rate dep. nonlinear param (dim-lss)
-  cm_ps->appendElement("T4",UI[30]);  // not used (1/time)
-  cm_ps->appendElement("T5",UI[31]);  // not used (stress)
-  cm_ps->appendElement("T6",UI[32]);  // rate dep. nonlinear param (time)
-  cm_ps->appendElement("T7",UI[33]);  // rate dep. nonlinear param (1/strs)
-
-  cm_ps->appendElement("J3TYPE",UI[34]);// octahedral profile shape option
-  cm_ps->appendElement("A2PF",UI[35]);  // flow potential analog of A2
-  cm_ps->appendElement("A4PF",UI[36]);  // flow potential analog of A4
-  cm_ps->appendElement("CRPF",UI[37]);  // flow potential analog of CR
-  cm_ps->appendElement("RKPF",UI[38]);  // flow potential analog of RK
-  cm_ps->appendElement("SUBX",UI[39]);// subcycle control exponent (dim. less)
-  cm_ps->appendElement("DEJAVU",UI[40]);//
-  cm_ps->appendElement("FSPEED",UI[41]);//
-  cm_ps->appendElement("PEAKI1I",UI[42]);//
-  cm_ps->appendElement("STRENI", UI[43]);//
-  cm_ps->appendElement("FSLOPEI",UI[44]);//
-  cm_ps->appendElement("PEAKI1F",UI[45]);//
-  cm_ps->appendElement("STRENF", UI[46]);//
-  cm_ps->appendElement("JOBFAIL",UI[47]);//
-  cm_ps->appendElement("FSLOPEF",UI[48]);//
-  cm_ps->appendElement("FAILSTAT",UI[49]);//
-  cm_ps->appendElement("EOSID",UI[50]);//
-  cm_ps->appendElement("USEHOSTEOS",UI[51]);//
-  cm_ps->appendElement("FREE01",UI[52]);//
-  cm_ps->appendElement("FREE02",UI[53]);//
-  cm_ps->appendElement("FREE03",UI[54]);//
-  cm_ps->appendElement("FREE04",UI[55]);//
-  cm_ps->appendElement("FREE05",UI[56]);//
-  cm_ps->appendElement("FREE06",UI[57]);//
-  cm_ps->appendElement("YSLOPEI",UI[58]);//
-  cm_ps->appendElement("YSLOPEF",UI[59]);//
-
-//     Pointers vary from this point forward depending on which
-//     features have been enabled.  If there are no joints, then the
-//     next parameters after those listed above are the ones for thermo.
-//
-   int JJNT=d_NBASICINPUTS-1;  //JJNT equals 60
-
-#ifdef KMM_ORTHOTROPIC
-//    The orthotropic option requires 12 parameters (four per joint)
-  cm_ps->appendElement("CKN01",     UI[JJNT+1]); //Init jnt normal stiffness (stress/length)
-  cm_ps->appendElement("CKN02",     UI[JJNT+2]); //Init jnt normal stiffness (stress/length)
-  cm_ps->appendElement("CKN03",     UI[JJNT+3]); //Init jnt normal stiffness (stress/length)
-  cm_ps->appendElement("VMAX1",     UI[JJNT+4]); //Maximum joint closure(length)
-  cm_ps->appendElement("VMAX2",     UI[JJNT+5]); //Maximum joint closure(length)
-  cm_ps->appendElement("VMAX3",     UI[JJNT+6]); //Maximum joint closure(length)
-  cm_ps->appendElement("SPACE1",    UI[JJNT+7]); //Spacing of joints in a set (length)
-  cm_ps->appendElement("SPACE2",    UI[JJNT+8]); //Spacing of joints in a set (length)
-  cm_ps->appendElement("SPACE3",    UI[JJNT+9]); //Spacing of joints in a set (length)
-  cm_ps->appendElement("SHRSTIFF1", UI[JJNT+10]); //Init joint shr stiffness (stress/length)
-  cm_ps->appendElement("SHRSTIFF2", UI[JJNT+11]); //Init jnt shr stiffness (stress/length)
-  cm_ps->appendElement("SHRSTIFF3", UI[JJNT+d_NUMJOINTINPUTS]); //Init jnt shr stiff
-#elif KMM_ANISOTROPIC
-  cm_ps->appendElement("STRIKE1",   UI[JJNT+ 1]); //strike for joint #1(degrees)
-  cm_ps->appendElement("DIP1",      UI[JJNT+ 2]); //dip for joint #1 (degrees)
-  cm_ps->appendElement("CKN01",     UI[JJNT+ 3]); //Init jnt nrmal stiffness (stress/length)
-  cm_ps->appendElement("VMAX1",     UI[JJNT+ 4]); //Maximum joint closure(lngth)
-  cm_ps->appendElement("SPACE1",    UI[JJNT+ 5]); //Spacing of joints (length)
-  cm_ps->appendElement("SHRSTIFF1", UI[JJNT+ 6]); //Init jnt shear stiffness (stress/length)
-  cm_ps->appendElement("STRIKE2",   UI[JJNT+ 7]); //same, but for joint #2
-  cm_ps->appendElement("DIP2",      UI[JJNT+ 8]); //same, but for joint #2
-  cm_ps->appendElement("CKN02",     UI[JJNT+ 9]); //same, but for joint #2
-  cm_ps->appendElement("VMAX2",     UI[JJNT+10]); //same, but for joint #2
-  cm_ps->appendElement("SPACE2",    UI[JJNT+11]); //same, but for joint #2
-  cm_ps->appendElement("SHRSTIFF2", UI[JJNT+12]); //same, but for joint #2
-  cm_ps->appendElement("STRIKE3",   UI[JJNT+13]); //same,but for joint#3
-  cm_ps->appendElement("DIP3",      UI[JJNT+14]); //same,but for joint#3
-  cm_ps->appendElement("CKN03",     UI[JJNT+15]); //same,but for joint#3
-  cm_ps->appendElement("VMAX3",     UI[JJNT+16]); //same,but for joint#3
-  cm_ps->appendElement("SPACE3",    UI[JJNT+17]); //same,but for joint#3
-  cm_ps->appendElement("SHRSTIFF3", UI[JJNT+18]); //same,but for joint#3
-  cm_ps->appendElement("STRIKE4",   UI[JJNT+19]); //joint #4
-  cm_ps->appendElement("DIP4",      UI[JJNT+20]); //joint #4
-  cm_ps->appendElement("CKN04",     UI[JJNT+21]); //joint #4
-  cm_ps->appendElement("VMAX4",     UI[JJNT+22]); //joint #4
-  cm_ps->appendElement("SPACE4",    UI[JJNT+23]); //joint #4
-  cm_ps->appendElement("SHRSTIFF4", UI[JJNT+d_NUMJOINTINPUTS]);
-#endif
-//     ________________________________________________________________________
-//     EOSMG inputs
-  int IJTHERMPAR = JJNT+d_NUMJOINTINPUTS;
-
-  cm_ps->appendElement("TMPRXP",  UI[IJTHERMPAR + 1]);
-  cm_ps->appendElement("THERM01", UI[IJTHERMPAR + 2]);
-  cm_ps->appendElement("THERM02", UI[IJTHERMPAR + 3]);
-  cm_ps->appendElement("THERM03", UI[IJTHERMPAR + 4]);
-  cm_ps->appendElement("THERM04", UI[IJTHERMPAR + 5]);
-
-  d_IEOSMGCT     = IJTHERMPAR+d_NTHERMOPLAST;
-  cm_ps->appendElement("RHO0",    UI[d_IEOSMGCT +  1]);
-  cm_ps->appendElement("TMPR0",   UI[d_IEOSMGCT +  2]);
-  cm_ps->appendElement("SNDSP0",  UI[d_IEOSMGCT +  3]);
-  cm_ps->appendElement("S1MG",    UI[d_IEOSMGCT +  4]);
-  cm_ps->appendElement("GRPAR",   UI[d_IEOSMGCT +  5]);
-  cm_ps->appendElement("CV",      UI[d_IEOSMGCT +  6]);
-  cm_ps->appendElement("ESFT",    UI[d_IEOSMGCT +  7]);
-  cm_ps->appendElement("RP",      UI[d_IEOSMGCT +  8]);
-  cm_ps->appendElement("PS",      UI[d_IEOSMGCT +  9]);
-  cm_ps->appendElement("PE",      UI[d_IEOSMGCT + 10]);
-  cm_ps->appendElement("CE",      UI[d_IEOSMGCT + 11]);
-  cm_ps->appendElement("NSUB",    UI[d_IEOSMGCT + 12]);
-  cm_ps->appendElement("S2MG",    UI[d_IEOSMGCT + 13]);
-  cm_ps->appendElement("TYP",     UI[d_IEOSMGCT + 14]);
-  cm_ps->appendElement("RO",      UI[d_IEOSMGCT + 15]);
-  cm_ps->appendElement("TO",      UI[d_IEOSMGCT + 16]);
-  cm_ps->appendElement("S",       UI[d_IEOSMGCT + 17]);
-  cm_ps->appendElement("GRPARO",  UI[d_IEOSMGCT + 18]);
-  cm_ps->appendElement("B",       UI[d_IEOSMGCT + 19]);
-  cm_ps->appendElement("XB",      UI[d_IEOSMGCT + 20]);
-  cm_ps->appendElement("NB",      UI[d_IEOSMGCT + 21]);
-  cm_ps->appendElement("PWR",     UI[d_IEOSMGCT + d_NUIEOSMG]);
-//    ________________________________________________________________________
-//    EOSMG derived constants
-  int IDCEOSMGCT=d_IEOSMGCT+d_NUIEOSMG;
-  cm_ps->appendElement("A1MG", UI[IDCEOSMGCT +  1]);
-  cm_ps->appendElement("A2MG", UI[IDCEOSMGCT +  2]);
-  cm_ps->appendElement("A3MG", UI[IDCEOSMGCT +  3]);
-  cm_ps->appendElement("A4MG", UI[IDCEOSMGCT +  4]);
-  cm_ps->appendElement("A5MG", UI[IDCEOSMGCT +  5]);
-  cm_ps->appendElement("A0MG", UI[IDCEOSMGCT +  6]);
-  cm_ps->appendElement("AEMG", UI[IDCEOSMGCT +  7]);
-  cm_ps->appendElement("FK0",  UI[IDCEOSMGCT +  8]);
-  cm_ps->appendElement("AF",   UI[IDCEOSMGCT +  9]);
-  cm_ps->appendElement("PF",   UI[IDCEOSMGCT + 10]);
-  cm_ps->appendElement("XF",   UI[IDCEOSMGCT + 11]);
-  cm_ps->appendElement("CF",   UI[IDCEOSMGCT + 12]);
-  cm_ps->appendElement("RMX",  UI[IDCEOSMGCT + d_NDCEOSMG]);
-//    ________________________________________________________________________
-//    EOSMG VI
-  int IVIEOSMGCT=IDCEOSMGCT+d_NDCEOSMG;
-  cm_ps->appendElement("VI1MG", UI[IVIEOSMGCT +  1]);
-  cm_ps->appendElement("VI2MG", UI[IVIEOSMGCT +  2]);
-  cm_ps->appendElement("VI3MG", UI[IVIEOSMGCT +  3]);
-  cm_ps->appendElement("VI4MG", UI[IVIEOSMGCT +  4]);
-  cm_ps->appendElement("VI5MG", UI[IVIEOSMGCT +  d_NVIEOSMG]);
-
+  // Kayenta User Input Variables
+  cm_ps->appendElement("B0",      UI[0]);   // initial bulk modulus (stress)
+  cm_ps->appendElement("B1",      UI[1]);   // nonlinear bulk mod param (stress)
+  cm_ps->appendElement("B2",      UI[2]);   // nonlinear bulk mod param (stress)
+  cm_ps->appendElement("B3",      UI[3]);   // nonlinear bulk mod param (stress)
+  cm_ps->appendElement("B4",      UI[4]);   // nonlinear bulk mod param (dim-less)
+  cm_ps->appendElement("G0",      UI[5]);   // initial shear modulus (stress)
+  cm_ps->appendElement("G1",      UI[6]);   // nonlinear shear mod param
+  cm_ps->appendElement("G2",      UI[7]);   // nonlinear shear mod param (1/stres)
+  cm_ps->appendElement("G3",      UI[8]);   // nonlinear shear mod param (stress)
+  cm_ps->appendElement("G4",      UI[9]);   // nonlinear shear mod param 
+  cm_ps->appendElement("RJS",     UI[10]);  // joint spacing (iso. joint set) 
+  cm_ps->appendElement("RKS",     UI[11]);  // joint shear stiffness (iso. case)
+  cm_ps->appendElement("RKN",     UI[12]);  // joint normal stiffness (iso. case) 
+  cm_ps->appendElement("A1",      UI[13]);  // meridional yld prof param (stress)
+  cm_ps->appendElement("A2",      UI[14]);  // meridional yld prof param (1/stres)
+  cm_ps->appendElement("A3",      UI[15]);  // meridional yld prof param (stress)
+  cm_ps->appendElement("A4",      UI[16]);  // meridional yld prof param
+  cm_ps->appendElement("P0",      UI[17]);  // init hydrostatic crush press 
+  cm_ps->appendElement("P1",      UI[18]);  // crush curve parameter (1/stress)
+  cm_ps->appendElement("P2",      UI[19]);  // crush curve parameter (1/stress^2)
+  cm_ps->appendElement("P3",      UI[20]);  // crush curve parameter (strain)
+  cm_ps->appendElement("CR",      UI[21]);  // cap curvature parameter (dim. less)
+  cm_ps->appendElement("RK",      UI[22]);  // TXE/TXC strength ratio (dim. less)
+  cm_ps->appendElement("RN",      UI[23]);  // TXE/TXC strength ratio (stress)
+  cm_ps->appendElement("HC",      UI[24]);  // kinematic hardening modulus (strs)
+  cm_ps->appendElement("CTI1",    UI[25]);  // Tension I1 cut-off (stress)
+  cm_ps->appendElement("CTPS",    UI[26]);  // Tension prin. stress cut-off (strs)
+  cm_ps->appendElement("T1",      UI[27]);  // rate dep. primary relax. time(time)
+  cm_ps->appendElement("T2",      UI[28]);  // rate dep. nonlinear param (1/time)
+  cm_ps->appendElement("T3",      UI[29]);  // rate dep. nonlinear param (dim-lss)
+  cm_ps->appendElement("T4",      UI[30]);  // not used (1/time)
+  cm_ps->appendElement("T5",      UI[31]);  // not used (stress)
+  cm_ps->appendElement("T6",      UI[32]);  // rate dep. nonlinear param (time)
+  cm_ps->appendElement("T7",      UI[33]);  // rate dep. nonlinear param (1/strs)
+  cm_ps->appendElement("J3TYPE",  UI[34]);  // octahedral profile shape option
+  cm_ps->appendElement("A2PF",    UI[35]);  // flow potential analog of A2
+  cm_ps->appendElement("A4PF",    UI[36]);  // flow potential analog of A4
+  cm_ps->appendElement("CRPF",    UI[37]);  // flow potential analog of CR
+  cm_ps->appendElement("RKPF",    UI[38]);  // flow potential analog of RK
+  cm_ps->appendElement("SUBX",    UI[39]);  // subcycle control exponent (dim. less)
+  cm_ps->appendElement("DEJAVU",  UI[40]);  // =1 if parameters have been checked 
+  cm_ps->appendElement("FSPEED",  UI[41]);  // failure speed (time) 
+  cm_ps->appendElement("PEAKI1I", UI[42]);  // Peak I1 hydrostatic tension strength 
+  cm_ps->appendElement("STRENI",  UI[43]);  // Peak (high pressure) shear strength 
+  cm_ps->appendElement("FSLOPEI", UI[44]);  // Initial slope of limit surface at PEAKI1I
+  cm_ps->appendElement("PEAKI1F", UI[45]);  // same as PEAKI1I, but for failed surface
+  cm_ps->appendElement("STRENF",  UI[46]);  // same as STRENI, but for failed surface
+  cm_ps->appendElement("JOBFAIL", UI[47]);  // failure handling option
+  cm_ps->appendElement("FSLOPEF", UI[48]);  // same as FSLOPEI, but for failed surface
+  cm_ps->appendElement("FAILSTAT",UI[49]);  // >0= failure statistics
+  cm_ps->appendElement("EOSID",   UI[50]);  // equation of state id
+  cm_ps->appendElement("USEHOSTEOS",UI[51]);// boolean for using EOS
+  cm_ps->appendElement("FREE01",  UI[52]);  //
+  cm_ps->appendElement("FREE02",  UI[53]);  //
+  cm_ps->appendElement("FREE03",  UI[54]);  //
+  cm_ps->appendElement("FREE04",  UI[55]);  //
+  cm_ps->appendElement("FREE05",  UI[56]);  //
+  cm_ps->appendElement("CTPSF",   UI[57]);  // fracture cutoff of principal stress (stress)
+  cm_ps->appendElement("YSLOPEI", UI[58]);  // intact high pressure slope
+  cm_ps->appendElement("YSLOPEF", UI[59]);  // failed high pressure slope
+  // Kayenta EOSMG User Inputs
+  int IJTHERMPAR =d_NBASICINPUTS+d_NUMJOINTINPUTS;
+  cm_ps->appendElement("TMPRXP",  UI[IJTHERMPAR]);
+  cm_ps->appendElement("THERM01", UI[IJTHERMPAR + 1]);
+  cm_ps->appendElement("THERM02", UI[IJTHERMPAR + 2]);
+  cm_ps->appendElement("THERM03", UI[IJTHERMPAR + 3]);
+  cm_ps->appendElement("TMPRM0",  UI[IJTHERMPAR + 4]);
+  // Kayenta EOSMGCT User Inputs
+  cm_ps->appendElement("RHO0",    UI[d_IEOSMGCT]);
+  cm_ps->appendElement("TMPR0",   UI[d_IEOSMGCT +  1]);
+  cm_ps->appendElement("SNDSP0",  UI[d_IEOSMGCT +  2]);
+  cm_ps->appendElement("S1MG",    UI[d_IEOSMGCT +  3]);
+  cm_ps->appendElement("GRPAR",   UI[d_IEOSMGCT +  4]);
+  cm_ps->appendElement("CV",      UI[d_IEOSMGCT +  5]);
+  cm_ps->appendElement("ESFT",    UI[d_IEOSMGCT +  6]);
+  cm_ps->appendElement("RP",      UI[d_IEOSMGCT +  7]);
+  cm_ps->appendElement("PS",      UI[d_IEOSMGCT +  8]);
+  cm_ps->appendElement("PE",      UI[d_IEOSMGCT +  9]);
+  cm_ps->appendElement("CE",      UI[d_IEOSMGCT + 10]);
+  cm_ps->appendElement("NSUB",    UI[d_IEOSMGCT + 11]);
+  cm_ps->appendElement("S2MG",    UI[d_IEOSMGCT + 12]);
+  cm_ps->appendElement("TYP",     UI[d_IEOSMGCT + 13]);
+  cm_ps->appendElement("RO",      UI[d_IEOSMGCT + 14]);
+  cm_ps->appendElement("TO",      UI[d_IEOSMGCT + 15]);
+  cm_ps->appendElement("S",       UI[d_IEOSMGCT + 16]);
+  cm_ps->appendElement("GRPARO",  UI[d_IEOSMGCT + 17]);
+  cm_ps->appendElement("B",       UI[d_IEOSMGCT + 18]);
+  cm_ps->appendElement("XB",      UI[d_IEOSMGCT + 19]);
+  cm_ps->appendElement("NB",      UI[d_IEOSMGCT + 20]);
+  cm_ps->appendElement("PWR",     UI[d_IEOSMGCT + 21]);
+  //  ________________________________________________________________________
+  //  EOSMG Derived Constants
+  cm_ps->appendElement("A1MG",    DC[0]);
+  cm_ps->appendElement("A2MG",    DC[1]);
+  cm_ps->appendElement("A3MG",    DC[2]);
+  cm_ps->appendElement("A4MG",    DC[3]);
+  cm_ps->appendElement("A5MG",    DC[4]);
+  cm_ps->appendElement("A0MG",    DC[5]);
+  cm_ps->appendElement("AEMG",    DC[6]);
+  cm_ps->appendElement("FK0",     DC[7]);
+  cm_ps->appendElement("AF",      DC[8]);
+  cm_ps->appendElement("PF",      DC[9]);
+  cm_ps->appendElement("XF",      DC[10]);
+  cm_ps->appendElement("CF",      DC[11]);
+  cm_ps->appendElement("RMX",     DC[12]);
+  //  ________________________________________________________________________
+  //  Uintah Variability Variables 
   cm_ps->appendElement("peakI1IPerturb", wdist.Perturb);
   cm_ps->appendElement("peakI1IMed",     wdist.WeibMed);
   cm_ps->appendElement("peakI1IMod",     wdist.WeibMod);
@@ -389,33 +342,41 @@ void Kayenta::initializeCMData(const Patch* patch,
 
   StaticArray<ParticleVariable<double> > ISVs(d_NINSV+1);
 
-  cout << "In initializeCMData" << endl;
+//  proc0cout << "In initializeCMData" << endl;
   for(int i=0;i<d_NINSV;i++){
     new_dw->allocateAndPut(ISVs[i],ISVLabels[i], pset);
     ParticleSubset::iterator iter = pset->begin();
     for(;iter != pset->end(); iter++){
       ISVs[i][*iter] = rinit[i];
     }
-//    cout << "RINIT[" << i << "] = " << rinit[i] << endl;
   }
 
   ParticleVariable<int>     pLocalized;
   new_dw->allocateAndPut(pLocalized,         pLocalizedLabel, pset);
   ParticleSubset::iterator iter = pset->begin();
   for(;iter != pset->end();iter++){
-  pLocalized[*iter] = 0;
+    pLocalized[*iter] = 0;
   }
   
   ParticleVariable<double> peakI1IDist;
   new_dw->allocateAndPut(peakI1IDist, peakI1IDistLabel, pset);
-  proc0cout << "Weibull Variables for PEAKI1I: (initialize CMData)\n"
-            << "Median:          " << wdist.WeibMed
+  if ( wdist.Perturb){
+      // Make the seed differ for each patch, otherwise each patch gets the
+      // same set of random #s.
+      int patchID = patch->getID();
+      int patch_div_32 = patchID/32;
+      patchID = patchID%32;
+      unsigned int unique_seed = ((wdist.WeibSeed+patch_div_32+1) << patchID);
+
+    SCIRun::Weibull weibGen(wdist.WeibMed,wdist.WeibMod,wdist.WeibRefVol,
+                            unique_seed,wdist.WeibMod);
+    proc0cout << "Weibull Variables for PEAKI1I: (initialize CMData)\n"
+            << "Median:            " << wdist.WeibMed
             << "\nModulus:         " << wdist.WeibMod
             << "\nReference Vol:   " << wdist.WeibRefVol
             << "\nSeed:            " << wdist.WeibSeed
             << "\nPerturb?:        " << wdist.Perturb << std::endl;
-  if ( wdist.Perturb){
-    SCIRun::Weibull weibGen(wdist.WeibMed,wdist.WeibMod,wdist.WeibRefVol,wdist.WeibSeed);
+    
     constParticleVariable<double>pVolume;
     new_dw->get(pVolume, lb->pVolumeLabel, pset);
   
@@ -490,7 +451,6 @@ void Kayenta::allocateCMDataAdd(DataWarehouse* new_dw,
   
   for (o=delset->begin(); o != delset->end(); o++, n++) {
     pLocalized[*n] = o_Localized[*o];
-  
   }
   (*newState)[pLocalizedLabel]=pLocalized.clone();
 
@@ -567,10 +527,10 @@ void Kayenta::computeStableTimestep(const Patch* patch,
                       Max(c_dil+fabs(pvelocity[idx].y()),WaveSpeed.y()),
                       Max(c_dil+fabs(pvelocity[idx].z()),WaveSpeed.z()));
   }
-  UI[d_IEOSMGCT +  1]=matl->getInitialDensity();
-  UI[d_IEOSMGCT +  2]=matl->getRoomTemperature();
-  UI[d_IEOSMGCT +  3]=bulk/matl->getInitialDensity();
-  UI[d_IEOSMGCT +  6]=matl->getInitialCv();
+  UI[d_IEOSMGCT     ]=matl->getInitialDensity();           // RHO0
+  UI[d_IEOSMGCT +  1]=matl->getRoomTemperature();     // TMPR0
+  UI[d_IEOSMGCT +  2]=bulk/matl->getInitialDensity(); // SNDSP0
+  UI[d_IEOSMGCT +  5]=matl->getInitialCv();           // CV
 
   WaveSpeed = dx/WaveSpeed;
   double delT_new = WaveSpeed.minComponent();
@@ -661,6 +621,7 @@ void Kayenta::computeStressTensor(const PatchSubset* patches,
     delt_vartype delT;
     constParticleVariable<int> pLocalized;
     ParticleVariable<int>     pLocalized_new;
+    constParticleVariable<long64> pParticleID;
 
     old_dw->get(pLocalized, pLocalizedLabel, pset);
     new_dw->allocateAndPut(pLocalized_new,pLocalizedLabel_preReloc, pset);
@@ -677,6 +638,7 @@ void Kayenta::computeStressTensor(const PatchSubset* patches,
     old_dw->get(ptemperature,        lb->pTemperatureLabel,        pset);
     old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
     old_dw->get(peakI1IDist,         peakI1IDistLabel,             pset);
+    old_dw->get(pParticleID,         lb->pParticleIDLabel,         pset);
 
     StaticArray<constParticleVariable<double> > ISVs(d_NINSV+1);
     for(int i=0;i<d_NINSV;i++){
@@ -746,9 +708,9 @@ void Kayenta::computeStressTensor(const PatchSubset* patches,
 	Matrix3 AvgStress = (pstress_new[idx] + pstress[idx])*.5;
 
 	double e = (D(0,0)*AvgStress(0,0) +
-		    D(1,1)*AvgStress(1,1) +
-		    D(2,2)*AvgStress(2,2) +
-		    2.*(D(0,1)*AvgStress(0,1) +
+		  D(1,1)*AvgStress(1,1) +
+		  D(2,2)*AvgStress(2,2) +
+		  2.*(D(0,1)*AvgStress(0,1) +
 			D(0,2)*AvgStress(0,2) +
 			D(1,2)*AvgStress(1,2))) * pvolume_new[idx]*delT;
 
@@ -757,81 +719,94 @@ void Kayenta::computeStressTensor(const PatchSubset* patches,
 	// Compute wave speed at each particle, store the maximum
 	Vector pvelocity_idx = pvelocity[idx];
 	WaveSpeed=Vector(Max(c_dil+fabs(pvelocity_idx.x()),WaveSpeed.x()),
-			 Max(c_dil+fabs(pvelocity_idx.y()),WaveSpeed.y()),
-			 Max(c_dil+fabs(pvelocity_idx.z()),WaveSpeed.z()));
+			Max(c_dil+fabs(pvelocity_idx.y()),WaveSpeed.y()),
+			Max(c_dil+fabs(pvelocity_idx.z()),WaveSpeed.z()));
 
 	// Compute artificial viscosity term
 	if (flag->d_artificial_viscosity) {
 	  double dx_ave = (dx.x() + dx.y() + dx.z())/3.0;
 	  double c_bulk = sqrt(UI[0]/rho_cur);
 	  Matrix3 D=(velGrad + velGrad.Transpose())*0.5;
-	  p_q[idx] = artificialBulkViscosity(D.Trace(), c_bulk, rho_cur, dx_ave);
+	  p_q[idx] = artificialBulkViscosity(D.Trace(),c_bulk, rho_cur, dx_ave);
 	} else {
 	  p_q[idx] = 0.;
 	}
-
-	// the 
-      }else{
-
-    
+      } else {  // particle is not previously localized
 	  // Compute the deformation gradient increment using the time_step
 	  // velocity gradient
 	  // F_n^np1 = dudx * dt + Identity
-	  deformationGradientInc = velGrad * delT + Identity;
 
-	  Jinc = deformationGradientInc.Determinant();
+          double J;
+//          if(velGrad.Norm() > 1e-10){
+//            Matrix3 F=deformationGradient[idx];
+//            int num_scs = 10;
+//            double dtsc = delT/(double (num_scs));
+//            Matrix3 finc = (Identity+velGrad*dtsc);
+//            for(int n=0;n<num_scs;n++){
+//              F=finc*F;
+//            }   
+//            deformationGradient_new[idx] = F;
+//	    J = deformationGradient_new[idx].Determinant();
+//            double Jold = deformationGradient[idx].Determinant();
+//            Jinc = J/Jold;
+//          }
+//          else{
+            deformationGradientInc = velGrad * delT + Identity;
 
-	  // Update the deformation gradient tensor to its time n+1 value.
-	  deformationGradient_new[idx] = deformationGradientInc *
-					 deformationGradient[idx];
+            Jinc = deformationGradientInc.Determinant();
 
-	  // get the volumetric part of the deformation
-	  double J = deformationGradient_new[idx].Determinant();
+            // Update the deformation gradient tensor to its time n+1 value.
+            deformationGradient_new[idx] = deformationGradientInc *
+                                           deformationGradient[idx];
+
+            // get the volumetric part of the deformation
+            J = deformationGradient_new[idx].Determinant();
+//          }
+
 	  // Check 1: Look at Jacobian
-	  if (J<=0.0||J>20.0) {
-	      cout<<"negative or huge J encountered (J="<<J<<", deleting particle "<<endl;
+	  if (J<=0.0 || J > d_hugeJ) {
+            double Jold = deformationGradient[idx].Determinant();
+	    cout<<"negative or huge J encountered J="<<J<<", Jold = " << Jold << " deleting particle" << endl;
+            cout << "pos = " << px[idx] << endl;
 
-	    constParticleVariable<long64> pParticleID;
-	    old_dw->get(pParticleID, lb->pParticleIDLabel, pset);
 	    if(d_allowNoTension){
 	      pLocalized_new[idx]=1;
 	      cout<< "localizing (viscous) particle "<<pParticleID[idx]<<endl;
 	    }else if(d_removeMass){
 	      pLocalized_new[idx]=-999;
 	      cout<< "localizing (deleting) particle "<<pParticleID[idx]<<endl;
+              cout<< "material = " << dwi << endl << "Momentum deleted = " 
+                                          << pvelocity[idx]*pmass[idx] <<endl;
 	    }else{
 	      cerr << getpid() 
 		   << "**ERROR** Negative Jacobian of deformation gradient, no erosion algorithm set" << endl;
-	      throw InternalError("Negative Jacobian",__FILE__,__LINE__);	      
+	      throw InternalError("Negative Jacobian",__FILE__,__LINE__);
 	    }
 
-
 	    // the particle is localized and will be updated using a viscous model
-	    // we need to caluclate: pstress_new, pvolume_new, deformationGradient_new
+	    // we need to calculate: pstress_new, pvolume_new, deformationGradient_new
 	    // we have available pstress, pmass, pvolume, ptemperature, deformationGradient,
 	    double viscosity = 1e-3;
-	    double USM;
-	    double rho_cur;
-	    double dt;
+	    double USM,rho_cur,dt;
 	    viscousStressUpdate( D, pstress[idx], rho_orig, pvolume[idx], UI[0],viscosity,dt, pstress_new[idx],deformationGradient_new[idx],rho_cur,pvolume_new[idx],USM,c_dil);
 
 	    // Compute The Strain Energy for all the particles
 	    Matrix3 AvgStress = (pstress_new[idx] + pstress[idx])*.5;
 
 	    double e = (D(0,0)*AvgStress(0,0) +
-			D(1,1)*AvgStress(1,1) +
-			D(2,2)*AvgStress(2,2) +
-			2.*(D(0,1)*AvgStress(0,1) +
-			    D(0,2)*AvgStress(0,2) +
-			    D(1,2)*AvgStress(1,2))) * pvolume_new[idx]*delT;
+			   D(1,1)*AvgStress(1,1) +
+			   D(2,2)*AvgStress(2,2) +
+			   2.*(D(0,1)*AvgStress(0,1) +
+			   D(0,2)*AvgStress(0,2) +
+			   D(1,2)*AvgStress(1,2))) * pvolume_new[idx]*delT;
 
 	    se += e;
 
 	    // Compute wave speed at each particle, store the maximum
 	    Vector pvelocity_idx = pvelocity[idx];
 	    WaveSpeed=Vector(Max(c_dil+fabs(pvelocity_idx.x()),WaveSpeed.x()),
-			     Max(c_dil+fabs(pvelocity_idx.y()),WaveSpeed.y()),
-			     Max(c_dil+fabs(pvelocity_idx.z()),WaveSpeed.z()));
+			    Max(c_dil+fabs(pvelocity_idx.y()),WaveSpeed.y()),
+			    Max(c_dil+fabs(pvelocity_idx.z()),WaveSpeed.z()));
 
 	    // Compute artificial viscosity term
 	    if (flag->d_artificial_viscosity) {
@@ -842,19 +817,18 @@ void Kayenta::computeStressTensor(const PatchSubset* patches,
 	    } else {
 	      p_q[idx] = 0.;
 	    }
-
-
-
 	  }else{
 	    pvolume_new[idx]=Jinc*pvolume[idx];
 
 	    // Compute the local sound speed
 	    double rho_cur = rho_orig/J;
 
-	    // NEED TO FIND R
-	    Matrix3 tensorR, tensorU;
+            // NEED TO FIND R
+            Matrix3 tensorR, tensorU;
 
-	    deformationGradient_new[idx].polarDecompositionRMB(tensorU, tensorR);
+            //Comment by KC: Computing tensorR at the beginning of the timestep
+            deformationGradient[idx].polarDecompositionAFFinvTran(tensorU,
+                                                                  tensorR);
 
 	    // This is the previous timestep Cauchy stress
 	    // unrotated tensorSig=R^T*pstress*R
@@ -889,25 +863,25 @@ void Kayenta::computeStressTensor(const PatchSubset* patches,
 	    for(int i=0;i<d_NINSV;i++){
 	      svarg[i]=ISVs[i][idx];
 	    }
-	    constParticleVariable<long64> pParticleID;
-	    old_dw->get(pParticleID, lb->pParticleIDLabel, pset);
-
 	    // 'Hijack' UI[42] with perturbed value if desired
 	    // put real value of UI[42] in tmp var just in case
+            double TFAIL_tmp = UI[27];
+    
+            // Scale T1 according to a characteristic particle length
+            UI[27]*=cbrt(pvolume_new[idx]);
 	    if (wdist.Perturb){
 	      double tempVar = UI[42];
 	      UI[42] = peakI1IDist[idx];
-
-
-	      KAYENTA_CALC(nblk, d_NINSV, dt, UI, sigarg, Darray, svarg, USM);
+	      KAYENTA_CALC(nblk, d_NINSV, dt, UI, GC, DC, sigarg,
+                                 Darray, svarg, USM);
 	      UI[42]=tempVar;
 	    } else {
-	      KAYENTA_CALC(nblk, d_NINSV, dt, UI, sigarg, Darray, svarg, USM);
+	      KAYENTA_CALC(nblk, d_NINSV, dt, UI, GC, DC, sigarg,
+                                 Darray, svarg, USM);
 	    }
+            // Put T1 back for now
+            UI[27]=TFAIL_tmp;
 
-	    if(sigarg[1]>1e19){
-	      cout<<"huge stress (sig22="<<sigarg[1]<<") in particle "<<pParticleID[idx]<<endl;
-	    }
 	    // Unload ISVs from 1D array into ISVs_new 
 	    for(int i=0;i<d_NINSV;i++){
 	      ISVs_new[i][idx]=svarg[i];
@@ -923,6 +897,10 @@ void Kayenta::computeStressTensor(const PatchSubset* patches,
 	    tensorSig(1,2) = sigarg[4];
 	    tensorSig(2,0) = sigarg[5];
 	    tensorSig(0,2) = sigarg[5];
+
+           //Comment by KC : Computing tensorR at the end of the time-step
+           deformationGradient_new[idx].polarDecompositionAFFinvTran(tensorU,
+                                                                     tensorR);
 
 	    // ROTATE pstress_new: S=R*tensorSig*R^T
 	    pstress_new[idx] = (tensorR*tensorSig)*(tensorR.Transpose());
@@ -942,8 +920,8 @@ void Kayenta::computeStressTensor(const PatchSubset* patches,
 	    // Compute wave speed at each particle, store the maximum
 	    Vector pvelocity_idx = pvelocity[idx];
 	    WaveSpeed=Vector(Max(c_dil+fabs(pvelocity_idx.x()),WaveSpeed.x()),
-			     Max(c_dil+fabs(pvelocity_idx.y()),WaveSpeed.y()),
-			     Max(c_dil+fabs(pvelocity_idx.z()),WaveSpeed.z()));
+			   Max(c_dil+fabs(pvelocity_idx.y()),WaveSpeed.y()),
+			   Max(c_dil+fabs(pvelocity_idx.z()),WaveSpeed.z()));
 
 	    // Compute artificial viscosity term
 	    if (flag->d_artificial_viscosity) {
@@ -1118,189 +1096,124 @@ double Kayenta::getCompressibility()
 void
 Kayenta::getInputParameters(ProblemSpecP& ps)
 {
-  ps->require("B0",UI[0]);              // initial bulk modulus (stress)
-  ps->getWithDefault("B1",UI[1],0.0);   // nonlinear bulk mod param (stress)
-  ps->getWithDefault("B2",UI[2],0.0);   // nonlinear bulk mod param (stress)
-  ps->getWithDefault("B3",UI[3],0.0);   // nonlinear bulk mod param (stress)
-  ps->getWithDefault("B4",UI[4],0.0);   // nonlinear bulk mod param (dim. less)
-
-  ps->require("G0",UI[5]);              // initial shear modulus (stress)
-  ps->getWithDefault("G1",UI[6],0.0);   // nonlinear shear mod param (dim. less)
-  ps->getWithDefault("G2",UI[7],0.0);   // nonlinear shear mod param (1/stress)
-  ps->getWithDefault("G3",UI[8],0.0);   // nonlinear shear mod param (stress)
-  ps->getWithDefault("G4",UI[9],0.0);   // nonlinear shear mod param (dim. less)
-
-  ps->getWithDefault("RJS",UI[10],0.0); // joint spacing (iso. joint set) 
-                                        // (length)
-  ps->getWithDefault("RKS",UI[11],0.0); // joint shear stiffness (iso. case)                                            // (stress/length)
-  ps->getWithDefault("RKN",UI[12],0.0); // joint normal stiffness (iso. case) 
-                                        // (stress/length)
-
-  ps->getWithDefault("A1",UI[13],0.0);  // meridional yld prof param (stress)
-  ps->getWithDefault("A2",UI[14],0.0);  // meridional yld prof param (1/stress)
-  ps->getWithDefault("A3",UI[15],0.0);  // meridional yld prof param (stress)
-  ps->getWithDefault("A4",UI[16],0.0);  // meridional yld prof param (dim. less)
-
-  ps->getWithDefault("P0",UI[17],0.0);  // init hydrostatic crush press (stress)
-  ps->getWithDefault("P1",UI[18],0.0);  // crush curve parameter (1/stress)
-  ps->getWithDefault("P2",UI[19],0.0);  // crush curve parameter (1/stress^2)
-  ps->getWithDefault("P3",UI[20],0.0);  // crush curve parameter (strain)
-
-  ps->getWithDefault("CR",UI[21],0.0);  // cap curvature parameter (dim. less)
-  ps->getWithDefault("RK",UI[22],0.0);  // TXE/TXC strength ratio (dim. less)
-  ps->getWithDefault("RN",UI[23],0.0);  // TXE/TXC strength ratio (stress)
-  ps->getWithDefault("HC",UI[24],0.0);  // kinematic hardening modulus (stress)
-
-  ps->getWithDefault("CTI1",UI[25],0.0);// Tension I1 cut-off (stress)
-  ps->getWithDefault("CTPS",UI[26],0.0);// Tension prin. stress cut-off (stress)
-
-  ps->getWithDefault("T1",UI[27],0.0);  // rate dep. primary relax. time (time)
-  ps->getWithDefault("T2",UI[28],0.0);  // rate dep. nonlinear param (1/time)
-  ps->getWithDefault("T3",UI[29],0.0);  // rate dep. nonlinear param (dim. less)
-  ps->getWithDefault("T4",UI[30],0.0);  // not used (1/time)
-  ps->getWithDefault("T5",UI[31],0.0);  // not used (stress)
-  ps->getWithDefault("T6",UI[32],0.0);  // rate dep. nonlinear param (time)
-  ps->getWithDefault("T7",UI[33],0.0);  // rate dep. nonlinear param (1/stress)
-
-  ps->getWithDefault("J3TYPE",UI[34],0.0);// octahedral profile shape option
-                                          // (dim. less)
-  ps->getWithDefault("A2PF",UI[35],0.0);// flow potential analog of A2
-  ps->getWithDefault("A4PF",UI[36],0.0);// flow potential analog of A4
-  ps->getWithDefault("CRPF",UI[37],0.0);// flow potential analog of CR
-  ps->getWithDefault("RKPF",UI[38],0.0);// flow potential analog of RK
-  ps->getWithDefault("SUBX",UI[39],0.0);// subcycle control exponent (dim. less)
-  ps->getWithDefault("DEJAVU",UI[40],0.0);//
-  ps->getWithDefault("FSPEED",UI[41],0.0);//
-  ps->getWithDefault("PEAKI1I",UI[42],0.0);//
-  ps->getWithDefault("STRENI", UI[43],0.0);//
-  ps->getWithDefault("FSLOPEI",UI[44],0.0);//
-  ps->getWithDefault("PEAKI1F",UI[45],0.0);//
-  ps->getWithDefault("STRENF", UI[46],0.0);//
-  ps->getWithDefault("JOBFAIL",UI[47],0.0);//
-  ps->getWithDefault("FSLOPEF",UI[48],0.0);//
+  ps->require("B0",             UI[0]);       // initial bulk modulus (stress)
+  ps->getWithDefault("B1",      UI[1],0.0);   // nonlinear bulk mod param (stress)
+  ps->getWithDefault("B2",      UI[2],0.0);   // nonlinear bulk mod param (stress)
+  ps->getWithDefault("B3",      UI[3],0.0);   // nonlinear bulk mod param (stress)
+  ps->getWithDefault("B4",      UI[4],0.0);   // nonlinear bulk mod param (dim. less)
+  ps->require("G0",             UI[5]);       // initial shear modulus (stress)
+  ps->getWithDefault("G1",      UI[6],0.0);   // nonlinear shear mod param (dim. less)
+  ps->getWithDefault("G2",      UI[7],0.0);   // nonlinear shear mod param (1/stress)
+  ps->getWithDefault("G3",      UI[8],0.0);   // nonlinear shear mod param (stress)
+  ps->getWithDefault("G4",      UI[9],0.0);   // nonlinear shear mod param (dim. less)
+  ps->getWithDefault("RJS",     UI[10],0.0);  // joint spacing (iso. joint set) 
+  ps->getWithDefault("RKS",     UI[11],0.0);  // joint shear stiffness (iso. case) 
+  ps->getWithDefault("RKN",     UI[12],0.0);  // joint normal stiffness (iso. case) 
+  ps->getWithDefault("A1",      UI[13],0.0);  // meridional yld prof param (stress)
+  ps->getWithDefault("A2",      UI[14],0.0);  // meridional yld prof param (1/stress)
+  ps->getWithDefault("A3",      UI[15],0.0);  // meridional yld prof param (stress)
+  ps->getWithDefault("A4",      UI[16],0.0);  // meridional yld prof param (dim. less)
+  ps->getWithDefault("P0",      UI[17],0.0);  // init hydrostatic crush press (stress)
+  ps->getWithDefault("P1",      UI[18],0.0);  // crush curve parameter (1/stress)
+  ps->getWithDefault("P2",      UI[19],0.0);  // crush curve parameter (1/stress^2)
+  ps->getWithDefault("P3",      UI[20],0.0);  // crush curve parameter (strain)
+  ps->getWithDefault("CR",      UI[21],0.0);  // cap curvature parameter (dim. less)
+  ps->getWithDefault("RK",      UI[22],0.0);  // TXE/TXC strength ratio (dim. less)
+  ps->getWithDefault("RN",      UI[23],0.0);  // TXE/TXC strength ratio (stress)
+  ps->getWithDefault("HC",      UI[24],0.0);  // kinematic hardening modulus (stress)
+  ps->getWithDefault("CTI1",    UI[25],0.0);  // Tension I1 cut-off (stress)
+  ps->getWithDefault("CTPS",    UI[26],0.0);  // Tension prin. stress cut-off (stress)
+  ps->getWithDefault("T1",      UI[27],0.0);  // rate dep. primary relax. time (time)
+  ps->getWithDefault("T2",      UI[28],0.0);  // rate dep. nonlinear param (1/time)
+  ps->getWithDefault("T3",      UI[29],0.0);  // rate dep. nonlinear param (dim. less)
+  ps->getWithDefault("T4",      UI[30],0.0);  // not used (1/time)
+  ps->getWithDefault("T5",      UI[31],0.0);  // not used (stress)
+  ps->getWithDefault("T6",      UI[32],0.0);  // rate dep. nonlinear param (time)
+  ps->getWithDefault("T7",      UI[33],0.0);  // rate dep. nonlinear param (1/stress)
+  ps->getWithDefault("J3TYPE",  UI[34],0.0);  // octahedral profile shape option
+  ps->getWithDefault("A2PF",    UI[35],0.0);  // flow potential analog of A2
+  ps->getWithDefault("A4PF",    UI[36],0.0);  // flow potential analog of A4
+  ps->getWithDefault("CRPF",    UI[37],0.0);  // flow potential analog of CR
+  ps->getWithDefault("RKPF",    UI[38],0.0);  // flow potential analog of RK
+  ps->getWithDefault("SUBX",    UI[39],0.0);  // subcycle control exponent (dim. less)
+  ps->getWithDefault("DEJAVU",  UI[40],0.0);//
+  ps->getWithDefault("FSPEED",  UI[41],0.0);//
+  ps->getWithDefault("PEAKI1I", UI[42],0.0);//
+  ps->getWithDefault("STRENI",  UI[43],0.0);//
+  ps->getWithDefault("FSLOPEI", UI[44],0.0);//
+  ps->getWithDefault("PEAKI1F", UI[45],0.0);//
+  ps->getWithDefault("STRENF",  UI[46],0.0);//
+  ps->getWithDefault("JOBFAIL", UI[47],0.0);//
+  ps->getWithDefault("FSLOPEF", UI[48],0.0);//
   ps->getWithDefault("FAILSTAT",UI[49],0.0);//
-  ps->getWithDefault("EOSID",UI[50],0.0);//
+  ps->getWithDefault("EOSID",   UI[50],0.0);//
   ps->getWithDefault("USEHOSTEOS",UI[51],0.0);//
-  ps->getWithDefault("FREE01",UI[52],0.0);//
-  ps->getWithDefault("FREE02",UI[53],0.0);//
-  ps->getWithDefault("FREE03",UI[54],0.0);//
-  ps->getWithDefault("FREE04",UI[55],0.0);//
-  ps->getWithDefault("FREE05",UI[56],0.0);//
-  ps->getWithDefault("FREE06",UI[57],0.0);//
-  ps->getWithDefault("YSLOPEI",UI[58],0.0);//
-  ps->getWithDefault("YSLOPEF",UI[59],0.0);//
-
-//     Pointers vary from this point forward depending on which
-//     features have been enabled.  If there are no joints, then the
-//     next parameters after those listed above are the ones for thermo.
-//
-   int JJNT=d_NBASICINPUTS-1;  //JJNT equals 60
-
-#ifdef KMM_ORTHOTROPIC
-//    The orthotropic option requires 12 parameters (four per joint)
-      ps->getWithDefault("CKN01",     UI[JJNT+1],0.0); //Init jnt normal stiffness (stress/length)
-      ps->getWithDefault("CKN02",     UI[JJNT+2],0.0); //Init jnt normal stiffness (stress/length)
-      ps->getWithDefault("CKN03",     UI[JJNT+3],0.0); //Init jnt normal stiffness (stress/length)
-      ps->getWithDefault("VMAX1",     UI[JJNT+4],0.0); //Maximum joint closure (length)
-      ps->getWithDefault("VMAX2",     UI[JJNT+5],0.0); //Maximum joint closure (length)
-      ps->getWithDefault("VMAX3",     UI[JJNT+6],0.0); //Maximum joint closure (length)
-      ps->getWithDefault("SPACE1",    UI[JJNT+7],0.0); //Spacing of joints in a set (length)
-      ps->getWithDefault("SPACE2",    UI[JJNT+8],0.0); //Spacing of joints in a set (length)
-      ps->getWithDefault("SPACE3",    UI[JJNT+9],0.0); //Spacing of joints in a set (length)
-      ps->getWithDefault("SHRSTIFF1", UI[JJNT+10],0.0); //Init joint shr stiffness (stress/length)
-      ps->getWithDefault("SHRSTIFF2", UI[JJNT+11],0.0); //Init jnt shr stiffness (stress/length)
-      ps->getWithDefault("SHRSTIFF3", UI[JJNT+d_NUMJOINTINPUTS],0.0); //Init jnt shr stiff
-#elif KMM_ANISOTROPIC
-      ps->getWithDefault("STRIKE1",   UI[JJNT+ 1],0.0); //strike for joint #1 (degrees)
-      ps->getWithDefault("DIP1",      UI[JJNT+ 2],0.0); //dip for joint #1 (degrees)
-      ps->getWithDefault("CKN01",     UI[JJNT+ 3],0.0); //Init jnt nrmal stiffness (stress/length)
-      ps->getWithDefault("VMAX1",     UI[JJNT+ 4],0.0); //Maximum joint closure (length)
-      ps->getWithDefault("SPACE1",    UI[JJNT+ 5],0.0); //Spacing of joints (length)
-      ps->getWithDefault("SHRSTIFF1", UI[JJNT+ 6],0.0); //Init jnt shear stiffness (stress/length)
-      ps->getWithDefault("STRIKE2",   UI[JJNT+ 7],0.0); //same as above, but for joint #2
-      ps->getWithDefault("DIP2",      UI[JJNT+ 8],0.0); //same as above, but for joint #2
-      ps->getWithDefault("CKN02",     UI[JJNT+ 9],0.0); //same as above, but for joint #2
-      ps->getWithDefault("VMAX2",     UI[JJNT+10],0.0); //same as above, but for joint #2
-      ps->getWithDefault("SPACE2",    UI[JJNT+11],0.0); //same as above, but for joint #2
-      ps->getWithDefault("SHRSTIFF2", UI[JJNT+12],0.0); //same as above, but for joint #2
-      ps->getWithDefault("STRIKE3",   UI[JJNT+13],0.0); //same,but for joint#3
-      ps->getWithDefault("DIP3",      UI[JJNT+14],0.0); //same,but for joint#3
-      ps->getWithDefault("CKN03",     UI[JJNT+15],0.0); //same,but for joint#3
-      ps->getWithDefault("VMAX3",     UI[JJNT+16],0.0); //same,but for joint#3
-      ps->getWithDefault("SPACE3",    UI[JJNT+17],0.0); //same,but for joint#3
-      ps->getWithDefault("SHRSTIFF3", UI[JJNT+18],0.0); //same,but for joint#3
-      ps->getWithDefault("STRIKE4",   UI[JJNT+19],0.0); //joint #4
-      ps->getWithDefault("DIP4",      UI[JJNT+20],0.0); //joint #4
-      ps->getWithDefault("CKN04",     UI[JJNT+21],0.0); //joint #4
-      ps->getWithDefault("VMAX4",     UI[JJNT+22],0.0); //joint #4
-      ps->getWithDefault("SPACE4",    UI[JJNT+23],0.0); //joint #4
-      ps->getWithDefault("SHRSTIFF4", UI[JJNT+d_NUMJOINTINPUTS],0.0);
-#endif
-//     ________________________________________________________________________
-//     EOSMG inputs
-      int IJTHERMPAR = JJNT+d_NUMJOINTINPUTS;
-
-      ps->getWithDefault("TMPRXP",  UI[IJTHERMPAR + 1],0.0);
-      ps->getWithDefault("THERM01", UI[IJTHERMPAR + 2],0.0);
-      ps->getWithDefault("THERM02", UI[IJTHERMPAR + 3],0.0);
-      ps->getWithDefault("THERM03", UI[IJTHERMPAR + 4],0.0);
-      ps->getWithDefault("THERM04", UI[IJTHERMPAR + 5],0.0);
-
-      d_IEOSMGCT     = IJTHERMPAR+d_NTHERMOPLAST;
-      ps->getWithDefault("RHO0",    UI[d_IEOSMGCT +  1],0.0);
-      ps->getWithDefault("TMPR0",   UI[d_IEOSMGCT +  2],0.0);
-      ps->getWithDefault("SNDSP0",  UI[d_IEOSMGCT +  3],0.0);
-      ps->getWithDefault("S1MG",    UI[d_IEOSMGCT +  4],0.0);
-      ps->getWithDefault("GRPAR",   UI[d_IEOSMGCT +  5],0.0);
-      ps->getWithDefault("CV",      UI[d_IEOSMGCT +  6],0.0);
-      ps->getWithDefault("ESFT",    UI[d_IEOSMGCT +  7],0.0);
-      ps->getWithDefault("RP",      UI[d_IEOSMGCT +  8],0.0);
-      ps->getWithDefault("PS",      UI[d_IEOSMGCT +  9],0.0);
-      ps->getWithDefault("PE",      UI[d_IEOSMGCT + 10],0.0);
-      ps->getWithDefault("CE",      UI[d_IEOSMGCT + 11],0.0);
-      ps->getWithDefault("NSUB",    UI[d_IEOSMGCT + 12],0.0);
-      ps->getWithDefault("S2MG",    UI[d_IEOSMGCT + 13],0.0);
-      ps->getWithDefault("TYP",     UI[d_IEOSMGCT + 14],0.0);
-      ps->getWithDefault("RO",      UI[d_IEOSMGCT + 15],0.0);
-      ps->getWithDefault("TO",      UI[d_IEOSMGCT + 16],0.0);
-      ps->getWithDefault("S",       UI[d_IEOSMGCT + 17],0.0);
-      ps->getWithDefault("GRPARO",  UI[d_IEOSMGCT + 18],0.0);
-      ps->getWithDefault("B",       UI[d_IEOSMGCT + 19],0.0);
-      ps->getWithDefault("XB",      UI[d_IEOSMGCT + 20],0.0);
-      ps->getWithDefault("NB",      UI[d_IEOSMGCT + 21],0.0);
-      ps->getWithDefault("PWR",     UI[d_IEOSMGCT + d_NUIEOSMG],0.0);
-//    ________________________________________________________________________
-//    EOSMG derived constants
-      int IDCEOSMGCT=d_IEOSMGCT+d_NUIEOSMG;
-      ps->getWithDefault("A1MG", UI[IDCEOSMGCT +  1],0.0);
-      ps->getWithDefault("A2MG", UI[IDCEOSMGCT +  2],0.0);
-      ps->getWithDefault("A3MG", UI[IDCEOSMGCT +  3],0.0);
-      ps->getWithDefault("A4MG", UI[IDCEOSMGCT +  4],0.0);
-      ps->getWithDefault("A5MG", UI[IDCEOSMGCT +  5],0.0);
-      ps->getWithDefault("A0MG", UI[IDCEOSMGCT +  6],0.0);
-      ps->getWithDefault("AEMG", UI[IDCEOSMGCT +  7],0.0);
-      ps->getWithDefault("FK0",  UI[IDCEOSMGCT +  8],0.0);
-      ps->getWithDefault("AF",   UI[IDCEOSMGCT +  9],0.0);
-      ps->getWithDefault("PF",   UI[IDCEOSMGCT + 10],0.0);
-      ps->getWithDefault("XF",   UI[IDCEOSMGCT + 11],0.0);
-      ps->getWithDefault("CF",   UI[IDCEOSMGCT + 12],0.0);
-      ps->getWithDefault("RMX",  UI[IDCEOSMGCT + d_NDCEOSMG],0.0);
-//    ________________________________________________________________________
-//    EOSMG VI
-      int IVIEOSMGCT=IDCEOSMGCT+d_NDCEOSMG;
-      ps->getWithDefault("VI1MG", UI[IVIEOSMGCT +  1],0.0);
-      ps->getWithDefault("VI2MG", UI[IVIEOSMGCT +  2],0.0);
-      ps->getWithDefault("VI3MG", UI[IVIEOSMGCT +  3],0.0);
-      ps->getWithDefault("VI4MG", UI[IVIEOSMGCT +  4],0.0);
-      ps->getWithDefault("VI5MG", UI[IVIEOSMGCT +  d_NVIEOSMG],0.0);
-
+  ps->getWithDefault("FREE01",  UI[52],0.0);//
+  ps->getWithDefault("FREE02",  UI[53],0.0);//
+  ps->getWithDefault("FREE03",  UI[54],0.0);//
+  ps->getWithDefault("FREE04",  UI[55],0.0);//
+  ps->getWithDefault("FREE05",  UI[56],0.0);//
+  ps->getWithDefault("CTPSF",   UI[57],0.0);//
+  ps->getWithDefault("YSLOPEI", UI[58],0.0);//
+  ps->getWithDefault("YSLOPEF", UI[59],0.0);//
+  //     ________________________________________________________________________
+  //     EOSMG inputs
+  int IJTHERMPAR =d_NBASICINPUTS+d_NUMJOINTINPUTS;
+  ps->getWithDefault("TMPRXP",  UI[IJTHERMPAR    ],0.0);
+  ps->getWithDefault("THERM01", UI[IJTHERMPAR + 1],0.0);
+  ps->getWithDefault("THERM02", UI[IJTHERMPAR + 2],0.0);
+  ps->getWithDefault("THERM03", UI[IJTHERMPAR + 3],0.0);
+  ps->getWithDefault("TMPRM0",  UI[IJTHERMPAR + 4],0.0);
+  //     ________________________________________________________________________
+  //     EOSMGCT inputs
+  ps->getWithDefault("RHO0",    UI[d_IEOSMGCT     ],0.0);
+  ps->getWithDefault("TMPR0",   UI[d_IEOSMGCT +  1],0.0);
+  ps->getWithDefault("SNDSP0",  UI[d_IEOSMGCT +  2],0.0);
+  ps->getWithDefault("S1MG",    UI[d_IEOSMGCT +  3],0.0);
+  ps->getWithDefault("GRPAR",   UI[d_IEOSMGCT +  4],0.0);
+  ps->getWithDefault("CV",      UI[d_IEOSMGCT +  5],0.0);
+  ps->getWithDefault("ESFT",    UI[d_IEOSMGCT +  6],0.0);
+  ps->getWithDefault("RP",      UI[d_IEOSMGCT +  7],0.0);
+  ps->getWithDefault("PS",      UI[d_IEOSMGCT +  8],0.0);
+  ps->getWithDefault("PE",      UI[d_IEOSMGCT +  9],0.0);
+  ps->getWithDefault("CE",      UI[d_IEOSMGCT + 10],0.0);
+  ps->getWithDefault("NSUB",    UI[d_IEOSMGCT + 11],0.0);
+  ps->getWithDefault("S2MG",    UI[d_IEOSMGCT + 12],0.0);
+  ps->getWithDefault("TYP",     UI[d_IEOSMGCT + 13],0.0);
+  ps->getWithDefault("RO",      UI[d_IEOSMGCT + 14],0.0);
+  ps->getWithDefault("TO",      UI[d_IEOSMGCT + 15],0.0);
+  ps->getWithDefault("S",       UI[d_IEOSMGCT + 16],0.0);
+  ps->getWithDefault("GRPARO",  UI[d_IEOSMGCT + 17],0.0);
+  ps->getWithDefault("B",       UI[d_IEOSMGCT + 18],0.0);
+  ps->getWithDefault("XB",      UI[d_IEOSMGCT + 19],0.0);
+  ps->getWithDefault("NB",      UI[d_IEOSMGCT + 20],0.0);
+  ps->getWithDefault("PWR",     UI[d_IEOSMGCT + 21],0.0);
+  //    ________________________________________________________________________
+  //    EOSMG Derived Constants
+  ps->getWithDefault("A1MG",    DC[0],0.0);
+  ps->getWithDefault("A2MG",    DC[1],0.0);
+  ps->getWithDefault("A3MG",    DC[2],0.0);
+  ps->getWithDefault("A4MG",    DC[3],0.0);
+  ps->getWithDefault("A5MG",    DC[4],0.0);
+  ps->getWithDefault("A0MG",    DC[5],0.0);
+  ps->getWithDefault("AEMG",    DC[6],0.0);
+  ps->getWithDefault("FK0",     DC[7],0.0);
+  ps->getWithDefault("AF",      DC[8],0.0);
+  ps->getWithDefault("PF",      DC[9],0.0);
+  ps->getWithDefault("XF",      DC[10],0.0);
+  ps->getWithDefault("CF",      DC[11],0.0);
+  ps->getWithDefault("RMX",     DC[12],0.0);
+  //    ________________________________________________________________________
+  //    Uintah Variability Variables
   ps->get("PEAKI1IDIST",wdist.WeibDist);
   WeibullParser(wdist);
-  cout << "Weibull Variables for PEAKI1I (getInputParameters):\n"
-       << "Median:            " << wdist.WeibMed
-       << "\nModulus:         " << wdist.WeibMod
-       << "\nReference Vol:   " << wdist.WeibRefVol
-       << "\nSeed:            " << wdist.WeibSeed << std::endl;
+  ps->getWithDefault("hugeJ", d_hugeJ, 20.0);
+  
+//  proc0cout << "Weibull Variables for PEAKI1I (getInputParameters):\n"
+//            << "Median:            " << wdist.WeibMed
+//            << "\nModulus:         " << wdist.WeibMod
+//            << "\nReference Vol:   " << wdist.WeibRefVol
+//            << "\nSeed:            " << wdist.WeibSeed << std::endl;
 }
 
 void
@@ -1309,14 +1222,14 @@ Kayenta::initializeLocalMPMLabels()
 
   // create a localized variable
   pLocalizedLabel = VarLabel::create("p.localized",
- ParticleVariable<int>::getTypeDescription());
+                  ParticleVariable<int>::getTypeDescription());
   pLocalizedLabel_preReloc = VarLabel::create("p.localized+",
-					      ParticleVariable<int>::getTypeDescription());
+                  ParticleVariable<int>::getTypeDescription());
  vector<string> ISVNames;
 
 // These lines of code are added by KC to replace the currently hard-coded
 // internal variable allocation with a proper call to KMMRXV routine.
-//Create VarLabels for GeoModel internal state variables (ISVs)
+//Create VarLabels for Kayenta internal state variables (ISVs)
   int nx;
   char namea[5000];
   char keya[5000];
@@ -1325,17 +1238,15 @@ Kayenta::initializeLocalMPMLabels()
   int iadvct[100];
   int itype[100];
   
-  KMMRXV( UI, UI, UI, nx, namea, keya, rinit, rdim, iadvct, itype );
+  KAYENTA_RXV( UI, GC, DC, nx, namea, keya, rinit, rdim, iadvct, itype );
 
   char *ISV[d_NINSV];
   ISV[0] = strtok(keya, "|"); // Splits | between words in string
-  //cout << "ISV's Requested are :: " << ISV[0] << endl; 
   ISVNames.push_back(ISV[0]);
   for(int i = 1; i < d_NINSV ; i++)
   {
 // If you specify NULL, by default it will start again from the previous stop.
         ISV[i] = strtok (NULL, "|"); 
-        //cout << "ISV's Requested are :: " << ISV[i] << endl; //
 	ISVNames.push_back(ISV[i]);
   }
 
@@ -1461,6 +1372,6 @@ Kayenta::WeibullParser(WeibParameters &iP)
     iP.WeibMod    = atof(weibModulus.c_str());
     iP.WeibRefVol = atof(weibRefVol.c_str());
     iP.WeibSeed   = atoi(weibSeed.c_str());
-    
+    UI[42]=iP.WeibMed;  // Set this here to satisfy KAYENTA_CHK
   } // End if (iP.Perturb)
 }

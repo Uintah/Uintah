@@ -30,12 +30,14 @@
     <!--____________________________________________________________________-->
     <Grid>
     <BoundaryConditions>
+<!--
       <LODI>
         <press_infinity> 1.01325e+05             </press_infinity>
         <sigma>          0.27                    </sigma>
         <material> atmosphere                    </material>
         <Li_scale>    0.1                        </Li_scale>
       </LODI>
+-->
 
       <!--  pseudo dye injection jet -->
       <Face circle = "x-" origin = "-0.1 0.0 0.0" radius = ".001">
@@ -57,9 +59,11 @@
         <BCType id = "1"    label = "Density"           var = "Dirichlet">
                               <value> 1.1792946927374306  </value>
         </BCType>
+<!--
         <BCType id = "all"  label = "SpecificVol"       var = "computeFromDensity">
                               <value> 0.0  </value>
         </BCType>
+-->
         <BCType id = "1"    label = "scalar-f"          var = "Dirichlet">
                               <value> 0.0</value>
         </BCType>
@@ -81,24 +85,47 @@
         <BCType id = "1"    label = "Density"           var = "Dirichlet">
                               <value> 1.1792946927374306  </value>
         </BCType>
+<!--
         <BCType id = "all"  label = "SpecificVol"       var = "computeFromDensity">
                               <value> 0.0  </value>
         </BCType>
+-->
         <BCType id = "1"    label = "scalar-f"          var = "Dirichlet">
                               <value> 0.0</value>
         </BCType>
       </Face>
       <Face side = "x+">
-        <BCType id = "0"    label = "Pressure"        var = "LODI">
-                              <value> 0.0   </value>
+        <BCType id = "0"    label = "Pressure"        var = "Dirichlet">
+                              <value> 101325.0   </value>
         </BCType>
-        <BCType id = "0"  label = "Velocity"          var = "LODI">
+        <BCType id = "all"  label = "Velocity"          var = "Neumann">
                               <value> [0.,0.,0.] </value>
         </BCType>
-        <BCType id = "0"  label = "Temperature"       var = "LODI">
+        <BCType id = "all"  label = "Temperature"       var = "Neumann">
                               <value> 0.0  </value>
         </BCType>
-        <BCType id = "0"  label = "Density"           var = "LODI">
+        <BCType id = "all"  label = "Density"           var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+<!--
+        <BCType id = "1"  label = "SpecificVol"       var = "computeFromDensity">
+                              <value> 0.0  </value>
+        </BCType>
+-->
+        <BCType id = "1"    label = "scalar-f"        var = "Neumann">
+                              <value> 0.0</value>
+        </BCType>
+      </Face>
+
+<!--
+      <Face side = "x+">
+        <BCType id = "0"  label = "Velocity"          var = "Neumann">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "0"  label = "Temperature"       var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "0"  label = "Density"           var = "Neumann">
                               <value> 0.0  </value>
         </BCType>
         <BCType id = "0"  label = "SpecificVol"       var = "computeFromDensity">
@@ -108,24 +135,7 @@
                               <value> 0.0</value>
         </BCType>
       </Face>
-
-      <Face side = "x+">
-        <BCType id = "1"  label = "Velocity"          var = "Neumann">
-                              <value> [0.,0.,0.] </value>
-        </BCType>
-        <BCType id = "1"  label = "Temperature"       var = "Neumann">
-                              <value> 0.0  </value>
-        </BCType>
-        <BCType id = "1"  label = "Density"           var = "Neumann">
-                              <value> 0.0  </value>
-        </BCType>
-        <BCType id = "1"  label = "SpecificVol"       var = "computeFromDensity">
-                              <value> 0.0  </value>
-        </BCType>
-        <BCType id = "1"    label = "scalar-f"        var = "Dirichlet">
-                              <value> 0.0</value>
-        </BCType>
-      </Face>
+-->
       
       <Face side = "y-">
         <BCType id = "0"    label = "Pressure"        var = "Neumann">
@@ -140,9 +150,11 @@
         <BCType id = "all" label = "Density"          var = "Neumann">
                               <value> 0.0  </value>
         </BCType>
+<!--
         <BCType id = "all" label = "SpecificVol"      var = "computeFromDensity">
                               <value> 0.0  </value>
         </BCType>
+-->
         <BCType id = "1"    label = "scalar-f"           var = "Dirichlet">
                               <value> 0.0</value>
         </BCType>
@@ -160,9 +172,11 @@
         <BCType id = "all" label = "Density"          var = "Neumann">
                               <value> 0.0  </value>
         </BCType>
+<!--
         <BCType id = "all" label = "SpecificVol"      var = "computeFromDensity">
                               <value> 0.0  </value>
         </BCType>
+-->
         <BCType id = "1"    label = "scalar-f"         var = "Dirichlet">
                               <value> 0.0</value>
         </BCType>
@@ -204,9 +218,11 @@
       <save label = "temp_CC"/>
       <save label = "delP_Dilatate"/>
       <save label = "scalar-f"/>
+<!--
       <save label = "rhs"/>
       <save label = "Li1"/>
       <save label = "Li5"/>
+-->
       <save label = "TotalMass"/>
       <save label = "TotalMomentum"/>
       <save label = "p.x"             levels = "-1"/>
@@ -265,6 +281,37 @@
     <!--    MATERIAL PROPERTIES INITIAL CONDITIONS                          -->
     <!--____________________________________________________________________-->
     <MaterialProperties>
+      
+       <MPM>
+         <material name="unknown">
+           <density>             8900.0         </density>
+           <constitutive_model type = "comp_neo_hook">
+              <useModifiedEOS>     true          </useModifiedEOS>
+              <bulk_modulus>      117.0e7        </bulk_modulus>
+              <shear_modulus>      43.8e7        </shear_modulus>
+              <yield_stress>       70.0e6        </yield_stress>
+              <hardening_modulus>  43.8e5        </hardening_modulus>
+              <alpha>               0.0          </alpha>
+              <strain_limit>       3.05          </strain_limit>
+              <reduction_factor>   1.0           </reduction_factor>
+           </constitutive_model>
+           <thermal_conductivity>  400.0         </thermal_conductivity>
+           <specific_heat>         386.0         </specific_heat>
+           <geom_object>
+               <cylinder label = "cylinder">
+                  <bottom>    [0.0,0.0,0.0]      </bottom>
+                  <top>       [0.0,0.0,0.1]      </top>
+                  <radius>        0.01           </radius>
+                </cylinder>
+              <res>              [2,2,2]       </res>
+              <velocity>         [0.,0.,0.]    </velocity>
+              <temperature>      300.          </temperature>
+           </geom_object>
+         </material>
+         <contact>
+           <type>null</type>
+         </contact>
+      </MPM>
        <ICE>
          <material name="atmosphere">
            <EOS type = "ideal_gas">                     </EOS>
@@ -301,38 +348,7 @@
                <pressure>           101325.0            </pressure>
            </geom_object>
          </material>
-      </ICE>       
-       <MPM>
-         <material name="unknown">
-           <density>             8900.0         </density>
-           <constitutive_model type = "comp_neo_hook">
-              <useModifiedEOS>     true          </useModifiedEOS>
-              <bulk_modulus>      117.0e7        </bulk_modulus>
-              <shear_modulus>      43.8e7        </shear_modulus>
-              <yield_stress>       70.0e6        </yield_stress>
-              <hardening_modulus>  43.8e5        </hardening_modulus>
-              <alpha>               0.0          </alpha>
-              <strain_limit>       3.05          </strain_limit>
-              <reduction_factor>   1.0           </reduction_factor>
-           </constitutive_model>
-           <thermal_conductivity>  400.0         </thermal_conductivity>
-           <specific_heat>         386.0         </specific_heat>
-           <geom_object>
-               <cylinder label = "cylinder">
-                  <bottom>    [0.0,0.0,0.0]      </bottom>
-                  <top>       [0.0,0.0,0.1]      </top>
-                  <radius>        0.01           </radius>
-                </cylinder>
-              <res>              [2,2,2]       </res>
-              <velocity>         [0.,0.,0.]    </velocity>
-              <temperature>      300.          </temperature>
-           </geom_object>
-         </material>
-         <contact>
-           <type>null</type>
-         </contact>
-      </MPM>
-
+      </ICE> 
       <exchange_properties> 
          <exchange_coefficients>
               <momentum>               [1e15]         </momentum>
@@ -342,6 +358,8 @@
     </MaterialProperties>
     <!--____________________________________________________________________-->
     <!--  Use passiveScalar model to advect a scalar around                -->
+<!--
+-->
     <Models>
        <Model type="PassiveScalar">
         <material>atmosphere</material>

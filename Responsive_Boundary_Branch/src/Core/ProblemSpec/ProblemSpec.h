@@ -42,7 +42,6 @@ DEALINGS IN THE SOFTWARE.
 #include <string>
 #include <vector>
 #include <map>
-#include <iostream>
 
 typedef struct _xmlNode xmlNode;
 
@@ -50,11 +49,6 @@ typedef struct _xmlNode xmlNode;
 namespace Uintah {
 
 class TypeDescription;
-
-using std::string;
-using std::vector;
-using std::map;
-using std::ostream;
 
 using SCIRun::IntVector;
 using SCIRun::Vector;
@@ -101,7 +95,7 @@ WARNING
       // 'checkForInputError()' determines if the input string is a valid int or float.
       //  If the string is not valid, a ProblemSetupException is thrown.
       enum CheckType { INT_TYPE, FLOAT_TYPE };
-      static void checkForInputError( const string & stringValue, CheckType type );
+      static void checkForInputError( const std::string & stringValue, CheckType type );
 
       enum NodeType {
         ELEMENT_NODE = 1, ATTRIBUTE_NODE, TEXT_NODE, CDATA_SECTION_NODE,
@@ -222,13 +216,13 @@ WARNING
 
       //////////
       // return the name of this node
-      string getNodeName() const;
+      std::string getNodeName() const;
 
       //////////
       // returns the value of this node (the ascii text between the
       // xml tags) (Not to be confused with the nodes children which
       // would be in <child></child> notation.)
-      string getNodeValue();
+      std::string getNodeValue();
 
       //////////
       // return type of node, as specified in the NodeType enum above
@@ -254,10 +248,10 @@ WARNING
       ProblemSpecP appendElement(const char* name, const Point& value);
       ProblemSpecP appendElement(const char* name, const Vector& value);
       ProblemSpecP appendElement(const char* name, double value);
-      ProblemSpecP appendElement(const char* name, const vector<double>& va);
-      ProblemSpecP appendElement(const char* name, const vector<int>& val);
+      ProblemSpecP appendElement(const char* name, const std::vector<double>& va);
+      ProblemSpecP appendElement(const char* name, const std::vector<int>& val);
       ProblemSpecP appendElement(const char* name, 
-                                 const vector<string>& val);
+                                 const std::vector<std::string>& val);
       ProblemSpecP appendElement(const char* name, bool value);
 
       //////////
@@ -272,9 +266,9 @@ WARNING
       void require(const std::string& name, IntVector& value);
       void require(const std::string& name, Vector& value);
       void require(const std::string& name, Point& value);
-      void require(const std::string& name, vector<double>& value);
-      void require(const std::string& name, vector<int>& value); 
-      void require(const std::string& name, vector<IntVector>& value);
+      void require(const std::string& name, std::vector<double>& value);
+      void require(const std::string& name, std::vector<int>& value); 
+      void require(const std::string& name, std::vector<IntVector>& value);
 
       //////////
       // Look for the child tag named 'name' and pass back its
@@ -292,10 +286,10 @@ WARNING
       ProblemSpecP get(const std::string& name, IntVector& value);
       ProblemSpecP get(const std::string& name, Vector& value);
       ProblemSpecP get(const std::string& name, Point& value);
-      ProblemSpecP get(const std::string& name, vector<double>& value);   
-      ProblemSpecP get(const std::string& name, vector<int>& value); 
-      ProblemSpecP get(const std::string& name, vector<IntVector>& value);
-      ProblemSpecP get(const std::string& name, vector<std::string>& value);
+      ProblemSpecP get(const std::string& name, std::vector<double>& value);   
+      ProblemSpecP get(const std::string& name, std::vector<int>& value); 
+      ProblemSpecP get(const std::string& name, std::vector<IntVector>& value);
+      ProblemSpecP get(const std::string& name, std::vector<std::string>& value);
       
       void parseIntVector(const std::string& str, IntVector& value);
       
@@ -305,7 +299,7 @@ WARNING
       bool get(int &value);
       bool get(long &value);
       bool get(double &value);
-      bool get(string &value);
+      bool get(std::string &value);
       bool get(Vector &value);
 
       //////////
@@ -319,9 +313,9 @@ WARNING
       ProblemSpecP getWithDefault(const std::string& name, IntVector& value, const IntVector& defaultVal);
       ProblemSpecP getWithDefault(const std::string& name, Vector& value, const Vector& defaultVal);
       ProblemSpecP getWithDefault(const std::string& name, Point& value, const Point& defaultVal);
-      ProblemSpecP getWithDefault(const std::string& name, vector<double>& value, const vector<double>& defaultVal);   
-      ProblemSpecP getWithDefault(const std::string& name, vector<int>& value, const vector<int>& defaultVal); 
-      ProblemSpecP getWithDefault(const std::string& name, vector<std::string>& value, const vector<std::string>& defaultVal); 
+      ProblemSpecP getWithDefault(const std::string& name, std::vector<double>& value, const std::vector<double>& defaultVal);   
+      ProblemSpecP getWithDefault(const std::string& name, std::vector<int>& value, const std::vector<int>& defaultVal); 
+      ProblemSpecP getWithDefault(const std::string& name, std::vector<std::string>& value, const std::vector<std::string>& defaultVal); 
 
       //////////
       // Add a stylesheet to this document, to be output at the top of the page
@@ -359,7 +353,7 @@ WARNING
       // Returns the name of the file that this problem spec came from... WARNING
       // haven't tested this extensively.  It is in place for 'hacks' that need to
       // deal with data in UDAs that is _NOT_ managed explicitly by the Datawarehouse.
-      string getFile() const;
+      std::string getFile() const;
 
       //////////
       // to output the document

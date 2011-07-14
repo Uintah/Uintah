@@ -19,7 +19,7 @@ using namespace Uintah;
 
 Devolatilization::Devolatilization( std::string modelName, 
                                               SimulationStateP& sharedState,
-                                              const ArchesLabel* fieldLabels,
+                                              ArchesLabel* fieldLabels,
                                               vector<std::string> icLabelNames, 
                                               vector<std::string> scalarLabelNames,
                                               int qn ) 
@@ -33,10 +33,17 @@ Devolatilization::Devolatilization( std::string modelName,
   // Create the gas phase source term associated with this model
   std::string gasSourceName = modelName + "_gasSource";
   d_gasLabel = VarLabel::create( gasSourceName, CCVariable<double>::getTypeDescription() );
+
+  // Create the gas phase source term associated with this model
+  std::string charSourceName = modelName + "_charSource";
+  d_charLabel = VarLabel::create( charSourceName, CCVariable<double>::getTypeDescription() );
+
 }
 
 Devolatilization::~Devolatilization()
-{}
+{
+  VarLabel::destroy(d_charLabel);
+}
 
 //---------------------------------------------------------------------------
 // Method: Problem Setup
@@ -68,6 +75,26 @@ Devolatilization::problemSetup(const ProblemSpecP& params, int qn)
   d_w_scaling_factor = weight_eqn.getScalingConstant();
 }
 
+void
+Devolatilization::sched_dummyInit( const LevelP& level, SchedulerP& sched )
+{
+  string taskname = "Devolatilization::dummyInit"; 
+
+  Ghost::GhostType  gn = Ghost::None;
+
+  Task* tsk = scinew Task(taskname, this, &Devolatilization::dummyInit);
+
+  tsk->requires( Task::OldDW, d_modelLabel, gn, 0);
+  tsk->requires( Task::OldDW, d_gasLabel,   gn, 0);
+  tsk->requires( Task::OldDW, d_charLabel,   gn, 0);
+
+  tsk->computes(d_modelLabel);
+  tsk->computes(d_gasLabel); 
+  tsk->computes(d_charLabel);
+
+  sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
+
+}
 
 //-------------------------------------------------------------------------
 // Method: Actually do the dummy initialization
@@ -100,18 +127,23 @@ Devolatilization::dummyInit( const ProcessorGroup* pc,
 
     CCVariable<double> ModelTerm;
     CCVariable<double> GasModelTerm;
-    
+    CCVariable<double> CharModelTerm;
+
     constCCVariable<double> oldModelTerm;
     constCCVariable<double> oldGasModelTerm;
+    constCCVariable<double> oldCharModelTerm;
 
     new_dw->allocateAndPut( ModelTerm,    d_modelLabel, matlIndex, patch );
     new_dw->allocateAndPut( GasModelTerm, d_gasLabel,   matlIndex, patch ); 
-
+    new_dw->allocateAndPut( CharModelTerm, d_charLabel,   matlIndex, patch );
+   
     old_dw->get( oldModelTerm,    d_modelLabel, matlIndex, patch, gn, 0 );
     old_dw->get( oldGasModelTerm, d_gasLabel,   matlIndex, patch, gn, 0 );
-    
+    old_dw->get( oldCharModelTerm, d_charLabel,   matlIndex, patch, gn, 0 );
+
     ModelTerm.copyData(oldModelTerm);
     GasModelTerm.copyData(oldGasModelTerm);
+    CharModelTerm.copyData(oldCharModelTerm);
   }
 }
 

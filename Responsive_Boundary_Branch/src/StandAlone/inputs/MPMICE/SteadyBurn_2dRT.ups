@@ -19,7 +19,7 @@
     <delt_min>            0.0       </delt_min>
     <delt_max>            1.0       </delt_max>
     <delt_init>           1.e-10    </delt_init>
-    <max_Timesteps>       310       </max_Timesteps>
+    <max_Timesteps>       100       </max_Timesteps>
     <max_delt_increase>   0.7       </max_delt_increase>
     <timestep_multiplier> 0.70      </timestep_multiplier>
   </Time>
@@ -99,7 +99,7 @@
   <DataArchiver>
     <filebase>Steady.uda</filebase>
     <!-- <outputInterval> 1.0e-5 </outputInterval> -->
-    <outputTimestepInterval> 100 </outputTimestepInterval>
+    <outputTimestepInterval> 10 </outputTimestepInterval>
     <compression> gzip </compression>
     <save label="rho_CC"/>
     <save label="sp_vol_CC"/>
@@ -130,7 +130,7 @@
     <save label= "p.localized"/>
 -->
     <!-- <checkpoint cycle="2" timestepInterval="3000"/> -->
-    <checkpoint cycle="2" timestepInterval="100"/>
+    <checkpoint cycle="2" timestepInterval="20"/>
   </DataArchiver>
 
 

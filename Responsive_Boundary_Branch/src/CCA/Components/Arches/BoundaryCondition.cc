@@ -38,12 +38,12 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Arches/CellInformation.h>
 #include <CCA/Components/Arches/CellInformationP.h>
 #include <CCA/Components/Arches/BoundaryCond_new.h>
+#include <CCA/Components/Arches/ChemMix/MixingRxnModel.h>
 
 #include <CCA/Components/Arches/ArchesVariables.h>
 #include <CCA/Components/Arches/ArchesConstVariables.h>
 #include <CCA/Components/Arches/TimeIntegratorLabel.h>
 #include <CCA/Components/Arches/PhysicalConstants.h>
-#include <CCA/Components/Arches/ExtraScalarSolver.h>
 #include <CCA/Components/Arches/Properties.h>
 #include <CCA/Components/Arches/ArchesMaterial.h>
 #include <CCA/Components/ProblemSpecification/ProblemSpecReader.h>  //WME
@@ -61,21 +61,23 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Variables/PerPatch.h>
 #include <Core/Grid/Variables/VarTypes.h>
-#include <Core/Parallel/Parallel.h>   //WME
 
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Math/MiscMath.h>
+#include <Core/IO/UintahZlibUtil.h>
+
 #include <Core/OS/Dir.h> //WME 
 #include <sys/stat.h> //WME
 #include <errno.h> //WME
 
 #include <iostream>
-#include <fstream>  //WME
-#include <iomanip>  //WME
 #include <sstream>
 #include <stdlib.h>
+
+#include <fstream>  //WME
+#include <iomanip>  //WME
 
 
 using namespace std;
@@ -90,7 +92,7 @@ using namespace Uintah;
 #include <CCA/Components/Arches/fortran/bcuvel_fort.h>
 #include <CCA/Components/Arches/fortran/bcvvel_fort.h>
 #include <CCA/Components/Arches/fortran/bcwvel_fort.h>
-#include <CCA/Components/Arches/fortran/profv_fort.h>
+//#include <CCA/Components/Arches/fortran/profv_fort.h>
 #include <CCA/Components/Arches/fortran/intrusion_computevel_fort.h>
 #include <CCA/Components/Arches/fortran/mmbcenthalpy_energyex_fort.h>
 #include <CCA/Components/Arches/fortran/mmbcvelocity_momex_fort.h>
@@ -145,11 +147,6 @@ BoundaryCondition::~BoundaryCondition()
   for (int ii = 0; ii < d_numInlets; ii++){
     delete d_flowInlets[ii];
   }
-  if (d_calcExtraScalars){
-    for (int i=0; i < static_cast<int>(d_extraScalarBCs.size()); i++){
-      delete d_extraScalarBCs[i];
-    }
-  }
   if(d_intrusionBC){
     delete d_intrusionBC;
   }
@@ -162,6 +159,12 @@ BoundaryCondition::~BoundaryCondition()
   }
 
   delete d_newBC; 
+  for ( BCInfoMap::iterator bc_iter = d_bc_information.begin(); 
+        bc_iter != d_bc_information.end(); bc_iter++){
+
+    VarLabel::destroy( bc_iter->second.total_area_label ); 
+
+  }
 }
 
 //****************************************************************************
@@ -172,6 +175,7 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params,
                                 const ProblemSpecP& restart_ps)         //WME
 {
 
+  ProblemSpecP db_params = params; 
   ProblemSpecP db = params->findBlock("BoundaryConditions");
   d_flowfieldCellTypeVal = -1;
   d_numInlets = 0;
@@ -180,7 +184,6 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params,
 
   d_newBC = scinew BoundaryCondition_new( d_lab ); // need to declare a new boundary condition here 
                                                    // while transition to new code is taking place
- 
   if(db.get_rep()==0)
   {
     proc0cout << "No Boundary Conditions Specified\n";
@@ -191,15 +194,22 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params,
     d_intrusionBoundary = false;
     d_carbon_balance=false;
     d_sulfur_balance=false;
-    d_carbon_balance_es=false;
-    d_sulfur_balance_es=false;
+    d_use_new_bcs = false; 
   }
   else
   {
+
+     d_use_new_bcs = false; 
+     if ( db->findBlock("use_new_bcs") ) { 
+       d_use_new_bcs = true; 
+     }
+     // new bc:                                                 
+     if ( d_use_new_bcs ) { 
+       setupBCs( db_params );
+     }
+
     db->getWithDefault("carbon_balance", d_carbon_balance, false);
     db->getWithDefault("sulfur_balance", d_sulfur_balance, false);
-    db->getWithDefault("carbon_balance_es", d_carbon_balance_es, false);
-    db->getWithDefault("sulfur_balance_es", d_sulfur_balance_es, false);
     //--- instrusions with boundary sources -----
     if (ProblemSpecP intrusionbcs_db = db->findBlock("IntrusionWithBCSource")){
       for (ProblemSpecP intrusionbcs_db = db->findBlock("IntrusionWithBCSource");
@@ -220,6 +230,7 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params,
     }
 
     // --- new turbulence inlet flow generator --- 
+    turbinlet = false; 
     if (ProblemSpecP turb_db = db->findBlock("TurbulentInlet")){
       turbinlet = true;
       int Nstep;
@@ -336,14 +347,21 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params,
       }
     }
 
+    //-------------------------------------------------------------------
+    // Flow Inlets:
+    //
     if (ProblemSpecP inlet_db = db->findBlock("FlowInlet")) {
+
       d_inletBoundary = true;
+
       for (ProblemSpecP inlet_db = db->findBlock("FlowInlet");
           inlet_db != 0; inlet_db = inlet_db->findNextBlock("FlowInlet")) {
+
         d_flowInlets.push_back(scinew FlowInlet(total_cellTypes, d_calcVariance,
               d_reactingScalarSolve));
         d_flowInlets[d_numInlets]->problemSetup(inlet_db,
                                                 restart_ps);             //WME
+
 
         // compute density and other dependent properties
         d_flowInlets[d_numInlets]->streamMixturefraction.d_initEnthalpy=true;
@@ -357,39 +375,10 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params,
           d_flowInlets[d_numInlets]->fcr = d_props->getCarbonContent(f);
           
         }
-        if (d_calcExtraScalars) {
 
-          ProblemSpecP extra_scalar_db = inlet_db->findBlock("ExtraScalars");
-          for (int i=0; i < static_cast<int>(d_extraScalars->size()); i++) {
-
-            string curr_name = d_extraScalars->at(i)->getScalarName();
-  
-            for (ProblemSpecP scalar_db = extra_scalar_db->findBlock("scalar"); 
-                 scalar_db != 0; scalar_db = scalar_db->findNextBlock("scalar")){
-
-              std::string scalar_name;
-              scalar_db->getAttribute("label",scalar_name);
-
-              if (scalar_name == curr_name){
-
-                char* value;
-                string svalue;  
-                double dvalue = 0; 
-                scalar_db->getAttribute("value", svalue);
-                value = &svalue[0]; 
-                dvalue = std::atof(value);                 
-
-                d_extraScalarBC* bc = scinew d_extraScalarBC;
-                bc->d_scalar_name = curr_name;
-                bc->d_scalarBC_value = dvalue;
-                bc->d_BC_ID = total_cellTypes;
-                d_extraScalarBCs.push_back(bc);
-              }
-            }
-          }
-        }
         ++total_cellTypes;
         ++d_numInlets;
+
       }
     }
     else {
@@ -419,49 +408,7 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params,
       string bc_type = "pressure"; 
       d_props->computeInletProperties(d_pressureBC->streamMixturefraction, 
           d_pressureBC->calcStream, bc_type);
-      if (d_calcExtraScalars) {
 
-        ProblemSpecP extra_scalar_db = press_db->findBlock("ExtraScalars");
-        for (int i=0; i < static_cast<int>(d_extraScalars->size()); i++) {
-
-          string curr_name = d_extraScalars->at(i)->getScalarName();
-
-          for (ProblemSpecP scalar_db = extra_scalar_db->findBlock("scalar"); 
-               scalar_db != 0; scalar_db = scalar_db->findNextBlock("scalar")){
-            std::string scalar_name;
-            scalar_db->getAttribute("label",scalar_name);
-
-            if (scalar_name == curr_name){
-              char* value;
-              string svalue;  
-              double dvalue = 0; 
-              scalar_db->getAttribute("value", svalue);
-              value = &svalue[0]; 
-              dvalue = std::atof(value);                 
-
-              d_extraScalarBC* bc = scinew d_extraScalarBC;
-              bc->d_scalar_name = curr_name;
-              bc->d_scalarBC_value = dvalue;
-              bc->d_BC_ID = total_cellTypes;
-              d_extraScalarBCs.push_back(bc);
-
-            }
-          }
-        }
-      }
-/*      if (d_calcExtraScalars) {
-        ProblemSpecP extra_scalar_db = press_db->findBlock("ExtraScalars");
-        for (int i=0; i < static_cast<int>(d_extraScalars->size()); i++) {
-          double value;
-          string name = d_extraScalars->at(i)->getScalarName();
-          extra_scalar_db->require(name, value);
-          d_extraScalarBC* bc = scinew d_extraScalarBC;
-          bc->d_scalar_name = name;
-          bc->d_scalarBC_value = value;
-          bc->d_BC_ID = total_cellTypes;
-          d_extraScalarBCs.push_back(bc);
-        }
-      }*/
       ++total_cellTypes;
     }
     else {
@@ -480,49 +427,6 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params,
       string bc_type = "outlet"; 
       d_props->computeInletProperties(d_outletBC->streamMixturefraction, 
           d_outletBC->calcStream, bc_type);
-      if (d_calcExtraScalars) {
-
-        ProblemSpecP extra_scalar_db = outlet_db->findBlock("ExtraScalars");
-        for (int i=0; i < static_cast<int>(d_extraScalars->size()); i++) {
-
-          string curr_name = d_extraScalars->at(i)->getScalarName();
-
-          for (ProblemSpecP scalar_db = extra_scalar_db->findBlock("scalar"); 
-               scalar_db != 0; scalar_db = scalar_db->findNextBlock("scalar")){
-            std::string scalar_name;
-            scalar_db->getAttribute("label",scalar_name);
-
-            if (scalar_name == curr_name){
-              char* value;
-              string svalue;  
-              double dvalue = 0; 
-              scalar_db->getAttribute("value", svalue);
-              value = &svalue[0]; 
-              dvalue = std::atof(value);                 
-
-              d_extraScalarBC* bc = scinew d_extraScalarBC;
-              bc->d_scalar_name = curr_name;
-              bc->d_scalarBC_value = dvalue;
-              bc->d_BC_ID = total_cellTypes;
-              d_extraScalarBCs.push_back(bc);
-
-            }
-          }
-        }
-      }
-/*      if (d_calcExtraScalars) {
-        ProblemSpecP extra_scalar_db = outlet_db->findBlock("ExtraScalars");
-        for (int i=0; i < static_cast<int>(d_extraScalars->size()); i++) {
-          double value;
-          string name = d_extraScalars->at(i)->getScalarName();
-          extra_scalar_db->require(name, value);
-          d_extraScalarBC* bc = scinew d_extraScalarBC;
-          bc->d_scalar_name = name;
-          bc->d_scalarBC_value = value;
-          bc->d_BC_ID = total_cellTypes;
-          d_extraScalarBCs.push_back(bc);
-        }
-      }*/
       ++total_cellTypes;
     }
     else {
@@ -716,13 +620,21 @@ BoundaryCondition::cellTypeInit(const ProcessorGroup*,
         GeometryPieceP  piece = d_intrusionBC->d_geomPiece[ii];
         Box geomBox = piece->getBoundingBox();
         Box b = geomBox.intersect(patchInteriorBox);
-        if (!(b.degenerate())) {
+        if ( !(b.degenerate()) && !d_intrusionBC->inverse ) {
           for (CellIterator iter = patch->getCellCenterIterator(b);!iter.done(); iter++) {
             Point p = patch->cellPosition(*iter);
-            if (piece->inside(p)) 
+            if ( piece->inside(p) ) {
               cellType[*iter] = d_intrusionBC->d_cellTypeID;
+            } 
           }
-        }
+        } else if ( d_intrusionBC->inverse ) { 
+          for (CellIterator iter = patch->getCellIterator();!iter.done(); iter++) {
+            Point p = patch->cellPosition(*iter);
+            if ( !piece->inside(p) ) {
+              cellType[*iter] = d_intrusionBC->d_cellTypeID;
+            } 
+          }
+        } 
       }
     }
   }
@@ -1221,12 +1133,6 @@ BoundaryCondition::sched_setProfile(SchedulerP& sched,
     tsk->computes(d_flowInlets[ii]->d_flowRate_label);
   }
 
-  if (d_calcExtraScalars){
-    for (int i=0; i < static_cast<int>(d_extraScalars->size()); i++){
-      tsk->modifies(d_extraScalars->at(i)->getScalarLabel());
-    }
-  }
-
   sched->addTask(tsk, patches, matls);
 }
 
@@ -1241,9 +1147,11 @@ BoundaryCondition::setProfile(const ProcessorGroup*,
                               DataWarehouse* new_dw)
 {
   for (int p = 0; p < patches->size(); p++) {
+
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
     int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+
     constCCVariable<int> cellType;
     CCVariable<double> density;
     SFCXVariable<double> uVelocity;
@@ -1253,27 +1161,17 @@ BoundaryCondition::setProfile(const ProcessorGroup*,
     SFCYVariable<double> vVelRhoHat;
     SFCZVariable<double> wVelRhoHat;
     CCVariable<double> scalar;
-    CCVariable<double> reactscalar;
     CCVariable<double> enthalpy;
 
+    new_dw->get(cellType, d_lab->d_cellTypeLabel, indx, patch, Ghost::None, 0);
     new_dw->getModifiable(uVelocity, d_lab->d_uVelocitySPBCLabel, indx, patch);
     new_dw->getModifiable(vVelocity, d_lab->d_vVelocitySPBCLabel, indx, patch);
     new_dw->getModifiable(wVelocity, d_lab->d_wVelocitySPBCLabel, indx, patch);
     new_dw->getModifiable(uVelRhoHat, d_lab->d_uVelRhoHatLabel, indx, patch);
     new_dw->getModifiable(vVelRhoHat, d_lab->d_vVelRhoHatLabel, indx, patch);
     new_dw->getModifiable(wVelRhoHat, d_lab->d_wVelRhoHatLabel, indx, patch);
-    
-    // get cellType, density and velocity
-    new_dw->get(cellType, d_lab->d_cellTypeLabel, indx, patch, Ghost::None,
-                Arches::ZEROGHOSTCELLS);
     new_dw->getModifiable(density, d_lab->d_densityCPLabel, indx, patch);
     new_dw->getModifiable(scalar, d_lab->d_scalarSPLabel, indx, patch);
-      // reactscalar will be zero at the boundaries, so no further calculation
-      // is required.
-    if (d_reactingScalarSolve){
-      new_dw->getModifiable(reactscalar, d_lab->d_reactscalarSPLabel, indx, patch);
-    }
-    
     if (d_enthalpySolve){ 
       new_dw->getModifiable(enthalpy, d_lab->d_enthalpySPLabel, indx, patch);
     }
@@ -1281,18 +1179,22 @@ BoundaryCondition::setProfile(const ProcessorGroup*,
     IntVector idxLo = patch->getFortranCellLowIndex();
     IntVector idxHi = patch->getFortranCellHighIndex();
     bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
-    bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
+    bool xplus =  patch->getBCType(Patch::xplus)  != Patch::Neighbor;
     bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
-    bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
+    bool yplus =  patch->getBCType(Patch::yplus)  != Patch::Neighbor;
     bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
-    bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
+    bool zplus =  patch->getBCType(Patch::zplus)  != Patch::Neighbor;
 
     // loop thru the flow inlets to set all the components of velocity and density
     if (d_inletBoundary) {
-      double time = 0.0; 
+
+      //double time = 0.0; 
+
       for (int indx = 0; indx < d_numInlets; indx++) {
+
         sum_vartype area_var;
         new_dw->get(area_var, d_flowInlets[indx]->d_area_label);
+
         double area = area_var;
         double actual_flow_rate;
       
@@ -1302,25 +1204,87 @@ BoundaryCondition::setProfile(const ProcessorGroup*,
 
         proc0cout << "Actual area for inlet: " << fi->d_inlet_name << " = " << area << endl;
         proc0cout << endl;
-        
-        fort_profv(uVelocity, vVelocity, wVelocity, idxLo, idxHi,
-                   cellType, area, fi->d_cellTypeID, fi->flowRate, fi->inletVel,
-                   fi->calcStream.d_density,
-                   xminus, xplus, yminus, yplus, zminus, zplus, time,
-                   fi->d_ramping_inlet_flowrate, actual_flow_rate);
 
-        d_flowInlets[indx]->flowRate = actual_flow_rate;
-        new_dw->put(delt_vartype(actual_flow_rate),
-                    d_flowInlets[indx]->d_flowRate_label);
+        switch ( fi->d_inletVelType ){
+          case FlowInlet::VEL_FLAT_PROFILE:
 
-        fort_profscalar(idxLo, idxHi, density, cellType,
-                        fi->calcStream.d_density, fi->d_cellTypeID,
-                        xminus, xplus, yminus, yplus, zminus, zplus);
-        if (d_enthalpySolve){
-          fort_profscalar(idxLo, idxHi, enthalpy, cellType,
-                          fi->calcStream.d_enthalpy, fi->d_cellTypeID,
-                          xminus, xplus, yminus, yplus, zminus, zplus);
+            setFlatProfV( patch, 
+                          uVelocity, vVelocity, wVelocity, 
+                          cellType, area, fi->d_cellTypeID, 
+                          fi->flowRate, fi->inletVel, fi->calcStream.d_density, 
+                          xminus, xplus, 
+                          yminus, yplus, 
+                          zminus, zplus, 
+                          actual_flow_rate ); 
+                          
+            d_flowInlets[indx]->flowRate = actual_flow_rate;
+            new_dw->put(delt_vartype(actual_flow_rate),
+                        d_flowInlets[indx]->d_flowRate_label);
+
+            break; 
+          case FlowInlet::VEL_FUNCTION:
+
+            break; 
+          case FlowInlet::VEL_VECTOR:
+
+            break; 
+          case FlowInlet::VEL_FILE_INPUT:
+
+            break; 
         }
+
+        switch ( fi->d_inletScalarType ){
+          case FlowInlet::SCALAR_FLAT_PROFILE:
+
+            setFlatProfS( patch, 
+                          density, 
+                          fi->calcStream.d_density, cellType, area, fi->d_cellTypeID, 
+                          xminus, xplus, 
+                          yminus, yplus, 
+                          zminus, zplus ); 
+
+            setFlatProfS( patch, 
+                          scalar, 
+                          fi->streamMixturefraction.d_mixVars[0], cellType, area, fi->d_cellTypeID, 
+                          xminus, xplus, 
+                          yminus, yplus, 
+                          zminus, zplus );  
+
+            if (d_enthalpySolve) {
+
+              setFlatProfS( patch, 
+                            enthalpy, 
+                            fi->calcStream.d_enthalpy, cellType, area, fi->d_cellTypeID, 
+                            xminus, xplus, 
+                            yminus, yplus, 
+                            zminus, zplus ); 
+            }
+
+            break; 
+          case FlowInlet::SCALAR_FUNCTION:
+
+            break; 
+          case FlowInlet::SCALAR_FILE_INPUT:
+
+            break; 
+        }
+
+        
+        //fort_profv(uVelocity, vVelocity, wVelocity, idxLo, idxHi,
+        //           cellType, area, fi->d_cellTypeID, fi->flowRate, fi->inletVel,
+        //           fi->calcStream.d_density,
+        //           xminus, xplus, yminus, yplus, zminus, zplus, time,
+        //           fi->d_ramping_inlet_flowrate, actual_flow_rate);
+
+
+        //fort_profscalar(idxLo, idxHi, density, cellType,
+        //                fi->calcStream.d_density, fi->d_cellTypeID,
+        //                xminus, xplus, yminus, yplus, zminus, zplus);
+        //if (d_enthalpySolve){
+        //  fort_profscalar(idxLo, idxHi, enthalpy, cellType,
+        //                  fi->calcStream.d_enthalpy, fi->d_cellTypeID,
+        //                  xminus, xplus, yminus, yplus, zminus, zplus);
+        //}
       }
     }
 
@@ -1352,23 +1316,15 @@ BoundaryCondition::setProfile(const ProcessorGroup*,
       }
     }
 
-    if (d_inletBoundary) {
-      for (int ii = 0; ii < d_numInlets; ii++) {
-        double scalarValue = 
-               d_flowInlets[ii]->streamMixturefraction.d_mixVars[0];
-        fort_profscalar(idxLo, idxHi, scalar, cellType,
-                        scalarValue, d_flowInlets[ii]->d_cellTypeID,
-                        xminus, xplus, yminus, yplus, zminus, zplus);
-        double reactScalarValue;
-        if (d_reactingScalarSolve) {
-          reactScalarValue = 
-               d_flowInlets[ii]->streamMixturefraction.d_rxnVars[0];
-          fort_profscalar(idxLo, idxHi, reactscalar, cellType,
-                          reactScalarValue, d_flowInlets[ii]->d_cellTypeID,
-                          xminus, xplus, yminus, yplus, zminus, zplus);
-        }
-      }
-    }
+    //if (d_inletBoundary) {
+    //  for (int ii = 0; ii < d_numInlets; ii++) {
+    //    double scalarValue = 
+    //           d_flowInlets[ii]->streamMixturefraction.d_mixVars[0];
+    //    fort_profscalar(idxLo, idxHi, scalar, cellType,
+    //                    scalarValue, d_flowInlets[ii]->d_cellTypeID,
+    //                    xminus, xplus, yminus, yplus, zminus, zplus);
+    //  }
+    // }
 
     if (d_pressureBoundary) {
       double scalarValue = 
@@ -1376,14 +1332,6 @@ BoundaryCondition::setProfile(const ProcessorGroup*,
       fort_profscalar(idxLo, idxHi, scalar, cellType, scalarValue,
                       d_pressureBC->d_cellTypeID,
                       xminus, xplus, yminus, yplus, zminus, zplus);
-      double reactScalarValue;
-      if (d_reactingScalarSolve) {
-        reactScalarValue = 
-             d_pressureBC->streamMixturefraction.d_rxnVars[0];
-        fort_profscalar(idxLo, idxHi, reactscalar, cellType,
-                        reactScalarValue, d_pressureBC->d_cellTypeID,
-                        xminus, xplus, yminus, yplus, zminus, zplus);
-      }
     }
 
     if (d_outletBoundary) {
@@ -1392,199 +1340,185 @@ BoundaryCondition::setProfile(const ProcessorGroup*,
       fort_profscalar(idxLo, idxHi, scalar, cellType, scalarValue,
                       d_outletBC->d_cellTypeID,
                       xminus, xplus, yminus, yplus, zminus, zplus);
-      double reactScalarValue;
-      if (d_reactingScalarSolve) {
-        reactScalarValue = 
-             d_outletBC->streamMixturefraction.d_rxnVars[0];
-        fort_profscalar(idxLo, idxHi, reactscalar, cellType,
-                        reactScalarValue, d_outletBC->d_cellTypeID,
-                        xminus, xplus, yminus, yplus, zminus, zplus);
-      }
     }
     uVelRhoHat.copyData(uVelocity); 
     vVelRhoHat.copyData(vVelocity); 
     wVelRhoHat.copyData(wVelocity); 
 
-    if (d_calcExtraScalars) {
-      for (int i=0; i < static_cast<int>(d_extraScalars->size()); i++) {
-        string extra_scalar_name = d_extraScalars->at(i)->getScalarName();
-        CCVariable<double> extra_scalar;
-        new_dw->getModifiable(extra_scalar,
-                              d_extraScalars->at(i)->getScalarLabel(),indx, patch);
+  }
+}
 
-        if (d_inletBoundary) {
-          for (int ii = 0; ii < d_numInlets; ii++) {
-            int BC_ID = d_flowInlets[ii]->d_cellTypeID;
+// set a velocity profile for a boundary 
+// should replace the klunky fortran routines
+void 
+BoundaryCondition::setFlatProfV( const Patch* patch, 
+                             SFCXVariable<double>& u, SFCYVariable<double>& v, SFCZVariable<double>& w, 
+                             const CCVariable<int>& cellType, const double area, const int inlet_type, 
+                             const double flow_rate, const double inlet_vel, const double density, 
+                             const bool xminus, const bool xplus, 
+                             const bool yminus, const bool yplus, 
+                             const bool zminus, const bool zplus, 
+                             double& actual_flow_rate ) 
+{
+  vector<Patch::FaceType>::const_iterator fiter;
+  vector<Patch::FaceType> bf;
+  patch->getBoundaryFaces(bf);
+  Vector Dx = patch->dCell(); 
 
-            double extra_scalar_value;
-            for (int j=0; j < static_cast<int>(d_extraScalarBCs.size()); j++)
-              if ((d_extraScalarBCs[j]->d_scalar_name == extra_scalar_name)&&
-                  (d_extraScalarBCs[j]->d_BC_ID) == BC_ID)
-                extra_scalar_value = d_extraScalarBCs[j]->d_scalarBC_value;
+  double ave_normal_vel = 0; 
+  double tiny = 1.0e-16; 
 
-                fort_profscalar(idxLo, idxHi, extra_scalar, cellType,
-                                extra_scalar_value, BC_ID,
-                                xminus, xplus, yminus, yplus, zminus, zplus);
+  // for normal flow inlet BC: 
+  if ( flow_rate < tiny ) { //ie, it is zero
+    ave_normal_vel   = inlet_vel;
+    actual_flow_rate = ave_normal_vel * density * area; 
+  } else { 
+    if ( area < tiny ) {
+      ave_normal_vel   = 0.0;
+      actual_flow_rate = 0.0; 
+    } else {
+      ave_normal_vel = flow_rate / ( area * density ); 
+      actual_flow_rate = flow_rate; 
+    }
+  }
+
+  for (fiter = bf.begin(); fiter !=bf.end(); fiter++){
+    Patch::FaceType face = *fiter;
+
+    //get the face direction
+    IntVector insideCellDir = patch->faceDirection(face);
+    switch (face) {
+      case Patch::xminus:
+        for ( CellIterator citer = patch->getFaceIterator( face, Patch::InteriorFaceCells );
+              !citer.done(); citer++ ){
+
+          IntVector c  = *citer; 
+          IntVector cb = *citer + insideCellDir; 
+
+          if ( cellType[cb] == inlet_type ) { 
+            u[c]  = ave_normal_vel; 
+            u[cb] = ave_normal_vel; 
+            v[cb] = 0.0; 
+            w[cb] = 0.0;
           }
         }
+        break;
+      case Patch::xplus:
+        for ( CellIterator citer = patch->getFaceIterator( face, Patch::InteriorFaceCells );
+              !citer.done(); citer++ ){
 
-        if (d_pressureBoundary) {
-          int BC_ID = d_pressureBC->d_cellTypeID;
-
-          double extra_scalar_value;
-          for (int j=0; j < static_cast<int>(d_extraScalarBCs.size()); j++){
-            if ((d_extraScalarBCs[j]->d_scalar_name == extra_scalar_name)&&
-                (d_extraScalarBCs[j]->d_BC_ID) == BC_ID){
-              extra_scalar_value = d_extraScalarBCs[j]->d_scalarBC_value;
-            }
+          IntVector c  = *citer; 
+          IntVector cb = *citer + insideCellDir; 
+          IntVector cbb= *citer + insideCellDir + insideCellDir; 
+          
+          if ( cellType[cb] == inlet_type ) { 
+            u[cb] = ave_normal_vel; 
+            u[cbb]= ave_normal_vel; 
+            v[cb] = 0.0; 
+            w[cb] = 0.0;
           }
-          fort_profscalar(idxLo, idxHi, extra_scalar, cellType,
-                          extra_scalar_value, BC_ID,
-                          xminus, xplus, yminus, yplus, zminus, zplus);
         }
+        break; 
+      case Patch::yminus:
+        for ( CellIterator citer = patch->getFaceIterator( face, Patch::InteriorFaceCells );
+              !citer.done(); citer++ ){
 
-        if (d_outletBoundary) {
-          int BC_ID = d_outletBC->d_cellTypeID;
+          IntVector c  = *citer; 
+          IntVector cb = *citer + insideCellDir; 
 
-          double extra_scalar_value;
-          for (int j=0; j < static_cast<int>(d_extraScalarBCs.size()); j++){
-            if ((d_extraScalarBCs[j]->d_scalar_name == extra_scalar_name)&&
-                (d_extraScalarBCs[j]->d_BC_ID) == BC_ID){
-              extra_scalar_value = d_extraScalarBCs[j]->d_scalarBC_value;
-            }
+          if ( cellType[cb] == inlet_type ) { 
+            v[c]  = ave_normal_vel; 
+            v[cb] = ave_normal_vel; 
+            u[cb] = 0.0; 
+            w[cb] = 0.0;
           }
-
-          fort_profscalar(idxLo, idxHi, extra_scalar, cellType,
-                          extra_scalar_value, BC_ID,
-                                xminus, xplus, yminus, yplus, zminus, zplus);
         }
-      }
+        break; 
+      case Patch::yplus:
+        for ( CellIterator citer = patch->getFaceIterator( face, Patch::InteriorFaceCells );
+              !citer.done(); citer++ ){
+
+          IntVector c  = *citer; 
+          IntVector cb = *citer + insideCellDir; 
+          IntVector cbb= *citer + insideCellDir + insideCellDir; 
+
+          if ( cellType[cb] == inlet_type ) { 
+            v[cb] = ave_normal_vel; 
+            v[cbb]= ave_normal_vel;
+            u[cb] = 0.0; 
+            w[cb] = 0.0;
+          }
+        }
+        break; 
+      case Patch::zminus: 
+        for ( CellIterator citer = patch->getFaceIterator( face, Patch::InteriorFaceCells );
+              !citer.done(); citer++ ){
+
+          IntVector c  = *citer; 
+          IntVector cb = *citer + insideCellDir; 
+
+          if ( cellType[c] == inlet_type ) { 
+            w[c]  = ave_normal_vel; 
+            w[cb] = ave_normal_vel; 
+            u[cb] = 0.0; 
+            v[cb] = 0.0;
+          }
+        }
+        break; 
+      case Patch::zplus:
+        for ( CellIterator citer = patch->getFaceIterator( face, Patch::InteriorFaceCells );
+              !citer.done(); citer++ ){
+
+          IntVector c  = *citer; 
+          IntVector cb = *citer + insideCellDir; 
+          IntVector cbb= *citer + insideCellDir + insideCellDir; 
+
+          if ( cellType[cb] == inlet_type ) { 
+            w[cb] = ave_normal_vel; 
+            w[cbb]= ave_normal_vel; 
+            u[cb] = 0.0; 
+            v[cb] = 0.0;
+          }
+        }
+        break; 
+      default: 
+        throw InvalidValue("Error: Face type for setFlatProfV not recognized.",__FILE__,__LINE__); 
+        break; 
     }
   }
 }
 
-
-//****************************************************************************
-// Apply turbulence fluctuations to the inlet profile
-//****************************************************************************
-void
-BoundaryCondition::sched_setTurbulence(SchedulerP& sched,
-                                       const PatchSet* patches,
-                                       const MaterialSet* matls)
+// set a scalar profile for a boundary 
+// should replace the klunky fortran routines
+void 
+BoundaryCondition::setFlatProfS( const Patch* patch, 
+                             CCVariable<double>& scalar, 
+                             double set_point, 
+                             const CCVariable<int>& cellType, const double area, const int check_type, 
+                             const bool xminus, const bool xplus, 
+                             const bool yminus, const bool yplus, 
+                             const bool zminus, const bool zplus )
 {
-  Task* tsk = scinew Task("BoundaryCondition::setTurbulence",
-                          this,
-                          &BoundaryCondition::setTurbulence);
+  vector<Patch::FaceType>::const_iterator fiter;
+  vector<Patch::FaceType> bf;
+  patch->getBoundaryFaces(bf);
+  Vector Dx = patch->dCell(); 
 
-  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, Ghost::None, 0);
- 
-  tsk->modifies(d_lab->d_uVelocitySPBCLabel);
-  tsk->modifies(d_lab->d_vVelocitySPBCLabel);
-  tsk->modifies(d_lab->d_wVelocitySPBCLabel);
-  tsk->modifies(d_lab->d_uVelRhoHatLabel);
-  tsk->modifies(d_lab->d_vVelRhoHatLabel);
-  tsk->modifies(d_lab->d_wVelRhoHatLabel);
+  for (fiter = bf.begin(); fiter !=bf.end(); fiter++){
+    Patch::FaceType face = *fiter;
 
-  sched->addTask(tsk, patches, matls);
-}
+    //get the face direction
+    IntVector insideCellDir = patch->faceDirection(face);
 
+    for ( CellIterator citer = patch->getFaceIterator( face, Patch::InteriorFaceCells );
+          !citer.done(); citer++ ){
 
-//****************************************************************************
-// Actually set turbulent profile at flow inlet boundary
-//****************************************************************************
-void
-BoundaryCondition::setTurbulence(const ProcessorGroup*,
-                                 const PatchSubset* patches,
-                                 const MaterialSubset*,
-                                 DataWarehouse*,
-                                 DataWarehouse* new_dw)
-{
-  for (int p = 0; p < patches->size(); p++) {
+      IntVector cb = *citer + insideCellDir; 
 
-    int nofTimeSteps=d_lab->d_sharedState->getCurrentTopLevelTimeStep();
-    const Patch* patch = patches->get(p);
-    int archIndex = 0; // only one arches material
-    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
-    constCCVariable<int> cellType;
-    SFCXVariable<double> uVelocity;
-    SFCYVariable<double> vVelocity;
-    SFCZVariable<double> wVelocity;
-    SFCXVariable<double> uVelRhoHat;
-    SFCYVariable<double> vVelRhoHat;
-    SFCZVariable<double> wVelRhoHat;
-   
-    new_dw->getModifiable(uVelocity, d_lab->d_uVelocitySPBCLabel, indx, patch);
-    new_dw->getModifiable(vVelocity, d_lab->d_vVelocitySPBCLabel, indx, patch);
-    new_dw->getModifiable(wVelocity, d_lab->d_wVelocitySPBCLabel, indx, patch);
-    new_dw->getModifiable(uVelRhoHat, d_lab->d_uVelRhoHatLabel, indx, patch);
-    new_dw->getModifiable(vVelRhoHat, d_lab->d_vVelRhoHatLabel, indx, patch);
-    new_dw->getModifiable(wVelRhoHat, d_lab->d_wVelRhoHatLabel, indx, patch);
-  
-    // get cellType, density and velocity
-    new_dw->get(cellType, d_lab->d_cellTypeLabel, indx, patch, Ghost::None,
-                Arches::ZEROGHOSTCELLS);
- 
-    IntVector idxLo = patch->getFortranCellLowIndex();
-    IntVector idxHi = patch->getFortranCellHighIndex();
-    bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
-    //bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
-    //bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
-    //bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
-    //bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
-    //bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
+      if (cellType[cb] == check_type ) 
+        scalar[cb] = set_point; 
 
-    if (d_inletBoundary) {
-      if(xminus) {
-        srand(nofTimeSteps);
-        for (int indx = 0; indx < d_numInlets; indx++) {
-        
-          FlowInlet* fi = d_flowInlets[indx];
-
-          int inlet_celltypeval = inletCellType(indx);
-          double sumdum;
-          double UUa[My][Mz];
-          double Rnew[2*Nx+1];
-
-          for(int j = 0;j<My;j++){
-            for(int k = 0;k<Mz;k++){
-              sumdum = 0;
-              for(int ii = -Nx;ii<(Nx+1);ii++){
-                    sumdum += bbcoeff[ii+Nx]*Rturb[ii+Nx];
-              }
-              UUa[j][k] = (fi->inletVel)*(1+sumdum);
-            }
-          }
-      
-          for(int i = -Nx;i<(Nx);i++){
-                Rnew[i+Nx] = Rturb[i+1+Nx];
-          }
- 
-          double r = rand();
-          Rnew[2*Nx] = intensity*(r/RAND_MAX-.5)*sqrt(12.0);
-
-          for(int i = -Nx;i<(Nx+1);i++){
-                Rturb[i+Nx] = Rnew[i+Nx];
-          }
- 
-          if (xminus) {
-            int colX = idxLo.x();
-            for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-              for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-                IntVector currCell(colX, colY, colZ);
-                IntVector xminusCell(colX-1, colY, colZ);
-                if (cellType[xminusCell] == inlet_celltypeval) {
-                  uVelocity[currCell] = UUa[colY-ilow][colZ-ilow];
-                  uVelocity[xminusCell] = UUa[colY-ilow][colZ-ilow];
-                }
-              }
-            }
-          }
-        }
-      }
     }
-    uVelRhoHat.copyData(uVelocity);
-    vVelRhoHat.copyData(vVelocity);
-    wVelRhoHat.copyData(wVelocity);
   }
 }
 
@@ -1690,6 +1624,7 @@ BoundaryCondition::velocityBC(const Patch* patch,
 
 void 
 BoundaryCondition::pressureBC(const Patch* patch,
+                              const int matl_index, 
                               ArchesVariables* vars,
                               ArchesConstVariables* constvars)
 {
@@ -1721,66 +1656,88 @@ BoundaryCondition::pressureBC(const Patch* patch,
     }
   }
 
-  //__________________________________
-  //  Pressure, outlet, and wall BC
-  vector<Patch::FaceType> bf;
-  patch->getBoundaryFaces(bf);
-  
-  for( vector<Patch::FaceType>::const_iterator itr = bf.begin(); itr != bf.end(); ++itr ){
-    Patch::FaceType face = *itr;
-    
-    IntVector offset = patch->faceDirection(face);
-    
-    CellIterator iter = patch->getFaceIterator(face, Patch::InteriorFaceCells);
-    
-    //face:       -x +x -y +y -z +z
-    //Stencil 7   w, e, s, n, b, t;
-    for(;!iter.done(); iter++){
-      IntVector c = *iter;
-      IntVector adj = c + offset;
-      
-      if( cellType[adj] == pressure_BC ||
-          cellType[adj] == outlet_BC){
-        // dirichlet_BC
-        A[c].p = A[c].p +  A[c][face];
-        A[c][face] = 0.0;
-      }
 
-      if( cellType[adj] == wall_BC){
-        // Neumann zero gradient BC
-        A[c].p = A[c].p - A[c][face];
-        A[c][face] = 0.0;
-      }
-    }
-  }
-  
-  //__________________________________
-  //  Inlets
-  // This assumes that all inlets have Neumann (zero gradient) pressure BCs
-  for (int ii = 0; ii < d_numInlets; ii++) {
+  if ( !d_use_new_bcs ) { 
+    //__________________________________
+    //  Pressure, outlet, and wall BC
+    vector<Patch::FaceType> bf;
+    patch->getBoundaryFaces(bf);
     
     for( vector<Patch::FaceType>::const_iterator itr = bf.begin(); itr != bf.end(); ++itr ){
       Patch::FaceType face = *itr;
-
+      
       IntVector offset = patch->faceDirection(face);
-
+      
       CellIterator iter = patch->getFaceIterator(face, Patch::InteriorFaceCells);
-
+      
       //face:       -x +x -y +y -z +z
       //Stencil 7   w, e, s, n, b, t;
       for(;!iter.done(); iter++){
         IntVector c = *iter;
         IntVector adj = c + offset;
         
-        if( cellType[adj] == d_flowInlets[ii]->d_cellTypeID){
+        if( cellType[adj] == pressure_BC ||
+            cellType[adj] == outlet_BC){
+          // dirichlet_BC
+          A[c].p = A[c].p +  A[c][face];
+          A[c][face] = 0.0;
+        }
+
+        if( cellType[adj] == wall_BC){
           // Neumann zero gradient BC
-          
-          A[c].p = A[c].p -  A[c][face];
+          A[c].p = A[c].p - A[c][face];
           A[c][face] = 0.0;
         }
       }
     }
-  }
+    
+    //__________________________________
+    //  Inlets
+    // This assumes that all inlets have Neumann (zero gradient) pressure BCs
+    for (int ii = 0; ii < d_numInlets; ii++) {
+      
+      for( vector<Patch::FaceType>::const_iterator itr = bf.begin(); itr != bf.end(); ++itr ){
+        Patch::FaceType face = *itr;
+
+        IntVector offset = patch->faceDirection(face);
+
+        CellIterator iter = patch->getFaceIterator(face, Patch::InteriorFaceCells);
+
+        //face:       -x +x -y +y -z +z
+        //Stencil 7   w, e, s, n, b, t;
+        for(;!iter.done(); iter++){
+          IntVector c = *iter;
+          IntVector adj = c + offset;
+          
+          if( cellType[adj] == d_flowInlets[ii]->d_cellTypeID){
+            // Neumann zero gradient BC
+            
+            A[c].p = A[c].p -  A[c][face];
+            A[c][face] = 0.0;
+          }
+        }
+      }
+    }
+  } else { 
+
+    std::vector<BC_TYPE> add_types; 
+    add_types.push_back( OUTLET ); 
+    add_types.push_back( PRESSURE ); 
+    int sign = 1; 
+
+    zeroStencilDirection( patch, matl_index, sign, A, add_types ); 
+
+    std::vector<BC_TYPE> sub_types; 
+    sub_types.push_back( WALL ); 
+    sub_types.push_back( MASSFLOW_INLET ); 
+    sub_types.push_back( VELOCITY_INLET ); 
+    sub_types.push_back( VELOCITY_FILE ); 
+    sub_types.push_back( MASSFLOW_FILE ); 
+    sign = -1;
+
+    zeroStencilDirection( patch, matl_index, sign, A, sub_types ); 
+
+  } 
 }
 
 //****************************************************************************
@@ -2379,6 +2336,11 @@ BoundaryCondition::IntrusionBdry::problemSetup(ProblemSpecP& params)
   ProblemSpecP geomObjPS = params->findBlock("geom_object");
   GeometryPieceFactory::create(geomObjPS, d_geomPiece);
 
+  inverse = false; 
+
+  if ( params->findBlock( "inverse" ) )
+    inverse = true; 
+
 }
 
 
@@ -2497,21 +2459,89 @@ void
 BoundaryCondition::FlowInlet::problemSetup(ProblemSpecP& params,
                                            const ProblemSpecP& restart_ps)      //WME  
 {
-  params->getWithDefault("Flow_rate", flowRate,0.0);
-  params->getWithDefault("InletVelocity", inletVel,0.0);
+
   params->getWithDefault("ResponsiveBoundary", d_responsiveBoundary, false);  //WME
-// ramping function is the same for all inlets where ramping is on  
-  params->getWithDefault("ramping_inlet_flowrate",
-                         d_ramping_inlet_flowrate, false);
-  // This parameter only needs to be set for fuel inlets for which
-  // mixture fraction > 0, if there is an air inlet, and air has some CO2,
-  // this air CO2 will be counted in the balance automatically
-  // params->getWithDefault("CarbonMassFractionInFuel", fcr, 0.0);
-  params->getWithDefault("SulfurMassFractionInFuel", fsr, 0.0);
+
+  // ---- Velocity inlet information ---- 
+  std::string input_type; 
+  params->getWithDefault("velocity_type", input_type, "flat");
+
+  if ( input_type == "flat" ) {
+
+    if ( params->findBlock( "Flow_rate" ) && params->findBlock("InletVelocity") ) 
+      throw InvalidValue("Error: Flow_rate and InletVelocity cannot both be specified in FlowInlet BC", __FILE__, __LINE__); 
+
+    if ( params->findBlock( "Flow_rate" ) ) {
+      params->getWithDefault("Flow_rate", flowRate,0.0);
+      inletVel = 0.0; 
+    } else if ( params->findBlock( "InletVelocity" ) ) { 
+      params->getWithDefault("InletVelocity", inletVel,0.0);
+      flowRate = 0.0; 
+    } 
+
+    d_inletVelType = FlowInlet::VEL_FLAT_PROFILE; 
+
+  } else if ( input_type == "function" ) {
+      
+    throw InvalidValue("Error: velocity_type = function not yet supported. ", __FILE__, __LINE__); 
+
+  } else if ( input_type == "vector" ) {
+
+    throw InvalidValue("Error: velocity_type = vector not yet supported. ", __FILE__, __LINE__); 
+
+  } else if ( input_type == "file" ) {
+
+    std::string filename; 
+    params->require("vel_filename", filename); 
+
+    d_inletVelType = FlowInlet::VEL_FILE_INPUT; 
+
+  } else 
+      throw InvalidValue("Error: FlowInlet velocity_type not recognized.", __FILE__, __LINE__); 
+
+  // ---- Scalar inlet information --- 
+  params->getWithDefault("scalar_type", input_type, "flat");
+  if ( input_type == "flat" ) {
+
+    double mixfrac;
+    double heatloss; 
+    double mixfrac2; 
+    mixfrac2 = 0.0; 
+
+    params->require("mixture_fraction", mixfrac);
+    streamMixturefraction.d_mixVars.push_back(mixfrac);
+    streamMixturefraction.d_has_second_mixfrac = false; 
+
+    if (params->findBlock("mixture_fraction_2")){
+      params->require("mixture_fraction_2", mixfrac2); 
+      streamMixturefraction.d_f2 = mixfrac2; 
+      streamMixturefraction.d_has_second_mixfrac = true;
+    }
+
+    params->getWithDefault("heat_loss", heatloss, 0); 
+    streamMixturefraction.d_heatloss = heatloss; 
+
+    d_inletScalarType = FlowInlet::SCALAR_FLAT_PROFILE;
+
+  } else if ( input_type == "function" ) {
+      
+    throw InvalidValue("Error: scalar_type = function not yet supported. ", __FILE__, __LINE__); 
+
+  } else if ( input_type == "file" ) {
+
+    std::string filename; 
+    params->require("scalar_filename", filename); 
+
+    d_inletScalarType = FlowInlet::SCALAR_FILE_INPUT; 
+
+  } else 
+      throw InvalidValue("Error: FlowInlet scalar_type not recognized.", __FILE__, __LINE__); 
+
   // check to see if this will work
   ProblemSpecP geomObjPS = params->findBlock("geom_object");
   params->getWithDefault("name",d_inlet_name,"not named"); 
   GeometryPieceFactory::create(geomObjPS, d_geomPiece);
+
   // loop thru all the inlet geometry objects
   //for (ProblemSpecP geom_obj_ps = params->findBlock("geom_object");
   //     geom_obj_ps != 0; 
@@ -2527,31 +2557,15 @@ BoundaryCondition::FlowInlet::problemSetup(ProblemSpecP& params,
   //  }
   //}
 
-  double mixfrac;
-  double mixfrac2; 
-  params->require("mixture_fraction", mixfrac);
-  streamMixturefraction.d_mixVars.push_back(mixfrac);
-
-  mixfrac2 = 0.0; 
-  streamMixturefraction.d_has_second_mixfrac = false; 
-  if (params->findBlock("mixture_fraction_2")){
-    params->require("mixture_fraction_2", mixfrac2); 
-    streamMixturefraction.d_f2 = mixfrac2; 
-    streamMixturefraction.d_has_second_mixfrac = true;
-  }
 
   if (d_calcVariance){
     streamMixturefraction.d_mixVarVariance.push_back(0.0);
   }
-  double reactscalar;
-  if (d_reactingScalarSolve) {
-    params->require("reacting_scalar", reactscalar);
-    streamMixturefraction.d_rxnVars.push_back(reactscalar);
-  }
  
   //Prefill a geometry object with the flow inlet condition 
   d_prefill = params->findBlock("Prefill"); 
-  if (params->findBlock("Prefill")){
+  if (params->findBlock("Prefill") ){
+
     ProblemSpecP db_prefill = params->findBlock("Prefill");
     std::string prefill_direction = "null"; 
     db_prefill->getAttribute("direction",prefill_direction); 
@@ -2625,6 +2639,21 @@ BoundaryCondition::PressureInlet::problemSetup(ProblemSpecP& params)
   if (d_calcVariance){
     streamMixturefraction.d_mixVarVariance.push_back(0.0);
   }
+
+  if (params->findBlock("mixture_fraction_2")){
+    double mixfrac2; 
+    params->require("mixture_fraction_2", mixfrac2); 
+    streamMixturefraction.d_f2 = mixfrac2; 
+    streamMixturefraction.d_has_second_mixfrac = true;
+  } else { 
+    streamMixturefraction.d_has_second_mixfrac = false; 
+    streamMixturefraction.d_f2 = 0.0; 
+  }
+
+  double heatloss; 
+  params->getWithDefault("heat_loss", heatloss, 0); 
+  streamMixturefraction.d_heatloss = heatloss; 
+
   double reactscalar;
   if (d_reactingScalarSolve) {
     params->require("reacting_scalar", reactscalar);
@@ -2668,6 +2697,21 @@ BoundaryCondition::FlowOutlet::problemSetup(ProblemSpecP& params)
   double mixfrac;
   params->require("mixture_fraction", mixfrac);
   streamMixturefraction.d_mixVars.push_back(mixfrac);
+
+  if (params->findBlock("mixture_fraction_2")){
+    double mixfrac2; 
+    params->require("mixture_fraction_2", mixfrac2); 
+    streamMixturefraction.d_f2 = mixfrac2; 
+    streamMixturefraction.d_has_second_mixfrac = true;
+  } else { 
+    streamMixturefraction.d_has_second_mixfrac = false; 
+    streamMixturefraction.d_f2 = 0.0; 
+  }
+
+  double heatloss; 
+  params->getWithDefault("heat_loss", heatloss, 0); 
+  streamMixturefraction.d_heatloss = heatloss; 
+
   if (d_calcVariance)
     streamMixturefraction.d_mixVarVariance.push_back(0.0);
   double reactscalar;
@@ -3679,6 +3723,7 @@ void
 BoundaryCondition::velRhoHatInletBC(const Patch* patch,
                                     ArchesVariables* vars,
                                     ArchesConstVariables* constvars,
+                                    const int matl_index, 
                                     double time_shift)
 {
   double time = d_lab->d_sharedState->getElapsedTime();
@@ -3687,44 +3732,96 @@ BoundaryCondition::velRhoHatInletBC(const Patch* patch,
   IntVector idxLo = patch->getFortranCellLowIndex();
   IntVector idxHi = patch->getFortranCellHighIndex();
   // stores cell type info for the patch with the ghost cell type
-  for (int indx = 0; indx < d_numInlets; indx++) {
-    // Get a copy of the current flow inlet
-    FlowInlet* fi = d_flowInlets[indx];
-    
-    // assign flowType the value that corresponds to flow
-    //CellTypeInfo flowType = FLOW;
-    bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
-    bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
-    bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
-    bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
-    bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
-    bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
+  
+  if ( !d_use_new_bcs ) { 
+    for (int indx = 0; indx < d_numInlets; indx++) {
+      // Get a copy of the current flow inlet
+      FlowInlet* fi = d_flowInlets[indx];
+      
+      // assign flowType the value that corresponds to flow
+      //CellTypeInfo flowType = FLOW;
+      bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
+      bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
+      bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
+      bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
+      bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
+      bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
 
-    fort_inlbcs(vars->uVelRhoHat, vars->vVelRhoHat, vars->wVelRhoHat,
-                idxLo, idxHi, constvars->new_density, constvars->cellType, 
-                fi->d_cellTypeID, current_time,
-                xminus, xplus, yminus, yplus, zminus, zplus,
-                fi->d_ramping_inlet_flowrate);
-  }
+      fort_inlbcs(vars->uVelRhoHat, vars->vVelRhoHat, vars->wVelRhoHat,
+                  idxLo, idxHi, constvars->new_density, constvars->cellType, 
+                  fi->d_cellTypeID, current_time,
+                  xminus, xplus, yminus, yplus, zminus, zplus,
+                  fi->d_ramping_inlet_flowrate);
+    }
+  } else { 
+
+    vector<Patch::FaceType>::const_iterator bf_iter;
+    vector<Patch::FaceType> bf;
+    patch->getBoundaryFaces(bf);
+
+    for ( BCInfoMap::iterator bc_iter = d_bc_information.begin(); 
+          bc_iter != d_bc_information.end(); bc_iter++){
+
+      for ( bf_iter = bf.begin(); bf_iter !=bf.end(); bf_iter++ ){
+
+        //get the face
+        Patch::FaceType face = *bf_iter;
+        IntVector insideCellDir = patch->faceDirection(face); 
+
+        //get the number of children
+        int numChildren = patch->getBCDataArray(face)->getNumberChildren(matl_index); //assumed one material
+
+        for (int child = 0; child < numChildren; child++){
+
+          double bc_value = 0;
+          string bc_kind = "NotSet";
+          Iterator bound_ptr;
+
+          bool foundIterator = 
+            getIteratorBCValueBCKind( patch, face, child, bc_iter->second.name, matl_index, bc_value, bound_ptr, bc_kind); 
+
+          if ( foundIterator ) {
+
+            bound_ptr.reset(); 
+
+            if ( bc_iter->second.type == VELOCITY_INLET || bc_iter->second.type == MASSFLOW_INLET ) { 
+              //---- set velocities
+              setVel__NEW( patch, face, vars->uVelRhoHat, vars->vVelRhoHat, vars->wVelRhoHat, constvars->new_density, bound_ptr, bc_iter->second.velocity ); 
+            } else if ( bc_iter->second.type == VELOCITY_FILE ) {
+              //---- set velocities
+              //setVelFromInput__NEW( patch, face, uVelocity, vVelocity, wVelocity, bound_ptr, bc_iter->second.filename ); 
+              //---- set the enthalpy
+              //if ( d_enthalpySolve ) 
+              //  setEnthalpyFromInput__NEW( patch, face, enthalpy, ivGridVarMap, allIndepVarNames, bound_ptr ); 
+            }
+
+          }
+        }
+      }
+    }
+  } 
   
 }
 
 //****************************************************************************
 // Set hat velocity at the outlet
-// Tangential bc's are not needed to be set for hat velocities
-// Commented them out to avoid confusion
 //****************************************************************************
 void 
-BoundaryCondition::velRhoHatOutletPressureBC(const Patch* patch,
-                                             ArchesVariables* vars,
-                                             ArchesConstVariables* constvars)
+BoundaryCondition::velRhoHatOutletPressureBC( const Patch* patch,
+                                              SFCXVariable<double>& uvel, 
+                                              SFCYVariable<double>& vvel, 
+                                              SFCZVariable<double>& wvel, 
+                                              constSFCXVariable<double>& old_uvel, 
+                                              constSFCYVariable<double>& old_vvel, 
+                                              constSFCZVariable<double>& old_wvel, 
+                                              constCCVariable<int>& cellType )  
 {
   // Get the low and high index for the patch
   IntVector idxLo = patch->getFortranCellLowIndex();
   IntVector idxHi = patch->getFortranCellHighIndex();
 
-  int outlet_celltypeval = outletCellType();
-  int pressure_celltypeval = pressureCellType();
+  int outlet_type = outletCellType();
+  int pressure_type = pressureCellType();
 
   bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
   bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
@@ -3742,26 +3839,22 @@ BoundaryCondition::velRhoHatOutletPressureBC(const Patch* patch,
         IntVector currCell(colX, colY, colZ);
         IntVector xminusCell(colX-1, colY, colZ);
         IntVector xplusCell(colX+1, colY, colZ);
-        if ((constvars->cellType[xminusCell] == outlet_celltypeval)||
-            (constvars->cellType[xminusCell] == pressure_celltypeval)) {
+        if ((cellType[xminusCell] == outlet_type)||
+            (cellType[xminusCell] == pressure_type)) {
           if ((zminus && (colZ == idxLo.z()))||(zplus && (colZ == idxHi.z()))
               ||(yminus && (colY == idxLo.y()))||(yplus && (colY == idxHi.y())))
-            vars->uVelRhoHat[currCell] = 0.0;
+            uvel[currCell] = 0.0;
           else {
-          if (constvars->cellType[xminusCell] == outlet_celltypeval)
+          if (cellType[xminusCell] == outlet_type)
             sign = 1;
           else
             sign = -1;
-          if (sign * constvars->old_uVelocity[currCell] < -1.0e-10)
-            vars->uVelRhoHat[currCell] = vars->uVelRhoHat[xplusCell];
+          if (sign * old_uvel[currCell] < -1.0e-10)
+            uvel[currCell] = uvel[xplusCell];
           else
-            vars->uVelRhoHat[currCell] = 0.0;
+            uvel[currCell] = 0.0;
           }
-          vars->uVelRhoHat[xminusCell] = vars->uVelRhoHat[currCell];
- /*         if (!(yminus && (colY == idxLo.y())))
-            vars->vVelRhoHat[xminusCell] = vars->vVelRhoHat[currCell];
-          if (!(zminus && (colZ == idxLo.z())))
-            vars->wVelRhoHat[xminusCell] = vars->wVelRhoHat[currCell];*/
+          uvel[xminusCell] = uvel[currCell];
         }
       }
     }
@@ -3773,26 +3866,22 @@ BoundaryCondition::velRhoHatOutletPressureBC(const Patch* patch,
         IntVector currCell(colX, colY, colZ);
         IntVector xplusCell(colX+1, colY, colZ);
         IntVector xplusplusCell(colX+2, colY, colZ);
-        if ((constvars->cellType[xplusCell] == outlet_celltypeval)||
-            (constvars->cellType[xplusCell] == pressure_celltypeval)) {
+        if ((cellType[xplusCell] == outlet_type)||
+            (cellType[xplusCell] == pressure_type)) {
           if ((zminus && (colZ == idxLo.z()))||(zplus && (colZ == idxHi.z()))
               ||(yminus && (colY == idxLo.y()))||(yplus && (colY == idxHi.y())))
-            vars->uVelRhoHat[xplusCell] = 0.0;
+            uvel[xplusCell] = 0.0;
           else {
-          if (constvars->cellType[xplusCell] == outlet_celltypeval)
+          if (cellType[xplusCell] == outlet_type)
             sign = 1;
           else
             sign = -1;
-          if (sign * constvars->old_uVelocity[xplusCell] > 1.0e-10)
-            vars->uVelRhoHat[xplusCell] = vars->uVelRhoHat[currCell];
+          if (sign * old_uvel[xplusCell] > 1.0e-10)
+            uvel[xplusCell] = uvel[currCell];
           else
-            vars->uVelRhoHat[xplusCell] = 0.0;
+            uvel[xplusCell] = 0.0;
           }
-          vars->uVelRhoHat[xplusplusCell] = vars->uVelRhoHat[xplusCell];
-   /*       if (!(yminus && (colY == idxLo.y())))
-            vars->vVelRhoHat[xplusCell] = vars->vVelRhoHat[currCell];
-          if (!(zminus && (colZ == idxLo.z())))
-            vars->wVelRhoHat[xplusCell] = vars->wVelRhoHat[currCell];*/
+          uvel[xplusplusCell] = uvel[xplusCell];
         }
       }
     }
@@ -3804,26 +3893,22 @@ BoundaryCondition::velRhoHatOutletPressureBC(const Patch* patch,
         IntVector currCell(colX, colY, colZ);
         IntVector yminusCell(colX, colY-1, colZ);
         IntVector yplusCell(colX, colY+1, colZ);
-        if ((constvars->cellType[yminusCell] == outlet_celltypeval)||
-            (constvars->cellType[yminusCell] == pressure_celltypeval)) {
-     /*     if (!(xminus && (colX == idxLo.x())))
-            vars->uVelRhoHat[yminusCell] = vars->uVelRhoHat[currCell];*/
+        if ((cellType[yminusCell] == outlet_type)||
+            (cellType[yminusCell] == pressure_type)) {
           if ((zminus && (colZ == idxLo.z()))||(zplus && (colZ == idxHi.z()))
               ||(xminus && (colX == idxLo.x()))||(xplus && (colX == idxHi.x())))
-            vars->vVelRhoHat[currCell] = 0.0;
+            vvel[currCell] = 0.0;
           else {
-          if (constvars->cellType[yminusCell] == outlet_celltypeval)
+          if (cellType[yminusCell] == outlet_type)
             sign = 1;
           else
             sign = -1;
-          if (sign * constvars->old_vVelocity[currCell] < -1.0e-10)
-            vars->vVelRhoHat[currCell] = vars->vVelRhoHat[yplusCell];
+          if (sign * old_vvel[currCell] < -1.0e-10)
+            vvel[currCell] = vvel[yplusCell];
           else
-            vars->vVelRhoHat[currCell] = 0.0;
+            vvel[currCell] = 0.0;
           }
-          vars->vVelRhoHat[yminusCell] = vars->vVelRhoHat[currCell];
-     /*     if (!(zminus && (colZ == idxLo.z())))
-            vars->wVelRhoHat[yminusCell] = vars->wVelRhoHat[currCell];*/
+          vvel[yminusCell] = vvel[currCell];
         }
       }
     }
@@ -3835,26 +3920,22 @@ BoundaryCondition::velRhoHatOutletPressureBC(const Patch* patch,
         IntVector currCell(colX, colY, colZ);
         IntVector yplusCell(colX, colY+1, colZ);
         IntVector yplusplusCell(colX, colY+2, colZ);
-        if ((constvars->cellType[yplusCell] == outlet_celltypeval)||
-            (constvars->cellType[yplusCell] == pressure_celltypeval)) {
-      /*    if (!(xminus && (colX == idxLo.x())))
-            vars->uVelRhoHat[yplusCell] = vars->uVelRhoHat[currCell];*/
+        if ((cellType[yplusCell] == outlet_type)||
+            (cellType[yplusCell] == pressure_type)) {
           if ((zminus && (colZ == idxLo.z()))||(zplus && (colZ == idxHi.z()))
               ||(xminus && (colX == idxLo.x()))||(xplus && (colX == idxHi.x())))
-            vars->vVelRhoHat[yplusCell] = 0.0;
+            vvel[yplusCell] = 0.0;
           else {
-          if (constvars->cellType[yplusCell] == outlet_celltypeval)
+          if (cellType[yplusCell] == outlet_type)
             sign = 1;
           else
             sign = -1;
-          if (sign * constvars->old_vVelocity[yplusCell] > 1.0e-10)
-            vars->vVelRhoHat[yplusCell] = vars->vVelRhoHat[currCell];
+          if (sign * old_vvel[yplusCell] > 1.0e-10)
+            vvel[yplusCell] = vvel[currCell];
           else
-            vars->vVelRhoHat[yplusCell] = 0.0;
+            vvel[yplusCell] = 0.0;
           }
-          vars->vVelRhoHat[yplusplusCell] = vars->vVelRhoHat[yplusCell];
-       /*   if (!(zminus && (colZ == idxLo.z())))
-            vars->wVelRhoHat[yplusCell] = vars->wVelRhoHat[currCell];*/
+          vvel[yplusplusCell] = vvel[yplusCell];
         }
       }
     }
@@ -3866,26 +3947,22 @@ BoundaryCondition::velRhoHatOutletPressureBC(const Patch* patch,
         IntVector currCell(colX, colY, colZ);
         IntVector zminusCell(colX, colY, colZ-1);
         IntVector zplusCell(colX, colY, colZ+1);
-        if ((constvars->cellType[zminusCell] == outlet_celltypeval)||
-            (constvars->cellType[zminusCell] == pressure_celltypeval)) {
-      /*    if (!(xminus && (colX == idxLo.x())))
-            vars->uVelRhoHat[zminusCell] = vars->uVelRhoHat[currCell];
-          if (!(yminus && (colY == idxLo.y())))
-            vars->vVelRhoHat[zminusCell] = vars->vVelRhoHat[currCell];*/
+        if ((cellType[zminusCell] == outlet_type)||
+            (cellType[zminusCell] == pressure_type)) {
           if ((yminus && (colY == idxLo.y()))||(yplus && (colY == idxHi.y()))
               ||(xminus && (colX == idxLo.x()))||(xplus && (colX == idxHi.x())))
-            vars->wVelRhoHat[currCell] = 0.0;
+            wvel[currCell] = 0.0;
           else {
-          if (constvars->cellType[zminusCell] == outlet_celltypeval)
+          if (cellType[zminusCell] == outlet_type)
             sign = 1;
           else
             sign = -1;
-          if (sign * constvars->old_wVelocity[currCell] < -1.0e-10)
-            vars->wVelRhoHat[currCell] = vars->wVelRhoHat[zplusCell];
+          if (sign * old_wvel[currCell] < -1.0e-10)
+            wvel[currCell] = wvel[zplusCell];
           else
-            vars->wVelRhoHat[currCell] = 0.0;
+            wvel[currCell] = 0.0;
           }
-          vars->wVelRhoHat[zminusCell] = vars->wVelRhoHat[currCell];
+          wvel[zminusCell] = wvel[currCell];
         }
       }
     }
@@ -3897,31 +3974,29 @@ BoundaryCondition::velRhoHatOutletPressureBC(const Patch* patch,
         IntVector currCell(colX, colY, colZ);
         IntVector zplusCell(colX, colY, colZ+1);
         IntVector zplusplusCell(colX, colY, colZ+2);
-        if ((constvars->cellType[zplusCell] == outlet_celltypeval)||
-            (constvars->cellType[zplusCell] == pressure_celltypeval)) {
-       /*   if (!(xminus && (colX == idxLo.x())))
-            vars->uVelRhoHat[zplusCell] = vars->uVelRhoHat[currCell];
-          if (!(yminus && (colY == idxLo.y())))
-            vars->vVelRhoHat[zplusCell] = vars->vVelRhoHat[currCell];*/
+        if ((cellType[zplusCell] == outlet_type)||
+            (cellType[zplusCell] == pressure_type)) {
           if ((yminus && (colY == idxLo.y()))||(yplus && (colY == idxHi.y()))
               ||(xminus && (colX == idxLo.x()))||(xplus && (colX == idxHi.x())))
-            vars->wVelRhoHat[zplusCell] = 0.0;
+            wvel[zplusCell] = 0.0;
           else {
-          if (constvars->cellType[zplusCell] == outlet_celltypeval)
+          if (cellType[zplusCell] == outlet_type)
             sign = 1;
           else
             sign = -1;
-          if (sign * constvars->old_wVelocity[zplusCell] > 1.0e-10)
-            vars->wVelRhoHat[zplusCell] = vars->wVelRhoHat[currCell];
+          if (sign * old_wvel[zplusCell] > 1.0e-10)
+            wvel[zplusCell] = wvel[currCell];
           else
-            vars->wVelRhoHat[zplusCell] = 0.0;
+            wvel[zplusCell] = 0.0;
           }
-          vars->wVelRhoHat[zplusplusCell] = vars->wVelRhoHat[zplusCell];
+          wvel[zplusplusCell] = wvel[zplusCell];
         }
       }
     }
   }
 }
+
+
 //****************************************************************************
 // Set zero gradient for tangent velocity on outlet and pressure bc
 //****************************************************************************
@@ -4966,15 +5041,9 @@ BoundaryCondition::sched_getScalarFlowRate(SchedulerP& sched,
   if (d_carbon_balance){
     tsk->computes(d_lab->d_CO2FlowRateLabel);
   }
-  if (d_carbon_balance_es){
-    tsk->computes(d_lab->d_CO2FlowRateESLabel);
-  }
   if (d_sulfur_balance){
     tsk->computes(d_lab->d_SO2FlowRateLabel);
   }
-  if (d_sulfur_balance_es){
-    tsk->computes(d_lab->d_SO2FlowRateESLabel);
-  }                  
   if (d_enthalpySolve){
     tsk->computes(d_lab->d_enthalpyFlowRateLabel);
   }
@@ -5044,23 +5113,6 @@ BoundaryCondition::getScalarFlowRate(const ProcessorGroup*,
                         &co2IN, &co2OUT); 
       new_dw->put(sum_vartype(co2OUT-co2IN), d_lab->d_CO2FlowRateLabel);
     }
-    co2IN = 0.0;
-    co2OUT = 0.0;
-    if (d_carbon_balance_es) {
-
-      std::vector<ExtraScalarSolver*>::iterator iss; 
-      for (iss=d_extraScalars->begin(); iss!=d_extraScalars->end(); ++iss){
-        bool checkCarbonBalance = (*iss)->doCarbonBalance();
-        if (checkCarbonBalance){         
-          const VarLabel* templabel = (*iss)->getScalarLabel();
-                  
-          new_dw->get(co2_es, templabel, indx, patch, gn, 0);
-          getVariableFlowRate(patch, cellinfo, &constVars, co2_es,
-                  &co2IN, &co2OUT); 
-          new_dw->put(sum_vartype(co2OUT-co2IN), d_lab->d_CO2FlowRateESLabel);
-        }
-      }
-    }
 
     // --- new efficiency calculator --- 
     for (BoundaryCondition::SpeciesEffMap::iterator iter = d_speciesEffInfo.begin(); iter != d_speciesEffInfo.end(); iter++){
@@ -5085,25 +5137,6 @@ BoundaryCondition::getScalarFlowRate(const ProcessorGroup*,
       new_dw->put(sum_vartype(so2OUT-so2IN), d_lab->d_SO2FlowRateLabel);
     } 
         
-    so2IN = 0.0;
-    so2OUT = 0.0; 
-    if (d_sulfur_balance_es) {
-
-      std::vector<ExtraScalarSolver*>::iterator iss; 
-      for (iss=d_extraScalars->begin(); iss!=d_extraScalars->end(); ++iss){
-        bool checkSulfurBalance = (*iss)->doSulfurBalance();
-        if (checkSulfurBalance){         
-          
-          const VarLabel* templabel = (*iss)->getScalarLabel();
-                  
-          new_dw->get(so2_es, templabel, indx, patch, gn, 0);
-          getVariableFlowRate(patch, cellinfo, &constVars, so2_es,
-                  &so2IN, &so2OUT); 
-          new_dw->put(sum_vartype(so2OUT-so2IN), d_lab->d_SO2FlowRateESLabel);
-        }
-      }
-    }
-          
     double enthalpyIN = 0.0;
     double enthalpyOUT = 0.0;
     if (d_enthalpySolve) {
@@ -5137,17 +5170,9 @@ void BoundaryCondition::sched_getScalarEfficiency(SchedulerP& sched,
     tsk->requires(Task::NewDW, d_lab->d_CO2FlowRateLabel);
     tsk->computes(d_lab->d_carbonEfficiencyLabel);
   }
-  if (d_carbon_balance_es) {
-    tsk->requires(Task::NewDW, d_lab->d_CO2FlowRateESLabel);
-    tsk->computes(d_lab->d_carbonEfficiencyESLabel);
-  }
   if (d_sulfur_balance) {
     tsk->requires(Task::NewDW, d_lab->d_SO2FlowRateLabel);
     tsk->computes(d_lab->d_sulfurEfficiencyLabel);
-  }
-  if (d_sulfur_balance_es) {
-    tsk->requires(Task::NewDW, d_lab->d_SO2FlowRateESLabel);
-    tsk->computes(d_lab->d_sulfurEfficiencyESLabel);
   }
   if (d_enthalpySolve) {
     tsk->requires(Task::NewDW, d_lab->d_enthalpyFlowRateLabel);
@@ -5178,26 +5203,19 @@ BoundaryCondition::getScalarEfficiency(const ProcessorGroup*,
                                        DataWarehouse* new_dw)
 {
     sum_vartype sum_scalarFlowRate, sum_CO2FlowRate, sum_SO2FlowRate, sum_enthalpyFlowRate;
-    sum_vartype sum_CO2FlowRateES, sum_SO2FlowRateES;
     sum_vartype sum_totalRadSrc;
     delt_vartype flowRate;
     double scalarFlowRate = 0.0;
     double CO2FlowRate = 0.0;
-    double CO2FlowRateES = 0.0;
     double SO2FlowRate = 0.0;
-    double SO2FlowRateES = 0.0;
     double enthalpyFlowRate = 0.0;
     double totalFlowRate = 0.0;
     double totalCarbonFlowRate = 0.0;
-    double totalCarbonFlowRateES = 0.0;
     double totalSulfurFlowRate = 0.0;
-    double totalSulfurFlowRateES = 0.0;
     double totalEnthalpyFlowRate = 0.0;
     double scalarEfficiency = 0.0;
     double carbonEfficiency = 0.0;
-    double carbonEfficiencyES = 0.0;
     double sulfurEfficiency = 0.0;
-    double sulfurEfficiencyES = 0.0;
     double enthalpyEfficiency = 0.0;
     double totalRadSrc = 0.0;
     double normTotalRadSrc = 0.0;
@@ -5208,18 +5226,10 @@ BoundaryCondition::getScalarEfficiency(const ProcessorGroup*,
       new_dw->get(sum_CO2FlowRate, d_lab->d_CO2FlowRateLabel);
       CO2FlowRate = sum_CO2FlowRate;
     }
-    if (d_carbon_balance_es) {
-      new_dw->get(sum_CO2FlowRateES, d_lab->d_CO2FlowRateESLabel);
-      CO2FlowRateES = sum_CO2FlowRateES;
-    }
 
     if (d_sulfur_balance) {
       new_dw->get(sum_SO2FlowRate, d_lab->d_SO2FlowRateLabel);
       SO2FlowRate = sum_SO2FlowRate;
-    }
-    if (d_sulfur_balance_es) {
-      new_dw->get(sum_SO2FlowRateES, d_lab->d_SO2FlowRateESLabel);
-      SO2FlowRateES = sum_SO2FlowRateES;
     }
     if (d_enthalpySolve) {
       new_dw->get(sum_enthalpyFlowRate, d_lab->d_enthalpyFlowRateLabel);
@@ -5238,12 +5248,8 @@ BoundaryCondition::getScalarEfficiency(const ProcessorGroup*,
           totalFlowRate += fi->flowRate;
       if ((d_carbon_balance)&&(scalarValue > 0.0))
             totalCarbonFlowRate += fi->flowRate * fi->fcr;
-      if ((d_carbon_balance_es)&&(scalarValue > 0.0))
-            totalCarbonFlowRateES += fi->flowRate * fi->fcr;
       if ((d_sulfur_balance)&&(scalarValue > 0.0))
             totalSulfurFlowRate += fi->flowRate * fi->fsr;
-      if ((d_sulfur_balance_es)&&(scalarValue > 0.0))
-            totalSulfurFlowRateES += fi->flowRate * fi->fsr;
       if ((d_enthalpySolve)&&(scalarValue > 0.0))
             totalEnthalpyFlowRate += fi->flowRate * fi->calcStream.getEnthalpy();
     }
@@ -5261,13 +5267,6 @@ BoundaryCondition::getScalarEfficiency(const ProcessorGroup*,
         throw InvalidValue("No carbon in the domain", __FILE__, __LINE__);
       new_dw->put(delt_vartype(carbonEfficiency), d_lab->d_carbonEfficiencyLabel);
     }
-    if (d_carbon_balance_es) {
-      if (totalCarbonFlowRateES > 0.0)
-        carbonEfficiencyES = CO2FlowRateES * 12.0/44.0 /totalCarbonFlowRateES;
-      else 
-        throw InvalidValue("No carbon in the domain from ExtraScalar", __FILE__, __LINE__);
-      new_dw->put(delt_vartype(carbonEfficiencyES), d_lab->d_carbonEfficiencyESLabel);
-    }
 
     if (d_sulfur_balance) {
       if (totalSulfurFlowRate > 0.0)
@@ -5275,14 +5274,6 @@ BoundaryCondition::getScalarEfficiency(const ProcessorGroup*,
       else 
         throw InvalidValue("No sulfur in the domain", __FILE__, __LINE__);
       new_dw->put(delt_vartype(sulfurEfficiency), d_lab->d_sulfurEfficiencyLabel);
-    }
-
-    if (d_sulfur_balance_es) {
-      if (totalSulfurFlowRateES > 0.0)
-                sulfurEfficiencyES = SO2FlowRateES * 32.0/64.0 /totalSulfurFlowRateES;
-      else 
-        throw InvalidValue("No sulfur in the domain from ExtraScalar", __FILE__, __LINE__);
-      new_dw->put(delt_vartype(sulfurEfficiencyES), d_lab->d_sulfurEfficiencyESLabel);
     }
 
     // new efficiency calculation
@@ -6240,12 +6231,6 @@ BoundaryCondition::sched_Prefill(SchedulerP& sched,
 
   tsk->modifies(d_lab->d_scalarSPLabel);
 
-  if (d_calcExtraScalars){
-    for (int i=0; i < static_cast<int>(d_extraScalars->size()); i++) {
-      tsk->modifies(d_extraScalars->at(i)->getScalarLabel());
-    }
-  }
-
   sched->addTask(tsk, patches, matls);
 }
 
@@ -6355,23 +6340,6 @@ BoundaryCondition::Prefill(const ProcessorGroup*,
                   if (d_reactingScalarSolve)
                     reactscalar[*iter] = fi->streamMixturefraction.d_rxnVars[0];
                 
-                  //Now handle extra scalars
-                  if (d_calcExtraScalars) {
-                    for ( int i=0; i < static_cast<int>(d_extraScalars->size()); i++ ) {
-
-                      CCVariable<double> extra_scalar;
-                      new_dw->getModifiable(extra_scalar, d_extraScalars->at(i)->getScalarLabel(), indx, patch); // get the current extra scalar
-                      string extra_scalar_name = d_extraScalars->at(i)->getScalarName(); // actual name of the extra scalar
-                      int BC_ID = fi->d_cellTypeID; 
-
-                      for (int j=0; j < static_cast<int>(d_extraScalarBCs.size()); j++) {
-                        if ((d_extraScalarBCs[j]->d_scalar_name == extra_scalar_name)&&
-                           (d_extraScalarBCs[j]->d_BC_ID) == BC_ID) {
-                         extra_scalar[*iter] = d_extraScalarBCs[j]->d_scalarBC_value; //finally set the extra scalar's value
-                        }
-                      }
-                    } 
-                  } // end extra scalars
                 } // Cell Iter loop 
   
               } // cell iterator loop
@@ -6472,6 +6440,7 @@ void BoundaryCondition::sched_setAreaFraction(SchedulerP& sched,
   Task* tsk = scinew Task( "BoundaryCondition::setAreaFraction",this, &BoundaryCondition::setAreaFraction);
 
   tsk->modifies(d_lab->d_areaFractionLabel); 
+  tsk->modifies(d_lab->d_volFractionLabel); 
   tsk->requires( Task::NewDW, d_lab->d_cellTypeLabel, Ghost::AroundCells, 1 ); 
  
   sched->addTask(tsk, patches, matls);
@@ -6489,23 +6458,949 @@ BoundaryCondition::setAreaFraction( const ProcessorGroup*,
     int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
     CCVariable<Vector>   areaFraction; 
+    CCVariable<double>   volFraction; 
     constCCVariable<int> cellType; 
 
     new_dw->get( cellType, d_lab->d_cellTypeLabel, indx, patch, Ghost::AroundCells, 1 ); 
     new_dw->getModifiable( areaFraction, d_lab->d_areaFractionLabel, indx, patch );  
+    new_dw->getModifiable( volFraction, d_lab->d_volFractionLabel, indx, patch );  
 
     int flowType = -1; 
     if (d_intrusionBoundary) 
-      d_newBC->setAreaFraction( patch, areaFraction, cellType, d_intrusionBC->d_cellTypeID, flowType ); 
+      d_newBC->setAreaFraction( patch, areaFraction, volFraction, cellType, d_intrusionBC->d_cellTypeID, flowType ); 
 
     if (d_MAlab)
-      d_newBC->setAreaFraction( patch, areaFraction, cellType, d_mmWallID, flowType ); 
+      d_newBC->setAreaFraction( patch, areaFraction, volFraction, cellType, d_mmWallID, flowType ); 
 
     if (d_wallBdry) 
-      d_newBC->setAreaFraction( patch, areaFraction, cellType, d_wallBdry->d_cellTypeID, flowType ); 
+      d_newBC->setAreaFraction( patch, areaFraction, volFraction, cellType, d_wallBdry->d_cellTypeID, flowType ); 
 
   }
 }
+
+//-------------------------------------------------------------
+// New Domain BCs
+//
+void 
+BoundaryCondition::setupBCs( ProblemSpecP& db )
+{
+ 
+  ProblemSpecP db_root = db->getRootNode();
+  ProblemSpecP db_bc   = db_root->findBlock("Grid")->findBlock("BoundaryConditions"); 
+  int bc_type_index = 0; 
+
+  //Map types to strings:
+  d_bc_type_to_string.insert( std::make_pair( VELOCITY_INLET , "VelocityInlet" ) );
+  d_bc_type_to_string.insert( std::make_pair( MASSFLOW_INLET , "MassFlowInlet" ) );
+  d_bc_type_to_string.insert( std::make_pair( VELOCITY_FILE  , "VelocityFileInput" ) );
+  d_bc_type_to_string.insert( std::make_pair( PRESSURE       , "PressureBC" ) );
+  d_bc_type_to_string.insert( std::make_pair( OUTLET         , "Outlet" ) );
+  d_bc_type_to_string.insert( std::make_pair( WALL           , "Wall" ) );
+
+  // Now actually look for the boundary types
+  if ( db_bc ) { 
+    for ( ProblemSpecP db_face = db_bc->findBlock("Face"); db_face != 0; 
+          db_face = db_face->findNextBlock("Face") ){
+      
+      for ( ProblemSpecP db_BCType = db_face->findBlock("BCType"); db_BCType != 0; 
+          db_BCType = db_BCType->findNextBlock("BCType") ){
+
+        std::string name; 
+        std::string type; 
+        bool found_bc = false; 
+        BCInfo my_info; 
+        db_BCType->getAttribute("label", name);
+        db_BCType->getAttribute("var", type); 
+        my_info.name = name;
+        std::stringstream color; 
+        color << bc_type_index; 
+        my_info.total_area_label = VarLabel::create( "bc_area"+color.str(), ReductionVariable<double, Reductions::Sum<double> >::getTypeDescription());
+
+        if ( type == "VelocityInlet" ){
+
+          my_info.type = VELOCITY_INLET; 
+          db_BCType->require("vecvalue", my_info.velocity);
+          found_bc = true; 
+
+          //old: remove when this is cleaned up: 
+          d_inletBoundary = true; 
+
+        } else if ( type == "MassFlowInlet" ){
+
+          my_info.type = MASSFLOW_INLET;
+          my_info.velocity = Vector(0,0,0); 
+          found_bc = true; 
+
+          //old: remove when this is cleaned up: 
+          d_inletBoundary = true; 
+
+        } else if ( type == "VelocityFileInput" ){ 
+
+          my_info.type = VELOCITY_FILE; 
+          db_BCType->require("inputfile", my_info.filename); 
+          my_info.velocity = Vector(0,0,0); 
+          found_bc = true; 
+
+          //old: remove when this is cleaned up: 
+          d_inletBoundary = true; 
+
+        } else if ( type == "PressureBC" ){
+
+          my_info.type = PRESSURE; 
+          my_info.velocity = Vector(0,0,0); 
+          found_bc = true; 
+
+          //old: remove when this is cleaned up: 
+          d_pressureBoundary = true; 
+
+        } else if ( type == "OutletBC" ){ 
+
+          my_info.type = OUTLET; 
+          my_info.velocity = Vector(0,0,0); 
+          found_bc = true; 
+
+          //old: remove when this is cleaned up: 
+          d_outletBoundary = true; 
+
+        } else if ( type == "WallBC" ){
+
+          my_info.type = WALL;
+          my_info.velocity = Vector(0,0,0); 
+          db_BCType->getWithDefault("vecvalue", my_info.velocity, Vector(0,0,0)); // to allow for "moving" walls
+          found_bc = true; 
+
+        }
+
+        if ( found_bc ) {
+          d_bc_information.insert( std::make_pair(bc_type_index, my_info)).first;
+          bc_type_index++; 
+        }
+
+      }
+    }
+  }
+}
+
+//-------------------------------------------------------------
+// Set the cell Type
+//
+void 
+BoundaryCondition::sched_cellTypeInit__NEW(SchedulerP& sched,
+                                      const PatchSet* patches,
+                                      const MaterialSet* matls)
+{
+  // cell type initialization
+  Task* tsk = scinew Task("BoundaryCondition::cellTypeInit__NEW",
+                          this, &BoundaryCondition::cellTypeInit__NEW);
+
+  tsk->computes(d_lab->d_cellTypeLabel);
+
+  sched->addTask(tsk, patches, matls);
+}
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+void 
+BoundaryCondition::cellTypeInit__NEW(const ProcessorGroup*,
+                                const PatchSubset* patches,
+                                const MaterialSubset*,
+                                DataWarehouse*,
+                                DataWarehouse* new_dw)
+{
+
+  for (int p = 0; p < patches->size(); p++) {
+
+    const Patch* patch = patches->get(p);
+    int archIndex = 0;
+    int matl_index = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+
+    CCVariable<int> cellType;
+    new_dw->allocateAndPut(cellType, d_lab->d_cellTypeLabel, matl_index, patch);
+    cellType.initialize(999);
+
+    for ( CellIterator iter=patch->getCellIterator(); !iter.done(); iter++ ){
+
+      // initialize all cells in the interior as flow
+      // intrusions will be dealt with later
+      cellType[*iter] = -1; 
+
+    }
+
+    vector<Patch::FaceType>::const_iterator bf_iter;
+    vector<Patch::FaceType> bf;
+    patch->getBoundaryFaces(bf);
+
+    for ( BCInfoMap::iterator bc_iter = d_bc_information.begin(); 
+        bc_iter != d_bc_information.end(); bc_iter++){
+
+      for (bf_iter = bf.begin(); bf_iter !=bf.end(); bf_iter++){
+
+        //get the face
+        Patch::FaceType face = *bf_iter;
+
+        //get the number of children
+        int numChildren = patch->getBCDataArray(face)->getNumberChildren(matl_index); //assumed one material
+
+        for (int child = 0; child < numChildren; child++){
+
+          double bc_value = 0;
+          
+          string bc_kind = "NotSet";
+          Iterator bound_ptr;
+
+          bool foundIterator = 
+            getIteratorBCValueBCKind( patch, face, child, bc_iter->second.name, matl_index, bc_value, bound_ptr, bc_kind); 
+
+          if ( foundIterator ) {
+
+            for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
+
+              cellType[*bound_ptr] = bc_iter->second.type;
+
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+//-------------------------------------------------------------
+// Compute BC Areas
+//
+void 
+BoundaryCondition::sched_computeBCArea__NEW(SchedulerP& sched,
+                                      const LevelP& level, 
+                                      const PatchSet* patches,
+                                      const MaterialSet* matls)
+{
+  IntVector lo, hi;
+  level->findInteriorCellIndexRange(lo,hi);
+
+  // cell type initialization
+  Task* tsk = scinew Task("BoundaryCondition::computeBCArea__NEW",
+                          this, &BoundaryCondition::computeBCArea__NEW, lo, hi);
+
+  for ( BCInfoMap::iterator bc_iter = d_bc_information.begin(); 
+        bc_iter != d_bc_information.end(); bc_iter++){
+
+    BCInfo the_info = bc_iter->second; 
+    tsk->computes( the_info.total_area_label ); 
+
+  }
+
+  sched->addTask(tsk, patches, matls);
+}
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+void 
+BoundaryCondition::computeBCArea__NEW(const ProcessorGroup*,
+                                const PatchSubset* patches,
+                                const MaterialSubset*,
+                                DataWarehouse*,
+                                DataWarehouse* new_dw, 
+                                const IntVector lo, 
+                                const IntVector hi )
+{
+
+  for (int p = 0; p < patches->size(); p++) {
+
+    const Patch* patch = patches->get(p);
+    int archIndex = 0;
+    int matl_index = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+
+    vector<Patch::FaceType>::const_iterator bf_iter;
+    vector<Patch::FaceType> bf;
+    patch->getBoundaryFaces(bf);
+    Vector Dx = patch->dCell(); 
+
+    for ( BCInfoMap::iterator bc_iter = d_bc_information.begin(); 
+          bc_iter != d_bc_information.end(); bc_iter++){
+
+      double area = 0; 
+
+      for (bf_iter = bf.begin(); bf_iter !=bf.end(); bf_iter++){
+
+        //get the face
+        Patch::FaceType face = *bf_iter;
+
+        //get the number of children
+        int numChildren = patch->getBCDataArray(face)->getNumberChildren(matl_index); //assumed one material
+
+        for (int child = 0; child < numChildren; child++){
+
+          double bc_value = 0;
+          
+          string bc_kind = "NotSet";
+          Iterator bound_ptr;
+
+          bool foundIterator = 
+            getIteratorBCValueBCKind( patch, face, child, bc_iter->second.name, matl_index, bc_value, bound_ptr, bc_kind); 
+
+          double dx_1 = 0.0;
+          double dx_2 = 0.0; 
+          IntVector shift; 
+
+          if ( foundIterator ) {
+
+            switch (face) {
+              case Patch::xminus:
+                dx_1 = Dx.y();
+                dx_2 = Dx.z(); 
+                shift = IntVector( 1, 0, 0);
+                break;
+              case Patch::xplus:
+                dx_1 = Dx.y();
+                dx_2 = Dx.z(); 
+                shift = IntVector( 1, 0, 0);
+                break;
+              case Patch::yminus:
+                dx_1 = Dx.x();
+                dx_2 = Dx.z(); 
+                shift = IntVector( 0, 1, 0);
+                break;
+              case Patch::yplus:
+                dx_1 = Dx.x();
+                dx_2 = Dx.z(); 
+                shift = IntVector( 0, 1, 0);
+                break;
+              case Patch::zminus: 
+                dx_1 = Dx.y();
+                dx_2 = Dx.x(); 
+                shift = IntVector( 0, 0, 1);
+                break;
+              case Patch::zplus:
+                dx_1 = Dx.y();
+                dx_2 = Dx.x(); 
+                shift = IntVector( 0, 0, 1);
+                break;
+              default:
+                break;
+            }
+
+            for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
+
+              IntVector c = *bound_ptr; 
+
+              // "if" needed to ensure that extra cell contributions aren't added
+              if ( c.x() >= lo.x() - shift.x() && c.x() < hi.x() + shift.x() ){ 
+                if ( c.y() >= lo.y() - shift.y() && c.y() < hi.y() + shift.y() ){ 
+                  if ( c.z() >= lo.z() - shift.z() && c.z() < hi.z() + shift.z() ){ 
+
+                    area += dx_1*dx_2;
+                  }
+                }
+              }
+            }
+
+            new_dw->put( sum_vartype(area), bc_iter->second.total_area_label );
+
+          }
+        }
+      }
+    }
+  }
+}
+
+//--------------------------------------------------------------------------------
+// Compute velocities from mass flow rates for bc's
+//
+void 
+BoundaryCondition::sched_setupBCInletVelocities__NEW(SchedulerP& sched,
+                                                     const PatchSet* patches,
+                                                     const MaterialSet* matls)
+{
+  // cell type initialization
+  Task* tsk = scinew Task("BoundaryCondition::setupBCInletVelocities__NEW",
+                          this, &BoundaryCondition::setupBCInletVelocities__NEW);
+
+  for ( BCInfoMap::iterator bc_iter = d_bc_information.begin(); 
+        bc_iter != d_bc_information.end(); bc_iter++){
+
+    BCInfo the_info = bc_iter->second; 
+    tsk->requires( Task::NewDW, the_info.total_area_label ); 
+
+  }
+
+  tsk->requires( Task::NewDW, d_lab->d_densityCPLabel, Ghost::AroundCells, 0 ); 
+
+  sched->addTask(tsk, patches, matls);
+}
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+void 
+BoundaryCondition::setupBCInletVelocities__NEW(const ProcessorGroup*,
+                                const PatchSubset* patches,
+                                const MaterialSubset*,
+                                DataWarehouse*,
+                                DataWarehouse* new_dw)
+{
+  for (int p = 0; p < patches->size(); p++) {
+
+    const Patch* patch = patches->get(p);
+    int archIndex = 0;
+    int matl_index = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+
+    vector<Patch::FaceType>::const_iterator bf_iter;
+    vector<Patch::FaceType> bf;
+    patch->getBoundaryFaces(bf);
+    Vector Dx = patch->dCell(); 
+    constCCVariable<double> density; 
+    new_dw->get( density, d_lab->d_densityCPLabel, matl_index, patch, Ghost::None, 0 ); 
+
+    proc0cout << "\nBoundary condition summary for inlets: \n";
+
+    for ( BCInfoMap::iterator bc_iter = d_bc_information.begin(); 
+          bc_iter != d_bc_information.end(); bc_iter++){
+
+      sum_vartype area_var;
+      new_dw->get( area_var, bc_iter->second.total_area_label );
+      double area = area_var; 
+
+      for (bf_iter = bf.begin(); bf_iter !=bf.end(); bf_iter++){
+
+        //get the face
+        Patch::FaceType face = *bf_iter;
+
+        //get the number of children
+        int numChildren = patch->getBCDataArray(face)->getNumberChildren(matl_index); //assumed one material
+
+        for (int child = 0; child < numChildren; child++){
+
+          double bc_value = 0;
+          int norm = getNormal( face ); 
+          
+          string bc_kind = "NotSet";
+          Iterator bound_ptr;
+
+          bool foundIterator = 
+            getIteratorBCValueBCKind( patch, face, child, bc_iter->second.name, matl_index, bc_value, bound_ptr, bc_kind); 
+
+          // Notice: 
+          // In the case of mass flow inlets, we are going to assume the density is constant across the inlet
+          // so as to compute the average velocity.  As a result, we will just use the first iterator: 
+          bound_ptr.reset(); 
+
+          if ( foundIterator ) {
+
+            switch ( bc_iter->second.type ) {
+
+              case ( VELOCITY_INLET ): 
+                proc0cout << " Velocity inlet found for face: " << face << " with area = " << area << endl;
+                bc_iter->second.mass_flow_rate = bc_iter->second.velocity[norm] * area * density[*bound_ptr];
+                break;
+              case ( MASSFLOW_INLET ): 
+                proc0cout << " Massflow inlet found for face: " << face << " with area = " << area << endl;
+                bc_iter->second.mass_flow_rate = bc_value; 
+                bc_iter->second.velocity[norm] = bc_iter->second.mass_flow_rate / 
+                                                 ( area * density[*bound_ptr] );
+                proc0cout << "     Computed velocity from rho = " << density[*bound_ptr] << " is v = " << bc_iter->second.velocity[norm] << endl;
+                break;
+              case ( VELOCITY_FILE ): 
+                // here we should read in the file 
+
+                break; 
+              default: 
+                break; 
+            }
+
+          }
+        }
+      }
+    }
+    proc0cout << endl;
+  }
+}
+//--------------------------------------------------------------------------------
+// Apply the boundary conditions
+//
+void 
+BoundaryCondition::sched_setInitProfile__NEW(SchedulerP& sched,
+                                       const PatchSet* patches,
+                                       const MaterialSet* matls)
+{
+  // cell type initialization
+  Task* tsk = scinew Task("BoundaryCondition::setInitProfile__NEW",
+                          this, &BoundaryCondition::setInitProfile__NEW);
+
+  // Momentum
+  tsk->modifies(d_lab->d_uVelocitySPBCLabel);
+  tsk->modifies(d_lab->d_vVelocitySPBCLabel);
+  tsk->modifies(d_lab->d_wVelocitySPBCLabel);
+
+  tsk->modifies(d_lab->d_uVelRhoHatLabel);
+  tsk->modifies(d_lab->d_vVelRhoHatLabel);
+  tsk->modifies(d_lab->d_wVelRhoHatLabel);
+
+  // Density
+  tsk->requires(Task::NewDW, d_lab->d_densityCPLabel, Ghost::AroundCells, 0); 
+
+  MixingRxnModel* mixingTable = d_props->getMixRxnModel(); 
+  MixingRxnModel::VarMap iv_vars = mixingTable->getIVVars(); 
+
+  for ( MixingRxnModel::VarMap::iterator i = iv_vars.begin(); i != iv_vars.end(); i++ ){ 
+
+    tsk->requires( Task::NewDW, i->second, Ghost::AroundCells, 0 ); 
+
+  }
+
+  // Energy
+  if ( d_enthalpySolve ){ 
+
+    tsk->modifies( d_lab->d_enthalpySPLabel ); 
+
+  }
+
+  sched->addTask(tsk, patches, matls);
+}
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+void 
+BoundaryCondition::setInitProfile__NEW(const ProcessorGroup*,
+                                const PatchSubset* patches,
+                                const MaterialSubset*,
+                                DataWarehouse*,
+                                DataWarehouse* new_dw)
+{
+  for (int p = 0; p < patches->size(); p++) {
+
+    const Patch* patch = patches->get(p);
+    int archIndex = 0;
+    int matl_index = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+
+    vector<Patch::FaceType>::const_iterator bf_iter;
+    vector<Patch::FaceType> bf;
+    patch->getBoundaryFaces(bf);
+
+    SFCXVariable<double> uVelocity; 
+    SFCYVariable<double> vVelocity; 
+    SFCZVariable<double> wVelocity; 
+    SFCXVariable<double> uRhoHat; 
+    SFCYVariable<double> vRhoHat; 
+    SFCZVariable<double> wRhoHat; 
+    CCVariable<double> enthalpy; 
+    constCCVariable<double> density; 
+
+    new_dw->getModifiable( uVelocity, d_lab->d_uVelocitySPBCLabel, matl_index, patch ); 
+    new_dw->getModifiable( vVelocity, d_lab->d_vVelocitySPBCLabel, matl_index, patch ); 
+    new_dw->getModifiable( wVelocity, d_lab->d_wVelocitySPBCLabel, matl_index, patch ); 
+    new_dw->getModifiable( uRhoHat, d_lab->d_uVelRhoHatLabel, matl_index, patch ); 
+    new_dw->getModifiable( vRhoHat, d_lab->d_vVelRhoHatLabel, matl_index, patch ); 
+    new_dw->getModifiable( wRhoHat, d_lab->d_wVelRhoHatLabel, matl_index, patch ); 
+    if ( d_enthalpySolve )
+      new_dw->getModifiable( enthalpy, d_lab->d_enthalpySPLabel, matl_index, patch ); 
+    new_dw->get( density, d_lab->d_densityCPLabel, matl_index, patch, Ghost::None, 0 ); 
+
+    MixingRxnModel* mixingTable = d_props->getMixRxnModel(); 
+    MixingRxnModel::VarMap iv_vars = mixingTable->getIVVars(); 
+
+    // Get the independent variable information for table lookup
+    BoundaryCondition::HelperMap ivGridVarMap; 
+    BoundaryCondition::HelperVec allIndepVarNames = mixingTable->getAllIndepVars(); 
+
+    for ( MixingRxnModel::VarMap::iterator i = iv_vars.begin(); i != iv_vars.end(); i++ ){ 
+      constCCVariable<double> variable; 
+      new_dw->get( variable, i->second, matl_index, patch, Ghost::None, 0 );
+      ivGridVarMap.insert( make_pair( i->first, variable)).first;
+    }
+
+    for ( BCInfoMap::iterator bc_iter = d_bc_information.begin(); 
+          bc_iter != d_bc_information.end(); bc_iter++){
+
+      for ( bf_iter = bf.begin(); bf_iter !=bf.end(); bf_iter++ ){
+
+        //get the face
+        Patch::FaceType face = *bf_iter;
+        IntVector insideCellDir = patch->faceDirection(face); 
+
+        //get the number of children
+        int numChildren = patch->getBCDataArray(face)->getNumberChildren(matl_index); //assumed one material
+
+        for (int child = 0; child < numChildren; child++){
+
+          double bc_value = 0;
+          //int norm = getNormal( face ); 
+          
+          string bc_kind = "NotSet";
+          Iterator bound_ptr;
+
+          bool foundIterator = 
+            getIteratorBCValueBCKind( patch, face, child, bc_iter->second.name, matl_index, bc_value, bound_ptr, bc_kind); 
+
+          if ( foundIterator ) {
+
+            bound_ptr.reset(); 
+
+            if ( bc_iter->second.type != VELOCITY_FILE ) { 
+              //---- set velocities
+              setVel__NEW( patch, face, uVelocity, vVelocity, wVelocity, density, bound_ptr, bc_iter->second.velocity ); 
+              //---- set the enthalpy
+              if ( d_enthalpySolve ) 
+                setEnthalpy__NEW( patch, face, enthalpy, ivGridVarMap, allIndepVarNames, bound_ptr ); 
+            } else {
+              //---- set velocities
+              setVelFromInput__NEW( patch, face, uVelocity, vVelocity, wVelocity, bound_ptr, bc_iter->second.filename ); 
+              //---- set the enthalpy
+              if ( d_enthalpySolve ) 
+                setEnthalpyFromInput__NEW( patch, face, enthalpy, ivGridVarMap, allIndepVarNames, bound_ptr ); 
+            }
+
+          }
+        }
+      }
+    }
+
+    uRhoHat.copyData( uVelocity ); 
+    vRhoHat.copyData( vVelocity ); 
+    wRhoHat.copyData( wVelocity ); 
+
+  }
+}
+
+void BoundaryCondition::setEnthalpy__NEW( const Patch* patch, const Patch::FaceType& face, 
+    CCVariable<double>& enthalpy, BoundaryCondition::HelperMap ivGridVarMap, BoundaryCondition::HelperVec allIndepVarNames, 
+    Iterator bound_ptr)
+{
+  //get the face direction
+  IntVector insideCellDir = patch->faceDirection(face);
+  MixingRxnModel* mixingTable = d_props->getMixRxnModel(); 
+
+  for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
+
+    IntVector c = *bound_ptr; 
+    IntVector ci = *bound_ptr - insideCellDir; 
+
+    std::vector<double> iv; 
+    double hl = 0.0;
+    for ( BoundaryCondition::HelperVec::iterator ivnames_iter = allIndepVarNames.begin(); 
+          ivnames_iter != allIndepVarNames.end(); ivnames_iter++ ){ 
+
+      BoundaryCondition::HelperMap::iterator which_var = ivGridVarMap.find( *ivnames_iter ); 
+      double value = ( (which_var->second)[c] + (which_var->second)[ci] ) / 2.0; 
+      iv.push_back( value );  
+
+      if ( *ivnames_iter == "heat_loss" || *ivnames_iter == "HeatLoss" )
+        hl = value; 
+      
+    }
+
+    double h_a = mixingTable->getTableValue( iv, "adiabaticenthalpy" ); 
+    double h_s = mixingTable->getTableValue( iv, "sensibleenthalpy" );
+
+    // actually set the enthalpy on this boundary
+    enthalpy[c] = h_a - hl * h_s;
+
+  }
+}
+
+void BoundaryCondition::setEnthalpyFromInput__NEW( const Patch* patch, const Patch::FaceType& face, 
+    CCVariable<double>& enthalpy, BoundaryCondition::HelperMap ivGridVarMap, BoundaryCondition::HelperVec allIndepVarNames, 
+    Iterator bound_ptr ) 
+{
+}
+
+void BoundaryCondition::setVel__NEW( const Patch* patch, const Patch::FaceType& face, 
+        SFCXVariable<double>& uVel, SFCYVariable<double>& vVel, SFCZVariable<double>& wVel,
+        constCCVariable<double>& density, 
+        Iterator bound_ptr, Vector value )
+{
+
+ //get the face direction
+ IntVector insideCellDir = patch->faceDirection(face);
+
+ switch ( face ) {
+
+   case Patch::xminus :
+
+     for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
+
+       IntVector c  = *bound_ptr; 
+       IntVector cp = *bound_ptr - insideCellDir; 
+
+       uVel[c]  = value.x();
+       uVel[cp] = value.x() * density[c] / ( 0.5 * ( density[c] + density[cp] )); 
+
+       vVel[c] = value.y(); 
+       wVel[c] = value.z(); 
+     }
+
+     break; 
+   case Patch::xplus: 
+
+     for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
+
+       IntVector c  = *bound_ptr; 
+       IntVector cp = *bound_ptr - insideCellDir; 
+
+       uVel[c]  = value.x();
+       uVel[cp] = value.x() * density[c] / ( 0.5 * ( density[c] + density[cp] )); 
+
+       vVel[c] = value.y(); 
+       wVel[c] = value.z(); 
+     }
+     break; 
+   case Patch::yminus: 
+
+     for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
+
+       IntVector c  = *bound_ptr; 
+       IntVector cp = *bound_ptr - insideCellDir; 
+
+       vVel[c] = value.y();
+       vVel[cp] = value.y() * density[c] / ( 0.5 * ( density[c] + density[cp] )); 
+
+       uVel[c] = value.x(); 
+       wVel[c] = value.z(); 
+
+     }
+     break; 
+   case Patch::yplus: 
+
+     for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
+
+       IntVector c  = *bound_ptr; 
+       IntVector cp = *bound_ptr - insideCellDir; 
+
+       vVel[c] = value.y();
+       vVel[cp] = value.y() * density[c] / ( 0.5 * ( density[c] + density[cp] )); 
+
+       uVel[c] = value.x(); 
+       wVel[c] = value.z(); 
+
+     }
+     break; 
+   case Patch::zminus: 
+
+     for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
+
+       IntVector c  = *bound_ptr; 
+       IntVector cp = *bound_ptr - insideCellDir; 
+
+       wVel[c] = value.z();
+       wVel[cp] = value.z() * density[c] / ( 0.5 * ( density[c] + density[cp] )); 
+
+       uVel[c] = value.x(); 
+       vVel[c] = value.y(); 
+
+     }
+     break; 
+   case Patch::zplus: 
+
+     for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
+
+       IntVector c  = *bound_ptr; 
+       IntVector cp = *bound_ptr - insideCellDir; 
+
+       wVel[c] = value.z();
+       wVel[cp] = value.z() * density[c] / ( 0.5 * ( density[c] + density[cp] )); 
+
+       uVel[c] = value.x(); 
+       vVel[c] = value.y(); 
+
+     }
+     break; 
+   default:
+
+     break;
+
+ }
+}
+
+void BoundaryCondition::setVelFromInput__NEW( const Patch* patch, const Patch::FaceType& face, 
+        SFCXVariable<double>& uVel, SFCYVariable<double>& vVel, SFCZVariable<double>& wVel,
+        Iterator bound_ptr, std::string file_name )
+{
+
+  gzFile file = gzopen( file_name.c_str(), "r" ); 
+  int total_variables;
+  // name of variable, filename to open
+  std::map<std::string, std::string> input_files;
+
+  if ( file == NULL ) { 
+    proc0cout << "Error opening file: " << file_name << " for boundary conditions. Errno: " << errno << endl;
+    throw ProblemSetupException("Unable to open the given input file: " + file_name, __FILE__, __LINE__);
+  }
+
+  total_variables = getInt( file ); 
+  for ( int i = 0; i < total_variables; i++ ){
+    std::string varname  = getString( file );
+    std::string which_file  = getString( file ); 
+    input_files.insert( make_pair( varname, which_file)).first; 
+  }
+  gzclose( file ); 
+
+  typedef std::map<IntVector, double> CellToValue; 
+  CellToValue u_input; 
+  CellToValue v_input; 
+  CellToValue w_input; 
+
+  std::map<string, string>::iterator iter = input_files.find( "uvel" ); 
+  u_input = readInputFile__NEW( iter->second ); 
+
+  iter = input_files.find( "vvel" ); 
+  v_input = readInputFile__NEW( iter->second ); 
+
+  iter = input_files.find( "wvel" ); 
+  w_input = readInputFile__NEW( iter->second ); 
+
+ //get the face direction
+ IntVector insideCellDir = patch->faceDirection(face);
+
+ switch ( face ) {
+
+   case Patch::xminus:
+
+     for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
+        
+       CellToValue::iterator u_iter = u_input.find( *bound_ptr ); 
+       CellToValue::iterator v_iter = v_input.find( *bound_ptr ); 
+       CellToValue::iterator w_iter = w_input.find( *bound_ptr ); 
+
+       if ( u_iter != u_input.end() ){ 
+        uVel[ *bound_ptr ] = u_iter->second; 
+        uVel[ *bound_ptr - insideCellDir ] = u_iter->second; 
+       }
+
+       if ( v_iter != v_input.end() ) 
+        vVel[ *bound_ptr ] = v_iter->second; 
+       if ( w_iter != w_input.end() )
+        wVel[ *bound_ptr ] = w_iter->second; 
+
+     }
+
+     break; 
+   case Patch::xplus: 
+
+     for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
+
+       CellToValue::iterator u_iter = u_input.find( *bound_ptr ); 
+       CellToValue::iterator v_iter = v_input.find( *bound_ptr ); 
+       CellToValue::iterator w_iter = w_input.find( *bound_ptr ); 
+
+       if ( u_iter != u_input.end() ){ 
+        uVel[ *bound_ptr ] = u_iter->second; 
+        uVel[ *bound_ptr - insideCellDir ] = u_iter->second; 
+       }
+
+       if ( v_iter != v_input.end() )
+        vVel[ *bound_ptr ] = v_iter->second; 
+       if ( w_iter != w_input.end() ) 
+        wVel[ *bound_ptr ] = w_iter->second; 
+
+     }
+     break; 
+   case Patch::yminus: 
+
+     for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
+
+       CellToValue::iterator u_iter = u_input.find( *bound_ptr ); 
+       CellToValue::iterator v_iter = v_input.find( *bound_ptr ); 
+       CellToValue::iterator w_iter = w_input.find( *bound_ptr ); 
+
+       if ( v_iter != v_input.end()) { 
+       vVel[ *bound_ptr ] = v_iter->second; 
+       vVel[ *bound_ptr - insideCellDir ] = v_iter->second; 
+       }
+
+       if ( u_iter != u_input.end() ) 
+       uVel[ *bound_ptr ] = u_iter->second;
+       if ( w_iter != w_input.end() ) 
+       wVel[ *bound_ptr ] = w_iter->second; 
+
+     }
+     break; 
+   case Patch::yplus: 
+
+     for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
+
+       CellToValue::iterator u_iter = u_input.find( *bound_ptr ); 
+       CellToValue::iterator v_iter = v_input.find( *bound_ptr ); 
+       CellToValue::iterator w_iter = w_input.find( *bound_ptr ); 
+
+       if ( v_iter != v_input.end() ) {
+       vVel[ *bound_ptr ] = v_iter->second; 
+       vVel[ *bound_ptr - insideCellDir ] = v_iter->second; 
+       }
+
+       if ( u_iter != u_input.end() )
+       uVel[ *bound_ptr ] = u_iter->second;
+       if ( w_iter != w_input.end() ) 
+       wVel[ *bound_ptr ] = w_iter->second; 
+
+     }
+     break; 
+   case Patch::zminus: 
+
+     for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
+
+       CellToValue::iterator u_iter = u_input.find( *bound_ptr ); 
+       CellToValue::iterator v_iter = v_input.find( *bound_ptr ); 
+       CellToValue::iterator w_iter = w_input.find( *bound_ptr ); 
+
+       if ( w_iter != w_input.end() ) { 
+       wVel[ *bound_ptr ] = w_iter->second; 
+       wVel[ *bound_ptr - insideCellDir ] = w_iter->second;
+       }
+
+       if ( u_iter != u_input.end() ) 
+       uVel[ *bound_ptr ] = u_iter->second;
+       if ( v_iter != v_input.end() ) 
+       vVel[ *bound_ptr ] = v_iter->second; 
+
+     }
+     break; 
+   case Patch::zplus: 
+
+     for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
+
+       CellToValue::iterator u_iter = u_input.find( *bound_ptr ); 
+       CellToValue::iterator v_iter = v_input.find( *bound_ptr ); 
+       CellToValue::iterator w_iter = w_input.find( *bound_ptr ); 
+
+       if ( w_iter != w_input.end() ) { 
+       wVel[ *bound_ptr ] = w_iter->second; 
+       wVel[ *bound_ptr - insideCellDir ] = w_iter->second; 
+       }
+
+       if ( u_iter != u_input.end() ) 
+       uVel[ *bound_ptr ] = u_iter->second;
+       if ( v_iter != v_input.end() ) 
+       vVel[ *bound_ptr ] = v_iter->second; 
+     }
+     break; 
+   default:
+
+     break;
+
+ }
+}
+
+std::map<IntVector, double>
+BoundaryCondition::readInputFile__NEW( std::string file_name )
+{
+
+  gzFile file = gzopen( file_name.c_str(), "r" ); 
+  if ( file == NULL ) { 
+    proc0cout << "Error opening file: " << file_name << " for boundary conditions. Errno: " << errno << endl;
+    throw ProblemSetupException("Unable to open the given input file: " + file_name, __FILE__, __LINE__);
+  }
+
+  std::string variable = getString( file ); 
+  int         num_points = getInt( file ); 
+  std::map<IntVector, double> result; 
+
+  for ( int i = 0; i < num_points; i++ ) {
+    int I = getInt( file ); 
+    int J = getInt( file ); 
+    int K = getInt( file ); 
+    double v = getDouble( file ); 
+
+    IntVector C(I,J,K);
+
+    result.insert( make_pair( C, v )).first; 
+
+  }
+
+  gzclose( file ); 
+  return result; 
+}
+
+
 
 //****************************************************************************
 //Reads the ResponsiveBoundary data from file.  To be executed at restart. 
@@ -6624,5 +7519,243 @@ BoundaryCondition::updateResponsiveBoundaryProfile(const LevelP& level,
 //****************************************************************************
 //****************************************************************************
  
- 
 
+
+void 
+BoundaryCondition::velocityOutletPressureBC__NEW( const Patch* patch, 
+                                                  int  matl_index, 
+                                                  SFCXVariable<double>& uvel, 
+                                                  SFCYVariable<double>& vvel, 
+                                                  SFCZVariable<double>& wvel, 
+                                                  constSFCXVariable<double>& old_uvel, 
+                                                  constSFCYVariable<double>& old_vvel, 
+                                                  constSFCZVariable<double>& old_wvel ) 
+{
+  vector<Patch::FaceType>::const_iterator bf_iter;
+  vector<Patch::FaceType> bf;
+  patch->getBoundaryFaces(bf);
+
+  // This business is to get the outlet/pressure bcs to behave like the 
+  // original arches outlet/pressure bc
+  bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
+  bool xplus =  patch->getBCType(Patch::xplus)  != Patch::Neighbor;
+  bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
+  bool yplus =  patch->getBCType(Patch::yplus)  != Patch::Neighbor;
+  bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
+  bool zplus =  patch->getBCType(Patch::zplus)  != Patch::Neighbor;
+
+  IntVector idxLo = patch->getFortranCellLowIndex();
+  IntVector idxHi = patch->getFortranCellHighIndex();
+
+  for ( BCInfoMap::iterator bc_iter = d_bc_information.begin(); 
+        bc_iter != d_bc_information.end(); bc_iter++){
+
+    if ( bc_iter->second.type == OUTLET || bc_iter->second.type == PRESSURE ) { 
+
+      for ( bf_iter = bf.begin(); bf_iter !=bf.end(); bf_iter++ ){
+
+        //get the face
+        Patch::FaceType face = *bf_iter;
+        IntVector insideCellDir = patch->faceDirection(face); 
+
+        //get the number of children
+        int numChildren = patch->getBCDataArray(face)->getNumberChildren(matl_index); //assumed one material
+
+        for (int child = 0; child < numChildren; child++){
+
+          double bc_value = 0;
+          //int norm = getNormal( face ); 
+          
+          string bc_kind = "NotSet";
+          Iterator bound_ptr;
+
+          bool foundIterator = 
+            getIteratorBCValueBCKind( patch, face, child, bc_iter->second.name, matl_index, bc_value, bound_ptr, bc_kind); 
+
+          if ( foundIterator ) {
+
+            bound_ptr.reset();
+            double negsmall = -1.0E-10;
+            double possmall =  1.0E-10;
+            double zero     = 0.0E0; 
+            int sign        = 1;
+
+            if ( bc_iter->second.type == PRESSURE ) { 
+              sign = -1; 
+            }
+
+            switch (face) {
+
+              case Patch::xminus:
+
+                for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
+
+                  IntVector c   = *bound_ptr; 
+                  IntVector cp  = *bound_ptr - insideCellDir; 
+                  IntVector cpp = cp - insideCellDir; 
+
+                  if ( (zminus && (c.z() == idxLo.z())) ||
+                       (zplus  && (c.z() == idxHi.z())) ||
+                       (yminus && (c.y() == idxLo.y())) ||
+                       (yplus  && (c.y() == idxHi.y())) ){ 
+
+                    uvel[cp] = zero; 
+
+                  } else {
+
+                    if ( sign * old_uvel[cp] < negsmall ) { 
+                      uvel[cp] = uvel[cpp]; 
+                    } else {
+                      uvel[cp] = zero; 
+                    }
+                    uvel[c] = uvel[cp]; 
+                  }
+                }
+                break; 
+
+              case Patch::xplus:
+
+                for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
+
+                  IntVector c   = *bound_ptr; 
+                  IntVector cp  = *bound_ptr - insideCellDir; 
+                  IntVector cm  = c + insideCellDir; 
+
+                  if ( (zminus && (c.z() == idxLo.z())) ||
+                       (zplus  && (c.z() == idxHi.z())) ||
+                       (yminus && (c.y() == idxLo.y())) ||
+                       (yplus  && (c.y() == idxHi.y())) ){ 
+
+                    uvel[c] = zero; 
+
+                  } else {
+
+                    if ( sign * old_uvel[c] > possmall ) { 
+                      uvel[c] = uvel[cp]; 
+                    } else {
+                      uvel[c] = zero; 
+                    }
+                    uvel[cm] = uvel[c]; 
+                  }
+
+                }
+                break; 
+
+              case Patch::yminus:
+
+                for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
+
+                  IntVector c   = *bound_ptr; 
+                  IntVector cp  = *bound_ptr - insideCellDir; 
+                  IntVector cpp = cp - insideCellDir; 
+
+                  if ( (zminus && (c.z() == idxLo.z())) ||
+                       (zplus  && (c.z() == idxHi.z())) ||
+                       (xminus && (c.x() == idxLo.x())) ||
+                       (xplus  && (c.x() == idxHi.x())) ){ 
+
+                    vvel[cp] = zero; 
+
+                  } else {
+
+                    if ( sign * old_vvel[cp] < negsmall ) { 
+                      vvel[cp] = vvel[cpp]; 
+                    } else {
+                      vvel[cp] = zero; 
+                    }
+                    vvel[c] = vvel[cp]; 
+                  }
+                }
+                break; 
+
+              case Patch::yplus: 
+
+                for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
+
+                  IntVector c   = *bound_ptr; 
+                  IntVector cp  = *bound_ptr - insideCellDir; 
+                  IntVector cm  = c + insideCellDir; 
+
+                  if ( (zminus && (c.z() == idxLo.z())) ||
+                       (zplus  && (c.z() == idxHi.z())) ||
+                       (xminus && (c.x() == idxLo.x())) ||
+                       (xplus  && (c.x() == idxHi.x())) ){ 
+
+                    vvel[c] = zero; 
+
+                  } else {
+
+                    if ( sign * old_vvel[c] > possmall ) { 
+                      vvel[c] = vvel[cp]; 
+                    } else {
+                      vvel[c] = zero; 
+                    }
+                    vvel[cm] = vvel[c]; 
+                  }
+                }
+                break; 
+
+              case Patch::zminus: 
+
+                for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
+
+                  IntVector c   = *bound_ptr; 
+                  IntVector cp  = *bound_ptr - insideCellDir; 
+                  IntVector cpp = cp - insideCellDir; 
+
+                  if ( (xminus && (c.x() == idxLo.x())) ||
+                       (xplus  && (c.x() == idxHi.x())) ||
+                       (yminus && (c.y() == idxLo.y())) ||
+                       (yplus  && (c.y() == idxHi.y())) ){ 
+
+                    wvel[cp] = zero; 
+
+                  } else {
+
+                    if ( sign * old_wvel[cp] < negsmall ) { 
+                      wvel[cp] = wvel[cpp]; 
+                    } else {
+                      wvel[cp] = zero; 
+                    }
+                    wvel[c] = wvel[cp]; 
+                  }
+                }
+                break; 
+
+              case Patch::zplus:
+
+                for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
+
+                  IntVector c   = *bound_ptr; 
+                  IntVector cp  = *bound_ptr - insideCellDir; 
+                  IntVector cm  = c + insideCellDir; 
+
+                  if ( (xminus && (c.x() == idxLo.x())) ||
+                       (xplus  && (c.x() == idxHi.x())) ||
+                       (yminus && (c.y() == idxLo.y())) ||
+                       (yplus  && (c.y() == idxHi.y())) ){ 
+
+                    wvel[c] = zero; 
+
+                  } else {
+
+                    if ( sign * old_wvel[c] > possmall ) { 
+                      wvel[c] = wvel[cp]; 
+                    } else {
+                      wvel[c] = zero; 
+                    }
+                    wvel[cm] = wvel[c]; 
+                  }
+                }
+                break; 
+
+              default: 
+                throw InvalidValue("Error: Face type not recognized: " + face, __FILE__, __LINE__); 
+                break; 
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -61,7 +61,8 @@ endif
 ifeq ($(IS_STATIC_BUILD),yes)
   LIBS := $(CORE_STATIC_LIBS)
 else
-  LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(F_LIBRARY) $(TEEM_LIBRARY) $(PNG_LIBRARY)
+  LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(F_LIBRARY) $(TEEM_LIBRARY) \
+	  $(PNG_LIBRARY) $(BLAS_LIBRARY) $(THREAD_LIBRARY)
 endif
 
 include $(SCIRUN_SCRIPTS)/program.mk
@@ -71,6 +72,14 @@ include $(SCIRUN_SCRIPTS)/program.mk
 
 SRCS    := $(SRCDIR)/pfs2.cc
 PROGRAM := $(SRCDIR)/pfs2
+
+include $(SCIRUN_SCRIPTS)/program.mk
+
+
+###############################################
+# rawToUniqueGrains
+SRCS    := $(SRCDIR)/rawToUniqueGrains.cc
+PROGRAM := $(SRCDIR)/rawToUniqueGrains
 
 include $(SCIRUN_SCRIPTS)/program.mk
 

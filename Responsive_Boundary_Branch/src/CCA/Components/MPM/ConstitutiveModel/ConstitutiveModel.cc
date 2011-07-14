@@ -411,11 +411,10 @@ ConstitutiveModel::computeDeformationGradientFromDisplacement(
     double J = Fnew[idx].Determinant();
     if (!(J > 0)) {
       ostringstream warn;
-      warn << "**ERROR** CompNeoHook: Negative or zero determinant of Jacobian."
-             << " Particle has inverted." << endl;
-      warn << "     Particle = " << idx << " J = " << J << " position = " << endl;
-      warn << "          Disp Grad = " << dispGrad << endl; 
-      warn << "          F_new = " << Fnew[idx] << endl; 
+      warn << "**ERROR** : ConstitutiveModel::computeDeformationGradientFromDisplacement" << endl << "Negative or zero determinant of Jacobian." << endl;
+      warn << "     Particle = " << idx << " J = " << J << " position = " << px[idx] << endl;
+      warn << "     Disp Grad = " << dispGrad << endl; 
+      warn << "     F_new = " << Fnew[idx] << endl; 
       throw InvalidValue(warn.str(), __FILE__, __LINE__);
     }
   }
@@ -461,11 +460,16 @@ ConstitutiveModel::computeDeformationGradientFromVelocity(
         ostringstream warn;
         warn << "**ERROR** CompNeoHook: Negative or zero determinant of Jacobian."
              << " Particle has inverted." << endl;
-        warn << "     Particle = " << idx << " J = " << J << " position = " << endl;
-        warn << "          Vel Grad = " << velGrad << endl; 
-        warn << "          F_inc = " << deformationGradientInc << endl; 
-        warn << "          F_old = " << Fold[idx] << endl; 
-        warn << "          F_new = " << Fnew[idx] << endl; 
+        warn << "     Particle = " << idx << ", J = " << J << ", position = " << px[idx]<<endl;
+        warn << "          Vel Grad = \n" << velGrad << endl; 
+        warn << "          F_inc = \n" << deformationGradientInc << endl; 
+        warn << "          F_old = \n" << Fold[idx] << endl; 
+        warn << "          F_new = \n" << Fnew[idx] << endl; 
+        warn << "          gVelocity:" << endl;
+        for(int k = 0; k < flag->d_8or27; k++) {
+          warn<< "             node: " << ni[k] << " vel: " << gVel[ni[k]] << endl;
+        }
+        
         throw InvalidValue(warn.str(), __FILE__, __LINE__);
       }
 

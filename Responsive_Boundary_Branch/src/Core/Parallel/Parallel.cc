@@ -61,7 +61,7 @@ using std::ostringstream;
 static bool            determinedIfUsingMPI = false;
 static bool            initialized = false;
 static bool            usingMPI = false;
-static int             maxThreads = 1;
+static int             maxThreads = -1;
 static MPI_Comm        worldComm = MPI_Comm(-1);
 static int             worldRank = -1;
 static int             worldSize = -1;
@@ -99,6 +99,7 @@ Parallel::getMaxThreads()
 void
 Parallel::setMaxThreads( int maxNumThreads )
 {
+  
    ::maxThreads = maxNumThreads;
    //::allowThreads = true;
 }
@@ -187,7 +188,7 @@ Parallel::determineIfRunningUnderMPI( int argc, char** argv )
 }
 
 void
-Parallel::initializeManager(int& argc, char**& argv, const string & scheduler)
+Parallel::initializeManager(int& argc, char**& argv)
 {
    if( !determinedIfUsingMPI ) {
       cerr << "Must call determineIfRunningUnderMPI() " 
@@ -210,7 +211,7 @@ Parallel::initializeManager(int& argc, char**& argv, const string & scheduler)
 #endif
    if(::usingMPI){	
 #ifdef THREADED_MPI_AVAILABLE
-     if( scheduler == "MixedScheduler" ) {
+     if( ::maxThreads > 0 ) {
        required = MPI_THREAD_MULTIPLE;
      } else {
        required = MPI_THREAD_SINGLE;
@@ -239,10 +240,9 @@ Parallel::initializeManager(int& argc, char**& argv, const string & scheduler)
 
 #ifdef THREADED_MPI_AVAILABLE
      if( provided < required ){
-       ostringstream msg;
-       msg << "Provided MPI parallel support of " << provided 
-	   << " is not enough for the required level of " << required;
-       throw InternalError( msg.str(), __FILE__, __LINE__ );
+       cerr  << "Provided MPI parallel support of " << provided 
+	   << " is not enough for the required level of " << required <<"\n";
+       throw InternalError( "Bad MPI level", __FILE__, __LINE__ );
      }
 #endif
 
@@ -257,7 +257,7 @@ Parallel::initializeManager(int& argc, char**& argv, const string & scheduler)
      SCIRun::AllocatorMallocStatsAppendNumber(worldRank);
 #endif
      rootContext = scinew ProcessorGroup(0, worldComm, true,
-					 worldRank,worldSize);
+					 worldRank,worldSize, ::maxThreads);
 
      if(rootContext->myrank() == 0){
        cout << "Parallel: " << rootContext->size() 
@@ -270,13 +270,22 @@ Parallel::initializeManager(int& argc, char**& argv, const string & scheduler)
      //MPI_Errhandler_set(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
    } else {
      worldRank = 0;
-     rootContext = scinew ProcessorGroup(0,0, false, 0, 1);
+     rootContext = scinew ProcessorGroup(0,0, false, 0, 1, 0);
    }
 }
 
 int
 Parallel::getMPIRank()
 {
+  if( worldRank == -1 ) {
+    // Can't throw an exception here because it won't get trapped
+    // properly because 'getMPIRank()' is called in the exception
+    // handler...
+    cout << "ERROR:\n";
+    cout << "ERROR: getMPIRank() called before initializeManager()...\n";
+    cout << "ERROR:\n";
+    Thread::exitAll(1);
+  }
   return worldRank;
 }
 

@@ -1,13 +1,21 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 from os import symlink,environ
 from sys import argv,exit,platform
-from helpers.runSusTests import runSusTests, inputs_root
+from helpers.runSusTests import runSusTests, inputs_root, generatingGoldStandards
 from helpers.modUPS import modUPS
 
-#methane8patch_ups = modUPS("%s/ARCHES" % inputs_root(), \
-#                           "methane_explicit_table.ups", \
-#                           ["<patches>[2,2,2]</patches>"]) 
+the_dir = generatingGoldStandards()
+
+if the_dir == "" :
+  the_dir = "%s/ARCHES" % inputs_root()
+else :
+  the_dir = the_dir + "/ARCHES"
+
+methanePetscRadSolver_ups = modUPS( the_dir,                 \
+                            "methane_explicit_table.ups",    \
+                            ["<patches>[2,2,2]</patches>",   \
+                             "<LinearSolver type=\"petsc\">"] )
                            
 #______________________________________________________________________                            
 #  Test syntax: ( "folder name", "input file", # processors, "OS", ["flags1","flag2"])
@@ -22,44 +30,49 @@ from helpers.modUPS import modUPS
 #       abs_tolerance=[double]  - absolute tolerance used in comparisons
 #       rel_tolerance=[double]  - relative tolerance used in comparisons
 #       exactComparison         - set absolute/relative tolerance = 0  for uda comparisons
-#       startFromCheckpoint     - start test from checkpoint. (/usr/local/home/csafe-tester/CheckPoints/..../testname.uda.000)
+#       startFromCheckpoint     - start test from checkpoint. (/home/csafe-tester/CheckPoints/..../testname.uda.000)
 #
-#  Note: the "folder name" must be the same as input file without the extension.
+#  Notes: 
+#  1) The "folder name" must be the same as input file without the extension.
+#  2) If the processors is > 1.0 then an mpirun command will be used
+#  3) Performance_tests are not run on a debug build.
 #______________________________________________________________________
 
 UNUSED_TESTS = []
 NIGHTLYTESTS = [
-   ("constantMMS",             "mms/constantMMS.ups",                 1.1,  "Linux",   ["exactComparison"]),
-   ("almgrenMMS",              "mms/almgrenMMS.ups",                  1.1,  "Linux",   ["exactComparison"]),
-   ("periodic",                "periodicTurb/periodic.ups",           1.1,  "Linux",   ["exactComparison"]),
-   ("helium_RT",               "helium_RT.ups",                       1.1,  "Linux",   ["exactComparison"]),
-   ("periodic",                "periodicTurb/periodic.ups",           1.1,  "Darwin",  ["doesTestRun","no_dbg"]),
-   ("methane_explicit_table",  "methane_explicit_table.ups",          1.1,  "Linux",   ["exactComparison"]),
-   ("methane_explicit_table",  "methane_explicit_table.ups",          1.1,  "Darwin",  ["doesTestRun"]),
-#   ("methane8patch",           methane8patch_ups,                     8,    "Linux",   ["exactComparison"]),
-#   ("methane8patch",           methane8patch_ups,                     8,    "Darwin",  ["doesTestRun"]),
-   ("dqmom_test_1",            "DQMOM_regression/dqmom_test_1.ups",   1.1,  "Linux",   ["exactComparison"]),
-   ("dqmom_test_2a",           "DQMOM_regression/dqmom_test_2a.ups",  1.1,  "Linux",   ["exactComparison"]),
-   ("dqmom_test_2b",           "DQMOM_regression/dqmom_test_2b.ups",  1.1,  "Linux",   ["exactComparison"]),
-   ("dqmom_test_2c",           "DQMOM_regression/dqmom_test_2c.ups",  1.1,  "Linux",   ["exactComparison"]),
-   ("dqmom_test_3",            "DQMOM_regression/dqmom_test_3.ups",   1.1,  "Linux",   ["exactComparison"]),
-   ("dqmom_test_4",            "DQMOM_regression/dqmom_test_4.ups",   1.1,  "Linux",   ["exactComparison"])
+   ("constantMMS"            , "mms/constantMMS.ups"                     , 1.1 , "Linux"  , ["exactComparison"]) , 
+   ("almgrenMMS"             , "mms/almgrenMMS.ups"                      , 1.1 , "Linux"  , ["exactComparison"]) , 
+   ("periodic"               , "periodicTurb/periodic.ups"               , 1.1 , "Linux"  , ["exactComparison"]) , 
+   ("helium_RT"              , "helium_RT.ups"                           , 1.1 , "Linux"  , ["exactComparison"]) , 
+   ("periodic"               , "periodicTurb/periodic.ups"               , 1.1 , "Darwin" , ["doesTestRun"       , "no_dbg"]) , 
+   ("methane_explicit_table" , "methane_explicit_table.ups"              , 1.1 , "Linux"  , ["exactComparison"]) , 
+   ("methane_explicit_table" , "methane_explicit_table.ups"              , 1.1 , "Darwin" , ["doesTestRun"])     , 
+   ("methane8patch"          , "methane8patch.ups"                       , 8   , "Linux"  , ["exactComparison"]) , 
+   ("methane8patch"          , "methane8patch.ups"                       , 8   , "Darwin" , ["doesTestRun"])     , 
+   ("methanePetscRadSolver"  , methanePetscRadSolver_ups                 , 8   , "Linux"  , ["exactComparison"]) , 
+   ("dqmom_test_1"           , "DQMOM_regression/dqmom_test_1.ups"       , 1.1 , "Linux"  , ["exactComparison"]) , 
+   ("dqmom_test_2"           , "DQMOM_regression/dqmom_test_2.ups"       , 1.1 , "Linux"  , ["exactComparison"]) , 
+   ("dqmom_test_3"           , "DQMOM_regression/dqmom_test_3.ups"       , 1.1 , "Linux"  , ["exactComparison"]) , 
+   ("dqmom_test_4"           , "DQMOM_regression/dqmom_test_4.ups"       , 1.1 , "Linux"  , ["exactComparison"]) , 
+   ("dqmom_test_5"           , "DQMOM_regression/dqmom_test_5.ups"       , 1.1 , "Linux"  , ["exactComparison"]) , 
+   ("methane_jet"            , "ClassicMixingTables/ups/methane_jet.ups" , 1.1 , "Linux"  , ["exactComparison", "no_restart"])     , 
 ]
 
 # Tests that are run during local regression testing
 LOCALTESTS = [
-   ("constantMMS",             "mms/constantMMS.ups",                 1.1,  "Linux",   ["exactComparison"]),
-   ("almgrenMMS",              "mms/almgrenMMS.ups",                  1.1,  "Linux",   ["exactComparison"]),
-   ("periodic",                "periodicTurb/periodic.ups",           1.1,  "Linux",   ["exactComparison"]),
-   ("helium_RT",               "helium_RT.ups",                       1.1,  "Linux",   ["exactComparison"]),
-   ("methane_explicit_table",  "methane_explicit_table.ups",          1.1,  "Linux",   ["exactComparison"]),
-#   ("methane8patch",           methane8patch_ups,                     8,    "Linux",   ["exactComparison"]),
-   ("dqmom_test_1",            "DQMOM_regression/dqmom_test_1.ups",   1.1,  "Linux",   ["exactComparison"]),
-   ("dqmom_test_2a",           "DQMOM_regression/dqmom_test_2a.ups",  1.1,  "Linux",   ["exactComparison"]),
-   ("dqmom_test_2b",           "DQMOM_regression/dqmom_test_2b.ups",  1.1,  "Linux",   ["exactComparison"]),
-   ("dqmom_test_2c",           "DQMOM_regression/dqmom_test_2c.ups",  1.1,  "Linux",   ["exactComparison"]),
-   ("dqmom_test_3",            "DQMOM_regression/dqmom_test_3.ups",   1.1,  "Linux",   ["exactComparison"]),
-   ("dqmom_test_4",            "DQMOM_regression/dqmom_test_4.ups",   1.1,  "Linux",   ["exactComparison"])
+   ("constantMMS"            , "mms/constantMMS.ups"                     , 1.1 , "All"   , ["exactComparison"]) , 
+   ("almgrenMMS"             , "mms/almgrenMMS.ups"                      , 1.1 , "All"   , ["exactComparison"]) , 
+   ("periodic"               , "periodicTurb/periodic.ups"               , 1.1 , "All"   , ["exactComparison"]) , 
+   ("helium_RT"              , "helium_RT.ups"                           , 1.1 , "All"   , ["exactComparison"]) , 
+   ("methane_explicit_table" , "methane_explicit_table.ups"              , 1.1 , "All"   , ["exactComparison"]) , 
+   ("methane8patch"          , "methane8patch.ups"                       , 8   , "All"   , ["exactComparison"]) , 
+   ("methanePetscRadSolver"  , methanePetscRadSolver_ups                 , 8   , "All"   , ["exactComparison"]) , 
+   ("dqmom_test_1"           , "DQMOM_regression/dqmom_test_1.ups"       , 1.1 , "All"   , ["exactComparison"]) , 
+   ("dqmom_test_2"           , "DQMOM_regression/dqmom_test_2.ups"       , 1.1 , "All"   , ["exactComparison"]) , 
+   ("dqmom_test_3"           , "DQMOM_regression/dqmom_test_3.ups"       , 1.1 , "All"   , ["exactComparison"]) , 
+   ("dqmom_test_4"           , "DQMOM_regression/dqmom_test_4.ups"       , 1.1 , "All"   , ["exactComparison"]) , 
+   ("dqmom_test_5"           , "DQMOM_regression/dqmom_test_5.ups"       , 1.1 , "All"   , ["exactComparison"]) , 
+   ("methane_jet"            , "ClassicMixingTables/ups/methane_jet.ups" , 1.1 , "All" , ["exactComparison", "no_restart"])     
 ]
 
 #__________________________________
@@ -74,7 +87,7 @@ def getLocalTests() :
 
 if __name__ == "__main__":
 
-  if environ['LOCAL_OR_NIGHTLY_TEST'] == "local":
+  if environ['WHICH_TESTS'] == "local":
     TESTS = LOCALTESTS
   else:
     TESTS = NIGHTLYTESTS

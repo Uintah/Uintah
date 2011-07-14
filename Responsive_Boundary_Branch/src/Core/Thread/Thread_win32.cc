@@ -1079,6 +1079,11 @@ void Thread::pop_bstack(Thread_private* p, int oldstate)
     p->state=(ThreadState)oldstate;
 } 
 
+void
+Thread::set_affinity(int cpu)
+{
+}
+
 void ThreadGroup::gangSchedule()
 {
 }

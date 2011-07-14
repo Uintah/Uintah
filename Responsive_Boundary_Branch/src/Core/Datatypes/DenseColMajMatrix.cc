@@ -61,6 +61,7 @@
 #  include <Core/Math/sci_lapack.h>
 #endif
 
+//using namespace std;
 using std::cout;
 using std::endl;
 using std::vector;
@@ -277,7 +278,7 @@ DenseColMajMatrix::print() const
 
 
 void
-DenseColMajMatrix::print(ostream& ostr) const
+DenseColMajMatrix::print(std::ostream& ostr) const
 {
   for (int i=0; i<nrows_; i++)
   {
@@ -430,7 +431,7 @@ DenseColMajMatrix::io(Piostream& stream)
         {
           const string errmsg = "Error reading separated file '" +
             raw_filename_ + "'";
-          cerr << errmsg << "\n";
+          std::cerr << errmsg << "\n";
           throw FileNotFound(errmsg, __FILE__, __LINE__);
         }
       }

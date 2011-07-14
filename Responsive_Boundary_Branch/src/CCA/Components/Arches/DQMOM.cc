@@ -1,35 +1,35 @@
+#include <CCA/Components/Arches/DQMOM.h>
 #include <CCA/Components/Arches/ArchesLabel.h>
-#include <CCA/Components/Arches/SourceTerms/SourceTermBase.h>
-#include <CCA/Components/Arches/LU.h>
 #include <CCA/Components/Arches/CoalModels/CoalModelFactory.h>
-#include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
 #include <CCA/Components/Arches/CoalModels/ModelBase.h>
-#include <Core/Grid/Variables/VarLabel.h>
-#include <Core/Grid/Variables/PerPatch.h>
-#include <Core/Grid/Variables/CCVariable.h>
-#include <Core/Grid/Variables/SFCXVariable.h>
-#include <Core/Grid/Variables/SFCYVariable.h>
-#include <Core/Grid/Variables/SFCZVariable.h>
-#include <Core/Grid/Variables/VarTypes.h>
+#include <CCA/Components/Arches/Directives.h>
+#include <CCA/Components/Arches/LU.h>
+#include <CCA/Components/Arches/SourceTerms/SourceTermBase.h>
+#include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
 #include <CCA/Ports/Scheduler.h>
-#include <Core/Grid/Variables/CellIterator.h>
+#include <Core/Exceptions/FileNotFound.h>
+#include <Core/Exceptions/InvalidValue.h>
+#include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/Datatypes/ColumnMatrix.h>
+#include <Core/Datatypes/DenseMatrix.h>
+#include <Core/Datatypes/Matrix.h>
+#include <Core/Datatypes/MatrixOperations.h>
+#include <Core/Datatypes/SparseRowMatrix.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Grid/SimulationState.h>
-#include <Core/Exceptions/InvalidValue.h>
-#include <CCA/Components/Arches/DQMOM.h>
-#include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/Variables/CellIterator.h>
+#include <Core/Grid/Variables/PerPatch.h>
+#include <Core/Grid/Variables/SFCXVariable.h>
+#include <Core/Grid/Variables/SFCYVariable.h>
+#include <Core/Grid/Variables/SFCZVariable.h>
+#include <Core/Grid/Variables/VarLabel.h>
+#include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Thread/Time.h>
-#include <Core/Exceptions/FileNotFound.h>
-#include <Core/Exceptions/ProblemSetupException.h>
-#include <Core/Datatypes/Matrix.h>
-#include <Core/Datatypes/DenseMatrix.h>
-#include <Core/Datatypes/ColumnMatrix.h>
-#include <Core/Datatypes/SparseRowMatrix.h>
-#include <Core/Datatypes/MatrixOperations.h>
-#include <CCA/Components/Arches/Directives.h>
 
 #include <iostream>
 #include <sstream>
@@ -37,6 +37,7 @@
 
 //===========================================================================
 
+using namespace std;
 using namespace Uintah;
 
 DQMOM::DQMOM(ArchesLabel* fieldLabels, std::string which_dqmom):
@@ -72,6 +73,11 @@ DQMOM::~DQMOM()
   VarLabel::destroy(d_normResNormalizedLabelB);
   VarLabel::destroy(d_normResNormalizedLabelX);
   VarLabel::destroy(d_conditionNumberLabel);
+
+ if( d_solverType == "Optimize" ) {
+   delete AAopt; 
+ }
+
 }
 //---------------------------------------------------------------------------
 // Method: Problem setup

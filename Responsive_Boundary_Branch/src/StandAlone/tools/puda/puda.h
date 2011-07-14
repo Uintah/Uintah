@@ -42,8 +42,10 @@ namespace Uintah {
     bool do_listvars;
     bool do_varsummary;
     bool be_brief;
+    bool do_monica1;
     bool do_jim1;
-    bool do_AA_MMS;
+    bool do_AA_MMS_1;
+    bool do_AA_MMS_2;
     bool do_jim2;
     bool do_partvar;
     bool do_asci;
@@ -89,8 +91,10 @@ namespace Uintah {
       do_varsummary = false;
       be_brief      = false;
       do_jim1       = false;
-      do_AA_MMS     = false;
+      do_AA_MMS_1   = false;
+      do_AA_MMS_2  = false;
       do_jim2       = false;
+      do_monica1    = false;
       do_partvar    = false;
       do_asci       = false;
       do_cell_stresses = false;

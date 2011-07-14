@@ -48,6 +48,7 @@ BCGeomBase::BCGeomBase()
 {
   d_cells = GridIterator(IntVector(0,0,0),IntVector(0,0,0));
   d_nodes = GridIterator(IntVector(0,0,0),IntVector(0,0,0));
+  d_bcname = "NotSet"; 
 }
 
 
@@ -55,6 +56,7 @@ BCGeomBase::BCGeomBase(const BCGeomBase& rhs)
 {
   d_cells=rhs.d_cells;
   d_nodes=rhs.d_nodes;
+  d_bcname = rhs.d_bcname; 
 }
 
 
@@ -65,6 +67,7 @@ BCGeomBase& BCGeomBase::operator=(const BCGeomBase& rhs)
 
   d_cells = rhs.d_cells;
   d_nodes = rhs.d_nodes;
+  d_bcname = rhs.d_bcname; 
 
   return *this;
 }
@@ -154,6 +157,7 @@ void BCGeomBase::determineIteratorLimits(Patch::FaceType face,
 
 void BCGeomBase::printLimits() const
 {
+  using namespace std;
   cout << endl;
   cout << "d_cells = " << d_cells.begin() << " " << d_cells.end() << endl;
   cout << "d_nodes = " << d_nodes.begin() << " " << d_nodes.end() << endl;

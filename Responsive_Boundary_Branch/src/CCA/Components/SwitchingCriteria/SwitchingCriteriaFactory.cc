@@ -44,6 +44,7 @@ DEALINGS IN THE SOFTWARE.
 using std::cerr;
 using std::endl;
 using std::string;
+using std::map;
 
 using namespace Uintah;
 

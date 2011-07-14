@@ -30,6 +30,8 @@ DEALINGS IN THE SOFTWARE.
 
 #include <testprograms/Regridders/GBRv2Regridder.h>
 
+using namespace std;
+
 namespace Uintah {
 
 bool GBRv2Regridder::getTags(int &tag1, int &tag2)

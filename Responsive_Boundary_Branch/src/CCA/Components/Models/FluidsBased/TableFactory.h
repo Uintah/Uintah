@@ -70,7 +70,7 @@ WARNING
   public:
 
     static TableInterface* readTable(const ProblemSpecP& params,
-                                     const string& name);
+                                     const std::string& name);
   private:
     TableFactory();
   };

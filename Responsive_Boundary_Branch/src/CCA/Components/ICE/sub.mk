@@ -55,18 +55,18 @@ include $(SCIRUN_SCRIPTS)/recurse.mk
 PSELIBS := \
        CCA/Components/OnTheFlyAnalysis \
        CCA/Ports                       \
-       Core/Grid                       \
-       Core/Util                       \
-       Core/Math                       \
        Core/Disclosure                 \
-       Core/GeometryPiece              \
-       Core/ProblemSpec                \
-       Core/Parallel                   \
        Core/Exceptions                 \
-       Core/Math                       \
+       Core/Geometry                   \
+       Core/GeometryPiece              \
+       Core/Grid                       \
        Core/Labels                     \
-       Core/Exceptions Core/Geometry                   \
-       Core/Thread Core/Util Core/OS
+       Core/Math                       \
+       Core/OS                         \
+       Core/Parallel                   \
+       Core/ProblemSpec                \
+       Core/Thread                     \
+       Core/Util                       
 
 ifeq ($(OS_NAME),Darwin)
   PSELIBS += CCA/Components/MPM

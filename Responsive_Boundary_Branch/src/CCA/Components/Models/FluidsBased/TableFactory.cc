@@ -36,7 +36,7 @@ DEALINGS IN THE SOFTWARE.
 using namespace Uintah;
 
 TableInterface* TableFactory::readTable(const ProblemSpecP& params,
-                                        const string& name)
+                                        const std::string& name)
 {
   for (ProblemSpecP child = params->findBlock("table"); child != 0;
        child = child->findNextBlock("table")) {

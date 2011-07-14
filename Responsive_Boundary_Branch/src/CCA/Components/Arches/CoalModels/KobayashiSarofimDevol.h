@@ -35,7 +35,7 @@ public:
   KobayashiSarofimDevolBuilder( const std::string          & modelName,
                                 const vector<std::string>  & reqICLabelNames,
                                 const vector<std::string>  & reqScalarLabelNames,
-                                const ArchesLabel          * fieldLabels,
+                                ArchesLabel          * fieldLabels,
                                 SimulationStateP           & sharedState,
                                 int qn );
 
@@ -55,7 +55,7 @@ public:
 
   KobayashiSarofimDevol( std::string modelName, 
                          SimulationStateP& shared_state, 
-                         const ArchesLabel* fieldLabels,
+                         ArchesLabel* fieldLabels,
                          vector<std::string> reqICLabelNames, 
                          vector<std::string> reqScalarLabelNames,
                          int qn );
@@ -85,28 +85,10 @@ public:
                      DataWarehouse* old_dw, 
                      DataWarehouse* new_dw );
 
-  // FIXME: add Glacier computation methods
-
-  /** @brief  Get raw coal reaction rate (see Glacier) */
-  double calcRawCoalReactionRate() {
-    return 0; }
-
-  /** @brief  Get gas volatile production rate (see Glacier) */
-  double calcGasDevolRate() {
-    return 0; }
-
-  /** @brief  Get char production rate (see Glacier) */
-  double calcCharProductionRate() {
-    return 0; }
-
-  ///////////////////////////////////////////////////
-  // Get/set methods
-
-  /* getType method is defined in parent class... */
-
 private:
 
   const VarLabel* d_raw_coal_mass_label;
+  const VarLabel* d_char_mass_label;
   const VarLabel* d_weight_label;
   const VarLabel* d_particle_temperature_label;
 
@@ -123,8 +105,10 @@ private:
   
   bool compute_part_temp; ///< Boolean: is particle temperature computed? 
                           //   (if not, gas temp = particle temp)
+  bool compute_char_mass;
 
   double d_rc_scaling_factor;   ///< Scaling factor for raw coal internal coordinate
+  double d_rh_scaling_factor;
   double d_pt_scaling_factor;   ///< Scaling factor for particle temperature internal coordinate
 
 }; // end ConstSrcTerm

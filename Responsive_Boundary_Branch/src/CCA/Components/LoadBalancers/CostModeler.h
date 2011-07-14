@@ -31,9 +31,7 @@ DEALINGS IN THE SOFTWARE.
 #ifndef UINTAH_HOMEBREW_CostModeler_H
 #define UINTAH_HOMEBREW_CostModeler_H
 
-#include <map>
 #include <vector>
-using namespace std;
 
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/Region.h>
@@ -82,7 +80,7 @@ namespace Uintah {
 
   class CostModeler : public CostForecasterBase {
     public:
-      void getWeights(const Grid* grid, vector<vector<int> > num_particles, vector<vector<double> >&costs)
+      void getWeights(const Grid* grid, std::vector<std::vector<int> > num_particles, std::vector<std::vector<double> >&costs)
       {
         costs.resize(grid->numLevels());
         //for each level

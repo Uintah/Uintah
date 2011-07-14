@@ -163,6 +163,7 @@ namespace Uintah {
     // Erosion algorithms
     bool   d_setStressToZero;
     bool   d_allowNoTension;
+    bool   d_allowNoShear;
 
     YieldCondition*     d_yield;
     StabilityCheck*     d_stable;

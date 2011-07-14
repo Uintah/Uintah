@@ -39,6 +39,8 @@ DEALINGS IN THE SOFTWARE.
 #include <iostream>
 #include <algorithm>
 
+using namespace std;
+
 using namespace SCIRun;
 using namespace Uintah;
 
@@ -178,7 +180,6 @@ void UnionBCData::determineIteratorLimits(Patch::FaceType face,
 
   d_cells = UnionIterator(cells);   
   d_nodes = UnionIterator(nodes); 
-
 
 
 #if 0

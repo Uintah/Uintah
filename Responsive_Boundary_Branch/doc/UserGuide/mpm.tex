@@ -1002,20 +1002,116 @@ The basic input section for UCNH:
                <hardening_modulus> 500.0 </hardening_modulus>
                <alpha>             1.0   </alpha>
 
-              <!-- Damage Parameters -->
-               <useDamage> true </useDamage>
-               <!-- choices are true or false (default) -->
-               <failure_by_stress>  true </failure_by_stress>
-
-               <!-- when failure_by_stress is true, values are stress not strain -->
-               <failure_strain_mean> 900 </failure_strain_mean>
-               <failure_strain_std>  0.1 </failure_strain_std>
-
-               <!-- choices are "constant", "gauss" or "weibull" -->
-               <failure_strain_distrib> "constant" </failure_strain_distrib>
             </constitutive_model>
 \end{Verbatim}
 
+A fairly sophisticated means of seeding explicit material heterogeneity is also provided for. 
+To use these features the following four steps are required: 
+
+1. To allow for failure (by material point erosion) the following must be set: 
+
+In the \tt <MPM> \normalfont block, the erosion algorithm must be set to one of the following: 
+
+\begin{Verbatim}[fontsize=\footnotesize]
+<erosion algorithm="AllowNoTension"/>
+<erosion algorithm="AllowNoShear"/>
+<erosion algorithm="ZeroStress"/>
+\end{Verbatim}
+
+In the \tt <constitutive\_model> \normalfont block:
+\begin{Verbatim}[fontsize=\footnotesize]
+<useDamage>true</useDamage>
+\end{Verbatim}
+
+2. The failure surface type must be specified.  This is also in the \tt <constitutive\_model> \normalfont 
+block.  One of the following must be specified:
+
+\begin{Verbatim}[fontsize=\footnotesize]
+<failure_criteria>  MohrCoulomb </failure_criteria>
+<failure_criteria>  MaximumPrincipalStress </failure_criteria>
+<failure_criteria>  MaximumPrincipalStrain </failure_criteria>
+\end{Verbatim}
+
+The cohesion, $c$, is assigned using a distribution, as described below.  For the maximum 
+principal stress and strain failure criteria, the cohesion is the maximum value of principal 
+stress or strain that may be obtained (must be positive).  The MohrCoulomb failure criteria is
+given by 
+\begin{equation}
+\frac{\sigma_3-\sigma_1}{2}=c\cos(\phi)-\frac{\sigma_3+\sigma_1}{2}\sin(\phi)
+\end{equation}
+where $\sigma_i$ are the ordered principal stresses, positive in tension 
+($\sigma_3 > \sigma_2 > \sigma_1$).  Note, the MohrCoulomb failure 
+surface also requires a friction angle, $\phi$, (in degrees):
+
+\begin{Verbatim}[fontsize=\footnotesize]
+<friction_angle> friction angle </friction_angle>
+\end{Verbatim}
+
+A tensile cutoff failure surface may be added for MohrCoulomb.
+The tensile cutoff is taken to be a fraction of the cohesion.  
+This parameter is specified using:
+
+\begin{Verbatim}[fontsize=\footnotesize]
+<tensile_cutoff_fraction> 0.1 </tensile_cutoff_fraction> 
+\end{Verbatim}
+
+Setting this to a large number effectively removes this failure surface, leaving just Mohr-Coulomb.
+
+3. Material heterogeneity type must be specified.  For MohrCoulomb the cohesion is distributed 
+spatially (an independent assignment for each material point).  For MaximumPrincipalStress and 
+MaximumPrincipalStrain, the threshold stress or strain for failure, respectively, is distributed 
+spatially (an independent assignment for each material point).  Material heterogeneity is 
+distributed spatially by assigning values consistent with a distribution function.  Three different 
+distributions may be used.  All parameters are in the \tt <constitutive\_model> \normalfont block:
+
+\begin{Verbatim}[fontsize=\footnotesize]
+<failure_distrib> gauss </failure_distrib>
+<failure_distrib> weibull </failure_distrib>
+<failure_distrib> constant </failure_distrib>
+\end{Verbatim}
+
+A Gaussian (gauss) distribution requires the following parameters:
+
+\begin{Verbatim}[fontsize=\footnotesize]
+<failure_mean> Gaussian mean value of cohesion </failure_mean>
+<failure_std> Gaussian standard deviation of cohesion </failure_std>
+<failure_seed> random number generator seed </failure_seed>
+\end{Verbatim}
+
+A Weibull (weibull) distribution requires the following parameters:
+\begin{Verbatim}[fontsize=\footnotesize]
+<failure_mean> Weibull mean value of cohesion </failure_mean>
+<failure_std> Weibull modulus </failure_std>
+<failure_seed> random number generator seed </failure_seed>
+\end{Verbatim}
+
+A homogeneous (constant) assignment requires the following parameters:
+\begin{Verbatim}[fontsize=\footnotesize]
+<failure_mean> value (all particles assigned one value) </failure_mean>
+\end{Verbatim}
+
+4. Distribution scaling with numerical resolution may optionally be specified.  This is only 
+available for Gaussian and Weibull distributions.  All parameters are in the 
+\tt <constitutive\_model> \normalfont block:
+
+\begin{Verbatim}[fontsize=\footnotesize]
+<scaling> kayenta </scaling>
+<scaling> none (default) </scaling>
+\end{Verbatim}
+
+For kayenta scaling, the mean value of the distribution is scaled by the factor
+\begin{equation}
+\biggl(\frac{\bar V}{V}\biggr)^{1/n}
+\end{equation}
+where $V$ is the particle volume, a function of numerical resolution.  The reference volume, 
+$\bar V$ and exponent, $n$, both must be specified
+\begin{Verbatim}[fontsize=\footnotesize]
+<reference_volume> $\bar V$ </reference_volume>
+<exponent> n </exponent>
+\end{Verbatim}
+The exponent defaults to the Weibull modulus if the Weibull distribution is used.  This physically
+motivated scaling provides for an increase in mean cohesion with decreasing particle size, generallly
+consistent with the observation that smaller quantities of material contain fewer critical flaws.
 
 \tt <comp\_neo\_hook> \normalfont is a basic elastic model, which calls the underlying \tt <UCNH> \normalfont .
 The specifications for CNH are:
@@ -1061,26 +1157,11 @@ The specification for CNHD are:
                <shear_modulus>  3.52e9 </shear_modulus>
                <useModifiedEOS> true   </useModifiedEOS>
                 
-               <!-- choices are true or false (default) -->
-               <failure_by_stress>  true </failure_by_stress>
-
-               <!-- when failure_by_stress is true, values are stress not strain -->
-               <failure_strain_mean> 900 </failure_strain_mean>
-               <failure_strain_std>  0.1 </failure_strain_std>
-
-               <!-- choices are "constant", "gauss" or "weibull" -->
-               <failure_strain_distrib> "constant" </failure_strain_distrib>
             </constitutive_model>
 \end{Verbatim}
 
-
-When specifying \tt <cnh\_damage> \normalfont, or using \tt <useDamage> \normalfont one must also specify
-the following MPMFlag
-\begin{Verbatim}[fontsize=\footnotesize]
-     <!-- choices are: "AllowNoTension", "ZeroStress" -->
-     <erosion algorithm="ZeroStress"/>
-\end{Verbatim}
-in the \tt <MPM> \normalfont section of the input file.
+When specifying \tt <cnh\_damage> \normalfont, the material heterogeneity and damage 
+specification described for the general model (UCNH) may also be specified.
 
 \tt <cnhp\_damage> \normalfont as the constitutive model (or both damage and plasticity
  flags discussed above) uses an extension
@@ -1200,6 +1281,97 @@ an obscene number of input parameters which are best covered in the users
 guide for this model.  For a simple list, see the source code in
 \tt Kayenta.cc. \normalfont
 
+\item{\bf Simplified Geomodel} This is a simplified model which has the basic features
+needed for geomaterials. The yield function of this model is a two-surface plasticity model 
+which includes a linear Drucker-Prager part and a cap yield function. The “cap” part reflects
+the fact that plastic deformations can occur even under purely hydrostatic compression as
+a consequence of void collapse. It means that the simplified geomodel considers the presence 
+of both microscale flaws such as porosity and networks of microcracks. This mdel uses a 
+multi-stage return algorithm proposed in \cite{brannon10}. Usage is as follows:
+\begin{Verbatim}[fontsize=\footnotesize]
+        <constitutive_model type="simplified_geo_model">
+            <B0>10000</B0>
+            <G0>3750</G0>
+            <hardening_modulus>0.0</hardening_modulus>
+            <FSLOPE> 0.057735026919 </FSLOPE>
+            <FSLOPE_p> 0.057735026919 </FSLOPE_p>
+            <PEAKI1> 612.3724356953976 </PEAKI1>
+            <kappa_initial> -612.3724 </kappa_initial>
+            <cap_radius> 1224.7 </cap_radius>
+            <p0_crush_curve> -1837.0724 </p0_crush_curve>
+            <p1_crush_curve> 6.666666666666666e-4 </p1_crush_curve>
+            <p3_crush_curve> 0.5 </p3_crush_curve>
+            <p4_fluid_effect> 0.2 </p4_fluid_effect>
+            <fluid_B0> 0.0 </fluid_B0>
+            <fluid_pressur_initial> 0.0 </fluid_pressur_initial>
+            <kinematic_hardening_constant> 0.0 </kinematic_hardening_constant>
+        </constitutive_model>
+\end{Verbatim}
+where \tt <B0> \normalfont and \tt <G0> \normalfont are the bulk and 
+shear moduli of the material, \tt <FSLOPE> \normalfont is the tangent of the friction angle 
+of the Drucker-Prager part, \tt <FSLOPE\_p> \normalfont is the tangent of the dilation angle 
+of the Drucker-Prager part, \tt <hardening\_modulus> \normalfont is the ensemble hardening 
+modulus, and \tt <PEAKI1> \normalfont is the initial tensile limit of the 
+first stress invariant, $I_1$. The Drucker-Prager yield criterion is given as
+\begin{equation}
+\sqrt{J_2}+FSLOPE \times (I_1-PEAKI1)=0,
+\end{equation}
+\tt <kappa\_initial> \normalfont is the initial value for the internal 
+state variable $\kappa$ which determines the cap yield surface position, \tt <cap\_radius> 
+\normalfont is $\kappa-X$ in which $X$ is the value of the first stress invariant at the 
+intersection of the cap yield surface and the mean pressure axis, \tt <p0\_crush\_curve> 
+\normalfont, \tt <p1\_crush\_curve> \normalfont, and \tt <p3\_crush\_curve> \normalfont are the
+constants in the fitted post yielding part of the crush curve
+\begin{equation}
+p_3-\bar{\epsilon}_v^p=p_3\exp{-3p_1(\bar{p}-p_0)}
+\end{equation}
+in which $\bar{p}$ is the pressure.
+
+In pure kinematic hardening the center of the yield surface changes with its size and
+shape remaining unchanged.
+Generally, kinematic hardening is modeled by introducing the back stress tensor, and defining
+an appropriate evolution rule for it. In the simplified geomodel, linear Ziegler’s rule is used:
+\begin{equation}
+\dot{\alpha}_{ij}=\dot{\mu}(\Bsig_{ij}-\alpha_{ij})
+\end{equation}
+in which $\alpha_{ij}$ is the back stress tensor, $\dot{\alpha}_{ij}$ is time derivative of 
+the back stress tensor, and
+\begin{equation}
+\dot{\mu}=c\dot{\xi}^p
+\end{equation}
+where $\dot{\xi}^p$ is the deviatoric invariant of the rate of plastic strain and $c$ is a 
+constant defined yb the user as \tt <kinematic\_hardening\_constant> \normalfont.
+
+Based on the research work done by M. Homel at the University of Utah, the following equations
+are used in the simplified geomodel to consider the fluid-filled porous effects:
+\begin{eqnarray}
+\frac{\partial X}{\partial\varepsilon^p_v}=
+&& \frac{1}{p_1p_3}\exp{(-p_1X-p_0)}
+-\frac{3K_f\left(\exp(p_3+p_4)-1\right)\exp(p_3+p_4+\varepsilon^p_v)}
+{\left(\exp(p_3+p_4+\varepsilon^p_v)-1\right)^2} \nonumber \\
+&& +\frac{3K_f\left(\exp(p_3+p_4)-1\right)\exp(p_3+\varepsilon^p_v)}
+{\left(\exp(p_3+\varepsilon^p_v)-1\right)^2}
+\end{eqnarray}
+in which $K_f$ is the fluid bulk modulus, which is defined by the user as \tt <fluid\_B0>\normalfont, 
+$\varepsilon^p_v$ is the volumetric part 
+of the plastic strain, and $p_4$ is a constant defined by the user as 
+\tt <p4\_fluid\_effect>\normalfont. The isotropic part of the back stress tensor
+is updated using the following equation
+\begin{equation}
+\alpha^{\mathrm{iso}}_{n+1}=\alpha^{\mathrm{iso}}_{n}+
+\frac{3K_f\exp(p_3)\left(\exp(p_4)-\exp(\varepsilon^p_v)\right)}
+{\left(\exp(p_3+\varepsilon^p_v)-1\right)}
+\dot{\varepsilon}^p_v\Delta t ~\Bone
+\end{equation}
+in which $~\Bone$ is the second-order identity tensor. Also, the effective bulk modulus 
+is calculated as
+\begin{equation}
+K_e=B0+
+\frac{K_f\left(\exp(p_3+p_4)-1\right)\exp(p_3+p_4+\varepsilon^e_v+\varepsilon^p_v)}
+{\left(\exp(p_3+p_4+\varepsilon^e_v+\varepsilon^p_v)-1\right)^2}
+\end{equation}
+in which $\varepsilon^e_v$ is the volumetric part of the elastic strain.
+           
 \item{\bf Water}  This is a model for water, reported in \cite{water_model_ref}.
 The P-V relationship is given by:
 \begin{equation}
@@ -1548,31 +1720,83 @@ The code is in \verb|.../MPM/ConstitutiveModel/PlasticityModels/HyperElasticEOS.
 
 \subparagraph{Mie-Gruneisen equation of state}
 The pressure ($p$) is calculated using a Mie-Gr{\"u}neisen equation of state
-of the form (\cite{Wilkins99,Zocher00})
+\begin{equation} \label{eq:MG}
+  p = p_{ref} +\rho \Gamma (e - e_{ref})
+\end{equation}
+where $\rho$ is the mass density, $\Gamma$ the Gr{\"u}neisen parameter (unitless) and $p_{ref}$
+and $e_{ref}$ are known pressure and internal specific energy on a reference curve {\it and are a function
+of volume only}.  As the form can be formally viewed as an expansion valid near the reference curve,
+ideally the reference curve prescribes states near those of interest.  The reference curve could be
+the shock Hugoniot, the standard adiabat (through the initial state), the 0 K isotherm, the isobar $p=0$,
+the curve $e=0$, or some composite of these curves to cover the range of interest.  
+
+For shock calculations it makes sense to use the Hugoniot as a reference curve.  We Assume the following
+relationship between shock wave velocity, $U_s$ and particle velocity,  $U_p$,
+\begin{equation} \label{eq:SteinbergUsUp}
+  U_s = C_0 + s_\alpha U_p + s_2 \frac{U_p^2}{U_s} + s_3 \frac{U_p^3}{U_s^2}
+\end{equation}
+where $C_0$ is the bulk speed of sound, and the $s$'s are dimensionless coefficients.
+This form is due to Steinberg (\cite{Steinberg91}), and is a straight--forward extension to a nonlinear 
+shock velocity, particle velocity relationship.  It reduces to the linear relationship most frequently 
+used, e.g. (\cite{Wilkins99,Zocher00}), with $s_2 = s_3 = 0$.  Using the steady shock jump conditions for
+conservation of mass, momentum and energy, the Hugoniot reference pressure, $p_H$ and specific energy,
+$e_H$ may be determined
+\begin{equation} \label{eq:pH}
+  p_H = \frac{\rho_0 C_0^2 \eta}{1 - s_\alpha \eta - s_2 \eta^2 - s_3 \eta^3}
+\end{equation}
+\begin{equation} \label{eq:eH}
+  e_H = \frac{p_H \eta}{2 \rho_0}
+\end{equation}
+where $\rho_0$ is the initial density (pre-shock) and
+\begin{equation} \label{eq:eta}
+  \eta = 1-\frac{\rho_0}{\rho}
+\end{equation}
+is a measure of volumetric deformation.  Using these relationships and the additional assumption that
+$\rho\Gamma=\rho_0\Gamma_0$ the Mie-Gr{\"u}neisen equation of state may be written
 \begin{equation} \label{eq:EOSMG_upd}
   \boxed{
-  p_{n+1} =  - \frac{\rho_0~C_0^2~(1 - J^e_{n+1})
-           [1 - \Gamma_0 (1 - J^e_{n+1})/2]}
-           {[1 - S_{\alpha}(1 - J^e_{n+1})]^2} - \Gamma_0~e_{n+1} 
-  ~;~~~ J^e := \det{\BF^e} 
+  p =  \frac{\rho_0~C_0^2~\eta(1-\frac{\Gamma_0\eta}{2})}{(1 - s_\alpha \eta - s_2 \eta^2 - s_3 \eta^3)^2}
+           + \rho_0\Gamma_0~e
   }
 \end{equation}
-where $C_0$ is the bulk speed of sound, $\rho_0$ is the initial mass density,
-$\Gamma_0$ is the Gr{\"u}neisen's gamma at the reference state,
-$S_{\alpha} = dU_s/dU_p$ is a linear Hugoniot slope coefficient,
-$U_s$ is the shock wave velocity, $U_p$ is the particle velocity, and
-$e$ is the internal energy density (per unit reference volume), $\BF^e$ is
-the elastic part of the deformation gradient.  For isochoric plasticity,
+To extend the Mie Gr{\"u}neisen EOS into tensile stress regimes, for $\eta<0$ the pressure is evaluated as
+\begin{equation} \label{eq:EOSMG_upd}
+  \boxed{
+  p =  \rho_0~C_0^2~\eta + \rho_0\Gamma_0~e
+  }
+\end{equation}
+This equation is integrated explicitly, using beginning timestep values for energy and the current value
+of density to update the pressure.  For isochoric plasticity,
 \begin{equation*}
   J^e = J = \det(\BF) = \cfrac{\rho_0}{\rho} ~.
 \end{equation*}
-  The internal energy is computed using
+where $\BF^e$ is the elastic part of the deformation gradient.  
+The increment in specific internal energy is computed using
   \begin{equation}
-    E = \frac{1}{V_0} \int C_v dT \approx \frac{C_v (T-T_0)}{V_0}
+    \rho^* \Delta e = (\sigma^*_{ij} D_{ij} - q D_{kk}) \Delta t
   \end{equation}
-  where $V_0 = 1/\rho_0$ is the reference specific volume at temperature
-  $T = T_0$, and $C_v$ is the specific heat at constant volume.
-Also,
+where $\sigma^*_{ij}$ and $\rho^*$ are the average stress and density over the time step, 
+$D_{ij}$ is the rate of deformation tensor, and $q$ is
+the artificial viscosity.  Note that the artificial velocity term must be included explicitly
+since it is not accumulated in the total stress.
+
+The temperature, $T$, is calculated using the thermodynamic relationship
+  \begin{equation}\label{eq:dTthermo}
+    dT = -\rho\Gamma T dv + \frac{TdS}{C_v}
+  \end{equation}
+where $v$ is the specific volume, $S$ the entropy and $C_v$ the specific heat at constant volume.
+Entropy change is associated with irreversible, or dissipative, processes.  Equating $TdS$ to the
+dissipated work terms, those components of temperature change are computed in the appropriate routines,
+such as plasticity or artificial viscosity.  In fact, not all of the dissipated energy needs be
+converted to heat, as allowed for by using the Taylor--Quinney coefficient (see below).  The first term
+in \label{eq:dT} may be integrated to give the isentropic temperature change
+  \begin{equation}\label{eq:dTisentropic}
+    \Delta T_{isentropic} = -T\Gamma_0\frac{\rho_0}{\rho}D_{kk}\Delta t
+  \end{equation}
+where the same assumption, $\rho\Gamma=\rho_0\Gamma_0$ is used.  The isentropic temperature change
+is computed as part of the EOS response.
+
+Should an implicit integration scheme be used the tangent moduli are needed, which in turn require calculation of
 \Beq
   \boxed{
   \Partial{p}{J^e} =
@@ -1580,7 +1804,8 @@ Also,
         {[1-S_{\alpha}~(1-J^e)]^3} - \Gamma_0~\Partial{e}{J^e}.
   }
 \Eeq
-We neglect the $\Partial{e}{J^e}$ term in our calculations.
+We neglect the $\Partial{e}{J^e}$ term in our calculations.  {\it Note: this calculation hasn't been updated for
+the Steinberg nonlinear shock velocity, particle velocity relationship.}
 
 This model is invoked in Uintah using
 \begin{Verbatim}[fontsize=\footnotesize]
@@ -1588,9 +1813,51 @@ This model is invoked in Uintah using
     <C_0>5386</C_0>
     <Gamma_0>1.99</Gamma_0>
     <S_alpha>1.339</S_alpha>
+    <S_2>1.339</S_2>
+    <S_3>1.339</S_3>
   </equation_of_state>
 \end{Verbatim}
 The code is in \verb|.../MPM/ConstitutiveModel/PlasticityModels/MieGruneisenEOS.cc|.
+
+It is worth noting that this approach to calculating energy and temperature is not necessarily consistent
+with existing implementations.  In fact, it does not appear that there is a standard approach, many shock
+codes have unique implementations.  In particular, it appears that the elastic stored energy term is 
+often neglected, as well as the isentropic temperature change.
+
+It is worth noting that the approach outlined above is consistent with that taken fairly
+recently by Wilkins (\cite{Wilkins99}).  Wilkins expands the pressure and energy as polynomials in $\eta$
+and uses Hugoniot data (and a linear $U_s$, $U_p$ relationship) to determine the coefficients.  Using the
+additional thermodynamic relationship
+  \begin{equation}\label{eq:de}
+    de = -p dv + TdS
+  \end{equation}
+and substituting for $TdS$ from \ref{eq:dTthermo}, assuming $C_v$ constant and 
+$\rho\Gamma=\rho_0\Gamma_0$ (as in Wilkins), the following relationship may be derived
+  \begin{equation}\label{eq:e}
+    e = -\int_{v_0}^v (p - \rho_0 \Gamma_0 C_v T) dv + C_v(T-T_0)
+  \end{equation}
+Since the integral is for $dS=0$, it may be integrated to give an alternate form of \ref{eq:dTisentropic},
+  \begin{equation}\label{eq:dTisentropic2}
+    T_{isentropic} = T_0\exp(\Gamma_0(1-\frac{\rho_0}{\rho}))
+  \end{equation}
+which may be substituted into \ref{eq:e} along with the expansion for $p(\eta)$ (here for $s_2=s_3=0$)
+  \begin{equation}\label{eq:pofeta}
+    p = \rho_0\Gamma_0 e + \rho_0 C_0^2(\eta + (2s_\alpha-\frac{\Gamma_0}{2})\eta^2 + s_\alpha(3s_\alpha-\Gamma_0)\eta^3) + O(\eta^4)
+  \end{equation}
+to give the equation
+  \begin{equation}\label{eq:e2}
+    e+\int_{v_0}^v\rho_0\Gamma_0 e dv = C_v(T-T_0) + \rho_0 \Gamma_0C_vT_0\int_{v_0}^v \exp(\Gamma_0\eta)dv 
+       -\rho_0\Gamma_0\int_{v_0}^v(\eta + (2s_\alpha-\frac{\Gamma_0}{2})\eta^2 + s_\alpha(3s_\alpha-\Gamma_0)\eta^3)dv
+  \end{equation}
+Finally, using 
+  \begin{equation}
+    e = e_0(\eta) + \int_{T_0}^T C_vdT
+  \end{equation}
+with a polynomial expansion for $e(\eta)$ in powers of $\eta$, \ref{eq:e2} can be integrated 
+to determine the coefficients in the expansion.  Determining the coefficients this way gives 
+exactly the same expansion for energy as derived in
+Wilkins, using a different approach.  The advantages of the approach outlined above are it's relative simplicity,
+and generality -- no assumption of constant specific heat is needed.
 
 \paragraph{Melting Temperature}
   \subparagraph{Default model}
@@ -1763,12 +2030,13 @@ The code is in \verb|.../MPM/ConstitutiveModel/PlasticityModels/MieGruneisenEOS.
   The inputs can be found in \verb|.../MPM/ConstitutiveModel/PlasticityModel/PTWShear.h|.
 
   \paragraph{Flow Stress}
-  We have explored five temperature and strain rate dependent
+  We have explored six temperature and strain rate dependent
   models that can be used to compute the flow stress:
   \begin{enumerate}
     \item the Johnson-Cook (JC) model
     \item the Steinberg-Cochran-Guinan-Lund (SCG) model.
     \item the Zerilli-Armstrong (ZA) model.
+    \item the Zerilli-Armstrong for polymers model (which also has pressure dependence).
     \item the Mechanical Threshold Stress (MTS) model.
     \item the Preston-Tonks-Wallace (PTW) model.
   \end{enumerate}
@@ -1894,11 +2162,77 @@ The code is in \verb|.../MPM/ConstitutiveModel/PlasticityModels/MieGruneisenEOS.
 
   The inputs for this model are of the form
   \begin{Verbatim}[fontsize=\footnotesize]
-    <bcc_or_fcc> fcc </bcc_or_fcc>
-    <c2> </c2>
-    <c3> </c3>
-    <c4> </c4>
-    <n> </n>
+    
+    <plasticity_model type="zerilli_armstrong">
+       <sigma_g>     50.0e6   </sigma_g>
+       <k_H>         5.0e6    </k_H>
+       <sqrt_l_inv>  5.0      </sqrt_l_inv>
+       <B>           25.0e6   </B>
+       <beta_0>      0.0      </beta_0>
+       <beta_1>      0.0      </beta_1>
+       <B_0>         0.0      </B_0>
+       <alpha_0>     0.0      </alpha_0>
+       <alpha_1>     0.0      </alpha_1>
+       <K>           5.0e9    </K>
+       <n>           1.0      </n>
+     </plasticity_model>
+  \end{Verbatim}
+
+  \subparagraph{ZA for Polymers Flow Stress Model}
+  The Zerilli-Armstrong flow stress model for polymers(\cite{Zerilli07})
+  is a modification to the ZA flow stress model for metals motivated by considering
+  thermally activated processess appropriate to polymers, in place of
+  dislocations.  The ZA flow stress function for polymers has three terms.  
+  The first term accounts for a saturation of the flow stress to finite stress 
+  at higher temperatures (Although such stress component is specified as ``athermal'' 
+  it should follow the generally weaker temperature dependence of the elastic 
+  shear modulus, hence the subscript ``g''). The second gives the yield stress as 
+  a function of temperature and plastic strain rate. The third gives an increment 
+  due to strain hardening, influenced by the pressure. The general form of the
+  equation for the flow stress implemented in Uintah is
+  \begin{equation}
+    \sigma_y(\Ep,\Epdot{},p,T) = 
+      \sigma_g + B\exp(-\beta(T-T_0)) + 
+                           B_0\sqrt{\omega\Ep}\exp(-\alpha(T-T_0))
+  \end{equation}
+  where it should be noted that the equation is slightly modified from the
+  original to include a reference temperature $T_0$ and an athermal stress, 
+  $\sigma_g$, which is a constant.  The other terms are specified via
+  \begin{equation}
+    B=B_{pa}(1+B_{pb}p)^{B_{pn}};\quad
+    B_0=B_{0pa}(1+B_{0pb}p)^{B_{0pn}};\quad
+    \omega=\omega_a+\omega_b\ln(\Epdot{})+\omega_p p
+  \end{equation}
+  where $B_{pa}$, $B_{pb}$, $B_{pn}$, $B_{0pa}$, $B_{0pb}$, $B_{0pn}$, $\omega_a$, $\omega_b$, 
+  and $\omega_p$ are material parameters.  The functional forms of the exponents
+  $\alpha$ and $\beta$ are (as in the original)
+  \begin{equation}
+    \alpha = \alpha_0 - \alpha_1 \ln(\Epdot{}); \quad
+    \beta = \beta_0 - \beta_1 \ln(\Epdot{}); 
+  \end{equation}
+  where $\alpha_0, \alpha_1, \beta_0, \beta_1$ are material parameters.
+
+  The inputs for this model are of the form
+  \begin{Verbatim}[fontsize=\footnotesize]
+    
+         <plasticity_model type="zerilli_armstrong_polymer">
+           <sigma_g>     50.0e6      </sigma_g>
+           <B_pa>        0.0      </B_pa>
+           <B_pb>        0.0      </B_pb>
+           <B_pn>        0.0      </B_pn>
+           <beta_0>      0.0      </beta_0>
+           <beta_1>      0.0      </beta_1>
+           <T_0>         0.0      </T_0>
+           <B_0pa>       500.0e6      </B_0pa>
+           <B_0pb>       0.0      </B_0pb>
+           <B_0pn>       0.0      </B_0pn>
+           <omega_a>     1.0      </omega_a>
+           <omega_b>     0.0      </omega_b>
+           <omega_p>     0.0      </omega_p>
+           <alpha_0>     0.0      </alpha_0>
+           <alpha_1>     0.0      </alpha_1>
+         </plasticity_model>
+
   \end{Verbatim}
 
   \subparagraph{MTS Flow Stress Model}
@@ -3261,7 +3595,7 @@ to the following optional specification in the \tt <contact> \normalfont
 section:
 
 \begin{Verbatim}[fontsize=\footnotesize]
-        <direction>[1,1,1]</direction>
+        <direction>[0,1,0]</direction>
 \end{Verbatim}
 
 \begin{figure}
@@ -3277,7 +3611,7 @@ similar simulation.  In this case, the cylinder is restricted from sliding
 laterally across the plate by altering the \tt <contact> \normalfont
 section as follows:
 \begin{Verbatim}[fontsize=\footnotesize]
-        <direction>[0,1,0]</direction>
+        <direction>[1,1,1]</direction>
 \end{Verbatim}
 
 \begin{figure}

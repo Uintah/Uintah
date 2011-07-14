@@ -78,7 +78,7 @@ void IsoHardeningPlastic::outputProblemSpec(ProblemSpecP& ps)
 void 
 IsoHardeningPlastic::addInitialComputesAndRequires(Task* task,
                                                    const MPMMaterial* matl,
-                                                   const PatchSet*) const
+                                                   const PatchSet*)
 {
   const MaterialSubset* matlset = matl->thisMaterial();
   task->computes(pAlphaLabel, matlset);
@@ -87,7 +87,7 @@ IsoHardeningPlastic::addInitialComputesAndRequires(Task* task,
 void 
 IsoHardeningPlastic::addComputesAndRequires(Task* task,
                                             const MPMMaterial* matl,
-                                            const PatchSet*) const
+                                            const PatchSet*)
 {
   const MaterialSubset* matlset = matl->thisMaterial();
   task->requires(Task::OldDW, pAlphaLabel, matlset,Ghost::None);
@@ -99,7 +99,7 @@ IsoHardeningPlastic::addComputesAndRequires(Task* task,
                                    const MPMMaterial* matl,
                                    const PatchSet*,
                                    bool /*recurse*/,
-                                   bool SchedParent) const
+                                   bool SchedParent)
 {
   const MaterialSubset* matlset = matl->thisMaterial();
   if(SchedParent){
@@ -121,7 +121,7 @@ void
 IsoHardeningPlastic::allocateCMDataAddRequires(Task* task,
                                                const MPMMaterial* matl,
                                                const PatchSet* ,
-                                               MPMLabel* ) const
+                                               MPMLabel* )
 {
   const MaterialSubset* matlset = matl->thisMaterial();
   task->requires(Task::NewDW, pAlphaLabel_preReloc, matlset, Ghost::None);
@@ -317,6 +317,3 @@ IsoHardeningPlastic::evalDerivativeWRTAlpha(const PlasticityState* ,
 {
   return d_CM.K;
 }
-
-
-

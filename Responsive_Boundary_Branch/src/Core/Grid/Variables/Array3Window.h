@@ -66,7 +66,11 @@ KEYWORDS
    Array3Window
 
 DESCRIPTION
-   Long description...
+
+   The Array3Window class supports a windowed access into memory.  For
+   multiple patches per process, this allows one large block of memory
+   to be accessed by each patch with local 0-based access from the
+   patch.  The offset contained herein is a GLOBAL offset.
   
 WARNING
   

@@ -1,23 +1,49 @@
 <config>
-<postProcessCmd_path></postProcessCmd_path>
+<postProcessCmd_path>orderAccuracy/postProcessTools/compare_MPM_AA_MMS</postProcessCmd_path>
 
-<symbolicLinks> 
-  /usr/local/home/harman/Builds/Fresh/NB/src/scripts/ /usr/local/home/harman/Builds/Fresh/NB/src/StandAlone/inputs
-</symbolicLinks>
+<symbolicLinks> </symbolicLinks>
+<!--
+<test>
+  <name>3rdorderBS_AA_MMS</name>
+  <ups>AA.ups</ups>
+  <tst>3rdorderBS_dx.tst</tst>
+</test>
 
 <test>
-  <name>1D_MMS_X</name>
-  <ups>1D_MMS.ups</ups>
-  <tst>dx.tst</tst>
+  <name>cpdi_AA_MMS</name>
+  <ups>AA.ups</ups>
+  <tst>cpdi_dx.tst</tst>
 </test>
+
 <test>
-  <name>1D_MMS_Y</name>
-  <ups>1D_MMS.ups</ups>
-  <tst>dx.tst</tst>
+  <name>fastcpdi_AA_MMS</name>
+  <ups>AA.ups</ups>
+  <tst>fastcpdi_dx.tst</tst>
 </test>
+
 <test>
-  <name>1D_MMS_Z</name>
-  <ups>1D_MMS.ups</ups>
-  <tst>dx.tst</tst>
+  <name>gimp_AA_MMS</name>
+  <ups>AA.ups</ups>
+  <tst>gimp_dx.tst</tst>
 </test>
+
+<test>
+  <name>linear_AA_MMS</name>
+  <ups>AA.ups</ups>
+  <tst>linear_dx.tst</tst>
+</test>
+
+<test>
+  <name>linear_AA_MMS_2L</name>
+  <ups>AA_MMS_3L.ups</ups>
+  <tst>linear_dx_3L.tst</tst>
+</test>
+-->
+
+<test>
+  <name>1D_MMS</name>
+  <ups>AA.ups</ups>
+  <tst>1D_MMS_Z.tst</tst>
+</test>
+
 </config>

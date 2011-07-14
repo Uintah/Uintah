@@ -35,50 +35,50 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := CCA/Components/Arches/fortran
 
 SRCS += \
-	$(SRCDIR)/add_mm_enth_src.F \
-	$(SRCDIR)/apcal_all.F \
-	$(SRCDIR)/areain.F \
-	$(SRCDIR)/arrass.F \
-	$(SRCDIR)/inlpresbcinout.F \
-	$(SRCDIR)/bcscalar.F \
-	$(SRCDIR)/bcuvel.F \
-	$(SRCDIR)/bcvvel.F \
-	$(SRCDIR)/bcwvel.F \
-	$(SRCDIR)/cellg.F \
-	$(SRCDIR)/celltypeInit.F \
-	$(SRCDIR)/enthalpyradthinsrc.F \
-	$(SRCDIR)/explicit_scalar.F \
-	$(SRCDIR)/fixval.F \
-	$(SRCDIR)/fixval_trans.F \
-	$(SRCDIR)/inlbcs.F \
-	$(SRCDIR)/intrusion_computevel.F \
-	$(SRCDIR)/mascal_scalar.F \
-	$(SRCDIR)/mm_computevel.F\
-	$(SRCDIR)/mm_explicit.F\
-	$(SRCDIR)/mm_explicit_oldvalue.F\
-	$(SRCDIR)/mm_explicit_vel.F\
-	$(SRCDIR)/mmbcvelocity.F \
-	$(SRCDIR)/mmbcvelocity_momex.F \
-	$(SRCDIR)/mmbcenthalpy_energyex.F \
-	$(SRCDIR)/mmcelltypeinit.F \
-	$(SRCDIR)/mmwallbc.F \
-	$(SRCDIR)/mmwallbc_trans.F \
+        $(SRCDIR)/add_mm_enth_src.F \
+        $(SRCDIR)/apcal_all.F \
+        $(SRCDIR)/areain.F \
+        $(SRCDIR)/arrass.F \
+        $(SRCDIR)/inlpresbcinout.F \
+        $(SRCDIR)/bcscalar.F \
+        $(SRCDIR)/bcuvel.F \
+        $(SRCDIR)/bcvvel.F \
+        $(SRCDIR)/bcwvel.F \
+        $(SRCDIR)/cellg.F \
+        $(SRCDIR)/celltypeInit.F \
+        $(SRCDIR)/enthalpyradthinsrc.F \
+        $(SRCDIR)/explicit_scalar.F \
+        $(SRCDIR)/fixval.F \
+        $(SRCDIR)/fixval_trans.F \
+        $(SRCDIR)/inlbcs.F \
+        $(SRCDIR)/intrusion_computevel.F \
+        $(SRCDIR)/mascal_scalar.F \
+        $(SRCDIR)/mm_computevel.F\
+        $(SRCDIR)/mm_explicit.F\
+        $(SRCDIR)/mm_explicit_oldvalue.F\
+        $(SRCDIR)/mm_explicit_vel.F\
+        $(SRCDIR)/mmbcvelocity.F \
+        $(SRCDIR)/mmbcvelocity_momex.F \
+        $(SRCDIR)/mmbcenthalpy_energyex.F \
+        $(SRCDIR)/mmcelltypeinit.F \
+        $(SRCDIR)/mmwallbc.F \
+        $(SRCDIR)/mmwallbc_trans.F \
         $(SRCDIR)/prescoef_var.F \
-	$(SRCDIR)/pressrcpred.F \
+        $(SRCDIR)/pressrcpred.F \
         $(SRCDIR)/pressrcpred_var.F \
-	$(SRCDIR)/profscalar.F \
-	$(SRCDIR)/profv.F \
-	$(SRCDIR)/scalarvarmodel.F \
-	$(SRCDIR)/scalcoef.F \
-	$(SRCDIR)/scalsrc.F \
-	$(SRCDIR)/smagmodel.F \
-	$(SRCDIR)/uvelcoef.F \
-	$(SRCDIR)/uvelsrc.F \
-	$(SRCDIR)/vvelcoef.F \
-	$(SRCDIR)/vvelsrc.F \
-	$(SRCDIR)/wallbc.F \
-	$(SRCDIR)/wvelcoef.F \
-	$(SRCDIR)/wvelsrc.F \
+        $(SRCDIR)/profscalar.F \
+        $(SRCDIR)/profv.F \
+        $(SRCDIR)/scalarvarmodel.F \
+        $(SRCDIR)/scalcoef.F \
+        $(SRCDIR)/scalsrc.F \
+        $(SRCDIR)/smagmodel.F \
+        $(SRCDIR)/uvelcoef.F \
+        $(SRCDIR)/uvelsrc.F \
+        $(SRCDIR)/vvelcoef.F \
+        $(SRCDIR)/vvelsrc.F \
+        $(SRCDIR)/wallbc.F \
+        $(SRCDIR)/wvelcoef.F \
+        $(SRCDIR)/wvelsrc.F \
         $(SRCDIR)/get_ramping_factor.F
 
 PSELIBS := 

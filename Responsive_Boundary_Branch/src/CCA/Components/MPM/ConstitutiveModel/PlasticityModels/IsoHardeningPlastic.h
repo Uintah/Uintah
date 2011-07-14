@@ -103,21 +103,21 @@ namespace Uintah {
     // Only one internal variable for Isotropic-Hardening :: plastic strain
     virtual void addInitialComputesAndRequires(Task* task,
                                                const MPMMaterial* matl,
-                                               const PatchSet* patches) const;
+                                               const PatchSet* patches);
 
     virtual void addComputesAndRequires(Task* task,
                                         const MPMMaterial* matl,
-                                        const PatchSet* patches) const;
+                                        const PatchSet* patches);
 
     virtual void addComputesAndRequires(Task* task,
                                         const MPMMaterial* matl,
                                         const PatchSet* patches,
                                         bool recurse,
-                                        bool SchedParent) const;
+                                        bool SchedParent);
 
     virtual void allocateCMDataAddRequires(Task* task, const MPMMaterial* matl,
                                            const PatchSet* patch, 
-                                           MPMLabel* lb) const;
+                                           MPMLabel* lb);
 
     virtual void allocateCMDataAdd(DataWarehouse* new_dw,
                                    ParticleSubset* addset,

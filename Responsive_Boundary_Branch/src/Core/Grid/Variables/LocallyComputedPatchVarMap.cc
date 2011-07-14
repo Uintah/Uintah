@@ -35,6 +35,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Exceptions/InternalError.h>
 #include <iostream>
 
+using namespace std;
 using namespace SCIRun;
 using namespace Uintah;
 

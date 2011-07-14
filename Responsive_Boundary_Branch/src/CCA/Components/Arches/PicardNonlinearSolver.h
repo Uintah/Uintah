@@ -71,7 +71,6 @@ namespace Uintah {
 class PressureSolver;
 class MomentumSolver;
 class ScalarSolver;
-class ReactiveScalarSolver; 
 class TurbulenceModel;
 class Properties;
 class BoundaryCondition;
@@ -87,14 +86,13 @@ public:
   // GROUP: Constructors:
   ////////////////////////////////////////////////////////////////////////
   // Solver initialized with all input data 
-  PicardNonlinearSolver(const ArchesLabel* label,
+  PicardNonlinearSolver(ArchesLabel* label,
                         const MPMArchesLabel* MAlb,
                         Properties* props, 
                         BoundaryCondition* bc,
                         TurbulenceModel* turbModel, 
                         PhysicalConstants* physConst,
                         bool calcScalar,
-                        bool calcReactscalar,
                         bool calcEnthalpy,
                         bool calcVariance,
                         const ProcessorGroup* myworld);
@@ -227,13 +225,6 @@ public:
   inline void setExtraScalars(vector<ExtraScalarSolver*>* extraScalars) {
   }
 
-  inline void setCarbonBalanceES(bool carbon_balance_es){
-    d_carbon_balance_es = carbon_balance_es;
-  }
-  inline void setSulfurBalanceES(bool sulfur_balance_es){
-    d_sulfur_balance_es = sulfur_balance_es;
-  }
-
   void setPartVel( PartVel* partVel ) {
     d_partVel = partVel; };
 
@@ -351,7 +342,7 @@ private:
 
 private:
   // const VarLabel*
-  const ArchesLabel* d_lab;
+  ArchesLabel* d_lab;
   const MPMArchesLabel* d_MAlab;
   // generation variable for DataWarehouse creation
 
@@ -366,7 +357,6 @@ private:
   // Turbulence Model
   TurbulenceModel* d_turbModel;
   bool d_calScalar;
-  bool d_reactingScalarSolve;
   bool d_enthalpySolve;
   bool d_calcVariance;
   bool d_radiationCalc;
@@ -380,8 +370,6 @@ private:
   MomentumSolver* d_momSolver;
   // Scalar solver
   ScalarSolver* d_scalarSolver;
-  // reacting scalar solver
-  ReactiveScalarSolver* d_reactingScalarSolver;
   // physcial constatns
   PhysicalConstants* d_physicalConsts;
 
@@ -399,8 +387,6 @@ private:
   bool d_extraProjection;
   bool d_EKTCorrection;
   bool d_KE_fromFC;
-  bool d_carbon_balance_es;
-  bool d_sulfur_balance_es;
 
   PartVel* d_partVel; 
   DQMOM* d_dqmomSolver; 

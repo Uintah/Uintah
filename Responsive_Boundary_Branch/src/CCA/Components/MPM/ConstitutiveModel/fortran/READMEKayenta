@@ -4,20 +4,18 @@ do the following:
 1.  Access the Kayenta, aka GeoModel, source code.  See Jim Guilkey
 or Rebecca Brannon for more information on this.
 
-2.  In the trunk/demo/source_091210 directory, do:
+2.  In the /toolset directory, do:
 
-make uintah
+createKayentaRelease
 
-Which will create a UintahKayenta000000 directory (where 000000 stands for the
-build date in yymmdd form), which will contain the relevant source code.
+Which will create a KAYENTA_FILES directory with the source code (or just the libraries):
+/materials/kayenta/branches/current-releases/f77-isotropic-uintah
+/materials/kayenta/branches/current-releases/f77-isotropic-uintah-lib
 
 3.  From the directory you are currently in
 (Uintah/CCA/Components/MPM/ConstitutiveModel/fortran), do the following:
 
-cp PATH_TO_KAYENTA/trunk/demo/source_091210/UintahKayenta000000/*.F .
-cp PATH_TO_KAYENTA/trunk/demo/source_091210/UintahKayenta000000/*.h .
-cp PATH_TO_KAYENTA/trunk/demo/source_091210/UintahKayenta000000/Kayenta_pnt.Blk .
-cp PATH_TO_KAYENTA/trunk/demo/source_091210/UintahKayenta000000/geojoint_stiff.x .
+cp KAYENTA_FILES/*.* .
 
 At this point, you should be able to recompile the sus executable, after
 which you will be ready to run simulations using Kayenta.

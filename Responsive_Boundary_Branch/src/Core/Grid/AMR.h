@@ -660,7 +660,7 @@ template<class T>
 {
   // piecewise constant
   if(orderOfInterpolation == 0){
-    cout << " pieceWise constant Interpolator " << endl;
+    std::cout << " pieceWise constant Interpolator " << std::endl;
     piecewiseConstantInterpolation(q_CL, fineLevel,fl, fh, q_FineLevel);
   }
   // linear
@@ -672,11 +672,11 @@ template<class T>
   if(orderOfInterpolation == 2){
   
 #if 0
-//    cout << " colella's quadratic interpolator" << endl;
+//    std::cout << " colella's quadratic interpolator" << std::endl;
     quadraticInterpolation_CFI<T>(q_CL, finePatch, patchFace,coarseLevel, 
                                   fineLevel, refineRatio, fl, fh,q_FineLevel);
 #else
-//    cout << " standard quadratic Interpolator" << endl;
+//    std::cout << " standard quadratic Interpolator" << std::endl;
     quadraticInterpolation<T>(q_CL, coarseLevel, fineLevel,
                               refineRatio, fl,fh, q_FineLevel);
 #endif
@@ -693,7 +693,7 @@ _____________________________________________________________________*/
 template<class T>
   void interpolationTest_helper( CCVariable<T>& q_FineLevel,
                                  CCVariable<T>& q_CL,
-                                 const string& desc,
+                                 const std::string& desc,
                                  const int test,
                                  const Level* level,
                                  const IntVector& l,
@@ -743,7 +743,7 @@ template<class T>
       T diff(q_FineLevel[c] - exact);
       error = error + diff * diff;
       //if( fabs(diff) > 1e-3) {
-      //  cout << c << " q_FineLevel[c] " <<  q_FineLevel[c] << " exact " << exact << " diff " << diff << endl;
+      //  std::cout << c << " q_FineLevel[c] " <<  q_FineLevel[c] << " exact " << exact << " diff " << diff << endl;
       //}
       ncell += 1; 
     }
@@ -851,24 +851,25 @@ template<class T>
 // (we need the finePatch, as the fine level might not entirely overlap the coarse)
 // also get the coarse range to iterate over
 UINTAHSHARE void getFineLevelRange(const Patch* coarsePatch, const Patch* finePatch,
-                             IntVector& cl, IntVector& ch, IntVector& fl, IntVector& fh);
+                                    IntVector& cl, IntVector& ch, 
+                                    IntVector& fl, IntVector& fh);
 
-// As above, but do the same for nodes, and include ghost data requirements
-UINTAHSHARE void getFineLevelRangeNodes(const Patch* coarsePatch, const Patch* finePatch,
-                            IntVector& cl, IntVector& ch,
-                            IntVector& fl, IntVector& fh, IntVector ghost);
+// As above, but do the same for nodes, and include fine patch padding cell requirements 
+UINTAHSHARE void getFineLevelRangeNodes(const Patch* coarsePatch, 
+                                        const Patch* finePatch,
+                                        IntVector& cl, IntVector& ch,
+                                        IntVector& fl, IntVector& fh, 
+                                        IntVector padding);
 
 // find the range of values to get from the coarseLevel that coincides with coarsePatch
 // ngc is the number of ghost cells to get at the fine level
 UINTAHSHARE void getCoarseLevelRange(const Patch* finePatch, const Level* coarseLevel, 
-                               IntVector& cl, IntVector& ch, IntVector& fl, IntVector& fh, int ngc);
+                                     IntVector& cl, IntVector& ch, 
+                                     IntVector& fl, IntVector& fh, 
+                                     IntVector boundaryLayer,
+                                     int ngc,
+                                     const bool returnExclusiveRange);
 
-UINTAHSHARE void getCoarseLevelRangeNodes(const Patch* finePatch,
-                                          const Level* coarseLevel, 
-                                          IntVector& cl, IntVector& ch,
-                                          IntVector& fl, IntVector& fh,
-                                          int ngc,
-                                          int nBoundaryCells);
 
 // find the range of a coarse-fine interface along a certain face
 UINTAHSHARE void getCoarseFineFaceRange(const Patch* finePatch, 
@@ -896,10 +897,10 @@ UINTAHSHARE void coarseLevel_CFI_Iterator(Patch::FaceType patchFace,
                                           bool& isRight_CP_FP_pair);
                                        
 UINTAHSHARE void fineLevel_CFI_Iterator(Patch::FaceType patchFace,
-                                       const Patch* coarsePatch,  
-                                       const Patch* finePatch,    
-                                       CellIterator& iter,
-                                       bool& isRight_CP_FP_pair);   
+                                        const Patch* coarsePatch,  
+                                        const Patch* finePatch,    
+                                        CellIterator& iter,
+                                        bool& isRight_CP_FP_pair);   
                                        
 UINTAHSHARE void fineLevel_CFI_NodeIterator(Patch::FaceType patchFace,
                                             const Patch* coarsePatch,  

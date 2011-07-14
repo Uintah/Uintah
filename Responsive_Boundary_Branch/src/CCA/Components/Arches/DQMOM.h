@@ -3,18 +3,19 @@
 #ifndef Uintah_Components_Arches_DQMOM_h
 #define Uintah_Components_Arches_DQMOM_h
 
-#include <CCA/Ports/DataWarehouse.h>
-#include <Core/Grid/Variables/PerPatch.h>
-#include <Core/Grid/Variables/CellIterator.h>
-#include <Core/Grid/Variables/VarTypes.h>
-#include <Core/Grid/Variables/VarLabel.h>
-#include <Core/Grid/Variables/CCVariable.h>
-#include <Core/Grid/SimulationState.h>
-#include <Core/Grid/Patch.h>
-#include <Core/Datatypes/DenseMatrix.h>
-#include <Core/Datatypes/ColumnMatrix.h>
-#include <Core/Datatypes/ColumnMatrix.h>
 #include <CCA/Components/Arches/Directives.h>
+
+#include <CCA/Ports/DataWarehouse.h>
+
+#include <Core/Datatypes/ColumnMatrix.h>
+#include <Core/Datatypes/DenseMatrix.h>
+#include <Core/Grid/Patch.h>
+#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/Variables/CellIterator.h>
+#include <Core/Grid/Variables/PerPatch.h>
+#include <Core/Grid/Variables/VarLabel.h>
+#include <Core/Grid/Variables/VarTypes.h>
 
 #include <map>
 
@@ -46,6 +47,7 @@ class ArchesLabel;
 class DQMOMEqn; 
 class ModelBase; 
 class LU;
+
 class DQMOM {
 
 public:
@@ -140,7 +142,7 @@ private:
   std::vector<DQMOMEqn* > weightEqns;           ///< Weight equation labels, IN SAME ORDER AS GIVEN IN INPUT FILE
   std::vector<DQMOMEqn* > weightedAbscissaEqns; ///< Weighted abscissa equation labels, IN SAME ORDER AS GIVEN IN INPUT FILE
 
-  vector< vector<ModelBase> > weightedAbscissaModels;
+  vector< vector<ModelBase*> > weightedAbscissaModels;
 
   ArchesLabel* d_fieldLabels; 
   

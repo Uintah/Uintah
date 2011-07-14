@@ -125,9 +125,7 @@ TCL_ETAGS_FILES := $(wildcard $(TCL_FILES))
 ETAGS := @ETAGS@
 CTAGS := ctags
 
-SCIRUN_APP_DIR := $(OBJTOP_ABS)/../SCIRun/
-
-all:: prereqs packmaker $(ALLTARGETS)
+all:: prereqs packmaker $(ALLTARGETS) uintah
 
 prereqs : $(MAKEFILEDIRSTAG) $(CREATETCLINDEX) $(LIBDIR) $(SUBMAKEFILES) $(ALLGEN) $(VCDIR) $(VCDEPS)
 	@if test ! -f prereqs; then \
@@ -146,25 +144,6 @@ packmaker: $(SRCTOP)/build_scripts/packmaker.in $(OBJTOP)/Makefile
               -e 's,REPLACE_SCIRUN_SRCTOP,$(SRCTOP_ABS),g' \
               $(SRCTOP)/build_scripts/packmaker.in > packmaker
 	-@chmod a+x packmaker
-
-app: all
-	@echo making SCIRun.app in $(SCIRUN_APP_DIR)
-	@mkdir -p $(SCIRUN_APP_DIR)/SCIRun.app/Contents/MacOS
-	@mkdir -p $(SCIRUN_APP_DIR)/SCIRun.app/Contents/src
-	@mkdir -p $(SCIRUN_APP_DIR)/SCIRun.app/Contents/Thirdparty
-	@cp -rp $(OBJTOP)/* $(SCIRUN_APP_DIR)/SCIRun.app/Contents/MacOS
-	@cp -rp $(SRCTOP)/* $(SCIRUN_APP_DIR)/SCIRun.app/Contents/src
-	@cp -rp $(SRCTOP)/build_scripts/Info.plist $(SCIRUN_APP_DIR)/SCIRun.app
-	@echo Copying SCIRun
-	@mv $(SCIRUN_APP_DIR)/SCIRun.app/Contents/MacOS/scirun $(SCIRUN_APP_DIR)/SCIRun.app/Contents/MacOS/scirun-bin
-	@cp -rp $(SRCTOP)/build_scripts/SCIRun $(SCIRUN_APP_DIR)/SCIRun.app/Contents/MacOS/
-	chmod a+x $(SCIRUN_APP_DIR)/SCIRun.app/Contents/MacOS/SCIRun*
-	@touch app
-
-dmg: app
-	hdiutil create -fs "HFS+J" -volname $(SCIRUN_APP_NAME) -srcfolder $(shell cd $(SCIRUN_APP_DIR); pwd) $(shell cd $(OBJTOP_ABS)/..; pwd)/$(SCIRUN_APP_NAME).dmg
-	touch dmg
-
 
 
 $(LIBDIR):
@@ -214,10 +193,14 @@ cleanreally::
 	rm -f $(patsubst %,%/*.$(OBJEXT), $(ALLOBJSUBDIRS))
 	rm -f $(patsubst %,%/depend.mk, $(ALLOBJSUBDIRS))
 	rm -f $(patsubst %,%/core, $(ALLOBJSUBDIRS))
+	rm -f $(patsubst %,%/*.d, $(ALLOBJSUBDIRS))
 	for fname in $(patsubst %,%/ii_files, $(ALLOBJSUBDIRS)); \
 	  do if test -d $$fname; then rm -rf $$fname; fi; done
 	rm -f $(patsubst %,%/*~, $(ALLOBJSUBDIRS))
 	rm -f $(LIBDIR)/so_locations ./so_locations
+       
+reallyclean:: cleanreally
+
 ifeq ($(CC_DEPEND_EXT),depend.mk)
 	rm -f $(patsubst %,%/depend.mk, $(ALLOBJSUBDIRS))
 else
@@ -269,14 +252,22 @@ vc: prereqs $(VCSOLUTION) $(ALLTCLINDEXES)
 $(VCSOLUTION): $(ALLVCPROJECTS)
 	@echo -e "Microsoft Visual Studio Solution File, Format Version 8.00$(foreach project,$^,\nProject(\"{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}\") = \"$(basename $(notdir $(project)))\", \"$(project)\", \"{$($(project)_ID)}\"\n\tProjectSection(ProjectDependencies) = postProject$(foreach dep,$($(project)_PROJ_DEPS),\n\t\t{$($(dep)_ID)} = {$($(dep)_ID)}PPPPP)\n\tEndProjectSection\nEndProject)\nGlobal\n\tGlobalSection(SolutionConfiguration) = preSolution\n\t\t$(CONF_NAME) = $(CONF_NAME)\n\tEndGlobalSection\n\tGlobalSection(ProjectConfiguration) = postSolution$(foreach project,$^,\n\t\t{$($(project)_ID)}.$(CONF_NAME).ActiveCfg = $(CONF_NAME)|Win32\n\t\t{$($(project)_ID)}.$(CONF_NAME).Build.0 = $(CONF_NAME)|Win32PPPPP)\n\tEndGlobalSection\n\tGlobalSection(ExtensibilityGlobals) = postSolution\n\tEndGlobalSection\n\tGlobalSection(ExtensibilityAddIns) = postSolution\n\tEndGlobalSection\nEndGlobal" | sed 's,PPPPP ,,g' | sed 's,PPPPP,,g' > $@
 
+#########################################################################################################
+# Targets for regression testing...
+
+gold_standards :
+	@mkdir -p $(OBJTOP_ABS)/TestData;                    \
+         cd $(OBJTOP_ABS)/TestData;                          \
+	 components=`$(SRCTOP_ABS)/R_Tester/helpers/selectComponents.sh $(SRCTOP_ABS)/R_Tester`; \
+	 if test "$$?" -eq 0; then                            \
+            export PYTHONPATH="$(SRCTOP_ABS)/R_Tester/toplevel:$(SRCTOP_ABS)/R_Tester"; \
+            $(SRCTOP_ABS)/R_Tester/toplevel/generateGoldStandards.py \
+	                                           -d $(IS_DEBUG) -b $(OBJTOP_ABS) -s $(SRCTOP_ABS) $$components \
+	                                           -m $(SCI_MALLOC_ON) -j $(MAKE_PARALLELISM) -v; \
+         fi
+
 #__________________________________
 #  to execute the local regression tester
 runLocalRT:
-	@echo ""
-	@echo ""
-	@echo "Now running local regression tester"
-	@echo "____________________________________"       
-	cd $(OBJTOP_ABS)
-	$(SRCTOP)/R_Tester/toplevel/startLocalTest $(OBJTOP_ABS)
-	@echo "____________________________________"
-	@echo ""
+	@cd $(OBJTOP_ABS)
+	@$(SRCTOP)/R_Tester/toplevel/startLocalTest $(OBJTOP_ABS) $(SRCTOP_ABS) $(IS_DEBUG) $(SCI_MALLOC_ON)

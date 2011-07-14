@@ -40,23 +40,22 @@ SRCS += \
         $(SRCDIR)/ColdflowMixingModel.cc    \
         $(SRCDIR)/InletStream.cc            \
         $(SRCDIR)/MixingModel.cc            \
-        $(SRCDIR)/MOMColdflowMixingModel.cc \
         $(SRCDIR)/NewStaticMixingTable.cc   \
         $(SRCDIR)/StandardTable.cc          \
         $(SRCDIR)/Stream.cc                 
 
 PSELIBS := \
-	Core/Exceptions       \
-	Core/IO               \
-	Core/Math             \
-	Core/ProblemSpec      \
+        Core/Exceptions       \
+        Core/IO               \
+        Core/Math             \
+        Core/ProblemSpec      \
   Core/Grid          \
-	Core/Util             \
-	CCA/Components/Models \
-	Core/Exceptions \
-	Core/Thread     \
-	Core/Parallel \
-	Core/Geometry   
+        Core/Util             \
+        CCA/Components/Models \
+        Core/Exceptions \
+        Core/Thread     \
+        Core/Parallel \
+        Core/Geometry   
 
 LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(F_LIBRARY)
 

@@ -7,6 +7,7 @@
 
 //-- Wasatch includes --//
 #include "PatchInfo.h"
+#include "GraphHelperTools.h"
 
 // forward declarations
 namespace Uintah{
@@ -17,20 +18,10 @@ namespace Uintah{
   class Patch;
 }
 
-namespace Expr{
-  class ExpressionTree;
-  class FieldDeps;
-  class FieldManagerList;
-  struct AllocInfo;
-}
-
-namespace SpatialOps{
-  class OperatorDatabase;
-}
-
 
 namespace Wasatch{
 
+  class TreeTaskExecute;
 
   /**
    *  \ingroup WasatchCore
@@ -50,6 +41,20 @@ namespace Wasatch{
    *  tree and set of expressions could be constructed for each
    *  patch. This would require more memory, however.
    *
+   *  There are two main "modes" that a TaskInterface can be created
+   *  to support:
+   *
+   *   - Create expressions and the associated ExpressionTree on each
+   *      patch. This is required when setting boundary conditions,
+   *      since this must modify expressions on boundary patches.
+   *
+   *   - Create expressions and the associated ExpressionTree only
+   *     once. This will be executed on each patch. This will only be
+   *     valid if all patches are homogeneous, i.e. no boundary
+   *     conditions are being applied.
+   *
+   *  These modes are selected when the TaskInterface is constructed.
+   *
    *  \todo for tree cleaving, we need to put MODIFIES flags on fields
    *        rather than COMPUTES or REQUIRES.  This might be a bit sticky.
    */
@@ -58,26 +63,81 @@ namespace Wasatch{
   public:
 
     /**
-     *  \brief Create a TaskInterface from an ExpressionTree
+     *  \brief Create a TaskInterface from a list of root expressions
      *
-     *  \param tree the ExpressionTree that we want to expose as a Uintah::Task
+     *  \param roots The root nodes of the tree to create
+     *
+     *  \param taskName the name of this task
+     *
+     *  \param factory the Expr::ExpressionFactory that will be used to build the tree.
+     *
+     *  \param sched The Scheduler that this task will be loaded on.
+     *
+     *  \param patches the patches to associate this task with.
+     *
+     *  \param materials the MaterialSet for the materials associated with this task
+     *
+     *  \param info The PatchInfoMap object.
+     *
+     *  \param createUniqueTreePerPatch if true, then a tree will be
+     *         constructed for each patch.  If false, one tree will be
+     *         used across all patches.
      *
      *  \param fml [OPTIONAL] the FieldManagerList to associate with
      *         this expression.  If not supplied, one will be created.
      *
      *  This registers fields on the FieldManagerList (which is created if necessary).
      */
-    TaskInterface( Expr::ExpressionTree* tree,
+    TaskInterface( const IDSet& roots,
+                   const std::string taskName,
+                   Expr::ExpressionFactory& factory,
+                   Uintah::SchedulerP& sched,
+                   const Uintah::PatchSet* const patches,
+                   const Uintah::MaterialSet* const materials,
                    const PatchInfoMap& info,
+                   const bool createUniqueTreePerPatch,
+                   Expr::FieldManagerList* fml = NULL );
+
+    /**
+     *  \brief Create a TaskInterface from a list of root expressions
+     *
+     *  \param root The root node of the tree to create
+     *
+     *  \param taskName the name of this task
+     *
+     *  \param factory the Expr::ExpressionFactory that will be used to build the tree.
+     *
+     *  \param sched The Scheduler that this task will be loaded on.
+     *
+     *  \param patches the patches to associate this task with.
+     *
+     *  \param materials the MaterialSet for the materials associated with this task
+     *
+     *  \param info The PatchInfoMap object.
+     *
+     *  \param createUniqueTreePerPatch if true, then a tree will be
+     *         constructed for each patch.  If false, one tree will be
+     *         used across all patches.
+     *
+     *  \param fml [OPTIONAL] the FieldManagerList to associate with
+     *         this expression.  If not supplied, one will be created.
+     *
+     *  This registers fields on the FieldManagerList (which is created if necessary).
+     */
+    TaskInterface( const Expr::ExpressionID& root,
+                   const std::string taskName,
+                   Expr::ExpressionFactory& factory,
+                   Uintah::SchedulerP& sched,
+                   const Uintah::PatchSet* const patches,
+                   const Uintah::MaterialSet* const materials,
+                   const PatchInfoMap& info,
+                   const bool createUniqueTreePerPatch,
                    Expr::FieldManagerList* fml = NULL );
 
     ~TaskInterface();
 
     /**
      *  \brief Schedule for execution with Uintah
-     *  \param scheduler the Uintah::Scheduler that we will put this task on
-     *  \param patches the Uintah::PatchSet associated with this task
-     *  \param material the Uintah::MaterialSet associated with this task
      *  \param newDWFields - a vector of Expr::Tag indicating fields
      *         should be pulled from the new DW.  This is particularly
      *         useful for situations where another task will be
@@ -89,40 +149,24 @@ namespace Wasatch{
      *  This sets all field requirements for the Uintah task and
      *  scheduled it for execution.
      */
-    void schedule( Uintah::SchedulerP& scheduler,
-                   const Uintah::PatchSet* const patches,
-                   const Uintah::MaterialSet* const materials,
-                   const std::vector<Expr::Tag>& newDWFields );
+    void schedule( const Expr::TagSet& newDWFields );
 
-    void schedule( Uintah::SchedulerP& scheduler,
-                   const Uintah::PatchSet* const patches,
-                   const Uintah::MaterialSet* const materials );
+
+    /**
+     *  \brief Schedule for execution with Uintah
+     *
+     *  This sets all field requirements for the Uintah task and
+     *  scheduled it for execution.
+     */
+    void schedule();
 
   private:
 
-    Expr::ExpressionTree* const tree_;  ///< the underlying ExpressionTree associated with this task.
-
-    const std::string taskName_;        ///< the name of the task
-
-    const PatchInfoMap& patchInfoMap_;  ///< information for each individual patch.
+    typedef std::vector< TreeTaskExecute* > ExecList;
+    ExecList execList_;
 
     const bool builtFML_;               ///< true if we constructed a FieldManagerList internally.
     Expr::FieldManagerList* const fml_; ///< the FieldManagerList for this TaskInterface
-
-    Uintah::Task* const uintahTask_;    ///< the Uintah::Task that is created from this TaskInterface.
-    bool hasBeenScheduled_;             ///< true after the call to schedule().  Must be true prior to add_fields_to_task().
-
-    /** advertises field requirements to Uintah. */
-    void add_fields_to_task( const Uintah::PatchSet* const patches,
-                             const Uintah::MaterialSet* const materials,
-                             const std::vector<Expr::Tag>& );
-
-    /** main execution driver - the callback function exposed to Uintah. */
-    void execute( const Uintah::ProcessorGroup* const,
-                  const Uintah::PatchSubset* const,
-                  const Uintah::MaterialSubset* const,
-                  Uintah::DataWarehouse* const,
-                  Uintah::DataWarehouse* const );
 
   };
 

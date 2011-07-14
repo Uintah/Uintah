@@ -102,7 +102,7 @@ public:
   // PRECONDITIONS
   // POSTCONDITIONS
   //   A linear level solver is partially constructed.  
-  PressureSolver(const ArchesLabel* label,
+  PressureSolver(ArchesLabel* label,
                  const MPMArchesLabel* MAlb,
                  BoundaryCondition* bndry_cond,
                  PhysicalConstants* phys_const,
@@ -238,9 +238,13 @@ private:
                       ArchesVariables* vars);
 
  private:
-  
+
+  bool d_always_construct_A;
+  bool d_construct_A; 
+  bool d_construct_solver_obj; 
+
   // const VarLabel* (required)
-  const ArchesLabel* d_lab;
+  ArchesLabel* d_lab;
   // for multimaterial
   const MPMArchesLabel* d_MAlab;
 

@@ -29,7 +29,7 @@ public:
 
   HeatTransfer( std::string modelName, 
                 SimulationStateP& shared_state, 
-                const ArchesLabel* fieldLabels,
+                ArchesLabel* fieldLabels,
                 vector<std::string> reqICLabelNames, 
                 vector<std::string> reqScalarLabelNames, 
                 int qn );
@@ -53,6 +53,8 @@ public:
                  const MaterialSubset * matls, 
                  DataWarehouse        * old_dw, 
                  DataWarehouse        * new_dw );
+
+void sched_dummyInit( const LevelP& level, SchedulerP& sched );
 
   /** @brief  Actually do dummy solve (sched_dummyInit is defined in ModelBase parent class) */
   void dummyInit( const ProcessorGroup* pc, 
@@ -93,13 +95,17 @@ public:
     return "HeatTransfer"; }
 
   /** @brief  Access function for radiation flag (on/off) */
-  inline const bool getRadiationFlag(){
+  inline bool getRadiationFlag(){
     return b_radiation; };   
+
+  /** @brief  Return the VarLabel for the model term for absorption coefficient */
+  inline const VarLabel* getabskpLabel() {
+    return d_abskpLabel; };
 
 protected:
 
   bool b_radiation;
-
+  const VarLabel* d_abskpLabel;
   double d_w_scaling_constant;
   double d_w_small; // "small" clip value for zero weights
 

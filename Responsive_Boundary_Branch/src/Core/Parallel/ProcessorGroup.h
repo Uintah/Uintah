@@ -33,6 +33,8 @@ DEALINGS IN THE SOFTWARE.
 
 #include <sci_defs/mpi_defs.h> // For MPIPP_H on SGI
 #include <Core/Parallel/uintahshare.h>
+#include <vector>
+
 namespace Uintah {
 /**************************************
 
@@ -85,6 +87,12 @@ WARNING
 	 return d_comm;
       }
 
+      MPI_Comm getgComm(int i) const {
+        if (d_threads < 1) return d_comm; 
+        else return d_gComms[i%d_threads];
+      }
+
+
    private:
       //////////
       // Insert Documentation Here:
@@ -93,11 +101,13 @@ WARNING
       friend class Parallel;
       ProcessorGroup(const ProcessorGroup* parent,
 		     MPI_Comm comm, bool allmpi,
-		     int rank, int size);
+		     int rank, int size, int threads);
 
       int d_rank;
       int d_size;
+      int d_threads;
       MPI_Comm d_comm;
+      std::vector<MPI_Comm> d_gComms;
       bool d_allmpi;
       
       ProcessorGroup(const ProcessorGroup&);

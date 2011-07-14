@@ -32,9 +32,8 @@
 # Makefile fragment for this subdirectory
 # $Id$
 #
-include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR   := CCA/Components/Arches/Radiation
+SRCDIR := CCA/Components/Arches/Radiation
 
 SRCS += \
         $(SRCDIR)/RadiationModel.cc   \
@@ -50,32 +49,6 @@ endif
 ifeq ($(HAVE_HYPRE),yes)
   SRCS += $(SRCDIR)/RadHypreSolver.cc
 endif
-
-PSELIBS := \
-        CCA/Components/Arches/Radiation/fortran \
-        Core/ProblemSpec   \
-        Core/Grid          \
-        Core/Util          \
-        Core/Disclosure    \
-        Core/Exceptions    \
-        Core/Math          \
-        Core/Exceptions \
-        Core/Util       \
-        Core/Thread     \
-        Core/Geometry   
-
-LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(F_LIBRARY) \
-        $(LAPACK_LIBRARY) $(BLAS_LIBRARY) $(THREAD_LIBRARY)
-
-ifneq ($(HAVE_PETSC),)
-  LIBS := $(LIBS) $(PETSC_LIBRARY) 
-endif
-
-ifneq ($(HAVE_HYPRE),)
-  LIBS := $(LIBS) $(HYPRE_LIBRARY) 
-endif
-
-include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
 $(SRCDIR)/DORadiationModel.$(OBJEXT): $(SRCDIR)/fortran/rordr_fort.h
 $(SRCDIR)/DORadiationModel.$(OBJEXT): $(SRCDIR)/fortran/rordrss_fort.h

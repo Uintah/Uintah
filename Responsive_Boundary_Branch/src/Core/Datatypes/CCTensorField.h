@@ -45,7 +45,6 @@ DEALINGS IN THE SOFTWARE.
 namespace Uintah {
 
   using namespace SCIRun;
-  using std::vector;
   
 class CCTensorField: public TensorField {
 public:
@@ -54,8 +53,8 @@ public:
   int nz;
   CCTensorField();
   CCTensorField(const CCTensorField&);
-  CCTensorField(GridP grid, LevelP level, string var, int mat,
-		const vector< CCVariable<Matrix3> >& vars);
+  CCTensorField(GridP grid, LevelP level, std::string var, int mat,
+		const std::vector< CCVariable<Matrix3> >& vars);
   virtual ~CCTensorField() {}
   virtual TensorField* clone();
 
@@ -68,14 +67,14 @@ public:
   void SetGrid( GridP g ){ _grid = g; }
   void SetLevel( LevelP l){ _level = l; computeHighLowIndices(); }
   const LevelP GetLevel() { return _level; }
-  void SetName( string vname ) { _varname = vname; }
+  void SetName( std::string vname ) { _varname = vname; }
   void SetMaterial( int index) { _matIndex = index; }
   void AddVar( const CCVariable<Matrix3>& var);
 private:
-  vector< CCVariable<Matrix3> > _vars;
+  std::vector< CCVariable<Matrix3> > _vars;
   GridP _grid;
   LevelP _level;
-  string _varname;
+  std::string _varname;
   int _matIndex;
   IntVector low;
   IntVector high;

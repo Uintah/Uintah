@@ -43,16 +43,15 @@ DEALINGS IN THE SOFTWARE.
 
 #include <string>
 #include <testprograms/TestSuite/uintahshare.h>
-using namespace std;
 
 class UINTAHSHARE Test
 {
 public:
-  Test(const string name);
+  Test(const std::string name);
 
   ~Test(); // delete space allocated for name
 
-  const string getName()
+  const std::string getName()
   { return myName; }
 
   // set the results of the test:
@@ -72,7 +71,7 @@ public:
   { return myHasPassed; }
 
 private:
-  string myName;
+  std::string myName;
 
   // true iff this test has been run 
   // (that is, setResults has ever been called for this object)

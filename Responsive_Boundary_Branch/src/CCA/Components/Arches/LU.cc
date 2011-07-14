@@ -429,17 +429,17 @@ LU::dump()
 double
 LU::getNorm( double* a, int type ) {
     double TheNorm = 0;
-  	 
+         
     if (type > 5) {
       type = 0;
     }
     if (type == 0) {
     // L_infty norm = max(abs(z)) 
       for (int z = 0; z < dim_; ++z) {
-    	  if (abs(a[z]) > TheNorm) {
-    	    TheNorm = abs(a[z]);
-    	  }
-    	}
+          if (abs(a[z]) > TheNorm) {
+            TheNorm = abs(a[z]);
+          }
+        }
     } else if( type < 0 ) {
     // L_negative_infty norm = min(abs(z))
         TheNorm = a[0];
@@ -463,17 +463,17 @@ LU::getNorm( double* a, int type ) {
 double
 LU::getNorm( long double* a, int type ) {
     double TheNorm = 0;
-  	 
+         
     if (type > 5) {
       type = 0;
     }
     if (type == 0) {
     // L_infty norm = max(abs(z)) 
       for (int z = 0; z < dim_; ++z) {
-    	  if (abs(a[z]) > TheNorm) {
-    	    TheNorm = abs(a[z]);
-    	  }
-    	}
+          if (abs(a[z]) > TheNorm) {
+            TheNorm = abs(a[z]);
+          }
+        }
     } else if( type < 0 ) {
     // L_negative_infty norm = min(abs(z))
         TheNorm = a[0];

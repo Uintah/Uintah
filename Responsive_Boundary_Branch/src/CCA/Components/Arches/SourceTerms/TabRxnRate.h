@@ -1,4 +1,3 @@
-
 #ifndef Uintah_Component_Arches_TabRxnRate_h
 #define Uintah_Component_Arches_TabRxnRate_h
 #include <Core/ProblemSpec/ProblemSpec.h>

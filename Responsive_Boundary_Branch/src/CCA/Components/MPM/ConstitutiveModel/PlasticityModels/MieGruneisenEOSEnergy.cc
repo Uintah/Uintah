@@ -90,12 +90,19 @@ MieGruneisenEOSEnergy::computePressure(const MPMMaterial* matl,
   double e = state->energy;
 
   // Calculate the pressure
-  double denom = 
+
+  double p;
+  if(eta >= 0.0) {
+    double denom = 
                (1.-d_const.S_1*eta-d_const.S_2*eta*eta-d_const.S_3*eta*eta*eta)
               *(1.-d_const.S_1*eta-d_const.S_2*eta*eta-d_const.S_3*eta*eta*eta);
-  double p;
-  p = rho_0*d_const.Gamma_0*e 
-    + rho_0*(d_const.C_0*d_const.C_0)*eta*(1. - .5*d_const.Gamma_0*eta)/denom;
+    p = rho_0*d_const.Gamma_0*e 
+      + rho_0*(d_const.C_0*d_const.C_0)*eta*(1. - .5*d_const.Gamma_0*eta)/denom;
+  }
+  else{
+    p = rho_0*d_const.Gamma_0*e
+      + rho_0*(d_const.C_0*d_const.C_0)*eta;
+  }
 
   return -p;
 }
@@ -130,13 +137,13 @@ MieGruneisenEOSEnergy::eval_dp_dJ(const MPMMaterial* matl,
   double denom = (1.0 - S_1*eta - S_2*eta*eta - S_3*eta*eta*eta);
   double numer = -rho_0*C_0*C_0*((1.0 - Gamma_0*eta)*denom 
        + 2.0*eta*(1.0 - Gamma_0*eta/2.0)*(S_1 + 2.0*S_2*eta + 3.0*S_3*eta*eta));
-  double denom3 = (denom*denom*denom);
+//  double denom3 = (denom*denom*denom);
 
-  if (denom3 == 0.0) {
-    cout << "rh0_0 = " << rho_0 << " J = " << J 
-           << " numer = " << numer << endl;
-    denom3 = 1.0e-5;
-  }
+//  if (denom3 == 0.0) {
+//    cout << "rh0_0 = " << rho_0 << " J = " << J 
+//           << " numer = " << numer << endl;
+//    denom3 = 1.0e-5;
+//  }
 
   return (numer/denom);
 }

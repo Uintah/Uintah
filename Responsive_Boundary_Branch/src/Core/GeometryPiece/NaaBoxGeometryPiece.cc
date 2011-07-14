@@ -40,10 +40,9 @@ DEALINGS IN THE SOFTWARE.
 
 #include <iostream>
 
-
-
 using namespace Uintah;
 using namespace SCIRun;
+using namespace std;
 
 static DebugStream dbg( "GeometryPiece", false );
 
@@ -97,7 +96,18 @@ NaaBoxGeometryPiece::init( const Point& p1,
   // p5 is the opposite corner to p1 and is used for the bounding box.
   Point p5 = p1 + (p2minusP1 + p3minusP1 + p4minusP1);
 
-  boundingBox_ = Box( p1, p5 );
+  // Find the bounding box with the following gross code
+  double lowX = min(min(min(p1.x(),p2.x()),min(p2.x(),p3.x())),p4.x());
+  double lowY = min(min(min(p1.y(),p2.y()),min(p2.y(),p3.y())),p4.y());
+  double lowZ = min(min(min(p1.z(),p2.z()),min(p2.z(),p3.z())),p4.z());
+  double highX = max(max(max(p1.x(),p2.x()),max(p2.x(),p3.x())),p4.x());
+  double highY = max(max(max(p1.y(),p2.y()),max(p2.y(),p3.y())),p4.y());
+  double highZ = max(max(max(p1.z(),p2.z()),max(p2.z(),p3.z())),p4.z());
+
+  Point blow = Point(lowX,lowY,lowZ);
+  Point bhigh = Point(highX,highY,highZ);
+
+  boundingBox_ = Box( blow, bhigh );
 
   if( boundingBox_.degenerate() ) {
     // 1st point must be '<' second point, so flip them.

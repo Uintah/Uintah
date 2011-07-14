@@ -67,11 +67,14 @@ for ($k = $startLoop; $k<=$endLoop; $k++){
   #__________________________________
   # bulletproofing
   my @stripped_cmd = split(/ /,$postProc_cmd[$k]);  # remove command options
-  if (! -e $stripped_cmd[0] ){
+  my $foundCmd = system( "which $stripped_cmd[0] >&/dev/null");
+
+  if ( ! $foundCmd ==0 ){
+    my $mypath = $ENV{"PATH"};
     print "\n\n__________________________________\n";
     print "ERROR:analyze_results:\n";
     print "The comparison utility: $stripped_cmd[0]";
-    print " doesn't exist.  Now exiting\n\n\n";
+    print " doesn't exist in path \n $mypath \n Now exiting\n\n\n";
     die
   }
   #__________________________________
@@ -89,7 +92,7 @@ for ($k = $startLoop; $k<=$endLoop; $k++){
   $L2norm = `cat $comp_output`;
   chomp($L2norm);
   `echo $x[$k] $L2norm >> L2norm.dat`;
-  system("rm $comp_output");
+  #system("rm $comp_output");
 }
 
 #______________________________________________________________________

@@ -38,7 +38,6 @@
     <save label = "continuityResidual"/>
     <save label = "velocityDivergence"/>
     <save label = "ummsLnError"/>
-    <!--save label = "test1"/-->
     <checkpoint cycle = "2" interval = "0.05"/>
     <compression>gzip</compression>
   </DataArchiver>
@@ -74,7 +73,6 @@
           <cw>.1</cw>
           <cp>100</cp>
           <phi0>0.3</phi0>
-          <esphi0>0.0</esphi0>
         </constantMMS>
       </MMS>
 
@@ -106,20 +104,6 @@
       </BoundaryConditions>
 -->
 
-
-      <ExtraScalars>
-        <scalar label="test1">
-          <initial_value>.0</initial_value>
-          <convection_scheme>central-upwind</convection_scheme>
-          <diffusion>true</diffusion>
-          <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
-          <density_weighted>false</density_weighted>
-          <sources>
-            <source label="zero_src"/>
-          </sources>
-        </scalar>
-      </ExtraScalars>
-  
       <ExplicitSolver>
 
       <initial_dt>1</initial_dt>

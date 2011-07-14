@@ -34,6 +34,8 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Util/Endian.h>
 #include <Core/Util/FancyAssert.h>
 #include <iostream>
+
+using namespace std;
 using namespace Uintah;
 
 Advector::Advector()

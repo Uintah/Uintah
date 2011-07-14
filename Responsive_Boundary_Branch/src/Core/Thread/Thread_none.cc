@@ -199,6 +199,10 @@ Thread::pop_bstack(Thread_private* p, int oldstate)
 {
 }
 
+void
+Thread::set_affinity(int cpu)
+{
+}
 /*
  * Signal handling cruft
  */

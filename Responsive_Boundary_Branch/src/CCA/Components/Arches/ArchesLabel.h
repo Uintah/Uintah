@@ -75,6 +75,9 @@ namespace Uintah {
      
       SimulationStateP d_sharedState;
 
+      // recompile task graph flag
+      bool recompile_taskgraph; 
+
       // material subset for stencils
       MaterialSubset* d_stencilMatl;
 
@@ -474,18 +477,14 @@ namespace Uintah {
       const VarLabel* d_ShRFLabel;
       const VarLabel* d_CO2FlowRateLabel;
       const VarLabel* d_SO2FlowRateLabel;
-      const VarLabel* d_SO2FlowRateESLabel;
-      const VarLabel* d_CO2FlowRateESLabel;
       const VarLabel* d_carbonEfficiencyLabel;
       const VarLabel* d_sulfurEfficiencyLabel;
-      const VarLabel* d_sulfurEfficiencyESLabel;
       const VarLabel* d_scalarFlowRateLabel;
       const VarLabel* d_scalarEfficiencyLabel;
       const VarLabel* d_enthalpyFlowRateLabel;
       const VarLabel* d_enthalpyEfficiencyLabel;
       const VarLabel* d_totalRadSrcLabel;
       const VarLabel* d_normTotalRadSrcLabel;
-      const VarLabel* d_carbonEfficiencyESLabel;
 
       //mms force term labels
       const VarLabel* d_uFmmsLabel;
@@ -506,7 +505,6 @@ namespace Uintah {
       const VarLabel* d_vmomBoundarySrcLabel;
       const VarLabel* d_wmomBoundarySrcLabel;
 
-
       // DQMOM Variables:
 
       // Particle velocity map ( populated in Arches.cc::registerDQMOMEqns() )
@@ -523,11 +521,19 @@ namespace Uintah {
       MomentMap DQMOMMoments;
 
       const VarLabel* d_areaFractionLabel; 
+      const VarLabel* d_volFractionLabel; 
 
       // Variables related to Responsive Boundary Pool Fire Simulation
       const VarLabel* d_poolConvectiveHeatFluxLabel; //(W/m/m) WME
       const VarLabel* d_poolMassFluxLabel;   //(kg/m/m/s)   WME 
       const VarLabel* d_poolSurfaceTemperatureLabel;  // (Kelvins)  WME
+
+      std::vector<std::string> model_req_species;
+
+      inline void add_species( std::string s ) { 
+        model_req_species.push_back( s ); };
+
+      inline std::vector<std::string> get_species( ) { return model_req_species; }; 
 
     }; // End class ArchesLabel
 } // End namespace Uintah

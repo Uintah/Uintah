@@ -49,8 +49,8 @@ class ArcCrack : public CrackGeometry
      virtual ~ArcCrack();
      virtual void readCrack(ProblemSpecP&);
      virtual void outputInitialCrackPlane(int i);
-     virtual void discretize(int& nstart0,vector<Point>& cx,
-                             vector<IntVector>& ce,vector<int>& SegNodes);
+     virtual void discretize(int& nstart0,std::vector<Point>& cx,
+                             std::vector<IntVector>& ce,std::vector<int>& SegNodes);
 
  private:
      int NCells, CrkFrtSegID;

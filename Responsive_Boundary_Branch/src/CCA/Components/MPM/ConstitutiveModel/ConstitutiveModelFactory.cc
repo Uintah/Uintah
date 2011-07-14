@@ -61,10 +61,13 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/MPM/ConstitutiveModel/MurnahanMPM.h>
 #include <CCA/Components/MPM/ConstitutiveModel/SmallStrainPlastic.h>
 #include <CCA/Components/MPM/ConstitutiveModel/IdealGasMP.h>
+#include <CCA/Components/MPM/ConstitutiveModel/P_Alpha.h>
 #include <CCA/Components/MPM/ConstitutiveModel/SoilFoam.h>
 #include <CCA/Components/MPM/ConstitutiveModel/Water.h>
 #include <CCA/Components/MPM/ConstitutiveModel/UCNH.h>
 #include <CCA/Components/MPM/ConstitutiveModel/ViscoPlastic.h>
+#include <CCA/Components/MPM/ConstitutiveModel/NonLocalDruckerPrager.h>
+#include <CCA/Components/MPM/ConstitutiveModel/simplifiedGeoModel.h>
 #include <CCA/Components/MPM/MPMFlags.h>
 
 #include <Core/Exceptions/ProblemSetupException.h>
@@ -103,7 +106,11 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
 
   else if (mat_type == "comp_mooney_rivlin")
     return(scinew CompMooneyRivlin(child,flags));
-   
+  else if (mat_type == "nonlocal_drucker_prager")
+    return(scinew NonLocalDruckerPrager(child,flags));
+  else if (mat_type == "simplified_geo_model")
+    return(scinew simplifiedGeoModel(child,flags));
+
   else if (mat_type ==  "comp_neo_hook") {
     if (flags->d_integrator_type == "explicit" || 
         flags->d_integrator_type == "fracture")
@@ -141,6 +148,9 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
   
   else if (mat_type ==  "ideal_gas")
     return(scinew IdealGasMP(child,flags));
+
+  else if (mat_type ==  "p_alpha")
+    return(scinew P_Alpha(child,flags));
 
   else if (mat_type ==  "water")
     return(scinew Water(child,flags));
@@ -204,7 +214,7 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
     return(scinew HypoElasticPlastic(child,flags));
 
   else if (mat_type ==  "elastic_plastic")
-    return(scinew ElasticPlastic(child,flags));
+    return(scinew ElasticPlasticHP(child,flags));
 
   else if (mat_type ==  "elastic_plastic_hp")
     return(scinew ElasticPlasticHP(child,flags));

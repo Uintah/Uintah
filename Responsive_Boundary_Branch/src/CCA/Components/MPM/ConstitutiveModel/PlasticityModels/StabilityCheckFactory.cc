@@ -38,6 +38,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Malloc/Allocator.h>
 #include <string>
 
+using namespace std;
 using namespace Uintah;
 
 /// Create an instance of a stabilty check method

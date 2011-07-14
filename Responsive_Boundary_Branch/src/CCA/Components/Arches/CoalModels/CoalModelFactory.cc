@@ -1,5 +1,8 @@
 #include <CCA/Components/Arches/CoalModels/CoalModelFactory.h>
 #include <CCA/Components/Arches/CoalModels/ModelBase.h> 
+#include <CCA/Components/Arches/CoalModels/Devolatilization.h>
+#include <CCA/Components/Arches/CoalModels/CharOxidation.h>
+#include <CCA/Components/Arches/CoalModels/HeatTransfer.h>
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <sstream>
@@ -23,6 +26,18 @@ CoalModelFactory::~CoalModelFactory()
 
   // delete all constructed solvers
   for( ModelMap::iterator i=models_.begin(); i!=models_.end(); ++i ){
+      delete i->second;
+  }
+
+  for( DevolModelMap::iterator i=devolmodels_.begin(); i!=devolmodels_.end(); ++i ){
+      delete i->second;
+  }
+
+  for( CharOxiModelMap::iterator i=charoximodels_.begin(); i!=charoximodels_.end(); ++i ){
+      delete i->second;
+  }
+
+  for( HeatTransferModelMap::iterator i=heatmodels_.begin(); i!=heatmodels_.end(); ++i ){
       delete i->second;
   }
 
@@ -216,6 +231,18 @@ CoalModelFactory::register_model( const std::string name,
   models_[name] = model;
 
   model->setUnweightedAbscissas(d_unweighted);
+
+  string modelType = model->getType();
+  if( modelType == "Devolatilization" ) {
+    Devolatilization* devolmodel = dynamic_cast<Devolatilization*>(model);
+    devolmodels_[name] = devolmodel;
+  } else if( modelType == "CharOxidation" ) {
+    CharOxidation* charoximodel = dynamic_cast<CharOxidation*>(model);
+    charoximodels_[name] = charoximodel;
+  } else if( modelType == "HeatTransfer" ) {
+    HeatTransfer* heatmodel = dynamic_cast<HeatTransfer*>(model);
+    heatmodels_[name] = heatmodel;
+  }
 
   if( b_coupled_physics ) {
     string modelType = model->getType();

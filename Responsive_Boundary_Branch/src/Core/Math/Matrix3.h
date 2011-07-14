@@ -53,7 +53,6 @@ DEALINGS IN THE SOFTWARE.
 namespace Uintah {
 
   using SCIRun::Vector;
-  using std::string;
   using TNT::Array2D;
 
   class Matrix3 {
@@ -168,14 +167,17 @@ namespace Uintah {
     // Returns right stretch and rotation if rightFlag == true
     // Returns left stretch and rotation if rightFlag == false
     UINTAHSHARE void polarDecomposition(Matrix3& stretch,
-                            Matrix3& rotation,
-                            double tolerance,
-                            bool rightFlag) const;
+                                        Matrix3& rotation,
+                                        double tolerance,
+                                        bool rightFlag) const;
 
-    UINTAHSHARE void polarDecompositionRMB(Matrix3& U,
-                                    Matrix3& R) const;
+    UINTAHSHARE void polarDecompositionRMB(Matrix3& U, Matrix3& R) const;
 
     UINTAHSHARE void polarRotationRMB(Matrix3& R) const;
+
+    UINTAHSHARE void polarDecompositionAFFinvTran(Matrix3& U, Matrix3& R) const;
+
+    UINTAHSHARE void polarRotationAFFinvTran(Matrix3& R) const;
 
     // Returns number of real, unique eigen values and passes
     // back the values.  If it returns 1, the value is passed back
@@ -240,7 +242,7 @@ namespace Uintah {
                       std::vector<Vector>& xg_basis,
                       double relative_scale /* MaxAbsElem() suggested */) const;
     //! support dynamic compilation
-    UINTAHSHARE static const string& get_h_file_path();
+    UINTAHSHARE static const std::string& get_h_file_path();
 
     /*! Calculate eigenvalues */
     UINTAHSHARE void eigen(Vector& eval, Matrix3& evec);
@@ -718,11 +720,9 @@ namespace SCIRun {
   class TypeDescription;
   class Piostream;
 
-  using namespace Uintah;
-
   UINTAHSHARE void swapbytes( Uintah::Matrix3& m);
-  template<> UINTAHSHARE const string find_type_name(Matrix3*);
-  UINTAHSHARE const TypeDescription* get_type_description(Matrix3*);
+  template<> UINTAHSHARE const std::string find_type_name(Uintah::Matrix3*);
+  UINTAHSHARE const TypeDescription* get_type_description(Uintah::Matrix3*);
   UINTAHSHARE void Pio( Piostream&, Uintah::Matrix3& );
 } // namespace SCIRun
 

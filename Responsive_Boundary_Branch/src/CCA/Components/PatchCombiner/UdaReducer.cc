@@ -39,6 +39,7 @@ DEALINGS IN THE SOFTWARE.
 
 #include <iomanip>
 
+using namespace std;
 using namespace Uintah;
 
 UdaReducer::UdaReducer(const ProcessorGroup* world, string udaDir)

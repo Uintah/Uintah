@@ -38,9 +38,10 @@ SRCS    += \
 
 RADIATION :=
 
-ifeq ($(BUILD_RADIATION),yes)
-  RADIATION += $(SRCDIR)/Radiation   
+ifeq ($(BUILD_MODELS_RADIATION),yes)
+  RADIATION += $(SRCDIR)/Radiation
 endif
+
 
 SUBDIRS := $(SRCDIR)/FluidsBased \
            $(RADIATION)
@@ -60,8 +61,7 @@ PSELIBS :=              \
         Core/Labels        \
         Core/Parallel      \
         Core/ProblemSpec   \
-	\
-	Core/Math
+	 Core/Math
 
 ifneq ($(BUILD_ICE),no)
   PSELIBS += CCA/Components/ICE

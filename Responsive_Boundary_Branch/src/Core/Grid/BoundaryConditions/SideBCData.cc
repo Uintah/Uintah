@@ -38,6 +38,8 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Malloc/Allocator.h>
 #include <iostream>
 
+using std::endl;
+
 using namespace SCIRun;
 using namespace Uintah;
 
@@ -48,6 +50,7 @@ SideBCData::SideBCData()
 {
   d_cells=GridIterator(IntVector(0,0,0),IntVector(0,0,0));
   d_nodes=GridIterator(IntVector(0,0,0),IntVector(0,0,0));
+  d_bcname = "NotSet"; 
 }
 
 

@@ -64,7 +64,7 @@
 ##  initialize configure 
 AC_INIT([Uintah],[1.25],[csafe-homebrew@cs.utah.edu])
 
-##  require autoconf version 2.61
+##  require autoconf version 2.68
 ##     The reason to require the latest autoconf is to try and get everyone who
 ##     updates configure to use the same version.  By doing so, the SVN diffs
 ##     don't look completely different from minor changes.  (This happens
@@ -72,10 +72,7 @@ AC_INIT([Uintah],[1.25],[csafe-homebrew@cs.utah.edu])
 ##
 ##     type "autoconf --version" to find out what version you have.
 ##
-##     Note, 2.63+ is actually the latest, but many machines don't have it, so
-##     going to use 2.61 for now.
-##
-AC_PREREQ(2.61)
+AC_PREREQ(2.68)
 
 AC_COPYRIGHT(
 ##
@@ -295,6 +292,23 @@ SCI_ARG_WITH(mpi,
   [with_mpi="$withval"
    sci_required_mpi=yes],
   [with_mpi=""])
+SCI_ARG_WITH(mpi_lib,
+  AC_HELP_STRING(--with-mpi-lib=DIR,
+                 Use the mpi libraries installed in DIR),
+  [with_mpi_lib="$withval"
+   sci_required_mpi=yes],
+  [with_mpi_lib=""])
+SCI_ARG_WITH(mpi_include,
+  AC_HELP_STRING(--with-mpi-include=DIR,
+                 Use the mpi include files installed in DIR),
+  [with_mpi_include="$withval"
+   sci_required_mpi=yes],
+  [with_mpi_include=""])
+SCI_ARG_WITH(mpi_extra_libs,
+  AC_HELP_STRING(--with-mpi-extra-libs=/path/to/lib1.so,
+                 Use this additional library(or libraries - comma separated) for mpi linking),
+  [with_mpi_extra_libs="$withval"],
+  [with_mpi_extra_libs=""])
 SCI_ARG_WITH(mpiuni,
   AC_HELP_STRING(--with-mpiuni=DIR,
                  Use the mpiuni installation in DIR),
@@ -390,7 +404,7 @@ SCI_ARG_WITH(xalan,
 
 SCI_ARG_WITH(libxml2,
   AC_HELP_STRING(--with-libxml2=DIR,
-                 Use the libxml2 installation in DIR),
+                 Use the libxml2 installation in DIR.  Set 'DIR' to 'built-in' if explicit linking of xml2 is NOT required.),
   [with_libxml2="$withval"
    sci_required_libxml2=yes],
   [with_libxml2=""])
@@ -423,14 +437,14 @@ SCI_ARG_WITH(visit,
 
 SCI_ARG_ENABLE(wasatch_3p,
   AC_HELP_STRING(--enable-wasatch_3p,
-                 Download and build the Wasatch Thirdparty libraries - TabProps, ExprLib, SpatialOps),
+                 Download and build the Wasatch Thirdparty libraries - TabProps oExprLibs SpatialOps.),
   [wasatch_3p="yes"],
   [wasatch_3p=="no"])
 
 SCI_ARG_ENABLE(static,
   AC_HELP_STRING(--enable-static,
-                 Build a statically linked version of Uintah),
-  [static="yes"],
+                 Build a statically linked version of Uintah.  Set to 'full' to force full static link.),
+  [static="$enableval"],
   [static="no"])
 SCI_ARG_ENABLE(verbosity,
   AC_HELP_STRING(--enable-verbosity,
@@ -559,7 +573,7 @@ myargs=`echo $args | sed 's%\^% %g'`
 ## Cut off the /configure from the configure command (eg: ../src/configure)
 path_to_src=`echo $0 | sed 's/\/configure//'`
 
-if test "$sci_required_petsc" = "yes"; then
+if test "$sci_required_petsc" = "yes" -a "$with_petsc" != "built-in"; then
    sci_required_blas=yes
    sci_required_lapack=yes
 fi
@@ -642,7 +656,6 @@ if test -z "$NUM_CPUS"; then
   NUM_CPUS="1"
 fi
 AC_MSG_RESULT($NUM_CPUS)
-
 
 ##  ----------  determine if this is a 32 or 64 bit machine
 AC_LANG([C])
@@ -811,12 +824,11 @@ TEMPLATE_BOX="<>"
 case $host in
      *-darwin*)
 	SO_OR_ARCHIVE_EXTENSION=dylib
-	if test "$enable_sci_malloc" = "yes"; then
-	   AC_MSG_WARN(sci_malloc does not work under mac osx. use --enable-sci-malloc=force)
-	   AC_MSG_WARN(sci-malloc disabled)
-	   enable_sci_malloc="no"
+        if test "$enable_sci_malloc" = "yes"; then
+           AC_MSG_ERROR(sci_malloc does not work under mac osx. Though you can try to use: --enable-sci-malloc=force)
+           enable_sci_malloc="no"
         elif test "$enable_sci_malloc" = "force"; then
-	   enable_sci_malloc="yes"
+           enable_sci_malloc="yes"
         fi
 	;;
 	
@@ -849,8 +861,10 @@ fi
 LARGESOS=$largesos
 
 if test "$enable_sci_malloc" = "yes"; then
+  SCI_MALLOC_ON="yes"
   DEF_MALLOC=""
 else
+  SCI_MALLOC_ON="no"
   DEF_MALLOC="#define DISABLE_SCI_MALLOC 1"
 fi
 
@@ -866,12 +880,12 @@ else
   DEF_MALLOC_LINENUMBERS=""
 fi
 
-
 AC_SUBST(NOPRINTDIR)
 AC_SUBST(EXENAME)
 AC_SUBST(LARGESOS)
 AC_SUBST(TIME_IMPL)
 
+AC_SUBST(SCI_MALLOC_ON)
 AC_SUBST(DEF_MALLOC)
 AC_SUBST(DEF_MALLOC_LINENUMBERS)
 sci_defs_files="$sci_defs_files include/sci_defs/malloc_testdefs.h"
@@ -969,21 +983,21 @@ fi
 BUILD_ARCHES=yes
 BUILD_ICE=yes
 BUILD_MPM=yes
-BUILD_RADIATION=yes
+BUILD_MODELS_RADIATION=yes
 BUILD_WASATCH=no
 DEF_ARCHES=""
 DEF_ICE=""
 DEF_MPM=""
-DEF_RADIATION=""
+DEF_MODELS_RADIATION=""
 DEF_WASATCH=""
 
 if test "$USE_ARCHES" = no; then BUILD_ARCHES=no; DEF_ARCHES="#define NO_ARCHES"; fi
 if test "$USE_ICE" = no; then BUILD_ICE=no; DEF_ICE="#define NO_ICE"; fi
 if test "$USE_MPM" = no; then BUILD_MPM=no; DEF_MPM="#define NO_MPM"; fi
-if test "$USE_RADIATION" = no; then BUILD_RADIATION=no; DEF_RADIATION="#define NO_RADIATION"; fi
+if test "$USE_MODELS_RADIATION" = no; then BUILD_MODELS_RADIATION=no; DEF_MODELS_RADIATION="#define NO_MODELS_RADIATION"; fi
 if test "$with_fortran" = no; then 
-            BUILD_ARCHES=no; BUILD_RADIATION=no;
-            DEF_RADIATION="#define NO_RADIATION"; DEF_ARCHES="#define NO_ARCHES";
+            BUILD_ARCHES=no;
+            DEF_ARCHES="#define NO_ARCHES";
             DEF_NO_FORTRAN="#define NO_FORTRAN";
             NO_FORTRAN="yes";
 fi
@@ -993,16 +1007,16 @@ fi
 AC_SUBST(BUILD_ARCHES)
 AC_SUBST(BUILD_ICE)
 AC_SUBST(BUILD_MPM)
-AC_SUBST(BUILD_RADIATION)
+AC_SUBST(BUILD_MODELS_RADIATION)
 AC_SUBST(DEF_ARCHES)
 AC_SUBST(DEF_ICE)
 AC_SUBST(DEF_MPM)
 AC_SUBST(DEF_NO_FORTRAN)
-AC_SUBST(DEF_RADIATION)
+AC_SUBST(DEF_MODELS_RADIATION)
 AC_SUBST(DEF_WASATCH)
 AC_SUBST(NO_FORTRAN)
 
-if test "$BUILD_ARCHES" = no -a "$BUILD_RADIATION" = no; then
+if test "$BUILD_ARCHES" = no -a "$BUILD_MODELS_RADIATION" = no; then
   sci_required_fortran=no
 else
   if test "$with_fortran" != no; then
@@ -1026,11 +1040,22 @@ fi
 IS_STATIC_BUILD="no"
 
 # If --enable-static, or if lib extension already set to 'a' (eg: AIX):
-if test "$static" = "yes" -o "$SO_OR_ARCHIVE_EXTENSION" = "a"; then
+if test "$static" != "no" -o "$SO_OR_ARCHIVE_EXTENSION" = "a"; then
   AC_MSG_WARN( Building a statically linked version of Uintah! )
   IS_STATIC_BUILD="yes"
   SO_OR_ARCHIVE_EXTENSION=a
-#  LDFLAGS="$LDFLAGS -static"   # FIXME... need -static (at least for gcc)...
+  if test "$static" == "full"; then
+
+    # If we don't use the 'full' option, then some shared libs may be
+    # linked in.  While we probably should make 'full' the default, this
+    # ends up breaking a number of (our test) machines that don't have (all the) static
+    # libraries installed.  As 'static' is really used only on specific/large 
+    # supercomputers (Crays mostly), and we only/mostly use it on
+    # small machines to check for circular dependancies, it is ok to not use
+    # '-static' in most cases.
+
+    LDFLAGS="${LDFLAGS} -static"
+  fi
   MAKE_ARCHIVES="yes"
   STATIC_BUILD_DEF="#define STATIC_BUILD 1"
 else
@@ -1053,8 +1078,14 @@ if test "$with_malloc_trace"; then
     if test ! -d $with_malloc_trace; then
       AC_MSG_ERROR( '$with_malloc_trace' directory does not exist. )
     fi
-    if test ! -f $with_malloc_trace/lib/shared/libMallocTrace.so; then
-      AC_MSG_ERROR( '$with_malloc_trace/lib/shared/libMallocTrace.so' does not exist. )
+    if test "$IS_STATIC_BUILD" = "yes"; then
+       if test ! -f $with_malloc_trace/lib/libMallocTrace.a; then
+       	  AC_MSG_ERROR( '$with_malloc_trace/lib/libMallocTrace.a' does not exist. )
+       fi
+    else
+	if test ! -f $with_malloc_trace/lib/shared/libMallocTrace.so; then
+      	   AC_MSG_ERROR( '$with_malloc_trace/lib/shared/libMallocTrace.so' does not exist. )
+    	fi
     fi
     if test ! -f $with_malloc_trace/include/MallocTrace.h; then
       AC_MSG_ERROR( '$with_malloc_trace/include/MallocTrace.h' does not exist. )
@@ -1062,7 +1093,11 @@ if test "$with_malloc_trace"; then
     AC_MSG_RESULT(yes)
     DEF_MALLOC_TRACE="#define MALLOC_TRACE 1"
     INC_MALLOC_TRACE_H="-I$with_malloc_trace/include"
-    MALLOC_TRACE_LIB_DIR_FLAG="$LDRUN_PREFIX$with_malloc_trace/lib/shared -L$with_malloc_trace/lib/shared"
+    if test "$IS_STATIC_BUILD" = "yes"; then
+       MALLOC_TRACE_LIB_DIR_FLAG="$LDRUN_PREFIX$with_malloc_trace/lib -L$with_malloc_trace/lib"
+    else								     
+       MALLOC_TRACE_LIB_DIR_FLAG="$LDRUN_PREFIX$with_malloc_trace/lib/shared -L$with_malloc_trace/lib/shared"
+    fi
     MALLOC_TRACE_LIB_FLAG="-lMallocTrace"
     MALLOC_TRACE_LIB_MPI_FLAG="-lMallocTraceMPI"
   fi
@@ -1073,7 +1108,7 @@ AC_SUBST(MALLOC_TRACE_LIB_FLAG)
 AC_SUBST(MALLOC_TRACE_LIB_DIR_FLAG)
 AC_SUBST(MALLOC_TRACE_LIB_MPI_FLAG)
 
-##  --  Check for 64 vs 80 bit floating point number storage in register precission error ------------------------
+##  --  Check for 64 vs 80 bit floating point number storage in register precision error ------------------------
 
 # In other words, the processor may use 80 bit floating point number registers, and as long as the
 # data is kept on the processor (in registers) then you get extra precission... however, as soon as
@@ -2109,73 +2144,86 @@ if test "$with_libxml2"; then
    _sci_optional=specific
 fi
 
-AC_MSG_CHECKING(for $_sci_optional libxml2)
-if test ! -e $_sci_lib/../bin/xml2-config; then
-   AC_MSG_RESULT(Not found under $_sci_lib)
-   AC_MSG_CHECKING(for xml2-config in your path)
-   XML2_DIR=`xml2-config --prefix`
-   if test -e "$XML2_DIR/lib"; then
-      _sci_lib=$XML2_DIR/lib
-      AC_MSG_RESULT(xml2-config found...)
-   else
-      AC_MSG_RESULT(xml2-config program not found...)
-   fi
-fi
+if test "$with_libxml2" == "built-in"; then
+  XML2_LIB_FLAG="-lxml2"
+  AC_MSG_RESULT( "Using built in libxml2... no explicit linking will be done." )
+else
 
-found_xml2_config="no"
+  AC_MSG_CHECKING(for $_sci_optional libxml2)
+  if test ! -e $_sci_lib/../bin/xml2-config; then
+     AC_MSG_RESULT(Not found under $_sci_lib)
+     AC_MSG_CHECKING(for xml2-config in your path)
+     XML2_DIR=`xml2-config --prefix`
+     if test -e "$XML2_DIR/lib"; then
+        _sci_lib=$XML2_DIR/lib
+        AC_MSG_RESULT(xml2-config found...)
+     else
+        AC_MSG_RESULT(xml2-config program not found...)
+     fi
+  fi
 
-if test -e $_sci_lib/../bin/xml2-config; then
-    found_xml2_config="yes"
-    AC_MSG_WARN(Using $_sci_lib/../bin/xml2-config to set libxml2 variables.)
+  found_xml2_config="no"
 
-    if test "$IS_STATIC_BUILD" = "yes"; then
-       STATIC_FLAG=--static
-    fi
+  if test -e $_sci_lib/../bin/xml2-config; then
+      found_xml2_config="yes"
+      AC_MSG_WARN(Using $_sci_lib/../bin/xml2-config to set libxml2 variables.)
 
-    XML2_LIB_DIR_FLAG=`$_sci_lib/../bin/xml2-config --libs $STATIC_FLAG`
-    XML2_LDFLAGS=""
-    XML2_LIB_PATH=""
-    for i in $XML2_LIB_DIR_FLAG;do
-      is_lib_path=`echo $i | sed -n -e "s/-L//p"`
-      if test -z "$is_lib_path";then
-        XML2_LDFLAGS="$XML2_LDFLAGS $i"
-      else 
-        if ! test $i = "-L/usr/lib";then
-    	XML2_LIB_PATH="$XML2_LIB_PATH $i"
+      xml2_static=`xml2-config | grep static`
+
+      if test "$IS_STATIC_BUILD" = "yes" -a "$IS_OSX" != "yes"; then
+        if test -n "$xml2_static"; then
+           STATIC_FLAG=--static
+        else
+           STATIC_FLAG=''
         fi
       fi
-    done
-    includes=`$_sci_lib/../bin/xml2-config --cflags`
-fi
-SCI_TRY_LINK(XML2,xml2 library and headers,libxml/tree.h libxml/parser.h,
-              $includes,$XML2_LDFLAGS,$XML2_LIB_PATH,,[
-#if defined(LIBXML_TREE_ENABLED) && defined(LIBXML_OUTPUT_ENABLED)
-xmlDocPtr doc = NULL;       /* document pointer */
-xmlNodePtr root_node = NULL, node = NULL, node1 = NULL;/* node pointers */
-xmlDtdPtr dtd = NULL;       /* DTD pointer */
-char buff[256];
-int i, j;
 
-LIBXML_TEST_VERSION;
 
-/*
-  * Creates a new document, a node and set it as a root node
-  */
-doc = xmlNewDoc(BAD_CAST "1.0");
-root_node = xmlNewNode(NULL, BAD_CAST "root");
-xmlDocSetRootElement(doc, root_node);
-#else
-//create compile error so configure fails
-WrongVersionOrNotInstalled *x = 0;
-#endif
-],required)
+      XML2_LIB_DIR_FLAG=`$_sci_lib/../bin/xml2-config --libs $STATIC_FLAG`
+      XML2_LDFLAGS=""
+      XML2_LIB_PATH=""
+      for i in $XML2_LIB_DIR_FLAG;do
+        is_lib_path=`echo $i | sed -n -e "s/-L//p"`
+        if test -z "$is_lib_path";then
+          XML2_LDFLAGS="$XML2_LDFLAGS $i"
+        else 
+          if ! test $i = "-L/usr/lib";then
+            XML2_LIB_PATH="$XML2_LIB_PATH $i"
+          fi
+        fi
+      done
+      includes=`$_sci_lib/../bin/xml2-config --cflags`
+  fi
+  SCI_TRY_LINK(XML2,xml2 library and headers,libxml/tree.h libxml/parser.h,
+                $includes,$XML2_LDFLAGS,$XML2_LIB_PATH,,[
+  #if defined(LIBXML_TREE_ENABLED) && defined(LIBXML_OUTPUT_ENABLED)
+  xmlDocPtr doc = NULL;       /* document pointer */
+  xmlNodePtr root_node = NULL, node = NULL, node1 = NULL;/* node pointers */
+  xmlDtdPtr dtd = NULL;       /* DTD pointer */
+  char buff[256];
+  int i, j;
 
-DEF_XML2="#define HAVE_XML2 1"
-break
+  LIBXML_TEST_VERSION;
 
-if test ! "$DEF_XML2"; then
-  echo
-  AC_MSG_ERROR(One or more of the xml2 components is missing.)
+  /*
+    * Creates a new document, a node and set it as a root node
+    */
+  doc = xmlNewDoc(BAD_CAST "1.0");
+  root_node = xmlNewNode(NULL, BAD_CAST "root");
+  xmlDocSetRootElement(doc, root_node);
+  #else
+  //create compile error so configure fails
+  WrongVersionOrNotInstalled *x = 0;
+  #endif
+  ],required)
+
+  DEF_XML2="#define HAVE_XML2 1"
+  break
+
+  if test ! "$DEF_XML2"; then
+    echo
+    AC_MSG_ERROR(One or more of the xml2 components is missing.)
+  fi
 fi
 
 AC_SUBST(XML2_LIB_FLAG)
@@ -2898,12 +2946,57 @@ AC_SUBST(LAPACKMP_LIB_FLAG)
 AC_SUBST(LAPACKMP_LIB_DIR_FLAG)
 sci_defs_files="$sci_defs_files include/sci_defs/lapack_testdefs.h"
 
+##  --  allow for extra mpi libraries  -----------------------------------
+
+# If --with-mpi-extra-libs is set, then it will be one or more
+# absolute paths to additionaly libraries necessary to link MPI.  This
+# code parses the given library (libraries) and adds (through the
+# MPI_EXTRA flags) to the MPI test link line.
+
+if test "$with_mpi_extra_libs"; then
+   the_libs=$(echo $with_mpi_extra_libs | tr "," "\n")
+   for lib in $the_libs; do
+      if test ! -f "$lib"; then
+         AC_MSG_ERROR(Extra MPI lib '$lib' does not exist...)
+      else
+         the_dir=`dirname $lib`
+         if test "$the_dir" == "."; then
+            AC_MSG_ERROR(Extra MPI lib '$lib' must include an absolute path...)
+         fi
+         the_base=`basename $lib | cut -f"1" -d"." | sed 's/lib//g'` 
+         MPI_EXTRA_LIB_FLAG="$MPI_EXTRA_LIB_FLAG -l$the_base"
+         MPI_EXTRA_LIB_DIR="$MPI_EXTRA_LIB_DIR -L$the_dir"
+      fi
+   done
+fi
+
 ##  --  search for mpi  --------------------------------------------------
 sci_required_mpi="yes"
 if test "$sci_required_mpi" = "yes"; then
   echo
   AS_MESSAGE(checking for required MPI components......)
   echo
+
+  if test "$with_mpi" -a \( "$with_mpi_include" -o "$with_mpi_lib" \); then
+    AC_MSG_ERROR( [Please use either --with-mpi or --with-mpi-lib/include, but not both.] )
+  fi
+  if test "$with_mpi_include" = "yes"; then
+    AC_MSG_ERROR( [--with-mpi-include=DIR must specify a DIRectory.] )
+  fi
+  if test "$with_mpi_lib" = "yes"; then
+    AC_MSG_ERROR( [--with-mpi-lib=DIR must specify a DIRectory.] )
+  fi
+  if test \( "$with_mpi_lib" -a "$with_mpi_include" = "" \) -o \( "$with_mpi_lib" = "" -a "$with_mpi_include" \); then
+    AC_MSG_ERROR( [Both --with-mpi-lib=DIR and --with-mpi-include=DIR must be specified...] )
+  fi
+  if test "$with_mpi_include"; then
+    if ! test -d "$with_mpi_include"; then
+      AC_MSG_ERROR( [The directory specified with --with-mpi-include=DIR is not valid: $with_mpi_include] )
+    fi
+    if ! test -d "$with_mpi_lib"; then
+      AC_MSG_ERROR( [The directory specified with --with-mpi-lib=DIR is not valid: $with_mpi_lib] )
+    fi
+  fi
 
   case $host in
   #  *aix*)
@@ -2937,6 +3030,11 @@ if test "$sci_required_mpi" = "yes"; then
               # Account for lib64 or lib32 or just lib...
               BASE_LIB_PATH(_sci_lib,$with_mpi)
            fi
+        else
+          if test "$with_mpi_lib"; then
+            _sci_inc="$with_mpi_include"
+            _sci_lib="$with_mpi_lib"
+          fi
         fi
 
 	# After each attempt to locate mpi, we need to verify that the mpi it
@@ -3002,9 +3100,20 @@ if test "$sci_required_mpi" = "yes"; then
                 fi
 
                 if test "$HAVE_MPI" != "yes"; then
+		   # try mpich with mpich_threadm and mpl library
                    SCI_TRY_LINK(MPI,mpich library and header-2,mpi.h,
-                                  $_sci_inc /usr/include/mpi,mpich $MPI_EXTRA_LIB_FLAG,$_sci_lib $MPI_EXTRA_LIB_DIR,,,optional)
+                                  $_sci_inc /usr/include/mpi,mpich_threadm mpl $MPI_EXTRA_LIB_FLAG,$_sci_lib $MPI_EXTRA_LIB_DIR,,,optional)
 
+                   # try mpich_threadm again without mpl library 
+                   if test "$HAVE_MPI" != "yes"; then
+                      SCI_TRY_LINK(MPI,mpich library and header,mpi.h,
+                                  $_sci_inc /usr/include/mpi,mpich_threadm $MPI_EXTRA_LIB_FLAG,$_sci_lib $MPI_EXTRA_LIB_DIR,,,optional)
+                   fi
+                   # try just plain mpich  
+                   if test "$HAVE_MPI" != "yes"; then
+                      SCI_TRY_LINK(MPI,mpich library and header,mpi.h,
+                                  $_sci_inc /usr/include/mpi,mpich $MPI_EXTRA_LIB_FLAG,$_sci_lib $MPI_EXTRA_LIB_DIR,,,optional)
+                   fi
                    # try mpich again with pmpich
                    if test "$HAVE_MPI" != "yes"; then
                       SCI_TRY_LINK(MPI,mpich library and header,mpi.h,
@@ -3210,140 +3319,149 @@ if test -z "$PETSC_ARCH"; then
    AC_MSG_ERROR(PETSC_ARCH environment var is not set.  Please set.)
 fi
 
-# Make sure we have either mpi or mpi-uni, blas, and lapack
-# It seems that under AIX and OSF, the libs that cover blas also cover lapack
-if (test "$HAVE_MPI" = "yes" || test "$HAVE_MPI_UNI" = "yes") && test "$HAVE_BLAS" = "yes" && 
-   (test "$PETSC_ARCH" = "aix5.1.0.0" || test "$PETSC_ARCH" = "dec" ||
-    test "$HAVE_LAPACK" = "yes"); then
+if test "$with_petsc" == "no"; then # Handle --without option
+  AC_MSG_WARN( "PETSc disabled." )
+else  
 
-  _sci_lib_dir=
-  _sci_inc=
+  if test "$with_petsc" == "built-in"; then
+     HAVE_PETSC="yes"
+     DEF_PETSC="#define HAVE_PETSC 1"
+  else
+    # Make sure we have either mpi or mpi-uni, blas, and lapack
+    # It seems that under AIX and OSF, the libs that cover blas also cover lapack
+    if (test "$HAVE_MPI" = "yes" || test "$HAVE_MPI_UNI" = "yes") && test "$HAVE_BLAS" = "yes" && 
+       (test "$PETSC_ARCH" = "aix5.1.0.0" || test "$PETSC_ARCH" = "dec" ||
+        test "$HAVE_LAPACK" = "yes"); then
 
-  for petsc_arch in "$PETSC_ARCH" linux-gnu linux-gnu-c-opt; do
-    if test "$HAVE_PETSC" = "yes"; then
-      break
-    fi
+      _sci_lib_dir=
+      _sci_inc=
 
-    PETSC_SUB=lib/libO
+      for petsc_arch in "$PETSC_ARCH" linux-gnu linux-gnu-c-opt; do
+        if test "$HAVE_PETSC" = "yes"; then
+          break
+        fi
 
-    if test "$with_petsc"; then
+        PETSC_SUB=lib/libO
 
-      ####################################################
-      # The newer (2.3+) versions of petsc don't use the libO anymore...
-      have23=`echo "$with_petsc" | grep "2.3."`
-      if test -z "$have23" ; then
-         petsc_version_major=`grep PETSC_VERSION_MAJOR $with_petsc/include/petscversion.h | grep define | awk '{print $3}'`
-         petsc_version_minor=`grep PETSC_VERSION_MINOR $with_petsc/include/petscversion.h | grep define | awk '{print $3}'`
-         if test "$petsc_version_major" -eq 2 ; then
-            if test "$petsc_version_minor" -eq 3 ; then
-               have23=true
+        if test "$with_petsc"; then
+
+          ####################################################
+          # The newer (2.3+) versions of petsc don't use the libO anymore...
+          have23=`echo "$with_petsc" | grep "2.3."`
+          if test -z "$have23" ; then
+             petsc_version_major=`grep PETSC_VERSION_MAJOR $with_petsc/include/petscversion.h | grep define | awk '{print $3}'`
+             petsc_version_minor=`grep PETSC_VERSION_MINOR $with_petsc/include/petscversion.h | grep define | awk '{print $3}'`
+             if test "$petsc_version_major" -eq 2 ; then
+                if test "$petsc_version_minor" -eq 3 ; then
+                   have23=true
+                fi
+             fi
+          fi
+          if test "$have23"; then
+             PETSC_SUB=lib
+          fi
+          ####################################################
+
+          _sci_lib_dir="$with_petsc/$PETSC_SUB/$petsc_arch"
+          _sci_inc="$with_petsc/bmake/$petsc_arch $with_petsc/include"
+        else
+          # Modify _sci_dirs to have correct path information:
+          for i in $sci_thirdparty_dir; do
+            if test ! -d "$i"; then
+              continue
             fi
-         fi
-      fi
-      if test "$have23"; then
-         PETSC_SUB=lib
-      fi
-      ####################################################
 
-      _sci_lib_dir="$with_petsc/$PETSC_SUB/$petsc_arch"
-      _sci_inc="$with_petsc/bmake/$petsc_arch $with_petsc/include"
-    else
-      # Modify _sci_dirs to have correct path information:
-      for i in $sci_thirdparty_dir; do
-        if test ! -d "$i"; then
-          continue
+            # This is where the lib actually lives
+            if test ! -d "$i/$PETSC_VERSION_DIR/$PETSC_SUB/$petsc_arch"; then
+              continue
+            fi
+
+            _sci_lib_dir="$_sci_lib_dir $i/$PETSC_VERSION_DIR/$PETSC_SUB/$petsc_arch"
+            _sci_inc="$_sci_inc $i/$PETSC_VERSION_DIR/include $i/$PETSC_VERSION_DIR/bmake/$petsc_arch"
+          done  
         fi
-  
-        #this is where the lib actually lives
-        if test ! -d "$i/$PETSC_VERSION_DIR/$PETSC_SUB/$petsc_arch"; then
-          continue
-        fi
-  
-        _sci_lib_dir="$_sci_lib_dir $i/$PETSC_VERSION_DIR/$PETSC_SUB/$petsc_arch"
-        _sci_inc="$_sci_inc $i/$PETSC_VERSION_DIR/include $i/$PETSC_VERSION_DIR/bmake/$petsc_arch"
+
+        # For Petsc 2.2 use this line below:   petsc petscvec petscmat petscdm petscsnes petscts petscksp $LAPACK_LIB_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $MPI_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $DL_LIB_FLAG,
+        # Use -DMPIPP_H so we don't include mpi++.h where we don't want it.
+
+        SCI_TRY_LINK(PETSC,
+                     petsc libraries and headers (petsc_arch = $petsc_arch),
+                     petsc.h,
+                     $_sci_inc /usr/include/petsc,
+                     petsc petscvec petscmat petscdm petscsnes petscts petscksp,
+                     $_sci_lib_dir,
+                     $INC_MPI_H -DMPIPP_H $LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $MALLOC_TRACE_LIB_DIR_FLAG $MALLOC_TRACE_LIB_FLAG $M_LIB_FLAG $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG,
+                     ,
+                     optional)
+
+        if test "$HAVE_PETSC" = "yes" ; then
+          DEF_PETSC="#define HAVE_PETSC 1"
+        fi    
       done  
-    fi
+      if test "$with_petsc" && test ! "$DEF_PETSC"; then
+        echo
+        AC_MSG_ERROR(One or more of the PETSc components is missing.)
+        echo
+      fi
 
-    # For Petsc 2.2 use this line below:   petsc petscvec petscmat petscdm petscsnes petscts petscksp $LAPACK_LIB_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $MPI_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $DL_LIB_FLAG,
-    # Use -DMPIPP_H so we don't include mpi++.h where we don't want it.
+      #  --  search for uni-petsc  --------------------------------------------
 
-    SCI_TRY_LINK(PETSC,
-                 petsc libraries and headers (petsc_arch = $petsc_arch),
-                 petsc.h,
-                 $_sci_inc /usr/include/petsc,
-                 petsc petscvec petscmat petscdm petscsnes petscts petscksp,
-                 $_sci_lib_dir,
-                 $INC_MPI_H -DMPIPP_H $LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $MALLOC_TRACE_LIB_DIR_FLAG $MALLOC_TRACE_LIB_FLAG $M_LIB_FLAG $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG,
-                 ,
-                 optional)
+      if test "$HAVE_PETSC" != "yes" ; then
 
-    if test "$HAVE_PETSC" = "yes" ; then
-      DEF_PETSC="#define HAVE_PETSC 1"
-    fi    
-  done  
-  if test "$with_petsc" && test ! "$DEF_PETSC"; then
-    echo
-    AC_MSG_ERROR(One or more of the PETSc components is missing.)
-    echo
-  fi
+        # Only check for uni petsc if petsc not found.
+        _sci_lib=""
+        _sci_inc=""
 
-  #  --  search for uni-petsc  --------------------------------------------
+        if test "$with_unipetsc"; then
+          _sci_lib="$with_unipetsc/$PETSC_SUB/$PETSC_ARCH"
+          _sci_inc="$with_unipetsc/bmake/$PETSC_ARCH $with_unipetsc/include"
+        fi
 
-  if test "$HAVE_PETSC" != "yes" ; then
+        # For petsc 2.2 use this line below:  petsc petscvec petscmat petscdm petscsnes petscts petscksp,
+        # Use -DMPIPP_H so we don't include mpi++.h where we don't want it.
+        SCI_TRY_LINK(PETSC_UNI,
+                     petsc-uni libraries and headers,
+                     petsc.h,
+                     $_sci_inc /usr/include/petsc,
+                     petsc petscvec petscmat petscdm petscsnes petscts petscksp,
+                     $_sci_lib,
+                     $LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $INC_MPI_UNI_H $MPI_UNI_LIB_DIR_FLAG $MPI_UNI_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG -DMPIPP_H,
+                     ,
+                     optional)
 
-    # Only check for uni petsc if petsc not found.
-    _sci_lib=""
-    _sci_inc=""
+        if test "$HAVE_PETSC_UNI" = "yes" ; then
+          DEF_PETSC_UNI="#define PETSC_UNI 1"
+        else
+          # Give it a shot on the old petsc-uni version
+          SCI_TRY_LINK(PETSC_UNI,
+                       petsc libraries and headers - old2,
+                       petsc.h,
+                       $_sci_inc /usr/include/petsc,
+                       petsc petscvec petscmat petscdm petscsnes petscts,
+                       $_sci_lib,
+                       $LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $INC_MPI_UNI_H $MPI_UNI_LIB_DIR_FLAG $MPI_UNI_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG -DMPIPP_H,
+                       ,
+                       optional)
+          if test "$HAVE_PETSC_UNI" = "yes" ; then
+            DEF_PETSC_UNI="#define PETSC_UNI 1"
+          fi  
+        fi
 
-    if test "$with_unipetsc"; then
-      _sci_lib="$with_unipetsc/$PETSC_SUB/$PETSC_ARCH"
-      _sci_inc="$with_unipetsc/bmake/$PETSC_ARCH $with_unipetsc/include"
-    fi
-
-    # For petsc 2.2 use this line below:  petsc petscvec petscmat petscdm petscsnes petscts petscksp,
-    # Use -DMPIPP_H so we don't include mpi++.h where we don't want it.
-    SCI_TRY_LINK(PETSC_UNI,
-                 petsc-uni libraries and headers,
-                 petsc.h,
-                 $_sci_inc /usr/include/petsc,
-                 petsc petscvec petscmat petscdm petscsnes petscts petscksp,
-                 $_sci_lib,
-                 $LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $INC_MPI_UNI_H $MPI_UNI_LIB_DIR_FLAG $MPI_UNI_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG -DMPIPP_H,
-                 ,
-                 optional)
-
-    if test "$HAVE_PETSC_UNI" = "yes" ; then
-      DEF_PETSC_UNI="#define PETSC_UNI 1"
+        if test "$with_unipetsc" && test ! "$DEF_PETSC_UNI"; then
+          echo
+          AC_MSG_ERROR(One or more of the UNI-PETSC components is missing.)
+          echo
+        fi
+      fi
     else
-      # Give it a shot on the old petsc-uni version
-      SCI_TRY_LINK(PETSC_UNI,
-                   petsc libraries and headers - old2,
-                   petsc.h,
-                   $_sci_inc /usr/include/petsc,
-                   petsc petscvec petscmat petscdm petscsnes petscts,
-                   $_sci_lib,
-                   $LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $INC_MPI_UNI_H $MPI_UNI_LIB_DIR_FLAG $MPI_UNI_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG -DMPIPP_H,
-                   ,
-                   optional)
-      if test "$HAVE_PETSC_UNI" = "yes" ; then
-        DEF_PETSC_UNI="#define PETSC_UNI 1"
-      fi  
-    fi
-
-    if test "$with_unipetsc" && test ! "$DEF_PETSC_UNI"; then
-      echo
-      AC_MSG_ERROR(One or more of the UNI-PETSC components is missing.)
-      echo
+      AC_MSG_WARN(One or more of MPI or BLAS or LAPACK is missing.)
+      AC_MSG_WARN(HAVE_MPI: $HAVE_MPI)
+      AC_MSG_WARN(HAVE_MPI_UNI: $HAVE_MPI_UNI)
+      AC_MSG_WARN(HAVE_BLAS: $HAVE_BLAS)
+      AC_MSG_WARN(HAVE_LAPACK: $HAVE_LAPACK)
+      AC_MSG_WARN(Not configuring PETSc.)
     fi
   fi
-
-else
-  AC_MSG_WARN(One or more of MPI or BLAS or LAPACK is missing.)
-  AC_MSG_WARN(HAVE_MPI: $HAVE_MPI)
-  AC_MSG_WARN(HAVE_MPI_UNI: $HAVE_MPI_UNI)
-  AC_MSG_WARN(HAVE_BLAS: $HAVE_BLAS)
-  AC_MSG_WARN(HAVE_LAPACK: $HAVE_LAPACK)
-  AC_MSG_WARN(Not configuring PETSc.)
 fi
 
 AC_SUBST(HAVE_PETSC)
@@ -3601,11 +3719,12 @@ if test "$with_boost"; then
     done
     # Check for libraries files
     BOOST_LIB_DIR=$with_boost/lib
-    for file in libboost_thread-mt.a libboost_signals-mt.a; do
-      if test ! -f $BOOST_LIB_DIR/$file; then
+    for file in libboost_thread-mt libboost_signals-mt libboost_serialization; do
+      EXT=$SO_OR_ARCHIVE_EXTENSION
+      if test ! -f $BOOST_LIB_DIR/$file.$EXT; then
         echo ""
-        AC_MSG_WARN( $file lib does not exist... looking for non-mt version...)
-        short_name="`echo $file | cut -f1 -d"-"`.a"
+        AC_MSG_WARN( $file.$EXT lib does not exist... looking for non-mt version...)
+        short_name="`echo $file | cut -f1 -d"-"`.$EXT"
         if test ! -f $BOOST_LIB_DIR/$short_name; then
             AC_MSG_ERROR( $BOOST_LIB_DIR/$short_name lib does not exist!)
         else
@@ -3640,9 +3759,9 @@ if test "$wasatch_3p" = "yes"; then
   if test "$HAVE_BOOST" != "yes"; then
       AC_MSG_ERROR( Option --enable-wasatch_3p requires Boost... <--with-boost=DIR> )
   fi
-  if test "$HAVE_HDF5" != "yes"; then
-      AC_MSG_ERROR( Option --enable-wasatch_3p requires HDF5... <--with-hdf5=DIR> )
-  fi
+#  if test "$HAVE_HDF5" != "yes"; then
+#      AC_MSG_ERROR( Option --enable-wasatch_3p requires HDF5... <--with-hdf5=DIR> )
+#  fi
   if test "$with_tabprops"; then
      AC_MSG_ERROR( Do NOT specify both --with-tabprops and --enable-wasatch_3p )
   fi
@@ -3654,7 +3773,8 @@ if test "$wasatch_3p" = "yes"; then
   fi
 
   mkdir -p Wasatch3P
-  $path_to_src/build_scripts/build_wasatch_3p.sh `$sci_pwd` "$with_boost" "$with_hdf5"
+
+  $path_to_src/build_scripts/build_wasatch_3p.sh `$sci_pwd` "$with_boost" "$debug"
 
   if test $? != 0; then
      AC_MSG_ERROR( Failed to build Wasatch 3p libraries... )
@@ -3683,8 +3803,8 @@ if test "$with_spatialops"; then
     fi
     SPOPS_INCLUDE_DIR="include/spatialops"
     # Check includes
-    for file in FieldFunctions.h LinAlgTrilinos.h LinAlgUBlas.h LinearSystem.h OperatorDatabase.h \
-                SpatialOperator.h SpatialOpsConfigure.h SpatialOpsDefs.h SpatialOpsTools.h \
+    for file in FieldExpressions.h FieldFunctions.h OperatorDatabase.h \
+                structured/SpatialField.h SpatialOpsConfigure.h SpatialOpsDefs.h SpatialOpsTools.h \
                 particles structured; do
       if test ! -e $with_spatialops/$SPOPS_INCLUDE_DIR/$file; then
         echo ""
@@ -3701,7 +3821,7 @@ if test "$with_spatialops"; then
   DEF_SPATIALOPS="#define HAVE_SPATIALOPS 1"
   INC_SPATIALOPS_H="-I$with_spatialops/include"
   SPATIALOPS_LIB_DIR_FLAG="-L$with_spatialops/lib/spatialops"
-  SPATIALOPS_LIB_FLAG="-lspatialops"
+  SPATIALOPS_LIB_FLAG="-lspatialops -lspatialops-stencil"
   HAVE_SPATIALOPS="yes"
 fi
 AC_SUBST(HAVE_SPATIALOPS)
@@ -3728,7 +3848,7 @@ if test "$with_exprlib"; then
     fi
     SPOPS_INCLUDE_DIR="include/expression"
     # Check includes
-    for file in ExecuteExpression.h ExprDeps.h ExprLib.h Expr_Context.h Expr_Expression.h Expr_ExpressionID.h Expr_FieldManagerList.h \
+    for file in ExprDeps.h ExprLib.h Expr_Context.h Expr_Expression.h Expr_ExpressionID.h Expr_FieldManagerList.h \
                 ExpressionBase.h ExpressionFactory.h ExpressionRegistry.h ExpressionTree.h FieldDeps.h FieldManager.h FieldManagerBase.h \
                 Functions.h PlaceHolderExpr.h Tag.h TransportEquation.h uintah; do
       if test ! -e $with_exprlib/$SPOPS_INCLUDE_DIR/$file; then
@@ -3758,9 +3878,6 @@ AC_SUBST(EXPRLIB_LIB_DIR_FLAG)
 ##  --  search for TabProps ------------------------
 
 if test "$with_tabprops"; then
-  if test "$HAVE_HDF5" != "yes"; then
-    AC_MSG_ERROR( --with-tabprops=DIR requires HDF5. )
-  fi
 
   if test "$with_tabprops" = "yes"; then
     AC_MSG_ERROR( --with-tabprops=DIR requires a DIRectory be provided. )
@@ -3791,18 +3908,16 @@ AC_SUBST(TABPROPS_LIB_DIR_FLAG)
 ##  --  Determine whether we can use WASATCH OR NOT ----------------------
 
 if test "$USE_WASATCH" = yes; then
-  if test "$HAVE_HDF5" = "yes" &&
-     test "$HAVE_BOOST" = "yes" &&
+   if test "$HAVE_BOOST" = "yes" &&
      test "$HAVE_TABPROPS" = "yes" &&
      test "$HAVE_SPATIALOPS" = "yes" &&
      test "$HAVE_EXPRLIB" = "yes"; then
     BUILD_WASATCH=yes
   else
-    AC_MSG_ERROR(You specified the use of the Wasatch component but do not have all the of the prereqs: HDF5 ($HAVE_HDF5); Boost ($HAVE_BOOST); TabProps ($HAVE_TABPROPS); SpatialOps ($HAVE_SPATIALOPS); and ExprLib ($HAVE_EXPRLIB).)
+    AC_MSG_ERROR(You specified the use of the Wasatch component but do not have all the of the prereqs: Boost ($HAVE_BOOST); TabProps ($HAVE_TABPROPS); SpatialOps ($HAVE_SPATIALOPS); and ExprLib ($HAVE_EXPRLIB).)
   fi
 else
-  if test "$HAVE_HDF5" = "yes" &&
-     test "$HAVE_BOOST" = "yes" &&
+  if test "$HAVE_BOOST" = "yes" &&
      test "$HAVE_TABPROPS" = "yes" &&
      test "$HAVE_SPATIALOPS" = "yes" &&
      test "$HAVE_EXPRLIB" = "yes"; then
@@ -3822,39 +3937,44 @@ _sci_lib=
 _sci_inc=
 _sci_optional=optional
 
-if test "$with_hypre" = "yes"; then
-  _sci_optional=required
-elif test "$with_hypre"; then
-  _sci_lib="$with_hypre/lib"
-  _sci_inc="$with_hypre/include"
-  _sci_optional=specific
-fi
+# Handle --without option
+if test "$with_hypre" = "no"; then
+   AC_MSG_WARN( "Hypre is turned off." )
+else
+   if test "$with_hypre" = "yes"; then
+      _sci_optional=required
+   elif test "$with_hypre"; then
+      _sci_lib="$with_hypre/lib"
+      _sci_inc="$with_hypre/include"
+      _sci_optional=specific
+   fi
 
-# # We used to also check for HYPRE_blas, but hypre 1.9 doesn't have it,
-# # so we aren't going to check for it in any version.  If the other 3
-# # libs exist, we will assume that HYPRE_blas is there if it is needed.
-# SCI_TRY_LINK(HYPRE,HYPRE libraries and headers,HYPRE.h,$_sci_inc,
-#                          HYPRE_struct_mv HYPRE_struct_ls HYPRE_sstruct_mv HYPRE_sstruct_ls HYPRE_LSI HYPRE_superlu HYPRE_utilities,
-#                          $_sci_lib,-lm,,$_sci_optional)
+   # # We used to also check for HYPRE_blas, but hypre 1.9 doesn't have it,
+   # # so we aren't going to check for it in any version.  If the other 3
+   # # libs exist, we will assume that HYPRE_blas is there if it is needed.
+   # SCI_TRY_LINK(HYPRE,HYPRE libraries and headers,HYPRE.h,$_sci_inc,
+   #                          HYPRE_struct_mv HYPRE_struct_ls HYPRE_sstruct_mv HYPRE_sstruct_ls HYPRE_LSI HYPRE_superlu HYPRE_utilities,
+   #                          $_sci_lib,-lm,,$_sci_optional)
 
-# We should just be able to link vs. libHYPRE.so...
-#   Also, libHYPRE has some C++ stuff in it, so we need to be in C++ mode...
-AC_LANG([C++])
-SCI_TRY_LINK(HYPRE,HYPRE libraries and headers,HYPRE.h,$_sci_inc,
-                         HYPRE,
-                         $_sci_lib,
-                         $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $MALLOC_TRACE_LIB_DIR_FLAG $MALLOC_TRACE_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $M_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG,
-                         ,
-                         $_sci_optional)
-AC_LANG([C])
+   # We should just be able to link vs. libHYPRE.so...
+   #   Also, libHYPRE has some C++ stuff in it, so we need to be in C++ mode...
+   AC_LANG([C++])
+   SCI_TRY_LINK(HYPRE,HYPRE libraries and headers,HYPRE.h,$_sci_inc,
+                            HYPRE,
+                            $_sci_lib,
+                            $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $MALLOC_TRACE_LIB_DIR_FLAG $MALLOC_TRACE_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $M_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG,
+                            ,
+                            $_sci_optional)
+   AC_LANG([C])
 
-if test "$HAVE_HYPRE" = "yes" ; then
-  DEF_HYPRE="#define HAVE_HYPRE 1"
-fi
+   if test "$HAVE_HYPRE" = "yes" ; then
+      DEF_HYPRE="#define HAVE_HYPRE 1"
+   fi
 
-if test "$with_hypre" && test ! "$DEF_HYPRE"; then
-  echo
-  AC_MSG_ERROR(One or more of the HYPRE components is missing.)
+   if test "$with_hypre" && test ! "$DEF_HYPRE"; then
+      echo
+      AC_MSG_ERROR(One or more of the HYPRE components is missing.)
+   fi
 fi
 
 AC_SUBST(HAVE_HYPRE)

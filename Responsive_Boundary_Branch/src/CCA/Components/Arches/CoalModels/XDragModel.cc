@@ -24,7 +24,7 @@ using namespace Uintah;
 XDragModelBuilder::XDragModelBuilder( const std::string         & modelName, 
                                             const vector<std::string> & reqICLabelNames,
                                             const vector<std::string> & reqScalarLabelNames,
-                                            const ArchesLabel         * fieldLabels,
+                                            ArchesLabel         * fieldLabels,
                                             SimulationStateP          & sharedState,
                                             int qn ) :
   ModelBuilder( modelName, reqICLabelNames, reqScalarLabelNames, fieldLabels, sharedState, qn )
@@ -41,7 +41,7 @@ ModelBase* XDragModelBuilder::build(){
 
 XDragModel::XDragModel( std::string           modelName, 
                               SimulationStateP    & sharedState,
-                              const ArchesLabel   * fieldLabels,
+                              ArchesLabel   * fieldLabels,
                               vector<std::string>   icLabelNames, 
                               vector<std::string>   scalarLabelNames,
                               int qn ) 
@@ -141,6 +141,26 @@ XDragModel::problemSetup(const ProblemSpecP& params, int qn)
     temp_ic_name_full += node;
     std::replace( d_icLabels.begin(), d_icLabels.end(), temp_ic_name, temp_ic_name_full);
   }
+
+}
+
+
+void
+XDragModel::sched_dummyInit( const LevelP& level, SchedulerP& sched )
+{
+  string taskname = "XDragModel::dummyInit"; 
+
+  Ghost::GhostType  gn = Ghost::None;
+
+  Task* tsk = scinew Task(taskname, this, &XDragModel::dummyInit);
+
+  tsk->requires( Task::OldDW, d_modelLabel, gn, 0);
+  tsk->requires( Task::OldDW, d_gasLabel,   gn, 0);
+
+  tsk->computes(d_modelLabel);
+  tsk->computes(d_gasLabel); 
+
+  sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
 
 }
 
@@ -273,9 +293,8 @@ XDragModel::sched_computeModel( const LevelP& level, SchedulerP& sched, int time
   d_w_scaling_factor = weight_eqn.getScalingConstant();
   tsk->requires( Task::OldDW, d_weight_label, gn, 0);
 
-
-  // require gas velocity
   tsk->requires( Task::OldDW, d_fieldLabels->d_newCCVelocityLabel, gn, 0 );
+  tsk->requires(Task::OldDW, d_fieldLabels->d_densityCPLabel, Ghost::None, 0);
 
   // require particle velocity
   ArchesLabel::PartVelMap::const_iterator i = d_fieldLabels->partVel.find(d_quadNode);
@@ -379,6 +398,9 @@ XDragModel::computeModel( const ProcessorGroup* pc,
     constCCVariable<Vector> gasVel;
     old_dw->get( gasVel, d_fieldLabels->d_newCCVelocityLabel, matlIndex, patch, gn, 0 );
 
+    constCCVariable<double> den;
+    old_dw->get(den, d_fieldLabels->d_densityCPLabel, matlIndex, patch, gn, 0 );
+
     constCCVariable<Vector> partVel;
     ArchesLabel::PartVelMap::const_iterator iter = d_fieldLabels->partVel.find(d_quadNode);
     old_dw->get(partVel, iter->second, matlIndex, patch, gn, 0);
@@ -417,7 +439,7 @@ XDragModel::computeModel( const ProcessorGroup* pc,
         sphPart = cart2sph( cartPart );
 
         double diff = sphGas.z() - sphPart.z();
-        double Re  = abs(diff)*length / kvisc;
+        double Re  = abs(diff)*length / (kvisc/den[c]);
         double phi;
 
         if(Re < 1) {

@@ -52,7 +52,6 @@
 
 namespace SCIRun {
 
-using std::string;
 
 template <class Basis>
 class LatVolMesh : public Mesh
@@ -122,7 +121,7 @@ public:
     NodeIndex() : LatIndex() {}
     NodeIndex(const LatVolMesh *m, unsigned i, unsigned j, unsigned k)
       : LatIndex(m, i,j,k) {}
-    static string type_name(int i=-1) {
+    static std::string type_name(int i=-1) {
       ASSERT(i < 1);
       return LatVolMesh<Basis>::type_name(-1) + "::NodeIndex";
     }
@@ -741,7 +740,7 @@ public:
 
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
-  static  const string type_name(int n = -1);
+  static  const std::string type_name(int n = -1);
   virtual const TypeDescription *get_type_description() const;
   static const TypeDescription* cell_type_description();
   static const TypeDescription* face_type_description();
@@ -786,7 +785,7 @@ const TypeDescription* get_type_description(LatVolMesh<Basis> *)
     TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(1);
     (*subs)[0] = sub;
     td = scinew TypeDescription("LatVolMesh", subs,
-                                string(__FILE__),
+                                std::string(__FILE__),
                                 "SCIRun",
                                 TypeDescription::MESH_E);
   }
@@ -812,7 +811,7 @@ LatVolMesh<Basis>::node_type_description()
     const TypeDescription *me =
       SCIRun::get_type_description((LatVolMesh<Basis> *)0);
     td = scinew TypeDescription(me->get_name() + "::Node",
-                                string(__FILE__),
+                                std::string(__FILE__),
                                 "SCIRun",
                                 TypeDescription::MESH_E);
   }
@@ -830,7 +829,7 @@ LatVolMesh<Basis>::edge_type_description()
     const TypeDescription *me =
       SCIRun::get_type_description((LatVolMesh<Basis> *)0);
     td = scinew TypeDescription(me->get_name() + "::Edge",
-                                string(__FILE__),
+                                std::string(__FILE__),
                                 "SCIRun",
                                 TypeDescription::MESH_E);
   }
@@ -848,7 +847,7 @@ LatVolMesh<Basis>::face_type_description()
     const TypeDescription *me =
       SCIRun::get_type_description((LatVolMesh<Basis> *)0);
     td = scinew TypeDescription(me->get_name() + "::Face",
-                                string(__FILE__),
+                                std::string(__FILE__),
                                 "SCIRun",
                                 TypeDescription::MESH_E);
   }
@@ -866,7 +865,7 @@ LatVolMesh<Basis>::cell_type_description()
     const TypeDescription *me =
       SCIRun::get_type_description((LatVolMesh<Basis> *)0);
     td = scinew TypeDescription(me->get_name() + "::Cell",
-                                string(__FILE__),
+                                std::string(__FILE__),
                                 "SCIRun",
                                 TypeDescription::MESH_E);
   }
@@ -883,7 +882,7 @@ LatVolMesh<Basis>::node_index_type_description()
     const TypeDescription *me =
       SCIRun::get_type_description((LatVolMesh<Basis> *)0);
     td = scinew TypeDescription(me->get_name() + "::NodeIndex",
-                                string(__FILE__),
+                                std::string(__FILE__),
                                 "SCIRun",
                                 TypeDescription::MESH_E);
   }
@@ -901,7 +900,7 @@ LatVolMesh<Basis>::cell_index_type_description()
     const TypeDescription *me =
       SCIRun::get_type_description((LatVolMesh<Basis> *)0);
     td = scinew TypeDescription(me->get_name() + "::CellIndex",
-                                string(__FILE__),
+                                std::string(__FILE__),
                                 "SCIRun",
                                 TypeDescription::MESH_E);
   }
@@ -1886,19 +1885,19 @@ LatVolMesh<Basis>::get_weights(const Point &p, typename Cell::array_type &l,
 
 
 template <class Basis>
-const string
+const std::string
 find_type_name(typename LatVolMesh<Basis>::NodeIndex *)
 {
-  static string name = LatVolMesh<Basis>::type_name(-1) + "::NodeIndex";
+  static std::string name = LatVolMesh<Basis>::type_name(-1) + "::NodeIndex";
   return name;
 }
 
 
 template <class Basis>
-const string
+const std::string
 find_type_name(typename LatVolMesh<Basis>::CellIndex *)
 {
-  static string name = LatVolMesh<Basis>::type_name(-1) + "::CellIndex";
+  static std::string name = LatVolMesh<Basis>::type_name(-1) + "::CellIndex";
   return name;
 }
 
@@ -1946,18 +1945,18 @@ LatVolMesh<Basis>::io(Piostream& stream)
 
 
 template <class Basis>
-const string
+const std::string
 LatVolMesh<Basis>::type_name(int n)
 {
   ASSERT((n >= -1) && n <= 1);
   if (n == -1)
   {
-    static const string name = type_name(0) + FTNS + type_name(1) + FTNE;
+    static const std::string name = type_name(0) + FTNS + type_name(1) + FTNE;
     return name;
   }
   else if (n == 0)
   {
-    static const string nm("LatVolMesh");
+    static const std::string nm("LatVolMesh");
     return nm;
   }
   else

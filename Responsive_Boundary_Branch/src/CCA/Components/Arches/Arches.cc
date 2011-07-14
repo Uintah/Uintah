@@ -37,6 +37,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Arches/SourceTerms/MMS1.h>
 #include <CCA/Components/Arches/SourceTerms/TabRxnRate.h>
 #include <CCA/Components/Arches/SourceTerms/CoalGasDevol.h>
+#include <CCA/Components/Arches/SourceTerms/CoalGasOxi.h>
 #include <CCA/Components/Arches/SourceTerms/CoalGasHeat.h>
 #include <CCA/Components/Arches/SourceTerms/CoalGasMomentum.h> 
 #include <CCA/Components/Arches/SourceTerms/WestbrookDryer.h>
@@ -48,9 +49,13 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Arches/CoalModels/PartVel.h>
 #include <CCA/Components/Arches/CoalModels/ConstantModel.h>
 #include <CCA/Components/Arches/CoalModels/Devolatilization.h>
+#include <CCA/Components/Arches/CoalModels/CharOxidation.h>
 #include <CCA/Components/Arches/CoalModels/KobayashiSarofimDevol.h>
+#include <CCA/Components/Arches/CoalModels/YamamotoDevol.h>
 #include <CCA/Components/Arches/CoalModels/HeatTransfer.h>
 #include <CCA/Components/Arches/CoalModels/SimpleHeatTransfer.h>
+#include <CCA/Components/Arches/CoalModels/ShaddixHeatTransfer.h>
+#include <CCA/Components/Arches/CoalModels/CharOxidationShaddix.h>
 #include <CCA/Components/Arches/CoalModels/XDragModel.h>
 #include <CCA/Components/Arches/CoalModels/YDragModel.h>
 #include <CCA/Components/Arches/CoalModels/ZDragModel.h>
@@ -63,10 +68,11 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Arches/PropertyModels/ConstProperty.h>
 #include <CCA/Components/Arches/PropertyModels/LaminarPrNo.h>
 #include <CCA/Components/Arches/PropertyModels/ScalarDiss.h>
+#include <CCA/Components/Arches/PropertyModels/ABSKP.h>
 #include <CCA/Components/Arches/PropertyModels/ExtentRxn.h>
 #include <CCA/Components/Arches/PropertyModels/TabStripFactor.h>
 #if HAVE_TABPROPS
-# include <CCA/Components/Arches/ChemMix/TabPropsInterface.h>
+#  include <CCA/Components/Arches/ChemMix/TabPropsInterface.h>
 #endif 
 
 #include <CCA/Components/Arches/Arches.h>
@@ -85,7 +91,6 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Arches/IncDynamicProcedure.h>
 #include <CCA/Components/Arches/CompDynamicProcedure.h>
 #include <CCA/Components/Arches/CompLocalDynamicProcedure.h>
-#include <CCA/Components/Arches/ExtraScalarSolver.h>
 #include <CCA/Components/Arches/OdtClosure.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Ports/Scheduler.h>
@@ -98,6 +103,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Variables/VarTypes.h>
+#include <Core/Grid/DbgOutput.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Parallel/Parallel.h>
 
@@ -114,6 +120,9 @@ using namespace Uintah;
 #ifdef PetscFilter
 #include <CCA/Components/Arches/Filter.h>
 #endif
+
+
+static DebugStream dbg("ARCHES", false);
 
 const int Arches::NDIM = 3;
 
@@ -144,8 +153,6 @@ Arches::Arches(const ProcessorGroup* myworld) :
   nofTimeSteps = 0;
   init_timelabel_allocated = false;
   d_analysisModule = false;
-  d_calcExtraScalars = false;
-  d_extraScalarSolver = 0;
   d_dataArchiver = 0;  //WME
   d_set_initial_condition = false;
 
@@ -153,6 +160,7 @@ Arches::Arches(const ProcessorGroup* myworld) :
   dqmomfactory.set_quad_nodes(0);
   d_doDQMOM = false; 
   d_doMMS = false;
+  d_myworld = myworld;
   
 }
 
@@ -177,9 +185,6 @@ Arches::~Arches()
   if (d_analysisModule) {
     delete d_analysisModule;
   }
-  if (d_calcExtraScalars)
-    for (int i=0; i < static_cast<int>(d_extraScalars.size()); i++)
-      delete d_extraScalars[i];
 
   delete d_timeIntegrator; 
   if (d_doDQMOM) { 
@@ -248,7 +253,7 @@ Arches::problemSetup(const ProblemSpecP& params,
     // db->require("model_mixture_fraction_variance", d_calcVariance);
   }
   db->getWithDefault("turnonMixedModel",    d_mixedModel,false);
-  db->getWithDefault("recompileTaskgraph",  d_recompile,false);
+  db->getWithDefault("recompileTaskgraph",  d_lab->recompile_taskgraph,false);
 
   string nlSolver;
   if (db->findBlock("ExplicitSolver")){
@@ -281,7 +286,6 @@ Arches::problemSetup(const ProblemSpecP& params,
       db_mms0->getWithDefault("cw",d_cw,0.0);
       db_mms0->getWithDefault("cp",d_cp,0.0);
       db_mms0->getWithDefault("phi0",d_phi0,0.0);
-      db_mms0->getWithDefault("esphi0",d_esphi0,0.0);
     }
     else if (d_mms == "almgrenMMS") {
       ProblemSpecP db_mms3 = db_mms->findBlock("almgrenMMS");
@@ -296,18 +300,6 @@ Arches::problemSetup(const ProblemSpecP& params,
   d_physicalConsts = scinew PhysicalConstants();
   const ProblemSpecP db_root = db->getRootNode();
   d_physicalConsts->problemSetup(db_root);
-
-  if (db->findBlock("ExtraScalars")) {
-    d_calcExtraScalars = true; 
-    ProblemSpecP extra_sc_db = db->findBlock("ExtraScalars");
-    for (ProblemSpecP scalar_db = extra_sc_db->findBlock("scalar");
-         scalar_db != 0; scalar_db = scalar_db->findNextBlock("scalar")) {
-      d_extraScalarSolver = scinew ExtraScalarSolver(d_lab, d_MAlab,
-                                                     d_physicalConsts);
-      d_extraScalarSolver->problemSetup(scalar_db);
-      d_extraScalars.push_back(d_extraScalarSolver);
-    }
-  }
 
   //create a time integrator.
   d_timeIntegrator = scinew ExplicitTimeInt(d_lab);
@@ -335,9 +327,9 @@ Arches::problemSetup(const ProblemSpecP& params,
       Arches::registerUDSources(sources_db);
     //register all equations
     Arches::registerTransportEqns(transportEqn_db); 
+  } else { 
+    proc0cout << "No additonal transport equations found." << endl;
   }
-  else
-    proc0cout << "No *extra* transport equations found." << endl;
 
   //create user specified transport eqns
   if (transportEqn_db) {
@@ -373,7 +365,15 @@ Arches::problemSetup(const ProblemSpecP& params,
         }
         SourceTermBase& a_src = src_factory.retrieve_source_term( srcname );
         a_src.problemSetup( src_db );  
-      
+
+				//Add any table lookup species to the table lookup list: 
+				std::vector<std::string> tbl_lookup = a_src.get_tablelookup_species(); 
+				for ( std::vector<std::string>::iterator iter = tbl_lookup.begin(); 
+						iter != tbl_lookup.end(); ++iter ){ 
+
+					d_lab->add_species( *iter ); 
+
+				}
       }
     }
   }
@@ -403,31 +403,17 @@ Arches::problemSetup(const ProblemSpecP& params,
                               d_calcReactingScalar, 
                               d_calcEnthalpy, d_calcVariance, d_myworld);
 
-  d_props->setCalcExtraScalars(d_calcExtraScalars);
-
-  if (d_calcExtraScalars){
-    d_props->setExtraScalars(&d_extraScalars);
-  }
-  
   d_props->problemSetup(db);
 
   // read boundary condition information 
   d_boundaryCondition = scinew BoundaryCondition(d_lab, d_MAlab, d_physicalConsts,
                                                  d_props, d_calcReactingScalar,
                                                  d_calcEnthalpy, d_calcVariance);
+
   // send params, boundary type defined at the level of Grid
   d_boundaryCondition->setMMS(d_doMMS);
-  d_boundaryCondition->setCalcExtraScalars(d_calcExtraScalars);
-  if (d_calcExtraScalars){
-    d_boundaryCondition->setExtraScalars(&d_extraScalars);
-  }
     d_boundaryCondition->problemSetup(db,
                                     restart_ps);                        //WME
-
-  d_carbon_balance_es = d_boundaryCondition->getCarbonBalanceES();
-  d_sulfur_balance_es = d_boundaryCondition->getSulfurBalanceES();
-  d_props->setCarbonBalanceES(d_carbon_balance_es);        
-  d_props->setSulfurBalanceES(d_sulfur_balance_es);
 
   ProblemSpecP turb_db = db->findBlock("Turbulence");
   turb_db->getAttribute("model", d_whichTurbModel); 
@@ -479,25 +465,14 @@ Arches::problemSetup(const ProblemSpecP& params,
 
   d_props->setBC(d_boundaryCondition);
 
-  if (d_calcExtraScalars){
-    for (int i=0; i < static_cast<int>(d_extraScalars.size()); i++) {
-      d_extraScalars[i]->setTurbulenceModel(d_turbModel);
-      d_extraScalars[i]->setBoundaryCondition(d_boundaryCondition);
-    }
-  }
-
   if(nlSolver == "picard") {
     d_nlSolver = scinew PicardNonlinearSolver(d_lab, d_MAlab, d_props, 
                                               d_boundaryCondition,
                                               d_turbModel, d_physicalConsts,
                                               d_calcScalar,
-                                              d_calcReactingScalar,
                                               d_calcEnthalpy,
                                               d_calcVariance,
                                               d_myworld);
-    if (d_calcExtraScalars){
-      throw InvalidValue("Transport of extra scalars by picard solver is not implemented", __FILE__, __LINE__);
-    }
   }
   else if (nlSolver == "explicit") {
         d_nlSolver = scinew ExplicitSolver(d_lab, d_MAlab, d_props,
@@ -505,7 +480,6 @@ Arches::problemSetup(const ProblemSpecP& params,
                                            d_turbModel, d_scaleSimilarityModel, 
                                            d_physicalConsts,
                                            d_calcScalar,
-                                           d_calcReactingScalar,
                                            d_calcEnthalpy,
                                            d_calcVariance,
                                            d_myworld);
@@ -518,12 +492,7 @@ Arches::problemSetup(const ProblemSpecP& params,
   d_nlSolver->setEKTCorrection(d_EKTCorrection);
   d_nlSolver->setMMS(d_doMMS);
   d_nlSolver->problemSetup(db);
-  d_nlSolver->setCarbonBalanceES(d_carbon_balance_es);
-  d_nlSolver->setSulfurBalanceES(d_sulfur_balance_es);
   d_timeIntegratorType = d_nlSolver->getTimeIntegratorType();
-  d_nlSolver->setCalcExtraScalars(d_calcExtraScalars);
-  if (d_calcExtraScalars) d_nlSolver->setExtraScalars(&d_extraScalars);
-
 
   //__________________
   // Init data analysis module(s) and run problemSetup
@@ -588,7 +557,7 @@ Arches::problemSetup(const ProblemSpecP& params,
     DQMOMEqnFactory& eqn_factory = DQMOMEqnFactory::self(); 
     const int numQuadNodes = eqn_factory.get_quad_nodes();  
 
-    model_factory.setArchesLabel( d_lab ); 
+    model_factory.setArchesLabel( d_lab );
 
     ProblemSpecP w_db = dqmom_db->findBlock("Weights");
 
@@ -661,6 +630,9 @@ Arches::problemSetup(const ProblemSpecP& params,
 
   // register any other source terms:
   registerSources(); 
+
+  // Add extra species to table lookup as required by models
+  d_props->addLookupSpecies(); 
 }
 
 
@@ -680,7 +652,6 @@ Arches::scheduleInitialize(const LevelP& level,
   // compute : [u,v,w]VelocityIN, pressureIN, scalarIN, densityIN,
   //           viscosityIN
   sched_paramInit(level, sched);
-  sched_scalarInit(level, sched);
 
   if (d_set_initial_condition) {
     sched_readCCInitialCondition(level, sched);
@@ -695,7 +666,18 @@ Arches::scheduleInitialize(const LevelP& level,
   // schedule init of cell type
   // require : NONE
   // compute : cellType
-  d_boundaryCondition->sched_cellTypeInit(sched, patches, matls);
+  
+  if ( d_boundaryCondition->isUsingNewBC() ) { 
+    d_boundaryCondition->sched_cellTypeInit__NEW( sched, patches, matls ); 
+  } else { 
+    d_boundaryCondition->sched_cellTypeInit(sched, patches, matls);
+  }
+  //
+  // compute the cell area fraction 
+  d_boundaryCondition->sched_setAreaFraction( sched, patches, matls ); 
+
+  sched_scalarInit(level, sched);
+
 
   // computing flow inlet areas
   if (d_boundaryCondition->getInletBC()){
@@ -755,16 +737,19 @@ Arches::scheduleInitialize(const LevelP& level,
 
   // Table Lookup 
   string mixmodel = d_props->getMixingModelType(); 
-  if ( mixmodel != "TabProps")
+  if ( mixmodel != "TabProps" && mixmodel != "ClassicTable" && mixmodel != "ColdFlow")
     d_props->sched_reComputeProps(sched, patches, matls,
                                 init_timelabel, true, true, false,false);
   else {
     bool initialize_it = true; 
     bool modify_ref_den = true; 
+	  d_props->doTableMatching(); 
     if ( d_calcEnthalpy) 
       d_props->sched_initEnthalpy( level, sched ); 
     d_props->sched_reComputeProps_new( level, sched, init_timelabel, initialize_it, modify_ref_den ); 
   }
+
+
 
 
 // Execute ResponsiveBoundary Calculations Here:
@@ -780,7 +765,14 @@ Arches::scheduleInitialize(const LevelP& level,
 // End Execution of ResponsiveBoundary
 
 
+
   d_boundaryCondition->sched_initInletBC(sched, patches, matls);
+
+  if ( d_boundaryCondition->isUsingNewBC() ) { 
+    d_boundaryCondition->sched_computeBCArea__NEW( sched, level, patches, matls ); 
+    d_boundaryCondition->sched_setupBCInletVelocities__NEW( sched, patches, matls ); 
+    d_boundaryCondition->sched_setInitProfile__NEW( sched, patches, matls ); 
+  }
 
   sched_getCCVelocities(level, sched);
   // Compute Turb subscale model (output Varlabel have CTS appended to them)
@@ -841,9 +833,6 @@ Arches::scheduleInitialize(const LevelP& level,
     eqn->sched_checkBCs( level, sched ); 
   }
 
-  // compute the cell area fraction 
-  d_boundaryCondition->sched_setAreaFraction( sched, patches, matls ); 
-
 }
 
 void
@@ -864,6 +853,8 @@ Arches::sched_paramInit(const LevelP& level,
     Task* tsk = scinew Task( "Arches::paramInit",
                        this, &Arches::paramInit);
 
+    printSchedule(level,dbg,"Arches::paramInit");
+
     tsk->computes(d_lab->d_cellInfoLabel);
     tsk->computes(d_lab->d_uVelocitySPBCLabel);
     tsk->computes(d_lab->d_vVelocitySPBCLabel);
@@ -877,6 +868,8 @@ Arches::sched_paramInit(const LevelP& level,
     tsk->computes(d_lab->d_newCCWVelocityLabel);
     tsk->computes(d_lab->d_pressurePSLabel);
     tsk->computes(d_lab->d_areaFractionLabel); 
+    tsk->computes(d_lab->d_volFractionLabel); 
+
     if ((d_extraProjection)||(d_EKTCorrection)){
       tsk->computes(d_lab->d_pressureExtraProjectionLabel);
     }
@@ -940,17 +933,6 @@ Arches::sched_paramInit(const LevelP& level,
       tsk->computes(d_lab->d_wFmmsLabel);
     }
     
-    if (d_calcExtraScalars){
-      for (int i=0; i < static_cast<int>(d_extraScalars.size()); i++){
-        tsk->computes(d_extraScalars[i]->getScalarLabel());
-      }
-    }
-    if (d_carbon_balance_es){
-      tsk->computes(d_lab->d_co2RateLabel);
-    }
-    if (d_sulfur_balance_es){
-      tsk->computes(d_lab->d_so2RateLabel);                
-    }
     tsk->computes(d_lab->d_scalarBoundarySrcLabel);
     tsk->computes(d_lab->d_enthalpyBoundarySrcLabel);
     tsk->computes(d_lab->d_umomBoundarySrcLabel);
@@ -1011,22 +993,12 @@ Arches::paramInit(const ProcessorGroup* pg,
     CCVariable<double> pPlusHydro;
     CCVariable<double> mmgasVolFrac;
     CCVariable<Vector> areaFraction; 
+    CCVariable<double> volFraction; 
 
     new_dw->allocateAndPut( areaFraction, d_lab->d_areaFractionLabel, indx, patch ); 
-    areaFraction.initialize(Vector(1.,1.,1.)); 
-   
-    if (d_calcExtraScalars){
-      if (d_carbon_balance_es){ 
-        CCVariable<double> co2Rate;
-        new_dw->allocateAndPut(co2Rate, d_lab->d_co2RateLabel, indx, patch);
-        co2Rate.initialize(0.0);
-      }
-      if (d_sulfur_balance_es){ 
-        CCVariable<double> so2Rate;
-        new_dw->allocateAndPut(so2Rate, d_lab->d_so2RateLabel, indx, patch);
-        so2Rate.initialize(0.0);
-      }
-    }        
+    new_dw->allocateAndPut( volFraction, d_lab->d_volFractionLabel, indx, patch ); 
+    areaFraction.initialize(Vector(1.,1.,1.));         
+    volFraction.initialize(1.0);
 
     CCVariable<double> scalarBoundarySrc;
     CCVariable<double> enthalpyBoundarySrc;
@@ -1221,16 +1193,6 @@ Arches::paramInit(const ProcessorGroup* pg,
 
       }
     }
-
-    if (d_calcExtraScalars) {
-
-      for (int i=0; i < static_cast<int>(d_extraScalars.size()); i++) {
-        CCVariable<double> extra_scalar;
-        new_dw->allocateAndPut(extra_scalar,
-                               d_extraScalars[i]->getScalarLabel(), indx, patch);
-        extra_scalar.initialize(d_extraScalars[i]->getScalarInitValue());
-      }
-    }  
   } // patches
 }
 
@@ -1244,7 +1206,9 @@ Arches::scheduleComputeStableTimestep(const LevelP& level,
   // primitive variable initialization
   Task* tsk = scinew Task( "Arches::computeStableTimeStep",this, 
                            &Arches::computeStableTimeStep);
-  
+                           
+  printSchedule(level,dbg, "Arches::computeStableTimeStep");
+ 
   Ghost::GhostType  gac = Ghost::AroundCells;
   Ghost::GhostType  gaf = Ghost::AroundFaces;
   Ghost::GhostType  gn = Ghost::None;
@@ -1503,7 +1467,7 @@ Arches::scheduleTimeAdvance( const LevelP& level,
       }
       d_boundaryCondition->sched_setProfile(sched, patches, matls); 
       d_doingRestart = false;
-      d_recompile = true; //This will be set to false after the first timestep.
+      d_lab->recompile_taskgraph = true; 
     }
   }
 
@@ -1529,16 +1493,15 @@ Arches::scheduleTimeAdvance( const LevelP& level,
 bool Arches::needRecompile(double time, double dt, 
                             const GridP& grid) {
   bool temp; 
-  if ( d_recompile ) {
-   temp = d_recompile;
-   proc0cout << endl;
-   proc0cout << "NOTICE!:Recompile Taskgraph is set to true.  Taskgraph will be recompiled once first timestep but not after." << endl; 
-   proc0cout << endl;
-   d_recompile = false; 
-   return temp; 
+  if ( d_lab->recompile_taskgraph ) {
+    //Currently turning off recompile after. 
+    temp = d_lab->recompile_taskgraph;
+    proc0cout << "\n NOTICE: Recompiling task graph. \n \n";
+    d_lab->recompile_taskgraph = false; 
+    return temp; 
   }
   else 
-    return d_recompile;
+    return d_lab->recompile_taskgraph;
 }
 // ****************************************************************************
 // schedule reading of initial condition for velocity and pressure
@@ -1550,6 +1513,9 @@ Arches::sched_readCCInitialCondition(const LevelP& level,
     // primitive variable initialization
     Task* tsk = scinew Task( "Arches::readCCInitialCondition",
                             this, &Arches::readCCInitialCondition);
+
+    printSchedule(level,dbg,"Arches::readCCInitialCondition");
+                            
     tsk->modifies(d_lab->d_newCCUVelocityLabel);
     tsk->modifies(d_lab->d_newCCVVelocityLabel);
     tsk->modifies(d_lab->d_newCCWVelocityLabel);
@@ -1631,6 +1597,8 @@ Arches::sched_scalarInit( const LevelP& level,
 {
   Task* tsk = scinew Task( "Arches::scalarInit", 
                            this, &Arches::scalarInit); 
+                           
+  printSchedule(level,dbg,"Arches::scalarInit");
  
   EqnFactory& eqnFactory = EqnFactory::self(); 
   EqnFactory::EqnMap& scalar_eqns = eqnFactory.retrieve_all_eqns(); 
@@ -1660,6 +1628,8 @@ Arches::sched_scalarInit( const LevelP& level,
 
 
   }
+
+  tsk->requires( Task::NewDW, d_lab->d_volFractionLabel, Ghost::None ); 
 
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
 
@@ -1692,14 +1662,16 @@ Arches::scalarInit( const ProcessorGroup* ,
 
       CCVariable<double> phi; 
       CCVariable<double> oldPhi; 
+      constCCVariable<double> eps_v; 
       new_dw->allocateAndPut( phi, phiLabel, matlIndex, patch ); 
       new_dw->allocateAndPut( oldPhi, oldPhiLabel, matlIndex, patch ); 
+      new_dw->get( eps_v, d_lab->d_volFractionLabel, matlIndex, patch, Ghost::None, 0 ); 
     
       phi.initialize(0.0);
       oldPhi.initialize(0.0); 
 
       // initialize to something other than zero if desired. 
-      eqn->initializationFunction( patch, phi ); 
+      eqn->initializationFunction( patch, phi, eps_v ); 
 
       oldPhi.copyData(phi);
 
@@ -1744,6 +1716,9 @@ Arches::sched_weightInit( const LevelP& level,
 {
   Task* tsk = scinew Task( "Arches::weightInit", 
                            this, &Arches::weightInit); 
+                           
+  printSchedule(level,dbg,"Arches::weightInit");
+                           
   // DQMOM weight transport vars
   DQMOMEqnFactory& dqmomFactory = DQMOMEqnFactory::self(); 
   DQMOMEqnFactory::EqnMap& dqmom_eqns = dqmomFactory.retrieve_all_eqns(); 
@@ -1763,6 +1738,8 @@ Arches::sched_weightInit( const LevelP& level,
       tsk->computes( tempSource ); 
     }
   } 
+
+  tsk->requires( Task::NewDW, d_lab->d_volFractionLabel, Ghost::None ); 
 
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
 }
@@ -1793,6 +1770,9 @@ Arches::weightInit( const ProcessorGroup* ,
     const Patch* patch=patches->get(p);
 
     CCVariable<Vector> partVel; 
+    constCCVariable<double> eps_v; 
+
+    new_dw->get( eps_v, d_lab->d_volFractionLabel, matlIndex, patch, Ghost::None, 0 ); 
 
     DQMOMEqnFactory& dqmomFactory = DQMOMEqnFactory::self(); 
     DQMOMEqnFactory::EqnMap& dqmom_eqns = dqmomFactory.retrieve_all_eqns(); 
@@ -1828,7 +1808,7 @@ Arches::weightInit( const ProcessorGroup* ,
         phi_icv.initialize(0.0);
       
         // initialize phi
-        eqn->initializationFunction( patch, phi );
+        eqn->initializationFunction( patch, phi, eps_v );
 
         // do boundary conditions
         eqn->computeBCs( patch, eqn_name, phi );
@@ -1887,9 +1867,30 @@ Arches::sched_weightedAbsInit( const LevelP& level,
     tsk->computes( modelLabel );
     tsk->computes( gasmodelLabel );  
 
+    string modelType = model->getType();
+    if( modelType == "Devolatilization" ) {
+      Devolatilization* devolmodel = dynamic_cast<Devolatilization*>(model);
+      const VarLabel* charmodelLabel = devolmodel->getCharSourceLabel();
+      tsk->computes( charmodelLabel );
+    } else if( modelType == "CharOxidation" ) {
+      CharOxidation* charoxymodel = dynamic_cast<CharOxidation*>(model);
+      const VarLabel* particletempLabel = charoxymodel->getParticleTempSourceLabel();
+      tsk->computes( particletempLabel );
+      const VarLabel* surfacerateLabel = charoxymodel->getSurfaceRateLabel();
+      tsk->computes( surfacerateLabel );
+      const VarLabel* PO2surfLabel = charoxymodel->getPO2surfLabel();
+      tsk->computes( PO2surfLabel );
+    } else if( modelType == "HeatTransfer" ) {
+      HeatTransfer* heatmodel = dynamic_cast<HeatTransfer*>(model);
+      const VarLabel* abskpLabel = heatmodel->getabskpLabel();
+      tsk->computes( abskpLabel );
+    }
+
     model->sched_initVars( level, sched ); 
 
   }
+
+  tsk->requires( Task::NewDW, d_lab->d_volFractionLabel, Ghost::None ); 
 
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
 }
@@ -1920,8 +1921,11 @@ Arches::weightedAbsInit( const ProcessorGroup* ,
     const Patch* patch=patches->get(p);
 
     CCVariable<Vector> partVel;
+    constCCVariable<double> eps_v; 
 
     Ghost::GhostType  gn = Ghost::None;
+
+    new_dw->get( eps_v, d_lab->d_volFractionLabel, matlIndex, patch, gn, 0 ); 
 
     DQMOMEqnFactory& dqmomFactory = DQMOMEqnFactory::self(); 
     DQMOMEqnFactory::EqnMap& dqmom_eqns = dqmomFactory.retrieve_all_eqns(); 
@@ -1970,9 +1974,9 @@ Arches::weightedAbsInit( const ProcessorGroup* ,
       
         // initialize phi
         if( d_which_dqmom == "unweightedAbs" ){
-          eqn->initializationFunction( patch, phi);
+          eqn->initializationFunction( patch, phi, eps_v);
         } else {
-          eqn->initializationFunction( patch, phi, weight );
+          eqn->initializationFunction( patch, phi, weight, eps_v );
         }
 
         // do boundary conditions
@@ -2017,6 +2021,35 @@ Arches::weightedAbsInit( const ProcessorGroup* ,
       new_dw->allocateAndPut( gas_source, gasModelLabel, matlIndex, patch ); 
       gas_source.initialize(0.0); 
 
+      string modelType = model->getType();
+      if( modelType == "Devolatilization" ) {
+        Devolatilization* devolmodel = dynamic_cast<Devolatilization*>(model);
+        const VarLabel* charmodelLabel = devolmodel->getCharSourceLabel();
+        CCVariable<double> char_source;
+        new_dw->allocateAndPut( char_source, charmodelLabel, matlIndex, patch );
+        char_source.initialize(0.0);
+      } else if( modelType == "CharOxidation" ) {
+        CharOxidation* charoxymodel = dynamic_cast<CharOxidation*>(model);
+        const VarLabel* particletempLabel = charoxymodel->getParticleTempSourceLabel();
+        CCVariable<double> particle_temp_source;
+        new_dw->allocateAndPut( particle_temp_source, particletempLabel, matlIndex, patch );
+        particle_temp_source.initialize(0.0);
+        const VarLabel* surfacerateLabel = charoxymodel->getSurfaceRateLabel();
+        CCVariable<double> surface_rate;
+        new_dw->allocateAndPut( surface_rate, surfacerateLabel, matlIndex, patch );
+        surface_rate.initialize(0.0);
+        const VarLabel* PO2surfLabel = charoxymodel->getPO2surfLabel();
+        CCVariable<double> PO2surf;
+        new_dw->allocateAndPut( PO2surf, PO2surfLabel, matlIndex, patch );
+        PO2surf.initialize(0.0);
+      } else if( modelType == "HeatTransfer" ) {
+        HeatTransfer* heatmodel = dynamic_cast<HeatTransfer*>(model);
+        const VarLabel* abskpLabel = heatmodel->getabskpLabel();
+        CCVariable<double> abskp;
+        new_dw->allocateAndPut( abskp, abskpLabel, matlIndex, patch );
+        abskp.initialize(0.0);
+
+      }
     }
   }
   proc0cout << endl;
@@ -2032,18 +2065,15 @@ Arches::sched_mmsInitialCondition(const LevelP& level,
   // primitive variable initialization
   Task* tsk = scinew Task( "Arches::mmsInitialCondition",
                           this, &Arches::mmsInitialCondition);
+                          
+  printSchedule(level,dbg,"Arches::mmsInitialCondition");
+                          
   tsk->modifies(d_lab->d_uVelocitySPBCLabel);
   tsk->modifies(d_lab->d_vVelocitySPBCLabel);
   tsk->modifies(d_lab->d_wVelocitySPBCLabel);
   tsk->modifies(d_lab->d_pressurePSLabel);
   tsk->modifies(d_lab->d_scalarSPLabel);
   tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, Ghost::None);
-
-  if (d_calcExtraScalars){
-    for (int i=0; i < static_cast<int>(d_extraScalars.size()); i++){
-      tsk->modifies(d_extraScalars[i]->getScalarLabel());
-    }
-  }
 
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
 }
@@ -2088,15 +2118,6 @@ Arches::mmsInitialCondition(const ProcessorGroup* ,
       if (d_mms == "constantMMS") { 
         pressure[*iter] = d_cp;
         scalar[*iter]   = d_phi0;
-        if (d_calcExtraScalars) {
-      
-          for (int i=0; i < static_cast<int>(d_extraScalars.size()); i++) {
-           CCVariable<double> extra_scalar;
-           new_dw->allocateAndPut(extra_scalar,
-                                  d_extraScalars[i]->getScalarLabel(),indx, patch);
-           extra_scalar.initialize(d_esphi0);
-         }
-        }
       } else if (d_mms == "almgrenMMS") {         
         pressure[*iter] = -d_amp*d_amp/4 * (cos(4.0*pi*cellinfo->xx[currCell.x()])
                           + cos(4.0*pi*cellinfo->yy[currCell.y()]));
@@ -2162,6 +2183,9 @@ Arches::sched_interpInitialConditionToStaggeredGrid(const LevelP& level,
   // primitive variable initialization
   Task* tsk = scinew Task( "Arches::interpInitialConditionToStaggeredGrid",
                      this, &Arches::interpInitialConditionToStaggeredGrid);
+                     
+  printSchedule(level,dbg,"Arches::interpInitialConditionToStaggeredGrid");
+                       
   Ghost::GhostType  gac = Ghost::AroundCells;   
                       
   tsk->requires(Task::NewDW, d_lab->d_newCCUVelocityLabel, gac, 1);
@@ -2233,6 +2257,8 @@ Arches::sched_getCCVelocities(const LevelP& level, SchedulerP& sched)
 {
   Task* tsk = scinew Task("Arches::getCCVelocities", this, 
                           &Arches::getCCVelocities);
+                          
+  printSchedule(level,dbg,"Arches::getCCVelocities");
                           
   Ghost::GhostType  gaf = Ghost::AroundFaces;
   tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel, gaf, 1);
@@ -2432,6 +2458,11 @@ void Arches::registerUDSources(ProblemSpecP& db)
         // Sums up the devol. model terms * weights
         SourceTermBase::Builder* src_builder = scinew CoalGasDevol::Builder(src_name, required_varLabels, d_lab->d_sharedState);
         factory.register_source_term( src_name, src_builder ); 
+
+      } else if (src_type == "coal_gas_oxi"){
+        // Sums up the devol. model terms * weights
+        SourceTermBase::Builder* src_builder = scinew CoalGasOxi::Builder(src_name, required_varLabels, d_lab->d_sharedState);
+        factory.register_source_term( src_name, src_builder );
 
       } else if (src_type == "coal_gas_heat"){
         SourceTermBase::Builder* src_builder = scinew CoalGasHeat::Builder(src_name, required_varLabels, d_lab->d_sharedState);
@@ -2651,11 +2682,20 @@ void Arches::registerModels(ProblemSpecP& db)
           // Kobayashi Sarofim devolatilization model
           ModelBuilder* modelBuilder = scinew KobayashiSarofimDevolBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
           model_factory.register_model( temp_model_name, modelBuilder );
-	      //} else if ( model_type == "HeatTransfer" ) {
+        } else if ( model_type == "YamamotoDevol" ) {
+          ModelBuilder* modelBuilder = scinew YamamotoDevolBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
+          model_factory.register_model( temp_model_name, modelBuilder );
+              //} else if ( model_type == "HeatTransfer" ) {
         //  ModelBuilder* modelBuilder = scinew HeatTransferBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
         //  model_factory.register_model( temp_model_name, modelBuilder );
+        } else if ( model_type == "CharOxidationShaddix" ) {
+          ModelBuilder* modelBuilder = scinew CharOxidationShaddixBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
+          model_factory.register_model( temp_model_name, modelBuilder );
         } else if ( model_type == "SimpleHeatTransfer" ) {
           ModelBuilder* modelBuilder = scinew SimpleHeatTransferBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
+          model_factory.register_model( temp_model_name, modelBuilder );
+        } else if ( model_type == "ShaddixHeatTransfer" ) {
+          ModelBuilder* modelBuilder = scinew ShaddixHeatTransferBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
           model_factory.register_model( temp_model_name, modelBuilder );
         } else if ( model_type == "XDrag" ) {
           ModelBuilder* modelBuilder = scinew XDragModelBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
@@ -2765,6 +2805,13 @@ void Arches::registerPropertyModels(ProblemSpecP& db)
         PropertyModelBase::Builder* the_builder = new ScalarDiss::Builder( "scalar_dissipation_rate", d_sharedState ); 
         prop_factory.register_property_model( prop_name, the_builder ); 
 
+      } else if ( prop_type == "absorption_coefficient" ) {
+        // Coal particles absorption coefficient rate calculation 
+        if ( prop_name != "abskp" )
+          proc0cout << "Note:  " << prop_name  << " renamed to abskp. " << endl;
+        PropertyModelBase::Builder* the_builder = new ABSKP::Builder( "abskp", d_sharedState ); 
+        prop_factory.register_property_model( prop_name, the_builder );
+
       } else if ( prop_type == "extent_rxn" ) {
 
         // Scalar dissipation rate calculation 
@@ -2872,7 +2919,6 @@ void Arches::registerDQMOMEqns(ProblemSpecP& db)
     }
   }  
 }
-
 
  
 //*****************************************************************************//WME

@@ -5,6 +5,34 @@
 #include <CCA/Components/Arches/SourceTerms/SourceTermBase.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermFactory.h>
 
+/**
+ * @class  CoalGasHeat
+ * @author Jeremy Thornock, Julien Pedel, Charles Reid
+ * @date   Not sure
+ *
+ * @brief Assembles source term for the gas enthalpy equation from the 
+ * 				particle phase. 
+ *
+ * @todo
+ *
+ * @details
+ * This simply packages a gas source term into a form that is easily 
+ * accessed by the enthalpy equation.  The packaging is an assembly of
+ * the various model terms integrated over the ndf using the weights to 
+ * provide a total enthalpy source term. 
+ *
+ * Input file interface is as follows: 
+\code
+<Sources>
+	<src label="STRING OPTIONAL" type="coal_gas_heat">
+		<heat_model_name>STRING REQUIRED</heat_model_name>
+  </src>
+</Sources>
+\endcode
+	* where heat_model_name is the given name of the heat transfer model for the 
+	* particle model as specified in the CoalModel section. 
+*/
+
 namespace Uintah{ 
 
 class CoalGasHeat: public SourceTermBase {

@@ -1,7 +1,9 @@
 #ifndef TabPropsEvaluator_Expr_h
 #define TabPropsEvaluator_Expr_h
 
+#include <tabprops/TabPropsConfig.h>
 #include <tabprops/StateTable.h>
+#include <tabprops/BSpline.h>
 
 #include <expression/Expr_Expression.h>
 
@@ -83,7 +85,8 @@ TabPropsEvaluator<FieldT>::
 ~TabPropsEvaluator()
 {
   for( Evaluators::iterator ieval=evaluators_.begin(); ieval!=evaluators_.end(); ++ieval ){
-    delete *ieval;
+    //jcs this was causing a segfault:
+    //    delete *ieval;
   }
 }
 

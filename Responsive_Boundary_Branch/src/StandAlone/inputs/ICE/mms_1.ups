@@ -19,7 +19,7 @@
        <delt_max>           1.0         </delt_max>
        <delt_init>          1.0e-5      </delt_init>
        <timestep_multiplier>1.0         </timestep_multiplier>
-       <!--<max_Timesteps>     2        </max_Timesteps> -->
+       <max_Timesteps>     2        </max_Timesteps>
    </Time>
    
     <!--____________________________________________________________________-->
@@ -40,7 +40,7 @@
               <upper>        [6.28318530717959,6.28318530717959, 0.05]    </upper>
               <extraCells>   [0,0,1]              </extraCells>
               <patches>      [1,1,1]              </patches>
-              <resolution>   [50,50,1]          </resolution>
+              <resolution>   [50,50,2]          </resolution>
            </Box>
            <periodic>       [1,1,0]           </periodic>
        </Level>

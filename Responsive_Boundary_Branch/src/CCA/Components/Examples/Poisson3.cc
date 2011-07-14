@@ -46,7 +46,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/BoundaryConditions/BoundCond.h>
 #include <iomanip>
 
-
+using namespace std;
 using namespace Uintah;
 using namespace SCIRun;
 

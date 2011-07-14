@@ -40,7 +40,7 @@ PSELIBS := \
         Core/Exceptions          \
 	Core/Math
 
-LIBS := $(MPI_LIBRARY)
+LIBS := $(MPI_LIBRARY) $(BLAS_LIBRARY) $(THREAD_LIBRARY)
         
 
 include $(SCIRUN_SCRIPTS)/program.mk

@@ -34,7 +34,6 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Regridder/RegridderCommon.h>
 
 #include <set>
-using std::set;
 
 namespace Uintah {
 
@@ -82,7 +81,7 @@ class VarLabel;
     //! Create a new Grid
     virtual Grid* regrid(Grid* oldGrid);
 
-    virtual vector<IntVector> getMinPatchSize() {return d_patchSize;};
+    virtual std::vector<IntVector> getMinPatchSize() {return d_patchSize;};
 
   private:
     Grid* CreateGrid2(Grid* oldGrid);
@@ -99,7 +98,7 @@ class VarLabel;
     
     //! ratio to divide each patch (inner vector is for x,y,z ratio, 
     //! outer vector is a subsequent value per level)
-    vector<SCIRun::IntVector> d_latticeRefinementRatio;
+    std::vector<SCIRun::IntVector> d_latticeRefinementRatio;
 
     // these are structures derived from the code
     SizeList d_patchNum;
@@ -107,16 +106,16 @@ class VarLabel;
     SizeList d_maxPatchSize;
     SizeList d_patchesToCombine;
 
-    vector< CCVariable<int>* > d_patchActive;
-    vector< CCVariable<int>* > d_patchCreated;
-    vector< CCVariable<int>* > d_patchDeleted;
+    std::vector< CCVariable<int>* > d_patchActive;
+    std::vector< CCVariable<int>* > d_patchCreated;
+    std::vector< CCVariable<int>* > d_patchDeleted;
 
     // activePatches will not act as a normal variable.  It will only be as large as the number
     // patches a level can be divided into.
     const VarLabel* d_activePatchesLabel;
 
-    typedef set<IntVector> subpatchset;
-    vector<subpatchset> d_patches;    
+    typedef std::set<IntVector> subpatchset;
+    std::vector<subpatchset> d_patches;    
   };
 
 } // End namespace Uintah

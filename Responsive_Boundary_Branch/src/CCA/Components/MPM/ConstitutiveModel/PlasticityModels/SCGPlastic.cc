@@ -167,14 +167,14 @@ void SCGPlastic::outputProblemSpec(ProblemSpecP& ps)
 void 
 SCGPlastic::addInitialComputesAndRequires(Task* ,
                                           const MPMMaterial* ,
-                                          const PatchSet*) const
+                                          const PatchSet*)
 {
 }
 
 void 
 SCGPlastic::addComputesAndRequires(Task* ,
                                    const MPMMaterial* ,
-                                   const PatchSet*) const
+                                   const PatchSet*)
 {
 }
 
@@ -183,7 +183,7 @@ SCGPlastic::addComputesAndRequires(Task* task,
                                    const MPMMaterial* matl,
                                    const PatchSet*,
                                    bool ,
-                                   bool ) const
+                                   bool )
 {
 }
 
@@ -197,7 +197,7 @@ void
 SCGPlastic::allocateCMDataAddRequires(Task* ,
                                       const MPMMaterial* ,
                                       const PatchSet* ,
-                                      MPMLabel* ) const
+                                      MPMLabel* )
 {
 }
 

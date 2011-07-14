@@ -63,10 +63,6 @@ DEALINGS IN THE SOFTWARE.
 
 namespace Uintah {
 
-  using std::string;
-  using std::map;
-  using std::vector;
-
   using SCIRun::Vector;
   using SCIRun::Point;
   using SCIRun::IntVector;
@@ -229,12 +225,13 @@ WARNING
        */
       inline IntVector getExtraCellLowIndex(int ngc=0) const
       {
+        IntVector ec=getExtraCells();
         //if have a neighbor subtract the number of ghost cells from the index
         //otherwise subtract the number of extra cells from the index
         return d_lowIndex-IntVector(
-            getBCType(xminus)==Neighbor?ngc:d_extraCells[0],
-            getBCType(yminus)==Neighbor?ngc:d_extraCells[1],
-            getBCType(zminus)==Neighbor?ngc:d_extraCells[2]); 
+            getBCType(xminus)==Neighbor?ngc:ec[0],
+            getBCType(yminus)==Neighbor?ngc:ec[1],
+            getBCType(zminus)==Neighbor?ngc:ec[2]); 
       }
 
       /**
@@ -243,12 +240,13 @@ WARNING
        */
       inline IntVector getExtraCellHighIndex(int ngc=0) const
       {
+        IntVector ec=getExtraCells();
         //if have a neighbor add the number of ghost cells to the index
         //otherwise add the number of extra cells to the index
         return d_highIndex+IntVector(
-            getBCType(xplus)==Neighbor?ngc:d_extraCells[0],
-            getBCType(yplus)==Neighbor?ngc:d_extraCells[1],
-            getBCType(zplus)==Neighbor?ngc:d_extraCells[2]); 
+            getBCType(xplus)==Neighbor?ngc:ec[0],
+            getBCType(yplus)==Neighbor?ngc:ec[1],
+            getBCType(zplus)==Neighbor?ngc:ec[2]); 
       }
 
       /**
@@ -293,12 +291,13 @@ WARNING
        */
       inline IntVector getExtraNodeLowIndex(int ngn=0) const
       {
+        IntVector ec=getExtraCells();
         //if have a neighbor subtract the number of ghost nodes from the index
         //otherwise subtract the number of extra nodes from the index
         return d_lowIndex-IntVector(
-            getBCType(xminus)==Neighbor?ngn:d_extraCells[0],
-            getBCType(yminus)==Neighbor?ngn:d_extraCells[1],
-            getBCType(zminus)==Neighbor?ngn:d_extraCells[2]); 
+            getBCType(xminus)==Neighbor?ngn:ec[0],
+            getBCType(yminus)==Neighbor?ngn:ec[1],
+            getBCType(zminus)==Neighbor?ngn:ec[2]); 
       }
 
       /**
@@ -307,12 +306,13 @@ WARNING
        */
       inline IntVector getExtraNodeHighIndex(int ngn=0) const
       {
+        IntVector ec=getExtraCells();
         //if have a neighbor add the number of ghost nodes to the index
         //otherwise the number of extra nodes to the index and 1 for the plus face node
         return d_highIndex+IntVector(
-            getBCType(xplus)==Neighbor?ngn:d_extraCells[0]+1,
-            getBCType(yplus)==Neighbor?ngn:d_extraCells[1]+1,
-            getBCType(zplus)==Neighbor?ngn:d_extraCells[2]+1); 
+            getBCType(xplus)==Neighbor?ngn:ec[0]+1,
+            getBCType(yplus)==Neighbor?ngn:ec[1]+1,
+            getBCType(zplus)==Neighbor?ngn:ec[2]+1); 
 
       }
 
@@ -701,12 +701,13 @@ WARNING
        */
       inline IntVector getFortranExtraCellLowIndex(int ngc=0) const
       {
+        IntVector ec=getExtraCells();
         //if have a neighbor subtract the number of ghost cells from the index
         //otherwise subtract the number of extra cells from the index
         return d_lowIndex-IntVector(
-            getBCType(xminus)==Neighbor?ngc:d_extraCells[0],
-            getBCType(yminus)==Neighbor?ngc:d_extraCells[1],
-            getBCType(zminus)==Neighbor?ngc:d_extraCells[2]); 
+            getBCType(xminus)==Neighbor?ngc:ec[0],
+            getBCType(yminus)==Neighbor?ngc:ec[1],
+            getBCType(zminus)==Neighbor?ngc:ec[2]); 
       }
 
       /**
@@ -715,12 +716,13 @@ WARNING
        */
       inline IntVector getFortranExtraCellHighIndex(int ngc=0) const
       {
+        IntVector ec=getExtraCells();
         //if have a neighbor add the number of ghost cells to the index
         //otherwise add the number of extra cells to the index
         return d_highIndex-IntVector(1,1,1)+IntVector(
-            getBCType(xplus)==Neighbor?ngc:d_extraCells[0],
-            getBCType(yplus)==Neighbor?ngc:d_extraCells[1],
-            getBCType(zplus)==Neighbor?ngc:d_extraCells[2]); 
+            getBCType(xplus)==Neighbor?ngc:ec[0],
+            getBCType(yplus)==Neighbor?ngc:ec[1],
+            getBCType(zplus)==Neighbor?ngc:ec[2]); 
       }
 
       /**
@@ -765,12 +767,13 @@ WARNING
        */
       inline IntVector getFortranExtraNodeLowIndex(int ngn=0) const
       {
+        IntVector ec=getExtraCells();
         //if have a neighbor subtract the number of ghost nodes from the index
         //otherwise subtract the number of extra nodes from the index
         return d_lowIndex-IntVector(
-            getBCType(xminus)==Neighbor?ngn:d_extraCells[0],
-            getBCType(yminus)==Neighbor?ngn:d_extraCells[1],
-            getBCType(zminus)==Neighbor?ngn:d_extraCells[2]); 
+            getBCType(xminus)==Neighbor?ngn:ec[0],
+            getBCType(yminus)==Neighbor?ngn:ec[1],
+            getBCType(zminus)==Neighbor?ngn:ec[2]); 
       }
 
       /**
@@ -779,12 +782,13 @@ WARNING
        */
       inline IntVector getFortranExtraNodeHighIndex(int ngn=0) const
       {
+        IntVector ec=getExtraCells();
         //if have a neighbor add the number of ghost nodes to the index
         //otherwise the number of extra nodes to the index and 1 for the plus face node
         return d_highIndex-IntVector(1,1,1)+IntVector(
-            getBCType(xplus)==Neighbor?ngn:d_extraCells[0]+1,
-            getBCType(yplus)==Neighbor?ngn:d_extraCells[1]+1,
-            getBCType(zplus)==Neighbor?ngn:d_extraCells[2]+1); 
+            getBCType(xplus)==Neighbor?ngn:ec[0]+1,
+            getBCType(yplus)==Neighbor?ngn:ec[1]+1,
+            getBCType(zplus)==Neighbor?ngn:ec[2]+1); 
 
       }
 
@@ -988,19 +992,11 @@ WARNING
       }
 
       /**
-       * Sets the number of extra cells for the patch class.
-       */
-      static inline void setExtraCells(IntVector extraCells) 
-      {
-        d_extraCells=extraCells;
-      }
-
-      /**
        * Gets the number of extra cells for the patch class.
        */
-      static inline IntVector getExtraCells() 
+      inline IntVector getExtraCells() const 
       {
-        return d_extraCells;
+        return getLevel()->getExtraCells();
       }
 
       /** 
@@ -1013,7 +1009,7 @@ WARNING
       } 
 
       /**
-       * Returns the number of cells excluding extra cells
+       * Returns the number of cells excluding extra cells and ghost cells
        */
       inline int getNumCells() const
       {
@@ -1110,7 +1106,7 @@ WARNING
       /**
        * sets the vector faces equal to the list of faces that have neighbors
        */
-      inline void getNeighborFaces(vector<FaceType>& faces) const
+      inline void getNeighborFaces(std::vector<FaceType>& faces) const
       { 
         faces.clear();
 
@@ -1140,7 +1136,7 @@ WARNING
       /**
        * sets the vector faces equal to the list of faces that are on the boundary
        */
-      inline void getBoundaryFaces(vector<FaceType>& faces) const
+      inline void getBoundaryFaces(std::vector<FaceType>& faces) const
       { 
         faces.clear();
 
@@ -1174,7 +1170,7 @@ WARNING
        * a coarser level.  Thus the face does not have a neighbor on the same 
        * level and is not on the boundary.
        */
-      inline void getCoarseFaces(vector<FaceType>& faces) const
+      inline void getCoarseFaces(std::vector<FaceType>& faces) const
       { 
         faces.clear();
 
@@ -1204,7 +1200,7 @@ WARNING
       /**
        * sets the vector cells equal to the list of cells that are in the corners
        */
-      void getCornerCells(vector<IntVector> & cells, const FaceType &face) const;
+      void getCornerCells(std::vector<IntVector> & cells, const FaceType &face) const;
 
       /**
        * Returns the principal axis along a face and
@@ -1231,7 +1227,7 @@ WARNING
       /**
        * Returns a string equivalent of the face name (eg: "xminus")
        */
-      static string getFaceName(FaceType face);
+      static std::string getFaceName(FaceType face);
 
       /**
        * Sets a pointer to the new grid
@@ -1286,6 +1282,11 @@ WARNING
       inline const Level* getLevel() const 
       {
         return d_grid->getLevel(d_patchState.levelIndex).get_rep();
+      }
+
+      inline const LevelP& getLevelP() const 
+      {
+        return d_grid->getLevel(d_patchState.levelIndex);
       }
 
       /**
@@ -1566,6 +1567,18 @@ WARNING
       IntVector noNeighborsHigh() const;
       
       /**
+       * Returns an IntVector with 0 or 1 depending on
+       * if there are neighboring patches on the low faces.  
+       */
+      IntVector neighborsLow() const;
+      
+      /**
+       * Returns an IntVector with 0 or 1 depending on
+       * if there are neighboring patches on high low faces.  
+       */
+      IntVector neighborsHigh() const;
+      
+      /**
        * Returns the position of the node idx in domain coordinates.
        */
       Point nodePosition(const IntVector& idx) const;
@@ -1591,7 +1604,7 @@ WARNING
       /**
        * returns a string with patch information
        */
-      string toString() const;
+      std::string toString() const;
      
       /**
        * returns a unique patch id
@@ -1784,14 +1797,14 @@ WARNING
       const BCDataArray* getBCDataArray(Patch::FaceType face) const;
 
       const BoundCondBase* getArrayBCValues(FaceType face,int mat_id,
-                                            const string& type,
+                                            const std::string& type,
                                             Iterator& b_ptr,
                                             Iterator& e_ptr,
                                             int child) const ;
 
 
-      bool haveBC(FaceType face,int mat_id,const string& bc_type,
-          const string& bc_variable) const;
+      bool haveBC(FaceType face,int mat_id,const std::string& bc_type,
+          const std::string& bc_variable) const;
 
       void initializeBoundaryConditions();
 
@@ -1803,7 +1816,7 @@ WARNING
       * Use the following to iterate over the cells
       * that have no finer level overlapping cells.
       */
-     void  getFinestRegionsOnPatch(vector<Region>& difference) const;
+     void  getFinestRegionsOnPatch(std::vector<Region>& difference) const;
 
 
 
@@ -1939,11 +1952,6 @@ WARNING
       IntVector d_highIndex;
 
       /**
-       * The number of extra cells on the edge of the domain
-       */
-      static IntVector d_extraCells;
-
-      /**
        * The patch state.  This stores much of the internal state
        * of the patch in a compact datastructure.
        */
@@ -1986,7 +1994,7 @@ WARNING
       // used only by friend class Level
       inline void setLevelIndex( int idx ){ d_level_index = idx;}
       
-      vector<BCDataArray*>* d_arrayBCS;
+      std::vector<BCDataArray*>* d_arrayBCS;
 
       /********************
         The following are needed in order to use Patch as a Box in

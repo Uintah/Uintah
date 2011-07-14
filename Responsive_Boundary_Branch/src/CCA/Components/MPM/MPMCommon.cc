@@ -35,6 +35,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/Level.h>
 
+using namespace std;
 using namespace Uintah;
 
 MPMCommon::MPMCommon(const ProcessorGroup* myworld)
@@ -140,45 +141,4 @@ void MPMCommon::cohesiveZoneProblemSetup(const ProblemSpecP& prob_spec,
       sharedState->registerCZMaterial(mat);
     }
   }
-}
-
-void MPMCommon::printSchedule(const PatchSet* patches,
-                              DebugStream& dbg,
-                              const string& where)
-{
-  if (dbg.active()){
-    dbg << d_myworld->myrank() << " ";
-    dbg << left;
-    dbg.width(50);
-    dbg  << where << "L-"
-        << getLevel(patches)->getIndex()<< endl;
-  }  
-}
-
-void MPMCommon::printSchedule(const LevelP& level,
-                              DebugStream& dbg,
-                              const string& where)
-{
-  if (dbg.active()){
-    dbg << d_myworld->myrank() << " ";
-    dbg << left;
-    dbg.width(50);
-    dbg << where << "L-"
-        << level->getIndex()<< endl;
-  }  
-}
-
-void MPMCommon::printTask(const PatchSubset* patches,
-                          const Patch* patch,
-                          DebugStream& dbg,
-                          const string& where)
-{
-  if (dbg.active()){
-    dbg << d_myworld->myrank() << " ";
-    dbg << left;
-    dbg.width(50);
-    dbg << where << " MPM \tL-"
-        << getLevel(patches)->getIndex()
-        << " patch " << patch->getGridIndex()<< endl;
-  }  
 }

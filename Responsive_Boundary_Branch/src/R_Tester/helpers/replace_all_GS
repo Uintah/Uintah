@@ -34,13 +34,12 @@ set failedTestList = ""
 
 foreach X (*-short.log)
   set component = `echo $X | cut -f1 -d "-"`
-
-  set these = (`grep failed $X | cut -f3 -d "-" $X | uniq`)
+  set these = (`grep failed $X | cut -f2 -d\: | uniq`)
 
   foreach test ( $these[*]:q )
     set label = "$component--$test"
     set failedTestList = ($failedTestList $n "$label" off)
-    echo "$n-$component-$test" >> $tmpFile
+    echo "$n $component $test" >> $tmpFile
     @ n = $n + 1
   end
 end
@@ -84,14 +83,17 @@ end
 #__________________________________
 # Verify the user inputs
 set message = "\n "
-foreach indx ($choices[*]:q)  
-  set comp = `grep $indx $tmpFile | cut -f2 -d-`
-  set test = `grep $indx $tmpFile | cut -f3 -d-`
+foreach indx ($choices[*]:q) 
+
+  #parse the temp file for the component and test
+  set comp = `awk -v n=$indx -- '{if ($1 == n) print $2}' $tmpFile`
+  set test = `awk -v n=$indx -- '{if ($1 == n) print $3}' $tmpFile`
+  
   if ( $#opts > 0 )  then
-    echo Replacing GS for $comp $test
+    echo "Replacing GS for $comp $test"
     set message = ($message $comp "----" $test "\n")
   endif
-end                           
+end 
 
 dialog --stdout --yesno "Replace the following tests:\n $message \n Log message: $logMessage \n Replacing: $opts\n\n Is this correct?" 15 61
 
@@ -105,12 +107,21 @@ clear
 set GS = `readlink goldStandard`
 set TS = `readlink TestScripts`
 set here = `pwd`
+
 foreach indx ($choices[*]:q)  
-  set comp = `grep $indx $tmpFile | cut -f2 -d-`
-  set test = `grep $indx $tmpFile | cut -f3 -d-`
+
+  #parse the temp file for the component and test
+  set comp = `awk -v n=$indx -- '{if ($1 == n) print $2}' $tmpFile`
+  set test = `awk -v n=$indx -- '{if ($1 == n) print $3}' $tmpFile`
+  
   if ( $#opts > 0 )  then
-  echo $opts
+    echo "Replacing GS for $comp : $test  $opts"
     set cmd = "$TS/helpers/replace_gold_standard $opts $GS/$comp $here/$comp-results  $test $logMessage"
     $cmd
   endif
 end 
+
+
+# cleanup
+#/bin/rm $tmpFile
+

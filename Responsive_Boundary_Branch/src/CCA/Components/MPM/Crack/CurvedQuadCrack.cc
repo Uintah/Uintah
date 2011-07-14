@@ -33,6 +33,9 @@ DEALINGS IN THE SOFTWARE.
 
 using std::cout;
 using std::endl;
+using std::vector;
+using std::string;
+
 using namespace Uintah;
 
 CurvedQuadCrack::CurvedQuadCrack(ProblemSpecP& ps)

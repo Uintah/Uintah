@@ -66,7 +66,7 @@ DEALINGS IN THE SOFTWARE.
 
 #include <Core/Math/uintahshare.h>
 namespace Uintah {
-  using namespace std;
+
   class UINTAHSHARE FastMatrix {
   public:
     FastMatrix(int rows, int cols);
@@ -92,7 +92,7 @@ namespace Uintah {
     void destructiveSolve(SCIRun::Vector* b);
 
     void transpose(const FastMatrix& transpose);
-    void multiply(const vector<double>& b, vector<double>& X) const;
+    void multiply(const std::vector<double>& b, std::vector<double>& X) const;
     void multiply(const double* b, double* X) const;
     void multiply(const FastMatrix& a, const FastMatrix& b);
     void multiply(double s);

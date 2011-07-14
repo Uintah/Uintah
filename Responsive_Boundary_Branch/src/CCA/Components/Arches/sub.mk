@@ -34,51 +34,46 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR   := CCA/Components/Arches
 
-SRCS += $(SRCDIR)/Arches.cc \
-        $(SRCDIR)/ArchesLabel.cc \
-        $(SRCDIR)/ArchesMaterial.cc \
-        $(SRCDIR)/ArchesVariables.cc \
-        $(SRCDIR)/ArchesConstVariables.cc \
-        $(SRCDIR)/BoundaryCondition.cc \
-        $(SRCDIR)/ResponsiveBoundary.cc \
-        $(SRCDIR)/RBComponentProperties.cc \
-        $(SRCDIR)/RBMixerProperties.cc \
-        $(SRCDIR)/CellInformation.cc \
-        $(SRCDIR)/Discretization.cc \
-        $(SRCDIR)/EnthalpySolver.cc \
-        $(SRCDIR)/ExplicitSolver.cc \
-        $(SRCDIR)/LinearSolver.cc \
-        $(SRCDIR)/MomentumSolver.cc \
-        $(SRCDIR)/NonlinearSolver.cc \
-        $(SRCDIR)/PhysicalConstants.cc \
-        $(SRCDIR)/PicardNonlinearSolver.cc \
-        $(SRCDIR)/PressureSolver.cc \
-        $(SRCDIR)/Properties.cc \
-        $(SRCDIR)/ReactiveScalarSolver.cc \
-        $(SRCDIR)/RHSSolver.cc \
-        $(SRCDIR)/ScalarSolver.cc \
-        $(SRCDIR)/ExtraScalarSolver.cc \
-        $(SRCDIR)/ExtraScalarSrc.cc \
-        $(SRCDIR)/ExtraScalarSrcFactory.cc \
-        $(SRCDIR)/ZeroExtraScalarSrc.cc \
-        $(SRCDIR)/CO2RateSrc.cc \
-        $(SRCDIR)/SO2RateSrc.cc \
-        $(SRCDIR)/SmagorinskyModel.cc \
-        $(SRCDIR)/ScaleSimilarityModel.cc \
-        $(SRCDIR)/IncDynamicProcedure.cc \
-        $(SRCDIR)/CompDynamicProcedure.cc \
+SRCS += $(SRCDIR)/Arches.cc                    \
+        $(SRCDIR)/ArchesConstVariables.cc      \
+        $(SRCDIR)/ArchesLabel.cc               \
+        $(SRCDIR)/ArchesMaterial.cc            \
+        $(SRCDIR)/ArchesVariables.cc           \
+        $(SRCDIR)/BoundaryCondition.cc         \
+        $(SRCDIR)/BoundaryCond_new.cc          \
+        $(SRCDIR)/CellInformation.cc           \
+        $(SRCDIR)/CompDynamicProcedure.cc      \
         $(SRCDIR)/CompLocalDynamicProcedure.cc \
-        $(SRCDIR)/OdtClosure.cc \
-        $(SRCDIR)/OdtData.cc \
-        $(SRCDIR)/Source.cc \
-        $(SRCDIR)/TurbulenceModel.cc \
-	$(SRCDIR)/DQMOM.cc \
-	$(SRCDIR)/LU.cc \
-	$(SRCDIR)/BoundaryCond_new.cc \
-	$(SRCDIR)/ExplicitTimeInt.cc 
+        $(SRCDIR)/Discretization.cc            \
+        $(SRCDIR)/DQMOM.cc                     \
+        $(SRCDIR)/EnthalpySolver.cc            \
+        $(SRCDIR)/ExplicitSolver.cc            \
+        $(SRCDIR)/ExplicitTimeInt.cc           \
+        $(SRCDIR)/IncDynamicProcedure.cc       \
+        $(SRCDIR)/LinearSolver.cc              \
+        $(SRCDIR)/LU.cc                        \
+        $(SRCDIR)/MomentumSolver.cc            \
+        $(SRCDIR)/NonlinearSolver.cc           \
+        $(SRCDIR)/OdtClosure.cc                \
+        $(SRCDIR)/OdtData.cc                   \
+        $(SRCDIR)/PhysicalConstants.cc         \
+        $(SRCDIR)/PicardNonlinearSolver.cc     \
+        $(SRCDIR)/PressureSolver.cc            \
+        $(SRCDIR)/Properties.cc                \
+        $(SRCDIR)/RHSSolver.cc                 \
+        $(SRCDIR)/ResponsiveBoundary.cc        \
+        $(SRCDIR)/RBComponentProperties.cc     \
+        $(SRCDIR)/RBMixerProperties.cc         \
+        $(SRCDIR)/ScalarSolver.cc              \
+        $(SRCDIR)/ScaleSimilarityModel.cc      \
+        $(SRCDIR)/SmagorinskyModel.cc          \
+        $(SRCDIR)/Source.cc                    \
+        $(SRCDIR)/TurbulenceModel.cc           
 
 ifeq ($(HAVE_PETSC),yes)
-  SRCS += $(SRCDIR)/PetscSolver.cc $(SRCDIR)/Filter.cc
+  SRCS += $(SRCDIR)/PetscCommon.cc \
+          $(SRCDIR)/PetscSolver.cc \
+          $(SRCDIR)/Filter.cc      
 else
   SRCS += $(SRCDIR)/FakePetscSolver.cc
 endif
@@ -87,37 +82,25 @@ ifeq ($(HAVE_HYPRE),yes)
   SRCS += $(SRCDIR)/HypreSolver.cc
 endif
 
-SUBDIRS := $(SRCDIR)/CoalModels $(SRCDIR)/SourceTerms $(SRCDIR)/TransportEqns $(SRCDIR)/PropertyModels
-
-ifeq ($(HAVE_TABPROPS),yes)
-  SUBDIRS += $(SRCDIR)/ChemMix
-endif
-
-include $(SCIRUN_SCRIPTS)/recurse.mk
-
 PSELIBS := \
-        Core/ProblemSpec   \
-        Core/GeometryPiece \
-        Core/Grid          \
-        Core/Datatypes     \
-        Core/Math          \
-        Core/Util          \
-        Core/Disclosure    \
-        Core/Exceptions    \
         CCA/Components/Arches/fortran   \
         CCA/Components/Arches/Mixing    \
-        CCA/Components/Arches/MCRT/ArchesRMCRT  \
-        CCA/Components/Arches/Radiation \
+        CCA/Components/Models           \
         CCA/Components/OnTheFlyAnalysis \
-        CCA/Ports     \
-        Core/Parallel \
-        Core/Util       \
-        Core/Thread     \
-        Core/Exceptions \
-        Core/Geometry   \
-        Core/Containers \
-	\
-	Core/Math
+        CCA/Ports          \
+        Core/Containers    \
+        Core/Datatypes     \
+        Core/Disclosure    \
+        Core/Exceptions    \
+        Core/Geometry      \
+        Core/GeometryPiece \
+        Core/IO            \
+        Core/Grid          \
+        Core/Math          \
+        Core/Parallel      \
+        Core/ProblemSpec   \
+        Core/Thread        \
+        Core/Util
 
 ifneq ($(HAVE_PETSC),)
   LIBS := $(LIBS) $(PETSC_LIBRARY) 
@@ -128,11 +111,34 @@ ifneq ($(HAVE_HYPRE),)
 endif
 
 LIBS := $(LIBS) $(XML2_LIBRARY) $(F_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) \
-        $(LAPACK_LIBRARY) $(BLAS_LIBRARY) $(THREAD_LIBRARY) $(TABPROPS_LIBRARY) $(HDF5_LIBRARY)
+        $(LAPACK_LIBRARY) $(BLAS_LIBRARY) $(THREAD_LIBRARY) $(TABPROPS_LIBRARY) \
+        $(BOOST_LIBRARY)
+
+INCLUDES := $(INCLUDES) $(BOOST_INCLUDE) $(TABPROPS_INCLUDE)
+
+#### Handle subdirs (These files are just 'included' into the build of libCCA_Components_Arches.so)
+SUBDIRS := $(SRCDIR)/CoalModels        \
+           $(SRCDIR)/PropertyModels    \
+           $(SRCDIR)/Radiation         \
+           $(SRCDIR)/Radiation/fortran \
+           $(SRCDIR)/SourceTerms       \
+           $(SRCDIR)/TransportEqns  \
+                                         $(SRCDIR)/ChemMix
+
+include $(SCIRUN_SCRIPTS)/recurse.mk
+#### End handle subdirs
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
-INCLUDES := $(INCLUDES) $(HDF5_INCLUDE) $(TABPROPS_INCLUDE)
+#### Handle subdirs that are their OWN SHARED LIBRARIES
+# I don't know of any reason that these are actually made into separate libraries...
+# perhaps just for historical reasons.  It would be just as easy to fold them into
+# libArches if there ever was a reason to...
+SUBDIRS := $(SRCDIR)/fortran           \
+           $(SRCDIR)/Mixing            
+
+include $(SCIRUN_SCRIPTS)/recurse.mk
+#### End handle subdirs
 
 $(SRCDIR)/BoundaryCondition.$(OBJEXT): $(SRCDIR)/fortran/areain_fort.h
 $(SRCDIR)/BoundaryCondition.$(OBJEXT): $(SRCDIR)/fortran/inlpresbcinout_fort.h
