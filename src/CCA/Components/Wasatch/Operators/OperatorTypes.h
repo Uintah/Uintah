@@ -2,6 +2,8 @@
 #define Wasatch_OperatorTypes_h
 
 #include "../FieldTypes.h"
+#include "UpwindInterpolant.h"
+#include "FluxLimiterInterpolant.h"
 
 #include <spatialops/structured/FVStaggered.h>
 
@@ -9,69 +11,62 @@
  *  \file OperatorTypes.h
  */
 
-namespace Wasatch{
 
-  typedef SpatialOps::Divergence  Divergence;
-  typedef SpatialOps::Gradient    Gradient;
-  typedef SpatialOps::Interpolant Interpolant;
+using SpatialOps::Divergence;
+using SpatialOps::Gradient;
+using SpatialOps::Interpolant;
+
+using SpatialOps::structured::OperatorTypeBuilder;
+
+namespace Wasatch{
 
   /**
    *  \ingroup WasatchOperators
    *  \ingroup WasatchCore
-   *  \struct OperatorTypeBuilder
-   *  \brief Convenience definition for a SpatialOperator
+   *  \struct OpTypes
+   *  \brief provides typedefs for various operators related to the given cell type
    *
-   *  Supplies a typedef defining \c type, which defines the operator.
+   *  Note: this extends the BasicOpTypes definitions in SpatialOps.
+   *  The full set of available operator types provided is:
    *
-   *  This should not generally be used by programmers.  Rather, it is
-   *  used internally here to define various operators.
+   *    - \b GradX - x-gradient of cell-centered quantities produced at cell x-faces
+   *    - \b GradY - y-gradient of cell-centered quantities produced at cell y-faces
+   *    - \b GradZ - z-gradient of cell-centered quantities produced at cell z-faces
+   *
+   *    - \b DivX - x-divergence of cell-centered quantities produced at cell x-faces
+   *    - \b DivY - y-divergence of cell-centered quantities produced at cell y-faces
+   *    - \b DivZ - z-divergence of cell-centered quantities produced at cell z-faces
+   *
+   *    - \b InterpC2FX - Interpolate cell-centered quantities to x-faces
+   *    - \b InterpC2FY - Interpolate cell-centered quantities to y-faces
+   *    - \b InterpC2FZ - Interpolate cell-centered quantities to z-faces
+   *
+   *    - \b InterpF2CX - Interpolate x-face quantities to cell-centered
+   *    - \b InterpF2CY - Interpolate y-face quantities to cell-centered
+   *    - \b InterpF2CZ - Interpolate z-face quantities to cell-centered
+   *
+   *    - \b InterpC2FXUpwind - upwind or limited interpolants in x-dir
+   *    - \b InterpC2FYUpwind - upwind or limited interpolants in y-dir
+   *    - \b InterpC2FZUpwind - upwind or limited interpolants in z-dir
+   *
+   *  Example:
+   *  \code
+   *    typedef OpTypes< SVolField >  VolOps;
+   *    typedef VolOps::GradX         GradX;
+   *    typedef VolOps::DivX          DivX;
+   *  \endcode
    */
-  template<typename Op, typename SrcT, typename DestT>
-  struct OperatorTypeBuilder{
-    typedef SpatialOps::SpatialOperator< LinAlg, Op, SrcT, DestT >  type;
-  };
-
   template< typename CellT > struct OpTypes
+    : public SpatialOps::structured::BasicOpTypes<CellT>
   {
-    typedef typename OperatorTypeBuilder< Gradient,
-                                          CellT,
-                                          typename FaceTypes<CellT>::XFace >::type  GradX;
-    typedef typename OperatorTypeBuilder< Gradient,
-                                          CellT,
-                                          typename FaceTypes<CellT>::YFace >::type 	GradY;
-    typedef typename OperatorTypeBuilder< Gradient,
-                                          CellT,
-                                          typename FaceTypes<CellT>::ZFace >::type 	GradZ;
-
-    typedef typename OperatorTypeBuilder< Divergence,
-                                          typename FaceTypes<CellT>::XFace,
-                                          CellT >::type					DivX;
-    typedef typename OperatorTypeBuilder< Divergence,
-                                          typename FaceTypes<CellT>::YFace,
-                                          CellT >::type 				DivY;
-    typedef typename OperatorTypeBuilder< Divergence,
-                                          typename FaceTypes<CellT>::ZFace,
-                                          CellT >::type 				DivZ;
-
-    typedef typename OperatorTypeBuilder< Interpolant,
-                                          CellT,
-                                          typename FaceTypes<CellT>::XFace >::type 	InterpC2FX;
-    typedef typename OperatorTypeBuilder< Interpolant,
-                                          CellT,
-                                          typename FaceTypes<CellT>::YFace >::type 	InterpC2FY;
-    typedef typename OperatorTypeBuilder< Interpolant,
-                                          CellT,
-                                          typename FaceTypes<CellT>::ZFace >::type 	InterpC2FZ;
-
-    typedef typename OperatorTypeBuilder< Interpolant,
-                                          typename FaceTypes<CellT>::XFace,
-                                          CellT >::type 				InterpF2CX;
-    typedef typename OperatorTypeBuilder< Interpolant,
-                                          typename FaceTypes<CellT>::YFace,
-                                          CellT >::type 				InterpF2CY;
-    typedef typename OperatorTypeBuilder< Interpolant,
-                                          typename FaceTypes<CellT>::ZFace,
-                                          CellT >::type 				InterpF2CZ;
+    typedef UpwindInterpolant< CellT, typename FaceTypes<CellT>::XFace >    InterpC2FXUpwind;
+    typedef UpwindInterpolant< CellT, typename FaceTypes<CellT>::YFace >    InterpC2FYUpwind;
+    typedef UpwindInterpolant< CellT, typename FaceTypes<CellT>::ZFace >    InterpC2FZUpwind;
+        
+    typedef FluxLimiterInterpolant< CellT, typename FaceTypes<CellT>::XFace >  InterpC2FXLimiter;
+    typedef FluxLimiterInterpolant< CellT, typename FaceTypes<CellT>::YFace >  InterpC2FYLimiter;
+    typedef FluxLimiterInterpolant< CellT, typename FaceTypes<CellT>::ZFace >  InterpC2FZLimiter;
+    
   };
 }
 

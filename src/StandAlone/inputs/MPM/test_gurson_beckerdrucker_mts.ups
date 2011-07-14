@@ -40,6 +40,7 @@
     <save label = "p.plasticStrain"/>
     <save label = "p.plasticTemp"/>
     <save label = "p.temperature"/>
+    <save label = "p.particleID"/>
     <save label = "p.localized"/>
     <save label = "p.plasticTempInc"/>
     <save label = "p.damage"/>

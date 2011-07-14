@@ -1,6 +1,5 @@
 <start>
 <upsFile>advectPS.ups</upsFile>
-<Study>Res.Study</Study>
 
 <gnuplot>
   <script>plotScript.gp</script>s
@@ -27,7 +26,6 @@
 <Test>
     <Title>100</Title>
     <sus_cmd>sus </sus_cmd>
-    <Study>Res.Study</Study>
     <postProcess_cmd>compare_scalar -v</postProcess_cmd>
     <x>100</x>
     <replace_lines>
@@ -39,7 +37,6 @@
 <Test>
     <Title>200</Title>
     <sus_cmd>sus </sus_cmd>
-    <Study>Res.Study</Study>
     <postProcess_cmd>compare_scalar -v</postProcess_cmd>
     <x>200</x>
     <replace_lines>
@@ -51,7 +48,6 @@
 <Test>
     <Title>400</Title>
     <sus_cmd>sus </sus_cmd>
-    <Study>Res.Study</Study>
     <postProcess_cmd>compare_scalar -v</postProcess_cmd>
     <x>400</x>
     <replace_lines>
@@ -62,7 +58,6 @@
 <Test>
     <Title>800</Title>
     <sus_cmd>sus </sus_cmd>
-    <Study>Res.Study</Study>
     <postProcess_cmd>compare_scalar -v</postProcess_cmd>
     <x>800</x>
     <replace_lines>
@@ -73,7 +68,6 @@
 <Test>
     <Title>1600</Title>
     <sus_cmd>sus </sus_cmd>
-    <Study>Res.Study</Study>
     <postProcess_cmd>compare_scalar -v</postProcess_cmd>
     <x>1600</x>
     <replace_lines>

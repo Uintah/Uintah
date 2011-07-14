@@ -37,6 +37,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/SimulationState.h>
 
+using namespace std;
 using namespace Uintah;
 
 PatchCombiner::PatchCombiner(const ProcessorGroup* world, string udaDir)

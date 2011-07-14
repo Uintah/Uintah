@@ -9,7 +9,7 @@ using namespace Uintah;
 
 ModelBase::ModelBase( std::string modelName, 
                       SimulationStateP& sharedState,
-                      const ArchesLabel* fieldLabels,
+                      ArchesLabel* fieldLabels,
                       vector<std::string> reqICLabelNames, 
                       vector<std::string> reqScalarLabelNames,
                       int qn ) : 
@@ -54,6 +54,7 @@ However, the implementation (as opposed to the schedule) requires knowledge of t
  variable type, so the dummyInit() method must be defined explicitly in the 
  particular model classes - not here.
  */
+/*
 void
 ModelBase::sched_dummyInit( const LevelP& level, SchedulerP& sched )
 {
@@ -72,4 +73,4 @@ ModelBase::sched_dummyInit( const LevelP& level, SchedulerP& sched )
   sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
 
 }
-
+*/

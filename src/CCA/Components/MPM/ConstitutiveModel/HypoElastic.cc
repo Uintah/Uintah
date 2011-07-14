@@ -50,7 +50,7 @@ DEALINGS IN THE SOFTWARE.
 #include <fstream>
 #include <iostream>
 
-using std::cerr;
+using namespace std;
 using namespace Uintah;
 
 HypoElastic::HypoElastic(ProblemSpecP& ps,MPMFlags* Mflag)

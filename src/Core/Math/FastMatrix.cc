@@ -73,6 +73,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Util/FancyAssert.h>
 #include <iostream>
 
+using std::vector;
 using namespace Uintah;
 using namespace SCIRun;
 
@@ -260,7 +261,7 @@ void FastMatrix::copy(const FastMatrix& a)
   }
 }
 
-void FastMatrix::print(ostream& out)
+void FastMatrix::print(std::ostream& out)
 {
   for(int i=0;i<rows;i++){
     out << i << ":";

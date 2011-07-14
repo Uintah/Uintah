@@ -44,6 +44,7 @@ DEALINGS IN THE SOFTWARE.
 #include <iostream>
 #include <sci_values.h>
 
+using namespace std;
 using namespace Uintah;
 using namespace SCIRun;
 
@@ -412,8 +413,6 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
         IntVector ec;
         box_ps->getWithDefault("extraCells", ec, IntVector(0,0,0));
         extraCells = Max(ec, extraCells);
-
-        Patch::setExtraCells(extraCells);
         
         // bulletproofing
         if(have_levelspacing || have_patchspacing){
@@ -896,7 +895,7 @@ namespace Uintah
           << " has " << level->numPatches() << " patch(es)" << endl;
       for ( Level::patchIterator patchIter = level->patchesBegin(); patchIter < level->patchesEnd(); patchIter++ ) {
         const Patch* patch = *patchIter;
-        out << *patch << endl;
+        out <<"    "<< *patch << endl;
       }
     }
     return out;

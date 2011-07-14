@@ -1,9 +1,7 @@
 /*
-
   The MIT License
 
-  Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
-  Explosions (CSAFE), and  Institute for Clean and Secure Energy (ICSE), 
+  Copyright (c) 2010 Institute for Clean and Secure Energy (ICSE), 
   University of Utah.
 
   License for the specific language governing rights and limitations under
@@ -24,7 +22,6 @@
   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
   DEALINGS IN THE SOFTWARE.
-
 */
 
 
@@ -111,6 +108,7 @@
 #include <Core/Parallel/UintahParallelComponent.h>
 #include <CCA/Ports/SimulationInterface.h>
 #include <Core/Grid/SimulationStateP.h>
+#include <CCA/Ports/SolverInterface.h>
 
 //-- Wasatch includes --//
 #include "PatchInfo.h"
@@ -220,11 +218,14 @@ namespace Wasatch{
     CoordHelper *icCoordHelper_;
 
     TimeStepper* timeStepper_;  ///< The TimeStepper used to advance equations registered here.
+    
+    Uintah::SolverInterface* linSolver_;
 
     typedef std::vector<EqnTimestepAdaptorBase*> EquationAdaptors;
     EquationAdaptors adaptors_;
 
-    std::list< TaskInterface*  > taskInterfaceList_;
+    std::list< const TaskInterface*  > taskInterfaceList_;
+    std::list< const Uintah::PatchSet* > patchSetList_;
 
     Wasatch( const Wasatch& ); // disallow copying
     Wasatch& operator=( const Wasatch& ); // disallow assignment
@@ -240,6 +241,11 @@ namespace Wasatch{
                       const Uintah::MaterialSubset* matls,
                       Uintah::DataWarehouse* old_dw,
                       Uintah::DataWarehouse* new_dw );
+
+    /** \brief obtain the set of patches to operate on */
+    const Uintah::PatchSet* get_patchset( const Uintah::LevelP& level,
+                                          Uintah::SchedulerP& sched );
+
   };
 
 } // namespace Wasatch

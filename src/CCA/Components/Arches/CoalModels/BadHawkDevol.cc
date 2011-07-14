@@ -22,7 +22,7 @@ using namespace Uintah;
 BadHawkDevolBuilder::BadHawkDevolBuilder( const std::string         & modelName,
                                                   const vector<std::string> & reqICLabelNames,
                                                   const vector<std::string> & reqScalarLabelNames,
-                                                  const ArchesLabel         * fieldLabels,
+                                                  ArchesLabel         * fieldLabels,
                                                   SimulationStateP          & sharedState,
                                                   int qn ) :
   ModelBuilder( modelName, fieldLabels, reqICLabelNames, reqScalarLabelNames, sharedState, qn )
@@ -39,7 +39,7 @@ ModelBase* BadHawkDevolBuilder::build() {
 
 BadHawkDevol::BadHawkDevol( std::string modelName, 
                                     SimulationStateP& sharedState,
-                                    const ArchesLabel* fieldLabels,
+                                    ArchesLabel* fieldLabels,
                                     vector<std::string> icLabelNames, 
                                     vector<std::string> scalarLabelNames,
                                     int qn ) 
@@ -476,7 +476,7 @@ BadHawkDevol::computeModel( const ProcessorGroup * pc,
           if(d_unweighted){
             particle_temperature = temperature[c]*d_pt_scaling_factor;
           } else {
-	    particle_temperature = temperature[c]*d_pt_scaling_factor/weight[c];  
+            particle_temperature = temperature[c]*d_pt_scaling_factor/weight[c];  
           }   
           k1 = A1*exp(E1/(R*particle_temperature)); // 1/s
           k2 = A2*exp(E2/(R*particle_temperature)); // 1/s     

@@ -132,7 +132,7 @@ ModelFactory::makeModels( const ProblemSpecP& restart_prob_spec,
     else if(type == "DDT1")
       d_models.push_back(scinew DDT1(d_myworld, model_ps, prob_spec));
     else if(type == "Radiation")
-#  if !defined( NO_RADIATION )
+#  if !defined( NO_FORTRAN )
       d_models.push_back(scinew RadiationDriver(d_myworld, model_ps));
 #  else
       throw ProblemSetupException("Radiation not supported in this build", __FILE__, __LINE__);

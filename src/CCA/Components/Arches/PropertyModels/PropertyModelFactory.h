@@ -53,6 +53,9 @@ public:
    */
   PropertyModelBase& retrieve_property_model( const std::string name );
 
+  /** @brief Determine if a property is contained in the factory. */
+  bool find_property_model( const std::string name );
+
   typedef std::map< std::string, PropertyModelBase::Builder* > BuildMap;
   typedef std::map< std::string, PropertyModelBase*    > PropMap;
 

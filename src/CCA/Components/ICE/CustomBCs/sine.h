@@ -137,9 +137,9 @@ namespace Uintah {
   
   //__________________________________
   //  set one or zero flags
-  double x_one_zero = abs(one_or_zero.x());
-  double y_one_zero = abs(one_or_zero.y());
-  double z_one_zero = abs(one_or_zero.z());
+  double x_one_zero = fabs(one_or_zero.x());
+  double y_one_zero = fabs(one_or_zero.y());
+  double z_one_zero = fabs(one_or_zero.z());
 
   //__________________________________
   //                            

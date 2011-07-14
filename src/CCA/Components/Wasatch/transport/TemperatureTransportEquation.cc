@@ -18,7 +18,7 @@ namespace Wasatch{
 
   TemperatureTransportEquation::
   TemperatureTransportEquation( Expr::ExpressionFactory& solnExprFactory )
-    : Expr::TransportEquation( StringNames::self().temperature,
+    : Wasatch::TransportEquation( StringNames::self().temperature,
                                get_rhs_id( solnExprFactory ) )
   {
     // register all relevant solver expressions
@@ -63,11 +63,14 @@ namespace Wasatch{
 
   //------------------------------------------------------------------
 
-  void
+  void 
   TemperatureTransportEquation::
-  setup_boundary_conditions( Expr::ExpressionFactory& exprFactory )
+  setup_boundary_conditions( const GraphHelper& graphHelper,
+                                 const Uintah::PatchSet* const localPatches,
+                                 const PatchInfoMap& patchInfoMap,
+                                 const Uintah::MaterialSubset* const materials)
   {}
-
+  
   //------------------------------------------------------------------
 
   Expr::ExpressionID

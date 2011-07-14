@@ -50,6 +50,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Util/DebugStream.h>
 #include <Core/Containers/StaticArray.h>
 
+using namespace std;
 using namespace Uintah;
 
 

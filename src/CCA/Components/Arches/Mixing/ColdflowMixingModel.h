@@ -69,7 +69,6 @@ POSSIBLE REVISIONS
 #include <string>
 
 namespace Uintah {
-class ExtraScalarSolver; 
 class ColdflowMixingModel: public MixingModel {
 
 public:
@@ -139,14 +138,6 @@ public:
         return 0.0;
       }
 
-      inline void setCalcExtraScalars(bool calcExtraScalars) {
-        d_calcExtraScalars=calcExtraScalars;
-      }
-
-      inline void setExtraScalars(std::vector<ExtraScalarSolver*>* extraScalars) {
-        d_extraScalars = extraScalars;
-      }
-
 protected :
 
 private:
@@ -173,9 +164,6 @@ private:
       bool d_calcReactingScalar, d_calcEnthalpy, d_calcVariance;
       int d_numMixingVars;
       std::vector<Stream> d_streams; 
-      bool d_calcExtraScalars;
-      std::vector<ExtraScalarSolver*>* d_extraScalars;
-
 
 }; // end class ColdflowMixingModel
 

@@ -35,7 +35,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Parallel/ProcessorGroup.h>
 
 #include <vector>
-using namespace std;
+
 
 namespace Uintah {
 
@@ -74,45 +74,45 @@ WARNING
   class PatchFixer {
   public:
     PatchFixer(const ProcessorGroup* pg) : d_myworld(pg) 
-		{
-		};
+    {
+    };
     ~PatchFixer() {};
-		void FixUp(vector<Region> &patches);	
-	private:
-		const ProcessorGroup *d_myworld;
-		vector<int> lattice_;                   //lattice of ints
-		vector<int> cellstolattice_[3];         //map from cells to lattice
-		vector<int> latticetocells_[3];         //map from lattice to cells
-		Region bounds_;                    //bounds of the patches
-		IntVector csize_,lsize_;		            // size of the cells and lattice
+    void FixUp(std::vector<Region> &patches);	
+  private:
+    const ProcessorGroup *d_myworld;
+    std::vector<int> lattice_;                   //lattice of ints
+    std::vector<int> cellstolattice_[3];         //map from cells to lattice
+    std::vector<int> latticetocells_[3];         //map from lattice to cells
+    Region bounds_;                    //bounds of the patches
+    IntVector csize_,lsize_;		            // size of the cells and lattice
 		
-		void FixFace(vector<Region> &patches,Region patch, int dim, int side);
-		void SplitPatch(int index, vector<Region> &patches, const Split &split);
-		void BuildLattice(const vector<Region> &patches);
-		void Fill(const Region patch,const int id);
-		inline int CellToLattice(int c, int d)
-		{
-		  return cellstolattice_[d][c-bounds_.getLow()[d]];
-		};
-		inline void CellToLattice( int* c)
-		{
-		  for(int d=0;d<3;d++)
-			{
-			 	c[d]=CellToLattice(c[d],d);
-			}
-		};
-		inline int LatticeToCell(int l, int d)
-		{
-			return latticetocells_[d][l];
-		};
-		inline void LatticeToCell( int* l)
-		{
-			for(int d=0;d<3;d++)
-			{
-				l[d]=LatticeToCell(l[d],d);
-			}
-		};
-	
+    void FixFace(std::vector<Region> &patches,Region patch, int dim, int side);
+    void SplitPatch(int index, std::vector<Region> &patches, const Split &split);
+    void BuildLattice(const std::vector<Region> &patches);
+    void Fill(const Region patch,const int id);
+    inline int CellToLattice(int c, int d)
+    {
+      return cellstolattice_[d][c-bounds_.getLow()[d]];
+    };
+    inline void CellToLattice( int* c)
+    {
+      for(int d=0;d<3;d++)
+        {
+          c[d]=CellToLattice(c[d],d);
+        }
+    };
+    inline int LatticeToCell(int l, int d)
+    {
+      return latticetocells_[d][l];
+    };
+    inline void LatticeToCell( int* l)
+    {
+      for(int d=0;d<3;d++)
+        {
+          l[d]=LatticeToCell(l[d],d);
+        }
+    };
+    
   };
 
 } // End namespace Uintah

@@ -350,8 +350,9 @@ void MPMPetscSolver::createMatrix(const ProcessorGroup* d_myworld,
 
   PetscTruth exists;
 #if ((PETSC_VERSION_MAJOR == 3) && (PETSC_VERSION_MINOR == 1))
-  PetscCookie cookie;
-  PetscObjectGetCookie((PetscObject)d_A,&cookie);
+  PetscCookie cookie = 0;
+  if (d_A)
+    PetscObjectGetCookie((PetscObject)d_A,&cookie);
   if (cookie)
     exists = PETSC_TRUE;
   else
@@ -482,8 +483,10 @@ void MPMPetscSolver::destroyMatrix(bool recursion)
   } else {
     PetscTruth exists;
 #if ((PETSC_VERSION_MAJOR == 3) && (PETSC_VERSION_MINOR == 1))
-  PetscCookie cookie;
-  PetscObjectGetCookie((PetscObject)d_A,&cookie);
+  PetscCookie cookie = 0;
+  if (d_A) 
+    PetscObjectGetCookie((PetscObject)d_A,&cookie);
+     
   if (cookie)
     exists = PETSC_TRUE;
   else

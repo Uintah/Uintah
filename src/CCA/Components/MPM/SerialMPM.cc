@@ -753,7 +753,7 @@ void SerialMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   t->computes(lb->gTemperatureNoBCLabel);
   t->computes(lb->gTemperatureRateLabel);
   t->computes(lb->gExternalHeatRateLabel);
-  t->computes(lb->gNumNearParticlesLabel);
+  //t->computes(lb->gNumNearParticlesLabel);
 
   if(flags->d_with_ice){
     t->computes(lb->gVelocityBCLabel);
@@ -2091,7 +2091,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       NCVariable<double> gSp_vol;
       NCVariable<double> gTemperatureNoBC;
       NCVariable<double> gTemperatureRate;
-      NCVariable<double> gnumnearparticles;
+      //NCVariable<double> gnumnearparticles;
 
       new_dw->allocateAndPut(gmass,            lb->gMassLabel,       dwi,patch);
       new_dw->allocateAndPut(gSp_vol,          lb->gSp_volLabel,     dwi,patch);
@@ -2106,8 +2106,8 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
                              dwi,patch);
       new_dw->allocateAndPut(gexternalheatrate,lb->gExternalHeatRateLabel,
                              dwi,patch);
-      new_dw->allocateAndPut(gnumnearparticles,lb->gNumNearParticlesLabel,
-                             dwi,patch);
+      //new_dw->allocateAndPut(gnumnearparticles,lb->gNumNearParticlesLabel,
+      //                       dwi,patch);
 
       gmass.initialize(d_SMALL_NUM_MPM);
       gvolume.initialize(d_SMALL_NUM_MPM);
@@ -2117,8 +2117,8 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       gTemperatureNoBC.initialize(0);
       gTemperatureRate.initialize(0);
       gexternalheatrate.initialize(0);
-      gnumnearparticles.initialize(0.);
       gSp_vol.initialize(0.);
+      //gnumnearparticles.initialize(0.);
 
       // Interpolate particle data to Grid data.
       // This currently consists of the particle velocity and mass
@@ -2153,7 +2153,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
             gexternalforce[node] += pexternalforce[idx]            * S[k];
             gTemperature[node]   += pTemperature[idx] * pmass[idx] * S[k];
             gSp_vol[node]        += pSp_vol           * pmass[idx] * S[k];
-            gnumnearparticles[node] += 1.0;
+            //gnumnearparticles[node] += 1.0;
             //  gexternalheatrate[node] += pexternalheatrate[idx]      * S[k];
           }
         }
@@ -2723,9 +2723,9 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
         }
       } // faces
       
-      string interp_type = flags->d_interpolator_type;
-      MPMBoundCond bc;
-      bc.setBoundaryCondition(patch,dwi,"Symmetric",internalforce,interp_type);
+    string interp_type = flags->d_interpolator_type;
+    MPMBoundCond bc;
+    bc.setBoundaryCondition(patch,dwi,"Symmetric",internalforce,interp_type);
     }
 
     for(NodeIterator iter = patch->getNodeIterator();!iter.done();iter++){
@@ -3658,7 +3658,9 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 //             << " volnew = " << pvolume[idx] << endl;
         }
         if(pvelocitynew[idx].length() > flags->d_max_vel){
-          pvelocitynew[idx]=pvelocity[idx];
+          if(pvelocitynew[idx].length() >= pvelocity[idx].length()){
+            pvelocitynew[idx]=pvelocity[idx];
+          }
         }
       }
 

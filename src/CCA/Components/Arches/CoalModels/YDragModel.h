@@ -37,7 +37,7 @@ public:
   YDragModelBuilder( const std::string          & modelName, 
                         const vector<std::string>  & reqICLabelNames,
                         const vector<std::string>  & reqScalarLabelNames,
-                        const ArchesLabel          * fieldLabels,
+                        ArchesLabel          * fieldLabels,
                         SimulationStateP           & sharedState,
                         int qn );
   ~YDragModelBuilder(); 
@@ -55,7 +55,7 @@ public:
 
   YDragModel( std::string modelName, 
                  SimulationStateP& shared_state, 
-                 const ArchesLabel* fieldLabels,
+                 ArchesLabel* fieldLabels,
                  vector<std::string> reqICLabelNames, 
                  vector<std::string> reqScalarLabelNames,
                  int qn );
@@ -77,6 +77,8 @@ public:
                  const MaterialSubset * matls, 
                  DataWarehouse        * old_dw, 
                  DataWarehouse        * new_dw );
+
+  void sched_dummyInit( const LevelP& level, SchedulerP& sched );
 
   /** @brief  Actually do dummy solve (sched_dummyInit is defined in ModelBase parent class) */
   void dummyInit( const ProcessorGroup* pc, 

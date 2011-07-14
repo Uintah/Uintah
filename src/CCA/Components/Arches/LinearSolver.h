@@ -33,7 +33,7 @@ DEALINGS IN THE SOFTWARE.
 #define Uintah_Components_Arches_LinearSolver_h
 
 #include <Core/Grid/Patch.h>
-
+#include <Core/Grid/Variables/CCVariable.h>
 namespace Uintah {
 
 class ProcessorGroup;
@@ -108,11 +108,15 @@ public:
   virtual void matrixCreate(const PatchSet* allpatches,
                             const PatchSubset* mypatches) = 0;
                             
-  virtual void setPressMatrix(const ProcessorGroup* pc, 
-                              const Patch* patch,
-                              ArchesVariables* vars,
-                              ArchesConstVariables* constvars,
-                              const ArchesLabel* lab) = 0;
+  virtual void setMatrix(const ProcessorGroup* pc, 
+                         const Patch* patch,
+                         constCCVariable<Stencil7>& coeff) = 0;
+
+  virtual void setRHS_X(const ProcessorGroup* pc, 
+                        const Patch* patch,
+                        CCVariable<double>& guess,
+                        constCCVariable<double>& rhs,
+                        bool construct_A ) = 0;
 
 
   virtual bool pressLinearSolve() = 0;

@@ -111,6 +111,7 @@ SchedulerCommon::SchedulerCommon(const ProcessorGroup* myworld, Output* oport)
 
   m_locallyComputedPatchVarMap = scinew LocallyComputedPatchVarMap;
   reloc_new_posLabel_ = 0;
+  maxGhost=0;
 }
 
 SchedulerCommon::~SchedulerCommon()
@@ -661,6 +662,8 @@ SchedulerCommon::addTask(Task* task, const PatchSet* patches,
   graphs[graphs.size()-1]->addTask(task, patches, matls);
   numTasks_++;
 
+  if (task->maxGhostCells > maxGhost) maxGhost = task->maxGhostCells;
+
   // add to init-requires.  These are the vars which require from the OldDW that we'll
   // need for checkpointing, switching, and the like.
   // In the case of treatAsOld Vars, we handle them because something external to the taskgraph
@@ -670,20 +673,6 @@ SchedulerCommon::addTask(Task* task, const PatchSet* patches,
       d_initRequires.push_back(dep);
       d_initRequiredVars.insert(dep->var);
     }
-    if (dep->var->typeDescription()->getType() == TypeDescription::ParticleVariable && dep->numGhostCells != 0) {
-      if (numParticleGhostCells_ == 0) {
-        numParticleGhostCells_ = dep->numGhostCells;
-        particleGhostType_ = dep->gtype;
-      }
-      else if (numParticleGhostCells_ != dep->numGhostCells) {
-        ostringstream ostr;
-        ostr << "Invalid Particle Variable require: not consistent with previous particle requires:\n"
-             << "Previous: Ghost::" << Ghost::getGhostTypeName(particleGhostType_) << " with numGhostCells " << numParticleGhostCells_
-             << " Invalid: Ghost::" << Ghost::getGhostTypeName(dep->gtype) << " with numGhostCells " << dep->numGhostCells << endl;
-        throw InternalError(ostr.str(), __FILE__, __LINE__);
-      }
-    }
-    
   }
 
   // for the treat-as-old vars, go through the computes and add them.
@@ -890,7 +879,7 @@ SchedulerCommon::logMemoryUse()
 {
   if(!memlogfile){
     ostringstream fname;
-    fname << "uintah_memuse.log.p" << setw(5) << setfill('0') << d_myworld->myrank();
+    fname << "uintah_memuse.log.p" << setw(5) << setfill('0') << d_myworld->myrank() << "." << d_myworld->size();
     memlogfile = scinew ofstream(fname.str().c_str());
     if(!*memlogfile){
       cerr << "Error opening file: " << fname.str() << '\n';
@@ -906,7 +895,8 @@ SchedulerCommon::logMemoryUse()
       name=const_cast<char*>("NewDW");
     else
       name=const_cast<char*>("IntermediateDW");
-    dws[i]->logMemoryUse(*memlogfile, total, name);
+    if (dws[i])
+    	dws[i]->logMemoryUse(*memlogfile, total, name);
   }
   
   for (unsigned i = 0; i < graphs.size(); i++) {
@@ -1406,7 +1396,7 @@ SchedulerCommon::copyDataToNewGrid(const ProcessorGroup*, const PatchSubset* pat
             // for particles anyhow (but we will have to reset the bounds to copy the data)
             oldsub = oldDataWarehouse->getParticleSubset(matl, newPatch->getLowIndexWithDomainLayer(Patch::CellBased),
                                                          newPatch->getHighIndexWithDomainLayer(Patch::CellBased), 
-                                                         oldLevel.get_rep(), newPatch, reloc_new_posLabel_);
+                                                         newPatch, reloc_new_posLabel_, oldLevel.get_rep());
             oldsubsets[matl] = oldsub;
             oldsub->addReference();
           }
@@ -1527,3 +1517,60 @@ void SchedulerCommon::overrideVariableBehavior(string var, bool treatAsOld,
   }
 }
 
+//______________________________________________________________________
+// output the task name and the level it's executing on.
+// and each of the patches
+void
+SchedulerCommon::printTask( ostream& out, DetailedTask* task )
+{
+  out << left;
+  out.width(70);
+  out << task->getTask()->getName();
+  if(task->getPatches()){
+
+    out << " \t on patches ";
+    const PatchSubset* patches = task->getPatches();
+    for(int p=0;p<patches->size();p++){
+      if(p != 0)
+	out << ", ";
+      out << patches->get(p)->getID();
+    }
+    
+    if (task->getTask()->getType() != Task::OncePerProc) {
+      const Level* level = getLevel(patches);
+      out << "\t  L-"<< level->getIndex();
+    }
+  }
+}
+
+
+//______________________________________________________________________
+//  Output the task name and the level it's executing on
+//  only first patch of that level
+void 
+SchedulerCommon::printTaskLevels( const ProcessorGroup* d_myworld, 
+                                  DebugStream & out, 
+                                  DetailedTask* task )
+{
+  if(out.active() ){
+    if(task->getPatches()){
+
+      if (task->getTask()->getType() != Task::OncePerProc) {
+      
+        const PatchSubset* taskPatches = task->getPatches();
+        
+        const Level* level = getLevel(taskPatches);
+        const Patch* firstPatch = level->getPatch(0);
+        
+        if(taskPatches->contains(firstPatch)){
+        
+          out << d_myworld->myrank() << "   ";
+          out << left;
+          out.width(70);
+          out << task->getTask()->getName();
+          out << " \t  Patch " << firstPatch->getGridIndex() << "\t L-"<< level->getIndex() << "\n";
+        }
+      }
+    }
+  }  //debugstream active
+} 

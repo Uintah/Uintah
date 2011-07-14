@@ -29,25 +29,28 @@
 
 //-- Uintah framework includes --//
 #include <CCA/Ports/Scheduler.h>
+#include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/Variables/VarTypes.h>
-#include <Core/Grid/Variables/VarLabel.h>
+
 #include <Core/Grid/SimpleMaterial.h>
 #include <Core/Grid/Task.h>
+#include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Exceptions/ProblemSetupException.h>
-
+#include <Core/Grid/Patch.h>
+#include <Core/Grid/BoundaryConditions/BCDataArray.h>
+#include <Core/Grid/BoundaryConditions/BoundCond.h>
 
 //-- SpatialOps includes --//
-#include <spatialops/OperatorDatabase.h>
-
+#include <spatialops/structured/FVStaggered.h>
+#include <spatialops/structured/FVStaggeredBCTools.h>
 
 //-- ExprLib includes --//
 #include <expression/ExprLib.h>
-
 
 //-- Wasatch includes --//
 #include "Wasatch.h"
@@ -61,6 +64,11 @@
 #include "Expressions/BasicExprBuilder.h"
 #include "Expressions/SetCurrentTime.h"
 #include "transport/ParseEquation.h"
+#include "transport/TransportEquation.h"
+#include "BCHelperTools.h"
+
+using std::endl;
+using std::cout;
 
 namespace Wasatch{
 
@@ -69,7 +77,12 @@ namespace Wasatch{
   Wasatch::Wasatch( const Uintah::ProcessorGroup* myworld )
     : Uintah::UintahParallelComponent( myworld )
   {
-    const bool log = true;
+    // disable memory windowing on variables.  This will ensure that
+    // each variable is allocated its own memory on each patch,
+    // precluding memory blocks being defined across multiple patches.
+    Uintah::OnDemandDataWarehouse::d_combineMemory = false;
+
+    const bool log = false;
     graphCategories_[ INITIALIZATION     ] = scinew GraphHelper( scinew Expr::ExpressionFactory(log) );
     graphCategories_[ TIMESTEP_SELECTION ] = scinew GraphHelper( scinew Expr::ExpressionFactory(log) );
     graphCategories_[ ADVANCE_SOLUTION   ] = scinew GraphHelper( scinew Expr::ExpressionFactory(log) );
@@ -89,7 +102,11 @@ namespace Wasatch{
       delete *i;
     }
 
-    for( std::list<TaskInterface*>::iterator i=taskInterfaceList_.begin(); i!=taskInterfaceList_.end(); ++i ){
+    for( std::list<const TaskInterface*>::iterator i=taskInterfaceList_.begin(); i!=taskInterfaceList_.end(); ++i ){
+      delete *i;
+    }
+
+    for( std::list<const Uintah::PatchSet*>::iterator i=patchSetList_.begin(); i!=patchSetList_.end(); ++i ){
       delete *i;
     }
 
@@ -100,7 +117,6 @@ namespace Wasatch{
       delete igc->second->exprFactory;
       delete igc->second;
     }
-
   }
 
   //--------------------------------------------------------------------
@@ -112,6 +128,41 @@ namespace Wasatch{
   {
     sharedState_ = sharedState;
 
+    // disallow specification of extraCells
+    {
+      std::ostringstream msg;
+      bool foundExtraCells = false;
+      Uintah::ProblemSpecP grid = params->findBlock("Grid");
+      for( Uintah::ProblemSpecP level = grid->findBlock("Level");
+           level != 0;
+           level = grid->findNextBlock("Level") ){
+        for( Uintah::ProblemSpecP box = level->findBlock("Box");
+             box != 0;
+             box = level->findNextBlock("Box") ){
+          // note that a [0,0,0] specification gets added by default,
+          // so we will check to ensure that something other than
+          // [0,0,0] has not been specified.
+          if( box->findBlock("extraCells") ){
+            Uintah::IntVector extraCells;
+            box->get("extraCells",extraCells);
+            if( extraCells != Uintah::IntVector(0,0,0) ){
+              foundExtraCells = true;
+              std::string boxLabel;
+              box->get("label",boxLabel);
+              msg << "box '" << boxLabel << "' has extraCells specified." << endl;
+            }
+          }
+        }
+      }
+      if( foundExtraCells ){
+        msg << endl
+            << "  Specification of 'extraCells' is forbidden in Wasatch." << endl
+            << "  Please remove it from your input file" << endl
+            << endl;
+        throw std::runtime_error( msg.str() );
+      }
+    }
+
     Uintah::ProblemSpecP wasatchParams = params->findBlock("Wasatch");
 
     //
@@ -120,6 +171,14 @@ namespace Wasatch{
     Uintah::SimpleMaterial* mymaterial = scinew Uintah::SimpleMaterial();  
     sharedState->registerSimpleMaterial(mymaterial);
 
+    // we are able to get the solver port from here
+    linSolver_ = dynamic_cast<Uintah::SolverInterface*>(getPort("solver"));
+    if(!linSolver_) {
+      throw Uintah::InternalError("Wasatch: couldn't get solver port", __FILE__, __LINE__);
+    } else if (linSolver_) {
+      proc0cout << "Detected solver port... \n";
+    }
+    
     //
     // create expressions explicitly defined in the input file.  These
     // are typically associated with, e.g. initial conditions.
@@ -137,6 +196,50 @@ namespace Wasatch{
          transEqnParams=transEqnParams->findNextBlock("TransportEquation") ){
       adaptors_.push_back( parse_equation( transEqnParams, graphCategories_ ) );
     }
+    
+    //
+    // Build coupled transport equations scalability test for wasatch.
+    //
+    for( Uintah::ProblemSpecP scalEqnParams=wasatchParams->findBlock("ScalabilityTest");
+        scalEqnParams != 0;
+        scalEqnParams=scalEqnParams->findNextBlock("ScalabilityTest") ) {
+      try{
+        // note - parse_scalability_test returns a vector of equation adaptors
+        EquationAdaptors scalEqnAdaptors = parse_scalability_test( scalEqnParams, graphCategories_ );
+        adaptors_.insert( adaptors_.end(), scalEqnAdaptors.begin(), scalEqnAdaptors.end() );
+      }
+      catch( std::runtime_error& err ){
+        std::ostringstream msg;
+        msg << endl
+        << "Problems setting up scalability test equations.  Details follow:" << endl
+        << err.what() << endl;
+        throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+      }
+      
+    }    
+
+    //
+    // Build momentum transport equations.  This registers all expressions 
+    // required for solution of each momentum equation.
+    //
+    for( Uintah::ProblemSpecP momEqnParams=wasatchParams->findBlock("MomentumEquations");
+        momEqnParams != 0;
+        momEqnParams=momEqnParams->findNextBlock("MomentumEquations") ){
+      // note - parse_momentum_equations returns a vector of equation adaptors
+      try{
+        EquationAdaptors momentumAdaptors = parse_momentum_equations( momEqnParams, graphCategories_, *linSolver_);
+        adaptors_.insert( adaptors_.end(), momentumAdaptors.begin(), momentumAdaptors.end() );
+      }
+      catch( std::runtime_error& err ){
+        std::ostringstream msg;
+        msg << endl
+            << "Problems setting up momentum transport equations.  Details follow:" << endl
+            << err.what() << endl;
+        throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+      }
+    }
+    
+    
 
     timeStepper_ = scinew TimeStepper( sharedState_->get_delt_label(),
                                        *graphCategories_[ ADVANCE_SOLUTION ]->exprFactory );
@@ -155,54 +258,55 @@ namespace Wasatch{
     //
     // Also save off the timestep label information.
     //
-    const Uintah::PatchSet* localPatches = sched->getLoadBalancer()->getPerProcessorPatchSet(level);
+    const Uintah::PatchSet* const localPatches = get_patchset( level, sched );
+    const Uintah::MaterialSet* const materials = sharedState_->allMaterials();
 
-    for( int ip=0; ip<localPatches->size(); ++ip ){
-
-      const Uintah::PatchSubset* const patches = localPatches->getSubset(ip);
-
-      for( int ipss=0; ipss<patches->size(); ++ipss ){
-
-        SpatialOps::OperatorDatabase* const opdb = scinew SpatialOps::OperatorDatabase();
-        const Uintah::Patch* const patch = patches->get(ipss);
-        build_operators( *patch, *opdb );
-        PatchInfo& pi = patchInfoMap_[patch->getID()];
-        pi.operators   = opdb;
-        pi.patchID = patch->getID();
+    for( int ipss=0; ipss<localPatches->size(); ++ipss ){
+        const Uintah::PatchSubset* pss = localPatches->getSubset(ipss);
+        for( int ip=0; ip<pss->size(); ++ip ){
+          SpatialOps::OperatorDatabase* const opdb = scinew SpatialOps::OperatorDatabase();
+          const Uintah::Patch* const patch = pss->get(ip);
+          build_operators( *patch, *opdb );
+          PatchInfo& pi = patchInfoMap_[patch->getID()];
+          pi.operators = opdb;
+          pi.patchID = patch->getID();
+        }
       }
-    }
 
     GraphHelper* const icGraphHelper = graphCategories_[ INITIALIZATION ];
 
+    Expr::ExpressionFactory& exprFactory = *icGraphHelper->exprFactory;
+
+    //_______________________________________
+    // set the time
+    exprFactory.register_expression( Expr::Tag(StringNames::self().time,Expr::STATE_NONE),
+                                     scinew SetCurrentTime::Builder(sharedState_) );
+    
     //_____________________________________________
     // Build the initial condition expression graph
     if( !icGraphHelper->rootIDs.empty() ){
 
-      Expr::ExpressionTree* const graph = scinew Expr::ExpressionTree( *icGraphHelper->exprFactory, -1, "initialization" );
-
-      for( IDSet::const_iterator iid=icGraphHelper->rootIDs.begin(); iid!=icGraphHelper->rootIDs.end(); ++iid ){
-        graph->insert_tree( *iid );
-      }
+      TaskInterface* const task = scinew TaskInterface( icGraphHelper->rootIDs,
+                                                        "initialization",
+                                                        *icGraphHelper->exprFactory,
+                                                        sched,
+                                                        localPatches,
+                                                        materials,
+                                                        patchInfoMap_,
+                                                        true );
 
       // set coordinate values as required by the IC graph.
-      icCoordHelper_->create_task( sched, localPatches, sharedState_->allMaterials() );
+      icCoordHelper_->create_task( sched, localPatches, materials );
 
       //_______________________________________________________
       // create the TaskInterface and schedule this task for
       // execution.  Note that field dependencies are assigned
       // within the TaskInterface object.
-      TaskInterface* const task = scinew TaskInterface( graph, patchInfoMap_ );
-      task->schedule( sched, localPatches, sharedState_->allMaterials(), icCoordHelper_->field_tags() );
+      task->schedule( icCoordHelper_->field_tags() );
       taskInterfaceList_.push_back( task );
-
-      //________________
-      // jcs diagnostics
-      std::cout << "writing tree file to 'initialization.dot'" << std::endl;
-      std::ofstream fout("initialization.dot");
-      graph->write_tree(fout);
     }
-
-    std::cout << "Wasatch: done creating initialization task(s)" << std::endl;
+    if( d_myworld->myrank() == 0 )
+      proc0cout << "Wasatch: done creating initialization task(s)" << std::endl;
   }
 
   //--------------------------------------------------------------------
@@ -213,35 +317,32 @@ namespace Wasatch{
     GraphHelper* const tsGraphHelper = graphCategories_[ TIMESTEP_SELECTION ];
 
     // jcs: was getting patch set this way (from discussions with Justin).
-    // sched->getLoadBalancer()->getPerProcessorPatchSet(level),
-    const Uintah::PatchSet* patches = level->eachPatch();
+    const Uintah::PatchSet* const localPatches = get_patchset(level,sched);
+
     const Uintah::MaterialSet* materials = sharedState_->allMaterials();
 
     if( tsGraphHelper->rootIDs.size() > 0 ){
-
-      Expr::ExpressionTree* const graph = scinew Expr::ExpressionTree( *tsGraphHelper->exprFactory, -1, "initialization" );
-
-      for( IDSet::const_iterator iid=tsGraphHelper->rootIDs.begin(); iid!=tsGraphHelper->rootIDs.end(); ++iid ){
-        graph->insert_tree( *iid );
-      }
 
       //_______________________________________________________
       // create the TaskInterface and schedule this task for
       // execution.  Note that field dependencies are assigned
       // within the TaskInterface object.
-      TaskInterface* const task = scinew TaskInterface( graph, patchInfoMap_ );
-      task->schedule( sched, patches, materials );
+      TaskInterface* const task = scinew TaskInterface( tsGraphHelper->rootIDs,
+                                                        "compute timestep",
+                                                        *tsGraphHelper->exprFactory,
+                                                        sched,
+                                                        localPatches,
+                                                        materials,
+                                                        patchInfoMap_,
+                                                        true );
+      task->schedule();
       taskInterfaceList_.push_back( task );
-
-      //________________
-      // jcs diagnostics
-      std::cout << "writing tree file to 'deltat.dot'" << std::endl;
-      std::ofstream fout("detat.dot");
-      graph->write_tree(fout);
     }
     else{ // default
 
-      cout << "Task 'compute timestep' COMPUTES 'delT' in NEW data warehouse" << endl;
+      if( d_myworld->myrank() == 0 )
+        cout << "Task 'compute timestep' COMPUTES 'delT' in NEW data warehouse" << endl;
+
       Uintah::Task* task = scinew Uintah::Task( "compute timestep", this, &Wasatch::computeDelT );
 
       // jcs it appears that for reduction variables we cannot specify the patches - only the materials.
@@ -250,11 +351,11 @@ namespace Wasatch{
       //              materials->getUnion() );
       // jcs why can't we specify a metrial here?  It doesn't seem to be working if I do.
 
-      sched->addTask( task, level->eachPatch(), sharedState_->allMaterials() );
-
+      sched->addTask( task, localPatches, sharedState_->allMaterials() );
     }
 
-    std::cout << "Wasatch: done creating timestep task(s)" << std::endl;
+    if( d_myworld->myrank() == 0 )
+      proc0cout << "Wasatch: done creating timestep task(s)" << std::endl;
   }
 
   //--------------------------------------------------------------------
@@ -263,11 +364,15 @@ namespace Wasatch{
   Wasatch::scheduleTimeAdvance( const Uintah::LevelP& level,
                                 Uintah::SchedulerP& sched )
   {
-    create_timestepper_on_patches( sched->getLoadBalancer()->getPerProcessorPatchSet(level),
-                                   sharedState_->allMaterials(),
-                                   sched );
+    // jcs why do we need this instead of getting the level?
+    const Uintah::PatchSet* const localPatches = get_patchset( level, sched );
 
-    std::cout << "Wasatch: done creating solution task(s)" << std::endl;
+    const Uintah::MaterialSet* const materials = sharedState_->allMaterials();
+
+    create_timestepper_on_patches( localPatches, materials, sched );
+    
+    if( d_myworld->myrank() == 0 )
+      proc0cout << "Wasatch: done creating solution task(s)" << std::endl;
 
     // jcs notes:
     //
@@ -280,8 +385,38 @@ namespace Wasatch{
     //       executed together across all patches.  This is required if
     //       any global MPI syncronizations occurr (e.g. in a linear
     //       solve)
-  }
+    //    also need to set a flag on the task: task->setType(Task::OncePerProc);
 
+
+    // -----------------------------------------------------------------------
+    // BOUNDARY CONDITIONS TREATMENT
+    // -----------------------------------------------------------------------
+    const GraphHelper* gh = graphCategories_[ ADVANCE_SOLUTION ];
+    //Expr::ExpressionFactory& exprFactory = *gh->exprFactory;
+    //build_bcs( adaptors_, *gh, localPatches, patchInfoMap_, materials->getUnion() );
+    typedef std::vector<EqnTimestepAdaptorBase*> EquationAdaptors;
+    
+    for( EquationAdaptors::const_iterator ia=adaptors_.begin(); ia!=adaptors_.end(); ++ia ){
+      EqnTimestepAdaptorBase* const adaptor = *ia;
+      TransportEquation* transEq = adaptor->equation();
+      std::string eqnLabel = transEq->solution_variable_name();
+      //______________________________________________________
+      // set up boundary conditions on this transport equation
+      try{
+        proc0cout << "Setting BCs for transport equation '" << eqnLabel << "'" << std::endl;
+        transEq->setup_boundary_conditions(*gh, localPatches, patchInfoMap_, materials->getUnion());
+      }
+      catch( std::runtime_error& e ){
+        std::ostringstream msg;
+        msg << e.what()
+        << std::endl
+        << "ERORR while setting boundary conditions on equation '" << eqnLabel << "'"
+        << std::endl;
+        throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+      }
+    }
+  }
+  
   //--------------------------------------------------------------------
 
   void
@@ -335,9 +470,8 @@ namespace Wasatch{
 //     // some things (e.g. boundary conditions) may be prescribed
 //     // functions of time.
 //     {
-//       Expr::ExpressionTree* timeTree = scinew Expr::ExpressionTree( timeID, exprFactory, -1, "set time" );
-//       TaskInterface* const timeTask = scinew TaskInterface( timeTree, patchInfoMap_ );
-//       timeTask->schedule( sched, localPatches, materials );
+//       TaskInterface* const timeTask = scinew TaskInterface( timeID, "set time", exprFactory, sched, localPatches, materials, patchInfoMap_, true );
+//       timeTask->schedule( sched );
 //       taskInterfaceList_.push_back( timeTask );
 //     }
   }
@@ -353,7 +487,7 @@ namespace Wasatch{
   {
     const double deltat = 1.0; // jcs should get this from an input file possibly?
 
-//       std::cout << std::endl
+//       proc0cout << std::endl
 //                 << "Wasatch: executing 'Wasatch::computeDelT()' on all patches"
 //                 << std::endl;
 
@@ -362,6 +496,29 @@ namespace Wasatch{
                    Uintah::getLevel(patches) );
       //                   material );
       // jcs it seems that we cannot specify a material here.  Why not?
+  }
+
+  //------------------------------------------------------------------
+
+  const Uintah::PatchSet*
+  Wasatch::get_patchset( const Uintah::LevelP& level,
+                         Uintah::SchedulerP& sched )
+  {
+//     return sched->getLoadBalancer()->getPerProcessorPatchSet(level);
+    return level->eachPatch();
+
+//     const Uintah::PatchSet* const allPatches = sched->getLoadBalancer()->getPerProcessorPatchSet(level);
+//     const Uintah::PatchSubset* const localPatches = allPatches->getSubset( d_myworld->myrank() );
+//     Uintah::PatchSet* patches = new Uintah::PatchSet;
+//     // jcs: this results in "normal" scheduling and WILL NOT WORK FOR LINEAR SOLVES
+//     //      in that case, we need to use "gang" scheduling: addAll( localPatches )
+//     patches->addEach( localPatches->getVector() );
+// //     const std::set<int>& procs = sched->getLoadBalancer()->getNeighborhoodProcessors();
+// //     for( std::set<int>::const_iterator ip=procs.begin(); ip!=procs.end(); ++ip ){
+// //       patches->addEach( allPatches->getSubset( *ip )->getVector() );
+// //     }
+//     patchSetList_.push_back( patches );
+//     return patches;
   }
 
   //------------------------------------------------------------------

@@ -199,7 +199,7 @@ void NrrdData::io(Piostream& stream)
       {
 	// Need to upgade error reporting
 	char *err = biffGet(NRRD);
-	cerr << "Error reading nrrd " << nrrd_fname_ << ": " << err << endl;
+	cerr << "Error reading nrrd " << nrrd_fname_ << ": " << err << "\n";
 	free(err);
 	biffDone(NRRD);
 	return;
@@ -228,7 +228,7 @@ void NrrdData::io(Piostream& stream)
       // Create a new nrrd structure
       if (!(nrrd_ = nrrdNew())) 
       {   // Needs to be replaced with proper exception code
-	std::cerr << "Error allocating memory for nrrd" << std::endl;
+	std::cerr << "Error allocating memory for nrrd" << "\n";
       }
 		
       stream.begin_cheap_delim();
@@ -256,7 +256,7 @@ void NrrdData::io(Piostream& stream)
       if(nrrdAlloc_nva(nrrd_,nrrd_->type,nrrd_->dim,nrrddims))	
       {
 	char *err = biffGet(NRRD);
-	std::cerr << "Error reading nrrd: " << err << std::endl;
+	std::cerr << "Error reading nrrd: " << err << "\n";
 	free(err);
 	biffDone(NRRD); 
       }
@@ -398,7 +398,7 @@ void NrrdData::io(Piostream& stream)
       default:
 	// We should not get here, but it outputs a statement in case
 	// we reach this one due to some other bug elsewhere
-	std::cerr << "Error embedding nrrd, unknown datatype in nrrd " << std::endl;
+	std::cerr << "Error embedding nrrd, unknown datatype in nrrd " << "\n";
       }
       stream.end_cheap_delim();
       stream.end_cheap_delim();
@@ -451,7 +451,7 @@ void NrrdData::io(Piostream& stream)
       if (nrrdSave(nrrd_fname_.c_str(), nrrd_, no))
       {
 	char *err = biffGet(NRRD);      
-	cerr << "Error writing nrrd " << nrrd_fname_ << ": "<< err << endl;
+	cerr << "Error writing nrrd " << nrrd_fname_ << ": "<< err << "\n";
 	free(err);
 	biffDone(NRRD);
 	return;
@@ -605,7 +605,7 @@ void NrrdData::io(Piostream& stream)
 	}
 	break;			
       default:
-	std::cerr << "Error embedding nrrd, unknown datatype in nrrd " << std::endl;
+	std::cerr << "Error embedding nrrd, unknown datatype in nrrd " << "\n";
       }
       stream.end_cheap_delim();
       stream.end_cheap_delim();

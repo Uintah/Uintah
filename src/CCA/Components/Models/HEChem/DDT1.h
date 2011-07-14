@@ -134,13 +134,6 @@ WARNING
     double computeBurnedMass(double To, double& Ts,  double P, double Vc,
                              double surfArea, double delT, double solidMass);
       
-    void printSchedule(const LevelP& level,
-                       const string& where); 
-      
-    void printTask(const PatchSubset* patches,
-                   const Patch* patch,
-                   const string& where);
-      
     DDT1(const DDT1&);
     DDT1& operator=(const DDT1&);
 
@@ -152,6 +145,7 @@ WARNING
     const VarLabel* totalMassBurnedLabel;
     const VarLabel* totalHeatReleasedLabel;
     const VarLabel* burningLabel;   
+    const VarLabel* crackedEnoughLabel;   
     const VarLabel* TsLabel;
     const VarLabel* numPPCLabel;
     // JWL++
@@ -166,6 +160,7 @@ WARNING
     ProblemSpecP d_params;
     const Material* d_matl0;
     const Material* d_matl1;
+    const Material* d_matl2;
     SimulationStateP d_sharedState;   
 
     ICELabel* Ilb;
@@ -175,7 +170,7 @@ WARNING
     MaterialSubset* d_one_matl;
    
 
-    string fromMaterial, toMaterial;
+    string fromMaterial, toMaterial, burnMaterial;
     // Detonation Model
     double d_G;
     double d_b;

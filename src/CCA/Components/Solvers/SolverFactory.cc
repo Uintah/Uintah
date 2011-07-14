@@ -33,7 +33,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Solvers/CGSolver.h>
 #include <CCA/Components/Solvers/DirectSolve.h>
 #include <CCA/Components/Solvers/HypreSolver.h>
-#include <CCA/Components/Solvers/AMRSolver.h>
+#include <CCA/Components/Solvers/AMR/AMRSolver.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <iostream>

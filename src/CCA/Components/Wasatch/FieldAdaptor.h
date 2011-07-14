@@ -1,7 +1,7 @@
 #ifndef Wasatch_FieldAdaptor_h
 #define Wasatch_FieldAdaptor_h
 
-#include <spatialops/structured/FVStaggeredTypes.h>
+#include <spatialops/structured/FVStaggeredFieldTypes.h>
 
 #include <Core/Grid/Variables/SFCXVariable.h>  /* x-face variable */
 #include <Core/Grid/Variables/SFCYVariable.h>  /* y-face variable */
@@ -53,25 +53,28 @@ namespace Wasatch{
   template<typename FieldT> struct SelectUintahFieldType;
   typedef double AtomicT;
 
-  template<> struct SelectUintahFieldType<SpatialOps::structured::SVolField  >{ typedef Uintah::CCVariable  <AtomicT> type;  typedef Uintah::constCCVariable  <AtomicT> const_type; };
-  template<> struct SelectUintahFieldType<SpatialOps::structured::SSurfXField>{ typedef Uintah::SFCXVariable<AtomicT> type;  typedef Uintah::constSFCXVariable<AtomicT> const_type; };
-  template<> struct SelectUintahFieldType<SpatialOps::structured::SSurfYField>{ typedef Uintah::SFCYVariable<AtomicT> type;  typedef Uintah::constSFCYVariable<AtomicT> const_type; };
-  template<> struct SelectUintahFieldType<SpatialOps::structured::SSurfZField>{ typedef Uintah::SFCZVariable<AtomicT> type;  typedef Uintah::constSFCZVariable<AtomicT> const_type; };
+#define DECLARE_SELECT_FIELD_TYPE_STRUCT( VOLT )                \
+  template<> struct SelectUintahFieldType< VOLT >{              \
+    typedef Uintah::CCVariable     <AtomicT>  type;             \
+    typedef Uintah::constCCVariable<AtomicT>  const_type;       \
+  };                                                                    \
+  template<> struct SelectUintahFieldType< SpatialOps::structured::FaceTypes<VOLT>::XFace >{ \
+    typedef Uintah::SFCXVariable     <AtomicT>  type;                   \
+    typedef Uintah::constSFCXVariable<AtomicT>  const_type;             \
+  };                                                                    \
+  template<> struct SelectUintahFieldType< SpatialOps::structured::FaceTypes<VOLT>::YFace >{ \
+    typedef Uintah::SFCYVariable     <AtomicT>  type;                   \
+    typedef Uintah::constSFCYVariable<AtomicT>  const_type;             \
+  };                                                                    \
+  template<> struct SelectUintahFieldType< SpatialOps::structured::FaceTypes<VOLT>::ZFace >{ \
+    typedef Uintah::SFCZVariable     <AtomicT>  type;                   \
+    typedef Uintah::constSFCZVariable<AtomicT>  const_type;             \
+  };
 
-  template<> struct SelectUintahFieldType<SpatialOps::structured::XVolField  >{ typedef Uintah::CCVariable  <AtomicT> type;  typedef Uintah::constCCVariable  <AtomicT> const_type; };
-  template<> struct SelectUintahFieldType<SpatialOps::structured::XSurfXField>{ typedef Uintah::SFCXVariable<AtomicT> type;  typedef Uintah::constSFCXVariable<AtomicT> const_type; };
-  template<> struct SelectUintahFieldType<SpatialOps::structured::XSurfYField>{ typedef Uintah::SFCYVariable<AtomicT> type;  typedef Uintah::constSFCYVariable<AtomicT> const_type; };
-  template<> struct SelectUintahFieldType<SpatialOps::structured::XSurfZField>{ typedef Uintah::SFCZVariable<AtomicT> type;  typedef Uintah::constSFCZVariable<AtomicT> const_type; };
-
-  template<> struct SelectUintahFieldType<SpatialOps::structured::YVolField  >{ typedef Uintah::CCVariable  <AtomicT> type;  typedef Uintah::constCCVariable  <AtomicT> const_type; };
-  template<> struct SelectUintahFieldType<SpatialOps::structured::YSurfXField>{ typedef Uintah::SFCXVariable<AtomicT> type;  typedef Uintah::constSFCXVariable<AtomicT> const_type; };
-  template<> struct SelectUintahFieldType<SpatialOps::structured::YSurfYField>{ typedef Uintah::SFCYVariable<AtomicT> type;  typedef Uintah::constSFCYVariable<AtomicT> const_type; };
-  template<> struct SelectUintahFieldType<SpatialOps::structured::YSurfZField>{ typedef Uintah::SFCZVariable<AtomicT> type;  typedef Uintah::constSFCZVariable<AtomicT> const_type; };
-
-  template<> struct SelectUintahFieldType<SpatialOps::structured::ZVolField  >{ typedef Uintah::CCVariable  <AtomicT> type;  typedef Uintah::constCCVariable  <AtomicT> const_type; };
-  template<> struct SelectUintahFieldType<SpatialOps::structured::ZSurfXField>{ typedef Uintah::SFCXVariable<AtomicT> type;  typedef Uintah::constSFCXVariable<AtomicT> const_type; };
-  template<> struct SelectUintahFieldType<SpatialOps::structured::ZSurfYField>{ typedef Uintah::SFCYVariable<AtomicT> type;  typedef Uintah::constSFCYVariable<AtomicT> const_type; };
-  template<> struct SelectUintahFieldType<SpatialOps::structured::ZSurfZField>{ typedef Uintah::SFCZVariable<AtomicT> type;  typedef Uintah::constSFCZVariable<AtomicT> const_type; };
+  DECLARE_SELECT_FIELD_TYPE_STRUCT( SpatialOps::structured::SVolField );
+  DECLARE_SELECT_FIELD_TYPE_STRUCT( SpatialOps::structured::XVolField );
+  DECLARE_SELECT_FIELD_TYPE_STRUCT( SpatialOps::structured::YVolField );
+  DECLARE_SELECT_FIELD_TYPE_STRUCT( SpatialOps::structured::ZVolField );
 
 
   /**

@@ -77,11 +77,7 @@ DEALINGS IN THE SOFTWARE.
 
 #define SET_CFI_BC 0
 
-using std::vector;
-using std::max;
-using std::min;
-using std::istringstream;
- 
+using namespace std;
 using namespace Uintah;
 
 //__________________________________
@@ -114,13 +110,13 @@ ICE::ICE(const ProcessorGroup* myworld, const bool doAMR) :
   d_dbgVar2   = 0;
   d_EVIL_NUM  = -9.99e30;                                                    
   d_SMALL_NUM = 1.0e-100;                                                   
-  d_TINY_RHO  = 1.0e-12;   // also defined ICEMaterial.cc and MPMMaterial.cc   
   d_modelInfo = 0;
   d_modelSetup = 0;
   d_analysisModule = 0;
   d_recompile               = false;
   d_canAddICEMaterial       = false;
   d_with_mpm                = false;
+  d_with_rigid_mpm          = false;
   d_clampSpecificVolume     = false;
   
   d_exchCoeff = scinew ExchangeCoefficients();
@@ -372,7 +368,7 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
     ps = ps->findNextBlock("material") ) {
     string index("");
     ps->getAttribute("index",index);
-    stringstream id(index);
+    std::stringstream id(index);
 
     const int DEFAULT_VALUE = -1;
 
@@ -2989,9 +2985,15 @@ template<class T> void ICE::computeVelFace(int dir,
                                            constCCVariable<Vector>& vel_CC,
                                            constCCVariable<double>& press_CC,
                                            T& vel_FC,
-                                           T& grad_P_FC)
+                                           T& grad_P_FC,
+                                           bool include_acc)
 {
   double inv_dx = 1.0/dx;
+
+  double one_or_zero=1.;
+  if(!include_acc){
+    one_or_zero=0.0;
+  }
   
   for(;!it.done(); it++){
     IntVector R = *it;
@@ -3022,7 +3024,7 @@ template<class T> void ICE::computeVelFace(int dir,
     // gravity term
     double term3 =  delT * gravity;
     
-    vel_FC[R] = term1- term2 + term3;
+    vel_FC[R] = term1 - one_or_zero*term2 + one_or_zero*term3;
   } 
 }
                   
@@ -3059,6 +3061,7 @@ void ICE::computeVel_FC(const ProcessorGroup*,
       Material* matl = d_sharedState->getMaterial( m );
       int indx = matl->getDWIndex();
       ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
+      MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl); 
       constCCVariable<double> rho_CC, sp_vol_CC;
       constCCVariable<Vector> vel_CC;
       if(ice_matl){
@@ -3110,22 +3113,28 @@ void ICE::computeVel_FC(const ProcessorGroup*,
       CellIterator XFC_iterator = patch->getSFCXIterator();
       CellIterator YFC_iterator = patch->getSFCYIterator();
       CellIterator ZFC_iterator = patch->getSFCZIterator();
+
+      bool include_acc = true;
+      if(mpm_matl && d_with_rigid_mpm){
+        include_acc = false;
+      }
+
       //__________________________________
       //  Compute vel_FC for each face
       computeVelFace<SFCXVariable<double> >(0, XFC_iterator,
                                        adj_offset[0],dx[0],delT,gravity[0],
                                        rho_CC,sp_vol_CC,vel_CC,press_CC,
-                                       uvel_FC, grad_P_XFC);
+                                       uvel_FC, grad_P_XFC, include_acc);
 
       computeVelFace<SFCYVariable<double> >(1, YFC_iterator,
                                        adj_offset[1],dx[1],delT,gravity[1],
                                        rho_CC,sp_vol_CC,vel_CC,press_CC,
-                                       vvel_FC, grad_P_YFC);
+                                       vvel_FC, grad_P_YFC, include_acc);
 
       computeVelFace<SFCZVariable<double> >(2, ZFC_iterator,
                                        adj_offset[2],dx[2],delT,gravity[2],
                                        rho_CC,sp_vol_CC,vel_CC,press_CC,
-                                       wvel_FC, grad_P_ZFC);
+                                       wvel_FC, grad_P_ZFC, include_acc);
 
       //__________________________________
       // (*)vel_FC BC are updated in 
@@ -3454,7 +3463,7 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
       
       sp_vol_XFC[m].initialize(0.0, lowIndex,patch->getExtraSFCXHighIndex());
       sp_vol_YFC[m].initialize(0.0, lowIndex,patch->getExtraSFCYHighIndex());
-      sp_vol_ZFC[m].initialize(0.0, lowIndex,patch->getExtraSFCZHighIndex());     
+      sp_vol_ZFC[m].initialize(0.0, lowIndex,patch->getExtraSFCZHighIndex());
     }   
     
     vector<IntVector> adj_offset(3);
@@ -4244,9 +4253,11 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,
      CCVariable<Vector> mom_L; 
      CCVariable<double> int_eng_L; 
      CCVariable<double> mass_L;
+     double tiny_rho = 1.e-12;
      if(ice_matl)  {               //  I C E
       constCCVariable<double> rho_CC, temp_CC, cv, int_eng_source;
       constCCVariable<Vector> vel_CC, mom_source, mom_comb;
+      tiny_rho = ice_matl->getTinyRho();
 
       Ghost::GhostType  gn = Ghost::None;
       new_dw->get(cv,             lb->specific_heatLabel,    indx,patch,gn,0);
@@ -4296,7 +4307,7 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,
          IntVector c = *iter;
            //  must have a minimum mass
           double mass = rho_CC[c] * vol;
-          double min_mass = d_TINY_RHO * vol;
+          double min_mass = tiny_rho * vol;
 
           mass_L[c] = std::max( (mass + modelMass_src[c] ), min_mass);
 
@@ -4474,6 +4485,11 @@ void ICE::computeLagrangianSpecificVolume(const ProcessorGroup*,
       new_dw->allocateAndPut(sp_vol_L,  lb->sp_vol_L_CCLabel,   indx,patch);
       new_dw->allocateAndPut(sp_vol_src,lb->sp_vol_src_CCLabel, indx,patch);
       sp_vol_src.initialize(0.);
+      double tiny_rho = 1.e-12;
+      ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
+      if (ice_matl) {
+        tiny_rho = ice_matl->getTinyRho();
+      }
 
       new_dw->get(sp_vol_CC,  lb->sp_vol_CCLabel,     indx,patch,gn, 0);
       new_dw->get(rho_CC,     lb->rho_CCLabel,        indx,patch,gn, 0);
@@ -4529,7 +4545,7 @@ void ICE::computeLagrangianSpecificVolume(const ProcessorGroup*,
         for(CellIterator iter=patch->getCellIterator();!iter.done();iter++){
           IntVector c = *iter;
 /*`==========TESTING==========*/
-          sp_vol_L[c] = max(sp_vol_L[c], d_TINY_RHO * vol * sp_vol_CC[c]);
+          sp_vol_L[c] = max(sp_vol_L[c], tiny_rho * vol * sp_vol_CC[c]);
 /*==========TESTING==========`*/
         }
       }
@@ -5884,38 +5900,7 @@ IntVector ICE::upwindCell_Z(const IntVector& c,
   IntVector tmp = c + IntVector(0,0,one_or_zero);
   return tmp;
 }
-/*_____________________________________________________________________
- Function~  ICE::areAllValuesPositive--
- _____________________________________________________________________  */
-bool ICE::areAllValuesPositive( CCVariable<double> & src, IntVector& neg_cell )
-{ 
-  double numCells = 0;
-  double sum_src = 0;
-  int sumNan = 0;
-  IntVector l = src.getLowIndex();
-  IntVector h = src.getHighIndex();
-  CellIterator iterLim = CellIterator(l,h);
-  
-  for(CellIterator iter=iterLim; !iter.done();iter++) {
-    IntVector c = *iter;
-    sumNan += isnan(src[c]);       // check for nans
-    sum_src += src[c]/(fabs(src[c]) + d_SMALL_NUM);
-    numCells++;
-  }
 
-  // now find the first cell where the value is < 0   
-  if ( (fabs(sum_src - numCells) > 1.0e-2) || sumNan !=0) {
-    for(CellIterator iter=iterLim; !iter.done();iter++) {
-      IntVector c = *iter;
-      if (src[c] < 0.0 || isnan(src[c]) !=0) {
-        neg_cell = c;
-        return false;
-      }
-    }
-  } 
-  neg_cell = IntVector(0,0,0); 
-  return true;      
-} 
 //______________________________________________________________________
 //  Models
 ICE::ICEModelSetup::ICEModelSetup()

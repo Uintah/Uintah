@@ -47,13 +47,11 @@ include $(SCIRUN_SCRIPTS)/recurse.mk
 COMPONENTS      = CCA/Components
 CA              = CCA/Components/Arches
 ifeq ($(BUILD_ARCHES),yes)
-  ARCHES_SUB_LIBS = $(CA)/Mixing $(CA)/fortran $(CA)/Radiation $(CA)/Radiation/fortran
+  ARCHES_SUB_LIBS = $(CA)/Mixing $(CA)/fortran 
   ifeq ($(BUILD_MPM),yes)
     MPMARCHES_LIB    = $(COMPONENTS)/MPMArches
   endif
-  ARCHES_LIBS        = $(COMPONENTS)/Arches                  \
-                       $(COMPONENTS)/Arches/MCRT/ArchesRMCRT \
-                       $(COMPONENTS)/SpatialOps
+  ARCHES_LIBS        = $(COMPONENTS)/Arches
 endif
 
 ifeq ($(BUILD_MPM),yes)
@@ -77,21 +75,18 @@ SRCS := $(SRCDIR)/sus.cc
 PROGRAM := StandAlone/sus
 
 ifeq ($(IS_STATIC_BUILD),yes)
+  # WARNING: THESE LIBRARIES ARE LISTED IN A SPECIFIC ORDER TO SATISFY
+  #          THE NEEDS OF STATIC LINKING.  DO NOT ALPHABETIZE THEM!
   PSELIBS := \
     CCA/Components/Parent               \
     CCA/Components/Solvers              \
     CCA/Components/DataArchiver         \
-    CCA/Components/Schedulers           \
     CCA/Components/SimulationController \
     CCA/Components/Regridder            \
     CCA/Components/LoadBalancers        \
     CCA/Components/SwitchingCriteria    \
     CCA/Components/Examples             \
     CCA/Components/Angio                \
-    CCA/Components/MPMICE               \
-    CCA/Components/ICE                  \
-    CCA/Components/MPM                  \
-    CCA/Components/OnTheFlyAnalysis     \
                                         \
     $(ARCHES_LIBS)                      \
     $(ARCHES_SUB_LIBS)                  \
@@ -101,6 +96,8 @@ ifeq ($(IS_STATIC_BUILD),yes)
     $(MPMICE_LIB)                       \
     $(WASATCH_LIB)                      \
                                         \
+    CCA/Components/Schedulers           \
+    CCA/Components/OnTheFlyAnalysis     \
     CCA/Components/Models               \
     CCA/Components/PatchCombiner        \
                                         \
@@ -132,31 +129,28 @@ else
     PSELIBS := Packages/Uintah
   else
     PSELIBS := \
-        Core/Containers   \
-        Core/Exceptions   \
-        Core/Geometry     \
-        Core/Math         \
-        Core/Persistent   \
-        Core/Thread       \
-        Core/Util         \
-        Core/DataArchive  \
-        Core/Disclosure   \
-        Core/Exceptions   \
-        Core/GeometryPiece\
-        Core/Grid         \
-        Core/Labels       \
-        Core/Math         \
-        Core/OS           \
-        Core/Parallel     \
-        Core/Tracker      \
-        Core/Util         \
-        CCA/Ports         \
+        Core/Containers    \
+        Core/DataArchive   \
+        Core/Disclosure    \
+        Core/Exceptions    \
+        Core/Geometry      \
+        Core/GeometryPiece \
+        Core/Grid          \
+        Core/Labels        \
+        Core/Math          \
+        Core/OS            \
+        Core/Parallel      \
+        Core/Persistent    \
+        Core/ProblemSpec   \
+        Core/Thread        \
+        Core/Tracker       \
+        Core/Util          \
+        CCA/Ports          \
         CCA/Components/Parent               \
         CCA/Components/Models               \
         CCA/Components/DataArchiver         \
         CCA/Components/LoadBalancers        \
         CCA/Components/Regridder            \
-        Core/ProblemSpec                    \
         CCA/Components/SimulationController \
         CCA/Components/Schedulers           \
         CCA/Components/ProblemSpecification \
@@ -169,10 +163,10 @@ ifeq ($(IS_STATIC_BUILD),yes)
           $(HDF5_LIBRARY) $(BOOST_LIBRARY)         \
           $(EXPRLIB_LIBRARY) $(SPATIALOPS_LIBRARY) $(TABPROPS_LIBRARY)
 else
-  LIBS := $(XML2_LIBRARY) $(F_LIBRARY) $(HYPRE_LIBRARY)      \
+  LIBS := $(MPI_LIBRARY) $(XML2_LIBRARY) $(F_LIBRARY) $(HYPRE_LIBRARY)      \
           $(CANTERA_LIBRARY) $(ZOLTAN_LIBRARY)               \
           $(PETSC_LIBRARY) $(BLAS_LIBRARY) $(LAPACK_LIBRARY) \
-          $(MPI_LIBRARY) $(M_LIBRARY) $(THREAD_LIBRARY) $(Z_LIBRARY) \
+          $(M_LIBRARY) $(THREAD_LIBRARY) $(Z_LIBRARY) \
           $(TEEM_LIBRARY) $(PNG_LIBRARY) \
           $(BOOST_LIBRARY)
 endif
@@ -240,6 +234,7 @@ include $(SCIRUN_SCRIPTS)/program.mk
 # Convenience targets for Specific executables 
 
 ifeq ($(BUILD_VISIT),yes)
+  # 'visit_stuff' is defined in .../src/VisIt/udaReaderMTMD/sub.mk
   VISIT_STUFF=visit_stuff
 endif
 
@@ -247,6 +242,7 @@ uintah: sus \
         puda \
         dumpfields \
         compare_uda \
+        compute_Lnorm_udas \
         restart_merger \
         partextract \
         partvarRange \
@@ -263,9 +259,10 @@ uintah: sus \
         timeextract \
         faceextract \
         link_inputs \
-	link_scripts \
+        link_scripts \
         link_tools \
         link_regression_tester \
+        link_localRT \
 	$(VISIT_STUFF)
 
 ###############################################
@@ -295,6 +292,11 @@ link_tools:
               ln -sf $(OBJTOP_ABS)/StandAlone/tools/extractors/lineextract $(OBJTOP_ABS)/StandAlone/lineextract; \
               ln -sf $(OBJTOP_ABS)/StandAlone/tools/extractors/timeextract $(OBJTOP_ABS)/StandAlone/timeextract; \
 	   fi )
+link_localRT:
+	@( if ! test -L StandAlone/localRT; then \
+               echo "Creating link to localRT script." ; \
+	       ln -sf $(SRCTOP_ABS)/scripts/localRT StandAlone/localRT; \
+	   fi )
 link_regression_tester:
 	@( if ! test -L StandAlone/run_RT; then \
                echo "Creating link to regression_tester script." ; \
@@ -320,13 +322,15 @@ ifeq ($(IS_REDSTORM),yes)
 	@echo "Built sus"
 endif
 
-tools: puda dumpfields compare_uda restart_merger partextract partvarRange selectpart async_mpi_test mpi_test extractV extractF extractS gambitFileReader slb pfs pfs2 timeextract faceextract lineextract compare_mms compare_scalar fsspeed
+tools: puda dumpfields compare_uda compute_Lnorm_udas restart_merger partextract partvarRange selectpart async_mpi_test mpi_test extractV extractF extractS gambitFileReader slb pfs pfs2 timeextract faceextract lineextract compare_mms compare_scalar fsspeed
 
 puda: prereqs StandAlone/tools/puda/puda
 
 dumpfields: prereqs StandAlone/tools/dumpfields/dumpfields
 
 compare_uda: prereqs StandAlone/compare_uda
+
+compute_Lnorm_udas: prereqs StandAlone/tools/compute_Lnorm_udas
 
 restart_merger: prereqs StandAlone/restart_merger
 

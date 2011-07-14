@@ -34,7 +34,7 @@ class DQMOMEqnBuilder: public DQMOMEqnBuilderBase
 public:
   DQMOMEqnBuilder( ArchesLabel* fieldLabels, 
                    ExplicitTimeInt* timeIntegrator, 
-                   string eqnName );
+                   std::string eqnName );
   ~DQMOMEqnBuilder();
 
   EqnBase* build(); 
@@ -51,7 +51,7 @@ public EqnBase{
 
 public: 
 
-  DQMOMEqn( ArchesLabel* fieldLabels, ExplicitTimeInt* timeIntegrator, string eqnName );
+  DQMOMEqn( ArchesLabel* fieldLabels, ExplicitTimeInt* timeIntegrator, std::string eqnName );
 
   ~DQMOMEqn();
 
@@ -98,7 +98,7 @@ public:
   void sched_computeSources( const LevelP& level, SchedulerP& schedi, int timeSubStep );
 
   /** @brief Apply boundary conditions */
-  template <class phiType> void computeBCs( const Patch* patch, string varName, phiType& phi ){
+  template <class phiType> void computeBCs( const Patch* patch, std::string varName, phiType& phi ){
     d_boundaryCond->setScalarValueBC( 0, patch, phi, varName );
   };
 
@@ -154,7 +154,7 @@ public:
   }
 
   /** @brief Return the list of models associated with this equation. */
-  inline const vector<string> getModelsList(){
+  inline const std::vector<std::string> getModelsList(){
     return d_models; };
 
   /** @brief Return the VarLabel for this equation's source term. */ 
@@ -199,7 +199,7 @@ public:
     d_quadNode = node; };
 
   /** @brief Get the quadrature node value. */
-  inline const int getQuadNode(){
+  inline int getQuadNode(){
     return d_quadNode; };
 
  
@@ -209,10 +209,10 @@ private:
   const VarLabel* d_icLabel;      ///< This is the label that holds the unscaled and (if applicable) unweighted DQMOM scalar value 
   const VarLabel* d_weightLabel;  ///< Label for weight corresponding to this quadrature node
 
-  std::vector<string> d_models;   ///< This is the list of models for this internal coordinate
+  std::vector<std::string> d_models;   ///< This is the list of models for this internal coordinate
   int d_quadNode;                 ///< The quadrature node for this equation object 
   bool d_weight;                  ///< Boolean: is this equation object for a weight?
-  vector<std::string> d_sources;
+  std::vector<std::string> d_sources;
   bool d_addExtraSources; 
   double d_w_small;               ///< Value of "small" weights
   bool d_unweighted;

@@ -39,6 +39,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Variables/VarTypes.h>
+#include <Core/Grid/Variables/Utils.h>
 #include <Core/Exceptions/ConvergenceFailure.h>
 #include <Core/Exceptions/ProblemSetupException.h> 
 #include <Core/Exceptions/InvalidValue.h>

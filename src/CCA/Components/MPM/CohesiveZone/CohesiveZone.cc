@@ -41,9 +41,7 @@ DEALINGS IN THE SOFTWARE.
 #include <iostream>
 
 using namespace Uintah;
-using std::vector;
-using std::cerr;
-using std::ofstream;
+using namespace std;
 
 //______________________________________________________________________
 //  Reference: N. P. Daphalapukar, Hongbing Lu, Demir Coker, Ranga Komanduri,

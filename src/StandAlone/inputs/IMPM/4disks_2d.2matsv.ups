@@ -7,7 +7,7 @@
        <title>Compaction of cylinders</title>
    </Meta>
 
-   <SimulationComponent type="ice" />
+   <SimulationComponent type="impm" />
 
    <Time>
        <maxTime>3.e-6</maxTime>

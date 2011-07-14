@@ -38,7 +38,6 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Schedulers/OnDemandDataWarehouseP.h>
 #include <CCA/Ports/DataWarehouseP.h>
 #include <Core/Parallel/PackBufferInfo.h>
-#include <Core/Util/DebugStream.h>
  
 #include <Core/Grid/Task.h>
 #include <Core/Parallel/BufferInfo.h>
@@ -123,7 +122,7 @@ WARNING
     void runTask( DetailedTask* task, int iteration );
     void runReductionTask( DetailedTask* task );        
 
-    void addToSendList(const MPI_Request& request, int bytes, AfterCommunicationHandler* buf, const string& var);
+    void addToSendList(const MPI_Request& request, int bytes, AfterCommunicationHandler* buf, const std::string& var);
 
     // get the processor group executing with (only valid during execute())
     const ProcessorGroup* getProcessorGroup()
@@ -159,13 +158,15 @@ WARNING
         }
       }
     }
+    mpi_timing_info_s     mpi_info_;
+    MPIScheduler* parentScheduler;
+    // Performs the reduction task. (In Mixed, gives the task to a thread.)    
+    virtual void initiateReduction( DetailedTask          * task );    
   protected:
     // Runs the task. (In Mixed, gives the task to a thread.)
     virtual void initiateTask( DetailedTask          * task,
 			       bool only_old_recvs, int abort_point, int iteration);
 
-    // Performs the reduction task. (In Mixed, gives the task to a thread.)    
-    virtual void initiateReduction( DetailedTask          * task );    
 
     // Waits until all tasks have finished.  In the MPI Scheduler,
     // this is basically a nop, for the mixed, it talks to the ThreadPool 
@@ -175,17 +176,15 @@ WARNING
     virtual void verifyChecksum();
     MessageLog log;
 
-    MPIScheduler* parentScheduler;
 
     Output*       oport_;
 
-    mpi_timing_info_s     mpi_info_;
     CommRecMPI            sends_;
     CommRecMPI            recvs_;
 
     double           d_lasttime;
-    vector<const char*>    d_labels;
-    vector<double>   d_times;
+    std::vector<const char*>    d_labels;
+    std::vector<double>   d_times;
     ofstream         timingStats, avgStats, maxStats;
 
     void emitTime(const char* label);

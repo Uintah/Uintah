@@ -80,12 +80,14 @@ using namespace SCIRun;
 extern UINTAHSHARE SCIRun::Mutex       cerrLock;
 extern DebugStream mixedDebug;
 
-static DebugStream dbg("MPIScheduler", false);
+static DebugStream dbg("MPIScheduler",             false);
 static DebugStream timeout("MPIScheduler.timings", false);
-static DebugStream reductionout("ReductionTasks", false);
+static DebugStream reductionout("ReductionTasks",  false);
+
 DebugStream waitout("WaitTimes", false);
 DebugStream execout("ExecTimes", false);
-DebugStream taskdbg("TaskDBG", false);
+DebugStream taskdbg("TaskDBG",   false);
+DebugStream taskLevel_dbg("TaskLevel", false);
 DebugStream mpidbg("MPIDBG",false);
 static Mutex sendsLock( "sendsLock" );
 
@@ -94,26 +96,7 @@ static double CurrentWaitTime=0;
 map<string,double> waittimes;
 map<string,double> exectimes;
 
-static
-void
-printTask( ostream& out, DetailedTask* task )
-{
-  out << task->getTask()->getName();
-  if(task->getPatches()){
-    out << " \t on patches ";
-    const PatchSubset* patches = task->getPatches();
-    for(int p=0;p<patches->size();p++){
-      if(p != 0)
-	out << ", ";
-      out << patches->get(p)->getID();
-    }
-    
-    if (task->getTask()->getType() != Task::OncePerProc) {
-      const Level* level = getLevel(patches);
-      out << "\t  L-"<< level->getIndex();
-    }
-  }
-}
+ 
 
 MPIScheduler::MPIScheduler( const ProcessorGroup * myworld,
 			          Output         * oport,
@@ -372,11 +355,11 @@ MPIScheduler::runReductionTask( DetailedTask         * task )
   ASSERT(!mod->next);
   
   OnDemandDataWarehouse* dw = dws[mod->mapDataWarehouse()].get_rep();
-  dw->reduceMPI(mod->var, mod->reductionLevel, mod->matls);
+  dw->reduceMPI(mod->var, mod->reductionLevel, mod->matls, task->getTask()->d_phase);
   task->done(dws);
 
-  taskdbg << d_myworld->myrank() << " Completed task: \t";
-  printTask(taskdbg, task); taskdbg << '\n';
+  cerrLock.lock(); taskdbg << d_myworld->myrank() << " Completed: \t";
+  printTask(taskdbg, task); taskdbg << '\n'; cerrLock.unlock();
 
 }
 
@@ -909,8 +892,12 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
         processMPIRecvs(WAIT_ALL);
         ASSERT(recvs_.numRequests() == 0);
         runTask(task, iteration);
+        
+        //  output to help application developers
         taskdbg << d_myworld->myrank() << " Completed task:  \t";
         printTask(taskdbg, task); taskdbg << '\n';
+        
+        printTaskLevels( d_myworld, taskLevel_dbg, task );
       }
   
       TAU_MAPPING_PROFILE_STOP(0);

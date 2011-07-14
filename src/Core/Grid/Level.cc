@@ -70,6 +70,7 @@ DEALINGS IN THE SOFTWARE.
 #define rint(x) (int)((x>0) ? x+.5 : x-.5)
 #endif
 
+using namespace std;
 using namespace Uintah;
 using namespace SCIRun;
 
@@ -266,34 +267,34 @@ void Level::findNodeIndexRange(IntVector& lowIndex,IntVector& highIndex) const
   Vector l=(d_spatial_range.min()-d_anchor)/d_dcell;
   Vector h=(d_spatial_range.max()-d_anchor)/d_dcell+Vector(1,1,1);
 
-  lowIndex=IntVector((int)l.x(),(int)l.y(),(int)l.z());
-  highIndex=IntVector((int)h.x(),(int)h.y(),(int)h.z());
+  lowIndex  = roundNearest(l);
+  highIndex = roundNearest(h);
 }
 void Level::findCellIndexRange(IntVector& lowIndex,IntVector& highIndex) const
 {
   Vector l=(d_spatial_range.min()-d_anchor)/d_dcell;
-  Vector h=(d_spatial_range.max()-d_anchor)/d_dcell;
+  Vector h=(d_spatial_range.max()-d_anchor)/d_dcell; 
 
-  lowIndex=IntVector((int)l.x(),(int)l.y(),(int)l.z());
-  highIndex=IntVector((int)h.x(),(int)h.y(),(int)h.z());
+  lowIndex  = roundNearest(l);
+  highIndex = roundNearest(h);
 }
 
 void Level::findInteriorCellIndexRange(IntVector& lowIndex,IntVector& highIndex) const
 {
   Vector l=(d_int_spatial_range.min()-d_anchor)/d_dcell;
   Vector h=(d_int_spatial_range.max()-d_anchor)/d_dcell;
-
-  lowIndex=IntVector((int)l.x(),(int)l.y(),(int)l.z());
-  highIndex=IntVector((int)h.x(),(int)h.y(),(int)h.z());
+  
+  lowIndex  = roundNearest(l);
+  highIndex = roundNearest(h);
 }
 
 void Level::findInteriorNodeIndexRange(IntVector& lowIndex,IntVector& highIndex) const
 {
   Vector l=(d_int_spatial_range.min()-d_anchor)/d_dcell;
   Vector h=(d_int_spatial_range.max()-d_anchor)/d_dcell+Vector(1,1,1);
-
-  lowIndex=IntVector((int)l.x(),(int)l.y(),(int)l.z());
-  highIndex=IntVector((int)h.x(),(int)h.y(),(int)h.z());
+  
+  lowIndex  = roundNearest(l);
+  highIndex = roundNearest(h);
 }
 
 long Level::totalCells() const
@@ -1025,6 +1026,18 @@ namespace Uintah {
 #if SCI_ASSERTION_LEVEL>0
     for(int i=1;i<subset->size();i++){
       ASSERT(level == subset->get(i)->getLevel());
+    }
+#endif
+    return level;
+  }
+
+  const LevelP& getLevelP(const PatchSubset* subset)
+  {
+    ASSERT(subset->size()>0);
+    const LevelP& level = subset->get(0)->getLevelP();
+#if SCI_ASSERTION_LEVEL>0
+    for(int i=1;i<subset->size();i++){
+      ASSERT(level == subset->get(i)->getLevelP());
     }
 #endif
     return level;

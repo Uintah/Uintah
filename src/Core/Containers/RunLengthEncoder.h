@@ -181,7 +181,7 @@ private:
     bool isRun() const 
     { return data_.size() == 1 && length_ > 1; }
 
-    vector<T> data_;
+    std::vector<T> data_;
 
     // If the group is a sequence then then data_[0] and rule_ are
     // used to find the element of the sequence for any index
@@ -300,7 +300,7 @@ public:
   { return size_; }
 
   // these return the number of bytes written/read
-  long write(ostream& out) throw(ErrnoException);
+  long write(std::ostream& out) throw(ErrnoException);
 
   long read(std::istream& in, bool swapBytes = false,
 	    int nByteMode = sizeof(unsigned long)) throw(InternalError)
@@ -322,7 +322,7 @@ public:
       return seekPriv<false>(fd, index, swapBytes, nByteMode);
   }
  
-  void testPrint(ostream& out);
+  void testPrint( std::ostream & out );
 
 private:
 
@@ -661,7 +661,7 @@ void RunLengthEncoder<T, Sequencer>::finalize()
  */
 
 template<class T, class Sequencer>
-long RunLengthEncoder<T, Sequencer>::write(ostream& out) throw(ErrnoException)
+long RunLengthEncoder<T, Sequencer>::write(std::ostream& out) throw(ErrnoException)
 {
   finalize();
   ssize_t header_size = (ssize_t)(groups_.size() + 1) * header_item_size;
@@ -786,7 +786,7 @@ long RunLengthEncoder<T, Sequencer>::readPriv(std::istream& in, bool swapBytes,
     throw InternalError("Invalid RunLengthEncoded data", __FILE__, __LINE__);
    
   unsigned long num_runs_left = header_size / header_item_size - 1;
-  vector<bool> usesDefaultRule(num_runs_left, false);
+  std::vector<bool> usesDefaultRule(num_runs_left, false);
 
   // read the header
   int i = 0;
@@ -819,7 +819,7 @@ long RunLengthEncoder<T, Sequencer>::readPriv(std::istream& in, bool swapBytes,
   i = 0;
   for (typename std::list<Group>::iterator groupIter = groups_.begin();
        groupIter != groups_.end(); groupIter++, i++) {      
-    vector<T>& data = (*groupIter).data_;
+    std::vector<T>& data = (*groupIter).data_;
     if ((*groupIter).isRun()) {
       in.read((char*)&data[0], sizeof(T));
       if (needConversion && swapBytes) SCIRun::swapbytes(data[0]);
@@ -942,7 +942,7 @@ T RunLengthEncoder<T, Sequencer>::seekPriv(int fd, unsigned long index,
 }
 
 template<class T, class Sequencer>
-void RunLengthEncoder<T, Sequencer>::testPrint(ostream& out)
+void RunLengthEncoder<T, Sequencer>::testPrint(std::ostream& out)
 {
   finalize();
   unsigned long total_length = 0;

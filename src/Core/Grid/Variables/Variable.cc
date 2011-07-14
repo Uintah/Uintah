@@ -53,6 +53,7 @@ DEALINGS IN THE SOFTWARE.
 
 
 using namespace Uintah;
+using namespace std;
 
 #ifdef _WIN32
 #  include <io.h>
@@ -107,7 +108,7 @@ Variable::emit( OutputContext& oc, const IntVector& l,
   used_rle = use_rle;
   used_gzip = use_gzip;
   
-  ostringstream outstream;
+  std::ostringstream outstream;
 
   if (use_rle) {
     if (!emitRLE(outstream, l, h, oc.varnode)) {

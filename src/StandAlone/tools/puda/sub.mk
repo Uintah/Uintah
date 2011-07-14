@@ -33,10 +33,11 @@ PROGRAM := StandAlone/tools/puda/puda
 
 SRCS := \
 	$(SRCDIR)/asci.cc        \
+	$(SRCDIR)/monica1.cc     \
 	$(SRCDIR)/jim1.cc        \
 	$(SRCDIR)/jim2.cc        \
 	$(SRCDIR)/jim3.cc        \
-	$(SRCDIR)/AA_MMS.cc        \
+	$(SRCDIR)/AA_MMS.cc      \
 	$(SRCDIR)/rtdata.cc      \
 	$(SRCDIR)/tecplot.cc     \
 	$(SRCDIR)/util.cc        \
@@ -73,7 +74,8 @@ endif
 ifeq ($(IS_STATIC_BUILD),yes)
   LIBS := $(CORE_STATIC_LIBS)
 else
-  LIBS    := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(Z_LIBRARY) $(TEEM_LIBRARY) $(F_LIBRARY)
+  LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(Z_LIBRARY) $(TEEM_LIBRARY) \
+	  $(F_LIBRARY) $(BLAS_LIBRARY) $(THREAD_LIBRARY)
 endif
 
 include $(SCIRUN_SCRIPTS)/program.mk

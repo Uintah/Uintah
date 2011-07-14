@@ -32,14 +32,16 @@ namespace Uintah {
 //---------------------------------------------------------------------------
 // Builder
 class ModelBase; 
-
+class Devolatilization;
+class CharOxidation;
+class HeatTransfer;
 class ModelBuilder
 {
 public:
   ModelBuilder( const std::string   & model_name, 
                 vector<std::string>   icLabelNames, 
                 vector<std::string>   scalarLabelNames, 
-                const ArchesLabel   * fieldLabels,
+                ArchesLabel   * fieldLabels,
                 SimulationStateP    & sharedState,
                 int                   qn ) : 
     d_modelName( model_name ), 
@@ -59,7 +61,7 @@ protected:
   std::string        d_modelName;
   vector<string>     d_icLabels;
   vector<string>     d_scalarLabels;
-  const ArchesLabel* d_fieldLabels;
+  ArchesLabel* d_fieldLabels;
   SimulationStateP & d_sharedState; 
   int                d_quadNode; 
 private: 
@@ -89,13 +91,16 @@ class CoalModelFactory
 public:
   
   typedef std::map< std::string, ModelBase*> ModelMap;
-  
-  /** @brief	Obtain a reference to the CoalModelFactory. */
+  typedef std::map< std::string, Devolatilization*> DevolModelMap;
+  typedef std::map< std::string, CharOxidation*> CharOxiModelMap;
+  typedef std::map< std::string, HeatTransfer*> HeatTransferModelMap;
+
+  /** @brief    Obtain a reference to the CoalModelFactory. */
   static CoalModelFactory& self();
 
-	/** @brief	Grab input parameters from the ups file. */
-	void problemSetup( const ProblemSpecP & params);
-		
+        /** @brief      Grab input parameters from the ups file. */
+        void problemSetup( const ProblemSpecP & params);
+                
   /**
    *  @brief Register a source term on the specified transport equation.
    *
@@ -130,16 +135,28 @@ public:
                                 DataWarehouse        * old_dw, 
                                 DataWarehouse        * new_dw );
 
-	////////////////////////////////////////////////
-	// Get/set methods
+        ////////////////////////////////////////////////
+        // Get/set methods
 
   /** @brief  Get all models in a ModelMap */
   ModelMap& retrieve_all_models() {
     return models_; }; 
 
-	/** @brief	Get the initial composition vector for the coal particles */
-	vector<double> getInitialCoalComposition() {
-		return yelem; };
+  /** @brief  Get all models in a ModelMap */
+  DevolModelMap& retrieve_devol_models() {
+    return devolmodels_; };
+
+  /** @brief  Get all models in a ModelMap */
+  CharOxiModelMap& retrieve_charoxi_models() {
+    return charoximodels_; };
+
+  /** @brief  Get all models in a ModelMap */
+  HeatTransferModelMap& retrieve_heattransfer_models() {
+    return heatmodels_; };
+
+        /** @brief      Get the initial composition vector for the coal particles */
+        vector<double> getInitialCoalComposition() {
+                return yelem; };
 
   /** @brief  Set the ArchesLabel class so that CoalModelFactory can use field labels from Arches */
   void setArchesLabel( ArchesLabel * fieldLabels ) {
@@ -147,19 +164,21 @@ public:
     b_labelSet = true;
   }
 
-
 private:
 
   typedef std::map< std::string, ModelBuilder* > BuildMap;
 
   BuildMap builders_;
   ModelMap models_;
+  DevolModelMap devolmodels_;
+  CharOxiModelMap charoximodels_;
+  HeatTransferModelMap heatmodels_;
 
-	bool b_coupled_physics;		///< Boolean: use coupled physics and iterative procedure?
+  bool b_coupled_physics;               ///< Boolean: use coupled physics and iterative procedure?
   bool b_labelSet;          ///< Boolean: has the ArchesLabel been set using setArchesLabel()?
   bool d_unweighted;
 
-  vector<double> yelem;			///< Vector containing initial composition of coal particle
+  vector<double> yelem;                 ///< Vector containing initial composition of coal particle
   ArchesLabel* d_fieldLabels;
   
   // If using coupled physics, specific internal coordinates are needed.
@@ -209,7 +228,7 @@ private:
  
   CoalModelFactory();
   ~CoalModelFactory();
-	
+        
 }; // class CoalModelFactory
 }  //Namespace Uintah
 #endif

@@ -40,4 +40,3 @@ PlasticityModel::PlasticityModel()
 PlasticityModel::~PlasticityModel()
 {
 }
-         

@@ -1,9 +1,7 @@
 # 
-# 
 # The MIT License
 # 
-# Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
-# Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
+# Copyright (c) 2010 Institute for Clean and Secure Energy (ICSE),
 # University of Utah.
 # 
 # License for the specific language governing rights and limitations under
@@ -34,7 +32,7 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR   := CCA/Components/Wasatch
 
-SRCS     +=                             \
+SRCS	+=                             \
         $(SRCDIR)/FieldAdaptor.cc	\
 	$(SRCDIR)/CoordHelper.cc	\
         $(SRCDIR)/GraphHelperTools.cc	\
@@ -43,13 +41,16 @@ SRCS     +=                             \
 	$(SRCDIR)/StringNames.cc	\
         $(SRCDIR)/TaskInterface.cc	\
 	$(SRCDIR)/TimeStepper.cc	\
-	$(SRCDIR)/Wasatch.cc
-
+	$(SRCDIR)/Wasatch.cc  \
+  $(SRCDIR)/BCHelperTools.cc \
+  $(SRCDIR)/ConvectiveInterpolationMethods.cc
+    
 PSELIBS :=              \
 	Core/Geometry   \
 	Core/Util       \
 	Core/Exceptions   \
 	CCA/Ports         \
+	CCA/Components/Schedulers \
 	Core/Grid         \
 	Core/Util         \
 	Core/ProblemSpec  \

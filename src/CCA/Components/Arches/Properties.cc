@@ -35,13 +35,13 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Arches/ArchesLabel.h>
 #if HAVE_TABPROPS
 # include <CCA/Components/Arches/ChemMix/TabPropsInterface.h>
-#endif
+#endif 
+# include <CCA/Components/Arches/ChemMix/ClassicTableInterface.h>
+# include <CCA/Components/Arches/ChemMix/ColdFlow.h>
 #include <CCA/Components/Arches/Mixing/MixingModel.h>
 #include <CCA/Components/Arches/Mixing/ColdflowMixingModel.h>
-#include <CCA/Components/Arches/Mixing/MOMColdflowMixingModel.h>
 #include <CCA/Components/Arches/Mixing/NewStaticMixingTable.h>
 #include <CCA/Components/Arches/Mixing/StandardTable.h>
-#include <CCA/Components/Arches/ExtraScalarSolver.h>
 #include <CCA/Components/Arches/ArchesMaterial.h>
 #include <CCA/Components/Arches/CellInformationP.h>
 #include <CCA/Components/Arches/CellInformation.h>
@@ -87,7 +87,7 @@ Properties::Properties(const ArchesLabel* label,
                        d_calcReactingScalar(calcReactingScalar),
                        d_calcEnthalpy(calcEnthalpy),
                        d_calcVariance(calcVariance),
-                                           d_myworld(myworld)
+                       d_myworld(myworld)
 {
   d_DORadiationCalc = false;
   d_radiationCalc = false;
@@ -95,7 +95,6 @@ Properties::Properties(const ArchesLabel* label,
   d_sulfur_chem     = false;
   d_soot_precursors = false;
   d_tabulated_soot  = false;
-  d_calcExtraScalars= false;
   d_bc = 0;
 #ifdef PetscFilter
   d_filter = 0;
@@ -110,6 +109,10 @@ Properties::Properties(const ArchesLabel* label,
 Properties::~Properties()
 {
   delete d_mixingModel;
+
+  if ( mixModel == "TabProps" || mixModel == "ClassicTable" ){ 
+    delete d_mixingRxnTable; 
+  }
 }
 
 //****************************************************************************
@@ -138,14 +141,16 @@ Properties::problemSetup(const ProblemSpecP& params)
     mixModel = "ColdFlowMixingModel"; 
   else if (db->findBlock("StandardTable"))
     mixModel = "StandardTable"; 
-  else if (db->findBlock("MOMColdFlowMixingModel"))
-    mixModel = "MOMcoldFlowMixingModel"; 
 #if HAVE_TABPROPS
   else if (db->findBlock("TabProps"))
     mixModel = "TabProps";
-#endif
+#endif 
+  else if (db->findBlock("ClassicTable"))
+    mixModel = "ClassicTable";
+	else if (db->findBlock("ColdFlow"))
+		mixModel = "ColdFlow";
   else
-    throw InvalidValue("ERROR!: No mixing/reaction table specified! If you are attempting to use the new TabProps interface, ensure that you configured properly with TabProps.",__FILE__,__LINE__);
+    throw InvalidValue("ERROR!: No mixing/reaction table specified! If you are attempting to use the new TabProps interface, ensure that you configured properly with TabProps and Boost libs.",__FILE__,__LINE__);
 
   if (mixModel == "ColdFlowMixingModel") {
     d_mixingModel = scinew ColdflowMixingModel(d_calcReactingScalar,
@@ -158,9 +163,6 @@ Properties::problemSetup(const ProblemSpecP& params)
                                                 d_calcEnthalpy,
                                                 d_calcVariance,
                                                 d_myworld);
-                                                
-    d_mixingModel->setCalcExtraScalars(d_calcExtraScalars);
-    d_mixingModel->setExtraScalars(d_extraScalars);
     d_mixingModel->setNonAdiabPartBool(d_adiabGas_nonadiabPart); 
   }
   else if (mixModel == "StandardTable"){
@@ -168,17 +170,12 @@ Properties::problemSetup(const ProblemSpecP& params)
                                          d_calcEnthalpy,
                                          d_calcVariance);
   }
-  else if (mixModel == "MOMColdFlowMixingModel"){
-    d_mixingModel = scinew MOMColdflowMixingModel(d_calcReactingScalar,
-                                                  d_calcEnthalpy,
-                                                  d_calcVariance);
-    d_reactingFlow = false;
-  }
 #if HAVE_TABPROPS
   else if (mixModel == "TabProps") {
     // New TabPropsInterface stuff...
     d_mixingRxnTable = scinew TabPropsInterface( d_lab, d_MAlab );
     d_mixingRxnTable->problemSetup( db ); 
+    d_reactingFlow    = d_mixingRxnTable->is_not_cold(); 
     // At this time, these all need to be false:
     d_co_output       = false;
     if (d_sulfur_chem) {
@@ -194,7 +191,32 @@ Properties::problemSetup(const ProblemSpecP& params)
       d_tabulated_soot  = false;
     }
   }
-#endif
+#endif 
+  else if (mixModel == "ClassicTable") { 
+    // New Classic interface
+    d_mixingRxnTable = scinew ClassicTableInterface( d_lab, d_MAlab ); 
+    d_mixingRxnTable->problemSetup( db ); 
+    // At this time, these all need to be false:
+    d_co_output       = false;
+    d_reactingFlow    = d_mixingRxnTable->is_not_cold(); 
+
+    if (d_sulfur_chem) {
+      proc0cout << "Warning!: The old sulfur_chem boolean is not compatible with ClassicTable.  I am going to set it to false. " << endl;
+      d_sulfur_chem     = false;
+    }
+    if (d_soot_precursors) {
+      proc0cout << "Warning!: The soot_precursors boolean is not compatible with ClassicTable.  I am going to set it to false. " << endl; 
+      d_soot_precursors = false;
+    }
+    if (d_tabulated_soot) {
+      proc0cout << "Warning!: The tabulated soot mechanism (tabulated_soot) is not active yet when using ClassicTable.  I am going to set it to false. " << endl;
+      d_tabulated_soot  = false;
+    }
+	} else if (mixModel == "ColdFlow") {
+		d_mixingRxnTable = scinew ColdFlow( d_lab, d_MAlab ); 
+		d_mixingRxnTable->problemSetup( db ); 
+    d_reactingFlow = false;
+  }
   else if (mixModel == "pdfMixingModel" || mixModel == "SteadyFlameletsTable"
         || mixModel == "flameletModel"  || mixModel == "StaticMixingTable"
         || mixModel == "meanMixingModel" ){
@@ -203,7 +225,7 @@ Properties::problemSetup(const ProblemSpecP& params)
     throw InvalidValue("Mixing Model not supported: " + mixModel, __FILE__, __LINE__);
   }
  
-  if (mixModel != "TabProps") {
+  if (mixModel != "TabProps" && mixModel != "ClassicTable" && mixModel != "ColdFlow") {
     d_mixingModel->problemSetup(db);
 
     if (d_calcEnthalpy){
@@ -216,12 +238,19 @@ Properties::problemSetup(const ProblemSpecP& params)
       d_carbon_air  = d_mixingModel->getCarbonAir();
     }
 
-    d_mixingModel->setCalcExtraScalars(d_calcExtraScalars);
     d_co_output       = d_mixingModel->getCOOutput();
     d_sulfur_chem     = d_mixingModel->getSulfurChem();
     d_soot_precursors = d_mixingModel->getSootPrecursors();
     d_tabulated_soot  = d_mixingModel->getTabulatedSoot();  
     d_radiationCalc = false;
+  } else { 
+
+    if ( d_calcEnthalpy ) { 
+
+      d_H_air = d_mixingRxnTable->get_ox_enthalpy(); 
+
+
+    } 
   } 
 
 
@@ -244,7 +273,7 @@ Properties::problemSetup(const ProblemSpecP& params)
     if (db_enthalpy_solver->findBlock("DORadiationModel"))
       d_radiationCalc = true; 
     else 
-      cout << "ATTENTION: NO WORKING RADIATION MODEL TURNED ON!" << endl; 
+      proc0cout << "ATTENTION: NO WORKING RADIATION MODEL TURNED ON!" << endl; 
 
     if (d_radiationCalc) {
 
@@ -279,12 +308,9 @@ void
 Properties::computeInletProperties(const InletStream& inStream, 
                                    Stream& outStream, const string bc_type)
 {
-  if (dynamic_cast<const ColdflowMixingModel*>(d_mixingModel))
+  if (dynamic_cast<const ColdflowMixingModel*>(d_mixingModel)){
     d_mixingModel->computeProps(inStream, outStream);
-  else if (dynamic_cast<const MOMColdflowMixingModel*>(d_mixingModel)){
-    d_mixingModel->computeProps(inStream, outStream);
-  }
-  else if (dynamic_cast<const NewStaticMixingTable*>(d_mixingModel)) {
+  } else if (dynamic_cast<const NewStaticMixingTable*>(d_mixingModel)) {
     d_mixingModel->computeProps(inStream, outStream);
   }
   else if (dynamic_cast<const StandardTable*>(d_mixingModel)) {
@@ -294,7 +320,12 @@ Properties::computeInletProperties(const InletStream& inStream,
   else if ( mixModel == "TabProps"){
     d_mixingRxnTable->oldTableHack( inStream, outStream, d_calcEnthalpy, bc_type ); 
   }
-#endif
+#endif 
+  else if ( mixModel == "ClassicTable"){
+    d_mixingRxnTable->oldTableHack( inStream, outStream, d_calcEnthalpy, bc_type ); 
+  } else if ( mixModel == "ColdFlow" ) {
+		// nothing to do here -- put here as a place holder until Properties is deleted
+  }
   else {
     throw InvalidValue("Mixing Model not supported", __FILE__, __LINE__);
   }
@@ -450,12 +481,6 @@ Properties::sched_reComputeProps(SchedulerP& sched,
       tsk->computes(d_lab->d_sootFVINLabel);
     }
 
-    if (d_carbon_balance_es){        
-      tsk->modifies(d_lab->d_co2RateLabel);
-    }
-    if (d_sulfur_balance_es){
-      tsk->modifies(d_lab->d_so2RateLabel);                
-    }
     tsk->computes(d_lab->d_poolConvectiveHeatFluxLabel);  //WME
     tsk->computes(d_lab->d_poolMassFluxLabel);            //WME
     tsk->computes(d_lab->d_poolSurfaceTemperatureLabel);  //WME
@@ -519,16 +544,15 @@ Properties::sched_reComputeProps(SchedulerP& sched,
       tsk->modifies(d_lab->d_sootFVINLabel);
     }
 
-    if (d_carbon_balance_es)        
-      tsk->modifies(d_lab->d_co2RateLabel);
-      if (d_sulfur_balance_es)
-        tsk->modifies(d_lab->d_so2RateLabel);                
+//Responsive Boundary Related Properties: this only works for methanol and heptane
+// fire, more work will need to be done to generalize the fuel. (WME)
     tsk->modifies(d_lab->d_poolConvectiveHeatFluxLabel);  //WME
     tsk->modifies(d_lab->d_poolMassFluxLabel);            //WME
     tsk->modifies(d_lab->d_poolSurfaceTemperatureLabel);  //WME
     tsk->modifies(d_lab->d_c7h16INLabel);                 //WME 
     tsk->modifies(d_lab->d_ch3ohINLabel);                 //WME
-    //tsk->modifies(d_lab->d_tabReactionRateLabel);
+   
+ //tsk->modifies(d_lab->d_tabReactionRateLabel);
   }
 
   if (d_MAlab) {
@@ -538,12 +562,6 @@ Properties::sched_reComputeProps(SchedulerP& sched,
     else
       tsk->modifies(d_lab->d_densityMicroLabel);
   }
-
-  if (d_calcExtraScalars)
-    for (int i=0; i < static_cast<int>(d_extraScalars->size()); i++) {
-      tsk->requires(Task::NewDW, d_extraScalars->at(i)->getScalarLabel(), 
-                    gn, 0);
-    } 
 
   sched->addTask(tsk, patches, matls);
 }
@@ -642,9 +660,6 @@ Properties::reComputeProps(const ProcessorGroup* pc,
     CCVariable<double> c2h2;
     CCVariable<double> ch4;
 
-    CCVariable<double> co2Rate;
-    CCVariable<double> so2Rate;
-
     CCVariable<double> poolCHF; //WME
     CCVariable<double> poolMF;  //WME
     CCVariable<double> poolST;  //WME
@@ -673,36 +688,10 @@ Properties::reComputeProps(const ProcessorGroup* pc,
       new_dw->get(cellType, d_lab->d_cellTypeLabel,   indx, patch, gn, 0);
     }
 
-    //WARNING!
-    //THIS is messy for extra scalars and will need to be fixed for EKT!!!!
     if (doing_EKT_now) {
       new_dw->getModifiable(scalar, d_lab->d_scalarEKTLabel, indx, patch);
       std::cout << "DANGER!  Extra scalars not supported for EKT yet" << endl;
-    }
-    //ExtraScalar for Density
-    else if (d_calcExtraScalars){     
-      for (int i=0; i < static_cast<int>(d_extraScalars->size()); i++) {
-        usemeforden = d_extraScalars->at(i)->useforDen();
-        if (usemeforden) {
-                indexforden = i;
-                foundExtrascalar = true;
-        }
-      } 
-      
-
-      if (foundExtrascalar){
-        //found an extra scalar for density
-        const VarLabel* extrascalarlabel;
-        extrascalarlabel = d_extraScalars->at(indexforden)->getScalarLabel();
-        new_dw->getModifiable(extrascalar, extrascalarlabel,indx, patch);
-      }
-      else { //Standard scalar
-        //Default to the standard scalar if no extrascalar 
-        // is found that is labeled to be used for density
-        new_dw->getModifiable(scalar, d_lab->d_scalarSPLabel, indx, patch);
-      }
-    }
-    else {
+    } else {
         new_dw->getModifiable(scalar, d_lab->d_scalarSPLabel, indx, patch);
     }
 
@@ -803,12 +792,6 @@ Properties::reComputeProps(const ProcessorGroup* pc,
         new_dw->allocateAndPut(sootFV, d_lab->d_sootFVINLabel, indx,patch);
       }
 
-      if (d_carbon_balance_es){       
-        new_dw->getModifiable(co2Rate, d_lab->d_co2RateLabel, indx, patch);
-      }
-      if (d_sulfur_balance_es){
-        new_dw->getModifiable(so2Rate, d_lab->d_so2RateLabel, indx, patch);
-      }
       new_dw->allocateAndPut(poolCHF, d_lab->d_poolConvectiveHeatFluxLabel,indx,patch); //WME
       new_dw->allocateAndPut(poolMF, d_lab->d_poolMassFluxLabel,           indx,patch); //WME
       new_dw->allocateAndPut(poolST, d_lab->d_poolSurfaceTemperatureLabel, indx,patch); //WME
@@ -875,12 +858,6 @@ Properties::reComputeProps(const ProcessorGroup* pc,
         new_dw->getModifiable(sootFV,       d_lab->d_sootFVINLabel, indx,patch);
       }
 
-      if (d_carbon_balance_es){
-        new_dw->getModifiable(co2Rate, d_lab->d_co2RateLabel, indx, patch);
-      }
-      if (d_sulfur_balance_es){
-        new_dw->getModifiable(so2Rate, d_lab->d_so2RateLabel, indx, patch);                  
-      }
       new_dw->getModifiable(poolCHF, d_lab->d_poolConvectiveHeatFluxLabel,indx,patch); //WME
       new_dw->getModifiable(poolMF, d_lab->d_poolMassFluxLabel,           indx,patch); //WME
       new_dw->getModifiable(poolST, d_lab->d_poolSurfaceTemperatureLabel, indx,patch); //WME
@@ -944,13 +921,6 @@ Properties::reComputeProps(const ProcessorGroup* pc,
       sootFV.initialize(0.0);
     }
 
-    if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First)){
-      if (d_carbon_balance_es)
-        co2Rate.initialize(0.0);
-      if (d_sulfur_balance_es)
-        so2Rate.initialize(0.0);
-    }
-
     poolCHF.initialize(0.0);//WME
     poolMF.initialize(0.0); //WME
     poolST.initialize(0.0); //WME
@@ -1002,14 +972,8 @@ Properties::reComputeProps(const ProcessorGroup* pc,
           
           inStream.d_currentCell = currCell;
           
-          //This is a bit messy, but we can make this more efficient later
-          if (d_calcExtraScalars && foundExtrascalar){
-            inStream.d_mixVars[0] = extrascalar[currCell];
-          }
-          else{
-            //Mixture fraction 
-            inStream.d_mixVars[0] = scalar[currCell];
-          }
+          //Mixture fraction 
+          inStream.d_mixVars[0] = scalar[currCell];
           
           if (d_calcVariance) {
             // Variance passed in has already been normalized !!!
@@ -1145,14 +1109,9 @@ Properties::reComputeProps(const ProcessorGroup* pc,
           // density underrelaxation is bogus here and has been removed
           new_density[currCell] = local_den;
 
-          //write the rates:
 
-          if (d_carbon_balance_es){
-            co2Rate[currCell] = outStream.getCO2RATE();
-          }
-          if (d_sulfur_balance_es){
-            so2Rate[currCell] = outStream.getSO2RATE();         
-          }
+//More Responsive Boundary Related variables, this only works for 
+// methanol and heptane fires and will need to be generalized.
           poolCHF[currCell] = 0.0;                //WME
           poolMF[currCell]  = 0.0;                //WME
           poolST[currCell]  = 0.0;                //WME      
@@ -1867,13 +1826,6 @@ Properties::sched_averageRKProps(SchedulerP& sched, const PatchSet* patches,
     tsk->requires(Task::NewDW, d_lab->d_enthalpyFELabel,   gn, 0);
     tsk->modifies(d_lab->d_enthalpySPLabel);
   }
-  
-  if (d_calcExtraScalars){
-    for (int i=0; i < static_cast<int>(d_extraScalars->size()); i++) {
-      tsk->requires(Task::OldDW, d_extraScalars->at(i)->getScalarLabel(), gn, 0);
-      tsk->modifies(d_extraScalars->at(i)->getScalarLabel());
-    }
-  }
 
   sched->addTask(tsk, patches, matls);
 }
@@ -2000,24 +1952,6 @@ Properties::averageRKProps(const ProcessorGroup*,
               }
             }
             
-            if (d_calcReactingScalar) {
-              if (!average_failed) {
-                new_reactScalar[currCell] = (factor_old *
-                                             old_density[currCell]*old_reactScalar[currCell] +
-                                             factor_new*new_density[currCell]*
-                                             new_reactScalar[currCell]) / ( factor_divide*predicted_density );
-                if (new_reactScalar[currCell] > 1.0) {
-                  new_reactScalar[currCell] = 1.0;
-                }
-                else if (new_reactScalar[currCell] < 0.0) {
-                  new_reactScalar[currCell] = 0.0;
-                }
-              }
-              else {
-                new_reactScalar[currCell] = fe_reactScalar[currCell];
-              }
-            }
-
             if( d_calcEnthalpy ) {
               if( !average_failed ) {
                 new_enthalpy[currCell] = (factor_old*old_density[currCell]*
@@ -2029,42 +1963,6 @@ Properties::averageRKProps(const ProcessorGroup*,
               }
             }
             density_guess[currCell] = predicted_density;
-          }
-        }
-      }
-    }
-
-    if( d_calcExtraScalars ) {
-      for (int i=0; i < static_cast<int>(d_extraScalars->size()); i++) {
-        constCCVariable<double> old_extra_scalar;
-        CCVariable<double> new_extra_scalar;
-        old_dw->get(old_extra_scalar, d_extraScalars->at(i)->getScalarLabel(), 
-                    indx, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-        new_dw->getModifiable(new_extra_scalar,
-                              d_extraScalars->at(i)->getScalarLabel(), 
-                              indx, patch);
-        bool scalar_density_weighted = d_extraScalars->at(i)->isDensityWeighted();
-        for (int colZ = indexLow.z(); colZ < indexHigh.z(); colZ ++) {
-          for (int colY = indexLow.y(); colY < indexHigh.y(); colY ++) {
-            for (int colX = indexLow.x(); colX < indexHigh.x(); colX ++) {
-              IntVector currCell(colX, colY, colZ);
-              
-              if (new_density[currCell] > 0.0) {
-                if (scalar_density_weighted) {
-                  new_extra_scalar[currCell] = 
-                    (factor_old*old_density[currCell]*
-                     old_extra_scalar[currCell] + 
-                     factor_new*new_density[currCell]*
-                     new_extra_scalar[currCell])/
-                    (factor_divide* density_guess[currCell]);
-                }
-                else {
-                  new_extra_scalar[currCell] = (factor_old*
-                                                old_extra_scalar[currCell] + factor_new*
-                                                new_extra_scalar[currCell])/(factor_divide);
-                }
-              }
-            }
           }
         }
       }
@@ -2305,7 +2203,7 @@ Properties::computeDrhodt(const ProcessorGroup* pc,
     // filtering for periodic case is not implemented 
     // if it needs to be then drhodt will require 1 layer of boundary cells to be computed
 #ifdef PetscFilter
-    d_filter->applyFilter(pc, patch, drhodt, filterdrhodt);
+    d_filter->applyFilter<CCVariable<double> >(pc, patch, drhodt, filterdrhodt);
 #else
     // filtering without petsc is not implemented
     // if it needs to be then drhodt will have to be computed with ghostcells
@@ -2339,25 +2237,38 @@ Properties::sched_reComputeProps_new( const LevelP& level,
                                       const bool initialize, 
                                       const bool modify_ref_den )
 {
-#if HAVE_TABPROPS
   // this method is temporary while we get rid of properties.cc 
   d_mixingRxnTable->sched_computeHeatLoss( level, sched, initialize, d_calcEnthalpy );
 
   d_mixingRxnTable->sched_getState( level, sched, time_labels, initialize, d_calcEnthalpy, modify_ref_den ); 
-#endif  
 }
 
 void 
 Properties::sched_initEnthalpy( const LevelP& level, SchedulerP& sched )
 {
-#if HAVE_TABPROPS
   d_mixingRxnTable->sched_computeFirstEnthalpy( level, sched ) ; 
-#endif
 }
 void 
 Properties::sched_doTPDummyInit( const LevelP& level, SchedulerP& sched )
 {
-#if HAVE_TABPROPS
   d_mixingRxnTable->sched_dummyInit( level, sched ); 
-#endif 
+}
+void 
+Properties::addLookupSpecies( ){
+
+  std::vector<std::string> sps; 
+  sps = d_lab->model_req_species; 
+
+  if ( mixModel == "ClassicTable"  || mixModel == "TabProps" ) { 
+    for ( vector<string>::iterator i = sps.begin(); i != sps.end(); i++ ){
+      d_mixingRxnTable->insertIntoMap( *i ); 
+    }
+  }
+}
+
+void 
+Properties::doTableMatching(){ 
+
+	d_mixingRxnTable->tableMatching(); 
+
 }

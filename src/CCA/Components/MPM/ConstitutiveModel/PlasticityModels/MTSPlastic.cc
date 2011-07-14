@@ -178,7 +178,7 @@ void MTSPlastic::outputProblemSpec(ProblemSpecP& ps)
 void 
 MTSPlastic::addInitialComputesAndRequires(Task* ,
                                           const MPMMaterial* ,
-                                          const PatchSet*) const
+                                          const PatchSet*)
 {
   //const MaterialSubset* matlset = matl->thisMaterial();
   //task->computes(pMTSLabel, matlset);
@@ -187,7 +187,7 @@ MTSPlastic::addInitialComputesAndRequires(Task* ,
 void 
 MTSPlastic::addComputesAndRequires(Task* ,
                                    const MPMMaterial* ,
-                                   const PatchSet*) const
+                                   const PatchSet*)
 {
   //const MaterialSubset* matlset = matl->thisMaterial();
   //task->requires(Task::OldDW, pMTSLabel, matlset,Ghost::None);
@@ -199,7 +199,7 @@ MTSPlastic::addComputesAndRequires(Task* ,
                                    const MPMMaterial* ,
                                    const PatchSet*,
                                    bool ,
-                                   bool ) const
+                                   bool )
 {
   //const MaterialSubset* matlset = matl->thisMaterial();
   //task->requires(Task::ParentOldDW, pMTSLabel, matlset,Ghost::None);
@@ -217,7 +217,7 @@ void
 MTSPlastic::allocateCMDataAddRequires(Task* ,
                                       const MPMMaterial* ,
                                       const PatchSet* ,
-                                      MPMLabel* ) const
+                                      MPMLabel* )
 {
   //const MaterialSubset* matlset = matl->thisMaterial();
   //task->requires(Task::NewDW, pMTSLabel_preReloc, matlset, Ghost::None);
@@ -1066,5 +1066,3 @@ MTSPlastic::evalDerivativeWRTSigmaE(const PlasticityState* state,
   S_e = mu_mu_0*S_e;
   return S_e;
 }
-
-

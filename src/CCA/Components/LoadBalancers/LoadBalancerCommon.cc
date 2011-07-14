@@ -45,6 +45,7 @@ DEALINGS IN THE SOFTWARE.
 #include <sstream>
 
 using namespace Uintah;
+using namespace std;
 
 #undef UINTAHSHARE
 #if defined(_WIN32) && !defined(BUILD_UINTAH_STATIC)
@@ -246,10 +247,14 @@ LoadBalancerCommon::createNeighborhood(const GridP& grid, const GridP& oldGrid)
 {
   int me = d_myworld->myrank();
   // WARNING - this should be determined from the taskgraph? - Steve
-  int maxGhost = 2;
+  // Now maxGhost is from taskgraph 
+  int maxGhost = d_scheduler->getMaxGhost();
   d_neighbors.clear();
   d_neighborProcessors.clear();
   
+  //this processor should always be in the neighbhood
+  d_neighborProcessors.insert(d_myworld->myrank());
+ 
   // go through all patches on all levels, and if the patchwise
   // processor assignment equals the current processor, then store the 
   // patch's neighbors in the load balancer array
@@ -316,7 +321,12 @@ LoadBalancerCommon::createNeighborhood(const GridP& grid, const GridP& oldGrid)
           IntVector ratio = level->getRefinementRatio();
 
           // we can require up to 1 ghost cell from a coarse patch
-          int ngc = 1 * Max(Max(ratio.x(), ratio.y()), ratio.z());
+          // If any direction's refinement ratio is 1, we will need 2 ghost cells
+          int ngc;
+          if (Min(Min(ratio.x(), ratio.y()), ratio.z()) == 1) 
+            ngc = 2 * Max(Max(ratio.x(), ratio.y()), ratio.z());
+          else ngc = 1 * Max(Max(ratio.x(), ratio.y()), ratio.z());
+
           IntVector ghost(ngc,ngc,ngc);
           coarseLevel->selectPatches(level->mapCellToCoarser(low-ghost), 
               level->mapCellToCoarser(high+ghost), coarse);

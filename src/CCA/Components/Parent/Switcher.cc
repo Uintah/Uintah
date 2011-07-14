@@ -64,6 +64,7 @@ DEALINGS IN THE SOFTWARE.
 
 #include <sstream>
 
+using namespace std;
 using namespace Uintah;
 
 #define ALL_LEVELS  99

@@ -36,6 +36,7 @@ DEALINGS IN THE SOFTWARE.
 #include <iostream>
 #include <iomanip>
 
+using namespace std;
 using namespace Uintah;
 
 JWLC::JWLC(ProblemSpecP& ps)

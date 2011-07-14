@@ -49,8 +49,6 @@ DEALINGS IN THE SOFTWARE.
 
 #include <testprograms/TestSuite/uintahshare.h>
 
-using namespace std;
-
 class UINTAHSHARE SuiteTree
 {
 public:
@@ -59,21 +57,21 @@ public:
   // deletes the whole tree including Suite's
   virtual ~SuiteTree() {}
   
-  virtual string composeSummary(const string indent, bool expandAll,
+  virtual std::string composeSummary(const std::string indent, bool expandAll,
 				bool& allPassed) = 0;
 
-  virtual void appendFailedSuites(list<Suite*>& failedSuiteList) = 0;
+  virtual void appendFailedSuites(std::list<Suite*>& failedSuiteList) = 0;
 
   virtual void reportAllSuites() = 0;
   
-  string summary(bool expandAll)
+  std::string summary(bool expandAll)
   { bool dummy; return composeSummary("", expandAll, dummy); }
 };
 
 class UINTAHSHARE SuiteTreeNode : public SuiteTree
 {
 public:
-  SuiteTreeNode(string name)
+  SuiteTreeNode(std::string name)
     : myName(name) { }
   
   ~SuiteTreeNode(); // delete sub trees
@@ -81,28 +79,28 @@ public:
   void addSubTree(SuiteTree* subTree)
   { mySubTrees.push_back(subTree); }
 
-  SuiteTreeNode* addSubTree(string name)
+  SuiteTreeNode* addSubTree(std::string name)
   { SuiteTreeNode* node = new SuiteTreeNode(name); addSubTree(node);
     return node; }
 
   inline void addSuite(Suite* suite);
 
-  Suite* addSuite(string name)
+  Suite* addSuite(std::string name)
   { Suite* suite = new Suite(name); addSuite(suite); return suite; }
   
-  string getName()
+  std::string getName()
   { return myName; }
   
-  string composeSummary(const string indent, bool expandAll, bool& allPassed);
-  string composeSubSummary(const string indent, bool expandAll,
+  std::string composeSummary(const std::string indent, bool expandAll, bool& allPassed);
+  std::string composeSubSummary(const std::string indent, bool expandAll,
 			   bool& allPassed);
 
-  void appendFailedSuites(list<Suite*>& failedSuiteList);
+  void appendFailedSuites(std::list<Suite*>& failedSuiteList);
 
   void reportAllSuites();  
 private:
-  string myName;
-  list<SuiteTree*> mySubTrees;
+  std::string myName;
+  std::list<SuiteTree*> mySubTrees;
 };
 
 class UINTAHSHARE SuiteTreeLeaf : public SuiteTree
@@ -114,9 +112,9 @@ public:
   ~SuiteTreeLeaf()
   { delete mySuite; }
   
-  string composeSummary(const string indent, bool expandAll, bool& allPassed);
+  std::string composeSummary(const std::string indent, bool expandAll, bool& allPassed);
   
-  void appendFailedSuites(list<Suite*>& failedSuiteList);
+  void appendFailedSuites(std::list<Suite*>& failedSuiteList);
 
   void reportAllSuites();  
 private:

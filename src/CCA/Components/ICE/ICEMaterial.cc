@@ -47,7 +47,7 @@ DEALINGS IN THE SOFTWARE.
 #include <iostream>
 #include <CCA/Components/ICE/EOS/EquationOfStateFactory.h>
 
-#define d_TINY_RHO 1.0e-12 // also defined ICE.cc and MPMMaterial.cc 
+//#define d_TINY_RHO 1.0e-12 // also defined ICE.cc and MPMMaterial.cc 
 
 using namespace std;
 using namespace Uintah;
@@ -73,6 +73,7 @@ ICEMaterial::ICEMaterial(ProblemSpecP& ps): Material(ps)
    ps->require("specific_heat",d_specificHeat);
    ps->require("dynamic_viscosity",d_viscosity);
    ps->require("gamma",d_gamma);
+   ps->getWithDefault("tiny_rho",d_tiny_rho,1.e-12);
    
    d_isSurroundingMatl = false;
    ps->get("isSurroundingMatl",d_isSurroundingMatl);
@@ -82,11 +83,14 @@ ICEMaterial::ICEMaterial(ProblemSpecP& ps): Material(ps)
 
    // Step 3 -- Loop through all of the pieces in this geometry object
    int piece_num = 0;
-   list<string> geom_obj_data;
-   geom_obj_data.push_back("temperature");
-   geom_obj_data.push_back("pressure");
-   geom_obj_data.push_back("density");
-   
+
+   list<GeometryObject::DataItem> geom_obj_data;
+   geom_obj_data.push_back(GeometryObject::DataItem("res",        GeometryObject::IntVector));
+   geom_obj_data.push_back(GeometryObject::DataItem("temperature",GeometryObject::Double));
+   geom_obj_data.push_back(GeometryObject::DataItem("pressure",   GeometryObject::Double));
+   geom_obj_data.push_back(GeometryObject::DataItem("density",    GeometryObject::Double));
+   geom_obj_data.push_back(GeometryObject::DataItem("velocity",   GeometryObject::Vector));
+
    for (ProblemSpecP geom_obj_ps = ps->findBlock("geom_object");
         geom_obj_ps != 0;
         geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
@@ -104,8 +108,7 @@ ICEMaterial::ICEMaterial(ProblemSpecP& ps): Material(ps)
       }
 
       piece_num++;
-      d_geom_objs.push_back(scinew GeometryObject(mainpiece,geom_obj_ps,
-                                                  geom_obj_data));
+      d_geom_objs.push_back(scinew GeometryObject(mainpiece, geom_obj_ps, geom_obj_data));
    }
    lb = scinew ICELabel();
 }
@@ -130,6 +133,7 @@ ProblemSpecP ICEMaterial::outputProblemSpec(ProblemSpecP& ps)
   ice_ps->appendElement("gamma",d_gamma);
   ice_ps->appendElement("isSurroundingMatl",d_isSurroundingMatl);
   ice_ps->appendElement("includeFlowWork",d_includeFlowWork);
+  ice_ps->appendElement("tiny_rho",d_tiny_rho);
     
   for (vector<GeometryObject*>::const_iterator it = d_geom_objs.begin();
        it != d_geom_objs.end(); it++) {
@@ -148,6 +152,11 @@ EquationOfState * ICEMaterial::getEOS() const
 double ICEMaterial::getGamma() const
 {
   return d_gamma;
+}
+
+double ICEMaterial::getTinyRho() const
+{
+  return d_tiny_rho;
 }
 
 double ICEMaterial::getViscosity() const
@@ -177,7 +186,7 @@ double ICEMaterial::getThermalConductivity() const
 
 double ICEMaterial::getInitialDensity() const
 {
-  return d_geom_objs[0]->getInitialData("density");
+  return d_geom_objs[0]->getInitialData_double("density");
 }
 
 /* --------------------------------------------------------------------- 
@@ -241,15 +250,15 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
     // First initialize all variables everywhere.
     for(CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
       vol_frac_CC[*iter]= 1.0;
-      press_CC[*iter]   = d_geom_objs[obj]->getInitialData("pressure");
-      vel_CC[*iter]     = d_geom_objs[obj]->getInitialVelocity();
-      rho_micro[*iter]  = d_geom_objs[obj]->getInitialData("density");
-      rho_CC[*iter]     = rho_micro[*iter] + d_TINY_RHO*rho_micro[*iter];
-      temp[*iter]       = d_geom_objs[obj]->getInitialData("temperature");
+      press_CC[*iter]   = d_geom_objs[obj]->getInitialData_double("pressure");
+      vel_CC[*iter]     = d_geom_objs[obj]->getInitialData_Vector("velocity");
+      rho_micro[*iter]  = d_geom_objs[obj]->getInitialData_double("density");
+      rho_CC[*iter]     = rho_micro[*iter] + d_tiny_rho*rho_micro[*iter];
+      temp[*iter]       = d_geom_objs[obj]->getInitialData_double("temperature");
       IveBeenHere[*iter]= 1;
     }
 
-    IntVector ppc = d_geom_objs[obj]->getNumParticlesPerCell();
+    IntVector ppc = d_geom_objs[obj]->getInitialData_IntVector("res");
     double ppc_tot = ppc.x()*ppc.y()*ppc.z();
     cout << "ppc_tot = " << ppc_tot << endl;
     cout << "numPts = " << numPts << endl;
@@ -263,12 +272,12 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
 
     for(CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
       rho_CC[*iter]     = rho_micro[*iter] * vol_frac_CC[*iter] +
-                          d_TINY_RHO*rho_micro[*iter];
+                          d_tiny_rho*rho_micro[*iter];
     }
 
    } else {
 
-    IntVector ppc = d_geom_objs[obj]->getNumParticlesPerCell();
+    IntVector ppc = d_geom_objs[obj]->getInitialData_IntVector("res");
     Vector dxpp = patch->dCell()/ppc;
     Vector dcorner = dxpp*0.5;
     double totalppc = ppc.x()*ppc.y()*ppc.z();
@@ -291,11 +300,11 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
       if(numMatls == 1)  {
         if ( count > 0 ) {
           vol_frac_CC[*iter]= 1.0;
-          press_CC[*iter]   = d_geom_objs[obj]->getInitialData("pressure");
-          vel_CC[*iter]     = d_geom_objs[obj]->getInitialVelocity();
-          rho_micro[*iter]  = d_geom_objs[obj]->getInitialData("density");
-          rho_CC[*iter]     = rho_micro[*iter] + d_TINY_RHO*rho_micro[*iter];
-          temp[*iter]       = d_geom_objs[obj]->getInitialData("temperature");
+          press_CC[*iter]   = d_geom_objs[obj]->getInitialData_double("pressure");
+          vel_CC[*iter]     = d_geom_objs[obj]->getInitialData_Vector("velocity");
+          rho_micro[*iter]  = d_geom_objs[obj]->getInitialData_double("density");
+          rho_CC[*iter]     = rho_micro[*iter] + d_tiny_rho*rho_micro[*iter];
+          temp[*iter]       = d_geom_objs[obj]->getInitialData_double("temperature");
           IveBeenHere[*iter]= 1;
         }
       }   
@@ -304,23 +313,23 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
         if(IveBeenHere[*iter] == -9){
           // This cell hasn't been hit for this matl yet so set values
           // to ensure that everything is set to something everywhere
-          vel_CC[*iter]     = d_geom_objs[obj]->getInitialVelocity();
-          rho_micro[*iter]  = d_geom_objs[obj]->getInitialData("density");
+          vel_CC[*iter]     = d_geom_objs[obj]->getInitialData_Vector("velocity");
+          rho_micro[*iter]  = d_geom_objs[obj]->getInitialData_double("density");
           rho_CC[*iter]     = rho_micro[*iter] * vol_frac_CC[*iter] +
-                            d_TINY_RHO*rho_micro[*iter];
-          temp[*iter]       = d_geom_objs[obj]->getInitialData("temperature");
+                            d_tiny_rho*rho_micro[*iter];
+          temp[*iter]       = d_geom_objs[obj]->getInitialData_double("temperature");
           IveBeenHere[*iter]= obj; 
         }
         if(IveBeenHere[*iter] != -9 && count > 0){
           // This cell HAS been hit but another object has values to
           // override it, possibly in a cell that was just set by default
           // in the above section.
-          press_CC[*iter]   = d_geom_objs[obj]->getInitialData("pressure");
-          vel_CC[*iter]     = d_geom_objs[obj]->getInitialVelocity();
-          rho_micro[*iter]  = d_geom_objs[obj]->getInitialData("density");
+          press_CC[*iter]   = d_geom_objs[obj]->getInitialData_double("pressure");
+          vel_CC[*iter]     = d_geom_objs[obj]->getInitialData_Vector("velocity");
+          rho_micro[*iter]  = d_geom_objs[obj]->getInitialData_double("density");
           rho_CC[*iter]     = rho_micro[*iter] * vol_frac_CC[*iter] +
-                            d_TINY_RHO*rho_micro[*iter];
-          temp[*iter]       = d_geom_objs[obj]->getInitialData("temperature");
+                            d_tiny_rho*rho_micro[*iter];
+          temp[*iter]       = d_geom_objs[obj]->getInitialData_double("temperature");
           IveBeenHere[*iter]= obj; 
         }
         if(IveBeenHere[*iter] != -9 && count == 0){

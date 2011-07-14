@@ -85,13 +85,13 @@ void HeatConduction::scheduleComputeInternalHeatRate(SchedulerP& sched,
   t->requires(Task::OldDW, d_lb->pMassLabel,                      gan, NGP);
   t->requires(Task::OldDW, d_lb->pVolumeLabel,                    gan, NGP);
   t->requires(Task::OldDW, d_lb->pDeformationMeasureLabel,        gan, NGP);
-  t->requires(Task::NewDW, d_lb->gTemperatureLabel,               gac, 2*NGP);
+  t->requires(Task::NewDW, d_lb->gTemperatureLabel,               gan, 2*NGN);
   t->requires(Task::NewDW, d_lb->gMassLabel,                      gnone);
   t->computes(d_lb->gdTdtLabel);
 
   if(d_flag->d_fracture) { // for FractureMPM
     t->requires(Task::NewDW, d_lb->pgCodeLabel,                   gan, NGP);
-    t->requires(Task::NewDW, d_lb->GTemperatureLabel,             gac, 2*NGP);
+    t->requires(Task::NewDW, d_lb->GTemperatureLabel,             gac, 2*NGN);
     t->requires(Task::NewDW, d_lb->GMassLabel,                    gnone);
     t->computes(d_lb->GdTdtLabel);
   }

@@ -42,6 +42,7 @@ SRCS     += $(SRCDIR)/EquationOfState.cc \
 	$(SRCDIR)/Gruneisen.cc     \
 	$(SRCDIR)/Tillotson.cc     \
 	$(SRCDIR)/Thomsen_Hartka_water.cc     \
+	$(SRCDIR)/KnaussSeaWater.cc     \
 	$(SRCDIR)/Murnahan.cc
 
 PSELIBS := \

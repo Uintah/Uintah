@@ -28,7 +28,7 @@ public:
 
   Devolatilization( std::string modelName, 
                          SimulationStateP& shared_state, 
-                         const ArchesLabel* fieldLabels,
+                         ArchesLabel* fieldLabels,
                          vector<std::string> reqICLabelNames, 
                          vector<std::string> reqScalarLabelNames,
                          int qn );
@@ -53,6 +53,8 @@ public:
                  DataWarehouse        * old_dw, 
                  DataWarehouse        * new_dw );
 
+  void sched_dummyInit( const LevelP& level, SchedulerP& sched );
+
   /** @brief  Actually do dummy initialization (sched_dummyInit is defined in ModelBase parent class) */
   void dummyInit( const ProcessorGroup* pc, 
                   const PatchSubset* patches, 
@@ -60,28 +62,20 @@ public:
                   DataWarehouse* old_dw, 
                   DataWarehouse* new_dw );
 
-  ////////////////////////////////////////////////
-  // Model computation methods
-
-  /** @brief  Get raw coal reaction rate (see Glacier) */
-  virtual double calcRawCoalReactionRate() = 0;
-
-  /** @brief  Get gas volatile production rate (see Glacier) */
-  virtual double calcGasDevolRate() = 0;
-
-  /** @brief  Get char production rate (see Glacier) */
-  virtual double calcCharProductionRate() = 0;
-
-  ///////////////////////////////////////////////////
-  // Access methods
 
   /** @brief  Return a string containing the model type ("Devolatilization") */
   inline string getType() {
     return "Devolatilization"; }
 
+  /** @brief  Return the VarLabel for the model term for char */
+  inline const VarLabel* getCharSourceLabel() {
+    return d_charLabel; };
+   
+
 
 protected:
 
+  const VarLabel* d_charLabel;
   double d_w_scaling_factor; 
   double d_w_small; // "small" clip value for zero weights
 

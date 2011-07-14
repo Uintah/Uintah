@@ -49,6 +49,7 @@ using namespace SCIRun;
 
 static DebugStream dbg("SingleProcessorScheduler", false);
 extern DebugStream taskdbg;
+extern DebugStream taskLevel_dbg;
 
 SingleProcessorScheduler::SingleProcessorScheduler(const ProcessorGroup* myworld,
     	    	    	    	    	    	   Output* oport, 
@@ -78,21 +79,6 @@ SingleProcessorScheduler::verifyChecksum()
   // Not used in SingleProcessorScheduler
 }
 
-static
-void
-printTask( ostream& out, DetailedTask* task )
-{
-  out << task->getTask()->getName();
-  if(task->getPatches()){
-    out << " on patches ";
-    const PatchSubset* patches = task->getPatches();
-    for(int p=0;p<patches->size();p++){
-      if(p != 0)
-	out << ", ";
-      out << patches->get(p)->getID();
-    }
-  }
-}
 
 void
 SingleProcessorScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
@@ -153,7 +139,7 @@ SingleProcessorScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
     double start = Time::currentSeconds();
     DetailedTask* task = dts->getTask( i );
     
-    taskdbg << d_myworld->myrank() << " SPS: Initiating task: "; printTask(taskdbg, task); taskdbg << '\n';
+    taskdbg << d_myworld->myrank() << " SPS: Initiating: "; printTask(taskdbg, task); taskdbg << '\n';
 
     if (trackingVarsPrintLocation_ & SchedulerCommon::PRINT_BEFORE_EXEC)
       printTrackedVars(task, SchedulerCommon::PRINT_BEFORE_EXEC);
@@ -165,7 +151,10 @@ SingleProcessorScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
 
     task->done(dws);
     
-    taskdbg << d_myworld->myrank() << " SPS: Completed task: "; printTask(taskdbg, task); taskdbg << '\n';
+    taskdbg << d_myworld->myrank() << " SPS: Completed:  "; printTask(taskdbg, task); taskdbg << '\n';
+    printTaskLevels( d_myworld, taskLevel_dbg, task );
+    
+    
     double delT = Time::currentSeconds()-start;
     long long flop_count = 0;
 #ifdef USE_PERFEX_COUNTERS

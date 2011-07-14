@@ -47,6 +47,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/BoundaryConditions/BCDataArray.h>
 #include <Core/Grid/BoundaryConditions/BoundCond.h>
 
+using namespace std;
 using namespace Uintah;
 
 Poisson2::Poisson2(const ProcessorGroup* myworld)

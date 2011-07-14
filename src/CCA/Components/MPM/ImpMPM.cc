@@ -1607,10 +1607,8 @@ void ImpMPM::iterate(const ProcessorGroup*,
 {
   DataWarehouse::ScrubMode old_dw_scrubmode =
                            old_dw->setScrubbing(DataWarehouse::ScrubNone);
-#if 0
-  DataWarehouse::ScrubMode new_dw_scrubmode =
-                           new_dw->setScrubbing(DataWarehouse::ScrubNone);
-#endif
+//  DataWarehouse::ScrubMode new_dw_scrubmode =
+//                           new_dw->setScrubbing(DataWarehouse::ScrubNone);
 
   GridP grid = level->getGrid();
   d_subsched->setParentDWs(old_dw, new_dw);
@@ -1745,7 +1743,7 @@ void ImpMPM::iterate(const ProcessorGroup*,
     }
 
     d_subsched->advanceDataWarehouse(grid);
-  }
+  } // while
   d_numIterations = count;
 
   // Move the particle data from subscheduler to scheduler.

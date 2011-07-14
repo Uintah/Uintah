@@ -22,7 +22,7 @@ using namespace Uintah;
 SimpleHeatTransferBuilder::SimpleHeatTransferBuilder( const std::string         & modelName,
                                                       const vector<std::string> & reqICLabelNames,
                                                       const vector<std::string> & reqScalarLabelNames,
-                                                      const ArchesLabel         * fieldLabels,
+                                                      ArchesLabel         * fieldLabels,
                                                       SimulationStateP          & sharedState,
                                                       int qn ) :
   ModelBuilder( modelName, reqICLabelNames, reqScalarLabelNames, fieldLabels, sharedState, qn )
@@ -39,19 +39,12 @@ ModelBase* SimpleHeatTransferBuilder::build() {
 
 SimpleHeatTransfer::SimpleHeatTransfer( std::string modelName, 
                                         SimulationStateP& sharedState,
-                                        const ArchesLabel* fieldLabels,
+                                        ArchesLabel* fieldLabels,
                                         vector<std::string> icLabelNames, 
                                         vector<std::string> scalarLabelNames,
                                         int qn ) 
 : HeatTransfer(modelName, sharedState, fieldLabels, icLabelNames, scalarLabelNames, qn)
 {
-  // Create a label for this model
-  d_modelLabel = VarLabel::create( modelName, CCVariable<double>::getTypeDescription() );
-
-  // Create the gas phase source term associated with this model
-  std::string gasSourceName = modelName + "_gasSource";
-  d_gasLabel = VarLabel::create( gasSourceName, CCVariable<double>::getTypeDescription() );
-
   // Set constants
   Pr = 0.7;
   blow = 1.0;
@@ -62,9 +55,7 @@ SimpleHeatTransfer::SimpleHeatTransfer( std::string modelName,
 }
 
 SimpleHeatTransfer::~SimpleHeatTransfer()
-{
-  VarLabel::destroy(d_abskp);
-}
+{}
 
 //---------------------------------------------------------------------------
 // Method: Problem Setup
@@ -229,12 +220,6 @@ SimpleHeatTransfer::problemSetup(const ProblemSpecP& params, int qn)
   std::stringstream out;
   out << qn; 
   string node = out.str();
-
-  // Absorption coefficient of particle
-  std::string abskpName = "abskp_qn";
-  abskpName += node; 
-  d_abskp = VarLabel::create(abskpName, CCVariable<double>::getTypeDescription());
-
 }
 
 //---------------------------------------------------------------------------
@@ -245,8 +230,6 @@ SimpleHeatTransfer::sched_initVars( const LevelP& level, SchedulerP& sched )
 {
   std::string taskname = "SimpleHeatTransfer::initVars";
   Task* tsk = scinew Task(taskname, this, &SimpleHeatTransfer::initVars);
-
-  tsk->computes(d_abskp);
 
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials()); 
 }
@@ -261,17 +244,15 @@ SimpleHeatTransfer::initVars( const ProcessorGroup * pc,
                               DataWarehouse        * old_dw, 
                               DataWarehouse        * new_dw )
 {
+  /*
   for( int p=0; p < patches->size(); p++ ) {  // Patch loop
 
     const Patch* patch = patches->get(p);
     int archIndex = 0;
     int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
-    CCVariable<double> abskp; 
-    new_dw->allocateAndPut( abskp, d_abskp, matlIndex, patch ); 
-    abskp.initialize(0.0);
-
   }
+  */
 }
 
 //---------------------------------------------------------------------------
@@ -292,11 +273,11 @@ SimpleHeatTransfer::sched_computeModel( const LevelP& level, SchedulerP& sched, 
 
     tsk->computes(d_modelLabel);
     tsk->computes(d_gasLabel); 
-    tsk->computes(d_abskp);
+    tsk->computes(d_abskpLabel);
   } else {
     tsk->modifies(d_modelLabel);
     tsk->modifies(d_gasLabel);  
-    tsk->modifies(d_abskp);
+    tsk->modifies(d_abskpLabel);
   }
 
   //EqnFactory& eqn_factory = EqnFactory::self();
@@ -466,10 +447,10 @@ SimpleHeatTransfer::computeModel( const ProcessorGroup * pc,
     }
     
     CCVariable<double> abskp; 
-    if( new_dw->exists( d_abskp, matlIndex, patch) ) {
-      new_dw->getModifiable( abskp, d_abskp, matlIndex, patch ); 
+    if( new_dw->exists( d_abskpLabel, matlIndex, patch) ) {
+      new_dw->getModifiable( abskp, d_abskpLabel, matlIndex, patch ); 
     } else {
-      new_dw->allocateAndPut( abskp, d_abskp, matlIndex, patch );
+      new_dw->allocateAndPut( abskp, d_abskpLabel, matlIndex, patch );
       abskp.initialize(0.0);
     }
     
@@ -653,11 +634,11 @@ SimpleHeatTransfer::computeModel( const ProcessorGroup * pc,
         Q_radiation = 0.0;
         if (b_radiation) {
           double Qabs = 0.8;
-	  double Apsc = (pi/4)*Qabs*pow(unscaled_length,2);
-	  double Eb = 4*sigma*pow(unscaled_particle_temperature,4);
+          double Apsc = (pi/4)*Qabs*pow(unscaled_length,2);
+          double Eb = 4*sigma*pow(unscaled_particle_temperature,4);
           FSum = radiationVolqIN[c];    
-	  Q_radiation = Apsc*(FSum - Eb);
-	  abskp_ = pi/4*Qabs*unscaled_weight*pow(unscaled_length,2); 
+          Q_radiation = Apsc*(FSum - Eb);
+          abskp_ = pi/4*Qabs*unscaled_weight*pow(unscaled_length,2); 
         } else {
           abskp_ = 0.0;
         }

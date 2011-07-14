@@ -73,7 +73,6 @@ POSSIBLE REVISIONS
 namespace Uintah {
 
 class InletStream;
-class ExtraScalarSolver;
    
 class NewStaticMixingTable: public MixingModel {
 
@@ -140,15 +139,6 @@ public:
   inline double getFStoich() const{
     return d_f_stoich;
   }
-  
-  inline void setCalcExtraScalars(bool calcExtraScalars) {
-    d_calcExtraScalars=calcExtraScalars;
-  }
-
-  inline void setExtraScalars(std::vector<ExtraScalarSolver*>* extraScalars) {
-    d_extraScalars = extraScalars;
-  }
-
 
 protected :
 
@@ -213,9 +203,6 @@ private:
   int T_index, Rho_index, Cp_index, Hs_index;
   double d_H_fuel, d_H_air;
   double d_f_stoich, d_carbon_fuel, d_carbon_air;
-  bool d_calcExtraScalars;
-  std::vector<ExtraScalarSolver*>* d_extraScalars;
-
   bool d_loudHeatLossWarning; 
   
   const ProcessorGroup* d_myworld;

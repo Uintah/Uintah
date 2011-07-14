@@ -36,6 +36,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Variables/VarTypes.h>
+#include <Core/Grid/DbgOutput.h>
 #include <Core/Labels/MPMLabel.h>
 #include <Core/Labels/ICELabel.h>
 #include <Core/Labels/MPMICELabel.h>
@@ -190,7 +191,7 @@ void Unsteady_Burn::outputProblemSpec(ProblemSpecP& ps)
 
 
 void Unsteady_Burn::scheduleInitialize(SchedulerP& sched, const LevelP& level, const ModelInfo*){
-  printSchedule(level,"Unsteady_Burn::scheduleInitialize\t\t\t");
+  printSchedule(level,cout_doing,"Unsteady_Burn::scheduleInitialize");
   Task* t = scinew Task("Unsteady_Burn::initialize", this, &Unsteady_Burn::initialize);                        
   const MaterialSubset* react_matl = matl0->thisMaterial();
   t->computes(BurningCellLabel, react_matl);
@@ -254,7 +255,7 @@ void Unsteady_Burn::scheduleComputeModelSources(SchedulerP& sched,
   Task* t = scinew Task("Unsteady_Burn::computeModelSources", this, 
                         &Unsteady_Burn::computeModelSources, mi);
   
-  printSchedule(level,"Unsteady_Burn::scheduleComputeModelSources\t\t\t");  
+  printSchedule(level,cout_doing,"Unsteady_Burn::scheduleComputeModelSources");  
 
   Ghost::GhostType gac = Ghost::AroundCells;  
   Ghost::GhostType gn  = Ghost::None;
@@ -355,7 +356,7 @@ void Unsteady_Burn::computeModelSources(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);  
     
-    printTask(patches,patch,"Doing computeModelSources\t\t\t\t");
+    printTask(patches,patch, cout_doing,"Doing computeModelSources");
     CCVariable<double> mass_src_0, mass_src_1, mass_0;
     CCVariable<Vector> momentum_src_0, momentum_src_1;
     CCVariable<double> energy_src_0, energy_src_1;
@@ -629,28 +630,6 @@ void Unsteady_Burn::scheduleErrorEstimate(const LevelP&, SchedulerP&){
 void Unsteady_Burn::scheduleTestConservation(SchedulerP&, const PatchSet*, const ModelInfo*){
   // Not implemented yet
 }
-
-//______________________________________________________________________
-void Unsteady_Burn::printSchedule(const LevelP& level,
-                                const string& where){
-  if (cout_doing.active()){
-    cout_doing << d_myworld->myrank() << " " 
-               << where << "L-"
-               << level->getIndex()<< endl;
-  }  
-}
-//______________________________________________________________________
-void Unsteady_Burn::printTask(const PatchSubset* patches,
-                            const Patch* patch,
-                            const string& where){
-  if (cout_doing.active()){
-    cout_doing << d_myworld->myrank() << " " 
-               << where << " STEADY_BURN L-"
-               << getLevel(patches)->getIndex()
-               << " patch " << patch->getGridIndex()<< endl;
-  }  
-}
-
 
 /****************************************************************************/
 /******************* Bisection Newton Solver ********************************/

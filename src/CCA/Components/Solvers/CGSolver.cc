@@ -54,6 +54,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Util/DebugStream.h>
 #include <iomanip>
 
+using std::cout;
 using namespace Uintah;
 //__________________________________
 //  To turn on normal output
@@ -694,7 +695,7 @@ public:
     // Schedule the setup
     if(cout_doing.active())
       cout_doing << "CGSolver::schedule setup" << endl;
-    Task* task = scinew Task("CGSolve setup", this, &CGStencil7<Types>::setup);
+    Task* task = scinew Task("CGSolver: schedule setup", this, &CGStencil7<Types>::setup);
     task->requires(parent_which_b_dw, B_label, Ghost::None, 0);
     task->requires(parent_which_A_dw, A_label, Ghost::None, 0);
     if(guess_label)
@@ -756,7 +757,7 @@ public:
       // Step 1 - requires A(parent), D(old, 1 ghost) computes aden(new)
       if(cout_doing.active())
         cout_doing << "CGSolver::schedule Step 1" << endl;
-      task = scinew Task("CGSolve step1", this, &CGStencil7<Types>::step1);
+      task = scinew Task("CGSolver: schedule step1", this, &CGStencil7<Types>::step1);
       task->requires(parent_which_A_dw, A_label, Ghost::None, 0);
       task->requires(Task::OldDW,       D_label, Around, 1);
       task->computes(aden_label);
@@ -770,7 +771,7 @@ public:
       // Step 2 - requires d(old), aden(new) D(old), X(old) R(old)  computes X, R, Q, d
       if(cout_doing.active())
         cout_doing << "CGSolver::schedule Step 2" << endl;
-      task = scinew Task("CGSolve step2", this, &CGStencil7<Types>::step2);
+      task = scinew Task("CGSolver: schedule step2", this, &CGStencil7<Types>::step2);
       task->requires(Task::OldDW, d_label);
       task->requires(Task::NewDW, aden_label);
       task->requires(Task::OldDW, D_label,    Ghost::None, 0);
@@ -795,7 +796,7 @@ public:
       // Step 3 - requires D(old), Q(new), d(new), d(old), computes D
       if(cout_doing.active())
         cout_doing << "CGSolver::schedule Step 3" << endl;
-      task = scinew Task("CGSolve step3", this, &CGStencil7<Types>::step3);
+      task = scinew Task("CGSolver: schedule step3", this, &CGStencil7<Types>::step3);
       task->requires(Task::OldDW, D_label, Ghost::None, 0);
       task->requires(Task::NewDW, Q_label, Ghost::None, 0);
       task->requires(Task::NewDW, d_label);
@@ -1011,7 +1012,7 @@ void CGSolver::scheduleSolve(const LevelP& level, SchedulerP& sched,
       Around = Ghost::AroundFaces;
       CGStencil7<SFCXTypes>* that = scinew CGStencil7<SFCXTypes>(sched.get_rep(), d_myworld, level.get_rep(), matls, Around, A, which_A_dw, x, modifies_x, b, which_b_dw, guess, which_guess_dw, cgparams);
       Handle<CGStencil7<SFCXTypes> > handle = that;
-      task = scinew Task("Matrix solve", that, &CGStencil7<SFCXTypes>::solve, handle);
+      task = scinew Task("CGSolver::Matrix solve(SFCX)", that, &CGStencil7<SFCXTypes>::solve, handle);
     }
     break;
   case TypeDescription::SFCYVariable:
@@ -1019,7 +1020,7 @@ void CGSolver::scheduleSolve(const LevelP& level, SchedulerP& sched,
       Around = Ghost::AroundFaces;
       CGStencil7<SFCYTypes>* that = scinew CGStencil7<SFCYTypes>(sched.get_rep(), d_myworld, level.get_rep(), matls, Around, A, which_A_dw, x, modifies_x, b, which_b_dw, guess, which_guess_dw, cgparams);
       Handle<CGStencil7<SFCYTypes> > handle = that;
-      task = scinew Task("Matrix solve", that, &CGStencil7<SFCYTypes>::solve, handle);
+      task = scinew Task("CGSolver::Matrix solve(SFCY)", that, &CGStencil7<SFCYTypes>::solve, handle);
     }
     break;
   case TypeDescription::SFCZVariable:
@@ -1027,7 +1028,7 @@ void CGSolver::scheduleSolve(const LevelP& level, SchedulerP& sched,
       Around = Ghost::AroundFaces;
       CGStencil7<SFCZTypes>* that = scinew CGStencil7<SFCZTypes>(sched.get_rep(), d_myworld, level.get_rep(), matls, Around, A, which_A_dw, x, modifies_x, b, which_b_dw, guess, which_guess_dw, cgparams);
       Handle<CGStencil7<SFCZTypes> > handle = that;
-      task = scinew Task("Matrix solve", that, &CGStencil7<SFCZTypes>::solve, handle);
+      task = scinew Task("CGSolver::Matrix solve(SFCZ)", that, &CGStencil7<SFCZTypes>::solve, handle);
     }
     break;
   case TypeDescription::CCVariable:
@@ -1035,7 +1036,7 @@ void CGSolver::scheduleSolve(const LevelP& level, SchedulerP& sched,
       Around = Ghost::AroundCells;
       CGStencil7<CCTypes>* that = scinew CGStencil7<CCTypes>(sched.get_rep(), d_myworld, level.get_rep(), matls, Around, A, which_A_dw, x, modifies_x, b, which_b_dw, guess, which_guess_dw, cgparams);
       Handle<CGStencil7<CCTypes> > handle = that;
-      task = scinew Task("Matrix solve", that, &CGStencil7<CCTypes>::solve, handle);
+      task = scinew Task("CGSolver::Matrix solve(CC)", that, &CGStencil7<CCTypes>::solve, handle);
     }
     break;
   case TypeDescription::NCVariable:
@@ -1043,7 +1044,7 @@ void CGSolver::scheduleSolve(const LevelP& level, SchedulerP& sched,
       Around = Ghost::AroundNodes;
       CGStencil7<NCTypes>* that = scinew CGStencil7<NCTypes>(sched.get_rep(), d_myworld, level.get_rep(), matls, Around, A, which_A_dw, x, modifies_x, b, which_b_dw, guess, which_guess_dw, cgparams);
       Handle<CGStencil7<NCTypes> > handle = that;
-      task = scinew Task("Matrix solve", that, &CGStencil7<NCTypes>::solve, handle);
+      task = scinew Task("CGSolver::Matrix solve(NC)", that, &CGStencil7<NCTypes>::solve, handle);
     }
     break;
   default:

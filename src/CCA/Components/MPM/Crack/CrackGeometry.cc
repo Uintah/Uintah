@@ -32,8 +32,9 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Geometry/Vector.h>
 #include <cmath>
 
-using namespace Uintah;
+using std::vector;
 
+using namespace Uintah;
 
 CrackGeometry::CrackGeometry()
 {

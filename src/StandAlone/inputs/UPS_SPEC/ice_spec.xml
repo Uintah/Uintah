@@ -62,7 +62,7 @@
           <norm                         spec="OPTIONAL STRING 'LInfinity linfinity L1 l1 L2 l2'" />       
           <npost                        spec="OPTIONAL INTEGER" />                                        
           <npre                         spec="OPTIONAL INTEGER" />                                        
-          <preconditioner               spec="OPTIONAL STRING 'none, pfmg'" />                            
+          <preconditioner               spec="OPTIONAL STRING 'none, pfmg, smg'" />                            
           <outputEquations              spec="OPTIONAL BOOLEAN" />                                        
           <skip                         spec="OPTIONAL INTEGER" />                                        
           <solver                       spec="REQUIRED STRING 'smg, SMG, PFMG, pfmg, SparseMSG, sparsemsg, CG, cg, Hybrid, hybrid, GMRES, gmres amg'" />                         
@@ -100,10 +100,12 @@
                                 attribute1="name OPTIONAL STRING" >
         <dynamic_viscosity    spec="REQUIRED DOUBLE 'positive'" />
         <EOS                  spec="REQUIRED NO_DATA"
-                                attribute1="type REQUIRED STRING 'ideal_gas, hard_sphere_gas, TST, Thomsen_Hartka_water, JWL, JWLC, Murnahan, Gruneisen, Tillotson'" >
+                                attribute1="type REQUIRED STRING 'ideal_gas, hard_sphere_gas, TST, Thomsen_Hartka_water, JWL, JWLC, Murnahan, Gruneisen, Tillotson, KnaussSeaWater'" >
           <!--  TST  -->
           <a                  spec="REQUIRED DOUBLE" need_applies_to='type  TST, Thomsen_Hartka_water Tillotson' />
+          <a                  spec="OPTIONAL DOUBLE" need_applies_to='type  KnaussSeaWater' />
           <b                  spec="REQUIRED DOUBLE" need_applies_to='type  TST, Thomsen_Hartka_water Tillotson' />
+          <b                  spec="OPTIONAL DOUBLE" need_applies_to='type  KnaussSeaWater' />
           <Gamma              spec="REQUIRED DOUBLE" need_applies_to='type  TST' />
           <u                  spec="REQUIRED DOUBLE" need_applies_to='type  TST' />
           <w                  spec="REQUIRED DOUBLE" need_applies_to='type  TST' />
@@ -118,11 +120,16 @@
           <R2                 spec="REQUIRED DOUBLE 'positive'" need_applies_to='type JWL JWLC' />
           <om                 spec="REQUIRED DOUBLE 'positive'" need_applies_to='type JWL JWLC' /> 
           <rho0               spec="REQUIRED DOUBLE 'positive'" need_applies_to='type JWL JWLC Murnahan Gruneisen Tillotson' />
+          <rho0               spec="OPTIONAL DOUBLE 'positive'" need_applies_to='type KnaussSeaWater' />
           <!--  Murnahan  -->
           <n                  spec="REQUIRED DOUBLE 'positive'" need_applies_to='type Murnahan' />
           <K                  spec="REQUIRED DOUBLE 'positive'" need_applies_to='type Murnahan' />
+          <K                  spec="OPTIONAL DOUBLE 'positive'" need_applies_to='type KnaussSeaWater' />
           <P0                 spec="REQUIRED DOUBLE 'positive'" need_applies_to='type Murnahan Gruneisen' />
           <T0                 spec="REQUIRED DOUBLE 'positive'" need_applies_to='type Gruneisen' />
+          <T0                 spec="OPTIONAL DOUBLE 'positive'" need_applies_to='type KnaussSeaWater' />
+          <S0                 spec="OPTIONAL DOUBLE 'positive'" need_applies_to='type KnaussSeaWater' />
+          <S                  spec="OPTIONAL DOUBLE 'positive'" need_applies_to='type KnaussSeaWater' />
           
           <co                 spec="REQUIRED DOUBLE 'positive'" need_applies_to='type Thomsen_Hartka_water' />
           <ko                 spec="REQUIRED DOUBLE 'positive'" need_applies_to='type Thomsen_Hartka_water' />
@@ -138,6 +145,7 @@
           
         </EOS>
         <gamma                spec="REQUIRED DOUBLE 'positive'" />
+        <tiny_rho             spec="OPTIONAL DOUBLE 'positive'" />
         <geom_object          spec="MULTIPLE" />
         <includeFlowWork      spec="OPTIONAL BOOLEAN" />
         <isSurroundingMatl    spec="OPTIONAL BOOLEAN" />  <!-- FIXME: What is the default? -->
@@ -146,6 +154,25 @@
 
       </material>
     </ICE>
+    
+    <exchange_properties           spec="OPTIONAL NO_DATA" >
+      <convective_fluid            spec="OPTIONAL INTEGER" /> 
+      <convective_solid            spec="OPTIONAL INTEGER" /> 
+      <do_convective_heat_transfer spec="OPTIONAL BOOLEAN" /> <!-- FIXME: What is the default? -->
+      <heatExchangeCoeff           spec="OPTIONAL STRING 'variable'" />
+      
+      <exchange_coefficients       spec="REQUIRED NO_DATA" >
+        <momentum                  spec="REQUIRED MULTIPLE_DOUBLES" />
+        <heat                      spec="OPTIONAL MULTIPLE_DOUBLES" />
+      </exchange_coefficients>
+      
+      <exch_coef_after_MPM_add     spec="OPTIONAL NO_DATA" >
+        <momentum                  spec="REQUIRED MULTIPLE_DOUBLES" />
+        <heat                      spec="OPTIONAL MULTIPLE_DOUBLES" /> 
+      </exch_coef_after_MPM_add>
+      
+    </exchange_properties>
+    
   </MaterialProperties>
 
 </Uintah_Include>

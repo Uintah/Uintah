@@ -85,6 +85,9 @@ MPMLabel::MPMLabel()
                      
   pColorLabel_preReloc  = VarLabel::create( "p.color+",
 			ParticleVariable<double>::getTypeDescription() );
+                     
+  pPartitionUnityLabel   = VarLabel::create( "p.partitionUnity",
+			ParticleVariable<double>::getTypeDescription() );
   
   //PermanentParticleState
   pDeformationMeasureLabel = VarLabel::create("p.deformationMeasure",
@@ -270,8 +273,6 @@ MPMLabel::MPMLabel()
   gZOILabel     = VarLabel::create("g.zoi",
 			NCVariable<Stencil7>::getTypeDescription());
 
-  gSumWeightsLabel= VarLabel::create("g.sumInterpWeights",
-			NCVariable<double>::getTypeDescription());
 
   cVolumeLabel  = VarLabel::create( "c.volume",
                      CCVariable<double>::getTypeDescription() );
@@ -687,6 +688,7 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(pFiberDirLabel);
   VarLabel::destroy(p_qLabel);
   VarLabel::destroy(p_qLabel_preReloc);
+  VarLabel::destroy(pPartitionUnityLabel);
 
   VarLabel::destroy(gAccelerationLabel);
   VarLabel::destroy(gMassLabel);
@@ -841,7 +843,6 @@ MPMLabel::~MPMLabel()
    // Debugging labels
   VarLabel::destroy(pColorLabel);
   VarLabel::destroy(pColorLabel_preReloc);
-  VarLabel::destroy(gSumWeightsLabel);  // sum of the interpolation weights
 
   // For Cohesive Zones
   VarLabel::destroy(czLengthLabel);

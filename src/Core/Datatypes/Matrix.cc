@@ -88,7 +88,7 @@ Matrix::scalar_multiply(double s)
 Transform Matrix::toTransform() {
   Transform t;
   if (nrows() != 4 || ncols() != 4) {
-    cerr << "Error - can't make a transform from this matrix.\n";
+    std::cerr << "Error - can't make a transform from this matrix.\n";
     return t;
   }
   double dummy[16];

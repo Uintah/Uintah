@@ -994,7 +994,7 @@ DetailedTask::addRequires(DependencyBatch* req)
 void DetailedTask::checkExternalDepCount()
 {
   //cout << Parallel::getMPIRank() << " Task " << this->getTask()->getName() << " ext deps: " << externalDependencyCount_ << " int deps: " << numPendingInternalDependencies << endl;
-  if (externalDependencyCount_ == 0 && taskGroup->sc_->useInternalDeps() && initiated_ && externallyReady_ == false && task->getType() != Task::OncePerProc) {
+  if (externalDependencyCount_ == 0 && taskGroup->sc_->useInternalDeps() && initiated_ && externallyReady_ == false && (task->getType() != Task::OncePerProc || Uintah::Parallel::getMaxThreads() > 1 )) { 
     //cout << Parallel::getMPIRank() << " Task " << this->getTask()->getName() << " ready\n";
     taskGroup->mpiCompletedTasks_.push(this);
     externallyReady_ = true;
@@ -1287,6 +1287,10 @@ void DependencyBatch::received(const ProcessorGroup * pg)
     //add the time waiting on MPI to the wait times per from task
     waittimes[fromTask->getTask()->getName()]+=CommRecMPI::WaitTimePerMessage;
   }
+  //set all the toVars to valid, meaning the mpi has been completed
+  for (vector<Variable*>::iterator iter = toVars.begin(); iter != toVars.end(); iter++) {
+    (*iter)->setValid();
+  }
   for (list<DetailedTask*>::iterator iter = toTasks.begin(); iter != toTasks.end(); iter++) {
     // if the count is 0, the task will add itself to the external ready queue
     //cout << pg->myrank() << "  Dec: " << *fromTask << " for " << *(*iter) << endl;
@@ -1295,10 +1299,6 @@ void DependencyBatch::received(const ProcessorGroup * pg)
     (*iter)->checkExternalDepCount();
   }
 
-  //set all the toVars to valid, meaning the mpi has been completed
-  for (vector<Variable*>::iterator iter = toVars.begin(); iter != toVars.end(); iter++) {
-    (*iter)->setValid();
-  }
   //clear the variables that have outstanding MPI as they are completed now.
   toVars.clear();
 

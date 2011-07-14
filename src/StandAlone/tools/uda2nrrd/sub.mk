@@ -51,7 +51,9 @@ PROGRAM := $(SRCDIR)/uda2nrrd
 	$(SRCDIR)/particles.cc           \
 	$(SRCDIR)/wrap_nrrd.cc 
 
-  LIBS := $(XML2_LIBRARY) $(TEEM_LIBRARY) $(PNG_LIBRARY) $(Z_LIBRARY) $(M_LIBRARY) $(MPI_LIBRARY) $(F_LIBRARY)
+  LIBS := $(XML2_LIBRARY) $(TEEM_LIBRARY) $(PNG_LIBRARY) $(Z_LIBRARY) \
+	  $(M_LIBRARY) $(MPI_LIBRARY) $(F_LIBRARY) \
+          $(BLAS_LIBRARY) $(THREAD_LIBRARY) 
 
   include $(SCIRUN_SCRIPTS)/program.mk
 

@@ -191,10 +191,10 @@ void FirstOrderAdvector::inFluxOutFluxVolume(
   }  // if total_fluxout > vol
   
   if (error && !bulletProof_test) {
-    ostringstream mesg;
-    cout << " WARNING: ICE Advection operator Influx/Outflux volume error:"
+    std::ostringstream mesg;
+    std::cout << " WARNING: ICE Advection operator Influx/Outflux volume error:"
          << " Patch " << patch->getID()
-         << ", Level " << patch->getLevel()->getIndex()<< endl;
+              << ", Level " << patch->getLevel()->getIndex()<< std::endl;
   }
 }
 

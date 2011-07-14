@@ -107,7 +107,7 @@ public:
    virtual ~OnDemandDataWarehouse();
    
    virtual bool exists(const VarLabel*, int matIndex, const Patch*) const; 
-  
+   
    // Returns a (const) pointer to the grid.  This pointer can then be
    // used to (for example) get the number of levels in the grid.
    virtual const Grid * getGrid() { return d_grid.get_rep(); }
@@ -175,19 +175,22 @@ public:
    virtual ParticleSubset* getDeleteSubset(int matlIndex, 
                                           const Patch*);
                                           
-   virtual map<const VarLabel*, ParticleVariableBase*>* getNewParticleState(int matlIndex, const Patch*);
+   virtual std::map<const VarLabel*, ParticleVariableBase*>* getNewParticleState(int matlIndex, const Patch*);
    
    virtual ParticleSubset* getParticleSubset(int matlIndex,
-					          const Patch*, Ghost::GhostType, 
-					          int numGhostCells,
-					          const VarLabel* posvar);
-                                        
+                                             const Patch*, Ghost::GhostType, 
+                                             int numGhostCells,
+                                             const VarLabel* posvar);
+                                 
+   //returns the particle subset in the range of low->high
+     //relPatch is used as the key and should be the patch you are querying from
+     //level is used if you are querying from an old level
    virtual ParticleSubset* getParticleSubset(int matlIndex, 
                                              IntVector low, 
                                              IntVector high, 
-                                             const Level* level, 
                                              const Patch* relPatch,
-                                             const VarLabel* posvar);
+                                             const VarLabel* posvar,
+                                             const Level* level=0);
                                              
    virtual void allocateTemporary(ParticleVariableBase&, 
                                   ParticleSubset*);
@@ -234,7 +237,7 @@ public:
 
    virtual void addParticles(const Patch* patch, 
                              int matlIndex, 
-			        map<const VarLabel*, 
+                             std::map<const VarLabel*, 
                              ParticleVariableBase*>* addedstate);
 
   //__________________________________
@@ -308,7 +311,7 @@ public:
    void recvMPI(DependencyBatch* batch, BufferInfo& buffer,
 	        OnDemandDataWarehouse* old_dw, const DetailedDep* dep, LoadBalancer* lb);
    void reduceMPI(const VarLabel* label, const Level* level,
-		  const MaterialSubset* matls);
+		  const MaterialSubset* matls, int nComm);
 
    // Scrub counter manipulator functions -- when the scrub count goes to
    // zero, the data is deleted
@@ -342,7 +345,9 @@ public:
    }
 
    // The following is for support of regriding
-   virtual void getVarLabelMatlLevelTriples( vector<VarLabelMatl<Level> >& vars ) const;
+   virtual void getVarLabelMatlLevelTriples( std::vector<VarLabelMatl<Level> >& vars ) const;
+
+   static bool d_combineMemory;
 
    friend class SchedulerCommon;
 
@@ -364,7 +369,7 @@ private:
      IntVector highOffset;
    };
   
-   typedef map<VarLabelMatl<Patch>, AccessInfo> VarAccessMap;
+   typedef std::map<VarLabelMatl<Patch>, AccessInfo> VarAccessMap;
 
    struct RunningTaskInfo {
      RunningTaskInfo()
@@ -417,10 +422,10 @@ private:
    };
 
    typedef std::vector<dataLocation*> variableListType;
-   typedef map<const VarLabel*, variableListType*, VarLabel::Compare> dataLocationDBtype;
-   typedef multimap<PSPatchMatlGhost, ParticleSubset*> psetDBType;
-   typedef map<pair<int, const Patch*>, map<const VarLabel*, ParticleVariableBase*>* > psetAddDBType;
-   typedef map<pair<int, const Patch*>, int> particleQuantityType;
+   typedef std::map<const VarLabel*, variableListType*, VarLabel::Compare> dataLocationDBtype;
+   typedef std::multimap<PSPatchMatlGhost, ParticleSubset*> psetDBType;
+   typedef std::map<std::pair<int, const Patch*>, std::map<const VarLabel*, ParticleVariableBase*>* > psetAddDBType;
+   typedef std::map<std::pair<int, const Patch*>, int> particleQuantityType;
    
    ParticleSubset* queryPSetDB( psetDBType &db, const Patch* patch, int matlIndex, IntVector low, IntVector high, const VarLabel* pos_var, bool exact=false);
    void insertPSetRecord(psetDBType &subsetDB,const Patch* patch, IntVector low, IntVector high, int matlIndex, ParticleSubset *psubset);
@@ -457,10 +462,10 @@ private:
    bool d_isInitializationDW;
   
    inline bool hasRunningTask();
-   inline list<RunningTaskInfo>* getRunningTasksInfo();
+   inline std::list<RunningTaskInfo>* getRunningTasksInfo();
    inline RunningTaskInfo* getCurrentTaskInfo();
     
-   map<Thread*, list<RunningTaskInfo> > d_runningTasks;
+   std::map<Thread*, std::list<RunningTaskInfo> > d_runningTasks;
    ScrubMode d_scrubMode;
 
    bool aborted;
@@ -468,6 +473,7 @@ private:
 
    // Whether this (Old) DW is being used for a restarted timestep (the new DWs are cleared out)
    bool hasRestarted_;
+
 };
 
 } // end namespace Uintah

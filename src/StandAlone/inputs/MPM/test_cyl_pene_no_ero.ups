@@ -46,6 +46,7 @@
     <save label = "p.damage"/>
     <save label = "p.porosity"/>
     <save label = "p.localized"/>
+    <save label = "p.particleID"/>
     <save label = "p.temperature"/>
     <save label = "g.mass"/>
     <save label = "g.volume"/>
@@ -166,7 +167,7 @@
         <lower>[0.0,-6.0e-2,0.0]</lower>
         <upper>[3.0e-2,4.0e-2,3.0e-2]</upper>
         <resolution>[10,25,10]</resolution>
-        <patches>[2,2,2]</patches>
+        <patches>[1,2,1]</patches>
         <extraCells>[1,1,1]</extraCells>
       </Box>
     </Level>

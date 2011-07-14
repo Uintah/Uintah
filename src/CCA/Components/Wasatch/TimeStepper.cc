@@ -15,8 +15,9 @@
 #include <Core/Grid/Material.h>
 #include <Core/Grid/Variables/VarTypes.h>  // delt_vartype
 #include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/Parallel/Parallel.h>
 
-
+using std::endl;
 namespace SO=SpatialOps::structured;
 
 
@@ -56,10 +57,11 @@ namespace Wasatch{
   {
     typedef typename std::vector< TimeStepper::FieldInfo<FieldT> > Fields;
     for( typename Fields::const_iterator ifld = fields.begin(); ifld!=fields.end(); ++ifld ){
-      cout << "timestepper COMPUTES '" << ifld->varLabel->getName() << "' in NEW DW" << endl
-           << "            REQUIRES '" << ifld->varLabel->getName() << "' in OLD DW" << endl
-           << "            REQUIRES '" << ifld->rhsLabel->getName() << "' in NEW DW" << endl
-           << endl;
+//       proc0cout << "timestepper COMPUTES '" << ifld->varLabel->getName() << "' in NEW DW" << endl
+//                 << "            REQUIRES '" << ifld->varLabel->getName() << "' in OLD DW" << endl
+//                 << "            REQUIRES '" << ifld->rhsLabel->getName() << "' in NEW DW" << endl
+//                 << "            patches: " << *pss
+//                 << endl;
       task->computes( ifld->varLabel );
       // jcs for some reason this one does not work:
       //       task->computes( ifld->varLabel,
@@ -132,6 +134,9 @@ namespace Wasatch{
     for( std::list<TaskInterface*>::iterator i=taskInterfaceList_.begin(); i!=taskInterfaceList_.end(); ++i ){
       delete *i;
     }
+    for( std::vector<Uintah::VarLabel*>::iterator i=createdVarLabels_.begin(); i!=createdVarLabels_.end(); ++i ){
+      Uintah::VarLabel::destroy( *i );
+    }
   }
 
   //------------------------------------------------------------------
@@ -144,8 +149,7 @@ namespace Wasatch{
                              const Uintah::MaterialSet* const materials,
                              Uintah::SchedulerP& sched )
   {
-    // for now we will assume that we are computing things on ALL patches and ALL materials
-    const Uintah::PatchSubset*    const pss = patches  ->getUnion();
+    // for now we will assume that we are computing things on ALL materials
     const Uintah::MaterialSubset* const mss = materials->getUnion();
 
     //_________________________________________________________________
@@ -155,19 +159,18 @@ namespace Wasatch{
       // jcs for multistage integrators, we may need to keep the same
       //     field manager list for all of the stages?  Otherwise we
       //     will have all sorts of name clashes?
-      Expr::ExpressionTree* rhsTree = scinew Expr::ExpressionTree( rhsIDs_, *factory_, -1, "rhs" );
-      TaskInterface* rhsTask = scinew TaskInterface( rhsTree, patchInfoMap );
+      TaskInterface* rhsTask = scinew TaskInterface( rhsIDs_,
+                                                     "rhs",
+                                                     *factory_,
+                                                     sched,
+                                                     patches,
+                                                     materials,
+                                                     patchInfoMap,
+                                                     true );
 
       taskInterfaceList_.push_back( rhsTask );
-
       coordHelper_->create_task( sched, patches, materials );
-      rhsTask->schedule( sched, patches, materials, coordHelper_->field_tags() );
-      
-      // jcs hacked diagnostics - problems in parallel.
-      const std::string fname("rhs.dot");
-      std::cout << "writing RHS tree to '" << fname << "'" << std::endl;
-      std::ofstream fout(fname.c_str());
-      rhsTree->write_tree(fout);
+      rhsTask->schedule( coordHelper_->field_tags() ); // must be scheduled after coordHelper_
     }
     catch( std::exception& e ){
       std::ostringstream msg;
@@ -182,12 +185,16 @@ namespace Wasatch{
     // add a task to populate a "field" with the current time.
     // This is required by the time integrator.
     {
-      Expr::ExpressionTree* timeTree = scinew Expr::ExpressionTree( timeID, *factory_, -1, "set time" );
-      TaskInterface* const timeTask = scinew TaskInterface( timeTree, patchInfoMap );
-
+      TaskInterface* const timeTask = scinew TaskInterface( timeID,
+                                                            "set time",
+                                                            *factory_,
+                                                            sched,
+                                                            patches,
+                                                            materials,
+                                                            patchInfoMap,
+                                                            true );
       taskInterfaceList_.push_back( timeTask );
-
-      timeTask->schedule( sched, patches, materials, coordHelper_->field_tags() );
+      timeTask->schedule( coordHelper_->field_tags() );
     }
 
     //_____________________________________________________
@@ -195,6 +202,7 @@ namespace Wasatch{
     {
       Uintah::Task* updateTask = scinew Uintah::Task( "update solution vars", this, &TimeStepper::update_variables );
       
+      const Uintah::PatchSubset* const pss = patches->getUnion();
       set_field_requirements<SO::SVolField>( updateTask, scalarFields_, pss, mss );
       set_field_requirements<SO::XVolField>( updateTask, xVolFields_,   pss, mss );
       set_field_requirements<SO::YVolField>( updateTask, yVolFields_,   pss, mss );
@@ -203,7 +211,7 @@ namespace Wasatch{
       // we require the timestep value
       updateTask->requires( Uintah::Task::OldDW, deltaTLabel_ );
       /* jcs if we specify this, then things fail:
-                            pss, Uintah::Task::NormalDomain,
+                            patches, Uintah::Task::NormalDomain,
                             mss, Uintah::Task::NormalDomain,
                             Uintah::Ghost::None, 0 );
       */
@@ -234,7 +242,7 @@ namespace Wasatch{
         
         const int material = materials->get(im);
 
-//         std::cout << std::endl
+//         proc0cout << std::endl
 //                   << "Wasatch: executing 'TimeStepper::update_variables()' on patch "
 //                   << patch->getID() << " and material " << material
 //                   << std::endl;
@@ -245,7 +253,7 @@ namespace Wasatch{
         //newDW->get( deltat, deltaTLabel_, Uintah::getLevel(patches), material );
         oldDW->get( deltat, deltaTLabel_ );
         
-//         cout << "TimeStepper::update_variables() : dt = " << deltat << endl;
+//         proc0cout << "TimeStepper::update_variables() : dt = " << deltat << endl;
 
         //____________________________________________
         // update variables on this material and patch

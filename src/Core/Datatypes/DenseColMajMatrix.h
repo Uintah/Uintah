@@ -134,7 +134,7 @@ public:
   static DenseColMajMatrix *identity(int size);
 
   virtual void    print() const;
-  virtual void    print(ostream&) const;
+  virtual void    print(std::ostream&) const;
   
   //! Persistent representation...
   virtual void io(Piostream&);

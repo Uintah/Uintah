@@ -51,7 +51,6 @@ DEALINGS IN THE SOFTWARE.
 namespace Uintah {
   class ProcessorGroup;
 
-//class StencilMatrix;
 using namespace SCIRun;
 
 /**************************************

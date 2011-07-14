@@ -70,12 +70,58 @@ MixingRxnModel::MixingRxnModel( const ArchesLabel* labels, const MPMArchesLabel*
 //---------------------------------------------------------------------------
 MixingRxnModel::~MixingRxnModel()
 {
-
   for ( VarMap::iterator i = d_dvVarMap.begin(); i != d_dvVarMap.end(); ++i ){
     VarLabel::destroy( i->second ); 
   }
-  for ( VarMap::iterator i = d_ivVarMap.begin(); i != d_ivVarMap.end(); ++i ){
-    VarLabel::destroy( i->second ); 
+  delete _iv_transform; 
+}
+
+//---------------------------------------------------------------------------
+void 
+MixingRxnModel::problemSetupCommon( const ProblemSpecP& params )
+{
+
+  ProblemSpecP db = params; 
+
+  // create a transform object
+  if ( db->findBlock("coal") ) {
+
+    double constant = 0.0; 
+    _iv_transform = scinew CoalTransform( constant ); 
+
+  } else if ( db->findBlock("acidbase") ) {
+
+    doubleMap::iterator iter = d_constants.find( "transform_constant" ); 
+
+    if ( iter == d_constants.end() ) {
+      throw ProblemSetupException( "Could not find transform_constant for the acid/base table.",__FILE__, __LINE__ ); 
+    } else { 
+      double constant = iter->second; 
+      _iv_transform = scinew CoalTransform( constant ); 
+    }
+
+  } else if ( db->findBlock("slowfastchem") ) { 
+
+    _iv_transform = scinew SlowFastTransform(); 
+
+  } else { 
+
+    _iv_transform = scinew NoTransform();
+
+  }
+
+  bool check_transform = _iv_transform->problemSetup( db, d_allIndepVarNames ); 
+
+  if ( !check_transform ){ 
+    throw ProblemSetupException( "Could not properly setup independent variable transform based on input.",__FILE__,__LINE__); 
+  }
+
+  doubleMap::iterator iter = d_constants.find("H_ox");
+  if ( iter == d_constants.end() ){ 
+    proc0cout << " Error: Cannot find #KEY H_ox=*value* in the table.\n"; 
+    throw ProblemSetupException( "H_ox (pure oxidizer enthalpy) required as an input.",__FILE__,__LINE__);
+  } else { 
+    _H_ox = iter->second; 
   }
 }
 
@@ -126,7 +172,7 @@ MixingRxnModel::setMixDVMap( const ProblemSpecP& root_params )
     var_name = "CO2"; 
     insertIntoMap( var_name ); 
     var_name = "H2O"; 
-    insertIntoMap( var_name ); 
+    insertIntoMap( var_name );
   }
 
   proc0cout << endl;
@@ -144,3 +190,12 @@ MixingRxnModel::addAdditionalDV( std::vector<string>& vars )
 
   }
 }
+MixingRxnModel::TransformBase::TransformBase(){}
+MixingRxnModel::TransformBase::~TransformBase(){}
+MixingRxnModel::NoTransform::NoTransform(){}
+MixingRxnModel::NoTransform::~NoTransform(){}
+MixingRxnModel::CoalTransform::CoalTransform( double constant ) : d_constant(constant){}
+MixingRxnModel::CoalTransform::~CoalTransform(){}
+MixingRxnModel::SlowFastTransform::SlowFastTransform(){}
+MixingRxnModel::SlowFastTransform::~SlowFastTransform(){}
+

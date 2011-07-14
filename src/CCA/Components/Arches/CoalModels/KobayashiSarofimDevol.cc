@@ -23,7 +23,7 @@ using namespace Uintah;
 KobayashiSarofimDevolBuilder::KobayashiSarofimDevolBuilder( const std::string         & modelName,
                                                             const vector<std::string> & reqICLabelNames,
                                                             const vector<std::string> & reqScalarLabelNames,
-                                                            const ArchesLabel         * fieldLabels,
+                                                            ArchesLabel         * fieldLabels,
                                                             SimulationStateP          & sharedState,
                                                             int qn ) :
   ModelBuilder( modelName, reqICLabelNames, reqScalarLabelNames, fieldLabels, sharedState, qn )
@@ -40,7 +40,7 @@ ModelBase* KobayashiSarofimDevolBuilder::build() {
 
 KobayashiSarofimDevol::KobayashiSarofimDevol( std::string modelName, 
                                               SimulationStateP& sharedState,
-                                              const ArchesLabel* fieldLabels,
+                                              ArchesLabel* fieldLabels,
                                               vector<std::string> icLabelNames, 
                                               vector<std::string> scalarLabelNames,
                                               int qn ) 
@@ -73,11 +73,12 @@ KobayashiSarofimDevol::KobayashiSarofimDevol( std::string modelName,
   */
 
   compute_part_temp = false;
-
+  compute_char_mass = false;
 }
 
 KobayashiSarofimDevol::~KobayashiSarofimDevol()
-{}
+{
+}
 
 //---------------------------------------------------------------------------
 // Method: Problem Setup
@@ -90,6 +91,7 @@ KobayashiSarofimDevol::problemSetup(const ProblemSpecP& params, int qn)
 
   ProblemSpecP db = params; 
   compute_part_temp = false;
+  compute_char_mass = false;
 
   string label_name;
   string role_name;
@@ -123,9 +125,12 @@ KobayashiSarofimDevol::problemSetup(const ProblemSpecP& params, int qn)
       } else if( role_name == "particle_temperature" ) {  
         LabelToRoleMap[temp_label_name] = role_name;
         compute_part_temp = true;
+      } else if( role_name == "char_mass" ) {    
+        LabelToRoleMap[temp_label_name] = role_name;        
+        compute_char_mass = true;                           
       } else {
         std::string errmsg;
-        errmsg = "Invalid variable role for Kobayashi Sarofim Devolatilization model: must be \"particle_temperature\" or \"raw_coal_mass\", you specified \"" + role_name + "\".";
+        errmsg = "Invalid variable role for Kobayashi Sarofim Devolatilization model: must be \"particle_temperature\" or \"raw_coal_mass\" or \"char_mass\", you specified \"" + role_name + "\".";
         throw InvalidValue(errmsg,__FILE__,__LINE__);
       }
     }
@@ -152,6 +157,7 @@ KobayashiSarofimDevol::problemSetup(const ProblemSpecP& params, int qn)
   // Look for required scalars
   //   ( Kobayashi-Sarofim model doesn't use any extra scalars (yet)
   //     but if it did, this "for" loop would have to be un-commented )
+  /*
   ProblemSpecP db_scalarvars = params->findBlock("scalarVars");
   if (db_scalarvars) {
     for( ProblemSpecP variable = db_scalarvars->findBlock("variable");
@@ -183,6 +189,7 @@ KobayashiSarofimDevol::problemSetup(const ProblemSpecP& params, int qn)
       }
     }
   }
+  */
 
   // fix the d_scalarLabels to point to the correct quadrature node (since there is 1 model per quad node)
   for ( vector<std::string>::iterator iString = d_scalarLabels.begin(); 
@@ -220,9 +227,11 @@ KobayashiSarofimDevol::sched_computeModel( const LevelP& level, SchedulerP& sche
 
     tsk->computes(d_modelLabel);
     tsk->computes(d_gasLabel); 
+    tsk->computes(d_charLabel);
   } else {
     tsk->modifies(d_modelLabel);
     tsk->modifies(d_gasLabel);  
+    tsk->modifies(d_charLabel);
   }
 
   //EqnFactory& eqn_factory = EqnFactory::self();
@@ -277,6 +286,23 @@ KobayashiSarofimDevol::sched_computeModel( const LevelP& level, SchedulerP& sche
           d_raw_coal_mass_label = current_eqn.getTransportEqnLabel();
           d_rc_scaling_factor = current_eqn.getScalingConstant();
           tsk->requires(Task::OldDW, d_raw_coal_mass_label, Ghost::None, 0);
+
+        } else {
+          std::string errmsg = "ARCHES: KobayashiSarofimDevol: Invalid variable given in <variable> tag for KobayashiSarofimDevol model";
+          errmsg += "\nCould not find given raw coal mass variable \"";
+          errmsg += *iter;
+          errmsg += "\" in DQMOMEqnFactory.";
+          throw InvalidValue(errmsg,__FILE__,__LINE__);
+        }
+
+      } else if ( iMap->second == "char_mass") {
+        if (dqmom_eqn_factory.find_scalar_eqn(*iter) ) {
+          EqnBase& t_current_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(*iter);
+          DQMOMEqn& current_eqn = dynamic_cast<DQMOMEqn&>(t_current_eqn);
+          d_char_mass_label = current_eqn.getTransportEqnLabel();
+          d_rh_scaling_factor = current_eqn.getScalingConstant();
+          tsk->requires(Task::OldDW, d_char_mass_label, Ghost::None, 0);
+
         } else {
           std::string errmsg = "ARCHES: KobayashiSarofimDevol: Invalid variable given in <variable> tag for KobayashiSarofimDevol model";
           errmsg += "\nCould not find given raw coal mass variable \"";
@@ -363,6 +389,14 @@ KobayashiSarofimDevol::computeModel( const ProcessorGroup * pc,
     } else {
       new_dw->allocateAndPut( gas_devol_rate, d_gasLabel, matlIndex, patch ); 
       gas_devol_rate.initialize(0.0);
+    } 
+
+    CCVariable<double> char_rate;
+    if (new_dw->exists( d_charLabel, matlIndex, patch )){
+      new_dw->getModifiable( char_rate, d_charLabel, matlIndex, patch );
+    } else {
+      new_dw->allocateAndPut( char_rate, d_charLabel, matlIndex, patch );
+      char_rate.initialize(0.0);
     }
 
     constCCVariable<double> temperature; // holds gas OR particle temperature...
@@ -374,6 +408,11 @@ KobayashiSarofimDevol::computeModel( const ProcessorGroup * pc,
  
     constCCVariable<double> wa_raw_coal_mass;
     old_dw->get( wa_raw_coal_mass, d_raw_coal_mass_label, matlIndex, patch, gn, 0 );
+
+    constCCVariable<double> wa_char_mass;
+    if(compute_char_mass){
+      old_dw->get( wa_char_mass, d_char_mass_label, matlIndex, patch, gn, 0 );
+    }
 
     constCCVariable<double> weight;
     old_dw->get( weight, d_weight_label, matlIndex, patch, gn, 0 );
@@ -392,22 +431,38 @@ KobayashiSarofimDevol::computeModel( const ProcessorGroup * pc,
       // raw coal mass - de-scaled, de-weighted
       double scaled_raw_coal_mass;
       double unscaled_raw_coal_mass;
- 
+     // char mass - de-scaled, de-weighted
+      double scaled_char_mass;
+      double unscaled_char_mass;
+
       // devol_rate: particle source
       double devol_rate_;
 
       // gase_devol_rate: gas source
       double gas_devol_rate_;
 
+      // char_rate: particle source
+      double char_rate_;
+
       if (weight_is_small  && !d_unweighted) {
         devol_rate_ = 0.0;
         gas_devol_rate_ = 0.0;
+        char_rate_ = 0.0;
       } else {
 
         if(d_unweighted){
           unscaled_weight = weight[c]*d_w_scaling_factor;
           scaled_raw_coal_mass = wa_raw_coal_mass[c];
           unscaled_raw_coal_mass = scaled_raw_coal_mass*d_rc_scaling_factor;
+
+          if(compute_char_mass){
+            scaled_char_mass = wa_char_mass[c];
+            unscaled_char_mass = scaled_char_mass*d_rh_scaling_factor;
+          } else {
+            scaled_char_mass = 0.0;
+            unscaled_char_mass = 0.0;
+          }
+
           if (compute_part_temp) {
             // particle temp
             unscaled_temperature = temperature[c]*d_pt_scaling_factor;
@@ -426,6 +481,15 @@ KobayashiSarofimDevol::computeModel( const ProcessorGroup * pc,
           }
           scaled_raw_coal_mass = wa_raw_coal_mass[c]/weight[c];
           unscaled_raw_coal_mass = scaled_raw_coal_mass*d_rc_scaling_factor;
+
+          if(compute_char_mass){
+            scaled_char_mass = wa_char_mass[c]/weight[c];
+            unscaled_char_mass = scaled_char_mass*d_rh_scaling_factor;
+          } else {
+            scaled_char_mass = 0.0;
+            unscaled_char_mass = 0.0;
+          }
+
         }
 
 #else
@@ -434,28 +498,34 @@ KobayashiSarofimDevol::computeModel( const ProcessorGroup * pc,
         double unscaled_temperature = 2000;
         double unscaled_raw_coal_mass = 1e-8;
         double scaled_raw_coal_mass = unscaled_raw_coal_mass;
+        double unscaled_char_mass = 1e-8;
+        double scaled_char_mass = unscaled_char_mass;
         double devol_rate_;
         double gas_devol_rate_;
+        double char_rate_;
 #endif
 
         k1 = A1*exp(-E1/(R*unscaled_temperature)); // [=] 1/s
         k2 = A2*exp(-E2/(R*unscaled_temperature)); // [=] 1/s
         
-        double testVal_part = -(k1+k2)*scaled_raw_coal_mass;
+        double testVal_part = -(k1+k2)*(unscaled_raw_coal_mass + min(0.0,unscaled_char_mass))/d_rc_scaling_factor;
+        double testVal_gas = (Y1_*k1 + Y2_*k2)*(unscaled_raw_coal_mass+ min(0.0,unscaled_char_mass))*unscaled_weight;
+        double testVal_char = ((1-Y1_)*k1 + (1-Y2_)*k2)*(unscaled_raw_coal_mass + min(0.0,unscaled_char_mass));
+
         if( testVal_part < -1e-16 ) {
           devol_rate_ = testVal_part;
+          gas_devol_rate_ = testVal_gas;
+          char_rate_ = testVal_char;
         } else {
           devol_rate_ = 0.0;
-        }
-
-        double testVal_gas = (Y1_*k1 + Y2_*k2)*unscaled_raw_coal_mass*unscaled_weight;
-        if( testVal_gas > 1e-16 ) {
-          gas_devol_rate_ = testVal_gas;
-        } else {
           gas_devol_rate_ = 0.0;
+          char_rate_ = 0.0;
         }
+      }      
 
-      }
+      //cout << "devol_rate_ " << devol_rate_ << " char_rate_ " << char_rate_ << " unscaled_char_mass " << unscaled_char_mass
+      //     << " unscaled_raw_coal_mass " << unscaled_raw_coal_mass << endl;
+ 
 
 #if defined(VERIFY_KOBAYASHI_MODEL)
       proc0cout << "****************************************************************" << endl;
@@ -494,10 +564,20 @@ KobayashiSarofimDevol::computeModel( const ProcessorGroup * pc,
 #else
       devol_rate[c] = devol_rate_;
       gas_devol_rate[c] = gas_devol_rate_;
-
+      char_rate[c] = char_rate_;
     }//end cell loop
 #endif
   
   }//end patch loop
 }
+
+
+
+
+
+
+
+
+
+
 

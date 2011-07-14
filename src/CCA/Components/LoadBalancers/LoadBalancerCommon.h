@@ -108,7 +108,7 @@ namespace Uintah {
       /// receive data from.
       virtual void createNeighborhood(const GridP& grid, const GridP& oldGrid);
 
-      const set<int>& getNeighborhoodProcessors()
+    const std::set<int>& getNeighborhoodProcessors()
       {
         return d_neighborProcessors;
       }
@@ -164,9 +164,9 @@ namespace Uintah {
       //! needs it to assign the processor resource.
       int d_outputNthProc;
 
-      vector<Handle<const PatchSet> > levelPerProcPatchSets;
+      std::vector<Handle<const PatchSet> > levelPerProcPatchSets;
       Handle<const PatchSet> gridPerProcPatchSet;
-      vector<Handle<const PatchSet> > outputPatchSets;
+      std::vector<Handle<const PatchSet> > outputPatchSets;
 
   };
 

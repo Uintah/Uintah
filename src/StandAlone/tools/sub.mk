@@ -81,7 +81,7 @@ ifeq ($(IS_STATIC_BUILD),yes)
   LIBS := \
 	$(CORE_STATIC_LIBS)
 else
-  LIBS := $(MPI_LIBRARY)
+  LIBS := $(MPI_LIBRARY) $(BLAS_LIBRARY) $(THREAD_LIBRARY)
 endif
 
 SRCS := $(SRCDIR)/compute_Lnorm_udas.cc 
@@ -89,6 +89,6 @@ PROGRAM := $(SRCDIR)/compute_Lnorm_udas
 
 include $(SCIRUN_SCRIPTS)/program.mk
 
-compute_Lnorm_udas: prereqs StandAlone/tools/compute_Lnorm_udas
+
 
 include $(SCIRUN_SCRIPTS)/recurse.mk

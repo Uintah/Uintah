@@ -31,7 +31,7 @@ DEALINGS IN THE SOFTWARE.
 #ifndef UINTAH_HOMEBREW_PARALLEL_H
 #define UINTAH_HOMEBREW_PARALLEL_H
 
-#include   <string>
+#include <iostream>
 
 #include <Core/Parallel/uintahshare.h>
 
@@ -39,7 +39,7 @@ DEALINGS IN THE SOFTWARE.
 //
 //   Make sure that MPI_Init is called before using 'proc0cout'...
 //
-#define proc0cout if( Uintah::Parallel::getMPIRank() == 0 ) cout
+#define proc0cout if( Uintah::Parallel::getMPIRank() == 0 ) std::cout
 
 namespace Uintah {
 
@@ -90,13 +90,8 @@ WARNING
 
       //////////
 
-      // Initializes MPI if necessary.  "scheduler" is used to tell
-      // MPI to initialize the thread safety MPI libs (ie: MPI lib
-      // thread safety is requested if (scheduler ==
-      // "MixedScheduler")) If MPI thread safety is not needed, then
-      // in theory MPI uses a faster library.
-      static void initializeManager( int& argc, char**& argv, 
-				     const std::string & scheduler );
+      // Initializes MPI if necessary. 
+      static void initializeManager( int& argc, char**& arg );
 
       // check to see whether initializeManager has been called
       static bool isInitialized();

@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 from sys import argv,exit
 from os import environ
@@ -17,9 +17,12 @@ from helpers.runSusTests import runSusTests
 #       abs_tolerance=[double]  - absolute tolerance used in comparisons
 #       rel_tolerance=[double]  - relative tolerance used in comparisons
 #       exactComparison         - set absolute/relative tolerance = 0  for uda comparisons
-#       startFromCheckpoint     - start test from checkpoint. (/usr/local/home/csafe-tester/CheckPoints/..../testname.uda.000)
+#       startFromCheckpoint     - start test from checkpoint. (/home/csafe-tester/CheckPoints/..../testname.uda.000)
 #
-#  Note: the "folder name" must be the same as input file without the extension.
+#  Notes: 
+#  1) The "folder name" must be the same as input file without the extension.
+#  2) If the processors is > 1.0 then an mpirun command will be used
+#  3) Performance_tests are not run on a debug build.
 #______________________________________________________________________
 
 NIGHTLYTESTS = [  
@@ -27,7 +30,8 @@ NIGHTLYTESTS = [
                  ("heatcond2mat",                   "heatcond2mat.ups",                   1,  "Linux", ["exactComparison"]),    \
                  ("inclined_plane_sphere",          "inclined_plane_sphere.ups",          1,  "Linux", ["exactComparison"]),    \
                  ("foam_crush",                     "foam_crush.ups",                     4,  "Linux", ["exactComparison"]),    \
-                 ("periodic_disks",                 "periodic_disks.ups",                 6,  "Linux", ["exactComparison"]),    \
+                 ("periodic_disks",                 "periodic_disks.ups",                 1,  "Linux", ["exactComparison"]),    \
+                 ("periodic_spheres3D",             "periodic_spheres3D.ups",             8,  "Linux", ["exactComparison"]),    \
                  ("const_test_hypo",                "const_test_hypo.ups",                1,  "Linux", ["exactComparison"]),    \
                  ("const_test_cmr",                 "const_test_cmr.ups",                 1,  "Linux", ["exactComparison"]),    \
                  ("const_test_nhp",                 "const_test_nhp.ups",                 1,  "Linux", ["exactComparison"]),    \
@@ -40,7 +44,7 @@ NIGHTLYTESTS = [
                  ("test_corrug_plate",              "test_corrug_plate.ups",              1,  "Linux", ["exactComparison"]),    \
                  ("test_cyl_pene_no_ero",           "test_cyl_pene_no_ero.ups",           1,  "Linux", ["exactComparison"]),    \
                  ("test_gurson_beckerdrucker_mts",  "test_gurson_beckerdrucker_mts.ups",  1,  "Linux", ["exactComparison"]),    \
-           
+                 ("advect_3L_3D",                    "advect_3L_3D.ups",                  1,  "Linux", ["exactComparison","no_restart"]),    \
                  ("disks2mat4patch",                "disks2mat4patch.ups",                4,  "Darwin", ["doesTestRun"]),    \
                  ("heatcond2mat",                   "heatcond2mat.ups",                   1,  "Darwin", ["doesTestRun"]),    \
                  ("inclined_plane_sphere",          "inclined_plane_sphere.ups",          1,  "Darwin", ["doesTestRun"]),    \
@@ -54,15 +58,17 @@ NIGHTLYTESTS = [
                  ("test_corrug_plate",              "test_corrug_plate.ups",              1,  "Darwin", ["doesTestRun"]),    \
                  ("test_cyl_pene_no_ero",           "test_cyl_pene_no_ero.ups",           1,  "Darwin", ["doesTestRun"]),    \
                  ("test_gurson_beckerdrucker_mts",  "test_gurson_beckerdrucker_mts.ups",  1,  "Darwin", ["doesTestRun"])
-    	       ]
+            ]
               
 # Tests that are run during local regression testing              
 LOCALTESTS = [  
-                 ("disks2mat4patch",                 "disks2mat4patch.ups",                4,  "Linux", ["exactComparison"]),    \
+                 ("advect_3L_3D",                   "advect_3L_3D.ups",                   1,  "Linux", ["exactComparison","no_restart"]),    \
+                 ("disks2mat4patch",                "disks2mat4patch.ups",                4,  "Linux", ["exactComparison"]),    \
                  ("heatcond2mat",                   "heatcond2mat.ups",                   1,  "Linux", ["exactComparison"]),    \
                  ("inclined_plane_sphere",          "inclined_plane_sphere.ups",          1,  "Linux", ["exactComparison"]),    \
                  ("foam_crush",                     "foam_crush.ups",                     4,  "Linux", ["exactComparison"]),    \
-                 ("periodic_disks",                 "periodic_disks.ups",                 6,  "Linux", ["exactComparison"]),    \
+                 ("periodic_disks",                 "periodic_disks.ups",                 1,  "Linux", ["exactComparison"]),    \
+                 ("periodic_spheres3D",             "periodic_spheres3D.ups",             8,  "Linux", ["exactComparison"]),    \
                  ("const_test_hypo",                "const_test_hypo.ups",                1,  "Linux", ["exactComparison"]),    \
                  ("const_test_cmr",                 "const_test_cmr.ups",                 1,  "Linux", ["exactComparison"]),    \
                  ("const_test_nhp",                 "const_test_nhp.ups",                 1,  "Linux", ["exactComparison"]),    \
@@ -75,7 +81,7 @@ LOCALTESTS = [
                  ("test_corrug_plate",              "test_corrug_plate.ups",              1,  "Linux", ["exactComparison"]),    \
                  ("test_cyl_pene_no_ero",           "test_cyl_pene_no_ero.ups",           1,  "Linux", ["exactComparison"]),    \
                  ("test_gurson_beckerdrucker_mts",  "test_gurson_beckerdrucker_mts.ups",  1,  "Linux", ["exactComparison"])
-    	       ]
+              ]
 
 UNUSED =      [  ("test_cyl_pene_hypo_jc_ero", "test_cyl_pene_hypo_jc_ero.ups", 1, "ALL"), \
 	          ("testConvert1MAdd", "testConvert1MAdd.ups", 1, "ALL"), \
@@ -93,7 +99,7 @@ def getLocalTests() :
 
 if __name__ == "__main__":
 
-  if environ['LOCAL_OR_NIGHTLY_TEST'] == "local":
+  if environ['WHICH_TESTS'] == "local":
     TESTS = LOCALTESTS
   else:
     TESTS = NIGHTLYTESTS

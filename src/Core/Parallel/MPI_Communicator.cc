@@ -33,8 +33,6 @@ DEALINGS IN THE SOFTWARE.
 // We mustn't call the PMPI routines when using TAU, or they won't get profiled.
 #if defined(LAM_MPI) && !defined(USE_TAU_PROFILING)
 #include <iostream>
-#include <vector>
-#include <queue>
 #include <unistd.h>
 #include <cstdlib>
 #include <Core/Thread/Thread.h>
@@ -51,6 +49,8 @@ DEALINGS IN THE SOFTWARE.
 #define debug_mpi_thread
 
 
+using std::cout;
+using std::endl;
 using namespace SCIRun;
 
 #ifdef MALLOC_TRACE

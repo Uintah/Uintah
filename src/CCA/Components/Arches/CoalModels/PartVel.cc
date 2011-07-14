@@ -216,7 +216,6 @@ void PartVel::ComputePartVel( const ProcessorGroup* pc,
                               DataWarehouse* old_dw, 
                               DataWarehouse* new_dw, const int rkStep )
 {
-   //patch loop
   for (int p=0; p < patches->size(); p++){
     
     //double pi = acos(-1.0);
@@ -325,17 +324,17 @@ void PartVel::ComputePartVel( const ProcessorGroup* pc,
               for ( int iter = 0; iter < d_totIter; iter++) {
 
                 prev_diff = diff; 
-                double Re  = abs(diff)*length / kvisc; //do we really want an Re component wise? 
+                double Re  = fabs(diff)*length / kvisc; //do we really want an Re component wise? 
                 double phi = 1. + .15*pow(Re, 0.687);
                 double t_p_by_t_k = (2*rhoRatio+1)/36*1.0/phi*pow(length_ratio,2);
 
                 diff = uk*(1-beta)*pow(t_p_by_t_k, d_power);
-                double error = abs(diff - prev_diff)/diff; 
+                double error = fabs(diff - prev_diff)/diff; 
 
-                if ( abs(diff) < 1e-16 )
+                if ( fabs(diff) < 1e-16 )
                   error = 0.0;
 
-                if (abs(error) < d_tol)
+                if (fabs(error) < d_tol)
                   break;
 
               }
@@ -429,6 +428,7 @@ void PartVel::ComputePartVel( const ProcessorGroup* pc,
             ux = vel_x[c]*eqn3.getScalingConstant();
             uy = vel_y[c]*eqn4.getScalingConstant();
             uz = vel_z[c]*eqn5.getScalingConstant();
+
           } else {
             if( weight[c] < small_weight ) {
               ux = 0;
@@ -455,5 +455,5 @@ void PartVel::ComputePartVel( const ProcessorGroup* pc,
       } 
     }  
   } 
-}
+} // end ComputePartVel()
 

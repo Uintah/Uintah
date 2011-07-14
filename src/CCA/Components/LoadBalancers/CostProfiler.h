@@ -31,9 +31,7 @@ DEALINGS IN THE SOFTWARE.
 #ifndef UINTAH_HOMEBREW_CostProfiler_H
 #define UINTAH_HOMEBREW_CostProfiler_H
 
-#include <map>
 #include <vector>
-using namespace std;
 
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/Region.h>
@@ -86,7 +84,7 @@ namespace Uintah {
   class CostProfiler : public CostForecasterBase {
   public:
     CostProfiler(const ProcessorGroup* myworld,ProfileDriver::FILTER_TYPE type, LoadBalancer *lb) : d_lb(lb), d_myworld(myworld), d_profiler(myworld,type,lb) {};
-    void setMinPatchSize(const vector<IntVector> &min_patch_size);
+    void setMinPatchSize(const std::vector<IntVector> &min_patch_size);
     //add the contribution for region r on level l
     void addContribution(DetailedTask *task, double cost);
     //finalize the contributions for this timestep
@@ -94,7 +92,7 @@ namespace Uintah {
     //outputs the error associated with the profiler
     void outputError(const GridP currentGrid);
     //get the contributions for each patch, particles are ignored
-    void getWeights(const Grid* grid, vector<vector<int> > num_particles, vector<vector<double> >&costs);
+    void getWeights(const Grid* grid, std::vector<std::vector<int> > num_particles, std::vector<std::vector<double> >&costs);
     //sets the decay rate for the exponential average
     void setTimestepWindow(int window) {d_profiler.setTimestepWindow(window);}
     //initializes the regions in the new level that are not in the old level

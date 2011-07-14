@@ -82,5 +82,5 @@ void ExplicitTimeInt::problemSetup(const ProblemSpecP& params)
 
   }
   else
-	    throw InvalidValue("Explicit time integration order must be one of: first, second, third!  Please fix input file.",__FILE__, __LINE__);		
+            throw InvalidValue("Explicit time integration order must be one of: first, second, third!  Please fix input file.",__FILE__, __LINE__);             
 }

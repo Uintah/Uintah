@@ -112,9 +112,9 @@ namespace Uintah {
     // Simple matrix and vectors
 
     SparseMatrix<double,int> KK;
-    valarray<double> Q;
-    valarray<double> d_x;
-    valarray<double> d_t,d_flux;
+    std::valarray<double> Q;
+    std::valarray<double> d_x;
+    std::valarray<double> d_t,d_flux;
 
     inline bool compare(double num1, double num2)
       {

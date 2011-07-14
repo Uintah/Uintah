@@ -85,7 +85,8 @@ public:
   MixedScheduler(const ProcessorGroup* myworld, Output* oport);
   virtual ~MixedScheduler();
       
-  virtual void problemSetup(const ProblemSpecP& prob_spec);
+  virtual void problemSetup( const ProblemSpecP& prob_spec,
+                             SimulationStateP& /* state */ );
       
   virtual SchedulerP createSubScheduler();
 private:
@@ -93,7 +94,8 @@ private:
   MessageLog log;
 
   virtual void initiateTask( DetailedTask* task,
-			     bool only_old_recvs, int abort_point );
+			     bool only_old_recvs, int abort_point, int /* iteration */ );
+
   virtual void initiateReduction( DetailedTask* task );  
 
   // Waits until all tasks have finished. (Ie: talks to the ThreadPool

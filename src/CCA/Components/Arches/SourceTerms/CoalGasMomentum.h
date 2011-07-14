@@ -4,6 +4,30 @@
 #include <Core/Grid/SimulationStateP.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermBase.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermFactory.h>
+/**
+ * @class  CoalGasMomentum
+ * @author Jeremy Thornock, Julien Pedel, Charles Reid
+ * @date   Not sure
+ *
+ * @brief Assembles source term for the particle drag from the
+ * 				particle phase. 
+ *
+ * @todo
+ *
+ * @details
+ * This simply packages a gas source term into a form that is easily 
+ * accessed by the moementum equation.  The packaging is an assembly of
+ * the various model terms integrated over the ndf using the weights to 
+ * provide a total enthalpy source term. 
+ *
+ * Input file interface is as follows: 
+\code
+<Sources>
+	<src label="STRING REQUIRED" type="coal_gas_momentum"/>
+</Sources>
+\endcode
+ *
+*/
 
 namespace Uintah{
 

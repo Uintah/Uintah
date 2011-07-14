@@ -34,7 +34,6 @@ DEALINGS IN THE SOFTWARE.
 #include <map>
 #include <vector>
 #include <fstream>
-using namespace std;
 
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/Region.h>
@@ -101,7 +100,7 @@ namespace Uintah {
       //output standard error metrics of the prediction
       void outputError(const GridP currentGrid);
       //get the contributions for each patch, particles are ignored
-      void getWeights(const Grid* grid, vector<vector<int> > num_particles, vector<vector<double> >&costs);
+      void getWeights(const Grid* grid, std::vector<std::vector<int> > num_particles, std::vector<std::vector<double> >&costs);
       //sets the decay rate for the exponential average
       void setTimestepWindow(int window) { d_timestepWindow=window;}
       
@@ -154,8 +153,8 @@ namespace Uintah {
       const ProcessorGroup* d_myworld;
       int d_timestepWindow;
       map<int,double> execTimes;
-      void collectPatchInfo(const GridP currentGrid, vector<PatchInfo> &patch_info);
-      vector<double> d_x;
+      void collectPatchInfo(const GridP currentGrid, std::vector<PatchInfo> &patch_info);
+      std::vector<double> d_x;
   };
       
   ostream& operator<<(ostream& out, const CostModelForecaster::PatchInfo &pi);

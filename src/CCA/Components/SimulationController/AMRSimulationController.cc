@@ -73,15 +73,14 @@ DEALINGS IN THE SOFTWARE.
 #include <iostream>
 #include <iomanip>
 
-using std::cerr;
-using std::cout;
-
+using namespace std;
 using namespace SCIRun;
 using namespace Uintah;
 
 DebugStream amrout("AMR", false);
 static DebugStream dbg("AMRSimulationController", false);
 static DebugStream dbg_barrier("MPIBarriers",false);
+static DebugStream dbg_dwmem("LogDWMemory",false);
 
 AMRSimulationController::AMRSimulationController(const ProcessorGroup* myworld,
                                                  bool doAMR, ProblemSpecP pspec) :
@@ -99,16 +98,11 @@ AMRSimulationController::run()
 {
   MALLOC_TRACE_TAG_SCOPE("AMRSimulationController::run()");
 
-   bool log_dw_mem=false;
-#ifndef DISABLE_SCI_MALLOC
-   ProblemSpecP debug = d_ups->findBlock("debug");
-   if(debug){
-     ProblemSpecP log_mem = debug->findBlock("logmemory");
-     if(log_mem){
-       log_dw_mem=true;
-     }
-   }
-#endif
+  bool log_dw_mem=false;
+
+  if(dbg_dwmem.active()) {
+    log_dw_mem=true;
+  }
 
    // sets up sharedState, timeinfo, output, scheduler, lb
    preGridSetup();

@@ -91,6 +91,9 @@ EqnBase::checkBCs( const ProcessorGroup* pc,
           cout << "Material = " << matlIndex << endl;
           throw ProblemSetupException("Please correct your <BoundaryCondition> section in your input file for this variable", __FILE__,__LINE__); 
         }
+
+        delete bc; 
+
       }
     }
   }

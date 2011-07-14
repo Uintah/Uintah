@@ -92,7 +92,8 @@ void CZMaterial::registerParticleState(SimulationState* sharedState)
 
 ProblemSpecP CZMaterial::outputProblemSpec(ProblemSpecP& ps)
 {
-  ProblemSpecP cz_ps = Material::outputProblemSpec(ps);
+  ProblemSpecP cz_ps = ps->appendChild("cohesive_zone");
+
   cz_ps->appendElement("delta_n",d_delta_n);
   cz_ps->appendElement("delta_t",d_delta_t);
   cz_ps->appendElement("sig_max",d_sig_max);

@@ -40,10 +40,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <iostream>
 
-using std::cerr;
-using std::cout;
-using std::endl;
-
+using namespace std;
 using namespace Uintah;
 
 LoadBalancerCommon* LoadBalancerFactory::create(ProblemSpecP& ps, 

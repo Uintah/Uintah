@@ -981,7 +981,7 @@ TaskGraph::createDetailedDependencies()
     DetailedTask* task = dts_->getTask(i);
     task->task->d_phase=currphase;
     //cout << d_myworld->myrank()  << " Task: " << *task << " phase: " << currphase << endl;
-    if (task->task->getType() == Task::Reduction || task->task->getType() == Task::OncePerProc) {
+    if (task->task->getType() == Task::Reduction || ( task->task->getType() == Task::OncePerProc && Uintah::Parallel::getMaxThreads() < 1 )) {
       currphase++;
       lastReductionTask = task;
     }
@@ -1365,7 +1365,7 @@ TaskGraph::createDetailedDependencies(DetailedTask* task,
                       warn.invoke();
                       if (dbg.active())
                         dbg << d_myworld->myrank() << " Task that requires with ghost cells and modifies\n";
-                      cout <<  d_myworld->myrank() << " RGM: var: " << *req->var << " compute: " 
+                        dbg <<  d_myworld->myrank() << " RGM: var: " << *req->var << " compute: " 
                         << *creator << " mod " << *task << " PRT " << *prevReqTask << " " << from_l << " " << from_h << endl;
                     }
                   } else {
