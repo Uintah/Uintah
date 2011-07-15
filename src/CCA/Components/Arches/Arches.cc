@@ -2934,7 +2934,7 @@ Arches::readArchesSpecificData(const LevelP& level,
 cout << "reading data" << endl; 
       d_boundaryCondition->readResponsiveBoundaryData(level, sched, d_dataArchiver);
       d_readResponsiveBoundaryData = false;
-      d_recompile = true;
+      d_lab->recompile_taskgraph = true;
 cout << "boolean: " << d_readResponsiveBoundaryData << endl;
     }
   } // end if (d_boundaryCondition) 

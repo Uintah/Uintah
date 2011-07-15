@@ -170,7 +170,7 @@ public:
   // is used.  If the recompile is not used, then readResponsiveBoundaryData is not eliminated from the task                       //WME
   // graph and is used again and again beyond the intial steps of a restart.                                     //WME
   /////////////////////////////////////////////////////////////////////////////////////////////////////////      //WME
-  //  void setRecompileTrue() {d_recompile = true;}                                                                  //WME
+  //  void setRecompileTrue() {d_lab->recompile_taskgraph = true;}                                                                  //WME
  
  
 
