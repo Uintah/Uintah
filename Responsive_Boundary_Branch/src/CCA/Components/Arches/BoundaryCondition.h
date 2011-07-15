@@ -391,7 +391,7 @@ namespace Uintah {
       }
       ////////////////////////////////////////////////////////////////////////
       // sets boolean for energy exchange between solid and fluid
-      void seeefCalcEnergyExchange(bool calcEnergyExchange){
+      void setIfCalcEnergyExchange(bool calcEnergyExchange){
         d_calcEnergyExchange = calcEnergyExchange;
       }
 
@@ -1022,7 +1022,8 @@ namespace Uintah {
           // stores the geometry information, read from problem specs
           std::vector<GeometryPieceP> d_geomPiece;
           std::vector<GeometryPieceP> d_prefillGeomPiece;
-          void problemSetup(ProblemSpecP& params);
+          void problemSetup(ProblemSpecP& params,
+                            const ProblemSpecP& restart_ps);
           // reduction variable label to get area
           VarLabel* d_area_label;
           VarLabel* d_flowRate_label;
