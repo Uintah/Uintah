@@ -56,8 +56,6 @@ namespace Wasatch{
     bcPlus[1] = patch.getBCType(Uintah::Patch::yplus) != Uintah::Patch::Neighbor;
     bcPlus[2] = patch.getBCType(Uintah::Patch::zplus) != Uintah::Patch::Neighbor;
 
-    const double vol = spacing[0]*spacing[1]*spacing[2];
-
     // build all of the stencils defined in SpatialOps
     build_stencils( udim[0], udim[1], udim[2],
                     udim[0]*spacing[0], udim[1]*spacing[1], udim[2]*spacing[2],

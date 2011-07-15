@@ -216,7 +216,7 @@ namespace Wasatch{
             << __FILE__ << " : " << __LINE__ << endl;
       }
 
-      Category cat;
+      Category cat = INITIALIZATION;
       if     ( taskListName == "initialization"   )   cat = INITIALIZATION;
       else if( taskListName == "timestep_size"    )   cat = TIMESTEP_SELECTION;
       else if( taskListName == "advance_solution" )   cat = ADVANCE_SOLUTION;
@@ -257,7 +257,7 @@ namespace Wasatch{
             << __FILE__ << " : " << __LINE__ << endl;
       }
 		
-      Category cat;
+      Category cat = INITIALIZATION;
       if     ( taskListName == "initialization"   )   cat = INITIALIZATION;
       else if( taskListName == "timestep_size"    )   cat = TIMESTEP_SELECTION;
       else if( taskListName == "advance_solution" )   cat = ADVANCE_SOLUTION;

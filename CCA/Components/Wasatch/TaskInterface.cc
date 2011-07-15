@@ -247,8 +247,8 @@ namespace Wasatch{
 
 #       ifdef WASATCH_TASK_FIELD_DIAGNOSTICS
         proc0cout << std::setw(20) << std::left << fieldInfo.varlabel->getName();
-        if( fieldInfo.useOldDataWarehouse ) proc0cout << "OLD   ";
-        else proc0cout << "NEW   ";
+        if( fieldInfo.useOldDataWarehouse ){ proc0cout << "OLD   "; }
+        else{ proc0cout << "NEW   "; }
         proc0cout << std::left << std::setw(5) << fieldInfo.nghost
                   << *patches << endl;
 #       endif
