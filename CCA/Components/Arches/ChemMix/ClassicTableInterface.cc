@@ -465,7 +465,7 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
             throw InvalidValue( "Error: When trying to compute properties at a boundary, found boundary specification missing in the <Grid> section of the input file.", __FILE__, __LINE__); 
           }
 
-          double bc_value     = new_bcs->getValue(); 
+          double bc_value     = new_bcs->getValue();
           std::string bc_kind = new_bcs->getBCType__NEW(); 
 
           if ( bc_kind == "Dirichlet" ) {
@@ -478,7 +478,7 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
           // currently assuming a constant value across the mesh. 
           bc_values.push_back( bc_value ); 
 
-          bc_values.push_back(0.0);
+          //bc_values.push_back(0.0);
           which_bc.push_back(ClassicTableInterface::DIRICHLET);
 
           delete bc; 
@@ -496,7 +496,7 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
 
             switch (which_bc[i]) { 
               case ClassicTableInterface::DIRICHLET:
-                iv.push_back( bc_values[i] ); 
+                iv.push_back( bc_values[i] );
                 break; 
               case ClassicTableInterface::NEUMANN:
                 iv.push_back(0.5*(indep_storage[i][c] + indep_storage[i][cp1]));  
@@ -516,9 +516,9 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
               (*i->second.var)[c] = table_value;
 
               if (i->first == "density") {
-                //double ghost_value = 2.0*table_value - arches_density[cp1];
-                arches_density[c] = table_value;
-                //arches_density[c] = ghost_value; 
+                double ghost_value = 2.0*table_value - arches_density[cp1];
+                //arches_density[c] = table_value; 
+                arches_density[c] = ghost_value; 
                 if (d_MAlab)
                   mpmarches_denmicro[c] = table_value; 
               } else if (i->first == "temperature" && !d_coldflow) {
