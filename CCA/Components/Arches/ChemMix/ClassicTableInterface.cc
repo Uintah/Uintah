@@ -475,10 +475,8 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
           } else
             throw InvalidValue( "Error: BC type not supported for property calculation", __FILE__, __LINE__ ); 
 
-          // currently assuming a constant value across the mesh. 
+          // currently assuming a constant value across the boundary
           bc_values.push_back( bc_value ); 
-
-          //bc_values.push_back(0.0);
           which_bc.push_back(ClassicTableInterface::DIRICHLET);
 
           delete bc; 
@@ -499,7 +497,7 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
                 iv.push_back( bc_values[i] );
                 break; 
               case ClassicTableInterface::NEUMANN:
-                iv.push_back(0.5*(indep_storage[i][c] + indep_storage[i][cp1]));  
+                iv.push_back( 0.5 * (indep_storage[i][c] + indep_storage[i][cp1]) );  
                 break; 
               default: 
                 throw InvalidValue( "Error: BC type not supported for property calculation", __FILE__, __LINE__ ); 
@@ -516,9 +514,12 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
               (*i->second.var)[c] = table_value;
 
               if (i->first == "density") {
-                double ghost_value = 2.0*table_value - arches_density[cp1];
-                //arches_density[c] = table_value; 
-                arches_density[c] = ghost_value; 
+                // Two ways of setting density.  Note that the old ARCHES code used the table value directly and not the ghost_value as defined below. 
+                // This gets density = bc value on face:
+                //double ghost_value = 2.0*table_value - arches_density[cp1];
+                //arches_density[c] = ghost_value; 
+                // This gets density = bc value in extra cell 
+                arches_density[c] = table_value; 
                 if (d_MAlab)
                   mpmarches_denmicro[c] = table_value; 
               } else if (i->first == "temperature" && !d_coldflow) {
@@ -531,8 +532,9 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
                 arches_h2o[c] = table_value; 
               }
           }
-          iv.clear(); 
+          iv.resize(0);
         }
+        bc_values.resize(0);
       }
     }
 
