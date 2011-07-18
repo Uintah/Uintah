@@ -11,9 +11,9 @@
 using namespace std;
 using namespace Uintah; 
 
-WestbrookDryer::WestbrookDryer( std::string src_name, SimulationStateP& shared_state,
+WestbrookDryer::WestbrookDryer( std::string src_name, ArchesLabel* field_labels,
                             vector<std::string> req_label_names ) 
-: SourceTermBase(src_name, shared_state, req_label_names)
+: _field_labels(field_labels), SourceTermBase(src_name, field_labels->d_sharedState, req_label_names)
 { 
 
   _label_sched_init = false; 
@@ -114,12 +114,6 @@ WestbrookDryer::sched_computeSource( const LevelP& level, SchedulerP& sched, int
     tsk->modifies(d_WDverLabel); 
   }
 
-  for (vector<std::string>::iterator iter = _required_labels.begin(); 
-       iter != _required_labels.end(); iter++) { 
-    // HERE I WOULD REQUIRE ANY VARIABLES NEEDED TO COMPUTE THE SOURCe
-    //tsk->requires( Task::OldDW, .... ); 
-  }
-
   _temperatureLabel   = VarLabel::find( d_T_label );
   _mixMWLabel         = VarLabel::find( d_mw_label );
   _denLabel           = VarLabel::find( d_rho_label );
@@ -131,6 +125,7 @@ WestbrookDryer::sched_computeSource( const LevelP& level, SchedulerP& sched, int
   tsk->requires( Task::OldDW, _CstarMassFracLabel,  Ghost::None, 0 ); 
   tsk->requires( Task::OldDW, _CEqMassFracLabel, Ghost::None, 0 ); 
   tsk->requires( Task::OldDW, _denLabel,         Ghost::None, 0 ); 
+  tsk->requires( Task::OldDW, _field_labels->d_sharedState->get_delt_label(), Ghost::None, 0);
 
   sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials()); 
 
@@ -152,6 +147,15 @@ WestbrookDryer::computeSource( const ProcessorGroup* pc,
     const Patch* patch = patches->get(p);
     int archIndex = 0;
     int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex(); 
+    Vector Dx = patch->dCell(); 
+    double vol = Dx.x();
+#ifdef YDIM
+    vol *= Dx.y();
+#endif
+#ifdef ZDIM
+    vol *= Dx.z();
+#endif
+    
 
     CCVariable<double> CxHyRate; // rate source term  
     CCVariable<double> S; // stripping fraction 
@@ -184,12 +188,6 @@ WestbrookDryer::computeSource( const ProcessorGroup* pc,
       ver.initialize(0.0); 
     } 
 
-    for (vector<std::string>::iterator iter = _required_labels.begin(); 
-         iter != _required_labels.end(); iter++) { 
-      //CCVariable<double> temp; 
-      //old_dw->get( *iter.... ); 
-    }
-
     constCCVariable<double> T;      // temperature 
     constCCVariable<double> den;    // mixture density
     constCCVariable<double> mixMW;  // mixture molecular weight (assumes that the table value is an inverse)
@@ -201,6 +199,10 @@ WestbrookDryer::computeSource( const ProcessorGroup* pc,
     old_dw->get( den   , _denLabel           , matlIndex , patch , Ghost::None , 0 );
     old_dw->get( Cstar , _CstarMassFracLabel , matlIndex , patch , Ghost::None , 0 );
     old_dw->get( Ceq   , _CEqMassFracLabel   , matlIndex , patch , Ghost::None , 0 );
+
+    delt_vartype DT; 
+    old_dw->get(DT, _field_labels->d_sharedState->get_delt_label()); 
+    double dt = DT;
 
     for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
       IntVector c = *iter; 
@@ -257,6 +259,14 @@ WestbrookDryer::computeSource( const ProcessorGroup* pc,
       CxHyRate[c] = rate * d_MW_HC * mixMW[c] * d_R * T[c] / d_Press;
       CxHyRate[c] *= den[c] * 1.0e6; // to get [kg HC/time/vol]
       CxHyRate[c] *= d_sign; // pick the sign. 
+
+      //check the rate...
+      double constant = dt * vol / den[c]; 
+      if ( std::abs(constant * CxHyRate[c]) > Cstar[c] ) { 
+
+        CxHyRate[c] = d_sign*den[c]/(dt*vol)*Cstar[c];
+
+      } 
 
       // Checking for NaN
       if ( CxHyRate[c] != CxHyRate[c] ) {

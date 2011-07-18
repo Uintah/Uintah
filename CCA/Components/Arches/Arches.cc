@@ -2417,7 +2417,7 @@ void Arches::registerUDSources(ProblemSpecP& db)
 
       } else if (src_type == "westbrook_dryer") {
         // Computes a global reaction rate for a hydrocarbon (see Turns, eqn 5.1,5.2)
-        SourceTermBase::Builder* srcBuilder = scinew WestbrookDryer::Builder(src_name, required_varLabels, d_lab->d_sharedState); 
+        SourceTermBase::Builder* srcBuilder = scinew WestbrookDryer::Builder(src_name, required_varLabels, d_lab); 
         factory.register_source_term( src_name, srcBuilder ); 
       
       } else if (src_type == "mms1"){

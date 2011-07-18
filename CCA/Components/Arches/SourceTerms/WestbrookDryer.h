@@ -4,6 +4,8 @@
 #include <Core/Grid/SimulationStateP.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermBase.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermFactory.h>
+#include <CCA/Components/Arches/ArchesLabel.h>
+#include <CCA/Components/Arches/Directives.h>
 
 /** 
 * @class  Westbrook and Dryer Hydrocarbon Chemistry Model
@@ -52,7 +54,7 @@ namespace Uintah{
 class WestbrookDryer: public SourceTermBase {
 public: 
 
-  WestbrookDryer( std::string srcName, SimulationStateP& shared_state, 
+  WestbrookDryer( std::string srcName, ArchesLabel* field_labels, 
                 vector<std::string> reqLabelNames );
 
   ~WestbrookDryer();
@@ -81,17 +83,18 @@ public:
 
     public: 
 
-      Builder( std::string name, vector<std::string> required_label_names, SimulationStateP& shared_state ) 
-        : _name(name), _shared_state(shared_state), _required_label_names(required_label_names){};
+      Builder( std::string name, vector<std::string> required_label_names, ArchesLabel* field_labels ) 
+        : _name(name), _field_labels(field_labels), _required_label_names(required_label_names){};
       ~Builder(){}; 
 
       WestbrookDryer* build()
-      { return scinew WestbrookDryer( _name, _shared_state, _required_label_names ); };
+      { return scinew WestbrookDryer( _name, _field_labels, _required_label_names ); };
 
     private: 
 
       std::string _name; 
-      SimulationStateP& _shared_state; 
+      //SimulationStateP& _shared_state; 
+      ArchesLabel* _field_labels; 
       vector<std::string> _required_label_names; 
 
   }; // Builder
@@ -130,6 +133,8 @@ private:
   const VarLabel* _denLabel;         
   const VarLabel* _CstarMassFracLabel;  
   const VarLabel* _CEqMassFracLabel; 
+
+  ArchesLabel* _field_labels;
 
   double d_sign; 
 
