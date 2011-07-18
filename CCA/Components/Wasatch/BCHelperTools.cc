@@ -8,6 +8,7 @@
 //-- SpatialOps includes --//
 #include <spatialops/OperatorDatabase.h>
 #include <spatialops/structured/FVStaggered.h>
+#include <spatialops/structured/FVStaggeredBCTools.h>
 
 //-- ExprLib includes --//
 #include <expression/ExprLib.h>
@@ -20,7 +21,7 @@
 namespace Wasatch {
   
   //
-  // this macro will be unwrapped inside the build_bcs method.  The
+  // this macro will be unwrapped inside the process_boundary_conditions method.  The
   // variable names correspond to those defined within the appropriate
   // scope of that method.
   //
@@ -28,22 +29,49 @@ namespace Wasatch {
   #define SET_BC( BCEvalT,      /* type of bc evaluator */                \
                   BCT,          /* type of BC */                          \
                   SIDE )                                                  \
-    proc0cout << "SETTING BOUNDARY CONDITION ON "<< phiName <<std::endl;    \
+    proc0cout << "SETTING BOUNDARY CONDITION ON "<< phiName << " ON SIDE " << SIDE <<std::endl;    \
     for( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {            \
       SCIRun::IntVector bc_point_indices(*bound_ptr);                     \
       const SS::IntVec bcPointIJK(bc_point_indices[0],bc_point_indices[1],bc_point_indices[2]); \
       switch (staggeredLocation) {                                        \
       case XDIR:                                                          \
         typedef SS::XVolField  XFieldT;                                    \
-        set_bc< XFieldT, BCOpTypeSelector<XFieldT,BCEvalT>::BCT >( patch, graphHelper, phiTag, bcPointIJK, SIDE, bc_value, opdb ); \
+        if (bc_kind=="Dirichlet" && SIDE==SS::X_MINUS_SIDE) { 							\
+  					set_bc_staggered<XFieldT> (patch,graphHelper,phiTag,bcPointIJK,bc_value);\
+						const SS::IntVec ghostCellIJK(bc_point_indices[0] - 1,bc_point_indices[1],bc_point_indices[2]); \
+  					set_bc_staggered<XFieldT> (patch,graphHelper,phiTag,ghostCellIJK,bc_value);     \
+				}\
+        else if (bc_kind=="Dirichlet" && SIDE==SS::X_PLUS_SIDE) {								\
+            const SS::IntVec ghostCellIJK(bc_point_indices[0] + 1,bc_point_indices[1],bc_point_indices[2]); \
+  					set_bc_staggered<XFieldT> (patch,graphHelper,phiTag,ghostCellIJK,bc_value);\
+        }																																		\
+        else set_bc< XFieldT, BCOpTypeSelector<XFieldT,BCEvalT>::BCT >( patch, graphHelper, phiTag, bcPointIJK, SIDE, bc_value, opdb ); \
         break;                                                            \
       case YDIR:                                                          \
         typedef SS::YVolField  YFieldT;                                    \
-        set_bc< YFieldT, BCOpTypeSelector<YFieldT,BCEvalT>::BCT >( patch, graphHelper, phiTag, bcPointIJK, SIDE, bc_value, opdb ); \
+        if (bc_kind=="Dirichlet" && SIDE==SS::Y_MINUS_SIDE) { 							\
+          set_bc_staggered<YFieldT> (patch,graphHelper,phiTag,bcPointIJK,bc_value);\
+          const SS::IntVec ghostCellIJK(bc_point_indices[0],bc_point_indices[1] - 1,bc_point_indices[2]); \
+          set_bc_staggered<YFieldT> (patch,graphHelper,phiTag,ghostCellIJK,bc_value);     \
+        }\
+        else if (bc_kind=="Dirichlet" && SIDE==SS::Y_PLUS_SIDE) {								\
+          const SS::IntVec ghostCellIJK(bc_point_indices[0],bc_point_indices[1] + 1,bc_point_indices[2]); \
+          set_bc_staggered<YFieldT> (patch,graphHelper,phiTag,ghostCellIJK,bc_value);\
+        }																																		\
+        else set_bc< YFieldT, BCOpTypeSelector<YFieldT,BCEvalT>::BCT >( patch, graphHelper, phiTag, bcPointIJK, SIDE, bc_value, opdb ); \
         break;																														\
       case ZDIR:																													\
         typedef SS::ZVolField  ZFieldT;                                    \
-        set_bc< ZFieldT, BCOpTypeSelector<ZFieldT,BCEvalT>::BCT >( patch, graphHelper, phiTag, bcPointIJK, SIDE, bc_value, opdb ); \
+        if (bc_kind=="Dirichlet" && SIDE==SS::Z_MINUS_SIDE) { 							\
+          set_bc_staggered<ZFieldT> (patch,graphHelper,phiTag,bcPointIJK,bc_value);\
+          const SS::IntVec ghostCellIJK(bc_point_indices[0],bc_point_indices[1],bc_point_indices[2] - 1); \
+          set_bc_staggered<ZFieldT> (patch,graphHelper,phiTag,ghostCellIJK,bc_value);     \
+        }\
+        else if (bc_kind=="Dirichlet" && SIDE==SS::Z_PLUS_SIDE) {								\
+          const SS::IntVec ghostCellIJK(bc_point_indices[0],bc_point_indices[1],bc_point_indices[2] + 1); \
+          set_bc_staggered<ZFieldT> (patch,graphHelper,phiTag,ghostCellIJK,bc_value);\
+        }																																		\
+        else set_bc< ZFieldT, BCOpTypeSelector<ZFieldT,BCEvalT>::BCT >( patch, graphHelper, phiTag, bcPointIJK, SIDE, bc_value, opdb ); \
         break;																														\
       case NODIR:																													\
         typedef SS::SVolField  SFieldT;                                   \
@@ -53,8 +81,27 @@ namespace Wasatch {
         break;																														\
     }																																		  \
   }
+  //-----------------------------------------------------------------------------
+  // Sets Dirichlet values on the field directly
+  template < typename FieldT >
+  void set_bc_staggered( const Uintah::Patch* const patch,
+              const GraphHelper& gh,
+              const Expr::Tag phiTag,
+              const SpatialOps::structured::IntVec& bcPointIndex,
+              const double bcValue)
+  {
+    typedef SpatialOps::structured::ConstValEval BCVal;
+    typedef SpatialOps::structured::BoundaryCondition<FieldT,BCVal> BC;
+    Expr::ExpressionFactory& factory = *gh.exprFactory;
+    const Expr::ExpressionID phiID = factory.get_registry().get_id(phiTag);
+    Expr::Expression<FieldT>& phiExpr = dynamic_cast<Expr::Expression<FieldT>&>( factory.retrieve_expression( phiID, patch->getID(), true ) );    
+    BC bound_cond(bcPointIndex, BCVal(bcValue));
+    phiExpr.process_after_evaluate( bound_cond );                      
+  }
+  
   
   //-----------------------------------------------------------------------------
+  
   template < typename FieldT, typename BCOpT >
   void set_bc( const Uintah::Patch* const patch,
                   const GraphHelper& gh,
@@ -68,7 +115,7 @@ namespace Wasatch {
     //const Expr::Tag phiLabel( phiName, Expr::STATE_N );
     Expr::ExpressionFactory& factory = *gh.exprFactory;
     const Expr::ExpressionID phiID = factory.get_registry().get_id(phiTag);
-    Expr::Expression<FieldT>& phiExpr = dynamic_cast<Expr::Expression<FieldT>&>( factory.retrieve_expression( phiID, patch->getID(), true ) );
+    Expr::Expression<FieldT>& phiExpr = dynamic_cast<Expr::Expression<FieldT>&>( factory.retrieve_expression( phiID, patch->getID(), true ) );    
     BCOpT bcOp( bcPointIndex, bcSide, BCEvaluator(bcValue), opdb );
     phiExpr.process_after_evaluate( bcOp );
   }
@@ -129,7 +176,7 @@ namespace Wasatch {
   
   //-----------------------------------------------------------------------------
 
-  void build_bcs( const Expr::Tag phiTag,
+  void process_boundary_conditions( const Expr::Tag phiTag,
                      const Direction staggeredLocation,
                      const GraphHelper& graphHelper,
                      const Uintah::PatchSet* const localPatches,
@@ -180,6 +227,9 @@ namespace Wasatch {
           for( ; faceIterator!=bndFaces.end(); ++faceIterator ){
             Uintah::Patch::FaceType face = *faceIterator;
             
+            //get the face direction
+            SCIRun::IntVector insideCellDir = patch->faceDirection(face);
+
             //get the number of children
             const int numChildren = patch->getBCDataArray(face)->getNumberChildren(materialID);
             
@@ -188,6 +238,10 @@ namespace Wasatch {
               double bc_value = -9; 
               std::string bc_kind = "NotSet";
               SCIRun::Iterator bound_ptr;
+              // NOTE TO SELF: The Uintah boundary iterator, in the absence of extra cells, as is the case in Wasatch,
+              // will give the zero-based ijk indices of the SCALAR interior cells, adjacent to the boundary.
+              // ALSO NOTE: that even with staggered scalar Wasatch fields, there is NO additional ghost cell on the x+ face. So
+              // nx_staggered = nx_scalar
               bool foundIterator = get_iter_bcval_bckind( patch, face, child, phiName, materialID, bc_value, bound_ptr, bc_kind);
               
               if (foundIterator) {

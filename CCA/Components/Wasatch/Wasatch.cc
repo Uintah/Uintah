@@ -393,7 +393,7 @@ namespace Wasatch{
     // -----------------------------------------------------------------------
     const GraphHelper* gh = graphCategories_[ ADVANCE_SOLUTION ];
     //Expr::ExpressionFactory& exprFactory = *gh->exprFactory;
-    //build_bcs( adaptors_, *gh, localPatches, patchInfoMap_, materials->getUnion() );
+    //process_boundary_conditions( adaptors_, *gh, localPatches, patchInfoMap_, materials->getUnion() );
     typedef std::vector<EqnTimestepAdaptorBase*> EquationAdaptors;
     
     for( EquationAdaptors::const_iterator ia=adaptors_.begin(); ia!=adaptors_.end(); ++ia ){
