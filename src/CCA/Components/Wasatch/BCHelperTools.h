@@ -57,7 +57,7 @@ namespace Wasatch {
    *  \param materials a pointer to the Uintah::MaterialSubset.
    */
   
-  void build_bcs( const Expr::Tag phiTag,
+  void process_boundary_conditions( const Expr::Tag phiTag,
                      const Direction staggeredLocation,
                      const GraphHelper& graphHelper,
                      const Uintah::PatchSet* const localPatches,
