@@ -84,37 +84,51 @@ intensities > 0 and maps that intensity to a mpm matl.
 
 
 ups file specification:
-
   <PreprocessTools>
     <rawToUniqueGrains>
-      <numGrainMatls>      3              </numGrainMatls>
-      <image> simple_sugar_mock_blob3d_unique_grains.raw  </image>
-      <ppc>               [1,1,1]         </ppc>
-      <res>              [154,252,1]     </res>
-      <threshold>        [1,80]          </threshold>
-      <outputBasename> points/16bit_grains    </outputBasename>
+      <image>  simple_sugar_mock_blob3d_unique_grains.raw  </image>
+      <ppc>      [1,1,1]       </ppc>
+      <res>    [154,252,1]     </res>
+      <outputBasename>   points/16bit_grains    </outputBasename>
+      
+      <matl index="0">
+        <threshold>   [0,0]   </threshold>
+      </matl>
+      <matl index="2">
+        <threshold>   [67,69] </threshold>
+      </matl>
+
+      <uniqueGrains>
+         <matlIndex>  [1,2,3,4,5] </matlIndex>
+         <threshold>    [1,80]    </threshold>
+      </uniqueGrains>
     </rawToUniqueGrains>
   </PreprocessTools>
 
 Mapping of intensity to matl:
 
-Intensity Levels: 79 min: 1 max: 79
+ 
+Unique grain intensity levels:  min: 1 max: 79
 Intensity level to mpm matl mapping
  Intensity: 0 = matl 0
  Intensity: 1 = matl 1
  Intensity: 2 = matl 2
  Intensity: 3 = matl 3
- Intensity: 4 = matl 1
- Intensity: 5 = matl 2
- Intensity: 6 = matl 3
- Intensity: 7 = matl 1
- Intensity: 8 = matl 2
- Intensity: 9 = matl 3
- Intensity: 10 = matl 1
-
-
+ Intensity: 4 = matl 4
+ Intensity: 5 = matl 5
+ Intensity: 6 = matl 1
+ Intensity: 7 = matl 2
+ Intensity: 8 = matl 3
+ Intensity: 9 = matl 4
+ Intensity: 10 = matl 5
+ Intensity: 11 = matl 1
+ Intensity: 12 = matl 2
+ Intensity: 13 = matl 3
+ Intensity: 14 = matl 4
+ Intensity: 15 = matl 5
+ Intensity: 16 = matl 1
+ 
 Assumptions:
- - All pixels with an intensity of 0 belong to matl 0.
  - The particle per cell (ppc) is a constant for all matls.
 -----------------------------------------------------------------------------------------*/
 
@@ -143,6 +157,10 @@ inline Point CreatePoint(unsigned int n, vector<int>& res, double dx, double dy,
   return Point( dx*((double)i + 0.5), dy*(((double)(res[1]-1-j)) + 0.5),dz*((double)k + 0.5));
 }
 
+struct intensityMapping{
+  vector<int> threshold;
+  unsigned int matlIndex;
+};
 
 //______________________________________________________________________
 //
@@ -171,13 +189,19 @@ int main(int argc, char *argv[])
 
   //__________________________________
   //  Read in user specificatons
-  int  numGrainMatls;    // number of matls to represent all the grains
-  string imgname;        // raw image file name
-  vector<int> res;       // image resolution
-  vector<int> ppc;       // number of particles per cell
-  vector<int> L;         // lower and upper threshold
-  string f_name;         // the base name of the output file
-
+  string imgname;                   // raw image file name
+  vector<int> res;                  // image resolution
+  vector<int> ppc;                  // number of particles per cell
+  vector<int> UG_matlIndex;         // unique grain matl index
+  vector<int> UG_threshold;         // unique grain threshold
+  int UG_numMatls = 0;              // number of unique grain matls
+  map<int, int> intensityToMatl_map;// intensity to matl mapping
+  
+  
+  
+  string f_name;                    // the base name of the output file
+  bool hasUniqueGrains = false;
+  
   ProblemSpecP ups = ProblemSpecReader().readInputFile( infile );
 
   if( !ups ) {
@@ -201,9 +225,39 @@ int main(int argc, char *argv[])
   raw_ps->require("image",          imgname ); 
   raw_ps->require("ppc",            ppc);
   raw_ps->require("res",            res);
-  raw_ps->require("threshold",      L);
   raw_ps->require("outputBasename", f_name);
-  raw_ps->require("numGrainMatls",  numGrainMatls);
+  
+  
+  // read in all non unique grain specs and put that in a vector
+  vector<intensityMapping> intMatl_Vec;
+  
+  for (ProblemSpecP child = raw_ps->findBlock("matl"); child != 0;
+                    child = child->findNextBlock("matl")) {
+    
+    vector<int> threshold;
+    map<string,string> matlIndex;
+    
+    child->getAttributes(matlIndex);
+    child->require("threshold", threshold);
+    
+    intensityMapping data;
+    data.matlIndex = atoi(matlIndex["index"].c_str());
+    data.threshold = threshold;
+    intMatl_Vec.push_back(data);
+    
+    cout << "matl index " << matlIndex["index"] << " Threshold low: " << threshold[0] << " high: " <<threshold[1] <<endl;
+  }
+  
+  // read in the unique grains
+  ProblemSpecP ug_ps = raw_ps->findBlockWithOutAttribute("uniqueGrains");
+  if( ug_ps ) {
+    ug_ps->require("matlIndex",      UG_matlIndex);
+    ug_ps->require("threshold",      UG_threshold);
+    UG_numMatls = UG_matlIndex.size();
+    cout << "Number of unique Grain Matls " << UG_numMatls << endl;
+    hasUniqueGrains = true;
+  }
+
 
   //__________________________________
   //  Read the image file
@@ -219,43 +273,56 @@ int main(int argc, char *argv[])
   cout << "Done reading " << nPixels << " pixels\n";
 
   //__________________________________
-  //  find the number of intensity levels within the specified threshold
+  //  find the number of intensity levels within the unique grains threshold
   pixel* pb = pimg;
-  int maxI = 0;
-  int minI =INT_MAX;
   
-  for (int k=0; k<res[2]; k++) {
-    for (int j=0; j<res[1]; j++) {
-      for (int i=0; i<res[0]; i++, pb++) {
-        int pixelValue = *pb/scale;
-        if ((pixelValue >= L[0]) && (pixelValue <= L[1])) {
-          maxI = max(maxI, pixelValue);
-          minI = min(minI, pixelValue);
+  if(hasUniqueGrains){
+    int maxI = 0;
+    int minI =INT_MAX;
+
+    for (int k=0; k<=res[2]; k++) {
+      for (int j=0; j<=res[1]; j++) {
+        for (int i=0; i<=res[0]; i++, pb++) {
+
+          int pixelValue = *pb/scale;
+          if ((pixelValue >= UG_threshold[0]) && (pixelValue <= UG_threshold[1])) {
+            maxI = max(maxI, pixelValue);
+            minI = min(minI, pixelValue);
+          }
         }
       }
     }
-  }
-  int nIntensityLevels = maxI;
-  cout << "Intensity Levels: " << nIntensityLevels << " min: " << minI << " max: " << maxI << endl;
 
-
-  //__________________________________
-  //  create the intensity level to matl index map
-  cout << "Intensity level to mpm matl mapping \n"
-       << " Intensity: 0 = matl 0" << endl;
-       
-  map<int, int> intensityToMatl_map;
-  int matl = 0;
-  intensityToMatl_map[0] = matl;
-
-  for (int i=minI; i<=maxI; i++) {
-    intensityToMatl_map[i] = matl;
-    matl ++;
-    if(matl > numGrainMatls){
-      matl = 1;
+    cout << "Unique grain intensity levels: "  << " min: " << minI << " max: " << maxI << endl;
+    //__________________________________
+    //  create the intensity level to matl index map for the unique grains   
+    int m = 0;
+    for (int i=minI; i<=maxI; i++) {
+      intensityToMatl_map[i] = UG_matlIndex[m];
+      m ++;
+      if(m >= UG_numMatls){
+        m = 0;
+      }
     }
-    cout << " Intensity: " << i << " = matl " << matl << endl;
   }
+  //__________________________________
+  // Now add the mappings for the individual materials
+  // These can overwrite the unique grains mapping
+  for (int m=0; m<intMatl_Vec.size(); m++) {
+    
+    intensityMapping data = intMatl_Vec[m];
+    
+    for (int i=data.threshold[0]; i<=data.threshold[1]; i++) {
+      intensityToMatl_map[i] = data.matlIndex;
+    }
+  }
+  
+  cout << "Intensity level to mpm matl mapping \n";
+  map<int,int>::iterator it;
+   for ( it=intensityToMatl_map.begin() ; it != intensityToMatl_map.end(); it++ ){
+    cout << " Intensity: " << it->first<< " = matl " << it->second << endl;
+  }
+
 
   //__________________________________
   // Parse the ups file for the grid specification
@@ -319,10 +386,9 @@ int main(int argc, char *argv[])
 
             int pixelValue = *pb/scale;
             bool isRightMatl      = ( matl == intensityToMatl_map[pixelValue]);
-            bool ignoreThreshold  = ( matl == 0 );
-            bool withinThreshold  = ( (pixelValue >= L[0]) && (pixelValue <= L[1]) );
+            //bool withinThreshold  = ( (pixelValue >= L[0]) && (pixelValue <= L[1]) );
 
-            if ( (withinThreshold || ignoreThreshold ) && isRightMatl) {
+            if ( isRightMatl ) {
 
               pt = CreatePoint(n, res, dx, dy, dz);
               curPatch = level->selectPatchForCellIndex(level->getCellIndex(pt));
@@ -351,10 +417,9 @@ int main(int argc, char *argv[])
 
             int pixelValue = *pb/scale;
             bool isRightMatl      = ( matl == intensityToMatl_map[pixelValue]);
-            bool ignoreThreshold  = ( matl == 0 );
-            bool withinThreshold  = ( (pixelValue >= L[0]) && (pixelValue <= L[1]) );
+            //bool withinThreshold  = ( (pixelValue >= L[0]) && (pixelValue <= L[1]) );
 
-            if ( (withinThreshold || ignoreThreshold ) && isRightMatl) {
+            if ( isRightMatl) {
 
               pt = CreatePoint(n, res, dx, dy, dz);
 
