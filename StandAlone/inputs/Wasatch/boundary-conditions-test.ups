@@ -282,23 +282,23 @@
         </BCType>
       </Face>
       <Face side="y-">
-        <BCType id="all" var="Dirichlet" label="phi-z-scalar">
+        <BCType id="all" var="Neumann" label="phi-z-scalar">
           <value> 10.0 </value>
         </BCType>
       </Face>
       <Face side="y+">
-        <BCType id="all" var="Dirichlet" label="phi-z-scalar">
-          <value> 0.0 </value>
+        <BCType id="all" var="Neumann" label="phi-z-scalar">
+          <value> -10.0 </value>
         </BCType>
       </Face>
       <Face side="z-">
-        <BCType id="all" var="Neumann" label="phi-z-scalar">
+        <BCType id="all" var="Dirichlet" label="phi-z-scalar">
           <value> 10.0 </value>
         </BCType>
       </Face>
       <Face side="z+">
-        <BCType id="all" var="Neumann" label="phi-z-scalar">
-          <value> -10.0 </value>
+        <BCType id="all" var="Dirichlet" label="phi-z-scalar">
+          <value> 0.0 </value>
         </BCType>
       </Face>
 
