@@ -2,6 +2,7 @@
 #define Wasatch_FieldAdaptor_h
 
 #include <spatialops/structured/FVStaggeredFieldTypes.h>
+#include <spatialops/structured/MemoryWindow.h>
 
 #include <Core/Grid/Variables/SFCXVariable.h>  /* x-face variable */
 #include <Core/Grid/Variables/SFCYVariable.h>  /* y-face variable */
@@ -33,6 +34,35 @@ namespace Wasatch{
     YVOL, YSURFX, YSURFY, YSURFZ,
     ZVOL, ZSURFX, ZSURFY, ZSURFZ
   };
+
+  /**
+   *  \ingroup WasatchFields
+   *
+   *  \brief wrap a uintah field to obtain a SpatialOps field,
+   *         returning a new pointer.  The caller is responsible for
+   *         freeing the memory.
+   */
+  template< typename FieldT, typename UFT >
+  inline FieldT* wrap_uintah_field_as_spatialops( UFT& uintahVar )
+  {
+    using SCIRun::IntVector;
+    const IntVector uvarGlobSize = uintahVar.getWindow()->getData()->size();
+    const IntVector uvarHi       = uintahVar.getWindow()->getHighIndex();
+    const IntVector uvarLo       = uintahVar.getWindow()->getLowIndex();
+    const IntVector uvarOffset   = uintahVar.getWindow()->getOffset();
+    SpatialOps::structured::IntVec varGlobSize(1,1,1), varExtent(1,1,1), varOffset(0,0,0);
+    for( size_t i=0; i<3; ++i ){
+      varGlobSize[i] = uvarGlobSize[i];
+      if( uvarGlobSize[i]>1 ){
+        varExtent[i] = uvarHi[i] - uvarLo[i];
+        varOffset[i] = uvarLo[i] - uvarOffset[i];
+      }
+    }
+
+    return new FieldT( SpatialOps::structured::MemoryWindow( varGlobSize, varOffset, varExtent ),
+                       const_cast<double*>( uintahVar.getPointer() ),
+                       SpatialOps::structured::ExternalStorage );
+  }
 
   /**
    *  \ingroup WasatchParser
