@@ -99,6 +99,52 @@ public:
 
   }; // Builder
 
+  inline double getRate( double T, double CxHy, double O2, double mix_mw, double den, double dt, double vol ) {
+
+    double rate = 0.0; 
+
+    if ( O2 > 0.0 && CxHy > 0.0 ) { 
+
+      double small = 1e-16; 
+
+      double c_O2 = O2 * 1.0/ ( mix_mw * d_MW_O2 ) * d_Press / ( d_R * T ); 
+      c_O2 *= 1.0e-6; // to convert to gmol/cm^3
+
+      double c_HC = CxHy * 1.0/ ( mix_mw * d_MW_HC ) * d_Press / ( d_R * T ); 
+      c_HC *= 1.0e-6; // to convert to gmol/cm^3
+
+      double my_exp = -1.0 * d_ER / T; 
+
+      double p_HC = 0.0; 
+      if ( c_HC > small ) {
+        p_HC = pow( c_HC, d_m ); 
+      }
+
+      rate = d_A * exp( my_exp ) * p_HC * pow(c_O2, d_n); // gmol/cm^3/s
+
+      rate *= d_MW_HC * mix_mw * d_R * T / d_Press; 
+      rate *= den * 1.0e6; // to get [kg HC/s/vol]
+      rate *= d_sign; // picking the sign.
+
+      // now check the rate based on local reactants: 
+      double constant = dt * vol / den; 
+
+      // check limiting reactant
+      if ( fabs( constant*rate ) > CxHy ){ 
+        rate = d_sign*den/(dt*vol)*CxHy; 
+      } 
+
+      // check for nan
+      if ( rate != rate ){ 
+        rate = 0.0; 
+      } 
+
+    }
+
+    return rate; 
+
+  };
+
 private:
 
   double d_A;        ///< Pre-exponential fractor
@@ -126,6 +172,7 @@ private:
   std::string d_mw_label; 
   std::string d_rho_label; 
   std::string d_T_label; 
+  std::string d_o2_label; 
 
   const VarLabel* _temperatureLabel; 
   const VarLabel* _fLabel;           
@@ -133,6 +180,7 @@ private:
   const VarLabel* _denLabel;         
   const VarLabel* _CstarMassFracLabel;  
   const VarLabel* _CEqMassFracLabel; 
+  const VarLabel* _O2MassFracLabel; 
 
   ArchesLabel* _field_labels;
 
