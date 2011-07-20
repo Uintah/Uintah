@@ -7,6 +7,8 @@
 #include <expression/FieldManager.h>  // for field type mapping
 #include <expression/ExpressionTree.h>
 
+//-- SpatialOps includes --//
+#include <spatialops/FieldExpressions.h>
 
 //-- Uintah Includes --//
 #include <CCA/Ports/Scheduler.h>
@@ -110,10 +112,12 @@ namespace Wasatch{
 
       //______________________________________
       // forward Euler timestep at each point:
-      typedef IteratorSelector<FieldT> CellIter;
-      for( typename CellIter::type iter=CellIter::getBegin(patch); !iter.done(); ++iter ){
-        phiNew[*iter] = phiOld[*iter] + deltat * rhs[*iter];
-      }
+      FieldT* const fnew = wrap_uintah_field_as_spatialops<FieldT>(phiNew);
+      const FieldT* const fold = wrap_uintah_field_as_spatialops<FieldT>(phiOld);
+      const FieldT* const frhs = wrap_uintah_field_as_spatialops<FieldT>(rhs);
+      using namespace SpatialOps;
+      *fnew <<= *fold + deltat * *frhs;
+      delete fnew fold frhs;
     }
   }
 
@@ -242,21 +246,15 @@ namespace Wasatch{
         
         const int material = materials->get(im);
 
-//         proc0cout << std::endl
-//                   << "Wasatch: executing 'TimeStepper::update_variables()' on patch "
-//                   << patch->getID() << " and material " << material
-//                   << std::endl;
-
         // grab the timestep
         Uintah::delt_vartype deltat;
         //jcs this doesn't work:
         //newDW->get( deltat, deltaTLabel_, Uintah::getLevel(patches), material );
         oldDW->get( deltat, deltaTLabel_ );
-        
-//         proc0cout << "TimeStepper::update_variables() : dt = " << deltat << endl;
 
         //____________________________________________
         // update variables on this material and patch
+        // jcs note that we could do this in parallel
         do_update<SO::SVolField>( scalarFields_, patch, material, oldDW, newDW, deltat );
         do_update<SO::XVolField>( xVolFields_,   patch, material, oldDW, newDW, deltat );
         do_update<SO::YVolField>( yVolFields_,   patch, material, oldDW, newDW, deltat );
