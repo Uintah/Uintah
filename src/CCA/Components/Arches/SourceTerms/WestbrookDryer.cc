@@ -19,7 +19,7 @@ WestbrookDryer::WestbrookDryer( std::string src_name, ArchesLabel* field_labels,
   _label_sched_init = false; 
   _src_label = VarLabel::create( src_name, CCVariable<double>::getTypeDescription() ); 
 
-  _extra_local_labels.resize(4); 
+  _extra_local_labels.resize(2); 
   std::string tag = "WDstrip_" + src_name; 
   d_WDstrippingLabel = VarLabel::create( tag,  CCVariable<double>::getTypeDescription() ); 
   _extra_local_labels[0] = d_WDstrippingLabel; 
