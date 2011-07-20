@@ -117,9 +117,8 @@ namespace Wasatch{
         case ZDIR:
           return "z";
         case NODIR:
-          return "";
         default:
-          break;
+          return "";
       }
     }
     
