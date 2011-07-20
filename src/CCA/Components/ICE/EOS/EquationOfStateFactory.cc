@@ -35,6 +35,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/ICE/EOS/TST.h>
 #include <CCA/Components/ICE/EOS/JWLC.h>
 #include <CCA/Components/ICE/EOS/Murnahan.h>
+#include <CCA/Components/ICE/EOS/BirchMurnaghan.h>
 #include <CCA/Components/ICE/EOS/KnaussSeaWater.h>
 #include <CCA/Components/ICE/EOS/Gruneisen.h>
 #include <CCA/Components/ICE/EOS/Tillotson.h>
@@ -92,6 +93,8 @@ EquationOfState* EquationOfStateFactory::create(ProblemSpecP& ps)
     return(scinew JWLC(EOS_ps));
   else if (EOS == "Murnahan") 
     return(scinew Murnahan(EOS_ps));
+  else if (EOS == "BirchMurnaghan") 
+    return(scinew BirchMurnaghan(EOS_ps));
   else if (EOS == "Gruneisen") 
     return(scinew Gruneisen(EOS_ps));
   else if (EOS == "Tillotson") 
