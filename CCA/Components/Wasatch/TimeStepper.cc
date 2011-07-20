@@ -117,7 +117,7 @@ namespace Wasatch{
       const FieldT* const frhs = wrap_uintah_field_as_spatialops<FieldT>(rhs);
       using namespace SpatialOps;
       *fnew <<= *fold + deltat * *frhs;
-      delete fnew fold frhs;
+      delete fnew, fold, frhs;
     }
   }
 
