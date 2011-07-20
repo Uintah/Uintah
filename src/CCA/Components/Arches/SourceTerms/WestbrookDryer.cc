@@ -28,14 +28,6 @@ WestbrookDryer::WestbrookDryer( std::string src_name, ArchesLabel* field_labels,
   d_WDextentLabel    = VarLabel::create( tag, CCVariable<double>::getTypeDescription() ); 
   _extra_local_labels[1] = d_WDextentLabel; 
 
-  tag = "WDo2_" + src_name; 
-  d_WDO2Label        = VarLabel::create( tag,     CCVariable<double>::getTypeDescription() ); 
-  _extra_local_labels[2] = d_WDO2Label; 
-
-  tag = "WDver_" + src_name; 
-  d_WDverLabel = VarLabel::create( tag, CCVariable<double>::getTypeDescription() ); 
-  _extra_local_labels[3] = d_WDverLabel; 
-
   _source_type = CC_SRC; 
 }
 
@@ -44,8 +36,6 @@ WestbrookDryer::~WestbrookDryer()
 
   VarLabel::destroy( d_WDstrippingLabel ); 
   VarLabel::destroy( d_WDextentLabel ); 
-  VarLabel::destroy( d_WDO2Label ); 
-  VarLabel::destroy( d_WDverLabel ); 
 
 }
 //---------------------------------------------------------------------------
@@ -67,11 +57,18 @@ WestbrookDryer::problemSetup(const ProblemSpecP& inputdb)
   db->require("fuel_mass_fraction", d_MF_HC_f1);           // Mass fraction of C_xH_y when f=1
   db->require("oxidizer_O2_mass_fraction", d_MF_O2_f0);    // Mass fraction of O2 when f=0
   // labels: 
-  db->getWithDefault("temperature_label", d_T_label, "temperature");     // The name of the mixture fraction label
-  db->getWithDefault("density_label", d_rho_label, "density"); 
-  db->require("cstar_fraction_label", d_cstar_label);    // The name of the C* mixture fraction label
-  db->require("equil_fraction_label", d_ceq_label);    // The name of the secondary mixture fraciton label 
-  db->require("mw_label", d_mw_label);           // The name of the MW label
+  db->getWithDefault("temperature_label", d_T_label, "temperature"); // The name of the mixture fraction label
+  db->getWithDefault("density_label", d_rho_label, "density");       // The name of the density label 
+  db->require("cstar_fraction_label", d_cstar_label);                // The name of the C* mixture fraction label
+  db->require("equil_fraction_label", d_ceq_label);                  // The name of the secondary mixture fraciton label
+  db->require("mw_label", d_mw_label);                               // The name of the MW label
+  db->require("o2_label", d_o2_label);                               // The name of the O2 label
+
+  // add for table lookup
+  _field_labels->add_species( d_mw_label ); 
+  _field_labels->add_species( d_o2_label ); 
+  _field_labels->add_species( d_rho_label ); 
+  _field_labels->add_species( d_T_label ); 
 
   if ( db->findBlock("pos") ) { 
     d_sign = 1.0; 
@@ -104,14 +101,10 @@ WestbrookDryer::sched_computeSource( const LevelP& level, SchedulerP& sched, int
     tsk->computes(_src_label);
     tsk->computes(d_WDstrippingLabel); 
     tsk->computes(d_WDextentLabel); 
-    tsk->computes(d_WDO2Label); 
-    tsk->computes(d_WDverLabel); 
   } else {
     tsk->modifies(_src_label); 
     tsk->modifies(d_WDstrippingLabel); 
     tsk->modifies(d_WDextentLabel);   
-    tsk->modifies(d_WDO2Label); 
-    tsk->modifies(d_WDverLabel); 
   }
 
   _temperatureLabel   = VarLabel::find( d_T_label );
@@ -119,12 +112,15 @@ WestbrookDryer::sched_computeSource( const LevelP& level, SchedulerP& sched, int
   _denLabel           = VarLabel::find( d_rho_label );
   _CstarMassFracLabel = VarLabel::find( d_cstar_label );
   _CEqMassFracLabel   = VarLabel::find( d_ceq_label );
+  _O2MassFracLabel    = VarLabel::find( d_o2_label ); 
+
 
   tsk->requires( Task::OldDW, _temperatureLabel, Ghost::None, 0 ); 
   tsk->requires( Task::OldDW, _mixMWLabel,       Ghost::None, 0 ); 
   tsk->requires( Task::OldDW, _CstarMassFracLabel,  Ghost::None, 0 ); 
   tsk->requires( Task::OldDW, _CEqMassFracLabel, Ghost::None, 0 ); 
   tsk->requires( Task::OldDW, _denLabel,         Ghost::None, 0 ); 
+  tsk->requires( Task::OldDW, _O2MassFracLabel,  Ghost::None, 0 ); 
   tsk->requires( Task::OldDW, _field_labels->d_sharedState->get_delt_label(), Ghost::None, 0);
 
   sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials()); 
@@ -160,32 +156,22 @@ WestbrookDryer::computeSource( const ProcessorGroup* pc,
     CCVariable<double> CxHyRate; // rate source term  
     CCVariable<double> S; // stripping fraction 
     CCVariable<double> E; // extent of reaction 
-    CCVariable<double> w_o2; // mass fraction of O2
-    CCVariable<double> ver; 
     
     if ( new_dw->exists(_src_label, matlIndex, patch ) ){
       new_dw->getModifiable( CxHyRate , _src_label         , matlIndex , patch );
       new_dw->getModifiable( S        , d_WDstrippingLabel , matlIndex , patch );
       new_dw->getModifiable( E        , d_WDextentLabel    , matlIndex , patch );
-      new_dw->getModifiable( w_o2     , d_WDO2Label        , matlIndex , patch );
-      new_dw->getModifiable( ver      , d_WDverLabel       , matlIndex , patch );
       CxHyRate.initialize(0.0);
       S.initialize(0.0);
       E.initialize(0.0); 
-      w_o2.initialize(0.0); 
-      ver.initialize(0.0); 
     } else {
       new_dw->allocateAndPut( CxHyRate , _src_label         , matlIndex , patch );
       new_dw->allocateAndPut( S        , d_WDstrippingLabel , matlIndex , patch );
       new_dw->allocateAndPut( E        , d_WDextentLabel    , matlIndex , patch );
-      new_dw->allocateAndPut( w_o2     , d_WDO2Label        , matlIndex , patch );
-      new_dw->allocateAndPut( ver      , d_WDverLabel       , matlIndex , patch );
     
       CxHyRate.initialize(0.0);
       S.initialize(0.0); 
       E.initialize(0.0); 
-      w_o2.initialize(0.0); 
-      ver.initialize(0.0); 
     } 
 
     constCCVariable<double> T;      // temperature 
@@ -193,18 +179,21 @@ WestbrookDryer::computeSource( const ProcessorGroup* pc,
     constCCVariable<double> mixMW;  // mixture molecular weight (assumes that the table value is an inverse)
     constCCVariable<double> Cstar;  // mass fraction of the hydrocarbon
     constCCVariable<double> Ceq;    // mass fraction of hydrocarbon for equilibrium
+    constCCVariable<double> O2;     // O2 mass fraction
 
     old_dw->get( T     , _temperatureLabel   , matlIndex , patch , Ghost::None , 0 );
     old_dw->get( mixMW , _mixMWLabel         , matlIndex , patch , Ghost::None , 0 );
     old_dw->get( den   , _denLabel           , matlIndex , patch , Ghost::None , 0 );
     old_dw->get( Cstar , _CstarMassFracLabel , matlIndex , patch , Ghost::None , 0 );
     old_dw->get( Ceq   , _CEqMassFracLabel   , matlIndex , patch , Ghost::None , 0 );
+    old_dw->get( O2    , _O2MassFracLabel    , matlIndex , patch , Ghost::None , 0 ); 
 
     delt_vartype DT; 
     old_dw->get(DT, _field_labels->d_sharedState->get_delt_label()); 
     double dt = DT;
 
     for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
+
       IntVector c = *iter; 
 
       // Step 1: Compute the stripping fraction 
@@ -219,61 +208,20 @@ WestbrookDryer::computeSource( const ProcessorGroup* pc,
         } 
       }
 
-      double small =  1.0e-16; 
+      // Step 2: Compute stripping fraction and extent 
+      double tiny = 1.0e-16;
       S[c] = 0.0; 
-      double hc_wo_rxn = f * d_MF_HC_f1; //fuel as if no rxn occured (computed from mixture fraction)  
-      
-      if ( Cstar[c] > hc_wo_rxn ) 
-        hc_wo_rxn = Cstar[c];   
+      double hc_wo_rxn = f * d_MW_HC; 
 
-      if ( Cstar[c] > small ) 
+      if ( Cstar[c] > tiny ) 
         S[c] = Cstar[c] / hc_wo_rxn; 
 
-      double f_loc = hc_wo_rxn / d_MF_HC_f1; 
-
-      // Step 2: Compute the extent of reaction 
       E[c] = 1.0 - S[c]; 
 
-      // Step 3: Compute the mass fraction of O2
-      w_o2[c] = ( 1.0 - f_loc ) * d_MF_O2_f0 - hc_wo_rxn  * E[c] * ( d_X + d_Y/4.0 ) * d_MW_O2 / d_MW_HC; 
-      if (w_o2[c] < small)
-        w_o2[c] = 0.0;
+      // Step 3: Compute rate
+      double rate = getRate( T[c], Cstar[c], O2[c], mixMW[c], den[c], dt, vol ); 
 
-      // Step 4: Compute the concentration of O2
-      double conc_O2 = w_o2[c] * 1.0/mixMW[c] * 1.0/d_MW_O2 * d_Press / ( d_R * T[c] ); 
-      conc_O2 *= 1.0e-6; // to convert to gmol/cm^3
-
-      // Step 5: Computes the concentration of the HydroCarbon
-      double conc_HC = Cstar[c] * 1.0/mixMW[c] * 1.0/d_MW_HC * d_Press / ( d_R * T[c] ); 
-      conc_HC *= 1.0e-6; // to convert to gmol/cm^3
-
-      // Step 6: Compute the rate term 
-      double my_exp = -1.0 * d_ER / T[c]; 
-
-      double p_HC = 0.0; 
-      if (conc_HC > small)
-        p_HC = pow(conc_HC, d_m); 
-
-      double rate = d_A * exp( my_exp ) * p_HC * pow(conc_O2, d_n); // gmol/cm^3/s
-
-      CxHyRate[c] = rate * d_MW_HC * mixMW[c] * d_R * T[c] / d_Press;
-      CxHyRate[c] *= den[c] * 1.0e6; // to get [kg HC/time/vol]
-      CxHyRate[c] *= d_sign; // pick the sign. 
-
-      //check the rate...
-      double constant = dt * vol / den[c]; 
-      if ( std::abs(constant * CxHyRate[c]) > Cstar[c] ) { 
-
-        CxHyRate[c] = d_sign*den[c]/(dt*vol)*Cstar[c];
-
-      } 
-
-      // Checking for NaN
-      if ( CxHyRate[c] != CxHyRate[c] ) {
-        CxHyRate[c] = 0.0; 
-      }
-
-      ver[c] = hc_wo_rxn * S[c]; 
+      CxHyRate[c] = rate; 
 
     }
   }
