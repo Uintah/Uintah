@@ -41,6 +41,10 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/SimulationStateP.h>
 #include <Core/Util/DebugStream.h>
 
+
+#include <CCA/Components/Schedulers/CUDADevice.h>
+#include <CUDA/CUDA.h>
+
 #include   <iosfwd>
 #include   <set>
 
@@ -85,7 +89,7 @@ WARNING
 
   class SchedulerCommon : public Scheduler, public UintahParallelComponent {
   public:
-    SchedulerCommon(const ProcessorGroup* myworld, Output* oport);
+    SchedulerCommon(const ProcessorGroup* myworld, Output* oport, bool);
     virtual ~SchedulerCommon();
 
     virtual void problemSetup(const ProblemSpecP& prob_spec,
@@ -334,6 +338,10 @@ WARNING
 
     //max ghost cells of all tasks - will be used for loadbalancer to create neighorhood
     int maxGhost;
+      
+    // GPU Based variables
+    bool withCUDA;
+    vector<CUDADevice> d_cudaDevices;
   };
 } // End namespace Uintah
 

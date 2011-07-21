@@ -303,6 +303,9 @@ main( int argc, char *argv[], char *env[] )
   bool   validateUps = true, onlyValidateUps = false;
   bool   track = false, track_or_die = false;
 
+  // GPU Values
+  bool with_gpu = false;
+    
   // Checks to see if user is running an MPI version of sus.
   Uintah::Parallel::determineIfRunningUnderMPI( argc, argv );
 
@@ -665,7 +668,7 @@ main( int argc, char *argv[], char *env[] )
     
     //__________________________________
     // Scheduler
-    SchedulerCommon* sched = SchedulerFactory::create(ups, world, output);
+    SchedulerCommon* sched = SchedulerFactory::create(ups, world, output,with_gpu);
     sched->attachPort("load balancer", lbc);
     ctl->attachPort("scheduler", sched);
     lbc->attachPort("scheduler", sched);
