@@ -10,7 +10,7 @@
 #include <Core/Grid/Variables/CCVariable.h>    /* cell variable   */
 #include <Core/Disclosure/TypeDescription.h>
 
-#include <CCA/Components/Wasatch/Fieldtypes.h>
+#include <CCA/Components/Wasatch/FieldTypes.h>
 
 
 /**
