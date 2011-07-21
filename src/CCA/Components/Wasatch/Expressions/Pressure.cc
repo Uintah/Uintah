@@ -44,11 +44,11 @@ Pressure::Pressure( const Expr::Tag& fxtag,
     // note that this does not provide any ghost entries in the matrix...
     matrixLabel_  ( Uintah::VarLabel::create( "pressure_matrix", Uintah::CCVariable<Uintah::Stencil7>::getTypeDescription() ) ),
     pressureLabel_( Uintah::VarLabel::create( (this->names())[0].name(), 
-                                              Wasatch::getUintahFieldTypeDescriptor<SVolField>(),
-                                              Wasatch::getUintahGhostDescriptor<SVolField>() ) ),
+                                              Wasatch::get_uintah_field_type_descriptor<SVolField>(),
+                                              Wasatch::get_uintah_ghost_descriptor<SVolField>() ) ),
     prhsLabel_    ( Uintah::VarLabel::create( (this->names())[1].name(), 
-                                              Wasatch::getUintahFieldTypeDescriptor<SVolField>(),
-                                              Wasatch::getUintahGhostDescriptor<SVolField>() ) )
+                                              Wasatch::get_uintah_field_type_descriptor<SVolField>(),
+                                              Wasatch::get_uintah_ghost_descriptor<SVolField>() ) )
 {
 }
 

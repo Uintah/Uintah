@@ -181,8 +181,8 @@ namespace Wasatch{
                              Expr::ExpressionID rhsID )
   {
     const std::string& rhsName = factory_->get_registry().get_label(rhsID).name();
-    const Uintah::TypeDescription* typeDesc = getUintahFieldTypeDescriptor<FieldT>();
-    const Uintah::IntVector ghostDesc       = getUintahGhostDescriptor<FieldT>();
+    const Uintah::TypeDescription* typeDesc = get_uintah_field_type_descriptor<FieldT>();
+    const Uintah::IntVector ghostDesc       = get_uintah_ghost_descriptor<FieldT>();
     Uintah::VarLabel* solnVarLabel = Uintah::VarLabel::create( solnVarName, typeDesc, ghostDesc );
     Uintah::VarLabel* rhsVarLabel  = Uintah::VarLabel::create( rhsName,     typeDesc, ghostDesc );
     std::vector< FieldInfo<FieldT> >& fields = field_info_selctor<FieldT>();

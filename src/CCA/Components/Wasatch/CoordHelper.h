@@ -113,8 +113,8 @@ namespace Wasatch{
   {
     const Uintah::Task::DomainSpec domain = Uintah::Task::NormalDomain;
     vl = Uintah::VarLabel::create( tag.field_name(),
-                                   getUintahFieldTypeDescriptor<FieldT>(),
-                                   getUintahGhostDescriptor<FieldT>() );
+                                   get_uintah_field_type_descriptor<FieldT>(),
+                                   get_uintah_ghost_descriptor<FieldT>() );
     fieldTags_.insert( tag );
     task.computes( vl, pss, domain, mss, domain );
   }
