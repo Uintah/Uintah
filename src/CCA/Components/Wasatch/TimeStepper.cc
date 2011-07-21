@@ -25,29 +25,6 @@ namespace SO=SpatialOps::structured;
 
 namespace Wasatch{
 
-  template<typename FieldT> struct IteratorSelector;
-
-  template<> struct IteratorSelector<SO::SVolField>
-  {
-    typedef Uintah::CellIterator type;
-    static type getBegin( const Uintah::Patch* patch ){ return patch->getCellIterator(); }
-  };
-  template<> struct IteratorSelector<SO::XVolField>
-  {
-    typedef Uintah::CellIterator type;
-    static type getBegin( const Uintah::Patch* patch ){ return patch->getSFCXIterator(); }
-  };
-  template<> struct IteratorSelector<SO::YVolField>
-  {
-    typedef Uintah::CellIterator type;
-    static type getBegin( const Uintah::Patch* patch ){ return patch->getSFCYIterator(); }
-  };
-  template<> struct IteratorSelector<SO::ZVolField>
-  {
-    typedef Uintah::CellIterator type;
-    static type getBegin( const Uintah::Patch* patch ){ return patch->getSFCZIterator(); }
-  };
-
   //==================================================================
 
   template<typename FieldT>
