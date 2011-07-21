@@ -92,7 +92,7 @@ static DebugStream dbg("SchedulerCommon", false);
 char * SchedulerCommon::start_addr = NULL;
 
 
-SchedulerCommon::SchedulerCommon(const ProcessorGroup* myworld, Output* oport)
+SchedulerCommon::SchedulerCommon(const ProcessorGroup* myworld, Output* oport, bool withGPU)
   : UintahParallelComponent(myworld), m_outPort(oport),
     trackingVarsPrintLocation_(0), d_maxMemUse(0), m_graphDoc(NULL), m_nodes(NULL)
 {
@@ -112,6 +112,36 @@ SchedulerCommon::SchedulerCommon(const ProcessorGroup* myworld, Output* oport)
   m_locallyComputedPatchVarMap = scinew LocallyComputedPatchVarMap;
   reloc_new_posLabel_ = 0;
   maxGhost=0;
+    
+  // Take a look at the CUDA Devices if it is specified
+  withCUDA=withGPU;
+  if(withCUDA)
+  {
+      int devCount;
+      cudaGetDeviceCount(&devCount);
+      
+      if(devCount < 1)
+      {
+          throw new ProblemSetupException("ERROR:SchedulerCommon: Uintah was compiled with GPU support, but no GPUs are attached to this node.",__FILE__,__LINE__);
+      }
+      
+      // Add devices to the device vector if they have the correct compute capability
+      cudaDeviceProp devprop;
+      for(i=0; i < devCount; i++)
+      {
+          cudaGetDeviceProperties(&devprop,i);
+          if(devprop.major > 1)
+          {
+              d_cudaDevices.push_back(CUDADevice(i));
+          }
+      }
+      
+      // make sure we have at least one CUDA Device
+      if(d_cudaDevices.size() < 1)
+      {
+          throw new ProblemSetupException("ERROR:SchedulerCommon: Uintah was compiled with GPU support, but no GPUs have compute capability 2.0.",__FILE__,__LINE__);
+      }
+  }
 }
 
 SchedulerCommon::~SchedulerCommon()
