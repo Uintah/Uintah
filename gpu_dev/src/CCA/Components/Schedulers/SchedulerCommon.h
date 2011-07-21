@@ -41,9 +41,10 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/SimulationStateP.h>
 #include <Core/Util/DebugStream.h>
 
-
+#ifdef HAVE_CUDA
 #include <CCA/Components/Schedulers/CUDADevice.h>
 #include <CUDA/CUDA.h>
+#endif
 
 #include   <iosfwd>
 #include   <set>
@@ -341,7 +342,9 @@ WARNING
       
     // GPU Based variables
     bool withCUDA;
+#ifdef HAVE_CUDA
     vector<CUDADevice> d_cudaDevices;
+#endif
   };
 } // End namespace Uintah
 

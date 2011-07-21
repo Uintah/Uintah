@@ -1,0 +1,13 @@
+TODO List for Implementing GPU Support in Uintah
+------------------------------------------------
+
+1) SingleProcessorScheduler
+2) HeatEquationGPU
+3) Poisson2GPU
+4) MPIScheduler
+5) ThreadedMPI Scheduler
+6) Advection Tasks
+	a) AdvectQ
+	b) AdvectSlabs
+
+7) Cell iterator generalized function?

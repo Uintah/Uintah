@@ -320,7 +320,8 @@ WARNING
       Reduction,
       InitialSend,
       OncePerProc, // make sure to pass a PerProcessorPatchSet to the addTask function
-      Output
+      Output,
+      GPUCUDATask
     };
     
     Task(const std::string& taskName, TaskType type)

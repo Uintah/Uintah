@@ -31,6 +31,7 @@
 #ifndef UINTAH_HOMEBREW_CUDADevice_H
 #define UINTAH_HOMEBREW_CUDADevice_H
 
+#ifdef HAVE_CUDA
 
 #include <Core/Grid/Task.h>
 #include <CCA/Ports/Scheduler.h>
@@ -183,5 +184,7 @@ namespace Uintah {
         
     };
 } // End namespace Uintah
+
+#endif
 
 #endif
