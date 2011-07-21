@@ -50,14 +50,14 @@ namespace Wasatch{
                       ifld->varLabel,
                       pss, Uintah::Task::NormalDomain,
                       mss, Uintah::Task::NormalDomain,
-                      getUintahGhostType<FieldT>(),
-                      getNGhost<FieldT>() );
+                      get_uintah_ghost_type<FieldT>(),
+                      get_n_ghost<FieldT>() );
       task->requires( Uintah::Task::NewDW,
                       ifld->rhsLabel,
                       pss, Uintah::Task::NormalDomain,
                       mss, Uintah::Task::NormalDomain,
-                      getUintahGhostType<FieldT>(),
-                      getNGhost<FieldT>() );
+                      get_uintah_ghost_type<FieldT>(),
+                      get_n_ghost<FieldT>() );
     }
   }
 
@@ -78,8 +78,8 @@ namespace Wasatch{
       typedef typename SelectUintahFieldType<FieldT>::const_type ConstUintahField;
       typedef typename SelectUintahFieldType<FieldT>::type       UintahField;
 
-      const Uintah::Ghost::GhostType gt = getUintahGhostType<FieldT>();
-      const int ng = getNGhost<FieldT>();
+      const Uintah::Ghost::GhostType gt = get_uintah_ghost_type<FieldT>();
+      const int ng = get_n_ghost<FieldT>();
 
       UintahField phiNew;
       ConstUintahField phiOld, rhs;
@@ -89,9 +89,9 @@ namespace Wasatch{
 
       //______________________________________
       // forward Euler timestep at each point:
-      FieldT* const fnew = wrap_uintah_field_as_spatialops<FieldT>(phiNew);
-      const FieldT* const fold = wrap_uintah_field_as_spatialops<FieldT>(phiOld);
-      const FieldT* const frhs = wrap_uintah_field_as_spatialops<FieldT>(rhs);
+      FieldT* const fnew = wrap_uintah_field_as_spatialops<FieldT>(phiNew,patch);
+      const FieldT* const fold = wrap_uintah_field_as_spatialops<FieldT>(phiOld,patch);
+      const FieldT* const frhs = wrap_uintah_field_as_spatialops<FieldT>(rhs,patch);
       using namespace SpatialOps;
       *fnew <<= *fold + deltat * *frhs;
       delete fnew; delete fold; delete frhs;

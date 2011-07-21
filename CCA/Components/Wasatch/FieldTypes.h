@@ -10,12 +10,12 @@
 #include <spatialops/structured/FVStaggeredFieldTypes.h>
 
 
-using SpatialOps::structured::SVolField;
-using SpatialOps::structured::XVolField;
-using SpatialOps::structured::YVolField;
-using SpatialOps::structured::ZVolField;
+using SpatialOps::structured::SVolField;   ///< the scalar volume field type
+using SpatialOps::structured::XVolField;   ///< the x-staggered volume field type
+using SpatialOps::structured::YVolField;   ///< the y-staggered volume field type
+using SpatialOps::structured::ZVolField;   ///< the z-staggered volume field type
 
-using SpatialOps::structured::FaceTypes;
+using SpatialOps::structured::FaceTypes;   ///< allows deducing face types from volume types
 
 namespace Wasatch{
 
