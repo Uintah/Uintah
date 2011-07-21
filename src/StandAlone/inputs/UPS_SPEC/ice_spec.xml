@@ -100,7 +100,7 @@
                                 attribute1="name OPTIONAL STRING" >
         <dynamic_viscosity    spec="REQUIRED DOUBLE 'positive'" />
         <EOS                  spec="REQUIRED NO_DATA"
-                                attribute1="type REQUIRED STRING 'ideal_gas, hard_sphere_gas, TST, Thomsen_Hartka_water, JWL, JWLC, Murnahan, Gruneisen, Tillotson, KnaussSeaWater'" >
+                                attribute1="type REQUIRED STRING 'ideal_gas, hard_sphere_gas, TST, Thomsen_Hartka_water, JWL, JWLC, Murnahan, BirchMurnaghan, Gruneisen, Tillotson, KnaussSeaWater'" >
           <!--  TST  -->
           <a                  spec="REQUIRED DOUBLE" need_applies_to='type  TST, Thomsen_Hartka_water Tillotson' />
           <a                  spec="OPTIONAL DOUBLE" need_applies_to='type  KnaussSeaWater BirchMurnaghan' />
