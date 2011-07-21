@@ -28,6 +28,8 @@
  */
 
 
+#ifdef HAVE_CUDA
+
 #include <CCA/Components/Schedulers/SchedulerCommon.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Grid/Task.h>
@@ -70,3 +72,5 @@ CUDADevice::~CUDADevice()
 {
     
 }
+
+#endif
