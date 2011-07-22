@@ -130,7 +130,7 @@ SchedulerCommon::SchedulerCommon(const ProcessorGroup* myworld, Output* oport, b
       for(i=0; i < devCount; i++)
       {
           cudaGetDeviceProperties(&devprop,i);
-          if(devprop.major > 1)
+          if(devprop.major > 1 || (devprop.major == 1 && devprop.minor > 2))
           {
               d_cudaDevices.push_back(CUDADevice(i));
           }

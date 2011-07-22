@@ -341,6 +341,7 @@ WARNING
     int maxGhost;
       
     // GPU Based variables
+protected:
     bool withCUDA;
 #ifdef HAVE_CUDA
     vector<CUDADevice> d_cudaDevices;
