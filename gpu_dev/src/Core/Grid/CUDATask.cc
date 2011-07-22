@@ -63,7 +63,10 @@ CUDATask::doit (const ProcessorGroup* pc,
     if(d_action)
     { 
         if(dynamic_cast<CUDAActionBase *>(d_action))
+        {    
+            devprop->incrementRunningKernels();
             dynamic_cast<CUDAActionBase *>(d_action)->doit(pc, patches, matls, fromDW, toDW, dev, devprop);
+        }
         else
             throw new InternalError("ERROR:CUDATask:doit(): Failed to cast the action to a CUDAAction.  Bailing out.",__FILE__, __LINE__);
         

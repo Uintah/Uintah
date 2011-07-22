@@ -143,12 +143,47 @@ SingleProcessorScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
 
     if (trackingVarsPrintLocation_ & SchedulerCommon::PRINT_BEFORE_EXEC)
       printTrackedVars(task, SchedulerCommon::PRINT_BEFORE_EXEC);
-
-    task->doit(d_myworld, dws, plain_old_dws);
+      
+    // CUDA device to run on
+    int deviceToUse = -1;
+      
+    if(withCUDA)
+    {
+        // if it is a cuda task, execute it as such
+        if(task->getType() == Task::TaskType::GPUCUDATask)
+        {    
+            // find the least occupied device
+            int leastOccupied = 999999;
+            for(int i = 0; i < d_cudaDevices[i]; i++)
+            {
+                // We probably want a lock here on the multithreaded schedulers
+                if(d_cudaDevices[i].runningKernels() < leastOccupied)
+                {
+                    leastOccupied = d_cudaDevices[i].runningKernels();
+                    deviceToUse = i;
+                }
+            }
+            dynamic_cast<CUDATask::CUDAActionBase *>(task)->doit(d_myworld, dws, plain_old_dws,d_cudaDevices[deviceToUse].getDevicePtr(),&d_cudaDevices[deviceToUse]);
+        }
+        else // just do the normal doit
+        {
+            task->doit(d_myworld, dws, plain_old_dws);
+        }
+    } else {
+        task->doit(d_myworld, dws, plain_old_dws);
+    }
 
     if (trackingVarsPrintLocation_ & SchedulerCommon::PRINT_AFTER_EXEC)
       printTrackedVars(task, SchedulerCommon::PRINT_AFTER_EXEC);
 
+    if(withCUDA)
+    {
+        if(task->getType() == Task::TaskType::GPUCUDATask)
+        {
+            d_cudaDevices[deviceToUse].decrementKernelsRunning();
+        }
+    }
+      
     task->done(dws);
     
     taskdbg << d_myworld->myrank() << " SPS: Completed:  "; printTask(taskdbg, task); taskdbg << '\n';

@@ -33,10 +33,11 @@
 
 #ifdef HAVE_CUDA
 
-#include <Core/Grid/Task.h>
 #include <CCA/Ports/Scheduler.h>
+#include <Core/Grid/Task.h>
 #include <Core/Grid/Grid.h>
 #include <Core/Geometry/IntVector.h>
+#include <Core/Exception/InternalError.h>
 #include <vector>
 #include <list>
 #include <map>
@@ -177,10 +178,32 @@ namespace Uintah {
             return devprop.concurrentKernels;
         }
         
+        
+        //////////////////////////////////////////////
+        // Functions Regarding Total Executing Kernels
+        //////////////////////////////////////////////
+        /// @brief indicate that the device has one more kernel queued
+        void incrementRunningKernels()
+        {
+            kernelsRunning++;
+        }
+        
+        ///@brief indicate that one of the running kernels completed
+        void decrementRunningKernels()
+        {
+            kernelsRunning--;
+            if(kernelsRunning < 0)
+                throw new InternalError("ERROR:CUDADevice:decrementRunningKernels(): Fewer than 0 running kernels!",__FILE__,__LINE__);
+        }
+        
+        
     private:
         
-        cudaDeviceProp devprop;
-        int devicePointer;
+        cudaDeviceProp devprop;     // the properties of the device
+        int devicePointer;          // device number on the system represented as an integer
+        
+        int kernelsRunning;         // the total kernels currently running or queued on the device
+        
         
     };
 } // End namespace Uintah
