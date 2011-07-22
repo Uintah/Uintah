@@ -579,7 +579,6 @@ if test "$__extern_c" = "yes"; then
 }"
 fi
 
-
 AC_TRY_LINK($__sci_pound_includes,[$8],[
 
 if test "$IS_VC" = "yes"; then
@@ -690,6 +689,205 @@ _sci_includes=''
 ##
 
 ])
+
+## SCI_CUDA_COMPILE_LINK_TEST
+AC_DEFUN([SCI_CUDA_COMPILE_LINK_TEST], [
+## arguments mean:
+## arg 1 : variable base name i.e. CUDA
+## arg 2 : checking message
+## arg 3 : includes that arg 8 needs to compile
+## arg 4 : include paths -I
+## arg 5 : list of libs to link against -l
+## arg 6 : lib paths -L
+## arg 7 : extra link flags
+## arg 8 : body of code (source file) to compile
+## arg 9 : optional or not-optional required argument
+##
+## after execution of macro, the following will be defined:
+##      Variable            Value
+##      --------            -----
+##      $1_LIB_DIR        => lib path
+##      $1_LIB_DIR_FLAG   => all the -L's
+##      $1_LIB_FLAG       => all the -l's
+##      HAVE_$1           => yes or no
+##      INC_$1_H          => all the -I's
+##      HAVE_$1_H         => yes or no
+
+# make sure we have a base name, bail otherwise
+ifelse([$1],[],[AC_FATAL(must provide a test name in arg 1)],)dnl
+
+ifelse([$9],[optional],,[$9],[not-optional],,
+       [AC_FATAL(arg 9 must be either 'optional' or 'not-optional' got $9)])dnl
+
+AC_MSG_CHECKING(for $2 ($9))
+echo
+
+# save all the old values
+_sci_savecc=$CC
+_sci_savelibs=$LIBS
+_sci_saveldflags=$LDFLAGS
+_sci_savecflags=$CFLAGS
+_sci_savecxxflags=$CXXFLAGS
+
+_sci_includes=
+ifelse([$4],[],,[
+for i in $4; do
+  # make sure it exists
+  if test -d $i; then
+    if test -z "$_sci_includes"; then
+      _sci_includes=-I$i
+    else
+      _sci_includes="$_sci_includes -I$i"
+    fi
+  fi
+done
+])dnl
+
+ifelse([$5],[],_sci_libs=,[
+for i in $5; do
+  if test -z "$_sci_libs"; then
+    _sci_libs=-l$i
+  else
+    _sci_libs="$_sci_libs -l$i"
+  fi
+done
+])dnl
+
+_sci_lib_path=
+ifelse([$6],[],,[
+for i in $6; do
+  # make sure it exists
+  if test -d $i; then
+    if test -z "$_sci_lib_path"; then
+      #_sci_lib_path="$LDRUN_PREFIX$i -L$i"
+      _sci_lib_path="-L$i"
+    else
+	  #_sci_lib_path="$_sci_lib_path $LDRUN_PREFIX$i -L$i"
+      _sci_lib_path="$_sci_lib_path -L$i"
+    fi
+  fi
+done
+])dnl
+
+# Look for the CUDA compiler, "nvcc"
+AC_ARG_VAR([NVCC], [nvcc])
+AC_PATH_PROG([NVCC], [nvcc], [no])
+
+# set up the -Xcompiler flag so that NVCC can pass CFLAGS to underlying C comiler
+for i in $CFLAGS; do
+  NVCC_CFLAGS="$NVCC_CFLAGS -Xcompiler $i"
+done
+
+# set up the -Xcompiler flag so that NVCC can pass CXXFLAGS to underlying C++ comiler
+for i in $CXXFLAGS; do
+  NVCC_CXXFLAGS="$NVCC_CXXFLAGS -Xcompiler $i"
+done
+
+# set up the -Xlinker flag so that NVCC can pass LDFLAGS to underlying C/C++ comiler
+for i in $LDFLAGS; do
+  NVCC_LDFLAGS="$NVCC_LDFLAGS -Xlinker $i"
+done
+
+# do the same as the above loop, but for $7, the extra link flags
+for i in $7; do
+  NVCC_LDFLAGS="$NVCC_LDFLAGS -Xlinker $i"
+done
+
+# set flags tailored to CUDA compiler
+CFLAGS="$_sci_includes $NVCC_CFLAGS"
+CXXFLAGS="$_sci_includes $NVCC_CXXFLAGS"
+LDFLAGS="$_sci_lib_path $_sci_libs -Xlinker $_$NVCC_LDFLAGS"
+LIBS="$_sci_libs $LIBS"
+
+# check that the CUDA compiler/linker works:
+working_nvcc=no
+_file_base_name=`ls $8 | sed 's/\(.*\)\..*/\1/'`
+AC_MSG_CHECKING([for compilation using nvcc])
+$NVCC $CFLAGS -c $8
+if test -f $_file_base_name.o; then
+  AC_MSG_RESULT([yes])
+else
+	AC_MSG_RESULT([no])
+	AC_MSG_ERROR( [For some reason we could not compile using nvcc] )
+fi
+
+# check we can also link
+AC_MSG_CHECKING([for linking via nvcc])
+$NVCC $LDFLAGS $LIBS -o $_file_base_name $_file_base_name.o
+
+if test -f $_file_base_name; then
+  AC_MSG_RESULT([yes])
+  HAVE_CUDA="yes"
+else
+  AC_MSG_RESULT([no])
+  AC_MSG_ERROR( [For some reason we could not link using nvcc] )
+  HAVE_CUDA="no"
+fi
+
+# now set the precious variables
+if test $HAVE_CUDA="yes"; then
+  DEF_CUDA="#define HAVE_CUDA 1"
+  eval $1_LIB_DIR='"$6"'
+  if test "$6" = "$SCI_THIRDPARTY_LIB_DIR"; then
+    eval $1_LIB_DIR_FLAG=''
+  else
+    eval $1_LIB_DIR_FLAG='"$_sci_lib_path"'
+  fi
+  eval $1_LIB_FLAG='"$_sci_libs"'
+  if test "$_sci_includes" = "$INC_SCI_THIRDPARTY_H"; then
+    eval INC_$1_H=''
+  else
+    eval INC_$1_H='"$_sci_includes"'
+  fi
+  eval HAVE_$1_H="yes"
+
+else
+  eval $1_LIB_DIR=''
+  eval $1_LIB_DIR_FLAG=''
+  eval $1_LIB_FLAG=''
+  eval HAVE_$1="no"
+  eval INC_$1_H=''
+  eval HAVE_$1_H="no"
+fi
+
+if test ! "$DEF_CUDA"; then
+   echo
+   SCI_MSG_ERROR(one or more of the CUDA components is missing.)
+fi
+
+#[aph] - debug
+#echo
+#echo "CC       = " $CC
+#echo "NVCC     = " $NVCC
+#echo "LIBS     = " $LIBS
+#echo "LDFLAGS  = " $LDFLAGS
+#echo "CFLAGS   = " $CFLAGS
+#echo "CXXFLAGS = " $CXXFLAGS
+#echo
+
+if test "$9" = "not-optional"; then
+  SCI_MSG_ERROR([[Test for required $1 failed.
+    To see the failed compile information, look in config.log,
+    search for $1. Please install the relevant libraries
+     or specify the correct paths and try to configure again.]])
+fi
+
+#restore previous precious variables
+CC=$_sci_savecc
+CFLAGS=$_sci_savecflags
+CXXFLAGS=$_sci_savecxxflags
+LDFLAGS=$_sci_saveldflags
+LIBS=$_sci_savelibs
+_sci_lib_path=''
+_sci_libs=''
+_sci_includes=''
+
+##
+## END of SCI_COMPILE_LINK_CUDA_TEST ($1):  $2
+##
+
+])
+
 
 ##
 ##  SCI_CHECK_VERSION(prog,verflag,need-version,if-correct,if-not-correct,comp)
