@@ -64,7 +64,7 @@
 ##  initialize configure 
 AC_INIT([Uintah],[1.31],[csafe-homebrew@cs.utah.edu])
 
-##  require autoconf version 2.67
+##  require autoconf version 2.68
 ##     The reason to require the latest autoconf is to try and get everyone who
 ##     updates configure to use the same version.  By doing so, the SVN diffs
 ##     don't look completely different from minor changes.  (This happens
@@ -72,7 +72,7 @@ AC_INIT([Uintah],[1.31],[csafe-homebrew@cs.utah.edu])
 ##
 ##     type "autoconf --version" to find out what version you have.
 ##
-AC_PREREQ(2.67)
+AC_PREREQ(2.68)
 
 AC_COPYRIGHT(
 ##
