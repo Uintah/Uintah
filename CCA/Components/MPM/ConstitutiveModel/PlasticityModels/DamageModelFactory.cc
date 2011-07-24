@@ -39,6 +39,8 @@ DEALINGS IN THE SOFTWARE.
 #include <fstream>
 #include <iostream>
 #include <string>
+#include <Core/Parallel/Parallel.h>
+
 using std::cerr;
 using std::ifstream;
 using std::ofstream;
@@ -49,7 +51,7 @@ DamageModel* DamageModelFactory::create(ProblemSpecP& ps)
 {
    ProblemSpecP child = ps->findBlock("damage_model");
    if(!child) {
-      cerr << "**WARNING** Creating default null damage model" << endl;
+      proc0cout << "**WARNING** Creating default null damage model" << endl;
       return(scinew NullDamage());
       //throw ProblemSetupException("Cannot find damage_model tag", __FILE__, __LINE__);
    }
@@ -62,7 +64,7 @@ DamageModel* DamageModelFactory::create(ProblemSpecP& ps)
    else if (mat_type == "hancock_mackenzie")
       return(scinew HancockMacKenzieDamage(child));
    else {
-      cerr << "**WARNING** Creating default null damage model" << endl;
+      proc0cout << "**WARNING** Creating default null damage model" << endl;
       return(scinew NullDamage(child));
       //throw ProblemSetupException("Unknown Damage Model ("+mat_type+")", __FILE__, __LINE__);
    }
@@ -79,7 +81,7 @@ DamageModel* DamageModelFactory::createCopy(const DamageModel* dm)
       return(scinew HancockMacKenzieDamage(dynamic_cast<const HancockMacKenzieDamage*>(dm)));
 
    else {
-      cerr << "**WARNING** Creating copy of default null damage model" << endl;
+      proc0cout << "**WARNING** Creating copy of default null damage model" << endl;
       return(scinew NullDamage(dynamic_cast<const NullDamage*>(dm)));
       //throw ProblemSetupException("Cannot create copy of unknown damage model", __FILE__, __LINE__);
    }
