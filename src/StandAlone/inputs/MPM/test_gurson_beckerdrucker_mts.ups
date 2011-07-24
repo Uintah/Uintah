@@ -38,11 +38,9 @@
     <save label = "p.deformationMeasure"/>
     <save label = "p.strainRate"/>
     <save label = "p.plasticStrain"/>
-    <save label = "p.plasticTemp"/>
     <save label = "p.temperature"/>
     <save label = "p.particleID"/>
     <save label = "p.localized"/>
-    <save label = "p.plasticTempInc"/>
     <save label = "p.damage"/>
     <save label = "p.porosity"/>
     <save label = "g.mass"/>
@@ -89,8 +87,7 @@
       </material>
       <material>
         <include href="inputs/MPM/MaterialData/MatConstHY100Steel.xml"/>
-        <constitutive_model type="hypoelastic_plastic">
-          <tolerance>1.0e-10</tolerance>
+        <constitutive_model type="elastic_plastic">
           <include href="inputs/MPM/MaterialData/IsoElasticHY100Steel.xml"/>
           <include href="inputs/MPM/MaterialData/MieGrunEOSHY100Steel.xml"/>
           <include href="inputs/MPM/MaterialData/MTSPlasticHY100Steel.xml"/>
