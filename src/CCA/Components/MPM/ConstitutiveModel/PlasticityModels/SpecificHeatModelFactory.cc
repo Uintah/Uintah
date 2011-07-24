@@ -38,6 +38,7 @@ DEALINGS IN THE SOFTWARE.
 #include <string>
 #include <iostream>
 #include <sstream>
+#include <Core/Parallel/Parallel.h>
 
 using namespace Uintah;
 using namespace std;
@@ -47,7 +48,7 @@ SpecificHeatModel* SpecificHeatModelFactory::create(ProblemSpecP& ps)
 {
   ProblemSpecP child = ps->findBlock("specific_heat_model");
   if(!child) {
-    cerr << "** WARNING ** Creating default (constant specific heat) model" << endl;
+    proc0cout << "** WARNING ** Creating default (constant specific heat) model" << endl;
     return(scinew ConstantCp());
     //ostringstream desc;
     //desc << "**Error in Input UPS File: " 
@@ -72,7 +73,7 @@ SpecificHeatModel* SpecificHeatModelFactory::create(ProblemSpecP& ps)
   else if (mat_type == "steel_Cp")
     return(scinew SteelCp(child));
   else {
-    cerr << "** WARNING ** Creating default (constant specific heat) model" << endl;
+    proc0cout << "** WARNING ** Creating default (constant specific heat) model" << endl;
     return(scinew ConstantCp(child));
     //ostringstream desc;
     //desc << "**Error in Input UPS File: " 
@@ -95,7 +96,7 @@ SpecificHeatModelFactory::createCopy(const SpecificHeatModel* smm)
   else if (dynamic_cast<const SteelCp*>(smm))
     return(scinew SteelCp(dynamic_cast<const SteelCp*>(smm)));
   else {
-    cerr << "** WARNING ** Creating copy of default (constant specific heat) model" << endl;
+    proc0cout << "** WARNING ** Creating copy of default (constant specific heat) model" << endl;
     return(scinew ConstantCp(dynamic_cast<const ConstantCp*>(smm)));
     //ostringstream desc;
     //desc << "**Error in Material Copying: " 
