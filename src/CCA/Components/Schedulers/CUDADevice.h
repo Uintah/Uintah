@@ -41,7 +41,7 @@
 #include <vector>
 #include <list>
 #include <map>
-#include <CUDA/CUDA.h>
+#include <sci_defs/cuda_defs.h>
 
 namespace Uintah {
     
@@ -141,7 +141,7 @@ namespace Uintah {
         /// @brief gets the memory bus width for the device
         int memoryBusWidth()
         {
-            return devprop.memoryBusWidth();
+            return devprop.memoryBusWidth;
         }
         
         

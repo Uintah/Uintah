@@ -48,6 +48,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/Variables/LocallyComputedPatchVarMap.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Exceptions/ProblemSetupException.h>
 #include <CCA/Ports/DataWarehouse.h>
 
 #include <Core/Exceptions/ErrnoException.h>
@@ -69,6 +70,10 @@ DEALINGS IN THE SOFTWARE.
 #include <cstdlib>
 
 #include <time.h>
+
+#ifdef HAVE_CUDA
+#include <sci_defs/cuda_defs.h>
+#endif
 
 using namespace Uintah;
 using namespace SCIRun;
@@ -122,12 +127,12 @@ SchedulerCommon::SchedulerCommon(const ProcessorGroup* myworld, Output* oport, b
       
       if(devCount < 1)
       {
-          throw new ProblemSetupException("ERROR:SchedulerCommon: Uintah was compiled with GPU support, but no GPUs are attached to this node.",__FILE__,__LINE__);
+          throw ProblemSetupException("ERROR:SchedulerCommon: Uintah was compiled with GPU support, but no GPUs are attached to this node.",__FILE__,__LINE__);
       }
       
       // Add devices to the device vector if they have the correct compute capability
       cudaDeviceProp devprop;
-      for(i=0; i < devCount; i++)
+      for(int i=0; i < devCount; i++)
       {
           cudaGetDeviceProperties(&devprop,i);
           if(devprop.major > 1 || (devprop.major == 1 && devprop.minor > 2))

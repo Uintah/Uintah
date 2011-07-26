@@ -43,7 +43,7 @@ DEALINGS IN THE SOFTWARE.
 
 #ifdef HAVE_CUDA
 #include <CCA/Components/Schedulers/CUDADevice.h>
-#include <CUDA/CUDA.h>
+#include <sci_defs/cuda_defs.h>
 #endif
 
 #include   <iosfwd>
@@ -90,7 +90,7 @@ WARNING
 
   class SchedulerCommon : public Scheduler, public UintahParallelComponent {
   public:
-    SchedulerCommon(const ProcessorGroup* myworld, Output* oport, bool);
+    SchedulerCommon(const ProcessorGroup* myworld, Output* oport, bool withGPU);
     virtual ~SchedulerCommon();
 
     virtual void problemSetup(const ProblemSpecP& prob_spec,
