@@ -289,7 +289,7 @@ CORE_STATIC_LIBS := \
 
 CC              := @CC@
 CXX             := @CXX@
-NVCC			:= @NVCC@
+NVCC            := @NVCC@
 AS              := @AS@
 LD              := @LD@
 CFLAGS          := @CFLAGS@ $(CFLAGS) @WOFF_STRING@
