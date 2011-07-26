@@ -722,7 +722,7 @@ ifelse([$9],[optional],,[$9],[not-optional],,
 AC_MSG_CHECKING(for $2 ($9))
 echo
 
-# save all the old values
+# save the precious variables
 _sci_savecc=$CC
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
@@ -770,8 +770,7 @@ done
 ])dnl
 
 # Look for the CUDA compiler, "nvcc"
-AC_ARG_VAR([NVCC], [nvcc])
-AC_PATH_PROG([NVCC], [nvcc], [no])
+AC_PATH_PROG([NVCC], [nvcc], [no], [$with_cuda/bin])
 
 # set up the -Xcompiler flag so that NVCC can pass CFLAGS to underlying C comiler
 for i in $CFLAGS; do
@@ -794,16 +793,24 @@ for i in $7; do
 done
 
 # set flags tailored to CUDA compiler
-CFLAGS="$_sci_includes $NVCC_CFLAGS"
-CXXFLAGS="$_sci_includes $NVCC_CXXFLAGS"
-LDFLAGS="$_sci_lib_path $_sci_libs -Xlinker $_$NVCC_LDFLAGS"
+NVCC_CFLAGS="$_sci_includes $NVCC_CFLAGS"
+NVCC_CXXFLAGS="$_sci_includes $NVCC_CXXFLAGS"
+NVCC_LDFLAGS="$_sci_lib_path $_sci_libs -Xlinker $NVCC_LDFLAGS"
 LIBS="$_sci_libs $LIBS"
 
 # check that the CUDA compiler/linker works:
-working_nvcc=no
 _file_base_name=`ls $8 | sed 's/\(.*\)\..*/\1/'`
-AC_MSG_CHECKING([for compilation using nvcc])
-$NVCC $CFLAGS -c $8
+AC_MSG_CHECKING([for C compilation using nvcc])
+$NVCC $NVCC_CFLAGS -c $8
+if test -f $_file_base_name.o; then
+  AC_MSG_RESULT([yes])
+else
+	AC_MSG_RESULT([no])
+	AC_MSG_ERROR( [For some reason we could not compile using nvcc] )
+fi
+
+AC_MSG_CHECKING([for C++ compilation using nvcc])
+$NVCC $NVCC_CXXFLAGS -c $8
 if test -f $_file_base_name.o; then
   AC_MSG_RESULT([yes])
 else
@@ -813,7 +820,7 @@ fi
 
 # check we can also link
 AC_MSG_CHECKING([for linking via nvcc])
-$NVCC $LDFLAGS $LIBS -o $_file_base_name $_file_base_name.o
+$NVCC $NVCC_LDFLAGS $LIBS -o $_file_base_name $_file_base_name.o
 
 if test -f $_file_base_name; then
   AC_MSG_RESULT([yes])
@@ -824,7 +831,6 @@ else
   HAVE_CUDA="no"
 fi
 
-# now set the precious variables
 if test $HAVE_CUDA="yes"; then
   DEF_CUDA="#define HAVE_CUDA 1"
   eval $1_LIB_DIR='"$6"'
@@ -1236,7 +1242,7 @@ AC_DEFUN([SCI_ARG_ENABLE], [
 ##
 ## SCI_ARG_VAR
 ##
-## callse AC_ARG_VAR makes variables precious, and allows the vars to pass
+## calls AC_ARG_VAR, makes variables precious, and allows the vars to pass
 ## our valid check by recording it in sci_arg_var_list
 ##
 AC_DEFUN([SCI_ARG_VAR], [
