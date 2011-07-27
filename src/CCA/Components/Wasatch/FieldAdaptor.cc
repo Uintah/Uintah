@@ -51,13 +51,17 @@ namespace Wasatch{
                         SCIRun::IntVector& bcMinus,
                         SCIRun::IntVector& bcPlus )
   {
+    for( int i=0; i<3; ++i ){
+      bcMinus[i] = 1;
+      bcPlus [i] = 1;
+    }
     std::vector<Uintah::Patch::FaceType> faces;
     patch->getNeighborFaces(faces);
     for( std::vector<Uintah::Patch::FaceType>::const_iterator i=faces.begin(); i!=faces.end(); ++i ){
       SCIRun::IntVector dir = patch->getFaceDirection(*i);
       for( int j=0; j<3; ++j ){
-        if( dir[j] == -1 ) bcMinus[j]=1;  else bcMinus[j]=0;
-        if( dir[j] ==  1 ) bcPlus [j]=1;  else bcPlus [j]=0;
+        if( dir[j] == -1 ) bcMinus[j]=0;
+        if( dir[j] ==  1 ) bcPlus [j]=0;
       }
     }
   }

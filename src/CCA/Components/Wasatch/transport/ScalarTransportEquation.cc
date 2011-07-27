@@ -276,18 +276,20 @@ namespace Wasatch{
   //------------------------------------------------------------------
   
   template< typename FieldT >  
-  void ScalarTransportEquation<FieldT>::setup_boundary_conditions(const GraphHelper& graphHelper,
-                                         const Uintah::PatchSet* const localPatches,
-                                         const PatchInfoMap& patchInfoMap,
-                                         const Uintah::MaterialSubset* const materials)
+  void ScalarTransportEquation<FieldT>::
+  setup_boundary_conditions( const GraphHelper& graphHelper,
+                             const Uintah::PatchSet* const localPatches,
+                             const PatchInfoMap& patchInfoMap,
+                             const Uintah::MaterialSubset* const materials )
   {
+    // see BCHelperTools.cc
     process_boundary_conditions( Expr::Tag( this->solution_variable_name(),
-                         Expr::STATE_N ),
-                  this->staggered_location(),
-                  graphHelper,
-                  localPatches,
-                  patchInfoMap,
-                  materials );    
+                                            Expr::STATE_N ),
+                                 this->staggered_location(),
+                                 graphHelper,
+                                 localPatches,
+                                 patchInfoMap,
+                                 materials );    
   }
   
   //------------------------------------------------------------------

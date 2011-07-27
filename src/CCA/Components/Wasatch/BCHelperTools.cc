@@ -177,11 +177,11 @@ namespace Wasatch {
   //-----------------------------------------------------------------------------
 
   void process_boundary_conditions( const Expr::Tag phiTag,
-                     const Direction staggeredLocation,
-                     const GraphHelper& graphHelper,
-                     const Uintah::PatchSet* const localPatches,
-                     const PatchInfoMap& patchInfoMap,
-                     const Uintah::MaterialSubset* const materials )
+                                    const Direction staggeredLocation,
+                                    const GraphHelper& graphHelper,
+                                    const Uintah::PatchSet* const localPatches,
+                                    const PatchInfoMap& patchInfoMap,
+                                    const Uintah::MaterialSubset* const materials )
   {
     /*
      ALGORITHM:
@@ -231,6 +231,9 @@ namespace Wasatch {
             SCIRun::IntVector insideCellDir = patch->faceDirection(face);
 
             //get the number of children
+            // jcs note that we need to do some error checking here.
+            // If the BC has not been set then we get a cryptic error
+            // from Uintah.
             const int numChildren = patch->getBCDataArray(face)->getNumberChildren(materialID);
             
             for( int child = 0; child<numChildren; ++child ){
