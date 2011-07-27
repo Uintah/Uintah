@@ -24,8 +24,14 @@ namespace Wasatch{
 
   //====================================================================
 
-  void parseTabProps( Uintah::ProblemSpecP& params,
-                      GraphHelper& gh )
+  /**
+   *  \ingroup WasatchParser
+   *  \brief set up TabProps for use on the given GraphHelper
+   *  \param params - the parser parameters for the TabProps specification.
+   *  \param gh - the GraphHelper associated with this instance of TabProps.
+   */
+  void parse_tabprops( Uintah::ProblemSpecP& params,
+                       GraphHelper& gh )
   {
     std::string fileName;
     params->get("FileNamePrefix",fileName);
@@ -153,7 +159,7 @@ namespace Wasatch{
     for( Uintah::ProblemSpecP tabPropsParams = params->findBlock("TabProps");
          tabPropsParams != 0;
          tabPropsParams = tabPropsParams->findNextBlock("TabProps") ){
-      parseTabProps( tabPropsParams, gh );
+      parse_tabprops( tabPropsParams, gh );
     }
   }
 

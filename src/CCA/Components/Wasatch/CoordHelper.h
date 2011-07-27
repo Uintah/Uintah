@@ -27,6 +27,13 @@ namespace Wasatch{
 
   class StringNames;
   
+  /**
+   *  \class CoordHelper
+   *  \author James C. Sutherland
+   *  \ingroup WasatchCore
+   *
+   *  \brief Allows easy creation of coordinate fields.
+   */
   class CoordHelper
   {
     const Expr::Context context_;
@@ -93,11 +100,18 @@ namespace Wasatch{
 
     /**
      *  \brief create a task to calculate the requested coordinates
+     *  \param sched - The scheduler for this task
+     *  \param patches - the set of patches that this task is associated with
+     *  \param materials - the set of materials that this task is associated with
      */
     void create_task( Uintah::SchedulerP& sched,
                       const Uintah::PatchSet* patches,
                       const Uintah::MaterialSet* materials );
 
+    /**
+     *  \brief Obtain the TagSet describing all of the fields that
+     *         have been requested of this CoordHelper object.
+     */
     const Expr::TagSet& field_tags() const{ return fieldTags_; }
 
   };

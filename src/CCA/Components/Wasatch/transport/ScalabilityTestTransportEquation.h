@@ -74,9 +74,9 @@ namespace Wasatch{
      *  Note that the static member method get_rhs_expr_id can be useful to 
      *  obtain the appropriate input arguments here.
      */
-    ScalabilityTestTransportEquation(const std::string basePhiName, 
-                                     const std::string thisPhiName,
-                            const Expr::ExpressionID id );
+    ScalabilityTestTransportEquation( const std::string basePhiName, 
+                                      const std::string thisPhiName,
+                                      const Expr::ExpressionID id );
     
     ~ScalabilityTestTransportEquation();
     
@@ -98,6 +98,9 @@ namespace Wasatch{
      *        Also registers convective flux, diffusive flux, and
      *        source term expressions.
      *
+     *  \param thisPhiName the name of the solution variable for this
+     *         equation.
+     *
      *  \param factory The Expr::ExpressionFactory object that
      *         terms associated with the RHS of this transport
      *         equation should be registered on.
@@ -106,8 +109,8 @@ namespace Wasatch{
      *         equation.  Scope should be within the ScalabilityTest tag.
      */
     static Expr::ExpressionID get_rhs_expr_id(std::string thisPhiName, 
-													                    Expr::ExpressionFactory& factory, 
-													                    Uintah::ProblemSpecP params );        
+                                              Expr::ExpressionFactory& factory, 
+                                              Uintah::ProblemSpecP params );        
   private:
     
   };

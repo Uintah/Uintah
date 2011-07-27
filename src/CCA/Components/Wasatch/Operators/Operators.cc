@@ -38,9 +38,6 @@ namespace Wasatch{
   void build_operators( const Uintah::Patch& patch,
                         SpatialOps::OperatorDatabase& opDB )
   {
-    using namespace SpatialOps;
-    using namespace structured;
-
     const SCIRun::IntVector udim = patch.getCellHighIndex() - patch.getCellLowIndex();
     std::vector<int> dim(3,1);
     for( size_t i=0; i<3; ++i ){ dim[i] = udim[i]; }
@@ -57,9 +54,9 @@ namespace Wasatch{
     bcPlus[2] = patch.getBCType(Uintah::Patch::zplus) != Uintah::Patch::Neighbor;
 
     // build all of the stencils defined in SpatialOps
-    build_stencils( udim[0], udim[1], udim[2],
-                    udim[0]*spacing[0], udim[1]*spacing[1], udim[2]*spacing[2],
-                    opDB );
+    SpatialOps::structured::build_stencils( udim[0], udim[1], udim[2],
+                                            udim[0]*spacing[0], udim[1]*spacing[1], udim[2]*spacing[2],
+                                            opDB );
 
     //--------------------------------------------------------
     // UPWIND interpolants - phi volume to phi surface

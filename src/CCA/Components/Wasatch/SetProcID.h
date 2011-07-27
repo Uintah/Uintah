@@ -14,6 +14,16 @@ namespace Uintah{
 }
 
 namespace Wasatch{
+
+  /**
+   *  \class SetProcID
+   *  \author James C. Sutherland
+   *  \ingroup WasatchCore
+   *
+   *  \brief A simple task to run to set a CCVariable containing the
+   *         processor rank.  This is typically only needed for
+   *         diagnostic output.
+   */
   class SetProcID
   {
     Uintah::VarLabel* pid_;

@@ -94,14 +94,15 @@ namespace Wasatch{
      *        Also registers convective flux, diffusive flux, and
      *        source term expressions.
      *
-     *  \param solnExprFactory the Expr::ExpressionFactory object that
-     *         terms associated with the RHS of this transport
-     *         equation should be registered on.
+     *  \param factory the Expr::ExpressionFactory object that terms
+     *         associated with the RHS of this transport equation
+     *         should be registered on.
      *
      *  \param params the Uintah::ProblemSpec XML description for this
      *         equation.  Scope should be within the TransportEquation tag.
      */
-    static Expr::ExpressionID get_rhs_expr_id( Expr::ExpressionFactory& factory, Uintah::ProblemSpecP params );
+    static Expr::ExpressionID get_rhs_expr_id( Expr::ExpressionFactory& factory,
+                                               Uintah::ProblemSpecP params );
 
     /**
      *  \brief Parse the input file to get the name of this ScalarTransportEquation

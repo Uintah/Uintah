@@ -35,6 +35,7 @@ namespace Wasatch{
 
   /**
    *  \class TreeTaskExecute
+   *  \ingroup WasatchGraph
    *  \author James C. Sutherland
    *  \brief Handles execution of a Expr::ExpressionTree object on a set of patches.
    */
@@ -62,7 +63,7 @@ namespace Wasatch{
     bool hasBeenScheduled_;
     PatchTreeMap patchTreeMap_;
 
-    /** main execution driver - the callback function exposed to Uintah. */
+    /** \brief main execution driver - the callback function exposed to Uintah. */
     void execute( const Uintah::ProcessorGroup* const,
                   const Uintah::PatchSubset* const,
                   const Uintah::MaterialSubset* const,
@@ -71,6 +72,16 @@ namespace Wasatch{
 
   public:
 
+    /**
+     *  \brief Construct a TreeTaskExecute object.
+     *  \param tree - the TreePtr that this object is associated with
+     *  \param taskName - the name of this task
+     *  \param scheduler - the scheduler that this task is associated with
+     *  \param patches 	- the list of patches that this TreeTaskExecute object is to be executed on.
+     *  \param materials - the list of materials that this task is to be associated with.
+     *  \param info	- the PatchInfoMap object that holds patch-specific information (like operators).
+     *  \param createUniqueTreePerPatch - if true, then a unique tree will be created per patch (recommended).
+     */
     TreeTaskExecute( TreePtr tree,
                      const std::string taskName,
                      Uintah::SchedulerP& scheduler,
@@ -143,6 +154,20 @@ namespace Wasatch{
 
   //------------------------------------------------------------------
 
+  /**
+   *  \ingroup WasatchGraph
+   *  \brief adds requisite fields to the given task.
+   *  \param task - the task to add fields to
+   *  \param tree - the ExpressionTree that is being wrapped as a task
+   *  \param fml  - the FieldManagerList that manages the fields associated with this ExpressionTree and task.
+   *  \param patches - the patches to associate with this task
+   *  \param materials - the materials to associate with this task
+   *  \param newDWFields - any fields specified in this TagSet will be taken from the new DataWarehouse instead of the old DataWarehouse.
+   *
+   *  This function analyzes the ExpressionTree to identify what
+   *  fields are required for this task, and then advertises them to
+   *  Uintah.  The COMPUTES/REQUIRES is automatically deduced.
+   */
   void
   add_fields_to_task( Uintah::Task& task,
                       const Expr::ExpressionTree& tree,

@@ -7,8 +7,13 @@
 
 
 /**
- *  \class MomRHSPart
+ *  \class 	MomRHSPart
+ *  \ingroup 	Expressions
+ *
  *  \brief Calculates the RHS of a momentum equation excluding the pressure gradient term.
+ *
+ *  \tparam FieldT the type of field for the momentum RHS (nominally
+ *          XVolField, YVolField, ZVolField).
  *
  *  \f[
  *    \frac{\partial \rho u_i}{\partial t} =

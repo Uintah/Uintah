@@ -87,7 +87,7 @@ namespace Wasatch{
     graphCategories_[ TIMESTEP_SELECTION ] = scinew GraphHelper( scinew Expr::ExpressionFactory(log) );
     graphCategories_[ ADVANCE_SOLUTION   ] = scinew GraphHelper( scinew Expr::ExpressionFactory(log) );
 
-    icCoordHelper_  = new CoordHelper( *(graphCategories_[INITIALIZATION  ]->exprFactory) );
+    icCoordHelper_  = new CoordHelper( *(graphCategories_[INITIALIZATION]->exprFactory) );
   }
 
   //--------------------------------------------------------------------

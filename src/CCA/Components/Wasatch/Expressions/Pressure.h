@@ -25,12 +25,14 @@ namespace Uintah{
 namespace Wasatch{
 
 /**
- *  \class Pressure
+ *  \class 	Pressure
+ *  \ingroup 	Expressions
+ *  \ingroup	WasatchCore
+ *  \author 	James C. Sutherland
+ *  \author 	Tony Saad
+ *  \date 	January, 2011
  *
  *  \brief Expression to form and solve the poisson system for pressure.
- *  \author James C. Sutherland
- *  \author Tony Saad
- *  \date January, 2011
  *
  *  NOTE: this expression BREAKS WITH CONVENTION!  Notably, it has
  *  uintah tenticles that reach into it, and mixes SpatialOps and
