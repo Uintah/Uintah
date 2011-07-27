@@ -4143,6 +4143,13 @@ echo
 #echo "NVCC_CXXFLAGS     = " $NVCC_CXXFLAGS
 #echo "NVCC_LDFLAGS      = " $NVCC_LDFLAGS
 #echo
+#echo "CC       = " $CC
+#echo "NVCC     = " $NVCC
+#echo "LIBS     = " $LIBS
+#echo "LDFLAGS  = " $LDFLAGS
+#echo "CFLAGS   = " $CFLAGS
+#echo "CXXFLAGS = " $CXXFLAGS
+#echo
 
 fi #end sci_required_cuda
 

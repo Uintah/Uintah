@@ -37,7 +37,7 @@
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Grid.h>
 #include <Core/Geometry/IntVector.h>
-#include <Core/Exception/InternalError.h>
+#include <Core/Exceptions/InternalError.h>
 #include <vector>
 #include <list>
 #include <map>
