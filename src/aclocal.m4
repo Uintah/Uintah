@@ -861,16 +861,6 @@ if test ! "$DEF_CUDA"; then
    SCI_MSG_ERROR(one or more of the CUDA components is missing.)
 fi
 
-#[aph] - debug
-#echo
-#echo "CC       = " $CC
-#echo "NVCC     = " $NVCC
-#echo "LIBS     = " $LIBS
-#echo "LDFLAGS  = " $LDFLAGS
-#echo "CFLAGS   = " $CFLAGS
-#echo "CXXFLAGS = " $CXXFLAGS
-#echo
-
 if test "$9" = "not-optional"; then
   SCI_MSG_ERROR([[Test for required $1 failed.
     To see the failed compile information, look in config.log,

@@ -71,10 +71,6 @@ DEALINGS IN THE SOFTWARE.
 
 #include <time.h>
 
-#ifdef HAVE_CUDA
-#include <sci_defs/cuda_defs.h>
-#endif
-
 using namespace Uintah;
 using namespace SCIRun;
 using namespace std;

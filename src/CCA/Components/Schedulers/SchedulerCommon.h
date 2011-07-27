@@ -41,9 +41,10 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/SimulationStateP.h>
 #include <Core/Util/DebugStream.h>
 
+#include <sci_defs/cuda_defs.h>
+
 #ifdef HAVE_CUDA
 #include <CCA/Components/Schedulers/CUDADevice.h>
-#include <sci_defs/cuda_defs.h>
 #endif
 
 #include   <iosfwd>
