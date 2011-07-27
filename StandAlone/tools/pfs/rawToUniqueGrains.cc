@@ -166,339 +166,347 @@ enum endian{little, big};
 //
 int main(int argc, char *argv[])
 {
-  Uintah::Parallel::determineIfRunningUnderMPI( argc, argv );
-  Uintah::Parallel::initializeManager( argc, argv );
+  try {
+    Uintah::Parallel::determineIfRunningUnderMPI( argc, argv );
+    Uintah::Parallel::initializeManager( argc, argv );
 
-  bool binmode = false;
-  string endianness= "little";
+    bool binmode = false;
+    string endianness= "little";
 
-  //__________________________________
-  // parse the command arguments
-  for (int i=1; i<argc; i++){
-    string s=argv[i];
-    if (s == "-b") {
-      binmode = true;
-    }
-    else if (s == "-B" || s == "-bigEndian") {
-      endianness = "big";
-    }
-    else if (s == "-l" || s == "-littleEndian") {
-      endianness = "little";
-    }
-    else if (s == "-h" || s == "-help") {
-      usage( argv[0] );
-    }
-    else if ( s[0] == '-'){
-      cout << "\nERROR invalid input (" << s << ")" << endl;
-      usage( argv[0] );
-    }
-  }
-
-  string infile = argv[argc-1];
-
-  if( argc < 2 || argc > 11 ){ 
-    usage( argv[0] );
-  }
-
-  //__________________________________
-  //  Read in user specificatons
-  string imgname;                   // raw image file name
-  vector<int> res;                  // image resolution
-  vector<int> ppc;                  // number of particles per cell
-  vector<int> UG_matlIndex;         // unique grain matl index
-  vector<int> UG_threshold;         // unique grain threshold
-  int UG_numMatls = 0;              // number of unique grain matls
-  map<int, int> intensityToMatl_map;// intensity to matl mapping
-  
-  
-  
-  string f_name;                    // the base name of the output file
-  bool hasUniqueGrains = false;
-  
-  ProblemSpecP ups = ProblemSpecReader().readInputFile( infile );
-
-  if( !ups ) {
-    throw ProblemSetupException("Cannot read problem specification", __FILE__, __LINE__);
-  }
-
-  ProblemSpecP ppt_ps = ups->findBlockWithOutAttribute("PreprocessTools");
-  if( !ppt_ps ) {
-    string warn;
-    warn ="\n INPUT FILE ERROR:\n <PreprocessTools>  block not found\n";
-    throw ProblemSetupException(warn, __FILE__, __LINE__);
-  }
-  
-  ProblemSpecP raw_ps = ppt_ps->findBlockWithOutAttribute("rawToUniqueGrains");
-  if( !raw_ps ) {
-    string warn;
-    warn ="\n INPUT FILE ERROR:\n <rawToUniqueGrains>  block not found inside of <PreprocessTools> \n";
-    throw ProblemSetupException(warn, __FILE__, __LINE__);
-  }
-  
-  raw_ps->require("image",          imgname ); 
-  raw_ps->require("ppc",            ppc);
-  raw_ps->require("res",            res);
-  raw_ps->require("outputBasename", f_name);
-  
-  
-  // read in all non unique grain specs and put that in a vector
-  vector<intensityMapping> intMatl_Vec;
-  
-  for (ProblemSpecP child = raw_ps->findBlock("matl"); child != 0;
-                    child = child->findNextBlock("matl")) {
-    
-    vector<int> threshold;
-    map<string,string> matlIndex;
-    
-    child->getAttributes(matlIndex);
-    child->require("threshold", threshold);
-    
-    intensityMapping data;
-    data.matlIndex = atoi(matlIndex["index"].c_str());
-    data.threshold = threshold;
-    intMatl_Vec.push_back(data);
-    
-    cout << "matl index " << matlIndex["index"] << " Threshold low: " << threshold[0] << " high: " <<threshold[1] <<endl;
-  }
-  
-  // read in the unique grains
-  ProblemSpecP ug_ps = raw_ps->findBlockWithOutAttribute("uniqueGrains");
-  if( ug_ps ) {
-    ug_ps->require("matlIndex",      UG_matlIndex);
-    ug_ps->require("threshold",      UG_threshold);
-    UG_numMatls = UG_matlIndex.size();
-    cout << "Number of unique Grain Matls " << UG_numMatls << endl;
-    hasUniqueGrains = true;
-  }
-
-
-  //__________________________________
-  //  Read the image file
-  unsigned int nPixels = res[0]*res[1]*res[2];
-  
-  pixel* pimg = scinew pixel[nPixels];
-
-  if (ReadImage(imgname.c_str(), nPixels, pimg, endianness) == false) {
-    cout << "FATAL ERROR : Failed reading image data" << endl;
-    exit(0);
-  }
-
-  //__________________________________
-  //  find the number of intensity levels within the unique grains threshold
-  pixel* pb = pimg;
-  
-  if(hasUniqueGrains){
-    int maxI = 0;
-    int minI =INT_MAX;
-
-    for (int k=0; k<=res[2]; k++) {
-      for (int j=0; j<=res[1]; j++) {
-        for (int i=0; i<=res[0]; i++, pb++) {
-          int pixelValue = *pb;
-          if ((pixelValue >= UG_threshold[0]) && (pixelValue <= UG_threshold[1])) {
-            maxI = max(maxI, pixelValue);
-            minI = min(minI, pixelValue);
-          }
-        }
-      }
-    }
-
-    if( maxI == 0 && minI == INT_MAX ){
-      ostringstream warn;
-      warn << "No unique grains found in the threshold range "<< UG_threshold[0] << " and " << UG_threshold[1] << endl;
-      throw ProblemSetupException("This exception doesn't work" , __FILE__, __LINE__);
-    }
-    cout << "Unique grain intensity levels: "  << " min: " << minI << " max: " << maxI << endl;
     //__________________________________
-    //  create the intensity level to matl index map for the unique grains   
-    int m = 0;
-    for (int i=minI; i<=maxI; i++) {
-      intensityToMatl_map[i] = UG_matlIndex[m];
-      m ++;
-      if(m >= UG_numMatls){
-        m = 0;
+    // parse the command arguments
+    for (int i=1; i<argc; i++){
+      string s=argv[i];
+      if (s == "-b") {
+        binmode = true;
+      }
+      else if (s == "-B" || s == "-bigEndian") {
+        endianness = "big";
+      }
+      else if (s == "-l" || s == "-littleEndian") {
+        endianness = "little";
+      }
+      else if (s == "-h" || s == "-help") {
+        usage( argv[0] );
+      }
+      else if ( s[0] == '-'){
+        cout << "\nERROR invalid input (" << s << ")" << endl;
+        usage( argv[0] );
       }
     }
-  }
-  //__________________________________
-  // Now add the mappings for the individual materials
-  // These can overwrite the unique grains mapping
-  for (int m=0; m<intMatl_Vec.size(); m++) {
-    
-    intensityMapping data = intMatl_Vec[m];
-    
-    for (int i=data.threshold[0]; i<=data.threshold[1]; i++) {
-      intensityToMatl_map[i] = data.matlIndex;
-    }
-  }
-  
-  cout << "Intensity level to mpm matl mapping \n";
-  map<int,int>::iterator it;
-   for ( it=intensityToMatl_map.begin() ; it != intensityToMatl_map.end(); it++ ){
-    cout << " Intensity: " << it->first<< " = matl " << it->second << endl;
-  }
 
+    string infile = argv[argc-1];
 
-  //__________________________________
-  // Parse the ups file for the grid specification
-  // and voxel size
-  GridP grid = CreateGrid(ups);
-
-  // loop over levels
-  for (int l = 0; l < grid->numLevels(); l++) {
-    LevelP level = grid->getLevel(l);
-
-    // calculate voxel size
-    Vector DX = level->dCell();
-    double dx = DX.x() / ppc[0];
-    double dy = DX.y() / ppc[1];
-    double dz = DX.z() / ppc[2];
-    fprintf(stderr, "Voxel size : %g, %g, %g\n", DX.x(), DX.y(), DX.z());
-    fprintf(stderr, "Voxel dimensions : %g, %g, %g\n", dx, dy, dz);
-
-
-    // bulletproofing
-    // must use cubic cells
-    IntVector low, high;
-    level->findCellIndexRange(low, high);
-    IntVector diff = high-low;
-    long cells = diff.x()*diff.y()*diff.z();
-
-    if(cells != level->totalCells()){
-      throw ProblemSetupException("pfs can only cubic cells", __FILE__, __LINE__);
+    if( argc < 2 || argc > 11 ){ 
+      usage( argv[0] );
     }
 
-    // loop over all mpm materials
-    int matl = -1;
-    ProblemSpecP mp = ups->findBlockWithOutAttribute("MaterialProperties");
-    ProblemSpecP mpm = mp->findBlock("MPM");
-    
-    for (ProblemSpecP child = mpm->findBlock("material"); child != 0;
-                      child = child->findNextBlock("material")) {
-      
-      matl +=1;
-      // these points define the extremas of the grid
-      Point minP(1.e30,1.e30,1.e30),maxP(-1.e30,-1.e30,-1.e30);
+    //__________________________________
+    //  Read in user specificatons
+    string imgname;                   // raw image file name
+    vector<int> res;                  // image resolution
+    vector<int> ppc;                  // number of particles per cell
+    vector<int> UG_matlIndex;         // unique grain matl index
+    vector<int> UG_threshold;         // unique grain threshold
+    int UG_numMatls = 0;              // number of unique grain matls
+    map<int, int> intensityToMatl_map;// intensity to matl mapping
 
-      int nPatches = level->numPatches();
-      vector< vector<int> > points(nPatches);
-      vector<int> numPoints(nPatches);
-      
-      Point pt;
-      pixel* pb = pimg;
 
-      // first determine the number of points for each patch for this matl
-      for (int p=0; p<nPatches; p++){
-        numPoints[p] = 0;
-      }
 
-      const Patch* curPatch;
-      int n = 0;
-      
-      for (int k=0; k<res[2]; k++) {
-        for (int j=0; j<res[1]; j++) {
-          for (int i=0; i<res[0]; i++, pb++, n++) {
+    string f_name;                    // the base name of the output file
+    bool hasUniqueGrains = false;
 
+    ProblemSpecP ups = ProblemSpecReader().readInputFile( infile );
+
+    if( !ups ) {
+      throw ProblemSetupException("Cannot read problem specification", __FILE__, __LINE__);
+    }
+
+    ProblemSpecP ppt_ps = ups->findBlockWithOutAttribute("PreprocessTools");
+    if( !ppt_ps ) {
+      string warn;
+      warn ="\n INPUT FILE ERROR:\n <PreprocessTools>  block not found\n";
+      throw ProblemSetupException(warn, __FILE__, __LINE__);
+    }
+
+    ProblemSpecP raw_ps = ppt_ps->findBlockWithOutAttribute("rawToUniqueGrains");
+    if( !raw_ps ) {
+      string warn;
+      warn ="\n INPUT FILE ERROR:\n <rawToUniqueGrains>  block not found inside of <PreprocessTools> \n";
+      throw ProblemSetupException(warn, __FILE__, __LINE__);
+    }
+
+    raw_ps->require("image",          imgname ); 
+    raw_ps->require("ppc",            ppc);
+    raw_ps->require("res",            res);
+    raw_ps->require("outputBasename", f_name);
+
+
+    // read in all non unique grain specs and put that in a vector
+    vector<intensityMapping> intMatl_Vec;
+
+    for (ProblemSpecP child = raw_ps->findBlock("matl"); child != 0;
+                      child = child->findNextBlock("matl")) {
+
+      vector<int> threshold;
+      map<string,string> matlIndex;
+
+      child->getAttributes(matlIndex);
+      child->require("threshold", threshold);
+
+      intensityMapping data;
+      data.matlIndex = atoi(matlIndex["index"].c_str());
+      data.threshold = threshold;
+      intMatl_Vec.push_back(data);
+
+      cout << "matl index " << matlIndex["index"] << " Threshold low: " << threshold[0] << " high: " <<threshold[1] <<endl;
+    }
+
+    // read in the unique grains
+    ProblemSpecP ug_ps = raw_ps->findBlockWithOutAttribute("uniqueGrains");
+    if( ug_ps ) {
+      ug_ps->require("matlIndex",      UG_matlIndex);
+      ug_ps->require("threshold",      UG_threshold);
+      UG_numMatls = UG_matlIndex.size();
+      cout << "Number of unique Grain Matls " << UG_numMatls << endl;
+      hasUniqueGrains = true;
+    }
+
+
+    //__________________________________
+    //  Read the image file
+    unsigned int nPixels = res[0]*res[1]*res[2];
+
+    pixel* pimg = scinew pixel[nPixels];
+
+    if (ReadImage(imgname.c_str(), nPixels, pimg, endianness) == false) {
+      cout << "FATAL ERROR : Failed reading image data" << endl;
+      exit(0);
+    }
+
+    //__________________________________
+    //  find the number of intensity levels within the unique grains threshold
+    pixel* pb = pimg;
+
+    if(hasUniqueGrains){
+      int maxI = 0;
+      int minI =INT_MAX;
+
+      for (int k=0; k<=res[2]; k++) {
+        for (int j=0; j<=res[1]; j++) {
+          for (int i=0; i<=res[0]; i++, pb++) {
             int pixelValue = *pb;
-            bool isRightMatl      = ( matl == intensityToMatl_map[pixelValue]);
-            //bool withinThreshold  = ( (pixelValue >= L[0]) && (pixelValue <= L[1]) );
-
-            if ( isRightMatl ) {
-
-              pt = CreatePoint(n, res, dx, dy, dz);
-              curPatch = level->selectPatchForCellIndex(level->getCellIndex(pt));
-              int patchID = curPatch->getID();
-              numPoints[patchID]++;
+            if ((pixelValue >= UG_threshold[0]) && (pixelValue <= UG_threshold[1])) {
+              maxI = max(maxI, pixelValue);
+              minI = min(minI, pixelValue);
             }
           }
         }
-        fprintf(stderr, "%s : %.1f\n", "Preprocessing ", 50.0*(k+1.0)/(double)res[2]);
       }
 
-      // allocate storage for the patches
-      for (int p=0; p<nPatches; p++){
-        points[p].resize(numPoints[p]);
-        numPoints[p] = 0;
+      if( maxI == 0 && minI == INT_MAX ){
+        ostringstream warn;
+        warn << "\n ERROR: No unique grains found in the threshold range "<< UG_threshold[0] << " and " << UG_threshold[1] << endl;
+        throw ProblemSetupException(warn.str() , __FILE__, __LINE__);
       }
-
-      // put the points in the correct patches
-      // keep track of the min/max point locations
-      pb = pimg;
-
-      n = 0;
-      for (int k=0; k<res[2]; k++) {
-        for (int j=0; j<res[1]; j++) {
-          for (int i=0; i<res[0]; i++, pb++, n++) {
-
-            int pixelValue = *pb;
-            bool isRightMatl      = ( matl == intensityToMatl_map[pixelValue]);
-            //bool withinThreshold  = ( (pixelValue >= L[0]) && (pixelValue <= L[1]) );
-
-            if ( isRightMatl) {
-
-              pt = CreatePoint(n, res, dx, dy, dz);
-
-              const Patch* patch =   level->selectPatchForCellIndex(level->getCellIndex(pt));
-              unsigned int patchID = patch->getID();
-              minP = Min(pt,minP);
-              maxP = Max(pt,maxP);
-              points[patchID][ numPoints[patchID] ] = n;
-              numPoints[patchID]++;
-            }
-          }
-        }
-        fprintf(stderr, "%s : %.1f\r", "Preprocessing ", 50+50.0*(k+1.0)/(double)res[2]);
-      }
-
-
+      cout << "Unique grain intensity levels: "  << " min: " << minI << " max: " << maxI << endl;
       //__________________________________
-      //  Write out the pts file for this patch and matl
-      for(Level::const_patchIterator iter = level->patchesBegin(); iter != level->patchesEnd(); iter++){
-        const Patch* patch = *iter;
-        
-        unsigned int patchID = patch->getID();
-        ostringstream of_name;
-        of_name << f_name.c_str() << "_mat"<< matl <<"_pts."<<patchID;
-        
-        FILE* dest = fopen(of_name.str().c_str(), "wb");
-        if(dest==0){
-          cout << "FATAL ERROR : Failed opening points file " << of_name.str()<<endl;
-          exit(0);
+      //  create the intensity level to matl index map for the unique grains   
+      int m = 0;
+      for (int i=minI; i<=maxI; i++) {
+        intensityToMatl_map[i] = UG_matlIndex[m];
+        m ++;
+        if(m >= UG_numMatls){
+          m = 0;
+        }
+      }
+    }
+    //__________________________________
+    // Now add the mappings for the individual materials
+    // These can overwrite the unique grains mapping
+    for (int m=0; m<intMatl_Vec.size(); m++) {
+
+      intensityMapping data = intMatl_Vec[m];
+
+      for (int i=data.threshold[0]; i<=data.threshold[1]; i++) {
+        intensityToMatl_map[i] = data.matlIndex;
+      }
+    }
+
+    cout << "Intensity level to mpm matl mapping \n";
+    map<int,int>::iterator it;
+     for ( it=intensityToMatl_map.begin() ; it != intensityToMatl_map.end(); it++ ){
+      cout << " Intensity: " << it->first<< " = matl " << it->second << endl;
+    }
+
+
+    //__________________________________
+    // Parse the ups file for the grid specification
+    // and voxel size
+    GridP grid = CreateGrid(ups);
+
+    // loop over levels
+    for (int l = 0; l < grid->numLevels(); l++) {
+      LevelP level = grid->getLevel(l);
+
+      // calculate voxel size
+      Vector DX = level->dCell();
+      double dx = DX.x() / ppc[0];
+      double dy = DX.y() / ppc[1];
+      double dz = DX.z() / ppc[2];
+      fprintf(stderr, "Voxel size : %g, %g, %g\n", DX.x(), DX.y(), DX.z());
+      fprintf(stderr, "Voxel dimensions : %g, %g, %g\n", dx, dy, dz);
+
+
+      // bulletproofing
+      // must use cubic cells
+      IntVector low, high;
+      level->findCellIndexRange(low, high);
+      IntVector diff = high-low;
+      long cells = diff.x()*diff.y()*diff.z();
+
+      if(cells != level->totalCells()){
+        throw ProblemSetupException("pfs can only cubic cells", __FILE__, __LINE__);
+      }
+
+      // loop over all mpm materials
+      int matl = -1;
+      ProblemSpecP mp = ups->findBlockWithOutAttribute("MaterialProperties");
+      ProblemSpecP mpm = mp->findBlock("MPM");
+
+      for (ProblemSpecP child = mpm->findBlock("material"); child != 0;
+                        child = child->findNextBlock("material")) {
+
+        matl +=1;
+        // these points define the extremas of the grid
+        Point minP(1.e30,1.e30,1.e30),maxP(-1.e30,-1.e30,-1.e30);
+
+        int nPatches = level->numPatches();
+        vector< vector<int> > points(nPatches);
+        vector<int> numPoints(nPatches);
+
+        Point pt;
+        pixel* pb = pimg;
+
+        // first determine the number of points for each patch for this matl
+        for (int p=0; p<nPatches; p++){
+          numPoints[p] = 0;
         }
 
-        cout << " Writing file: " << of_name.str() << endl;
-        
-        // write the header
-        double x[6];
-        x[0] = minP.x(), x[1] = minP.y(), x[2] = minP.z();
-        x[3] = maxP.x(), x[4] = maxP.y(), x[5] = maxP.z();
+        const Patch* curPatch;
+        int n = 0;
 
-        if(binmode) {
-          fwrite(x, sizeof(double),6,dest);
-        } else {
-          fprintf(dest, "%g %g %g %g %g %g\n", x[0],x[1],x[2],x[3],x[4],x[5]);
+        for (int k=0; k<res[2]; k++) {
+          for (int j=0; j<res[1]; j++) {
+            for (int i=0; i<res[0]; i++, pb++, n++) {
+
+              int pixelValue = *pb;
+              bool isRightMatl      = ( matl == intensityToMatl_map[pixelValue]);
+              //bool withinThreshold  = ( (pixelValue >= L[0]) && (pixelValue <= L[1]) );
+
+              if ( isRightMatl ) {
+
+                pt = CreatePoint(n, res, dx, dy, dz);
+                curPatch = level->selectPatchForCellIndex(level->getCellIndex(pt));
+                int patchID = curPatch->getID();
+                numPoints[patchID]++;
+              }
+            }
+          }
+          fprintf(stderr, "%s : %.1f\n", "Preprocessing ", 50.0*(k+1.0)/(double)res[2]);
         }
 
-        // output individual points
-        for (int I = 0; I < numPoints[patchID]; I++) {
-          pt = CreatePoint(points[patchID][I], res, dx, dy, dz);
-          x[0] = pt.x();
-          x[1] = pt.y();
-          x[2] = pt.z();
+        // allocate storage for the patches
+        for (int p=0; p<nPatches; p++){
+          points[p].resize(numPoints[p]);
+          numPoints[p] = 0;
+        }
+
+        // put the points in the correct patches
+        // keep track of the min/max point locations
+        pb = pimg;
+
+        n = 0;
+        for (int k=0; k<res[2]; k++) {
+          for (int j=0; j<res[1]; j++) {
+            for (int i=0; i<res[0]; i++, pb++, n++) {
+
+              int pixelValue = *pb;
+              bool isRightMatl      = ( matl == intensityToMatl_map[pixelValue]);
+              //bool withinThreshold  = ( (pixelValue >= L[0]) && (pixelValue <= L[1]) );
+
+              if ( isRightMatl) {
+
+                pt = CreatePoint(n, res, dx, dy, dz);
+
+                const Patch* patch =   level->selectPatchForCellIndex(level->getCellIndex(pt));
+                unsigned int patchID = patch->getID();
+                minP = Min(pt,minP);
+                maxP = Max(pt,maxP);
+                points[patchID][ numPoints[patchID] ] = n;
+                numPoints[patchID]++;
+              }
+            }
+          }
+          fprintf(stderr, "%s : %.1f\r", "Preprocessing ", 50+50.0*(k+1.0)/(double)res[2]);
+        }
+
+
+        //__________________________________
+        //  Write out the pts file for this patch and matl
+        for(Level::const_patchIterator iter = level->patchesBegin(); iter != level->patchesEnd(); iter++){
+          const Patch* patch = *iter;
+
+          unsigned int patchID = patch->getID();
+          ostringstream of_name;
+          of_name << f_name.c_str() << "_mat"<< matl <<"_pts."<<patchID;
+
+          FILE* dest = fopen(of_name.str().c_str(), "wb");
+          if(dest==0){
+            cout << "FATAL ERROR : Failed opening points file " << of_name.str()<<endl;
+            exit(0);
+          }
+
+          cout << " Writing file: " << of_name.str() << endl;
+
+          // write the header
+          double x[6];
+          x[0] = minP.x(), x[1] = minP.y(), x[2] = minP.z();
+          x[3] = maxP.x(), x[4] = maxP.y(), x[5] = maxP.z();
 
           if(binmode) {
-            fwrite(x, sizeof(double), 3, dest);
+            fwrite(x, sizeof(double),6,dest);
           } else {
-            fprintf(dest, "%g %g %g\n", x[0], x[1], x[2]);
+            fprintf(dest, "%g %g %g %g %g %g\n", x[0],x[1],x[2],x[3],x[4],x[5]);
           }
-        }
-        fclose(dest);
-      } // loop over patches
-    } // loop over materials
-  } // loop over levels
-  
-  // delete image data
-  delete [] pimg;
+
+          // output individual points
+          for (int I = 0; I < numPoints[patchID]; I++) {
+            pt = CreatePoint(points[patchID][I], res, dx, dy, dz);
+            x[0] = pt.x();
+            x[1] = pt.y();
+            x[2] = pt.z();
+
+            if(binmode) {
+              fwrite(x, sizeof(double), 3, dest);
+            } else {
+              fprintf(dest, "%g %g %g\n", x[0], x[1], x[2]);
+            }
+          }
+          fclose(dest);
+        } // loop over patches
+      } // loop over materials
+    } // loop over levels
+
+    // delete image data
+    delete [] pimg;
+  } catch (Exception& e) {
+    cerr << "\nCaught exception: " << e.message() << '\n';
+    if(e.stackTrace())
+      cerr << "Stack trace: " << e.stackTrace() << '\n';
+  } catch(...){
+    cerr << "Caught unknown exception\n";
+  }
 }
 
 //--------------------------------------------------------------------------------------
