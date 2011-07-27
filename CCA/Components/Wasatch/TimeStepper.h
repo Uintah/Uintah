@@ -78,10 +78,10 @@ namespace Wasatch{
     Expr::ExpressionFactory* const factory_;  ///< the factory that is associated with this time stepper.
     const Uintah::VarLabel* const deltaTLabel_;  ///< label for the time step variable.
 
-    CoordHelper* coordHelper_;
+    CoordHelper* coordHelper_;   ///< provides ability to obtain coordinate values on any field type.
 
-    std::list  < TaskInterface*    > taskInterfaceList_;
-    std::vector< Uintah::VarLabel* > createdVarLabels_;
+    std::list  < TaskInterface*    > taskInterfaceList_;  ///< all of the TaskInterface objects managed here
+    std::vector< Uintah::VarLabel* > createdVarLabels_;   ///< a list of all VarLabel objects created (so we can delete them later)
 
     /**
      *  \brief used internally to obtain the appropriate vector
@@ -105,11 +105,13 @@ namespace Wasatch{
     /**
      *  \brief Construct a TimeStepper object to advance equations forward in time
      *
-     *  \param factory the ExpressionFactory that will be used to
-     *         construc the trees for any transport equations added to
-     *         this library.  The same factory should be used when
-     *         constructing the expressions in each transport
-     *         equation.
+     *  \param deltaTLabel - the VarLabel associated with the time step value
+     * 
+     *  \param factory - the ExpressionFactory that will be used to
+     *                   construct the trees for any transport
+     *                   equations added to this library.  The same
+     *                   factory should be used when constructing the
+     *                   expressions in each transport equation.
      */
     TimeStepper( const Uintah::VarLabel* deltaTLabel,
                  Expr::ExpressionFactory& factory );
@@ -135,12 +137,13 @@ namespace Wasatch{
      *  \brief schedule the tasks associated with this TimeStepper
      *
      *  \param timeID the ExpressionID for the Expression that calculates the time.
+     *  \param infoMap information about each patch including operators, etc.
      *  \param localPatches the patches that this task will be executed on
      *  \param materials the materials that this task will be executed on
      *  \param sched the scheduler
      */
     void create_tasks( const Expr::ExpressionID timeID,
-                       const PatchInfoMap&,
+                       const PatchInfoMap& infoMap,
                        const Uintah::PatchSet* const localPatches,
                        const Uintah::MaterialSet* const materials,
                        Uintah::SchedulerP& sched );

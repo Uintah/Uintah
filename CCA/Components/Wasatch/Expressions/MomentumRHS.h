@@ -7,7 +7,12 @@
 
 /**
  *  \class MomRHS
+ *  \ingroup Expressions
+ *
  *  \brief Calculates the full momentum RHS
+ *
+ *  \tparam FieldT the type of field for the momentum RHS (nominally
+ *          XVolField, YVolField, ZVolField).
  *
  *  The momentum RHS is split into two contributions:
  *   - the pressure term

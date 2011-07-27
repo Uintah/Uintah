@@ -4,7 +4,7 @@
 #include <expression/Expr_Expression.h>
 
 /**
- *  \ingroup WasatchExpressions
+ *  \ingroup Expressions
  *  \class  DiffusiveFlux
  *  \author James C. Sutherland
  *  \date	June, 2010
@@ -13,6 +13,8 @@
  *         \f$ J_i = -\Gamma \frac{\partial \phi}{\partial x_i} \f$ 
  *         where \f$i=1,2,3\f$ is the coordinate direction.
  *         This requires knowledge of a the velocity field.
+ *
+ *  \tparam GradT the type for the gradient operator.
  *
  *  Note that this requires the diffusion coefficient, \f$\Gamma\f$,
  *  to be evaluated at the same location as \f$J_i\f$ and 
@@ -116,14 +118,12 @@ public:
  *         \frac{\partial \phi}{\partial x}\f$, where \f$\Gamma\f$ is
  *         located at the same location as \f$\phi\f$.
  *
- *  \par Template Parameters
- *  <ul>
- *  <li> \b GradT The type of operator used in forming
+ *  \tparam GradT The type of operator used in forming
  *       \f$\frac{\partial \phi}{\partial x}\f$
- *  <li> \b InterpT The type of operator used in interpolating
+ *
+ *  \tparam InterpT The type of operator used in interpolating
  *       \f$\Gamma\f$ from the location of \f$\phi\f$ to the location
  *       of \f$\frac{\partial \phi}{\partial x}\f$
- *  </ul>
  */
 template< typename GradT,
           typename InterpT >

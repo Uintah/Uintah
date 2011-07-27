@@ -5,14 +5,15 @@
 #include <spatialops/structured/FVStaggeredOperatorTypes.h>
 
 /**
- *  \class Stress
- *  \author James C. Sutherland
- *  \date December, 2010
+ *  \class 	Stress
+ *  \author 	James C. Sutherland
+ *  \date 	December, 2010
+ *  \ingroup	Expressions
  *
  *  \brief Calculates a component of the stress tensor.
  *
  *  The stress tensor is given as
- *  \[ \tau_{ij} = -\mu \left( \frac{\partial u_i}{\partial x_j} + \frac{\partial u_j}{\partial x_i} \right) + \frac{2}{3} \mu \delta_{ij} \frac{\partial u_k}{\partial x_k} \]
+ *  \f[ \tau_{ij} = -\mu \left( \frac{\partial u_i}{\partial x_j} + \frac{\partial u_j}{\partial x_i} \right) + \frac{2}{3} \mu \delta_{ij} \frac{\partial u_k}{\partial x_k} \f]
  *
  *  \tparam StressT The type of field for this stress component.
  *  \tparam Vel1T   The type of field for the first velocity component.
@@ -55,7 +56,7 @@ public:
      *  \param vel1Tag the first velocity component
      *  \param vel2Tag the second velocity component
      *
-     *  \param delTag the dilatation tag. If supplied, the
+     *  \param dilTag the dilatation tag. If supplied, the
      *         dilatational stress term will be added.
      */
     Builder( const Expr::Tag viscTag,
@@ -119,7 +120,7 @@ public:
      *  \param vel1Tag the first velocity component
      *  \param vel2Tag the second velocity component
      *
-     *  \param delTag the dilatation tag. If supplied, the
+     *  \param dilTag the dilatation tag. If supplied, the
      *         dilatational stress term will be added.
      *
      *  note that in this case, the second velocity component will be

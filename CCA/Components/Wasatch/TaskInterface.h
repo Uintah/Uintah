@@ -25,6 +25,7 @@ namespace Wasatch{
 
   /**
    *  \ingroup WasatchCore
+   *  \ingroup WasatchGraph
    *  \class  TaskInterface
    *  \author James C. Sutherland
    *  \date   June, 2010
@@ -162,7 +163,17 @@ namespace Wasatch{
 
   private:
 
+    /**
+     *  \brief A vector of TreeTaskExecute pointers that hold each
+     *  Uintah::Task to be executed as part of this TaskInterface.
+     */
     typedef std::vector< TreeTaskExecute* > ExecList;
+
+    /**
+     *  The ordered list of trees to be executed as tasks.  This is
+     *  obtained by cleaving the original tree obtained by the root
+     *  expressions supplied to the TaskInterface.
+     */
     ExecList execList_;
 
     const bool builtFML_;               ///< true if we constructed a FieldManagerList internally.

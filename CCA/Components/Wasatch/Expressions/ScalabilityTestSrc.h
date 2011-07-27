@@ -8,11 +8,12 @@
 
 #include <spatialops/structured/FVStaggeredFieldTypes.h>
 #include <spatialops/structured/FVStaggeredOperatorTypes.h>
+
 /**
- *  \ingroup WasatchExpressions
- *  \class ScalabilityTestSrc
- *  \date April, 2011
- *  \author Tony Saad
+ *  \ingroup 	Expressions
+ *  \class 	ScalabilityTestSrc
+ *  \date 	April, 2011
+ *  \author 	Tony Saad
  *
  *  \brief Creates an all-to-all strongly coupled source term for use in
  *         scalability tests.

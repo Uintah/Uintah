@@ -10,7 +10,12 @@
 namespace Wasatch{
 
 /**
- *  \class SetCurrentTime
+ *  \class 	SetCurrentTime
+ *  \ingroup 	Expressions
+ *  \author 	James C. Sutherland
+ *
+ *  \brief Provides a simple expression to set the current simulation
+ *         time.  May be needed for time-varying BCs, etc.
  */
 class SetCurrentTime
  : public Expr::Expression<double>

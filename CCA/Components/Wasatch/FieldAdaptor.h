@@ -42,7 +42,7 @@ namespace Wasatch{
   /**
    *  \ingroup WasatchFields
    *  \brief obtain the memory window for a uintah field that is to be wrapped as a SpatialOps field
-   *  \param globalSize - the full size of the parent field.
+   *  \param globSize - the full size of the parent field.
    *  \param patch - the patch that the field is associated with.
    */
   template< typename FieldT >
@@ -88,24 +88,22 @@ namespace Wasatch{
    */
   template<typename FieldT> struct SelectUintahFieldType;
 
-  typedef double AtomicT;
-
 #define DECLARE_SELECT_FIELD_TYPE_STRUCT( VOLT )                        \
   template<> struct SelectUintahFieldType< VOLT >{                      \
-    typedef Uintah::CCVariable     <AtomicT>  type;                     \
-    typedef Uintah::constCCVariable<AtomicT>  const_type;               \
+    typedef Uintah::CCVariable     <double>  type;                      \
+    typedef Uintah::constCCVariable<double>  const_type;                \
   };                                                                    \
   template<> struct SelectUintahFieldType< SpatialOps::structured::FaceTypes<VOLT>::XFace >{ \
-    typedef Uintah::SFCXVariable     <AtomicT>  type;                   \
-    typedef Uintah::constSFCXVariable<AtomicT>  const_type;             \
+    typedef Uintah::SFCXVariable     <double>  type;                    \
+    typedef Uintah::constSFCXVariable<double>  const_type;              \
   };                                                                    \
   template<> struct SelectUintahFieldType< SpatialOps::structured::FaceTypes<VOLT>::YFace >{ \
-    typedef Uintah::SFCYVariable     <AtomicT>  type;                   \
-    typedef Uintah::constSFCYVariable<AtomicT>  const_type;             \
+    typedef Uintah::SFCYVariable     <double>  type;                    \
+    typedef Uintah::constSFCYVariable<double>  const_type;              \
   };                                                                    \
   template<> struct SelectUintahFieldType< SpatialOps::structured::FaceTypes<VOLT>::ZFace >{ \
-    typedef Uintah::SFCZVariable     <AtomicT>  type;                   \
-    typedef Uintah::constSFCZVariable<AtomicT>  const_type;             \
+    typedef Uintah::SFCZVariable     <double>  type;                    \
+    typedef Uintah::constSFCZVariable<double>  const_type;              \
   };
   
   DECLARE_SELECT_FIELD_TYPE_STRUCT( SpatialOps::structured::SVolField );

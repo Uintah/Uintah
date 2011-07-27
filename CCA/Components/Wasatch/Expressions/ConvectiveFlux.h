@@ -14,7 +14,7 @@
 #include <CCA/Components/Wasatch/ConvectiveInterpolationMethods.h>
 
 /**
- *  \ingroup WasatchExpressions
+ *  \ingroup Expressions
  *  \class   ConvectiveFlux
  *  \author  Tony Saad
  *  \date    July, 2010
@@ -28,24 +28,22 @@
  *  Here, we are constructing the convective flux J_i, therefore, it
  *  is convenient to set \f$ \rho \varphi \equiv \phi\f$
  *
- *  \par Template Parameters
- *  <ul>
- *  <li> \b PhiInterpT The type of operator used in forming 
- *       \f$\frac{\partial \phi}{\partial x}\f$
- *  <li> \b VelInterpT The type of operator used in interpolating the
- *       velocity from volume to face fields
- *  </ul>
+ *  \tparam PhiInterpT The type of operator used in forming
+ *          \f$\frac{\partial \phi}{\partial x}\f$
+ *
+ *  \tparam VelInterpT The type of operator used in interpolating the
+ *          velocity from volume to face fields
  */
 template< typename PhiInterpT, typename VelInterpT > // scalar interpolant and velocity interpolant
 class ConvectiveFlux
   : public Expr::Expression<typename PhiInterpT::DestFieldType>
 {  
   // PhiInterpT: an interpolant from staggered or non-staggered volume field to staggered or non-staggered face field
-  typedef typename PhiInterpT::SrcFieldType  PhiVolT; // source field is a scalar volume
-  typedef typename PhiInterpT::DestFieldType PhiFaceT; // destination field is scalar face
+  typedef typename PhiInterpT::SrcFieldType  PhiVolT;  ///< source field is a scalar volume
+  typedef typename PhiInterpT::DestFieldType PhiFaceT; ///< destination field is scalar face
   
   // VelInterpT: an interpolant from Staggered volume field to scalar face field
-  typedef typename VelInterpT::SrcFieldType  VelVolT; // source field is always a staggered volume field.
+  typedef typename VelInterpT::SrcFieldType  VelVolT;  ///< source field is always a staggered volume field.
   typedef typename VelInterpT::DestFieldType VelFaceT;
   // the destination field of VelInterpT should be a PhiFaceT
 
@@ -127,10 +125,10 @@ template< typename PhiInterpT, typename VelInterpT > // scalar interpolant and v
 class ConvectiveFluxLimiter
   : public Expr::Expression<typename PhiInterpT::DestFieldType>
 {  
-  typedef typename PhiInterpT::SrcFieldType  PhiVolT; // source field is a scalar volume
-  typedef typename PhiInterpT::DestFieldType PhiFaceT; // destination field is scalar face
+  typedef typename PhiInterpT::SrcFieldType  PhiVolT;  ///< source field is a scalar volume
+  typedef typename PhiInterpT::DestFieldType PhiFaceT; ///< destination field is scalar face
   
-  typedef typename VelInterpT::SrcFieldType  VelVolT; // source field is always a staggered volume field.
+  typedef typename VelInterpT::SrcFieldType  VelVolT;  ///< source field is always a staggered volume field.
   typedef typename VelInterpT::DestFieldType VelFaceT;
 
   const Expr::Tag phiTag_, velTag_;
@@ -163,6 +161,8 @@ public:
      *
      *  \param velTag the Expr::Tag for the velocity field.  The
      *         velocity field is a face field.
+     *
+     *  \param limiterType the type of flux limiter to use.
      */
     Builder( const Expr::Tag phiTag,
              const Expr::Tag velTag,

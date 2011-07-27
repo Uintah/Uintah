@@ -17,7 +17,7 @@
 namespace Wasatch{
 
   /**
-   *  \obtain the tag for the pressure
+   *  \brief obtain the tag for the pressure
    */
   Expr::Tag pressure_tag();
 

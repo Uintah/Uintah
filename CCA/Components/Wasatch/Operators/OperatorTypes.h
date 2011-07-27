@@ -49,12 +49,24 @@ namespace Wasatch{
    *    - \b InterpC2FYUpwind - upwind or limited interpolants in y-dir
    *    - \b InterpC2FZUpwind - upwind or limited interpolants in z-dir
    *
+   *    - \b InterpC2FXLimiter - upwind or limited interpolants in x-dir
+   *    - \b InterpC2FYLimiter - upwind or limited interpolants in y-dir
+   *    - \b InterpC2FZLimiter - upwind or limited interpolants in z-dir
+   *
    *  Example:
    *  \code
    *    typedef OpTypes< SVolField >  VolOps;
    *    typedef VolOps::GradX         GradX;
    *    typedef VolOps::DivX          DivX;
    *  \endcode
+   *
+   *  Operator types may also be determined by the helpful struct OperatorTypeBuilder.
+   *  \code
+   *    typedef OperatorTypeBuilder< Interpolant, SrcFieldT, DestFieldT >::type  InterpOperator;
+   *    typedef OperatorTypeBuilder< Interpolant, XVolField, YSurfXField >::type InterpT;
+   *  \endcode
+   *  Note that if you have trouble compiling after defining one of
+   *  these operator types, it may not be supported.
    */
   template< typename CellT > struct OpTypes
     : public SpatialOps::structured::BasicOpTypes<CellT>
@@ -66,7 +78,6 @@ namespace Wasatch{
     typedef FluxLimiterInterpolant< CellT, typename FaceTypes<CellT>::XFace >  InterpC2FXLimiter;
     typedef FluxLimiterInterpolant< CellT, typename FaceTypes<CellT>::YFace >  InterpC2FYLimiter;
     typedef FluxLimiterInterpolant< CellT, typename FaceTypes<CellT>::ZFace >  InterpC2FZLimiter;
-    
   };
 }
 

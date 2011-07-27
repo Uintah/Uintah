@@ -65,7 +65,7 @@ namespace Wasatch{
    *  \brief Build the momentum equation specified by "params"
    *
    *  \param params The XML block from the input file specifying the
-   *         momentum equation. This will be <MomentumEquations>.
+   *         momentum equation. This will be \verbatim <MomentumEquations>\endverbatim.
    *
    *  \param gc The GraphCategories.
    *
@@ -79,7 +79,7 @@ namespace Wasatch{
    *  \brief Build the momentum equation specified by "params"
    *
    *  \param params The XML block from the input file specifying the
-   *         momentum equation. This will be <MomentumEquations>.
+   *         momentum equation. This will be \verbatim <MomentumEquations>\endverbatim.
    *
    *  \param gc The GraphCategories.
    *
@@ -87,8 +87,8 @@ namespace Wasatch{
    *          plug this transport equation into a TimeStepper.
    */  
   std::vector<EqnTimestepAdaptorBase*> parse_momentum_equations( Uintah::ProblemSpecP params,
-                                                   GraphCategories& gc,
-                                                   Uintah::SolverInterface& linSolver);
+                                                                 GraphCategories& gc,
+                                                                 Uintah::SolverInterface& linSolver );
 
   /** @} */
 

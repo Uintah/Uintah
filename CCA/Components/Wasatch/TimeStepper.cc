@@ -29,18 +29,13 @@ namespace Wasatch{
 
   template<typename FieldT>
   void
-  set_field_requirements( Uintah::Task* const task,
-                          const std::vector< TimeStepper::FieldInfo<FieldT> >& fields,
-                          const Uintah::PatchSubset* const pss,
-                          const Uintah::MaterialSubset* const mss )
+  set_soln_field_requirements( Uintah::Task* const task,
+                               const std::vector< TimeStepper::FieldInfo<FieldT> >& fields,
+                               const Uintah::PatchSubset* const pss,
+                               const Uintah::MaterialSubset* const mss )
   {
     typedef typename std::vector< TimeStepper::FieldInfo<FieldT> > Fields;
     for( typename Fields::const_iterator ifld = fields.begin(); ifld!=fields.end(); ++ifld ){
-//       proc0cout << "timestepper COMPUTES '" << ifld->varLabel->getName() << "' in NEW DW" << endl
-//                 << "            REQUIRES '" << ifld->varLabel->getName() << "' in OLD DW" << endl
-//                 << "            REQUIRES '" << ifld->rhsLabel->getName() << "' in NEW DW" << endl
-//                 << "            patches: " << *pss
-//                 << endl;
       task->computes( ifld->varLabel );
       // jcs for some reason this one does not work:
       //       task->computes( ifld->varLabel,
@@ -184,10 +179,10 @@ namespace Wasatch{
       Uintah::Task* updateTask = scinew Uintah::Task( "update solution vars", this, &TimeStepper::update_variables );
       
       const Uintah::PatchSubset* const pss = patches->getUnion();
-      set_field_requirements<SO::SVolField>( updateTask, scalarFields_, pss, mss );
-      set_field_requirements<SO::XVolField>( updateTask, xVolFields_,   pss, mss );
-      set_field_requirements<SO::YVolField>( updateTask, yVolFields_,   pss, mss );
-      set_field_requirements<SO::ZVolField>( updateTask, zVolFields_,   pss, mss );
+      set_soln_field_requirements<SO::SVolField>( updateTask, scalarFields_, pss, mss );
+      set_soln_field_requirements<SO::XVolField>( updateTask, xVolFields_,   pss, mss );
+      set_soln_field_requirements<SO::YVolField>( updateTask, yVolFields_,   pss, mss );
+      set_soln_field_requirements<SO::ZVolField>( updateTask, zVolFields_,   pss, mss );
 
       // we require the timestep value
       updateTask->requires( Uintah::Task::OldDW, deltaTLabel_ );

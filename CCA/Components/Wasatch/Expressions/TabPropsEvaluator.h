@@ -8,13 +8,16 @@
 #include <expression/Expr_Expression.h>
 
 /**
- *  \ingroup WasatchExpressions
- *  \class  TabPropsEvaluator
- *  \author James C. Sutherland
- *  \date   June, 2010
+ *  \ingroup	Expressions
+ *  \class  	TabPropsEvaluator
+ *  \author 	James C. Sutherland
+ *  \date   	June, 2010
  *
  *  \brief Evaluates one or more fields using TabProps, an external
  *         library for tabular property evaluation.
+ *
+ *  \tparam FieldT the type of field for both the independent and
+ *          dependent variables.
  */
 template< typename FieldT >
 class TabPropsEvaluator

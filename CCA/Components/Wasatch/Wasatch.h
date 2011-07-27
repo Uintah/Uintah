@@ -88,13 +88,16 @@
  
     - Task creation.  Uintah tasks are typically created by wrapping
       Expression tree objects using the Wasatch::TaskInterface class.
+      If you find yourself writing a Uintah::Task directly in Wasatch,
+      you are probably doing something wrong.
 
-  \defgroup WasatchExpressions	Expressions in Wasatch
+  \defgroup Expressions		Expressions in Wasatch
   \defgroup WasatchFields	Fields and field tools
   \defgroup WasatchOperators	Operators
   \defgroup WasatchCore		Wasatch Core
   \defgroup WasatchGraph	Wasatch Graph
   \defgroup WasatchParser	Wasatch Parsers
+
 */
 
 #ifndef Packages_Uintah_CCA_Components_Examples_Wasatch_h
@@ -137,6 +140,11 @@ namespace Wasatch{
    * \todo Create a tree on the initialization that duplicates the
    *       "advance solution" tree so that we have everything required
    *       for output at the initial time step.
+   *
+   * \todo Allow other "root" tasks to be registerd that are not
+   *       necessarily associated with the RHS of a governing
+   *       equation.
+   *
    */
   class UINTAHSHARE Wasatch :
     public Uintah::UintahParallelComponent,
