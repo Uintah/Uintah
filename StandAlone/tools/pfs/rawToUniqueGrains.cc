@@ -40,6 +40,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Parallel/Parallel.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Malloc/Allocator.h>
+#include <Core/Util/Endian.h>
 #include <limits.h>
 #include <cstdio>
 #include <iostream>
@@ -134,10 +135,8 @@ Assumptions:
 
 #if 0
   typedef unsigned char pixel;       // 8bit images
-  int scale = 1;
 #else
   typedef unsigned short pixel;      // 16bit images
-  int scale = 256;
 #endif
 
 
@@ -146,7 +145,7 @@ void usage( char *prog_name );
 
 GridP CreateGrid(ProblemSpecP ups);
 
-bool ReadImage(const char* szfile, unsigned int nPixels, pixel* pix);
+bool ReadImage(const char* szfile, unsigned int nPixels, pixel* pix, const string endianness);
 
 inline Point CreatePoint(unsigned int n, vector<int>& res, double dx, double dy, double dz)
 {
@@ -161,6 +160,7 @@ struct intensityMapping{
   vector<int> threshold;
   unsigned int matlIndex;
 };
+enum endian{little, big};
 
 //______________________________________________________________________
 //
@@ -170,13 +170,27 @@ int main(int argc, char *argv[])
   Uintah::Parallel::initializeManager( argc, argv );
 
   bool binmode = false;
+  string endianness= "little";
 
   //__________________________________
   // parse the command arguments
   for (int i=1; i<argc; i++){
     string s=argv[i];
-    if (s == "-b" || s == "-B") {
+    if (s == "-b") {
       binmode = true;
+    }
+    else if (s == "-B" || s == "-bigEndian") {
+      endianness = "big";
+    }
+    else if (s == "-l" || s == "-littleEndian") {
+      endianness = "little";
+    }
+    else if (s == "-h" || s == "-help") {
+      usage( argv[0] );
+    }
+    else if ( s[0] == '-'){
+      cout << "\nERROR invalid input (" << s << ")" << endl;
+      usage( argv[0] );
     }
   }
 
@@ -185,7 +199,6 @@ int main(int argc, char *argv[])
   if( argc < 2 || argc > 11 ){ 
     usage( argv[0] );
   }
-
 
   //__________________________________
   //  Read in user specificatons
@@ -262,15 +275,13 @@ int main(int argc, char *argv[])
   //__________________________________
   //  Read the image file
   unsigned int nPixels = res[0]*res[1]*res[2];
-  cout << "Reading " << nPixels << " nPixels\n";
   
   pixel* pimg = scinew pixel[nPixels];
 
-  if (ReadImage(imgname.c_str(), nPixels, pimg) == false) {
+  if (ReadImage(imgname.c_str(), nPixels, pimg, endianness) == false) {
     cout << "FATAL ERROR : Failed reading image data" << endl;
     exit(0);
   }
-  cout << "Done reading " << nPixels << " pixels\n";
 
   //__________________________________
   //  find the number of intensity levels within the unique grains threshold
@@ -283,8 +294,7 @@ int main(int argc, char *argv[])
     for (int k=0; k<=res[2]; k++) {
       for (int j=0; j<=res[1]; j++) {
         for (int i=0; i<=res[0]; i++, pb++) {
-
-          int pixelValue = *pb/scale;
+          int pixelValue = *pb;
           if ((pixelValue >= UG_threshold[0]) && (pixelValue <= UG_threshold[1])) {
             maxI = max(maxI, pixelValue);
             minI = min(minI, pixelValue);
@@ -293,6 +303,11 @@ int main(int argc, char *argv[])
       }
     }
 
+    if( maxI == 0 && minI == INT_MAX ){
+      ostringstream warn;
+      warn << "No unique grains found in the threshold range "<< UG_threshold[0] << " and " << UG_threshold[1] << endl;
+      throw ProblemSetupException("This exception doesn't work" , __FILE__, __LINE__);
+    }
     cout << "Unique grain intensity levels: "  << " min: " << minI << " max: " << maxI << endl;
     //__________________________________
     //  create the intensity level to matl index map for the unique grains   
@@ -384,7 +399,7 @@ int main(int argc, char *argv[])
         for (int j=0; j<res[1]; j++) {
           for (int i=0; i<res[0]; i++, pb++, n++) {
 
-            int pixelValue = *pb/scale;
+            int pixelValue = *pb;
             bool isRightMatl      = ( matl == intensityToMatl_map[pixelValue]);
             //bool withinThreshold  = ( (pixelValue >= L[0]) && (pixelValue <= L[1]) );
 
@@ -415,7 +430,7 @@ int main(int argc, char *argv[])
         for (int j=0; j<res[1]; j++) {
           for (int i=0; i<res[0]; i++, pb++, n++) {
 
-            int pixelValue = *pb/scale;
+            int pixelValue = *pb;
             bool isRightMatl      = ( matl == intensityToMatl_map[pixelValue]);
             //bool withinThreshold  = ( (pixelValue >= L[0]) && (pixelValue <= L[1]) );
 
@@ -521,24 +536,49 @@ GridP CreateGrid(ProblemSpecP ups)
 //
 void usage( char *prog_name )
 {
-  cout << "Usage: " << prog_name << " [-b] [-B] <ups file> \n";
-  cout << "-b,B: binary output \n";
+  cout << "Usage: " << prog_name << " [options]  <ups file> \n";
+  cout << "options:" << endl;
+  cout << "-b, -binary:            binary output \n";
+  cout << "-l, -littleEndian:      input file contains little endian bytes  [default]\n";
+  cout << "-B, -bigEndian:         input file contains big endian bytes\n";
   exit( 1 );
 }
 
 //-----------------------------------------------------------------------------------------------
-// function ReadImage : Reads the image data from file and stores it in a buffer
+// function ReadImage : Reads the image data from the file and stores it in a buffer
 //
-bool ReadImage(const char* szfile, unsigned int nPixels, pixel* pb)
+bool ReadImage(const char* szfile, unsigned int nPixels, pixel* pb, const string endianness)
 {
   FILE* fp = fopen(szfile, "rb");
   if (fp == 0){ 
     return false;
   }
-  
+   
   unsigned int nread = fread(pb, sizeof(pixel), nPixels, fp);
   fclose(fp);
+  cout <<"Reading: " << szfile << ", Bytes per pixel " << sizeof(pixel) << ", number of pixels read " << nread << endl;
+  
+  //__________________________________
+  //  Display what the max intensity
+  // is using big & little endianness bytes
+  pixel minI = 0;
+  pixel maxI = 0;
 
-  cout << szfile << " Bytes per pixel " << sizeof(pixel) << " nPixels " << nPixels << " Nread " << nread << endl;
+  // if the user specifies bigEndian then return
+  if( endianness == "big" ){
+    for(unsigned int i = 0; i< nread;  i++ ){
+      swapbytes(pb[i]);
+      maxI = max(pb[i], maxI);
+      minI = min(pb[i], minI);
+    }
+    cout << "Big endian intensity: max (" << maxI << "), min(" << minI << " )"<< endl;
+  } 
+  else{
+    for(unsigned int i = 0; i< nread;  i++ ){
+      maxI = max(pb[i], maxI);
+      minI = min(pb[i], minI);
+    }
+    cout << "Little endian intensity: max (" << maxI << "), min(" << minI << " )"<< endl;
+  }
   return (nread == nPixels);  
 }
