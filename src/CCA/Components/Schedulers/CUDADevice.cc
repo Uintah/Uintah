@@ -61,7 +61,7 @@ CUDADevice::CUDADevice(int dev)
 
 /// @brief Copy Constructor
 /// @param tocopy the CUDA device to copy
-CUDADevice::CUDADevice(CUDADevice &right)
+CUDADevice::CUDADevice(const CUDADevice &right)
 {
     devicePointer = right.devicePointer;
     devprop       = right.devprop;

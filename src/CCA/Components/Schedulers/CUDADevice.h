@@ -94,7 +94,7 @@ namespace Uintah {
         
         /// @brief Copy Constructor
         /// @param tocopy the CUDA device to copy
-        CUDADevice(CUDADevice &);
+        CUDADevice(const CUDADevice &);
         
         /// @brief the destructor
         ~CUDADevice();
@@ -182,6 +182,12 @@ namespace Uintah {
         //////////////////////////////////////////////
         // Functions Regarding Total Executing Kernels
         //////////////////////////////////////////////
+        /// @brief indicate that the device has one more kernel queued
+        int runningKernels()
+        {
+            return kernelsRunning;
+        }
+
         /// @brief indicate that the device has one more kernel queued
         void incrementRunningKernels()
         {

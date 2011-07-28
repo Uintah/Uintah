@@ -74,8 +74,9 @@ ofstream wout;
 
 DynamicMPIScheduler::DynamicMPIScheduler( const ProcessorGroup * myworld,
 			          Output         * oport,
-			          DynamicMPIScheduler   * parentScheduler) :
-  MPIScheduler( myworld, oport, parentScheduler )
+			          DynamicMPIScheduler   * parentScheduler,
+                                  bool withGPU) :
+  MPIScheduler( myworld, oport, parentScheduler, withGPU )
 {
 
 }

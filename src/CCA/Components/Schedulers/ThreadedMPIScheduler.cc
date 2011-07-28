@@ -95,8 +95,9 @@ printTask( ostream& out, DetailedTask* task )
 
 ThreadedMPIScheduler::ThreadedMPIScheduler( const ProcessorGroup * myworld,
 			          Output         * oport,
-			          ThreadedMPIScheduler   * parentScheduler) :
-  MPIScheduler( myworld, oport, parentScheduler ), 
+			          ThreadedMPIScheduler   * parentScheduler,
+                                  bool withGPU) :
+  MPIScheduler( myworld, oport, parentScheduler, withGPU ), 
   d_nextsignal("next condition"), d_nextmutex("next mutex")
 {
 
