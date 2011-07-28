@@ -55,6 +55,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/Variables/ParticleVariable.h>
 #include <Core/Grid/Variables/SoleVariable.h>
 #include <Core/Grid/Variables/VarTypes.h>
+#include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 
