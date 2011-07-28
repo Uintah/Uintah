@@ -32,6 +32,11 @@ DEALINGS IN THE SOFTWARE.
 #define UINTAH_HOMEBREW_DetailedTasks_H
 
 #include <CCA/Components/Schedulers/OnDemandDataWarehouseP.h>
+#include <sci_defs/cuda_defs.h>
+#ifdef HAVE_CUDA
+#include <Core/Grid/CUDATask.h>
+#include <CCA/Components/Schedulers/CUDADevice.h>
+#endif
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Patch.h>
@@ -198,6 +203,11 @@ namespace Uintah {
     ProfileType getProfileType() {return d_profileType;}
     void doit(const ProcessorGroup* pg, vector<OnDemandDataWarehouseP>& oddws,
 	      vector<DataWarehouseP>& dws);
+
+#ifdef HAVE_CUDA
+    void doit(const ProcessorGroup* pg, vector<OnDemandDataWarehouseP>& oddws,
+	      vector<DataWarehouseP>& dws, int devid, CUDADevice *dev);
+#endif
     // Called after doit and mpi data sent (packed in buffers) finishes.
     // Handles internal dependencies and scrubbing.
     // Called after doit finishes.

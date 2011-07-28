@@ -378,7 +378,7 @@ main( int argc, char *argv[], char *env[] )
       restartRemoveOldDir = true;
 #ifdef HAVE_CUDA
     } else if(arg == "-gpu") {
-        withCUDA = true;
+        withGPU = true;
 #endif
     } else if(arg == "-t") {
       if (i < argc-1)
@@ -672,7 +672,7 @@ main( int argc, char *argv[], char *env[] )
     
     //__________________________________
     // Scheduler
-    SchedulerCommon* sched = SchedulerFactory::create(ups, world, output,with_gpu);
+    SchedulerCommon* sched = SchedulerFactory::create(ups, world, output,withGPU);
     sched->attachPort("load balancer", lbc);
     ctl->attachPort("scheduler", sched);
     lbc->attachPort("scheduler", sched);

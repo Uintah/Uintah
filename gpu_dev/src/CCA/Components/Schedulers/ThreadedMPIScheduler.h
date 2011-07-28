@@ -77,7 +77,7 @@ WARNING
 ****************************************/
   class ThreadedMPIScheduler : public MPIScheduler  {
   public:
-    ThreadedMPIScheduler(const ProcessorGroup* myworld, Output* oport, ThreadedMPIScheduler* parentScheduler = 0);
+    ThreadedMPIScheduler(const ProcessorGroup* myworld, Output* oport, ThreadedMPIScheduler* parentScheduler = 0, bool withGPU = 0);
      ~ThreadedMPIScheduler();
     
     virtual void problemSetup(const ProblemSpecP& prob_spec,

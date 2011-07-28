@@ -83,6 +83,7 @@ WARNING
 ****************************************/
 
   class UINTAHSHARE Task {
+  protected:
     class UINTAHSHARE ActionBase {
     public:
       virtual ~ActionBase();
@@ -92,7 +93,7 @@ WARNING
                         DataWarehouse* fromDW,
                         DataWarehouse* toDW) = 0;
     };
-    
+  private:
     template<class T>
     class Action : public ActionBase {
       
@@ -434,7 +435,7 @@ WARNING
     
     void initialize();
     
-    ~Task();
+    virtual ~Task();
     
     void hasSubScheduler(bool state = true);
     bool inline getHasSubScheduler() const { return d_hasSubScheduler; }
@@ -567,7 +568,7 @@ WARNING
     
     //////////
     // Tells the task to actually execute the function assigned to it.
-    void doit(const ProcessorGroup* pc, const PatchSubset*,
+    virtual void doit(const ProcessorGroup* pc, const PatchSubset*,
               const MaterialSubset*, vector<DataWarehouseP>& dws);
 
     inline const char* getName() const {

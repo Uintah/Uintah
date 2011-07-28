@@ -75,7 +75,7 @@ WARNING
 
   class SingleProcessorScheduler : public SchedulerCommon {
   public:
-    SingleProcessorScheduler(const ProcessorGroup* myworld, Output* oport, SingleProcessorScheduler* parent = NULL);
+    SingleProcessorScheduler(const ProcessorGroup* myworld, Output* oport, SingleProcessorScheduler* parent = NULL, bool withGPU = 0);
     virtual ~SingleProcessorScheduler();
 
     //////////

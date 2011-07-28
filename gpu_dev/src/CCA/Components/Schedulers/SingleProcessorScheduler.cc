@@ -42,6 +42,9 @@ DEALINGS IN THE SOFTWARE.
 #ifdef USE_PERFEX_COUNTERS
 #include "counters.h"
 #endif
+#ifdef HAVE_CUDA
+#include <Core/Grid/CUDATask.h>
+#endif
 
 using namespace Uintah;
 using namespace std;
@@ -53,8 +56,9 @@ extern DebugStream taskLevel_dbg;
 
 SingleProcessorScheduler::SingleProcessorScheduler(const ProcessorGroup* myworld,
     	    	    	    	    	    	   Output* oport, 
-						   SingleProcessorScheduler* parent)
-   : SchedulerCommon(myworld, oport)
+						   SingleProcessorScheduler* parent,
+                                                   bool withGPU)
+   : SchedulerCommon(myworld, oport, withGPU)
 {
   d_generation = 0;
   m_parent = parent;
@@ -150,11 +154,11 @@ SingleProcessorScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
     if(withCUDA)
     {
         // if it is a cuda task, execute it as such
-        if(task->getType() == Task::TaskType::GPUCUDATask)
+        if(task->getTask()->getType() == Task::GPUCUDATask)
         {    
             // find the least occupied device
             int leastOccupied = 999999;
-            for(int i = 0; i < d_cudaDevices[i]; i++)
+            for(unsigned int i = 0; i < d_cudaDevices.size(); i++)
             {
                 // We probably want a lock here on the multithreaded schedulers
                 if(d_cudaDevices[i].runningKernels() < leastOccupied)
@@ -163,7 +167,7 @@ SingleProcessorScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
                     deviceToUse = i;
                 }
             }
-            dynamic_cast<CUDATask::CUDAActionBase *>(task)->doit(d_myworld, dws, plain_old_dws,d_cudaDevices[deviceToUse].getDevicePtr(),&d_cudaDevices[deviceToUse]);
+            task->doit(d_myworld, dws, plain_old_dws, d_cudaDevices[deviceToUse].getDevicePtr(),&d_cudaDevices[deviceToUse]);
         }
         else // just do the normal doit
         {
@@ -178,9 +182,9 @@ SingleProcessorScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
 
     if(withCUDA)
     {
-        if(task->getType() == Task::TaskType::GPUCUDATask)
+        if(task->getTask()->getType() == Task::GPUCUDATask)
         {
-            d_cudaDevices[deviceToUse].decrementKernelsRunning();
+            d_cudaDevices[deviceToUse].decrementRunningKernels();
         }
     }
       
