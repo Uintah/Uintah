@@ -50,15 +50,12 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Malloc/Allocator.h>
 
 #include <sci_defs/mpi_defs.h> // For MPIPP_H on SGI
+#include <sci_defs/papi_defs.h> // for PAPI flop counters
 
 #include   <sstream>
 #include   <iomanip>
 #include   <map>
 #include   <cstring>
-
-#ifdef USE_PERFEX_COUNTERS
-#  include <CCA/Components/Schedulers/counters.h>
-#endif
 
 // Pack data into a buffer before sending -- testing to see if this
 // works better and avoids certain problems possible when you allow
@@ -207,18 +204,19 @@ MPIScheduler::initiateTask( DetailedTask          * task,
   MALLOC_TRACE_TAG_SCOPE("MPIScheduler::initiateTask");
   TAU_PROFILE("MPIScheduler::initiateTask()", " ", TAU_USER); 
 
-#ifdef USE_PERFEX_COUNTERS
-  long long dummy, recv_flops;
-  start_counters(0, 19);
+#ifdef USE_PAPI_COUNTERS
+  int event_set[1] = {PAPI_FP_OPS};
+  PAPI_start_counters(event_set, 1);
 #endif  
-  postMPIRecvs( task, only_old_recvs, abort_point, iteration);
-  if(only_old_recvs)
+  postMPIRecvs(task, only_old_recvs, abort_point, iteration);
+  if(only_old_recvs) {
     return;
-#ifdef USE_PERFEX_COUNTERS
-  read_counters(0, &dummy, 19, &recv_flops);
-  mpi_info_.totalcommflops += recv_flops;
+  }
+#ifdef USE_PAPI_COUNTERS
+  long long recv_flops[1];
+  PAPI_stop_counters(recv_flops, 1);
+  mpi_info_.totalcommflops += recv_flops[0];
 #endif
-
 
 } // end initiateTask()
 
@@ -230,18 +228,22 @@ MPIScheduler::initiateReduction( DetailedTask          * task )
     if(reductionout.active() && d_myworld->myrank()==0)
       reductionout << "Running Reduction Task: " << task->getName() << endl;
 
-#ifdef USE_PERFEX_COUNTERS
-    start_counters(0, 19);
+#ifdef USE_PAPI_COUNTERS
+    int event_set[1] = {PAPI_FP_OPS};
+    PAPI_start_counters(event_set, 1);
 #endif
+
     double reducestart = Time::currentSeconds();
 
     runReductionTask(task);
 
     double reduceend = Time::currentSeconds();
     long long flop_count=0;
-#ifdef USE_PERFEX_COUNTERS
-    long long dummy;
-    read_counters(0, &dummy, 19, &flop_count);
+
+#ifdef USE_PAPI_COUNTERS
+    long long reduce_flops[1];
+    PAPI_stop_counters(reduce_flops, 1);
+    flop_count += reduce_flops[0];
 #endif
     emitNode(task, reducestart, reduceend - reducestart, 0, 0, flop_count);
     mpi_info_.totalreduce += reduceend-reducestart;
@@ -260,14 +262,12 @@ MPIScheduler::runTask( DetailedTask         * task, int iteration)
     waittimes[task->getTask()->getName()]+=CurrentWaitTime;
     CurrentWaitTime=0;
   }
-#ifdef USE_PERFEX_COUNTERS
-  long long dummy, exec_flops, send_flops;
-#endif
 
   double taskstart = Time::currentSeconds();
   
-#ifdef USE_PERFEX_COUNTERS
-  start_counters(0, 19);
+#ifdef USE_PAPI_COUNTERS
+  int event_set[1] = {PAPI_FP_OPS};
+  PAPI_start_counters(event_set, 1);
 #endif
 
   if (trackingVarsPrintLocation_ & SchedulerCommon::PRINT_BEFORE_EXEC) {
@@ -287,10 +287,11 @@ MPIScheduler::runTask( DetailedTask         * task, int iteration)
     printTrackedVars(task, SchedulerCommon::PRINT_AFTER_EXEC);
   }
 
-#ifdef USE_PERFEX_COUNTERS
-  read_counters(0, &dummy, 19, &exec_flops);
-  mpi_info_.totalexecflops += exec_flops;
-  start_counters(0, 19);
+#ifdef USE_PAPI_COUNTERS
+  long long exec_flops[1];
+  PAPI_stop_counters(exec_flops, 1);
+  mpi_info_.totalexecflops += exec_flops[0];
+  PAPI_start_counters(event_set, 1);
 #endif
   
   double dtask = Time::currentSeconds()-taskstart;
@@ -338,11 +339,10 @@ MPIScheduler::runTask( DetailedTask         * task, int iteration)
     parentScheduler->mpi_info_.totalreduce+=mpi_info_.totalreduce;
   }
 
-
-#ifdef USE_PERFEX_COUNTERS
-  long long send_flops;
-  read_counters(0, &dummy, 19, &send_flops);
-  mpi_info_.totalcommflops += send_flops;
+#ifdef USE_PAPI_COUNTERS
+  long long send_flops[1];
+  PAPI_stop_counters(send_flops, 1);
+  mpi_info_.totalcommflops += send_flops[0];
 #endif
   emitNode(task, taskstart, dtask, 0, 0, 0);
   

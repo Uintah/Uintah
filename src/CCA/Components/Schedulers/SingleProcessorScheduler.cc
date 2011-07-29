@@ -39,9 +39,8 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/FancyAssert.h>
 #include <Core/Malloc/Allocator.h>
-#ifdef USE_PERFEX_COUNTERS
-#include "counters.h"
-#endif
+
+#include <sci_defs/papi_defs.h> // for PAPI flop counters
 
 using namespace Uintah;
 using namespace std;
@@ -133,8 +132,9 @@ SingleProcessorScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
   dts->initializeScrubs(dws, dwmap);
   
   for(int i=0;i<ntasks;i++){
-#ifdef USE_PERFEX_COUNTERS
-    start_counters(0, 19);  
+#ifdef USE_PAPI_COUNTERS
+	int event_set[1] = {PAPI_FP_OPS};
+	PAPI_start_counters(event_set, 1);
 #endif    
     double start = Time::currentSeconds();
     DetailedTask* task = dts->getTask( i );
@@ -157,9 +157,10 @@ SingleProcessorScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
     
     double delT = Time::currentSeconds()-start;
     long long flop_count = 0;
-#ifdef USE_PERFEX_COUNTERS
-    long long dummy;
-    read_counters(0, &dummy, 19, &flop_count);
+#ifdef USE_PAPI_COUNTERS
+    long long execute_flops[1];
+    PAPI_stop_counters(execute_flops, 1);
+    flop_count += execute_flops[0];
 #endif
     if(dws[dws.size()-1] && dws[dws.size()-1]->timestepAborted()){
       dbg << "Aborting timestep after task: " << *task->getTask() << '\n';
