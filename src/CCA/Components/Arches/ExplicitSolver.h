@@ -456,7 +456,6 @@ private:
 
   bool d_carbon_balance_es;
   bool d_sulfur_balance_es;
-  bool d_turbinlet;
   int d_numSourceBoundaries;
 
   //RMCRT Stuff

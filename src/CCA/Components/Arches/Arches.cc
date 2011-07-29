@@ -737,6 +737,7 @@ Arches::scheduleInitialize(const LevelP& level,
     d_boundaryCondition->sched_computeBCArea__NEW( sched, level, patches, matls ); 
     d_boundaryCondition->sched_setupBCInletVelocities__NEW( sched, patches, matls ); 
     d_boundaryCondition->sched_setInitProfile__NEW( sched, patches, matls ); 
+    d_boundaryCondition->sched_setPrefill__NEW( sched, patches, matls ); 
   }
 
   sched_getCCVelocities(level, sched);

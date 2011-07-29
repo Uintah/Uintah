@@ -149,8 +149,6 @@ ExplicitSolver::problemSetup(const ProblemSpecP& params)
       d_probePoints.push_back(prbPoint);
     }
   }
-  d_turbinlet = d_boundaryCondition->getturbinlet();
-
   d_pressSolver = scinew PressureSolver(d_lab, d_MAlab,
                                           d_boundaryCondition,
                                           d_physicalConsts, d_myworld);

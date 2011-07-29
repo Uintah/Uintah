@@ -599,13 +599,13 @@ ScalarEqn::timeAve( const ProcessorGroup* pc,
     //----Time averaging done here. 
     d_timeIntegrator->timeAvePhi( patch, new_phi, old_phi, new_den, old_den, timeSubStep, curr_ssp_time ); 
 
+    if (d_doClipping) 
+      clipPhi( patch, new_phi ); 
+
     //----BOUNDARY CONDITIONS
     //    must update BCs for next substep
     computeBCs( patch, d_eqnName, new_phi );
 
-    if (d_doClipping) 
-      clipPhi( patch, new_phi ); 
-    
     //----COPY averaged phi into oldphi
     //  I don't think this is needed but keeping it until it is proven...
     last_rk_phi.copyData(new_phi); 
