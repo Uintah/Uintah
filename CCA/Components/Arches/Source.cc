@@ -388,15 +388,6 @@ Source::calculateEnthalpySource(const ProcessorGroup*,
                constvars->old_density, constvars->old_enthalpy,
                cellinfo->sew, cellinfo->sns, cellinfo->stb, delta_t);
 
-// ++ jeremy ++
-  if (d_boundaryCondition->getNumSourceBndry() > 0) {
-    for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
-      vars->scalarNonlinearSrc[*iter] += vars->enthalpyBoundarySrc[*iter];
-    }
-  }
-// -- jeremy -- 
-
-
 }
 
 

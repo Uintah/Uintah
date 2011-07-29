@@ -692,13 +692,13 @@ DQMOMEqn::solveTransportEqn( const ProcessorGroup* pc,
     curr_ssp_time = curr_time + factor * dt; 
     d_timeIntegrator->timeAvePhi( patch, phi, rk1_phi, timeSubStep, curr_ssp_time ); 
 
+    if (d_doClipping) 
+      clipPhi( patch, phi ); 
+
     //----BOUNDARY CONDITIONS
     // For first time step, bc's have been set in dqmomInit
     computeBCs( patch, d_eqnName, phi );
 
-    if (d_doClipping) 
-      clipPhi( patch, phi ); 
-    
     // copy averaged phi into oldphi
     oldphi.copyData(phi); 
 
