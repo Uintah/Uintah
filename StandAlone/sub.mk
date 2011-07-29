@@ -161,14 +161,15 @@ endif
 ifeq ($(IS_STATIC_BUILD),yes)
   LIBS := $(CORE_STATIC_LIBS) $(ZOLTAN_LIBRARY)    \
           $(HDF5_LIBRARY) $(BOOST_LIBRARY)         \
-          $(EXPRLIB_LIBRARY) $(SPATIALOPS_LIBRARY) $(TABPROPS_LIBRARY)
+          $(EXPRLIB_LIBRARY) $(SPATIALOPS_LIBRARY) \
+          $(TABPROPS_LIBRARY) $(PAPI_LIBRARY)
 else
   LIBS := $(MPI_LIBRARY) $(XML2_LIBRARY) $(F_LIBRARY) $(HYPRE_LIBRARY)      \
           $(CANTERA_LIBRARY) $(ZOLTAN_LIBRARY)               \
           $(PETSC_LIBRARY) $(BLAS_LIBRARY) $(LAPACK_LIBRARY) \
           $(M_LIBRARY) $(THREAD_LIBRARY) $(Z_LIBRARY) \
           $(TEEM_LIBRARY) $(PNG_LIBRARY) \
-          $(BOOST_LIBRARY)
+          $(BOOST_LIBRARY) $(PAPI_LIBRARY)
 endif
 
 include $(SCIRUN_SCRIPTS)/program.mk
