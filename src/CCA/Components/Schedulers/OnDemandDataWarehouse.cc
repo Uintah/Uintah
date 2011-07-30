@@ -119,6 +119,7 @@ OnDemandDataWarehouse::OnDemandDataWarehouse(const ProcessorGroup* myworld,
                                              bool isInitializationDW/*=false*/)
    : DataWarehouse(myworld, scheduler, generation),
      d_lock("DataWarehouse lock"),
+     d_rtasklock("DataWarehouse rtasklock"),
      d_finalized( false ),
      d_grid(grid),
      d_isInitializationDW(isInitializationDW),
@@ -1545,20 +1546,20 @@ OnDemandDataWarehouse:: allocateTemporary(GridVariableBase& var,
                                           Ghost::GhostType gtype, 
                                           int numGhostCells )
 {
- d_lock.writeLock();  
   IntVector boundaryLayer(0, 0, 0); // Is this right?
 
   MALLOC_TRACE_TAG_SCOPE("OnDemandDataWarehouse::allocateTemporary(Grid Variable)");
   IntVector lowIndex, highIndex;
   IntVector lowOffset, highOffset;
+  d_lock.writeLock();  
   Patch::VariableBasis basis = Patch::translateTypeToBasis(var.virtualGetTypeDescription()->getType(), false);
   Patch::getGhostOffsets(var.virtualGetTypeDescription()->getType(), gtype,
                          numGhostCells, lowOffset, highOffset);
                       
+  d_lock.writeUnlock();  
   patch->computeExtents(basis, boundaryLayer, lowOffset, highOffset,lowIndex, highIndex);
 
   var.allocate(lowIndex, highIndex);
- d_lock.writeUnlock();  
 }
 //______________________________________________________________________
 //
@@ -2815,21 +2816,21 @@ void OnDemandDataWarehouse::pushRunningTask(const Task* task,
                                             vector<OnDemandDataWarehouseP>* dws)
 {
   ASSERT(task);
- d_lock.writeLock();    
+ d_rtasklock.writeLock();    
   d_runningTasks[Thread::self()].push_back(RunningTaskInfo(task, dws));
- d_lock.writeUnlock();
+ d_rtasklock.writeUnlock();
 }
 //______________________________________________________________________
 //
 void OnDemandDataWarehouse::popRunningTask()
 {
- d_lock.writeLock();
+ d_rtasklock.writeLock();
   list<RunningTaskInfo>& runningTasks = d_runningTasks[Thread::self()];
   runningTasks.pop_back();
-  if (runningTasks.empty()) {
+ /* if (runningTasks.empty()) {
     d_runningTasks.erase(Thread::self());
-  }
- d_lock.writeUnlock();
+  }*/
+ d_rtasklock.writeUnlock();
 }
 //______________________________________________________________________
 //
@@ -2861,10 +2862,10 @@ OnDemandDataWarehouse::getCurrentTaskInfo()
 DataWarehouse*
 OnDemandDataWarehouse::getOtherDataWarehouse(Task::WhichDW dw, RunningTaskInfo* info)
 {
-  d_lock.readLock();
+  d_rtasklock.readLock();
   int dwindex = info->d_task->mapDataWarehouse(dw);
   DataWarehouse* result = (*info->dws)[dwindex].get_rep();
-  d_lock.readUnlock();
+  d_rtasklock.readUnlock();
   return result;
 }
 //______________________________________________________________________
@@ -2872,11 +2873,11 @@ OnDemandDataWarehouse::getOtherDataWarehouse(Task::WhichDW dw, RunningTaskInfo* 
 DataWarehouse*
 OnDemandDataWarehouse::getOtherDataWarehouse(Task::WhichDW dw)
 {
-  d_lock.readLock();
+  d_rtasklock.readLock();
   RunningTaskInfo* info = getCurrentTaskInfo();
   int dwindex = info->d_task->mapDataWarehouse(dw);
   DataWarehouse* result = (*info->dws)[dwindex].get_rep();
-  d_lock.readUnlock();
+  d_rtasklock.readUnlock();
   return result;
 }
 //______________________________________________________________________
