@@ -40,8 +40,6 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Util/FancyAssert.h>
 #include <Core/Malloc/Allocator.h>
 
-#include <sci_defs/papi_defs.h> // for PAPI flop counters
-
 using namespace Uintah;
 using namespace std;
 using namespace SCIRun;
@@ -132,10 +130,6 @@ SingleProcessorScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
   dts->initializeScrubs(dws, dwmap);
   
   for(int i=0;i<ntasks;i++){
-#ifdef USE_PAPI_COUNTERS
-	int event_set[1] = {PAPI_FP_OPS};
-	PAPI_start_counters(event_set, 1);
-#endif    
     double start = Time::currentSeconds();
     DetailedTask* task = dts->getTask( i );
     
@@ -157,11 +151,6 @@ SingleProcessorScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
     
     double delT = Time::currentSeconds()-start;
     long long flop_count = 0;
-#ifdef USE_PAPI_COUNTERS
-    long long execute_flops[1];
-    PAPI_stop_counters(execute_flops, 1);
-    flop_count += execute_flops[0];
-#endif
     if(dws[dws.size()-1] && dws[dws.size()-1]->timestepAborted()){
       dbg << "Aborting timestep after task: " << *task->getTask() << '\n';
       break;
@@ -170,7 +159,7 @@ SingleProcessorScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
       dbg << "Completed task: " << *task->getTask()
           << " (" << delT << " seconds)\n";
     //scrub(task);
-    emitNode( task, start, delT, delT, flop_count );
+    emitNode( task, start, delT, delT);
   }
   finalizeTimestep();
 }

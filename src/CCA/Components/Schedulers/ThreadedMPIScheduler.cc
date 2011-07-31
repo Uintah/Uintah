@@ -42,8 +42,6 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Thread/Thread.h>
 #include <Core/Thread/Mutex.h>
 
-#include <sci_defs/papi_defs.h> // for PAPI flop counters
-
 #include   <cstring>
 
 using namespace std;
@@ -228,11 +226,6 @@ ThreadedMPIScheduler::runTask( DetailedTask         * task, int iteration, int t
 
   double taskstart = Time::currentSeconds();
   
-#ifdef USE_PAPI_COUNTERS
-  int event_set[1] = {PAPI_FP_OPS};
-  PAPI_start_counters(event_set, 1);
-#endif
-
   if (trackingVarsPrintLocation_ & SchedulerCommon::PRINT_BEFORE_EXEC) {
     printTrackedVars(task, SchedulerCommon::PRINT_BEFORE_EXEC);
   }
@@ -249,13 +242,6 @@ ThreadedMPIScheduler::runTask( DetailedTask         * task, int iteration, int t
     printTrackedVars(task, SchedulerCommon::PRINT_AFTER_EXEC);
   }
 
-#ifdef USE_PAPI_COUNTERS
-  long long exec_flops[1];
-  PAPI_stop_counters(exec_flops, 1);
-  mpi_info_.totalexecflops += exec_flops[0];
-  PAPI_start_counters(event_set, 1);
-#endif
-  
   double dtask = Time::currentSeconds()-taskstart;
  
   dlbLock.lock();
@@ -306,12 +292,6 @@ ThreadedMPIScheduler::runTask( DetailedTask         * task, int iteration, int t
   }
 
 
-#ifdef USE_PAPI_COUNTERS
-  long long send_flops[1];
-  PAPI_stop_counters(send_flops, 1);
-  mpi_info_.totalcommflops += send_flops[0];
-#endif
-  
 } // end runTask()
 
 void
