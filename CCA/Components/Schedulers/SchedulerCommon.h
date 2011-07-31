@@ -233,9 +233,7 @@ WARNING
     void makeTaskGraphDoc(const DetailedTasks* dt,
 			  int rank = 0);
     void emitNode(const DetailedTask* dt, double start, double duration,
-		  double execution_duration, 
-		  double execution_flops,
-		  double communication_flops = 0);
+		  double execution_duration);
     void finalizeNodes(int process=0);
 
     enum { PRINT_BEFORE_COMM = 1, PRINT_BEFORE_EXEC = 2, PRINT_AFTER_EXEC = 4};

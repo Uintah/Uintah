@@ -69,6 +69,8 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Ports/SimulationInterface.h>
 
+#include <sci_defs/papi_defs.h> // for PAPI flop counters
+
 #include <TauProfilerForSCIRun.h>
 
 #include <iostream>
@@ -98,6 +100,12 @@ void
 AMRSimulationController::run()
 {
   MALLOC_TRACE_TAG_SCOPE("AMRSimulationController::run()");
+ 
+#ifdef USE_PAPI_COUNTERS
+  int event_set[1] = {PAPI_FP_OPS};
+  PAPI_start_counters(event_set, 1);
+#endif
+
 
   bool log_dw_mem=false;
 

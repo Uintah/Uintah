@@ -64,8 +64,6 @@ struct mpi_timing_info_s {
   double totalrecvmpi;
   double totaltestmpi;
   double totalwaitmpi;
-  long long totalcommflops;
-  long long totalexecflops;
 };
 
 /**************************************

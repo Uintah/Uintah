@@ -29,6 +29,7 @@ DEALINGS IN THE SOFTWARE.
 
 
 #include <sci_defs/malloc_defs.h>
+#include <sci_defs/papi_defs.h> // for PAPI flop counters
 
 #include <CCA/Components/SimulationController/SimulationController.h>
 #include <Core/Parallel/ProcessorGroup.h>
@@ -516,6 +517,12 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
     }
   }
 
+ 
+#ifdef USE_PAPI_COUNTERS
+  long long recv_flop[1];
+  PAPI_read_counters(recv_flop, 1);
+  double flop = (double) recv_flop[0]  ;
+#endif
 
   // with the sum reduces, use double, since with memory it is possible that
   // it will overflow
@@ -555,6 +562,10 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
   toReduceMax.push_back(double_int(d_sharedState->taskWaitCommTime,rank));
   toReduce.push_back(d_sharedState->outputTime);
   toReduceMax.push_back(double_int(d_sharedState->outputTime,rank));
+#ifdef USE_PAPI_COUNTERS
+  toReduce.push_back(flop);
+  toReduceMax.push_back(double_int(flop,rank));
+#endif
   statLabels.push_back("Mem usage");
   statLabels.push_back("Recompile");
   statLabels.push_back("Regridding");
@@ -566,6 +577,9 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
   statLabels.push_back("TaskLocalComm");
   statLabels.push_back("TaskWaitCommTime");
   statLabels.push_back("Output");
+#ifdef USE_PAPI_COUNTERS
+  statLabels.push_back("FLOP");
+#endif
 
   if (highwater) // add highwater to the end so we know where everything else is (as highwater is conditional)
     toReduce.push_back(highwater);

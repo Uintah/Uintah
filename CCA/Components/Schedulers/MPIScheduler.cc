@@ -50,7 +50,6 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Malloc/Allocator.h>
 
 #include <sci_defs/mpi_defs.h> // For MPIPP_H on SGI
-#include <sci_defs/papi_defs.h> // for PAPI flop counters
 
 #include   <sstream>
 #include   <iomanip>
@@ -204,20 +203,10 @@ MPIScheduler::initiateTask( DetailedTask          * task,
   MALLOC_TRACE_TAG_SCOPE("MPIScheduler::initiateTask");
   TAU_PROFILE("MPIScheduler::initiateTask()", " ", TAU_USER); 
 
-#ifdef USE_PAPI_COUNTERS
-  int event_set[1] = {PAPI_FP_OPS};
-  PAPI_start_counters(event_set, 1);
-#endif  
   postMPIRecvs(task, only_old_recvs, abort_point, iteration);
   if(only_old_recvs) {
     return;
   }
-#ifdef USE_PAPI_COUNTERS
-  long long recv_flops[1];
-  PAPI_stop_counters(recv_flops, 1);
-  mpi_info_.totalcommflops += recv_flops[0];
-#endif
-
 } // end initiateTask()
 
 void
@@ -228,11 +217,6 @@ MPIScheduler::initiateReduction( DetailedTask          * task )
     if(reductionout.active() && d_myworld->myrank()==0)
       reductionout << "Running Reduction Task: " << task->getName() << endl;
 
-#ifdef USE_PAPI_COUNTERS
-    int event_set[1] = {PAPI_FP_OPS};
-    PAPI_start_counters(event_set, 1);
-#endif
-
     double reducestart = Time::currentSeconds();
 
     runReductionTask(task);
@@ -240,12 +224,7 @@ MPIScheduler::initiateReduction( DetailedTask          * task )
     double reduceend = Time::currentSeconds();
     long long flop_count=0;
 
-#ifdef USE_PAPI_COUNTERS
-    long long reduce_flops[1];
-    PAPI_stop_counters(reduce_flops, 1);
-    flop_count += reduce_flops[0];
-#endif
-    emitNode(task, reducestart, reduceend - reducestart, 0, 0, flop_count);
+    emitNode(task, reducestart, reduceend - reducestart, 0);
     mpi_info_.totalreduce += reduceend-reducestart;
     mpi_info_.totalreducempi += reduceend-reducestart;
   }
@@ -265,11 +244,6 @@ MPIScheduler::runTask( DetailedTask         * task, int iteration)
 
   double taskstart = Time::currentSeconds();
   
-#ifdef USE_PAPI_COUNTERS
-  int event_set[1] = {PAPI_FP_OPS};
-  PAPI_start_counters(event_set, 1);
-#endif
-
   if (trackingVarsPrintLocation_ & SchedulerCommon::PRINT_BEFORE_EXEC) {
     printTrackedVars(task, SchedulerCommon::PRINT_BEFORE_EXEC);
   }
@@ -287,13 +261,6 @@ MPIScheduler::runTask( DetailedTask         * task, int iteration)
     printTrackedVars(task, SchedulerCommon::PRINT_AFTER_EXEC);
   }
 
-#ifdef USE_PAPI_COUNTERS
-  long long exec_flops[1];
-  PAPI_stop_counters(exec_flops, 1);
-  mpi_info_.totalexecflops += exec_flops[0];
-  PAPI_start_counters(event_set, 1);
-#endif
-  
   double dtask = Time::currentSeconds()-taskstart;
  
   if(execout.active())
@@ -339,12 +306,7 @@ MPIScheduler::runTask( DetailedTask         * task, int iteration)
     parentScheduler->mpi_info_.totalreduce+=mpi_info_.totalreduce;
   }
 
-#ifdef USE_PAPI_COUNTERS
-  long long send_flops[1];
-  PAPI_stop_counters(send_flops, 1);
-  mpi_info_.totalcommflops += send_flops[0];
-#endif
-  emitNode(task, taskstart, dtask, 0, 0, 0);
+  emitNode(task, taskstart, dtask, 0);
   
 } // end runTask()
 
