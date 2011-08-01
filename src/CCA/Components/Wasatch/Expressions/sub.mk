@@ -45,6 +45,7 @@ SRCS     +=                             \
   $(SRCDIR)/Pressure.cc
 
 SUBDIRS := \
-        $(SRCDIR)/MMS
+        $(SRCDIR)/MMS \
+        $(SRCDIR)/PBE
 
 include $(SCIRUN_SCRIPTS)/recurse.mk

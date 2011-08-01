@@ -28,12 +28,4 @@
 # 
 # Makefile fragment for this subdirectory
 
-SRCDIR   := CCA/Components/Wasatch/transport
-
-SRCS	+=                             		\
-	$(SRCDIR)/ScalarTransportEquation.cc		\
-	$(SRCDIR)/TemperatureTransportEquation.cc	\
-	$(SRCDIR)/MomentumTransportEquation.cc		\
-  $(SRCDIR)/ScalabilityTestTransportEquation.cc		\
-	$(SRCDIR)/ParseEquation.cc \
-  $(SRCDIR)/MomentTransportEquation.cc
+SRCDIR := CCA/Components/Wasatch/Expressions/PBE
