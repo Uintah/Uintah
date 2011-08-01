@@ -106,7 +106,8 @@ ViscoScram::ViscoScram(ProblemSpecP& ps,MPMFlags* Mflag)
 
   // Murnaghan EOS inputs
   ps->getWithDefault("useMurnahanEOS", d_useMurnahanEOS, false);
-  if(d_useMurnahanEOS) {
+  ps->getWithDefault("useBirchMurnaghanEOS", d_useBirchMurnaghanEOS, false);
+  if(d_useMurnahanEOS || d_useBirchMurnaghanEOS) {
     ps->require("gamma", d_murnahanEOSData.gamma);
     ps->require("P0",    d_murnahanEOSData.P0);
     ps->require("bulkPrime", d_murnahanEOSData.bulkPrime);
@@ -213,7 +214,8 @@ ViscoScram::ViscoScram(const ViscoScram* cm) : ConstitutiveModel(cm)
 
   // Murnaghan EOS inputs
   d_useMurnahanEOS = cm->d_useMurnahanEOS;
-  if(d_useMurnahanEOS) {
+  d_useBirchMurnaghanEOS = cm->d_useBirchMurnaghanEOS;
+  if(d_useMurnahanEOS || d_useBirchMurnaghanEOS) {
     d_murnahanEOSData.gamma     = cm->d_murnahanEOSData.gamma;
     d_murnahanEOSData.P0        = cm->d_murnahanEOSData.P0;
     d_murnahanEOSData.bulkPrime = cm->d_murnahanEOSData.bulkPrime;
@@ -325,6 +327,7 @@ void ViscoScram::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
 
   // Murnaghan EOS inputs
   cm_ps->appendElement("useMurnahanEOS", d_useMurnahanEOS);
+  cm_ps->appendElement("useBirchMurnaghanEOS", d_useBirchMurnaghanEOS);
   if(d_useMurnahanEOS) {
     cm_ps->appendElement("gamma", d_murnahanEOSData.gamma);
     cm_ps->appendElement("P0",    d_murnahanEOSData.P0);
@@ -1449,7 +1452,65 @@ double ViscoScram::computeRhoMicroCM(double pressure,
       rho_cur = rho_orig * pow((bulkPrime*gamma*(pressure-P0)+1.0),1.0/gamma);
     } else {
       rho_cur = rho_orig * pow((pressure/P0), bulkPrime*P0);
-    } 
+    }
+  } else if(d_useBirchMurnaghanEOS) {    // Birch Murnaghan EOS
+      // Use normal Birch-Murnaghan EOS
+      //  Solved using Newton Method code adapted from JWLC.cc
+      double f;                // difference between current and previous function value
+      double df_drho;          // rate of change of function value
+      double epsilon = 1.e-15; // convergence limit
+      double delta   = 1.0;    // change in rhoM each step
+      double relfac  = 0.9;
+      int count      = 0;      // counter of total iterations
+      double rhoM = rho_orig;
+
+      double rho0 = rho_orig;
+
+      while(fabs(delta/rhoM)>epsilon){  // Main Iterative loop
+        // Compute the difference between the previous pressure and the new pressure
+        f       = computeP(rho0/rhoM) - pressure;
+
+        // Compute the new pressure derivative
+        df_drho = computedPdrho(rho0/rhoM, rho0);
+
+        // factor by which to adjust rhoM
+        delta = -relfac*(f/df_drho);
+        rhoM +=  delta;
+        rhoM  =  fabs(rhoM);
+
+        if(count>=100){
+          // The following is here solely to help figure out what was going on
+          // at the time the above code failed to converge.  Start over with this
+          // copy and print more out.
+          delta = 1.0;
+          rhoM  = 2.0*rho0;
+
+          while(fabs(delta/rhoM)>epsilon){
+            f       = computeP(rho0/rhoM) - pressure;
+            df_drho = computedPdrho(rho0/rhoM, rho0);
+
+            // determine by how much to change
+            delta = -relfac*(f/df_drho);
+            rhoM +=  delta;
+            rhoM  =  fabs(rhoM);
+
+            // After 50 more iterations finally quit out
+            if(count>=150){
+              ostringstream warn;
+              warn << std::setprecision(15);
+              warn << "ERROR:ICE:BirchMurnaghan::computeRhoMicro(...) not converging. \n";
+              warn << "press= " << pressure << "\n";
+              warn << "delta= " << delta << " rhoM= " << rhoM << " f = " << f
+                   <<" df_drho =" << df_drho << " rho_guess =" << rho_guess << "\n";
+              throw InternalError(warn.str(), __FILE__, __LINE__);
+           }
+           count++;
+          }
+        }
+        count++;
+      }
+      return rhoM;
+   
   } else if(d_useModifiedEOS && p_gauge < 0.0) {
     double A = p_ref;       // Modified EOS
     double n = p_ref/d_bulk;
@@ -1539,6 +1600,20 @@ void ViscoScram::computePressEOSCM(double rho_cur,double& pressure,
       // is this the right speed of sound?
       tmp      = d_bulk/rho_cur;
     } 
+  } else if(d_useBirchMurnaghanEOS) {
+
+    if(rho_cur >= rho_orig) {
+      double v = rho_orig/rho_cur; // reduced volume
+      pressure = computeP(v);
+      dp_drho  = computedPdrho(v, rho_orig);
+    } else {
+      pressure = d_murnahanEOSData.P0*pow(rho_cur/rho_cur, (1.0/(d_murnahanEOSData.bulkPrime*d_murnahanEOSData.P0)));
+      dp_drho  = (1.0/(d_murnahanEOSData.bulkPrime*rho_orig))*pow(rho_cur/rho_orig,(1.0/(d_murnahanEOSData.bulkPrime*d_murnahanEOSData.P0)-1.0));
+      // is this the right speed of sound?
+      tmp      = d_murnahanEOSData.bulkPrime/rho_cur;
+    }
+
+
   } else if(d_useModifiedEOS && rho_cur < rho_orig){
     double A = p_ref;         // MODIFIED EOS
     double n = d_bulk/p_ref;
