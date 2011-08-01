@@ -239,6 +239,28 @@ namespace Wasatch{
       }
     }
     
+    //
+    // Build moment transport equations.  This registers all expressions 
+    // required for solution of each momentum equation.
+    //
+    for( Uintah::ProblemSpecP momEqnParams=wasatchParams->findBlock("MomentTransportEquation");
+        momEqnParams != 0;
+        momEqnParams=momEqnParams->findNextBlock("MomentTransportEquation") ){
+      // note - parse_momentum_equations returns a vector of equation adaptors
+      try{
+        EquationAdaptors momentAdaptors = parse_moment_transport_equations( momEqnParams, graphCategories_);
+        adaptors_.insert( adaptors_.end(), momentAdaptors.begin(), momentAdaptors.end() );
+      }
+      catch( std::runtime_error& err ){
+        std::ostringstream msg;
+        msg << endl
+        << "Problems setting up moment transport equations.  Details follow:" << endl
+        << err.what() << endl;
+        throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+      }
+    }
+    
+    
     
 
     timeStepper_ = scinew TimeStepper( sharedState_->get_delt_label(),

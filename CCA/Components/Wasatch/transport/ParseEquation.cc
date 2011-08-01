@@ -8,6 +8,8 @@
 #include "ScalabilityTestTransportEquation.h"
 #include "TemperatureTransportEquation.h"
 #include "MomentumTransportEquation.h"
+#include "MomentTransportEquation.h"
+#include <CCA/Components/Wasatch/Expressions/PBE/QMOM.h>
 
 //-- Uintah includes --//
 #include <Core/Exceptions/InvalidValue.h>
@@ -418,5 +420,205 @@ namespace Wasatch{
     return adaptors;
   }
   
+  //==================================================================
+  
+  template<typename FieldT>
+  void preprocess_moment_transport_qmom(Uintah::ProblemSpecP momentEqsParams,
+                                     Expr::ExpressionFactory& factory,
+                                     Expr::TagList& transportedMomentTags,
+                                     Expr::TagList& abscissaeTags,
+                                     Expr::TagList& weightsTags) {
+    std::string populationName;
+    momentEqsParams->get( "PopulationName", populationName );
+    int nEnv = 1;
+    momentEqsParams->get( "NumberOfEnvironments", nEnv );
+    Expr::TagList weightsAndAbscissaeTags;
+    //
+    // fill in the weights and abscissae tags
+    //
+    std::stringstream envID;
+    for (int i=0; i<nEnv; i++) {
+      envID.str(std::string());
+      envID << i;      
+      weightsAndAbscissaeTags.push_back(Expr::Tag("w_" + populationName + "_" + envID.str(), Expr::STATE_NONE));
+      weightsAndAbscissaeTags.push_back(Expr::Tag("a_" + populationName + "_" + envID.str(), Expr::STATE_NONE));      
+      weightsTags.push_back(Expr::Tag("w_" + populationName + "_" + envID.str(), Expr::STATE_NONE));
+      abscissaeTags.push_back(Expr::Tag("a_" + populationName + "_"+ envID.str(), Expr::STATE_NONE));
+    } 
+    //
+    // construct the transported moments taglist. this will be used to register the
+    // qmom expression
+    //
+    const int nEqs = 2*nEnv;    
+    std::stringstream strMomID;
+    for (int iEq=0; iEq<nEqs; iEq++) {
+      strMomID.str(std::string());
+      const double momentOrder = (double) iEq;
+      strMomID << momentOrder;
+      const std::string thisPhiName = "m_" + populationName + "_" + strMomID.str();
+      transportedMomentTags.push_back(Expr::Tag(thisPhiName, Expr::STATE_N));
+    }
+    //
+    // register the qmom expression
+    //
+    factory.register_expression( weightsAndAbscissaeTags,
+                                scinew typename QMOM<FieldT>::Builder(transportedMomentTags) );          
+    
+  }  
+  
+  //==================================================================
+  
+  std::vector<EqnTimestepAdaptorBase*> 
+  parse_moment_transport_equations(Uintah::ProblemSpecP params,
+                                   GraphCategories& gc )
+  {
+    typedef std::vector<EqnTimestepAdaptorBase*> EquationAdaptors;
+    EquationAdaptors adaptors;
+    EqnTimestepAdaptorBase* adaptor = NULL;
+    Wasatch::TransportEquation* momtranseq = NULL;
+    Expr::ExpressionBuilder* icBuilder = NULL;
+    
+    std::cout << "Parsing moment transport equations\n";
+    GraphHelper* const solnGraphHelper = gc[ADVANCE_SOLUTION];
+    GraphHelper* const icGraphHelper   = gc[INITIALIZATION  ];
+    Expr::TagList transportedMomentTags;
+    Expr::TagList abscissaeTags;
+    Expr::TagList weightsTags;
+    
+    std::string basePhiName;
+    params->get( "PopulationName", basePhiName );
+    basePhiName = "m_" + basePhiName;
+    
+    std::string stagLoc;
+    Uintah::ProblemSpecP stagLocParams = params->get( "StaggeredDirection", stagLoc );
+    int nEnv = 1;
+    params->get( "NumberOfEnvironments", nEnv );
+    const int nEqs = 2*nEnv;    
+    
+    if (stagLocParams) {
+      
+      // X-Staggered scalar
+      if (stagLoc=="X") {
+        for (int iMom=0; iMom<nEqs; iMom++) {
+          preprocess_moment_transport_qmom<XVolField>(params, *solnGraphHelper->exprFactory, 
+                                        transportedMomentTags, abscissaeTags,
+                                        weightsTags);
+          
+          const double momentID = (double) iMom; //here we will add any fractional moments
+          std::stringstream ss;
+          ss << iMom;
+          std::string thisPhiName = basePhiName + "_" + ss.str();            
+          
+          // create moment transport equation
+          typedef MomentTransportEquation< XVolField > MomTransEq; 
+          momtranseq = scinew MomTransEq( thisPhiName, 
+                                          MomTransEq::get_moment_rhs_id( *solnGraphHelper->exprFactory, 
+                                                                      params,
+                                                                      weightsTags,
+                                                                      abscissaeTags,
+                                                                      momentID)
+                                         );          
+          adaptor = scinew EqnTimestepAdaptor< XVolField >( momtranseq );
+          adaptors.push_back(adaptor);
+        }
+      } else if (stagLoc=="Y") {
+        preprocess_moment_transport_qmom<YVolField>(params, *solnGraphHelper->exprFactory, 
+                                                 transportedMomentTags, abscissaeTags,
+                                                 weightsTags);        
+        for (int iMom=0; iMom<nEqs; iMom++) {
+          const double momentID = (double) iMom; //here we will add any fractional moments
+          std::stringstream ss;
+          ss << iMom;
+          std::string thisPhiName = basePhiName + "_" + ss.str();            
+          
+          // create moment transport equation
+          typedef MomentTransportEquation< YVolField > MomTransEq; 
+          momtranseq = scinew MomTransEq( thisPhiName, 
+                                         MomTransEq::get_moment_rhs_id( *solnGraphHelper->exprFactory, 
+                                                                       params,
+                                                                       weightsTags,
+                                                                       abscissaeTags,
+                                                                       momentID)
+                                         );          
+          adaptor = scinew EqnTimestepAdaptor< YVolField >( momtranseq );
+          adaptors.push_back(adaptor);
+        }
+        
+      } else if (stagLoc=="Z") {
+        preprocess_moment_transport_qmom<ZVolField>(params, *solnGraphHelper->exprFactory, 
+                                                 transportedMomentTags, abscissaeTags,
+                                                 weightsTags);        
+        
+        for (int iMom=0; iMom<nEqs; iMom++) {
+          const double momentID = (double) iMom; //here we will add any fractional moments          
+          std::stringstream ss;
+          ss << iMom;
+          std::string thisPhiName = basePhiName + "_" + ss.str();            
+          
+          // create moment transport equation
+          typedef MomentTransportEquation< ZVolField > MomTransEq; 
+          momtranseq = scinew MomTransEq( thisPhiName, 
+                                         MomTransEq::get_moment_rhs_id( *solnGraphHelper->exprFactory, 
+                                                                       params,
+                                                                       weightsTags,
+                                                                       abscissaeTags,
+                                                                       momentID)
+                                         );          
+          adaptor = scinew EqnTimestepAdaptor< ZVolField >( momtranseq );
+          adaptors.push_back(adaptor);
+        }
+      }        
+    } else if (!stagLocParams) {
+      preprocess_moment_transport_qmom<SVolField>(params, *solnGraphHelper->exprFactory, 
+                                               transportedMomentTags, abscissaeTags,
+                                               weightsTags);        
+      
+      for (int iMom=0; iMom<nEqs; iMom++) {
+        const double momentID = (double) iMom; //here we will add any fractional moments        
+        std::stringstream ss;
+        ss << iMom;
+        std::string thisPhiName = basePhiName + "_" + ss.str();            
+        
+        // create moment transport equation
+        typedef MomentTransportEquation< SVolField > MomTransEq; 
+        momtranseq = scinew MomTransEq( thisPhiName, 
+                                       MomTransEq::get_moment_rhs_id( *solnGraphHelper->exprFactory, 
+                                                                     params,
+                                                                     weightsTags,
+                                                                     abscissaeTags,
+                                                                     momentID)
+                                       );          
+        adaptor = scinew EqnTimestepAdaptor< SVolField >( momtranseq );
+        adaptors.push_back(adaptor);
+        }
+      }          
+    //
+    // loop over the local adaptors and set the initial and boundary conditions on each equation attached to that adaptor
+    for( EquationAdaptors::const_iterator ia=adaptors.begin(); ia!=adaptors.end(); ++ia ){
+      EqnTimestepAdaptorBase* const adaptor = *ia;
+      Wasatch::TransportEquation* momtranseq = adaptor->equation();
+      
+      //_____________________________________________________
+      // set up initial conditions on this momentum equation
+      try{
+        proc0cout << "Setting initial conditions for scalability test equation: "
+        << momtranseq->solution_variable_name()
+        << std::endl;
+        icGraphHelper->rootIDs.insert( momtranseq->initial_condition( *icGraphHelper->exprFactory ) );
+      }
+      catch( std::runtime_error& e ){
+        std::ostringstream msg;
+        msg << e.what()
+        << std::endl
+        << "ERORR while setting initial conditions on scalability test equation "
+        << momtranseq->solution_variable_name()
+        << std::endl;
+        throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+      }
+      proc0cout << "------------------------------------------------" << std::endl;      
+    }
+    //
+    return adaptors;
+  }    
   
 } // namespace Wasatch
