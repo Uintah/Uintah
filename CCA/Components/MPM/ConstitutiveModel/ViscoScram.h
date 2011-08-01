@@ -139,6 +139,7 @@ namespace Uintah {
     bool d_useJWLCEOS;
     bool d_useModifiedEOS;
     bool d_useMurnahanEOS;
+    bool d_useBirchMurnaghanEOS;
     bool d_random;
     bool d_doTimeTemperature;
     bool d_useObjectiveRate;
@@ -251,6 +252,25 @@ namespace Uintah {
     double func(double rhoM,const MPMMaterial* matl);
     double deri(double rhoM,const MPMMaterial* matl);
     void   setInterval(double f, double rhoM);
+
+private:
+    double computeP(double v)
+    {
+      double K = d_murnahanEOSData.bulkPrime;
+      double n = d_murnahanEOSData.gamma;
+      return 3.0/(2.0*K) * (pow(v,-7.0/3.0) - pow(v,-5.0/3.0))
+                                 * (1.0 + 0.75*(n-4.0)*(pow(v,-2.0/3.0)-1.0));
+    }
+
+    double computedPdrho(double v, double rho0)
+    {
+      double K = d_murnahanEOSData.bulkPrime;
+      double n = d_murnahanEOSData.gamma;
+      return 3.0/(2.0*K) * (-7.0*rho0/(3.0*pow(v,10.0/3.0)) + 5.0*rho0/(3.0*pow(v,8.0/3.0)))
+                             * (1.0 + (0.75*n-3.0)*(1.0/(pow(v,2.0/3.0))-1.0))
+                             - (1.0/K * (1.0/pow(v,7.0/3.0)-1.0/pow(v,5.0/3.0))*(0.75*n-3.0)*rho0/pow(v,5.0/3.0));
+    }
+
 
   };
 

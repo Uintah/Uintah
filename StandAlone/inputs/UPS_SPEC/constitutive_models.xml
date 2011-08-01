@@ -320,11 +320,12 @@
     <useJWLEOS                     spec="OPTIONAL BOOLEAN" />
     <useJWLCEOS                    spec="OPTIONAL BOOLEAN" />
     <useMurnahanEOS                spec="OPTIONAL BOOLEAN" />
+    <useBirchMurnaghanEOS          spec="OPTIONAL BOOLEAN" />
     <useModifiedEOS                spec="OPTIONAL BOOLEAN" />
     <useObjectiveRate              spec="OPTIONAL BOOLEAN" />        <!-- FIXME: What is the default -->
     <usePlasticity                 spec="OPTIONAL BOOLEAN" />
     <UseArtificialViscosity        spec="OPTIONAL BOOLEAN" />        <!-- FIXME: What is the default -->
-    <use_polar_decomposition_RMB  spec="OPTIONAL BOOLEAN" />
+    <use_polar_decomposition_RMB   spec="OPTIONAL BOOLEAN" />
     <use_time_temperature_equation spec="OPTIONAL BOOLEAN" />   <!-- FIXME: What is the default -->
     <viscosity                     spec="OPTIONAL DOUBLE" />
     <volfracHE                     spec="OPTIONAL DOUBLE" />
