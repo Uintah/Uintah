@@ -520,8 +520,12 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
  
 #ifdef USE_PAPI_COUNTERS
   long long recv_flop[1];
-  PAPI_read_counters(recv_flop, 1);
-  double flop = (double) recv_flop[0]  ;
+  double flop;
+  if (PAPI_read_counters(recv_flop, 1) != PAPI_OK) {
+    if (d_myworld->myrank() == 0) 
+      cout<< "WARNNING: Cannot read PAPI counter!" <<endl;
+    flop = 0;
+  } else flop = (double) recv_flop[0]  ;
 #endif
 
   // with the sum reduces, use double, since with memory it is possible that

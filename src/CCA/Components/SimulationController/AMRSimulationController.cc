@@ -103,7 +103,8 @@ AMRSimulationController::run()
  
 #ifdef USE_PAPI_COUNTERS
   int event_set[1] = {PAPI_FP_OPS};
-  PAPI_start_counters(event_set, 1);
+  if (PAPI_start_counters(event_set, 1) != PAPI_OK) 
+    proc0cout<< "WARNNING: Cannot start PAPI counter!" <<endl;
 #endif
 
 
