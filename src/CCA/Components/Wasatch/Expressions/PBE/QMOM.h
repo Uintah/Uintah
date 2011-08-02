@@ -271,7 +271,7 @@ evaluate()
 //      printf("w[%i] = %.12f ",i,*resultsIterators[matLoc]);
 //      printf("a[%i] = %.12f ",i,*resultsIterators[matLoc+1]);      
 //    }
-    printf("\n");
+//    printf("\n");
         
     //__________
     // increment iterators
