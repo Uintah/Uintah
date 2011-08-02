@@ -29,11 +29,14 @@ DEALINGS IN THE SOFTWARE.
 
 
 #include <CCA/Components/SwitchingCriteria/None.h>
+#include <Core/Grid/DbgOutput.h>
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <CCA/Ports/Scheduler.h>
 
+
 using namespace Uintah;
+static DebugStream dbg("SWITCHER", false);
 
 None::None()
 {
@@ -52,6 +55,8 @@ void None::problemSetup(const ProblemSpecP& ps,
 
 void None::scheduleSwitchTest(const LevelP& level, SchedulerP& sched)
 {
+  printSchedule(level,dbg,"Switching Criteria:None::scheduleSwitchTest");
+  
   Task* t = scinew Task("switchTest", this, &None::switchTest);
 
   t->computes(d_sharedState->get_switch_label());
@@ -65,6 +70,7 @@ void None::switchTest(const ProcessorGroup* group,
                       DataWarehouse* old_dw,
                       DataWarehouse* new_dw)
 {
+  dbg << "  Doing Switching Criteria:None::switchTest" <<  endl;
   double sw = 0;
   max_vartype switch_condition(sw);
   const Level* allLevels = 0;

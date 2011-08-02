@@ -32,6 +32,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/Grid/DbgOutput.h>
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Variables/NCVariable.h>
 #include <Core/Grid/Variables/VarTypes.h>
@@ -44,18 +45,16 @@ DEALINGS IN THE SOFTWARE.
 #include <iostream>
 
 using namespace std;
-
 using namespace Uintah;
+static DebugStream dbg("SWITCHER", false);
 
 SimpleBurnCriteria::SimpleBurnCriteria(ProblemSpecP& ps)
 {
   ps->require("reactant_material",   d_material);
   ps->require("ThresholdTemperature",d_temperature);
 
-  if (Parallel::getMPIRank() == 0) {
-    cout << "Switching criteria:  \tSimpleBurn, reactant matl: " 
-         << d_material << " Threshold tempterature " << d_temperature << endl;
-  }
+  proc0cout << "Switching criteria:  \tSimpleBurn, reactant matl: " 
+            << d_material << " Threshold tempterature " << d_temperature << endl;
 
   Mlb  = scinew MPMLabel();
   MIlb = scinew MPMICELabel();
@@ -78,6 +77,7 @@ void SimpleBurnCriteria::problemSetup(const ProblemSpecP& ps,
 //
 void SimpleBurnCriteria::scheduleSwitchTest(const LevelP& level, SchedulerP& sched)
 {
+  printSchedule(level,dbg,"Switching Criteria:SimpleBurnCriteria::scheduleSwitchTest");
   Task* t = scinew Task("switchTest", this, &SimpleBurnCriteria::switchTest);
 
   MaterialSubset* one_matl = scinew MaterialSubset();
@@ -116,6 +116,7 @@ void SimpleBurnCriteria::switchTest(const ProcessorGroup* group,
 
     for(int p=0;p<patches->size();p++){
       const Patch* patch = patches->get(p);
+      printTask(patches, patch,dbg,"Doing Switching Criteria:SimpleBurnCriteria::switchTest");
 
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(d_material);
       int indx = mpm_matl->getDWIndex();

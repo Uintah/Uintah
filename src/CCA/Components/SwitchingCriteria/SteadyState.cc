@@ -30,6 +30,7 @@ DEALINGS IN THE SOFTWARE.
 
 #include <CCA/Components/SwitchingCriteria/SteadyState.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Grid/DbgOutput.h>
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Variables/VarTypes.h>
@@ -41,18 +42,16 @@ DEALINGS IN THE SOFTWARE.
 #include <iostream>
 
 using namespace std;
-
 using namespace Uintah;
+static DebugStream dbg("SWITCHER", false);
 
 SteadyState::SteadyState(ProblemSpecP& ps)
 {
   ps->require("material", d_material);
   ps->require("num_steps", d_numSteps);
 
-  if (Parallel::getMPIRank() == 0) {
-    cout << "material = " << d_material << endl;
-    cout << "num_steps  = " << d_numSteps << endl;
-  }
+  proc0cout << "material = " << d_material << endl;
+  proc0cout << "num_steps  = " << d_numSteps << endl;
 
   heatRate_CCLabel = 
     VarLabel::create("heatRate_CC",CCVariable<double>::getTypeDescription());
@@ -98,9 +97,8 @@ void SteadyState::initialize(const ProcessorGroup*,
                              DataWarehouse*,
                              DataWarehouse* new_dw)
 {
-  if (Parallel::getMPIRank() == 0) {
-    cout << "Initializing heatFluxSum and heatFluxSumTimeDerivative" << endl;
-  }
+  proc0cout << "Initializing heatFluxSum and heatFluxSumTimeDerivative" << endl;
+ 
   new_dw->put(max_vartype(0.0), heatFluxSumLabel);
   new_dw->put(max_vartype(0.0), heatFluxSumTimeDerivativeLabel);
   new_dw->put(max_vartype(0.0),d_sharedState->get_switch_label());
@@ -109,6 +107,8 @@ void SteadyState::initialize(const ProcessorGroup*,
 
 void SteadyState::scheduleSwitchTest(const LevelP& level, SchedulerP& sched)
 {
+  printSchedule(level,dbg,"Switching Criteria:SteadyState::scheduleSwitchTest");
+  
   Task* t = scinew Task("switchTest", this, &SteadyState::switchTest);
 
   MaterialSubset* container = scinew MaterialSubset();
@@ -141,6 +141,7 @@ void SteadyState::switchTest(const ProcessorGroup* group,
 
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);  
+    printTask(patches, patch,dbg,"Doing Switching Criteria:SimpleBurnCriteria::switchTest");
     
     constCCVariable<double> heatFlux;
     new_dw->get(heatFlux, heatRate_CCLabel,0,patch,Ghost::None,0);
@@ -151,26 +152,18 @@ void SteadyState::switchTest(const ProcessorGroup* group,
   }
 
   new_dw->put(max_vartype(heatFluxSum),heatFluxSumLabel);
-  if (Parallel::getMPIRank() == 0) {
-    cout << "heatFluxSum = " << heatFluxSum << endl;
-  }
+  proc0cout << "heatFluxSum = " << heatFluxSum << endl;
 
   max_vartype oldHeatFluxSum;
   old_dw->get(oldHeatFluxSum,heatFluxSumLabel);
-
-  if (Parallel::getMPIRank() == 0) {
-    cout << "oldHeatFluxSum = " << oldHeatFluxSum << endl;
-  }
+  proc0cout << "oldHeatFluxSum = " << oldHeatFluxSum << endl;
 
   delt_vartype delT;
   old_dw->get(delT,d_sharedState->get_delt_label(),getLevel(patches));
 
   double dH_dt = (heatFluxSum - oldHeatFluxSum)/delT;
   max_vartype heatFluxSumTimeDerivative(dH_dt);
-
-  if (Parallel::getMPIRank() == 0) {
-    cout << "heatFluxSumTimeDerivative = " << heatFluxSumTimeDerivative << endl;
-  }
+  proc0cout << "heatFluxSumTimeDerivative = " << heatFluxSumTimeDerivative << endl;
 
   new_dw->put(heatFluxSumTimeDerivative,heatFluxSumTimeDerivativeLabel);
 
@@ -197,7 +190,5 @@ void SteadyState::dummy(const ProcessorGroup* group,
 {
   max_vartype old_sw(1.23);
   old_dw->get(old_sw,d_sharedState->get_switch_label());
-  if (Parallel::getMPIRank() == 0) {
-    cout << "old_sw = " << old_sw << endl;
-  }
+  proc0cout << "old_sw = " << old_sw << endl;
 }
