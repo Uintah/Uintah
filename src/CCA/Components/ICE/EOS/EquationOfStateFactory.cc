@@ -34,7 +34,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/ICE/EOS/JWL.h>
 #include <CCA/Components/ICE/EOS/TST.h>
 #include <CCA/Components/ICE/EOS/JWLC.h>
-#include <CCA/Components/ICE/EOS/Murnahan.h>
+#include <CCA/Components/ICE/EOS/Murnaghan.h>
 #include <CCA/Components/ICE/EOS/BirchMurnaghan.h>
 #include <CCA/Components/ICE/EOS/KnaussSeaWater.h>
 #include <CCA/Components/ICE/EOS/Gruneisen.h>
@@ -67,10 +67,10 @@ EquationOfState* EquationOfStateFactory::create(ProblemSpecP& ps)
   }
   
   // warnings
-  if (EOS == "Murnahan"){
+  if (EOS == "Murnaghan"){
     proc0cout << "______________________________________________________\n"
           << "  ICE: EOS: WARNING: \n"
-          << "  The Murnahan equation of state has a discontinuity in dp_drho at the \n"
+          << "  The Murnaghan equation of state has a discontinuity in dp_drho at the \n"
           << "  reference density (rho0)."
           << "  This will cause the Equilibration pressure calculation to fail\n"
           << "  under certain circumstances.\n"
@@ -91,8 +91,8 @@ EquationOfState* EquationOfStateFactory::create(ProblemSpecP& ps)
     return(scinew JWL(EOS_ps));
   else if (EOS == "JWLC") 
     return(scinew JWLC(EOS_ps));
-  else if (EOS == "Murnahan") 
-    return(scinew Murnahan(EOS_ps));
+  else if (EOS == "Murnaghan") 
+    return(scinew Murnaghan(EOS_ps));
   else if (EOS == "BirchMurnaghan") 
     return(scinew BirchMurnaghan(EOS_ps));
   else if (EOS == "Gruneisen") 
@@ -111,7 +111,7 @@ EquationOfState* EquationOfStateFactory::create(ProblemSpecP& ps)
          << "TST\n"
          << "JWL\n"
          << "JWLC\n"
-         << "Murnahan\n"
+         << "Murnaghan\n"
          << "Gruneisen\n"
          << "Tillotson\n"
          << "KnaussSeaWater\n"

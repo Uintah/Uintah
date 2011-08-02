@@ -28,7 +28,7 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <CCA/Components/MPM/ConstitutiveModel/MurnahanMPM.h>
+#include <CCA/Components/MPM/ConstitutiveModel/MurnaghanMPM.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Grid/Patch.h>
 #include <CCA/Ports/DataWarehouse.h>
@@ -52,7 +52,7 @@ DEALINGS IN THE SOFTWARE.
 using std::cerr;
 using namespace Uintah;
 
-MurnahanMPM::MurnahanMPM(ProblemSpecP& ps, MPMFlags* Mflag)
+MurnaghanMPM::MurnaghanMPM(ProblemSpecP& ps, MPMFlags* Mflag)
   : ConstitutiveModel(Mflag)
 {
 
@@ -64,7 +64,7 @@ MurnahanMPM::MurnahanMPM(ProblemSpecP& ps, MPMFlags* Mflag)
   ps->require("rho0",         d_initialData.d_rho0);
 }
 
-MurnahanMPM::MurnahanMPM(const MurnahanMPM* cm) : ConstitutiveModel(cm)
+MurnaghanMPM::MurnaghanMPM(const MurnaghanMPM* cm) : ConstitutiveModel(cm)
 {
   d_useModifiedEOS = cm->d_useModifiedEOS ;
   d_initialData.d_K = cm->d_initialData.d_K;
@@ -73,11 +73,11 @@ MurnahanMPM::MurnahanMPM(const MurnahanMPM* cm) : ConstitutiveModel(cm)
   d_initialData.d_P0 = cm->d_initialData.d_P0;
 }
 
-MurnahanMPM::~MurnahanMPM()
+MurnaghanMPM::~MurnaghanMPM()
 {
 }
 
-void MurnahanMPM::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
+void MurnaghanMPM::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
 {
   ProblemSpecP cm_ps = ps;
   if (output_cm_tag) {
@@ -92,12 +92,12 @@ void MurnahanMPM::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
   cm_ps->appendElement("rho0",        d_initialData.d_rho0);
 }
 
-MurnahanMPM* MurnahanMPM::clone()
+MurnaghanMPM* MurnaghanMPM::clone()
 {
-  return scinew MurnahanMPM(*this);
+  return scinew MurnaghanMPM(*this);
 }
 
-void MurnahanMPM::initializeCMData(const Patch* patch,
+void MurnaghanMPM::initializeCMData(const Patch* patch,
                              const MPMMaterial* matl,
                              DataWarehouse* new_dw)
 {
@@ -108,7 +108,7 @@ void MurnahanMPM::initializeCMData(const Patch* patch,
   computeStableTimestep(patch, matl, new_dw);
 }
 
-void MurnahanMPM::allocateCMDataAddRequires(Task* task,
+void MurnaghanMPM::allocateCMDataAddRequires(Task* task,
                                             const MPMMaterial* matl,
                                             const PatchSet* patches,
                                             MPMLabel* ) const
@@ -122,7 +122,7 @@ void MurnahanMPM::allocateCMDataAddRequires(Task* task,
 }
 
 
-void MurnahanMPM::allocateCMDataAdd(DataWarehouse* new_dw,
+void MurnaghanMPM::allocateCMDataAdd(DataWarehouse* new_dw,
                                     ParticleSubset* addset,
                                     map<const VarLabel*, ParticleVariableBase*>* newState,
                                     ParticleSubset* delset,
@@ -137,13 +137,13 @@ void MurnahanMPM::allocateCMDataAdd(DataWarehouse* new_dw,
   // be deleted to the particles to be added
 }
 
-void MurnahanMPM::addParticleState(std::vector<const VarLabel*>& ,
+void MurnaghanMPM::addParticleState(std::vector<const VarLabel*>& ,
                                    std::vector<const VarLabel*>& )
 {
   // Add the local particle state data for this constitutive model.
 }
 
-void MurnahanMPM::computeStableTimestep(const Patch* patch,
+void MurnaghanMPM::computeStableTimestep(const Patch* patch,
                                         const MPMMaterial* matl,
                                         DataWarehouse* new_dw)
 {
@@ -177,7 +177,7 @@ void MurnahanMPM::computeStableTimestep(const Patch* patch,
   new_dw->put(delt_vartype(delT_new), lb->delTLabel, patch->getLevel());
 }
 
-void MurnahanMPM::computeStressTensor(const PatchSubset* patches,
+void MurnaghanMPM::computeStressTensor(const PatchSubset* patches,
                                       const MPMMaterial* matl,
                                       DataWarehouse* old_dw,
                                       DataWarehouse* new_dw)
@@ -317,7 +317,7 @@ void MurnahanMPM::computeStressTensor(const PatchSubset* patches,
 //#endif
 }
 
-void MurnahanMPM::carryForward(const PatchSubset* patches,
+void MurnaghanMPM::carryForward(const PatchSubset* patches,
                                const MPMMaterial* matl,
                                DataWarehouse* old_dw,
                                DataWarehouse* new_dw)
@@ -342,7 +342,7 @@ void MurnahanMPM::carryForward(const PatchSubset* patches,
   }
 }
 
-void MurnahanMPM::addComputesAndRequires(Task* task,
+void MurnaghanMPM::addComputesAndRequires(Task* task,
                                           const MPMMaterial* matl,
                                           const PatchSet* patches) const
 {
@@ -355,7 +355,7 @@ void MurnahanMPM::addComputesAndRequires(Task* task,
 }
 
 void 
-MurnahanMPM::addComputesAndRequires(Task* ,
+MurnaghanMPM::addComputesAndRequires(Task* ,
                                    const MPMMaterial* ,
                                    const PatchSet* ,
                                    const bool ) const
@@ -364,7 +364,7 @@ MurnahanMPM::addComputesAndRequires(Task* ,
 
 
 // The "CM" versions use the pressure-volume relationship of the CNH model
-double MurnahanMPM::computeRhoMicroCM(double pressure, 
+double MurnaghanMPM::computeRhoMicroCM(double pressure, 
                                       const double p_ref,
                                       const MPMMaterial* matl,
                                       double temperature,
@@ -386,7 +386,7 @@ double MurnahanMPM::computeRhoMicroCM(double pressure,
     return rhoM;
 }
 
-void MurnahanMPM::computePressEOSCM(const double rhoM,double& pressure, 
+void MurnaghanMPM::computePressEOSCM(const double rhoM,double& pressure, 
                                     const double p_ref,
                                     double& dp_drho, double& tmp,
                                     const MPMMaterial* matl,
@@ -410,7 +410,7 @@ void MurnahanMPM::computePressEOSCM(const double rhoM,double& pressure,
 
 }
 
-double MurnahanMPM::getCompressibility()
+double MurnaghanMPM::getCompressibility()
 {
   return 1.0/d_initialData.d_K;
 }
@@ -421,19 +421,19 @@ namespace Uintah {
 #if 0
   static MPI_Datatype makeMPI_CMData()
   {
-    ASSERTEQ(sizeof(MurnahanMPM::StateData), sizeof(double)*0);
+    ASSERTEQ(sizeof(MurnaghanMPM::StateData), sizeof(double)*0);
     MPI_Datatype mpitype;
     MPI_Type_vector(1, 0, 0, MPI_DOUBLE, &mpitype);
     MPI_Type_commit(&mpitype);
     return mpitype;
   }
   
-  const TypeDescription* fun_getTypeDescription(MurnahanMPM::StateData*)
+  const TypeDescription* fun_getTypeDescription(MurnaghanMPM::StateData*)
   {
     static TypeDescription* td = 0;
     if(!td){
       td = scinew TypeDescription(TypeDescription::Other,
-                                  "MurnahanMPM::StateData", 
+                                  "MurnaghanMPM::StateData", 
                                   true, &makeMPI_CMData);
     }
     return td;

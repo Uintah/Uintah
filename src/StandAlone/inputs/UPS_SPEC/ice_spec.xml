@@ -100,7 +100,7 @@
                                 attribute1="name OPTIONAL STRING" >
         <dynamic_viscosity    spec="REQUIRED DOUBLE 'positive'" />
         <EOS                  spec="REQUIRED NO_DATA"
-                                attribute1="type REQUIRED STRING 'ideal_gas, hard_sphere_gas, TST, Thomsen_Hartka_water, JWL, JWLC, Murnahan, BirchMurnaghan, Gruneisen, Tillotson, KnaussSeaWater'" >
+                                attribute1="type REQUIRED STRING 'ideal_gas, hard_sphere_gas, TST, Thomsen_Hartka_water, JWL, JWLC, Murnaghan, BirchMurnaghan, Gruneisen, Tillotson, KnaussSeaWater'" >
           <!--  TST  -->
           <a                  spec="REQUIRED DOUBLE" need_applies_to='type  TST, Thomsen_Hartka_water Tillotson' />
           <a                  spec="OPTIONAL DOUBLE" need_applies_to='type  KnaussSeaWater BirchMurnaghan' />
@@ -119,12 +119,12 @@
           <R1                 spec="REQUIRED DOUBLE 'positive'" need_applies_to='type JWL JWLC' /> 
           <R2                 spec="REQUIRED DOUBLE 'positive'" need_applies_to='type JWL JWLC' />
           <om                 spec="REQUIRED DOUBLE 'positive'" need_applies_to='type JWL JWLC' /> 
-          <rho0               spec="REQUIRED DOUBLE 'positive'" need_applies_to='type JWL JWLC Murnahan Gruneisen Tillotson' />
+          <rho0               spec="REQUIRED DOUBLE 'positive'" need_applies_to='type JWL JWLC Murnaghan Gruneisen Tillotson' />
           <rho0               spec="OPTIONAL DOUBLE 'positive'" need_applies_to='type KnaussSeaWater' />
 
-          <!--  Murnahan  -->
-          <n                  spec="REQUIRED DOUBLE 'positive'" need_applies_to='type Murnahan' />
-          <K                  spec="REQUIRED DOUBLE 'positive'" need_applies_to='type Murnahan' />
+          <!--  Murnaghan  -->
+          <n                  spec="REQUIRED DOUBLE 'positive'" need_applies_to='type Murnaghan' />
+          <K                  spec="REQUIRED DOUBLE 'positive'" need_applies_to='type Murnaghan' />
 
           <!-- BirchMurnaghan -->
           <useSpecificHeatModel spec="OPTIONAL BOOLEAN" need_applies_to='type BirchMurnaghan'/>
@@ -134,7 +134,7 @@
           <c3                 spec="OPTIONAL DOUBLE" need_applies_to='type  BirchMurnaghan' />
           
           <K                  spec="OPTIONAL DOUBLE 'positive'" need_applies_to='type KnaussSeaWater' />
-          <P0                 spec="REQUIRED DOUBLE 'positive'" need_applies_to='type Murnahan Gruneisen' />
+          <P0                 spec="REQUIRED DOUBLE 'positive'" need_applies_to='type Murnaghan Gruneisen' />
           <T0                 spec="REQUIRED DOUBLE 'positive'" need_applies_to='type Gruneisen' />
           <T0                 spec="OPTIONAL DOUBLE 'positive'" need_applies_to='type KnaussSeaWater' />
           <S0                 spec="OPTIONAL DOUBLE 'positive'" need_applies_to='type KnaussSeaWater' />
