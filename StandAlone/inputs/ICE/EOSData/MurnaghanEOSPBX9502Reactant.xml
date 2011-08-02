@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='ISO-8859-1' ?>
 <Uintah_Include>
-  <EOS type="Murnahan">
+  <EOS type="Murnaghan">
     <!-- PBX 9502 Parameters 
          Fit to data from:
          Marsh, S.P. LASL Shock Hugoniot Data. Berkeley: University of California Press, 1980.

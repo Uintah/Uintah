@@ -52,13 +52,13 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/MPM/ConstitutiveModel/HypoElasticImplicit.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MWViscoElastic.h>
 #include <CCA/Components/MPM/ConstitutiveModel/Membrane.h>
-#include <CCA/Components/MPM/ConstitutiveModel/MurnahanMPM.h>
+#include <CCA/Components/MPM/ConstitutiveModel/MurnaghanMPM.h>
 #include <CCA/Components/MPM/ConstitutiveModel/ProgramBurn.h>
 #include <CCA/Components/MPM/ConstitutiveModel/ShellMaterial.h>
 #include <CCA/Components/MPM/ConstitutiveModel/ElasticPlastic.h>
 #include <CCA/Components/MPM/ConstitutiveModel/ElasticPlasticHP.h>
 #include <CCA/Components/MPM/ConstitutiveModel/HypoElasticPlastic.h>
-#include <CCA/Components/MPM/ConstitutiveModel/MurnahanMPM.h>
+#include <CCA/Components/MPM/ConstitutiveModel/MurnaghanMPM.h>
 #include <CCA/Components/MPM/ConstitutiveModel/SmallStrainPlastic.h>
 #include <CCA/Components/MPM/ConstitutiveModel/IdealGasMP.h>
 #include <CCA/Components/MPM/ConstitutiveModel/P_Alpha.h>
@@ -201,8 +201,8 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
   else if (mat_type ==  "membrane")
     return(scinew Membrane(child,flags));
 
-  else if (mat_type ==  "murnahanMPM")
-    return(scinew MurnahanMPM(child,flags));
+  else if (mat_type ==  "murnaghanMPM")
+    return(scinew MurnaghanMPM(child,flags));
 
   else if (mat_type ==  "program_burn")
     return(scinew ProgramBurn(child,flags));
@@ -228,8 +228,8 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
   else if (mat_type ==  "visco_plastic")
     return(scinew ViscoPlastic(child,flags));
   
-  else if (mat_type ==  "murnahanMPM")
-    return(scinew MurnahanMPM(child,flags));
+  else if (mat_type ==  "murnaghanMPM")
+    return(scinew MurnaghanMPM(child,flags));
   
   else 
     throw ProblemSetupException("Unknown Material Type R ("+mat_type+")", __FILE__, __LINE__);

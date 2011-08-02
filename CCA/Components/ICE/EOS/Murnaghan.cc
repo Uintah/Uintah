@@ -28,7 +28,7 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <CCA/Components/ICE/EOS/Murnahan.h>
+#include <CCA/Components/ICE/EOS/Murnaghan.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
@@ -38,7 +38,7 @@ DEALINGS IN THE SOFTWARE.
 
 using namespace Uintah;
 
-Murnahan::Murnahan(ProblemSpecP& ps)
+Murnaghan::Murnaghan(ProblemSpecP& ps)
 {
    // Constructor
   ps->require("n",n);
@@ -47,14 +47,14 @@ Murnahan::Murnahan(ProblemSpecP& ps)
   ps->require("P0",P0);
 }
 
-Murnahan::~Murnahan()
+Murnaghan::~Murnaghan()
 {
 }
 
-void Murnahan::outputProblemSpec(ProblemSpecP& ps)
+void Murnaghan::outputProblemSpec(ProblemSpecP& ps)
 {
   ProblemSpecP eos_ps = ps->appendChild("EOS");
-  eos_ps->setAttribute("type","Murnahan");
+  eos_ps->setAttribute("type","Murnaghan");
   eos_ps->appendElement("n",n);
   eos_ps->appendElement("K",K);
   eos_ps->appendElement("rho0",rho0);
@@ -63,7 +63,7 @@ void Murnahan::outputProblemSpec(ProblemSpecP& ps)
 
 
 //__________________________________
-double Murnahan::computeRhoMicro(double press, double,
+double Murnaghan::computeRhoMicro(double press, double,
                                  double , double ,double)
 {
   // Pointwise computation of microscopic density
@@ -79,7 +79,7 @@ double Murnahan::computeRhoMicro(double press, double,
 
 //__________________________________
 // Return (1/v)*(dv/dT)  (constant pressure thermal expansivity)
-double Murnahan::getAlpha(double, double, double, double)
+double Murnaghan::getAlpha(double, double, double, double)
 {
   // No dependence on temperature
   double alpha=0.;
@@ -87,7 +87,7 @@ double Murnahan::getAlpha(double, double, double, double)
 }
 
 //__________________________________
-void Murnahan::computeTempCC(const Patch* patch,
+void Murnaghan::computeTempCC(const Patch* patch,
                              const string& comp_domain,
                              const CCVariable<double>& /*press*/, 
                              const CCVariable<double>& /*gamma*/,
@@ -114,7 +114,7 @@ void Murnahan::computeTempCC(const Patch* patch,
 }
 
 //__________________________________
-void Murnahan::computePressEOS(double rhoM, double, double, double,
+void Murnaghan::computePressEOS(double rhoM, double, double, double,
                           double& press, double& dp_drho, double& dp_de)
 {
   // Pointwise computation of thermodynamic quantities
@@ -132,7 +132,7 @@ void Murnahan::computePressEOS(double rhoM, double, double, double,
 //______________________________________________________________________
 // Update temperature boundary conditions due to hydrostatic pressure gradient
 // call this after set Dirchlet and Neuman BC
-void Murnahan::hydrostaticTempAdjustment(Patch::FaceType, 
+void Murnaghan::hydrostaticTempAdjustment(Patch::FaceType, 
                                          const Patch*,
                                          Iterator& ,
                                          Vector&,
@@ -141,6 +141,6 @@ void Murnahan::hydrostaticTempAdjustment(Patch::FaceType,
                                          const Vector&,
                                          CCVariable<double>&)
 { 
-//  throw InternalError( "ERROR:ICE:EOS:Murnahan: hydrostaticTempAdj() \n"
+//  throw InternalError( "ERROR:ICE:EOS:Murnaghan: hydrostaticTempAdj() \n"
 //                       " has not been implemented", __FILE__, __LINE__ );
 }

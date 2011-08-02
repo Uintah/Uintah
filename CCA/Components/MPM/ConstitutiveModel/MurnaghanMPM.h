@@ -28,7 +28,7 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-//  MurnahanMPM.h 
+//  MurnaghanMPM.h 
 //  class ConstitutiveModel ConstitutiveModel data type -- 3D - 
 //  holds ConstitutiveModel
 //    Features:
@@ -43,8 +43,8 @@ DEALINGS IN THE SOFTWARE.
 // 
 // 
 
-#ifndef __MURNAHAN_CONSTITUTIVE_MODEL_H__
-#define __MURNAHAN_CONSTITUTIVE_MODEL_H__
+#ifndef __MURNAGHAN_CONSTITUTIVE_MODEL_H__
+#define __MURNAGHAN_CONSTITUTIVE_MODEL_H__
 
 
 #include <cmath>
@@ -54,7 +54,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Disclosure/TypeDescription.h>
 
 namespace Uintah {
-  class MurnahanMPM : public ConstitutiveModel {
+  class MurnaghanMPM : public ConstitutiveModel {
 
   public:
 
@@ -76,21 +76,21 @@ namespace Uintah {
   private:
     // Prevent copying of this class
     // copy constructor
-    //MurnahanMPM(const Murnahan &cm);
-    MurnahanMPM& operator=(const MurnahanMPM &cm);
+    //MurnaghanMPM(const Murnaghan &cm);
+    MurnaghanMPM& operator=(const MurnaghanMPM &cm);
 
   public:
     // constructors
-    MurnahanMPM(ProblemSpecP& ps, MPMFlags* flag);
-    MurnahanMPM(const MurnahanMPM* cm);
+    MurnaghanMPM(ProblemSpecP& ps, MPMFlags* flag);
+    MurnaghanMPM(const MurnaghanMPM* cm);
        
     // destructor
-    virtual ~MurnahanMPM();
+    virtual ~MurnaghanMPM();
 
     virtual void outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag = true);
 
     // clone
-    MurnahanMPM* clone();
+    MurnaghanMPM* clone();
     
     // compute stable timestep for this patch
     virtual void computeStableTimestep(const Patch* patch,

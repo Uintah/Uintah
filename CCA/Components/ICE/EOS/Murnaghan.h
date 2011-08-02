@@ -28,8 +28,8 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#ifndef __Murnahan_H__
-#define __Murnahan_H__
+#ifndef __Murnaghan_H__
+#define __Murnaghan_H__
 
 #include <Core/Grid/Variables/CCVariable.h>
 #include "EquationOfState.h"
@@ -40,14 +40,14 @@ namespace Uintah {
 CLASS
    EquationOfState
    
-   A version of the Murnahan equation of state, as described in
+   A version of the Murnaghan equation of state, as described in
    "JWL++:  A Simple Reactive Flow Code Package for Detonation"
    P. Clark Souers, Steve Anderson, James Mercer, Estella McGuire and
    Peter Vitello, Propellants, Explosives and Pyrotechnics, 25, 54-58, 2000.
 
 GENERAL INFORMATION
 
-   Murnahan.h
+   Murnaghan.h
 
    Jim Guilkey
    Department of Mechanical Engineerng
@@ -66,11 +66,11 @@ DESCRIPTION
 WARNING
 ****************************************/
 
-      class Murnahan : public EquationOfState {
+      class Murnaghan : public EquationOfState {
       public:
 
-        Murnahan(ProblemSpecP& ps);
-        virtual ~Murnahan();
+        Murnaghan(ProblemSpecP& ps);
+        virtual ~Murnaghan();
 
         virtual void outputProblemSpec(ProblemSpecP& ps);
         
@@ -111,4 +111,4 @@ WARNING
       };
 } // End namespace Uintah
       
-#endif  // __Murnahan_H__
+#endif  // __Murnaghan_H__
