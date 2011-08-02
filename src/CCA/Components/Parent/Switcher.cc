@@ -77,7 +77,8 @@ static DebugStream dbg("SWITCHER", false);
 // - test carry over and init vars
 // - test in parallel
 // - test restarting capability
-
+// - fix so each subcomponent filebase name is used for uda.
+// - test different components (mpmice, impm) for subcomponents
 
 
 //__________________________________
