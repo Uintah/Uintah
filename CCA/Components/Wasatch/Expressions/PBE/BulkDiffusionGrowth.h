@@ -6,20 +6,26 @@
 #include <expression/Expr_Expression.h>
 
 /**
- *	\ingroup WasatchExpressions
+ *  \ingroup WasatchExpressions
  *  \class BulkDiffusionGrowth
  *  \author Tony Saad
  *  \date July, 2011
  *
- *  \brief Implements the moment integral of the monosurface growth model of the form
- *         \f$ G = g_0(\mathbf{x},S,t)r^2 \f$. In the context of the moments method, 
- *					this expression is part of the convection term in internal coordinates.
- Let \f$\eta\equiv\eta(r;\mathbf{x},t), where \f$r\f$ is an internal coordinate and 
- \f$\mathbf{x}\f$ and \f$ t \f$ are spatial and time coordinates. The convection
- term in internal coordinates takes the form \f$ \frac{\partial G\eta}{\partial r}
- = g_0(\mathbf{x},S,t)\frac{\partial r^2 \eta}{\partial r}\f$. Upon integration, we have
- \f$ \int_{-\infty}^{\infty) r^k g_0 \frac{\partial r^2 \eta}{\partial r} \, \mathrm{d}r
-  = k g_0 m_{k+1}\f$ where \f$ k \f$ corresponds to the kth moment.
+ *  \tparam FieldT the type of field.
+
+ *  \brief Implements the moment integral of the monosurface growth
+ *         model of the form \f$ G = g_0(\mathbf{x},S,t)r^2 \f$.
+ *
+ *   In the context of the moments method, this expression is part of
+ *   the convection term in internal coordinates.  Let
+ *   \f$\eta\equiv\eta(r;\mathbf{x},t)\f$, where \f$r\f$ is an
+ *   internal coordinate and \f$\mathbf{x}\f$ and \f$ t \f$ are
+ *   spatial and time coordinates. The convection term in internal
+ *   coordinates takes the form
+ *    \f[ \frac{\partial G\eta}{\partial r} = g_0(\mathbf{x},S,t)\frac{\partial r^2 \eta}{\partial r}. \f]
+ *   Upon integration, we have
+ *    \f[ \int_{-\infty}^{\infty} r^k g_0 \frac{\partial r^2 \eta}{\partial r} \, \mathrm{d}r = k g_0 m_{k+1},\f]
+ *   where \f$ k \f$ corresponds to the \f$k^{th}\f$ moment.
  */
 template< typename FieldT >
 class BulkDiffusionGrowth
@@ -34,16 +40,16 @@ class BulkDiffusionGrowth
   const double momentOrder_; // this is the order of the moment equation in which the growth rate is used
 
   BulkDiffusionGrowth( const Expr::Tag phiTag,
-                    const Expr::Tag growthCoefTag,
-                    const double momentOrder,
-                    const Expr::ExpressionID& id,
-                    const Expr::ExpressionRegistry& reg  );
+                       const Expr::Tag growthCoefTag,
+                       const double momentOrder,
+                       const Expr::ExpressionID& id,
+                       const Expr::ExpressionRegistry& reg  );
 
   BulkDiffusionGrowth( const Expr::Tag phiTag,
-                    const double growthCoefVal,
-                    const double momentOrder,
-                    const Expr::ExpressionID& id,
-                    const Expr::ExpressionRegistry& reg  );
+                       const double growthCoefVal,
+                       const double momentOrder,
+                       const Expr::ExpressionID& id,
+                       const Expr::ExpressionRegistry& reg  );
   
 
 public:
@@ -53,18 +59,18 @@ public:
     Builder(const Expr::Tag phiTag, 
             const Expr::Tag growthCoefTag, 
             const double momentOrder )
-    				: isconstcoef_( false ),
-					    phit_(phiTag),
-					    growthcoeft_(growthCoefTag),
-					    momentorder_(momentOrder),
-					    growthcoefval_(0.0)
+      : isconstcoef_( false ),
+        phit_(phiTag),
+        growthcoeft_(growthCoefTag),
+        momentorder_(momentOrder),
+        growthcoefval_(0.0)
     {}
     
     Builder( const Expr::Tag phiTag, const double growthCoefVal, const double momentOrder )
-    : isconstcoef_( true ),
-    phit_(phiTag),
-    growthcoefval_(growthCoefVal),
-    momentorder_(momentOrder)
+      : isconstcoef_( true ),
+        phit_(phiTag),
+        growthcoefval_(growthCoefVal),
+        momentorder_(momentOrder)
     {}
     
 
@@ -72,8 +78,8 @@ public:
     build( const Expr::ExpressionID& id,
            const Expr::ExpressionRegistry& reg ) const
     {
-      if (isconstcoef_) return new BulkDiffusionGrowth<FieldT>( phit_, growthcoefval_, momentorder_, id, reg);
-      else 										return new BulkDiffusionGrowth<FieldT>( phit_, growthcoeft_, momentorder_, id, reg);
+      if (isconstcoef_) return new BulkDiffusionGrowth<FieldT>( phit_, growthcoefval_, momentorder_, id, reg );
+      else              return new BulkDiffusionGrowth<FieldT>( phit_, growthcoeft_,   momentorder_, id, reg );
     }
 
   private:
@@ -86,11 +92,8 @@ public:
   ~BulkDiffusionGrowth();
 
   void advertise_dependents( Expr::ExprDeps& exprDeps );
-
   void bind_fields( const Expr::FieldManagerList& fml );
-
   void bind_operators( const SpatialOps::OperatorDatabase& opDB );
-
   void evaluate();
 
 };
@@ -130,11 +133,11 @@ BulkDiffusionGrowth( const Expr::Tag phiTag,
                   const Expr::ExpressionID& id,
                   const Expr::ExpressionRegistry& reg  )
 : Expr::Expression<FieldT>(id,reg),
-isConstCoef_( true ),
-phiTag_(phiTag),
-momentOrder_(0.0),
-growthCoefTag_("NULL", Expr::INVALID_CONTEXT),
-growthCoefVal_(growthCoefVal)
+  isConstCoef_( true ),
+  phiTag_(phiTag),
+  momentOrder_(0.0),
+  growthCoefTag_("NULL", Expr::INVALID_CONTEXT),
+  growthCoefVal_(growthCoefVal)
 {}
 
 //--------------------------------------------------------------------

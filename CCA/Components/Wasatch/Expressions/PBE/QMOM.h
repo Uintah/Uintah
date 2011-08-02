@@ -15,6 +15,9 @@ extern "C"{
 
 /**
  *  \class QMOM
+ *  \author Tony Saad
+ *  \todo add documentation
+ *  \todo add till support
  */
 template<typename FieldT>
 class QMOM : public Expr::Expression<FieldT>
@@ -22,9 +25,9 @@ class QMOM : public Expr::Expression<FieldT>
   typedef std::vector<const FieldT*> FieldTVec;
   FieldTVec knownMoments_;  
   const Expr::TagList knownMomentsTagList_;
-  QMOM(const Expr::TagList knownMomentsTagList,
-       const Expr::ExpressionID& id,
-       const Expr::ExpressionRegistry& reg);
+  QMOM( const Expr::TagList knownMomentsTagList,
+        const Expr::ExpressionID& id,
+        const Expr::ExpressionRegistry& reg );
 
 public:
   class Builder : public Expr::ExpressionBuilder
@@ -47,11 +50,8 @@ public:
   ~QMOM();
 
   void advertise_dependents( Expr::ExprDeps& exprDeps );
-
   void bind_fields( const Expr::FieldManagerList& fml );
-
   void bind_operators( const SpatialOps::OperatorDatabase& opDB );
-
   void evaluate();
 
 };
@@ -100,9 +100,11 @@ bind_fields( const Expr::FieldManagerList& fml )
   /* add additional code here to bind any fields required by this expression */
   // iterate over taglist
   knownMoments_.clear();
-  for (Expr::TagList::const_iterator iMomTag=knownMomentsTagList_.begin(); iMomTag!=knownMomentsTagList_.end(); ++iMomTag)
-      knownMoments_.push_back(&fm.field_ref(*iMomTag));
-      
+  for( Expr::TagList::const_iterator iMomTag=knownMomentsTagList_.begin();
+       iMomTag!=knownMomentsTagList_.end();
+       ++iMomTag ){
+    knownMoments_.push_back(&fm.field_ref(*iMomTag));
+  }      
 }
 
 //--------------------------------------------------------------------
