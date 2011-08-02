@@ -106,61 +106,6 @@ namespace Wasatch{
     //Expr::TagList weightsTagList_, abscissaeTagList_, weightsAndAbscissaeTagList_;
     };
 
-  template< typename FieldT >
-  void setup_growth_expression(	Uintah::ProblemSpecP growthParams,
-                               const std::string& phiName, 
-                               const double momentOrder,
-                               const int nEqs,
-                               Expr::TagList& growthTags,
-                               const Expr::TagList& weightsTagList,
-                               const Expr::TagList& abscissaeTagList,                               
-                               Expr::ExpressionFactory& factory );
-  
-  template< typename FieldT >
-  void setup_nucleation_expression(Uintah::ProblemSpecP growthParams,
-                                   const std::string& phiName, 
-                                   const double momentOrder,
-                                   const int nEqs,
-                                   Expr::TagList& growthTags,
-                                   const Expr::TagList& weightsTagList,
-                                   const Expr::TagList& abscissaeTagList,                               
-                                   Expr::ExpressionFactory& factory );  
-
-  template< typename FieldT >
-  void setup_birth_expression( Uintah::ProblemSpecP birthParams,
-                              const std::string& phiName, 
-                              const double momentOrder,
-                              const int nEqs,
-                              Expr::TagList& birthTags,
-                              const Expr::TagList& weightsTagList,
-                              const Expr::TagList& abscissaeTagList,                               
-                              Expr::ExpressionFactory& factory );  
-
-  template< typename FieldT >
-  void setup_death_expression(Uintah::ProblemSpecP deathParams,
-                              const std::string& phiName, 
-                              const double momentOrder,
-                              const int nEqs,
-                              Expr::TagList& deathTags,
-                              const Expr::TagList& weightsTagList,
-                              const Expr::TagList& abscissaeTagList,                               
-                              Expr::ExpressionFactory& factory );  
-
-  template< typename FieldT >
-  void setup_diffusive_flux_expression( Uintah::ProblemSpecP diffFluxParams,
-                                       const std::string& phiName,
-                                       Expr::ExpressionFactory& factory,
-                                       typename ScalarRHS<FieldT>::FieldTagInfo& info );
-
-  template< typename FieldT >
-  void setup_convective_flux_expression( Uintah::ProblemSpecP convFluxParams,
-                                        const std::string& phiName,
-                                        Expr::ExpressionFactory& factory,
-                                        typename ScalarRHS<FieldT>::FieldTagInfo& info );  
-  
-  std::string
-  get_population_name( Uintah::ProblemSpecP params );
-
 } // namespace Wasatch
 #endif // Wasatch_MomentTransportEquation_h
 

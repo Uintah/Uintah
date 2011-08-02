@@ -8,6 +8,8 @@
 
 /**
  *  \class QuadratureClosure
+ *  \author Tony Saad
+ *  \todo add documentation
  */
 template< typename FieldT >
 class QuadratureClosure
@@ -22,20 +24,20 @@ class QuadratureClosure
   FieldVec weights_;
   FieldVec abscissae_;
   
-  QuadratureClosure(const Expr::TagList weightsTagList_,
-                    const Expr::TagList abscissaeTagList_,
-                const double momentOrder,
-                const Expr::ExpressionID& id,
-                const Expr::ExpressionRegistry& reg  );
+  QuadratureClosure( const Expr::TagList weightsTagList_,
+                     const Expr::TagList abscissaeTagList_,
+                     const double momentOrder,
+                     const Expr::ExpressionID& id,
+                     const Expr::ExpressionRegistry& reg  );
 
 public:
   class Builder : public Expr::ExpressionBuilder
   {
   public:
     Builder( const Expr::TagList weightsTagList, const Expr::TagList abscissaeTagList, const double momentOrder )
-    : weightstaglist_(weightsTagList),
-    abscissaetaglist_(abscissaeTagList),
-      momentorder_(momentOrder)
+      : weightstaglist_(weightsTagList),
+        abscissaetaglist_(abscissaeTagList),
+        momentorder_(momentOrder)
     {}
 
     Expr::ExpressionBase*
@@ -72,11 +74,11 @@ public:
 
 template< typename FieldT >
 QuadratureClosure<FieldT>::
-QuadratureClosure(const Expr::TagList weightsTagList,
-                  const Expr::TagList abscissaeTagList,
-                  const double momentOrder,
-                  const Expr::ExpressionID& id,
-                  const Expr::ExpressionRegistry& reg  )
+QuadratureClosure( const Expr::TagList weightsTagList,
+                   const Expr::TagList abscissaeTagList,
+                   const double momentOrder,
+                   const Expr::ExpressionID& id,
+                   const Expr::ExpressionRegistry& reg  )
   : Expr::Expression<FieldT>(id,reg),
     weightsTagList_(weightsTagList),
     abscissaeTagList_(abscissaeTagList),
@@ -138,8 +140,9 @@ evaluate()
   FieldT& result = this->value();
   result = 0.0;
   typename FieldVec::const_iterator abscissaeIterator = abscissae_.begin();
-  for (typename FieldVec::const_iterator weightsIterator=weights_.begin(); 
-       weightsIterator!=weights_.end(); ++weightsIterator, ++abscissaeIterator) {
+  for( typename FieldVec::const_iterator weightsIterator=weights_.begin(); 
+       weightsIterator!=weights_.end();
+       ++weightsIterator, ++abscissaeIterator) {
     result <<= result + (**weightsIterator) * pow(**abscissaeIterator,momentOrder_);
   }
 }

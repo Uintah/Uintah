@@ -6,6 +6,8 @@
 
 /**
  *  \class UniformGrowth
+ *  \author Tony Saad
+ *  \todo add documentation
  */
 template< typename FieldT >
 class UniformGrowth
