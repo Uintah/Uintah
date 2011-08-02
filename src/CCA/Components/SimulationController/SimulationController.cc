@@ -112,6 +112,27 @@ namespace Uintah {
     d_sim = 0;
 
     d_grid_ps=d_ups->findBlock("Grid");
+#ifdef USE_PAPI_COUNTERS
+  event_set = PAPI_NULL;
+
+  PAPI_thread_init(pthread_self);
+  int retp = PAPI_is_initialized();
+  if (retp != PAPI_LOW_LEVEL_INITED)
+      if (d_myworld->myrank() == 0)
+    cout<< "WARNNING: Cannot init PAPI counter! Error code= " << retp << endl;
+  retp = PAPI_create_eventset(&event_set);
+  if ( retp != PAPI_OK) 
+      if (d_myworld->myrank() == 0)
+    cout<< "WARNNING: Cannot create PAPI counter! Error code= " << retp << endl;
+  retp = PAPI_add_event(event_set, PAPI_FP_OPS);
+  if ( retp != PAPI_OK) 
+      if (d_myworld->myrank() == 0)
+    cout<< "WARNNING: Cannot add PAPI counter! Error code= " << retp << endl;
+  retp= PAPI_start(event_set);
+  if ( retp != PAPI_OK) 
+      if (d_myworld->myrank() == 0)
+    cout<< "WARNNING: Cannot start PAPI counter! Error code= " << retp << endl;
+#endif
   }
 
   SimulationController::~SimulationController()
@@ -519,13 +540,19 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
 
  
 #ifdef USE_PAPI_COUNTERS
-  long long recv_flop[1];
   double flop;
-  if (PAPI_read_counters(recv_flop, 1) != PAPI_OK) {
+  int retp=PAPI_read(event_set, event_values);
+  cout << d_myworld->myrank() << "PAPI Counter:::: " << event_values[0] <<endl;
+  if (retp != PAPI_OK) {
     if (d_myworld->myrank() == 0) 
-      cout<< "WARNNING: Cannot read PAPI counter!" <<endl;
+      cout<< "WARNNING: Cannot read PAPI counter! Error value = " << retp << endl;
     flop = 0;
-  } else flop = (double) recv_flop[0]  ;
+  } else flop = (double) event_values[0]  ;
+  retp = PAPI_reset(event_set);
+  if (retp != PAPI_OK) {
+    if (d_myworld->myrank() == 0) 
+      cout<< "WARNNING: Cannot reset PAPI counter! Error value = " << retp << endl;
+  }
 #endif
 
   // with the sum reduces, use double, since with memory it is possible that
