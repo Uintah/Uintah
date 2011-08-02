@@ -147,6 +147,7 @@ namespace Uintah {
     vector<vector<int> > d_initLevels;
     vector<vector<VarLabel*> > d_initVarLabels;
 
+    vector<string> d_in_file;                    // contains the name of all the subcomponent inputfiles
     vector<string> d_carryOverVars;
     vector<VarLabel*> d_carryOverVarLabels;
     vector<MaterialSubset*> d_carryOverVarMatls;
