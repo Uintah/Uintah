@@ -71,6 +71,8 @@ DEALINGS IN THE SOFTWARE.
 
 #include <time.h>
 
+#include <sci_defs/cuda_defs.h>
+
 using namespace Uintah;
 using namespace SCIRun;
 using namespace std;

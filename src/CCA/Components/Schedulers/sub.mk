@@ -38,6 +38,7 @@ SRCS += \
 	$(SRCDIR)/DetailedTasks.cc \
 	$(SRCDIR)/MemoryLog.cc \
 	$(SRCDIR)/CommRecMPI.cc \
+	$(SRCDIR)/CUDADevice.cc \
 	$(SRCDIR)/MPIScheduler.cc \
 	$(SRCDIR)/DynamicMPIScheduler.cc \
 	$(SRCDIR)/MessageLog.cc \
@@ -54,7 +55,7 @@ SRCS += \
 	$(SRCDIR)/DependencyException.cc \
 	$(SRCDIR)/IncorrectAllocation.cc \
 	$(SRCDIR)/Util.cc \
-	$(SRCDIR)/templates.cc
+	$(SRCDIR)/templates.cc \
 
 PSELIBS := \
 	CCA/Components/ProblemSpecification \
@@ -74,7 +75,7 @@ PSELIBS := \
 	\
 	Core/Math
 
-LIBS := $(XML2_LIBRARY) $(TAU_LIBRARY) $(MPI_LIBRARY) $(VAMPIR_LIBRARY) $(PERFEX_LIBRARY)
+LIBS := $(XML2_LIBRARY) $(TAU_LIBRARY) $(MPI_LIBRARY) $(VAMPIR_LIBRARY) $(CUDA_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
