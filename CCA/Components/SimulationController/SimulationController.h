@@ -154,6 +154,8 @@ class DataArchive;
       // If !d_restartFromScratch, then this indicates whether to move
       // or copy the old timesteps.
       bool d_restartRemoveOldDir;
+      int event_set;  //PAPI event set 
+      long long event_values[1]; //PAPI event value
 
 
    private:

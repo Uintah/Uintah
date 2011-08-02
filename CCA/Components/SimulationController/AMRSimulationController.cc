@@ -38,6 +38,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Math/MiscMath.h>
 #include <Core/OS/ProcessInfo.h>
 #include <Core/Thread/Time.h>
+#include <Core/Thread/Thread.h>
 #include <Core/Parallel/Parallel.h>
 
 #include <Core/Exceptions/ProblemSetupException.h>
@@ -69,8 +70,6 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Ports/SimulationInterface.h>
 
-#include <sci_defs/papi_defs.h> // for PAPI flop counters
-
 #include <TauProfilerForSCIRun.h>
 
 #include <iostream>
@@ -101,11 +100,6 @@ AMRSimulationController::run()
 {
   MALLOC_TRACE_TAG_SCOPE("AMRSimulationController::run()");
  
-#ifdef USE_PAPI_COUNTERS
-  int event_set[1] = {PAPI_FP_OPS};
-  if (PAPI_start_counters(event_set, 1) != PAPI_OK) 
-    proc0cout<< "WARNNING: Cannot start PAPI counter!" <<endl;
-#endif
 
 
   bool log_dw_mem=false;
