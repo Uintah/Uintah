@@ -7,6 +7,7 @@
 //-- Wasatch includes --//
 #include <CCA/Components/Wasatch/FieldTypes.h>
 #include <CCA/Components/Wasatch/BCHelperTools.h>
+#include <CCA/Components/Wasatch/Expressions/ScalarRHS.h>
 
 //-- Uintah includes --//
 #include <Core/ProblemSpec/ProblemSpecP.h>
@@ -116,34 +117,46 @@ namespace Wasatch{
                                Expr::ExpressionFactory& factory );
   
   template< typename FieldT >
-  void setup_nucleation_expression(Uintah::ProblemSpecP nucleationParams,
+  void setup_nucleation_expression(Uintah::ProblemSpecP growthParams,
                                    const std::string& phiName, 
-                                   Expr::ExpressionFactory& factory,
-                                   typename MomentRHS<FieldT>::FieldTagInfo& info );  
+                                   const double momentOrder,
+                                   const int nEqs,
+                                   Expr::TagList& growthTags,
+                                   const Expr::TagList& weightsTagList,
+                                   const Expr::TagList& abscissaeTagList,                               
+                                   Expr::ExpressionFactory& factory );  
 
   template< typename FieldT >
   void setup_birth_expression( Uintah::ProblemSpecP birthParams,
-                              const std::string& phiName,
-															Expr::ExpressionFactory& factory,
-                              typename MomentRHS<FieldT>::FieldTagInfo& info );  
+                              const std::string& phiName, 
+                              const double momentOrder,
+                              const int nEqs,
+                              Expr::TagList& birthTags,
+                              const Expr::TagList& weightsTagList,
+                              const Expr::TagList& abscissaeTagList,                               
+                              Expr::ExpressionFactory& factory );  
 
   template< typename FieldT >
   void setup_death_expression(Uintah::ProblemSpecP deathParams,
                               const std::string& phiName, 
-                              Expr::ExpressionFactory& factory,
-                              typename MomentRHS<FieldT>::FieldTagInfo& info );  
+                              const double momentOrder,
+                              const int nEqs,
+                              Expr::TagList& deathTags,
+                              const Expr::TagList& weightsTagList,
+                              const Expr::TagList& abscissaeTagList,                               
+                              Expr::ExpressionFactory& factory );  
 
   template< typename FieldT >
   void setup_diffusive_flux_expression( Uintah::ProblemSpecP diffFluxParams,
                                        const std::string& phiName,
                                        Expr::ExpressionFactory& factory,
-                                       typename MomentRHS<FieldT>::FieldTagInfo& info );
+                                       typename ScalarRHS<FieldT>::FieldTagInfo& info );
 
   template< typename FieldT >
   void setup_convective_flux_expression( Uintah::ProblemSpecP convFluxParams,
                                         const std::string& phiName,
                                         Expr::ExpressionFactory& factory,
-                                        typename MomentRHS<FieldT>::FieldTagInfo& info );  
+                                        typename ScalarRHS<FieldT>::FieldTagInfo& info );  
   
   std::string
   get_population_name( Uintah::ProblemSpecP params );
