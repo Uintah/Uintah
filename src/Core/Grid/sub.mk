@@ -54,6 +54,7 @@ SRCS += \
         $(SRCDIR)/Material.cc              \
         $(SRCDIR)/Node27Interpolator.cc    \
         $(SRCDIR)/PatchRangeTree.cc        \
+        $(SRCDIR)/CUDATask.cc              \
         $(SRCDIR)/Patch.cc                 \
         $(SRCDIR)/Region.cc                \
         $(SRCDIR)/SimpleMaterial.cc        \
