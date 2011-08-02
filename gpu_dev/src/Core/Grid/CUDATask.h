@@ -27,6 +27,8 @@
  
  */
 
+#include <sci_defs/cuda_defs.h>
+
 #ifdef HAVE_CUDA
 
 #ifndef UINTAH_HOMEBREW_CUDATask_H

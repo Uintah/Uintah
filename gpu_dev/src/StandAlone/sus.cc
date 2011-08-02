@@ -304,7 +304,7 @@ main( int argc, char *argv[], char *env[] )
   bool   track = false, track_or_die = false;
 
   // GPU Values
-  bool with_gpu = false;
+  bool withGPU = false;
     
   // Checks to see if user is running an MPI version of sus.
   Uintah::Parallel::determineIfRunningUnderMPI( argc, argv );

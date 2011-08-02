@@ -27,6 +27,8 @@
  
  */
 
+#include <sci_defs/cuda_defs.h>
+
 #ifdef HAVE_CUDA
 
 #include <Core/Grid/Task.h>
@@ -60,12 +62,12 @@ CUDATask::doit (const ProcessorGroup* pc,
 {
     DataWarehouse* fromDW = mapDataWarehouse(Task::OldDW, dws);
     DataWarehouse* toDW = mapDataWarehouse(Task::NewDW, dws);
-    if(d_action)
+    if(d_action2)
     { 
-        if(dynamic_cast<CUDAActionBase *>(d_action))
+        if(dynamic_cast<CUDAActionBase *>(d_action2))
         {    
             devprop->incrementRunningKernels();
-            dynamic_cast<CUDAActionBase *>(d_action)->doit(pc, patches, matls, fromDW, toDW, dev, devprop);
+            dynamic_cast<CUDAActionBase *>(d_action2)->doit(pc, patches, matls, fromDW, toDW, dev, devprop);
         }
         else
             throw new InternalError("ERROR:CUDATask:doit(): Failed to cast the action to a CUDAAction.  Bailing out.",__FILE__, __LINE__);
