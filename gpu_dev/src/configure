@@ -636,6 +636,11 @@ LIBOBJS
 scirun_src_dir
 scirun_obj_dir
 WOFF_STRING
+CUDA_LIB_FLAG
+CUDA_LIB_DIR_FLAG
+INC_CUDA_H
+DEF_CUDA
+HAVE_CUDA
 HYPRE_LIB_DIR_FLAG
 HYPRE_LIB_FLAG
 INC_HYPRE_H
@@ -691,12 +696,6 @@ MPI_UNI_LIB_DIR_FLAG
 MPI_UNI_LIB_FLAG
 INC_MPI_UNI_H
 DEF_MPI_UNI
-CUDA_LIB_FLAG
-CUDA_LIB_DIR_FLAG
-INC_CUDA_H
-DEF_CUDA
-HAVE_CUDA
-NVCC
 MPI_LIB_DIR_FLAG
 MPI_LIB_FLAG
 INC_MPI_H
@@ -858,6 +857,9 @@ build_os
 build_vendor
 build_cpu
 build
+NVCC_CXXFLAGS
+NVCC_CFLAGS
+NVCC
 CXXCPP
 CPP
 FFLAGS
@@ -977,9 +979,11 @@ F77
 FFLAGS
 CPP
 CXXCPP
+NVCC
+NVCC_CFLAGS
+NVCC_CXXFLAGS
 LIBS
-CCC
-NVCC'
+CCC'
 
 
 # Initialize some variables set by options.
@@ -1688,8 +1692,11 @@ Some influential environment variables:
   FFLAGS      Fortran 77 compiler flags
   CPP         C preprocessor
   CXXCPP      C++ preprocessor
+  NVCC        CUDA compiler command
+  NVCC_CFLAGS CUDA C compiler flags
+  NVCC_CXXFLAGS
+              CUDA C++ compiler flags
   LIBS        libraries to pass to the linker, e.g. -l<library>
-  NVCC        nvcc
 
 Use these variables to override the choices made by `configure' or to help
 it to find libraries and programs with nonstandard names/locations.
@@ -2902,6 +2909,18 @@ fi
 
 
   sci_arg_var_list="$sci_arg_var_list CXXCPP"
+
+
+
+  sci_arg_var_list="$sci_arg_var_list NVCC"
+
+
+
+  sci_arg_var_list="$sci_arg_var_list NVCC_CFLAGS"
+
+
+
+  sci_arg_var_list="$sci_arg_var_list NVCC_CXXFLAGS"
 
 
 # Make sure we can run config.sub.
@@ -37368,479 +37387,6 @@ fi #end sci_required_mpi
 
 sci_defs_files="$sci_defs_files include/sci_defs/mpi_testdefs.h"
 
-##  --  search for cuda stuff  ------------------------------------------
-if test "$sci_required_cuda" = "yes"; then
-
-  echo
-  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for required CUDA components......" >&5
-$as_echo "$as_me: checking for required CUDA components......" >&6;}
-  echo
-
-  if test \( "$with_cuda" -a "$with_cuda_sdk" = "no" \) -o \( "$with_cuda" = "no" -a "$with_cuda_sdk" \) ; then
-    as_fn_error $? "Both --with-cuda=DIR and --with-cuda-sdk=DIR must be specified... " "$LINENO" 5
-  fi
-  if test \( "$with_cuda" -a "$with_cuda_sdk" = "" \) -o \( "$with_cuda" = "" -a "$with_cuda_sdk" \); then
-    as_fn_error $? "Both --with-cuda=DIR and --with-cuda-sdk=DIR must be specified... " "$LINENO" 5
-  fi
-
-  if ! test -d "$with_cuda"; then
-    as_fn_error $? "The directory specified with --with-cuda=DIR is not valid: $with_cuda " "$LINENO" 5
-  fi
-
-  if ! test -d "$with_cuda_sdk"; then
-    as_fn_error $? "The directory specified with --with-cuda_sdk=DIR is not valid: $with_cuda_sdk " "$LINENO" 5
-  fi
-
-  # the major CUDA definitions, etc
-  DEF_CUDA=""
-  HAVE_CUDA=""
-  HAVE_CUDA_H=""
-  INC_CUDA_H=""
-  CUDA_LIB_DIR=""
-
-  # all the -L's
-  CUDA_LIB_DIR_FLAG=""
-
-  # all the -l's
-  CUDA_LIB_FLAG=""
-
-  # confirm the existence/location of CUDA lib and include directories
-  _cuda_lib=
-  _cuda_inc="$with_cuda/include"
-  # account for lib64 or lib32 or just lib...
-
-##
-## BASE_LIB_PATH:
-##
-## This macro takes the base path of a library and determines
-## if there is a lib32, lib64, or just plain lib that is
-## associated with it.  It sets the full path to the value of
-## the first argument.
-##
-## eg:  if arg 2 is /usr/sci/local, and the machine has a
-## /usr/sci/local/lib64, and configure is in 64 bit mode, then
-## /sur/sci/local/lib64 is set as the value of arg 1.
-##
-## arguments mean:
-## arg 1 : This argument will be written with the result
-## arg 2 : library base.  I.e. /usr, /usr/local, /usr/X11R6
-##
-## This function assums the enable_64bit variable is in scope
-##
-
-  _new_lib_path=$with_cuda/lib
-
-  ## if 64 bit is enabled, check for lib64 first, otherwise use lib
-  if test "$enable_64bit" = "yes"; then
-    _new_lib_path=$with_cuda/lib64
-    if test ! -e $_new_lib_path; then
-      _new_lib_path=$with_cuda/lib
-    fi
-  else
-  ## We should look for lib32 (IRIX), then default to lib
-    _new_lib_path=$with_cuda/lib32
-    if test ! -e $_new_lib_path; then
-      _new_lib_path=$with_cuda/lib
-    fi
-  fi
-  eval _cuda_lib='"$_new_lib_path"'
-
-
-  # confirm the existence/location of CUDA-SDK lib and include directories
-  _cuda_sdk_lib=$with_cuda_sdk/C/lib
-  _cuda_sdk_inc=$with_cuda_sdk/C/common/inc
-
-  # don't need to account for lib64 or lib32. It will be just lib...
-  # below we will check for "libcutil" or "libcutil_x86_64" within $with_cuda_sdk/C/lib
-  _cutil_lib=""
-  if test "$NBITS" = 64; then
-    _cutil_lib="cutil_x86_64"
-  else
-    _cutil_lib="cutil"
-  fi
-
-# code to compile and test linking for (this will be deleted after tests)
-  cat > cuda_conf_test.cu <<EOF
-#include <stdio.h>
-#include <stdlib.h>
-#include <cutil.h>
-#include <cuda.h>
-
-__global__ void vectorAddGPU(float *a, float *results, int N) {
-	int idx = threadIdx.x;
-	if (idx < N) {
-		*(results+idx) = *(a+idx) * (*(a+idx));
-	}
-}
-
-int main(int argc, char **argv) {
-
-	int N = 512;
-    float *a = (float *)malloc(N * sizeof(float));
-    float *results = (float *)malloc(N * sizeof(float));
-	float *dev_a, *dev_results;
-	int memsize = N * sizeof(float);
-
-	for (int i = 0; i < N; i++) {
-	    *(a+i) = i;
-		printf("a:%d = %f\n", i, *(a+i));
-	}
-
-	CUDA_SAFE_CALL(cudaMalloc((void**)&dev_a, memsize));
-	CUDA_SAFE_CALL(cudaMalloc((void**)&dev_results, memsize));
-	CUDA_SAFE_CALL(cudaMemcpy(dev_a, a, memsize, cudaMemcpyHostToDevice));
-	CUDA_SAFE_CALL(cudaMemcpy(dev_results, results, memsize, cudaMemcpyHostToDevice));
-
-	vectorAddGPU<<< 1, 512 >>>(dev_a, dev_results, N);
-
-	CUDA_SAFE_CALL(cudaMemcpy(results, dev_results, memsize, cudaMemcpyDeviceToHost));
-
-	for (int i = 0; i < N; i++) {
-		printf("a:%d = %f\n", i, *(results+i));
-	}
-
-    CUDA_SAFE_CALL(cudaFree(dev_a));
-    CUDA_SAFE_CALL(cudaFree(dev_results));
-    free(a);
-    free(results);
-
-	cudaThreadExit();
-
-	return 1;
-}
-EOF
-
-  # now try to compile and link the above CUDA code
-  #--------------------------------------------------
-  ## arg 1 : variable base name i.e. CUDA
-  ## arg 2 : checking message
-  ## arg 3 : includes (header files) that arg 8 needs to compile
-  ## arg 4 : include paths -I
-  ## arg 5 : list of libs to link against -l
-  ## arg 6 : lib paths -L
-  ## arg 7 : extra link flags (can be empty)
-  ## arg 8 : body of code (source file) to compile
-  ## arg 9 : optional or not-optional required argument
-  #--------------------------------------------------
-
-
-## arguments mean:
-## arg 1 : variable base name i.e. CUDA
-## arg 2 : checking message
-## arg 3 : includes that arg 8 needs to compile
-## arg 4 : include paths -I
-## arg 5 : list of libs to link against -l
-## arg 6 : lib paths -L
-## arg 7 : extra link flags
-## arg 8 : body of code (source file) to compile
-## arg 9 : optional or not-optional required argument
-##
-## after execution of macro, the following will be defined:
-##      Variable            Value
-##      --------            -----
-##      CUDA_LIB_DIR        => lib path
-##      CUDA_LIB_DIR_FLAG   => all the -L's
-##      CUDA_LIB_FLAG       => all the -l's
-##      HAVE_CUDA           => yes or no
-##      INC_CUDA_H          => all the -I's
-##      HAVE_CUDA_H         => yes or no
-
-# make sure we have a base name, bail otherwise
-
-
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for CUDA libraries and headers (optional)" >&5
-$as_echo_n "checking for CUDA libraries and headers (optional)... " >&6; }
-echo
-
-# save all the old values
-_sci_savecc=$CC
-_sci_savelibs=$LIBS
-_sci_saveldflags=$LDFLAGS
-_sci_savecflags=$CFLAGS
-_sci_savecxxflags=$CXXFLAGS
-
-_sci_includes=
-
-for i in $_cuda_inc $_cuda_sdk_inc; do
-  # make sure it exists
-  if test -d $i; then
-    if test -z "$_sci_includes"; then
-      _sci_includes=-I$i
-    else
-      _sci_includes="$_sci_includes -I$i"
-    fi
-  fi
-done
-
-
-for i in cudart $_cutil_lib; do
-  if test -z "$_sci_libs"; then
-    _sci_libs=-l$i
-  else
-    _sci_libs="$_sci_libs -l$i"
-  fi
-done
-
-_sci_lib_path=
-
-for i in $_cuda_lib $_cuda_sdk_lib; do
-  # make sure it exists
-  if test -d $i; then
-    if test -z "$_sci_lib_path"; then
-      #_sci_lib_path="$LDRUN_PREFIX$i -L$i"
-      _sci_lib_path="-L$i"
-    else
-	  #_sci_lib_path="$_sci_lib_path $LDRUN_PREFIX$i -L$i"
-      _sci_lib_path="$_sci_lib_path -L$i"
-    fi
-  fi
-done
-
-# Look for the CUDA compiler, "nvcc"
-
-# Extract the first word of "nvcc", so it can be a program name with args.
-set dummy nvcc; ac_word=$2
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
-$as_echo_n "checking for $ac_word... " >&6; }
-if ${ac_cv_path_NVCC+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  case $NVCC in
-  [\\/]* | ?:[\\/]*)
-  ac_cv_path_NVCC="$NVCC" # Let the user override the test with a path.
-  ;;
-  *)
-  as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-for as_dir in $PATH
-do
-  IFS=$as_save_IFS
-  test -z "$as_dir" && as_dir=.
-    for ac_exec_ext in '' $ac_executable_extensions; do
-  if { test -f "$as_dir/$ac_word$ac_exec_ext" && $as_test_x "$as_dir/$ac_word$ac_exec_ext"; }; then
-    ac_cv_path_NVCC="$as_dir/$ac_word$ac_exec_ext"
-    $as_echo "$as_me:${as_lineno-$LINENO}: found $as_dir/$ac_word$ac_exec_ext" >&5
-    break 2
-  fi
-done
-  done
-IFS=$as_save_IFS
-
-  test -z "$ac_cv_path_NVCC" && ac_cv_path_NVCC="no"
-  ;;
-esac
-fi
-NVCC=$ac_cv_path_NVCC
-if test -n "$NVCC"; then
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $NVCC" >&5
-$as_echo "$NVCC" >&6; }
-else
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
-$as_echo "no" >&6; }
-fi
-
-
-
-# set up the -Xcompiler flag so that NVCC can pass CFLAGS to underlying C comiler
-for i in $CFLAGS; do
-  NVCC_CFLAGS="$NVCC_CFLAGS -Xcompiler $i"
-done
-
-# set up the -Xcompiler flag so that NVCC can pass CXXFLAGS to underlying C++ comiler
-for i in $CXXFLAGS; do
-  NVCC_CXXFLAGS="$NVCC_CXXFLAGS -Xcompiler $i"
-done
-
-# set up the -Xlinker flag so that NVCC can pass LDFLAGS to underlying C/C++ comiler
-for i in $LDFLAGS; do
-  NVCC_LDFLAGS="$NVCC_LDFLAGS -Xlinker $i"
-done
-
-# do the same as the above loop, but for , the extra link flags
-for i in ; do
-  NVCC_LDFLAGS="$NVCC_LDFLAGS -Xlinker $i"
-done
-
-# set flags tailored to CUDA compiler
-CFLAGS="$_sci_includes $NVCC_CFLAGS"
-CXXFLAGS="$_sci_includes $NVCC_CXXFLAGS"
-LDFLAGS="$_sci_lib_path $_sci_libs -Xlinker $_$NVCC_LDFLAGS"
-LIBS="$_sci_libs $LIBS"
-
-# check that the CUDA compiler/linker works:
-working_nvcc=no
-_file_base_name=`ls cuda_conf_test.cu | sed 's/\(.*\)\..*/\1/'`
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for compilation using nvcc" >&5
-$as_echo_n "checking for compilation using nvcc... " >&6; }
-$NVCC $CFLAGS -c cuda_conf_test.cu
-if test -f $_file_base_name.o; then
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
-$as_echo "yes" >&6; }
-else
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
-$as_echo "no" >&6; }
-	as_fn_error $? "For some reason we could not compile using nvcc " "$LINENO" 5
-fi
-
-# check we can also link
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for linking via nvcc" >&5
-$as_echo_n "checking for linking via nvcc... " >&6; }
-$NVCC $LDFLAGS $LIBS -o $_file_base_name $_file_base_name.o
-
-if test -f $_file_base_name; then
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
-$as_echo "yes" >&6; }
-  HAVE_CUDA="yes"
-else
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
-$as_echo "no" >&6; }
-  as_fn_error $? "For some reason we could not link using nvcc " "$LINENO" 5
-  HAVE_CUDA="no"
-fi
-
-# now set the precious variables
-if test $HAVE_CUDA="yes"; then
-  DEF_CUDA="#define HAVE_CUDA 1"
-  eval CUDA_LIB_DIR='"$_cuda_lib $_cuda_sdk_lib"'
-  if test "$_cuda_lib $_cuda_sdk_lib" = "$SCI_THIRDPARTY_LIB_DIR"; then
-    eval CUDA_LIB_DIR_FLAG=''
-  else
-    eval CUDA_LIB_DIR_FLAG='"$_sci_lib_path"'
-  fi
-  eval CUDA_LIB_FLAG='"$_sci_libs"'
-  if test "$_sci_includes" = "$INC_SCI_THIRDPARTY_H"; then
-    eval INC_CUDA_H=''
-  else
-    eval INC_CUDA_H='"$_sci_includes"'
-  fi
-  eval HAVE_CUDA_H="yes"
-
-else
-  eval CUDA_LIB_DIR=''
-  eval CUDA_LIB_DIR_FLAG=''
-  eval CUDA_LIB_FLAG=''
-  eval HAVE_CUDA="no"
-  eval INC_CUDA_H=''
-  eval HAVE_CUDA_H="no"
-fi
-
-if test ! "$DEF_CUDA"; then
-   echo
-
-## SCI_MSG_ERROR
-if test -z "$debugging"; then
-  { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING:
-    Adding '--enable-verbosity' to configure line
-    _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
-    Digging through the config.log file is your best option
-    for determining what went wrong.  Search for the specific lib/file
-    that configured failed to find.  There should be a compile line
-    and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it - the true
-    error most likely will show up.
-  " >&5
-$as_echo "$as_me: WARNING:
-    Adding '--enable-verbosity' to configure line
-    _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
-    Digging through the config.log file is your best option
-    for determining what went wrong.  Search for the specific lib/file
-    that configured failed to find.  There should be a compile line
-    and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it - the true
-    error most likely will show up.
-  " >&2;}
-fi
-
-as_fn_error $? "one or more of the CUDA components is missing." "$LINENO" 5
-
-fi
-
-#[aph] - debug
-#echo
-#echo "CC       = " $CC
-#echo "NVCC     = " $NVCC
-#echo "LIBS     = " $LIBS
-#echo "LDFLAGS  = " $LDFLAGS
-#echo "CFLAGS   = " $CFLAGS
-#echo "CXXFLAGS = " $CXXFLAGS
-#echo
-
-if test "optional" = "not-optional"; then
-
-## SCI_MSG_ERROR
-if test -z "$debugging"; then
-  { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING:
-    Adding '--enable-verbosity' to configure line
-    _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
-    Digging through the config.log file is your best option
-    for determining what went wrong.  Search for the specific lib/file
-    that configured failed to find.  There should be a compile line
-    and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it - the true
-    error most likely will show up.
-  " >&5
-$as_echo "$as_me: WARNING:
-    Adding '--enable-verbosity' to configure line
-    _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
-    Digging through the config.log file is your best option
-    for determining what went wrong.  Search for the specific lib/file
-    that configured failed to find.  There should be a compile line
-    and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it - the true
-    error most likely will show up.
-  " >&2;}
-fi
-
-as_fn_error $? "Test for required CUDA failed.
-    To see the failed compile information, look in config.log,
-    search for CUDA. Please install the relevant libraries
-     or specify the correct paths and try to configure again." "$LINENO" 5
-
-fi
-
-#restore previous precious variables
-CC=$_sci_savecc
-CFLAGS=$_sci_savecflags
-CXXFLAGS=$_sci_savecxxflags
-LDFLAGS=$_sci_saveldflags
-LIBS=$_sci_savelibs
-_sci_lib_path=''
-_sci_libs=''
-_sci_includes=''
-
-##
-## END of SCI_COMPILE_LINK_CUDA_TEST (CUDA):  CUDA libraries and headers
-##
-
-
-
-rm -rf cuda_cutil_test*
-echo
-
-#[aph] - debug
-#echo
-#echo "HAVE_CUDA         = " $HAVE_CUDA
-#echo "HAVE_CUDA_H       = " $HAVE_CUDA_H
-#echo "INC_CUDA_H        = " $INC_CUDA_H
-#echo "CUDA_LIB_FLAG     = " $CUDA_LIB_FLAG
-#echo "CUDA_LIB_DIR      = " $CUDA_LIB_DIR
-#echo "CUDA_LIB_DIR_FLAG = " $CUDA_LIB_DIR_FLAG
-#echo
-
-fi #end sci_required_cuda
-
-# these are all defined after the call to SCI_CUDA_COMPILE_LINK_TEST
-
-
-
-
-
-
-sci_defs_files="$sci_defs_files include/sci_defs/cuda_testdefs.h"
-
 ##  --  search for petsc stuff  ------------------------------------------
 # a required check for an optional library for base scirun, due to that
 # fact that if MatrixSolver will utilize uni-petsc if it exists, and uni-petsc
@@ -42705,6 +42251,499 @@ fi
 
 sci_defs_files="$sci_defs_files include/sci_defs/hypre_testdefs.h"
 
+
+##  --  search for cuda stuff  ------------------------------------------
+if test "$sci_required_cuda" = "yes"; then
+
+  echo
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for required CUDA components......" >&5
+$as_echo "$as_me: checking for required CUDA components......" >&6;}
+  echo
+
+  # guard against building staticaly linked Uintah with CUDA
+  if test \( "$with_cuda" -a "$with_cuda_sdk" \) -a \( "$static" != "no" -o "$SO_OR_ARCHIVE_EXTENSION" = "a" \); then
+    as_fn_error $? "Cannot build a statically linked version of Uintah with CUDA support... " "$LINENO" 5
+  fi
+
+  # make sure we have both CUDA and CUDA-SDK
+  if test \( "$with_cuda" -a "$with_cuda_sdk" = "no" \) -o \( "$with_cuda" = "no" -a "$with_cuda_sdk" \) ; then
+    as_fn_error $? "Both --with-cuda=DIR and --with-cuda-sdk=DIR must be specified... " "$LINENO" 5
+  fi
+  if test \( "$with_cuda" -a "$with_cuda_sdk" = "" \) -o \( "$with_cuda" = "" -a "$with_cuda_sdk" \); then
+    as_fn_error $? "Both --with-cuda=DIR and --with-cuda-sdk=DIR must be specified... " "$LINENO" 5
+  fi
+
+  # check that the CUDA installation and SDK exist
+  if ! test -d "$with_cuda"; then
+    as_fn_error $? "The directory specified with --with-cuda=DIR is not valid: $with_cuda " "$LINENO" 5
+  fi
+
+  if ! test -d "$with_cuda_sdk"; then
+    as_fn_error $? "The directory specified with --with-cuda_sdk=DIR is not valid: $with_cuda_sdk " "$LINENO" 5
+  fi
+
+  # the major CUDA definitions, etc
+  DEF_CUDA=""
+  HAVE_CUDA=""
+  HAVE_CUDA_H=""
+  INC_CUDA_H=""
+  CUDA_LIB_DIR=""
+
+  # all the -L's
+  CUDA_LIB_DIR_FLAG=""
+
+  # all the -l's
+  CUDA_LIB_FLAG=""
+
+  # confirm the existence/location of CUDA lib and include directories
+  _cuda_lib=
+  _cuda_inc="$with_cuda/include"
+  # account for lib64 or lib32 or just lib...
+
+##
+## BASE_LIB_PATH:
+##
+## This macro takes the base path of a library and determines
+## if there is a lib32, lib64, or just plain lib that is
+## associated with it.  It sets the full path to the value of
+## the first argument.
+##
+## eg:  if arg 2 is /usr/sci/local, and the machine has a
+## /usr/sci/local/lib64, and configure is in 64 bit mode, then
+## /sur/sci/local/lib64 is set as the value of arg 1.
+##
+## arguments mean:
+## arg 1 : This argument will be written with the result
+## arg 2 : library base.  I.e. /usr, /usr/local, /usr/X11R6
+##
+## This function assums the enable_64bit variable is in scope
+##
+
+  _new_lib_path=$with_cuda/lib
+
+  ## if 64 bit is enabled, check for lib64 first, otherwise use lib
+  if test "$enable_64bit" = "yes"; then
+    _new_lib_path=$with_cuda/lib64
+    if test ! -e $_new_lib_path; then
+      _new_lib_path=$with_cuda/lib
+    fi
+  else
+  ## We should look for lib32 (IRIX), then default to lib
+    _new_lib_path=$with_cuda/lib32
+    if test ! -e $_new_lib_path; then
+      _new_lib_path=$with_cuda/lib
+    fi
+  fi
+  eval _cuda_lib='"$_new_lib_path"'
+
+
+  # confirm the existence/location of CUDA-SDK lib and include directories
+  _cuda_sdk_lib=$with_cuda_sdk/C/lib
+  _cuda_sdk_inc=$with_cuda_sdk/C/common/inc
+
+  # don't need to account for lib64 or lib32. It will be just lib...
+  # below we will check for "libcutil" or "libcutil_x86_64" within $with_cuda_sdk/C/lib
+  _cutil_lib=""
+  if test "$NBITS" = 64; then
+    _cutil_lib="cutil_x86_64"
+  else
+    _cutil_lib="cutil"
+  fi
+
+# code to compile and test linking for (this will be deleted after tests)
+  cat > cuda_conf_test.cu <<EOF
+#include <stdio.h>
+#include <stdlib.h>
+#include <cutil.h>
+#include <cuda.h>
+
+__global__ void vectorAddGPU(float *a, float *results, int N) {
+	int idx = threadIdx.x;
+	if (idx < N) {
+		*(results+idx) = *(a+idx) * (*(a+idx));
+	}
+}
+
+int main(int argc, char **argv) {
+
+	int N = 512;
+    float *a = (float *)malloc(N * sizeof(float));
+    float *results = (float *)malloc(N * sizeof(float));
+	float *dev_a, *dev_results;
+	int memsize = N * sizeof(float);
+
+	for (int i = 0; i < N; i++) {
+	    *(a+i) = i;
+		printf("a:%d = %f\n", i, *(a+i));
+	}
+
+	CUDA_SAFE_CALL(cudaMalloc((void**)&dev_a, memsize));
+	CUDA_SAFE_CALL(cudaMalloc((void**)&dev_results, memsize));
+	CUDA_SAFE_CALL(cudaMemcpy(dev_a, a, memsize, cudaMemcpyHostToDevice));
+	CUDA_SAFE_CALL(cudaMemcpy(dev_results, results, memsize, cudaMemcpyHostToDevice));
+
+	vectorAddGPU<<< 1, 512 >>>(dev_a, dev_results, N);
+
+	CUDA_SAFE_CALL(cudaMemcpy(results, dev_results, memsize, cudaMemcpyDeviceToHost));
+
+	for (int i = 0; i < N; i++) {
+		printf("a:%d = %f\n", i, *(results+i));
+	}
+
+    CUDA_SAFE_CALL(cudaFree(dev_a));
+    CUDA_SAFE_CALL(cudaFree(dev_results));
+    free(a);
+    free(results);
+
+	cudaThreadExit();
+
+	return 1;
+}
+EOF
+
+  # now try to compile and link the above CUDA code
+  #--------------------------------------------------
+  ## arg 1 : variable base name i.e. CUDA
+  ## arg 2 : checking message
+  ## arg 3 : includes (header files) that arg 8 needs to compile
+  ## arg 4 : include paths -I
+  ## arg 5 : list of libs to link against -l
+  ## arg 6 : lib paths -L
+  ## arg 7 : extra link flags (can be empty)
+  ## arg 8 : body of code (source file) to compile
+  ## arg 9 : optional or not-optional required argument
+  #--------------------------------------------------
+
+
+## arguments mean:
+## arg 1 : variable base name i.e. CUDA
+## arg 2 : checking message
+## arg 3 : includes that arg 8 needs to compile
+## arg 4 : include paths -I
+## arg 5 : list of libs to link against -l
+## arg 6 : lib paths -L
+## arg 7 : extra link flags
+## arg 8 : body of code (source file) to compile
+## arg 9 : optional or not-optional required argument
+##
+## after execution of macro, the following will be defined:
+##      Variable            Value
+##      --------            -----
+##      CUDA_LIB_DIR        => lib path
+##      CUDA_LIB_DIR_FLAG   => all the -L's
+##      CUDA_LIB_FLAG       => all the -l's
+##      HAVE_CUDA           => yes or no
+##      INC_CUDA_H          => all the -I's
+##      HAVE_CUDA_H         => yes or no
+
+# make sure we have a base name, bail otherwise
+
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for CUDA libraries and headers (optional)" >&5
+$as_echo_n "checking for CUDA libraries and headers (optional)... " >&6; }
+echo
+
+# save the precious variables
+_sci_savecc=$CC
+_sci_savelibs=$LIBS
+_sci_saveldflags=$LDFLAGS
+_sci_savecflags=$CFLAGS
+_sci_savecxxflags=$CXXFLAGS
+
+_sci_includes=
+
+for i in $_cuda_inc $_cuda_sdk_inc; do
+  # make sure it exists
+  if test -d $i; then
+    if test -z "$_sci_includes"; then
+      _sci_includes=-I$i
+    else
+      _sci_includes="$_sci_includes -I$i"
+    fi
+  fi
+done
+
+
+for i in cudart $_cutil_lib; do
+  if test -z "$_sci_libs"; then
+    _sci_libs=-l$i
+  else
+    _sci_libs="$_sci_libs -l$i"
+  fi
+done
+
+_sci_lib_path=
+
+for i in $_cuda_lib $_cuda_sdk_lib; do
+  # make sure it exists
+  if test -d $i; then
+    if test -z "$_sci_lib_path"; then
+      _sci_lib_path="$LDRUN_PREFIX$i -L$i"
+    else
+      _sci_lib_path="$_sci_lib_path $LDRUN_PREFIX$i -L$i"
+    fi
+  fi
+done
+
+# Look for the CUDA compiler, "nvcc"
+# Extract the first word of "nvcc", so it can be a program name with args.
+set dummy nvcc; ac_word=$2
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
+$as_echo_n "checking for $ac_word... " >&6; }
+if ${ac_cv_path_NVCC+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  case $NVCC in
+  [\\/]* | ?:[\\/]*)
+  ac_cv_path_NVCC="$NVCC" # Let the user override the test with a path.
+  ;;
+  *)
+  as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $with_cuda/bin
+do
+  IFS=$as_save_IFS
+  test -z "$as_dir" && as_dir=.
+    for ac_exec_ext in '' $ac_executable_extensions; do
+  if { test -f "$as_dir/$ac_word$ac_exec_ext" && $as_test_x "$as_dir/$ac_word$ac_exec_ext"; }; then
+    ac_cv_path_NVCC="$as_dir/$ac_word$ac_exec_ext"
+    $as_echo "$as_me:${as_lineno-$LINENO}: found $as_dir/$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+  done
+IFS=$as_save_IFS
+
+  test -z "$ac_cv_path_NVCC" && ac_cv_path_NVCC="no"
+  ;;
+esac
+fi
+NVCC=$ac_cv_path_NVCC
+if test -n "$NVCC"; then
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $NVCC" >&5
+$as_echo "$NVCC" >&6; }
+else
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+fi
+
+
+
+# set up the -Xcompiler flag so that NVCC can pass CFLAGS to host C comiler
+for i in $CFLAGS; do
+  NVCC_CFLAGS="$NVCC_CFLAGS -Xcompiler $i"
+done
+
+# set up the -Xcompiler flag so that NVCC can pass CXXFLAGS to host C++ comiler
+for i in $CXXFLAGS; do
+  NVCC_CXXFLAGS="$NVCC_CXXFLAGS -Xcompiler $i"
+done
+
+NVCC_CFLAGS="$_sci_includes $NVCC_CFLAGS"
+NVCC_CXXFLAGS="$_sci_includes $NVCC_CXXFLAGS"
+NVCC_LIBS="$_sci_lib_path $_sci_libs"
+
+# check that the CUDA compiler works:
+_file_base_name=`echo cuda_conf_test.cu | sed 's/\(.*\)\..*/\1/'`
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for C compilation using nvcc" >&5
+$as_echo_n "checking for C compilation using nvcc... " >&6; }
+$NVCC $NVCC_CFLAGS -c cuda_conf_test.cu
+if test -f $_file_base_name.o; then
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+$as_echo "yes" >&6; }
+else
+	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+	as_fn_error $? "For some reason we could not compile using nvcc " "$LINENO" 5
+fi
+
+# check we can also link via C compiler
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for linking nvcc compiled object code via C compiler" >&5
+$as_echo_n "checking for linking nvcc compiled object code via C compiler... " >&6; }
+$CC $NVCC_LIBS -o $_file_base_name $_file_base_name.o
+
+# cleanup for C++ test
+rm $_file_base_name.o
+
+if test -f $_file_base_name; then
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+$as_echo "yes" >&6; }
+else
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+        as_fn_error $? "For some reason we could not link via C compiler " "$LINENO" 5
+fi
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for C++ compilation using nvcc" >&5
+$as_echo_n "checking for C++ compilation using nvcc... " >&6; }
+$NVCC $NVCC_CXXFLAGS -c cuda_conf_test.cu
+if test -f $_file_base_name.o; then
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+$as_echo "yes" >&6; }
+else
+	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+	as_fn_error $? "For some reason we could not compile using nvcc " "$LINENO" 5
+fi
+
+# check we can also link via C++ compiler
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for linking nvcc compiled object code via C++ compiler" >&5
+$as_echo_n "checking for linking nvcc compiled object code via C++ compiler... " >&6; }
+$CXX $NVCC_LIBS -o $_file_base_name $_file_base_name.o
+
+
+if test -f $_file_base_name; then
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+$as_echo "yes" >&6; }
+  HAVE_CUDA="yes"
+else
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+  as_fn_error $? "For some reason we could not link nvcc compiled object code " "$LINENO" 5
+  HAVE_CUDA="no"
+fi
+
+if test $HAVE_CUDA="yes"; then
+  DEF_CUDA="#define HAVE_CUDA 1"
+  eval CUDA_LIB_DIR='"$_cuda_lib $_cuda_sdk_lib"'
+  if test "$_cuda_lib $_cuda_sdk_lib" = "$SCI_THIRDPARTY_LIB_DIR"; then
+    eval CUDA_LIB_DIR_FLAG=''
+  else
+    eval CUDA_LIB_DIR_FLAG='"$_sci_lib_path"'
+  fi
+  eval CUDA_LIB_FLAG='"$_sci_libs"'
+  if test "$_sci_includes" = "$INC_SCI_THIRDPARTY_H"; then
+    eval INC_CUDA_H=''
+  else
+    eval INC_CUDA_H='"$_sci_includes"'
+  fi
+  eval HAVE_CUDA_H="yes"
+
+else
+  eval CUDA_LIB_DIR=''
+  eval CUDA_LIB_DIR_FLAG=''
+  eval CUDA_LIB_FLAG=''
+  eval HAVE_CUDA="no"
+  eval INC_CUDA_H=''
+  eval HAVE_CUDA_H="no"
+fi
+
+if test ! "$DEF_CUDA"; then
+   echo
+
+## SCI_MSG_ERROR
+if test -z "$debugging"; then
+  { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING:
+    Adding '--enable-verbosity' to configure line
+    _may_ give more information about what is breaking.
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
+    Digging through the config.log file is your best option
+    for determining what went wrong.  Search for the specific lib/file
+    that configured failed to find.  There should be a compile line
+    and source code near that check.  If you cut the source code into
+    a test.cc and then use the compile line to compile it - the true
+    error most likely will show up.
+  " >&5
+$as_echo "$as_me: WARNING:
+    Adding '--enable-verbosity' to configure line
+    _may_ give more information about what is breaking.
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
+    Digging through the config.log file is your best option
+    for determining what went wrong.  Search for the specific lib/file
+    that configured failed to find.  There should be a compile line
+    and source code near that check.  If you cut the source code into
+    a test.cc and then use the compile line to compile it - the true
+    error most likely will show up.
+  " >&2;}
+fi
+
+as_fn_error $? "one or more of the CUDA components is missing." "$LINENO" 5
+
+fi
+
+if test "optional" = "not-optional"; then
+
+## SCI_MSG_ERROR
+if test -z "$debugging"; then
+  { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING:
+    Adding '--enable-verbosity' to configure line
+    _may_ give more information about what is breaking.
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
+    Digging through the config.log file is your best option
+    for determining what went wrong.  Search for the specific lib/file
+    that configured failed to find.  There should be a compile line
+    and source code near that check.  If you cut the source code into
+    a test.cc and then use the compile line to compile it - the true
+    error most likely will show up.
+  " >&5
+$as_echo "$as_me: WARNING:
+    Adding '--enable-verbosity' to configure line
+    _may_ give more information about what is breaking.
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
+    Digging through the config.log file is your best option
+    for determining what went wrong.  Search for the specific lib/file
+    that configured failed to find.  There should be a compile line
+    and source code near that check.  If you cut the source code into
+    a test.cc and then use the compile line to compile it - the true
+    error most likely will show up.
+  " >&2;}
+fi
+
+as_fn_error $? "Test for required CUDA failed.
+    To see the failed compile information, look in config.log,
+    search for CUDA. Please install the relevant libraries
+     or specify the correct paths and try to configure again." "$LINENO" 5
+
+fi
+
+#restore previous precious variables
+CC=$_sci_savecc
+CFLAGS=$_sci_savecflags
+CXXFLAGS=$_sci_savecxxflags
+LDFLAGS=$_sci_saveldflags
+LIBS=$_sci_savelibs
+_sci_includes=''
+_sci_lib_path=''
+_sci_libs=''
+
+##
+## END of SCI_COMPILE_LINK_CUDA_TEST (CUDA):  CUDA libraries and headers
+##
+
+
+
+rm -rf cuda_conf_test*
+echo
+
+#[aph] - debug
+#echo
+#echo "HAVE_CUDA         = " $HAVE_CUDA
+#echo "HAVE_CUDA_H       = " $HAVE_CUDA_H
+#echo "INC_CUDA_H        = " $INC_CUDA_H
+#echo "CUDA_LIB_FLAG     = " $CUDA_LIB_FLAG
+#echo "CUDA_LIB_DIR      = " $CUDA_LIB_DIR
+#echo "CUDA_LIB_DIR_FLAG = " $CUDA_LIB_DIR_FLAG
+#echo "NVCC_CFLAGS       = " $NVCC_CFLAGS
+#echo "NVCC_CXXFLAGS     = " $NVCC_CXXFLAGS
+#echo "NVCC_LDFLAGS      = " $NVCC_LDFLAGS
+#echo
+#echo "CC       = " $CC
+#echo "NVCC     = " $NVCC
+#echo "LIBS     = " $LIBS
+#echo "LDFLAGS  = " $LDFLAGS
+#echo "CFLAGS   = " $CFLAGS
+#echo "CXXFLAGS = " $CXXFLAGS
+#echo
+
+fi #end sci_required_cuda
+
+# these are all defined after the call to SCI_CUDA_COMPILE_LINK_TEST
+
+
+
+
+
+
+sci_defs_files="$sci_defs_files include/sci_defs/cuda_testdefs.h"
 
 
 ##  --  finis flags  ------------------------------------------------

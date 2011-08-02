@@ -48,7 +48,7 @@ namespace Uintah {
     static SchedulerCommon* create(ProblemSpecP& ps,
                                    const ProcessorGroup* world,
                                    Output* ouput,
-                                   bool);
+                                   bool withGPU);
 
 
   };

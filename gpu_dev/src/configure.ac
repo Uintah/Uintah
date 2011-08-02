@@ -4006,7 +4006,13 @@ if test "$sci_required_cuda" = "yes"; then
   echo
   AS_MESSAGE(checking for required CUDA components......)
   echo
+  
+  # guard against building staticaly linked Uintah with CUDA
+  if test \( "$with_cuda" -a "$with_cuda_sdk" \) -a \( "$static" != "no" -o "$SO_OR_ARCHIVE_EXTENSION" = "a" \); then
+    AC_MSG_ERROR( [Cannot build a statically linked version of Uintah with CUDA support...] )
+  fi
 
+  # make sure we have both CUDA and CUDA-SDK
   if test \( "$with_cuda" -a "$with_cuda_sdk" = "no" \) -o \( "$with_cuda" = "no" -a "$with_cuda_sdk" \) ; then
     AC_MSG_ERROR( [Both --with-cuda=DIR and --with-cuda-sdk=DIR must be specified...] )
   fi
@@ -4014,6 +4020,7 @@ if test "$sci_required_cuda" = "yes"; then
     AC_MSG_ERROR( [Both --with-cuda=DIR and --with-cuda-sdk=DIR must be specified...] )
   fi
   
+  # check that the CUDA installation and SDK exist
   if ! test -d "$with_cuda"; then
     AC_MSG_ERROR( [The directory specified with --with-cuda=DIR is not valid: $with_cuda] )
   fi

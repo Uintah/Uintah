@@ -224,16 +224,8 @@ ThreadedMPIScheduler::runTask( DetailedTask         * task, int iteration, int t
     waittimes[task->getTask()->getName()]+=CurrentWaitTime;
     CurrentWaitTime=0;
   }
-#ifdef USE_PERFEX_COUNTERS
-  long long dummy, exec_flops, send_flops;
-#endif
-
   double taskstart = Time::currentSeconds();
   
-#ifdef USE_PERFEX_COUNTERS
-  start_counters(0, 19);
-#endif
-
   if (trackingVarsPrintLocation_ & SchedulerCommon::PRINT_BEFORE_EXEC) {
     printTrackedVars(task, SchedulerCommon::PRINT_BEFORE_EXEC);
   }
@@ -250,12 +242,6 @@ ThreadedMPIScheduler::runTask( DetailedTask         * task, int iteration, int t
     printTrackedVars(task, SchedulerCommon::PRINT_AFTER_EXEC);
   }
 
-#ifdef USE_PERFEX_COUNTERS
-  read_counters(0, &dummy, 19, &exec_flops);
-  mpi_info_.totalexecflops += exec_flops;
-  start_counters(0, 19);
-#endif
-  
   double dtask = Time::currentSeconds()-taskstart;
  
   dlbLock.lock();
@@ -305,13 +291,6 @@ ThreadedMPIScheduler::runTask( DetailedTask         * task, int iteration, int t
     parentScheduler->mpi_info_.totalreduce+=mpi_info_.totalreduce;
   }
 
-
-#ifdef USE_PERFEX_COUNTERS
-  long long send_flops;
-  read_counters(0, &dummy, 19, &send_flops);
-  mpi_info_.totalcommflops += send_flops;
-#endif
-  
 } // end runTask()
 
 void
