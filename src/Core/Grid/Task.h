@@ -741,7 +741,9 @@ WARNING
     //////////
     // Insert Documentation Here:
     std::string d_taskName;
+protected:
     ActionBase* d_action;
+private:
     Dependency* comp_head;
     Dependency* comp_tail;
     Dependency* req_head;
