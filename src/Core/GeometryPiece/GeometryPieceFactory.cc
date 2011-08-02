@@ -85,7 +85,7 @@ GeometryPieceFactory::create( const ProblemSpecP& ps,
       child->getAttribute( "name", go_label );
     }
 
-    dbg << "---------------------------------------------------------------\n";
+    dbg << "---------------------------------------------------------------: go_label: " << go_label << "\n";
     
     if( go_label != "" ) {
 
@@ -225,6 +225,13 @@ GeometryPieceFactory::create( const ProblemSpecP& ps,
 
   } // end for( child )
   dbg << "Done creating geometry objects\n";
+}
+
+void
+GeometryPieceFactory::resetFactor()
+{
+  unnamedPieces_.clear();
+  namedPieces_.clear();
 }
 
 void
