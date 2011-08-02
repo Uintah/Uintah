@@ -4,7 +4,7 @@
 #include <CCA/Components/Wasatch/Expressions/DiffusiveFlux.h>
 #include <CCA/Components/Wasatch/Expressions/ConvectiveFlux.h>
 #include <CCA/Components/Wasatch/Expressions/ScalarRHS.h>
-#include <CCA/Components/Wasatch/Expressions/PBE/MonoSurfaceGrowth.h>
+#include <CCA/Components/Wasatch/Expressions/PBE/MonosurfaceGrowth.h>
 #include <CCA/Components/Wasatch/Expressions/PBE/BulkDiffusionGrowth.h>
 #include <CCA/Components/Wasatch/Expressions/PBE/UniformGrowth.h>
 #include <CCA/Components/Wasatch/Expressions/PBE/QMOM.h>
