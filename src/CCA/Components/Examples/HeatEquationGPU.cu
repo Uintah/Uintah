@@ -45,7 +45,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Malloc/Allocator.h>
 
-// #include <cudautil.h>
+#include <sci_defs/cuda_defs.h>
 
 using namespace Uintah;
 
