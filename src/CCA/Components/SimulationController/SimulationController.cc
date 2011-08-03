@@ -113,25 +113,33 @@ namespace Uintah {
 
     d_grid_ps=d_ups->findBlock("Grid");
 #ifdef USE_PAPI_COUNTERS
-  event_set = PAPI_NULL;
+    event_set = PAPI_NULL;
 
-  PAPI_thread_init(pthread_self);
-  int retp = PAPI_is_initialized();
-  if (retp != PAPI_LOW_LEVEL_INITED)
+    int retp = PAPI_library_init(PAPI_VER_CURRENT);
+    if (retp != PAPI_VER_CURRENT)
       if (d_myworld->myrank() == 0)
-    cout<< "WARNNING: Cannot init PAPI counter! Error code= " << retp << endl;
-  retp = PAPI_create_eventset(&event_set);
-  if ( retp != PAPI_OK) 
+        cout<< "WARNNING: Cannot init PAPI counter! Error code= " << retp << endl;
+    retp=PAPI_thread_init(pthread_self);
+    if (retp != PAPI_OK)
       if (d_myworld->myrank() == 0)
-    cout<< "WARNNING: Cannot create PAPI counter! Error code= " << retp << endl;
-  retp = PAPI_add_event(event_set, PAPI_FP_OPS);
-  if ( retp != PAPI_OK) 
+        cout<< "WARNNING: Cannot init thread PAPI counter! Error code= " << retp << endl;
+    retp = PAPI_create_eventset(&event_set);
+    if ( retp != PAPI_OK) 
       if (d_myworld->myrank() == 0)
-    cout<< "WARNNING: Cannot add PAPI counter! Error code= " << retp << endl;
-  retp= PAPI_start(event_set);
-  if ( retp != PAPI_OK) 
+        cout<< "WARNNING: Cannot create PAPI counter! Error code= " << retp << endl;
+    retp = PAPI_query_event (PAPI_FP_OPS);
+    if ( retp != PAPI_OK) 
       if (d_myworld->myrank() == 0)
-    cout<< "WARNNING: Cannot start PAPI counter! Error code= " << retp << endl;
+        cout<< "WARNNING: Cannot query PAPI counter! Error code= " << retp << endl;
+    retp = PAPI_add_event(event_set, PAPI_TOT_INS);
+    if ( retp != PAPI_OK) 
+      if (d_myworld->myrank() == 0)
+        cout<< "WARNNING: Cannot add PAPI counter! Error code= " << retp << endl;
+    retp = PAPI_start(event_set);
+    if ( retp != PAPI_OK) 
+      if (d_myworld->myrank() == 0)
+        cout<< "WARNNING: Cannot start PAPI counter! Error code= " << retp << endl;
+    cout << " 111 event_set = " << event_set<< endl;
 #endif
   }
 
@@ -541,6 +549,7 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
  
 #ifdef USE_PAPI_COUNTERS
   double flop;
+  cout << " 222 event_set = " << event_set<< endl;
   int retp=PAPI_read(event_set, event_values);
   cout << d_myworld->myrank() << "PAPI Counter:::: " << event_values[0] <<endl;
   if (retp != PAPI_OK) {
