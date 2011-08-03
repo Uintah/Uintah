@@ -148,7 +148,7 @@ evaluate()
   // loop over every point in the patch. get a sample iterator for any of the
   // fields.
   const FieldT* sampleField = knownMoments_[0];
-  typename FieldT::const_interior_iterator sampleIterator = sampleField->begin();
+  typename FieldT::const_interior_iterator sampleIterator = sampleField->interior_begin();
   double m0;
   //
   // create vector of iterators for the known moments and for the results
@@ -156,14 +156,14 @@ evaluate()
   std::vector<typename FieldT::const_interior_iterator> knownMomentsIterators;
   std::vector<typename FieldT::interior_iterator> resultsIterators;
   for (int i=0; i<nMoments; i++) {
-    typename FieldT::const_interior_iterator thisIterator = knownMoments_[i]->begin();
+    typename FieldT::const_interior_iterator thisIterator = knownMoments_[i]->interior_begin();
     knownMomentsIterators.push_back(thisIterator);
     
-    typename FieldT::interior_iterator thisResultsIterator = results[i]->begin();
+    typename FieldT::interior_iterator thisResultsIterator = results[i]->interior_begin();
     resultsIterators.push_back(thisResultsIterator);
   }
   //
-  while (sampleIterator!=sampleField->end()) {        
+  while (sampleIterator!=sampleField->interior_end()) {        
     // for every point, calculate the quadrature weights and abscissae
     // start by putting together the p matrix. this is documented in an associated pdf
     for (int iRow=0; iRow<=nMoments-2; iRow += 2) {
@@ -281,7 +281,7 @@ evaluate()
     for (int i=0; i<nMoments; i++) {
       knownMomentsIterators[i] += 1;
       resultsIterators[i] += 1;
-    }    
+    }
   }
   delete[] a;
   delete[] b;
