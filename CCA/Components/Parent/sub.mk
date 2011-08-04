@@ -44,6 +44,7 @@ PSELIBS := \
         Core/Exceptions  \
         Core/Util        \
         Core/Geometry    \
+        Core/GeometryPiece  \
         CCA/Ports        \
         Core/Disclosure  \
         Core/Exceptions  \
