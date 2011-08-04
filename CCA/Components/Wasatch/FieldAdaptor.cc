@@ -1,6 +1,7 @@
 #include <CCA/Components/Wasatch/FieldAdaptor.h>
-
 #include <Core/Grid/Patch.h>
+
+#include <spatialops/structured/FVTools.h>
 
 #include <map>
 #include <string>
@@ -70,12 +71,17 @@ namespace Wasatch{
 
   template< typename FieldT >
   SpatialOps::structured::MemoryWindow
-  get_memory_window_for_uintah_field( const SCIRun::IntVector& globSize,
-                                      const Uintah::Patch* const patch )
+  get_memory_window_for_uintah_field( const Uintah::Patch* const patch )
   {
     SCIRun::IntVector bcMinus, bcPlus;
     get_bc_logicals( patch, bcMinus, bcPlus );
     const SCIRun::IntVector& extraCells = patch->getExtraCells();
+
+    const SCIRun::IntVector gs = patch->getExtraCellHighIndex(0) - patch->getExtraCellLowIndex(0);
+    SCIRun::IntVector globSize;
+    globSize[0] = SpatialOps::structured::get_nx_with_ghost<FieldT>( gs[0], bcPlus[0] );
+    globSize[1] = SpatialOps::structured::get_ny_with_ghost<FieldT>( gs[1], bcPlus[1] );
+    globSize[2] = SpatialOps::structured::get_nz_with_ghost<FieldT>( gs[2], bcPlus[2] );
 
     // assumes that we have one layer of extra cells specified.
     using SpatialOps::structured::IntVec;
@@ -127,8 +133,7 @@ namespace Wasatch{
   // macro shortcuts for explicit template instantiation
 #define declare_method( FIELDT )                                        \
   template SpatialOps::structured::MemoryWindow                         \
-  get_memory_window_for_uintah_field<FIELDT>( const SCIRun::IntVector&, \
-                                              const Uintah::Patch* const ); \
+  get_memory_window_for_uintah_field<FIELDT>( const Uintah::Patch* const ); \
   template Uintah::Ghost::GhostType get_uintah_ghost_type<FIELDT>();
   
 #define declare_variants( VOLT )                \
