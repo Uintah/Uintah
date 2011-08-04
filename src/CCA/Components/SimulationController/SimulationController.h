@@ -31,6 +31,8 @@ DEALINGS IN THE SOFTWARE.
 #ifndef UINTAH_HOMEBREW_SIMULATIONCONTROLLER_H
 #define UINTAH_HOMEBREW_SIMULATIONCONTROLLER_H
 
+#include <sci_defs/papi_defs.h> // for PAPI flop counters
+
 #include <Core/Parallel/UintahParallelComponent.h>
 #include <CCA/Ports/DataWarehouseP.h>
 #include <Core/Grid/GridP.h>
