@@ -712,7 +712,7 @@ Switcher::needRecompile( double time,
     
     // Reseting the GeometryPieceFactory only (I believe) will ever need to be done
     // by the Switcher component...
-    GeometryPieceFactory::resetFactor();
+    GeometryPieceFactory::resetFactory();
 
     //__________________________________
     // get the next simulation component
