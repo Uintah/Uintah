@@ -228,7 +228,7 @@ GeometryPieceFactory::create( const ProblemSpecP& ps,
 }
 
 void
-GeometryPieceFactory::resetFactor()
+GeometryPieceFactory::resetFactory()
 {
   unnamedPieces_.clear();
   namedPieces_.clear();

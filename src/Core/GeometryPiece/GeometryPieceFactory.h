@@ -53,7 +53,7 @@ namespace Uintah {
     // Clears out the saved geometry piece information...  In theory, this should
     // only be called by (and necessary for) the Switcher component (and only if 
     // a component that is being switched to happens to be a 'copy' of a previous component).
-    static void resetFactor();
+    static void resetFactory();
 
     // Runs through all the GeometryPiece that have been created and
     // sets their flag for first time output.  This should be done at
