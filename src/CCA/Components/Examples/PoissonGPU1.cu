@@ -67,9 +67,9 @@ PoissonGPU1::~PoissonGPU1()
 //______________________________________________________________________
 //
 void PoissonGPU1::problemSetup(const ProblemSpecP& params, 
-                            const ProblemSpecP& restart_prob_spec, 
-                            GridP& /*grid*/, 
-                            SimulationStateP& sharedState)
+                               const ProblemSpecP& restart_prob_spec, 
+                               GridP& /*grid*/, 
+                               SimulationStateP& sharedState)
 {
   sharedState_ = sharedState;
   ProblemSpecP poisson = params->findBlock("Poisson");
@@ -83,7 +83,7 @@ void PoissonGPU1::problemSetup(const ProblemSpecP& params,
 //______________________________________________________________________
 //
 void PoissonGPU1::scheduleInitialize(const LevelP& level,
-                                  SchedulerP& sched)
+                                     SchedulerP& sched)
 {
   Task* task = scinew Task("PoissonGPU1::initialize",
                      this, &PoissonGPU1::initialize);
@@ -95,7 +95,7 @@ void PoissonGPU1::scheduleInitialize(const LevelP& level,
 //______________________________________________________________________
 //
 void PoissonGPU1::scheduleComputeStableTimestep(const LevelP& level,
-                                             SchedulerP& sched)
+                                                SchedulerP& sched)
 {
   Task* task = scinew Task("PoissonGPU1::computeStableTimestep",
                      this, &PoissonGPU1::computeStableTimestep);
@@ -107,8 +107,8 @@ void PoissonGPU1::scheduleComputeStableTimestep(const LevelP& level,
 //______________________________________________________________________
 //
 void
-PoissonGPU1::scheduleTimeAdvance( const LevelP& level, 
-                               SchedulerP& sched)
+PoissonGPU1::scheduleTimeAdvance(const LevelP& level, 
+                                 SchedulerP& sched)
 {
   CUDATask* task = scinew CUDATask("PoissonGPU1::timeAdvance",
                          this, &PoissonGPU1::timeAdvance);
@@ -121,10 +121,10 @@ PoissonGPU1::scheduleTimeAdvance( const LevelP& level,
 //______________________________________________________________________
 //
 void PoissonGPU1::computeStableTimestep(const ProcessorGroup* pg,
-                                     const PatchSubset* patches,
-                                     const MaterialSubset* /*matls*/,
-                                     DataWarehouse*,
-                                     DataWarehouse* new_dw)
+                                        const PatchSubset* patches,
+                                        const MaterialSubset* /*matls*/,
+                                        DataWarehouse*,
+                                        DataWarehouse* new_dw)
 {
   if(pg->myrank() == 0){
     sum_vartype residual;
@@ -137,9 +137,9 @@ void PoissonGPU1::computeStableTimestep(const ProcessorGroup* pg,
 //______________________________________________________________________
 //
 void PoissonGPU1::initialize(const ProcessorGroup*,
-                          const PatchSubset* patches,
-                          const MaterialSubset* matls,
-                          DataWarehouse* /*old_dw*/, DataWarehouse* new_dw)
+                             const PatchSubset* patches,
+                             const MaterialSubset* matls,
+                             DataWarehouse* /*old_dw*/, DataWarehouse* new_dw)
 {
   int matl = 0;
   for(int p=0;p<patches->size();p++){
@@ -147,7 +147,7 @@ void PoissonGPU1::initialize(const ProcessorGroup*,
     
     NCVariable<double> phi;
     new_dw->allocateAndPut(phi, phi_label, matl, patch);
-    phi.initialize(0.);
+    phi.initialize(0.0);
 
     for (Patch::FaceType face = Patch::startFace; face <= Patch::endFace;
          face=Patch::nextFace(face)) {
@@ -171,34 +171,68 @@ void PoissonGPU1::initialize(const ProcessorGroup*,
         }
       }
     }            
-#if 0
-    if(patch->getBCType(Patch::xminus) != Patch::Neighbor){
-       IntVector l,h;
-       patch->getFaceNodes(Patch::xminus, 0, l, h);
- 
-      for(NodeIterator iter(l,h); !iter.done(); iter++){
-        if (phi[*iter] != 1.0) {
-          cout << "phi_old[" << *iter << "]=" << phi[*iter] << endl;
-        }
-         phi[*iter]=1;
-      }
-    }
-#endif
 
     new_dw->put(sum_vartype(-1), residual_label);
   }
 }
+
+//______________________________________________________________________
+//
+// @brief A kernel that applies the stencil used in timeAdvance(...)
+// @param domainSize a three component vector that gives the size of the domain as (x,y,z)
+// @param domainLower a three component vector that gives the lower corner of the workarea as (x,y,z)
+// @param residual the residual calculated by this individual kernel 
+// @param oldphi pointer to the source phi allocated on the device
+// @param newphi pointer to the sink phi allocated on the device
+__global__ void timeAdvanceKernel(uint3 domainSize, uint3 domainLower, double &residual, double *oldphi, double *newphi)
+{
+  // calculate the indices
+  int indxX=domainLower.x+blockdim.x*blockid.x+threadid.x;
+  int indxY=domainLower.y+blockdim.y*blockid.y+threadid.y;
+  int indxZ=domainLower.z+blockdim.z*blockid.z+threadid.z;
+
+  // Do not perform calculation if in a ghost cell or outside the domain
+  if( (indxX < domainSize.x && indxX > 0) 
+   && (indxY < domainSize.y && indxY > 0)
+   && (indxZ < domainSize.z && indxZ > 0) )
+  {
+    // calculate the offset in the dw representation
+    int baseindx=domainSize.x*(indxZ*domainSize.y+indxY+1);
+
+    // compute the stencil
+    newphi[baseindx] = (1.0/6.0) * (
+       oldphi[baseindx+1]                         + oldphi[baseindx-1] +
+       oldphi[baseindx+domainSize.x]              + oldphi[baseindx-domainSize.y] +
+       oldphi[baseindx+domainSize.z*domainSize.y] + oldphi[baseindx-domainSize.z*domainSize.y] );
+    
+    // compute the residual
+    double diff = newphi[baseidx] - oldphi[baseidx];
+    residual   += diff * diff; // THIS LINE IS WRONG--NEED SOME SORT OF LOCKING MAYBE
+  }
+}
+
 //______________________________________________________________________
 //
 void PoissonGPU1::timeAdvance(const ProcessorGroup*,
-                           const PatchSubset* patches,
-                           const MaterialSubset* matls,
-                           DataWarehouse* old_dw, 
-                           DataWarehouse* new_dw,
-                           int deviceID,
-                           CUDADevice *deviceProperties)
+                              const PatchSubset* patches,
+                              const MaterialSubset* matls,
+                              DataWarehouse* old_dw, 
+                              DataWarehouse* new_dw,
+                              int deviceID,
+                              CUDADevice *deviceProperties)
 {
   int matl = 0;
+  int previousPatchSize = 0;  // this is to see if we need to release and release and reallocate between computations
+  int size = 0;
+
+  // device memory
+  double * phinew;
+  double * phiold;
+  
+  // set CUDA device
+  // cudaThreadExit();
+  cudaSetDevice(deviceID);
+
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     constNCVariable<double> phi;
@@ -209,7 +243,7 @@ void PoissonGPU1::timeAdvance(const ProcessorGroup*,
     new_dw->allocateAndPut(newphi, phi_label, matl, patch);
     newphi.copyPatch(phi, newphi.getLowIndex(), newphi.getHighIndex());
  
-    double residual=0;
+    double residual=0.0;
     IntVector l = patch->getNodeLowIndex();
     IntVector h = patch->getNodeHighIndex();
  
@@ -222,17 +256,55 @@ void PoissonGPU1::timeAdvance(const ProcessorGroup*,
     
     //__________________________________
     //  Stencil 
-    for(NodeIterator iter(l, h);!iter.done(); iter++){
-      IntVector n = *iter;
- 
-      newphi[n]=(1./6)*(
-        phi[n+IntVector(1,0,0)] + phi[n+IntVector(-1,0,0)] +
-        phi[n+IntVector(0,1,0)] + phi[n+IntVector(0,-1,0)] +
-        phi[n+IntVector(0,0,1)] + phi[n+IntVector(0,0,-1)]);
- 
-      double diff = newphi[n] - phi[n];
-      residual += diff * diff;
+   
+    //// Memory Allocation ////
+    ///////////////////////////
+    // USE PINNING INSTEAD
+    int size = (h.x()-l.x()) * (h.y()-l.y()) * (h.z()-l.z()) * sizeof(double);
+    // check if we need to reallocate
+    if(size != previousPatchSize)
+    {
+      if(previousPatchSize != 0)
+      {
+         cudaFree(phinew);
+         cudaFree(phiold);
+      }
+      cudaMalloc(&phiold, size);
+      cudaMalloc(&phinew, size);
     }
+    // host pointers
+    double *oldhostmem;  // point this at DW representation
+    double *newhostmem;  // point this at DW representation
+
+    cudaMemcpy(phiold, oldhostmem, size, cudaMemcpyHostToDevice);
+    cudaMemcpy(phinew, newhostmem, size, cudaMemcpyHostToDevice);
+
+    //// Kernel Execution ////
+    //////////////////////////
+    uint3 domainSize  = make_uint3(h.x()-l.x(), h.y()-l.y(), h.z()-l.z());
+    uint3 domainLower = make_uint3(l.x(), l.y(), l.z()); 
+
+    int tx = 8;
+    int ty = 8;
+    int tz = 8;
+    int totalBlocks = size/(sizeof(double)*tx*ty*tz);
+    if(size % size/(sizeof(double)*tx*ty*tz) != 0)
+      totalBlocks++;
+    dim3 threadsPerBlock(tx,ty,tz);
+    
+    // launch kernel
+    timeAdvanceKernel<<<totalBlocks, threadsPerBlock>>>(domainSize, domainLower, &residual, phiold, phinew);
+
+    // Memory Deallocation ////
+    ///////////////////////////
+    // USE PINNING INSTEAD
+    cudaMemcpy(newhostmem, phinew, size, cudaMemcpyDeviceToHost);
+
+
     new_dw->put(sum_vartype(residual), residual_label);
   }
+
+  // final device free
+  cudaFree(phiold);
+  cudaFree(phinew);
 }
