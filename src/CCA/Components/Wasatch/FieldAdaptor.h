@@ -47,8 +47,7 @@ namespace Wasatch{
    */
   template< typename FieldT >
   SpatialOps::structured::MemoryWindow
-  get_memory_window_for_uintah_field( const SCIRun::IntVector& globSize,
-                                      const Uintah::Patch* const patch );
+  get_memory_window_for_uintah_field( const Uintah::Patch* const patch );
 
   /**
    *  \ingroup WasatchFields
@@ -65,7 +64,7 @@ namespace Wasatch{
   {
     using SCIRun::IntVector;
 
-    return new FieldT( get_memory_window_for_uintah_field<FieldT>( uintahVar.getWindow()->getData()->size(), patch ),
+    return new FieldT( get_memory_window_for_uintah_field<FieldT>( patch ),
                        const_cast<double*>( uintahVar.getPointer() ),
                        SpatialOps::structured::ExternalStorage );
   }
