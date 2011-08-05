@@ -43,6 +43,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Arches/SourceTerms/WestbrookDryer.h>
 #include <CCA/Components/Arches/SourceTerms/Inject.h>
 #include <CCA/Components/Arches/SourceTerms/IntrusionInlet.h>
+#include <CCA/Components/Arches/SourceTerms/DORadiation.h>
 #include <CCA/Components/Arches/CoalModels/CoalModelFactory.h>
 #include <CCA/Components/Arches/CoalModels/ModelBase.h>
 #include <CCA/Components/Arches/TransportEqns/EqnBase.h>
@@ -789,7 +790,6 @@ Arches::scheduleInitialize(const LevelP& level,
     }
 
   }
-
 
   // check to make sure that all the scalar variables have BCs set. 
   EqnFactory& eqnFactory = EqnFactory::self(); 
@@ -2470,6 +2470,11 @@ void Arches::registerUDSources(ProblemSpecP& db)
         // Adds a constant to the RHS in specified geometric locations
         SourceTermBase::Builder* srcBuilder = scinew IntrusionInlet<SFCZVariable<double> >::Builder(src_name, required_varLabels, d_lab->d_sharedState);
         factory.register_source_term( src_name, srcBuilder ); 
+
+			} else if ( src_type == "do_radiation" ) { 
+
+				SourceTermBase::Builder* srcBuilder = scinew DORadiation::Builder( src_name, required_varLabels, d_lab, d_boundaryCondition, d_myworld ); 
+				factory.register_source_term( src_name, srcBuilder ); 
 
       } else {
         proc0cout << "For source term named: " << src_name << endl;

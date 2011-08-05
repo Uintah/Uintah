@@ -126,7 +126,7 @@ public:
                                   const Patch* patch,
                                   CellInformation* cellinfo,
                                   ArchesVariables* vars,
-                                  ArchesConstVariables* constvars)  = 0;
+                                  ArchesConstVariables* constvars, int wall_type )  = 0;
   RadiationSolver* d_linearSolver;
  protected:
       void computeOpticalLength();

@@ -123,7 +123,8 @@ public:
                                   const Patch* patch,
                                   CellInformation* cellinfo, 
                                   ArchesVariables* vars,
-                                  ArchesConstVariables* constvars);
+                                  ArchesConstVariables* constvars, 
+                                  int wall_type);
       ////////////////////////////////////////////////////////////////////////
 
 protected: 

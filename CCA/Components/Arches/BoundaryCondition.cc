@@ -170,7 +170,7 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
   d_flowfieldCellTypeVal = -1;
   d_numInlets = 0;
   d_numSourceBoundaries = 0;
-  int total_cellTypes = 0;
+  int total_cellTypes = 100;
 
   d_newBC = scinew BoundaryCondition_new( d_lab ); // need to declare a new boundary condition here 
                                                    // while transition to new code is taking place
@@ -330,9 +330,9 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
 
     if (ProblemSpecP wall_db = db->findBlock("WallBC")) {
       d_wallBoundary = true;
-      d_wallBdry = scinew WallBdry(total_cellTypes);
+      d_wallBdry = scinew WallBdry(WALL);
       d_wallBdry->problemSetup(wall_db);
-      ++total_cellTypes;
+      //++total_cellTypes;
     }
     else {
       proc0cout << "Wall boundary not specified"<<endl;
@@ -341,7 +341,7 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
 
     if (ProblemSpecP press_db = db->findBlock("PressureBC")) {
       d_pressureBoundary = true;
-      d_pressureBC = scinew PressureInlet(total_cellTypes, d_calcVariance,
+      d_pressureBC = scinew PressureInlet(PRESSURE, d_calcVariance,
           d_reactingScalarSolve);
       d_pressureBC->problemSetup(press_db);
       // compute density and other dependent properties
@@ -351,7 +351,7 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
       d_props->computeInletProperties(d_pressureBC->streamMixturefraction, 
           d_pressureBC->calcStream, bc_type);
 
-      ++total_cellTypes;
+      //++total_cellTypes;
     }
     else {
       proc0cout << "Pressure boundary not specified"<< endl;
@@ -360,7 +360,7 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
 
     if (ProblemSpecP outlet_db = db->findBlock("OutletBC")) {
       d_outletBoundary = true;
-      d_outletBC = scinew FlowOutlet(total_cellTypes, d_calcVariance,
+      d_outletBC = scinew FlowOutlet(OUTLET, d_calcVariance,
           d_reactingScalarSolve);
       d_outletBC->problemSetup(outlet_db);
       // compute density and other dependent properties
@@ -369,7 +369,7 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
       string bc_type = "outlet"; 
       d_props->computeInletProperties(d_outletBC->streamMixturefraction, 
           d_outletBC->calcStream, bc_type);
-      ++total_cellTypes;
+      //++total_cellTypes;
     }
     else {
       proc0cout << "Outlet boundary not specified"<<endl;
@@ -381,10 +381,10 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
       if ( d_use_new_bcs ) { 
         d_intrusionBC = scinew IntrusionBdry(WALL);
       } else { 
-        d_intrusionBC = scinew IntrusionBdry(total_cellTypes);
+        d_intrusionBC = scinew IntrusionBdry(INTRUSION);
       } 
       d_intrusionBC->problemSetup(intrusion_db);
-      ++total_cellTypes;
+      //++total_cellTypes;
     }
     else {
       proc0cout << "Intrusion boundary not specified"<<endl;
@@ -395,9 +395,9 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
   d_mmWallID = -10; // invalid cell type
   // if multimaterial then add an id for multimaterial wall
   if (d_MAlab){ 
-    d_mmWallID = total_cellTypes;
+    d_mmWallID = MMWALL; //total_cellTypes;
     if (d_use_new_bcs) { 
-      d_mmWallID = WALL; 
+      d_mmWallID = MMWALL; 
     } 
   }
   if ((d_MAlab)&&(d_intrusionBoundary)){

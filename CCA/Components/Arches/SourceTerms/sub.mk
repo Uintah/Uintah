@@ -15,6 +15,7 @@ SRCS += \
         $(SRCDIR)/Inject.cc \
         $(SRCDIR)/TabRxnRate.cc \
         $(SRCDIR)/IntrusionInlet.cc \
+				$(SRCDIR)/DORadiation.cc \
         $(SRCDIR)/MMS1.cc
 
 
