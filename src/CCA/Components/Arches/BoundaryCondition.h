@@ -102,7 +102,7 @@ namespace Uintah {
 
     public:
 
-      enum BC_TYPE { VELOCITY_INLET, MASSFLOW_INLET, VELOCITY_FILE, MASSFLOW_FILE, PRESSURE, OUTLET, WALL, INTRUSION }; 
+      enum BC_TYPE { VELOCITY_INLET, MASSFLOW_INLET, VELOCITY_FILE, MASSFLOW_FILE, PRESSURE, OUTLET, WALL, MMWALL, INTRUSION }; 
 
       // GROUP: Constructors:
       ////////////////////////////////////////////////////////////////////////
@@ -345,7 +345,7 @@ namespace Uintah {
       // mm Wall boundary ID
       int getMMWallId() const {
         if ( d_use_new_bcs ) {
-          return WALL; 
+          return MMWALL; 
         } else { 
           return d_mmWallID; 
         }
@@ -363,13 +363,13 @@ namespace Uintah {
       inline int wallCellType() const { 
         int wall_celltypeval = -10;
         if (d_wallBoundary){ 
-          wall_celltypeval = d_wallBdry->d_cellTypeID; 
+          wall_celltypeval = WALL; //d_wallBdry->d_cellTypeID; 
         }
 
         if ( d_use_new_bcs ) { 
           return WALL; 
         } else { 
-          return wall_celltypeval; 
+          return WALL; //wall_celltypeval; 
         } 
       }
 
@@ -381,7 +381,7 @@ namespace Uintah {
         if ( d_use_new_bcs ) { 
           return PRESSURE; 
         } else { 
-          return pressure_celltypeval; 
+          return PRESSURE; //pressure_celltypeval; 
         } 
       }
 
@@ -393,7 +393,7 @@ namespace Uintah {
         if ( d_use_new_bcs ) { 
           return OUTLET; 
         } else { 
-          return outlet_celltypeval; 
+          return OUTLET; //outlet_celltypeval; 
         } 
       }
       ////////////////////////////////////////////////////////////////////////

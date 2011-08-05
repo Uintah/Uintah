@@ -974,8 +974,9 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
                                                    d_energyEx);
         }
 
+          int wall = d_boundaryCondition->wallCellType();
           d_DORadiation->intensitysolve(pc, patch, cellinfo,
-                                        &enthalpyVars, &constEnthalpyVars);
+                                        &enthalpyVars, &constEnthalpyVars, wall );
       }
       IntVector indexLow = patch->getFortranCellLowIndex();
       IntVector indexHigh = patch->getFortranCellHighIndex();

@@ -344,7 +344,8 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
                                  const Patch* patch,
                                  CellInformation* cellinfo,
                                  ArchesVariables* vars,
-                                 ArchesConstVariables* constvars)
+                                 ArchesConstVariables* constvars, 
+                                 int wall_type )
 {
   double solve_start = Time::currentSeconds();
    rgamma.resize(1,29);
@@ -368,7 +369,6 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
   IntVector domLo = patch->getExtraCellLowIndex();
   IntVector domHi = patch->getExtraCellHighIndex();
   
-  int wall = d_boundaryCondition->wallCellType();
   double areaew;
 
   CCVariable<double> volume;
@@ -448,7 +448,7 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
         an.initialize(0.0);
         at.initialize(0.0);
         bool plusX, plusY, plusZ;
-        fort_rdomsolve(idxLo, idxHi, constvars->cellType, wall, ffield, cellinfo->sew,
+        fort_rdomsolve(idxLo, idxHi, constvars->cellType, wall_type, ffield, cellinfo->sew,
                        cellinfo->sns, cellinfo->stb, vars->ESRCG, direcn, oxi, omu,
                        oeta, wt, 
                        vars->temperature, vars->ABSKG, vars->cenint, volume,
