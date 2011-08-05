@@ -636,6 +636,7 @@ LIBOBJS
 scirun_src_dir
 scirun_obj_dir
 WOFF_STRING
+NVCC_LIBS
 CUDA_LIB_FLAG
 CUDA_LIB_DIR_FLAG
 INC_CUDA_H
@@ -857,6 +858,7 @@ build_os
 build_vendor
 build_cpu
 build
+NVCC_LDFLAGS
 NVCC_CXXFLAGS
 NVCC_CFLAGS
 NVCC
@@ -982,6 +984,7 @@ CXXCPP
 NVCC
 NVCC_CFLAGS
 NVCC_CXXFLAGS
+NVCC_LDFLAGS
 LIBS
 CCC'
 
@@ -1696,6 +1699,8 @@ Some influential environment variables:
   NVCC_CFLAGS CUDA C compiler flags
   NVCC_CXXFLAGS
               CUDA C++ compiler flags
+  NVCC_LDFLAGS
+              CUDA linker flags
   LIBS        libraries to pass to the linker, e.g. -l<library>
 
 Use these variables to override the choices made by `configure' or to help
@@ -2921,6 +2926,10 @@ fi
 
 
   sci_arg_var_list="$sci_arg_var_list NVCC_CXXFLAGS"
+
+
+
+  sci_arg_var_list="$sci_arg_var_list NVCC_LDFLAGS"
 
 
 # Make sure we can run config.sub.
@@ -42605,7 +42614,7 @@ fi
 if test $HAVE_CUDA="yes"; then
   DEF_CUDA="#define HAVE_CUDA 1"
   eval CUDA_LIB_DIR='"$_cuda_lib $_cuda_sdk_lib"'
-  if test "$_cuda_lib $_cuda_sdk_lib" = "$SCI_THIRDPARTY_LIB_DIR"; then
+  if test "$_cuda_lib $_cuda_sdk_lib"="$SCI_THIRDPARTY_LIB_DIR"; then
     eval CUDA_LIB_DIR_FLAG=''
   else
     eval CUDA_LIB_DIR_FLAG='"$_sci_lib_path"'
@@ -42722,9 +42731,9 @@ echo
 #echo "CUDA_LIB_FLAG     = " $CUDA_LIB_FLAG
 #echo "CUDA_LIB_DIR      = " $CUDA_LIB_DIR
 #echo "CUDA_LIB_DIR_FLAG = " $CUDA_LIB_DIR_FLAG
-#echo "NVCC_CFLAGS       = " $NVCC_CFLAGS
-#echo "NVCC_CXXFLAGS     = " $NVCC_CXXFLAGS
-#echo "NVCC_LDFLAGS      = " $NVCC_LDFLAGS
+echo "NVCC_CFLAGS       = " $NVCC_CFLAGS
+echo "NVCC_CXXFLAGS     = " $NVCC_CXXFLAGS
+echo "NVCC_LDFLAGS      = " $NVCC_LDFLAGS
 #echo
 #echo "CC       = " $CC
 #echo "NVCC     = " $NVCC
@@ -42737,6 +42746,9 @@ echo
 fi #end sci_required_cuda
 
 # these are all defined after the call to SCI_CUDA_COMPILE_LINK_TEST
+
+
+
 
 
 
