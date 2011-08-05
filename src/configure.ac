@@ -164,6 +164,7 @@ SCI_ARG_VAR(CXXCPP,C++ preprocessor)
 SCI_ARG_VAR(NVCC, CUDA compiler command)
 SCI_ARG_VAR(NVCC_CFLAGS, CUDA C compiler flags)
 SCI_ARG_VAR(NVCC_CXXFLAGS, CUDA C++ compiler flags)
+SCI_ARG_VAR(NVCC_LDFLAGS, CUDA linker flags)
 
 AC_CANONICAL_HOST
 
@@ -4166,6 +4167,9 @@ AC_SUBST(DEF_CUDA)
 AC_SUBST(INC_CUDA_H)
 AC_SUBST(CUDA_LIB_DIR_FLAG)
 AC_SUBST(CUDA_LIB_FLAG)
+AC_SUBST(NVCC_CFLAGS)
+AC_SUBST(NVCC_CXXFLAGS)
+AC_SUBST(NVCC_LIBS)
 
 sci_defs_files="$sci_defs_files include/sci_defs/cuda_testdefs.h"
 

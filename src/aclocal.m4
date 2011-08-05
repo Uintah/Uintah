@@ -835,7 +835,7 @@ fi
 if test $HAVE_CUDA="yes"; then
   DEF_CUDA="#define HAVE_CUDA 1"
   eval $1_LIB_DIR='"$6"'
-  if test "$6" = "$SCI_THIRDPARTY_LIB_DIR"; then
+  if test "$6"="$SCI_THIRDPARTY_LIB_DIR"; then
     eval $1_LIB_DIR_FLAG=''
   else
     eval $1_LIB_DIR_FLAG='"$_sci_lib_path"'
