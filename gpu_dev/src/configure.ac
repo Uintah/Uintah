@@ -4150,6 +4150,7 @@ echo
 #echo "NVCC_CFLAGS       = " $NVCC_CFLAGS
 #echo "NVCC_CXXFLAGS     = " $NVCC_CXXFLAGS
 #echo "NVCC_LDFLAGS      = " $NVCC_LDFLAGS
+#echo "NVCC_LIBS         = " $NVCC_LIBS
 #echo
 #echo "CC       = " $CC
 #echo "NVCC     = " $NVCC

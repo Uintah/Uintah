@@ -38,6 +38,8 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/Variables/VarLabel.h>
 
+#include <sci_defs/cuda_defs.h>
+
 #include <CCA/Components/Examples/uintahshare.h>
 namespace Uintah {
   class SimpleMaterial;

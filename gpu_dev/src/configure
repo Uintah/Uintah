@@ -42551,7 +42551,7 @@ NVCC_CFLAGS="$_sci_includes $NVCC_CFLAGS"
 NVCC_CXXFLAGS="$_sci_includes $NVCC_CXXFLAGS"
 NVCC_LIBS="$_sci_lib_path $_sci_libs"
 
-# check that the CUDA compiler works:
+    # check that the CUDA compiler works:
 _file_base_name=`echo cuda_conf_test.cu | sed 's/\(.*\)\..*/\1/'`
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for C compilation using nvcc" >&5
 $as_echo_n "checking for C compilation using nvcc... " >&6; }
@@ -42614,12 +42614,9 @@ fi
 if test $HAVE_CUDA="yes"; then
   DEF_CUDA="#define HAVE_CUDA 1"
   eval CUDA_LIB_DIR='"$_cuda_lib $_cuda_sdk_lib"'
-  if test "$_cuda_lib $_cuda_sdk_lib"="$SCI_THIRDPARTY_LIB_DIR"; then
-    eval CUDA_LIB_DIR_FLAG=''
-  else
-    eval CUDA_LIB_DIR_FLAG='"$_sci_lib_path"'
-  fi
+  eval CUDA_LIB_DIR_FLAG='"$_sci_lib_path"'
   eval CUDA_LIB_FLAG='"$_sci_libs"'
+
   if test "$_sci_includes" = "$INC_SCI_THIRDPARTY_H"; then
     eval INC_CUDA_H=''
   else
@@ -42731,9 +42728,10 @@ echo
 #echo "CUDA_LIB_FLAG     = " $CUDA_LIB_FLAG
 #echo "CUDA_LIB_DIR      = " $CUDA_LIB_DIR
 #echo "CUDA_LIB_DIR_FLAG = " $CUDA_LIB_DIR_FLAG
-echo "NVCC_CFLAGS       = " $NVCC_CFLAGS
-echo "NVCC_CXXFLAGS     = " $NVCC_CXXFLAGS
-echo "NVCC_LDFLAGS      = " $NVCC_LDFLAGS
+#echo "NVCC_CFLAGS       = " $NVCC_CFLAGS
+#echo "NVCC_CXXFLAGS     = " $NVCC_CXXFLAGS
+#echo "NVCC_LDFLAGS      = " $NVCC_LDFLAGS
+#echo "NVCC_LIBS         = " $NVCC_LIBS
 #echo
 #echo "CC       = " $CC
 #echo "NVCC     = " $NVCC

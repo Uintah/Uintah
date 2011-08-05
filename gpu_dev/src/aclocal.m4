@@ -784,7 +784,7 @@ NVCC_CFLAGS="$_sci_includes $NVCC_CFLAGS"
 NVCC_CXXFLAGS="$_sci_includes $NVCC_CXXFLAGS"
 NVCC_LIBS="$_sci_lib_path $_sci_libs"
 
-# check that the CUDA compiler works:
+# check that the CUDA compiler works
 _file_base_name=`echo $8 | sed 's/\(.*\)\..*/\1/'`
 AC_MSG_CHECKING([for C compilation using nvcc])
 $NVCC $NVCC_CFLAGS -c $8
@@ -835,12 +835,9 @@ fi
 if test $HAVE_CUDA="yes"; then
   DEF_CUDA="#define HAVE_CUDA 1"
   eval $1_LIB_DIR='"$6"'
-  if test "$6"="$SCI_THIRDPARTY_LIB_DIR"; then
-    eval $1_LIB_DIR_FLAG=''
-  else
-    eval $1_LIB_DIR_FLAG='"$_sci_lib_path"'
-  fi
+  eval $1_LIB_DIR_FLAG='"$_sci_lib_path"'
   eval $1_LIB_FLAG='"$_sci_libs"'
+
   if test "$_sci_includes" = "$INC_SCI_THIRDPARTY_H"; then
     eval INC_$1_H=''
   else

@@ -30,18 +30,14 @@
 
 #include <sci_defs/cuda_defs.h>
 
-
 #ifdef HAVE_CUDA
 
 #include <CCA/Components/Schedulers/SchedulerCommon.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Grid/Task.h>
-
 #include <Core/Containers/FastHashTable.h>
 #include <Core/Exceptions/ProblemSetupException.h>
-
 #include <CCA/Components/Schedulers/CUDADevice.h>
-#include "cuda.h"
 
 using namespace Uintah;
 
