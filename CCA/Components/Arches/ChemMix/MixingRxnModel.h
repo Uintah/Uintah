@@ -349,6 +349,7 @@ namespace Uintah {
       std::vector<string> d_allDepVarNames;   ///< Vector storing all dependent variable names from the table file
 
       double _H_ox;                          ///< Adiabatic air enthalpy
+      double _H_fuel;                        ///< Adiabatic fuel enthalpy
 
       /** @brief Insert a varLabel into the map where the varlabel has been created elsewhere */ 
       inline void insertExisitingLabelIntoMap( const string var_name ){ 

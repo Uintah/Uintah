@@ -145,6 +145,7 @@ Arches::Arches(const ProcessorGroup* myworld) :
   d_calcReactingScalar = 0;
   d_calcScalar = 0;
   d_calcEnthalpy =0;
+  d_calcNewEnthalpy = 0;
   d_doingRestart = false; 
   d_newBC_on_Restart = false; 
 #ifdef multimaterialform
@@ -241,8 +242,12 @@ Arches::problemSetup(const ProblemSpecP& params,
     }
 
     if (db->findBlock("ExplicitSolver")){
-      if (db->findBlock("ExplicitSolver")->findBlock("EnthalpySolver"))
+      if (db->findBlock("ExplicitSolver")->findBlock("EnthalpySolver")) {
         d_calcEnthalpy = true; 
+      }
+      if (db->findBlock("ExplicitSolver")->findBlock("newEnthalpySolver")){ 
+        d_calcNewEnthalpy = true; 
+      } 
     } else if (db->findBlock("PicardSolver")) {
       if (db->findBlock("PicardSolver")->findBlock("EnthalpySolver"))
         d_calcEnthalpy = true;
@@ -726,7 +731,7 @@ Arches::scheduleInitialize(const LevelP& level,
     bool initialize_it = true; 
     bool modify_ref_den = true; 
 	  d_props->doTableMatching(); 
-    if ( d_calcEnthalpy) 
+    if ( d_calcEnthalpy || d_calcNewEnthalpy ) 
       d_props->sched_initEnthalpy( level, sched ); 
     d_props->sched_reComputeProps_new( level, sched, init_timelabel, initialize_it, modify_ref_den ); 
   }
