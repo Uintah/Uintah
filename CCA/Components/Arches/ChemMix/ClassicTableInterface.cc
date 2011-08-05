@@ -194,6 +194,9 @@ ClassicTableInterface::problemSetup( const ProblemSpecP& propertiesParameters )
   getIndexInfo(); 
   if (!d_coldflow) 
     getEnthalpyIndexInfo();
+
+  d_enthalpy_label = VarLabel::find( d_enthalpy_name ); 
+
 }
 
 void ClassicTableInterface::tableMatching(){ 
@@ -726,7 +729,6 @@ ClassicTableInterface::sched_computeFirstEnthalpy( const LevelP& level, Schedule
 
   Task* tsk = scinew Task(taskname, this, &ClassicTableInterface::computeFirstEnthalpy );
 
-  d_enthalpy_label = VarLabel::find( d_enthalpy_name ); 
 
   tsk->modifies( d_enthalpy_label ); 
 
