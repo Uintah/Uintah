@@ -84,6 +84,7 @@ ClassicTableInterface::problemSetup( const ProblemSpecP& propertiesParameters )
   db_classic->getWithDefault( "hl_scalar_init", d_hl_scalar_init, 0.0); 
   db_classic->getWithDefault( "cold_flow", d_coldflow, false); 
   db_properties_root->getWithDefault( "use_mixing_model", d_use_mixing_model, false ); 
+  db_classic->getWithDefault( "enthalpy_label", d_enthalpy_name, "enthalpySP" ); 
 
   d_noisy_hl_warning = false; 
   if ( ProblemSpecP temp = db_classic->findBlock("noisy_hl_warning") ) 
@@ -105,6 +106,11 @@ ClassicTableInterface::problemSetup( const ProblemSpecP& propertiesParameters )
   } else {
     d_adiabatic = true; 
   }
+
+  // Developer's switch
+  if ( db_classic->findBlock("NOT_ADIABATIC") ) { 
+    d_adiabatic = false; 
+  } 
 
   // need the reference denisty point: (also in PhysicalPropteries object but this was easier than passing it around)
   const ProblemSpecP db_root = db_classic->getRootNode(); 
@@ -584,7 +590,7 @@ ClassicTableInterface::sched_computeHeatLoss( const LevelP& level, SchedulerP& s
     tsk->modifies( d_lab->d_heatLossLabel ); 
 
   if ( calcEnthalpy )
-    tsk->requires( Task::NewDW, d_lab->d_enthalpySPLabel, gn, 0 ); 
+    tsk->requires( Task::NewDW, d_enthalpy_label, gn, 0 ); 
 
   sched->addTask( tsk, level->eachPatch(), d_lab->d_sharedState->allArchesMaterials() ); 
 }
@@ -617,7 +623,7 @@ ClassicTableInterface::computeHeatLoss( const ProcessorGroup* pc,
 
     constCCVariable<double> enthalpy; 
     if ( calcEnthalpy ) 
-      new_dw->get(enthalpy, d_lab->d_enthalpySPLabel, matlIndex, patch, gn, 0 ); 
+      new_dw->get(enthalpy, d_enthalpy_label, matlIndex, patch, gn, 0 ); 
 
     std::vector<constCCVariable<double> > the_variables; 
 
@@ -669,10 +675,15 @@ ClassicTableInterface::computeHeatLoss( const ProcessorGroup* pc,
         double sensible_enthalpy    = tableLookUp( iv, i_index->second ); 
         i_index = d_enthalpyVarIndexMap.find( "adiabaticenthalpy" ); 
         double adiabatic_enthalpy = tableLookUp( iv, i_index->second ); 
+        //adiabatic_enthalpy = _H_fuel*iv[0] + _H_ox*(1.0-iv[0]);
         double current_heat_loss  = 0.0;
         double small = 1e-10; 
-        if ( calcEnthalpy )
-          current_heat_loss = ( adiabatic_enthalpy - enthalpy[c] ) / ( sensible_enthalpy + small ); 
+        if ( calcEnthalpy ) {
+          
+          double numerator = adiabatic_enthalpy - enthalpy[c]; 
+          current_heat_loss = ( numerator ) / ( sensible_enthalpy + small ); 
+
+        }
 
         if ( current_heat_loss < d_hl_lower_bound ) {
 
@@ -715,7 +726,9 @@ ClassicTableInterface::sched_computeFirstEnthalpy( const LevelP& level, Schedule
 
   Task* tsk = scinew Task(taskname, this, &ClassicTableInterface::computeFirstEnthalpy );
 
-  tsk->modifies( d_lab->d_enthalpySPLabel ); 
+  d_enthalpy_label = VarLabel::find( d_enthalpy_name ); 
+
+  tsk->modifies( d_enthalpy_label ); 
 
   // independent variables
   for (MixingRxnModel::VarMap::iterator i = d_ivVarMap.begin(); i != d_ivVarMap.end(); ++i) {
@@ -750,7 +763,7 @@ ClassicTableInterface::computeFirstEnthalpy( const ProcessorGroup* pc,
     int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
     CCVariable<double> enthalpy; 
-    new_dw->getModifiable( enthalpy, d_lab->d_enthalpySPLabel, matlIndex, patch ); 
+    new_dw->getModifiable( enthalpy, d_enthalpy_label, matlIndex, patch ); 
 
     std::vector<constCCVariable<double> > the_variables; 
 

@@ -268,33 +268,36 @@ Properties::problemSetup(const ProblemSpecP& params)
                    "for PicardSolver or ExplicitSolver" << endl;
       throw ProblemSetupException(exception.str(), __FILE__, __LINE__);
     }
-    db_enthalpy_solver = db_enthalpy_solver->findBlock("EnthalpySolver");
 
-    if (db_enthalpy_solver->findBlock("DORadiationModel"))
-      d_radiationCalc = true; 
-    else 
-      proc0cout << "ATTENTION: NO WORKING RADIATION MODEL TURNED ON!" << endl; 
-
-    if (d_radiationCalc) {
+    if ( db_enthalpy_solver->findBlock( "EnthalpySolver" ) ){ 
+      db_enthalpy_solver = db_enthalpy_solver->findBlock("EnthalpySolver");
 
       if (db_enthalpy_solver->findBlock("DORadiationModel"))
-        d_DORadiationCalc = true; 
+        d_radiationCalc = true; 
+      else 
+        proc0cout << "ATTENTION: NO WORKING RADIATION MODEL TURNED ON!" << endl; 
 
-      d_opl = 0.0;
+      if (d_radiationCalc) {
 
-      if (!d_DORadiationCalc)
-        db->require("optically_thin_model_opl",d_opl);
-      if (d_tabulated_soot) {
-        db->getWithDefault("empirical_soot",d_empirical_soot,false);
-        if (d_empirical_soot)
-          throw InvalidValue("Table has soot, do not use empirical soot model!",
-                             __FILE__, __LINE__);
-      }
-      else {
-        db->getWithDefault("empirical_soot",d_empirical_soot,true);
-        if (d_empirical_soot) 
-          db->getWithDefault("soot_factor", d_sootFactor, 1.0);
+        if (db_enthalpy_solver->findBlock("DORadiationModel"))
+          d_DORadiationCalc = true; 
 
+        d_opl = 0.0;
+
+        if (!d_DORadiationCalc)
+          db->require("optically_thin_model_opl",d_opl);
+        if (d_tabulated_soot) {
+          db->getWithDefault("empirical_soot",d_empirical_soot,false);
+          if (d_empirical_soot)
+            throw InvalidValue("Table has soot, do not use empirical soot model!",
+                               __FILE__, __LINE__);
+        }
+        else {
+          db->getWithDefault("empirical_soot",d_empirical_soot,true);
+          if (d_empirical_soot) 
+            db->getWithDefault("soot_factor", d_sootFactor, 1.0);
+
+        }
       }
     }
   }

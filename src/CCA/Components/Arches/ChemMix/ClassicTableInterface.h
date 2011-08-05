@@ -210,6 +210,9 @@ private:
   int d_indepvarscount;     ///< Number of independent variables
   int d_varscount;          ///< Total dependent variables
 
+  string d_enthalpy_name; 
+  const VarLabel* d_enthalpy_label; 
+
   IntVector d_ijk_den_ref;                ///< Reference density location
 
   IndexMap d_depVarIndexMap;              ///< Reference to the integer location of the variable
