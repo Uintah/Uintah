@@ -1146,12 +1146,12 @@ void MPMICE::actuallyInitialize(const ProcessorGroup*,
     //   B U L L E T  P R O O F I N G
     // Verify volume fractions sum to 1.0
     ostringstream warn;
-    double errorThresholdTop    = 1.0 + 1.0e-12;
-    double errorThresholdBottom = 1.0 - 1.0e-12;
+    double errorThresholdTop    = 1.0e0 + 1.0e-12;
+    double errorThresholdBottom = 1.0e0 - 1.0e-12;
 
     for (CellIterator iter = patch->getCellIterator(); !iter.done();iter++){
       // get lowest and highest cells...
-      if(vol_frac_sum[*iter] <= errorThresholdTop && vol_frac_sum[*iter] >= errorThresholdBottom)
+      if(!(vol_frac_sum[*iter] <= errorThresholdTop && vol_frac_sum[*iter] >= errorThresholdBottom))
       {
         warn << "ERROR MPMICE::actuallyInitialize cell " << *iter
              << " volume fraction does not sum to 1 within 1e-12 error, but was: " << vol_frac_sum[*iter] <<"\n"
