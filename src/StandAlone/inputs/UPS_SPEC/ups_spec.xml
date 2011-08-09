@@ -300,6 +300,7 @@
       <color                  spec="OPTIONAL DOUBLE" />
       <density                spec="OPTIONAL DOUBLE" />
       <pressure               spec="OPTIONAL DOUBLE" />
+      <volumeFraction         spec="OPTIONAL DOUBLE" />
 
       <null                   spec="OPTIONAL NO_DATA" /> <!-- FIXME: What is this? -->
 

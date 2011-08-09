@@ -575,7 +575,21 @@ ParticleCreator::initializeParticle(const Patch* patch,
 
   pvelocity[i]    = (*obj)->getInitialData_Vector("velocity");
   ptemperature[i] = (*obj)->getInitialData_double("temperature");
-  pmass[i]        = matl->getInitialDensity()*pvolume[i];
+  double vol_frac_CC = 1.0;
+  try {
+    if((*obj)->getInitialData_double("volumeFraction") == -1.0)
+    {    
+      vol_frac_CC = 1.0;
+      pmass[i]        = matl->getInitialDensity()*pvolume[i];
+    } else {
+      vol_frac_CC = (*obj)->getInitialData_double("volumeFraction");
+      pmass[i]        = matl->getInitialDensity()*pvolume[i]*vol_frac_CC;
+    }
+  } catch (...)
+  {
+    vol_frac_CC = 1.0;       
+    pmass[i]        = matl->getInitialDensity()*pvolume[i];
+  }
   pdisp[i]        = Vector(0.,0.,0.);
   
   if(d_with_color){
