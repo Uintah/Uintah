@@ -1151,8 +1151,6 @@ void MPMICE::actuallyInitialize(const ProcessorGroup*,
     double errorThresholdTop    = 1.0 + 1.0e-12;
     double errorThresholdBottom = 1.0 - 1.0e-12;
 
-    std::cout << "Bottom: " << errorThresholdTop << "    Top: " << errorThresholdBottom << "\n";
-
     for (CellIterator iter = patch->getCellIterator(); !iter.done();iter++){
       // get lowest and highest cells...
       if(vol_frac_sum[*iter] <= errorThresholdTop && vol_frac_sum[*iter] >= errorThresholdBottom)
