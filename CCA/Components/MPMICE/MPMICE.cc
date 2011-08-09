@@ -295,8 +295,6 @@ void MPMICE::scheduleInitialize(const LevelP& level,
                   this, &MPMICE::actuallyInitialize);
                   
   // get the ice materials
-//  const MaterialSubset *ice_matls = d_sharedState->allICEMaterials()->getUnion();
-//  t->requires(Task::NewDW, Ilb->vol_frac_CCLabel, ice_matls, Ghost::None);
   t->computes(MIlb->vel_CCLabel);
   t->computes(Ilb->rho_CCLabel); 
   t->computes(Ilb->temp_CCLabel);
