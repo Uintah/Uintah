@@ -88,7 +88,14 @@ ICEMaterial::ICEMaterial(ProblemSpecP& ps): Material(ps)
    geom_obj_data.push_back(GeometryObject::DataItem("res",        GeometryObject::IntVector));
    geom_obj_data.push_back(GeometryObject::DataItem("temperature",GeometryObject::Double));
    geom_obj_data.push_back(GeometryObject::DataItem("pressure",   GeometryObject::Double));
-   geom_obj_data.push_back(GeometryObject::DataItem("density",    GeometryObject::Double));
+   geom_obj_data.push_back(GeometryObject::DataItem("density",    GeometryObject::Double)); 
+    try{
+        geom_obj_data.push_back(GeometryObject::DataItem("volumeFraction",    GeometryObject::Double));
+        }
+    catch(...)
+    {
+        
+    }
    geom_obj_data.push_back(GeometryObject::DataItem("velocity",   GeometryObject::Vector));
 
    for (ProblemSpecP geom_obj_ps = ps->findBlock("geom_object");
@@ -309,7 +316,19 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
         }
       }   
       if (numMatls > 1 ) {
-        vol_frac_CC[*iter]+= count/totalppc;       
+        try
+        {
+            if(d_geom_objs[obj]->getInitialData_double("volumeFraction") == -1.0)
+            {    
+                vol_frac_CC[*iter]+= count/totalppc;
+            } else {
+                vol_frac_CC[*iter] = count/(totalppc)*d_geom_objs[obj]->getInitialData_double("volumeFraction");
+            }
+        } catch (...)
+        {
+          vol_frac_CC[*iter]+= count/totalppc;            
+        }
+          
         if(IveBeenHere[*iter] == -9){
           // This cell hasn't been hit for this matl yet so set values
           // to ensure that everything is set to something everywhere

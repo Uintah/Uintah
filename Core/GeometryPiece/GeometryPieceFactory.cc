@@ -193,7 +193,8 @@ GeometryPieceFactory::create( const ProblemSpecP& ps,
     else if (go_type == "res"         || go_type == "velocity" || 
              go_type == "temperature" || go_type == "comment"  ||
              go_type == "density"     || go_type == "pressure" ||
-             go_type == "scalar"      || go_type == "color")  {
+             go_type == "scalar"      || go_type == "color"    ||
+             go_type == "volumeFraction" )  {
       // Ignoring. 
       continue;    // restart loop to avoid accessing name of empty object
       

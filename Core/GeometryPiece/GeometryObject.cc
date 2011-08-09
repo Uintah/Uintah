@@ -47,7 +47,13 @@ GeometryObject::GeometryObject(GeometryPieceP piece, ProblemSpecP& ps,
         case Double:
         {
           double val;
-          ps->require(it->name,val);
+          if(it->name == "volumeFraction")
+          {
+              ps->getWithDefault(it->name,val,-1.0);
+          } else 
+          {
+              ps->require(it->name,val);
+          }
           d_double_data[it->name] = val;
           break;
         }

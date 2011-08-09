@@ -150,6 +150,7 @@ WARNING
                               CCVariable<double>& rhC,
                               CCVariable<double>& temp,   
                               CCVariable<Vector>& vCC,
+                              CCVariable<double>& vfCC,
                               int numMatls,
                               const Patch* patch);
 
@@ -157,6 +158,7 @@ WARNING
                                    CCVariable<double>& rhC,
                                    CCVariable<double>& temp,   
                                    CCVariable<Vector>& vCC,
+                                   CCVariable<double>& vfCC,
                                    int numMatls,
                                    const Patch* patch);
 
