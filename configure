@@ -42125,7 +42125,7 @@ ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 ## arg 2 : HYPRE libraries and headers
 ## arg 3 : HYPRE.h
 ## arg 4 : $_sci_inc
-## arg 5 : HYPRE HYPRE_utilities HYPRE_krylov HYPRE_struct_mv HYPRE_struct_ls HYPRE_sstruct_mv HYPRE_sstruct_ls HYPRE_parcsr_mv HYPRE_parcsr_ls
+## arg 5 : HYPRE
 ## arg 6 : $_sci_lib
 ## arg 7 : $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $MALLOC_TRACE_LIB_DIR_FLAG $MALLOC_TRACE_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $M_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG
 ## arg 8 : <Can't expand it here as it may be multiple lines and cause sh problems.>
@@ -42202,10 +42202,10 @@ done
 
 ### Take care of arg 5 (the list of libs)
 
-if test -n "HYPRE HYPRE_utilities HYPRE_krylov HYPRE_struct_mv HYPRE_struct_ls HYPRE_sstruct_mv HYPRE_sstruct_ls HYPRE_parcsr_mv HYPRE_parcsr_ls"; then
+if test -n "HYPRE"; then
 
    found_framework=no
-   for lib in HYPRE HYPRE_utilities HYPRE_krylov HYPRE_struct_mv HYPRE_struct_ls HYPRE_sstruct_mv HYPRE_sstruct_ls HYPRE_parcsr_mv HYPRE_parcsr_ls; do
+   for lib in HYPRE; do
 
       if test "$found_framework" = "one"; then
          found_framework=two
@@ -42498,7 +42498,7 @@ if test "$_sci_optional" = "specific"; then
     fi
   done
   # Make sure the exact libraries were found
-  for i in "" HYPRE HYPRE_utilities HYPRE_krylov HYPRE_struct_mv HYPRE_struct_ls HYPRE_sstruct_mv HYPRE_sstruct_ls HYPRE_parcsr_mv HYPRE_parcsr_ls; do
+  for i in "" HYPRE; do
     if test -z "$i"; then
        continue
     fi
