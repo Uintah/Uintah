@@ -65,6 +65,9 @@ DEALINGS IN THE SOFTWARE.
 #include <cstdio>
 #include <Core/Util/DebugStream.h>
 
+#include <iomanip>
+
+
 using namespace Uintah;
 using namespace std;
 //__________________________________
@@ -1137,7 +1140,7 @@ void MPMICE::actuallyInitialize(const ProcessorGroup*,
       // Get the Volume Fraction computed in ICE's actuallyInitialize(...)
       new_dw->get(vol_frac, Ilb->vol_frac_CCLabel, indx, patch, Ghost::None, 0);
       
-      for (CellIterator iter = patch->getExtraCellIterator(); !iter.done();iter++){
+      for (CellIterator iter = patch->getCellIterator(); !iter.done();iter++){
         vol_frac_sum[*iter] += vol_frac[*iter];
       }
     }  // num_ICE_matls loop
@@ -1146,15 +1149,15 @@ void MPMICE::actuallyInitialize(const ProcessorGroup*,
     //   B U L L E T  P R O O F I N G
     // Verify volume fractions sum to 1.0
     ostringstream warn;
-    double errorThresholdTop    = 1.0e0 + 1.0e-12;
-    double errorThresholdBottom = 1.0e0 - 1.0e-12;
+    double errorThresholdTop    = 1.0e0 + 1.0e-10;
+    double errorThresholdBottom = 1.0e0 - 1.0e-10;
 
     for (CellIterator iter = patch->getCellIterator(); !iter.done();iter++){
       // get lowest and highest cells...
       if(!(vol_frac_sum[*iter] <= errorThresholdTop && vol_frac_sum[*iter] >= errorThresholdBottom))
       {
         warn << "ERROR MPMICE::actuallyInitialize cell " << *iter
-             << " volume fraction does not sum to 1 within 1e-12 error, but was: " << vol_frac_sum[*iter] <<"\n"
+             << " volume fraction does not sum to 1 within 1e-10 error, but was: " << std::setprecision(13)<< vol_frac_sum[*iter] <<"\n"
              << "This is likely because the user did not specify 'volumeFraction'\n"
              << "tags in the input file for geometry pieces that sum to 1 over all materials.\n";
         throw ProblemSetupException(warn.str(), __FILE__, __LINE__ );
