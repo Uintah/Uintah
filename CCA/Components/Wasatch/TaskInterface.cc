@@ -425,7 +425,7 @@ namespace Wasatch{
       if( treeList.size() > 1 ){
         std::ostringstream fnam;
         fnam << tree->name() << "_original.dot";
-        cout << "writing pre-cleave tree to " << fnam.str() << endl;
+        proc0cout << "writing pre-cleave tree to " << fnam.str() << endl;
         std::ofstream fout( fnam.str().c_str() );
         tree->write_tree(fout);
       }
