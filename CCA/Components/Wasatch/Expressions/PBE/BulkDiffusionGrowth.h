@@ -32,12 +32,12 @@ class BulkDiffusionGrowth
  : public Expr::Expression<FieldT>
 {
   /* declare private variables such as fields, operators, etc. here */
+  const Expr::Tag phiTag_, growthCoefTag_;  
+  const double growthCoefVal_;  
+  const double momentOrder_; // this is the order of the moment equation in which the growth rate is used  
   const bool isConstCoef_;
-  const Expr::Tag phiTag_, growthCoefTag_;
-  const double growthCoefVal_;
   const FieldT* phi_; // this will correspond to m(k+1)
   const FieldT* growthCoef_; // this will correspond to the coefficient in the growth rate term
-  const double momentOrder_; // this is the order of the moment equation in which the growth rate is used
 
   BulkDiffusionGrowth( const Expr::Tag phiTag,
                        const Expr::Tag growthCoefTag,
@@ -62,8 +62,8 @@ public:
       : isconstcoef_( false ),
         phit_(phiTag),
         growthcoeft_(growthCoefTag),
-        momentorder_(momentOrder),
-        growthcoefval_(0.0)
+		    growthcoefval_(0.0),
+        momentorder_(momentOrder)
     {}
     
     Builder( const Expr::Tag phiTag, const double growthCoefVal, const double momentOrder )
@@ -83,10 +83,10 @@ public:
     }
 
   private:
+    const Expr::Tag phit_, growthcoeft_;    
+    const double growthcoefval_;    
     const double momentorder_;
     const bool isconstcoef_;
-    const Expr::Tag phit_, growthcoeft_;
-    const double growthcoefval_;
   };
 
   ~BulkDiffusionGrowth();
@@ -116,11 +116,11 @@ BulkDiffusionGrowth( const Expr::Tag phiTag,
                     const Expr::ExpressionID& id,
                     const Expr::ExpressionRegistry& reg  )
   : Expr::Expression<FieldT>(id,reg),
-    isConstCoef_( false ),
     phiTag_(phiTag),
-    momentOrder_(0.0),
     growthCoefTag_(growthCoefTag),
-    growthCoefVal_(0.0)
+    growthCoefVal_(0.0),
+    momentOrder_(0.0),
+    isConstCoef_( false )
 {}
 
 //--------------------------------------------------------------------
@@ -133,11 +133,11 @@ BulkDiffusionGrowth( const Expr::Tag phiTag,
                   const Expr::ExpressionID& id,
                   const Expr::ExpressionRegistry& reg  )
 : Expr::Expression<FieldT>(id,reg),
-  isConstCoef_( true ),
   phiTag_(phiTag),
-  momentOrder_(0.0),
   growthCoefTag_("NULL", Expr::INVALID_CONTEXT),
-  growthCoefVal_(growthCoefVal)
+  growthCoefVal_(growthCoefVal),
+  momentOrder_(0.0),
+  isConstCoef_( true )
 {}
 
 //--------------------------------------------------------------------
