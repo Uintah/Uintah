@@ -135,10 +135,12 @@ namespace Wasatch{
       patchTreeMap_[ -1 ] = std::make_pair( masterTree_, scinew Uintah::Task( taskName_, this, &TreeTaskExecute::execute ) );
     }
 
-    std::ostringstream fnam;
-    fnam << tree->name() << ".dot";
-    std::ofstream fout( fnam.str().c_str() );
-    tree->write_tree(fout);
+    if( Uintah::Parallel::getMPIRank() == 0 ){
+      std::ostringstream fnam;
+      fnam << tree->name() << ".dot";
+      std::ofstream fout( fnam.str().c_str() );
+      tree->write_tree(fout);
+    }
   }
 
   //------------------------------------------------------------------
@@ -419,12 +421,14 @@ namespace Wasatch{
     typedef Expr::ExpressionTree::TreeList TreeList;
     Expr::ExpressionTree::TreePtr tree( new Expr::ExpressionTree( root, factory, -1, taskName ) );
     TreeList treeList = tree->split_tree();
-    if( treeList.size() > 1 ){
-      std::ostringstream fnam;
-      fnam << tree->name() << "_original.dot";
-      proc0cout << "writing pre-cleave tree to " << fnam.str() << endl;
-      std::ofstream fout( fnam.str().c_str() );
-      tree->write_tree(fout);
+    if( Uintah::Parallel::getMPIRank() == 0 ){
+      if( treeList.size() > 1 ){
+        std::ostringstream fnam;
+        fnam << tree->name() << "_original.dot";
+        cout << "writing pre-cleave tree to " << fnam.str() << endl;
+        std::ofstream fout( fnam.str().c_str() );
+        tree->write_tree(fout);
+      }
     }
     for( TreeList::iterator itr=treeList.begin(); itr!=treeList.end(); ++itr ){
       Expr::ExpressionTree::TreePtr tr = *itr;
@@ -449,12 +453,14 @@ namespace Wasatch{
     typedef Expr::ExpressionTree::TreeList TreeList;
     Expr::ExpressionTree::TreePtr tree( new Expr::ExpressionTree( roots, factory, -1, taskName ) );
     TreeList treeList = tree->split_tree();
-    if( treeList.size() > 1 ){
-      std::ostringstream fnam;
-      fnam << tree->name() << "_original.dot";
-      proc0cout << "writing pre-cleave tree to " << fnam.str() << endl;
-      std::ofstream fout( fnam.str().c_str() );
-      tree->write_tree(fout);
+    if( Uintah::Parallel::getMPIRank() == 0 ){
+      if( treeList.size() > 1 ){
+        std::ostringstream fnam;
+        fnam << tree->name() << "_original.dot";
+        proc0cout << "writing pre-cleave tree to " << fnam.str() << endl;
+        std::ofstream fout( fnam.str().c_str() );
+        tree->write_tree(fout);
+      }
     }
     for( TreeList::iterator itr=treeList.begin(); itr!=treeList.end(); ++itr ){
       Expr::ExpressionTree::TreePtr tr = *itr;
