@@ -200,10 +200,10 @@ namespace Wasatch{
 
       const Expr::Tag tag = parse_nametag( exprParams->findBlock("NameTag") );
 
-      std::cout << "Creating BasicExpression for variable '" << tag.name()
-                << "' with state " << tag.context()
-                << " on task list '" << taskListName << "'"
-                << std::endl;
+//       std::cout << "Creating BasicExpression for variable '" << tag.name()
+//                 << "' with state " << tag.context()
+//                 << " on task list '" << taskListName << "'"
+//                 << std::endl;
 
       switch( get_field_type(fieldType) ){
       case SVOL : builder = build_basic_expr< SVolField >( exprParams );  break;
@@ -241,10 +241,10 @@ namespace Wasatch{
 	
       const Expr::Tag tag = parse_nametag( exprParams->findBlock("NameTag") );
 		
-      std::cout << "Creating TaylorVortexMMS for variable '" << tag.name()
-                << "' with state " << tag.context()
-                << " on task list '" << taskListName << "'"
-                << std::endl;
+//       std::cout << "Creating TaylorVortexMMS for variable '" << tag.name()
+//                 << "' with state " << tag.context()
+//                 << " on task list '" << taskListName << "'"
+//                 << std::endl;
 		
       switch( get_field_type(fieldType) ){
       case SVOL : builder = build_taylor_vortex_mms_expr< SVolField >( exprParams );  break;
