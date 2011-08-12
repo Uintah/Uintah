@@ -197,25 +197,25 @@ timeAdvanceKernel(uint3 domainSize, uint3 domainLower, double *residual, double 
   int indxY = domainLower.y + blockDim.y * blockIdx.y + threadIdx.y;
   int indxZ = domainLower.z + blockDim.z * blockIdx.z + threadIdx.z;
 
-  // Do not perform calculation if in a ghost cell or outside the domain
-  if ((indxX < domainSize.x && indxX > 0)
-      && (indxY < domainSize.y && indxY > 0) && (indxZ < domainSize.z && indxZ
-      > 0))
-    {
-      // calculate the offset in the dw representation
-      int baseIdx = domainSize.x * (indxZ * domainSize.y + indxY + 1);
-
-      // compute the stencil
-      // FIXME - domainSize is not a class type. Need to get access to underlying IntVectors
-      newphi[baseIdx] = (1.0 / 6.0) * (oldphi[baseIdx + 1]
-          + oldphi[baseIdx - 1] + oldphi[baseIdx + baseIdx.x] + oldphi[baseIdx
-          - domainSize.y] + oldphi[baseIdx + domainSize.z * domainSize.y]
-          + oldphi[baseIdx - domainSize.z * domainSize.y]);
-
-      // compute the residual
-      double diff = newphi[baseIdx] - oldphi[baseIdx];
-      *residual += diff * diff; // THIS LINE IS WRONG--NEED SOME SORT OF LOCKING MAYBE
-    }
+//  // Do not perform calculation if in a ghost cell or outside the domain
+//  if ((indxX < domainSize.x && indxX > 0)
+//      && (indxY < domainSize.y && indxY > 0) && (indxZ < domainSize.z && indxZ
+//      > 0))
+//    {
+//      // calculate the offset in the dw representation
+//      int baseIdx = domainSize.x * (indxZ * domainSize.y + indxY + 1);
+//
+//      // compute the stencil
+//      // FIXME - domainSize is not a class type. Need to get access to underlying IntVectors
+//      newphi[baseIdx] = (1.0 / 6.0) * (oldphi[baseIdx + 1]
+//          + oldphi[baseIdx - 1] + oldphi[baseIdx + baseIdx.x] + oldphi[baseIdx
+//          - domainSize.y] + oldphi[baseIdx + domainSize.z * domainSize.y]
+//          + oldphi[baseIdx - domainSize.z * domainSize.y]);
+//
+//      // compute the residual
+//      double diff = newphi[baseIdx] - oldphi[baseIdx];
+//      *residual += diff * diff; // THIS LINE IS WRONG--NEED SOME SORT OF LOCKING MAYBE
+//    }
 }
 
 //______________________________________________________________________
