@@ -220,6 +220,8 @@ KobayashiSarofimDevol::sched_computeModel( const LevelP& level, SchedulerP& sche
 
   d_timeSubStep = timeSubStep; 
 
+  tsk->requires( Task::OldDW, d_fieldLabels->d_sharedState->get_delt_label(), Ghost::None, 0);
+
   if (d_timeSubStep == 0 && !d_labelSchedInit) {
     // Every model term needs to set this flag after the varLabel is computed. 
     // transportEqn.cleanUp should reinitialize this flag at the end of the time step. 
@@ -375,6 +377,10 @@ KobayashiSarofimDevol::computeModel( const ProcessorGroup * pc,
     int archIndex = 0;
     int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
+    delt_vartype DT;
+    old_dw->get(DT, d_fieldLabels->d_sharedState->get_delt_label());
+    double dt = DT;
+
     CCVariable<double> devol_rate;
     if( new_dw->exists( d_modelLabel, matlIndex, patch ) ) {
       new_dw->getModifiable( devol_rate, d_modelLabel, matlIndex, patch ); 
@@ -507,12 +513,30 @@ KobayashiSarofimDevol::computeModel( const ProcessorGroup * pc,
 
         k1 = A1*exp(-E1/(R*unscaled_temperature)); // [=] 1/s
         k2 = A2*exp(-E2/(R*unscaled_temperature)); // [=] 1/s
-        
-        double testVal_part = -(k1+k2)*(unscaled_raw_coal_mass + min(0.0,unscaled_char_mass))/d_rc_scaling_factor;
-        double testVal_gas = (Y1_*k1 + Y2_*k2)*(unscaled_raw_coal_mass+ min(0.0,unscaled_char_mass))*unscaled_weight;
-        double testVal_char = ((1-Y1_)*k1 + (1-Y2_)*k2)*(unscaled_raw_coal_mass + min(0.0,unscaled_char_mass));
+ 
+        if(d_unweighted){ 
+          rateMax = max((0.2*(unscaled_raw_coal_mass + min(0.0,unscaled_char_mass))/dt),0.0);
+          testVal_part = -(k1+k2)*(unscaled_raw_coal_mass + min(0.0,unscaled_char_mass))/d_rc_scaling_factor;
+          testVal_gas = (Y1_*k1 + Y2_*k2)*(unscaled_raw_coal_mass+ min(0.0,unscaled_char_mass))*unscaled_weight;
+          testVal_char = ((1-Y1_)*k1 + (1-Y2_)*k2)*(unscaled_raw_coal_mass + min(0.0,unscaled_char_mass));
+          if( testVal_part < (-rateMax/d_rc_scaling_factor)) {
+            testVal_part = -rateMax/(d_rc_scaling_factor);
+            testVal_gas = Y1_*rateMax;
+            testVal_char = (1-Y1_)*rateMax;
+          }
+        } else {
+          rateMax = max((0.2*(unscaled_raw_coal_mass + min(0.0,unscaled_char_mass))*unscaled_weight/dt),0.0);
+          testVal_part = -(k1+k2)*(unscaled_raw_coal_mass + min(0.0,unscaled_char_mass))*unscaled_weight/(d_rc_scaling_factor*d_w_scaling_factor);
+          testVal_gas = (Y1_*k1 + Y2_*k2)*(unscaled_raw_coal_mass+ min(0.0,unscaled_char_mass))*unscaled_weight;
+          testVal_char = ((1-Y1_)*k1 + (1-Y2_)*k2)*(unscaled_raw_coal_mass + min(0.0,unscaled_char_mass))*unscaled_weight;
+          if( testVal_part < (-rateMax/(d_rc_scaling_factor*d_w_scaling_factor))) {
+            testVal_part = -rateMax/(d_rc_scaling_factor*d_w_scaling_factor);
+            testVal_gas = Y1_*rateMax;
+            testVal_char = (1-Y1_)*rateMax;
+          }
+        }
 
-        if( testVal_part < -1e-16 ) {
+        if( (testVal_part < -1e-16) && (unscaled_raw_coal_mass > 1e-16)) {
           devol_rate_ = testVal_part;
           gas_devol_rate_ = testVal_gas;
           char_rate_ = testVal_char;
