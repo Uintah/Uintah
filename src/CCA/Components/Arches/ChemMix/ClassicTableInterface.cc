@@ -506,7 +506,9 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
                 iv.push_back( bc_values[i] );
                 break; 
               case ClassicTableInterface::NEUMANN:
-                iv.push_back( 0.5 * (indep_storage[i][c] + indep_storage[i][cp1]) );  
+                // Kludge fixing for the heatloss bc issue. Is only valid for zero neumann bc.
+                //iv.push_back( 0.5 * (indep_storage[i][c] + indep_storage[i][cp1]) );
+                iv.push_back(indep_storage[i][cp1]);
                 break; 
               default: 
                 throw InvalidValue( "Error: BC type not supported for property calculation", __FILE__, __LINE__ ); 
