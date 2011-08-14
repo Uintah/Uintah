@@ -181,7 +181,9 @@ EnthalpySolver::problemSetup(const ProblemSpecP& params)
   string limiter_type;
   if (d_conv_scheme == 1) {
     db->getWithDefault("limiter_type",limiter_type,"superbee");
-    if (limiter_type == "superbee"){ 
+    if (limiter_type == "minmod"){
+      d_limiter_type = -1;
+    } else if (limiter_type == "superbee"){ 
       d_limiter_type = 0;
     }else if (limiter_type == "vanLeer"){ 
       d_limiter_type = 1;
