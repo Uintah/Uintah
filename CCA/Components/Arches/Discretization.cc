@@ -800,7 +800,10 @@ Discretization::calculateScalarFluxLimitedConvection(
             else r = 1.0e10; // doesn't take sign of dZup into accout, doesn't mattter since Zup = Zdwn in this case
           }
 
-          if (limiter_type == 0) {
+          if (limiter_type == -1) {
+            temp1 = min(r,1.0);
+            psi = max(0.0,temp1);
+          } else if (limiter_type == 0) {
             temp1 = min(2.0 * r,1.0);
             temp2 = min(r,2.0);
             temp1 = max(temp1, temp2);
@@ -878,7 +881,10 @@ Discretization::calculateScalarFluxLimitedConvection(
             else r = 1.0e10; // doesn't take sign of dZup into accout, doesn't mattter since Zup = Zdwn in this case
           }
 
-          if (limiter_type == 0) {
+          if (limiter_type == -1) {
+            temp1 = min(r,1.0);
+            psi = max(0.0,temp1);
+          } else if (limiter_type == 0) {
             temp1 = min(2.0 * r,1.0);
             temp2 = min(r,2.0);
             temp1 = max(temp1, temp2);
@@ -956,7 +962,10 @@ Discretization::calculateScalarFluxLimitedConvection(
             else r = 1.0e10; // doesn't take sign of dZup into accout, doesn't mattter since Zup = Zdwn in this case
           }
 
-          if (limiter_type == 0) {
+          if (limiter_type == -1) {
+            temp1 = min(r,1.0);
+            psi = max(0.0,temp1);
+          } else if (limiter_type == 0) {
             temp1 = min(2.0 * r,1.0);
             temp2 = min(r,2.0);
             temp1 = max(temp1, temp2);
