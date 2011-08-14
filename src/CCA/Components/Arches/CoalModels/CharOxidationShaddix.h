@@ -149,6 +149,8 @@ private:
   double upper_bound;
   int icount;
   double pi;
+  double rateMax;
+  vector<double>  rc_mass_init;
   double d_rh_scaling_constant;
   double d_rc_scaling_constant;   ///< Scaling factor for raw coal
   double d_pl_scaling_constant;   ///< Scaling factor for particle size (length)

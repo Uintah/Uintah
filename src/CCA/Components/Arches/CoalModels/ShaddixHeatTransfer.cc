@@ -741,15 +741,18 @@ ShaddixHeatTransfer::computeModel( const ProcessorGroup * pc,
           Particle_enthalpy = 0.0;
         }
 
-        Q_reaction = charoxi_temp_source[c];
-
-        heat_rate_ = (Q_convection + Q_radiation + Q_reaction)/(mp_Cp*d_pt_scaling_constant);
-
-        //cout << "Qconv " << Q_convection << " Qrad " << Q_radiation << " Qreac " << Q_reaction << " blow " << blow << endl;
-        //cout << "abskp " << abskp_ << endl;
+        if(d_unweighted){
+          Q_reaction = charoxi_temp_source[c];
+          heat_rate_ = (Q_convection + Q_radiation + Q_reaction)/(mp_Cp*d_pt_scaling_constant);
+          gas_heat_rate_ = -unscaled_weight*Q_convection + (devol_gas_source[c] + chargas_source[c])*Particle_enthalpy;
+        } else {
+          Q_reaction = charoxi_temp_source[c];
+          heat_rate_ = ((Q_convection + Q_radiation)*unscaled_weight + Q_reaction)/(mp_Cp*d_pt_scaling_constant*d_w_scaling_constant);
+          gas_heat_rate_ = -unscaled_weight*Q_convection + (devol_gas_source[c] + chargas_source[c])*Particle_enthalpy;
+        }
+        //cout << "Qconv " << Q_convection << " Qrad " << Q_radiation << " Qreac " << Q_reaction << " blow " << blow << " mp_Cp " << mp_Cp <<  endl;
+        //cout << "abskp " << abskp_ << " w " << weight[c] << " w_particle_length[c] " << w_particle_length[c] << " d_quadNode " << d_quadNode << endl;
         //cout << "Particle_enthalpy " << Particle_enthalpy << " Cpc " << Cpc << " Cph " << Cph << " Cpa " << Cpa << endl;
-
-        gas_heat_rate_ = -unscaled_weight*Q_convection + (devol_gas_source[c] + chargas_source[c])*Particle_enthalpy;
  
       }
 
