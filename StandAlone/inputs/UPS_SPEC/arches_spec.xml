@@ -270,7 +270,7 @@
         <newEnthalpySolver              spec="OPTIONAL NO_DATA" /> <!-- DEVELOPER SWITCH --> 
         <EnthalpySolver                 spec="OPTIONAL NO_DATA" >
           <convection_scheme            spec="REQUIRED STRING 'central-upwind, flux_limited'" />
-          <limiter_type                 spec="OPTIONAL STRING 'superbee, vanLeer, upwind, none'"/>
+          <limiter_type                 spec="OPTIONAL STRING 'minmod, superbee, vanLeer, upwind, none'"/>
           <boundary_limiter_type        spec="OPTIONAL STRING 'central-upwind, upwind'" />
           <central_limiter              spec="OPTIONAL BOOLEAN" /> <!-- unrecognized option -->
           <radiationCalcFreq            spec="OPTIONAL INTEGER" />
@@ -307,7 +307,7 @@
         <MixtureFractionSolver          spec="REQUIRED NO_DATA" >
           <initial_value                spec="OPTIONAL DOUBLE" />
           <convection_scheme            spec="REQUIRED STRING 'central-upwind, flux_limited'"/>
-          <limiter_type                 spec="OPTIONAL STRING 'superbee, vanLeer, upwind, none'"/>
+          <limiter_type                 spec="OPTIONAL STRING 'minmod, superbee, vanLeer, upwind, none'"/>
           <boundary_limiter_type        spec="OPTIONAL STRING 'central-upwind, upwind'" />
           <central_limiter              spec="OPTIONAL BOOLEAN" /> <!-- unrecognized option -->
           <src                          spec="MULTIPLE NO_DATA" 
@@ -358,7 +358,7 @@
           <doDiff                       spec="OPTIONAL BOOLEAN"/>
           <doConv                       spec="OPTIONAL BOOLEAN"/>
           <addSources                   spec="OPTIONAL BOOLEAN"/>
-          <conv_scheme                  spec="OPTIONAL STRING 'upwind, super_bee, central, old_super_bee'"/> 
+          <conv_scheme                  spec="OPTIONAL STRING 'upwind, minmod, super_bee, central, old_super_bee'"/> 
           <scaling_const                spec="OPTIONAL DOUBLE"/>                              
           <!--use_density_guess            spec="OPTIONAL NO_DATA"/--> <!-- Option removed for the time being-->
           <src                          spec="MULTIPLE NO_DATA" 
@@ -596,7 +596,7 @@
         <Weights                        spec="REQUIRED NO_DATA">
           <doDiff                       spec="OPTIONAL BOOLEAN"/>
           <doConv                       spec="OPTIONAL BOOLEAN"/>
-          <conv_scheme                  spec="OPTIONAL STRING 'upwind, super_bee'"/>
+          <conv_scheme                  spec="OPTIONAL STRING 'upwind, minmod, super_bee'"/>
           <turbulentPrandtlNumber       spec="OPTIONAL DOUBLE" />
           <initialization               spec="OPTIONAL NO_DATA"
                                         attribute1="type REQUIRED STRING 'env_constant, constant, env_step, step'">
@@ -630,7 +630,7 @@
                                         attribute1="label REQUIRED STRING">
           <doDiff                       spec="OPTIONAL BOOLEAN"/>
           <doConv                       spec="OPTIONAL BOOLEAN"/>
-          <conv_scheme                  spec="OPTIONAL STRING 'upwind, super_bee'"/>
+          <conv_scheme                  spec="OPTIONAL STRING 'upwind, minmod, super_bee'"/>
           <turbulentPrandtlNumber       spec="OPTIONAL DOUBLE" />
           <initialization               spec="OPTIONAL NO_DATA"
                                         attribute1="type REQUIRED STRING 'env_constant, constant, env_step'">
