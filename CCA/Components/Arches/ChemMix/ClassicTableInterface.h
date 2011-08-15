@@ -88,6 +88,7 @@ namespace Uintah {
 class ArchesLabel; 
 class MPMArchesLabel; 
 class TimeIntegratorLabel; 
+class BoundaryCondition_new; 
 class ClassicTableInterface : public MixingRxnModel {
 
 public:
@@ -223,6 +224,8 @@ private:
   std::vector<string> d_allDepVarUnits;        ///< Units for the dependent variables 
 
   vector<string> d_allUserDepVarNames;    ///< Vector storing all independent varaible names requested in input file
+
+  BoundaryCondition_new* _boundary_condition; 
 
   void checkForConstants( const string & inputfile );
 
