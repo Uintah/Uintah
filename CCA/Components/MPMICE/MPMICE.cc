@@ -305,6 +305,11 @@ void MPMICE::scheduleInitialize(const LevelP& level,
   t->computes(Ilb->speedSound_CCLabel); 
   t->computes(Mlb->heatRate_CCLabel);
 
+  const MaterialSubset* ice_matls = d_sharedState->allICEMaterials()->getUnion();
+  
+
+  t->requires(Task::NewDW, Ilb->vol_frac_CCLabel, ice_matls, Ghost::AroundCells, 1, false);
+
   if (d_switchCriteria) {
     d_switchCriteria->scheduleInitialize(level,sched);
   }
