@@ -59,13 +59,16 @@ using namespace Uintah;
 //--------------------------------------------------------------------------- 
 ClassicTableInterface::ClassicTableInterface( const ArchesLabel* labels, const MPMArchesLabel* MAlabels ) :
   MixingRxnModel( labels, MAlabels )
-{}
+{
+  _boundary_condition = scinew BoundaryCondition_new( labels ); 
+}
 
 //--------------------------------------------------------------------------- 
 // Default Destructor
 //--------------------------------------------------------------------------- 
 ClassicTableInterface::~ClassicTableInterface()
 {
+  delete _boundary_condition; 
 }
 
 //--------------------------------------------------------------------------- 
@@ -502,14 +505,18 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
           for ( int i = 0; i < (int) d_allIndepVarNames.size(); i++ ){
 
             switch (which_bc[i]) { 
+
               case ClassicTableInterface::DIRICHLET:
                 iv.push_back( bc_values[i] );
                 break; 
+
               case ClassicTableInterface::NEUMANN:
                 iv.push_back( 0.5 * (indep_storage[i][c] + indep_storage[i][cp1]) );
                 break; 
+
               default: 
                 throw InvalidValue( "Error: BC type not supported for property calculation", __FILE__, __LINE__ ); 
+
             }
           }
 
@@ -616,6 +623,7 @@ ClassicTableInterface::computeHeatLoss( const ProcessorGroup* pc,
     const Patch* patch = patches->get(p); 
     int archIndex = 0; 
     int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    std::string heat_loss_string; 
 
     CCVariable<double> heat_loss; 
     if ( initialize_me )
@@ -648,6 +656,7 @@ ClassicTableInterface::computeHeatLoss( const ProcessorGroup* pc,
 
           the_variables.push_back( test_Var ); 
         } else {
+          heat_loss_string = ivar->first; 
           constCCVariable<double> a_null_var; 
           the_variables.push_back( a_null_var ); // to preserve the total number of IV otherwise you will have problems below
         }
@@ -714,6 +723,10 @@ ClassicTableInterface::computeHeatLoss( const ProcessorGroup* pc,
             cout << "   --> upper heat loss exceeded. " << endl;
         } 
       } 
+
+      //boundary conditions
+      _boundary_condition->setScalarValueBC( pc, patch, heat_loss, heat_loss_string );
+
     }
   }
 }

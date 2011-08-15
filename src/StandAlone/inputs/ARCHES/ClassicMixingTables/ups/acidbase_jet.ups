@@ -38,7 +38,7 @@
     <save label="Vtest1" table_lookup="true"/>
     <save label="Vtest2" table_lookup="true"/>
     <save label="cellType"/>
-    <checkpoint cycle="2" interval="0.02"/>
+    <checkpoint cycle="2" interval="0.002"/>
     <compression>gzip</compression>
   </DataArchiver>
   <Grid>
