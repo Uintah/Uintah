@@ -69,8 +69,8 @@ OperatorSplitChem::sched_eval( const LevelP& level, SchedulerP& sched )
 
   Task* tsk = scinew Task("OperatorSplitChem::eval", this, &OperatorSplitChem::eval);
 
-  SourceTermFactory& src_factory = SourceTermFactory::self();
-  EqnFactory&        eqn_factory = EqnFactory::self();
+  //SourceTermFactory& src_factory = SourceTermFactory::self();
+  //EqnFactory&        eqn_factory = EqnFactory::self();
 
 	sched->addTask( tsk, level->eachPatch(), _field_labels->d_sharedState->allArchesMaterials() ); 
 

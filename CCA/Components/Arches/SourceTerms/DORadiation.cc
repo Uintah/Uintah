@@ -109,7 +109,6 @@ DORadiation::sched_computeSource( const LevelP& level, SchedulerP& sched, int ti
   _perproc_patches = level->eachPatch(); 
 
   Ghost::GhostType  gac = Ghost::AroundCells;
-  Ghost::GhostType  gaf = Ghost::AroundFaces;
   Ghost::GhostType  gn = Ghost::None;
 
   _co2_label = VarLabel::find( _co2_label_name ); 
@@ -180,8 +179,6 @@ DORadiation::computeSource( const ProcessorGroup* pc,
     int archIndex = 0;
     int matlIndex = _labels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
     Ghost::GhostType  gac = Ghost::AroundCells;
-    Ghost::GhostType  gaf = Ghost::AroundFaces;
-    Ghost::GhostType  gn = Ghost::None;      
 
     int timestep = _labels->d_sharedState->getCurrentTopLevelTimeStep(); 
 

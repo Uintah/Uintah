@@ -650,10 +650,6 @@ Properties::reComputeProps(const ProcessorGroup* pc,
     CCVariable<double> c2h2;
     CCVariable<double> ch4;
 
-    bool foundExtrascalar = false;
-    bool usemeforden = false;
-    int indexforden = -1;
-
     PerPatch<CellInformationP> cellInfoP;
     new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
     CellInformation* cellinfo = cellInfoP.get().get_rep();
