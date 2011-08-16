@@ -380,10 +380,6 @@ XDragModel::computeModel( const ProcessorGroup* pc,
     int archIndex = 0;
     int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
-    delt_vartype DT;
-    old_dw->get(DT, d_fieldLabels->d_sharedState->get_delt_label());
-    double dt = DT;
-
     CCVariable<double> model; 
     CCVariable<double> gas_source;
 
