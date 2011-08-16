@@ -8,7 +8,7 @@
    <Solver type="hypre" />
   <Wasatch>
 
-    <TimeIntegrator>RK3SSP</TimeIntegrator
+    <TimeIntegrator>RK3SSP</TimeIntegrator>
 
     <!-- Set the initial condition expression for x-momentum -->
     <TaylorVortexMMS type="YVOL">
