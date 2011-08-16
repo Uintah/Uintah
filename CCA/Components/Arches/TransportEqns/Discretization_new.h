@@ -884,10 +884,19 @@ namespace Uintah{
         }; 
       }; 
 
+      // ---------------------------------------------------------------------------
+      // Flux Limiters
+      //
       // Limiter Functions:
       // This is the base class: 
-      
       // Given r, should return psi
+      //
+      // To add a new limiter: 
+      // 1) Add a derived LimiterFunctionBase class to return psi
+      // 2) Add an instance of the function in the FluxLimiterInterpolation() constructor
+      // 3) Add the option in the spec file 
+      
+      /** @brief Limiter function base class */
       class LimiterFunctionBase { 
 
         public: 
@@ -903,6 +912,7 @@ namespace Uintah{
 
       };
 
+      /** @brief Super Bee function */ 
       class SuperBeeFunction : public LimiterFunctionBase { 
 
         public: 
@@ -925,6 +935,7 @@ namespace Uintah{
 
       };
 
+      /** @brief Roe MinMod function */ 
       class RoeMindModFunction : public LimiterFunctionBase { 
 
         public: 
@@ -946,10 +957,29 @@ namespace Uintah{
           };
       }; 
 
-      // ---------------------------------------------------------------------------
-      // Flux Limiters
-      //
-      /** @brief Super Bee Interpolation */ 
+      /** @brief Van Leer function */ 
+      class VanLeerFunction : public LimiterFunctionBase { 
+
+        public: 
+
+          VanLeerFunction(){}; 
+          ~VanLeerFunction(){};
+
+          double get_psi( double const r ){ 
+
+            double psi = 2.0; // when r = infinity
+
+            if ( psi < _huge ) { 
+              psi = ( r + std::abs(r) ) / ( 1.0 + std::abs(r) ); 
+            }
+
+            return psi; 
+
+          };
+      }; 
+      //--- end functions --- below is the actual interpolation for all limiters
+
+      /** @brief Generalized Flux Limiter */ 
       template <typename phiT>
       class FluxLimiterInterpolation { 
 
@@ -964,6 +994,10 @@ namespace Uintah{
           } else if ( type == "roe_minmod" ) { 
 
             _limiter_function = scinew RoeMindModFunction(); 
+
+          } else if ( type == "vanleer" ) { 
+
+            _limiter_function = scinew VanLeerFunction(); 
 
           } else { 
 
