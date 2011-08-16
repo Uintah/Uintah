@@ -211,6 +211,7 @@ namespace Wasatch{
                               Uintah::SchedulerP& );
 
   private:
+    int nRKStages_;
 
     Uintah::SimulationStateP sharedState_; ///< access to some common things like the current timestep.
 
@@ -241,7 +242,8 @@ namespace Wasatch{
     /** \brief a convenience function */
     void create_timestepper_on_patches( const Uintah::PatchSet* const localPatches,
                                         const Uintah::MaterialSet* const materials,
-                                        Uintah::SchedulerP& sched );
+                                        Uintah::SchedulerP& sched,
+                                       int RKStage);
 
     // jcs this should disappear soon?
     void computeDelT( const Uintah::ProcessorGroup*,

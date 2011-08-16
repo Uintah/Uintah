@@ -97,7 +97,8 @@ namespace Wasatch{
                    const Uintah::MaterialSet* const materials,
                    const PatchInfoMap& info,
                    const bool createUniqueTreePerPatch,
-                   Expr::FieldManagerList* fml = NULL );
+                  int RKStage,
+                   Expr::FieldManagerList* fml = NULL);
 
     /**
      *  \brief Create a TaskInterface from a list of root expressions
@@ -133,7 +134,8 @@ namespace Wasatch{
                    const Uintah::MaterialSet* const materials,
                    const PatchInfoMap& info,
                    const bool createUniqueTreePerPatch,
-                   Expr::FieldManagerList* fml = NULL );
+                  int RKStage,
+                   Expr::FieldManagerList* fml = NULL);
 
     ~TaskInterface();
 
@@ -150,7 +152,7 @@ namespace Wasatch{
      *  This sets all field requirements for the Uintah task and
      *  scheduled it for execution.
      */
-    void schedule( const Expr::TagSet& newDWFields );
+    void schedule( const Expr::TagSet& newDWFields, int RKStage );
 
 
     /**
@@ -159,7 +161,9 @@ namespace Wasatch{
      *  This sets all field requirements for the Uintah task and
      *  scheduled it for execution.
      */
-    void schedule();
+    void schedule(int RKStage);
+    
+    Expr::ExpressionTree::TreePtr get_time_tree();
 
   private:
 

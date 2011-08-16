@@ -75,7 +75,7 @@ namespace Wasatch{
   //--------------------------------------------------------------------
 
   Wasatch::Wasatch( const Uintah::ProcessorGroup* myworld )
-    : Uintah::UintahParallelComponent( myworld )
+    : Uintah::UintahParallelComponent( myworld ), nRKStages_(1)
   {
     // disable memory windowing on variables.  This will ensure that
     // each variable is allocated its own memory on each patch,
@@ -178,6 +178,11 @@ namespace Wasatch{
     } else if (linSolver_) {
       proc0cout << "Detected solver port... \n";
     }
+    
+    //
+    std::string timeIntegrator;
+    wasatchParams->get("TimeIntegrator",timeIntegrator);    
+    if (timeIntegrator=="RK3SSP") nRKStages_ = 3;
     
     //
     // create expressions explicitly defined in the input file.  These
@@ -302,7 +307,7 @@ namespace Wasatch{
     //_______________________________________
     // set the time
     exprFactory.register_expression( Expr::Tag(StringNames::self().time,Expr::STATE_NONE),
-                                     scinew SetCurrentTime::Builder(sharedState_) );
+                                     scinew SetCurrentTime::Builder(sharedState_, 1));
     
     //_____________________________________________
     // Build the initial condition expression graph
@@ -315,7 +320,7 @@ namespace Wasatch{
                                                         localPatches,
                                                         materials,
                                                         patchInfoMap_,
-                                                        true );
+                                                        true, 1 );
 
       // set coordinate values as required by the IC graph.
       icCoordHelper_->create_task( sched, localPatches, materials );
@@ -324,7 +329,7 @@ namespace Wasatch{
       // create the TaskInterface and schedule this task for
       // execution.  Note that field dependencies are assigned
       // within the TaskInterface object.
-      task->schedule( icCoordHelper_->field_tags() );
+      task->schedule( icCoordHelper_->field_tags(), 1 );
       taskInterfaceList_.push_back( task );
     }
     if( d_myworld->myrank() == 0 )
@@ -356,8 +361,8 @@ namespace Wasatch{
                                                         localPatches,
                                                         materials,
                                                         patchInfoMap_,
-                                                        true );
-      task->schedule();
+                                                        true, 1 );
+      task->schedule(1);
       taskInterfaceList_.push_back( task );
     }
     else{ // default
@@ -368,7 +373,7 @@ namespace Wasatch{
       Uintah::Task* task = scinew Uintah::Task( "compute timestep", this, &Wasatch::computeDelT );
 
       // jcs it appears that for reduction variables we cannot specify the patches - only the materials.
-      task->computes( sharedState_->get_delt_label(),
+      	task->computes( sharedState_->get_delt_label(),
                       level.get_rep() );
       //              materials->getUnion() );
       // jcs why can't we specify a metrial here?  It doesn't seem to be working if I do.
@@ -386,55 +391,57 @@ namespace Wasatch{
   Wasatch::scheduleTimeAdvance( const Uintah::LevelP& level,
                                 Uintah::SchedulerP& sched )
   {
-    // jcs why do we need this instead of getting the level?
-    const Uintah::PatchSet* const localPatches = get_patchset( level, sched );
-
-    const Uintah::MaterialSet* const materials = sharedState_->allMaterials();
-
-    create_timestepper_on_patches( localPatches, materials, sched );
-    
-    if( d_myworld->myrank() == 0 )
-      proc0cout << "Wasatch: done creating solution task(s)" << std::endl;
-
-    // jcs notes:
-    //
-    //   eachPatch() returns a PatchSet that will result in the task
-    //       being executed asynchronously accross all patches.  This
-    //       can improve performance but will deadlock if any global MPI
-    //       calls occur.
-    //
-    //   allPatches() returns a PatchSet that results in the task being
-    //       executed together across all patches.  This is required if
-    //       any global MPI syncronizations occurr (e.g. in a linear
-    //       solve)
-    //    also need to set a flag on the task: task->setType(Task::OncePerProc);
-
-
-    // -----------------------------------------------------------------------
-    // BOUNDARY CONDITIONS TREATMENT
-    // -----------------------------------------------------------------------
-    const GraphHelper* gh = graphCategories_[ ADVANCE_SOLUTION ];
-    //Expr::ExpressionFactory& exprFactory = *gh->exprFactory;
-    //process_boundary_conditions( adaptors_, *gh, localPatches, patchInfoMap_, materials->getUnion() );
-    typedef std::vector<EqnTimestepAdaptorBase*> EquationAdaptors;
-    
-    for( EquationAdaptors::const_iterator ia=adaptors_.begin(); ia!=adaptors_.end(); ++ia ){
-      EqnTimestepAdaptorBase* const adaptor = *ia;
-      TransportEquation* transEq = adaptor->equation();
-      std::string eqnLabel = transEq->solution_variable_name();
-      //______________________________________________________
-      // set up boundary conditions on this transport equation
-      try{
-        proc0cout << "Setting BCs for transport equation '" << eqnLabel << "'" << std::endl;
-        transEq->setup_boundary_conditions(*gh, localPatches, patchInfoMap_, materials->getUnion());
-      }
-      catch( std::runtime_error& e ){
-        std::ostringstream msg;
-        msg << e.what()
-        << std::endl
-        << "ERORR while setting boundary conditions on equation '" << eqnLabel << "'"
-        << std::endl;
-        throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+    for (int iStage=1; iStage<=nRKStages_; iStage++) {
+      // jcs why do we need this instead of getting the level?
+      const Uintah::PatchSet* const localPatches = get_patchset( level, sched );
+      
+      const Uintah::MaterialSet* const materials = sharedState_->allMaterials();
+      
+      create_timestepper_on_patches( localPatches, materials, sched, iStage );
+      
+      if( d_myworld->myrank() == 0 )
+        proc0cout << "Wasatch: done creating solution task(s)" << std::endl;
+      
+      // jcs notes:
+      //
+      //   eachPatch() returns a PatchSet that will result in the task
+      //       being executed asynchronously accross all patches.  This
+      //       can improve performance but will deadlock if any global MPI
+      //       calls occur.
+      //
+      //   allPatches() returns a PatchSet that results in the task being
+      //       executed together across all patches.  This is required if
+      //       any global MPI syncronizations occurr (e.g. in a linear
+      //       solve)
+      //    also need to set a flag on the task: task->setType(Task::OncePerProc);
+      
+      
+      // -----------------------------------------------------------------------
+      // BOUNDARY CONDITIONS TREATMENT
+      // -----------------------------------------------------------------------
+      const GraphHelper* gh = graphCategories_[ ADVANCE_SOLUTION ];
+      //Expr::ExpressionFactory& exprFactory = *gh->exprFactory;
+      //process_boundary_conditions( adaptors_, *gh, localPatches, patchInfoMap_, materials->getUnion() );
+      typedef std::vector<EqnTimestepAdaptorBase*> EquationAdaptors;
+      
+      for( EquationAdaptors::const_iterator ia=adaptors_.begin(); ia!=adaptors_.end(); ++ia ){
+        EqnTimestepAdaptorBase* const adaptor = *ia;
+        TransportEquation* transEq = adaptor->equation();
+        std::string eqnLabel = transEq->solution_variable_name();
+        //______________________________________________________
+        // set up boundary conditions on this transport equation
+        try{
+          proc0cout << "Setting BCs for transport equation '" << eqnLabel << "'" << std::endl;
+          transEq->setup_boundary_conditions(*gh, localPatches, patchInfoMap_, materials->getUnion());
+        }
+        catch( std::runtime_error& e ){
+          std::ostringstream msg;
+          msg << e.what()
+          << std::endl
+          << "ERORR while setting boundary conditions on equation '" << eqnLabel << "'"
+          << std::endl;
+          throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+        }
       }
     }
   }
@@ -444,7 +451,8 @@ namespace Wasatch{
   void
   Wasatch::create_timestepper_on_patches( const Uintah::PatchSet* const localPatches,
                                           const Uintah::MaterialSet* const materials,
-                                          Uintah::SchedulerP& sched )
+                                          Uintah::SchedulerP& sched,
+                                          int RKStage)
   {
     if( adaptors_.size() == 0 ) return; // no equations registered.
 
@@ -454,25 +462,33 @@ namespace Wasatch{
     //_____________________________________________________________
     // create an expression to set the current time as a field that
     // will be available to all expressions if needed.
-    const Expr::ExpressionID timeID =
-      exprFactory.register_expression( Expr::Tag(StringNames::self().time,Expr::STATE_NONE),
-                                       scinew SetCurrentTime::Builder(sharedState_) );
+    const Expr::Tag TimeTag (StringNames::self().time,Expr::STATE_NONE);
+    Expr::ExpressionID timeID;
+    if( RKStage==1 ) {
+      timeID =
+      exprFactory.register_expression( TimeTag,
+                                      scinew SetCurrentTime::Builder(sharedState_, RKStage) );
+    } else {
+      timeID = exprFactory.get_registry().get_id(TimeTag);
+    }
 
     //___________________________________________
     // Plug in each equation that has been set up
-    for( EquationAdaptors::const_iterator ia=adaptors_.begin(); ia!=adaptors_.end(); ++ia ){
-      const EqnTimestepAdaptorBase* const adaptor = *ia;
-      try{
-        adaptor->hook( *timeStepper_ );
-      }
-      catch( std::exception& e ){
-        std::ostringstream msg;
-        msg << "Problems plugging transport equation for '"
-            << adaptor->equation()->solution_variable_name()
-            << "' into the time integrator" << std::endl
-            << e.what() << std::endl;
-        cout << msg.str() << endl;
-        throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+    if (RKStage==1) {
+      for( EquationAdaptors::const_iterator ia=adaptors_.begin(); ia!=adaptors_.end(); ++ia ){
+        const EqnTimestepAdaptorBase* const adaptor = *ia;
+        try{
+          adaptor->hook( *timeStepper_ );
+        }
+        catch( std::exception& e ){
+          std::ostringstream msg;
+          msg << "Problems plugging transport equation for '"
+          << adaptor->equation()->solution_variable_name()
+          << "' into the time integrator" << std::endl
+          << e.what() << std::endl;
+          cout << msg.str() << endl;
+          throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+        }        
       }
     }
 
@@ -484,7 +500,8 @@ namespace Wasatch{
                                 patchInfoMap_,
                                 localPatches,
                                 materials,
-                                sched );
+                                sched,
+                               RKStage);
 
 //     //________________________________________________________
 //     // add a task to populate a "field" with the current time.
@@ -511,11 +528,10 @@ namespace Wasatch{
 
 //       proc0cout << std::endl
 //                 << "Wasatch: executing 'Wasatch::computeDelT()' on all patches"
-//                 << std::endl;
-
+//                 << std::endl;    
       new_dw->put( Uintah::delt_vartype(deltat),
-                   sharedState_->get_delt_label(),
-                   Uintah::getLevel(patches) );
+                  sharedState_->get_delt_label(),
+                  Uintah::getLevel(patches) );        
       //                   material );
       // jcs it seems that we cannot specify a material here.  Why not?
   }
