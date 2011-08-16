@@ -123,7 +123,8 @@ public:
    */
   void schedule_solver( const Uintah::LevelP& level,
                         Uintah::SchedulerP sched,
-                        const Uintah::MaterialSet* const materials );
+                        const Uintah::MaterialSet* const materials,
+                        int RKStage);
 
   /**
    *  \brief allows Wasatch::TaskInterface to reach in and provide
@@ -132,7 +133,8 @@ public:
    */
   void declare_uintah_vars( Uintah::Task& task,
                             const Uintah::PatchSubset* const patches,
-                            const Uintah::MaterialSubset* const materials );
+                            const Uintah::MaterialSubset* const materials,
+                           int RKStage);
 
   /**
    *  \brief allows Wasatch::TaskInterface to reach in and provide
@@ -148,7 +150,8 @@ public:
    */
   void bind_uintah_vars( Uintah::DataWarehouse* const dw,
                          const Uintah::Patch* const patch,
-                         const int material );
+                         const int material,
+                        int RKStage);
   /**
    * \brief Calculates pressure coefficient matrix.
    */

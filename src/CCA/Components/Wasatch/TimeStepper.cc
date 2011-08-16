@@ -2,6 +2,8 @@
 #include "TimeStepper.h"
 #include "TaskInterface.h"
 #include "CoordHelper.h"
+#include "StringNames.h"
+#include <CCA/Components/Wasatch/Expressions/SetCurrentTime.h>
 
 //-- ExprLib includes --//
 #include <expression/FieldManager.h>  // for field type mapping
@@ -32,11 +34,13 @@ namespace Wasatch{
   set_soln_field_requirements( Uintah::Task* const task,
                                const std::vector< TimeStepper::FieldInfo<FieldT> >& fields,
                                const Uintah::PatchSubset* const pss,
-                               const Uintah::MaterialSubset* const mss )
+                               const Uintah::MaterialSubset* const mss,
+                               int RKStage)
   {
     typedef typename std::vector< TimeStepper::FieldInfo<FieldT> > Fields;
     for( typename Fields::const_iterator ifld = fields.begin(); ifld!=fields.end(); ++ifld ){
-      task->computes( ifld->varLabel );
+      if (RKStage==1) task->computes( ifld->varLabel );
+      else task->modifies( ifld->varLabel );
       // jcs for some reason this one does not work:
       //       task->computes( ifld->varLabel,
       //                       pss, Uintah::Task::NormalDomain,
@@ -65,7 +69,8 @@ namespace Wasatch{
              const int material,
              Uintah::DataWarehouse* const oldDW,
              Uintah::DataWarehouse* const newDW,
-             const double deltat )
+             const double deltat,
+            int RKStage)
   {
     typedef std::vector< TimeStepper::FieldInfo<FieldT> > Fields;
     for( typename Fields::const_iterator ifld=fields.begin(); ifld!=fields.end(); ++ifld ){
@@ -78,17 +83,28 @@ namespace Wasatch{
 
       UintahField phiNew;
       ConstUintahField phiOld, rhs;
-      newDW->allocateAndPut( phiNew, ifld->varLabel, material, patch, gt, ng );  // note that these fields do have ghost info.
+      if (RKStage==1) {
+      	newDW->allocateAndPut( phiNew, ifld->varLabel, material, patch, gt, ng );  // note that these fields do have ghost info.
+      } else {
+        newDW->           getModifiable( phiNew, ifld->varLabel, material, patch, gt, ng );
+      }
       oldDW->           get( phiOld, ifld->varLabel, material, patch, gt, ng );
       newDW->           get( rhs,    ifld->rhsLabel, material, patch, gt, ng );
 
       //______________________________________
-      // forward Euler timestep at each point:
+      // forward Euler or RK3SSP timestep at each point:
       FieldT* const fnew = wrap_uintah_field_as_spatialops<FieldT>(phiNew,patch);
       const FieldT* const fold = wrap_uintah_field_as_spatialops<FieldT>(phiOld,patch);
       const FieldT* const frhs = wrap_uintah_field_as_spatialops<FieldT>(rhs,patch);
-      using namespace SpatialOps;
-      *fnew <<= *fold + deltat * *frhs;
+      using namespace SpatialOps;      
+      int iCount = 0;
+      if (RKStage==1) {
+        *fnew <<= *fold + deltat * *frhs;
+      } else if (RKStage==2) {
+        *fnew <<= 0.25 * *fnew + 0.75 * *fold + 0.25*deltat * *frhs;
+      } else if (RKStage==3) {
+        *fnew <<= 2.0/3.0* *fnew + 1.0/3.0* *fold + 2.0/3.0*deltat * *frhs;
+      }
       delete fnew; delete fold; delete frhs;
     }
   }
@@ -123,7 +139,8 @@ namespace Wasatch{
                              const PatchInfoMap& patchInfoMap,
                              const Uintah::PatchSet* const patches,
                              const Uintah::MaterialSet* const materials,
-                             Uintah::SchedulerP& sched )
+                             Uintah::SchedulerP& sched, 
+                            int RKStage)
   {
     // for now we will assume that we are computing things on ALL materials
     const Uintah::MaterialSubset* const mss = materials->getUnion();
@@ -131,6 +148,9 @@ namespace Wasatch{
     //_________________________________________________________________
     // Schedule the task to compute the RHS for the transport equations
     //
+    std::ostringstream theStage;
+    theStage << RKStage;        
+
     try{
       // jcs for multistage integrators, we may need to keep the same
       //     field manager list for all of the stages?  Otherwise we
@@ -142,11 +162,12 @@ namespace Wasatch{
                                                      patches,
                                                      materials,
                                                      patchInfoMap,
-                                                     true );
+                                                     true,
+                                                    RKStage);
 
       taskInterfaceList_.push_back( rhsTask );
       coordHelper_->create_task( sched, patches, materials );
-      rhsTask->schedule( coordHelper_->field_tags() ); // must be scheduled after coordHelper_
+      rhsTask->schedule( coordHelper_->field_tags(), RKStage ); // must be scheduled after coordHelper_
     }
     catch( std::exception& e ){
       std::ostringstream msg;
@@ -162,27 +183,31 @@ namespace Wasatch{
     // This is required by the time integrator.
     {
       TaskInterface* const timeTask = scinew TaskInterface( timeID,
-                                                            "set time",
-                                                            *factory_,
-                                                            sched,
-                                                            patches,
-                                                            materials,
-                                                            patchInfoMap,
-                                                            true );
+                                                           "set time",
+                                                           *factory_,
+                                                           sched,
+                                                           patches,
+                                                           materials,
+                                                           patchInfoMap,
+                                                           true, 1);
       taskInterfaceList_.push_back( timeTask );
-      timeTask->schedule( coordHelper_->field_tags() );
-    }
+      timeTask->schedule( coordHelper_->field_tags(), RKStage );
+      // add a task to update current simulation time
+      Uintah::Task* updateCurrentTimeTask = scinew Uintah::Task( "update current time", this, &TimeStepper::update_current_time, timeTask->get_time_tree(), RKStage );
+      updateCurrentTimeTask->requires( Uintah::Task::OldDW, deltaTLabel_ );
+      sched->addTask( updateCurrentTimeTask, patches, materials );      
+    }    
 
     //_____________________________________________________
     // add a task to advance each solution variable in time
     {
-      Uintah::Task* updateTask = scinew Uintah::Task( "update solution vars", this, &TimeStepper::update_variables );
+      Uintah::Task* updateTask = scinew Uintah::Task( "update solution vars", this, &TimeStepper::update_variables, RKStage );
       
       const Uintah::PatchSubset* const pss = patches->getUnion();
-      set_soln_field_requirements<SO::SVolField>( updateTask, scalarFields_, pss, mss );
-      set_soln_field_requirements<SO::XVolField>( updateTask, xVolFields_,   pss, mss );
-      set_soln_field_requirements<SO::YVolField>( updateTask, yVolFields_,   pss, mss );
-      set_soln_field_requirements<SO::ZVolField>( updateTask, zVolFields_,   pss, mss );
+      set_soln_field_requirements<SO::SVolField>( updateTask, scalarFields_, pss, mss, RKStage );
+      set_soln_field_requirements<SO::XVolField>( updateTask, xVolFields_,   pss, mss, RKStage );
+      set_soln_field_requirements<SO::YVolField>( updateTask, yVolFields_,   pss, mss, RKStage );
+      set_soln_field_requirements<SO::ZVolField>( updateTask, zVolFields_,   pss, mss, RKStage );
 
       // we require the timestep value
       updateTask->requires( Uintah::Task::OldDW, deltaTLabel_ );
@@ -198,13 +223,35 @@ namespace Wasatch{
   }
 
   //------------------------------------------------------------------
+  
+  void
+  TimeStepper::update_current_time( const Uintah::ProcessorGroup* const pg,
+                                const Uintah::PatchSubset* const patches,
+                                const Uintah::MaterialSubset* const materials,
+                                Uintah::DataWarehouse* const oldDW,
+                                Uintah::DataWarehouse* const newDW,
+                                   Expr::ExpressionTree::TreePtr timeTree,
+                                int RKStage )
+  {
+    // grab the timestep
+    Uintah::delt_vartype deltat;
+    oldDW->get( deltat, deltaTLabel_ );
+    
+    const Expr::Tag TimeTag (StringNames::self().time,Expr::STATE_NONE);
+    SetCurrentTime& settimeexpr = dynamic_cast<SetCurrentTime&>( timeTree->get_expression( TimeTag ) );    
+    settimeexpr.set_integrator_stage(RKStage);    
+    settimeexpr.set_deltat(deltat);
+  }
+  
+  //------------------------------------------------------------------
 
   void
   TimeStepper::update_variables( const Uintah::ProcessorGroup* const pg,
                                  const Uintah::PatchSubset* const patches,
                                  const Uintah::MaterialSubset* const materials,
                                  Uintah::DataWarehouse* const oldDW,
-                                 Uintah::DataWarehouse* const newDW )
+                                 Uintah::DataWarehouse* const newDW,
+                                int RKStage)
   {
     //__________________
     // loop over patches
@@ -226,11 +273,11 @@ namespace Wasatch{
 
         //____________________________________________
         // update variables on this material and patch
-        // jcs note that we could do this in parallel
-        do_update<SO::SVolField>( scalarFields_, patch, material, oldDW, newDW, deltat );
-        do_update<SO::XVolField>( xVolFields_,   patch, material, oldDW, newDW, deltat );
-        do_update<SO::YVolField>( yVolFields_,   patch, material, oldDW, newDW, deltat );
-        do_update<SO::ZVolField>( zVolFields_,   patch, material, oldDW, newDW, deltat );
+				// jcs note that we could do this in parallel        
+        do_update<SO::SVolField>( scalarFields_, patch, material, oldDW, newDW, deltat, RKStage );
+        do_update<SO::XVolField>( xVolFields_,   patch, material, oldDW, newDW, deltat, RKStage );
+        do_update<SO::YVolField>( yVolFields_,   patch, material, oldDW, newDW, deltat, RKStage );
+        do_update<SO::ZVolField>( zVolFields_,   patch, material, oldDW, newDW, deltat, RKStage );
 
       } // material loop
     } // patch loop

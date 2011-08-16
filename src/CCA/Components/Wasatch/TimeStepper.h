@@ -8,6 +8,7 @@
 #include <expression/FieldManager.h> // field type conversion tools
 #include <expression/ExpressionFactory.h>
 #include <expression/PlaceHolderExpr.h>
+#include <expression/ExprLib.h>
 
 #include "PatchInfo.h"
 #include "FieldAdaptor.h"
@@ -98,7 +99,18 @@ namespace Wasatch{
                            const Uintah::PatchSubset* const,
                            const Uintah::MaterialSubset* const,
                            Uintah::DataWarehouse* const,
-                           Uintah::DataWarehouse* const );
+                           Uintah::DataWarehouse* const,
+                          int RKStage);
+    
+    void
+    update_current_time( const Uintah::ProcessorGroup* const pg,
+                                     const Uintah::PatchSubset* const patches,
+                                     const Uintah::MaterialSubset* const materials,
+                                     Uintah::DataWarehouse* const oldDW,
+                                     Uintah::DataWarehouse* const newDW,
+                        Expr::ExpressionTree::TreePtr timeTree,
+                        int RKStage );
+    
 
   public:
 
@@ -146,7 +158,8 @@ namespace Wasatch{
                        const PatchInfoMap& infoMap,
                        const Uintah::PatchSet* const localPatches,
                        const Uintah::MaterialSet* const materials,
-                       Uintah::SchedulerP& sched );
+                       Uintah::SchedulerP& sched,
+                      int RKStage);
   };
 
   //------------------------------------------------------------------

@@ -2,6 +2,9 @@
 
   <Wasatch			spec="OPTIONAL NO_DATA">
 
+    <!-- Specify time integrator. Defaults to forward euler (FE) if unspecified -->
+    <TimeIntegrator             spec="OPTIONAL STRING 'RK3SSP, FE'" />
+
     <BasicExpression		spec="MULTIPLE" />
     <!-- ========================================= -->
 
