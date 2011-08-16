@@ -297,18 +297,22 @@ void MPMICE::scheduleInitialize(const LevelP& level,
   Task* t = scinew Task("MPMICE::actuallyInitialize",
                   this, &MPMICE::actuallyInitialize);
                   
-  // get the ice materials
-  t->computes(MIlb->vel_CCLabel);
-  t->computes(Ilb->rho_CCLabel); 
-  t->computes(Ilb->temp_CCLabel);
-  t->computes(Ilb->sp_vol_CCLabel);
-  t->computes(Ilb->speedSound_CCLabel); 
-  t->computes(Mlb->heatRate_CCLabel);
-
+  // Get the material subsets
   const MaterialSubset* ice_matls = d_sharedState->allICEMaterials()->getUnion();
-  
+  const MaterialSubset* mpm_matls = d_sharedState->allMPMMaterials()->getUnion();
 
-  t->requires(Task::NewDW, Ilb->vol_frac_CCLabel, ice_matls, Ghost::AroundCells, 1, false);
+  // These values are calculated for ICE materials in d_ice->actuallyInitialize(...)
+  //  so they are only needed for MPM
+  t->computes(MIlb->vel_CCLabel,       mpm_matls);
+  t->computes(Ilb->rho_CCLabel,        mpm_matls); 
+  t->computes(Ilb->temp_CCLabel,       mpm_matls);
+  t->computes(Ilb->sp_vol_CCLabel,     mpm_matls);
+  t->computes(Ilb->speedSound_CCLabel, mpm_matls); 
+  t->computes(Mlb->heatRate_CCLabel,   mpm_matls);
+
+  // This is compute in d_ice->actuallyInitalize(...), and it is needed in 
+  //  MPMICE's actuallyInitialize()
+  t->requires(Task::NewDW, Ilb->vol_frac_CCLabel, ice_matls, Ghost::None, 0);
 
   if (d_switchCriteria) {
     d_switchCriteria->scheduleInitialize(level,sched);
@@ -320,7 +324,7 @@ void MPMICE::scheduleInitialize(const LevelP& level,
     d_analysisModule->scheduleInitialize( sched, level);
   }
     
-  sched->addTask(t, level->eachPatch(), d_sharedState->allMPMMaterials());
+  sched->addTask(t, level->eachPatch(), d_sharedState->allMaterials());
 }
 
 //______________________________________________________________________
