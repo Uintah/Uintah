@@ -20,9 +20,9 @@ namespace Wasatch{
 class SetCurrentTime
  : public Expr::Expression<double>
 {
+  const Uintah::SimulationStateP state_;
   int RKStage_;
   double deltat_;
-  const Uintah::SimulationStateP state_;
 
   SetCurrentTime( const Uintah::SimulationStateP sharedState,
                   const int RKStage,
@@ -34,8 +34,9 @@ public:
   
   class Builder : public Expr::ExpressionBuilder
   {
-    const int RKStage_;
     const Uintah::SimulationStateP state_;
+    const int RKStage_;
+    
   public:
     Builder( const Uintah::SimulationStateP sharedState, const int RKStage );
     Expr::ExpressionBase* build( const Expr::ExpressionID& id,

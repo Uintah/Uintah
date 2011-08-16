@@ -97,7 +97,6 @@ namespace Wasatch{
       const FieldT* const fold = wrap_uintah_field_as_spatialops<FieldT>(phiOld,patch);
       const FieldT* const frhs = wrap_uintah_field_as_spatialops<FieldT>(rhs,patch);
       using namespace SpatialOps;      
-      int iCount = 0;
       if (RKStage==1) {
         *fnew <<= *fold + deltat * *frhs;
       } else if (RKStage==2) {
