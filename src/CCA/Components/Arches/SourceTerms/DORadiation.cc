@@ -56,7 +56,6 @@ DORadiation::DORadiation( std::string src_name, ArchesLabel* labels, BoundaryCon
   _abskpLabel = VarLabel::create("new_abskp", CC_double); 
   _extra_local_labels.push_back(_abskpLabel); 
 
-
   //Declare the source type: 
   _source_type = CC_SRC; // or FX_SRC, or FY_SRC, or FZ_SRC, or CCVECTOR_SRC
 
@@ -74,8 +73,6 @@ DORadiation::~DORadiation()
 
   }
 
-  // clean up any other stuff here
-  
 }
 //---------------------------------------------------------------------------
 // Method: Problem Setup
@@ -85,9 +82,6 @@ DORadiation::problemSetup(const ProblemSpecP& inputdb)
 {
 
   ProblemSpecP db = inputdb; 
-
-  // hard coded for now...
-  _soot_vf_name = "sootFVIN"; 
 
   db->getWithDefault( "calc_frequency",   _radiation_calc_freq, 3 ); 
   db->getWithDefault( "calc_on_all_RKsteps", _all_rk, false ); 
@@ -121,7 +115,6 @@ DORadiation::sched_computeSource( const LevelP& level, SchedulerP& sched, int ti
   _co2_label = VarLabel::find( _co2_label_name ); 
   _h2o_label = VarLabel::find( _h2o_label_name ); 
   _T_label   = VarLabel::find( _T_label_name ); 
-  _soot_label = VarLabel::find( _soot_vf_name ); 
 
   if (timeSubStep == 0 && !_label_sched_init) {
     // Every source term needs to set this flag after the varLabel is computed. 
@@ -132,8 +125,8 @@ DORadiation::sched_computeSource( const LevelP& level, SchedulerP& sched, int ti
 
     tsk->requires( Task::OldDW, _co2_label, gac, 1 ); 
     tsk->requires( Task::OldDW, _h2o_label, gac, 1 ); 
-    tsk->requires( Task::OldDW, _soot_label, gac, 1 ); 
     tsk->requires( Task::OldDW, _T_label, gac, 1 ); 
+    tsk->requires( Task::OldDW, _labels->d_sootFVINLabel, gac, 1 ); 
 
     for (std::vector<const VarLabel*>::iterator iter = _extra_local_labels.begin(); 
          iter != _extra_local_labels.end(); iter++){
@@ -149,8 +142,8 @@ DORadiation::sched_computeSource( const LevelP& level, SchedulerP& sched, int ti
 
     tsk->requires( Task::NewDW, _co2_label, gac, 1 ); 
     tsk->requires( Task::NewDW, _h2o_label, gac, 1 ); 
-    tsk->requires( Task::NewDW, _soot_label, gac, 1 ); 
     tsk->requires( Task::NewDW, _T_label, gac, 1 ); 
+    tsk->requires( Task::NewDW, _labels->d_sootFVINLabel, gac, 1); 
 
     for (std::vector<const VarLabel*>::iterator iter = _extra_local_labels.begin(); 
          iter != _extra_local_labels.end(); iter++){
@@ -160,7 +153,7 @@ DORadiation::sched_computeSource( const LevelP& level, SchedulerP& sched, int ti
     }
   }
 
-  tsk->requires(Task::OldDW, _labels->d_cellTypeLabel, gn); 
+  tsk->requires(Task::OldDW, _labels->d_cellTypeLabel, gac, 1 ); 
   tsk->requires(Task::NewDW, _labels->d_cellInfoLabel, gn);
 
   sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials()); 
@@ -216,9 +209,9 @@ DORadiation::computeSource( const ProcessorGroup* pc,
 
         old_dw->get( const_radiation_vars.co2       , _co2_label               , matlIndex , patch , gac , 1 );
         old_dw->get( const_radiation_vars.h2o       , _h2o_label               , matlIndex , patch , gac , 1 );
-        old_dw->get( const_radiation_vars.sootFV    , _soot_label              , matlIndex , patch , gac , 1 );
+        old_dw->get( const_radiation_vars.sootFV    , _labels->d_sootFVINLabel        , matlIndex , patch , gac , 1 ); 
         old_dw->getCopy( radiation_vars.temperature , _T_label                 , matlIndex , patch , gac , 1 );
-        old_dw->get( const_radiation_vars.cellType  , _labels->d_cellTypeLabel , matlIndex , patch , gn  , 0 );
+        old_dw->get( const_radiation_vars.cellType  , _labels->d_cellTypeLabel , matlIndex , patch , gac , 1 );
 
         new_dw->allocateAndPut( radiation_vars.qfluxe , _radiationFluxELabel , matlIndex , patch );
         new_dw->allocateAndPut( radiation_vars.qfluxw , _radiationFluxWLabel , matlIndex , patch );
@@ -237,9 +230,9 @@ DORadiation::computeSource( const ProcessorGroup* pc,
 
         new_dw->get( const_radiation_vars.co2, _co2_label, matlIndex, patch, gac, 1 ); 
         new_dw->get( const_radiation_vars.h2o, _h2o_label, matlIndex, patch, gac, 1 ); 
-        new_dw->get( const_radiation_vars.sootFV, _soot_label, matlIndex, patch, gac, 1 ); 
         new_dw->getCopy( radiation_vars.temperature, _T_label, matlIndex, patch, gac, 1 ); 
-        old_dw->get( const_radiation_vars.cellType          , _labels->d_cellTypeLabel, matlIndex, patch  , gn ,  0 ); 
+        new_dw->get( const_radiation_vars.sootFV, _labels->d_sootFVINLabel, matlIndex, patch, gac, 1 ); 
+        old_dw->get( const_radiation_vars.cellType          , _labels->d_cellTypeLabel, matlIndex, patch  , gac ,  1 ); 
 
         new_dw->getModifiable( radiation_vars.qfluxe , _radiationFluxELabel , matlIndex , patch );
         new_dw->getModifiable( radiation_vars.qfluxw , _radiationFluxWLabel , matlIndex , patch );

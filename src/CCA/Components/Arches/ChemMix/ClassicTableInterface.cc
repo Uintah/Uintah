@@ -990,6 +990,9 @@ ClassicTableInterface::sched_dummyInit( const LevelP& level,
     tsk->requires( Task::OldDW, i->second, Ghost::None, 0 ); 
   }
 
+  tsk->computes( d_lab->d_sootFVINLabel ); 
+  tsk->requires( Task::OldDW, d_lab->d_sootFVINLabel, Ghost::None, 0 );  
+
   sched->addTask( tsk, level->eachPatch(), d_lab->d_sharedState->allArchesMaterials() ); 
 }
 
@@ -1024,6 +1027,14 @@ ClassicTableInterface::dummyInit( const ProcessorGroup* pc,
       the_var->copyData( old_var ); 
 
     }
+
+    CCVariable<double> soot; 
+    constCCVariable<double> old_soot; 
+    new_dw->allocateAndPut( soot, d_lab->d_sootFVINLabel, matlIndex, patch ); 
+    old_dw->get( old_soot, d_lab->d_sootFVINLabel, matlIndex, patch, Ghost::None, 0 ); 
+    soot.initialize(0.0);
+    soot.copyData( old_soot ); 
+
   }
 }
 

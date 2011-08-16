@@ -98,7 +98,6 @@ private:
 
   std::string _co2_label_name; 
   std::string _h2o_label_name; 
-  std::string _soot_vf_name; 
   std::string _T_label_name; 
 
   const ProcessorGroup* _my_world;
@@ -109,7 +108,6 @@ private:
   const VarLabel* _co2_label; 
   const VarLabel* _h2o_label; 
   const VarLabel* _T_label; 
-  const VarLabel* _soot_label; 
   const VarLabel* _abskgLabel;
   const VarLabel* _abskpLabel;
   const VarLabel* _radiationSRCLabel;
