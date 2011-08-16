@@ -59,18 +59,18 @@ public:
     Builder(const Expr::Tag phiTag, 
             const Expr::Tag growthCoefTag, 
             const double momentOrder )
-      : isconstcoef_( false ),
-        phit_(phiTag),
+      : phit_(phiTag),
         growthcoeft_(growthCoefTag),
 		    growthcoefval_(0.0),
-        momentorder_(momentOrder)
+        momentorder_(momentOrder),
+				isconstcoef_( false )
     {}
     
     Builder( const Expr::Tag phiTag, const double growthCoefVal, const double momentOrder )
-      : isconstcoef_( true ),
-        phit_(phiTag),
+      : phit_(phiTag),
         growthcoefval_(growthCoefVal),
-        momentorder_(momentOrder)
+        momentorder_(momentOrder),
+				isconstcoef_( true )
     {}
     
 
