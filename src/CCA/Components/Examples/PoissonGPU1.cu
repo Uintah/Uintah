@@ -123,14 +123,16 @@ PoissonGPU1::computeStableTimestep(const ProcessorGroup* pg,
     const PatchSubset* patches, const MaterialSubset* /*matls*/,
     DataWarehouse*, DataWarehouse* new_dw)
 {
+  std::cout << "In computeStableTimestep" << std::endl;
+
+
   if (pg->myrank() == 0)
-    {
-      sum_vartype residual;
-      new_dw->get(residual, residual_label);
-      cerr << "Residual=" << residual << '\n';
-    }
-  new_dw->put(delt_vartype(delt_), sharedState_->get_delt_label(),
-      getLevel(patches));
+  {
+    sum_vartype residual;
+    new_dw->get(residual, residual_label);
+    cerr << "Residual=" << residual << '\n';
+  }
+  new_dw->put(delt_vartype(delt_), sharedState_->get_delt_label(), getLevel(patches));
 }
 
 //______________________________________________________________________
@@ -140,6 +142,9 @@ PoissonGPU1::initialize(const ProcessorGroup*, const PatchSubset* patches,
     const MaterialSubset* matls, DataWarehouse* /*old_dw*/,
     DataWarehouse* new_dw)
 {
+  std::cout << "In initialize" << std::endl;
+
+
   int matl = 0;
   for (int p = 0; p < patches->size(); p++)
     {
@@ -190,7 +195,7 @@ PoissonGPU1::initialize(const ProcessorGroup*, const PatchSubset* patches,
 // @param oldphi pointer to the source phi allocated on the device
 // @param newphi pointer to the sink phi allocated on the device
 __global__ void
-timeAdvanceKernel(uint3 domainSize, uint3 domainLower, double *residual, double *oldphi, double *newphi)
+timeAdvanceKernel(uint3 domainSize, uint3 domainLower, double *oldphi, double *newphi)
 {
   // calculate the indices
   int indxX = domainLower.x + blockDim.x * blockIdx.x + threadIdx.x;
@@ -208,7 +213,7 @@ timeAdvanceKernel(uint3 domainSize, uint3 domainLower, double *residual, double 
 //      // compute the stencil
 //      // FIXME - domainSize is not a class type. Need to get access to underlying IntVectors
 //      newphi[baseIdx] = (1.0 / 6.0) * (oldphi[baseIdx + 1]
-//          + oldphi[baseIdx - 1] + oldphi[baseIdx + baseIdx.x] + oldphi[baseIdx
+//          + oldphi[baseIdx - 1] + oldphi[baseIdx + baseIdx] + oldphi[baseIdx
 //          - domainSize.y] + oldphi[baseIdx + domainSize.z * domainSize.y]
 //          + oldphi[baseIdx - domainSize.z * domainSize.y]);
 //
@@ -223,8 +228,11 @@ timeAdvanceKernel(uint3 domainSize, uint3 domainLower, double *residual, double 
 void
 PoissonGPU1::timeAdvance(const ProcessorGroup*, const PatchSubset* patches,
     const MaterialSubset* matls, DataWarehouse* old_dw, DataWarehouse* new_dw,
-    int deviceID, CUDADevice *deviceProperties)
+    int deviceID = 0, CUDADevice *deviceProperties = NULL)
 {
+
+  std::cout << "In timeAdvance" << std::endl;
+
   int matl = 0;
   int previousPatchSize = 0; // this is to see if we need to release and reallocate between computations
   int size = 0;
@@ -237,6 +245,8 @@ PoissonGPU1::timeAdvance(const ProcessorGroup*, const PatchSubset* patches,
   // cudaThreadExit();
   cudaSetDevice(deviceID);
 
+  double residual = 0;
+
   for (int p = 0; p < patches->size(); p++)
     {
       const Patch* patch = patches->get(p);
@@ -248,7 +258,8 @@ PoissonGPU1::timeAdvance(const ProcessorGroup*, const PatchSubset* patches,
       new_dw->allocateAndPut(newphi, phi_label, matl, patch);
       newphi.copyPatch(phi, newphi.getLowIndex(), newphi.getHighIndex());
 
-      double residual = 0.0;
+      residual = 0;
+
       IntVector l = patch->getNodeLowIndex();
       IntVector h = patch->getNodeHighIndex();
 
@@ -280,12 +291,13 @@ PoissonGPU1::timeAdvance(const ProcessorGroup*, const PatchSubset* patches,
           cudaMalloc(&phinew, size);
         }
       // host pointers
+      /*
       double *oldhostmem = NULL; // point this at DW representation
       double *newhostmem = NULL; // point this at DW representation
 
       cudaMemcpy(phiold, oldhostmem, size, cudaMemcpyHostToDevice);
       cudaMemcpy(phinew, newhostmem, size, cudaMemcpyHostToDevice);
-
+      */
       //// Kernel Execution ////
       //////////////////////////
       uint3 domainSize = make_uint3(h.x() - l.x(), h.y() - l.y(), h.z() - l.z());
@@ -303,12 +315,17 @@ PoissonGPU1::timeAdvance(const ProcessorGroup*, const PatchSubset* patches,
       dim3 threadsPerBlock(tx, ty, tz);
 
       // launch kernel
-      timeAdvanceKernel<<<totalBlocks, threadsPerBlock>>>(domainSize, domainLower, &residual, phiold, phinew);
+      std::cout << "Prior to kernel." << std::endl;
+      //timeAdvanceKernel<<<totalBlocks, threadsPerBlock>>>(domainSize, domainLower, phiold, phinew);
+      std::cout << "Post kernel." << std::endl;
+
+      //cudaThreadSynchronize();
+      sleep(1000);
 
       // Memory Deallocation ////
       ///////////////////////////
       // USE PINNING INSTEAD
-      cudaMemcpy(newhostmem, phinew, size, cudaMemcpyDeviceToHost);
+      //cudaMemcpy(newhostmem, phinew, size, cudaMemcpyDeviceToHost);
 
       new_dw->put(sum_vartype(residual), residual_label);
     }

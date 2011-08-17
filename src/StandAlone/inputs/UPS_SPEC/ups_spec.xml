@@ -329,7 +329,7 @@
                                     attribute1="type REQUIRED STRING 'angio, arches, burger, ice, impm, mpm, mpmarches, 
                                                                       mpmf, mpmice, amrmpm,
                                                                       wasatch, reduce_uda,
-                                                                      poisson1, poisson2, poisson3, poisson4, benchmark, rigidmpmice, 
+                                                                      poisson1, poissongpu1, poisson2, poisson3, poisson4, benchmark, rigidmpmice, 
                                                                       rmpmice, smpm, smpmice, spatialops, switcher, wave, solvertest, RMCRT_Test'" >
                                   <!-- The 'type' above is used in CCA/Components/Parent/ComponentFactory.cc -->
         <carry_over                 spec="MULTIPLE NO_DATA"
