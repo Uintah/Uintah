@@ -47,6 +47,12 @@
 using namespace Uintah;
 using namespace SCIRun;
 
+//__________________________________
+CUDATask::CUDAActionBase::~CUDAActionBase()
+{
+}
+
+//__________________________________
 CUDATask::~CUDATask()
 {
 }
