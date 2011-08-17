@@ -34,6 +34,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Examples/RMCRT_Test.h>
 #include <CCA/Components/Examples/ParticleTest1.h>
 #include <CCA/Components/Examples/Poisson1.h>
+#include <CCA/Components/Examples/PoissonGPU1.h>
 #include <CCA/Components/Examples/Poisson2.h>
 #include <CCA/Components/Examples/Poisson3.h>
 #include <CCA/Components/Examples/RegridderTest.h>
@@ -58,6 +59,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <sci_defs/uintah_defs.h>
+#include <sci_defs/cuda_defs.h>
 //#include <CCA/Components/Examples/Poisson4.h>
 
 #ifndef NO_WASATCH
@@ -186,6 +188,11 @@ ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world,
   if (sim_comp == "poisson1" || sim_comp == "POISSON1") {
     return scinew Poisson1(world);
   } 
+#ifdef HAVE_CUDA
+  if (sim_comp == "poissongpu1" || sim_comp == "POISSONGPU1") {
+    return scinew PoissonGPU1(world);
+  } 
+#endif
   if (sim_comp == "regriddertest" || sim_comp == "REGRIDDERTEST") {
     return scinew RegridderTest(world);
   } 
