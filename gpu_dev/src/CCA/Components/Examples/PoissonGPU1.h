@@ -109,9 +109,9 @@ WARNING
                      const PatchSubset* patches,
                      const MaterialSubset* matls,
 		     DataWarehouse* old_dw,
-                     DataWarehouse* new_dw,
-                     int deviceID,
-                     CUDADevice *deviceProperties);
+                     DataWarehouse* new_dw); //,
+                   //  int deviceID,
+                   //  CUDADevice *deviceProperties);
                      
     SimulationStateP sharedState_;
     double delt_;
