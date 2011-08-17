@@ -108,8 +108,10 @@ PoissonGPU1::scheduleComputeStableTimestep(const LevelP& level,
 void
 PoissonGPU1::scheduleTimeAdvance(const LevelP& level, SchedulerP& sched)
 {
-  CUDATask* task = scinew CUDATask("PoissonGPU1::timeAdvance",
+  Task* task = scinew Task("PoissonGPU1::timeAdvance",
       this, &PoissonGPU1::timeAdvance);
+//  CUDATask* task = scinew CUDATask("PoissonGPU1::timeAdvance",
+//      this, &PoissonGPU1::timeAdvance);
 
   task->requires(Task::OldDW, phi_label, Ghost::AroundNodes, 1);
   task->computes(phi_label);
@@ -227,8 +229,8 @@ timeAdvanceKernel(uint3 domainSize, uint3 domainLower, double *oldphi, double *n
 //
 void
 PoissonGPU1::timeAdvance(const ProcessorGroup*, const PatchSubset* patches,
-    const MaterialSubset* matls, DataWarehouse* old_dw, DataWarehouse* new_dw,
-    int deviceID = 0, CUDADevice *deviceProperties = NULL)
+    const MaterialSubset* matls, DataWarehouse* old_dw, DataWarehouse* new_dw) //,
+//    int deviceID = 0, CUDADevice *deviceProperties = NULL)
 {
 
   std::cout << "In timeAdvance" << std::endl;
@@ -241,6 +243,8 @@ PoissonGPU1::timeAdvance(const ProcessorGroup*, const PatchSubset* patches,
   double * phinew;
   double * phiold;
 
+
+  int deviceID = 0;
   // set CUDA device
   // cudaThreadExit();
   cudaSetDevice(deviceID);
@@ -316,11 +320,10 @@ PoissonGPU1::timeAdvance(const ProcessorGroup*, const PatchSubset* patches,
 
       // launch kernel
       std::cout << "Prior to kernel." << std::endl;
-      //timeAdvanceKernel<<<totalBlocks, threadsPerBlock>>>(domainSize, domainLower, phiold, phinew);
+      timeAdvanceKernel<<<totalBlocks, threadsPerBlock>>>(domainSize, domainLower, phiold, phinew);
       std::cout << "Post kernel." << std::endl;
 
-      //cudaThreadSynchronize();
-      sleep(1000);
+      cudaThreadSynchronize();
 
       // Memory Deallocation ////
       ///////////////////////////
