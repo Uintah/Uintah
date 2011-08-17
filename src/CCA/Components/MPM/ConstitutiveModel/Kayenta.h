@@ -65,7 +65,8 @@ namespace Uintah {
     int d_NUMJNTS;
     int d_NUMJOINTINPUTS;
     int d_NUIEOSMG;
-    int d_NDCEOSMG;
+    int d_NKMMGC;
+    int d_NKMMDC;
     int d_NVIEOSMG;
     int d_NTHERMOPLAST;
     int d_NUMEOSINPUTS;
