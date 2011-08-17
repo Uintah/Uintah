@@ -96,15 +96,18 @@ ClassicTableInterface::problemSetup( const ProblemSpecP& propertiesParameters )
   // only solve for heat loss if a working radiation model is found
   const ProblemSpecP params_root = db_classic->getRootNode();
   ProblemSpecP db_enthalpy  =  params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ExplicitSolver")->findBlock("EnthalpySolver");
+  d_allocate_soot = true; 
   if (db_enthalpy) { 
     ProblemSpecP db_radiation = params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ExplicitSolver")->findBlock("EnthalpySolver")->findBlock("DORadiationModel");
     d_adiabatic = true; 
     if (db_radiation) { 
       proc0cout << "Found a working radiation model -- will implement case with heat loss" << endl;
       d_adiabatic = false; 
+      d_allocate_soot = false; // needed for new DORadiation source term 
     } else { 
       proc0cout << "No working radiation model found -- will NOT implement case with heat loss" << endl;
       d_adiabatic = true; 
+      d_allocate_soot = true; // needed for new DORadiation source term
     }
   } else {
     d_adiabatic = true; 
@@ -990,8 +993,10 @@ ClassicTableInterface::sched_dummyInit( const LevelP& level,
     tsk->requires( Task::OldDW, i->second, Ghost::None, 0 ); 
   }
 
-  tsk->computes( d_lab->d_sootFVINLabel ); 
-  tsk->requires( Task::OldDW, d_lab->d_sootFVINLabel, Ghost::None, 0 );  
+  if ( d_allocate_soot ) { 
+    tsk->computes( d_lab->d_sootFVINLabel ); 
+    tsk->requires( Task::OldDW, d_lab->d_sootFVINLabel, Ghost::None, 0 );  
+  }
 
   sched->addTask( tsk, level->eachPatch(), d_lab->d_sharedState->allArchesMaterials() ); 
 }
@@ -1028,12 +1033,14 @@ ClassicTableInterface::dummyInit( const ProcessorGroup* pc,
 
     }
 
-    CCVariable<double> soot; 
-    constCCVariable<double> old_soot; 
-    new_dw->allocateAndPut( soot, d_lab->d_sootFVINLabel, matlIndex, patch ); 
-    old_dw->get( old_soot, d_lab->d_sootFVINLabel, matlIndex, patch, Ghost::None, 0 ); 
-    soot.initialize(0.0);
-    soot.copyData( old_soot ); 
+    if ( d_allocate_soot ) { 
+      CCVariable<double> soot; 
+      constCCVariable<double> old_soot; 
+      new_dw->allocateAndPut( soot, d_lab->d_sootFVINLabel, matlIndex, patch ); 
+      old_dw->get( old_soot, d_lab->d_sootFVINLabel, matlIndex, patch, Ghost::None, 0 ); 
+      soot.initialize(0.0);
+      soot.copyData( old_soot );
+    }
 
   }
 }

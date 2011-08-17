@@ -199,6 +199,7 @@ private:
 
   bool d_table_isloaded;    ///< Boolean: has the table been loaded?
   bool d_noisy_hl_warning;  ///< Provide information about heat loss clipping
+  bool d_allocate_soot;     ///< For new DORadiation source term...allocate soot variable 
   
   double d_hl_scalar_init;  ///< Heat loss value for non-adiabatic conditions
   // Specifically for the classic table: 
