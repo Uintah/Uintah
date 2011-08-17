@@ -29,21 +29,27 @@
 *   <Sources>
 *     <src label = "my_source" type = "westbrook_dryer" > 
         <!-- Westbrook Dryer Global Hydrocarbon reaction rate model -->
-        <!-- see Turns, pg. 156-157 -->
-        <A                          spec="OPTIONAL DOUBLE" /> <!-- Pre-exponential factor --> 
-        <E_R                        spec="OPTIONAL DOUBLE" /> <!-- Activation temperature --> 
-        <X                          spec="OPTIONAL DOUBLE" /> <!-- C_xH_y --> 
-        <Y                          spec="OPTIONAL DOUBLE" /> <!-- C_xH_y --> 
-        <m                          spec="OPTIONAL DOUBLE" /> <!-- [C_xH_y]^m --> 
-        <n                          spec="OPTIONAL DOUBLE" /> <!-- [O_2]^n --> 
-        <fuel_mass_fraction         spec="OPTIONAL DOUBLE" /> <!-- Mass fraction of hydrocarbon in the fuel stream --> 
-        <oxidizer_O2_mass_fraction  spec="OPTIONAL DOUBLE" /> <!-- Mass fraction of O2 in the oxidizer stream --> 
-        <mix_frac_label             spec="OPTIONAL STRING" /> <!-- Mixture fraction label --> 
-				<hc_frac_label 							spec="OPTIONAL STRING" /> <!-- Hydrocarbon mass fraction label --> 
-        <mw_label                   spec="OPTIONAL STRING" /> <!-- mixture molecular weight label --> 
-				<temperature_label 					spec="OPTIONAL STRING" /> <!-- temperature label, default = "temperature" --> 
-				<density_label 							spec="OPTIONAL STRING" /> <!-- density label, default = "density" --> 
-				<pos 												spec="OPTIONAL NODATA" /> <!-- source term is positive --> 
+	      <!-- see Turns, pg. 156-157 -->
+        <A                          spec="REQUIRED DOUBLE" need_applies_to="type westbrook_dryer"/> <!-- Pre-exponential factor --> 
+        <E_R                        spec="REQUIRED DOUBLE" need_applies_to="type westbrook_dryer"/> <!-- Activation temperature --> 
+        <X                          spec="REQUIRED DOUBLE" need_applies_to="type westbrook_dryer"/> <!-- C_xH_y --> 
+        <Y                          spec="REQUIRED DOUBLE" need_applies_to="type westbrook_dryer"/> <!-- C_xH_y --> 
+        <m                          spec="REQUIRED DOUBLE" need_applies_to="type westbrook_dryer"/> <!-- [C_xH_y]^m --> 
+        <n                          spec="REQUIRED DOUBLE" need_applies_to="type westbrook_dryer"/> <!-- [O_2]^n --> 
+        <fuel_mass_fraction         spec="REQUIRED DOUBLE" need_applies_to="type westbrook_dryer"/> <!-- Mass fraction of hydrocarbon in the fuel stream --> 
+        <oxidizer_O2_mass_fraction  spec="REQUIRED DOUBLE" need_applies_to="type westbrook_dryer"/> <!-- Mass fraction of O2 in the oxidizer stream --> 
+        <cstar_fraction_label       spec="REQUIRED STRING" need_applies_to="type westbrook_dryer"/> <!-- C*H mass fraction label --> 
+        <equil_fraction_label       spec="REQUIRED STRING" need_applies_to="type westbrook_dryer"/> <!-- CH mass fraction label (equilibrium calc) --> 
+        <mw_label                   spec="REQUIRED STRING" need_applies_to="type westbrook_dryer"/> <!-- mixture molecular weight label --> 
+        <o2_label                   spec="REQUIRED STRING" need_applies_to="type westbrook_dryer"/> <!-- o2 label --> 
+        <temperature_label          spec="REQUIRED STRING" need_applies_to="type westbrook_dryer"/> <!-- temperature label, default = "temperature" --> 
+        <density_label              spec="REQUIRED STRING" need_applies_to="type westbrook_dryer"/> <!-- density label, default = "density" --> 
+        <pos                        spec="OPTIONAL NO_DATA" need_applies_to="type westbrook_dryer"/><!-- source term is positive --> 
+        <hot_spot                   spec="OPTIONAL NO_DATA" need_applies_to="type westbrook_dryer"> <!-- pilot light --> 
+          <geom_object/>                                                                            <!-- defines the location of the pilot --> 
+          <max_time                 spec="REQUIRED DOUBLE 'positive'"/>                             <!-- defines how long does the pilot last -->  
+          <temperature              spec="REQUIRED DOUBLE 'positive'"/>                             <!-- defines the temperature of the pilot --> 
+        </hot_spot>
       </src>
     </Sources>
 * \endcode 
@@ -181,6 +187,11 @@ private:
   const VarLabel* _CstarMassFracLabel;  
   const VarLabel* _CEqMassFracLabel; 
   const VarLabel* _O2MassFracLabel; 
+
+  std::vector<GeometryPieceP> _geom_hot_spot;    ///< Geometric locations of pilot light
+  double _T_hot_spot;                            ///< Temperature of the pilot light
+  double _max_time_hot_spot;                     ///< How long the pilot light is on
+  bool _hot_spot;                                ///< Logical on/off switch for the pilot
 
   ArchesLabel* _field_labels;
 

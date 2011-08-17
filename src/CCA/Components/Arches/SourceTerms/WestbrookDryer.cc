@@ -70,6 +70,16 @@ WestbrookDryer::problemSetup(const ProblemSpecP& inputdb)
   _field_labels->add_species( d_rho_label ); 
   _field_labels->add_species( d_T_label ); 
 
+  _hot_spot = false; 
+  if ( db->findBlock("hot_spot") ){
+    ProblemSpecP db_hotspot = db->findBlock("hot_spot"); 
+    ProblemSpecP the_geometry = db_hotspot->findBlock("geom_object");
+    GeometryPieceFactory::create( the_geometry, _geom_hot_spot ); 
+    db_hotspot->require("max_time",_max_time_hot_spot);
+    db_hotspot->require("temperature", _T_hot_spot);
+    _hot_spot = true; 
+  }
+
   if ( db->findBlock("pos") ) { 
     d_sign = 1.0; 
   } else { 
@@ -191,6 +201,7 @@ WestbrookDryer::computeSource( const ProcessorGroup* pc,
     delt_vartype DT; 
     old_dw->get(DT, _field_labels->d_sharedState->get_delt_label()); 
     double dt = DT;
+    Box patchInteriorBox = patch->getBox(); 
 
     for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
 
@@ -220,6 +231,33 @@ WestbrookDryer::computeSource( const ProcessorGroup* pc,
 
       // Step 3: Compute rate
       double rate = getRate( T[c], Cstar[c], O2[c], mixMW[c], den[c], dt, vol ); 
+
+      // Overwrite with hot spot if specified -- like a pilot light
+      if ( _hot_spot ) { 
+
+        double total_time = _field_labels->d_sharedState->getElapsedTime();
+
+        for (std::vector<GeometryPieceP>::iterator giter = _geom_hot_spot.begin(); giter != _geom_hot_spot.end(); giter++){
+
+          GeometryPieceP g_piece = *giter; 
+          Box geomBox        = g_piece->getBoundingBox(); 
+          Box intersectedBox = geomBox.intersect( patchInteriorBox ); 
+          if ( !(intersectedBox.degenerate())) { 
+
+            Point P = patch->cellPosition( c ); 
+            
+            if ( g_piece->inside(P) && total_time < _max_time_hot_spot ){ 
+
+              rate = getRate( _T_hot_spot, Cstar[c], O2[c], mixMW[c], den[c], dt, vol ); 
+
+            }
+          }
+        }
+
+        if ( total_time > _max_time_hot_spot ){ 
+          _hot_spot = false; 
+        } 
+      }
 
       CxHyRate[c] = rate; 
 
