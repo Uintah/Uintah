@@ -162,7 +162,7 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
      cerr << "nodes8or27 is deprecated, use " << endl;
      cerr << "<interpolator>type</interpolator>" << endl;
      cerr << "where type is one of the following:" << endl;
-     cerr << "linear, gimp, 3rdorderBS, cpdi, fastcpdi" << endl;
+     cerr << "linear, gimp, cpgimp, 3rdorderBS, cpdi, fastcpdi" << endl;
     exit(1);
   }
 
@@ -272,6 +272,9 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
   } else if(d_interpolator_type=="gimp"){
     d_interpolator = scinew Node27Interpolator();
     d_8or27 = 27;
+  } else if(d_interpolator_type=="cpgimp"){
+    d_interpolator = scinew Node27Interpolator();
+    d_8or27 = 27;
   } else if(d_interpolator_type=="3rdorderBS"){
     d_interpolator = scinew TOBSplineInterpolator();
     d_8or27 = 27;
@@ -298,6 +301,7 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
          << "Valid options are: \n"
          << "linear\n"
          << "gimp\n"
+         << "cpgimp\n"
          << "cpdi\n"
          << "3rdorderBS\n"
          << "4thorderBS\n"<< endl;
