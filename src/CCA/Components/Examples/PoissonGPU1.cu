@@ -295,13 +295,33 @@ PoissonGPU1::timeAdvance(const ProcessorGroup*, const PatchSubset* patches,
           cudaMalloc(&phinew, size);
         }
       // host pointers
-      /*
-      double *oldhostmem = NULL; // point this at DW representation
-      double *newhostmem = NULL; // point this at DW representation
+      
+      double *oldhostmem = (double*)phi.getWindow()->getData()->getPointer(); // point this at DW representation
+      double *newhostmem = (double*)newphi.getWindow()->getData()->getPointer(); // point this at DW representation
+
+      // Check to make sure memory is as we expect
+      /* */
+      NodeIterator iter(l, h);
+      int offset = l.x()
+      int size2 = phi.getWindow()->getData()->size().x() *
+                 phi.getWindow()->getData()->size().y() * 
+                 phi.getWindow()->getData()->size().z();
+      for(int i = 0; i < size2; i++)
+      {
+        if(oldhostmem[i] != phi[*iter])
+        {
+          std::cout << "for " << i << " pointer and variable wrapped representations of phi differ" << std::endl;
+          std::cout << "phi: " << phi[*iter] << "    flatrep: " << oldhostmem[i] << std::endl;
+        }
+        iter++;
+      }
+
+      /* */
+
 
       cudaMemcpy(phiold, oldhostmem, size, cudaMemcpyHostToDevice);
       cudaMemcpy(phinew, newhostmem, size, cudaMemcpyHostToDevice);
-      */
+      
       //// Kernel Execution ////
       //////////////////////////
       uint3 domainSize = make_uint3(h.x() - l.x(), h.y() - l.y(), h.z() - l.z());
