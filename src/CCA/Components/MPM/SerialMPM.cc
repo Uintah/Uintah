@@ -583,7 +583,7 @@ void SerialMPM::scheduleComputeStableTimestep(const LevelP&,
                                               SchedulerP&)
 {
   // Nothing to do here - delt is computed as a by-product of the
-  // consitutive model
+  // constitutive model
 }
 
 void
@@ -3068,9 +3068,14 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
-      // Get the particle position data
+
+      // Get the particle data
       constParticleVariable<Point>  px;
+      ParticleVariable<Vector> pExternalForce_new;
+
       old_dw->get(px, lb->pXLabel, pset);
+      new_dw->allocateAndPut(pExternalForce_new, 
+                             lb->pExtForceLabel_preReloc,  pset);
 
       if (flags->d_useLoadCurves) {
         bool do_PressureBCs=false;
@@ -3083,75 +3088,52 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
           }
         }
 
-        if(do_PressureBCs){
-
         // Get the load curve data
         constParticleVariable<int> pLoadCurveID;
         old_dw->get(pLoadCurveID, lb->pLoadCurveIDLabel, pset);
-
-        // Get the external force data and allocate new space for
-        // external force
-        constParticleVariable<Vector> pExternalForce;
-        ParticleVariable<Vector> pExternalForce_new;
-        old_dw->get(pExternalForce, lb->pExternalForceLabel, pset);
-        new_dw->allocateAndPut(pExternalForce_new, 
-                               lb->pExtForceLabel_preReloc,  pset);
-
-        // Iterate over the particles
-        ParticleSubset::iterator iter = pset->begin();
-        for(;iter != pset->end(); iter++){
-          particleIndex idx = *iter;
-          int loadCurveID = pLoadCurveID[idx]-1;
-          if (loadCurveID < 0) {
-            pExternalForce_new[idx] = pExternalForce[idx];
-          } else {
-            PressureBC* pbc = pbcP[loadCurveID];
-            double force = forcePerPart[loadCurveID];
-            pExternalForce_new[idx] = pbc->getForceVector(px[idx], force, time);
-          }
-        }
-
         // Recycle the loadCurveIDs
         ParticleVariable<int> pLoadCurveID_new;
         new_dw->allocateAndPut(pLoadCurveID_new, 
                                lb->pLoadCurveIDLabel_preReloc, pset);
         pLoadCurveID_new.copyData(pLoadCurveID);
-       }
-       else {
+
+        if(do_PressureBCs){
+          // Get the external force data and allocate new space for
+          // external force
+          constParticleVariable<Vector> pExternalForce;
+          old_dw->get(pExternalForce, lb->pExternalForceLabel, pset);
+
+          // Iterate over the particles
+          ParticleSubset::iterator iter = pset->begin();
+          for(;iter != pset->end(); iter++){
+            particleIndex idx = *iter;
+            int loadCurveID = pLoadCurveID[idx]-1;
+            if (loadCurveID < 0) {
+              pExternalForce_new[idx] = pExternalForce[idx];
+            } else {
+              PressureBC* pbc = pbcP[loadCurveID];
+              double force = forcePerPart[loadCurveID];
+              pExternalForce_new[idx] = pbc->getForceVector(px[idx],force,time);
+            }
+          }
+        } else {
+           for(ParticleSubset::iterator iter = pset->begin();
+               iter != pset->end(); iter++){
+             pExternalForce_new[*iter] = 0.;
+           }
+        }
+      } else {
+         // Get the external force data and allocate new space for
+         // external force and copy the data
          constParticleVariable<Vector> pExternalForce;
-         ParticleVariable<Vector> pExternalForce_new;
          old_dw->get(pExternalForce, lb->pExternalForceLabel, pset);
-         new_dw->allocateAndPut(pExternalForce_new, 
-                                lb->pExtForceLabel_preReloc,  pset);
-         
+
          for(ParticleSubset::iterator iter = pset->begin();
              iter != pset->end(); iter++){
-           pExternalForce_new[*iter] = 0.;
+           particleIndex idx = *iter;
+           pExternalForce_new[idx] = 
+                   pExternalForce[idx]*flags->d_forceIncrementFactor;
          }
-
-         ParticleVariable<int> pLoadCurveID_new;
-         constParticleVariable<int> pLoadCurveID;
-         old_dw->get(pLoadCurveID, lb->pLoadCurveIDLabel, pset);
-         new_dw->allocateAndPut(pLoadCurveID_new, 
-                                lb->pLoadCurveIDLabel_preReloc, pset);
-         pLoadCurveID_new.copyData(pLoadCurveID);
-         
-       }
-      } else {  
-        // Get the external force data and allocate new space for
-        // external force and copy the data
-        constParticleVariable<Vector> pExternalForce;
-        ParticleVariable<Vector> pExternalForce_new;
-        old_dw->get(pExternalForce, lb->pExternalForceLabel, pset);
-        new_dw->allocateAndPut(pExternalForce_new, 
-                               lb->pExtForceLabel_preReloc,  pset);
-        
-        for(ParticleSubset::iterator iter = pset->begin();
-            iter != pset->end(); iter++){
-          particleIndex idx = *iter;
-          pExternalForce_new[idx] = 
-                  pExternalForce[idx]*flags->d_forceIncrementFactor;
-        }
       }
     } // matl loop
   }  // patch loop
