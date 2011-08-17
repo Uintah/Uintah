@@ -2077,7 +2077,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       old_dw->get(pvelocity,      lb->pVelocityLabel,      pset);
       old_dw->get(pTemperature,   lb->pTemperatureLabel,   pset);
       old_dw->get(psize,          lb->pSizeLabel,          pset);
-      old_dw->get(FOld,           lb->pDeformationMeasureLabel,pset);
+      old_dw->get(pFOld,          lb->pDeformationMeasureLabel,pset);
 
       new_dw->get(pexternalforce, lb->pExtForceLabel_preReloc, pset);
 
@@ -2586,8 +2586,7 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
       old_dw->get(pvol,    lb->pVolumeLabel,                 pset);
       old_dw->get(pstress, lb->pStressLabel,                 pset);
       old_dw->get(psize,   lb->pSizeLabel,                   pset);
-      old_dw->get(FOld,    lb->pDeformationMeasureLabel,     pset);
-
+      old_dw->get(pFOld,   lb->pDeformationMeasureLabel,     pset);
 
       new_dw->get(gvolume, lb->gVolumeLabel, dwi, patch, Ghost::None, 0);
 
