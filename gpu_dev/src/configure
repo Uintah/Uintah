@@ -42551,7 +42551,7 @@ NVCC_CFLAGS="$_sci_includes $NVCC_CFLAGS"
 NVCC_CXXFLAGS="$_sci_includes $NVCC_CXXFLAGS"
 NVCC_LIBS="$_sci_lib_path $_sci_libs"
 
-    # check that the CUDA compiler works:
+# check that the CUDA compiler works
 _file_base_name=`echo cuda_conf_test.cu | sed 's/\(.*\)\..*/\1/'`
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for C compilation using nvcc" >&5
 $as_echo_n "checking for C compilation using nvcc... " >&6; }
