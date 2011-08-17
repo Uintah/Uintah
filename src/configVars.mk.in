@@ -449,80 +449,21 @@ else
   endif
 endif
 
+
+
+
+
+
+
+
+
+
 .cu.$(OBJEXT): $<
 ifeq ($(SCI_MAKE_BE_QUIET),true)
 	@-rm -f $@
 else
 	-rm -f $@
 endif
-ifeq ($(CC_DEPEND_MODE),normal)
-  ifneq ($(TAU_MAKEFILE),)
-    ifneq ($(PDTDIR),)
-	-echo "Building $*.$(OBJEXT) ..." ; \
-	pdbfile=`basename $< .cu`.pdb ; \
-	rm $$pdbfile ; \
-	$(PDTPARSE) $< $(TAU_INCLUDE) $(TAU_MPI_INCLUDE) $(NVCC_CXXFLAGS) $(INCLUDES) -Xcompiler $(CC_DEPEND_REGEN) $(call repository,$@) -DSCI_Hash_Map_h -DSCI_HASH_SET_H -DPDT_PARSER; \
-	rm $*.inst.cu ; \
-	$(TAUINSTR) $$pdbfile $< -o $*.inst.cu -f $(SRCTOP)/tau/select.dat ; \
-        $(NVCC) $(NVCC_CXXFLAGS) $(INCLUDES) -Xcompiler  $(CC_DEPEND_REGEN) $(call repository,$@) -c -I`dirname $<` $*.inst.cu -o $@
-	@if [ -f $@ ] ; then  \
-	echo " *** Instrumented $*.$(OBJEXT) successfully  " ; \
-	else \
-	echo " *** Failed to instrumented $*.$(OBJEXT)  " ; \
-	$(NVCC) $(NVCC_CXXFLAGS) $(INCLUDES) -Xcompiler  $(CC_DEPEND_REGEN) $(call repository,$@) -c $< -o $@ ; \
-	ls -l $@; \
-	fi ; \
-	rm -f $$pdbfile ; 
-    else
-      ifeq ($(SCI_MAKE_BE_QUIET),true)
-	@echo "Compiling: $<"
-	@$(NVCC) $(NVCC_CXXFLAGS) $(INCLUDES) -Xcompiler  $(CC_DEPEND_REGEN) $(call repository,$@) -c $< -o $@ ;
-      else
-	$(NVCC) $(NVCC_CXXFLAGS) $(INCLUDES) -Xcompiler  $(CC_DEPEND_REGEN) $(call repository,$@) -c $< -o $@ ;
-      endif
-    endif
-  else
-    ifeq ($(SCI_MAKE_BE_QUIET),true)
-	@echo "Compiling: $<"
-	@$(NVCC) $(NVCC_CXXFLAGS) $(INCLUDES) -Xcompiler $(CC_DEPEND_REGEN) @WIN_DLLFLAGS@ $(call repository,$@) -c $< -o $@
-    else
-	$(NVCC) $(NVCC_CXXFLAGS) $(INCLUDES) -Xcompiler $(CC_DEPEND_REGEN) @WIN_DLLFLAGS@ $(call repository,$@) -c $< -o $@
-    endif
-  endif
-else
-  ifeq ($(CC_DEPEND_MODE),modify)
-    ifeq ($(SCI_MAKE_BE_QUIET),true)
-	@echo "Compiling: $<"
-	@$(NVCC) $(NVCC_CXXFLAGS) $(INCLUDES) -Xcompiler $(CC_DEPEND_REGEN) $(call repository,$@) -c $< -o $@ && $(SED) -e 's,^$(notdir $@),$@,' $(basename $@).$(CC_DEPEND_EXT) > $(basename $@).$(CC_DEPEND_EXT).tmp && mv -f $(basename $@).$(CC_DEPEND_EXT).tmp $(basename $@).$(CC_DEPEND_EXT)
-    else
-	$(NVCC) $(NVCC_CXXFLAGS) $(INCLUDES) -Xcompiler $(CC_DEPEND_REGEN) $(call repository,$@) -c $< -o $@ && $(SED) -e 's,^$(notdir $@),$@,' $(basename $@).$(CC_DEPEND_EXT) > $(basename $@).$(CC_DEPEND_EXT).tmp && mv -f $(basename $@).$(CC_DEPEND_EXT).tmp $(basename $@).$(CC_DEPEND_EXT)
-    endif
-  else
-    ifeq ($(CC_DEPEND_MODE),move)
-      ifeq ($(SCI_MAKE_BE_QUIET),true)
-	@echo "Compiling: $<"
-	@$(NVCC) $(NVCC_CXXFLAGS) $(INCLUDES) -Xcompiler $(CC_DEPEND_REGEN) $(call repository,$@) -c $< -o $@
-	@sed 's,^$(basename $@),$@,g' $(basename $(notdir $@)).$(CC_DEPEND_EXT) > $(basename $@).$(CC_DEPEND_EXT)
-	@rm $(basename $(notdir $@)).$(CC_DEPEND_EXT)
-      else
-	$(NVCC) $(NVCC_CXXFLAGS) $(INCLUDES) -Xcompiler $(CC_DEPEND_REGEN) $(call repository,$@) -c $< -o $@
-	sed 's,^$(basename $@),$@,g' $(basename $(notdir $@)).$(CC_DEPEND_EXT) > $(basename $@).$(CC_DEPEND_EXT)
-	rm $(basename $(notdir $@)).$(CC_DEPEND_EXT)
-      endif
-    else
-      ifeq ($(CC_DEPEND_MODE),modify_and_move)
-        ifeq ($(SCI_MAKE_BE_QUIET),true)
-	  @echo "Compiling: $<"
-	  @$(NVCC) $(NVCC_CXXFLAGS) $(INCLUDES) -Xcompiler $(CC_DEPEND_REGEN) $(call repository,$@) -c $< -o $@ && \
-             $(SED) -e 's,^$(notdir $@),$@,' $(basename $(notdir $@)).$(CC_DEPEND_EXT) > $(basename $@).$(CC_DEPEND_EXT)
-	  @rm $(basename $(notdir $@)).$(CC_DEPEND_EXT)
-        else
-	  $(NVCC) $(NVCC_CXXFLAGS) $(INCLUDES) -Xcompiler $(CC_DEPEND_REGEN) $(call repository,$@) -c $< -o $@ && \
-             $(SED) -e 's,^$(notdir $@),$@,' $(basename $(notdir $@)).$(CC_DEPEND_EXT) > $(basename $@).$(CC_DEPEND_EXT)
-	  rm $(basename $(notdir $@)).$(CC_DEPEND_EXT)
-        endif
-      else
-        ifeq ($(CC_DEPEND_MODE),stdout)
           #
           # .d - most likely gcc... have to explicitly put it in a .d file.
           #
@@ -533,27 +474,28 @@ else
           ifeq ($(SCI_MAKE_BE_QUIET),true)
 	    @echo "Compiling: $<"
 	    @rm -f $(basename $@).$(CC_DEPEND_EXT)
-	    @$(NVCC) $(NVCC_CXXFLAGS) $(INCLUDES) -Xcompiler $(CC_DEPEND_REGEN) -c $< | sed 's,^$(notdir $@),$@,g' > $(basename $@).$(CC_DEPEND_EXT)
+	    @$(NVCC) $(NVCC_CXXFLAGS) $(INCLUDES) -M $< | sed 's,^$(notdir $@),$@,g' > $(basename $@).$(CC_DEPEND_EXT)
 
             # Now do the actual compile!
 	    @$(NVCC) $(NVCC_CXXFLAGS) $(INCLUDES) -Xcompiler $(call repository,$@) -c $< -o $@
           else
 	    @echo "CREATING DEPENDENCY INFORMATION:"
 	    @rm -f $(basename $@).$(CC_DEPEND_EXT)
-	    $(NVCC) $(NVCC_CXXFLAGS) $(INCLUDES) -Xcompiler $(CC_DEPEND_REGEN) -c $< | sed 's,^$(notdir $@),$@,g' > $(basename $@).$(CC_DEPEND_EXT)
+	    $(NVCC) $(NVCC_CXXFLAGS) $(INCLUDES) -M $< | sed 's,^$(notdir $@),$@,g' > $(basename $@).$(CC_DEPEND_EXT)
 
             # Now do the actual compile!
 	    @echo "ACTUALLY COMPILING:"
 	    $(NVCC) $(NVCC_CXXFLAGS) $(INCLUDES) -Xcompiler $(call repository,$@) -c $< -o $@
           endif
-        else
-	  @echo ".cu rule: Unknown CC_DEPEND_MODE: $(CC_DEPEND_MODE)"
-	  @exit 1
-        endif
-      endif
-    endif
-  endif
-endif
+
+
+
+
+
+
+
+
+
 
 .cpp.$(OBJEXT): $<
 	-rm -f $@

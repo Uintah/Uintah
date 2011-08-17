@@ -54,13 +54,13 @@ SRCS += \
         $(SRCDIR)/Material.cc              \
         $(SRCDIR)/Node27Interpolator.cc    \
         $(SRCDIR)/PatchRangeTree.cc        \
-        $(SRCDIR)/CUDATask.cc              \
         $(SRCDIR)/Patch.cc                 \
         $(SRCDIR)/Region.cc                \
         $(SRCDIR)/SimpleMaterial.cc        \
         $(SRCDIR)/SimulationState.cc       \
         $(SRCDIR)/SimulationTime.cc        \
         $(SRCDIR)/Task.cc                  \
+        $(SRCDIR)/CUDATask.cc              \
         $(SRCDIR)/TOBSplineInterpolator.cc \
         $(SRCDIR)/UnknownVariable.cc       \
         $(SRCDIR)/cpdiInterpolator.cc      \
