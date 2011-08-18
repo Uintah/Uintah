@@ -124,13 +124,10 @@ MixingRxnModel::problemSetupCommon( const ProblemSpecP& params )
     _H_ox = iter->second; 
   }
 
-//  iter = d_constants.find("H_fuel");
-//  if ( iter == d_constants.end() ){ 
-//    proc0cout << " Error: Cannot find #KEY H_fuel=*value* in the table.\n"; 
-//    throw ProblemSetupException( "H_fuel (pure fuel enthalpy) required as an input.",__FILE__,__LINE__);
-//  } else { 
-//    _H_fuel = iter->second; 
-//  }
+  iter = d_constants.find("H_fuel");
+  if ( !(iter == d_constants.end()) ){ 
+    _H_fuel = iter->second; 
+  }
 
 }
 
