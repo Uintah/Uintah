@@ -136,7 +136,7 @@ public:
       double constant = dt * vol / den; 
 
       // check limiting reactant
-      if ( fabs( constant*rate ) > CxHy ){ 
+      if ( std::abs( constant*rate ) > CxHy ){ 
         rate = d_sign*den/(dt*vol)*CxHy; 
       } 
 
