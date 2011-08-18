@@ -1413,12 +1413,11 @@ ClassicTableInterface::loadMixingTable( const string & inputfile )
           }
         } else { 
           for (int i = 0; i < d_allIndepVarNum[0]; i++){
-            double v = getDouble( gzFp ); 
             // read but don't assign 
             // doing this for now because it was causing some weirdness 
+            double v = getDouble( gzFp ); 
           }
         }
-
 
         for ( int jj = 0; jj < d_allIndepVarNum[1]; jj++ ){
           for ( int ii = 0; ii < d_allIndepVarNum[0]; ii++ ){
