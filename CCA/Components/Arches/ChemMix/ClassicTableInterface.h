@@ -200,7 +200,8 @@ private:
   bool d_table_isloaded;    ///< Boolean: has the table been loaded?
   bool d_noisy_hl_warning;  ///< Provide information about heat loss clipping
   bool d_allocate_soot;     ///< For new DORadiation source term...allocate soot variable 
-  
+  bool d_use_mf_for_hl;     ///< Rather than using adiabatic enthalpy from the table, compute using mix. frac and fuel/ox enthalpy
+
   double d_hl_scalar_init;  ///< Heat loss value for non-adiabatic conditions
   // Specifically for the classic table: 
   double d_f_stoich;        ///< Stoichiometric mixture fraction 
@@ -208,6 +209,7 @@ private:
   double d_H_air;           ///< Oxidizer Enthalpy
   double d_hl_lower_bound;  ///< Heat loss lower bound
   double d_hl_upper_bound;  ///< Heat loss upper bound
+
   
   int d_indepvarscount;     ///< Number of independent variables
   int d_varscount;          ///< Total dependent variables

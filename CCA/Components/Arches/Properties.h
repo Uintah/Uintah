@@ -345,6 +345,8 @@ private:
       // for doing adiabatic gas with non-adiabatic particles
       bool d_adiabGas_nonadiabPart;
 
+      bool d_newEnthalpySolver; 
+
       string mixModel; 
 
 }; // end class Properties

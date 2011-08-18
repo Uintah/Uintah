@@ -88,6 +88,11 @@ ClassicTableInterface::problemSetup( const ProblemSpecP& propertiesParameters )
   db_classic->getWithDefault( "cold_flow", d_coldflow, false); 
   db_properties_root->getWithDefault( "use_mixing_model", d_use_mixing_model, false ); 
   db_classic->getWithDefault( "enthalpy_label", d_enthalpy_name, "enthalpySP" ); 
+ 
+  // Developer only for now. 
+  if ( db_classic->findBlock("mf_for_hl") ){ 
+    d_use_mf_for_hl =  true; 
+  } 
 
   d_noisy_hl_warning = false; 
   if ( ProblemSpecP temp = db_classic->findBlock("noisy_hl_warning") ) 
@@ -689,8 +694,16 @@ ClassicTableInterface::computeHeatLoss( const ProcessorGroup* pc,
         IndexMap::iterator i_index = d_enthalpyVarIndexMap.find( "sensibleenthalpy" ); 
         double sensible_enthalpy    = tableLookUp( iv, i_index->second ); 
         i_index = d_enthalpyVarIndexMap.find( "adiabaticenthalpy" ); 
-        double adiabatic_enthalpy = tableLookUp( iv, i_index->second ); 
-        //adiabatic_enthalpy = _H_fuel*iv[0] + _H_ox*(1.0-iv[0]);
+
+        double adiabatic_enthalpy = 0.0;
+        if ( !d_use_mf_for_hl ) { 
+          adiabatic_enthalpy = tableLookUp( iv, i_index->second ); 
+        } else { 
+          // WARNING: Hardcoded index for development testing
+          // only works for "coal" tables
+          // requires that you have _H_fuel defined in the table
+          adiabatic_enthalpy = _H_fuel * iv[2] + _H_ox * (1.0-iv[2]);
+        }
         double current_heat_loss  = 0.0;
         double small = 1e-10; 
         if ( calcEnthalpy ) {
@@ -832,7 +845,16 @@ ClassicTableInterface::computeFirstEnthalpy( const ProcessorGroup* pc,
       IndexMap::iterator i_index = d_enthalpyVarIndexMap.find( "sensibleenthalpy" ); 
       double sensible_enthalpy    = tableLookUp( iv, i_index->second ); 
       i_index = d_enthalpyVarIndexMap.find( "adiabaticenthalpy" ); 
-      double adiabatic_enthalpy = tableLookUp( iv, i_index->second ); 
+      double adiabatic_enthalpy = 0.0; 
+      if ( !d_use_mf_for_hl ){ 
+        adiabatic_enthalpy = tableLookUp( iv, i_index->second ); 
+      } else { 
+        //WARNING: Development only
+        adiabatic_enthalpy = _H_fuel * iv[2] + _H_ox * (1.0-iv[2]);
+        cout << " H OX = " << _H_ox << " WITH enthalpy = " << adiabatic_enthalpy << endl;
+        
+      } 
+
       enthalpy[c]     = adiabatic_enthalpy - current_heat_loss * sensible_enthalpy; 
 
     }
