@@ -3038,12 +3038,10 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
   std::vector<double> forcePerPart;
   std::vector<PressureBC*> pbcP;
   if (flags->d_useLoadCurves) {
-    for (int ii = 0; 
-         ii < (int)MPMPhysicalBCFactory::mpmPhysicalBCs.size(); ii++) {
+    for (int ii = 0;ii < (int)MPMPhysicalBCFactory::mpmPhysicalBCs.size();ii++){
       string bcs_type = MPMPhysicalBCFactory::mpmPhysicalBCs[ii]->getType();
       if (bcs_type == "Pressure") {
 
-        // Get the material points per load curve
         PressureBC* pbc = 
           dynamic_cast<PressureBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
         pbcP.push_back(pbc);
