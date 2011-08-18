@@ -302,10 +302,10 @@ PoissonGPU1::timeAdvance(const ProcessorGroup*, const PatchSubset* patches,
       // Check to make sure memory is as we expect
       /* */
       NodeIterator iter(l, h);
-      int offset = l.x()
-      int size2 = phi.getWindow()->getData()->size().x() *
-                 phi.getWindow()->getData()->size().y() * 
-                 phi.getWindow()->getData()->size().z();
+      int offset = l.x();
+      int size2 = phi.getWindow()->getData()->size().x()
+				* phi.getWindow()->getData()->size().y()
+				* phi.getWindow()->getData()->size().z();
       for(int i = 0; i < size2; i++)
       {
         if(oldhostmem[i] != phi[*iter])
