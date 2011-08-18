@@ -89,6 +89,7 @@
               <load               spec="REQUIRED INTEGER" />
             </time_point>
           </load_curve>
+          <res                    spec="OPTIONAL VECTOR" />
         </pressure>
         <heat_flux                spec="MULTIPLE NO_DATA" >
           <geom_object />

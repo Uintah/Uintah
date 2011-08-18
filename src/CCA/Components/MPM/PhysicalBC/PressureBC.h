@@ -146,6 +146,7 @@ WARNING
 
     public:
       Vector d_dxpp;
+      IntVector d_res;
 
       friend std::ostream& operator<<(std::ostream& out, const Uintah::PressureBC& bc);
    };

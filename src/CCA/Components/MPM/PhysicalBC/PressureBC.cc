@@ -37,6 +37,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/GeometryPiece/DifferenceGeometryPiece.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Grid/Box.h>
+#include <Core/Grid/Level.h>
 #include <Core/Geometry/BBox.h>
 #include <iostream>
 
@@ -52,6 +53,7 @@ PressureBC::PressureBC(ProblemSpecP& ps, const GridP& grid)
   // of the outward normal and -ve if applied in the direction of the
   // inward normal
   // **WARNING** Currently allows only for box, cylinder or sphere.
+  d_dxpp = Vector(1.,1.,1.);  // Only needed for axisymmetric end, see below
   ProblemSpecP child = (ps->findBlock("geom_object"))->findBlock();
   std::string go_type = child->getNodeName();
   //std::cerr << "PressureBC::go_type = " << go_type << endl;
@@ -69,6 +71,13 @@ PressureBC::PressureBC(ProblemSpecP& ps, const GridP& grid)
     d_cylinder_end=cgp->cylinder_end();
     d_axisymmetric_end=cgp->axisymmetric_end();
     d_axisymmetric_side=cgp->axisymmetric_side();
+    if(d_axisymmetric_end){
+      ps->require("res",d_res);
+      Vector dx = grid->getLevel(0)->dCell();
+      d_dxpp =  Vector(dx.x()/((double) d_res.x()),
+                       dx.y()/((double) d_res.y()),
+                       dx.z()/((double) d_res.z()));
+    }
   } else {
     throw ParameterNotFound("** ERROR ** No surface specified for pressure BC.",
                             __FILE__, __LINE__);
@@ -76,7 +85,7 @@ PressureBC::PressureBC(ProblemSpecP& ps, const GridP& grid)
   
   d_numMaterialPoints = 0;  // this value is read in on a restart
   ps->get("numberOfParticlesOnLoadSurface",d_numMaterialPoints);
-  
+
   // Read and save the load curve information
   d_loadCurve = scinew LoadCurve<double>(ps);
 
@@ -122,6 +131,7 @@ void PressureBC::outputProblemSpec(ProblemSpecP& ps)
   d_surface->outputProblemSpec(geom_ps);
   press_ps->appendElement("numberOfParticlesOnLoadSurface",d_numMaterialPoints);
   d_loadCurve->outputProblemSpec(press_ps);
+  press_ps->appendElement("res",d_res);
 }
 
 // Get the type of this object for BC application
@@ -142,7 +152,6 @@ PressureBC::flagMaterialPoint(const Point& p,
                               const Vector& dxpp)
 {
   bool flag = false;
-  d_dxpp=dxpp;
   if (d_surfaceType == "box") {
     // Create box that is min-dxpp, max+dxpp;
     Box box = d_surface->getBoundingBox();
