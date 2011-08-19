@@ -332,8 +332,7 @@ namespace Wasatch{
       task->schedule( icCoordHelper_->field_tags(), 1 );
       taskInterfaceList_.push_back( task );
     }
-    if( d_myworld->myrank() == 0 )
-      proc0cout << "Wasatch: done creating initialization task(s)" << std::endl;
+    proc0cout << "Wasatch: done creating initialization task(s)" << std::endl;
   }
 
   //--------------------------------------------------------------------
@@ -367,8 +366,7 @@ namespace Wasatch{
     }
     else{ // default
 
-      if( d_myworld->myrank() == 0 )
-        cout << "Task 'compute timestep' COMPUTES 'delT' in NEW data warehouse" << endl;
+      cout << "Task 'compute timestep' COMPUTES 'delT' in NEW data warehouse" << endl;
 
       Uintah::Task* task = scinew Uintah::Task( "compute timestep", this, &Wasatch::computeDelT );
 
@@ -381,8 +379,7 @@ namespace Wasatch{
       sched->addTask( task, localPatches, sharedState_->allMaterials() );
     }
 
-    if( d_myworld->myrank() == 0 )
-      proc0cout << "Wasatch: done creating timestep task(s)" << std::endl;
+    proc0cout << "Wasatch: done creating timestep task(s)" << std::endl;
   }
 
   //--------------------------------------------------------------------
@@ -399,8 +396,7 @@ namespace Wasatch{
       
       create_timestepper_on_patches( localPatches, materials, sched, iStage );
       
-      if( d_myworld->myrank() == 0 )
-        proc0cout << "Wasatch: done creating solution task(s)" << std::endl;
+      proc0cout << "Wasatch: done creating solution task(s)" << std::endl;
       
       // jcs notes:
       //
@@ -486,7 +482,7 @@ namespace Wasatch{
           << adaptor->equation()->solution_variable_name()
           << "' into the time integrator" << std::endl
           << e.what() << std::endl;
-          cout << msg.str() << endl;
+          proc0cout << msg.str() << endl;
           throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
         }        
       }
