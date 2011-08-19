@@ -232,6 +232,10 @@ public:
   virtual double recomputeTimestep(double current_dt);
 
   virtual bool restartableTimesteps();
+  
+  void setWithMPMARCHES() { 
+    d_with_mpmarches = true;
+  };
 
 
 protected:
@@ -328,9 +332,7 @@ private:
   void registerDQMOMEqns(ProblemSpecP& db);
 
   /** @brief Registers all possible Property Models by instantiating a builder in the factory */ 
-  void registerPropertyModels( ProblemSpecP& db ); 
-
-
+  void registerPropertyModels( ProblemSpecP& db );
 
       double d_init_dt; // The initial dt from input file. 
       double d_init_mix_frac; // The initial value of mixture fraction in the domain (for paramInit)
@@ -343,6 +345,7 @@ private:
       bool d_calcVariance;
       bool d_mixedModel;
       bool d_doMMS;
+      bool d_with_mpmarches;
       bool d_extraProjection;
       bool d_EKTCorrection;
       ScaleSimilarityModel* d_scaleSimilarityModel;
