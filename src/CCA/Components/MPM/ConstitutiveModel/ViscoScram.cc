@@ -1324,7 +1324,7 @@ double ViscoScram::computeRhoMicroCM(double pressure,
 
     int iter = 0;
     while(1){
-      f = func(rho_cur,matl);
+      f = computePJWL(rho_cur,matl);
       setInterval(f, rho_cur);
       if(fabs((IL-IR)/rho_cur)<epsilon){
         return (IL+IR)/2.0;
@@ -1332,7 +1332,7 @@ double ViscoScram::computeRhoMicroCM(double pressure,
 
       delta_new = 1e100;
       while(1){
-        df_drho = deri(rho_cur,matl);
+        df_drho = computedPdrhoJWL(rho_cur,matl);
         delta_old = delta_new;
         delta_new = -f/df_drho;
         rho_cur += delta_new;
@@ -1355,7 +1355,7 @@ double ViscoScram::computeRhoMicroCM(double pressure,
           break;
         }
 
-        f = func(rho_cur,matl);
+        f = computePJWL(rho_cur,matl);
         setInterval(f, rho_cur);
         iter++;
       }
@@ -1468,10 +1468,10 @@ double ViscoScram::computeRhoMicroCM(double pressure,
 
       while(fabs(delta/rhoM)>epsilon){  // Main Iterative loop
         // Compute the difference between the previous pressure and the new pressure
-        f       = computeP(rho0/rhoM) - pressure;
+        f       = computePBirchMurnaghan(rho0/rhoM) - pressure;
 
         // Compute the new pressure derivative
-        df_drho = computedPdrho(rho0/rhoM, rho0);
+        df_drho = computedPdrhoBirchMurnaghan(rho0/rhoM, rho0);
 
         // factor by which to adjust rhoM
         delta = -relfac*(f/df_drho);
@@ -1486,8 +1486,8 @@ double ViscoScram::computeRhoMicroCM(double pressure,
           rhoM  = 2.0*rho0;
 
           while(fabs(delta/rhoM)>epsilon){
-            f       = computeP(rho0/rhoM) - pressure;
-            df_drho = computedPdrho(rho0/rhoM, rho0);
+            f       = computePBirchMurnaghan(rho0/rhoM) - pressure;
+            df_drho = computedPdrhoBirchMurnaghan(rho0/rhoM, rho0);
 
             // determine by how much to change
             delta = -relfac*(f/df_drho);
@@ -1604,8 +1604,8 @@ void ViscoScram::computePressEOSCM(double rho_cur,double& pressure,
 
     if(rho_cur >= rho_orig) {
       double v = rho_orig/rho_cur; // reduced volume
-      pressure = computeP(v);
-      dp_drho  = computedPdrho(v, rho_orig);
+      pressure = computePBirchMurnaghan(v);
+      dp_drho  = computedPdrhoBirchMurnaghan(v, rho_orig);
     } else {
       pressure = d_murnahanEOSData.P0*pow(rho_cur/rho_cur, (1.0/(d_murnahanEOSData.bulkPrime*d_murnahanEOSData.P0)));
       dp_drho  = (1.0/(d_murnahanEOSData.bulkPrime*rho_orig))*pow(rho_cur/rho_orig,(1.0/(d_murnahanEOSData.bulkPrime*d_murnahanEOSData.P0)-1.0));
@@ -1634,9 +1634,28 @@ double ViscoScram::getCompressibility()
 {
   return 1.0/d_bulk;
 }
+//_____________________________________________________
+// Functions used in solution of the BirchMurnaghan EOS
+double ViscoScram::computePBirchMurnaghan(double v)
+{
+  double K = d_murnahanEOSData.bulkPrime;
+  double n = d_murnahanEOSData.gamma;
+  return 3.0/(2.0*K) * (pow(v,-7.0/3.0) - pow(v,-5.0/3.0))
+                             * (1.0 + 0.75*(n-4.0)*(pow(v,-2.0/3.0)-1.0));
+}
 
-// Func used in Newton-Bisection Solver for JWL Temperature Dependent EOS
-double ViscoScram::func(double rhoM,const MPMMaterial*  matl){
+double ViscoScram::computedPdrhoBirchMurnaghan(double v, double rho0)
+{
+  double K = d_murnahanEOSData.bulkPrime;
+  double n = d_murnahanEOSData.gamma;
+  return 3.0/(2.0*K) * (-7.0*rho0/(3.0*pow(v,10.0/3.0)) + 5.0*rho0/(3.0*pow(v,8.0/3.0)))
+                         * (1.0 + (0.75*n-3.0)*(1.0/(pow(v,2.0/3.0))-1.0))
+                         - (1.0/K * (1.0/pow(v,7.0/3.0)-1.0/pow(v,5.0/3.0))*(0.75*n-3.0)*rho0/pow(v,5.0/3.0));
+}
+
+//____________________________________________________________________________
+// Functions used in Newton-Bisection Solver for JWL Temperature Dependent EOS
+double ViscoScram::computePJWL(double rhoM,const MPMMaterial*  matl){
   double A = d_JWLEOSData.A;
   double B = d_JWLEOSData.B;
   double R1 = d_JWLEOSData.R1;
@@ -1653,8 +1672,7 @@ double ViscoScram::func(double rhoM,const MPMMaterial*  matl){
   return (P1 + P2 + P3) - Pressure;
 }
 
-// deri used in Newton-Bisection Solver for JWL Temperature Dependent EOS
-double ViscoScram::deri(double rhoM, const MPMMaterial* matl){
+double ViscoScram::computedPdrhoJWL(double rhoM, const MPMMaterial* matl){
   double A = d_JWLEOSData.A;
   double B = d_JWLEOSData.B;
   double R1 = d_JWLEOSData.R1;
