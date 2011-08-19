@@ -631,7 +631,8 @@
   <DataAnalysis                         spec="OPTIONAL NO_DATA" >
     <Module                             spec="REQUIRED NO_DATA"
                                           attribute1="name REQUIRED STRING 'lineExtract, containerExtract, particleExtract'" >
-      <material                         spec="REQUIRED STRING" />
+      <material                         spec="OPTIONAL STRING" />
+      <materialIndex                    spec="OPTIONAL INTEGER" />
       <samplingFrequency                spec="REQUIRED DOUBLE" />
       <timeStart                        spec="REQUIRED INTEGER" />
       <timeStop                         spec="REQUIRED INTEGER" />

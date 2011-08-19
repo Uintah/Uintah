@@ -133,35 +133,33 @@ const int Arches::NDIM = 3;
 Arches::Arches(const ProcessorGroup* myworld) :
   UintahParallelComponent(myworld)
 {
-  d_lab = scinew ArchesLabel();
-  d_MAlab = 0; // will be set by setMPMArchesLabel
-  d_props = 0;
-  d_turbModel = 0;
-  d_initTurb = 0;
-  d_scaleSimilarityModel = 0;
-  d_boundaryCondition = 0;
-  d_nlSolver = 0;
-  d_physicalConsts = 0;
-  d_calcReactingScalar = 0;
-  d_calcScalar = 0;
-  d_calcEnthalpy =0;
-  d_calcNewEnthalpy = 0;
-  d_doingRestart = false; 
-  d_newBC_on_Restart = false; 
+  d_lab =  scinew  ArchesLabel();
+  d_MAlab                 =  0;      //will  be  set  by  setMPMArchesLabel
+  d_props                 =  0;
+  d_turbModel             =  0;
+  d_initTurb              =  0;
+  d_scaleSimilarityModel  =  0;
+  d_boundaryCondition     =  0;
+  d_nlSolver              =  0;
+  d_physicalConsts        =  0;
+  d_calcReactingScalar    =  0;
+  d_calcScalar            =  0;
+  d_calcEnthalpy          =  0;
+  d_calcNewEnthalpy       =  0;
+  d_doingRestart          =  false;
+
 #ifdef multimaterialform
   d_mmInterface = 0;
 #endif
-  nofTimeSteps = 0;
-  init_timelabel_allocated = false;
-  d_analysisModule = false;
-  d_set_initial_condition = false;
-
-  DQMOMEqnFactory& dqmomfactory = DQMOMEqnFactory::self(); 
+  nofTimeSteps                     =  0;
+  init_timelabel_allocated         =  false;
+  d_analysisModule                 =  false;
+  d_set_initial_condition          =  false;
+  DQMOMEqnFactory&  dqmomfactory   =  DQMOMEqnFactory::self();
   dqmomfactory.set_quad_nodes(0);
-  d_doDQMOM = false; 
-  d_doMMS = false;
-  d_myworld = myworld;
-  
+  d_doDQMOM                        =  false;
+  d_doMMS                          =  false;
+  d_with_mpmarches                 =  false;
 }
 
 // ****************************************************************************
@@ -498,23 +496,19 @@ Arches::problemSetup(const ProblemSpecP& params,
   d_timeIntegratorType = d_nlSolver->getTimeIntegratorType();
 
   //__________________
-  // Init data analysis module(s) and run problemSetup
-  // note we're just calling a child problemSetup with mostly
-  // the same parameters
-
-  
-  //__________________
   //This is not the proper way to get our DA.  Scheduler should
   //pass us a DW pointer on every function call.  I don't think
   //AnalysisModule should retain the pointer in a field, IMHO.
-  Output* dataArchiver = dynamic_cast<Output*>(getPort("output"));
-  if(!dataArchiver){
-    throw InternalError("ARCHES:couldn't get output port", __FILE__, __LINE__);
-  }
- 
-  d_analysisModule = AnalysisModuleFactory::create(params, sharedState, dataArchiver);
-  if (d_analysisModule) {
-    d_analysisModule->problemSetup(params, grid, sharedState);
+  if(!d_with_mpmarches){
+    Output* dataArchiver = dynamic_cast<Output*>(getPort("output"));
+    if(!dataArchiver){
+      throw InternalError("ARCHES:couldn't get output port", __FILE__, __LINE__);
+    }
+
+    d_analysisModule = AnalysisModuleFactory::create(params, sharedState, dataArchiver);
+    if (d_analysisModule) {
+      d_analysisModule->problemSetup(params, grid, sharedState);
+    }
   }
 
   // ----- DQMOM STUFF:

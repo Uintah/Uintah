@@ -83,7 +83,7 @@ namespace SCIRun {
 #include <CCA/Components/MPM/RigidMPM.h>
 #include <CCA/Components/MPM/PhysicalBC/MPMPhysicalBC.h>
 #include <CCA/Components/Arches/Arches.h>
-
+#include <CCA/Components/OnTheFlyAnalysis/AnalysisModule.h>
 #include <Core/Geometry/Vector.h>
 
 #undef RIGID_MPM
@@ -372,6 +372,8 @@ public:
 #endif
 
   Arches*          d_arches;
+  
+  AnalysisModule* d_analysisModule;
 
   double d_tcond;
   bool d_calcEnergyExchange;

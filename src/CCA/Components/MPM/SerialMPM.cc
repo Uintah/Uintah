@@ -253,7 +253,7 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,
   //__________________________________
   //  create analysis modules
   // call problemSetup  
-  if(!flags->d_with_ice){    // mpmice handles this
+  if(!flags->d_with_ice && !flags->d_with_arches){    // mpmice or mpmarches handles this
     d_analysisModule = AnalysisModuleFactory::create(prob_spec, sharedState, dataArchiver);
     if(d_analysisModule){
       d_analysisModule->problemSetup(prob_spec, grid, sharedState);
