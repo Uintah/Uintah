@@ -851,8 +851,6 @@ ClassicTableInterface::computeFirstEnthalpy( const ProcessorGroup* pc,
       } else { 
         //WARNING: Development only
         adiabatic_enthalpy = _H_fuel * iv[2] + _H_ox * (1.0-iv[2]);
-        cout << " H OX = " << _H_ox << " WITH enthalpy = " << adiabatic_enthalpy << endl;
-        
       } 
 
       enthalpy[c]     = adiabatic_enthalpy - current_heat_loss * sensible_enthalpy; 
