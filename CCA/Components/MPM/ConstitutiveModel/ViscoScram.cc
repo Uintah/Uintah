@@ -328,7 +328,7 @@ void ViscoScram::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
   // Murnaghan EOS inputs
   cm_ps->appendElement("useMurnahanEOS", d_useMurnahanEOS);
   cm_ps->appendElement("useBirchMurnaghanEOS", d_useBirchMurnaghanEOS);
-  if(d_useMurnahanEOS) {
+  if(d_useMurnahanEOS || d_useBirchMurnaghanEOS) {
     cm_ps->appendElement("gamma", d_murnahanEOSData.gamma);
     cm_ps->appendElement("P0",    d_murnahanEOSData.P0);
     cm_ps->appendElement("bulkPrime", d_murnahanEOSData.bulkPrime);
