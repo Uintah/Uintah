@@ -61,6 +61,8 @@ ClassicTableInterface::ClassicTableInterface( const ArchesLabel* labels, const M
   MixingRxnModel( labels, MAlabels )
 {
   _boundary_condition = scinew BoundaryCondition_new( labels ); 
+  _use_mf_for_hl = false;
+ 
 }
 
 //--------------------------------------------------------------------------- 
@@ -91,7 +93,7 @@ ClassicTableInterface::problemSetup( const ProblemSpecP& propertiesParameters )
  
   // Developer only for now. 
   if ( db_classic->findBlock("mf_for_hl") ){ 
-    d_use_mf_for_hl =  true; 
+    _use_mf_for_hl =  true; 
   } 
 
   d_noisy_hl_warning = false; 
@@ -696,7 +698,7 @@ ClassicTableInterface::computeHeatLoss( const ProcessorGroup* pc,
         i_index = d_enthalpyVarIndexMap.find( "adiabaticenthalpy" ); 
 
         double adiabatic_enthalpy = 0.0;
-        if ( !d_use_mf_for_hl ) { 
+        if ( !_use_mf_for_hl ) { 
           adiabatic_enthalpy = tableLookUp( iv, i_index->second ); 
         } else { 
           // WARNING: Hardcoded index for development testing
@@ -846,7 +848,7 @@ ClassicTableInterface::computeFirstEnthalpy( const ProcessorGroup* pc,
       double sensible_enthalpy    = tableLookUp( iv, i_index->second ); 
       i_index = d_enthalpyVarIndexMap.find( "adiabaticenthalpy" ); 
       double adiabatic_enthalpy = 0.0; 
-      if ( !d_use_mf_for_hl ){ 
+      if ( !_use_mf_for_hl ){ 
         adiabatic_enthalpy = tableLookUp( iv, i_index->second ); 
       } else { 
         //WARNING: Development only
