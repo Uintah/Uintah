@@ -242,6 +242,9 @@ ClassicTableInterface::sched_getState( const LevelP& level,
 
   }
 
+  // ensure that dependent variables are matched to their index. 
+  getIndexInfo(); 
+
   // dependent variables
   if ( initialize_me ) {
 
