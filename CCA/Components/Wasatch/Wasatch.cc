@@ -285,20 +285,25 @@ namespace Wasatch{
     //
     // Also save off the timestep label information.
     //
-    const Uintah::PatchSet* const localPatches = get_patchset( level, sched );
-    const Uintah::MaterialSet* const materials = sharedState_->allMaterials();
-
-    for( int ipss=0; ipss<localPatches->size(); ++ipss ){
-        const Uintah::PatchSubset* pss = localPatches->getSubset(ipss);
-        for( int ip=0; ip<pss->size(); ++ip ){
-          SpatialOps::OperatorDatabase* const opdb = scinew SpatialOps::OperatorDatabase();
-          const Uintah::Patch* const patch = pss->get(ip);
-          build_operators( *patch, *opdb );
-          PatchInfo& pi = patchInfoMap_[patch->getID()];
-          pi.operators = opdb;
-          pi.patchID = patch->getID();
+    {
+      const Uintah::PatchSet* patches = get_patchset( USE_FOR_OPERATORS, level, sched );
+      
+        for( int ipss=0; ipss<patches->size(); ++ipss ){
+          const Uintah::PatchSubset* pss = patches->getSubset(ipss);
+          for( int ip=0; ip<pss->size(); ++ip ){
+            SpatialOps::OperatorDatabase* const opdb = scinew SpatialOps::OperatorDatabase();
+            const Uintah::Patch* const patch = pss->get(ip);
+            build_operators( *patch, *opdb );
+            PatchInfo& pi = patchInfoMap_[patch->getID()];
+            pi.operators = opdb;
+            pi.patchID = patch->getID();
+            std::cout << "Patch ID: " << patch->getID() << std::endl;
+          }
         }
-      }
+    }
+    
+    const Uintah::PatchSet* const localPatches = get_patchset( USE_FOR_TASKS, level, sched );
+    const Uintah::MaterialSet* const materials = sharedState_->allMaterials();
 
     GraphHelper* const icGraphHelper = graphCategories_[ INITIALIZATION ];
 
@@ -343,7 +348,7 @@ namespace Wasatch{
     GraphHelper* const tsGraphHelper = graphCategories_[ TIMESTEP_SELECTION ];
 
     // jcs: was getting patch set this way (from discussions with Justin).
-    const Uintah::PatchSet* const localPatches = get_patchset(level,sched);
+    const Uintah::PatchSet* const localPatches = get_patchset(USE_FOR_TASKS,level,sched);
 
     const Uintah::MaterialSet* materials = sharedState_->allMaterials();
 
@@ -390,12 +395,12 @@ namespace Wasatch{
   {
     for (int iStage=1; iStage<=nRKStages_; iStage++) {
       // jcs why do we need this instead of getting the level?
-      const Uintah::PatchSet* const localPatches = get_patchset( level, sched );
-      
+      const Uintah::PatchSet* const localPatches = get_patchset( USE_FOR_TASKS, level, sched );
+
       const Uintah::MaterialSet* const materials = sharedState_->allMaterials();
-      
+
       create_timestepper_on_patches( localPatches, materials, sched, iStage );
-      
+
       proc0cout << "Wasatch: done creating solution task(s)" << std::endl;
       
       // jcs notes:
@@ -535,24 +540,31 @@ namespace Wasatch{
   //------------------------------------------------------------------
 
   const Uintah::PatchSet*
-  Wasatch::get_patchset( const Uintah::LevelP& level,
+  Wasatch::get_patchset( const PatchsetSelector pss,
+                         const Uintah::LevelP& level,
                          Uintah::SchedulerP& sched )
   {
-//     return sched->getLoadBalancer()->getPerProcessorPatchSet(level);
-    return level->eachPatch();
+    switch ( pss ) {
+    case USE_FOR_TASKS:
+      // return sched->getLoadBalancer()->getPerProcessorPatchSet(level);
+      return level->eachPatch();
+      break;
+    case USE_FOR_OPERATORS:
 
-//     const Uintah::PatchSet* const allPatches = sched->getLoadBalancer()->getPerProcessorPatchSet(level);
-//     const Uintah::PatchSubset* const localPatches = allPatches->getSubset( d_myworld->myrank() );
-//     Uintah::PatchSet* patches = new Uintah::PatchSet;
-//     // jcs: this results in "normal" scheduling and WILL NOT WORK FOR LINEAR SOLVES
-//     //      in that case, we need to use "gang" scheduling: addAll( localPatches )
-//     patches->addEach( localPatches->getVector() );
-// //     const std::set<int>& procs = sched->getLoadBalancer()->getNeighborhoodProcessors();
-// //     for( std::set<int>::const_iterator ip=procs.begin(); ip!=procs.end(); ++ip ){
-// //       patches->addEach( allPatches->getSubset( *ip )->getVector() );
-// //     }
-//     patchSetList_.push_back( patches );
-//     return patches;
+      const Uintah::PatchSet* const allPatches = sched->getLoadBalancer()->getPerProcessorPatchSet(level);
+      const Uintah::PatchSubset* const localPatches = allPatches->getSubset( d_myworld->myrank() );
+      Uintah::PatchSet* patches = new Uintah::PatchSet;
+      // jcs: this results in "normal" scheduling and WILL NOT WORK FOR LINEAR SOLVES
+      //      in that case, we need to use "gang" scheduling: addAll( localPatches )
+      patches->addEach( localPatches->getVector() );
+      //     const std::set<int>& procs = sched->getLoadBalancer()->getNeighborhoodProcessors();
+      //     for( std::set<int>::const_iterator ip=procs.begin(); ip!=procs.end(); ++ip ){
+      //       patches->addEach( allPatches->getSubset( *ip )->getVector() );
+      //     }
+      patchSetList_.push_back( patches );
+      return patches;
+    }
+    return NULL;
   }
 
   //------------------------------------------------------------------

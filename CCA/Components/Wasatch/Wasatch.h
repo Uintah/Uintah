@@ -252,8 +252,15 @@ namespace Wasatch{
                       Uintah::DataWarehouse* old_dw,
                       Uintah::DataWarehouse* new_dw );
 
+
+    enum PatchsetSelector{
+      USE_FOR_TASKS,
+      USE_FOR_OPERATORS
+    };
+
     /** \brief obtain the set of patches to operate on */
-    const Uintah::PatchSet* get_patchset( const Uintah::LevelP& level,
+    const Uintah::PatchSet* get_patchset( const PatchsetSelector,
+                                          const Uintah::LevelP& level,
                                           Uintah::SchedulerP& sched );
 
   };
