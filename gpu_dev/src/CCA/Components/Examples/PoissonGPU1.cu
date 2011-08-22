@@ -125,7 +125,6 @@ PoissonGPU1::computeStableTimestep(const ProcessorGroup* pg,
     const PatchSubset* patches, const MaterialSubset* /*matls*/,
     DataWarehouse*, DataWarehouse* new_dw)
 {
-  std::cout << "In computeStableTimestep" << std::endl;
 
 
   if (pg->myrank() == 0)
@@ -136,7 +135,6 @@ PoissonGPU1::computeStableTimestep(const ProcessorGroup* pg,
   }
   new_dw->put(delt_vartype(delt_), sharedState_->get_delt_label(), getLevel(patches));
 }
-
 //______________________________________________________________________
 //
 void
@@ -144,7 +142,6 @@ PoissonGPU1::initialize(const ProcessorGroup*, const PatchSubset* patches,
     const MaterialSubset* matls, DataWarehouse* /*old_dw*/,
     DataWarehouse* new_dw)
 {
-  std::cout << "In initialize" << std::endl;
 
 
   int matl = 0;
@@ -199,57 +196,69 @@ PoissonGPU1::initialize(const ProcessorGroup*, const PatchSubset* patches,
 __global__ void
 timeAdvanceKernel(uint3 domainSize, uint3 domainLower, double *oldphi, double *newphi)
 {
-  // calculate the indices
-  int indxX = domainLower.x + blockDim.x * blockIdx.x + threadIdx.x;
-  int indxY = domainLower.y + blockDim.y * blockIdx.y + threadIdx.y;
-  int indxZ = domainLower.z + blockDim.z * blockIdx.z + threadIdx.z;
+  // calculate the indices  
+  //int indxX = domainLower.x + blockDim.x * blockIdx.x + threadIdx.x;
+  //int indxY = domainLower.y + blockDim.y * blockIdx.y + threadIdx.y;
+  //int indxZ = domainLower.z + blockDim.z * blockIdx.z + threadIdx.z;
+  int indxX = blockDim.x * blockIdx.x + threadIdx.x;
+  int indxY = blockDim.y * blockIdx.y + threadIdx.y;
+  int indxZ = blockDim.z * blockIdx.z + threadIdx.z;
 
-//  // Do not perform calculation if in a ghost cell or outside the domain
-//  if ((indxX < domainSize.x && indxX > 0)
-//      && (indxY < domainSize.y && indxY > 0) && (indxZ < domainSize.z && indxZ
-//      > 0))
-//    {
-//      // calculate the offset in the dw representation
-//      int baseIdx = domainSize.x * (indxZ * domainSize.y + indxY + 1);
-//
-//      // compute the stencil
-//      // FIXME - domainSize is not a class type. Need to get access to underlying IntVectors
-//      newphi[baseIdx] = (1.0 / 6.0) * (oldphi[baseIdx + 1]
-//          + oldphi[baseIdx - 1] + oldphi[baseIdx + baseIdx] + oldphi[baseIdx
-//          - domainSize.y] + oldphi[baseIdx + domainSize.z * domainSize.y]
-//          + oldphi[baseIdx - domainSize.z * domainSize.y]);
-//
-//      // compute the residual
+  // Do not perform calculation if in a ghost cell or outside the domain
+  if ((indxX < domainSize.x && indxX >= 0)
+      && (indxY < domainSize.y && indxY >= 0)
+      && (indxZ < domainSize.z && indxZ >= 0))
+    {
+      // calculate the offset in the dw representation
+      int baseIdx = domainSize.x * (indxZ * domainSize.y + indxY) + indxX;
+
+      // compute the stencil
+      newphi[baseIdx] = (1.0 / 6.0) * (oldphi[baseIdx + 1]
+          + oldphi[baseIdx - 1] + oldphi[baseIdx + domainSize.x]
+          + oldphi[baseIdx - domainSize.x] + oldphi[baseIdx + domainSize.x
+          * domainSize.y] + oldphi[baseIdx - domainSize.x * domainSize.y]);
+
+      // compute the residual
 //      double diff = newphi[baseIdx] - oldphi[baseIdx];
 //      *residual += diff * diff; // THIS LINE IS WRONG--NEED SOME SORT OF LOCKING MAYBE
-//    }
+    }
 }
 
 //______________________________________________________________________
 //
 void
-PoissonGPU1::timeAdvance(const ProcessorGroup*, const PatchSubset* patches,
-    const MaterialSubset* matls, DataWarehouse* old_dw, DataWarehouse* new_dw) //,
-//    int deviceID = 0, CUDADevice *deviceProperties = NULL)
+PoissonGPU1::timeAdvance(const ProcessorGroup*,
+                         const PatchSubset* patches,
+                         const MaterialSubset* matls,
+                         DataWarehouse* old_dw,
+                         DataWarehouse* new_dw) //,
+//                         int deviceID = 0,
+//                         CUDADevice *deviceProperties = NULL)
 {
-
-  std::cout << "In timeAdvance" << std::endl;
-
+  //
   int matl = 0;
   int previousPatchSize = 0; // this is to see if we need to release and reallocate between computations
   int size = 0;
 
-  // device memory
+  // declare device memory
   double * phinew;
   double * phiold;
 
-
-  int deviceID = 0;
-  // set CUDA device
-  // cudaThreadExit();
-  cudaSetDevice(deviceID);
-
-  double residual = 0;
+  // find the "best" for cudaSetDevice()
+  int num_devices, device;
+  cudaGetDeviceCount(&num_devices);
+  if (num_devices > 1) {
+      int max_multiprocessors = 0, max_device = 0;
+      for (device = 0; device < num_devices; device++) {
+          cudaDeviceProp properties;
+          cudaGetDeviceProperties(&properties, device);
+          if (max_multiprocessors < properties.multiProcessorCount) {
+              max_multiprocessors = properties.multiProcessorCount;
+              max_device = device;
+          }
+      }
+      cudaSetDevice(max_device);
+  }
 
   for (int p = 0; p < patches->size(); p++)
     {
@@ -262,18 +271,17 @@ PoissonGPU1::timeAdvance(const ProcessorGroup*, const PatchSubset* patches,
       new_dw->allocateAndPut(newphi, phi_label, matl, patch);
       newphi.copyPatch(phi, newphi.getLowIndex(), newphi.getHighIndex());
 
-      residual = 0;
+      double residual = 0;
 
       IntVector l = patch->getNodeLowIndex();
       IntVector h = patch->getNodeHighIndex();
 
-      l += IntVector(
-          patch->getBCType(Patch::xminus) == Patch::Neighbor ? 0 : 1,
-          patch->getBCType(Patch::yminus) == Patch::Neighbor ? 0 : 1,
-          patch->getBCType(Patch::zminus) == Patch::Neighbor ? 0 : 1);
-      h -= IntVector(patch->getBCType(Patch::xplus) == Patch::Neighbor ? 0 : 1,
-          patch->getBCType(Patch::yplus) == Patch::Neighbor ? 0 : 1,
-          patch->getBCType(Patch::zplus) == Patch::Neighbor ? 0 : 1);
+      l += IntVector(patch->getBCType(Patch::xminus) == Patch::Neighbor?0:1,
+                     patch->getBCType(Patch::yminus) == Patch::Neighbor?0:1,
+                     patch->getBCType(Patch::zminus) == Patch::Neighbor?0:1);
+      h -= IntVector(patch->getBCType(Patch::xplus)  == Patch::Neighbor?0:1,
+                     patch->getBCType(Patch::yplus)  == Patch::Neighbor?0:1,
+                     patch->getBCType(Patch::zplus)  == Patch::Neighbor?0:1);
 
       //__________________________________
       //  Stencil 
@@ -296,60 +304,59 @@ PoissonGPU1::timeAdvance(const ProcessorGroup*, const PatchSubset* patches,
         }
       // host pointers
       
-      double *oldhostmem = (double*)phi.getWindow()->getData()->getPointer(); // point this at DW representation
-      double *newhostmem = (double*)newphi.getWindow()->getData()->getPointer(); // point this at DW representation
+      //double *oldhostmem = (double*)phi.getWindow()->getData()->getPointer(); // point this at DW representation
+      //double *newhostmem = (double*)newphi.getWindow()->getData()->getPointer(); // point this at DW representation
+      double *oldhostmem = (double *)malloc(size); // point this at DW representation
+      double *newhostmem = (double *)malloc(size); // point this at DW representation
 
       // Check to make sure memory is as we expect
       /* */
       NodeIterator iter(l, h);
-      int offset = l.x();
-      int size2 = phi.getWindow()->getData()->size().x()
-				* phi.getWindow()->getData()->size().y()
-				* phi.getWindow()->getData()->size().z();
-      for(int i = 0; i < size2; i++)
+      int i = 0;
+      for( ; !iter.done(); iter++)
       {
-        if(oldhostmem[i] != phi[*iter])
-        {
-          std::cout << "for " << i << " pointer and variable wrapped representations of phi differ" << std::endl;
-          std::cout << "phi: " << phi[*iter] << "    flatrep: " << oldhostmem[i] << std::endl;
-        }
-        iter++;
+         oldhostmem[i] = phi[*iter];
+         i++;
       }
 
-      /* */
-
-
       cudaMemcpy(phiold, oldhostmem, size, cudaMemcpyHostToDevice);
-      cudaMemcpy(phinew, newhostmem, size, cudaMemcpyHostToDevice);
       
       //// Kernel Execution ////
       //////////////////////////
       uint3 domainSize = make_uint3(h.x() - l.x(), h.y() - l.y(), h.z() - l.z());
-      uint3 domainLower = make_uint3(l.x(), l.y(), l.z());
+      uint3 domainLower = make_uint3(l.x()+1, l.y()+1, l.z()+1);
 
       int tx = 8;
       int ty = 8;
       int tz = 8;
       int totalBlocks = size / (sizeof(double) * tx * ty * tz);
       
-      if (size % size / (sizeof(double) * tx * ty * tz) != 0) {
+      if (size % (size / (sizeof(double) * tx * ty * tz)) != 0) {
         totalBlocks++;
       }
       
       dim3 threadsPerBlock(tx, ty, tz);
 
       // launch kernel
-      std::cout << "Prior to kernel." << std::endl;
       timeAdvanceKernel<<<totalBlocks, threadsPerBlock>>>(domainSize, domainLower, phiold, phinew);
-      std::cout << "Post kernel." << std::endl;
 
-      cudaThreadSynchronize();
+      cudaDeviceSynchronize();
 
       // Memory Deallocation ////
       ///////////////////////////
       // USE PINNING INSTEAD
-      //cudaMemcpy(newhostmem, phinew, size, cudaMemcpyDeviceToHost);
+      cudaMemcpy(newhostmem, phinew, size, cudaMemcpyDeviceToHost);
 
+      NodeIterator iter2(l, h);
+      int i2 = 0;
+      for( ; !iter2.done(); iter2++)
+      {
+         newphi[*iter2] = newhostmem[i2];
+         i2++;
+      }
+
+      free(oldhostmem);
+      free(newhostmem);
       new_dw->put(sum_vartype(residual), residual_label);
     }
 
