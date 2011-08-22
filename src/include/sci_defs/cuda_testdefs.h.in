@@ -33,7 +33,7 @@
 @DEF_CUDA@
 
 #ifdef HAVE_CUDA
-#include <cuda.h>
+#  include <cuda.h>
 #  include <cutil.h>
 #  include <cuda_runtime_api.h>
 #  include <cuda_runtime.h>
