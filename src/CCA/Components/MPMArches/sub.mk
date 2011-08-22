@@ -56,6 +56,7 @@ PSELIBS := \
 	CCA/Components/Arches \
 	CCA/Components/Arches/fortran \
 	CCA/Components/Arches/Mixing  \
+       CCA/Components/OnTheFlyAnalysis \
 	Core/Exceptions \
 	Core/Util       \
 	Core/Thread     \
