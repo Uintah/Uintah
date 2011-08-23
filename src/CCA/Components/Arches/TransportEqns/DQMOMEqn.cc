@@ -595,8 +595,8 @@ DQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
        
         // Right now, no source term for weights. The conditional statement prevents errors coming from solving Ax=b,
         // it should be removed if the source term for weights isn't zero.
-        if(!d_weight) RHS[c] += src[c]*vol;           
-
+        //if(!d_weight) RHS[c] += src[c]*vol;           
+        RHS[c] += src[c]*vol;
 #ifdef VERIFY_DQMOM_TRANSPORT
         if (d_addExtraSources) { 
           // Going to subtract out the src from the Ax=b solver
