@@ -75,7 +75,8 @@ namespace Wasatch{
   //--------------------------------------------------------------------
 
   Wasatch::Wasatch( const Uintah::ProcessorGroup* myworld )
-    : Uintah::UintahParallelComponent( myworld ), nRKStages_(1)
+    : Uintah::UintahParallelComponent( myworld ),
+      nRKStages_(1)
   {
     // disable memory windowing on variables.  This will ensure that
     // each variable is allocated its own memory on each patch,
@@ -453,7 +454,7 @@ namespace Wasatch{
   Wasatch::create_timestepper_on_patches( const Uintah::PatchSet* const localPatches,
                                           const Uintah::MaterialSet* const materials,
                                           Uintah::SchedulerP& sched,
-                                          int RKStage)
+                                          const int rkStage )
   {
     if( adaptors_.size() == 0 ) return; // no equations registered.
 
@@ -465,17 +466,17 @@ namespace Wasatch{
     // will be available to all expressions if needed.
     const Expr::Tag TimeTag (StringNames::self().time,Expr::STATE_NONE);
     Expr::ExpressionID timeID;
-    if( RKStage==1 ) {
+    if( rkStage==1 ) {
       timeID =
       exprFactory.register_expression( TimeTag,
-                                      scinew SetCurrentTime::Builder(sharedState_, RKStage) );
+                                       scinew SetCurrentTime::Builder(sharedState_, rkStage) );
     } else {
       timeID = exprFactory.get_registry().get_id(TimeTag);
     }
 
     //___________________________________________
     // Plug in each equation that has been set up
-    if (RKStage==1) {
+    if (rkStage==1) {
       for( EquationAdaptors::const_iterator ia=adaptors_.begin(); ia!=adaptors_.end(); ++ia ){
         const EqnTimestepAdaptorBase* const adaptor = *ia;
         try{
@@ -502,7 +503,7 @@ namespace Wasatch{
                                 localPatches,
                                 materials,
                                 sched,
-                               RKStage);
+                                rkStage );
 
 //     //________________________________________________________
 //     // add a task to populate a "field" with the current time.

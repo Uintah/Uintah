@@ -243,7 +243,7 @@ namespace Wasatch{
     void create_timestepper_on_patches( const Uintah::PatchSet* const localPatches,
                                         const Uintah::MaterialSet* const materials,
                                         Uintah::SchedulerP& sched,
-                                       int RKStage);
+                                        const int RKStage );
 
     // jcs this should disappear soon?
     void computeDelT( const Uintah::ProcessorGroup*,
