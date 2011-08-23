@@ -68,7 +68,6 @@
 #include "BCHelperTools.h"
 
 using std::endl;
-using std::cout;
 
 namespace Wasatch{
 
@@ -298,7 +297,7 @@ namespace Wasatch{
             PatchInfo& pi = patchInfoMap_[patch->getID()];
             pi.operators = opdb;
             pi.patchID = patch->getID();
-            std::cout << "Patch ID: " << patch->getID() << std::endl;
+            proc0cout << "Patch ID: " << patch->getID() << std::endl;
           }
         }
     }
@@ -372,7 +371,7 @@ namespace Wasatch{
     }
     else{ // default
 
-      cout << "Task 'compute timestep' COMPUTES 'delT' in NEW data warehouse" << endl;
+      proc0cout << "Task 'compute timestep' COMPUTES 'delT' in NEW data warehouse" << endl;
 
       Uintah::Task* task = scinew Uintah::Task( "compute timestep", this, &Wasatch::computeDelT );
 
