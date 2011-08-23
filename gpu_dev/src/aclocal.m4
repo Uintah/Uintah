@@ -780,8 +780,13 @@ for i in $CXXFLAGS; do
   NVCC_CXXFLAGS="$NVCC_CXXFLAGS -Xcompiler $i"
 done
 
-NVCC_CFLAGS="$_sci_includes $NVCC_CFLAGS"
-NVCC_CXXFLAGS="$_sci_includes $NVCC_CXXFLAGS"
+if test "$debug" = "yes"; then
+  NVCC_CFLAGS="-G $NVCC_CFLAGS $_sci_includes"
+  NVCC_CXXFLAGS="-G $NVCC_CXXFLAGS $_sci_includes"
+else
+  NVCC_CFLAGS="$NVCC_CFLAGS $_sci_includes"
+  NVCC_CXXFLAGS="$NVCC_CXXFLAGS $_sci_includes"
+fi
 NVCC_LIBS="$_sci_lib_path $_sci_libs"
 
 # check that the CUDA compiler works

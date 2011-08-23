@@ -4140,17 +4140,17 @@ rm -rf cuda_conf_test*
 echo
 
 #[aph] - debug
-#echo
+echo
 #echo "HAVE_CUDA         = " $HAVE_CUDA
 #echo "HAVE_CUDA_H       = " $HAVE_CUDA_H
 #echo "INC_CUDA_H        = " $INC_CUDA_H
 #echo "CUDA_LIB_FLAG     = " $CUDA_LIB_FLAG
 #echo "CUDA_LIB_DIR      = " $CUDA_LIB_DIR
 #echo "CUDA_LIB_DIR_FLAG = " $CUDA_LIB_DIR_FLAG
-#echo "NVCC_CFLAGS       = " $NVCC_CFLAGS
-#echo "NVCC_CXXFLAGS     = " $NVCC_CXXFLAGS
-#echo "NVCC_LDFLAGS      = " $NVCC_LDFLAGS
-#echo "NVCC_LIBS         = " $NVCC_LIBS
+echo "NVCC_CFLAGS       = " $NVCC_CFLAGS
+echo "NVCC_CXXFLAGS     = " $NVCC_CXXFLAGS
+echo "NVCC_LDFLAGS      = " $NVCC_LDFLAGS
+echo "NVCC_LIBS         = " $NVCC_LIBS
 #echo
 #echo "CC       = " $CC
 #echo "NVCC     = " $NVCC
@@ -4158,7 +4158,7 @@ echo
 #echo "LDFLAGS  = " $LDFLAGS
 #echo "CFLAGS   = " $CFLAGS
 #echo "CXXFLAGS = " $CXXFLAGS
-#echo
+echo
 
 fi #end sci_required_cuda
 
