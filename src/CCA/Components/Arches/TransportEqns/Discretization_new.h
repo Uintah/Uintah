@@ -1513,7 +1513,11 @@ namespace Uintah{
        delete convection_helper; 
        delete the_interpolant; 
 
-      }
+      } else { 
+
+        throw InvalidValue("Error: Convection scheme not recognized. Check UPS file and try again.", __FILE__, __LINE__);
+
+      } 
     }
 
   //---------------------------------------------------------------------------
@@ -1559,7 +1563,12 @@ namespace Uintah{
        delete convection_helper; 
        delete the_interpolant; 
 
+      } else { 
+
+        throw InvalidValue("Error: Convection scheme not recognized. Check UPS file and try again.", __FILE__, __LINE__);
+
       }
+
     }
 
   //---------------------------------------------------------------------------
@@ -1605,6 +1614,10 @@ namespace Uintah{
 
        delete convection_helper; 
        delete the_interpolant; 
+
+      } else { 
+
+        throw InvalidValue("Error: Convection scheme not recognized. Check UPS file and try again.", __FILE__, __LINE__);
 
       }
     }
