@@ -6879,7 +6879,7 @@ case $host in
 # GCC_TEST
 #####
     OS_VERSION=`uname -r | cut -f1 -d.`
-    if test "$OS_VERSION" = "10"; then
+    if test "$OS_VERSION" = "10" -o "$OS_VERSION" = "11"; then
         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Running under Snow Leopard " >&5
 $as_echo "$as_me: WARNING: Running under Snow Leopard " >&2;}
         DEF_OSX_SNOW_LEOPARD="#define OSX_SNOW_LEOPARD"
@@ -8269,8 +8269,12 @@ for flag in -MDupdate; do
     { $as_echo "$as_me:${as_lineno-$LINENO}: checking 1 - if depend mode flag '$flag' works for '$CXX'" >&5
 $as_echo_n "checking 1 - if depend mode flag '$flag' works for '$CXX'... " >&6; }
     rm -f configure-test.o configure-test-dir/configure-test.o
-    ac_try="$CXX $CFLAGS -c $flag configure-test-dir/configure-test.d -o configure-test-dir/configure-test.o configure-test-dir/configure-test.cc >/dev/null 2>conftest.out"
-    (eval $ac_try) 2>&5
+
+echo "here: $ac_try"
+    ac_try="$CXX $CFLAGS -c $flag configure-test-dir/configure-test.d -o configure-test-dir/configure-test.o configure-test-dir/configure-test.cc"
+    (eval $ac_try)
+echo "done"
+echo "-----------------------------------------------"
     if test -f configure-test-dir/configure-test.d ; then
       CC_DEPEND_MODE=normal
       CC_DEPEND_REGEN='-MDupdate $(dir $@)depend.mk'
