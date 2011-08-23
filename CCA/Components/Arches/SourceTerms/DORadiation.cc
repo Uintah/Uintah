@@ -188,67 +188,40 @@ DORadiation::computeSource( const ProcessorGroup* pc,
 
     CCVariable<double> divQ; 
 
-    bool doit = false; 
+    bool do_radiation = false; 
     if ( timestep%_radiation_calc_freq == 0 ) { 
       if ( _all_rk ) { 
-        doit = true; 
+        do_radiation = true; 
       } else if ( timeSubStep == 0 && !_all_rk ) { 
-        doit = true; 
+        do_radiation = true; 
       } 
     } 
 
-    if ( doit ){ 
+    ArchesVariables radiation_vars; 
+    ArchesConstVariables const_radiation_vars; 
 
-      ArchesVariables radiation_vars; 
-      ArchesConstVariables const_radiation_vars; 
+    if ( timeSubStep == 0 ) { 
 
-      if ( timeSubStep == 0 ) { 
+      old_dw->get( const_radiation_vars.co2       , _co2_label               , matlIndex , patch , gac , 1 );
+      old_dw->get( const_radiation_vars.h2o       , _h2o_label               , matlIndex , patch , gac , 1 );
+      old_dw->get( const_radiation_vars.sootFV    , _labels->d_sootFVINLabel        , matlIndex , patch , gac , 1 ); 
+      old_dw->getCopy( radiation_vars.temperature , _T_label                 , matlIndex , patch , gac , 1 );
+      old_dw->get( const_radiation_vars.cellType  , _labels->d_cellTypeLabel , matlIndex , patch , gac , 1 );
 
-        old_dw->get( const_radiation_vars.co2       , _co2_label               , matlIndex , patch , gac , 1 );
-        old_dw->get( const_radiation_vars.h2o       , _h2o_label               , matlIndex , patch , gac , 1 );
-        old_dw->get( const_radiation_vars.sootFV    , _labels->d_sootFVINLabel        , matlIndex , patch , gac , 1 ); 
-        old_dw->getCopy( radiation_vars.temperature , _T_label                 , matlIndex , patch , gac , 1 );
-        old_dw->get( const_radiation_vars.cellType  , _labels->d_cellTypeLabel , matlIndex , patch , gac , 1 );
+      new_dw->allocateAndPut( radiation_vars.qfluxe , _radiationFluxELabel , matlIndex , patch );
+      new_dw->allocateAndPut( radiation_vars.qfluxw , _radiationFluxWLabel , matlIndex , patch );
+      new_dw->allocateAndPut( radiation_vars.qfluxn , _radiationFluxNLabel , matlIndex , patch );
+      new_dw->allocateAndPut( radiation_vars.qfluxs , _radiationFluxSLabel , matlIndex , patch );
+      new_dw->allocateAndPut( radiation_vars.qfluxt , _radiationFluxTLabel , matlIndex , patch );
+      new_dw->allocateAndPut( radiation_vars.qfluxb , _radiationFluxBLabel , matlIndex , patch );
+      new_dw->allocateAndPut( radiation_vars.volq   , _radiationVolqLabel  , matlIndex , patch );
+      new_dw->allocateAndPut( radiation_vars.src    , _radiationSRCLabel   , matlIndex , patch );
+      new_dw->allocateAndPut( radiation_vars.ABSKG  , _abskgLabel          , matlIndex , patch );
+      new_dw->allocateAndPut( radiation_vars.ABSKP  , _abskpLabel          , matlIndex , patch );
 
-        new_dw->allocateAndPut( radiation_vars.qfluxe , _radiationFluxELabel , matlIndex , patch );
-        new_dw->allocateAndPut( radiation_vars.qfluxw , _radiationFluxWLabel , matlIndex , patch );
-        new_dw->allocateAndPut( radiation_vars.qfluxn , _radiationFluxNLabel , matlIndex , patch );
-        new_dw->allocateAndPut( radiation_vars.qfluxs , _radiationFluxSLabel , matlIndex , patch );
-        new_dw->allocateAndPut( radiation_vars.qfluxt , _radiationFluxTLabel , matlIndex , patch );
-        new_dw->allocateAndPut( radiation_vars.qfluxb , _radiationFluxBLabel , matlIndex , patch );
-        new_dw->allocateAndPut( radiation_vars.volq   , _radiationVolqLabel  , matlIndex , patch );
-        new_dw->allocateAndPut( radiation_vars.src    , _radiationSRCLabel   , matlIndex , patch );
-        new_dw->allocateAndPut( radiation_vars.ABSKG  , _abskgLabel          , matlIndex , patch );
-        new_dw->allocateAndPut( radiation_vars.ABSKP  , _abskpLabel          , matlIndex , patch );
-
-        new_dw->allocateAndPut( divQ, _src_label, matlIndex, patch ); 
-
-      } else { 
-
-        new_dw->get( const_radiation_vars.co2, _co2_label, matlIndex, patch, gac, 1 ); 
-        new_dw->get( const_radiation_vars.h2o, _h2o_label, matlIndex, patch, gac, 1 ); 
-        new_dw->getCopy( radiation_vars.temperature, _T_label, matlIndex, patch, gac, 1 ); 
-        new_dw->get( const_radiation_vars.sootFV, _labels->d_sootFVINLabel, matlIndex, patch, gac, 1 ); 
-        old_dw->get( const_radiation_vars.cellType          , _labels->d_cellTypeLabel, matlIndex, patch  , gac ,  1 ); 
-
-        new_dw->getModifiable( radiation_vars.qfluxe , _radiationFluxELabel , matlIndex , patch );
-        new_dw->getModifiable( radiation_vars.qfluxw , _radiationFluxWLabel , matlIndex , patch );
-        new_dw->getModifiable( radiation_vars.qfluxn , _radiationFluxNLabel , matlIndex , patch );
-        new_dw->getModifiable( radiation_vars.qfluxs , _radiationFluxSLabel , matlIndex , patch );
-        new_dw->getModifiable( radiation_vars.qfluxt , _radiationFluxTLabel , matlIndex , patch );
-        new_dw->getModifiable( radiation_vars.qfluxb , _radiationFluxBLabel , matlIndex , patch );
-        new_dw->getModifiable( radiation_vars.volq   , _radiationVolqLabel  , matlIndex , patch );
-        new_dw->getModifiable( radiation_vars.src    , _radiationSRCLabel   , matlIndex , patch );
-        new_dw->getModifiable( radiation_vars.ABSKG  , _abskgLabel          , matlIndex , patch );
-        new_dw->getModifiable( radiation_vars.ABSKP  , _abskpLabel          , matlIndex , patch );
-
-        new_dw->getModifiable( divQ, _src_label, matlIndex, patch ); 
-
-      } 
-
+      new_dw->allocateAndPut( divQ, _src_label, matlIndex, patch ); 
       radiation_vars.ESRCG.allocate( patch->getExtraCellLowIndex(1), patch->getExtraCellHighIndex(1) );  
 
-      if ( timeSubStep == 0 ) {
       radiation_vars.src.initialize(0.0);
       radiation_vars.qfluxe.initialize(0.0);
       radiation_vars.qfluxw.initialize(0.0);
@@ -261,11 +234,42 @@ DORadiation::computeSource( const ProcessorGroup* pc,
       radiation_vars.ESRCG.initialize(0.0);
       divQ.initialize(0.0); 
 
-      _DO_model->computeRadiationProps( pc, patch, cellinfo, &radiation_vars, &const_radiation_vars ); 
+    } else { 
 
-      _DO_model->boundarycondition( pc, patch, cellinfo, &radiation_vars, &const_radiation_vars ); 
+      new_dw->get( const_radiation_vars.co2, _co2_label, matlIndex, patch, gac, 1 ); 
+      new_dw->get( const_radiation_vars.h2o, _h2o_label, matlIndex, patch, gac, 1 ); 
+      new_dw->getCopy( radiation_vars.temperature, _T_label, matlIndex, patch, gac, 1 ); 
+      new_dw->get( const_radiation_vars.sootFV, _labels->d_sootFVINLabel, matlIndex, patch, gac, 1 ); 
+      old_dw->get( const_radiation_vars.cellType          , _labels->d_cellTypeLabel, matlIndex, patch  , gac ,  1 ); 
 
-      _DO_model->intensitysolve( pc, patch, cellinfo, &radiation_vars, &const_radiation_vars, BoundaryCondition::WALL ); 
+      new_dw->getModifiable( radiation_vars.qfluxe , _radiationFluxELabel , matlIndex , patch );
+      new_dw->getModifiable( radiation_vars.qfluxw , _radiationFluxWLabel , matlIndex , patch );
+      new_dw->getModifiable( radiation_vars.qfluxn , _radiationFluxNLabel , matlIndex , patch );
+      new_dw->getModifiable( radiation_vars.qfluxs , _radiationFluxSLabel , matlIndex , patch );
+      new_dw->getModifiable( radiation_vars.qfluxt , _radiationFluxTLabel , matlIndex , patch );
+      new_dw->getModifiable( radiation_vars.qfluxb , _radiationFluxBLabel , matlIndex , patch );
+      new_dw->getModifiable( radiation_vars.volq   , _radiationVolqLabel  , matlIndex , patch );
+      new_dw->getModifiable( radiation_vars.src    , _radiationSRCLabel   , matlIndex , patch );
+      new_dw->getModifiable( radiation_vars.ABSKG  , _abskgLabel          , matlIndex , patch );
+      new_dw->getModifiable( radiation_vars.ABSKP  , _abskpLabel          , matlIndex , patch );
+
+      new_dw->getModifiable( divQ, _src_label, matlIndex, patch ); 
+      divQ.initialize(0.0); 
+
+      radiation_vars.ESRCG.allocate( patch->getExtraCellLowIndex(1), patch->getExtraCellHighIndex(1) );  
+
+    } 
+
+    if ( do_radiation ){ 
+
+
+      if ( timeSubStep == 0 ) {
+
+        _DO_model->computeRadiationProps( pc, patch, cellinfo, &radiation_vars, &const_radiation_vars ); 
+
+        _DO_model->boundarycondition( pc, patch, cellinfo, &radiation_vars, &const_radiation_vars ); 
+
+        _DO_model->intensitysolve( pc, patch, cellinfo, &radiation_vars, &const_radiation_vars, BoundaryCondition::WALL ); 
 
       }
 
@@ -275,17 +279,6 @@ DORadiation::computeSource( const ProcessorGroup* pc,
         divQ[c] = radiation_vars.src[c]; 
 
       }
-
-    } else { 
-
-      // Nothing to do because radiation isn't computed
-      // this timestep.  Set source to zero. 
-      if ( timeSubStep == 0 ) { 
-        new_dw->allocateAndPut( divQ, _src_label, matlIndex, patch ); 
-      } else { 
-        new_dw->getModifiable( divQ, _src_label, matlIndex, patch ); 
-      } 
-      divQ.initialize(0.0);
 
     } 
   } // end patch loop
