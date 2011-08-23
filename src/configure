@@ -42547,8 +42547,13 @@ for i in $CXXFLAGS; do
   NVCC_CXXFLAGS="$NVCC_CXXFLAGS -Xcompiler $i"
 done
 
-NVCC_CFLAGS="$_sci_includes $NVCC_CFLAGS"
-NVCC_CXXFLAGS="$_sci_includes $NVCC_CXXFLAGS"
+if test "$debug" = "yes"; then
+  NVCC_CFLAGS="-G $NVCC_CFLAGS $_sci_includes"
+  NVCC_CXXFLAGS="-G $NVCC_CXXFLAGS $_sci_includes"
+else
+  NVCC_CFLAGS="$NVCC_CFLAGS $_sci_includes"
+  NVCC_CXXFLAGS="$NVCC_CXXFLAGS $_sci_includes"
+fi
 NVCC_LIBS="$_sci_lib_path $_sci_libs"
 
 # check that the CUDA compiler works
@@ -42721,17 +42726,17 @@ rm -rf cuda_conf_test*
 echo
 
 #[aph] - debug
-#echo
+echo
 #echo "HAVE_CUDA         = " $HAVE_CUDA
 #echo "HAVE_CUDA_H       = " $HAVE_CUDA_H
 #echo "INC_CUDA_H        = " $INC_CUDA_H
 #echo "CUDA_LIB_FLAG     = " $CUDA_LIB_FLAG
 #echo "CUDA_LIB_DIR      = " $CUDA_LIB_DIR
 #echo "CUDA_LIB_DIR_FLAG = " $CUDA_LIB_DIR_FLAG
-#echo "NVCC_CFLAGS       = " $NVCC_CFLAGS
-#echo "NVCC_CXXFLAGS     = " $NVCC_CXXFLAGS
-#echo "NVCC_LDFLAGS      = " $NVCC_LDFLAGS
-#echo "NVCC_LIBS         = " $NVCC_LIBS
+echo "NVCC_CFLAGS       = " $NVCC_CFLAGS
+echo "NVCC_CXXFLAGS     = " $NVCC_CXXFLAGS
+echo "NVCC_LDFLAGS      = " $NVCC_LDFLAGS
+echo "NVCC_LIBS         = " $NVCC_LIBS
 #echo
 #echo "CC       = " $CC
 #echo "NVCC     = " $NVCC
@@ -42739,7 +42744,7 @@ echo
 #echo "LDFLAGS  = " $LDFLAGS
 #echo "CFLAGS   = " $CFLAGS
 #echo "CXXFLAGS = " $CXXFLAGS
-#echo
+echo
 
 fi #end sci_required_cuda
 
