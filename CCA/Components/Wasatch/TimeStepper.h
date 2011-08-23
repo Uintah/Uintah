@@ -100,16 +100,16 @@ namespace Wasatch{
                            const Uintah::MaterialSubset* const,
                            Uintah::DataWarehouse* const,
                            Uintah::DataWarehouse* const,
-                          int RKStage);
+                           const int rkStage );
     
     void
     update_current_time( const Uintah::ProcessorGroup* const pg,
-                                     const Uintah::PatchSubset* const patches,
-                                     const Uintah::MaterialSubset* const materials,
-                                     Uintah::DataWarehouse* const oldDW,
-                                     Uintah::DataWarehouse* const newDW,
-                        Expr::ExpressionTree::TreePtr timeTree,
-                        int RKStage );
+                         const Uintah::PatchSubset* const patches,
+                         const Uintah::MaterialSubset* const materials,
+                         Uintah::DataWarehouse* const oldDW,
+                         Uintah::DataWarehouse* const newDW,
+                         Expr::ExpressionTree::TreePtr timeTree,
+                         const int rkStage );
     
 
   public:
@@ -159,7 +159,7 @@ namespace Wasatch{
                        const Uintah::PatchSet* const localPatches,
                        const Uintah::MaterialSet* const materials,
                        Uintah::SchedulerP& sched,
-                      int RKStage);
+                       const int rkStage );
   };
 
   //------------------------------------------------------------------
