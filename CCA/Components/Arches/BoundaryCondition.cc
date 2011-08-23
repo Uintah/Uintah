@@ -4638,7 +4638,7 @@ BoundaryCondition::getFlowINOUT(const ProcessorGroup*,
                             density, varIN, varOUT);
       }
       if (d_outletBoundary) {
-        int outlet_celltypeval = d_outletBC->d_cellTypeID;
+        int outlet_celltypeval = BoundaryCondition::OUTLET;
         if (xminus) {
           int colX = idxLo.x();
           for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
@@ -4663,6 +4663,7 @@ BoundaryCondition::getFlowINOUT(const ProcessorGroup*,
               IntVector xplusCell(colX+1, colY, colZ);
 
               if (cellType[xplusCell] == outlet_celltypeval) {
+
                 double avden = 0.5 * (density[xplusCell] +
                                        density[currCell]);
                 floutbc += avden*uVelocity[xplusCell] *
