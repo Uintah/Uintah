@@ -123,16 +123,17 @@ namespace Wasatch{
     hasBeenScheduled_ = false;
 
     if( createUniqueTreePerPatch_ ){
-      for( int ipss=0; ipss!=patches_->size(); ++ipss ){
-        const Uintah::PatchSubset* const pss = patches_->getSubset(ipss);
-        for( int ip=0; ip<pss->size(); ++ip ){
-          const Uintah::Patch* const patch = pss->get(ip);
-          //proc0cout << "Setting up tree '" << taskName_ << "' on patch (" << patch->getID() << ")" << endl;
-          TreePtr tree( new Expr::ExpressionTree( *masterTree_ ) );
-          tree->set_patch_id( patch->getID() );
-          tree->register_fields( *fml_ );
-          patchTreeMap_[ patch->getID() ] = std::make_pair( tree,  scinew Uintah::Task( taskName_, this, &TreeTaskExecute::execute, rkStage ));
-        }
+
+      // only set up trees on the patches that we own on this process.
+      const Uintah::PatchSubset* const localPatches = patches->getSubset( Uintah::Parallel::getMPIRank() );
+
+      for( int ip=0; ip<localPatches->size(); ++ip ){
+        const Uintah::Patch* const patch = localPatches->get(ip);
+        proc0cout << "Setting up tree '" << taskName_ << "' on patch (" << patch->getID() << ")" << endl;
+        TreePtr tree( new Expr::ExpressionTree( *masterTree_ ) );
+        tree->set_patch_id( patch->getID() );
+        tree->register_fields( *fml_ );
+        patchTreeMap_[ patch->getID() ] = std::make_pair( tree,  scinew Uintah::Task( taskName_, this, &TreeTaskExecute::execute, rkStage ));
       }
     }
     else{
@@ -266,8 +267,8 @@ namespace Wasatch{
           ASSERT( dw == Uintah::Task::NewDW );
           // jcs note that we need ghost information on the computes fields as well!
           task.computes( fieldInfo.varlabel,
-                            patches, Uintah::Task::NormalDomain,
-                            materials, Uintah::Task::NormalDomain );
+                         patches, Uintah::Task::NormalDomain,
+                         materials, Uintah::Task::NormalDomain );
 //          else task.modifies( fieldInfo.varlabel,
 //                             patches, Uintah::Task::NormalDomain,
 //                             materials, Uintah::Task::NormalDomain );
