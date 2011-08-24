@@ -262,7 +262,6 @@ uintah: sus \
         link_inputs \
         link_scripts \
         link_tools \
-        link_regression_tester \
         link_localRT \
 	$(VISIT_STUFF)
 
