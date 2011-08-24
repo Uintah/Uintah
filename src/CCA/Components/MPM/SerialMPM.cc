@@ -126,6 +126,7 @@ SerialMPM::SerialMPM(const ProcessorGroup* myworld) :
   dataArchiver = 0;
   d_loadCurveIndex=0;
   d_analysisModule = 0;
+  d_switchCriteria = 0;
 }
 
 SerialMPM::~SerialMPM()
@@ -140,6 +141,12 @@ SerialMPM::~SerialMPM()
   if(d_analysisModule){
     delete d_analysisModule;
   }
+  
+  if(d_switchCriteria) {
+    delete d_switchCriteria;
+  }
+  
+  
 }
 
 void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, 
@@ -258,6 +265,14 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,
     if(d_analysisModule){
       d_analysisModule->problemSetup(prob_spec, grid, sharedState);
     }
+  }
+  
+  //__________________________________
+  //  create the switching criteria port
+  d_switchCriteria = dynamic_cast<SwitchingCriteria*>(getPort("switch_criteria"));
+   
+  if (d_switchCriteria) {
+     d_switchCriteria->problemSetup(restart_mat_ps,restart_prob_spec,d_sharedState);
   }
 }
 
@@ -403,7 +418,7 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
   if(d_analysisModule){
     d_analysisModule->scheduleInitialize( sched, level);
   }
-
+  
   int numCZM = d_sharedState->getNumCZMatls();
   for(int m = 0; m < numCZM; m++){
     CZMaterial* cz_matl = d_sharedState->getCZMaterial(m);
@@ -1679,12 +1694,9 @@ void SerialMPM::scheduleInitialErrorEstimate(const LevelP& coarseLevel,
 
 void SerialMPM::scheduleSwitchTest(const LevelP& level, SchedulerP& sched)
 {
-  Task* task = scinew Task("switchTest",this, &SerialMPM::switchTest);
-
-  task->requires(Task::OldDW, d_sharedState->get_delt_label() );
-  task->computes(d_sharedState->get_switch_label(), level.get_rep());
-  sched->addTask(task, level->eachPatch(),d_sharedState->allMaterials());
-
+  if (d_switchCriteria) {
+    d_switchCriteria->scheduleSwitchTest(level,sched);
+  }
 }
 
 void SerialMPM::printParticleCount(const ProcessorGroup* pg,
@@ -4751,24 +4763,3 @@ bool SerialMPM::needRecompile(double , double , const GridP& )
     return false;
   }
 }
-
-
-void SerialMPM::switchTest(const ProcessorGroup* group,
-                          const PatchSubset* patches,
-                          const MaterialSubset* matls,
-                          DataWarehouse* old_dw,
-                          DataWarehouse* new_dw)
-{
-  int time_step = d_sharedState->getCurrentTopLevelTimeStep();
-  double sw = 0;
-#if 1
-  if (time_step == 6 )
-    sw = 1;
-  else
-    sw = 0;
-#endif
-
-  max_vartype switch_condition(sw);
-  new_dw->put(switch_condition,d_sharedState->get_switch_label(),getLevel(patches));
-}
-
