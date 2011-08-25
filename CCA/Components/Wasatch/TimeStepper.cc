@@ -162,7 +162,7 @@ namespace Wasatch{
                                                      rkStage );
 
       taskInterfaceList_.push_back( rhsTask );
-      coordHelper_->create_task( sched, patches, materials );
+      if(rkStage==1) coordHelper_->create_task( sched, patches, materials );
       rhsTask->schedule( coordHelper_->field_tags(), rkStage ); // must be scheduled after coordHelper_
     }
     catch( std::exception& e ){
