@@ -297,7 +297,7 @@ namespace Wasatch{
             PatchInfo& pi = patchInfoMap_[patch->getID()];
             pi.operators = opdb;
             pi.patchID = patch->getID();
-            proc0cout << "Patch ID: " << patch->getID() << std::endl;
+            //std::cout << "Set up operators for Patch ID: " << patch->getID() << " on process " << Uintah::Parallel::getMPIRank() << std::endl;
           }
         }
     }
@@ -321,6 +321,7 @@ namespace Wasatch{
       TaskInterface* const task = scinew TaskInterface( icGraphHelper->rootIDs,
                                                         "initialization",
                                                         *icGraphHelper->exprFactory,
+                                                        level,
                                                         sched,
                                                         localPatches,
                                                         materials,
@@ -361,6 +362,7 @@ namespace Wasatch{
       TaskInterface* const task = scinew TaskInterface( tsGraphHelper->rootIDs,
                                                         "compute timestep",
                                                         *tsGraphHelper->exprFactory,
+                                                        level,
                                                         sched,
                                                         localPatches,
                                                         materials,
@@ -395,11 +397,12 @@ namespace Wasatch{
   {
     for (int iStage=1; iStage<=nRKStages_; iStage++) {
       // jcs why do we need this instead of getting the level?
-      const Uintah::PatchSet* const localPatches = get_patchset( USE_FOR_TASKS, level, sched );
+      const Uintah::PatchSet* const allPatches = get_patchset( USE_FOR_TASKS, level, sched );
+      const Uintah::PatchSet* const localPatches = get_patchset( USE_FOR_OPERATORS, level, sched );
 
       const Uintah::MaterialSet* const materials = sharedState_->allMaterials();
 
-      create_timestepper_on_patches( localPatches, materials, sched, iStage );
+      create_timestepper_on_patches( allPatches, materials, level, sched, iStage );
 
       proc0cout << "Wasatch: done creating solution task(s)" << std::endl;
       
@@ -421,8 +424,6 @@ namespace Wasatch{
       // BOUNDARY CONDITIONS TREATMENT
       // -----------------------------------------------------------------------
       const GraphHelper* gh = graphCategories_[ ADVANCE_SOLUTION ];
-      //Expr::ExpressionFactory& exprFactory = *gh->exprFactory;
-      //process_boundary_conditions( adaptors_, *gh, localPatches, patchInfoMap_, materials->getUnion() );
       typedef std::vector<EqnTimestepAdaptorBase*> EquationAdaptors;
       
       for( EquationAdaptors::const_iterator ia=adaptors_.begin(); ia!=adaptors_.end(); ++ia ){
@@ -452,6 +453,7 @@ namespace Wasatch{
   void
   Wasatch::create_timestepper_on_patches( const Uintah::PatchSet* const localPatches,
                                           const Uintah::MaterialSet* const materials,
+                                          const Uintah::LevelP& level,
                                           Uintah::SchedulerP& sched,
                                           const int rkStage )
   {
@@ -501,6 +503,7 @@ namespace Wasatch{
                                 patchInfoMap_,
                                 localPatches,
                                 materials,
+                                level,
                                 sched,
                                 rkStage );
 
@@ -510,7 +513,7 @@ namespace Wasatch{
 //     // some things (e.g. boundary conditions) may be prescribed
 //     // functions of time.
 //     {
-//       TaskInterface* const timeTask = scinew TaskInterface( timeID, "set time", exprFactory, sched, localPatches, materials, patchInfoMap_, true );
+//       TaskInterface* const timeTask = scinew TaskInterface( timeID, "set time", exprFactory, level, sched, localPatches, materials, patchInfoMap_, true );
 //       timeTask->schedule( sched );
 //       taskInterfaceList_.push_back( timeTask );
 //     }

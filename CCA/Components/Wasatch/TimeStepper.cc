@@ -138,6 +138,7 @@ namespace Wasatch{
                              const PatchInfoMap& patchInfoMap,
                              const Uintah::PatchSet* const patches,
                              const Uintah::MaterialSet* const materials,
+                             const Uintah::LevelP& level,
                              Uintah::SchedulerP& sched, 
                              const int rkStage )
   {
@@ -155,9 +156,7 @@ namespace Wasatch{
       TaskInterface* rhsTask = scinew TaskInterface( rhsIDs_,
                                                      "rhs",
                                                      *factory_,
-                                                     sched,
-                                                     patches,
-                                                     materials,
+                                                     level, sched, patches, materials,
                                                      patchInfoMap,
                                                      true,
                                                      rkStage );
@@ -180,13 +179,11 @@ namespace Wasatch{
     // This is required by the time integrator.
     {
       TaskInterface* const timeTask = scinew TaskInterface( timeID,
-                                                           "set time",
-                                                           *factory_,
-                                                           sched,
-                                                           patches,
-                                                           materials,
-                                                           patchInfoMap,
-                                                           true, 1);
+                                                            "set time",
+                                                            *factory_,
+                                                            level, sched, patches, materials,
+                                                            patchInfoMap,
+                                                            true, 1 );
       taskInterfaceList_.push_back( timeTask );
       timeTask->schedule( coordHelper_->field_tags(), rkStage );
       // add a task to update current simulation time

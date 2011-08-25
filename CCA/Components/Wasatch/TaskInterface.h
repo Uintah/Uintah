@@ -92,6 +92,7 @@ namespace Wasatch{
     TaskInterface( const IDSet& roots,
                    const std::string taskName,
                    Expr::ExpressionFactory& factory,
+                   const Uintah::LevelP& level,
                    Uintah::SchedulerP& sched,
                    const Uintah::PatchSet* const patches,
                    const Uintah::MaterialSet* const materials,
@@ -129,13 +130,14 @@ namespace Wasatch{
     TaskInterface( const Expr::ExpressionID& root,
                    const std::string taskName,
                    Expr::ExpressionFactory& factory,
+                   const Uintah::LevelP& level,
                    Uintah::SchedulerP& sched,
                    const Uintah::PatchSet* const patches,
                    const Uintah::MaterialSet* const materials,
                    const PatchInfoMap& info,
                    const bool createUniqueTreePerPatch,
-                  int RKStage,
-                   Expr::FieldManagerList* fml = NULL);
+                   const int RKStage,
+                   Expr::FieldManagerList* fml = NULL );
 
     ~TaskInterface();
 

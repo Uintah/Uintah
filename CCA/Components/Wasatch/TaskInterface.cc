@@ -85,6 +85,7 @@ namespace Wasatch{
      */
     TreeTaskExecute( TreePtr tree,
                      const std::string taskName,
+                     const Uintah::LevelP& level,
                      Uintah::SchedulerP& scheduler,
                      const Uintah::PatchSet* const patches,
                      const Uintah::MaterialSet* const materials,
@@ -104,6 +105,7 @@ namespace Wasatch{
 
   TreeTaskExecute::TreeTaskExecute( TreePtr tree,
                                     const std::string taskName,
+                                    const Uintah::LevelP& level,
                                     Uintah::SchedulerP& sched,
                                     const Uintah::PatchSet* const patches,
                                     const Uintah::MaterialSet* const materials,
@@ -125,8 +127,9 @@ namespace Wasatch{
     if( createUniqueTreePerPatch_ ){
 
       // only set up trees on the patches that we own on this process.
-      const Uintah::PatchSubset* const localPatches = patches->getSubset( Uintah::Parallel::getMPIRank() );
-
+      const Uintah::PatchSet*  perproc_patchset = sched->getLoadBalancer()->getPerProcessorPatchSet(level);
+      const Uintah::PatchSubset* const localPatches = perproc_patchset->getSubset(Uintah::Parallel::getMPIRank());
+      //std::cout << "looking at patch " << localPatches->size() << " of " << patches->size() << " patches on process " << Uintah::Parallel::getMPIRank() << std::endl;
       for( int ip=0; ip<localPatches->size(); ++ip ){
         const Uintah::Patch* const patch = localPatches->get(ip);
         proc0cout << "Setting up tree '" << taskName_ << "' on patch (" << patch->getID() << ")" << endl;
@@ -390,6 +393,7 @@ namespace Wasatch{
       // resolve the tree
       TreePtr tree;
       if( createUniqueTreePerPatch_ ){
+        //proc0cout << "Resolving tree for patch " << patch->getID() << std::endl;
         PatchTreeMap::iterator iptm = patchTreeMap_.find( patch->getID() );
         ASSERT( iptm != patchTreeMap_.end() );
         tree = iptm->second.first;
@@ -436,6 +440,7 @@ namespace Wasatch{
   TaskInterface::TaskInterface( const Expr::ExpressionID& root,
                                 const std::string taskName,
                                 Expr::ExpressionFactory& factory,
+                                const Uintah::LevelP& level,
                                 Uintah::SchedulerP& sched,
                                 const Uintah::PatchSet* const patches,
                                 const Uintah::MaterialSet* const materials,
@@ -460,7 +465,7 @@ namespace Wasatch{
     }
     for( TreeList::iterator itr=treeList.begin(); itr!=treeList.end(); ++itr ){
       Expr::ExpressionTree::TreePtr tr = *itr;
-      execList_.push_back( new TreeTaskExecute( tr, tr->name(), sched, patches, materials, info, createUniqueTreePerPatch, rkStage ) );
+      execList_.push_back( new TreeTaskExecute( tr, tr->name(), level, sched, patches, materials, info, createUniqueTreePerPatch, rkStage ) );
     }
   }
 
@@ -469,6 +474,7 @@ namespace Wasatch{
   TaskInterface::TaskInterface( const IDSet& roots,
                                 const std::string taskName,
                                 Expr::ExpressionFactory& factory,
+                                const Uintah::LevelP& level,
                                 Uintah::SchedulerP& sched,
                                 const Uintah::PatchSet* patches,
                                 const Uintah::MaterialSet* const materials,
@@ -493,7 +499,7 @@ namespace Wasatch{
     }
     for( TreeList::iterator itr=treeList.begin(); itr!=treeList.end(); ++itr ){
       Expr::ExpressionTree::TreePtr tr = *itr;
-      execList_.push_back( new TreeTaskExecute( tr, tr->name(), sched, patches, materials, info, createUniqueTreePerPatch, rkStage ) );
+      execList_.push_back( new TreeTaskExecute( tr, tr->name(), level, sched, patches, materials, info, createUniqueTreePerPatch, rkStage ) );
     }
   }
 

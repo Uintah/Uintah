@@ -242,6 +242,7 @@ namespace Wasatch{
     /** \brief a convenience function */
     void create_timestepper_on_patches( const Uintah::PatchSet* const localPatches,
                                         const Uintah::MaterialSet* const materials,
+                                        const Uintah::LevelP& level,
                                         Uintah::SchedulerP& sched,
                                         const int RKStage );
 
