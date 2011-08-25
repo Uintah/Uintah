@@ -210,8 +210,7 @@ int main(int argc, char *argv[])
     vector<int> UG_threshold;         // unique grain threshold
     int UG_numMatls = 0;              // number of unique grain matls
     map<int, int> intensityToMatl_map;// intensity to matl mapping
-
-
+    vector<int> specifiedMatls;       // matls that have been specified in the input file
 
     string f_name;                    // the base name of the output file
     bool hasUniqueGrains = false;
@@ -254,12 +253,15 @@ int main(int argc, char *argv[])
       child->getAttributes(matlIndex);
       child->require("threshold", threshold);
 
+      int matl = atoi(matlIndex["index"].c_str());
       intensityMapping data;
-      data.matlIndex = atoi(matlIndex["index"].c_str());
+      data.matlIndex = matl;
       data.threshold = threshold;
       intMatl_Vec.push_back(data);
+      
+      specifiedMatls.push_back(matl);  // keep a list of all matls that have been specified
 
-      cout << "matl index " << matlIndex["index"] << " Threshold low: " << threshold[0] << " high: " <<threshold[1] <<endl;
+      cout << "matl index " << matl << " Threshold low: " << threshold[0] << " high: " <<threshold[1] <<endl;
     }
 
     // read in the unique grains
@@ -268,8 +270,15 @@ int main(int argc, char *argv[])
       ug_ps->require("matlIndex",      UG_matlIndex);
       ug_ps->require("threshold",      UG_threshold);
       UG_numMatls = UG_matlIndex.size();
-      cout << "Number of unique Grain Matls " << UG_numMatls << endl;
+      cout << "Number of unique Grain Matls " << UG_numMatls << " {";
       hasUniqueGrains = true;
+      
+      for (int m = 0; m< UG_numMatls; m++){
+        int matl = UG_matlIndex[m];
+        specifiedMatls.push_back(matl);  // keep a list of all matls that have been specified
+        cout << matl << ", ";        
+      }
+      cout << "}\n";
     }
 
 
@@ -378,6 +387,12 @@ int main(int argc, char *argv[])
                         child = child->findNextBlock("material")) {
 
         matl +=1;
+        
+        // continue if the matl has been specified in the input file
+        bool foundMatl = (find(specifiedMatls.begin(), specifiedMatls.end(), matl) != specifiedMatls.end());
+        if (!foundMatl)
+          continue;
+        
         // these points define the extremas of the grid
         Point minP(1.e30,1.e30,1.e30),maxP(-1.e30,-1.e30,-1.e30);
 
@@ -453,7 +468,7 @@ int main(int argc, char *argv[])
 
 
         //__________________________________
-        //  Write out the pts file for this patch and matl
+        //  Write out the pts file for this patch and matl        
         for(Level::const_patchIterator iter = level->patchesBegin(); iter != level->patchesEnd(); iter++){
           const Patch* patch = *iter;
 
