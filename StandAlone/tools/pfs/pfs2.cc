@@ -30,7 +30,6 @@ DEALINGS IN THE SOFTWARE.
 
 #include <CCA/Components/ProblemSpecification/ProblemSpecReader.h>
 #include <Core/Exceptions/ProblemSetupException.h>
-#include <Core/Grid/Variables/Array3.h>
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/Level.h>
@@ -44,9 +43,9 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Parallel/Parallel.h>
-#include <Core/Math/Primes.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Malloc/Allocator.h>
+#include <Core/Util/Endian.h>
 
 #include <cstdio>
 #include <iostream>
@@ -55,13 +54,12 @@ DEALINGS IN THE SOFTWARE.
 
 using namespace Uintah;
 using namespace std;
+#define IS_8_BIT
 
-#if 1
+#ifdef IS_8_BIT
   typedef unsigned char pixel;       // 8bit images
-  int scale = 1;
 #else
   typedef unsigned short pixel;      // 16bit images
-  int scale = 256;
 #endif
 
 
@@ -70,7 +68,7 @@ void usage( char *prog_name );
 
 GridP CreateGrid(ProblemSpecP ups);
 
-bool ReadImage(const char* szfile, unsigned int nPixels, pixel* pix);
+bool ReadImage(const char* szfile, unsigned int nPixels, pixel* pix, const string endianness);
 
 inline Point CreatePoint(unsigned int n, vector<int>& res, double dx, double dy, double dz)
 {
@@ -81,6 +79,10 @@ inline Point CreatePoint(unsigned int n, vector<int>& res, double dx, double dy,
   return Point( dx*((double)i + 0.5), dy*(((double)(res[1]-1-j)) + 0.5),dz*((double)k + 0.5));
 //  return Point( dx*((double)i + 0.5), dy*(((double)(j)) + 0.5),dz*((double)k + 0.5));
 }
+
+enum endian{little, big};
+
+
 
 //-----------------------------------------------------------------------------------------
 /*
@@ -109,6 +111,8 @@ int main(int argc, char *argv[])
     string infile;
     bool binmode = false;
     bool do_cylinder = false;
+    string endianness= "little";
+    
     CylinderGeometryPiece* cylinder;
     cylinder = 0;
 
@@ -123,7 +127,14 @@ int main(int argc, char *argv[])
       string s=argv[i];
       if (s == "-b" || s == "-B") {
         binmode = true;
-      } else if (s == "-cyl") {
+      } 
+      else if (s == "-B" || s == "-bigEndian") {
+        endianness = "big";
+      }
+      else if (s == "-l" || s == "-littleEndian") {
+        endianness = "little";
+      }
+      else if (s == "-cyl") {
         do_cylinder = true;        
         xb = atof(argv[++i]);      
         yb = atof(argv[++i]);      
@@ -132,6 +143,13 @@ int main(int argc, char *argv[])
         yt = atof(argv[++i]);      
         zt = atof(argv[++i]);      
         radius = atof(argv[++i]);  
+      }
+      else if (s == "-h" || s == "-help") {
+        usage( argv[0] );
+      }
+      else if ( s[0] == '-'){
+        cout << "\nERROR invalid input (" << s << ")" << endl;
+        usage( argv[0] );
       }
     }
     
@@ -275,7 +293,7 @@ int main(int argc, char *argv[])
           cout << "Reading " << nPixels << " nPixels\n";
           pixel* pimg = scinew pixel[nPixels];
           
-          if (ReadImage(imgname.c_str(), nPixels, pimg) == false) {
+          if (ReadImage(imgname.c_str(), nPixels, pimg, endianness) == false) {
             cout << "FATAL ERROR : Failed reading image data" << endl;
             exit(0);
           }
@@ -312,7 +330,7 @@ int main(int argc, char *argv[])
             for (j=0; j<res[1]; j++) {
               for (i=0; i<res[0]; i++, pb++, n++) {
               
-                int pixelValue = *pb/scale;
+                int pixelValue = *pb;
                 
                 if ((pixelValue >= L[0]) && (pixelValue <= L[1])) {
                   
@@ -340,7 +358,7 @@ int main(int argc, char *argv[])
             for (j=0; j<res[1]; j++) {
               for (i=0; i<res[0]; i++, pb++, n++) {
               
-                int pixelValue = *pb/scale;
+                int pixelValue = *pb;
                 if ((pixelValue >= L[0])  && (pixelValue <= L[1])) {
 
                   pt = CreatePoint(n, res, dx, dy, dz);
@@ -456,17 +474,19 @@ GridP CreateGrid(ProblemSpecP ups)
 //
 void usage( char *prog_name )
 {
-  cout << "Usage: " << prog_name << " [-b] [-B] [-cyl <args>] infile \n";
-  cout << "-b,B: binary output \n";
-  cout << "-cyl: defines a cylinder within the geometry \n";
-  cout << "args = xbot ybot zbot xtop ytop ztop radius \n";
+  cout << "Usage: " << prog_name << " [options]  <ups file> \n";
+  cout << "options:" << endl;
+  cout << "-b, -binary:            binary output \n";
+  cout << "-cyl <args> :           defines a cylinder within the geometry args = xbot ybot zbot xtop ytop ztop radius \n";         
+  cout << "-l, -littleEndian:      input file contains little endian bytes  [default]\n";
+  cout << "-B, -bigEndian:         input file contains big endian bytes\n";
   exit( 1 );
 }
 
 //-----------------------------------------------------------------------------------------------
 // function ReadImage : Reads the image data from file and stores it in a buffer
 //
-bool ReadImage(const char* szfile, unsigned int nPixels, pixel* pb)
+bool ReadImage(const char* szfile, unsigned int nPixels, pixel* pb, const string endianness)
 {
   FILE* fp = fopen(szfile, "rb");
   if (fp == 0){ 
@@ -476,6 +496,31 @@ bool ReadImage(const char* szfile, unsigned int nPixels, pixel* pb)
   unsigned int nread = fread(pb, sizeof(pixel), nPixels, fp);
   fclose(fp);
 
-  cout << szfile << " Bytes per pixel " << sizeof(pixel) << " nPixels " << nPixels << " Nread " << nread << endl;
+  cout <<"Reading: " << szfile << ", Bytes per pixel " << sizeof(pixel) << ", number of pixels read " << nread << endl;
+  
+  //__________________________________
+  //  Display what the max intensity
+  // is using big & little endianness bytes
+  pixel minI = 0;
+  pixel maxI = 0;
+
+  // if the user specifies bigEndian then return
+  if( endianness == "big" ){
+    for(unsigned int i = 0; i< nread;  i++ ){
+      swapbytes(pb[i]);
+      maxI = max(pb[i], maxI);
+      minI = min(pb[i], minI);
+    }
+    cout << "Big endian intensity: max (" << maxI << "), min(" << minI << " )"<< endl;
+  } 
+  else{
+    for(unsigned int i = 0; i< nread;  i++ ){
+      maxI = max(pb[i], maxI);
+      minI = min(pb[i], minI);
+      cout << " max: " << maxI << endl;
+    }
+    cout << "Little endian intensity: max (" << maxI << "), min(" << minI << " )"<< endl;
+  }
+  
   return (nread == nPixels);  
 }
