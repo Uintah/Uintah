@@ -322,7 +322,7 @@ ifeq ($(IS_REDSTORM),yes)
 	@echo "Built sus"
 endif
 
-tools: puda dumpfields compare_uda compute_Lnorm_udas restart_merger partextract partvarRange selectpart async_mpi_test mpi_test extractV extractF extractS gambitFileReader slb pfs pfs2 timeextract faceextract lineextract compare_mms compare_scalar fsspeed
+tools: puda dumpfields compare_uda compute_Lnorm_udas restart_merger partextract partvarRange selectpart async_mpi_test mpi_test extractV extractF extractS gambitFileReader slb pfs pfs2 rawToUniqueGrains timeextract faceextract lineextract compare_mms compare_scalar fsspeed
 
 puda: prereqs StandAlone/tools/puda/puda
 
@@ -357,6 +357,8 @@ slb: prereqs StandAlone/slb
 pfs: prereqs StandAlone/tools/pfs/pfs
 
 pfs2: prereqs StandAlone/tools/pfs/pfs2
+
+rawToUniqueGrains: prereqs StandAlone/tools/pfs/rawToUniqueGrains
 
 timeextract: StandAlone/tools/extractors/timeextract
 
