@@ -158,6 +158,7 @@ namespace Wasatch{
                        const PatchInfoMap& infoMap,
                        const Uintah::PatchSet* const localPatches,
                        const Uintah::MaterialSet* const materials,
+                       const Uintah::LevelP& level,
                        Uintah::SchedulerP& sched,
                        const int rkStage );
   };
