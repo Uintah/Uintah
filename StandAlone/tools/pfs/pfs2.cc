@@ -517,7 +517,6 @@ bool ReadImage(const char* szfile, unsigned int nPixels, pixel* pb, const string
     for(unsigned int i = 0; i< nread;  i++ ){
       maxI = max(pb[i], maxI);
       minI = min(pb[i], minI);
-      cout << " max: " << maxI << endl;
     }
     cout << "Little endian intensity: max (" << maxI << "), min(" << minI << " )"<< endl;
   }
