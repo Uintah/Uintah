@@ -118,6 +118,7 @@ ImplicitCM::addSharedCRForImplicit(Task* task,
   task->requires(Task::OldDW, d_lb->pTemperatureLabel, matlset, gnone);
   task->requires(Task::OldDW, d_lb->pDeformationMeasureLabel,
                                                        matlset, gnone);
+  task->requires(Task::OldDW, d_lb->pStressLabel,      matlset, gnone);
   if(reset){
     task->requires(Task::NewDW, d_lb->dispNewLabel,      matlset,gac,1);
   } else {
