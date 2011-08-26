@@ -356,7 +356,7 @@
                         <res_tol>1.0e-9</res_tol>
                         <solver>cg</solver>
                         <preconditioner>jacobi</preconditioner>
-                        <max_iter>75</max_iter>
+                        <max_iter>250</max_iter>
                     </parameters>
                 </PressureSolver>
                 
