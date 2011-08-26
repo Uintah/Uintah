@@ -330,7 +330,7 @@ PetscSolver::pressLinearSolve()
   bool test;
   test = PetscLinearSolve(A, d_b, d_x, d_u,
                           d_pcType, d_solverType, d_overlap,
-                          d_fill, d_residual, d_myworld);
+                          d_fill, d_residual, d_maxSweeps, d_myworld);
   return test;
 }
 

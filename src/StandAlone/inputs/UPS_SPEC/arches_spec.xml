@@ -213,6 +213,10 @@
         <carbon_balance                 spec="OPTIONAL BOOLEAN" />
         <sulfur_balance                 spec="OPTIONAL BOOLEAN" />
         <ramping_inlet_flowrate         spec="OPTIONAL BOOLEAN" />
+        <Prefill                        spec="OPTIONAL NO_DATA"
+                                        attribute1="bc REQUIRED STRING">
+          <geom_object/>
+        </Prefill>
         <FlowInlet                      spec="MULTIPLE NO_DATA" >
           <velocity_type                spec="OPTIONAL STRING 'flat, function, vector, file, geometry'"/>
           <scalar_type                  spec="OPTIONAL STRING 'flat, function, file, geometry'"/>

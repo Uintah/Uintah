@@ -45,6 +45,7 @@ bool PetscLinearSolve(Mat& A,
                       const int overlap,
                       const int fill,
                       const double residual,
+                      const int maxIter,
                       const ProcessorGroup* myworld)
 {
   double solve_start = Time::currentSeconds();
@@ -217,7 +218,7 @@ bool PetscLinearSolve(Mat& A,
       throw UintahPetscError(ierr, "KSPSetType", __FILE__, __LINE__);
   }
   
-  ierr = KSPSetTolerances(solver, 1.0e-50, residual, PETSC_DEFAULT, PETSC_DEFAULT);
+  ierr = KSPSetTolerances(solver, 1.0e-50, residual, PETSC_DEFAULT, maxIter);
   if(ierr)
     throw UintahPetscError(ierr, "KSPSetTolerances", __FILE__, __LINE__);
 
