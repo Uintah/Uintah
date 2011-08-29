@@ -86,20 +86,19 @@ static DebugStream dbg("SWITCHER", false);
 // For each subcomponent in the ups file:
 //     - 
 Switcher::Switcher( const ProcessorGroup* myworld, 
-                    ProblemSpecP& ups, 
+                    ProblemSpecP& d_master_ups, 
                     bool doAMR,
                     const string & uda ) : 
   UintahParallelComponent(myworld)
 {
-  dbg << "-----------------------------Switcher::Switcher top"<< endl;
+  proc0cout << "-----------------------------Switcher::Switcher top"<< endl;
   int num_components = 0;
   d_componentIndex   = 0;
   d_switchState      = idle;
   d_restarting       = false;
-  d_problemSpec      = ups;
 
 
-  ProblemSpecP sim_block = ups->findBlock("SimulationComponent");
+  ProblemSpecP sim_block = d_master_ups->findBlock("SimulationComponent");
   ProblemSpecP child     = sim_block->findBlock("subcomponent");
 
   //__________________________________
@@ -118,13 +117,17 @@ Switcher::Switcher( const ProcessorGroup* myworld,
 // THAT SHOULD BE TAKING PLACE IN PROBLEMSETUP AND NEEDS RECOMILE TASKS (i THINK)
 // DON'T WE JUST NEED TO READ IN THE SWITCHIN CRITERIA AND THE INIT/CARRYOVER VARS?
 
-
+    proc0cout << "Input file:\t\t" << input_file << endl;
+    
     d_in_file.push_back(input_file);
-    ProblemSpecP subCompUps = ProblemSpecReader().readInputFile(d_in_file[d_componentIndex]);
+    ProblemSpecP subCompUps = ProblemSpecReader().readInputFile(input_file);
 
+#if 0
     if( uda != "" ) {
+      cout << " uda " << uda << endl;
       throw ProblemSetupException( "Uda != ''", __FILE__, __LINE__);
     }
+#endif
 
     // This will get the component name from the input file, and the uda arg is not needed for normal simulations...  
     UintahParallelComponent* comp = ComponentFactory::create(subCompUps, myworld, doAMR, "");
@@ -172,6 +175,8 @@ Switcher::Switcher( const ProcessorGroup* myworld,
     d_initMatls.push_back(init_matls);
     d_initLevels.push_back(init_levels);
     num_components++;
+    
+    proc0cout << "\n";
   }  // loop over subcomponents
   
   //__________________________________
@@ -244,8 +249,8 @@ Switcher::Switcher( const ProcessorGroup* myworld,
   d_numComponents = num_components;
   d_computedVars.clear();
   
-  dbg << "Number of components " << d_numComponents <<  endl;
-  dbg << "-----------------------------Switcher::Switcher bottom"<< endl;
+  proc0cout<< "Number of components " << d_numComponents <<  endl;
+  proc0cout << "-----------------------------Switcher::Switcher bottom"<< endl;
 }
 //______________________________________________________________________
 //
@@ -276,17 +281,21 @@ Switcher::~Switcher()
 //______________________________________________________________________
 // Setup the first component and 
 void
-Switcher::problemSetup( const ProblemSpecP& params, 
+Switcher::problemSetup( const ProblemSpecP& /*params*/, 
                         const ProblemSpecP& restart_prob_spec, 
                         GridP& grid,
                         SimulationStateP& sharedState )
 {
-  if( params.get_rep() != d_problemSpec.get_rep() ) {
+
+#if 0
+  if( params.get_rep() != d_master_ups.get_rep() ) {
     throw InternalError( "Switcher problemSetup ProblemSpec is different from initialization ProblemSpec ", __FILE__, __LINE__);    
   }
+#endif
   
   dbg << "Doing ProblemSetup \t\t\t\tSwitcher"<< endl;
-  dbg << "Component " << d_componentIndex <<" Reading input file " << d_in_file[d_componentIndex] << "\n";
+  proc0cout << "\n------------ Switching to component (" << d_componentIndex <<") \n";
+  proc0cout << "  Reading input file: " << d_in_file[d_componentIndex] << "\n";
   
   d_sharedState = sharedState;
   d_sim =                         dynamic_cast<SimulationInterface*>(     getPort("sim",d_componentIndex) );
@@ -301,8 +310,10 @@ Switcher::problemSetup( const ProblemSpecP& params,
   //Read the ups file for the first subcomponent   
   ProblemSpecP subCompUps = ProblemSpecReader().readInputFile(d_in_file[d_componentIndex]);  
   
-  d_sim->problemSetup(subCompUps, restart_prob_spec, grid, sharedState );
   dataArchiver->problemSetup( subCompUps, d_sharedState.get_rep() );
+  
+  d_sim->problemSetup(subCompUps, restart_prob_spec, grid, sharedState );
+  
 
   // read in the grid adaptivity flag from the ups file
   Regridder* regridder = dynamic_cast<Regridder*>(getPort("regridder"));
@@ -348,6 +359,7 @@ Switcher::problemSetup( const ProblemSpecP& params,
       throw ProblemSetupException(error, __FILE__, __LINE__);
     }
   }
+  proc0cout << "-----------------------------------\n\n";
 }
 //______________________________________________________________________
 // 
@@ -725,16 +737,20 @@ Switcher::needRecompile( double time,
     comp->attachPort("scheduler", sched);
     comp->attachPort("output",    dataArchiver);
   
-    proc0cout << "------------ Switching to component (" << d_componentIndex <<").";
-    proc0cout << " Reading input file: " << d_in_file[d_componentIndex] << "\n";
+    proc0cout << "\n------------ Switching to component (" << d_componentIndex <<") \n";
+    proc0cout << "  Reading input file: " << d_in_file[d_componentIndex] << "\n";
     
     // read in the problemSpec
     ProblemSpecP restart_prob_spec=0;
-    ProblemSpecP d_problemSpec = ProblemSpecReader().readInputFile(d_in_file[d_componentIndex]);  
-
-    d_sim->problemSetup(d_problemSpec, restart_prob_spec,const_cast<GridP&>(grid), d_sharedState );
+    ProblemSpecP subCompUps = ProblemSpecReader().readInputFile(d_in_file[d_componentIndex]);  
     
-    dataArchiver->problemSetup( d_problemSpec, d_sharedState.get_rep() );
+     // read in <Time> block from ups file
+    d_sharedState->d_simTime->problemSetup( subCompUps );   
+    
+    d_sim->problemSetup(subCompUps, restart_prob_spec,const_cast<GridP&>(grid), d_sharedState );
+    
+    dataArchiver->problemSetup( subCompUps, d_sharedState.get_rep() );
+ //   dataArchiver->initializeOutput(subCompUps);
     
     // we need this to get the "ICE surrounding matl"
     d_sim->restartInitialize();
@@ -743,13 +759,11 @@ Switcher::needRecompile( double time,
     // read in the grid adaptivity flag from the ups file
     Regridder* regridder = dynamic_cast<Regridder*>(getPort("regridder"));
     if (regridder) {
-      regridder->switchInitialize( d_problemSpec );
+      regridder->switchInitialize( subCompUps );
     }
 
-    // read in <Time> block from ups file
-    d_sharedState->d_simTime->problemSetup( d_problemSpec );
-
     retval = true;
+    proc0cout << "-----------------------------------\n\n";
   } 
   else {
     d_sharedState->d_switchState = false;
@@ -769,14 +783,15 @@ Switcher::outputProblemSpec(ProblemSpecP& ps)
 void
 Switcher::outputPS( Dir & dir )
 {
+#if 0
+  // TURN THIS OFF.  It appears to be working without it.
   for (unsigned i = 0; i < d_numComponents; i++) {
     
     std::stringstream stream;
     stream << i;
     string inputname = dir.getName() + "/input.xml." + stream.str();
-    cout << "outputing file " << inputname << endl;
-//  ups->output(inputname.c_str());
-    d_problemSpec->output(inputname.c_str());
+    cout << "switcher:outputing file " << inputname << endl;
+    d_master_ups->output(inputname.c_str());
   }
   
   string inputname = dir.getName()+"/input.xml";
@@ -786,6 +801,7 @@ Switcher::outputPS( Dir & dir )
   ProblemSpecP sim_block = inputDoc->findBlock("SimulationComponent");
   for (ProblemSpecP child = sim_block->findBlock("subcomponent"); child != 0; 
        child = child->findNextBlock("subcomponent")) {
+       
     ProblemSpecP in_file = child->findBlock("input_file");
     string nodeName = in_file->getNodeName();
     cout << "nodeName = " << nodeName << endl;
@@ -793,7 +809,6 @@ Switcher::outputPS( Dir & dir )
     if (nodeName == "input_file") {
       std::stringstream stream;
       stream << count++;
-//    string inputname = dir.getName() + "/input.xml." + stream.str();
       string inputname = "input.xml." + stream.str();
       cout << "inputname = " << inputname << endl;
       child->appendElement("input_file",inputname);
@@ -802,8 +817,9 @@ Switcher::outputPS( Dir & dir )
     
   }
   inputDoc->output( inputname.c_str() );
-//inputDoc->releaseDocument();
+#endif
 }
+
 //______________________________________________________________________
 //
 void
@@ -834,6 +850,7 @@ Switcher::readFromTimestepXML(const ProblemSpecP& spec,SimulationStateP& state)
     MaterialSet* new_matls = scinew MaterialSet;
     new_matls->addReference();
     new_matls->createEmptySubsets(1);
+    
     for (int i = 0; i < numMatls; i++)
       new_matls->getSubset(0)->add(i);
     state->setOriginalMatlsFromRestart(new_matls);
@@ -842,28 +859,34 @@ Switcher::readFromTimestepXML(const ProblemSpecP& spec,SimulationStateP& state)
    proc0cout << "  Switcher RESTART: component index = " << d_componentIndex << endl;
 }
 
+//______________________________________________________________________
+//
 void Switcher::addMaterial(const ProblemSpecP& params, GridP& grid,
                            SimulationStateP& state)
 {
   d_sim->addMaterial(params, grid, state);
 }
-
+//______________________________________________________________________
+//
 void Switcher::scheduleInitializeAddedMaterial(const LevelP& level,
                                                SchedulerP& sched)
 {
   d_sim->scheduleInitializeAddedMaterial(level, sched);
 }
-
+//______________________________________________________________________
+//
 void Switcher::restartInitialize() {
   d_restarting = true;
   d_sim->restartInitialize();
 }
-
+//______________________________________________________________________
+//
 bool Switcher::restartableTimesteps() {
   return d_sim->restartableTimesteps();
 }
 
-
+//______________________________________________________________________
+//
 double Switcher::recomputeTimestep(double dt) {
   return d_sim->recomputeTimestep(dt);
 }
@@ -877,23 +900,27 @@ void Switcher::scheduleRefineInterface(const LevelP& fineLevel,
 {
   d_sim->scheduleRefineInterface(fineLevel,sched, needCoarseOld, needCoarseNew);
 }
-                                    
+//______________________________________________________________________
+//                                    
 void Switcher::scheduleRefine (const PatchSet* patches, 
                                SchedulerP& sched){
   d_sim->scheduleRefine(patches, sched);
 }
-
+//______________________________________________________________________
+//
 void Switcher::scheduleCoarsen(const LevelP& coarseLevel, 
                                SchedulerP& sched){
   d_sim->scheduleCoarsen(coarseLevel, sched);
 }
 
-
+//______________________________________________________________________
+//
 void Switcher::scheduleInitialErrorEstimate(const LevelP& coarseLevel,
                                             SchedulerP& sched){
   d_sim->scheduleInitialErrorEstimate(coarseLevel,sched);
 }
-                                          
+//______________________________________________________________________
+//                                          
 void Switcher::scheduleErrorEstimate(const LevelP& coarseLevel,
                                      SchedulerP& sched){
   d_sim->scheduleErrorEstimate(coarseLevel,sched);
