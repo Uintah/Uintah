@@ -28,8 +28,9 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-
+#include <Core/Containers/StringUtil.h>
 #include <Core/Grid/SimulationTime.h>
+#include <Core/Parallel/Parallel.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 
 #include <Core/Thread/Thread.h>
@@ -92,15 +93,17 @@ SimulationTime::SimulationTime(const ProblemSpecP& params)
     }
 }
 
+//__________________________________
+//  This only called by the switcher component
 void SimulationTime::problemSetup(const ProblemSpecP& params)
 {
+  proc0cout << "  Reading <Time> section from: " << SCIRun::basename(params->getFile()) << "\n";
   ProblemSpecP time_ps = params->findBlock("Time");
   time_ps->require("delt_min", delt_min);
   time_ps->require("delt_max", delt_max);
   time_ps->require("timestep_multiplier", delt_factor);
-
-  if(!time_ps->get("delt_init", max_initial_delt)
-     && !time_ps->get("max_initial_delt", max_initial_delt))
+  
+  if(!time_ps->get("delt_init", max_initial_delt) && !time_ps->get("max_initial_delt", max_initial_delt))
     max_initial_delt = DBL_MAX;
   if(!time_ps->get("initial_delt_range", initial_delt_range))
     initial_delt_range = 0;
