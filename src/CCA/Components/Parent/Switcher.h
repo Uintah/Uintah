@@ -122,7 +122,7 @@ namespace Uintah {
                     DataWarehouse* old_dw, DataWarehouse* new_dw);
 
 
-    ProblemSpecP d_problemSpec;
+    ProblemSpecP d_master_ups;
 
     switchState d_switchState;
 
