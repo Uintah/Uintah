@@ -97,7 +97,8 @@ GeometryObject::outputProblemSpec(ProblemSpecP& ps)
   
   for (map<string,double>::iterator it = d_double_data.begin(); 
        it != d_double_data.end(); it++) {
-    geom_obj_ps->appendElement(it->first.c_str(),it->second);
+    if(!(it->first.compare("volumeFraction") == 0 && it->second == -1.0))
+      geom_obj_ps->appendElement(it->first.c_str(),it->second);
   }
   for (map<string,Uintah::Vector>::iterator it = d_vector_data.begin(); 
        it != d_vector_data.end(); it++) {
