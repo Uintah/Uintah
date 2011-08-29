@@ -1598,8 +1598,8 @@ namespace Uintah{
        FluxLimiterInterpolation<oldPhiT>* the_interpolant = scinew FluxLimiterInterpolation<oldPhiT>( convScheme ); 
        ConvHelper1<FluxLimiterInterpolation<oldPhiT>, oldPhiT>* convection_helper = 
          scinew ConvHelper1<FluxLimiterInterpolation<oldPhiT>, oldPhiT>(the_interpolant, oldPhi);
-
-       convection_helper->do_convection( p, Fconv, uVel, vVel, wVel, areaFraction, this ); 
+ 
+       convection_helper->do_convection( p, Fconv, uVel, vVel, wVel, partVel,  areaFraction, this );
 
        delete convection_helper; 
        delete the_interpolant; 
