@@ -15,7 +15,7 @@
           <input_file>inputs/IMPM/4disks_2d.1mat.ups</input_file>
 
           <SwitchCriteria type = "Timestep">
-            <timestep> 5 </timestep>
+            <timestep> 10 </timestep>
           </SwitchCriteria>
         </subcomponent>
         
@@ -31,7 +31,7 @@
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
     <Time>
-       <maxTime>3.e-6</maxTime>      <!-- persistent across all subcomponents -->
+       <maxTime>1.e-6</maxTime>      <!-- persistent across all subcomponents -->
        <initTime>0.0</initTime>      <!-- ignored -->
        <delt_min>0</delt_min>        <!-- ignored -->
        <delt_max>0</delt_max>        <!-- ignored -->

@@ -10,29 +10,27 @@
    <SimulationComponent type="impm" />
 
    <Time>
-       <maxTime>3.e-6</maxTime>
+       <maxTime>1.e-6</maxTime>
        <initTime>0.0</initTime>
        <delt_min>5.e-8</delt_min>
        <delt_max>5.e-8</delt_max>
        <timestep_multiplier>1.0</timestep_multiplier>
    </Time>
    <DataArchiver>
-        <filebase>4disks_2d.uda</filebase>
+       <filebase>4disks_2d_impm.uda</filebase>
        <outputInterval>5.e-7</outputInterval>
        <save label = "p.x"/>
        <save label = "p.velocity"/>
        <save label = "p.volume"/>
        <save label = "p.stress"/>
-        <save label = "g.stressFS"/>
-        <save label = "dispNew"/>
-<!--
-       <save label = "KineticEnergy"/>
        <save label = "p.temperature"/>
        <save label = "p.stress"/>
-        <save label = "g.mass" material = "2"/>
-        <save label = "g.temperature" material = "2"/>
+       
+       <save label = "g.stressFS"/>
+       <save label = "g.mass"/>
+       <save label = "g.temperature"/>
        <save label = "g.velocity"/>
--->
+       
         <checkpoint cycle = "2" interval = "1.e-6"/>
    </DataArchiver>
 
