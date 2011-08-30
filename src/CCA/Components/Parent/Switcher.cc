@@ -122,13 +122,6 @@ Switcher::Switcher( const ProcessorGroup* myworld,
     d_in_file.push_back(input_file);
     ProblemSpecP subCompUps = ProblemSpecReader().readInputFile(input_file);
 
-#if 0
-    if( uda != "" ) {
-      cout << " uda " << uda << endl;
-      throw ProblemSetupException( "Uda != ''", __FILE__, __LINE__);
-    }
-#endif
-
     // This will get the component name from the input file, and the uda arg is not needed for normal simulations...  
     UintahParallelComponent* comp = ComponentFactory::create(subCompUps, myworld, doAMR, "");
 
@@ -207,7 +200,7 @@ Switcher::Switcher( const ProcessorGroup* myworld,
   SwitchingCriteria* none_switch_criteria = scinew None();
   
   // Attaching to switcher so that the switcher can delete it
-  attachPort("switch_criteria",none_switch_criteria);
+  attachPort(           "switch_criteria",none_switch_criteria);
   last_comp->attachPort("switch_criteria",none_switch_criteria);
   
   
@@ -263,20 +256,6 @@ Switcher::~Switcher()
     if (d_carryOverVarMatls[i] && d_carryOverVarMatls[i]->removeReference())
       delete d_carryOverVarMatls[i];
   d_carryOverVarMatls.clear();
-
-  for (unsigned i = 0; i < numConnections("sim"); i++)
-    delete getPort("sim",i);
-  
-  for (unsigned i = 0; i < numConnections("switch_criteria"); i++)
-    delete getPort("switch_criteria",i);
-  
-  for (unsigned i = 0; i < numConnections("sub_solver"); i++)
-    delete getPort("sub_solver",i);
-  
-  for (unsigned i = 0; i < numConnections("problem spec"); i++)
-    delete getPort("problem spec",i);
-
-  //VarLabel::destroy(d_switchLabel);
 }
 //______________________________________________________________________
 // Setup the first component and 
@@ -285,14 +264,7 @@ Switcher::problemSetup( const ProblemSpecP& /*params*/,
                         const ProblemSpecP& restart_prob_spec, 
                         GridP& grid,
                         SimulationStateP& sharedState )
-{
-
-#if 0
-  if( params.get_rep() != d_master_ups.get_rep() ) {
-    throw InternalError( "Switcher problemSetup ProblemSpec is different from initialization ProblemSpec ", __FILE__, __LINE__);    
-  }
-#endif
-  
+{  
   dbg << "Doing ProblemSetup \t\t\t\tSwitcher"<< endl;
   proc0cout << "\n------------ Switching to component (" << d_componentIndex <<") \n";
   proc0cout << "  Reading input file: " << d_in_file[d_componentIndex] << "\n";
