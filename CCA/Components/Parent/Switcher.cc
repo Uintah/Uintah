@@ -31,41 +31,32 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Parent/Switcher.h>
 #include <CCA/Components/ProblemSpecification/ProblemSpecReader.h>
 #include <CCA/Components/Solvers/SolverFactory.h>
-#include <CCA/Components/SwitchingCriteria/SwitchingCriteriaFactory.h>
 #include <CCA/Components/SwitchingCriteria/None.h>
-#include <Core/Grid/DbgOutput.h>
+#include <CCA/Components/SwitchingCriteria/SwitchingCriteriaFactory.h>
 #include <CCA/Ports/LoadBalancer.h>
 #include <CCA/Ports/ModelMaker.h>
-#include <CCA/Ports/ProblemSpecInterface.h>
+#include <CCA/Ports/Output.h>
 #include <CCA/Ports/Regridder.h>
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Ports/SolverInterface.h>
 #include <CCA/Ports/SwitchingCriteria.h>
-#include <CCA/Ports/Output.h>
 
+#include <Core/Containers/ConsecutiveRangeSet.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/GeometryPiece/GeometryPieceFactory.h>
-#include <Core/Grid/Grid.h>
+
+#include <Core/Grid/DbgOutput.h>
 #include <Core/Grid/GridP.h>
 #include <Core/Grid/Level.h>
-#include <Core/Grid/SimpleMaterial.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Variables/NCVariable.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
-#include <Core/Grid/Variables/SoleVariable.h>
 #include <Core/Grid/Variables/VarTypes.h>
-#include <Core/Parallel/Parallel.h>
-#include <Core/Parallel/ProcessorGroup.h>
-#include <Core/ProblemSpec/ProblemSpec.h>
 
-#include <Core/Malloc/Allocator.h>
-#include <Core/Containers/ConsecutiveRangeSet.h>
 #include <Core/OS/Dir.h>
-#include <Core/Util/FileUtils.h>
-
-#include <sstream>
+#include <Core/Parallel/Parallel.h>
 
 using namespace std;
 using namespace Uintah;
@@ -401,8 +392,8 @@ void Switcher::scheduleSwitchTest(const LevelP& level,
   
   d_sim->scheduleSwitchTest(level,sched); // generates switch test data;
 
-  Task* t = scinew Task("Switcher::switchTest",
-                        this, & Switcher::switchTest);
+  Task* t = scinew Task("Switcher::switchTest", this, 
+                       & Switcher::switchTest);
 
   t->setType(Task::OncePerProc);
   
@@ -418,8 +409,9 @@ void Switcher::scheduleInitNewVars(const LevelP& level,
 {
   printSchedule(level,dbg,"Switcher::scheduleInitNewVars");
   
-  Task* t = scinew Task("Switcher::initNewVars",
-                        this, & Switcher::initNewVars);
+  Task* t = scinew Task("Switcher::initNewVars",this, 
+                       & Switcher::initNewVars);
+
   t->requires(Task::NewDW,d_sharedState->get_switch_label());
   sched->addTask(t,level->eachPatch(),d_sharedState->allMaterials());
 }
@@ -431,6 +423,7 @@ void Switcher::scheduleCarryOverVars(const LevelP& level,
                                      SchedulerP& sched)
 {
   printSchedule(level,dbg,"Switcher::scheduleCarryOverVars");
+  int L_indx = level->getIndex();
   
   if (d_computedVars.size() == 0) {
     // get the set of computed vars like this, because by scheduling a carry-over
@@ -438,32 +431,42 @@ void Switcher::scheduleCarryOverVars(const LevelP& level,
     d_computedVars = sched->getComputedVars();
   }
 
-  if (d_doSwitching[level->getIndex()] || d_restarting) {
+  if ( d_doSwitching[L_indx] || d_restarting ) {
     // clear and reset carry-over db
-    if (level->getIndex() >= (int) d_doCarryOverVarPerLevel.size()) {
-      d_doCarryOverVarPerLevel.resize(level->getIndex()+1);
+    if ( L_indx >= (int) d_doCarryOverVarPerLevel.size() ) {
+      d_doCarryOverVarPerLevel.resize( L_indx+1 );
     }
-    d_doCarryOverVarPerLevel[level->getIndex()].clear();
+    d_doCarryOverVarPerLevel[L_indx].clear();
 
-    // rebuild carry-over db
+    // rebuild carry-over database
 
     // mark each var as carry over if it's not in the computed list
     for (unsigned i = 0; i < d_carryOverVarLabels.size(); i++) {
-      bool do_on_this_level = !d_carryOverFinestLevelOnly[i] || level->getIndex() == level->getGrid()->numLevels()-1;
-      bool no_computes = d_computedVars.find(d_carryOverVarLabels[i]) == d_computedVars.end();
-      d_doCarryOverVarPerLevel[level->getIndex()].push_back(do_on_this_level && no_computes);
+      
+      bool do_on_this_level = !d_carryOverFinestLevelOnly[i] || L_indx == level->getGrid()->numLevels()-1;
+      
+      bool no_computes      = d_computedVars.find( d_carryOverVarLabels[i] ) == d_computedVars.end();
+      
+      bool trueFalse = ( do_on_this_level && no_computes );
+      d_doCarryOverVarPerLevel[L_indx].push_back( trueFalse );
     }
   }
-
-  Task* t = scinew Task("Switcher::carryOverVars",
-                        this, & Switcher::carryOverVars);
+  
+  //__________________________________
+  //
+  Task* t = scinew Task("Switcher::carryOverVars",this, 
+                       & Switcher::carryOverVars);
                         
   // schedule the vars for carrying over (if this happens before a switch, don't do it)
-  if (level->getIndex() < (int) d_doCarryOverVarPerLevel.size()) {
+  if ( L_indx < (int) d_doCarryOverVarPerLevel.size() ) {
+    
     for (unsigned int i = 0; i < d_carryOverVarLabels.size(); i++) { 
-      if (d_doCarryOverVarPerLevel[level->getIndex()][i]) {
-        VarLabel* var = d_carryOverVarLabels[i];
+    
+      if ( d_doCarryOverVarPerLevel[L_indx][i] ) {
+      
+        VarLabel* var         = d_carryOverVarLabels[i];
         MaterialSubset* matls = d_carryOverVarMatls[i];
+      
         t->requires(Task::OldDW, var, matls, Ghost::None, 0);
         t->computes(var, matls);
      
@@ -502,32 +505,43 @@ void Switcher::switchTest(const ProcessorGroup*,
 void Switcher::initNewVars(const ProcessorGroup*,
                            const PatchSubset* patches,
                            const MaterialSubset* matls,
-                           DataWarehouse* old_dw, DataWarehouse* new_dw)
+                           DataWarehouse* old_dw, 
+                           DataWarehouse* new_dw)
 {
+  dbg << "Doing initNewVars \t\t\t\tSwitcher"<< endl;
   max_vartype switch_condition;
-  new_dw->get(switch_condition,d_sharedState->get_switch_label(),0);
+  new_dw->get(switch_condition, d_sharedState->get_switch_label(), 0);
 
   if (!switch_condition)
     return;
 
+  //__________________________________
+  //
   for (unsigned i = 0; i < d_initVarLabels[d_componentIndex+1].size(); i++) {
     VarLabel* l = d_initVarLabels[d_componentIndex+1][i];
     const MaterialSubset* matls;
-    if (d_initMatls[d_componentIndex+1][i] == "ice_matls")
+
+    string nextComp_matls = d_initMatls[d_componentIndex+1][i];
+    
+    if (     nextComp_matls == "ice_matls" ){
       matls = d_sharedState->allICEMaterials()->getSubset(0);
-    else if (d_initMatls[d_componentIndex+1][i] == "mpm_matls")
+    }
+    else if (nextComp_matls == "mpm_matls" ) {
       matls = d_sharedState->allMPMMaterials()->getSubset(0);
-    else if (d_initMatls[d_componentIndex+1][i] == "all_matls")
+    }
+    else if (nextComp_matls == "all_matls") {
       matls = d_sharedState->allMaterials()->getSubset(0);
-    else 
+    }
+    else {
       throw ProblemSetupException("Bad material set", __FILE__, __LINE__);
+    }
     //__________________________________
     //initialize a variable on this level?
-    const Level* level = getLevel(patches);
-    int numLevels = level->getGrid()->numLevels();
-    int L_indx = getLevel(patches)->getIndex();
-    int relative_indx = L_indx - numLevels;
-    int init_Levels = d_initLevels[d_componentIndex+1][i];
+    const Level* level  = getLevel(patches);
+    int numLevels       = level->getGrid()->numLevels();
+    int L_indx          = getLevel(patches)->getIndex();
+    int relative_indx   = L_indx - numLevels;
+    int init_Levels     = d_initLevels[d_componentIndex+1][i];
     
     bool onThisLevel = false;
 
@@ -557,21 +571,24 @@ void Switcher::initNewVars(const ProcessorGroup*,
         
       for (int p = 0; p < patches->size(); p++) {
         const Patch* patch = patches->get(p);
+        
         // loop over certain vars and init them into the DW
         switch(l->typeDescription()->getType()) {
+        //__________________________________
+        //
         case TypeDescription::CCVariable:
-          switch(l->typeDescription()->getSubType()->getType()) {
+          switch( l->typeDescription()->getSubType()->getType() ) {
           case TypeDescription::double_type:
             {
             CCVariable<double> q;
-            new_dw->allocateAndPut(q, l, indx,patch);
+            new_dw->allocateAndPut(q, l, indx, patch);
             q.initialize(0);
             break;
             }
           case TypeDescription::Vector:
             {
             CCVariable<Vector> q;
-            new_dw->allocateAndPut(q, l, indx,patch);
+            new_dw->allocateAndPut(q, l, indx, patch);
             q.initialize(Vector(0,0,0));
             break;
             }
@@ -579,19 +596,21 @@ void Switcher::initNewVars(const ProcessorGroup*,
             throw ProblemSetupException("Unknown type", __FILE__, __LINE__);
           }
           break;
+        //__________________________________
+        //
         case TypeDescription::NCVariable:
           switch(l->typeDescription()->getSubType()->getType()) {
           case TypeDescription::double_type:
             {
             NCVariable<double> q;
-            new_dw->allocateAndPut(q, l, indx,patch);
+            new_dw->allocateAndPut(q, l, indx, patch);
             q.initialize(0);
             break;
             }
           case TypeDescription::Vector:
             {
             NCVariable<Vector> q;
-            new_dw->allocateAndPut(q, l, indx,patch);
+            new_dw->allocateAndPut(q, l, indx, patch);
             q.initialize(Vector(0,0,0));
             break;
             }
@@ -599,6 +618,8 @@ void Switcher::initNewVars(const ProcessorGroup*,
             throw ProblemSetupException("Unknown type", __FILE__, __LINE__);
           }
           break;
+        //__________________________________
+        //
         case TypeDescription::ParticleVariable:
           {
           ParticleSubset* pset = new_dw->getParticleSubset(indx, patch);
@@ -606,35 +627,41 @@ void Switcher::initNewVars(const ProcessorGroup*,
           case TypeDescription::int_type:
             {
             ParticleVariable<int> q;
-            constParticleVariable<int> qcopy;
             new_dw->allocateAndPut(q, l, pset);
-            for (ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); iter++)
+            
+            for (ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); iter++) {
               q[*iter] = 0;
+            }
+            
             break;
             }
           case TypeDescription::double_type:
             {
             ParticleVariable<double> q;
-            constParticleVariable<double> qcopy;
             new_dw->allocateAndPut(q, l, pset);
-            for (ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); iter++)
+            
+            for (ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); iter++) {
               q[*iter] = 0;
+            }
             break;
             }
           case TypeDescription::Vector:
             {
             ParticleVariable<Vector> q;
             new_dw->allocateAndPut(q, l, pset);
-            for (ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); iter++)
+            
+            for (ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); iter++){
               q[*iter] = Vector(0,0,0);
+            }
             break;
             }
           case TypeDescription::Matrix3:
             {
             ParticleVariable<Matrix3> q;
             new_dw->allocateAndPut(q, l, pset);
-            for (ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); iter++)
+            for (ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); iter++){
               q[*iter].Identity();
+            }
             break;
             }
           default:
@@ -658,19 +685,23 @@ void Switcher::carryOverVars(const ProcessorGroup*,
                              DataWarehouse* new_dw)
 {
   const Level* level = getLevel(patches);
-  if (level->getIndex() < (int) d_doCarryOverVarPerLevel.size()) {
-    for (unsigned int i = 0; i < d_carryOverVarLabels.size(); i++) { 
-      if (d_doCarryOverVarPerLevel[level->getIndex()][i]) {
+  int L_indx = level->getIndex();
+
+  if ( L_indx < (int) d_doCarryOverVarPerLevel.size() ) {
+  
+    for (unsigned int i = 0; i < d_carryOverVarLabels.size(); i++) {
+     
+      if ( d_doCarryOverVarPerLevel[L_indx][i] ) {
         VarLabel* var = d_carryOverVarLabels[i];
         const MaterialSubset* xfer_matls = d_carryOverVarMatls[i] == 0 ? matls : d_carryOverVarMatls[i];
-        new_dw->transferFrom(old_dw, var, patches, xfer_matls);
+        new_dw->transferFrom( old_dw, var, patches, xfer_matls );
       }
     }  
   }
 }
 
 //______________________________________________________________________
-//  This is where the actual component switching takes place
+//  This is where the actual component switching takes place.
 bool
 Switcher::needRecompile( double time, 
                          double delt, 
@@ -712,7 +743,7 @@ Switcher::needRecompile( double time,
     proc0cout << "\n------------ Switching to component (" << d_componentIndex <<") \n";
     proc0cout << "  Reading input file: " << d_in_file[d_componentIndex] << "\n";
     
-    // read in the problemSpec
+    // read in the problemSpec on next subcomponent
     ProblemSpecP restart_prob_spec=0;
     ProblemSpecP subCompUps = ProblemSpecReader().readInputFile(d_in_file[d_componentIndex]);  
     
