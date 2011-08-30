@@ -48,24 +48,21 @@ namespace Uintah {
     virtual ~Switcher();
 
     virtual void problemSetup(const ProblemSpecP& params, 
-                              const ProblemSpecP& restart_prob_spec, GridP& grid,
-			      SimulationStateP&);
+                              const ProblemSpecP& restart_prob_spec, 
+                              GridP& grid,
+                              SimulationStateP&);
 
     virtual void outputProblemSpec(ProblemSpecP& ps);
     virtual void outputPS(Dir& dir);
-    virtual void scheduleInitialize(const LevelP& level,
-				    SchedulerP& sched);
-    virtual void scheduleComputeStableTimestep(const LevelP& level,
-					       SchedulerP&);
-    virtual void scheduleTimeAdvance( const LevelP& level, 
-				      SchedulerP&);
+    virtual void scheduleInitialize(            const LevelP& level, SchedulerP& sched);
+    virtual void scheduleComputeStableTimestep( const LevelP& level, SchedulerP& sched);
+    virtual void scheduleTimeAdvance(           const LevelP& level, SchedulerP& sched);
 
-    virtual void scheduleSwitchTest(const LevelP& level, SchedulerP& sched);
-    virtual void scheduleInitNewVars(const LevelP& level, SchedulerP& sched);
-    virtual void scheduleCarryOverVars(const LevelP& level, SchedulerP& sched);
-    virtual void scheduleSwitchInitialization(const LevelP& level, 
-                                              SchedulerP& sched);
-    virtual void scheduleFinalizeTimestep(const LevelP& level, SchedulerP& sched);
+    virtual void scheduleSwitchTest(            const LevelP& level, SchedulerP& sched);
+    virtual void scheduleInitNewVars(           const LevelP& level, SchedulerP& sched);
+    virtual void scheduleCarryOverVars(         const LevelP& level, SchedulerP& sched);
+    virtual void scheduleSwitchInitialization(  const LevelP& level, SchedulerP& sched);
+    virtual void scheduleFinalizeTimestep(      const LevelP& level, SchedulerP& sched);
 
     virtual bool needRecompile(double time, double delt, const GridP& grid);
     virtual void restartInitialize();
@@ -76,7 +73,8 @@ namespace Uintah {
 
 
     // direct component to add a new material
-    virtual void addMaterial( const ProblemSpecP& params, GridP& grid,
+    virtual void addMaterial( const ProblemSpecP& params, 
+                              GridP& grid,
                               SimulationStateP& state );
 
     virtual void scheduleInitializeAddedMaterial( const LevelP & level,
@@ -91,18 +89,14 @@ namespace Uintah {
                                          bool needCoarseOld, 
                                          bool needCoarseNew);
                                          
-    virtual void scheduleRefine (const PatchSet* patches, 
-                                 SchedulerP& sched); 
+    virtual void scheduleRefine (const PatchSet* patches,  SchedulerP& sched); 
     
-    virtual void scheduleCoarsen(const LevelP& coarseLevel, 
-                                 SchedulerP& sched);
+    virtual void scheduleCoarsen(const LevelP& coarseLevel, SchedulerP& sched);
 
-
-    virtual void scheduleInitialErrorEstimate(const LevelP& coarseLevel,
-                                              SchedulerP& sched);
+    virtual void scheduleInitialErrorEstimate(const LevelP& coarseLevel,SchedulerP& sched);
                                                
-    virtual void scheduleErrorEstimate(const LevelP& coarseLevel,
-                                       SchedulerP& sched);
+    virtual void scheduleErrorEstimate(       const LevelP& coarseLevel,SchedulerP& sched);
+
 
     enum switchState { idle, switching };
   private:
@@ -140,17 +134,17 @@ namespace Uintah {
     unsigned int d_componentIndex;
     
     set<const VarLabel*, VarLabel::Compare> d_computedVars;
-    vector<vector<string> > d_initVars;
-    vector<vector<string> > d_initMatls;
-    vector<vector<int> > d_initLevels;
+    vector<vector<string> >    d_initVars;
+    vector<vector<string> >    d_initMatls;
+    vector<vector<int> >       d_initLevels;
     vector<vector<VarLabel*> > d_initVarLabels;
 
-    vector<string> d_in_file;                    // contains the name of all the subcomponent inputfiles
-    vector<string> d_carryOverVars;
-    vector<VarLabel*> d_carryOverVarLabels;
+    vector<string>          d_in_file;                  // contains the name of all the subcomponent inputfiles
+    vector<string>          d_carryOverVars;
+    vector<VarLabel*>       d_carryOverVarLabels;
     vector<MaterialSubset*> d_carryOverVarMatls;
-    vector<bool> d_carryOverFinestLevelOnly; // either all levels or finest only
-    vector<vector<bool> > d_doCarryOverVarPerLevel; // size to numlevels
+    vector<bool>            d_carryOverFinestLevelOnly; // either all levels or finest only
+    vector<vector<bool> >   d_doCarryOverVarPerLevel;   // size to numlevels
 
     Switcher(const Switcher&);
     Switcher& operator=(const Switcher&);
