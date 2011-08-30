@@ -133,8 +133,6 @@ namespace Uintah {
 
     bool d_restarting;
 
-    // used to sync other switch tasks
-    //VarLabel* d_switchLabel;
     SimulationInterface* d_sim;
 
     SimulationStateP d_sharedState;
