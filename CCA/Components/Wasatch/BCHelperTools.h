@@ -25,7 +25,7 @@
 /**
  *  \file 	BCHelperTools.h
  *  \author 	Tony Saad
- *  \date  	December, 2010
+ *  \date  	December, 2011
  *
  *  \brief Provides tools to apply boundary conditions to transport equations.
  */

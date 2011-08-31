@@ -71,7 +71,7 @@ public:
   /**
    *  \class Builder
    *  \author James C. Sutherland
-   *  \date   June, 2010
+   *  \date   June, 2011
    *
    *  \brief builder for ScalarRHS objecst.
    */

@@ -1,7 +1,7 @@
 /*
   The MIT License
 
-  Copyright (c) 2010 Institute for Clean and Secure Energy (ICSE), 
+  Copyright (c) 2011 Institute for Clean and Secure Energy (ICSE), 
   University of Utah.
 
   License for the specific language governing rights and limitations under
@@ -31,7 +31,7 @@
    \mainpage
  
    \author James C. Sutherland
-   \date June, 2010
+   \date June, 2011
  
    Wasatch is a Uintah component that interfaces to the Expression
    library and SpatialOps library to facilitate more rapid
@@ -133,7 +133,7 @@ namespace Wasatch{
    *  \ingroup WasatchCore
    *  \class  Wasatch
    *  \author James C. Sutherland
-   *  \date   June, 2010
+   *  \date   June, 2011
    *
    *  \brief Defines the Wasatch simulation component within Uintah.
    *

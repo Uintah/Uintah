@@ -18,7 +18,7 @@
 /**
  *  \class     UpwindInterpolant
  *  \author    Tony Saad
- *  \date      July 2010
+ *  \date      July 2011
  *  \ingroup   WasatchOperators
  *
  *  \brief     Calculates convective flux using upwind interpolation.

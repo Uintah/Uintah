@@ -11,7 +11,7 @@
  *  \ingroup	Expressions
  *  \class  	TabPropsEvaluator
  *  \author 	James C. Sutherland
- *  \date   	June, 2010
+ *  \date   	June, 2011
  *
  *  \brief Evaluates one or more fields using TabProps, an external
  *         library for tabular property evaluation.

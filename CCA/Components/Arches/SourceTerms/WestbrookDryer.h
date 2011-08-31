@@ -10,7 +10,7 @@
 /** 
 * @class  Westbrook and Dryer Hydrocarbon Chemistry Model
 * @author Jeremy Thornock
-* @date   Aug 2010
+* @date   Aug 2011
 * 
 * @brief Computes the reaction rate source term for any CxHy hydrocarbon using a 
 *         one step mechanism. 

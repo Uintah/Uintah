@@ -57,7 +57,7 @@ namespace Wasatch{
   /**
    *  \struct GraphHelper
    *  \author James C. Sutherland
-   *  \date   June, 2010
+   *  \date   June, 2011
    *
    *  \brief Contains information helpful in constructing graphs from ExprLib
    */
