@@ -38,10 +38,10 @@ UNUSED = [ ("ice_perf_test",    "icePerformanceTest.ups",    1, "Linux","", ["do
 NIGHTLYTESTS = [ ("ice_perf_test",          "icePerformanceTest.ups",    1, "Linux", ["do_performance_test"]),  \
                  ("mpmice_perf_test",       "mpmicePerformanceTest.ups", 1, "Linux", ["do_performance_test"]), \
                  ("LBwoRegrid",             "LBwoRegrid.ups",            2, "Linux", ["exactComparison"]), \
-                 ("switchExample_impm_mpm", "switchExample_impm_mpm.ups",1, "Linux", ["all"])
+                 ("switchExample_impm_mpm", "switchExample_impm_mpm.ups",1, "Linux", ["no_memoryTest"])
                ]
 
-LOCALTESTS = [ ("switchExample_impm_mpm", "switchExample_impm_mpm.ups",1, "Linux", ["all"]), \
+LOCALTESTS = [ ("switchExample_impm_mpm", "switchExample_impm_mpm.ups",1, "Linux", ["no_memoryTest"]), \
                ("ice_perf_test",          "icePerformanceTest.ups",    1, "Linux", ["do_performance_test"]),  \
                ("mpmice_perf_test",       "mpmicePerformanceTest.ups", 1, "Linux", ["do_performance_test"]), \
                ("LBwoRegrid",             "LBwoRegrid.ups",            2, "Linux", ["exactComparison"])
