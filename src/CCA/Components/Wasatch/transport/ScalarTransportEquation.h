@@ -18,7 +18,7 @@ namespace Wasatch{
   /**
    *  \ingroup WasatchCore
    *  \class ScalarTransportEquation
-   *  \date June, 2011
+   *  \date June, 2010
    *  \author James C. Sutherland
    *
    *  \brief Support for a generic scalar transport equation.

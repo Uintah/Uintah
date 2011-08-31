@@ -21,7 +21,7 @@ namespace Wasatch{
   /**
    *  \class TemperatureTransportEquation
    *  \author James C. Sutherland
-   *  \date June, 2011
+   *  \date June, 2010
    *
    *  \brief A basic transport equation for temperature.
    *

@@ -17,7 +17,7 @@ namespace Wasatch{
    *  \ingroup WasatchCore
    *  \struct PatchInfo
    *  \author James C. Sutherland
-   *  \date   June, 2011
+   *  \date   June, 2010
    *
    *  \brief Holds information about a patch.  This is useful for
    *  individual nodes in a graph so that they have access to

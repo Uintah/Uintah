@@ -17,7 +17,7 @@
  *  \ingroup Expressions
  *  \class   ConvectiveFlux
  *  \author  Tony Saad
- *  \date    July, 2011
+ *  \date    July, 2010
  *
  *  \brief Creates an expression for the convective flux of a scalar
  *  given a velocity field \f$\mathbf{u}\f$. We write the convective
