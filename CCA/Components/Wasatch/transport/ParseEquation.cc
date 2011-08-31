@@ -30,7 +30,7 @@ namespace Wasatch{
   /**
    *  \class EqnTimestepAdaptor
    *  \author James C. Sutherland
-   *  \date June, 2011
+   *  \date June, 2010
    *
    *  \brief Strongly typed adaptor provides the key functionality to
    *         plug a transport equation into a TimeStepper.

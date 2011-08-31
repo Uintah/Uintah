@@ -7,7 +7,7 @@
 /**
  *  \class 	Stress
  *  \author 	James C. Sutherland
- *  \date 	December, 2011
+ *  \date 	December, 2010
  *  \ingroup	Expressions
  *
  *  \brief Calculates a component of the stress tensor.
