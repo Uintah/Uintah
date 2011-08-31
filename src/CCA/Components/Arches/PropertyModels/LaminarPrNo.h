@@ -8,7 +8,7 @@
 /** 
 * @class  LaminarPrNo
 * @author Jeremy T. and Weston E. 
-* @date   August 2010
+* @date   August 2011
 * 
 * @brief Computes the laminar Pr number by evaluating a laminar diffusion coefficient 
 *        and viscosity based on local concentrations of species and local temperature. 

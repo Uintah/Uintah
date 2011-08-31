@@ -30,7 +30,7 @@ namespace Wasatch{
    *  \ingroup WasatchCore
    *  \class  TimeStepper
    *  \author James C. Sutherland
-   *  \date   June 2010
+   *  \date   June 2011
    *
    *  \brief Support for integrating a set of transport equations
    *         (explicit time integration methods for now).

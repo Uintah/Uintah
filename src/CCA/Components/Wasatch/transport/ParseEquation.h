@@ -25,7 +25,7 @@ namespace Wasatch{
   /**
    *  \class EqnTimestepAdaptorBase
    *  \author James C. Sutherland
-   *  \date June, 2010
+   *  \date June, 2011
    *
    *  This serves as a means to have a container of adaptors.  These
    *  adaptors will plug a strongly typed transport equation into a

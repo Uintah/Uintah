@@ -28,7 +28,7 @@ namespace Wasatch{
    *  \ingroup WasatchGraph
    *  \class  TaskInterface
    *  \author James C. Sutherland
-   *  \date   June, 2010
+   *  \date   June, 2011
    *
    *  \brief Provides an interface to Uintah
    *

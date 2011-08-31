@@ -7,7 +7,7 @@
  *  \ingroup Expressions
  *  \class  DiffusiveFlux
  *  \author James C. Sutherland
- *  \date	June, 2010
+ *  \date	June, 2011
  *
  *  \brief Calculates a simple diffusive flux of the form
  *         \f$ J_i = -\Gamma \frac{\partial \phi}{\partial x_i} \f$ 
@@ -112,7 +112,7 @@ public:
  *  \ingroup WasatchExpressions
  *  \class  DiffusiveFlux2
  *  \author James C. Sutherland
- *  \date   June, 2010
+ *  \date   June, 2011
  *
  *  \brief Calculates a generic diffusive flux, \f$J = -\Gamma
  *         \frac{\partial \phi}{\partial x}\f$, where \f$\Gamma\f$ is

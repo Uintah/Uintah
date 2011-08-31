@@ -1,7 +1,7 @@
 # 
 # The MIT License
 # 
-# Copyright (c) 2010 Institute for Clean and Secure Energy (ICSE),
+# Copyright (c) 2011 Institute for Clean and Secure Energy (ICSE),
 # University of Utah.
 # 
 # License for the specific language governing rights and limitations under
