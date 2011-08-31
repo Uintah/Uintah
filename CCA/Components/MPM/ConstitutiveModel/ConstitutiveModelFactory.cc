@@ -99,7 +99,12 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
       flags->d_integrator_type != "fracture"){
     string txt="MPM: time integrator [explicit or implicit] hasn't been set.";
     throw ProblemSetupException(txt, __FILE__, __LINE__);
-  }   
+  }
+  
+  if(flags->d_integrator_type == "implicit" && ( mat_type == "comp_neo_hook_plastic" ) ){
+    string txt="MPM:  You cannot use implicit MPM and comp_neo_hook_plastic";
+    throw ProblemSetupException(txt, __FILE__, __LINE__);
+  }
 
   if (mat_type == "rigid")
     return(scinew RigidMaterial(child,flags));
