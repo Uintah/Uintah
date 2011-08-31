@@ -75,7 +75,7 @@ SchedulerCommon* SchedulerFactory::create(ProblemSpecP& ps,
   }
 
   if (world->myrank() == 0)
-    cout << "Scheduler: \\t\\t" << scheduler << endl;
+    cout << "Scheduler: \t\t" << scheduler << endl;
 
   if(scheduler == "SingleProcessorScheduler"){
     sch = scinew SingleProcessorScheduler(world, output, NULL, withGPU);

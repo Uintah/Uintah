@@ -49,7 +49,7 @@
 using namespace Uintah;
 
 PoissonGPU1::PoissonGPU1(const ProcessorGroup* myworld) :
-  UintahParallelComponent(myworld)
+UintahParallelComponent(myworld)
 {
 
   phi_label = VarLabel::create("phi", NCVariable<double>::getTypeDescription());
@@ -126,7 +126,6 @@ PoissonGPU1::computeStableTimestep(const ProcessorGroup* pg,
     DataWarehouse*, DataWarehouse* new_dw)
 {
 
-
   if (pg->myrank() == 0)
   {
     sum_vartype residual;
@@ -142,47 +141,40 @@ PoissonGPU1::initialize(const ProcessorGroup*, const PatchSubset* patches,
     const MaterialSubset* matls, DataWarehouse* /*old_dw*/,
     DataWarehouse* new_dw)
 {
-
-
   int matl = 0;
   for (int p = 0; p < patches->size(); p++)
+  {
+    const Patch* patch = patches->get(p);
+
+    NCVariable<double> phi;
+    new_dw->allocateAndPut(phi, phi_label, matl, patch);
+    phi.initialize(0.0);
+
+    for (Patch::FaceType face = Patch::startFace; face <= Patch::endFace; face
+        = Patch::nextFace(face))
     {
-      const Patch* patch = patches->get(p);
-
-      NCVariable<double> phi;
-      new_dw->allocateAndPut(phi, phi_label, matl, patch);
-      phi.initialize(0.0);
-
-      for (Patch::FaceType face = Patch::startFace; face <= Patch::endFace; face
-          = Patch::nextFace(face))
+      if (patch->getBCType(face) == Patch::None)
+      {
+        int numChildren = patch->getBCDataArray(face)->getNumberChildren(
+            matl);
+        for (int child = 0; child < numChildren; child++)
         {
+          Iterator nbound_ptr, nu;
 
-          if (patch->getBCType(face) == Patch::None)
-            {
-              int numChildren = patch->getBCDataArray(face)->getNumberChildren(
-                  matl);
-              for (int child = 0; child < numChildren; child++)
-                {
-                  Iterator nbound_ptr, nu;
-
-                  const BoundCondBase* bcb = patch->getArrayBCValues(face,
-                      matl, "Phi", nu, nbound_ptr, child);
-
-                  const BoundCond<double>* bc = dynamic_cast<const BoundCond<
-                      double>*> (bcb);
-                  double value = bc->getValue();
-                  for (nbound_ptr.reset(); !nbound_ptr.done(); nbound_ptr++)
-                    {
-                      phi[*nbound_ptr] = value;
-
-                    }
-                  delete bcb;
-                }
-            }
+          const BoundCondBase* bcb = patch->getArrayBCValues(face, matl, "Phi", nu, nbound_ptr, child);
+          const BoundCond<double>* bc = dynamic_cast<const BoundCond<double>*> (bcb);
+          double value = bc->getValue();
+          for (nbound_ptr.reset(); !nbound_ptr.done(); nbound_ptr++)
+          {
+            phi[*nbound_ptr] = value;
+          }
+          delete bcb;
         }
-
-      new_dw->put(sum_vartype(-1), residual_label);
+      }
     }
+
+    new_dw->put(sum_vartype(-1), residual_label);
+  }
 }
 
 //______________________________________________________________________
@@ -193,35 +185,35 @@ PoissonGPU1::initialize(const ProcessorGroup*, const PatchSubset* patches,
 // @param residual the residual calculated by this individual kernel 
 // @param oldphi pointer to the source phi allocated on the device
 // @param newphi pointer to the sink phi allocated on the device
-__global__ void
-timeAdvanceKernel(uint3 domainSize, uint3 domainLower, double *oldphi, double *newphi)
-{
-  // calculate the indices  
-  //int indxX = domainLower.x + blockDim.x * blockIdx.x + threadIdx.x;
-  //int indxY = domainLower.y + blockDim.y * blockIdx.y + threadIdx.y;
-  //int indxZ = domainLower.z + blockDim.z * blockIdx.z + threadIdx.z;
-  int indxX = blockDim.x * blockIdx.x + threadIdx.x;
-  int indxY = blockDim.y * blockIdx.y + threadIdx.y;
-  int indxZ = blockDim.z * blockIdx.z + threadIdx.z;
+__global__ void timeAdvanceKernel(uint3 domainSize, uint3 domainLower, double *phi, double *newphi,
+    double *residual) {
 
-  // Do not perform calculation if in a ghost cell or outside the domain
-  if ((indxX < domainSize.x && indxX >= 0)
-      && (indxY < domainSize.y && indxY >= 0)
-      && (indxZ < domainSize.z && indxZ >= 0))
-    {
-      // calculate the offset in the dw representation
-      int baseIdx = domainSize.x * (indxZ * domainSize.y + indxY) + indxX;
+//  __shared__ double[] residual_device;
+  // calculate the indices
+//  int indxX = domainLower.x + blockDim.x * blockIdx.x + threadIdx.x;
+//  int indxY = domainLower.y + blockDim.y * blockIdx.y + threadIdx.y;
+//  int indxZ = domainLower.z + blockDim.z * blockIdx.z + threadIdx.z;
+  int tidX = blockDim.x * blockIdx.x + threadIdx.x;
+  int tidY = blockDim.y * blockIdx.y + threadIdx.y;
+  int tidZ = blockDim.z * blockIdx.z + threadIdx.z;
 
-      // compute the stencil
-      newphi[baseIdx] = (1.0 / 6.0) * (oldphi[baseIdx + 1]
-          + oldphi[baseIdx - 1] + oldphi[baseIdx + domainSize.x]
-          + oldphi[baseIdx - domainSize.x] + oldphi[baseIdx + domainSize.x
-          * domainSize.y] + oldphi[baseIdx - domainSize.x * domainSize.y]);
+  int dz = domainSize.x - 1;
+  int dy = domainSize.y - 1;
+  int dx = domainSize.z - 1;
+  int offset = 1;
 
-      // compute the residual
-//      double diff = newphi[baseIdx] - oldphi[baseIdx];
-//      *residual += diff * diff; // THIS LINE IS WRONG--NEED SOME SORT OF LOCKING MAYBE
-    }
+// calculate the offset in the dw representation
+  int tid = tidX + ((dx + offset) * tidY + (dx + offset) * (dy + offset) * tidZ);
+
+  newphi[tid] = (1.0 / 6.0)
+      * (phi[tid - offset] + phi[tid + offset] + phi[tid - (dx + offset)]
+          + phi[tid + dx + offset] + phi[tid - (dx + offset) * (offset + dy)]
+          + phi[tid + (offset + dx) * (offset + dy)]);
+
+  double diff = newphi[tid] - phi[tid];
+  // this will cause a race condition. what we need is a scan to compute this
+  // in conjunction with atomicAdd() and __shared__ double[] residual_device;
+  *residual += diff * diff;
 }
 
 //______________________________________________________________________
@@ -237,130 +229,128 @@ PoissonGPU1::timeAdvance(const ProcessorGroup*,
 {
   //
   int matl = 0;
-  int previousPatchSize = 0; // this is to see if we need to release and reallocate between computations
+  int previousPatchSize = 0;// this is to see if we need to release and reallocate between computations
   int size = 0;
 
-  // declare device memory
-  double * phinew;
-  double * phiold;
+  // declare device and host memory
+  double* newphi_device;
+  double* phi_device;
+  double* phi_host;
+  double* newphi_host;
 
-  // find the "best" for cudaSetDevice()
+  // find the "best" device for cudaSetDevice()
   int num_devices, device;
   cudaGetDeviceCount(&num_devices);
   if (num_devices > 1) {
-      int max_multiprocessors = 0, max_device = 0;
-      for (device = 0; device < num_devices; device++) {
-          cudaDeviceProp properties;
-          cudaGetDeviceProperties(&properties, device);
-          if (max_multiprocessors < properties.multiProcessorCount) {
-              max_multiprocessors = properties.multiProcessorCount;
-              max_device = device;
-          }
+    int max_multiprocessors = 0, max_device = 0;
+    for (device = 0; device < num_devices; device++) {
+      cudaDeviceProp properties;
+      cudaGetDeviceProperties(&properties, device);
+      if (max_multiprocessors < properties.multiProcessorCount) {
+        max_multiprocessors = properties.multiProcessorCount;
+        max_device = device;
       }
-      cudaSetDevice(max_device);
+    }
+    cudaSetDevice(max_device);
   }
 
+  // Do time steps
   for (int p = 0; p < patches->size(); p++)
+  {
+    const Patch* patch = patches->get(p);
+    constNCVariable<double> phi;
+    old_dw->get(phi, phi_label, matl, patch, Ghost::AroundNodes, 1);
+
+    NCVariable<double> newphi;
+    new_dw->allocateAndPut(newphi, phi_label, matl, patch);
+    newphi.copyPatch(phi, newphi.getLowIndex(), newphi.getHighIndex());
+
+    double residual = 0;
+    IntVector l = patch->getNodeLowIndex();
+    IntVector h = patch->getNodeHighIndex();
+    IntVector s = h-l;
+    int xdim = s.x(), ydim = s.y(), zdim = s.z();
+    size = xdim * ydim * zdim * sizeof(double);
+
+    l += IntVector(patch->getBCType(Patch::xminus) == Patch::Neighbor?0:1,
+        patch->getBCType(Patch::yminus) == Patch::Neighbor?0:1,
+        patch->getBCType(Patch::zminus) == Patch::Neighbor?0:1);
+    h -= IntVector(patch->getBCType(Patch::xplus) == Patch::Neighbor?0:1,
+        patch->getBCType(Patch::yplus) == Patch::Neighbor?0:1,
+        patch->getBCType(Patch::zplus) == Patch::Neighbor?0:1);
+
+    // check if we need to reallocate
+    if (size != previousPatchSize)
     {
-      const Patch* patch = patches->get(p);
-      constNCVariable<double> phi;
-
-      old_dw->get(phi, phi_label, matl, patch, Ghost::AroundNodes, 1);
-      NCVariable<double> newphi;
-
-      new_dw->allocateAndPut(newphi, phi_label, matl, patch);
-      newphi.copyPatch(phi, newphi.getLowIndex(), newphi.getHighIndex());
-
-      double residual = 0;
-
-      IntVector l = patch->getNodeLowIndex();
-      IntVector h = patch->getNodeHighIndex();
-
-      l += IntVector(patch->getBCType(Patch::xminus) == Patch::Neighbor?0:1,
-                     patch->getBCType(Patch::yminus) == Patch::Neighbor?0:1,
-                     patch->getBCType(Patch::zminus) == Patch::Neighbor?0:1);
-      h -= IntVector(patch->getBCType(Patch::xplus)  == Patch::Neighbor?0:1,
-                     patch->getBCType(Patch::yplus)  == Patch::Neighbor?0:1,
-                     patch->getBCType(Patch::zplus)  == Patch::Neighbor?0:1);
-
-      //__________________________________
-      //  Stencil 
-
-      //// Memory Allocation ////
-      ///////////////////////////
-      // USE PINNING INSTEAD
-      int size = (h.x() - l.x()) * (h.y() - l.y()) * (h.z() - l.z())
-          * sizeof(double);
-      // check if we need to reallocate
-      if (size != previousPatchSize)
-        {
-          if (previousPatchSize != 0)
-            {
-              cudaFree(phinew);
-              cudaFree(phiold);
-            }
-          cudaMalloc(&phiold, size);
-          cudaMalloc(&phinew, size);
-        }
-      // host pointers
-      
-      //double *oldhostmem = (double*)phi.getWindow()->getData()->getPointer(); // point this at DW representation
-      //double *newhostmem = (double*)newphi.getWindow()->getData()->getPointer(); // point this at DW representation
-      double *oldhostmem = (double *)malloc(size); // point this at DW representation
-      double *newhostmem = (double *)malloc(size); // point this at DW representation
-
-      // Check to make sure memory is as we expect
-      /* */
-      NodeIterator iter(l, h);
-      int i = 0;
-      for( ; !iter.done(); iter++)
+      if (previousPatchSize != 0)
       {
-         oldhostmem[i] = phi[*iter];
-         i++;
+        cudaFree(phi_device);
+        cudaFree(newphi_device);
       }
-
-      cudaMemcpy(phiold, oldhostmem, size, cudaMemcpyHostToDevice);
-      
-      //// Kernel Execution ////
-      //////////////////////////
-      uint3 domainSize = make_uint3(h.x() - l.x(), h.y() - l.y(), h.z() - l.z());
-      uint3 domainLower = make_uint3(l.x()+1, l.y()+1, l.z()+1);
-
-      int tx = 8;
-      int ty = 8;
-      int tz = 8;
-      int totalBlocks = size / (sizeof(double) * tx * ty * tz);
-      
-      if (size % (size / (sizeof(double) * tx * ty * tz)) != 0) {
-        totalBlocks++;
-      }
-      
-      dim3 threadsPerBlock(tx, ty, tz);
-
-      // launch kernel
-      timeAdvanceKernel<<<totalBlocks, threadsPerBlock>>>(domainSize, domainLower, phiold, phinew);
-
-      cudaDeviceSynchronize();
-
-      // Memory Deallocation ////
-      ///////////////////////////
-      // USE PINNING INSTEAD
-      cudaMemcpy(newhostmem, phinew, size, cudaMemcpyDeviceToHost);
-
-      NodeIterator iter2(l, h);
-      int i2 = 0;
-      for( ; !iter2.done(); iter2++)
-      {
-         newphi[*iter2] = newhostmem[i2];
-         i2++;
-      }
-
-      free(oldhostmem);
-      free(newhostmem);
-      new_dw->put(sum_vartype(residual), residual_label);
+      cudaMalloc(&phi_device, size);
+      cudaMalloc(&newphi_device, size);
     }
 
-  // final device free
-  cudaFree(phiold);
-  cudaFree(phinew);
+    //__________________________________
+    //  Memory Allocation
+    phi_host = (double*) phi.getWindow()->getData()->getPointer();
+    newphi_host = (double*) newphi.getWindow()->getData()->getPointer();
+
+    // allocate space on the device
+    // TODO
+    // Fix this so when we have >= CCv2.0 we can use pinned host mem for phi
+    cudaMemcpy(phi_device, phi_host, size, cudaMemcpyHostToDevice);
+    cudaMemcpy(newphi_device, newphi_host, size, cudaMemcpyHostToDevice);
+
+    uint3 domainSize = make_uint3(xdim, ydim, zdim);
+    uint3 domainLower = make_uint3(l.x(), l.y(), l.z());
+    int totalBlocks = size / (sizeof(double) * xdim * ydim * zdim);
+    dim3 threadsPerBlock(xdim, ydim, zdim);
+
+    if (size % (totalBlocks) != 0) {
+      totalBlocks++;
+    }
+
+    // launch kernel
+    timeAdvanceKernel<<< totalBlocks, threadsPerBlock >>>(domainSize, domainLower, phi_device, newphi_device, &residual);
+
+    cudaDeviceSynchronize();
+    cudaMemcpy(newphi_host, newphi_device, size, cudaMemcpyDeviceToHost);
+
+    // now store residual that was device calculated
+    new_dw->put(sum_vartype(residual), residual_label);
+
+    //    //__________________________________
+    //    //  3D-Pointer Stencil operation for reference
+    //    double*** phi_data = (double***) phi.getWindow()->getData()->get3DPointer();
+    //    double*** newphi_data = (double***) newphi.getWindow()->getData()->get3DPointer();
+    //    double diff;
+    //
+    //    int zlen = s.z()-1;
+    //    int ylen = s.y()-1;
+    //    int xlen = s.x()-1;
+    //    for (int i = 1; i < zlen; i++) {
+    //      for (int j = 1; j < ylen; j++) {
+    //        for (int k = 1; k < xlen; k++) {
+    //
+    //          double xminus = phi_data[i-1][j][k];
+    //          double xplus  = phi_data[i+1][j][k];
+    //          double yminus = phi_data[i][j-1][k];
+    //          double yplus  = phi_data[i][j+1][k];
+    //          double zminus = phi_data[i][j][k-1];
+    //          double zplus  = phi_data[i][j][k+1];
+    //
+    //          newphi_data[i][j][k] = (1./6) * (xminus + xplus + yminus + yplus  + zminus + zplus);
+    //
+    //          diff = newphi_data[i][j][k] - phi_data[i][j][k];
+    //          residual += diff * diff;
+    //        }
+    //      }
+    //    }
+    //    new_dw->put(sum_vartype(residual), residual_label);
+  }
+
+  // free up allocated memory
+  cudaFree(phi_device);
+  cudaFree(newphi_device);
 }
