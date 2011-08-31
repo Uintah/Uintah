@@ -30,7 +30,7 @@
        <save label = "g.mass"/>
        <save label = "g.temperature"/>
        <save label = "g.velocity"/>
-        <checkpoint cycle = "2" interval = "1.e-6"/>
+        <checkpoint cycle = "2" interval = "0.4e-6"/>
    </DataArchiver>
 
     <MPM>
