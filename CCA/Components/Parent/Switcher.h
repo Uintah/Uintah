@@ -133,11 +133,18 @@ namespace Uintah {
     unsigned int d_numComponents;
     unsigned int d_componentIndex;
     
+    struct initVars{
+      vector<string>            varNames;
+      vector<string>            matlSetNames;
+      vector<const MaterialSet*> matls;
+      vector<int>               levels;
+      vector<VarLabel*>         varLabels;
+    };
+    
+    map<int, initVars*> d_initVars;
+    
     set<const VarLabel*, VarLabel::Compare> d_computedVars;
-    vector<vector<string> >    d_initVars;
-    vector<vector<string> >    d_initMatls;
-    vector<vector<int> >       d_initLevels;
-    vector<vector<VarLabel*> > d_initVarLabels;
+    
 
     vector<string>          d_in_file;                  // contains the name of all the subcomponent inputfiles
     vector<string>          d_carryOverVars;
