@@ -144,7 +144,25 @@ namespace Wasatch{
   {
     // for now we will assume that we are computing things on ALL materials
     const Uintah::MaterialSubset* const mss = materials->getUnion();
-
+    
+    //________________________________________________________
+    // add a task to populate a "field" with the current time.
+    // This is required by the time integrator.
+    {
+      TaskInterface* const timeTask = scinew TaskInterface( timeID,
+                                                           "set time",
+                                                           *factory_,
+                                                           level, sched, patches, materials,
+                                                           patchInfoMap,
+                                                           true, 1 );
+      taskInterfaceList_.push_back( timeTask );
+      timeTask->schedule( coordHelper_->field_tags(), rkStage );
+      // add a task to update current simulation time
+      Uintah::Task* updateCurrentTimeTask = scinew Uintah::Task( "update current time", this, &TimeStepper::update_current_time, timeTask->get_time_tree(), rkStage );
+      updateCurrentTimeTask->requires( Uintah::Task::OldDW, deltaTLabel_ );
+      sched->addTask( updateCurrentTimeTask, patches, materials );      
+    }    
+        
     //_________________________________________________________________
     // Schedule the task to compute the RHS for the transport equations
     //
@@ -173,24 +191,6 @@ namespace Wasatch{
           << "*************************************************" << endl << endl;
       throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
     }
-
-    //________________________________________________________
-    // add a task to populate a "field" with the current time.
-    // This is required by the time integrator.
-    {
-      TaskInterface* const timeTask = scinew TaskInterface( timeID,
-                                                            "set time",
-                                                            *factory_,
-                                                            level, sched, patches, materials,
-                                                            patchInfoMap,
-                                                            true, 1 );
-      taskInterfaceList_.push_back( timeTask );
-      timeTask->schedule( coordHelper_->field_tags(), rkStage );
-      // add a task to update current simulation time
-      Uintah::Task* updateCurrentTimeTask = scinew Uintah::Task( "update current time", this, &TimeStepper::update_current_time, timeTask->get_time_tree(), rkStage );
-      updateCurrentTimeTask->requires( Uintah::Task::OldDW, deltaTLabel_ );
-      sched->addTask( updateCurrentTimeTask, patches, materials );      
-    }    
 
     //_____________________________________________________
     // add a task to advance each solution variable in time
