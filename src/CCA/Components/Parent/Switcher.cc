@@ -87,7 +87,7 @@ Switcher::Switcher( const ProcessorGroup* myworld,
   d_componentIndex   = 0;
   d_switchState      = idle;
   d_restarting       = false;
-
+  set<string>       simComponents;
 
   ProblemSpecP sim_block = d_master_ups->findBlock("SimulationComponent");
   ProblemSpecP child     = sim_block->findBlock("subcomponent");
@@ -95,9 +95,6 @@ Switcher::Switcher( const ProcessorGroup* myworld,
   //__________________________________
   //  loop over the subcomponents
   for(; child != 0; child = child->findNextBlock("subcomponent")) {
-    vector<string> init_vars;
-    vector<string> init_matls;
-    vector<int> init_levels;
     
     string input_file("");
     if (!child->get("input_file",input_file)) {
@@ -115,7 +112,11 @@ Switcher::Switcher( const ProcessorGroup* myworld,
 
     // This will get the component name from the input file, and the uda arg is not needed for normal simulations...  
     UintahParallelComponent* comp = ComponentFactory::create(subCompUps, myworld, doAMR, "");
-
+    string sim_comp;
+    ProblemSpecP sim_ps = subCompUps->findBlock("SimulationComponent");
+    sim_ps->getAttribute( "type", sim_comp );
+    simComponents.insert(sim_comp);
+    
     SimulationInterface* sim = dynamic_cast<SimulationInterface*>(comp);
     attachPort( "sim", sim );
 
@@ -134,34 +135,41 @@ Switcher::Switcher( const ProcessorGroup* myworld,
       comp->attachPort("switch_criteria",switch_criteria);
     }
 
-    // Get the vars that will need to be initialized by this component
+    // Get the variables that will need to be initialized by this component
+    initVars* initVar = scinew initVars;
     for( ProblemSpecP var = child->findBlock("init"); var != 0; var = var->findNextBlock("init") ) {
+
       map<string,string> attributes;
       var->getAttributes(attributes);
-      string name   = attributes["var"];
-      string matls  = attributes["matls"];
       
+      // matlsetNames
+      string matls = attributes["matls"];
+      initVar->matlSetNames.push_back(matls);
+      
+      // levels
       stringstream s_level(attributes["levels"]);
       int levels = ALL_LEVELS;
       s_level >> levels;
-      
-      if (name != ""){ 
-        init_vars.push_back(name);
-      }else{
-        continue;
-      }
-      
-      init_levels.push_back(levels);
-      init_matls.push_back(matls);
+      initVar->levels.push_back(levels);
+     
+      // variable name
+      string varName =  attributes["var"];
+      initVar->varNames.push_back(varName);
     }
     
-    d_initVars.push_back(init_vars);
-    d_initMatls.push_back(init_matls);
-    d_initLevels.push_back(init_levels);
+    d_initVars[num_components] =initVar;
+    
     num_components++;
     
     proc0cout << "\n";
   }  // loop over subcomponents
+  
+  //__________________________________
+  // Bulletproofing:
+  if ( simComponents.count("mpm") && simComponents.count("rmpmice") ){
+    throw ProblemSetupException("Switcher: The simulation subComponents rmpmice and mpm cannot be used together", __FILE__, __LINE__);
+  }
+  
   
   //__________________________________
   // Bulletproofing:
@@ -288,28 +296,41 @@ Switcher::problemSetup( const ProblemSpecP& /*params*/,
   // read in <Time> block from ups file
   d_sharedState->d_simTime->problemSetup( subCompUps );    
     
-    
-// SHOULD THIS BE MOVED TO THE CONSTRUCTOR??
   //__________________________________
-  // get the varLabels for carryOver and init Vars from the strings
-  for (unsigned i = 0; i < d_initVars.size(); i++) {
-    vector<string>& names = d_initVars[i];
-    vector<VarLabel*> labels;
-    
-    for (unsigned j = 0; j < names.size(); j++) {
-      VarLabel* label = VarLabel::find(names[j]);
-      if (label) {
-        labels.push_back(label);
-        sched->overrideVariableBehavior(names[j], false, false, true);
-      }
-      else {
-        string error = "ERROR: Switcher: Cannot find init VarLabel" + names[j];
+  // init Variables:
+  //   - determine the label from the string names
+  //   - determine the MaterialSet from the string matlSetName
+  map<int,initVars*>::iterator it;
+  for ( it=d_initVars.begin() ; it != d_initVars.end(); it++ ){ 
+     
+    int comp = it->first;
+    proc0cout << " init Variables:  component: " << comp << endl;
+    initVars* tmp = it->second;
+ 
+ 
+    // Find the varLabel   
+    vector<string>& varNames    = tmp->varNames;
+    vector<VarLabel*> varLabels = tmp->varLabels;
+ 
+    for (unsigned j = 0; j < varNames.size(); j++) {
+     
+      string varName = varNames[j];
+      VarLabel* label = VarLabel::find(varName);
+      
+      if (!label) {
+        string error = "ERROR: Switcher: Cannot find init VarLabel" + varName;
         throw ProblemSetupException(error, __FILE__, __LINE__);
       }
+      
+      varLabels.push_back(label);
+     // sched->overrideVariableBehavior(varName, false, false, true);
     }
-    d_initVarLabels.push_back(labels);
+
+    d_initVars[comp]->varLabels = varLabels;
   }
   
+  //__________________________________
+  //
   // Carry over labels
   for (unsigned i = 0; i < d_carryOverVars.size(); i++) {
     VarLabel* label = VarLabel::find(d_carryOverVars[i]);
@@ -407,10 +428,50 @@ void Switcher::scheduleSwitchTest(const LevelP& level,
 void Switcher::scheduleInitNewVars(const LevelP& level, 
                                   SchedulerP& sched)
 {
+  unsigned int nextComp_indx = d_componentIndex+1;
+  
+  if( nextComp_indx >= d_numComponents )
+    return;
+  
   printSchedule(level,dbg,"Switcher::scheduleInitNewVars");
   
   Task* t = scinew Task("Switcher::initNewVars",this, 
                        & Switcher::initNewVars);
+  
+  initVars* initVar  = d_initVars.find(nextComp_indx)->second;
+  
+  vector<const MaterialSet*> matlSet;
+ 
+  for (unsigned i = 0; i < initVar->varLabels.size(); i++) {
+    
+    VarLabel* label = initVar->varLabels[i]; 
+     
+    // Find the MaterialSet for this variable
+    // and put that set in the global structure
+    const MaterialSet* matls;
+
+    string nextComp_matls = initVar->matlSetNames[i];
+    if (     nextComp_matls == "ice_matls" ){
+      matls = d_sharedState->allICEMaterials();
+    }
+    else if (nextComp_matls == "mpm_matls" ) {
+      matls = d_sharedState->allMPMMaterials();
+    }
+    else if (nextComp_matls == "all_matls") {
+      matls = d_sharedState->allMaterials();
+    }
+    else {
+      throw ProblemSetupException("Bad material set", __FILE__, __LINE__);
+    }
+    matlSet.push_back(matls);
+    proc0cout << "    varName: " << initVar->varNames[i] << " \t matls: " 
+              << nextComp_matls << " levels " << initVar->levels[i] << endl;  
+    
+    const MaterialSubset* matl_ss = matls->getUnion();
+    t->computes(label, matl_ss);
+  }
+
+  d_initVars[nextComp_indx]->matls = matlSet;
 
   t->requires(Task::NewDW,d_sharedState->get_switch_label());
   sched->addTask(t,level->eachPatch(),d_sharedState->allMaterials());
@@ -508,40 +569,31 @@ void Switcher::initNewVars(const ProcessorGroup*,
                            DataWarehouse* old_dw, 
                            DataWarehouse* new_dw)
 {
-  dbg << "Doing initNewVars \t\t\t\tSwitcher"<< endl;
   max_vartype switch_condition;
   new_dw->get(switch_condition, d_sharedState->get_switch_label(), 0);
 
   if (!switch_condition)
     return;
-
+    
+  dbg << "Doing initNewVars \t\t\t\tSwitcher"<< endl;
   //__________________________________
   //
-  for (unsigned i = 0; i < d_initVarLabels[d_componentIndex+1].size(); i++) {
-    VarLabel* l = d_initVarLabels[d_componentIndex+1][i];
-    const MaterialSubset* matls;
-
-    string nextComp_matls = d_initMatls[d_componentIndex+1][i];
+  initVars* initVar  = d_initVars.find(d_componentIndex+1)->second;
+  
+  for (unsigned i = 0; i < initVar->varLabels.size(); i++) {
     
-    if (     nextComp_matls == "ice_matls" ){
-      matls = d_sharedState->allICEMaterials()->getSubset(0);
-    }
-    else if (nextComp_matls == "mpm_matls" ) {
-      matls = d_sharedState->allMPMMaterials()->getSubset(0);
-    }
-    else if (nextComp_matls == "all_matls") {
-      matls = d_sharedState->allMaterials()->getSubset(0);
-    }
-    else {
-      throw ProblemSetupException("Bad material set", __FILE__, __LINE__);
-    }
+    VarLabel* l = initVar->varLabels[i];
+    const MaterialSubset* matls = initVar->matls[i]->getUnion();
+
     //__________________________________
     //initialize a variable on this level?
     const Level* level  = getLevel(patches);
     int numLevels       = level->getGrid()->numLevels();
     int L_indx          = getLevel(patches)->getIndex();
     int relative_indx   = L_indx - numLevels;
-    int init_Levels     = d_initLevels[d_componentIndex+1][i];
+    int init_Levels     = initVar->levels[i];
+    
+    cout << "    varName: " << l->getName() << " \t\t matls " << initVar->matlSetNames[i] << " level " << init_Levels << endl;
     
     bool onThisLevel = false;
 
