@@ -49,42 +49,38 @@
 using namespace Uintah;
 
 PoissonGPU1::PoissonGPU1(const ProcessorGroup* myworld) :
-UintahParallelComponent(myworld)
-{
+    UintahParallelComponent(myworld) {
 
   phi_label = VarLabel::create("phi", NCVariable<double>::getTypeDescription());
-  residual_label = VarLabel::create("residual",
-      sum_vartype::getTypeDescription());
+  residual_label = VarLabel::create("residual", sum_vartype::getTypeDescription());
 }
 
-PoissonGPU1::~PoissonGPU1()
-{
-  VarLabel::destroy( phi_label);
-  VarLabel::destroy( residual_label);
+PoissonGPU1::~PoissonGPU1() {
+  VarLabel::destroy(phi_label);
+  VarLabel::destroy(residual_label);
 }
 //______________________________________________________________________
 //
-void
-PoissonGPU1::problemSetup(const ProblemSpecP& params,
-    const ProblemSpecP& restart_prob_spec, GridP& /*grid*/,
-    SimulationStateP& sharedState)
-{
+void PoissonGPU1::problemSetup(const ProblemSpecP& params,
+                               const ProblemSpecP& restart_prob_spec,
+                               GridP& /*grid*/,
+                               SimulationStateP& sharedState) {
   sharedState_ = sharedState;
   ProblemSpecP poisson = params->findBlock("Poisson");
 
   poisson->require("delt", delt_);
 
-  mymat_ = scinew SimpleMaterial();
+  mymat_ = scinew
+  SimpleMaterial();
 
   sharedState->registerSimpleMaterial(mymat_);
 }
 //______________________________________________________________________
 //
-void
-PoissonGPU1::scheduleInitialize(const LevelP& level, SchedulerP& sched)
-{
-  Task* task = scinew Task("PoissonGPU1::initialize",
-      this, &PoissonGPU1::initialize);
+void PoissonGPU1::scheduleInitialize(const LevelP& level,
+                                     SchedulerP& sched) {
+  Task * task = scinew
+  Task("PoissonGPU1::initialize", this, &PoissonGPU1::initialize);
 
   task->computes(phi_label);
   task->computes(residual_label);
@@ -92,12 +88,10 @@ PoissonGPU1::scheduleInitialize(const LevelP& level, SchedulerP& sched)
 }
 //______________________________________________________________________
 //
-void
-PoissonGPU1::scheduleComputeStableTimestep(const LevelP& level,
-    SchedulerP& sched)
-{
-  Task* task = scinew Task("PoissonGPU1::computeStableTimestep",
-      this, &PoissonGPU1::computeStableTimestep);
+void PoissonGPU1::scheduleComputeStableTimestep(const LevelP& level,
+                                                SchedulerP& sched) {
+  Task * task = scinew
+  Task("PoissonGPU1::computeStableTimestep", this, &PoissonGPU1::computeStableTimestep);
 
   task->requires(Task::NewDW, residual_label);
   task->computes(sharedState_->get_delt_label(), level.get_rep());
@@ -105,11 +99,10 @@ PoissonGPU1::scheduleComputeStableTimestep(const LevelP& level,
 }
 //______________________________________________________________________
 //
-void
-PoissonGPU1::scheduleTimeAdvance(const LevelP& level, SchedulerP& sched)
-{
-  Task* task = scinew Task("PoissonGPU1::timeAdvance",
-      this, &PoissonGPU1::timeAdvance);
+void PoissonGPU1::scheduleTimeAdvance(const LevelP& level,
+                                      SchedulerP& sched) {
+  Task * task = scinew
+  Task("PoissonGPU1::timeAdvance", this, &PoissonGPU1::timeAdvance);
 //  CUDATask* task = scinew CUDATask("PoissonGPU1::timeAdvance",
 //      this, &PoissonGPU1::timeAdvance);
 
@@ -120,14 +113,13 @@ PoissonGPU1::scheduleTimeAdvance(const LevelP& level, SchedulerP& sched)
 }
 //______________________________________________________________________
 //
-void
-PoissonGPU1::computeStableTimestep(const ProcessorGroup* pg,
-    const PatchSubset* patches, const MaterialSubset* /*matls*/,
-    DataWarehouse*, DataWarehouse* new_dw)
-{
+void PoissonGPU1::computeStableTimestep(const ProcessorGroup* pg,
+                                        const PatchSubset* patches,
+                                        const MaterialSubset* /*matls*/,
+                                        DataWarehouse*,
+                                        DataWarehouse* new_dw) {
 
-  if (pg->myrank() == 0)
-  {
+  if (pg->myrank() == 0) {
     sum_vartype residual;
     new_dw->get(residual, residual_label);
     cerr << "Residual=" << residual << '\n';
@@ -136,36 +128,31 @@ PoissonGPU1::computeStableTimestep(const ProcessorGroup* pg,
 }
 //______________________________________________________________________
 //
-void
-PoissonGPU1::initialize(const ProcessorGroup*, const PatchSubset* patches,
-    const MaterialSubset* matls, DataWarehouse* /*old_dw*/,
-    DataWarehouse* new_dw)
-{
+void PoissonGPU1::initialize(const ProcessorGroup*,
+                             const PatchSubset* patches,
+                             const MaterialSubset* matls,
+                             DataWarehouse* /*old_dw*/,
+                             DataWarehouse* new_dw) {
   int matl = 0;
-  for (int p = 0; p < patches->size(); p++)
-  {
+  for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
 
     NCVariable<double> phi;
     new_dw->allocateAndPut(phi, phi_label, matl, patch);
     phi.initialize(0.0);
 
-    for (Patch::FaceType face = Patch::startFace; face <= Patch::endFace; face
-        = Patch::nextFace(face))
-    {
-      if (patch->getBCType(face) == Patch::None)
-      {
-        int numChildren = patch->getBCDataArray(face)->getNumberChildren(
-            matl);
-        for (int child = 0; child < numChildren; child++)
-        {
+    for (Patch::FaceType face = Patch::startFace; face <= Patch::endFace;
+        face = Patch::nextFace(face)) {
+      if (patch->getBCType(face) == Patch::None) {
+        int numChildren = patch->getBCDataArray(face)->getNumberChildren(matl);
+        for (int child = 0; child < numChildren; child++) {
           Iterator nbound_ptr, nu;
 
-          const BoundCondBase* bcb = patch->getArrayBCValues(face, matl, "Phi", nu, nbound_ptr, child);
-          const BoundCond<double>* bc = dynamic_cast<const BoundCond<double>*> (bcb);
+          const BoundCondBase* bcb = patch->getArrayBCValues(face, matl, "Phi", nu, nbound_ptr,
+                                                             child);
+          const BoundCond<double>* bc = dynamic_cast<const BoundCond<double>*>(bcb);
           double value = bc->getValue();
-          for (nbound_ptr.reset(); !nbound_ptr.done(); nbound_ptr++)
-          {
+          for (nbound_ptr.reset(); !nbound_ptr.done(); nbound_ptr++) {
             phi[*nbound_ptr] = value;
           }
           delete bcb;
@@ -182,11 +169,13 @@ PoissonGPU1::initialize(const ProcessorGroup*, const PatchSubset* patches,
 // @brief A kernel that applies the stencil used in timeAdvance(...)
 // @param domainSize a three component vector that gives the size of the domain as (x,y,z)
 // @param domainLower a three component vector that gives the lower corner of the work area as (x,y,z)
+// @param ghostLayers the number of layers of ghost cells
 // @param residual the residual calculated by this individual kernel 
 // @param oldphi pointer to the source phi allocated on the device
 // @param newphi pointer to the sink phi allocated on the device
 __global__ void timeAdvanceKernel(uint3 domainSize,
                                   uint3 domainLower,
+                                  int ghostLayers,
                                   double *phi,
                                   double *newphi,
                                   double *residual) {
@@ -196,45 +185,48 @@ __global__ void timeAdvanceKernel(uint3 domainSize,
 // calculate the thread indices
   int tidX = blockDim.x * blockIdx.x + threadIdx.x;
   int tidY = blockDim.y * blockIdx.y + threadIdx.y;
-//  int tidZ = blockDim.z * blockIdx.z + threadIdx.z;
+  //  int tidZ = blockDim.z * blockIdx.z + threadIdx.z;
 
-  int num_slices = domainSize.z;
+  int num_slices = domainSize.z - ghostLayers;
 
-  int dx = domainSize.x - 1;
-  int dy = domainSize.y - 1;
+  int dx = domainSize.x;
+  int dy = domainSize.y;
 
-  for (int slice = 1; slice < num_slices; slice++) {
+  if (tidX < (dx - ghostLayers) && tidY < (dy - ghostLayers) && tidX > 0 && tidY > 0) {
+    for (int slice = ghostLayers; slice < num_slices; slice++) {
 
-    newphi[INDEX3D(dx, dy, tidX, tidY, slice)] = (1.0 / 6.0)
-                                                 * (phi[INDEX3D(dx, dy, tidX - 1, tidY, slice)]
-                                                    + phi[INDEX3D(dx, dy, tidX + 1, tidY, slice)]
-                                                    + phi[INDEX3D(dx, dy, tidX, tidY - 1, slice)]
-                                                    + phi[INDEX3D(dx, dy, tidX, tidY + 1, slice)]
-                                                    + phi[INDEX3D(dx, dy, tidX, tidY, slice - 1)]
-                                                    + phi[INDEX3D(dx, dy, tidX, tidY, slice + 1)]);
+      newphi[INDEX3D(dx, dy, tidX, tidY, slice)] =
+          (1.0 / 6.0)
+          * (phi[INDEX3D(dx, dy, tidX - 1, tidY, slice)]
+             + phi[INDEX3D(dx, dy, tidX + 1, tidY, slice)]
+             + phi[INDEX3D(dx, dy, tidX, tidY - 1, slice)]
+             + phi[INDEX3D(dx, dy, tidX, tidY + 1, slice)]
+             + phi[INDEX3D(dx, dy, tidX, tidY, slice - 1)]
+             + phi[INDEX3D(dx, dy, tidX, tidY, slice + 1)]);
 
-    double diff = newphi[INDEX3D(dx, dy, tidX, tidY, slice)]
-                  - phi[INDEX3D(dx, dy, tidX, tidY, slice)];
+      //double diff = newphi[INDEX3D(dx, dy, tidX, tidY, slice)]
+      //              - phi[INDEX3D(dx, dy, tidX, tidY, slice)];
 
-    // this will cause a race condition. what we need is a reduction to compute this
-    // in conjunction with atomicAdd() and __shared__ double[] residual_device;
-    *residual += diff * diff;
+      // this will cause a race condition. what we need is a reduction to compute this
+      // in conjunction with atomicAdd() and __shared__ double[] residual_device;
+      //*residual += diff * diff;
+    }
   }
 }
 
 //______________________________________________________________________
 //
 void PoissonGPU1::timeAdvance(const ProcessorGroup*,
-    const PatchSubset* patches,
-    const MaterialSubset* matls,
-    DataWarehouse* old_dw,
-    DataWarehouse* new_dw)//,
+                              const PatchSubset* patches,
+                              const MaterialSubset* matls,
+                              DataWarehouse* old_dw,
+                              DataWarehouse* new_dw)    //,
 //                         int deviceID = 0,
 //                         CUDADevice *deviceProperties = NULL)
-{
+                              {
   //
   int matl = 0;
-  int previousPatchSize = 0;// this is to see if we need to release and reallocate between computations
+  int previousPatchSize = 0;  // this is to see if we need to release and reallocate between computations
   int size = 0;
 
   // declare device and host memory
@@ -260,8 +252,7 @@ void PoissonGPU1::timeAdvance(const ProcessorGroup*,
   }
 
   // Do time steps
-  for (int p = 0; p < patches->size(); p++)
-  {
+  for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     constNCVariable<double> phi;
     old_dw->get(phi, phi_label, matl, patch, Ghost::AroundNodes, 1);
@@ -273,22 +264,20 @@ void PoissonGPU1::timeAdvance(const ProcessorGroup*,
     double residual = 0;
     IntVector l = patch->getNodeLowIndex();
     IntVector h = patch->getNodeHighIndex();
-    IntVector s = h-l;
+    IntVector s = h - l;
     int xdim = s.x(), ydim = s.y(), zdim = s.z();
     size = xdim * ydim * zdim * sizeof(double);
 
-    l += IntVector(patch->getBCType(Patch::xminus) == Patch::Neighbor?0:1,
-        patch->getBCType(Patch::yminus) == Patch::Neighbor?0:1,
-        patch->getBCType(Patch::zminus) == Patch::Neighbor?0:1);
-    h -= IntVector(patch->getBCType(Patch::xplus) == Patch::Neighbor?0:1,
-        patch->getBCType(Patch::yplus) == Patch::Neighbor?0:1,
-        patch->getBCType(Patch::zplus) == Patch::Neighbor?0:1);
+    l += IntVector(patch->getBCType(Patch::xminus) == Patch::Neighbor ? 0 : 1,
+                   patch->getBCType(Patch::yminus) == Patch::Neighbor ? 0 : 1,
+                   patch->getBCType(Patch::zminus) == Patch::Neighbor ? 0 : 1);
+    h -= IntVector(patch->getBCType(Patch::xplus) == Patch::Neighbor ? 0 : 1,
+                   patch->getBCType(Patch::yplus) == Patch::Neighbor ? 0 : 1,
+                   patch->getBCType(Patch::zplus) == Patch::Neighbor ? 0 : 1);
 
     // check if we need to reallocate
-    if (size != previousPatchSize)
-    {
-      if (previousPatchSize != 0)
-      {
+    if (size != previousPatchSize) {
+      if (previousPatchSize != 0) {
         cudaFree(phi_device);
         cudaFree(newphi_device);
       }
@@ -298,8 +287,8 @@ void PoissonGPU1::timeAdvance(const ProcessorGroup*,
 
     //__________________________________
     //  Memory Allocation
-    phi_host = (double*) phi.getWindow()->getData()->getPointer();
-    newphi_host = (double*) newphi.getWindow()->getData()->getPointer();
+    phi_host = (double*)phi.getWindow()->getData()->getPointer();
+    newphi_host = (double*)newphi.getWindow()->getData()->getPointer();
 
     // allocate space on the device
     // TODO
@@ -317,7 +306,7 @@ void PoissonGPU1::timeAdvance(const ProcessorGroup*,
     }
 
     // launch kernel
-    timeAdvanceKernel<<< totalBlocks, threadsPerBlock >>>(domainSize, domainLower, phi_device, newphi_device, &residual);
+    timeAdvanceKernel<<< totalBlocks, threadsPerBlock >>>(domainSize, domainLower, 1, phi_device, newphi_device, &residual);
 
     cudaDeviceSynchronize();
     cudaMemcpy(newphi_host, newphi_device, size, cudaMemcpyDeviceToHost);
@@ -355,7 +344,6 @@ void PoissonGPU1::timeAdvance(const ProcessorGroup*,
 //      }
 //    }
 //    new_dw->put(sum_vartype(residual), residual_label);
-
 
 //    //__________________________________
 //    // 1D-Pointer Stencil operation for reference
