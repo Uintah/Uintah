@@ -369,7 +369,6 @@ void DDT1::scheduleComputeModelSources(SchedulerP& sched,
     t1->computes(crackedEnoughLabel,    react_matl);
     t->requires(Task::OldDW, Mlb->pXLabel,            mpm_matls,  gn);
     t->requires(Task::OldDW, pCrackRadiusLabel,       react_matl, gn);
-    t->requires(Task::OldDW, detLocalToLabel,         react_matl, oms, gac,1);
     t->requires(Task::NewDW, crackedEnoughLabel,      react_matl, gac,1);
   }
   
@@ -528,7 +527,6 @@ void DDT1::computeModelSources(const ProcessorGroup*,
     CCVariable<double> Fr, delF;       
     // Diagnostics/Thresholds                     
     CCVariable<double> burningCell, detonating, detLocalTo;
-    constCCVariable<double> previousDetLocal;
     // Old Reactant Quantities
     constCCVariable<double> cv_reactant, rctVolFrac;
     constCCVariable<double> rctTemp, rctRho, rctSpvol, rctFr, pFlag;
@@ -559,7 +557,6 @@ void DDT1::computeModelSources(const ProcessorGroup*,
     new_dw->get(pFlag,         numPPCLabel,           m0, patch,gac,1);
     if(d_useCrackModel){
       old_dw->get(px,          Mlb->pXLabel,      pset);
-      old_dw->get(previousDetLocal,    detLocalToLabel,    m0, patch, gac, 1); 
       new_dw->get(crackedEnough,       crackedEnoughLabel, m0, patch, gac, 1);
     }
     //__________________________________
