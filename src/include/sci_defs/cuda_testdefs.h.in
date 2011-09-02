@@ -33,12 +33,13 @@
 @DEF_CUDA@
 
 #ifdef HAVE_CUDA
+#define INDEX3D(dx,dy,i,j,k) ((i)+dx*((j)+dy*(k)))
+
 #  include <cuda.h>
 #  include <cutil.h>
 #  include <cuda_runtime_api.h>
 #  include <cuda_runtime.h>
 #endif
-
 
 #endif
 
