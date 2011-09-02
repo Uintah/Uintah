@@ -181,49 +181,54 @@ PoissonGPU1::initialize(const ProcessorGroup*, const PatchSubset* patches,
 //
 // @brief A kernel that applies the stencil used in timeAdvance(...)
 // @param domainSize a three component vector that gives the size of the domain as (x,y,z)
-// @param domainLower a three component vector that gives the lower corner of the workarea as (x,y,z)
+// @param domainLower a three component vector that gives the lower corner of the work area as (x,y,z)
 // @param residual the residual calculated by this individual kernel 
 // @param oldphi pointer to the source phi allocated on the device
 // @param newphi pointer to the sink phi allocated on the device
-__global__ void timeAdvanceKernel(uint3 domainSize, uint3 domainLower, double *phi, double *newphi,
-    double *residual) {
+__global__ void timeAdvanceKernel(uint3 domainSize,
+                                  uint3 domainLower,
+                                  double *phi,
+                                  double *newphi,
+                                  double *residual) {
 
 //  __shared__ double[] residual_device;
-  // calculate the indices
-//  int indxX = domainLower.x + blockDim.x * blockIdx.x + threadIdx.x;
-//  int indxY = domainLower.y + blockDim.y * blockIdx.y + threadIdx.y;
-//  int indxZ = domainLower.z + blockDim.z * blockIdx.z + threadIdx.z;
+
+// calculate the thread indices
   int tidX = blockDim.x * blockIdx.x + threadIdx.x;
   int tidY = blockDim.y * blockIdx.y + threadIdx.y;
-  int tidZ = blockDim.z * blockIdx.z + threadIdx.z;
+//  int tidZ = blockDim.z * blockIdx.z + threadIdx.z;
 
-  int dz = domainSize.x - 1;
+  int num_slices = domainSize.z;
+
+  int dx = domainSize.x - 1;
   int dy = domainSize.y - 1;
-  int dx = domainSize.z - 1;
-  int offset = 1;
 
-// calculate the offset in the dw representation
-  int tid = tidX + ((dx + offset) * tidY + (dx + offset) * (dy + offset) * tidZ);
+  for (int slice = 1; slice < num_slices; slice++) {
 
-  newphi[tid] = (1.0 / 6.0)
-      * (phi[tid - offset] + phi[tid + offset] + phi[tid - (dx + offset)]
-          + phi[tid + dx + offset] + phi[tid - (dx + offset) * (offset + dy)]
-          + phi[tid + (offset + dx) * (offset + dy)]);
+    newphi[INDEX3D(dx, dy, tidX, tidY, slice)] = (1.0 / 6.0)
+                                                 * (phi[INDEX3D(dx, dy, tidX - 1, tidY, slice)]
+                                                    + phi[INDEX3D(dx, dy, tidX + 1, tidY, slice)]
+                                                    + phi[INDEX3D(dx, dy, tidX, tidY - 1, slice)]
+                                                    + phi[INDEX3D(dx, dy, tidX, tidY + 1, slice)]
+                                                    + phi[INDEX3D(dx, dy, tidX, tidY, slice - 1)]
+                                                    + phi[INDEX3D(dx, dy, tidX, tidY, slice + 1)]);
 
-  double diff = newphi[tid] - phi[tid];
-  // this will cause a race condition. what we need is a scan to compute this
-  // in conjunction with atomicAdd() and __shared__ double[] residual_device;
-  *residual += diff * diff;
+    double diff = newphi[INDEX3D(dx, dy, tidX, tidY, slice)]
+                  - phi[INDEX3D(dx, dy, tidX, tidY, slice)];
+
+    // this will cause a race condition. what we need is a reduction to compute this
+    // in conjunction with atomicAdd() and __shared__ double[] residual_device;
+    *residual += diff * diff;
+  }
 }
 
 //______________________________________________________________________
 //
-void
-PoissonGPU1::timeAdvance(const ProcessorGroup*,
-                         const PatchSubset* patches,
-                         const MaterialSubset* matls,
-                         DataWarehouse* old_dw,
-                         DataWarehouse* new_dw) //,
+void PoissonGPU1::timeAdvance(const ProcessorGroup*,
+    const PatchSubset* patches,
+    const MaterialSubset* matls,
+    DataWarehouse* old_dw,
+    DataWarehouse* new_dw)//,
 //                         int deviceID = 0,
 //                         CUDADevice *deviceProperties = NULL)
 {
@@ -320,35 +325,78 @@ PoissonGPU1::timeAdvance(const ProcessorGroup*,
     // now store residual that was device calculated
     new_dw->put(sum_vartype(residual), residual_label);
 
-    //    //__________________________________
-    //    //  3D-Pointer Stencil operation for reference
-    //    double*** phi_data = (double***) phi.getWindow()->getData()->get3DPointer();
-    //    double*** newphi_data = (double***) newphi.getWindow()->getData()->get3DPointer();
-    //    double diff;
-    //
-    //    int zlen = s.z()-1;
-    //    int ylen = s.y()-1;
-    //    int xlen = s.x()-1;
-    //    for (int i = 1; i < zlen; i++) {
-    //      for (int j = 1; j < ylen; j++) {
-    //        for (int k = 1; k < xlen; k++) {
-    //
-    //          double xminus = phi_data[i-1][j][k];
-    //          double xplus  = phi_data[i+1][j][k];
-    //          double yminus = phi_data[i][j-1][k];
-    //          double yplus  = phi_data[i][j+1][k];
-    //          double zminus = phi_data[i][j][k-1];
-    //          double zplus  = phi_data[i][j][k+1];
-    //
-    //          newphi_data[i][j][k] = (1./6) * (xminus + xplus + yminus + yplus  + zminus + zplus);
-    //
-    //          diff = newphi_data[i][j][k] - phi_data[i][j][k];
-    //          residual += diff * diff;
-    //        }
-    //      }
-    //    }
-    //    new_dw->put(sum_vartype(residual), residual_label);
-  }
+//    //__________________________________
+//    // 3D-Pointer Stencil operation for reference
+//    // (offsets need to be parameterized)
+//    //__________________________________
+//    double*** phi_data = (double***) phi.getWindow()->getData()->get3DPointer();
+//    double*** newphi_data = (double***) newphi.getWindow()->getData()->get3DPointer();
+//    double diff;
+//
+//    int zlen = s.z()-1;
+//    int ylen = s.y()-1;
+//    int xlen = s.x()-1;
+//    for (int i = 1; i < zlen; i++) {
+//      for (int j = 1; j < ylen; j++) {
+//        for (int k = 1; k < xlen; k++) {
+//
+//          double xminus = phi_data[i-1][j][k];
+//          double xplus = phi_data[i+1][j][k];
+//          double yminus = phi_data[i][j-1][k];
+//          double yplus = phi_data[i][j+1][k];
+//          double zminus = phi_data[i][j][k-1];
+//          double zplus = phi_data[i][j][k+1];
+//
+//          newphi_data[i][j][k] = (1./6) * (xminus + xplus + yminus + yplus + zminus + zplus);
+//
+//          diff = newphi_data[i][j][k] - phi_data[i][j][k];
+//          residual += diff * diff;
+//        }
+//      }
+//    }
+//    new_dw->put(sum_vartype(residual), residual_label);
+
+
+//    //__________________________________
+//    // 1D-Pointer Stencil operation for reference
+//    // (offsets need to be parameterized)
+//    //__________________________________
+//    double *phi_data = (double*) phi.getWindow()->getData()->getPointer();
+//    double *newphi_data = (double*) newphi.getWindow()->getData()->getPointer();
+//    double diff;
+//
+//    int dz = s.z() - 1;
+//    int dy = s.y() - 1;
+//    int dx = s.x() - 1;
+//
+//    int length = (dz - 1) * (dy - 1) * (dx - 1);
+//    int i = 1, j = 1, k = 1, offset = 1;
+//
+//    for (int z = 0; z < length; z++) {
+//      // get the base address
+//      int baseAddr = i + ((dx + offset) * j + (dx + offset) * (dy + offset) * k);
+//
+//      newphi_data[baseAddr] = (1.0 / 6.0)
+//                              * (phi_data[baseAddr - offset] + phi_data[baseAddr + offset]
+//                              + phi_data[baseAddr - (dx + offset)] + phi_data[baseAddr + dx + offset]
+//                              + phi_data[baseAddr - (dx + offset) * (offset + dy)]
+//                              + phi_data[baseAddr + (offset + dx) * (offset + dy)]);
+//      diff = newphi_data[baseAddr] - phi_data[baseAddr];
+//      residual += diff * diff;
+//
+//      i++;
+//      if (i >= dx) {
+//        i = 1;
+//        j++;
+//        if (j >= dy) {
+//          j = 1;
+//          k++;
+//        }
+//      }
+//    }
+//    new_dw->put(sum_vartype(residual), residual_label);
+
+  }  // end patch for loop
 
   // free up allocated memory
   cudaFree(phi_device);
