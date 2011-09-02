@@ -1458,9 +1458,12 @@ OnDemandDataWarehouse::put(ParticleVariableBase& var,
   }
   
   int matlIndex = pset->getMatlIndex();
-
-  dbg << d_myworld->myrank() << " Putting: " << *label << " MI: " << matlIndex << " patch: " 
-       << *patch << " \t\t into DW: " << d_generation << "\n";
+  
+  
+  dbg << d_myworld->myrank() << " Putting: ";
+  dbg<< left;dbg.width(20);
+  dbg << *label << " MI: " << matlIndex << " patch: " 
+       << *patch << " \tinto DW: " << d_generation << "\n";
 
   d_lock.writeLock();   
   checkPutAccess(label, matlIndex, patch, replace);
@@ -2690,7 +2693,10 @@ OnDemandDataWarehouse::checkGetAccess(const VarLabel* label,
             varname = label->getName();
           }
           dbg << d_myworld->myrank() << " Task running is: " << runningTask->getName();
-          dbg<< "\t "<< varname << " \t\t on patch " << ID << " and matl: " << matlIndex << " has been gotten\n";
+          dbg<< left;dbg.width(10);
+          dbg<< "\t"<< varname;
+          dbg<< left;dbg.width(10);
+          dbg<< " \t on patch " << ID << " and matl: " << matlIndex << " has been gotten\n";
         } else {
           findIter->second.encompassOffsets(lowOffset, highOffset);
         }
