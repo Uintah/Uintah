@@ -187,13 +187,13 @@ __global__ void timeAdvanceKernel(uint3 domainSize,
   int tidY = blockDim.y * blockIdx.y + threadIdx.y;
   //  int tidZ = blockDim.z * blockIdx.z + threadIdx.z;
 
-  int num_slices = domainSize.z - ghostLayers;
+  int numSlices = domainSize.z - ghostLayers;
 
-  int dx = domainSize.x;
-  int dy = domainSize.y;
+  int dx = domainSize.x - ghostLayers;
+  int dy = domainSize.y - ghostLayers;
 
-  if (tidX < (dx - ghostLayers) && tidY < (dy - ghostLayers) && tidX > 0 && tidY > 0) {
-    for (int slice = ghostLayers; slice < num_slices; slice++) {
+  if ((tidX < dx) && (tidY < dy) && (tidX > 0) && (tidY > 0)) {
+    for (int slice = ghostLayers; slice < numSlices; slice++) {
 
       newphi[INDEX3D(dx, dy, tidX, tidY, slice)] =
           (1.0 / 6.0)
@@ -204,12 +204,12 @@ __global__ void timeAdvanceKernel(uint3 domainSize,
              + phi[INDEX3D(dx, dy, tidX, tidY, slice - 1)]
              + phi[INDEX3D(dx, dy, tidX, tidY, slice + 1)]);
 
-      //double diff = newphi[INDEX3D(dx, dy, tidX, tidY, slice)]
-      //              - phi[INDEX3D(dx, dy, tidX, tidY, slice)];
+      double diff = newphi[INDEX3D(dx, dy, tidX, tidY, slice)]
+                    - phi[INDEX3D(dx, dy, tidX, tidY, slice)];
 
       // this will cause a race condition. what we need is a reduction to compute this
       // in conjunction with atomicAdd() and __shared__ double[] residual_device;
-      //*residual += diff * diff;
+      *residual += diff * diff;
     }
   }
 }
@@ -220,14 +220,14 @@ void PoissonGPU1::timeAdvance(const ProcessorGroup*,
                               const PatchSubset* patches,
                               const MaterialSubset* matls,
                               DataWarehouse* old_dw,
-                              DataWarehouse* new_dw)    //,
+                              DataWarehouse* new_dw) {   //,
 //                         int deviceID = 0,
-//                         CUDADevice *deviceProperties = NULL)
-                              {
-  //
+//                         CUDADevice *deviceProperties = NULL) {
+
   int matl = 0;
   int previousPatchSize = 0;  // this is to see if we need to release and reallocate between computations
   int size = 0;
+  int ghostLayers = 1;
 
   // declare device and host memory
   double* newphi_device;
@@ -252,10 +252,11 @@ void PoissonGPU1::timeAdvance(const ProcessorGroup*,
   }
 
   // Do time steps
-  for (int p = 0; p < patches->size(); p++) {
+  int numPatches = patches->size();
+  for (int p = 0; p < numPatches; p++) {
     const Patch* patch = patches->get(p);
     constNCVariable<double> phi;
-    old_dw->get(phi, phi_label, matl, patch, Ghost::AroundNodes, 1);
+    old_dw->get(phi, phi_label, matl, patch, Ghost::AroundNodes, ghostLayers);
 
     NCVariable<double> newphi;
     new_dw->allocateAndPut(newphi, phi_label, matl, patch);
@@ -306,12 +307,11 @@ void PoissonGPU1::timeAdvance(const ProcessorGroup*,
     }
 
     // launch kernel
-    timeAdvanceKernel<<< totalBlocks, threadsPerBlock >>>(domainSize, domainLower, 1, phi_device, newphi_device, &residual);
+    timeAdvanceKernel<<< totalBlocks, threadsPerBlock >>>(domainSize, domainLower, ghostLayers, phi_device, newphi_device, &residual);
 
     cudaDeviceSynchronize();
     cudaMemcpy(newphi_host, newphi_device, size, cudaMemcpyDeviceToHost);
 
-    // now store residual that was device calculated
     new_dw->put(sum_vartype(residual), residual_label);
 
 //    //__________________________________
