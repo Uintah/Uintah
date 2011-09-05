@@ -30,6 +30,7 @@ DEALINGS IN THE SOFTWARE.
 
 #include <CCA/Components/ProblemSpecification/ProblemSpecReader.h>
 #include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/Exceptions/InternalError.h>
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/Patch.h>
@@ -49,6 +50,8 @@ DEALINGS IN THE SOFTWARE.
 
 using namespace Uintah;
 using namespace std;
+
+#define NEW
 
 /*-----------------------------------------------------------------------------------------
 This prepocessing tool is used to create a separate pts file for each material and patch
@@ -147,6 +150,8 @@ GridP CreateGrid(ProblemSpecP ups);
 
 bool ReadImage(const char* szfile, unsigned int nPixels, pixel* pix, const string endianness);
 
+bool ReadAuxFile(const string auxfile, map<int,double>& data);
+
 inline Point CreatePoint(unsigned int n, vector<int>& res, double dx, double dy, double dz)
 {
   unsigned int k = n / (res[0]*res[1]); n -= k* res[0]*res[1];
@@ -156,9 +161,15 @@ inline Point CreatePoint(unsigned int n, vector<int>& res, double dx, double dy,
   return Point( dx*((double)i + 0.5), dy*(((double)(res[1]-1-j)) + 0.5),dz*((double)k + 0.5));
 }
 
-struct intensityMapping{
+struct intensityMatlMapping{
   vector<int> threshold;
   unsigned int matlIndex;
+};
+
+struct dataPoint{
+  Point px;
+  double scalar;
+  int intensity;
 };
 enum endian{little, big};
 
@@ -171,12 +182,15 @@ int main(int argc, char *argv[])
     Uintah::Parallel::initializeManager( argc, argv );
 
     bool binmode = false;
+    string auxFile = "notUsed";                   // auxilary file name
     string endianness= "little";
+    bool d_auxMap    = false;
 
     //__________________________________
     // parse the command arguments
     for (int i=1; i<argc; i++){
-      string s=argv[i];
+      string s   = argv[i];
+      
       if (s == "-b") {
         binmode = true;
       }
@@ -185,6 +199,9 @@ int main(int argc, char *argv[])
       }
       else if (s == "-l" || s == "-littleEndian") {
         endianness = "little";
+      }
+      else if (s == "-auxScalarFile") {
+        auxFile = argv[++i];
       }
       else if (s == "-h" || s == "-help") {
         usage( argv[0] );
@@ -242,7 +259,7 @@ int main(int argc, char *argv[])
 
 
     // read in all non unique grain specs and put that in a vector
-    vector<intensityMapping> intMatl_Vec;
+    vector<intensityMatlMapping> intMatl_Vec;
 
     for (ProblemSpecP child = raw_ps->findBlock("matl"); child != 0;
                       child = child->findNextBlock("matl")) {
@@ -254,7 +271,7 @@ int main(int argc, char *argv[])
       child->require("threshold", threshold);
 
       int matl = atoi(matlIndex["index"].c_str());
-      intensityMapping data;
+      intensityMatlMapping data;
       data.matlIndex = matl;
       data.threshold = threshold;
       intMatl_Vec.push_back(data);
@@ -335,7 +352,7 @@ int main(int argc, char *argv[])
     // These can overwrite the unique grains mapping
     for (int m=0; m<intMatl_Vec.size(); m++) {
 
-      intensityMapping data = intMatl_Vec[m];
+      intensityMatlMapping data = intMatl_Vec[m];
 
       for (int i=data.threshold[0]; i<=data.threshold[1]; i++) {
         intensityToMatl_map[i] = data.matlIndex;
@@ -349,6 +366,17 @@ int main(int argc, char *argv[])
     }
 
 
+    //__________________________________
+    //  read in auxilary scalar file  
+    //  The two column file contains
+    //  intensity  scalar
+    map<int,double> intensityScalar_D_map;
+    if ( auxFile != "notUsed" ) {
+      ReadAuxFile(auxFile,intensityScalar_D_map);
+      d_auxMap = true;
+    }
+
+cout << " intensity " << 40 << " scalar: " << intensityScalar_D_map[40] << endl;
     //__________________________________
     // Parse the ups file for the grid specification
     // and voxel size
@@ -400,6 +428,7 @@ int main(int argc, char *argv[])
         vector< vector<int> > points(nPatches);
         vector<int> numPoints(nPatches);
 
+        map<int,vector<dataPoint*> > patch_dataPoints;
         Point pt;
         pixel* pb = pimg;
 
@@ -416,21 +445,37 @@ int main(int argc, char *argv[])
             for (int i=0; i<res[0]; i++, pb++, n++) {
 
               int pixelValue = *pb;
-              bool isRightMatl      = ( matl == intensityToMatl_map[pixelValue]);
-              //bool withinThreshold  = ( (pixelValue >= L[0]) && (pixelValue <= L[1]) );
+              bool isRightMatl = ( matl == intensityToMatl_map[pixelValue]);
 
               if ( isRightMatl ) {
 
                 pt = CreatePoint(n, res, dx, dy, dz);
+                
+                minP = Min(pt,minP);
+                maxP = Max(pt,maxP);
+                
                 curPatch = level->selectPatchForCellIndex(level->getCellIndex(pt));
                 int patchID = curPatch->getID();
+
                 numPoints[patchID]++;
+                
+                dataPoint* dp = scinew dataPoint;
+                dp->px      = pt;
+                
+                // if auxilary variable is being used
+                if(d_auxMap){
+                  dp->scalar  = intensityScalar_D_map[pixelValue];
+                  //cout << "pixelValue " << pixelValue << " size " << intensityScalar_D_map[pixelValue] << endl;
+                }
+                patch_dataPoints[patchID].push_back(dp);
               }
             }
           }
           fprintf(stderr, "%s : %.1f\n", "Preprocessing ", 50.0*(k+1.0)/(double)res[2]);
+          cout << " minP " << minP << " maxP " << maxP << endl;
         }
-
+#ifndef NEW
+  cout << " doing it the old way AAA" << endl;
         // allocate storage for the patches
         for (int p=0; p<nPatches; p++){
           points[p].resize(numPoints[p]);
@@ -448,7 +493,6 @@ int main(int argc, char *argv[])
 
               int pixelValue = *pb;
               bool isRightMatl      = ( matl == intensityToMatl_map[pixelValue]);
-              //bool withinThreshold  = ( (pixelValue >= L[0]) && (pixelValue <= L[1]) );
 
               if ( isRightMatl) {
 
@@ -465,7 +509,7 @@ int main(int argc, char *argv[])
           }
           fprintf(stderr, "%s : %.1f\r", "Preprocessing ", 50+50.0*(k+1.0)/(double)res[2]);
         }
-
+#endif
 
         //__________________________________
         //  Write out the pts file for this patch and matl        
@@ -495,6 +539,42 @@ int main(int argc, char *argv[])
             fprintf(dest, "%g %g %g %g %g %g\n", x[0],x[1],x[2],x[3],x[4],x[5]);
           }
 
+#ifdef NEW
+            cout << " doing it the NEW way " << endl;
+          vector<dataPoint*> dataPoints = patch_dataPoints[patchID];
+          
+          for ( int i= 0; i != dataPoints.size(); i++ ){ 
+            dataPoint* dp = dataPoints[i]; 
+            double scalar;
+            
+            x[0] = dp->px.x();
+            x[1] = dp->px.y();
+            x[2] = dp->px.z();
+            
+            //__________________________________
+            //
+            if( !d_auxMap ){
+              if(binmode) {
+                fwrite(x, sizeof(double), 3, dest);
+              } else {
+                fprintf(dest, "%g %g %g\n", x[0], x[1], x[2]);
+              
+              }
+            }
+            //__________________________________
+            //  if there's an auxilary mapping
+            if( d_auxMap){
+              x[3] = dp->scalar;
+              
+              if(binmode) {
+                fwrite(x, sizeof(double), 4, dest);
+              } else {
+                fprintf(dest, "%g %g %g %g\n", x[0], x[1], x[2], x[3]);
+              }
+            }
+          }
+#else
+          cout << " doing it the old way BBB" << endl;
           // output individual points
           for (int I = 0; I < numPoints[patchID]; I++) {
             pt = CreatePoint(points[patchID][I], res, dx, dy, dz);
@@ -508,6 +588,7 @@ int main(int argc, char *argv[])
               fprintf(dest, "%g %g %g\n", x[0], x[1], x[2]);
             }
           }
+#endif
           fclose(dest);
         } // loop over patches
       } // loop over materials
@@ -564,6 +645,18 @@ void usage( char *prog_name )
   cout << "-b, -binary:            binary output \n";
   cout << "-l, -littleEndian:      input file contains little endian bytes  [default]\n";
   cout << "-B, -bigEndian:         input file contains big endian bytes\n";
+  cout << "-auxScalarFile:         name of file that contains two columns of data (intensity scalar) \n";
+  cout << "       # case:  grains \n";
+  cout << "       # Number of blobs  75 \n";
+  cout << "       # max diameter (cm) 0.0365792455209 \n";
+  cout << "       # min diameter (cm) 0.00202786936452 \n";
+  cout << "       # average diameter (cm) 0.00990896874237 \n";
+  cout << "       # color    equivalent spherical diameter (cm) \n";
+  cout << "       1.0 0.0365792455209 \n"; 
+  cout << "       2.0 0.0031813408649 \n";
+  cout << "       3.0 0.0113385664577" << endl;
+  
+  
   exit( 1 );
 }
 
@@ -604,4 +697,49 @@ bool ReadImage(const char* szfile, unsigned int nPixels, pixel* pb, const string
     cout << "Little endian intensity: max (" << maxI << "), min(" << minI << " )"<< endl;
   }
   return (nread == nPixels);  
+}
+
+//-----------------------------------------------------------------------------------------------
+//
+bool ReadAuxFile(const string auxFileName, map<int,double>& data)
+{
+  ifstream auxFile(auxFileName.c_str());
+  
+  if (!auxFile){ 
+    throw ProblemSetupException("\nERROR:Couldn't open the auxilary file: " + auxFileName + "\n", __FILE__, __LINE__);
+  }
+  
+  string line;
+  int  intensity;
+  double scalar;
+  double tmp;
+  
+  while (getline(auxFile, line)) {
+    
+    // throw away any line that contains #
+    if (line.find("#") == 0 ){
+      continue;
+    }
+     
+    // read in the data
+    stringstream(line) >> tmp >> scalar;
+    intensity = (int) tmp;
+    
+    cout.setf(ios::scientific,ios::floatfield);
+    cout.precision(17);
+    
+    // bullet proofing
+    if(isnormal(intensity) ==0 || isnormal(scalar == 0 ) ){
+      ostringstream warn;
+      warn << "ERROR: auxFile: either the intensity (" << intensity << ") or scalar (" << scalar << ") is not a number\n";
+      throw InternalError(warn.str(), __FILE__, __LINE__);
+    }
+    
+    data[intensity] = scalar;
+    
+    cout << " intensity " << intensity << " scalar " << data[intensity] << endl;
+  }
+  
+  cout << " done reading auxfile " << endl;
+  return true; 
 }
