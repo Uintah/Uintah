@@ -50,7 +50,7 @@ RectangleBCData::RectangleBCData() : BCGeomBase()
 
 RectangleBCData::RectangleBCData(Point& low, Point& up) : BCGeomBase()
 {
-  cout << "low = " << low << " up = " << up << endl;
+//  cout << "low = " << low << " up = " << up << endl;
   Point n_low(0.,0.,0.), n_up(0.,0.,0.);
 
   if(low.x() == up.x()) {
@@ -68,7 +68,7 @@ RectangleBCData::RectangleBCData(Point& low, Point& up) : BCGeomBase()
   d_min = n_low;
   d_max = n_up;
 
-  cout << "d_min = " << d_min << " d_max = " << d_max << endl;
+//  cout << "d_min = " << d_min << " d_max = " << d_max << endl;
 }
 
 RectangleBCData::~RectangleBCData()
