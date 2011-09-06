@@ -222,7 +222,7 @@ WestbrookDryer::computeSource( const ProcessorGroup* pc,
       // Step 2: Compute stripping fraction and extent 
       double tiny = 1.0e-16;
       S[c] = 0.0; 
-      double hc_wo_rxn = f * d_MW_HC; 
+      double hc_wo_rxn = f * d_MF_HC_f1;
 
       if ( Cstar[c] > tiny ) 
         S[c] = Cstar[c] / hc_wo_rxn; 
