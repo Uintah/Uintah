@@ -73,19 +73,19 @@ PetscSolver::matrixCreate(const PatchSet*,
 // Fill linear parallel matrix
 // ****************************************************************************
 void 
-PetscSolver::setMatrix(const ProcessorGroup* ,
-                       const Patch*,
-                       constCCVariable<Stencil7>& coeff )
+PetscSolver::setPressMatrix( const Patch*,
+                            ArchesVariables*,
+                            ArchesConstVariables*,
+                            const ArchesLabel*)
 {
   throw InternalError("setMatrix(): PetscSolver not configured", __FILE__, __LINE__);
 }
 
 void
-PetscSolver::setRHS_X( const ProcessorGroup * pc, 
-                       const Patch          * patch,
-                       CCVariable<double>& guess,
-                       constCCVariable<double>& rhs,
-                       bool construct_A )
+PetscSolver::setPressRHS(  const Patch          * patch,
+                          ArchesVariables      * vars,
+                          ArchesConstVariables * constvars,
+                          const ArchesLabel    * lab )
 {
   throw InternalError("set RHS_X(): PetscSolver not configured", __FILE__, __LINE__);
 }
