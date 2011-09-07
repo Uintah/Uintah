@@ -41,6 +41,10 @@ namespace Uintah {
     virtual ~CGSolver();
 
     virtual SolverParameters* readParameters(ProblemSpecP& params,
+                                             const std::string& name,
+                                             SimulationStateP& state);
+
+    virtual SolverParameters* readParameters(ProblemSpecP& params,
                                              const std::string& name);
 
     virtual void scheduleSolve(const LevelP& level, SchedulerP& sched,

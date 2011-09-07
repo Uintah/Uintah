@@ -62,7 +62,7 @@
 ##  --------------------------------------------------------------------
 
 ##  initialize configure 
-AC_INIT([Uintah],[1.31],[csafe-homebrew@cs.utah.edu])
+AC_INIT([Uintah],[1.4],[uintah-developer@gforge.sci.utah.edu])
 
 ##  require autoconf version 2.68
 ##     The reason to require the latest autoconf is to try and get everyone who
@@ -80,7 +80,7 @@ AC_COPYRIGHT(
 ## 
 ##  The MIT License
 ## 
-##  Copyright (c) 2004 Scientific Computing and Imaging Institute,
+##  Copyright (c) 1997-2011 Scientific Computing and Imaging Institute,
 ##  University of Utah.
 ## 
 ##  License for the specific language governing rights and limitations under

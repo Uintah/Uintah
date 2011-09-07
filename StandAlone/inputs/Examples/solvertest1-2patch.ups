@@ -10,7 +10,8 @@
    <SimulationComponent type="solvertest" />
 
    <Time>
-       <maxTime>0.1</maxTime>
+       <maxTime>1</maxTime>
+       <max_Timesteps> 5 </max_Timesteps>
        <initTime>0.0</initTime>
        <delt_min>0.00001</delt_min>
        <delt_max>1</delt_max>
@@ -20,7 +21,7 @@
         <filebase>solvertest_2patch.uda</filebase>
        <outputTimestepInterval>1</outputTimestepInterval>
        <save label = "pressure"/>
-       <checkpoint cycle = "2" interval = ".01"/>
+<!--       <checkpoint cycle = "2" interval = ".01"/> -->
    </DataArchiver>
 
     <Grid>
@@ -28,15 +29,19 @@
         <Box label = "1">
            <lower>        [0,0,0]       </lower>
            <upper>        [1.0,1.0,1.0] </upper>
-           <resolution>   [10,10,10]    </resolution>
-           <patches>      [2,1,1]       </patches>
+           <resolution>   [100,100,100]    </resolution>
+           <patches>      [2,2,2]       </patches>
         </Box>
       </Level>
     </Grid>
 
+    <Solver type="hypre" />
+
     <SolverTest>
       <delt>.01</delt>
       <X_Laplacian/>
+      <Y_Laplacian/>
+      <Z_Laplacian/>
       <Parameters variable="implicitPressure">
 
        <!-- CGSolver options -->
@@ -52,6 +57,7 @@
        <npost>          1       </npost>
        <skip>           0       </skip>
        <jump>           0       </jump>
+       <setupFrequency> 4       </setupFrequency>
       </Parameters>
    </SolverTest>        
 

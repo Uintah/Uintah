@@ -55,7 +55,6 @@ SRCS += \
         $(SRCDIR)/ReductionVariable_special.cc  \
         $(SRCDIR)/ScrubItem.cc                  \
         $(SRCDIR)/SoleVariableBase.cc           \
-        $(SRCDIR)/SoleVariable_special.cc       \
         $(SRCDIR)/Stencil7.cc                   \
         $(SRCDIR)/Utils.cc                      \
         $(SRCDIR)/ugc_templates.cc              \
