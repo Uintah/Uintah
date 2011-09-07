@@ -319,7 +319,7 @@ namespace Wasatch{
   
   std::vector<EqnTimestepAdaptorBase*> parse_momentum_equations( Uintah::ProblemSpecP params,
                                                                  GraphCategories& gc,
-                                                                 Uintah::SolverInterface& linSolver )
+                                                                 Uintah::SolverInterface& linSolver, Uintah::SimulationStateP sharedState )
   {
     typedef std::vector<EqnTimestepAdaptorBase*> EquationAdaptors;
     EquationAdaptors adaptors;
@@ -361,7 +361,7 @@ namespace Wasatch{
                                       xmomname,
                                       *solnGraphHelper->exprFactory,
                                       params,
-                                      linSolver );
+                                      linSolver,sharedState );
       adaptor = scinew EqnTimestepAdaptor< XVolField >( momtranseq );
       adaptors.push_back(adaptor);
     }
@@ -374,7 +374,7 @@ namespace Wasatch{
                                       ymomname,
                                       *solnGraphHelper->exprFactory,
                                       params,
-                                      linSolver );
+                                      linSolver,sharedState );
       adaptor = scinew EqnTimestepAdaptor< YVolField >( momtranseq );
       adaptors.push_back(adaptor);
     }
@@ -387,7 +387,7 @@ namespace Wasatch{
                                       zmomname,
                                       *solnGraphHelper->exprFactory,
                                       params,
-                                      linSolver );
+                                      linSolver,sharedState );
       adaptor = scinew EqnTimestepAdaptor< ZVolField >( momtranseq );
       adaptors.push_back(adaptor);
     }      

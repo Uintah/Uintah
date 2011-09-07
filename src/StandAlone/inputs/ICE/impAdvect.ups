@@ -166,6 +166,7 @@
       <save label="vel_CC"/>      
    </DataArchiver>
 
+    <Solver type="hypre" />
     
     <!--____________________________________________________________________-->
     <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
@@ -200,6 +201,7 @@
             <npost>          1       </npost>
             <skip>           0       </skip>
             <jump>           0       </jump>
+            <setupFrequency> 10       </setupFrequency>
            </Parameters>
         </ImplicitSolver>
     

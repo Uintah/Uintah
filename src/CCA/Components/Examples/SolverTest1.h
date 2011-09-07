@@ -32,6 +32,8 @@ DEALINGS IN THE SOFTWARE.
 #ifndef Packages_Uintah_CCA_Components_Examples_SolverTest1_h
 #define Packages_Uintah_CCA_Components_Examples_SolverTest1_h
 
+#include <Core/Util/RefCounted.h>
+#include <Core/Util/Handle.h>
 #include <Core/Parallel/UintahParallelComponent.h>
 #include <CCA/Ports/SimulationInterface.h>
 #include <Core/Grid/Variables/ComputeSet.h>
@@ -71,6 +73,7 @@ WARNING
   
 ****************************************/
 
+
   class UINTAHSHARE SolverTest1 : public UintahParallelComponent, public SimulationInterface {
   public:
     SolverTest1(const ProcessorGroup* myworld);
@@ -98,6 +101,8 @@ WARNING
 		     const MaterialSubset* matls,
 		     DataWarehouse* old_dw, DataWarehouse* new_dw,
 		     LevelP, Scheduler*);
+
+
     ExamplesLabel* lb_;
     SimulationStateP sharedState_;
     double delt_;

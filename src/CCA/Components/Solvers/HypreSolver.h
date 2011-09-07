@@ -33,6 +33,10 @@ DEALINGS IN THE SOFTWARE.
 
 #include <CCA/Ports/SolverInterface.h>
 #include <Core/Parallel/UintahParallelComponent.h>
+#include <Core/Util/RefCounted.h>
+#include <Core/Util/Handle.h>
+#include <HYPRE_struct_ls.h>
+#include <HYPRE_krylov.h>
 /**
  *  @class  HypreSolver2
  *  @author Steve Parker
@@ -47,10 +51,25 @@ DEALINGS IN THE SOFTWARE.
  */
 
 namespace Uintah {
+
+  struct hypre_solver_struct : public RefCounted {
+    HYPRE_StructSolver solver;
+    HYPRE_StructSolver precond_solver;
+    HYPRE_StructMatrix* HA;
+    HYPRE_StructVector* HB;
+    HYPRE_StructVector* HX;
+  };
+
+  typedef Handle<hypre_solver_struct> hypre_solver_structP;
+
   class HypreSolver2 : public SolverInterface, public UintahParallelComponent {
   public:
     HypreSolver2(const ProcessorGroup* myworld);
     virtual ~HypreSolver2();
+
+    virtual SolverParameters* readParameters(ProblemSpecP& params,
+                                             const std::string& name,
+                                             SimulationStateP& state);
 
     virtual SolverParameters* readParameters(ProblemSpecP& params,
                                              const std::string& name);
@@ -63,7 +82,7 @@ namespace Uintah {
      *  @param matls A pointer to the MaterialSet.
      *  @param A Varlabel of the coefficient matrix \[\mathbf{A}\]
      *  @param which_A_dw The datawarehouse in which the coefficient matrix lives.
-     *  @param x The varlabel of the solution vector.
+     *  @param x The varlabel of the solutio1n vector.
      *  @param modifies_x A boolean that specifies the behaviour of the task 
                           associated with the ScheduleSolve. If set to true,
                           then the task will only modify x. Otherwise, it will
@@ -88,8 +107,16 @@ namespace Uintah {
                                Task::WhichDW guess_dw,
                                const SolverParameters* params);
 
-  virtual string getName();
+    virtual void scheduleInitialize(const LevelP& level, SchedulerP& sched,
+                                    const MaterialSet* matls);
+
+    virtual string getName();
   private:
+    void initialize(const ProcessorGroup*,
+                    const PatchSubset* patches, const MaterialSubset* matls,
+                    DataWarehouse* old_dw, DataWarehouse* new_dw);
+
+  const VarLabel* hypre_solver_label;
   };
 }
 

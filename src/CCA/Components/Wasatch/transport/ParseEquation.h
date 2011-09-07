@@ -88,7 +88,7 @@ namespace Wasatch{
    */  
   std::vector<EqnTimestepAdaptorBase*> parse_momentum_equations( Uintah::ProblemSpecP params,
                                                    GraphCategories& gc,
-                                                   Uintah::SolverInterface& linSolver);
+                                                                 Uintah::SolverInterface& linSolver,Uintah::SimulationStateP simulationState);
   
   /**
    *  \brief Build moment transport equations specified by "params"
