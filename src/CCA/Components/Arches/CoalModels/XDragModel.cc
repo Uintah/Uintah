@@ -264,6 +264,8 @@ XDragModel::sched_computeModel( const LevelP& level, SchedulerP& sched, int time
 
   d_timeSubStep = timeSubStep; 
 
+  tsk->requires( Task::OldDW, d_fieldLabels->d_sharedState->get_delt_label(), Ghost::None, 0);
+
   if (d_timeSubStep == 0 && !d_labelSchedInit) {
     // Every model term needs to set this flag after the varLabel is computed. 
     // transportEqn.cleanUp should reinitialize this flag at the end of the time step. 
@@ -439,7 +441,7 @@ XDragModel::computeModel( const ProcessorGroup* pc,
         sphPart = cart2sph( cartPart );
 
         double diff = sphGas.z() - sphPart.z();
-        double Re  = abs(diff)*length / (kvisc/den[c]);
+        double Re  = abs(diff)*length/(kvisc/den[c]);
         double phi;
 
         if(Re < 1) {
@@ -452,14 +454,13 @@ XDragModel::computeModel( const ProcessorGroup* pc,
 
         double t_p = rhop/(18*kvisc)*pow(length,2);
 
-
-        model[c] = (phi/t_p*(cartGas.x()-cartPart.x())+gravity.x())/(d_xvel_scaling_factor);
-
-        gas_source[c] = -weight[c]*d_w_scaling_factor*rhop/6*pi*phi/t_p*(cartGas.x()-cartPart.x())*pow(length,3);
-        
-        if(isnan(model[c])){
-          model[c] = 0.;
+        if(d_unweighted){
+          model[c] = (phi/t_p*(cartGas.x()-cartPart.x())+gravity.x())/(d_xvel_scaling_factor);
+        } else {
+          model[c]= weight[c]*(phi/t_p*(cartGas.x()-cartPart.x())+gravity.x())/d_xvel_scaling_factor;
         }
+
+        gas_source[c] = -weight[c]*d_w_scaling_factor*rhop/6.0*pi*phi/t_p*(cartGas.x()-cartPart.x())*pow(length,3);
 
         /*
         //KLUDGE: more implicit clipping

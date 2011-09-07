@@ -22,10 +22,10 @@ namespace Wasatch{
   class GraphHelper;
   /**
    *  \ingroup WasatchCore
-   *  @class  TransportEquation
-   *  @author Tony Saad
-   *  @date   April, 2011
-   *  @brief  Base class for defining a transport equation.
+   *  \class  TransportEquation
+   *  \author Tony Saad
+   *  \date   April, 2011
+   *  \brief  Base class for defining a transport equation.
    */
   class TransportEquation
   {
@@ -33,93 +33,94 @@ namespace Wasatch{
     
     
     /**
-     *  @brief Construct a TransportEquation
+     *  \brief Construct a TransportEquation
      *
-     *  @param solnVarName The name of the solution variable that this
-     *         TransportEquation describes
+     *  \param solutionVarName The name of the solution variable that
+     *         this TransportEquation describes
      *
-     *  @param rhsExprID The ExpressionID for the RHS expression.
+     *  \param rhsExprID The ExpressionID for the RHS expression.
      */
     TransportEquation( const std::string solutionVarName,
-                      const Expr::ExpressionID rhsExprID )
-    : solnVarName_( solutionVarName ),
-    rhsExprID_( rhsExprID ),
-    stagLoc_( NODIR )
+                       const Expr::ExpressionID rhsExprID )
+      : solnVarName_( solutionVarName ),
+        rhsExprID_( rhsExprID ),
+        stagLoc_( NODIR )
     {}
     
     /**
-     *  @brief Construct a TransportEquation
+     *  \brief Construct a TransportEquation
      *
-     *  @param solnVarName The name of the solution variable that this
+     *  \param solutionVarName The name of the solution variable that this
      *         TransportEquation describes
      *
-     *  @param rhsExprID The ExpressionID for the RHS expression.
+     *  \param rhsExprID The ExpressionID for the RHS expression.
+     *
+     *  \param stagLoc the staggered location.
      */
     TransportEquation( const std::string solutionVarName,
-                      const Expr::ExpressionID rhsExprID,
-                      const Direction stagLoc)
-    : solnVarName_( solutionVarName ),
-    rhsExprID_( rhsExprID ),
-    stagLoc_( stagLoc )
+                       const Expr::ExpressionID rhsExprID,
+                       const Direction stagLoc )
+      : solnVarName_( solutionVarName ),
+        rhsExprID_( rhsExprID ),
+        stagLoc_( stagLoc )
     {}
     
     /**
-     *  @brief The base class constructor registers the expression
+     *  \brief The base class constructor registers the expression
      *         associated with this transport equation
      *
-     *  @param exprFactory The ExpressionFactory that manages creation
+     *  \param exprFactory The ExpressionFactory that manages creation
      *         of expressions.
      *
-     *  @param solnVarName The name of the solution variable that this
+     *  \param solnVarName The name of the solution variable that this
      *         TransportEquation describes
      *
-     *  @param solnVarRHSBuilder The ExpressionBuilder for the
+     *  \param solnVarRHSBuilder The ExpressionBuilder for the
      *         expression that will calculate the RHS for this
      *         TransportEquation.
      *
-     *  @param rhsExprTag The Expr::Tag for the RHS expression
+     *  \param rhsExprTag The Expr::Tag for the RHS expression
      *         (corresponding to the builder supplied in the previous
      *         argument)
      */
     TransportEquation( Expr::ExpressionFactory& exprFactory,
-                      const std::string solnVarName,
-                      const Expr::ExpressionBuilder* const solnVarRHSBuilder,
-                      const Expr::Tag rhsExprTag )
-    : solnVarName_( solnVarName ),
-    rhsExprID_( exprFactory.register_expression(rhsExprTag,solnVarRHSBuilder) ),
-    stagLoc_( NODIR )
+                       const std::string solnVarName,
+                       const Expr::ExpressionBuilder* const solnVarRHSBuilder,
+                       const Expr::Tag rhsExprTag )
+      : solnVarName_( solnVarName ),
+        rhsExprID_( exprFactory.register_expression(rhsExprTag,solnVarRHSBuilder) ),
+        stagLoc_( NODIR )
     {}
     
     virtual ~TransportEquation(){}
     
     /**
-     *  @brief Obtain the name of the solution variable for thisa transport equation.
+     *  \brief Obtain the name of the solution variable for thisa transport equation.
      */
     const std::string& solution_variable_name() const{ return solnVarName_; }
     
     /**
-     *  @brief Obtain the staggered location of the solution variable that is
+     *  \brief Obtain the staggered location of the solution variable that is
      *  governed by this transport equation.
      */    
     const Direction staggered_location() const{ return stagLoc_; }
     
     /**
-     *  @brief Obtain the name (i.e. string) staggered location of the solution 
+     *  \brief Obtain the name (i.e. string) staggered location of the solution 
      *  variable that is governed by this transport equation.
      */    
     const std::string dir_name() const {
       switch (stagLoc_) {
-        case XDIR:
-          return "x";
-          break;
-        case YDIR:
-          return "y";
-        case ZDIR:
-          return "z";
-        case NODIR:
-          return "";
-        default:
-          break;
+      case XDIR:
+        return "x";
+        break;
+      case YDIR:
+        return "y";
+      case ZDIR:
+        return "z";
+      case NODIR:
+      default:
+        return "";
       }
     }
     
@@ -134,9 +135,9 @@ namespace Wasatch{
      *  via the <code>Expression::process_after_evaluate</code> method.
      */
     virtual void setup_boundary_conditions( const GraphHelper& graphHelper,
-                                           const Uintah::PatchSet* const localPatches,
-                                           const PatchInfoMap& patchInfoMap,
-                                           const Uintah::MaterialSubset* const materials) = 0;
+                                            const Uintah::PatchSet* const localPatches,
+                                            const PatchInfoMap& patchInfoMap,
+                                            const Uintah::MaterialSubset* const materials) = 0;
     
     /**
      *  Return the ExpressionID that identifies an expression that will

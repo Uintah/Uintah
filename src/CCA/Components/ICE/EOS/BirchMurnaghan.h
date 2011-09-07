@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -28,8 +28,8 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#ifndef __Murnahan_H__
-#define __Murnahan_H__
+#ifndef __BirchMurnaghan_H__
+#define __BirchMurnaghan_H__
 
 #include <Core/Grid/Variables/CCVariable.h>
 #include "EquationOfState.h"
@@ -40,37 +40,52 @@ namespace Uintah {
 CLASS
    EquationOfState
    
-   A version of the Murnahan equation of state, as described in
-   "JWL++:  A Simple Reactive Flow Code Package for Detonation"
-   P. Clark Souers, Steve Anderson, James Mercer, Estella McGuire and
-   Peter Vitello, Propellants, Explosives and Pyrotechnics, 25, 54-58, 2000.
+   A version of the Birch-Murnaghan equation of state, as described in:
+    Birch, Francis. "Finite Elastic Strin of Cubic Crystals." Physical Review, 71 (11), 1947, 809-824.
 
+   The Debye temperature model and specific heat model are described in:
+    Sewell, T.D. and Menikoff, R. "Complete Equation of State for Beta-HMX and Implications for Initiation".
+    Shock Compression o fCondensed Matter, 2003.
 GENERAL INFORMATION
 
-   Murnahan.h
+   BirchMurnaghan.h
 
-   Jim Guilkey
-   Department of Mechanical Engineerng
+   Joseph Peterson
+   Department of Chemistry
    University of Utah
 
    Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
   
-   Copyright (C) 2000 SCI Group
+   Copyright (C) 2011 SCI Group
 
 KEYWORDS
-   Equation_of_State JWL
+   Equation_of_State Birch Murnaghan
 
 DESCRIPTION
-   Long description...
+   
+   EOS:
+    P(V)=3/(2*K) * [v^(-7/3)-v^(-5/3)] * [1 + 3/4*(n-4) * (v^(-2/3) - 1)]
+
+    where v is the reduced volume, V/V0.
+
+
+   Debye Model:
+    theta(V) = (V0/V)^a*exp(b*(V0-V)/V)
+
+
+   Specific Heat Model:
+    Cv(T)=T^3/(c0 + c1*T + c2*T^2 + c3*T^3)
+
+    where T is the unitless temperature.
   
 WARNING
 ****************************************/
 
-      class Murnahan : public EquationOfState {
+      class BirchMurnaghan : public EquationOfState {
       public:
 
-        Murnahan(ProblemSpecP& ps);
-        virtual ~Murnahan();
+        BirchMurnaghan(ProblemSpecP& ps);
+        virtual ~BirchMurnaghan();
 
         virtual void outputProblemSpec(ProblemSpecP& ps);
         
@@ -104,11 +119,29 @@ WARNING
                                                CCVariable<double>&);
 
       private:
-        double   n;
-        double   K;     // 1/Pascals
+        // Functions to compute Pressure and Pressure derivative
+        /// @param v the current relative volume
+        double computeP(double);
+        
+        /// @param v the current relative volume
+        double computedPdrho(double);
+
+
+        // Equation of State Parameters
+        double   n;     // Bulk modulus pressure derivative
+        double   K;     // Compressibility, 1/Bulk Modulus  (1/Pa)
         double   rho0;  // kg/m^3
         double   P0;    // Pascals
+
+        // Specific Heat Model Parameters
+        bool useSpecificHeatModel;
+        double a;
+        double b;
+        double c0;   // K*kg/J
+        double c1;   // K*kg/J
+        double c2;   // K*kg/J
+        double c3;   // K*kg/J
       };
 } // End namespace Uintah
       
-#endif  // __Murnahan_H__
+#endif  // __BirchMurnaghan_H__

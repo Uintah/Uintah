@@ -65,7 +65,7 @@ namespace Wasatch{
    *  \brief Build the momentum equation specified by "params"
    *
    *  \param params The XML block from the input file specifying the
-   *         momentum equation. This will be <MomentumEquations>.
+   *         momentum equation. This will be \verbatim <MomentumEquations>\endverbatim.
    *
    *  \param gc The GraphCategories.
    *
@@ -79,7 +79,7 @@ namespace Wasatch{
    *  \brief Build the momentum equation specified by "params"
    *
    *  \param params The XML block from the input file specifying the
-   *         momentum equation. This will be <MomentumEquations>.
+   *         momentum equation. This will be \verbatim <MomentumEquations>\endverbatim.
    *
    *  \param gc The GraphCategories.
    *
@@ -89,6 +89,28 @@ namespace Wasatch{
   std::vector<EqnTimestepAdaptorBase*> parse_momentum_equations( Uintah::ProblemSpecP params,
                                                    GraphCategories& gc,
                                                    Uintah::SolverInterface& linSolver);
+  
+  /**
+   *  \brief Build moment transport equations specified by "params"
+   *
+   *  \param params The XML block from the input file specifying the
+   *         momentum equation. This will be <MomentumEquations>.
+   *
+   *  \param gc The GraphCategories.
+   *
+   *  \return a vector of EqnTimestepAdaptorBase objects that can be used to
+   *          plug this transport equation into a TimeStepper.
+   */  
+  std::vector<EqnTimestepAdaptorBase*> parse_moment_transport_equations( Uintah::ProblemSpecP params,
+                                                                        GraphCategories& gc);
+
+//  template<typename FieldT>
+//  void process_moment_transport_qmom(Uintah::ProblemSpecP params,
+//                                     Expr::ExpressionFactory& factory,
+//                                     Expr::TagList& transportedMomentTags,
+//                                     Expr::TagList& abscissaeTags,
+//                                     Expr::TagList& weightsTags);
+  
 
   /** @} */
 

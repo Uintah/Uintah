@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -54,7 +54,7 @@ CLASS
  
  // This is a contact model developed by Peter Mackenzie. Details about the
  // derivation can be found in "Modeling Strategies for Multiphase Drag 
- // Interactions Using the Material Point Method" (Mackenzie, et al; 2010).
+ // Interactions Using the Material Point Method" (Mackenzie, et al; 2011).
  // Of the interaction models proposed in their paper, this particular 
  // contact model for MPM in Uintah can simulate the Nodal Bang Bang method 
  // OR the Nodal Smoothed Volume (SVF) Fraction Method. The Nodal Bang Bang 

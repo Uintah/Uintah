@@ -2,6 +2,9 @@
 
   <Wasatch			spec="OPTIONAL NO_DATA">
 
+    <!-- Specify time integrator. Defaults to forward euler (FE) if unspecified -->
+    <TimeIntegrator             spec="OPTIONAL STRING 'RK3SSP, FE'" />
+
     <BasicExpression		spec="MULTIPLE" />
     <!-- ========================================= -->
 
@@ -208,6 +211,79 @@
         <Type			spec="OPTIONAL STRING 'SVOL,XVOL,YVOL,ZVOL" />
       </ExtractVariable>
     </TabProps>
+    <!-- ================== -->
+    <!-- QMOM: Quadrature method of moments -->
+    <!-- ================== -->
+    <MomentTransportEquation	spec="MULTIPLE NO_DATA">
+
+      <!-- this is for example ACC, Aragonite... the solution variables will be m_PopulationName_0, m_PopulationName_1... -->
+      <PopulationName		spec="REQUIRED STRING" /> 
+      
+      <!-- this will dictate the number of moments to transport = 2*NumberOfEnvironments -->
+      <NumberOfEnvironments spec="REQUIRED INTEGER 'positive'"/>
+      
+      <!-- Specify a staggered direction for this scalar. If the scalar is non-staggered, this block is not needed -->                          
+      <StaggeredDirection  spec="OPTIONAL STRING 'X,Y,Z'"/>
+      
+      <!-- ================================================================================== -->            
+      <!-- GROWTH EXPRESSION -->
+      <GrowthExpression	spec="MULTIPLE NO_DATA"
+                             children1="ONE_OF(CHILD ConstantGrowthCoefficient, GrowthCoefficient, NameTag)">
+        <GrowthModel     spec="REQUIRED STRING 'CONSTANT, MONOSURFACE, BULK_DIFFUSION'"/>
+
+        <!-- specify a constant growth coefficient -->        
+        <ConstantGrowthCoefficient    spec="OPTIONAL DOUBLE" />
+
+        <!-- specify an expression for the growth coefficient -->        
+        <GrowthCoefficient   spec="OPTIONAL NO_DATA">
+          <NameTag		spec="REQUIRED" />
+        </GrowthCoefficient>
+        
+        <!-- specify an expression for the growthrate -->
+        <NameTag		spec="OPTIONAL" />
+      </GrowthExpression>
+      
+      <!-- ================================================================================== -->            
+      <!-- CONVECTIVE FLUX -->
+      <ConvectiveFluxExpression	spec="MULTIPLE NO_DATA">
+        <NameTag		spec="OPTIONAL" /> <!-- SPECIFY THE NAME OF A BASIC EXPRESSION, IF PROVIDED -->
+        <Method         spec="REQUIRED STRING 'CENTRAL, UPWIND, SUPERBEE,
+                            CHARM, KOREN, MC, OSPRE, SMART, VANLEER, HCUS, MINMOD, HQUICK'" /> <!-- SPECIFY THE INTERPOLATION METHOD -->
+        <Direction      spec="REQUIRED STRING 'X,Y,Z'"/> <!-- SPECIFY THE DIRECTION OF THE FLUX -->
+        <AdvectiveVelocity  spec="OPTIONAL NO_DATA"> <!-- SPECIFY THE ADVECTIVE VELOCITY -->
+            <NameTag spec="REQUIRED"/> <!-- IF AN EXPRESSION FOR THE VELOCITY WAS SPECIFIED, THEN USE THAT -->
+        </AdvectiveVelocity>
+      </ConvectiveFluxExpression>
+      
+      <!-- ================================================================================== -->            
+      <!-- Specification of the diffusive flux -->
+      <DiffusiveFluxExpression	spec="MULTIPLE NO_DATA"
+                                children1="ONE_OF(CHILD ConstantDiffusivity, DiffusionCoefficient, NameTag)"
+                                children2="ONE_OF(CHILD Direction)" >
+
+        <Direction		spec="REQUIRED STRING 'X,Y,Z'" />
+
+        <!-- Specify a constant diffusion coefficient.  A diffusive flux expression will be built. -->
+        <ConstantDiffusivity    spec="OPTIONAL DOUBLE" />
+
+        <!-- specify an expression for the diffusion coefficient. A diffusive flux expression will be built. -->
+        <DiffusionCoefficient   spec="OPTIONAL NO_DATA">
+          <NameTag		spec="REQUIRED" />
+        </DiffusionCoefficient>
+
+        <!-- specify an expression for the diffusive flux -->
+        <NameTag		spec="OPTIONAL" />
+
+      </DiffusiveFluxExpression>
+            
+      <!-- ================================================================================== -->            
+      <!-- Specification of the source term -->
+      <SourceTermExpression	spec="MULTIPLE NO_DATA">
+        <!-- specify the name of one or more source term expressions to be added to this transport equation -->
+        <NameTag		spec="REQUIRED" />
+      </SourceTermExpression>
+
+    </MomentTransportEquation>
 
 
   </Wasatch>

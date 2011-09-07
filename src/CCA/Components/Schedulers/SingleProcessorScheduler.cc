@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -39,9 +39,6 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/FancyAssert.h>
 #include <Core/Malloc/Allocator.h>
-#ifdef USE_PERFEX_COUNTERS
-#include "counters.h"
-#endif
 
 using namespace Uintah;
 using namespace std;
@@ -133,9 +130,6 @@ SingleProcessorScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
   dts->initializeScrubs(dws, dwmap);
   
   for(int i=0;i<ntasks;i++){
-#ifdef USE_PERFEX_COUNTERS
-    start_counters(0, 19);  
-#endif    
     double start = Time::currentSeconds();
     DetailedTask* task = dts->getTask( i );
     
@@ -157,10 +151,6 @@ SingleProcessorScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
     
     double delT = Time::currentSeconds()-start;
     long long flop_count = 0;
-#ifdef USE_PERFEX_COUNTERS
-    long long dummy;
-    read_counters(0, &dummy, 19, &flop_count);
-#endif
     if(dws[dws.size()-1] && dws[dws.size()-1]->timestepAborted()){
       dbg << "Aborting timestep after task: " << *task->getTask() << '\n';
       break;
@@ -169,7 +159,7 @@ SingleProcessorScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
       dbg << "Completed task: " << *task->getTask()
           << " (" << delT << " seconds)\n";
     //scrub(task);
-    emitNode( task, start, delT, delT, flop_count );
+    emitNode( task, start, delT, delT);
   }
   finalizeTimestep();
 }

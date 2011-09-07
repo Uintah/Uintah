@@ -44,11 +44,11 @@ Pressure::Pressure( const Expr::Tag& fxtag,
     // note that this does not provide any ghost entries in the matrix...
     matrixLabel_  ( Uintah::VarLabel::create( "pressure_matrix", Uintah::CCVariable<Uintah::Stencil7>::getTypeDescription() ) ),
     pressureLabel_( Uintah::VarLabel::create( (this->names())[0].name(), 
-                                              Wasatch::getUintahFieldTypeDescriptor<SVolField>(),
-                                              Wasatch::getUintahGhostDescriptor<SVolField>() ) ),
+                                              Wasatch::get_uintah_field_type_descriptor<SVolField>(),
+                                              Wasatch::get_uintah_ghost_descriptor<SVolField>() ) ),
     prhsLabel_    ( Uintah::VarLabel::create( (this->names())[1].name(), 
-                                              Wasatch::getUintahFieldTypeDescriptor<SVolField>(),
-                                              Wasatch::getUintahGhostDescriptor<SVolField>() ) )
+                                              Wasatch::get_uintah_field_type_descriptor<SVolField>(),
+                                              Wasatch::get_uintah_ghost_descriptor<SVolField>() ) )
 {
 }
 
@@ -66,10 +66,19 @@ Pressure::~Pressure()
 void
 Pressure::schedule_solver( const Uintah::LevelP& level,
                            Uintah::SchedulerP sched,
-                           const Uintah::MaterialSet* const materials )
+                           const Uintah::MaterialSet* const materials,
+                           int RKStage)
 {
-  solver_.scheduleSolve( level, sched, materials, matrixLabel_, 
-                         Uintah::Task::NewDW, pressureLabel_, true, prhsLabel_, Uintah::Task::NewDW, 0, Uintah::Task::OldDW, &solverParams_ );
+  // TODO: investigate why projection only works for the first RK stage when running
+  // in parallel (specifically hypre)
+  if (RKStage==1) {
+    solver_.scheduleSolve( level, sched, materials, matrixLabel_, 
+                          Uintah::Task::NewDW, pressureLabel_, true, prhsLabel_, Uintah::Task::NewDW, 0, Uintah::Task::OldDW, &solverParams_ );
+  } else {
+//    solver_.scheduleSolve( level, sched, materials, matrixLabel_, 
+//                          Uintah::Task::NewDW, pressureLabel_, true, prhsLabel_, Uintah::Task::NewDW, pressureLabel_, Uintah::Task::NewDW, &solverParams_ );
+  }
+
 }
 
 //--------------------------------------------------------------------
@@ -77,9 +86,13 @@ Pressure::schedule_solver( const Uintah::LevelP& level,
 void
 Pressure::declare_uintah_vars( Uintah::Task& task,
                                const Uintah::PatchSubset* const patches,
-                               const Uintah::MaterialSubset* const materials )
+                               const Uintah::MaterialSubset* const materials,
+                              int RKStage)
 {
-  task.computes( matrixLabel_, patches, Uintah::Task::NormalDomain, materials, Uintah::Task::NormalDomain );
+  if (RKStage ==1) 
+    task.computes( matrixLabel_, patches, Uintah::Task::NormalDomain, materials, Uintah::Task::NormalDomain );
+  else 
+    task.modifies( matrixLabel_, patches, Uintah::Task::NormalDomain, materials, Uintah::Task::NormalDomain );
 }
 
 //--------------------------------------------------------------------
@@ -87,14 +100,20 @@ Pressure::declare_uintah_vars( Uintah::Task& task,
 void
 Pressure::bind_uintah_vars( Uintah::DataWarehouse* const dw,
                            const Uintah::Patch* const patch,
-                           const int material)
+                           const int material,
+                           int RKStage)
 { 
   if (didAllocateMatrix_) {
+    //std::cout << "RKStage "<< RKStage << "did allocate matrix \n";
     // Todd: instead of checking for allocation - check for new timestep or some other ingenious solution
     // check for transferfrom - transfer matrix from old to new DW
-    dw->put( matrix_, matrixLabel_, material, patch ); 
+    if (RKStage==1) dw->put( matrix_, matrixLabel_, material, patch ); 
+    else dw->getModifiable( matrix_, matrixLabel_, material, patch ); 
+    //setup_matrix(patch);
   } else {
+    //std::cout << "RKStage "<< RKStage << "before allocate and put matrix \n";
     dw->allocateAndPut( matrix_, matrixLabel_, material, patch );    
+    ///std::cout << "after allocate and put matrix \n";    
     setup_matrix(patch);
     didAllocateMatrix_=true;
   }    

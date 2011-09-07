@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -50,6 +50,10 @@ namespace Uintah {
     static void create(const ProblemSpecP& ps,
 		       std::vector<GeometryPieceP>& objs);
 
+    // Clears out the saved geometry piece information...  In theory, this should
+    // only be called by (and necessary for) the Switcher component (and only if 
+    // a component that is being switched to happens to be a 'copy' of a previous component).
+    static void resetFactory();
 
     // Runs through all the GeometryPiece that have been created and
     // sets their flag for first time output.  This should be done at

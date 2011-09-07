@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -181,7 +181,9 @@ EnthalpySolver::problemSetup(const ProblemSpecP& params)
   string limiter_type;
   if (d_conv_scheme == 1) {
     db->getWithDefault("limiter_type",limiter_type,"superbee");
-    if (limiter_type == "superbee"){ 
+    if (limiter_type == "minmod"){
+      d_limiter_type = -1;
+    } else if (limiter_type == "superbee"){ 
       d_limiter_type = 0;
     }else if (limiter_type == "vanLeer"){ 
       d_limiter_type = 1;
@@ -974,8 +976,9 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
                                                    d_energyEx);
         }
 
+          int wall = d_boundaryCondition->wallCellType();
           d_DORadiation->intensitysolve(pc, patch, cellinfo,
-                                        &enthalpyVars, &constEnthalpyVars);
+                                        &enthalpyVars, &constEnthalpyVars, wall );
       }
       IntVector indexLow = patch->getFortranCellLowIndex();
       IntVector indexHigh = patch->getFortranCellHighIndex();

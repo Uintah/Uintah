@@ -62,7 +62,7 @@
 ##  --------------------------------------------------------------------
 
 ##  initialize configure 
-AC_INIT([Uintah],[1.25],[csafe-homebrew@cs.utah.edu])
+AC_INIT([Uintah],[1.31],[csafe-homebrew@cs.utah.edu])
 
 ##  require autoconf version 2.68
 ##     The reason to require the latest autoconf is to try and get everyone who
@@ -369,6 +369,14 @@ SCI_ARG_WITH(tau,
   [with_tau="$withval"
    sci_required_tau=yes],
   [with_tau=""])
+  
+SCI_ARG_WITH(papi,
+  AC_HELP_STRING(--with-papi=DIR,
+                 Use the papi installation in DIR),
+  [with_papi="$withval"
+   sci_required_papi=yes],
+  [with_papi=""])
+    
 SCI_ARG_WITH(unp,
   AC_HELP_STRING(--with-unp=DIR,
                  Use the unp installation in DIR),
@@ -3542,6 +3550,68 @@ EOF
 fi
 
 AC_SUBST(TAU_MAKEFILE)
+
+##  --  search for papi stuff  -------------------------------------------
+if test "$sci_required_papi" = "yes"; then
+
+  AS_MESSAGE(checking for required PAPI components......)
+  
+  if ! test -d "$with_papi"; then
+    AC_MSG_ERROR( [The directory specified with --with-papi=DIR is not valid: $with_papi] )
+  fi
+
+  # the major PAPI definitions, etc
+  DEF_PAPI=""
+  HAVE_PAPI=""
+  HAVE_PAPI_H=""
+  INC_PAPI_H=""
+  PAPI_LIB_DIR=""
+
+  # all the -L's
+  PAPI_LIB_DIR_FLAG=""
+
+  # all the -l's
+  PAPI_LIB_FLAG=""
+
+  # confirm the existence/location of PAPI lib and include directories
+  _papi_lib=
+  _papi_inc="$with_papi/include"
+  # account for lib64 or lib32 or just lib...
+  BASE_LIB_PATH(_papi_lib,$with_papi)
+  
+  AC_LANG_PUSH(C++)
+  SCI_COMPILE_LINK_TEST(PAPI, PAPI libraries and headers,
+                        [#include <papi.h>
+                        #include <cstdlib>],
+                        $_papi_inc,
+                        papi,
+                        $_papi_lib,
+                        ,
+                        [int *event_set = (int*)malloc(sizeof(int));
+                        *event_set = PAPI_FP_OPS;
+                        long long *flops = (long long *)malloc(sizeof(long long));
+                        PAPI_start_counters(event_set, 1);
+                        PAPI_stop_counters(flops, 1);
+                        free(event_set);
+                        free(flops);],
+                        optional)
+  AC_LANG_POP(C++)     
+  
+if test $HAVE_PAPI="yes"; then
+  DEF_PAPI="#define USE_PAPI_COUNTERS 1"
+fi                     
+
+fi #end sci_required_papi
+
+# these are all defined after the call to SCI_COMPILE_LINK_TEST
+AC_SUBST(HAVE_PAPI)
+AC_SUBST(DEF_PAPI)
+AC_SUBST(INC_PAPI_H)
+AC_SUBST(PAPI_LIB_DIR_FLAG)
+AC_SUBST(PAPI_LIB_FLAG)
+
+sci_defs_files="$sci_defs_files include/sci_defs/papi_testdefs.h"
+
 
 ##  --  search for freetype stuff  -------------------------------------------
 # Default values:

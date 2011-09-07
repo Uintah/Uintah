@@ -2,7 +2,7 @@
 
    The MIT License
 
-   Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+   Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
    Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
    University of Utah.
 
@@ -105,7 +105,7 @@ namespace Uintah {
 
     public:
 
-      enum BC_TYPE { VELOCITY_INLET, MASSFLOW_INLET, VELOCITY_FILE, MASSFLOW_FILE, PRESSURE, OUTLET, WALL }; 
+      enum BC_TYPE { VELOCITY_INLET, MASSFLOW_INLET, VELOCITY_FILE, MASSFLOW_FILE, PRESSURE, OUTLET, WALL, MMWALL, INTRUSION }; 
 
       // GROUP: Constructors:
       ////////////////////////////////////////////////////////////////////////
@@ -217,10 +217,10 @@ namespace Uintah {
                                       const MaterialSet* matls);
 
      void setInitProfile__NEW(const ProcessorGroup*,
-                                const PatchSubset* patches,
-                                const MaterialSubset*,
-                                DataWarehouse*,
-                                DataWarehouse* new_dw);
+                              const PatchSubset* patches,
+                              const MaterialSubset*,
+                              DataWarehouse*,
+                              DataWarehouse* new_dw);
 
       void setVel__NEW( const Patch* patch, const Patch::FaceType& face, 
         SFCXVariable<double>& uVel, SFCYVariable<double>& vVel, SFCZVariable<double>& wVel, 
@@ -256,6 +256,17 @@ namespace Uintah {
 																			 velType& vel, 
                                        constCCVariable<double>& P,
                                        constCCVariable<double>& density );
+
+      void sched_setPrefill__NEW( SchedulerP& sched,
+                                  const PatchSet* patches,
+                                  const MaterialSet* matls);
+
+      void setPrefill__NEW( const ProcessorGroup*,
+                            const PatchSubset* patches,
+                            const MaterialSubset*,
+                            DataWarehouse*,
+                            DataWarehouse* new_dw );
+
 
       template <class stencilType> 
       void zeroStencilDirection( const Patch* patch, 
@@ -324,10 +335,6 @@ namespace Uintah {
         //return d_intrusionBoundary; 
       }
 
-      bool getturbinlet() { 
-        return turbinlet; 
-      }
-
       bool anyArchesPhysicalBC() { 
         return ((d_wallBoundary)||(d_inletBoundary)||(d_pressureBoundary)||(d_outletBoundary)||(d_intrusionBoundary)); 
       }
@@ -341,7 +348,11 @@ namespace Uintah {
       ////////////////////////////////////////////////////////////////////////
       // mm Wall boundary ID
       int getMMWallId() const {
-        return d_mmWallID;
+        if ( d_use_new_bcs ) {
+          return MMWALL; 
+        } else { 
+          return d_mmWallID; 
+        }
       }
 
       ////////////////////////////////////////////////////////////////////////
@@ -356,13 +367,13 @@ namespace Uintah {
       inline int wallCellType() const { 
         int wall_celltypeval = -10;
         if (d_wallBoundary){ 
-          wall_celltypeval = d_wallBdry->d_cellTypeID; 
+          wall_celltypeval = WALL; //d_wallBdry->d_cellTypeID; 
         }
 
         if ( d_use_new_bcs ) { 
           return WALL; 
         } else { 
-          return wall_celltypeval; 
+          return WALL; //wall_celltypeval; 
         } 
       }
 
@@ -374,7 +385,7 @@ namespace Uintah {
         if ( d_use_new_bcs ) { 
           return PRESSURE; 
         } else { 
-          return pressure_celltypeval; 
+          return PRESSURE; //pressure_celltypeval; 
         } 
       }
 
@@ -386,7 +397,7 @@ namespace Uintah {
         if ( d_use_new_bcs ) { 
           return OUTLET; 
         } else { 
-          return outlet_celltypeval; 
+          return OUTLET; //outlet_celltypeval; 
         } 
       }
       ////////////////////////////////////////////////////////////////////////
@@ -827,6 +838,7 @@ namespace Uintah {
       BCInfoMap d_bc_information;                           ///< Contains information about each boundary condition spec. (from UPS)
       BCNameMap d_bc_type_to_string;                        ///< Matches the BC integer ID with the string name
       bool d_use_new_bcs;                                   ///< Turn on/off the new BC mech. 
+      std::map<std::string, std::vector<GeometryPieceP> > d_prefill_map;  ///< Contains inlet name/geometry piece pairing
 
       ////////////////////////////////////////////////////////////////////////
       // Call Fortran to compute u velocity BC terms
@@ -962,26 +974,6 @@ namespace Uintah {
           const bool xminus, const bool xplus, 
           const bool yminus, const bool yplus, 
           const bool zminus, const bool zplus );
-
-      bool turbinlet;
-      int ilow;
-      int ihigh;
-      int Nx;
-      int Ny;
-      int Nz;
-      int My;
-      int Mz;
-      int Nf;
-      double lscale;
-      double intensity;
-      double cellsize;
-      double *bcoeffx;
-      double *bcoeffy;
-      double *bcoeffz;
-      //double ***bbcoeff;
-      //double ***Rturb;
-      double *bbcoeff;
-      double *Rturb;
 
     private:
 

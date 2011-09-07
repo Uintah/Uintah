@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -35,6 +35,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Ports/DataWarehouseP.h>
 #include <CCA/Ports/Output.h>
 #include <CCA/Ports/SimulationInterface.h>
+#include <CCA/Ports/SwitchingCriteria.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Grid/GridP.h>
 #include <Core/Grid/LevelP.h>
@@ -547,12 +548,6 @@ protected:
   void readInsertParticlesFile(string filename);
   
   virtual void scheduleSwitchTest(const LevelP& level, SchedulerP& sched);
-  
-  virtual void switchTest(const ProcessorGroup*,
-                          const PatchSubset* patches,
-                          const MaterialSubset* matls,
-                          DataWarehouse*,
-                          DataWarehouse*);
                    
 
   
@@ -589,6 +584,8 @@ protected:
   MaterialSubset*  d_loadCurveIndex;
   
   AnalysisModule* d_analysisModule;
+  SwitchingCriteria* d_switchCriteria;
+  
 private:
 
   SerialMPM(const SerialMPM&);

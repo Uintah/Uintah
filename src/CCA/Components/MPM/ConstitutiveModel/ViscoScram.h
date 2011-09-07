@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -139,6 +139,7 @@ namespace Uintah {
     bool d_useJWLCEOS;
     bool d_useModifiedEOS;
     bool d_useMurnahanEOS;
+    bool d_useBirchMurnaghanEOS;
     bool d_random;
     bool d_doTimeTemperature;
     bool d_useObjectiveRate;
@@ -244,13 +245,21 @@ namespace Uintah {
     /*! Used by MPMICE for pressure equilibriation */
     virtual double getCompressibility();
 
+private:
+
+    // Functions and variables for solving the BirchMurnaghan equation of state
+    double computePBirchMurnaghan(double v);
+    double computedPdrhoBirchMurnaghan(double v, double rho0);
+
+    // Functions and variables for solving JWL temperature dependend form of equation of state
     double   Pressure;
     double   Temperature;
     double   SpecificHeat;
     double   IL, IR;
-    double func(double rhoM,const MPMMaterial* matl);
-    double deri(double rhoM,const MPMMaterial* matl);
+
     void   setInterval(double f, double rhoM);
+    double computePJWL(double rhoM,const MPMMaterial* matl);
+    double computedPdrhoJWL(double rhoM,const MPMMaterial* matl);
 
   };
 

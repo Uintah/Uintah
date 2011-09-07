@@ -2,7 +2,7 @@
 # 
 # The MIT License
 # 
-# Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+# Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 # Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 # University of Utah.
 # 
@@ -44,6 +44,7 @@ PSELIBS := \
         Core/Exceptions  \
         Core/Util        \
         Core/Geometry    \
+        Core/GeometryPiece  \
         CCA/Ports        \
         Core/Disclosure  \
         Core/Exceptions  \

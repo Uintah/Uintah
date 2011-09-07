@@ -294,6 +294,22 @@ namespace Uintah{
       // Interpolation
       // These functions interpolate
       // --------------------------------------------------------------------------
+
+      /** @brief Cell-centered interolation -- should work for all cell types */ 
+      template< class phiT >
+        inline FaceData1D centralInterp( const IntVector c, const IntVector coord, phiT& phi )
+      {
+        IntVector cxp = c + coord; 
+        IntVector cxm = c - coord; 
+
+        FaceData1D face_values; 
+
+        face_values.minus = 0.5 * ( phi[c] + phi[cxm] ); 
+        face_values.plus  = 0.5 * ( phi[c] + phi[cxp] ); 
+
+        return face_values; 
+
+      }
       
       /** @brief Return the face velocity for a CC cell given a CC velocity VECTOR */
       inline FaceData1D getFaceVelocity( const IntVector c, const CCVariable<double>& F, 
@@ -867,18 +883,134 @@ namespace Uintah{
           return face_values; 
         }; 
       }; 
-      
+
       // ---------------------------------------------------------------------------
-      // Super Bee interpolator
+      // Flux Limiters
       //
-      /** @brief Super Bee Interpolation */ 
-      template <typename phiT>
-      class SuperBeeInterpolation { 
+      // Limiter Functions:
+      // This is the base class: 
+      // Given r, should return psi
+      //
+      // To add a new limiter: 
+      // 1) Add a derived LimiterFunctionBase class to return psi
+      // 2) Add an instance of the function in the FluxLimiterInterpolation() constructor
+      // 3) Add the option in the spec file 
+      
+      /** @brief Limiter function base class */
+      class LimiterFunctionBase { 
 
         public: 
 
-        SuperBeeInterpolation(){};
-        ~SuperBeeInterpolation(){}; 
+          LimiterFunctionBase() : _huge(1e10) {}; 
+          virtual ~LimiterFunctionBase(){}; 
+
+          virtual double get_psi(double const r) = 0;
+
+        protected: 
+
+          const double _huge; 
+
+      };
+
+      /** @brief Super Bee function */ 
+      class SuperBeeFunction : public LimiterFunctionBase { 
+
+        public: 
+
+        SuperBeeFunction(){};
+        ~SuperBeeFunction(){}; 
+
+        double get_psi( double const r ){ 
+
+          double psi = 2.0; // when r = infinity
+
+          if ( r < _huge ){ 
+            psi = std::max( std::min( 2.0*r, 1.0 ), std::min( r, 2.0 ) ); 
+            psi = std::max( 0.0, psi ); 
+          } 
+
+          return psi; 
+
+        };
+
+      };
+
+      /** @brief Roe MinMod function */ 
+      class RoeMindModFunction : public LimiterFunctionBase { 
+
+        public: 
+
+          RoeMindModFunction(){}; 
+          ~RoeMindModFunction(){};
+
+          double get_psi( double const r ){ 
+
+            double psi = 1.0; // when r = infinity
+
+            if ( psi < _huge ) { 
+              psi = std::min(r, 1.0);
+              psi = std::max( 0.0, psi );
+            }
+
+            return psi; 
+
+          };
+      }; 
+
+      /** @brief Van Leer function */ 
+      class VanLeerFunction : public LimiterFunctionBase { 
+
+        public: 
+
+          VanLeerFunction(){}; 
+          ~VanLeerFunction(){};
+
+          double get_psi( double const r ){ 
+
+            double psi = 2.0; // when r = infinity
+
+            if ( psi < _huge ) { 
+              psi = ( r + std::abs(r) ) / ( 1.0 + std::abs(r) ); 
+            }
+
+            return psi; 
+
+          };
+      }; 
+      //--- end functions --- below is the actual interpolation for all limiters
+
+      /** @brief Generalized Flux Limiter */ 
+      template <typename phiT>
+      class FluxLimiterInterpolation { 
+
+        public: 
+
+        FluxLimiterInterpolation( std::string type ){
+       
+          if ( type == "super_bee" ) { 
+
+            _limiter_function = scinew SuperBeeFunction(); 
+
+          } else if ( type == "roe_minmod" ) { 
+
+            _limiter_function = scinew RoeMindModFunction(); 
+
+          } else if ( type == "vanleer" ) { 
+
+            _limiter_function = scinew VanLeerFunction(); 
+
+          } else { 
+
+            throw InternalError("ERROR: Limiter function not recognized.", __FILE__, __LINE__);
+
+          } 
+        
+        };
+        ~FluxLimiterInterpolation(){
+        
+          delete _limiter_function; 
+
+        }; 
 
         FaceData1D inline no_bc( const IntVector c, const IntVector coord, phiT& phi, 
             FaceData1D vel, constCCVariable<Vector>& areaFraction ) 
@@ -887,10 +1019,10 @@ namespace Uintah{
           face_values.plus  = 0.0;
           face_values.minus = 0.0;
 
-          double r=0.0; 
-          double psi; 
-          double Sup;
-          double Sdn;
+          double r   = 0.0; 
+          double psi = 0.0; 
+          double Sup = 0.0;
+          double Sdn = 0.0;
           const double tiny = 1.0e-16; 
 
           IntVector cxp  = c + coord; 
@@ -899,12 +1031,13 @@ namespace Uintah{
           IntVector cxmm = c - coord - coord; 
 
           int dim = 0; 
-          if (coord[0] == 1)
+          if (coord[0] == 1){
             dim =0; 
-          else if (coord[1] == 1)
+          } else if (coord[1] == 1) { 
             dim = 1; 
-          else 
-            dim = 2; 
+          } else {  
+            dim = 2;
+          }
 
           // - FACE
           if ( vel.minus > 0.0 ) {
@@ -912,26 +1045,26 @@ namespace Uintah{
             Sdn = phi[c];
             r = ( phi[cxm] - phi[cxmm] ) / ( phi[c] - phi[cxm] );
 
-            if ( areaFraction[cxm][dim] < tiny || areaFraction[c][dim] < tiny )
+            if ( areaFraction[cxm][dim] < tiny || areaFraction[c][dim] < tiny ){
               r = 0.0;
+            }
 
           } else if ( vel.minus < 0.0 ) {
             Sup = phi[c];
             Sdn = phi[cxm];
             r = ( phi[cxp] - phi[c] ) / ( phi[c] - phi[cxm] );
 
-            if ( areaFraction[cxp][dim] < tiny || areaFraction[c][dim] < tiny )
+            if ( areaFraction[cxp][dim] < tiny || areaFraction[c][dim] < tiny ){
               r = 0.0;
-
-          } else { 
-            Sup = 0.0;
-            Sdn = 0.0; 
-            psi = 0.0;
+            }
           }
-          psi = std::max( std::min(2.0*r, 1.0), std::min(r, 2.0) );
-          psi = std::max( 0.0, psi );
+
+          psi = _limiter_function->get_psi( r ); 
 
           face_values.minus = Sup + 0.5*psi*( Sdn - Sup );
+
+          Sup = 0.0;
+          Sdn = 0.0; 
 
           // + FACE
           if ( vel.plus > 0.0 ) {
@@ -939,24 +1072,21 @@ namespace Uintah{
             Sup = phi[c];
             Sdn = phi[cxp];
 
-            if ( areaFraction[c][dim] < tiny || areaFraction[cxp][dim] < tiny )
+            if ( areaFraction[c][dim] < tiny || areaFraction[cxp][dim] < tiny ) {
               r = 0.0;
+            }
 
           } else if ( vel.plus < 0.0 ) {
             r = ( phi[cxpp] - phi[cxp] ) / ( phi[cxp] - phi[c] );
             Sup = phi[cxp];
             Sdn = phi[c]; 
 
-            if ( areaFraction[cxpp][dim] < tiny || areaFraction[cxp][dim] < tiny )
+            if ( areaFraction[cxpp][dim] < tiny || areaFraction[cxp][dim] < tiny ){
               r = 0.0; 
-
-          } else {
-            Sup = 0.0;
-            Sdn = 0.0; 
-            psi = 0.0;
+            }
           }
-          psi = std::max( std::min(2.0*r, 1.0), std::min(r, 2.0) );
-          psi = std::max( 0.0, psi );
+
+          psi = _limiter_function->get_psi( r ); 
 
           face_values.plus = Sup + 0.5*psi*( Sdn - Sup );
 
@@ -970,10 +1100,10 @@ namespace Uintah{
           face_values.plus  = 0.0;
           face_values.minus = 0.0;
 
-          double r = 0; 
-          double psi; 
-          double Sup;
-          double Sdn;
+          double r   = 0.0; 
+          double psi = 0.0; 
+          double Sup = 0.0;
+          double Sdn = 0.0;
           const double tiny = 1.0e-16; 
 
           IntVector cxp  = c + coord; 
@@ -982,78 +1112,84 @@ namespace Uintah{
           IntVector cxmm = c - coord - coord; 
 
           int dim = 0; 
-          if (coord[0] == 1)
+          if (coord[0] == 1){
             dim =0; 
-          else if (coord[1] == 1)
+          } else if (coord[1] == 1) {
             dim = 1; 
-          else 
-            dim = 2; 
+          } else {  
+            dim = 2;
+          }
 
           // - FACE
-          if (isBoundary.minus) 
+          if (isBoundary.minus) {
             face_values.minus = 0.5*(phi[c]+phi[cxm]);
-          else { 
+          } else { 
             if ( vel.minus > 0.0 ) {
               Sup = phi[cxm];
               Sdn = phi[c];
               r = ( phi[cxm] - phi[cxmm] ) / ( phi[c] - phi[cxm] ); 
 
-            if ( areaFraction[cxm][dim] < tiny || areaFraction[c][dim] < tiny )
-              r = 0.0;
+              if ( areaFraction[cxm][dim] < tiny || areaFraction[c][dim] < tiny ){
+                r = 0.0;
+              }
 
             } else if ( vel.minus < 0.0 ) {
               Sup = phi[c];
               Sdn = phi[cxm];
               r = ( phi[cxp] - phi[c] ) / ( phi[c] - phi[cxm] );
 
-            if ( areaFraction[cxp][dim] < tiny || areaFraction[c][dim] < tiny )
-              r = 0.0;
-
-            } else { 
-              Sup = 0.0;
-              Sdn = 0.0; 
-              psi = 0.0;
+              if ( areaFraction[cxp][dim] < tiny || areaFraction[c][dim] < tiny ){
+                r = 0.0;
+              }
             }
-            psi = std::max( std::min(2.0*r, 1.0), std::min(r, 2.0) );
-            psi = std::max( 0.0, psi );
+
+            psi = _limiter_function->get_psi( r ); 
 
             face_values.minus = Sup + 0.5*psi*( Sdn - Sup );
           }
 
+          Sup = 0.0; 
+          Sdn = 0.0; 
+
           // + FACE
-          if (isBoundary.plus)
+          if (isBoundary.plus) {
             face_values.plus = 0.5*(phi[c] + phi[cxp]);
-          else { 
+          } else { 
             if ( vel.plus > 0.0 ) {
               r = ( phi[c] - phi[cxm] ) / ( phi[cxp] - phi[c] );
               Sup = phi[c];
               Sdn = phi[cxp];
 
-            if ( areaFraction[c][dim] < tiny || areaFraction[cxp][dim] < tiny )
+            if ( areaFraction[c][dim] < tiny || areaFraction[cxp][dim] < tiny ){
               r = 0.0;
+            }
 
             } else if ( vel.plus < 0.0 ) {
               r = ( phi[cxpp] - phi[cxp] ) / ( phi[cxp] - phi[c] );
               Sup = phi[cxp];
               Sdn = phi[c]; 
 
-            if ( areaFraction[cxpp][dim] < tiny || areaFraction[cxp][dim] < tiny )
-              r = 0.0; 
-
-            } else {
-              Sup = 0.0;
-              Sdn = 0.0; 
-              psi = 0.0;
+              if ( areaFraction[cxpp][dim] < tiny || areaFraction[cxp][dim] < tiny ){
+                r = 0.0; 
+              }
             }
-            psi = std::max( std::min(2.0*r, 1.0), std::min(r, 2.0) );
-            psi = std::max( 0.0, psi );
+
+            psi = _limiter_function->get_psi( r ); 
 
             face_values.plus = Sup + 0.5*psi*( Sdn - Sup );
           }
 
           return face_values; 
         };
+
+
+        private: 
+
+          LimiterFunctionBase* _limiter_function; 
+
       }; 
+
+      
 
       // ---------------------------------------------------------------------------
       // Old Super Bee interpolator
@@ -1162,11 +1298,6 @@ namespace Uintah{
           double Sup;
           double Sdn;
           const double tiny = 1.0e-16; 
-          if ( c == IntVector(0,7,7) ) 
-          { 
-            std::cout << "I want some food" << std::endl; 
-          } 
-
 
           IntVector cxp  = c + coord; 
           IntVector cxpp = c + coord + coord; 
@@ -1257,267 +1388,6 @@ namespace Uintah{
         };
       }; 
 
-      /** @brief Cell-centered interolation -- should work for all cell types */ 
-      template< class phiT >
-        inline FaceData1D centralInterp( const IntVector c, const IntVector coord, phiT& phi )
-        {
-          IntVector cxp = c + coord; 
-          IntVector cxm = c - coord; 
-
-          FaceData1D face_values; 
-
-          face_values.minus = 0.5 * ( phi[c] + phi[cxm] ); 
-          face_values.plus  = 0.5 * ( phi[c] + phi[cxp] ); 
-
-          return face_values; 
-
-        }
-
-      /** @brief Super Bee Interpolation -- should work for all cell types.
-       *      This function does not have boundary checking (for speed). */
-      template< class phiT >
-        inline FaceData1D superBeeInterp( const IntVector c, const IntVector coord, phiT& phi, 
-            FaceData1D vel, constCCVariable<Vector>& areaFraction ) {
-
-          FaceData1D face_values;
-          face_values.plus  = 0.0;
-          face_values.minus = 0.0;
-
-          double r=0.; 
-          double psi; 
-          double Sup;
-          double Sdn;
-          const double tiny = 1.0e-16; 
-
-          IntVector cxp  = c + coord; 
-          IntVector cxpp = c + coord + coord; 
-          IntVector cxm  = c - coord; 
-          IntVector cxmm = c - coord - coord; 
-
-          int dim = 0; 
-          if (coord[0] == 1)
-            dim =0; 
-          else if (coord[1] == 1)
-            dim = 1; 
-          else 
-            dim = 2; 
-
-          // - FACE
-          if ( vel.minus > 0.0 ) {
-            Sup = phi[cxm];
-            Sdn = phi[c];
-            r = ( phi[cxm] - phi[cxmm] ) / ( phi[c] - phi[cxm] );
-
-            if ( areaFraction[cxm][dim] < tiny || areaFraction[c][dim] < tiny )
-              r = 0.0;
-
-          } else if ( vel.minus < 0.0 ) {
-            Sup = phi[c];
-            Sdn = phi[cxm];
-            r = ( phi[cxp] - phi[c] ) / ( phi[c] - phi[cxm] );
-
-            if ( areaFraction[cxp][dim] < tiny || areaFraction[c][dim] < tiny )
-              r = 0.0;
-
-          } else { 
-            Sup = 0.0;
-            Sdn = 0.0; 
-            psi = 0.0;
-          }
-          psi = std::max( std::min(2.0*r, 1.0), std::min(r, 2.0) );
-          psi = std::max( 0.0, psi );
-
-          face_values.minus = Sup + 0.5*psi*( Sdn - Sup );
-
-          // + FACE
-          if ( vel.plus > 0.0 ) {
-            r = ( phi[c] - phi[cxm] ) / ( phi[cxp] - phi[c] );
-            Sup = phi[c];
-            Sdn = phi[cxp];
-
-            if ( areaFraction[c][dim] < tiny || areaFraction[cxp][dim] < tiny )
-              r = 0.0;
-
-          } else if ( vel.plus < 0.0 ) {
-            r = ( phi[cxpp] - phi[cxp] ) / ( phi[cxp] - phi[c] );
-            Sup = phi[cxp];
-            Sdn = phi[c]; 
-
-            if ( areaFraction[cxpp][dim] < tiny || areaFraction[cxp][dim] < tiny )
-              r = 0.0; 
-
-          } else {
-            Sup = 0.0;
-            Sdn = 0.0; 
-            psi = 0.0;
-          }
-          psi = std::max( std::min(2.0*r, 1.0), std::min(r, 2.0) );
-          psi = std::max( 0.0, psi );
-
-          face_values.plus = Sup + 0.5*psi*( Sdn - Sup );
-
-          return face_values; 
-        }
-
-      /** @brief Super Bee Interpolation -- should work for all cell types. 
-       *       This function includes boundary checking (slower).  */ 
-      template< class phiT >
-        inline FaceData1D superBeeInterp( const IntVector c, const IntVector coord, phiT& phi, 
-            FaceData1D vel, FaceBoundaryBool isBoundary, constCCVariable<Vector>& areaFraction ) {
-
-          FaceData1D face_values;
-          face_values.plus  = 0.0;
-          face_values.minus = 0.0;
-
-          double r = 0; 
-          double psi; 
-          double Sup;
-          double Sdn;
-          const double tiny = 1.0e-16; 
-
-          IntVector cxp  = c + coord; 
-          IntVector cxpp = c + coord + coord; 
-          IntVector cxm  = c - coord; 
-          IntVector cxmm = c - coord - coord; 
-
-          int dim = 0; 
-          if (coord[0] == 1)
-            dim =0; 
-          else if (coord[1] == 1)
-            dim = 1; 
-          else 
-            dim = 2; 
-
-          // - FACE
-          if (isBoundary.minus) 
-            face_values.minus = 0.5*(phi[c]+phi[cxm]);
-          else { 
-            if ( vel.minus > 0.0 ) {
-              Sup = phi[cxm];
-              Sdn = phi[c];
-              r = ( phi[cxm] - phi[cxmm] ) / ( phi[c] - phi[cxm] ); 
-
-            if ( areaFraction[cxm][dim] < tiny || areaFraction[c][dim] < tiny )
-              r = 0.0;
-
-            } else if ( vel.minus < 0.0 ) {
-              Sup = phi[c];
-              Sdn = phi[cxm];
-              r = ( phi[cxp] - phi[c] ) / ( phi[c] - phi[cxm] );
-
-            if ( areaFraction[cxp][dim] < tiny || areaFraction[c][dim] < tiny )
-              r = 0.0;
-
-            } else { 
-              Sup = 0.0;
-              Sdn = 0.0; 
-              psi = 0.0;
-            }
-            psi = std::max( std::min(2.0*r, 1.0), std::min(r, 2.0) );
-            psi = std::max( 0.0, psi );
-
-            face_values.minus = Sup + 0.5*psi*( Sdn - Sup );
-          }
-
-          // + FACE
-          if (isBoundary.plus)
-            face_values.plus = 0.5*(phi[c] + phi[cxp]);
-          else { 
-            if ( vel.plus > 0.0 ) {
-              r = ( phi[c] - phi[cxm] ) / ( phi[cxp] - phi[c] );
-              Sup = phi[c];
-              Sdn = phi[cxp];
-
-            if ( areaFraction[c][dim] < tiny || areaFraction[cxp][dim] < tiny )
-              r = 0.0;
-
-            } else if ( vel.plus < 0.0 ) {
-              r = ( phi[cxpp] - phi[cxp] ) / ( phi[cxp] - phi[c] );
-              Sup = phi[cxp];
-              Sdn = phi[c]; 
-
-            if ( areaFraction[cxpp][dim] < tiny || areaFraction[cxp][dim] < tiny )
-              r = 0.0; 
-
-            } else {
-              Sup = 0.0;
-              Sdn = 0.0; 
-              psi = 0.0;
-            }
-            psi = std::max( std::min(2.0*r, 1.0), std::min(r, 2.0) );
-            psi = std::max( 0.0, psi );
-
-            face_values.plus = Sup + 0.5*psi*( Sdn - Sup );
-          }
-
-          return face_values; 
-        }
-
-      /* @brief Upwind interpolation -- should work for all data types. 
-       *      This function does not have boundary checking (for speed). */ 
-      template< class phiT >
-        inline FaceData1D upwindInterp( const IntVector c, const IntVector coord, phiT& phi, 
-            FaceData1D vel) {
-
-          Discretization_new::FaceData1D face_values; 
-          face_values.minus = 0.0;
-          face_values.plus = 0.0;
-
-          IntVector cxp = c + coord; 
-          IntVector cxm = c - coord; 
-
-          // - FACE 
-          if ( vel.minus > 0.0 )
-            face_values.minus = phi[cxm];
-          else if ( vel.minus <= 0.0 )
-            face_values.minus = phi[c]; 
-
-          // + FACE 
-          if ( vel.plus >= 0.0 )
-            face_values.plus = phi[c]; 
-          else if ( vel.plus < 0.0 )
-            face_values.plus = phi[cxp]; 
-
-          return face_values; 
-
-        }
-
-      /* @brief Upwind interpolation -- should work for all data types. 
-       *      This function includes boundary checking (slower). */ 
-      template< class phiT >
-        inline FaceData1D upwindInterp( const IntVector c, const IntVector coord, phiT& phi, 
-            FaceData1D vel, FaceBoundaryBool isBoundary ) {
-
-          Discretization_new::FaceData1D face_values; 
-          face_values.minus = 0.0;
-          face_values.plus = 0.0;
-
-          IntVector cxp = c + coord; 
-          IntVector cxm = c - coord; 
-
-          // - FACE 
-          if (isBoundary.minus)
-            face_values.minus = 0.5*(phi[c] + phi[cxm]);
-          else {
-            if ( vel.minus > 0.0 )
-              face_values.minus = phi[cxm];
-            else if ( vel.minus <= 0.0 )
-              face_values.minus = phi[c]; 
-          }
-
-          // + FACE 
-          if (isBoundary.plus)
-            face_values.plus = 0.5*(phi[c] + phi[cxp]);
-          else {
-            if ( vel.plus >= 0.0 )
-              face_values.plus = phi[c]; 
-            else if ( vel.plus < 0.0 )
-              face_values.plus = phi[cxp]; 
-          }
-
-          return face_values; 
-
-        }
 
       //---------------------------------------------------------------------------
       // Derivatives
@@ -1610,11 +1480,11 @@ namespace Uintah{
        delete convection_helper; 
        delete the_interpolant; 
 
-      } else if (convScheme == "super_bee") { 
+      } else if ( convScheme == "super_bee" || convScheme == "roe_minmod" ) { 
 
-       SuperBeeInterpolation<oldPhiT>* the_interpolant = scinew SuperBeeInterpolation<oldPhiT>(); 
-       ConvHelper1<SuperBeeInterpolation<oldPhiT>, oldPhiT>* convection_helper = 
-         scinew ConvHelper1<SuperBeeInterpolation<oldPhiT>, oldPhiT>(the_interpolant, oldPhi);
+       FluxLimiterInterpolation<oldPhiT>* the_interpolant = scinew FluxLimiterInterpolation<oldPhiT>( convScheme ); 
+       ConvHelper1<FluxLimiterInterpolation<oldPhiT>, oldPhiT>* convection_helper = 
+         scinew ConvHelper1<FluxLimiterInterpolation<oldPhiT>, oldPhiT>(the_interpolant, oldPhi);
 
        convection_helper->do_convection( p, Fconv, uVel, vVel, wVel, den, areaFraction, this ); 
 
@@ -1643,11 +1513,11 @@ namespace Uintah{
        delete convection_helper; 
        delete the_interpolant; 
 
-      } else if (convScheme == "vanleer") {
+      } else { 
 
-      } else if (convScheme == "l2up") { 
+        throw InvalidValue("Error: Convection scheme not recognized. Check UPS file and try again.", __FILE__, __LINE__);
 
-      }
+      } 
     }
 
   //---------------------------------------------------------------------------
@@ -1671,11 +1541,11 @@ namespace Uintah{
        delete convection_helper; 
        delete the_interpolant; 
 
-      } else if (convScheme == "super_bee") { 
+      } else if ( convScheme == "super_bee" || convScheme == "roe_minmod" ) { 
 
-       SuperBeeInterpolation<oldPhiT>* the_interpolant = scinew SuperBeeInterpolation<oldPhiT>(); 
-       ConvHelper1<SuperBeeInterpolation<oldPhiT>, oldPhiT>* convection_helper = 
-         scinew ConvHelper1<SuperBeeInterpolation<oldPhiT>, oldPhiT>(the_interpolant, oldPhi);
+       FluxLimiterInterpolation<oldPhiT>* the_interpolant = scinew FluxLimiterInterpolation<oldPhiT>( convScheme ); 
+       ConvHelper1<FluxLimiterInterpolation<oldPhiT>, oldPhiT>* convection_helper = 
+         scinew ConvHelper1<FluxLimiterInterpolation<oldPhiT>, oldPhiT>(the_interpolant, oldPhi);
 
        convection_helper->do_convection( p, Fconv, uVel, vVel, wVel, areaFraction, this ); 
 
@@ -1693,11 +1563,12 @@ namespace Uintah{
        delete convection_helper; 
        delete the_interpolant; 
 
-      } else if (convScheme == "vanleer") {
+      } else { 
 
-      } else if (convScheme == "l2up") { 
+        throw InvalidValue("Error: Convection scheme not recognized. Check UPS file and try again.", __FILE__, __LINE__);
 
       }
+
     }
 
   //---------------------------------------------------------------------------
@@ -1722,13 +1593,13 @@ namespace Uintah{
        delete convection_helper; 
        delete the_interpolant; 
 
-      } else if (convScheme == "super_bee") { 
+      } else if ( convScheme == "super_bee" || convScheme == "roe_minmod" ) { 
 
-       SuperBeeInterpolation<oldPhiT>* the_interpolant = scinew SuperBeeInterpolation<oldPhiT>(); 
-       ConvHelper1<SuperBeeInterpolation<oldPhiT>, oldPhiT>* convection_helper = 
-         scinew ConvHelper1<SuperBeeInterpolation<oldPhiT>, oldPhiT>(the_interpolant, oldPhi);
-
-       convection_helper->do_convection( p, Fconv, uVel, vVel, wVel, partVel, areaFraction, this ); 
+       FluxLimiterInterpolation<oldPhiT>* the_interpolant = scinew FluxLimiterInterpolation<oldPhiT>( convScheme ); 
+       ConvHelper1<FluxLimiterInterpolation<oldPhiT>, oldPhiT>* convection_helper = 
+         scinew ConvHelper1<FluxLimiterInterpolation<oldPhiT>, oldPhiT>(the_interpolant, oldPhi);
+ 
+       convection_helper->do_convection( p, Fconv, uVel, vVel, wVel, partVel,  areaFraction, this );
 
        delete convection_helper; 
        delete the_interpolant; 
@@ -1744,9 +1615,9 @@ namespace Uintah{
        delete convection_helper; 
        delete the_interpolant; 
 
-      } else if (convScheme == "vanleer") {
+      } else { 
 
-      } else if (convScheme == "l2up") { 
+        throw InvalidValue("Error: Convection scheme not recognized. Check UPS file and try again.", __FILE__, __LINE__);
 
       }
     }
@@ -2008,6 +1879,7 @@ namespace Uintah{
       }
     }
 
+
   //---------------------------------------------------------------------------
   // Method: Compute the diffusion term
   // Simple diffusion term: \f$ \int_{S} \nabla \phi \cdot dS \f$
@@ -2227,3 +2099,841 @@ namespace Uintah{
     }
 } // namespace Uintah
 #endif
+
+// Code attic -- clean out after regression tests pass: 
+//
+//
+//      /** @brief Minmod Interpolation -- should work for all cell types.
+//       *      This function does not have boundary checking (for speed). */
+//      template< class phiT >
+//        inline FaceData1D minmodInterp( const IntVector c, const IntVector coord, phiT& phi,
+//            FaceData1D vel, constCCVariable<Vector>& areaFraction ) {
+//
+//          FaceData1D face_values;
+//          face_values.plus  = 0.0;
+//          face_values.minus = 0.0;
+//
+//          double r=0.;
+//          double psi;
+//          double Sup;
+//          double Sdn;
+//          const double tiny = 1.0e-16;
+//
+//          IntVector cxp  = c + coord;
+//          IntVector cxpp = c + coord + coord;
+//          IntVector cxm  = c - coord;
+//          IntVector cxmm = c - coord - coord;
+//
+//          int dim = 0;
+//          if (coord[0] == 1)
+//            dim =0;
+//          else if (coord[1] == 1)
+//            dim = 1;
+//          else
+//            dim = 2;
+//
+//          // - FACE
+//          if ( vel.minus > 0.0 ) {
+//            Sup = phi[cxm];
+//            Sdn = phi[c];
+//            r = ( phi[cxm] - phi[cxmm] ) / ( phi[c] - phi[cxm] );
+//
+//            if ( areaFraction[cxm][dim] < tiny || areaFraction[c][dim] < tiny )
+//              r = 0.0;
+//
+//          } else if ( vel.minus < 0.0 ) {
+//            Sup = phi[c];
+//            Sdn = phi[cxm];
+//            r = ( phi[cxp] - phi[c] ) / ( phi[c] - phi[cxm] );
+//
+//            if ( areaFraction[cxp][dim] < tiny || areaFraction[c][dim] < tiny )
+//              r = 0.0;
+//
+//          } else {
+//            Sup = 0.0;
+//            Sdn = 0.0;
+//            psi = 0.0;
+//          }
+//          psi = std::min(r, 1.0);
+//          psi = std::max( 0.0, psi );
+//
+//          face_values.minus = Sup + 0.5*psi*( Sdn - Sup );
+//
+//          // + FACE
+//          if ( vel.plus > 0.0 ) {
+//            r = ( phi[c] - phi[cxm] ) / ( phi[cxp] - phi[c] );
+//            Sup = phi[c];
+//            Sdn = phi[cxp];
+//
+//            if ( areaFraction[c][dim] < tiny || areaFraction[cxp][dim] < tiny )
+//              r = 0.0;
+//
+//          } else if ( vel.plus < 0.0 ) {
+//            r = ( phi[cxpp] - phi[cxp] ) / ( phi[cxp] - phi[c] );
+//            Sup = phi[cxp];
+//            Sdn = phi[c];
+//
+//            if ( areaFraction[cxpp][dim] < tiny || areaFraction[cxp][dim] < tiny )
+//              r = 0.0;
+//
+//          } else {
+//            Sup = 0.0;
+//            Sdn = 0.0;
+//            psi = 0.0;
+//          }
+//          psi = std::min(r, 1.0);
+//          psi = std::max( 0.0, psi );
+//
+//          face_values.plus = Sup + 0.5*psi*( Sdn - Sup );
+//
+//          return face_values;
+//        }
+//
+//      /** @brief Minmod Interpolation -- should work for all cell types. 
+//       *       This function includes boundary checking (slower).  */
+//      template< class phiT >
+//        inline FaceData1D minmodInterp( const IntVector c, const IntVector coord, phiT& phi,
+//            FaceData1D vel, FaceBoundaryBool isBoundary, constCCVariable<Vector>& areaFraction ) {
+//
+//          FaceData1D face_values;
+//          face_values.plus  = 0.0;
+//          face_values.minus = 0.0;
+//
+//          double r = 0;
+//          double psi;
+//          double Sup;
+//          double Sdn;
+//          const double tiny = 1.0e-16;
+//
+//          IntVector cxp  = c + coord;
+//          IntVector cxpp = c + coord + coord;
+//          IntVector cxm  = c - coord;
+//          IntVector cxmm = c - coord - coord;
+//
+//          int dim = 0;
+//          if (coord[0] == 1)
+//            dim =0;
+//          else if (coord[1] == 1)
+//            dim = 1;
+//          else
+//            dim = 2;
+//
+//          // - FACE
+//          if (isBoundary.minus)
+//            face_values.minus = 0.5*(phi[c]+phi[cxm]);
+//          else {
+//            if ( vel.minus > 0.0 ) {
+//              Sup = phi[cxm];
+//              Sdn = phi[c];
+//              r = ( phi[cxm] - phi[cxmm] ) / ( phi[c] - phi[cxm] );
+//
+//            if ( areaFraction[cxm][dim] < tiny || areaFraction[c][dim] < tiny )
+//              r = 0.0;
+//
+//            } else if ( vel.minus < 0.0 ) {
+//              Sup = phi[c];
+//              Sdn = phi[cxm];
+//              r = ( phi[cxp] - phi[c] ) / ( phi[c] - phi[cxm] );
+//
+//            if ( areaFraction[cxp][dim] < tiny || areaFraction[c][dim] < tiny )
+//              r = 0.0;
+//
+//            } else {
+//              Sup = 0.0;
+//              Sdn = 0.0;
+//              psi = 0.0;
+//            }
+//            psi = std::min(r, 1.0);
+//            psi = std::max( 0.0, psi );
+//
+//            face_values.minus = Sup + 0.5*psi*( Sdn - Sup );
+//          }
+//
+//          // + FACE
+//          if (isBoundary.plus)
+//            face_values.plus = 0.5*(phi[c] + phi[cxp]);
+//          else {
+//            if ( vel.plus > 0.0 ) {
+//              r = ( phi[c] - phi[cxm] ) / ( phi[cxp] - phi[c] );
+//              Sup = phi[c];
+//              Sdn = phi[cxp];
+//
+//            if ( areaFraction[c][dim] < tiny || areaFraction[cxp][dim] < tiny )
+//              r = 0.0;
+//
+//            } else if ( vel.plus < 0.0 ) {
+//              r = ( phi[cxpp] - phi[cxp] ) / ( phi[cxp] - phi[c] );
+//              Sup = phi[cxp];
+//              Sdn = phi[c];
+//
+//            if ( areaFraction[cxpp][dim] < tiny || areaFraction[cxp][dim] < tiny )
+//              r = 0.0;
+//
+//            } else {
+//              Sup = 0.0;
+//              Sdn = 0.0;
+//              psi = 0.0;
+//            }
+//            psi = std::min(r, 1.0);
+//            psi = std::max( 0.0, psi );
+//
+//            face_values.plus = Sup + 0.5*psi*( Sdn - Sup );
+//          }
+//
+//          return face_values;
+//        }
+//
+//
+////      /** @brief Super Bee Interpolation -- should work for all cell types.
+////       *      This function does not have boundary checking (for speed). */
+////      template< class phiT >
+////        inline FaceData1D superBeeInterp( const IntVector c, const IntVector coord, phiT& phi, 
+////            FaceData1D vel, constCCVariable<Vector>& areaFraction ) {
+////
+////          FaceData1D face_values;
+////          face_values.plus  = 0.0;
+////          face_values.minus = 0.0;
+////
+////          double r=0.; 
+////          double psi; 
+////          double Sup;
+////          double Sdn;
+////          const double tiny = 1.0e-16; 
+////
+////          IntVector cxp  = c + coord; 
+////          IntVector cxpp = c + coord + coord; 
+////          IntVector cxm  = c - coord; 
+////          IntVector cxmm = c - coord - coord; 
+////
+////          int dim = 0; 
+////          if (coord[0] == 1)
+////            dim =0; 
+////          else if (coord[1] == 1)
+////            dim = 1; 
+////          else 
+////            dim = 2; 
+////
+////          // - FACE
+////          if ( vel.minus > 0.0 ) {
+////            Sup = phi[cxm];
+////            Sdn = phi[c];
+////            r = ( phi[cxm] - phi[cxmm] ) / ( phi[c] - phi[cxm] );
+////
+////            if ( areaFraction[cxm][dim] < tiny || areaFraction[c][dim] < tiny )
+////              r = 0.0;
+////
+////          } else if ( vel.minus < 0.0 ) {
+////            Sup = phi[c];
+////            Sdn = phi[cxm];
+////            r = ( phi[cxp] - phi[c] ) / ( phi[c] - phi[cxm] );
+////
+////            if ( areaFraction[cxp][dim] < tiny || areaFraction[c][dim] < tiny )
+////              r = 0.0;
+////
+////          } else { 
+////            Sup = 0.0;
+////            Sdn = 0.0; 
+////            psi = 0.0;
+////          }
+////          psi = std::max( std::min(2.0*r, 1.0), std::min(r, 2.0) );
+////          psi = std::max( 0.0, psi );
+////
+////          face_values.minus = Sup + 0.5*psi*( Sdn - Sup );
+////
+////          // + FACE
+////          if ( vel.plus > 0.0 ) {
+////            r = ( phi[c] - phi[cxm] ) / ( phi[cxp] - phi[c] );
+////            Sup = phi[c];
+////            Sdn = phi[cxp];
+////
+////            if ( areaFraction[c][dim] < tiny || areaFraction[cxp][dim] < tiny )
+////              r = 0.0;
+////
+////          } else if ( vel.plus < 0.0 ) {
+////            r = ( phi[cxpp] - phi[cxp] ) / ( phi[cxp] - phi[c] );
+////            Sup = phi[cxp];
+////            Sdn = phi[c]; 
+////
+////            if ( areaFraction[cxpp][dim] < tiny || areaFraction[cxp][dim] < tiny )
+////              r = 0.0; 
+////
+////          } else {
+////            Sup = 0.0;
+////            Sdn = 0.0; 
+////            psi = 0.0;
+////          }
+////          psi = std::max( std::min(2.0*r, 1.0), std::min(r, 2.0) );
+////          psi = std::max( 0.0, psi );
+////
+////          face_values.plus = Sup + 0.5*psi*( Sdn - Sup );
+////
+////          return face_values; 
+////        }
+////
+////      /** @brief Super Bee Interpolation -- should work for all cell types. 
+////       *       This function includes boundary checking (slower).  */ 
+////      template< class phiT >
+////        inline FaceData1D superBeeInterp( const IntVector c, const IntVector coord, phiT& phi, 
+////            FaceData1D vel, FaceBoundaryBool isBoundary, constCCVariable<Vector>& areaFraction ) {
+////
+////          FaceData1D face_values;
+////          face_values.plus  = 0.0;
+////          face_values.minus = 0.0;
+////
+////          double r = 0; 
+////          double psi; 
+////          double Sup;
+////          double Sdn;
+////          const double tiny = 1.0e-16; 
+////
+////          IntVector cxp  = c + coord; 
+////          IntVector cxpp = c + coord + coord; 
+////          IntVector cxm  = c - coord; 
+////          IntVector cxmm = c - coord - coord; 
+////
+////          int dim = 0; 
+////          if (coord[0] == 1)
+////            dim =0; 
+////          else if (coord[1] == 1)
+////            dim = 1; 
+////          else 
+////            dim = 2; 
+////
+////          // - FACE
+////          if (isBoundary.minus) 
+////            face_values.minus = 0.5*(phi[c]+phi[cxm]);
+////          else { 
+////            if ( vel.minus > 0.0 ) {
+////              Sup = phi[cxm];
+////              Sdn = phi[c];
+////              r = ( phi[cxm] - phi[cxmm] ) / ( phi[c] - phi[cxm] ); 
+////
+////            if ( areaFraction[cxm][dim] < tiny || areaFraction[c][dim] < tiny )
+////              r = 0.0;
+////
+////            } else if ( vel.minus < 0.0 ) {
+////              Sup = phi[c];
+////              Sdn = phi[cxm];
+////              r = ( phi[cxp] - phi[c] ) / ( phi[c] - phi[cxm] );
+////
+////            if ( areaFraction[cxp][dim] < tiny || areaFraction[c][dim] < tiny )
+////              r = 0.0;
+////
+////            } else { 
+////              Sup = 0.0;
+////              Sdn = 0.0; 
+////              psi = 0.0;
+////            }
+////            psi = std::max( std::min(2.0*r, 1.0), std::min(r, 2.0) );
+////            psi = std::max( 0.0, psi );
+////
+////            face_values.minus = Sup + 0.5*psi*( Sdn - Sup );
+////          }
+////
+////          // + FACE
+////          if (isBoundary.plus)
+////            face_values.plus = 0.5*(phi[c] + phi[cxp]);
+////          else { 
+////            if ( vel.plus > 0.0 ) {
+////              r = ( phi[c] - phi[cxm] ) / ( phi[cxp] - phi[c] );
+////              Sup = phi[c];
+////              Sdn = phi[cxp];
+////
+////            if ( areaFraction[c][dim] < tiny || areaFraction[cxp][dim] < tiny )
+////              r = 0.0;
+////
+////            } else if ( vel.plus < 0.0 ) {
+////              r = ( phi[cxpp] - phi[cxp] ) / ( phi[cxp] - phi[c] );
+////              Sup = phi[cxp];
+////              Sdn = phi[c]; 
+////
+////            if ( areaFraction[cxpp][dim] < tiny || areaFraction[cxp][dim] < tiny )
+////              r = 0.0; 
+////
+////            } else {
+////              Sup = 0.0;
+////              Sdn = 0.0; 
+////              psi = 0.0;
+////            }
+////            psi = std::max( std::min(2.0*r, 1.0), std::min(r, 2.0) );
+////            psi = std::max( 0.0, psi );
+////
+////            face_values.plus = Sup + 0.5*psi*( Sdn - Sup );
+////          }
+////
+////          return face_values; 
+////        }
+//
+//      /* @brief Upwind interpolation -- should work for all data types. 
+//       *      This function does not have boundary checking (for speed). */ 
+//      template< class phiT >
+//        inline FaceData1D upwindInterp( const IntVector c, const IntVector coord, phiT& phi, 
+//            FaceData1D vel) {
+//
+//          Discretization_new::FaceData1D face_values; 
+//          face_values.minus = 0.0;
+//          face_values.plus = 0.0;
+//
+//          IntVector cxp = c + coord; 
+//          IntVector cxm = c - coord; 
+//
+//          // - FACE 
+//          if ( vel.minus > 0.0 )
+//            face_values.minus = phi[cxm];
+//          else if ( vel.minus <= 0.0 )
+//            face_values.minus = phi[c]; 
+//
+//          // + FACE 
+//          if ( vel.plus >= 0.0 )
+//            face_values.plus = phi[c]; 
+//          else if ( vel.plus < 0.0 )
+//            face_values.plus = phi[cxp]; 
+//
+//          return face_values; 
+//
+//        }
+//
+//      /* @brief Upwind interpolation -- should work for all data types. 
+//       *      This function includes boundary checking (slower). */ 
+//      template< class phiT >
+//        inline FaceData1D upwindInterp( const IntVector c, const IntVector coord, phiT& phi, 
+//            FaceData1D vel, FaceBoundaryBool isBoundary ) {
+//
+//          Discretization_new::FaceData1D face_values; 
+//          face_values.minus = 0.0;
+//          face_values.plus = 0.0;
+//
+//          IntVector cxp = c + coord; 
+//          IntVector cxm = c - coord; 
+//
+//          // - FACE 
+//          if (isBoundary.minus)
+//            face_values.minus = 0.5*(phi[c] + phi[cxm]);
+//          else {
+//            if ( vel.minus > 0.0 )
+//              face_values.minus = phi[cxm];
+//            else if ( vel.minus <= 0.0 )
+//              face_values.minus = phi[c]; 
+//          }
+//
+//          // + FACE 
+//          if (isBoundary.plus)
+//            face_values.plus = 0.5*(phi[c] + phi[cxp]);
+//          else {
+//            if ( vel.plus >= 0.0 )
+//              face_values.plus = phi[c]; 
+//            else if ( vel.plus < 0.0 )
+//              face_values.plus = phi[cxp]; 
+//          }
+//
+//          return face_values; 
+//
+//        }
+//      // ---------------------------------------------------------------------------
+//      // Minmod interpolator
+//      //
+//      /** @brief Minmod Interpolation */ 
+//      template <typename phiT>
+//      class MinmodInterpolation { 
+//
+//        public: 
+//
+//        MinmodInterpolation(){};
+//        ~MinmodInterpolation(){}; 
+//
+//        FaceData1D inline no_bc( const IntVector c, const IntVector coord, phiT& phi, 
+//            FaceData1D vel, constCCVariable<Vector>& areaFraction ) 
+//        { 
+//          FaceData1D face_values;
+//          face_values.plus  = 0.0;
+//          face_values.minus = 0.0;
+//
+//          double r=0.0; 
+//          double psi; 
+//          double Sup;
+//          double Sdn;
+//          const double tiny = 1.0e-16; 
+//
+//          IntVector cxp  = c + coord; 
+//          IntVector cxpp = c + coord + coord; 
+//          IntVector cxm  = c - coord; 
+//          IntVector cxmm = c - coord - coord; 
+//
+//          int dim = 0; 
+//          if (coord[0] == 1)
+//            dim =0; 
+//          else if (coord[1] == 1)
+//            dim = 1; 
+//          else 
+//            dim = 2; 
+//
+//          // - FACE
+//          if ( vel.minus > 0.0 ) {
+//            Sup = phi[cxm];
+//            Sdn = phi[c];
+//            if(fabs(phi[c] - phi[cxm]) >  tiny){
+//              r = ( phi[cxm] - phi[cxmm] ) / ( phi[c] - phi[cxm] );
+//            } else {
+//              r = 0.0;
+//            }
+//
+//            if ( areaFraction[cxm][dim] < tiny || areaFraction[c][dim] < tiny )
+//              r = 0.0;
+//
+//          } else if ( vel.minus < 0.0 ) {
+//            Sup = phi[c];
+//            Sdn = phi[cxm];
+//            if(fabs(phi[c] - phi[cxm]) > tiny){
+//              r = ( phi[cxp] - phi[c] ) / ( phi[c] - phi[cxm] );
+//            } else {
+//              r = 0.0;
+//            }
+//
+//            if ( areaFraction[cxp][dim] < tiny || areaFraction[c][dim] < tiny )
+//              r = 0.0;
+//
+//          } else { 
+//            Sup = 0.0;
+//            Sdn = 0.0; 
+//            psi = 0.0;
+//          }
+//
+//          psi = std::min(r, 1.0);
+//          psi = std::max( 0.0, psi );
+//
+//          face_values.minus = Sup + 0.5*psi*( Sdn - Sup );
+//
+//          // + FACE
+//          if ( vel.plus > 0.0 ) {
+//            if(fabs(phi[cxp] - phi[c]) > tiny){
+//              r = ( phi[c] - phi[cxm] ) / ( phi[cxp] - phi[c] );
+//            } else {
+//              r = 0.0;
+//            }
+//            Sup = phi[c];
+//            Sdn = phi[cxp];
+//
+//            if ( areaFraction[c][dim] < tiny || areaFraction[cxp][dim] < tiny )
+//              r = 0.0;
+//
+//          } else if ( vel.plus < 0.0 ) {
+//            if(fabs(phi[cxp] - phi[c]) > tiny){
+//              r = ( phi[cxpp] - phi[cxp] ) / ( phi[cxp] - phi[c] );
+//            } else {
+//              r = 0.0;
+//            }
+//            Sup = phi[cxp];
+//            Sdn = phi[c]; 
+//
+//            if ( areaFraction[cxpp][dim] < tiny || areaFraction[cxp][dim] < tiny )
+//              r = 0.0; 
+//
+//          } else {
+//            Sup = 0.0;
+//            Sdn = 0.0; 
+//            psi = 0.0;
+//          }
+//
+//          psi = std::min(r, 1.0);
+//          psi = std::max( 0.0, psi );
+//
+//          face_values.plus = Sup + 0.5*psi*( Sdn - Sup );
+//
+//          return face_values; 
+//        }; 
+//
+//        FaceData1D inline with_bc( const IntVector c, const IntVector coord, phiT& phi, 
+//            FaceData1D vel, constCCVariable<Vector>& areaFraction, FaceBoundaryBool isBoundary ) 
+//        { 
+//          FaceData1D face_values;
+//          face_values.plus  = 0.0;
+//          face_values.minus = 0.0;
+//
+//          double r = 0; 
+//          double psi; 
+//          double Sup;
+//          double Sdn;
+//          const double tiny = 1.0e-16; 
+//
+//          IntVector cxp  = c + coord; 
+//          IntVector cxpp = c + coord + coord; 
+//          IntVector cxm  = c - coord; 
+//          IntVector cxmm = c - coord - coord; 
+//
+//          int dim = 0; 
+//          if (coord[0] == 1)
+//            dim =0; 
+//          else if (coord[1] == 1)
+//            dim = 1; 
+//          else 
+//            dim = 2; 
+//
+//          // - FACE
+//          if (isBoundary.minus) 
+//            face_values.minus = 0.5*(phi[c]+phi[cxm]);
+//          else { 
+//            if ( vel.minus > 0.0 ) {
+//              Sup = phi[cxm];
+//              Sdn = phi[c];
+//              if(fabs(phi[c] - phi[cxm]) > tiny){
+//                r = ( phi[cxm] - phi[cxmm] ) / ( phi[c] - phi[cxm] );
+//              } else {
+//                r = 0.0;
+//              } 
+//
+//            if ( areaFraction[cxm][dim] < tiny || areaFraction[c][dim] < tiny )
+//              r = 0.0;
+//
+//            } else if ( vel.minus < 0.0 ) {
+//              Sup = phi[c];
+//              Sdn = phi[cxm];
+//              if(fabs(phi[c] - phi[cxm]) > tiny){
+//                r = ( phi[cxp] - phi[c] ) / ( phi[c] - phi[cxm] );
+//              } else {
+//                r = 0.0;
+//              }
+//
+//            if ( areaFraction[cxp][dim] < tiny || areaFraction[c][dim] < tiny )
+//              r = 0.0;
+//
+//            } else { 
+//              Sup = 0.0;
+//              Sdn = 0.0; 
+//              psi = 0.0;
+//            }
+//
+//            psi = std::min(r, 1.0);
+//            psi = std::max( 0.0, psi );
+//
+//            face_values.minus = Sup + 0.5*psi*( Sdn - Sup );
+//          }
+//
+//          // + FACE
+//          if (isBoundary.plus)
+//            face_values.plus = 0.5*(phi[c] + phi[cxp]);
+//          else { 
+//            if ( vel.plus > 0.0 ) {
+//              if(fabs(phi[cxp] - phi[c]) > tiny){
+//                r = ( phi[c] - phi[cxm] ) / ( phi[cxp] - phi[c] );
+//              } else {
+//                r = 0.0;
+//              }
+//              Sup = phi[c];
+//              Sdn = phi[cxp];
+//
+//            if ( areaFraction[c][dim] < tiny || areaFraction[cxp][dim] < tiny )
+//              r = 0.0;
+//
+//            } else if ( vel.plus < 0.0 ) {
+//              if(fabs(phi[cxp] - phi[c]) > tiny){
+//                r = ( phi[cxpp] - phi[cxp] ) / ( phi[cxp] - phi[c] );
+//              } else {
+//                r = 0.0;
+//              }
+//              Sup = phi[cxp];
+//              Sdn = phi[c]; 
+//
+//            if ( areaFraction[cxpp][dim] < tiny || areaFraction[cxp][dim] < tiny )
+//              r = 0.0; 
+//
+//            } else {
+//              Sup = 0.0;
+//              Sdn = 0.0; 
+//              psi = 0.0;
+//            }
+//            psi = std::min(r, 1.0);
+//            psi = std::max( 0.0, psi );
+//
+//            face_values.plus = Sup + 0.5*psi*( Sdn - Sup );
+//          }
+//
+//          return face_values; 
+//        };
+//      }; 
+//      
+//      // ---------------------------------------------------------------------------
+//      // Super Bee interpolator
+//      //
+//      /** @brief Super Bee Interpolation */ 
+//      template <typename phiT>
+//      class SuperBeeInterpolation { 
+//
+//        public: 
+//
+//        SuperBeeInterpolation(){};
+//        ~SuperBeeInterpolation(){}; 
+//
+//        FaceData1D inline no_bc( const IntVector c, const IntVector coord, phiT& phi, 
+//            FaceData1D vel, constCCVariable<Vector>& areaFraction ) 
+//        { 
+//          FaceData1D face_values;
+//          face_values.plus  = 0.0;
+//          face_values.minus = 0.0;
+//
+//          double r=0.0; 
+//          double psi; 
+//          double Sup;
+//          double Sdn;
+//          const double tiny = 1.0e-16; 
+//
+//          IntVector cxp  = c + coord; 
+//          IntVector cxpp = c + coord + coord; 
+//          IntVector cxm  = c - coord; 
+//          IntVector cxmm = c - coord - coord; 
+//
+//          int dim = 0; 
+//          if (coord[0] == 1)
+//            dim =0; 
+//          else if (coord[1] == 1)
+//            dim = 1; 
+//          else 
+//            dim = 2; 
+//
+//          // - FACE
+//          if ( vel.minus > 0.0 ) {
+//            Sup = phi[cxm];
+//            Sdn = phi[c];
+//            r = ( phi[cxm] - phi[cxmm] ) / ( phi[c] - phi[cxm] );
+//
+//            if ( areaFraction[cxm][dim] < tiny || areaFraction[c][dim] < tiny )
+//              r = 0.0;
+//
+//          } else if ( vel.minus < 0.0 ) {
+//            Sup = phi[c];
+//            Sdn = phi[cxm];
+//            r = ( phi[cxp] - phi[c] ) / ( phi[c] - phi[cxm] );
+//
+//            if ( areaFraction[cxp][dim] < tiny || areaFraction[c][dim] < tiny )
+//              r = 0.0;
+//
+//          } else { 
+//            Sup = 0.0;
+//            Sdn = 0.0; 
+//            psi = 0.0;
+//          }
+//          psi = std::max( std::min(2.0*r, 1.0), std::min(r, 2.0) );
+//          psi = std::max( 0.0, psi );
+//
+//          face_values.minus = Sup + 0.5*psi*( Sdn - Sup );
+//
+//          // + FACE
+//          if ( vel.plus > 0.0 ) {
+//            r = ( phi[c] - phi[cxm] ) / ( phi[cxp] - phi[c] );
+//            Sup = phi[c];
+//            Sdn = phi[cxp];
+//
+//            if ( areaFraction[c][dim] < tiny || areaFraction[cxp][dim] < tiny )
+//              r = 0.0;
+//
+//          } else if ( vel.plus < 0.0 ) {
+//            r = ( phi[cxpp] - phi[cxp] ) / ( phi[cxp] - phi[c] );
+//            Sup = phi[cxp];
+//            Sdn = phi[c]; 
+//
+//            if ( areaFraction[cxpp][dim] < tiny || areaFraction[cxp][dim] < tiny )
+//              r = 0.0; 
+//
+//          } else {
+//            Sup = 0.0;
+//            Sdn = 0.0; 
+//            psi = 0.0;
+//          }
+//          psi = std::max( std::min(2.0*r, 1.0), std::min(r, 2.0) );
+//          psi = std::max( 0.0, psi );
+//
+//          face_values.plus = Sup + 0.5*psi*( Sdn - Sup );
+//
+//          return face_values; 
+//        }; 
+//
+//        FaceData1D inline with_bc( const IntVector c, const IntVector coord, phiT& phi, 
+//            FaceData1D vel, constCCVariable<Vector>& areaFraction, FaceBoundaryBool isBoundary ) 
+//        { 
+//          FaceData1D face_values;
+//          face_values.plus  = 0.0;
+//          face_values.minus = 0.0;
+//
+//          double r = 0; 
+//          double psi; 
+//          double Sup;
+//          double Sdn;
+//          const double tiny = 1.0e-16; 
+//
+//          IntVector cxp  = c + coord; 
+//          IntVector cxpp = c + coord + coord; 
+//          IntVector cxm  = c - coord; 
+//          IntVector cxmm = c - coord - coord; 
+//
+//          int dim = 0; 
+//          if (coord[0] == 1)
+//            dim =0; 
+//          else if (coord[1] == 1)
+//            dim = 1; 
+//          else 
+//            dim = 2; 
+//
+//          // - FACE
+//          if (isBoundary.minus) 
+//            face_values.minus = 0.5*(phi[c]+phi[cxm]);
+//          else { 
+//            if ( vel.minus > 0.0 ) {
+//              Sup = phi[cxm];
+//              Sdn = phi[c];
+//              r = ( phi[cxm] - phi[cxmm] ) / ( phi[c] - phi[cxm] ); 
+//
+//            if ( areaFraction[cxm][dim] < tiny || areaFraction[c][dim] < tiny )
+//              r = 0.0;
+//
+//            } else if ( vel.minus < 0.0 ) {
+//              Sup = phi[c];
+//              Sdn = phi[cxm];
+//              r = ( phi[cxp] - phi[c] ) / ( phi[c] - phi[cxm] );
+//
+//            if ( areaFraction[cxp][dim] < tiny || areaFraction[c][dim] < tiny )
+//              r = 0.0;
+//
+//            } else { 
+//              Sup = 0.0;
+//              Sdn = 0.0; 
+//              psi = 0.0;
+//            }
+//            psi = std::max( std::min(2.0*r, 1.0), std::min(r, 2.0) );
+//            psi = std::max( 0.0, psi );
+//
+//            face_values.minus = Sup + 0.5*psi*( Sdn - Sup );
+//          }
+//
+//          // + FACE
+//          if (isBoundary.plus)
+//            face_values.plus = 0.5*(phi[c] + phi[cxp]);
+//          else { 
+//            if ( vel.plus > 0.0 ) {
+//              r = ( phi[c] - phi[cxm] ) / ( phi[cxp] - phi[c] );
+//              Sup = phi[c];
+//              Sdn = phi[cxp];
+//
+//            if ( areaFraction[c][dim] < tiny || areaFraction[cxp][dim] < tiny )
+//              r = 0.0;
+//
+//            } else if ( vel.plus < 0.0 ) {
+//              r = ( phi[cxpp] - phi[cxp] ) / ( phi[cxp] - phi[c] );
+//              Sup = phi[cxp];
+//              Sdn = phi[c]; 
+//
+//            if ( areaFraction[cxpp][dim] < tiny || areaFraction[cxp][dim] < tiny )
+//              r = 0.0; 
+//
+//            } else {
+//              Sup = 0.0;
+//              Sdn = 0.0; 
+//              psi = 0.0;
+//            }
+//            psi = std::max( std::min(2.0*r, 1.0), std::min(r, 2.0) );
+//            psi = std::max( 0.0, psi );
+//
+//            face_values.plus = Sup + 0.5*psi*( Sdn - Sup );
+//          }
+//
+//          return face_values; 
+//        };
+//      }; 

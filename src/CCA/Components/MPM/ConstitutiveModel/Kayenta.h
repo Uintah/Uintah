@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -65,7 +65,8 @@ namespace Uintah {
     int d_NUMJNTS;
     int d_NUMJOINTINPUTS;
     int d_NUIEOSMG;
-    int d_NDCEOSMG;
+    int d_NKMMGC;
+    int d_NKMMDC;
     int d_NVIEOSMG;
     int d_NTHERMOPLAST;
     int d_NUMEOSINPUTS;

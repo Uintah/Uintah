@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='ISO-8859-1' ?>
 <Uintah_Include>
-  <constitutive_model type = "murnahanMPM">
+  <constitutive_model type = "murnaghanMPM">
     <!-- ANFO parameters -->
     <!-- This bulk modulus is from Souer's paper on JWL++ -->	
     <!-- It corresponds to a K=2.56 GPa  -->

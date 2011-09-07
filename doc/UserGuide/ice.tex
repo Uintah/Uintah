@@ -449,7 +449,7 @@ is specified with \cite{ref:Thomsen,ref:bejan}
 \end{Verbatim}
 % 
 %
-The input specification for the ``JWLC'', ``JWL++'' and ``Murnahan'' equations of state from \cite{ref:JWL} are: 
+The input specification for the ``JWLC'', ``JWL++'' and ``Murnaghan'' equations of state from \cite{ref:JWL} are: 
 \begin{Verbatim}[fontsize=\footnotesize]
 <EOS type = "JWLC">
   <A>   2.9867e11   </A>
@@ -474,7 +474,16 @@ The input specification for the ``JWLC'', ``JWL++'' and ``Murnahan'' equations o
 \end{Verbatim}
 %
 \begin{Verbatim}[fontsize=\footnotesize]
-<EOS type = "Murnahan">
+<EOS type = "Murnaghan">
+  <n>     7.4       </n>
+  <K>     39.0e-11  </K>
+  <rho0>  1160.0    </rho0>
+  <P0>    101325.0  </P0>
+</EOS>
+\end{Verbatim}
+%
+\begin{Verbatim}[fontsize=\footnotesize]
+<EOS type = "BirchMurnaghan">
   <n>     7.4       </n>
   <K>     39.0e-11  </K>
   <rho0>  1160.0    </rho0>
@@ -686,6 +695,28 @@ there are no passing through the outlet of the domain it reduces
 the reflected pressure waves significantly.
 %FIXME
 %Table below shows some of the
+
+\subsection{Variable Volume Fraction}
+An arbitrary number of materials may be layered on one another to generate mixtures in a cell.  
+Each geometry object may have a specified fraction of the cell in the range (0,1].  A volume
+fraction may be specified as:
+
+\begin{Verbatim}
+<geom\_object>
+   ...
+   <volumeFraction> 0.5 </volumeFraction>
+</geom\_object>
+\end{Verbatim}
+
+If the volume fraction is spcified for one geometry object it MUST be specified for all
+geometry objects, even if they constitute a volume fraction equal to 1 in the given 
+volume.  Similarly, each cell must have a total of 1 for the summation of all volume 
+fractions of materials in that cell.  Failure of either of these criteria will result
+in a crashed simulation during the problem setup phase.
+
+MPMICE also has the ability to use the variable volume fraction convention, however pure MPM
+does not.
+
 
 \subsection{Output Variable Names}
 There are numerous variables that can be saved during a simulation.  The table below is

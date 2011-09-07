@@ -28,6 +28,7 @@ namespace Uintah {
                         const int overlap,
                         const int fill,
                         const double residual,
+                        const int maxIter,
                         const ProcessorGroup* myworld);
 
   void destroyPetscObjects(Mat A, Vec X, Vec B, Vec U);

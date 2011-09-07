@@ -8,7 +8,7 @@
 /** 
 * @class  TabStripFactor
 * @author Jeremy Thornock
-* @date   Aug 2010
+* @date   Aug 2011
 * 
 * @brief Computes the stripping factor of CxHy using tabulated values of CO2.  
 *

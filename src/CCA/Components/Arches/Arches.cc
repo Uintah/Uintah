@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -43,6 +43,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Arches/SourceTerms/WestbrookDryer.h>
 #include <CCA/Components/Arches/SourceTerms/Inject.h>
 #include <CCA/Components/Arches/SourceTerms/IntrusionInlet.h>
+#include <CCA/Components/Arches/SourceTerms/DORadiation.h>
 #include <CCA/Components/Arches/CoalModels/CoalModelFactory.h>
 #include <CCA/Components/Arches/CoalModels/ModelBase.h>
 #include <CCA/Components/Arches/TransportEqns/EqnBase.h>
@@ -132,36 +133,35 @@ const int Arches::NDIM = 3;
 Arches::Arches(const ProcessorGroup* myworld) :
   UintahParallelComponent(myworld)
 {
-  d_lab = scinew ArchesLabel();
-  d_MAlab = 0; // will be set by setMPMArchesLabel
-  d_props = 0;
-  d_turbModel = 0;
-  d_initTurb = 0;
-  d_scaleSimilarityModel = 0;
-  d_boundaryCondition = 0;
-  d_nlSolver = 0;
-  d_physicalConsts = 0;
-  d_calcReactingScalar = 0;
-  d_calcScalar = 0;
-  d_calcEnthalpy =0;
-  d_readResponsiveBoundaryData = false;    //WME
-  d_doingRestart = false; 
-  d_newBC_on_Restart = false; 
+  d_lab =  scinew  ArchesLabel();
+  d_MAlab                 =  0;      //will  be  set  by  setMPMArchesLabel
+  d_props                 =  0;
+  d_turbModel             =  0;
+  d_initTurb              =  0;
+  d_scaleSimilarityModel  =  0;
+  d_boundaryCondition     =  0;
+  d_nlSolver              =  0;
+  d_physicalConsts        =  0;
+  d_calcReactingScalar    =  0;
+  d_calcScalar            =  0;
+  d_calcEnthalpy          =  0;
+  d_calcNewEnthalpy       =  0;
+  d_doingRestart          =  false;
+  d_readResponsiveBoundaryData = false; //WME
+
 #ifdef multimaterialform
   d_mmInterface = 0;
 #endif
-  nofTimeSteps = 0;
-  init_timelabel_allocated = false;
-  d_analysisModule = false;
-  d_dataArchiver = 0;  //WME
-  d_set_initial_condition = false;
-
-  DQMOMEqnFactory& dqmomfactory = DQMOMEqnFactory::self(); 
+  nofTimeSteps                     =  0;
+  init_timelabel_allocated         =  false;
+  d_analysisModule                 =  false;
+  d_set_initial_condition          =  false;
+  d_dataArchiver                   =  0;       //WME
+  DQMOMEqnFactory&  dqmomfactory   =  DQMOMEqnFactory::self();
   dqmomfactory.set_quad_nodes(0);
-  d_doDQMOM = false; 
-  d_doMMS = false;
-  d_myworld = myworld;
-  
+  d_doDQMOM                        =  false;
+  d_doMMS                          =  false;
+  d_with_mpmarches                 =  false;
 }
 
 // ****************************************************************************
@@ -242,8 +242,12 @@ Arches::problemSetup(const ProblemSpecP& params,
     }
 
     if (db->findBlock("ExplicitSolver")){
-      if (db->findBlock("ExplicitSolver")->findBlock("EnthalpySolver"))
+      if (db->findBlock("ExplicitSolver")->findBlock("EnthalpySolver")) {
         d_calcEnthalpy = true; 
+      }
+      if (db->findBlock("ExplicitSolver")->findBlock("newEnthalpySolver")){ 
+        d_calcNewEnthalpy = true; 
+      } 
     } else if (db->findBlock("PicardSolver")) {
       if (db->findBlock("PicardSolver")->findBlock("EnthalpySolver"))
         d_calcEnthalpy = true;
@@ -495,24 +499,20 @@ Arches::problemSetup(const ProblemSpecP& params,
   d_timeIntegratorType = d_nlSolver->getTimeIntegratorType();
 
   //__________________
-  // Init data analysis module(s) and run problemSetup
-  // note we're just calling a child problemSetup with mostly
-  // the same parameters
-
-  
-  //__________________
   //This is not the proper way to get our DA.  Scheduler should
   //pass us a DW pointer on every function call.  I don't think
   //AnalysisModule should retain the pointer in a field, IMHO.
-   d_dataArchiver = dynamic_cast<Output*>(getPort("output"));
-  if(!d_dataArchiver)
-  {
-    throw InternalError("ARCHES:couldn't get output port", __FILE__, __LINE__);
-  }
- 
-  d_analysisModule = AnalysisModuleFactory::create(params, sharedState, d_dataArchiver);
-  if (d_analysisModule) {
-    d_analysisModule->problemSetup(params, grid, sharedState);
+  d_dataArchiver = dynamic_cast<Output*>(getPort("output"));
+  if(!d_with_mpmarches){
+    Output* dataArchiver = dynamic_cast<Output*>(getPort("output"));
+    if(!dataArchiver){
+      throw InternalError("ARCHES:couldn't get output port", __FILE__, __LINE__);
+    }
+
+    d_analysisModule = AnalysisModuleFactory::create(params, sharedState, dataArchiver);
+    if (d_analysisModule) {
+      d_analysisModule->problemSetup(params, grid, sharedState);
+    }
   }
 
   // ----- DQMOM STUFF:
@@ -744,7 +744,7 @@ Arches::scheduleInitialize(const LevelP& level,
     bool initialize_it = true; 
     bool modify_ref_den = true; 
 	  d_props->doTableMatching(); 
-    if ( d_calcEnthalpy) 
+    if ( d_calcEnthalpy || d_calcNewEnthalpy ) 
       d_props->sched_initEnthalpy( level, sched ); 
     d_props->sched_reComputeProps_new( level, sched, init_timelabel, initialize_it, modify_ref_den ); 
   }
@@ -772,6 +772,7 @@ Arches::scheduleInitialize(const LevelP& level,
     d_boundaryCondition->sched_computeBCArea__NEW( sched, level, patches, matls ); 
     d_boundaryCondition->sched_setupBCInletVelocities__NEW( sched, patches, matls ); 
     d_boundaryCondition->sched_setInitProfile__NEW( sched, patches, matls ); 
+    d_boundaryCondition->sched_setPrefill__NEW( sched, patches, matls ); 
   }
 
   sched_getCCVelocities(level, sched);
@@ -823,7 +824,6 @@ Arches::scheduleInitialize(const LevelP& level,
     }
 
   }
-
 
   // check to make sure that all the scalar variables have BCs set. 
   EqnFactory& eqnFactory = EqnFactory::self(); 
@@ -2475,7 +2475,7 @@ void Arches::registerUDSources(ProblemSpecP& db)
 
       } else if (src_type == "westbrook_dryer") {
         // Computes a global reaction rate for a hydrocarbon (see Turns, eqn 5.1,5.2)
-        SourceTermBase::Builder* srcBuilder = scinew WestbrookDryer::Builder(src_name, required_varLabels, d_lab->d_sharedState); 
+        SourceTermBase::Builder* srcBuilder = scinew WestbrookDryer::Builder(src_name, required_varLabels, d_lab); 
         factory.register_source_term( src_name, srcBuilder ); 
       
       } else if (src_type == "mms1"){
@@ -2527,6 +2527,11 @@ void Arches::registerUDSources(ProblemSpecP& db)
         // Adds a constant to the RHS in specified geometric locations
         SourceTermBase::Builder* srcBuilder = scinew IntrusionInlet<SFCZVariable<double> >::Builder(src_name, required_varLabels, d_lab->d_sharedState);
         factory.register_source_term( src_name, srcBuilder ); 
+
+			} else if ( src_type == "do_radiation" ) { 
+
+				SourceTermBase::Builder* srcBuilder = scinew DORadiation::Builder( src_name, required_varLabels, d_lab, d_boundaryCondition, d_myworld ); 
+				factory.register_source_term( src_name, srcBuilder ); 
 
       } else {
         proc0cout << "For source term named: " << src_name << endl;

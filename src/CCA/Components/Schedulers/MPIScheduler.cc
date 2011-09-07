@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -55,10 +55,6 @@ DEALINGS IN THE SOFTWARE.
 #include   <iomanip>
 #include   <map>
 #include   <cstring>
-
-#ifdef USE_PERFEX_COUNTERS
-#  include <CCA/Components/Schedulers/counters.h>
-#endif
 
 // Pack data into a buffer before sending -- testing to see if this
 // works better and avoids certain problems possible when you allow
@@ -207,19 +203,10 @@ MPIScheduler::initiateTask( DetailedTask          * task,
   MALLOC_TRACE_TAG_SCOPE("MPIScheduler::initiateTask");
   TAU_PROFILE("MPIScheduler::initiateTask()", " ", TAU_USER); 
 
-#ifdef USE_PERFEX_COUNTERS
-  long long dummy, recv_flops;
-  start_counters(0, 19);
-#endif  
-  postMPIRecvs( task, only_old_recvs, abort_point, iteration);
-  if(only_old_recvs)
+  postMPIRecvs(task, only_old_recvs, abort_point, iteration);
+  if(only_old_recvs) {
     return;
-#ifdef USE_PERFEX_COUNTERS
-  read_counters(0, &dummy, 19, &recv_flops);
-  mpi_info_.totalcommflops += recv_flops;
-#endif
-
-
+  }
 } // end initiateTask()
 
 void
@@ -230,20 +217,14 @@ MPIScheduler::initiateReduction( DetailedTask          * task )
     if(reductionout.active() && d_myworld->myrank()==0)
       reductionout << "Running Reduction Task: " << task->getName() << endl;
 
-#ifdef USE_PERFEX_COUNTERS
-    start_counters(0, 19);
-#endif
     double reducestart = Time::currentSeconds();
 
     runReductionTask(task);
 
     double reduceend = Time::currentSeconds();
     long long flop_count=0;
-#ifdef USE_PERFEX_COUNTERS
-    long long dummy;
-    read_counters(0, &dummy, 19, &flop_count);
-#endif
-    emitNode(task, reducestart, reduceend - reducestart, 0, 0, flop_count);
+
+    emitNode(task, reducestart, reduceend - reducestart, 0);
     mpi_info_.totalreduce += reduceend-reducestart;
     mpi_info_.totalreducempi += reduceend-reducestart;
   }
@@ -260,16 +241,9 @@ MPIScheduler::runTask( DetailedTask         * task, int iteration)
     waittimes[task->getTask()->getName()]+=CurrentWaitTime;
     CurrentWaitTime=0;
   }
-#ifdef USE_PERFEX_COUNTERS
-  long long dummy, exec_flops, send_flops;
-#endif
 
   double taskstart = Time::currentSeconds();
   
-#ifdef USE_PERFEX_COUNTERS
-  start_counters(0, 19);
-#endif
-
   if (trackingVarsPrintLocation_ & SchedulerCommon::PRINT_BEFORE_EXEC) {
     printTrackedVars(task, SchedulerCommon::PRINT_BEFORE_EXEC);
   }
@@ -287,12 +261,6 @@ MPIScheduler::runTask( DetailedTask         * task, int iteration)
     printTrackedVars(task, SchedulerCommon::PRINT_AFTER_EXEC);
   }
 
-#ifdef USE_PERFEX_COUNTERS
-  read_counters(0, &dummy, 19, &exec_flops);
-  mpi_info_.totalexecflops += exec_flops;
-  start_counters(0, 19);
-#endif
-  
   double dtask = Time::currentSeconds()-taskstart;
  
   if(execout.active())
@@ -338,13 +306,7 @@ MPIScheduler::runTask( DetailedTask         * task, int iteration)
     parentScheduler->mpi_info_.totalreduce+=mpi_info_.totalreduce;
   }
 
-
-#ifdef USE_PERFEX_COUNTERS
-  long long send_flops;
-  read_counters(0, &dummy, 19, &send_flops);
-  mpi_info_.totalcommflops += send_flops;
-#endif
-  emitNode(task, taskstart, dtask, 0, 0, 0);
+  emitNode(task, taskstart, dtask, 0);
   
 } // end runTask()
 

@@ -2,7 +2,7 @@
 # 
 # The MIT License
 # 
-# Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+# Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 # Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 # University of Utah.
 # 
@@ -59,12 +59,12 @@ SRCS   += \
         $(SRCDIR)/SmallStrainPlastic.cc         \
         $(SRCDIR)/Water.cc                      \
         $(SRCDIR)/ViscoPlastic.cc               \
-        $(SRCDIR)/MurnahanMPM.cc                \
+        $(SRCDIR)/MurnaghanMPM.cc               \
         $(SRCDIR)/ProgramBurn.cc                \
         $(SRCDIR)/JWLppMPM.cc                   \
         $(SRCDIR)/UCNH.cc                       \
         $(SRCDIR)/P_Alpha.cc                    \
-        $(SRCDIR)/SoilFoam.cc	                  \
+        $(SRCDIR)/SoilFoam.cc	                \
        	$(SRCDIR)/NonLocalDruckerPrager.cc      \
         $(SRCDIR)/simplifiedGeoModel.cc
 

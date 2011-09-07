@@ -38,7 +38,7 @@
  *  Modified by:
  *   Jim Guilkey
  *   Schlumberger
- *   September 2010
+ *   September 2011
  *
  *  Copyright (C) 2009 SCI Group
  */
