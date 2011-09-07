@@ -1284,7 +1284,7 @@ avtudaReaderMTMDFileFormat::GetVar(int timestate, int domain, const char *varnam
 
     // replace nan's with a large negative number
     for (int i=0; i<n*gd->components; i++) {
-      if (isnan(gd->data[i]))
+      if (std::isnan(gd->data[i]))
         gd->data[i] = -1e16;
     }
 
@@ -1342,7 +1342,7 @@ avtudaReaderMTMDFileFormat::GetVar(int timestate, int domain, const char *varnam
 
     // replace nan's with a large negative number
     for (int i=0; i<pd->num*pd->components; i++) {
-      if (isnan(pd->data[i]))
+      if (std::isnan(pd->data[i]))
         pd->data[i] = -1e16;
     }
 
