@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -221,9 +221,7 @@ void
 SchedulerCommon::emitNode( const DetailedTask* task, 
                                  double        start,
                                  double        duration,
-                                 double        execution_duration,
-                                 double        execution_flops,
-                                 double        communication_flops )
+                                 double        execution_duration)
 {  
     if (m_nodes == 0)
         return;
@@ -236,10 +234,6 @@ SchedulerCommon::emitNode( const DetailedTask* task,
     node->appendElement("duration", duration);
     if (execution_duration > 0)
       node->appendElement("execution_duration", execution_duration);
-    if (execution_flops > 0)
-      node->appendElement("execution_flops", (long)execution_flops);
-    if (communication_flops > 0)
-      node->appendElement("communication_flops", (long)communication_flops);
 }
 
 void

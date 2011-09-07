@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -85,7 +85,7 @@ GeometryPieceFactory::create( const ProblemSpecP& ps,
       child->getAttribute( "name", go_label );
     }
 
-    dbg << "---------------------------------------------------------------\n";
+    dbg << "---------------------------------------------------------------: go_label: " << go_label << "\n";
     
     if( go_label != "" ) {
 
@@ -193,7 +193,8 @@ GeometryPieceFactory::create( const ProblemSpecP& ps,
     else if (go_type == "res"         || go_type == "velocity" || 
              go_type == "temperature" || go_type == "comment"  ||
              go_type == "density"     || go_type == "pressure" ||
-             go_type == "scalar"      || go_type == "color")  {
+             go_type == "scalar"      || go_type == "color"    ||
+             go_type == "volumeFraction" )  {
       // Ignoring. 
       continue;    // restart loop to avoid accessing name of empty object
       
@@ -225,6 +226,13 @@ GeometryPieceFactory::create( const ProblemSpecP& ps,
 
   } // end for( child )
   dbg << "Done creating geometry objects\n";
+}
+
+void
+GeometryPieceFactory::resetFactory()
+{
+  unnamedPieces_.clear();
+  namedPieces_.clear();
 }
 
 void

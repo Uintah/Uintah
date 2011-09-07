@@ -16,7 +16,8 @@
                                         attribute1="label REQUIRED STRING"
                                         attribute2="type REQUIRED STRING 'cc_constant, fx_constant, 
                                                                           scalar_diss, laminar_pr, 
-                                                                          extent_rxn, tab_strip_factor'">
+                                                                          extent_rxn, tab_strip_factor, 
+                                                                          absorption_coefficient'">
           <!-- constant property model and scalar dissipation rate model --> 
           <constant                     spec="OPTIONAL DOUBLE"/>
 
@@ -168,6 +169,9 @@
           <cold_flow                    spec="OPTIONAL BOOLEAN"/> <!-- use for simple two stream mixing --> 
           <noisy_hl_warning             spec="OPTIONAL NO_DATA"/> <!-- warn when heat loss is clipped to bounds --> 
           <hl_scalar_init               spec="OPTIONAL DOUBLE" /> <!-- initial heat loss value in the domain --> 
+          <NOT_ADIABATIC                spec="OPTIONAL NO_DATA" /> <!-- DEVELOPER SWITCH --> 
+          <mf_for_hl                    spec="OPTIONAL NO_DATA"/>  <!-- DEVELOPER SWITCH --> 
+          <enthalpy_label               spec="OPTIONAL STRING" />  <!-- Pointer to the enthalpy equation.  default = enthalpySP -->
           <coal                         spec="OPTIONAL NO_DATA" 
                                         attribute1="fp_label REQUIRED STRING"     
                                         attribute2="eta_label REQUIRED STRING"/> <!-- Attributes must match the transported IVs specified in the TransportEqn node --> 
@@ -209,6 +213,10 @@
         <carbon_balance                 spec="OPTIONAL BOOLEAN" />
         <sulfur_balance                 spec="OPTIONAL BOOLEAN" />
         <ramping_inlet_flowrate         spec="OPTIONAL BOOLEAN" />
+        <Prefill                        spec="OPTIONAL NO_DATA"
+                                        attribute1="bc REQUIRED STRING">
+          <geom_object/>
+        </Prefill>
         <FlowInlet                      spec="MULTIPLE NO_DATA" >
           <velocity_type                spec="OPTIONAL STRING 'flat, function, vector, file, geometry'"/>
           <scalar_type                  spec="OPTIONAL STRING 'flat, function, file, geometry'"/>
@@ -310,16 +318,17 @@
         <EKTCorrection                  spec="OPTIONAL BOOLEAN" /> 
         <scalarUnderflowCheck           spec="OPTIONAL BOOLEAN" /> 
         <extraProjection                spec="OPTIONAL BOOLEAN" /> 
+        <newEnthalpySolver              spec="OPTIONAL NO_DATA" /> <!-- DEVELOPER SWITCH --> 
         <EnthalpySolver                 spec="OPTIONAL NO_DATA" >
           <convection_scheme            spec="REQUIRED STRING 'central-upwind, flux_limited'" />
-          <limiter_type                 spec="OPTIONAL STRING 'superbee, vanLeer, upwind, none'"/>
+          <limiter_type                 spec="OPTIONAL STRING 'minmod, superbee, vanLeer, upwind, none'"/>
           <boundary_limiter_type        spec="OPTIONAL STRING 'central-upwind, upwind'" />
           <central_limiter              spec="OPTIONAL BOOLEAN" /> <!-- unrecognized option -->
           <radiationCalcFreq            spec="OPTIONAL INTEGER" />
           <radCalcForAllRKSteps         spec="OPTIONAL BOOLEAN" />
           <radCalcForAllImplicitSteps   spec="OPTIONAL BOOLEAN" />
           <src                          spec="MULTIPLE NO_DATA" 
-                                        attribute1="label REQUIRED STRING"/>
+                                        attribute1="label REQUIRED STRING" />
           
           <include href="Models.xml"    section="Models/RMCRT" />
           
@@ -349,7 +358,7 @@
         <MixtureFractionSolver          spec="REQUIRED NO_DATA" >
           <initial_value                spec="OPTIONAL DOUBLE" />
           <convection_scheme            spec="REQUIRED STRING 'central-upwind, flux_limited'"/>
-          <limiter_type                 spec="OPTIONAL STRING 'superbee, vanLeer, upwind, none'"/>
+          <limiter_type                 spec="OPTIONAL STRING 'minmod, superbee, vanLeer, upwind, none'"/>
           <boundary_limiter_type        spec="OPTIONAL STRING 'central-upwind, upwind'" />
           <central_limiter              spec="OPTIONAL BOOLEAN" /> <!-- unrecognized option -->
           <src                          spec="MULTIPLE NO_DATA" 
@@ -361,7 +370,8 @@
           <filter_divergence_constraint spec="OPTIONAL BOOLEAN" />
           <convection_scheme            spec="REQUIRED STRING 'central, upwind'" />
           <src                          spec="MULTIPLE NO_DATA" 
-                                        attribute1="label REQUIRED STRING"/>
+                                        attribute1="label REQUIRED STRING"
+                                        attribute2="type REQUIRED STRING"/>
         </MomentumSolver>
 
         <PressureSolver                 spec="REQUIRED NO_DATA" >
@@ -399,7 +409,7 @@
           <doDiff                       spec="OPTIONAL BOOLEAN"/>
           <doConv                       spec="OPTIONAL BOOLEAN"/>
           <addSources                   spec="OPTIONAL BOOLEAN"/>
-          <conv_scheme                  spec="OPTIONAL STRING 'upwind, super_bee, central, old_super_bee'"/> 
+          <conv_scheme                  spec="OPTIONAL STRING 'upwind, vanleer, roe_minmod, super_bee, central, old_super_bee'"/> 
           <scaling_const                spec="OPTIONAL DOUBLE"/>                              
           <!--use_density_guess            spec="OPTIONAL NO_DATA"/--> <!-- Option removed for the time being-->
           <src                          spec="MULTIPLE NO_DATA" 
@@ -444,41 +454,72 @@
                                         cc_intrusion_inlet, 
 																				fx_intrusion_inlet, 
                                         fy_intrusion_inlet, 
-																				fz_intrusion_inlet'">
+																				fz_intrusion_inlet, 
+																				do_radiation'">
 
             <!-- Specs for coal gas devol model -->
-            <devol_model_name           spec="OPTIONAL STRING" />
+            <devol_model_name           spec="REQUIRED STRING" need_applies_to="type coal_gas_devol" />
 
 						<!-- Spec for the heat transfer source --> 
-						<heat_model_name 					  spec="OPTIONAL STRING" />
+						<heat_model_name 					  spec="REQUIRED STRING" need_applies_to="type coal_gas_heat"/>
 
             <!-- Tabulated reaction rate --> 
-            <rxn_rate                   spec="OPTIONAL STRING" />
+            <rxn_rate                   spec="REQUIRED STRING" need_applies_to="type tab_rxn_rate" />
 
             <!-- Spec for constant and multi-point constant source term model -->
-            <constant                   spec="OPTIONAL DOUBLE" />
+            <constant                   spec="REQUIRED DOUBLE" need_applies_to="type constant_src" />
+
+            <!-- Spec for the char oxidation source --> 
+            <char_oxidation_model_name  spec="REQUIRED STRING" need_applies_to="type coal_gas_oxi" />
 
             <!-- Multi-point constant injection --> 
             <injector                   spec="MULTIPLE NO_DATA">
               <geom_object/>
             </injector>
 
+						<!-- DO radiation model --> 
+						<calc_frequency 						spec="OPTIONAL INTEGER" need_applies_to="type do_radiation" /> <!-- calculate radiation every N steps, default = 3 --> 
+  					<calc_on_all_RKsteps        spec="OPTIONAL BOOLEAN" need_applies_to="type do_radiation" /> <!-- calculate radiation every RK step, default = false --> 
+						<co2_label 									spec="OPTIONAL STRING"  need_applies_to="type do_radiation" /> <!-- string label of CO2, default = CO2 --> 
+						<h2o_label 									spec="OPTIONAL STRING"  need_applies_to="type do_radiation" /> <!-- string label of H2O, default = H2O --> 
+            <T_label                    spec="OPTIONAL STRING"  need_applies_to="type do_radiation" /> <!-- string label of temperature, default = temperature -->  
+						<DORadiationModel 					spec="REQUIRED NO_DATA" need_applies_to="type do_radiation" >
+            	<opl                        spec="REQUIRED DOUBLE" />                                    <!-- optical path length --> 
+            	<ordinates                  spec="OPTIONAL INTEGER" />                                   <!-- number of ordinants, default = 2 --> 
+            	<property_model             spec="OPTIONAL STRING 'radcoef, patchmean, wsggm'" />        <!-- optical property model, default = radcoef --> 
+            	<LinearSolver               spec="OPTIONAL NO_DATA"                                      
+            	                            attribute1="type REQUIRED STRING 'hypre, petsc'">
+            	  <res_tol                  spec="REQUIRED DOUBLE" />
+            	  <ksptype                  spec="REQUIRED STRING 'gmres, cg'" />
+            	  <pctype                   spec="REQUIRED STRING 'jacobi, blockjacobi'" />
+            	  <max_iter                 spec="REQUIRED INTEGER" />
+            	</LinearSolver>
+            	<spherical_harmonics        spec="OPTIONAL BOOLEAN" />                                   <!-- Spherical harmonics, default = false (works?) --> 
+						</DORadiationModel>
+
+
             <!-- Westbrook Dryer Global Hydrocarbon reaction rate model -->
             <!-- see Turns, pg. 156-157 -->
-            <A                          spec="OPTIONAL DOUBLE" /> <!-- Pre-exponential factor --> 
-            <E_R                        spec="OPTIONAL DOUBLE" /> <!-- Activation temperature --> 
-            <X                          spec="OPTIONAL DOUBLE" /> <!-- C_xH_y --> 
-            <Y                          spec="OPTIONAL DOUBLE" /> <!-- C_xH_y --> 
-            <m                          spec="OPTIONAL DOUBLE" /> <!-- [C_xH_y]^m --> 
-            <n                          spec="OPTIONAL DOUBLE" /> <!-- [O_2]^n --> 
-            <fuel_mass_fraction         spec="OPTIONAL DOUBLE" /> <!-- Mass fraction of hydrocarbon in the fuel stream --> 
-            <oxidizer_O2_mass_fraction  spec="OPTIONAL DOUBLE" /> <!-- Mass fraction of O2 in the oxidizer stream --> 
-            <cstar_fraction_label       spec="OPTIONAL STRING" /> <!-- C*H mass fraction label --> 
-            <equil_fraction_label       spec="OPTIONAL STRING" /> <!-- CH mass fraction label (equilibrium calc) --> 
-            <mw_label                   spec="OPTIONAL STRING" /> <!-- mixture molecular weight label --> 
-            <temperature_label          spec="OPTIONAL STRING" /> <!-- temperature label, default = "temperature" --> 
-            <density_label              spec="OPTIONAL STRING" /> <!-- density label, default = "density" --> 
-            <pos                        spec="OPTIONAL NO_DATA" /> <!-- source term is positive --> 
+            <A                          spec="REQUIRED DOUBLE" need_applies_to="type westbrook_dryer"/> <!-- Pre-exponential factor --> 
+            <E_R                        spec="REQUIRED DOUBLE" need_applies_to="type westbrook_dryer"/> <!-- Activation temperature --> 
+            <X                          spec="REQUIRED DOUBLE" need_applies_to="type westbrook_dryer"/> <!-- C_xH_y --> 
+            <Y                          spec="REQUIRED DOUBLE" need_applies_to="type westbrook_dryer"/> <!-- C_xH_y --> 
+            <m                          spec="REQUIRED DOUBLE" need_applies_to="type westbrook_dryer"/> <!-- [C_xH_y]^m --> 
+            <n                          spec="REQUIRED DOUBLE" need_applies_to="type westbrook_dryer"/> <!-- [O_2]^n --> 
+            <fuel_mass_fraction         spec="REQUIRED DOUBLE" need_applies_to="type westbrook_dryer"/> <!-- Mass fraction of hydrocarbon in the fuel stream --> 
+            <oxidizer_O2_mass_fraction  spec="REQUIRED DOUBLE" need_applies_to="type westbrook_dryer"/> <!-- Mass fraction of O2 in the oxidizer stream --> 
+            <cstar_fraction_label       spec="REQUIRED STRING" need_applies_to="type westbrook_dryer"/> <!-- C*H mass fraction label --> 
+            <equil_fraction_label       spec="REQUIRED STRING" need_applies_to="type westbrook_dryer"/> <!-- CH mass fraction label (equilibrium calc) --> 
+            <mw_label                   spec="REQUIRED STRING" need_applies_to="type westbrook_dryer"/> <!-- mixture molecular weight label --> 
+            <o2_label                   spec="REQUIRED STRING" need_applies_to="type westbrook_dryer"/> <!-- o2 label --> 
+            <temperature_label          spec="REQUIRED STRING" need_applies_to="type westbrook_dryer"/> <!-- temperature label, default = "temperature" --> 
+            <density_label              spec="REQUIRED STRING" need_applies_to="type westbrook_dryer"/> <!-- density label, default = "density" --> 
+            <pos                        spec="OPTIONAL NO_DATA" need_applies_to="type westbrook_dryer"/><!-- source term is positive --> 
+            <hot_spot                   spec="OPTIONAL NO_DATA" need_applies_to="type westbrook_dryer"> <!-- pilot light --> 
+              <geom_object/>                                                                            <!-- defines the location of the pilot --> 
+              <max_time                 spec="REQUIRED DOUBLE 'positive'"/>                             <!-- defines how long does the pilot last -->  
+              <temperature              spec="REQUIRED DOUBLE 'positive'"/>                             <!-- defines the temperature of the pilot --> 
+            </hot_spot>
 					
 
             <!-- Intrusion inlets --> 
@@ -580,13 +621,17 @@
         
           <model                        spec="MULTIPLE NO_DATA"
                                         attribute1="label REQUIRED STRING"
-                                        attribute2="type REQUIRED STRING 'KobayashiSarofimDevol, ConstantModel, SimpleHeatTransfer, XDrag, YDrag, ZDrag'">
+                                        attribute2="type REQUIRED STRING 'KobayashiSarofimDevol, ConstantModel, 
+                                                                          SimpleHeatTransfer, 
+                                                                          XDrag, YDrag, ZDrag, 
+                                                                          ShaddixHeatTransfer, CharOxidationShaddix'">
 
             <ICVars                     spec="OPTIONAL NO_DATA"> <!-- block containing list of internal coordinates the DQMOM model depends on -->
               <variable                 spec="MULTIPLE NO_DATA"
                                         attribute1="label REQUIRED STRING"
                                         attribute2="role REQUIRED STRING"/>
             </ICVars>
+
             <scalarVars                 spec="OPTIONAL NO_DATA"> <!-- block containing list of scalar variables the DQMOM model depends on -->
               <variable                 spec="MULTIPLE NO_DATA"
                                         attribute1="label REQUIRED STRING"
@@ -602,15 +647,13 @@
             <!-- Constant Model -->
             <constant                   spec="OPTIONAL DOUBLE"/>
 
-            
-
           </model>
         </Models>
 
         <Weights                        spec="REQUIRED NO_DATA">
           <doDiff                       spec="OPTIONAL BOOLEAN"/>
           <doConv                       spec="OPTIONAL BOOLEAN"/>
-          <conv_scheme                  spec="OPTIONAL STRING 'upwind, super_bee'"/>
+          <conv_scheme                  spec="OPTIONAL STRING 'upwind, minmod, super_bee'"/>
           <turbulentPrandtlNumber       spec="OPTIONAL DOUBLE" />
           <initialization               spec="OPTIONAL NO_DATA"
                                         attribute1="type REQUIRED STRING 'env_constant, constant, env_step, step'">
@@ -644,7 +687,7 @@
                                         attribute1="label REQUIRED STRING">
           <doDiff                       spec="OPTIONAL BOOLEAN"/>
           <doConv                       spec="OPTIONAL BOOLEAN"/>
-          <conv_scheme                  spec="OPTIONAL STRING 'upwind, super_bee'"/>
+          <conv_scheme                  spec="OPTIONAL STRING 'upwind, minmod, super_bee'"/>
           <turbulentPrandtlNumber       spec="OPTIONAL DOUBLE" />
           <initialization               spec="OPTIONAL NO_DATA"
                                         attribute1="type REQUIRED STRING 'env_constant, constant, env_step'">

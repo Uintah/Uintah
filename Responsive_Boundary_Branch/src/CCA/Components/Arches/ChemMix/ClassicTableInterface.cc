@@ -2,7 +2,7 @@
 
    The MIT License
 
-   Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+   Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
    Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
    University of Utah.
 
@@ -59,13 +59,18 @@ using namespace Uintah;
 //--------------------------------------------------------------------------- 
 ClassicTableInterface::ClassicTableInterface( const ArchesLabel* labels, const MPMArchesLabel* MAlabels ) :
   MixingRxnModel( labels, MAlabels )
-{}
+{
+  _boundary_condition = scinew BoundaryCondition_new( labels ); 
+  _use_mf_for_hl = false;
+ 
+}
 
 //--------------------------------------------------------------------------- 
 // Default Destructor
 //--------------------------------------------------------------------------- 
 ClassicTableInterface::~ClassicTableInterface()
 {
+  delete _boundary_condition; 
 }
 
 //--------------------------------------------------------------------------- 
@@ -84,6 +89,12 @@ ClassicTableInterface::problemSetup( const ProblemSpecP& propertiesParameters )
   db_classic->getWithDefault( "hl_scalar_init", d_hl_scalar_init, 0.0); 
   db_classic->getWithDefault( "cold_flow", d_coldflow, false); 
   db_properties_root->getWithDefault( "use_mixing_model", d_use_mixing_model, false ); 
+  db_classic->getWithDefault( "enthalpy_label", d_enthalpy_name, "enthalpySP" ); 
+ 
+  // Developer only for now. 
+  if ( db_classic->findBlock("mf_for_hl") ){ 
+    _use_mf_for_hl =  true; 
+  } 
 
   d_noisy_hl_warning = false; 
   if ( ProblemSpecP temp = db_classic->findBlock("noisy_hl_warning") ) 
@@ -92,19 +103,27 @@ ClassicTableInterface::problemSetup( const ProblemSpecP& propertiesParameters )
   // only solve for heat loss if a working radiation model is found
   const ProblemSpecP params_root = db_classic->getRootNode();
   ProblemSpecP db_enthalpy  =  params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ExplicitSolver")->findBlock("EnthalpySolver");
+  d_allocate_soot = true; 
   if (db_enthalpy) { 
     ProblemSpecP db_radiation = params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ExplicitSolver")->findBlock("EnthalpySolver")->findBlock("DORadiationModel");
     d_adiabatic = true; 
     if (db_radiation) { 
       proc0cout << "Found a working radiation model -- will implement case with heat loss" << endl;
       d_adiabatic = false; 
+      d_allocate_soot = false; // needed for new DORadiation source term 
     } else { 
       proc0cout << "No working radiation model found -- will NOT implement case with heat loss" << endl;
       d_adiabatic = true; 
+      d_allocate_soot = true; // needed for new DORadiation source term
     }
   } else {
     d_adiabatic = true; 
   }
+
+  // Developer's switch
+  if ( db_classic->findBlock("NOT_ADIABATIC") ) { 
+    d_adiabatic = false; 
+  } 
 
   // need the reference denisty point: (also in PhysicalPropteries object but this was easier than passing it around)
   const ProblemSpecP db_root = db_classic->getRootNode(); 
@@ -188,6 +207,9 @@ ClassicTableInterface::problemSetup( const ProblemSpecP& propertiesParameters )
   getIndexInfo(); 
   if (!d_coldflow) 
     getEnthalpyIndexInfo();
+
+  d_enthalpy_label = VarLabel::find( d_enthalpy_name ); 
+
 }
 
 void ClassicTableInterface::tableMatching(){ 
@@ -219,6 +241,9 @@ ClassicTableInterface::sched_getState( const LevelP& level,
     tsk->requires( Task::NewDW, i->second, gn, 0 ); 
 
   }
+
+  // ensure that dependent variables are matched to their index. 
+  getIndexInfo(); 
 
   // dependent variables
   if ( initialize_me ) {
@@ -465,7 +490,7 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
             throw InvalidValue( "Error: When trying to compute properties at a boundary, found boundary specification missing in the <Grid> section of the input file.", __FILE__, __LINE__); 
           }
 
-          double bc_value     = new_bcs->getValue(); 
+          double bc_value     = new_bcs->getValue();
           std::string bc_kind = new_bcs->getBCType__NEW(); 
 
           if ( bc_kind == "Dirichlet" ) {
@@ -475,10 +500,8 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
           } else
             throw InvalidValue( "Error: BC type not supported for property calculation", __FILE__, __LINE__ ); 
 
-          // currently assuming a constant value across the mesh. 
+          // currently assuming a constant value across the boundary
           bc_values.push_back( bc_value ); 
-
-          bc_values.push_back(0.0);
           which_bc.push_back(ClassicTableInterface::DIRICHLET);
 
           delete bc; 
@@ -495,14 +518,18 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
           for ( int i = 0; i < (int) d_allIndepVarNames.size(); i++ ){
 
             switch (which_bc[i]) { 
+
               case ClassicTableInterface::DIRICHLET:
-                iv.push_back( bc_values[i] ); 
+                iv.push_back( bc_values[i] );
                 break; 
+
               case ClassicTableInterface::NEUMANN:
-                iv.push_back(0.5*(indep_storage[i][c] + indep_storage[i][cp1]));  
+                iv.push_back( 0.5 * (indep_storage[i][c] + indep_storage[i][cp1]) );
                 break; 
+
               default: 
                 throw InvalidValue( "Error: BC type not supported for property calculation", __FILE__, __LINE__ ); 
+
             }
           }
 
@@ -516,9 +543,12 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
               (*i->second.var)[c] = table_value;
 
               if (i->first == "density") {
+                // Two ways of setting density.  Note that the old ARCHES code used the table value directly and not the ghost_value as defined below. 
+                // This gets density = bc value on face:
                 //double ghost_value = 2.0*table_value - arches_density[cp1];
-                arches_density[c] = table_value;
                 //arches_density[c] = ghost_value; 
+                // This gets density = bc value in extra cell 
+                arches_density[c] = table_value; 
                 if (d_MAlab)
                   mpmarches_denmicro[c] = table_value; 
               } else if (i->first == "temperature" && !d_coldflow) {
@@ -531,8 +561,9 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
                 arches_h2o[c] = table_value; 
               }
           }
-          iv.clear(); 
+          iv.resize(0);
         }
+        bc_values.resize(0);
       }
     }
 
@@ -582,7 +613,7 @@ ClassicTableInterface::sched_computeHeatLoss( const LevelP& level, SchedulerP& s
     tsk->modifies( d_lab->d_heatLossLabel ); 
 
   if ( calcEnthalpy )
-    tsk->requires( Task::NewDW, d_lab->d_enthalpySPLabel, gn, 0 ); 
+    tsk->requires( Task::NewDW, d_enthalpy_label, gn, 0 ); 
 
   sched->addTask( tsk, level->eachPatch(), d_lab->d_sharedState->allArchesMaterials() ); 
 }
@@ -605,6 +636,7 @@ ClassicTableInterface::computeHeatLoss( const ProcessorGroup* pc,
     const Patch* patch = patches->get(p); 
     int archIndex = 0; 
     int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    std::string heat_loss_string; 
 
     CCVariable<double> heat_loss; 
     if ( initialize_me )
@@ -615,7 +647,7 @@ ClassicTableInterface::computeHeatLoss( const ProcessorGroup* pc,
 
     constCCVariable<double> enthalpy; 
     if ( calcEnthalpy ) 
-      new_dw->get(enthalpy, d_lab->d_enthalpySPLabel, matlIndex, patch, gn, 0 ); 
+      new_dw->get(enthalpy, d_enthalpy_label, matlIndex, patch, gn, 0 ); 
 
     std::vector<constCCVariable<double> > the_variables; 
 
@@ -637,6 +669,7 @@ ClassicTableInterface::computeHeatLoss( const ProcessorGroup* pc,
 
           the_variables.push_back( test_Var ); 
         } else {
+          heat_loss_string = ivar->first; 
           constCCVariable<double> a_null_var; 
           the_variables.push_back( a_null_var ); // to preserve the total number of IV otherwise you will have problems below
         }
@@ -666,11 +699,24 @@ ClassicTableInterface::computeHeatLoss( const ProcessorGroup* pc,
         IndexMap::iterator i_index = d_enthalpyVarIndexMap.find( "sensibleenthalpy" ); 
         double sensible_enthalpy    = tableLookUp( iv, i_index->second ); 
         i_index = d_enthalpyVarIndexMap.find( "adiabaticenthalpy" ); 
-        double adiabatic_enthalpy = tableLookUp( iv, i_index->second ); 
+
+        double adiabatic_enthalpy = 0.0;
+        if ( !_use_mf_for_hl ) { 
+          adiabatic_enthalpy = tableLookUp( iv, i_index->second ); 
+        } else { 
+          // WARNING: Hardcoded index for development testing
+          // only works for "coal" tables
+          // requires that you have _H_fuel defined in the table
+          adiabatic_enthalpy = _H_fuel * iv[2] + _H_ox * (1.0-iv[2]);
+        }
         double current_heat_loss  = 0.0;
         double small = 1e-10; 
-        if ( calcEnthalpy )
-          current_heat_loss = ( adiabatic_enthalpy - enthalpy[c] ) / ( sensible_enthalpy + small ); 
+        if ( calcEnthalpy ) {
+          
+          double numerator = adiabatic_enthalpy - enthalpy[c]; 
+          current_heat_loss = ( numerator ) / ( sensible_enthalpy + small ); 
+
+        }
 
         if ( current_heat_loss < d_hl_lower_bound ) {
 
@@ -698,6 +744,10 @@ ClassicTableInterface::computeHeatLoss( const ProcessorGroup* pc,
             cout << "   --> upper heat loss exceeded. " << endl;
         } 
       } 
+
+      //boundary conditions
+      _boundary_condition->setScalarValueBC( pc, patch, heat_loss, heat_loss_string );
+
     }
   }
 }
@@ -713,7 +763,8 @@ ClassicTableInterface::sched_computeFirstEnthalpy( const LevelP& level, Schedule
 
   Task* tsk = scinew Task(taskname, this, &ClassicTableInterface::computeFirstEnthalpy );
 
-  tsk->modifies( d_lab->d_enthalpySPLabel ); 
+
+  tsk->modifies( d_enthalpy_label ); 
 
   // independent variables
   for (MixingRxnModel::VarMap::iterator i = d_ivVarMap.begin(); i != d_ivVarMap.end(); ++i) {
@@ -748,7 +799,7 @@ ClassicTableInterface::computeFirstEnthalpy( const ProcessorGroup* pc,
     int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
     CCVariable<double> enthalpy; 
-    new_dw->getModifiable( enthalpy, d_lab->d_enthalpySPLabel, matlIndex, patch ); 
+    new_dw->getModifiable( enthalpy, d_enthalpy_label, matlIndex, patch ); 
 
     std::vector<constCCVariable<double> > the_variables; 
 
@@ -799,7 +850,14 @@ ClassicTableInterface::computeFirstEnthalpy( const ProcessorGroup* pc,
       IndexMap::iterator i_index = d_enthalpyVarIndexMap.find( "sensibleenthalpy" ); 
       double sensible_enthalpy    = tableLookUp( iv, i_index->second ); 
       i_index = d_enthalpyVarIndexMap.find( "adiabaticenthalpy" ); 
-      double adiabatic_enthalpy = tableLookUp( iv, i_index->second ); 
+      double adiabatic_enthalpy = 0.0; 
+      if ( !_use_mf_for_hl ){ 
+        adiabatic_enthalpy = tableLookUp( iv, i_index->second ); 
+      } else { 
+        //WARNING: Development only
+        adiabatic_enthalpy = _H_fuel * iv[2] + _H_ox * (1.0-iv[2]);
+      } 
+
       enthalpy[c]     = adiabatic_enthalpy - current_heat_loss * sensible_enthalpy; 
 
     }
@@ -960,6 +1018,11 @@ ClassicTableInterface::sched_dummyInit( const LevelP& level,
     tsk->requires( Task::OldDW, i->second, Ghost::None, 0 ); 
   }
 
+  if ( d_allocate_soot ) { 
+    tsk->computes( d_lab->d_sootFVINLabel ); 
+    tsk->requires( Task::OldDW, d_lab->d_sootFVINLabel, Ghost::None, 0 );  
+  }
+
   sched->addTask( tsk, level->eachPatch(), d_lab->d_sharedState->allArchesMaterials() ); 
 }
 
@@ -994,6 +1057,16 @@ ClassicTableInterface::dummyInit( const ProcessorGroup* pc,
       the_var->copyData( old_var ); 
 
     }
+
+    if ( d_allocate_soot ) { 
+      CCVariable<double> soot; 
+      constCCVariable<double> old_soot; 
+      new_dw->allocateAndPut( soot, d_lab->d_sootFVINLabel, matlIndex, patch ); 
+      old_dw->get( old_soot, d_lab->d_sootFVINLabel, matlIndex, patch, Ghost::None, 0 ); 
+      soot.initialize(0.0);
+      soot.copyData( old_soot );
+    }
+
   }
 }
 
@@ -1365,12 +1438,11 @@ ClassicTableInterface::loadMixingTable( const string & inputfile )
           }
         } else { 
           for (int i = 0; i < d_allIndepVarNum[0]; i++){
-            double v = getDouble( gzFp ); 
             // read but don't assign 
             // doing this for now because it was causing some weirdness 
+            double v = getDouble( gzFp ); 
           }
         }
-
 
         for ( int jj = 0; jj < d_allIndepVarNum[1]; jj++ ){
           for ( int ii = 0; ii < d_allIndepVarNum[0]; ii++ ){

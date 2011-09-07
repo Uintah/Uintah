@@ -16,7 +16,7 @@
 /**
  * @class Ray
  * @author Isaac Hunsaker
- * @date July 8, 2010 
+ * @date July 8, 2011 
  *
  * @brief This file traces N (usually 1000+) rays per cell until the intensity reaches a predetermined threshold
  *

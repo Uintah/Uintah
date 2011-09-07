@@ -55,7 +55,8 @@ NIGHTLYTESTS = [
    ("dqmom_test_3"           , "DQMOM_regression/dqmom_test_3.ups"       , 1.1 , "Linux"  , ["exactComparison"]) , 
    ("dqmom_test_4"           , "DQMOM_regression/dqmom_test_4.ups"       , 1.1 , "Linux"  , ["exactComparison"]) , 
    ("dqmom_test_5"           , "DQMOM_regression/dqmom_test_5.ups"       , 1.1 , "Linux"  , ["exactComparison"]) , 
-   ("methane_jet"            , "ClassicMixingTables/ups/methane_jet.ups" , 1.1 , "Linux"  , ["exactComparison", "no_restart"])     , 
+   ("methane_jet"            , "ClassicMixingTables/ups/methane_jet.ups" , 1.1 , "Linux"  , ["exactComparison", "no_restart"]) , 
+   ("acidbase_jet"           , "ClassicMixingTables/ups/acidbase_jet.ups", 1.1 , "Linux"  , ["doesTestRun", "no_restart"])
 ]
 
 # Tests that are run during local regression testing
@@ -72,7 +73,8 @@ LOCALTESTS = [
    ("dqmom_test_3"           , "DQMOM_regression/dqmom_test_3.ups"       , 1.1 , "All"   , ["exactComparison"]) , 
    ("dqmom_test_4"           , "DQMOM_regression/dqmom_test_4.ups"       , 1.1 , "All"   , ["exactComparison"]) , 
    ("dqmom_test_5"           , "DQMOM_regression/dqmom_test_5.ups"       , 1.1 , "All"   , ["exactComparison"]) , 
-   ("methane_jet"            , "ClassicMixingTables/ups/methane_jet.ups" , 1.1 , "All" , ["exactComparison", "no_restart"])     
+   ("methane_jet"            , "ClassicMixingTables/ups/methane_jet.ups" , 1.1 , "All"   , ["exactComparison", "no_restart"]) ,
+   ("acidbase_jet"           , "ClassicMixingTables/ups/acidbase_jet.ups", 1.1 , "All"   , ["exactComparison", "no_restart"])
 ]
 
 #__________________________________

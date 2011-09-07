@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -92,8 +92,9 @@ double TST::computeRhoMicro(double press, double gamma,
   double c3 = k*bubw - a + press*bbuwuw;
   double c4 = (press*b+k)*bbuw + ab;
 
-  double p = fabs(c3/c1 - pow(c2/c1, 2.)/3.);
-  double q = pow((c2/c1),3.)/13.5 - c2*c3/(c1*c1)/3. + c4/c1;
+  double c2overc1 = c2/c1;
+  double p = fabs(c3/c1 - c2overc1*c2overc1/3.);
+  double q = c2overc1*c2overc1*c2overc1/13.5 - c2*c3/(c1*c1)/3. + c4/c1;
   double cos_val = -q / pow(p,1.5) * 2.5980762113533159402911695122588;
   //2.59807621135331594 = sqrt(27)/2.0; 
 
@@ -106,7 +107,7 @@ double TST::computeRhoMicro(double press, double gamma,
 
   double phi = acos(cos_val);
 
-  double sp_v = 2.*sqrt(p/3.)*cos(phi/3.) - c2/c1/3.;
+  double sp_v = 2.*sqrt(p/3.)*cos(phi/3.) - c2overc1/3.;
 
   return  1./sp_v;
 }
@@ -177,15 +178,15 @@ void TST::computePressEOS(double rhoM, double gamma,
                           double& press, double& dp_drho, double& dp_de){
   // Pointwise computation of thermodynamic quantities
   double sp_v = 1/rhoM;
-  double p1 = (Gamma-1)*cv*Temp/(sp_v-b);
-  double p2 = a/((sp_v+bu)*(sp_v+bw));
   double d1 = sp_v - b;
+  double p1 = (Gamma-1)*cv*Temp/(d1);
   double d2 = sp_v + bu;
   double d3 = sp_v + bw;
+  double p2 = a/(d2*d3);
 
   press   = p1-p2;
   dp_drho = sp_v*sp_v * (p1/d1 - p2*(1/d2+1/d3));
-  dp_de   = (Gamma-1)/(sp_v-b);
+  dp_de   = (Gamma-1)/(d1);
   return;
 }
 

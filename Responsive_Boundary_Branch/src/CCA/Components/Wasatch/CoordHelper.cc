@@ -131,7 +131,7 @@ namespace Wasatch{
                   const int idir )
   {
     typename SelectUintahFieldType<FieldT>::type field;
-    dw->allocateAndPut( field, varLabel, material, patch, getUintahGhostType<FieldT>(), getNGhost<FieldT>() );
+    dw->allocateAndPut( field, varLabel, material, patch, get_uintah_ghost_type<FieldT>(), get_n_ghost<FieldT>() );
     const IntVector lo = field.getLow();
     const IntVector hi = field.getHigh();
     for( int k=lo[2]; k<hi[2]; ++k ){

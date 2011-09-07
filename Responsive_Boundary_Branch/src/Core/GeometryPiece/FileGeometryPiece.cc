@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -32,6 +32,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Malloc/Allocator.h>
+#include <Core/Parallel/Parallel.h>
 #include <Core/Util/Endian.h>
 #include <fstream>
 #include <iostream>
@@ -66,24 +67,25 @@ FileGeometryPiece::FileGeometryPiece( ProblemSpecP & ps )
   
   d_file_format = "text";
   d_presplit    = true;  // default expects input to have been been processed with pfs
+  
 #if 1
-  cerr << "reading: positions";
+  proc0cout << "File Geometry Piece: reading positions and ";
   for(list<string>::const_iterator vit(d_vars.begin());vit!=d_vars.end();vit++) {
     if       (*vit=="p.volume") {
-      cerr << " volume";
+      proc0cout << " volume";
     } else if(*vit=="p.temperature") {
-      cerr << " temperature";
+      proc0cout << " temperature";
     } else if(*vit=="p.color"){
-      cerr << " color";
+      proc0cout << " color";
     } else if(*vit=="p.externalforce") {
-      cerr << " externalforce";
+      proc0cout << " externalforce";
     } else if(*vit=="p.fiberdir") {
-      cerr << " fiberdirn";
+      proc0cout << " fiberdirn";
     } else if(*vit=="p.velocity") { // gcd add 
-      cerr << " velocity";         // end gcd add
+      proc0cout << " velocity";         // end gcd add
     }
   }
-  cerr << endl;
+  proc0cout << endl;
 #endif
   
   string fformat_txt;
@@ -225,16 +227,16 @@ FileGeometryPiece::read_line(std::istream & is, Point & xmin, Point & xmax)
         if(is >> v1 >> v2 >> v3){
           d_fiberdirs.push_back(Vector(v1,v2,v3));
 	}  
-      } else if(*vit=="p.velocity") {        // add by gcd
+      } else if(*vit=="p.velocity") {
         if(is >> v1 >> v2 >> v3){
           d_velocity.push_back(Vector(v1,v2,v3));
         }
       }
-                                             // end add by gcd
+
       if(!is) {
         throw ProblemSetupException("Failed while reading point text point file", __FILE__, __LINE__);
       }
-  }
+    }
     
   } else if(d_file_format=="lsb" || d_file_format=="msb") {
     // read unformatted binary numbers
@@ -294,21 +296,23 @@ FileGeometryPiece::read_line(std::istream & is, Point & xmin, Point & xmax)
             swapbytes(v[2]);
           }
           d_fiberdirs.push_back(Vector(v[0],v[1],v[2]));
-	}
-      } else if(*vit=="p.velocity") {       // gcd adds
-	if(is.read((char*)&v[0], sizeof(double)*3)) {
-	  if(needflip) {
-	    swapbytes(v[0]);
-	    swapbytes(v[1]);
-	    swapbytes(v[2]);
+	 }
+      } else if(*vit=="p.velocity") {
+	 if(is.read((char*)&v[0], sizeof(double)*3)) {
+	   if(needflip) {
+	     swapbytes(v[0]);
+	     swapbytes(v[1]);
+	     swapbytes(v[2]);
           }
           d_velocity.push_back(Vector(v[0],v[1],v[2]));
-	}  
-    }                                          // end gcd adds
+	 }  
+      }          
+
       if(!is){
         throw ProblemSetupException("Failed while reading point text point file", __FILE__, __LINE__);
       }
-  }
+      
+    }
   } else if(d_file_format=="gzip") {
     throw ProblemSetupException("Sorry - gzip not implemented !", __FILE__, __LINE__);
   }

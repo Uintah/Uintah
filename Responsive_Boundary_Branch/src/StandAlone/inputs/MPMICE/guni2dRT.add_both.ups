@@ -336,15 +336,14 @@
 
       <MPM>
          <material name = "Steel Ring">
-               <density>7830.0</density>
-               <thermal_conductivity>38</thermal_conductivity>
-               <specific_heat>477</specific_heat>
-               <room_temp>294.0</room_temp>
-               <melt_temp>1793.0</melt_temp>
+         <density>7830.0</density>
+         <thermal_conductivity>38</thermal_conductivity>
+         <specific_heat>477</specific_heat>
+         <room_temp>294.0</room_temp>
+         <melt_temp>1793.0</melt_temp>
 
-               <constitutive_model type = "hypoelastic_plastic">
-                 <useModifiedEOS> true </useModifiedEOS>
-                 <tolerance>1.0e-10</tolerance>
+         <constitutive_model type = "hypoelastic_plastic">
+         <useModifiedEOS> true </useModifiedEOS>
        
          <shear_modulus>80.0e9</shear_modulus>
          <bulk_modulus>173.33e9</bulk_modulus>

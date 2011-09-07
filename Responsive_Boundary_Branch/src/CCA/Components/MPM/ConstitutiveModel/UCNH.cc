@@ -1,7 +1,7 @@
 /* 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -115,6 +115,7 @@ UCNH::UCNH(ProblemSpecP& ps, MPMFlags* Mflag, bool plas, bool dam)
   ps->require("bulk_modulus",         d_initialData.Bulk);
   ps->require("shear_modulus",        d_initialData.tauDev);
   ps->get("useModifiedEOS",           d_useModifiedEOS); 
+  d_8or27=Mflag->d_8or27;
   
   // Plasticity
   ps->getWithDefault("usePlasticity", d_usePlasticity, plas);

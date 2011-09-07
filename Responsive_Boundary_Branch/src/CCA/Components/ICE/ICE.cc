@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -2125,11 +2125,13 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
     StaticArray<CCVariable<Vector>   > vel_CC(max_indx);
     StaticArray<CCVariable<double>   > cv(max_indx);
     StaticArray<CCVariable<double>   > gamma(max_indx);
-    CCVariable<double>    press_CC, imp_initialGuess;
+    CCVariable<double>    press_CC, imp_initialGuess, vol_frac_sum;
     
     new_dw->allocateAndPut(press_CC,         lb->press_CCLabel,     0,patch);
     new_dw->allocateAndPut(imp_initialGuess, lb->initialGuessLabel, 0,patch);
+    new_dw->allocateTemporary(vol_frac_sum,patch);
     imp_initialGuess.initialize(0.0); 
+    vol_frac_sum.initialize(0.0);
 
     //__________________________________
     //  Thermo and transport properties
@@ -2169,7 +2171,7 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
       new_dw->allocateAndPut(rho_CC[indx],     lb->rho_CCLabel,       indx,patch); 
       new_dw->allocateAndPut(Temp_CC[indx],    lb->temp_CCLabel,      indx,patch); 
       new_dw->allocateAndPut(speedSound[indx], lb->speedSound_CCLabel,indx,patch); 
-      new_dw->allocateAndPut(vol_frac_CC[indx],lb->vol_frac_CCLabel,  indx,patch); 
+      new_dw->allocateAndPut(vol_frac_CC[indx],lb->vol_frac_CCLabel,  indx,patch);
       new_dw->allocateAndPut(vel_CC[indx],     lb->vel_CCLabel,       indx,patch);
     }
 
@@ -2202,7 +2204,8 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
         sp_vol_CC[indx][c] = 1.0/rho_micro[indx][c];
 
         //needed for LODI BCs
-        vol_frac_CC[indx][c] = rho_CC[indx][c]*sp_vol_CC[indx][c]; 
+        vol_frac_CC[indx][c] = rho_CC[indx][c]*sp_vol_CC[indx][c];
+        vol_frac_sum[c] += vol_frac_CC[indx][c];
 
         double dp_drho, dp_de, c_2, press_tmp;
         ice_matl->getEOS()->computePressEOS(rho_micro[indx][c],gamma[indx][c],
@@ -2212,7 +2215,7 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
         if( !d_customInitialize_basket->doesComputePressure){
           press_CC[c] = press_tmp;
         }
-
+          
         c_2 = dp_drho + dp_de * press_CC[c]/(rho_micro[indx][c] * rho_micro[indx][c]);
         speedSound[indx][c] = sqrt(c_2);
       }
@@ -2238,6 +2241,21 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
         throw ProblemSetupException(warn.str(), __FILE__, __LINE__ );
       }
     }   // numMatls
+    
+    // make sure volume fractions sum to 1
+    if(!d_with_mpm)
+    {
+      for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
+        if(vol_frac_sum[*iter] > 1.0 + 1e-10 || vol_frac_sum[*iter] < 1.0 - 1e-10)
+        {
+          ostringstream warn, base;
+          base <<"ERROR ICE:(L-"<<L_indx<<"):actuallyInitialize";
+          warn << base.str() << "Cell: " << *iter << " Volume fractions did not sum to 1. Sum=" << vol_frac_sum[*iter] << "\n";
+          throw ProblemSetupException(warn.str(), __FILE__, __LINE__ );
+        }
+      }
+    }
+      
 
     if (switchDebug_Initialize){     
       ostringstream desc1;

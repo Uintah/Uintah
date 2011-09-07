@@ -11,12 +11,14 @@
 
 
 /**
- *  \ingroup WasatchExpressions
- *  \class ScalarRHS
- *  \author James C. Sutherland
+ *  \ingroup 	Expressions
+ *  \class 	ScalarRHS
+ *  \author 	James C. Sutherland
  *
  *  \brief Support for a basic scalar transport equation involving
  *         any/all of advection, diffusion and reaction.
+ *
+ *  \tparam FieldT - the type of field for the RHS.
  *
  *  The ScalarRHS Expression defines a template class for basic
  *  transport equations.  Each equation is templated on an interpolant

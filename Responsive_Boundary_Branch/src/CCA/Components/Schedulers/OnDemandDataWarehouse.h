@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -455,6 +455,7 @@ private:
    //////////
    // Insert Documentation Here:
    mutable CrowdMonitor    d_lock;
+   mutable CrowdMonitor    d_rtasklock;
    bool                    d_finalized;
    GridP                   d_grid;
 

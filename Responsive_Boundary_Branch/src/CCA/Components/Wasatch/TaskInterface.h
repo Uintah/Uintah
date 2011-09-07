@@ -25,6 +25,7 @@ namespace Wasatch{
 
   /**
    *  \ingroup WasatchCore
+   *  \ingroup WasatchGraph
    *  \class  TaskInterface
    *  \author James C. Sutherland
    *  \date   June, 2010
@@ -91,12 +92,14 @@ namespace Wasatch{
     TaskInterface( const IDSet& roots,
                    const std::string taskName,
                    Expr::ExpressionFactory& factory,
+                   const Uintah::LevelP& level,
                    Uintah::SchedulerP& sched,
                    const Uintah::PatchSet* const patches,
                    const Uintah::MaterialSet* const materials,
                    const PatchInfoMap& info,
                    const bool createUniqueTreePerPatch,
-                   Expr::FieldManagerList* fml = NULL );
+                  int RKStage,
+                   Expr::FieldManagerList* fml = NULL);
 
     /**
      *  \brief Create a TaskInterface from a list of root expressions
@@ -127,11 +130,13 @@ namespace Wasatch{
     TaskInterface( const Expr::ExpressionID& root,
                    const std::string taskName,
                    Expr::ExpressionFactory& factory,
+                   const Uintah::LevelP& level,
                    Uintah::SchedulerP& sched,
                    const Uintah::PatchSet* const patches,
                    const Uintah::MaterialSet* const materials,
                    const PatchInfoMap& info,
                    const bool createUniqueTreePerPatch,
+                   const int RKStage,
                    Expr::FieldManagerList* fml = NULL );
 
     ~TaskInterface();
@@ -149,7 +154,7 @@ namespace Wasatch{
      *  This sets all field requirements for the Uintah task and
      *  scheduled it for execution.
      */
-    void schedule( const Expr::TagSet& newDWFields );
+    void schedule( const Expr::TagSet& newDWFields, int RKStage );
 
 
     /**
@@ -158,11 +163,23 @@ namespace Wasatch{
      *  This sets all field requirements for the Uintah task and
      *  scheduled it for execution.
      */
-    void schedule();
+    void schedule(int RKStage);
+    
+    Expr::ExpressionTree::TreePtr get_time_tree();
 
   private:
 
+    /**
+     *  \brief A vector of TreeTaskExecute pointers that hold each
+     *  Uintah::Task to be executed as part of this TaskInterface.
+     */
     typedef std::vector< TreeTaskExecute* > ExecList;
+
+    /**
+     *  The ordered list of trees to be executed as tasks.  This is
+     *  obtained by cleaving the original tree obtained by the root
+     *  expressions supplied to the TaskInterface.
+     */
     ExecList execList_;
 
     const bool builtFML_;               ///< true if we constructed a FieldManagerList internally.

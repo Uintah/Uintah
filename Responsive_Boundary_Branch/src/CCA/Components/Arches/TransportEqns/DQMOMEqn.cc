@@ -592,9 +592,11 @@ DQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
       RHS[c] += Fdiff[c] - Fconv[c];
 
       if (d_addSources) {
-
-        RHS[c] += src[c]*vol;           
-
+       
+        // Right now, no source term for weights. The conditional statement prevents errors coming from solving Ax=b,
+        // it should be removed if the source term for weights isn't zero.
+        //if(!d_weight) RHS[c] += src[c]*vol;           
+        RHS[c] += src[c]*vol;
 #ifdef VERIFY_DQMOM_TRANSPORT
         if (d_addExtraSources) { 
           // Going to subtract out the src from the Ax=b solver
@@ -692,13 +694,13 @@ DQMOMEqn::solveTransportEqn( const ProcessorGroup* pc,
     curr_ssp_time = curr_time + factor * dt; 
     d_timeIntegrator->timeAvePhi( patch, phi, rk1_phi, timeSubStep, curr_ssp_time ); 
 
+    if (d_doClipping) 
+      clipPhi( patch, phi ); 
+
     //----BOUNDARY CONDITIONS
     // For first time step, bc's have been set in dqmomInit
     computeBCs( patch, d_eqnName, phi );
 
-    if (d_doClipping) 
-      clipPhi( patch, phi ); 
-    
     // copy averaged phi into oldphi
     oldphi.copyData(phi); 
 

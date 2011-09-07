@@ -1296,8 +1296,7 @@ multi-stage return algorithm proposed in \cite{brannon10}. Usage is as follows:
             <FSLOPE> 0.057735026919 </FSLOPE>
             <FSLOPE_p> 0.057735026919 </FSLOPE_p>
             <PEAKI1> 612.3724356953976 </PEAKI1>
-            <kappa_initial> -612.3724 </kappa_initial>
-            <cap_radius> 1224.7 </cap_radius>
+            <CR> 6.0 </CR>
             <p0_crush_curve> -1837.0724 </p0_crush_curve>
             <p1_crush_curve> 6.666666666666666e-4 </p1_crush_curve>
             <p3_crush_curve> 0.5 </p3_crush_curve>
@@ -1316,10 +1315,9 @@ first stress invariant, $I_1$. The Drucker-Prager yield criterion is given as
 \begin{equation}
 \sqrt{J_2}+FSLOPE \times (I_1-PEAKI1)=0,
 \end{equation}
-\tt <kappa\_initial> \normalfont is the initial value for the internal 
-state variable $\kappa$ which determines the cap yield surface position, \tt <cap\_radius> 
-\normalfont is $\kappa-X$ in which $X$ is the value of the first stress invariant at the 
-intersection of the cap yield surface and the mean pressure axis, \tt <p0\_crush\_curve> 
+\tt <CR> \normalfont is a shape parameter that allows porosity to affect shear
+strength which equals the eccentricity (width divided by
+height) of the elliptical cap function, \tt <p0\_crush\_curve> 
 \normalfont, \tt <p1\_crush\_curve> \normalfont, and \tt <p3\_crush\_curve> \normalfont are the
 constants in the fitted post yielding part of the crush curve
 \begin{equation}
@@ -1352,7 +1350,9 @@ are used in the simplified geomodel to consider the fluid-filled porous effects:
 && +\frac{3K_f\left(\exp(p_3+p_4)-1\right)\exp(p_3+\varepsilon^p_v)}
 {\left(\exp(p_3+\varepsilon^p_v)-1\right)^2}
 \end{eqnarray}
-in which $K_f$ is the fluid bulk modulus, which is defined by the user as \tt <fluid\_B0>\normalfont, 
+in which $X$ is the value of the first stress invariant at the 
+intersection of the cap yield surface and the mean pressure axis, 
+$K_f$ is the fluid bulk modulus, which is defined by the user as \tt <fluid\_B0>\normalfont, 
 $\varepsilon^p_v$ is the volumetric part 
 of the plastic strain, and $p_4$ is a constant defined by the user as 
 \tt <p4\_fluid\_effect>\normalfont. The isotropic part of the back stress tensor

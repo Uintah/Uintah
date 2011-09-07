@@ -247,6 +247,8 @@ CharOxidationShaddix::sched_computeModel( const LevelP& level, SchedulerP& sched
     tsk->modifies(d_surfacerateLabel);
     tsk->modifies(d_PO2surfLabel);
   }
+
+  tsk->requires( Task::OldDW, d_fieldLabels->d_sharedState->get_delt_label(), Ghost::None, 0);
  
   DQMOMEqnFactory& dqmom_eqn_factory = DQMOMEqnFactory::self();
   CoalModelFactory& modelFactory = CoalModelFactory::self();
@@ -418,6 +420,10 @@ CharOxidationShaddix::computeModel( const ProcessorGroup * pc,
     int archIndex = 0;
     int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
+    delt_vartype DT;
+    old_dw->get(DT, d_fieldLabels->d_sharedState->get_delt_label());
+    double dt = DT;
+
     CCVariable<double> char_rate;
     if ( new_dw->exists( d_modelLabel, matlIndex, patch) ) {
       new_dw->getModifiable( char_rate, d_modelLabel, matlIndex, patch ); 
@@ -517,7 +523,8 @@ CharOxidationShaddix::computeModel( const ProcessorGroup * pc,
       double unscaled_char_mass;
      
       if (weight_is_small && !d_unweighted) {
-        char_rate[c] = 0.0;
+        char_production_rate_ = devolChar[c];
+        char_rate[c] = char_production_rate_/(d_rh_scaling_constant*d_w_scaling_constant);
         gas_char_rate[c] = 0.0;
         particle_temp_rate[c] = 0.0;
         surface_rate[c] = 0.0;
@@ -554,7 +561,13 @@ CharOxidationShaddix::computeModel( const ProcessorGroup * pc,
  
         PO2_inf = O2[c]/WO2/MWmix[c];
 
-        if((unscaled_raw_coal_mass+unscaled_char_mass-small) > 0 && PO2_inf > 1e-6) {
+        //if((unscaled_raw_coal_mass+unscaled_char_mass-small) > 0 && PO2_inf > 1e-6) {
+        if((PO2_inf < 1e-6) || (unscaled_char_mass < small)) {
+          PO2_surf = 0.0;
+          CO2CO = 0.0;
+          q = 0.0;
+        } else {
+
           char_reaction_rate_ = 0.0;
           char_production_rate_ = 0.0;
           gas_char_rate_ = 0.0;     
@@ -679,12 +692,15 @@ CharOxidationShaddix::computeModel( const ProcessorGroup * pc,
 
             }
           }              
+        }
+
+        char_production_rate_ = devolChar[c];
               
-          char_reaction_rate_ = -pi*(pow(unscaled_length,2.0))*WC*q;
+        char_reaction_rate_ = -pi*(pow(unscaled_length,2.0))*WC*q;
+        rateMax = min((-0.2*unscaled_char_mass/dt),0.0);
+        char_reaction_rate_ = min(max(char_reaction_rate_,rateMax),0.0);
 
-          char_production_rate_ = devolChar[c];
-
-          particle_temp_rate_ = -pi*(pow(unscaled_length,2.0))*q/(1.0+CO2CO)*(CO2CO*HF_CO2 + HF_CO); // in J/s
+        particle_temp_rate_ = -pi*(pow(unscaled_length,2.0))*q/(1.0+CO2CO)*(CO2CO*HF_CO2 + HF_CO); // in J/s
 
           
           //cout << "O2 " << O2[c] << " CO2 " << CO2[c] << " H2O " << H2O[c] << " N2 " << N2[c] << " MW_mix " << MW_mix << " Conc " << Conc << " DO2 " << DO2 << " q " << q << endl;
@@ -695,25 +711,21 @@ CharOxidationShaddix::computeModel( const ProcessorGroup * pc,
           //cout << "char_reaction_rate_ " << char_reaction_rate_ << " char_production_rate_ " << char_production_rate_ << 
           //     " particle_temp_rate_ " << particle_temp_rate_ <<endl;
           
-
+        if(d_unweighted){
           char_rate[c] = (char_reaction_rate_ + char_production_rate_)/d_rh_scaling_constant;
           gas_char_rate[c] = -char_reaction_rate_*unscaled_weight;
           particle_temp_rate[c] = particle_temp_rate_;
-          surface_rate[c] = WC*q;  // in kg/s/m^2
-          PO2surf_[c] = PO2_surf;
-
         } else {
-          char_rate[c] = 0.0;
-          gas_char_rate[c] = 0.0;
-          particle_temp_rate[c] = 0.0;
-          surface_rate[c] = 0.0;
-          PO2surf_[c] = 0.0;
+          char_rate[c] = (char_reaction_rate_*unscaled_weight + char_production_rate_)/(d_rh_scaling_constant*d_w_scaling_constant);
+          gas_char_rate[c] = -char_reaction_rate_*unscaled_weight;
+          particle_temp_rate[c] = particle_temp_rate_*unscaled_weight;
         }
+ 
+        surface_rate[c] = WC*q;  // in kg/s/m^2
+        PO2surf_[c] = PO2_surf;
+
       }
-
-
     }//end cell loop
-
   }//end patch loop
 }
 

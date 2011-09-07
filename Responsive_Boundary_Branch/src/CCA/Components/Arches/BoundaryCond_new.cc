@@ -67,96 +67,47 @@ void BoundaryCondition_new::setScalarValueBC( const ProcessorGroup*,
         // --- notation --- 
         // bp1: boundary cell + 1 or the interior cell one in from the boundary
         if (bc_kind == "Dirichlet") {
-          switch (face) {
-            case Patch::xminus:
-              for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
-                IntVector bp1(*bound_ptr - insideCellDir); 
-                scalar[*bound_ptr] = 2.0*bc_value - scalar[bp1];
-              }
-              break;
-            case Patch::xplus:
-              for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
-                IntVector bp1(*bound_ptr - insideCellDir);
-                scalar[*bound_ptr] = 2.0*bc_value - scalar[bp1];
-              }
-              break;
-#ifdef YDIM
-            case Patch::yminus:
-              for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
-                IntVector bp1(*bound_ptr - insideCellDir);
-                scalar[*bound_ptr] = 2.0*bc_value - scalar[bp1];
-              }
-              break;
-            case Patch::yplus:
-              for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
-                IntVector bp1(*bound_ptr - insideCellDir);
-                scalar[*bound_ptr] = 2.0*bc_value - scalar[bp1];
-              }
-              break;
-#endif
-#ifdef ZDIM
-            case Patch::zminus:
-              for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
-                IntVector bp1(*bound_ptr - insideCellDir);
-                scalar[*bound_ptr] = 2.0*bc_value - scalar[bp1];
-              }
-              break;
-            case Patch::zplus:
-              for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
-                IntVector bp1(*bound_ptr - insideCellDir);
-                scalar[*bound_ptr] = 2.0*bc_value - scalar[bp1];
-              }
-              break;
-#endif
-          default: 
-            throw InvalidValue("Error: Face type not recognized.",__FILE__,__LINE__); 
-            break; 
+
+          for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
+            IntVector bp1(*bound_ptr - insideCellDir);
+            scalar[*bound_ptr] = 2.0*bc_value - scalar[bp1];
           }
+
         } else if (bc_kind == "Neumann") {
+
+          double dx = 0.0;
+          double the_sign = 1.0; 
+
           switch (face) {
             case Patch::xminus:
-              for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
-                IntVector bp1(*bound_ptr - insideCellDir); 
-                scalar[*bound_ptr] = scalar[bp1] - Dx.x()*bc_value;
-              }
-              break;
+              dx = Dx.x(); 
+              the_sign = -1.0;
+              break; 
             case Patch::xplus:
-              for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
-                IntVector bp1(*bound_ptr - insideCellDir);
-                scalar[*bound_ptr] = Dx.x()*bc_value + scalar[bp1];
-              }
-              break;
-#ifdef YDIM
+              dx = Dx.x(); 
+              break; 
             case Patch::yminus:
-              for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
-                IntVector bp1(*bound_ptr - insideCellDir); 
-                scalar[*bound_ptr] = scalar[bp1] - Dx.y()*bc_value;
-              }
-              break;
+              dx = Dx.y(); 
+              the_sign = -1.0; 
+              break; 
             case Patch::yplus:
-              for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
-                IntVector bp1(*bound_ptr - insideCellDir);
-                scalar[*bound_ptr] = Dx.y()*bc_value + scalar[bp1];
-              }
-              break;
-#endif
-#ifdef ZDIM
+              dx = Dx.y(); 
+              break; 
             case Patch::zminus:
-              for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
-                IntVector bp1(*bound_ptr - insideCellDir); 
-                scalar[*bound_ptr] = scalar[bp1] - Dx.z()*bc_value;
-              }
-              break;
+              dx = Dx.z(); 
+              the_sign = -1.0; 
+              break; 
             case Patch::zplus:
-              for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
-                IntVector bp1(*bound_ptr - insideCellDir);
-                scalar[*bound_ptr] = Dx.z()*bc_value + scalar[bp1];
-              }
-              break;
-#endif
-          default: 
-            throw InvalidValue("Error: Face type not recognized.",__FILE__,__LINE__); 
-            break; 
+              dx = Dx.z(); 
+              break; 
+            default: 
+              throw InvalidValue("Error: Face type not recognized.",__FILE__,__LINE__); 
+              break; 
+          }
+
+          for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
+            IntVector bp1(*bound_ptr - insideCellDir); 
+            scalar[*bound_ptr] = scalar[bp1] + the_sign * dx * bc_value;
           }
         }
       }
@@ -204,76 +155,60 @@ void BoundaryCondition_new::setVectorValueBC( const ProcessorGroup*,
         // --- notation --- 
         // bp1: boundary cell + 1 or the interior cell one in from the boundary
         if (bc_kind == "Dirichlet") {
+
           for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
+
             IntVector bp1(*bound_ptr - insideCellDir); 
+
             X = 2.0*bc_value.x() - vec[bp1].x();
             Y = 2.0*bc_value.y() - vec[bp1].y();
             Z = 2.0*bc_value.z() - vec[bp1].z();
+
             vec[*bound_ptr] = Vector(X,Y,Z); 
+
           }
+
         } else if (bc_kind == "Neumann") {
+
+          double dx = 0.0;
+          double the_sign = 1.0; 
+
           switch (face) {
             case Patch::xminus:
-              for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
-                IntVector bp1(*bound_ptr - insideCellDir); 
-                X = vec[bp1].x() - Dx.x()*bc_value.x();
-                Y = vec[bp1].y() - Dx.x()*bc_value.y();
-                Z = vec[bp1].z() - Dx.x()*bc_value.z();
-                vec[*bound_ptr] = Vector(X,Y,Z); 
-              }
-              break;
+              dx = Dx.x(); 
+              the_sign = -1.0;
+              break; 
             case Patch::xplus:
-              for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
-                IntVector bp1(*bound_ptr - insideCellDir);
-                X = Dx.x()*bc_value.x() + vec[bp1].x();
-                Y = Dx.x()*bc_value.y() + vec[bp1].y();
-                Z = Dx.x()*bc_value.z() + vec[bp1].z();
-                vec[*bound_ptr] = Vector(X,Y,Z); 
-              }
-              break;
-#ifdef YDIM
+              dx = Dx.x(); 
+              break; 
             case Patch::yminus:
-              for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
-                IntVector bp1(*bound_ptr - insideCellDir); 
-                X = vec[bp1].x() - Dx.y()*bc_value.x();
-                Y = vec[bp1].y() - Dx.y()*bc_value.y();
-                Z = vec[bp1].z() - Dx.y()*bc_value.z();
-                vec[*bound_ptr] = Vector(X,Y,Z); 
-              }
-              break;
+              dx = Dx.y(); 
+              the_sign = -1.0; 
+              break; 
             case Patch::yplus:
-              for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
-                IntVector bp1(*bound_ptr - insideCellDir);
-                X = Dx.y()*bc_value.x() + vec[bp1].x();
-                Y = Dx.y()*bc_value.y() + vec[bp1].y();
-                Z = Dx.y()*bc_value.z() + vec[bp1].z();
-                vec[*bound_ptr] = Vector(X,Y,Z); 
-              }
-              break;
-#endif
-#ifdef ZDIM
+              dx = Dx.y(); 
+              break; 
             case Patch::zminus:
-              for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
-                IntVector bp1(*bound_ptr - insideCellDir); 
-                X = vec[bp1].x() - Dx.z()*bc_value.x();
-                Y = vec[bp1].y() - Dx.z()*bc_value.y();
-                Z = vec[bp1].z() - Dx.z()*bc_value.z();
-                vec[*bound_ptr] = Vector(X,Y,Z); 
-              }
-              break;
+              dx = Dx.z(); 
+              the_sign = -1.0; 
+              break; 
             case Patch::zplus:
-              for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
-                IntVector bp1(*bound_ptr - insideCellDir);
-                X = Dx.z()*bc_value.x() + vec[bp1].x();
-                Y = Dx.z()*bc_value.y() + vec[bp1].y();
-                Z = Dx.z()*bc_value.z() + vec[bp1].z();
-                vec[*bound_ptr] = Vector(X,Y,Z); 
-              }
-              break;
-#endif
-          default: 
-            throw InvalidValue("Error: Face type not recognized.",__FILE__,__LINE__); 
-            break; 
+              dx = Dx.z(); 
+              break; 
+            default: 
+              throw InvalidValue("Error: Face type not recognized.",__FILE__,__LINE__); 
+              break; 
+          }
+
+          for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
+            
+            IntVector bp1(*bound_ptr - insideCellDir); 
+            
+            X = vec[bp1].x() + the_sign * dx * bc_value.x();
+            Y = vec[bp1].y() + the_sign * dx * bc_value.y();
+            Z = vec[bp1].z() + the_sign * dx * bc_value.z();
+          
+            vec[*bound_ptr] = Vector(X,Y,Z); 
           }
         }
       }
@@ -290,8 +225,7 @@ void BoundaryCondition_new::setVectorValueBC( const ProcessorGroup*,
     constCCVariable<Vector>& const_vec, 
     string varname )
 {
-  // This method sets the value of the CELL-CENTERED VECTOR components in the boundary cell
-  // so that the boundary condition set in the input file is satisfied. 
+
   vector<Patch::FaceType>::const_iterator iter;
   vector<Patch::FaceType> bf;
   patch->getBoundaryFaces(bf);

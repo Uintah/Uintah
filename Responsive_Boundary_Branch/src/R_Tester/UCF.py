@@ -35,14 +35,16 @@ UNUSED = [ ("ice_perf_test",    "icePerformanceTest.ups",    1, "Linux","", ["do
            ("switcher",       "JP8-switch.ups",     8, "NONE") 
 ]
 
-NIGHTLYTESTS = [ ("ice_perf_test",    "icePerformanceTest.ups",    1, "Linux", ["do_performance_test"]),  \
-                 ("mpmice_perf_test", "mpmicePerformanceTest.ups", 1, "Linux", ["do_performance_test"]), \
-                 ("LBwoRegrid",       "LBwoRegrid.ups",            2, "Linux", ["exactComparison"])
+NIGHTLYTESTS = [ ("ice_perf_test",          "icePerformanceTest.ups",    1, "Linux", ["do_performance_test"]),  \
+                 ("mpmice_perf_test",       "mpmicePerformanceTest.ups", 1, "Linux", ["do_performance_test"]), \
+                 ("LBwoRegrid",             "LBwoRegrid.ups",            2, "Linux", ["exactComparison"]), \
+                 ("switchExample_impm_mpm", "switchExample_impm_mpm.ups",1, "Linux", ["no_memoryTest"])
                ]
 
-LOCALTESTS = [ ("ice_perf_test",    "icePerformanceTest.ups",    1, "Linux", ["do_performance_test"]),  \
-               ("mpmice_perf_test", "mpmicePerformanceTest.ups", 1, "Linux", ["do_performance_test"]), \
-               ("LBwoRegrid",        "LBwoRegrid.ups",           2, "Linux", ["exactComparison"])
+LOCALTESTS = [ ("switchExample_impm_mpm", "switchExample_impm_mpm.ups",1, "Linux", ["no_memoryTest"]), \
+               ("ice_perf_test",          "icePerformanceTest.ups",    1, "Linux", ["do_performance_test"]),  \
+               ("mpmice_perf_test",       "mpmicePerformanceTest.ups", 1, "Linux", ["do_performance_test"]), \
+               ("LBwoRegrid",             "LBwoRegrid.ups",            2, "Linux", ["exactComparison"])
              ]
 
 #__________________________________

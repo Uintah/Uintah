@@ -300,6 +300,7 @@
       <color                  spec="OPTIONAL DOUBLE" />
       <density                spec="OPTIONAL DOUBLE" />
       <pressure               spec="OPTIONAL DOUBLE" />
+      <volumeFraction         spec="OPTIONAL DOUBLE" />
 
       <null                   spec="OPTIONAL NO_DATA" /> <!-- FIXME: What is this? -->
 
@@ -330,7 +331,7 @@
                                                                       mpmf, mpmice, amrmpm,
                                                                       wasatch, reduce_uda,
                                                                       poisson1, poisson2, poisson3, poisson4, benchmark, rigidmpmice, 
-                                                                      rmpmice, smpm, smpmice, switcher, wave, solvertest, RMCRT_Test'" >
+                                                                      rmpmice, smpm, smpmice, switcher, wave, solvertest, RMCRT_Test particletest'" >
                                   <!-- The 'type' above is used in CCA/Components/Parent/ComponentFactory.cc -->
         <carry_over                 spec="MULTIPLE NO_DATA"
                                   attribute1="var   REQUIRED STRING"
@@ -630,7 +631,8 @@
   <DataAnalysis                         spec="OPTIONAL NO_DATA" >
     <Module                             spec="REQUIRED NO_DATA"
                                           attribute1="name REQUIRED STRING 'lineExtract, containerExtract, particleExtract'" >
-      <material                         spec="REQUIRED STRING" />
+      <material                         spec="OPTIONAL STRING" />
+      <materialIndex                    spec="OPTIONAL INTEGER" />
       <samplingFrequency                spec="REQUIRED DOUBLE" />
       <timeStart                        spec="REQUIRED INTEGER" />
       <timeStop                         spec="REQUIRED INTEGER" />
@@ -729,12 +731,22 @@
   <!-- image or preprocessing specs     -->
   <PreprocessTools        spec="OPTIONAL NO_DATA" >
     <rawToUniqueGrains    spec="OPTIONAL NO_DATA" >
-      <numGrainMatls      spec="REQUIRED INTEGER 'positive'" />
       <image              spec="REQUIRED STRING" />
       <ppc                spec="REQUIRED VECTOR 'positive'" />
       <res                spec="REQUIRED VECTOR 'positive'" />
-      <threshold          spec="REQUIRED MULTIPLE_DOUBLES" />
       <outputBasename     spec="REQUIRED STRING" />
+      
+      <matl               spec="MULTIPLE NO_DATA"
+                          attribute1="index REQUIRED STRING">
+        <threshold        spec="REQUIRED MULTIPLE_DOUBLES" />
+      </matl>
+      
+      <uniqueGrains       spec="OPTIONAL NO_DATA">
+        <matlIndex        spec="REQUIRED MULTIPLE_DOUBLES" />
+        <threshold        spec="REQUIRED MULTIPLE_DOUBLES" />
+      </uniqueGrains>
+      
+
     </rawToUniqueGrains>
   </PreprocessTools>
   

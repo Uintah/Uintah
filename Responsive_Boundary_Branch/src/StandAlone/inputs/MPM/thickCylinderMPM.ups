@@ -59,8 +59,7 @@
      <MPM>
        <material>
          <include href="MaterialData/MaterialConst4340Steel.xml"/>
-         <constitutive_model type="hypoelastic_plastic">
-           <tolerance>1.0e-10</tolerance>
+         <constitutive_model type="elastic_plastic">
            <damage_cutoff>0.2</damage_cutoff>
            <include href="MaterialData/IsotropicElastic4340Steel.xml"/>
            <include href="MaterialData/VonMisesYield.xml"/>

@@ -12,7 +12,7 @@
 /**
  *  @class  PropertyModelFactory
  *  @author Jeremy Thornock
- *  @date   Aug 2010
+ *  @date   Aug 2011
  *  @brief  Factory for property model generation
  *
  *  Allows easy addition of property models.

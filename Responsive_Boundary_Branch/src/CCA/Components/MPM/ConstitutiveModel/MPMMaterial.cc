@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -128,6 +128,7 @@ MPMMaterial::standardInitialization(ProblemSpecP& ps, MPMFlags* flags)
   geom_obj_data.push_back(GeometryObject::DataItem("res",        GeometryObject::IntVector));
   geom_obj_data.push_back(GeometryObject::DataItem("temperature",GeometryObject::Double));
   geom_obj_data.push_back(GeometryObject::DataItem("velocity",   GeometryObject::Vector));
+  geom_obj_data.push_back(GeometryObject::DataItem("volumeFraction",   GeometryObject::Double));
 
   if(flags->d_with_color){
     geom_obj_data.push_back(GeometryObject::DataItem("color", GeometryObject::Double));
@@ -315,6 +316,7 @@ void MPMMaterial::initializeCCVariables(CCVariable<double>& rho_micro,
                                   CCVariable<double>& rho_CC,
                                   CCVariable<double>& temp,
                                   CCVariable<Vector>& vel_CC,
+                                  CCVariable<double>& vol_frac_CC,
                                   int numMatls,
                                   const Patch* patch)
 { 
@@ -324,6 +326,7 @@ void MPMMaterial::initializeCCVariables(CCVariable<double>& rho_micro,
   rho_micro.initialize(-9.0);
   rho_CC.initialize(-9.0);
   temp.initialize(-9.0);
+  vol_frac_CC.initialize(-9.0);
   Vector dx = patch->dCell();
   
   for(int obj=0; obj<(int)d_geom_objs.size(); obj++){
@@ -359,7 +362,7 @@ void MPMMaterial::initializeCCVariables(CCVariable<double>& rho_micro,
   // For single materials with more than one object 
       if(numMatls == 1)  {
         if ( count > 0  && obj == 0) {
-         // vol_frac_CC[*iter]= 1.0;
+          vol_frac_CC[*iter]= 1.0;
           vel_CC[*iter]     = d_geom_objs[obj]->getInitialData_Vector("velocity");
           rho_micro[*iter]  = getInitialDensity();
           rho_CC[*iter]     = rho_micro[*iter] + d_TINY_RHO;
@@ -367,7 +370,7 @@ void MPMMaterial::initializeCCVariables(CCVariable<double>& rho_micro,
         }
 
         if (count > 0 && obj > 0) {
-         // vol_frac_CC[*iter]= 1.0;
+          vol_frac_CC[*iter]= 1.0;
           vel_CC[*iter]     = d_geom_objs[obj]->getInitialData_Vector("velocity");
           rho_micro[*iter]  = getInitialDensity();
           rho_CC[*iter]     = rho_micro[*iter] + d_TINY_RHO;
@@ -375,9 +378,20 @@ void MPMMaterial::initializeCCVariables(CCVariable<double>& rho_micro,
         } 
       }   
       if (numMatls > 1 ) {
-        double vol_frac_CC= count/totalppc;       
+        vol_frac_CC[*iter] = 0.0;
+        try {
+            if(d_geom_objs[obj]->getInitialData_double("volumeFraction") == -1.0)
+            {    
+                vol_frac_CC[*iter] = count/totalppc;
+            } else {
+                vol_frac_CC[*iter] = count/(totalppc)*d_geom_objs[obj]->getInitialData_double("volumeFraction");
+            }
+        } catch (...)
+        {
+          vol_frac_CC[*iter] = count/totalppc;      
+        }
         rho_micro[*iter]  = getInitialDensity();
-        rho_CC[*iter]     = rho_micro[*iter] * vol_frac_CC + d_TINY_RHO;
+        rho_CC[*iter]     = rho_micro[*iter] * vol_frac_CC[*iter] + d_TINY_RHO;
         temp[*iter]       = 300.0;         
         Point pd = patch->cellPosition(*iter);
         if((pd.x() > b1low.x() && pd.y() > b1low.y() && pd.z() > b1low.z()) &&
@@ -395,6 +409,7 @@ MPMMaterial::initializeDummyCCVariables(CCVariable<double>& rho_micro,
                                         CCVariable<double>& rho_CC,
                                         CCVariable<double>& temp,
                                         CCVariable<Vector>& vel_CC,
+                                        CCVariable<double>& vol_frac_CC,
                                         int ,
                                         const Patch* )
 { 
@@ -402,4 +417,5 @@ MPMMaterial::initializeDummyCCVariables(CCVariable<double>& rho_micro,
   rho_micro.initialize(d_density);
   rho_CC.initialize(d_TINY_RHO);
   temp.initialize(d_troom);
+  vol_frac_CC.initialize(1.0);
 }

@@ -32,7 +32,7 @@ NIGHTLYTESTS = [   ("massX",                 "massX.ups",                 1,  "L
                    ("TRWnoz",                "TRWnoz.ups",                1,  "Linux", ["exactComparison"]),   \
                    ("testConvertMPMICEAdd",  "testConvertMPMICEAdd.ups",  1,  "Linux", ["exactComparison"]),   \
                    ("advect_2L_MI",          "advect_2L_MI.ups",          1,  "Linux", ["exactComparison"]),   \
-                   ("explode2D_amr",         "explode2D_amr",             8,  "Linux", ["startFromCheckpoint"]),   \
+                   ("explode2D_amr",         "explode2D_amr.ups",         8,  "Linux", ["startFromCheckpoint"]),   \
                    ("advect",                "advect.ups",                1,  "Darwin", ["doesTestRun"]),  \
                    ("massX",                 "massX.ups",                 1,  "Darwin", ["doesTestRun"]),  \
                    ("guni2dRT",              "guni2dRT.ups",              4,  "Darwin", ["doesTestRun"]),  \

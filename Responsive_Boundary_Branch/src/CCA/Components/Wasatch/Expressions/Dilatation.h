@@ -7,6 +7,7 @@
 
 /**
  *  \class Dilatation
+ *  \ingroup Expressions
  *
  *  \brief calculates \f$\nabla\cdot\mathbf{u}$\f
  *

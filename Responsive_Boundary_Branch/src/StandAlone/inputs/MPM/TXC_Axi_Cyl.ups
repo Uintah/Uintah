@@ -137,6 +137,7 @@
              <axisymmetric_end>true</axisymmetric_end>
            </cylinder>
          </geom_object>
+         <res>                 [2,2,1]         </res>
          <load_curve>
            <id>3</id>
            <time_point>

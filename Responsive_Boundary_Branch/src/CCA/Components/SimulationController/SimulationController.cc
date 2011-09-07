@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -29,6 +29,7 @@ DEALINGS IN THE SOFTWARE.
 
 
 #include <sci_defs/malloc_defs.h>
+#include <sci_defs/papi_defs.h> // for PAPI flop counters
 
 #include <CCA/Components/SimulationController/SimulationController.h>
 #include <Core/Parallel/ProcessorGroup.h>
@@ -111,6 +112,34 @@ namespace Uintah {
     d_sim = 0;
 
     d_grid_ps=d_ups->findBlock("Grid");
+#ifdef USE_PAPI_COUNTERS
+    event_set = PAPI_NULL;
+
+    int retp = PAPI_library_init(PAPI_VER_CURRENT);
+    if (retp != PAPI_VER_CURRENT)
+      if (d_myworld->myrank() == 0)
+        cout<< "WARNNING: Cannot init PAPI counter! Error code= " << retp << endl;
+    retp=PAPI_thread_init(pthread_self);
+    if (retp != PAPI_OK)
+      if (d_myworld->myrank() == 0)
+        cout<< "WARNNING: Cannot init thread PAPI counter! Error code= " << retp << endl;
+    retp = PAPI_create_eventset(&event_set);
+    if ( retp != PAPI_OK) 
+      if (d_myworld->myrank() == 0)
+        cout<< "WARNNING: Cannot create PAPI counter! Error code= " << retp << endl;
+    retp = PAPI_query_event (PAPI_FP_OPS);
+    if ( retp != PAPI_OK) 
+      if (d_myworld->myrank() == 0)
+        cout<< "WARNNING: Cannot query PAPI counter! Error code= " << retp << endl;
+    retp = PAPI_add_event(event_set, PAPI_FP_OPS);
+    if ( retp != PAPI_OK) 
+      if (d_myworld->myrank() == 0)
+        cout<< "WARNNING: Cannot add PAPI counter! Error code= " << retp << endl;
+    retp = PAPI_start(event_set);
+    if ( retp != PAPI_OK) 
+      if (d_myworld->myrank() == 0)
+        cout<< "WARNNING: Cannot start PAPI counter! Error code= " << retp << endl;
+#endif
   }
 
   SimulationController::~SimulationController()
@@ -516,6 +545,22 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
     }
   }
 
+ 
+#ifdef USE_PAPI_COUNTERS
+  double flop;
+  int retp=PAPI_read(event_set, event_values);
+  //cout << d_myworld->myrank() << "PAPI Counter:::: " << event_values[0] <<endl;
+  if (retp != PAPI_OK) {
+    if (d_myworld->myrank() == 0) 
+      cout<< "WARNNING: Cannot read PAPI counter! Error value = " << retp << endl;
+    flop = 0;
+  } else flop = (double) event_values[0]  ;
+  retp = PAPI_reset(event_set);
+  if (retp != PAPI_OK) {
+    if (d_myworld->myrank() == 0) 
+      cout<< "WARNNING: Cannot reset PAPI counter! Error value = " << retp << endl;
+  }
+#endif
 
   // with the sum reduces, use double, since with memory it is possible that
   // it will overflow
@@ -555,6 +600,10 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
   toReduceMax.push_back(double_int(d_sharedState->taskWaitCommTime,rank));
   toReduce.push_back(d_sharedState->outputTime);
   toReduceMax.push_back(double_int(d_sharedState->outputTime,rank));
+#ifdef USE_PAPI_COUNTERS
+  toReduce.push_back(flop);
+  toReduceMax.push_back(double_int(flop,rank));
+#endif
   statLabels.push_back("Mem usage");
   statLabels.push_back("Recompile");
   statLabels.push_back("Regridding");
@@ -566,6 +615,9 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
   statLabels.push_back("TaskLocalComm");
   statLabels.push_back("TaskWaitCommTime");
   statLabels.push_back("Output");
+#ifdef USE_PAPI_COUNTERS
+  statLabels.push_back("FLOP");
+#endif
 
   if (highwater) // add highwater to the end so we know where everything else is (as highwater is conditional)
     toReduce.push_back(highwater);

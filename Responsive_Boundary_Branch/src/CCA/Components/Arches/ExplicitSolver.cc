@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -150,8 +150,6 @@ ExplicitSolver::problemSetup(const ProblemSpecP& params)
       d_probePoints.push_back(prbPoint);
     }
   }
-  d_turbinlet = d_boundaryCondition->getturbinlet();
-
   d_pressSolver = scinew PressureSolver(d_lab, d_MAlab,
                                           d_boundaryCondition,
                                           d_physicalConsts, d_myworld);

@@ -280,9 +280,9 @@ apply_to_field( const PhiVolT &src, PhiFaceT &dest ) const
   
   //
   // now for the plus side (i.e. x+, y+, z+).
-  destFld = dest.begin() + bndPlusStrideCoef_*stride_;
-  advVel = advectiveVelocity_->begin() + bndPlusStrideCoef_*stride_;
+  destFld       = dest.begin() + bndPlusStrideCoef_*stride_;
   srcFieldMinus = src.begin() + (bndPlusStrideCoef_-1)*stride_;
+  advVel  = advectiveVelocity_->begin() + bndPlusStrideCoef_*stride_;
   // Source field on the minus, minus side of a face
   typename PhiVolT::const_iterator srcFieldMinusMinus = src.begin() + (bndPlusStrideCoef_ - 2)*stride_;
   srcFieldPlus = src.begin() + bndPlusStrideCoef_*stride_;
@@ -331,13 +331,12 @@ apply_to_field( const PhiVolT &src, PhiFaceT &dest ) const
   
   //
   // now for the internal faces
-  srcFieldMinus = src.begin() + stride_;
+  srcFieldMinus      = src.begin() + stride_;
   srcFieldMinusMinus = src.begin();
-  srcFieldPlus = src.begin() + stride_ + stride_;
-  srcFieldPlusPlus = src.begin() + stride_ + stride_ + stride_;
+  srcFieldPlus       = src.begin() + stride_ + stride_;
+  srcFieldPlusPlus   = src.begin() + stride_ + stride_ + stride_;
+  destFld            = dest.begin() + stride_ + stride_;
   advVel = advectiveVelocity_->begin() + stride_ + stride_;
-  destFld = dest.begin() + stride_ + stride_;
-  
   for (size_t k=1; k<=faceCount_[2]; k++) { // count zCount times
     
     for (size_t j=1; j<=faceCount_[1]; j++) { // count yCount times

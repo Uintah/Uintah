@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -30,6 +30,7 @@ DEALINGS IN THE SOFTWARE.
 
 #include <CCA/Components/SwitchingCriteria/TimestepNumber.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Grid/DbgOutput.h>
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <CCA/Ports/Scheduler.h>
@@ -40,13 +41,12 @@ DEALINGS IN THE SOFTWARE.
 using namespace std;
 
 using namespace Uintah;
+static DebugStream dbg("SWITCHER", false);
 
 TimestepNumber::TimestepNumber(ProblemSpecP& ps)
 {
   ps->require("timestep",d_timestep);
-  if (Parallel::getMPIRank() == 0) {
-    cout << "Switching criteria: \tTimestep Number: switch components on timestep " << d_timestep << endl;
-  }
+  proc0cout << "Switching criteria: \tTimestep Number: switch components on timestep " << d_timestep << endl;
 }
 
 TimestepNumber::~TimestepNumber()
@@ -62,6 +62,8 @@ void TimestepNumber::problemSetup(const ProblemSpecP& ps,
 
 void TimestepNumber::scheduleSwitchTest(const LevelP& level, SchedulerP& sched)
 {
+  printSchedule(level,dbg,"Switchinng Criteria:TimestepNumber::scheduleSwitchTest");
+  
   Task* t = scinew Task("switchTest", this, &TimestepNumber::switchTest);
 
   t->computes(d_sharedState->get_switch_label());
@@ -74,6 +76,7 @@ void TimestepNumber::switchTest(const ProcessorGroup* group,
                                 DataWarehouse* old_dw,
                                 DataWarehouse* new_dw)
 {
+  dbg << " Doing Switchinng Criteria:TimestepNumber::switchTest" <<  endl;
   double sw = 0;
 
   unsigned int time_step = d_sharedState->getCurrentTopLevelTimeStep();

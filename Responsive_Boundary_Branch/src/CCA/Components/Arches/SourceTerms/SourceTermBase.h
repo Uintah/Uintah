@@ -12,8 +12,11 @@
 #include <Core/Parallel/Parallel.h>
 #include <Core/Exceptions/InvalidValue.h>
 #include <CCA/Ports/Scheduler.h>
+#include <Core/Grid/Box.h>
 #include <CCA/Components/Arches/ArchesMaterial.h>
 #include <typeinfo>
+#include <Core/GeometryPiece/GeometryPiece.h>
+#include <Core/GeometryPiece/GeometryPieceFactory.h>
 
 //===============================================================
 

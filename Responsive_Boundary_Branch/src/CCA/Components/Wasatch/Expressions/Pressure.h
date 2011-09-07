@@ -25,12 +25,14 @@ namespace Uintah{
 namespace Wasatch{
 
 /**
- *  \class Pressure
+ *  \class 	Pressure
+ *  \ingroup 	Expressions
+ *  \ingroup	WasatchCore
+ *  \author 	James C. Sutherland
+ *  \author 	Tony Saad
+ *  \date 	January, 2011
  *
  *  \brief Expression to form and solve the poisson system for pressure.
- *  \author James C. Sutherland
- *  \author Tony Saad
- *  \date January, 2011
  *
  *  NOTE: this expression BREAKS WITH CONVENTION!  Notably, it has
  *  uintah tenticles that reach into it, and mixes SpatialOps and
@@ -121,7 +123,8 @@ public:
    */
   void schedule_solver( const Uintah::LevelP& level,
                         Uintah::SchedulerP sched,
-                        const Uintah::MaterialSet* const materials );
+                        const Uintah::MaterialSet* const materials,
+                        int RKStage);
 
   /**
    *  \brief allows Wasatch::TaskInterface to reach in and provide
@@ -130,7 +133,8 @@ public:
    */
   void declare_uintah_vars( Uintah::Task& task,
                             const Uintah::PatchSubset* const patches,
-                            const Uintah::MaterialSubset* const materials );
+                            const Uintah::MaterialSubset* const materials,
+                           int RKStage);
 
   /**
    *  \brief allows Wasatch::TaskInterface to reach in and provide
@@ -146,7 +150,8 @@ public:
    */
   void bind_uintah_vars( Uintah::DataWarehouse* const dw,
                          const Uintah::Patch* const patch,
-                         const int material );
+                         const int material,
+                        int RKStage);
   /**
    * \brief Calculates pressure coefficient matrix.
    */

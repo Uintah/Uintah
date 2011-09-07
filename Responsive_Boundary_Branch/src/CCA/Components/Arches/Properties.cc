@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -95,6 +95,7 @@ Properties::Properties(const ArchesLabel* label,
   d_sulfur_chem     = false;
   d_soot_precursors = false;
   d_tabulated_soot  = false;
+  d_newEnthalpySolver = false; 
   d_bc = 0;
 #ifdef PetscFilter
   d_filter = 0;
@@ -268,36 +269,49 @@ Properties::problemSetup(const ProblemSpecP& params)
                    "for PicardSolver or ExplicitSolver" << endl;
       throw ProblemSetupException(exception.str(), __FILE__, __LINE__);
     }
-    db_enthalpy_solver = db_enthalpy_solver->findBlock("EnthalpySolver");
 
-    if (db_enthalpy_solver->findBlock("DORadiationModel"))
-      d_radiationCalc = true; 
-    else 
-      proc0cout << "ATTENTION: NO WORKING RADIATION MODEL TURNED ON!" << endl; 
-
-    if (d_radiationCalc) {
+    if ( db_enthalpy_solver->findBlock( "EnthalpySolver" ) ){ 
+      db_enthalpy_solver = db_enthalpy_solver->findBlock("EnthalpySolver");
 
       if (db_enthalpy_solver->findBlock("DORadiationModel"))
-        d_DORadiationCalc = true; 
+        d_radiationCalc = true; 
+      else 
+        proc0cout << "ATTENTION: NO WORKING RADIATION MODEL TURNED ON!" << endl; 
 
-      d_opl = 0.0;
+      if (d_radiationCalc) {
 
-      if (!d_DORadiationCalc)
-        db->require("optically_thin_model_opl",d_opl);
-      if (d_tabulated_soot) {
-        db->getWithDefault("empirical_soot",d_empirical_soot,false);
-        if (d_empirical_soot)
-          throw InvalidValue("Table has soot, do not use empirical soot model!",
-                             __FILE__, __LINE__);
-      }
-      else {
-        db->getWithDefault("empirical_soot",d_empirical_soot,true);
-        if (d_empirical_soot) 
-          db->getWithDefault("soot_factor", d_sootFactor, 1.0);
+        if (db_enthalpy_solver->findBlock("DORadiationModel"))
+          d_DORadiationCalc = true; 
 
+        d_opl = 0.0;
+
+        if (!d_DORadiationCalc)
+          db->require("optically_thin_model_opl",d_opl);
+        if (d_tabulated_soot) {
+          db->getWithDefault("empirical_soot",d_empirical_soot,false);
+          if (d_empirical_soot)
+            throw InvalidValue("Table has soot, do not use empirical soot model!",
+                               __FILE__, __LINE__);
+        }
+        else {
+          db->getWithDefault("empirical_soot",d_empirical_soot,true);
+          if (d_empirical_soot) 
+            db->getWithDefault("soot_factor", d_sootFactor, 1.0);
+
+        }
       }
     }
-  }
+  } else { 
+
+    // allowance for other enthalpy solver
+    ProblemSpecP params_non_constant = params;
+    const ProblemSpecP params_root = params_non_constant->getRootNode();
+    if ( params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ExplicitSolver")->findBlock("newEnthalpySolver") ){ 
+
+      d_newEnthalpySolver = true; 
+
+    } 
+  } 
 }
 
 //****************************************************************************
@@ -665,7 +679,6 @@ Properties::reComputeProps(const ProcessorGroup* pc,
     CCVariable<double> poolST;  //WME
     CCVariable<double> c7h16;   //WME
     CCVariable<double> ch3oh;   //WME
-
 
     bool foundExtrascalar = false;
     bool usemeforden = false;
@@ -2238,7 +2251,11 @@ Properties::sched_reComputeProps_new( const LevelP& level,
                                       const bool modify_ref_den )
 {
   // this method is temporary while we get rid of properties.cc 
-  d_mixingRxnTable->sched_computeHeatLoss( level, sched, initialize, d_calcEnthalpy );
+  if ( ! d_newEnthalpySolver ) { 
+    d_mixingRxnTable->sched_computeHeatLoss( level, sched, initialize, d_calcEnthalpy );
+  } else { 
+    d_mixingRxnTable->sched_computeHeatLoss( level, sched, initialize, d_newEnthalpySolver );
+  } 
 
   d_mixingRxnTable->sched_getState( level, sched, time_labels, initialize, d_calcEnthalpy, modify_ref_den ); 
 }

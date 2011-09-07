@@ -10,23 +10,35 @@
 namespace Wasatch{
 
 /**
- *  \class SetCurrentTime
+ *  \class 	SetCurrentTime
+ *  \ingroup 	Expressions
+ *  \author 	James C. Sutherland
+ *
+ *  \brief Provides a simple expression to set the current simulation
+ *         time.  May be needed for time-varying BCs, etc.
  */
 class SetCurrentTime
  : public Expr::Expression<double>
 {
   const Uintah::SimulationStateP state_;
+  int RKStage_;
+  double deltat_;
 
   SetCurrentTime( const Uintah::SimulationStateP sharedState,
+                  const int RKStage,
                   const Expr::ExpressionID& id,
                   const Expr::ExpressionRegistry& reg );
 
 public:
+  int RKStage;
+  
   class Builder : public Expr::ExpressionBuilder
   {
     const Uintah::SimulationStateP state_;
+    const int RKStage_;
+    
   public:
-    Builder( const Uintah::SimulationStateP sharedState );
+    Builder( const Uintah::SimulationStateP sharedState, const int RKStage );
     Expr::ExpressionBase* build( const Expr::ExpressionID& id,
                                  const Expr::ExpressionRegistry& reg ) const;
   };
@@ -40,7 +52,10 @@ public:
   void bind_operators( const SpatialOps::OperatorDatabase& opDB ){}
 
   void evaluate();
-
+  
+  void set_integrator_stage( const int RKStage ){RKStage_ = RKStage;}
+  
+  void set_deltat( const double deltat ) {deltat_ = deltat;}
 };
 
 
