@@ -312,16 +312,17 @@ int main(int argc, char *argv[])
 
     //__________________________________
     //  find the number of intensity levels within the unique grains threshold
-    pixel* pb = pimg;
-
     if(hasUniqueGrains){
       int maxI = 0;
       int minI =INT_MAX;
-
-      for (int k=0; k<=res[2]; k++) {
-        for (int j=0; j<=res[1]; j++) {
-          for (int i=0; i<=res[0]; i++, pb++) {
-            int pixelValue = *pb;
+      unsigned int n = 0;
+      for (int k=0; k<res[2]; k++) {
+        for (int j=0; j<res[1]; j++) {
+          for (int i=0; i<res[0]; i++, n++) {
+            
+            ASSERT(n<nPixels);
+            
+            int pixelValue = pimg[n];
             if ((pixelValue >= UG_threshold[0]) && (pixelValue <= UG_threshold[1])) {
               maxI = max(maxI, pixelValue);
               minI = min(minI, pixelValue);
@@ -350,7 +351,7 @@ int main(int argc, char *argv[])
     //__________________________________
     // Now add the mappings for the individual materials
     // These can overwrite the unique grains mapping
-    for (int m=0; m<intMatl_Vec.size(); m++) {
+    for (unsigned int m=0; m<intMatl_Vec.size(); m++) {
 
       intensityMatlMapping data = intMatl_Vec[m];
 
@@ -375,8 +376,6 @@ int main(int argc, char *argv[])
       ReadAuxFile(auxFile,intensityScalar_D_map);
       d_auxMap = true;
     }
-
-cout << " intensity " << 40 << " scalar: " << intensityScalar_D_map[40] << endl;
     //__________________________________
     // Parse the ups file for the grid specification
     // and voxel size
@@ -430,7 +429,6 @@ cout << " intensity " << 40 << " scalar: " << intensityScalar_D_map[40] << endl;
 
         map<int,vector<dataPoint*> > patch_dataPoints;
         Point pt;
-        pixel* pb = pimg;
 
         // first determine the number of points for each patch for this matl
         for (int p=0; p<nPatches; p++){
@@ -438,13 +436,14 @@ cout << " intensity " << 40 << " scalar: " << intensityScalar_D_map[40] << endl;
         }
 
         const Patch* curPatch;
-        int n = 0;
+        unsigned int n = 0;
 
         for (int k=0; k<res[2]; k++) {
           for (int j=0; j<res[1]; j++) {
-            for (int i=0; i<res[0]; i++, pb++, n++) {
-
-              int pixelValue = *pb;
+            for (int i=0; i<res[0]; i++, n++) {
+              ASSERT(n<nPixels);
+              
+              int pixelValue = pimg[n];
               bool isRightMatl = ( matl == intensityToMatl_map[pixelValue]);
 
               if ( isRightMatl ) {
@@ -543,7 +542,7 @@ cout << " intensity " << 40 << " scalar: " << intensityScalar_D_map[40] << endl;
             cout << " doing it the NEW way " << endl;
           vector<dataPoint*> dataPoints = patch_dataPoints[patchID];
           
-          for ( int i= 0; i != dataPoints.size(); i++ ){ 
+          for ( unsigned int i= 0; i != dataPoints.size(); i++ ){ 
             dataPoint* dp = dataPoints[i]; 
             double scalar;
             
