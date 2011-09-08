@@ -1116,30 +1116,43 @@ ClassicTableInterface::tableLookUp( std::vector<double> iv, int var_index)
   }
 
   double fmg=0.0, fpmg=0.0,s1=0.0,s2=0.0,var_value=0.0;
-  double dhl_lo=0.0, dhl_hi=0.0; 
+  double dhl_lo=0.0, dhl_hi=0.0;
   int nhl_lo=0, nhl_hi=0; 
 
   // compute index of iv3:
   if ( d_indepvarscount == 3 ){ 
-
-    for(int hl_index=0; hl_index < d_allIndepVarNum[2] - 1; hl_index++){
-
-      dhl_lo = i3[hl_index]   - iv[2];
-      dhl_hi = i3[hl_index+1] - iv[2];
-
-      if((dhl_lo*dhl_hi) == 0.0 && hl_index != 0){
-
-        nhl_lo=hl_index+1;
-        nhl_hi=nhl_lo;
-        break;
-
-      } else if( ( dhl_lo * dhl_hi ) <= 0.0) {
-
-        nhl_lo = hl_index;
-        nhl_hi = nhl_lo + 1;
-        break;
-      }
-    }
+	  
+	  int mid = 0;
+	  nhl_hi = d_allIndepVarNum[2] - 1;
+	  
+	  if (i3[nhl_hi] != iv[2] && i3[nhl_lo] != iv[2]) {
+		  while ((nhl_hi-nhl_lo)>1) {
+			  mid = (nhl_hi+nhl_lo)/2;
+			  if (i3[mid] > iv[2]) {
+				  nhl_hi = mid;
+			  } else if (i3[mid] < iv[2]) {
+				  nhl_lo = mid;
+			  } else {
+				  nhl_hi = mid;
+				  nhl_lo = mid;
+			  }
+		  }
+	  } else if (i3[nhl_lo] == iv[2]) {
+		  nhl_hi = 1;
+	  } else {
+		  nhl_lo = nhl_hi;
+	  } 
+	  
+	  dhl_lo = i3[nhl_hi-1] - iv[2];
+	  dhl_hi = i3[nhl_hi] - iv[2];
+	  
+	  if (iv[2] < i3[0]) {
+		  nhl_lo = 0;
+		  nhl_hi = 0;
+		  dhl_lo = i3[d_allIndepVarNum[2]-2] - iv[2];  
+		  dhl_hi = i3[d_allIndepVarNum[2]-1] - iv[2];
+	  }  
+	  
   } else {
 
     nhl_lo = 0; 
@@ -1149,86 +1162,102 @@ ClassicTableInterface::tableLookUp( std::vector<double> iv, int var_index)
 
   }
 
-
   // Main loop
-  for ( int m_index = nhl_lo; m_index <= nhl_hi; m_index++ ) { 
 
     int nx_lo=0, nx_hi=0;
-
+	  
     //Non-uniform iv1
     double df1=0.0, df2=0.0;
+	  
+	nx_hi = d_allIndepVarNum[0] - 1;  
+	int mid = 0;
+	  
+	if (i1[nhl_lo][nx_hi] != iv[0] && i1[nhl_lo][nx_lo] != iv[0]) {
+		while ((nx_hi-nx_lo)>1) {
+			mid = (nx_lo + nx_hi)/2;
+			if (i1[nhl_lo][mid] > iv[0]) {
+				nx_hi = mid;
+			} else if (i1[nhl_lo][mid] < iv[0]) {
+				nx_lo = mid;
+			} else {
+				nx_hi = mid;
+				nx_lo = mid;
+			}
+		}
+	} else if (i1[nhl_lo][nx_lo] == iv[0]) {
+		nx_hi = 1;
+	} else {
+		nx_lo = nx_hi;
+	} 
 
-    for ( int index=0; index < d_allIndepVarNum[0]-1; index++ ) {
-
-      df1 = i1[nhl_lo][index]   - iv[0];
-      df2 = i1[nhl_lo][index+1] - iv[0];
-
-      if((df1*df2) == 0.0 && index != 0){
-
-        nx_lo=index+1;
-        nx_hi=nx_lo;
-        break;
-
-      } else if((df1*df2) <= 0.0) {
-
-        nx_lo=index;
-        nx_hi=nx_lo+1;
-        break;
-
-      }
-    }
-
+	  df1 = i1[nhl_lo][nx_hi-1] - iv[0];
+	  df2 = i1[nhl_lo][nx_hi]-iv[0];
+	  
+	  if (iv[0] < i1[nhl_lo][0]) {
+		  nx_lo = 0;
+		  nx_hi = 0;
+		  df1 = i1[nhl_lo][d_allIndepVarNum[0]-2] - iv[0];
+		  df2 = i1[nhl_lo][d_allIndepVarNum[0]-1] - iv[0];
+	  } 
+	  
     // Supports non-uniform normalized variance lookup  
-    // Normalized variance
-    double g=0.0;
+
     //Index for variances
-    int k1=0,k2=0;
+    int k_lo = 0, k_hi=0;
     //Weighing factors for variance
     double dk1=0.0,dk2=0.0;
+	  
 
     if ( d_indepvarscount > 1 ) {  
+		
 
-      g = iv[1];
-      // Finding the table entry
-
-      for(int index=0; index < d_allIndepVarNum[1]-1; index++){
-
-        dk1 = i2[index]-g;
-        dk2 = i2[index+1]-g;
-
-      //cout << "dk2 = " << dk2 << endl;
-
-        if((dk1*dk2) == 0.0 && index != 0){
-
-          k1=index+1;
-          k2=k1;
-          break;
-
-        } else if ( (dk1*dk2) <= 0.0){
-
-          k1=index;
-          k2=k1+1;
-          break;
-
-        }
-      }
+		k_hi = d_allIndepVarNum[1] -1;
+		
+		if (i2[k_lo] != iv[1] && i2[k_hi] != iv[1]) {
+			while ((k_hi - k_lo)>1) {
+				mid = (k_lo + k_hi)/2;
+				if (i2[mid] > iv[1]) {
+					k_hi = mid;
+				} else if (i2[mid] < iv[1]) {
+					k_lo = mid;
+				} else {
+					k_hi = mid;
+					k_lo = mid;
+				}
+			}
+		} else if (i2[k_lo] == iv[1]) {
+			k_hi = 1;
+		} else {
+			k_lo = k_hi;
+		} 
+		
+		dk1 = i2[k_hi-1] - iv[1];
+		dk2 = i2[k_hi] - iv[1];
+		
+		if (iv[1] < i2[0]) {
+			k_lo = 0;
+			k_hi = 0;
+			dk1 = i2[d_allIndepVarNum[1]-2] - iv[1];
+			dk2 = i2[d_allIndepVarNum[1]-1] - iv[1];
+		}
+		
     } else { 
 
       // Set the values to get the first entry
-      g=0.0;
-      k1=0;
-      k2=0;
+      k_lo=0;
+      k_hi=0;
       dk1=0.0;
       dk2=1.0;
 
     }
+	for ( int m_index = nhl_lo; m_index <= nhl_hi; m_index++ ) {
 
     //Interpolating the values
-    fmg = ( dk1 * table[var_index][m_index*d_allIndepVarNum[0] * d_allIndepVarNum[1] + k2*d_allIndepVarNum[0] + nx_lo] - 
-        dk2 * table[var_index][m_index*d_allIndepVarNum[0] * d_allIndepVarNum[1] + k1*d_allIndepVarNum[0] + nx_lo])/(dk1-dk2);
+    fmg = ( dk1 * table[var_index][m_index*d_allIndepVarNum[0] * d_allIndepVarNum[1] + k_hi*d_allIndepVarNum[0] + nx_lo] - 
+        dk2 * table[var_index][m_index*d_allIndepVarNum[0] * d_allIndepVarNum[1] + k_lo*d_allIndepVarNum[0] + nx_lo])/(dk1-dk2);
 
-    fpmg = ( dk1 * table[var_index][m_index*d_allIndepVarNum[0] * d_allIndepVarNum[1] + k2*d_allIndepVarNum[0] + nx_hi] - 
-        dk2 * table[var_index][m_index*d_allIndepVarNum[0] * d_allIndepVarNum[1] + k1*d_allIndepVarNum[0] + nx_hi])/(dk1-dk2);
+    fpmg = ( dk1 * table[var_index][m_index*d_allIndepVarNum[0] * d_allIndepVarNum[1] + k_hi*d_allIndepVarNum[0] + nx_hi] - 
+        dk2 * table[var_index][m_index*d_allIndepVarNum[0] * d_allIndepVarNum[1] + k_lo*d_allIndepVarNum[0] + nx_hi])/(dk1-dk2);
 
     if(nhl_lo==nhl_hi){
 
