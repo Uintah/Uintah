@@ -53,8 +53,7 @@ namespace Wasatch{
                                const std::string momName,
                                Expr::ExpressionFactory& factory,
                                Uintah::ProblemSpecP params,
-                               Uintah::SolverInterface& linSolver,
-                               Uintah::SimulationStateP sharedState);
+                               Uintah::SolverInterface& linSolver);
 
     ~MomentumTransportEquation();
 

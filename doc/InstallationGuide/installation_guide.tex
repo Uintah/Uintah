@@ -45,7 +45,7 @@
   Carson Brownlee,
   Tony Saad}
 
-\date{Version 1.3}
+\date{Version 1.4}
 
 \maketitle
 
@@ -123,30 +123,33 @@ Required libraries:
 \item c++
 \item fortran
 \item subversion
-\item ccmake
+\item cmake
 
 \end{itemize}
 
 Useful libraries:
 \begin{itemize}
 \item Hypre v2.7.0b (\url{https://computation.llnl.gov/casc/hypre/software.html})
-\item PETSc v3.0 (\url{http://www.mcs.anl.gov/petsc/petsc-as/download/index.html})
+\item PETSc v3.1 (\url{http://www.mcs.anl.gov/petsc/petsc-as/download/index.html})
 \end{itemize}
 
-Note, we suggest using Hypre v2.7.0b and PETSc v3.1-p8.  (Jun, 2011)
+Note, we suggest using Hypre v2.7.0b and PETSc v3.1-p8.  (Sept, 2011)
 
 The Wasatch component requires the following:
 \begin{itemize}
   \item git
-  \item boost-1.46
+  \item boost-1.44 or higher
   \item cmake 2.8 or above
 \end{itemize}
 \section{OS Version Dependencies}
 
-\subsection{Debian Dependencies}
+\subsection{Debian \& Ubuntu Dependencies}
 \label{sec:debian_dependencies}
-The \textbf{Gnu/Debian} OS \url{http://www.debian.org} offers the vast majority of libraries necessary for
-installing \textbf{Uintah} with the exception of VisIt and Teem.
+The \textbf{Gnu/Debian} OS \url{http://www.debian.org} and
+\textbf{Ubuntu} OS \url{http://www.ubuntu.org} offer the vast majority
+of libraries necessary for installing \textbf{Uintah} with the
+exception of VisIt and Teem.  Either one of these distributions are
+the recommended OS to install.
 
 Installing the following libraries will ensure that all dependencies
 required for \textbf{Uintah} are satisfied: 
@@ -154,21 +157,21 @@ required for \textbf{Uintah} are satisfied:
 \begin{verbatim} 
 sudo aptitude install subversion libhypre-dev petsc-dev \ 
 libxml2-dev zlib1g-dev liblapack-dev cmake libglew1.5-dev \
-libglui-dev libxmu-dev
+libglui-dev libxmu-dev g++ gfortran
 \end{verbatim}
 
 \noindent Optional: Additional libraries needed for the Wasatch component:
 \begin{verbatim}
-  aptitude install git-core
+  aptitude install git
 \end{verbatim}  
- \hspace{0.125in}Lenny:
+ \hspace{0.125in} \textbf{Lenny}:
 \begin{verbatim}
   aptitude install cmake > 2.8 (from squeeze)
   download boost-1.46 from www.boost.org
   bootstrap.sh --prefix=path/to/installation/prefix
   bjam threading=single install
 \end{verbatim}
-\hspace{0.125in}Squeeze:
+\hspace{0.125in} \textbf{Squeeze}:
 \begin{verbatim}
   aptitude install cmake > 2.8 (from squeeze)
   
@@ -205,63 +208,30 @@ followed by installation of \textbf{Uintah}.
 \end{verbatim}
 See: \url{http://wiki.debian.org/NvidiaGraphicsDrivers#Libraries} for additional details
 
-\subsection{Fedora Core 9 Dependencies}
+\subsection{Fedora Core  Dependencies}
 
-\textbf{Fedora Core 9} \url{http://fedoraproject.org/} offers all the
-dependencies except for PETSc and hypre.  Install the following
+\textbf{Fedora Core} \url{http://fedoraproject.org/} offers all the
+dependencies except for PETSc and HYPRE.  Install the following
 libraries:
 \begin{verbatim}
 sudo yum install openmpi-devel openmpi-libs lapack-devel \
 gcc-gfortran blas-devel gcc-c++ libxml2-devel subversion \ 
-make tar diffutils
-\end{verbatim}
-
-\subsubsection{MPI issues} 
-\label{sec:mpi}
-
-The OpenMPI library that is installed with \textbf{Fedora Core 9}
-needs to have a 'helper' directory set up with symbolic links assigned
-so that during the \emph{configure} of \textbf{Uintah} can find the
-location of specific include files and shared libraries.
-
-Execute the following as root:
-
-\begin{Verbatim}
-mkdir /usr/local/openmpi
-cd /usr/local/openmpi
-ln -s /usr/include/openmpi/1.2.4-gcc include
-ln -s /usr/lib64/openmpi/1.2.4-gcc lib
-\end{Verbatim}
-
-In the event that soft linking the libraries does not work, it may be
-required to actually copy the shared library to a suitable location
-and then performing the soft linking as in:
-
-\begin{Verbatim}
-cp /full/path/to/openmpi/lib/libmpi.so.0.0.0 .
-ln -s libmpi.so.0.0.0 libmpi.so
-\end{Verbatim}
+make tar diffutils libX11-devel libXext-devel patch wget \
+mesa-libGL-devel mesa-libGLU-devel libXt-devel 
+\end{verbatim} 
 
 
-\subsection{CentOS 5 Dependencies}
+\subsection{CentOS  Dependencies}
 
-\textbf{CentOS 5} \url{http://www.centos.org/} is similar to \textbf{Fedora
-Core 9} however, it does not provide an OpenMpi rpm.  A src.rpm can be
-downloaded from \url{http://www.open-mpi.org:80/software/ompi/v1.3/}
-and installed via rpmbuild
+\textbf{CentOS} \url{http://www.centos.org/} is similar to \textbf{Fedora
+Core} 
 
-\begin{Verbatim}
-rpmbuild --rebuild --define 'dist .centos5' openmpi-1.3.1-1.src.rpm
-rpm -i openmpi-1.3.1-1.*.rpm
-\end{Verbatim}
-The location of the rpm is likely to be found in
-/usr/src/redhat/RPMS/ARCH where ARCH is either i386 or x86\_64.
-
-Once MPI has been built, the other libraries can be installed:
 \begin{verbatim}
-sudo yum install lapack-devel gcc-gfortran blas-devel gcc-c++ \
-libxml2-devel subversion make tar diffutils
-\end{verbatim}
+sudo yum install openmpi-devel openmpi-libs lapack-devel \
+gcc-gfortran blas-devel gcc-c++ libxml2-devel subversion \ 
+make tar diffutils libX11-devel libXext-devel patch wget \
+mesa-libGL-devel mesa-libGLU-devel libXt-devel 
+\end{verbatim} 
 
 
 \section{PETSc Installation}
@@ -270,11 +240,11 @@ PETSc can be installed by executing the following simplified
 instructions.  Please refer to the PETSc website for comprehensive
 installation instructions if you encounter any difficulties.
 
-Download petsc-3.0.0 from
+Download petsc-v3.1-p8 from
 \url{http://www.mcs.anl.gov/petsc/petsc-as/download/index.html}
 
 The following configure script assumes the location of MPI is in
-/usr/local/openmpi using the Fedora Core 9 OS.  For other OS
+/usr/local/openmpi using the Fedora Core OS.  For other OS
 distributions, the location of the MPI libraries may be found
 automatically.
 
