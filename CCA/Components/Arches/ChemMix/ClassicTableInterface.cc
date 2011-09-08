@@ -1118,40 +1118,40 @@ ClassicTableInterface::tableLookUp( std::vector<double> iv, int var_index)
   double fmg=0.0, fpmg=0.0,s1=0.0,s2=0.0,var_value=0.0;
   double dhl_lo=0.0, dhl_hi=0.0;
   int nhl_lo=0, nhl_hi=0; 
-
+  
   // compute index of iv3:
   if ( d_indepvarscount == 3 ){ 
 	  
-	  int mid = 0;
-	  nhl_hi = d_allIndepVarNum[2] - 1;
+    int mid = 0;
+    nhl_hi = d_allIndepVarNum[2] - 1;
 	  
-	  if (i3[nhl_hi] != iv[2] && i3[nhl_lo] != iv[2]) {
-		  while ((nhl_hi-nhl_lo)>1) {
-			  mid = (nhl_hi+nhl_lo)/2;
-			  if (i3[mid] > iv[2]) {
-				  nhl_hi = mid;
-			  } else if (i3[mid] < iv[2]) {
-				  nhl_lo = mid;
-			  } else {
-				  nhl_hi = mid;
-				  nhl_lo = mid;
-			  }
-		  }
-	  } else if (i3[nhl_lo] == iv[2]) {
-		  nhl_hi = 1;
-	  } else {
-		  nhl_lo = nhl_hi;
-	  } 
-	  
-	  dhl_lo = i3[nhl_hi-1] - iv[2];
-	  dhl_hi = i3[nhl_hi] - iv[2];
-	  
-	  if (iv[2] < i3[0]) {
-		  nhl_lo = 0;
-		  nhl_hi = 0;
-		  dhl_lo = i3[d_allIndepVarNum[2]-2] - iv[2];  
-		  dhl_hi = i3[d_allIndepVarNum[2]-1] - iv[2];
-	  }  
+    if (i3[nhl_hi] != iv[2] && i3[nhl_lo] != iv[2]) {
+      while ((nhl_hi-nhl_lo)>1) {
+        mid = (nhl_hi+nhl_lo)/2;
+        if (i3[mid] > iv[2]) {
+          nhl_hi = mid;
+        } else if (i3[mid] < iv[2]) {
+          nhl_lo = mid;
+        } else {
+          nhl_hi = mid;
+          nhl_lo = mid;
+        }
+      }
+    } else if (i3[nhl_lo] == iv[2]) {
+      nhl_hi = 1;
+    } else {
+      nhl_lo = nhl_hi;
+    } 
+
+    dhl_lo = i3[nhl_hi-1] - iv[2];
+    dhl_hi = i3[nhl_hi] - iv[2];
+
+    if (iv[2] < i3[0]) {
+      nhl_lo = 0;
+      nhl_hi = 0;
+      dhl_lo = i3[d_allIndepVarNum[2]-2] - iv[2];  
+      dhl_hi = i3[d_allIndepVarNum[2]-1] - iv[2];
+    }  
 	  
   } else {
 
@@ -1162,95 +1162,91 @@ ClassicTableInterface::tableLookUp( std::vector<double> iv, int var_index)
 
   }
 
-  // Main loop
+  
 
-    int nx_lo=0, nx_hi=0;
+  int nx_lo=0, nx_hi=0;
 	  
-    //Non-uniform iv1
-    double df1=0.0, df2=0.0;
+  //Non-uniform iv1
+  double df1=0.0, df2=0.0;
 	  
-	nx_hi = d_allIndepVarNum[0] - 1;  
-	int mid = 0;
+  nx_hi = d_allIndepVarNum[0] - 1;  
+  int mid = 0;
 	  
-	if (i1[nhl_lo][nx_hi] != iv[0] && i1[nhl_lo][nx_lo] != iv[0]) {
-		while ((nx_hi-nx_lo)>1) {
-			mid = (nx_lo + nx_hi)/2;
-			if (i1[nhl_lo][mid] > iv[0]) {
-				nx_hi = mid;
-			} else if (i1[nhl_lo][mid] < iv[0]) {
-				nx_lo = mid;
-			} else {
-				nx_hi = mid;
-				nx_lo = mid;
-			}
-		}
-	} else if (i1[nhl_lo][nx_lo] == iv[0]) {
-		nx_hi = 1;
-	} else {
-		nx_lo = nx_hi;
-	} 
-
-	  df1 = i1[nhl_lo][nx_hi-1] - iv[0];
-	  df2 = i1[nhl_lo][nx_hi]-iv[0];
-	  
-	  if (iv[0] < i1[nhl_lo][0]) {
-		  nx_lo = 0;
-		  nx_hi = 0;
-		  df1 = i1[nhl_lo][d_allIndepVarNum[0]-2] - iv[0];
-		  df2 = i1[nhl_lo][d_allIndepVarNum[0]-1] - iv[0];
-	  } 
-	  
-    // Supports non-uniform normalized variance lookup  
-
-    //Index for variances
-    int k_lo = 0, k_hi=0;
-    //Weighing factors for variance
-    double dk1=0.0,dk2=0.0;
-	  
-
-    if ( d_indepvarscount > 1 ) {  
-		
-
-		k_hi = d_allIndepVarNum[1] -1;
-		
-		if (i2[k_lo] != iv[1] && i2[k_hi] != iv[1]) {
-			while ((k_hi - k_lo)>1) {
-				mid = (k_lo + k_hi)/2;
-				if (i2[mid] > iv[1]) {
-					k_hi = mid;
-				} else if (i2[mid] < iv[1]) {
-					k_lo = mid;
-				} else {
-					k_hi = mid;
-					k_lo = mid;
-				}
-			}
-		} else if (i2[k_lo] == iv[1]) {
-			k_hi = 1;
-		} else {
-			k_lo = k_hi;
-		} 
-		
-		dk1 = i2[k_hi-1] - iv[1];
-		dk2 = i2[k_hi] - iv[1];
-		
-		if (iv[1] < i2[0]) {
-			k_lo = 0;
-			k_hi = 0;
-			dk1 = i2[d_allIndepVarNum[1]-2] - iv[1];
-			dk2 = i2[d_allIndepVarNum[1]-1] - iv[1];
-		}
-		
-    } else { 
-
-      // Set the values to get the first entry
-      k_lo=0;
-      k_hi=0;
-      dk1=0.0;
-      dk2=1.0;
-
+  if (i1[nhl_lo][nx_hi] != iv[0] && i1[nhl_lo][nx_lo] != iv[0]) {
+    while ((nx_hi-nx_lo)>1) {
+      mid = (nx_lo + nx_hi)/2;
+      if (i1[nhl_lo][mid] > iv[0]) {
+        nx_hi = mid;
+      } else if (i1[nhl_lo][mid] < iv[0]) {
+        nx_lo = mid;
+      } else {
+        nx_hi = mid;
+        nx_lo = mid;
+      }
     }
-	for ( int m_index = nhl_lo; m_index <= nhl_hi; m_index++ ) {
+  } else if (i1[nhl_lo][nx_lo] == iv[0]) {
+    nx_hi = 1;
+  } else {
+    nx_lo = nx_hi;
+  } 
+
+  df1 = i1[nhl_lo][nx_hi-1] - iv[0];
+  df2 = i1[nhl_lo][nx_hi]-iv[0];
+	  
+  if (iv[0] < i1[nhl_lo][0]) {
+    nx_lo = 0;
+    nx_hi = 0;
+    df1 = i1[nhl_lo][d_allIndepVarNum[0]-2] - iv[0];
+    df2 = i1[nhl_lo][d_allIndepVarNum[0]-1] - iv[0];
+  } 
+	  
+  // Supports non-uniform normalized variance lookup  
+
+  //Index for variances
+  int k_lo = 0, k_hi=0;
+  //Weighing factors for variance
+  double dk1=0.0,dk2=0.0;  
+
+  if ( d_indepvarscount > 1 ) {  
+    k_hi = d_allIndepVarNum[1] -1;
+    if (i2[k_lo] != iv[1] && i2[k_hi] != iv[1]) {
+	  while ((k_hi - k_lo)>1) {
+        mid = (k_lo + k_hi)/2;
+        if (i2[mid] > iv[1]) {
+        k_hi = mid;
+        } else if (i2[mid] < iv[1]) {
+          k_lo = mid;
+        } else {
+          k_hi = mid;
+          k_lo = mid;
+        }
+      }
+    } else if (i2[k_lo] == iv[1]) {
+      k_hi = 1;
+    } else {
+      k_lo = k_hi;
+    } 
+		
+    dk1 = i2[k_hi-1] - iv[1];
+    dk2 = i2[k_hi] - iv[1];
+		
+    if (iv[1] < i2[0]) {
+      k_lo = 0;
+      k_hi = 0;
+      dk1 = i2[d_allIndepVarNum[1]-2] - iv[1];
+      dk2 = i2[d_allIndepVarNum[1]-1] - iv[1];
+    }
+		
+  } else { 
+
+    // Set the values to get the first entry
+    k_lo=0;
+    k_hi=0;
+    dk1=0.0;
+    dk2=1.0;
+
+  }
+  for ( int m_index = nhl_lo; m_index <= nhl_hi; m_index++ ) {
 
     //Interpolating the values
     fmg = ( dk1 * table[var_index][m_index*d_allIndepVarNum[0] * d_allIndepVarNum[1] + k_hi*d_allIndepVarNum[0] + nx_lo] - 
