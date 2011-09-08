@@ -152,13 +152,27 @@ bool ReadImage(const char* szfile, unsigned int nPixels, pixel* pix, const strin
 
 bool ReadAuxFile(const string auxfile, map<int,double>& data);
 
-inline Point CreatePoint(unsigned int n, vector<int>& res, double dx, double dy, double dz)
+inline Point CreatePoint(unsigned int n, vector<int>& res, double dx, double dy, double dz, Point domain_lo, Point domain_hi)
 {
   unsigned int k = n / (res[0]*res[1]); n -= k* res[0]*res[1];
   unsigned int j = n / res[0];
   unsigned int i = n % res[0];
 
-  return Point( dx*((double)i + 0.5), dy*(((double)(res[1]-1-j)) + 0.5),dz*((double)k + 0.5));
+  Point here( dx*((double)i + 0.5), dy*(((double)(res[1]-1-j)) + 0.5),dz*((double)k + 0.5));
+  
+  // bullet proofing
+  if( here.x() < domain_lo.x() || here.x() > domain_hi.x() ||
+      here.y() < domain_lo.y() || here.y() > domain_hi.y() ||
+      here.z() < domain_lo.z() || here.z() > domain_hi.z() ){
+    ostringstream warn;
+    warn<< " ERROR: you're trying to create a point outside of the computational domain \n"
+        << " point:  " << here << "\n"
+        << " domain: " << domain_lo << " -> " << domain_hi << "\n"
+        << " Double check your grid specification." << endl;
+    throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+  }
+  
+  return here;
 }
 
 struct intensityMatlMapping{
@@ -380,7 +394,11 @@ int main(int argc, char *argv[])
     // Parse the ups file for the grid specification
     // and voxel size
     GridP grid = CreateGrid(ups);
-
+    BBox box;
+    grid->getInteriorSpatialRange(box);
+    Point domain_lo = box.min();
+    Point domain_hi = box.max();
+    
     // loop over levels
     for (int l = 0; l < grid->numLevels(); l++) {
       LevelP level = grid->getLevel(l);
@@ -448,7 +466,7 @@ int main(int argc, char *argv[])
 
               if ( isRightMatl ) {
 
-                pt = CreatePoint(n, res, dx, dy, dz);
+                pt = CreatePoint(n, res, dx, dy, dz, domain_lo, domain_hi);
                 
                 minP = Min(pt,minP);
                 maxP = Max(pt,maxP);
@@ -495,7 +513,7 @@ int main(int argc, char *argv[])
 
               if ( isRightMatl) {
 
-                pt = CreatePoint(n, res, dx, dy, dz);
+                pt = CreatePoint(n, res, dx, dy, dz, domain_lo, domain_hi);
 
                 const Patch* patch =   level->selectPatchForCellIndex(level->getCellIndex(pt));
                 unsigned int patchID = patch->getID();
@@ -576,7 +594,7 @@ int main(int argc, char *argv[])
           cout << " doing it the old way BBB" << endl;
           // output individual points
           for (int I = 0; I < numPoints[patchID]; I++) {
-            pt = CreatePoint(points[patchID][I], res, dx, dy, dz);
+            pt = CreatePoint(points[patchID][I], res, dx, dy, dz, domain_lo,, domain_hi);
             x[0] = pt.x();
             x[1] = pt.y();
             x[2] = pt.z();
