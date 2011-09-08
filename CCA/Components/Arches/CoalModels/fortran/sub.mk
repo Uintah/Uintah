@@ -30,17 +30,10 @@
 # 
 # Makefile fragment for this subdirectory
 
-include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
-
 SRCDIR   := CCA/Components/Arches/CoalModels/fortran
 
 SRCS += \
         $(SRCDIR)/rqpart.f 
 
-PSELIBS := 
 
-LIBS := $(F_LIBRARY) $(M_LIBRARY)
-
-include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
-
-$(SRCDIR)/rqpart.$(OBJEXT): $(SRCDIR)/rqpart.h
+$(SRCDIR)/rqpart.$(OBJEXT): $(SRCDIR)/rqpart_fort.h
