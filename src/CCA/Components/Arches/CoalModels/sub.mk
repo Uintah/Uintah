@@ -19,3 +19,5 @@ SRCS += \
   $(SRCDIR)/YDragModel.cc \
   $(SRCDIR)/ZDragModel.cc \
   $(SRCDIR)/DragModel.cc
+
+$(SRCDIR)/DragModel.$(OBJEXT): $(SRCDIR)/fortran/rqpart_fort.h
