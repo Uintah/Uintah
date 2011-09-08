@@ -88,18 +88,29 @@ WARNING
     inline operator T () const {
       return value;
     }
-    inline T& get() {
-      return value;
-    }
-    inline const T& get() const {
-      return value;
-    }
-
-    void setData(const T&);
-
     virtual SoleVariableBase* clone() const;
     virtual void copyPointer(Variable&);
+    virtual void print(std::ostream& out)
+    { out << value; }
+    virtual void emitNormal(std::ostream& out, const IntVector& /*l*/,
+                            const IntVector& /*h*/, ProblemSpecP /*varnode*/, bool /*outputDoubleAsFloat*/)
+    { out.write((char*)&value, sizeof(double)); }
+    virtual void readNormal(std::istream& in, bool swapBytes)
+    {
+      in.read((char*)&value, sizeof(double));
+      if (swapBytes) swapbytes(value);
+    }
+     
+    virtual void allocate(const Patch*,const IntVector& boundary)
+    {
+      SCI_THROW(SCIRun::InternalError("Should not call SoleVariable<T>"
+                          "::allocate(const Patch*)", __FILE__, __LINE__)); 
+    }
 
+    virtual const TypeDescription* virtualGetTypeDescription() const;
+    virtual void getMPIInfo(int& count, MPI_Datatype& datatype);
+    virtual void getMPIData(std::vector<char>& buf, int& index);
+    virtual void putMPIData(std::vector<char>& buf, int& index);
     virtual void getSizeInfo(std::string& elems, unsigned long& totsize,
                              void*& ptr) const {
       elems="1";
@@ -111,7 +122,7 @@ WARNING
     static Variable* maker();
     T value;
   };
-
+   
   template<class T>  const TypeDescription* 
     SoleVariable<T>::getTypeDescription()
   {
@@ -128,6 +139,12 @@ WARNING
   template<class T> Variable*  SoleVariable<T>::maker()
   {
     return scinew SoleVariable<T>();
+  }
+   
+  template<class T> const TypeDescription*
+    SoleVariable<T>::virtualGetTypeDescription() const
+  {
+    return getTypeDescription();
   }
    
   template<class T> SoleVariable<T>::~SoleVariable()
@@ -154,13 +171,7 @@ WARNING
     value = copy.value;
     return *this;
   }
-
-  template<class T>
-    void
-    SoleVariable<T>::setData(const T& val)
-    {
-      value = val;
-    }  
+  
 } // End namespace Uintah
 
 #endif

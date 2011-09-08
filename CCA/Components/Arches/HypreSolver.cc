@@ -538,7 +538,7 @@ HypreSolver::pressLinearSolve()
                            (HYPRE_PtrToSolverFcn) HYPRE_StructJacobiSetup,
                            (HYPRE_Solver) precond);
     }
-    cout << "Calling HYPRE_PCGSetup" << endl;
+    
     HYPRE_PCGSetup
       ( (HYPRE_Solver)solver, (HYPRE_Matrix)d_A, (HYPRE_Vector)d_b, (HYPRE_Vector)d_x );
 

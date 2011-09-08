@@ -96,9 +96,6 @@ ICE::ICE(const ProcessorGroup* myworld, const bool doAMR) :
 {
   lb   = scinew ICELabel();
 
-  hypre_solver_label = VarLabel::create("hypre_solver_label",
-                                        SoleVariable<double>::getTypeDescription());
-
   d_doAMR               = doAMR;
   d_doRefluxing         = false;
   d_add_heat            = false;
@@ -140,9 +137,6 @@ ICE::ICE(const ProcessorGroup* myworld, const bool doAMR) :
 ICE::~ICE()
 {
   cout_doing << d_myworld->myrank() << " Doing: ICE destructor " << endl;
-
-  VarLabel::destroy(hypre_solver_label);
-
   delete d_customInitialize_basket;
   delete d_customBC_var_basket->Lodi_var_basket;
   delete d_customBC_var_basket->Slip_var_basket;
@@ -165,9 +159,6 @@ ICE::~ICE()
   }
   if (d_press_matlSet && d_press_matlSet->removeReference()){
     delete d_press_matlSet;
-  }
-  if (d_solver_parameters) {
-    delete d_solver_parameters;
   }
   //__________________________________
   // MODELS
@@ -202,7 +193,7 @@ ICE::~ICE()
   if(d_modelInfo){
     delete d_modelInfo;
   }
-  //  releasePort("solver");
+  releasePort("solver");
 }
 
 bool ICE::restartableTimesteps()
@@ -304,9 +295,7 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
   ProblemSpecP impSolver = cfd_ice_ps->findBlock("ImplicitSolver");
   if (impSolver) {
     d_delT_knob = 0.5;      // default value when running implicit
-    d_solver_parameters = d_solver->readParameters(impSolver, 
-                                                   "implicitPressure",
-                                                   sharedState);
+    d_solver_parameters = d_solver->readParameters(impSolver, "implicitPressure");
     d_solver_parameters->setSolveOnExtraCells(false);
     impSolver->require("max_outer_iterations",      d_max_iter_implicit);
     impSolver->require("outer_iteration_tolerance", d_outer_iter_tolerance);
@@ -322,8 +311,6 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
     d_subsched->mapDataWarehouse(Task::ParentNewDW, 1);
     d_subsched->mapDataWarehouse(Task::OldDW, 2);
     d_subsched->mapDataWarehouse(Task::NewDW, 3);
-
-
   
     d_recompileSubsched = true;
 
@@ -753,9 +740,6 @@ void ICE::scheduleInitialize(const LevelP& level,SchedulerP& sched)
   
   sched->addTask(t, level->eachPatch(), d_sharedState->allICEMaterials());
 
-  if (d_impICE)
-    d_solver->scheduleInitialize(level,sched,
-                                 d_sharedState->allICEMaterials());
   //__________________________________
   // Models Initialization
   if(d_models.size() != 0){

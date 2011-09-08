@@ -73,8 +73,7 @@ AMRSolver::~AMRSolver() {}
  _____________________________________________________________________*/
 SolverParameters*
 AMRSolver::readParameters(ProblemSpecP& params,
-                          const string& varname,
-                          SimulationStateP& state)
+                          const string& varname)
   
 {
   HypreSolverParams* p = new HypreSolverParams();
@@ -120,54 +119,6 @@ AMRSolver::readParameters(ProblemSpecP& params,
 
   return p;
 }
-
-SolverParameters*
-AMRSolver::readParameters(ProblemSpecP& params,const string& varname)
-{
-  HypreSolverParams* p = new HypreSolverParams();
-  bool found=false;
-
-  /* Scan and set parameters */
-  if(params){
-    for(ProblemSpecP param = params->findBlock("Parameters"); param != 0;
-        param = param->findNextBlock("Parameters")) {
-      string variable;
-      if(param->getAttribute("variable", variable) && variable != varname)
-        continue;
-      param->getWithDefault("solver", p->solverTitle, "smg");
-      param->getWithDefault("preconditioner", p->precondTitle, "diagonal");
-      param->getWithDefault("tolerance", p->tolerance, 1.e-10);
-      param->getWithDefault("maxiterations", p->maxIterations, 75);
-      param->getWithDefault("npre", p->nPre, 1);
-      param->getWithDefault("npost", p->nPost, 1);
-      param->getWithDefault("skip", p->skip, 0);
-      param->getWithDefault("jump", p->jump, 0);
-      param->getWithDefault("logging", p->logging, 0);
-      param->getWithDefault("outputEquations", p->printSystem,false);
-      found=true;
-    }
-  }
-
-  /* Default parameter values */
-  if(!found){
-    p->solverTitle = "smg";
-    p->precondTitle = "diagonal";
-    p->tolerance = 1.e-10;
-    p->maxIterations = 75;
-    p->nPre = 1;
-    p->nPost = 1;
-    p->skip = 0;
-    p->jump = 0;
-    p->logging = 0;
-  }
-  p->symmetric = false;
-  //  p->symmetric=true;
-  p->restart=false;
-  //  p->restart=true;
-
-  return p;
-}
-
 //______________________________________________________________________
 //  This originated from Steve's implementation of HypreSolver
 void

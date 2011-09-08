@@ -179,14 +179,6 @@ namespace Wasatch{
       proc0cout << "Detected solver port... \n";
     }
     
-    Uintah::ProblemSpecP pressureParams = wasatchParams->findBlock("Pressure");
-    Uintah::SolverParameters* sparams = 
-      linSolver_->readParameters(pressureParams, "", sharedState_ );
-#if 0
-    linSolver_->readParameters(pressureParams,"ImplicitPressure",sharedState_);
-#endif
-    sparams->setSolveOnExtraCells( false );
-
     //
     std::string timeIntegrator;
     wasatchParams->get("TimeIntegrator",timeIntegrator);    
@@ -240,7 +232,7 @@ namespace Wasatch{
         momEqnParams=momEqnParams->findNextBlock("MomentumEquations") ){
       // note - parse_momentum_equations returns a vector of equation adaptors
       try{
-        EquationAdaptors momentumAdaptors = parse_momentum_equations( momEqnParams, graphCategories_, *linSolver_,sharedState);
+        EquationAdaptors momentumAdaptors = parse_momentum_equations( momEqnParams, graphCategories_, *linSolver_);
         adaptors_.insert( adaptors_.end(), momentumAdaptors.begin(), momentumAdaptors.end() );
       }
       catch( std::runtime_error& err ){
@@ -312,11 +304,6 @@ namespace Wasatch{
     
     const Uintah::PatchSet* const localPatches = get_patchset( USE_FOR_TASKS, level, sched );
     const Uintah::MaterialSet* const materials = sharedState_->allMaterials();
-
-    if( linSolver_ ){
-      linSolver_->scheduleInitialize( level, sched, 
-                                      sharedState_->allMaterials() );
-    }
 
     GraphHelper* const icGraphHelper = graphCategories_[ INITIALIZATION ];
 

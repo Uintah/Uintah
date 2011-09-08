@@ -519,12 +519,9 @@ main( int argc, char *argv[], char *env[] )
 
 #if defined(MALLOC_TRACE)
     ostringstream traceFilename;
-    if (Uintah::Parallel::getMPIRank() == 0 || 
-        Uintah::Parallel::getMPISize()/2)  {
-      traceFilename << "mallocTrace-" << Uintah::Parallel::getMPIRank();
-      MALLOC_TRACE_LOG_FILE( traceFilename.str().c_str() );
-      //mallocTraceInfo.setTracingState( false );
-    }
+    traceFilename << "mallocTrace-" << Uintah::Parallel::getMPIRank();
+    MALLOC_TRACE_LOG_FILE( traceFilename.str().c_str() );
+    //mallocTraceInfo.setTracingState( false );
 #endif
 
     if( Uintah::Parallel::getMPIRank() == 0 ) {

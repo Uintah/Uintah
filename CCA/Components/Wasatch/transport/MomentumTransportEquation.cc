@@ -243,8 +243,7 @@ namespace Wasatch{
                              const std::string momName,
                              Expr::ExpressionFactory& factory,
                              Uintah::ProblemSpecP params,
-                             Uintah::SolverInterface& linSolver,
-                             Uintah::SimulationStateP sharedState)
+                             Uintah::SolverInterface& linSolver)
     : Wasatch::TransportEquation( momName,
                                   get_mom_rhs_id<FieldT>( factory,
                                                        velName,
@@ -348,11 +347,9 @@ namespace Wasatch{
 
     //__________________
     // pressure    
-#if 1
     Uintah::ProblemSpecP pressureParams = params->findBlock( "Pressure" );
-    Uintah::SolverParameters* sparams = linSolver.readParameters( pressureParams, "",sharedState );
+    Uintah::SolverParameters* sparams = linSolver.readParameters( pressureParams, "" );
     sparams->setSolveOnExtraCells( false );
-#endif
     
     if( !factory.get_registry().have_entry( pressure_tag() ) ){
       // if pressure expression has not be registered, then register it
