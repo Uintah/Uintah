@@ -1047,7 +1047,6 @@ void MPMICE::actuallyInitialize(const ProcessorGroup*,
     //  Even if mass = 0 in a cell you still need
     //  CC Variables defined.
     double junk=-9, tmp;
-    int numALL_matls = d_sharedState->getNumMatls();
     int numMPM_matls = d_sharedState->getNumMPMMatls();
     double p_ref = d_ice->getRefPress();
     for (int m = 0; m < numMPM_matls; m++ ) {
@@ -1069,25 +1068,34 @@ void MPMICE::actuallyInitialize(const ProcessorGroup*,
       new_dw->allocateAndPut(heatFlux, Mlb->heatRate_CCLabel,    indx, patch);
       heatFlux.initialize(0.0);
 
+/*`==========TESTING==========*/
+#if 0
+  09/09/11  Jim is going to check with BB to see if we can delete the particle addition
       // Ignore the dummy materials that are used when particles are
       // localized
       if (d_mpm->flags->d_createNewParticles) {
         if (m%2 == 0) // The actual materials
           mpm_matl->initializeCCVariables(rho_micro,   rho_CC,
                                           Temp_CC,     vel_CC,
-                                          vol_frac_CC,  
-                                          numALL_matls,patch);  
+                                          vol_frac_CC, patch);  
         else // The dummy materials
           mpm_matl->initializeDummyCCVariables(rho_micro,   rho_CC,
                                                Temp_CC,     vel_CC,  
-                                               vol_frac_CC,
-                                               numALL_matls,patch);  
+                                               vol_frac_CC, patch);  
       } else {
         mpm_matl->initializeCCVariables(rho_micro,   rho_CC,
                                         Temp_CC,     vel_CC,  
-                                        vol_frac_CC,
-                                        numALL_matls,patch);  
+                                        vol_frac_CC, patch);  
       }
+#endif 
+/*===========TESTING==========`*/      
+      
+      mpm_matl->initializeCCVariables(rho_micro,   rho_CC,
+                                      Temp_CC,     vel_CC,  
+                                      vol_frac_CC, patch);
+      
+      
+      
 
       setBC(rho_CC,    "Density",      patch, d_sharedState, indx, new_dw);    
       setBC(rho_micro, "Density",      patch, d_sharedState, indx, new_dw);    
@@ -1139,6 +1147,9 @@ void MPMICE::actuallyInitialize(const ProcessorGroup*,
       }             
     }  // num_MPM_matls loop 
 
+    //___________________________________
+    //   B U L L E T  P R O O F I N G
+    // Verify volume fractions sum to 1.0
     // Loop through ICE materials to get their contribution to volume fraction
     int numICE_matls = d_sharedState->getNumICEMatls();
     for (int m = 0; m < numICE_matls; m++ ) {
@@ -1150,25 +1161,23 @@ void MPMICE::actuallyInitialize(const ProcessorGroup*,
       new_dw->get(vol_frac, Ilb->vol_frac_CCLabel, indx, patch, Ghost::None, 0);
       
       for (CellIterator iter = patch->getCellIterator(); !iter.done();iter++){
-        vol_frac_sum[*iter] += vol_frac[*iter];
+        IntVector c = *iter;
+        vol_frac_sum[c] += vol_frac[c];
       }
     }  // num_ICE_matls loop
 
-    //___________________________________
-    //   B U L L E T  P R O O F I N G
-    // Verify volume fractions sum to 1.0
-    ostringstream warn;
     double errorThresholdTop    = 1.0e0 + 1.0e-10;
     double errorThresholdBottom = 1.0e0 - 1.0e-10;
 
     for (CellIterator iter = patch->getCellIterator(); !iter.done();iter++){
-      // get lowest and highest cells...
-      if(!(vol_frac_sum[*iter] <= errorThresholdTop && vol_frac_sum[*iter] >= errorThresholdBottom))
-      {
-        warn << "ERROR MPMICE::actuallyInitialize cell " << *iter
-             << " volume fraction does not sum to 1 within 1e-10 error, but was: " << std::setprecision(13)<< vol_frac_sum[*iter] <<"\n"
-             << "This is likely because the user did not specify 'volumeFraction'\n"
-             << "tags in the input file for geometry pieces that sum to 1 over all materials.\n";
+      IntVector c = *iter;
+      
+      if(!(vol_frac_sum[c] <= errorThresholdTop && vol_frac_sum[c] >= errorThresholdBottom)){\
+        ostringstream warn;
+        warn << "ERROR MPMICE::actuallyInitialize cell " << *iter << "\n\n"
+             << "volume fraction ("<< std::setprecision(13)<< vol_frac_sum[*iter] << ") does not sum to 1.0 +- 1e-10.\n"
+             << "Verify that this region of the domain contains at least 1 geometry object.  If you're using the optional\n"
+             << "'volumeFraction' tags verify that they're correctly specified.\n";
         throw ProblemSetupException(warn.str(), __FILE__, __LINE__ );
       }
     } // cell iterator for volume fraction
@@ -2433,7 +2442,7 @@ void MPMICE::actuallyInitializeAddedMPMMaterial(const ProcessorGroup*,
 
     mpm_matl->initializeDummyCCVariables(rho_micro,   rho_CC,
                                          Temp_CC,     vel_CC, 
-                                         vol_frac_CC, 0,patch);
+                                         vol_frac_CC, patch);
 
     setBC(rho_CC,    "Density",      patch, d_sharedState, indx, new_dw);
     setBC(rho_micro, "Density",      patch, d_sharedState, indx, new_dw);
@@ -2723,8 +2732,7 @@ MPMICE::refine(const ProcessorGroup*,
 
       mpm_matl->initializeDummyCCVariables(rho_micro,   rho_CC,
                                            Temp_CC,     vel_CC,
-                                           vol_frac_CC, 
-                                           d_sharedState->getNumMatls(),patch);  
+                                           vol_frac_CC, patch);  
       //__________________________________
       //  Set boundary conditions                                     
       setBC(rho_micro, "Density",      patch, d_sharedState, dwi, new_dw);    
