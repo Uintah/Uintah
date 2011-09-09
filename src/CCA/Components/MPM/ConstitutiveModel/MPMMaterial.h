@@ -151,7 +151,6 @@ WARNING
                               CCVariable<double>& temp,   
                               CCVariable<Vector>& vCC,
                               CCVariable<double>& vfCC,
-                              int numMatls,
                               const Patch* patch);
 
    void initializeDummyCCVariables(CCVariable<double>& rhom,
@@ -159,7 +158,6 @@ WARNING
                                    CCVariable<double>& temp,   
                                    CCVariable<Vector>& vCC,
                                    CCVariable<double>& vfCC,
-                                   int numMatls,
                                    const Patch* patch);
 
  private:
