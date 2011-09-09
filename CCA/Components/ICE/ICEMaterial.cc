@@ -315,20 +315,18 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
           IveBeenHere[*iter]= 1;
         }
       }   
+      
+      //__________________________________
+      //  Multiple matls
       if (numMatls > 1 ) {
-        try
-        {
-            if(d_geom_objs[obj]->getInitialData_double("volumeFraction") == -1.0)
-            {    
-                vol_frac_CC[*iter]+= count/totalppc;
-            } else {
-                vol_frac_CC[*iter] = count/(totalppc)*d_geom_objs[obj]->getInitialData_double("volumeFraction");
-            }
-        } catch (...)
-        {
-          vol_frac_CC[*iter]+= count/totalppc;            
+      
+        double ups_volFrac = d_geom_objs[obj]->getInitialData_double("volumeFraction");
+        if( ups_volFrac == -1.0 ) {    
+          vol_frac_CC[*iter] += count/totalppc;  // there can be contributions from multiple objects 
+        } else {
+          vol_frac_CC[*iter] = ups_volFrac * count/(totalppc);
         }
-          
+                  
         if(IveBeenHere[*iter] == -9){
           // This cell hasn't been hit for this matl yet so set values
           // to ensure that everything is set to something everywhere
