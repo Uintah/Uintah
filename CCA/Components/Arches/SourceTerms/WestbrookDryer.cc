@@ -207,19 +207,9 @@ WestbrookDryer::computeSource( const ProcessorGroup* pc,
 
       IntVector c = *iter; 
 
-      // Step 1: Compute the stripping fraction 
-      double f = 0;
-      if ( Ceq[c] < 1.0 ) { 
-        f = Cstar[c] / ( 1.0 - Ceq[c] ); 
-        // bulletproofing needed? 
-        if ( f > 1.0 ) { 
-          f = 1.0; 
-        } else if ( f < 0.0 ) { 
-          f = 0.0; 
-        } 
-      }
-
-      // Step 2: Compute stripping fraction and extent 
+      double f = Ceq[c] + Cstar[c];
+      
+      // Step 1: Compute stripping fraction and extent 
       double tiny = 1.0e-16;
       S[c] = 0.0; 
       double hc_wo_rxn = f * d_MF_HC_f1;
@@ -229,7 +219,7 @@ WestbrookDryer::computeSource( const ProcessorGroup* pc,
 
       E[c] = 1.0 - S[c]; 
 
-      // Step 3: Compute rate
+      // Step 2: Compute rate
       double rate = getRate( T[c], Cstar[c], O2[c], mixMW[c], den[c], dt, vol ); 
 
       // Overwrite with hot spot if specified -- like a pilot light
