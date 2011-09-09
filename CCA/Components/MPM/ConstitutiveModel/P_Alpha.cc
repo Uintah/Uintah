@@ -59,7 +59,8 @@ P_Alpha::P_Alpha(ProblemSpecP& ps,MPMFlags* Mflag)
   ps->require("Ps",        d_initialData.Ps);
   ps->require("Pe",        d_initialData.Pe);
   ps->require("rhoS",      d_initialData.rhoS);
-  ps->require("alpha0",    d_initialData.alpha0);
+  // Compute alpha0 from material density and rhoS - Jim 9/8/2011
+  //ps->require("alpha0",    d_initialData.alpha0);
   ps->require("K0",        d_initialData.K0);
   ps->require("Ks",        d_initialData.Ks);
   //  For M-G part of response
@@ -87,7 +88,8 @@ P_Alpha::P_Alpha(const P_Alpha* cm) : ConstitutiveModel(cm)
   d_initialData.Ps     = cm->d_initialData.Ps;
   d_initialData.Pe     = cm->d_initialData.Pe;
   d_initialData.rhoS   = cm->d_initialData.rhoS;
-  d_initialData.alpha0 = cm->d_initialData.alpha0;
+  // Compute alpha0 from material density and rhoS - Jim 9/8/2011
+  //d_initialData.alpha0 = cm->d_initialData.alpha0;
   d_initialData.K0     = cm->d_initialData.K0;
   d_initialData.Ks     = cm->d_initialData.Ks;
   d_initialData.Ku     = cm->d_initialData.Ku;
@@ -118,7 +120,8 @@ void P_Alpha::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
   cm_ps->appendElement("Ps",      d_initialData.Ps);
   cm_ps->appendElement("Pe",      d_initialData.Pe);
   cm_ps->appendElement("rhoS",    d_initialData.rhoS);
-  cm_ps->appendElement("alpha0",  d_initialData.alpha0);
+  // Compute alpha0 from material density and rhoS - Jim 9/8/2011
+  //cm_ps->appendElement("alpha0",  d_initialData.alpha0);
   cm_ps->appendElement("K0",      d_initialData.K0);
   cm_ps->appendElement("Ks",      d_initialData.Ks);
   cm_ps->appendElement("Ku",      d_initialData.Ku);
@@ -156,9 +159,14 @@ void P_Alpha::initializeCMData(const Patch* patch,
   ParticleVariable<double>      tAlpha1;
   new_dw->allocateAndPut(tAlpha1, tempAlpha1Label, pset);
 
+  double rhoS = d_initialData.rhoS;
+  double rho_orig = matl->getInitialDensity();
+  double alpha_min0 = rhoS/rho_orig;
 
   for(ParticleSubset::iterator iter = pset->begin();iter != pset->end();iter++){
-     alpha_min[*iter]    = d_initialData.alpha0;
+  // Compute alpha0 from material density and rhoS - Jim 9/8/2011
+     // alpha_min[*iter]    = d_initialData.alpha0;
+     alpha_min[*iter]    = alpha_min0;
      tAlpha1[*iter]      = d_initialData.T_0;
   }
 
@@ -310,15 +318,17 @@ void P_Alpha::computeStressTensor(const PatchSubset* patches,
     // Temporary Allocations
     new_dw->allocateTemporary(velGrad,                                    pset);
 
+    double rho_orig = matl->getInitialDensity();
     double Ps = d_initialData.Ps;
     double Pe = d_initialData.Pe;
-    double alpha0 = d_initialData.alpha0;
+    // Compute alpha0 from material density and rhoS - Jim 9/8/2011
+    // double alpha0 = d_initialData.alpha0;
+    double alpha0 = rhoS/rho_orig;
     double K0 = d_initialData.K0;
     double Ks = d_initialData.Ks;
     double Ku = d_initialData.Ku;
     double rhoS = d_initialData.rhoS;
 
-    double rho_orig = matl->getInitialDensity();
     double cv = matl->getSpecificHeat();
     double rhoP     = rho_orig/(1.-Pe/K0);
     double alphaP   = rhoS/rhoP;
@@ -491,13 +501,12 @@ void P_Alpha::computeStressTensor(const PatchSubset* patches,
       }
 
       // Unloading cases that get into either alpha > alpha0, or negative P
-      if(alpha > alpha0){
+      if(alpha > alpha0 || p < 0 ){
           // This still may need some work - Jim (2/11/2011)
-          double rho_max = rhoS/alpha_min_new[idx];
+          // I think I've improved things, but
+          // the plastic work (dTdt_plas) still needs work - Jim (9/8/2011)
+          double rho_max = min(rhoS,rhoS/alpha_min_new[idx]);
           p = Ku*(1.-rho_max/rhoM);
-      }
-      else if(p < 0.){
-          p = Ku*(1.-rhoS/rhoM);
       }
 
 //      double etime = d_sharedState->getElapsedTime();
