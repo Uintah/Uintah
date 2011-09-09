@@ -1466,6 +1466,8 @@ ClassicTableInterface::loadMixingTable( const string & inputfile )
             // read but don't assign 
             // doing this for now because it was causing some weirdness 
             double v = getDouble( gzFp ); 
+            //operation to remove warning. 
+            v += 0.0;
           }
         }
 
