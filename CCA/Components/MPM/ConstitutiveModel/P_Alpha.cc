@@ -323,7 +323,7 @@ void P_Alpha::computeStressTensor(const PatchSubset* patches,
     double Pe = d_initialData.Pe;
     // Compute alpha0 from material density and rhoS - Jim 9/8/2011
     // double alpha0 = d_initialData.alpha0;
-    double alpha0 = rhoS/rho_orig;
+    double alpha0 = d_initialData.rhoS/rho_orig;
     double K0 = d_initialData.K0;
     double Ks = d_initialData.Ks;
     double Ku = d_initialData.Ku;
