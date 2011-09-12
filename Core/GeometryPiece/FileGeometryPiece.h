@@ -62,7 +62,6 @@ namespace Uintah {
     <file>
       <name>file_name.txt</name>
       <format>text </format>
-      <split> true </split>
       <var>p.volume</var>
       <var>p.fiberdir</var>
       <var>p.externalforce</var>
@@ -76,13 +75,6 @@ namespace Uintah {
     lsb   - least significant byte binary double
     msb   - most significant byte binary double
     bin   - use native binary ordering.
-
-    if split is specified (the default), the points file is assumed to have
-    been run through pfs.
-    
-    the 'split' format must match the number of processors, and 
-    expects files in file_name.txt.iproc
-    where iproc is the mpi rank of the processor.
     
     Note, for all formats (text and binary), there needs to be a 128 line
     buffer containing the bounding box of the whole data set in every file.
@@ -144,9 +136,10 @@ namespace Uintah {
  
     Box                 d_box;
     string              d_file_name;
-    bool                d_presplit;
     string              d_file_format;
     list<string>        d_vars;
+    
+    void checkFileType(std::ifstream & source, string& fileType, string& filename);
     
     bool read_line(std::istream & is, Point & xmin, Point & xmax);
     void read_bbox(std::istream & source, Point & lowpt, Point & highpt) const;
