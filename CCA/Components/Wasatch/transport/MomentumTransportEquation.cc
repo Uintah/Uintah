@@ -188,15 +188,17 @@ namespace Wasatch{
   {
     std::string xmomname, ymomname, zmomname; 
     Uintah::ProblemSpecP doxmom,doymom,dozmom;
+    Uintah::ProblemSpecP isviscous;
+    isviscous = params->findBlock("Viscosity");
     doxmom = params->get( "X-Momentum", xmomname );
     doymom = params->get( "Y-Momentum", ymomname );
     dozmom = params->get( "Z-Momentum", zmomname );
     //
-    if( doxmom ) tauTags.push_back( Expr::Tag("tau_x" + thisMomDirName , Expr::STATE_NONE) );
+    if( doxmom && isviscous ) tauTags.push_back( Expr::Tag("tau_x" + thisMomDirName , Expr::STATE_NONE) );
     else         tauTags.push_back( Expr::Tag() );
-    if( doymom ) tauTags.push_back( Expr::Tag("tau_y" + thisMomDirName , Expr::STATE_NONE) );
+    if( doymom && isviscous) tauTags.push_back( Expr::Tag("tau_y" + thisMomDirName , Expr::STATE_NONE) );
     else         tauTags.push_back( Expr::Tag() );
-    if( dozmom ) tauTags.push_back( Expr::Tag("tau_z" + thisMomDirName , Expr::STATE_NONE) );
+    if( dozmom && isviscous) tauTags.push_back( Expr::Tag("tau_z" + thisMomDirName , Expr::STATE_NONE) );
     else         tauTags.push_back( Expr::Tag() );
   }
   
@@ -254,7 +256,8 @@ namespace Wasatch{
       dir_( set_direction<FieldT>() ),
       normalStressID_  ( Expr::ExpressionID::null_id() ),
       normalConvFluxID_( Expr::ExpressionID::null_id() ),
-      pressureID_      ( Expr::ExpressionID::null_id() )
+      pressureID_      ( Expr::ExpressionID::null_id() ),
+		  isviscous_			 ( params->findBlock("Viscosity")?true:false)
   {
     set_vel_tags( params, velTags_ );
 
@@ -279,6 +282,10 @@ namespace Wasatch{
     doxmom = params->get( "X-Momentum", xmomname );
     doymom = params->get( "Y-Momentum", ymomname );
     dozmom = params->get( "Z-Momentum", zmomname );
+    //
+    if (dir_ == XDIR) thisMomName_ = xmomname;
+    if (dir_ == YDIR) thisMomName_ = ymomname;
+    if (dir_ == ZDIR) thisMomName_ = zmomname;
     Expr::TagList tauTags;
     const std::string thisMomDirName = this->dir_name();
     set_tau_tags<FieldT>( params, tauTags, thisMomDirName );
@@ -286,19 +293,23 @@ namespace Wasatch{
     const Expr::Tag tauyt = tauTags[1];
     const Expr::Tag tauzt = tauTags[2];
     
-    const Expr::Tag viscTag = parse_nametag( params->findBlock("Viscosity")->findBlock("NameTag") );
-
-    if( doxmom ){
-      const Expr::ExpressionID stressID = setup_stress< XFace >( tauxt, viscTag, thisVelTag, velTags_[0], dilTag, factory );
-      if( dir_ == XDIR )  normalStressID_ = stressID;
-    }
-    if( doymom ){
-      const Expr::ExpressionID stressID = setup_stress< YFace >( tauyt, viscTag, thisVelTag, velTags_[1], dilTag, factory );
-      if( dir_ == YDIR )  normalStressID_ = stressID;
-    }
-    if( dozmom ){
-      const Expr::ExpressionID stressID = setup_stress< ZFace >( tauzt, viscTag, thisVelTag, velTags_[2], dilTag, factory );
-      if( dir_ == ZDIR )  normalStressID_ = stressID;
+     // check if inviscid or not
+    if (isviscous_) {
+      const Expr::Tag viscTag = parse_nametag( params->findBlock("Viscosity")->findBlock("NameTag") );
+      if( doxmom ){
+        const Expr::ExpressionID stressID = setup_stress< XFace >( tauxt, viscTag, thisVelTag, velTags_[0], dilTag, factory );
+        if( dir_ == XDIR )  normalStressID_ = stressID;
+      }
+      if( doymom ){
+        const Expr::ExpressionID stressID = setup_stress< YFace >( tauyt, viscTag, thisVelTag, velTags_[1], dilTag, factory );
+        if( dir_ == YDIR )  normalStressID_ = stressID;
+      }
+      if( dozmom ){
+        const Expr::ExpressionID stressID = setup_stress< ZFace >( tauzt, viscTag, thisVelTag, velTags_[2], dilTag, factory );
+        if( dir_ == ZDIR )  normalStressID_ = stressID;
+      }  
+      factory.cleave_from_children( normalStressID_   );
+      factory.cleave_from_parents( normalStressID_   );
     }
 
     //__________________
@@ -364,6 +375,8 @@ namespace Wasatch{
       pressureID_ = factory.register_expression( ptags,
                                                  new typename Pressure::Builder( fxt, fyt, fzt,
                                                                                  d2rhodt2t, *sparams, linSolver) );
+      factory.cleave_from_children( pressureID_   );
+      factory.cleave_from_parents( pressureID_       );
     }
     else{
       pressureID_ = factory.get_registry().get_id( pressure_tag() );
@@ -372,10 +385,6 @@ namespace Wasatch{
     //________________________________________________________________
     // Several expressions require ghost updates after they are calculated
     // jcs note that we need to set BCs on these quantities as well.
-    factory.cleave_from_children( pressureID_   );
-    factory.cleave_from_parents( pressureID_       );
-    factory.cleave_from_children( normalStressID_   );
-    factory.cleave_from_parents( normalStressID_   );
     factory.cleave_from_children( normalConvFluxID_   );
     factory.cleave_from_parents( normalConvFluxID_ );
   }
@@ -396,7 +405,148 @@ namespace Wasatch{
                                  const Uintah::PatchSet* const localPatches,
                                  const PatchInfoMap& patchInfoMap,
                                  const Uintah::MaterialSubset* const materials)
-  {}
+  {
+    typedef typename SpatialOps::structured::FaceTypes<FieldT>::XFace XFace;
+    typedef typename SpatialOps::structured::FaceTypes<FieldT>::YFace YFace;
+    typedef typename SpatialOps::structured::FaceTypes<FieldT>::ZFace ZFace;
+        
+    
+    // build bcs for momentum
+    process_boundary_conditions( Expr::Tag( this->solution_variable_name(),
+                         Expr::STATE_N ),
+              this->staggered_location(),
+              graphHelper,
+              localPatches,
+              patchInfoMap,
+              materials );   
+    
+    // build bcs for velocity - cos we don't have a mechanism now to set them
+    // on interpolated density field
+    Expr::Tag velTag;
+    switch (this->staggered_location()) {
+      case XDIR:
+        velTag = velTags_[0];
+        break;
+      case YDIR:
+        velTag = velTags_[1];
+        break;
+      case ZDIR:
+        velTag = velTags_[2];
+        break;
+      default:
+        break;
+    }
+    process_boundary_conditions( velTag,
+              this->staggered_location(),
+              graphHelper,
+              localPatches,
+              patchInfoMap,
+              materials);            
+    
+
+//    // set bcs for density
+//    const Expr::Tag densTag( "density", Expr::STATE_N );
+//    const Direction denDir = NODIR;
+//    build_bcs( densTag,
+//              denDir,
+//              graphHelper,
+//              localPatches,
+//              patchInfoMap,
+//              materials);            
+//
+//    // set bcs for viscosity
+//    const Expr::Tag viscTag( "viscosity", Expr::STATE_N );
+//    const Direction viscDir = NODIR;
+//    build_bcs( viscTag,
+//              viscDir,
+//              graphHelper,
+//              localPatches,
+//              patchInfoMap,
+//              materials);            
+    
+    // build bcs for normal stresses and normal convective fluxes
+    
+    Expr::ExpressionFactory& factory = *graphHelper.exprFactory;
+    if(isviscous_) {
+      Expr::Tag normalStressTag = factory.get_registry().get_label(normalStressID_);
+      process_boundary_conditions( normalStressTag,
+                this->staggered_location(),
+                graphHelper,
+                localPatches,
+                patchInfoMap,
+                materials,
+                false);        
+    }
+    
+//      Expr::Tag normalConvFluxTag = factory.get_registry().get_label(normalConvFluxID_);    
+//      process_boundary_conditions( normalConvFluxTag,
+//                                  this->staggered_location(),
+//                                  graphHelper,
+//                                  localPatches,
+//                                  patchInfoMap,
+//                                  materials,
+//                                  true);             
+    
+//    build_bcs( rhs_part_tag(mom_tag(thisMomName_)),
+//            this->staggered_location(),
+//            graphHelper,
+//            localPatches,
+//            patchInfoMap,
+//            materials );    
+//    if( dir_ == XDIR ) {
+//	    build_bcs<XFace>( normalStressTag.name(),
+//              this->staggered_location(),
+//              graphHelper,
+//              localPatches,
+//              patchInfoMap,
+//              materials );    
+//      build_bcs<XFace>( normalConvFluxTag.name(),
+//                this->staggered_location(),
+//                graphHelper,
+//                localPatches,
+//                patchInfoMap,
+//                materials );       
+//    }
+//    if (dir_ == YDIR ) {
+//      build_bcs<YFace>( normalStressTag.name(),
+//                       this->staggered_location(),
+//                       graphHelper,
+//                       localPatches,
+//                       patchInfoMap,
+//                       materials );    
+//      build_bcs<YFace>( normalConvFluxTag.name(),
+//                       this->staggered_location(),
+//                       graphHelper,
+//                       localPatches,
+//                       patchInfoMap,
+//                       materials );       
+//      
+//    }
+//    if (dir_ == ZDIR) {
+//      build_bcs<ZFace>( normalStressTag.name(),
+//                       this->staggered_location(),
+//                       graphHelper,
+//                       localPatches,
+//                       patchInfoMap,
+//                       materials );    
+//      build_bcs<ZFace>( normalConvFluxTag.name(),
+//                       this->staggered_location(),
+//                       graphHelper,
+//                       localPatches,
+//                       patchInfoMap,
+//                       materials );       
+//      
+//    }
+    
+    
+    // build bcs for pressure
+//    build_bcs( pressure_tag(),
+//              NODIR,
+//              graphHelper,
+//              localPatches,
+//              patchInfoMap,
+//              materials );            
+  }
   
   //------------------------------------------------------------------
 

@@ -3,6 +3,7 @@
 //-- Wasatch Includes --//
 #include <CCA/Components/Wasatch/FieldAdaptor.h>
 #include <CCA/Components/Wasatch/FieldTypes.h>
+#include <CCA/Components/Wasatch/BCHelperTools.h>
 
 //-- Uintah Includes --//
 #include <CCA/Ports/SolverInterface.h>
@@ -209,6 +210,15 @@ Pressure::setup_matrix(const Uintah::Patch* const patch)
     coefs.t = t;
     coefs.p = p;           
   }
+  
+  //
+//  typedef std::vector<SVolField*> SVolFieldVec;
+//  SVolFieldVec& results = this->get_value_vec();
+//  SVolField& pressureField = *results[0];
+//  SVolField& pRhs = *results[1];
+//  pRhs = 0.0;
+//  
+//  set_pressure_bc(this->name(),matrix_, pressureField, pRhs, patch);
 }
     
 //--------------------------------------------------------------------
@@ -223,16 +233,20 @@ Pressure::evaluate()
   // we would only need one field, not two...
   //SVolField* p = results[0];
   //SVolField* r = results[1];
-  //SVolField& pressure = *p;
+  SVolField& pressure = *results[0];
   //SVolField& rhs = *r;
   SVolField& rhs = *results[1];
   rhs = 0.0;
+  //
+  set_pressure_bc((this->names())[0],matrix_, pressure, rhs, patch_);
+  //
   namespace SS = SpatialOps::structured;
   const SS::MemoryWindow& w = rhs.window_with_ghost();
   SpatialOps::SpatFldPtr<SS::SSurfXField> tmpx  = SpatialOps::SpatialFieldStore<SS::SSurfXField >::self().get( w );
   SpatialOps::SpatFldPtr<SS::SSurfYField> tmpy  = SpatialOps::SpatialFieldStore<SS::SSurfYField >::self().get( w );
   SpatialOps::SpatFldPtr<SS::SSurfZField> tmpz  = SpatialOps::SpatialFieldStore<SS::SSurfZField >::self().get( w );
   SpatialOps::SpatFldPtr<SVolField> tmp = SpatialOps::SpatialFieldStore<SVolField>::self().get( rhs );
+  //set_pressure_bc(this->name(), pressure, rhs, patch);
   //___________________________________________________
   // calculate the RHS field for the poisson solve.
   // Note that this is "automagically" plugged into
