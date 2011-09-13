@@ -3295,8 +3295,12 @@ else
 
             _sci_lib_dir="$_sci_lib_dir $i/$PETSC_VERSION_DIR/$PETSC_SUB/$petsc_arch"
             _sci_inc="$_sci_inc $i/$PETSC_VERSION_DIR/include"
+            SINGLE_LIB=0
           done  
-        fi
+
+          # Try the default location of /usr/include and /usr/lib/
+           SINGLE_LIB=0       
+        fi      
 
         # For Petsc 2.2 use this line below:   petsc petscvec petscmat petscdm petscsnes petscts petscksp $LAPACK_LIB_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $MPI_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $DL_LIB_FLAG,
         # Use -DMPIPP_H so we don't include mpi++.h where we don't want it.
