@@ -80,8 +80,10 @@ namespace Wasatch{
   private:
 
     const Direction dir_;
+    std::string thisMomName_;
     Expr::ExpressionID normalStressID_, normalConvFluxID_, pressureID_;
     Expr::TagList velTags_; ///< TagList for the velocity expressions
+    const bool isviscous_;
 
   };
 

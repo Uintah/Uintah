@@ -85,6 +85,7 @@ class Pressure
   
   typedef Uintah::CCVariable<Uintah::Stencil7> MatType;
   MatType matrix_;
+  const Uintah::Patch* patch_;
 
   Pressure( const Expr::Tag& fxtag,
             const Expr::Tag& fytag,
@@ -136,6 +137,8 @@ public:
                             const Uintah::MaterialSubset* const materials,
                            int RKStage);
 
+  void set_patch(const Uintah::Patch* const patch) {patch_ = const_cast<Uintah::Patch*> (patch);}
+
   /**
    *  \brief allows Wasatch::TaskInterface to reach in and provide
    *         this expression with a way to retrieve Uintah-specific
@@ -156,6 +159,8 @@ public:
    * \brief Calculates pressure coefficient matrix.
    */
   void setup_matrix(const Uintah::Patch* const patch);
+
+  //Uintah::CCVariable<Uintah::Stencil7> pressure_matrix(){ return matrix_ ;}
 
   void advertise_dependents( Expr::ExprDeps& exprDeps );
   void bind_fields( const Expr::FieldManagerList& fml );
