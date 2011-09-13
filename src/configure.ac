@@ -3256,30 +3256,31 @@ else
         if test "$HAVE_PETSC" = "yes"; then
           break
         fi
-
-        PETSC_SUB=lib/libO
-
-        if test "$with_petsc"; then
-
-          ####################################################
-          # The newer (2.3+) versions of petsc don't use the libO anymore...
-          have23=`echo "$with_petsc" | grep "2.3."`
-          if test -z "$have23" ; then
+	
+	if test "$with_petsc"; then
              petsc_version_major=`grep PETSC_VERSION_MAJOR $with_petsc/include/petscversion.h | grep define | awk '{print $3}'`
              petsc_version_minor=`grep PETSC_VERSION_MINOR $with_petsc/include/petscversion.h | grep define | awk '{print $3}'`
-             if test "$petsc_version_major" -eq 2 ; then
-                if test "$petsc_version_minor" -eq 3 ; then
-                   have23=true
-                fi
-             fi
-          fi
-          if test "$have23"; then
-             PETSC_SUB=lib
-          fi
-          ####################################################
 
-          _sci_lib_dir="$with_petsc/$PETSC_SUB/$petsc_arch"
-          _sci_inc="$with_petsc/bmake/$petsc_arch $with_petsc/include"
+        	case $petsc_version_major in
+			2)
+			if test "$petsc_version_minor" -le 2; then
+			   PETSC_SUB=lib/libO
+			fi
+			if test "$petsc_version_minor" -eq 3; then
+			   PETSC_SUB=lib
+			fi
+          		   _sci_lib_dir="$with_petsc/$PETSC_SUB/$petsc_arch"
+          	           _sci_inc="$with_petsc/include $with_petsc/bmake/$petsc_arch"
+			   SINGLE_LIB=0
+			;;
+			3)
+			   PETSC_SUB=lib
+          		   _sci_lib_dir="$with_petsc/$petsc_arch/$PETSC_SUB"
+          		   _sci_inc="$with_petsc/include $with_petsc/$petsc_arch/include"
+			   SINGLE_LIB=1
+			;;
+		esac
+
         else
           # Modify _sci_dirs to have correct path information:
           for i in $sci_thirdparty_dir; do
@@ -3293,14 +3294,14 @@ else
             fi
 
             _sci_lib_dir="$_sci_lib_dir $i/$PETSC_VERSION_DIR/$PETSC_SUB/$petsc_arch"
-            _sci_inc="$_sci_inc $i/$PETSC_VERSION_DIR/include $i/$PETSC_VERSION_DIR/bmake/$petsc_arch"
+            _sci_inc="$_sci_inc $i/$PETSC_VERSION_DIR/include"
           done  
         fi
 
         # For Petsc 2.2 use this line below:   petsc petscvec petscmat petscdm petscsnes petscts petscksp $LAPACK_LIB_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $MPI_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $DL_LIB_FLAG,
         # Use -DMPIPP_H so we don't include mpi++.h where we don't want it.
-
-        SCI_TRY_LINK(PETSC,
+	if test $SINGLE_LIB -eq 0; then
+        	SCI_TRY_LINK(PETSC,
                      petsc libraries and headers (petsc_arch = $petsc_arch),
                      petsc.h,
                      $_sci_inc /usr/include/petsc,
@@ -3309,6 +3310,19 @@ else
                      $INC_MPI_H -DMPIPP_H $LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $MALLOC_TRACE_LIB_DIR_FLAG $MALLOC_TRACE_LIB_FLAG $M_LIB_FLAG $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG,
                      ,
                      optional)
+	fi
+       	# For PETSC 3.x, a single petsc library is created called libpetsc 
+	if test $SINGLE_LIB -eq 1; then
+		SCI_TRY_LINK(PETSC,
+                     petsc libraries and headers (petsc_arch = $petsc_arch),
+                     petsc.h,
+                     $_sci_inc /usr/include/petsc,
+                     petsc,
+                     $_sci_lib_dir,
+                     $INC_MPI_H -DMPIPP_H $LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $MALLOC_TRACE_LIB_DIR_FLAG $MALLOC_TRACE_LIB_FLAG $M_LIB_FLAG $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG,
+                     ,
+                     optional)
+	fi
 
         if test "$HAVE_PETSC" = "yes" ; then
           DEF_PETSC="#define HAVE_PETSC 1"
