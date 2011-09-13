@@ -48,8 +48,7 @@
 
 using namespace Uintah;
 
-PoissonGPU1::PoissonGPU1(const ProcessorGroup* myworld) :
-    UintahParallelComponent(myworld) {
+PoissonGPU1::PoissonGPU1(const ProcessorGroup* myworld) : UintahParallelComponent(myworld) {
 
   phi_label = VarLabel::create("phi", NCVariable<double>::getTypeDescription());
   residual_label = VarLabel::create("residual", sum_vartype::getTypeDescription());
@@ -147,9 +146,7 @@ void PoissonGPU1::initialize(const ProcessorGroup*,
         int numChildren = patch->getBCDataArray(face)->getNumberChildren(matl);
         for (int child = 0; child < numChildren; child++) {
           Iterator nbound_ptr, nu;
-
-          const BoundCondBase* bcb = patch->getArrayBCValues(face, matl, "Phi", nu, nbound_ptr,
-                                                             child);
+          const BoundCondBase* bcb = patch->getArrayBCValues(face, matl, "Phi", nu, nbound_ptr, child);
           const BoundCond<double>* bc = dynamic_cast<const BoundCond<double>*>(bcb);
           double value = bc->getValue();
           for (nbound_ptr.reset(); !nbound_ptr.done(); nbound_ptr++) {
@@ -159,7 +156,6 @@ void PoissonGPU1::initialize(const ProcessorGroup*,
         }
       }
     }
-
     new_dw->put(sum_vartype(-1), residual_label);
   }
 }
@@ -187,13 +183,12 @@ __global__ void timeAdvanceKernel(uint3 domainSize,
   int tidY = blockDim.y * blockIdx.y + threadIdx.y;
   //  int tidZ = blockDim.z * blockIdx.z + threadIdx.z;
 
-  int numSlices = domainSize.z - ghostLayers;
+  int num_slices = domainSize.z - ghostLayers;
+  int dx = domainSize.x;
+  int dy = domainSize.y;
 
-  int dx = domainSize.x - ghostLayers;
-  int dy = domainSize.y - ghostLayers;
-
-  if ((tidX < dx) && (tidY < dy) && (tidX > 0) && (tidY > 0)) {
-    for (int slice = ghostLayers; slice < numSlices; slice++) {
+  if (tidX < (dx - ghostLayers) && tidY < (dy - ghostLayers) && tidX > 0 && tidY > 0) {
+    for (int slice = ghostLayers; slice < num_slices; slice++) {
 
       newphi[INDEX3D(dx, dy, tidX, tidY, slice)] =
           (1.0 / 6.0)
@@ -204,12 +199,12 @@ __global__ void timeAdvanceKernel(uint3 domainSize,
              + phi[INDEX3D(dx, dy, tidX, tidY, slice - 1)]
              + phi[INDEX3D(dx, dy, tidX, tidY, slice + 1)]);
 
-      double diff = newphi[INDEX3D(dx, dy, tidX, tidY, slice)]
-                    - phi[INDEX3D(dx, dy, tidX, tidY, slice)];
+      //double diff = newphi[INDEX3D(dx, dy, tidX, tidY, slice)]
+      //               - phi[INDEX3D(dx, dy, tidX, tidY, slice)];
 
       // this will cause a race condition. what we need is a reduction to compute this
       // in conjunction with atomicAdd() and __shared__ double[] residual_device;
-      *residual += diff * diff;
+      //*residual += diff * diff;;
     }
   }
 }
@@ -221,11 +216,11 @@ void PoissonGPU1::timeAdvance(const ProcessorGroup*,
                               const MaterialSubset* matls,
                               DataWarehouse* old_dw,
                               DataWarehouse* new_dw) {   //,
-//                         int deviceID = 0,
-//                         CUDADevice *deviceProperties = NULL) {
+//                            int deviceID = 0,
+//                            CUDADevice *deviceProperties = NULL) {
 
   int matl = 0;
-  int previousPatchSize = 0;  // this is to see if we need to release and reallocate between computations
+  int previousPatchSize = 0;// this is to see if we need to release and reallocate between computations
   int size = 0;
   int ghostLayers = 1;
 
@@ -270,11 +265,11 @@ void PoissonGPU1::timeAdvance(const ProcessorGroup*,
     size = xdim * ydim * zdim * sizeof(double);
 
     l += IntVector(patch->getBCType(Patch::xminus) == Patch::Neighbor ? 0 : 1,
-                   patch->getBCType(Patch::yminus) == Patch::Neighbor ? 0 : 1,
-                   patch->getBCType(Patch::zminus) == Patch::Neighbor ? 0 : 1);
+        patch->getBCType(Patch::yminus) == Patch::Neighbor ? 0 : 1,
+        patch->getBCType(Patch::zminus) == Patch::Neighbor ? 0 : 1);
     h -= IntVector(patch->getBCType(Patch::xplus) == Patch::Neighbor ? 0 : 1,
-                   patch->getBCType(Patch::yplus) == Patch::Neighbor ? 0 : 1,
-                   patch->getBCType(Patch::zplus) == Patch::Neighbor ? 0 : 1);
+        patch->getBCType(Patch::yplus) == Patch::Neighbor ? 0 : 1,
+        patch->getBCType(Patch::zplus) == Patch::Neighbor ? 0 : 1);
 
     // check if we need to reallocate
     if (size != previousPatchSize) {
@@ -315,70 +310,66 @@ void PoissonGPU1::timeAdvance(const ProcessorGroup*,
     new_dw->put(sum_vartype(residual), residual_label);
 
 //    //__________________________________
-//    // 3D-Pointer Stencil operation for reference
-//    // (offsets need to be parameterized)
-//    //__________________________________
-//    double*** phi_data = (double***) phi.getWindow()->getData()->get3DPointer();
-//    double*** newphi_data = (double***) newphi.getWindow()->getData()->get3DPointer();
-//    double diff;
+//    //  3D-Pointer Stencil
+//    double*** phi_data = (double***)phi.getWindow()->getData()->get3DPointer();
+//    double*** newphi_data = (double***)newphi.getWindow()->getData()->get3DPointer();
 //
-//    int zlen = s.z()-1;
-//    int ylen = s.y()-1;
-//    int xlen = s.x()-1;
-//    for (int i = 1; i < zlen; i++) {
-//      for (int j = 1; j < ylen; j++) {
-//        for (int k = 1; k < xlen; k++) {
+//    int zhigh = h.z();
+//    int yhigh = h.y();
+//    int xhigh = h.x();
+//
+//    for (int i = l.z(); i < zhigh; i++) {
+//      for (int j = l.y(); j < yhigh; j++) {
+//        for (int k = l.x(); k < xhigh; k++) {
 //
 //          double xminus = phi_data[i-1][j][k];
-//          double xplus = phi_data[i+1][j][k];
+//          double xplus  = phi_data[i+1][j][k];
 //          double yminus = phi_data[i][j-1][k];
-//          double yplus = phi_data[i][j+1][k];
+//          double yplus  = phi_data[i][j+1][k];
 //          double zminus = phi_data[i][j][k-1];
-//          double zplus = phi_data[i][j][k+1];
+//          double zplus  = phi_data[i][j][k+1];
 //
-//          newphi_data[i][j][k] = (1./6) * (xminus + xplus + yminus + yplus + zminus + zplus);
+//          newphi_data[i][j][k] = (1. / 6) * (xminus + xplus + yminus + yplus + zminus + zplus);
 //
-//          diff = newphi_data[i][j][k] - phi_data[i][j][k];
+//          double diff = newphi_data[i][j][k] - phi_data[i][j][k];
 //          residual += diff * diff;
 //        }
 //      }
 //    }
 //    new_dw->put(sum_vartype(residual), residual_label);
-
+//
 //    //__________________________________
-//    // 1D-Pointer Stencil operation for reference
-//    // (offsets need to be parameterized)
-//    //__________________________________
-//    double *phi_data = (double*) phi.getWindow()->getData()->getPointer();
-//    double *newphi_data = (double*) newphi.getWindow()->getData()->getPointer();
-//    double diff;
+//    // 1D-Pointer Stencil
+//    double *phi_data = (double*)phi.getWindow()->getData()->getPointer();
+//    double *newphi_data = (double*)newphi.getWindow()->getData()->getPointer();
 //
-//    int dz = s.z() - 1;
-//    int dy = s.y() - 1;
-//    int dx = s.x() - 1;
+//    int zhigh = h.z();
+//    int yhigh = h.y();
+//    int xhigh = h.x();
+//    int ghostLayers = 1;
+//    int ystride = yhigh + ghostLayers;
+//    int xstride = xhigh + ghostLayers;
 //
-//    int length = (dz - 1) * (dy - 1) * (dx - 1);
-//    int i = 1, j = 1, k = 1, offset = 1;
+//    for (int i = l.z(); i < zhigh; i++) {
+//      for (int j = l.y(); j < yhigh; j++) {
+//        for (int k = l.x(); k < xhigh; k++) {
 //
-//    for (int z = 0; z < length; z++) {
-//      // get the base address
-//      int baseAddr = i + ((dx + offset) * j + (dx + offset) * (dy + offset) * k);
+//          // For an array of [ A ][ B ][ C ], we can index it thus:
+//          // (a * B * C) + (b * C) + (c * 1)
+//          int idx = i + (j * xstride) + (k * xstride * ystride);
 //
-//      newphi_data[baseAddr] = (1.0 / 6.0)
-//                              * (phi_data[baseAddr - offset] + phi_data[baseAddr + offset]
-//                              + phi_data[baseAddr - (dx + offset)] + phi_data[baseAddr + dx + offset]
-//                              + phi_data[baseAddr - (dx + offset) * (offset + dy)]
-//                              + phi_data[baseAddr + (offset + dx) * (offset + dy)]);
-//      diff = newphi_data[baseAddr] - phi_data[baseAddr];
-//      residual += diff * diff;
+//          int xminus = (i - 1) + (j * xstride) + (k * xstride * ystride);
+//          int xplus  = (i + 1) + (j * xstride) + (k * xstride * ystride);
+//          int yminus = i + ((j - 1) * xstride) + (k * xstride * ystride);
+//          int yplus  = i + ((j + 1) * xstride) + (k * xstride * ystride);
+//          int zminus = i + (j * xstride) + ((k - 1) * xstride * ystride);
+//          int zplus  = i + (j * xstride) + ((k + 1) * xstride * ystride);
 //
-//      i++;
-//      if (i >= dx) {
-//        i = 1;
-//        j++;
-//        if (j >= dy) {
-//          j = 1;
-//          k++;
+//          newphi_data[idx] = (1. / 6) * (phi_data[xminus] + phi_data[xplus] + phi_data[yminus]
+//              + phi_data[yplus] + phi_data[zminus] + phi_data[zplus]);
+//
+//          double diff = newphi_data[idx] - phi_data[idx];
+//          residual += diff * diff;
 //        }
 //      }
 //    }
