@@ -51,7 +51,6 @@ DEALINGS IN THE SOFTWARE.
 using namespace Uintah;
 using namespace std;
 
-#define NEW
 
 /*-----------------------------------------------------------------------------------------
 This prepocessing tool is used to create a separate pts file for each material and patch
@@ -441,21 +440,13 @@ int main(int argc, char *argv[])
         // these points define the extremas of the grid
         Point minP(1.e30,1.e30,1.e30),maxP(-1.e30,-1.e30,-1.e30);
 
-        int nPatches = level->numPatches();
-        vector< vector<int> > points(nPatches);
-        vector<int> numPoints(nPatches);
-
         map<int,vector<dataPoint*> > patch_dataPoints;
-        Point pt;
-
-        // first determine the number of points for each patch for this matl
-        for (int p=0; p<nPatches; p++){
-          numPoints[p] = 0;
-        }
-
         const Patch* curPatch;
         unsigned int n = 0;
-
+        
+        //__________________________________
+        // loop over image and put points and scalar
+        // in the patch_dataPoints map
         for (int k=0; k<res[2]; k++) {
           for (int j=0; j<res[1]; j++) {
             for (int i=0; i<res[0]; i++, n++) {
@@ -466,15 +457,13 @@ int main(int argc, char *argv[])
 
               if ( isRightMatl ) {
 
-                pt = CreatePoint(n, res, dx, dy, dz, domain_lo, domain_hi);
+                Point pt = CreatePoint(n, res, dx, dy, dz, domain_lo, domain_hi);
                 
                 minP = Min(pt,minP);
                 maxP = Max(pt,maxP);
                 
                 curPatch = level->selectPatchForCellIndex(level->getCellIndex(pt));
                 int patchID = curPatch->getID();
-
-                numPoints[patchID]++;
                 
                 dataPoint* dp = scinew dataPoint;
                 dp->px      = pt;
@@ -482,51 +471,13 @@ int main(int argc, char *argv[])
                 // if auxilary variable is being used
                 if(d_auxMap){
                   dp->scalar  = intensityScalar_D_map[pixelValue];
-                  //cout << "pixelValue " << pixelValue << " size " << intensityScalar_D_map[pixelValue] << endl;
                 }
                 patch_dataPoints[patchID].push_back(dp);
               }
             }
           }
           fprintf(stderr, "%s : %.1f\n", "Preprocessing ", 50.0*(k+1.0)/(double)res[2]);
-          cout << " minP " << minP << " maxP " << maxP << endl;
         }
-#ifndef NEW
-  cout << " doing it the old way AAA" << endl;
-        // allocate storage for the patches
-        for (int p=0; p<nPatches; p++){
-          points[p].resize(numPoints[p]);
-          numPoints[p] = 0;
-        }
-
-        // put the points in the correct patches
-        // keep track of the min/max point locations
-        pb = pimg;
-
-        n = 0;
-        for (int k=0; k<res[2]; k++) {
-          for (int j=0; j<res[1]; j++) {
-            for (int i=0; i<res[0]; i++, pb++, n++) {
-
-              int pixelValue = *pb;
-              bool isRightMatl      = ( matl == intensityToMatl_map[pixelValue]);
-
-              if ( isRightMatl) {
-
-                pt = CreatePoint(n, res, dx, dy, dz, domain_lo, domain_hi);
-
-                const Patch* patch =   level->selectPatchForCellIndex(level->getCellIndex(pt));
-                unsigned int patchID = patch->getID();
-                minP = Min(pt,minP);
-                maxP = Max(pt,maxP);
-                points[patchID][ numPoints[patchID] ] = n;
-                numPoints[patchID]++;
-              }
-            }
-          }
-          fprintf(stderr, "%s : %.1f\r", "Preprocessing ", 50+50.0*(k+1.0)/(double)res[2]);
-        }
-#endif
 
         //__________________________________
         //  Write out the pts file for this patch and matl        
@@ -556,13 +507,12 @@ int main(int argc, char *argv[])
             fprintf(dest, "%g %g %g %g %g %g\n", x[0],x[1],x[2],x[3],x[4],x[5]);
           }
 
-#ifdef NEW
-            cout << " doing it the NEW way " << endl;
+          //__________________________________
+          // write out the datapoints for this patch
           vector<dataPoint*> dataPoints = patch_dataPoints[patchID];
           
           for ( unsigned int i= 0; i != dataPoints.size(); i++ ){ 
-            dataPoint* dp = dataPoints[i]; 
-            double scalar;
+            dataPoint* dp = dataPoints[i];
             
             x[0] = dp->px.x();
             x[1] = dp->px.y();
@@ -590,22 +540,7 @@ int main(int argc, char *argv[])
               }
             }
           }
-#else
-          cout << " doing it the old way BBB" << endl;
-          // output individual points
-          for (int I = 0; I < numPoints[patchID]; I++) {
-            pt = CreatePoint(points[patchID][I], res, dx, dy, dz, domain_lo,, domain_hi);
-            x[0] = pt.x();
-            x[1] = pt.y();
-            x[2] = pt.z();
-
-            if(binmode) {
-              fwrite(x, sizeof(double), 3, dest);
-            } else {
-              fprintf(dest, "%g %g %g\n", x[0], x[1], x[2]);
-            }
-          }
-#endif
+          
           fclose(dest);
         } // loop over patches
       } // loop over materials
@@ -731,6 +666,8 @@ bool ReadAuxFile(const string auxFileName, map<int,double>& data)
   double scalar;
   double tmp;
   
+  cout << "\nIntensity -> auxilary scalar mapping \n" << endl;
+  
   while (getline(auxFile, line)) {
     
     // throw away any line that contains #
@@ -753,8 +690,7 @@ bool ReadAuxFile(const string auxFileName, map<int,double>& data)
     }
     
     data[intensity] = scalar;
-    
-    cout << " intensity " << intensity << " scalar " << data[intensity] << endl;
+    cout << "Intensity: "<<intensity << " = scalar " << scalar << endl;
   }
   
   cout << " done reading auxfile " << endl;
