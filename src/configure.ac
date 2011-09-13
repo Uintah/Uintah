@@ -62,7 +62,7 @@
 ##  --------------------------------------------------------------------
 
 ##  initialize configure 
-AC_INIT([Uintah],[1.31],[csafe-homebrew@cs.utah.edu])
+AC_INIT([Uintah],[1.4],[uintah-developer@gforge.sci.utah.edu])
 
 ##  require autoconf version 2.68
 ##     The reason to require the latest autoconf is to try and get everyone who
@@ -309,12 +309,6 @@ SCI_ARG_WITH(mpi_extra_libs,
                  Use this additional library(or libraries - comma separated) for mpi linking),
   [with_mpi_extra_libs="$withval"],
   [with_mpi_extra_libs=""])
-SCI_ARG_WITH(mpiuni,
-  AC_HELP_STRING(--with-mpiuni=DIR,
-                 Use the mpiuni installation in DIR),
-  [with_mpiuni="$withval"
-   sci_required_mpiuni=yes],
-  [with_mpiuni=""])
 SCI_ARG_WITH(hypre,
   AC_HELP_STRING(--with-hypre=DIR,
                  Use the hypre installation in DIR),
@@ -357,12 +351,6 @@ SCI_ARG_WITH(zoltan,
   [with_zoltan="$withval"
    sci_required_zoltan=yes],
   [with_zoltan=""])
-SCI_ARG_WITH(unipetsc,
-  AC_HELP_STRING(--with-unipetsc=DIR,
-                 Use the unipetsc installation in DIR),
-  [with_unipetsc="$withval"
-   sci_required_unipetsc=yes],
-  [with_unipetsc=""])
 SCI_ARG_WITH(tau,
   AC_HELP_STRING(--with-tau=<tau-makefile>,
                  Specify a Tau Makefile),
@@ -600,11 +588,6 @@ if test -z "$DIRNAME_IS" -o -z "$BASENAME_IS"; then
   AC_MSG_ERROR(dirname or basename not found.  Configure script won't work!)
 fi
 
-## -- Can't use uni-petsc and Uintah (as Uintah needs full mpi petsc).
-
-if test "$with_unipetsc"; then
-   AC_MSG_ERROR(However Uintah requires MPI petsc - not Uni-PETSc.)
-fi
 
 ##  --------------------------------------------------------------------
 ##  -----  determine host type, processor count and OS version  --------
@@ -3209,10 +3192,6 @@ AC_SUBST(MPI_LIB_DIR_FLAG)
 sci_defs_files="$sci_defs_files include/sci_defs/mpi_testdefs.h"
 
 ##  --  search for petsc stuff  ------------------------------------------
-# a required check for an optional library for base scirun, due to that 
-# fact that if MatrixSolver will utilize uni-petsc if it exists, and uni-petsc
-# depends upon petsc - also check for mpi-uni as it most often exists in the 
-# same directory
 
 PETSC_VERSION_DIR=petsc-2.3.2
 
@@ -3250,77 +3229,6 @@ case $host in
     ;;
 esac
 fi
-# check for mpi-uni if either --with-unipetsc or --with-mpiuni,
-#   check here to look in petsc's subdirs.
-#  --  search for mpi-uni  --------------------------------------------
-# Again required for the following uni-petsc checks, that attempt to support
-# the MatrixSolver module.
-
-_sci_lib=
-_sci_inc=
-
-if test "$with_mpiuni" = "yes"; then
-  echo
-  AC_MSG_ERROR(You must specify a directory with the --with-mpiuni=dir.)
-  echo
-elif test "$with_unipetsc"; then
-
-  echo
-  # To fix this, just do the same thing as below for the full petsc.
-  AC_MSG_ERROR(FIX ME... configure for mpiuni is broken... need to handle the PETSC_SUB correctly.)
-  echo
-
-  _sci_lib="$with_unipetsc/lib/$PETSC_SUB/$PETSC_ARCH"
-  if test ! -d "$_sci_lib" || test ! -d "$with_unipetsc/include/mpiuni" ||
-     test ! -d "$with_unipetsc/bmake/$PETSC_ARCH" ; then
-    echo
-    AC_MSG_WARN(Specified unipetsc directory is invalid.  One of the following dirs does not exist:)
-    AC_MSG_WARN($_sci_lib)
-    AC_MSG_WARN($with_unipetsc/include/mpiuni)
-    AC_MSG_WARN($with_unipetsc/bmake/$PETSC_ARCH)
-    AC_MSG_ERROR(Please fix this problem and reconfigure.)
-  fi
-  _sci_inc="$with_unipetsc/include/mpiuni $with_unipetsc/bmake/$PETSC_ARCH" 
-fi
-
-SCI_TRY_LINK(MPI_UNI,mpi-uni libraries and headers,mpi.h,$_sci_inc,mpiuni,$_sci_lib,,,optional)
-
-if test "$HAVE_MPI_UNI" != "yes"; then
-   SCI_TRY_LINK(MPI_UNICH,mpiunich and pmpiunich libraries,,
-                  $_sci_inc,mpiunich pmpiunich,$_sci_lib,,,optional)
-
-   if test "$HAVE_MPI_UNICH" = "yes"; then
-     LIB_DIR_MPI_UNI="$LIB_DIR_MPI_UNICH"
-     MPI_UNI_LIB_FLAG="$MPI_UNICH_LIB_FLAG"
-     MPI_UNI_LIB_DIR_FLAG="$MPI_UNICH_LIB_DIR_FLAG"
-   fi
-fi
-
-if test "$HAVE_MPI_UNI" = "yes"; then
-   if test "$HAVE_MPI_UNICH" = "yes"; then
-     DEF_MPI_UNI="#define HAVE_MPI_UNICH 1"
-   else
-     DEF_MPI_UNI="#define HAVE_MPI_UNI 1"
-   fi
-fi
-
-if test "$with_mpiuni" && test ! "$DEF_MPI_UNI"; then
-  echo
-  AC_MSG_ERROR(One or more of the MPI_UNI components is missing.)
-  echo
-fi
-
-if test "$with_unipetsc" && test ! "$DEF_MPI_UNI"; then
-  echo
-  AC_MSG_ERROR(One or more of the MPI_UNI components is missing.)
-  echo
-fi
-
-AC_SUBST(DEF_MPI_UNI)
-AC_SUBST(INC_MPI_UNI_H)
-AC_SUBST(MPI_UNI_LIB_FLAG)
-AC_SUBST(MPI_UNI_LIB_DIR_FLAG)
-
 
 #  --  search for PETSc  --------------------------------------------
 if test -z "$PETSC_ARCH"; then
@@ -3335,9 +3243,9 @@ else
      HAVE_PETSC="yes"
      DEF_PETSC="#define HAVE_PETSC 1"
   else
-    # Make sure we have either mpi or mpi-uni, blas, and lapack
+    # Make sure we have either mpi, blas, and lapack
     # It seems that under AIX and OSF, the libs that cover blas also cover lapack
-    if (test "$HAVE_MPI" = "yes" || test "$HAVE_MPI_UNI" = "yes") && test "$HAVE_BLAS" = "yes" && 
+    if (test "$HAVE_MPI" = "yes" ) && test "$HAVE_BLAS" = "yes" && 
        (test "$PETSC_ARCH" = "aix5.1.0.0" || test "$PETSC_ARCH" = "dec" ||
         test "$HAVE_LAPACK" = "yes"); then
 
@@ -3412,59 +3320,9 @@ else
         echo
       fi
 
-      #  --  search for uni-petsc  --------------------------------------------
-
-      if test "$HAVE_PETSC" != "yes" ; then
-
-        # Only check for uni petsc if petsc not found.
-        _sci_lib=""
-        _sci_inc=""
-
-        if test "$with_unipetsc"; then
-          _sci_lib="$with_unipetsc/$PETSC_SUB/$PETSC_ARCH"
-          _sci_inc="$with_unipetsc/bmake/$PETSC_ARCH $with_unipetsc/include"
-        fi
-
-        # For petsc 2.2 use this line below:  petsc petscvec petscmat petscdm petscsnes petscts petscksp,
-        # Use -DMPIPP_H so we don't include mpi++.h where we don't want it.
-        SCI_TRY_LINK(PETSC_UNI,
-                     petsc-uni libraries and headers,
-                     petsc.h,
-                     $_sci_inc /usr/include/petsc,
-                     petsc petscvec petscmat petscdm petscsnes petscts petscksp,
-                     $_sci_lib,
-                     $LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $INC_MPI_UNI_H $MPI_UNI_LIB_DIR_FLAG $MPI_UNI_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG -DMPIPP_H,
-                     ,
-                     optional)
-
-        if test "$HAVE_PETSC_UNI" = "yes" ; then
-          DEF_PETSC_UNI="#define PETSC_UNI 1"
-        else
-          # Give it a shot on the old petsc-uni version
-          SCI_TRY_LINK(PETSC_UNI,
-                       petsc libraries and headers - old2,
-                       petsc.h,
-                       $_sci_inc /usr/include/petsc,
-                       petsc petscvec petscmat petscdm petscsnes petscts,
-                       $_sci_lib,
-                       $LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $INC_MPI_UNI_H $MPI_UNI_LIB_DIR_FLAG $MPI_UNI_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG -DMPIPP_H,
-                       ,
-                       optional)
-          if test "$HAVE_PETSC_UNI" = "yes" ; then
-            DEF_PETSC_UNI="#define PETSC_UNI 1"
-          fi  
-        fi
-
-        if test "$with_unipetsc" && test ! "$DEF_PETSC_UNI"; then
-          echo
-          AC_MSG_ERROR(One or more of the UNI-PETSC components is missing.)
-          echo
-        fi
-      fi
     else
       AC_MSG_WARN(One or more of MPI or BLAS or LAPACK is missing.)
       AC_MSG_WARN(HAVE_MPI: $HAVE_MPI)
-      AC_MSG_WARN(HAVE_MPI_UNI: $HAVE_MPI_UNI)
       AC_MSG_WARN(HAVE_BLAS: $HAVE_BLAS)
       AC_MSG_WARN(HAVE_LAPACK: $HAVE_LAPACK)
       AC_MSG_WARN(Not configuring PETSc.)
@@ -3478,11 +3336,6 @@ AC_SUBST(PETSC_LIB_DIR_FLAG)
 AC_SUBST(DEF_PETSC)
 AC_SUBST(INC_PETSC_H)
 
-AC_SUBST(HAVE_PETSC_UNI)
-AC_SUBST(PETSC_UNI_LIB_FLAG)
-AC_SUBST(PETSC_UNI_LIB_DIR_FLAG)
-AC_SUBST(DEF_PETSC_UNI)
-AC_SUBST(INC_PETSC_UNI_H)
 sci_defs_files="$sci_defs_files include/sci_defs/petsc_testdefs.h"
 
 
