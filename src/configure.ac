@@ -3300,7 +3300,7 @@ else
 
         # For Petsc 2.2 use this line below:   petsc petscvec petscmat petscdm petscsnes petscts petscksp $LAPACK_LIB_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $MPI_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $DL_LIB_FLAG,
         # Use -DMPIPP_H so we don't include mpi++.h where we don't want it.
-	if test $SINGLE_LIB -eq 0; then
+	if test $SINGLE_LIB = "0"; then
         	SCI_TRY_LINK(PETSC,
                      petsc libraries and headers (petsc_arch = $petsc_arch),
                      petsc.h,
@@ -3312,7 +3312,7 @@ else
                      optional)
 	fi
        	# For PETSC 3.x, a single petsc library is created called libpetsc 
-	if test $SINGLE_LIB -eq 1; then
+	if test $SINGLE_LIB = "1"; then
 		SCI_TRY_LINK(PETSC,
                      petsc libraries and headers (petsc_arch = $petsc_arch),
                      petsc.h,
