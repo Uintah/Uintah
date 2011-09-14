@@ -76,6 +76,8 @@ AdvectSlabs::AdvectSlabs(const ProcessorGroup* myworld)
     S_ac[FRONT]  =  IntVector( 0, 0, 1);   
     S_ac[BACK]   =  IntVector( 0, 0,-1);
     
+
+    
     // initialize all the fluxes to 1
     /* 
     for(int f = TOP; f <= BACK; f++ )  {
@@ -126,7 +128,7 @@ AdvectSlabs::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
   Task* task = scinew Task("timeAdvance",
 			   this, &AdvectSlabs::timeAdvance);
 
-  task->requires(Task::OldDW, mass_label, Ghost::AroundNodes, 1);
+  task->requires(Task::OldDW, mass_label, Ghost::AroundCells, 1);
   task->computes(mass_label);
   task->computes(massAdvected_label);
   sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
@@ -144,27 +146,27 @@ void AdvectSlabs::computeStableTimestep(const ProcessorGroup*,
 void AdvectSlabs::initialize(const ProcessorGroup*,
 		       const PatchSubset* patches,
 		       const MaterialSubset* matls,
-		       DataWarehouse*, DataWarehouse* new_dw)
+		       DataWarehouse*old_dw, DataWarehouse* new_dw)
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
       
-    new_dw->allocateTemporary(d_OFS,patch, Ghost::AroundCells,1);
+    new_dw->allocateTemporary(d_OFS, patch, Ghost::AroundCells,1);
     for(int m = 0;m<matls->size();m++){
       int matl = matls->get(m);
 
       CCVariable<double> mass, massAd;
-      new_dw->allocateAndPut(mass, mass_label, matl, patch);
-      new_dw->allocateAndPut(massAd, massAdvected_label, matl, patch);
+      new_dw->allocateAndPut(mass,   mass_label,         matl, patch, Ghost::AroundCells, 1);
+      new_dw->allocateAndPut(massAd, massAdvected_label, matl, patch, Ghost::AroundCells, 1);
       mass.initialize(0.0);
       massAd.initialize(0.0);
         
       for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++)
       {
         // set initial value for fluxes
-        for(int face = TOP; face <= BACK; face++ )  {
-          d_OFS[*iter].d_fflux[face]= 1;
-        }
+      //  for(int face = TOP; face <= BACK; face++ )  {
+      //    d_OFS[*iter].d_fflux[face]= 1;
+      //  }
         // set up the initial mass
         mass[*iter]=1;
       }
@@ -178,22 +180,24 @@ void AdvectSlabs::timeAdvance(const ProcessorGroup* pg,
                                DataWarehouse* old_dw, DataWarehouse* new_dw)
 {
     // MAKE SURE ONLY 1 MATERIAL
-    
+    struct fflux ff; 
     for(int p=0;p<patches->size();p++){
         const Patch* patch = patches->get(p);
         Vector dx = patch->dCell();            
         double invvol = 1.0/(dx.x() * dx.y() * dx.z());                     
     
- 
+        //new_dw->allocateTemporary(d_OFS, patch, Ghost::AroundCells, 1);
+        d_OFS.initialize(ff);
         for(int m = 0;m<matls->size();m++){
           int matl = matls->get(m);
 
           // variable to get
           constCCVariable<double> mass;
-          CCVariable<double>      massAd;
+          CCVariable<double>      mass2, massAd;
         
-          old_dw->get(mass, mass_label, matl, patch, Ghost::AroundNodes, 1);
-          new_dw->allocateAndPut(massAd, massAdvected_label, matl, patch);
+          old_dw->get(mass, mass_label, matl, patch, Ghost::AroundCells, 1);
+          new_dw->allocateAndPut(mass2, mass_label, matl, patch, Ghost::AroundCells, 1 );
+          new_dw->allocateAndPut(massAd, massAdvected_label, matl, patch, Ghost::AroundCells, 1 );
         
           for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) { 
               const IntVector& c = *iter;  
@@ -211,7 +215,7 @@ void AdvectSlabs::timeAdvance(const ProcessorGroup* pg,
                 IntVector ac = c + S_ac[f];     // slab adjacent cell
                 double outfluxVol = d_OFS[c ].d_fflux[OF_slab[f]];
                 double influxVol  = d_OFS[ac].d_fflux[IF_slab[f]];
-            
+                
                 double q_faceFlux_tmp  =   mass[ac] * influxVol - mass[c] * outfluxVol;
             
                 faceVol[f]       =  outfluxVol +  influxVol;
@@ -219,6 +223,7 @@ void AdvectSlabs::timeAdvance(const ProcessorGroup* pg,
                 sum_q_face_flux += q_faceFlux_tmp;
               }  
               massAd[c] = sum_q_face_flux*invvol;
+              mass2[c] = mass[c] - massAd[c];
            }
         }
     }

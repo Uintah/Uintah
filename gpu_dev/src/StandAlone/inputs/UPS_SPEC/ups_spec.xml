@@ -328,7 +328,7 @@
     <SimulationComponent          spec="REQUIRED NO_DATA"
                                     attribute1="type REQUIRED STRING 'angio, arches, burger, ice, impm, mpm, mpmarches, 
                                                                       mpmf, mpmice, amrmpm,
-                                                                      wasatch, reduce_uda,
+                                                                      wasatch, reduce_uda, advectslabs,
                                                                       poisson1, poissongpu1, poisson2, poisson3, poisson4, benchmark, rigidmpmice, 
                                                                       rmpmice, smpm, smpmice, spatialops, switcher, wave, solvertest, RMCRT_Test'" >
                                   <!-- The 'type' above is used in CCA/Components/Parent/ComponentFactory.cc -->
@@ -822,6 +822,10 @@
     <delt                     spec="REQUIRED DOUBLE" />
     <maxresidual              spec="REQUIRED DOUBLE" />
   </Poisson>
+
+  <AdvectSlabs                spec="OPTIONAL NO_DATA" >
+    <delt                     spec="REQUIRED DOUBLE" />
+  </AdvectSlabs>
 
   <!--  Particle Test Component -->
   <ParticleTest1              spec="OPTIONAL NO_DATA" >

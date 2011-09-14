@@ -33,6 +33,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Examples/Burger.h>
 #include <CCA/Components/Examples/RMCRT_Test.h>
 #include <CCA/Components/Examples/ParticleTest1.h>
+#include <CCA/Components/Examples/AdvectSlabs.h>
 #include <CCA/Components/Examples/Poisson1.h>
 #include <CCA/Components/Examples/PoissonGPU1.h>
 #include <CCA/Components/Examples/Poisson2.h>
@@ -187,6 +188,9 @@ ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world,
 #endif
   if (sim_comp == "poisson1" || sim_comp == "POISSON1") {
     return scinew Poisson1(world);
+  } 
+  if (sim_comp == "advectslabs" || sim_comp == "ADVECTSLABS") {
+    return scinew AdvectSlabs(world);
   } 
 #ifdef HAVE_CUDA
   if (sim_comp == "poissongpu1" || sim_comp == "POISSONGPU1") {
