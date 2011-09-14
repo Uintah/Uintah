@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- @version: -->
+<Uintah_specification>
+
+  <Meta>
+    <title>none</title>
+  </Meta>
+  <!--____________________________________________________________________-->
+  <!--         C O M P O N E N T   S W I T C H E R                        -->
+  <!--____________________________________________________________________-->
+  <SimulationComponent type="switcher" >
+  
+    <subcomponent>                                                   
+      <input_file>inputs/UCF/JP8-switch.ups</input_file>             
+
+      <SwitchCriteria type = "Timestep">                             
+        <timestep> 3 </timestep>                                     
+      </SwitchCriteria>                                              
+    </subcomponent>                                                  
+                                                                     
+    <subcomponent>                                                   
+      <input_file>inputs/UCF/ContainerHeatUp3D.ups</input_file>      
+      <init var = "p.acceleration"     matls = "mpm_matls"/>      
+      <init var = "p.externalHeatFlux" matls = "mpm_matls"/> 
+    </subcomponent>                                                  
+    
+    <carry_over var="g.temperature" />
+        
+  </SimulationComponent>
+   
+    <!--____________________________________________________________________-->
+    <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
+    <!--____________________________________________________________________-->
+    <Time>
+       <maxTime>1.0 </maxTime>      <!-- persistent across all subcomponents -->
+       <initTime>0.0</initTime>      <!-- ignored -->
+       <delt_min>0</delt_min>        <!-- ignored -->
+       <delt_max>0</delt_max>        <!-- ignored -->
+       <timestep_multiplier>0.0</timestep_multiplier>
+       <max_Timesteps> 10 </max_Timesteps>
+   </Time>
+
+  <!--____________________________________________________________________-->
+  <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
+  <!--____________________________________________________________________-->
+  <DataArchiver>  
+    <filebase>imp_mpm_switch2.uda</filebase>
+    <outputInterval> 0.0 </outputInterval> <!-- (Explicitly) don't save any data... -->
+  </DataArchiver>
+
+    <!--____________________________________________________________________-->
+    <!--      G  R  I  D     V  A  R  I  A  B  L  E  S                      -->
+    <!--  This must identical to what's in the ups file                     -->
+    <!--____________________________________________________________________-->
+  <Grid>
+   <BoundaryConditions>
+      <!--______________LEFT____________________-->
+      <Face side = "x-">
+        <BCType id = "0"   label = "Pressure"     var = "Dirichlet">
+                              <value> 101325.0   </value>
+        </BCType>
+        <BCType id = "all" label = "Velocity"     var = "Neumann">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "all" label = "Temperature"  var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" label = "Density"      var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0  </value>
+        </BCType>
+      </Face>
+      <!--______________RIGHT____________________-->
+      <Face side = "x+">
+        <BCType id = "0"   label = "Pressure"     var = "Dirichlet">
+                              <value> 101325.0   </value>
+        </BCType>
+        <BCType id = "all" label = "Velocity"     var = "Neumann">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "all" label = "Temperature"  var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" label = "Density"      var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0  </value>
+        </BCType>
+      </Face>
+      <!--______________BOTTOM____________-->
+      <Face side = "y-">
+        <BCType id = "0"   label = "Pressure"     var = "Dirichlet">
+                              <value> 101325.0   </value>
+        </BCType>
+        <BCType id = "all" label = "Velocity"     var = "Neumann">
+                              <value> [0.,0.0,0.] </value>
+        </BCType>
+        <BCType id = "all" label = "Temperature"  var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" label = "Density"      var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0  </value>
+        </BCType>
+      </Face>   
+      <!--______________TOP____________________-->               
+      <Face side = "y+">
+        <BCType id = "0"   label = "Pressure"     var = "Dirichlet">
+                              <value> 101325.0   </value>
+        </BCType>
+        <BCType id = "all" label = "Velocity"     var = "Neumann">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "all" label = "Temperature"  var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" label = "Density"      var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0  </value>
+        </BCType>
+      </Face>
+      <!--______________BACK____________________-->
+      <Face side = "z-">
+        <BCType id = "0"   label = "Pressure"     var = "Dirichlet">
+                              <value> 101325.0   </value>
+        </BCType>
+        <BCType id = "all" label = "Velocity"     var = "Neumann">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "all" label = "Temperature"  var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" label = "Density"      var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0  </value>
+        </BCType>
+      </Face>  
+      <!--______________FRONT____________________--> 
+      <Face side = "z+">
+        <BCType id = "0"   label = "Pressure"     var = "Dirichlet">
+                              <value> 101325.0   </value>
+        </BCType>
+        <BCType id = "all" label = "Velocity"     var = "Neumann">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "all" label = "Temperature"  var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" label = "Density"      var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0  </value>
+        </BCType>
+      </Face>
+    </BoundaryConditions>
+    <!--____________________________________________________________________-->
+    <Level>
+           <Box label = "3D">
+              <lower>        [-0.1,-0.1,-0.1]   </lower>
+              <upper>        [ 0.1, 0.1, 0.1]   </upper>
+
+              <extraCells>   [1,1,1]            </extraCells>
+              <patches>      [1,1,1]            </patches>
+              <resolution>   [20,20,20]          </resolution>
+           </Box>
+    </Level>
+  </Grid>
+</Uintah_specification>
