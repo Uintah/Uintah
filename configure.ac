@@ -3195,45 +3195,45 @@ sci_defs_files="$sci_defs_files include/sci_defs/mpi_testdefs.h"
 
 PETSC_VERSION_DIR=petsc-2.3.2
 
-if test -z "$PETSC_ARCH"; then
-case $host in
-  *linux*)
-    if test "$enable_64bit" = "yes"; then
-      PETSC_ARCH=linux64
-    else
-      PETSC_ARCH=linux
-    fi
-    ;;
-  *-dec*)
-    if test "$petsc"; then
-      SCI_MSG_ERROR(PETSC ARCH not set for Tru64.  Need to fix this.)
-    else
-      PETSC_ARCH=dec
-    fi
-    ;;
-  *-aix*)
-    PETSC_ARCH=aix5.1.0.0
-    ;;
-  *-darwin*)
-      if test `uname -p` = "i386"; then
-        PETSC_ARCH=i386
-      else 
-        PETSC_ARCH=ppc
-      fi
-    ;;
-  *-pc-mingw*)
-    PETSC_ARCH=win
-    ;;
-  *)
-    PETSC_ARCH=""
-    ;;
-esac
-fi
+##if test -z "$PETSC_ARCH"; then
+##case $host in
+##  *linux*)
+##    if test "$enable_64bit" = "yes"; then
+##      PETSC_ARCH=linux64
+##    else
+##      PETSC_ARCH=linux
+##    fi
+##    ;;
+##  *-dec*)
+##    if test "$petsc"; then
+##      SCI_MSG_ERROR(PETSC ARCH not set for Tru64.  Need to fix this.)
+##    else
+##      PETSC_ARCH=dec
+##    fi
+##    ;;
+##  *-aix*)
+##    PETSC_ARCH=aix5.1.0.0
+##    ;;
+##  *-darwin*)
+##      if test `uname -p` = "i386"; then
+##        PETSC_ARCH=i386
+##      else 
+##        PETSC_ARCH=ppc
+##      fi
+##    ;;
+##  *-pc-mingw*)
+##    PETSC_ARCH=win
+##    ;;
+##  *)
+##    PETSC_ARCH=""
+##    ;;
+##esac
+##fi
 
 #  --  search for PETSc  --------------------------------------------
-if test -z "$PETSC_ARCH"; then
-   AC_MSG_ERROR(PETSC_ARCH environment var is not set.  Please set.)
-fi
+##if test -z "$PETSC_ARCH"; then
+##   AC_MSG_ERROR(PETSC_ARCH environment var is not set.  Please set.)
+##fi
 
 if test "$with_petsc" == "no"; then # Handle --without option
   AC_MSG_WARN( "PETSc disabled." )
@@ -3252,7 +3252,8 @@ else
       _sci_lib_dir=
       _sci_inc=
 
-      for petsc_arch in "$PETSC_ARCH" linux-gnu linux-gnu-c-opt; do
+##      for petsc_arch in "$PETSC_ARCH" linux-gnu linux-gnu-c-opt; do
+      for petsc_arch in "$PETSC_ARCH"; do
         if test "$HAVE_PETSC" = "yes"; then
           break
         fi
@@ -3305,6 +3306,7 @@ else
         # For Petsc 2.2 use this line below:   petsc petscvec petscmat petscdm petscsnes petscts petscksp $LAPACK_LIB_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $MPI_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $DL_LIB_FLAG,
         # Use -DMPIPP_H so we don't include mpi++.h where we don't want it.
 	if test "$SINGLE_LIB" = "0"; then
+
         	SCI_TRY_LINK(PETSC,
                      petsc libraries and headers (petsc_arch = $petsc_arch),
                      petsc.h,

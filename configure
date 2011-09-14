@@ -37367,73 +37367,45 @@ sci_defs_files="$sci_defs_files include/sci_defs/mpi_testdefs.h"
 
 PETSC_VERSION_DIR=petsc-2.3.2
 
-if test -z "$PETSC_ARCH"; then
-case $host in
-  *linux*)
-    if test "$enable_64bit" = "yes"; then
-      PETSC_ARCH=linux64
-    else
-      PETSC_ARCH=linux
-    fi
-    ;;
-  *-dec*)
-    if test "$petsc"; then
-
-## SCI_MSG_ERROR
-if test -z "$debugging"; then
-  { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING:
-    Adding '--enable-verbosity' to configure line
-    _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
-    Digging through the config.log file is your best option
-    for determining what went wrong.  Search for the specific lib/file
-    that configured failed to find.  There should be a compile line
-    and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it - the true
-    error most likely will show up.
-  " >&5
-$as_echo "$as_me: WARNING:
-    Adding '--enable-verbosity' to configure line
-    _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
-    Digging through the config.log file is your best option
-    for determining what went wrong.  Search for the specific lib/file
-    that configured failed to find.  There should be a compile line
-    and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it - the true
-    error most likely will show up.
-  " >&2;}
-fi
-
-as_fn_error $? "PETSC ARCH not set for Tru64.  Need to fix this." "$LINENO" 5
-
-    else
-      PETSC_ARCH=dec
-    fi
-    ;;
-  *-aix*)
-    PETSC_ARCH=aix5.1.0.0
-    ;;
-  *-darwin*)
-      if test `uname -p` = "i386"; then
-        PETSC_ARCH=i386
-      else
-        PETSC_ARCH=ppc
-      fi
-    ;;
-  *-pc-mingw*)
-    PETSC_ARCH=win
-    ;;
-  *)
-    PETSC_ARCH=""
-    ;;
-esac
-fi
+##if test -z "$PETSC_ARCH"; then
+##case $host in
+##  *linux*)
+##    if test "$enable_64bit" = "yes"; then
+##      PETSC_ARCH=linux64
+##    else
+##      PETSC_ARCH=linux
+##    fi
+##    ;;
+##  *-dec*)
+##    if test "$petsc"; then
+##      SCI_MSG_ERROR(PETSC ARCH not set for Tru64.  Need to fix this.)
+##    else
+##      PETSC_ARCH=dec
+##    fi
+##    ;;
+##  *-aix*)
+##    PETSC_ARCH=aix5.1.0.0
+##    ;;
+##  *-darwin*)
+##      if test `uname -p` = "i386"; then
+##        PETSC_ARCH=i386
+##      else
+##        PETSC_ARCH=ppc
+##      fi
+##    ;;
+##  *-pc-mingw*)
+##    PETSC_ARCH=win
+##    ;;
+##  *)
+##    PETSC_ARCH=""
+##    ;;
+##esac
+##fi
 
 #  --  search for PETSc  --------------------------------------------
-if test -z "$PETSC_ARCH"; then
-   as_fn_error $? "PETSC_ARCH environment var is not set.  Please set." "$LINENO" 5
-fi
+##if test -z "$PETSC_ARCH"; then
+##   AC_MSG_ERROR(PETSC_ARCH environment var is not set.  Please set.)
+##fi
 
 if test "$with_petsc" == "no"; then # Handle --without option
   { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: \"PETSc disabled.\" " >&5
@@ -37453,7 +37425,8 @@ else
       _sci_lib_dir=
       _sci_inc=
 
-      for petsc_arch in "$PETSC_ARCH" linux-gnu linux-gnu-c-opt; do
+##      for petsc_arch in "$PETSC_ARCH" linux-gnu linux-gnu-c-opt; do
+      for petsc_arch in "$PETSC_ARCH"; do
         if test "$HAVE_PETSC" = "yes"; then
           break
         fi
@@ -37506,6 +37479,7 @@ else
         # For Petsc 2.2 use this line below:   petsc petscvec petscmat petscdm petscsnes petscts petscksp $LAPACK_LIB_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $MPI_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $DL_LIB_FLAG,
         # Use -DMPIPP_H so we don't include mpi++.h where we don't want it.
 	if test "$SINGLE_LIB" = "0"; then
+
 
 ##
 ## SCI_TRY_LINK (PETSC):  petsc libraries and headers (petsc_arch = $petsc_arch)
