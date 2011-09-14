@@ -50,6 +50,7 @@ SRCS     += \
 	$(SRCDIR)/SolverTest1.cc     \
 	$(SRCDIR)/RegionDB.cc        \
 	$(SRCDIR)/Benchmark.cc       \
+	$(SRCDIR)/AdvectSlabs.cc       \
 	$(SRCDIR)/PoissonGPU1.cu
        
 ifeq ($(BUILD_MODELS_RADIATION),yes)
