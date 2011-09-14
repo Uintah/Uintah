@@ -323,7 +323,8 @@ Switcher::problemSetup( const ProblemSpecP& /*params*/,
       }
       
       varLabels.push_back(label);
-     // sched->overrideVariableBehavior(varName, false, false, true);
+      // so variable is not scrubbed from the data warehouse
+      sched->overrideVariableBehavior(varName, false, false, true);
     }
 
     d_initVars[comp]->varLabels = varLabels;
@@ -336,6 +337,8 @@ Switcher::problemSetup( const ProblemSpecP& /*params*/,
     VarLabel* label = VarLabel::find(d_carryOverVars[i]);
     if (label) {
       d_carryOverVarLabels.push_back(label);
+      
+      // so variable is not scrubbed from the data warehouse
       sched->overrideVariableBehavior(d_carryOverVars[i], false, false, true);
     }
     else {
@@ -380,17 +383,19 @@ Switcher::scheduleFinalizeTimestep( const LevelP& level,
                                     SchedulerP& sched)
 {
   printSchedule(level,dbg,"Switcher::scheduleFinalizeTimestep");
-  d_sim->scheduleFinalizeTimestep(level, sched);
-
+  
+  d_sim->scheduleFinalizeTimestep(level, sched); 
+  
   scheduleSwitchTest(level,sched);
 
-  // compute vars for the next component that may not have been computed by the current
+  // compute variables that are required from the old_dw 
   scheduleInitNewVars(level,sched);
 
   scheduleSwitchInitialization(level,sched);
 
   // carry over vars that will be needed by a future component
   scheduleCarryOverVars(level,sched);
+ 
 }
 
 //______________________________________________________________________
@@ -464,10 +469,11 @@ void Switcher::scheduleInitNewVars(const LevelP& level,
       throw ProblemSetupException("Bad material set", __FILE__, __LINE__);
     }
     matlSet.push_back(matls);
-    proc0cout << "    varName: " << initVar->varNames[i] << " \t matls: " 
+    proc0cout << "init Variable  " << initVar->varNames[i] << " \t matls: " 
               << nextComp_matls << " levels " << initVar->levels[i] << endl;  
     
     const MaterialSubset* matl_ss = matls->getUnion();
+    
     t->computes(label, matl_ss);
   }
 
@@ -562,7 +568,7 @@ void Switcher::switchTest(const ProcessorGroup*,
 }
 
 //______________________________________________________________________
-//
+//  This only get executed if a switching components has been called for.
 void Switcher::initNewVars(const ProcessorGroup*,
                            const PatchSubset* patches,
                            const MaterialSubset* matls,
@@ -572,10 +578,13 @@ void Switcher::initNewVars(const ProcessorGroup*,
   max_vartype switch_condition;
   new_dw->get(switch_condition, d_sharedState->get_switch_label(), 0);
 
+
   if (!switch_condition)
-    return;
+    return; 
+
     
-  dbg << "Doing initNewVars \t\t\t\tSwitcher"<< endl;
+  proc0cout << "__________________________________" << endl;
+  proc0cout << "initNewVars \t\t\t\tSwitcher"<< endl;
   //__________________________________
   //
   initVars* initVar  = d_initVars.find(d_componentIndex+1)->second;
@@ -593,7 +602,7 @@ void Switcher::initNewVars(const ProcessorGroup*,
     int relative_indx   = L_indx - numLevels;
     int init_Levels     = initVar->levels[i];
     
-    cout << "    varName: " << l->getName() << " \t\t matls " << initVar->matlSetNames[i] << " level " << init_Levels << endl;
+    proc0cout << "    varName: " << l->getName() << " \t\t matls " << initVar->matlSetNames[i] << " level " << init_Levels << endl;
     
     bool onThisLevel = false;
 
@@ -620,12 +629,15 @@ void Switcher::initNewVars(const ProcessorGroup*,
     
     for (int m = 0; m < matls->size(); m++) {
       const int indx = matls->get(m);
-        
+         
       for (int p = 0; p < patches->size(); p++) {
         const Patch* patch = patches->get(p);
         
+        proc0cout << "    indx: " << indx << " patch " << *patch << " " << l->getName() << endl;
+        
         // loop over certain vars and init them into the DW
         switch(l->typeDescription()->getType()) {
+        
         //__________________________________
         //
         case TypeDescription::CCVariable:
@@ -674,7 +686,8 @@ void Switcher::initNewVars(const ProcessorGroup*,
         //
         case TypeDescription::ParticleVariable:
           {
-          ParticleSubset* pset = new_dw->getParticleSubset(indx, patch);
+          
+          ParticleSubset* pset = old_dw->getParticleSubset(indx, patch); 
           switch(l->typeDescription()->getSubType()->getType()) {
           case TypeDescription::int_type:
             {
@@ -724,9 +737,10 @@ void Switcher::initNewVars(const ProcessorGroup*,
         default:
           throw ProblemSetupException("Unknown type", __FILE__, __LINE__);
         }
-      }
-    }
-  }
+      }  // patch loop
+    }  // matl loop
+  }  // varlabel loop
+  proc0cout << "__________________________________" << endl;
 }
 //______________________________________________________________________
 //
@@ -792,7 +806,7 @@ Switcher::needRecompile( double time,
     comp->attachPort("scheduler", sched);
     comp->attachPort("output",    dataArchiver);
   
-    proc0cout << "\n------------ Switching to component (" << d_componentIndex <<") \n";
+    proc0cout << "\n__________________________________ Switching to component (" << d_componentIndex <<") \n";
     proc0cout << "  Reading input file: " << d_in_file[d_componentIndex] << "\n";
     
     // read in the problemSpec on next subcomponent
@@ -818,7 +832,7 @@ Switcher::needRecompile( double time,
     }
 
     retval = true;
-    proc0cout << "-----------------------------------\n\n";
+    proc0cout << "__________________________________\n\n";
   } 
   else {
     d_sharedState->d_switchState = false;
