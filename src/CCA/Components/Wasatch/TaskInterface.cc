@@ -539,7 +539,8 @@ namespace Wasatch{
   //------------------------------------------------------------------
   
   Expr::ExpressionTree::TreePtr 
-  TaskInterface::get_time_tree() {
+  TaskInterface::get_time_tree()
+  {
     typedef Expr::ExpressionTree::TreePtr TreePtr;
     typedef std::pair< TreePtr, Uintah::Task* > TreeTaskPair;
     typedef std::map< int, TreeTaskPair > PatchTreeMap;
@@ -553,7 +554,8 @@ namespace Wasatch{
       if (tree->name()=="set time") {
         return tree;
       }
-    }    
+    }
+    throw std::runtime_error( "TaskInterface::get_time_tree() could not resolve a valid tree");
   }
   
   //------------------------------------------------------------------
