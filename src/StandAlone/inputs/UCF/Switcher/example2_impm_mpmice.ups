@@ -11,7 +11,7 @@
   <SimulationComponent type="switcher" >
   
     <subcomponent>                                                   
-      <input_file>inputs/UCF/JP8-switch.ups</input_file>             
+      <input_file>inputs/UCF/Switcher/ex2_phase1.ups</input_file>             
 
       <SwitchCriteria type = "Timestep">                             
         <timestep> 3 </timestep>                                     
@@ -19,7 +19,7 @@
     </subcomponent>                                                  
                                                                      
     <subcomponent>                                                   
-      <input_file>inputs/UCF/ContainerHeatUp3D.ups</input_file>      
+      <input_file>inputs/UCF/Switcher/ex2_phase2.ups</input_file>      
       <init var = "p.acceleration"     matls = "mpm_matls"/>      
       <init var = "p.externalHeatFlux" matls = "mpm_matls"/> 
     </subcomponent>                                                  
@@ -44,7 +44,7 @@
   <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
   <!--____________________________________________________________________-->
   <DataArchiver>  
-    <filebase>imp_mpm_switch2.uda</filebase>
+    <filebase>example2_imp_mpmice.uda</filebase>
     <outputInterval> 0.0 </outputInterval> <!-- (Explicitly) don't save any data... -->
   </DataArchiver>
 
