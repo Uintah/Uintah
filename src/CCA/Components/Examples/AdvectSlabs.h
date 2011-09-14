@@ -32,7 +32,7 @@ DEALINGS IN THE SOFTWARE.
 #ifndef Packages_Uintah_CCA_Components_Examples_AdvectSlabs_h
 #define Packages_Uintah_CCA_Components_Examples_AdvectSlabs_h
 
-#include <CCA/Components/ICE/Advection/FluxDatatypes.h>
+#include <CCA/Components/ICE/Advection/Advector.h>
 #include <Core/Parallel/UintahParallelComponent.h>
 #include <CCA/Ports/SimulationInterface.h>
 #include <Core/Grid/Variables/ComputeSet.h>
