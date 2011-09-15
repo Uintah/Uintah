@@ -116,7 +116,7 @@ void SimpleBurnCriteria::switchTest(const ProcessorGroup* group,
 
     for(int p=0;p<patches->size();p++){
       const Patch* patch = patches->get(p);
-      printTask(patches, patch,dbg,"Doing Switching Criteria:SimpleBurnCriteria::switchTest");
+      printTask(patches, patch,dbg,"Doing SimpleBurnCriteria::switchTest");
 
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(d_material);
       int indx = mpm_matl->getDWIndex();
@@ -154,9 +154,10 @@ void SimpleBurnCriteria::switchTest(const ProcessorGroup* group,
         if ( ratio > 0.4 && ratio < 1.0 &&  MaxMass > d_TINY_RHO){
           if(Temp_CC_mpm >= d_temperature){
            timeToSwitch=1;
-           cout << " The switching criteria satisfied in cell "<<c
-                << " (MaxMass-MinMass)/MaxMass " << ratio
-                << " temp_CC_mpm " << Temp_CC_mpm << endl;
+           cout << " \n"
+                << " The simpleBurn switching criteria is satisfied in cell " << c
+                << " (MaxMass-MinMass)/MaxMass = " << ratio
+                << ", temp_CC_mpm= " << Temp_CC_mpm << "\n"<< endl;
            break;
           }
         }

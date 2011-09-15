@@ -76,7 +76,7 @@ void TimestepNumber::switchTest(const ProcessorGroup* group,
                                 DataWarehouse* old_dw,
                                 DataWarehouse* new_dw)
 {
-  dbg << " Doing Switchinng Criteria:TimestepNumber::switchTest" <<  endl;
+  dbg << "Doing Switch Criteria:TimestepNumber";
   double sw = 0;
 
   unsigned int time_step = d_sharedState->getCurrentTopLevelTimeStep();
@@ -84,6 +84,8 @@ void TimestepNumber::switchTest(const ProcessorGroup* group,
     sw = 1;
   else
     sw = 0;
+  
+  dbg  << " is it time to switch components: " << sw << endl;
 
   max_vartype switch_condition(sw);
   

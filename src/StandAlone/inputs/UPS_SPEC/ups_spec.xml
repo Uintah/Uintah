@@ -343,7 +343,7 @@
                                   <!-- The 'type' above is used in CCA/Components/Parent/ComponentFactory.cc -->
           <input_file               spec="REQUIRED STRING" />
           <SwitchCriteria           spec="OPTIONAL NO_DATA" 
-                                  attribute1="type REQUIRED STRING 'steadyBurn, Timestep'" >
+                                  attribute1="type REQUIRED STRING 'steadyBurn, Timestep, simpleBurn'" >
             <timestep               spec="REQUIRED INTEGER" need_applies_to="type Timestep"   />
             <reactant_material      spec="REQUIRED INTEGER" need_applies_to="type steadyBurn" />
             <BoundaryParticles      spec="REQUIRED INTEGER" need_applies_to="type steadyBurn" />
