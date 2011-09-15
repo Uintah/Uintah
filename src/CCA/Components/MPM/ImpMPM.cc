@@ -156,6 +156,7 @@ void ImpMPM::problemSetup(const ProblemSpecP& prob_spec,
                           const ProblemSpecP& restart_prob_spec,GridP& grid,
                           SimulationStateP& sharedState)
 {
+   cout_doing << " Doing ImpMPM::problemSetup " << endl;
    d_sharedState = sharedState;
    dynamic_cast<Scheduler*>(getPort("scheduler"))->setPositionVar(lb->pXLabel);
   
@@ -932,19 +933,18 @@ void ImpMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   t->requires(Task::NewDW, lb->pExtForceLabel_preReloc,Ghost::AroundNodes,1);
   t->requires(Task::NewDW, lb->pExternalHeatRateLabel, Ghost::AroundNodes,1);
   t->requires(Task::NewDW, lb->pExternalHeatFluxLabel_preReloc, 
-              Ghost::AroundNodes,1);
+                                                       Ghost::AroundNodes,1);
   if(!flags->d_doGridReset){
     t->requires(Task::OldDW,lb->gDisplacementLabel,    Ghost::None);
     t->computes(lb->gDisplacementLabel);
   }
   t->requires(Task::OldDW, lb->pDeformationMeasureLabel,   Ghost::AroundNodes,1);
 
-
   t->requires(Task::OldDW,lb->NC_CCweightLabel, one_matl,Ghost::AroundCells,1);
-  if (flags->d_temp_solve == false)
-    //    t->requires(Task::OldDW,lb->gTemperatureLabel,one_matl,Ghost::AroundCells,1);
+  
+  if (flags->d_temp_solve == false){
     t->requires(Task::OldDW,lb->gTemperatureLabel,one_matl,Ghost::None,0);
-
+  }
   t->computes(lb->gMassLabel,        d_sharedState->getAllInOneMatl(),
               Task::OutOfDomain);
   t->computes(lb->gVolumeLabel,      d_sharedState->getAllInOneMatl(),
@@ -1737,16 +1737,20 @@ void ImpMPM::iterate(const ProcessorGroup*,
     d_subsched->get_dw(3)->get(dispIncNormMax,lb->dispIncNormMax);
     d_subsched->get_dw(3)->get(dispIncQNorm0, lb->dispIncQNorm0);
 
+    double frac_Norm  = dispIncNorm/(dispIncNormMax + 1.e-100);
+    double frac_QNorm = dispIncQNorm/(dispIncQNorm0 + 1.e-100);
+
     if(UintahParallelComponent::d_myworld->myrank() == 0){
-      cerr << "dispIncNorm/dispIncNormMax = "
-           << dispIncNorm/(dispIncNormMax + 1.e-100) << "\n";
-      cerr << "dispIncQNorm/dispIncQNorm0 = "
-           << dispIncQNorm/(dispIncQNorm0 + 1.e-100) << "\n";
+      cerr << "dispIncNorm/dispIncNormMax = " << frac_Norm << "\n";
+      cerr << "dispIncQNorm/dispIncQNorm0 = "<< frac_QNorm << "\n";
     }
-    if (dispIncNorm/(dispIncNormMax + 1e-100) <= flags->d_conv_crit_disp)
+    if( (frac_Norm  <= flags->d_conv_crit_disp) || (dispIncNormMax <= flags->d_conv_crit_disp) ){
       dispInc = true;
-    if (dispIncQNorm/(dispIncQNorm0 + 1e-100) <= flags->d_conv_crit_energy)
+    }  
+    if( (frac_QNorm <= flags->d_conv_crit_energy) || (dispIncQNorm0 <= flags->d_conv_crit_energy) ){
       dispIncQ = true;
+    }
+    
     // Check to see if the residual is likely a nan, if so, we'll restart.
     bool restart_nan=false;
     bool restart_neg_residual=false;
@@ -2170,6 +2174,7 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 
     new_dw->allocateAndPut(gTemperature,lb->gTemperatureLabel, 0,patch);
     gTemperature.initialize(0.0);
+    
     if (flags->d_temp_solve == false)
       old_dw->get(gTemperatureOld, lb->gTemperatureLabel,0,patch,Ghost::None,0);
 
