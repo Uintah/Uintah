@@ -502,7 +502,6 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
 
           // currently assuming a constant value across the boundary
           bc_values.push_back( bc_value ); 
-          which_bc.push_back(ClassicTableInterface::DIRICHLET);
 
           delete bc; 
 

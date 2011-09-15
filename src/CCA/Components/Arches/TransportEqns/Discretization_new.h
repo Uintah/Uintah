@@ -947,7 +947,7 @@ namespace Uintah{
 
             double psi = 1.0; // when r = infinity
 
-            if ( psi < _huge ) { 
+            if ( r < _huge ) { 
               psi = std::min(r, 1.0);
               psi = std::max( 0.0, psi );
             }
@@ -969,7 +969,7 @@ namespace Uintah{
 
             double psi = 2.0; // when r = infinity
 
-            if ( psi < _huge ) { 
+            if ( r < _huge ) { 
               psi = ( r + std::abs(r) ) / ( 1.0 + std::abs(r) ); 
             }
 
