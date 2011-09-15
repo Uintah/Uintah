@@ -714,9 +714,41 @@ void ImpMPM::actuallyInitialize(const ProcessorGroup*,
       if(!flags->d_doGridReset){
         int indx = mpm_matl->getDWIndex();
         NCVariable<Vector> gDisplacement;
-        new_dw->allocateAndPut(gDisplacement,lb->gDisplacementLabel,indx,patch);        gDisplacement.initialize(Vector(0.));
+        new_dw->allocateAndPut(gDisplacement,lb->gDisplacementLabel,indx,patch);        
+        gDisplacement.initialize(Vector(0.));
       }
     }
+    
+    string interp_type = flags->d_interpolator_type;
+    if((interp_type=="gimp" || interp_type=="3rdorderBS" || interp_type=="cpdi" || interp_type=="cpgimp")){
+      proc0cout << "__________________________________\n"
+                << "WARNING: Use of GIMP/3rdorderBS/cpdi/cpgimp with Implicit MPM is untested and may not work at this time.\n\n";
+    }
+    
+    //__________________________________
+    //  Bulletproofing
+    IntVector num_extra_cells=patch->getExtraCells();
+    IntVector periodic=patch->getLevel()->getPeriodicBoundaries();
+    
+    if(interp_type=="linear" && num_extra_cells!=IntVector(0,0,0)){
+      ostringstream msg;
+      msg << "\n ERROR: When using <interpolator>linear</interpolator> \n"
+          << " you should also use <extraCells>[0,0,0]</extraCells> \n";
+      throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
+    }
+    else if((interp_type=="gimp" || interp_type=="3rdorderBS" 
+          || interp_type=="cpdi" || interp_type=="cpgimp")
+                          && (num_extra_cells+periodic)!=IntVector(1,1,1)){
+      ostringstream msg;
+      msg << "\n ERROR: When using <interpolator>gimp</interpolator> \n"
+          << " or <interpolator>3rdorderBS</interpolator> \n"
+          << " or <interpolator>cpdi</interpolator> \n"
+          << " or <interpolator>cpgimp</interpolator> \n"
+          << " you must also use extraCells and/or periodicBCs such that\n"
+          << " the sum of the two is [1,1,1].\n";
+      throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
+    }
+
 
    //__________________________________
    // - Initialize NC_CCweight = 0.125
