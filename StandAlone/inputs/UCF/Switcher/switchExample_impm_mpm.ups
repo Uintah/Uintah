@@ -22,7 +22,6 @@
         <subcomponent>
           <SimulationComponent type="mpm" />
           <input_file>inputs/MPM/4disks_2d.1mat.ups</input_file>
-
         </subcomponent>
         
   </SimulationComponent>
@@ -48,11 +47,11 @@
 
     <!--____________________________________________________________________-->
     <!--      G  R  I  D     V  A  R  I  A  B  L  E  S                      -->
-    <!--  This must identical to what's in the ups file                     -->
+    <!--  This is the grid used by the first sub-component                  -->
     <!--____________________________________________________________________-->
     <Grid>
        <BoundaryConditions>
-               <Face side = "x-">
+              <Face side = "x-">
                    <BCType id = "all" var = "symmetry" label = "Symmetric">
               </BCType>
                 </Face>

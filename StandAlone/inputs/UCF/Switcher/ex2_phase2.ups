@@ -12,140 +12,18 @@
   <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
   <!--____________________________________________________________________-->
   <Time>
-    <maxTime>          100.0         </maxTime>
+    <maxTime>          100.0         </maxTime>       <!-- ignored -->
     <initTime>           0.0         </initTime>
     <delt_min>           1.0e-19     </delt_min>
     <delt_max>           0.5         </delt_max>
     <delt_init>          0.01        </delt_init>
-    <timestep_multiplier>1.0         </timestep_multiplier>
+    <timestep_multiplier>0.2         </timestep_multiplier>
   </Time>
 
   <!--____________________________________________________________________-->
   <!--      G  R  I  D     V  A  R  I  A  B  L  E  S                      -->
   <!--____________________________________________________________________-->
-  <Grid>
-   <BoundaryConditions>
-      <!--______________LEFT____________________-->
-      <Face side = "x-">
-        <BCType id = "0"   label = "Pressure"     var = "Dirichlet">
-                              <value> 101325.0   </value>
-        </BCType>
-        <BCType id = "all" label = "Velocity"     var = "Neumann">
-                              <value> [0.,0.,0.] </value>
-        </BCType>
-        <BCType id = "all" label = "Temperature"  var = "Neumann">
-                              <value> 0.0  </value>
-        </BCType>
-        <BCType id = "all" label = "Density"      var = "Neumann">
-                              <value> 0.0  </value>
-        </BCType>
-        <BCType id = "all" label = "SpecificVol"  var = "computeFromDensity">
-                              <value> 0.0  </value>
-        </BCType>
-      </Face>
-      <!--______________RIGHT____________________-->
-      <Face side = "x+">
-        <BCType id = "0"   label = "Pressure"     var = "Dirichlet">
-                              <value> 101325.0   </value>
-        </BCType>
-        <BCType id = "all" label = "Velocity"     var = "Neumann">
-                              <value> [0.,0.,0.] </value>
-        </BCType>
-        <BCType id = "all" label = "Temperature"  var = "Neumann">
-                              <value> 0.0  </value>
-        </BCType>
-        <BCType id = "all" label = "Density"      var = "Neumann">
-                              <value> 0.0  </value>
-        </BCType>
-        <BCType id = "all" label = "SpecificVol"  var = "computeFromDensity">
-                              <value> 0.0  </value>
-        </BCType>
-      </Face>
-      <!--______________BOTTOM____________-->
-      <Face side = "y-">
-        <BCType id = "0"   label = "Pressure"     var = "Dirichlet">
-                              <value> 101325.0   </value>
-        </BCType>
-        <BCType id = "all" label = "Velocity"     var = "Neumann">
-                              <value> [0.,0.0,0.] </value>
-        </BCType>
-        <BCType id = "all" label = "Temperature"  var = "Neumann">
-                              <value> 0.0  </value>
-        </BCType>
-        <BCType id = "all" label = "Density"      var = "Neumann">
-                              <value> 0.0  </value>
-        </BCType>
-        <BCType id = "all" label = "SpecificVol"  var = "computeFromDensity">
-                              <value> 0.0  </value>
-        </BCType>
-      </Face>   
-      <!--______________TOP____________________-->               
-      <Face side = "y+">
-        <BCType id = "0"   label = "Pressure"     var = "Dirichlet">
-                              <value> 101325.0   </value>
-        </BCType>
-        <BCType id = "all" label = "Velocity"     var = "Neumann">
-                              <value> [0.,0.,0.] </value>
-        </BCType>
-        <BCType id = "all" label = "Temperature"  var = "Neumann">
-                              <value> 0.0  </value>
-        </BCType>
-        <BCType id = "all" label = "Density"      var = "Neumann">
-                              <value> 0.0  </value>
-        </BCType>
-        <BCType id = "all" label = "SpecificVol"  var = "computeFromDensity">
-                              <value> 0.0  </value>
-        </BCType>
-      </Face>
-      <!--______________BACK____________________-->
-      <Face side = "z-">
-        <BCType id = "0"   label = "Pressure"     var = "Dirichlet">
-                              <value> 101325.0   </value>
-        </BCType>
-        <BCType id = "all" label = "Velocity"     var = "Neumann">
-                              <value> [0.,0.,0.] </value>
-        </BCType>
-        <BCType id = "all" label = "Temperature"  var = "Neumann">
-                              <value> 0.0  </value>
-        </BCType>
-        <BCType id = "all" label = "Density"      var = "Neumann">
-                              <value> 0.0  </value>
-        </BCType>
-        <BCType id = "all" label = "SpecificVol"  var = "computeFromDensity">
-                              <value> 0.0  </value>
-        </BCType>
-      </Face>  
-      <!--______________FRONT____________________--> 
-      <Face side = "z+">
-        <BCType id = "0"   label = "Pressure"     var = "Dirichlet">
-                              <value> 101325.0   </value>
-        </BCType>
-        <BCType id = "all" label = "Velocity"     var = "Neumann">
-                              <value> [0.,0.,0.] </value>
-        </BCType>
-        <BCType id = "all" label = "Temperature"  var = "Neumann">
-                              <value> 0.0  </value>
-        </BCType>
-        <BCType id = "all" label = "Density"      var = "Neumann">
-                              <value> 0.0  </value>
-        </BCType>
-        <BCType id = "all" label = "SpecificVol"  var = "computeFromDensity">
-                              <value> 0.0  </value>
-        </BCType>
-      </Face>
-    </BoundaryConditions>
-    <!--____________________________________________________________________-->
-    <Level>
-           <Box label = "3D">
-              <lower>        [-0.1,-0.1,-0.1]   </lower>
-              <upper>        [ 0.1, 0.1, 0.1]   </upper>
-
-              <extraCells>   [1,1,1]            </extraCells>
-              <patches>      [1,1,1]            </patches>
-              <resolution>   [20,20,20]          </resolution>
-           </Box>
-    </Level>
-  </Grid>
+    <include href="inputs/UCF/Switcher/ex2_grid.xml"/>
 
   <!--____________________________________________________________________-->
   <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
@@ -165,7 +43,6 @@
     <save label = "g.mass"/>
     <checkpoint cycle = "2" timestepInterval = "10"/>
   </DataArchiver>
-
  
   <MPM>
     <time_integrator>               implicit </time_integrator>
