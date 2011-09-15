@@ -25,15 +25,6 @@ contribution from the previous products of reaction are lost, and the PBX
 reaction starts over again as if starting for the first time.
 
 
-JP8_IS_lowres.ups
----------------------------------------
-The same settings as JP8_IS.ups with resolution cut in half in each dimension 
-to [50,200,50].  Output name was set to JP8_IS_lowres.uda as well.
-
-6/16/05 Modifications by David Groulx
-Copied Jim's changes to the full res version into the low res version.  Also
-further lowered the resolution to [20,80,20] and the patches to [2,4,2]
-
 ContainerHeatUp3D.ups
 ---------------------------------------
 This input file is similar to the IS, but it is set up to do the slow heatup
@@ -43,8 +34,3 @@ in the PBX.  Note also that for now, the top half of the domain has been
 lopped off as there isn't anything interesting there, so that would kill
 our load balancing.
 
-
-IS_05.ups
----------------------------------------
-First attempt at putting a 0.5m dia. container in a pool fire
-with open boundary conditions.
