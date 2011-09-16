@@ -59,14 +59,14 @@
        <delt_max>0</delt_max>        <!-- ignored -->
        <timestep_multiplier>0.0</timestep_multiplier>
        <max_Timesteps> 100 </max_Timesteps>
-   </Time>
+    </Time>
 
   <!--____________________________________________________________________-->
   <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
   <!--____________________________________________________________________-->
   <DataArchiver>  
-    <filebase>example3.uda</filebase>      <!-- persistent across all subcomponents -->
-    <outputInterval> 0.0 </outputInterval> <!-- (Explicitly) don't save any data... -->
+    <filebase>switchExample3.uda</filebase>      <!-- persistent across all subcomponents -->
+    <outputInterval> 0.0 </outputInterval>       <!-- (Explicitly) don't save any data... -->
   </DataArchiver>
 
   <!--____________________________________________________________________-->
