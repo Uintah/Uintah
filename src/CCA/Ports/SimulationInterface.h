@@ -152,9 +152,6 @@ WARNING
 
      virtual void scheduleSwitchTest(const LevelP& /*level*/, SchedulerP& /*sched*/)
        {};
-
-     virtual void addToTimestepXML(ProblemSpecP&) {};
-     virtual void readFromTimestepXML(const ProblemSpecP&,SimulationStateP& state) {};
  
    private:
      SimulationInterface(const SimulationInterface&);
