@@ -83,13 +83,31 @@
     </TaylorVortexMMS>
     <!-- ========================================= -->
     
+    <!-- =========================================================================== -->
+    <!-- Spec for density in our equations (transport equation & momentum equation): -->
+    <!-- Here we can specify wether we have constant density or variable density and -->
+    <!-- in the case of variable density we should also define a tag for density.    -->
+    <!-- =========================================================================== -->
+    <Density           spec="OPTIONAL NO_DATA">
+      <IsConstant      spec="REQUIRED BOOLEAN"/>
+      <NameTag         spec="OPTIONAL" />
+    </Density>    
+    
     <!-- ============================ -->
     <!-- Spec for a TransportEquation -->
     <!-- ============================ -->
     <TransportEquation		spec="MULTIPLE NO_DATA"
                                 attribute1="equation REQUIRED STRING 'generic,temperature">
       
+      <!-- An Optional Primitive variable tag: -->
+      <!-- Sometimes we transport the solution variable and it is itself our primitive variable, So, we write   --> 
+      <!-- diffusive term in terms of solution variable. But sometimes the solution variable is density times -->
+      <!-- primitive variable and we should just pass the primitive variable into diffusive terms. In these cases -->
+      <!-- we separate density from primitive variable in this way -->
       <SolutionVariable		spec="REQUIRED STRING" />
+      <StrongForm 		spec="REQUIRED BOOLEAN"/>
+      <PrimitiveVariable 	spec="OPTIONAL STRING" />
+
       
       <!-- Specify a staggered direction for this scalar. If the scalar is non-staggered, this block is not needed -->                          
       <StaggeredDirection  spec="OPTIONAL STRING 'X,Y,Z'"/>
@@ -197,6 +215,8 @@
       -->
     <TabProps			spec="MULTIPLE NO_DATA" >
       <FileNamePrefix		spec="REQUIRED STRING" />
+      <TaskList				spec="REQUIRED STRING 'initialization,timestep_size,advance_solution'" />
+
 
       <!-- allow renaming of independent variables from TabProps file -->
       <IndependentVariable	spec="MULTIPLE NO_DATA" >
@@ -210,6 +230,18 @@
         <NameTag		spec="REQUIRED" />
         <Type			spec="OPTIONAL STRING 'SVOL,XVOL,YVOL,ZVOL" />
       </ExtractVariable>
+      
+      <!-- An special case to extract density from this TabProps file -->
+      <ExtractDensity           spec="MULTIPLE NO_DATA">
+        <NameInTable            spec="REQUIRED STRING" />
+        <DensityWeightedIVar    spec="MULTIPLE NO_DATA">
+          <NameTag              spec="REQUIRED" />
+          <RelatedIVar          spec="REQUIRED NO_DATA">
+            <NameTag            spec="REQUIRED" />
+          </RelatedIVar>
+        </DensityWeightedIVar>
+      </ExtractDensity>
+      
     </TabProps>
     <!-- ================== -->
     <!-- QMOM: Quadrature method of moments -->

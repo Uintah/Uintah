@@ -40,6 +40,16 @@ namespace Wasatch{
    *  Any or all of the terms in the RHS above may be activated
    *  through the input file.
    *
+   *  \par Notes & Restrictions
+   *
+   *  - The source term of momentum equation is \f$\nabla P \f$ and
+   *    the diffusive Flux is \f$\nabla . \tau \f$. Right now in the
+   *    momentumTransportEqu we do not require density when it is  
+   *    constant. So, you should be careful about these 2 terms in 
+   *    constant density cases. You need to use kinematic viscosity
+   *    instead of dynamic viscosity for calculating \f$ \tau \f$ and
+   *    use density wieghted pressure instead of normal pressure.
+   *
    */
   template<typename FieldT>
   class MomentTransportEquation : public Wasatch::TransportEquation

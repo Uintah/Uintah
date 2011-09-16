@@ -66,6 +66,7 @@
 #include "transport/ParseEquation.h"
 #include "transport/TransportEquation.h"
 #include "BCHelperTools.h"
+#include "ParseTools.h"
 
 using std::endl;
 
@@ -189,9 +190,46 @@ namespace Wasatch{
     // are typically associated with, e.g. initial conditions.
     //
     create_expressions_from_input( wasatchParams, graphCategories_ );
+    setup_property_evaluation( wasatchParams, graphCategories_ );
 
-    setup_property_evaluation( wasatchParams, *graphCategories_[ADVANCE_SOLUTION] );
+    //
+    // extract the density tag for scalar transport equations and momentum equations
+    // and perform error handling
+    //
+    Uintah::ProblemSpecP momEqnParams   = wasatchParams->findBlock("MomentumEquations");
+    Uintah::ProblemSpecP densityParams  = wasatchParams->findBlock("Density");
+    bool existSrcTerm=false;
+    
+    for( Uintah::ProblemSpecP transEqnParams=wasatchParams->findBlock("TransportEquation");
+        transEqnParams != 0;
+        transEqnParams=transEqnParams->findNextBlock("TransportEquation") ){
+      existSrcTerm = (existSrcTerm || transEqnParams->findBlock("SourceTermExpression") );
+    }
+    Uintah::ProblemSpecP transEqnParams = wasatchParams->findBlock("TransportEquation");
 
+    Expr::Tag densityTag = Expr::Tag();
+    bool isConstDensity = true;
+
+    if (transEqnParams || momEqnParams) {
+      if( !densityParams ) {
+        std::ostringstream msg;
+        msg << "ERROR: You must include a 'Density' block in your input file when solving transport equations" << endl;
+        throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+      }
+      const bool existDensity = densityParams->findBlock("NameTag");
+      densityParams->get("IsConstant",isConstDensity);
+
+      if( !isConstDensity || existSrcTerm || momEqnParams) {
+        if( !existDensity ) {
+          std::ostringstream msg;
+          msg << "ERROR: For variable density cases or when we have source terms in transport equation or in momentum equation, the density expression tag" << endl
+              << "       must be provided in the <Density> block" << endl;
+          throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+        }
+        densityTag = parse_nametag( densityParams->findBlock("NameTag") );
+      } 
+    }
+    
     //
     // Build transport equations.  This registers all expressions as
     // appropriate for solution of each transport equation.
@@ -199,7 +237,7 @@ namespace Wasatch{
     for( Uintah::ProblemSpecP transEqnParams=wasatchParams->findBlock("TransportEquation");
          transEqnParams != 0;
          transEqnParams=transEqnParams->findNextBlock("TransportEquation") ){
-      adaptors_.push_back( parse_equation( transEqnParams, graphCategories_ ) );
+      adaptors_.push_back( parse_equation( transEqnParams, densityTag, isConstDensity, graphCategories_ ) );
     }
     
     //
@@ -232,7 +270,7 @@ namespace Wasatch{
         momEqnParams=momEqnParams->findNextBlock("MomentumEquations") ){
       // note - parse_momentum_equations returns a vector of equation adaptors
       try{
-        EquationAdaptors momentumAdaptors = parse_momentum_equations( momEqnParams, graphCategories_, *linSolver_);
+        EquationAdaptors momentumAdaptors = parse_momentum_equations( momEqnParams, densityTag, graphCategories_, *linSolver_);
         adaptors_.insert( adaptors_.end(), momentumAdaptors.begin(), momentumAdaptors.end() );
       }
       catch( std::runtime_error& err ){

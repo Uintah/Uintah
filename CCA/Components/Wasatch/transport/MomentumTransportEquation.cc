@@ -243,6 +243,7 @@ namespace Wasatch{
   MomentumTransportEquation<FieldT>::
   MomentumTransportEquation( const std::string velName,
                              const std::string momName,
+                             const Expr::Tag densTag,
                              Expr::ExpressionFactory& factory,
                              Uintah::ProblemSpecP params,
                              Uintah::SolverInterface& linSolver)
@@ -347,15 +348,15 @@ namespace Wasatch{
                                                                            bodyForcet) );
     
     //__________________
+    
+    // Here we should register an expression to get \nabla.(\rho*v)
+    // I.C for \nabla.(\rho*v)???...
+    
     // density time derivative
     const Expr::Tag d2rhodt2t;//( "density-acceleration", Expr::STATE_NONE); // for now this is empty
-    
-    //------------------------------------
-    // THIS SECTION IS TEMPORARY TO TEST THINGS OUT - MUST SPECIFY DENSITY
-    // IN INPUT FILE AT THIS POINT
-    const Expr::Tag densT( "density", Expr::STATE_N );
-    Expr::ExpressionID thisVelID= factory.register_expression( thisVelTag, new typename PrimVar<FieldT,SVolField>::Builder( thisMomTag, densT));
 
+    factory.register_expression( thisVelTag, new typename PrimVar<FieldT,SVolField>::Builder( thisMomTag, densTag));
+        
     //__________________
     // pressure    
     Uintah::ProblemSpecP pressureParams = params->findBlock( "Pressure" );

@@ -1,7 +1,7 @@
 //-- Wasatch includes --//
 #include "MomentTransportEquation.h"
 #include <CCA/Components/Wasatch/ParseTools.h>
-#include <CCA/Components/Wasatch/Expressions/DiffusiveFlux.h>
+#include <CCA/Components/Wasatch/Expressions/DiffusiveVelocity.h>
 #include <CCA/Components/Wasatch/Expressions/ConvectiveFlux.h>
 #include <CCA/Components/Wasatch/Expressions/ScalarRHS.h>
 #include <CCA/Components/Wasatch/Expressions/PBE/MonosurfaceGrowth.h>
@@ -132,6 +132,7 @@ namespace Wasatch {
     
     const std::string basePhiName = "m_" + PopulationName;
     const std::string thisPhiName = "m_" + PopulationName + "_" + momentOrderStr.str();    
+    const Expr::Tag thisPhiTag    = Expr::Tag( thisPhiName, Expr::STATE_N );
 
     //____________
     // start setting up the right-hand-side terms: these include expressions
@@ -160,8 +161,7 @@ namespace Wasatch {
     for( Uintah::ProblemSpecP diffFluxParams=params->findBlock("DiffusiveFluxExpression");
         diffFluxParams != 0;
         diffFluxParams=diffFluxParams->findNextBlock("DiffusiveFluxExpression") ){
-      
-      setup_diffusive_flux_expression<FieldT>( diffFluxParams, thisPhiName, factory, info );
+      setup_diffusive_velocity_expression<FieldT>( diffFluxParams, thisPhiTag, factory, info );
       
     }
     
@@ -171,12 +171,19 @@ namespace Wasatch {
         convFluxParams != 0;
         convFluxParams=convFluxParams->findNextBlock("ConvectiveFluxExpression") ){
       
-      setup_convective_flux_expression<FieldT>( convFluxParams, thisPhiName, factory, info );
+      setup_convective_flux_expression<FieldT>( convFluxParams, thisPhiTag, factory, info );
       
     }
     //
+    // Because of the forms that the ScalarRHS expression builders are defined, 
+    // we need a density tag and a boolean variable to be passed into this expression
+    // builder. So we just define an empty tag and a false boolean to be passed into 
+    // the builder of ScalarRHS in order to prevent any errors in ScalarRHS
+    
+    const Expr::Tag densT = Expr::Tag();
+    const bool tempConstDens = false;
     return factory.register_expression( Expr::Tag( thisPhiName + "_rhs", Expr::STATE_NONE ),
-                                       scinew typename ScalarRHS<FieldT>::Builder(info,rhsTags ));    
+                                       scinew typename ScalarRHS<FieldT>::Builder(info,rhsTags,densT, tempConstDens ));    
   }  
   
   //------------------------------------------------------------------
