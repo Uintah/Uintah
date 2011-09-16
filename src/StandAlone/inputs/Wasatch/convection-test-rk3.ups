@@ -8,6 +8,10 @@
 
   <Wasatch>
 
+    <Density>
+      <IsConstant>true</IsConstant>
+    </Density>
+
    <TimeIntegrator>RK3SSP</TimeIntegrator>
 
     <!-- Set the initial condition for non-staggered scalar -->
@@ -71,6 +75,7 @@
     <TransportEquation equation="generic">
 
       <SolutionVariable>phi0-scalar</SolutionVariable>
+      <StrongForm>true</StrongForm>
 
       <ConvectiveFluxExpression>
         <Method>UPWIND</Method> 
@@ -102,6 +107,7 @@
     <TransportEquation equation="generic">
 
       <SolutionVariable>phi1-scalar</SolutionVariable>
+      <StrongForm>true</StrongForm>
 
       <StaggeredDirection>X</StaggeredDirection>
 
@@ -135,6 +141,7 @@
     <TransportEquation equation="generic">
 
       <SolutionVariable>phi2-scalar</SolutionVariable>
+      <StrongForm>true</StrongForm>
 
       <StaggeredDirection>Y</StaggeredDirection>
 
@@ -168,6 +175,7 @@
     <TransportEquation equation="generic">
 
       <SolutionVariable>phi3-scalar</SolutionVariable>
+      <StrongForm>true</StrongForm>
 
       <StaggeredDirection>Z</StaggeredDirection>
 

@@ -7,6 +7,19 @@
   <SimulationComponent type="wasatch"/>
 
   <Wasatch>
+  
+    <Density>
+      <IsConstant>true</IsConstant>
+      <NameTag name="rho" state="STATE_NONE" />      
+    </Density>
+
+    <!-- Set a constant density to be used by the source term -->
+    <BasicExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="rho" state="STATE_NONE" />
+      <Constant>1.0</Constant>
+    </BasicExpression>
+    
      <TimeIntegrator>RK3SSP</TimeIntegrator>
     <!-- Set the initial condition for non-staggered scalar -->
     <BasicExpression type="SVOL">
@@ -28,6 +41,7 @@
     <TransportEquation equation="generic">
 
       <SolutionVariable>phi-scalar</SolutionVariable>
+      <StrongForm>true</StrongForm>
 
       <SourceTermExpression>
         <NameTag name="phi-source" state="STATE_NONE" />

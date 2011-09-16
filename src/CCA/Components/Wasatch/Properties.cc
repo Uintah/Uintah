@@ -3,6 +3,7 @@
 #include "GraphHelperTools.h"
 #include "ParseTools.h"
 #include "Expressions/TabPropsEvaluator.h"
+#include "Expressions/DensityCalculator.h"
 
 //--- ExprLib includes ---//
 #include <expression/ExpressionFactory.h>
@@ -31,6 +32,7 @@ namespace Wasatch{
    *  \param gh - the GraphHelper associated with this instance of TabProps.
    */
   void parse_tabprops( Uintah::ProblemSpecP& params,
+                       const Expr::Tag densityTag,
                        GraphHelper& gh )
   {
     std::string fileName;
@@ -148,18 +150,99 @@ namespace Wasatch{
 
     }
 
-  }
+    //________________________________________________________________
+    // create an expression specifically for density.
+    
+    Uintah::ProblemSpecP densityParams = params->findBlock("ExtractDensity");
+    if (densityParams != 0) {
+      
+      std::vector<Expr::Tag> rhoEtaNames;
+      std::vector<Expr::Tag> reiEtaNames;
+      for( Uintah::ProblemSpecP rhoEtaParams = densityParams->findBlock("DensityWeightedIVar");
+          rhoEtaParams != 0;
+          rhoEtaParams = rhoEtaParams->findNextBlock("DensityWeightedIVar") ){
+        const Expr::Tag rhoEtaTag = parse_nametag( rhoEtaParams->findBlock("NameTag") );
+        rhoEtaNames.push_back( rhoEtaTag );
+        Uintah::ProblemSpecP reiEtaParams = rhoEtaParams->findBlock("RelatedIVar");
+        const Expr::Tag reiEtaTag = parse_nametag( reiEtaParams->findBlock("NameTag") );
+        reiEtaNames.push_back( reiEtaTag );
+      }
+      
+      
+      //_______________________________________
+      // extract density variable information
+      std::string dvarTableName;
+      densityParams->get( "NameInTable", dvarTableName );
+      if( !table.has_depvar(dvarTableName) ){
+        std::ostringstream msg;
+        msg << "Table '" << fileName
+            << "' has no dependent variable named '" << dvarTableName << "'"
+            << std::endl;
+        throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+      }
+      const BSpline* const spline = table.find_entry( dvarTableName );
+      
+      //_____________________________________
+      // register the expression for density
+      typedef DensityCalculator<SpatialOps::structured::SVolField>::Builder DensCalc;
+      gh.exprFactory->register_expression( densityTag,
+                                           scinew DensCalc( spline->clone(), rhoEtaNames, reiEtaNames, ivarNames ));
+      
+    }
 
+  }
   //====================================================================
 
   void
   setup_property_evaluation( Uintah::ProblemSpecP& params,
-                             GraphHelper& gh )
+                             GraphCategories& gc )
   {
+    //_________________________________________________________________________________
+    // extracting the density tag in the cases that it is needed and also throwing the 
+    // error messages in different error conditions regarding to the input file  
+
+    Uintah::ProblemSpecP densityParams = params->findBlock("Density");
+    Uintah::ProblemSpecP tabPropsParams = params->findBlock("TabProps");
+
+    Expr::Tag densityTag = Expr::Tag();
+    if (tabPropsParams) {
+      if (tabPropsParams->findBlock("ExtractDensity") && !densityParams) {
+        std::ostringstream msg;
+        msg << "ERROR: You need a tag for density when you want to extract it using TabProps." << endl
+            << "       Please include the \"Density\" block in wasatch in your input file." << endl;
+        throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+      }
+      else if (tabPropsParams->findBlock("ExtractDensity") && densityParams) {
+
+        bool existDensity = densityParams->findBlock("NameTag");
+        if (!existDensity) {
+          std::ostringstream msg;
+          msg << "ERROR: You need to define and register a tag for density to be used in \"ExtractDensity\" block." << endl
+              << "       Please include a block for density tag in \"Density\" block." << endl;
+          throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+        }
+        densityTag = parse_nametag( densityParams->findBlock("NameTag") );
+      }
+    }
+
+    
     for( Uintah::ProblemSpecP tabPropsParams = params->findBlock("TabProps");
          tabPropsParams != 0;
          tabPropsParams = tabPropsParams->findNextBlock("TabProps") ){
-      parse_tabprops( tabPropsParams, gh );
+      // determine which task list this goes on
+      std::string taskListName;
+      tabPropsParams->require("TaskList",taskListName);
+      Category cat;
+      if     ( taskListName == "initialization"   )   cat = INITIALIZATION;
+      else if( taskListName == "timestep_size"    )   cat = TIMESTEP_SELECTION;
+      else if( taskListName == "advance_solution" )   cat = ADVANCE_SOLUTION;
+      else{
+        std::ostringstream msg;
+        msg << "ERROR: unsupported task list '" << taskListName << "'" << endl;
+        throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+      }
+      
+      parse_tabprops( tabPropsParams, densityTag, *gc[cat] );
     }
   }
 

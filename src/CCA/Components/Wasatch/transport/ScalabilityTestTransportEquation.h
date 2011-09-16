@@ -41,11 +41,11 @@ namespace Wasatch{
    *
    *  \par Notes & Restrictions
    *
-   *  - Currently, only basic forms for the scalar diffusive flux are
+   *  - Currently, only basic forms for the scalar diffusive velocity are
    *    supported.  Specifically, either an expression for the
    *    diffusion coefficient, \f$\Gamma_\phi\f$ is required or the
    *    diffusion coefficient must be a constant value.  See
-   *    DiffusiveFlux and DiffusiveFlux2 classes.
+   *    DiffusiveVelocity and DiffusiveVelocity2 classes.
    *
    *  - Source terms can only be added if the expression to evaluate
    *    them has been constructed elsewhere.
@@ -95,7 +95,7 @@ namespace Wasatch{
     
     /**
      * \brief Parse the input file to determine the rhs expression id.
-     *        Also registers convective flux, diffusive flux, and
+     *        Also registers convective flux, diffusive velocity, and
      *        source term expressions.
      *
      *  \param thisPhiName the name of the solution variable for this
@@ -117,7 +117,7 @@ namespace Wasatch{
   
   
   template< typename FieldT >
-  void setup_diffusive_flux_expression( std::string dir,
+  void setup_diffusive_velocity_expression( std::string dir,
                                        Expr::ExpressionFactory& factory,
                                        typename ScalarRHS<FieldT>::FieldTagInfo& info );
   

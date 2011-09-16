@@ -8,6 +8,10 @@
 
   <Wasatch>
 
+    <Density>
+      <IsConstant>true</IsConstant>
+    </Density>
+
     <!-- Set the initial condition for non-staggered scalar -->
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
@@ -58,7 +62,9 @@
     
     <!-- Build a non-staggered scalar transport equation -->
     <TransportEquation equation="generic">
+
       <SolutionVariable>phi0-scalar</SolutionVariable>
+      <StrongForm>true</StrongForm>
       
       <ConvectiveFluxExpression>
         <Method>SUPERBEE</Method> 
@@ -72,8 +78,10 @@
     
     <!-- Build a non-staggered scalar transport equation -->
     <TransportEquation equation="generic">
+
       <SolutionVariable>phi1-scalar</SolutionVariable>
-      
+      <StrongForm>true</StrongForm>
+
       <ConvectiveFluxExpression>
         <Method>SUPERBEE</Method>
         <Direction>Y</Direction>
@@ -86,7 +94,9 @@
 
     <!-- Build a non-staggered scalar transport equation -->
     <TransportEquation equation="generic">
+
       <SolutionVariable>phi2-scalar</SolutionVariable>
+      <StrongForm>true</StrongForm>
 
       <ConvectiveFluxExpression>
         <Method>SUPERBEE</Method>

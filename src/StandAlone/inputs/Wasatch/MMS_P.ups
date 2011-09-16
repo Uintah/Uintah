@@ -9,6 +9,10 @@
 
   <Wasatch>
 
+    <Density>
+      <IsConstant>true</IsConstant>
+    </Density>
+
     <!-- Set the initial condition expression for VelX -->
     <TaylorVortexMMS type="XVOL">
       <TaskList>initialization</TaskList>
@@ -65,7 +69,9 @@
       -->
     <TransportEquation equation="generic">
       <StaggeredDirection>X</StaggeredDirection>
+
       <SolutionVariable>VelX</SolutionVariable>
+      <StrongForm>true</StrongForm>
 
       <DiffusiveFluxExpression>
         <Direction>X</Direction>
@@ -77,7 +83,7 @@
         <ConstantDiffusivity>0.1</ConstantDiffusivity>
       </DiffusiveFluxExpression>
 
-	  <ConvectiveFluxExpression>
+      <ConvectiveFluxExpression>
         <Method>CENTRAL</Method> 
         <Direction>X</Direction>
         <AdvectiveVelocity>
@@ -112,7 +118,9 @@
 
     <TransportEquation equation="generic">
       <StaggeredDirection>Y</StaggeredDirection>
+
       <SolutionVariable>VelY</SolutionVariable>
+      <StrongForm>true</StrongForm>
 
       <DiffusiveFluxExpression>
         <Direction>X</Direction>
@@ -124,7 +132,7 @@
         <ConstantDiffusivity>0.1</ConstantDiffusivity>
       </DiffusiveFluxExpression>
 
-	  <ConvectiveFluxExpression>
+      <ConvectiveFluxExpression>
         <Method>CENTRAL</Method> 
         <Direction>X</Direction>
         <AdvectiveVelocity>

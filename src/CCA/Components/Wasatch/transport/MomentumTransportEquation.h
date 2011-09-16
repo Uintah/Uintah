@@ -51,6 +51,7 @@ namespace Wasatch{
      */
     MomentumTransportEquation( const std::string velName,
                                const std::string momName,
+                               const Expr::Tag densTag,
                                Expr::ExpressionFactory& factory,
                                Uintah::ProblemSpecP params,
                                Uintah::SolverInterface& linSolver);
@@ -61,9 +62,9 @@ namespace Wasatch{
      *  \brief setup the boundary conditions associated with this momentum equation
      */
     void setup_boundary_conditions( const GraphHelper& graphHelper,
-                                           const Uintah::PatchSet* const localPatches,
-                                           const PatchInfoMap& patchInfoMap,
-                                           const Uintah::MaterialSubset* const materials);    
+                                    const Uintah::PatchSet* const localPatches,
+                                    const PatchInfoMap& patchInfoMap,
+                                    const Uintah::MaterialSubset* const materials);    
     /**
      *  \brief setup the initial conditions for this momentum equation.
      */

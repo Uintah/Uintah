@@ -20,6 +20,8 @@ Expr::Tag ScalarRHS<FieldT>::resolve_field_tag( const typename ScalarRHS<FieldT>
 template< typename FieldT >
 ScalarRHS<FieldT>::ScalarRHS( const FieldTagInfo& fieldTags,
                               const std::vector<Expr::Tag>& srcTags,
+                              const Expr::Tag densityTag,
+                              const bool isConstDensity,
                               const Expr::ExpressionID& id,
                               const Expr::ExpressionRegistry& reg )
   : Expr::Expression<FieldT>( id, reg ),
@@ -38,7 +40,9 @@ ScalarRHS<FieldT>::ScalarRHS( const FieldTagInfo& fieldTags,
     doXDir_( convTagX_ != Expr::Tag() || diffTagX_ != Expr::Tag() ),
     doYDir_( convTagY_ != Expr::Tag() || diffTagY_ != Expr::Tag() ),
     doZDir_( convTagZ_ != Expr::Tag() || diffTagZ_ != Expr::Tag() ),
-  
+
+    densityTag_( densityTag ),
+    isConstDensity_( isConstDensity ),
     srcTags_( srcTags )
 {
   srcTags_.push_back( ScalarRHS<FieldT>::resolve_field_tag( SOURCE_TERM, fieldTags ) );
@@ -86,8 +90,13 @@ void ScalarRHS<FieldT>::bind_fields( const Expr::FieldManagerList& fml )
     
   srcTerm_.clear();
   for( std::vector<Expr::Tag>::const_iterator isrc=srcTags_.begin(); isrc!=srcTags_.end(); ++isrc ){
-    if( isrc->context() != Expr::INVALID_CONTEXT )
+    if( isrc->context() != Expr::INVALID_CONTEXT ) {
       srcTerm_.push_back( &scalarFM.field_ref( *isrc ) );
+      if (isConstDensity_){
+        const Expr::FieldManager<SVolField>& densityFM = fml.template field_manager<SVolField>();
+        rho_ = &densityFM.field_ref( densityTag_ );
+      }
+    }
   }
 }
   
@@ -109,8 +118,11 @@ void ScalarRHS<FieldT>::advertise_dependents( Expr::ExprDeps& exprDeps )
   }
     
   for( std::vector<Expr::Tag>::const_iterator isrc=srcTags_.begin(); isrc!=srcTags_.end(); ++isrc ){
-    if( isrc->context() != Expr::INVALID_CONTEXT )
+    if( isrc->context() != Expr::INVALID_CONTEXT ){
       exprDeps.requires_expression( *isrc );
+      if (isConstDensity_)
+        exprDeps.requires_expression( densityTag_ );
+    }
   }
 }
   
@@ -122,6 +134,11 @@ void ScalarRHS<FieldT>::bind_operators( const SpatialOps::OperatorDatabase& opDB
   if( doXDir_ )  divOpX_ = opDB.retrieve_operator<DivX>();
   if( doYDir_ )  divOpY_ = opDB.retrieve_operator<DivY>();
   if( doZDir_ )  divOpZ_ = opDB.retrieve_operator<DivZ>();
+  
+  for( std::vector<Expr::Tag>::const_iterator isrc=srcTags_.begin(); isrc!=srcTags_.end(); ++isrc ){
+    if( (isrc->context() != Expr::INVALID_CONTEXT) && isConstDensity_)
+      densityInterpOp_ = opDB.retrieve_operator<DensityInterpT>();
+  }
 }
   
 //------------------------------------------------------------------
@@ -129,6 +146,8 @@ void ScalarRHS<FieldT>::bind_operators( const SpatialOps::OperatorDatabase& opDB
 template< typename FieldT >
 void ScalarRHS<FieldT>::evaluate()
 {
+  using namespace SpatialOps;
+  
   FieldT& rhs = this->value();
   rhs = 0.0;
     
@@ -169,7 +188,12 @@ void ScalarRHS<FieldT>::evaluate()
     
   typename SrcVec::const_iterator isrc;
   for( isrc=srcTerm_.begin(); isrc!=srcTerm_.end(); ++isrc ){
-    rhs += **isrc;
+    if (isConstDensity_) {
+      const double densVal = (*rho_)[0];
+      rhs <<= rhs + (**isrc / densVal );
+    }
+    else 
+      rhs += **isrc;
   }
     
 }
@@ -178,16 +202,24 @@ void ScalarRHS<FieldT>::evaluate()
   
 template< typename FieldT >
 ScalarRHS<FieldT>::Builder::Builder( const FieldTagInfo& fieldInfo,
-                                     const std::vector<Expr::Tag>& sources )
-  : info_( fieldInfo ),
-    srcT_( sources )
+                                     const std::vector<Expr::Tag>& sources,
+                                     const Expr::Tag densityTag,
+                                     const bool  isConstDensity)
+  : info_          ( fieldInfo ),
+    srcT_          ( sources ),
+    densityT_      ( densityTag ),
+    isConstDensity_( isConstDensity )
 {}
   
 //------------------------------------------------------------------
-  
+
 template< typename FieldT >
-ScalarRHS<FieldT>::Builder::Builder( const FieldTagInfo& fieldInfo )
-  : info_( fieldInfo )
+ScalarRHS<FieldT>::Builder::Builder( const FieldTagInfo& fieldInfo, 
+                                     const Expr::Tag densityTag,
+                                     const bool  isConstDensity)
+  : info_          ( fieldInfo ),
+    densityT_      ( densityTag ),
+    isConstDensity_( isConstDensity )
 {}
   
 //------------------------------------------------------------------
@@ -197,7 +229,7 @@ Expr::ExpressionBase*
 ScalarRHS<FieldT>::Builder::build( const Expr::ExpressionID& id,
                                    const Expr::ExpressionRegistry& reg ) const
 {
-  return new ScalarRHS<FieldT>( info_, srcT_, id, reg );
+  return new ScalarRHS<FieldT>( info_, srcT_, densityT_, isConstDensity_, id, reg );
 }
 //------------------------------------------------------------------
 

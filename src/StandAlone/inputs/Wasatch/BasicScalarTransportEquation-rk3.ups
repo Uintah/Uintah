@@ -9,6 +9,10 @@
 
   <Wasatch>
 
+    <Density>
+      <IsConstant>true</IsConstant>
+    </Density>
+         
 <TimeIntegrator>RK3SSP</TimeIntegrator>
     <!-- Set the initial condition expression for phi1 -->
     <BasicExpression type="SVOL">
@@ -39,6 +43,7 @@
     <TransportEquation equation="generic">
 
       <SolutionVariable>phi1</SolutionVariable>
+      <StrongFrom>true</StrongFrom>
 
       <DiffusiveFluxExpression>
         <Direction>X</Direction>
@@ -75,6 +80,7 @@
     <TransportEquation equation="generic">
 
       <SolutionVariable>phi2</SolutionVariable>
+      <StrongForm>true</StrongForm>
 
       <DiffusiveFluxExpression>
         <Direction>X</Direction>
@@ -106,6 +112,7 @@
     <TransportEquation equation="generic">
 
       <SolutionVariable>phi3</SolutionVariable>
+      <StrongForm>true</StrongForm>
 
       <DiffusiveFluxExpression>
         <Direction>X</Direction>
@@ -145,6 +152,7 @@
     <TransportEquation equation="generic">
 
       <SolutionVariable>phi4</SolutionVariable>
+      <StrongForm>true</StrongForm>
 
       <DiffusiveFluxExpression>
         <Direction>X</Direction>

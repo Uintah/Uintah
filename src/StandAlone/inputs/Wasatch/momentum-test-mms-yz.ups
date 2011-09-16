@@ -8,6 +8,11 @@
    <Solver type="hypre" />
   <Wasatch>
 
+    <Density>
+      <IsConstant>true</IsConstant>
+      <NameTag name="density" state="STATE_N" />
+    </Density>
+
     <!-- Set the initial condition expression for x-momentum -->
     <TaylorVortexMMS type="YVOL">
       <TaskList>initialization</TaskList>

@@ -3,6 +3,8 @@
 
 #include <Core/ProblemSpec/ProblemSpecP.h>
 
+#include "GraphHelperTools.h"
+
 /**
  *  \file Properties.h
  *
@@ -11,7 +13,6 @@
 
 namespace Wasatch{
 
-  class GraphHelper;
 
   /**
    *  \ingroup WasatchParser
@@ -21,7 +22,7 @@ namespace Wasatch{
    *  \param gh The GraphHelper object to be used when setting properties.
    */
   void setup_property_evaluation( Uintah::ProblemSpecP& params,
-                                  GraphHelper& gh );
+                                  GraphCategories& gc );
 
 } // namespace Wasatch
 

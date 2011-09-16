@@ -9,6 +9,10 @@
   <Wasatch>
   <TimeIntegrator>RK3SSP</TimeIntegrator>
 
+    <Density>
+      <IsConstant>true</IsConstant>
+    </Density>
+
     <!-- Set the initial condition for non-staggered scalar -->
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
@@ -59,6 +63,8 @@
     <TransportEquation equation="generic">
 
       <SolutionVariable>phi-scalar</SolutionVariable>
+      <StrongForm>true</StrongForm>
+
       <DiffusiveFluxExpression>
         <Direction>X</Direction>
         <ConstantDiffusivity>1.0</ConstantDiffusivity>
@@ -82,6 +88,7 @@
       <StaggeredDirection>X</StaggeredDirection>
     
       <SolutionVariable>phi-x-scalar</SolutionVariable>
+      <StrongForm>true</StrongForm>
       
       <DiffusiveFluxExpression>
         <Direction>X</Direction>
@@ -106,6 +113,7 @@
       <StaggeredDirection>Y</StaggeredDirection>
     
       <SolutionVariable>phi-y-scalar</SolutionVariable>
+      <StrongForm>true</StrongForm>
       
       <DiffusiveFluxExpression>
         <Direction>X</Direction>
@@ -130,6 +138,7 @@
       <StaggeredDirection>Z</StaggeredDirection>
     
       <SolutionVariable>phi-z-scalar</SolutionVariable>
+      <StrongForm>true</StrongForm>
       
       <DiffusiveFluxExpression>
         <Direction>X</Direction>

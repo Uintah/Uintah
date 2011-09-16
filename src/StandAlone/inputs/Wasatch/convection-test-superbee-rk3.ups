@@ -8,6 +8,10 @@
 
   <Wasatch>
 
+    <Density>
+      <IsConstant>true</IsConstant>
+    </Density>
+
    <TimeIntegrator>RK3SSP</TimeIntegrator>
 
     <!-- Set the initial condition for non-staggered scalar -->
@@ -60,7 +64,9 @@
     
     <!-- Build a non-staggered scalar transport equation -->
     <TransportEquation equation="generic">
+
       <SolutionVariable>phi0-scalar</SolutionVariable>
+      <StrongForm>true</StrongForm>
       
       <ConvectiveFluxExpression>
         <Method>SUPERBEE</Method> 
@@ -74,7 +80,9 @@
     
     <!-- Build a non-staggered scalar transport equation -->
     <TransportEquation equation="generic">
+
       <SolutionVariable>phi1-scalar</SolutionVariable>
+      <StrongForm>true</StrongForm>
       
       <ConvectiveFluxExpression>
         <Method>SUPERBEE</Method>
@@ -88,7 +96,9 @@
 
     <!-- Build a non-staggered scalar transport equation -->
     <TransportEquation equation="generic">
+
       <SolutionVariable>phi2-scalar</SolutionVariable>
+      <StrongForm>true</StrongForm>
 
       <ConvectiveFluxExpression>
         <Method>SUPERBEE</Method>
