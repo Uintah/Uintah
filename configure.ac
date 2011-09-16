@@ -3,7 +3,7 @@
 ## 
 ##  The MIT License
 ## 
-##  Copyright (c) 2004 Scientific Computing and Imaging Institute,
+##  Copyright (c) 2004-2011 Scientific Computing and Imaging Institute,
 ##  University of Utah.
 ## 
 ##  License for the specific language governing rights and limitations under
@@ -80,7 +80,7 @@ AC_COPYRIGHT(
 ## 
 ##  The MIT License
 ## 
-##  Copyright (c) 2004 Scientific Computing and Imaging Institute,
+##  Copyright (c) 2004-2011 Scientific Computing and Imaging Institute,
 ##  University of Utah.
 ## 
 ##  License for the specific language governing rights and limitations under
@@ -1276,14 +1276,14 @@ case $host in
 # GCC_TEST
 #####
     OS_VERSION=`uname -r | cut -f1 -d.`
-    if test "$OS_VERSION" = "10"; then
-        AC_MSG_WARN( Running under Snow Leopard )
-        DEF_OSX_SNOW_LEOPARD="#define OSX_SNOW_LEOPARD"
-        IS_OSX_SNOW_LEOPARD="yes"
+    if test "$OS_VERSION" = "10" -o "$OS_VERSION" = "11"; then
+        AC_MSG_WARN( Running under Snow Leopard or later)
+        DEF_OSX_SNOW_LEOPARD_OR_LATER="#define OSX_SNOW_LEOPARD_OR_LATER"
+        IS_OSX_SNOW_LEOPARD_OR_LATER="yes"
     fi
 
     NO_LONG_DOUBLE="-Wno-long-double"
-    if test "$IS_OSX_SNOW_LEOPARD" = "yes"; then
+    if test "$IS_OSX_SNOW_LEOPARD_OR_LATER" = "yes"; then
       NO_LONG_DOUBLE=
     fi      
 
@@ -1520,7 +1520,7 @@ esac
 
 OBJEXT=$ac_objext
 
-AC_SUBST(DEF_OSX_SNOW_LEOPARD)
+AC_SUBST(DEF_OSX_SNOW_LEOPARD_OR_LATER)
 AC_SUBST(NEED_OSX_SYSTEMSTUBS)
 AC_SUBST(OBJEXT)
 

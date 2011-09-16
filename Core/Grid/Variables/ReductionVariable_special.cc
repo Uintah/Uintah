@@ -34,7 +34,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Util/FancyAssert.h>
 
 #include <sci_defs/bits_defs.h> // for SCI_32BITS
-#include <sci_defs/osx_defs.h>  // for OSX_SNOW_LEOPARD
+#include <sci_defs/osx_defs.h>  // for OSX_SNOW_LEOPARD_OR_LATER
 
 #include <Core/Disclosure/TypeUtils.h>
 #include <Core/Grid/uintahshare.h>
@@ -243,7 +243,7 @@ ReductionVariable<bool, Reductions::And<bool> >
   index += sizeof(char);
 }
 
-#if ( defined( REDSTORM ) || !defined( __PGI ) ) && !defined( OSX_SNOW_LEOPARD )
+#if ( defined( REDSTORM ) || !defined( __PGI ) ) && !defined( OSX_SNOW_LEOPARD_OR_LATER )
 // We reduce a "long", not a long64 because on 2/24/03, LAM-MPI did not
 // support MPI_Reduce for LONG_LONG_INT.  We could use MPI_Create_op instead?
   #if !defined(__digital__) || defined(__GNUC__)
@@ -285,7 +285,7 @@ ReductionVariable<long64, Reductions::Sum<long64> >
   index += sizeof(long);
 }
 
-#if !defined( OSX_SNOW_LEOPARD ) && (defined( REDSTORM ) || !defined( __PGI ))
+#if !defined( OSX_SNOW_LEOPARD_OR_LATER ) && (defined( REDSTORM ) || !defined( __PGI ))
 #  if !defined( SCI_32BITS )
 #    if !defined(__digital__) || defined(__GNUC__)
 template<>

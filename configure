@@ -18,7 +18,7 @@
 # ##
 # ##  The MIT License
 # ##
-# ##  Copyright (c) 2004 Scientific Computing and Imaging Institute,
+# ##  Copyright (c) 2004-2011 Scientific Computing and Imaging Institute,
 # ##  University of Utah.
 # ##
 # ##  License for the specific language governing rights and limitations under
@@ -784,7 +784,7 @@ WIN_OTFFLAGS
 WIN_DLLFLAGS
 NBITS
 NEED_OSX_SYSTEMSTUBS
-DEF_OSX_SNOW_LEOPARD
+DEF_OSX_SNOW_LEOPARD_OR_LATER
 LD
 AS
 PATH_TO_MSYS_BIN
@@ -1751,7 +1751,7 @@ gives unlimited permission to copy, distribute and modify it.
 ##
 ##  The MIT License
 ##
-##  Copyright (c) 2004 Scientific Computing and Imaging Institute,
+##  Copyright (c) 2004-2011 Scientific Computing and Imaging Institute,
 ##  University of Utah.
 ##
 ##  License for the specific language governing rights and limitations under
@@ -6829,15 +6829,15 @@ case $host in
 # GCC_TEST
 #####
     OS_VERSION=`uname -r | cut -f1 -d.`
-    if test "$OS_VERSION" = "10"; then
-        { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Running under Snow Leopard " >&5
-$as_echo "$as_me: WARNING: Running under Snow Leopard " >&2;}
-        DEF_OSX_SNOW_LEOPARD="#define OSX_SNOW_LEOPARD"
-        IS_OSX_SNOW_LEOPARD="yes"
+    if test "$OS_VERSION" = "10" -o "$OS_VERSION" = "11"; then
+        { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Running under Snow Leopard or later" >&5
+$as_echo "$as_me: WARNING: Running under Snow Leopard or later" >&2;}
+        DEF_OSX_SNOW_LEOPARD_OR_LATER="#define OSX_SNOW_LEOPARD_OR_LATER"
+        IS_OSX_SNOW_LEOPARD_OR_LATER="yes"
     fi
 
     NO_LONG_DOUBLE="-Wno-long-double"
-    if test "$IS_OSX_SNOW_LEOPARD" = "yes"; then
+    if test "$IS_OSX_SNOW_LEOPARD_OR_LATER" = "yes"; then
       NO_LONG_DOUBLE=
     fi
 
