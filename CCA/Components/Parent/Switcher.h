@@ -80,8 +80,8 @@ namespace Uintah {
     virtual void scheduleInitializeAddedMaterial( const LevelP & level,
                                                   SchedulerP   & scheduler );
 
-    virtual void addToTimestepXML( ProblemSpecP & spec );
-    virtual void readFromTimestepXML( const ProblemSpecP&, SimulationStateP& state );
+
+
 
     // AMR
     virtual void scheduleRefineInterface(const LevelP& fineLevel,
@@ -114,7 +114,9 @@ namespace Uintah {
                     const PatchSubset* patches,
                     const MaterialSubset* matls,
                     DataWarehouse* old_dw, DataWarehouse* new_dw);
-
+                    
+    void readSwitcherState( const ProblemSpecP&, 
+                            SimulationStateP& state );
 
     ProblemSpecP d_master_ups;
 

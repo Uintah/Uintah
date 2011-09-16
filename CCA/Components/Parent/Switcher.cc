@@ -42,6 +42,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Ports/SwitchingCriteria.h>
 
 #include <Core/Containers/ConsecutiveRangeSet.h>
+#include <Core/Exceptions/InternalError.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/GeometryPiece/GeometryPieceFactory.h>
 
@@ -96,30 +97,33 @@ Switcher::Switcher( const ProcessorGroup* myworld,
   //  loop over the subcomponents
   for(; child != 0; child = child->findNextBlock("subcomponent")) {
     
+    
+    //__________________________________
+    //  Read in subcomponent ups file and store the filename
     string input_file("");
     if (!child->get("input_file",input_file)) {
       throw ProblemSetupException("Need 'input_file' for subcomponent", __FILE__, __LINE__);
     }
     
-// WHY ARE WE READING THE PROBLEM SPEC AND ATTACHING PORTS TO THE SUBCOMPONENTS HERE?  
-// THAT SHOULD BE TAKING PLACE IN PROBLEMSETUP AND NEEDS RECOMILE TASKS (i THINK)
-// DON'T WE JUST NEED TO READ IN THE SWITCHIN CRITERIA AND THE INIT/CARRYOVER VARS?
-
     proc0cout << "Input file:\t\t" << input_file << endl;
     
     d_in_file.push_back(input_file);
     ProblemSpecP subCompUps = ProblemSpecReader().readInputFile(input_file);
 
-    // This will get the component name from the input file, and the uda arg is not needed for normal simulations...  
-    UintahParallelComponent* comp = ComponentFactory::create(subCompUps, myworld, doAMR, "");
+
+    // get the component name from the input file, and the uda arg is not needed for normal simulations...  
     string sim_comp;
     ProblemSpecP sim_ps = subCompUps->findBlock("SimulationComponent");
     sim_ps->getAttribute( "type", sim_comp );
     simComponents.insert(sim_comp);
-    
+
+    //__________________________________
+    // create simulation port and attach it switcher component    
+    UintahParallelComponent* comp = ComponentFactory::create(subCompUps, myworld, doAMR, "");    
     SimulationInterface* sim = dynamic_cast<SimulationInterface*>(comp);
     attachPort( "sim", sim );
 
+    //__________________________________
     // create solver  port and attach it to the switcher component
     string  no_solver_specified("");
     SolverInterface * solver = SolverFactory::create( subCompUps, myworld, no_solver_specified );
@@ -127,6 +131,7 @@ Switcher::Switcher( const ProcessorGroup* myworld,
     attachPort(   "sub_solver", solver);
     comp->attachPort("solver", solver);
 
+    //__________________________________
     // create switching criteria port and attach it switcher component
     SwitchingCriteria * switch_criteria = SwitchingCriteriaFactory::create( child,myworld );
 
@@ -135,7 +140,8 @@ Switcher::Switcher( const ProcessorGroup* myworld,
       comp->attachPort("switch_criteria",switch_criteria);
     }
 
-    // Get the variables that will need to be initialized by this component
+    //__________________________________
+    // Get the variables that will need to be initialized by this subcomponent
     initVars* initVar = scinew initVars;
     for( ProblemSpecP var = child->findBlock("init"); var != 0; var = var->findNextBlock("init") ) {
 
@@ -163,6 +169,7 @@ Switcher::Switcher( const ProcessorGroup* myworld,
     
     proc0cout << "\n";
   }  // loop over subcomponents
+  
   
   //__________________________________
   // Bulletproofing:
@@ -257,7 +264,7 @@ Switcher::~Switcher()
   d_carryOverVarMatls.clear();
 }
 //______________________________________________________________________
-// Setup the first component and 
+// Setup the first component 
 void
 Switcher::problemSetup( const ProblemSpecP& /*params*/, 
                         const ProblemSpecP& restart_prob_spec, 
@@ -265,6 +272,10 @@ Switcher::problemSetup( const ProblemSpecP& /*params*/,
                         SimulationStateP& sharedState )
 {  
   dbg << "Doing ProblemSetup \t\t\t\tSwitcher"<< endl;
+  if (restart_prob_spec){
+    readSwitcherState(restart_prob_spec,sharedState);
+  }
+  
   proc0cout << "\n------------ Switching to component (" << d_componentIndex <<") \n";
   proc0cout << "  Reading input file: " << d_in_file[d_componentIndex] << "\n";
   
@@ -300,6 +311,7 @@ Switcher::problemSetup( const ProblemSpecP& /*params*/,
   // init Variables:
   //   - determine the label from the string names
   //   - determine the MaterialSet from the string matlSetName
+  //   - store this info to be used later
   map<int,initVars*>::iterator it;
   for ( it=d_initVars.begin() ; it != d_initVars.end(); it++ ){ 
      
@@ -323,7 +335,7 @@ Switcher::problemSetup( const ProblemSpecP& /*params*/,
       }
       
       varLabels.push_back(label);
-      // so variable is not scrubbed from the data warehouse
+      // so the variable is not scrubbed from the data warehouse
       sched->overrideVariableBehavior(varName, false, false, true);
     }
 
@@ -331,7 +343,6 @@ Switcher::problemSetup( const ProblemSpecP& /*params*/,
   }
   
   //__________________________________
-  //
   // Carry over labels
   for (unsigned i = 0; i < d_carryOverVars.size(); i++) {
     VarLabel* label = VarLabel::find(d_carryOverVars[i]);
@@ -388,7 +399,8 @@ Switcher::scheduleFinalizeTimestep( const LevelP& level,
   
   scheduleSwitchTest(level,sched);
 
-  // compute variables that are required from the old_dw 
+  // compute variables that are required from the old_dw for the next
+  // subcomponent
   scheduleInitNewVars(level,sched);
 
   scheduleSwitchInitialization(level,sched);
@@ -423,7 +435,7 @@ void Switcher::scheduleSwitchTest(const LevelP& level,
 
   t->setType(Task::OncePerProc);
   
-  // the component is responsible to determine when it is to switch.
+  // the component is responsible for determining when it is to switch.
   t->requires(Task::NewDW,d_sharedState->get_switch_label());
   sched->addTask(t,sched->getLoadBalancer()->getPerProcessorPatchSet(level),d_sharedState->allMaterials());
 }
@@ -468,6 +480,7 @@ void Switcher::scheduleInitNewVars(const LevelP& level,
     else {
       throw ProblemSetupException("Bad material set", __FILE__, __LINE__);
     }
+    
     matlSet.push_back(matls);
     proc0cout << "init Variable  " << initVar->varNames[i] << " \t matls: " 
               << nextComp_matls << " levels " << initVar->levels[i] << endl;  
@@ -485,7 +498,7 @@ void Switcher::scheduleInitNewVars(const LevelP& level,
 
 //______________________________________________________________________
 //
-// note - won't work if number of levels changes
+//
 void Switcher::scheduleCarryOverVars(const LevelP& level, 
                                      SchedulerP& sched)
 {
@@ -524,7 +537,7 @@ void Switcher::scheduleCarryOverVars(const LevelP& level,
   Task* t = scinew Task("Switcher::carryOverVars",this, 
                        & Switcher::carryOverVars);
                         
-  // schedule the vars for carrying over (if this happens before a switch, don't do it)
+  // schedule the vars to be carried over (if this happens before a switch, don't do it)
   if ( L_indx < (int) d_doCarryOverVarPerLevel.size() ) {
     
     for (unsigned int i = 0; i < d_carryOverVarLabels.size(); i++) { 
@@ -539,18 +552,17 @@ void Switcher::scheduleCarryOverVars(const LevelP& level,
      
         if(UintahParallelComponent::d_myworld->myrank() == 0){
           if (matls)
-            cout << d_myworld->myrank() << "  Carry over " << *var << "\t\tmatls: " << *matls << " on level " << level->getIndex() << endl;
+            cout << d_myworld->myrank() << "  Carry over " << *var << "\t\tmatls: " << *matls << " on level " << L_indx << endl;
           else
-            cout << d_myworld->myrank() << "  Carry over " << *var << "\t\tAll matls on level " << level->getIndex() << "\n";
+            cout << d_myworld->myrank() << "  Carry over " << *var << "\t\tAll matls on level " << L_indx << "\n";
         }
       }
     }  
   }
   sched->addTask(t,level->eachPatch(),d_sharedState->originalAllMaterials());
-  
 }
 //______________________________________________________________________
-//
+//  Set the flag if switch criteria has been satisfied.
 void Switcher::switchTest(const ProcessorGroup*,
                           const PatchSubset* patches,
                           const MaterialSubset* matls,
@@ -586,7 +598,7 @@ void Switcher::initNewVars(const ProcessorGroup*,
   proc0cout << "__________________________________" << endl;
   proc0cout << "initNewVars \t\t\t\tSwitcher"<< endl;
   //__________________________________
-  //
+  // loop over the init vars, initialize them and put them in the new_dw
   initVars* initVar  = d_initVars.find(d_componentIndex+1)->second;
   
   for (unsigned i = 0; i < initVar->varLabels.size(); i++) {
@@ -626,7 +638,8 @@ void Switcher::initNewVars(const ProcessorGroup*,
       throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
     }
     
-    
+    //__________________________________
+    // initialization section
     for (int m = 0; m < matls->size(); m++) {
       const int indx = matls->get(m);
          
@@ -635,7 +648,7 @@ void Switcher::initNewVars(const ProcessorGroup*,
         
         proc0cout << "    indx: " << indx << " patch " << *patch << " " << l->getName() << endl;
         
-        // loop over certain vars and init them into the DW
+        
         switch(l->typeDescription()->getType()) {
         
         //__________________________________
@@ -657,7 +670,7 @@ void Switcher::initNewVars(const ProcessorGroup*,
             break;
             }
           default:
-            throw ProblemSetupException("Unknown type", __FILE__, __LINE__);
+            throw InternalError("ERROR:Switcher::initNewVars Unknown CCVariable type", __FILE__, __LINE__);
           }
           break;
         //__________________________________
@@ -679,7 +692,7 @@ void Switcher::initNewVars(const ProcessorGroup*,
             break;
             }
           default:
-            throw ProblemSetupException("Unknown type", __FILE__, __LINE__);
+            throw InternalError("ERROR:Switcher::initNewVars Unknown NCVariable type", __FILE__, __LINE__);
           }
           break;
         //__________________________________
@@ -730,12 +743,12 @@ void Switcher::initNewVars(const ProcessorGroup*,
             break;
             }
           default:
-            throw ProblemSetupException("Unknown type", __FILE__, __LINE__);
+            throw InternalError("ERROR:Switcher::initNewVars Unknown particle type", __FILE__, __LINE__);
           }          
           break;
           }
         default:
-          throw ProblemSetupException("Unknown type", __FILE__, __LINE__);
+          throw InternalError("ERROR:Switcher::initNewVars Unknown Variable type", __FILE__, __LINE__);
         }
       }  // patch loop
     }  // matl loop
@@ -816,8 +829,10 @@ Switcher::needRecompile( double time,
      // read in <Time> block from ups file
     d_sharedState->d_simTime->problemSetup( subCompUps );   
     
+    // execute the subcomponent ProblemSetup
     d_sim->problemSetup(subCompUps, restart_prob_spec,const_cast<GridP&>(grid), d_sharedState );
     
+    // read in <DataArchiver> section
     dataArchiver->problemSetup( subCompUps, d_sharedState.get_rep() );
  //   dataArchiver->initializeOutput(subCompUps);
     
@@ -845,6 +860,9 @@ Switcher::needRecompile( double time,
 void
 Switcher::outputProblemSpec(ProblemSpecP& ps)
 {
+  ps->appendElement( "switcherComponentIndex", (int) d_componentIndex );
+  ps->appendElement( "switcherState",          (int) d_switchState );
+  ps->appendElement( "switcherCarryOverMatls", d_sharedState->originalAllMaterials()->getUnion()->size());
   d_sim->outputProblemSpec( ps );
 }
 //______________________________________________________________________
@@ -854,6 +872,7 @@ Switcher::outputPS( Dir & dir )
 {
 #if 0
   // TURN THIS OFF.  It appears to be working without it.
+  // We can problem remove outputPS from the source tree
   for (unsigned i = 0; i < d_numComponents; i++) {
     
     std::stringstream stream;
@@ -892,23 +911,14 @@ Switcher::outputPS( Dir & dir )
 //______________________________________________________________________
 //
 void
-Switcher::addToTimestepXML(ProblemSpecP& spec)
+Switcher::readSwitcherState(const ProblemSpecP& spec,SimulationStateP& state)
 {
-  spec->appendElement( "switcherComponentIndex", (int) d_componentIndex );
-  spec->appendElement( "switcherState",          (int) d_switchState );
-  spec->appendElement( "switcherCarryOverMatls", d_sharedState->originalAllMaterials()->getUnion()->size());
-}
-
-//______________________________________________________________________
-//
-void
-Switcher::readFromTimestepXML(const ProblemSpecP& spec,SimulationStateP& state)
-{
-  // problemSpec doesn't handle unsigned
   ProblemSpecP ps = (ProblemSpecP) spec;
+  
   int tmp;
   ps->get("switcherComponentIndex", tmp);
   d_componentIndex = tmp; 
+  
   ps->get("switcherState", tmp);
   d_switchState = (switchState) tmp;
   
@@ -920,8 +930,10 @@ Switcher::readFromTimestepXML(const ProblemSpecP& spec,SimulationStateP& state)
     new_matls->addReference();
     new_matls->createEmptySubsets(1);
     
-    for (int i = 0; i < numMatls; i++)
+    for (int i = 0; i < numMatls; i++){
       new_matls->getSubset(0)->add(i);
+    }
+    
     state->setOriginalMatlsFromRestart(new_matls);
   }
   
