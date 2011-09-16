@@ -35,7 +35,7 @@
         <save label = "CO"      table_lookup = "true"/>
         <save label = "NC7H16"  table_lookup = "true"/>
 
-        <checkpoint cycle = "2" interval = "0.2"/>
+        <checkpoint cycle = "2" interval = "0.02"/>
         <compression>gzip</compression>
     </DataArchiver>
     
