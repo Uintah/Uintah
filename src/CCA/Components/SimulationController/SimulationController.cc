@@ -319,7 +319,6 @@ namespace Uintah {
     if (d_restarting) {
       // do these before calling archive->restartInitialize, since problemSetup creates VarLabes the DA needs
       restart_prob_spec = d_archive->getTimestepDoc(d_restartIndex);
-      d_sim->readFromTimestepXML(restart_prob_spec, d_sharedState);
     }
 
     // Pass the restart_prob_spec to the problemSetup.  For restarting, 
