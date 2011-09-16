@@ -29,7 +29,7 @@ DEALINGS IN THE SOFTWARE.
 
 
 
-#include <CCA/Components/Examples/AdvectSlabs.h>
+#include <CCA/Components/Examples/AdvectSlabsGPU.h>
 #include <CCA/Components/Examples/ExamplesLabel.h>
 #include <CCA/Ports/LoadBalancer.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
@@ -51,7 +51,7 @@ DEALINGS IN THE SOFTWARE.
 
 using namespace Uintah;
 
-AdvectSlabs::AdvectSlabs(const ProcessorGroup* myworld)
+AdvectSlabsGPU::AdvectSlabsGPU(const ProcessorGroup* myworld)
   : UintahParallelComponent(myworld)
 {
   mass_label = VarLabel::create("mass", 
@@ -75,48 +75,58 @@ AdvectSlabs::AdvectSlabs(const ProcessorGroup* myworld)
     S_ac[BOTTOM] =  IntVector( 0,-1, 0);   
     S_ac[FRONT]  =  IntVector( 0, 0, 1);   
     S_ac[BACK]   =  IntVector( 0, 0,-1);
+    
+
+    
+    // initialize all the fluxes to 1
+    /* 
+    for(int f = TOP; f <= BACK; f++ )  {
+        d_OFS[c ].d_fflux[OF_slab[f]] = 1;
+    } 
+    */ 
+    
 }
 
-AdvectSlabs::~AdvectSlabs()
+AdvectSlabsGPU::~AdvectSlabsGPU()
 {
     
 }
 
-void AdvectSlabs::problemSetup(const ProblemSpecP& params,
+void AdvectSlabsGPU::problemSetup(const ProblemSpecP& params,
                             const ProblemSpecP& restart_prob_spec,
                             GridP&, SimulationStateP& sharedState)
 {
   sharedState_ = sharedState;
-  ProblemSpecP ps = params->findBlock("AdvectSlabs");
+  ProblemSpecP ps = params->findBlock("AdvectSlabsGPU");
   ps->require("delt", delt_);
   mymat_ = scinew SimpleMaterial();
   sharedState->registerSimpleMaterial(mymat_);
 }
  
-void AdvectSlabs::scheduleInitialize(const LevelP& level,
+void AdvectSlabsGPU::scheduleInitialize(const LevelP& level,
 			       SchedulerP& sched)
 {
   Task* task = scinew Task("initialize",
-			   this, &AdvectSlabs::initialize);
+			   this, &AdvectSlabsGPU::initialize);
   task->computes(mass_label);
   task->computes(massAdvected_label);
   sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
 }
  
-void AdvectSlabs::scheduleComputeStableTimestep(const LevelP& level,
+void AdvectSlabsGPU::scheduleComputeStableTimestep(const LevelP& level,
 					  SchedulerP& sched)
 {
   Task* task = scinew Task("computeStableTimestep",
-			   this, &AdvectSlabs::computeStableTimestep);
+			   this, &AdvectSlabsGPU::computeStableTimestep);
   task->computes(sharedState_->get_delt_label(),level.get_rep());
   sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
 }
 
 void
-AdvectSlabs::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
+AdvectSlabsGPU::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
 {
   Task* task = scinew Task("timeAdvance",
-			   this, &AdvectSlabs::timeAdvance);
+			   this, &AdvectSlabsGPU::timeAdvance);
 
   task->requires(Task::OldDW, mass_label, Ghost::AroundCells, 1);
   task->computes(mass_label);
@@ -125,7 +135,7 @@ AdvectSlabs::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
 
 }
 
-void AdvectSlabs::computeStableTimestep(const ProcessorGroup*,
+void AdvectSlabsGPU::computeStableTimestep(const ProcessorGroup*,
 				  const PatchSubset* patches,
 				  const MaterialSubset*,
 				  DataWarehouse*, DataWarehouse* new_dw)
@@ -133,7 +143,7 @@ void AdvectSlabs::computeStableTimestep(const ProcessorGroup*,
   new_dw->put(delt_vartype(delt_), sharedState_->get_delt_label(),getLevel(patches));
 }
 
-void AdvectSlabs::initialize(const ProcessorGroup*,
+void AdvectSlabsGPU::initialize(const ProcessorGroup*,
 		       const PatchSubset* patches,
 		       const MaterialSubset* matls,
 		       DataWarehouse*old_dw, DataWarehouse* new_dw)
@@ -154,9 +164,9 @@ void AdvectSlabs::initialize(const ProcessorGroup*,
       for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++)
       {
         // set initial value for fluxes
-        for(int face = TOP; face <= BACK; face++ )  {
-          d_OFS[*iter].d_fflux[face]= 1;
-        }
+      //  for(int face = TOP; face <= BACK; face++ )  {
+      //    d_OFS[*iter].d_fflux[face]= 1;
+      //  }
         // set up the initial mass
         mass[*iter]=1;
       }
@@ -164,17 +174,64 @@ void AdvectSlabs::initialize(const ProcessorGroup*,
   }
 }
 
-void AdvectSlabs::timeAdvance(const ProcessorGroup* pg,
+
+/// KERNEL FOR TIME ADVANCE
+// @brief A kernel that applies the stencil used in timeAdvance(...)
+// @param domainSize a three component vector that gives the size of the domain as (x,y,z)
+// @param domainLower a three component vector that gives the lower corner of the work area as (x,y,z)
+// @param ghostLayers the number of layers of ghost cells
+// @param residual the residual calculated by this individual kernel 
+// @param oldphi pointer to the source phi allocated on the device
+// @param newphi pointer to the sink phi allocated on the device
+__global__ void timeAdvanceKernelAdvectSlabs(uint3 domainSize,
+                                             uint3 domainLower,
+                                             int ghostLayers,
+                                             double *phi,
+                                             double *newphi,
+                                             double *residual) {
+
+// calculate the thread indices
+  int tidX = blockDim.x * blockIdx.x + threadIdx.x;
+  int tidY = blockDim.y * blockIdx.y + threadIdx.y;
+  //  int tidZ = blockDim.z * blockIdx.z + threadIdx.z;
+
+  int num_slices = domainSize.z - ghostLayers;
+  int dx = domainSize.x;
+  int dy = domainSize.y;
+
+  if (tidX < (dx - ghostLayers) && tidY < (dy - ghostLayers) && tidX > 0 && tidY > 0) {
+    for (int slice = ghostLayers; slice < num_slices; slice++) {
+/*
+      newphi[INDEX3D(dx, dy, tidX, tidY, slice)] =
+          (1.0 / 6.0)
+          * (phi[INDEX3D(dx, dy, tidX - 1, tidY, slice)]
+             + phi[INDEX3D(dx, dy, tidX + 1, tidY, slice)]
+             + phi[INDEX3D(dx, dy, tidX, tidY - 1, slice)]
+             + phi[INDEX3D(dx, dy, tidX, tidY + 1, slice)]
+             + phi[INDEX3D(dx, dy, tidX, tidY, slice - 1)]
+             + phi[INDEX3D(dx, dy, tidX, tidY, slice + 1)]);
+*/
+    }
+  }
+}
+
+
+
+
+
+void AdvectSlabsGPU::timeAdvance(const ProcessorGroup* pg,
                                const PatchSubset* patches,
                                const MaterialSubset* matls,
                                DataWarehouse* old_dw, DataWarehouse* new_dw)
 {
+    // MAKE SURE ONLY 1 MATERIAL
     struct fflux ff; 
     for(int p=0;p<patches->size();p++){
         const Patch* patch = patches->get(p);
         Vector dx = patch->dCell();            
         double invvol = 1.0/(dx.x() * dx.y() * dx.z());                     
     
+        //new_dw->allocateTemporary(d_OFS, patch, Ghost::AroundCells, 1);
         d_OFS.initialize(ff);
         for(int m = 0;m<matls->size();m++){
           int matl = matls->get(m);
@@ -186,7 +243,9 @@ void AdvectSlabs::timeAdvance(const ProcessorGroup* pg,
           old_dw->get(mass, mass_label, matl, patch, Ghost::AroundCells, 1);
           new_dw->allocateAndPut(mass2, mass_label, matl, patch, Ghost::AroundCells, 1 );
           new_dw->allocateAndPut(massAd, massAdvected_label, matl, patch, Ghost::AroundCells, 1 );
-        
+
+
+/*        
           for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) { 
               const IntVector& c = *iter;  
         
@@ -213,6 +272,7 @@ void AdvectSlabs::timeAdvance(const ProcessorGroup* pg,
               massAd[c] = sum_q_face_flux*invvol;
               mass2[c] = mass[c] - massAd[c];
            }
+*/
         }
     }
 }
@@ -220,12 +280,12 @@ void AdvectSlabs::timeAdvance(const ProcessorGroup* pg,
 //______________________________________________________________________
 //  
 namespace SCIRun {
-
+/*
   void swapbytes( Uintah::fflux& f) {
     double *p = f.d_fflux;
     SWAP_8(*p); SWAP_8(*++p); SWAP_8(*++p);
     SWAP_8(*++p); SWAP_8(*++p); SWAP_8(*++p);
-  }
+  }*/
 } // namespace SCIRun
 
 
