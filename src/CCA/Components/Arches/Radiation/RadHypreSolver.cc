@@ -29,38 +29,12 @@ DEALINGS IN THE SOFTWARE.
 
 
 //----- RadHypreSolver.cc ----------------------------------------------
-
-#include <fstream> // work around compiler bug with RHEL 3
-
 #include <CCA/Components/Arches/Radiation/RadHypreSolver.h>
-#include <CCA/Components/Arches/Radiation/RadiationSolver.h>
 #include <Core/Thread/Time.h>
-#include <CCA/Components/Arches/Arches.h>
-#include <CCA/Components/Arches/ArchesLabel.h>
-#include <CCA/Components/Arches/ArchesVariables.h>
-#include <CCA/Components/Arches/BoundaryCondition.h>
-#include <CCA/Components/Arches/Discretization.h>
-#include <CCA/Components/Arches/PressureSolver.h>
-#include <CCA/Components/Arches/Source.h>
-#include <CCA/Components/Arches/StencilMatrix.h>
-#include <CCA/Ports/DataWarehouse.h>
-#include <CCA/Ports/LoadBalancer.h>
-#include <CCA/Ports/Scheduler.h>
-#include <Core/Exceptions/InvalidValue.h>
-#include <Core/Grid/Level.h>
-#include <Core/Grid/Task.h>
-#include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Parallel/ProcessorGroup.h>
-#include <Core/ProblemSpec/ProblemSpec.h>
 
 #include <cstdlib>
 #include <cstdio>
-#include <cmath>
-
-#include <_hypre_utilities.h>
-#include <HYPRE_struct_ls.h>
-#include <krylov.h>
-#include <_hypre_struct_mv.h>
 
 using namespace std;
 using namespace Uintah;
