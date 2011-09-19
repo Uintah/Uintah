@@ -24,7 +24,7 @@ HeatTransfer::HeatTransfer( std::string modelName,
                             int qn ) 
 : ModelBase(modelName, sharedState, fieldLabels, icLabelNames, scalarLabelNames, qn)
 {
-  //b_radiation = false;
+  _radiation = false;
   d_quadNode = qn;
 
   // Create a label for this model
@@ -61,15 +61,14 @@ HeatTransfer::problemSetup(const ProblemSpecP& params, int qn)
   DQMOMEqnFactory& dqmom_eqn_factory = DQMOMEqnFactory::self();
 
   // Check for radiation 
-  b_radiation = false;
   const ProblemSpecP params_root = db->getRootNode(); 
   if(params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ExplicitSolver")->findBlock("EnthalpySolver")->findBlock("DORadiationModel")) {
-    b_radiation = true; //if gas phase radiation is turned on
+    _radiation = true; //if gas phase radiation is turned on
   }
 
   //user can specifically turn off radiation heat transfer
   if (db->findBlock("noRadiation"))
-    b_radiation = false; 
+    _radiation = false; 
 
   // set model clipping
   db->getWithDefault( "low_clip",  d_lowModelClip,  1.0e-6 );

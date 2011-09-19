@@ -3,6 +3,7 @@
 #include <CCA/Components/Arches/TransportEqns/EqnFactory.h>
 #include <CCA/Components/Arches/TransportEqns/EqnBase.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
+#include <CCA/Components/Arches/CoalModels/fortran/rqpart_fort.h>
 #include <CCA/Components/Arches/ArchesLabel.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <CCA/Ports/Scheduler.h>
@@ -91,15 +92,6 @@ SimpleHeatTransfer::problemSetup(const ProblemSpecP& params, int qn)
   } else {
     throw InvalidValue("ERROR: SimpleHeatTransfer: problemSetup(): Missing <Coal_Properties> section in input file!",__FILE__,__LINE__);
   }
-
-  // Check for radiation 
-  b_radiation = false;
-  if (params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ExplicitSolver")->findBlock("EnthalpySolver")->findBlock("DORadiationModel"))
-    b_radiation = true; // if gas phase radiation is turned on.  
-  //user can specifically turn off radiation heat transfer
-  if (db->findBlock("noRadiation"))
-    b_radiation = false;
-
 
   // Assume no ash (for now)
   //d_ash = false;
@@ -302,7 +294,7 @@ SimpleHeatTransfer::sched_computeModel( const LevelP& level, SchedulerP& sched, 
   tsk->requires(Task::OldDW, d_fieldLabels->d_densityCPLabel, Ghost::None, 0);
   tsk->requires(Task::OldDW, d_fieldLabels->d_cpINLabel, Ghost::None, 0);
  
-  if(b_radiation){
+  if(_radiation){
     tsk->requires(Task::OldDW, d_fieldLabels->d_radiationSRCINLabel,  Ghost::None, 0);
     tsk->requires(Task::OldDW, d_fieldLabels->d_abskgINLabel,  Ghost::None, 0);   
     tsk->requires(Task::OldDW, d_fieldLabels->d_radiationVolqINLabel, Ghost::None, 0);
@@ -474,7 +466,7 @@ SimpleHeatTransfer::computeModel( const ProcessorGroup * pc,
     constCCVariable<double> radiationVolqIN;
     CCVariable<double> enthNonLinSrc;
 
-    if(b_radiation){
+    if(_radiation){
       old_dw->get(radiationSRCIN, d_fieldLabels->d_radiationSRCINLabel, matlIndex, patch, gn, 0);
       old_dw->get(abskgIN, d_fieldLabels->d_abskgINLabel, matlIndex, patch, gn, 0);
       old_dw->get(radiationVolqIN, d_fieldLabels->d_radiationVolqINLabel, matlIndex, patch, gn, 0);
@@ -631,8 +623,18 @@ SimpleHeatTransfer::computeModel( const ProcessorGroup * pc,
         Q_convection = Nu*pi*blow*rkg*unscaled_length*(gas_temperature - unscaled_particle_temperature);
 
         // Radiation part: -------------------------
+        bool DO_NEW_ABSKP = false; 
         Q_radiation = 0.0;
-        if (b_radiation) {
+        if ( _radiation  && DO_NEW_ABSKP){ 
+          // New Glacier Code for ABSKP: 
+          double qabs = 0.0; 
+          double omegaa  = 0.0; 
+          double afracq0 = 0.0; 
+          double qsca = 0.0; 
+          fort_rqpart( unscaled_length, unscaled_particle_temperature, unscaled_ash_mass, afracq0, qabs, qsca ); 
+
+          //what goes next?!
+        } else if ( _radiation && !DO_NEW_ABSKP ) { 
           double Qabs = 0.8;
           double Apsc = (pi/4)*Qabs*pow(unscaled_length,2);
           double Eb = 4*sigma*pow(unscaled_particle_temperature,4);
