@@ -32,6 +32,10 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Arches/Radiation/RadHypreSolver.h>
 #include <Core/Thread/Time.h>
 #include <Core/Parallel/ProcessorGroup.h>
+#include <_hypre_utilities.h>
+#include <HYPRE_struct_ls.h>
+#include <krylov.h>
+#include <_hypre_struct_mv.h>
 
 #include <cstdlib>
 #include <cstdio>
