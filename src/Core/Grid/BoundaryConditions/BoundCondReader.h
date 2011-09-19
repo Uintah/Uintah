@@ -132,6 +132,8 @@ namespace Uintah {
     void combineBCS();
 
     void combineBCS_NEW();
+    
+    void bulletProofing();
 
     ///
     bool compareBCData(BCGeomBase* b1, BCGeomBase* b2);
