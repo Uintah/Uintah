@@ -628,10 +628,9 @@ SimpleHeatTransfer::computeModel( const ProcessorGroup * pc,
         if ( _radiation  && DO_NEW_ABSKP){ 
           // New Glacier Code for ABSKP: 
           double qabs = 0.0; 
-          double omegaa  = 0.0; 
-          double afracq0 = 0.0; 
           double qsca = 0.0; 
-          fort_rqpart( unscaled_length, unscaled_particle_temperature, unscaled_ash_mass, afracq0, qabs, qsca ); 
+          double init_ash_frac = 0.0; // THIS NEEDS TO BE FIXED!
+          fort_rqpart( unscaled_length, unscaled_particle_temperature, unscaled_ash_mass, init_ash_frac, qabs, qsca ); 
 
           //what goes next?!
         } else if ( _radiation && !DO_NEW_ABSKP ) { 
