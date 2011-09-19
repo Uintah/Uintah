@@ -414,7 +414,8 @@ BoundCondReader::read(ProblemSpecP& bc_ps, const ProblemSpecP& grid_ps)
     }
     bctype_data.clear();
     bcgeom_data.clear();
-  }
+    
+  }  // loop over faces
 
  
 
@@ -423,8 +424,10 @@ BoundCondReader::read(ProblemSpecP& bc_ps, const ProblemSpecP& grid_ps)
   // materials boundary condition section.
   BCR_dbg << "Add 'all' boundary condition information" << endl;
   BCDataArray::bcDataArrayType::const_iterator  mat_all_itr, bc_geom_itr;
+  
   for (Patch::FaceType face = Patch::startFace; 
       face <= Patch::endFace; face=Patch::nextFace(face)) {
+      
     mat_all_itr = d_BCReaderData[face].d_BCDataArray.find(-1);
     if (mat_all_itr != d_BCReaderData[face].d_BCDataArray.end()) 
       for (bc_geom_itr = d_BCReaderData[face].d_BCDataArray.begin(); 
@@ -451,7 +454,7 @@ BoundCondReader::read(ProblemSpecP& bc_ps, const ProblemSpecP& grid_ps)
     BCR_dbg << endl << "Printing out bcDataArray for face " << face 
       << " after adding 'all' . . " << endl;
     d_BCReaderData[face].print();
-  }
+  }  // face loop
 #endif
 
   // Need to take the individual boundary conditions and combine them into
@@ -467,9 +470,9 @@ BoundCondReader::read(ProblemSpecP& bc_ps, const ProblemSpecP& grid_ps)
     d_BCReaderData[face].print();
   } 
 
+  bulletProofing();
 
   combineBCS_NEW();
-
 
   BCR_dbg << endl << "After combineBCS() . . ." << endl << endl;
   for (Patch::FaceType face = Patch::startFace; 
@@ -477,7 +480,7 @@ BoundCondReader::read(ProblemSpecP& bc_ps, const ProblemSpecP& grid_ps)
     BCR_dbg << "After Face . . .  " << face << endl;
     d_BCReaderData[face].print();
   } 
-
+  
 }
 
 
@@ -772,6 +775,40 @@ bool BoundCondReader::compareBCData(BCGeomBase* b1, BCGeomBase* b2)
 {
   return false;
 }
+
+//______________________________________________________________________
+//
+void BoundCondReader::bulletProofing()
+{
+  for (Patch::FaceType face = Patch::startFace; 
+       face <= Patch::endFace; face=Patch::nextFace(face)) {
+
+    BCDataArray& original = d_BCReaderData[face];
+
+    BCDataArray::bcDataArrayType::iterator mat_id_itr;
+    for (mat_id_itr = original.d_BCDataArray.begin(); 
+         mat_id_itr != original.d_BCDataArray.end(); 
+         ++mat_id_itr) {
+
+      typedef vector<BCGeomBase*> BCGeomBaseVec;
+      BCGeomBaseVec& bcgeom_vec = mat_id_itr->second;
+
+      //__________________________________
+      // There must be 1 and only 1 side BC specified
+      int nSides = count_if(bcgeom_vec.begin(),bcgeom_vec.end(), cmp_type<SideBCData>()  );
+      
+      if ( nSides != 1 ){
+        ostringstream warn;
+        warn<<"ERROR: <BoundaryConditions> <"<< Patch::getFaceName(face) << ">\n" 
+            << "There must be 1 and only 1 side boundary condition specified \n\n";
+        throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+      }
+    }  // BCDataArray
+  }  // patch faces
+}
+
+
+
 
 namespace Uintah {
 
