@@ -405,10 +405,10 @@ namespace Wasatch {
                       case Uintah::Patch::zminus:  SET_BC_TAU( BCEvaluator, NeumannTauZ, SpatialOps::structured::Z_MINUS_SIDE );  break;
                       case Uintah::Patch::zplus :  SET_BC_TAU( BCEvaluator, NeumannTauZ, SpatialOps::structured::Z_PLUS_SIDE  );  break;
                       case Uintah::Patch::numFaces:
-                        throw Uintah::ProblemSetupException( "numFaces is not a valid face", __FILE__, __LINE__ );
+                        throw Uintah::ProblemSetupException( "An invalid face Patch::numFaces was encountered while setting boundary conditions", __FILE__, __LINE__ );
                         break;
                       case Uintah::Patch::invalidFace:
-                        throw Uintah::ProblemSetupException( "invalidFace is not a valid face", __FILE__, __LINE__ );
+                        throw Uintah::ProblemSetupException( "An invalid face Patch::invalidFace was encountered while setting boundary conditions", __FILE__, __LINE__ );
                         break;
                     }    
                   } else {
@@ -420,10 +420,10 @@ namespace Wasatch {
                       case Uintah::Patch::zminus:  SET_BC( BCEvaluator, NeumannZ, SpatialOps::structured::Z_MINUS_SIDE );  break;
                       case Uintah::Patch::zplus :  SET_BC( BCEvaluator, NeumannZ, SpatialOps::structured::Z_PLUS_SIDE  );  break;
                       case Uintah::Patch::numFaces:
-                        throw Uintah::ProblemSetupException( "numFaces is not a valid face", __FILE__, __LINE__ );
+                        throw Uintah::ProblemSetupException( "An invalid face Patch::numFaces was encountered while setting boundary conditions", __FILE__, __LINE__ );
                         break;
                       case Uintah::Patch::invalidFace:
-                        throw Uintah::ProblemSetupException( "invalidFace is not a valid face", __FILE__, __LINE__ );
+                        throw Uintah::ProblemSetupException( "An invalid face Patch::invalidFace was encountered while setting boundary conditions", __FILE__, __LINE__ );
                         break;
                     }    
                   }              
