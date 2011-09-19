@@ -20,4 +20,4 @@ SRCS += \
   $(SRCDIR)/ZDragModel.cc \
   $(SRCDIR)/DragModel.cc
 
-$(SRCDIR)/DragModel.$(OBJEXT): $(SRCDIR)/fortran/rqpart_fort.h
+$(SRCDIR)/ShaddixHeatTransfer.$(OBJEXT): $(SRCDIR)/fortran/rqpart_fort.h
