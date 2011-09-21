@@ -122,6 +122,7 @@ public:
   virtual bool pressLinearSolve() = 0;
   virtual void copyPressSoln(const Patch* patch, ArchesVariables* vars) = 0;
   virtual void destroyMatrix() = 0;
+  virtual void print(const string& desc, const int timestep, const int step) = 0;
   double init_norm;
 
 protected:

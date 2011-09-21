@@ -259,6 +259,8 @@ private:
   // physical constants
   PhysicalConstants* d_physicalConsts;
 
+  int d_iteration;
+
   // Maximum number of iterations to take before stopping/giving up.
   int d_maxIterations;
   //reference points for the solvers
