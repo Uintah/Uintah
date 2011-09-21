@@ -109,7 +109,7 @@ public:
   int high[3];
   int components;
 
-  float *data;
+  double *data;
 };
 
 
@@ -117,6 +117,6 @@ class ParticleDataRaw {
 public:
   int num;
   int components;
-  float *data;
+  double *data;
 };
 
