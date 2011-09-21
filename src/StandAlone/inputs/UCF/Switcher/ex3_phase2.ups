@@ -160,7 +160,7 @@
         <MPM>
         <arches_heat_flux> 
           <geom_object>
-              <cylinder>
+              <cylinder>   <!-- You must define the geometry object, not reuse one -->
                 <bottom>    [0.0,0.0,-.06985] </bottom>
                 <top>       [0.0,0.0, .06985] </top>
                 <radius>    0.05715           </radius>
