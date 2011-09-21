@@ -349,4 +349,28 @@ PetscSolver::destroyMatrix()
 {
   destroyPetscObjects(A, d_x, d_b, d_u);
 }
+//______________________________________________________________________
+//
+void
+PetscSolver::print(const string& desc, const int timestep, const int step)
+{
+  char A_file[100],B_file[100], X_file[100];
+  
+  PetscViewer matview, vecview;
+  sprintf(B_file,"output/b.%s.%i.%i",desc.c_str(), timestep, step);
+  sprintf(X_file,"output/x.%s.%i.%i",desc.c_str(), timestep, step);
+  sprintf(A_file,"output/A.%s.%i.%i",desc.c_str(), timestep, step);
+  
+  PetscViewerASCIIOpen(PETSC_COMM_WORLD,B_file,&vecview);
+  VecView(d_b,vecview);
+  PetscViewerDestroy(vecview);
+  
+  PetscViewerASCIIOpen(PETSC_COMM_WORLD,X_file,&vecview);
+  VecView(d_x,vecview);
+  PetscViewerDestroy(vecview);
+  
+  PetscViewerASCIIOpen(PETSC_COMM_WORLD,A_file,&matview);
+  MatView(A,matview);
+  PetscViewerDestroy(matview);
+}
 

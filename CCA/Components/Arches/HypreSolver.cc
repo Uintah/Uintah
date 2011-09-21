@@ -390,12 +390,6 @@ HypreSolver::setRHS_X(const ProcessorGroup* pc,
 
   HYPRE_StructVectorAssemble(d_b);  
   HYPRE_StructVectorAssemble(d_x);
-
-#if 0
-  HYPRE_StructMatrixPrint("driver.out.A", d_A, 0);
-  HYPRE_StructVectorPrint("driver.out.b", d_b, 0);
-  HYPRE_StructVectorPrint("driver.out.x0", d_x, 0);  
-#endif
   
   hypre_TFree(X);
   hypre_TFree(B);
@@ -590,10 +584,6 @@ HypreSolver::copyPressSoln(const Patch* patch, ArchesVariables* vars)
     vars->pressure[c] = xvec[i];
     i++;
   }
-  
-#if 0
-  HYPRE_StructVectorPrint("driver.out.x", d_x, 0);
-#endif
   hypre_TFree(xvec);
 }
  
@@ -626,6 +616,23 @@ HypreSolver::destroyMatrix()
   hypre_TFree(d_offsets);
   
   hypre_FinalizeMemoryDebug();
+}
+
+//______________________________________________________________________
+//
+void HypreSolver::print(const string& desc, const int timestep, const int step){
+
+  char A_fname[100],B_fname[100], X_fname[100];
+  
+  sprintf(B_fname,"output/b.%s.%i.%i",desc.c_str(), timestep, step);
+  sprintf(X_fname,"output/x.%s.%i.%i",desc.c_str(), timestep, step);
+  sprintf(A_fname,"output/A.%s.%i.%i",desc.c_str(), timestep, step);
+  
+  HYPRE_StructMatrixPrint(A_fname, d_A, 0);
+  
+  HYPRE_StructVectorPrint(B_fname, d_b, 0);
+  
+  HYPRE_StructVectorPrint(X_fname, d_x, 0);  
 }
 
 void HypreSolver::finalizeSolver()
