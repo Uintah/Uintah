@@ -63,6 +63,10 @@ $(links_to_create) :
 	@echo "Creating symbolic link to $@... this occurs only one time."
 	@ln -fs $(SRCTOP_ABS)/$(VISIT_SRCDIR)/`basename $@` $@
 
+# Override this from configure if you want to install -public (to Visit 
+# install dir instead of user's .visit directory).
+INSTALL_TYPE = -private
+
 #
 # This creates the VisIt Makefile.  Have to move your Makefile out of
 # the way, rename VisIt's Makefile, and put ours back.
@@ -72,7 +76,7 @@ ${VISIT_SRCDIR}/Makefile.visit : lib/libStandAlone_tools_uda2vis.${SO_OR_A_FILE}
 	@cd ${VISIT_SRCDIR}; \
           rm -f Makefile.visit; \
           mv Makefile Makefile.sci; \
-          ${VISIT_INSTALL_DIR}/bin/xml2cmake -private -clobber udaReaderMTMD.xml; \
+          ${VISIT_INSTALL_DIR}/bin/xml2cmake ${INSTALL_TYPE} -clobber udaReaderMTMD.xml; \
           ${VISIT_INSTALL_DIR}/bin/xml2info -clobber $(OBJTOP_ABS)/${VISIT_SRCDIR}/udaReaderMTMD.xml; \
           cmake . -DVISIT_DISABLE_SETTING_COMPILER:BOOL=TRUE -DCMAKE_CXX_COMPILER:FILEPATH=${CXX} -DCMAKE_CXX_FLAGS:STRING="-I${OBJTOP_ABS} -I${SRCTOP_ABS} ${CXXFLAGS}"; \
           cp Makefile Makefile.visit;
