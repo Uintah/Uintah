@@ -53,6 +53,9 @@ void printTask( const PatchSubset   * patches,
 void printTask( const Patch         * patch,
                 SCIRun::DebugStream & dbg,
                 const string        & where );
+                
+void printTask( SCIRun::DebugStream & dbg,
+                const string        & where );
 
 } // End namespace Uintah
 
