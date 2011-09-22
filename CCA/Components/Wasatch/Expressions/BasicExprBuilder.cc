@@ -8,6 +8,7 @@
 #include <CCA/Components/Wasatch/FieldTypes.h>
 #include <CCA/Components/Wasatch/ParseTools.h>
 #include <CCA/Components/Wasatch/Expressions/MMS/TaylorVortex.h>
+#include <CCA/Components/Wasatch/Expressions/MMS/Functions.h>
 #include <CCA/Components/Wasatch/StringNames.h>
 
 //-- ExprLib includes --//
@@ -91,6 +92,13 @@ namespace Wasatch{
       typedef typename Expr::DoubleTanhFunction<FieldT>::Builder Builder;
       builder = scinew Builder( indepVarTag, midpointUp, midpointDown, width, amplitude);
     }
+    
+    else if ( params->findBlock("SineTime") ) {
+      const Expr::Tag timeVarTag( "time", Expr::STATE_NONE );
+      typedef typename SineTime<FieldT>::Builder Builder;
+      builder = scinew Builder( timeVarTag );
+    }
+    
 	  
     return builder;
 	  
