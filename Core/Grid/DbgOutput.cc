@@ -93,4 +93,18 @@ void printTask(const Patch* patch,
         << " patch " << patch->getGridIndex()<< endl;
   }  
 }
+
+//__________________________________
+//
+void printTask(SCIRun::DebugStream& dbg,
+               const string& where)
+{
+  if (dbg.active()){
+    dbg << Uintah::Parallel::getMPIRank()  << " ";
+    dbg << left;
+    dbg.width(50);
+    dbg << where << " \tAll Patches" << endl;
+  }  
+}
+
 } // End namespace Uintah
