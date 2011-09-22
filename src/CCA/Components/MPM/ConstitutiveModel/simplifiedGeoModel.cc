@@ -335,7 +335,6 @@ void simplifiedGeoModel::computeStressTensor(const PatchSubset* patches,
     const double p3_crush_curve = d_initialData.p3_crush_curve;
     const double p4_fluid_effect = d_initialData.p4_fluid_effect;
     const double fluid_B0 = d_initialData.fluid_B0;
-    const double fluid_pressur_initial = d_initialData.fluid_pressur_initial;
     const double kinematic_hardening_constant = d_initialData.kinematic_hardening_constant;
     const double PEAKI1 = d_initialData.PEAKI1;
     double bulk = d_initialData.B0;
@@ -378,6 +377,7 @@ void simplifiedGeoModel::computeStressTensor(const PatchSubset* patches,
 	      cout<< "ERROR, negative J! "<<endl;
 	      cout<<"J= "<<J<<endl;
 	      cout<<"L= "<<tensorL<<endl;
+       exit(1);
 	    }
 	    // Update particle volumes
 	    pvolume[idx]=(pmass[idx]/rho_orig)*J;
@@ -388,8 +388,9 @@ void simplifiedGeoModel::computeStressTensor(const PatchSubset* patches,
       particleIndex idx = *iter;
 
       pdTdt[idx] = 0.0;
-      const double PEAKI1_hardening = PEAKI1*FSLOPE + hardening_modulus*pPlasticStrain[idx];
-      const double cap_radius=-CR*FSLOPE*(pKappa[idx]-PEAKI1);
+      double PEAKI1_hardening = PEAKI1*FSLOPE + hardening_modulus*pPlasticStrain[idx];
+      //const double cap_radius=-CR*FSLOPE*(pKappa[idx]-PEAKI1);
+      double cap_radius=-CR*(FSLOPE*pKappa[idx]-PEAKI1_hardening);
 
       // Compute the rate of deformation tensor
       Matrix3 D = (velGrad[idx] + velGrad[idx].Transpose())*.5;
@@ -494,14 +495,14 @@ void simplifiedGeoModel::computeStressTensor(const PatchSubset* patches,
         // plasticity vertex treatment ends
         // nested return algorithm begins
         if (condition_return_to_vertex == 0){
-	         double gamma_tolerance = 0.0001;
+	         double gamma_tolerance = 0.01;
 	         double del_gamma = 100.;
 	         double gamma = 0.0;;
 	         double gamma_old;
 	         double I1_iteration,J2_iteration;
 	         double beta_cap,FSLOPE_cap;
 	         int max_number_of_iterations = 1000;
-	         int counter = 0;
+	         int counter = 1;
 	         Matrix3 P,M,G;
 	         Matrix3 stress_iteration=trial_stress[idx];
 	         Matrix3 S_iteration;
@@ -519,16 +520,13 @@ void simplifiedGeoModel::computeStressTensor(const PatchSubset* patches,
               double I1_iteration1;
               double I1_iteration2;
               double I1_iteration3;
-              //double f_iteration1;
               double f_iteration2;
-              double junk_var;
               int counter_temp=0;
               computeInvariants(stress_iteration, S_iteration, I1_iteration, J2_iteration);
               I1_iteration1=I1_iteration;
               I1_iteration2=pKappa[idx];
               I1_iteration3=(I1_iteration1+I1_iteration2)/2.0;
               stress_iteration_temp = stress_iteration + Identity*I1_iteration/3.0*(I1_iteration3/I1_iteration-1.0);
-              //f_iteration1=-1.0;
               f_iteration2=YieldFunction(stress_iteration_temp,FSLOPE,pKappa[idx],cap_radius,PEAKI1_hardening);
               while ((abs(f_iteration2)>0.0000001*sqrt(J2_iteration+I1_iteration*I1_iteration) && counter_temp<2000) || counter_temp==0) {
                 counter_temp = counter_temp + 1;
@@ -592,11 +590,57 @@ void simplifiedGeoModel::computeStressTensor(const PatchSubset* patches,
 	        }
          // Multi-stage return loop ends
          // compute the new stress state
+         double hardeningEns;
+         if (I1_iteration>=pKappa[idx]){
+           hardeningEns = hardening_modulus/G.Norm();
+         }else{
+           if (J2_iteration<0.00000001){
+             beta_cap = 0.0;
+           }else{
+             beta_cap = 1.0 - (pKappa[idx]-I1_iteration)/(cap_radius)*
+                        (pKappa[idx]-I1_iteration)/(cap_radius);
+           }
+           hardeningEns = sqrt(beta_cap)*hardening_modulus/G.Norm()
+                        +2.0*CR*(FSLOPE*I1_iteration-PEAKI1_hardening) *
+                        (pKappa[idx]-I1_iteration)
+                        /cap_radius/cap_radius/cap_radius/(1.0+FSLOPE*CR)*
+                        1.0/p3_crush_curve/p3_crush_curve*
+                        exp(-p1_crush_curve*(pKappa[idx]-cap_radius-p0_crush_curve))
+                        *M.Trace()/G.Norm();
+         }
+         gamma=(G/G.Norm()).Contract(P)/((G/G.Norm()).Contract(P)+hardeningEns)*gamma;
 	        stress_new[idx] = trial_stress[idx] - P*gamma;
        }
+
+       double shear_inverse = 1.0/2.0/shear;
+	      double lame_inverse = 1.0/6.0/bulk/shear * ( 2.0/3.0*shear - bulk );
+       Matrix3 diff_stress_iteration = trial_stress[idx] - stress_new[idx];
+	      Matrix3 strain_iteration = (Identity*lame_inverse*(diff_stress_iteration.Trace()) +
+                                  diff_stress_iteration*2.0*shear_inverse);
+       // update total plastic strain magnitude
+	      pPlasticStrain_new[idx] = pPlasticStrain[idx] + strain_iteration.Norm();
+       // update volumetric part of the plastic strain magnitude
+       pPlasticStrainVol_new[idx] = pPlasticStrainVol[idx] + strain_iteration.Trace();
+       // update volumetric part of the elastic strain magnitude
+       pElasticStrainVol_new[idx] = pElasticStrainVol_new[idx] - strain_iteration.Trace();
+       // update the position of the cap
+       pKappa_new[idx] = pKappa[idx] + ( 1.0/p3_crush_curve/p1_crush_curve *
+                       exp(-p1_crush_curve*(pKappa[idx]-cap_radius-p0_crush_curve)) -
+                       3.0*fluid_B0*(exp(p3_crush_curve+p4_fluid_effect)-1.0)*
+                       exp(p3_crush_curve+p4_fluid_effect+pPlasticStrainVol[idx])
+                       /(exp(p3_crush_curve+p4_fluid_effect+pPlasticStrainVol[idx])-1.0)
+                       /(exp(p3_crush_curve+p4_fluid_effect+pPlasticStrainVol[idx])-1.0) +
+                       3.0*fluid_B0*(exp(p3_crush_curve+p4_fluid_effect)-1.0)*
+                       exp(p3_crush_curve+pPlasticStrainVol[idx])
+                       /(exp(p3_crush_curve+pPlasticStrainVol[idx])-1.0)
+                       /(exp(p3_crush_curve+pPlasticStrainVol[idx])-1.0) )
+                       *strain_iteration.Trace()/(1.0+FSLOPE*CR);
+
 	      double f_new;
+       PEAKI1_hardening = PEAKI1*FSLOPE + hardening_modulus*pPlasticStrain_new[idx];
+       cap_radius=-CR*(FSLOPE*pKappa_new[idx]-PEAKI1_hardening);
        // compute the value of the yield function for the new stress
-	      f_new=YieldFunction(stress_new[idx],FSLOPE,pKappa[idx],cap_radius,PEAKI1_hardening);
+	      f_new=YieldFunction(stress_new[idx],FSLOPE,pKappa_new[idx],cap_radius,PEAKI1_hardening);
        double J2_new,I1_new;
        Matrix3 S_new;
        computeInvariants(stress_new[idx], S_new, I1_new, J2_new);
@@ -606,34 +650,9 @@ void simplifiedGeoModel::computeStressTensor(const PatchSubset* patches,
 	        cerr<<"ERROR!  did not return to yield surface (simplifiedGeomodel.cc)"<<endl;
 	        cerr<<"sqrt(J2_new)= "<<sqrt(J2_new)<<endl;
 	        cerr<<"I1_new= "<<I1_new<<endl;
-          cerr<<"f_new= "<<f_new<<endl;
+         cerr<<"f_new= "<<f_new<<endl;
 	        exit(1);
 	      }
-	      double shear_inverse = 1.0/2.0/shear;
-	      double lame_inverse = 1.0/6.0/bulk/shear * ( 2.0/3.0*shear - bulk );
-       Matrix3 diff_stress_iteration = trial_stress[idx] - stress_new[idx];
-	      Matrix3 strain_iteration = (Identity*lame_inverse*(diff_stress_iteration.Trace()) +
-                                  diff_stress_iteration*2.0*shear_inverse);
-        // update total plastic strain magnitude
-	      pPlasticStrain_new[idx] = pPlasticStrain[idx] + strain_iteration.Norm();
-       // update volumetric part of the plastic strain magnitude
-       pPlasticStrainVol_new[idx] = pPlasticStrainVol[idx] + strain_iteration.Trace();
-       // update volumetric part of the elastic strain magnitude
-       pElasticStrainVol_new[idx] = pElasticStrainVol_new[idx] - strain_iteration.Trace();
-       // update the position of the cap
-       pKappa_new[idx] = pKappa[idx] + ( 1.0/p3_crush_curve/p1_crush_curve *
-                         exp(-p1_crush_curve*(pKappa[idx]-cap_radius-p0_crush_curve)) -
-                         3.0*fluid_B0*
-                         (exp(p3_crush_curve+p4_fluid_effect)-1.0)*
-                         exp(p3_crush_curve+p4_fluid_effect+pPlasticStrainVol[idx])
-                         /(exp(p3_crush_curve+p4_fluid_effect+pPlasticStrainVol[idx])-1.0)
-                         /(exp(p3_crush_curve+p4_fluid_effect+pPlasticStrainVol[idx])-1.0) +
-                         3.0*fluid_B0*
-                         (exp(p3_crush_curve+p4_fluid_effect)-1.0)*
-                         exp(p3_crush_curve+pPlasticStrainVol[idx])
-                         /(exp(p3_crush_curve+pPlasticStrainVol[idx])-1.0)
-                         /(exp(p3_crush_curve+pPlasticStrainVol[idx])-1.0) )*
-                         strain_iteration.Trace();
 
        // compute invariants of the plastic strain rate
        double I1_plasStrain,J2_plasStrain;
@@ -655,7 +674,7 @@ void simplifiedGeoModel::computeStressTensor(const PatchSubset* patches,
      pBackStressIso_new[idx] = pBackStressIso[idx] + deltaBackStressIso;
 
     }//end loop over particles
-
+    
     // final loop over all particles
     for(ParticleSubset::iterator iter = pset->begin();iter!=pset->end();iter++){
 
