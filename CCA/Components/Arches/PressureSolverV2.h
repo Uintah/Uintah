@@ -164,8 +164,10 @@ private:
                        const MaterialSubset*,
                        DataWarehouse* ,
                        DataWarehouse* ,
-                       Task::WhichDW which_dw,
-                       const TimeIntegratorLabel* timelabels );
+                       const TimeIntegratorLabel* timelabels,
+                       const bool extraProjection,
+                       const bool d_EKTCorrection,
+                       const bool doing_EKT_now );
                        
   //______________________________________________________________________
   // SolveSystem:
@@ -258,6 +260,7 @@ private:
   int d_maxIterations;
   
   int d_indx;         // Arches matl index.
+  int d_iteration;
 
   //reference point for the solvers
   IntVector d_pressRef;

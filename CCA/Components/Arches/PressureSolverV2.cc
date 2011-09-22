@@ -85,6 +85,7 @@ PressureSolver::PressureSolver(ArchesLabel* label,
   d_source = 0;
   d_linearSolver = 0; 
   d_construct_solver_obj = true; 
+  d_iteration = 0;
 }
 
 //______________________________________________________________________
@@ -178,8 +179,6 @@ void PressureSolver::sched_solve(const LevelP& level,
   schedExtract_X(sched, perproc_patches, matls,
                  timelabels, extraProjection, doing_EKT_now,  pressLabel);
                  
-cout << " Sched_solve PressLabel: " << pressLabel << endl;
-  
   sched_normalizePress(sched, perproc_patches, matls, pressLabel);
   
   
@@ -201,13 +200,13 @@ PressureSolver::sched_buildLinearMatrix(SchedulerP& sched,
                                         bool doing_EKT_now)
 {
   //  build pressure equation coefficients and source
-  string taskname =  "PressureSolver::buildLinearMatrix" +
+  string taskname =  "PressureSolver::buildLinearMatrix_" +
                      timelabels->integrator_step_name;
   if (extraProjection){
-    taskname += "extraProjection";
+    taskname += "_extraProjection";
   }
   if (doing_EKT_now){
-    taskname += "EKTnow";
+    taskname += "_EKTnow";
   }
   
   printSchedule(patches,dbg,taskname);
@@ -295,6 +294,8 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
   
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p); 
+    printTask(patches, patch,dbg,"buildLinearMatrix");
+    
     ArchesVariables vars;
     ArchesConstVariables constVars;
 
@@ -396,25 +397,28 @@ PressureSolver::sched_setRHS_X_wrap(SchedulerP& sched,
                                     bool d_EKTCorrection,
                                     bool doing_EKT_now)
 { 
-  printSchedule(patches,dbg,"PressureSolver::setRHS_X_wrap");
+
+  string taskname =  "PressureSolver::setRHS_X_wrap_" +
+                     timelabels->integrator_step_name;
+                     
+  printSchedule(patches,dbg, taskname);
+     
+  Task* tsk = scinew Task(taskname, this,
+                          &PressureSolver::setRHS_X_wrap,
+                          timelabels, extraProjection, d_EKTCorrection, doing_EKT_now);
+
+  Ghost::GhostType  gn = Ghost::None;
   
-  // Which dw to pull data from
-  Task::WhichDW thisDW;                  // TODD innitialize this and catch it.
-   
-  if (!((d_pressure_correction)||(extraProjection) || ( d_EKTCorrection && doing_EKT_now ))){
+/*`==========TESTING==========*/
+  if (!((d_pressure_correction)||(extraProjection) ||((d_EKTCorrection)&&(doing_EKT_now)))){
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First){
-      thisDW = Task::OldDW;
+      tsk->requires(Task::OldDW, timelabels->pressure_guess, gn, 0);
     }else{
-      thisDW = Task::NewDW;
+      tsk->requires(Task::NewDW, timelabels->pressure_guess, gn, 0);
     }
   }
-   
-  Task* tsk = scinew Task("PressureSolver::setRHS_X_wrap", this,
-                          &PressureSolver::setRHS_X_wrap, thisDW,
-                          timelabels);
-
-  Ghost::GhostType  gn = Ghost::None; 
-  tsk->requires(thisDW,      timelabels->pressure_guess,     gn, 0);
+/*===========TESTING==========`*/
+  
   tsk->requires(Task::NewDW, d_lab->d_presNonLinSrcPBLMLabel,gn, 0);
 
   sched->addTask(tsk, patches, matls);
@@ -432,8 +436,10 @@ PressureSolver::setRHS_X_wrap ( const ProcessorGroup* pg,
                                  const MaterialSubset*,
                                  DataWarehouse* old_dw,
                                  DataWarehouse* new_dw,
-                                 Task::WhichDW which_dw,
-                                 const TimeIntegratorLabel* timelabels )
+                                 const TimeIntegratorLabel* timelabels,
+                                 const bool extraProjection,
+                                 const bool d_EKTCorrection,
+                                 const bool doing_EKT_now )
 { 
   Ghost::GhostType  gn = Ghost::None;
   
@@ -441,21 +447,40 @@ PressureSolver::setRHS_X_wrap ( const ProcessorGroup* pg,
     const Patch* patch = patches->get(p);
     printTask(patches, patch,dbg,"setRHS_X");
     
-    constCCVariable<double> guess;
+    CCVariable<double> guess;
     constCCVariable<double> rhs;
+    new_dw->allocateTemporary(guess, patch,gn,0);
     
-    DataWarehouse* this_dw = new_dw;
-  
-    if( which_dw == Task::OldDW ){
-      this_dw = old_dw;
-    }
     
-    this_dw->get(guess,   timelabels->pressure_guess,      d_indx, patch, gn,0);
+/*`==========TESTING==========*/  
+    if (!((d_pressure_correction)||(extraProjection)||((d_EKTCorrection)&&(doing_EKT_now)))){
+      if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First){
+        old_dw->copyOut(guess, timelabels->pressure_guess, d_indx, patch);
+      }
+      else {
+        new_dw->copyOut(guess, timelabels->pressure_guess, d_indx, patch);
+      }
+    }else{
+      guess.initialize(0.0);
+    } 
+/*===========TESTING==========`*/
+
     new_dw->get(rhs,      d_lab->d_presNonLinSrcPBLMLabel, d_indx, patch, gn, 0);
    
     // Pass the data to either Hypre or Petsc
-    d_linearSolver->setRHS_X(pg, patch, guess.castOffConst(), rhs, d_construct_A);
+    d_linearSolver->setRHS_X(pg, patch, guess, rhs, d_construct_A);
   }
+  //__________________________________
+  //  debugging 
+#if 1
+  string desc  = timelabels->integrator_step_name;
+  int timestep = d_lab->d_sharedState->getCurrentTopLevelTimeStep();
+  d_iteration ++;
+  
+  cout << "//_______________________________STEP_" << desc << " " << timestep << " " << d_iteration << endl;
+  
+  d_linearSolver->print(desc,timestep,d_iteration );
+#endif
 }
 
 
@@ -474,14 +499,14 @@ PressureSolver::sched_SolveSystem(SchedulerP& sched,
 {
 
 
-  string taskname =  "PressureSolver::sched_SolveSystem" + 
+  string taskname =  "PressureSolver::sched_SolveSystem_" + 
                      timelabels->integrator_step_name;
                      
   if (extraProjection){
-    taskname += "extraProjection";
+    taskname += "_extraProjection";
   }
   if (doing_EKT_now){
-    taskname += "EKTnow";
+    taskname += "_EKTnow";
   }
   
   printSchedule(patches,dbg,taskname);
@@ -508,9 +533,8 @@ PressureSolver::solveSystem(const ProcessorGroup* pg,
                             DataWarehouse* new_dw,
                             const TimeIntegratorLabel* timelabels)
 {
-
-  
-  
+  printTask(dbg,"solveSystem");
+ 
   // Call Hypre or Petsc to solve the system
   bool converged   =  d_linearSolver->pressLinearSolve();
   double init_norm = d_linearSolver->getInitNorm();
@@ -524,12 +548,10 @@ PressureSolver::solveSystem(const ProcessorGroup* pg,
     throw InternalError("pressure solver is diverging", __FILE__, __LINE__);
   }
 
-#if 0
   if ( !d_always_construct_A && d_construct_A ) {
     d_construct_A = false; 
     d_lab->recompile_taskgraph = true; 
   }
-#endif
 }
 
 
@@ -547,7 +569,10 @@ PressureSolver::schedExtract_X(SchedulerP& sched,
                                bool doing_EKT_now,
                                string& pressLabelName)
 { 
-  printSchedule(patches,dbg,"PressureSolver::Extract_X");
+
+  string taskname =  "PressureSolver::Extract_X_" +
+                     timelabels->integrator_step_name;
+  printSchedule(patches,dbg,taskname);
    
   WhichCM compute_or_modify = none;
   const VarLabel* pressLabel;
@@ -569,11 +594,9 @@ PressureSolver::schedExtract_X(SchedulerP& sched,
   
   pressLabelName = pressLabel->getName();
   
-  cout << " schedExtract_X : pressLabel " << pressLabelName << endl;
-  
   const string integratorPhase = timelabels->integrator_step_name;
   
-  Task* tsk = scinew Task("PressureSolver::Extract_X", this,
+  Task* tsk = scinew Task(taskname, this,
                           &PressureSolver::Extract_X, compute_or_modify, 
                           pressLabel, integratorPhase);
                             
@@ -610,7 +633,8 @@ PressureSolver::Extract_X ( const ProcessorGroup* pg,
 { 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    printTask(patches, patch,dbg,"Extract_X");
+
+    printTask(patches, patch,dbg,"Extract_X " + integratorPhase);
     
     ArchesVariables vars;
     
@@ -629,10 +653,9 @@ PressureSolver::Extract_X ( const ProcessorGroup* pg,
       if( patch->containsCell(d_pressRef)){
         refPress = vars.pressure[d_pressRef];        
       }
+      cout << " *** Extract X " << integratorPhase << " refPress " << refPress << endl;
       new_dw->put(sum_vartype(refPress), d_lab->d_refPressure_label);
     }
-    
-    cout << "integratorPhase" << integratorPhase<< endl;
     
     if (d_do_only_last_projection){
       if ( integratorPhase == "Predictor" || integratorPhase == "Intermediate") {
@@ -647,7 +670,7 @@ PressureSolver::Extract_X ( const ProcessorGroup* pg,
     }
     
     
-  }
+  } // patches
 }
 
 //______________________________________________________________________
@@ -664,14 +687,11 @@ PressureSolver::sched_normalizePress(SchedulerP& sched,
   if(!d_norm_press){
     return;
   }
+  printSchedule(patches,dbg,"PressureSolver::normalizePress");
   
   const VarLabel* pressLabel = VarLabel::find(pressLabelname);
   Task* tsk = scinew Task("PressureSolver::normalizePress",this, 
-                          &PressureSolver::normalizePress, pressLabel);
-
-cout << " sched_normalizePress: " << endl;
-cout << " pressLabel " << pressLabel->getName() << endl;
-                          
+                          &PressureSolver::normalizePress, pressLabel);                          
 
   tsk->modifies(pressLabel);
   tsk->requires(Task::NewDW, d_lab->d_refPressure_label, Ghost::None, 0);
@@ -690,19 +710,17 @@ PressureSolver::normalizePress ( const ProcessorGroup* pg,
                                  DataWarehouse* new_dw,
                                  const VarLabel* pressLabel)
 {
-  Ghost::GhostType gn = Ghost::None;
+  sum_vartype refPress = -9;
+  new_dw->get(refPress, d_lab->d_refPressure_label);
   
-  ArchesVariables vars;
+  proc0cout << "press_ref for norm: " << refPress << endl;
   
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     printTask(patches, patch,dbg,"NormalizePressure");
     
-    sum_vartype refPress = -9;
     CCVariable<double> press;
-    
     new_dw->getModifiable(press,  pressLabel, d_indx, patch);
-    new_dw->get(refPress, d_lab->d_refPressure_label);
 
     for(CellIterator iter=patch->getExtraCellIterator(); !iter.done(); iter++){
       IntVector c = *iter;
@@ -722,6 +740,8 @@ PressureSolver::sched_addHydrostaticTermtoPressure(SchedulerP& sched,
                                                    const TimeIntegratorLabel* timelabels)
 
 {
+  printSchedule(patches,dbg,"PressureSolver::sched_addHydrostaticTermtoPressure");
+
   Task* tsk = scinew Task("PressureSolver::sched_addHydrostaticTermtoPressure",
                           this, &PressureSolver::addHydrostaticTermtoPressure,
                           timelabels);
@@ -756,7 +776,8 @@ PressureSolver::addHydrostaticTermtoPressure(const ProcessorGroup*,
   for (int p = 0; p < patches->size(); p++) {
 
     const Patch* patch = patches->get(p);
-
+    printTask(patches, patch,dbg,"addHydrostaticTermtoPressure");
+    
     constCCVariable<double> prel;
     CCVariable<double> pPlusHydro;
     constCCVariable<double> denMicro;
