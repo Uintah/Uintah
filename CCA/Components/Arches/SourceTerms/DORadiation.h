@@ -83,10 +83,10 @@ public:
     private: 
 
       std::string _name; 
-      vector<std::string> _required_label_names; 
       ArchesLabel* _labels; 
       BoundaryCondition* _bc; 
       const ProcessorGroup* _my_world; 
+      vector<std::string> _required_label_names; 
 
   }; // class Builder 
 

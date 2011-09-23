@@ -64,8 +64,7 @@ namespace Uintah{
 
     public: 
 
-      enum INTRUSION_TYPE { INLET }; 
-      enum VARIABLE_TYPE  { CC, FX, FY, FZ }; 
+      enum INTRUSION_TYPE { INLET, SIMPLE_WALL }; 
 
       IntrusionBC( const ArchesLabel* lab, Properties* props, int WALL ); 
       ~IntrusionBC(); 
@@ -177,7 +176,7 @@ namespace Uintah{
           }; 
           virtual ~VelInletBase(){}; 
 
-          virtual inline double set_velocity( int dir, 
+          virtual inline void set_velocity( int dir, 
                                        IntVector c, 
                                        SFCXVariable<double>& u, 
                                        SFCYVariable<double>& v, 
@@ -198,13 +197,16 @@ namespace Uintah{
 
       /** @brief Flat velocity profile */
       class FlatVelProf : public VelInletBase { 
+        
+        // Sets normal velocity to: 
+        // u = 2*rho_b*u_b/(rho_b + rho_flow); 
 
         public: 
 
           FlatVelProf(){}; 
           ~FlatVelProf(){}; 
 
-          inline double set_velocity( int dir, 
+          inline void set_velocity( int dir, 
                                IntVector c, 
                                SFCXVariable<double>& u, 
                                SFCYVariable<double>& v, 
@@ -217,8 +219,21 @@ namespace Uintah{
 
             velocity = 2 * bc_density * bc_velocity[_iHelp[dir]] / ( bc_density + density[c + _dHelp[dir]] ); 
 
-            return velocity; 
+            IntVector cb = c + _faceDirHelp[dir]; 
 
+            if ( dir == 0 || dir == 1 ){ 
+
+              u[cb] = velocity; 
+
+            } else if ( dir == 2 || dir == 3 ){ 
+
+              v[cb] = velocity; 
+              
+            } else { 
+
+              w[cb] = velocity; 
+
+            } 
           };
       }; 
 
@@ -246,15 +261,20 @@ namespace Uintah{
         const VarLabel* bc_area; 
       
         //inlet generator
-        VelInletBase* velocity_inlet_generator; 
+        IntrusionBC::VelInletBase* velocity_inlet_generator; 
+
+        bool inverted; 
 
       }; 
 
       typedef std::map<std::string, Boundary> IntrusionMap;
 
-      inline bool in_or_out( IntVector c, GeometryPieceP piece, const Patch* patch ){ 
+      inline bool in_or_out( IntVector c, GeometryPieceP piece, const Patch* patch, bool inverted ){ 
 
         bool test = false; 
+        if ( inverted ) { 
+          test = true; 
+        } 
         Box geom_box = piece->getBoundingBox(); 
         Box patch_box = patch->getBox(); 
         Box intersect_box = geom_box.intersect( patch_box ); 
@@ -263,7 +283,11 @@ namespace Uintah{
 
           Point p = patch->cellPosition( c ); 
           if ( piece->inside( p ) ) { 
-            test = true; 
+            if ( inverted ) { 
+              test = false; 
+            } else { 
+              test = true; 
+            } 
           } 
         }
         return test; 

@@ -91,13 +91,21 @@ IntrusionBC::problemSetup( const ProblemSpecP& params )
         intrusion.type = IntrusionBC::INLET; 
         intrusion.velocity_inlet_generator = scinew FlatVelProf(); 
 
+      } else if ( type == "simple_wall" ){ 
+
+        intrusion.type = IntrusionBC::SIMPLE_WALL; 
+        intrusion.velocity_inlet_generator = scinew FlatVelProf(); 
+
       } else { 
 
         throw ProblemSetupException("Error: Invalid intrusion BC type. ",__FILE__,__LINE__); 
 
       }
 
-
+      intrusion.inverted = false; 
+      if ( db_intrusion->findBlock("inverted") ){ 
+        intrusion.inverted = true; 
+      } 
 
       //geometry 
       ProblemSpecP geometry_db = db_intrusion->findBlock("geom_object");
@@ -132,7 +140,15 @@ IntrusionBC::problemSetup( const ProblemSpecP& params )
       } 
 
       //direction of boundary 
-      db_intrusion->require( "boundary_direction", intrusion.directions );  
+      if ( intrusion.type != IntrusionBC::SIMPLE_WALL ) {
+        db_intrusion->require( "boundary_direction", intrusion.directions );  
+      } else { 
+        std::vector<int> temp; 
+        for (int i = 0; i<6; ++i ){ 
+          temp.push_back(0); 
+        } 
+        intrusion.directions = temp; 
+      } 
 
       //make an area varlable
       intrusion.bc_area = VarLabel::create( name + "_bc_area", sum_vartype::getTypeDescription() ); 
@@ -177,12 +193,12 @@ IntrusionBC::computeBCArea( const ProcessorGroup*,
   for ( int p = 0; p < patches->size(); p++ ){ 
 
     const Patch* patch = patches->get(p); 
-    int archIndex = 0; 
-    int index = _lab->d_sharedState->getArchesMaterial( archIndex )->getDWIndex(); 
+    //int archIndex = 0; 
+    //int index = _lab->d_sharedState->getArchesMaterial( archIndex )->getDWIndex(); 
     Box patch_box = patch->getBox(); 
     Vector Dx = patch->dCell(); 
 
-    for ( IntrusionMap::iterator iter = _intrusion_map.begin(); iter != _intrusion_map.end(); ++iter ){ 
+    for ( IntrusionMap::iterator iter = _intrusion_map.begin(); iter != _intrusion_map.end(); ++iter ){
 
       double total_area = 0.;
 
@@ -212,12 +228,12 @@ IntrusionBC::computeBCArea( const ProcessorGroup*,
                 } 
 
                 // check current cell: 
-                bool curr_cell = in_or_out( c, piece, patch ); 
+                bool curr_cell = in_or_out( c, piece, patch, iter->second.inverted ); 
 
                 if ( curr_cell ){ 
                   //check neighbor in the direction of the boundary 
                   IntVector n = c + _dHelp[idir]; 
-                  bool neighbor_cell = in_or_out( n, piece, patch );  
+                  bool neighbor_cell = in_or_out( n, piece, patch, iter->second.inverted );  
 
                   if ( !neighbor_cell ) { 
 
@@ -277,52 +293,56 @@ IntrusionBC::computeProperties( const ProcessorGroup*,
     vector<double> iv; 
 
     for ( IntrusionMap::iterator iIntrusion = _intrusion_map.begin(); iIntrusion != _intrusion_map.end(); ++iIntrusion ){ 
-      for ( int i = 0; i < iv_var_names.size(); i++ ){ 
 
-        StringDoubleMap::iterator ivar = iIntrusion->second.varnames_values_map.find(iv_var_names[i]); 
+      if ( iIntrusion->second.type != IntrusionBC::SIMPLE_WALL ) { 
 
-        if ( ivar == iIntrusion->second.varnames_values_map.end() ){ 
-          throw InvalidValue("Error: Cannot compute property values for IntrusionBC due to missing independent variables in the UPS file.", __FILE__, __LINE__); 
-        } 
-          
-        iv.push_back(ivar->second); 
+        for ( int i = 0; i < iv_var_names.size(); i++ ){ 
 
-      }
+          StringDoubleMap::iterator ivar = iIntrusion->second.varnames_values_map.find(iv_var_names[i]); 
 
-      iIntrusion->second.density = mixingTable->getTableValue( iv, "density" ); 
+          if ( ivar == iIntrusion->second.varnames_values_map.end() ){ 
+            throw InvalidValue("Error: Cannot compute property values for IntrusionBC due to missing independent variables in the UPS file.", __FILE__, __LINE__); 
+          } 
+            
+          iv.push_back(ivar->second); 
 
-      //heat loss/enthalpy calculations for the properties. 
-      StringDoubleMap::iterator heatloss_it = iIntrusion->second.varnames_values_map.find("heat_loss"); 
+        }
 
-      if ( heatloss_it != iIntrusion->second.varnames_values_map.end() ){ 
-        //heat loss has been specified -- compute enthalpy
-        double adiabatic_enthalpy = mixingTable->getTableValue( iv, "adiabaticenthalpy" ); 
-        double sensible_enthalpy  = mixingTable->getTableValue( iv, "sensibleenthalpy" ); 
-        double enthalpy = adiabatic_enthalpy - heatloss_it->second * sensible_enthalpy; 
+        iIntrusion->second.density = mixingTable->getTableValue( iv, "density" ); 
 
-        StringDoubleMap::iterator enthalpy_it = iIntrusion->second.varnames_values_map.find("enthalpy"); 
-        if ( enthalpy_it != iIntrusion->second.varnames_values_map.end() ) { 
-          // enthalpy was found .. overwrite with adiabatic enthalpy
-          enthalpy_it->second = adiabatic_enthalpy; 
+        //heat loss/enthalpy calculations for the properties. 
+        StringDoubleMap::iterator heatloss_it = iIntrusion->second.varnames_values_map.find("heat_loss"); 
+
+        if ( heatloss_it != iIntrusion->second.varnames_values_map.end() ){ 
+          //heat loss has been specified -- compute enthalpy
+          double adiabatic_enthalpy = mixingTable->getTableValue( iv, "adiabaticenthalpy" ); 
+          double sensible_enthalpy  = mixingTable->getTableValue( iv, "sensibleenthalpy" ); 
+          double enthalpy = adiabatic_enthalpy - heatloss_it->second * sensible_enthalpy; 
+
+          StringDoubleMap::iterator enthalpy_it = iIntrusion->second.varnames_values_map.find("enthalpy"); 
+          if ( enthalpy_it != iIntrusion->second.varnames_values_map.end() ) { 
+            // enthalpy was found .. overwrite with adiabatic enthalpy
+            enthalpy_it->second = adiabatic_enthalpy; 
+
+          } else { 
+            // enthalpy not found so insert it: 
+            std::string name = "enthalpy"; 
+            iIntrusion->second.varnames_values_map.insert(make_pair(name,enthalpy)); 
+          } 
 
         } else { 
-          // enthalpy not found so insert it: 
-          std::string name = "enthalpy"; 
-          iIntrusion->second.varnames_values_map.insert(make_pair(name,enthalpy)); 
-        } 
+          //no heat loss found ... is enthalpy found? 
+          StringDoubleMap::iterator enthalpy_it = iIntrusion->second.varnames_values_map.find("enthalpy"); 
+          if ( enthalpy_it != iIntrusion->second.varnames_values_map.end() ) { 
+            // enthalpy was found .. overwrite with adiabatic enthalpy
+            double adiabatic_enthalpy = mixingTable->getTableValue( iv, "adiabaticenthalpy" ); 
+            enthalpy_it->second = adiabatic_enthalpy; 
 
-      } else { 
-        //no heat loss found ... is enthalpy found? 
-        StringDoubleMap::iterator enthalpy_it = iIntrusion->second.varnames_values_map.find("enthalpy"); 
-        if ( enthalpy_it != iIntrusion->second.varnames_values_map.end() ) { 
-          // enthalpy was found .. overwrite with adiabatic enthalpy
-          double adiabatic_enthalpy = mixingTable->getTableValue( iv, "adiabaticenthalpy" ); 
-          enthalpy_it->second = adiabatic_enthalpy; 
-
+          } 
+          // enthalpy or heat loss not found...don't do anything. 
+          // assume the user knows what he/she is doing. 
         } 
-        // enthalpy or heat loss not found...don't do anything. 
-        // assume the user knows what he/she is doing. 
-      } 
+      }
     }
   }
 } 
@@ -353,8 +373,8 @@ IntrusionBC::setIntrusionVelocities( const ProcessorGroup*,
   for ( int p = 0; p < patches->size(); p++ ){ 
 
     const Patch* patch = patches->get(p); 
-    int archIndex = 0; 
-    int index = _lab->d_sharedState->getArchesMaterial( archIndex )->getDWIndex(); 
+    //int archIndex = 0; 
+    //int index = _lab->d_sharedState->getArchesMaterial( archIndex )->getDWIndex(); 
     Box patch_box = patch->getBox(); 
     Vector Dx = patch->dCell(); 
 
@@ -374,8 +394,8 @@ IntrusionBC::setIntrusionVelocities( const ProcessorGroup*,
         for ( int idir = 0; idir < 6; idir++ ){ 
 
           if ( iter->second.directions[idir] != 1 ) { 
-            int index = _iHelp[idir]; 
-            iter->second.velocity[index] = V; 
+            int vel_index = _iHelp[idir]; 
+            iter->second.velocity[vel_index] = V; 
           }
         } 
 
@@ -436,7 +456,7 @@ IntrusionBC::setCellType( const ProcessorGroup*,
 
             // check current cell
             // Initialize as a wall
-            bool curr_cell = in_or_out( c, piece, patch ); 
+            bool curr_cell = in_or_out( c, piece, patch, iter->second.inverted ); 
             if ( curr_cell ) { 
 
               cell_type[c] = _WALL; 
@@ -454,12 +474,12 @@ IntrusionBC::setCellType( const ProcessorGroup*,
 
               if ( iter->second.directions[idir] == 1 ) { 
 
-                bool curr_cell = in_or_out( c, piece, patch ); 
+                bool curr_cell = in_or_out( c, piece, patch, iter->second.inverted ); 
                 if ( curr_cell ){ 
 
                   //check neighbor in the direction of the boundary 
                   IntVector n = c + _dHelp[idir]; 
-                  bool neighbor_cell = in_or_out( n, piece, patch );  
+                  bool neighbor_cell = in_or_out( n, piece, patch, iter->second.inverted );  
                   Vector af = Vector(0.,0.,0.);
 
                   if ( !neighbor_cell ) { 
@@ -500,8 +520,7 @@ IntrusionBC::setHattedVelocity( const int p,
 
   // go through each intrusion
   // go through the iterator for this patch
-  // set the normal velocities according to: 
-  // u = 2*rho_b*u_b/(rho_b + rho_flow); 
+  // set the velocities according to method chosen in input file
   // exit
   if ( _intrusion_on ) { 
   
@@ -513,29 +532,16 @@ IntrusionBC::setHattedVelocity( const int p,
         
         for ( std::vector<IntVector>::iterator i = iBC_iter->second.begin(); i != iBC_iter->second.end(); i++){
 
-          IntVector c = *i; // just for my sanity
-          for ( int idir = 0; idir < 6; idir++ ){ 
+          IntVector c = *i; 
 
-            IntVector cb = c + _faceDirHelp[idir]; 
+          for ( int idir = 0; idir < 6; idir++ ){ 
 
             if ( iIntrusion->second.directions[idir] != 0 ){ 
 
-              if ( idir == 0 || idir == 1 ){ 
-                // x-direction
-                u[cb] = iIntrusion->second.velocity_inlet_generator->set_velocity( 
-                    idir, c, u, v, w, density, iIntrusion->second.density, iIntrusion->second.velocity );  
+              // sets the velocity depending on the method set in the input 
+              iIntrusion->second.velocity_inlet_generator->set_velocity( idir, c, u, v, w, density, 
+                  iIntrusion->second.density, iIntrusion->second.velocity );  
 
-              } else if ( idir == 2 || idir == 3 ){ 
-                // y-direction
-                v[cb] = iIntrusion->second.velocity_inlet_generator->set_velocity( 
-                    idir, c, u, v, w, density, iIntrusion->second.density, iIntrusion->second.velocity );  
-
-              } else { 
-                //z-direction
-                w[cb] = iIntrusion->second.velocity_inlet_generator->set_velocity( 
-                    idir, c, u, v, w, density, iIntrusion->second.density, iIntrusion->second.velocity );  
-
-              } 
             } 
           }
         }
@@ -596,33 +602,36 @@ IntrusionBC::addScalarRHS( const int p,
     // adds \rho*u*\phi to the RHS
     for ( IntrusionMap::iterator iIntrusion = _intrusion_map.begin(); iIntrusion != _intrusion_map.end(); ++iIntrusion ){ 
 
-      std::map<std::string,double>::iterator scalar_iter =  iIntrusion->second.varnames_values_map.find( scalar_name ); 
+      if ( iIntrusion->second.type != IntrusionBC::SIMPLE_WALL ){ 
 
-      if ( scalar_iter == iIntrusion->second.varnames_values_map.end() ){ 
-        throw InvalidValue("Error: Cannot match scalar value to scalar name in intrusion. ", __FILE__, __LINE__); 
-      } 
+        std::map<std::string,double>::iterator scalar_iter =  iIntrusion->second.varnames_values_map.find( scalar_name ); 
 
-      if ( !iIntrusion->second.bc_face_iterator.empty() ) {
+        if ( scalar_iter == iIntrusion->second.varnames_values_map.end() ){ 
+          throw InvalidValue("Error: Cannot match scalar value to scalar name in intrusion. ", __FILE__, __LINE__); 
+        } 
 
-        BCIterator::iterator  iBC_iter = (iIntrusion->second.bc_face_iterator).find(p);
-        
-        for ( std::vector<IntVector>::iterator i = iBC_iter->second.begin(); i != iBC_iter->second.end(); i++){
+        if ( !iIntrusion->second.bc_face_iterator.empty() ) {
 
-          IntVector c = *i;
+          BCIterator::iterator  iBC_iter = (iIntrusion->second.bc_face_iterator).find(p);
+          
+          for ( std::vector<IntVector>::iterator i = iBC_iter->second.begin(); i != iBC_iter->second.end(); i++){
 
-          for ( int idir = 0; idir < 6; idir++ ){ 
+            IntVector c = *i;
 
-            IntVector cb = c + _faceDirHelp[idir]; 
+            for ( int idir = 0; idir < 6; idir++ ){ 
 
-            if ( iIntrusion->second.directions[idir] != 0 ){ 
+              IntVector cb = c + _faceDirHelp[idir]; 
 
-              double face_den = ( iIntrusion->second.density + density[c + _dHelp[idir]] ) / 2.0; 
+              if ( iIntrusion->second.directions[idir] != 0 ){ 
 
-              double face_vel = 1.0/face_den * iIntrusion->second.density * iIntrusion->second.velocity[_iHelp[idir]];
+                double face_den = ( iIntrusion->second.density + density[c + _dHelp[idir]] ) / 2.0; 
 
-              RHS[cb] += _sHelp[idir] * area[idir] * face_den * face_vel * scalar_iter->second; 
+                double face_vel = 1.0/face_den * iIntrusion->second.density * iIntrusion->second.velocity[_iHelp[idir]];
 
-            } 
+                RHS[cb] += _sHelp[idir] * area[idir] * face_den * face_vel * scalar_iter->second; 
+
+              } 
+            }
           }
         }
       }
