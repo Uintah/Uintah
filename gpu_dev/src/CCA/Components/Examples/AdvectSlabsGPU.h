@@ -39,6 +39,8 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Variables/CCVariable.h>
 
+#include <sci_defs/cuda_defs.h>
+
 #include <CCA/Components/Examples/uintahshare.h>
 namespace Uintah {
   class SimpleMaterial;
@@ -114,7 +116,6 @@ WARNING
       
     SimulationStateP sharedState_;
     double delt_;
-    double maxresidual_;
     SimpleMaterial* mymat_;
 
     // Our advector variables  

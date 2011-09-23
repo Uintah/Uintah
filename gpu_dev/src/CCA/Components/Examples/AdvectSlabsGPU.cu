@@ -25,7 +25,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 DEALINGS IN THE SOFTWARE.
 
-*/
+ */
 
 
 
@@ -52,49 +52,39 @@ DEALINGS IN THE SOFTWARE.
 using namespace Uintah;
 
 AdvectSlabsGPU::AdvectSlabsGPU(const ProcessorGroup* myworld)
-  : UintahParallelComponent(myworld)
+: UintahParallelComponent(myworld)
 {
   mass_label = VarLabel::create("mass", 
-                               CCVariable<double>::getTypeDescription());
+                                CCVariable<double>::getTypeDescription());
   massAdvected_label = VarLabel::create("massAdvected", 
-                                  CCVariable<double>::getTypeDescription());
-    
-    //__________________________________
-    //  outflux/influx slabs
-    OF_slab[RIGHT] = RIGHT;         IF_slab[RIGHT]  = LEFT;
-    OF_slab[LEFT]  = LEFT;          IF_slab[LEFT]   = RIGHT;
-    OF_slab[TOP]   = TOP;           IF_slab[TOP]    = BOTTOM;
-    OF_slab[BOTTOM]= BOTTOM;        IF_slab[BOTTOM] = TOP;  
-    OF_slab[FRONT] = FRONT;         IF_slab[FRONT]  = BACK;
-    OF_slab[BACK]  = BACK;          IF_slab[BACK]   = FRONT;   
-    
-    // Slab adjacent cell
-    S_ac[RIGHT]  =  IntVector( 1, 0, 0);   
-    S_ac[LEFT]   =  IntVector(-1, 0, 0);   
-    S_ac[TOP]    =  IntVector( 0, 1, 0);   
-    S_ac[BOTTOM] =  IntVector( 0,-1, 0);   
-    S_ac[FRONT]  =  IntVector( 0, 0, 1);   
-    S_ac[BACK]   =  IntVector( 0, 0,-1);
-    
+                                        CCVariable<double>::getTypeDescription());
 
-    
-    // initialize all the fluxes to 1
-    /* 
-    for(int f = TOP; f <= BACK; f++ )  {
-        d_OFS[c ].d_fflux[OF_slab[f]] = 1;
-    } 
-    */ 
-    
+  //__________________________________
+  //  outflux/influx slabs
+  OF_slab[RIGHT] = RIGHT;         IF_slab[RIGHT]  = LEFT;
+  OF_slab[LEFT]  = LEFT;          IF_slab[LEFT]   = RIGHT;
+  OF_slab[TOP]   = TOP;           IF_slab[TOP]    = BOTTOM;
+  OF_slab[BOTTOM]= BOTTOM;        IF_slab[BOTTOM] = TOP;
+  OF_slab[FRONT] = FRONT;         IF_slab[FRONT]  = BACK;
+  OF_slab[BACK]  = BACK;          IF_slab[BACK]   = FRONT;
+
+  // Slab adjacent cell
+  S_ac[RIGHT]  =  IntVector( 1, 0, 0);
+  S_ac[LEFT]   =  IntVector(-1, 0, 0);
+  S_ac[TOP]    =  IntVector( 0, 1, 0);
+  S_ac[BOTTOM] =  IntVector( 0,-1, 0);
+  S_ac[FRONT]  =  IntVector( 0, 0, 1);
+  S_ac[BACK]   =  IntVector( 0, 0,-1);
 }
 
 AdvectSlabsGPU::~AdvectSlabsGPU()
 {
-    
+
 }
 
 void AdvectSlabsGPU::problemSetup(const ProblemSpecP& params,
-                            const ProblemSpecP& restart_prob_spec,
-                            GridP&, SimulationStateP& sharedState)
+                                  const ProblemSpecP& restart_prob_spec,
+                                  GridP&, SimulationStateP& sharedState)
 {
   sharedState_ = sharedState;
   ProblemSpecP ps = params->findBlock("AdvectSlabsGPU");
@@ -102,22 +92,22 @@ void AdvectSlabsGPU::problemSetup(const ProblemSpecP& params,
   mymat_ = scinew SimpleMaterial();
   sharedState->registerSimpleMaterial(mymat_);
 }
- 
+
 void AdvectSlabsGPU::scheduleInitialize(const LevelP& level,
-			       SchedulerP& sched)
+                                        SchedulerP& sched)
 {
   Task* task = scinew Task("initialize",
-			   this, &AdvectSlabsGPU::initialize);
+                           this, &AdvectSlabsGPU::initialize);
   task->computes(mass_label);
   task->computes(massAdvected_label);
   sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
 }
- 
+
 void AdvectSlabsGPU::scheduleComputeStableTimestep(const LevelP& level,
-					  SchedulerP& sched)
+                                                   SchedulerP& sched)
 {
   Task* task = scinew Task("computeStableTimestep",
-			   this, &AdvectSlabsGPU::computeStableTimestep);
+                           this, &AdvectSlabsGPU::computeStableTimestep);
   task->computes(sharedState_->get_delt_label(),level.get_rep());
   sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
 }
@@ -126,7 +116,7 @@ void
 AdvectSlabsGPU::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
 {
   Task* task = scinew Task("timeAdvance",
-			   this, &AdvectSlabsGPU::timeAdvance);
+                           this, &AdvectSlabsGPU::timeAdvance);
 
   task->requires(Task::OldDW, mass_label, Ghost::AroundCells, 1);
   task->computes(mass_label);
@@ -136,21 +126,21 @@ AdvectSlabsGPU::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
 }
 
 void AdvectSlabsGPU::computeStableTimestep(const ProcessorGroup*,
-				  const PatchSubset* patches,
-				  const MaterialSubset*,
-				  DataWarehouse*, DataWarehouse* new_dw)
+                                           const PatchSubset* patches,
+                                           const MaterialSubset*,
+                                           DataWarehouse*, DataWarehouse* new_dw)
 {
   new_dw->put(delt_vartype(delt_), sharedState_->get_delt_label(),getLevel(patches));
 }
 
 void AdvectSlabsGPU::initialize(const ProcessorGroup*,
-		       const PatchSubset* patches,
-		       const MaterialSubset* matls,
-		       DataWarehouse*old_dw, DataWarehouse* new_dw)
+                                const PatchSubset* patches,
+                                const MaterialSubset* matls,
+                                DataWarehouse*old_dw, DataWarehouse* new_dw)
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-      
+
     new_dw->allocateTemporary(d_OFS, patch, Ghost::AroundCells,1);
     for(int m = 0;m<matls->size();m++){
       int matl = matls->get(m);
@@ -160,13 +150,13 @@ void AdvectSlabsGPU::initialize(const ProcessorGroup*,
       new_dw->allocateAndPut(massAd, massAdvected_label, matl, patch, Ghost::AroundCells, 1);
       mass.initialize(0.0);
       massAd.initialize(0.0);
-        
+
       for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++)
       {
         // set initial value for fluxes
-      //  for(int face = TOP; face <= BACK; face++ )  {
-      //    d_OFS[*iter].d_fflux[face]= 1;
-      //  }
+        for(int face = TOP; face <= BACK; face++ )  {
+          d_OFS[*iter].d_fflux[face]= 1;
+        }
         // set up the initial mass
         mass[*iter]=1;
       }
@@ -180,17 +170,19 @@ void AdvectSlabsGPU::initialize(const ProcessorGroup*,
 // @param domainSize a three component vector that gives the size of the domain as (x,y,z)
 // @param domainLower a three component vector that gives the lower corner of the work area as (x,y,z)
 // @param ghostLayers the number of layers of ghost cells
-// @param residual the residual calculated by this individual kernel 
-// @param oldphi pointer to the source phi allocated on the device
-// @param newphi pointer to the sink phi allocated on the device
+// @param mass pointer to the source mass allocated on the device
+// @param newMass pointer to the sink mass allocated on the device
+// @param massAd pointer to the  massAdvected allocated on the device
+// @param invol inverse of the volume of a single cell
 __global__ void timeAdvanceKernelAdvectSlabs(uint3 domainSize,
                                              uint3 domainLower,
                                              int ghostLayers,
-                                             double *phi,
-                                             double *newphi,
-                                             double *residual) {
+                                             double *mass,
+                                             double *newMass,
+                                             double *massAd,
+                                             double invol) {
 
-// calculate the thread indices
+  // calculate the thread indices
   int tidX = blockDim.x * blockIdx.x + threadIdx.x;
   int tidY = blockDim.y * blockIdx.y + threadIdx.y;
   //  int tidZ = blockDim.z * blockIdx.z + threadIdx.z;
@@ -199,18 +191,66 @@ __global__ void timeAdvanceKernelAdvectSlabs(uint3 domainSize,
   int dx = domainSize.x;
   int dy = domainSize.y;
 
+  double q_face_flux[6];
+  double faceVol[6];
+
   if (tidX < (dx - ghostLayers) && tidY < (dy - ghostLayers) && tidX > 0 && tidY > 0) {
     for (int slice = ghostLayers; slice < num_slices; slice++) {
-/*
-      newphi[INDEX3D(dx, dy, tidX, tidY, slice)] =
-          (1.0 / 6.0)
-          * (phi[INDEX3D(dx, dy, tidX - 1, tidY, slice)]
-             + phi[INDEX3D(dx, dy, tidX + 1, tidY, slice)]
-             + phi[INDEX3D(dx, dy, tidX, tidY - 1, slice)]
-             + phi[INDEX3D(dx, dy, tidX, tidY + 1, slice)]
-             + phi[INDEX3D(dx, dy, tidX, tidY, slice - 1)]
-             + phi[INDEX3D(dx, dy, tidX, tidY, slice + 1)]);
-*/
+      // Variables needed for each cell
+      double sum_q_face_flux = 0.0;
+      int cell = INDEX3D(dx,dy, tidX,tidY, slice);
+      double outfluxVol = 1.0;
+      double influxVol  = 1.0;
+      double q_faceFlux_tmp;
+      int adjCell;
+
+      // Unrolled 'for' loop
+      // Above
+      adjCell = INDEX3D(dx,dy, tidX, tidY+1, slice);
+      q_faceFlux_tmp = mass[adjCell]*influxVol - mass[cell]*outfluxVol;
+      q_face_flux[0] = q_faceFlux_tmp;
+      faceVol[0]   = outfluxVol + influxVol;
+      sum_q_face_flux += q_face_flux[0];
+
+      // Below
+      adjCell = INDEX3D(dx,dy, tidX, tidY-1, slice);
+      q_faceFlux_tmp = mass[adjCell]*influxVol - mass[cell]*outfluxVol;
+      q_face_flux[1] = q_faceFlux_tmp;
+      faceVol[1]   = outfluxVol + influxVol;
+      sum_q_face_flux += q_face_flux[1];
+
+      // Right
+      adjCell = INDEX3D(dx,dy, tidX+1, tidY, slice);
+      q_faceFlux_tmp = mass[adjCell]*influxVol - mass[cell]*outfluxVol;
+      q_face_flux[2] = q_faceFlux_tmp;
+      faceVol[2]   = outfluxVol + influxVol;
+      sum_q_face_flux += q_face_flux[2];
+
+      // Left
+      adjCell = INDEX3D(dx,dy, tidX-1, tidY, slice);
+      q_faceFlux_tmp = mass[adjCell]*influxVol - mass[cell]*outfluxVol;
+      q_face_flux[3] = q_faceFlux_tmp;
+      faceVol[3]   = outfluxVol + influxVol;
+      sum_q_face_flux += q_face_flux[3];
+
+      // Front
+      adjCell = INDEX3D(dx,dy, tidX, tidY, slice-1);
+      q_faceFlux_tmp = mass[adjCell]*influxVol - mass[cell]*outfluxVol;
+      q_face_flux[4] = q_faceFlux_tmp;
+      faceVol[4]   = outfluxVol + influxVol;
+      sum_q_face_flux += q_face_flux[4];
+
+      // Back
+      adjCell          = INDEX3D(dx,dy, tidX, tidY, slice+1);
+      q_faceFlux_tmp   = mass[adjCell]*influxVol - mass[cell]*outfluxVol;
+      q_face_flux[5]   = q_faceFlux_tmp;
+      faceVol[5]       = outfluxVol + influxVol;
+      sum_q_face_flux += q_face_flux[5];
+
+
+      // Sum all the Advected masses and adjust the new mass
+      massAd[cell]     = sum_q_face_flux*invol;
+      newMass[cell]    = mass[cell] - massAd[cell];
     }
   }
 }
@@ -220,72 +260,120 @@ __global__ void timeAdvanceKernelAdvectSlabs(uint3 domainSize,
 
 
 void AdvectSlabsGPU::timeAdvance(const ProcessorGroup* pg,
-                               const PatchSubset* patches,
-                               const MaterialSubset* matls,
-                               DataWarehouse* old_dw, DataWarehouse* new_dw)
+                                 const PatchSubset* patches,
+                                 const MaterialSubset* matls,
+                                 DataWarehouse* old_dw, DataWarehouse* new_dw)
 {
-    // MAKE SURE ONLY 1 MATERIAL
-    struct fflux ff; 
-    for(int p=0;p<patches->size();p++){
-        const Patch* patch = patches->get(p);
-        Vector dx = patch->dCell();            
-        double invvol = 1.0/(dx.x() * dx.y() * dx.z());                     
-    
-        //new_dw->allocateTemporary(d_OFS, patch, Ghost::AroundCells, 1);
-        d_OFS.initialize(ff);
-        for(int m = 0;m<matls->size();m++){
-          int matl = matls->get(m);
+  int previousPatchSize = 0;// this is to see if we need to release and reallocate between computations
+  int size = 0;
+  int ghostLayers = 1;
 
-          // variable to get
-          constCCVariable<double> mass;
-          CCVariable<double>      mass2, massAd;
-        
-          old_dw->get(mass, mass_label, matl, patch, Ghost::AroundCells, 1);
-          new_dw->allocateAndPut(mass2, mass_label, matl, patch, Ghost::AroundCells, 1 );
-          new_dw->allocateAndPut(massAd, massAdvected_label, matl, patch, Ghost::AroundCells, 1 );
+  // declare device and host memory
+  double* mass_device;
+  double* newMass_device;
+  double* massAd_device;
+  double* massAd_host;
+  double* mass_host;
+  double* newMass_host;
 
-
-/*        
-          for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) { 
-              const IntVector& c = *iter;  
-        
-              double q_face_flux[6];
-              double faceVol[6];
-          
-              double sum_q_face_flux(0.0);   
-              for(int f = TOP; f <= BACK; f++ )  {    
-                //__________________________________
-                //   S L A B S
-                // q_CC: vol_frac, mass, momentum, int_eng....
-                //      for consistent units you need to divide by cell volume
-                // 
-                IntVector ac = c + S_ac[f];     // slab adjacent cell
-                double outfluxVol = d_OFS[c ].d_fflux[OF_slab[f]];
-                double influxVol  = d_OFS[ac].d_fflux[IF_slab[f]];
-                
-                double q_faceFlux_tmp  =   mass[ac] * influxVol - mass[c] * outfluxVol;
-            
-                faceVol[f]       =  outfluxVol +  influxVol;
-                q_face_flux[f]   = q_faceFlux_tmp; 
-                sum_q_face_flux += q_faceFlux_tmp;
-              }  
-              massAd[c] = sum_q_face_flux*invvol;
-              mass2[c] = mass[c] - massAd[c];
-           }
-*/
-        }
+  // find the "best" device for cudaSetDevice()
+  int num_devices, device;
+  cudaGetDeviceCount(&num_devices);
+  if (num_devices > 1) {
+    int max_multiprocessors = 0, max_device = 0;
+    for (device = 0; device < num_devices; device++) {
+      cudaDeviceProp properties;
+      cudaGetDeviceProperties(&properties, device);
+      if (max_multiprocessors < properties.multiProcessorCount) {
+        max_multiprocessors = properties.multiProcessorCount;
+        max_device = device;
+      }
     }
-}
+    cudaSetDevice(max_device);
+  }
 
-//______________________________________________________________________
-//  
-namespace SCIRun {
-/*
-  void swapbytes( Uintah::fflux& f) {
-    double *p = f.d_fflux;
-    SWAP_8(*p); SWAP_8(*++p); SWAP_8(*++p);
-    SWAP_8(*++p); SWAP_8(*++p); SWAP_8(*++p);
-  }*/
-} // namespace SCIRun
+  struct fflux ff;
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    Vector dx = patch->dCell();
+    double invvol = 1.0/(dx.x() * dx.y() * dx.z());
+
+    d_OFS.initialize(ff);
+    for(int m = 0;m<matls->size();m++){
+      int matl = matls->get(m);
+
+      // variable to get
+      constCCVariable<double> mass;
+      CCVariable<double>      mass2;
+      CCVariable<double>      massAd;
+
+      old_dw->get(mass, mass_label, matl, patch, Ghost::AroundCells, 1);
+      new_dw->allocateAndPut(mass2, mass_label, matl, patch, Ghost::AroundCells, 1 );
+      new_dw->allocateAndPut(massAd, massAdvected_label, matl, patch, Ghost::AroundCells, 1 );
+
+
+      // Here the extents of the patch are extracted
+      //   and the size of the domain is memory needed
+      //   is calculated.  Any memory allocation
+      //   occur here.
+      IntVector l = patch->getNodeLowIndex();
+      IntVector h = patch->getNodeHighIndex();
+      IntVector s = h - l;
+      int xdim = s.x(), ydim = s.y(), zdim = s.z();
+      size = xdim * ydim * zdim * sizeof(double);
+
+      l += IntVector(patch->getBCType(Patch::xminus) == Patch::Neighbor ? 0 : 1,
+          patch->getBCType(Patch::yminus) == Patch::Neighbor ? 0 : 1,
+              patch->getBCType(Patch::zminus) == Patch::Neighbor ? 0 : 1);
+      h -= IntVector(patch->getBCType(Patch::xplus) == Patch::Neighbor ? 0 : 1,
+          patch->getBCType(Patch::yplus) == Patch::Neighbor ? 0 : 1,
+              patch->getBCType(Patch::zplus) == Patch::Neighbor ? 0 : 1);
+
+      // check if we need to reallocate
+      if (size != previousPatchSize) {
+        if (previousPatchSize != 0) {
+          cudaFree(mass_device);
+          cudaFree(massAd_device);
+          cudaFree(newMass_device);
+        }
+        cudaMalloc(&mass_device, size);
+        cudaMalloc(&newMass_device, size);
+        cudaMalloc(&massAd_device, size);
+      }
+
+      //__________________________________
+      //  Memory Allocation
+      mass_host = (double*)mass.getWindow()->getData()->getPointer();
+      newMass_host = (double*)mass2.getWindow()->getData()->getPointer();
+      massAd_host = (double*)massAd.getWindow()->getData()->getPointer();
+
+      // allocate space on the device
+      // TODO
+      // Fix this so when we have >= CCv2.0 for pinned
+      cudaMemcpy(mass_device, mass_host, size, cudaMemcpyHostToDevice);
+
+      uint3 domainSize = make_uint3(xdim, ydim, zdim);
+      uint3 domainLower = make_uint3(l.x(), l.y(), l.z());
+      int totalBlocks = size / (sizeof(double) * xdim * ydim * zdim);
+      dim3 threadsPerBlock(xdim, ydim, zdim);
+
+      if (size % (totalBlocks) != 0) {
+        totalBlocks++;
+      }
+
+      // launch kernel
+      timeAdvanceKernelAdvectSlabs<<< totalBlocks, threadsPerBlock >>>(domainSize, domainLower, ghostLayers, mass_device, newMass_device, massAd_device, invvol);
+
+      cudaDeviceSynchronize();
+      cudaMemcpy(newMass_host, newMass_device, size, cudaMemcpyDeviceToHost);
+      cudaMemcpy(massAd_host, massAd_device, size, cudaMemcpyDeviceToHost);
+    }
+  }
+
+  // free up allocated memory
+  cudaFree(mass_device);
+  cudaFree(massAd_device);
+  cudaFree(newMass_device);
+}
 
 

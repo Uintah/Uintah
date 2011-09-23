@@ -166,17 +166,15 @@ void PoissonGPU1::initialize(const ProcessorGroup*,
 // @param domainSize a three component vector that gives the size of the domain as (x,y,z)
 // @param domainLower a three component vector that gives the lower corner of the work area as (x,y,z)
 // @param ghostLayers the number of layers of ghost cells
-// @param residual the residual calculated by this individual kernel 
-// @param oldphi pointer to the source phi allocated on the device
+// @param phi pointer to the source phi allocated on the device
 // @param newphi pointer to the sink phi allocated on the device
+// @param residual the residual calculated by this individual kernel 
 __global__ void timeAdvanceKernel(uint3 domainSize,
                                   uint3 domainLower,
                                   int ghostLayers,
                                   double *phi,
                                   double *newphi,
                                   double *residual) {
-
-//  __shared__ double[] residual_device;
 
 // calculate the thread indices
   int tidX = blockDim.x * blockIdx.x + threadIdx.x;
