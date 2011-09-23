@@ -191,6 +191,7 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
     d_carbon_balance=false;
     d_sulfur_balance=false;
     d_use_new_bcs = false; 
+    _using_new_intrusion = false;
   }
   else
   {

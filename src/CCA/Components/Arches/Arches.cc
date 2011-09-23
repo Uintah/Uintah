@@ -630,6 +630,33 @@ Arches::problemSetup(const ProblemSpecP& params,
 
   // Add extra species to table lookup as required by models
   d_props->addLookupSpecies(); 
+
+  // Add new intrusion stuff: 
+  // get a reference to the intrusions
+  IntrusionBC* intrusion_ref = d_boundaryCondition->get_intrusion_ref(); 
+  bool using_new_intrusions = d_boundaryCondition->is_using_new_intrusion(); 
+
+  if(d_doDQMOM)
+  {
+    // check to make sure that all dqmom equations have BCs set. 
+    DQMOMEqnFactory& dqmom_factory = DQMOMEqnFactory::self(); 
+    DQMOMEqnFactory::EqnMap& dqmom_eqns = dqmom_factory.retrieve_all_eqns(); 
+    for (DQMOMEqnFactory::EqnMap::iterator ieqn=dqmom_eqns.begin(); ieqn != dqmom_eqns.end(); ieqn++){
+      EqnBase* eqn = ieqn->second; 
+      eqn->set_intrusion( intrusion_ref ); 
+      eqn->set_intrusion_bool( using_new_intrusions ); 
+    }
+  }
+
+  // check to make sure that all the scalar variables have BCs set and set intrusions: 
+  EqnFactory& eqnFactory = EqnFactory::self(); 
+  EqnFactory::EqnMap& scalar_eqns = eqnFactory.retrieve_all_eqns(); 
+  for (EqnFactory::EqnMap::iterator ieqn=scalar_eqns.begin(); ieqn != scalar_eqns.end(); ieqn++){
+    EqnBase* eqn = ieqn->second; 
+    eqn->set_intrusion( intrusion_ref ); 
+    eqn->set_intrusion_bool( using_new_intrusions ); 
+  }
+
 }
 
 // ****************************************************************************
@@ -774,10 +801,6 @@ Arches::scheduleInitialize(const LevelP& level,
     d_analysisModule->scheduleInitialize(sched, level);
   }
 
-  // get a reference to the intrusions
-  IntrusionBC* intrusion_ref = d_boundaryCondition->get_intrusion_ref(); 
-  bool using_new_intrusions = d_boundaryCondition->is_using_new_intrusion(); 
-
   //----------------------
   //DQMOM initialization 
   if(d_doDQMOM)
@@ -791,8 +814,6 @@ Arches::scheduleInitialize(const LevelP& level,
     for (DQMOMEqnFactory::EqnMap::iterator ieqn=dqmom_eqns.begin(); ieqn != dqmom_eqns.end(); ieqn++){
       EqnBase* eqn = ieqn->second; 
       eqn->sched_checkBCs( level, sched ); 
-      eqn->set_intrusion( intrusion_ref ); 
-      eqn->set_intrusion_bool( using_new_intrusions ); 
     }
 
   }
@@ -803,13 +824,7 @@ Arches::scheduleInitialize(const LevelP& level,
   for (EqnFactory::EqnMap::iterator ieqn=scalar_eqns.begin(); ieqn != scalar_eqns.end(); ieqn++){
     EqnBase* eqn = ieqn->second; 
     eqn->sched_checkBCs( level, sched ); 
-    eqn->set_intrusion( intrusion_ref ); 
-    eqn->set_intrusion_bool( using_new_intrusions ); 
   }
-
-
-  
-
 }
 
 void
