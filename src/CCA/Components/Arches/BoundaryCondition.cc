@@ -38,6 +38,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Arches/CellInformationP.h>
 #include <CCA/Components/Arches/BoundaryCond_new.h>
 #include <CCA/Components/Arches/ChemMix/MixingRxnModel.h>
+#include <CCA/Components/Arches/IntrusionBC.h>
 
 #include <CCA/Components/Arches/ArchesVariables.h>
 #include <CCA/Components/Arches/ArchesConstVariables.h>
@@ -119,6 +120,7 @@ BoundaryCondition::BoundaryCondition(const ArchesLabel* label,
   d_pressureBC = 0;
   d_outletBC = 0;
   d_intrusionBC = 0;
+  _using_new_intrusion = false; 
 }
 
 //****************************************************************************
@@ -243,6 +245,16 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
 
       } 
     }
+
+    if ( db->findBlock("NewIntrusionBC") ){ 
+
+      ProblemSpecP db_new_intrusion = db->findBlock("NewIntrusionBC"); 
+      _using_new_intrusion = true; 
+
+      _intrusionBC = scinew IntrusionBC( d_lab, d_props, BoundaryCondition::MMWALL ); 
+      _intrusionBC->problemSetup( db_new_intrusion ); 
+
+    } 
 
     // --- new efficiency calculator --- 
     ProblemSpecP eff_db = db->findBlock("ScalarEfficiency");
@@ -806,7 +818,7 @@ BoundaryCondition::mmWallCellTypeInit(const ProcessorGroup*,
       // resets old mmwall type back to flow field and sets cells with void fraction
       // of less than .5 to mmWall
 
-      if (d_intrusionBoundary) {
+      if (d_intrusionBoundary || _using_new_intrusion) {
         for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
           for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
             for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
@@ -1020,6 +1032,7 @@ BoundaryCondition::sched_calculateArea(SchedulerP& sched,
   }
 
   sched->addTask(tsk, patches, matls);
+
 #if 0
   for(Level::const_patchIterator iter=level->patchesBegin();
       iter != level->patchesEnd(); iter++){
@@ -7708,4 +7721,27 @@ void BoundaryCondition::setPrefill__NEW( const ProcessorGroup*,
       } 
     } 
   }
+}
+void 
+BoundaryCondition::setHattedIntrusionVelocity( const int p, 
+                                               SFCXVariable<double>& u, 
+                                               SFCYVariable<double>& v, 
+                                               SFCZVariable<double>& w, 
+                                               constCCVariable<double>& density ) 
+{ 
+  if ( _using_new_intrusion ) { 
+    _intrusionBC->setHattedVelocity( p, u, v, w, density );
+  } 
+} 
+void
+BoundaryCondition::sched_setupNewIntrusions( SchedulerP& sched, const PatchSet* patches, const MaterialSet* matls )
+{
+
+  if ( _using_new_intrusion ) { 
+    _intrusionBC->sched_computeBCArea( sched, patches, matls ); 
+    _intrusionBC->sched_computeProperties( sched, patches, matls ); 
+    _intrusionBC->sched_setIntrusionVelocities( sched, patches, matls );  
+    _intrusionBC->sched_setCellType( sched, patches, matls ); 
+  }
+
 }

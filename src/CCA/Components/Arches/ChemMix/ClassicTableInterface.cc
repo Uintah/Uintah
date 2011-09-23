@@ -1101,6 +1101,9 @@ ClassicTableInterface::getEnthalpyIndexInfo()
   cout_tabledbg << "ClassicTableInterface::getEnthalpyIndexInfo(): Looking up adiabatic enthalpy" << endl;
   index = findIndex( "adiabaticenthalpy" ); 
   d_enthalpyVarIndexMap.insert( make_pair( "adiabaticenthalpy", index )).first; 
+
+  index = findIndex( "density" ); 
+  d_enthalpyVarIndexMap.insert( make_pair( "density", index )).first; 
 }
 
 //-------------------------------------
