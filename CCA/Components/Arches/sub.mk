@@ -50,6 +50,7 @@ SRCS += $(SRCDIR)/Arches.cc                    \
         $(SRCDIR)/ExplicitSolver.cc            \
         $(SRCDIR)/ExplicitTimeInt.cc           \
         $(SRCDIR)/IncDynamicProcedure.cc       \
+				$(SRCDIR)/IntrusionBC.cc               \
         $(SRCDIR)/LinearSolver.cc              \
         $(SRCDIR)/LU.cc                        \
         $(SRCDIR)/MomentumSolver.cc            \

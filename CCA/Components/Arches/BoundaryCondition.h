@@ -96,6 +96,7 @@ namespace Uintah {
   class ProcessorGroup;
   class DataWarehouse;
   class TimeIntegratorLabel;
+  class IntrusionBC;
   class BoundaryCondition_new; 
 
   class BoundaryCondition {
@@ -162,6 +163,10 @@ namespace Uintah {
 			 return offsets; 
 
 		 };
+
+     inline IntrusionBC* get_intrusion_ref(){ 
+       return _intrusionBC; 
+     } 
 
       inline bool typeMatch( BC_TYPE check_type, std::vector<BC_TYPE >& type_list ){ 
 
@@ -281,6 +286,15 @@ namespace Uintah {
       std::map<IntVector, double>
       readInputFile__NEW( std::string );
 
+      void sched_setupNewIntrusions(SchedulerP&, 
+          const PatchSet* patches,
+          const MaterialSet* matls); 
+
+      void setHattedIntrusionVelocity( const int p,
+                                       SFCXVariable<double>& u, 
+                                       SFCYVariable<double>& v, 
+                                       SFCZVariable<double>& w, 
+                                       constCCVariable<double>& density );
 
       ////////////////////////////////////////////////////////////////////////
       // BoundaryCondition constructor used in  PSE
@@ -1155,6 +1169,9 @@ namespace Uintah {
       bool d_calcEnergyExchange;
       bool d_fixTemp;
       bool d_cutCells;
+
+      IntrusionBC* _intrusionBC; 
+      bool _using_new_intrusion; 
 
       // used for calculating wall boundary conditions
       PhysicalConstants* d_physicalConsts;

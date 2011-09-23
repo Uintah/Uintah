@@ -43,6 +43,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Arches/SourceTerms/WestbrookDryer.h>
 #include <CCA/Components/Arches/SourceTerms/Inject.h>
 #include <CCA/Components/Arches/SourceTerms/IntrusionInlet.h>
+#include <CCA/Components/Arches/IntrusionBC.h>
 #include <CCA/Components/Arches/SourceTerms/DORadiation.h>
 #include <CCA/Components/Arches/CoalModels/CoalModelFactory.h>
 #include <CCA/Components/Arches/CoalModels/ModelBase.h>
@@ -730,15 +731,15 @@ Arches::scheduleInitialize(const LevelP& level,
     d_props->sched_reComputeProps_new( level, sched, init_timelabel, initialize_it, modify_ref_den ); 
   }
 
-
-  d_boundaryCondition->sched_initInletBC(sched, patches, matls);
-
   if ( d_boundaryCondition->isUsingNewBC() ) { 
     d_boundaryCondition->sched_computeBCArea__NEW( sched, level, patches, matls ); 
     d_boundaryCondition->sched_setupBCInletVelocities__NEW( sched, patches, matls ); 
     d_boundaryCondition->sched_setInitProfile__NEW( sched, patches, matls ); 
     d_boundaryCondition->sched_setPrefill__NEW( sched, patches, matls ); 
   }
+
+  d_boundaryCondition->sched_initInletBC(sched, patches, matls);
+  d_boundaryCondition->sched_setupNewIntrusions( sched, patches, matls ); 
 
   sched_getCCVelocities(level, sched);
   // Compute Turb subscale model (output Varlabel have CTS appended to them)
@@ -773,6 +774,9 @@ Arches::scheduleInitialize(const LevelP& level,
     d_analysisModule->scheduleInitialize(sched, level);
   }
 
+  // get a reference to the intrusions
+  IntrusionBC* intrusion_ref = d_boundaryCondition->get_intrusion_ref(); 
+
   //----------------------
   //DQMOM initialization 
   if(d_doDQMOM)
@@ -786,17 +790,22 @@ Arches::scheduleInitialize(const LevelP& level,
     for (DQMOMEqnFactory::EqnMap::iterator ieqn=dqmom_eqns.begin(); ieqn != dqmom_eqns.end(); ieqn++){
       EqnBase* eqn = ieqn->second; 
       eqn->sched_checkBCs( level, sched ); 
+      eqn->set_intrusion( intrusion_ref ); 
     }
 
   }
 
-  // check to make sure that all the scalar variables have BCs set. 
+  // check to make sure that all the scalar variables have BCs set and set intrusions: 
   EqnFactory& eqnFactory = EqnFactory::self(); 
   EqnFactory::EqnMap& scalar_eqns = eqnFactory.retrieve_all_eqns(); 
   for (EqnFactory::EqnMap::iterator ieqn=scalar_eqns.begin(); ieqn != scalar_eqns.end(); ieqn++){
     EqnBase* eqn = ieqn->second; 
     eqn->sched_checkBCs( level, sched ); 
+    eqn->set_intrusion( intrusion_ref ); 
   }
+
+
+  
 
 }
 

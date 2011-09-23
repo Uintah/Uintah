@@ -12,6 +12,7 @@
 #include <CCA/Components/Arches/ExplicitTimeInt.h>
 #include <CCA/Components/Arches/TransportEqns/Discretization_new.h>
 #include <CCA/Components/Arches/ArchesMaterial.h>
+#include <CCA/Components/Arches/IntrusionBC.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Exceptions/ParameterNotFound.h>
@@ -143,6 +144,11 @@ public:
     d_boundaryCond->setScalarValueBC( 0, patch, phi, varName ); 
   }
 
+  /** @brief Set the intrusion machinery **/ 
+  inline void set_intrusion( IntrusionBC* intrusions ){ 
+    _intrusions = intrusions; 
+  }  
+
 protected:
 
   template<class T> 
@@ -162,6 +168,7 @@ protected:
   BoundaryCondition_new* d_boundaryCond;  ///< Boundary condition object associated with equation object
   ExplicitTimeInt* d_timeIntegrator;      ///< Time integrator object associated with equation object
   Discretization_new* d_disc;             ///< Discretization object associated with equation object
+  IntrusionBC* _intrusions;               ///< Intrusions for boundary conditions. 
 
   const VarLabel* d_transportVarLabel;    ///< Label for scalar being transported, in NEW data warehouse
   const VarLabel* d_oldtransportVarLabel; ///< Label for scalar being transported, in OLD data warehouse
