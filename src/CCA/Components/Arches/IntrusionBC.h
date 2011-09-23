@@ -280,6 +280,7 @@ namespace Uintah{
       IntrusionMap _intrusion_map; 
       const ArchesLabel* _lab; 
       Properties* _props;
+      bool _intrusion_on; 
 
       std::vector<IntVector> _dHelp;
       std::vector<IntVector> _faceDirHelp; 

@@ -142,12 +142,17 @@ public:
                        phiType& phi )
   {
     d_boundaryCond->setScalarValueBC( 0, patch, phi, varName ); 
-  }
+  };
 
   /** @brief Set the intrusion machinery **/ 
   inline void set_intrusion( IntrusionBC* intrusions ){ 
     _intrusions = intrusions; 
-  }  
+  };  
+
+  /** @brief Set boolean for new intrusions **/ 
+  inline void set_intrusion_bool( bool using_new_intrusions ){ 
+    _using_new_intrusion = using_new_intrusions; 
+  };
 
 protected:
 
@@ -179,6 +184,7 @@ protected:
   bool d_doConv;                          ///< Boolean: do convection for this equation object?
   bool d_doDiff;                          ///< Boolean: do diffusion for this equation object?
   bool d_addSources;                      ///< Boolean: add a right-hand side (i.e. convection, diffusion, source terms) to this equation object?
+  bool _using_new_intrusion;              ///< Indicates if new intrusions are being used. 
 
   std::string d_eqnName;                  ///< Human-readable label for this equation
   std::string d_convScheme;               ///< Convection scheme (superbee, upwind, etc.)

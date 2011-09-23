@@ -50,11 +50,21 @@ IntrusionBC::IntrusionBC( const ArchesLabel* lab, Properties* props, int WALL ) 
   _sHelp.push_back( -1.0 ); 
   _sHelp.push_back( +1.0 ); 
 
+  _intrusion_on = false; 
+
 }
 
 //_________________________________________
 IntrusionBC::~IntrusionBC()
 {
+  if ( _intrusion_on ) { 
+    for ( IntrusionMap::iterator iIntrusion = _intrusion_map.begin(); iIntrusion != _intrusion_map.end(); ++iIntrusion ){ 
+
+      VarLabel::destroy(iIntrusion->second.bc_area); 
+      delete(iIntrusion->second.velocity_inlet_generator); 
+
+    }
+  }
 }
 
 //_________________________________________
@@ -130,6 +140,7 @@ IntrusionBC::problemSetup( const ProblemSpecP& params )
       IntrusionMap::iterator i = _intrusion_map.find( name ); 
       if ( i == _intrusion_map.end() ){ 
         _intrusion_map.insert(make_pair( name, intrusion ));  
+        _intrusion_on = true; 
       } else { 
         throw ProblemSetupException("Error: Two intrusion boundarys with the same name listed in input file", __FILE__, __LINE__); 
       } 
@@ -492,39 +503,41 @@ IntrusionBC::setHattedVelocity( const int p,
   // set the normal velocities according to: 
   // u = 2*rho_b*u_b/(rho_b + rho_flow); 
   // exit
+  if ( _intrusion_on ) { 
   
-  for ( IntrusionMap::iterator iIntrusion = _intrusion_map.begin(); iIntrusion != _intrusion_map.end(); ++iIntrusion ){ 
+    for ( IntrusionMap::iterator iIntrusion = _intrusion_map.begin(); iIntrusion != _intrusion_map.end(); ++iIntrusion ){ 
 
-    if ( !iIntrusion->second.bc_face_iterator.empty() ) {
+      if ( !iIntrusion->second.bc_face_iterator.empty() ) {
 
-      BCIterator::iterator  iBC_iter = (iIntrusion->second.bc_face_iterator).find(p);
-      
-      for ( std::vector<IntVector>::iterator i = iBC_iter->second.begin(); i != iBC_iter->second.end(); i++){
+        BCIterator::iterator  iBC_iter = (iIntrusion->second.bc_face_iterator).find(p);
+        
+        for ( std::vector<IntVector>::iterator i = iBC_iter->second.begin(); i != iBC_iter->second.end(); i++){
 
-        IntVector c = *i; // just for my sanity
-        for ( int idir = 0; idir < 6; idir++ ){ 
+          IntVector c = *i; // just for my sanity
+          for ( int idir = 0; idir < 6; idir++ ){ 
 
-          IntVector cb = c + _faceDirHelp[idir]; 
+            IntVector cb = c + _faceDirHelp[idir]; 
 
-          if ( iIntrusion->second.directions[idir] != 0 ){ 
+            if ( iIntrusion->second.directions[idir] != 0 ){ 
 
-            if ( idir == 0 || idir == 1 ){ 
-              // x-direction
-              u[cb] = iIntrusion->second.velocity_inlet_generator->set_velocity( 
-                  idir, c, u, v, w, density, iIntrusion->second.density, iIntrusion->second.velocity );  
+              if ( idir == 0 || idir == 1 ){ 
+                // x-direction
+                u[cb] = iIntrusion->second.velocity_inlet_generator->set_velocity( 
+                    idir, c, u, v, w, density, iIntrusion->second.density, iIntrusion->second.velocity );  
 
-            } else if ( idir == 2 || idir == 3 ){ 
-              // y-direction
-              v[cb] = iIntrusion->second.velocity_inlet_generator->set_velocity( 
-                  idir, c, u, v, w, density, iIntrusion->second.density, iIntrusion->second.velocity );  
+              } else if ( idir == 2 || idir == 3 ){ 
+                // y-direction
+                v[cb] = iIntrusion->second.velocity_inlet_generator->set_velocity( 
+                    idir, c, u, v, w, density, iIntrusion->second.density, iIntrusion->second.velocity );  
 
-            } else { 
-              //z-direction
-              w[cb] = iIntrusion->second.velocity_inlet_generator->set_velocity( 
-                  idir, c, u, v, w, density, iIntrusion->second.density, iIntrusion->second.velocity );  
+              } else { 
+                //z-direction
+                w[cb] = iIntrusion->second.velocity_inlet_generator->set_velocity( 
+                    idir, c, u, v, w, density, iIntrusion->second.density, iIntrusion->second.velocity );  
 
+              } 
             } 
-          } 
+          }
         }
       }
     }
@@ -538,21 +551,24 @@ IntrusionBC::setScalar( const int p,
                         CCVariable<double>& scalar ){ 
 
 
-  for ( IntrusionMap::iterator iIntrusion = _intrusion_map.begin(); iIntrusion != _intrusion_map.end(); ++iIntrusion ){ 
+  if ( _intrusion_on ) { 
 
-    std::map<std::string,double>::iterator scalar_iter =  iIntrusion->second.varnames_values_map.find( scalar_name ); 
+    for ( IntrusionMap::iterator iIntrusion = _intrusion_map.begin(); iIntrusion != _intrusion_map.end(); ++iIntrusion ){ 
 
-    if ( scalar_iter == iIntrusion->second.varnames_values_map.end() ){ 
-      throw InvalidValue("Error: Cannot match scalar value to scalar name in intrusion. ", __FILE__, __LINE__); 
-    } 
+      std::map<std::string,double>::iterator scalar_iter =  iIntrusion->second.varnames_values_map.find( scalar_name ); 
 
-    if ( !iIntrusion->second.bc_face_iterator.empty() ) {
-      BCIterator::iterator  iBC_iter = (iIntrusion->second.bc_face_iterator).find(p);
-      
-      for ( std::vector<IntVector>::iterator i = iBC_iter->second.begin(); i != iBC_iter->second.end(); i++){
+      if ( scalar_iter == iIntrusion->second.varnames_values_map.end() ){ 
+        throw InvalidValue("Error: Cannot match scalar value to scalar name in intrusion. ", __FILE__, __LINE__); 
+      } 
 
-        scalar[*i] = scalar_iter->second; 
+      if ( !iIntrusion->second.bc_face_iterator.empty() ) {
+        BCIterator::iterator  iBC_iter = (iIntrusion->second.bc_face_iterator).find(p);
+        
+        for ( std::vector<IntVector>::iterator i = iBC_iter->second.begin(); i != iBC_iter->second.end(); i++){
 
+          scalar[*i] = scalar_iter->second; 
+
+        }
       }
     }
   }
@@ -575,36 +591,39 @@ IntrusionBC::addScalarRHS( const int p,
   area.push_back(Dx.y()*Dx.x()); 
   area.push_back(Dx.y()*Dx.x()); 
 
-  // adds \rho*u*\phi to the RHS
-  for ( IntrusionMap::iterator iIntrusion = _intrusion_map.begin(); iIntrusion != _intrusion_map.end(); ++iIntrusion ){ 
+  if ( _intrusion_on ) { 
 
-    std::map<std::string,double>::iterator scalar_iter =  iIntrusion->second.varnames_values_map.find( scalar_name ); 
+    // adds \rho*u*\phi to the RHS
+    for ( IntrusionMap::iterator iIntrusion = _intrusion_map.begin(); iIntrusion != _intrusion_map.end(); ++iIntrusion ){ 
 
-    if ( scalar_iter == iIntrusion->second.varnames_values_map.end() ){ 
-      throw InvalidValue("Error: Cannot match scalar value to scalar name in intrusion. ", __FILE__, __LINE__); 
-    } 
+      std::map<std::string,double>::iterator scalar_iter =  iIntrusion->second.varnames_values_map.find( scalar_name ); 
 
-    if ( !iIntrusion->second.bc_face_iterator.empty() ) {
+      if ( scalar_iter == iIntrusion->second.varnames_values_map.end() ){ 
+        throw InvalidValue("Error: Cannot match scalar value to scalar name in intrusion. ", __FILE__, __LINE__); 
+      } 
 
-      BCIterator::iterator  iBC_iter = (iIntrusion->second.bc_face_iterator).find(p);
-      
-      for ( std::vector<IntVector>::iterator i = iBC_iter->second.begin(); i != iBC_iter->second.end(); i++){
+      if ( !iIntrusion->second.bc_face_iterator.empty() ) {
 
-        IntVector c = *i;
+        BCIterator::iterator  iBC_iter = (iIntrusion->second.bc_face_iterator).find(p);
+        
+        for ( std::vector<IntVector>::iterator i = iBC_iter->second.begin(); i != iBC_iter->second.end(); i++){
 
-        for ( int idir = 0; idir < 6; idir++ ){ 
+          IntVector c = *i;
 
-          IntVector cb = c + _faceDirHelp[idir]; 
+          for ( int idir = 0; idir < 6; idir++ ){ 
 
-          if ( iIntrusion->second.directions[idir] != 0 ){ 
+            IntVector cb = c + _faceDirHelp[idir]; 
 
-            double face_den = ( iIntrusion->second.density + density[c + _dHelp[idir]] ) / 2.0; 
+            if ( iIntrusion->second.directions[idir] != 0 ){ 
 
-            double face_vel = 1.0/face_den * iIntrusion->second.density * iIntrusion->second.velocity[_iHelp[idir]];
+              double face_den = ( iIntrusion->second.density + density[c + _dHelp[idir]] ) / 2.0; 
 
-            RHS[cb] += _sHelp[idir] * area[idir] * face_den * face_vel * scalar_iter->second; 
+              double face_vel = 1.0/face_den * iIntrusion->second.density * iIntrusion->second.velocity[_iHelp[idir]];
 
-          } 
+              RHS[cb] += _sHelp[idir] * area[idir] * face_den * face_vel * scalar_iter->second; 
+
+            } 
+          }
         }
       }
     }
