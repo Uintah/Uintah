@@ -39,35 +39,24 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Arches/EnthalpySolver.h>
 #include <CCA/Components/Arches/PetscSolver.h>
 #include <CCA/Components/Arches/PhysicalConstants.h>
-#include <CCA/Components/Arches/RHSSolver.h>
-#include <CCA/Components/Arches/Source.h>
-#include <CCA/Components/Arches/TurbulenceModel.h>
-#include <CCA/Components/Arches/Radiation/RadiationModel.h>
-#include <CCA/Components/Arches/Radiation/DORadiationModel.h>
-#include <CCA/Components/Arches/Radiation/RadLinearSolver.h>
-#include <CCA/Components/Models/Radiation/RMCRT/Ray.h>
-#ifdef HAVE_HYPRE
-#include <CCA/Components/Arches/Radiation/RadHypreSolver.h>
-#endif
-#include <CCA/Components/MPMArches/MPMArchesLabel.h>
-#include <CCA/Components/Arches/TimeIntegratorLabel.h>
-#include <CCA/Ports/DataWarehouse.h>
-#include <CCA/Ports/LoadBalancer.h>
-#include <CCA/Ports/Scheduler.h>
-#include <Core/Exceptions/InvalidValue.h>
-#include <Core/Exceptions/VariableNotFoundInGrid.h>
-#include <Core/Grid/Level.h>
-#include <Core/Grid/Patch.h>
-#include <Core/Grid/Variables/PerPatch.h>
-#include <Core/Grid/SimulationState.h>
-#include <Core/Grid/Task.h>
-#include <Core/Grid/Variables/VarTypes.h>
-#include <Core/Parallel/ProcessorGroup.h>
-#include <Core/ProblemSpec/ProblemSpec.h>
-#include <CCA/Components/Arches/SourceTerms/SourceTermFactory.h>
-#include <CCA/Components/Arches/SourceTerms/SourceTermBase.h>
 #include <CCA/Components/Arches/PropertyModels/PropertyModelBase.h>
 #include <CCA/Components/Arches/PropertyModels/PropertyModelFactory.h>
+#include <CCA/Components/Arches/RHSSolver.h>
+#include <CCA/Components/Arches/Radiation/DORadiationModel.h>
+#include <CCA/Components/Arches/Radiation/RadLinearSolver.h>
+#include <CCA/Components/Arches/Radiation/RadiationModel.h>
+#include <CCA/Components/Arches/Source.h>
+#include <CCA/Components/Arches/SourceTerms/SourceTermBase.h>
+#include <CCA/Components/Arches/SourceTerms/SourceTermFactory.h>
+#include <CCA/Components/Arches/TimeIntegratorLabel.h>
+#include <CCA/Components/Arches/TurbulenceModel.h>
+#include <CCA/Components/MPMArches/MPMArchesLabel.h>
+#include <CCA/Components/Models/Radiation/RMCRT/Ray.h>
+
+#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/Variables/PerPatch.h>
+#include <Core/Parallel/ProcessorGroup.h>
+
 
 using namespace Uintah;
 using namespace std;
