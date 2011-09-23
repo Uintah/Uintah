@@ -1,6 +1,8 @@
 #ifndef Wasatch_TaskInterface_h
 #define Wasatch_TaskInterface_h
 
+#include <set>
+
 //-- Uintah includes --//
 #include <CCA/Ports/SchedulerP.h>
 #include <Core/Grid/Variables/ComputeSet.h>
@@ -98,7 +100,8 @@ namespace Wasatch{
                    const Uintah::MaterialSet* const materials,
                    const PatchInfoMap& info,
                    const bool createUniqueTreePerPatch,
-                  int RKStage,
+                   int RKStage,
+                   const std::set<std::string>& ioFieldSet_,
                    Expr::FieldManagerList* fml = NULL);
 
     /**
@@ -137,6 +140,7 @@ namespace Wasatch{
                    const PatchInfoMap& info,
                    const bool createUniqueTreePerPatch,
                    const int RKStage,
+                   const std::set<std::string>& ioFieldSet_,                  
                    Expr::FieldManagerList* fml = NULL );
 
     ~TaskInterface();

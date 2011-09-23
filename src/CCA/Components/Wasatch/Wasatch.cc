@@ -163,9 +163,18 @@ namespace Wasatch{
         throw std::runtime_error( msg.str() );
       }
     }
-
+    
+    // ADD BLOCK FOR IO FIELDS
+    Uintah::ProblemSpecP archiverParams = params->findBlock("DataArchiver");
+    for( Uintah::ProblemSpecP saveLabelParams=archiverParams->findBlock("save");
+        saveLabelParams != 0;
+        saveLabelParams=saveLabelParams->findNextBlock("save") ){
+      std::string saveTheLabel;
+      saveLabelParams->getAttribute("label",saveTheLabel);
+      ioFieldSet_.insert(saveTheLabel);
+    }      
+    
     Uintah::ProblemSpecP wasatchParams = params->findBlock("Wasatch");
-
     //
     // Material
     //
@@ -304,7 +313,6 @@ namespace Wasatch{
     }
     
     
-    
 
     timeStepper_ = scinew TimeStepper( sharedState_->get_delt_label(),
                                        *graphCategories_[ ADVANCE_SOLUTION ]->exprFactory );
@@ -364,7 +372,7 @@ namespace Wasatch{
                                                         localPatches,
                                                         materials,
                                                         patchInfoMap_,
-                                                        true, 1 );
+                                                        true, 1, ioFieldSet_ );
 
       // set coordinate values as required by the IC graph.
       icCoordHelper_->create_task( sched, localPatches, materials );
@@ -405,7 +413,7 @@ namespace Wasatch{
                                                         localPatches,
                                                         materials,
                                                         patchInfoMap_,
-                                                        true, 1 );
+                                                        true, 1, ioFieldSet_ );
       task->schedule(1);
       taskInterfaceList_.push_back( task );
     }
@@ -543,7 +551,7 @@ namespace Wasatch{
                                 materials,
                                 level,
                                 sched,
-                                rkStage );
+                                rkStage, ioFieldSet_ );
 
 //     //________________________________________________________
 //     // add a task to populate a "field" with the current time.

@@ -1,4 +1,5 @@
 //-- Wasatch Includes --//
+
 #include "TimeStepper.h"
 #include "TaskInterface.h"
 #include "CoordHelper.h"
@@ -140,7 +141,8 @@ namespace Wasatch{
                              const Uintah::MaterialSet* const materials,
                              const Uintah::LevelP& level,
                              Uintah::SchedulerP& sched, 
-                             const int rkStage )
+                             const int rkStage, 
+                             const std::set<std::string>& ioFieldSet )
   {
     // for now we will assume that we are computing things on ALL materials
     const Uintah::MaterialSubset* const mss = materials->getUnion();
@@ -154,7 +156,7 @@ namespace Wasatch{
                                                            *factory_,
                                                            level, sched, patches, materials,
                                                            patchInfoMap,
-                                                           true, 1 );
+                                                           true, 1, ioFieldSet );
       taskInterfaceList_.push_back( timeTask );
       timeTask->schedule( coordHelper_->field_tags(), rkStage );
       // add a task to update current simulation time
@@ -177,7 +179,7 @@ namespace Wasatch{
                                                      level, sched, patches, materials,
                                                      patchInfoMap,
                                                      true,
-                                                     rkStage );
+                                                     rkStage, ioFieldSet );
 
       taskInterfaceList_.push_back( rhsTask );
       if(rkStage==1) coordHelper_->create_task( sched, patches, materials );

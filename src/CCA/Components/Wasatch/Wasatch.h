@@ -106,6 +106,7 @@
 #include <list>
 #include <map>
 #include <string>
+#include <set>
 
 //-- Uintah Framework Includes --//
 #include <Core/Parallel/UintahParallelComponent.h>
@@ -212,7 +213,7 @@ namespace Wasatch{
 
   private:
     int nRKStages_;
-
+    std::set<std::string> ioFieldSet_;
     Uintah::SimulationStateP sharedState_; ///< access to some common things like the current timestep.
 
     /**
