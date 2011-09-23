@@ -1,6 +1,8 @@
 #ifndef Wasatch_TimeStepper_h
 #define Wasatch_TimeStepper_h
 
+#include <set>
+
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 
@@ -160,7 +162,8 @@ namespace Wasatch{
                        const Uintah::MaterialSet* const materials,
                        const Uintah::LevelP& level,
                        Uintah::SchedulerP& sched,
-                       const int rkStage );
+                       const int rkStage,
+                       const std::set<std::string>& ioFieldSet);
   };
 
   //------------------------------------------------------------------

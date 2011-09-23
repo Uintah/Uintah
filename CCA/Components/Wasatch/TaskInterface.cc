@@ -57,6 +57,7 @@ namespace Wasatch{
     const std::string taskName_;        ///< the name of the task
     const PatchInfoMap& patchInfoMap_;  ///< information for each individual patch.
     Expr::FieldManagerList* const fml_; ///< the FieldManagerList for this TaskInterface
+    const std::set<std::string>& ioFieldSet_;
 
     const bool hasPressureExpression_;
 
@@ -91,7 +92,8 @@ namespace Wasatch{
                      const Uintah::MaterialSet* const materials,
                      const PatchInfoMap& info,
                      const bool createUniqueTreePerPatch,
-                     const int rkStage );
+                     const int rkStage,
+                     const std::set<std::string>& ioFieldSet_);
 
     ~TreeTaskExecute();
     
@@ -111,7 +113,8 @@ namespace Wasatch{
                                     const Uintah::MaterialSet* const materials,
                                     const PatchInfoMap& info,
                                     const bool createUniqueTreePerPatch,
-                                    const int rkStage )
+                                    const int rkStage,
+                                    const std::set<std::string>& ioFieldSet)
     : masterTree_( tree ),
       scheduler_( sched ),
       patches_( patches ),
@@ -120,6 +123,7 @@ namespace Wasatch{
       taskName_( taskName ),
       patchInfoMap_( info ),
       fml_( scinew Expr::FieldManagerList(taskName) ),
+      ioFieldSet_ (ioFieldSet),
       hasPressureExpression_( tree->computes_field( pressure_tag() ) )
   {
     hasBeenScheduled_ = false;
@@ -186,7 +190,8 @@ namespace Wasatch{
                       const Uintah::PatchSubset* const patches,
                       const Uintah::MaterialSubset* const materials,
                       const Expr::TagSet& newDWFields,
-                      const int rkStage )
+                      const int rkStage,
+                      const std::set<std::string>& ioFieldSet)
   {
     // this is done once when the task is scheduled.  The purpose of
     // this method is to collect the fields from the ExpressionTree
@@ -229,7 +234,8 @@ namespace Wasatch{
         // see if this field is required by the given tree
         const Expr::Tag fieldTag( fieldInfo.varlabel->getName(), fieldInfo.context );
         if( !tree.has_field( fieldTag ) )  continue;
-        
+        fieldInfo.isIO = ( ioFieldSet.find(fieldInfo.varlabel->getName()) != ioFieldSet.end())? true : false ;
+        //std::cout << "Field Name: " << fieldInfo.varlabel->getName() << "\t IO: " << fieldInfo.isIO << std::endl;
         //________________
         // set field mode 
         if( tree.computes_field( fieldTag ) ){
@@ -351,7 +357,7 @@ namespace Wasatch{
       }
     }
 
-    add_fields_to_task( *task, *tree, *fml_, pss, mss, newDWFields, rkStage );
+    add_fields_to_task( *task, *tree, *fml_, pss, mss, newDWFields, rkStage, ioFieldSet_ );
 
     // jcs eachPatch vs. allPatches (gang schedule vs. independent...)
     scheduler_->addTask( task, patches_, materials_ );
@@ -448,6 +454,7 @@ namespace Wasatch{
                                 const PatchInfoMap& info,
                                 const bool createUniqueTreePerPatch,
                                 const int rkStage,
+                                const std::set<std::string>& ioFieldSet,
                                 Expr::FieldManagerList* fml )
     : builtFML_( fml==NULL ),
       fml_( builtFML_ ? scinew Expr::FieldManagerList( taskName ) : fml )
@@ -466,7 +473,7 @@ namespace Wasatch{
     }
     for( TreeList::iterator itr=treeList.begin(); itr!=treeList.end(); ++itr ){
       Expr::ExpressionTree::TreePtr tr = *itr;
-      execList_.push_back( new TreeTaskExecute( tr, tr->name(), level, sched, patches, materials, info, createUniqueTreePerPatch, rkStage ) );
+      execList_.push_back( new TreeTaskExecute( tr, tr->name(), level, sched, patches, materials, info, createUniqueTreePerPatch, rkStage, ioFieldSet ) );
     }
   }
 
@@ -482,6 +489,7 @@ namespace Wasatch{
                                 const PatchInfoMap& info,
                                 const bool createUniqueTreePerPatch,
                                 const int rkStage,
+                                const std::set<std::string>& ioFieldSet,
                                 Expr::FieldManagerList* fml )
     : builtFML_( fml==NULL ),
       fml_( builtFML_ ? scinew Expr::FieldManagerList( taskName ) : fml )
@@ -500,7 +508,7 @@ namespace Wasatch{
     }
     for( TreeList::iterator itr=treeList.begin(); itr!=treeList.end(); ++itr ){
       Expr::ExpressionTree::TreePtr tr = *itr;
-      execList_.push_back( new TreeTaskExecute( tr, tr->name(), level, sched, patches, materials, info, createUniqueTreePerPatch, rkStage ) );
+      execList_.push_back( new TreeTaskExecute( tr, tr->name(), level, sched, patches, materials, info, createUniqueTreePerPatch, rkStage, ioFieldSet ) );
     }
   }
 
