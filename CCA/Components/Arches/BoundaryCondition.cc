@@ -158,6 +158,10 @@ BoundaryCondition::~BoundaryCondition()
     VarLabel::destroy( bc_iter->second.total_area_label ); 
 
   }
+
+  if (_using_new_intrusion) { 
+    delete _intrusionBC; 
+  } 
 }
 
 //****************************************************************************
@@ -248,10 +252,10 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
 
     if ( db->findBlock("NewIntrusionBC") ){ 
 
+      _intrusionBC = scinew IntrusionBC( d_lab, d_props, BoundaryCondition::MMWALL ); 
       ProblemSpecP db_new_intrusion = db->findBlock("NewIntrusionBC"); 
       _using_new_intrusion = true; 
 
-      _intrusionBC = scinew IntrusionBC( d_lab, d_props, BoundaryCondition::MMWALL ); 
       _intrusionBC->problemSetup( db_new_intrusion ); 
 
     } 

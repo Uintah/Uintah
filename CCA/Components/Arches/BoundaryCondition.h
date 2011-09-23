@@ -166,7 +166,11 @@ namespace Uintah {
 
      inline IntrusionBC* get_intrusion_ref(){ 
        return _intrusionBC; 
-     } 
+     }; 
+
+     inline bool is_using_new_intrusion(){ 
+       return _using_new_intrusion; 
+     }; 
 
       inline bool typeMatch( BC_TYPE check_type, std::vector<BC_TYPE >& type_list ){ 
 

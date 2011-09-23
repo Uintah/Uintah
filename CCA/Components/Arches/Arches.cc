@@ -776,6 +776,7 @@ Arches::scheduleInitialize(const LevelP& level,
 
   // get a reference to the intrusions
   IntrusionBC* intrusion_ref = d_boundaryCondition->get_intrusion_ref(); 
+  bool using_new_intrusions = d_boundaryCondition->is_using_new_intrusion(); 
 
   //----------------------
   //DQMOM initialization 
@@ -791,6 +792,7 @@ Arches::scheduleInitialize(const LevelP& level,
       EqnBase* eqn = ieqn->second; 
       eqn->sched_checkBCs( level, sched ); 
       eqn->set_intrusion( intrusion_ref ); 
+      eqn->set_intrusion_bool( using_new_intrusions ); 
     }
 
   }
@@ -802,6 +804,7 @@ Arches::scheduleInitialize(const LevelP& level,
     EqnBase* eqn = ieqn->second; 
     eqn->sched_checkBCs( level, sched ); 
     eqn->set_intrusion( intrusion_ref ); 
+    eqn->set_intrusion_bool( using_new_intrusions ); 
   }
 
 
