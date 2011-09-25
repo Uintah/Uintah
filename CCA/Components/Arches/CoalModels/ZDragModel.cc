@@ -297,7 +297,7 @@ ZDragModel::sched_computeModel( const LevelP& level, SchedulerP& sched, int time
 
   // require particle velocity
   ArchesLabel::PartVelMap::const_iterator i = d_fieldLabels->partVel.find(d_quadNode);
-  tsk->requires( Task::OldDW, i->second, gn, 0 );
+  tsk->requires( Task::NewDW, i->second, gn, 0 );
 
   for (vector<std::string>::iterator iter = d_icLabels.begin();
       iter != d_icLabels.end(); iter++) {
@@ -402,7 +402,7 @@ ZDragModel::computeModel( const ProcessorGroup* pc,
 
     constCCVariable<Vector> partVel;
     ArchesLabel::PartVelMap::const_iterator iter = d_fieldLabels->partVel.find(d_quadNode);
-    old_dw->get(partVel, iter->second, matlIndex, patch, gn, 0);
+    new_dw->get(partVel, iter->second, matlIndex, patch, gn, 0);
 
     constCCVariable<double> weight;
     old_dw->get( weight, d_weight_label, matlIndex, patch, gn, 0 );
@@ -425,9 +425,6 @@ ZDragModel::computeModel( const ProcessorGroup* pc,
           length = w_particle_length[c]/weight[c]*d_pl_scaling_factor;
         }
 
-        // KLUDGE: implicit clipping
-        //length = max(min(length,1e-3),1e-6);
-
         Vector sphGas = Vector(0.,0.,0.);
         Vector cartGas = gasVel[c];
 
@@ -438,18 +435,18 @@ ZDragModel::computeModel( const ProcessorGroup* pc,
         sphPart = cart2sph( cartPart );
 
         double diff = sphGas.z() - sphPart.z();
-        double Re  = abs(diff)*length / (kvisc/den[c]);
+        double Re  = std::abs(diff)*length / (kvisc/den[c]);
         double phi;
 
-        if(Re < 1) {
-          phi = 1;
-        } else if(Re>1000) {
+        if(Re < 1.0) {
+          phi = 1.0;
+        } else if(Re>1000.0) {
           phi = 0.0183*Re;
         } else {
           phi = 1. + .15*pow(Re, 0.687);
         }
 
-        double t_p = rhop/(18*kvisc)*pow(length,2);
+        double t_p = rhop/(18.0*kvisc)*pow(length,2.0);
 
 
         if(d_unweighted){        
@@ -457,13 +454,7 @@ ZDragModel::computeModel( const ProcessorGroup* pc,
         } else {
           model[c] = weight[c]*(phi/t_p*(cartGas.z()-cartPart.z())+gravity.z())/(d_zvel_scaling_factor);
         }
-        gas_source[c] = -weight[c]*d_w_scaling_factor*rhop/6*pi*phi/t_p*(cartGas.z()-cartPart.z())*pow(length,3);
-
-        /*
-        //KLUDGE: more implicit clipping
-        model[c] = min(model[c], 1e7);
-        model[c] = max(model[c],-1e7);
-        */
+        gas_source[c] = -weight[c]*d_w_scaling_factor*rhop/6.0*pi*phi/t_p*(cartGas.z()-cartPart.z())*pow(length,3.0);
 
         /*
         // Debugging

@@ -241,11 +241,11 @@ void DQMOM::problemSetup(const ProblemSpecP& params)
         db_optimize->get("Optimal_abscissas",d_opt_abscissas);
         AAopt = scinew DenseMatrix((N_xi+1)*N_,(N_xi+1)*N_);
         AAopt->zero();
-        if(d_unweighted == true){
+        //if(d_unweighted == true){
           constructAopt_unw( AAopt, d_opt_abscissas );
-        } else {
-          constructAopt( AAopt, d_opt_abscissas );
-        }
+        //} else {
+        //  constructAopt( AAopt, d_opt_abscissas );
+        //}
         AAopt->invert();
       }
     } else {
@@ -576,11 +576,11 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
         ColumnMatrix* BB = scinew ColumnMatrix( dimension );
         ColumnMatrix* XX = scinew ColumnMatrix( dimension );
         BB->zero();
-        if(d_unweighted == true){
+        //if(d_unweighted == true){
           constructBopt_unw( BB, d_opt_abscissas, models );
-        } else {
-          constructBopt( BB, weights, d_opt_abscissas, models );
-        }
+        //} else {
+        //  constructBopt( BB, weights, d_opt_abscissas, models );
+        //}
 
         Mult( (*XX), (*AAopt), (*BB) );
 

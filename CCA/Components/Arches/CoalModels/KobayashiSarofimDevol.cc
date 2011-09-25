@@ -518,25 +518,25 @@ KobayashiSarofimDevol::computeModel( const ProcessorGroup * pc,
           rateMax = max((0.2*(unscaled_raw_coal_mass + min(0.0,unscaled_char_mass))/dt),0.0);
           testVal_part = -(k1+k2)*(unscaled_raw_coal_mass + min(0.0,unscaled_char_mass))/d_rc_scaling_factor;
           testVal_gas = (Y1_*k1 + Y2_*k2)*(unscaled_raw_coal_mass+ min(0.0,unscaled_char_mass))*unscaled_weight;
-          testVal_char = ((1-Y1_)*k1 + (1-Y2_)*k2)*(unscaled_raw_coal_mass + min(0.0,unscaled_char_mass));
+          testVal_char = ((1.0-Y1_)*k1 + (1.0-Y2_)*k2)*(unscaled_raw_coal_mass + min(0.0,unscaled_char_mass));
           if( testVal_part < (-rateMax/d_rc_scaling_factor)) {
             testVal_part = -rateMax/(d_rc_scaling_factor);
             testVal_gas = Y1_*rateMax;
-            testVal_char = (1-Y1_)*rateMax;
+            testVal_char = (1.0-Y1_)*rateMax;
           }
         } else {
           rateMax = max((0.2*(unscaled_raw_coal_mass + min(0.0,unscaled_char_mass))*unscaled_weight/dt),0.0);
           testVal_part = -(k1+k2)*(unscaled_raw_coal_mass + min(0.0,unscaled_char_mass))*unscaled_weight/(d_rc_scaling_factor*d_w_scaling_factor);
           testVal_gas = (Y1_*k1 + Y2_*k2)*(unscaled_raw_coal_mass+ min(0.0,unscaled_char_mass))*unscaled_weight;
-          testVal_char = ((1-Y1_)*k1 + (1-Y2_)*k2)*(unscaled_raw_coal_mass + min(0.0,unscaled_char_mass))*unscaled_weight;
+          testVal_char = ((1.0-Y1_)*k1 + (1.0-Y2_)*k2)*(unscaled_raw_coal_mass + min(0.0,unscaled_char_mass))*unscaled_weight;
           if( testVal_part < (-rateMax/(d_rc_scaling_factor*d_w_scaling_factor))) {
             testVal_part = -rateMax/(d_rc_scaling_factor*d_w_scaling_factor);
             testVal_gas = Y1_*rateMax;
-            testVal_char = (1-Y1_)*rateMax;
+            testVal_char = (1.0-Y1_)*rateMax;
           }
         }
 
-        if( (testVal_part < -1e-16) && (unscaled_raw_coal_mass > 1e-16)) {
+        if( (testVal_part < -1e-16) && ((unscaled_raw_coal_mass+min(0.0,unscaled_char_mass))> 1e-16)) {
           devol_rate_ = testVal_part;
           gas_devol_rate_ = testVal_gas;
           char_rate_ = testVal_char;
@@ -547,6 +547,7 @@ KobayashiSarofimDevol::computeModel( const ProcessorGroup * pc,
         }
       }      
 
+      //cout << "koba " << max(0,0.5) << " " << min(0,0.5) << endl;
       //cout << "devol_rate_ " << devol_rate_ << " char_rate_ " << char_rate_ << " unscaled_char_mass " << unscaled_char_mass
       //     << " unscaled_raw_coal_mass " << unscaled_raw_coal_mass << endl;
  
