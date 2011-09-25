@@ -119,6 +119,10 @@ private:
   double d_rc_scaling_factor;   ///< Scaling factor for raw coal internal coordinate
   double d_rh_scaling_factor;
   double d_pt_scaling_factor;   ///< Scaling factor for particle temperature internal coordinate
+  double rateMax;
+  double testVal_part;
+  double testVal_gas;
+  double testVal_char;
 
 }; // end ConstSrcTerm
 } // end namespace Uintah
