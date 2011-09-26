@@ -264,17 +264,11 @@ ShaddixHeatTransfer::sched_computeModel( const LevelP& level, SchedulerP& sched,
     tsk->computes(d_modelLabel);
     tsk->computes(d_gasLabel); 
     tsk->computes(d_abskpLabel);
-    tsk->computes(d_qconvLabel);
-    tsk->computes(d_qradLabel);
   } else {
     tsk->modifies(d_modelLabel);
     tsk->modifies(d_gasLabel);  
     tsk->modifies(d_abskpLabel);
-    tsk->modifies(d_qconvLabel);
-    tsk->modifies(d_qradLabel);
   }
-
-  tsk->requires( Task::OldDW, d_fieldLabels->d_sharedState->get_delt_label(), Ghost::None, 0);
 
   DQMOMEqnFactory& dqmom_eqn_factory = DQMOMEqnFactory::self();
   CoalModelFactory& modelFactory = CoalModelFactory::self();
@@ -314,7 +308,7 @@ ShaddixHeatTransfer::sched_computeModel( const LevelP& level, SchedulerP& sched,
   
   // also require paticle velocity, gas velocity, and density
   ArchesLabel::PartVelMap::const_iterator iQuad = d_fieldLabels->partVel.find(d_quadNode);
-  tsk->requires(Task::NewDW, iQuad->second, Ghost::None, 0);
+  tsk->requires(Task::OldDW, iQuad->second, Ghost::None, 0);
   tsk->requires( Task::OldDW, d_fieldLabels->d_newCCVelocityLabel, Ghost::None, 0);
   tsk->requires(Task::OldDW, d_fieldLabels->d_densityCPLabel, Ghost::None, 0);
   tsk->requires(Task::OldDW, d_fieldLabels->d_cpINLabel, Ghost::None, 0);
@@ -465,10 +459,6 @@ ShaddixHeatTransfer::computeModel( const ProcessorGroup * pc,
     int archIndex = 0;
     int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
-    delt_vartype DT;
-    old_dw->get(DT, d_fieldLabels->d_sharedState->get_delt_label());
-    double dt = DT;
-
     CCVariable<double> heat_rate;
     if ( new_dw->exists( d_modelLabel, matlIndex, patch) ) {
       new_dw->getModifiable( heat_rate, d_modelLabel, matlIndex, patch ); 
@@ -493,26 +483,11 @@ ShaddixHeatTransfer::computeModel( const ProcessorGroup * pc,
       abskp.initialize(0.0);
     }
     
-    CCVariable<double> qconv;
-    if( new_dw->exists( d_qconvLabel, matlIndex, patch) ) {
-      new_dw->getModifiable( qconv, d_qconvLabel, matlIndex, patch );
-    } else {
-      new_dw->allocateAndPut( qconv, d_qconvLabel, matlIndex, patch );
-      qconv.initialize(0.0);
-    }
-
-    CCVariable<double> qrad;
-    if( new_dw->exists( d_qradLabel, matlIndex, patch) ) {
-      new_dw->getModifiable( qrad, d_qradLabel, matlIndex, patch );
-    } else {
-      new_dw->allocateAndPut( qrad, d_qradLabel, matlIndex, patch );
-      qrad.initialize(0.0);
-    }
 
     // get particle velocity used to calculate Reynolds number
     constCCVariable<Vector> partVel;  
     ArchesLabel::PartVelMap::const_iterator iQuad = d_fieldLabels->partVel.find(d_quadNode);
-    new_dw->get( partVel, iQuad->second, matlIndex, patch, gn, 0);
+    old_dw->get( partVel, iQuad->second, matlIndex, patch, gn, 0);
     
     // gas velocity used to calculate Reynolds number
     constCCVariable<Vector> gasVel; 
@@ -677,7 +652,7 @@ ShaddixHeatTransfer::computeModel( const ProcessorGroup * pc,
         // Convection part: -----------------------
 
         // Reynolds number
-        Re = std::abs(gas_velocity.length() - particle_velocity.length())*unscaled_length*density/visc;
+        Re = abs(gas_velocity.length() - particle_velocity.length())*unscaled_length*density/visc;
 
         // Nusselt number
         Nu = 2.0 + 0.65*pow(Re,0.50)*pow(Pr,(1.0/3.0));
@@ -698,11 +673,11 @@ ShaddixHeatTransfer::computeModel( const ProcessorGroup * pc,
         rkg = props(gas_temperature, unscaled_particle_temperature); // [=] J/s/m/K
 
         // A BLOWING CORRECTION TO THE HEAT TRANSFER MODEL IS EMPLOYED
-        kappa =  -surface_rate[c]*unscaled_length*specific_heat[c]/(2.0*rkg);
-        if(std::abs(exp(kappa)-1) < 1e-16){
+        kappa =  -surface_rate[c]*unscaled_length*specific_heat[c]/(2*rkg);
+        if(abs(exp(kappa)-1) < 1e-16){
           blow = 1.0;
         } else {
-          blow = kappa/(exp(kappa)-1.0);
+          blow = kappa/(exp(kappa)-1);
         }
         // Q_convection (see Section 5.4 of LES_Coal document)
         Q_convection = Nu*pi*blow*rkg*unscaled_length*(gas_temperature - unscaled_particle_temperature);
@@ -874,9 +849,7 @@ ShaddixHeatTransfer::computeModel( const ProcessorGroup * pc,
       heat_rate[c] = heat_rate_;
       gas_heat_rate[c] = gas_heat_rate_;
       abskp[c] = abskp_;
-      qconv[c] = Q_convection;
-      qrad[c] = Q_radiation;
-
+ 
     }//end cell loop
 #endif
 
