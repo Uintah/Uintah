@@ -60,6 +60,7 @@ WARNING
 ************************************************************************/
 
 #include <Core/Exceptions/InvalidValue.h>
+#include <Core/Exceptions/InternalError.h>
 
 namespace Uintah {
   class ArchesLabel;
@@ -87,9 +88,13 @@ namespace Uintah {
 
   class TimeIntegratorLabel  {
     public:
-    string integrator_step_name;
-    int integrator_step_number;
-    bool multiple_steps;
+    
+    // PROGRAMMER:  if you added a variable
+    // make sure you initialize it in initializeVars()
+    // and catch it in catchUninitializedVars ()
+    string integrator_step_name;     
+    int integrator_step_number;      
+    bool multiple_steps;             
     bool integrator_last_step;
     bool use_old_values;
     bool recursion;
@@ -122,10 +127,88 @@ namespace Uintah {
     const VarLabel* smmsExactSol;
     const VarLabel* gradpmmsExactSol;
 
+    //__________________________________
+    //  initialize all the variabless
+    void initializeVars(){
+      areaOUT                  =  NULL;
+      denAccum                 =  NULL;
+      densityLag               =  NULL;
+      factor_divide            = -9;                 
+      factor_new               = -9;                 
+      factor_old               = -9;                 
+      floutbc                  =  NULL;
+      flowIN                   =  NULL;
+      flowOUT                  =  NULL;
+      gradpmmsExactSol         =  NULL;
+      gradpmmsLnError          =  NULL;
+      integrator_step_name     = "-9";
+      integrator_step_number   =  -9;
+      negativeDensityGuess     =  NULL;
+      negativeEKTDensityGuess  =  NULL;
+      pressure_guess           =  NULL;
+      pressure_out             =  NULL;
+      ref_density              =  NULL;
+      smmsExactSol             =  NULL;
+      smmsLnError              =  NULL;
+      time_multiplier          = -9;
+      time_position_multiplier_after_average    = -9;
+      time_position_multiplier_before_average   = -9;
+      tke_out                  =  NULL;
+      ummsExactSol             =  NULL;
+      ummsLnError              =  NULL;
+      vmmsExactSol             =  NULL;
+      vmmsLnError              =  NULL;
+      wmmsExactSol             =  NULL;
+      wmmsLnError              =  NULL;
+    }
+    
+    //__________________________________
+    //  Test for uninitialized Variables
+    void catchUninitializedVars(){
+      bool test =( (areaOUT      ==  NULL ) ||
+      ( denAccum                 ==  NULL ) ||
+      ( densityLag               ==  NULL ) ||
+      ( factor_divide            == -9 )    ||              
+      ( factor_new               == -9 )    ||              
+      ( factor_old               == -9 )    ||              
+      ( floutbc                  ==  NULL ) ||
+      ( flowIN                   ==  NULL ) ||
+      ( flowOUT                  ==  NULL ) ||
+      ( gradpmmsExactSol         ==  NULL ) ||
+      ( gradpmmsLnError          ==  NULL ) ||
+      ( integrator_step_name     == "-9" )  ||
+      ( integrator_step_number   ==  -9 )   ||
+      ( negativeDensityGuess     ==  NULL ) ||
+      ( negativeEKTDensityGuess  ==  NULL ) ||
+      ( pressure_guess           ==  NULL ) ||
+      ( pressure_out             ==  NULL ) ||
+      ( ref_density              ==  NULL ) ||
+      ( smmsExactSol             ==  NULL ) ||
+      ( smmsLnError              ==  NULL ) ||
+      ( time_multiplier          == -9 )    ||
+      ( time_position_multiplier_after_average    == -9 ) ||
+      ( time_position_multiplier_before_average   == -9 ) ||
+      ( tke_out                  ==  NULL ) ||
+      ( ummsExactSol             ==  NULL ) ||
+      ( ummsLnError              ==  NULL ) ||
+      ( vmmsExactSol             ==  NULL ) ||
+      ( vmmsLnError              ==  NULL ) ||
+      ( wmmsExactSol             ==  NULL ) ||
+      ( wmmsLnError              ==  NULL ) );
+      
+      if (test){
+        throw InternalError("ERROR: unintialized variable in TimeIntegrator.h", __FILE__, __LINE__);
+      }
+    }
 
+    //______________________________________________________________________
+    //
     TimeIntegratorLabel(const ArchesLabel* lab, 
                          TimeIntegratorStepType::Type intgType)
       {
+      
+        initializeVars();
+        
         switch(intgType) {
 
           case TimeIntegratorStepType::BE:
@@ -537,6 +620,8 @@ namespace Uintah {
           default: 
             throw InvalidValue("Unknown explicit time integrator type", __FILE__, __LINE__);
         }
+        
+        catchUninitializedVars();
       }; 
 
     ~TimeIntegratorLabel() {};
