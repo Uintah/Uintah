@@ -110,3 +110,8 @@ PetscSolver::destroyMatrix()
   throw InternalError("PetscSolver not configured", __FILE__, __LINE__);
 }
 
+void
+PetscSolver::print(const string& desc, const int timestep, const int step)
+{
+  throw InternalError("PetscSolver not configured", __FILE__, __LINE__);
+}
