@@ -1853,10 +1853,6 @@ Arches::sched_weightedAbsInit( const LevelP& level,
       HeatTransfer* heatmodel = dynamic_cast<HeatTransfer*>(model);
       const VarLabel* abskpLabel = heatmodel->getabskpLabel();
       tsk->computes( abskpLabel );
-      const VarLabel* qconvLabel = heatmodel->getqconvLabel();
-      tsk->computes( qconvLabel );
-      const VarLabel* qradLabel = heatmodel->getqradLabel();
-      tsk->computes( qradLabel );
     }
 
     model->sched_initVars( level, sched ); 
@@ -2021,14 +2017,7 @@ Arches::weightedAbsInit( const ProcessorGroup* ,
         CCVariable<double> abskp;
         new_dw->allocateAndPut( abskp, abskpLabel, matlIndex, patch );
         abskp.initialize(0.0);
-        const VarLabel* qconvLabel = heatmodel->getqconvLabel();
-        CCVariable<double> qconv;
-        new_dw->allocateAndPut( qconv, qconvLabel, matlIndex, patch );
-        qconv.initialize(0.0);
-        const VarLabel* qradLabel = heatmodel->getqradLabel();
-        CCVariable<double> qrad;
-        new_dw->allocateAndPut( qrad, qradLabel, matlIndex, patch );
-        qrad.initialize(0.0);
+
       }
     }
   }

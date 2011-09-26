@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -359,15 +359,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
         dqmom_eqn->sched_evalTransportEqn( level, sched, curr_level ); 
       }
-    
-      for ( DQMOMEqnFactory::EqnMap::iterator iEqn = dqmom_eqns.begin();
-            iEqn != dqmom_eqns.end(); iEqn++){
-
-        DQMOMEqn* dqmom_eqn = dynamic_cast<DQMOMEqn*>(iEqn->second);
-
-        dqmom_eqn->sched_TransportEqnBC( level, sched, curr_level );
-      }
- 
+     
       // Clean up after DQMOM equation evaluations & calculate unscaled DQMOM scalar values 
       // (also, putting this in its own separate loop makes sure you don't require() before you compute())
       if (curr_level == numTimeIntegratorLevels-1){

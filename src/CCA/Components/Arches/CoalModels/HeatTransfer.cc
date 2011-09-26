@@ -38,19 +38,11 @@ HeatTransfer::HeatTransfer( std::string modelName,
   std::string abskpName = modelName + "_abskp";
   d_abskpLabel = VarLabel::create( abskpName, CCVariable<double>::getTypeDescription() );
 
-  std::string qconvName = modelName + "_Qconv";
-  d_qconvLabel = VarLabel::create( qconvName, CCVariable<double>::getTypeDescription() );
-
-  std::string qradName = modelName + "_Qrad";
-  d_qradLabel = VarLabel::create( qradName, CCVariable<double>::getTypeDescription() );
-
 }
 
 HeatTransfer::~HeatTransfer()
 {
   VarLabel::destroy(d_abskpLabel);
-  VarLabel::destroy(d_qconvLabel);
-  VarLabel::destroy(d_qradLabel);
 }
 
 //---------------------------------------------------------------------------
@@ -108,14 +100,10 @@ HeatTransfer::sched_dummyInit( const LevelP& level, SchedulerP& sched )
   tsk->requires( Task::OldDW, d_modelLabel, gn, 0);
   tsk->requires( Task::OldDW, d_gasLabel,   gn, 0);
   tsk->requires( Task::OldDW, d_abskpLabel,   gn, 0);
-  tsk->requires( Task::OldDW, d_qconvLabel,   gn, 0);
-  tsk->requires( Task::OldDW, d_qradLabel,   gn, 0);
 
   tsk->computes(d_modelLabel);
   tsk->computes(d_gasLabel); 
   tsk->computes(d_abskpLabel);
-  tsk->computes(d_qconvLabel);
-  tsk->computes(d_qradLabel);
 
   sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
 
@@ -153,33 +141,22 @@ HeatTransfer::dummyInit( const ProcessorGroup* pc,
     CCVariable<double> ModelTerm;
     CCVariable<double> GasModelTerm;
     CCVariable<double> abskpTerm;
-    CCVariable<double> qconvTerm;
-    CCVariable<double> qradTerm;
 
     constCCVariable<double> oldModelTerm;
     constCCVariable<double> oldGasModelTerm;
     constCCVariable<double> oldabskpTerm;
-    constCCVariable<double> oldqconvTerm;
-    constCCVariable<double> oldqradTerm;
 
     new_dw->allocateAndPut( ModelTerm,    d_modelLabel, matlIndex, patch );
-    new_dw->allocateAndPut( GasModelTerm, d_gasLabel,   matlIndex, patch );
+    new_dw->allocateAndPut( GasModelTerm, d_gasLabel,   matlIndex, patch ); 
     new_dw->allocateAndPut( abskpTerm, d_abskpLabel,   matlIndex, patch );
-    new_dw->allocateAndPut( qconvTerm, d_qconvLabel,   matlIndex, patch );
-    new_dw->allocateAndPut( qradTerm, d_qradLabel,   matlIndex, patch );
 
     old_dw->get( oldModelTerm,    d_modelLabel, matlIndex, patch, gn, 0 );
     old_dw->get( oldGasModelTerm, d_gasLabel,   matlIndex, patch, gn, 0 );
     old_dw->get( oldabskpTerm, d_abskpLabel,   matlIndex, patch, gn, 0 );
-    old_dw->get( oldqconvTerm, d_qconvLabel,   matlIndex, patch, gn, 0 );
-    old_dw->get( oldqradTerm, d_qradLabel,   matlIndex, patch, gn, 0 );
-
-
+    
     ModelTerm.copyData(oldModelTerm);
     GasModelTerm.copyData(oldGasModelTerm);
     abskpTerm.copyData(oldabskpTerm);
-    qconvTerm.copyData(oldqconvTerm);
-    qradTerm.copyData(oldqradTerm);
 
   }
 }
