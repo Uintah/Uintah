@@ -42,7 +42,9 @@ SRCS := \
 	$(SRCDIR)/tecplot.cc     \
 	$(SRCDIR)/util.cc        \
 	$(SRCDIR)/varsummary.cc  \
-	$(SRCDIR)/puda.cc
+	$(SRCDIR)/puda.cc	\
+	$(SRCDIR)/GV_MMS.cc	\
+	$(SRCDIR)/ER_MMS.cc
 
 ifeq ($(IS_STATIC_BUILD),yes)
   PSELIBS := $(CORE_STATIC_PSELIBS)

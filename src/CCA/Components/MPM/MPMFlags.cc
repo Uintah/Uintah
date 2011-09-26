@@ -108,6 +108,17 @@ MPMFlags::MPMFlags(const ProcessorGroup* myworld)
   d_reductionVars->KE               = false;
   d_reductionVars->volDeformed      = false;
   d_reductionVars->centerOfMass     = false;
+
+// MMS
+if(d_mms_type=="AxisAligned"){
+    d_mms_type = "AxisAligned";
+  } else if(d_mms_type=="GeneralizedVortex"){
+    d_mms_type = "GeneralizedVortex";
+  } else if(d_mms_type=="ExpandingRing"){
+    d_mms_type = "ExpandingRing";
+  } else if(d_mms_type=="AxisAligned3L"){
+    d_mms_type = "AxisAligned3L";
+  }
 }
 
 MPMFlags::~MPMFlags()
@@ -212,6 +223,8 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
   if(d_prescribeDeformation){
     mpm_flag_ps->get("PresribedDeformationFile",d_prescribedDeformationFile);
   }
+//MMS
+  mpm_flag_ps->get("RunMMSProblem",d_mms_type);
 
   mpm_flag_ps->get("InsertParticles",d_insertParticles);
   if(d_insertParticles){
@@ -373,6 +386,8 @@ MPMFlags::outputProblemSpec(ProblemSpecP& ps)
   if(d_prescribeDeformation){
     ps->appendElement("PresribedDeformationFile",d_prescribedDeformationFile);
   }
+//MMS
+  ps->appendElement("RunMMSProblem",d_mms_type);
   ps->appendElement("InsertParticles",d_insertParticles);
   if(d_insertParticles){
     ps->appendElement("InsertParticlesFile",d_insertParticlesFile);

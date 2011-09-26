@@ -114,6 +114,7 @@ namespace Uintah {
     bool        d_with_ice;
     bool        d_with_arches;
     bool        d_use_momentum_form;
+    std::string d_mms_type;  // MMS Flag
     
     // flags for turning on/off the reduction variable calculations
     struct reductionVars{

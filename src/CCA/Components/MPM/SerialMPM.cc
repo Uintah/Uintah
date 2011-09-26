@@ -39,6 +39,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/MPM/PhysicalBC/MPMPhysicalBCFactory.h>
 #include <CCA/Components/MPM/PhysicalBC/PressureBC.h>
 #include <CCA/Components/MPM/SerialMPM.h>
+#include <CCA/Components/MPM/MMS/MMS.h>
 #include <CCA/Components/MPM/ThermalContact/ThermalContact.h>
 #include <CCA/Components/MPM/ThermalContact/ThermalContactFactory.h>
 #include <CCA/Components/OnTheFlyAnalysis/AnalysisModuleFactory.h>
@@ -3133,6 +3134,12 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
            }
         }
       } else {
+// MMS
+	string mms_type = flags->d_mms_type;
+         if(!mms_type.empty()) {
+		MMS MMSObject;
+		MMSObject.computeExternalForceForMMS(old_dw,new_dw,time,pset,lb,flags,pExternalForce_new);
+	  } else { 
          // Get the external force data and allocate new space for
          // external force and copy the data
          constParticleVariable<Vector> pExternalForce;
@@ -3143,6 +3150,7 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
            particleIndex idx = *iter;
            pExternalForce_new[idx] = 
                    pExternalForce[idx]*flags->d_forceIncrementFactor;
+	    }
          }
       }
     } // matl loop

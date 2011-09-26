@@ -79,6 +79,8 @@ DEALINGS IN THE SOFTWARE.
 #include <StandAlone/tools/puda/jim1.h>
 #include <StandAlone/tools/puda/jim2.h>
 #include <StandAlone/tools/puda/AA_MMS.h>
+#include <StandAlone/tools/puda/GV_MMS.h>
+#include <StandAlone/tools/puda/ER_MMS.h>
 #include <StandAlone/tools/puda/rtdata.h>
 #include <StandAlone/tools/puda/tecplot.h>
 #include <StandAlone/tools/puda/util.h>
@@ -132,6 +134,8 @@ usage( const std::string& badarg, const std::string& progname )
   cerr << "  -monica1             (Finds the maximum pressure in the domain.)\n";
   cerr << "  -AA_MMS_1            (1D periodic bar MMS)\n";
   cerr << "  -AA_MMS_2            (3D Axis aligned MMS)\n";
+  cerr << "  -GV_MMS            (GeneralizedVortex MMS)\n"; //MMS
+  cerr << "  -ER_MMS            (Expanding Ring MMS)\n"; 
   cerr << "  -partvar <variable name>\n";
   cerr << "  -asci\n";
   cerr << "  -tecplot <variable name>\n";
@@ -290,6 +294,10 @@ main(int argc, char** argv)
       clf.do_AA_MMS_1 = true;
     } else if(s == "-AA_MMS_2"){
       clf.do_AA_MMS_2 = true;
+    } else if(s == "-GV_MMS"){ //MMS
+      clf.do_GV_MMS = true;
+    } else if(s == "-ER_MMS"){
+      clf.do_ER_MMS = true;
     } else if(s == "-partvar"){
       clf.do_partvar = true;
       clf.particleVariable = argv[++i]; 
@@ -475,6 +483,14 @@ main(int argc, char** argv)
 
     if( clf.do_AA_MMS_1 || clf.do_AA_MMS_2 ){
       AA_MMS( da, clf );
+    }
+
+//MMS
+    if( clf.do_GV_MMS ){
+      GV_MMS( da, clf );
+    }
+    if( clf.do_ER_MMS ){
+      ER_MMS( da, clf );
     }
 
     if (clf.do_asci){

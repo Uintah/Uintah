@@ -59,6 +59,7 @@
       <smooth_crack_front                 spec="OPTIONAL BOOLEAN" />  <!-- FIXME: default is? -->
       <calculate_fracture_parameters      spec="OPTIONAL BOOLEAN" />  <!-- FIXME: default is? -->
       <do_crack_propagation               spec="OPTIONAL BOOLEAN" />
+      <RunMMSProblem                           spec="OPTIONAL STRING 'AxisAligned, GeneralizedVortex , ExpandingRing, AxisAligned3L'" /> <!-- MMS runtime option -->
     </MPM>
     <PhysicalBC                   spec="OPTIONAL NO_DATA" >
       <MPM                        spec="REQUIRED NO_DATA" >
