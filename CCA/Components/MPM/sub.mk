@@ -62,7 +62,8 @@ SUBDIRS := \
 	$(SRCDIR)/ParticleCreator   \
 	$(SRCDIR)/CohesiveZone   \
 	$(SRCDIR)/Crack		    \
-	$(SRCDIR)/HeatConduction
+	$(SRCDIR)/HeatConduction    \
+	$(SRCDIR)/MMS
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
