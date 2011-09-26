@@ -154,12 +154,14 @@ namespace Uintah {
             smmsLnError              =  lab->d_totalsmmsLnErrorLabel;
             time_position_multiplier_after_average = 1.0;
             time_position_multiplier_before_average = 1.0;
+            time_multiplier          =  1.0;
             tke_out                  =  lab->d_totalKineticEnergyLabel;
             ummsExactSol             =  lab->d_totalummsExactSolLabel;
             ummsLnError              =  lab->d_totalummsLnErrorLabel;
             use_old_values           =  true;
             vmmsExactSol             =  lab->d_totalvmmsExactSolLabel;
             vmmsLnError              =  lab->d_totalvmmsLnErrorLabel;
+            wmmsLnError              =  lab->d_totalwmmsLnErrorLabel;
             wmmsExactSol             =  lab->d_totalwmmsExactSolLabel;
           break;
 
@@ -187,6 +189,7 @@ namespace Uintah {
             ref_density              =  lab->d_refDensity_label;
             smmsExactSol             =  lab->d_totalsmmsExactSolLabel;
             smmsLnError              =  lab->d_totalsmmsLnErrorLabel;
+            time_multiplier          =  1.0;
             time_position_multiplier_after_average = 1.0;
             time_position_multiplier_before_average = 1.0;
             tke_out                  =  lab->d_totalKineticEnergyLabel;
@@ -196,6 +199,7 @@ namespace Uintah {
             vmmsExactSol             =  lab->d_totalvmmsExactSolLabel;
             vmmsLnError              =  lab->d_totalvmmsLnErrorLabel;
             wmmsExactSol             =  lab->d_totalwmmsExactSolLabel;
+            wmmsLnError              =  lab->d_totalwmmsLnErrorLabel;
           break;
 
           case TimeIntegratorStepType::Predictor:
@@ -222,6 +226,7 @@ namespace Uintah {
             ref_density              =  lab->d_refDensityPred_label;
             smmsExactSol             =  lab->d_totalsmmsExactSolPredLabel;
             smmsLnError              =  lab->d_totalsmmsLnErrorPredLabel;
+            time_multiplier          =  1.0;
             time_position_multiplier_after_average = 1.0;
             time_position_multiplier_before_average = 1.0;
             tke_out                  =  lab->d_totalKineticEnergyPredLabel;
@@ -231,6 +236,7 @@ namespace Uintah {
             vmmsExactSol             =  lab->d_totalvmmsExactSolPredLabel;
             vmmsLnError              =  lab->d_totalvmmsLnErrorPredLabel;
             wmmsExactSol             =  lab->d_totalwmmsExactSolPredLabel;
+            wmmsLnError              = lab->d_totalwmmsLnErrorPredLabel;
           break;
 
           case TimeIntegratorStepType::OldPredictor:
@@ -256,6 +262,7 @@ namespace Uintah {
             ref_density              =  lab->d_refDensityPred_label;
             smmsExactSol             =  lab->d_totalsmmsExactSolPredLabel;
             smmsLnError              =  lab->d_totalsmmsLnErrorPredLabel;
+            time_multiplier          =  0.5;
             time_position_multiplier_after_average = 1.0;
             time_position_multiplier_before_average = 1.0;
             tke_out                  =  lab->d_totalKineticEnergyPredLabel;
@@ -265,6 +272,7 @@ namespace Uintah {
             vmmsExactSol             =  lab->d_totalvmmsExactSolPredLabel;
             vmmsLnError              =  lab->d_totalvmmsLnErrorPredLabel;
             wmmsExactSol             =  lab->d_totalwmmsExactSolPredLabel;
+            wmmsLnError              =  lab->d_totalwmmsLnErrorPredLabel;
           break;
 
           case TimeIntegratorStepType::Corrector:
@@ -291,6 +299,7 @@ namespace Uintah {
             ref_density              =  lab->d_refDensity_label;
             smmsExactSol             =  lab->d_totalsmmsExactSolLabel;
             smmsLnError              =  lab->d_totalsmmsLnErrorLabel;
+            time_multiplier          =  1.0;
             time_position_multiplier_after_average = 1.0;
             time_position_multiplier_before_average = 2.0;
             tke_out                  =  lab->d_totalKineticEnergyLabel;
@@ -300,7 +309,7 @@ namespace Uintah {
             vmmsExactSol             =  lab->d_totalvmmsExactSolLabel;
             vmmsLnError              =  lab->d_totalvmmsLnErrorLabel;
             wmmsExactSol             =  lab->d_totalwmmsExactSolLabel;
-
+            wmmsLnError = lab->d_totalwmmsLnErrorLabel;
           break;
 
           case TimeIntegratorStepType::OldCorrector:
@@ -327,6 +336,7 @@ namespace Uintah {
             ref_density              =  lab->d_refDensity_label;
             smmsExactSol             =  lab->d_totalsmmsExactSolLabel;
             smmsLnError              =  lab->d_totalsmmsLnErrorLabel;
+            time_multiplier          =  1.0;
             time_position_multiplier_after_average = 1.0;
             time_position_multiplier_before_average = 1.0;
             tke_out                  =  lab->d_totalKineticEnergyLabel;
@@ -336,7 +346,7 @@ namespace Uintah {
             vmmsExactSol             =  lab->d_totalvmmsExactSolLabel;
             vmmsLnError              =  lab->d_totalvmmsLnErrorLabel;
             wmmsExactSol             =  lab->d_totalwmmsExactSolLabel;
-
+            wmmsLnError              =  lab->d_totalwmmsLnErrorLabel;
           break;
 
           case TimeIntegratorStepType::CorrectorRK3:
@@ -363,6 +373,7 @@ namespace Uintah {
             ref_density              =  lab->d_refDensity_label;
             smmsExactSol             =  lab->d_totalsmmsExactSolLabel;
             smmsLnError              =  lab->d_totalsmmsLnErrorLabel;
+            time_multiplier          =  1.0;
             time_position_multiplier_after_average = 1.0;
             time_position_multiplier_before_average = 1.5;
             tke_out                  =  lab->d_totalKineticEnergyLabel;
@@ -372,6 +383,7 @@ namespace Uintah {
             vmmsExactSol             =  lab->d_totalvmmsExactSolLabel;
             vmmsLnError              =  lab->d_totalvmmsLnErrorLabel;
             wmmsExactSol             =  lab->d_totalwmmsExactSolLabel;
+            wmmsLnError              =  lab->d_totalwmmsLnErrorLabel;
           break;
 
           case TimeIntegratorStepType::Intermediate:
@@ -398,6 +410,7 @@ namespace Uintah {
             ref_density              =  lab->d_refDensityInterm_label;
             smmsExactSol             =  lab->d_totalsmmsExactSolIntermLabel;
             smmsLnError              =  lab->d_totalsmmsLnErrorIntermLabel;
+            time_multiplier          =  1.0;
             time_position_multiplier_after_average = 0.5;
             time_position_multiplier_before_average = 2.0;
             tke_out                  =  lab->d_totalKineticEnergyIntermLabel;
@@ -407,6 +420,7 @@ namespace Uintah {
             vmmsExactSol             =  lab->d_totalvmmsExactSolIntermLabel;
             vmmsLnError              =  lab->d_totalvmmsLnErrorIntermLabel;
             wmmsExactSol             =  lab->d_totalwmmsExactSolIntermLabel;
+            wmmsLnError              =  lab->d_totalwmmsLnErrorIntermLabel;
           break;
 
           case TimeIntegratorStepType::BEEmulation1:
@@ -433,6 +447,7 @@ namespace Uintah {
             ref_density              =  lab->d_refDensityPred_label;
             smmsExactSol             =  lab->d_totalsmmsExactSolPredLabel;
             smmsLnError              =  lab->d_totalsmmsLnErrorPredLabel;
+            time_multiplier          =  1.0;
             time_position_multiplier_after_average = 1.0;
             time_position_multiplier_before_average = 1.0;
             tke_out                  =  lab->d_totalKineticEnergyPredLabel;
@@ -442,6 +457,7 @@ namespace Uintah {
             vmmsExactSol             =  lab->d_totalvmmsExactSolPredLabel;
             vmmsLnError              =  lab->d_totalvmmsLnErrorPredLabel;
             wmmsExactSol             =  lab->d_totalwmmsExactSolPredLabel;
+            wmmsLnError              =  lab->d_totalwmmsLnErrorPredLabel;
           break;
 
           case TimeIntegratorStepType::BEEmulation2:
@@ -468,6 +484,7 @@ namespace Uintah {
             ref_density              =  lab->d_refDensityInterm_label;
             smmsExactSol             =  lab->d_totalsmmsExactSolIntermLabel;
             smmsLnError              =  lab->d_totalsmmsLnErrorIntermLabel;
+            time_multiplier          =  1.0;
             time_position_multiplier_after_average = 1.0;
             time_position_multiplier_before_average = 1.0;
             tke_out                  =  lab->d_totalKineticEnergyIntermLabel;
@@ -477,6 +494,7 @@ namespace Uintah {
             vmmsExactSol             =  lab->d_totalvmmsExactSolIntermLabel;
             vmmsLnError              =  lab->d_totalvmmsLnErrorIntermLabel;
             wmmsExactSol             =  lab->d_totalwmmsExactSolIntermLabel;
+            wmmsLnError              =  lab->d_totalwmmsLnErrorIntermLabel;
           break;
 
           case TimeIntegratorStepType::BEEmulation3:
@@ -503,6 +521,7 @@ namespace Uintah {
             ref_density              =  lab->d_refDensity_label;
             smmsExactSol             =  lab->d_totalsmmsExactSolLabel;
             smmsLnError              =  lab->d_totalsmmsLnErrorLabel;
+            time_multiplier          =  1.0;
             time_position_multiplier_after_average = 1.0;
             time_position_multiplier_before_average = 1.0;
             tke_out                  =  lab->d_totalKineticEnergyLabel;
@@ -512,6 +531,7 @@ namespace Uintah {
             vmmsExactSol             =  lab->d_totalvmmsExactSolLabel;
             vmmsLnError              =  lab->d_totalvmmsLnErrorLabel;
             wmmsExactSol             =  lab->d_totalwmmsExactSolLabel;
+            wmmsLnError              =  lab->d_totalwmmsLnErrorLabel;
           break;
 
           default: 
