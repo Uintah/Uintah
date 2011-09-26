@@ -6,6 +6,7 @@
 \usepackage{chapterbib}
 \usepackage{hyperref}
 \usepackage{wrapfig}
+\usepackage{subfig}
 
 \pdfcompresslevel=9
 \DeclareGraphicsExtensions{{.png},{.pdf},{.jpg},{jpeg}}
@@ -57,17 +58,17 @@
 
 \newpage
 
-\section{Overview of Uintah} \label{sec:overview}
-The \textbf{Uintah} library is composed of several executables and a
-generic library framework for solving PDEs on structured AMR grids on
-large parallel supercomputers. The \textbf{\emph{VisIt}} and
-\textbf{\emph{Teem}} applications are used to visualize data generated
-from \textbf{Uintah}.
+\section{Overview of Uintah} \label{sec:overview} The \textbf{Uintah}
+library is composed of several executables and a generic library
+framework for solving PDEs on structured AMR grids on large parallel
+supercomputers. The \textbf{\emph{VisIt}} and \textbf{\emph{Teem}}
+applications are used to visualize data generated from
+\textbf{Uintah}.
 
 \subsection{Obtaining the Code}
 Uintah can be obtained either as a compressed tarball from
-\url{http://www.uintah.utah.edu/trac/chrome/site/uintah.tar.gz} or by using
-Subversion (SVN) to download the latest source code:
+\url{http://www.uintah.utah.edu/trac/chrome/site/uintah.tar.gz} or by
+using Subversion (SVN) to download the latest source code:
 
 \begin{verbatim}
 svn co https://gforge.sci.utah.edu/svn/uintah/trunk uintah
@@ -83,8 +84,8 @@ directory.
 If \textbf{Uintah} is installed on a workstation and one wants to
 visualize the data generated, the visualization tools
 \textbf{\emph{VisIt}} and \textbf{\emph{Teem}} should be installed
-prior to installation of \textbf{Uintah}.  The configure script used by
-\textbf{Uintah} depends on the presence of these libraries.
+prior to installation of \textbf{Uintah}.  The configure script used
+by \textbf{Uintah} depends on the presence of these libraries.
 
 However, if \textbf{Uintah} is installed on a supercomputer, the
 visualization tools do not need to be installed prior to installation
@@ -108,9 +109,9 @@ The installation procedure follows the basic outline:
 
 \section{Generic Library Dependencies}
 
-\textbf{Uintah} depends on several different libraries that are commonly
-available or easily installable on various Linux or Unix like OS
-distributions.  
+\textbf{Uintah} depends on several different libraries that are
+commonly available or easily installable on various Linux or Unix like
+OS distributions.
 
 Required libraries:
 \begin{itemize}
@@ -152,7 +153,7 @@ exception of VisIt and Teem.  Either one of these distributions are
 the recommended OS to install.
 
 Installing the following libraries will ensure that all dependencies
-required for \textbf{Uintah} are satisfied: 
+required for \textbf{Uintah} are satisfied:
 
 \begin{verbatim} 
 sudo aptitude install subversion libhypre-dev petsc-dev \ 
@@ -213,8 +214,9 @@ See: \url{http://wiki.debian.org/NvidiaGraphicsDrivers#Libraries} for additional
 \textbf{Fedora Core} \url{http://fedoraproject.org/} offers all the
 dependencies except for PETSc and HYPRE.  Install the following
 libraries:
+
 \begin{verbatim}
-sudo yum install openmpi-devel openmpi-libs lapack-devel \
+sudo yum install make openmpi-devel openmpi-libs lapack-devel \
 gcc-gfortran blas-devel gcc-c++ libxml2-devel subversion \ 
 make tar diffutils libX11-devel libXext-devel patch wget \
 mesa-libGL-devel mesa-libGLU-devel libXt-devel 
@@ -227,8 +229,20 @@ mesa-libGL-devel mesa-libGLU-devel libXt-devel
 Core} 
 
 \begin{verbatim}
-sudo yum install openmpi-devel openmpi-libs lapack-devel \
+sudo zypper install make openmpi-devel openmpi-libs lapack-devel \
 gcc-gfortran blas-devel gcc-c++ libxml2-devel subversion \ 
+make tar diffutils libX11-devel libXext-devel patch wget \
+mesa-libGL-devel mesa-libGLU-devel libXt-devel 
+\end{verbatim} 
+
+\subsection{OpenSuse  Dependencies}
+
+\textbf{OpenSuse} \url{http://www.centos.org/} is similar to
+\textbf{Fedora Core}
+
+\begin{verbatim}
+sudo yum install make openmpi-devel openmpi-libs lapack \
+gcc-gfortran blas gcc-c++ libxml2-devel subversion \ 
 make tar diffutils libX11-devel libXext-devel patch wget \
 mesa-libGL-devel mesa-libGLU-devel libXt-devel 
 \end{verbatim} 
@@ -243,21 +257,43 @@ installation instructions if you encounter any difficulties.
 Download petsc-v3.1-p8 from
 \url{http://www.mcs.anl.gov/petsc/petsc-as/download/index.html}
 
-The following configure script assumes the location of MPI is in
-/usr/local/openmpi using the Fedora Core OS.  For other OS
-distributions, the location of the MPI libraries may be found
-automatically.
+\subsection{Fedora \& CentOS}
+
+The following configure script assumes the location of MPI libaries
+are in \texttt{/usr/lib64/openmpi/lib}.  Note that the
+\texttt{LD\_LIBRARY\_PATH} must be set.  It is helpful to include the
+\texttt{/usr/lib/64/openmpi/bin} in your path for the location of
+mpirun and mpiCC, mpicc, and mpif77.
 
 \begin{Verbatim}
-tar zxf petsc-3.0.0.tar.gz
-cd petsc-3.0.0-p7
+tar zxf petsc-3.1-p8.tar.gz
+cd petsc-3.1-p8
+export PETSC_DIR=$PWD
+export PETSC_ARCH=gnu-linux
 
-./config/configure.py --with-shared --with-debugging=0 \ 
---with-mpi-dir=/usr/local/openmpi/ --prefix=/usr/local/petsc
+LD_LIBRARY_PATH=/usr/lib64/openmpi/lib \
+./config/configure.py --with-shared \
+--with-debugging=O \
+--with-mpi-dir=/usr/lib64/openmpi
 
 make all
 make install
 \end{Verbatim}
+
+\subsection{OpenSuse}
+
+\begin{Verbatim}
+tar zxf petsc-3.1-p8.tar.gz
+cd petsc-3.1-p8
+export PETSC_DIR=$PWD
+export PETSC_ARCH=gnu-linux
+
+./config/configure.py --with-shared --with-debugging=0 
+
+make all
+make install
+\end{Verbatim}
+
 
 \section{Hypre Installation}
 
@@ -268,43 +304,48 @@ hypre website for troubleshooting.
 Download hypre-2.7.0b from
 \url{https://computation.llnl.gov/casc/hypre/software.html}
 
-If installing hypre on a 64bit platform, hypre must be modified to add
-the -fPIC compile option.  After unpacking the hypre tar file, edit
-the Makefile in \tt hypre-2.7.0b/src/lapack \normalfont and add the
--fPIC to line 128.  It should look like the following:
+\subsection{Fedora \& CentOS}
 
-\emph{Note: This may have been fixed... if there is
-  '${SHARED\_COMPILE\_FLAG}$' on the compile line, then it should be good
-to go.}
+The following configure script assumes the location of MPI libaries
+are in \texttt{/usr/lib64/openmpi/lib}.  Note that the
+\texttt{LD\_LIBRARY\_PATH} must be set.  It is helpful to include the
+\texttt{/usr/lib/64/openmpi/bin} in your path for the location of
+mpirun and mpiCC, mpicc, and mpif77.
 
-\begin{verbatim}
-${CC} -c -fPIC dlamch.c
-\end{verbatim}
-
-\emph{Note: However, it looks like another problem may have been
-  introduced.  /src/FEI\_mv/SuperLU/SRC/Makefile line 209
-  ${SHARED\_COMPILE\_FLAG}$ needs to be added to the superlutimer.o
-  build line.
-}
-
-Depending on the location of the MPI libraries, i.e. location of mpi.h
-and libmpi.so, the configure line for hypre should look like this:
-
-For *nix:
 
 \begin{verbatim}
 cd hypre-2.7.0b/src
 
-./configure \
-  --enable-shared \
-  --with-MPI-include=/usr/local/openmpi/include \
-  --with-MPI-lib-dirs=/usr/local/openmpi/lib \
-  --with-MPI-libs="mpi pmpi util" \
-  CFLAGS=-DMPIPP_H CXXFLAGS=-DMPIPP_H \
-  --prefix=/usr/local
+LD_LIBRARY_PATH=/usr/lib64/openmpi/lib/ \
+ ./configure --enable-shared \
+ --with-MPI-lib-dirs=/usr/lib64/openmpi/lib/ \
+--with-MPI-include=/usr/include/openmpi-x86_64/ \
+--with-MPI-libs="mpi mpi_cxx" \
+CC=/usr/lib64/openmpi/bin/mpicc \
+ CXX=/usr/lib64/openmpi/bin/mpic++ \
+ F77=/usr/lib64/openmpi/bin/mpif77
+
+make
+
 \end{verbatim}
 
-For OSX (Macs):
+\subsection{OpenSuse}
+
+\begin{verbatim}
+
+cd hypre-2.7.0b/src
+
+./configure --enable-shared \
+  --with-MPI-libs="mpi mpi_cxx" \
+  CC=/usr/lib64/mpi/gcc/openmpi/bin/mpicc \
+  CXX=/usr/lib64/mpi/gcc/openmpi/bin/mpic++ \
+  F77=/usr/lib64/mpi/gcc/openmpi/bin/mpif77
+
+make
+
+\end{verbatim}
+
+\subsection{For OSX (Macs)}
 
 \begin{verbatim}
 cd hypre-2.7.0b/src
@@ -320,9 +361,9 @@ cd hypre-2.7.0b/src
 \end{verbatim}
 
 (Note, under OSX, you will not be builing a shared library version of
-Hypre.  Also, the 'FLIBS' line is required for use with some 
-gfortran compilers as they try to use crt1.10.5.o (which causes
-duplicate symbol errors).)
+Hypre.  Also, the 'FLIBS' line is required for use with some gfortran
+compilers as they try to use crt1.10.5.o (which causes duplicate
+symbol errors).)
 
 \begin{verbatim}
 make
@@ -353,13 +394,13 @@ the Uintah team.
 
 \emph{Note, Teem is only needed for UdaToNrrd (which is used to
   translate UDA into NRRD files for visualization with the Manta or
-  RTRT ray tracers.  Users of VisIt do not need to install Teem.}
+  RTRT ray tracers.  Users of \textbf{\emph{VisIt}} do not need to install Teem.}
 
 Download Teem from
 \url{http://teem.sourceforge.net/download/index.html}.  Teem uses
 CMake to configure the build system. Installation instructions for
-Teem are found at \url{http://teem.sourceforge.net/build.html}.  Simplified
-instructions are as follows:
+Teem are found at \url{http://teem.sourceforge.net/build.html}.
+Simplified instructions are as follows:
 
 \begin{verbatim}
 tar zxf teem-1.10.0-src.tar.gz
@@ -391,272 +432,137 @@ ln -s ../lib/libteem.so libteem.so
 
 \subsection{VisIt Installation}
 
-The latest official release of VisIt is 2.1.0.  The VisIt build system
-has been changed to CMake, so building the UDA reader plugin for
-previous versions of VisIt (1.x) will no longer be supported, and
-CMake is now also required to build the plugin.
-
+The latest official release of \textbf{\emph{VisIt}} is 2.3.2.
+However, the instructions apply to earlier versions such as 2.2.X.
 The UDA reader plugin must be built against an installed version of
-VisIt.  VisIt can be installed either from one of their binary
-distributions, or by compiling and installing it from source.
-Building the plugin against a VisIt source tree no longer works.
-Building VisIt from source may include fixes for bugs in the official
-releases, but is much more complicated and time consuming.  You may
-also need to build VisIt from source if a binary is not provided for
-your exact OS and MPI versions.
-
-The VisIt source code is available two ways: a package for each
-official release, or from the svn repository maintained at NERSC.  The
-svn code may have bug fixes that are not in the official releases, but
-may have additional bugs and should not be considered stable.  The svn
-repository also includes all of the third party libraries that VisIt
-requires.  The script used to build VisIt is setup to automatically
-download these dependencies, but often fails.  In is highly
-recommended to NOT use the SVN version of VisIt, but instead us one of
-the official tarball releases.
+\textbf{\emph{VisIt}}.  \textbf{\emph{VisIt}} can be installed either
+from one of their binary distributions, or by compiling and installing
+it from source.  You may also need to build \textbf{\emph{VisIt}} from
+source if a binary is not provided for your exact OS and MPI versions
+and is the recommended installation method outlined below.
 
 \subsubsection{Caveats}
 \label{subsec:VisIt_Caveats}
 \begin{itemize}
-\item If you are upgrading to 2.1 from an earlier version of VisIt
-  (1.x or 2.0 beta), remove your uintah/build/VisIt directory before
-  rerunning uintah's configure script, so it gets regenerated for the
-  updated version of VisIt.
-\item Before you install VisIt, a number of dependency files are
-  required.  These include X11, GL, GLU, GLX, and libz libraries (it
-  is possible that you will find these libraries in the following
-  rpms: libx11-dev, libxext-dev, libxt-dev, libglu, zlib-dev -- notice
-  that most of these are the 'development' rpm).  You can either
-  install these directly and hope you get them right, or you can
-  install the files listed here~\ref{sec:debian_dependencies} (which
-  will hopefully pull in all the libraries that you need).
+\item Before you install \textbf{\emph{VisIt}}, a number of dependency
+  files are required.  These include X11, GL, GLU, GLX, and libz
+  libraries (it is possible that you will find these libraries in the
+  following rpms: libx11-dev, libxext-dev, libxt-dev, libglu, zlib-dev
+  -- notice that most of these are the 'development' rpm).  You can
+  either install these directly and hope you get them right, or you
+  can install the files listed here~\ref{sec:debian_dependencies}
+  (which will hopefully pull in all the libraries that you need).
 \item MPI must be installed and the MPI compilers (mpicc, etc) must be
   in your path.
-\item The VisIt executable is not relocatable once it is built, so
-  make sure you specify the correct installation location in the
-  beginning.
-\item Building VisIt from scratch can take a while.  As mentioned
-  below, you can \begin{verbatim}tail -f build_visit_log\end{verbatim}
-  to watch the progress.
+\item The \textbf{\emph{VisIt}} executable is not relocatable once it
+  is built, so make sure you specify the correct installation location
+  in the beginning.
+\item Building \textbf{\emph{VisIt}} from scratch can take a while.
+  As mentioned below, you can \begin{verbatim}tail -f
+    build_visit_log\end{verbatim} to watch the progress.
+\item If you are having problems please check the Uintah wiki page on
+  building \textbf{\emph{VisIt}}
+  (\url{http://www.uintah.utah.edu/trac/wiki/visit}).
 
 \end{itemize}
 
-\subsubsection{Prebuilt binaries}
-\label{subsec:PrebuiltBinaries}
 
-VisIt binary distributions consist of two files: a tarball and a
-install script, which are available from
-https://wci.llnl.gov/codes/visit/executables.html.  Download both to
-the same directory.  The tarball does not need to be extracted -- the
-install script will do all of the work for you.  The syntax for the
-install script is:
-\begin{verbatim}
-visit-install version platform directory
-\end{verbatim}
 
-The version and platform should be apparent from the name of the
-tarball.  You may need to make the script executable, and may need to
-run it as root, depending on what directory you are installing it to.
-For example, the 2.1.0 release for Ubuntu could be installed with:
-\begin{verbatim}
-chmod +x visit-install
-./visit-install 2.1.0 linux-x86_64-ubuntu8 ``visit_bin_dir''
-\end{verbatim}
-
-If you are installing version 2.1.0, there was a bug in the release that
-hard codes an incorrect path to gcc and g++.  To fix it, open the file:
-\begin{verbatim}
-emacs ``visit_bin_dir''/2.1.0/``platform''/include/PluginVsInstall.cmake
-\end{verbatim}
-
-Comment out the following lines near the top of the file:
-\begin{verbatim}
-# Force the same compiler as VisIt
-SET(CMAKE_C_COMPILER /home/js9/bin/gcc)
-SET(CMAKE_CXX_COMPILER /home/js9/bin/g++)
-\end{verbatim}
-
-\subsubsection{Building from source}
-\label{subsec:VisItVersion2_Build}
-
-There are two ways to get the source for VisIt: download a packaged version from
-the VisIt webpage, or checkout a copy from the NERSC repository.
-
-\subsubsection{Downloading VisIt Tarball}
+\subsubsection{Using the ``build\_visit'' Script to Build VisIt}
 \label{subsec:VisItVersion2_tarball}
 
-If using a packaged version, download the source tarball (version 2.1
-or later) and the build\_visit script from
-https://wci.llnl.gov/codes/visit/source.html.  Extract the tarball,
-make a build directory inside the visit directory, and copy
-build\_visit into it:
+\begin{enumerate}
+\item Download the build\_visit script from
+  \url{https://wci.llnl.gov/codes/visit/source.html}.
 
+
+
+\item Change the mode of the build\_visit script so it can execute, and
+  copy it to a VISIT directory (calling it Visit\_2.3.2 in the
+  following description) where you will build the VisIT source code:
 \begin{verbatim}
-tar xzf visit2.1.0.tar.gz
-cd visit2.1.0
-mkdir build
-cd build
-cp ../src/svn_bin/build_visit .
-chmod +x build_visit
+mkdir ~/Visit_2.3.2
+cp build_visit_2.3.2 Visit_2.3.2
+cd Visit_2.3.2
+chmod +x build_visit_2.3.2
 \end{verbatim}
 
-The packaged VisIt source code includes code to generate example data
-files for testing, but building them often fails.  To avoid building them,
-delete or rename the data directory:
+\item Build the VisIT source (after it downloads everything) using two
+  processors (use the number of available processors on your
+  machine). This will take a long time since all the prerequisite
+  software will be downloaded and compiled. Select the 'parallel'
+  option when the script starts up. 
 
 \begin{verbatim}
-mv ../data ../data_ignore
+ ./build_visit_2.3.2 --makeflags -j2 
 \end{verbatim}
 
-\emph{NOTE, instructions continue below at ~\ref{subsec:VisItVersion2_common}.}
+\emph{NOTE: If you run into problems building QT, you can try setting
+  the environment variable LD\_LIBRARY\_PATH to the following}:
 
-\subsubsection{Downloading VisIt SVN}
-\label{subsec:VisItVersion2_svn}
+for csh users:
+\begin{verbatim}
+setenv LD_LIBRARY_PATH complete_path_to/qt-everywhere-opensource-src-4.6.1/lib
+\end{verbatim}
 
-\emph{Please use the most recent VisIt release tarball instead of
-  building from SVN unless there is a good reason not to.}
+or
 
-If building from SVN source, check out the code from the SVN repository:
+for bash users:
+\begin{verbatim}
+export
+LD_LIBRARY_PATH=complete_path_to/qt-everywhere-opensource-src-4.6.1/lib
+\end{verbatim}
 
-\emph{Note, it can take a long time (several hours) to do the initial
-  check out.  Additionally, VisIt requires a lot of disk space (~7 GB
-  - ~2.4 GB for thirdparty libraries, ~6.8 GB for VisIt source code
-  and VisIt compilation, and ~364 MB for the installed directory),
-  so make sure you have enough. }
+where complete\_path\_to is the full path to the
+qt-everywhere-opensource-src-4.6.1/lib found in the Visit directory.
 
+Once this is set, you can start the build\_visit script again and it
+should pick up where it left off.
+
+\item After VisIT finishes building, go into the visit2.3.2/src
+  directory and make a binary distribution for it so it can be
+  installed.  
+\begin{verbatim}
+cd visit2.3.2/src
+ make package 
+\end{verbatim}
+
+Within the visit2.3.2/src directory there should be a gzip'ed tar
+file that can be installed in different location (VisIT must be
+installed in order to compile and build the UDA reader plugin to
+visualize Uintah data), i.e
 
 \begin{verbatim}
-mkdir ``visit_src_dir''
-cd ``visit_src_dir'' 
-svn co http://portal.nersc.gov/svn/visit/trunk/ .
+ls visit2.3.2/src
+ . . . 
+ visit2_3_2.linux-x86_64.tar.gz
+ . . .
 \end{verbatim}
 
-Just as with the packaged source, we will create a build directory in 
-the VisIt directory, and copy build\_visit into it.  In this case,
-the build\_visit script is inculded in the svn source code:
+\item Copy the gzip'd tar file to another location and install VisIT
+  (using the visit-install script found in
+  Visit\_2.3.2/visit2.3.2/src/svn\_bin/visit-install) in the directory
+  \emph{visit\_bin\_dir}.
 
 \begin{verbatim}
-mkdir build
-cd build
-cp ../src/svn_bin/build_visit .
-chmod +x build_visit
+cp visit2_3_2.linux-x86_64.tar.gz ~/
+cd ~/
+~/Visit_2.3.2/visit2.3.2/src/svn_bin/visit-install 2.3.2 linux-x86_64
+visit_bin_dir
 \end{verbatim}
 
-Copy the dependencies into the build directory. The build\_visit script
-will download them if needed, but will sometimes fail (particularly when
-building from svn source).  Copying them
-skips the downloading phase.  These dependencies are included in svn, but
-not in the source code packaged for the official releases.
+\item Use the following '--with-visit' configuration line when
+  configuring uintah. Use the full path name for the location of the
+  \emph{visit\_bin\_dir} directory.
 
 \begin{verbatim}
-cp ../third_party/*.tar.gz .
-cp ../third_party/*.tgz .
+
+    --with-visit=/full_path/visit_bin_dir/  --with-teem='location for
+teem'
+
 \end{verbatim}
 
-\subsubsection{Common Instructions}
-\label{subsec:VisItVersion2_common}
-
-The remaining directions are the same for both SVN and packaged builds.
-
-Run the 'build\_visit' script (Note, this just builds the VisIt dependency
-libraries.):
-
-\emph{Note, the following command will assume the generic compilers on
-  the system.  If you need specific compilers, then add '--cc gcc --cxx g++'.
-}
-
-\begin{verbatim}
-./build_visit --makeflags -j# --no-visit
-\end{verbatim}
-
-Note: An alternate simpler way (but less flexible) is mentioned at the end
-of this section.
-
-Replace '\#' with the number of processors you want to use.  This
-will launch the normal dialog window, where you should select
-the ``Parallel'' option.  (Use the arrow keys and the space bar.)
-
-By the end of this process, cmake will have generated a config file. It will
-be named ``your\_machine\_name''.cmake. Copy this into the
-``../src/config-site'' folder:
-
-\begin{verbatim}
-cp ``your_machine_name''.cmake ../src/config-site
-\end{verbatim}
-
-\emph{Note, on some machines, the log in node will change each time
-  you log in.  You must make sure the name of the (above) generated
-  machine.cmake file corresponds exactly to the machine you are
-  building on.}
-
-
-Before you run cmake, check your ``your\_machine\_name''.cmake
-and make sure that the VISIT\_MPI\_COMPILER variable is set, and add
-a line to set it if it isn't.  It should look something like this:
-
-\begin{verbatim}
-VISIT_OPTION_DEFAULT(VISIT_MPI_COMPILER /usr/bin/mpic++)
-\end{verbatim}
-
-Change directory to the ``src'' folder and run cmake (version 2.8 or
-later of CMake is required for VisIt 2.1).  Note, VisIt builds CMake for
-you, so if your system CMake isn't new enough, use the one
-in the VisIt 'build' directory.
-
-\emph{Note, the '.' at the end of the cmake command below is necessary!}
-
-\begin{verbatim}
-cd ../src
-../build/visit/cmake/2.8.0/linux-x86_64_gcc-4.4/bin/cmake \
- -DVISIT_PARALLEL:BOOL=ON \
- -DCMAKE_INSTALL_PREFIX:PATH=/path/to/``visit_bin_dir'' \
- .
-\end{verbatim}
-
-
-After the cmake process is over, run make:  (See below for
-information on common errors that occur during the 'make' process.)
-
-\begin{verbatim}
-make -j#
-make install
-\end{verbatim}
-
-where '\#' is the number of processors to use while building.  You
-may need to be root to install it, depending on where your
-``visit\_bin\_dir'' is.
-
-As usual, cross your fingers. If everything goes fine, you can find
-the visit executable in ``visit\_bin\_dir''/bin.
-
-\emph{WARNING: A bug in the VisIt make system was fixed in version 2.2.2, 
-for earlier versions you will have to manually update
-/path/to/installation/2.0.2/linux-x86\_64/include/PluginVsInstall.cmake
-and comment out these lines:}
-
-
-\begin{verbatim}
-# Force the same compiler as VisIt, if we can
-#IF(EXISTS /usr/bin/gcc4)
-#    SET(CMAKE_C_COMPILER /usr/bin/gcc4)
-#ENDIF(EXISTS /usr/bin/gcc4)
-#IF(EXISTS /usr/bin/g++4)
-#    SET(CMAKE_CXX_COMPILER /usr/bin/g++4)
-#ENDIF(EXISTS /usr/bin/g++4)
-\end{verbatim}
-
-And alternate way to build is to omit the --no-visit flag.  This will
-give the build script the okay to build visit.
-
-\begin{verbatim}
-./build_visit --makeflags -j#
-\end{verbatim}
-
-Once the script is finished you will need to package up the build.  
-This can be done by navigating to /path/to/build\_script/visit2.2.0/src.
-And running "make package".  This will package up the files into a tar
-file.  Once this is done the same instructions in 7.2.2 will work.  Just
-use visit-install to install the package to your desired location.
+\end{enumerate}
 
 
 \subsubsection{Parallel OS X build}
@@ -687,7 +593,7 @@ by hand. The instructions for doing this are carefully outlined in the
 VisIt Build Notes file,
 
 \begin{verbatim}
-https://wci.llnl.gov/codes/visit/2.1.0/BUILD_NOTES
+https://wci.llnl.gov/codes/visit/2.3.2/BUILD_NOTES
 \end{verbatim}
 
 \subsubsection{VisIt executable}
@@ -731,26 +637,6 @@ of) \textasciitilde/.visit. When VisIt is run, it will find the plugin
 and allow for reading UDA's.
 
 
-There is a configure error that occurs when CMake is unable to find the
-right compilers when building the plugin.  An infinite loop will result
-as a consequence of this error.  If the error:
-
-\begin{verbatim}
-You have changed variables that require your cache to be deleted.
-Configure will be re-run and you may have to reset some variables.
-The following variables have changed:
-CMAKE_CXX_COMPILER= g++
-\end{verbatim}
-
-\noindent or a similar error occurs (this is a snippet of the output), you will 
-need to explicitly point the \textbf{Uintah} CC and CXX flags to gcc 
-and g++.  Example, add something similar to:
-
-\begin{verbatim}
-CC=/path/to/gcc CXX=/path/to/g++
-\end{verbatim}
-
-\noindent to the configure line. 
 
 \subsubsection{Remote visualization}
 In order to read data on a remote machine, you will need to have a
@@ -768,16 +654,31 @@ machine. Select 'Host Profiles' from the 'Options' menu and set up a
 new profile as shown in figure ~\ref{VisItHostProfile}.
 
 
+% \begin{wrapfigure}{r}{.50\textwidth}
+
+% %\begin{figure}
+%   \vspace{-30pt}
+%   \begin{center}
+%     \includegraphics[width=.425\textwidth]{VisItHostProfile.png}
+%   \end{center}
+%   \vspace{-20pt}
+%   \caption{Setting up Host Profile}
+%   \vspace{-30pt}
+%   \label{VisItHostProfile}
+% %\end{figure}
+
+% \end{wrapfigure}
+
+
 \begin{wrapfigure}{r}{.50\textwidth}
 
 %\begin{figure}
-  \vspace{-30pt}
+   \vspace{-25pt}
   \begin{center}
     \includegraphics[width=.425\textwidth]{VisItHostProfile.png}
   \end{center}
-  \vspace{-20pt}
   \caption{Setting up Host Profile}
-  \vspace{-10pt}
+   \vspace{-20pt}
   \label{VisItHostProfile}
 %\end{figure}
 
@@ -790,20 +691,49 @@ through SSH' option. This is illustrated in
 figure~\ref{VisItHostProfileAdv}. Click on 'Apply' and then do a 'Save
 Settings' in the 'Options' menu on the gui.
 
-\begin{wrapfigure}{r}{.50\textwidth}
+% \begin{wrapfigure}{r}{.50\textwidth}
 
-%\begin{figure}
-  \vspace{-30pt}
-  \begin{center}
-    \includegraphics[width=.5\textwidth]{VisItHostProfileAdv.png}
-  \end{center}
-  \vspace{-20pt}
-  \caption{Setting up advanced options}
+% %\begin{figure}
+%   \vspace{-30pt}
+%   \begin{center}
+%     \includegraphics[width=.5\textwidth]{VisItHostProfileAdv.png}
+%   \end{center}
+%   \vspace{-20pt}
+%   \caption{Setting up advanced options}
+%   \vspace{-10pt}
+%   \label{VisItHostProfileAdv}
+% %\end{figure}
+
+% \end{wrapfigure}
+
+% \begin{wrapfigure}{r}{.50\textwidth}
+
+% \begin{figure}
+
+%   \begin{center}
+%     \includegraphics[width=.5\textwidth]{VisItHostProfileAdv.png}
+%   \end{center}
+
+%   \caption{Setting up advanced options}
+
+%   \label{VisItHostProfileAdv}
+% \end{figure}
+
+% \end{wrapfigure}
+
+\begin{figure}[h]
+  \centering
+  \vspace{5pt}
+  \subfloat[Setting up advance options]{\label{VisItHostProfileAdv}
+    \includegraphics[width=.5\textwidth]{VisItHostProfileAdv.png}}
+  \hspace{20pt}
+  \subfloat[Setting up advance options]{\label{VisItHostProfileAdv2}
+    \includegraphics[width=.5\textwidth]{VisItHostProfileAdv2.png}}
+  \caption{}
   \vspace{-10pt}
-  \label{VisItHostProfileAdv}
-%\end{figure}
+  \label{}
+\end{figure}
 
-\end{wrapfigure}
 
 For the remote visualization option to work, you must have ports 5600
 - 5609 open. You can try this by running the following on your local
@@ -813,24 +743,26 @@ desktop (on Linux distributions),
 traceroute -p 560[0-9] <remote machine>
 \end{verbatim}
 
+%\begin{wrapfigure}{r}{.50\textwidth}
+
+% \begin{figure}
+%   \vspace{-30pt}
+%   \begin{center}
+%     \includegraphics[width=.5\textwidth]{VisItHostProfileAdv2.png}
+%   \end{center}
+%   \vspace{-20pt}
+%   \caption{Setting up advanced options}
+%   \vspace{-10pt}
+%   \label{VisItHostProfileAdv2}
+% \end{figure}
+
+%\end{wrapfigure}
+
+
 If the tunneling option doesn't works, try the option as shown in
 figure~\ref{VisItHostProfileAdv2}.
 
 
-\begin{wrapfigure}{r}{.50\textwidth}
-
-%\begin{figure}
-  \vspace{-30pt}
-  \begin{center}
-    \includegraphics[width=.5\textwidth]{VisItHostProfileAdv2.png}
-  \end{center}
-  \vspace{-20pt}
-  \caption{Setting up advanced options}
-  \vspace{-10pt}
-  \label{VisItHostProfileAdv2}
-%\end{figure}
-
-\end{wrapfigure}
 
 Now you should be able select 'Open' from VisIt's 'File' menu. After
 selecting your host from the host entry list, you will be prompted for
@@ -841,40 +773,6 @@ Once the ssh login has completed, you should see the directory
 listing. You can then change directories to your UDA and load the
 data.
 
-%VisIt has a build script which builds VisIt plus all of its dependencies.
-
-%The build script can be downloaded from
-%https://wci.llnl.gov/codes/visit/1.11.2/build\_visit
-
-%Make the build\_script executable:
-
-%\begin{verbatim}
-
-%chmod +x build\_script
-
-%\end{verbatim}
-
-%Create a directory for VisIt and launch the build\_script using four
-%processors (-j4):
-
-%\begin{verbatim}
-
-%mkdir VisIt
-
-%cp build\_script VisIt
-
-%cd VisIt
-
-%./build\_script --makeflags '-j4'
-
-%\end{verbatim}
-
-%The build\_visit script will launch a GUI.  Use the space key to
-%unselect the Optional and then scroll down to the Parallel option and
-%select that.  The GUI will determine the location of the MPI libraries
-%and then start the build process.  All source files will be downloaded
-%and installed in the ~/VisIt/visit1.11.2 directory.  The \tt visit
-%\normalfont executable is found in ~/VisIt/visit1.11.2/src/bin .
 
 % \subsection{Manta Installation}
 
@@ -937,10 +835,11 @@ running, it will create the \TT{configVars.mk} file which will include all
 the information it has determined about the computer.  The following
 lines show \textbf{generically} how to use ``configure''.
 
-cd to \TT{ \textasciitilde/uintah} and create the following directories:
+Goto the directory \TT{ \textasciitilde/uintah} and create the following directories:
 \TT{dbg} (debug) and \TT{opt} (optimized)
 
 \begin{verbatim}
+cd ~/uintah-1.4
 mkdir dbg opt
 \end{verbatim}
 
@@ -956,8 +855,6 @@ then do NOT use the \TT{--with-team} and \TT{--with-visit} shown below!)
           --with-visit=/home/user_name/VisIt/
 \end{verbatim}
 
-If building on a 64bit platform, append \TT{--enable-64bit} to the
-configure line.
 
 After the configuration process, type \TT{make} to compile Uintah.
 
