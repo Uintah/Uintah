@@ -93,7 +93,7 @@ namespace Wasatch{
                      const PatchInfoMap& info,
                      const bool createUniqueTreePerPatch,
                      const int rkStage,
-                     const std::set<std::string>& ioFieldSet_);
+                     const std::set<std::string>& ioFieldSet);
 
     ~TreeTaskExecute();
     
@@ -190,8 +190,7 @@ namespace Wasatch{
                       const Uintah::PatchSubset* const patches,
                       const Uintah::MaterialSubset* const materials,
                       const Expr::TagSet& newDWFields,
-                      const int rkStage,
-                      const std::set<std::string>& ioFieldSet)
+                      const int rkStage)
   {
     // this is done once when the task is scheduled.  The purpose of
     // this method is to collect the fields from the ExpressionTree
@@ -234,8 +233,7 @@ namespace Wasatch{
         // see if this field is required by the given tree
         const Expr::Tag fieldTag( fieldInfo.varlabel->getName(), fieldInfo.context );
         if( !tree.has_field( fieldTag ) )  continue;
-        fieldInfo.isIO = ( ioFieldSet.find(fieldInfo.varlabel->getName()) != ioFieldSet.end())? true : false ;
-        //std::cout << "Field Name: " << fieldInfo.varlabel->getName() << "\t IO: " << fieldInfo.isIO << std::endl;
+
         //________________
         // set field mode 
         if( tree.computes_field( fieldTag ) ){
@@ -329,6 +327,7 @@ namespace Wasatch{
   void
   TreeTaskExecute::schedule( Expr::TagSet newDWFields, const int rkStage )
   {
+    std::cout << " I AM SCHEDULING TASK \n";
     ASSERT( !hasBeenScheduled_ );
 
 #   ifdef WASATCH_TASK_DIAGNOSTICS
@@ -357,7 +356,7 @@ namespace Wasatch{
       }
     }
 
-    add_fields_to_task( *task, *tree, *fml_, pss, mss, newDWFields, rkStage, ioFieldSet_ );
+    add_fields_to_task( *task, *tree, *fml_, pss, mss, newDWFields, rkStage );
 
     // jcs eachPatch vs. allPatches (gang schedule vs. independent...)
     scheduler_->addTask( task, patches_, materials_ );
@@ -419,6 +418,28 @@ namespace Wasatch{
 //                     << endl;
 
 //     fml_->dump_fields(cout);
+          
+          //______________________________
+          // check which fields are IO fields
+          for( Expr::FieldManagerList::iterator ifm=fml_->begin(); ifm!=fml_->end(); ++ifm ){
+            
+            typedef Expr::FieldManagerBase::PropertyMap PropertyMap;
+            PropertyMap& properties = (*ifm)->properties();
+            PropertyMap::iterator ipm = properties.find("UintahInfo");
+            assert( ipm != properties.end() );
+            Expr::IDInfoMap& infomap = boost::any_cast< boost::reference_wrapper<Expr::IDInfoMap> >(ipm->second);
+            
+            for( Expr::IDInfoMap::iterator ii=infomap.begin(); ii!=infomap.end(); ++ii ){
+              
+              Expr::FieldInfo& fieldInfo = ii->second;
+              // see if this field is required by the given tree
+              const Expr::Tag fieldTag( fieldInfo.varlabel->getName(), fieldInfo.context );
+              if( !tree->has_field( fieldTag ) )  continue;
+              // if this field belongs to the Ouput list, then set the fieldInfo accordingly
+              fieldInfo.isIO = ( ioFieldSet_.find(fieldInfo.varlabel->getName()) != ioFieldSet_.end())? true : false ;
+            } // field loop
+          } // fml loop
+  
           fml_->allocate_fields( Expr::AllocInfo( oldDW, newDW, material, patch, pg ) );
 
           if( hasPressureExpression_ ){
