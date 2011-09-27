@@ -222,7 +222,7 @@ PetscSolver::matrixCreate(const PatchSet* perproc_patches,
 void 
 PetscSolver::setMatrix(const ProcessorGroup* ,
                        const Patch* patch,
-                       constCCVariable<Stencil7>& coeff)
+                       CCVariable<Stencil7>& coeff)
 {
   int ierr = 0;
   int col[7];
@@ -270,6 +270,10 @@ PetscSolver::setMatrix(const ProcessorGroup* ,
       }
     }
   }
+
+  
+  
+  
 }
 // ****************************************************************************
 // Fill linear parallel RHS
