@@ -2302,7 +2302,7 @@ void MPMArches::scheduleMomExchange(SchedulerP& sched,
   // also, from mpmarches, void fraction
   // use old_dw since using at the beginning of the time advance loop
 
-  t->computes(d_Alab->d_cellInfoLabel);
+  t->computes(d_Alab->d_cellInfoLabel, arches_matls->getUnion());
 
   // use modified celltype
 
