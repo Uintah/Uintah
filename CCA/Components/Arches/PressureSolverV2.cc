@@ -86,6 +86,7 @@ PressureSolver::PressureSolver(ArchesLabel* label,
   d_linearSolver = 0; 
   d_construct_solver_obj = true; 
   d_iteration = 0;
+  d_indx = -9;
 }
 
 //______________________________________________________________________
@@ -792,21 +793,23 @@ PressureSolver::addHydrostaticTermtoPressure(const ProcessorGroup*,
     double gx = d_physicalConsts->getGravity(1);
     double gy = d_physicalConsts->getGravity(2);
     double gz = d_physicalConsts->getGravity(3);
-
+    
+    int indx = d_lab->d_sharedState->getArchesMaterial(0)->getDWIndex();
+    
     // Get the PerPatch CellInformation data
     PerPatch<CellInformationP> cellInfoP;
-    new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, d_indx, patch);
+    new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
     CellInformation* cellinfo = cellInfoP.get().get_rep();
     
     Ghost::GhostType  gn = Ghost::None;
-    old_dw->get(prel,     d_lab->d_pressurePSLabel,     d_indx, patch, gn, 0);
-    old_dw->get(denMicro, d_lab->d_densityMicroLabel,   d_indx, patch, gn, 0);
-    new_dw->get(cellType, d_lab->d_cellTypeLabel,       d_indx, patch, gn, 0);
-
+    old_dw->get(prel,     d_lab->d_pressurePSLabel,     indx, patch, gn, 0);
+    old_dw->get(denMicro, d_lab->d_densityMicroLabel,   indx, patch, gn, 0);
+    new_dw->get(cellType, d_lab->d_cellTypeLabel,       indx, patch, gn, 0);
+    
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First){
-      new_dw->allocateAndPut(pPlusHydro, d_lab->d_pressPlusHydroLabel, d_indx, patch);
+      new_dw->allocateAndPut(pPlusHydro, d_lab->d_pressPlusHydroLabel, indx, patch);
     }else{
-      new_dw->getModifiable(pPlusHydro,  d_lab->d_pressPlusHydroLabel, d_indx, patch);
+      new_dw->getModifiable(pPlusHydro,  d_lab->d_pressPlusHydroLabel, indx, patch);
     }
 
     //__________________________________
