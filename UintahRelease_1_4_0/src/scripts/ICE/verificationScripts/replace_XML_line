@@ -1,0 +1,38 @@
+#!/bin/csh
+#______________________________________________________________________
+#  Usage:  replace_XML_line <replacement Pattern> < filename>
+#
+#  This script reads in an XML file and replaces the line
+#  who's xml tag matches the replacment pattern xml tag.
+#______________________________________________________________________
+
+set replacePattern = "$argv[1]"  # replacement pattern
+set f              = $argv[2]  # filename
+
+if ( $#argv != 2) then
+  echo "Usage:  replace_XML_Line <replacement Pattern> < filename>
+  exit
+endif
+
+if (! -e $f || ! -f $f) then  
+  echo " file ($f) not found"
+  echo "Usage:  replace_XML_Line <replacement Pattern> < filename>"
+  exit
+endif
+
+# change </xmlTag>  to <\/xmlTag> so sed can use it
+echo "$replacePattern"> .tmp
+set replacePattern = `sed s/'\/'/"\\\/"/g .tmp`
+/bin/rm .tmp
+
+
+# find  xml tag
+set xml_tag = `echo "$replacePattern" |tr -d "<>/"|awk '{print $1}'`
+
+#do a line replacement
+cp $f $f.tmp
+sed s/"<$xml_tag>.*<\/$xml_tag>"/"$replacePattern"/g < $f.tmp >& $f
+
+/bin/rm $f.tmp 
+
+exit

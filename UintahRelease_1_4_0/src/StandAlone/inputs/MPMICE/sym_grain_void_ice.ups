@@ -1,0 +1,265 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- <!DOCTYPE Uintah_specification SYSTEM "input.dtd"> -->
+<Uintah_specification> 
+<!--Please use a consistent set of units, (mks, cgs,...)-->
+
+   <Meta>
+       <title>Compaction of grain with air void</title>
+   </Meta>
+
+   <SimulationComponent type="mpmice" />
+
+   <Time>
+       <maxTime>0.6</maxTime>
+       <initTime>0.0</initTime>
+       <delt_min>1.e-9</delt_min>
+       <delt_max>0.006</delt_max>
+       <delt_init>          0.00001     </delt_init>
+       <timestep_multiplier>.4</timestep_multiplier>
+   </Time>
+       <MPM>
+       <time_integrator>explicit</time_integrator>
+      </MPM>
+
+    <DataArchiver>
+      <filebase>grain_void_stif.uda</filebase>
+        <outputTimestepInterval> 50 </outputTimestepInterval>
+      <save label = "press_CC"/>
+      <save label = "vol_frac_CC"/>
+      <save label = "rho_CC"/>
+      <save label = "temp_CC"/>
+      <save label = "eng_L_ME_CC"/>
+      <save label = "p.x"/>
+      <save label = "p.volume"/>
+      <save label = "p.mass"/>
+      <save label = "p.temperature"/>
+      <save label = "g.mass" material = "4"/>
+      <save label = "g.stressFS" material = "4"/>
+      <save label = "vel_CC"/>
+        <checkpoint cycle = "2" timestepInterval = "500"/>
+    </DataArchiver>
+    <CFD>
+         <cfl>0.4</cfl>
+       <ICE>
+        <advection type = "FirstOrder" />
+      </ICE>        
+    </CFD>
+
+    <!--____________________________________________________________________-->
+    <!--     P  H  Y  S  I  C  A  L     C  O  N  S  T  A  N  T  S           -->
+    <!--____________________________________________________________________-->   
+    <PhysicalConstants>
+      <gravity>                         [0,0,0]         </gravity>
+      <reference_pressure>              1.01325         </reference_pressure>
+    </PhysicalConstants>
+
+    <MaterialProperties>
+       <MPM>
+         <material name = "Piston">
+                <density>1.9e8</density>
+                <constitutive_model type = "comp_neo_hook_plastic">
+                    <bulk_modulus>10.2e8</bulk_modulus>
+                    <shear_modulus>7.2e8</shear_modulus>
+                    <yield_stress>.27e8</yield_stress>
+                    <hardening_modulus>0.1e4</hardening_modulus>
+                    <alpha> 0.0 </alpha>
+                </constitutive_model>
+                <thermal_conductivity>.5e-7</thermal_conductivity>
+                <specific_heat>1.004e-5</specific_heat>
+              <geom_object>
+                  <box label = "Piston">
+                     <min>[-0.0025,-0.0025,0.0031]</min>
+                     <max>[ 0.0025, 0.0025,0.0034]</max>
+                  </box>
+                  <res>[2,2,2]</res>
+                  <velocity>[0.0,0.0,-0.1]</velocity>
+                  <temperature>300</temperature>
+              </geom_object>
+         </material>
+         <material name = "HMX">
+                <density>1.901e6</density>
+                <constitutive_model type = "comp_neo_hook_plastic">
+                    <bulk_modulus>10.2e6</bulk_modulus>
+                    <shear_modulus>7.2e6</shear_modulus>
+                    <yield_stress>.27e6</yield_stress>
+                    <hardening_modulus>0.1e4</hardening_modulus>
+                    <alpha> 0.0 </alpha>
+                </constitutive_model>
+                <thermal_conductivity>.5e-7</thermal_conductivity>
+                <specific_heat>1.004e-5</specific_heat>
+
+                <geom_object>
+                  <box label = "top grain">
+                     <min>[-0.0025,-0.0025,0.0025]</min>
+                     <max>[ 0.0025, 0.0025,0.0031]</max>
+                  </box>
+                  <res>[2,2,2]</res>
+                  <velocity>[0.0,0.0,-0.1]</velocity>
+                  <temperature>300</temperature>
+                </geom_object>
+         </material>
+         <material name = "HMX">
+               <density>1.902e6</density>
+                <constitutive_model type = "comp_neo_hook_plastic">
+                    <bulk_modulus>10.2e6</bulk_modulus>
+                    <shear_modulus>7.2e6</shear_modulus>
+                    <yield_stress>.27e6</yield_stress>
+                    <hardening_modulus>0.1e4</hardening_modulus>
+                    <alpha> 0.0 </alpha>
+                </constitutive_model>
+                <thermal_conductivity>.5e-7</thermal_conductivity>
+                <specific_heat>1.004e-5</specific_heat>
+              <geom_object>
+                <difference>
+                    <sphere label = "grain">
+                        <origin>[0.0,0.0,0.0  ]</origin>
+                        <radius>0.0025 </radius>
+                    </sphere>
+                    <sphere label = "void">
+                        <origin>[0.0,0.0,0.0  ]</origin>
+                        <radius>0.0005 </radius>
+                    </sphere>
+                </difference>
+                  <res>[2,2,2]</res>
+                  <velocity>[0.0,0.0,0]</velocity>
+                  <temperature>300</temperature>
+               </geom_object>
+         </material>
+
+           <contact>
+             <type>friction</type>
+             <materials>[0,1]</materials>
+             <mu> .5 </mu>
+           </contact>
+      </MPM>
+       <ICE>
+         <material name = "air">
+           <EOS type = "ideal_gas">                     </EOS>
+           <dynamic_viscosity>          0.0             </dynamic_viscosity>
+           <thermal_conductivity>       0.0             </thermal_conductivity>
+           <specific_heat>              716.0e-8        </specific_heat>
+           <gamma>                      1.4             </gamma>           
+           <geom_object>
+              <union>
+                <difference>
+                  <difference>
+                    <box label = "wholedomain+extracells">
+                        <min>             [-0.1,-0.1,-0.1]    </min>
+                         <max>             [ 0.1, 0.1, 0.1]    </max>
+                    </box>
+
+                    <box label = "top piston and slab">
+                      <min>[-0.0025,-0.0025,0.0025]</min>
+                      <max>[ 0.0025, 0.0025,0.0034]</max>
+                    </box>
+                  </difference>
+
+                   <sphere label = "grain">
+                     <origin>[0.0,0.0,0.0]</origin>
+                     <radius>0.0025 </radius>
+                   </sphere>
+
+                </difference>
+                      <sphere label = "void">
+                        <origin>[0.0,0.0,0.0]</origin>
+                        <radius>0.0005 </radius>
+                      </sphere>
+              </union>
+
+               <res>                      [2,2,2]        </res>
+               <velocity>           [0.0,0.0,0.0]     </velocity>
+               <temperature>        300.0             </temperature>
+              <density>            1179.294693       </density>
+               <pressure>           1.01325            </pressure>
+           </geom_object>
+         </material>
+      </ICE>       
+
+       <exchange_properties>
+         <exchange_coefficients>
+              <momentum>       [  0,   0, 1e20,   0,1e20,1e20] </momentum>
+              <heat>           [  0,   0,    0,   0,   0,   0]    </heat>
+          </exchange_coefficients>
+       </exchange_properties>
+    </MaterialProperties>
+       
+    <Grid>
+       <Level>
+           <Box label = "1">
+              <lower>[0.0,0.0,0.0]</lower>
+              <upper>[0.0035,0.0035,0.0035]</upper>
+                <extraCells>   [1,1,1]    </extraCells>
+              <patches>[1,1,1]</patches>
+              <resolution>[35,35,35]</resolution>
+           </Box>
+       </Level>
+    <BoundaryConditions>
+      <Face side = "x-">
+        <BCType id = "all"   label = "Symmetric" var = "symmetry">
+        </BCType>
+      </Face>
+      <Face side = "x+">
+        <BCType id = "0" var = "Neumann" label = "Pressure">
+                              <value> 0.0   </value>
+        </BCType>
+        <BCType id = "all" var = "Neumann" label = "Velocity">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "all" var = "Neumann" label = "Temperature">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" var = "Neumann" label = "Density">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" var = "computeFromDensity" label = "SpecificVol">
+                              <value> 0.0  </value>
+        </BCType>
+      </Face>
+      <Face side = "y-">
+        <BCType id = "all"   label = "Symmetric" var = "symmetry">
+        </BCType>
+      </Face>                  
+      <Face side = "y+">
+        <BCType id = "0" var = "Neumann" label = "Pressure">
+                              <value> 0.0   </value>
+        </BCType>
+        <BCType id = "all" var = "Neumann" label = "Velocity">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "all" var = "Neumann" label = "Temperature">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" var = "Neumann" label = "Density">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" var = "computeFromDensity" label = "SpecificVol">
+                              <value> 0.0  </value>
+        </BCType>
+      </Face>
+      <Face side = "z-">
+        <BCType id = "all"   label = "Symmetric" var = "symmetry">
+        </BCType>
+      </Face>                  
+      <Face side = "z+">
+        <BCType id = "0" var = "Neumann" label = "Pressure">
+                              <value>  0.0   </value>
+        </BCType>
+        <BCType id = "all" var = "Dirichlet" label = "Velocity">
+                              <value> [0.,0.,-0.1] </value>
+        </BCType>
+        <BCType id = "all" var = "Neumann" label = "Temperature">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" var = "Neumann" label = "Density">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" var = "computeFromDensity" label = "SpecificVol">
+                              <value> 0.0  </value>
+        </BCType>
+      </Face>
+    </BoundaryConditions>
+    </Grid>
+
+    
+</Uintah_specification>
+

@@ -1,0 +1,164 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- <!DOCTYPE Uintah_specification SYSTEM "input.dtd"> -->
+<!-- @version: Updated 7/31/00-->
+<Uintah_specification>
+
+   <Meta>
+	<title>MMS test problem for axisymmetric MPM</title>
+   </Meta>
+
+   <SimulationComponent type="mpm" />
+
+<!--
+This is an axisymmetric version of the ring problem described by
+Wallstedt and Guilkey in JCP,"An evaluation of explicit time integration
+schemes for use with the generalized interpolation material point method ",
+Volume 227, pp.9628Ã¢ÂÂ9642 2008.
+
+Note:  In order to use this input file effectively, some changes
+must be made to the source tree.  Specifically, one must change
+MPM/ParticleCreator/ParticleCreator.cc at about line 552 in rev. 42515:
+
++//  pvelocity[i]    = (*obj)->getInitialVelocity();
++  double r=p.x();
++  double ri = 0.5;
++  double ro = 1.0;
++  double A=.1;
++  double c=100.;
++  double c1=(-6*ri)/(ro*(ro-3.*ri));
++  double c2=(3*(ro+ri))/((ro*ro)*(ro-3.*ri));
++  double c3=(-2)/(ro*ro*(ro-3.*ri));
++   
++  pvelocity[i]    = Vector(c*M_PI*A*(1.)*(c3*r*r*r + c2*r*r + c1*r),0.,0.);
+
+MPM/ConstitutiveModel/CompNeoHook.cc, around line 277:
+
+       bElBar_new = deformationGradient_new[idx]
+-                 * deformationGradient_new[idx].Transpose()*pow(J,-(2./3.));
++                 * deformationGradient_new[idx].Transpose();
+ 
+-      IEl = onethird*bElBar_new.Trace();
++      //IEl = onethird*bElBar_new.Trace();
+ 
+       // Shear is equal to the shear modulus times dev(bElBar)
+-      Shear = (bElBar_new - Identity*IEl)*shear;
++      Shear = (bElBar_new - Identity)*shear;
+ 
+       // get the hydrostatic part of the stress
+-      p = 0.5*bulk*(J - 1.0/J);
++      double lambda = (3.*bulk - 2.*shear)/3.;
++      p = lambda*log(J)/J;
+
+MPM/SerialMPM.cc
+
+Still to come...
+
+-->
+
+   <Time>
+	<maxTime>0.02</maxTime>
+	<initTime>0.0</initTime>
+	<delt_min>1.e-9</delt_min>
+	<delt_init>1.e-9</delt_init>
+	<delt_max>2.e-3</delt_max>
+	<timestep_multiplier>0.1</timestep_multiplier>
+   </Time>
+   <DataArchiver>
+        <filebase>MMS_ring.uda</filebase>
+	<outputInterval>0.0002</outputInterval>
+	<save label = "p.x"/>
+	<save label = "p.velocity"/>
+	<save label = "p.volume"/>
+	<save label = "p.externalforce"/>
+	<save label = "p.mass"/>
+	<save label = "p.stress"/>
+	<save label = "p.particleID"/>
+	<save label = "p.displacement"/>
+<!--
+	<save label = "g.mass"/>
+	<save label = "g.velocity"/>
+	<save label = "g.internalforce"/>
+	<save label = "g.externalforce"/>
+	<save label = "g.acceleration"/>
+-->
+   </DataArchiver>
+
+    <MPM>
+	<time_integrator>explicit</time_integrator>
+        <interpolator>gimp</interpolator>
+        <axisymmetric>true</axisymmetric>
+    </MPM>
+
+    <PhysicalConstants>
+	<gravity>[0,0,0]</gravity>
+    </PhysicalConstants>
+
+    <MaterialProperties>
+	<MPM>
+	    <material>
+		<density>1.e3</density>
+		<constitutive_model type = "comp_neo_hook">
+		   <shear_modulus>5.e6</shear_modulus>
+		   <bulk_modulus>3.333e6</bulk_modulus>
+	        </constitutive_model>
+		<thermal_conductivity>1.0</thermal_conductivity>
+		<specific_heat>5</specific_heat>
+		<geom_object>
+		    <box label = "box">
+			<min>[0.5,0.0, 0.0]</min>
+			<max>[1.0,0.08,0.08]</max>
+		    </box>
+		    <res>[2,1,1]</res>
+		    <velocity>[0.0,0.0,0.0]</velocity>
+		    <temperature>12</temperature>
+ 		</geom_object>
+	    </material>
+
+	    <contact>
+	      <type>null</type>
+	      <vel_fields>[0,1,0]</vel_fields>
+              <stop_time>999.005</stop_time>
+	      <direction>[1,0,0]</direction>
+	    </contact>
+	</MPM>
+
+    </MaterialProperties>
+	
+    <Grid>
+	<BoundaryConditions>
+	   <Face side = "x-">
+            <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
+           </Face>
+           <Face side = "x+">
+            <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
+           </Face>
+           <Face side = "y-">
+            <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
+           </Face>                  
+	   <Face side = "y+">
+            <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
+           </Face>                  
+           <Face side = "z-">
+            <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
+           </Face>                  
+	   <Face side = "z+">
+            <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
+           </Face>         	 
+	</BoundaryConditions>
+	<Level>
+	    <Box label = "1">
+		<lower>[0.0,0.0,0.0]</lower>
+		<upper>[1.2,0.04,0.04]</upper>
+	        <resolution>[30,1,1]</resolution>
+		<patches>[1,1,1]</patches>
+                <extraCells>[1,1,1]</extraCells>
+	    </Box>
+	</Level>
+    </Grid>
+
+    <PhysicalBC>
+	<MPM>
+	</MPM>
+    </PhysicalBC>
+    
+</Uintah_specification>

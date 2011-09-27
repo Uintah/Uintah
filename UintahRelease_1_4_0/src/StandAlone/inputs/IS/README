@@ -1,0 +1,36 @@
+JP8_IS.ups
+---------------------------------------
+A modified version of the ../Models/JP8Fire_container.ups file.  
+	- Set the boundry conditions in the grid variables section for 3D
+	- Set level in the grid variables section for 3D
+	- Changed the output name to JP8_IS.uda
+	- Added p.volume to the list of saved properties
+	- Set the ICE settings dyanmic_viscosity and thermal_conductivity to 0
+
+6/13/05 Modification by Jim Guilkey
+	- Increase the frequency of checkpointing
+	- Put in the ability to use the material addition, namely for
+the product of reaction material.  The only caveat with this involves
+doing a restart AFTER the explicit phase of the calculation has begun.
+If it is necessary to do that, the user should:
+	1.  Move the material info from MaterialProperties add=true /ICE up to
+where the other ICE materials are defined.
+	2.  Move the exchange_properties from the MaterialProperties add=true
+section up to the main MaterialProperties section
+	3.  Switch CanAddIceMaterial back to false
+	4.  In the SimpleBurn model, change Active to true
+
+	- Note that if the above 4 steps aren't taken, then upon restart, the
+contribution from the previous products of reaction are lost, and the PBX
+reaction starts over again as if starting for the first time.
+
+
+ContainerHeatUp3D.ups
+---------------------------------------
+This input file is similar to the IS, but it is set up to do the slow heatup
+part of the calculation.  Run it with sus -impm ContainerHeatUp3D.ups
+As of 6/15/05, thermal expansion of the steel is implemented, but not yet
+in the PBX.  Note also that for now, the top half of the domain has been
+lopped off as there isn't anything interesting there, so that would kill
+our load balancing.
+

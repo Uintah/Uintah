@@ -1,0 +1,49 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- <!DOCTYPE Uintah_specification SYSTEM "input.dtd"> -->
+<!-- @version: Updated 7/31/00-->
+<Uintah_specification>
+
+   <Meta>
+       <title>Poisson1 test</title>
+   </Meta>
+
+   <SimulationComponent type="particletest" />
+
+   <Time>
+       <maxTime>1000.0</maxTime>
+       <initTime>0.0</initTime>
+       <delt_min>1</delt_min>
+       <delt_max>1</delt_max>
+       <timestep_multiplier>1</timestep_multiplier>
+   </Time>
+   <DataArchiver>
+        <filebase>particletest1.uda</filebase>
+       <outputInterval>1</outputInterval>
+       <save label = "p.mass"/>
+       <save label = "p.x"/>
+       <save label = "p.particleID"/>
+       <checkpoint cycle = "2" interval = "1"/>
+   </DataArchiver>
+
+   <LoadBalancer type="DLB">
+     <timestepInterval>2</timestepInterval>
+     <dynamicAlgorithm>patchFactorParticles</dynamicAlgorithm>
+   </LoadBalancer>
+
+   <ParticleTest1>
+      <doOutput>0</doOutput>
+   </ParticleTest1>
+
+    <Grid>
+       <Level>
+           <Box label = "1">
+              <lower>[0,0,0]</lower>
+              <upper>[50.0,50.0,50.0]</upper>
+               <resolution>[50,50,50]</resolution>
+              <patches>[2,1,1]</patches>
+           </Box>
+       </Level>
+    </Grid>
+
+</Uintah_specification>
+

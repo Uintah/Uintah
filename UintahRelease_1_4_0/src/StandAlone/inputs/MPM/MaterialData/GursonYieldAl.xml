@@ -1,0 +1,11 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- Alumnium -->
+<Uintah_Include>
+  <yield_condition type="gurson">
+    <q1> 1.5 </q1>
+    <q2> 1.0 </q2>
+    <q3> 2.25 </q3>
+    <k> 4.0 </k>
+    <f_c> 0.05 </f_c>
+  </yield_condition>
+</Uintah_Include>

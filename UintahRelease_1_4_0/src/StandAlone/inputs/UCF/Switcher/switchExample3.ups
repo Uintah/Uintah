@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- @version: -->
+<Uintah_specification>
+
+  <Meta>
+    <title>none</title>
+  </Meta>
+  <!--____________________________________________________________________-->
+  <!--         C O M P O N E N T   S W I T C H E R                        -->
+  <!--____________________________________________________________________-->
+  <SimulationComponent type="switcher" >
+    <!--__________________________________-->
+    <!-- phase 1: setup the initial grid and define CC variables -->
+    <subcomponent>                                                   
+      <input_file>inputs/UCF/Switcher/ex3_phases1_3.ups</input_file>             
+
+      <SwitchCriteria type = "Timestep">                             
+        <timestep> 3 </timestep>                                     
+      </SwitchCriteria>                                              
+    </subcomponent>                                                  
+    <!--__________________________________-->       
+    <!-- heat transfer calculation phase: impm -->                                                                 
+    <subcomponent>                                                   
+      <input_file>inputs/UCF/Switcher/ex3_phase2.ups</input_file> 
+      <SwitchCriteria type = "simpleBurn">
+        <reactant_material>    1      </reactant_material>
+          <ThresholdTemperature> 350  </ThresholdTemperature>
+      </SwitchCriteria>
+      
+      <init var = "p.acceleration"     matls = "mpm_matls"/>      
+      <init var = "p.externalHeatFlux" matls = "mpm_matls"/> 
+    </subcomponent>
+                            
+    <!--__________________________________-->
+    <!-- explosion phase: mpmice -->
+    <subcomponent>                                                   
+      <input_file>inputs/UCF/Switcher/ex3_phases1_3.ups</input_file>                                              
+    </subcomponent>
+    
+    <!-- variables that must be carried over from phase 1 to 3 -->
+    <carry_over var="press_CC" matls="0" />
+    <carry_over var="temp_CC" />
+    <carry_over var="rho_CC" />
+    <carry_over var="sp_vol_CC" />
+    <carry_over var="vel_CC" />
+    <carry_over var="NC_CCweight" />
+    <carry_over var="heatRate_CC" matls="0,1"/>
+    <carry_over var="g.temperature" />
+        
+  </SimulationComponent>
+   
+    <!--____________________________________________________________________-->
+    <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
+    <!--____________________________________________________________________-->
+    <Time>
+       <maxTime>1000.0 </maxTime>    <!-- persistent across all subcomponents -->
+       <initTime>0.0</initTime>      <!-- ignored -->
+       <delt_min>0</delt_min>        <!-- ignored -->
+       <delt_max>0</delt_max>        <!-- ignored -->
+       <timestep_multiplier>0.0</timestep_multiplier>
+       <max_Timesteps> 100 </max_Timesteps>
+    </Time>
+
+  <!--____________________________________________________________________-->
+  <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
+  <!--____________________________________________________________________-->
+  <DataArchiver>  
+    <filebase>switchExample3.uda</filebase>      <!-- persistent across all subcomponents -->
+    <outputInterval> 0.0 </outputInterval>       <!-- (Explicitly) don't save any data... -->
+  </DataArchiver>
+
+  <!--____________________________________________________________________-->
+  <!--      G  R  I  D     V  A  R  I  A  B  L  E  S                      -->
+  <!--  This is the grid used by the first sub-component                  -->
+  <!--____________________________________________________________________-->
+  <Grid>
+    <include href="inputs/UCF/Switcher/ex3_BC.xml"/>
+
+    <Level>
+       <Box label = "3D">                                     
+          <lower>        [-0.1,-0.1,-0.1]   </lower>          
+          <upper>        [ 0.1, 0.1, 0.1]   </upper>          
+
+          <extraCells>   [1,1,1]            </extraCells>     
+          <patches>      [1,1,1]            </patches>        
+          <resolution>   [20,20,20]          </resolution>    
+       </Box>                                                 
+    </Level>
+  </Grid>
+</Uintah_specification>

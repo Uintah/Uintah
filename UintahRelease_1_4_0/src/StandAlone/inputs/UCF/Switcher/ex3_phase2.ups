@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<Uintah_specification> 
+<!--Please use a consistent set of units, (mks, cgs,...)-->
+
+  <Meta>
+    <title>none</title>
+  </Meta>
+
+  <SimulationComponent type="impm" />
+
+  <!--____________________________________________________________________-->
+  <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
+  <!--____________________________________________________________________-->
+  <Time>
+    <maxTime>           10.0         </maxTime>
+    <initTime>           0.0         </initTime>
+    <delt_min>           1.0e-19     </delt_min>
+    <delt_max>           0.5         </delt_max>
+    <delt_init>          0.01        </delt_init>
+    <timestep_multiplier>1.0         </timestep_multiplier>
+  </Time>
+
+  <!--____________________________________________________________________-->
+  <!--      G  R  I  D     V  A  R  I  A  B  L  E  S                      -->
+  <!--____________________________________________________________________-->
+  <Grid>
+    <include href="inputs/UCF/Switcher/ex3_BC.xml"/>
+
+    <Level>
+       <Box label = "3D">                                     
+          <lower>        [-0.1,-0.1,-0.1]   </lower>          
+          <upper>        [ 0.1, 0.1, 0.1]   </upper>          
+
+          <extraCells>   [0,0,0]            </extraCells>     
+          <patches>      [1,1,1]            </patches>        
+          <resolution>   [20,20,20]          </resolution>    
+       </Box>                                                 
+    </Level>
+  </Grid>
+
+  <!--____________________________________________________________________-->
+  <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
+  <!--____________________________________________________________________-->
+  <DataArchiver>
+    <filebase>containerHeatup.uda</filebase> <!-- ignored by switcher -->
+    <outputTimestepInterval>1</outputTimestepInterval>
+    <save label = "p.x"/>
+    <save label = "p.velocity"/>
+    <save label = "p.mass"/>
+    <save label = "p.particleID"/>
+    <save label = "p.temperature"/>
+    <save label = "p.externalHeatRate"/>
+    <save label = "g.temperatureStar"/>
+    <save label = "g.externalHeatRate"/>
+    <save label = "g.temperature"/>
+    <save label = "g.mass"/>
+    <checkpoint cycle = "2" timestepInterval = "10"/>
+  </DataArchiver>
+
+  <MPM>
+    <time_integrator>               implicit </time_integrator>
+    <interpolator>                  linear    </interpolator>
+    <dynamic>                       true     </dynamic>
+    <solver>                        petsc    </solver>
+     <DoMechanics>                  false    </DoMechanics>
+    <convergence_criteria_disp>     1.e-5    </convergence_criteria_disp>
+    <convergence_criteria_energy>   4.e-5    </convergence_criteria_energy>
+    <iters_before_timestep_restart> 12       </iters_before_timestep_restart>
+    <num_iters_to_decrease_delT>    9        </num_iters_to_decrease_delT>
+    <num_iters_to_increase_delT>    5        </num_iters_to_increase_delT>
+    <delT_decrease_factor>          0.4      </delT_decrease_factor>
+    <delT_increase_factor>          2.0      </delT_increase_factor>
+    <do_grid_reset>                 true     </do_grid_reset>
+    <DoImplicitHeatConduction>      true     </DoImplicitHeatConduction>
+    <DoTransientImplicitHeatConduction>true</DoTransientImplicitHeatConduction>
+    <use_load_curves>               true     </use_load_curves>
+    <DoThermalExpansion>            false     </DoThermalExpansion>
+    <testForNegTemps_mpm>           false    </testForNegTemps_mpm>
+  </MPM>
+
+  <!--____________________________________________________________________-->
+  <!--     P  H  Y  S  I  C  A  L     C  O  N  S  T  A  N  T  S           -->
+  <!--____________________________________________________________________-->   
+  <PhysicalConstants>
+    <gravity>            [0,0.0,0]   </gravity>
+    <reference_pressure> 101325.0  </reference_pressure>
+  </PhysicalConstants>
+
+  <!--____________________________________________________________________-->
+  <!--    MATERIAL PROPERTIES INITIAL CONDITIONS                          -->
+  <!--____________________________________________________________________-->
+  <MaterialProperties>
+    <MPM>
+        <material name="cylinder">
+        <density>             8900.0           </density>
+        <constitutive_model type = "comp_neo_hook">
+          <useModifiedEOS>     true          </useModifiedEOS>       
+          <bulk_modulus>      117.0e7        </bulk_modulus>         
+          <shear_modulus>      43.8e7        </shear_modulus>        
+          <yield_stress>       70.0e6        </yield_stress>         
+          <hardening_modulus>  43.8e5        </hardening_modulus>    
+          <alpha>               0.0          </alpha>                
+          <strain_limit>       3.05          </strain_limit>         
+          <reduction_factor>   1.0           </reduction_factor>     
+        </constitutive_model>
+        <thermal_conductivity>  400.0         </thermal_conductivity>
+        <specific_heat>         386.0         </specific_heat>
+ 
+        <geom_object>
+          <difference>
+            <cylinder label = "outer cylinder">
+              <bottom>           [0.0,0.0,-.06985]   </bottom>
+              <top>              [0.0,0.0, .06985]   </top>
+              <radius>           0.05715             </radius>
+            </cylinder>
+            <cylinder label = "inner cylinder">
+              <bottom>           [0.0,0.0,-.0508]   </bottom>
+              <top>              [0.0,0.0, .0508]   </top>
+              <radius>           0.0508             </radius>
+            </cylinder>
+          </difference>
+          <res>                 [2,2,2]         </res>
+          <velocity>            [0.0,0.0,0.0]   </velocity>
+          <temperature>        300.0            </temperature>
+        </geom_object>
+      </material>
+      
+      <material name = "PBX9501">
+        <include href="inputs/MPM/MaterialData/MatConstPBX9501.xml"/>
+        <constitutive_model type = "visco_scram">
+          <include href="inputs/MPM/MaterialData/ViscoSCRAMPBX9501.xml"/>
+          <include href="inputs/MPM/MaterialData/TimeTempPBX9501.xml"/>
+          <randomize_parameters>          false </randomize_parameters>
+          <use_time_temperature_equation> false </use_time_temperature_equation>
+          <useObjectiveRate>              false </useObjectiveRate>
+          <useModifiedEOS>                true  </useModifiedEOS>
+        </constitutive_model>
+           
+        <geom_object>
+          <cylinder label = "inner cylinder"/>                   
+          <res>                 [2,2,2]         </res>           
+          <velocity>            [0.0,0.0,0.0]   </velocity>      
+          <temperature>         300.0           </temperature>
+        </geom_object>
+      </material>
+      
+      <contact>
+        <type>approach</type>
+        <materials>              [0,1]         </materials>
+        <mu> 0.0 </mu>
+      </contact>
+      <thermal_contact></thermal_contact>
+    </MPM>
+    </MaterialProperties>
+    
+    <!--__________________________________-->
+    <!--  Apply heat flux to outside of container -->
+    <!--__________________________________-->
+    <PhysicalBC>
+        <MPM>
+        <arches_heat_flux> 
+          <geom_object>
+              <cylinder>   <!-- You must define the geometry object, not reuse one -->
+                <bottom>    [0.0,0.0,-.06985] </bottom>
+                <top>       [0.0,0.0, .06985] </top>
+                <radius>    0.05715           </radius>
+              </cylinder>
+          </geom_object>
+          <polynomial_data>
+            <file>inputs/IS/ArchesHeatUpExplosion/case3/curveFit_coefs_97.dat</file> 
+            <file>inputs/IS/ArchesHeatUpExplosion/case3/curveFit_coefs_98.dat</file> 
+            <file> inputs/IS/ArchesHeatUpExplosion/case3/curveFit_coefs_99.dat</file> 
+            <file> inputs/IS/ArchesHeatUpExplosion/case3/curveFit_coefs_100.dat</file> 
+            <file> inputs/IS/ArchesHeatUpExplosion/case3/curveFit_coefs_101.dat</file> 
+            <file> inputs/IS/ArchesHeatUpExplosion/case3/curveFit_coefs_102.dat</file> 
+            <file> inputs/IS/ArchesHeatUpExplosion/case3/endcap_averages.dat</file> 
+          </polynomial_data>
+
+          <!-- Only needed by to invoke the external heat flux machinery -->
+
+          <load_curve>
+            <id>1</id>
+            <time_point>
+              <time> 0 </time>
+              <load> 0</load>
+            </time_point>
+          </load_curve>
+        </arches_heat_flux> 
+        </MPM>
+    </PhysicalBC>
+
+</Uintah_specification>
