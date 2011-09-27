@@ -101,7 +101,7 @@ namespace Wasatch{
                    const PatchInfoMap& info,
                    const bool createUniqueTreePerPatch,
                    int RKStage,
-                   const std::set<std::string>& ioFieldSet_,
+                   const std::set<std::string>& ioFieldSet,
                    Expr::FieldManagerList* fml = NULL);
 
     /**
@@ -140,7 +140,7 @@ namespace Wasatch{
                    const PatchInfoMap& info,
                    const bool createUniqueTreePerPatch,
                    const int RKStage,
-                   const std::set<std::string>& ioFieldSet_,                  
+                   const std::set<std::string>& ioFieldSet,                  
                    Expr::FieldManagerList* fml = NULL );
 
     ~TaskInterface();
