@@ -179,7 +179,7 @@ void PressureSolver::sched_solve(const LevelP& level,
   schedExtract_X(sched, perproc_patches, matls,
                  timelabels, extraProjection, doing_EKT_now,  pressLabel);
                  
-  sched_normalizePress(sched, perproc_patches, matls, pressLabel);
+  sched_normalizePress(sched, perproc_patches, matls, pressLabel,timelabels);
   
   
   if ((d_MAlab)&&(!(extraProjection))) {
@@ -472,7 +472,7 @@ PressureSolver::setRHS_X_wrap ( const ProcessorGroup* pg,
   }
   //__________________________________
   //  debugging 
-#if 1
+#if 0
   string desc  = timelabels->integrator_step_name;
   int timestep = d_lab->d_sharedState->getCurrentTopLevelTimeStep();
   d_iteration ++;
@@ -593,12 +593,13 @@ PressureSolver::schedExtract_X(SchedulerP& sched,
   }
   
   pressLabelName = pressLabel->getName();
+  const VarLabel* refPressLabel = timelabels->ref_pressure;
   
   const string integratorPhase = timelabels->integrator_step_name;
   
   Task* tsk = scinew Task(taskname, this,
                           &PressureSolver::Extract_X, compute_or_modify, 
-                          pressLabel, integratorPhase);
+                          pressLabel, refPressLabel, integratorPhase);
                             
   if(compute_or_modify == Computes){
     tsk->computes(pressLabel);
@@ -609,7 +610,7 @@ PressureSolver::schedExtract_X(SchedulerP& sched,
   //__________________________________
   //  find the normalization pressure
   if (d_norm_press){ 
-    tsk->computes(d_lab->d_refPressure_label);
+    tsk->computes(refPressLabel);
   }
     
   sched->addTask(tsk, patches, matls);
@@ -628,7 +629,8 @@ PressureSolver::Extract_X ( const ProcessorGroup* pg,
                             DataWarehouse* old_dw,
                             DataWarehouse* new_dw,
                             WhichCM compute_or_modify,
-                            const VarLabel* varLabel,
+                            const VarLabel* pressLabel,
+                            const VarLabel* refPressLabel,
                             const string integratorPhase )
 { 
   for(int p=0;p<patches->size();p++){
@@ -639,9 +641,9 @@ PressureSolver::Extract_X ( const ProcessorGroup* pg,
     ArchesVariables vars;
     
     if(compute_or_modify == Computes){
-      new_dw->allocateAndPut(vars.pressure,  varLabel, d_indx, patch);
+      new_dw->allocateAndPut(vars.pressure,  pressLabel, d_indx, patch);
     } else {
-      new_dw->getModifiable(vars.pressure,  varLabel, d_indx, patch);
+      new_dw->getModifiable(vars.pressure,  pressLabel, d_indx, patch);
     }    
     
     d_linearSolver->copyPressSoln(patch, &vars);
@@ -654,7 +656,7 @@ PressureSolver::Extract_X ( const ProcessorGroup* pg,
         refPress = vars.pressure[d_pressRef];        
       }
       cout << " *** Extract X " << integratorPhase << " refPress " << refPress << endl;
-      new_dw->put(sum_vartype(refPress), d_lab->d_refPressure_label);
+      new_dw->put(sum_vartype(refPress), refPressLabel);
     }
     
     if (d_do_only_last_projection){
@@ -681,7 +683,8 @@ void
 PressureSolver::sched_normalizePress(SchedulerP& sched,
                                      const PatchSet* patches,
                                      const MaterialSet* matls,
-                                     const string& pressLabelname)
+                                     const string& pressLabelname,
+                                     const TimeIntegratorLabel* timelabels)
 {
   // ignore this task if not normalizing
   if(!d_norm_press){
@@ -689,12 +692,14 @@ PressureSolver::sched_normalizePress(SchedulerP& sched,
   }
   printSchedule(patches,dbg,"PressureSolver::normalizePress");
   
-  const VarLabel* pressLabel = VarLabel::find(pressLabelname);
+  const VarLabel* pressLabel    = VarLabel::find(pressLabelname);
+  const VarLabel* refPressLabel = timelabels->ref_pressure;
+  
   Task* tsk = scinew Task("PressureSolver::normalizePress",this, 
-                          &PressureSolver::normalizePress, pressLabel);                          
+                          &PressureSolver::normalizePress, pressLabel, refPressLabel);                          
 
   tsk->modifies(pressLabel);
-  tsk->requires(Task::NewDW, d_lab->d_refPressure_label, Ghost::None, 0);
+  tsk->requires(Task::NewDW, refPressLabel, Ghost::None, 0);
   
   sched->addTask(tsk, patches, matls);
 }
@@ -708,10 +713,11 @@ PressureSolver::normalizePress ( const ProcessorGroup* pg,
                                  const MaterialSubset* matls,
                                  DataWarehouse*,
                                  DataWarehouse* new_dw,
-                                 const VarLabel* pressLabel)
+                                 const VarLabel* pressLabel,
+                                 const VarLabel* refPressLabel)
 {
   sum_vartype refPress = -9;
-  new_dw->get(refPress, d_lab->d_refPressure_label);
+  new_dw->get(refPress, refPressLabel);
   
   proc0cout << "press_ref for norm: " << refPress << endl;
   

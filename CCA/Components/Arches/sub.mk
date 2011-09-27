@@ -50,7 +50,7 @@ SRCS += $(SRCDIR)/Arches.cc                    \
         $(SRCDIR)/ExplicitSolver.cc            \
         $(SRCDIR)/ExplicitTimeInt.cc           \
         $(SRCDIR)/IncDynamicProcedure.cc       \
-				$(SRCDIR)/IntrusionBC.cc               \
+        $(SRCDIR)/IntrusionBC.cc               \
         $(SRCDIR)/LinearSolver.cc              \
         $(SRCDIR)/LU.cc                        \
         $(SRCDIR)/MomentumSolver.cc            \
@@ -59,14 +59,14 @@ SRCS += $(SRCDIR)/Arches.cc                    \
         $(SRCDIR)/OdtData.cc                   \
         $(SRCDIR)/PhysicalConstants.cc         \
         $(SRCDIR)/PicardNonlinearSolver.cc     \
-        $(SRCDIR)/PressureSolver.cc            \
+        $(SRCDIR)/PressureSolverV2.cc          \
         $(SRCDIR)/Properties.cc                \
         $(SRCDIR)/RHSSolver.cc                 \
         $(SRCDIR)/ScalarSolver.cc              \
         $(SRCDIR)/ScaleSimilarityModel.cc      \
         $(SRCDIR)/SmagorinskyModel.cc          \
         $(SRCDIR)/Source.cc                    \
-				$(SRCDIR)/OperatorSplitChem.cc 				 \
+        $(SRCDIR)/OperatorSplitChem.cc         \
         $(SRCDIR)/TurbulenceModel.cc           
 
 ifeq ($(HAVE_PETSC),yes)

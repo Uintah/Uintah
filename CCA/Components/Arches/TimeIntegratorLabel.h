@@ -105,6 +105,7 @@ namespace Uintah {
     double factor_new;
     double factor_divide;
     const VarLabel* ref_density;
+    const VarLabel* ref_pressure;
     const VarLabel* pressure_out;
     const VarLabel* pressure_guess;
     const VarLabel* tke_out;
@@ -233,6 +234,7 @@ namespace Uintah {
             pressure_out             =  lab->d_pressurePSLabel;
             recursion                =  true;
             ref_density              =  lab->d_refDensity_label;
+            ref_pressure             =  lab->d_refPressure_label;
             smmsExactSol             =  lab->d_totalsmmsExactSolLabel;
             smmsLnError              =  lab->d_totalsmmsLnErrorLabel;
             time_position_multiplier_after_average = 1.0;
@@ -270,6 +272,7 @@ namespace Uintah {
             pressure_out             =  lab->d_pressurePSLabel;
             recursion                =  false;
             ref_density              =  lab->d_refDensity_label;
+            ref_pressure             =  lab->d_refPressure_label;
             smmsExactSol             =  lab->d_totalsmmsExactSolLabel;
             smmsLnError              =  lab->d_totalsmmsLnErrorLabel;
             time_multiplier          =  1.0;
@@ -307,6 +310,7 @@ namespace Uintah {
             pressure_out             =  lab->d_pressurePredLabel;
             recursion                =  false;
             ref_density              =  lab->d_refDensityPred_label;
+            ref_pressure             =  lab->d_refPressurePred_label;
             smmsExactSol             =  lab->d_totalsmmsExactSolPredLabel;
             smmsLnError              =  lab->d_totalsmmsLnErrorPredLabel;
             time_multiplier          =  1.0;
@@ -343,6 +347,7 @@ namespace Uintah {
             pressure_out             =  lab->d_pressurePredLabel;
             recursion                =  false;
             ref_density              =  lab->d_refDensityPred_label;
+            ref_pressure             =  lab->d_refPressurePred_label;
             smmsExactSol             =  lab->d_totalsmmsExactSolPredLabel;
             smmsLnError              =  lab->d_totalsmmsLnErrorPredLabel;
             time_multiplier          =  0.5;
@@ -380,6 +385,7 @@ namespace Uintah {
             pressure_out             =  lab->d_pressurePSLabel;
             recursion                =  false;
             ref_density              =  lab->d_refDensity_label;
+            ref_pressure             =  lab->d_refPressure_label;
             smmsExactSol             =  lab->d_totalsmmsExactSolLabel;
             smmsLnError              =  lab->d_totalsmmsLnErrorLabel;
             time_multiplier          =  1.0;
@@ -417,6 +423,7 @@ namespace Uintah {
             pressure_out             =  lab->d_pressurePSLabel;
             recursion                =  false;
             ref_density              =  lab->d_refDensity_label;
+            ref_pressure             =  lab->d_refPressure_label;
             smmsExactSol             =  lab->d_totalsmmsExactSolLabel;
             smmsLnError              =  lab->d_totalsmmsLnErrorLabel;
             time_multiplier          =  1.0;
@@ -454,6 +461,7 @@ namespace Uintah {
             pressure_out             =  lab->d_pressurePSLabel;
             recursion                =  false;
             ref_density              =  lab->d_refDensity_label;
+            ref_pressure             =  lab->d_refPressure_label;
             smmsExactSol             =  lab->d_totalsmmsExactSolLabel;
             smmsLnError              =  lab->d_totalsmmsLnErrorLabel;
             time_multiplier          =  1.0;
@@ -491,6 +499,7 @@ namespace Uintah {
             pressure_out             =  lab->d_pressureIntermLabel;
             recursion                =  false;
             ref_density              =  lab->d_refDensityInterm_label;
+            ref_pressure             =  lab->d_refPressureInterm_label;
             smmsExactSol             =  lab->d_totalsmmsExactSolIntermLabel;
             smmsLnError              =  lab->d_totalsmmsLnErrorIntermLabel;
             time_multiplier          =  1.0;
@@ -528,6 +537,7 @@ namespace Uintah {
             pressure_out             =  lab->d_pressurePredLabel;
             recursion                =  false;
             ref_density              =  lab->d_refDensityPred_label;
+            ref_pressure             =  lab->d_refPressurePred_label;
             smmsExactSol             =  lab->d_totalsmmsExactSolPredLabel;
             smmsLnError              =  lab->d_totalsmmsLnErrorPredLabel;
             time_multiplier          =  1.0;
@@ -565,6 +575,7 @@ namespace Uintah {
             pressure_out             =  lab->d_pressureIntermLabel;
             recursion                =  false;
             ref_density              =  lab->d_refDensityInterm_label;
+            ref_pressure             =  lab->d_refPressureInterm_label;
             smmsExactSol             =  lab->d_totalsmmsExactSolIntermLabel;
             smmsLnError              =  lab->d_totalsmmsLnErrorIntermLabel;
             time_multiplier          =  1.0;
@@ -602,6 +613,7 @@ namespace Uintah {
             pressure_out             =  lab->d_pressurePSLabel;
             recursion                =  false;
             ref_density              =  lab->d_refDensity_label;
+            ref_pressure             =  lab->d_refPressure_label;
             smmsExactSol             =  lab->d_totalsmmsExactSolLabel;
             smmsLnError              =  lab->d_totalsmmsLnErrorLabel;
             time_multiplier          =  1.0;

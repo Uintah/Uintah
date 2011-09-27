@@ -52,7 +52,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Arches/EnthalpySolver.h>
 #include <CCA/Components/Arches/MomentumSolver.h>
 #include <CCA/Components/Arches/PhysicalConstants.h>
-#include <CCA/Components/Arches/PressureSolver.h>
+#include <CCA/Components/Arches/PressureSolverV2.h>
 #include <CCA/Components/Arches/Properties.h>
 #include <CCA/Components/Arches/ScalarSolver.h>
 #include <CCA/Components/Arches/ScaleSimilarityModel.h>

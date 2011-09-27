@@ -95,7 +95,7 @@ public:
                             
   virtual void setMatrix(const ProcessorGroup* pc, 
                          const Patch* patch,
-                         constCCVariable<Stencil7>& coeff);
+                         CCVariable<Stencil7>& coeff);
 
   virtual void setRHS_X(const ProcessorGroup* pc, 
                         const Patch* patch,

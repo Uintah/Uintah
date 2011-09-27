@@ -294,7 +294,7 @@ HypreSolver::gridSetup(const ProcessorGroup*,
 void 
 HypreSolver::setMatrix(const ProcessorGroup* pc,
                        const Patch* patch,
-                       constCCVariable<Stencil7>& coeff)
+                       CCVariable<Stencil7>& coeff)
 { 
   gridSetup(pc, patch);
   /*-----------------------------------------------------------
@@ -323,6 +323,7 @@ HypreSolver::setMatrix(const ProcessorGroup* pc,
     A[i+3] =  coeff[c].p; //[0,0,0]
 
     i = i + d_stencilSize;
+   
   }
   
   for (int ib = 0; ib < d_nblocks; ib++){
@@ -634,6 +635,7 @@ void HypreSolver::print(const string& desc, const int timestep, const int step){
   
   HYPRE_StructVectorPrint(X_fname, d_x, 0);  
 }
+
 
 void HypreSolver::finalizeSolver()
 {

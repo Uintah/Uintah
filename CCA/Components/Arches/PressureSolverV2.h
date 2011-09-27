@@ -30,8 +30,8 @@ DEALINGS IN THE SOFTWARE.
 
 //----- PressureSolver.h -----------------------------------------------
 
-#ifndef Uintah_Components_Arches_PressureSolver_h
-#define Uintah_Components_Arches_PressureSolver_h
+#ifndef Uintah_Components_Arches_PressureSolverV2_h
+#define Uintah_Components_Arches_PressureSolverV2_h
 
 #include <CCA/Ports/SchedulerP.h>
 #include <CCA/Components/Arches/ArchesConstVariables.h>
@@ -205,6 +205,7 @@ private:
                     DataWarehouse* new_dw,
                     WhichCM compute_or_modify,
                     const VarLabel* pressLabel,
+                    const VarLabel* refPressLabel,
                     const string integratorPhase );
                     
   //______________________________________________________________________
@@ -213,14 +214,16 @@ private:
   void sched_normalizePress(SchedulerP& sched,
                             const PatchSet* patches,
                             const MaterialSet* matls,
-                            const string& pressLabel);
+                            const string& pressLabel,
+                            const TimeIntegratorLabel* timelabels);
                             
   void normalizePress ( const ProcessorGroup* pg,
                         const PatchSubset* patches,
                         const MaterialSubset* matls,
                         DataWarehouse*,
                         DataWarehouse* new_dw,
-                        const VarLabel* pressLabel);
+                        const VarLabel* pressLabel,
+                        const VarLabel* refPressLabel);
                                                                    
                            
   //__________________________________

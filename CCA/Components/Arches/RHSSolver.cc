@@ -35,7 +35,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Arches/ArchesLabel.h>
 #include <CCA/Components/Arches/BoundaryCondition.h>
 #include <CCA/Components/Arches/Discretization.h>
-#include <CCA/Components/Arches/PressureSolver.h>
+#include <CCA/Components/Arches/PressureSolverV2.h>
 #include <CCA/Components/Arches/Source.h>
 #include <CCA/Components/Arches/StencilMatrix.h>
 #include <CCA/Ports/Scheduler.h>
