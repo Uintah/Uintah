@@ -327,7 +327,6 @@ namespace Wasatch{
   void
   TreeTaskExecute::schedule( Expr::TagSet newDWFields, const int rkStage )
   {
-    std::cout << " I AM SCHEDULING TASK \n";
     ASSERT( !hasBeenScheduled_ );
 
 #   ifdef WASATCH_TASK_DIAGNOSTICS
