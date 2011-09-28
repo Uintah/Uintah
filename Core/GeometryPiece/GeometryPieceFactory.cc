@@ -38,6 +38,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/GeometryPiece/SphereGeometryPiece.h>
 #include <Core/GeometryPiece/SphereMembraneGeometryPiece.h>
 #include <Core/GeometryPiece/CylinderGeometryPiece.h>
+#include <Core/GeometryPiece/TorusGeometryPiece.h>
 #include <Core/GeometryPiece/EllipsoidGeometryPiece.h>
 #include <Core/GeometryPiece/SmoothCylGeomPiece.h>
 #include <Core/GeometryPiece/CorrugEdgeGeomPiece.h>
@@ -159,6 +160,9 @@ GeometryPieceFactory::create( const ProblemSpecP& ps,
     }
     else if ( go_type == CylinderGeometryPiece::TYPE_NAME ) {
       newGeomPiece = scinew CylinderGeometryPiece(child);
+    }
+    else if ( go_type == TorusGeometryPiece::TYPE_NAME ) {
+      newGeomPiece = scinew TorusGeometryPiece(child);
     }
     else if ( go_type ==  SmoothCylGeomPiece::TYPE_NAME ) {
       newGeomPiece = scinew SmoothCylGeomPiece(child);
