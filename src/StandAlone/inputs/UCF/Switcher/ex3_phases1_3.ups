@@ -54,6 +54,9 @@
     <save label="sp_vol_CC"/>
     <save label="delP_Dilatate"/>
     <save label="vel_CC"/>
+    <save label="modelMass_src"/>
+    <save label="totalMassBurned"/>
+    <save label="totalHeatReleased"/>
       
     <save label="p.x"/>
     <save label="p.particleID"/>

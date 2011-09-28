@@ -284,9 +284,10 @@ Switcher::problemSetup( const ProblemSpecP& /*params*/,
   UintahParallelComponent* comp = dynamic_cast<UintahParallelComponent*>( getPort("sim",d_componentIndex) );
   Scheduler* sched              = dynamic_cast<Scheduler*>(               getPort("scheduler") );
   Output* dataArchiver          = dynamic_cast<Output*>(                  getPort("output") );
+  ModelMaker* modelmaker        = dynamic_cast<ModelMaker*>(              getPort("modelmaker") ); 
   comp->attachPort("scheduler", sched);
   comp->attachPort("output",    dataArchiver);
-
+  comp->attachPort("modelmaker",modelmaker);
 
   //__________________________________
   //Read the ups file for the first subcomponent   
@@ -816,8 +817,10 @@ Switcher::needRecompile( double time,
     UintahParallelComponent* comp = dynamic_cast<UintahParallelComponent*>( getPort("sim",d_componentIndex) );
     Scheduler* sched              = dynamic_cast<Scheduler*>(getPort("scheduler") );
     Output* dataArchiver          = dynamic_cast<Output*>(   getPort("output") );
+    ModelMaker* modelmaker        = dynamic_cast<ModelMaker*>(              getPort("modelmaker") );
     comp->attachPort("scheduler", sched);
     comp->attachPort("output",    dataArchiver);
+    comp->attachPort("modelmaker",modelmaker);
   
     proc0cout << "\n__________________________________ Switching to component (" << d_componentIndex <<") \n";
     proc0cout << "  Reading input file: " << d_in_file[d_componentIndex] << "\n";
