@@ -84,7 +84,6 @@ PressureSolver::PressureSolver(ArchesLabel* label,
   d_discretize = 0;
   d_source = 0;
   d_linearSolver = 0; 
-  d_construct_solver_obj = true; 
   d_iteration = 0;
   d_indx = -9;
 }
@@ -95,8 +94,10 @@ PressureSolver::PressureSolver(ArchesLabel* label,
 PressureSolver::~PressureSolver()
 {
   // destroy A, x, and B
-  d_linearSolver->destroyMatrix();
-
+  if ( !d_always_construct_A ) { 
+    d_linearSolver->destroyMatrix();
+  }
+  
   delete d_discretize;
   delete d_source;
   delete d_linearSolver;
@@ -154,18 +155,11 @@ void PressureSolver::sched_solve(const LevelP& level,
 
   LoadBalancer* lb = sched->getLoadBalancer();
   const PatchSet* perproc_patches =  lb->getPerProcessorPatchSet(level);
-  const PatchSubset* levelPatches = level->eachPatch()->getUnion();
   
   int archIndex = 0; // only one arches material
   d_indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
   const MaterialSet* matls = d_lab->d_sharedState->allArchesMaterials();
   string pressLabel = "NULL";
-  
-  if ( d_construct_solver_obj )  {
-    d_linearSolver->matrixCreate(perproc_patches, levelPatches);
-    d_construct_solver_obj = false; 
-  }
-
   
   sched_buildLinearMatrix(sched, perproc_patches, matls, 
                           timelabels, extraProjection,d_EKTCorrection, doing_EKT_now);
@@ -214,6 +208,7 @@ PressureSolver::sched_buildLinearMatrix(SchedulerP& sched,
   
   Task* tsk = scinew Task(taskname, this,
                           &PressureSolver::buildLinearMatrix,
+                          patches,
                           timelabels, extraProjection,
                           d_EKTCorrection, doing_EKT_now);
     
@@ -275,11 +270,19 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
                                   const MaterialSubset* /* matls */,
                                   DataWarehouse* old_dw,
                                   DataWarehouse* new_dw,
+                                  const PatchSet* patchSet,
                                   const TimeIntegratorLabel* timelabels,
                                   bool extraProjection,
                                   bool d_EKTCorrection,
                                   bool doing_EKT_now)
 {
+  // create matrix.
+  bool isFirstTimestep = (d_lab->d_sharedState->getCurrentTopLevelTimeStep() == 1);
+
+  if ( isFirstTimestep || d_always_construct_A )  {
+    d_linearSolver->matrixCreate(patchSet, patches);
+  }
+
   DataWarehouse* parent_old_dw;
   if (timelabels->recursion){
     parent_old_dw = new_dw->getOtherDataWarehouse(Task::ParentOldDW);
@@ -649,6 +652,11 @@ PressureSolver::Extract_X ( const ProcessorGroup* pg,
     
     d_linearSolver->copyPressSoln(patch, &vars);
     
+    
+    if ( d_always_construct_A ) {   // always destroy if you always construct
+      d_linearSolver->destroyMatrix(); 
+    }
+    
     //__________________________________
     //  Find the reference pressure
     if (d_norm_press){ 
@@ -656,7 +664,6 @@ PressureSolver::Extract_X ( const ProcessorGroup* pg,
       if( patch->containsCell(d_pressRef)){
         refPress = vars.pressure[d_pressRef];        
       }
-      cout << " *** Extract X " << integratorPhase << " refPress " << refPress << endl;
       new_dw->put(sum_vartype(refPress), refPressLabel);
     }
     
