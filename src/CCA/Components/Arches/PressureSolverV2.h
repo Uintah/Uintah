@@ -142,6 +142,7 @@ private:
                          const MaterialSubset* matls,
                          DataWarehouse* new_dw,
                          DataWarehouse* matrix_dw,
+                         const PatchSet* patchSet,
                          const TimeIntegratorLabel* timelabels,
                          bool extraProjection,
                          bool d_EKTCorrection,
@@ -247,8 +248,7 @@ private:
  private:
 
   bool d_always_construct_A;
-  bool d_construct_A; 
-  bool d_construct_solver_obj; 
+  bool d_construct_A;
 
   ArchesLabel* d_lab;
   const MPMArchesLabel* d_MAlab;
