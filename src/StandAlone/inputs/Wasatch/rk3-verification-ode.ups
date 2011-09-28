@@ -55,6 +55,7 @@
     <outputTimestepInterval>1</outputTimestepInterval>
     <outputInitTimestep/>
     <save label="phi-scalar"/>
+    <save label="phi-source"/>
   </DataArchiver> 
 
 
