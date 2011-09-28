@@ -42,6 +42,7 @@ SRCS     += \
 	$(SRCDIR)/NaaBoxGeometryPiece.cc \
 	$(SRCDIR)/BoxGeometryPiece.cc \
 	$(SRCDIR)/CylinderGeometryPiece.cc \
+	$(SRCDIR)/TorusGeometryPiece.cc \
 	$(SRCDIR)/ConeGeometryPiece.cc \
 	$(SRCDIR)/TriGeometryPiece.cc \
 	$(SRCDIR)/UniformGrid.cc \

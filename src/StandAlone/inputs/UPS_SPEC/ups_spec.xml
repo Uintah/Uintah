@@ -124,6 +124,13 @@
       <axisymmetric_side      spec="OPTIONAL BOOLEAN" />
     </cylinder>
 
+    <torus                 spec="OPTIONAL NO_DATA"
+                                attribute1="label    OPTIONAL STRING" >
+      <center                 spec="REQUIRED VECTOR" />
+      <major_radius           spec="REQUIRED DOUBLE 'positive'" />
+      <minor_radius           spec="REQUIRED DOUBLE 'positive'" />
+    </torus>
+
     <parallelepiped                 spec="OPTIONAL NO_DATA"
                                 attribute1="label    OPTIONAL STRING" >
       <p1                     spec="REQUIRED VECTOR" />
@@ -267,6 +274,7 @@
       <box                    spec="MULTIPLE" />
       <cone                   spec="MULTIPLE" />
       <cylinder               spec="MULTIPLE" />
+      <torus                  spec="MULTIPLE" />
       <difference             spec="MULTIPLE" />
       <intersection           spec="MULTIPLE" />
       <ellipsoid              spec="MULTIPLE" />
@@ -330,7 +338,7 @@
                                     attribute1="type REQUIRED STRING 'angio, arches, burger, ice, impm, mpm, mpmarches, 
                                                                       mpmf, mpmice, amrmpm,
                                                                       wasatch, reduce_uda,
-                                                                      poisson1, poisson2, poisson3, poisson4, benchmark, rigidmpmice, 
+                                                                      poisson1, poisson2, poisson3, poisson4, benchmark, rigidmpmice, reduce_uda, combine_patches, 
                                                                       rmpmice, smpm, smpmice, switcher, wave, solvertest, RMCRT_Test particletest'" >
                                   <!-- The 'type' above is used in CCA/Components/Parent/ComponentFactory.cc -->
         <carry_over                 spec="MULTIPLE NO_DATA"
@@ -634,7 +642,7 @@
   <!--__________________________________-->
 
   <DataAnalysis                         spec="OPTIONAL NO_DATA" >
-    <Module                             spec="REQUIRED NO_DATA"
+    <Module                             spec="MULTIPLE NO_DATA"
                                           attribute1="name REQUIRED STRING 'lineExtract, containerExtract, particleExtract'" >
       <material                         spec="OPTIONAL STRING" />
       <materialIndex                    spec="OPTIONAL INTEGER" />
