@@ -591,7 +591,8 @@
                               VelocityInlet, PressureBC, WallBC, OutletBC, VelocityFileInput, MassFlowInlet, Swirl  '"
                               attribute3="label     REQUIRED STRING " >
                                                                 
-          <value            spec="REQUIRED STRING"  need_applies_to="var Neumann Dirichlet LODI computeFromDensity Sine creep slip Custom" />
+          <value            spec="REQUIRED STRING"  need_applies_to="var Neumann Dirichlet LODI computeFromDensity Sine creep slip Custom 
+                                                                     MassFlowInlet Swirl" />
           <inputfile        spec="REQUIRED STRING"  need_applies_to="var VelocityFileInput" />
           <vecvalue         spec="REQUIRED VECTOR"  need_applies_to="var VelocityInlet"/>
           <swirl_no         spec="REQUIRED DOUBLE"  need_applies_to="var Swirl"/>
