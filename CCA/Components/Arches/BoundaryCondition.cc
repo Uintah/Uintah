@@ -121,6 +121,19 @@ BoundaryCondition::BoundaryCondition(const ArchesLabel* label,
   d_outletBC = 0;
   d_intrusionBC = 0;
   _using_new_intrusion = false; 
+
+  // x-direction
+  index_map[0][0] = 0;
+  index_map[0][1] = 1; 
+  index_map[0][2] = 2; 
+  // y-direction 
+  index_map[1][0] = 2;
+  index_map[1][1] = 0; 
+  index_map[1][2] = 1; 
+  // z-direction
+  index_map[2][0] = 1;
+  index_map[2][1] = 2; 
+  index_map[2][2] = 0; 
 }
 
 //****************************************************************************
@@ -1703,6 +1716,7 @@ BoundaryCondition::pressureBC(const Patch* patch,
     sub_types.push_back( VELOCITY_INLET ); 
     sub_types.push_back( VELOCITY_FILE ); 
     sub_types.push_back( MASSFLOW_FILE ); 
+    sub_types.push_back( SWIRL );
     sign = -1;
 
     zeroStencilDirection( patch, matl_index, sign, A, sub_types ); 
@@ -3747,7 +3761,35 @@ BoundaryCondition::velRhoHatInletBC(const Patch* patch,
 
             if ( bc_iter->second.type == VELOCITY_INLET || bc_iter->second.type == MASSFLOW_INLET ) { 
               //---- set velocities
-              setVel__NEW( patch, face, vars->uVelRhoHat, vars->vVelRhoHat, vars->wVelRhoHat, constvars->new_density, bound_ptr, bc_iter->second.velocity ); 
+              //if ( face == Patch::xminus || face == Patch::xplus ) { 
+                setVel__NEW( patch, face, vars->uVelRhoHat, vars->vVelRhoHat, vars->wVelRhoHat, constvars->new_density, bound_ptr, bc_iter->second.velocity ); 
+              //} else if ( face == Patch::yminus || face == Patch::yplus ){ 
+              //  setVel__NEW( patch, face, vars->vVelRhoHat, vars->wVelRhoHat, vars->uVelRhoHat, constvars->new_density, bound_ptr, bc_iter->second.velocity ); 
+              //} else if ( face == Patch::zminus || face == Patch::zplus ){ 
+              //  setVel__NEW( patch, face, vars->wVelRhoHat, vars->uVelRhoHat, vars->vVelRhoHat, constvars->new_density, bound_ptr, bc_iter->second.velocity ); 
+              //} 
+            } else if ( bc_iter->second.type == SWIRL ) { 
+
+              if ( face == Patch::xminus || face == Patch::xplus ) { 
+
+                std::cout << " velocity = " << bc_iter->second.velocity[0] << std::endl;
+                std::cout << " swirl_no = " << bc_iter->second.swirl_no << std::endl;
+                std::cout << " swirl_cent = " << bc_iter->second.swirl_cent << std::endl;
+                setSwirl( patch, face, vars->uVelRhoHat, vars->vVelRhoHat, vars->wVelRhoHat, 
+                    constvars->new_density, bound_ptr, bc_iter->second.velocity, bc_iter->second.swirl_no, bc_iter->second.swirl_cent ); 
+
+              } else if ( face == Patch::yminus || face == Patch::yplus ){ 
+
+                setSwirl( patch, face, vars->vVelRhoHat, vars->wVelRhoHat, vars->uVelRhoHat, 
+                    constvars->new_density, bound_ptr, bc_iter->second.velocity, bc_iter->second.swirl_no, bc_iter->second.swirl_cent  ); 
+
+              } else if ( face == Patch::zminus || face == Patch::zplus ){ 
+
+                setSwirl( patch, face, vars->wVelRhoHat, vars->uVelRhoHat, vars->vVelRhoHat, 
+                    constvars->new_density, bound_ptr, bc_iter->second.velocity, bc_iter->second.swirl_no, bc_iter->second.swirl_cent  ); 
+
+              } 
+
             } else if ( bc_iter->second.type == VELOCITY_FILE ) {
               //---- set velocities
               //setVelFromInput__NEW( patch, face, uVelocity, vVelocity, wVelocity, bound_ptr, bc_iter->second.filename ); 
@@ -6457,6 +6499,7 @@ BoundaryCondition::setupBCs( ProblemSpecP& db )
   d_bc_type_to_string.insert( std::make_pair( VELOCITY_FILE  , "VelocityFileInput" ) );
   d_bc_type_to_string.insert( std::make_pair( PRESSURE       , "PressureBC" ) );
   d_bc_type_to_string.insert( std::make_pair( OUTLET         , "Outlet" ) );
+  d_bc_type_to_string.insert( std::make_pair( SWIRL          , "Swirl" ) ); 
   d_bc_type_to_string.insert( std::make_pair( WALL           , "Wall" ) );
 
   // Now actually look for the boundary types
@@ -6493,6 +6536,8 @@ BoundaryCondition::setupBCs( ProblemSpecP& db )
           my_info.velocity = Vector(0,0,0); 
           found_bc = true; 
 
+          // note that the mass flow rate is in the BCstruct value 
+
           //old: remove when this is cleaned up: 
           d_inletBoundary = true; 
 
@@ -6501,6 +6546,19 @@ BoundaryCondition::setupBCs( ProblemSpecP& db )
           my_info.type = VELOCITY_FILE; 
           db_BCType->require("inputfile", my_info.filename); 
           my_info.velocity = Vector(0,0,0); 
+          found_bc = true; 
+
+          //old: remove when this is cleaned up: 
+          d_inletBoundary = true; 
+
+        } else if ( type == "Swirl" ){ 
+
+          my_info.type = SWIRL; 
+          db_BCType->require("swirl_no", my_info.swirl_no);
+          db_BCType->require("swirl_centroid", my_info.swirl_cent); 
+
+          // note that the mass flow rate is in the BCstruct value 
+
           found_bc = true; 
 
           //old: remove when this is cleaned up: 
@@ -6889,6 +6947,14 @@ BoundaryCondition::setupBCInletVelocities__NEW(const ProcessorGroup*,
                                                  ( area * density[*bound_ptr] );
                 proc0cout << "     Computed velocity from rho = " << density[*bound_ptr] << " is v = " << bc_iter->second.velocity[norm] << endl;
                 break;
+              case ( SWIRL ):
+                proc0cout << " Swirl inlet found for face: " << face << " with area = " << area << endl;
+                bc_iter->second.mass_flow_rate = bc_value; 
+                bc_iter->second.velocity[norm] = bc_iter->second.mass_flow_rate / 
+                                                 ( area * density[*bound_ptr] ); 
+                proc0cout << "     Computed velocity from rho = " << density[*bound_ptr] << " is v = " << bc_iter->second.velocity[norm] << endl;
+                break; 
+
               case ( VELOCITY_FILE ): 
                 // here we should read in the file 
 
@@ -7089,6 +7155,62 @@ void BoundaryCondition::setEnthalpyFromInput__NEW( const Patch* patch, const Pat
     CCVariable<double>& enthalpy, BoundaryCondition::HelperMap ivGridVarMap, BoundaryCondition::HelperVec allIndepVarNames, 
     Iterator bound_ptr ) 
 {
+}
+
+template<class d0T, class d1T, class d2T>
+void BoundaryCondition::setSwirl( const Patch* patch, const Patch::FaceType& face, 
+        d0T& uVel, d1T& vVel, d2T& wVel,
+        constCCVariable<double>& density, 
+        Iterator bound_ptr, Vector value, 
+        double swrl_no, Vector swrl_cent )
+{
+
+ //get the face direction
+ IntVector insideCellDir = patch->faceDirection(face);
+ Vector Dx = patch->dCell(); 
+ Vector mDx; //mapped dx 
+ int dir = 0; 
+
+ //remap the dx's and vector values
+ for (int i = 0; i < 3; i++ ){ 
+  if ( insideCellDir[i] != 0 ) { 
+    dir = i; 
+  } 
+ }
+ Vector bc_values;
+ for (int i = 0; i < 3; i++ ){ 
+   int index = index_map[dir][i]; 
+   bc_values[i] = value[index];
+   mDx[i] = Dx[index];
+ }
+
+ for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
+
+   IntVector c  = *bound_ptr; 
+   IntVector cp = *bound_ptr - insideCellDir; 
+
+   uVel[c]  = bc_values.x();
+   uVel[cp] = bc_values.x() * density[c] / ( 0.5 * ( density[c] + density[cp] )); 
+
+   double ave_u = (uVel[c] + uVel[cp])/2.0;
+
+   double y = c[index_map[dir][1]] * mDx.y() - swrl_cent[index_map[dir][1]];
+   double z = c[index_map[dir][2]] * mDx.z() + mDx.z()/2.0 - swrl_cent[index_map[dir][2]];
+
+   double denom = pow(y,2) + pow(z,2); 
+   denom = pow(denom,0.5); 
+
+   vVel[c] = -1.0 * z * swrl_no * ave_u /denom; 
+
+   y = c[index_map[dir][1]]*mDx.y() + mDx.y()/2.0 - swrl_cent[index_map[dir][1]];
+   z = c[index_map[dir][2]]*mDx.z() - swrl_cent[index_map[dir][2]]; 
+
+   denom = pow(y,2) + pow(z,2); 
+   denom = pow(denom,0.5); 
+
+   wVel[c] = y * swrl_no * ave_u / denom;
+
+ }
 }
 
 void BoundaryCondition::setVel__NEW( const Patch* patch, const Patch::FaceType& face, 

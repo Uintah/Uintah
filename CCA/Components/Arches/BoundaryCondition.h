@@ -103,7 +103,7 @@ namespace Uintah {
 
     public:
 
-      enum BC_TYPE { VELOCITY_INLET, MASSFLOW_INLET, VELOCITY_FILE, MASSFLOW_FILE, PRESSURE, OUTLET, WALL, MMWALL, INTRUSION }; 
+      enum BC_TYPE { VELOCITY_INLET, MASSFLOW_INLET, VELOCITY_FILE, MASSFLOW_FILE, PRESSURE, OUTLET, WALL, MMWALL, INTRUSION, SWIRL }; 
 
       // GROUP: Constructors:
       ////////////////////////////////////////////////////////////////////////
@@ -232,6 +232,13 @@ namespace Uintah {
         SFCXVariable<double>& uVel, SFCYVariable<double>& vVel, SFCZVariable<double>& wVel, 
         constCCVariable<double>& density, 
         Iterator bound_iter, Vector value );
+
+      template<class d0T, class d1T, class d2T>
+      void setSwirl( const Patch* patch, const Patch::FaceType& face, 
+        d0T& uVel, d1T& vVel, d2T& wVel,
+        constCCVariable<double>& density, 
+        Iterator bound_ptr, Vector value, 
+        double swirl_no, Vector swirl_cent );
 
       void setVelFromInput__NEW( const Patch* patch, const Patch::FaceType& face, 
         SFCXVariable<double>& uVel, SFCYVariable<double>& vVel, SFCZVariable<double>& wVel,
@@ -810,6 +817,8 @@ namespace Uintah {
         double mass_flow_rate;
         std::string filename; 
         std::map<IntVector, double> file_input; 
+        double swirl_no; 
+        Vector swirl_cent; 
 
         // State: 
         double enthalpy; 
@@ -1241,6 +1250,9 @@ namespace Uintah {
       SpeciesEffMap d_speciesEffInfo;
 
       BoundaryCondition_new* d_newBC; 
+
+      int index_map[3][3];
+      
 
   /* --------------------------------------------------------------------- 
   Function~  getIteratorBCValueBCKind--
