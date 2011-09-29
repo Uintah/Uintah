@@ -690,18 +690,20 @@ _sci_includes=''
 
 ])
 
+
 ## SCI_CUDA_COMPILE_LINK_TEST
 AC_DEFUN([SCI_CUDA_COMPILE_LINK_TEST], [
 ## arguments mean:
-## arg 1 : variable base name i.e. CUDA
-## arg 2 : checking message
-## arg 3 : includes that arg 8 needs to compile
-## arg 4 : include paths -I
-## arg 5 : list of libs to link against -l
-## arg 6 : lib paths -L
-## arg 7 : extra link flags
-## arg 8 : body of code (source file) to compile
-## arg 9 : optional or not-optional required argument
+## arg 1  : variable base name i.e. CUDA
+## arg 2  : checking message
+## arg 3  : includes that arg 8 needs to compile
+## arg 4  : include paths -I
+## arg 5  : list of libs to link against -l
+## arg 6  : lib paths -L
+## arg 7  : extra link flags
+## arg 8  : body of code (source file) to compile
+## arg 9  : optional or not-optional required argument
+## arg 10 : whether or not to set env vars
 ##
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
@@ -718,6 +720,9 @@ ifelse([$1],[],[AC_FATAL(must provide a test name in arg 1)],)dnl
 
 ifelse([$9],[optional],,[$9],[not-optional],,
        [AC_FATAL(arg 9 must be either 'optional' or 'not-optional' got $9)])dnl
+
+ifelse([$10],[yes],,[$10],[no],,
+       [AC_FATAL(arg 10 must be either 'yes' or 'no' got $10)])dnl       
 
 AC_MSG_CHECKING(for $2 ($9))
 echo
@@ -826,7 +831,6 @@ fi
 # check we can also link via C++ compiler
 AC_MSG_CHECKING([for linking nvcc compiled object code via C++ compiler])
 $CXX $NVCC_LIBS -o $_file_base_name $_file_base_name.o
-
 
 if test -f $_file_base_name; then
   AC_MSG_RESULT([yes])

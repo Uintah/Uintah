@@ -247,7 +247,6 @@ __global__ void timeAdvanceKernelAdvectSlabs(uint3 domainSize,
       faceVol[5]       = outfluxVol + influxVol;
       sum_q_face_flux += q_face_flux[5];
 
-
       // Sum all the Advected masses and adjust the new mass
       massAd[cell]     = sum_q_face_flux*invol;
       newMass[cell]    = mass[cell] - massAd[cell];
