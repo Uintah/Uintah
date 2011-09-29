@@ -565,9 +565,141 @@ as a child of the \verb=<Uintah_Specification>= section.
 Most other Arches specifications are located in the {\it CFD$\rightarrow$ARCHES} section of the input file.  Unless otherwise specified, the system of units for all Arches input parameters are SGI.
 
 \subsection{Boundary Conditions} 
-Boundary conditions for Arches are specified using the Uintah boundary condition mechanism.  As such, all boundary conditions for domain faces are specified in the \verb=<Grid>=$\rightarrow$=<BoundaryConditions>=\verb section of the input file.  Generic details of the UCF boundary condition mechanism may be found in \ref{sec:ucf_bc}.  
+Boundary conditions for Arches are specified using the Uintah boundary condition mechanism.  As such, all boundary conditions for domain faces are specified in the \verb=<Grid>=$\rightarrow$\verb=<BoundaryConditions>= section of the input file.  Generic details of the UCF boundary condition mechanism may be found in \ref{sec:ucf_bc}.  
 
-Generally, boundary conditions are required for every transport equation.   
+Generally, boundary conditions are required for every transport equation except at periodic boundaries.  Specifically, every equation specified in the \verb=<TransportEqn>= section of the input file requires domain boundary specification on every domain face.  
+
+The generic options for the boundary condition type include \verb=Dirichlet= and \verb=Neumann= conditions.  For the \verb=Dirichlet= condition, transported variables at domain boundaries satisfy the condition, 
+%
+\begin{equation}
+\phi_b = \alpha_D
+\end{equation}
+%
+where $\phi_b$ is the transported variable at the domain extent and $\alpha_D$ is the value specified in the \verb=<BCType>=$\rightarrow$\verb=<value>= tag. The \verb=Neumann= condition specifies the gradient of $\phi$ at the boundary and thus satisfies the condition, 
+%
+\begin{equation}
+\frac{\partial \phi}{\partial n}|_b = \alpha_N
+\end{equation}
+%
+where $n$ is the normal direction of the boundary and $\alpha_N$ is the value specified in the \verb=<BCType>=$\rightarrow$\verb=<value>= tag.  
+
+Momentum boundary conditions are specified using descriptive tags that in turn choose the appropriate Nuemann, Dirichlet, or some other boundary condition depending on the tag.  Note that some momentum boundary conditions have implications for all transported variables despite any previously specified boundary condition for that specific scalar.  This is described below.  
+
+Boundary conditions for momentum include (with the corresponding \verb=<BCTyep var>= attribute listed), 
+%
+\begin{itemize}
+\item Specified velocity inlet (\verb=VelocityInlet=)
+\item Specified mass flow rate (\verb=MassFlowInlet=)
+\item Specified swirl inlet (\verb=Swirl=)
+\item Velocity inlet read from file (\verb=VelocityFileInput=)
+\item Pressure boundary condition (\verb=PressureBC=)
+\item Outlet boundary condition (\verb=OutletBC=)
+\item Wall boundary condition (\verb=WallBC=)
+\end{itemize}
+%
+Details of each boundary condition follow.
+
+\subsubsection*{Velocity Inlet}
+%
+The velocity inlet specification requires that \verb=<vecvalue>= be specified as a child of \verb=<BCType>=, where \verb=<vecvalue>= represents a three component vector of velocity at the inlet. For example, 
+%
+\begin{Verbatim}[fontsize=\footnotesize]
+<Face circle="x-" radius="0.5" centroid="0 0.5 0.5">
+	<BCType var="VelocityInlet" id="0" label="my velocity inlet">
+		<vecvalue>[0.1, 0.2, 0.2]</vecvalue>
+	</BCType>
+</Face>
+\end{Verbatim}
+%
+specifies a non-normal velocity component in a circular region on the x-minus face.  Note that the \verb=label= attribute is generic here, allowing the user to specify any descriptive title to the boundary condition.  
+
+Velocity inlet boundary conditions simply set the velocity vector at domain boundary interface.  To ensure a constant mass flow rate for the given velocity condition, the actual velocity at the domain interface may vary to compensate for varying density within the domain while maintaining a constant mass flow rate into the domain.  This step is necessary because density is a cell centered quantity and interpolation of density to the face may potentially change the mass flow rate if the velocity is not adjusted accordingly.  This is accomplished by computing the following for the normal velocity component, 
+%
+\begin{equation}
+u_{n} = 2.0( \rho u )_{b} / (\rho_{i} + \rho_{b}), 
+\end{equation}
+% 
+where $n$ indicates the normal interfacial velocity, $b$ is the boundary density, and $i$ is the density from the first interior cell in the normal direction of the boundary.  Note that a simple linear interpolant has been used to compute the boundary density.  
+
+\subsubsection*{Mass Flow Inlet}
+%
+The mass flow inlet boundary condition requires that \verb=<value>= be specified as a child of \verb=<BCType>=, where \verb=<value>= is the mass flow rate in units of \verb=[kg/s]=. For example, 
+%
+\begin{Verbatim}[fontsize=\footnotesize]
+<Face circle="x-" radius="0.5" centroid="0 0.5 0.5">
+	<BCType var="MassFlowInlet" id="0" label="my mass flow inlet">
+		<value>0.4</value>
+	</BCType>
+</Face>
+\end{Verbatim}
+%
+specifies a mass flow rate in a circular region on the x-minus face.  Note that the \verb=label= attribute is generic here, allowing the user to specify any descriptive title to the boundary condition.  
+
+A velocity condition is set from the mass flow rate condition using the area and density of the boundary geometry.  Note that the area of the geometry is computed from the true area of assembly of the grid cells and not the ideal geometry area.  Once velocities are computed, the mass flow rate boundary condition proceeds as the previously described velocity inlet condition.  
+
+\subsubsection*{Swirl Inlet}
+% 
+The swirl condition specifies a mass flow rate condition in addition to adding a swirling component from the non-normal velocity components.  This specification requires that the \verb=<value>= (mass flow rate, \verb=[kg/hr]=), \verb=<swirl_no>= (swirl number), and \verb=<swirl_centroid>= be specified as a child of \verb=<BCType>=.  For example, 
+%
+\begin{Verbatim}[fontsize=\footnotesize]
+<Face circle="x-" radius="0.5" centroid="0 0.5 0.5">
+	<BCType var="Swirl" id="0" label="my swirled inlet">
+		<value>1.0</value>
+		<swirl_no>16.0</swirl_no>
+		<swirl_centroid>[0, 0.5, 0.5]</swirl_centroid>
+	</BCType>
+</Face>
+\end{Verbatim}
+%
+specifies a mass flow inlet in a circular region on the x-minus face with a swirl number of 16 and a centroid coincident with the circle of the boundary geometry.  Note that the swirl condition currently is applied across the entire geometry. 
+%
+%add brief description of the swirl condition here.....
+
+\subsubsection*{Velocity File Input Inlet}
+% 
+Work in progress....please check back later. 
+
+\subsubsection*{Pressure Boundary Condition}
+%
+A pressure (open) boundary condition is specified using \verb=PressureBC= attribute.  For example, 
+%
+\begin{Verbatim}[fontsize=\footnotesize]
+<Face side="y+">
+	<BCType var="PressureBC" id="0" label="y+ pressure bc"/>
+</Face>
+\end{Verbatim}
+%
+specifies a pressure condition on the \verb=y+= face of the domain. 
+%
+% add brief description of the pressure condition here
+
+\subsubsection*{Flow Outlet Boundary Condition}
+%
+A flow outlet boundary condition is specified using \verb=OutletBC= attribute.  For example, 
+%
+\begin{Verbatim}[fontsize=\footnotesize]
+<Face side="y+">
+	<BCType var="OutletBC" id="0" label="x+ outlet bc"/>
+</Face>
+\end{Verbatim}
+%
+specifies an outlet condition on the \verb=x+= face of the domain. 
+%
+% add brief description of the outlet condition here
+
+\subsubsection*{Wall Boundary Condition}
+%
+A wall boundary condition is specified using \verb=WallBC= attribute.  For example, 
+%
+\begin{Verbatim}[fontsize=\footnotesize]
+<Face side="y+">
+	<BCType var="WallBC" id="0" label="x- wall bc"/>
+</Face>
+\end{Verbatim}
+%%once moving walls are supported, add documentation%
+specifies a stationary wall condition on the \verb=x-= face of the domain. 
+%
+% add brief description of the wall condition here
 
  \subsection{Time Integrator}
  % 
