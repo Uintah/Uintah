@@ -562,7 +562,12 @@ Choosing the ARCHES component is done through the simulation controller using th
 %
 as a child of the \verb=<Uintah_Specification>= section.  
 
-Most other Arches specifications are located in the {\it CFD$\rightarrow$ARCHES} section of the input file.  Unless otherwise specified, the system of units for all Arches input parameters are SGI. 
+Most other Arches specifications are located in the {\it CFD$\rightarrow$ARCHES} section of the input file.  Unless otherwise specified, the system of units for all Arches input parameters are SGI.
+
+\subsection{Boundary Conditions} 
+Boundary conditions for Arches are specified using the Uintah boundary condition mechanism.  As such, all boundary conditions for domain faces are specified in the \verb=<Grid>=$\rightarrow$=<BoundaryConditions>=\verb section of the input file.  Generic details of the UCF boundary condition mechanism may be found in \ref{sec:ucf_bc}.  
+
+Generally, boundary conditions are required for every transport equation.   
 
  \subsection{Time Integrator}
  % 
