@@ -4017,6 +4017,7 @@ if test "$sci_required_cuda" = "yes"; then
   if test \( "$with_cuda" -a "$with_cuda_sdk" = "no" \) -o \( "$with_cuda" = "no" -a "$with_cuda_sdk" \) ; then
     AC_MSG_ERROR( [Both --with-cuda=DIR and --with-cuda-sdk=DIR must be specified...] )
   fi
+  
   if test \( "$with_cuda" -a "$with_cuda_sdk" = "" \) -o \( "$with_cuda" = "" -a "$with_cuda_sdk" \); then
     AC_MSG_ERROR( [Both --with-cuda=DIR and --with-cuda-sdk=DIR must be specified...] )
   fi
@@ -4063,7 +4064,32 @@ if test "$sci_required_cuda" = "yes"; then
   fi  
 
 # code to compile and test linking for (this will be deleted after tests)
-  cat > cuda_conf_test.cu <<EOF
+
+# test if nvcc can compile tr1/type_traits headers provided by host compiler
+# there is a known incopmpatibility with nvcc and GNU 4.4 tr1/type_traits headers
+  cat > type_traits_test.cu << EOF
+#include <tr1/type_traits>
+int main(void)
+{
+      return 0;
+}
+EOF
+
+  SCI_CUDA_COMPILE_LINK_TEST(CUDA,
+                             NVCC tr1/type_traits header compatibility,
+                             cuda.h cutil.h,
+                             $_cuda_inc $_cuda_sdk_inc,
+                             cudart $_cutil_lib,
+                             $_cuda_lib $_cuda_sdk_lib,
+                             ,
+                             type_traits_test.cu,
+                             optional,
+                             no)
+
+rm -rf cuda_conf_test*
+
+
+  cat > cuda_conf_test.cu << EOF
 #include <stdio.h>
 #include <stdlib.h>
 #include <cutil.h>
@@ -4127,30 +4153,31 @@ EOF
   #--------------------------------------------------
     
   SCI_CUDA_COMPILE_LINK_TEST(CUDA,
-                             CUDA libraries and headers,
+                             CUDA and CUDA_SDK libraries and headers,
                              cuda.h cutil.h,
                              $_cuda_inc $_cuda_sdk_inc,
                              cudart $_cutil_lib,
                              $_cuda_lib $_cuda_sdk_lib,
                              ,
                              cuda_conf_test.cu,
-                             optional)
+                             optional,
+                             yes)
 
 rm -rf cuda_conf_test*
 echo
 
 #[aph] - debug
-echo
+#echo
 #echo "HAVE_CUDA         = " $HAVE_CUDA
 #echo "HAVE_CUDA_H       = " $HAVE_CUDA_H
 #echo "INC_CUDA_H        = " $INC_CUDA_H
 #echo "CUDA_LIB_FLAG     = " $CUDA_LIB_FLAG
 #echo "CUDA_LIB_DIR      = " $CUDA_LIB_DIR
 #echo "CUDA_LIB_DIR_FLAG = " $CUDA_LIB_DIR_FLAG
-echo "NVCC_CFLAGS       = " $NVCC_CFLAGS
-echo "NVCC_CXXFLAGS     = " $NVCC_CXXFLAGS
-echo "NVCC_LDFLAGS      = " $NVCC_LDFLAGS
-echo "NVCC_LIBS         = " $NVCC_LIBS
+#echo "NVCC_CFLAGS       = " $NVCC_CFLAGS
+#echo "NVCC_CXXFLAGS     = " $NVCC_CXXFLAGS
+#echo "NVCC_LDFLAGS      = " $NVCC_LDFLAGS
+#echo "NVCC_LIBS         = " $NVCC_LIBS
 #echo
 #echo "CC       = " $CC
 #echo "NVCC     = " $NVCC
@@ -4158,7 +4185,7 @@ echo "NVCC_LIBS         = " $NVCC_LIBS
 #echo "LDFLAGS  = " $LDFLAGS
 #echo "CFLAGS   = " $CFLAGS
 #echo "CXXFLAGS = " $CXXFLAGS
-echo
+#echo
 
 fi #end sci_required_cuda
 
