@@ -75,7 +75,7 @@ PetscSolver::matrixCreate(const PatchSet*,
 void 
 PetscSolver::setMatrix(const ProcessorGroup* ,
                        const Patch*,
-                       constCCVariable<Stencil7>& coeff )
+                       CCVariable<Stencil7>& coeff )
 {
   throw InternalError("setMatrix(): PetscSolver not configured", __FILE__, __LINE__);
 }
