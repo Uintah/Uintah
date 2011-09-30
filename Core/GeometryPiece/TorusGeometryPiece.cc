@@ -32,13 +32,11 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/Box.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/ProblemSetupException.h>
-
 #include <Core/Malloc/Allocator.h>
 #include <Core/Geometry/Vector.h>
 
 using namespace Uintah;
 using namespace SCIRun;
-
 
 const string TorusGeometryPiece::TYPE_NAME = "torus";
 
@@ -50,6 +48,7 @@ TorusGeometryPiece::TorusGeometryPiece()
   d_major_radius = 0.0;
   d_minor_radius = 0.0;
   d_axis = "x";
+  d_theta = 0.0;
 }
 
 TorusGeometryPiece::TorusGeometryPiece(ProblemSpecP& ps) 
@@ -60,6 +59,7 @@ TorusGeometryPiece::TorusGeometryPiece(ProblemSpecP& ps)
   ps->require("major_radius",d_major_radius);
   ps->require("minor_radius",d_minor_radius);
   ps->require("axis",d_axis);
+  ps->getWithDefault("theta",d_theta,0.0);
 
   if ( d_minor_radius <= 0.0) {
     SCI_THROW(ProblemSetupException("Input File Error: Torus minor_radius must be > 0.0", __FILE__, __LINE__));
@@ -75,7 +75,8 @@ TorusGeometryPiece::TorusGeometryPiece(ProblemSpecP& ps)
 TorusGeometryPiece::TorusGeometryPiece(const Point& center,
                                        const double major,
                                        const double minor,
-                                       const string axis)
+                                       const string axis,
+                                       const double theta)
 {
   name_ = "Unnamed " + TYPE_NAME + " from center/major/minor";
 
@@ -83,6 +84,7 @@ TorusGeometryPiece::TorusGeometryPiece(const Point& center,
   d_major_radius = major;
   d_minor_radius = minor;
   d_axis = axis;
+  d_theta = theta;
 
   if ( d_minor_radius <= 0.0) {
     SCI_THROW(ProblemSetupException("Input File Error: Torus minor_radius must be > 0.0", __FILE__, __LINE__));
@@ -106,6 +108,7 @@ TorusGeometryPiece::outputHelper( ProblemSpecP & ps ) const
   ps->appendElement("major_radius",d_major_radius);
   ps->appendElement("minor_radius",d_minor_radius);
   ps->appendElement("axis",d_axis);
+  ps->appendElement("rotation_angle",d_theta);
 }
 
 GeometryPieceP
@@ -121,6 +124,10 @@ TorusGeometryPiece::inside(const Point &p) const
   double y = p.y() - d_center.y();
   double z = p.z() - d_center.z();
   if(d_axis=="z"){
+    // rotate about the x-axis, i.e., keep x unchanged
+    double yprime = y*cos(-d_theta) - z*sin(-d_theta);
+    double zprime = y*sin(-d_theta) + z*cos(-d_theta);
+    y=yprime; z=zprime;
     if((d_major_radius - sqrt(x*x + y*y))*
        (d_major_radius - sqrt(x*x + y*y)) + z*z <
         d_minor_radius*d_minor_radius){
@@ -130,7 +137,11 @@ TorusGeometryPiece::inside(const Point &p) const
     }
   } // axis = z
 
-  if(d_axis=="y"){
+  else if(d_axis=="y"){
+    // rotate about the z-axis, i.e., keep z unchanged
+    double xprime = x*cos(-d_theta) - y*sin(-d_theta);
+    double yprime = x*sin(-d_theta) + y*cos(-d_theta);
+    x=xprime; y=yprime;
     if((d_major_radius - sqrt(x*x + z*z))*
        (d_major_radius - sqrt(x*x + z*z)) + y*y <
         d_minor_radius*d_minor_radius){
@@ -140,7 +151,11 @@ TorusGeometryPiece::inside(const Point &p) const
     }
   } // axis = y
 
-  if(d_axis=="x"){
+  else if(d_axis=="x"){
+    // rotate about the y-axis, i.e., keep y unchanged
+    double xprime = x*cos(-d_theta) - z*sin(-d_theta);
+    double zprime = x*sin(-d_theta) + z*cos(-d_theta);
+    x=xprime; z=zprime;
     if((d_major_radius - sqrt(y*y + z*z))*
        (d_major_radius - sqrt(y*y + z*z)) + x*x <
         d_minor_radius*d_minor_radius){
@@ -149,6 +164,9 @@ TorusGeometryPiece::inside(const Point &p) const
       return false;
     }
   } // axis = x
+  else{
+    SCI_THROW(ProblemSetupException("Input File Error: Torus axis must be 'x', 'y', or 'z'", __FILE__, __LINE__));
+  }
 
 }
 

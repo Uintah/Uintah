@@ -130,6 +130,7 @@
       <major_radius           spec="REQUIRED DOUBLE 'positive'" />
       <minor_radius           spec="REQUIRED DOUBLE 'positive'" />
       <axis                   spec="REQUIRED STRING" />
+      <theta                  spec="OPTIONAL DOUBLE" />
     </torus>
 
     <parallelepiped                 spec="OPTIONAL NO_DATA"
