@@ -34,6 +34,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Examples/RMCRT_Test.h>
 #include <CCA/Components/Examples/ParticleTest1.h>
 #include <CCA/Components/Examples/AdvectSlabs.h>
+#include <CCA/Components/Examples/AdvectSlabsGPU.h>
 #include <CCA/Components/Examples/Poisson1.h>
 #include <CCA/Components/Examples/PoissonGPU1.h>
 #include <CCA/Components/Examples/Poisson2.h>
@@ -191,6 +192,9 @@ ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world,
   } 
   if (sim_comp == "advectslabs" || sim_comp == "ADVECTSLABS") {
     return scinew AdvectSlabs(world);
+  } 
+  if (sim_comp == "advectslabsgpu" || sim_comp == "ADVECTSLABSGPU") {
+    return scinew AdvectSlabsGPU(world);
   } 
 #ifdef HAVE_CUDA
   if (sim_comp == "poissongpu1" || sim_comp == "POISSONGPU1") {
