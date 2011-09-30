@@ -129,6 +129,7 @@
       <center                 spec="REQUIRED VECTOR" />
       <major_radius           spec="REQUIRED DOUBLE 'positive'" />
       <minor_radius           spec="REQUIRED DOUBLE 'positive'" />
+      <axis                   spec="REQUIRED STRING" />
     </torus>
 
     <parallelepiped                 spec="OPTIONAL NO_DATA"

@@ -49,6 +49,7 @@ TorusGeometryPiece::TorusGeometryPiece()
   d_center = Point(0.,0.,0.);
   d_major_radius = 0.0;
   d_minor_radius = 0.0;
+  d_axis = "x";
 }
 
 TorusGeometryPiece::TorusGeometryPiece(ProblemSpecP& ps) 
@@ -58,6 +59,7 @@ TorusGeometryPiece::TorusGeometryPiece(ProblemSpecP& ps)
   ps->require("center",d_center);
   ps->require("major_radius",d_major_radius);
   ps->require("minor_radius",d_minor_radius);
+  ps->require("axis",d_axis);
 
   if ( d_minor_radius <= 0.0) {
     SCI_THROW(ProblemSetupException("Input File Error: Torus minor_radius must be > 0.0", __FILE__, __LINE__));
@@ -65,23 +67,31 @@ TorusGeometryPiece::TorusGeometryPiece(ProblemSpecP& ps)
   if ( d_major_radius <= 0.0) {
     SCI_THROW(ProblemSetupException("Input File Error: Torus major_radius must be > 0.0", __FILE__, __LINE__));
   }
+  if(d_axis != "x" && d_axis != "y" && d_axis != "z"){
+    SCI_THROW(ProblemSetupException("Input File Error: Torus axis must be 'x', 'y', or 'z'", __FILE__, __LINE__));
+  }
 }
 
 TorusGeometryPiece::TorusGeometryPiece(const Point& center,
                                        const double major,
-                                       const double minor)
+                                       const double minor,
+                                       const string axis)
 {
   name_ = "Unnamed " + TYPE_NAME + " from center/major/minor";
 
   d_center = center;
   d_major_radius = major;
   d_minor_radius = minor;
+  d_axis = axis;
 
   if ( d_minor_radius <= 0.0) {
     SCI_THROW(ProblemSetupException("Input File Error: Torus minor_radius must be > 0.0", __FILE__, __LINE__));
   }
   if ( d_major_radius <= 0.0) {
     SCI_THROW(ProblemSetupException("Input File Error: Torus major_radius must be > 0.0", __FILE__, __LINE__));
+  }
+  if(d_axis != "x" && d_axis != "y" && d_axis != "z"){
+    SCI_THROW(ProblemSetupException("Input File Error: Torus axis must be 'x', 'y', or 'z'", __FILE__, __LINE__));
   }
 }
 
@@ -95,6 +105,7 @@ TorusGeometryPiece::outputHelper( ProblemSpecP & ps ) const
   ps->appendElement("center",d_center);
   ps->appendElement("major_radius",d_major_radius);
   ps->appendElement("minor_radius",d_minor_radius);
+  ps->appendElement("axis",d_axis);
 }
 
 GeometryPieceP
@@ -109,20 +120,36 @@ TorusGeometryPiece::inside(const Point &p) const
   double x = p.x() - d_center.x();
   double y = p.y() - d_center.y();
   double z = p.z() - d_center.z();
-  if((d_major_radius - sqrt(x*x + y*y))*
-     (d_major_radius - sqrt(x*x + y*y)) + z*z <
-      d_minor_radius*d_minor_radius){
-    return true;
-  }else{
-/*
-  if((d_major_radius - sqrt(p.x()*p.x() + p.y()*p.y()))*
-     (d_major_radius - sqrt(p.x()*p.x() + p.y()*p.y())) + p.z()*p.z() <
-      d_minor_radius*d_minor_radius){
-    return true;
-  }else{
-*/
-    return false;
-  }
+  if(d_axis=="z"){
+    if((d_major_radius - sqrt(x*x + y*y))*
+       (d_major_radius - sqrt(x*x + y*y)) + z*z <
+        d_minor_radius*d_minor_radius){
+      return true;
+    }else{
+      return false;
+    }
+  } // axis = z
+
+  if(d_axis=="y"){
+    if((d_major_radius - sqrt(x*x + z*z))*
+       (d_major_radius - sqrt(x*x + z*z)) + y*y <
+        d_minor_radius*d_minor_radius){
+      return true;
+    }else{
+      return false;
+    }
+  } // axis = y
+
+  if(d_axis=="x"){
+    if((d_major_radius - sqrt(y*y + z*z))*
+       (d_major_radius - sqrt(y*y + z*z)) + x*x <
+        d_minor_radius*d_minor_radius){
+      return true;
+    }else{
+      return false;
+    }
+  } // axis = x
+
 }
 
 Box

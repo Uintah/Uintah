@@ -72,6 +72,7 @@ DESCRIPTION
          <center>[0.,0.,0.]</center>
          <major_radius>2.0</major_radius>
          <minor_radius>1.0</minor_radius>
+         <axis>x</axis>
        </torus>
 
 WARNING
@@ -92,7 +93,8 @@ WARNING
     //
     TorusGeometryPiece(const Point& center, 
                        const double minor,
-                       const double major);
+                       const double major,
+                       const string axis);
     
     //////////
     // Destructor
@@ -141,6 +143,7 @@ WARNING
     inline Point center() const {return d_center;}
     inline double major_radius() const {return d_major_radius;}
     inline double minor_radius() const {return d_minor_radius;}
+    inline string axis() const {return d_axis;}
 
   protected:
     
@@ -153,6 +156,7 @@ WARNING
     Point d_center;
     double d_major_radius;
     double d_minor_radius;
+    string d_axis;
   };
 } // End namespace Uintah
       
