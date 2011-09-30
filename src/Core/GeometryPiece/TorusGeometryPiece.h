@@ -94,7 +94,8 @@ WARNING
     TorusGeometryPiece(const Point& center, 
                        const double minor,
                        const double major,
-                       const string axis);
+                       const string axis,
+                       const double theta);
     
     //////////
     // Destructor
@@ -157,6 +158,7 @@ WARNING
     double d_major_radius;
     double d_minor_radius;
     string d_axis;
+    double d_theta;
   };
 } // End namespace Uintah
       
