@@ -525,14 +525,14 @@ namespace Wasatch{
     
     params->get("StrongForm",isStrong);
     
-    solnVarTag = Expr::Tag::Tag( solnVarName, Expr::STATE_N );
+    solnVarTag = Expr::Tag( solnVarName, Expr::STATE_N );
 
     if (isConstDensity || !isStrong) {
       primVarTag = solnVarTag;
     }
     else {
       const std::string primVarName = get_primvar_name( params );
-      primVarTag = Expr::Tag::Tag( primVarName, Expr::STATE_NONE );
+      primVarTag = Expr::Tag( primVarName, Expr::STATE_NONE );
       
       factory.register_expression( primVarTag, new typename PrimVar<FieldT,SVolField>::Builder( solnVarTag, densityTag));
     }    
