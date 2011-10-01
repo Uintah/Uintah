@@ -110,7 +110,7 @@ namespace SCIRun {
       // my default action (used if nothing is specified in SCI_DEBUG)
       bool defaulton;
       // the buffer that is used for output redirection
-      DebugBuf* dbgbuf;
+      DebugBuf dbgbuf;
       // if false, all input is ignored
       bool isactive;
       // check the environment variable
@@ -122,7 +122,7 @@ namespace SCIRun {
       ~DebugStream();
       bool active() {return isactive;};
       void setActive(bool active) { isactive = active; };
-      // the ostream that output should be redirected to. cerr by default.
+      // the ostream that output should be redirected to. cout by default.
       ostream *outstream;
     };
     
