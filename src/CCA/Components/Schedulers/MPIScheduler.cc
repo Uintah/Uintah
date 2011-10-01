@@ -97,7 +97,7 @@ MPIScheduler::MPIScheduler( const ProcessorGroup * myworld,
 			          Output         * oport,
 			          MPIScheduler   * parentScheduler) :
   SchedulerCommon( myworld, oport ),
-  log( myworld, oport ), parentScheduler( parentScheduler ), oport_(oport)
+  parentScheduler( parentScheduler ), log( myworld, oport ), oport_(oport)
 {
   d_lasttime=Time::currentSeconds();
   reloc_new_posLabel_=0;
@@ -221,7 +221,6 @@ MPIScheduler::initiateReduction( DetailedTask          * task )
     runReductionTask(task);
 
     double reduceend = Time::currentSeconds();
-    long long flop_count=0;
 
     emitNode(task, reducestart, reduceend - reducestart, 0);
     mpi_info_.totalreduce += reduceend-reducestart;

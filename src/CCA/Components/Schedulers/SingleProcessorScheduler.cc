@@ -150,7 +150,6 @@ SingleProcessorScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
     
     
     double delT = Time::currentSeconds()-start;
-    long long flop_count = 0;
     if(dws[dws.size()-1] && dws[dws.size()-1]->timestepAborted()){
       dbg << "Aborting timestep after task: " << *task->getTask() << '\n';
       break;
