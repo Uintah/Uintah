@@ -85,7 +85,6 @@ DebugStream execout("ExecTimes", false);
 DebugStream taskdbg("TaskDBG",   false);
 DebugStream taskLevel_dbg("TaskLevel", false);
 DebugStream mpidbg("MPIDBG",false);
-static Mutex sendsLock( "sendsLock" );
 
 extern ofstream wout;
 static double CurrentWaitTime=0;
@@ -288,9 +287,7 @@ MPIScheduler::runTask( DetailedTask         * task, int iteration)
   task->done(dws); // should this be timed with taskstart? - BJW
   double teststart = Time::currentSeconds();
 
-  sendsLock.lock(); // Dd... could do better?
   sends_.testsome( d_myworld );
-  sendsLock.unlock(); // Dd... could do better?
 
   mpi_info_.totaltestmpi += Time::currentSeconds() - teststart;
  
@@ -436,9 +433,7 @@ MPIScheduler::postMPISends( DetailedTask         * task, int iteration )
             d_myworld->getComm(), &requestid);
         int bytes = count;
 
-        sendsLock.lock(); // Dd: ??
         sends_.add( requestid, bytes, mpibuff.takeSendlist(), ostr.str(), batch->messageTag );
-        sendsLock.unlock(); // Dd: ??
         mpi_info_.totalsendmpi += Time::currentSeconds() - start;
       //}
     }

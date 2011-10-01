@@ -196,7 +196,11 @@ bool CommRecMPI::testsome(const ProcessorGroup * pg,
   statii.resize(ids.size());
   indices.resize(ids.size());
   int me = pg->myrank();
-  mixedDebug << me << " Calling testsome with " << ids.size() << " waiters\n";
+  if( mixedDebug.active() ) {
+    cerrLock.lock();
+    mixedDebug << me << " Calling testsome with " << ids.size() << " waiters\n";
+    cerrLock.unlock();
+  }
   int donecount;
   clock_t start=clock();
   MPI_Testsome((int)ids.size(), &ids[0], &donecount,

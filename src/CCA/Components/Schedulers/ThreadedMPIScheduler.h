@@ -35,8 +35,6 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Thread/ConditionVariable.h>
 #include <Core/Thread/Runnable.h>
 
-#define MAXTHR 16
-
 namespace Uintah {
 
 
@@ -106,6 +104,7 @@ WARNING
     DetailedTask*          t_task[16];     //current running tasks;
     int                    t_iteration[16];     //current running tasks;
     */
+    Mutex                  dlbLock;   //load balancer lock
     
   private:
     

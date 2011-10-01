@@ -455,7 +455,6 @@ private:
    //////////
    // Insert Documentation Here:
    mutable CrowdMonitor    d_lock;
-   mutable CrowdMonitor    d_rtasklock;
    bool                    d_finalized;
    GridP                   d_grid;
 
@@ -466,7 +465,8 @@ private:
    inline std::list<RunningTaskInfo>* getRunningTasksInfo();
    inline RunningTaskInfo* getCurrentTaskInfo();
     
-   std::map<Thread*, std::list<RunningTaskInfo> > d_runningTasks;
+   //std::map<Thread*, std::list<RunningTaskInfo> > d_runningTasks;
+   std::list<RunningTaskInfo>  d_runningTasks[16];
    ScrubMode d_scrubMode;
 
    bool aborted;
