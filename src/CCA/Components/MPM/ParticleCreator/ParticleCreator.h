@@ -31,6 +31,8 @@ DEALINGS IN THE SOFTWARE.
 #ifndef __PARTICLE_CREATOR_H__
 #define __PARTICLE_CREATOR_H__
 
+#include <Core/Thread/CrowdMonitor.h>
+
 #include <Core/GeometryPiece/GeometryPiece.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
@@ -154,6 +156,8 @@ namespace Uintah {
     geomvecs d_object_forces;
     geomvecs d_object_fibers;  
     geomvecs d_object_velocity; // gcd add
+    
+    mutable CrowdMonitor   d_lock;
   };
 
 
