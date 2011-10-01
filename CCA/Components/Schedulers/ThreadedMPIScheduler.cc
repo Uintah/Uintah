@@ -73,27 +73,6 @@ static DebugStream timeout("ThreadedMPIScheduler.timings", false);
 static DebugStream queuelength("QueueLength",false);
 static DebugStream threaddbg("ThreadDBG",false);
 
-static
-void
-printTask( ostream& out, DetailedTask* task )
-{
-  out << task->getTask()->getName();
-  if(task->getPatches()){
-    out << " \t on patches ";
-    const PatchSubset* patches = task->getPatches();
-    for(int p=0;p<patches->size();p++){
-      if(p != 0)
-	out << ", ";
-      out << patches->get(p)->getID();
-    }
-    
-    if (task->getTask()->getType() != Task::OncePerProc) {
-      const Level* level = getLevel(patches);
-      out << "\t  L-"<< level->getIndex();
-    }
-  }
-}
-
 ThreadedMPIScheduler::ThreadedMPIScheduler( const ProcessorGroup * myworld,
 			          Output         * oport,
 			          ThreadedMPIScheduler   * parentScheduler) :
