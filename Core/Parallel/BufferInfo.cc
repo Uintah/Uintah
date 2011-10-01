@@ -31,14 +31,12 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Parallel/BufferInfo.h>
 #include <Core/Util/RefCounted.h>
 #include <Core/Util/Assert.h>
-#include <Core/Thread/Mutex.h>
 #include <Core/Malloc/Allocator.h>
 
 #include <Core/Parallel/uintahshare.h>
 using namespace Uintah;
 using std::vector;
 
-UINTAHSHARE SCIRun::Mutex MPITypeLock( "MPITypeLock" );
 
 BufferInfo::BufferInfo()
 {
@@ -49,7 +47,6 @@ BufferInfo::BufferInfo()
 
 BufferInfo::~BufferInfo()
 {
- MPITypeLock.lock();
    
   if(free_datatype)
   {
@@ -70,8 +67,6 @@ BufferInfo::~BufferInfo()
     }
   }
 
- MPITypeLock.unlock();
- 
   if(sendlist)
   {
     delete sendlist;
@@ -100,7 +95,6 @@ void
 BufferInfo::get_type(void*& out_buf, int& out_count,
 		     MPI_Datatype& out_datatype)
 {
- MPITypeLock.lock();
   ASSERT(count() > 0);
   if(!have_datatype){
     if(count() == 1){
@@ -124,7 +118,6 @@ BufferInfo::get_type(void*& out_buf, int& out_count,
   out_buf=buf;
   out_count=cnt;
   out_datatype=datatype;
- MPITypeLock.unlock(); 
 }
 
 Sendlist::~Sendlist()

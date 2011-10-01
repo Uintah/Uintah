@@ -46,8 +46,6 @@ using namespace SCIRun;
 #  define UINTAHSHARE
 #endif
 
-extern UINTAHSHARE Mutex MPITypeLock;
-
 void GridVariableBase::getMPIBuffer(BufferInfo& buffer,
                                     const IntVector& low, const IntVector& high)
 {
@@ -61,16 +59,14 @@ void GridVariableBase::getMPIBuffer(BufferInfo& buffer,
   startbuf += strides.x()*off.x()+strides.y()*off.y()+strides.z()*off.z();
   IntVector d = high-low;
   MPI_Datatype type1d;
- MPITypeLock.lock();
-  MPI_Type_hvector(d.x(), 1, strides.x(), basetype, &type1d);
+  MPI_Type_create_hvector(d.x(), 1, strides.x(), basetype, &type1d);
 
   MPI_Datatype type2d;
-  MPI_Type_hvector(d.y(), 1, strides.y(), type1d, &type2d);
+  MPI_Type_create_hvector(d.y(), 1, strides.y(), type1d, &type2d);
   MPI_Type_free(&type1d);
   MPI_Datatype type3d;
-  MPI_Type_hvector(d.z(), 1, strides.z(), type2d, &type3d);
+  MPI_Type_create_hvector(d.z(), 1, strides.z(), type2d, &type3d);
   MPI_Type_free(&type2d);
   MPI_Type_commit(&type3d);
- MPITypeLock.unlock();  
   buffer.add(startbuf, 1, type3d, true);
 }
