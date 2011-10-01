@@ -95,7 +95,6 @@ static DebugStream warn( "OnDemandDataWarehouse_warn", true );
 static DebugStream particles("DWParticles", false);
 static DebugStream particles2("DWParticles2", false);
 extern DebugStream mpidbg;
-static Mutex ssLock( "send state lock" );
 
 struct ParticleSend : public RefCounted {
   int numParticles;
@@ -119,7 +118,6 @@ OnDemandDataWarehouse::OnDemandDataWarehouse(const ProcessorGroup* myworld,
                                              bool isInitializationDW/*=false*/)
    : DataWarehouse(myworld, scheduler, generation),
      d_lock("DataWarehouse lock"),
-     d_rtasklock("DataWarehouse rtasklock"),
      d_finalized( false ),
      d_grid(grid),
      d_isInitializationDW(isInitializationDW),
@@ -351,18 +349,14 @@ OnDemandDataWarehouse::sendMPI(DependencyBatch* batch,
           // already knows about it.
           ASSERT(old_dw != this);
           ParticleSubset* pset = var->getParticleSubset();
-          ssLock.lock();  // Dd: ??
           sendset = scinew ParticleSubset(0, matlIndex, patch, low, high);
-          ssLock.unlock();  // Dd: ??
           constParticleVariable<Point> pos;
           old_dw->get(pos, pos_var, pset);
           for(ParticleSubset::iterator iter = pset->begin();
               iter != pset->end(); iter++){
             particleIndex idx = *iter;
             if(Patch::containsIndex(low,high,patch->getCellIndex(pos[idx]))) {
-              ssLock.lock();  // Dd: ??
               sendset->addParticle(idx);
-              ssLock.unlock();  // Dd: ??
             }
           }
           old_dw->ss_.add_sendset(sendset, dest, patch, matlIndex, low, high, old_dw->d_generation);
@@ -1028,8 +1022,10 @@ OnDemandDataWarehouse::queryPSetDB(psetDBType &subsetDB,
   }
 
   //save subset for future queries
+  d_lock.writeLock();
   subsetDB.insert(pair<psetDBType::key_type,ParticleSubset*>(key,newsubset));
   newsubset->addReference();
+  d_lock.writeUnlock();
 
   return newsubset;
 }
@@ -1460,10 +1456,14 @@ OnDemandDataWarehouse::put(ParticleVariableBase& var,
   int matlIndex = pset->getMatlIndex();
   
   
+  if( dbg.active() ) {
+    cerrLock.lock();
   dbg << d_myworld->myrank() << " Putting: ";
   dbg<< left;dbg.width(20);
   dbg << *label << " MI: " << matlIndex << " patch: " 
        << *patch << " \tinto DW: " << d_generation << "\n";
+    cerrLock.unlock();
+  }
 
   d_lock.writeLock();   
   checkPutAccess(label, matlIndex, patch, replace);
@@ -2692,11 +2692,15 @@ OnDemandDataWarehouse::checkGetAccess(const VarLabel* label,
           if( label ){
             varname = label->getName();
           }
+         if( dbg.active() ) {
+          cerrLock.lock();
           dbg << d_myworld->myrank() << " Task running is: " << runningTask->getName();
           dbg<< left;dbg.width(10);
           dbg<< "\t"<< varname;
           dbg<< left;dbg.width(10);
           dbg<< " \t on patch " << ID << " and matl: " << matlIndex << " has been gotten\n";
+	  cerrLock.unlock();
+	 }
         } else {
           findIter->second.encompassOffsets(lowOffset, highOffset);
         }
@@ -2822,56 +2826,46 @@ void OnDemandDataWarehouse::pushRunningTask(const Task* task,
                                             vector<OnDemandDataWarehouseP>* dws)
 {
   ASSERT(task);
- d_rtasklock.writeLock();    
-  d_runningTasks[Thread::self()].push_back(RunningTaskInfo(task, dws));
- d_rtasklock.writeUnlock();
+  d_runningTasks[Thread::self()->myid()].push_back(RunningTaskInfo(task, dws));
 }
 //______________________________________________________________________
 //
 void OnDemandDataWarehouse::popRunningTask()
 {
- d_rtasklock.writeLock();
-  list<RunningTaskInfo>& runningTasks = d_runningTasks[Thread::self()];
-  runningTasks.pop_back();
- /* if (runningTasks.empty()) {
-    d_runningTasks.erase(Thread::self());
-  }*/
- d_rtasklock.writeUnlock();
+  d_runningTasks[Thread::self()->myid()].pop_back();
 }
 //______________________________________________________________________
 //
 inline list<OnDemandDataWarehouse::RunningTaskInfo>*
 OnDemandDataWarehouse::getRunningTasksInfo()
 {
-  map<Thread*, list<RunningTaskInfo> >::iterator findIt =
-    d_runningTasks.find(Thread::self());
-  return (findIt != d_runningTasks.end()) ? &findIt->second : 0;
+  if (d_runningTasks[Thread::self()->myid()].empty()) return 0;
+  else return &d_runningTasks[Thread::self()->myid()];
 }
 //______________________________________________________________________
 //
 inline bool OnDemandDataWarehouse::hasRunningTask()
 {
-  list<OnDemandDataWarehouse::RunningTaskInfo>* runningTasks =
-    getRunningTasksInfo();
-  return runningTasks ? !runningTasks->empty() : false;
+  if (d_runningTasks[Thread::self()->myid()].empty()) return false;
+  else return true;
 }
 //______________________________________________________________________
 //
 inline OnDemandDataWarehouse::RunningTaskInfo*
 OnDemandDataWarehouse::getCurrentTaskInfo()
 {
-  list<RunningTaskInfo>* taskInfoList = getRunningTasksInfo();
-  return (taskInfoList && !taskInfoList->empty()) ? &taskInfoList->back() : 0;
+  if (d_runningTasks[Thread::self()->myid()].empty()) return 0;
+  else return &d_runningTasks[Thread::self()->myid()].back();
 }
 //______________________________________________________________________
 //
 DataWarehouse*
 OnDemandDataWarehouse::getOtherDataWarehouse(Task::WhichDW dw, RunningTaskInfo* info)
 {
-  d_rtasklock.readLock();
+  d_lock.readLock();
   int dwindex = info->d_task->mapDataWarehouse(dw);
   DataWarehouse* result = (*info->dws)[dwindex].get_rep();
-  d_rtasklock.readUnlock();
+  d_lock.readUnlock();
   return result;
 }
 //______________________________________________________________________
@@ -2879,11 +2873,11 @@ OnDemandDataWarehouse::getOtherDataWarehouse(Task::WhichDW dw, RunningTaskInfo* 
 DataWarehouse*
 OnDemandDataWarehouse::getOtherDataWarehouse(Task::WhichDW dw)
 {
-  d_rtasklock.readLock();
+  d_lock.readLock();
   RunningTaskInfo* info = getCurrentTaskInfo();
   int dwindex = info->d_task->mapDataWarehouse(dw);
   DataWarehouse* result = (*info->dws)[dwindex].get_rep();
-  d_rtasklock.readUnlock();
+  d_lock.readUnlock();
   return result;
 }
 //______________________________________________________________________

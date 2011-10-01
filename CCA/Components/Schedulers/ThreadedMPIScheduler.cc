@@ -44,6 +44,8 @@ DEALINGS IN THE SOFTWARE.
 
 #include   <cstring>
 
+#define USE_PACKING
+
 using namespace std;
 using namespace Uintah;
 using namespace SCIRun;
@@ -57,7 +59,6 @@ using namespace SCIRun;
 // Debug: Used to sync cerr so it is readable (when output by
 // multiple threads at the same time)  From sus.cc:
 extern UINTAHSHARE SCIRun::Mutex       cerrLock;
-extern DebugStream mixedDebug;
 extern DebugStream taskdbg;
 extern DebugStream mpidbg;
 extern map<string,double> waittimes;
@@ -66,11 +67,11 @@ extern DebugStream waitout;
 extern DebugStream execout;
 
 static double CurrentWaitTime=0;
-static Mutex      dlbLock( "loadbalancer lock");
 
 static DebugStream dbg("ThreadedMPIScheduler", false);
 static DebugStream timeout("ThreadedMPIScheduler.timings", false);
 static DebugStream queuelength("QueueLength",false);
+static DebugStream threaddbg("ThreadDBG",false);
 
 static
 void
@@ -97,7 +98,7 @@ ThreadedMPIScheduler::ThreadedMPIScheduler( const ProcessorGroup * myworld,
 			          Output         * oport,
 			          ThreadedMPIScheduler   * parentScheduler) :
   MPIScheduler( myworld, oport, parentScheduler ), 
-  d_nextsignal("next condition"), d_nextmutex("next mutex")
+  d_nextsignal("next condition"), d_nextmutex("next mutex"), dlbLock( "loadbalancer lock")
 {
 
 }
@@ -437,17 +438,21 @@ ThreadedMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
          //initiateReduction(task);
         }
         numTasksDone++;
-      cerrLock.lock();
-        taskdbg << d_myworld->myrank() << " Task Reduction ready and assigned " << *task << " deps needed: " << task->getExternalDepCount() << endl;
-      cerrLock.unlock();
+	if (taskdbg.active()){
+          cerrLock.lock();
+          taskdbg << d_myworld->myrank() << " Task Reduction ready and assigned " << *task << " deps needed: " << task->getExternalDepCount() << endl;
+          cerrLock.unlock();
+	}
       }
       else {
         initiateTask( task, abort, abort_point, iteration );
         task->markInitiated();
         task->checkExternalDepCount();
-      cerrLock.lock();
-        taskdbg << d_myworld->myrank() << " Task internal ready " << *task << " deps needed: " << task->getExternalDepCount() << endl;
-      cerrLock.unlock();
+	if (taskdbg.active()){
+          cerrLock.lock();
+          taskdbg << d_myworld->myrank() << " Task internal ready " << *task << " deps needed: " << task->getExternalDepCount() << endl;
+          cerrLock.unlock();
+	}
         // if MPI has completed, it will run on the next iteration
         pending_tasks.insert(task);
       }
@@ -504,10 +509,11 @@ ThreadedMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
       TAU_MAPPING_PROFILE_TIMER(doitprofiler, tautimer, 0)
         TAU_MAPPING_PROFILE_START(doitprofiler,0);
 #endif
-      
+      if (taskdbg.active()){
       cerrLock.lock();
       taskdbg << d_myworld->myrank() << " Dispatching task " << *task << "(" << dts->numExternalReadyTasks() <<"/"<< pending_tasks.size() <<" tasks in queue)"<<endl;
       cerrLock.unlock();
+      }
       pending_tasks.erase(pending_tasks.find(task));
       ASSERTEQ(task->getExternalDepCount(), 0);
       assignTask(task, iteration);
@@ -807,12 +813,14 @@ ThreadedMPIScheduler::postMPISends( DetailedTask         * task, int iteration, 
       if ((req->condition == DetailedDep::FirstIteration && iteration > 0) || 
           (req->condition == DetailedDep::SubsequentIterations && iteration == 0)) {
         // See comment in DetailedDep about CommCondition
+        if( dbg.active()) 
         dbg << d_myworld->myrank() << "   Ignoring conditional send for " << *req << endl;
         continue;
       }
       // if we send/recv to an output task, don't send/recv if not an output timestep
       if (req->toTasks.front()->getTask()->getType() == Task::Output && 
           !oport_->isOutputTimestep() && !oport_->isCheckpointTimestep()) {
+        if( dbg.active())
         dbg << d_myworld->myrank() << "   Ignoring non-output-timestep send for " << *req << endl;
         continue;
       }
@@ -877,6 +885,7 @@ ThreadedMPIScheduler::postMPISends( DetailedTask         * task, int iteration, 
           //dbg.setActive(false);
         }
         //if (to == 40 && d_sharedState->getCurrentTopLevelTimeStep() == 2 && d_myworld->myrank() == 43)
+        if( mpidbg.active()) 
         mpidbg <<d_myworld->myrank() << " Sending message number " << batch->messageTag << ", to " << to << ", length: " << count << "\n"; 
 
         numMessages_++;
@@ -947,6 +956,8 @@ TaskWorker::TaskWorker(ThreadedMPIScheduler* scheduler, int id ) :
 void
 TaskWorker::run()
 {
+  threaddbg << "Binding thread id " << d_id+1 << " to cpu " << d_id+1 << endl;
+  Thread::self()->set_myid(d_id+1);
   Thread::self()->set_affinity(d_id+1);
   while(true) {
     //wait for main thread signal
