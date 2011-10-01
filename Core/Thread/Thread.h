@@ -341,7 +341,13 @@ DESCRIPTION
     static bool getCallExit() { return callExit; }
     static void set_affinity(int cpu);
 
+    int myid(){ return myid_;}        // get Uintah thread id
+    void set_myid(int id){ myid_=id;} // set Uintah thread id
+
   private:
+    //id assigned by Uintah, not id from OS
+    int myid_;
+
     // If you loaded the thread library (via dlopen for example), and
     // wanted to unload it, the thread library is designed to call
     // exit for the application.  This is generally undesirable for
