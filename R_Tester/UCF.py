@@ -36,11 +36,11 @@ NIGHTLYTESTS = [ ("ice_perf_test",          "icePerformanceTest.ups",           
                  ("mpmice_perf_test",       "mpmicePerformanceTest.ups",          1, "Linux", ["do_performance_test"]), \
                  ("LBwoRegrid",             "LBwoRegrid.ups",                     2, "Linux", ["exactComparison"]), \
                  ("switchExample_impm_mpm", "Switcher/switchExample_impm_mpm.ups",1, "Linux", ["no_memoryTest"]), \
-                 ("switchExample3",         "Switcher/switchExample3.ups",        1, "Linux", ["no_memoryTest"]), \
+                 ("switchExample3",         "Switcher/switchExample3.ups",        1, "Linux", ["no_restart","no_memoryTest"]), \
                ]
 
 LOCALTESTS = [ ("switchExample_impm_mpm", "Switcher/switchExample_impm_mpm.ups",1, "Linux", ["no_memoryTest"]), \
-               ("switchExample3",         "Switcher/switchExample3.ups",        1, "Linux", ["no_memoryTest"]), \
+               ("switchExample3",         "Switcher/switchExample3.ups",        1, "Linux", ["no_restart","no_memoryTest"]), \
                ("ice_perf_test",          "icePerformanceTest.ups",             1, "Linux", ["do_performance_test"]),  \
                ("mpmice_perf_test",       "mpmicePerformanceTest.ups",          1, "Linux", ["do_performance_test"]), \
                ("LBwoRegrid",             "LBwoRegrid.ups",                     2, "Linux", ["exactComparison"])
