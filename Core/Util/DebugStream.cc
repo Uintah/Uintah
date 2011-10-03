@@ -83,7 +83,7 @@ int DebugBuf::overflow(int ch)
 
 
 DebugStream::DebugStream(const string& iname, bool defaulton):
-    std::ostream(&dbgbuf)
+    std::ostream(&dbgbuf),outstream(0)
 {
   name = iname;
   dbgbuf.owner = this;
