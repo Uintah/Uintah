@@ -251,7 +251,6 @@ ParticleCreator::createParticles(MPMMaterial* matl,
 int ParticleCreator::getLoadCurveID(const Point& pp, const Vector& dxpp)
 {
   int ret=0;
-  d_lock.writeLock();
   for (int ii = 0; ii<(int)MPMPhysicalBCFactory::mpmPhysicalBCs.size(); ii++){
     string bcs_type = MPMPhysicalBCFactory::mpmPhysicalBCs[ii]->getType();
         
@@ -278,7 +277,6 @@ int ParticleCreator::getLoadCurveID(const Point& pp, const Vector& dxpp)
       }
     }
   }
-  d_lock.writeUnlock();
   return ret;
 }
 
