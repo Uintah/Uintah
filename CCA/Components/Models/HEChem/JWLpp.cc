@@ -36,6 +36,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/Material.h>
+#include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Labels/ICELabel.h>
@@ -231,7 +232,6 @@ void JWLpp::scheduleComputeModelSources(SchedulerP& sched,
     t->requires(Task::OldDW, Ilb->vel_CCLabel,       react_matl, gn);
     t->requires(Task::OldDW, Ilb->temp_CCLabel,      react_matl, gn);
     t->requires(Task::NewDW, Ilb->rho_CCLabel,       react_matl, gn);
-    t->requires(Task::NewDW, Ilb->specific_heatLabel,react_matl, gn);
     t->requires(Task::NewDW, Ilb->vol_frac_CCLabel,  react_matl, gn);
 
     t->requires(Task::NewDW, Ilb->press_equil_CCLabel, press_matl,gn);
@@ -378,8 +378,7 @@ void JWLpp::computeModelSources(const ProcessorGroup*,
     old_dw->get(rctTemp,       Ilb->temp_CCLabel,      m0,patch,gn, 0); 
     old_dw->get(rctvel_CC,     Ilb->vel_CCLabel,       m0,patch,gn, 0); 
     new_dw->get(rctRho,        Ilb->rho_CCLabel,       m0,patch,gn, 0); 
-    new_dw->get(rctSpvol,      Ilb->sp_vol_CCLabel    ,m0,patch,gn, 0); 
-    new_dw->get(cv_reactant,   Ilb->specific_heatLabel,m0,patch,gn, 0);
+    new_dw->get(rctSpvol,      Ilb->sp_vol_CCLabel,    m0,patch,gn, 0); 
     new_dw->get(rctVolFrac,    Ilb->vol_frac_CCLabel,  m0,patch,gn, 0);
     new_dw->allocateAndPut(Fr,   reactedFractionLabel, m0,patch);
     new_dw->allocateAndPut(delF, delFLabel,            m0,patch);
@@ -394,6 +393,15 @@ void JWLpp::computeModelSources(const ProcessorGroup*,
     //   Misc.
     new_dw->get(press_CC,         Ilb->press_equil_CCLabel,0,  patch,gn, 0);
 
+
+    // Get the specific heat, this is the value from the input file
+    double cv_rct = -1.0; 
+    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m0);
+    if(mpm_matl != NULL) {
+      cv_rct = mpm_matl->getSpecificHeat();
+    } else {
+      cv_rct = d_sharedState->getICEMaterial(m0)->getSpecificHeat();  
+    }
     for (CellIterator iter = patch->getCellIterator();!iter.done();iter++){
       IntVector c = *iter;
       if (press_CC[c] > d_threshold_pressure && rctVolFrac[c] > d_threshold_volFrac){          
@@ -423,7 +431,7 @@ void JWLpp::computeModelSources(const ProcessorGroup*,
         momentum_src_0[c] -= momX;
         momentum_src_1[c] += momX;
 
-        double energyX   = cv_reactant[c]*rctTemp[c]*burnedMass; 
+        double energyX   = cv_rct*rctTemp[c]*burnedMass; 
         double releasedHeat = burnedMass * d_E0;
         energy_src_0[c]   -= energyX;
         energy_src_1[c]   += energyX + releasedHeat;
