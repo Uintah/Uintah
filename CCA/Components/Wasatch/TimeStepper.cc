@@ -146,7 +146,9 @@ namespace Wasatch{
   {
     // for now we will assume that we are computing things on ALL materials
     const Uintah::MaterialSubset* const mss = materials->getUnion();
-    
+    std::stringstream strRKStage;
+    strRKStage << rkStage;
+
     //________________________________________________________
     // add a task to populate a "field" with the current time.
     // This is required by the time integrator.
@@ -173,8 +175,9 @@ namespace Wasatch{
       // jcs for multistage integrators, we may need to keep the same
       //     field manager list for all of the stages?  Otherwise we
       //     will have all sorts of name clashes?
+      
       TaskInterface* rhsTask = scinew TaskInterface( rhsIDs_,
-                                                     "rhs",
+                                                     "rhs_" + strRKStage.str(),
                                                      *factory_,
                                                      level, sched, patches, materials,
                                                      patchInfoMap,
@@ -197,7 +200,7 @@ namespace Wasatch{
     //_____________________________________________________
     // add a task to advance each solution variable in time
     {
-      Uintah::Task* updateTask = scinew Uintah::Task( "update solution vars", this, &TimeStepper::update_variables, rkStage );
+      Uintah::Task* updateTask = scinew Uintah::Task( "update solution vars_" + strRKStage.str(), this, &TimeStepper::update_variables, rkStage );
       
       const Uintah::PatchSubset* const pss = patches->getUnion();
       set_soln_field_requirements<SO::SVolField>( updateTask, scalarFields_, pss, mss, rkStage );

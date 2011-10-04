@@ -4,6 +4,7 @@
 
 //-- expression library includes --//
 #include <expression/ExprLib.h>
+#include <expression/ExpressionTree.h>
 
 
 //-- Uintah includes --//
@@ -57,7 +58,7 @@ namespace Wasatch{
     const std::string taskName_;        ///< the name of the task
     const PatchInfoMap& patchInfoMap_;  ///< information for each individual patch.
     Expr::FieldManagerList* const fml_; ///< the FieldManagerList for this TaskInterface
-    const std::set<std::string>& ioFieldSet_;
+    //const std::set<std::string>& ioFieldSet_;
 
     const bool hasPressureExpression_;
 
@@ -123,11 +124,16 @@ namespace Wasatch{
       taskName_( taskName ),
       patchInfoMap_( info ),
       fml_( scinew Expr::FieldManagerList(taskName) ),
-      ioFieldSet_ (ioFieldSet),
       hasPressureExpression_( tree->computes_field( pressure_tag() ) )
   {
     hasBeenScheduled_ = false;
-
+    if( Uintah::Parallel::getMPIRank() == 0 ){
+      std::ostringstream fnam;
+      fnam << tree->name() << ".dot";
+      std::ofstream fout( fnam.str().c_str() );
+      tree->write_tree(fout);
+    }
+    
     if( createUniqueTreePerPatch_ ){
 
       // only set up trees on the patches that we own on this process.
@@ -139,6 +145,28 @@ namespace Wasatch{
         proc0cout << "Setting up tree '" << taskName_ << "' on patch (" << patch->getID() << ")" << endl;
         TreePtr tree( new Expr::ExpressionTree( *masterTree_ ) );
         tree->set_patch_id( patch->getID() );
+        
+        std::set<std::string>::iterator ioFieldSetIter = ioFieldSet.begin();
+        
+        while (ioFieldSetIter != ioFieldSet.end()) {
+          const Expr::Tag fieldStateN (*ioFieldSetIter, Expr::STATE_N);
+          const Expr::Tag fieldStateNONE (*ioFieldSetIter, Expr::STATE_NONE);
+
+          if (tree->has_field(fieldStateN)) {
+            if (tree->has_expression(tree->get_id(fieldStateN))) {  
+              tree->set_expr_is_persistent( fieldStateN, true, *fml_);
+            }            
+          }  
+          
+          if (tree->has_field(fieldStateNONE)) {
+            if (tree->has_expression(tree->get_id(fieldStateNONE))) {
+              tree->set_expr_is_persistent( fieldStateNONE, true, *fml_);          
+            }            
+          }
+          
+          ioFieldSetIter++;
+        }
+        
         tree->register_fields( *fml_ );
         patchTreeMap_[ patch->getID() ] = std::make_pair( tree,  scinew Uintah::Task( taskName_, this, &TreeTaskExecute::execute, rkStage ));
       }
@@ -146,13 +174,6 @@ namespace Wasatch{
     else{
       masterTree_->register_fields( *fml_ );
       patchTreeMap_[ -1 ] = std::make_pair( masterTree_, scinew Uintah::Task( taskName_, this, &TreeTaskExecute::execute, rkStage ) );
-    }
-
-    if( Uintah::Parallel::getMPIRank() == 0 ){
-      std::ostringstream fnam;
-      fnam << tree->name() << ".dot";
-      std::ofstream fout( fnam.str().c_str() );
-      tree->write_tree(fout);
     }
   }
 
@@ -213,6 +234,8 @@ namespace Wasatch{
               << "DW  #Ghost PatchID" << endl
               << "-----------------------------------------------------------------------" << endl;
 #   endif
+    
+    Expr::ExpressionTree& tempTree = const_cast<Expr::ExpressionTree&>(tree);
 
     //______________________________
     // cycle through each field type
@@ -231,24 +254,27 @@ namespace Wasatch{
         Expr::FieldInfo& fieldInfo = ii->second;
 
         // see if this field is required by the given tree
-        const Expr::Tag fieldTag( fieldInfo.varlabel->getName(), fieldInfo.context );
-        if( !tree.has_field( fieldTag ) )  continue;
+        const Expr::Tag fieldTag( fieldInfo.varlabel->getName(), fieldInfo.context );        
+        if( !tree.has_field(fieldTag))  continue;
 
         //________________
         // set field mode 
         if( tree.computes_field( fieldTag ) ){
-          if (rkStage==1) 
-            fieldInfo.mode = Expr::COMPUTES;
+          // if the field uses dynamic allocation, then the uintah task should not be aware of this field
+          if (!tempTree.get_expr_is_persistent( fieldTag ))  continue;
+          if (rkStage==1) fieldInfo.mode = Expr::COMPUTES;
           // TSAAD: have a look at this another time. In principle, these should
           // be Modifies NOT requires, but it does not work wen we use MODIFIES
           //else fieldInfo.mode = Expr::MODIFIES;
           //if (fieldInfo.varlabel->getName() == "time") fieldInfo.mode = Expr::MODIFIES;          
           else  {
-            fieldInfo.mode = Expr::REQUIRES;
-            fieldInfo.useOldDataWarehouse = false;
+            //if (!tempTree.get_field_is_persistent( fieldTag) )  continue;
+            fieldInfo.mode = Expr::MODIFIES;
+            //fieldInfo.useOldDataWarehouse = false;
           }
         }
         else{
+          //if (!tempTree.get_field_is_persistent( fieldTag) )  continue;
           fieldInfo.mode = Expr::REQUIRES;
           if( newDWFields.find( fieldTag ) == newDWFields.end() )
             if (rkStage ==1 )
@@ -264,7 +290,7 @@ namespace Wasatch{
         // jcs : old dw is (should be) read only.
         Uintah::Task::WhichDW dw = Uintah::Task::NewDW;
         if( fieldInfo.useOldDataWarehouse ) dw = Uintah::Task::OldDW;
-
+        
         switch( fieldInfo.mode ){
 
         case Expr::COMPUTES:
@@ -416,31 +442,9 @@ namespace Wasatch{
 //                     << " and material " << material
 //                     << endl;
 
-//     fml_->dump_fields(cout);
-          
-          //______________________________
-          // check which fields are IO fields
-          for( Expr::FieldManagerList::iterator ifm=fml_->begin(); ifm!=fml_->end(); ++ifm ){
-            
-            typedef Expr::FieldManagerBase::PropertyMap PropertyMap;
-            PropertyMap& properties = (*ifm)->properties();
-            PropertyMap::iterator ipm = properties.find("UintahInfo");
-            assert( ipm != properties.end() );
-            Expr::IDInfoMap& infomap = boost::any_cast< boost::reference_wrapper<Expr::IDInfoMap> >(ipm->second);
-            
-            for( Expr::IDInfoMap::iterator ii=infomap.begin(); ii!=infomap.end(); ++ii ){
-              
-              Expr::FieldInfo& fieldInfo = ii->second;
-              // see if this field is required by the given tree
-              const Expr::Tag fieldTag( fieldInfo.varlabel->getName(), fieldInfo.context );
-              if( !tree->has_field( fieldTag ) )  continue;
-              // if this field belongs to the Ouput list, then set the fieldInfo accordingly
-              fieldInfo.isIO = ( ioFieldSet_.find(fieldInfo.varlabel->getName()) != ioFieldSet_.end())? true : false ;
-            } // field loop
-          } // fml loop
-  
+//     fml_->dump_fields(cout);            
           fml_->allocate_fields( Expr::AllocInfo( oldDW, newDW, material, patch, pg ) );
-
+          
           if( hasPressureExpression_ ){
             Pressure& pexpr = dynamic_cast<Pressure&>( tree->get_expression( pressure_tag() ) );
             pexpr.bind_uintah_vars( newDW, patch, material, rkStage );

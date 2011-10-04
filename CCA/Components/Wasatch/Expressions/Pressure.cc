@@ -72,13 +72,16 @@ Pressure::schedule_solver( const Uintah::LevelP& level,
 {
   // TODO: investigate why projection only works for the first RK stage when running
   // in parallel (specifically hypre)
-  if (RKStage==1) {
-    solver_.scheduleSolve( level, sched, materials, matrixLabel_, 
-                          Uintah::Task::NewDW, pressureLabel_, true, prhsLabel_, Uintah::Task::NewDW, 0, Uintah::Task::OldDW, &solverParams_ );
-  } else {
+  solver_.scheduleSolve( level, sched, materials, matrixLabel_, 
+                        Uintah::Task::NewDW, pressureLabel_, true, prhsLabel_, Uintah::Task::NewDW, 0, Uintah::Task::OldDW, &solverParams_ );
+
+//  if (RKStage==1) {
 //    solver_.scheduleSolve( level, sched, materials, matrixLabel_, 
-//                          Uintah::Task::NewDW, pressureLabel_, true, prhsLabel_, Uintah::Task::NewDW, pressureLabel_, Uintah::Task::NewDW, &solverParams_ );
-  }
+//                          Uintah::Task::NewDW, pressureLabel_, true, prhsLabel_, Uintah::Task::NewDW, 0, Uintah::Task::OldDW, &solverParams_ );
+//  } else {
+////    solver_.scheduleSolve( level, sched, materials, matrixLabel_, 
+////                          Uintah::Task::NewDW, pressureLabel_, true, prhsLabel_, Uintah::Task::NewDW, pressureLabel_, Uintah::Task::NewDW, &solverParams_ );
+//  }
 
 }
 

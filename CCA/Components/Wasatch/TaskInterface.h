@@ -100,7 +100,7 @@ namespace Wasatch{
                    const Uintah::MaterialSet* const materials,
                    const PatchInfoMap& info,
                    const bool createUniqueTreePerPatch,
-                   int RKStage,
+                   const int RKStage,
                    const std::set<std::string>& ioFieldSet,
                    Expr::FieldManagerList* fml = NULL);
 
