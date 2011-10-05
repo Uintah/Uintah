@@ -775,6 +775,9 @@ done
 # Look for the CUDA compiler, "nvcc"
 AC_PATH_PROG([NVCC], [nvcc], [no], [$with_cuda/bin])
 
+NVCC_CFLAGS="-arch=sm_20 "
+NVCC_CXXFLAGS="-arch=sm_20 "
+
 # set up the -Xcompiler flag so that NVCC can pass CFLAGS to host C comiler
 for i in $CFLAGS; do
   NVCC_CFLAGS="$NVCC_CFLAGS -Xcompiler $i"

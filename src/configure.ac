@@ -4063,7 +4063,40 @@ if test "$sci_required_cuda" = "yes"; then
     _cutil_lib="cutil"
   fi  
 
-# code to compile and test linking for (this will be deleted after tests)
+# code to compile and test various system GPU/CUDA properties
+# these files, etc will be deleted after tests)
+  cat > device_query.cu << EOF
+#include <stdio.h>
+#include <cutil.h>
+#include <cuda.h>
+int main(int argc, char** argv)
+{
+    int devCount;
+    cudaGetDeviceCount(&devCount);
+    printf("Checking CUDA capable devices...   (%d) devices\n", devCount);
+ 
+    for (int i = 0; i < devCount; ++i)
+    {
+        cudaDeviceProp deviceProp;
+        cudaGetDeviceProperties(&deviceProp, i);
+        printf("Device %d: %s CC Maj/Min: %d.%d\n", i, deviceProp.name, deviceProp.major, deviceProp.minor);
+    }
+    return 0;
+}
+EOF
+
+  SCI_CUDA_COMPILE_LINK_TEST(CUDA,
+                             CUDA capable devices,
+                             cuda.h cutil.h,
+                             $_cuda_inc $_cuda_sdk_inc,
+                             cudart $_cutil_lib,
+                             $_cuda_lib $_cuda_sdk_lib,
+                             ,
+                             device_query.cu,
+                             optional,
+                             no)
+
+rm -rf device_query*
 
 # test if nvcc can compile tr1/type_traits headers provided by host compiler
 # there is a known incopmpatibility with nvcc and GNU 4.4 tr1/type_traits headers
@@ -4086,11 +4119,10 @@ EOF
                              optional,
                              no)
 
-rm -rf cuda_conf_test*
+rm -rf type_traits_test*
 
 
   cat > cuda_conf_test.cu << EOF
-#include <stdio.h>
 #include <stdlib.h>
 #include <cutil.h>
 #include <cuda.h>
@@ -4139,19 +4171,6 @@ int main(int argc, char **argv) {
 }
 EOF
 
-  # now try to compile and link the above CUDA code
-  #--------------------------------------------------
-  ## arg 1 : variable base name i.e. CUDA
-  ## arg 2 : checking message
-  ## arg 3 : includes (header files) that arg 8 needs to compile
-  ## arg 4 : include paths -I
-  ## arg 5 : list of libs to link against -l
-  ## arg 6 : lib paths -L
-  ## arg 7 : extra link flags (can be empty)
-  ## arg 8 : body of code (source file) to compile
-  ## arg 9 : optional or not-optional required argument
-  #--------------------------------------------------
-    
   SCI_CUDA_COMPILE_LINK_TEST(CUDA,
                              CUDA and CUDA_SDK libraries and headers,
                              cuda.h cutil.h,
