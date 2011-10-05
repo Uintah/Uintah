@@ -6,6 +6,7 @@
 #include <CCA/Components/Arches/TransportEqns/EqnBase.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
 #include <CCA/Components/Arches/ArchesLabel.h>
+#include <CCA/Components/Arches/CoalModels/fortran/rqpart_fort.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Grid/SimulationState.h>
@@ -90,15 +91,6 @@ ShaddixHeatTransfer::problemSetup(const ProblemSpecP& params, int qn)
   } else {
     throw InvalidValue("ERROR: ShaddixHeatTransfer: problemSetup(): Missing <Coal_Properties> section in input file!",__FILE__,__LINE__);
   }
-
-  // Check for radiation 
-  b_radiation = false;
-  if (params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ExplicitSolver")->findBlock("EnthalpySolver")->findBlock("DORadiationModel"))
-    b_radiation = true; // if gas phase radiation is turned on.  
-  //user can specifically turn off radiation heat transfer
-  if (db->findBlock("noRadiation"))
-    b_radiation = false;
-
 
   // Assume no ash (for now)
   //d_ash = false;
@@ -321,7 +313,7 @@ ShaddixHeatTransfer::sched_computeModel( const LevelP& level, SchedulerP& sched,
   tsk->requires(Task::OldDW, d_fieldLabels->d_densityCPLabel, Ghost::None, 0);
   tsk->requires(Task::OldDW, d_fieldLabels->d_cpINLabel, Ghost::None, 0);
  
-  if(b_radiation){
+  if(_radiation){
     tsk->requires(Task::OldDW, d_fieldLabels->d_radiationSRCINLabel,  Ghost::None, 0);
     tsk->requires(Task::OldDW, d_fieldLabels->d_abskgINLabel,  Ghost::None, 0);   
     tsk->requires(Task::OldDW, d_fieldLabels->d_radiationVolqINLabel, Ghost::None, 0);
@@ -511,7 +503,7 @@ ShaddixHeatTransfer::computeModel( const ProcessorGroup * pc,
     constCCVariable<double> radiationVolqIN;
     CCVariable<double> enthNonLinSrc;
 
-    if(b_radiation){
+    if(_radiation){
       old_dw->get(radiationSRCIN, d_fieldLabels->d_radiationSRCINLabel, matlIndex, patch, gn, 0);
       old_dw->get(abskgIN, d_fieldLabels->d_abskgINLabel, matlIndex, patch, gn, 0);
       old_dw->get(radiationVolqIN, d_fieldLabels->d_radiationVolqINLabel, matlIndex, patch, gn, 0);
@@ -690,17 +682,32 @@ ShaddixHeatTransfer::computeModel( const ProcessorGroup * pc,
         // Q_convection (see Section 5.4 of LES_Coal document)
         Q_convection = Nu*pi*blow*rkg*unscaled_length*(gas_temperature - unscaled_particle_temperature);
 
+
+
         // Radiation part: -------------------------
+        bool DO_NEW_ABSKP = false; 
         Q_radiation = 0.0;
-        if (b_radiation) {
+        if ( _radiation  && DO_NEW_ABSKP){ 
+          // New Glacier Code for ABSKP: 
+          double qabs = 0.0; 
+          double qsca = 0.0; 
+          double init_ash_frac = 0.0; // THIS NEEDS TO BE FIXED!
+          fort_rqpart( unscaled_length, unscaled_particle_temperature, unscaled_ash_mass, init_ash_frac, qabs, qsca ); 
+
+          //what goes next?!
+        } else if ( _radiation && !DO_NEW_ABSKP ) { 
+
           double Qabs = 0.8;
           double Apsc = (pi/4)*Qabs*pow(unscaled_length,2);
           double Eb = 4*sigma*pow(unscaled_particle_temperature,4);
           FSum = radiationVolqIN[c];    
           Q_radiation = Apsc*(FSum - Eb);
           abskp_ = pi/4*Qabs*unscaled_weight*pow(unscaled_length,2); 
+
         } else {
+
           abskp_ = 0.0;
+
         }
 
         // Calculate particle enthalpy using composite Simpson's rule
@@ -741,15 +748,18 @@ ShaddixHeatTransfer::computeModel( const ProcessorGroup * pc,
           Particle_enthalpy = 0.0;
         }
 
-        Q_reaction = charoxi_temp_source[c];
-
-        heat_rate_ = (Q_convection + Q_radiation + Q_reaction)/(mp_Cp*d_pt_scaling_constant);
-
-        //cout << "Qconv " << Q_convection << " Qrad " << Q_radiation << " Qreac " << Q_reaction << " blow " << blow << endl;
-        //cout << "abskp " << abskp_ << endl;
+        if(d_unweighted){
+          Q_reaction = charoxi_temp_source[c];
+          heat_rate_ = (Q_convection + Q_radiation + Q_reaction)/(mp_Cp*d_pt_scaling_constant);
+          gas_heat_rate_ = -unscaled_weight*Q_convection + (devol_gas_source[c] + chargas_source[c])*Particle_enthalpy;
+        } else {
+          Q_reaction = charoxi_temp_source[c];
+          heat_rate_ = ((Q_convection + Q_radiation)*unscaled_weight + Q_reaction)/(mp_Cp*d_pt_scaling_constant*d_w_scaling_constant);
+          gas_heat_rate_ = -unscaled_weight*Q_convection + (devol_gas_source[c] + chargas_source[c])*Particle_enthalpy;
+        }
+        //cout << "Qconv " << Q_convection << " Qrad " << Q_radiation << " Qreac " << Q_reaction << " blow " << blow << " mp_Cp " << mp_Cp <<  endl;
+        //cout << "abskp " << abskp_ << " w " << weight[c] << " w_particle_length[c] " << w_particle_length[c] << " d_quadNode " << d_quadNode << endl;
         //cout << "Particle_enthalpy " << Particle_enthalpy << " Cpc " << Cpc << " Cph " << Cph << " Cpa " << Cpa << endl;
-
-        gas_heat_rate_ = -unscaled_weight*Q_convection + (devol_gas_source[c] + chargas_source[c])*Particle_enthalpy;
  
       }
 

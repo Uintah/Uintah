@@ -1,7 +1,7 @@
 <Uintah_specification>
 
   <Meta>
-      <title>Poisson1 test</title>
+      <title>AdvectSlabs test</title>
   </Meta>
 
   <SimulationComponent type="advectslabs" />
@@ -17,7 +17,7 @@
   
   <!--__________________________________-->
   <DataArchiver>
-  <filebase>poisson.uda</filebase>
+  <filebase>advectslabs.uda</filebase>
       <outputTimestepInterval>1</outputTimestepInterval>
       <save label = "mass"/>
       <save label = "massAdvected"/>

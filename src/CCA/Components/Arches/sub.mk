@@ -2,7 +2,7 @@
 # 
 # The MIT License
 # 
-# Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+# Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 # Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 # University of Utah.
 # 
@@ -50,6 +50,7 @@ SRCS += $(SRCDIR)/Arches.cc                    \
         $(SRCDIR)/ExplicitSolver.cc            \
         $(SRCDIR)/ExplicitTimeInt.cc           \
         $(SRCDIR)/IncDynamicProcedure.cc       \
+        $(SRCDIR)/IntrusionBC.cc               \
         $(SRCDIR)/LinearSolver.cc              \
         $(SRCDIR)/LU.cc                        \
         $(SRCDIR)/MomentumSolver.cc            \
@@ -58,13 +59,14 @@ SRCS += $(SRCDIR)/Arches.cc                    \
         $(SRCDIR)/OdtData.cc                   \
         $(SRCDIR)/PhysicalConstants.cc         \
         $(SRCDIR)/PicardNonlinearSolver.cc     \
-        $(SRCDIR)/PressureSolver.cc            \
+        $(SRCDIR)/PressureSolverV2.cc          \
         $(SRCDIR)/Properties.cc                \
         $(SRCDIR)/RHSSolver.cc                 \
         $(SRCDIR)/ScalarSolver.cc              \
         $(SRCDIR)/ScaleSimilarityModel.cc      \
         $(SRCDIR)/SmagorinskyModel.cc          \
         $(SRCDIR)/Source.cc                    \
+        $(SRCDIR)/OperatorSplitChem.cc         \
         $(SRCDIR)/TurbulenceModel.cc           
 
 ifeq ($(HAVE_PETSC),yes)
@@ -114,13 +116,14 @@ LIBS := $(LIBS) $(XML2_LIBRARY) $(F_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) \
 INCLUDES := $(INCLUDES) $(BOOST_INCLUDE) $(TABPROPS_INCLUDE)
 
 #### Handle subdirs (These files are just 'included' into the build of libCCA_Components_Arches.so)
-SUBDIRS := $(SRCDIR)/CoalModels        \
-           $(SRCDIR)/PropertyModels    \
-           $(SRCDIR)/Radiation         \
-           $(SRCDIR)/Radiation/fortran \
-           $(SRCDIR)/SourceTerms       \
-           $(SRCDIR)/TransportEqns  \
-                                         $(SRCDIR)/ChemMix
+SUBDIRS := $(SRCDIR)/ChemMix            \
+           $(SRCDIR)/CoalModels         \
+           $(SRCDIR)/CoalModels/fortran \
+           $(SRCDIR)/PropertyModels     \
+           $(SRCDIR)/Radiation          \
+           $(SRCDIR)/Radiation/fortran  \
+           $(SRCDIR)/SourceTerms        \
+           $(SRCDIR)/TransportEqns      
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 #### End handle subdirs

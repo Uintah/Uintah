@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -52,6 +52,8 @@ DEALINGS IN THE SOFTWARE.
 #endif
 using std::ifstream;
 using std::cerr;
+using std::cout;
+using std::endl;
 using namespace Uintah;
 
 //__________________________________
@@ -361,7 +363,7 @@ void    ICE::printData_driver( int matl,
       cerr << "$" << message1 << "\n";
       cerr << "$" << message2 << "\n";
 
-      cerr.setf(ios::scientific,ios::floatfield);
+      cerr.setf(std::ios::scientific,std::ios::floatfield);
       cerr.precision(d_dbgSigFigs);  
       for(int k = low.z(); k < high.z(); k++)  {
         for(int j = low.y(); j < high.y(); j++) {
@@ -377,7 +379,7 @@ void    ICE::printData_driver( int matl,
         cerr << "\n";
       }
       cerr <<" ______________________________________________\n";
-      cerr.setf(ios::scientific ,ios::floatfield);
+      cerr.setf(std::ios::scientific ,std::ios::floatfield);
     }
     
     //__________________________________
@@ -389,11 +391,11 @@ void    ICE::printData_driver( int matl,
         
       string filename = path + "/" + message2;
       //      fp = fopen(filename.c_str(), "w");
-      ofstream fp;
+      std::ofstream fp;
       fp.open(filename.c_str());
       fp.precision(15);
       fp.width(16);
-      fp.setf(ios::scientific);
+      fp.setf(std::ios::scientific);
 
       double x, dx;
       find_gnuplot_origin_And_dx(variableType, patch, low, high, &dx, &x);   
@@ -479,7 +481,7 @@ void    ICE::printVector_driver(int matl,
       if ( d_dbgGnuPlot== false && 
         high.x() > low.x() && high.y() > low.y() && high.z() > low.z() ) {  
        
-        cerr.setf(ios::scientific,ios::floatfield);
+        cerr.setf(std::ios::scientific,std::ios::floatfield);
         cerr.precision(d_dbgSigFigs);
         cerr << "__________________________________________L-"<<levelIndx<<"\n";
         cerr << "$" << message1 << "\n";
@@ -498,7 +500,7 @@ void    ICE::printVector_driver(int matl,
           cerr << "\n";
         }
         cerr << " ______________________________________________\n";
-        cerr.setf(ios::scientific, ios::floatfield);
+        cerr.setf(std::ios::scientific, std::ios::floatfield);
       }
 
       //__________________________________
@@ -610,7 +612,7 @@ void    ICE::symmetryTest_driver( int matl,
       is_FC_variable = true;
     }
 
-    cerr.setf(ios::scientific,ios::floatfield);
+    cerr.setf(std::ios::scientific,std::ios::floatfield);
     cerr.precision(10);
     bool printHeader = true;
 
@@ -676,7 +678,7 @@ void    ICE::symmetryTest_driver( int matl,
         }  // k loop
       }  // test this plane
     } // direction loop
-   cerr.setf(ios::scientific ,ios::floatfield);
+   cerr.setf(std::ios::scientific ,std::ios::floatfield);
   }  // time to dump
   //__________________________________
   //  bullet proof
@@ -743,7 +745,7 @@ void    ICE::symmetryTest_Vector( int matl,
     low   = patch->getCellLowIndex();
     high  = patch->getCellHighIndex();
 
-    cerr.setf(ios::scientific,ios::floatfield);
+    cerr.setf(std::ios::scientific,std::ios::floatfield);
     cerr.precision(5);
     bool printHeader = true;
     
@@ -807,7 +809,7 @@ void    ICE::symmetryTest_Vector( int matl,
         }  // k loop
       }  // test this plane
     } // direction loop
-   cerr.setf(ios::scientific ,ios::floatfield);
+   cerr.setf(std::ios::scientific ,std::ios::floatfield);
   }  // time to dump
   //__________________________________
   //  bullet proof
@@ -850,7 +852,7 @@ void    ICE::printStencil( int /*matl*/,
     cerr << "$" << message1 << "\n";
     cerr << "$" << message2 << "\n";
 
-    cerr.setf(ios::scientific,ios::floatfield);
+    cerr.setf(std::ios::scientific,std::ios::floatfield);
     cerr.precision(d_dbgSigFigs);    
 
     for(int k = low.z(); k < high.z(); k++)  {
@@ -870,7 +872,7 @@ void    ICE::printStencil( int /*matl*/,
     }
     cerr << "\n";
     cerr <<" ______________________________________________\n";
-    cerr.setf(ios::scientific ,ios::floatfield);
+    cerr.setf(std::ios::scientific ,std::ios::floatfield);
   } 
 }
 /*_______________________________________________________________________

@@ -1,8 +1,11 @@
+#ifndef UINTAH_HOMEBREW_BufferInfo_H
+#define UINTAH_HOMEBREW_BufferInfo_H
+
 /*
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -27,18 +30,14 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-
-
-#ifndef UINTAH_HOMEBREW_BufferInfo_H
-#define UINTAH_HOMEBREW_BufferInfo_H
-
 #include <sci_defs/mpi_defs.h> // For mpi.h
 
-#include   <vector>
-
 #include <Core/Parallel/uintahshare.h>
+
+#include <vector>
+
 namespace Uintah {
-  using namespace std;
+
   class RefCounted;
   class ProcessorGroup;
 
@@ -82,10 +81,10 @@ namespace Uintah {
 
   protected:
     Sendlist* sendlist;
-    vector<void*> startbufs;
-    vector<int> counts;
-    vector<MPI_Datatype> datatypes;
-    vector<bool> free_datatypes;
+    std::vector<void*> startbufs;
+    std::vector<int> counts;
+    std::vector<MPI_Datatype> datatypes;
+    std::vector<bool> free_datatypes;
 
     void* buf;
     int cnt;

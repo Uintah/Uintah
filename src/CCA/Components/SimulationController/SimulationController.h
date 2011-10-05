@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -30,6 +30,8 @@ DEALINGS IN THE SOFTWARE.
 
 #ifndef UINTAH_HOMEBREW_SIMULATIONCONTROLLER_H
 #define UINTAH_HOMEBREW_SIMULATIONCONTROLLER_H
+
+#include <sci_defs/papi_defs.h> // for PAPI flop counters
 
 #include <Core/Parallel/UintahParallelComponent.h>
 #include <CCA/Ports/DataWarehouseP.h>
@@ -154,6 +156,11 @@ class DataArchive;
       // If !d_restartFromScratch, then this indicates whether to move
       // or copy the old timesteps.
       bool d_restartRemoveOldDir;
+
+#ifdef USE_PAPI_COUNTERS
+      int event_set;                  // PAPI event set
+      long long event_values[1];      // PAPI event value
+#endif
 
 
    private:

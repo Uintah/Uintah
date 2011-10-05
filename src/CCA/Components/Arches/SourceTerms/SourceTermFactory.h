@@ -12,7 +12,7 @@
 /**
  *  @class  SourceTermFactory
  *  @author Jeremy Thornock
- *  @date   Aug 2010
+ *  @date   Aug 2011
  *  @brief  Factory for source term generation
  *
  *  Allows easy addition of source terms to a transport equation.

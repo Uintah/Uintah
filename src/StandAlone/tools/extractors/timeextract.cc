@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -73,7 +73,7 @@ using namespace std;
 using namespace Uintah;
 
 bool verbose = false;
-bool quite = false;
+bool quiet = false;
 
 void
 usage(const std::string& badarg, const std::string& progname)
@@ -83,19 +83,19 @@ usage(const std::string& badarg, const std::string& progname)
     cerr << "Usage: " << progname << " [options] "
          << "-uda <archive file>\n\n";
     cerr << "Valid options are:\n";
-    cerr << "  -h,--help\n";
-    cerr << "  -v,--variable <variable name>\n";
-    cerr << "  -m,--material <material number> [defaults to 0]\n";
+    cerr << "  -h,      --help\n";
+    cerr << "  -v,      --variable          <variable name>\n";
+    cerr << "  -m,      --material          <material number> [defaults to 0]\n";
     //    cerr << "  -binary (prints out the data in binary)\n";
-    cerr << "  -tlow,--timesteplow [int] (only outputs timestep from int) [defaults to 0]\n";
-    cerr << "  -thigh,--timestephigh [int] (only outputs timesteps up to int) [defaults to last timestep]\n";
-    cerr << "  -i,--index <x> <y> <z> (cell coordinates) [defaults to 0,0,0]\n";
-    cerr << "  -p,--point <x> <y> <z> [doubles] (physical coordinates)\n";
-    cerr << "  -l,--level [int] (level index to query range from) [defaults to 0]\n";
-    cerr << "  -o,--out <outputfilename> [defaults to stdout]\n";
-    cerr << "  -vv,--verbose (prints status of output)\n";
-    cerr << "  -q,--quite (only print data values)\n";
-    cerr << "  -noxml,--xml-cache-off (turn off XML caching in DataArchive)\n";
+    cerr << "  -tlow,   --timesteplow       [int] (only outputs timestep from int) [defaults to 0]\n";
+    cerr << "  -thigh,  --timestephigh      [int] (only outputs timesteps up to int) [defaults to last timestep]\n";
+    cerr << "  -i,      --index             <i> <j> <k> [intx] cell index [defaults to 0,0,0]\n";
+    cerr << "  -p,      --point             <x> <y> <z> [doubles] point location in physical coordinates \n";
+    cerr << "  -l,      --level             [int] (level index to query range from) [defaults to 0]\n";
+    cerr << "  -o,      --out               <outputfilename> [defaults to stdout]\n";
+    cerr << "  -vv,     --verbose           (prints status of output)\n";
+    cerr << "  -q,      --quiet             (only print data values)\n";
+    cerr << "  -noxml,  --xml-cache-off (turn off XML caching in DataArchive)\n";
     exit(1);
 }
 
@@ -108,7 +108,7 @@ void
 printData(DataArchive* archive, string& variable_name,
           int material, IntVector& var_id, int levelIndex,
           unsigned long time_step_lower, unsigned long time_step_upper,
-          ostream& out) 
+          unsigned long output_precision, ostream& out) 
 {
   vector<int> index;
   vector<double> times;
@@ -116,7 +116,7 @@ printData(DataArchive* archive, string& variable_name,
   // query time info from dataarchive
   archive->queryTimesteps(index, times);
   ASSERTEQ(index.size(), times.size());
-  if (!quite) cout << "There are " << index.size() << " timesteps:\n";
+  if (!quiet) cout << "There are " << index.size() << " timesteps:\n";
       
   //------------------------------
   // figure out the lower and upper bounds on the timesteps
@@ -138,13 +138,13 @@ printData(DataArchive* archive, string& variable_name,
     exit(1);
   }
   
-  if (!quite){
+  if (!quiet){
     cout << "outputting for times["<<time_step_lower<<"] = " << times[time_step_lower]<<" to times["<<time_step_upper<<"] = "<<times[time_step_upper] << endl;
   }
   
   // set defaults for output stream
   out.setf(ios::scientific,ios::floatfield);
-  out.precision(8);
+  out.precision(output_precision);
   
   // for each type available, we need to query the values for the time range, 
   // variable name, and material
@@ -173,7 +173,7 @@ main(int argc, char** argv)
   unsigned long time_step_lower = 0;
   // default to be last timestep, but can be set to 0
   unsigned long time_step_upper = (unsigned long)-1;
-
+  unsigned long output_precision = 16;
   string input_uda_name;
   string output_file_name("-");
   IntVector var_id(0,0,0);
@@ -204,12 +204,22 @@ main(int argc, char** argv)
       material = atoi(argv[++i]);
     } else if (s == "-vv" || s == "--verbose") {
       verbose = true;
-    } else if (s == "-q" || s == "--quite") {
-      quite = true;
+    } else if (s == "-q" || s == "--quiet") {
+      quiet = true;
     } else if (s == "-tlow" || s == "--timesteplow") {
       time_step_lower = strtoul(argv[++i],(char**)NULL,10);
     } else if (s == "-thigh" || s == "--timestephigh") {
       time_step_upper = strtoul(argv[++i],(char**)NULL,10);
+    } else if (s == "-pr" || s == "--precision") {
+      output_precision = strtoul(argv[++i],(char**)NULL,10);
+      if (output_precision > 32) {
+        std::cout << "Output precision cannot be larger than 32. Setting precision to 32 \n";        
+        output_precision = 32;
+      }
+      if (output_precision < 1 ) {
+        std::cout << "Output precision cannot be less than 1. Setting precision to 16 \n";
+        output_precision = 16;
+      }      
     } else if (s == "-i" || s == "--index") {
       int x = atoi(argv[++i]);
       int y = atoi(argv[++i]);
@@ -298,7 +308,7 @@ main(int argc, char** argv)
       }
     }
       
-    if (!quite){
+    if (!quiet){
       cout << vars[var_index] << ": " << types[var_index]->getName() << " being extracted for material "<<material<<" at index "<<var_id<<endl;
     }
     
@@ -341,19 +351,19 @@ main(int argc, char** argv)
   switch (subtype->getType()) {
   case Uintah::TypeDescription::double_type:
     printData<double>(archive, variable_name, material, var_id, levelIndex,
-                      time_step_lower, time_step_upper, *output_stream);
+                      time_step_lower, time_step_upper, output_precision, *output_stream);
     break;
   case Uintah::TypeDescription::float_type:
     printData<float>(archive, variable_name, material, var_id, levelIndex,
-                      time_step_lower, time_step_upper, *output_stream);
+                      time_step_lower, time_step_upper, output_precision, *output_stream);
     break;
   case Uintah::TypeDescription::int_type:
     printData<int>(archive, variable_name, material, var_id, levelIndex,
-                   time_step_lower, time_step_upper, *output_stream);
+                   time_step_lower, time_step_upper, output_precision, *output_stream);
     break;
   case Uintah::TypeDescription::Vector:
     printData<Vector>(archive, variable_name, material, var_id, levelIndex,
-                   time_step_lower, time_step_upper, *output_stream);
+                   time_step_lower, time_step_upper, output_precision, *output_stream);
     break;
   case Uintah::TypeDescription::Matrix3:
   case Uintah::TypeDescription::bool_type:

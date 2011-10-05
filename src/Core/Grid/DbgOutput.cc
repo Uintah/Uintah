@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -29,6 +29,8 @@ DEALINGS IN THE SOFTWARE.
 
 #include <Core/Grid/DbgOutput.h>
 #include <Core/Parallel/Parallel.h>
+
+using namespace std;
 
 namespace Uintah{
 
@@ -91,4 +93,18 @@ void printTask(const Patch* patch,
         << " patch " << patch->getGridIndex()<< endl;
   }  
 }
+
+//__________________________________
+//
+void printTask(SCIRun::DebugStream& dbg,
+               const string& where)
+{
+  if (dbg.active()){
+    dbg << Uintah::Parallel::getMPIRank()  << " ";
+    dbg << left;
+    dbg.width(50);
+    dbg << where << " \tAll Patches" << endl;
+  }  
+}
+
 } // End namespace Uintah

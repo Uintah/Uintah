@@ -3,10 +3,14 @@
   <Meta>
     <title>Test scalar transport equation</title>
   </Meta>
-
+StrongForm
   <SimulationComponent type="wasatch"/>
 
   <Wasatch>
+
+    <Density>
+      <IsConstant>true</IsConstant>
+    </Density>
 
     <!-- Set the initial condition for temperature -->
     <BasicExpression type="YVOL">
@@ -20,6 +24,7 @@
     <TransportEquation equation="generic">
 
       <SolutionVariable>phi</SolutionVariable>
+      <StrongForm>true</StrongForm>
 
       <StaggeredDirection>Y</StaggeredDirection>
 

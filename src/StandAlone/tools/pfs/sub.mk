@@ -2,7 +2,7 @@
 # 
 # The MIT License
 # 
-# Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+# Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 # Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 # University of Utah.
 # 
@@ -72,6 +72,14 @@ include $(SCIRUN_SCRIPTS)/program.mk
 
 SRCS    := $(SRCDIR)/pfs2.cc
 PROGRAM := $(SRCDIR)/pfs2
+
+include $(SCIRUN_SCRIPTS)/program.mk
+
+
+###############################################
+# rawToUniqueGrains
+SRCS    := $(SRCDIR)/rawToUniqueGrains.cc
+PROGRAM := $(SRCDIR)/rawToUniqueGrains
 
 include $(SCIRUN_SCRIPTS)/program.mk
 

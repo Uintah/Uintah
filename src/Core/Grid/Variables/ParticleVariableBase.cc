@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -37,8 +37,9 @@ DEALINGS IN THE SOFTWARE.
 
 #include <iostream>
 
-using namespace Uintah;
+using namespace std;
 
+using namespace Uintah;
 using namespace SCIRun;
 
 #if defined(_WIN32) && !defined(BUILD_UINTAH_STATIC)
@@ -46,8 +47,6 @@ using namespace SCIRun;
 #else
 #define UINTAHSHARE
 #endif
-
-extern UINTAHSHARE Mutex MPITypeLock;
 
 ParticleVariableBase::~ParticleVariableBase()
 {       
@@ -111,13 +110,9 @@ void ParticleVariableBase::getMPIBuffer(BufferInfo& buffer,
     MPI_Datatype datatype;
 
     //    cerr << "cnt: " << count << ", buf: " << buf << "\n";
-    MPITypeLock.lock();
-    {
-      MPI_Type_indexed( count, &blocklens[0],
+    MPI_Type_indexed( count, &blocklens[0],
                         sendset->getPointer(), td->getMPIType(), &datatype );
-      MPI_Type_commit(&datatype);
-    }
-    MPITypeLock.unlock();
+    MPI_Type_commit(&datatype);
     
     buffer.add(buf, 1, datatype, true);
   } 

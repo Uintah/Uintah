@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -229,6 +229,7 @@ namespace Uintah {
       // ref_density and pressure
       const VarLabel* d_refDensity_label;
       const VarLabel* d_refDensityPred_label;
+      const VarLabel* d_refPressurePred_label;
       const VarLabel* d_refPressure_label;
 
       // labels for nonlinear residuals
@@ -352,6 +353,7 @@ namespace Uintah {
 
       // runge-kutta 3d order properties labels
       const VarLabel* d_refDensityInterm_label;
+      const VarLabel* d_refPressureInterm_label;
       
       // runge-kutta 3d order pressure and momentum labels
       const VarLabel* d_pressureIntermLabel;

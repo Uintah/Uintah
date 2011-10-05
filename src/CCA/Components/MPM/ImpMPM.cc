@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -156,6 +156,7 @@ void ImpMPM::problemSetup(const ProblemSpecP& prob_spec,
                           const ProblemSpecP& restart_prob_spec,GridP& grid,
                           SimulationStateP& sharedState)
 {
+   cout_doing << " Doing ImpMPM::problemSetup " << endl;
    d_sharedState = sharedState;
    dynamic_cast<Scheduler*>(getPort("scheduler"))->setPositionVar(lb->pXLabel);
   
@@ -714,9 +715,41 @@ void ImpMPM::actuallyInitialize(const ProcessorGroup*,
       if(!flags->d_doGridReset){
         int indx = mpm_matl->getDWIndex();
         NCVariable<Vector> gDisplacement;
-        new_dw->allocateAndPut(gDisplacement,lb->gDisplacementLabel,indx,patch);        gDisplacement.initialize(Vector(0.));
+        new_dw->allocateAndPut(gDisplacement,lb->gDisplacementLabel,indx,patch);        
+        gDisplacement.initialize(Vector(0.));
       }
     }
+    
+    string interp_type = flags->d_interpolator_type;
+    if((interp_type=="gimp" || interp_type=="3rdorderBS" || interp_type=="cpdi" || interp_type=="cpgimp")){
+      proc0cout << "__________________________________\n"
+                << "WARNING: Use of GIMP/3rdorderBS/cpdi/cpgimp with Implicit MPM is untested and may not work at this time.\n\n";
+    }
+    
+    //__________________________________
+    //  Bulletproofing
+    IntVector num_extra_cells=patch->getExtraCells();
+    IntVector periodic=patch->getLevel()->getPeriodicBoundaries();
+    
+    if(interp_type=="linear" && num_extra_cells!=IntVector(0,0,0)){
+      ostringstream msg;
+      msg << "\n ERROR: When using <interpolator>linear</interpolator> \n"
+          << " you should also use <extraCells>[0,0,0]</extraCells> \n";
+      throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
+    }
+    else if((interp_type=="gimp" || interp_type=="3rdorderBS" 
+          || interp_type=="cpdi" || interp_type=="cpgimp")
+                          && (num_extra_cells+periodic)!=IntVector(1,1,1)){
+      ostringstream msg;
+      msg << "\n ERROR: When using <interpolator>gimp</interpolator> \n"
+          << " or <interpolator>3rdorderBS</interpolator> \n"
+          << " or <interpolator>cpdi</interpolator> \n"
+          << " or <interpolator>cpgimp</interpolator> \n"
+          << " you must also use extraCells and/or periodicBCs such that\n"
+          << " the sum of the two is [1,1,1].\n";
+      throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
+    }
+
 
    //__________________________________
    // - Initialize NC_CCweight = 0.125
@@ -900,19 +933,18 @@ void ImpMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   t->requires(Task::NewDW, lb->pExtForceLabel_preReloc,Ghost::AroundNodes,1);
   t->requires(Task::NewDW, lb->pExternalHeatRateLabel, Ghost::AroundNodes,1);
   t->requires(Task::NewDW, lb->pExternalHeatFluxLabel_preReloc, 
-              Ghost::AroundNodes,1);
+                                                       Ghost::AroundNodes,1);
   if(!flags->d_doGridReset){
     t->requires(Task::OldDW,lb->gDisplacementLabel,    Ghost::None);
     t->computes(lb->gDisplacementLabel);
   }
   t->requires(Task::OldDW, lb->pDeformationMeasureLabel,   Ghost::AroundNodes,1);
 
-
   t->requires(Task::OldDW,lb->NC_CCweightLabel, one_matl,Ghost::AroundCells,1);
-  if (flags->d_temp_solve == false)
-    //    t->requires(Task::OldDW,lb->gTemperatureLabel,one_matl,Ghost::AroundCells,1);
+  
+  if (flags->d_temp_solve == false){
     t->requires(Task::OldDW,lb->gTemperatureLabel,one_matl,Ghost::None,0);
-
+  }
   t->computes(lb->gMassLabel,        d_sharedState->getAllInOneMatl(),
               Task::OutOfDomain);
   t->computes(lb->gVolumeLabel,      d_sharedState->getAllInOneMatl(),
@@ -1705,16 +1737,20 @@ void ImpMPM::iterate(const ProcessorGroup*,
     d_subsched->get_dw(3)->get(dispIncNormMax,lb->dispIncNormMax);
     d_subsched->get_dw(3)->get(dispIncQNorm0, lb->dispIncQNorm0);
 
+    double frac_Norm  = dispIncNorm/(dispIncNormMax + 1.e-100);
+    double frac_QNorm = dispIncQNorm/(dispIncQNorm0 + 1.e-100);
+
     if(UintahParallelComponent::d_myworld->myrank() == 0){
-      cerr << "dispIncNorm/dispIncNormMax = "
-           << dispIncNorm/(dispIncNormMax + 1.e-100) << "\n";
-      cerr << "dispIncQNorm/dispIncQNorm0 = "
-           << dispIncQNorm/(dispIncQNorm0 + 1.e-100) << "\n";
+      cerr << "dispIncNorm/dispIncNormMax = " << frac_Norm << "\n";
+      cerr << "dispIncQNorm/dispIncQNorm0 = "<< frac_QNorm << "\n";
     }
-    if (dispIncNorm/(dispIncNormMax + 1e-100) <= flags->d_conv_crit_disp)
+    if( (frac_Norm  <= flags->d_conv_crit_disp) || (dispIncNormMax <= flags->d_conv_crit_disp) ){
       dispInc = true;
-    if (dispIncQNorm/(dispIncQNorm0 + 1e-100) <= flags->d_conv_crit_energy)
+    }  
+    if( (frac_QNorm <= flags->d_conv_crit_energy) || (dispIncQNorm0 <= flags->d_conv_crit_energy) ){
       dispIncQ = true;
+    }
+    
     // Check to see if the residual is likely a nan, if so, we'll restart.
     bool restart_nan=false;
     bool restart_neg_residual=false;
@@ -2138,6 +2174,7 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 
     new_dw->allocateAndPut(gTemperature,lb->gTemperatureLabel, 0,patch);
     gTemperature.initialize(0.0);
+    
     if (flags->d_temp_solve == false)
       old_dw->get(gTemperatureOld, lb->gTemperatureLabel,0,patch,Ghost::None,0);
 

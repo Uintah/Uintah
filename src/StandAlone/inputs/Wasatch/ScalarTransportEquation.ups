@@ -8,6 +8,10 @@
 
   <Wasatch>
 
+    <Density>
+      <IsConstant>true</IsConstant>
+    </Density>
+
     <!-- Set the initial condition for non-staggered scalar -->
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
@@ -29,6 +33,7 @@
     <TransportEquation equation="generic">
 
       <SolutionVariable>phi-scalar</SolutionVariable>
+      <StrongForm>true</StrongForm>
 
       <DiffusiveFluxExpression>
         <Direction>X</Direction>
@@ -65,6 +70,7 @@
     <TransportEquation equation="generic">
 
       <SolutionVariable>phi-xStaggered</SolutionVariable>
+      <StrongForm>true</StrongForm>
 
       <StaggeredDirection>X</StaggeredDirection>
 
@@ -98,6 +104,7 @@
     <TransportEquation equation="generic">
 
       <SolutionVariable>phi-yStaggered</SolutionVariable>
+      <StrongForm>true</StrongForm>
 
       <StaggeredDirection>Y</StaggeredDirection>
 
@@ -131,6 +138,7 @@
     <TransportEquation equation="generic">
 
       <SolutionVariable>phi-zStaggered</SolutionVariable>
+      <StrongForm>true</StrongForm>
 
       <StaggeredDirection>Z</StaggeredDirection>
 

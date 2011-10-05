@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -33,7 +33,6 @@ DEALINGS IN THE SOFTWARE.
 #define UINTAH_HOMEBREW_PackBufferInfo_H
 
 #include <sci_defs/mpi_defs.h> // For MPIPP_H on SGI
-#include <vector>
 #include <Core/Parallel/BufferInfo.h>
 #include <Core/Util/RefCounted.h>
 #include <Core/Parallel/ProcessorGroup.h>
@@ -41,7 +40,6 @@ DEALINGS IN THE SOFTWARE.
 
 #include <Core/Parallel/uintahshare.h>
 namespace Uintah {
-  using namespace std;
   
   class UINTAHSHARE PackedBuffer : public RefCounted
   {

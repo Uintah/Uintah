@@ -8,7 +8,7 @@
 /** 
 * @class  ScalarDiss
 * @author Jeremy Thornock
-* @date   Aug 2010
+* @date   Aug 2011
 * 
 * @brief Computes the scalar turbulent dissipation rate 
 *

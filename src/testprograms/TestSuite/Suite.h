@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -47,39 +47,39 @@ DEALINGS IN THE SOFTWARE.
 
 #include <testprograms/TestSuite/uintahshare.h>
 
-typedef map<string, Test*> testMap;
-typedef map<string, Test*>::iterator testMapIterator;
-typedef map<string, Test*>::value_type testMapPair;
+typedef std::map<std::string, Test*> testMap;
+typedef std::map<std::string, Test*>::iterator testMapIterator;
+typedef std::map<std::string, Test*>::value_type testMapPair;
 
 class UINTAHSHARE Suite
 {
 public:
   // construct a Suite with the given name
-  Suite(const string& name);
+  Suite(const std::string& name);
 
   ~Suite(); // delete all created tests and myName
 
-  const string getName() // get the Suite name
+  const std::string getName() // get the Suite name
   { return myName; }
 
   // if the given testName has been used, return NULL;
   // otherwise, create a test with the given name,
   // add it to the suite, and return a pointer to it.
-  Test* addTest(const string& testName);
+  Test* addTest(const std::string& testName);
 
   // Add the test and set its result.  If a test with
   // that name already exists, then simply return NULL.
-  Test* addTest(const string& testName, bool result);
+  Test* addTest(const std::string& testName, bool result);
 
   // Same as addTest methods except that if the test name
   // already exists, that is what is used/returned instead of
   // NULL.
-  Test* findOrAddTest(const string& testName);
-  Test* findOrAddTest(const string& testName, bool results);
+  Test* findOrAddTest(const std::string& testName);
+  Test* findOrAddTest(const std::string& testName, bool results);
   
   // if there is a test in this suite with the given
   // name, return a pointer to it; otherwise return NULL.
-  Test* findTest(const string& testName);
+  Test* findTest(const std::string& testName);
 
   bool hasAllPassed();
 
@@ -89,10 +89,10 @@ public:
   // suite along with a summary (to cout).
   void report();
 private:
-  string myName; // name of suite
+  std::string myName; // name of suite
 
   // map of tests (mapping names to tests)
   testMap myTests;
-  list<Test*> myOrderedTests;
+  std::list<Test*> myOrderedTests;
 };
 

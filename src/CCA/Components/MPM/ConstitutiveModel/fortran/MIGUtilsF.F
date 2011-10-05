@@ -2,7 +2,7 @@ C
 C 
 C The MIT License
 C 
-C Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+C Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 C Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 C University of Utah.
 C 

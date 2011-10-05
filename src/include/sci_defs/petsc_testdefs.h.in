@@ -31,7 +31,6 @@
 #define SCI_PETSC_DEFS_H
 
 @DEF_PETSC@
-@DEF_PETSC_UNI@
 
 /* 
    For reference, (if you have petsc, then) you are linking verses this PETSc:

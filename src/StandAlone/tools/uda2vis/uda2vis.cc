@@ -2,7 +2,7 @@
 
   The MIT License
 
-  Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+  Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
   Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
   University of Utah.
 
@@ -95,29 +95,29 @@ int numComponents<Matrix3>() {
 }
 
 template <typename T>
-void copyComponents(float *dest, const T &src) {
-  (*dest) = (float)src;
+void copyComponents(double *dest, const T &src) {
+  (*dest) = (double)src;
 }
 
 template <>
-void copyComponents<Vector>(float *dest, const Vector &src) {
-  dest[0] = (float)src[0];
-  dest[1] = (float)src[1];
-  dest[2] = (float)src[2];
+void copyComponents<Vector>(double *dest, const Vector &src) {
+  dest[0] = (double)src[0];
+  dest[1] = (double)src[1];
+  dest[2] = (double)src[2];
 }
 
 template <>
-void copyComponents<Point>(float *dest, const Point &src) {
-  dest[0] = (float)src.x();
-  dest[1] = (float)src.y();
-  dest[2] = (float)src.z();
+void copyComponents<Point>(double *dest, const Point &src) {
+  dest[0] = (double)src.x();
+  dest[1] = (double)src.y();
+  dest[2] = (double)src.z();
 }
 
 template <>
-void copyComponents<Matrix3>(float *dest, const Matrix3 &src) {
+void copyComponents<Matrix3>(double *dest, const Matrix3 &src) {
   for (int i=0; i<3; i++) {
     for (int j=0; j<3; j++) {
-      dest[i*3+j] = (float)src(i,j);
+      dest[i*3+j] = (double)src(i,j);
     }
   }
 }
@@ -298,7 +298,7 @@ static GridDataRaw* readGridData(DataArchive *archive,
   }
 
   int n = (high[0]-low[0])*(high[1]-low[1])*(high[2]-low[2]);
-  gd->data = new float[n*gd->components];
+  gd->data = new double[n*gd->components];
 
   T *p=var.getPointer();
   for (int i=0; i<n; i++)
@@ -440,7 +440,7 @@ ParticleDataRaw* readParticleData(DataArchive *archive,
 
   // copy all the data
   int pi=0;
-  pd->data = new float[pd->components * pd->num];
+  pd->data = new double[pd->components * pd->num];
   for (unsigned int i=0; i<particle_vars.size(); i++) {
     for (ParticleSubset::iterator p = particle_vars[i]->getParticleSubset()->begin();
          p != particle_vars[i]->getParticleSubset()->end(); ++p) {

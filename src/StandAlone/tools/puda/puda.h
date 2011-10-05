@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -46,6 +46,8 @@ namespace Uintah {
     bool do_jim1;
     bool do_AA_MMS_1;
     bool do_AA_MMS_2;
+    bool do_GV_MMS;
+    bool do_ER_MMS;
     bool do_jim2;
     bool do_partvar;
     bool do_asci;
@@ -93,6 +95,8 @@ namespace Uintah {
       do_jim1       = false;
       do_AA_MMS_1   = false;
       do_AA_MMS_2  = false;
+      do_GV_MMS   = false; //MMS
+      do_ER_MMS  = false;
       do_jim2       = false;
       do_monica1    = false;
       do_partvar    = false;

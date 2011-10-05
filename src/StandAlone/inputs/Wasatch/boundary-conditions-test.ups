@@ -7,6 +7,10 @@
   <SimulationComponent type="wasatch"/>
 
   <Wasatch>
+
+    <Density>
+      <IsConstant>true</IsConstant>
+    </Density>
   
     <!-- Set the initial condition for non-staggered scalar -->
     <BasicExpression type="SVOL">
@@ -58,6 +62,8 @@
     <TransportEquation equation="generic">
 
       <SolutionVariable>phi-scalar</SolutionVariable>
+      <StrongForm>true</StrongForm>
+
       <DiffusiveFluxExpression>
         <Direction>X</Direction>
         <ConstantDiffusivity>1.0</ConstantDiffusivity>
@@ -81,6 +87,7 @@
       <StaggeredDirection>X</StaggeredDirection>
     
       <SolutionVariable>phi-x-scalar</SolutionVariable>
+      <StrongForm>true</StrongForm>
       
       <DiffusiveFluxExpression>
         <Direction>X</Direction>
@@ -105,7 +112,8 @@
       <StaggeredDirection>Y</StaggeredDirection>
     
       <SolutionVariable>phi-y-scalar</SolutionVariable>
-      
+      <StrongForm>true</StrongForm>
+            
       <DiffusiveFluxExpression>
         <Direction>X</Direction>
         <ConstantDiffusivity>1.0</ConstantDiffusivity>
@@ -129,6 +137,7 @@
       <StaggeredDirection>Z</StaggeredDirection>
     
       <SolutionVariable>phi-z-scalar</SolutionVariable>
+      <StrongForm>true</StrongForm>
       
       <DiffusiveFluxExpression>
         <Direction>X</Direction>
@@ -282,23 +291,23 @@
         </BCType>
       </Face>
       <Face side="y-">
-        <BCType id="all" var="Dirichlet" label="phi-z-scalar">
+        <BCType id="all" var="Neumann" label="phi-z-scalar">
           <value> 10.0 </value>
         </BCType>
       </Face>
       <Face side="y+">
-        <BCType id="all" var="Dirichlet" label="phi-z-scalar">
-          <value> 0.0 </value>
+        <BCType id="all" var="Neumann" label="phi-z-scalar">
+          <value> -10.0 </value>
         </BCType>
       </Face>
       <Face side="z-">
-        <BCType id="all" var="Neumann" label="phi-z-scalar">
+        <BCType id="all" var="Dirichlet" label="phi-z-scalar">
           <value> 10.0 </value>
         </BCType>
       </Face>
       <Face side="z+">
-        <BCType id="all" var="Neumann" label="phi-z-scalar">
-          <value> -10.0 </value>
+        <BCType id="all" var="Dirichlet" label="phi-z-scalar">
+          <value> 0.0 </value>
         </BCType>
       </Face>
 

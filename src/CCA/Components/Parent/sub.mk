@@ -2,7 +2,7 @@
 # 
 # The MIT License
 # 
-# Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+# Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 # Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 # University of Utah.
 # 
@@ -38,16 +38,13 @@ COMPONENTS := CCA/Components
 SRCS := $(SRCDIR)/Switcher.cc \
         $(SRCDIR)/ComponentFactory.cc
 
-ifeq ($(BUILD_ARCHES),yes)
-  MORE_LIBS := $(COMPONENTS)/SpatialOps
-endif
-
 # ARCHES et. al. should have been seen by CCA/Components/sub.mk
 PSELIBS := \
         Core/Containers  \
         Core/Exceptions  \
         Core/Util        \
         Core/Geometry    \
+        Core/GeometryPiece  \
         CCA/Ports        \
         Core/Disclosure  \
         Core/Exceptions  \

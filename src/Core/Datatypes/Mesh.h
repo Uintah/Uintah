@@ -146,7 +146,7 @@ void get_faces( Msh *mesh, typename Msh::Face::array_type &faces, typename Msh::
   typename Msh::Elem::array_type elems;
   mesh->get_elems(elems, edge);
 
-  set<typename Msh::Face::index_type> unique;
+  std::set<typename Msh::Face::index_type> unique;
 
   for (unsigned int i = 0; i < elems.size(); i++)
   {

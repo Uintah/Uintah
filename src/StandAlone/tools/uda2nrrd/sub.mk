@@ -2,7 +2,7 @@
 # 
 # The MIT License
 # 
-# Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+# Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 # Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 # University of Utah.
 # 
@@ -52,7 +52,8 @@ PROGRAM := $(SRCDIR)/uda2nrrd
 	$(SRCDIR)/wrap_nrrd.cc 
 
   LIBS := $(XML2_LIBRARY) $(TEEM_LIBRARY) $(PNG_LIBRARY) $(Z_LIBRARY) \
-	  $(M_LIBRARY) $(MPI_LIBRARY) $(F_LIBRARY) $(THREAD_LIBRARY)
+	  $(M_LIBRARY) $(MPI_LIBRARY) $(F_LIBRARY) \
+          $(BLAS_LIBRARY) $(THREAD_LIBRARY) 
 
   include $(SCIRUN_SCRIPTS)/program.mk
 

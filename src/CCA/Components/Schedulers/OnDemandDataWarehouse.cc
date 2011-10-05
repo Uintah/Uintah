@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -75,12 +75,8 @@ DEALINGS IN THE SOFTWARE.
 #include <cstring>
 
 
-using std::cerr;
-using std::string;
-using std::vector;
-
+using namespace std;
 using namespace SCIRun;
-
 using namespace Uintah;
 
 #undef UINTAHSHARE
@@ -99,7 +95,6 @@ static DebugStream warn( "OnDemandDataWarehouse_warn", true );
 static DebugStream particles("DWParticles", false);
 static DebugStream particles2("DWParticles2", false);
 extern DebugStream mpidbg;
-static Mutex ssLock( "send state lock" );
 
 struct ParticleSend : public RefCounted {
   int numParticles;
@@ -354,18 +349,14 @@ OnDemandDataWarehouse::sendMPI(DependencyBatch* batch,
           // already knows about it.
           ASSERT(old_dw != this);
           ParticleSubset* pset = var->getParticleSubset();
-          ssLock.lock();  // Dd: ??
           sendset = scinew ParticleSubset(0, matlIndex, patch, low, high);
-          ssLock.unlock();  // Dd: ??
           constParticleVariable<Point> pos;
           old_dw->get(pos, pos_var, pset);
           for(ParticleSubset::iterator iter = pset->begin();
               iter != pset->end(); iter++){
             particleIndex idx = *iter;
             if(Patch::containsIndex(low,high,patch->getCellIndex(pos[idx]))) {
-              ssLock.lock();  // Dd: ??
               sendset->addParticle(idx);
-              ssLock.unlock();  // Dd: ??
             }
           }
           old_dw->ss_.add_sendset(sendset, dest, patch, matlIndex, low, high, old_dw->d_generation);
@@ -1031,8 +1022,10 @@ OnDemandDataWarehouse::queryPSetDB(psetDBType &subsetDB,
   }
 
   //save subset for future queries
+  d_lock.writeLock();
   subsetDB.insert(pair<psetDBType::key_type,ParticleSubset*>(key,newsubset));
   newsubset->addReference();
+  d_lock.writeUnlock();
 
   return newsubset;
 }
@@ -1461,9 +1454,16 @@ OnDemandDataWarehouse::put(ParticleVariableBase& var,
   }
   
   int matlIndex = pset->getMatlIndex();
-
-  dbg << d_myworld->myrank() << " Putting: " << *label << " MI: " << matlIndex << " patch: " 
-       << *patch << " \t\t into DW: " << d_generation << "\n";
+  
+  
+  if( dbg.active() ) {
+    cerrLock.lock();
+  dbg << d_myworld->myrank() << " Putting: ";
+  dbg<< left;dbg.width(20);
+  dbg << *label << " MI: " << matlIndex << " patch: " 
+       << *patch << " \tinto DW: " << d_generation << "\n";
+    cerrLock.unlock();
+  }
 
   d_lock.writeLock();   
   checkPutAccess(label, matlIndex, patch, replace);
@@ -1549,20 +1549,20 @@ OnDemandDataWarehouse:: allocateTemporary(GridVariableBase& var,
                                           Ghost::GhostType gtype, 
                                           int numGhostCells )
 {
- d_lock.writeLock();  
   IntVector boundaryLayer(0, 0, 0); // Is this right?
 
   MALLOC_TRACE_TAG_SCOPE("OnDemandDataWarehouse::allocateTemporary(Grid Variable)");
   IntVector lowIndex, highIndex;
   IntVector lowOffset, highOffset;
+  d_lock.writeLock();  
   Patch::VariableBasis basis = Patch::translateTypeToBasis(var.virtualGetTypeDescription()->getType(), false);
   Patch::getGhostOffsets(var.virtualGetTypeDescription()->getType(), gtype,
                          numGhostCells, lowOffset, highOffset);
                       
+  d_lock.writeUnlock();  
   patch->computeExtents(basis, boundaryLayer, lowOffset, highOffset,lowIndex, highIndex);
 
   var.allocate(lowIndex, highIndex);
- d_lock.writeUnlock();  
 }
 //______________________________________________________________________
 //
@@ -2692,8 +2692,15 @@ OnDemandDataWarehouse::checkGetAccess(const VarLabel* label,
           if( label ){
             varname = label->getName();
           }
+         if( dbg.active() ) {
+          cerrLock.lock();
           dbg << d_myworld->myrank() << " Task running is: " << runningTask->getName();
-          dbg<< "\t "<< varname << " \t\t on patch " << ID << " and matl: " << matlIndex << " has been gotten\n";
+          dbg<< left;dbg.width(10);
+          dbg<< "\t"<< varname;
+          dbg<< left;dbg.width(10);
+          dbg<< " \t on patch " << ID << " and matl: " << matlIndex << " has been gotten\n";
+	  cerrLock.unlock();
+	 }
         } else {
           findIter->second.encompassOffsets(lowOffset, highOffset);
         }
@@ -2819,46 +2826,36 @@ void OnDemandDataWarehouse::pushRunningTask(const Task* task,
                                             vector<OnDemandDataWarehouseP>* dws)
 {
   ASSERT(task);
- d_lock.writeLock();    
-  d_runningTasks[Thread::self()].push_back(RunningTaskInfo(task, dws));
- d_lock.writeUnlock();
+  d_runningTasks[Thread::self()->myid()].push_back(RunningTaskInfo(task, dws));
 }
 //______________________________________________________________________
 //
 void OnDemandDataWarehouse::popRunningTask()
 {
- d_lock.writeLock();
-  list<RunningTaskInfo>& runningTasks = d_runningTasks[Thread::self()];
-  runningTasks.pop_back();
-  if (runningTasks.empty()) {
-    d_runningTasks.erase(Thread::self());
-  }
- d_lock.writeUnlock();
+  d_runningTasks[Thread::self()->myid()].pop_back();
 }
 //______________________________________________________________________
 //
 inline list<OnDemandDataWarehouse::RunningTaskInfo>*
 OnDemandDataWarehouse::getRunningTasksInfo()
 {
-  map<Thread*, list<RunningTaskInfo> >::iterator findIt =
-    d_runningTasks.find(Thread::self());
-  return (findIt != d_runningTasks.end()) ? &findIt->second : 0;
+  if (d_runningTasks[Thread::self()->myid()].empty()) return 0;
+  else return &d_runningTasks[Thread::self()->myid()];
 }
 //______________________________________________________________________
 //
 inline bool OnDemandDataWarehouse::hasRunningTask()
 {
-  list<OnDemandDataWarehouse::RunningTaskInfo>* runningTasks =
-    getRunningTasksInfo();
-  return runningTasks ? !runningTasks->empty() : false;
+  if (d_runningTasks[Thread::self()->myid()].empty()) return false;
+  else return true;
 }
 //______________________________________________________________________
 //
 inline OnDemandDataWarehouse::RunningTaskInfo*
 OnDemandDataWarehouse::getCurrentTaskInfo()
 {
-  list<RunningTaskInfo>* taskInfoList = getRunningTasksInfo();
-  return (taskInfoList && !taskInfoList->empty()) ? &taskInfoList->back() : 0;
+  if (d_runningTasks[Thread::self()->myid()].empty()) return 0;
+  else return &d_runningTasks[Thread::self()->myid()].back();
 }
 //______________________________________________________________________
 //

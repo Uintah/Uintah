@@ -8,6 +8,7 @@
 #include <CCA/Components/Wasatch/FieldTypes.h>
 #include <CCA/Components/Wasatch/ParseTools.h>
 #include <CCA/Components/Wasatch/Expressions/MMS/TaylorVortex.h>
+#include <CCA/Components/Wasatch/Expressions/MMS/Functions.h>
 #include <CCA/Components/Wasatch/StringNames.h>
 
 //-- ExprLib includes --//
@@ -16,6 +17,8 @@
 
 #include <string>
 #define PI 3.1415926535897932384626433832795
+
+using std::endl;
 
 namespace Wasatch{
 
@@ -89,6 +92,13 @@ namespace Wasatch{
       typedef typename Expr::DoubleTanhFunction<FieldT>::Builder Builder;
       builder = scinew Builder( indepVarTag, midpointUp, midpointDown, width, amplitude);
     }
+    
+    else if ( params->findBlock("SineTime") ) {
+      const Expr::Tag timeVarTag( "time", Expr::STATE_NONE );
+      typedef typename SineTime<FieldT>::Builder Builder;
+      builder = scinew Builder( timeVarTag );
+    }
+    
 	  
     return builder;
 	  
@@ -198,10 +208,10 @@ namespace Wasatch{
 
       const Expr::Tag tag = parse_nametag( exprParams->findBlock("NameTag") );
 
-      std::cout << "Creating BasicExpression for variable '" << tag.name()
-                << "' with state " << tag.context()
-                << " on task list '" << taskListName << "'"
-                << std::endl;
+//       std::cout << "Creating BasicExpression for variable '" << tag.name()
+//                 << "' with state " << tag.context()
+//                 << " on task list '" << taskListName << "'"
+//                 << std::endl;
 
       switch( get_field_type(fieldType) ){
       case SVOL : builder = build_basic_expr< SVolField >( exprParams );  break;
@@ -214,7 +224,7 @@ namespace Wasatch{
             << __FILE__ << " : " << __LINE__ << endl;
       }
 
-      Category cat;
+      Category cat = INITIALIZATION;
       if     ( taskListName == "initialization"   )   cat = INITIALIZATION;
       else if( taskListName == "timestep_size"    )   cat = TIMESTEP_SELECTION;
       else if( taskListName == "advance_solution" )   cat = ADVANCE_SOLUTION;
@@ -239,10 +249,10 @@ namespace Wasatch{
 	
       const Expr::Tag tag = parse_nametag( exprParams->findBlock("NameTag") );
 		
-      std::cout << "Creating TaylorVortexMMS for variable '" << tag.name()
-                << "' with state " << tag.context()
-                << " on task list '" << taskListName << "'"
-                << std::endl;
+//       std::cout << "Creating TaylorVortexMMS for variable '" << tag.name()
+//                 << "' with state " << tag.context()
+//                 << " on task list '" << taskListName << "'"
+//                 << std::endl;
 		
       switch( get_field_type(fieldType) ){
       case SVOL : builder = build_taylor_vortex_mms_expr< SVolField >( exprParams );  break;
@@ -255,7 +265,7 @@ namespace Wasatch{
             << __FILE__ << " : " << __LINE__ << endl;
       }
 		
-      Category cat;
+      Category cat = INITIALIZATION;
       if     ( taskListName == "initialization"   )   cat = INITIALIZATION;
       else if( taskListName == "timestep_size"    )   cat = TIMESTEP_SELECTION;
       else if( taskListName == "advance_solution" )   cat = ADVANCE_SOLUTION;

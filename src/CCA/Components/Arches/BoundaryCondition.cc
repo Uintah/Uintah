@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -38,6 +38,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Arches/CellInformationP.h>
 #include <CCA/Components/Arches/BoundaryCond_new.h>
 #include <CCA/Components/Arches/ChemMix/MixingRxnModel.h>
+#include <CCA/Components/Arches/IntrusionBC.h>
 
 #include <CCA/Components/Arches/ArchesVariables.h>
 #include <CCA/Components/Arches/ArchesConstVariables.h>
@@ -119,6 +120,20 @@ BoundaryCondition::BoundaryCondition(const ArchesLabel* label,
   d_pressureBC = 0;
   d_outletBC = 0;
   d_intrusionBC = 0;
+  _using_new_intrusion = false; 
+
+  // x-direction
+  index_map[0][0] = 0;
+  index_map[0][1] = 1; 
+  index_map[0][2] = 2; 
+  // y-direction 
+  index_map[1][0] = 2;
+  index_map[1][1] = 0; 
+  index_map[1][2] = 1; 
+  // z-direction
+  index_map[2][0] = 1;
+  index_map[2][1] = 2; 
+  index_map[2][2] = 0; 
 }
 
 //****************************************************************************
@@ -156,6 +171,10 @@ BoundaryCondition::~BoundaryCondition()
     VarLabel::destroy( bc_iter->second.total_area_label ); 
 
   }
+
+  if (_using_new_intrusion) { 
+    delete _intrusionBC; 
+  } 
 }
 
 //****************************************************************************
@@ -170,7 +189,7 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
   d_flowfieldCellTypeVal = -1;
   d_numInlets = 0;
   d_numSourceBoundaries = 0;
-  int total_cellTypes = 0;
+  int total_cellTypes = 100;
 
   d_newBC = scinew BoundaryCondition_new( d_lab ); // need to declare a new boundary condition here 
                                                    // while transition to new code is taking place
@@ -185,6 +204,7 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
     d_carbon_balance=false;
     d_sulfur_balance=false;
     d_use_new_bcs = false; 
+    _using_new_intrusion = false;
   }
   else
   {
@@ -219,76 +239,40 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
       }
     }
 
-    // --- new turbulence inlet flow generator --- 
-    turbinlet = false; 
-    if (ProblemSpecP turb_db = db->findBlock("TurbulentInlet")){
-      turbinlet = true;
-      int Nstep;
-      turb_db->get("cell_low",ilow);
-      turb_db->get("cell_high",ihigh);
-      turb_db->get("Ntimestep",Nstep);
-      turb_db->get("turbulence_intensity",intensity);
+    if ( d_use_new_bcs ) { 
 
-      double summ;
-      double bsum;
-      int ncell;
-      double pi = acos(-1);
-      double ratio;
-      ncell = ihigh-ilow+1;
-      Nx = 2*Nstep;
-      My = ncell;
-      Mz = ncell;
- 
-      summ = 0;     
-      for (int j = -Nx;j<(Nx+1);j++){
-        ratio = 1.0*j/(Nx/2);
-        summ += pow((exp(-pi/2*pow(ratio,2))),2);
-      }
-      bsum = sqrt(summ);
-      bcoeffx = new double[2*Nx+1];
-      for (int j = -Nx;j<(Nx+1);j++){
-        ratio = 1.0*j/(Nx/2);
-        bcoeffx[j+Nx] = exp(-pi/2*pow(ratio,2))/bsum;
-      }
- 
-      summ = 0;     
-      for (int j = -Ny;j<(Ny+1);j++){
-        ratio = 1.0*j/(Ny/2);
-        summ += pow((exp(-pi/2*pow(ratio,2))),2);
-      }
-      bsum = sqrt(summ);
-      bcoeffy = new double[2*Ny+1];
-      for (int j = -Ny;j<(Ny+1);j++){
-        ratio = 1.0*j/(Ny/2);
-        bcoeffy[j+Ny] = exp(-pi/2*pow(ratio,2))/bsum;
-      }
+      for (ProblemSpecP prefill_db = db->findBlock("Prefill"); prefill_db != 0; 
+            prefill_db = prefill_db->findNextBlock("Prefill") ) { 
 
-      summ = 0;     
-      for (int j = -Nz;j<(Nz+1);j++){
-        ratio = 1.0*j/(Nz/2);
-        summ += pow((exp(-pi/2*pow(ratio,2))),2);
-      }
-      bsum = sqrt(summ);
-      bcoeffz = new double[2*Nz+1];
-      for (int j = -Nz;j<(Nz+1);j++){
-        ratio = 1.0*j/(Nz/2);
-        bcoeffz[j+Nz] = exp(-pi/2*pow(ratio,2))/bsum;
-      }
+        std::string which_boundary = "null"; 
+        prefill_db->getAttribute( "bc", which_boundary ); 
 
-      Rturb = new double[2*Nx+1];
-      for(int i = -Nx;i<(Nx+1);i++){
-            double r = rand();
-            Rturb[i+Nx] = intensity*(r/RAND_MAX-.5)*sqrt(12.0);
-      }
+        if ( which_boundary == "null" ) { 
+          throw ProblemSetupException("Error: Must specify an associated boundary for the prefill attribute.",__FILE__,__LINE__); 
+        } 
 
-      bbcoeff = new double[2*Nx+1];
-      for(int i = -Nx;i<(Nx+1);i++){
-            bbcoeff[i+Nx] = bcoeffx[i+Nx];
-      }
+        ProblemSpecP geometry_db = prefill_db->findBlock("geom_object"); 
+        std::vector<GeometryPieceP> geometry; 
+        if ( geometry_db ) { 
+          GeometryPieceFactory::create( geometry_db, geometry ); 
+        } else { 
+          throw ProblemSetupException("Error: Must specify a geom_object in <Prefill> block.",__FILE__,__LINE__); 
+        } 
 
-    } else {
-      turbinlet = false;
+        d_prefill_map.insert(make_pair(which_boundary, geometry)).first;
+
+      } 
     }
+
+    if ( db->findBlock("NewIntrusionBC") ){ 
+
+      _intrusionBC = scinew IntrusionBC( d_lab, d_props, BoundaryCondition::MMWALL ); 
+      ProblemSpecP db_new_intrusion = db->findBlock("NewIntrusionBC"); 
+      _using_new_intrusion = true; 
+
+      _intrusionBC->problemSetup( db_new_intrusion ); 
+
+    } 
 
     // --- new efficiency calculator --- 
     ProblemSpecP eff_db = db->findBlock("ScalarEfficiency");
@@ -376,9 +360,9 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
 
     if (ProblemSpecP wall_db = db->findBlock("WallBC")) {
       d_wallBoundary = true;
-      d_wallBdry = scinew WallBdry(total_cellTypes);
+      d_wallBdry = scinew WallBdry(WALL);
       d_wallBdry->problemSetup(wall_db);
-      ++total_cellTypes;
+      //++total_cellTypes;
     }
     else {
       proc0cout << "Wall boundary not specified"<<endl;
@@ -387,7 +371,7 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
 
     if (ProblemSpecP press_db = db->findBlock("PressureBC")) {
       d_pressureBoundary = true;
-      d_pressureBC = scinew PressureInlet(total_cellTypes, d_calcVariance,
+      d_pressureBC = scinew PressureInlet(PRESSURE, d_calcVariance,
           d_reactingScalarSolve);
       d_pressureBC->problemSetup(press_db);
       // compute density and other dependent properties
@@ -397,7 +381,7 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
       d_props->computeInletProperties(d_pressureBC->streamMixturefraction, 
           d_pressureBC->calcStream, bc_type);
 
-      ++total_cellTypes;
+      //++total_cellTypes;
     }
     else {
       proc0cout << "Pressure boundary not specified"<< endl;
@@ -406,7 +390,7 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
 
     if (ProblemSpecP outlet_db = db->findBlock("OutletBC")) {
       d_outletBoundary = true;
-      d_outletBC = scinew FlowOutlet(total_cellTypes, d_calcVariance,
+      d_outletBC = scinew FlowOutlet(OUTLET, d_calcVariance,
           d_reactingScalarSolve);
       d_outletBC->problemSetup(outlet_db);
       // compute density and other dependent properties
@@ -415,7 +399,7 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
       string bc_type = "outlet"; 
       d_props->computeInletProperties(d_outletBC->streamMixturefraction, 
           d_outletBC->calcStream, bc_type);
-      ++total_cellTypes;
+      //++total_cellTypes;
     }
     else {
       proc0cout << "Outlet boundary not specified"<<endl;
@@ -424,9 +408,13 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
 
     if (ProblemSpecP intrusion_db = db->findBlock("intrusions")) {
       d_intrusionBoundary = true;
-      d_intrusionBC = scinew IntrusionBdry(total_cellTypes);
+      if ( d_use_new_bcs ) { 
+        d_intrusionBC = scinew IntrusionBdry(WALL);
+      } else { 
+        d_intrusionBC = scinew IntrusionBdry(INTRUSION);
+      } 
       d_intrusionBC->problemSetup(intrusion_db);
-      ++total_cellTypes;
+      //++total_cellTypes;
     }
     else {
       proc0cout << "Intrusion boundary not specified"<<endl;
@@ -437,10 +425,16 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
   d_mmWallID = -10; // invalid cell type
   // if multimaterial then add an id for multimaterial wall
   if (d_MAlab){ 
-    d_mmWallID = total_cellTypes;
+    d_mmWallID = MMWALL; //total_cellTypes;
+    if (d_use_new_bcs) { 
+      d_mmWallID = MMWALL; 
+    } 
   }
   if ((d_MAlab)&&(d_intrusionBoundary)){
     d_mmWallID = d_intrusionBC->d_cellTypeID;
+    if (d_use_new_bcs) { 
+      d_mmWallID = WALL; 
+    } 
   }
   //adding mms access
   if (d_doMMS) {
@@ -842,7 +836,7 @@ BoundaryCondition::mmWallCellTypeInit(const ProcessorGroup*,
       // resets old mmwall type back to flow field and sets cells with void fraction
       // of less than .5 to mmWall
 
-      if (d_intrusionBoundary) {
+      if (d_intrusionBoundary || _using_new_intrusion) {
         for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
           for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
             for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
@@ -1056,6 +1050,7 @@ BoundaryCondition::sched_calculateArea(SchedulerP& sched,
   }
 
   sched->addTask(tsk, patches, matls);
+
 #if 0
   for(Level::const_patchIterator iter=level->patchesBegin();
       iter != level->patchesEnd(); iter++){
@@ -1530,7 +1525,7 @@ BoundaryCondition::velocityBC(const Patch* patch,
   bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
   bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
   bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
-  
+
   //__________________________________
   //    X Dir
   IntVector idxLo = patch->getSFCXFORTLowIndex__Old();
@@ -1721,6 +1716,7 @@ BoundaryCondition::pressureBC(const Patch* patch,
     sub_types.push_back( VELOCITY_INLET ); 
     sub_types.push_back( VELOCITY_FILE ); 
     sub_types.push_back( MASSFLOW_FILE ); 
+    sub_types.push_back( SWIRL );
     sign = -1;
 
     zeroStencilDirection( patch, matl_index, sign, A, sub_types ); 
@@ -2092,6 +2088,7 @@ BoundaryCondition::mmvelocityBC(const Patch* patch,
                     vars->uVelocityCoeff[Arches::AB],
                     vars->uVelNonlinearSrc, vars->uVelLinearSrc,
                     constvars->cellType, d_mmWallID, ioff, joff, koff);
+
   //__________________________________
   //    Y dir
   idxLoU = patch->getSFCYFORTLowIndex__Old();
@@ -3554,6 +3551,7 @@ BoundaryCondition::calculateVelRhoHat_mm(const Patch* patch,
                        delta_t, ioff, joff, koff,
                        constvars->cellType,
                        d_mmWallID);
+
   //__________________________________
   //    Y dir
   idxLo = patch->getSFCYFORTLowIndex__Old();
@@ -3763,7 +3761,35 @@ BoundaryCondition::velRhoHatInletBC(const Patch* patch,
 
             if ( bc_iter->second.type == VELOCITY_INLET || bc_iter->second.type == MASSFLOW_INLET ) { 
               //---- set velocities
-              setVel__NEW( patch, face, vars->uVelRhoHat, vars->vVelRhoHat, vars->wVelRhoHat, constvars->new_density, bound_ptr, bc_iter->second.velocity ); 
+              //if ( face == Patch::xminus || face == Patch::xplus ) { 
+                setVel__NEW( patch, face, vars->uVelRhoHat, vars->vVelRhoHat, vars->wVelRhoHat, constvars->new_density, bound_ptr, bc_iter->second.velocity ); 
+              //} else if ( face == Patch::yminus || face == Patch::yplus ){ 
+              //  setVel__NEW( patch, face, vars->vVelRhoHat, vars->wVelRhoHat, vars->uVelRhoHat, constvars->new_density, bound_ptr, bc_iter->second.velocity ); 
+              //} else if ( face == Patch::zminus || face == Patch::zplus ){ 
+              //  setVel__NEW( patch, face, vars->wVelRhoHat, vars->uVelRhoHat, vars->vVelRhoHat, constvars->new_density, bound_ptr, bc_iter->second.velocity ); 
+              //} 
+            } else if ( bc_iter->second.type == SWIRL ) { 
+
+              if ( face == Patch::xminus || face == Patch::xplus ) { 
+
+                std::cout << " velocity = " << bc_iter->second.velocity[0] << std::endl;
+                std::cout << " swirl_no = " << bc_iter->second.swirl_no << std::endl;
+                std::cout << " swirl_cent = " << bc_iter->second.swirl_cent << std::endl;
+                setSwirl( patch, face, vars->uVelRhoHat, vars->vVelRhoHat, vars->wVelRhoHat, 
+                    constvars->new_density, bound_ptr, bc_iter->second.velocity, bc_iter->second.swirl_no, bc_iter->second.swirl_cent ); 
+
+              } else if ( face == Patch::yminus || face == Patch::yplus ){ 
+
+                setSwirl( patch, face, vars->vVelRhoHat, vars->wVelRhoHat, vars->uVelRhoHat, 
+                    constvars->new_density, bound_ptr, bc_iter->second.velocity, bc_iter->second.swirl_no, bc_iter->second.swirl_cent  ); 
+
+              } else if ( face == Patch::zminus || face == Patch::zplus ){ 
+
+                setSwirl( patch, face, vars->wVelRhoHat, vars->uVelRhoHat, vars->vVelRhoHat, 
+                    constvars->new_density, bound_ptr, bc_iter->second.velocity, bc_iter->second.swirl_no, bc_iter->second.swirl_cent  ); 
+
+              } 
+
             } else if ( bc_iter->second.type == VELOCITY_FILE ) {
               //---- set velocities
               //setVelFromInput__NEW( patch, face, uVelocity, vVelocity, wVelocity, bound_ptr, bc_iter->second.filename ); 
@@ -4672,7 +4698,7 @@ BoundaryCondition::getFlowINOUT(const ProcessorGroup*,
                             density, varIN, varOUT);
       }
       if (d_outletBoundary) {
-        int outlet_celltypeval = d_outletBC->d_cellTypeID;
+        int outlet_celltypeval = BoundaryCondition::OUTLET;
         if (xminus) {
           int colX = idxLo.x();
           for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
@@ -4697,6 +4723,7 @@ BoundaryCondition::getFlowINOUT(const ProcessorGroup*,
               IntVector xplusCell(colX+1, colY, colZ);
 
               if (cellType[xplusCell] == outlet_celltypeval) {
+
                 double avden = 0.5 * (density[xplusCell] +
                                        density[currCell]);
                 floutbc += avden*uVelocity[xplusCell] *
@@ -6472,6 +6499,7 @@ BoundaryCondition::setupBCs( ProblemSpecP& db )
   d_bc_type_to_string.insert( std::make_pair( VELOCITY_FILE  , "VelocityFileInput" ) );
   d_bc_type_to_string.insert( std::make_pair( PRESSURE       , "PressureBC" ) );
   d_bc_type_to_string.insert( std::make_pair( OUTLET         , "Outlet" ) );
+  d_bc_type_to_string.insert( std::make_pair( SWIRL          , "Swirl" ) ); 
   d_bc_type_to_string.insert( std::make_pair( WALL           , "Wall" ) );
 
   // Now actually look for the boundary types
@@ -6508,6 +6536,8 @@ BoundaryCondition::setupBCs( ProblemSpecP& db )
           my_info.velocity = Vector(0,0,0); 
           found_bc = true; 
 
+          // note that the mass flow rate is in the BCstruct value 
+
           //old: remove when this is cleaned up: 
           d_inletBoundary = true; 
 
@@ -6516,6 +6546,19 @@ BoundaryCondition::setupBCs( ProblemSpecP& db )
           my_info.type = VELOCITY_FILE; 
           db_BCType->require("inputfile", my_info.filename); 
           my_info.velocity = Vector(0,0,0); 
+          found_bc = true; 
+
+          //old: remove when this is cleaned up: 
+          d_inletBoundary = true; 
+
+        } else if ( type == "Swirl" ){ 
+
+          my_info.type = SWIRL; 
+          db_BCType->require("swirl_no", my_info.swirl_no);
+          db_BCType->require("swirl_centroid", my_info.swirl_cent); 
+
+          // note that the mass flow rate is in the BCstruct value 
+
           found_bc = true; 
 
           //old: remove when this is cleaned up: 
@@ -6637,6 +6680,41 @@ BoundaryCondition::cellTypeInit__NEW(const ProcessorGroup*,
         }
       }
     }
+
+    // Initialize intrusions 
+    if ( d_intrusionBoundary ){ 
+
+      Box patchInteriorBox = patch->getBox();
+      int nofGeomPieces = (int)d_intrusionBC->d_geomPiece.size();
+
+      for (int ii = 0; ii < nofGeomPieces; ii++) {
+
+        GeometryPieceP  piece = d_intrusionBC->d_geomPiece[ii];
+        Box geomBox = piece->getBoundingBox();
+        Box b = geomBox.intersect(patchInteriorBox);
+
+        if ( !(b.degenerate()) && !d_intrusionBC->inverse ) {
+
+          for (CellIterator iter = patch->getCellCenterIterator(b);!iter.done(); iter++) {
+            Point p = patch->cellPosition(*iter);
+            if ( piece->inside(p) ) {
+              cellType[*iter] = INTRUSION; 
+            } 
+          }
+
+        } else if ( d_intrusionBC->inverse ) { 
+          // If outside of the geometry, then count it as an intrusion (inverse behavior from above)
+
+          for (CellIterator iter = patch->getCellIterator();!iter.done(); iter++) {
+            Point p = patch->cellPosition(*iter);
+            if ( !piece->inside(p) ) {
+              cellType[*iter] = INTRUSION;
+            } 
+          }
+
+        } 
+      }
+    } 
   }
 }
 
@@ -6869,6 +6947,14 @@ BoundaryCondition::setupBCInletVelocities__NEW(const ProcessorGroup*,
                                                  ( area * density[*bound_ptr] );
                 proc0cout << "     Computed velocity from rho = " << density[*bound_ptr] << " is v = " << bc_iter->second.velocity[norm] << endl;
                 break;
+              case ( SWIRL ):
+                proc0cout << " Swirl inlet found for face: " << face << " with area = " << area << endl;
+                bc_iter->second.mass_flow_rate = bc_value; 
+                bc_iter->second.velocity[norm] = bc_iter->second.mass_flow_rate / 
+                                                 ( area * density[*bound_ptr] ); 
+                proc0cout << "     Computed velocity from rho = " << density[*bound_ptr] << " is v = " << bc_iter->second.velocity[norm] << endl;
+                break; 
+
               case ( VELOCITY_FILE ): 
                 // here we should read in the file 
 
@@ -7069,6 +7155,62 @@ void BoundaryCondition::setEnthalpyFromInput__NEW( const Patch* patch, const Pat
     CCVariable<double>& enthalpy, BoundaryCondition::HelperMap ivGridVarMap, BoundaryCondition::HelperVec allIndepVarNames, 
     Iterator bound_ptr ) 
 {
+}
+
+template<class d0T, class d1T, class d2T>
+void BoundaryCondition::setSwirl( const Patch* patch, const Patch::FaceType& face, 
+        d0T& uVel, d1T& vVel, d2T& wVel,
+        constCCVariable<double>& density, 
+        Iterator bound_ptr, Vector value, 
+        double swrl_no, Vector swrl_cent )
+{
+
+ //get the face direction
+ IntVector insideCellDir = patch->faceDirection(face);
+ Vector Dx = patch->dCell(); 
+ Vector mDx; //mapped dx 
+ int dir = 0; 
+
+ //remap the dx's and vector values
+ for (int i = 0; i < 3; i++ ){ 
+  if ( insideCellDir[i] != 0 ) { 
+    dir = i; 
+  } 
+ }
+ Vector bc_values;
+ for (int i = 0; i < 3; i++ ){ 
+   int index = index_map[dir][i]; 
+   bc_values[i] = value[index];
+   mDx[i] = Dx[index];
+ }
+
+ for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
+
+   IntVector c  = *bound_ptr; 
+   IntVector cp = *bound_ptr - insideCellDir; 
+
+   uVel[c]  = bc_values.x();
+   uVel[cp] = bc_values.x() * density[c] / ( 0.5 * ( density[c] + density[cp] )); 
+
+   double ave_u = (uVel[c] + uVel[cp])/2.0;
+
+   double y = c[index_map[dir][1]] * mDx.y() - swrl_cent[index_map[dir][1]];
+   double z = c[index_map[dir][2]] * mDx.z() + mDx.z()/2.0 - swrl_cent[index_map[dir][2]];
+
+   double denom = pow(y,2) + pow(z,2); 
+   denom = pow(denom,0.5); 
+
+   vVel[c] = -1.0 * z * swrl_no * ave_u /denom; 
+
+   y = c[index_map[dir][1]]*mDx.y() + mDx.y()/2.0 - swrl_cent[index_map[dir][1]];
+   z = c[index_map[dir][2]]*mDx.z() - swrl_cent[index_map[dir][2]]; 
+
+   denom = pow(y,2) + pow(z,2); 
+   denom = pow(denom,0.5); 
+
+   wVel[c] = y * swrl_no * ave_u / denom;
+
+ }
 }
 
 void BoundaryCondition::setVel__NEW( const Patch* patch, const Patch::FaceType& face, 
@@ -7614,4 +7756,119 @@ BoundaryCondition::velocityOutletPressureBC__NEW( const Patch* patch,
       }
     }
   }
+}
+
+// Bandaid until the face-centered scalar eqn is implemented 
+void 
+BoundaryCondition::sched_setPrefill__NEW( SchedulerP& sched, const PatchSet* patches, const MaterialSet* matls )
+{ 
+  Task* tsk = scinew Task("BoundaryCondition::setPrefill__NEW", this, &BoundaryCondition::setPrefill__NEW); 
+
+  tsk->modifies(d_lab->d_uVelocitySPBCLabel);
+  tsk->modifies(d_lab->d_vVelocitySPBCLabel);
+  tsk->modifies(d_lab->d_wVelocitySPBCLabel);
+
+  tsk->requires( Task::NewDW, d_lab->d_cellTypeLabel, Ghost::None, 0 ); 
+
+  sched->addTask(tsk, patches, matls);
+
+} 
+
+void BoundaryCondition::setPrefill__NEW( const ProcessorGroup*,
+                                         const PatchSubset* patches,
+                                         const MaterialSubset* matls,
+                                         DataWarehouse*,
+                                         DataWarehouse* new_dw )
+{
+  for (int p = 0; p < patches->size(); p++) {
+
+    const Patch* patch = patches->get(p);
+    int archIndex = 0;
+    int matl_index = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    Box patchInteriorBox = patch->getBox();
+
+    SFCXVariable<double> uVelocity; 
+    SFCYVariable<double> vVelocity; 
+    SFCZVariable<double> wVelocity; 
+    constCCVariable<int> cellType; 
+
+    new_dw->getModifiable( uVelocity, d_lab->d_uVelocitySPBCLabel, matl_index, patch ); 
+    new_dw->getModifiable( vVelocity, d_lab->d_vVelocitySPBCLabel, matl_index, patch ); 
+    new_dw->getModifiable( wVelocity, d_lab->d_wVelocitySPBCLabel, matl_index, patch ); 
+    new_dw->get( cellType, d_lab->d_cellTypeLabel, matl_index, patch, Ghost::None, 0 ); 
+
+    for ( std::map<std::string, std::vector<GeometryPieceP> >::iterator iter = d_prefill_map.begin(); 
+          iter != d_prefill_map.end(); iter++ ) { 
+
+      BCInfoMap::iterator ifound_bc = d_bc_information.end(); 
+      BCInfoMap::iterator ibc_info; 
+
+      // search for the boundary condition to match this prefill instruction 
+      for ( ibc_info = d_bc_information.begin(); ibc_info != d_bc_information.end(); ibc_info++ ){ 
+
+        if ( ibc_info->second.name == iter->first ){ 
+
+          ifound_bc = ibc_info; 
+
+        } 
+      } 
+
+      if ( ifound_bc == d_bc_information.end() ) { 
+
+        throw InvalidValue("Error: Unable to match prefill bc name with actual boundary condition. ", __FILE__, __LINE__); 
+
+      } else { 
+
+        // Prefill matched with boundary condition.  Now set all cells inside the 
+        // geometry piece with the velocity as specified by the matching boundary. 
+        int nofGeomPieces = (int)iter->second.size(); 
+
+        for (int i = 0; i < nofGeomPieces; i++) {
+
+          GeometryPieceP piece = iter->second[i]; 
+          Box geomBox = piece->getBoundingBox(); 
+          Box box = geomBox.intersect( patchInteriorBox ); 
+          Vector velocity = ifound_bc->second.velocity; 
+
+          if ( !(box.degenerate()) ){ 
+
+            for ( CellIterator icell = patch->getCellCenterIterator(box); !icell.done(); icell++ ) { 
+
+              Point p = patch->cellPosition( *icell ); 
+              if ( piece->inside( p ) && cellType[*icell] == -1 ) { 
+
+                uVelocity[*icell] = velocity[0];
+                vVelocity[*icell] = velocity[1]; 
+                wVelocity[*icell] = velocity[2]; 
+
+              } 
+            } 
+          } 
+        }
+      } 
+    } 
+  }
+}
+void 
+BoundaryCondition::setHattedIntrusionVelocity( const int p, 
+                                               SFCXVariable<double>& u, 
+                                               SFCYVariable<double>& v, 
+                                               SFCZVariable<double>& w, 
+                                               constCCVariable<double>& density ) 
+{ 
+  if ( _using_new_intrusion ) { 
+    _intrusionBC->setHattedVelocity( p, u, v, w, density );
+  } 
+} 
+void
+BoundaryCondition::sched_setupNewIntrusions( SchedulerP& sched, const PatchSet* patches, const MaterialSet* matls )
+{
+
+  if ( _using_new_intrusion ) { 
+    _intrusionBC->sched_computeBCArea( sched, patches, matls ); 
+    _intrusionBC->sched_computeProperties( sched, patches, matls ); 
+    _intrusionBC->sched_setIntrusionVelocities( sched, patches, matls );  
+    _intrusionBC->sched_setCellType( sched, patches, matls ); 
+  }
+
 }

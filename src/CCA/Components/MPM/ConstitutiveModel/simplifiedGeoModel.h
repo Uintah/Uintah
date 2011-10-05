@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI),
 University of Utah.
 
@@ -54,8 +54,7 @@ namespace Uintah {
       double FSLOPE;
       double FSLOPE_p;
       double hardening_modulus;
-      double kappa_initial;
-      double cap_radius;
+      double CR;
       double p0_crush_curve;
       double p1_crush_curve;
       double p3_crush_curve;
@@ -119,10 +118,10 @@ namespace Uintah {
     void computeInvariants(const Matrix3& stress, Matrix3& S,  double& I1, double& J2);
 
 
-    double YieldFunction(const Matrix3& stress, const double& FSLOPE, const double& kappa_initial, const double& cap_radius, const double& PEAKI1);
+    double YieldFunction(const Matrix3& stress, const double& FSLOPE, const double& kappa, const double& cap_radius, const double& PEAKI1);
 
 
-    double YieldFunction(Matrix3& stress, const double& FSLOPE, const double& kappa_initial, const double& cap_radius, const double&PEAKI1);
+    double YieldFunction(Matrix3& stress, const double& FSLOPE, const double& kappa, const double& cap_radius, const double&PEAKI1);
 
 
     // carry forward CM data for RigidMPM

@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -54,17 +54,14 @@ class DetailedTask;
   
 using namespace SCIRun;
 
-using std::vector;
-using std::stack;
-
 class SendState; // from SendState.h
 struct mpi_timing_info_s; // from MPIScheduler.h
 
 class ThreadPool {
 
 public:
-  typedef map< int, list<Receiver*>* > ReceiverPriorityQueue;
-  typedef pair< list<Receiver*>*, list<Receiver*>::iterator >
+  typedef std::map< int, std::list<Receiver*>* > ReceiverPriorityQueue;
+  typedef std::pair< std::list<Receiver*>*, std::list<Receiver*>::iterator >
   ReceiverPriorityQueueItem;
 
 public:
@@ -132,7 +129,7 @@ private:
   MPIReducer      * d_reducer;
  
   // A stack of the ids of available (idle) worker threads
-  stack<int>        d_availableWorkers;
+  std::stack<int>      d_availableWorkers;
 
   // prioritize receivers based on how my bytes of unfinished batches they
   // are waiting on.
@@ -196,14 +193,14 @@ private:
   class AwaitingTask {
   public:
     AwaitingTask(DetailedTask* task,
-		 list<DependencyBatch*> outstandingExtRecvs, int threadID);
+		 std::list<DependencyBatch*> outstandingExtRecvs, int threadID);
     DetailedTask* getTask()
     { return task_; }
     bool isReady();
   private:
     DetailedTask* task_;
     // external receives outstanding
-    list<DependencyBatch*> outstandingExtRecvs_;
+    std::list<DependencyBatch*> outstandingExtRecvs_;
   };
 
   int                    d_id;
@@ -212,15 +209,15 @@ private:
   const ProcessorGroup*  pg_;
   Mutex                  d_lock;  
   
-  CommRecMPI             recvs_;
-  vector<AwaitingTask*>  awaitingTasks_;
-  queue<int>             availTaskSlots_;
-  queue<DetailedTask*>   newTasks_;
+  CommRecMPI                  recvs_;
+  std::vector<AwaitingTask*>  awaitingTasks_;
+  std::queue<int>             availTaskSlots_;
+  std::queue<DetailedTask*>   newTasks_;
 
   // awaitingTasks_ indices of tasks that have received data they have
   // personally posted requests for (but may still be waiting for others'
   // requests -- outstandingExtRecvs_).
-  list<int>    semiReadyTasks_;  
+  std::list<int>    semiReadyTasks_;  
 
   ThreadPool::ReceiverPriorityQueueItem priorityItem_;
   
@@ -240,13 +237,12 @@ public:
   void quit();
   
 private:
-  ThreadPool*            d_parent;
-  
-  queue<DetailedTask*>   tasks_;
-  Mutex                  lock_;
-  bool                   paused_;
-  bool                   quit_;
-  int                    proc_group_;
+  ThreadPool*                d_parent;
+  std::queue<DetailedTask*>  tasks_;
+  Mutex                      lock_;
+  bool                       paused_;
+  bool                       quit_;
+  int                        proc_group_;
 };
   
 

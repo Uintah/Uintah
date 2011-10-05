@@ -342,7 +342,7 @@ public:
   buildActivatedMaximalSuperBoxes(RangeQuerier& rangeQuerier,
 				  typename SBS::BoxHashMap& boxMap,
 				  std::vector<SB*>& maximalSuperBoxes,
-				  set<CB*, LexCompare>& allExplored,
+				  std::set<CB*, LexCompare>& allExplored,
 				  const Region* withinRegion = 0);  
 
   template <class BasicBoxPIterator, class RangeQuerier>
@@ -1267,7 +1267,7 @@ buildActivatedMaximalSuperBoxes(RangeQuerier& rangeQuerier,
   }
 
   unsigned int i;
-  std::vector< pair<BB*, Region> > minimalNeighbors;
+  std::vector< std::pair<BB*, Region> > minimalNeighbors;
   typename RangeContainer::iterator it = neighbors.begin();
   for (; it != neighbors.end(); it++) {
     BB* neighbor = boxMap[*it];
@@ -1665,7 +1665,7 @@ operator<<(std::ostream& out, const
   typename SBC::const_iterator iter;
   for (iter = superBoxSet.getSuperBoxes().begin();
        iter != superBoxSet.getSuperBoxes().end(); iter++) {
-    out << *(*iter) << endl;
+    out << *(*iter) << std::endl;
   }
   return out;
 }

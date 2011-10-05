@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -56,9 +56,7 @@ DEALINGS IN THE SOFTWARE.
 #include   <iterator>
 #include   <set>
 
-using std::map;
-using std::vector;
-using std::string;
+using namespace std;
 
 using namespace Uintah;
 
@@ -163,15 +161,15 @@ BCGeomBase* BoundCondReader::createBoundaryConditionFace(ProblemSpecP& face_ps,
     whichPatchFace(fc, face_side, plusMinusFaces, p_dir);
     string origin = values["origin"];
     string radius = values["radius"];
-    stringstream origin_stream(origin);
-    stringstream radius_stream(radius);
+    std::stringstream origin_stream(origin);
+    std::stringstream radius_stream(radius);
     double r,o[3];
     radius_stream >> r;
     origin_stream >> o[0] >> o[1] >> o[2];
     Point p(o[0],o[1],o[2]);
 
     if( !radius_stream || !origin_stream ) {
-      cout <<  "WARNING: BoundCondReader.cc: stringstream failed..." << endl;
+      std::cout <<  "WARNING: BoundCondReader.cc: stringstream failed..." << std::endl;
     }    
     
     //  bullet proofing-- origin must be on the same plane as the face
@@ -208,9 +206,9 @@ BCGeomBase* BoundCondReader::createBoundaryConditionFace(ProblemSpecP& face_ps,
     string origin = values["origin"];
     string in_radius = values["inner_radius"];
     string out_radius = values["outer_radius"];
-    stringstream origin_stream(origin);
-    stringstream in_radius_stream(in_radius);
-    stringstream out_radius_stream(out_radius);
+    std::stringstream origin_stream(origin);
+    std::stringstream in_radius_stream(in_radius);
+    std::stringstream out_radius_stream(out_radius);
     double i_r,o_r,o[3];
     in_radius_stream >> i_r;
     out_radius_stream >> o_r;
@@ -247,7 +245,7 @@ BCGeomBase* BoundCondReader::createBoundaryConditionFace(ProblemSpecP& face_ps,
     whichPatchFace(fc, face_side, plusMinusFaces, p_dir);
     string low = values["lower"];
     string up = values["upper"];
-    stringstream low_stream(low), up_stream(up);
+    std::stringstream low_stream(low), up_stream(up);
     double lower[3],upper[3];
     low_stream >> lower[0] >> lower[1] >> lower[2];
     up_stream >> upper[0] >> upper[1] >> upper[2];
@@ -326,7 +324,7 @@ BoundCondReader::read(ProblemSpecP& bc_ps, const ProblemSpecP& grid_ps)
     BCR_dbg << endl << endl << "Face = " << face_side << " Geometry type = " 
       << typeid(*bcGeom).name() << " " << bcGeom << endl;
 
-    multimap<int, BoundCondBase*> bctype_data;
+    std::multimap<int, BoundCondBase*> bctype_data;
 
     for (ProblemSpecP child = face_ps->findBlock("BCType"); child != 0;
         child = child->findNextBlock("BCType")) {
@@ -416,7 +414,8 @@ BoundCondReader::read(ProblemSpecP& bc_ps, const ProblemSpecP& grid_ps)
     }
     bctype_data.clear();
     bcgeom_data.clear();
-  }
+    
+  }  // loop over faces
 
  
 
@@ -425,8 +424,10 @@ BoundCondReader::read(ProblemSpecP& bc_ps, const ProblemSpecP& grid_ps)
   // materials boundary condition section.
   BCR_dbg << "Add 'all' boundary condition information" << endl;
   BCDataArray::bcDataArrayType::const_iterator  mat_all_itr, bc_geom_itr;
+  
   for (Patch::FaceType face = Patch::startFace; 
       face <= Patch::endFace; face=Patch::nextFace(face)) {
+      
     mat_all_itr = d_BCReaderData[face].d_BCDataArray.find(-1);
     if (mat_all_itr != d_BCReaderData[face].d_BCDataArray.end()) 
       for (bc_geom_itr = d_BCReaderData[face].d_BCDataArray.begin(); 
@@ -453,7 +454,7 @@ BoundCondReader::read(ProblemSpecP& bc_ps, const ProblemSpecP& grid_ps)
     BCR_dbg << endl << "Printing out bcDataArray for face " << face 
       << " after adding 'all' . . " << endl;
     d_BCReaderData[face].print();
-  }
+  }  // face loop
 #endif
 
   // Need to take the individual boundary conditions and combine them into
@@ -469,9 +470,9 @@ BoundCondReader::read(ProblemSpecP& bc_ps, const ProblemSpecP& grid_ps)
     d_BCReaderData[face].print();
   } 
 
+  bulletProofing();
 
   combineBCS_NEW();
-
 
   BCR_dbg << endl << "After combineBCS() . . ." << endl << endl;
   for (Patch::FaceType face = Patch::startFace; 
@@ -479,7 +480,7 @@ BoundCondReader::read(ProblemSpecP& bc_ps, const ProblemSpecP& grid_ps)
     BCR_dbg << "After Face . . .  " << face << endl;
     d_BCReaderData[face].print();
   } 
-
+  
 }
 
 
@@ -774,6 +775,40 @@ bool BoundCondReader::compareBCData(BCGeomBase* b1, BCGeomBase* b2)
 {
   return false;
 }
+
+//______________________________________________________________________
+//
+void BoundCondReader::bulletProofing()
+{
+  for (Patch::FaceType face = Patch::startFace; 
+       face <= Patch::endFace; face=Patch::nextFace(face)) {
+
+    BCDataArray& original = d_BCReaderData[face];
+
+    BCDataArray::bcDataArrayType::iterator mat_id_itr;
+    for (mat_id_itr = original.d_BCDataArray.begin(); 
+         mat_id_itr != original.d_BCDataArray.end(); 
+         ++mat_id_itr) {
+
+      typedef vector<BCGeomBase*> BCGeomBaseVec;
+      BCGeomBaseVec& bcgeom_vec = mat_id_itr->second;
+
+      //__________________________________
+      // There must be 1 and only 1 side BC specified
+      int nSides = count_if(bcgeom_vec.begin(),bcgeom_vec.end(), cmp_type<SideBCData>()  );
+      
+      if ( nSides != 1 ){
+        ostringstream warn;
+        warn<<"ERROR: <BoundaryConditions> <"<< Patch::getFaceName(face) << ">\n" 
+            << "There must be 1 and only 1 side boundary condition specified \n\n";
+        throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+      }
+    }  // BCDataArray
+  }  // patch faces
+}
+
+
+
 
 namespace Uintah {
 

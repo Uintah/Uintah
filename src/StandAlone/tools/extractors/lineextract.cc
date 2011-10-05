@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -94,17 +94,18 @@ usage(const std::string& badarg, const std::string& progname)
     cerr << "  -m,        --material:      <material number> [defaults to 0]\n";
     cerr << "  -tlow,     --timesteplow:   [int] (sets start output timestep to int) [defaults to 0]\n";
     cerr << "  -thigh,    --timestephigh:  [int] (sets end output timestep to int) [defaults to last timestep]\n";
-    cerr << "  -timestep, --timestep:      [int] (only outputs from timestep int) [defaults to 0]\n";
-    cerr << "  -istart,   --indexs:        <x> <y> <z> (cell index) [defaults to 0 0 0]\n";
-    cerr << "  -iend,     --indexe:        <x> <y> <z> (cell index) [defaults to 0 0 0]\n";
-    cerr << "  -startPt                    <x> <y> <z> [doubles] Starting point of line in physical units\n";
-    cerr << "  -endPt                      <x> <y> <z> [doubles] Ending point of line in physical units\n";
+    cerr << "  -timestep, --timestep:      [int] (only outputs from timestep int)  [defaults to 0]\n";
+    cerr << "  -istart,   --indexs:        <i> <j> <k> [ints] starting point cell index  [defaults to 0 0 0]\n";
+    cerr << "  -iend,     --indexe:        <i> <j> <k> [ints] end-point cell index [defaults to 0 0 0]\n";
+    cerr << "  -startPt                    <x> <y> <z> [doubles] starting point of line in physical coordinates\n";
+    cerr << "  -endPt                      <x> <y> <z> [doubles] end-point of line in physical coordinates\n";
+	  cerr << "  -pr,       --precision:     [int] (specify precision of output data) [defaults to 16. maximum 32]\n";  
     cerr << "  -l,        --level:         [int] (level index to query range from) [defaults to 0]\n";
     cerr << "  -o,        --out:           <outputfilename> [defaults to stdout]\n"; 
     cerr << "  -vv,       --verbose:       (prints status of output)\n";
     cerr << "  -q,        --quiet:         (only print data values)\n";
     cerr << "  -cellCoords:                (prints the cell centered coordinates on that level)\n";
-    cerr << "  --cellIndexFile:             <filename> (file that contains a list of cell indices)\n";
+    cerr << "  --cellIndexFile:            <filename> (file that contains a list of cell indices)\n";
     cerr << "                                   [int 100, 43, 0]\n";
     cerr << "                                   [int 101, 43, 0]\n";
     cerr << "                                   [int 102, 44, 0]\n";
@@ -124,7 +125,7 @@ template<class T>
 void printData(DataArchive* archive, string& variable_name, const Uintah::TypeDescription* variable_type,
                int material, const bool use_cellIndex_file, int levelIndex,
                IntVector& var_start, IntVector& var_end, vector<IntVector> cells,
-               unsigned long time_start, unsigned long time_end, ostream& out) 
+               unsigned long time_start, unsigned long time_end, unsigned long output_precision, ostream& out) 
 
 {
   // query time info from dataarchive
@@ -172,7 +173,7 @@ void printData(DataArchive* archive, string& variable_name, const Uintah::TypeDe
 
   // set defaults for output stream
   out.setf(ios::scientific,ios::floatfield);
-  out.precision(16);
+  out.precision(output_precision);
   
   //__________________________________
   // loop over timesteps
@@ -386,7 +387,7 @@ template<class T>
 void printData_PV(DataArchive* archive, string& variable_name, const Uintah::TypeDescription* variable_type,
                int material, const bool use_cellIndex_file, int levelIndex,
                IntVector& var_start, IntVector& var_end, vector<IntVector> cells,
-               unsigned long time_start, unsigned long time_end, ostream& out) 
+               unsigned long time_start, unsigned long time_end, unsigned long output_precision, ostream& out) 
 
 {
   // query time info from dataarchive
@@ -434,7 +435,7 @@ void printData_PV(DataArchive* archive, string& variable_name, const Uintah::Typ
 
   // set defaults for output stream
   out.setf(ios::scientific,ios::floatfield);
-  out.precision(16);
+  out.precision(output_precision);
   
   //__________________________________
   // loop over timesteps
@@ -608,6 +609,7 @@ int main(int argc, char** argv)
 
   unsigned long time_start = 0;
   unsigned long time_end = (unsigned long)-1;
+  unsigned long output_precision = 16;
   string input_uda_name;  
   string input_file_cellIndices;
   string output_file_name("-");
@@ -638,6 +640,16 @@ int main(int argc, char** argv)
       time_start = strtoul(argv[++i],(char**)NULL,10);
     } else if (s == "-thigh" || s == "--timestephigh") {
       time_end = strtoul(argv[++i],(char**)NULL,10);
+    } else if (s == "-pr" || s == "--precision") {
+      output_precision = strtoul(argv[++i],(char**)NULL,10);
+      if (output_precision > 32) {
+        std::cout << "Output precision cannot be larger than 32. Setting precision to 32 \n";        
+        output_precision = 32;
+      }
+      if (output_precision < 1 ) {
+        std::cout << "Output precision cannot be less than 1. Setting precision to 16 \n";
+        output_precision = 16;
+      }
     } else if (s == "-timestep" || s == "--timestep") {
       int val = strtoul(argv[++i],(char**)NULL,10);
       time_start = val;
@@ -775,28 +787,28 @@ int main(int argc, char** argv)
       case Uintah::TypeDescription::double_type:
         printData<double>(archive, variable_name, td, material, use_cellIndex_file,
                           levelIndex, var_start, var_end, cells,
-                          time_start, time_end, *output_stream);
+                          time_start, time_end, output_precision, *output_stream);
         break;
       case Uintah::TypeDescription::float_type:
         printData<float>(archive, variable_name, td, material, use_cellIndex_file,
                           levelIndex, var_start, var_end, cells,
-                          time_start, time_end, *output_stream);
+                          time_start, time_end, output_precision, *output_stream);
         break;
       case Uintah::TypeDescription::int_type:
         printData<int>(archive, variable_name, td, material, use_cellIndex_file,
                        levelIndex, var_start, var_end, cells,
-                       time_start, time_end, *output_stream);
+                       time_start, time_end, output_precision, *output_stream);
         break;
       case Uintah::TypeDescription::Vector:
         printData<Vector>(archive, variable_name, td, material, use_cellIndex_file,
                           levelIndex, var_start, var_end, cells,
-                          time_start, time_end, *output_stream);    
+                          time_start, time_end, output_precision, *output_stream);    
         break;
       case Uintah::TypeDescription::Other:
         if (subtype->getName() == "Stencil7") {
           printData<Stencil7>(archive, variable_name, td, material, use_cellIndex_file,
                             levelIndex, var_start, var_end, cells,
-                            time_start, time_end, *output_stream);    
+                            time_start, time_end, output_precision, *output_stream);    
           break;
         }
         // don't break on else - flow to the error statement
@@ -820,22 +832,22 @@ int main(int argc, char** argv)
       case Uintah::TypeDescription::double_type:
         printData_PV<double>(archive, variable_name, td, material, use_cellIndex_file,
                           levelIndex, var_start, var_end, cells,
-                          time_start, time_end, *output_stream);
+                          time_start, time_end, output_precision, *output_stream);
         break;
       case Uintah::TypeDescription::float_type:
         printData_PV<float>(archive, variable_name, td, material, use_cellIndex_file,
                           levelIndex, var_start, var_end, cells,
-                          time_start, time_end, *output_stream);
+                          time_start, time_end, output_precision, *output_stream);
         break;
       case Uintah::TypeDescription::int_type:
         printData_PV<int>(archive, variable_name, td, material, use_cellIndex_file,
                        levelIndex, var_start, var_end, cells,
-                       time_start, time_end, *output_stream);
+                       time_start, time_end, output_precision, *output_stream);
         break;
       case Uintah::TypeDescription::Vector:
         printData_PV<Vector>(archive, variable_name, td, material, use_cellIndex_file,
                           levelIndex, var_start, var_end, cells,
-                          time_start, time_end, *output_stream);    
+                          time_start, time_end, output_precision, *output_stream);    
         break;
       case Uintah::TypeDescription::Other:
         // don't break on else - flow to the error statement

@@ -44,6 +44,7 @@
 
 #include <stdio.h>
 #include <cstring>
+#include <cmath>
 #include <dlfcn.h>
 #include <string>
 
@@ -74,6 +75,9 @@
 #include <InvalidDBTypeException.h>
 #include <DBOptionsAttributes.h>
 
+
+using std::max;
+using std::min;
 
 //#ifdef PARALLEL
 // we only get the option for  serialized reads if compiling the parallel version
@@ -1105,13 +1109,13 @@ avtudaReaderMTMDFileFormat::GetMesh(int timestate, int domain, const char *meshn
     ParticleDataRaw *pd = (*getParticleData)(archive, grid, level, local_patch, vars, matlNo, timestate);
 
     // Create the vtkPoints object and copy points into it.
-    vtkFloatArray *floatArray = vtkFloatArray::New();
-    floatArray->SetNumberOfComponents(3);
-    floatArray->SetArray(pd->data, pd->num*pd->components, 0);
+    vtkDoubleArray *doubleArray = vtkDoubleArray::New();
+    doubleArray->SetNumberOfComponents(3);
+    doubleArray->SetArray(pd->data, pd->num*pd->components, 0);
 
     vtkPoints *points = vtkPoints::New();
-    points->SetData(floatArray);
-    floatArray->Delete();
+    points->SetData(doubleArray);
+    doubleArray->Delete();
 
     // 
     // Create a vtkUnstructuredGrid to contain the point cells. 
@@ -1142,7 +1146,7 @@ avtudaReaderMTMDFileFormat::GetMesh(int timestate, int domain, const char *meshn
 //
 //  Purpose:
 //      Gets a scalar variable associated with this file.  Although VTK has
-//      support for many different types, the best bet is vtkFloatArray, since
+//      support for many different types, the best bet is vtkDoubleArray, since
 //      that is supported everywhere through VisIt.
 //
 //  Arguments:
@@ -1183,7 +1187,7 @@ avtudaReaderMTMDFileFormat::GetVar(int timestate, int domain, const char *varnam
     }
   }
 
-  vtkFloatArray *rv = vtkFloatArray::New();
+  vtkDoubleArray *rv = vtkDoubleArray::New();
 
   int level, local_patch;
   GetLevelAndLocalPatchNumber(domain, level, local_patch);
@@ -1233,7 +1237,7 @@ avtudaReaderMTMDFileFormat::GetVar(int timestate, int domain, const char *varnam
       gd->components=1;
 
       int ncells = (high[0]-low[0])*(high[1]-low[1])*(high[2]-low[2]);
-      gd->data = new float[ncells];
+      gd->data = new double[ncells];
       for (int i=0; i<ncells; i++) 
         gd->data[i] = patchInfo.proc_id;
     }
@@ -1281,7 +1285,7 @@ avtudaReaderMTMDFileFormat::GetVar(int timestate, int domain, const char *varnam
 
     // replace nan's with a large negative number
     for (int i=0; i<n*gd->components; i++) {
-      if (isnan(gd->data[i]))
+      if (std::isnan(gd->data[i]))
         gd->data[i] = -1e16;
     }
 
@@ -1339,7 +1343,7 @@ avtudaReaderMTMDFileFormat::GetVar(int timestate, int domain, const char *varnam
 
     // replace nan's with a large negative number
     for (int i=0; i<pd->num*pd->components; i++) {
-      if (isnan(pd->data[i]))
+      if (std::isnan(pd->data[i]))
         pd->data[i] = -1e16;
     }
 
@@ -1359,7 +1363,7 @@ avtudaReaderMTMDFileFormat::GetVar(int timestate, int domain, const char *varnam
 //
 //  Purpose:
 //      Gets a vector variable associated with this file.  Although VTK has
-//      support for many different types, the best bet is vtkFloatArray, since
+//      support for many different types, the best bet is vtkDoubleArray, since
 //      that is supported everywhere through VisIt.
 //
 //  Arguments:

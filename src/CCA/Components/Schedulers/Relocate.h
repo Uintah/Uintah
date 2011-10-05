@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -44,8 +44,7 @@ namespace Uintah {
   class ProcessorGroup;
   class Scheduler;
   class VarLabel;
-  using namespace std;
-
+  
 /**************************************
 
 CLASS
@@ -89,9 +88,9 @@ WARNING
 			LoadBalancer* lb,
 			const LevelP& level,
 			const VarLabel* old_posLabel,
-			const vector<vector<const VarLabel*> >& old_labels,
+                        const std::vector<vector<const VarLabel*> >& old_labels,
 			const VarLabel* new_posLabel,
-			const vector<vector<const VarLabel*> >& new_labels,
+			const std::vector<std::vector<const VarLabel*> >& new_labels,
 			const VarLabel* particleIDLabel,
 			const MaterialSet* matls);
 
@@ -118,15 +117,15 @@ WARNING
    
     void finalizeCommunication();
     const VarLabel* reloc_old_posLabel;
-    vector<vector<const VarLabel*> > reloc_old_labels;
+    std::vector<std::vector<const VarLabel*> > reloc_old_labels;
     const VarLabel* reloc_new_posLabel;
-    vector<vector<const VarLabel*> > reloc_new_labels;
+    std::vector<std::vector<const VarLabel*> > reloc_new_labels;
     const VarLabel* particleIDLabel_;
     const MaterialSet* reloc_matls;
     LoadBalancer* lb;
-    vector<char*> recvbuffers;
-    vector<char*> sendbuffers;
-    vector<MPI_Request> sendrequests;
+    std::vector<char*> recvbuffers;
+    std::vector<char*> sendbuffers;
+    std::vector<MPI_Request> sendrequests;
 
 
   };

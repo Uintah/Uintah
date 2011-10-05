@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -55,6 +55,7 @@ static DebugStream BC_doing("ICE_BC_DOING", false);
 
 //#define TEST
 #undef TEST
+using namespace std;
 using namespace Uintah;
 namespace Uintah {
 
@@ -833,9 +834,9 @@ void setBC(CCVariable<double>& var_CC,
         if( BC_dbg.active() ) {
           bound_ptr.reset();
           cout  <<"Face: "<< patch->getFaceName(face) <<" numCellsTouched " << nCells
-               <<"\t child " << child  <<" NumChildren "<<numChildren 
-               <<"\t BC kind "<< bc_kind <<" \tBC value "<< bc_value
-               <<"\t bound_itr "<< bound_ptr << endl;
+                <<"\t child " << child  <<" NumChildren "<<numChildren 
+                <<"\t BC kind "<< bc_kind <<" \tBC value "<< bc_value
+                <<"\t bound_itr "<< bound_ptr << endl;
         }
       }  // found iterator
     }  // child loop

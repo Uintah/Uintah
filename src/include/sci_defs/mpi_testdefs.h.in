@@ -37,7 +37,6 @@
 #define MPICH_SKIP_MPICXX 1
 
 @DEF_MPI@
-@DEF_MPI_UNI@
 
 #include <mpi.h>
 

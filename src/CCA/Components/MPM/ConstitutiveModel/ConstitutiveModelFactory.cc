@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -52,13 +52,13 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/MPM/ConstitutiveModel/HypoElasticImplicit.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MWViscoElastic.h>
 #include <CCA/Components/MPM/ConstitutiveModel/Membrane.h>
-#include <CCA/Components/MPM/ConstitutiveModel/MurnahanMPM.h>
+#include <CCA/Components/MPM/ConstitutiveModel/MurnaghanMPM.h>
 #include <CCA/Components/MPM/ConstitutiveModel/ProgramBurn.h>
 #include <CCA/Components/MPM/ConstitutiveModel/ShellMaterial.h>
 #include <CCA/Components/MPM/ConstitutiveModel/ElasticPlastic.h>
 #include <CCA/Components/MPM/ConstitutiveModel/ElasticPlasticHP.h>
 #include <CCA/Components/MPM/ConstitutiveModel/HypoElasticPlastic.h>
-#include <CCA/Components/MPM/ConstitutiveModel/MurnahanMPM.h>
+#include <CCA/Components/MPM/ConstitutiveModel/MurnaghanMPM.h>
 #include <CCA/Components/MPM/ConstitutiveModel/SmallStrainPlastic.h>
 #include <CCA/Components/MPM/ConstitutiveModel/IdealGasMP.h>
 #include <CCA/Components/MPM/ConstitutiveModel/P_Alpha.h>
@@ -99,7 +99,12 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
       flags->d_integrator_type != "fracture"){
     string txt="MPM: time integrator [explicit or implicit] hasn't been set.";
     throw ProblemSetupException(txt, __FILE__, __LINE__);
-  }   
+  }
+  
+  if(flags->d_integrator_type == "implicit" && ( mat_type == "comp_neo_hook_plastic" ) ){
+    string txt="MPM:  You cannot use implicit MPM and comp_neo_hook_plastic";
+    throw ProblemSetupException(txt, __FILE__, __LINE__);
+  }
 
   if (mat_type == "rigid")
     return(scinew RigidMaterial(child,flags));
@@ -201,8 +206,8 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
   else if (mat_type ==  "membrane")
     return(scinew Membrane(child,flags));
 
-  else if (mat_type ==  "murnahanMPM")
-    return(scinew MurnahanMPM(child,flags));
+  else if (mat_type ==  "murnaghanMPM")
+    return(scinew MurnaghanMPM(child,flags));
 
   else if (mat_type ==  "program_burn")
     return(scinew ProgramBurn(child,flags));
@@ -228,8 +233,8 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
   else if (mat_type ==  "visco_plastic")
     return(scinew ViscoPlastic(child,flags));
   
-  else if (mat_type ==  "murnahanMPM")
-    return(scinew MurnahanMPM(child,flags));
+  else if (mat_type ==  "murnaghanMPM")
+    return(scinew MurnaghanMPM(child,flags));
   
   else 
     throw ProblemSetupException("Unknown Material Type R ("+mat_type+")", __FILE__, __LINE__);

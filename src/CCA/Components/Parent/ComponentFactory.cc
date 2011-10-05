@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -66,10 +66,6 @@ DEALINGS IN THE SOFTWARE.
 
 #ifndef NO_WASATCH
 #include <CCA/Components/Wasatch/Wasatch.h>
-#endif
-
-#if !defined(NO_ARCHES)
-#  include <CCA/Components/SpatialOps/SpatialOps.h>
 #endif
 
 #include <iosfwd>
@@ -192,11 +188,11 @@ ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world,
   } 
   if (sim_comp == "advectslabs" || sim_comp == "ADVECTSLABS") {
     return scinew AdvectSlabs(world);
-  } 
+  }
+#ifdef HAVE_CUDA
   if (sim_comp == "advectslabsgpu" || sim_comp == "ADVECTSLABSGPU") {
     return scinew AdvectSlabsGPU(world);
   } 
-#ifdef HAVE_CUDA
   if (sim_comp == "poissongpu1" || sim_comp == "POISSONGPU1") {
     return scinew PoissonGPU1(world);
   } 
@@ -210,9 +206,9 @@ ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world,
   if (sim_comp == "poisson3" || sim_comp == "POISSON3") {
     return scinew Poisson3(world);
   } 
-//  if (sim_comp == "poisson4" || sim_comp == "POISSON4") {
-//    return scinew Poisson4(world);
-//  } 
+  if (sim_comp == "poisson4" || sim_comp == "POISSON4") {
+    return scinew Poisson4(world);
+  }
   if (sim_comp == "benchmark" || sim_comp == "BENCHMARK") {
     return scinew Benchmark(world);
   } 
@@ -241,11 +237,6 @@ ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world,
   if (sim_comp == "reduce_uda") {
     return scinew UdaReducer(world, uda);
   } 
-#if !defined(NO_ARCHES)
-  if (sim_comp == "spatialops") {
-	 return scinew SpatialOps(world);
-  }
-#endif
   throw ProblemSetupException("Unknown simulationComponent ('" + sim_comp + "'). Must specify -arches, -ice, -mpm, "
                               "-impm, -mpmice, -mpmarches, -burger, -wave, -poisson1, -poisson2, -poisson3, -benchmark or -angio.\n"
                               "Note: the following components were turned off at configure time: " + turned_off_options + "\n"

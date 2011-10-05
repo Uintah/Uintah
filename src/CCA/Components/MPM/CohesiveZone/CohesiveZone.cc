@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -41,9 +41,7 @@ DEALINGS IN THE SOFTWARE.
 #include <iostream>
 
 using namespace Uintah;
-using std::vector;
-using std::cerr;
-using std::ofstream;
+using namespace std;
 
 //______________________________________________________________________
 //  Reference: N. P. Daphalapukar, Hongbing Lu, Demir Coker, Ranga Komanduri,

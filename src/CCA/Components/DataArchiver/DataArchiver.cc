@@ -2,7 +2,7 @@
   
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -137,6 +137,8 @@ void
 DataArchiver::problemSetup(const ProblemSpecP& params,
                            SimulationState* state)
 {
+   dbg << "Doing ProblemSetup \t\t\t\tDataArchiver"<< endl;
+   
    d_sharedState = state;
    d_upsFile = params;
    ProblemSpecP p = params->findBlock("DataArchiver");
@@ -1462,8 +1464,6 @@ DataArchiver::executedTimestep(double delt, const GridP& grid)
       GeometryPieceFactory::resetGeometryPiecesOutput();
 
       sim->outputProblemSpec(rootElem);
-
-      sim->addToTimestepXML(rootElem);
 
       string name = baseDirs[i]->getName()+"/"+tname.str()+"/timestep.xml";
       rootElem->output(name.c_str());

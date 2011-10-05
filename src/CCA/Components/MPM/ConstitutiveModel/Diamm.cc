@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI),
 University of Utah.
 
@@ -91,7 +91,7 @@ extern "C"{
 
 // End fortran functions.
 ////////////////////////////////////////////////////////////////////////////////
-using std::cerr; using namespace Uintah;
+using namespace std; using namespace Uintah;
 
 Diamm::Diamm(ProblemSpecP& ps,MPMFlags* Mflag)
   : ConstitutiveModel(Mflag)

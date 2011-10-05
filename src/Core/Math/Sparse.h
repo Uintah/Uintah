@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -38,7 +38,6 @@ DEALINGS IN THE SOFTWARE.
 
 #include <Core/Math/uintahshare.h>
 namespace Uintah {
-using namespace std;
 
 template<class ValueType, class IndexType, class ContainerType> 
 class MatrixElement {
@@ -48,7 +47,7 @@ class MatrixElement {
   IndexType row, column;
 
  public:
-  typedef pair<IndexType, IndexType> IndexPair;
+  typedef std::pair<IndexType, IndexType> IndexPair;
   typedef MatrixElement<ValueType, IndexType, ContainerType>& Reference;
   
   MatrixElement(ContainerType& Cont, IndexType r, IndexType c) : C(Cont),
@@ -101,8 +100,8 @@ class MatrixElement {
 
 template<class ValueType, class IndexType> class SparseMatrix {
  public:
-  typedef pair<IndexType, IndexType> IndexPair;
-  typedef map<IndexPair, ValueType, less<IndexPair> > ContainerType;
+  typedef std::pair<IndexType, IndexType> IndexPair;
+  typedef std::map<IndexPair, ValueType, std::less<IndexPair> > ContainerType;
   typedef MatrixElement<ValueType, IndexType, ContainerType> ME;
 
   typedef IndexType size_type;
@@ -133,9 +132,9 @@ template<class ValueType, class IndexType> class SparseMatrix {
 
   void clear() { C.clear(); };
 
-  valarray<ValueType> operator *(valarray<ValueType>& x) {
+  std::valarray<ValueType> operator *(std::valarray<ValueType>& x) {
     assert((size_type)x.size() == Columns());
-    valarray<ValueType> b(ValueType(0),Columns());
+    std::valarray<ValueType> b(ValueType(0),Columns());
     for (typename SparseMatrix<ValueType,IndexType>::iterator itr = begin(); 
 	 itr != end(); itr++) {
       b[Index1(itr)] += Value(itr)*x[Index2(itr)];
@@ -183,10 +182,10 @@ template<class ValueType, class IndexType> class SparseMatrix {
   
 };
 
-UINTAHSHARE valarray<double> cgSolve(SparseMatrix<double,int>& A, valarray<double>& b,
+UINTAHSHARE std::valarray<double> cgSolve(SparseMatrix<double,int>& A, std::valarray<double>& b,
 	  		          int conflag);
 
-UINTAHSHARE double eigenvalue(SparseMatrix<double,int>& A, valarray<double>& eigenvector);
+UINTAHSHARE double eigenvalue(SparseMatrix<double,int>& A, std::valarray<double>& eigenvector);
 
 UINTAHSHARE double conditionNum(SparseMatrix<double,int>& A);
 

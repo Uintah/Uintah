@@ -28,21 +28,22 @@ from helpers.modUPS import modUPS
 #  3) Performance_tests are not run on a debug build.
 #______________________________________________________________________
 
-UNUSED = [ ("ice_perf_test",    "icePerformanceTest.ups",    1, "Linux","", ["do_performance_test"]),  \
-           ("mpmice_perf_test", "mpmicePerformanceTest.ups", 1, "Linux","", ["do_performance_test"]), \
-           ("dlb_mpm",        "mpmDLBTest.ups",     8, "NONE"), \
-           ("dlb_mpmice",     "mpmiceDLBTest.ups",  8, "NONE"), \
-           ("switcher",       "JP8-switch.ups",     8, "NONE") 
+UNUSED = [ ("dlb_mpm",        "mpmDLBTest.ups",     8, "NONE"), \
+           ("dlb_mpmice",     "mpmiceDLBTest.ups",  8, "NONE") 
 ]
 
-NIGHTLYTESTS = [ ("ice_perf_test",    "icePerformanceTest.ups",    1, "Linux", ["do_performance_test"]),  \
-                 ("mpmice_perf_test", "mpmicePerformanceTest.ups", 1, "Linux", ["do_performance_test"]), \
-                 ("LBwoRegrid",       "LBwoRegrid.ups",            2, "Linux", ["exactComparison"])
+NIGHTLYTESTS = [ ("ice_perf_test",          "icePerformanceTest.ups",             1, "Linux", ["do_performance_test"]),  \
+                 ("mpmice_perf_test",       "mpmicePerformanceTest.ups",          1, "Linux", ["do_performance_test"]), \
+                 ("LBwoRegrid",             "LBwoRegrid.ups",                     2, "Linux", ["exactComparison"]), \
+                 ("switchExample_impm_mpm", "Switcher/switchExample_impm_mpm.ups",1, "Linux", ["no_memoryTest"]), \
+                 ("switchExample3",         "Switcher/switchExample3.ups",        1, "Linux", ["no_restart","no_memoryTest"]), \
                ]
 
-LOCALTESTS = [ ("ice_perf_test",    "icePerformanceTest.ups",    1, "Linux", ["do_performance_test"]),  \
-               ("mpmice_perf_test", "mpmicePerformanceTest.ups", 1, "Linux", ["do_performance_test"]), \
-               ("LBwoRegrid",        "LBwoRegrid.ups",           2, "Linux", ["exactComparison"])
+LOCALTESTS = [ ("switchExample_impm_mpm", "Switcher/switchExample_impm_mpm.ups",1, "Linux", ["no_memoryTest"]), \
+               ("switchExample3",         "Switcher/switchExample3.ups",        1, "Linux", ["no_restart","no_memoryTest"]), \
+               ("ice_perf_test",          "icePerformanceTest.ups",             1, "Linux", ["do_performance_test"]),  \
+               ("mpmice_perf_test",       "mpmicePerformanceTest.ups",          1, "Linux", ["do_performance_test"]), \
+               ("LBwoRegrid",             "LBwoRegrid.ups",                     2, "Linux", ["exactComparison"])
              ]
 
 #__________________________________

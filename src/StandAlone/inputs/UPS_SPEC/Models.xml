@@ -19,7 +19,7 @@
     <!--__________________________________-->
     <!--  Models used by ICE & MPMICE     -->
     <Model                    spec="MULTIPLE NO_DATA"
-                                attribute1="type REQUIRED STRING 'SimpleRxn, AdiabaticTable, Gruneisen, hard_sphere_gas, IandG, JWL, JWLC, JWLpp, LightTime, Radiation, Simple_Burn, Steady_Burn, Test, Unsteady_Burn, mass_momentum_energy_src, Murnahan PassiveScalar Thomsen_Hartka_water Tillotson, flameSheet_rxn, DDT0, DDT1'" >
+                                attribute1="type REQUIRED STRING 'SimpleRxn, AdiabaticTable, Gruneisen, hard_sphere_gas, IandG, JWL, JWLC, JWLpp, LightTime, Radiation, Simple_Burn, Steady_Burn, Test, Unsteady_Burn, mass_momentum_energy_src, Murnaghan PassiveScalar Thomsen_Hartka_water Tillotson, flameSheet_rxn, DDT0, DDT1'" >
 
       <Active                 spec="OPTIONAL BOOLEAN" need_applies_to="type JWLpp Simple_Burn DDT0" />
       <b                      spec="REQUIRED DOUBLE" need_applies_to="type hard_sphere_gas JWLpp Thomsen_Hartka_water Tillotson" />
@@ -123,7 +123,7 @@
       <rate                         spec="OPTIONAL DOUBLE" />
       <refPressure                  spec="OPTIONAL DOUBLE" />
       
-      <rho0                         spec="REQUIRED DOUBLE" need_applies_to="type Gruneisen JWL JWLC JWLpp Murnahan Tillotson" />
+      <rho0                         spec="REQUIRED DOUBLE" need_applies_to="type Gruneisen JWL JWLC JWLpp Murnaghan Tillotson" />
       
       <!--  Passive Scalar -->
       <scalar                        spec="OPTIONAL NO_DATA" 

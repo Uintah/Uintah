@@ -2,7 +2,7 @@
 # 
 # The MIT License
 # 
-# Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+# Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 # Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 # University of Utah.
 # 
@@ -32,25 +32,26 @@
 
 SRCDIR   := CCA/Components/ICE/EOS
 
-SRCS     += $(SRCDIR)/EquationOfState.cc \
+SRCS     += $(SRCDIR)/EquationOfState.cc    \
 	$(SRCDIR)/EquationOfStateFactory.cc \
-	$(SRCDIR)/IdealGas.cc \
-	$(SRCDIR)/HardSphereGas.cc \
-	$(SRCDIR)/TST.cc \
-	$(SRCDIR)/JWL.cc      \
-	$(SRCDIR)/JWLC.cc     \
-	$(SRCDIR)/Gruneisen.cc     \
-	$(SRCDIR)/Tillotson.cc     \
-	$(SRCDIR)/Thomsen_Hartka_water.cc     \
-	$(SRCDIR)/KnaussSeaWater.cc     \
-	$(SRCDIR)/Murnahan.cc
+	$(SRCDIR)/IdealGas.cc               \
+	$(SRCDIR)/HardSphereGas.cc          \
+	$(SRCDIR)/TST.cc                    \
+	$(SRCDIR)/JWL.cc                    \
+	$(SRCDIR)/JWLC.cc                   \
+	$(SRCDIR)/Gruneisen.cc              \
+	$(SRCDIR)/Tillotson.cc              \
+	$(SRCDIR)/Thomsen_Hartka_water.cc   \
+	$(SRCDIR)/KnaussSeaWater.cc         \
+	$(SRCDIR)/Murnaghan.cc              \
+	$(SRCDIR)/BirchMurnaghan.cc
 
 PSELIBS := \
-	CCA/Ports \
-	Core/Grid \
-	Core/Parallel \
+	CCA/Ports       \
+	Core/Grid       \
+	Core/Parallel   \
 	Core/Exceptions \
-	Core/Math \
+	Core/Math       \
 	Core/Exceptions Core/Thread Core/Geometry 
 
 LIBS	:= 

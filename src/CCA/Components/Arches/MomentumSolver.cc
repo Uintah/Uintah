@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -979,8 +979,6 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
     d_source->modifyVelMassSource(patch,
                                   &velocityVars, &constVelocityVars);
 
-
-
     // Calculate Velocity diagonal
     //  inputs : [u,v,w]VelCoefPBLM, [u,v,w]VelLinSrcPBLM
     //  outputs: [u,v,w]VelCoefPBLM
@@ -996,6 +994,8 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
                                        cellinfo, &velocityVars, &constVelocityVars);
     }
 
+    d_boundaryCondition->setHattedIntrusionVelocity( p, velocityVars.uVelRhoHat, 
+        velocityVars.vVelRhoHat, velocityVars.wVelRhoHat, constVelocityVars.new_density ); 
 
     //MMS boundary conditions ~Setting the uncorrected velocities~
     if (d_doMMS) { 
@@ -1076,6 +1076,7 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
       velocityVars.divergence[c] = (factor_old*old_divergence[c]+                              
                                     factor_new*velocityVars.divergence[c])/factor_divide;      
     }
+
 //#endif
 
   }
@@ -1250,6 +1251,8 @@ MomentumSolver::averageRKHatVelocities(const ProcessorGroup*,
     	                                                  		old_uvel, old_vvel, old_wvel ); 
 
 		}
+
+    d_boundaryCondition->setHattedIntrusionVelocity( p, new_uvel, new_vvel, new_wvel, new_density ); 
 
 
   }  // patches

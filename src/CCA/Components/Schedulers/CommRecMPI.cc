@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -35,6 +35,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Util/FancyAssert.h>
 #include <Core/Parallel/ProcessorGroup.h>
 
+using namespace std;
 using namespace Uintah;
 using namespace SCIRun;
 
@@ -195,7 +196,11 @@ bool CommRecMPI::testsome(const ProcessorGroup * pg,
   statii.resize(ids.size());
   indices.resize(ids.size());
   int me = pg->myrank();
-  mixedDebug << me << " Calling testsome with " << ids.size() << " waiters\n";
+  if( mixedDebug.active() ) {
+    cerrLock.lock();
+    mixedDebug << me << " Calling testsome with " << ids.size() << " waiters\n";
+    cerrLock.unlock();
+  }
   int donecount;
   clock_t start=clock();
   MPI_Testsome((int)ids.size(), &ids[0], &donecount,

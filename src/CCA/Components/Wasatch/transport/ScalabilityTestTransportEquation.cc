@@ -2,7 +2,7 @@
 #include "ScalabilityTestTransportEquation.h"
 #include <CCA/Components/Wasatch/Operators/OperatorTypes.h>
 #include <CCA/Components/Wasatch/ParseTools.h>
-#include <CCA/Components/Wasatch/Expressions/DiffusiveFlux.h>
+#include <CCA/Components/Wasatch/Expressions/DiffusiveVelocity.h>
 #include <CCA/Components/Wasatch/Expressions/ConvectiveFlux.h>
 #include <CCA/Components/Wasatch/Expressions/ScalabilityTestSrc.h>
 #include <CCA/Components/Wasatch/ConvectiveInterpolationMethods.h>
@@ -11,16 +11,18 @@
 #include <expression/ExprLib.h>
 
 //-- Uintah includes --//
+#include <Core/Parallel/Parallel.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 
+using std::endl;
 
 namespace Wasatch{
   
   //------------------------------------------------------------------
   
   template< typename FieldT >
-  void setup_diffusive_flux_expression(std::string dir,  
+  void setup_diffusive_velocity_expression(std::string dir,  
                                        std::string thisPhiName,
                               Expr::ExpressionFactory& factory,
                                typename ScalarRHS<FieldT>::FieldTagInfo& info )
@@ -35,19 +37,19 @@ namespace Wasatch{
     Expr::ExpressionBuilder* builder = NULL;
     
     if( dir=="X" ){
-      typedef typename DiffusiveFlux<typename MyOpTypes::GradX>::Builder Flux;
+      typedef typename DiffusiveVelocity<typename MyOpTypes::GradX>::Builder Flux;
       builder = scinew Flux( phiTag, 1.0 );
     } else if( dir=="Y" ){
-      typedef typename DiffusiveFlux<typename MyOpTypes::GradY>::Builder Flux;
+      typedef typename DiffusiveVelocity<typename MyOpTypes::GradY>::Builder Flux;
       builder = scinew Flux( phiTag, 1.0 );
     } else if( dir=="Z" ){
-      typedef typename DiffusiveFlux<typename MyOpTypes::GradZ>::Builder Flux;
+      typedef typename DiffusiveVelocity<typename MyOpTypes::GradZ>::Builder Flux;
       builder = scinew Flux( phiTag, 1.0 );
     }
     
     if( builder == NULL ){
         std::ostringstream msg;
-        msg << "Could not build a diffusive flux expression for '" << thisPhiName << "'" << endl;
+        msg << "Could not build a diffusive velocity expression for '" << thisPhiName << "'" << endl;
         throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
       }
       
@@ -91,14 +93,14 @@ namespace Wasatch{
       Expr::ExpressionBuilder* builder = NULL;
       
       if( dir=="X" ){
-        cout << "SETTING UP X-CONVECTIVE-FLUX EXPRESSION USING CENTRAL DIFFERENCING"  << std::endl;
+        proc0cout << "SETTING UP X-CONVECTIVE-FLUX EXPRESSION USING CENTRAL DIFFERENCING"  << std::endl;
         typedef typename OperatorTypeBuilder<Interpolant,XVolField,typename FaceTypes<FieldT>::XFace>::type VelInterpOpT;                            
             typedef typename ConvectiveFlux< typename Ops::InterpC2FX, VelInterpOpT >::Builder convFluxCent;
             builder = scinew convFluxCent(phiTag, advVelocityTag);
             
       }
       else if( dir=="Y" ){
-        cout << "SETTING UP Y-CONVECTIVE-FLUX EXPRESSION USING CENTRAL DIFFERENCING"  << std::endl;
+        proc0cout << "SETTING UP Y-CONVECTIVE-FLUX EXPRESSION USING CENTRAL DIFFERENCING"  << std::endl;
         typedef typename OperatorTypeBuilder<Interpolant,YVolField,typename FaceTypes<FieldT>::YFace>::type VelInterpOpT;
         
             typedef typename ConvectiveFlux< typename Ops::InterpC2FY, VelInterpOpT >::Builder convFluxCent;
@@ -106,7 +108,7 @@ namespace Wasatch{
             
       }
       else if( dir=="Z") {
-        cout << "SETTING UP Z-CONVECTIVE-FLUX EXPRESSION USING CENTRAL DIFFERENCING"  << std::endl;
+        proc0cout << "SETTING UP Z-CONVECTIVE-FLUX EXPRESSION USING CENTRAL DIFFERENCING"  << std::endl;
         typedef typename OperatorTypeBuilder<Interpolant,ZVolField,typename FaceTypes<FieldT>::ZFace>::type VelInterpOpT;
         
             typedef typename ConvectiveFlux< typename Ops::InterpC2FZ, VelInterpOpT >::Builder convFluxCent;
@@ -187,13 +189,13 @@ namespace Wasatch{
     typename ScalarRHS<FieldT>::FieldTagInfo info;
         
     //_________________
-    // Diffusive Fluxes
+    // Diffusive Velocities
     bool doDiffusion = true;
     params->get( "DoDiffusion", doDiffusion);
     if (doDiffusion) {
-      setup_diffusive_flux_expression<FieldT>( "X", thisPhiName, factory, info );
-      setup_diffusive_flux_expression<FieldT>( "Y", thisPhiName, factory, info );
-      setup_diffusive_flux_expression<FieldT>( "Z", thisPhiName, factory, info );      
+      setup_diffusive_velocity_expression<FieldT>( "X", thisPhiName, factory, info );
+      setup_diffusive_velocity_expression<FieldT>( "Y", thisPhiName, factory, info );
+      setup_diffusive_velocity_expression<FieldT>( "Z", thisPhiName, factory, info );      
     }
     //__________________
     // Convective Fluxes
@@ -233,8 +235,10 @@ namespace Wasatch{
       srcTags.push_back( srcTag );
     }
     
+    const Expr::Tag densT = Expr::Tag();
+    const bool tempConstDens = false;
     return factory.register_expression( Expr::Tag( thisPhiName + "_rhs", Expr::STATE_NONE ),
-                                       scinew typename ScalarRHS<FieldT>::Builder(info,srcTags) );
+                                       scinew typename ScalarRHS<FieldT>::Builder(info,srcTags,densT,tempConstDens) );
   }
   
   //------------------------------------------------------------------

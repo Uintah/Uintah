@@ -2,7 +2,7 @@
 
    The MIT License
 
-   Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+   Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
    Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
    University of Utah.
 
@@ -96,13 +96,14 @@ namespace Uintah {
   class ProcessorGroup;
   class DataWarehouse;
   class TimeIntegratorLabel;
+  class IntrusionBC;
   class BoundaryCondition_new; 
 
   class BoundaryCondition {
 
     public:
 
-      enum BC_TYPE { VELOCITY_INLET, MASSFLOW_INLET, VELOCITY_FILE, MASSFLOW_FILE, PRESSURE, OUTLET, WALL }; 
+      enum BC_TYPE { VELOCITY_INLET, MASSFLOW_INLET, VELOCITY_FILE, MASSFLOW_FILE, PRESSURE, OUTLET, WALL, MMWALL, INTRUSION, SWIRL }; 
 
       // GROUP: Constructors:
       ////////////////////////////////////////////////////////////////////////
@@ -163,6 +164,14 @@ namespace Uintah {
 
 		 };
 
+     inline IntrusionBC* get_intrusion_ref(){ 
+       return _intrusionBC; 
+     }; 
+
+     inline bool is_using_new_intrusion(){ 
+       return _using_new_intrusion; 
+     }; 
+
       inline bool typeMatch( BC_TYPE check_type, std::vector<BC_TYPE >& type_list ){ 
 
         bool found_match = false; 
@@ -214,15 +223,22 @@ namespace Uintah {
                                       const MaterialSet* matls);
 
      void setInitProfile__NEW(const ProcessorGroup*,
-                                const PatchSubset* patches,
-                                const MaterialSubset*,
-                                DataWarehouse*,
-                                DataWarehouse* new_dw);
+                              const PatchSubset* patches,
+                              const MaterialSubset*,
+                              DataWarehouse*,
+                              DataWarehouse* new_dw);
 
       void setVel__NEW( const Patch* patch, const Patch::FaceType& face, 
         SFCXVariable<double>& uVel, SFCYVariable<double>& vVel, SFCZVariable<double>& wVel, 
         constCCVariable<double>& density, 
         Iterator bound_iter, Vector value );
+
+      template<class d0T, class d1T, class d2T>
+      void setSwirl( const Patch* patch, const Patch::FaceType& face, 
+        d0T& uVel, d1T& vVel, d2T& wVel,
+        constCCVariable<double>& density, 
+        Iterator bound_ptr, Vector value, 
+        double swirl_no, Vector swirl_cent );
 
       void setVelFromInput__NEW( const Patch* patch, const Patch::FaceType& face, 
         SFCXVariable<double>& uVel, SFCYVariable<double>& vVel, SFCZVariable<double>& wVel,
@@ -254,6 +270,17 @@ namespace Uintah {
                                        constCCVariable<double>& P,
                                        constCCVariable<double>& density );
 
+      void sched_setPrefill__NEW( SchedulerP& sched,
+                                  const PatchSet* patches,
+                                  const MaterialSet* matls);
+
+      void setPrefill__NEW( const ProcessorGroup*,
+                            const PatchSubset* patches,
+                            const MaterialSubset*,
+                            DataWarehouse*,
+                            DataWarehouse* new_dw );
+
+
       template <class stencilType> 
       void zeroStencilDirection( const Patch* patch, 
                                  const int  matl_index, 
@@ -270,6 +297,15 @@ namespace Uintah {
       std::map<IntVector, double>
       readInputFile__NEW( std::string );
 
+      void sched_setupNewIntrusions(SchedulerP&, 
+          const PatchSet* patches,
+          const MaterialSet* matls); 
+
+      void setHattedIntrusionVelocity( const int p,
+                                       SFCXVariable<double>& u, 
+                                       SFCYVariable<double>& v, 
+                                       SFCZVariable<double>& w, 
+                                       constCCVariable<double>& density );
 
       ////////////////////////////////////////////////////////////////////////
       // BoundaryCondition constructor used in  PSE
@@ -314,14 +350,10 @@ namespace Uintah {
       }
 
       bool getIntrusionBC() { 
-        cout << "Intrusion machinery has been disabled" << endl;
+        std::cout << "Intrusion machinery has been disabled" << std::endl;
         exit(1);
         return 1;
         //return d_intrusionBoundary; 
-      }
-
-      bool getturbinlet() { 
-        return turbinlet; 
       }
 
       bool anyArchesPhysicalBC() { 
@@ -337,7 +369,11 @@ namespace Uintah {
       ////////////////////////////////////////////////////////////////////////
       // mm Wall boundary ID
       int getMMWallId() const {
-        return d_mmWallID;
+        if ( d_use_new_bcs ) {
+          return MMWALL; 
+        } else { 
+          return d_mmWallID; 
+        }
       }
 
       ////////////////////////////////////////////////////////////////////////
@@ -352,13 +388,13 @@ namespace Uintah {
       inline int wallCellType() const { 
         int wall_celltypeval = -10;
         if (d_wallBoundary){ 
-          wall_celltypeval = d_wallBdry->d_cellTypeID; 
+          wall_celltypeval = WALL; //d_wallBdry->d_cellTypeID; 
         }
 
         if ( d_use_new_bcs ) { 
           return WALL; 
         } else { 
-          return wall_celltypeval; 
+          return WALL; //wall_celltypeval; 
         } 
       }
 
@@ -370,7 +406,7 @@ namespace Uintah {
         if ( d_use_new_bcs ) { 
           return PRESSURE; 
         } else { 
-          return pressure_celltypeval; 
+          return PRESSURE; //pressure_celltypeval; 
         } 
       }
 
@@ -382,7 +418,7 @@ namespace Uintah {
         if ( d_use_new_bcs ) { 
           return OUTLET; 
         } else { 
-          return outlet_celltypeval; 
+          return OUTLET; //outlet_celltypeval; 
         } 
       }
       ////////////////////////////////////////////////////////////////////////
@@ -781,6 +817,8 @@ namespace Uintah {
         double mass_flow_rate;
         std::string filename; 
         std::map<IntVector, double> file_input; 
+        double swirl_no; 
+        Vector swirl_cent; 
 
         // State: 
         double enthalpy; 
@@ -805,6 +843,7 @@ namespace Uintah {
       BCInfoMap d_bc_information;                           ///< Contains information about each boundary condition spec. (from UPS)
       BCNameMap d_bc_type_to_string;                        ///< Matches the BC integer ID with the string name
       bool d_use_new_bcs;                                   ///< Turn on/off the new BC mech. 
+      std::map<std::string, std::vector<GeometryPieceP> > d_prefill_map;  ///< Contains inlet name/geometry piece pairing
 
       ////////////////////////////////////////////////////////////////////////
       // Call Fortran to compute u velocity BC terms
@@ -940,26 +979,6 @@ namespace Uintah {
           const bool xminus, const bool xplus, 
           const bool yminus, const bool yplus, 
           const bool zminus, const bool zplus );
-
-      bool turbinlet;
-      int ilow;
-      int ihigh;
-      int Nx;
-      int Ny;
-      int Nz;
-      int My;
-      int Mz;
-      int Nf;
-      double lscale;
-      double intensity;
-      double cellsize;
-      double *bcoeffx;
-      double *bcoeffy;
-      double *bcoeffz;
-      //double ***bbcoeff;
-      //double ***Rturb;
-      double *bbcoeff;
-      double *Rturb;
 
     private:
 
@@ -1164,6 +1183,9 @@ namespace Uintah {
       bool d_fixTemp;
       bool d_cutCells;
 
+      IntrusionBC* _intrusionBC; 
+      bool _using_new_intrusion; 
+
       // used for calculating wall boundary conditions
       PhysicalConstants* d_physicalConsts;
       // used to get properties of different streams
@@ -1228,6 +1250,9 @@ namespace Uintah {
       SpeciesEffMap d_speciesEffInfo;
 
       BoundaryCondition_new* d_newBC; 
+
+      int index_map[3][3];
+      
 
   /* --------------------------------------------------------------------- 
   Function~  getIteratorBCValueBCKind--

@@ -88,13 +88,16 @@
  
     - Task creation.  Uintah tasks are typically created by wrapping
       Expression tree objects using the Wasatch::TaskInterface class.
+      If you find yourself writing a Uintah::Task directly in Wasatch,
+      you are probably doing something wrong.
 
-  \defgroup WasatchExpressions	Expressions in Wasatch
+  \defgroup Expressions		Expressions in Wasatch
   \defgroup WasatchFields	Fields and field tools
   \defgroup WasatchOperators	Operators
   \defgroup WasatchCore		Wasatch Core
   \defgroup WasatchGraph	Wasatch Graph
   \defgroup WasatchParser	Wasatch Parsers
+
 */
 
 #ifndef Packages_Uintah_CCA_Components_Examples_Wasatch_h
@@ -103,6 +106,7 @@
 #include <list>
 #include <map>
 #include <string>
+#include <set>
 
 //-- Uintah Framework Includes --//
 #include <Core/Parallel/UintahParallelComponent.h>
@@ -137,6 +141,11 @@ namespace Wasatch{
    * \todo Create a tree on the initialization that duplicates the
    *       "advance solution" tree so that we have everything required
    *       for output at the initial time step.
+   *
+   * \todo Allow other "root" tasks to be registerd that are not
+   *       necessarily associated with the RHS of a governing
+   *       equation.
+   *
    */
   class UINTAHSHARE Wasatch :
     public Uintah::UintahParallelComponent,
@@ -203,7 +212,8 @@ namespace Wasatch{
                               Uintah::SchedulerP& );
 
   private:
-
+    int nRKStages_;
+    std::set<std::string> ioFieldSet_;
     Uintah::SimulationStateP sharedState_; ///< access to some common things like the current timestep.
 
     /**
@@ -233,7 +243,9 @@ namespace Wasatch{
     /** \brief a convenience function */
     void create_timestepper_on_patches( const Uintah::PatchSet* const localPatches,
                                         const Uintah::MaterialSet* const materials,
-                                        Uintah::SchedulerP& sched );
+                                        const Uintah::LevelP& level,
+                                        Uintah::SchedulerP& sched,
+                                        const int RKStage );
 
     // jcs this should disappear soon?
     void computeDelT( const Uintah::ProcessorGroup*,
@@ -242,8 +254,15 @@ namespace Wasatch{
                       Uintah::DataWarehouse* old_dw,
                       Uintah::DataWarehouse* new_dw );
 
+
+    enum PatchsetSelector{
+      USE_FOR_TASKS,
+      USE_FOR_OPERATORS
+    };
+
     /** \brief obtain the set of patches to operate on */
-    const Uintah::PatchSet* get_patchset( const Uintah::LevelP& level,
+    const Uintah::PatchSet* get_patchset( const PatchsetSelector,
+                                          const Uintah::LevelP& level,
                                           Uintah::SchedulerP& sched );
 
   };

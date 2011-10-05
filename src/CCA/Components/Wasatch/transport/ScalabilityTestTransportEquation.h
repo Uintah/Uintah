@@ -41,11 +41,11 @@ namespace Wasatch{
    *
    *  \par Notes & Restrictions
    *
-   *  - Currently, only basic forms for the scalar diffusive flux are
+   *  - Currently, only basic forms for the scalar diffusive velocity are
    *    supported.  Specifically, either an expression for the
    *    diffusion coefficient, \f$\Gamma_\phi\f$ is required or the
    *    diffusion coefficient must be a constant value.  See
-   *    DiffusiveFlux and DiffusiveFlux2 classes.
+   *    DiffusiveVelocity and DiffusiveVelocity2 classes.
    *
    *  - Source terms can only be added if the expression to evaluate
    *    them has been constructed elsewhere.
@@ -74,9 +74,9 @@ namespace Wasatch{
      *  Note that the static member method get_rhs_expr_id can be useful to 
      *  obtain the appropriate input arguments here.
      */
-    ScalabilityTestTransportEquation(const std::string basePhiName, 
-                                     const std::string thisPhiName,
-                            const Expr::ExpressionID id );
+    ScalabilityTestTransportEquation( const std::string basePhiName, 
+                                      const std::string thisPhiName,
+                                      const Expr::ExpressionID id );
     
     ~ScalabilityTestTransportEquation();
     
@@ -95,8 +95,11 @@ namespace Wasatch{
     
     /**
      * \brief Parse the input file to determine the rhs expression id.
-     *        Also registers convective flux, diffusive flux, and
+     *        Also registers convective flux, diffusive velocity, and
      *        source term expressions.
+     *
+     *  \param thisPhiName the name of the solution variable for this
+     *         equation.
      *
      *  \param factory The Expr::ExpressionFactory object that
      *         terms associated with the RHS of this transport
@@ -106,15 +109,15 @@ namespace Wasatch{
      *         equation.  Scope should be within the ScalabilityTest tag.
      */
     static Expr::ExpressionID get_rhs_expr_id(std::string thisPhiName, 
-													                    Expr::ExpressionFactory& factory, 
-													                    Uintah::ProblemSpecP params );        
+                                              Expr::ExpressionFactory& factory, 
+                                              Uintah::ProblemSpecP params );        
   private:
     
   };
   
   
   template< typename FieldT >
-  void setup_diffusive_flux_expression( std::string dir,
+  void setup_diffusive_velocity_expression( std::string dir,
                                        Expr::ExpressionFactory& factory,
                                        typename ScalarRHS<FieldT>::FieldTagInfo& info );
   

@@ -5,7 +5,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -52,6 +52,9 @@ void printTask( const PatchSubset   * patches,
 
 void printTask( const Patch         * patch,
                 SCIRun::DebugStream & dbg,
+                const string        & where );
+                
+void printTask( SCIRun::DebugStream & dbg,
                 const string        & where );
 
 } // End namespace Uintah

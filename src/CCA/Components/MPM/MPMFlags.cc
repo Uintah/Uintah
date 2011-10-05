@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -108,6 +108,17 @@ MPMFlags::MPMFlags(const ProcessorGroup* myworld)
   d_reductionVars->KE               = false;
   d_reductionVars->volDeformed      = false;
   d_reductionVars->centerOfMass     = false;
+
+// MMS
+if(d_mms_type=="AxisAligned"){
+    d_mms_type = "AxisAligned";
+  } else if(d_mms_type=="GeneralizedVortex"){
+    d_mms_type = "GeneralizedVortex";
+  } else if(d_mms_type=="ExpandingRing"){
+    d_mms_type = "ExpandingRing";
+  } else if(d_mms_type=="AxisAligned3L"){
+    d_mms_type = "AxisAligned3L";
+  }
 }
 
 MPMFlags::~MPMFlags()
@@ -162,7 +173,7 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
      cerr << "nodes8or27 is deprecated, use " << endl;
      cerr << "<interpolator>type</interpolator>" << endl;
      cerr << "where type is one of the following:" << endl;
-     cerr << "linear, gimp, 3rdorderBS, cpdi, fastcpdi" << endl;
+     cerr << "linear, gimp, cpgimp, 3rdorderBS, cpdi, fastcpdi" << endl;
     exit(1);
   }
 
@@ -212,6 +223,8 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
   if(d_prescribeDeformation){
     mpm_flag_ps->get("PresribedDeformationFile",d_prescribedDeformationFile);
   }
+//MMS
+  mpm_flag_ps->get("RunMMSProblem",d_mms_type);
 
   mpm_flag_ps->get("InsertParticles",d_insertParticles);
   if(d_insertParticles){
@@ -272,6 +285,9 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
   } else if(d_interpolator_type=="gimp"){
     d_interpolator = scinew Node27Interpolator();
     d_8or27 = 27;
+  } else if(d_interpolator_type=="cpgimp"){
+    d_interpolator = scinew Node27Interpolator();
+    d_8or27 = 27;
   } else if(d_interpolator_type=="3rdorderBS"){
     d_interpolator = scinew TOBSplineInterpolator();
     d_8or27 = 27;
@@ -298,6 +314,7 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
          << "Valid options are: \n"
          << "linear\n"
          << "gimp\n"
+         << "cpgimp\n"
          << "cpdi\n"
          << "3rdorderBS\n"
          << "4thorderBS\n"<< endl;
@@ -369,6 +386,8 @@ MPMFlags::outputProblemSpec(ProblemSpecP& ps)
   if(d_prescribeDeformation){
     ps->appendElement("PresribedDeformationFile",d_prescribedDeformationFile);
   }
+//MMS
+  ps->appendElement("RunMMSProblem",d_mms_type);
   ps->appendElement("InsertParticles",d_insertParticles);
   if(d_insertParticles){
     ps->appendElement("InsertParticlesFile",d_insertParticlesFile);

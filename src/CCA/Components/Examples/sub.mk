@@ -2,7 +2,7 @@
 # 
 # The MIT License
 # 
-# Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+# Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 # Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 # University of Utah.
 # 
@@ -51,7 +51,7 @@ SRCS     += \
 	$(SRCDIR)/RegionDB.cc        \
 	$(SRCDIR)/Benchmark.cc       \
 	$(SRCDIR)/AdvectSlabs.cc     \
-	$(SRCDIR)/AdvectSlabsGPU.cc  \
+	$(SRCDIR)/AdvectSlabsGPU.cu  \
 	$(SRCDIR)/PoissonGPU1.cu
        
 ifeq ($(BUILD_MODELS_RADIATION),yes)

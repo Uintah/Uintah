@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -47,7 +47,13 @@ GeometryObject::GeometryObject(GeometryPieceP piece, ProblemSpecP& ps,
         case Double:
         {
           double val;
-          ps->require(it->name,val);
+          if(it->name == "volumeFraction")
+          {
+              ps->getWithDefault(it->name,val,-1.0);
+          } else 
+          {
+              ps->require(it->name,val);
+          }
           d_double_data[it->name] = val;
           break;
         }
@@ -91,7 +97,8 @@ GeometryObject::outputProblemSpec(ProblemSpecP& ps)
   
   for (map<string,double>::iterator it = d_double_data.begin(); 
        it != d_double_data.end(); it++) {
-    geom_obj_ps->appendElement(it->first.c_str(),it->second);
+    if(!(it->first.compare("volumeFraction") == 0 && it->second == -1.0))
+      geom_obj_ps->appendElement(it->first.c_str(),it->second);
   }
   for (map<string,Uintah::Vector>::iterator it = d_vector_data.begin(); 
        it != d_vector_data.end(); it++) {

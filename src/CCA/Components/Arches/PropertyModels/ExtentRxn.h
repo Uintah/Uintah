@@ -10,7 +10,7 @@
 /** 
 * @class  ExtentRxn
 * @author Jeremy Thornock
-* @date   Aug 2010
+* @date   Aug 2011
 * 
 * @brief Computes the extent of reaction for any grid transported variable
 *

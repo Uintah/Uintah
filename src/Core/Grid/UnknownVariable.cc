@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -55,8 +55,8 @@ UnknownVariable::UnknownVariable(const std::string& varname, int dwid,
         << ", patch " << patch->getID()
         << "(" << patch->toString() << ")";
    }
-   if (matlIndex >= 0)
-      s << ", material index: " << matlIndex;
+   
+   s << ", material index: " << matlIndex;
 
    if(extramsg != "")
       s << " (" << extramsg << ")";
@@ -80,8 +80,8 @@ UnknownVariable::UnknownVariable(const std::string& varname, int dwid,
    if (level != NULL) {
      s << " on level " << level->getIndex();
    }
-   if (matlIndex >= 0)
-      s << ", material index: " << matlIndex;
+   
+   s << ", material index: " << matlIndex;
 
    if(extramsg != "")
       s << " (" << extramsg << ")";

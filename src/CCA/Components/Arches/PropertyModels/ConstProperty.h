@@ -8,7 +8,7 @@
 /** 
 * @class  ConstantProperty
 * @author Jeremy Thornock
-* @date   Aug. 2010
+* @date   Aug. 2011
 * 
 * @brief A templated property model that is simply a constant value.  The templated
 *        parameter is refering to the grid variable.  This derived class

@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -222,7 +222,7 @@ PetscSolver::matrixCreate(const PatchSet* perproc_patches,
 void 
 PetscSolver::setMatrix(const ProcessorGroup* ,
                        const Patch* patch,
-                       constCCVariable<Stencil7>& coeff)
+                       CCVariable<Stencil7>& coeff)
 {
   int ierr = 0;
   int col[7];
@@ -270,6 +270,10 @@ PetscSolver::setMatrix(const ProcessorGroup* ,
       }
     }
   }
+
+  
+  
+  
 }
 // ****************************************************************************
 // Fill linear parallel RHS
@@ -330,7 +334,7 @@ PetscSolver::pressLinearSolve()
   bool test;
   test = PetscLinearSolve(A, d_b, d_x, d_u,
                           d_pcType, d_solverType, d_overlap,
-                          d_fill, d_residual, d_myworld);
+                          d_fill, d_residual, d_maxSweeps, d_myworld);
   return test;
 }
 
@@ -348,5 +352,29 @@ void
 PetscSolver::destroyMatrix() 
 {
   destroyPetscObjects(A, d_x, d_b, d_u);
+}
+//______________________________________________________________________
+//
+void
+PetscSolver::print(const string& desc, const int timestep, const int step)
+{
+  char A_file[100],B_file[100], X_file[100];
+  
+  PetscViewer matview, vecview;
+  sprintf(B_file,"output/b.%s.%i.%i",desc.c_str(), timestep, step);
+  sprintf(X_file,"output/x.%s.%i.%i",desc.c_str(), timestep, step);
+  sprintf(A_file,"output/A.%s.%i.%i",desc.c_str(), timestep, step);
+  
+  PetscViewerASCIIOpen(PETSC_COMM_WORLD,B_file,&vecview);
+  VecView(d_b,vecview);
+  PetscViewerDestroy(vecview);
+  
+  PetscViewerASCIIOpen(PETSC_COMM_WORLD,X_file,&vecview);
+  VecView(d_x,vecview);
+  PetscViewerDestroy(vecview);
+  
+  PetscViewerASCIIOpen(PETSC_COMM_WORLD,A_file,&matview);
+  MatView(A,matview);
+  PetscViewerDestroy(matview);
 }
 

@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -48,7 +48,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Ports/uintahshare.h>
 
 namespace Uintah {
-  using namespace std;
+
   class LoadBalancer;
   class Task;
   class SimulationInterface;
@@ -130,9 +130,9 @@ WARNING
     
     virtual void addTask(Task* t, const PatchSet*, const MaterialSet*) = 0;
     
-    virtual const vector<const Task::Dependency*>& getInitialRequires() = 0;
-    virtual const set<const VarLabel*, VarLabel::Compare>& getInitialRequiredVars() const = 0;
-    virtual const set<const VarLabel*, VarLabel::Compare>& getComputedVars() const = 0;
+    virtual const std::vector<const Task::Dependency*>& getInitialRequires() = 0;
+    virtual const std::set<const VarLabel*, VarLabel::Compare>& getInitialRequiredVars() const = 0;
+    virtual const std::set<const VarLabel*, VarLabel::Compare>& getComputedVars() const = 0;
 
     virtual LoadBalancer* getLoadBalancer() = 0;
     virtual void releaseLoadBalancer() = 0;
@@ -160,17 +160,17 @@ WARNING
     
     virtual void scheduleParticleRelocation(const LevelP& level,
 					    const VarLabel* posLabel,
-					    const vector<vector<const VarLabel*> >& labels,
+					    const std::vector<std::vector<const VarLabel*> >& labels,
 					    const VarLabel* new_posLabel,
-					    const vector<vector<const VarLabel*> >& new_labels,
+					    const std::vector<std::vector<const VarLabel*> >& new_labels,
 					    const VarLabel* particleIDLabel,
 					    const MaterialSet* matls) = 0;
 
     virtual void scheduleParticleRelocation(const LevelP& level,
 					    const VarLabel* posLabel,
-					    const vector<vector<const VarLabel*> >& labels,
+					    const std::vector<std::vector<const VarLabel*> >& labels,
 					    const VarLabel* new_posLabel,
-					    const vector<vector<const VarLabel*> >& new_labels,
+					    const std::vector<std::vector<const VarLabel*> >& new_labels,
 					    const VarLabel* particleIDLabel,
 					    const MaterialSet* matls, int w) = 0;
 
@@ -179,7 +179,7 @@ WARNING
                                        SimulationInterface* sim) = 0;
 
 
-    virtual void overrideVariableBehavior(string var, bool treatAsOld, 
+    virtual void overrideVariableBehavior(std::string var, bool treatAsOld, 
                                           bool copyData, bool noScrub) = 0;
 
     // Get the SuperPatch (set of connected patches making a larger rectangle)
@@ -187,7 +187,7 @@ WARNING
     // the expected ghost cells (requiredLow, requiredHigh) and the requested
     // ghost cells as well (requestedLow, requestedHigh) for each of the
     // patches.  Required and requested will besame if requestedNumGCells = 0.
-    virtual const vector<const Patch*>*
+    virtual const std::vector<const Patch*>*
     getSuperPatchExtents(const VarLabel* label, int matlIndex,
 			 const Patch* patch, Ghost::GhostType requestedGType,
 			 int requestedNumGCells, IntVector& requiredLow,
@@ -197,7 +197,7 @@ WARNING
     // Makes and returns a map that maps strings to VarLabels of
     // that name and a list of material indices for which that
     // variable is valid (at least according to d_allcomps).
-    typedef map< string, list<int> > VarLabelMaterialMap;
+    typedef std::map< std::string, std::list<int> > VarLabelMaterialMap;
     virtual VarLabelMaterialMap* makeVarLabelMaterialMap() = 0;
     virtual int getMaxGhost() = 0;
   private:

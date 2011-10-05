@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -56,7 +56,6 @@ DEALINGS IN THE SOFTWARE.
 #include   <map>
 #include   <cstring>
 
-
 // Pack data into a buffer before sending -- testing to see if this
 // works better and avoids certain problems possible when you allow
 // tasks to modify data that may have a pending send.
@@ -86,7 +85,6 @@ DebugStream execout("ExecTimes", false);
 DebugStream taskdbg("TaskDBG",   false);
 DebugStream taskLevel_dbg("TaskLevel", false);
 DebugStream mpidbg("MPIDBG",false);
-static Mutex sendsLock( "sendsLock" );
 
 extern ofstream wout;
 static double CurrentWaitTime=0;
@@ -206,9 +204,9 @@ MPIScheduler::initiateTask( DetailedTask          * task,
   TAU_PROFILE("MPIScheduler::initiateTask()", " ", TAU_USER); 
 
   postMPIRecvs( task, only_old_recvs, abort_point, iteration);
-  if(only_old_recvs)
+  if(only_old_recvs) {
     return;
-
+  }
 } // end initiateTask()
 
 void
@@ -224,8 +222,8 @@ MPIScheduler::initiateReduction( DetailedTask          * task )
     runReductionTask(task);
 
     double reduceend = Time::currentSeconds();
-    long long flop_count=0;
-    emitNode(task, reducestart, reduceend - reducestart, 0, 0, flop_count);
+
+    emitNode(task, reducestart, reduceend - reducestart, 0);
     mpi_info_.totalreduce += reduceend-reducestart;
     mpi_info_.totalreducempi += reduceend-reducestart;
   }
@@ -289,9 +287,7 @@ MPIScheduler::runTask( DetailedTask         * task, int iteration)
   task->done(dws); // should this be timed with taskstart? - BJW
   double teststart = Time::currentSeconds();
 
-  sendsLock.lock(); // Dd... could do better?
   sends_.testsome( d_myworld );
-  sendsLock.unlock(); // Dd... could do better?
 
   mpi_info_.totaltestmpi += Time::currentSeconds() - teststart;
  
@@ -307,7 +303,7 @@ MPIScheduler::runTask( DetailedTask         * task, int iteration)
     parentScheduler->mpi_info_.totalreduce+=mpi_info_.totalreduce;
   }
 
-  emitNode(task, taskstart, dtask, 0, 0, 0);
+  emitNode(task, taskstart, dtask, 0);
   
 } // end runTask()
 
@@ -437,9 +433,7 @@ MPIScheduler::postMPISends( DetailedTask         * task, int iteration )
             d_myworld->getComm(), &requestid);
         int bytes = count;
 
-        sendsLock.lock(); // Dd: ??
         sends_.add( requestid, bytes, mpibuff.takeSendlist(), ostr.str(), batch->messageTag );
-        sendsLock.unlock(); // Dd: ??
         mpi_info_.totalsendmpi += Time::currentSeconds() - start;
       //}
     }

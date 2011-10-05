@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -38,23 +38,22 @@ DEALINGS IN THE SOFTWARE.
 
 namespace Uintah {
 using namespace SCIRun;
-using namespace std;
 
 // Just does a simple linear query for testing only.
 // Maybe change it to a range tree when testing performance.
 class BoxRangeQuerier
 {
 public:
-  typedef list<const Box*> ResultContainer;
+  typedef std::list<const Box*> ResultContainer;
   
   template <class BoxPIterator>
   BoxRangeQuerier(BoxPIterator begin, BoxPIterator end);
   ~BoxRangeQuerier();
 
   void query(const IntVector& low, const IntVector& high,
-	     list<const Box*>&);
+	     std::list<const Box*>&);
   void queryNeighbors(const IntVector& low, const IntVector& high,
-		      list<const Box*>&);
+		      std::list<const Box*>&);
 private:
   class BoxPoint
   {
@@ -90,14 +89,14 @@ private:
   IntVector d_maxBoxDimensions;
 
   // BoxPoint's vector is kept here mostly for memory management
-  vector<BoxPoint> d_boxPoints;
+  std::vector<BoxPoint> d_boxPoints;
 };
 
 template <class BoxPIterator>
 BoxRangeQuerier::BoxRangeQuerier(BoxPIterator begin, BoxPIterator end)
   :  d_maxBoxDimensions(0, 0, 0)
 {
-  list<BoxPoint*> pointList;
+  std::list<BoxPoint*> pointList;
   IntVector dimensions;
   BoxPIterator iter;
   

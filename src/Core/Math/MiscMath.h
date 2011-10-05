@@ -47,7 +47,7 @@
 #include <Core/Math/share.h>
 #include <cmath>
 #include <cfloat>
-using namespace std;
+
 namespace SCIRun {
 
 // Absolute value

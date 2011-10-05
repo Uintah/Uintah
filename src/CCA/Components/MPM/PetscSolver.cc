@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -60,6 +60,9 @@ using namespace std;
 
 //#define USE_SUPERLU
 #undef  USE_SUPERLU
+
+//#define OUTPUT_A_B  // output A matrix and B vector to files.
+#undef OUTPUT_A_B
 
 MPMPetscSolver::MPMPetscSolver()
 {
@@ -646,7 +649,10 @@ MPMPetscSolver::removeFixedDOF()
 #endif
   ISDestroy(is);
 
-#if 0
+
+  //__________________________________
+  //  debugging
+#ifdef OUTPUT_A_B
   char matfile[100],vecfile[100];
   
   PetscViewer matview, vecview;
@@ -789,6 +795,26 @@ void MPMPetscSolver::removeFixedDOFHeat()
 #if 0
   MatView(d_A,PETSC_VIEWER_STDOUT_WORLD);
   VecView(d_B,PETSC_VIEWER_STDOUT_WORLD);
+#endif
+
+  //__________________________________
+  //  debugging
+#ifdef OUTPUT_A_B
+  char matfile[100],vecfile[100];
+  
+  PetscViewer matview, vecview;
+  sprintf(vecfile,"output/HeatVector.%d.%d",Parallel::getMPISize(),d_iteration);
+  sprintf(matfile,"output/HeatMatrix.%d.%d",Parallel::getMPISize(),d_iteration);
+  
+  PetscViewerASCIIOpen(PETSC_COMM_WORLD,vecfile,&vecview);
+  VecView(d_B,vecview);
+  PetscViewerDestroy(vecview);
+  
+  PetscViewerASCIIOpen(PETSC_COMM_WORLD,matfile,&matview);
+  MatView(d_A,matview);
+  PetscViewerDestroy(matview);
+
+  d_iteration++;
 #endif
 
 }

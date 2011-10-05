@@ -25,12 +25,14 @@ namespace Uintah{
 namespace Wasatch{
 
 /**
- *  \class Pressure
+ *  \class 	Pressure
+ *  \ingroup 	Expressions
+ *  \ingroup	WasatchCore
+ *  \author 	James C. Sutherland
+ *  \author 	Tony Saad
+ *  \date 	January, 2011
  *
  *  \brief Expression to form and solve the poisson system for pressure.
- *  \author James C. Sutherland
- *  \author Tony Saad
- *  \date January, 2011
  *
  *  NOTE: this expression BREAKS WITH CONVENTION!  Notably, it has
  *  uintah tenticles that reach into it, and mixes SpatialOps and
@@ -83,6 +85,7 @@ class Pressure
   
   typedef Uintah::CCVariable<Uintah::Stencil7> MatType;
   MatType matrix_;
+  const Uintah::Patch* patch_;
 
   Pressure( const Expr::Tag& fxtag,
             const Expr::Tag& fytag,
@@ -121,7 +124,8 @@ public:
    */
   void schedule_solver( const Uintah::LevelP& level,
                         Uintah::SchedulerP sched,
-                        const Uintah::MaterialSet* const materials );
+                        const Uintah::MaterialSet* const materials,
+                        int RKStage);
 
   /**
    *  \brief allows Wasatch::TaskInterface to reach in and provide
@@ -130,7 +134,10 @@ public:
    */
   void declare_uintah_vars( Uintah::Task& task,
                             const Uintah::PatchSubset* const patches,
-                            const Uintah::MaterialSubset* const materials );
+                            const Uintah::MaterialSubset* const materials,
+                           int RKStage);
+
+  void set_patch(const Uintah::Patch* const patch) {patch_ = const_cast<Uintah::Patch*> (patch);}
 
   /**
    *  \brief allows Wasatch::TaskInterface to reach in and provide
@@ -146,11 +153,14 @@ public:
    */
   void bind_uintah_vars( Uintah::DataWarehouse* const dw,
                          const Uintah::Patch* const patch,
-                         const int material );
+                         const int material,
+                        int RKStage);
   /**
    * \brief Calculates pressure coefficient matrix.
    */
   void setup_matrix(const Uintah::Patch* const patch);
+
+  //Uintah::CCVariable<Uintah::Stencil7> pressure_matrix(){ return matrix_ ;}
 
   void advertise_dependents( Expr::ExprDeps& exprDeps );
   void bind_fields( const Expr::FieldManagerList& fml );

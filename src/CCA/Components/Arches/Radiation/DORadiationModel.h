@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -123,7 +123,8 @@ public:
                                   const Patch* patch,
                                   CellInformation* cellinfo, 
                                   ArchesVariables* vars,
-                                  ArchesConstVariables* constvars);
+                                  ArchesConstVariables* constvars, 
+                                  int wall_type);
       ////////////////////////////////////////////////////////////////////////
 
 protected: 
@@ -191,7 +192,7 @@ protected:
             for (CellIterator iter = patch->getCellIterator(); !iter.done(); ++iter){ 
 
               IntVector c = *iter; 
-              cout << abskg[c] << endl;
+              std::cout << abskg[c] << std::endl;
               abskg[c] = 0.90 * ( 1.0 - 2.0 * fabs( ( c[0] - (grid.x() - 1.0) /2.0) * Dx[0]) )
                               * ( 1.0 - 2.0 * fabs( ( c[1] - (grid.y() - 1.0) /2.0) * Dx[1]) )
                               * ( 1.0 - 2.0 * fabs( ( c[2] - (grid.z() - 1.0) /2.0) * Dx[2]) ) 

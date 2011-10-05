@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -48,24 +48,21 @@ namespace Uintah {
     virtual ~Switcher();
 
     virtual void problemSetup(const ProblemSpecP& params, 
-                              const ProblemSpecP& restart_prob_spec, GridP& grid,
-			      SimulationStateP&);
+                              const ProblemSpecP& restart_prob_spec, 
+                              GridP& grid,
+                              SimulationStateP&);
 
     virtual void outputProblemSpec(ProblemSpecP& ps);
     virtual void outputPS(Dir& dir);
-    virtual void scheduleInitialize(const LevelP& level,
-				    SchedulerP& sched);
-    virtual void scheduleComputeStableTimestep(const LevelP& level,
-					       SchedulerP&);
-    virtual void scheduleTimeAdvance( const LevelP& level, 
-				      SchedulerP&);
+    virtual void scheduleInitialize(            const LevelP& level, SchedulerP& sched);
+    virtual void scheduleComputeStableTimestep( const LevelP& level, SchedulerP& sched);
+    virtual void scheduleTimeAdvance(           const LevelP& level, SchedulerP& sched);
 
-    virtual void scheduleSwitchTest(const LevelP& level, SchedulerP& sched);
-    virtual void scheduleInitNewVars(const LevelP& level, SchedulerP& sched);
-    virtual void scheduleCarryOverVars(const LevelP& level, SchedulerP& sched);
-    virtual void scheduleSwitchInitialization(const LevelP& level, 
-                                              SchedulerP& sched);
-    virtual void scheduleFinalizeTimestep(const LevelP& level, SchedulerP& sched);
+    virtual void scheduleSwitchTest(            const LevelP& level, SchedulerP& sched);
+    virtual void scheduleInitNewVars(           const LevelP& level, SchedulerP& sched);
+    virtual void scheduleCarryOverVars(         const LevelP& level, SchedulerP& sched);
+    virtual void scheduleSwitchInitialization(  const LevelP& level, SchedulerP& sched);
+    virtual void scheduleFinalizeTimestep(      const LevelP& level, SchedulerP& sched);
 
     virtual bool needRecompile(double time, double delt, const GridP& grid);
     virtual void restartInitialize();
@@ -76,14 +73,15 @@ namespace Uintah {
 
 
     // direct component to add a new material
-    virtual void addMaterial( const ProblemSpecP& params, GridP& grid,
+    virtual void addMaterial( const ProblemSpecP& params, 
+                              GridP& grid,
                               SimulationStateP& state );
 
     virtual void scheduleInitializeAddedMaterial( const LevelP & level,
                                                   SchedulerP   & scheduler );
 
-    virtual void addToTimestepXML( ProblemSpecP & spec );
-    virtual void readFromTimestepXML( const ProblemSpecP&, SimulationStateP& state );
+
+
 
     // AMR
     virtual void scheduleRefineInterface(const LevelP& fineLevel,
@@ -91,18 +89,14 @@ namespace Uintah {
                                          bool needCoarseOld, 
                                          bool needCoarseNew);
                                          
-    virtual void scheduleRefine (const PatchSet* patches, 
-                                 SchedulerP& sched); 
+    virtual void scheduleRefine (const PatchSet* patches,  SchedulerP& sched); 
     
-    virtual void scheduleCoarsen(const LevelP& coarseLevel, 
-                                 SchedulerP& sched);
+    virtual void scheduleCoarsen(const LevelP& coarseLevel, SchedulerP& sched);
 
-
-    virtual void scheduleInitialErrorEstimate(const LevelP& coarseLevel,
-                                              SchedulerP& sched);
+    virtual void scheduleInitialErrorEstimate(const LevelP& coarseLevel,SchedulerP& sched);
                                                
-    virtual void scheduleErrorEstimate(const LevelP& coarseLevel,
-                                       SchedulerP& sched);
+    virtual void scheduleErrorEstimate(       const LevelP& coarseLevel,SchedulerP& sched);
+
 
     enum switchState { idle, switching };
   private:
@@ -120,9 +114,11 @@ namespace Uintah {
                     const PatchSubset* patches,
                     const MaterialSubset* matls,
                     DataWarehouse* old_dw, DataWarehouse* new_dw);
+                    
+    void readSwitcherState( const ProblemSpecP&, 
+                            SimulationStateP& state );
 
-
-    ProblemSpecP d_problemSpec;
+    ProblemSpecP d_master_ups;
 
     switchState d_switchState;
 
@@ -133,25 +129,31 @@ namespace Uintah {
 
     bool d_restarting;
 
-    // used to sync other switch tasks
-    //VarLabel* d_switchLabel;
     SimulationInterface* d_sim;
 
     SimulationStateP d_sharedState;
     unsigned int d_numComponents;
     unsigned int d_componentIndex;
     
+    struct initVars{
+      vector<string>            varNames;
+      vector<string>            matlSetNames;
+      vector<const MaterialSet*> matls;
+      vector<int>               levels;
+      vector<VarLabel*>         varLabels;
+    };
+    
+    map<int, initVars*> d_initVars;
+    
     set<const VarLabel*, VarLabel::Compare> d_computedVars;
-    vector<vector<string> > d_initVars;
-    vector<vector<string> > d_initMatls;
-    vector<vector<int> > d_initLevels;
-    vector<vector<VarLabel*> > d_initVarLabels;
+    
 
-    vector<string> d_carryOverVars;
-    vector<VarLabel*> d_carryOverVarLabels;
+    vector<string>          d_in_file;                  // contains the name of all the subcomponent inputfiles
+    vector<string>          d_carryOverVars;
+    vector<VarLabel*>       d_carryOverVarLabels;
     vector<MaterialSubset*> d_carryOverVarMatls;
-    vector<bool> d_carryOverFinestLevelOnly; // either all levels or finest only
-    vector<vector<bool> > d_doCarryOverVarPerLevel; // size to numlevels
+    vector<bool>            d_carryOverFinestLevelOnly; // either all levels or finest only
+    vector<vector<bool> >   d_doCarryOverVarPerLevel;   // size to numlevels
 
     Switcher(const Switcher&);
     Switcher& operator=(const Switcher&);

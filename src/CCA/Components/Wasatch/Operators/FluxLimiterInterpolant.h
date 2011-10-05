@@ -18,19 +18,25 @@
  *  \class     FluxLimiterInterpolant
  *  \author    Tony Saad
  *  \date      January 2011
+ *  \ingroup   WasatchOperators
+ *
+ *  \todo Consider basing this on the SpatialOps::structured::Stencil2 stuff.
+ *  \todo Parallelize apply_to_field() method
+ *  \todo Add mutex when set_advective_velocity() is set.  Release
+ *	  when apply_to_field() is done.
  *
  *  \brief     Calculates convective flux using a flux limiter.
  *  
  *  This class is a lightweight operator, i.e. it does NOT implement a
  *  matvec operation. The FluxLimiterInterpolant will interpolate the
- *  convective flux \phi u_i where \phi denotes a staggered or
- *  non-staggered field. For example, if \phi denotes the temperature
- *  T, then, \phi is a scalar volume field. On the other hand, if \phi
- *  denotes the momentum \rho u_i, then, \phi is staggered volume
+ *  convective flux \f$\phi u_i\f$ where \f$\phi\f$ denotes a staggered or
+ *  non-staggered field. For example, if \f$\phi\f$ denotes the temperature
+ *  T, then, \f$\phi\f$ is a scalar volume field. On the other hand, if \f$\phi\f$
+ *  denotes the momentum \f$\rho u_i\f$, then, \f$\phi\f$ is staggered volume
  *  field. The FluxLimiterInterpolant will interpolate the volume field to
- *  its corresponding face field. Thus, if \phi denotes a scalar
+ *  its corresponding face field. Thus, if \f$\phi\f$ denotes a scalar
  *  field, then the FluxLimiterInterpolant will produce a scalar face
- *  field. Similarly, if \phi was an X-Staggered volume field, then
+ *  field. Similarly, if \f$\phi\f$ was an X-Staggered volume field, then
  *  the FluxLimiterInterpolant will produce an X-Staggered face field.
  * 
  *  Based on this convention, the FluxLimiterInterpolant class is templated
@@ -121,8 +127,8 @@ public:
    *         case this is a scalar field usually denoted by phi.
    *
    *  \param dest: A reference to the destination field. This will
-   *         hold the convective flux \phi*u_i in the direction i. It
-   *         will be stored on the staggered cell centers.
+   *         hold the convective flux \f$\phi*u_i\f$ in the direction
+   *         i. It will be stored on the staggered cell centers.
    */
   void apply_to_field(const PhiVolT &src, PhiFaceT &dest) const; 
   

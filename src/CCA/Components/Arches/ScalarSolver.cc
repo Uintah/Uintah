@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -112,7 +112,9 @@ ScalarSolver::problemSetup(const ProblemSpecP& params)
   string limiter_type;
   if (d_conv_scheme == 1) {
     db->getWithDefault("limiter_type",limiter_type,"superbee");
-    if (limiter_type == "superbee"){
+    if (limiter_type == "minmod"){
+      d_limiter_type = -1;
+    }else if (limiter_type == "superbee"){
       d_limiter_type = 0;
     }else if (limiter_type == "vanLeer"){
       d_limiter_type = 1;

@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -145,7 +145,7 @@ public:
                                             IntVector low, IntVector high) = 0;
   virtual ParticleSubset* getParticleSubset(int matlIndex, const Patch*) = 0;
   virtual ParticleSubset* getDeleteSubset(int matlIndex, const Patch*) = 0;
-  virtual map<const VarLabel*, ParticleVariableBase*>* getNewParticleState(int matlIndex, const Patch*) = 0;
+  virtual std::map<const VarLabel*, ParticleVariableBase*>* getNewParticleState(int matlIndex, const Patch*) = 0;
   virtual ParticleSubset* getParticleSubset(int matlIndex, const Patch*, 
 					    Ghost::GhostType, 
 					    int numGhostCells,
@@ -232,7 +232,7 @@ public:
 
   // Add particles
   virtual void addParticles(const Patch* patch, int matlIndex,
-			    map<const VarLabel*, ParticleVariableBase*>* addedstate) = 0;
+			    std::map<const VarLabel*, ParticleVariableBase*>* addedstate) = 0;
 
   // Move stuff to a different data Warehouse
   virtual void transferFrom(DataWarehouse*, const VarLabel*,

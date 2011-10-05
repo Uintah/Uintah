@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -54,6 +54,8 @@ DEALINGS IN THE SOFTWARE.
 #include   <list>
 
 #define d_TINY_RHO 1.0e-12 // also defined  ICE.cc and ICEMaterial.cc 
+
+#define OLD
 
 using namespace std;
 using namespace Uintah;
@@ -128,6 +130,7 @@ MPMMaterial::standardInitialization(ProblemSpecP& ps, MPMFlags* flags)
   geom_obj_data.push_back(GeometryObject::DataItem("res",        GeometryObject::IntVector));
   geom_obj_data.push_back(GeometryObject::DataItem("temperature",GeometryObject::Double));
   geom_obj_data.push_back(GeometryObject::DataItem("velocity",   GeometryObject::Vector));
+  geom_obj_data.push_back(GeometryObject::DataItem("volumeFraction",   GeometryObject::Double));
 
   if(flags->d_with_color){
     geom_obj_data.push_back(GeometryObject::DataItem("color", GeometryObject::Double));
@@ -315,7 +318,7 @@ void MPMMaterial::initializeCCVariables(CCVariable<double>& rho_micro,
                                   CCVariable<double>& rho_CC,
                                   CCVariable<double>& temp,
                                   CCVariable<Vector>& vel_CC,
-                                  int numMatls,
+                                  CCVariable<double>& vol_frac_CC,
                                   const Patch* patch)
 { 
   // initialize to -9 so bullet proofing will catch it any cell that
@@ -324,82 +327,88 @@ void MPMMaterial::initializeCCVariables(CCVariable<double>& rho_micro,
   rho_micro.initialize(-9.0);
   rho_CC.initialize(-9.0);
   temp.initialize(-9.0);
+  vol_frac_CC.initialize(0.0);
   Vector dx = patch->dCell();
   
   for(int obj=0; obj<(int)d_geom_objs.size(); obj++){
-   GeometryPieceP piece = d_geom_objs[obj]->getPiece();
-   Box b1 = piece->getBoundingBox();
-   //Box b2 = patch->getBox();
-   //Box b = b1.intersect(b2);
-   // Find the bounds of a region a little bigger than the piece's BBox.
-   Point b1low(b1.lower().x()-3.*dx.x(),b1.lower().y()-3.*dx.y(),
-                                        b1.lower().z()-3.*dx.z());
-   Point b1up(b1.upper().x()+3.*dx.x(),b1.upper().y()+3.*dx.y(),
-                                        b1.upper().z()+3.*dx.z());
-   
-   IntVector ppc = d_geom_objs[obj]->getInitialData_IntVector("res");
-   Vector dxpp    = patch->dCell()/ppc;
-   Vector dcorner = dxpp*0.5;
-   double totalppc = ppc.x()*ppc.y()*ppc.z();
+    GeometryPieceP piece = d_geom_objs[obj]->getPiece();
+    IntVector ppc = d_geom_objs[obj]->getInitialData_IntVector("res");
+    Vector dxpp    = patch->dCell()/ppc;
+    Vector dcorner = dxpp*0.5;
+    double totalppc = ppc.x()*ppc.y()*ppc.z();
+    
+    // Find the bounds of a region a little bigger than the piece's BBox.
+    Box bb = piece->getBoundingBox();
+    
+    Point bb_low( bb.lower().x() - 3.0*dx.x(),
+                  bb.lower().y() - 3.0*dx.y(),
+                  bb.lower().z() - 3.0*dx.z() );
 
-  for(CellIterator iter = patch->getExtraCellIterator(); !iter.done();iter++){
-     Point lower = patch->nodePosition(*iter) + dcorner;
-     int count = 0;
-     for(int ix=0;ix < ppc.x(); ix++){
-       for(int iy=0;iy < ppc.y(); iy++){
-        for(int iz=0;iz < ppc.z(); iz++){
-          IntVector idx(ix, iy, iz);
-          Point p = lower + dxpp*idx;
-          if(piece->inside(p))
-            count++;
-        }
-       }
-     }
-  //__________________________________
-  // For single materials with more than one object 
-      if(numMatls == 1)  {
-        if ( count > 0  && obj == 0) {
-         // vol_frac_CC[*iter]= 1.0;
-          vel_CC[*iter]     = d_geom_objs[obj]->getInitialData_Vector("velocity");
-          rho_micro[*iter]  = getInitialDensity();
-          rho_CC[*iter]     = rho_micro[*iter] + d_TINY_RHO;
-          temp[*iter]       = d_geom_objs[obj]->getInitialData_double("temperature");
-        }
+    Point bb_up( bb.upper().x() + 3.0*dx.x(),
+                 bb.upper().y() + 3.0*dx.y(),
+                 bb.upper().z() + 3.0*dx.z() );
+    
 
-        if (count > 0 && obj > 0) {
-         // vol_frac_CC[*iter]= 1.0;
-          vel_CC[*iter]     = d_geom_objs[obj]->getInitialData_Vector("velocity");
-          rho_micro[*iter]  = getInitialDensity();
-          rho_CC[*iter]     = rho_micro[*iter] + d_TINY_RHO;
-          temp[*iter]       = d_geom_objs[obj]->getInitialData_double("temperature");
-        } 
-      }   
-      if (numMatls > 1 ) {
-        double vol_frac_CC= count/totalppc;       
-        rho_micro[*iter]  = getInitialDensity();
-        rho_CC[*iter]     = rho_micro[*iter] * vol_frac_CC + d_TINY_RHO;
-        temp[*iter]       = 300.0;         
-        Point pd = patch->cellPosition(*iter);
-        if((pd.x() > b1low.x() && pd.y() > b1low.y() && pd.z() > b1low.z()) &&
-           (pd.x() < b1up.x()  && pd.y() < b1up.y()  && pd.z() < b1up.z())){
-            vel_CC[*iter]     = d_geom_objs[obj]->getInitialData_Vector("velocity");
-            temp[*iter]      = d_geom_objs[obj]->getInitialData_double("temperature");
-        }    
-      }    
-    }  // Loop over domain
+    for(CellIterator iter = patch->getExtraCellIterator(); !iter.done();iter++){
+      IntVector c = *iter;
+      
+      Point lower = patch->nodePosition(*iter) + dcorner;
+      int count = 0;
+      
+      for(int ix=0;ix < ppc.x(); ix++){
+        for(int iy=0;iy < ppc.y(); iy++){
+          for(int iz=0;iz < ppc.z(); iz++){
+            IntVector idx(ix, iy, iz);
+            Point p = lower + dxpp*idx;
+            if(piece->inside(p))
+              count++;
+          }
+        }
+      }
+
+      double ups_volFrac = d_geom_objs[obj]->getInitialData_double("volumeFraction");
+      if( ups_volFrac == -1.0 ) {    
+        vol_frac_CC[c] += count/totalppc;  // there can be contributions from multiple objects 
+      } else {
+        vol_frac_CC[c] = ups_volFrac * count/(totalppc);
+      }
+      
+      rho_micro[c]  = getInitialDensity();
+      rho_CC[c]     = rho_micro[c] * vol_frac_CC[c] + d_TINY_RHO;     
+ 
+      // these values of temp_CC and vel_CC are only used away from the mpm objects
+      // on the first timestep in interpolateNC_CC_0.  We just need reasonable values
+      temp[c]       = 300.0;
+      
+      Point pd = patch->cellPosition(c);
+      
+      bool inside_bb_lo = (pd.x() > bb_low.x() && pd.y() > bb_low.y() && pd.z() > bb_low.z());
+      bool inside_bb_up = (pd.x() < bb_up.x()  && pd.y() < bb_up.y()  && pd.z() < bb_up.z() );
+      
+      // warning:  If two objects share the same cell then the last object sets the values.
+      //  This isn't a big deal since interpolateNC_CC_0 will only use these values on the first
+      //  timmestep
+      if( inside_bb_lo && inside_bb_up){
+        vel_CC[c] = d_geom_objs[obj]->getInitialData_Vector("velocity");
+        temp[c]   = d_geom_objs[obj]->getInitialData_double("temperature");
+      }                
+      
+    }  // Loop over cells
   }  // Loop over geom_objects
 }
-
+//______________________________________________________________________
+//
 void 
 MPMMaterial::initializeDummyCCVariables(CCVariable<double>& rho_micro,
                                         CCVariable<double>& rho_CC,
                                         CCVariable<double>& temp,
                                         CCVariable<Vector>& vel_CC,
-                                        int ,
+                                        CCVariable<double>& vol_frac_CC,
                                         const Patch* )
 { 
   vel_CC.initialize(Vector(0.,0.,0.));
   rho_micro.initialize(d_density);
   rho_CC.initialize(d_TINY_RHO);
   temp.initialize(d_troom);
+  vol_frac_CC.initialize(1.0);
 }

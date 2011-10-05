@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -88,7 +88,14 @@ ICEMaterial::ICEMaterial(ProblemSpecP& ps): Material(ps)
    geom_obj_data.push_back(GeometryObject::DataItem("res",        GeometryObject::IntVector));
    geom_obj_data.push_back(GeometryObject::DataItem("temperature",GeometryObject::Double));
    geom_obj_data.push_back(GeometryObject::DataItem("pressure",   GeometryObject::Double));
-   geom_obj_data.push_back(GeometryObject::DataItem("density",    GeometryObject::Double));
+   geom_obj_data.push_back(GeometryObject::DataItem("density",    GeometryObject::Double)); 
+    try{
+        geom_obj_data.push_back(GeometryObject::DataItem("volumeFraction",    GeometryObject::Double));
+        }
+    catch(...)
+    {
+        
+    }
    geom_obj_data.push_back(GeometryObject::DataItem("velocity",   GeometryObject::Vector));
 
    for (ProblemSpecP geom_obj_ps = ps->findBlock("geom_object");
@@ -308,8 +315,18 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
           IveBeenHere[*iter]= 1;
         }
       }   
+      
+      //__________________________________
+      //  Multiple matls
       if (numMatls > 1 ) {
-        vol_frac_CC[*iter]+= count/totalppc;       
+      
+        double ups_volFrac = d_geom_objs[obj]->getInitialData_double("volumeFraction");
+        if( ups_volFrac == -1.0 ) {    
+          vol_frac_CC[*iter] += count/totalppc;  // there can be contributions from multiple objects 
+        } else {
+          vol_frac_CC[*iter] = ups_volFrac * count/(totalppc);
+        }
+                  
         if(IveBeenHere[*iter] == -9){
           // This cell hasn't been hit for this matl yet so set values
           // to ensure that everything is set to something everywhere

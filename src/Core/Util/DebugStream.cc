@@ -73,7 +73,9 @@ DebugBuf::~DebugBuf()
 
 int DebugBuf::overflow(int ch)
 {
-  if(owner->active()){
+  if (owner==NULL){
+    cout << "DebugBuf: owner not initialized? Maybe static object init order error." << endl;
+  }else if(owner->active()){
     return(*(owner->outstream) << (char)ch ? 0 : EOF);
   }
   return 0;
@@ -81,18 +83,14 @@ int DebugBuf::overflow(int ch)
 
 
 DebugStream::DebugStream(const string& iname, bool defaulton):
-    std::ostream(0)
+    std::ostream(&dbgbuf),outstream(0)
 {
-  dbgbuf = new DebugBuf();
-  init(dbgbuf);
   name = iname;
-  dbgbuf->owner = this;
+  dbgbuf.owner = this;
   // set default values
   isactive = defaulton;
   if(isactive){
     outstream = &cout;
-  } else {
-    outstream = 0;
   }
   // check SCI_DEBUG to see if this instance is mentioned
   checkenv(iname);
@@ -104,7 +102,6 @@ DebugStream::~DebugStream()
   if( outstream && ( outstream != &cerr && outstream != &cout ) ){
     delete(outstream);
   }
-  delete dbgbuf;
 }
 
 void DebugStream::checkenv(string iname)

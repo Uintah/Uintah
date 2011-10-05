@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -38,7 +38,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Malloc/Allocator.h>
 
 #include <sci_defs/bits_defs.h> // for SCI_32BITS
-#include <sci_defs/osx_defs.h>  // for OSX_SNOW_LEOPARD
+#include <sci_defs/osx_defs.h>  // for OSX_SNOW_LEOPARD_OR_LATER
 
 #include <cfloat>
 #include <climits>
@@ -138,7 +138,7 @@ const TypeDescription* fun_getTypeDescription(long64*)
 }
 
 
-#if !defined( OSX_SNOW_LEOPARD ) &&  !defined( SCI_32BITS )
+#if !defined( OSX_SNOW_LEOPARD_OR_LATER ) &&  !defined( SCI_32BITS )
 const TypeDescription* fun_getTypeDescription(long long*)
 {
    static TypeDescription* td;
@@ -222,7 +222,7 @@ void fun_getSmallValue(bool* val)
   *val = false;
 }
 void fun_getZeroValue(  double  * val ) { *val = 0; }
-#if !defined( SCI_32BITS ) && !defined( OSX_SNOW_LEOPARD )
+#if !defined( SCI_32BITS ) && !defined( OSX_SNOW_LEOPARD_OR_LATER )
 void fun_getZeroValue(  long long * val ) { *val = 0; }
 #endif
 void fun_getZeroValue(  bool    * val ) { *val = false; }

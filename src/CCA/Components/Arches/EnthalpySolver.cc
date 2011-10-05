@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -39,35 +39,24 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Arches/EnthalpySolver.h>
 #include <CCA/Components/Arches/PetscSolver.h>
 #include <CCA/Components/Arches/PhysicalConstants.h>
-#include <CCA/Components/Arches/RHSSolver.h>
-#include <CCA/Components/Arches/Source.h>
-#include <CCA/Components/Arches/TurbulenceModel.h>
-#include <CCA/Components/Arches/Radiation/RadiationModel.h>
-#include <CCA/Components/Arches/Radiation/DORadiationModel.h>
-#include <CCA/Components/Arches/Radiation/RadLinearSolver.h>
-#include <CCA/Components/Models/Radiation/RMCRT/Ray.h>
-#ifdef HAVE_HYPRE
-#include <CCA/Components/Arches/Radiation/RadHypreSolver.h>
-#endif
-#include <CCA/Components/MPMArches/MPMArchesLabel.h>
-#include <CCA/Components/Arches/TimeIntegratorLabel.h>
-#include <CCA/Ports/DataWarehouse.h>
-#include <CCA/Ports/LoadBalancer.h>
-#include <CCA/Ports/Scheduler.h>
-#include <Core/Exceptions/InvalidValue.h>
-#include <Core/Exceptions/VariableNotFoundInGrid.h>
-#include <Core/Grid/Level.h>
-#include <Core/Grid/Patch.h>
-#include <Core/Grid/Variables/PerPatch.h>
-#include <Core/Grid/SimulationState.h>
-#include <Core/Grid/Task.h>
-#include <Core/Grid/Variables/VarTypes.h>
-#include <Core/Parallel/ProcessorGroup.h>
-#include <Core/ProblemSpec/ProblemSpec.h>
-#include <CCA/Components/Arches/SourceTerms/SourceTermFactory.h>
-#include <CCA/Components/Arches/SourceTerms/SourceTermBase.h>
 #include <CCA/Components/Arches/PropertyModels/PropertyModelBase.h>
 #include <CCA/Components/Arches/PropertyModels/PropertyModelFactory.h>
+#include <CCA/Components/Arches/RHSSolver.h>
+#include <CCA/Components/Arches/Radiation/DORadiationModel.h>
+#include <CCA/Components/Arches/Radiation/RadLinearSolver.h>
+#include <CCA/Components/Arches/Radiation/RadiationModel.h>
+#include <CCA/Components/Arches/Source.h>
+#include <CCA/Components/Arches/SourceTerms/SourceTermBase.h>
+#include <CCA/Components/Arches/SourceTerms/SourceTermFactory.h>
+#include <CCA/Components/Arches/TimeIntegratorLabel.h>
+#include <CCA/Components/Arches/TurbulenceModel.h>
+#include <CCA/Components/MPMArches/MPMArchesLabel.h>
+#include <CCA/Components/Models/Radiation/RMCRT/Ray.h>
+
+#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/Variables/PerPatch.h>
+#include <Core/Parallel/ProcessorGroup.h>
+
 
 using namespace Uintah;
 using namespace std;
@@ -181,7 +170,9 @@ EnthalpySolver::problemSetup(const ProblemSpecP& params)
   string limiter_type;
   if (d_conv_scheme == 1) {
     db->getWithDefault("limiter_type",limiter_type,"superbee");
-    if (limiter_type == "superbee"){ 
+    if (limiter_type == "minmod"){
+      d_limiter_type = -1;
+    } else if (limiter_type == "superbee"){ 
       d_limiter_type = 0;
     }else if (limiter_type == "vanLeer"){ 
       d_limiter_type = 1;
@@ -974,8 +965,9 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
                                                    d_energyEx);
         }
 
+          int wall = d_boundaryCondition->wallCellType();
           d_DORadiation->intensitysolve(pc, patch, cellinfo,
-                                        &enthalpyVars, &constEnthalpyVars);
+                                        &enthalpyVars, &constEnthalpyVars, wall );
       }
       IntVector indexLow = patch->getFortranCellLowIndex();
       IntVector indexHigh = patch->getFortranCellHighIndex();

@@ -5,8 +5,13 @@
   </Meta>
 
   <SimulationComponent type="wasatch"/>
-   <Solver type="CGSolver" />
+   <Solver type="hypre" />
   <Wasatch>
+
+    <Density>
+      <IsConstant>true</IsConstant>
+      <NameTag name="density" state="STATE_N" />
+    </Density>
 
     <!-- Set the initial condition expression for x-momentum -->
     <TaylorVortexMMS type="XVOL">
@@ -129,8 +134,8 @@
       <Box label="1">
         <lower>[0,0,0]</lower>
         <upper>[6.283185307179586,6.283185307179586,0.01]</upper>
-        <resolution>[60,60,2]</resolution>
-        <patches>[3,3,1]</patches>
+        <resolution>[64,64,2]</resolution>
+        <patches>[2,2,1]</patches>
       </Box>
       <periodic>[1,1,1]</periodic>
     </Level>

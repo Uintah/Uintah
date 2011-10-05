@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -30,6 +30,8 @@ DEALINGS IN THE SOFTWARE.
 
 #ifndef __PARTICLE_CREATOR_H__
 #define __PARTICLE_CREATOR_H__
+
+#include <Core/Thread/CrowdMonitor.h>
 
 #include <Core/GeometryPiece/GeometryPiece.h>
 #include <Core/Grid/Variables/CCVariable.h>
@@ -154,6 +156,8 @@ namespace Uintah {
     geomvecs d_object_forces;
     geomvecs d_object_fibers;  
     geomvecs d_object_velocity; // gcd add
+    
+    mutable CrowdMonitor   d_lock;
   };
 
 

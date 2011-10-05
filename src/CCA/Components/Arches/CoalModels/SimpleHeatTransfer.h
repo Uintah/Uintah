@@ -129,11 +129,6 @@ public:
   inline const VarLabel* getabskp(){
     return d_abskp; };  
   
-  /** @brief  Access function for radiation flag (on/off) */
-  inline bool getRadiationFlag(){
-    return b_radiation; };   
-
-
 private:
 
   //////////////////////////////////////////////////

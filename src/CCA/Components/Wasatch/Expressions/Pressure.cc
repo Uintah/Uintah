@@ -3,6 +3,7 @@
 //-- Wasatch Includes --//
 #include <CCA/Components/Wasatch/FieldAdaptor.h>
 #include <CCA/Components/Wasatch/FieldTypes.h>
+#include <CCA/Components/Wasatch/BCHelperTools.h>
 
 //-- Uintah Includes --//
 #include <CCA/Ports/SolverInterface.h>
@@ -44,11 +45,11 @@ Pressure::Pressure( const Expr::Tag& fxtag,
     // note that this does not provide any ghost entries in the matrix...
     matrixLabel_  ( Uintah::VarLabel::create( "pressure_matrix", Uintah::CCVariable<Uintah::Stencil7>::getTypeDescription() ) ),
     pressureLabel_( Uintah::VarLabel::create( (this->names())[0].name(), 
-                                              Wasatch::getUintahFieldTypeDescriptor<SVolField>(),
-                                              Wasatch::getUintahGhostDescriptor<SVolField>() ) ),
+                                              Wasatch::get_uintah_field_type_descriptor<SVolField>(),
+                                              Wasatch::get_uintah_ghost_descriptor<SVolField>() ) ),
     prhsLabel_    ( Uintah::VarLabel::create( (this->names())[1].name(), 
-                                              Wasatch::getUintahFieldTypeDescriptor<SVolField>(),
-                                              Wasatch::getUintahGhostDescriptor<SVolField>() ) )
+                                              Wasatch::get_uintah_field_type_descriptor<SVolField>(),
+                                              Wasatch::get_uintah_ghost_descriptor<SVolField>() ) )
 {
 }
 
@@ -66,10 +67,22 @@ Pressure::~Pressure()
 void
 Pressure::schedule_solver( const Uintah::LevelP& level,
                            Uintah::SchedulerP sched,
-                           const Uintah::MaterialSet* const materials )
+                           const Uintah::MaterialSet* const materials,
+                           int RKStage)
 {
+  // TODO: investigate why projection only works for the first RK stage when running
+  // in parallel (specifically hypre)
   solver_.scheduleSolve( level, sched, materials, matrixLabel_, 
-                         Uintah::Task::NewDW, pressureLabel_, true, prhsLabel_, Uintah::Task::NewDW, 0, Uintah::Task::OldDW, &solverParams_ );
+                        Uintah::Task::NewDW, pressureLabel_, true, prhsLabel_, Uintah::Task::NewDW, 0, Uintah::Task::OldDW, &solverParams_ );
+
+//  if (RKStage==1) {
+//    solver_.scheduleSolve( level, sched, materials, matrixLabel_, 
+//                          Uintah::Task::NewDW, pressureLabel_, true, prhsLabel_, Uintah::Task::NewDW, 0, Uintah::Task::OldDW, &solverParams_ );
+//  } else {
+////    solver_.scheduleSolve( level, sched, materials, matrixLabel_, 
+////                          Uintah::Task::NewDW, pressureLabel_, true, prhsLabel_, Uintah::Task::NewDW, pressureLabel_, Uintah::Task::NewDW, &solverParams_ );
+//  }
+
 }
 
 //--------------------------------------------------------------------
@@ -77,9 +90,13 @@ Pressure::schedule_solver( const Uintah::LevelP& level,
 void
 Pressure::declare_uintah_vars( Uintah::Task& task,
                                const Uintah::PatchSubset* const patches,
-                               const Uintah::MaterialSubset* const materials )
+                               const Uintah::MaterialSubset* const materials,
+                              int RKStage)
 {
-  task.computes( matrixLabel_, patches, Uintah::Task::NormalDomain, materials, Uintah::Task::NormalDomain );
+  if (RKStage ==1) 
+    task.computes( matrixLabel_, patches, Uintah::Task::NormalDomain, materials, Uintah::Task::NormalDomain );
+  else 
+    task.modifies( matrixLabel_, patches, Uintah::Task::NormalDomain, materials, Uintah::Task::NormalDomain );
 }
 
 //--------------------------------------------------------------------
@@ -87,14 +104,20 @@ Pressure::declare_uintah_vars( Uintah::Task& task,
 void
 Pressure::bind_uintah_vars( Uintah::DataWarehouse* const dw,
                            const Uintah::Patch* const patch,
-                           const int material)
+                           const int material,
+                           int RKStage)
 { 
   if (didAllocateMatrix_) {
+    //std::cout << "RKStage "<< RKStage << "did allocate matrix \n";
     // Todd: instead of checking for allocation - check for new timestep or some other ingenious solution
     // check for transferfrom - transfer matrix from old to new DW
-    dw->put( matrix_, matrixLabel_, material, patch ); 
+    if (RKStage==1) dw->put( matrix_, matrixLabel_, material, patch ); 
+    else dw->getModifiable( matrix_, matrixLabel_, material, patch ); 
+    //setup_matrix(patch);
   } else {
+    //std::cout << "RKStage "<< RKStage << "before allocate and put matrix \n";
     dw->allocateAndPut( matrix_, matrixLabel_, material, patch );    
+    ///std::cout << "after allocate and put matrix \n";    
     setup_matrix(patch);
     didAllocateMatrix_=true;
   }    
@@ -190,6 +213,15 @@ Pressure::setup_matrix(const Uintah::Patch* const patch)
     coefs.t = t;
     coefs.p = p;           
   }
+  
+  //
+//  typedef std::vector<SVolField*> SVolFieldVec;
+//  SVolFieldVec& results = this->get_value_vec();
+//  SVolField& pressureField = *results[0];
+//  SVolField& pRhs = *results[1];
+//  pRhs = 0.0;
+//  
+//  set_pressure_bc(this->name(),matrix_, pressureField, pRhs, patch);
 }
     
 //--------------------------------------------------------------------
@@ -204,16 +236,20 @@ Pressure::evaluate()
   // we would only need one field, not two...
   //SVolField* p = results[0];
   //SVolField* r = results[1];
-  //SVolField& pressure = *p;
+  SVolField& pressure = *results[0];
   //SVolField& rhs = *r;
   SVolField& rhs = *results[1];
   rhs = 0.0;
+  //
+  set_pressure_bc((this->names())[0],matrix_, pressure, rhs, patch_);
+  //
   namespace SS = SpatialOps::structured;
   const SS::MemoryWindow& w = rhs.window_with_ghost();
   SpatialOps::SpatFldPtr<SS::SSurfXField> tmpx  = SpatialOps::SpatialFieldStore<SS::SSurfXField >::self().get( w );
   SpatialOps::SpatFldPtr<SS::SSurfYField> tmpy  = SpatialOps::SpatialFieldStore<SS::SSurfYField >::self().get( w );
   SpatialOps::SpatFldPtr<SS::SSurfZField> tmpz  = SpatialOps::SpatialFieldStore<SS::SSurfZField >::self().get( w );
   SpatialOps::SpatFldPtr<SVolField> tmp = SpatialOps::SpatialFieldStore<SVolField>::self().get( rhs );
+  //set_pressure_bc(this->name(), pressure, rhs, patch);
   //___________________________________________________
   // calculate the RHS field for the poisson solve.
   // Note that this is "automagically" plugged into

@@ -2,7 +2,7 @@
 
    The MIT License
 
-   Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+   Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
    Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
    University of Utah.
 
@@ -349,6 +349,7 @@ namespace Uintah {
       std::vector<string> d_allDepVarNames;   ///< Vector storing all dependent variable names from the table file
 
       double _H_ox;                          ///< Adiabatic air enthalpy
+      double _H_fuel;                        ///< Adiabatic fuel enthalpy
 
       /** @brief Insert a varLabel into the map where the varlabel has been created elsewhere */ 
       inline void insertExisitingLabelIntoMap( const string var_name ){ 

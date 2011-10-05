@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -191,10 +191,10 @@ void FirstOrderAdvector::inFluxOutFluxVolume(
   }  // if total_fluxout > vol
   
   if (error && !bulletProof_test) {
-    ostringstream mesg;
-    cout << " WARNING: ICE Advection operator Influx/Outflux volume error:"
+    std::ostringstream mesg;
+    std::cout << " WARNING: ICE Advection operator Influx/Outflux volume error:"
          << " Patch " << patch->getID()
-         << ", Level " << patch->getLevel()->getIndex()<< endl;
+              << ", Level " << patch->getLevel()->getIndex()<< std::endl;
   }
 }
 

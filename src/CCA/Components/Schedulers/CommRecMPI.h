@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -53,13 +53,13 @@ public:
   // returns true while there are more tests to wait for.
   //bool waitsome(MPI_Comm comm, int me); // return false when all done
   //bool testsome(MPI_Comm comm, int me); // return false when all done
-  bool waitsome(const ProcessorGroup * pg, list<int>* finishedGroups = 0); 
+  bool waitsome(const ProcessorGroup * pg, std::list<int>* finishedGroups = 0); 
 
   // overload waitsome to take another CommRecMPI and do a waitsome on the
   // union of the two sets
   bool waitsome(const ProcessorGroup * pg, CommRecMPI &cr,
-		list<int>* finishedGroups = 0);
-  bool testsome(const ProcessorGroup * pg, list<int>* finishedGroups = 0); 
+		std::list<int>* finishedGroups = 0);
+  bool testsome(const ProcessorGroup * pg, std::list<int>* finishedGroups = 0); 
 
   void waitall(const ProcessorGroup * pg);
 
@@ -82,24 +82,24 @@ public:
 
   static double WaitTimePerMessage;
 private:  
-  vector<MPI_Request> ids;
-  vector<int> groupIDs;  
-  vector<AfterCommunicationHandler*> handlers; 
-  vector<int> byteCounts;
-  vector<string> vars;
-  vector<int> messageNums;
+  std::vector<MPI_Request> ids;
+  std::vector<int> groupIDs;  
+  std::vector<AfterCommunicationHandler*> handlers; 
+  std::vector<int> byteCounts;
+  std::vector<string> vars;
+  std::vector<int> messageNums;
 
-  map<int, int> groupWaitCount_; // groupID -> # receives waiting
+  std::map<int, int> groupWaitCount_; // groupID -> # receives waiting
   int groupIDDefault_;
   
   int totalBytes_;
   
   // temporary, used in calls to waitsome, testsome, and waitall
-  vector<MPI_Status> statii;
-  vector<int> indices;
+  std::vector<MPI_Status> statii;
+  std::vector<int> indices;
 
-  bool donesome(const ProcessorGroup * pg, int donecount, vector<MPI_Status> &statii,
-		list<int>* finishedGroups = 0);
+  bool donesome(const ProcessorGroup * pg, int donecount, std::vector<MPI_Status> &statii,
+		std::list<int>* finishedGroups = 0);
 };
 
 // AfterCommunicationHandler is defined in BufferInfo.h with Sendlist

@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -157,6 +157,7 @@ void BCGeomBase::determineIteratorLimits(Patch::FaceType face,
 
 void BCGeomBase::printLimits() const
 {
+  using namespace std;
   cout << endl;
   cout << "d_cells = " << d_cells.begin() << " " << d_cells.end() << endl;
   cout << "d_nodes = " << d_nodes.begin() << " " << d_nodes.end() << endl;
