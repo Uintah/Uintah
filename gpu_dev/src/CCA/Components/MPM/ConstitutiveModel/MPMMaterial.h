@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -150,14 +150,14 @@ WARNING
                               CCVariable<double>& rhC,
                               CCVariable<double>& temp,   
                               CCVariable<Vector>& vCC,
-                              int numMatls,
+                              CCVariable<double>& vfCC,
                               const Patch* patch);
 
    void initializeDummyCCVariables(CCVariable<double>& rhom,
                                    CCVariable<double>& rhC,
                                    CCVariable<double>& temp,   
                                    CCVariable<Vector>& vCC,
-                                   int numMatls,
+                                   CCVariable<double>& vfCC,
                                    const Patch* patch);
 
  private:

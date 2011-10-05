@@ -2,7 +2,7 @@
 # 
 # The MIT License
 # 
-# Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+# Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 # Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 # University of Utah.
 # 
@@ -51,8 +51,7 @@ ifeq ($(BUILD_ARCHES),yes)
   ifeq ($(BUILD_MPM),yes)
     MPMARCHES_LIB    = $(COMPONENTS)/MPMArches
   endif
-  ARCHES_LIBS        = $(COMPONENTS)/Arches             \
-                       $(COMPONENTS)/SpatialOps
+  ARCHES_LIBS        = $(COMPONENTS)/Arches
 endif
 
 ifeq ($(BUILD_MPM),yes)
@@ -162,14 +161,15 @@ endif
 ifeq ($(IS_STATIC_BUILD),yes)
   LIBS := $(CORE_STATIC_LIBS) $(ZOLTAN_LIBRARY)    \
           $(HDF5_LIBRARY) $(BOOST_LIBRARY)         \
-          $(EXPRLIB_LIBRARY) $(SPATIALOPS_LIBRARY) $(TABPROPS_LIBRARY)
+          $(EXPRLIB_LIBRARY) $(SPATIALOPS_LIBRARY) \
+          $(TABPROPS_LIBRARY) $(PAPI_LIBRARY)
 else
   LIBS := $(MPI_LIBRARY) $(XML2_LIBRARY) $(F_LIBRARY) $(HYPRE_LIBRARY)      \
           $(CANTERA_LIBRARY) $(ZOLTAN_LIBRARY)               \
           $(PETSC_LIBRARY) $(BLAS_LIBRARY) $(LAPACK_LIBRARY) \
           $(M_LIBRARY) $(THREAD_LIBRARY) $(Z_LIBRARY) \
           $(TEEM_LIBRARY) $(PNG_LIBRARY) \
-          $(BOOST_LIBRARY) $(CUDA_LIBRARY)
+          $(BOOST_LIBRARY) $(CUDA_LIBRARY) $(PAPI_LIBRARY)
 endif
 
 include $(SCIRUN_SCRIPTS)/program.mk
@@ -262,7 +262,6 @@ uintah: sus \
         link_inputs \
         link_scripts \
         link_tools \
-        link_regression_tester \
         link_localRT \
 	$(VISIT_STUFF)
 
@@ -323,7 +322,7 @@ ifeq ($(IS_REDSTORM),yes)
 	@echo "Built sus"
 endif
 
-tools: puda dumpfields compare_uda compute_Lnorm_udas restart_merger partextract partvarRange selectpart async_mpi_test mpi_test extractV extractF extractS gambitFileReader slb pfs pfs2 timeextract faceextract lineextract compare_mms compare_scalar fsspeed
+tools: puda dumpfields compare_uda compute_Lnorm_udas restart_merger partextract partvarRange selectpart async_mpi_test mpi_test extractV extractF extractS gambitFileReader slb pfs pfs2 rawToUniqueGrains timeextract faceextract lineextract compare_mms compare_scalar fsspeed
 
 puda: prereqs StandAlone/tools/puda/puda
 
@@ -358,6 +357,8 @@ slb: prereqs StandAlone/slb
 pfs: prereqs StandAlone/tools/pfs/pfs
 
 pfs2: prereqs StandAlone/tools/pfs/pfs2
+
+rawToUniqueGrains: prereqs StandAlone/tools/pfs/rawToUniqueGrains
 
 timeextract: StandAlone/tools/extractors/timeextract
 

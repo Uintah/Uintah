@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -37,6 +37,7 @@ DEALINGS IN THE SOFTWARE.
 // ensure that one can get the same answer using prescribed
 // contact as can be gotten using "automatic" contact.
 #include <CCA/Components/MPM/Contact/SingleVelContact.h>
+#include <CCA/Components/MPM/MPMBoundCond.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Grid/Grid.h>
@@ -88,6 +89,7 @@ void SingleVelContact::exMomInterpolated(const ProcessorGroup*,
                                          DataWarehouse*,
                                          DataWarehouse* new_dw)
 {
+  string interp_type = flag->d_interpolator_type;
   int numMatls = d_sharedState->getNumMPMMatls();
   ASSERTEQ(numMatls, matls->size());
   for(int p=0;p<patches->size();p++){
@@ -123,6 +125,12 @@ void SingleVelContact::exMomInterpolated(const ProcessorGroup*,
           gvelocity[n][c] = centerOfMassVelocity;
         }
       }
+    }
+
+    for(int m=0;m<matls->size();m++){
+      int dwi = matls->get(m);
+      MPMBoundCond bc;
+      bc.setBoundaryCondition(patch, dwi, "Symmetric",gvelocity[m],interp_type);
     }
   }
 }
@@ -192,7 +200,7 @@ void SingleVelContact::addComputesAndRequiresInterpolated(SchedulerP & sched,
   t->requires( Task::NewDW, lb->gMassLabel,          Ghost::None);
 
   t->modifies(              lb->gVelocityLabel, mss);
-  
+
   sched->addTask(t, patches, ms);
 }
 

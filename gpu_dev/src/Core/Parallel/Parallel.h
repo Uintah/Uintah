@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -31,7 +31,7 @@ DEALINGS IN THE SOFTWARE.
 #ifndef UINTAH_HOMEBREW_PARALLEL_H
 #define UINTAH_HOMEBREW_PARALLEL_H
 
-#include   <string>
+#include <iostream>
 
 #include <Core/Parallel/uintahshare.h>
 
@@ -39,7 +39,7 @@ DEALINGS IN THE SOFTWARE.
 //
 //   Make sure that MPI_Init is called before using 'proc0cout'...
 //
-#define proc0cout if( Uintah::Parallel::getMPIRank() == 0 ) cout
+#define proc0cout if( Uintah::Parallel::getMPIRank() == 0 ) std::cout
 
 namespace Uintah {
 

@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -64,6 +64,9 @@ DEALINGS IN THE SOFTWARE.
 #include <cfloat>
 #include <cstdio>
 #include <Core/Util/DebugStream.h>
+
+#include <iomanip>
+
 
 using namespace Uintah;
 using namespace std;
@@ -294,12 +297,22 @@ void MPMICE::scheduleInitialize(const LevelP& level,
   Task* t = scinew Task("MPMICE::actuallyInitialize",
                   this, &MPMICE::actuallyInitialize);
                   
-  t->computes(MIlb->vel_CCLabel);
-  t->computes(Ilb->rho_CCLabel); 
-  t->computes(Ilb->temp_CCLabel);
-  t->computes(Ilb->sp_vol_CCLabel);
-  t->computes(Ilb->speedSound_CCLabel); 
-  t->computes(Mlb->heatRate_CCLabel);
+  // Get the material subsets
+  const MaterialSubset* ice_matls = d_sharedState->allICEMaterials()->getUnion();
+  const MaterialSubset* mpm_matls = d_sharedState->allMPMMaterials()->getUnion();
+
+  // These values are calculated for ICE materials in d_ice->actuallyInitialize(...)
+  //  so they are only needed for MPM
+  t->computes(MIlb->vel_CCLabel,       mpm_matls);
+  t->computes(Ilb->rho_CCLabel,        mpm_matls); 
+  t->computes(Ilb->temp_CCLabel,       mpm_matls);
+  t->computes(Ilb->sp_vol_CCLabel,     mpm_matls);
+  t->computes(Ilb->speedSound_CCLabel, mpm_matls); 
+  t->computes(Mlb->heatRate_CCLabel,   mpm_matls);
+
+  // This is compute in d_ice->actuallyInitalize(...), and it is needed in 
+  //  MPMICE's actuallyInitialize()
+  t->requires(Task::NewDW, Ilb->vol_frac_CCLabel, ice_matls, Ghost::None, 0);
 
   if (d_switchCriteria) {
     d_switchCriteria->scheduleInitialize(level,sched);
@@ -311,7 +324,7 @@ void MPMICE::scheduleInitialize(const LevelP& level,
     d_analysisModule->scheduleInitialize( sched, level);
   }
     
-  sched->addTask(t, level->eachPatch(), d_sharedState->allMPMMaterials());
+  sched->addTask(t, level->eachPatch(), d_sharedState->allMaterials());
 }
 
 //______________________________________________________________________
@@ -1024,46 +1037,65 @@ void MPMICE::actuallyInitialize(const ProcessorGroup*,
       cout << "\n";
     }
 
+    // Sum variable for testing that the volume fractions sum to 1
+    CCVariable<double> vol_frac_sum;
+    new_dw->allocateTemporary(vol_frac_sum, patch);
+    vol_frac_sum.initialize(0.0);
+
     //__________________________________
     //  Initialize CCVaribles for MPM Materials
     //  Even if mass = 0 in a cell you still need
     //  CC Variables defined.
     double junk=-9, tmp;
-    int numALL_matls = d_sharedState->getNumMatls();
     int numMPM_matls = d_sharedState->getNumMPMMatls();
     double p_ref = d_ice->getRefPress();
     for (int m = 0; m < numMPM_matls; m++ ) {
-      CCVariable<double> rho_micro, sp_vol_CC, rho_CC, Temp_CC, speedSound;
+      CCVariable<double> rho_micro, sp_vol_CC, rho_CC, Temp_CC, speedSound, vol_frac_CC;
       CCVariable<Vector> vel_CC;
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
       int indx= mpm_matl->getDWIndex();
       new_dw->allocateTemporary(rho_micro, patch);
-      new_dw->allocateAndPut(sp_vol_CC, Ilb->sp_vol_CCLabel,    indx,patch);
-      new_dw->allocateAndPut(rho_CC,    Ilb->rho_CCLabel,       indx,patch);
-      new_dw->allocateAndPut(speedSound,Ilb->speedSound_CCLabel,indx,patch);
-      new_dw->allocateAndPut(Temp_CC,  MIlb->temp_CCLabel,      indx,patch);
-      new_dw->allocateAndPut(vel_CC,   MIlb->vel_CCLabel,       indx,patch);
+      // Allocate volume fraction for use in intializeCCVariables
+      new_dw->allocateTemporary(vol_frac_CC,patch);
+      new_dw->allocateAndPut(sp_vol_CC,   Ilb->sp_vol_CCLabel,    indx,patch);
+      new_dw->allocateAndPut(rho_CC,      Ilb->rho_CCLabel,       indx,patch);
+      new_dw->allocateAndPut(speedSound,  Ilb->speedSound_CCLabel,indx,patch);
+      new_dw->allocateAndPut(Temp_CC,    MIlb->temp_CCLabel,      indx,patch);
+      new_dw->allocateAndPut(vel_CC,     MIlb->vel_CCLabel,       indx,patch);
+
 
       CCVariable<double> heatFlux;
       new_dw->allocateAndPut(heatFlux, Mlb->heatRate_CCLabel,    indx, patch);
       heatFlux.initialize(0.0);
 
+/*`==========TESTING==========*/
+#if 0
+  09/09/11  Jim is going to check with BB to see if we can delete the particle addition
       // Ignore the dummy materials that are used when particles are
       // localized
       if (d_mpm->flags->d_createNewParticles) {
         if (m%2 == 0) // The actual materials
           mpm_matl->initializeCCVariables(rho_micro,   rho_CC,
-                                          Temp_CC,     vel_CC,  
-                                          numALL_matls,patch);  
+                                          Temp_CC,     vel_CC,
+                                          vol_frac_CC, patch);  
         else // The dummy materials
           mpm_matl->initializeDummyCCVariables(rho_micro,   rho_CC,
                                                Temp_CC,     vel_CC,  
-                                               numALL_matls,patch);  
+                                               vol_frac_CC, patch);  
       } else {
         mpm_matl->initializeCCVariables(rho_micro,   rho_CC,
                                         Temp_CC,     vel_CC,  
-                                        numALL_matls,patch);  
+                                        vol_frac_CC, patch);  
       }
+#endif 
+/*===========TESTING==========`*/      
+      
+      mpm_matl->initializeCCVariables(rho_micro,   rho_CC,
+                                      Temp_CC,     vel_CC,  
+                                      vol_frac_CC, patch);
+      
+      
+      
 
       setBC(rho_CC,    "Density",      patch, d_sharedState, indx, new_dw);    
       setBC(rho_micro, "Density",      patch, d_sharedState, indx, new_dw);    
@@ -1077,6 +1109,9 @@ void MPMICE::actuallyInitialize(const ProcessorGroup*,
         mpm_matl->getConstitutiveModel()->
             computePressEOSCM(rho_micro[c],junk, p_ref, junk, tmp,mpm_matl,Temp_CC[c]); 
         speedSound[c] = sqrt(tmp);
+
+        // sum volume fraction
+        vol_frac_sum[c] += vol_frac_CC[c];
       }
       
       //__________________________________
@@ -1098,7 +1133,7 @@ void MPMICE::actuallyInitialize(const ProcessorGroup*,
             <<neg_cell << " sp_vol_CC is negative\n";
         throw ProblemSetupException(warn.str(), __FILE__, __LINE__ );
       }
-      
+
       //---- P R I N T   D A T A ------        
       if (d_ice->switchDebug_Initialize){      
         ostringstream desc;
@@ -1111,6 +1146,41 @@ void MPMICE::actuallyInitialize(const ProcessorGroup*,
         d_ice->printVector(indx, patch,1, desc.str(), "vel_CC", 0,   vel_CC);
       }             
     }  // num_MPM_matls loop 
+
+    //___________________________________
+    //   B U L L E T  P R O O F I N G
+    // Verify volume fractions sum to 1.0
+    // Loop through ICE materials to get their contribution to volume fraction
+    int numICE_matls = d_sharedState->getNumICEMatls();
+    for (int m = 0; m < numICE_matls; m++ ) {
+      constCCVariable<double> vol_frac;
+      ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
+      int indx= ice_matl->getDWIndex();
+
+      // Get the Volume Fraction computed in ICE's actuallyInitialize(...)
+      new_dw->get(vol_frac, Ilb->vol_frac_CCLabel, indx, patch, Ghost::None, 0);
+      
+      for (CellIterator iter = patch->getCellIterator(); !iter.done();iter++){
+        IntVector c = *iter;
+        vol_frac_sum[c] += vol_frac[c];
+      }
+    }  // num_ICE_matls loop
+
+    double errorThresholdTop    = 1.0e0 + 1.0e-10;
+    double errorThresholdBottom = 1.0e0 - 1.0e-10;
+
+    for (CellIterator iter = patch->getCellIterator(); !iter.done();iter++){
+      IntVector c = *iter;
+      
+      if(!(vol_frac_sum[c] <= errorThresholdTop && vol_frac_sum[c] >= errorThresholdBottom)){\
+        ostringstream warn;
+        warn << "ERROR MPMICE::actuallyInitialize cell " << *iter << "\n\n"
+             << "volume fraction ("<< std::setprecision(13)<< vol_frac_sum[*iter] << ") does not sum to 1.0 +- 1e-10.\n"
+             << "Verify that this region of the domain contains at least 1 geometry object.  If you're using the optional\n"
+             << "'volumeFraction' tags verify that they're correctly specified.\n";
+        throw ProblemSetupException(warn.str(), __FILE__, __LINE__ );
+      }
+    } // cell iterator for volume fraction
   } // Patch loop
 }
 
@@ -2355,11 +2425,12 @@ void MPMICE::actuallyInitializeAddedMPMMaterial(const ProcessorGroup*,
     int m    = d_sharedState->getNumMPMMatls() - 1;
     int indx = d_sharedState->getNumMatls() - 1;
     double p_ref = d_ice->getRefPress();
-    CCVariable<double> rho_micro, sp_vol_CC, rho_CC, Temp_CC, speedSound;
+    CCVariable<double> rho_micro, sp_vol_CC, rho_CC, Temp_CC, speedSound, vol_frac_CC;
     CCVariable<double>  heatRate_CC;
     CCVariable<Vector> vel_CC;
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
-    new_dw->allocateTemporary(rho_micro, patch);
+    new_dw->allocateTemporary(rho_micro,   patch);
+    new_dw->allocateTemporary(vol_frac_CC, patch);
     new_dw->allocateAndPut(sp_vol_CC, Ilb->sp_vol_CCLabel,    indx,patch);
     new_dw->allocateAndPut(rho_CC,    Ilb->rho_CCLabel,       indx,patch);
     new_dw->allocateAndPut(speedSound,Ilb->speedSound_CCLabel,indx,patch);
@@ -2370,7 +2441,8 @@ void MPMICE::actuallyInitializeAddedMPMMaterial(const ProcessorGroup*,
     heatRate_CC.initialize(0.0);
 
     mpm_matl->initializeDummyCCVariables(rho_micro,   rho_CC,
-                                         Temp_CC,     vel_CC, 0,patch);
+                                         Temp_CC,     vel_CC, 
+                                         vol_frac_CC, patch);
 
     setBC(rho_CC,    "Density",      patch, d_sharedState, indx, new_dw);
     setBC(rho_micro, "Density",      patch, d_sharedState, indx, new_dw);
@@ -2647,19 +2719,20 @@ MPMICE::refine(const ProcessorGroup*,
       new_dw->allocateAndPut(heatFlux, Mlb->heatRate_CCLabel, dwi, patch);
       heatFlux.initialize(0.0);
 
-      CCVariable<double> rho_micro, sp_vol_CC, rho_CC, Temp_CC;
+      CCVariable<double> rho_micro, sp_vol_CC, rho_CC, Temp_CC, vol_frac_CC;
       CCVariable<Vector> vel_CC;
 
-      new_dw->allocateTemporary(rho_micro, patch);
-      new_dw->allocateTemporary(rho_CC,    patch);
+      new_dw->allocateTemporary(rho_micro,   patch);
+      new_dw->allocateTemporary(rho_CC,      patch);
+      new_dw->allocateTemporary(vol_frac_CC, patch);
 
       new_dw->allocateAndPut(sp_vol_CC,   Ilb->sp_vol_CCLabel,    dwi,patch);
       new_dw->allocateAndPut(Temp_CC,     MIlb->temp_CCLabel,     dwi,patch);
       new_dw->allocateAndPut(vel_CC,      MIlb->vel_CCLabel,      dwi,patch);
 
       mpm_matl->initializeDummyCCVariables(rho_micro,   rho_CC,
-                                           Temp_CC,     vel_CC,  
-                                          d_sharedState->getNumMatls(),patch);  
+                                           Temp_CC,     vel_CC,
+                                           vol_frac_CC, patch);  
       //__________________________________
       //  Set boundary conditions                                     
       setBC(rho_micro, "Density",      patch, d_sharedState, dwi, new_dw);    

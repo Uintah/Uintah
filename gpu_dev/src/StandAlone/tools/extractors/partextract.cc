@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -83,7 +83,8 @@ void getParticleStresses(DataArchive* da, int mat, long64 particleID,
 		         string flag);
 void printParticleVariable(DataArchive* da, int mat, string particleVariable,
                            long64 particleID, unsigned long time_step_lower,
-                           unsigned long time_step_upper);
+                           unsigned long time_step_upper,
+                           unsigned long time_step_inc);
 void computeEquivStress(const Matrix3& sig, double& sigeqv);
 void computeEquivStrain(const Matrix3& F, double& epseqv);
 void computeTrueStrain(const Matrix3& F, Vector& strain);
@@ -235,7 +236,7 @@ int main(int argc, char** argv)
         abort();
       }
       printParticleVariable(da, mat, particleVariable, particleID, 
-                            time_step_lower, time_step_upper);
+                            time_step_lower, time_step_upper, time_step_inc);
     }
   } catch (Exception& e) {
     cerr << "Caught exception: " << e.message() << endl;
@@ -741,7 +742,8 @@ void printParticleVariable(DataArchive* da,
                            string particleVariable,
                            long64 particleID,
                            unsigned long time_step_lower,
-                           unsigned long time_step_upper){
+                           unsigned long time_step_upper,
+                           unsigned long time_step_inc){
 
   // Check if the particle variable is available
   vector<string> vars;
@@ -767,7 +769,7 @@ void printParticleVariable(DataArchive* da,
   //cout << "There are " << index.size() << " timesteps:\n";
       
   // Loop thru all time steps and store the volume and variable (stress/strain)
-  for(unsigned long t=time_step_lower;t<=time_step_upper;t++){
+  for(unsigned long t=time_step_lower;t<=time_step_upper;t+=time_step_inc){
     double time = times[t];
     //cout << "Time = " << time << endl;
     GridP grid = da->queryGrid(t);

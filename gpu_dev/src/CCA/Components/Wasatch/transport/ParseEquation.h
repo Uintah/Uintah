@@ -26,6 +26,8 @@ namespace Wasatch{
    *  \class EqnTimestepAdaptorBase
    *  \author James C. Sutherland
    *  \date June, 2010
+   *  \modifier Amir Biglari
+   *  \date July, 2011
    *
    *  This serves as a means to have a container of adaptors.  These
    *  adaptors will plug a strongly typed transport equation into a
@@ -52,6 +54,10 @@ namespace Wasatch{
    *  \param params the tag from the input file specifying the
    *         transport equation.
    *
+   *  \param densityTag a tag for the density to be passed to 
+   *         the scalar transport equations if it is needed.
+   *         othwise it will be an empty tag.
+   *
    *  \param gc the GraphCategories.
    *
    *  \return an EqnTimestepAdaptorBase object that can be used to
@@ -59,13 +65,15 @@ namespace Wasatch{
    */
   EqnTimestepAdaptorBase*
   parse_equation( Uintah::ProblemSpecP params,
-                 GraphCategories& gc );
+                  const Expr::Tag densityTag,
+                  const bool isConstDensity,
+                  GraphCategories& gc );
   
   /**
    *  \brief Build the momentum equation specified by "params"
    *
    *  \param params The XML block from the input file specifying the
-   *         momentum equation. This will be <MomentumEquations>.
+   *         momentum equation. This will be \verbatim <MomentumEquations>\endverbatim.
    *
    *  \param gc The GraphCategories.
    *
@@ -73,13 +81,13 @@ namespace Wasatch{
    *          plug this transport equation into a TimeStepper.
    */  
   std::vector<EqnTimestepAdaptorBase*> parse_scalability_test( Uintah::ProblemSpecP params,
-                                                                GraphCategories& gc );  
+                                                               GraphCategories& gc );  
   
   /**
    *  \brief Build the momentum equation specified by "params"
    *
    *  \param params The XML block from the input file specifying the
-   *         momentum equation. This will be <MomentumEquations>.
+   *         momentum equation. This will be \verbatim <MomentumEquations>\endverbatim.
    *
    *  \param gc The GraphCategories.
    *
@@ -87,8 +95,35 @@ namespace Wasatch{
    *          plug this transport equation into a TimeStepper.
    */  
   std::vector<EqnTimestepAdaptorBase*> parse_momentum_equations( Uintah::ProblemSpecP params,
-                                                   GraphCategories& gc,
-                                                   Uintah::SolverInterface& linSolver);
+                                                                 const Expr::Tag densityTag,
+                                                                 GraphCategories& gc,
+                                                                 Uintah::SolverInterface& linSolver);
+  
+  /**
+   *  \brief Build moment transport equations specified by "params"
+   *
+   *  \param params The XML block from the input file specifying the
+   *         momentum equation. This will be <MomentumEquations>.
+   *
+   *  \param densityTag a tag for the density to be passed to 
+   *         the momentum equations if it is needed. othwise 
+   *         it will be an empty tag.
+   *
+   *  \param gc The GraphCategories.
+   *
+   *  \return a vector of EqnTimestepAdaptorBase objects that can be used to
+   *          plug this transport equation into a TimeStepper.
+   */  
+  std::vector<EqnTimestepAdaptorBase*> parse_moment_transport_equations( Uintah::ProblemSpecP params,
+                                                                        GraphCategories& gc);
+
+//  template<typename FieldT>
+//  void process_moment_transport_qmom(Uintah::ProblemSpecP params,
+//                                     Expr::ExpressionFactory& factory,
+//                                     Expr::TagList& transportedMomentTags,
+//                                     Expr::TagList& abscissaeTags,
+//                                     Expr::TagList& weightsTags);
+  
 
   /** @} */
 

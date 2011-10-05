@@ -109,7 +109,7 @@ void ABSKP::computeProp(const ProcessorGroup* pc,
     for (iter.begin(); !iter.done(); iter++){
 
       for( HeatTransferModelMap::iterator iModel = heatmodels_.begin(); iModel != heatmodels_.end(); ++iModel ) {
-        int modelNode = iModel->second->getquadNode();
+        //int modelNode = iModel->second->getquadNode();
         const VarLabel* tempabskpLabel = iModel->second->getabskpLabel();
         constCCVariable<double> qn_abskp;
         old_dw->get( qn_abskp, tempabskpLabel, matlIndex, patch, gn, 0 );

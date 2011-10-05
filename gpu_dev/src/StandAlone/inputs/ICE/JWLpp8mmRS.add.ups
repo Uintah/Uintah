@@ -160,7 +160,7 @@
     <MaterialProperties>
        <ICE>
          <material name = "reactant">
-           <include href="include/ICE/EOSData/MurnahanEOSANFO.xml"/>
+           <include href="include/ICE/EOSData/MurnaghanEOSANFO.xml"/>
            <dynamic_viscosity>      0.0                 </dynamic_viscosity>
            <thermal_conductivity>   0.0                 </thermal_conductivity>
            <specific_heat>          1515.31             </specific_heat>

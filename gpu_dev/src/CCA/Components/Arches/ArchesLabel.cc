@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -36,6 +36,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Variables/PerPatch.h>
 #include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/Variables/SoleVariable.h>
 #include <Core/Grid/Variables/SFCXVariable.h>
 #include <Core/Grid/Variables/SFCYVariable.h>
 #include <Core/Grid/Variables/SFCZVariable.h>
@@ -147,6 +148,7 @@ ArchesLabel::ArchesLabel()
   // labels for ref density and pressure
   d_refDensity_label      =  VarLabel::create("refDensityLabel",      sum_variable);
   d_refDensityPred_label  =  VarLabel::create("refDensityPredLabel",  sum_variable);
+  d_refPressurePred_label =  VarLabel::create("refPressurePredLabel", sum_variable);
   d_refPressure_label     =  VarLabel::create("refPressureLabel",     sum_variable);
 
   // Scalar 
@@ -319,7 +321,8 @@ ArchesLabel::ArchesLabel()
 //   d_odtDataLabel = VarLabel::create("odtDataLabel",CCVariable<odtData>::getTypeDescription());
 
   // Runge-Kutta 3d order properties labels
-  d_refDensityInterm_label = VarLabel::create("refDensityIntermLabel",  sum_variable);
+  d_refDensityInterm_label  = VarLabel::create("refDensityIntermLabel",  sum_variable);
+  d_refPressureInterm_label = VarLabel::create("refPressureIntermLabel", sum_variable);
 
   // Runge-Kutta 3d order pressure and momentum labels
   d_pressureIntermLabel     = VarLabel::create("pressureInterm",     CC_double);
@@ -584,6 +587,7 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_reactscalNonLinSrcSBLMLabel);
   VarLabel::destroy(d_refDensity_label);
   VarLabel::destroy(d_refDensityPred_label);
+  VarLabel::destroy(d_refPressurePred_label);
   VarLabel::destroy(d_refPressure_label);
   VarLabel::destroy(d_oldCCVelocityLabel);
   VarLabel::destroy(d_newCCVelocityLabel);
@@ -670,6 +674,7 @@ ArchesLabel::~ArchesLabel()
   
  // Runge-Kutta 3d order properties labels
   VarLabel::destroy(d_refDensityInterm_label);
+  VarLabel::destroy(d_refPressureInterm_label);
  // Runge-Kutta 3d order pressure and momentum labels
   VarLabel::destroy(d_pressureIntermLabel);
 // labels for scale similarity model

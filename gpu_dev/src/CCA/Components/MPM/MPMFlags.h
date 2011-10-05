@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -114,6 +114,7 @@ namespace Uintah {
     bool        d_with_ice;
     bool        d_with_arches;
     bool        d_use_momentum_form;
+    std::string d_mms_type;  // MMS Flag
     
     // flags for turning on/off the reduction variable calculations
     struct reductionVars{

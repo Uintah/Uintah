@@ -248,7 +248,7 @@
     </MPM>
     <ICE>
       <material name = "reactant">
-        <EOS type = "Murnahan">
+        <EOS type = "Murnaghan">
           <n>    7.0      </n>
           <K>    1.02e-9  </K>
           <rho0> 1260.0   </rho0>

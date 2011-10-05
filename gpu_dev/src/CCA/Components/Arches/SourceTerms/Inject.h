@@ -11,7 +11,7 @@
 /** 
  *  @class  Inject
  *  @author Jeremy Thornock
- *  @date   Aug, 2010
+ *  @date   Aug, 2011
  *
  *  @brief A source term for "injecting" sources into transported variables in regions 
  *         of the flow specified by geom_objects

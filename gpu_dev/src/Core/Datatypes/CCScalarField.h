@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -47,15 +47,14 @@ DEALINGS IN THE SOFTWARE.
 namespace Uintah {
 
   using namespace SCIRun;
-  using std::vector;
 
 template <class T>
 class CCScalarField : public ScalarFieldRGBase {
 public:
   CCScalarField();
   CCScalarField(const CCScalarField<T>&);
-  CCScalarField(GridP grid, LevelP level, string var, int mat,
-		const vector< CCVariable<T> >& vars);
+  CCScalarField(GridP grid, LevelP level, std::string var, int mat,
+		const std::vector< CCVariable<T> >& vars);
   virtual ~CCScalarField() {}
   virtual ScalarField* clone();
 
@@ -77,15 +76,15 @@ public:
 
   void SetGrid( GridP g ){ _grid = g; }
   void SetLevel( LevelP l){ _level = l; }
-  void SetName( string vname ) { _varname = vname; }
+  void SetName( std::string vname ) { _varname = vname; }
   void SetMaterial( int index) { _matIndex = index; }
   void AddVar( const CCVariable<T>& var,  const Patch* p);
 
 private:
-  vector< CCVariable<T> > _vars;
+  std::vector< CCVariable<T> > _vars;
   GridP _grid;
   LevelP _level;
-  string _varname;
+  std::string _varname;
   int _matIndex;
   IntVector high;
   IntVector low;
@@ -117,8 +116,8 @@ CCScalarField<T>::CCScalarField(const CCScalarField<T>& copy)
 
 template <class T>
 CCScalarField<T>::CCScalarField(GridP grid, LevelP level,
-				string var, int mat,
-				const vector< CCVariable<T> >& vars)
+				std::string var, int mat,
+				const std::vector< CCVariable<T> >& vars)
   : ScalarFieldRGBase(), _grid(grid), _level(level),
     _varname(var), _matIndex(mat),
    high(-INT_MAX,-INT_MAX,-INT_MAX),

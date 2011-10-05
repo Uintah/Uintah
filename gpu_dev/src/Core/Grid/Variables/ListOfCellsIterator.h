@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -34,7 +34,6 @@ DEALINGS IN THE SOFTWARE.
 
 #include <climits>
 #include <vector>
-using namespace std;
 
 #include <Core/Geometry/IntVector.h>
 #include <Core/Malloc/Allocator.h>
@@ -75,7 +74,7 @@ namespace Uintah {
 
   class UINTAHSHARE ListOfCellsIterator : public BaseIterator {
 
-    friend ostream& operator<<(std::ostream& out, const Uintah::ListOfCellsIterator& b);
+    friend std::ostream& operator<<(std::ostream& out, const Uintah::ListOfCellsIterator& b);
 
     public:
 
@@ -150,20 +149,20 @@ namespace Uintah {
 
     };
     
-    virtual ostream& put(std::ostream& out) const
+    virtual std::ostream& put(std::ostream& out) const
     {
       out << *this;
       return out;
     }
 
-    virtual ostream& limits(std::ostream& out) const
+    virtual std::ostream& limits(std::ostream& out) const
     {
       out << begin() << " " << end();
       return out;
     }
 
     //vector to store cells
-    vector<IntVector> listOfCells_;
+    std::vector<IntVector> listOfCells_;
 
     //index into the iterator
     unsigned int index_;

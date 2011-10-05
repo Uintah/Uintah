@@ -7,7 +7,7 @@
        <title>Poisson1 test</title>
    </Meta>
 
-   <SimulationComponent type="poisson1" />
+   <SimulationComponent type="particletest" />
 
    <Time>
        <maxTime>1000.0</maxTime>

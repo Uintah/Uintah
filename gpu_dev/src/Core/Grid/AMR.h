@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -660,7 +660,7 @@ template<class T>
 {
   // piecewise constant
   if(orderOfInterpolation == 0){
-    cout << " pieceWise constant Interpolator " << endl;
+    std::cout << " pieceWise constant Interpolator " << std::endl;
     piecewiseConstantInterpolation(q_CL, fineLevel,fl, fh, q_FineLevel);
   }
   // linear
@@ -672,11 +672,11 @@ template<class T>
   if(orderOfInterpolation == 2){
   
 #if 0
-//    cout << " colella's quadratic interpolator" << endl;
+//    std::cout << " colella's quadratic interpolator" << std::endl;
     quadraticInterpolation_CFI<T>(q_CL, finePatch, patchFace,coarseLevel, 
                                   fineLevel, refineRatio, fl, fh,q_FineLevel);
 #else
-//    cout << " standard quadratic Interpolator" << endl;
+//    std::cout << " standard quadratic Interpolator" << std::endl;
     quadraticInterpolation<T>(q_CL, coarseLevel, fineLevel,
                               refineRatio, fl,fh, q_FineLevel);
 #endif
@@ -693,7 +693,7 @@ _____________________________________________________________________*/
 template<class T>
   void interpolationTest_helper( CCVariable<T>& q_FineLevel,
                                  CCVariable<T>& q_CL,
-                                 const string& desc,
+                                 const std::string& desc,
                                  const int test,
                                  const Level* level,
                                  const IntVector& l,
@@ -743,7 +743,7 @@ template<class T>
       T diff(q_FineLevel[c] - exact);
       error = error + diff * diff;
       //if( fabs(diff) > 1e-3) {
-      //  cout << c << " q_FineLevel[c] " <<  q_FineLevel[c] << " exact " << exact << " diff " << diff << endl;
+      //  std::cout << c << " q_FineLevel[c] " <<  q_FineLevel[c] << " exact " << exact << " diff " << diff << endl;
       //}
       ncell += 1; 
     }

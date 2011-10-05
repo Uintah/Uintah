@@ -3,7 +3,7 @@
 ## 
 ##  The MIT License
 ## 
-##  Copyright (c) 2004 Scientific Computing and Imaging Institute,
+##  Copyright (c) 2004-2011 Scientific Computing and Imaging Institute,
 ##  University of Utah.
 ## 
 ##  License for the specific language governing rights and limitations under
@@ -62,7 +62,7 @@
 ##  --------------------------------------------------------------------
 
 ##  initialize configure 
-AC_INIT([Uintah],[1.31],[csafe-homebrew@cs.utah.edu])
+AC_INIT([Uintah],[1.4],[uintah-developer@gforge.sci.utah.edu])
 
 ##  require autoconf version 2.68
 ##     The reason to require the latest autoconf is to try and get everyone who
@@ -80,7 +80,7 @@ AC_COPYRIGHT(
 ## 
 ##  The MIT License
 ## 
-##  Copyright (c) 2004 Scientific Computing and Imaging Institute,
+##  Copyright (c) 2004-2011 Scientific Computing and Imaging Institute,
 ##  University of Utah.
 ## 
 ##  License for the specific language governing rights and limitations under
@@ -313,12 +313,6 @@ SCI_ARG_WITH(mpi_extra_libs,
                  Use this additional library(or libraries - comma separated) for mpi linking),
   [with_mpi_extra_libs="$withval"],
   [with_mpi_extra_libs=""])
-SCI_ARG_WITH(mpiuni,
-  AC_HELP_STRING(--with-mpiuni=DIR,
-                 Use the mpiuni installation in DIR),
-  [with_mpiuni="$withval"
-   sci_required_mpiuni=yes],
-  [with_mpiuni=""])
 SCI_ARG_WITH(cuda,
   AC_HELP_STRING(--with-cuda=DIR,
                  Use the CUDA installation in DIR),
@@ -373,18 +367,20 @@ SCI_ARG_WITH(zoltan,
   [with_zoltan="$withval"
    sci_required_zoltan=yes],
   [with_zoltan=""])
-SCI_ARG_WITH(unipetsc,
-  AC_HELP_STRING(--with-unipetsc=DIR,
-                 Use the unipetsc installation in DIR),
-  [with_unipetsc="$withval"
-   sci_required_unipetsc=yes],
-  [with_unipetsc=""])
 SCI_ARG_WITH(tau,
   AC_HELP_STRING(--with-tau=<tau-makefile>,
                  Specify a Tau Makefile),
   [with_tau="$withval"
    sci_required_tau=yes],
   [with_tau=""])
+  
+SCI_ARG_WITH(papi,
+  AC_HELP_STRING(--with-papi=DIR,
+                 Use the papi installation in DIR),
+  [with_papi="$withval"
+   sci_required_papi=yes],
+  [with_papi=""])
+    
 SCI_ARG_WITH(unp,
   AC_HELP_STRING(--with-unp=DIR,
                  Use the unp installation in DIR),
@@ -608,11 +604,6 @@ if test -z "$DIRNAME_IS" -o -z "$BASENAME_IS"; then
   AC_MSG_ERROR(dirname or basename not found.  Configure script won't work!)
 fi
 
-## -- Can't use uni-petsc and Uintah (as Uintah needs full mpi petsc).
-
-if test "$with_unipetsc"; then
-   AC_MSG_ERROR(However Uintah requires MPI petsc - not Uni-PETSc.)
-fi
 
 ##  --------------------------------------------------------------------
 ##  -----  determine host type, processor count and OS version  --------
@@ -1301,14 +1292,14 @@ case $host in
 # GCC_TEST
 #####
     OS_VERSION=`uname -r | cut -f1 -d.`
-    if test "$OS_VERSION" = "10"; then
-        AC_MSG_WARN( Running under Snow Leopard )
-        DEF_OSX_SNOW_LEOPARD="#define OSX_SNOW_LEOPARD"
-        IS_OSX_SNOW_LEOPARD="yes"
+    if test "$OS_VERSION" = "10" -o "$OS_VERSION" = "11"; then
+        AC_MSG_WARN( Running under Snow Leopard or later)
+        DEF_OSX_SNOW_LEOPARD_OR_LATER="#define OSX_SNOW_LEOPARD_OR_LATER"
+        IS_OSX_SNOW_LEOPARD_OR_LATER="yes"
     fi
 
     NO_LONG_DOUBLE="-Wno-long-double"
-    if test "$IS_OSX_SNOW_LEOPARD" = "yes"; then
+    if test "$IS_OSX_SNOW_LEOPARD_OR_LATER" = "yes"; then
       NO_LONG_DOUBLE=
     fi      
 
@@ -1545,7 +1536,7 @@ esac
 
 OBJEXT=$ac_objext
 
-AC_SUBST(DEF_OSX_SNOW_LEOPARD)
+AC_SUBST(DEF_OSX_SNOW_LEOPARD_OR_LATER)
 AC_SUBST(NEED_OSX_SYSTEMSTUBS)
 AC_SUBST(OBJEXT)
 
@@ -3217,123 +3208,48 @@ AC_SUBST(MPI_LIB_DIR_FLAG)
 sci_defs_files="$sci_defs_files include/sci_defs/mpi_testdefs.h"
 
 ##  --  search for petsc stuff  ------------------------------------------
-# a required check for an optional library for base scirun, due to that 
-# fact that if MatrixSolver will utilize uni-petsc if it exists, and uni-petsc
-# depends upon petsc - also check for mpi-uni as it most often exists in the 
-# same directory
 
 PETSC_VERSION_DIR=petsc-2.3.2
 
-if test -z "$PETSC_ARCH"; then
-case $host in
-  *linux*)
-    if test "$enable_64bit" = "yes"; then
-      PETSC_ARCH=linux64
-    else
-      PETSC_ARCH=linux
-    fi
-    ;;
-  *-dec*)
-    if test "$petsc"; then
-      SCI_MSG_ERROR(PETSC ARCH not set for Tru64.  Need to fix this.)
-    else
-      PETSC_ARCH=dec
-    fi
-    ;;
-  *-aix*)
-    PETSC_ARCH=aix5.1.0.0
-    ;;
-  *-darwin*)
-      if test `uname -p` = "i386"; then
-        PETSC_ARCH=i386
-      else 
-        PETSC_ARCH=ppc
-      fi
-    ;;
-  *-pc-mingw*)
-    PETSC_ARCH=win
-    ;;
-  *)
-    PETSC_ARCH=""
-    ;;
-esac
-fi
-# check for mpi-uni if either --with-unipetsc or --with-mpiuni,
-#   check here to look in petsc's subdirs.
-#  --  search for mpi-uni  --------------------------------------------
-# Again required for the following uni-petsc checks, that attempt to support
-# the MatrixSolver module.
-
-_sci_lib=
-_sci_inc=
-
-if test "$with_mpiuni" = "yes"; then
-  echo
-  AC_MSG_ERROR(You must specify a directory with the --with-mpiuni=dir.)
-  echo
-elif test "$with_unipetsc"; then
-
-  echo
-  # To fix this, just do the same thing as below for the full petsc.
-  AC_MSG_ERROR(FIX ME... configure for mpiuni is broken... need to handle the PETSC_SUB correctly.)
-  echo
-
-  _sci_lib="$with_unipetsc/lib/$PETSC_SUB/$PETSC_ARCH"
-  if test ! -d "$_sci_lib" || test ! -d "$with_unipetsc/include/mpiuni" ||
-     test ! -d "$with_unipetsc/bmake/$PETSC_ARCH" ; then
-    echo
-    AC_MSG_WARN(Specified unipetsc directory is invalid.  One of the following dirs does not exist:)
-    AC_MSG_WARN($_sci_lib)
-    AC_MSG_WARN($with_unipetsc/include/mpiuni)
-    AC_MSG_WARN($with_unipetsc/bmake/$PETSC_ARCH)
-    AC_MSG_ERROR(Please fix this problem and reconfigure.)
-  fi
-  _sci_inc="$with_unipetsc/include/mpiuni $with_unipetsc/bmake/$PETSC_ARCH" 
-fi
-
-SCI_TRY_LINK(MPI_UNI,mpi-uni libraries and headers,mpi.h,$_sci_inc,mpiuni,$_sci_lib,,,optional)
-
-if test "$HAVE_MPI_UNI" != "yes"; then
-   SCI_TRY_LINK(MPI_UNICH,mpiunich and pmpiunich libraries,,
-                  $_sci_inc,mpiunich pmpiunich,$_sci_lib,,,optional)
-
-   if test "$HAVE_MPI_UNICH" = "yes"; then
-     LIB_DIR_MPI_UNI="$LIB_DIR_MPI_UNICH"
-     MPI_UNI_LIB_FLAG="$MPI_UNICH_LIB_FLAG"
-     MPI_UNI_LIB_DIR_FLAG="$MPI_UNICH_LIB_DIR_FLAG"
-   fi
-fi
-
-if test "$HAVE_MPI_UNI" = "yes"; then
-   if test "$HAVE_MPI_UNICH" = "yes"; then
-     DEF_MPI_UNI="#define HAVE_MPI_UNICH 1"
-   else
-     DEF_MPI_UNI="#define HAVE_MPI_UNI 1"
-   fi
-fi
-
-if test "$with_mpiuni" && test ! "$DEF_MPI_UNI"; then
-  echo
-  AC_MSG_ERROR(One or more of the MPI_UNI components is missing.)
-  echo
-fi
-
-if test "$with_unipetsc" && test ! "$DEF_MPI_UNI"; then
-  echo
-  AC_MSG_ERROR(One or more of the MPI_UNI components is missing.)
-  echo
-fi
-
-AC_SUBST(DEF_MPI_UNI)
-AC_SUBST(INC_MPI_UNI_H)
-AC_SUBST(MPI_UNI_LIB_FLAG)
-AC_SUBST(MPI_UNI_LIB_DIR_FLAG)
-
+##if test -z "$PETSC_ARCH"; then
+##case $host in
+##  *linux*)
+##    if test "$enable_64bit" = "yes"; then
+##      PETSC_ARCH=linux64
+##    else
+##      PETSC_ARCH=linux
+##    fi
+##    ;;
+##  *-dec*)
+##    if test "$petsc"; then
+##      SCI_MSG_ERROR(PETSC ARCH not set for Tru64.  Need to fix this.)
+##    else
+##      PETSC_ARCH=dec
+##    fi
+##    ;;
+##  *-aix*)
+##    PETSC_ARCH=aix5.1.0.0
+##    ;;
+##  *-darwin*)
+##      if test `uname -p` = "i386"; then
+##        PETSC_ARCH=i386
+##      else 
+##        PETSC_ARCH=ppc
+##      fi
+##    ;;
+##  *-pc-mingw*)
+##    PETSC_ARCH=win
+##    ;;
+##  *)
+##    PETSC_ARCH=""
+##    ;;
+##esac
+##fi
 
 #  --  search for PETSc  --------------------------------------------
-if test -z "$PETSC_ARCH"; then
-   AC_MSG_ERROR(PETSC_ARCH environment var is not set.  Please set.)
-fi
+##if test -z "$PETSC_ARCH"; then
+##   AC_MSG_ERROR(PETSC_ARCH environment var is not set.  Please set.)
+##fi
 
 if test "$with_petsc" == "no"; then # Handle --without option
   AC_MSG_WARN( "PETSc disabled." )
@@ -3343,43 +3259,45 @@ else
      HAVE_PETSC="yes"
      DEF_PETSC="#define HAVE_PETSC 1"
   else
-    # Make sure we have either mpi or mpi-uni, blas, and lapack
+    # Make sure we have either mpi, blas, and lapack
     # It seems that under AIX and OSF, the libs that cover blas also cover lapack
-    if (test "$HAVE_MPI" = "yes" || test "$HAVE_MPI_UNI" = "yes") && test "$HAVE_BLAS" = "yes" && 
+    if (test "$HAVE_MPI" = "yes" ) && test "$HAVE_BLAS" = "yes" && 
        (test "$PETSC_ARCH" = "aix5.1.0.0" || test "$PETSC_ARCH" = "dec" ||
         test "$HAVE_LAPACK" = "yes"); then
 
       _sci_lib_dir=
       _sci_inc=
 
-      for petsc_arch in "$PETSC_ARCH" linux-gnu linux-gnu-c-opt; do
+##      for petsc_arch in "$PETSC_ARCH" linux-gnu linux-gnu-c-opt; do
+      for petsc_arch in "$PETSC_ARCH"; do
         if test "$HAVE_PETSC" = "yes"; then
           break
         fi
-
-        PETSC_SUB=lib/libO
-
-        if test "$with_petsc"; then
-
-          ####################################################
-          # The newer (2.3+) versions of petsc don't use the libO anymore...
-          have23=`echo "$with_petsc" | grep "2.3."`
-          if test -z "$have23" ; then
+	
+	if test "$with_petsc"; then
              petsc_version_major=`grep PETSC_VERSION_MAJOR $with_petsc/include/petscversion.h | grep define | awk '{print $3}'`
              petsc_version_minor=`grep PETSC_VERSION_MINOR $with_petsc/include/petscversion.h | grep define | awk '{print $3}'`
-             if test "$petsc_version_major" -eq 2 ; then
-                if test "$petsc_version_minor" -eq 3 ; then
-                   have23=true
-                fi
-             fi
-          fi
-          if test "$have23"; then
-             PETSC_SUB=lib
-          fi
-          ####################################################
 
-          _sci_lib_dir="$with_petsc/$PETSC_SUB/$petsc_arch"
-          _sci_inc="$with_petsc/bmake/$petsc_arch $with_petsc/include"
+        	case $petsc_version_major in
+			2)
+			if test "$petsc_version_minor" -le 2; then
+			   PETSC_SUB=lib/libO
+			fi
+			if test "$petsc_version_minor" -eq 3; then
+			   PETSC_SUB=lib
+			fi
+          		   _sci_lib_dir="$with_petsc/$PETSC_SUB/$petsc_arch"
+          	           _sci_inc="$with_petsc/include $with_petsc/bmake/$petsc_arch"
+			   SINGLE_LIB=0
+			;;
+			3)
+			   PETSC_SUB=lib
+          		   _sci_lib_dir="$with_petsc/$petsc_arch/$PETSC_SUB"
+          		   _sci_inc="$with_petsc/include $with_petsc/$petsc_arch/include"
+			   SINGLE_LIB=1
+			;;
+		esac
+
         else
           # Modify _sci_dirs to have correct path information:
           for i in $sci_thirdparty_dir; do
@@ -3393,14 +3311,19 @@ else
             fi
 
             _sci_lib_dir="$_sci_lib_dir $i/$PETSC_VERSION_DIR/$PETSC_SUB/$petsc_arch"
-            _sci_inc="$_sci_inc $i/$PETSC_VERSION_DIR/include $i/$PETSC_VERSION_DIR/bmake/$petsc_arch"
+            _sci_inc="$_sci_inc $i/$PETSC_VERSION_DIR/include"
+            SINGLE_LIB=0
           done  
-        fi
+
+          # Try the default location of /usr/include and /usr/lib/
+           SINGLE_LIB=0       
+        fi      
 
         # For Petsc 2.2 use this line below:   petsc petscvec petscmat petscdm petscsnes petscts petscksp $LAPACK_LIB_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $MPI_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $DL_LIB_FLAG,
         # Use -DMPIPP_H so we don't include mpi++.h where we don't want it.
+	if test "$SINGLE_LIB" = "0"; then
 
-        SCI_TRY_LINK(PETSC,
+        	SCI_TRY_LINK(PETSC,
                      petsc libraries and headers (petsc_arch = $petsc_arch),
                      petsc.h,
                      $_sci_inc /usr/include/petsc,
@@ -3409,6 +3332,19 @@ else
                      $INC_MPI_H -DMPIPP_H $LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $MALLOC_TRACE_LIB_DIR_FLAG $MALLOC_TRACE_LIB_FLAG $M_LIB_FLAG $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG,
                      ,
                      optional)
+	fi
+       	# For PETSC 3.x, a single petsc library is created called libpetsc 
+	if test "$SINGLE_LIB" = "1"; then
+		SCI_TRY_LINK(PETSC,
+                     petsc libraries and headers (petsc_arch = $petsc_arch),
+                     petsc.h,
+                     $_sci_inc /usr/include/petsc,
+                     petsc,
+                     $_sci_lib_dir,
+                     $INC_MPI_H -DMPIPP_H $LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $MALLOC_TRACE_LIB_DIR_FLAG $MALLOC_TRACE_LIB_FLAG $M_LIB_FLAG $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG,
+                     ,
+                     optional)
+	fi
 
         if test "$HAVE_PETSC" = "yes" ; then
           DEF_PETSC="#define HAVE_PETSC 1"
@@ -3420,59 +3356,9 @@ else
         echo
       fi
 
-      #  --  search for uni-petsc  --------------------------------------------
-
-      if test "$HAVE_PETSC" != "yes" ; then
-
-        # Only check for uni petsc if petsc not found.
-        _sci_lib=""
-        _sci_inc=""
-
-        if test "$with_unipetsc"; then
-          _sci_lib="$with_unipetsc/$PETSC_SUB/$PETSC_ARCH"
-          _sci_inc="$with_unipetsc/bmake/$PETSC_ARCH $with_unipetsc/include"
-        fi
-
-        # For petsc 2.2 use this line below:  petsc petscvec petscmat petscdm petscsnes petscts petscksp,
-        # Use -DMPIPP_H so we don't include mpi++.h where we don't want it.
-        SCI_TRY_LINK(PETSC_UNI,
-                     petsc-uni libraries and headers,
-                     petsc.h,
-                     $_sci_inc /usr/include/petsc,
-                     petsc petscvec petscmat petscdm petscsnes petscts petscksp,
-                     $_sci_lib,
-                     $LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $INC_MPI_UNI_H $MPI_UNI_LIB_DIR_FLAG $MPI_UNI_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG -DMPIPP_H,
-                     ,
-                     optional)
-
-        if test "$HAVE_PETSC_UNI" = "yes" ; then
-          DEF_PETSC_UNI="#define PETSC_UNI 1"
-        else
-          # Give it a shot on the old petsc-uni version
-          SCI_TRY_LINK(PETSC_UNI,
-                       petsc libraries and headers - old2,
-                       petsc.h,
-                       $_sci_inc /usr/include/petsc,
-                       petsc petscvec petscmat petscdm petscsnes petscts,
-                       $_sci_lib,
-                       $LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $INC_MPI_UNI_H $MPI_UNI_LIB_DIR_FLAG $MPI_UNI_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG -DMPIPP_H,
-                       ,
-                       optional)
-          if test "$HAVE_PETSC_UNI" = "yes" ; then
-            DEF_PETSC_UNI="#define PETSC_UNI 1"
-          fi  
-        fi
-
-        if test "$with_unipetsc" && test ! "$DEF_PETSC_UNI"; then
-          echo
-          AC_MSG_ERROR(One or more of the UNI-PETSC components is missing.)
-          echo
-        fi
-      fi
     else
       AC_MSG_WARN(One or more of MPI or BLAS or LAPACK is missing.)
       AC_MSG_WARN(HAVE_MPI: $HAVE_MPI)
-      AC_MSG_WARN(HAVE_MPI_UNI: $HAVE_MPI_UNI)
       AC_MSG_WARN(HAVE_BLAS: $HAVE_BLAS)
       AC_MSG_WARN(HAVE_LAPACK: $HAVE_LAPACK)
       AC_MSG_WARN(Not configuring PETSc.)
@@ -3486,11 +3372,6 @@ AC_SUBST(PETSC_LIB_DIR_FLAG)
 AC_SUBST(DEF_PETSC)
 AC_SUBST(INC_PETSC_H)
 
-AC_SUBST(HAVE_PETSC_UNI)
-AC_SUBST(PETSC_UNI_LIB_FLAG)
-AC_SUBST(PETSC_UNI_LIB_DIR_FLAG)
-AC_SUBST(DEF_PETSC_UNI)
-AC_SUBST(INC_PETSC_UNI_H)
 sci_defs_files="$sci_defs_files include/sci_defs/petsc_testdefs.h"
 
 
@@ -3558,6 +3439,68 @@ EOF
 fi
 
 AC_SUBST(TAU_MAKEFILE)
+
+##  --  search for papi stuff  -------------------------------------------
+if test "$sci_required_papi" = "yes"; then
+
+  AS_MESSAGE(checking for required PAPI components......)
+  
+  if ! test -d "$with_papi"; then
+    AC_MSG_ERROR( [The directory specified with --with-papi=DIR is not valid: $with_papi] )
+  fi
+
+  # the major PAPI definitions, etc
+  DEF_PAPI=""
+  HAVE_PAPI=""
+  HAVE_PAPI_H=""
+  INC_PAPI_H=""
+  PAPI_LIB_DIR=""
+
+  # all the -L's
+  PAPI_LIB_DIR_FLAG=""
+
+  # all the -l's
+  PAPI_LIB_FLAG=""
+
+  # confirm the existence/location of PAPI lib and include directories
+  _papi_lib=
+  _papi_inc="$with_papi/include"
+  # account for lib64 or lib32 or just lib...
+  BASE_LIB_PATH(_papi_lib,$with_papi)
+  
+  AC_LANG_PUSH(C++)
+  SCI_COMPILE_LINK_TEST(PAPI, PAPI libraries and headers,
+                        [#include <papi.h>
+                        #include <cstdlib>],
+                        $_papi_inc,
+                        papi,
+                        $_papi_lib,
+                        ,
+                        [int *event_set = (int*)malloc(sizeof(int));
+                        *event_set = PAPI_FP_OPS;
+                        long long *flops = (long long *)malloc(sizeof(long long));
+                        PAPI_start_counters(event_set, 1);
+                        PAPI_stop_counters(flops, 1);
+                        free(event_set);
+                        free(flops);],
+                        optional)
+  AC_LANG_POP(C++)     
+  
+if test $HAVE_PAPI="yes"; then
+  DEF_PAPI="#define USE_PAPI_COUNTERS 1"
+fi                     
+
+fi #end sci_required_papi
+
+# these are all defined after the call to SCI_COMPILE_LINK_TEST
+AC_SUBST(HAVE_PAPI)
+AC_SUBST(DEF_PAPI)
+AC_SUBST(INC_PAPI_H)
+AC_SUBST(PAPI_LIB_DIR_FLAG)
+AC_SUBST(PAPI_LIB_FLAG)
+
+sci_defs_files="$sci_defs_files include/sci_defs/papi_testdefs.h"
+
 
 ##  --  search for freetype stuff  -------------------------------------------
 # Default values:
@@ -3789,7 +3732,8 @@ if test "$wasatch_3p" = "yes"; then
   fi
 
   mkdir -p Wasatch3P
-  $path_to_src/build_scripts/build_wasatch_3p.sh `$sci_pwd` "$with_boost"
+
+  $path_to_src/build_scripts/build_wasatch_3p.sh `$sci_pwd` "$with_boost" "$debug"
 
   if test $? != 0; then
      AC_MSG_ERROR( Failed to build Wasatch 3p libraries... )

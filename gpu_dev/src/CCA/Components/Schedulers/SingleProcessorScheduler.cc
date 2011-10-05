@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -192,7 +192,6 @@ SingleProcessorScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
     
     
     double delT = Time::currentSeconds()-start;
-    long long flop_count = 0;
     if(dws[dws.size()-1] && dws[dws.size()-1]->timestepAborted()){
       dbg << "Aborting timestep after task: " << *task->getTask() << '\n';
       break;
@@ -201,7 +200,7 @@ SingleProcessorScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
       dbg << "Completed task: " << *task->getTask()
           << " (" << delT << " seconds)\n";
     //scrub(task);
-    emitNode( task, start, delT, delT, flop_count );
+    emitNode( task, start, delT, delT);
   }
   finalizeTimestep();
 }

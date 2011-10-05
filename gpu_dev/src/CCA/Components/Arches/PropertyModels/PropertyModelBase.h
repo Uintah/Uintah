@@ -17,7 +17,7 @@
 /** 
 * @class  PropertyModelBase
 * @author Jeremy Thornock
-* @date   Aug. 2010
+* @date   Aug. 2011
 * 
 * @brief A base class for property models. 
 *        

@@ -8,6 +8,10 @@
 
   <Wasatch>
 
+    <Density>
+      <IsConstant>true</IsConstant>
+    </Density>
+
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
       <NameTag name="mixture fraction" state="STATE_N" />
@@ -17,6 +21,7 @@
     <!-- Set up a tabular property evaluation -->
     <TabProps>
       <FileNamePrefix>inputs/Wasatch/AdiabaticEquil</FileNamePrefix>
+      <TaskList>advance_solution</TaskList>
       <IndependentVariable>
         <NameTag name="mixture fraction" state="STATE_N" />
         <NameInTable>MixtureFraction</NameInTable>
@@ -37,11 +42,12 @@
     <TransportEquation equation="generic">
 
       <SolutionVariable>mixture fraction</SolutionVariable>
+      <StrongForm>true</StrongForm>
 
       <DiffusiveFluxExpression>
         <Direction>X</Direction>
         <DiffusionCoefficient>
-	  <NameTag name="thermal conductivity" state="STATE_NONE" />
+          <NameTag name="thermal conductivity" state="STATE_NONE" />
         </DiffusionCoefficient>
       </DiffusiveFluxExpression>
 

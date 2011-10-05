@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -46,7 +46,7 @@ ConvergenceFailure::ConvergenceFailure(const string& message,
                                        const char* file,
                                        int line)
 {
-  ostringstream s;
+  std::ostringstream s;
   s << "A ConvergenceFailure exception was thrown.\n"
     << file << ":" << line << "\n"
     << message << " failed to converge in " << numiterations << " iterations"

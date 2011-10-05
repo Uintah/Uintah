@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -97,7 +97,7 @@ public:
                             
   virtual void setMatrix(const ProcessorGroup* pc, 
                          const Patch* patch,
-                         constCCVariable<Stencil7>& coeff);
+                         CCVariable<Stencil7>& coeff);
 
   virtual void setRHS_X(const ProcessorGroup* pc, 
                         const Patch* patch,
@@ -108,6 +108,8 @@ public:
   virtual bool pressLinearSolve();
   virtual void copyPressSoln(const Patch* patch, ArchesVariables* vars);
   virtual void destroyMatrix();
+  
+  virtual void print(const string& desc, const int timestep, const int step);
 protected:
 
 private:

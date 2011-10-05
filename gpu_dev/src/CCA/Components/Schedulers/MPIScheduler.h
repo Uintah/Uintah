@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -64,8 +64,6 @@ struct mpi_timing_info_s {
   double totalrecvmpi;
   double totaltestmpi;
   double totalwaitmpi;
-  long long totalcommflops;
-  long long totalexecflops;
 };
 
 /**************************************
@@ -122,7 +120,7 @@ WARNING
     void runTask( DetailedTask* task, int iteration );
     void runReductionTask( DetailedTask* task );        
 
-    void addToSendList(const MPI_Request& request, int bytes, AfterCommunicationHandler* buf, const string& var);
+    void addToSendList(const MPI_Request& request, int bytes, AfterCommunicationHandler* buf, const std::string& var);
 
     // get the processor group executing with (only valid during execute())
     const ProcessorGroup* getProcessorGroup()
@@ -183,8 +181,8 @@ WARNING
     CommRecMPI            recvs_;
 
     double           d_lasttime;
-    vector<const char*>    d_labels;
-    vector<double>   d_times;
+    std::vector<const char*>    d_labels;
+    std::vector<double>   d_times;
     ofstream         timingStats, avgStats, maxStats;
 
     void emitTime(const char* label);

@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -185,11 +185,11 @@ namespace Uintah {
           d_iz=d_s.z();
         }
 
-        ostream& limits(ostream& out) const
-          {
-            out << begin() << " " << end() - IntVector(1,1,1);
-            return out;
-          }
+        std::ostream& limits(std::ostream& out) const
+        {
+          out << begin() << " " << end() - IntVector(1,1,1);
+          return out;
+        }
 
       private:
         NodeIterator();
@@ -199,7 +199,7 @@ namespace Uintah {
           return scinew NodeIterator(*this);
         }
         
-        ostream& put(ostream& out) const
+        std::ostream& put(std::ostream& out) const
         {
           out << *this;
           return out;

@@ -129,7 +129,7 @@
     <MaterialProperties>
        <ICE>
          <material name = "reactant">
-           <EOS type="Murnahan">
+           <EOS type="Murnaghan">
              <n>7.4</n>
              <K>39.0e-11</K>
              <rho0>1717.0</rho0>

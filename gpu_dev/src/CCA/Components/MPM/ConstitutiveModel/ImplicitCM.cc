@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -118,6 +118,7 @@ ImplicitCM::addSharedCRForImplicit(Task* task,
   task->requires(Task::OldDW, d_lb->pTemperatureLabel, matlset, gnone);
   task->requires(Task::OldDW, d_lb->pDeformationMeasureLabel,
                                                        matlset, gnone);
+  task->requires(Task::OldDW, d_lb->pStressLabel,      matlset, gnone);
   if(reset){
     task->requires(Task::NewDW, d_lb->dispNewLabel,      matlset,gac,1);
   } else {

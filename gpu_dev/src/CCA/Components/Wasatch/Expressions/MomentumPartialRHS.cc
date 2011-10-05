@@ -81,9 +81,9 @@ void
 MomRHSPart<FieldT>::
 bind_operators( const SpatialOps::OperatorDatabase& opDB )
 {
-  if( cfluxXt_ != emptyTag_ && tauXt_ != emptyTag_ )  divXOp_ = opDB.retrieve_operator<DivX>();
-  if( cfluxYt_ != emptyTag_ && tauYt_ != emptyTag_ )  divYOp_ = opDB.retrieve_operator<DivY>();
-  if( cfluxZt_ != emptyTag_ && tauZt_ != emptyTag_ )  divZOp_ = opDB.retrieve_operator<DivZ>();
+  if( cfluxXt_ != emptyTag_ || tauXt_ != emptyTag_ )  divXOp_ = opDB.retrieve_operator<DivX>();
+  if( cfluxYt_ != emptyTag_ || tauYt_ != emptyTag_ )  divYOp_ = opDB.retrieve_operator<DivY>();
+  if( cfluxZt_ != emptyTag_ || tauZt_ != emptyTag_ )  divZOp_ = opDB.retrieve_operator<DivZ>();
 }
 
 //--------------------------------------------------------------------

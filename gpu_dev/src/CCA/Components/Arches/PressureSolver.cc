@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -79,7 +79,8 @@ PressureSolver::PressureSolver(ArchesLabel* label,
   d_discretize = 0;
   d_source = 0;
   d_linearSolver = 0; 
-  d_construct_solver_obj = true; 
+  d_construct_solver_obj = true;
+  d_iteration = 0;
 }
 
 // ****************************************************************************
@@ -460,6 +461,15 @@ PressureSolver::pressureLinearSolve_all(const ProcessorGroup* pg,
                         timelabels, extraProjection,
                         d_EKTCorrection, doing_EKT_now);
   }
+
+#if 0  
+  //__________________________________
+  //debugging
+  string desc = timelabels->integrator_step_name;
+  int timestep = d_lab->d_sharedState->getCurrentTopLevelTimeStep(); 
+  d_iteration ++; 
+  d_linearSolver->print(desc,timestep,d_iteration);
+#endif
   
   bool converged =  d_linearSolver->pressLinearSolve();
   if (converged) {

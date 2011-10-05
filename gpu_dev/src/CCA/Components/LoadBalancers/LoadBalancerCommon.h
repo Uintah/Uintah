@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -108,7 +108,7 @@ namespace Uintah {
       /// receive data from.
       virtual void createNeighborhood(const GridP& grid, const GridP& oldGrid);
 
-      const set<int>& getNeighborhoodProcessors()
+    const std::set<int>& getNeighborhoodProcessors()
       {
         return d_neighborProcessors;
       }
@@ -164,9 +164,9 @@ namespace Uintah {
       //! needs it to assign the processor resource.
       int d_outputNthProc;
 
-      vector<Handle<const PatchSet> > levelPerProcPatchSets;
+      std::vector<Handle<const PatchSet> > levelPerProcPatchSets;
       Handle<const PatchSet> gridPerProcPatchSet;
-      vector<Handle<const PatchSet> > outputPatchSets;
+      std::vector<Handle<const PatchSet> > outputPatchSets;
 
   };
 

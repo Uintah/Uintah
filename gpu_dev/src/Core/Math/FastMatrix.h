@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -66,7 +66,7 @@ DEALINGS IN THE SOFTWARE.
 
 #include <Core/Math/uintahshare.h>
 namespace Uintah {
-  using namespace std;
+
   class UINTAHSHARE FastMatrix {
   public:
     FastMatrix(int rows, int cols);
@@ -92,7 +92,7 @@ namespace Uintah {
     void destructiveSolve(SCIRun::Vector* b);
 
     void transpose(const FastMatrix& transpose);
-    void multiply(const vector<double>& b, vector<double>& X) const;
+    void multiply(const std::vector<double>& b, std::vector<double>& X) const;
     void multiply(const double* b, double* X) const;
     void multiply(const FastMatrix& a, const FastMatrix& b);
     void multiply(double s);

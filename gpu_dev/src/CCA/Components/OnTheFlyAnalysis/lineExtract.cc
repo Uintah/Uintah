@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -104,6 +104,7 @@ void lineExtract::problemSetup(const ProblemSpecP& prob_spec,
   cout_doing << "Doing problemSetup \t\t\t\tlineExtract" << endl;
   
   int numMatls  = d_sharedState->getNumMatls();
+  cout << " numMatls  "<< numMatls << endl;
   
   if(!d_dataArchiver){
     throw InternalError("lineExtract:couldn't get output port", __FILE__, __LINE__);
@@ -123,18 +124,32 @@ void lineExtract::problemSetup(const ProblemSpecP& prob_spec,
   if (!vars_ps){
     throw ProblemSetupException("lineExtract: Couldn't find <Variables> tag", __FILE__, __LINE__);    
   } 
-  map<string,string> attribute;
-  
 
-  //__________________________________
-  //  Read in the optional material index that may be different
-  //  from the default index
-  d_matl = d_sharedState->parseAndLookupMaterial(d_prob_spec, "material");
+  
+  // find the material to extract data from.  Default is matl 0.
+  // The user can use either 
+  //  <material>   atmosphere </material>
+  //  <materialIndex> 1 </materialIndex>
+  if(d_prob_spec->findBlock("material") ){
+    d_matl = d_sharedState->parseAndLookupMaterial(d_prob_spec, "material");
+  } else if (d_prob_spec->findBlock("materialIndex") ){
+    int indx;
+    d_prob_spec->get("materialIndex", indx);
+    d_matl = d_sharedState->getMaterial(indx);
+  } else {
+    d_matl = d_sharedState->getMaterial(0);
+  }
+  
   int defaultMatl = d_matl->getDWIndex();
+  
+  //__________________________________
+  //  Read in the optional material index from the variables that may be different
+  //  from the default index
   vector<int> m;
   m.push_back(defaultMatl);
   d_matl_set = scinew MaterialSet();
-  
+  map<string,string> attribute;
+    
   for (ProblemSpecP var_spec = vars_ps->findBlock("analyze"); var_spec != 0; 
                     var_spec = var_spec->findNextBlock("analyze")) {
     var_spec->getAttributes(attribute);

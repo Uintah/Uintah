@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -52,7 +52,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Arches/EnthalpySolver.h>
 #include <CCA/Components/Arches/MomentumSolver.h>
 #include <CCA/Components/Arches/PhysicalConstants.h>
-#include <CCA/Components/Arches/PressureSolver.h>
+#include <CCA/Components/Arches/PressureSolverV2.h>
 #include <CCA/Components/Arches/Properties.h>
 #include <CCA/Components/Arches/ScalarSolver.h>
 #include <CCA/Components/Arches/ScaleSimilarityModel.h>
@@ -78,6 +78,7 @@ DEALINGS IN THE SOFTWARE.
 
 #include <cmath>
 
+using namespace std;
 using namespace Uintah;
 
 static DebugStream dbg("ARCHES", false);
@@ -148,8 +149,6 @@ ExplicitSolver::problemSetup(const ProblemSpecP& params)
       d_probePoints.push_back(prbPoint);
     }
   }
-  d_turbinlet = d_boundaryCondition->getturbinlet();
-
   d_pressSolver = scinew PressureSolver(d_lab, d_MAlab,
                                           d_boundaryCondition,
                                           d_physicalConsts, d_myworld);

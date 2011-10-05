@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -69,10 +69,10 @@ VariableNotFoundInGrid::VariableNotFoundInGrid(const std::string& varname,
 					       const std::string& extramsg,
                                                const char* file, int line)
 {
-  ostringstream s;
+  std::ostringstream s;
   s << "Grid Variable not found: " << varname;
   
-  flush(cerr);
+  std::flush(std::cerr);
   s << " with location [" << loc.x() << ", " << loc.y() << ", " << loc.z() << "]";
   //s << " with location (" << loc << ")";
   s << ", material index: " << matlIndex;
@@ -82,9 +82,9 @@ VariableNotFoundInGrid::VariableNotFoundInGrid(const std::string& varname,
   d_msg = s.str();
 
 #ifdef EXCEPTIONS_CRASH
-  cout << "A VariableNotFoundInGrid exception was thrown.\n";
-  cout << file << ":" << line << "\n";
-  cout << d_msg;
+  std::cout << "A VariableNotFoundInGrid exception was thrown.\n";
+  std::cout << file << ":" << line << "\n";
+  std::cout << d_msg;
 #endif
 }
 

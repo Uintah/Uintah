@@ -124,6 +124,15 @@
       <axisymmetric_side      spec="OPTIONAL BOOLEAN" />
     </cylinder>
 
+    <torus                 spec="OPTIONAL NO_DATA"
+                                attribute1="label    OPTIONAL STRING" >
+      <center                 spec="REQUIRED VECTOR" />
+      <major_radius           spec="REQUIRED DOUBLE 'positive'" />
+      <minor_radius           spec="REQUIRED DOUBLE 'positive'" />
+      <axis                   spec="REQUIRED STRING" />
+      <theta                  spec="OPTIONAL DOUBLE" />
+    </torus>
+
     <parallelepiped                 spec="OPTIONAL NO_DATA"
                                 attribute1="label    OPTIONAL STRING" >
       <p1                     spec="REQUIRED VECTOR" />
@@ -212,6 +221,7 @@
       <box                    spec="MULTIPLE" />
       <cone                   spec="MULTIPLE" />
       <cylinder               spec="MULTIPLE" />
+      <torus                  spec="MULTIPLE" />
       <difference             spec="MULTIPLE" />
       <intersection           spec="MULTIPLE" />
       <ellipsoid              spec="MULTIPLE" />
@@ -231,6 +241,7 @@
       <box                    spec="MULTIPLE" />
       <cone                   spec="MULTIPLE" />
       <cylinder               spec="MULTIPLE" />
+      <torus                  spec="MULTIPLE" />
       <difference             spec="MULTIPLE" />
       <intersection           spec="MULTIPLE" />
       <ellipsoid              spec="MULTIPLE" />
@@ -249,6 +260,7 @@
       <box                    spec="MULTIPLE" />
       <cone                   spec="MULTIPLE" />
       <cylinder               spec="MULTIPLE" />
+      <torus                  spec="MULTIPLE" />
       <difference             spec="MULTIPLE" />
       <intersection           spec="MULTIPLE" />
       <ellipsoid              spec="MULTIPLE" />
@@ -267,6 +279,7 @@
       <box                    spec="MULTIPLE" />
       <cone                   spec="MULTIPLE" />
       <cylinder               spec="MULTIPLE" />
+      <torus                  spec="MULTIPLE" />
       <difference             spec="MULTIPLE" />
       <intersection           spec="MULTIPLE" />
       <ellipsoid              spec="MULTIPLE" />
@@ -300,6 +313,7 @@
       <color                  spec="OPTIONAL DOUBLE" />
       <density                spec="OPTIONAL DOUBLE" />
       <pressure               spec="OPTIONAL DOUBLE" />
+      <volumeFraction         spec="OPTIONAL DOUBLE" />
 
       <null                   spec="OPTIONAL NO_DATA" /> <!-- FIXME: What is this? -->
 
@@ -328,9 +342,10 @@
     <SimulationComponent          spec="REQUIRED NO_DATA"
                                     attribute1="type REQUIRED STRING 'angio, arches, burger, ice, impm, mpm, mpmarches, 
                                                                       mpmf, mpmice, amrmpm,
-                                                                      wasatch, reduce_uda, advectslabs, advectslabsgpu
-                                                                      poisson1, poissongpu1, poisson2, poisson3, poisson4, benchmark, rigidmpmice, 
-                                                                      rmpmice, smpm, smpmice, spatialops, switcher, wave, solvertest, RMCRT_Test'" >
+                                                                      wasatch, reduce_uda,
+                                                                      advectslabs, advectslabsgpu, poissongpu1,
+                                                                      poisson1, poisson2, poisson3, poisson4, benchmark, rigidmpmice, reduce_uda, combine_patches, 
+                                                                      rmpmice, smpm, smpmice, switcher, wave, solvertest, RMCRT_Test particletest'" >
                                   <!-- The 'type' above is used in CCA/Components/Parent/ComponentFactory.cc -->
         <carry_over                 spec="MULTIPLE NO_DATA"
                                   attribute1="var   REQUIRED STRING"
@@ -342,7 +357,7 @@
                                   <!-- The 'type' above is used in CCA/Components/Parent/ComponentFactory.cc -->
           <input_file               spec="REQUIRED STRING" />
           <SwitchCriteria           spec="OPTIONAL NO_DATA" 
-                                  attribute1="type REQUIRED STRING 'steadyBurn, Timestep'" >
+                                  attribute1="type REQUIRED STRING 'steadyBurn, Timestep, simpleBurn'" >
             <timestep               spec="REQUIRED INTEGER" need_applies_to="type Timestep"   />
             <reactant_material      spec="REQUIRED INTEGER" need_applies_to="type steadyBurn" />
             <BoundaryParticles      spec="REQUIRED INTEGER" need_applies_to="type steadyBurn" />
@@ -365,7 +380,7 @@
     <!-- Spec for basic expression types -->
     <BasicExpression			spec="MULTIPLE NO_DATA"
                                         attribute1="type REQUIRED STRING 'SVOL,XVOL,YVOL,ZVOL"
-                                        children1="ONE_OF(CHILD Constant,LinearFunction, ParabolicFunction,SineFunction,GaussianFunction,DoubleTanhFunction)" >
+                                        children1="ONE_OF(CHILD Constant,LinearFunction, ParabolicFunction,SineFunction,GaussianFunction,DoubleTanhFunction,SineTime)" >
       <TaskList				spec="REQUIRED STRING 'initialization,timestep_size,advance_solution'" />
       <NameTag				spec="REQUIRED" />
       <Constant				spec="OPTIONAL DOUBLE" />
@@ -383,6 +398,11 @@
                                   attribute3="c REQUIRED DOUBLE">
         <NameTag             spec="REQUIRED"/>
       </ParabolicFunction>
+      
+      <!-- sinetime: a x^2 + b x + c !-->
+      <SineTime    spec="OPTIONAL NO_DATA">
+      </SineTime>
+
       
       <!-- Sine function with frequency, amplitude, and offset !-->
       <SineFunction    spec="OPTIONAL NO_DATA"
@@ -570,12 +590,16 @@
                               attribute11="name          OPTIONAL STRING">
         <BCType             spec="MULTIPLE NO_DATA"
                               attribute1="id        REQUIRED STRING '0,1,2,3,4,5,6,all'"
-                              attribute2="var       REQUIRED STRING 'Neumann, Dirichlet, symmetry, LODI, computeFromDensity, Sine, creep, slip Custom, VelocityInlet, PressureBC, WallBC, OutletBC, VelocityFileInput, MassFlowInlet  '"
+                              attribute2="var       REQUIRED STRING 'Neumann, Dirichlet, symmetry, LODI, computeFromDensity, Sine, creep, slip Custom, 
+                              VelocityInlet, PressureBC, WallBC, OutletBC, VelocityFileInput, MassFlowInlet, Swirl  '"
                               attribute3="label     REQUIRED STRING " >
                                                                 
-          <value            spec="REQUIRED STRING"  need_applies_to="var Neumann Dirichlet LODI computeFromDensity Sine creep slip Custom" />
-          <inputfile        spec="OPTIONAL STRING" />
-          <vecvalue         spec="OPTIONAL VECTOR" />
+          <value            spec="REQUIRED STRING"  need_applies_to="var Neumann Dirichlet LODI computeFromDensity Sine creep slip Custom 
+                                                                     MassFlowInlet Swirl" />
+          <inputfile        spec="REQUIRED STRING"  need_applies_to="var VelocityFileInput" />
+          <vecvalue         spec="REQUIRED VECTOR"  need_applies_to="var VelocityInlet"/>
+          <swirl_no         spec="REQUIRED DOUBLE"  need_applies_to="var Swirl"/>
+          <swirl_centroid   spec="REQUIRED VECTOR"  need_applies_to="var Swirl"/>
         </BCType>
       </Face>
     </BoundaryConditions>
@@ -622,16 +646,16 @@
 
     <include href="ice_spec.xml"    section="CFD/ICE" />
     <include href="arches_spec.xml" section="CFD/ARCHES" />
-    <include href="spatialops_spec.xml" section="CFD/SPATIALOPS" />
 
   </CFD>
 
   <!--__________________________________-->
 
   <DataAnalysis                         spec="OPTIONAL NO_DATA" >
-    <Module                             spec="REQUIRED NO_DATA"
+    <Module                             spec="MULTIPLE NO_DATA"
                                           attribute1="name REQUIRED STRING 'lineExtract, containerExtract, particleExtract'" >
-      <material                         spec="REQUIRED STRING" />
+      <material                         spec="OPTIONAL STRING" />
+      <materialIndex                    spec="OPTIONAL INTEGER" />
       <samplingFrequency                spec="REQUIRED DOUBLE" />
       <timeStart                        spec="REQUIRED INTEGER" />
       <timeStop                         spec="REQUIRED INTEGER" />
@@ -726,8 +750,30 @@
     </VarTracker>
   </Scheduler>
 
+  <!--__________________________________-->
+  <!-- image or preprocessing specs     -->
+  <PreprocessTools        spec="OPTIONAL NO_DATA" >
+    <rawToUniqueGrains    spec="OPTIONAL NO_DATA" >
+      <image              spec="REQUIRED STRING" />
+      <ppc                spec="REQUIRED VECTOR 'positive'" />
+      <res                spec="REQUIRED VECTOR 'positive'" />
+      <outputBasename     spec="REQUIRED STRING" />
+      
+      <matl               spec="MULTIPLE NO_DATA"
+                          attribute1="index REQUIRED STRING">
+        <threshold        spec="REQUIRED MULTIPLE_DOUBLES" />
+      </matl>
+      
+      <uniqueGrains       spec="OPTIONAL NO_DATA">
+        <matlIndex        spec="REQUIRED MULTIPLE_DOUBLES" />
+        <threshold        spec="REQUIRED MULTIPLE_DOUBLES" />
+      </uniqueGrains>
+      
 
-
+    </rawToUniqueGrains>
+  </PreprocessTools>
+  
+  <!--__________________________________-->
   <LoadBalancer            spec="OPTIONAL NO_DATA" 
                              attribute1="type REQUIRED STRING 'DLB PLB SimpleLoadBalancer'" >
                              
@@ -826,7 +872,8 @@
   <AdvectSlabs                spec="OPTIONAL NO_DATA" >
     <delt                     spec="REQUIRED DOUBLE" />
   </AdvectSlabs>
-  <AdvectSlabsGPU                spec="OPTIONAL NO_DATA" >
+  
+  <AdvectSlabsGPU             spec="OPTIONAL NO_DATA" >
     <delt                     spec="REQUIRED DOUBLE" />
   </AdvectSlabsGPU>
 

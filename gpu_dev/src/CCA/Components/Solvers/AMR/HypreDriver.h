@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -323,9 +323,9 @@ namespace Uintah {
         if ((finalResNorm > _params->tolerance) ||(finite(finalResNorm) == 0)) {
           if (_params->restart){
             if(pg->myrank() == 0)
-              cout << "AMRSolver not converged in " << numIterations 
-                   << " iterations, final residual= " << finalResNorm
-                   << ", requesting smaller timestep\n";
+              std::cout << "AMRSolver not converged in " << numIterations 
+                        << " iterations, final residual= " << finalResNorm
+                        << ", requesting smaller timestep\n";
             //new_dw->abortTimestep();
             //new_dw->restartTimestep();
           } else {
@@ -345,12 +345,12 @@ namespace Uintah {
                 
         double dt = SCIRun::Time::currentSeconds()-tstart;
         if(pg->myrank() == 0){
-          cerr << "Solve of " << _X_label->getName() 
-               << " on level " << _level->getIndex()
-               << " completed in " << dt 
-               << " seconds (solve only: " << solve_dt 
-               << " seconds, " << numIterations
-               << " iterations, residual=" << finalResNorm << ")\n";
+          std::cerr << "Solve of " << _X_label->getName() 
+                    << " on level " << _level->getIndex()
+                    << " completed in " << dt 
+                    << " seconds (solve only: " << solve_dt 
+                    << " seconds, " << numIterations
+                    << " iterations, residual=" << finalResNorm << ")\n";
         }
           
         delete solver;

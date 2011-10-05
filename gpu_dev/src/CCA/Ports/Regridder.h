@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -40,7 +40,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Ports/SchedulerP.h>
 #include <CCA/Ports/uintahshare.h>
 #include <vector>
-using namespace std;
+
 using SCIRun::IntVector;
 
 namespace Uintah {
@@ -116,7 +116,7 @@ WARNING
 
     virtual bool useDynamicDilation() = 0;
 
-    virtual vector<IntVector> getMinPatchSize() = 0;
+    virtual std::vector<IntVector> getMinPatchSize() = 0;
   private:
     Regridder(const Regridder&);
     Regridder& operator=(const Regridder&);

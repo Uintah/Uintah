@@ -2,12 +2,15 @@
 #define Wasatch_FieldAdaptor_h
 
 #include <spatialops/structured/FVStaggeredFieldTypes.h>
+#include <spatialops/structured/MemoryWindow.h>
 
 #include <Core/Grid/Variables/SFCXVariable.h>  /* x-face variable */
 #include <Core/Grid/Variables/SFCYVariable.h>  /* y-face variable */
 #include <Core/Grid/Variables/SFCZVariable.h>  /* z-face variable */
 #include <Core/Grid/Variables/CCVariable.h>    /* cell variable   */
 #include <Core/Disclosure/TypeDescription.h>
+
+#include <CCA/Components/Wasatch/FieldTypes.h>
 
 
 /**
@@ -19,6 +22,8 @@
  *  This information is provided for the interface to the Expression
  *  library.  There should be no reason to use it otherwise.
  */
+
+namespace Uintah{ class Patch; }
 
 namespace Wasatch{
 
@@ -33,6 +38,36 @@ namespace Wasatch{
     YVOL, YSURFX, YSURFY, YSURFZ,
     ZVOL, ZSURFX, ZSURFY, ZSURFZ
   };
+
+  /**
+   *  \ingroup WasatchFields
+   *  \brief obtain the memory window for a uintah field that is to be wrapped as a SpatialOps field
+   *  \param globSize - the full size of the parent field.
+   *  \param patch - the patch that the field is associated with.
+   */
+  template< typename FieldT >
+  SpatialOps::structured::MemoryWindow
+  get_memory_window_for_uintah_field( const Uintah::Patch* const patch );
+
+  /**
+   *  \ingroup WasatchFields
+   *
+   *  \brief wrap a uintah field to obtain a SpatialOps field,
+   *         returning a new pointer.  The caller is responsible for
+   *         freeing the memory.
+   *  \param uintahVar - the uintah variable to wrap
+   *  \param patch - the patch that the field is associated with.
+   */
+  template< typename FieldT, typename UFT >
+  inline FieldT* wrap_uintah_field_as_spatialops( UFT& uintahVar,
+                                                  const Uintah::Patch* const patch )
+  {
+    using SCIRun::IntVector;
+
+    return new FieldT( get_memory_window_for_uintah_field<FieldT>( patch ),
+                       const_cast<double*>( uintahVar.getPointer() ),
+                       SpatialOps::structured::ExternalStorage );
+  }
 
   /**
    *  \ingroup WasatchParser
@@ -51,31 +86,29 @@ namespace Wasatch{
    *   - \c const_type : the Uintah const field type.
    */
   template<typename FieldT> struct SelectUintahFieldType;
-  typedef double AtomicT;
 
-#define DECLARE_SELECT_FIELD_TYPE_STRUCT( VOLT )                \
-  template<> struct SelectUintahFieldType< VOLT >{              \
-    typedef Uintah::CCVariable     <AtomicT>  type;             \
-    typedef Uintah::constCCVariable<AtomicT>  const_type;       \
+#define DECLARE_SELECT_FIELD_TYPE_STRUCT( VOLT )                        \
+  template<> struct SelectUintahFieldType< VOLT >{                      \
+    typedef Uintah::CCVariable     <double>  type;                      \
+    typedef Uintah::constCCVariable<double>  const_type;                \
   };                                                                    \
   template<> struct SelectUintahFieldType< SpatialOps::structured::FaceTypes<VOLT>::XFace >{ \
-    typedef Uintah::SFCXVariable     <AtomicT>  type;                   \
-    typedef Uintah::constSFCXVariable<AtomicT>  const_type;             \
+    typedef Uintah::SFCXVariable     <double>  type;                    \
+    typedef Uintah::constSFCXVariable<double>  const_type;              \
   };                                                                    \
   template<> struct SelectUintahFieldType< SpatialOps::structured::FaceTypes<VOLT>::YFace >{ \
-    typedef Uintah::SFCYVariable     <AtomicT>  type;                   \
-    typedef Uintah::constSFCYVariable<AtomicT>  const_type;             \
+    typedef Uintah::SFCYVariable     <double>  type;                    \
+    typedef Uintah::constSFCYVariable<double>  const_type;              \
   };                                                                    \
   template<> struct SelectUintahFieldType< SpatialOps::structured::FaceTypes<VOLT>::ZFace >{ \
-    typedef Uintah::SFCZVariable     <AtomicT>  type;                   \
-    typedef Uintah::constSFCZVariable<AtomicT>  const_type;             \
+    typedef Uintah::SFCZVariable     <double>  type;                    \
+    typedef Uintah::constSFCZVariable<double>  const_type;              \
   };
-
+  
   DECLARE_SELECT_FIELD_TYPE_STRUCT( SpatialOps::structured::SVolField );
   DECLARE_SELECT_FIELD_TYPE_STRUCT( SpatialOps::structured::XVolField );
   DECLARE_SELECT_FIELD_TYPE_STRUCT( SpatialOps::structured::YVolField );
   DECLARE_SELECT_FIELD_TYPE_STRUCT( SpatialOps::structured::ZVolField );
-
 
   /**
    *  \ingroup WasatchFields
@@ -84,7 +117,7 @@ namespace Wasatch{
    *         field type.
    */
   template<typename FieldT>
-  inline const Uintah::TypeDescription* getUintahFieldTypeDescriptor()
+  inline const Uintah::TypeDescription* get_uintah_field_type_descriptor()
   {
     return SelectUintahFieldType<FieldT>::type::getTypeDescription();
   }
@@ -94,8 +127,8 @@ namespace Wasatch{
    *  \brief Obtain the number of ghost cells for a given SpatialOps
    *         field type.
    */
-  template<typename FieldT> inline int getNGhost(){ return FieldT::Ghost::NGHOST; }
-  template<> inline int getNGhost<double>(){ return 0; };
+  template<typename FieldT> inline int get_n_ghost(){ return FieldT::Ghost::NGHOST; }
+  template<> inline int get_n_ghost<double>(){ return 0; };
 
   /**
    *  \ingroup WasatchFields
@@ -106,9 +139,9 @@ namespace Wasatch{
    *          cells in each direction.
    */  
   template<typename FieldT>
-  inline Uintah::IntVector getUintahGhostDescriptor()
+  inline Uintah::IntVector get_uintah_ghost_descriptor()
   {
-    const int ng = getNGhost<FieldT>();
+    const int ng = get_n_ghost<FieldT>();
     return Uintah::IntVector(ng,ng,ng);
   }
 
@@ -121,28 +154,7 @@ namespace Wasatch{
    *
    *  \return The Uintah::Ghost::GhostType for this field type.
    */
-  template<typename FieldT> Uintah::Ghost::GhostType getUintahGhostType();
-
-  template<> inline Uintah::Ghost::GhostType getUintahGhostType<SpatialOps::structured::SVolField  >(){ return Uintah::Ghost::AroundCells; }
-  template<> inline Uintah::Ghost::GhostType getUintahGhostType<SpatialOps::structured::SSurfXField>(){ return Uintah::Ghost::AroundFaces; }
-  template<> inline Uintah::Ghost::GhostType getUintahGhostType<SpatialOps::structured::SSurfYField>(){ return Uintah::Ghost::AroundFaces; }
-  template<> inline Uintah::Ghost::GhostType getUintahGhostType<SpatialOps::structured::SSurfZField>(){ return Uintah::Ghost::AroundFaces; }
-
-  template<> inline Uintah::Ghost::GhostType getUintahGhostType<SpatialOps::structured::XVolField  >(){ return Uintah::Ghost::AroundCells; }
-  template<> inline Uintah::Ghost::GhostType getUintahGhostType<SpatialOps::structured::XSurfXField>(){ return Uintah::Ghost::AroundFaces; }
-  template<> inline Uintah::Ghost::GhostType getUintahGhostType<SpatialOps::structured::XSurfYField>(){ return Uintah::Ghost::AroundFaces; }
-  template<> inline Uintah::Ghost::GhostType getUintahGhostType<SpatialOps::structured::XSurfZField>(){ return Uintah::Ghost::AroundFaces; }
-
-  template<> inline Uintah::Ghost::GhostType getUintahGhostType<SpatialOps::structured::YVolField  >(){ return Uintah::Ghost::AroundCells; }
-  template<> inline Uintah::Ghost::GhostType getUintahGhostType<SpatialOps::structured::YSurfXField>(){ return Uintah::Ghost::AroundFaces; }
-  template<> inline Uintah::Ghost::GhostType getUintahGhostType<SpatialOps::structured::YSurfYField>(){ return Uintah::Ghost::AroundFaces; }
-  template<> inline Uintah::Ghost::GhostType getUintahGhostType<SpatialOps::structured::YSurfZField>(){ return Uintah::Ghost::AroundFaces; }
-
-  template<> inline Uintah::Ghost::GhostType getUintahGhostType<SpatialOps::structured::ZVolField  >(){ return Uintah::Ghost::AroundCells; }
-  template<> inline Uintah::Ghost::GhostType getUintahGhostType<SpatialOps::structured::ZSurfXField>(){ return Uintah::Ghost::AroundFaces; }
-  template<> inline Uintah::Ghost::GhostType getUintahGhostType<SpatialOps::structured::ZSurfYField>(){ return Uintah::Ghost::AroundFaces; }
-  template<> inline Uintah::Ghost::GhostType getUintahGhostType<SpatialOps::structured::ZSurfZField>(){ return Uintah::Ghost::AroundFaces; }
-
+  template<typename FieldT> Uintah::Ghost::GhostType get_uintah_ghost_type();
 }
 
 #endif // Wasatch_FieldAdaptor_h

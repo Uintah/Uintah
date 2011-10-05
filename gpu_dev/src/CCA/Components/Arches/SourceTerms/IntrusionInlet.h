@@ -11,7 +11,7 @@
 /** 
  * @class  Intrusion Inlet
  * @author Jeremy Thornock
- * @date   Aug 2010
+ * @date   Aug 2011
  * 
  * @brief Adds a source term to cells adjacent to an intrusion to introduce sources
  *        of momentum, mass, and energy (like an inlet boundary condition). 

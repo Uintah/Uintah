@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -35,7 +35,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Arches/ArchesLabel.h>
 #include <CCA/Components/Arches/BoundaryCondition.h>
 #include <CCA/Components/Arches/Discretization.h>
-#include <CCA/Components/Arches/PressureSolver.h>
+#include <CCA/Components/Arches/PressureSolverV2.h>
 #include <CCA/Components/Arches/Source.h>
 #include <CCA/Components/Arches/StencilMatrix.h>
 #include <CCA/Ports/Scheduler.h>

@@ -142,6 +142,7 @@ Thread::Thread( ThreadGroup * g, const char * name )
   detached_   = false;
   runner_     = 0;
   cpu_        = -1;
+  myid_         = 0;
   stacksize_  = Thread::DEFAULT_STACKSIZE;
   abortCleanupFunc_ = NULL;
 }

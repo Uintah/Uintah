@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -103,7 +103,7 @@ WARNING
     private:
       BNRTask(Region patch,
               FlagsList flags,
-              const vector<int> &p_group,
+              const std::vector<int> &p_group,
               int p_rank,
               BNRTask *parent,
               unsigned int tag);
@@ -123,7 +123,7 @@ WARNING
     Task_Status status_;                // Status of current task
     Region patch_;                      // patch that is being worked on
     FlagsList flags_;                   // list of flags inside this task
-    vector<int> flag_info_;             // information on the flags on all processors
+    std::vector<int> flag_info_;        // information on the flags on all processors
     BNRTask *parent_;                   // pointer to parent task
     BNRTask *sibling_;                  // pointer to sibling task
     BNRTask *left_, *right_;            // left and right child tasks
@@ -134,7 +134,7 @@ WARNING
 
     // Signatures
     int sig_size_;                      // size of the signature
-    vector<int>     count_;             // histogram signature
+    std::vector<int>     count_;        // histogram signature
     IntVector sig_offset_;              // offset into count_ and sum_ for each dimension      
                 
     // MPI Communication state
@@ -144,18 +144,18 @@ WARNING
     int d_;                             // dimension of hypercube
                 
     // Communication buffers
-    vector<int> flag_info_buffer_;       // buffer for reducing flag info
-    vector<int> sum_;                   // buffer for calculating global histogram
+    std::vector<int> flag_info_buffer_; // buffer for reducing flag info
+    std::vector<int> sum_;              // buffer for calculating global histogram
     ChildTasks ctasks_;                 // structure of child tasks
 
     // Participating processor information
-    vector<int> p_group_;               // particpating processor group
+    std::vector<int> p_group_;          // particpating processor group
     int p_rank_;                        // rank within group
         
     // pointer to controlling algorithm
     static GBRv2Regridder *controller_;   // controlling algorithm;
 
-    vector<Region> my_patches_;         // list of patches
+    std::vector<Region> my_patches_;    // list of patches
     int my_size_;                       // number of patches on the parent
     int left_size_;                     // number of patches in left child
     int right_size_;                    // number of patches in right child

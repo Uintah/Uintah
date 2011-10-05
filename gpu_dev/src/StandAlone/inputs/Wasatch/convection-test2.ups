@@ -8,6 +8,10 @@
 
   <Wasatch>
 
+    <Density>
+      <IsConstant>true</IsConstant>
+    </Density>
+
     <!-- Set the initial condition for non-staggered scalar -->
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
@@ -55,7 +59,10 @@
     </BasicExpression>
     
     <TransportEquation equation="generic">
+
       <SolutionVariable>phix-scalar</SolutionVariable>
+      <StrongForm>true</StrongForm>
+
       <ConvectiveFluxExpression>
         <Method>UPWIND</Method> 
         <Direction>X</Direction>
@@ -66,7 +73,10 @@
     </TransportEquation>
 
     <TransportEquation equation="generic">
+
       <SolutionVariable>phiy-scalar</SolutionVariable>
+      <StrongForm>true</StrongForm>
+
       <ConvectiveFluxExpression>
         <Method>UPWIND</Method> 
         <Direction>Y</Direction>
@@ -77,7 +87,10 @@
     </TransportEquation>
 
     <TransportEquation equation="generic">
+
       <SolutionVariable>phiz-scalar</SolutionVariable>
+      <StrongForm>true</StrongForm>
+
       <ConvectiveFluxExpression>
         <Method>UPWIND</Method> 
         <Direction>Z</Direction>

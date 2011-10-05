@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -33,7 +33,6 @@ DEALINGS IN THE SOFTWARE.
 #define UINTAH_BaseIterator_H
 
 #include <ostream>
-using namespace std;
 
 #include <Core/Geometry/IntVector.h>
 
@@ -122,7 +121,7 @@ namespace Uintah {
      */
     virtual unsigned int size() const =0;
 
-    virtual ostream& limits(ostream&) const = 0;
+    virtual std::ostream& limits(std::ostream&) const = 0;
 
 
     protected:
@@ -143,7 +142,7 @@ namespace Uintah {
     /**
      * send iterator information to the ostream 
      */
-    virtual ostream& put(ostream&) const = 0;
+    virtual std::ostream& put(std::ostream&) const = 0;
 
     /**
      * resets the iterator to the begining

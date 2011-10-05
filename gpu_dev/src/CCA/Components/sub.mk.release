@@ -2,7 +2,7 @@
 # 
 # The MIT License
 # 
-# Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+# Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 # Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 # University of Utah.
 # 
@@ -34,8 +34,6 @@
 
 SRCDIR  := CCA/Components
 
-ADIR = $(SRCDIR)/Arches
-
 # The following variables are used by the Fake* scripts... please
 # do not modify...
 #
@@ -54,10 +52,7 @@ ifeq ($(BUILD_ICE),yes)
   ICE      := $(SRCDIR)/ICE
 endif
 ifeq ($(BUILD_ARCHES),yes)
-  ARCHES   := $(SRCDIR)/Arches \
-	      $(ADIR)/fortran           $(ADIR)/Mixing \
-	      $(ADIR)/Radiation        $(ADIR)/Radiation/fortran $(ADIR)/MCRT/ArchesRMCRT \
-              $(SRCDIR)/SpatialOps 
+  ARCHES   := $(SRCDIR)/Arches
   ifeq ($(BUILD_MPM),yes)
     MPMARCHES := $(SRCDIR)/MPMArches
   endif

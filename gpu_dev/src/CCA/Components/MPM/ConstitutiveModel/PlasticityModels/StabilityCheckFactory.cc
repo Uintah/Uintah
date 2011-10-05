@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -37,7 +37,9 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Malloc/Allocator.h>
 #include <string>
+#include <Core/Parallel/Parallel.h>
 
+using namespace std;
 using namespace Uintah;
 
 /// Create an instance of a stabilty check method
@@ -46,7 +48,7 @@ StabilityCheck* StabilityCheckFactory::create(ProblemSpecP& ps)
 {
   ProblemSpecP child = ps->findBlock("stability_check");
   if(!child) {
-    cerr << "**WARNING** Creating default action (no stability check)" << endl;
+    proc0cout << "**WARNING** Creating default action (no stability check)" << endl;
     return(scinew NoneCheck());
     throw ProblemSetupException("Cannot find stability check criterion.", __FILE__, __LINE__);
   }
@@ -64,7 +66,7 @@ StabilityCheck* StabilityCheckFactory::create(ProblemSpecP& ps)
   else if (mat_type == "none")
     return(scinew NoneCheck(child));
   else {
-    cerr << "**WARNING** Creating default action (no stability check)" << endl;
+    proc0cout << "**WARNING** Creating default action (no stability check)" << endl;
     return(scinew NoneCheck(child));
     // throw ProblemSetupException("Unknown Stability Check ("+mat_type+")", __FILE__, __LINE__);
   }
@@ -85,7 +87,7 @@ StabilityCheckFactory::createCopy(const StabilityCheck* sc)
     return(scinew NoneCheck(dynamic_cast<const NoneCheck*>(sc)));
 
   else {
-    cerr << "**WARNING** Creating copy of default action (no stability check)" << endl;
+    proc0cout << "**WARNING** Creating copy of default action (no stability check)" << endl;
     return(scinew NoneCheck(dynamic_cast<const NoneCheck*>(sc)));
     //  return 0;
   }

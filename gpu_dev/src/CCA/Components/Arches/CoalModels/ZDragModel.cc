@@ -452,15 +452,12 @@ ZDragModel::computeModel( const ProcessorGroup* pc,
         double t_p = rhop/(18*kvisc)*pow(length,2);
 
 
-        
-        model[c] = (phi/t_p*(cartGas.z()-cartPart.z())+gravity.z())/(d_zvel_scaling_factor);
-
-        gas_source[c] = -weight[c]*d_w_scaling_factor*rhop/6*pi*phi/t_p*(cartGas.z()-cartPart.z())*pow(length,3);
-
-        if(isnan(model[c])){
-          model[c] = 0.;
+        if(d_unweighted){        
+          model[c] = (phi/t_p*(cartGas.z()-cartPart.z())+gravity.z())/(d_zvel_scaling_factor);
+        } else {
+          model[c] = weight[c]*(phi/t_p*(cartGas.z()-cartPart.z())+gravity.z())/(d_zvel_scaling_factor);
         }
-
+        gas_source[c] = -weight[c]*d_w_scaling_factor*rhop/6*pi*phi/t_p*(cartGas.z()-cartPart.z())*pow(length,3);
 
         /*
         //KLUDGE: more implicit clipping

@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -30,8 +30,8 @@ DEALINGS IN THE SOFTWARE.
 
 //----- PressureSolver.h -----------------------------------------------
 
-#ifndef Uintah_Components_Arches_PressureSolver_h
-#define Uintah_Components_Arches_PressureSolver_h
+#ifndef Uintah_Components_Arches_PressureSolverV2_h
+#define Uintah_Components_Arches_PressureSolverV2_h
 
 #include <CCA/Ports/SchedulerP.h>
 #include <CCA/Components/Arches/ArchesConstVariables.h>
@@ -39,6 +39,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <CCA/Ports/DataWarehouseP.h>
 #include <Core/Grid/LevelP.h>
+#include <Core/Grid/Task.h>
 
 
 namespace Uintah {
@@ -93,7 +94,21 @@ public:
                                  bool d_EKTCorrection,
                                  bool doing_EKT_now);
 
+  //______________________________________________________________________
+  // addHydrostaticTermtoPressure:
+  // Add the hydrostatic term to the relative pressure
+  void sched_addHydrostaticTermtoPressure(SchedulerP& sched,
+                                          const PatchSet* patches,
+                                          const MaterialSet* matls,
+                                          const TimeIntegratorLabel* timelabels);
 
+  void addHydrostaticTermtoPressure(const ProcessorGroup* pc,
+                                    const PatchSubset* patches,
+                                    const MaterialSubset* matls,
+                                    DataWarehouse* old_dw,
+                                    DataWarehouse* new_dw,
+                                    const TimeIntegratorLabel* timelabels);
+                                    
 
   inline void setPressureCorrectionFlag(bool pressure_correction) {
     d_pressure_correction = pressure_correction;
@@ -104,6 +119,8 @@ public:
 protected:
 
 private:
+  enum WhichCM{Computes=0, Modifies=1, none=-9};
+  
   //______________________________________________________________________/
   // Default : Construct an empty instance of the Pressure solver.
   PressureSolver(const ProcessorGroup* myworld);
@@ -125,6 +142,7 @@ private:
                          const MaterialSubset* matls,
                          DataWarehouse* new_dw,
                          DataWarehouse* matrix_dw,
+                         const PatchSet* patchSet,
                          const TimeIntegratorLabel* timelabels,
                          bool extraProjection,
                          bool d_EKTCorrection,
@@ -147,8 +165,10 @@ private:
                        const MaterialSubset*,
                        DataWarehouse* ,
                        DataWarehouse* ,
-                       const string& which_dw,
-                       const TimeIntegratorLabel* timelabels );
+                       const TimeIntegratorLabel* timelabels,
+                       const bool extraProjection,
+                       const bool d_EKTCorrection,
+                       const bool doing_EKT_now );
                        
   //______________________________________________________________________
   // SolveSystem:
@@ -176,42 +196,35 @@ private:
                       const MaterialSet* matls,
                       const TimeIntegratorLabel* timelabels,
                       bool extraProjection,
-                      bool doing_EKT_now);
+                      bool doing_EKT_now,
+                      string& pressLabel);
                                  
   void  Extract_X ( const ProcessorGroup* pg,
                     const PatchSubset* patches,
                     const MaterialSubset* matls,
                     DataWarehouse* old_dw,
                     DataWarehouse* new_dw,
-                    const string& compute_or_modify,
-                    const VarLabel* varLabel );
+                    WhichCM compute_or_modify,
+                    const VarLabel* pressLabel,
+                    const VarLabel* refPressLabel,
+                    const string integratorPhase );
                     
   //______________________________________________________________________
   //  normalizePress:
   //  Subtract off the reference pressure from pressure field                 
   void sched_normalizePress(SchedulerP& sched,
                             const PatchSet* patches,
-                            const MaterialSet* matls);
+                            const MaterialSet* matls,
+                            const string& pressLabel,
+                            const TimeIntegratorLabel* timelabels);
                             
   void normalizePress ( const ProcessorGroup* pg,
                         const PatchSubset* patches,
                         const MaterialSubset* matls,
                         DataWarehouse*,
-                        DataWarehouse* new_dw);
-  //______________________________________________________________________
-  // addHydrostaticTermtoPressure:
-  // Add the hydrostatic term to the relative pressure
-  void sched_addHydrostaticTermtoPressure(SchedulerP& sched,
-                                          const PatchSet* patches,
-                                          const MaterialSet* matls,
-                                          const TimeIntegratorLabel* timelabels);
-
-  void addHydrostaticTermtoPressure(const ProcessorGroup* pc,
-                                    const PatchSubset* patches,
-                                    const MaterialSubset* matls,
-                                    DataWarehouse* old_dw,
-                                    DataWarehouse* new_dw,
-                                    const TimeIntegratorLabel* timelabels);
+                        DataWarehouse* new_dw,
+                        const VarLabel* pressLabel,
+                        const VarLabel* refPressLabel);
                                                                    
                            
   //__________________________________
@@ -235,8 +248,7 @@ private:
  private:
 
   bool d_always_construct_A;
-  bool d_construct_A; 
-  bool d_construct_solver_obj; 
+  bool d_construct_A;
 
   ArchesLabel* d_lab;
   const MPMArchesLabel* d_MAlab;
@@ -251,6 +263,7 @@ private:
   int d_maxIterations;
   
   int d_indx;         // Arches matl index.
+  int d_iteration;
 
   //reference point for the solvers
   IntVector d_pressRef;

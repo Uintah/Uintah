@@ -6,14 +6,19 @@
 #include <expression/Expr_Expression.h>
 
 /**
- *  \class PrimVar
- *  \author James C. Sutherland
- *  \brief given \f$\rho\phi$\f and \f$\rho$\f, this calculates \f$\phi$\f.
+ *  \class 	PrimVar
+ *  \ingroup 	Expressions
+ *  \author 	James C. Sutherland
  *
- *   Note: it is currently assumed that \f$\rho$\f is an SVolField
+ *  \brief given \f$\rho \phi\f$ and \f$\rho\f$, this calculates \f$\phi\f$.
+ *
+ *  \tparam FieldT - the type of field for \f$\rho\phi\f$ and \f$\phi\f$.
+ *  \tparam DensT  - the type of field for \f$\rho\f$.
+ *
+ *   Note: it is currently assumed that \f$\rho\f$ is an SVolField
  *         type.  Therefore, no interpolation of the density occurs in
  *         that case.  In other cases, the density is interpolated to
- *         the location of \f$\rho\phi$\f.
+ *         the location of \f$\rho\phi\f$.
  */
 template< typename FieldT,
           typename DensT >

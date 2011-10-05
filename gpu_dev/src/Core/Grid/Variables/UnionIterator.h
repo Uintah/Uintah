@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -73,13 +73,13 @@ namespace Uintah {
    ****************************************/
 
   class UINTAHSHARE UnionIterator : public ListOfCellsIterator {
-    friend ostream& operator<<(std::ostream& out, const Uintah::UnionIterator& b);
+    friend std::ostream& operator<<(std::ostream& out, const Uintah::UnionIterator& b);
     public:
 
     UnionIterator(Iterator iter1, Iterator iter2);
     UnionIterator() : ListOfCellsIterator() {}
 
-    ostream& put(std::ostream& out) const
+    std::ostream& put(std::ostream& out) const
     {
       out << *this;
       return out;

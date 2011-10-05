@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -32,6 +32,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Malloc/Allocator.h>
+#include <Core/Parallel/Parallel.h>
 #include <Core/Util/Endian.h>
 #include <fstream>
 #include <iostream>
@@ -40,6 +41,7 @@ DEALINGS IN THE SOFTWARE.
 using namespace Uintah;
 using namespace SCIRun;
 using std::cerr;
+using std::cout;
 using std::endl;
 
 const string FileGeometryPiece::TYPE_NAME = "file";
@@ -51,7 +53,42 @@ numbered_str(const string & s, int is)
   b << s << is;
   return b.str();
 }
+//______________________________________________________________________
+//  bulletproofing
+void FileGeometryPiece::checkFileType(std::ifstream & source, string& fileType, string& file_name){
 
+  int c;
+  while((c = source.get()) != EOF && c <= 127) ;
+
+  if(c == EOF ) {  
+    // the file is ascii
+    if( fileType != "text" ){
+      std::ostringstream warn;
+      warn << "ERROR: opening MPM geometry file (" << file_name+")\n" 
+           << "In the ups file you've specified that the file format is bin or " << fileType << "\n"
+           << "However this is a text file.\n";
+      throw ProblemSetupException(warn.str(),__FILE__, __LINE__);
+    }
+  } else{
+    // the file is binary
+    if( fileType != "bin" && fileType != "lsb" && fileType != "msb" ){
+      std::ostringstream warn;
+      warn << "ERROR: opening MPM geometry file (" << file_name+")\n" 
+           << "In the ups file you've specified that the file format is bin or " << fileType << "\n"
+           << "However this is a binary file.  Please correct this inconsistency.\n";
+      throw ProblemSetupException(warn.str(),__FILE__, __LINE__);
+    }
+  }
+  
+  // Reset read pointer to beginning of file
+  source.clear();
+  source.seekg (0, std::ios::beg);
+
+  // Check that file can now be read.
+  ASSERT(!source.eof());
+}
+//______________________________________________________________________
+//
 FileGeometryPiece::FileGeometryPiece( ProblemSpecP & ps )
 {
   name_ = "Unnamed " + TYPE_NAME + " from PS";
@@ -64,71 +101,53 @@ FileGeometryPiece::FileGeometryPiece( ProblemSpecP & ps )
     d_vars.push_back(next_var_name);
   }
   
-  d_file_format = "text";
-  d_presplit    = true;  // default expects input to have been been processed with pfs
-#if 1
-  cerr << "reading: positions";
+  proc0cout << "File Geometry Piece: reading positions ";
   for(list<string>::const_iterator vit(d_vars.begin());vit!=d_vars.end();vit++) {
     if       (*vit=="p.volume") {
-      cerr << " volume";
+      proc0cout << " and volume";
     } else if(*vit=="p.temperature") {
-      cerr << " temperature";
+      proc0cout << " and  temperature";
     } else if(*vit=="p.color"){
-      cerr << " color";
+      proc0cout << " and  color";
     } else if(*vit=="p.externalforce") {
-      cerr << " externalforce";
+      proc0cout << " and  externalforce";
     } else if(*vit=="p.fiberdir") {
-      cerr << " fiberdirn";
-    } else if(*vit=="p.velocity") { // gcd add 
-      cerr << " velocity";         // end gcd add
+      proc0cout << " and  fiberdirn";
+    } else if(*vit=="p.velocity") {
+      proc0cout << " and  velocity";
     }
   }
-  cerr << endl;
-#endif
+  proc0cout << endl;
   
-  string fformat_txt;
-  if(ps->get("format",fformat_txt)) {
-    if (fformat_txt=="split") 
-      {
-        // leave for backward compatibility
-        d_file_format = "text";
-        d_presplit    = true;
-      }
-    else if(fformat_txt=="bin")   
-      d_file_format = isLittleEndian()?"lsb":"msb";
-    else
-      d_file_format = fformat_txt;
+  ps->getWithDefault("format",d_file_format,"text");
+  if (d_file_format=="bin"){   
+    d_file_format = isLittleEndian()?"lsb":"msb";
   }
-  ps->get("split", d_presplit);
   
-  if(this->d_presplit) {
-    // read points now to find bounding box
-    
-    // We must first read in the min and max from file.0 so
-    // that we can determine the BoundingBox for the geometry
-    string file_name = numbered_str(d_file_name+".", 0);
-    std::ifstream source(file_name.c_str());
-    if (!source ){
-      throw ProblemSetupException("ERROR: opening MPM geometry file '"+file_name+"'\nFailed to find point file",
-                                  __FILE__, __LINE__);
-    }
-    
-    // note that the header is always text, even for binary formats
-    Point min, max;
-    read_bbox(source, min, max);
-    source.close();
-    
-    Vector fudge(1.e-5,1.e-5,1.e-5);
-    min = min - fudge;
-    max = max + fudge;
-    d_box = Box(min,max);
-    
-  } else {
-    // if not using split format, have to read points now to find bounding box
-    readPoints(-1); // pass pid of -1 to say we are reading all points
+  // We must first read in the min and max from file.0 so
+  // that we can determine the BoundingBox for the geometry
+  string file_name = numbered_str(d_file_name+".", 0);
+  std::ifstream source(file_name.c_str());
+  if (!source ){
+    throw ProblemSetupException("ERROR: opening MPM geometry file '"+file_name+"'\nFailed to find points file",
+                                __FILE__, __LINE__);
   }
-}
 
+  // bulletproofing
+  checkFileType(source, d_file_format, file_name);
+
+  // find the bounding box.
+  Point min, max;
+  read_bbox(source, min, max);
+  source.close();
+
+  Vector fudge(1.e-5,1.e-5,1.e-5);
+  min = min - fudge;
+  max = max + fudge;
+  d_box = Box(min,max);  
+}
+//______________________________________________________________________
+//
 FileGeometryPiece::FileGeometryPiece(const string& /*file_name*/)
 {
   name_ = "Unnamed " + TYPE_NAME + " from file_name";
@@ -137,24 +156,27 @@ FileGeometryPiece::FileGeometryPiece(const string& /*file_name*/)
 FileGeometryPiece::~FileGeometryPiece()
 {
 }
-
+//______________________________________________________________________
+//
 void
 FileGeometryPiece::outputHelper( ProblemSpecP & ps ) const
 {
   ps->appendElement("name",d_file_name);
   ps->appendElement("format",d_file_format);
-  ps->appendElement("split",d_presplit);
+  
   for (list<string>::const_iterator it = d_vars.begin(); it != d_vars.end(); it++) {
     ps->appendElement("var",*it);
   }
 }
-
+//______________________________________________________________________
+//
 GeometryPieceP
 FileGeometryPiece::clone() const
 {
   return scinew FileGeometryPiece(*this);
 }
-
+//______________________________________________________________________
+//
 bool
 FileGeometryPiece::inside(const Point& p) const
 {
@@ -164,20 +186,23 @@ FileGeometryPiece::inside(const Point& p) const
   else
     return false;
 }
-
+//______________________________________________________________________
+//
 Box
 FileGeometryPiece::getBoundingBox() const
 {
   return d_box;
 }
 
-
+//______________________________________________________________________
+//
 void
 FileGeometryPiece::read_bbox(std::istream & source, Point & min, 
                              Point & max) const
 {
   if(d_file_format=="text") {
     source >> min(0) >> min(1) >> min(2) >> max(0) >> max(1) >> max(2);
+   
   } else {
     // FIXME: never changes, should save this !
     const bool iamlittle = isLittleEndian();
@@ -191,17 +216,22 @@ FileGeometryPiece::read_bbox(std::istream & source, Point & min,
     source.read((char *)&t, sizeof(double)); if(needflip) swapbytes(t); max(2) = t;
   }
 }
-
+//______________________________________________________________________
+//
 bool
 FileGeometryPiece::read_line(std::istream & is, Point & xmin, Point & xmax)
 {
   double x1,x2,x3;
+  //__________________________________
+  //  TEXT FILE
   if(d_file_format=="text") {
     double v1,v2,v3;
     
     // line always starts with coordinates
     is >> x1 >> x2 >> x3;
-    if(is.eof()) return false; // out of points
+    if(is.eof()){
+     return false; // out of points
+    }
     d_points.push_back(Point(x1,x2,x3));
     
     for(list<string>::const_iterator vit(d_vars.begin());vit!=d_vars.end();vit++) {
@@ -225,17 +255,21 @@ FileGeometryPiece::read_line(std::istream & is, Point & xmin, Point & xmax)
         if(is >> v1 >> v2 >> v3){
           d_fiberdirs.push_back(Vector(v1,v2,v3));
 	}  
-      } else if(*vit=="p.velocity") {        // add by gcd
+      } else if(*vit=="p.velocity") {
         if(is >> v1 >> v2 >> v3){
           d_velocity.push_back(Vector(v1,v2,v3));
         }
       }
-                                             // end add by gcd
+
       if(!is) {
-        throw ProblemSetupException("Failed while reading point text point file", __FILE__, __LINE__);
+        std::ostringstream warn;
+        warn << "Failed while reading point text point file \n"
+             << "Position: "<< Point(x1,x2,x3) << "\n"; 
+        throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
       }
-  }
-    
+    }
+    //__________________________________
+    //  BINARY FILE
   } else if(d_file_format=="lsb" || d_file_format=="msb") {
     // read unformatted binary numbers
     
@@ -244,8 +278,13 @@ FileGeometryPiece::read_line(std::istream & is, Point & xmin, Point & xmax)
     // never changes, should save this !
     const bool iamlittle = isLittleEndian();
     const bool needflip = (iamlittle && (d_file_format=="msb")) || (!iamlittle && (d_file_format=="lsb"));
+
+    is.read((char*)&x1, sizeof(double)); 
     
-    is.read((char*)&x1, sizeof(double)); if(!is) return false;
+    if(!is){
+      return false;  // out of points
+    }
+    
     is.read((char*)&x2, sizeof(double));
     is.read((char*)&x3, sizeof(double));
     if(needflip) {
@@ -254,8 +293,10 @@ FileGeometryPiece::read_line(std::istream & is, Point & xmin, Point & xmax)
       swapbytes(x3);
     }
     d_points.push_back(Point(x1,x2,x3));
-    
+    //__________________________________
+    //
     for(list<string>::const_iterator vit(d_vars.begin());vit!=d_vars.end();vit++) {
+    
       if (*vit=="p.volume") {
         if(is.read((char*)&v[0], sizeof(double))) {
           if(needflip){ 
@@ -294,77 +335,63 @@ FileGeometryPiece::read_line(std::istream & is, Point & xmin, Point & xmax)
             swapbytes(v[2]);
           }
           d_fiberdirs.push_back(Vector(v[0],v[1],v[2]));
-	}
-      } else if(*vit=="p.velocity") {       // gcd adds
-	if(is.read((char*)&v[0], sizeof(double)*3)) {
-	  if(needflip) {
-	    swapbytes(v[0]);
-	    swapbytes(v[1]);
-	    swapbytes(v[2]);
+	 }
+      } else if(*vit=="p.velocity") {
+	 if(is.read((char*)&v[0], sizeof(double)*3)) {
+	   if(needflip) {
+	     swapbytes(v[0]);
+	     swapbytes(v[1]);
+	     swapbytes(v[2]);
           }
           d_velocity.push_back(Vector(v[0],v[1],v[2]));
-	}  
-    }                                          // end gcd adds
+	 }  
+      }          
       if(!is){
-        throw ProblemSetupException("Failed while reading point text point file", __FILE__, __LINE__);
+        std::ostringstream warn;
+        warn << "Failed while reading point text point file \n"
+             << "Position: "<< Point(x1,x2,x3) << "\n";
+        throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
       }
-  }
-  } else if(d_file_format=="gzip") {
-    throw ProblemSetupException("Sorry - gzip not implemented !", __FILE__, __LINE__);
+      
+    }
   }
   
   xmin = Min(xmin, Point(x1,x2,x3));
   xmax = Max(xmax, Point(x1,x2,x3));
   return true;
 }
-
+//______________________________________________________________________
+//
 void
-FileGeometryPiece::readPoints(int pid)
+FileGeometryPiece::readPoints(int patchID)
 {
-  // use pid of -1 to indicate reading all points
-  if(!d_presplit && pid!=-1) return; // already read points
-  
   std::ifstream source;
   
   Point minpt( 1e30, 1e30, 1e30);
   Point maxpt(-1e30,-1e30,-1e30);
   
   string file_name;
-  if(d_presplit) {
-    // pre-processed split point files
-    char fnum[5];
-    sprintf(fnum,".%d",pid);
-    file_name = d_file_name+fnum;
-    
-    source.open(file_name.c_str());
-    
-    // read past the bounding box line
-    Point fakemin, fakemax;
-    read_bbox(source, fakemin, fakemax);
-    
-  } else {
-    file_name = d_file_name;
-    source.open(file_name.c_str());
-  }    
+  char fnum[5];
   
-  if (!source ){
-    throw ProblemSetupException("ERROR: opening MPM point file '"+file_name+"'\n:  The file must be in the same directory as sus",
-                                __FILE__, __LINE__);
-  }
+  sprintf(fnum,".%d",patchID);
+  file_name = d_file_name+fnum;
+
+  source.open(file_name.c_str());
+
+  // bulletproofing
+  checkFileType(source, d_file_format, file_name);
   
-  int readpts = 0;
+  // ignore the first line of the file;
+  // this has already been processed
+  Point notUsed;
+  read_bbox(source, notUsed, notUsed);
+
   while(source) {
     read_line(source, minpt, maxpt);
-    if(source)
-      readpts++;
-  }
-
-  if(!d_presplit) { // pre-split reads the bounding box from the input file
-    Vector fudge(1.e-5,1.e-5,1.e-5);
-    d_box = Box(minpt-fudge,maxpt+fudge);
   }
 }
-
+//______________________________________________________________________
+//
 unsigned int
 FileGeometryPiece::createPoints()
 {

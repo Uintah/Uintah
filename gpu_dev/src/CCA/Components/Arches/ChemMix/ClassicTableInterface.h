@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -88,6 +88,7 @@ namespace Uintah {
 class ArchesLabel; 
 class MPMArchesLabel; 
 class TimeIntegratorLabel; 
+class BoundaryCondition_new; 
 class ClassicTableInterface : public MixingRxnModel {
 
 public:
@@ -198,7 +199,9 @@ private:
 
   bool d_table_isloaded;    ///< Boolean: has the table been loaded?
   bool d_noisy_hl_warning;  ///< Provide information about heat loss clipping
-  
+  bool d_allocate_soot;     ///< For new DORadiation source term...allocate soot variable 
+  bool _use_mf_for_hl;     ///< Rather than using adiabatic enthalpy from the table, compute using mix. frac and fuel/ox enthalpy
+
   double d_hl_scalar_init;  ///< Heat loss value for non-adiabatic conditions
   // Specifically for the classic table: 
   double d_f_stoich;        ///< Stoichiometric mixture fraction 
@@ -206,9 +209,13 @@ private:
   double d_H_air;           ///< Oxidizer Enthalpy
   double d_hl_lower_bound;  ///< Heat loss lower bound
   double d_hl_upper_bound;  ///< Heat loss upper bound
+
   
   int d_indepvarscount;     ///< Number of independent variables
   int d_varscount;          ///< Total dependent variables
+
+  string d_enthalpy_name; 
+  const VarLabel* d_enthalpy_label; 
 
   IntVector d_ijk_den_ref;                ///< Reference density location
 
@@ -220,6 +227,8 @@ private:
   std::vector<string> d_allDepVarUnits;        ///< Units for the dependent variables 
 
   vector<string> d_allUserDepVarNames;    ///< Vector storing all independent varaible names requested in input file
+
+  BoundaryCondition_new* _boundary_condition; 
 
   void checkForConstants( const string & inputfile );
 

@@ -38,9 +38,9 @@ namespace Wasatch{
    *  trees that are wrapped using the Wasatch::TaskInterface.
    */
   enum Category{
-    INITIALIZATION,
-    TIMESTEP_SELECTION,
-    ADVANCE_SOLUTION
+    INITIALIZATION,	///< Tasks associated with simulation initialization
+    TIMESTEP_SELECTION, ///< Tasks associated with choosing the size of the timestep
+    ADVANCE_SOLUTION    ///< Tasks associated with advancing the solution forward in time
   };
 
   /**

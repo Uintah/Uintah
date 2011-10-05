@@ -12,6 +12,7 @@
 #include <CCA/Components/Arches/ExplicitTimeInt.h>
 #include <CCA/Components/Arches/TransportEqns/Discretization_new.h>
 #include <CCA/Components/Arches/ArchesMaterial.h>
+#include <CCA/Components/Arches/IntrusionBC.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Exceptions/ParameterNotFound.h>
@@ -141,7 +142,17 @@ public:
                        phiType& phi )
   {
     d_boundaryCond->setScalarValueBC( 0, patch, phi, varName ); 
-  }
+  };
+
+  /** @brief Set the intrusion machinery **/ 
+  inline void set_intrusion( IntrusionBC* intrusions ){ 
+    _intrusions = intrusions; 
+  };  
+
+  /** @brief Set boolean for new intrusions **/ 
+  inline void set_intrusion_bool( bool using_new_intrusions ){ 
+    _using_new_intrusion = using_new_intrusions; 
+  };
 
 protected:
 
@@ -162,6 +173,7 @@ protected:
   BoundaryCondition_new* d_boundaryCond;  ///< Boundary condition object associated with equation object
   ExplicitTimeInt* d_timeIntegrator;      ///< Time integrator object associated with equation object
   Discretization_new* d_disc;             ///< Discretization object associated with equation object
+  IntrusionBC* _intrusions;               ///< Intrusions for boundary conditions. 
 
   const VarLabel* d_transportVarLabel;    ///< Label for scalar being transported, in NEW data warehouse
   const VarLabel* d_oldtransportVarLabel; ///< Label for scalar being transported, in OLD data warehouse
@@ -172,6 +184,7 @@ protected:
   bool d_doConv;                          ///< Boolean: do convection for this equation object?
   bool d_doDiff;                          ///< Boolean: do diffusion for this equation object?
   bool d_addSources;                      ///< Boolean: add a right-hand side (i.e. convection, diffusion, source terms) to this equation object?
+  bool _using_new_intrusion;              ///< Indicates if new intrusions are being used. 
 
   std::string d_eqnName;                  ///< Human-readable label for this equation
   std::string d_convScheme;               ///< Convection scheme (superbee, upwind, etc.)

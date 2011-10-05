@@ -2,7 +2,6 @@
 #include <iostream>
 #include <ostream>
 #include <fstream>
-using namespace std;
 
 #include <Core/Geometry/IntVector.h>
 #include <Core/Geometry/Vector.h>
@@ -10,6 +9,7 @@ using namespace std;
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Patch.h>
 
+using namespace std;
 using namespace SCIRun;
 using namespace Uintah;
 
@@ -62,10 +62,10 @@ int main(int argc, char **argv)
   //cout << "rad: " << rad << endl;
 
   //create coarse patch set
-  vector<Region> patches;
-  vector<CCVariable<int> * > flags;
-  vector<IntVector> gflags;
-  vector<list<IntVector> > lflags;
+  std::vector<Region> patches;
+  std::vector<CCVariable<int> * > flags;
+  std::vector<IntVector> gflags;
+  std::vector<list<IntVector> > lflags;
 
   int total_patches=num_patches.x()*num_patches.y()*num_patches.z();
   int div=total_patches/num_procs;
@@ -153,7 +153,7 @@ int main(int argc, char **argv)
   fout.close();
   
 
-  vector<Region> fine_patches,global_patches;
+  std::vector<Region> fine_patches,global_patches;
 
   TiledRegridder tiled(patch_size,rr);
   BNRRegridder bnr(.85,rr);

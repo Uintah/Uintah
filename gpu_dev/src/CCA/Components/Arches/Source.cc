@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -387,15 +387,6 @@ Source::calculateEnthalpySource(const ProcessorGroup*,
   fort_scalsrc(idxLo, idxHi, vars->scalarLinearSrc, vars->scalarNonlinearSrc,
                constvars->old_density, constvars->old_enthalpy,
                cellinfo->sew, cellinfo->sns, cellinfo->stb, delta_t);
-
-// ++ jeremy ++
-  if (d_boundaryCondition->getNumSourceBndry() > 0) {
-    for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
-      vars->scalarNonlinearSrc[*iter] += vars->enthalpyBoundarySrc[*iter];
-    }
-  }
-// -- jeremy -- 
-
 
 }
 

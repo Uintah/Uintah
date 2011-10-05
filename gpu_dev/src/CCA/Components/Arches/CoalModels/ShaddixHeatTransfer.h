@@ -132,11 +132,6 @@ public:
   inline const VarLabel* getabskp(){
     return d_abskp; };  
   
-  /** @brief  Access function for radiation flag (on/off) */
-  inline bool getRadiationFlag(){
-    return b_radiation; };   
-
-
 private:
 
   //////////////////////////////////////////////////
@@ -195,6 +190,8 @@ private:
   double d_ash_scaling_constant;  ///< Scaling factor for ash mass
   double d_pl_scaling_constant;   ///< Scaling factor for particle size (length)
   double d_pt_scaling_constant;   ///< Scaling factor for particle temperature
+
+  bool _radiation;                ///< Radiation flag
 
 }; // end ShaddixHeatTransfer
 } // end namespace Uintah

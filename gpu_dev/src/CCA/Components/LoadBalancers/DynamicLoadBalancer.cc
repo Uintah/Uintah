@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -59,7 +59,7 @@ DEALINGS IN THE SOFTWARE.
 #include <vector>
 using namespace Uintah;
 using namespace SCIRun;
-using std::cerr;
+using namespace std;
 static DebugStream doing("DynamicLoadBalancer_doing", false);
 static DebugStream lb("DynamicLoadBalancer_lb", false);
 static DebugStream dbg("DynamicLoadBalancer", false);
@@ -475,9 +475,9 @@ void DynamicLoadBalancer::useSFC(const LevelP& level, int* order)
   //center of patchset
   Vector center=(high+low).asVector()/2.0;
  
-  double r[3]={range[dimensions[0]],range[dimensions[1]],range[dimensions[2]]};
-  double c[3]={center[dimensions[0]],center[dimensions[1]],center[dimensions[2]]};
-  double delta[3]={min_patch_size[dimensions[0]],min_patch_size[dimensions[1]],min_patch_size[dimensions[2]]};
+  double r[3]={(double)range[dimensions[0]], (double)range[dimensions[1]], (double)range[dimensions[2]]};
+  double c[3]={(double)center[dimensions[0]],(double)center[dimensions[1]], (double)center[dimensions[2]]};
+  double delta[3]={(double)min_patch_size[dimensions[0]], (double)min_patch_size[dimensions[1]], (double)min_patch_size[dimensions[2]]};
 
 
   //create SFC

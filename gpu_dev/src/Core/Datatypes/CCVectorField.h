@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -48,8 +48,8 @@ class CCVectorField : public VectorFieldRG {
 public:
   CCVectorField();
   CCVectorField(const CCVectorField&);
-  CCVectorField(GridP grid, LevelP level, string var, int mat,
-		const vector< CCVariable<Vector> >& vars);
+  CCVectorField(GridP grid, LevelP level, std::string var, int mat,
+		const std::vector< CCVariable<Vector> >& vars);
   virtual ~CCVectorField() {}
   virtual VectorField* clone();
 
@@ -61,18 +61,18 @@ public:
 
   void SetGrid( GridP g ){ grid = g; }
   void SetLevel( LevelP l){ level = l; }
-  void SetName( string vname ) { _varname = vname; }
+  void SetName( std::string vname ) { _varname = vname; }
   void SetMaterial( int index) { _matIndex = index; }
   void AddVar( const CCVariable<Vector>& var);
 //   int nPatches(){ return _vars.size();}
-//   string& name(){ return _varname; }
+//   std::string& name(){ return _varname; }
 //   int material(){ return _matIndex; }
 //   const CCVariable<Vector>& var(int i){ return _vars[i];}
 private:
-  vector< CCVariable<Vector> > _vars;
+  std::vector< CCVariable<Vector> > _vars;
   GridP grid;
   LevelP level;
-  string _varname;
+  std::string _varname;
   int _matIndex;
 };
 } // End namespace Uintah

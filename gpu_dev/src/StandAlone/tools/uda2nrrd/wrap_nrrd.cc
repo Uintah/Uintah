@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -48,6 +48,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Geometry/Point.h>
 #include <Core/Util/TypeDescription.h>
 
+using namespace std;
 using namespace SCIRun;
 using namespace Uintah;
 

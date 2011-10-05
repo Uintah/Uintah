@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -164,7 +164,6 @@ void AdvectSlabsGPU::initialize(const ProcessorGroup*,
   }
 }
 
-
 /// KERNEL FOR TIME ADVANCE
 // @brief A kernel that applies the stencil used in timeAdvance(...)
 // @param domainSize a three component vector that gives the size of the domain as (x,y,z)
@@ -185,7 +184,6 @@ __global__ void timeAdvanceKernelAdvectSlabs(uint3 domainSize,
   // calculate the thread indices
   int tidX = blockDim.x * blockIdx.x + threadIdx.x;
   int tidY = blockDim.y * blockIdx.y + threadIdx.y;
-  //  int tidZ = blockDim.z * blockIdx.z + threadIdx.z;
 
   int num_slices = domainSize.z - ghostLayers;
   int dx = domainSize.x;
@@ -204,8 +202,7 @@ __global__ void timeAdvanceKernelAdvectSlabs(uint3 domainSize,
       double q_faceFlux_tmp;
       int adjCell;
 
-      // Unrolled 'for' loop
-      // Above
+      // Unrolled 'for' loop Above
       adjCell = INDEX3D(dx,dy, tidX, tidY+1, slice);
       q_faceFlux_tmp = mass[adjCell]*influxVol - mass[cell]*outfluxVol;
       q_face_flux[0] = q_faceFlux_tmp;
@@ -253,10 +250,6 @@ __global__ void timeAdvanceKernelAdvectSlabs(uint3 domainSize,
     }
   }
 }
-
-
-
-
 
 void AdvectSlabsGPU::timeAdvance(const ProcessorGroup* pg,
                                  const PatchSubset* patches,
@@ -311,10 +304,8 @@ void AdvectSlabsGPU::timeAdvance(const ProcessorGroup* pg,
       new_dw->allocateAndPut(massAd, massAdvected_label, matl, patch, Ghost::AroundCells, 1 );
 
 
-      // Here the extents of the patch are extracted
-      //   and the size of the domain is memory needed
-      //   is calculated.  Any memory allocation
-      //   occur here.
+      // Here the extents of the patch are extracted and the size of the domain is memory
+      // needed is calculated.  Any memory allocation occur here.
       IntVector l = patch->getNodeLowIndex();
       IntVector h = patch->getNodeHighIndex();
       IntVector s = h - l;
@@ -347,8 +338,6 @@ void AdvectSlabsGPU::timeAdvance(const ProcessorGroup* pg,
       massAd_host = (double*)massAd.getWindow()->getData()->getPointer();
 
       // allocate space on the device
-      // TODO
-      // Fix this so when we have >= CCv2.0 for pinned
       cudaMemcpy(mass_device, mass_host, size, cudaMemcpyHostToDevice);
 
       uint3 domainSize = make_uint3(xdim, ydim, zdim);
@@ -374,5 +363,3 @@ void AdvectSlabsGPU::timeAdvance(const ProcessorGroup* pg,
   cudaFree(massAd_device);
   cudaFree(newMass_device);
 }
-
-

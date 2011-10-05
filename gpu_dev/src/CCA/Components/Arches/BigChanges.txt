@@ -1,0 +1,22 @@
+This file contains a list of the major code changes to Arches 
+along with the commands to back out that specific change.
+______________________________________________________________________
+
+
+09/27/11  Todd
+The pressure solver has been segregated so the major sections of the solve are
+now individual tasks.  The tasks are: 
+
+  sched_buildLinearMatrix 
+  sched_setRHS_X_wrap
+  sched_SolveSystem
+  schedExtract_X
+  sched_normalizePress
+  sched_addHydrostaticTermtoPressure
+  
+In the previous implementation these sections were place inside of a loop
+over patches.  This change should not change any of the answers.
+
+To reverse this change execute:
+
+svn merge -r47642:47641 https://gforge.sci.utah.edu/svn/uintah/trunk/src/CCA/Components/Arches

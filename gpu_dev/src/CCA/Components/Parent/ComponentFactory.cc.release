@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -63,10 +63,6 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
-
-#if !defined(NO_ARCHES)
-#  include <CCA/Components/SpatialOps/SpatialOps.h>
-#endif
 
 #include <iosfwd>
 #include <string>
@@ -216,11 +212,6 @@ ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world,
   if (sim_comp == "reduce_uda") {
     return scinew UdaReducer(world, uda);
   } 
-#if !defined(NO_ARCHES)
-  if (sim_comp == "spatialops") {
-	 return scinew SpatialOps(world);
-  }
-#endif
   throw ProblemSetupException("Unknown simulationComponent ('" + sim_comp + "'). Must specify -arches, -ice, -mpm, "
                               "-impm, -mpmice, -mpmarches, -burger, -wave, -poisson1, -poisson2, -poisson3, -benchmark.\n"
                               "Note: the following components were turned off at configure time: " + turned_off_options + "\n"

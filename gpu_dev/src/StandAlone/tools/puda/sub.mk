@@ -2,7 +2,7 @@
 # 
 # The MIT License
 # 
-# Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+# Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 # Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 # University of Utah.
 # 
@@ -42,7 +42,9 @@ SRCS := \
 	$(SRCDIR)/tecplot.cc     \
 	$(SRCDIR)/util.cc        \
 	$(SRCDIR)/varsummary.cc  \
-	$(SRCDIR)/puda.cc
+	$(SRCDIR)/puda.cc	\
+	$(SRCDIR)/GV_MMS.cc	\
+	$(SRCDIR)/ER_MMS.cc
 
 ifeq ($(IS_STATIC_BUILD),yes)
   PSELIBS := $(CORE_STATIC_PSELIBS)

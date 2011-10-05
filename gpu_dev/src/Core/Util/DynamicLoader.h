@@ -48,41 +48,40 @@
 #include <Core/Util/share.h>
 
 namespace SCIRun {
-using namespace std;
 
 struct SCISHARE CompileInfo
 {
 public:
-  typedef map<string, int> ci_map_type; //! unique keys.
+  typedef std::map<std::string, int> ci_map_type; //! unique keys.
   //! construct with filename, base class name, and template class name.
-  CompileInfo(const string &fn, const string &bcn, 
-	      const string &tcn, const string &tcdec);
+  CompileInfo(const std::string &fn, const std::string &bcn, 
+	      const std::string &tcn, const std::string &tcdec);
   
   //! add to the list of files to include.
-  void add_include(const string &inc);
-  void add_data_include(const string &inc);
-  void add_basis_include(const string &inc);
-  void add_mesh_include(const string &inc);
-  void add_container_include(const string &inc);
-  void add_field_include(const string &inc);
-  void add_namespace(const string &inc) { namespaces_[inc] = 1; }
-  void add_pre_include(const string &pre);
-  void add_post_include(const string &post);
-  void create_cc(ostream &fstr, bool empty) const;
+  void add_include(const std::string &inc);
+  void add_data_include(const std::string &inc);
+  void add_basis_include(const std::string &inc);
+  void add_mesh_include(const std::string &inc);
+  void add_container_include(const std::string &inc);
+  void add_field_include(const std::string &inc);
+  void add_namespace(const std::string &inc) { namespaces_[inc] = 1; }
+  void add_pre_include(const std::string &pre);
+  void add_post_include(const std::string &post);
+  void create_cc(std::ostream &fstr, bool empty) const;
   
-  string             filename_;
-  list<string>       includes_;
-  list<string>       data_includes_;
-  list<string>       basis_includes_;
-  list<string>       mesh_includes_;
-  list<string>       container_includes_;
-  list<string>       field_includes_;
-  ci_map_type        namespaces_;
-  string             base_class_name_;
-  string             template_class_name_;
-  string             template_arg_;
-  string             pre_include_extra_;
-  string             post_include_extra_;
+  std::string             filename_;
+  std::list<std::string>  includes_;
+  std::list<std::string>  data_includes_;
+  std::list<std::string>  basis_includes_;
+  std::list<std::string>  mesh_includes_;
+  std::list<std::string>  container_includes_;
+  std::list<std::string>  field_includes_;
+  ci_map_type             namespaces_;
+  std::string             base_class_name_;
+  std::string             template_class_name_;
+  std::string             template_arg_;
+  std::string             pre_include_extra_;
+  std::string             post_include_extra_;
 
   //! For regression testing after the function has been compiled remove
   //! library if it was not there, we are just testing the regression.
@@ -106,7 +105,7 @@ struct SCISHARE DynamicAlgoBase {
   DynamicAlgoBase();
   virtual ~DynamicAlgoBase();
 
-  static string to_filename(const string s);
+  static std::string to_filename(const std::string s);
 };
 
 typedef LockingHandle<DynamicAlgoBase> DynamicAlgoHandle;
@@ -134,19 +133,19 @@ public:
 private:
   bool create_cc(const CompileInfo &info, bool empty, ProgressReporter *pr);
   bool compile_so(const CompileInfo &info, ProgressReporter *pr);
-  void store( const string &, maker_fun);
-  bool entry_exists(const string &entry);
-  bool entry_is_null(const string &entry);
-  bool wait_for_current_compile(const string &entry);
+  void store( const std::string &, maker_fun);
+  bool entry_exists(const std::string &entry);
+  bool entry_is_null(const std::string &entry);
+  bool wait_for_current_compile(const std::string &entry);
   
-  typedef map<string, maker_fun> map_type;
+  typedef std::map<std::string, maker_fun> map_type;
   map_type              algo_map_;
   
   //! Thread Safety. 
   CrowdMonitor          map_crowd_;
   ConditionVariable     compilation_cond_;
   Mutex                 map_lock_;
-  static string		otf_dir();
+  static std::string	otf_dir();
 
   //! static vars.
   static DynamicLoader *scirun_loader_;

@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -37,8 +37,6 @@ DEALINGS IN THE SOFTWARE.
 
 #include   <string>
 #include   <vector>
-#include   <list>
-#include   <map>
 #include   <iosfwd>
 #include   <iostream>
 
@@ -47,7 +45,6 @@ DEALINGS IN THE SOFTWARE.
 namespace Uintah {
 
   using SCIRun::IntVector;
-  using namespace std;
 
 /**************************************
       
@@ -165,8 +162,8 @@ WARNING
     }
 
     //O(p^2)
-    static vector<Region> difference(const Region& b1, const Region& b2);
-    static vector<Region> difference(vector<Region>& region1, vector<Region>& region2);
+    static std::vector<Region> difference(const Region& b1, const Region& b2);
+    static std::vector<Region> difference(std::vector<Region>& region1, std::vector<Region>& region2);
    
     class VolumeCompare {
       public:

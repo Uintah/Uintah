@@ -2,7 +2,7 @@
 
    The MIT License
 
-   Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+   Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
    Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
    University of Utah.
 
@@ -112,6 +112,10 @@ MPMArches::~MPMArches()
   delete d_MAlb;
   delete d_mpm;
   delete d_arches;
+  
+  if (d_analysisModule) {
+    delete d_analysisModule;
+  }
 }
 
 // ****************************************************************************
@@ -141,6 +145,7 @@ void MPMArches::problemSetup(const ProblemSpecP& prob_spec,
     printf("\n");
   }
   d_mpm->setWithARCHES();
+  d_arches->setWithMPMARCHES();
 
   db->require("heatExchange", d_calcEnergyExchange);
   db->require("fluidThermalConductivity", d_tcond);
@@ -197,6 +202,16 @@ void MPMArches::problemSetup(const ProblemSpecP& prob_spec,
     d_DORad = false;
     d_radiation = false;
   }
+  
+  //__________________________________
+  //  create analysis modules
+  // call problemSetup  
+  d_analysisModule = AnalysisModuleFactory::create(prob_spec, sharedState, dataArchiver);
+  if(d_analysisModule){
+    d_analysisModule->problemSetup(prob_spec, grid, sharedState);
+  }
+  
+  
 }
 
 void MPMArches::outputProblemSpec(ProblemSpecP& root_ps)
@@ -236,6 +251,12 @@ void MPMArches::scheduleInitialize(const LevelP& level,
 
   //  cerr << "Doing Initialization \t\t\t MPMArches" <<endl;
   //  cerr << "--------------------------------\n"<<endl; 
+  
+  // dataAnalysis 
+  if(d_analysisModule){
+    d_analysisModule->scheduleInitialize( sched, level);
+  }
+  
 }
 
 //______________________________________________________________________
@@ -1093,13 +1114,17 @@ MPMArches::scheduleTimeAdvance( const LevelP & level,
   d_mpm->scheduleInterpolateToParticlesAndUpdate(sched, patches, mpm_matls);
 
   sched->scheduleParticleRelocation(level, 
-      Mlb->pXLabel_preReloc,
-      d_sharedState->d_particleState_preReloc,
-      Mlb->pXLabel, 
-      d_sharedState->d_particleState,
-      Mlb->pParticleIDLabel,
-      mpm_matls);
-
+                                    Mlb->pXLabel_preReloc,
+                                    d_sharedState->d_particleState_preReloc,
+                                    Mlb->pXLabel, 
+                                    d_sharedState->d_particleState,
+                                    Mlb->pParticleIDLabel,
+                                    mpm_matls);
+      
+  // on the fly data analysis
+  if(d_analysisModule){                                                        
+    d_analysisModule->scheduleDoAnalysis( sched, level);
+  }
 }
 
 //______________________________________________________________________
@@ -2277,7 +2302,7 @@ void MPMArches::scheduleMomExchange(SchedulerP& sched,
   // also, from mpmarches, void fraction
   // use old_dw since using at the beginning of the time advance loop
 
-  t->computes(d_Alab->d_cellInfoLabel);
+  t->computes(d_Alab->d_cellInfoLabel, arches_matls->getUnion());
 
   // use modified celltype
 

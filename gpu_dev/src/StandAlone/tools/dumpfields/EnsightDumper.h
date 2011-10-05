@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -73,18 +73,18 @@ namespace Uintah {
       void unsetstrm() { os_ = 0; }
     
       void textfld(string v, int width=80) {
-        *os_ << setw(width) << setiosflags(ios::left) << v;
+        *os_ << std::setw(width) << std::setiosflags(std::ios::left) << v;
       }
       
       void textfld(string v, int width, int binwidth) {
         if(bin_)
-          *os_ << setw(binwidth)  << setiosflags(ios::left) << v;
+          *os_ << std::setw(binwidth)  << std::setiosflags(std::ios::left) << v;
         else
-          *os_ << setw(width)  << setiosflags(ios::left) << v;
+          *os_ << std::setw(width)  << std::setiosflags(std::ios::left) << v;
       }
     
       void textfld(int v, int width=10) {
-        *os_ << setiosflags(ios::left) << setw(width) << v;
+        *os_ << std::setiosflags(std::ios::left) << std::setw(width) << v;
       }
     
       void textfld(float v) { 

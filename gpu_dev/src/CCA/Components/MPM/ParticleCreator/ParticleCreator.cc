@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -49,6 +49,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
 #include <CCA/Components/MPM/MPMFlags.h>
+#include <CCA/Components/MPM/MMS/MMS.h>
 #include <fstream>
 #include <iostream>
 
@@ -59,6 +60,7 @@ using std::ofstream;
 
 ParticleCreator::ParticleCreator(MPMMaterial* matl, 
                                  MPMFlags* flags)
+:d_lock("Particle Creator lock")
 {
   d_lb = scinew MPMLabel();
   d_useLoadCurves = flags->d_useLoadCurves;
@@ -84,6 +86,7 @@ ParticleCreator::createParticles(MPMMaterial* matl,
 {
   // Print the physical boundary conditions
   //  printPhysicalBCs();
+  d_lock.writeLock();
 
   int dwi = matl->getDWIndex();
   ParticleSubset* subset = allocateVariables(numParticles,dwi,patch,new_dw);
@@ -237,6 +240,7 @@ ParticleCreator::createParticles(MPMMaterial* matl,
     }
     start += count;
   }
+  d_lock.writeUnlock();
   return subset;
 }
 
@@ -246,6 +250,7 @@ ParticleCreator::createParticles(MPMMaterial* matl,
 // because it updates the number of particles to which a BC is applied.
 int ParticleCreator::getLoadCurveID(const Point& pp, const Vector& dxpp)
 {
+  int ret=0;
   for (int ii = 0; ii<(int)MPMPhysicalBCFactory::mpmPhysicalBCs.size(); ii++){
     string bcs_type = MPMPhysicalBCFactory::mpmPhysicalBCs[ii]->getType();
         
@@ -254,25 +259,25 @@ int ParticleCreator::getLoadCurveID(const Point& pp, const Vector& dxpp)
       PressureBC* pbc = 
         dynamic_cast<PressureBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
       if (pbc->flagMaterialPoint(pp, dxpp)) {
-        return pbc->loadCurveID(); 
+         ret = pbc->loadCurveID(); 
       }
     }
     else if (bcs_type == "HeatFlux") {      
       HeatFluxBC* hfbc = 
         dynamic_cast<HeatFluxBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
       if (hfbc->flagMaterialPoint(pp, dxpp)) {
-        return hfbc->loadCurveID(); 
+        ret = hfbc->loadCurveID(); 
       }
     }
     else if (bcs_type == "ArchesHeatFlux") {      
       ArchesHeatFluxBC* hfbc = 
         dynamic_cast<ArchesHeatFluxBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
       if (hfbc->flagMaterialPoint(pp, dxpp)) {
-        return hfbc->loadCurveID(); 
+        ret = hfbc->loadCurveID(); 
       }
     }
   }
-  return 0;
+  return ret;
 }
 
 // Print MPM physical boundary condition information
@@ -363,6 +368,7 @@ void ParticleCreator::allocateVariablesAddRequires(Task* task,
                                                    const MPMMaterial* ,
                                                    const PatchSet* ) const
 {
+  d_lock.writeLock();
   Ghost::GhostType  gn = Ghost::None;
   //const MaterialSubset* matlset = matl->thisMaterial();
   task->requires(Task::OldDW,d_lb->pDispLabel,        gn);
@@ -388,6 +394,7 @@ void ParticleCreator::allocateVariablesAddRequires(Task* task,
   if(d_artificial_viscosity){
     task->requires(Task::OldDW,d_lb->p_qLabel,          gn);
   }
+  d_lock.writeUnlock();
 }
 
 
@@ -397,6 +404,7 @@ void ParticleCreator::allocateVariablesAdd(DataWarehouse* new_dw,
                                            ParticleSubset* delset,
                                            DataWarehouse* old_dw)
 {
+  d_lock.writeLock();
   ParticleSubset::iterator n,o;
 
   constParticleVariable<Vector> o_disp;
@@ -495,6 +503,7 @@ void ParticleCreator::allocateVariablesAdd(DataWarehouse* new_dw,
   if(d_artificial_viscosity){
     (*newState)[d_lb->p_qLabel]         =p_q.clone();
   }
+  d_lock.writeUnlock();
 }
 
 
@@ -562,21 +571,44 @@ ParticleCreator::initializeParticle(const Patch* patch,
   Vector size(1./((double) ppc.x()),
               1./((double) ppc.y()),
               1./((double) ppc.z()));
-  position[i] = p;
-  if(d_flags->d_axisymmetric){
-    // assume unit radian extent in the circumferential direction
-    pvolume[i]  = p.x()*dxpp.x()*dxpp.y();
-  } else {
-    // standard voxel volume
-    pvolume[i]  = dxpp.x()*dxpp.y()*dxpp.z();
-  }
-
-  psize[i]    = size;
-
-  pvelocity[i]    = (*obj)->getInitialData_Vector("velocity");
   ptemperature[i] = (*obj)->getInitialData_double("temperature");
-  pmass[i]        = matl->getInitialDensity()*pvolume[i];
-  pdisp[i]        = Vector(0.,0.,0.);
+//MMS
+ string mms_type = d_flags->d_mms_type;
+ if(!mms_type.empty()) {
+	MMS MMSObject;
+	MMSObject.initializeParticleForMMS(position,pvelocity,psize,pdisp,pmass,
+						pvolume,p,dxpp,size,patch,d_flags,i);
+ }  else {
+	  position[i] = p;
+	  if(d_flags->d_axisymmetric){
+	    // assume unit radian extent in the circumferential direction
+	    pvolume[i]  = p.x()*dxpp.x()*dxpp.y();
+	  } else {
+	    // standard voxel volume
+	    pvolume[i]  = dxpp.x()*dxpp.y()*dxpp.z();
+	  }
+
+	  psize[i]    = size;
+
+	  pvelocity[i]    = (*obj)->getInitialData_Vector("velocity");
+
+	  double vol_frac_CC = 1.0;
+	  try {
+	    if((*obj)->getInitialData_double("volumeFraction") == -1.0)
+	    {    
+	      vol_frac_CC = 1.0;
+	      pmass[i]        = matl->getInitialDensity()*pvolume[i];
+	    } else {
+	      vol_frac_CC = (*obj)->getInitialData_double("volumeFraction");
+	      pmass[i]        = matl->getInitialDensity()*pvolume[i]*vol_frac_CC;
+	    }
+	  } catch (...)
+	  {
+	    vol_frac_CC = 1.0;       
+	    pmass[i]        = matl->getInitialDensity()*pvolume[i];
+	  }
+	  pdisp[i]        = Vector(0.,0.,0.);
+}
   
   if(d_with_color){
     pcolor[i] = (*obj)->getInitialData_double("color");
@@ -611,12 +643,14 @@ particleIndex
 ParticleCreator::countParticles(const Patch* patch,
                                 vector<GeometryObject*>& d_geom_objs)
 {
+  d_lock.writeLock();
   particleIndex sum = 0;
   vector<GeometryObject*>::const_iterator geom;
   for (geom=d_geom_objs.begin(); geom != d_geom_objs.end(); ++geom){ 
     sum += countAndCreateParticles(patch,*geom);
   }
   
+  d_lock.writeUnlock();
   return sum;
 }
 
@@ -717,6 +751,7 @@ vector<const VarLabel* > ParticleCreator::returnParticleStatePreReloc()
 
 void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl)
 {
+  d_lock.writeLock();
   particle_state.push_back(d_lb->pDispLabel);
   particle_state_preReloc.push_back(d_lb->pDispLabel_preReloc);
 
@@ -772,6 +807,7 @@ void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl)
 
   matl->getConstitutiveModel()->addParticleState(particle_state,
                                                  particle_state_preReloc);
+  d_lock.writeUnlock();
 }
 
 int
@@ -783,6 +819,7 @@ ParticleCreator::checkForSurface( const GeometryPieceP piece, const Point p,
   //   in.  If any of those points are not also inside the object
   //  the current point is on the surface
   
+  d_lock.readUnlock();
   int ss = 0;
   
   // Check to the left (-x)
@@ -812,4 +849,5 @@ ParticleCreator::checkForSurface( const GeometryPieceP piece, const Point p,
   else {
     return 0;
   }
+  d_lock.readUnlock();
 }

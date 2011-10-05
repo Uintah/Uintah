@@ -2,7 +2,7 @@
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Region.h>
 #include <vector>
-using namespace std;
+
 using namespace SCIRun;
 using namespace Uintah;
 class TiledRegridder
@@ -12,7 +12,7 @@ class TiledRegridder
     {
     };
 
-    void regrid(const vector<Region> &cp, const vector<CCVariable<int>*> &flags, vector<Region> &patches);
+    void regrid(const std::vector<Region> &cp, const std::vector<CCVariable<int>*> &flags, std::vector<Region> &patches);
 
 
   private:
@@ -21,7 +21,7 @@ class TiledRegridder
 };
 
 
-void TiledRegridder::regrid(const vector<Region> &cp, const vector<CCVariable<int>*> &flags, vector<Region> &patches)
+void TiledRegridder::regrid(const std::vector<Region> &cp, const std::vector<CCVariable<int>*> &flags, std::vector<Region> &patches)
 {
   patches.resize(0);
   Vector factor=rr.asVector()/mps.asVector(); 

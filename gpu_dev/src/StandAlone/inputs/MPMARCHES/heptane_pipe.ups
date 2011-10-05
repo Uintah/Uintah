@@ -35,7 +35,7 @@
         <save label = "CO"      table_lookup = "true"/>
         <save label = "NC7H16"  table_lookup = "true"/>
 
-        <checkpoint cycle = "2" interval = "0.2"/>
+        <checkpoint cycle = "2" interval = "0.02"/>
         <compression>gzip</compression>
     </DataArchiver>
     
@@ -85,6 +85,24 @@
     
     <Grid>
         <BoundaryConditions>
+            <Face side="x-" name="x- face">
+                <BCType id="all" label="mixture_fraction" var="Dirichlet">
+                    <value>0.0</value>
+                </BCType>
+                <BCType id="all" label="heat_loss" var="Dirichlet">
+                    <value>0.</value>
+                </BCType>
+                <BCType id="all" label="scalar_variance" var="Dirichlet">
+                    <value>0.0</value>
+                </BCType>
+                <BCType id = "all" var = "Dirichlet" label = "Velocity">
+                    <value> [0.0,0.0,0.0] </value>
+                </BCType>
+                <BCType id = "all" var = "Dirichlet" label = "Temperature">
+                    <value> 298.0 </value>
+                </BCType>
+            </Face>
+
             <Face circle="x-" origin="0 1.5 1.5" radius=".5">
                 <BCType id="all" label="mixture_fraction" var="Dirichlet">
                     <value>1.0</value>
@@ -341,7 +359,7 @@
                         <res_tol>1.0e-9</res_tol>
                         <solver>cg</solver>
                         <preconditioner>jacobi</preconditioner>
-                        <max_iter>75</max_iter>
+                        <max_iter>250</max_iter>
                     </parameters>
                 </PressureSolver>
                 

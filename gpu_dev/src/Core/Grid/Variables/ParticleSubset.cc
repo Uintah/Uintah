@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 1997-2010 Center for the Simulation of Accidental Fires and 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
@@ -137,7 +137,7 @@ ParticleSubset::sort(ParticleVariableBase* particleIDs)
   if (pIDs == 0)
     SCI_THROW(InternalError("particleID variable must be ParticleVariable<long64>", __FILE__, __LINE__));
   compareIDFunctor comp(pIDs);
-  ::sort(d_particles, d_particles+d_numParticles, comp);
+  std::sort(d_particles, d_particles+d_numParticles, comp);
 }
 
 void

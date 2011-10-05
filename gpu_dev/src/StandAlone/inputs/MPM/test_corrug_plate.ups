@@ -89,8 +89,7 @@
       </material>
       <material>
         <include href="inputs/MPM/MaterialData/MatConst6061T6Al.xml"/>
-        <constitutive_model type="hypoelastic_plastic">
-          <tolerance>5.0e-10</tolerance>
+        <constitutive_model type="elastic_plastic">
           <include href="inputs/MPM/MaterialData/IsoElastic6061T6Al.xml"/>
           <include href="inputs/MPM/MaterialData/VonMisesYield.xml"/>
           <include href="inputs/MPM/MaterialData/DruckerStabilityCheck.xml"/>

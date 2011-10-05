@@ -11,12 +11,14 @@
 
 
 /**
- *  \ingroup WasatchExpressions
- *  \class ScalarRHS
- *  \author James C. Sutherland
+ *  \ingroup 	Expressions
+ *  \class 	ScalarRHS
+ *  \author 	James C. Sutherland
  *
  *  \brief Support for a basic scalar transport equation involving
  *         any/all of advection, diffusion and reaction.
+ *
+ *  \tparam FieldT - the type of field for the RHS.
  *
  *  The ScalarRHS Expression defines a template class for basic
  *  transport equations.  Each equation is templated on an interpolant
@@ -25,11 +27,24 @@
  *  The user provides expressions to calculate the advecting velocity,
  *  diffusive fluxes and/or source terms.  This will then calculate
  *  the full RHS for use with the time integrator.
+ *
+ *  Note: In the case that we are solving a scalar transport equation with
+ *        constant density we move out the density by devision from all  
+ *        terms except the source term. For the source term in this case we 
+ *        devide the specified source term expression by density here in 
+ *        ScalarRHS. 
+ *        So, you should be carfule with the cases that source terms are
+ *        NOT defined in the INPUT FILE but they will be added to the RHS
+ *        automatically during the solution process and they are almost
+ *        impossible to track (e.g. in ODT solver)
+ *
  */
 template< typename FieldT >
 class ScalarRHS : public Expr::Expression<FieldT>
 {
 protected:
+
+  typedef typename SpatialOps::structured::OperatorTypeBuilder<SpatialOps::Interpolant,SVolField,FieldT>::type  DensityInterpT;
 
   typedef typename SpatialOps::structured::FaceTypes<FieldT> FaceTypes;
   typedef typename FaceTypes::XFace XFluxT; ///< The type of field for the x-face variables.
@@ -83,20 +98,33 @@ public:
      *  \param fieldInfo the FieldTagInfo object that holds
      *         information for the various expressions that form the
      *         RHS.
+     *
+     *  \param densityTag density tag for cases that we have contsant density and a source term.
+     *
+     *  \param isConstDensity a boolean o show if density is constant or not.
      */
-    Builder( const FieldTagInfo& fieldInfo );
+    Builder( const FieldTagInfo& fieldInfo,
+             const Expr::Tag densityTag,
+             const bool isConstDensity);
 
     /**
-     *  \brief Constructs a builder for a ScalarRHS object.
+     *  \brief Constructs a builder for a ScalarRHS object. This is being
+     *         used by ScalarTransportEqu.
      *
      *  \param fieldInfo the FieldTagInfo object that holds
      *         information for the various expressions that form the
      *         RHS.
      *
      *  \param srcTags extra source terms to attach to this RHS.
+     *
+     *  \param densityTag density tag for cases that we have contsant density and a source term.
+     *
+     *  \param isConstDensity a boolean o show if density is constant or not.
      */
     Builder( const FieldTagInfo& fieldInfo,
-             const std::vector<Expr::Tag>& srcTags );
+             const std::vector<Expr::Tag>& srcTags,
+             const Expr::Tag densityTag,
+             const bool isConstDensity);
 
     virtual ~Builder(){}
 
@@ -105,6 +133,8 @@ public:
   protected:
     const FieldTagInfo info_;
     std::vector<Expr::Tag> srcT_;
+    Expr::Tag densityT_;
+    bool isConstDensity_;
   };
 
   virtual void evaluate();
@@ -119,6 +149,13 @@ protected:
 
   const bool haveConvection_, haveDiffusion_;
   const bool doXDir_, doYDir_, doZDir_;
+  
+  
+  const Expr::Tag densityTag_;
+
+  const SVolField* rho_;
+  bool isConstDensity_;
+  const DensityInterpT* densityInterpOp_;
 
   std::vector<Expr::Tag> srcTags_;
 
@@ -140,6 +177,8 @@ protected:
     
   ScalarRHS( const FieldTagInfo& fieldTags,
              const std::vector<Expr::Tag>& srcTags,
+             const Expr::Tag densityTag,
+             const bool  isConstDensity,
              const Expr::ExpressionID& id,
              const Expr::ExpressionRegistry& reg );
     
