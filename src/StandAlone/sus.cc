@@ -672,7 +672,7 @@ main( int argc, char *argv[], char *env[] )
     
     //__________________________________
     // Scheduler
-    SchedulerCommon* sched = SchedulerFactory::create(ups, world, output,withGPU);
+    SchedulerCommon* sched = SchedulerFactory::create(ups, world, output, withGPU);
     sched->attachPort("load balancer", lbc);
     ctl->attachPort("scheduler", sched);
     lbc->attachPort("scheduler", sched);
@@ -685,8 +685,9 @@ main( int argc, char *argv[], char *env[] )
     }
     sched->addReference();
     
-    if (emit_graphs) 
+    if (emit_graphs) {
       sched->doEmitTaskGraphDocs();
+    }
     
     MALLOC_TRACE_TAG(oldTag);
     /*
@@ -705,8 +706,9 @@ main( int argc, char *argv[], char *env[] )
 
     sched->removeReference();
     delete sched;
-    if (reg) 
+    if (reg) {
       delete reg;
+    }
     delete lbc;
     delete sim;
     delete solve;
