@@ -94,7 +94,6 @@ SCIRun::IntVector Uintah::Patch::neighborsLow() const
 SCIRun::IntVector Uintah::Patch::getLowIndex(Uintah::Patch::VariableBasis, const SCIRun::IntVector &) const  
 SCIRun::IntVector Uintah::Patch::getHighIndex(Uintah::Patch::VariableBasis, const SCIRun::IntVector &) const  
 bool Uintah::CompTable::Data::operator==(const Uintah::CompTable::Data &)  
-void Uintah::GhostOffsetVarMap::getExtents(const Uintah::VarLabelMatlPatch &, Uintah::Ghost::GhostType, int, SCIRun::IntVector &, SCIRun::IntVector &, SCIRun::IntVector &, SCIRun::IntVector &) const  
 void Uintah::IdealGas::computePressEOS(double, double, double, double, double &, double &, double &)  
 void Uintah::Level::selectPatches(const SCIRun::IntVector &, const SCIRun::IntVector &, Uintah::Level::selectType &) const  
 void Uintah::BCData::~BCData()  
@@ -149,7 +148,6 @@ Uintah::constHandle<Uintah::ComputeSubset<const Uintah::Patch *>> Uintah::Task::
 void Uintah::Patch::computeVariableExtents(Uintah::Patch::VariableBasis, const SCIRun::IntVector &, Uintah::Ghost::GhostType, int, Uintah::Patch::selectType &, SCIRun::IntVector &, SCIRun::IntVector &) const  
 SCIRun::IntVector Uintah::Patch::getInteriorNodeHighIndex() const  
 Uintah::constHandle<Uintah::MaterialSubset> Uintah::Task::Dependency::getMaterialsUnderDomain(const Uintah::MaterialSubset *) const  
-void Uintah::GhostOffsetVarMap::Offsets::encompassOffsets(SCIRun::IntVector, SCIRun::IntVector)  
 void Uintah::SideBCData::getBCData(Uintah::BCData &) const  
 Uintah::DensityBoundCond *Uintah::DensityBoundCond::clone()  
 Uintah::SideBCData *Uintah::SideBCData::clone()  

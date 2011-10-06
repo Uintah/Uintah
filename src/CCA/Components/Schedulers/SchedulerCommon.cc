@@ -857,10 +857,6 @@ getSuperPatchExtents(const VarLabel* label, int matlIndex, const Patch* patch,
     // get the minimum extents containing both the expected ghost cells
     // to be needed and the given ghost cells.
     const Patch* memberPatch = connectedPatchGroup->getBoxes()[i];
-    //VarLabelMatl<Patch> vmp(label, matlIndex, memberPatch);
-    //m_ghostOffsetVarMap.getExtents(vmp, requestedGType, requestedNumGCells,
-    //                               requiredLow, requiredHigh,
-    //                               requestedLow, requestedHigh);
 
     Patch::VariableBasis basis = Patch::translateTypeToBasis(label->typeDescription()->getType(), true);
     
