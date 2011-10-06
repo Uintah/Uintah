@@ -39,6 +39,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Examples/PoissonGPU1.h>
 #include <CCA/Components/Examples/Poisson2.h>
 #include <CCA/Components/Examples/Poisson3.h>
+#include <CCA/Components/Examples/Poisson4.h>
 #include <CCA/Components/Examples/RegridderTest.h>
 #include <CCA/Components/Examples/SolverTest1.h>
 #include <CCA/Components/Examples/Wave.h>
@@ -62,7 +63,6 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Parallel/ProcessorGroup.h>
 #include <sci_defs/uintah_defs.h>
 #include <sci_defs/cuda_defs.h>
-//#include <CCA/Components/Examples/Poisson4.h>
 
 #ifndef NO_WASATCH
 #include <CCA/Components/Wasatch/Wasatch.h>
