@@ -203,8 +203,7 @@ void
 Parallel::initializeManager(int& argc, char**& argv)
 {
    if( !determinedIfUsingMPI ) {
-      cerr << "Must call determineIfRunningUnderMPI() " 
-	   << "before initializeManager().\n";
+      cerr << "Must call determineIfRunningUnderMPI() " << "before initializeManager().\n";
       throw InternalError( "Bad coding... call determineIfRunningUnderMPI()"
 			   " before initializeManager()", __FILE__, __LINE__ );
    }
@@ -247,13 +246,13 @@ Parallel::initializeManager(int& argc, char**& argv)
      if( ( status = MPI_Init( &argc, &argv ) ) != MPI_SUCCESS)
 #endif
        {
-	 MpiError(const_cast<char*>("MPI_Init"), status);
+         MpiError(const_cast<char*>("MPI_Init"), status);
        }
 
 #ifdef THREADED_MPI_AVAILABLE
-     if( provided < required ){
+     if( provided < required ) {
        cerr  << "Provided MPI parallel support of " << provided 
-	   << " is not enough for the required level of " << required <<"\n";
+	     << " is not enough for the required level of " << required <<"\n";
        throw InternalError( "Bad MPI level", __FILE__, __LINE__ );
      }
 #endif
@@ -273,16 +272,16 @@ Parallel::initializeManager(int& argc, char**& argv)
 
      if(rootContext->myrank() == 0){
        cout << "Parallel: " << rootContext->size() 
-	    << " processors (using MPI)\n";
+	     << " processors (using MPI)\n";
 #ifdef THREADED_MPI_AVAILABLE
        cout << "Parallel: MPI Level Required: " << required << ", provided: " 
-	    << provided << "\n";
+	     << provided << "\n";
 #endif
      }
      //MPI_Errhandler_set(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
    } else {
      worldRank = 0;
-     rootContext = scinew ProcessorGroup(0,0, false, 0, 1, 0);
+     rootContext = scinew ProcessorGroup(0, 0, false, 0, 1, 0);
    }
 }
 
@@ -311,32 +310,34 @@ void
 Parallel::finalizeManager(Circumstances circumstances)
 {
   // worldRank is not reset here as even after finalizeManager,
-  // some things need to knoww their rank...
+  // some things need to know their rank...
 
-
-  //only finalize if MPI is initialized
-  if(determinedIfUsingMPI==false)
+  // only finalize if MPI is initialized
+  if(determinedIfUsingMPI==false) {
     return;
+  }
 
-  if(::usingMPI){
-    if(circumstances == Abort){
+  if(::usingMPI) {
+    if(circumstances == Abort) {
       int errorcode = 1;
-      if(getenv("LAMWORLD") || getenv("LAMRANK")){
+      if(getenv("LAMWORLD") || getenv("LAMRANK")) {
         errorcode = (errorcode << 16) + 1; // see LAM man MPI_Abort
       }
-      if (Parallel::getMPIRank() == 0)
+      if (Parallel::getMPIRank() == 0) {
         cout << "An exception was thrown... Goodbye.\n";
+      }
       cerr.flush();
       cout.flush();
       Time::waitFor(1.0);
       MPI_Abort(worldComm, errorcode);
     } else {
       int status;
-      if((status=MPI_Finalize()) != MPI_SUCCESS)
-	MpiError(const_cast<char*>("MPI_Finalize"), status);
+      if ((status = MPI_Finalize()) != MPI_SUCCESS) {
+        MpiError(const_cast<char*>("MPI_Finalize"), status);
+      }
     }
   }
-  if(rootContext){
+  if(rootContext) {
     delete rootContext;
     rootContext=0;
   }
@@ -348,9 +349,9 @@ Parallel::finalizeManager(Circumstances circumstances)
 ProcessorGroup*
 Parallel::getRootProcessorGroup()
 {
-   if(!rootContext)
+   if(!rootContext) {
       throw InternalError("Parallel not initialized", __FILE__, __LINE__);
+   }
 
    return rootContext;
 }
-

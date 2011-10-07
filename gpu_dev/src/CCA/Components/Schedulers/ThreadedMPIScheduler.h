@@ -141,13 +141,13 @@ public:
 private:
   int                    d_id;
   ThreadedMPIScheduler*  d_scheduler;
-  DetailedTask*  d_task;
-  int            d_iteration;    
-  Mutex d_runmutex;
-  ConditionVariable d_runsignal;
+  DetailedTask*          d_task;
+  int                    d_iteration;
+  Mutex                  d_runmutex;
+  ConditionVariable      d_runsignal;
   bool                   d_quit;
   int                    d_rank;
-  CommRecMPI            d_sends_;
+  CommRecMPI             d_sends_;
 };
 
 } // End namespace Uintah

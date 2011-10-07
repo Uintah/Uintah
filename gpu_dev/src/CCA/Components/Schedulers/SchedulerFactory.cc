@@ -50,10 +50,11 @@ SchedulerCommon* SchedulerFactory::create(ProblemSpecP& ps,
 {
   SchedulerCommon* sch = 0;
   string scheduler = "";
-  
+
   ProblemSpecP sc_ps = ps->findBlock("Scheduler");
-  if (sc_ps)
-    sc_ps->getAttribute("type",scheduler);
+  if (sc_ps) {
+    sc_ps->getAttribute("type", scheduler);
+  }
 
   // Default settings
   if (Uintah::Parallel::usingMPI()) {
@@ -61,37 +62,37 @@ SchedulerCommon* SchedulerFactory::create(ProblemSpecP& ps,
       //Uintah::Parallel::noThreading();
       if (Uintah::Parallel::getMaxThreads() > 0) {
         scheduler = "ThreadedMPI";
-      } else { 
+      } else {
         scheduler = "MPIScheduler";
       }
     }
-  }
-  else {// No MPI
-    if (scheduler == "")
+  } else {  // No MPI
+    if (scheduler == "") {
       scheduler = "SingleProcessorScheduler";
+    }
   }
 
-  if (world->myrank() == 0)
+  if (world->myrank() == 0) {
     cout << "Scheduler: \t\t" << scheduler << endl;
+  }
 
-  if(scheduler == "SingleProcessorScheduler"){
+  if (scheduler == "SingleProcessorScheduler") {
     sch = scinew SingleProcessorScheduler(world, output, NULL);
-  } else if(scheduler == "MPIScheduler" ||
-            scheduler == "MPI" ){
+  } else if (scheduler == "MPIScheduler" || scheduler == "MPI") {
     sch = scinew MPIScheduler(world, output, NULL);
-  } else if(scheduler == "DynamicMPI"){
+  } else if (scheduler == "DynamicMPI") {
     sch = scinew DynamicMPIScheduler(world, output, NULL);
-  } else if(scheduler == "ThreadedMPI"){
+  } else if (scheduler == "ThreadedMPI") {
     sch = scinew ThreadedMPIScheduler(world, output, NULL);
   } else {
-    sch = 0;   
+    sch = 0;
     throw ProblemSetupException("Unknown scheduler", __FILE__, __LINE__);
   }
 
   if ((Uintah::Parallel::getMaxThreads() > 0) && (scheduler != "ThreadedMPI")) {
     throw ProblemSetupException("Threaded Scheduler needed for -nthreads", __FILE__, __LINE__);
   }
-  
+
   return sch;
 
 }
