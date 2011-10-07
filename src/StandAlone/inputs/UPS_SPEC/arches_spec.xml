@@ -357,12 +357,12 @@
           <normalize_pressure           spec="OPTIONAL BOOLEAN" />
           <always_construct_A           spec="OPTIONAL BOOLEAN" /> <!-- default=true. Determines if Pressure matrix is recreated every time step. --> 
           <linear_solver                spec="REQUIRED STRING 'hypre, petsc'" />
-          <parameters                   spec="REQUIRED NO_DATA" >
-            <max_iter                   spec="REQUIRED INTEGER 'positive'" />
+          <Parameters                   spec="REQUIRED NO_DATA" >
+            <maxiterations              spec="REQUIRED INTEGER 'positive'" />
             <preconditioner             spec="REQUIRED STRING 'jacobi, pfmg'" />
-            <res_tol                    spec="REQUIRED DOUBLE" />
+            <tolerance                  spec="REQUIRED DOUBLE" />
             <solver                     spec="REQUIRED STRING 'cg'" />
-          </parameters>
+          </Parameters>
         </PressureSolver>
 
         <restartOnNegativeDensityGuess  spec="OPTIONAL BOOLEAN" /> <!--default = false-->

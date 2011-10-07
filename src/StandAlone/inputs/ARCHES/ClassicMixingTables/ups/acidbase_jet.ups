@@ -172,12 +172,12 @@
         <restartOnNegativeDensityGuess> false </restartOnNegativeDensityGuess>
         <PressureSolver>
           <linear_solver> hypre </linear_solver>
-          <parameters>
-            <res_tol> 1.0e-8 </res_tol>
+          <Parameters>
+            <tolerance> 1.0e-8 </tolerance>
             <solver> cg </solver>
             <preconditioner> pfmg </preconditioner>
-            <max_iter> 500 </max_iter>
-          </parameters>
+            <maxiterations> 500 </maxiterations>
+          </Parameters>
         </PressureSolver>
         <MomentumSolver>
           <convection_scheme> central </convection_scheme>
