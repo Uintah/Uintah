@@ -72,11 +72,10 @@ extern int create_tau_mapping( const string & taskname,
 
 ofstream wout;
 
-DynamicMPIScheduler::DynamicMPIScheduler( const ProcessorGroup * myworld,
-			          Output         * oport,
-			          DynamicMPIScheduler   * parentScheduler,
-                                  bool withGPU) :
-  MPIScheduler( myworld, oport, parentScheduler, withGPU )
+DynamicMPIScheduler::DynamicMPIScheduler(const ProcessorGroup* myworld,
+			                                   Output* oport,
+			                                   DynamicMPIScheduler* parentScheduler) :
+  MPIScheduler( myworld, oport, parentScheduler)
 {
 
 }

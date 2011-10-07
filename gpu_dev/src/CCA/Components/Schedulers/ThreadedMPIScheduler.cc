@@ -73,11 +73,10 @@ static DebugStream timeout("ThreadedMPIScheduler.timings", false);
 static DebugStream queuelength("QueueLength",false);
 static DebugStream threaddbg("ThreadDBG",false);
 
-ThreadedMPIScheduler::ThreadedMPIScheduler( const ProcessorGroup * myworld,
-			          Output         * oport,
-			          ThreadedMPIScheduler   * parentScheduler,
-                                  bool withGPU) :
-  MPIScheduler( myworld, oport, parentScheduler, withGPU ), 
+ThreadedMPIScheduler::ThreadedMPIScheduler(const ProcessorGroup* myworld,
+			                                     Output* oport,
+			                                     ThreadedMPIScheduler* parentScheduler) :
+  MPIScheduler( myworld, oport, parentScheduler),
   d_nextsignal("next condition"), d_nextmutex("next mutex"), dlbLock( "loadbalancer lock")
 {
 

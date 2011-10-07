@@ -72,7 +72,7 @@ WARNING
 
   class DynamicMPIScheduler : public MPIScheduler  {
   public:
-    DynamicMPIScheduler(const ProcessorGroup* myworld, Output* oport, DynamicMPIScheduler* parentScheduler = 0, bool = 0);
+    DynamicMPIScheduler(const ProcessorGroup* myworld, Output* oport, DynamicMPIScheduler* parentScheduler = 0);
     virtual ~DynamicMPIScheduler();
     
     virtual void problemSetup(const ProblemSpecP& prob_spec,

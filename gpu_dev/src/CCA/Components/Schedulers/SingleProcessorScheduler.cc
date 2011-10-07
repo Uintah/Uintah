@@ -55,13 +55,13 @@ extern DebugStream taskdbg;
 extern DebugStream taskLevel_dbg;
 
 SingleProcessorScheduler::SingleProcessorScheduler(const ProcessorGroup* myworld,
-    	    	    	    	    	    	   Output* oport, 
-						   SingleProcessorScheduler* parent,
-                                                   bool withGPU)
-   : SchedulerCommon(myworld, oport, withGPU)
+    	    	    	    	    	    	               Output* oport,
+						                                       SingleProcessorScheduler* parent) :
+  SchedulerCommon(myworld, oport)
 {
   d_generation = 0;
   m_parent = parent;
+  useGPU = Uintah::Parallel::usingGPU();
 }
 
 SingleProcessorScheduler::~SingleProcessorScheduler()
@@ -148,7 +148,7 @@ SingleProcessorScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
     // CUDA device to run on
     int deviceToUse = -1;
       
-    if(withCUDA)
+    if(useGPU)
     {
         // if it is a cuda task, execute it as such
         if(task->getTask()->getType() == Task::GPUCUDATask)
@@ -177,7 +177,7 @@ SingleProcessorScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
     if (trackingVarsPrintLocation_ & SchedulerCommon::PRINT_AFTER_EXEC)
       printTrackedVars(task, SchedulerCommon::PRINT_AFTER_EXEC);
 
-    if(withCUDA)
+    if(useGPU)
     {
         if(task->getTask()->getType() == Task::GPUCUDATask)
         {

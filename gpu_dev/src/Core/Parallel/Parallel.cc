@@ -61,6 +61,7 @@ using std::ostringstream;
 static bool            determinedIfUsingMPI = false;
 static bool            initialized = false;
 static bool            usingMPI = false;
+static bool            usingGPU = false;
 static int             maxThreads = -1;
 static MPI_Comm        worldComm = MPI_Comm(-1);
 static int             worldRank = -1;
@@ -90,6 +91,18 @@ Parallel::usingMPI()
    return ::usingMPI;
 }
 
+bool
+Parallel::usingGPU()
+{
+  return ::usingGPU;
+}
+
+void
+Parallel::setUsingGPU( bool useGPU )
+{
+   ::usingGPU = useGPU;
+}
+
 int
 Parallel::getMaxThreads()
 {
@@ -99,7 +112,6 @@ Parallel::getMaxThreads()
 void
 Parallel::setMaxThreads( int maxNumThreads )
 {
-  
    ::maxThreads = maxNumThreads;
    //::allowThreads = true;
 }

@@ -46,8 +46,7 @@ using namespace Uintah;
 
 SchedulerCommon* SchedulerFactory::create(ProblemSpecP& ps, 
                                           const ProcessorGroup* world,
-                                          Output* output,
-                                          bool withGPU)
+                                          Output* output)
 {
   SchedulerCommon* sch = 0;
   string scheduler = "";
@@ -76,14 +75,14 @@ SchedulerCommon* SchedulerFactory::create(ProblemSpecP& ps,
     cout << "Scheduler: \t\t" << scheduler << endl;
 
   if(scheduler == "SingleProcessorScheduler"){
-    sch = scinew SingleProcessorScheduler(world, output, NULL, withGPU);
+    sch = scinew SingleProcessorScheduler(world, output, NULL);
   } else if(scheduler == "MPIScheduler" ||
             scheduler == "MPI" ){
-    sch = scinew MPIScheduler(world, output, NULL, withGPU);
+    sch = scinew MPIScheduler(world, output, NULL);
   } else if(scheduler == "DynamicMPI"){
-    sch = scinew DynamicMPIScheduler(world, output, NULL, withGPU);
+    sch = scinew DynamicMPIScheduler(world, output, NULL);
   } else if(scheduler == "ThreadedMPI"){
-    sch = scinew ThreadedMPIScheduler(world, output, NULL, withGPU);
+    sch = scinew ThreadedMPIScheduler(world, output, NULL);
   } else {
     sch = 0;   
     throw ProblemSetupException("Unknown scheduler", __FILE__, __LINE__);
