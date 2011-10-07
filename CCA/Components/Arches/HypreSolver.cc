@@ -74,7 +74,7 @@ HypreSolver::~HypreSolver()
 void 
 HypreSolver::problemSetup(const ProblemSpecP& params)
 {
-  ProblemSpecP db = params->findBlock("parameters");
+  ProblemSpecP db = params->findBlock("Parameters");
 
   if(!db) {
     ostringstream warn;
@@ -150,8 +150,8 @@ HypreSolver::problemSetup(const ProblemSpecP& params)
     throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
   }
   
-  db->getWithDefault("max_iter", d_maxSweeps, 75);
-  db->getWithDefault("res_tol", d_stored_residual, 1.0e-8);
+  db->getWithDefault("maxiterations", d_maxSweeps, 75);
+  db->getWithDefault("tolerance",     d_stored_residual, 1.0e-8);
 }
 
 
