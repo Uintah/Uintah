@@ -75,7 +75,7 @@ WARNING
 
   class SingleProcessorScheduler : public SchedulerCommon {
   public:
-    SingleProcessorScheduler(const ProcessorGroup* myworld, Output* oport, SingleProcessorScheduler* parent = NULL, bool withGPU = 0);
+    SingleProcessorScheduler(const ProcessorGroup* myworld, Output* oport, SingleProcessorScheduler* parent = NULL);
     virtual ~SingleProcessorScheduler();
 
     //////////
@@ -90,6 +90,7 @@ WARNING
     virtual void verifyChecksum();
 
     SingleProcessorScheduler* m_parent;
+    bool useGPU;
   };
 } // End namespace Uintah
    

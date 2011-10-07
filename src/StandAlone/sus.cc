@@ -150,10 +150,9 @@ static
 void
 quit( const std::string & msg = "" )
 {
-  if( msg != "" )
-    {
-      cerr << msg << "\n";
-    }
+  if (msg != "") {
+    cerr << msg << "\n";
+  }
   Uintah::Parallel::finalizeManager();
   Thread::exitAll( 2 );
 }
@@ -302,9 +301,6 @@ main( int argc, char *argv[], char *env[] )
   IntVector layout(1,1,1);
   bool   validateUps = true, onlyValidateUps = false;
   bool   track = false, track_or_die = false;
-
-  // GPU Values
-  bool withGPU = false;
     
   // Checks to see if user is running an MPI version of sus.
   Uintah::Parallel::determineIfRunningUnderMPI( argc, argv );
@@ -341,15 +337,15 @@ main( int argc, char *argv[], char *env[] )
               arg, argv[0]);
       }
       numThreads = atoi(argv[i]);
-      if ( numThreads< 2 || numThreads>32 ) 
+      if ( numThreads< 2 || numThreads>32 ) {
         usage("number of threads is out of range 2...32", arg, argv[0]);
+      }
       Uintah::Parallel::setMaxThreads(numThreads);
     } else if(arg == "-threadmpi"){
       //used threaded mpi (this option is handled in MPI_Communicator.cc  MPI_Init_thread
     } else if(arg == "-solver") {
       if(++i == argc){
-        usage("You must provide a solver name for -solver",
-              arg, argv[0]);
+        usage("You must provide a solver name for -solver", arg, argv[0]);
       }
       solver = argv[i];
     } else if(arg == "-mpi") {
@@ -363,11 +359,11 @@ main( int argc, char *argv[], char *env[] )
     } else if(arg == "-handle_mpi_errors") {
       // handled in Parallel.cc
     } else if(arg == "-uda_suffix") {
-      if (i < argc-1)
+      if (i < argc-1) {
         udaSuffix = atoi(argv[++i]);
-      else
-        usage("You must provide a suffix number for -uda_suffix",
-              arg, argv[0]);
+      } else {
+        usage("You must provide a suffix number for -uda_suffix", arg, argv[0]);
+      }
     } else if(arg == "-nocopy") { // default anyway, but that's fine
       restartFromScratch = true;
     } else if(arg == "-copy") {
@@ -378,18 +374,20 @@ main( int argc, char *argv[], char *env[] )
       restartRemoveOldDir = true;
 #ifdef HAVE_CUDA
     } else if(arg == "-gpu") {
-        withGPU = true;
+        Uintah::Parallel::setUsingGPU(true);
 #endif
     } else if(arg == "-t") {
-      if (i < argc-1)
+      if (i < argc-1) {
         restartTimestep = atoi(argv[++i]);
+      }
     } else if(arg == "-layout") {
-      if(++i == argc)
-        usage("You must provide a vector arg for -layout",
-              arg, argv[0]);
-      int ii,jj,kk;
-      if(sscanf(argv[i], "%dx%dx%d", &ii, &jj, &kk) != 3)
+      if(++i == argc) {
+        usage("You must provide a vector arg for -layout", arg, argv[0]);
+      }
+      int ii, jj, kk;
+      if(sscanf(argv[i], "%dx%dx%d", &ii, &jj, &kk) != 3) {
         usage("Error parsing -layout", argv[i], argv[0]);
+      }
       layout = IntVector(ii,jj,kk);
     } else if(arg == "-svnDiff") {
       do_svnDiff = true;
@@ -434,7 +432,7 @@ main( int argc, char *argv[], char *env[] )
   // Pass the env into the sci env so it can be used there...
   create_sci_environment( env, 0, true );
 
-  if( filename == "" ){
+  if( filename == "" ) {
     usage("No input file specified", "", argv[0]);
   }
 
@@ -458,8 +456,9 @@ main( int argc, char *argv[], char *env[] )
     }
   }
 
-  if(dbgwait.active())
+  if(dbgwait.active()) {
     TURN_ON_WAIT_FOR_DEBUGGER();
+  }
 
   if (restart || combine_patches || reduce_uda) {
     // check if state.xml is present
@@ -547,17 +546,17 @@ main( int argc, char *argv[], char *env[] )
       cout << "CFLAGS: " << CFLAGS << "\n";
 
       // Run svn commands on Packages/Uintah 
-      if (do_svnDiff || do_svnStat){
+      if (do_svnDiff || do_svnStat) {
 #if defined(REDSTORM)
         cout << "WARNING:  SVN DIFF is disabled.\n";
 #else
         cout << "____SVN_____________________________________________________________\n";
         string sdir = string(sci_getenv("SCIRUN_SRCDIR"));
-        if(do_svnDiff){
+        if(do_svnDiff) {
           string cmd = "svn diff " + sdir;
           system(cmd.c_str());
         }
-        if(do_svnStat){
+        if(do_svnStat) {
           string cmd = "svn info " + sdir;
           system(cmd.c_str());
           cmd = "svn stat -u " + sdir;
@@ -595,16 +594,19 @@ main( int argc, char *argv[], char *env[] )
     }
 
     //if the AMR block is defined default to turning amr on
-    if (!do_AMR)
+    if (!do_AMR) {
       do_AMR = (bool) ups->findBlock("AMR");
+    }
 
     //if doAMR is defined set do_AMR.
-    if(do_AMR) 
+    if(do_AMR) {
       ups->get("doAMR",do_AMR);
+    }
     
     // don't do AMR on combine-patches or reduce-uda
-    if (reduce_uda || combine_patches)
+    if (reduce_uda || combine_patches) {
       do_AMR = false;
+    }
 
     const ProcessorGroup* world = Uintah::Parallel::getRootProcessorGroup();
 
@@ -614,16 +616,18 @@ main( int argc, char *argv[], char *env[] )
     RegridderCommon* reg = 0;
     if(do_AMR) {
       reg = RegridderFactory::create(ups, world);
-      if (reg)
+      if (reg) {
         ctl->attachPort("regridder", reg);
+      }
     }
 
     //__________________________________
     // Solver
     SolverInterface* solve = 0;
     solve = SolverFactory::create(ups, world, solver);
-    if(Uintah::Parallel::getMPIRank() == 0 && solve!=0)
+    if(Uintah::Parallel::getMPIRank() == 0 && solve!=0) {
       cout << "Implicit Solver:" << solve->getName() << endl;
+    }
 
     MALLOC_TRACE_TAG("main():create components");
     //______________________________________________________________________
@@ -655,8 +659,7 @@ main( int argc, char *argv[], char *env[] )
     // Load balancer
     LoadBalancerCommon* lbc = LoadBalancerFactory::create(ups, world);
     lbc->attachPort("sim", sim);
-    if(reg)
-    {
+    if(reg) {
       reg->attachPort("load balancer", lbc);
       lbc->attachPort("regridder",reg);
     }
@@ -672,7 +675,7 @@ main( int argc, char *argv[], char *env[] )
     
     //__________________________________
     // Scheduler
-    SchedulerCommon* sched = SchedulerFactory::create(ups, world, output, withGPU);
+    SchedulerCommon* sched = SchedulerFactory::create(ups, world, output);
     sched->attachPort("load balancer", lbc);
     ctl->attachPort("scheduler", sched);
     lbc->attachPort("scheduler", sched);
@@ -750,18 +753,18 @@ main( int argc, char *argv[], char *env[] )
     cerr << Uintah::Parallel::getMPIRank() << " Caught std exception 'ios_base::failure': " << e.what() << '\n';
     cerrLock.unlock();
     thrownException = true;
-  } catch (std::runtime_error e){
+  } catch (std::runtime_error e) {
     cerrLock.lock();
     cerr << Uintah::Parallel::getMPIRank() << " Caught std exception 'runtime_error': " << e.what() << '\n';
     cerrLock.unlock();
     thrownException = true;
-  } catch (std::exception e){
+  } catch (std::exception e) {
     cerrLock.lock();
     cerr << Uintah::Parallel::getMPIRank() << " Caught std exception: " << e.what() << '\n';
     cerrLock.unlock();
     thrownException = true;
     
-  } catch(...){
+  } catch(...) {
     
     cerrLock.lock();
     cerr << Uintah::Parallel::getMPIRank() << " Caught unknown exception\n";

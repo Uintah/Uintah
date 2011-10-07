@@ -90,7 +90,7 @@ WARNING
 
   class SchedulerCommon : public Scheduler, public UintahParallelComponent {
   public:
-    SchedulerCommon(const ProcessorGroup* myworld, Output* oport, bool withGPU);
+    SchedulerCommon(const ProcessorGroup* myworld, Output* oport);
     virtual ~SchedulerCommon();
 
     virtual void problemSetup(const ProblemSpecP& prob_spec,
@@ -340,7 +340,6 @@ WARNING
       
     // GPU Based variables
 protected:
-    bool withCUDA;
 #ifdef HAVE_CUDA
     vector<CUDADevice> d_cudaDevices;
 #endif

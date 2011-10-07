@@ -44,13 +44,9 @@ namespace Uintah {
   {
   public:
     // this function has a switch for all known load balancers
-    
     static SchedulerCommon* create(ProblemSpecP& ps,
                                    const ProcessorGroup* world,
-                                   Output* ouput,
-                                   bool withGPU);
-
-
+                                   Output* ouput);
   };
 } // End namespace Uintah
 

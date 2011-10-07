@@ -93,12 +93,11 @@ map<string,double> exectimes;
 
  
 
-MPIScheduler::MPIScheduler( const ProcessorGroup * myworld,
-			          Output         * oport,
-			          MPIScheduler   * parentScheduler,
-			          bool         withGPU) :
-  SchedulerCommon( myworld, oport, withGPU ),
-  log( myworld, oport ), parentScheduler( parentScheduler ), oport_( oport )
+MPIScheduler::MPIScheduler(const ProcessorGroup* myworld,
+			                     Output* oport,
+			                     MPIScheduler* parentScheduler) :
+  SchedulerCommon( myworld, oport), log( myworld, oport ),
+  parentScheduler( parentScheduler ), oport_( oport )
 {
   d_lasttime=Time::currentSeconds();
   reloc_new_posLabel_=0;
@@ -168,9 +167,8 @@ MPIScheduler::verifyChecksum()
     checksum += graphs[i]->getTasks().size();
   mpidbg << d_myworld->myrank() << " (Allreduce) Checking checksum of " << checksum << '\n';
   int result_checksum;
-  MPI_Allreduce(&checksum, &result_checksum, 1, MPI_INT, MPI_MIN,
-		d_myworld->getComm());
-  if(checksum != result_checksum){
+  MPI_Allreduce(&checksum, &result_checksum, 1, MPI_INT, MPI_MIN, d_myworld->getComm());
+  if(checksum != result_checksum) {
     cerr << "Failed task checksum comparison!\n";
     cerr << "Processor: " << d_myworld->myrank() << " of "
 	 << d_myworld->size() << ": has sum " << checksum
@@ -262,20 +260,17 @@ MPIScheduler::runTask( DetailedTask         * task, int iteration)
 
   double dtask = Time::currentSeconds()-taskstart;
  
-  if(execout.active())
-  {
+  if(execout.active()) {
     exectimes[task->getTask()->getName()]+=dtask;
   }
 
   //if i do not have a sub scheduler 
-  if(!task->getTask()->getHasSubScheduler())
-  {
+  if(!task->getTask()->getHasSubScheduler()) {
     //add my task time to the total time
     mpi_info_.totaltask += dtask;  
     //if(d_myworld->myrank()==0)
     //  cout << "adding: " << dtask << " to counters, new total: " << mpi_info_.totaltask << endl;
-    if(!d_sharedState->isCopyDataTimestep() && task->getTask()->getType()!=Task::Output)
-    {
+    if(!d_sharedState->isCopyDataTimestep() && task->getTask()->getType()!=Task::Output) {
       //if(d_myworld->myrank()==0 && task->getPatches()!=0)
       //  cout << d_myworld->myrank() << " adding: " << task->getTask()->getName() << " to profile:" << dtask << " on patches:" << *(task->getPatches()) << endl;
       //add contribution for patchlist

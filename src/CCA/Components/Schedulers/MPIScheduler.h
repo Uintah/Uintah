@@ -97,11 +97,10 @@ WARNING
 
   class MPIScheduler : public SchedulerCommon {
   public:
-    MPIScheduler(const ProcessorGroup* myworld, Output* oport, MPIScheduler* parentScheduler = 0, bool withGPU = 0);
+    MPIScheduler(const ProcessorGroup* myworld, Output* oport, MPIScheduler* parentScheduler = 0);
     virtual ~MPIScheduler();
       
-    virtual void problemSetup(const ProblemSpecP& prob_spec,
-                              SimulationStateP& state);
+    virtual void problemSetup(const ProblemSpecP& prob_spec, SimulationStateP& state);
       
     //////////
     // Insert Documentation Here:

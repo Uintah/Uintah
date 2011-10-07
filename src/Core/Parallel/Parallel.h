@@ -89,7 +89,6 @@ WARNING
       static void determineIfRunningUnderMPI( int argc, char** argv );
 
       //////////
-
       // Initializes MPI if necessary. 
       static void initializeManager( int& argc, char**& arg );
 
@@ -127,6 +126,14 @@ WARNING
       //////////
       // Tells Parallel that Threads are not to be used.
       static void noThreading();
+
+      //////////
+      // Returns whether or not to use GPUs
+      static bool usingGPU();
+
+      //////////
+      // Returns true if this process is to use GPUs, false otherwise
+      static void setUsingGPU( bool useGPU );
 
       //////////
       // Returns the number of threads that a processing element is

@@ -95,7 +95,7 @@ static DebugStream dbg("SchedulerCommon", false);
 char * SchedulerCommon::start_addr = NULL;
 
 
-SchedulerCommon::SchedulerCommon(const ProcessorGroup* myworld, Output* oport, bool withGPU)
+SchedulerCommon::SchedulerCommon(const ProcessorGroup* myworld, Output* oport)
   : UintahParallelComponent(myworld), m_outPort(oport),
     trackingVarsPrintLocation_(0), d_maxMemUse(0), m_graphDoc(NULL), m_nodes(NULL)
 {
@@ -117,8 +117,7 @@ SchedulerCommon::SchedulerCommon(const ProcessorGroup* myworld, Output* oport, b
   maxGhost=0;
     
   // Take a look at the CUDA Devices if it is specified
-  withCUDA=withGPU;
-  if(withCUDA)
+  if(Uintah::Parallel::usingGPU())
   {
       int devCount;
       cudaGetDeviceCount(&devCount);
