@@ -77,10 +77,11 @@ WARNING
    class UINTAHSHARE Parallel {
    public:
       enum Circumstances {
-	 NormalShutdown,
-	 Abort
+          NormalShutdown,
+          Abort
       };
 
+      //////////
       // Determines if MPI is being used.  MUST BE CALLED BEFORE
       // initializeManager()!  Also must be called before any one
       // calls "Uintah::Parallel::usingMPI()".  argc/argv are only
@@ -92,15 +93,16 @@ WARNING
       // Initializes MPI if necessary. 
       static void initializeManager( int& argc, char**& arg );
 
+      //////////
       // check to see whether initializeManager has been called
       static bool isInitialized();
       
       //////////
       // Insert Documentation Here:
-      static void finalizeManager(Circumstances cirumstances = NormalShutdown);
+      static void finalizeManager( Circumstances cirumstances = NormalShutdown );
 
       //////////
-      // Insert Documenatation here:
+      // Insert Documentation here:
       static ProcessorGroup* getRootProcessorGroup();
 
       //////////
@@ -109,6 +111,8 @@ WARNING
       // initializeManager();
       static int getMPIRank();
 
+      //////////
+      // Returns the size of MPI_Comm
       static int getMPISize();
       
       //////////
@@ -124,22 +128,24 @@ WARNING
       static void forceNoMPI();
 
       //////////
-      // Tells Parallel that Threads are not to be used.
+      // Tells Parallel that Threads are not to be used
       static void noThreading();
 
       //////////
-      // Returns whether or not to use GPUs
+      // Returns true if this process is to use GPUs, false otherwise
       static bool usingGPU();
 
       //////////
-      // Returns true if this process is to use GPUs, false otherwise
-      static void setUsingGPU( bool useGPU );
+      // Sets whether or not to use available GPUs
+      static void setUsingGPU( bool state );
 
       //////////
       // Returns the number of threads that a processing element is
       // allowed to use to compute its tasks.  
       static int getMaxThreads();
 
+      //////////
+      // Insert Documentation here:
       static void setMaxThreads( int maxNumThreads );
       
    private:
