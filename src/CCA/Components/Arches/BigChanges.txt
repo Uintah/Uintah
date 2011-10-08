@@ -20,3 +20,20 @@ over patches.  This change should not change any of the answers.
 To reverse this change execute:
 
 svn merge -r47642:47641 https://gforge.sci.utah.edu/svn/uintah/trunk/src/CCA/Components/Arches
+
+______________________________________________________________________
+
+10/06/11 Todd
+Changed the input file xml tags for the new ucf press solver.  Here 
+are the required changes:
+
+<PressureSolver>
+  parameters    ->    Parameters
+  res_tol       ->    tolerance
+  max_iter      ->    maxiteration
+
+All of the input files in the repository were updated.  Old files won't 
+run with new code until you modify them.  You can run a script in 
+inputs/ARCHES called "updateUps," or manually edit them.
+
+This will not change the answers.

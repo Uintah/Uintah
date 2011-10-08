@@ -676,6 +676,7 @@ Source::calculatePressMMSSourcePred(const ProcessorGroup* ,
                                     ArchesVariables* vars,
                                     ArchesConstVariables* constvars)
 {
+#if 0
   // Get the patch and variable indices
   double rho0 = 0.0;
   IntVector idxLo = patch->getFortranCellLowIndex();
@@ -689,4 +690,5 @@ Source::calculatePressMMSSourcePred(const ProcessorGroup* ,
       }
     }
   }
+#endif
 }

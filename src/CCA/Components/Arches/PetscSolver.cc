@@ -65,7 +65,7 @@ PetscSolver::~PetscSolver()
 void 
 PetscSolver::problemSetup(const ProblemSpecP& params)
 {
-  ProblemSpecP db = params->findBlock("parameters");
+  ProblemSpecP db = params->findBlock("Parameters");
   
   if(!db) {
     ostringstream warn;
@@ -88,10 +88,10 @@ PetscSolver::problemSetup(const ProblemSpecP& params)
     throw ProblemSetupException(warn.str(), __FILE__, __LINE__);    
   }
   
-  db->require("preconditioner", d_pcType);
-  db->require("solver",         d_solverType);
-  db->require("max_iter",       d_maxSweeps);
-  db->getWithDefault("res_tol", d_residual, 1.0e-7);
+  db->require("preconditioner",      d_pcType);
+  db->require("solver",              d_solverType);
+  db->require("maxiterations",       d_maxSweeps);
+  db->getWithDefault("tolerance",    d_residual, 1.0e-7);
   
   if (d_pcType == "asm"){
     db->require("overlap",d_overlap);
