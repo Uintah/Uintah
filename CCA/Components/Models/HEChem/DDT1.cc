@@ -895,17 +895,19 @@ void DDT1::scheduleTestConservation(SchedulerP&,
 /******************* Bisection Newton Solver ********************************/    
 /****************************************************************************/
 double DDT1::computeBurnedMass(double To, double& Ts, double P, double Vc, double surfArea, 
-                               double delT, double solidMass){  
-    UpdateConstants(To, P, Vc);
-    Ts                = BisectionNewton(Ts);
-    double m          = m_Ts(Ts);
+                                      double delT, double solidMass){  
+    IterationVariables iterVar;
+    UpdateConstants(To, P, Vc, &iterVar);
+    Ts = BisectionNewton(Ts, &iterVar);
+    double m =  m_Ts(Ts, &iterVar);
     double burnedMass = delT * surfArea * m;
-
+    if (burnedMass + MIN_MASS_IN_A_CELL > solidMass) 
+        burnedMass = solidMass - MIN_MASS_IN_A_CELL;  
     return burnedMass;
 }
-    
+
 //______________________________________________________________________
-void DDT1::UpdateConstants(double To, double P, double Vc){
+void DDT1::UpdateConstants(double To, double P, double Vc, IterationVariables *iterVar){
     /* CC1 = Ac*R*Kc/Ec/Cp        */
     /* CC2 = Qc/Cp/2              */
     /* CC3 = 4*Kg*Bg*W*W/Cp/R/R;  */
@@ -913,23 +915,24 @@ void DDT1::UpdateConstants(double To, double P, double Vc){
     /* CC5 = Qg/Cp                */
     /* Vc = Condensed Phase Specific Volume */
     
-    C1 = CC1 / Vc; 
-    C2 = To + CC2; 
-    C3 = CC3 * P*P;
-    C4 = To + CC4; 
-    C5 = CC5 * C3; 
-        
-    Tmin = C4;
-    double Tsmax = Ts_max();
-    if (Tmin < Tsmax)
-        Tmax =  F_Ts(Tsmax);
-    else
-        Tmax = F_Ts(Tmin);
-        
-    IL = Tmin;
-    IR = Tmax;
-}
+    iterVar->C1 = CC1 / Vc; 
+    iterVar->C2 = To + CC2; 
+    iterVar->C3 = CC3 * P*P;
+    iterVar->C4 = To + CC4; 
+    iterVar->C5 = CC5 * iterVar->C3; 
     
+    iterVar->Tmin = iterVar->C4;
+    double Tsmax = Ts_max(iterVar);
+    if (iterVar->Tmin < Tsmax)
+        iterVar->Tmax =  F_Ts(Tsmax, iterVar);
+    else
+        iterVar->Tmax = F_Ts(iterVar->Tmin, iterVar);
+    
+    iterVar->IL = iterVar->Tmin;
+    iterVar->IR = iterVar->Tmax;
+}
+
+
 /***   
  ***   Ts = F_Ts(Ts) = Ts_m(m_Ts(Ts))                                              
  ***   f_Ts(Ts) = C4 + C5/(sqrt(m^2+C3) + m)^2 
@@ -938,97 +941,96 @@ void DDT1::UpdateConstants(double To, double P, double Vc){
  ***   Ts_max = C2 - Ec/2R + sqrt(4*R^2*C2^2+Ec^2)/2R
  ***   f_Ts_max = f_Ts(Ts_max)
  ***/
-double DDT1::F_Ts(double Ts){
-    return Ts_m(m_Ts(Ts));
+double DDT1::F_Ts(double Ts, IterationVariables *iterVar){
+    return Ts_m(m_Ts(Ts, iterVar), iterVar);
 }
-    
-double DDT1::m_Ts(double Ts){
-    return sqrt( C1*Ts*Ts/(Ts-C2)*exp(-Ec/R/Ts) );
+
+double DDT1::m_Ts(double Ts, IterationVariables *iterVar){
+    return sqrt( iterVar->C1*Ts*Ts/(Ts-iterVar->C2)*exp(-Ec/R/Ts) );
 }
-    
-double DDT1::Ts_m(double m){
-    double deno = sqrt(m*m+C3)+m;
-    return C4 + C5/(deno*deno);
+
+double DDT1::Ts_m(double m, IterationVariables *iterVar){
+    double deno = sqrt(m*m+iterVar->C3)+m;
+    return iterVar->C4 + iterVar->C5/(deno*deno);
 }
-    
+
 /* the function value for the zero finding problem */
-double DDT1::Func(double Ts){
-    return Ts - F_Ts(Ts);
+double DDT1::Func(double Ts, IterationVariables *iterVar){
+    return Ts - F_Ts(Ts, iterVar);
 }
-    
+
 /* dFunc/dTs */
-double DDT1::Deri(double Ts){
-    double m = m_Ts(Ts);
-    double K1 = Ts-C2;
-    double K2 = sqrt(m*m+C3);
-    double K3 = (R*Ts*(K1-C2)+Ec*K1)*m*C5;
+double DDT1::Deri(double Ts, IterationVariables *iterVar){
+    double m = m_Ts(Ts, iterVar);
+    double K1 = Ts-iterVar->C2;
+    double K2 = sqrt(m*m+iterVar->C3);
+    double K3 = (R*Ts*(K1-iterVar->C2)+Ec*K1)*m*iterVar->C5;
     double K4 = (K2+m)*(K2+m)*K1*K2*R*Ts*Ts;
     return 1.0 + K3/K4;
 }
-    
+
 /* F_Ts(Ts_max) is the max of F_Ts function */
-double DDT1::Ts_max(){
-    return 0.5*(2.0*R*C2 - Ec + sqrt(4.0*R*R*C2*C2+Ec*Ec))/R;
+double DDT1::Ts_max(IterationVariables *iterVar){
+    return 0.5*(2.0*R*iterVar->C2 - Ec + sqrt(4.0*R*R*iterVar->C2*iterVar->C2+Ec*Ec))/R;
 } 
-    
-void DDT1::SetInterval(double f, double Ts){  
+
+void DDT1::SetInterval(double f, double Ts, IterationVariables *iterVar){  
     /* IL <= 0,  IR >= 0 */
     if(f < 0)  
-        IL = Ts;
+        iterVar->IL = Ts;
     else if(f > 0)
-        IR = Ts;
+        iterVar->IR = Ts;
     else if(f ==0){
-        IL = Ts;
-        IR = Ts; 
+        iterVar->IL = Ts;
+        iterVar->IR = Ts; 
     }
 }
-    
+
 /* Bisection - Newton Method */
-double DDT1::BisectionNewton(double Ts){  
+double DDT1::BisectionNewton(double Ts, IterationVariables *iterVar){  
     double y = 0;
     double df_dTs = 0;
     double delta_old = 0;
     double delta_new = 0;
-        
+    
     int iter = 0;
-    if(Ts>Tmax || Ts<Tmin)
-        Ts = (Tmin+Tmax)/2;
+    if(Ts>iterVar->Tmax || Ts<iterVar->Tmin)
+        Ts = (iterVar->Tmin+iterVar->Tmax)/2;
     
     while(1){
         iter++;
-        y = Func(Ts);
-        SetInterval(y, Ts);
-            
+        y = Func(Ts, iterVar);
+        SetInterval(y, Ts, iterVar);
+        
         if(fabs(y)<EPSILON)
             return Ts;
-            
+        
         delta_new = 1e100;
         while(1){
             if(iter>100){
                 cout<<"Not converging after 100 iterations in DDT1.cc."<<endl;
                 exit(1);
             }
-                
-            df_dTs = Deri(Ts);
+            
+            df_dTs = Deri(Ts, iterVar);
             if(df_dTs==0) 
                 break;
-                
+            
             delta_old = delta_new;
             delta_new = -y/df_dTs; //Newton Step
             Ts += delta_new;
-            y   = Func(Ts);
-                
+            y = Func(Ts, iterVar);
+            
             if(fabs(y)<EPSILON)
                 return Ts;
-                
-            if(Ts<IL || Ts>IR || fabs(delta_new)>fabs(delta_old*0.7))
+            
+            if(Ts<iterVar->IL || Ts>iterVar->IR || fabs(delta_new)>fabs(delta_old*0.7))
                 break;
             
             iter++; 
-            SetInterval(y, Ts);  
+            SetInterval(y, Ts, iterVar);  
         }
-            
-        Ts = (IL+IR)/2.0; //Bisection Step
+        
+        Ts = (iterVar->IL+iterVar->IR)/2.0; //Bisection Step
     }
 }
-
