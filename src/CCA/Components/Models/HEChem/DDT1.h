@@ -208,27 +208,31 @@ WARNING
     double CC5; /* CC5 = Qg/Cp                */
       
     /* C's, IL & IR, Tmin & Tmax are updated in UpdateConstants function  */
-    double C1; /* C1 = CC1 / Vc, (Vc = Condensed Phase Specific Volume) */
-    double C2; /* C2 = To + CC2     */
-    double C3; /* C3 = CC3 * P * P  */
-    double C4; /* C4 = To + CC4     */
-    double C5; /* C5 = CC5 * C3     */
-    
-    double Tmin, Tmax; /* define the range of Ts */
-    double IL, IR;     /* for interval update, left values and right values */
-    
-    // computeBurnedMass helper functions
-    void UpdateConstants(double To, double P, double Vc);
-    double F_Ts(double  Ts); /* function Ts = Ts(m(Ts))    */                    
-    double Ts_m(double m); /* function Ts = Ts(m)    */
-    double m_Ts(double Ts); /* function  m = m(Ts)    */
-    
-    double Func(double Ts);  /* function f = Ts - F_Ts(Ts) */
-    double Deri(double Ts);  /* derivative of Func dF_dTs  */
+    // Structure used to pass values into the iterator.  This is used to 
+    //   prevent global definitions that may be corrupted by 
+    //   multiple versions working on the same variables.
+    typedef struct {
+      double C1; /* C1 = CC1 / Vc, (Vc = Condensed Phase Specific Volume) */
+      double C2; /* C2 = To + CC2     */
+      double C3; /* C3 = CC3 * P * P  */
+      double C4; /* C4 = To + CC4     */
+      double C5; /* C5 = CC5 * C3     */
+          
+      double Tmin, Tmax; /* define the range of Ts */
+      double IL, IR;     /* for interval update, left values and right values */
+    } IterationVariables;
       
-    double Ts_max();
-    void SetInterval(double f, double Ts);
-    double BisectionNewton(double Ts);
+    void UpdateConstants(double To, double P, double Vc, IterationVariables *iter);
+    double F_Ts(double Ts, IterationVariables *iter); /* function Ts = Ts(m(Ts))    */                    
+    double Ts_m(double m, IterationVariables *iter); /* function Ts = Ts(m)    */
+    double m_Ts(double Ts, IterationVariables *iter); /* function  m = m(Ts)    */
+      
+    double Func(double Ts, IterationVariables *iter);  /* function f = Ts - F_Ts(Ts) */
+    double Deri(double Ts, IterationVariables *iter);  /* derivative of Func dF_dTs  */
+      
+    double Ts_max(IterationVariables *iter);
+    void SetInterval(double f, double Ts, IterationVariables *iter);
+    double BisectionNewton(double Ts, IterationVariables *iter);
       
     bool d_is_mpm_matl;  // Is matl 0 a mpm_matl?
     double d_cv_0;      //specific heat
