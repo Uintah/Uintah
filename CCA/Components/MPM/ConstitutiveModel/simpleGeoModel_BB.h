@@ -28,8 +28,8 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#ifndef __SIMPLIFIED_GEO_MODEL_H__
-#define __SIMPLIFIED_GEO_MODEL_H__
+#ifndef __SIMPLE_GEO_MODEL_H__
+#define __SIMPLE_GEO_MODEL_H__
 
 
 #include <CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
@@ -47,7 +47,7 @@ namespace Uintah {
 
   ****************************************/
 
-  class simplifiedGeoModel : public ConstitutiveModel {
+  class simpleGeoModel_BB : public ConstitutiveModel {
     // Create datatype for storing model parameters
   public:
     struct CMData {
@@ -84,23 +84,23 @@ namespace Uintah {
     // Prevent copying of this class
     // copy constructor
 
-    simplifiedGeoModel& operator=(const simplifiedGeoModel &cm);
+    simpleGeoModel_BB& operator=(const simpleGeoModel_BB &cm);
 
     void initializeLocalMPMLabels();
 
   public:
     // constructor
-    simplifiedGeoModel(ProblemSpecP& ps, MPMFlags* flag);
-    simplifiedGeoModel(const simplifiedGeoModel* cm);
+    simpleGeoModel_BB(ProblemSpecP& ps, MPMFlags* flag);
+    simpleGeoModel_BB(const simpleGeoModel_BB* cm);
 
     // destructor
-    virtual ~simplifiedGeoModel();
+    virtual ~simpleGeoModel_BB();
 
     virtual void outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag = true);
 
     // clone
 
-    simplifiedGeoModel* clone();
+    simpleGeoModel_BB* clone();
 
     // compute stable timestep for this patch
     virtual void computeStableTimestep(const Patch* patch,
