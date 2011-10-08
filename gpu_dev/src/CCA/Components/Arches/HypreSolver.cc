@@ -74,7 +74,7 @@ HypreSolver::~HypreSolver()
 void 
 HypreSolver::problemSetup(const ProblemSpecP& params)
 {
-  ProblemSpecP db = params->findBlock("parameters");
+  ProblemSpecP db = params->findBlock("Parameters");
 
   if(!db) {
     ostringstream warn;
@@ -150,8 +150,8 @@ HypreSolver::problemSetup(const ProblemSpecP& params)
     throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
   }
   
-  db->getWithDefault("max_iter", d_maxSweeps, 75);
-  db->getWithDefault("res_tol", d_stored_residual, 1.0e-8);
+  db->getWithDefault("maxiterations", d_maxSweeps, 75);
+  db->getWithDefault("tolerance",     d_stored_residual, 1.0e-8);
 }
 
 
@@ -193,30 +193,8 @@ HypreSolver::gridSetup(const ProcessorGroup*,
   by = 1;
   bz = 1;
   d_dim = 3;
-  d_stencilSize = 4;
+
   d_nblocks = bx*by*bz;           //number of blocks per processor, now is set to 1
-  d_stencilIndices = hypre_CTAlloc(int, d_stencilSize);
-  d_offsets = hypre_CTAlloc(int*, d_stencilSize);   //Allocating memory for 7 point stencil but since I'm using symmetry, only 4 is needed
-  
-  d_offsets[0] = hypre_CTAlloc(int, 3); //Allocating memory for 3 d_dimension indexing
-  d_offsets[0][0] = 0;            //setting the location of each stencil.
-  d_offsets[0][1] = 0;            //First index is the stencil number.
-  d_offsets[0][2] = -1;           //Second index is the [0,1,2]=[i,j,k]
-  
-  d_offsets[1] = hypre_CTAlloc(int, 3);
-  d_offsets[1][0] = 0; 
-  d_offsets[1][1] = -1; 
-  d_offsets[1][2] = 0; 
-  
-  d_offsets[2] = hypre_CTAlloc(int, 3);
-  d_offsets[2][0] = -1; 
-  d_offsets[2][1] = 0; 
-  d_offsets[2][2] = 0; 
-  
-  d_offsets[3] = hypre_CTAlloc(int, 3);
-  d_offsets[3][0] = 0; 
-  d_offsets[3][1] = 0; 
-  d_offsets[3][2] = 0;
      
   d_ilower = hypre_CTAlloc(int*, d_nblocks);
   d_iupper = hypre_CTAlloc(int*, d_nblocks);
@@ -281,10 +259,18 @@ HypreSolver::gridSetup(const ProcessorGroup*,
   /*-----------------------------------------------------------
    * Set up the stencil structure
    *-----------------------------------------------------------*/
+  d_stencilSize = 4;
+  d_stencilIndices = hypre_CTAlloc(int, d_stencilSize);
+  int offsets[4][3] = {{0,0,0},
+                      {-1,0,0},
+                      {0,-1,0},
+                      {0,0,-1}};
+   
+   
   HYPRE_StructStencilCreate(d_dim, d_stencilSize, &d_stencil);
    
   for (int s = 0; s < d_stencilSize; s++){
-    HYPRE_StructStencilSetElement(d_stencil, s, d_offsets[s]);
+    HYPRE_StructStencilSetElement(d_stencil, s, offsets[s]);
   }
 }
 
@@ -317,10 +303,10 @@ HypreSolver::setMatrix(const ProcessorGroup* pc,
   
   for(CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
     IntVector c = *iter;
-    A[i]   = -coeff[c].b; //[0,0,-1]
-    A[i+1] = -coeff[c].s; //[0,-1,0]
-    A[i+2] = -coeff[c].w; //[-1,0,0]
-    A[i+3] =  coeff[c].p; //[0,0,0]
+    A[i]   =  coeff[c].p; //[0, 0, 0]
+    A[i+1] = -coeff[c].w; //[-1,0, 0]
+    A[i+2] = -coeff[c].s; //[0,-1, 0]
+    A[i+3] = -coeff[c].b; //[0 ,0,-1]
 
     i = i + d_stencilSize;
    
@@ -610,12 +596,7 @@ HypreSolver::destroyMatrix()
   hypre_TFree(d_ilower);
   hypre_TFree(d_iupper);
   hypre_TFree(d_stencilIndices);
-  
-  for ( i = 0; i < d_stencilSize; i++){
-    hypre_TFree(d_offsets[i]);
-  }
-  hypre_TFree(d_offsets);
-  
+
   hypre_FinalizeMemoryDebug();
 }
 

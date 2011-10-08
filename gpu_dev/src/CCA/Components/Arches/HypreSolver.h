@@ -116,7 +116,7 @@ private:
   string d_solverType;
 
   int d_maxSweeps;
-  int **d_iupper, **d_ilower, **d_offsets;
+  int **d_iupper, **d_ilower;
   int d_volume, d_nblocks, d_dim, d_stencilSize;
   int *d_stencilIndices;
   int d_A_num_ghost[6];

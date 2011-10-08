@@ -3116,6 +3116,12 @@ if test "$sci_required_mpi" = "yes"; then
                       SCI_TRY_LINK(MPI,mpich library and header,mpi.h,
                                   $_sci_inc /usr/include/mpi,mpich_threadm $MPI_EXTRA_LIB_FLAG,$_sci_lib $MPI_EXTRA_LIB_DIR,,,optional)
                    fi
+                   # try mpich with mpl library  
+                   if test "$HAVE_MPI" != "yes"; then
+                      SCI_TRY_LINK(MPI,mpich library and header,mpi.h,
+                                  $_sci_inc /usr/include/mpi,mpich mpl $MPI_EXTRA_LIB_FLAG,$_sci_lib $MPI_EXTRA_LIB_DIR,,,optional)
+
+                   fi        
                    # try just plain mpich  
                    if test "$HAVE_MPI" != "yes"; then
                       SCI_TRY_LINK(MPI,mpich library and header,mpi.h,

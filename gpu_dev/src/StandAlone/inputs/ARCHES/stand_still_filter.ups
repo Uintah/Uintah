@@ -95,21 +95,21 @@
 
         <PressureSolver>
           <linear_solver>hypre</linear_solver>
-          <parameters>
+          <Parameters>
             <solver>        cg    </solver>
             <preconditioner>pfmg  </preconditioner>
-            <res_tol>   1.0e-10   </res_tol>
-            <max_iter>      75    </max_iter>
-          </parameters>
+            <tolerance>   1.0e-10   </tolerance>
+            <maxiterations>      75    </maxiterations>
+          </Parameters>
           
 <!--
           <linear_solver>petsc</linear_solver>
-          <parameters>
-            <res_tol>       1.0e-9</res_tol>
+          <Parameters>
+            <tolerance>       1.0e-9</tolerance>
             <solver>        cg    </solver>
             <preconditioner>jacobi</preconditioner>
-            <max_iter>      75    </max_iter>
-          </parameters>
+            <maxiterations>      75    </maxiterations>
+          </Parameters>
 -->
         </PressureSolver>
         
