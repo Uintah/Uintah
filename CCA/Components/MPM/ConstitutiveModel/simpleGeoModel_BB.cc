@@ -912,22 +912,27 @@ void simpleGeoModel_BB::computeStressTensor(const PatchSubset* patches,
       double eps_p = pPlasticStrain[idx];
       double epsv_p = pPlasticStrainVol[idx];
       double epsv_e = pElasticStrainVol[idx];
+      double eps_p_new = eps_p;
+      double epsv_p_new = epsv_p;
+      double epsv_e_new = epsv_e;
       double kappa = pKappa[idx];
+      double kappa_new = kappa;
 
       Matrix3 strain_inc(0.0);
       int lvl = 0;
       computeStress(idx, lvl, delT, lame, lame_inverse, 
                     L_new, defGrad[idx], stress_old[idx], pBackStress[idx],
-                    eps_p, epsv_e, epsv_p, kappa, strain_inc, defGrad_new[idx], rotation,
+                    eps_p, epsv_e, epsv_p, eps_p_new, epsv_e_new, epsv_p_new,
+                    kappa, kappa_new, strain_inc, defGrad_new[idx], rotation,
                     stress_new[idx]);
       // update total plastic strain magnitude
-      pPlasticStrain_new[idx] = eps_p;
+      pPlasticStrain_new[idx] = eps_p_new;
       // update volumetric part of the plastic strain magnitude
-      pPlasticStrainVol_new[idx] = epsv_p;
+      pPlasticStrainVol_new[idx] = epsv_p_new;
       // update volumetric part of the elastic strain magnitude
-      pElasticStrainVol_new[idx] = epsv_e;
+      pElasticStrainVol_new[idx] = epsv_e_new;
       // update the position of the cap
-      pKappa_new[idx] = kappa;
+      pKappa_new[idx] = kappa_new;
 
       if (isnan(strain_inc.Norm()) || isnan(rotation.Norm())) {
         cerr << "**ERROR** Strain is nan." << endl;
@@ -1007,7 +1012,10 @@ void simpleGeoModel_BB::computeStress(const particleIndex idx, int& lvl, const d
                                        const double lame, const double lame_inv, 
                                        const Matrix3& L_new, const Matrix3& F_old,
                                        const Matrix3& Sig_old, const Matrix3& Alpha_old,
-                                       double& eps_p, double& epsv_e, double& epsv_p, double& kappa, 
+                                       const double& eps_p, const double& epsv_e, 
+                                       const double& epsv_p, 
+                                       double& eps_p_new, double& epsv_e_new, double& epsv_p_new, 
+                                       const double& kappa, double& kappa_new,
                                        Matrix3& Eps_inc, Matrix3& F_new, Matrix3& R_new,
                                        Matrix3& Sig_new)
 {
@@ -1080,9 +1088,9 @@ void simpleGeoModel_BB::computeStress(const particleIndex idx, int& lvl, const d
                                      i1_peak_hard);
 
   // initial assignment for the plastic strains and the position of the cap function
-  double eps_p_new = eps_p;
-  double epsv_p_new = epsv_p;
-  double epsv_e_new = epsv_e + D_new.Trace()*delT;
+  eps_p_new = eps_p;
+  epsv_p_new = epsv_p;
+  epsv_e_new = epsv_e + D_new.Trace()*delT;
   /* double kappa_new = kappa; */
 
   // check if the stress is elastic or plastic: If it is elastic the new stres is equal
@@ -1218,36 +1226,32 @@ void simpleGeoModel_BB::computeStress(const particleIndex idx, int& lvl, const d
           }
           Sig_upd = Sig_upd_temp;
           */
-              Matrix3 Sig_upd_temp;
-              double i1_upd1;
-              double i1_upd2;
-              double i1_upd3;
-              double f_upd;
-              int count_temp=0;
-              computeInvariants(Sig_upd, S_upd, i1_upd, j2_upd);
-              i1_upd1=i1_upd;
-              i1_upd2=kappa;
+          Matrix3 Sig_upd_temp;
+          double i1_upd1;
+          double i1_upd2;
+          double i1_upd3;
+          double f_upd;
+          int count_temp=0;
+          computeInvariants(Sig_upd, S_upd, i1_upd, j2_upd);
+          i1_upd1=i1_upd;
+          i1_upd2=kappa;
+          i1_upd3=(i1_upd1+i1_upd2)*0.5;
+          Sig_upd_temp = Sig_upd + One*i1_upd*one_third*(i1_upd3/i1_upd-1.0);
+          f_upd = YieldFunction(Sig_upd_temp,fSlope,kappa,cap_rad,i1_peak_hard);
+          while ((abs(f_upd)>0.0000001*sqrt(j2_upd+i1_upd*i1_upd) 
+                  && count_temp<2000) || count_temp==0) {
+            count_temp = count_temp + 1;
+            if (f_upd<0.0){
+              i1_upd2=i1_upd3;
               i1_upd3=(i1_upd1+i1_upd2)*0.5;
-              Sig_upd_temp = Sig_upd + 
-                One*i1_upd*one_third*(i1_upd3/i1_upd-1.0);
-              f_upd = 
-                YieldFunction(Sig_upd_temp,fSlope,kappa,cap_rad,i1_peak_hard);
-              while ((abs(f_upd)>0.0000001*sqrt(j2_upd+i1_upd*i1_upd) 
-                      && count_temp<2000) || count_temp==0) {
-                count_temp = count_temp + 1;
-                if (f_upd<0.0){
-                  i1_upd2=i1_upd3;
-                  i1_upd3=(i1_upd1+i1_upd2)*0.5;
-                } else {
-                  i1_upd1=i1_upd3;
-                  i1_upd3=(i1_upd1+i1_upd2)*0.5;
-                }
-                Sig_upd_temp = Sig_upd + 
-                  One*i1_upd*one_third*(i1_upd3/i1_upd-1.0);
-                f_upd = 
-                 YieldFunction(Sig_upd_temp,fSlope,kappa,cap_rad,i1_peak_hard);
-              }
-              Sig_upd = Sig_upd_temp;
+            } else {
+              i1_upd1=i1_upd3;
+              i1_upd3=(i1_upd1+i1_upd2)*0.5;
+            }
+            Sig_upd_temp = Sig_upd + One*i1_upd*one_third*(i1_upd3/i1_upd-1.0);
+            f_upd = YieldFunction(Sig_upd_temp,fSlope,kappa,cap_rad,i1_peak_hard);
+          }
+          Sig_upd = Sig_upd_temp;
         } else if (i1_upd < kappa) {
           beta_cap = sqrt(1.0 - (kappa-i1_upd)*(kappa-i1_upd)/(cap_rad*cap_rad));
           Sig_upd += S_upd*((i1_peak_hard-fSlope*i1_upd)*beta_cap*one_sqrt_J2_upd - 1);
@@ -1304,7 +1308,7 @@ void simpleGeoModel_BB::computeStress(const particleIndex idx, int& lvl, const d
           }
         }
         // compute the projection direction tensor
-        P = One*(lame*M.Trace()) + M*(2.0*shear);
+        P = One*(M.Trace()*lame) + M*(2.0*shear);
         // store the last value of gamma for calculation of the changes in gamma
         gamma_old = gamma;
         // compute the new value for gamma
@@ -1329,12 +1333,12 @@ void simpleGeoModel_BB::computeStress(const particleIndex idx, int& lvl, const d
       // compute the new stress state
       feclearexcept(FE_ALL_EXCEPT);
       double hard_scaled = 0.0;
-      double G_mag = G.Norm();
-      double one_G_mag = 1/G_mag;
+      double G_norm = G.Norm();
+      double one_G_norm = 1/G_norm;
       double kappa_i1_upd = kappa - i1_upd;
       double cap_rad_sq = cap_rad*cap_rad;
       if (kappa_i1_upd <= 0.0){
-        hard_scaled = iso_hard*one_G_mag;
+        hard_scaled = iso_hard*one_G_norm;
       } else {
         if (j2_upd < 0.00000001) {
           beta_cap = 0.0;
@@ -1344,7 +1348,7 @@ void simpleGeoModel_BB::computeStress(const particleIndex idx, int& lvl, const d
         hard_scaled = (sqrt(beta_cap)*iso_hard +
                       2.0*cap_ratio*(fSlope*i1_upd-i1_peak_hard)*kappa_i1_upd
                          /(cap_rad_sq*cap_rad*(1.0+fSlope*cap_ratio)*p3*p3)*
-                         exp(-p1*(kappa-cap_rad-p0))*M.Trace())*one_G_mag;
+                         exp(-p1*(kappa-cap_rad-p0))*M.Trace())*one_G_norm;
         if (fetestexcept(FE_INVALID) != 0) {
           cerr << "Nan floating point exception in fourth part section 2" << endl;
           //cerr << "hard_scaled = " << hard_scaled << endl;
@@ -1352,7 +1356,7 @@ void simpleGeoModel_BB::computeStress(const particleIndex idx, int& lvl, const d
           feclearexcept(FE_ALL_EXCEPT);
         }
       }
-      Matrix3 G_unit = G*one_G_mag;
+      Matrix3 G_unit = G*one_G_norm;
       double GP = G_unit.Contract(P);
       gamma *= GP/(GP+hard_scaled);
       Sig_new = Sig_trial - P*gamma;
@@ -1360,23 +1364,20 @@ void simpleGeoModel_BB::computeStress(const particleIndex idx, int& lvl, const d
     } // End return to vertex if
 
     Matrix3 Sig_diff = Sig_trial - Sig_new;
-    Matrix3 Eps_diff = One*(lame_inv*Sig_diff.Trace()) + Sig_diff*(2.0*shear_inv);
+    Matrix3 Eps_diff = One*(Sig_diff.Trace()*lame_inv) + Sig_diff*(2.0*shear_inv);
     Eps_inc += Eps_diff;
 
     // update total plastic strain magnitude
     eps_p_new = eps_p + Eps_diff.Norm();
-    eps_p = eps_p_new;
     // update volumetric part of the plastic strain magnitude
     epsv_p_new = epsv_p + Eps_diff.Trace();
-    epsv_p = epsv_p_new;
     // update volumetric part of the elastic strain magnitude
     epsv_e_new = epsv_e_new - Eps_diff.Trace();
-    epsv_e = epsv_e_new;
 
     // update the position of the cap
-    double var1 = exp(p3+p4+epsv_p_new);
-    double var2 = exp(p3+epsv_p_new);
-    kappa += ( exp(-p1*(kappa-cap_rad-p0))/(p3*p1) -
+    double var1 = exp(p3+p4+epsv_p);
+    double var2 = exp(p3+epsv_p);
+    kappa_new = kappa + ( exp(-p1*(kappa-cap_rad-p0))/(p3*p1) -
                3.0*fluid_B0*(exp(p3+p4)-1.0)*(var1/((var1-1.0)*(var1-1.0)) +
                                               var2/((var2-1.0)*(var2-1.0))) )
                *Eps_diff.Trace()/(1.0+fSlope*cap_ratio);
@@ -1388,7 +1389,7 @@ void simpleGeoModel_BB::computeStress(const particleIndex idx, int& lvl, const d
     Matrix3 S_new(0.0);
     double j2_new = 0.0, i1_new = 0.0;
     computeInvariants(Sig_new, S_new, i1_new, j2_new);
-    double f_new = evalYieldFunction(j2_new, i1_new, fSlope, kappa, cap_rad, 
+    double f_new = evalYieldFunction(j2_new, i1_new, fSlope, kappa_new, cap_rad, 
                                        i1_peak_hard);
     if (abs(f_new) > 0.01*sqrt(j2_new+i1_new*i1_new)) {
       // Error message
@@ -1407,13 +1408,21 @@ void simpleGeoModel_BB::computeStress(const particleIndex idx, int& lvl, const d
       Matrix3 F_tmp(0.0);
       Matrix3 R_tmp(0.0);
       Eps_inc = Zero;
+      double eps_p_tmp = 0.0;
+      double epsv_p_tmp = 0.0;
+      double epsv_e_tmp = 0.0;
+      double kappa_tmp = 0.0;
       computeStress(idx, lvl, delT_new, lame, lame_inv, 
                     L_new, F_old, Sig_old, Alpha_old,
-                    eps_p, epsv_e, epsv_p, kappa, Eps_inc, F_tmp, R_tmp,
+                    eps_p, epsv_e, epsv_p, 
+                    eps_p_tmp, epsv_e_tmp, epsv_p_tmp, 
+                    kappa, kappa_tmp, Eps_inc, F_tmp, R_tmp,
                     Sig_tmp);
       computeStress(idx, lvl, delT_new, lame, lame_inv, 
                     L_new, F_tmp, Sig_tmp, Alpha_old,
-                    eps_p, epsv_e, epsv_p, kappa, Eps_inc, F_new, R_new,
+                    eps_p_tmp, epsv_e_tmp, epsv_p_tmp, 
+                    eps_p_new, epsv_e_new, epsv_p_new, 
+                    kappa_tmp, kappa_new, Eps_inc, F_new, R_new,
                     Sig_new);
       lvl -= 1;
     }
