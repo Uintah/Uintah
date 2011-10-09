@@ -119,7 +119,9 @@ namespace Uintah {
                        const double lame, const double lame_inv, 
                        const Matrix3& L_new, const Matrix3& F_old,
                        const Matrix3& Sig_old, const Matrix3& Alpha_old,
-                       double& eps_p, double& epsv_e, double& epsv_p, double& kappa, 
+                       const double& eps_p, const double& epsv_e, const double& epsv_p, 
+                       double& eps_p_new, double& epsv_e_new, double& epsv_p_new, 
+                       const double& kappa, double& kappa_new, 
                        Matrix3& Eps_inc, Matrix3& F_new, Matrix3& R_new,
                        Matrix3& Sig_new);
 
