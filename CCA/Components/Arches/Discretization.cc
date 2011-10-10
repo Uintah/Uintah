@@ -334,7 +334,7 @@ Discretization::compute_Ap(CellIterator iter,
   for(; !iter.done();iter++) { 
     IntVector c = *iter;
     Stencil7&  A_tmp=A[c];
-    A_tmp.p = A_tmp.e + A_tmp.w + A_tmp.n + A_tmp.s + A_tmp.t + A_tmp.b - source[c];
+    A_tmp.p = -(A_tmp.e + A_tmp.w + A_tmp.n + A_tmp.s + A_tmp.t + A_tmp.b) - source[c];
   }
 }
 
