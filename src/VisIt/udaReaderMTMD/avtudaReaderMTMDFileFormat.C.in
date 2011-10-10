@@ -927,55 +927,36 @@ avtudaReaderMTMDFileFormat::GetMesh(int timestate, int domain, const char *meshn
     PatchInfo &patchInfo = levelInfo.patchInfo[local_patch];
 
     int low[3], high[3];
-    int extra_low[3], extra_high[3];
 
     for (int i=0; i<3; i++) {
       low[i]  = patchInfo.cc_low[i];
       high[i] = patchInfo.cc_high[i];
-
-      extra_low[i] =  low[i];
-      extra_high[i] = high[i];
     }
-
-    // If there are extra cells, we need to store them on ALL sides.
-    int nextra = max(max(levelInfo.extraCells[0], levelInfo.extraCells[1]),
-                     levelInfo.extraCells[2]);
-
-    if( useExtraCells ) {
-      for (int i=0; i<3; i++) {
-        low[i]  += nextra;
-        high[i] -= nextra;
-      }
-    }
-
 
     // Node centered data uses the same mesh as cell centered,
     // face centered meshes need an extra value for one axis.
     int extra_for_faces[3] = {0,0,0};
     if (meshName.find("SFCX") != string::npos) {
       extra_for_faces[0]=1;
-      high[0]++; extra_high[0]++;
+      high[0]++;
     }
 
     if (meshName.find("SFCY") != string::npos) {
       extra_for_faces[1]=1;
-      high[1]++; extra_high[1]++;
+      high[1]++;
     }
 
     if (meshName.find("SFCZ") != string::npos) {
       extra_for_faces[2]=1;
-      high[2]++; extra_high[2]++;
+      high[2]++;
     }
-
-
 
     vtkRectilinearGrid *rgrid = vtkRectilinearGrid::New();
 
     int dims[3];
     for (int i=0; i<3; i++)
-      dims[i] = extra_high[i]-extra_low[i]+1;
+      dims[i] = high[i]-low[i]+1; // The +1 is important...
     rgrid->SetDimensions(dims);
-
 
     // Set the coordinates of the grid points in each direction.
     for (int c=0; c<3; c++) {
@@ -998,7 +979,7 @@ avtudaReaderMTMDFileFormat::GetMesh(int timestate, int domain, const char *meshn
         }
 
         array[i] = levelInfo.anchor[c] +
-          (i + extra_low[c] + face_offset) * levelInfo.spacing[c];
+          (i + low[c] + face_offset) * levelInfo.spacing[c];
       }
 
       switch(c) {
@@ -1012,83 +993,6 @@ avtudaReaderMTMDFileFormat::GetMesh(int timestate, int domain, const char *meshn
 
       coords->Delete();
     }
-
-    if (nextra) {
-      // If we have extra cells, we need to specify where in the data chunk
-      // the interior cells lay.
-      vtkIntArray *baseIndex = vtkIntArray::New();
-      baseIndex->SetNumberOfTuples(3);
-      baseIndex->SetValue(0, low[0]);
-      baseIndex->SetValue(1, low[1]);
-      baseIndex->SetValue(2, low[2]);
-      baseIndex->SetName("base_index");
-      rgrid->GetFieldData()->AddArray(baseIndex);
-      baseIndex->Delete();
-
-      vtkIntArray *realDims = vtkIntArray::New();
-      realDims->SetNumberOfTuples(6);
-      realDims->SetValue(0, low[0]-extra_low[0]);
-      realDims->SetValue(1, high[0]-extra_low[0]);
-      realDims->SetValue(2, low[1]-extra_low[1]);
-      realDims->SetValue(3, high[1]-extra_low[1]);
-      realDims->SetValue(4, low[2]-extra_low[2]);
-      realDims->SetValue(5, high[2]-extra_low[2]);
-      realDims->SetName("avtRealDims");
-      rgrid->GetFieldData()->AddArray(realDims);
-      realDims->Delete();
-
-      // Mark all of the ghost cells.
-      unsigned char ghostExternal=0;
-      avtGhostData::AddGhostZoneType(ghostExternal,
-                                     ZONE_EXTERIOR_TO_PROBLEM);
-      unsigned char ghostInternal=0;
-      avtGhostData::AddGhostZoneType(ghostInternal,
-                                     DUPLICATED_ZONE_INTERNAL_TO_PROBLEM);
-
-      unsigned char ghostNA=0;
-      avtGhostData::AddGhostZoneType(ghostNA,
-                                     ZONE_NOT_APPLICABLE_TO_PROBLEM);
-
-
-      vtkUnsignedCharArray *ghostCells = vtkUnsignedCharArray::New();
-      ghostCells->SetName("avtGhostZones");
-      ghostCells->Allocate(rgrid->GetNumberOfCells());
-
-      for (int z=extra_low[2]; z<extra_high[2]; z++) {
-        bool extraz=(z<low[2] || z>=high[2]);
-        bool isboundaryz = (extraz &&
-                            (z>=patchInfo.cc_extra_low[2] && z<patchInfo.cc_extra_high[2]));
-
-        for (int y=extra_low[1]; y<extra_high[1]; y++) {
-          bool extray=(y<low[1] || y>=high[1]);
-          bool isboundaryy = (extray &&
-                              (y>=patchInfo.cc_extra_low[1] && y<patchInfo.cc_extra_high[1]));
-
-          for (int x=extra_low[0]; x<extra_high[0]; x++) {
-            bool extrax=(x<low[0] || x>=high[0]);
-            bool isboundaryx = (extrax &&
-                                (x>=patchInfo.cc_extra_low[0] && x<patchInfo.cc_extra_high[0]));
-
-            bool extra = (extraz||extray||extrax);
-            bool isboundary = (isboundaryx||isboundaryy||isboundaryz);
-
-            if (extra) {
-              if (isboundary)
-                ghostCells->InsertNextValue(ghostExternal);
-              else
-                ghostCells->InsertNextValue(ghostInternal);
-            }
-            else
-              ghostCells->InsertNextValue(0);
-          }
-        }
-      }
-     
-      rgrid->GetCellData()->AddArray(ghostCells);
-      rgrid->SetUpdateGhostLevel(level);
-      ghostCells->Delete();
-    }
-
 
     return rgrid;
   }
@@ -1199,13 +1103,12 @@ avtudaReaderMTMDFileFormat::GetVar(int timestate, int domain, const char *varnam
     PatchInfo &patchInfo = levelInfo.patchInfo[local_patch];
 
 
-    int low[3], high[3];   // region that visit expects
+    int qlow[3], qhigh[3]; // region we're going to ask uintah for (from qlow to qhigh-1)
 
     for (int i=0; i<3; i++) {
-      low[i]  = patchInfo.cc_low[i];
-      high[i] = patchInfo.cc_high[i];
+      qlow[i]  = patchInfo.cc_low[i];
+      qhigh[i] = patchInfo.cc_high[i];
     }
-
 
     // Node centered data needs an extra value in each direction,
     // face centered meshes need an extra value for one axis.
@@ -1213,17 +1116,17 @@ avtudaReaderMTMDFileFormat::GetVar(int timestate, int domain, const char *varnam
     // patches, but there's no way around that right now.
     if (varType.find("SFCX") != string::npos ||
         varType.find("NC") != string::npos) {
-      high[0]++;
+      qhigh[0]++;
     }
 
     if (varType.find("SFCY") != string::npos ||
         varType.find("NC") != string::npos) {
-      high[1]++;
+      qhigh[1]++;
     }
 
     if (varType.find("SFCZ") != string::npos ||
         varType.find("NC") != string::npos) {
-      high[2]++;
+      qhigh[2]++;
     }
 
     GridDataRaw *gd=NULL;
@@ -1231,12 +1134,12 @@ avtudaReaderMTMDFileFormat::GetVar(int timestate, int domain, const char *varnam
     if (strcmp(varname, "proc_id")==0) {
       gd = new GridDataRaw;
       for (int i=0; i<3; i++) {
-        gd->low[i ] = low[i];
-        gd->high[i] = high[i];
+        gd->low[i ] = qlow[i];
+        gd->high[i] = qhigh[i];
       }
       gd->components=1;
 
-      int ncells = (high[0]-low[0])*(high[1]-low[1])*(high[2]-low[2]);
+      int ncells = (qhigh[0]-qlow[0])*(qhigh[1]-qlow[1])*(qhigh[2]-qlow[2]);
       gd->data = new double[ncells];
       for (int i=0; i<ncells; i++) 
         gd->data[i] = patchInfo.proc_id;
@@ -1270,18 +1173,42 @@ avtudaReaderMTMDFileFormat::GetVar(int timestate, int domain, const char *varnam
       if (prev>=0)
         MPI_Recv(&msg, 1, MPI_INT, prev, tag, VISIT_MPI_COMM, &status);
 
-      gd = (*getGridData)(archive, grid, level, local_patch, varName, atoi(matl.c_str()), timestate, low, high);
+      gd = (*getGridData)(archive, grid, level, local_patch, varName, atoi(matl.c_str()), timestate, qlow, qhigh);
 
       // let the next read go
       if (next>=0)
         MPI_Send(&msg, 1, MPI_INT, next, tag, VISIT_MPI_COMM);
 
 #else
-      gd = (*getGridData)(archive, grid, level, local_patch, varName, atoi(matl.c_str()), timestate, low, high);
+      gd = (*getGridData)(archive, grid, level, local_patch, varName, atoi(matl.c_str()), timestate, qlow, qhigh);
 #endif
     }
 
-    int n = (high[0]-low[0])*(high[1]-low[1])*(high[2]-low[2]);
+
+    bool correct_size = true;
+    for (int i=0; i<3; i++) {
+      if (qlow[i]!=gd->low[i] ||
+          qhigh[i]!=gd->high[i]) {
+        correct_size=false;
+        break;
+      }
+    }
+
+    if (!correct_size) {
+      cerr<<"incorrect size!"<<endl;
+
+      cerr<<"expected:"<<endl;
+      cerr<<"low: "<<qlow[0]<<" "<<qlow[1]<<" "<<qlow[2]<<" "<<endl;
+      cerr<<"high: "<<qhigh[0]<<" "<<qhigh[1]<<" "<<qhigh[2]<<" "<<endl;
+
+      cerr<<"found:"<<endl;
+      cerr<<"low: "<<gd->low[0]<<" "<<gd->low[1]<<" "<<gd->low[2]<<" "<<endl;
+      cerr<<"high: "<<gd->high[0]<<" "<<gd->high[1]<<" "<<gd->high[2]<<" "<<endl;
+
+      exit(0);
+    }
+
+    int n = (qhigh[0]-qlow[0])*(qhigh[1]-qlow[1])*(qhigh[2]-qlow[2]);
 
     // replace nan's with a large negative number
     for (int i=0; i<n*gd->components; i++) {

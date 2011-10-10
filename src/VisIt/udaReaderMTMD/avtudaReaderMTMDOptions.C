@@ -10,7 +10,7 @@ DBOptionsAttributes *
 GetudaReaderMTMDReadOptions(void)
 {
     DBOptionsAttributes *rv = new DBOptionsAttributes;
-    rv->SetBool("Load extra cells", false);
+    rv->SetBool("Load extra cells", true);
     return rv;
 }
 
