@@ -384,7 +384,6 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
       d_linearSolver->setMatrix(pc, patch, vars.pressCoeff); 
     }
   }
-
 }
 
 
@@ -474,17 +473,6 @@ PressureSolver::setRHS_X_wrap ( const ProcessorGroup* pg,
     // Pass the data to either Hypre or Petsc
     d_linearSolver->setRHS_X(pg, patch, guess, rhs, d_construct_A);
   }
-  //__________________________________
-  //  debugging 
-#if 0
-  string desc  = timelabels->integrator_step_name;
-  int timestep = d_lab->d_sharedState->getCurrentTopLevelTimeStep();
-  d_iteration ++;
-  
-  cout << "//_______________________________STEP_" << desc << " " << timestep << " " << d_iteration << endl;
-  
-  d_linearSolver->print(desc,timestep,d_iteration );
-#endif
 }
 
 
@@ -542,6 +530,18 @@ PressureSolver::solveSystem(const ProcessorGroup* pg,
   // Call Hypre or Petsc to solve the system
   bool converged   =  d_linearSolver->pressLinearSolve();
   double init_norm = d_linearSolver->getInitNorm();
+  
+  //__________________________________
+  //  debugging 
+#if 0
+  string desc  = timelabels->integrator_step_name;
+  int timestep = d_lab->d_sharedState->getCurrentTopLevelTimeStep();
+  d_iteration ++;
+  
+  cout << "//_______________________________STEP_" << desc << " " << timestep << " " << d_iteration << endl;
+  
+  d_linearSolver->print(desc,timestep,d_iteration );
+#endif
   
   if (timelabels->recursion){
     new_dw->put(max_vartype(init_norm), d_lab->d_InitNormLabel);
@@ -886,6 +886,19 @@ PressureSolver::calculatePressureCoeff(const Patch* patch,
                     cellinfo->snsv, cellinfo->dynp, cellinfo->dyps, 
                     cellinfo->stbw, cellinfo->dztp, cellinfo->dzpb);
 #endif
+
+  //__________________________________
+  //  The petsc and hypre solvers need A not -A
+  for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) { 
+    IntVector c = *iter;
+    Stencil7& A = coeff_vars->pressCoeff[c];
+    A.e *= -1.0; 
+    A.w *= -1.0; 
+    A.n *= -1.0; 
+    A.s *= -1.0; 
+    A.t *= -1.0; 
+    A.b *= -1.0;
+  }
 }
 
 
