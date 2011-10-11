@@ -71,9 +71,11 @@ void JWL::outputProblemSpec(ProblemSpecP& ps){
 //__________________________________
 double JWL::computeRhoMicro(double press, double,
                             double cv, double Temp,double rho_guess){
-  Pressure = press;
-  Temperature = Temp;
-  SpecificHeat = cv;
+  // Set up iteration variables for the solver
+  IterationVariables iterVar;
+  iterVar.Pressure = press;
+  iterVar.Temperature = Temp;
+  iterVar.SpecificHeat = cv;
   
   /* Use a hybrid Newton-Bisection Method to compute the rho_micro.
      The solver guarantees to converge to a solution.
@@ -86,8 +88,8 @@ double JWL::computeRhoMicro(double press, double,
   double epsilon  = 1e-15;
   double rho_min = 0.0;                      // Such that f(min) < 0
   double rho_max = press*1.001/(om*cv*Temp); // Such that f(max) > 0
-  IL = rho_min;
-  IR = rho_max;
+  iterVar.IL = rho_min;
+  iterVar.IR = rho_max;
 
   double f = 0;
   double df_drho = 0;
@@ -98,16 +100,16 @@ double JWL::computeRhoMicro(double press, double,
  
   int iter = 0;
   while(1){
-    f = func(rhoM);
-    setInterval(f, rhoM);
+    f = func(rhoM, &iterVar);
+    setInterval(f, rhoM, &iterVar);
     
-    if(fabs((IL-IR)/rhoM)<epsilon){
-      return (IL+IR)/2.0;
+    if(fabs((iterVar.IL-iterVar.IR)/rhoM)<epsilon){
+      return (iterVar.IL+iterVar.IR)/2.0;
     }
     
     delta_new = 1e100;
     while(1){
-      df_drho = deri(rhoM);
+      df_drho = deri(rhoM, &iterVar);
       delta_old = delta_new;
       delta_new = -f/df_drho; 
       rhoM += delta_new;
@@ -126,16 +128,16 @@ double JWL::computeRhoMicro(double press, double,
         throw InternalError(warn.str(), __FILE__, __LINE__);
       }
       
-      if(rhoM<IL || rhoM>IR || fabs(delta_new)>fabs(delta_old*0.7)){
+      if(rhoM<iterVar.IL || rhoM>iterVar.IR || fabs(delta_new)>fabs(delta_old*0.7)){
         break;
       }
       
-      f = func(rhoM);
-      setInterval(f, rhoM);      
+      f = func(rhoM, &iterVar);
+      setInterval(f, rhoM, &iterVar);      
       iter++;
     }
     
-    rhoM = (IL+IR)/2.0;
+    rhoM = (iterVar.IL+iterVar.IR)/2.0;
     iter++;
   }
   
@@ -143,35 +145,35 @@ double JWL::computeRhoMicro(double press, double,
 }
 
 
-double JWL::func(double rhoM){
+double JWL::func(double rhoM, IterationVariables *iterVar){
   if(rhoM == 0){
-    return -Pressure;
+    return -(iterVar->Pressure);
   }
   double V  = rho0/rhoM;
   double P1 = A*exp(-R1*V);
   double P2 = B*exp(-R2*V);
-  double P3 = om*SpecificHeat*Temperature*rhoM;
-  return P1 + P2 + P3 - Pressure;
+  double P3 = om*iterVar->SpecificHeat*iterVar->Temperature*rhoM;
+  return P1 + P2 + P3 - iterVar->Pressure;
 }
 
 
-double JWL::deri(double rhoM){
+double JWL::deri(double rhoM, IterationVariables *iterVar){
   double V  = rho0/rhoM;
   double P1 = A*exp(-R1*V);
   double P2 = B*exp(-R2*V);
-  double P3 = om*SpecificHeat*Temperature*rhoM;
+  double P3 = om*iterVar->SpecificHeat*iterVar->Temperature*rhoM;
   return (P1*R1*V + P2*R2*V + P3)/rhoM;
 }
 
 
-void JWL::setInterval(double f, double rhoM){
+void JWL::setInterval(double f, double rhoM, IterationVariables *iterVar){
   if(f < 0)   
-    IL = rhoM;
+    iterVar->IL = rhoM;
   else if(f > 0)  
-    IR = rhoM;
+    iterVar->IR = rhoM;
   else if(f ==0){    
-    IL = rhoM;
-    IR = rhoM; 
+    iterVar->IL = rhoM;
+    iterVar->IR = rhoM; 
   } 
 }
 
