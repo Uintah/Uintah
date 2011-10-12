@@ -35,6 +35,8 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Ports/DataWarehouse.h>
 #include <Core/Disclosure/TypeDescription.h>
 
+#include <sci_defs/cuda_defs.h>
+
 namespace Uintah {
 
 
@@ -131,33 +133,43 @@ namespace Uintah {
     /// @brief The kernel that computes influx and outflux values essentially replacing the cell iterator.
     /// @param domainSize A three component vector that gives the size of the domain as (x,y,z)
     /// @param domainLower A three component vector that gives the lower corner of the work area as (x,y,z)
+    /// @param cellSizes A three component vector containing dx, dy and dz for the cell
     /// @param ghostLayers The number of layers of ghost cells
     /// @param delt The change in time from the last timestep
     /// @param uvel_FC The pointer to face velocities in x
     /// @param vvel_FC The pointer to face velocities in y
     /// @param wvel_FC The pointer to face velocities in z
+    /// @param OFS Pointer to a six component array that must be updated in this function.
     __global__ void inFluxOutFluxVolumeKernel(uint3 domainSize,
                                               uint3 domainLower,
+                                              uint3 cellSizes,
                                               int ghostLayers,
                                               int delt,
                                               double *uvel_FC, 
                                               double *vvel_FC, 
-                                              double *wvel_FC);
+                                              double *wvel_FC,
+                                              double **OFS);
       
     /// @brief A kernel that applies the advection operation to a number of slabs.
     /// @param domainSize A three component vector that gives the size of the domain as (x,y,z)
     /// @param domainLower A three component vector that gives the lower corner of the work area as (x,y,z)
     /// @param ghostLayers The number of layers of ghost cells
-    /// @param mass Pointer to the source mass allocated on the device
-    /// @param newMass Pointer to the sink mass allocated on the device
-    /// @param massAd Pointer to the  massAdvected allocated on the device
+    /// @param q_CC Pointer to the advected variable
+    /// @param q_advected Pointer to the amount of q_CC advected
+    /// @param q_XFC Pointer to the advection through x faces
+    /// @param q_YFC Pointer to the advection through y faces
+    /// @param q_ZFC Pointer to the advection through z faces
+    /// @param OFS Pointer to a six component array that must be updated in this function.
     /// @param invol Inverse of the volume of a single cell
     __global__ void advectSlabsKernel(uint3 domainSize,
                                       uint3 domainLower,
                                       int ghostLayers,
-                                      double *mass,
-                                      double *newMass,
-                                      double *massAd,
+                                      double *q_CC,
+                                      double *q_advected,
+                                      double *q_XFC,
+                                      double *q_YFC,
+                                      double *q_ZFC,
+                                      double **OFS,
                                       double invol);
       
     /// @brief A kernel that computes the total flux through a face. 
