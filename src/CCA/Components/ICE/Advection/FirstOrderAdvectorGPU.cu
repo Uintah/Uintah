@@ -125,6 +125,10 @@ void FirstOrderAdvectorGPU::inFluxOutFluxVolume(
   // the computational footprint by one cell in ghostCells  
   bool error = false;
   
+  
+  // HERE GOES THE CALL TO THE KERNEL //
+  
+  /*
   int NGC =1;  // number of ghostCells
   for(CellIterator iter = patch->getExtraCellIterator(NGC); !iter.done(); iter++) {  
     const IntVector& c = *iter;
@@ -159,7 +163,7 @@ void FirstOrderAdvectorGPU::inFluxOutFluxVolume(
       error = true;
     }
   }  //cell iterator
-  
+  */
   //__________________________________
   // if total_fluxout > vol then 
   // -find the cell, 
@@ -536,23 +540,212 @@ void FirstOrderAdvectorGPU::q_FC_fluxes( const CCVariable<T>& q_CC,
 // The kernel that computes influx and outflux values essentially replacing the cell iterator.
 __global__ void FirstOrderAdvectorGPU::inFluxOutFluxVolumeKernel(uint3 domainSize,
                                                                  uint3 domainLower,
+                                                                 uint3 cellSizes,
                                                                  int ghostLayers,
                                                                  int delt,
                                                                  double *uvel_FC, 
                                                                  double *vvel_FC, 
-                                                                 double *wvel_FC)
+                                                                 double *wvel_FC,
+                                                                 double **OFS)
 {
+  __shared__ bool error;    // SHOULD THIS BE SET TO FALSE?
+  
+  // Compute the index
+  int tidX = blockDim.x * blockIdx.x + threadIdx.x;
+  int tidY = blockDim.y * blockIdx.y + threadIdx.y;
+
+  int num_slices = domainSize.z - ghostLayers;
+  int dx = domainSize.x;
+  int dy = domainSize.y;
+  
+  if (tidX < (dx - ghostLayers) && tidY < (dy - ghostLayers) && tidX > 0 && tidY > 0) {
+    for (int slice = ghostLayers; slice < num_slices; slice++) {
+      int index = INDEX3D(dx,dy, tidX,tidY, slice);
+      double valueAdjacent = 0.0; // A temporary storage for adjacent values
+      
+      // Set to initial values, these are set are used as the else case
+      //   for the following if statements.
+      double delY_top    = 0.0;
+      double delY_bottom = 0.0;
+      double delX_right  = 0.0;
+      double delX_left   = 0.0;
+      double delZ_front  = 0.0;
+      double delZ_back   = 0.0;
+  
+      // NOTE REFACTOR THIS SECTION TO USE fmaxf(x,y)
+      // The plus
+      valueAdjacent = vvel_FC[INDEX3D(dx,dy, tidX,tidY + 1, slice)];
+      if(valueAdjacent > 0.0)
+        delY_top    = valueAdjacent * delt;
+              
+      valueAdjacent = vvel_FC[INDEX3D(dx,dy, tidX + 1,tidY, slice)];  
+      if(valueAdjacent > 0.0)
+        delX_right  = valueAdjacent * delt;
+        
+      valueAdjacent = vvel_FC[INDEX3D(dx,dy, tidX,tidY, slice + 1)];   
+      if(valueAdjacent] > 0.0)
+        delZ_front  = valueAdjacent * delT;
+    
+    
+    
+      // The minus
+      valueAdjacent = vvel_FC[index];
+      if(-valueAdjacent > 0.0)
+        delY_bottom = -(valueAdjacent * delt);
+        
+      valueAdjacent = uvel_FC[index];
+      if(-valueAdjacent > 0.0)
+        delX_left   = -(valueAdjacent * delt);
+        
+      valueAdjacent = wvel_FC[index];
+      if(-valueAdjacent > 0.0)
+        delZ_back   = -(valueAdjacent * delT);
+    
+    
+    
+      //__________________________________
+      //   SLAB outfluxes
+      double delX_Z = cellSizes.x * cellSizes.z;
+      double delX_Y = cellSizes.x * cellSizes.y;
+      double delY_Z = cellSizes.y * cellSizes.z;
+      double top    = delY_top    * delX_Z;
+      double bottom = delY_bottom * delX_Z;
+      double right  = delX_right  * delY_Z;
+      double left   = delX_left   * delY_Z;
+      double front  = delZ_front  * delX_Y;
+      double back   = delZ_back   * delX_Y;
+  
+      // copy values to correct values of OFS
+      OFS[index][0] = top;
+      OFS[index][1] = bottom;
+      OFS[index][2] = right;
+      OFS[index][3] = left;
+      OFS[index][4] = front;
+      OFS[index][5] = back;
+
+      //__________________________________
+      //  Bullet proofing
+      double total_fluxout = top + bottom + right + left + front + back;
+  
+      if(total_fluxout > vol){
+        error = true;
+      }
+    }
+  }
 }
 
 // A kernel that applies the advection operation to a number of slabs.
 __global__ void FirstOrderAdvectorGPU::advectSlabsKernel(uint3 domainSize,
                                                          uint3 domainLower,
                                                          int ghostLayers,
-                                                         double *mass,
-                                                         double *newMass,
-                                                         double *massAd,
+                                                         double *q_CC,
+                                                         double *q_advected,
+                                                         double *q_XFC,
+                                                         double *q_YFC,
+                                                         double *q_ZFC,
+                                                         double **OFS,
                                                          double invol)
 {
+
+  // calculate the thread indices
+  int tidX = blockDim.x * blockIdx.x + threadIdx.x;
+  int tidY = blockDim.y * blockIdx.y + threadIdx.y;
+
+  int num_slices = domainSize.z - ghostLayers;
+  int dx = domainSize.x;
+  int dy = domainSize.y;
+
+  double q_face_flux[6];
+  double faceVol[6];
+
+  if (tidX < (dx - ghostLayers) && tidY < (dy - ghostLayers) && tidX > 0 && tidY > 0) {
+    for (int slice = ghostLayers; slice < num_slices; slice++) {
+      // Variables needed for each cell
+      int cell = INDEX3D(dx,dy, tidX,tidY, slice);
+      int adjCell;
+      double sum_q_face_flux = 0.0;
+      double outfluxVol;
+      double influxVol;
+      double q_faceFlux_tmp;
+
+      // Unrolled 'for' loop Above
+      adjCell          = INDEX3D(dx,dy, tidX, tidY+1, slice);
+      influxVol        = OFS[adjCell][0];
+      outfluxVol       = OFS[cell][0];
+      q_faceFlux_tmp   = q_CC[adjCell]*influxVol - q_CC[cell]*outfluxVol;
+      q_face_flux[0]   = q_faceFlux_tmp;
+      faceVol[0]       = outfluxVol + influxVol;
+      sum_q_face_flux += q_face_flux[0];
+
+      // Below
+      adjCell          = INDEX3D(dx,dy, tidX, tidY-1, slice);
+      influxVol        = OFS[adjCell][1];
+      outfluxVol       = OFS[cell][1];
+      q_faceFlux_tmp   = q_CC[adjCell]*influxVol - q_CC[cell]*outfluxVol;
+      q_face_flux[1]   = q_faceFlux_tmp;
+      faceVol[1]       = outfluxVol + influxVol;
+      sum_q_face_flux += q_face_flux[1];
+
+      // Right
+      adjCell          = INDEX3D(dx,dy, tidX+1, tidY, slice);
+      influxVol        = OFS[adjCell][2];
+      outfluxVol       = OFS[cell][2];
+      q_faceFlux_tmp   = q_CC[adjCell]*influxVol - q_CC[cell]*outfluxVol;
+      q_face_flux[2]   = q_faceFlux_tmp;
+      faceVol[2]       = outfluxVol + influxVol;
+      sum_q_face_flux += q_face_flux[2];
+
+      // Left
+      adjCell          = INDEX3D(dx,dy, tidX-1, tidY, slice);
+      influxVol        = OFS[adjCell][3];
+      outfluxVol       = OFS[cell][3];
+      q_faceFlux_tmp   = q_CC[adjCell]*influxVol - q_CC[cell]*outfluxVol;
+      q_face_flux[3]   = q_faceFlux_tmp;
+      faceVol[3]       = outfluxVol + influxVol;
+      sum_q_face_flux += q_face_flux[3];
+
+      // Front
+      adjCell          = INDEX3D(dx,dy, tidX, tidY, slice-1);
+      influxVol        = OFS[adjCell][4];
+      outfluxVol       = OFS[cell][4];
+      q_faceFlux_tmp   = q_CC[adjCell]*influxVol - q_CC[cell]*outfluxVol;
+      q_face_flux[4]   = q_faceFlux_tmp;
+      faceVol[4]       = outfluxVol + influxVol;
+      sum_q_face_flux += q_face_flux[4];
+
+      // Back
+      adjCell          = INDEX3D(dx,dy, tidX, tidY, slice+1);
+      influxVol        = OFS[adjCell][5];
+      outfluxVol       = OFS[cell][5];
+      q_faceFlux_tmp   = q_CC[adjCell]*influxVol - q_CC[cell]*outfluxVol;
+      q_face_flux[5]   = q_faceFlux_tmp;
+      faceVol[5]       = outfluxVol + influxVol;
+      sum_q_face_flux += q_face_flux[5];
+
+      // Sum all the Advected double
+      q_advected[cell]     = sum_q_face_flux*invol;
+      
+      
+      
+      // This is equivalent to save_q_FC //
+      double tempFC;    // for holding the temporary value used in the face center saving
+      double q_tmp = q_CC[index];
+      
+      // Note: BOTTOM = 1, LEFT = 3, BACK = 5
+      // X
+      tempFC = fabsf(q_face_flux[3]/(faceVol[3]+1e-100));
+      q_XFC[cell] = (q_face_flux[3] == 0.0 ? q_tmp:tempFC);
+      
+      // Y
+      tempFC = fabsf(q_face_flux[1]/(faceVol[1]+1e-100));
+      q_YFC[cell] = (q_face_flux[1] == 0.0 ? q_tmp:tempFC);   
+      
+      // Z
+      tempFC = fabsf(q_face_flux[5]/(faceVol[5]+1e-100));
+      q_ZFC[cell] = (q_face_flux[5] == 0.0 ? q_tmp:tempFC);     
+      
+    }
+  }
 }
 
 // A kernel that computes the total flux through a face.
