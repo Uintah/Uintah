@@ -115,7 +115,7 @@ namespace Uintah {
 
     
     // Actual return algorithm
-    void computeStress(const particleIndex idx, int& lvl, const double delT, 
+    void computeStress(const long64 idx, int& lvl, const double delT, 
                        const double lame, const double lame_inv, 
                        const Matrix3& L_new, const Matrix3& F_old,
                        const Matrix3& Sig_old, const Matrix3& Alpha_old,

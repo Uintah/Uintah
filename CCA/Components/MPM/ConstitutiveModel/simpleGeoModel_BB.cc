@@ -777,6 +777,7 @@ void simpleGeoModel_BB::computeStressTensor(const PatchSubset* patches,
 
     // Create array for the particle position
     ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
+    constParticleVariable<long64>  pParticleID;
     ParticleVariable<Matrix3> defGrad_new;
     constParticleVariable<Matrix3> defGrad;
     constParticleVariable<Matrix3> stress_old;
@@ -800,6 +801,7 @@ void simpleGeoModel_BB::computeStressTensor(const PatchSubset* patches,
     ParticleVariable<Matrix3>  pBackStressIso_new;
     delt_vartype delT;
     old_dw->get(delT, lb->delTLabel, getLevel(patches));
+    old_dw->get(pParticleID, lb->pParticleIDLabel, pset);
     old_dw->get(pPlasticStrain, pPlasticStrainLabel, pset);
     old_dw->get(pPlasticStrainVol, pPlasticStrainVolLabel, pset);
     old_dw->get(pElasticStrainVol, pElasticStrainVolLabel, pset);
@@ -920,7 +922,7 @@ void simpleGeoModel_BB::computeStressTensor(const PatchSubset* patches,
 
       Matrix3 strain_inc(0.0);
       int lvl = 0;
-      computeStress(idx, lvl, delT, lame, lame_inverse, 
+      computeStress(pParticleID[idx], lvl, delT, lame, lame_inverse, 
                     L_new, defGrad[idx], stress_old[idx], pBackStress[idx],
                     eps_p, epsv_e, epsv_p, eps_p_new, epsv_e_new, epsv_p_new,
                     kappa, kappa_new, strain_inc, defGrad_new[idx], rotation,
@@ -1008,7 +1010,7 @@ void simpleGeoModel_BB::computeStressTensor(const PatchSubset* patches,
 
 #endif
 
-void simpleGeoModel_BB::computeStress(const particleIndex idx, int& lvl, const double delT, 
+void simpleGeoModel_BB::computeStress(const long64 idx, int& lvl, const double delT, 
                                        const double lame, const double lame_inv, 
                                        const Matrix3& L_new, const Matrix3& F_old,
                                        const Matrix3& Sig_old, const Matrix3& Alpha_old,
@@ -1019,7 +1021,11 @@ void simpleGeoModel_BB::computeStress(const particleIndex idx, int& lvl, const d
                                        Matrix3& Eps_inc, Matrix3& F_new, Matrix3& R_new,
                                        Matrix3& Sig_new)
 {
-  if (lvl > 5) return;
+  int max_recursion_level=20;
+  if (lvl > max_recursion_level) {
+    cerr << "ParticleID = " << idx << " Stress = " << Sig_old << endl;
+    throw InternalError("Maximum number of recursive subcycles exceeded.",__FILE__,__LINE__);
+  }
 
   // Constants
   /*
@@ -1162,7 +1168,7 @@ void simpleGeoModel_BB::computeStress(const particleIndex idx, int& lvl, const d
     if (return_to_vertex){
       double gamma_tol = 0.01;   // **HARDCODED**
       double del_gamma = 100.;   // **HARDCODED**
-      int max_iter = 500;        // **HARDCODED**
+      int max_iter = 2000;        // **HARDCODED**
       double gamma = 0.0;
       double gamma_old = 0.0;
       double i1_upd = 0.0, j2_upd = 0.0;
@@ -1174,6 +1180,7 @@ void simpleGeoModel_BB::computeStress(const particleIndex idx, int& lvl, const d
       Matrix3 S_upd = Zero;
 
       // Multi-stage return loop begins
+      feclearexcept(FE_ALL_EXCEPT);
       int count = 1;
       while(abs(del_gamma)>gamma_tol && count<=max_iter){
         //cout << "Particle = " << idx << " return algo count = " << count 
@@ -1253,8 +1260,20 @@ void simpleGeoModel_BB::computeStress(const particleIndex idx, int& lvl, const d
           }
           Sig_upd = Sig_upd_temp;
         } else if (i1_upd < kappa) {
-          beta_cap = sqrt(1.0 - (kappa-i1_upd)*(kappa-i1_upd)/(cap_rad*cap_rad));
+          double kappa_i1_upd = kappa - i1_upd;
+          double kappa_i1_upd_sq = kappa_i1_upd*kappa_i1_upd;
+          double cap_rad_sq = cap_rad*cap_rad;
+          double ratio = kappa_i1_upd_sq/cap_rad_sq;
+          beta_cap = sqrt(1.0 - ratio);
           Sig_upd += S_upd*((i1_peak_hard-fSlope*i1_upd)*beta_cap*one_sqrt_J2_upd - 1);
+          if (fetestexcept(FE_INVALID) != 0) {
+            cerr << "Nan floating point exception in fast algorithm to return" << endl;
+            cerr << "ParticleID = " << idx << endl;
+            cerr << "Sig_upd = " << Sig_upd << " S_upd = " << S_upd << endl;
+            cerr << "kappa = " << kappa << " i1_upd = " << i1_upd << " cap_rad = " << cap_rad
+                 << " ratio = " << ratio << " beta_cap = " << beta_cap << endl;
+            throw InternalError("Nan in fast return algorithm",__FILE__,__LINE__);
+          }
         } else {
           Sig_upd += S_upd*((i1_peak_hard-fSlope*i1_upd)*one_sqrt_J2_upd - 1);
         }
@@ -1283,23 +1302,18 @@ void simpleGeoModel_BB::computeStress(const particleIndex idx, int& lvl, const d
             double kappa_i1_upd_sq = kappa_i1_upd*kappa_i1_upd;
             double cap_rad_sq = cap_rad*cap_rad;
             double ratio = kappa_i1_upd_sq/cap_rad_sq;
-            //ratio = (ratio > 1.0) ? (1.0 - 1.0e-10) : ratio ;  // Push back close to yield surface
-            //                                                   // where slope is infinity
             beta_cap = sqrt(1.0 - ratio);
             fSlope_cap = (fSlope*i1_upd-i1_peak_hard)*(kappa_i1_upd)/
-                            (cap_rad_sq*beta_cap) + fSlope*beta_cap;
-
-            //beta_cap = sqrt( 1.0 - (kappa-i1_upd)*(kappa-i1_upd)/(cap_rad*cap_rad) );
-            //if (fetestexcept(FE_INVALID) != 0) {
-               //cerr << "Nan floating point exception in third part section 2.2.1" << endl;
-               //cerr << "kappa = " << kappa << " i1_upd = " << i1_upd << " cap_rad = " << cap_rad
-               //     << " beta_cap_sq = " << ( 1.0 - (kappa-i1_upd)*(kappa-i1_upd)/(cap_rad*cap_rad) )
-               //     << endl;
-               //beta_cap = 1.0;  // ** HACK to se what happens
-               //feclearexcept(FE_ALL_EXCEPT);
-            //}
-            //fSlope_cap = (fSlope*i1_upd-i1_peak_hard)*(kappa_i1_upd)/
-            //                (cap_rad_sq*beta_cap) + fSlope*beta_cap;
+                         (cap_rad_sq*beta_cap) + fSlope*beta_cap;
+            if (fetestexcept(FE_INVALID) != 0) {
+              cerr << "Nan floating point exception in"
+                   << " check if the stress state is in the cap zone or not?" << endl;
+              cerr << "ParticleID = " << idx << endl;
+              cerr << "kappa = " << kappa << " i1_upd = " << i1_upd << " cap_rad = " << cap_rad
+                   << " ratio = " << ratio << endl;
+              cerr << "Sig_trial = " << Sig_trial << " Sig_upd = " << Sig_upd << endl;
+              throw InternalError("Nan in check for stress in cap zone",__FILE__,__LINE__);
+            }
 
             // compute the gradient of the plastic potential
             G = One*fSlope_cap + S_upd*(0.5*one_sqrt_J2_upd);
@@ -1318,14 +1332,15 @@ void simpleGeoModel_BB::computeStress(const particleIndex idx, int& lvl, const d
         // compute the changes of gamma in order to control converging
         del_gamma = (gamma-gamma_old)/gamma;
         if (fetestexcept(FE_INVALID) != 0) {
-           cerr << "Nan floating point exception in third part" << endl;
-           //cerr << "Sig_trial = " << Sig_trial << endl;
-           //cerr << "Sig_upd = " << Sig_upd << endl;
-           //cerr << "P = " << P << endl;
-           //cerr << "G = " << G << endl;
-           //cerr << "gamma_old = " << gamma_old << " gamma = " << gamma << " del_gamma = "
-           //     << del_gamma << endl;
-           del_gamma = 0.0; // ** HACK to see what happens
+          cerr << "Nan floating point exception in multistage return loop" << endl;
+          cerr << "ParticleID = " << idx << endl;
+          cerr << "Sig_trial = " << Sig_trial << endl;
+          cerr << "Sig_upd = " << Sig_upd << endl;
+          cerr << "P = " << P << endl;
+          cerr << "G = " << G << endl;
+          cerr << "gamma_old = " << gamma_old << " gamma = " << gamma << " del_gamma = "
+                << del_gamma << endl;
+          throw InternalError("Nan in multistage return loop",__FILE__,__LINE__);
         }
       }
       // Multi-stage return loop ends
@@ -1336,6 +1351,7 @@ void simpleGeoModel_BB::computeStress(const particleIndex idx, int& lvl, const d
       double G_norm = G.Norm();
       double one_G_norm = 1/G_norm;
       double kappa_i1_upd = kappa - i1_upd;
+      double kappa_i1_upd_sq = kappa_i1_upd*kappa_i1_upd;
       double cap_rad_sq = cap_rad*cap_rad;
       if (kappa_i1_upd <= 0.0){
         hard_scaled = iso_hard*one_G_norm;
@@ -1343,17 +1359,20 @@ void simpleGeoModel_BB::computeStress(const particleIndex idx, int& lvl, const d
         if (j2_upd < 0.00000001) {
           beta_cap = 0.0;
         } else {
-          beta_cap = 1.0 - (kappa_i1_upd*kappa_i1_upd)/cap_rad_sq;
+          double ratio = kappa_i1_upd_sq/cap_rad_sq;
+          beta_cap = 1.0 - ratio;
         }
         hard_scaled = (sqrt(beta_cap)*iso_hard +
                       2.0*cap_ratio*(fSlope*i1_upd-i1_peak_hard)*kappa_i1_upd
                          /(cap_rad_sq*cap_rad*(1.0+fSlope*cap_ratio)*p3*p3)*
                          exp(-p1*(kappa-cap_rad-p0))*M.Trace())*one_G_norm;
         if (fetestexcept(FE_INVALID) != 0) {
-          cerr << "Nan floating point exception in fourth part section 2" << endl;
-          //cerr << "hard_scaled = " << hard_scaled << endl;
-          hard_scaled = iso_hard; // *HACK to see what happens
-          feclearexcept(FE_ALL_EXCEPT);
+          cerr << "Nan floating point exception in compute new stress state" << endl;
+          cerr << "ParticleID = " << idx << endl;
+          cerr << "hard_scaled = " << hard_scaled << " beta_cap = " << beta_cap
+               << endl;
+          cerr << "M = " << M << " G = " << G << endl;
+          throw InternalError("Nan in compute new stress state",__FILE__,__LINE__);
         }
       }
       Matrix3 G_unit = G*one_G_norm;
@@ -1383,7 +1402,7 @@ void simpleGeoModel_BB::computeStress(const particleIndex idx, int& lvl, const d
                *Eps_diff.Trace()/(1.0+fSlope*cap_ratio);
 
     i1_peak_hard = i1_peak*fSlope + iso_hard*eps_p_new;
-    cap_rad = -cap_ratio*(fSlope*kappa-i1_peak_hard);
+    cap_rad = -cap_ratio*(fSlope*kappa_new-i1_peak_hard);
 
     // compute the value of the yield function for the new stress
     Matrix3 S_new(0.0);
@@ -1397,10 +1416,10 @@ void simpleGeoModel_BB::computeStress(const particleIndex idx, int& lvl, const d
       cerr << "ERROR!  Particle " << idx << " Recursion level = " << lvl  
            << " did not return to yield surface (simplifiedGeomodel.cc)"
            << " with delT = " << delT << endl;
-      cerr << "  f_new= " << f_new << " sqrt(J2_new)= " << sqrt(j2_new) 
-           << " I1_new= " << i1_new << endl;
-      cerr << "  f_trial= " << f_trial << " sqrt(j2_trial)= " << sqrt(j2_trial) 
-           << " i1_trial= " << i1_trial << endl;
+      cerr << "  [f_new sqrt(J2_new) I1_new] = [" << f_new << " " << sqrt(j2_new) 
+           << " " << i1_new << "]" << endl;
+      cerr << "  [f_trial sqrt(J2_trial) I1_trial] = [" << f_trial << " " << sqrt(j2_trial) 
+           << " " << i1_trial << "]" << endl;
 
       // Split again and see it is gets to the yield surface
       double delT_new = delT*0.5;
@@ -1418,6 +1437,7 @@ void simpleGeoModel_BB::computeStress(const particleIndex idx, int& lvl, const d
                     eps_p_tmp, epsv_e_tmp, epsv_p_tmp, 
                     kappa, kappa_tmp, Eps_inc, F_tmp, R_tmp,
                     Sig_tmp);
+      delT_new = delT*0.5;
       computeStress(idx, lvl, delT_new, lame, lame_inv, 
                     L_new, F_tmp, Sig_tmp, Alpha_old,
                     eps_p_tmp, epsv_e_tmp, epsv_p_tmp, 
@@ -1463,6 +1483,8 @@ void simpleGeoModel_BB::computeInvariants(const Matrix3& stress, Matrix3& S,  do
       return sqrt(J2) + FSLOPE*I1*sqrt(b) - PEAKI1*sqrt(b);
     }else{
       return sqrt(J2)+kappa-cap_rad-I1;
+      //return sqrt(J2);
+      //return sqrt(J2) + FSLOPE*I1 - PEAKI1;
     }
   }
 
@@ -1481,6 +1503,8 @@ void simpleGeoModel_BB::computeInvariants(const Matrix3& stress, Matrix3& S,  do
       return sqrt(J2) + FSLOPE*I1*sqrt(b) - PEAKI1*sqrt(b);
     }else{
       return sqrt(J2)+kappa-cap_rad-I1;
+      //return sqrt(J2);
+      //return sqrt(J2) + FSLOPE*I1 - PEAKI1;
     }
   }
 
@@ -1501,6 +1525,8 @@ double simpleGeoModel_BB::evalYieldFunction(const double& J2, const double& I1,
       return sqrt(J2) + (f_slope*I1 - i1_peak_hard)*sqrt(b);
     }else{
       return sqrt(J2) + kappa_I1 - cap_rad;
+      //return sqrt(J2);
+      //return sqrt(J2) + f_slope*I1 - i1_peak_hard;
     }
   }
 }
@@ -1580,6 +1606,7 @@ void simpleGeoModel_BB::addComputesAndRequires(Task* task,
   // base class.
   const MaterialSubset* matlset = matl->thisMaterial();
   addSharedCRForHypoExplicit(task, matlset, patches);
+  task->requires(Task::OldDW, lb->pParticleIDLabel,   matlset, Ghost::None);
   task->requires(Task::OldDW, pPlasticStrainLabel,    matlset, Ghost::None);
   task->requires(Task::OldDW, pPlasticStrainVolLabel,    matlset, Ghost::None);
   task->requires(Task::OldDW, pElasticStrainVolLabel,    matlset, Ghost::None);
@@ -1606,9 +1633,9 @@ simpleGeoModel_BB::addComputesAndRequires(Task* ,
 //*******************************************************************************
 // Assume EOS of the form (note that this is an Eulerian measure of pressure)
 // Under linear conditions:
-//   p = K(rho-rho0)/rho = K*eta/(1 + eta)
+//   p = K(V0/V-1) = K(rho/rho0 - 1) = K*eta
 //   eta = rho/rho0 - 1  (0 = reference state, > 0 = compression, < 0 = tension)
-//       = p/(K-p)
+//       =  p/K
 //   rho = rho0*(1+eta)
 // Under high pressures:
 //  (from "Craters produced by underground explosions" by Luccioni et al., 2009, 
@@ -1635,10 +1662,10 @@ double simpleGeoModel_BB::computeRhoMicroCM(double pressure,
 
   double eta = 1.0;
   double rho = rho0;
-  bool d_linear_eos = false;
+  bool d_linear_eos = true;
 
   if (d_linear_eos) {
-     eta = p_gauge/(K - p_gauge);
+     eta = p_gauge/K;
      rho = rho0*(1+eta);
   } else {
     double Cv = matl->getSpecificHeat();
@@ -1690,11 +1717,11 @@ double simpleGeoModel_BB::computeRhoMicroCM(double pressure,
 }
 
 //*******************************************************************************
-// Assume EOS of the form (note that this is an Eulerian measure of pressure)
-// Under normal circumstances:
-//   p = K(rho-rho0)/rho = K*eta/(1 + eta)
+// Assume EOS of the form:
+// Under normal circumstances: (note that this is an Eulerian measure of pressure)
+//   p = K(V0/V-1) = K(rho/rho0 - 1) = K*eta
 //   eta = rho/rho0 - 1  (0 = reference state, > 0 = compression, < 0 = tension)
-//   dp/drho = dp/deta*deta/drho = K/(rho0*(1+eta)^2) = K*rho0/rho^2
+//   dp/drho = K/rho0
 //   c = sqrt(K/rho)
 // Under high pressures:
 //  (from "Craters produced by underground explosions" by Luccioni et al., 2009, 
@@ -1724,10 +1751,10 @@ void simpleGeoModel_BB::computePressEOSCM(double rho, double& pressure,
   // eta cannot be less than -1 or greater than 2
   // if (eta <= -1.0) eta = -0.999999999999;
   // if (eta >= 2.0) eta = 1.999999999999;
-  bool d_linear_eos = false;
+  bool d_linear_eos = true;
   if (d_linear_eos) {
-    pressure = K*eta/(1+eta) + p_ref;
-    dp_drho  = K*rho0/(rho*rho);
+    pressure = K*eta + p_ref;
+    dp_drho  = K/rho0;
     csquared = K/rho;  // speed of sound squared
   } else {
     eta = (eta > 1.9) ? 1.9 : eta;
