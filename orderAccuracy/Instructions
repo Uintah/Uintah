@@ -1,0 +1,23 @@
+Running the Order of Accuracy tests
+
+This assumes that the code and all of the utilities 
+(timeextract, lineextract, puda) have been compiled.
+
+__________________________________
+Setup:
+-  cd opt/StandAlone
+-  ln -s ../../src/orderAccuracy/
+-  csh/tcsh: set here = `readlink -f orderAccuracy/`
+-  Edit the file and uncomment the component to test.
+    vim orderAccuracy/test_config_files/components.xml
+
+Running the tests:
+-  orderAccuracy/framework_scripts/masterScript.pl $here
+
+To examine the results look in the directory:
+    order_of_accuracy/<component>/<test>
+
+
+How to setup a new test:
+__________________________________
+to be filled in.
