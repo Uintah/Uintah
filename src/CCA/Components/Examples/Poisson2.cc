@@ -98,9 +98,7 @@ void Poisson2::scheduleComputeStableTimestep(const LevelP& level,
 void
 Poisson2::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
 {
-  Task* task = scinew Task("timeAdvance",
-			   this, &Poisson2::timeAdvance,
-			   level, sched.get_rep());
+  Task* task = scinew Task("timeAdvance", this, &Poisson2::timeAdvance, level, sched.get_rep());
   task->hasSubScheduler();
   task->requires(Task::OldDW, phi_label, Ghost::AroundNodes, 1);
   task->computes(phi_label);

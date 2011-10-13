@@ -378,7 +378,7 @@ namespace Uintah {
         CUDATask(const std::string& taskName, TaskType type)
         :  Task(taskName, type)
         {
-            this->setType(GPUCUDATask);
+            this->setType(GPU);
             d_action2 = 0;
         }
         
@@ -392,7 +392,7 @@ namespace Uintah {
                             DataWarehouse*,
                             int,
                             CUDADevice *) )
-        : Task(taskName, Task::GPUCUDATask), 
+        : Task(taskName, Task::GPU),
         d_action2( scinew CUDAAction<T>(ptr, pmf) )
         {
         }
@@ -409,7 +409,7 @@ namespace Uintah {
                             CUDADevice *,
                             Arg1),
              Arg1 arg1)
-        : Task(taskName, Task::GPUCUDATask), 
+        : Task(taskName, Task::GPU),
         d_action2( scinew CUDAAction1<T, Arg1>(ptr, pmf, arg1) )
         {
         }
@@ -426,7 +426,7 @@ namespace Uintah {
                             CUDADevice *,
                             Arg1, Arg2),
              Arg1 arg1, Arg2 arg2)
-        : Task(taskName, Task::GPUCUDATask), 
+        : Task(taskName, Task::GPU),
         d_action2( scinew CUDAAction2<T, Arg1, Arg2>(ptr, pmf, arg1, arg2) )
         {
         }
@@ -443,7 +443,7 @@ namespace Uintah {
                             CUDADevice *,
                             Arg1, Arg2, Arg3),
              Arg1 arg1, Arg2 arg2, Arg3 arg3)
-        : Task(taskName, Task::GPUCUDATask), 
+        : Task(taskName, Task::GPU),
         d_action2( scinew CUDAAction3<T, Arg1, Arg2, Arg3>(ptr, pmf, arg1, arg2, arg3) )
         {
         }
@@ -460,7 +460,7 @@ namespace Uintah {
                             CUDADevice *,
                             Arg1, Arg2, Arg3, Arg4),
              Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4)
-        : Task(taskName, Task::GPUCUDATask), 
+        : Task(taskName, Task::GPU),
         d_action2( scinew CUDAAction4<T, Arg1, Arg2, Arg3, Arg4>(ptr, pmf, arg1, arg2, arg3, arg4) )
         {
         }
@@ -477,7 +477,7 @@ namespace Uintah {
                             CUDADevice *,
                             Arg1, Arg2, Arg3, Arg4, Arg5),
              Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4, Arg5 arg5)
-        : Task(taskName, Task::GPUCUDATask), 
+        : Task(taskName, Task::GPU),
         d_action2( scinew CUDAAction5<T, Arg1, Arg2, Arg3, Arg4, Arg5>(ptr, pmf, arg1, arg2, arg3, arg4, arg5) )
         {
         }
