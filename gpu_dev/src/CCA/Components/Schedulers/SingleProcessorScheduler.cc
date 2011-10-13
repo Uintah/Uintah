@@ -151,7 +151,7 @@ SingleProcessorScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
     if(useGPU)
     {
         // if it is a cuda task, execute it as such
-        if(task->getTask()->getType() == Task::GPUCUDATask)
+        if(task->getTask()->getType() == Task::GPU)
         {    
             // find the least occupied device
             int leastOccupied = 999999;
@@ -179,7 +179,7 @@ SingleProcessorScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
 
     if(useGPU)
     {
-        if(task->getTask()->getType() == Task::GPUCUDATask)
+        if(task->getTask()->getType() == Task::GPU)
         {
             d_cudaDevices[deviceToUse].decrementRunningKernels();
         }

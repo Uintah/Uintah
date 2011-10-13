@@ -48,20 +48,24 @@ MaterialSubset* Task::globalMatlSubset = 0;
 
 void Task::initialize()
 {
-  comp_head=comp_tail=0;
-  req_head=req_tail=0;
-  mod_head=mod_tail=0;
-  patch_set=0;
-  matl_set=0;
-  d_usesThreads = false;
+  comp_head = comp_tail = 0;
+  req_head = req_tail = 0;
+  mod_head = mod_tail = 0;
+  patch_set = 0;
+  matl_set = 0;
   d_usesMPI = false;
+  d_usesThreads = false;
+  d_usesGPU = false;
   d_subpatchCapable = false;
   d_hasSubScheduler = false;
-  for(int i=0;i<TotalDWs;i++)
+
+  for(int i=0;i<TotalDWs;i++) {
     dwmap[i]=Task::InvalidDW;
-  sortedOrder=-1;
-  d_phase=-1;
-  maxGhostCells=0;
+  }
+
+  sortedOrder = -1;
+  d_phase = -1;
+  maxGhostCells = 0;
 }
 
 Task::ActionBase::~ActionBase()
@@ -143,6 +147,12 @@ void
 Task::usesThreads(bool state)
 {
   d_usesThreads = state;
+}
+
+void
+Task::usesGPU(bool state)
+{
+  d_usesGPU = state;
 }
 
 void
@@ -772,8 +782,23 @@ Task::doit (const ProcessorGroup* pc,
 {
   DataWarehouse* fromDW = mapDataWarehouse(Task::OldDW, dws);
   DataWarehouse* toDW = mapDataWarehouse(Task::NewDW, dws);
-  if(d_action)
+  if(d_action) {
     d_action->doit(pc, patches, matls, fromDW, toDW);
+  }
+}
+
+void
+Task::doitGPU(const ProcessorGroup* pc,
+              const PatchSubset* patches,
+              const MaterialSubset* matls,
+              vector<DataWarehouseP>& dws,
+              int device)
+{
+  DataWarehouse* fromDW = mapDataWarehouse(Task::OldDW, dws);
+  DataWarehouse* toDW = mapDataWarehouse(Task::NewDW, dws);
+  if(d_actionGPU) {
+    d_actionGPU->doitGPU(pc, patches, matls, fromDW, toDW, device);
+  }
 }
 
 //__________________________________
@@ -922,14 +947,14 @@ namespace Uintah {
   
 //__________________________________
   ostream &
-  operator << (ostream &out, const Task & task)
+  operator << (ostream& out, const Task& task)
   {
     task.display( out );
     return out;
   }
   
 //__________________________________
-  ostream &
+  ostream&
   operator << (ostream &out, const Task::TaskType & tt)
   {
     switch( tt ) {
@@ -942,12 +967,16 @@ namespace Uintah {
     case Task::InitialSend:
       out << "InitialSend";
       break;
-    case Task::Output:
-      out << "Output";
-      break;
     case Task::OncePerProc:
       out << "OncePerProc";
       break;
+    case Task::Output:
+      out << "Output";
+      break;
+    case Task::GPU:
+      out << "GPU";
+      break;
+
     }
     return out;
   }
