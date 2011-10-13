@@ -36,6 +36,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/Material.h>
+#include <CCA/Components/ICE/ICEMaterial.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Variables/VarTypes.h>
@@ -393,14 +394,14 @@ void JWLpp::computeModelSources(const ProcessorGroup*,
     //   Misc.
     new_dw->get(press_CC,         Ilb->press_equil_CCLabel,0,  patch,gn, 0);
 
-
     // Get the specific heat, this is the value from the input file
     double cv_rct = -1.0; 
-    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m0);
-    if(mpm_matl != NULL) {
+    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial *>(d_sharedState->getMaterial(m0));
+    ICEMaterial* ice_matl = dynamic_cast<ICEMaterial *>(d_sharedState->getMaterial(m0));
+    if(mpm_matl) {
       cv_rct = mpm_matl->getSpecificHeat();
-    } else {
-      cv_rct = d_sharedState->getICEMaterial(m0)->getSpecificHeat();  
+    } else if(ice_matl){
+      cv_rct = ice_matl->getSpecificHeat();  
     }
     for (CellIterator iter = patch->getCellIterator();!iter.done();iter++){
       IntVector c = *iter;
