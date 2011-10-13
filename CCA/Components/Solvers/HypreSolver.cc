@@ -59,6 +59,7 @@ DEALINGS IN THE SOFTWARE.
 //#define HYPRE_TIMING
 #include <_hypre_utilities.h>
 #include <HYPRE_struct_ls.h>
+#include <_hypre_struct_mv.h>
 #include <krylov.h>
 #ifndef HYPRE_TIMING
   #ifndef hypre_ClearTiming
