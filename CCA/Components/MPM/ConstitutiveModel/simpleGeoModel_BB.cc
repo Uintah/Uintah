@@ -1066,6 +1066,7 @@ void simpleGeoModel_BB::computeStress(const long64 idx, int& lvl, const double d
     cerr << "F_old = " << F_old << endl;
     cerr << "L_new = " << L_new << endl;
     cerr << "delT = " << delT << endl;
+    throw InternalError("Nan def grad in compute stress",__FILE__,__LINE__);
   }
   //double j_new = F_new.Determinant();
   Matrix3 U_new;
@@ -1083,15 +1084,19 @@ void simpleGeoModel_BB::computeStress(const long64 idx, int& lvl, const double d
   // compute shifted stress
   Sig_trial -= Alpha_old;
   Sig_new = Sig_unrot;
+  //cerr << "1 Sig_new calc" << endl;
 
   // compute stress invariants for the trial stress
-  double i1_trial,j2_trial;
-  Matrix3 S_trial;
+  double i1_trial = 0,j2_trial = 0;
+  Matrix3 S_trial(0.0);
   computeInvariants(Sig_trial, S_trial, i1_trial, j2_trial);
 
   // compute the value of the yield function for the trial stress
   double f_trial = evalYieldFunction(j2_trial, i1_trial, fSlope, kappa, cap_rad, 
                                      i1_peak_hard);
+  //cerr << "1 D_new" << D_new << " F_new = " << F_new << " F_old = " << F_old
+  //     << " Sig_trial = " << Sig_trial << " kappa = " << kappa << " cap_rad = " << cap_rad
+  //     << " i1_peak_hard = " << i1_peak_hard << endl;
 
   // initial assignment for the plastic strains and the position of the cap function
   eps_p_new = eps_p;
@@ -1103,6 +1108,7 @@ void simpleGeoModel_BB::computeStress(const long64 idx, int& lvl, const double d
   // to trial stress otherwise, the plasticity return algrithm would be used.
   if (f_trial < 0.0) {
     Sig_new = Sig_trial;
+    //cerr << "2 Sig_new calc" << endl;
   } else {
     // plasticity vertex treatment begins
     double i1_hard_fSlope = i1_peak_hard/fSlope;
@@ -1110,6 +1116,7 @@ void simpleGeoModel_BB::computeStress(const long64 idx, int& lvl, const double d
     if (i1_trial > i1_hard_fSlope) {
       if (j2_trial < 0.00000001){
         Sig_new = One*i1_hard_fSlope*one_third;
+        //cerr << "3 Sig_new calc" << endl;
         return_to_vertex = false;
       } else {
         int count_1_fix=0;
@@ -1159,6 +1166,7 @@ void simpleGeoModel_BB::computeStress(const long64 idx, int& lvl, const double d
                              (p_vol*p_vol);
         if ( ratio_plus >= 0.0 && ratio_minus >= 0.0) {
           Sig_new = One*(i1_hard_fSlope*one_third);
+          //cerr << "4 Sig_new calc" << endl;
           return_to_vertex = false;
         }
       }
@@ -1379,6 +1387,7 @@ void simpleGeoModel_BB::computeStress(const long64 idx, int& lvl, const double d
       double GP = G_unit.Contract(P);
       gamma *= GP/(GP+hard_scaled);
       Sig_new = Sig_trial - P*gamma;
+      //cerr << "5 Sig_new calc" << endl;
 
     } // End return to vertex if
 
@@ -1400,6 +1409,7 @@ void simpleGeoModel_BB::computeStress(const long64 idx, int& lvl, const double d
                3.0*fluid_B0*(exp(p3+p4)-1.0)*(var1/((var1-1.0)*(var1-1.0)) +
                                               var2/((var2-1.0)*(var2-1.0))) )
                *Eps_diff.Trace()/(1.0+fSlope*cap_ratio);
+    //cerr << "    kappa_old = " << kappa << " kappa_new = " << kappa_new << endl;
 
     i1_peak_hard = i1_peak*fSlope + iso_hard*eps_p_new;
     cap_rad = -cap_ratio*(fSlope*kappa_new-i1_peak_hard);
@@ -1421,29 +1431,32 @@ void simpleGeoModel_BB::computeStress(const long64 idx, int& lvl, const double d
       cerr << "  [f_trial sqrt(J2_trial) I1_trial] = [" << f_trial << " " << sqrt(j2_trial) 
            << " " << i1_trial << "]" << endl;
 
+
       // Split again and see it is gets to the yield surface
       double delT_new = delT*0.5;
       Matrix3 Sig_tmp(0.0);
       Matrix3 F_tmp(0.0);
       Matrix3 R_tmp(0.0);
       Eps_inc = Zero;
-      double eps_p_tmp = 0.0;
-      double epsv_p_tmp = 0.0;
-      double epsv_e_tmp = 0.0;
-      double kappa_tmp = 0.0;
+      double eps_p_tmp = eps_p;
+      double epsv_p_tmp = epsv_p;
+      double epsv_e_tmp = epsv_e;
+      double kappa_tmp = kappa;
       computeStress(idx, lvl, delT_new, lame, lame_inv, 
                     L_new, F_old, Sig_old, Alpha_old,
                     eps_p, epsv_e, epsv_p, 
                     eps_p_tmp, epsv_e_tmp, epsv_p_tmp, 
                     kappa, kappa_tmp, Eps_inc, F_tmp, R_tmp,
                     Sig_tmp);
-      delT_new = delT*0.5;
+      //cerr << "Step 1: kappa = " << kappa << " kappa_tmp = " << kappa_tmp << endl;
+      //delT_new = delT*0.5;
       computeStress(idx, lvl, delT_new, lame, lame_inv, 
                     L_new, F_tmp, Sig_tmp, Alpha_old,
                     eps_p_tmp, epsv_e_tmp, epsv_p_tmp, 
                     eps_p_new, epsv_e_new, epsv_p_new, 
                     kappa_tmp, kappa_new, Eps_inc, F_new, R_new,
                     Sig_new);
+      //cerr << "Step 2: kappa_tmp = " << kappa_tmp << " kappa_new = " << kappa_new << endl;
       lvl -= 1;
     }
   }
