@@ -210,8 +210,17 @@ void MPMArches::problemSetup(const ProblemSpecP& prob_spec,
   if(d_analysisModule){
     d_analysisModule->problemSetup(prob_spec, grid, sharedState);
   }
+
+  // make an allowance for an enthalpy variable with a different name: 
+  d_enthalpy_name = "enthalpySP"; 
+  if ( db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("Properties")->findBlock("ClassicTable") ){ 
+    if ( db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("Properties")->findBlock("ClassicTable")->findBlock("enthalpy_label")){ 
+      db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("Properties")->findBlock("ClassicTable")->getWithDefault("enthalpy_label",d_enthalpy_name,"enthalpySP"); 
+    }
+  } 
   
-  
+  d_enthalpy_label = VarLabel::find( d_enthalpy_name ); 
+
 }
 
 void MPMArches::outputProblemSpec(ProblemSpecP& root_ps)
@@ -3590,7 +3599,7 @@ void MPMArches::scheduleEnergyExchange(SchedulerP& sched,
       arches_matls->getUnion(),
       Ghost::AroundCells, numGhostCells);
 
-  t->requires(Task::OldDW, d_Alab->d_enthalpySPLabel,
+  t->requires(Task::OldDW, d_enthalpy_label, 
       arches_matls->getUnion(),
       Ghost::AroundCells, numGhostCells);
 
@@ -3930,7 +3939,7 @@ void MPMArches::doEnergyExchange(const ProcessorGroup*,
       radfluxB.initialize(0.);
     }
 
-    old_dw->get(enthalpy, d_Alab->d_enthalpySPLabel, matlIndex, 
+    old_dw->get(enthalpy, d_enthalpy_label, matlIndex, 
         patch, Ghost::AroundCells, numGhostCellsG);
     // allocates
 

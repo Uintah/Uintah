@@ -364,6 +364,9 @@ public:
   MPMLabel* Mlb;
   const ArchesLabel* d_Alab;
   const MPMArchesLabel* d_MAlb;
+  const VarLabel* d_enthalpy_label; 
+
+  std::string d_enthalpy_name; 
 
 #ifdef RIGID_MPM
   RigidMPM*        d_mpm;
