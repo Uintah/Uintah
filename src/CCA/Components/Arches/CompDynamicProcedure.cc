@@ -108,7 +108,7 @@ CompDynamicProcedure::problemSetup(const ProblemSpecP& params)
     db->require("variance_coefficient",d_CFVar); // const reqd by variance eqn
     db->getWithDefault("mixture_fraction_label",d_mix_frac_label_name, "scalarSP"); 
     d_mf_label = VarLabel::find( d_mix_frac_label_name );
-    cout << "Using " << *d_mf_label << " to compute scalar variance." << endl;
+    proc0cout << "Using " << *d_mf_label << " to compute scalar variance." << endl;
 
     db->getWithDefault("filter_variance_limit_scalar",d_filter_var_limit_scalar,true);
     if( d_filter_var_limit_scalar) {

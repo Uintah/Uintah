@@ -5,6 +5,8 @@
     <title> Acid Base Chemistry with Mixing Table </title>
   </Meta>
   <SimulationComponent type="arches"/>
+  <Solver type="hypre" />
+  
   <Time>
     <maxTime>.50</maxTime>
     <max_Timesteps>25</max_Timesteps>
@@ -171,12 +173,13 @@
         <timeIntegratorType> RK2SSP </timeIntegratorType>
         <restartOnNegativeDensityGuess> false </restartOnNegativeDensityGuess>
         <PressureSolver>
-          <linear_solver> hypre </linear_solver>
+          <linear_solver> hypre   </linear_solver>
           <Parameters>
-            <tolerance> 1.0e-8 </tolerance>
-            <solver> cg </solver>
+            <tolerance>   1.0e-8  </tolerance>
+            <solver>         cg   </solver>
             <preconditioner> pfmg </preconditioner>
-            <maxiterations> 500 </maxiterations>
+            <maxiterations>  500  </maxiterations>
+            <skip>           1    </skip>
           </Parameters>
         </PressureSolver>
         <MomentumSolver>

@@ -252,14 +252,16 @@ private:
     double computedPdrhoBirchMurnaghan(double v, double rho0);
 
     // Functions and variables for solving JWL temperature dependend form of equation of state
-    double   Pressure;
-    double   Temperature;
-    double   SpecificHeat;
-    double   IL, IR;
+    typedef struct {
+      double   Pressure;
+      double   Temperature;
+      double   SpecificHeat;
+      double   IL, IR;
+    } IterationVariables;
 
-    void   setInterval(double f, double rhoM);
-    double computePJWL(double rhoM,const MPMMaterial* matl);
-    double computedPdrhoJWL(double rhoM,const MPMMaterial* matl);
+    void   setInterval(double f, double rhoM, IterationVariables *);
+    double computePJWL(double rhoM,const MPMMaterial* matl, IterationVariables *);
+    double computedPdrhoJWL(double rhoM,const MPMMaterial* matl, IterationVariables *);
 
   };
 

@@ -46,23 +46,51 @@ namespace Uintah {
   class VarLabel;
   class UINTAHSHARE SolverParameters {
   public:
-    SolverParameters() : solveOnExtraCells(false), residualNormalization(1) {}
+    SolverParameters() : solveOnExtraCells(false), residualNormalizationFactor(1), dynamicTolerance(false), 
+                        outputFileName("NULL"){}
+    
     void setSolveOnExtraCells(bool s) {
       solveOnExtraCells = s;
     }
+    
     bool getSolveOnExtraCells() const {
       return solveOnExtraCells;
     }
+    
     void setResidualNormalizationFactor(double s) {
-      residualNormalization = s;
+      residualNormalizationFactor = s;
     }
+    
     double getResidualNormalizationFactor() const {
-      return residualNormalization;
+      return residualNormalizationFactor;
     }
+    
+    void setDynamicTolerance(bool s){
+      dynamicTolerance=s;
+    }
+    
+    bool getDynamicTolerance() const {
+      return dynamicTolerance;
+    }
+    
+    // Used for outputting A, X & B to files
+    void setOutputFileName(std::string s){
+      outputFileName=s;
+    }
+    
+    void getOutputFileName(vector<string>& fname) const {
+      fname.push_back( "output/A" + outputFileName );
+      fname.push_back( "output/b" + outputFileName );
+      fname.push_back( "output/x" + outputFileName );
+    }
+    
+    
     virtual ~SolverParameters();
   private:
-    bool solveOnExtraCells;
-    double residualNormalization;
+    bool   solveOnExtraCells;
+    double residualNormalizationFactor;
+    bool   dynamicTolerance;
+    std::string outputFileName;
   };
   
   class UINTAHSHARE SolverInterface : public UintahParallelPort {
@@ -85,7 +113,7 @@ namespace Uintah {
                                Task::WhichDW guess_dw,
 			          const SolverParameters* params) = 0;
                                
-  virtual string getName()=0;
+    virtual string getName()=0;
   
   private: 
     SolverInterface(const SolverInterface&);

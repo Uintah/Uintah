@@ -1304,16 +1304,17 @@ double ViscoScram::computeRhoMicroCM(double pressure,
   if(d_useJWLEOS) {                        // JWL EOS
     double Cv = d_JWLEOSData.Cv;
     //    double om = d_JWLEOSData.om;
+    IterationVariables iterVar;
 
-    Pressure = pressure;
-    Temperature = temperature;
-    SpecificHeat = Cv;
+    iterVar.Pressure = pressure;
+    iterVar.Temperature = temperature;
+    iterVar.SpecificHeat = Cv;
 
     double epsilon  = 1e-15;
     double rho_min = 0.0;                      // Such that f(min) < 0
     double rho_max = 100000; //pressure*1.001*rho_orig/(om*Cv*temperature)*1.3431907e7; // Such that f(max) > 0
-    IL = rho_min;
-    IR = rho_max;
+    iterVar.IL = rho_min;
+    iterVar.IR = rho_max;
 
     double f = 0;
     double df_drho = 0;
@@ -1324,15 +1325,15 @@ double ViscoScram::computeRhoMicroCM(double pressure,
 
     int iter = 0;
     while(1){
-      f = computePJWL(rho_cur,matl);
-      setInterval(f, rho_cur);
-      if(fabs((IL-IR)/rho_cur)<epsilon){
-        return (IL+IR)/2.0;
+      f = computePJWL(rho_cur,matl, &iterVar);
+      setInterval(f, rho_cur, &iterVar);
+      if(fabs((iterVar.IL-iterVar.IR)/rho_cur)<epsilon){
+        return (iterVar.IL+iterVar.IR)/2.0;
       }
 
       delta_new = 1e100;
       while(1){
-        df_drho = computedPdrhoJWL(rho_cur,matl);
+        df_drho = computedPdrhoJWL(rho_cur,matl, &iterVar);
         delta_old = delta_new;
         delta_new = -f/df_drho;
         rho_cur += delta_new;
@@ -1351,16 +1352,16 @@ double ViscoScram::computeRhoMicroCM(double pressure,
           throw InternalError(warn.str(), __FILE__, __LINE__);
         }
 
-        if(rho_cur<IL || rho_cur>IR || fabs(delta_new)>fabs(delta_old*0.7)){
+        if(rho_cur<iterVar.IL || rho_cur>iterVar.IR || fabs(delta_new)>fabs(delta_old*0.7)){
           break;
         }
 
-        f = computePJWL(rho_cur,matl);
-        setInterval(f, rho_cur);
+        f = computePJWL(rho_cur,matl,&iterVar);
+        setInterval(f, rho_cur, &iterVar);
         iter++;
       }
 
-      rho_cur = (IL+IR)/2.0;
+      rho_cur = (iterVar.IL+iterVar.IR)/2.0;
       iter++;
     }
 
@@ -1634,6 +1635,7 @@ double ViscoScram::getCompressibility()
 {
   return 1.0/d_bulk;
 }
+
 //_____________________________________________________
 // Functions used in solution of the BirchMurnaghan EOS
 double ViscoScram::computePBirchMurnaghan(double v)
@@ -1655,7 +1657,7 @@ double ViscoScram::computedPdrhoBirchMurnaghan(double v, double rho0)
 
 //____________________________________________________________________________
 // Functions used in Newton-Bisection Solver for JWL Temperature Dependent EOS
-double ViscoScram::computePJWL(double rhoM,const MPMMaterial*  matl){
+double ViscoScram::computePJWL(double rhoM,const MPMMaterial*  matl, IterationVariables *iterVar){
   double A = d_JWLEOSData.A;
   double B = d_JWLEOSData.B;
   double R1 = d_JWLEOSData.R1;
@@ -1663,16 +1665,16 @@ double ViscoScram::computePJWL(double rhoM,const MPMMaterial*  matl){
   double om = d_JWLEOSData.om;
 
   if(rhoM == 0){
-    return -Pressure;
+    return -(iterVar->Pressure);
   }
   double V  = matl->getInitialDensity()/rhoM;
   double P1 = A*exp(-R1*V);
   double P2 = B*exp(-R2*V);
-  double P3 = om*SpecificHeat*Temperature/V;
-  return (P1 + P2 + P3) - Pressure;
+  double P3 = om*iterVar->SpecificHeat*iterVar->Temperature/V;
+  return (P1 + P2 + P3) - iterVar->Pressure;
 }
 
-double ViscoScram::computedPdrhoJWL(double rhoM, const MPMMaterial* matl){
+double ViscoScram::computedPdrhoJWL(double rhoM, const MPMMaterial* matl, IterationVariables *iterVar){
   double A = d_JWLEOSData.A;
   double B = d_JWLEOSData.B;
   double R1 = d_JWLEOSData.R1;
@@ -1682,19 +1684,19 @@ double ViscoScram::computedPdrhoJWL(double rhoM, const MPMMaterial* matl){
   double V  = matl->getInitialDensity()/rhoM;
   double P1 = A*exp(-R1*V);
   double P2 = B*exp(-R2*V);
-  double P3 = om*SpecificHeat*Temperature/V;
+  double P3 = om*iterVar->SpecificHeat*iterVar->Temperature/V;
   return (P1*R1*V + P2*R2*V+P3)/rhoM;
 }
 
 // setInterval used in Newton-Bisection Solver for JWL Temperature Dependent EOS
-void ViscoScram::setInterval(double f, double rhoM){
+void ViscoScram::setInterval(double f, double rhoM, IterationVariables *iterVar){
   if(f < 0)
-    IL = rhoM;
+    iterVar->IL = rhoM;
   else if(f > 0)
-    IR = rhoM;
+    iterVar->IR = rhoM;
   else if(f ==0){
-    IL = rhoM;
-    IR = rhoM;
+    iterVar->IL = rhoM;
+    iterVar->IR = rhoM;
   }
 }
 

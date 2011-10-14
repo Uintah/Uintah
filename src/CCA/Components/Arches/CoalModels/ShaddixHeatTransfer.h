@@ -191,8 +191,6 @@ private:
   double d_pl_scaling_constant;   ///< Scaling factor for particle size (length)
   double d_pt_scaling_constant;   ///< Scaling factor for particle temperature
 
-  bool _radiation;                ///< Radiation flag
-
 }; // end ShaddixHeatTransfer
 } // end namespace Uintah
 #endif

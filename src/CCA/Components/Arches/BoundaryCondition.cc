@@ -1662,13 +1662,13 @@ BoundaryCondition::pressureBC(const Patch* patch,
         if( cellType[adj] == pressure_BC ||
             cellType[adj] == outlet_BC){
           // dirichlet_BC
-          A[c].p = A[c].p +  A[c][face];
+          A[c].p = A[c].p -  A[c][face];
           A[c][face] = 0.0;
         }
 
         if( cellType[adj] == wall_BC){
           // Neumann zero gradient BC
-          A[c].p = A[c].p - A[c][face];
+          A[c].p = A[c].p + A[c][face];
           A[c][face] = 0.0;
         }
       }
@@ -1695,7 +1695,7 @@ BoundaryCondition::pressureBC(const Patch* patch,
           if( cellType[adj] == d_flowInlets[ii]->d_cellTypeID){
             // Neumann zero gradient BC
             
-            A[c].p = A[c].p -  A[c][face];
+            A[c].p = A[c].p +  A[c][face];
             A[c][face] = 0.0;
           }
         }

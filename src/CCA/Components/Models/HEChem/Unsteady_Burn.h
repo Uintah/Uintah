@@ -175,39 +175,44 @@ WARNING
     double ignitionTemp;      /* IgnitionTemp               */
 
     double MIN_MASS_IN_A_CELL;
-    
+      
     double CC1;  /* CC1 = Ac*R*Kc*Ec/Cp        */
     double CC2;  /* CC2 = Qc/Cp/2              */
     double CC3;  /* CC3 = 4*Kg*Bg*W*W/Cp/R/R;  */
     double CC4;  /* CC4 = Qc/Cp                */
     double CC5;  /* CC5 = Qg/Cp                */
     
-    /* C's, L's & R's, Tmin & Tmax, T_ignition are updated in UpdateConstants function  */
-    double C1;   /* C1 = CC1 / Vc, (Vc = Condensed Phase Specific Volume) */
-    double C2;   /* C2 = To + CC2      */
-    double C3;   /* C3 = CC3 * P * P   */
-    double C4;   /* C4 = To + CC4      */
-    double C5;   /* C5 = CC5 * C3      */
+    // Structure used to pass values into the iterator.  This is used to 
+    //   prevent global definitions that may be corrupted by 
+    //   multiple versions working on the same variables.
+    typedef struct {
+      /* C's, L's & R's, Tmin & Tmax, T_ignition are updated in UpdateConstants function  */
+      double C1;   /* C1 = CC1 / Vc, (Vc = Condensed Phase Specific Volume) */
+      double C2;   /* C2 = To + CC2      */
+      double C3;   /* C3 = CC3 * P * P   */
+      double C4;   /* C4 = To + CC4      */
+      double C5;   /* C5 = CC5 * C3      */
+        
+      double NUM1;   /* K1 = Cp/Kc;                  */ 
+      double NUM2;   /* K2 = Kc*rhoc/Cp;             */
+      double NUM3;   /* K3 = -2*Kc/Qc;               */
+      double NUM4;   /* K4 = 2*Ac*R*Kc*rhoc/(Ec*Qc); */
+        
+      double Tmin, Tmax; /* define the range of Ts */
+      double IL, IR;     /* for interval update, left values and right values */
+    } IterationVariable;
+    
+    void UpdateConstants(double To, double P, double Vc, IterationVariable *);
+    double F_Ts(double Ts, IterationVariable *); /* function Ts = Ts(m(Ts))    */                    
+    double Ts_m(double m, IterationVariable *); /* function Ts = Ts(m)    */
+    double m_Ts(double Ts, IterationVariable *); /* function  m = m(Ts)    */
 
-    double NUM1;   /* K1 = Cp/Kc;                  */ 
-    double NUM2;   /* K2 = Kc*rhoc/Cp;             */
-    double NUM3;   /* K3 = -2*Kc/Qc;               */
-    double NUM4;   /* K4 = 2*Ac*R*Kc*rhoc/(Ec*Qc); */
+    double Func(double Ts, IterationVariable *);  /* function f = Ts - F_Ts(Ts) */
+    double Deri(double Ts, IterationVariable *);  /* derivative of Func dF_dTs  */
     
-    double Tmin, Tmax; /* define the range of Ts */
-    double IL, IR;     /* for interval update, left values and right values */
-    
-    void UpdateConstants(double To, double P, double Vc);
-    double F_Ts(double  Ts); /* function Ts = Ts(m(Ts))    */                    
-    double Ts_m(double m); /* function Ts = Ts(m)    */
-    double m_Ts(double Ts); /* function  m = m(Ts)    */
-
-    double Func(double Ts);  /* function f = Ts - F_Ts(Ts) */
-    double Deri(double Ts);  /* derivative of Func dF_dTs  */
-    
-    double Ts_max();
-    void SetInterval(double f, double Ts);
-    double BisectionNewton(double Ts);
+    double Ts_max(IterationVariable *);
+    void SetInterval(double f, double Ts, IterationVariable *);
+    double BisectionNewton(double Ts, IterationVariable *);
     
     static const double EPSILON;   /* stop epsilon for Bisection-Newton method */
     static const double INIT_TS;   /* initial surface temperature          */

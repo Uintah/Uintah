@@ -106,7 +106,7 @@ SmagorinskyModel::problemSetup(const ProblemSpecP& params)
 
     db->getWithDefault("mixture_fraction_label",d_mix_frac_label_name, "scalarSP"); 
     d_mf_label = VarLabel::find( d_mix_frac_label_name );
-    cout << "Using " << *d_mf_label << " to compute scalar variance." << endl;
+    proc0cout << "Using " << *d_mf_label << " to compute scalar variance." << endl;
     
     proc0cout << "WARNING! Scalar filtering for variance limit is not supported" << endl;
     proc0cout << "by this model. Possibly high variance values would be generated" << endl;

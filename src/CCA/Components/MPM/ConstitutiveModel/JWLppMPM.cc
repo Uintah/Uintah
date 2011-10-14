@@ -75,6 +75,15 @@ JWLppMPM::JWLppMPM(ProblemSpecP& ps, MPMFlags* Mflag)
   ps->require("G",    d_initialData.d_G); // Rate coefficient
   ps->require("b",    d_initialData.d_b); // Pressure exponent
 
+  // Initial stress
+  // Fix: Need to make it more general.  Add gravity turn-on option and 
+  //      read from file option etc.
+  ps->getWithDefault("useInitialStress", d_useInitialStress, false);
+  d_init_pressure = 0.0;
+  if (d_useInitialStress) {
+    ps->getWithDefault("initial_pressure", d_init_pressure, 0.0);
+  } 
+
   pProgressFLabel          = VarLabel::create("p.progressF",
                                ParticleVariable<double>::getTypeDescription());
   pProgressFLabel_preReloc = VarLabel::create("p.progressF+",
@@ -102,6 +111,10 @@ JWLppMPM::JWLppMPM(const JWLppMPM* cm) : ConstitutiveModel(cm)
 
   d_initialData.d_G    = cm->d_initialData.d_G;
   d_initialData.d_b    = cm->d_initialData.d_b;
+
+  // Initial stress
+  d_useInitialStress = cm->d_useInitialStress;
+  d_init_pressure = cm->d_init_pressure;
 
   pProgressFLabel          = VarLabel::create("p.progressF",
                                ParticleVariable<double>::getTypeDescription());
@@ -142,6 +155,11 @@ void JWLppMPM::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
 
   cm_ps->appendElement("b", d_initialData.d_b);
   cm_ps->appendElement("G", d_initialData.d_G);
+
+  cm_ps->appendElement("useInitialStress", d_useInitialStress);
+  if (d_useInitialStress) {
+    cm_ps->appendElement("initial_pressure", d_init_pressure);
+  }
 }
 
 JWLppMPM* JWLppMPM::clone()
@@ -155,9 +173,41 @@ void JWLppMPM::initializeCMData(const Patch* patch,
 {
   // Initialize the variables shared by all constitutive models
   // This method is defined in the ConstitutiveModel base class.
-  initSharedDataForExplicit(patch, matl, new_dw);
+  //initSharedDataForExplicit(patch, matl, new_dw);
+
+  Matrix3 Identity;
+  Identity.Identity();
+  Matrix3 zero(0.0);
   ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
 
+  ParticleVariable<double>  pdTdt;
+  ParticleVariable<Matrix3> pDefGrad;
+  ParticleVariable<Matrix3> pStress;
+
+  new_dw->allocateAndPut(pdTdt,       lb->pdTdtLabel,               pset);
+  new_dw->allocateAndPut(pDefGrad,    lb->pDeformationMeasureLabel, pset);
+  new_dw->allocateAndPut(pStress,     lb->pStressLabel,             pset);
+
+  ParticleSubset::iterator iter = pset->begin();
+  // Initial stress option 
+  if (!d_useInitialStress) {
+    for(; iter != pset->end(); iter++){
+      particleIndex idx = *iter;
+      pdTdt[idx] = 0.0;
+      pDefGrad[idx] = Identity;
+      pStress[idx] = zero;
+    }
+  } else {
+    double p = d_init_pressure;
+    Matrix3 sigInit(p, 0.0, 0.0, 0.0, p, 0.0, 0.0, 0.0, p);
+    for(;iter != pset->end(); iter++){
+      particleIndex idx = *iter;
+      pdTdt[idx] = 0.0;
+      pDefGrad[idx] = Identity;
+      pStress[idx] = sigInit;
+    }
+  }
+  
   ParticleVariable<double> pProgress;
   new_dw->allocateAndPut(pProgress,pProgressFLabel,pset);
   ParticleVariable<double> pProgressdelF;
@@ -347,7 +397,7 @@ void JWLppMPM::computeStressTensor(const PatchSubset* patches,
        
       // This is the burn logic
       pressure = 1.0/3.0 * pstress[idx].Trace();
-      if( pressure > 2.0e8)  // hard coded pressure threshold
+      if( fabs(pressure) > 2.0e8)  // hard coded pressure threshold
       {
          // compute the burned fraction
          rctRho  = pmass[idx]/pvolume[idx];
@@ -429,6 +479,13 @@ void JWLppMPM::computeStressTensor(const PatchSubset* patches,
       particleIndex idx = *iter;
 
       double J = deformationGradient_new[idx].Determinant();
+      if (!(J > 0.0)) {
+        cerr << "**ERROR in JWL++MPM** Negative Jacobian of deformation gradient" << endl;
+        cerr << "idx = " << idx << " J = " << J << " matl = " << matl << endl;
+        cerr << "F_old = " << deformationGradient[idx]     << endl;
+        cerr << "F_new = " << deformationGradient_new[idx] << endl;
+        cerr << "VelGrad = " << velGrad[idx] << endl;
+      }
 
       // More Pressure Stabilization
       if(flag->d_doPressureStabilization) {
@@ -533,7 +590,7 @@ void JWLppMPM::addComputesAndRequires(Task* task,
   // constitutive models.  The method is defined in the ConstitutiveModel
   // base class.
   const MaterialSubset* matlset = matl->thisMaterial();
-  addSharedCRForExplicit(task, matlset, patches);
+  addSharedCRForHypoExplicit(task, matlset, patches);
 
   task->requires(Task::OldDW, pProgressFLabel,    matlset, Ghost::None);
   task->computes(pProgressFLabel_preReloc,        matlset);

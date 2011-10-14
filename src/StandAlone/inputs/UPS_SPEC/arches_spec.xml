@@ -357,12 +357,22 @@
           <normalize_pressure           spec="OPTIONAL BOOLEAN" />
           <always_construct_A           spec="OPTIONAL BOOLEAN" /> <!-- default=true. Determines if Pressure matrix is recreated every time step. --> 
           <linear_solver                spec="REQUIRED STRING 'hypre, petsc'" />
-          <Parameters                   spec="REQUIRED NO_DATA" >
-            <maxiterations              spec="REQUIRED INTEGER 'positive'" />
-            <preconditioner             spec="REQUIRED STRING 'jacobi, pfmg'" />
-            <tolerance                  spec="REQUIRED DOUBLE" />
-            <solver                     spec="REQUIRED STRING 'cg'" />
-          </Parameters>
+        <Parameters                     spec="OPTIONAL NO_DATA"
+                                          attribute1="variable OPTIONAL STRING 'implicitPressure'" >
+          <initial_tolerance            spec="OPTIONAL DOUBLE 'positive'"/>
+          <criteria                     spec="OPTIONAL STRING 'Absolute relative'" />                     
+          <jump                         spec="OPTIONAL INTEGER" />                                        
+          <logging                      spec="OPTIONAL INTEGER 'positive'" />                             
+          <maxiterations                spec="OPTIONAL INTEGER 'positive'" />                             
+          <norm                         spec="OPTIONAL STRING 'LInfinity linfinity L1 l1 L2 l2'" />       
+          <npost                        spec="OPTIONAL INTEGER" />                                        
+          <npre                         spec="OPTIONAL INTEGER" />                                        
+          <preconditioner               spec="OPTIONAL STRING 'none, pfmg, smg jacobi'" />                            
+          <outputEquations              spec="OPTIONAL BOOLEAN" />                                        
+          <skip                         spec="OPTIONAL INTEGER" />                                        
+          <solver                       spec="REQUIRED STRING 'smg, SMG, PFMG, pfmg, SparseMSG, sparsemsg, CG, cg, Hybrid, hybrid, GMRES, gmres'" />                         
+          <tolerance                    spec="REQUIRED DOUBLE 'positive'" /> 
+        </Parameters>
         </PressureSolver>
 
         <restartOnNegativeDensityGuess  spec="OPTIONAL BOOLEAN" /> <!--default = false-->
