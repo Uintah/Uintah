@@ -137,7 +137,7 @@
 
           <timeIntegratorType>  RK2SSP      </timeIntegratorType>              
 
-          <EKTCorrection>       true      </EKTCorrection>
+<!--      <EKTCorrection>       true      </EKTCorrection>  -->
 
           <PressureSolver>                                             
             <linear_solver>hypre</linear_solver>                     
