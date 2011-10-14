@@ -256,13 +256,13 @@ PetscSolver::setMatrix(const ProcessorGroup* ,
         col[5] = l2g[IntVector(colX,  colY+1, colZ)];   // an
         col[6] = l2g[IntVector(colX,  colY,   colZ+1)]; // at
         
-        value[0] = -coeff[c].b;
-        value[1] = -coeff[c].s;
-        value[2] = -coeff[c].w;
-        value[3] =  coeff[c].p;
-        value[4] = -coeff[c].e;
-        value[5] = -coeff[c].n;
-        value[6] = -coeff[c].t;
+        value[0] = coeff[c].b;
+        value[1] = coeff[c].s;
+        value[2] = coeff[c].w;
+        value[3] = coeff[c].p;
+        value[4] = coeff[c].e;
+        value[5] = coeff[c].n;
+        value[6] = coeff[c].t;
         int row = col[3];
         ierr = MatSetValues(A,1,&row,7,col,value,INSERT_VALUES);
         if(ierr)
@@ -281,7 +281,7 @@ PetscSolver::setMatrix(const ProcessorGroup* ,
 void 
 PetscSolver::setRHS_X(const ProcessorGroup* ,
                       const Patch* patch,
-                      CCVariable<double>& guess,
+                      constCCVariable<double>& guess,
                       constCCVariable<double>& rhs, 
                       bool construct_A )
 {

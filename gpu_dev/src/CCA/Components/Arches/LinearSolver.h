@@ -114,7 +114,7 @@ public:
 
   virtual void setRHS_X(const ProcessorGroup* pc, 
                         const Patch* patch,
-                        CCVariable<double>& guess,
+                        constCCVariable<double>& guess,
                         constCCVariable<double>& rhs,
                         bool construct_A ) = 0;
 

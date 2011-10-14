@@ -29,69 +29,38 @@ DEALINGS IN THE SOFTWARE.
 
 
 
-#ifndef Uintah_Components_Arches_PetscSolver_h
-#define Uintah_Components_Arches_PetscSolver_h
-
-#include <sci_defs/petsc_defs.h>
+#ifndef Uintah_Components_Arches_hypreSolver_h
+#define Uintah_Components_Arches_hypreSolver_h
 
 #include <CCA/Components/Arches/LinearSolver.h>
 #include <CCA/Components/Arches/ArchesVariables.h>
 #include <CCA/Components/Arches/ArchesConstVariables.h>
 #include <Core/Grid/Patch.h>
 
-#ifdef HAVE_PETSC
-extern "C" {
-#include "petscksp.h"
-}
-#endif
+#include <_hypre_utilities.h>
+#include <HYPRE_struct_ls.h>
+
 
 namespace Uintah {
 
 class ProcessorGroup;
 
-/**************************************
-CLASS
-   PetscSolver
-   
-   Class PetscSolver uses gmres solver
-   solver
+using namespace SCIRun;
 
-GENERAL INFORMATION
-   PetscSolver.h - declaration of the class
-   
-   Author: Rajesh Rawat (rawat@crsim.utah.edu)
-
-   All major modifications since 01.01.2004 done by:
-   Stanislav Borodai(borodai@crsim.utah.edu)
-   
-   Creation Date:   Mar 1, 2000
-   
-   C-SAFE 
-   
-   Copyright U of U 2000
-
-KEYWORDS
-
-
-DESCRIPTION
-   Class PetscSolver is a gmres linear solver
-
-WARNING
-   none
-
-****************************************/
-
-class PetscSolver: public LinearSolver {
+class HypreSolver: public LinearSolver {
 
 public:
-  PetscSolver(const ProcessorGroup* myworld);
 
-  virtual ~PetscSolver();
+  HypreSolver(const ProcessorGroup* myworld);
+
+  virtual ~HypreSolver();
+
 
   void problemSetup(const ProblemSpecP& params);
 
+
   virtual void matrixCreate(const PatchSet* allpatches,
-                            const PatchSubset* mypatches);
+                            const PatchSubset* mypatc) {};
                             
   virtual void setMatrix(const ProcessorGroup* pc, 
                          const Patch* patch,
@@ -103,33 +72,33 @@ public:
                         constCCVariable<double>& rhs, 
                         bool construct_A );
 
-
   virtual bool pressLinearSolve();
   
   virtual void copyPressSoln(const Patch* patch, ArchesVariables* vars);
- 
+  
   virtual void destroyMatrix();
   
   virtual void print(const string& desc, const int timestep, const int step);
 protected:
 
 private:
-  string d_pcType;
   string d_solverType;
-  int d_overlap;
-  int d_fill;
+
   int d_maxSweeps;
+  int **d_iupper, **d_ilower, **d_offsets;
+  int d_volume, d_nblocks, d_dim, d_stencilSize;
+  int *d_stencilIndices;
+  int d_A_num_ghost[6];
+  
   double d_residual;
+  double d_stored_residual;
   const ProcessorGroup* d_myworld;
   
-  
-#ifdef HAVE_PETSC
-   map<const Patch*, int> d_petscGlobalStart;
-   map<const Patch*, Array3<int> > d_petscLocalToGlobal;
-   Mat A;
-   Vec d_x, d_b, d_u;
-#endif
-}; // End class PetscSolver.h
+  HYPRE_StructMatrix d_A;
+  HYPRE_StructVector d_x, d_b;
+  HYPRE_StructGrid d_grid;
+  HYPRE_StructStencil d_stencil;
+}; // End class hypreSolver.h
 
 } // End namespace Uintah
 

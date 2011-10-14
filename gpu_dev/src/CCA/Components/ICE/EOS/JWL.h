@@ -118,13 +118,16 @@ WARNING
 	   Department of Chemistry 
 	   University of Utah
 	*/
-	double   Pressure;
-	double   Temperature;
-	double   SpecificHeat;
-	double   IL, IR;
-	double func(double rhoM);
-	double deri(double rhoM);
-	void   setInterval(double f, double rhoM);
+        typedef struct { 
+	  double   Pressure;
+	  double   Temperature;
+	  double   SpecificHeat;
+	  double   IL, IR;
+        } IterationVariables;
+
+	double func(double rhoM, IterationVariables *);
+	double deri(double rhoM, IterationVariables *);
+	void   setInterval(double f, double rhoM, IterationVariables *);
       };
 } // End namespace Uintah
       

@@ -188,7 +188,7 @@ evaluate()
   viscInterpOp_->apply_to_field( *visc_, stress     );
   viscInterpOp_->apply_to_field( *dil_, *dilatation );
 
-  stress <<= ( stress * -2.0*( *velgrad ) ) + 2.0/3.0 * *dilatation;
+  stress <<= ( stress * -2.0*( *velgrad ) ) + 2.0/3.0 * stress * *dilatation;
 }
 
 //--------------------------------------------------------------------

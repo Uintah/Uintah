@@ -27,9 +27,11 @@ ICE_BC_FC         SCI_DEBUG     output boundary condition debugging information 
                                 Face-centered variables. 
 DBG_EqPress       SCI_DEBUG     Output debugging information about the iteration
                                 process in computeEquilibration if an exception is thrown.
+
 ARCHES:
 __________________________________
-
+ARCHES_PRESS_SOLVE SCI_DEBUG    Outputs the name of each task in the pressure solveras it's being     
+                                scheduled and executed.
 
 MPM:
 __________________________________

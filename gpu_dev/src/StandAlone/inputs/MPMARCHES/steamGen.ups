@@ -5,6 +5,7 @@
     <title>Steam Generator</title>
   </Meta>
   <SimulationComponent type="mpmarches"/>
+  <Solver type="hypre" />
   <Time>
     <maxTime>2.0</maxTime>
     <initTime>0.0</initTime>
@@ -379,6 +380,7 @@
             <solver>cg</solver>
             <preconditioner>pfmg</preconditioner>
             <maxiterations>75</maxiterations>
+            <skip>1</skip>
           </Parameters>
         </PressureSolver>
         <MomentumSolver>

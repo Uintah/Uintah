@@ -124,10 +124,10 @@ TorusGeometryPiece::inside(const Point &p) const
   double y = p.y() - d_center.y();
   double z = p.z() - d_center.z();
   if(d_axis=="z"){
-    // rotate about the x-axis, i.e., keep x unchanged
-    double yprime = y*cos(-d_theta) - z*sin(-d_theta);
-    double zprime = y*sin(-d_theta) + z*cos(-d_theta);
-    y=yprime; z=zprime;
+    // rotate about the y-axis, i.e., keep y unchanged
+    double xprime = x*cos(-d_theta) - z*sin(-d_theta);
+    double zprime = x*sin(-d_theta) + z*cos(-d_theta);
+    x=xprime; z=zprime;
     if((d_major_radius - sqrt(x*x + y*y))*
        (d_major_radius - sqrt(x*x + y*y)) + z*z <
         d_minor_radius*d_minor_radius){
@@ -138,10 +138,11 @@ TorusGeometryPiece::inside(const Point &p) const
   } // axis = z
 
   else if(d_axis=="y"){
-    // rotate about the z-axis, i.e., keep z unchanged
-    double xprime = x*cos(-d_theta) - y*sin(-d_theta);
-    double yprime = x*sin(-d_theta) + y*cos(-d_theta);
-    x=xprime; y=yprime;
+    // rotate about the x-axis, i.e., keep x unchanged
+    double yprime = y*cos(-d_theta) - z*sin(-d_theta);
+    double zprime = y*sin(-d_theta) + z*cos(-d_theta);
+
+    y=yprime; z=zprime;
     if((d_major_radius - sqrt(x*x + z*z))*
        (d_major_radius - sqrt(x*x + z*z)) + y*y <
         d_minor_radius*d_minor_radius){
@@ -152,10 +153,10 @@ TorusGeometryPiece::inside(const Point &p) const
   } // axis = y
 
   else if(d_axis=="x"){
-    // rotate about the y-axis, i.e., keep y unchanged
-    double xprime = x*cos(-d_theta) - z*sin(-d_theta);
-    double zprime = x*sin(-d_theta) + z*cos(-d_theta);
-    x=xprime; z=zprime;
+    // rotate about the z-axis, i.e., keep z unchanged
+    double xprime = x*cos(-d_theta) - y*sin(-d_theta);
+    double yprime = x*sin(-d_theta) + y*cos(-d_theta);
+    x=xprime; y=yprime;
     if((d_major_radius - sqrt(y*y + z*z))*
        (d_major_radius - sqrt(y*y + z*z)) + x*x <
         d_minor_radius*d_minor_radius){

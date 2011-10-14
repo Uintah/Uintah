@@ -304,9 +304,9 @@ HypreSolver::setMatrix(const ProcessorGroup* pc,
   for(CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
     IntVector c = *iter;
     A[i]   =  coeff[c].p; //[0, 0, 0]
-    A[i+1] = -coeff[c].w; //[-1,0, 0]
-    A[i+2] = -coeff[c].s; //[0,-1, 0]
-    A[i+3] = -coeff[c].b; //[0 ,0,-1]
+    A[i+1] = coeff[c].w; //[-1,0, 0]
+    A[i+2] = coeff[c].s; //[0,-1, 0]
+    A[i+3] = coeff[c].b; //[0 ,0,-1]
 
     i = i + d_stencilSize;
    

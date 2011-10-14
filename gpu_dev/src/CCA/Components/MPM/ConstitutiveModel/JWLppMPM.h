@@ -80,6 +80,10 @@ namespace Uintah {
     bool d_useModifiedEOS; 
     int d_8or27;
 
+    // Initial stress state
+    bool d_useInitialStress;
+    double d_init_pressure;  // Initial pressure
+
   private:
     // Prevent copying of this class
     // copy constructor

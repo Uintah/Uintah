@@ -78,7 +78,7 @@ else
 endif
 
 ifeq ($(HAVE_HYPRE),yes)
-  SRCS += $(SRCDIR)/HypreSolver.cc
+  SRCS += $(SRCDIR)/HypreSolverV2.cc
 endif
 
 PSELIBS := \

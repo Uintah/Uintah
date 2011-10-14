@@ -5,7 +5,8 @@
    </Meta>
 
    <SimulationComponent type="arches" />
-
+   <Solver type="hypre" />
+  
    <Time>
      <maxTime>         10.0        </maxTime>
      <initTime>        0.0         </initTime>
@@ -136,15 +137,16 @@
 
           <timeIntegratorType>  RK2SSP      </timeIntegratorType>              
 
-          <EKTCorrection>       true      </EKTCorrection>
+<!--      <EKTCorrection>       true      </EKTCorrection>  -->
 
           <PressureSolver>                                             
             <linear_solver>hypre</linear_solver>                     
             <Parameters>                                             
-                <tolerance>       1.0e-10</tolerance>                           
-                <solver>        cg    </solver>                                  
-                <preconditioner>pfmg  </preconditioner>                
-                <maxiterations>      75    </maxiterations>                              
+                <tolerance>     1.0e-10  </tolerance>                           
+                <solver>         cg      </solver>                                  
+                <preconditioner> pfmg    </preconditioner>                
+                <maxiterations>  75      </maxiterations>   
+                <skip>           1       </skip>                           
             </Parameters>                                            
           </PressureSolver>                                            
 

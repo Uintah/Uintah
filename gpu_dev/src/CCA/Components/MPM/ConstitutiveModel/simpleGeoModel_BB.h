@@ -28,8 +28,8 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#ifndef __SIMPLIFIED_GEO_MODEL_H__
-#define __SIMPLIFIED_GEO_MODEL_H__
+#ifndef __SIMPLE_GEO_MODEL_H__
+#define __SIMPLE_GEO_MODEL_H__
 
 
 #include <CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
@@ -47,7 +47,7 @@ namespace Uintah {
 
   ****************************************/
 
-  class simplifiedGeoModel : public ConstitutiveModel {
+  class simpleGeoModel_BB : public ConstitutiveModel {
     // Create datatype for storing model parameters
   public:
     struct CMData {
@@ -84,23 +84,23 @@ namespace Uintah {
     // Prevent copying of this class
     // copy constructor
 
-    simplifiedGeoModel& operator=(const simplifiedGeoModel &cm);
+    simpleGeoModel_BB& operator=(const simpleGeoModel_BB &cm);
 
     void initializeLocalMPMLabels();
 
   public:
     // constructor
-    simplifiedGeoModel(ProblemSpecP& ps, MPMFlags* flag);
-    simplifiedGeoModel(const simplifiedGeoModel* cm);
+    simpleGeoModel_BB(ProblemSpecP& ps, MPMFlags* flag);
+    simpleGeoModel_BB(const simpleGeoModel_BB* cm);
 
     // destructor
-    virtual ~simplifiedGeoModel();
+    virtual ~simpleGeoModel_BB();
 
     virtual void outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag = true);
 
     // clone
 
-    simplifiedGeoModel* clone();
+    simpleGeoModel_BB* clone();
 
     // compute stable timestep for this patch
     virtual void computeStableTimestep(const Patch* patch,
@@ -115,11 +115,13 @@ namespace Uintah {
 
     
     // Actual return algorithm
-    void computeStress(const particleIndex idx, int& lvl, const double delT, 
+    void computeStress(const long64 idx, int& lvl, const double delT, 
                        const double lame, const double lame_inv, 
                        const Matrix3& L_new, const Matrix3& F_old,
                        const Matrix3& Sig_old, const Matrix3& Alpha_old,
-                       double& eps_p, double& epsv_e, double& epsv_p, double& kappa, 
+                       const double& eps_p, const double& epsv_e, const double& epsv_p, 
+                       double& eps_p_new, double& epsv_e_new, double& epsv_p_new, 
+                       const double& kappa, double& kappa_new, 
                        Matrix3& Eps_inc, Matrix3& F_new, Matrix3& R_new,
                        Matrix3& Sig_new);
 

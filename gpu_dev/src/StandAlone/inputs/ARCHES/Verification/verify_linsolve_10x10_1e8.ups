@@ -5,6 +5,8 @@
     <title>Arches DQMOM Verification - Linear System, 10 x 10 Matrix, Condition Number = 10^8</title>
   </Meta>
   <SimulationComponent type="arches" />
+  <Solver type="hypre" />
+  
   <Time>
     <maxTime>0.02</maxTime>
     <max_Timesteps>1</max_Timesteps>
@@ -303,10 +305,11 @@
         <PressureSolver>
           <linear_solver>hypre</linear_solver>
           <Parameters>
-            <solver>cg</solver>
-            <preconditioner>pfmg</preconditioner>
-            <tolerance>1.0e-10</tolerance>
-            <maxiterations>75</maxiterations>
+            <solver>           cg     </solver>
+            <preconditioner>  pfmg    </preconditioner>
+            <tolerance>      1.0e-10  </tolerance>
+            <maxiterations>    75     </maxiterations>
+            <skip>              1     </skip>
           </Parameters>
         </PressureSolver>
 

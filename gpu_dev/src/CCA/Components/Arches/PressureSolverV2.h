@@ -34,6 +34,7 @@ DEALINGS IN THE SOFTWARE.
 #define Uintah_Components_Arches_PressureSolverV2_h
 
 #include <CCA/Ports/SchedulerP.h>
+#include <CCA/Ports/SolverInterface.h>
 #include <CCA/Components/Arches/ArchesConstVariables.h>
 #include <CCA/Components/Arches/CellInformationP.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
@@ -67,7 +68,8 @@ public:
                  const MPMArchesLabel* MAlb,
                  BoundaryCondition* bndry_cond,
                  PhysicalConstants* phys_const,
-                 const ProcessorGroup* myworld);
+                 const ProcessorGroup* myworld,
+                 SolverInterface* hypreSolver);
 
   //______________________________________________________________________/
   // Destructor
@@ -120,6 +122,7 @@ protected:
 
 private:
   enum WhichCM{Computes=0, Modifies=1, none=-9};
+  enum whichSolver{hypre, petsc};
   
   //______________________________________________________________________/
   // Default : Construct an empty instance of the Pressure solver.
@@ -147,6 +150,29 @@ private:
                          bool extraProjection,
                          bool d_EKTCorrection,
                          bool doing_EKT_now);
+                         
+  //______________________________________________________________________
+  //  setGuessForX:
+  //  This either sets the initial guess for X to 0.0 or moves the 
+  //  timelabel->pressureGuess to the new_dw.
+  
+  void sched_setGuessForX(SchedulerP& sched,
+                          const PatchSet* patches,                        
+                          const MaterialSet* matls,                       
+                          const TimeIntegratorLabel* timelabels,          
+                          bool extraProjection,                           
+                          bool d_EKTCorrection,                           
+                          bool doing_EKT_now);
+                          
+  void setGuessForX ( const ProcessorGroup* pg,
+                      const PatchSubset* patches,                          
+                      const MaterialSubset* matls,                               
+                      DataWarehouse* old_dw,                               
+                      DataWarehouse* new_dw,                               
+                      const TimeIntegratorLabel* timelabels,               
+                      const bool extraProjection,                          
+                      const bool d_EKTCorrection,                          
+                      const bool doing_EKT_now );                     
 
   //______________________________________________________________________
   //  setPressRHS:
@@ -264,6 +290,8 @@ private:
   
   int d_indx;         // Arches matl index.
   int d_iteration;
+  
+  int d_whichSolver;
 
   //reference point for the solvers
   IntVector d_pressRef;
@@ -280,6 +308,11 @@ private:
   bool d_norm_press;
   bool d_doMMS;
   bool d_do_only_last_projection;
+  
+  SolverInterface* d_hypreSolver;
+  SolverParameters* d_hypreSolver_parameters;
+  
+  
 }; // End class PressureSolver
 
 } // End namespace Uintah
