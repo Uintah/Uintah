@@ -281,7 +281,7 @@ PetscSolver::setMatrix(const ProcessorGroup* ,
 void 
 PetscSolver::setRHS_X(const ProcessorGroup* ,
                       const Patch* patch,
-                      CCVariable<double>& guess,
+                      constCCVariable<double>& guess,
                       constCCVariable<double>& rhs, 
                       bool construct_A )
 {

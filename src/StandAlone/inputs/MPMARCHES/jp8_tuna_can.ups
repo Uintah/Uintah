@@ -8,6 +8,7 @@
     </Meta>
     
     <SimulationComponent type="mpmarches" />
+    <Solver type="hypre" />
     
     <Time>
         <maxTime>1.0</maxTime>
@@ -285,6 +286,7 @@
                         <solver>cg</solver>
                         <preconditioner>pfmg</preconditioner>
                         <maxiterations>7500</maxiterations>
+                        <skip>1</skip>
                     </Parameters>
                     <normalize_pressure>false</normalize_pressure>
                 </PressureSolver>

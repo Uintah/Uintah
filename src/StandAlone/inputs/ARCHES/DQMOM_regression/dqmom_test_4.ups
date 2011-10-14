@@ -6,6 +6,7 @@
     <title>DQMOM/Scalar Test #4</title>
   </Meta>
   <SimulationComponent type="arches"/>
+  <Solver type="hypre" />
   <Time>
     <maxTime>0.20</maxTime>
     <initTime>0.0</initTime>
@@ -251,10 +252,11 @@
         <PressureSolver>
           <linear_solver>hypre</linear_solver>
           <Parameters>
-            <solver>cg</solver>
-            <preconditioner>pfmg</preconditioner>
-            <tolerance>1.0e-10</tolerance>
-            <maxiterations>75</maxiterations>
+            <solver>           cg     </solver>
+            <preconditioner>  pfmg    </preconditioner>
+            <tolerance>      1.0e-10  </tolerance>
+            <maxiterations>    75     </maxiterations>
+            <skip>              1     </skip>
           </Parameters>
         </PressureSolver>
         <MomentumSolver>

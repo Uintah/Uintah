@@ -96,6 +96,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Arches/OdtClosure.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Ports/Scheduler.h>
+#include <CCA/Ports/SolverInterface.h>
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Exceptions/ParameterNotFound.h>
 #include <Core/Exceptions/VariableNotFoundInGrid.h>
@@ -190,6 +191,8 @@ Arches::~Arches()
     delete d_dqmomSolver; 
     delete d_partVel; 
   }
+  releasePort("solver");
+  
 }
 
 // ****************************************************************************
@@ -466,6 +469,14 @@ Arches::problemSetup(const ProblemSpecP& params,
   }
 
   d_props->setBC(d_boundaryCondition);
+  
+  
+  //__________________________________
+  SolverInterface* hypreSolver = dynamic_cast<SolverInterface*>(getPort("solver"));
+  
+  if(!hypreSolver) {
+    throw InternalError("ARCHES:couldn't get hypreSolver port", __FILE__, __LINE__);
+  }
 
   if(nlSolver == "picard") {
     d_nlSolver = scinew PicardNonlinearSolver(d_lab, d_MAlab, d_props, 
@@ -474,17 +485,19 @@ Arches::problemSetup(const ProblemSpecP& params,
                                               d_calcScalar,
                                               d_calcEnthalpy,
                                               d_calcVariance,
-                                              d_myworld);
+                                              d_myworld,
+                                              hypreSolver);
   }
   else if (nlSolver == "explicit") {
-        d_nlSolver = scinew ExplicitSolver(d_lab, d_MAlab, d_props,
-                                           d_boundaryCondition,
-                                           d_turbModel, d_scaleSimilarityModel, 
-                                           d_physicalConsts,
-                                           d_calcScalar,
-                                           d_calcEnthalpy,
-                                           d_calcVariance,
-                                           d_myworld);
+    d_nlSolver = scinew ExplicitSolver(d_lab, d_MAlab, d_props,
+                                       d_boundaryCondition,                     
+                                       d_turbModel, d_scaleSimilarityModel,     
+                                       d_physicalConsts,                        
+                                       d_calcScalar,                            
+                                       d_calcEnthalpy,                          
+                                       d_calcVariance,                          
+                                       d_myworld,                               
+                                       hypreSolver);                            
 
   }
   else{
