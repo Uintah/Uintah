@@ -65,6 +65,7 @@ WARNING
 #include <CCA/Components/Arches/Arches.h>
 #include <CCA/Components/Arches/NonlinearSolver.h>
 #include <CCA/Ports/DataWarehouseP.h>
+#include <CCA/Ports/SolverInterface.h>
 
 namespace Uintah {
   using namespace SCIRun;
@@ -95,7 +96,8 @@ public:
                         bool calcScalar,
                         bool calcEnthalpy,
                         bool calcVariance,
-                        const ProcessorGroup* myworld);
+                        const ProcessorGroup* myworld,
+                        SolverInterface*  hypreSolver);
 
   // GROUP: Destructors:
   ////////////////////////////////////////////////////////////////////////
@@ -364,8 +366,8 @@ private:
   vector<IntVector> d_probePoints;
   // nonlinear residual tolerance
   double d_resTol;
-  // Pressure Eqn Solver
-  PressureSolver* d_pressSolver;
+ 
+  
   // Momentum Eqn Solver 
   MomentumSolver* d_momSolver;
   // Scalar solver
@@ -390,6 +392,11 @@ private:
 
   PartVel* d_partVel; 
   DQMOM* d_dqmomSolver; 
+  
+  // Pressure Eqn Solver
+  PressureSolver* d_pressSolver;
+  SolverInterface* d_hypreSolver;             // infrastructure hypre solver
+  
 }; // End class PicardNonlinearSolver
 } // End namespace Uintah
 

@@ -6,6 +6,7 @@
    </Meta>
 
    <SimulationComponent type="arches" />
+   <Solver type="hypre" />
 
    <Time>
         <maxTime>10.0</maxTime>
@@ -142,10 +143,11 @@
                 <PressureSolver>
                     <linear_solver>hypre</linear_solver>
                     <Parameters>
-                        <tolerance>1.0e-10</tolerance>
-                        <solver>cg</solver>
-                        <preconditioner>pfmg</preconditioner>
-                        <maxiterations>7500</maxiterations>
+                      <solver>           cg     </solver>
+                      <preconditioner>  pfmg    </preconditioner>
+                      <tolerance>      1.0e-10  </tolerance>
+                      <maxiterations>    7500   </maxiterations>
+                      <skip>              1     </skip>
                     </Parameters>
                 </PressureSolver>
 

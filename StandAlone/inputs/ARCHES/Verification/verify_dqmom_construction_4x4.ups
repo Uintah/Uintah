@@ -5,6 +5,8 @@
     <title>Arches DQMOM Verification - Construction Process, 1 IC, 2 Environments (4 x 4 Matrix)</title>
   </Meta>
   <SimulationComponent type="arches" />
+  <Solver type="hypre" />
+  
   <Time>
     <maxTime>0.02</maxTime>
     <max_Timesteps>1</max_Timesteps>
@@ -302,10 +304,11 @@
         <PressureSolver>
           <linear_solver>hypre</linear_solver>
           <Parameters>
-            <solver>cg</solver>
-            <preconditioner>pfmg</preconditioner>
-            <tolerance>1.0e-10</tolerance>
-            <maxiterations>75</maxiterations>
+            <solver>           cg     </solver>
+            <preconditioner>  pfmg    </preconditioner>
+            <tolerance>      1.0e-10  </tolerance>
+            <maxiterations>    75     </maxiterations>
+            <skip>              1     </skip>
           </Parameters>
         </PressureSolver>
 

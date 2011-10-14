@@ -84,14 +84,16 @@ PicardNonlinearSolver(ArchesLabel* label,
                       bool calc_Scalar,
                       bool calc_enthalpy,
                       bool calc_variance,
-                      const ProcessorGroup* myworld):
+                      const ProcessorGroup* myworld,
+                      SolverInterface* hypreSolver):
                       NonlinearSolver(myworld),
                       d_lab(label), d_MAlab(MAlb), d_props(props), 
                       d_boundaryCondition(bc), d_turbModel(turbModel),
                       d_calScalar(calc_Scalar),
                       d_enthalpySolve(calc_enthalpy),
                       d_calcVariance(calc_variance),
-                      d_physicalConsts(physConst)
+                      d_physicalConsts(physConst),
+                      d_hypreSolver(hypreSolver)
 {
   d_perproc_patches = 0;
   d_pressSolver = 0;
@@ -142,7 +144,8 @@ PicardNonlinearSolver::problemSetup(const ProblemSpecP& params)
 
   d_pressSolver = scinew PressureSolver(d_lab, d_MAlab,
                                         d_boundaryCondition,
-                                        d_physicalConsts, d_myworld);
+                                        d_physicalConsts, d_myworld,
+                                        d_hypreSolver);
   d_pressSolver->problemSetup(db);
 
   d_momSolver = scinew MomentumSolver(d_lab, d_MAlab,
