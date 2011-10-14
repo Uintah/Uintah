@@ -180,6 +180,12 @@ void MPMArches::problemSetup(const ProblemSpecP& prob_spec,
 
   d_mpm->attachPort("scheduler",sched);
 
+  SolverInterface* solver = dynamic_cast<SolverInterface*>(getPort("solver"));
+  if(!solver){
+    throw InternalError("ARCHES needs a solver component to work", __FILE__, __LINE__);
+  }
+  d_arches->attachPort("solver", solver);
+
   d_mpm->setMPMLabel(Mlb);
   d_mpm->problemSetup(prob_spec, materials_ps,grid, d_sharedState);
   // set multimaterial label in Arches to access interface variables

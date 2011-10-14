@@ -566,7 +566,6 @@ PressureSolver::setRHS_X_wrap ( const ProcessorGroup* pg,
     ostringstream fname;
     fname << "." << desc.c_str() << "." << timestep << "." << d_iteration;
     d_hypreSolver_parameters->setOutputFileName(fname.str());
-    cout << " -----------------------------fname " << fname.str()  << endl;
   }
 }
 
