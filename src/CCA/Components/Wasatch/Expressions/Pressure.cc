@@ -12,6 +12,7 @@
 #include <spatialops/OperatorDatabase.h>
 #include <spatialops/structured/SpatialFieldStore.h>
 #include <spatialops/structured/MemoryWindow.h>
+#include <spatialops/FieldExpressions.h>
 
 namespace Wasatch {
 
@@ -50,8 +51,7 @@ Pressure::Pressure( const Expr::Tag& fxtag,
     prhsLabel_    ( Uintah::VarLabel::create( (this->names())[1].name(), 
                                               Wasatch::get_uintah_field_type_descriptor<SVolField>(),
                                               Wasatch::get_uintah_ghost_descriptor<SVolField>() ) )
-{
-}
+{}
 
 //--------------------------------------------------------------------
 
@@ -68,7 +68,7 @@ void
 Pressure::schedule_solver( const Uintah::LevelP& level,
                            Uintah::SchedulerP sched,
                            const Uintah::MaterialSet* const materials,
-                           int RKStage)
+                           const int RKStage )
 {
   // TODO: investigate why projection only works for the first RK stage when running
   // in parallel (specifically hypre)
@@ -91,12 +91,10 @@ void
 Pressure::declare_uintah_vars( Uintah::Task& task,
                                const Uintah::PatchSubset* const patches,
                                const Uintah::MaterialSubset* const materials,
-                              int RKStage)
+                               const int RKStage )
 {
-  if (RKStage ==1) 
-    task.computes( matrixLabel_, patches, Uintah::Task::NormalDomain, materials, Uintah::Task::NormalDomain );
-  else 
-    task.modifies( matrixLabel_, patches, Uintah::Task::NormalDomain, materials, Uintah::Task::NormalDomain );
+  if( RKStage == 1 ) task.computes( matrixLabel_, patches, Uintah::Task::NormalDomain, materials, Uintah::Task::NormalDomain );
+  else               task.modifies( matrixLabel_, patches, Uintah::Task::NormalDomain, materials, Uintah::Task::NormalDomain );
 }
 
 //--------------------------------------------------------------------
@@ -105,14 +103,14 @@ void
 Pressure::bind_uintah_vars( Uintah::DataWarehouse* const dw,
                            const Uintah::Patch* const patch,
                            const int material,
-                           int RKStage)
+                           const int RKStage )
 { 
   if (didAllocateMatrix_) {
     //std::cout << "RKStage "<< RKStage << "did allocate matrix \n";
     // Todd: instead of checking for allocation - check for new timestep or some other ingenious solution
     // check for transferfrom - transfer matrix from old to new DW
-    if (RKStage==1) dw->put( matrix_, matrixLabel_, material, patch ); 
-    else dw->getModifiable( matrix_, matrixLabel_, material, patch ); 
+    if (RKStage==1 ) dw->put( matrix_, matrixLabel_, material, patch );
+    else   dw->getModifiable( matrix_, matrixLabel_, material, patch );
     //setup_matrix(patch);
   } else {
     //std::cout << "RKStage "<< RKStage << "before allocate and put matrix \n";
@@ -155,9 +153,9 @@ Pressure::bind_fields( const Expr::FieldManagerList& fml )
 void
 Pressure::bind_operators( const SpatialOps::OperatorDatabase& opDB )
 {
-  interpX_ = opDB.retrieve_operator<fxInterp>();
-  interpY_ = opDB.retrieve_operator<fyInterp>();
-  interpZ_ = opDB.retrieve_operator<fzInterp>();
+  interpX_ = opDB.retrieve_operator<FxInterp>();
+  interpY_ = opDB.retrieve_operator<FyInterp>();
+  interpZ_ = opDB.retrieve_operator<FzInterp>();
   
   divXOp_ = opDB.retrieve_operator<DivX>();
   divYOp_ = opDB.retrieve_operator<DivY>();
@@ -229,16 +227,15 @@ Pressure::setup_matrix(const Uintah::Patch* const patch)
 void
 Pressure::evaluate()
 {
+  using namespace SpatialOps;
+
   typedef std::vector<SVolField*> SVolFieldVec;
   SVolFieldVec& results = this->get_value_vec();
 
   // jcs: can we do the linear solve in place? We probably can. If so,
   // we would only need one field, not two...
-  //SVolField* p = results[0];
-  //SVolField* r = results[1];
   SVolField& pressure = *results[0];
-  //SVolField& rhs = *r;
-  SVolField& rhs = *results[1];
+  SVolField& rhs      = *results[1];
   rhs = 0.0;
   //
   // set_pressure_bc((this->names())[0],matrix_, pressure, rhs, patch_);
@@ -256,38 +253,34 @@ Pressure::evaluate()
   // the solver in the "schedule_solver" method.
   if( doX_ ){
     interpX_->apply_to_field( *fx_, *tmpx );
-    divXOp_->apply_to_field( *tmpx, *tmp );
-    rhs += *tmp;
+    divXOp_ ->apply_to_field( *tmpx, *tmp );
+    rhs <<= rhs + *tmp;
   }
 
   if( doY_ ){
     interpY_->apply_to_field( *fy_, *tmpy );
-    divYOp_->apply_to_field( *tmpy, *tmp );
-    rhs += *tmp;
+    divYOp_ ->apply_to_field( *tmpy, *tmp );
+    rhs <<= rhs + *tmp;
   }
 
   if( doZ_ ){
     interpZ_->apply_to_field( *fz_, *tmpz );
-    divZOp_->apply_to_field( *tmpz, *tmp );
-    rhs += *tmp;
+    divZOp_ ->apply_to_field( *tmpz, *tmp );
+    rhs <<= rhs + *tmp;
   }
 
   if( doDens_ ){
-    rhs += *d2rhodt2_;
+    rhs <<= rhs + *d2rhodt2_;
   }
-
-  //_________________________________________________
-  // construct the LHS matrix, solve for pressure....
-  // matrix_ = ????
 }
 
 //--------------------------------------------------------------------
 
-Pressure::Builder::Builder( Expr::Tag& fxtag,
-                            Expr::Tag& fytag,
-                            Expr::Tag& fztag,
+Pressure::Builder::Builder( const Expr::Tag& fxtag,
+                            const Expr::Tag& fytag,
+                            const Expr::Tag& fztag,
                             const Expr::Tag& d2rhodt2tag,
-                            Uintah::SolverParameters& sparams,
+                            const Uintah::SolverParameters& sparams,
                             Uintah::SolverInterface& solver )
  : fxt_( fxtag ),
    fyt_( fytag ),

@@ -7,7 +7,7 @@
  *  \ingroup WasatchExpressions
  *  \class  DiffusiveVelocity 
  *  \author Amir Biglari
- *  \date	Aug, 2011
+ *  \date   Aug, 2011
  *
  *  \brief Calculates a simple diffusive velocity of the form
  *         \f$ V_i = -\Gamma \frac{\partial \phi}{\partial x_i} \f$ 
@@ -73,9 +73,9 @@ public:
      */
     Builder( const Expr::Tag phiTag, const Expr::Tag coefTag )
       : isConstCoef_( false ),
-        phit_(phiTag),
-        coeft_(coefTag),
-        coef_(0.0)
+        phit_ ( phiTag  ),
+        coeft_( coefTag ),
+        coef_ ( 0.0     )
     {}
 
     /**
@@ -89,8 +89,9 @@ public:
      */
     Builder( const Expr::Tag phiTag, const double coef )
       : isConstCoef_( true ),
-        phit_(phiTag),
-        coef_(coef)
+        phit_ ( phiTag      ),
+        coeft_( Expr::Tag() ),
+        coef_ ( coef        )
     {}
 
     Expr::ExpressionBase*
@@ -101,8 +102,8 @@ public:
       else               return new DiffusiveVelocity<GradT>( phit_, coeft_, id, reg );
     }
   private:
-        const bool isConstCoef_;
-    const Expr::Tag phit_,coeft_;
+    const bool isConstCoef_;
+    const Expr::Tag phit_, coeft_;
     const double coef_;
   };
 
@@ -119,8 +120,8 @@ public:
 /**
  *  \ingroup WasatchExpressions
  *  \class  DiffusiveVelocity2
- *  \author James C. Sutherland
- *  \date   June, 2010
+ *  \author Amir Biglari
+ *  \date   Aug, 2011
  *
  *  \brief Calculates a generic diffusive velocity, \f$V = -\Gamma
  *         \frac{\partial \phi}{\partial x}\f$, where \f$\Gamma\f$ is

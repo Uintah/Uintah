@@ -23,7 +23,7 @@ template<typename FieldT>
 class QMOM : public Expr::Expression<FieldT>
 {
   typedef std::vector<const FieldT*> FieldTVec;
-  FieldTVec knownMoments_;  
+  FieldTVec knownMoments_;
   const Expr::TagList knownMomentsTagList_;
   QMOM( const Expr::TagList knownMomentsTagList,
         const Expr::ExpressionID& id,
@@ -34,17 +34,17 @@ public:
   {
   public:
     Builder( const Expr::TagList knownMomentsTagList )
-    : knownmomentstaglist_(knownMomentsTagList)
+    : knownMomentsTagList_( knownMomentsTagList )
     {}
     
     Expr::ExpressionBase*
     build( const Expr::ExpressionID& id,
-          const Expr::ExpressionRegistry& reg ) const {
-      return new QMOM<FieldT>(knownmomentstaglist_, id, reg);
+           const Expr::ExpressionRegistry& reg ) const {
+      return new QMOM<FieldT>( knownMomentsTagList_, id, reg );
     }
 
   private:
-    const Expr::TagList knownmomentstaglist_;
+    const Expr::TagList knownMomentsTagList_;
   };
 
   ~QMOM();
@@ -70,9 +70,8 @@ QMOM( const Expr::TagList knownMomentsTaglist,
        const Expr::ExpressionID& id,
        const Expr::ExpressionRegistry& reg  )
   : Expr::Expression<FieldT>(id,reg),
-knownMomentsTagList_(knownMomentsTaglist)
-{
-}
+    knownMomentsTagList_( knownMomentsTaglist )
+{}
 
 //--------------------------------------------------------------------
 template<typename FieldT>
@@ -97,13 +96,11 @@ QMOM<FieldT>::
 bind_fields( const Expr::FieldManagerList& fml )
 {
   const Expr::FieldManager<FieldT>& fm = fml.field_manager<FieldT>();
-  /* add additional code here to bind any fields required by this expression */
-  // iterate over taglist
   knownMoments_.clear();
   for( Expr::TagList::const_iterator iMomTag=knownMomentsTagList_.begin();
        iMomTag!=knownMomentsTagList_.end();
        ++iMomTag ){
-    knownMoments_.push_back(&fm.field_ref(*iMomTag));
+    knownMoments_.push_back( &fm.field_ref(*iMomTag) );
   }      
 }
 
@@ -113,10 +110,7 @@ template< typename FieldT >
 void
 QMOM<FieldT>::
 bind_operators( const SpatialOps::OperatorDatabase& opDB )
-{
-  // bind operators as follows:
-  // op_ = opDB.retrieve_operator<OpT>();
-}
+{}
 
 //--------------------------------------------------------------------
 

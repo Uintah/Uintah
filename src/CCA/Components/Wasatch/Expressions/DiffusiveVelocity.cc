@@ -29,7 +29,7 @@ DiffusiveVelocity<GradT>::DiffusiveVelocity( const Expr::Tag phiTag,
   : Expr::Expression<VelT>( id, reg ),
     isConstCoef_( true ),
     phiTag_ ( phiTag ),
-    coefTag_( "NULL", Expr::INVALID_CONTEXT ),
+    coefTag_( Expr::Tag() ),
     coefVal_( coef )
 {}
 
@@ -175,15 +175,15 @@ evaluate()
 //
 #include <spatialops/structured/FVStaggered.h>
 
-#define DECLARE_DIFF_VELOCITY( VOL )								\
-  template class DiffusiveVelocity< SpatialOps::structured::BasicOpTypes<VOL>::GradX >; 		\
-  template class DiffusiveVelocity< SpatialOps::structured::BasicOpTypes<VOL>::GradY >;		\
-  template class DiffusiveVelocity< SpatialOps::structured::BasicOpTypes<VOL>::GradZ >;		\
-  template class DiffusiveVelocity2< SpatialOps::structured::BasicOpTypes<VOL>::GradX,		\
-                                     SpatialOps::structured::BasicOpTypes<VOL>::InterpC2FX >;       \
-  template class DiffusiveVelocity2< SpatialOps::structured::BasicOpTypes<VOL>::GradY,		\
-                                     SpatialOps::structured::BasicOpTypes<VOL>::InterpC2FY >;	\
-  template class DiffusiveVelocity2< SpatialOps::structured::BasicOpTypes<VOL>::GradZ,		\
+#define DECLARE_DIFF_VELOCITY( VOL )                                                            \
+  template class DiffusiveVelocity< SpatialOps::structured::BasicOpTypes<VOL>::GradX >;         \
+  template class DiffusiveVelocity< SpatialOps::structured::BasicOpTypes<VOL>::GradY >;	        \
+  template class DiffusiveVelocity< SpatialOps::structured::BasicOpTypes<VOL>::GradZ >;	        \
+  template class DiffusiveVelocity2< SpatialOps::structured::BasicOpTypes<VOL>::GradX,	        \
+                                     SpatialOps::structured::BasicOpTypes<VOL>::InterpC2FX >;   \
+  template class DiffusiveVelocity2< SpatialOps::structured::BasicOpTypes<VOL>::GradY,          \
+                                     SpatialOps::structured::BasicOpTypes<VOL>::InterpC2FY >;   \
+  template class DiffusiveVelocity2< SpatialOps::structured::BasicOpTypes<VOL>::GradZ,          \
                                      SpatialOps::structured::BasicOpTypes<VOL>::InterpC2FZ >;
 
 DECLARE_DIFF_VELOCITY( SpatialOps::structured::SVolField );
