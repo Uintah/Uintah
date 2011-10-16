@@ -42,22 +42,22 @@
  *  then the UpwindInterpolant will produce an X-Staggered face field.
  * 
  *  Based on this convention, the UpwindInterpolant class is templated
- *  on two types o fields: the \f$phi\f$ field type (PhiVolT) and its
- *  corresponding face field type (PhiFaceT).
+ *  on two types o fields: the \f$phi\f$ field type (SrcT) and its
+ *  corresponding face field type (DestT).
  */
 
-template < typename PhiVolT, typename PhiFaceT >
+template < typename SrcT, typename DestT >
 class UpwindInterpolant {
   
   // Here, the advectivevelocity has been already interpolated to the phi cell 
   // faces. The destination field should be of the same type as the advective 
   // velocity, i.e. a staggered, cell centered field.
-  const PhiFaceT* advectiveVelocity_; 
+  const DestT* advectiveVelocity_;
   
 public:
   
-  typedef PhiVolT  SrcFieldType;
-  typedef PhiFaceT DestFieldType;
+  typedef SrcT  SrcFieldType;
+  typedef DestT DestFieldType;
   
   /**
    *  \brief Constructor for upwind interpolant.
@@ -76,7 +76,7 @@ public:
    *         velocity field. This must be of the same type as the
    *         destination field, i.e. a face centered field.
    */
-  void set_advective_velocity( const PhiFaceT &theAdvectiveVelocity );
+  void set_advective_velocity( const DestT &theAdvectiveVelocity );
   
   /**
    *   \brief Sets the flux limiter type to be used by this interpolant.
@@ -94,7 +94,7 @@ public:
    *         hold the convective flux \f$\phi*u_i\f$ in the direction
    *         i. It will be stored on the staggered cell centers.
    */
-  void apply_to_field( const PhiVolT &src, PhiFaceT &dest );
+  void apply_to_field( const SrcT &src, DestT &dest );
   
 };
 
