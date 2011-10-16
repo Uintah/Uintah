@@ -65,15 +65,15 @@ apply_to_field( const SrcT& src, DestT& dest )
                          wdest.has_bc(0), wdest.has_bc(1), wdest.has_bc(2) );
 
 
-#   ifndef NDEBUG
+# ifndef NDEBUG
   assert( ws1.extent() == ws2.extent() && ws1.extent() == wd.extent() );
-#   endif
+# endif
 
   // build fields using these newly created windows to do the stencil operation.
   DestT    d( wd, &dest[0], ExternalStorage );
   DestT aVel( wd, &((*advectiveVelocity_)[0]), ExternalStorage );
-  SrcT   s1( ws1, &src[0], ExternalStorage );
-  SrcT   s2( ws2, &src[0], ExternalStorage );
+  SrcT    s1( ws1, &src[0], ExternalStorage );
+  SrcT    s2( ws2, &src[0], ExternalStorage );
 
   typename DestT::iterator      id  = d .begin();
   typename DestT::iterator      ide = d .end();

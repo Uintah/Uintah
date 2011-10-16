@@ -68,7 +68,7 @@ bind_fields( const Expr::FieldManagerList& fml )
 
   phi_ = &scalarFM.field_ref( phiTag_ );
   rho_ = &fml.template field_manager<SVolField>().field_ref( rhoTag_ );
-  if( !isConstCoef_    ) coef_ = &fluxFM.field_ref( coefTag_ );
+  if( !isConstCoef_ ) coef_ = &fluxFM.field_ref( coefTag_ );
 }
 
 //--------------------------------------------------------------------
@@ -78,7 +78,7 @@ void
 DiffusiveFlux<ScalarT, FluxT>::
 bind_operators( const SpatialOps::OperatorDatabase& opDB )
 {
-  gradOp_ = opDB.retrieve_operator<GradT>();
+  gradOp_          = opDB.retrieve_operator<GradT>();
   densityInterpOp_ = opDB.retrieve_operator<DensityInterpT>();
 }
 
@@ -118,7 +118,6 @@ DiffusiveFlux2( const Expr::Tag rhoTag,
                 const Expr::ExpressionID& id,
                 const Expr::ExpressionRegistry& reg  )
   : Expr::Expression<FluxT>(id,reg),
-//    isConstDensity_( rhoTag == Expr::Tag() ),
     rhoTag_ ( rhoTag  ),
     phiTag_ ( phiTag  ),
     coefTag_( coefTag )

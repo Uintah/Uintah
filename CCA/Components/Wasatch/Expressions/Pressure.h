@@ -1,8 +1,5 @@
 #ifndef Pressure_Expr_h
 #define Pressure_Expr_h
-//-- SpatialOps includes --//
-#include <spatialops/structured/FVStaggered.h>
-#include <spatialops/structured/FVStaggeredOperatorTypes.h>
 
 //-- ExprLib Includes --//
 #include <expression/Expr_Expression.h>
@@ -67,18 +64,17 @@ class Pressure
   const ZVolField* fz_;
 
   // build interpolant operators
-  typedef OperatorTypeBuilder< Interpolant, XVolField, SpatialOps::structured::SSurfXField >::type  fxInterp;
-  typedef OperatorTypeBuilder< Interpolant, YVolField, SpatialOps::structured::SSurfYField >::type  fyInterp;
-  typedef OperatorTypeBuilder< Interpolant, ZVolField, SpatialOps::structured::SSurfZField >::type  fzInterp;
-  const fxInterp* interpX_;
-  const fyInterp* interpY_;
-  const fzInterp* interpZ_;
+  typedef OperatorTypeBuilder< Interpolant, XVolField, SpatialOps::structured::SSurfXField >::type  FxInterp;
+  typedef OperatorTypeBuilder< Interpolant, YVolField, SpatialOps::structured::SSurfYField >::type  FyInterp;
+  typedef OperatorTypeBuilder< Interpolant, ZVolField, SpatialOps::structured::SSurfZField >::type  FzInterp;
+  const FxInterp* interpX_;
+  const FyInterp* interpY_;
+  const FzInterp* interpZ_;
 
   // divergence operators
-  typedef SpatialOps::structured::BasicOpTypes<SVolField>  OpTypes;
-  typedef OpTypes::DivX  DivX;
-  typedef OpTypes::DivY  DivY;
-  typedef OpTypes::DivZ  DivZ;
+  typedef SpatialOps::structured::BasicOpTypes<SVolField>::DivX  DivX;
+  typedef SpatialOps::structured::BasicOpTypes<SVolField>::DivY  DivY;
+  typedef SpatialOps::structured::BasicOpTypes<SVolField>::DivZ  DivZ;
   const DivX* divXOp_;
   const DivY* divYOp_;
   const DivZ* divZOp_;  
@@ -103,11 +99,11 @@ public:
     const Uintah::SolverParameters& sparams_;
     Uintah::SolverInterface& solver_;
   public:
-    Builder( Expr::Tag& fxtag,
-             Expr::Tag& fytag,
-             Expr::Tag& fztag,
+    Builder( const Expr::Tag& fxtag,
+             const Expr::Tag& fytag,
+             const Expr::Tag& fztag,
              const Expr::Tag& d2rhodt2tag,
-             Uintah::SolverParameters& sparams,
+             const Uintah::SolverParameters& sparams,
              Uintah::SolverInterface& solver );
 
     Expr::ExpressionBase*
@@ -125,7 +121,7 @@ public:
   void schedule_solver( const Uintah::LevelP& level,
                         Uintah::SchedulerP sched,
                         const Uintah::MaterialSet* const materials,
-                        int RKStage);
+                        const int RKStage );
 
   /**
    *  \brief allows Wasatch::TaskInterface to reach in and provide
@@ -135,9 +131,9 @@ public:
   void declare_uintah_vars( Uintah::Task& task,
                             const Uintah::PatchSubset* const patches,
                             const Uintah::MaterialSubset* const materials,
-                           int RKStage);
+                            const int RKStage );
 
-  void set_patch(const Uintah::Patch* const patch) {patch_ = const_cast<Uintah::Patch*> (patch);}
+  void set_patch( const Uintah::Patch* const patch ){ patch_ = const_cast<Uintah::Patch*> (patch); }
 
   /**
    *  \brief allows Wasatch::TaskInterface to reach in and provide
@@ -154,11 +150,11 @@ public:
   void bind_uintah_vars( Uintah::DataWarehouse* const dw,
                          const Uintah::Patch* const patch,
                          const int material,
-                        int RKStage);
+                         const int RKStage );
   /**
    * \brief Calculates pressure coefficient matrix.
    */
-  void setup_matrix(const Uintah::Patch* const patch);
+  void setup_matrix( const Uintah::Patch* const patch );
 
   //Uintah::CCVariable<Uintah::Stencil7> pressure_matrix(){ return matrix_ ;}
 
