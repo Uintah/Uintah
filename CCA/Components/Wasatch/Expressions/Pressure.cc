@@ -241,7 +241,7 @@ Pressure::evaluate()
   SVolField& rhs = *results[1];
   rhs = 0.0;
   //
-  set_pressure_bc((this->names())[0],matrix_, pressure, rhs, patch_);
+  // set_pressure_bc((this->names())[0],matrix_, pressure, rhs, patch_);
   //
   namespace SS = SpatialOps::structured;
   const SS::MemoryWindow& w = rhs.window_with_ghost();

@@ -17,7 +17,7 @@ PrimVar( const Expr::Tag rhoPhiTag,
          const Expr::ExpressionRegistry& reg  )
   : Expr::Expression<FieldT>(id,reg),
     rhophit_( rhoPhiTag ),
-    rhot_( rhoTag )
+    rhot_   ( rhoTag    )
 {}
 
 template< typename FieldT >
@@ -28,7 +28,7 @@ PrimVar( const Expr::Tag rhoPhiTag,
          const Expr::ExpressionRegistry& reg  )
   : Expr::Expression<FieldT>(id,reg),
     rhophit_( rhoPhiTag ),
-    rhot_( rhoTag )
+    rhot_   ( rhoTag    )
 {}
 
 //--------------------------------------------------------------------
@@ -94,7 +94,6 @@ void
 PrimVar<FieldT,DensT>::
 bind_operators( const SpatialOps::OperatorDatabase& opDB )
 {
-  // bind operators as follows:
   interpOp_ = opDB.retrieve_operator<InterpT>();
 }
 

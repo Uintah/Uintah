@@ -30,21 +30,21 @@
 
 SRCDIR   := CCA/Components/Wasatch/Expressions
 
-SRCS     +=                             \
+SRCS     +=                         \
 	$(SRCDIR)/BasicExprBuilder.cc	\
-	$(SRCDIR)/ConvectiveFlux.cc	\
-	$(SRCDIR)/DiffusiveFlux.cc	\
+	$(SRCDIR)/ConvectiveFlux.cc	    \
+	$(SRCDIR)/DiffusiveFlux.cc	    \
 	$(SRCDIR)/DiffusiveVelocity.cc	\
-	$(SRCDIR)/Dilatation.cc		\
+	$(SRCDIR)/Dilatation.cc			\
 	$(SRCDIR)/MomentumPartialRHS.cc \
-	$(SRCDIR)/MomentumRHS.cc 	\
-	$(SRCDIR)/PrimVar.cc		\
-	$(SRCDIR)/Multiplier.cc		\
-	$(SRCDIR)/ScalarRHS.cc		\
-  $(SRCDIR)/ScalabilityTestSrc.cc		\
-	$(SRCDIR)/SetCurrentTime.cc	\
-	$(SRCDIR)/Stress.cc \
-  $(SRCDIR)/Pressure.cc
+	$(SRCDIR)/MomentumRHS.cc 		\
+	$(SRCDIR)/PrimVar.cc			\
+	$(SRCDIR)/Multiplier.cc			\
+	$(SRCDIR)/ScalarRHS.cc			\
+	$(SRCDIR)/ScalabilityTestSrc.cc	\
+	$(SRCDIR)/SetCurrentTime.cc		\
+	$(SRCDIR)/Stress.cc 			\
+	$(SRCDIR)/Pressure.cc
 
 SUBDIRS := \
         $(SRCDIR)/MMS \
