@@ -87,28 +87,73 @@ namespace Wasatch{
    */
   template<typename FieldT> struct SelectUintahFieldType;
 
-#define DECLARE_SELECT_FIELD_TYPE_STRUCT( VOLT )                        \
-  template<> struct SelectUintahFieldType< VOLT >{                      \
-    typedef Uintah::CCVariable     <double>  type;                      \
-    typedef Uintah::constCCVariable<double>  const_type;                \
-  };                                                                    \
-  template<> struct SelectUintahFieldType< SpatialOps::structured::FaceTypes<VOLT>::XFace >{ \
-    typedef Uintah::SFCXVariable     <double>  type;                    \
-    typedef Uintah::constSFCXVariable<double>  const_type;              \
-  };                                                                    \
-  template<> struct SelectUintahFieldType< SpatialOps::structured::FaceTypes<VOLT>::YFace >{ \
-    typedef Uintah::SFCYVariable     <double>  type;                    \
-    typedef Uintah::constSFCYVariable<double>  const_type;              \
-  };                                                                    \
-  template<> struct SelectUintahFieldType< SpatialOps::structured::FaceTypes<VOLT>::ZFace >{ \
-    typedef Uintah::SFCZVariable     <double>  type;                    \
-    typedef Uintah::constSFCZVariable<double>  const_type;              \
+  template<> struct SelectUintahFieldType<SpatialOps::structured::SVolField>{
+    typedef Uintah::     CCVariable<double>  type;
+    typedef Uintah::constCCVariable<double>  const_type;
   };
-  
-  DECLARE_SELECT_FIELD_TYPE_STRUCT( SpatialOps::structured::SVolField );
-  DECLARE_SELECT_FIELD_TYPE_STRUCT( SpatialOps::structured::XVolField );
-  DECLARE_SELECT_FIELD_TYPE_STRUCT( SpatialOps::structured::YVolField );
-  DECLARE_SELECT_FIELD_TYPE_STRUCT( SpatialOps::structured::ZVolField );
+  template<> struct SelectUintahFieldType<SpatialOps::structured::SSurfXField>{
+    typedef Uintah::     SFCXVariable<double>  type;
+    typedef Uintah::constSFCXVariable<double>  const_type;
+  };
+  template<> struct SelectUintahFieldType<SpatialOps::structured::SSurfYField>{
+    typedef Uintah::     SFCYVariable<double>  type;
+    typedef Uintah::constSFCYVariable<double>  const_type;
+  };
+  template<> struct SelectUintahFieldType<SpatialOps::structured::SSurfZField>{
+    typedef Uintah::     SFCZVariable<double>  type;
+    typedef Uintah::constSFCZVariable<double>  const_type;
+  };
+
+  template<> struct SelectUintahFieldType<SpatialOps::structured::XVolField>{
+    typedef Uintah::     SFCXVariable<double>  type;
+    typedef Uintah::constSFCXVariable<double>  const_type;
+  };
+  template<> struct SelectUintahFieldType<SpatialOps::structured::XSurfXField>{
+    typedef Uintah::     CCVariable<double>  type;
+    typedef Uintah::constCCVariable<double>  const_type;
+  };
+  template<> struct SelectUintahFieldType<SpatialOps::structured::XSurfYField>{
+    typedef Uintah::     SFCYVariable<double>  type;
+    typedef Uintah::constSFCYVariable<double>  const_type;
+  };
+  template<> struct SelectUintahFieldType<SpatialOps::structured::XSurfZField>{
+    typedef Uintah::     SFCZVariable<double>  type;
+    typedef Uintah::constSFCZVariable<double>  const_type;
+  };
+
+  template<> struct SelectUintahFieldType<SpatialOps::structured::YVolField>{
+     typedef Uintah::     SFCYVariable<double>  type;
+     typedef Uintah::constSFCYVariable<double>  const_type;
+   };
+   template<> struct SelectUintahFieldType<SpatialOps::structured::YSurfXField>{
+     typedef Uintah::     SFCXVariable<double>  type;
+     typedef Uintah::constSFCXVariable<double>  const_type;
+   };
+   template<> struct SelectUintahFieldType<SpatialOps::structured::YSurfYField>{
+     typedef Uintah::     CCVariable<double>  type;
+     typedef Uintah::constCCVariable<double>  const_type;
+   };
+   template<> struct SelectUintahFieldType<SpatialOps::structured::YSurfZField>{
+     typedef Uintah::     SFCZVariable<double>  type;
+     typedef Uintah::constSFCZVariable<double>  const_type;
+   };
+
+   template<> struct SelectUintahFieldType<SpatialOps::structured::ZVolField>{
+     typedef Uintah::     SFCZVariable<double>  type;
+     typedef Uintah::constSFCZVariable<double>  const_type;
+   };
+   template<> struct SelectUintahFieldType<SpatialOps::structured::ZSurfXField>{
+     typedef Uintah::     SFCXVariable<double>  type;
+     typedef Uintah::constSFCXVariable<double>  const_type;
+   };
+   template<> struct SelectUintahFieldType<SpatialOps::structured::ZSurfYField>{
+     typedef Uintah::     SFCYVariable<double>  type;
+     typedef Uintah::constSFCYVariable<double>  const_type;
+   };
+   template<> struct SelectUintahFieldType<SpatialOps::structured::ZSurfZField>{
+     typedef Uintah::     CCVariable<double>  type;
+     typedef Uintah::constCCVariable<double>  const_type;
+   };
 
   /**
    *  \ingroup WasatchFields

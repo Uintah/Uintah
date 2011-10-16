@@ -65,33 +65,6 @@ namespace Wasatch{
         stagLoc_( stagLoc )
     {}
     
-    /**
-     *  \brief The base class constructor registers the expression
-     *         associated with this transport equation
-     *
-     *  \param exprFactory The ExpressionFactory that manages creation
-     *         of expressions.
-     *
-     *  \param solnVarName The name of the solution variable that this
-     *         TransportEquation describes
-     *
-     *  \param solnVarRHSBuilder The ExpressionBuilder for the
-     *         expression that will calculate the RHS for this
-     *         TransportEquation.
-     *
-     *  \param rhsExprTag The Expr::Tag for the RHS expression
-     *         (corresponding to the builder supplied in the previous
-     *         argument)
-     */
-    TransportEquation( Expr::ExpressionFactory& exprFactory,
-                       const std::string solnVarName,
-                       const Expr::ExpressionBuilder* const solnVarRHSBuilder,
-                       const Expr::Tag rhsExprTag )
-      : solnVarName_( solnVarName ),
-        rhsExprID_( exprFactory.register_expression(rhsExprTag,solnVarRHSBuilder) ),
-        stagLoc_( NODIR )
-    {}
-    
     virtual ~TransportEquation(){}
     
     /**
