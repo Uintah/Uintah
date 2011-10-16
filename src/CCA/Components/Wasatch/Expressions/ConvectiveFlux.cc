@@ -6,7 +6,7 @@
 //-- SpatialOps includes --//
 #include <spatialops/OperatorDatabase.h>
 #include <spatialops/structured/SpatialFieldStore.h>
-
+#include <spatialops/FieldExpressions.h>
 
 //------------------------------------------------------------------
 
@@ -155,6 +155,7 @@ template< typename PhiInterpT, typename VelInterpT >
 void
 ConvectiveFluxLimiter<PhiInterpT, VelInterpT>::evaluate()
 {
+  using namespace SpatialOps;
   PhiFaceT& result = this->value();
   
   // note that PhiFaceT and VelFaceT should on the same mesh location
@@ -167,7 +168,7 @@ ConvectiveFluxLimiter<PhiInterpT, VelInterpT>::evaluate()
   phiInterpOp_->set_flux_limiter_type( limiterType_ );
   phiInterpOp_->apply_to_field( *phi_, result );
   
-  result *= *velInterp;
+  result <<= result * *velInterp;
 }
 
 //--------------------------------------------------------------------

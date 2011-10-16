@@ -87,7 +87,7 @@ evaluate()
 
   gradOp_->apply_to_field( *phi_, result );  // V = grad(phi)
   if( isConstCoef_ ){
-    result *= -coefVal_;  // V = -gamma * grad(phi)
+    result <<= -result * coefVal_;  // V = -gamma * grad(phi)
   }
   else{
     result <<= -result * *coef_;  // V =  - gamma * grad(phi)

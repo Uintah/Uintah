@@ -95,17 +95,15 @@ evaluate()
   gradOp_->apply_to_field( *phi_, result );  // J = grad(phi)
   
   if( isConstCoef_ ){
-    result *= -coefVal_;  // J = - gamma * grad(phi)
+    result <<= -result * coefVal_;  // J = - gamma * grad(phi)
   }
   else{
     result <<= -result * *coef_;  // J =  - gamma * grad(phi)
   }
   
-//  if (!isConstDensity_ ) {
-    SpatFldPtr<FluxT> interpRho = SpatialFieldStore<FluxT>::self().get(result);
-    densityInterpOp_->apply_to_field( *rho_, *interpRho );
-    result <<= result * *interpRho;               // J = - rho * gamma * grad(phi)
-  //}
+  SpatFldPtr<FluxT> interpRho = SpatialFieldStore<FluxT>::self().get(result);
+  densityInterpOp_->apply_to_field( *rho_, *interpRho );
+  result <<= result * *interpRho;               // J = - rho * gamma * grad(phi)
 }
 
 
@@ -185,10 +183,9 @@ evaluate()
   gradOp_  ->apply_to_field( *phi_, *fluxTmp );  // J = grad(phi)
   interpOp_->apply_to_field( *coef_, result  );
   result <<= -result * *fluxTmp;                 // J = - gamma * grad(phi)
-//  if (!isConstDensity_) {
-    densityInterpOp_->apply_to_field( *rho_, *fluxTmp );
-    result <<= result * *fluxTmp;               // J = - rho * gamma * grad(phi)
-//  }
+
+  densityInterpOp_->apply_to_field( *rho_, *fluxTmp );
+  result <<= result * *fluxTmp;               // J = - rho * gamma * grad(phi)
 }
 
 //--------------------------------------------------------------------

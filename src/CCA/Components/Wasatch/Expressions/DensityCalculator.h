@@ -117,10 +117,10 @@ DensityCalculator( const BSpline* const spline,
                   const Expr::ExpressionID& id,
                   const Expr::ExpressionRegistry& reg  )
 : Expr::Expression<FieldT>(id,reg),
-rhoEtaTags_       ( RhoEtaTags        ),
-RhoetaIncEtaNames_( RhoetaIncEtaNames ),
-OrderedEtaTags_   ( OrderedEtaTags    ),
-evaluator_        ( spline            )
+  rhoEtaTags_       ( RhoEtaTags        ),
+  RhoetaIncEtaNames_( RhoetaIncEtaNames ),
+  OrderedEtaTags_   ( OrderedEtaTags    ),
+  evaluator_        ( spline            )
 {
   ReIindex.clear();
   int counter=0;

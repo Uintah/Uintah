@@ -161,7 +161,6 @@ class DiffusiveFlux2
   typedef typename SpatialOps::structured::OperatorTypeBuilder<SpatialOps::Interpolant,ScalarT,  FluxT>::type  InterpT;
   typedef typename SpatialOps::structured::OperatorTypeBuilder<SpatialOps::Interpolant,SVolField,FluxT>::type  DensityInterpT;
   
-//  const bool isConstDensity_;
   const Expr::Tag phiTag_, coefTag_, rhoTag_;
 
   const GradT* gradOp_;
@@ -201,8 +200,7 @@ public:
     Builder( const Expr::Tag phiTag, 
              const Expr::Tag coefTag,
              const Expr::Tag rhoTag = Expr::Tag() )
-    : //isConstDensity_(rhoTag == Expr::Tag()),
-      rhot_(rhoTag), 
+    : rhot_(rhoTag),
       phit_(phiTag), 
       coeft_( coefTag )
     {}
@@ -213,7 +211,6 @@ public:
       return new DiffusiveFlux2<ScalarT,FluxT>( rhot_, phit_, coeft_, id, reg );
     }
   private:
-//    const bool isConstDensity_;
     const Expr::Tag phit_,coeft_,rhot_;
   };
 
