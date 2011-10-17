@@ -142,9 +142,7 @@ public:
              SchedulerP& sched,
              const PatchSet* patches,
              const MaterialSet* matls,
-             const TimeIntegratorLabel* timelabels,
-             bool d_EKTCorrection,
-             bool doing_EKT_now);
+             const TimeIntegratorLabel* timelabels);
 
   ///////////////////////////////////////////////////////////////////////
   // Schedule Build of linearized matrix
@@ -152,18 +150,14 @@ public:
                                SchedulerP&, 
                                const PatchSet* patches,
                                const MaterialSet* matls,
-                               const TimeIntegratorLabel* timelabels,
-                               bool d_EKTCorrection,
-                               bool doing_EKT_now);
+                               const TimeIntegratorLabel* timelabels);
 
   ///////////////////////////////////////////////////////////////////////
   // Schedule Linear Solve for Enthalpy[index]
   void sched_enthalpyLinearSolve(SchedulerP&, 
                                  const PatchSet* patches,
                                  const MaterialSet* matls,
-                                 const TimeIntegratorLabel* timelabels,
-                                 bool d_EKTCorrection,
-                                 bool doing_EKT_now);
+                                 const TimeIntegratorLabel* timelabels);
 
   inline void setMMS(bool doMMS) {
     d_doMMS=doMMS;
@@ -188,9 +182,7 @@ private:
                          const MaterialSubset* /*matls*/,
                          DataWarehouse* old_dw,
                          DataWarehouse* new_dw,
-                         const TimeIntegratorLabel* timelabels,
-                         bool d_EKTCorrection,
-                         bool doing_EKT_now);
+                         const TimeIntegratorLabel* timelabels);
 
   ///////////////////////////////////////////////////////////////////////
   // Actually Solver the Linear System for Enthalpy[index]
@@ -201,9 +193,7 @@ private:
                            const MaterialSubset* /*matls*/,
                            DataWarehouse* old_dw,
                            DataWarehouse* new_dw,
-                           const TimeIntegratorLabel* timelabels,
-                           bool d_EKTCorrection,
-                           bool doing_EKT_now);
+                           const TimeIntegratorLabel* timelabels);
 
 private:
   // const VarLabel* (required)

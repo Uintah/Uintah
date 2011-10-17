@@ -268,7 +268,6 @@ ArchesLabel::ArchesLabel()
 
   // enthalpy labels
   d_enthalpySPLabel    =  VarLabel::create("enthalpySP",    CC_double);
-  d_enthalpyEKTLabel   =  VarLabel::create("enthalpyEKT",   CC_double);
   d_enthalpyTempLabel  =  VarLabel::create("enthalpyTemp",  CC_double);
   d_enthalpyFELabel    =  VarLabel::create("enthalpyFE",    CC_double);
   d_enthalpyRXNLabel   =  VarLabel::create("enthalpyRXN",   CC_double);
@@ -648,7 +647,6 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_divConstraintLabel); 
   VarLabel::destroy(d_pressurePredLabel);
   VarLabel::destroy(d_enthalpySPLabel);
-  VarLabel::destroy(d_enthalpyEKTLabel);
   VarLabel::destroy(d_enthalpyTempLabel);
   VarLabel::destroy(d_enthalpyFELabel);
   VarLabel::destroy(d_enthalpyRXNLabel);

@@ -311,7 +311,6 @@ namespace Uintah {
 
       // for enthalpy equation
       const VarLabel* d_enthalpySPLabel;
-      const VarLabel* d_enthalpyEKTLabel;
       const VarLabel* d_enthalpyTempLabel;
       const VarLabel* d_enthalpyFELabel;
       
