@@ -440,7 +440,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
                                  
       d_momSolver->solve(sched, patches, matls,
                        d_timeIntegratorLabels[curr_level],
-                       false, doing_EKT_now);
+                       false );
       doing_EKT_now = false;
     }
 
@@ -554,8 +554,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     // linearizes and solves pressure eqn
     // first computes, hatted velocities and then computes
     // the pressure poisson equation
-    d_momSolver->solveVelHat(level, sched, d_timeIntegratorLabels[curr_level],
-                             d_EKTCorrection);
+    d_momSolver->solveVelHat(level, sched, d_timeIntegratorLabels[curr_level] );
 
     for (EqnFactory::EqnMap::iterator iter = scalar_eqns.begin(); iter != scalar_eqns.end(); iter++){
       EqnBase* eqn = iter->second; 
@@ -609,8 +608,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
                               true);
       //sched_syncRhoF(sched, patches, matls, d_timeIntegratorLabels[curr_level]);
       d_momSolver->sched_averageRKHatVelocities(sched, patches, matls,
-                                            d_timeIntegratorLabels[curr_level],
-                                            d_EKTCorrection);
+                                            d_timeIntegratorLabels[curr_level] );
     } 
 
     d_props->sched_computeDrhodt(sched, patches, matls,
@@ -622,8 +620,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
   
     // project velocities using the projection step
     d_momSolver->solve(sched, patches, matls,
-                       d_timeIntegratorLabels[curr_level],
-                       false, false);
+                       d_timeIntegratorLabels[curr_level], false);
 
 
 
@@ -636,7 +633,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
                            
       d_momSolver->solve(sched, patches, matls,
                        d_timeIntegratorLabels[curr_level],
-                       d_extraProjection, false);
+                       d_extraProjection);
     }
 
     //if (curr_level == numTimeIntegratorLevels - 1) {

@@ -141,10 +141,6 @@ ArchesLabel::ArchesLabel()
   d_uVelocitySPBCLabel = VarLabel::create("uVelocitySPBC", SFCX_double);
   d_vVelocitySPBCLabel = VarLabel::create("vVelocitySPBC", SFCY_double);
   d_wVelocitySPBCLabel = VarLabel::create("wVelocitySPBC", SFCZ_double);
-
-  d_uVelocityEKTLabel = VarLabel::create("uVelocityEKT", SFCX_double);
-  d_vVelocityEKTLabel = VarLabel::create("vVelocityEKT", SFCY_double);
-  d_wVelocityEKTLabel = VarLabel::create("wVelocityEKT", SFCZ_double);
   
   // labels for ref density and pressure
   d_refDensity_label      =  VarLabel::create("refDensityLabel",      sum_variable);
@@ -569,9 +565,6 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_uVelocitySPBCLabel);
   VarLabel::destroy(d_vVelocitySPBCLabel);
   VarLabel::destroy(d_wVelocitySPBCLabel);
-  VarLabel::destroy(d_uVelocityEKTLabel);
-  VarLabel::destroy(d_vVelocityEKTLabel);
-  VarLabel::destroy(d_wVelocityEKTLabel);
   VarLabel::destroy(d_scalarSPLabel);
   VarLabel::destroy(d_scalarEKTLabel);
   VarLabel::destroy(d_scalarTempLabel);

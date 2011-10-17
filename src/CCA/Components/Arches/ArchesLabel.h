@@ -143,10 +143,6 @@ namespace Uintah {
       // W-Velocity Labels
       const VarLabel* d_wVelocitySPBCLabel;
 
-      const VarLabel* d_uVelocityEKTLabel;
-      const VarLabel* d_vVelocityEKTLabel;
-      const VarLabel* d_wVelocityEKTLabel;
-
       // Scalar Labels
       //computed for old_dw in paramInit
       // computed for new_dw in setInitialGuess
