@@ -117,16 +117,115 @@ void FirstOrderAdvectorGPU::inFluxOutFluxVolume(
 {
   Vector dx = patch->dCell();
   double vol = dx.x()*dx.y()*dx.z();
-  double delY_top, delY_bottom,delX_right, delX_left, delZ_front, delZ_back;
-  double delX = dx.x(), delY = dx.y(), delZ = dx.z();
+  //double delY_top, delY_bottom,delX_right, delX_left, delZ_front, delZ_back;
+  //double delX = dx.x(), delY = dx.y(), delZ = dx.z();
 
   //__________________________________
   //  At patch boundaries you need to extend
   // the computational footprint by one cell in ghostCells  
   bool error = false;
   
+  // device and host memory pointers
   
-  // HERE GOES THE CALL TO THE KERNEL //
+  // find the "best" device for cudaSetDevice()
+  int num_devices, device;
+  cudaGetDeviceCount(&num_devices);
+  if (num_devices > 1) {
+    int max_multiprocessors = 0, max_device = 0;
+    for (device = 0; device < num_devices; device++) {
+      cudaDeviceProp properties;
+      cudaGetDeviceProperties(&properties, device);
+      if (max_multiprocessors < properties.multiProcessorCount) {
+        max_multiprocessors = properties.multiProcessorCount;
+        max_device = device;
+      }
+    }
+    cudaSetDevice(max_device);
+  }
+  
+  
+  IntVector l      = patch->getNodeLowIndex();
+  IntVector h      = patch->getNodeHighIndex();
+  IntVector s      = h-l;
+  int size         = s.x()*s.y()*s.z()*sizeof(double);
+  
+  // device pointers
+  double *uuvel_FC;
+  double *vvvel_FC;
+  double *wwvel_FC;
+  double **OFS;
+  double hostUvel_FC = uvel_FC.getWindow()->getData()->getPointer();
+  double hostVvel_FC = vvel_FC.getWindow()->getData()->getPointer();
+  double hostWvel_FC = wvel_FC.getWindow()->getData()->getPointer();
+  double hostOFS     = d_OFS.getWindow()->getData()->getPointer();
+  
+  // Memory copies host->device
+  cudaMalloc(&uuvel_FC, size);
+  cudaMalloc(&vvvel_FC, size);
+  cudaMalloc(&wwvel_FC, size);
+  cudaMalloc(&OFS,    6*size);
+  
+  cudaMemcpy(uuvel_FC, hostUvel_FC,
+             size,
+             cudaMemcpyHostToDevice);
+  cudaMemcpy(vvvel_FC, hosstVvel_FC,
+             size,
+             cudaMemcpyHostToDevice);
+  cudaMemcpy(wwvel_FC, hostWvel_FC,
+             size,
+             cudaMemcpyHostToDevice);
+  cudaMemcpy(OFS, hostOFS,
+             6*size,
+             cudaMemcpyHostToDevice);
+  
+  
+  // ADD PINNED FOR THE "error" VARIABLE!!!
+  
+  // set up domian specs
+  uint3 domainSize  = make_uint3(s.x(),  s.y(),  s.z());
+  uint3 domainLower = make_uint3(l.x(),  l.y(),  l.z());
+  uint3 cellSizes   = make_uint3(dx.x(), dx.y(), dx.z());
+  int ghostLayers   = 0;  // default for FirstOrderAdvector
+  
+  // thread logistics
+  int totalBlocks = size / (sizeof(double) * xdim * ydim * zdim);
+  if (size % (totalBlocks) != 0) {
+      totalBlocks++;
+  }
+  
+  
+  // Kernel invocation
+  advectSlabsKernel<<< totalBlocks, threadsPerBlock >>>(domainSize, 
+                                                        domainLower, 
+                                                        cellSizes, 
+                                                        ghostLayers, 
+                                                        delT, 
+                                                        uuvel_FC, 
+                                                        vvvel_FC, 
+                                                        wwvel_FC, 
+                                                        OFS);
+  cudaDeviceSynchronize();
+  
+  // Memory copies device->host
+  cudaMemcpy(hostUvel_FC, uuvel_FC, 
+             size,
+             cudaMemcpyDeviceToHost);
+  cudaMemcpy(hosstVvel_FC, vvvel_FC, 
+             size,
+             cudaMemcpyDeviceToHost);
+  cudaMemcpy(hostWvel_FC, wwvel_FC, 
+             size,
+             cudaMemcpyDeviceToHost);
+  cudaMemcpy(hostOFS, OFS,
+             6*size,
+             cudaMemcpyDeviceToHost);
+  
+  
+  // Free up memory
+  cudaFree(uuvel_FC);
+  cudaFree(vvvel_FC);
+  cudaFree(wwvel_FC);
+  cudaFree(OFS);
   
   /*
   int NGC =1;  // number of ghostCells
@@ -542,7 +641,7 @@ __global__ void FirstOrderAdvectorGPU::inFluxOutFluxVolumeKernel(uint3 domainSiz
                                                                  uint3 domainLower,
                                                                  uint3 cellSizes,
                                                                  int ghostLayers,
-                                                                 int delt,
+                                                                 double delt,
                                                                  double *uvel_FC, 
                                                                  double *vvel_FC, 
                                                                  double *wvel_FC,

@@ -144,7 +144,7 @@ namespace Uintah {
                                               uint3 domainLower,
                                               uint3 cellSizes,
                                               int ghostLayers,
-                                              int delt,
+                                              double delt,
                                               double *uvel_FC, 
                                               double *vvel_FC, 
                                               double *wvel_FC,
