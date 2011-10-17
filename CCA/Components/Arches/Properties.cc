@@ -371,12 +371,7 @@ Properties::sched_reComputeProps(SchedulerP& sched,
   Ghost::GhostType  gn = Ghost::None;
   
   tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, gn);
-  
-  if (doing_EKT_now){
-    tsk->modifies(d_lab->d_scalarEKTLabel);
-  }else{
-    tsk->modifies(d_lab->d_scalarSPLabel);
-  }
+  tsk->modifies(d_lab->d_scalarSPLabel);
 
   if (d_calcVariance){
     tsk->requires(Task::NewDW, d_lab->d_normalizedScalarVarLabel, gn, 0);
@@ -674,13 +669,7 @@ Properties::reComputeProps(const ProcessorGroup* pc,
       new_dw->get(cellType, d_lab->d_cellTypeLabel,   indx, patch, gn, 0);
     }
 
-    if (doing_EKT_now) {
-      new_dw->getModifiable(scalar, d_lab->d_scalarEKTLabel, indx, patch);
-      std::cout << "DANGER!  Extra scalars not supported for EKT yet" << endl;
-    } else {
-        new_dw->getModifiable(scalar, d_lab->d_scalarSPLabel, indx, patch);
-    }
-
+    new_dw->getModifiable(scalar, d_lab->d_scalarSPLabel, indx, patch);
 
     if (d_calcVariance) {
       new_dw->get(normalizedScalarVar, d_lab->d_normalizedScalarVarLabel, indx, patch, gn, 0);

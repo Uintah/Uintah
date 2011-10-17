@@ -156,15 +156,12 @@ public:
       virtual void sched_computeScalarVariance(SchedulerP&,
                                                const PatchSet* patches,
                                                const MaterialSet* matls,
-                                               const TimeIntegratorLabel* timelabels,
-                                               bool d_EKTCorrection,
-                                               bool doing_EKT_now) = 0;
+                                               const TimeIntegratorLabel* timelabels) = 0;
+                                               
       virtual void sched_computeScalarDissipation(SchedulerP&,
                                                   const PatchSet* patches,
                                                   const MaterialSet* matls,
-                                                  const TimeIntegratorLabel* timelabels,
-                                                  bool d_EKTCorrection,
-                                                  bool doing_EKT_now) = 0;
+                                                  const TimeIntegratorLabel* timelabels) = 0;
  protected:
 
       const ArchesLabel* d_lab;

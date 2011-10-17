@@ -150,7 +150,6 @@ ArchesLabel::ArchesLabel()
 
   // Scalar 
   d_scalarSPLabel    =  VarLabel::create("scalarSP",    CC_double);
-  d_scalarEKTLabel   =  VarLabel::create("scalarEKT",   CC_double);
   d_scalarTempLabel  =  VarLabel::create("scalarTemp",  CC_double);
   d_scalarFELabel    =  VarLabel::create("scalarFE",    CC_double);
 
@@ -565,7 +564,6 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_vVelocitySPBCLabel);
   VarLabel::destroy(d_wVelocitySPBCLabel);
   VarLabel::destroy(d_scalarSPLabel);
-  VarLabel::destroy(d_scalarEKTLabel);
   VarLabel::destroy(d_scalarTempLabel);
   VarLabel::destroy(d_scalarFELabel);
   VarLabel::destroy(d_scalarVarSPLabel);

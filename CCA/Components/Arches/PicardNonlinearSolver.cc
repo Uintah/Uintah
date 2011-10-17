@@ -464,13 +464,11 @@ PicardNonlinearSolver::recursiveSolver(const ProcessorGroup* pg,
 
   if (d_calcVariance) {
     d_turbModel->sched_computeScalarVariance(subsched, local_patches, local_matls,
-                                             d_timeIntegratorLabels[curr_level], 
-                                                                    false, false);
+                                             d_timeIntegratorLabels[curr_level]);
                                                                     
     d_turbModel->sched_computeScalarDissipation(
                                               subsched, local_patches, local_matls,
-                                              d_timeIntegratorLabels[curr_level], 
-                                                                    false, false);
+                                              d_timeIntegratorLabels[curr_level]);
   }
 
   d_props->sched_reComputeProps(             subsched, local_patches, local_matls,
@@ -504,13 +502,11 @@ PicardNonlinearSolver::recursiveSolver(const ProcessorGroup* pg,
     if (d_calcVariance) {
       d_turbModel->sched_computeScalarVariance(
                                              subsched, local_patches, local_matls,
-                                             d_timeIntegratorLabels[curr_level],
-                                                                    false, false);
+                                             d_timeIntegratorLabels[curr_level]);
                                                                     
       d_turbModel->sched_computeScalarDissipation(
                                              subsched, local_patches, local_matls,
-                                             d_timeIntegratorLabels[curr_level],
-                                                                    false, false);
+                                             d_timeIntegratorLabels[curr_level]);
     }
     d_props->sched_reComputeProps(           subsched, local_patches, local_matls,
                                              d_timeIntegratorLabels[curr_level],
@@ -859,12 +855,10 @@ int PicardNonlinearSolver::noSolve(const LevelP& level,
 
   if (d_calcVariance) {
     d_turbModel->sched_computeScalarVariance(       sched, patches, matls,
-                                                    nosolve_timelabels, 
-                                                    false, false);
+                                                    nosolve_timelabels);
                                               
     d_turbModel->sched_computeScalarDissipation(    sched, patches, matls,
-                                                    nosolve_timelabels, 
-                                                    false, false);
+                                                    nosolve_timelabels);
   }
 
   d_props->sched_computePropsFirst_mm(              sched, patches, matls);

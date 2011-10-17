@@ -415,11 +415,10 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
       if (d_calcVariance) {
         d_turbModel->sched_computeScalarVariance(sched, patches, matls,
-                                      d_timeIntegratorLabels[curr_level],
-                                      d_EKTCorrection, doing_EKT_now);
+                                      d_timeIntegratorLabels[curr_level]);
+                                      
         d_turbModel->sched_computeScalarDissipation(sched, patches, matls,
-                                      d_timeIntegratorLabels[curr_level],
-                                      d_EKTCorrection, doing_EKT_now);
+                                      d_timeIntegratorLabels[curr_level]);
       }
 
       d_props->sched_reComputeProps(sched, patches, matls,
@@ -467,11 +466,10 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
     if (d_calcVariance) {
       d_turbModel->sched_computeScalarVariance(sched, patches, matls,
-                                           d_timeIntegratorLabels[curr_level],
-                                           d_EKTCorrection, doing_EKT_now);
+                                           d_timeIntegratorLabels[curr_level]);
+                                           
       d_turbModel->sched_computeScalarDissipation(sched, patches, matls,
-                                           d_timeIntegratorLabels[curr_level],
-                                           d_EKTCorrection, doing_EKT_now);
+                                           d_timeIntegratorLabels[curr_level]);
     }
 
 //    d_props->sched_reComputeProps(sched, patches, matls,
@@ -565,11 +563,10 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
                                      d_timeIntegratorLabels[curr_level]);
       if (d_calcVariance) {
         d_turbModel->sched_computeScalarVariance(sched, patches, matls,
-                                            d_timeIntegratorLabels[curr_level],
-                                            d_EKTCorrection, doing_EKT_now);
+                                            d_timeIntegratorLabels[curr_level]);
+                                            
         d_turbModel->sched_computeScalarDissipation(sched, patches, matls,
-                                            d_timeIntegratorLabels[curr_level],
-                                            d_EKTCorrection, doing_EKT_now);
+                                            d_timeIntegratorLabels[curr_level]);
       }
     
       if (mixmodel != "TabProps" && mixmodel != "ClassicTable" && mixmodel != "ColdFlow")
@@ -728,11 +725,10 @@ int ExplicitSolver::noSolve(const LevelP& level,
 
   if (d_calcVariance) {
     d_turbModel->sched_computeScalarVariance(             sched, patches, matls,
-                                                          nosolve_timelabels,
-                                                          false, false);
+                                                          nosolve_timelabels);
+                                                          
     d_turbModel->sched_computeScalarDissipation(          sched, patches, matls,
-                                                          nosolve_timelabels,
-                                                          false, false);
+                                                          nosolve_timelabels);
   }
 
   EqnFactory& eqn_factory = EqnFactory::self();
