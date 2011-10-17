@@ -78,6 +78,7 @@ WARNING
      virtual ~ModelMaker();
            
      virtual std::vector<ModelInterface*> getModels() = 0;
+     virtual void clearModels() = 0;
      //////////
      // Insert Documentation Here:
      virtual void makeModels(const ProblemSpecP& orig_or_restart_ps, 
