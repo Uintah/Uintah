@@ -489,8 +489,7 @@ PicardNonlinearSolver::recursiveSolver(const ProcessorGroup* pg,
     // first computes, hatted velocities and then computes
     // the pressure poisson equation
   d_momSolver->solveVelHat(         level, subsched,
-                                           d_timeIntegratorLabels[curr_level],
-                                                                        false);
+                                           d_timeIntegratorLabels[curr_level] );
                              
   // using RKSSP averaging to perform underrelaxation
   if (d_timeIntegratorLabels[curr_level]->factor_new < 1.0) {
@@ -520,8 +519,7 @@ PicardNonlinearSolver::recursiveSolver(const ProcessorGroup* pg,
                                                       false, false, false, false);
 
     d_momSolver->sched_averageRKHatVelocities(subsched, local_patches, local_matls,
-                                              d_timeIntegratorLabels[curr_level],
-                                                                            false);
+                                              d_timeIntegratorLabels[curr_level] );
                                                                             
     d_timeIntegratorLabels[curr_level]->integrator_step_number = TimeIntegratorStepNumber::First;
   }
@@ -537,7 +535,7 @@ PicardNonlinearSolver::recursiveSolver(const ProcessorGroup* pg,
   // project velocities using the projection step
     d_momSolver->solve(                      subsched, local_patches, local_matls,
                                              d_timeIntegratorLabels[curr_level],
-                                                                    false, false);
+                                                                    false);
 
   if (d_boundaryCondition->anyArchesPhysicalBC()) {
     d_boundaryCondition->sched_getFlowINOUT( subsched, local_patches, local_matls,
