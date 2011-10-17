@@ -193,16 +193,12 @@ public:
   void sched_getDensityGuess(SchedulerP&, 
                              const PatchSet* patches,
                              const MaterialSet* matls,
-                             const TimeIntegratorLabel* timelabels,
-                             bool EKTCorrection, 
-                             bool doing_EKT_now);
+                             const TimeIntegratorLabel* timelabels);
 
   void sched_checkDensityGuess(SchedulerP&, 
                                const PatchSet* patches,
                                const MaterialSet* matls,
-                               const TimeIntegratorLabel* timelabels,
-                               bool EKTCorrection, 
-                               bool doing_EKT_now);
+                               const TimeIntegratorLabel* timelabels);
 
   void sched_checkDensityLag(SchedulerP&, 
                              const PatchSet* patches,
@@ -244,9 +240,6 @@ public:
   }
   inline void setExtraProjection(bool extraProjection) {
     d_extraProjection=extraProjection;
-  }
-  inline void setEKTCorrection(bool EKTCorrection) {
-    d_EKTCorrection=EKTCorrection;
   }
   inline void setNumSourceBoundaries(int numSourceBoundaries){
     d_numSourceBoundaries = numSourceBoundaries;
@@ -346,18 +339,14 @@ private:
                       const MaterialSubset* matls,
                       DataWarehouse* old_dw,
                       DataWarehouse* new_dw,
-                      const TimeIntegratorLabel* timelabels,
-                      bool EKTCorrection,
-                      bool doing_EKT_now);
+                      const TimeIntegratorLabel* timelabels);
 
   void checkDensityGuess(const ProcessorGroup*,
                       const PatchSubset* patches,
                       const MaterialSubset* matls,
                       DataWarehouse* old_dw,
                       DataWarehouse* new_dw,
-                      const TimeIntegratorLabel* timelabels,
-                      bool EKTCorrection,
-                      bool doing_EKT_now);
+                      const TimeIntegratorLabel* timelabels);
 
   void checkDensityLag(const ProcessorGroup*,
                       const PatchSubset* patches,
@@ -447,7 +436,6 @@ private:
   double d_viscosity;
 
   bool d_extraProjection;
-  bool d_EKTCorrection;
   bool d_KE_fromFC;
   double d_maxDensityLag;
 

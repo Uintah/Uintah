@@ -139,8 +139,6 @@ public:
 
   virtual void setExtraProjection(bool extraProjection) = 0;
 
-  virtual void setEKTCorrection(bool EKTCorrection) = 0;
-
   virtual void setPartVel(PartVel* partVel) = 0; 
 
   virtual void setDQMOMSolver(DQMOM* dqmomSolver) = 0;

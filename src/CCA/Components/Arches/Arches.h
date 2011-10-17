@@ -347,7 +347,7 @@ private:
       bool d_doMMS;
       bool d_with_mpmarches;
       bool d_extraProjection;
-      bool d_EKTCorrection;
+
       ScaleSimilarityModel* d_scaleSimilarityModel;
       CompLocalDynamicProcedure* d_initTurb;
       PhysicalConstants* d_physicalConsts;

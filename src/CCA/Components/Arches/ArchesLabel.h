@@ -103,7 +103,6 @@ namespace Uintah {
       // Density Labels
 
       const VarLabel* d_densityCPLabel;
-      const VarLabel* d_densityEKTLabel;
       const VarLabel* d_densityGuessLabel;
       const VarLabel* d_densityTempLabel;
       const VarLabel* d_densityOldOldLabel;
@@ -176,7 +175,6 @@ namespace Uintah {
 
       // reactive scalars
       const VarLabel* d_reactscalarSPLabel;
-      const VarLabel* d_reactscalarEKTLabel;
       const VarLabel* d_reactscalarTempLabel;
       const VarLabel* d_reactscalarFELabel;
 
@@ -371,9 +369,6 @@ namespace Uintah {
       const VarLabel* d_negativeDensityGuess_label;
       const VarLabel* d_negativeDensityGuessPred_label;
       const VarLabel* d_negativeDensityGuessInterm_label;
-      const VarLabel* d_negativeEKTDensityGuess_label;
-      const VarLabel* d_negativeEKTDensityGuessPred_label;
-      const VarLabel* d_negativeEKTDensityGuessInterm_label;
       const VarLabel* d_densityLag_label;
       const VarLabel* d_densityLagPred_label;
       const VarLabel* d_densityLagInterm_label;

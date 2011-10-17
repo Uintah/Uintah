@@ -130,9 +130,7 @@ public:
                             const MaterialSet* matls,
                             const TimeIntegratorLabel* timelabels,
                             bool modify_density, 
-                            bool initialize,
-                            bool d_EKTCorrection,
-                            bool doing_EKT_now);
+                            bool initialize);
 
   ///////////////////////////////////////////////////////////////////////
   // Schedule the computation of proprties for the first actual time 
@@ -163,9 +161,7 @@ public:
   void sched_computeDrhodt(SchedulerP& sched, 
                             const PatchSet* patches,
                             const MaterialSet* matls,
-                            const TimeIntegratorLabel* timelabels,
-                            bool d_EKTCorrection,
-                            bool doing_EKT_now);
+                            const TimeIntegratorLabel* timelabels);
 
 
   // GROUP: Get Methods :
@@ -237,9 +233,7 @@ private:
                       DataWarehouse* new_dw,
                       const TimeIntegratorLabel* timelabels,
                       bool modify_density,
-                      bool initialize,
-                      bool d_EKTCorrection,
-                      bool doing_EKT_now);
+                      bool initialize);
 
   ///////////////////////////////////////////////////////////////////////
   // Carry out actual computation of properties for the first actual
@@ -280,9 +274,7 @@ private:
                       const MaterialSubset* matls,
                       DataWarehouse* old_dw,
                       DataWarehouse* new_dw,
-                      const TimeIntegratorLabel* timelabels,
-                      bool d_EKTCorrection,
-                      bool doing_EKT_now);
+                      const TimeIntegratorLabel* timelabels);
 
   // GROUP: Constructors Not Instantiated:
   ///////////////////////////////////////////////////////////////////////

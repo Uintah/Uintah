@@ -264,7 +264,6 @@ Arches::problemSetup(const ProblemSpecP& params,
   string nlSolver;
   if (db->findBlock("ExplicitSolver")){
     nlSolver = "explicit";
-    db->findBlock("ExplicitSolver")->getWithDefault("EKTCorrection", d_EKTCorrection,false);  
     db->findBlock("ExplicitSolver")->getWithDefault("scalarUnderflowCheck",d_underflow,false);
     db->findBlock("ExplicitSolver")->getWithDefault("extraProjection",     d_extraProjection,false);  
     db->findBlock("ExplicitSolver")->require("initial_dt", d_init_dt);
@@ -272,7 +271,6 @@ Arches::problemSetup(const ProblemSpecP& params,
     
   } else if (db->findBlock("PicardSolver")){
     nlSolver = "picard";
-    db->findBlock("PicardSolver")->getWithDefault("EKTCorrection", d_EKTCorrection,false);  
     db->findBlock("PicardSolver")->getWithDefault("scalarUnderflowCheck",d_underflow,false);
     db->findBlock("PicardSolver")->getWithDefault("extraProjection",     d_extraProjection,false);  
     db->findBlock("PicardSolver")->require("initial_dt", d_init_dt);
@@ -504,7 +502,6 @@ Arches::problemSetup(const ProblemSpecP& params,
     throw InvalidValue("Nonlinear solver not supported: "+nlSolver, __FILE__, __LINE__);
   }
   d_nlSolver->setExtraProjection(d_extraProjection);
-  d_nlSolver->setEKTCorrection(d_EKTCorrection);
   d_nlSolver->setMMS(d_doMMS);
   d_nlSolver->problemSetup(db);
   d_timeIntegratorType = d_nlSolver->getTimeIntegratorType();
@@ -761,7 +758,7 @@ Arches::scheduleInitialize(const LevelP& level,
   string mixmodel = d_props->getMixingModelType(); 
   if ( mixmodel != "TabProps" && mixmodel != "ClassicTable" && mixmodel != "ColdFlow")
     d_props->sched_reComputeProps(sched, patches, matls,
-                                init_timelabel, true, true, false,false);
+                                init_timelabel, true, true);
   else {
     bool initialize_it = true; 
     bool modify_ref_den = true; 
@@ -874,9 +871,6 @@ Arches::sched_paramInit(const LevelP& level,
     tsk->computes(d_lab->d_areaFractionLabel); 
     tsk->computes(d_lab->d_volFractionLabel); 
 
-    if ((d_extraProjection)||(d_EKTCorrection)){
-      tsk->computes(d_lab->d_pressureExtraProjectionLabel);
-    }
     if (!((d_timeIntegratorType == "FE")||(d_timeIntegratorType == "BE"))){
       tsk->computes(d_lab->d_pressurePredLabel);
     }
@@ -1061,10 +1055,7 @@ Arches::paramInit(const ProcessorGroup* pg,
     wVelRhoHat.initialize(0.0);
     
     new_dw->allocateAndPut(pressure, d_lab->d_pressurePSLabel, indx, patch);
-    if ((d_extraProjection)||(d_EKTCorrection)) {
-      new_dw->allocateAndPut(pressureExtraProjection, d_lab->d_pressureExtraProjectionLabel, indx, patch);
-      pressureExtraProjection.initialize(0.0);
-    }
+
     if (!((d_timeIntegratorType == "FE")||(d_timeIntegratorType == "BE"))) {
       new_dw->allocateAndPut(pressurePred, d_lab->d_pressurePredLabel,indx, patch);
       pressurePred.initialize(0.0);
