@@ -396,59 +396,11 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
     sched_saveTempCopies(sched, patches, matls,d_timeIntegratorLabels[curr_level]);
 
-    bool doing_EKT_now = false;
-    if (d_EKTCorrection) {
-      doing_EKT_now = true;
-      sched_getDensityGuess(sched, patches, matls,
-                                      d_timeIntegratorLabels[curr_level],
-                                      d_EKTCorrection, doing_EKT_now);
-      sched_checkDensityGuess(sched, patches, matls,
-                                      d_timeIntegratorLabels[curr_level],
-                                      d_EKTCorrection, doing_EKT_now);
-
-      d_scalarSolver->solve(sched, patches, matls, 
-                                      d_timeIntegratorLabels[curr_level] );
-
-      if (d_enthalpySolve)
-        d_enthalpySolver->solve(level, sched, patches, matls,
-                                      d_timeIntegratorLabels[curr_level] );
-
-      if (d_calcVariance) {
-        d_turbModel->sched_computeScalarVariance(sched, patches, matls,
+    sched_getDensityGuess(sched, patches, matls,
                                       d_timeIntegratorLabels[curr_level]);
                                       
-        d_turbModel->sched_computeScalarDissipation(sched, patches, matls,
-                                      d_timeIntegratorLabels[curr_level]);
-      }
-
-      d_props->sched_reComputeProps(sched, patches, matls,
-                                      d_timeIntegratorLabels[curr_level],
-                                      false, false,
-                                      d_EKTCorrection, doing_EKT_now);
-      d_props->sched_computeDrhodt(sched, patches, matls,
-                                      d_timeIntegratorLabels[curr_level],
-                                      d_EKTCorrection, doing_EKT_now);
-
-      bool set_BC = false;
-      d_momSolver->sched_prepareExtraProjection(sched, patches, matls,
-                                      d_timeIntegratorLabels[curr_level],
-                                      set_BC);
-      d_pressSolver->sched_solve(level, sched, d_timeIntegratorLabels[curr_level], false);
-                                 
-      d_momSolver->solve(sched, patches, matls,
-                       d_timeIntegratorLabels[curr_level],
-                       false );
-      doing_EKT_now = false;
-    }
-
-
-
-    sched_getDensityGuess(sched, patches, matls,
-                                      d_timeIntegratorLabels[curr_level],
-                                      d_EKTCorrection, doing_EKT_now);
     sched_checkDensityGuess(sched, patches, matls,
-                                      d_timeIntegratorLabels[curr_level],
-                                      d_EKTCorrection, doing_EKT_now);
+                                      d_timeIntegratorLabels[curr_level]);
 
     d_scalarSolver->solve(sched, patches, matls, 
                           d_timeIntegratorLabels[curr_level]);
@@ -499,8 +451,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     if ( mixmodel != "TabProps" && mixmodel != "ClassicTable" && mixmodel != "ColdFlow")
       d_props->sched_reComputeProps(sched, patches, matls,
                                     d_timeIntegratorLabels[curr_level],
-                                    true, false,
-                                    d_EKTCorrection, doing_EKT_now);
+                                    true, false );
     else {
 
       bool initialize_it  = false;
@@ -572,8 +523,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       if (mixmodel != "TabProps" && mixmodel != "ClassicTable" && mixmodel != "ColdFlow")
         d_props->sched_reComputeProps(sched, patches, matls,
                                       d_timeIntegratorLabels[curr_level],
-                                      false, false,
-                                      d_EKTCorrection, doing_EKT_now);
+                                      false, false);
       else {
 
         bool initialize_it  = false;
@@ -605,8 +555,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     } 
 
     d_props->sched_computeDrhodt(sched, patches, matls,
-                                 d_timeIntegratorLabels[curr_level],
-                                 d_EKTCorrection, doing_EKT_now);
+                                 d_timeIntegratorLabels[curr_level]);
 
     d_pressSolver->sched_solve(level, sched, d_timeIntegratorLabels[curr_level],
                                false);
@@ -747,8 +696,7 @@ int ExplicitSolver::noSolve(const LevelP& level,
   d_props->sched_computePropsFirst_mm(                    sched, patches, matls);
 
   d_props->sched_computeDrhodt(                           sched, patches, matls,
-                                                          nosolve_timelabels,
-                                                          false, false);
+                                                          nosolve_timelabels);
 
   d_boundaryCondition->sched_setInletFlowRates(           sched, patches, matls);
 
@@ -2253,16 +2201,14 @@ void
 ExplicitSolver::sched_getDensityGuess(SchedulerP& sched,
                                       const PatchSet* patches,
                                       const MaterialSet* matls,
-                                      const TimeIntegratorLabel* timelabels,
-                                      bool EKTCorrection,
-                                      bool doing_EKT_now)
+                                      const TimeIntegratorLabel* timelabels)
 {
   string taskname =  "ExplicitSolver::getDensityGuess" +
                      timelabels->integrator_step_name;
-  if (doing_EKT_now) taskname += "EKTnow";
+
   Task* tsk = scinew Task(taskname, this,
                           &ExplicitSolver::getDensityGuess,
-                          timelabels, EKTCorrection, doing_EKT_now);
+                          timelabels);
 
   Task::WhichDW parent_old_dw;
   if (timelabels->recursion){ 
@@ -2293,25 +2239,14 @@ ExplicitSolver::sched_getDensityGuess(SchedulerP& sched,
     
   
   tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, gn);
-
-  if ((EKTCorrection)&&(!(doing_EKT_now))){
-    tsk->requires(Task::NewDW, d_lab->d_densityEKTLabel,  gn, 0);
-  }
   
   //__________________________________
-  if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First)&&
-      ((!(EKTCorrection))||((EKTCorrection)&&(doing_EKT_now)))){
+  if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First ){
     tsk->computes(d_lab->d_densityGuessLabel);
   }else{
     tsk->modifies(d_lab->d_densityGuessLabel);
   }
-  
-  //__________________________________
-  if (doing_EKT_now){
-    tsk->computes(timelabels->negativeEKTDensityGuess);
-  }else{
-    tsk->computes(timelabels->negativeDensityGuess);
-  }
+  tsk->computes(timelabels->negativeDensityGuess);
   
   sched->addTask(tsk, patches, matls);
 }
@@ -2324,9 +2259,7 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
                                 const MaterialSubset*,
                                 DataWarehouse* old_dw,
                                 DataWarehouse* new_dw,
-                                const TimeIntegratorLabel* timelabels,
-                                bool EKTCorrection,
-                                bool doing_EKT_now)
+                                const TimeIntegratorLabel* timelabels)
 {
   DataWarehouse* parent_old_dw;
   if (timelabels->recursion){
@@ -2367,8 +2300,7 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
       old_values_dw = new_dw;
     }
 
-    if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
-        &&((!(EKTCorrection))||((EKTCorrection)&&(doing_EKT_now)))){
+    if ( timelabels->integrator_step_number == TimeIntegratorStepNumber::First ){
       new_dw->allocateAndPut(densityGuess, d_lab->d_densityGuessLabel, indx, patch);
     }else{
       new_dw->getModifiable(densityGuess, d_lab->d_densityGuessLabel,  indx, patch);
@@ -2534,36 +2466,9 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
         }
       }
    // }
-      constCCVariable<double> densityEKT;
-      if ((EKTCorrection)&&(!(doing_EKT_now))) {
-      new_dw->get(densityEKT, d_lab->d_densityEKTLabel, indx, patch, 
-                  gn, 0);
-        idxLo = patch->getExtraCellLowIndex();
-        idxHi = patch->getExtraCellHighIndex();
-        for (int colZ = idxLo.z(); colZ < idxHi.z(); colZ ++) {
-          for (int colY = idxLo.y(); colY < idxHi.y(); colY ++) {
-            for (int colX = idxLo.x(); colX < idxHi.x(); colX ++) {
-              IntVector currCell(colX, colY, colZ);
 
-              if (Abs(densityGuess[currCell]-densityEKT[currCell])>1.0e-10) {
-                ostringstream warn;
-                warn << "ERROR:  EKT density is wrong at " << currCell << " Values are " << densityGuess[currCell] 
-                     << " " <<densityEKT[currCell];
-                throw InvalidValue(warn.str(), __FILE__, __LINE__);
-
-              }
-            }
-          }
-        }
-      }
-
-      if (doing_EKT_now){
-        new_dw->put(sum_vartype(negativeDensityGuess),
-                    timelabels->negativeEKTDensityGuess);
-      }else{
-        new_dw->put(sum_vartype(negativeDensityGuess),
-                    timelabels->negativeDensityGuess);
-      }
+     new_dw->put(sum_vartype(negativeDensityGuess),
+                  timelabels->negativeDensityGuess);
   }
 }
 //****************************************************************************
@@ -2573,16 +2478,14 @@ void
 ExplicitSolver::sched_checkDensityGuess(SchedulerP& sched,
                                         const PatchSet* patches,
                                         const MaterialSet* matls,
-                                        const TimeIntegratorLabel* timelabels,
-                                        bool EKTCorrection,
-                                        bool doing_EKT_now)
+                                        const TimeIntegratorLabel* timelabels)
 {
   string taskname =  "ExplicitSolver::checkDensityGuess" +
                      timelabels->integrator_step_name;
-  if (doing_EKT_now) taskname += "EKTnow";
+                     
   Task* tsk = scinew Task(taskname, this,
                           &ExplicitSolver::checkDensityGuess,
-                          timelabels, EKTCorrection, doing_EKT_now);
+                          timelabels);
 
   Task::WhichDW parent_old_dw;
   if (timelabels->recursion){
@@ -2600,11 +2503,7 @@ ExplicitSolver::sched_checkDensityGuess(SchedulerP& sched,
     
   tsk->requires(old_values_dw, d_lab->d_densityCPLabel,Ghost::None, 0);
   
-  if (doing_EKT_now){
-    tsk->requires(Task::NewDW, timelabels->negativeEKTDensityGuess);
-  }else{
-    tsk->requires(Task::NewDW, timelabels->negativeDensityGuess);
-  }
+  tsk->requires(Task::NewDW, timelabels->negativeDensityGuess);
 
   tsk->modifies(d_lab->d_densityGuessLabel);
 
@@ -2619,9 +2518,7 @@ ExplicitSolver::checkDensityGuess(const ProcessorGroup* pc,
                                   const MaterialSubset*,
                                   DataWarehouse* old_dw,
                                   DataWarehouse* new_dw,
-                                  const TimeIntegratorLabel* timelabels,
-                                  bool EKTCorrection,
-                                  bool doing_EKT_now)
+                                  const TimeIntegratorLabel* timelabels)
 {
   DataWarehouse* parent_old_dw;
   if (timelabels->recursion){
@@ -2632,11 +2529,8 @@ ExplicitSolver::checkDensityGuess(const ProcessorGroup* pc,
   
   double negativeDensityGuess = 0.0;
   sum_vartype nDG;
-  if (doing_EKT_now){
-    new_dw->get(nDG, timelabels->negativeEKTDensityGuess);
-  }else{
-    new_dw->get(nDG, timelabels->negativeDensityGuess);
-  }
+  new_dw->get(nDG, timelabels->negativeDensityGuess);
+  
   negativeDensityGuess = nDG;
 
   for (int p = 0; p < patches->size(); p++) {

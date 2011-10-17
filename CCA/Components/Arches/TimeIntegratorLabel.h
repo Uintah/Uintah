@@ -115,7 +115,6 @@ namespace Uintah {
     const VarLabel* floutbc;
     const VarLabel* areaOUT;
     const VarLabel* negativeDensityGuess;
-    const VarLabel* negativeEKTDensityGuess;
     const VarLabel* densityLag;
     const VarLabel* ummsLnError;
     const VarLabel* vmmsLnError;
@@ -145,7 +144,6 @@ namespace Uintah {
       integrator_step_name     = "-9";
       integrator_step_number   =  -9;
       negativeDensityGuess     =  NULL;
-      negativeEKTDensityGuess  =  NULL;
       pressure_guess           =  NULL;
       pressure_out             =  NULL;
       ref_density              =  NULL;
@@ -180,7 +178,6 @@ namespace Uintah {
       ( integrator_step_name     == "-9" )  ||
       ( integrator_step_number   ==  -9 )   ||
       ( negativeDensityGuess     ==  NULL ) ||
-      ( negativeEKTDensityGuess  ==  NULL ) ||
       ( pressure_guess           ==  NULL ) ||
       ( pressure_out             ==  NULL ) ||
       ( ref_density              ==  NULL ) ||
@@ -229,7 +226,6 @@ namespace Uintah {
             integrator_step_number   =  TimeIntegratorStepNumber::First;
             multiple_steps           =  false;
             negativeDensityGuess     =  lab->d_negativeDensityGuess_label;
-            negativeEKTDensityGuess  =  lab->d_negativeEKTDensityGuess_label;
             pressure_guess           =  lab->d_pressurePSLabel;
             pressure_out             =  lab->d_pressurePSLabel;
             recursion                =  true;
@@ -267,7 +263,6 @@ namespace Uintah {
             integrator_step_number   =  TimeIntegratorStepNumber::First;
             multiple_steps           =  false;
             negativeDensityGuess     =  lab->d_negativeDensityGuess_label;
-            negativeEKTDensityGuess  =  lab->d_negativeEKTDensityGuess_label;
             pressure_guess           =  lab->d_pressurePSLabel;
             pressure_out             =  lab->d_pressurePSLabel;
             recursion                =  false;
@@ -305,7 +300,6 @@ namespace Uintah {
             integrator_step_number   =  TimeIntegratorStepNumber::First;
             multiple_steps           =  true;
             negativeDensityGuess     =  lab->d_negativeDensityGuessPred_label;
-            negativeEKTDensityGuess  =  lab->d_negativeEKTDensityGuessPred_label;
             pressure_guess           =  lab->d_pressurePSLabel;
             pressure_out             =  lab->d_pressurePredLabel;
             recursion                =  false;
@@ -342,7 +336,6 @@ namespace Uintah {
             integrator_step_name     =  "OldPredictor";
             integrator_step_number   =  TimeIntegratorStepNumber::First;
             multiple_steps           =  true;
-            negativeEKTDensityGuess  =  lab->d_negativeEKTDensityGuessPred_label;
             pressure_guess           =  lab->d_pressurePSLabel;
             pressure_out             =  lab->d_pressurePredLabel;
             recursion                =  false;
@@ -380,7 +373,6 @@ namespace Uintah {
             integrator_step_number   =  TimeIntegratorStepNumber::Second;
             multiple_steps           =  true;
             negativeDensityGuess     =  lab->d_negativeDensityGuess_label;
-            negativeEKTDensityGuess  =  lab->d_negativeEKTDensityGuess_label;
             pressure_guess           =  lab->d_pressurePredLabel;
             pressure_out             =  lab->d_pressurePSLabel;
             recursion                =  false;
@@ -418,7 +410,6 @@ namespace Uintah {
             integrator_step_number   =  TimeIntegratorStepNumber::Second;
             multiple_steps           =  true;
             negativeDensityGuess     =  lab->d_negativeDensityGuess_label;
-            negativeEKTDensityGuess  =  lab->d_negativeEKTDensityGuess_label;
             pressure_guess           =  lab->d_pressurePredLabel;
             pressure_out             =  lab->d_pressurePSLabel;
             recursion                =  false;
@@ -456,7 +447,6 @@ namespace Uintah {
             integrator_step_number   =  TimeIntegratorStepNumber::Third;
             multiple_steps           =  true;
             negativeDensityGuess     =  lab->d_negativeDensityGuess_label;
-            negativeEKTDensityGuess  =  lab->d_negativeEKTDensityGuess_label;
             pressure_guess           =  lab->d_pressureIntermLabel;
             pressure_out             =  lab->d_pressurePSLabel;
             recursion                =  false;
@@ -494,7 +484,6 @@ namespace Uintah {
             integrator_step_number   =  TimeIntegratorStepNumber::Second;
             multiple_steps           =  true;
             negativeDensityGuess     =  lab->d_negativeDensityGuessInterm_label;
-            negativeEKTDensityGuess  =  lab->d_negativeEKTDensityGuessInterm_label;
             pressure_guess           =  lab->d_pressurePredLabel;
             pressure_out             =  lab->d_pressureIntermLabel;
             recursion                =  false;
@@ -532,7 +521,6 @@ namespace Uintah {
             integrator_step_number   =  TimeIntegratorStepNumber::First;
             multiple_steps           =  true;
             negativeDensityGuess     =  lab->d_negativeDensityGuessPred_label;
-            negativeEKTDensityGuess  =  lab->d_negativeEKTDensityGuessPred_label;
             pressure_guess           =  lab->d_pressurePSLabel;
             pressure_out             =  lab->d_pressurePredLabel;
             recursion                =  false;
@@ -570,7 +558,6 @@ namespace Uintah {
             integrator_step_number   =  TimeIntegratorStepNumber::Second;
             multiple_steps           =  true;
             negativeDensityGuess     =  lab->d_negativeDensityGuessInterm_label;
-            negativeEKTDensityGuess  =  lab->d_negativeEKTDensityGuessInterm_label;
             pressure_guess           =  lab->d_pressurePredLabel;
             pressure_out             =  lab->d_pressureIntermLabel;
             recursion                =  false;
@@ -608,7 +595,6 @@ namespace Uintah {
             integrator_step_number   =  TimeIntegratorStepNumber::Third;
             multiple_steps           =  true;
             negativeDensityGuess     =  lab->d_negativeDensityGuess_label;
-            negativeEKTDensityGuess  =  lab->d_negativeEKTDensityGuess_label;
             pressure_guess           =  lab->d_pressureIntermLabel;
             pressure_out             =  lab->d_pressurePSLabel;
             recursion                =  false;

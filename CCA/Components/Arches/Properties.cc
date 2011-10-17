@@ -354,19 +354,16 @@ Properties::sched_reComputeProps(SchedulerP& sched,
                                  const MaterialSet* matls,
                                  const TimeIntegratorLabel* timelabels,
                                  bool modify_ref_density, 
-                                 bool initialize,
-                                 bool d_EKTCorrection,
-                                 bool doing_EKT_now)
+                                 bool initialize)
 {
   string md = "";
   if (!(modify_ref_density)) md += "RKSSP";
   string taskname =  "Properties::ReComputeProps" +
                      timelabels->integrator_step_name + md;
-  if (doing_EKT_now) taskname += "EKTnow";
+                     
   Task* tsk = scinew Task(taskname, this,
                           &Properties::reComputeProps,
-                          timelabels, modify_ref_density, initialize,
-                          d_EKTCorrection, doing_EKT_now);
+                          timelabels, modify_ref_density, initialize);
 
   Ghost::GhostType  gn = Ghost::None;
   
@@ -380,11 +377,7 @@ Properties::sched_reComputeProps(SchedulerP& sched,
   //__________________________________
   if (d_calcReactingScalar)
   {
-    if (doing_EKT_now){
-      tsk->requires(Task::NewDW, d_lab->d_reactscalarEKTLabel, gn, 0);
-    }else{
-      tsk->requires(Task::NewDW, d_lab->d_reactscalarSPLabel,  gn, 0);
-    }
+    tsk->requires(Task::NewDW, d_lab->d_reactscalarSPLabel,  gn, 0);
   }  
   if (d_calcEnthalpy){
     tsk->modifies(d_lab->d_enthalpySPLabel);
@@ -412,22 +405,14 @@ Properties::sched_reComputeProps(SchedulerP& sched,
     }
   }
 
-  if (doing_EKT_now){
-    if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First){
-      tsk->computes(d_lab->d_densityEKTLabel);
-    }else{
-      tsk->modifies(d_lab->d_densityEKTLabel);
-    }
-  }else{
-    tsk->modifies(d_lab->d_densityCPLabel);
-  }
+  tsk->modifies(d_lab->d_densityCPLabel);
+  
 // assuming ref_density is not changed by RK averaging
   if (modify_ref_density){
     tsk->computes(timelabels->ref_density);
   }
   
-  if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
-      &&((!(d_EKTCorrection))||((d_EKTCorrection)&&(doing_EKT_now)))) {
+  if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
     tsk->computes(d_lab->d_drhodfCPLabel);
     
     tsk->computes(d_lab->d_dummyTLabel);
@@ -548,8 +533,7 @@ Properties::sched_reComputeProps(SchedulerP& sched,
   }
 
   if (d_MAlab) {
-    if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
-      &&((!(d_EKTCorrection))||((d_EKTCorrection)&&(doing_EKT_now)))) 
+    if ( timelabels->integrator_step_number == TimeIntegratorStepNumber::First ) 
       tsk->computes(d_lab->d_densityMicroLabel);
     else
       tsk->modifies(d_lab->d_densityMicroLabel);
@@ -570,9 +554,7 @@ Properties::reComputeProps(const ProcessorGroup* pc,
                            DataWarehouse* new_dw,
                            const TimeIntegratorLabel* timelabels,
                            bool modify_ref_density,
-                           bool initialize,
-                           bool d_EKTCorrection,
-                           bool doing_EKT_now)
+                           bool initialize)
 {
   if (d_bc == 0)
     throw InvalidValue("BoundaryCondition pointer not assigned", __FILE__, __LINE__);
@@ -677,11 +659,7 @@ Properties::reComputeProps(const ProcessorGroup* pc,
     
     //__________________________________
     if (d_calcReactingScalar) {
-      if (doing_EKT_now){
-        new_dw->get(reactScalar, d_lab->d_reactscalarEKTLabel, indx, patch, gn, 0);
-      }else{
-        new_dw->get(reactScalar, d_lab->d_reactscalarSPLabel,  indx, patch, gn, 0);
-      }
+      new_dw->get(reactScalar, d_lab->d_reactscalarSPLabel,  indx, patch, gn, 0);
     }
     
     //__________________________________
@@ -689,20 +667,11 @@ Properties::reComputeProps(const ProcessorGroup* pc,
       new_dw->getModifiable(enthalpy, d_lab->d_enthalpySPLabel,  indx, patch);
     }
     //__________________________________
-    if (doing_EKT_now){
-      if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First){
-        new_dw->allocateAndPut(new_density, d_lab->d_densityEKTLabel,indx, patch);
-      }else{
-        new_dw->getModifiable(new_density, d_lab->d_densityEKTLabel, indx, patch);
-      }
-    }else{
-      new_dw->getModifiable(new_density,   d_lab->d_densityCPLabel,  indx, patch);
-    }
+    new_dw->getModifiable(new_density,   d_lab->d_densityCPLabel,  indx, patch);
     new_density.initialize(0.0);
     
     //__________________________________
-    if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
-      &&((!(d_EKTCorrection))||((d_EKTCorrection)&&(doing_EKT_now)))) {
+    if ( timelabels->integrator_step_number == TimeIntegratorStepNumber::First ) {
       new_dw->allocateAndPut(drhodf, d_lab->d_drhodfCPLabel, indx, patch);
 
       new_dw->allocateAndPut(dummytemperature, d_lab->d_dummyTLabel, indx, patch);
@@ -890,8 +859,7 @@ Properties::reComputeProps(const ProcessorGroup* pc,
     }
 
     if (d_MAlab) {
-      if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
-      &&((!(d_EKTCorrection))||((d_EKTCorrection)&&(doing_EKT_now)))){
+      if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First){
         new_dw->allocateAndPut(denMicro, d_lab->d_densityMicroLabel, indx, patch);
       }else{
         new_dw->getModifiable(denMicro, d_lab->d_densityMicroLabel, indx, patch);
@@ -1967,17 +1935,14 @@ void
 Properties::sched_computeDrhodt(SchedulerP& sched, 
                                 const PatchSet* patches,
                                 const MaterialSet* matls, 
-                                const TimeIntegratorLabel* timelabels,
-                                bool d_EKTCorrection,
-                                bool doing_EKT_now)
+                                const TimeIntegratorLabel* timelabels)
 {
   string taskname =  "Properties::computeDrhodt" +
                      timelabels->integrator_step_name;
-  if (doing_EKT_now) taskname += "EKTnow";
   
   Task* tsk = scinew Task(taskname, this,
                           &Properties::computeDrhodt,
-                          timelabels, d_EKTCorrection, doing_EKT_now);
+                          timelabels);
 
   Task::WhichDW parent_old_dw;
   if (timelabels->recursion){
@@ -1992,17 +1957,11 @@ Properties::sched_computeDrhodt(SchedulerP& sched,
   tsk->requires(parent_old_dw, d_lab->d_oldDeltaTLabel);
   tsk->requires(parent_old_dw, d_lab->d_densityOldOldLabel, gn,0);
 
-  if (doing_EKT_now) {
-    tsk->requires(Task::NewDW, d_lab->d_densityEKTLabel,    gn,0);
-    tsk->requires(Task::NewDW, d_lab->d_densityGuessLabel,  gn,0);
-  }
-  else {
-    tsk->requires(Task::NewDW,   d_lab->d_densityCPLabel,   gn,0);
-    tsk->requires(parent_old_dw, d_lab->d_densityCPLabel,   gn,0);
-  }
+  tsk->requires(Task::NewDW,    d_lab->d_densityCPLabel,   gn,0);
+  tsk->requires(parent_old_dw, d_lab->d_densityCPLabel,   gn,0);
+  
 
-  if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
-      &&((!(d_EKTCorrection))||((d_EKTCorrection)&&(doing_EKT_now)))) {
+  if ( timelabels->integrator_step_number == TimeIntegratorStepNumber::First ) {
     tsk->computes(d_lab->d_filterdrhodtLabel);
     tsk->computes(d_lab->d_oldDeltaTLabel);
     tsk->computes(d_lab->d_densityOldOldLabel);
@@ -2021,9 +1980,7 @@ Properties::computeDrhodt(const ProcessorGroup* pc,
                           const MaterialSubset*,
                           DataWarehouse* old_dw,
                           DataWarehouse* new_dw,
-                          const TimeIntegratorLabel* timelabels,
-                          bool d_EKTCorrection,
-                          bool doing_EKT_now)
+                          const TimeIntegratorLabel* timelabels)
 {
   DataWarehouse* parent_old_dw;
   if (timelabels->recursion){
@@ -2041,16 +1998,13 @@ Properties::computeDrhodt(const ProcessorGroup* pc,
   parent_old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
   
   
-  if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
-      &&((!(d_EKTCorrection))||((d_EKTCorrection)&&(doing_EKT_now)))){
+  if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First){
     new_dw->put(delT, d_lab->d_oldDeltaTLabel);
   }
   double delta_t = delT;
   delta_t *= timelabels->time_multiplier;
+  delta_t *= timelabels->time_position_multiplier_after_average;
   
-  if (!(doing_EKT_now)){
-    delta_t *= timelabels->time_position_multiplier_after_average;
-  }
   parent_old_dw->get(old_delT, d_lab->d_oldDeltaTLabel);
   double  old_delta_t = old_delT;
 
@@ -2070,17 +2024,11 @@ Properties::computeDrhodt(const ProcessorGroup* pc,
     CCVariable<double> density_oldold;
     Ghost::GhostType  gn = Ghost::None;
     
-    if (doing_EKT_now){
-      new_dw->get(old_density,        d_lab->d_densityGuessLabel,    indx, patch,gn, 0);
-    }else{
-      parent_old_dw->get(old_density, d_lab->d_densityCPLabel,       indx, patch,gn, 0);
-    }
-    
+    parent_old_dw->get(old_density,     d_lab->d_densityCPLabel,     indx, patch,gn, 0);
     parent_old_dw->get(old_old_density, d_lab->d_densityOldOldLabel, indx, patch,gn, 0);
     
     
-    if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
-      &&((!(d_EKTCorrection))||((d_EKTCorrection)&&(doing_EKT_now)))) {
+    if ( timelabels->integrator_step_number == TimeIntegratorStepNumber::First ) {
       new_dw->allocateAndPut(density_oldold, d_lab->d_densityOldOldLabel, indx, patch);
       density_oldold.copyData(old_density);
     }
@@ -2090,14 +2038,9 @@ Properties::computeDrhodt(const ProcessorGroup* pc,
     
     CellInformation* cellinfo = cellInfoP.get().get_rep();
 
-    if (doing_EKT_now){
-      new_dw->get(new_density, d_lab->d_densityEKTLabel, indx, patch, gn, 0);
-    }else{
-      new_dw->get(new_density, d_lab->d_densityCPLabel,  indx, patch, gn, 0);
-    }
+    new_dw->get(new_density, d_lab->d_densityCPLabel,  indx, patch, gn, 0);
     
-    if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
-      &&((!(d_EKTCorrection))||((d_EKTCorrection)&&(doing_EKT_now)))){
+    if ( timelabels->integrator_step_number == TimeIntegratorStepNumber::First ){
       new_dw->allocateAndPut(filterdrhodt, d_lab->d_filterdrhodtLabel, indx, patch);
     }else{
       new_dw->getModifiable(filterdrhodt, d_lab->d_filterdrhodtLabel,  indx, patch);

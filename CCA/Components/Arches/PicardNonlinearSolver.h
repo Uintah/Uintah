@@ -219,9 +219,6 @@ public:
   inline void setExtraProjection(bool extraProjection) {
     d_extraProjection=extraProjection;
   }
-  inline void setEKTCorrection(bool EKTCorrection) {
-    d_EKTCorrection=EKTCorrection;
-  }
   inline void setCalcExtraScalars(bool calcExtraScalars) {
   }
   inline void setExtraScalars(vector<ExtraScalarSolver*>* extraScalars) {
@@ -387,7 +384,6 @@ private:
   double d_H_air;
   bool d_doMMS;
   bool d_extraProjection;
-  bool d_EKTCorrection;
   bool d_KE_fromFC;
 
   PartVel* d_partVel; 

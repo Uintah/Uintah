@@ -473,7 +473,7 @@ PicardNonlinearSolver::recursiveSolver(const ProcessorGroup* pg,
 
   d_props->sched_reComputeProps(             subsched, local_patches, local_matls,
                                              d_timeIntegratorLabels[curr_level],
-                                                       true, false, false, false);
+                                                       true, false);
  
   d_props->sched_computeDenRefArray(         subsched, local_patches, local_matls,
                                              d_timeIntegratorLabels[curr_level]);
@@ -510,7 +510,7 @@ PicardNonlinearSolver::recursiveSolver(const ProcessorGroup* pg,
     }
     d_props->sched_reComputeProps(           subsched, local_patches, local_matls,
                                              d_timeIntegratorLabels[curr_level],
-                                                      false, false, false, false);
+                                                      false, false);
 
     d_momSolver->sched_averageRKHatVelocities(subsched, local_patches, local_matls,
                                               d_timeIntegratorLabels[curr_level] );
@@ -519,8 +519,7 @@ PicardNonlinearSolver::recursiveSolver(const ProcessorGroup* pg,
   }
 
   d_props->sched_computeDrhodt(              subsched, local_patches, local_matls,
-                                             d_timeIntegratorLabels[curr_level],
-                                                                    false, false);
+                                             d_timeIntegratorLabels[curr_level]);
 
   d_pressSolver->sched_solve(                level, subsched, 
                                              d_timeIntegratorLabels[curr_level],
@@ -864,8 +863,7 @@ int PicardNonlinearSolver::noSolve(const LevelP& level,
   d_props->sched_computePropsFirst_mm(              sched, patches, matls);
 
   d_props->sched_computeDrhodt(                     sched, patches, matls,
-                                                    nosolve_timelabels,
-                                                    false, false);
+                                                    nosolve_timelabels);
 
   d_boundaryCondition->sched_setInletFlowRates(     sched, patches, matls);
 

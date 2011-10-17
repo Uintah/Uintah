@@ -293,7 +293,6 @@
 
         <initial_dt                     spec="REQUIRED DOUBLE 'positive'" />
         <variable_dt                    spec="REQUIRED BOOLEAN" />
-        <EKTCorrection                  spec="OPTIONAL BOOLEAN" /> 
         <scalarUnderflowCheck           spec="OPTIONAL BOOLEAN" /> 
         <extraProjection                spec="OPTIONAL BOOLEAN" /> 
         <newEnthalpySolver              spec="OPTIONAL NO_DATA" /> <!-- DEVELOPER SWITCH --> 
