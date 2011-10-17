@@ -2044,36 +2044,29 @@ void
 IncDynamicProcedure::sched_computeScalarVariance(SchedulerP& sched, 
                                                  const PatchSet* patches,
                                                  const MaterialSet* matls,
-                                                 const TimeIntegratorLabel* timelabels,
-                                                 bool d_EKTCorrection,
-                                                 bool doing_EKT_now)
+                                                 const TimeIntegratorLabel* timelabels)
 {
   string taskname =  "IncDynamicProcedure::computeScalarVaraince" +
                      timelabels->integrator_step_name;
-  if (doing_EKT_now) taskname += "EKTnow";
+
   Task* tsk = scinew Task(taskname, this,
                           &IncDynamicProcedure::computeScalarVariance,
-                          timelabels, d_EKTCorrection, doing_EKT_now);
+                          timelabels);
 
   
   // Requires, only the scalar corresponding to matlindex = 0 is
   //           required. For multiple scalars this will be put in a loop
   Ghost::GhostType  gac = Ghost::AroundCells;
-  if (doing_EKT_now){
-    tsk->requires(Task::NewDW, d_lab->d_scalarEKTLabel, gac, 1);
-  }else{
-    tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel,  gac, 1);
-  }
-  tsk->requires(Task::NewDW,   d_lab->d_cellTypeLabel,  gac, 1);
+  tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel,  gac, 1);
+  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,  gac, 1);
 
   // Computes
-  if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First) 
-      &&((!(d_EKTCorrection))||((d_EKTCorrection)&&(doing_EKT_now)))) {
-     tsk->computes(d_lab->d_scalarVarSPLabel);
-     tsk->computes(d_lab->d_normalizedScalarVarLabel);
+  if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First ) {
+    tsk->computes(d_lab->d_scalarVarSPLabel);
+    tsk->computes(d_lab->d_normalizedScalarVarLabel);
   }else {
-     tsk->modifies(d_lab->d_scalarVarSPLabel);
-     tsk->modifies(d_lab->d_normalizedScalarVarLabel);
+    tsk->modifies(d_lab->d_scalarVarSPLabel);
+    tsk->modifies(d_lab->d_normalizedScalarVarLabel);
   }
 
   sched->addTask(tsk, patches, matls);
@@ -2087,9 +2080,7 @@ IncDynamicProcedure::computeScalarVariance(const ProcessorGroup* pc,
                                            const MaterialSubset*,
                                            DataWarehouse*,
                                            DataWarehouse* new_dw,
-                                           const TimeIntegratorLabel* timelabels,
-                                           bool d_EKTCorrection,
-                                           bool doing_EKT_now)
+                                           const TimeIntegratorLabel* timelabels)
 {
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
@@ -2101,18 +2092,11 @@ IncDynamicProcedure::computeScalarVariance(const ProcessorGroup* pc,
     CCVariable<double> normalizedScalarVar;
 
     Ghost::GhostType  gac = Ghost::AroundCells;
-    if (doing_EKT_now){
-      new_dw->get(scalar, d_lab->d_scalarEKTLabel, indx, patch, gac, 1);
-    }else{
-      new_dw->get(scalar, d_lab->d_scalarSPLabel,  indx, patch, gac, 1);
-    }
+    new_dw->get(scalar, d_lab->d_scalarSPLabel,  indx, patch, gac, 1);
 
-    if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First) 
-      &&((!(d_EKTCorrection))||((d_EKTCorrection)&&(doing_EKT_now)))) {
-      new_dw->allocateAndPut(scalarVar, d_lab->d_scalarVarSPLabel, indx,
-                         patch);
-      new_dw->allocateAndPut(normalizedScalarVar, d_lab->d_normalizedScalarVarLabel, indx,
-                               patch);
+    if ( timelabels->integrator_step_number == TimeIntegratorStepNumber::First ) {
+      new_dw->allocateAndPut(scalarVar,           d_lab->d_scalarVarSPLabel,         indx,patch);
+      new_dw->allocateAndPut(normalizedScalarVar, d_lab->d_normalizedScalarVarLabel, indx, patch);
     }
     else {
       new_dw->getModifiable(scalarVar, d_lab->d_scalarVarSPLabel, indx,
@@ -2325,16 +2309,13 @@ void
 IncDynamicProcedure::sched_computeScalarDissipation(SchedulerP& sched, 
                                                     const PatchSet* patches,
                                                     const MaterialSet* matls,
-                                                    const TimeIntegratorLabel* timelabels,
-                                                    bool d_EKTCorrection,
-                                                    bool doing_EKT_now)
+                                                    const TimeIntegratorLabel* timelabels)
 {
   string taskname =  "IncDynamicProcedure::computeScalarDissipation" +
                      timelabels->integrator_step_name;
-  if (doing_EKT_now) taskname += "EKTnow";
   Task* tsk = scinew Task(taskname, this,
                           &IncDynamicProcedure::computeScalarDissipation,
-                          timelabels, d_EKTCorrection, doing_EKT_now);
+                          timelabels);
 
   
   // Requires, only the scalar corresponding to matlindex = 0 is
@@ -2342,21 +2323,16 @@ IncDynamicProcedure::sched_computeScalarDissipation(SchedulerP& sched,
   // assuming scalar dissipation is computed before turbulent viscosity calculation
 
   Ghost::GhostType  gac = Ghost::AroundCells;
-  if (doing_EKT_now){
-    tsk->requires(Task::NewDW, d_lab->d_scalarEKTLabel, gac, 1);
-  }else{
-    tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel,  gac, 1);
-  }
+  tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel,    gac, 1);
   tsk->requires(Task::NewDW, d_lab->d_viscosityCTSLabel,gac, 1);
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,    gac, 1);
 
   // Computes
-  if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First) 
-      &&((!(d_EKTCorrection))||((d_EKTCorrection)&&(doing_EKT_now))))
-     tsk->computes(d_lab->d_scalarDissSPLabel);
-  else
-     tsk->modifies(d_lab->d_scalarDissSPLabel);
-
+  if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First)){
+    tsk->computes(d_lab->d_scalarDissSPLabel);
+  }else{
+    tsk->modifies(d_lab->d_scalarDissSPLabel);
+  }
   sched->addTask(tsk, patches, matls);
 }
 
@@ -2368,9 +2344,7 @@ IncDynamicProcedure::computeScalarDissipation(const ProcessorGroup*,
                                               const MaterialSubset*,
                                               DataWarehouse*,
                                               DataWarehouse* new_dw,
-                                              const TimeIntegratorLabel* timelabels,
-                                              bool d_EKTCorrection,
-                                              bool doing_EKT_now)
+                                              const TimeIntegratorLabel* timelabels)
 {
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
@@ -2382,18 +2356,13 @@ IncDynamicProcedure::computeScalarDissipation(const ProcessorGroup*,
     CCVariable<double> scalarDiss;  // dissipation..chi
 
     Ghost::GhostType  gac = Ghost::AroundCells;
-    if (doing_EKT_now){
-      new_dw->get(scalar,  d_lab->d_scalarEKTLabel,    indx, patch, gac, 1);
-    }else{
-      new_dw->get(scalar,  d_lab->d_scalarSPLabel,     indx, patch, gac, 1);
-    }
+    new_dw->get(scalar,    d_lab->d_scalarSPLabel,     indx, patch, gac, 1);
     new_dw->get(viscosity, d_lab->d_viscosityCTSLabel, indx, patch, gac, 1);
 
-    if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First) 
-      &&((!(d_EKTCorrection))||((d_EKTCorrection)&&(doing_EKT_now)))){
-       new_dw->allocateAndPut(scalarDiss, d_lab->d_scalarDissSPLabel,indx, patch);
+    if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First ){
+      new_dw->allocateAndPut(scalarDiss, d_lab->d_scalarDissSPLabel,indx, patch);
     }else{
-       new_dw->getModifiable(scalarDiss,  d_lab->d_scalarDissSPLabel, indx, patch);
+      new_dw->getModifiable(scalarDiss,  d_lab->d_scalarDissSPLabel, indx, patch);
     }
     scalarDiss.initialize(0.0);
 

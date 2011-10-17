@@ -1124,14 +1124,13 @@ void
 OdtClosure::sched_computeScalarVariance(SchedulerP& sched, 
                                         const PatchSet* patches,
                                         const MaterialSet* matls,
-                                        const TimeIntegratorLabel* timelabels,
-                                        bool d_EKTCorrection)
+                                        const TimeIntegratorLabel* timelabels)
 {
   string taskname =  "OdtClosure::computeScalarVaraince" +
                      timelabels->integrator_step_name;
   Task* tsk = scinew Task(taskname, this,
                           &OdtClosure::computeScalarVariance,
-                          timelabels, d_EKTCorrection);
+                          timelabels );
 
   
   // Requires, only the scalar corresponding to matlindex = 0 is
@@ -1154,8 +1153,7 @@ OdtClosure::computeScalarVariance(const ProcessorGroup*,
                                   const MaterialSubset*,
                                   DataWarehouse*,
                                   DataWarehouse* new_dw,
-                                  const TimeIntegratorLabel* timelabels,
-                                  bool)
+                                  const TimeIntegratorLabel* timelabels)
 {
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
@@ -1242,14 +1240,13 @@ void
 OdtClosure::sched_computeScalarDissipation(SchedulerP& sched, 
                                            const PatchSet* patches,
                                            const MaterialSet* matls,
-                                           const TimeIntegratorLabel* timelabels,
-                                           bool d_EKTCorrection)
+                                           const TimeIntegratorLabel* timelabels)
 {
   string taskname =  "OdtClosure::computeScalarDissipation" +
                      timelabels->integrator_step_name;
   Task* tsk = scinew Task(taskname, this,
                           &OdtClosure::computeScalarDissipation,
-                          timelabels, d_EKTCorrection);
+                          timelabels );
 
   
   // Requires, only the scalar corresponding to matlindex = 0 is
@@ -1283,8 +1280,7 @@ OdtClosure::computeScalarDissipation(const ProcessorGroup*,
                                      const MaterialSubset*,
                                      DataWarehouse* old_dw,
                                      DataWarehouse* new_dw,
-                                     const TimeIntegratorLabel* timelabels,
-                                     bool)
+                                     const TimeIntegratorLabel* timelabels)
 {
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);

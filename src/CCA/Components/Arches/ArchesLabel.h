@@ -148,7 +148,6 @@ namespace Uintah {
       // computed for new_dw in setInitialGuess
 
       const VarLabel* d_scalarSPLabel;
-      const VarLabel* d_scalarEKTLabel;
       const VarLabel* d_scalarTempLabel;
       const VarLabel* d_scalarFELabel;
 
