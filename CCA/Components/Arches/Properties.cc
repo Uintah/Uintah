@@ -392,11 +392,7 @@ Properties::sched_reComputeProps(SchedulerP& sched,
     }
   }  
   if (d_calcEnthalpy){
-    if (doing_EKT_now){
-      tsk->modifies(d_lab->d_enthalpyEKTLabel);
-    }else{
-      tsk->modifies(d_lab->d_enthalpySPLabel);
-    }
+    tsk->modifies(d_lab->d_enthalpySPLabel);
   }
   
   //__________________________________
@@ -701,11 +697,7 @@ Properties::reComputeProps(const ProcessorGroup* pc,
     
     //__________________________________
     if (d_calcEnthalpy){
-      if (doing_EKT_now){
-        new_dw->getModifiable(enthalpy, d_lab->d_enthalpyEKTLabel, indx, patch);
-      }else{
-        new_dw->getModifiable(enthalpy, d_lab->d_enthalpySPLabel,  indx, patch);
-      }
+      new_dw->getModifiable(enthalpy, d_lab->d_enthalpySPLabel,  indx, patch);
     }
     //__________________________________
     if (doing_EKT_now){
