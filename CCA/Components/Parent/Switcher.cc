@@ -822,6 +822,9 @@ Switcher::needRecompile( double time,
     comp->attachPort("output",    dataArchiver);
     comp->attachPort("modelmaker",modelmaker);
   
+   //clean up old models
+    modelmaker->clearModels();
+
     proc0cout << "\n__________________________________ Switching to component (" << d_componentIndex <<") \n";
     proc0cout << "  Reading input file: " << d_in_file[d_componentIndex] << "\n";
     

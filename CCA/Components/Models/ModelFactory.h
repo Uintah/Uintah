@@ -73,6 +73,7 @@ WARNING
     virtual ~ModelFactory();
 
     std::vector<ModelInterface*> getModels();
+    void clearModels();
     virtual void makeModels(const ProblemSpecP& orig_or_restart_ps, 
                             const ProblemSpecP& prob_spec,
                             GridP& grid,
