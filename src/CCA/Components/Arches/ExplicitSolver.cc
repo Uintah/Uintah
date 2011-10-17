@@ -407,8 +407,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
                                       d_EKTCorrection, doing_EKT_now);
 
       d_scalarSolver->solve(sched, patches, matls, 
-                                      d_timeIntegratorLabels[curr_level],
-                                      d_EKTCorrection, doing_EKT_now);
+                                      d_timeIntegratorLabels[curr_level] );
 
       if (d_enthalpySolve)
         d_enthalpySolver->solve(level, sched, patches, matls,
@@ -453,8 +452,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
                                       d_EKTCorrection, doing_EKT_now);
 
     d_scalarSolver->solve(sched, patches, matls, 
-                          d_timeIntegratorLabels[curr_level],
-                          d_EKTCorrection, doing_EKT_now);
+                          d_timeIntegratorLabels[curr_level]);
 
     EqnFactory& eqn_factory = EqnFactory::self();
     EqnFactory::EqnMap& scalar_eqns = eqn_factory.retrieve_all_eqns(); 
