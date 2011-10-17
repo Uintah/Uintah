@@ -116,8 +116,7 @@ public:
                                    double delta_t,
                                    CellInformation* cellinfo,
                                    ArchesVariables* vars,
-                                   ArchesConstVariables* constvars,
-                                   bool doing_EKT_now); 
+                                   ArchesConstVariables* constvars); 
   ////////////////////////////////////////////////////////////////////////
   // Set source terms. Will need more parameters...like velocity and
   // scalars

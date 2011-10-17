@@ -84,17 +84,8 @@ public:
   //  Task that is called by Arches and constains scheduling of other tasks  
   void sched_solve(const LevelP& level, SchedulerP&,
                    const TimeIntegratorLabel* timelabels,
-                   bool extraProjection,
-                   bool d_EKTCorrection,
-                   bool doing_EKT_now);
+                   bool extraProjection);
 
-
-
-  void sched_pressureLinearSolve(const LevelP& level, SchedulerP& sched,
-                                 const TimeIntegratorLabel* timelabels,
-                                 bool extraProjection,
-                                 bool d_EKTCorrection,
-                                 bool doing_EKT_now);
 
   //______________________________________________________________________
   // addHydrostaticTermtoPressure:
@@ -132,9 +123,7 @@ private:
                                const PatchSet* patches,
                                const MaterialSet* matls,
                                const TimeIntegratorLabel* timelabels,
-                               bool extraProjection,
-                               bool d_EKTCorrection,
-                               bool doing_EKT_now);
+                               bool extraProjection);
 
   void buildLinearMatrix(const ProcessorGroup* pc,
                          const PatchSubset* patches,
@@ -143,9 +132,7 @@ private:
                          DataWarehouse* matrix_dw,
                          const PatchSet* patchSet,
                          const TimeIntegratorLabel* timelabels,
-                         bool extraProjection,
-                         bool d_EKTCorrection,
-                         bool doing_EKT_now);
+                         bool extraProjection);
                          
   //______________________________________________________________________
   //  setGuessForX:
@@ -156,9 +143,7 @@ private:
                           const PatchSet* patches,                        
                           const MaterialSet* matls,                       
                           const TimeIntegratorLabel* timelabels,          
-                          bool extraProjection,                           
-                          bool d_EKTCorrection,                           
-                          bool doing_EKT_now);
+                          bool extraProjection);
                           
   void setGuessForX ( const ProcessorGroup* pg,
                       const PatchSubset* patches,                          
@@ -166,9 +151,7 @@ private:
                       DataWarehouse* old_dw,                               
                       DataWarehouse* new_dw,                               
                       const TimeIntegratorLabel* timelabels,               
-                      const bool extraProjection,                          
-                      const bool d_EKTCorrection,                          
-                      const bool doing_EKT_now );                     
+                      const bool extraProjection);                     
 
   //______________________________________________________________________
   //  setPressRHS:
@@ -178,9 +161,7 @@ private:
                            const PatchSet* patches,
                            const MaterialSet* matls,
                            const TimeIntegratorLabel* timelabels,
-                           bool extraProjection,
-                           bool d_EKTCorrection,
-                           bool doing_EKT_now);
+                           bool extraProjection);
                            
   void setRHS_X_wrap ( const ProcessorGroup*,
                        const PatchSubset* patches,
@@ -188,9 +169,7 @@ private:
                        DataWarehouse* ,
                        DataWarehouse* ,
                        const TimeIntegratorLabel* timelabels,
-                       const bool extraProjection,
-                       const bool d_EKTCorrection,
-                       const bool doing_EKT_now );
+                       const bool extraProjection);
                        
   //______________________________________________________________________
   // SolveSystem:
@@ -199,8 +178,7 @@ private:
                          const PatchSet* patches,
                          const MaterialSet* matls,
                          const TimeIntegratorLabel* timelabels,
-                         bool extraProjection,
-                         bool doing_EKT_now);
+                         bool extraProjection);
                          
   void solveSystem(const ProcessorGroup* pg,
                    const PatchSubset* patches,
@@ -218,7 +196,6 @@ private:
                       const MaterialSet* matls,
                       const TimeIntegratorLabel* timelabels,
                       bool extraProjection,
-                      bool doing_EKT_now,
                       string& pressLabel);
                                  
   void  Extract_X ( const ProcessorGroup* pg,

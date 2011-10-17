@@ -436,8 +436,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       d_momSolver->sched_prepareExtraProjection(sched, patches, matls,
                                       d_timeIntegratorLabels[curr_level],
                                       set_BC);
-      d_pressSolver->sched_solve(level, sched, d_timeIntegratorLabels[curr_level],
-                                 false, d_EKTCorrection, doing_EKT_now);
+      d_pressSolver->sched_solve(level, sched, d_timeIntegratorLabels[curr_level], false);
                                  
       d_momSolver->solve(sched, patches, matls,
                        d_timeIntegratorLabels[curr_level],
@@ -619,7 +618,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
                                  d_EKTCorrection, doing_EKT_now);
 
     d_pressSolver->sched_solve(level, sched, d_timeIntegratorLabels[curr_level],
-                               false, d_EKTCorrection, doing_EKT_now);
+                               false);
   
     // project velocities using the projection step
     d_momSolver->solve(sched, patches, matls,
@@ -633,7 +632,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
                                           d_timeIntegratorLabels[curr_level],
                                           false);
       d_pressSolver->sched_solve(level, sched, d_timeIntegratorLabels[curr_level],
-                                 d_extraProjection, false, false);
+                                 d_extraProjection);
                            
       d_momSolver->solve(sched, patches, matls,
                        d_timeIntegratorLabels[curr_level],
