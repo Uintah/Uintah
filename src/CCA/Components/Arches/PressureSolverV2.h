@@ -110,11 +110,7 @@ public:
                                     DataWarehouse* old_dw,
                                     DataWarehouse* new_dw,
                                     const TimeIntegratorLabel* timelabels);
-                                    
 
-  inline void setPressureCorrectionFlag(bool pressure_correction) {
-    d_pressure_correction = pressure_correction;
-  }
   inline void setMMS(bool doMMS) {
     d_doMMS=doMMS;
   }
@@ -303,8 +299,7 @@ private:
   MultiMaterialInterface* d_mmInterface;
   MultiMaterialSGSModel* d_mmSGSModel;
 #endif
-  
-  bool d_pressure_correction;
+
   bool d_norm_press;
   bool d_doMMS;
   bool d_do_only_last_projection;

@@ -109,7 +109,6 @@ MomentumSolver::problemSetup(const ProblemSpecP& params)
     throw InvalidValue("Convection scheme not supported: " + conv_scheme, __FILE__, __LINE__);
   }
   
-  db->getWithDefault("pressure_correction",         d_pressure_correction,false);
   db->getWithDefault("filter_divergence_constraint",d_filter_divergence_constraint,false);
 
   d_source = scinew Source(d_physicalConsts);
@@ -455,14 +454,6 @@ MomentumSolver::sched_buildLinearMatrixVelHat(SchedulerP& sched,
   tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel, gaf, 2);
   tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel, gaf, 2);
   tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel, gaf, 2);
-
-  if (d_pressure_correction){
-    if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First){
-      tsk->requires(Task::OldDW, timelabels->pressure_guess, gac, 1);
-    }else{
-      tsk->requires(Task::NewDW, timelabels->pressure_guess, gac, 1);
-    }
-  }
   
   // required for computing div constraint
 //#ifdef divergenceconstraint
@@ -607,14 +598,6 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
     new_dw->get(constVelocityVars.uVelocity,   d_lab->d_uVelocitySPBCLabel, indx, patch, gaf, 2);
     new_dw->get(constVelocityVars.vVelocity,   d_lab->d_vVelocitySPBCLabel, indx, patch, gaf, 2);
     new_dw->get(constVelocityVars.wVelocity,   d_lab->d_wVelocitySPBCLabel, indx, patch, gaf, 2);
-
-    if (d_pressure_correction){
-      if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First){
-        old_dw->get(constVelocityVars.pressure, timelabels->pressure_guess, indx, patch, gac, 1);
-      }else{
-        new_dw->get(constVelocityVars.pressure, timelabels->pressure_guess, indx, patch, gac, 1);
-      }
-    }
 
 //#ifdef divergenceconstraint
     if (timelabels->multiple_steps){
@@ -1006,12 +989,6 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
                                          &velocityVars, &constVelocityVars, 
                                          time_shiftmms, 
                                          delta_t);
-    }
-
-
-    if (d_pressure_correction) {
-      d_rhsSolver->calculateVelocity(patch, delta_t, cellinfo, &velocityVars,
-                                     constVelocityVars.new_density,constVelocityVars.pressure);
     }
     
     //__________________________________

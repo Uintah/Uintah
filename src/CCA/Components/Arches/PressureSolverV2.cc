@@ -420,7 +420,7 @@ PressureSolver::sched_setGuessForX(SchedulerP& sched,
                           
   Ghost::GhostType  gn = Ghost::None;
 
-  if (!((d_pressure_correction)||(extraProjection) ||((d_EKTCorrection)&&(doing_EKT_now)))){
+  if (!( (extraProjection) ||((d_EKTCorrection)&&(doing_EKT_now)))){
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First){
       tsk->requires(Task::OldDW, timelabels->pressure_guess, gn, 0);
       tsk->computes( d_lab->d_pressureGuessLabel);
@@ -468,7 +468,7 @@ PressureSolver::setGuessForX ( const ProcessorGroup* pg,
     cout << " timelabel->pressure_out:   " << timelabels->pressure_out->getName() << endl;
 #endif
     
-    if (!((d_pressure_correction)||(extraProjection) ||((d_EKTCorrection)&&(doing_EKT_now)))){
+    if (!( (extraProjection) ||((d_EKTCorrection)&&(doing_EKT_now)))){
       if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First){
         
         new_dw->allocateAndPut(guess,     d_lab->d_pressureGuessLabel, d_indx, patch);
