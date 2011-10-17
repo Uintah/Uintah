@@ -532,7 +532,7 @@ PicardNonlinearSolver::recursiveSolver(const ProcessorGroup* pg,
 
   d_pressSolver->sched_solve(                level, subsched, 
                                              d_timeIntegratorLabels[curr_level],
-                                                             false, false, false);
+                                                             false);
   
   // project velocities using the projection step
     d_momSolver->solve(                      subsched, local_patches, local_matls,
