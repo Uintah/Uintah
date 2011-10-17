@@ -166,10 +166,6 @@ public:
     d_discretize->setFilter(filter);
   }
 #endif
-  const bool& getPressureCorrectionFlag() const
-    {
-      return d_pressure_correction;
-    }
   inline void setMMS(bool doMMS) {
     d_doMMS=doMMS;
   }
@@ -231,7 +227,7 @@ private:
   const MPMArchesLabel* d_MAlab;
   bool d_momentum_coupling;
   bool d_central;
-  bool d_pressure_correction;
+
   // computes coefficients
   Discretization* d_discretize;
   // computes sources

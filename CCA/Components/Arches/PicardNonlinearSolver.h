@@ -379,7 +379,7 @@ private:
   TimeIntegratorLabel* nosolve_timelabels;
   int numTimeIntegratorLevels;
   bool nosolve_timelabels_allocated;
-  bool d_pressure_correction;
+
   const PatchSet* d_perproc_patches;
   bool d_3d_periodic;
   double d_u_norm,d_v_norm,d_w_norm, d_rho_norm;

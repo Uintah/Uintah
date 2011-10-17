@@ -430,7 +430,7 @@ private:
   TimeIntegratorLabel* nosolve_timelabels;
   int numTimeIntegratorLevels;
   bool nosolve_timelabels_allocated;
-  bool d_pressure_correction;
+ 
   bool d_3d_periodic;
   bool d_dynScalarModel;
   int d_turbModelCalcFreq;

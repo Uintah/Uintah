@@ -344,7 +344,6 @@
         </MixtureFractionSolver>
 
         <MomentumSolver                 spec="REQUIRED NO_DATA" >
-          <pressure_correction          spec="OPTIONAL BOOLEAN" />
           <filter_divergence_constraint spec="OPTIONAL BOOLEAN" />
           <convection_scheme            spec="REQUIRED STRING 'central, upwind'" />
           <src                          spec="MULTIPLE NO_DATA" 
