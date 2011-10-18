@@ -455,7 +455,6 @@ Arches::problemSetup(const ProblemSpecP& params,
 
   d_props->setBC(d_boundaryCondition);
   
-  
   //__________________________________
   SolverInterface* hypreSolver = dynamic_cast<SolverInterface*>(getPort("solver"));
   

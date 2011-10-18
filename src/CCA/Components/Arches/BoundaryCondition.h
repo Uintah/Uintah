@@ -345,15 +345,8 @@ namespace Uintah {
         return d_outletBoundary; 
       }
 
-      bool getIntrusionBC() { 
-        std::cout << "Intrusion machinery has been disabled" << std::endl;
-        exit(1);
-        return 1;
-        //return d_intrusionBoundary; 
-      }
-
       bool anyArchesPhysicalBC() { 
-        return ((d_wallBoundary)||(d_inletBoundary)||(d_pressureBoundary)||(d_outletBoundary)||(d_intrusionBoundary)); 
+        return ((d_wallBoundary)||(d_inletBoundary)||(d_pressureBoundary)||(d_outletBoundary)); 
       }
 
       ////////////////////////////////////////////////////////////////////////
@@ -652,12 +645,6 @@ namespace Uintah {
           CellInformation*, 
           ArchesVariables* vars,
           ArchesConstVariables* constvars);
-      // applies multimaterial bc's for scalars and pressure
-      void mmscalarWallBC__new( const Patch* patch,
-          CellInformation*, 
-          ArchesVariables* vars,
-          ArchesConstVariables* constvars);
-
 
       // applies multimaterial bc's for enthalpy
       void mmEnthalpyWallBC( const Patch* patch,
@@ -820,6 +807,11 @@ namespace Uintah {
       /** @brief Using the new BC mechanism? */
       inline bool isUsingNewBC(){ return d_use_new_bcs; }; 
 
+      /** @brief Interface to the intrusion temperature method */ 
+      void sched_setIntrusionTemperature( SchedulerP& sched, 
+                                          const PatchSet* patches,
+                                          const MaterialSet* matls );
+
     private:
 
       /** @brief Setup new boundary conditions specified under the <Grid><BoundaryCondition> section */
@@ -896,6 +888,7 @@ namespace Uintah {
           DataWarehouse* new_dw);
 
       // New boundary conditions
+
       void getFlowINOUT(const ProcessorGroup*,
           const PatchSubset* patches,
           const MaterialSubset* matls,
@@ -1055,20 +1048,6 @@ namespace Uintah {
         void problemSetup(ProblemSpecP& params);
       };
 
-      ////////////////////////////////////////////////////////////////////////
-      // Intrusion Boundary
-      struct IntrusionBdry {
-        int d_cellTypeID;
-        double area;
-        double d_temperature;
-        bool inverse; 
-        // stores the geometry information, read from problem specs
-        std::vector<GeometryPieceP> d_geomPiece;
-        IntrusionBdry(int cellID);
-        IntrusionBdry() {}
-        void problemSetup(ProblemSpecP& params);
-      };
-
       void computeScalarSourceTerm(const ProcessorGroup*,
           const PatchSubset* patches,
           const MaterialSubset*,
@@ -1142,9 +1121,6 @@ namespace Uintah {
 
       bool d_outletBoundary;
       FlowOutlet* d_outletBC;
-
-      bool d_intrusionBoundary;
-      IntrusionBdry* d_intrusionBC;
 
       string d_mms;
       double d_airDensity, d_heDensity;

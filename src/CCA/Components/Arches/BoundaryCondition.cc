@@ -119,7 +119,6 @@ BoundaryCondition::BoundaryCondition(const ArchesLabel* label,
   d_wallBdry = 0;
   d_pressureBC = 0;
   d_outletBC = 0;
-  d_intrusionBC = 0;
   _using_new_intrusion = false; 
 
   // x-direction
@@ -152,9 +151,6 @@ BoundaryCondition::~BoundaryCondition()
   }
   for (int ii = 0; ii < d_numInlets; ii++){
     delete d_flowInlets[ii];
-  }
-  if(d_intrusionBC){
-    delete d_intrusionBC;
   }
   for ( EfficiencyMap::iterator iter = d_effVars.begin(); iter != d_effVars.end(); iter++){
     VarLabel::destroy(iter->second.label);
@@ -199,7 +195,6 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
     d_wallBoundary = false;
     d_pressureBoundary = false;
     d_outletBoundary = false;
-    d_intrusionBoundary = false;
     d_use_new_bcs = false; 
     _using_new_intrusion = false;
   }
@@ -240,10 +235,10 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
       } 
     }
 
-    if ( db->findBlock("NewIntrusionBC") ){ 
+    if ( db->findBlock("intrusions") ){ 
 
       _intrusionBC = scinew IntrusionBC( d_lab, d_props, BoundaryCondition::MMWALL ); 
-      ProblemSpecP db_new_intrusion = db->findBlock("NewIntrusionBC"); 
+      ProblemSpecP db_new_intrusion = db->findBlock("intrusions"); 
       _using_new_intrusion = true; 
 
       _intrusionBC->problemSetup( db_new_intrusion ); 
@@ -381,21 +376,6 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
       proc0cout << "Outlet boundary not specified"<<endl;
       d_outletBoundary = false;
     }
-
-    if (ProblemSpecP intrusion_db = db->findBlock("intrusions")) {
-      d_intrusionBoundary = true;
-      if ( d_use_new_bcs ) { 
-        d_intrusionBC = scinew IntrusionBdry(WALL);
-      } else { 
-        d_intrusionBC = scinew IntrusionBdry(INTRUSION);
-      } 
-      d_intrusionBC->problemSetup(intrusion_db);
-      //++total_cellTypes;
-    }
-    else {
-      proc0cout << "Intrusion boundary not specified"<<endl;
-      d_intrusionBoundary = false;
-    }
   }
 
   d_mmWallID = -10; // invalid cell type
@@ -406,11 +386,8 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
       d_mmWallID = MMWALL; 
     } 
   }
-  if ((d_MAlab)&&(d_intrusionBoundary)){
-    d_mmWallID = d_intrusionBC->d_cellTypeID;
-    if (d_use_new_bcs) { 
-      d_mmWallID = WALL; 
-    } 
+  if ( d_MAlab ){
+    d_mmWallID = WALL; 
   }
   //adding mms access
   if (d_doMMS) {
@@ -569,30 +546,6 @@ BoundaryCondition::cellTypeInit(const ProcessorGroup*,
               cellType[*iter] = d_flowInlets[ii]->d_cellTypeID;
           }
         }
-      }
-    }
-    if (d_intrusionBoundary) {
-      Box patchInteriorBox = patch->getBox();
-      int nofGeomPieces = (int)d_intrusionBC->d_geomPiece.size();
-      for (int ii = 0; ii < nofGeomPieces; ii++) {
-        GeometryPieceP  piece = d_intrusionBC->d_geomPiece[ii];
-        Box geomBox = piece->getBoundingBox();
-        Box b = geomBox.intersect(patchInteriorBox);
-        if ( !(b.degenerate()) && !d_intrusionBC->inverse ) {
-          for (CellIterator iter = patch->getCellCenterIterator(b);!iter.done(); iter++) {
-            Point p = patch->cellPosition(*iter);
-            if ( piece->inside(p) ) {
-              cellType[*iter] = d_intrusionBC->d_cellTypeID;
-            } 
-          }
-        } else if ( d_intrusionBC->inverse ) { 
-          for (CellIterator iter = patch->getCellIterator();!iter.done(); iter++) {
-            Point p = patch->cellPosition(*iter);
-            if ( !piece->inside(p) ) {
-              cellType[*iter] = d_intrusionBC->d_cellTypeID;
-            } 
-          }
-        } 
       }
     }
   }
@@ -812,7 +765,7 @@ BoundaryCondition::mmWallCellTypeInit(const ProcessorGroup*,
       // resets old mmwall type back to flow field and sets cells with void fraction
       // of less than .5 to mmWall
 
-      if (d_intrusionBoundary || _using_new_intrusion) {
+      if ( _using_new_intrusion ) {
         for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
           for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
             for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
@@ -1598,7 +1551,7 @@ BoundaryCondition::pressureBC(const Patch* patch,
   
   //__________________________________
   //  intrusion Boundary Conditions
-  if(d_intrusionBC){
+  if(_using_new_intrusion){
     for(CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
       IntVector c = *iter;
       if(cellType[c] == wall_BC){
@@ -1839,6 +1792,15 @@ BoundaryCondition::mmWallTemperatureBC(const Patch* patch,
   }  // z
 }
 
+void 
+BoundaryCondition::sched_setIntrusionTemperature( SchedulerP& sched, 
+                                                  const PatchSet* patches,
+                                                  const MaterialSet* matls) 
+{ 
+  // Interface to new intrusions
+  _intrusionBC->sched_setIntrusionT( sched, patches, matls ); 
+} 
+
 //______________________________________________________________________
 // compute multimaterial wall bc
 void 
@@ -1973,70 +1935,6 @@ BoundaryCondition::mmscalarWallBC( const Patch* patch,
 }
 
 //______________________________________________________________________
-// New intrusion scalar BC
-void 
-BoundaryCondition::mmscalarWallBC__new( const Patch* patch,
-                                        CellInformation*,
-                                        ArchesVariables* vars,
-                                        ArchesConstVariables* constvars)
-{
-  // **NOTE**
-  // Why is there a special d_mmWallID? This isn't consistent with how wallid is handled
-
-  // Get the wall boundary and flow field codes
-  for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
-    IntVector curr = *iter;
-
-    if (constvars->cellType[curr] == d_mmWallID) {
-      vars->scalarConvCoef[curr].e = 0.0;
-      vars->scalarConvCoef[curr].w = 0.0;
-      vars->scalarConvCoef[curr].n = 0.0;
-      vars->scalarConvCoef[curr].s = 0.0;
-      vars->scalarConvCoef[curr].t = 0.0;
-      vars->scalarConvCoef[curr].b = 0.0;
-
-      vars->scalarTotCoef[curr].e = 0.0;
-      vars->scalarTotCoef[curr].w = 0.0;
-      vars->scalarTotCoef[curr].n = 0.0;
-      vars->scalarTotCoef[curr].s = 0.0;
-      vars->scalarTotCoef[curr].t = 0.0;
-      vars->scalarTotCoef[curr].b = 0.0;
-  
-      vars->scalarNonlinearSrc[curr] = 0.0;
-      vars->scalarLinearSrc[curr] = -1.0;
-    }
-    else {
-      if (constvars->cellType[curr + IntVector(1,0,0)]==d_mmWallID){
-        vars->scalarConvCoef[curr].e = 0.0;
-        vars->scalarTotCoef[curr].e = 0.0;
-      }
-      if (constvars->cellType[curr - IntVector(1,0,0)]==d_mmWallID){
-        vars->scalarConvCoef[curr].w = 0.0;
-        vars->scalarTotCoef[curr].w = 0.0;
-      }
-      if (constvars->cellType[curr + IntVector(0,1,0)]==d_mmWallID){
-        vars->scalarConvCoef[curr].n = 0.0;
-        vars->scalarTotCoef[curr].n = 0.0;
-      }
-      if (constvars->cellType[curr - IntVector(0,1,0)]==d_mmWallID){
-        vars->scalarConvCoef[curr].s = 0.0;
-        vars->scalarTotCoef[curr].s = 0.0;
-      }
-       if (constvars->cellType[curr + IntVector(0,0,1)]==d_mmWallID){
-        vars->scalarConvCoef[curr].t = 0.0;
-        vars->scalarTotCoef[curr].t = 0.0;
-      } 
-       if (constvars->cellType[curr - IntVector(0,0,1)]==d_mmWallID){
-        vars->scalarConvCoef[curr].b = 0.0;
-        vars->scalarTotCoef[curr].b = 0.0;
-      } 
-    }
-
-  }
-}
- 
-
-//______________________________________________________________________
 // applies multimaterial bc's for enthalpy
 void
 BoundaryCondition::mmEnthalpyWallBC( const Patch* patch,
@@ -2075,37 +1973,6 @@ BoundaryCondition::WallBdry::problemSetup(ProblemSpecP& params)
   ProblemSpecP geomObjPS = params->findBlock("geom_object");
   GeometryPieceFactory::create(geomObjPS, d_geomPiece);
 }
-
-//****************************************************************************
-// constructor for BoundaryCondition::WallBdry
-//****************************************************************************
-BoundaryCondition::IntrusionBdry::IntrusionBdry(int cellID):
-  d_cellTypeID(cellID)
-{
-}
-
-//****************************************************************************
-// Problem Setup for BoundaryCondition::WallBdry
-//****************************************************************************
-void 
-BoundaryCondition::IntrusionBdry::problemSetup(ProblemSpecP& params)
-{
-  if (params->findBlock("temperature"))
-    params->require("temperature", d_temperature);
-  else
-    d_temperature = 300;
-  ProblemSpecP geomObjPS = params->findBlock("geom_object");
-  GeometryPieceFactory::create(geomObjPS, d_geomPiece);
-
-  inverse = false; 
-
-  if ( params->findBlock( "inverse" ) )
-    inverse = true; 
-
-}
-
-
-
 
 //****************************************************************************
 // constructor for BoundaryCondition::FlowInlet
@@ -2471,71 +2338,6 @@ BoundaryCondition::FlowOutlet::problemSetup(ProblemSpecP& params)
   }
 }
 
-//______________________________________________________________________
-//
-void
-BoundaryCondition::calculateIntrusionVel(const Patch* patch,
-                                         int index,
-                                         CellInformation* ,
-                                         ArchesVariables* vars,
-                                         ArchesConstVariables* constvars)
-{
-  int ioff, joff, koff;
-  IntVector idxLoU;
-  IntVector idxHiU;
-
-  switch(index) {
-
-  case Arches::XDIR:
-
-    idxLoU = patch->getSFCXFORTLowIndex__Old();
-    idxHiU = patch->getSFCXFORTHighIndex__Old();
-    ioff = 1; joff = 0; koff = 0;
-
-    fort_intrusion_computevel(vars->uVelRhoHat,
-                              ioff, joff, koff,
-                              constvars->cellType,
-                              idxLoU, idxHiU,
-                              d_intrusionBC->d_cellTypeID);
-
-    break;
-
-  case Arches::YDIR:
-
-    idxLoU = patch->getSFCYFORTLowIndex__Old();
-    idxHiU = patch->getSFCYFORTHighIndex__Old();
-    ioff = 0; joff = 1; koff = 0;
-
-    fort_intrusion_computevel(vars->vVelRhoHat,
-                              ioff, joff, koff,
-                              constvars->cellType,
-                              idxLoU, idxHiU,
-                              d_intrusionBC->d_cellTypeID);
-
-    break;
-
-  case Arches::ZDIR:
-
-    idxLoU = patch->getSFCZFORTLowIndex__Old();
-    idxHiU = patch->getSFCZFORTHighIndex__Old();
-
-    ioff = 0; joff = 0; koff = 1;
-    
-    fort_intrusion_computevel(vars->wVelRhoHat,
-                       ioff, joff, koff,
-                       constvars->cellType,
-                       idxLoU, idxHiU,
-                       d_intrusionBC->d_cellTypeID);
-
-    break;
-
-  default:
-    
-    throw InvalidValue("Invalid index in Source::calcVelSrc", __FILE__, __LINE__);
-    
-  }
-  
-}
 //______________________________________________________________________
 //
 void
@@ -5485,9 +5287,6 @@ BoundaryCondition::setAreaFraction( const ProcessorGroup*,
     new_dw->getModifiable( volFraction, d_lab->d_volFractionLabel, indx, patch );  
 
     int flowType = -1; 
-    if (d_intrusionBoundary) 
-      d_newBC->setAreaFraction( patch, areaFraction, volFraction, cellType, d_intrusionBC->d_cellTypeID, flowType ); 
-
     if (d_MAlab)
       d_newBC->setAreaFraction( patch, areaFraction, volFraction, cellType, d_mmWallID, flowType ); 
 
@@ -5695,41 +5494,6 @@ BoundaryCondition::cellTypeInit__NEW(const ProcessorGroup*,
         }
       }
     }
-
-    // Initialize intrusions 
-    if ( d_intrusionBoundary ){ 
-
-      Box patchInteriorBox = patch->getBox();
-      int nofGeomPieces = (int)d_intrusionBC->d_geomPiece.size();
-
-      for (int ii = 0; ii < nofGeomPieces; ii++) {
-
-        GeometryPieceP  piece = d_intrusionBC->d_geomPiece[ii];
-        Box geomBox = piece->getBoundingBox();
-        Box b = geomBox.intersect(patchInteriorBox);
-
-        if ( !(b.degenerate()) && !d_intrusionBC->inverse ) {
-
-          for (CellIterator iter = patch->getCellCenterIterator(b);!iter.done(); iter++) {
-            Point p = patch->cellPosition(*iter);
-            if ( piece->inside(p) ) {
-              cellType[*iter] = INTRUSION; 
-            } 
-          }
-
-        } else if ( d_intrusionBC->inverse ) { 
-          // If outside of the geometry, then count it as an intrusion (inverse behavior from above)
-
-          for (CellIterator iter = patch->getCellIterator();!iter.done(); iter++) {
-            Point p = patch->cellPosition(*iter);
-            if ( !piece->inside(p) ) {
-              cellType[*iter] = INTRUSION;
-            } 
-          }
-
-        } 
-      }
-    } 
   }
 }
 

@@ -454,6 +454,8 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
     }
 
+    d_boundaryCondition->sched_setIntrusionTemperature( sched, patches, matls ); 
+
     // Property models needed after table lookup:
     for ( PropertyModelFactory::PropMap::iterator iprop = all_prop_models.begin(); 
           iprop != all_prop_models.end(); iprop++){
