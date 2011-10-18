@@ -609,8 +609,6 @@ void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
     if (d_MAlab){
       d_boundaryCondition->mmscalarWallBC(patch, cellinfo,
                                           &scalarVars, &constScalarVars);
-      //d_boundaryCondition->mmscalarWallBC__new(pc, patch, cellinfo,
-      //                                    &scalarVars, &constScalarVars);
     }
     // similar to mascal
     d_source->modifyScalarMassSource(pc, patch, delta_t,

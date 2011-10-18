@@ -136,6 +136,17 @@ namespace Uintah{
                          CCVariable<double>& RHS,
                          constCCVariable<double>& density ); 
 
+      /** @brief Sets the temperature field to that of the intrusion temperature */ 
+      void sched_setIntrusionT( SchedulerP& sched, 
+                                const PatchSet* patches, 
+                                const MaterialSet* matls );
+
+      void setIntrusionT( const ProcessorGroup*, 
+                          const PatchSubset* patches, 
+                          const MaterialSubset* matls, 
+                          DataWarehouse* old_dw, 
+                          DataWarehouse* new_dw );
+
       /** @brief A base class for velocity inlet conditons **/ 
       class VelInletBase { 
 
@@ -263,6 +274,9 @@ namespace Uintah{
         //inlet generator
         IntrusionBC::VelInletBase* velocity_inlet_generator; 
 
+        //material properties
+        double temperature; 
+
         bool inverted; 
 
       }; 
@@ -305,11 +319,14 @@ namespace Uintah{
       const ArchesLabel* _lab; 
       Properties* _props;
       bool _intrusion_on; 
+      bool _do_energy_exchange; 
 
       std::vector<IntVector> _dHelp;
       std::vector<IntVector> _faceDirHelp; 
       std::vector<int>       _iHelp; 
       std::vector<double>    _sHelp; 
+
+      const VarLabel* _T_label; 
 
 
       /** @brief Add an iterator to the list of total iterators for this patch and face */ 

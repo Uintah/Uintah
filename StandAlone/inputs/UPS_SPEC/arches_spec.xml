@@ -190,7 +190,7 @@
 
       <BoundaryConditions               spec="OPTIONAL NO_DATA" > 
 
-        <NewIntrusionBC                 spec="OPTIONAL NO_DATA">
+        <intrusions                 spec="OPTIONAL NO_DATA">
          <!-- NOTES: --> 
          <!-- velocity components are specified using simple [u,v,w] labels and NOT uVelocitySPBC, etc... --> 
          <!-- variable = mass_flow_rate is a specific variable that sets the velocity components based
@@ -210,9 +210,11 @@
                                                                                        value= variable boundary value -->
            <inverted                    spec="OPTIONAL NO_DATA"/>                 <!-- inverts the solid def. so that points inside the solid 
                                                                                        are actually outside the solid and vice versa --> 
+
+           <temperature                 spec="OPTIONAL DOUBLE 'positive'"/>       <!-- solid temperature --> 
            
          </intrusion>
-        </NewIntrusionBC>
+        </intrusions>
 
         <use_new_bcs                    spec="OPTIONAL NO_DATA"/>
         
@@ -261,12 +263,6 @@
           </Prefill>
           <geom_object />
         </FlowInlet>
-
-        <intrusions                     spec="OPTIONAL NO_DATA" >
-          <geom_object                  spec="MULTIPLE"/>
-          <temperature                  spec="OPTIONAL DOUBLE 'positive'"/>
-          <inverse                      spec="OPTIONAL NO_DATA"/>
-        </intrusions>
 
         <PressureBC                     spec="OPTIONAL NO_DATA" >
           <mixture_fraction             spec="REQUIRED DOUBLE 'positive'" />
