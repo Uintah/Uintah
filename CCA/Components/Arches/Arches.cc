@@ -41,6 +41,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Arches/SourceTerms/CoalGasHeat.h>
 #include <CCA/Components/Arches/SourceTerms/CoalGasMomentum.h> 
 #include <CCA/Components/Arches/SourceTerms/WestbrookDryer.h>
+#include <CCA/Components/Arches/SourceTerms/BowmanNOx.h>
 #include <CCA/Components/Arches/SourceTerms/Inject.h>
 #include <CCA/Components/Arches/SourceTerms/IntrusionInlet.h>
 #include <CCA/Components/Arches/IntrusionBC.h>
@@ -2449,6 +2450,11 @@ void Arches::registerUDSources(ProblemSpecP& db)
       } else if (src_type == "westbrook_dryer") {
         // Computes a global reaction rate for a hydrocarbon (see Turns, eqn 5.1,5.2)
         SourceTermBase::Builder* srcBuilder = scinew WestbrookDryer::Builder(src_name, required_varLabels, d_lab); 
+        factory.register_source_term( src_name, srcBuilder ); 
+
+      } else if (src_type == "bowman_nox") {
+        // Computes a global reaction rate for a hydrocarbon (see Turns, eqn 5.1,5.2)
+        SourceTermBase::Builder* srcBuilder = scinew BowmanNOx::Builder(src_name, required_varLabels, d_lab); 
         factory.register_source_term( src_name, srcBuilder ); 
       
       } else if (src_type == "mms1"){
