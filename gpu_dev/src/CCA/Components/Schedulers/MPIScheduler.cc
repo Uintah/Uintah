@@ -195,25 +195,28 @@ MPIScheduler::wait_till_all_done()
 }
 
 void
-MPIScheduler::initiateTask( DetailedTask          * task,
-			    bool only_old_recvs, int abort_point, int iteration )
+MPIScheduler::initiateTask(DetailedTask* task,
+                           bool only_old_recvs,
+                           int abort_point,
+                           int iteration)
 {
   MALLOC_TRACE_TAG_SCOPE("MPIScheduler::initiateTask");
-  TAU_PROFILE("MPIScheduler::initiateTask()", " ", TAU_USER); 
+  TAU_PROFILE("MPIScheduler::initiateTask()", " ", TAU_USER);
 
-  postMPIRecvs( task, only_old_recvs, abort_point, iteration);
-  if(only_old_recvs) {
+  postMPIRecvs(task, only_old_recvs, abort_point, iteration);
+  if (only_old_recvs) {
     return;
   }
-} // end initiateTask()
+}  // end initiateTask()
 
 void
-MPIScheduler::initiateReduction( DetailedTask          * task )
+MPIScheduler::initiateReduction( DetailedTask* task )
 {
   TAU_PROFILE("MPIScheduler::initiateReduction()", " ", TAU_USER); 
   {
-    if(reductionout.active() && d_myworld->myrank()==0)
+    if(reductionout.active() && d_myworld->myrank()==0) {
       reductionout << "Running Reduction Task: " << task->getName() << endl;
+    }
 
     double reducestart = Time::currentSeconds();
 
@@ -228,13 +231,12 @@ MPIScheduler::initiateReduction( DetailedTask          * task )
 }
 
 void
-MPIScheduler::runTask( DetailedTask         * task, int iteration)
+MPIScheduler::runTask( DetailedTask* task, int iteration)
 {
   MALLOC_TRACE_TAG_SCOPE("MPIScheduler::runTask");
   TAU_PROFILE("MPIScheduler::runTask()", " ", TAU_USER); 
 
-  if(waitout.active())
-  {
+  if(waitout.active()) {
     waittimes[task->getTask()->getName()]+=CurrentWaitTime;
     CurrentWaitTime=0;
   }

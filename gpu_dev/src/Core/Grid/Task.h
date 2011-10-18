@@ -86,25 +86,27 @@ WARNING
 
   protected:
 
+    // base CPU Action class
     class UINTAHSHARE ActionBase {
     public:
       virtual ~ActionBase();
-      virtual void doit(const ProcessorGroup* pc,
+      virtual void doit(const ProcessorGroup* pg,
                         const PatchSubset* patches,
                         const MaterialSubset* matls,
                         DataWarehouse* fromDW,
                         DataWarehouse* toDW) = 0;
     };
 
-    class UINTAHSHARE ActionBaseGPU {
+    // base GPU Action class
+    class UINTAHSHARE ActionGPUBase {
     public:
-      virtual ~ActionBaseGPU();
-      virtual void doit(const ProcessorGroup* pc,
+      virtual ~ActionGPUBase();
+      virtual void doit(const ProcessorGroup* pg,
                         const PatchSubset* patches,
                         const MaterialSubset* matls,
                         DataWarehouse* fromDW,
                         DataWarehouse* toDW) = 0;
-      virtual void doitGPU(const ProcessorGroup* pc,
+      virtual void doitGPU(const ProcessorGroup* pg,
                         const PatchSubset* patches,
                         const MaterialSubset* matls,
                         DataWarehouse* fromDW,
@@ -115,153 +117,95 @@ WARNING
 
   private:
 
+    // begin CPU Action definitions
     template<class T>
     class Action : public ActionBase {
       
       T* ptr;
-      void (T::*pmf)(const ProcessorGroup*,
+      void (T::*pmf)(const ProcessorGroup* pg,
                      const PatchSubset* patches,
                      const MaterialSubset* matls,
                      DataWarehouse* fromDW,
                      DataWarehouse* toDW);
     public: // class Action
       Action( T* ptr,
-              void (T::*pmf)(const ProcessorGroup*, 
+              void (T::*pmf)(const ProcessorGroup* pg,
                              const PatchSubset* patches,
                              const MaterialSubset* matls,
-                             DataWarehouse*,
-                             DataWarehouse*) )
+                             DataWarehouse* fromDW,
+                             DataWarehouse*toDW) )
         : ptr(ptr), pmf(pmf) {}
       virtual ~Action() {}
       
       //////////
       // Insert Documentation Here:
-      virtual void doit(const ProcessorGroup* pc,
+      virtual void doit(const ProcessorGroup* pg,
                         const PatchSubset* patches,
                         const MaterialSubset* matls,
                         DataWarehouse* fromDW,
                         DataWarehouse* toDW) {
-        (ptr->*pmf)(pc, patches, matls, fromDW, toDW);
+        (ptr->*pmf)(pg, patches, matls, fromDW, toDW);
       }
     }; // end class Action
 
-    template<class T>
-    class ActionGPU : public ActionBaseGPU {
+    template<class T, class Arg1>
+    class Action1 : public ActionBase {
+
       T* ptr;
-      void (T::*pmf)(const ProcessorGroup*,
+      void (T::*pmf)(const ProcessorGroup* pg,
                      const PatchSubset* patches,
                      const MaterialSubset* matls,
                      DataWarehouse* fromDW,
-                     DataWarehouse* toDW);
-      void (T::*pmfgpu)(const ProcessorGroup*,
-                        const PatchSubset* patches,
-                        const MaterialSubset* matls,
-                        DataWarehouse* fromDW,
-                        DataWarehouse* toDW,
-                        int device);
-    public: // class ActionGPU
-      ActionGPU( T* ptr,
-                 void (T::*pmf)(const ProcessorGroup*,
-                                const PatchSubset* patches,
-                                const MaterialSubset* matls,
-                                DataWarehouse*,
-                                DataWarehouse*) )
-                 : ptr(ptr), pmf(pmf) {}
-      ActionGPU( T* ptr,
-                 void (T::*pmf)(const ProcessorGroup*,
-                                const PatchSubset* patches,
-                                const MaterialSubset* matls,
-                                DataWarehouse* fromDW,
-                                DataWarehouse* toDW),
-                 T* ptrgpu,
-                 void (T::*pmfgpu)(const ProcessorGroup*,
-                                   const PatchSubset* patches,
-                                   const MaterialSubset* matls,
-                                   DataWarehouse* fromDW,
-                                   DataWarehouse* toDW) )
-                 : ptr(ptr), pmf(pmf), pmfgpu(pmfgpu) {}
-      virtual ~ActionGPU() {}
-
-      //////////
-      // Insert Documentation Here:
-      virtual void doit(const ProcessorGroup* pc,
-                        const PatchSubset* patches,
-                        const MaterialSubset* matls,
-                        DataWarehouse* fromDW,
-                        DataWarehouse* toDW) {
-        (ptr->*pmf)(pc, patches, matls, fromDW, toDW);
-      }
-
-      //////////
-      // Insert Documentation Here:
-      virtual void doitGPU(const ProcessorGroup* pc,
-                           const PatchSubset* patches,
-                           const MaterialSubset* matls,
-                           DataWarehouse* fromDW,
-                           DataWarehouse* toDW,
-                           int device) {
-        (ptr->*pmfgpu)(pc, patches, matls, fromDW, toDW);
-      }
-    }; // end class ActionGPU
-
-    template<class T, class Arg1>
-    class Action1 : public ActionBase {
-      
-      T* ptr;
-      void (T::*pmf)(const ProcessorGroup*,
-                     const PatchSubset* patches,
-                     const MaterialSubset* matls,
-                     DataWarehouse*,
-                     DataWarehouse*,
+                     DataWarehouse* toDW,
                      Arg1 arg1);
       Arg1 arg1;
     public: // class Action1
       Action1( T* ptr,
-               void (T::*pmf)(const ProcessorGroup*, 
+               void (T::*pmf)(const ProcessorGroup* pg,
                               const PatchSubset* patches,
                               const MaterialSubset* matls,
-                              DataWarehouse*,
-                              DataWarehouse*,
-                              Arg1),
-               Arg1 arg1)
+                              DataWarehouse* fromDW,
+                              DataWarehouse* toDW,
+                              Arg1 arg1),
+               Arg1 arg1 )
         : ptr(ptr), pmf(pmf), arg1(arg1) {}
       virtual ~Action1() {}
-      
+
       //////////
       // Insert Documentation Here:
-      virtual void doit(const ProcessorGroup* pc,
+      virtual void doit(const ProcessorGroup* pg,
                         const PatchSubset* patches,
                         const MaterialSubset* matls,
                         DataWarehouse* fromDW,
                         DataWarehouse* toDW) {
-        (ptr->*pmf)(pc, patches, matls, fromDW, toDW, arg1);
+        (ptr->*pmf)(pg, patches, matls, fromDW, toDW, arg1);
       }
     }; // end class Action1
 
     template<class T, class Arg1, class Arg2>
     class Action2 : public ActionBase {
-      
+
       T* ptr;
-      void (T::*pmf)(const ProcessorGroup*,
+      void (T::*pmf)(const ProcessorGroup* pg,
                      const PatchSubset* patches,
                      const MaterialSubset* matls,
-                     DataWarehouse*,
-                     DataWarehouse*,
+                     DataWarehouse* fromDW,
+                     DataWarehouse* toDW,
                      Arg1 arg1, Arg2 arg2);
       Arg1 arg1;
       Arg2 arg2;
     public: // class Action2
       Action2( T* ptr,
-               void (T::*pmf)(const ProcessorGroup*, 
+               void (T::*pmf)(const ProcessorGroup*,
                               const PatchSubset* patches,
                               const MaterialSubset* matls,
                               DataWarehouse*,
                               DataWarehouse*,
                               Arg1, Arg2),
-               Arg1 arg1, Arg2 arg2)
+               Arg1 arg1, Arg2 arg2 )
         : ptr(ptr), pmf(pmf), arg1(arg1), arg2(arg2) {}
       virtual ~Action2() {}
-      
+
       //////////
       // Insert Documentation Here:
       virtual void doit(const ProcessorGroup* pc,
@@ -275,49 +219,49 @@ WARNING
 
     template<class T, class Arg1, class Arg2, class Arg3>
     class Action3 : public ActionBase {
-      
+
       T* ptr;
-      void (T::*pmf)(const ProcessorGroup*,
+      void (T::*pmf)(const ProcessorGroup* pg,
                      const PatchSubset* patches,
                      const MaterialSubset* matls,
-                     DataWarehouse*,
-                     DataWarehouse*,
+                     DataWarehouse* fromDW,
+                     DataWarehouse* toDW,
                      Arg1 arg1, Arg2 arg2, Arg3 arg3);
       Arg1 arg1;
       Arg2 arg2;
       Arg3 arg3;
     public: // class Action3
       Action3( T* ptr,
-               void (T::*pmf)(const ProcessorGroup*, 
+               void (T::*pmf)(const ProcessorGroup* pg,
                               const PatchSubset* patches,
                               const MaterialSubset* matls,
-                              DataWarehouse*,
-                              DataWarehouse*,
+                              DataWarehouse* fromDW,
+                              DataWarehouse* toDW,
                               Arg1, Arg2, Arg3),
-               Arg1 arg1, Arg2 arg2, Arg3 arg3)
+               Arg1 arg1, Arg2 arg2, Arg3 arg3 )
         : ptr(ptr), pmf(pmf), arg1(arg1), arg2(arg2), arg3(arg3) {}
       virtual ~Action3() {}
-      
+
       //////////
       // Insert Documentation Here:
-      virtual void doit(const ProcessorGroup* pc,
+      virtual void doit(const ProcessorGroup* pg,
                         const PatchSubset* patches,
                         const MaterialSubset* matls,
                         DataWarehouse* fromDW,
                         DataWarehouse* toDW) {
-        (ptr->*pmf)(pc, patches, matls, fromDW, toDW, arg1, arg2, arg3);
+        (ptr->*pmf)(pg, patches, matls, fromDW, toDW, arg1, arg2, arg3);
       }
     }; // end Action3
 
     template<class T, class Arg1, class Arg2, class Arg3, class Arg4>
     class Action4 : public ActionBase {
-      
+
       T* ptr;
-      void (T::*pmf)(const ProcessorGroup*,
+      void (T::*pmf)(const ProcessorGroup* pg,
                      const PatchSubset* patches,
                      const MaterialSubset* matls,
-                     DataWarehouse*,
-                     DataWarehouse*,
+                     DataWarehouse* fromDW,
+                     DataWarehouse* toDW,
                      Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4);
       Arg1 arg1;
       Arg2 arg2;
@@ -325,36 +269,36 @@ WARNING
       Arg4 arg4;
     public: // class Action4
       Action4( T* ptr,
-               void (T::*pmf)(const ProcessorGroup*, 
+               void (T::*pmf)(const ProcessorGroup* pg,
                               const PatchSubset* patches,
                               const MaterialSubset* matls,
-                              DataWarehouse*,
-                              DataWarehouse*,
+                              DataWarehouse* fromDW,
+                              DataWarehouse* toDW,
                               Arg1, Arg2, Arg3, Arg4),
                Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4)
         : ptr(ptr), pmf(pmf), arg1(arg1), arg2(arg2), arg3(arg3), arg4(arg4) {}
       virtual ~Action4() {}
-      
+
       //////////
       // Insert Documentation Here:
-      virtual void doit(const ProcessorGroup* pc,
+      virtual void doit(const ProcessorGroup* pg,
                         const PatchSubset* patches,
                         const MaterialSubset* matls,
                         DataWarehouse* fromDW,
                         DataWarehouse* toDW) {
-        (ptr->*pmf)(pc, patches, matls, fromDW, toDW, arg1, arg2, arg3, arg4);
+        (ptr->*pmf)(pg, patches, matls, fromDW, toDW, arg1, arg2, arg3, arg4);
       }
     }; // end Action4
 
     template<class T, class Arg1, class Arg2, class Arg3, class Arg4, class Arg5>
     class Action5 : public ActionBase {
-      
+
       T* ptr;
-      void (T::*pmf)(const ProcessorGroup*,
+      void (T::*pmf)(const ProcessorGroup* pg,
                      const PatchSubset* patches,
                      const MaterialSubset* matls,
-                     DataWarehouse*,
-                     DataWarehouse*,
+                     DataWarehouse* fromDW,
+                     DataWarehouse* toDW,
                      Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4, Arg5 arg5);
       Arg1 arg1;
       Arg2 arg2;
@@ -363,26 +307,398 @@ WARNING
       Arg5 arg5;
     public: // class Action5
       Action5( T* ptr,
-               void (T::*pmf)(const ProcessorGroup*, 
+               void (T::*pmf)(const ProcessorGroup* pg,
                               const PatchSubset* patches,
                               const MaterialSubset* matls,
-                              DataWarehouse*,
-                              DataWarehouse*,
+                              DataWarehouse* fromDW,
+                              DataWarehouse* toDW,
                               Arg1, Arg2, Arg3, Arg4, Arg5),
                Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4, Arg5 arg5)
         : ptr(ptr), pmf(pmf), arg1(arg1), arg2(arg2), arg3(arg3), arg4(arg4), arg5(arg5) {}
       virtual ~Action5() {}
-      
+
       //////////
       // Insert Documentation Here:
-      virtual void doit(const ProcessorGroup* pc,
+      virtual void doit(const ProcessorGroup* pg,
                         const PatchSubset* patches,
                         const MaterialSubset* matls,
                         DataWarehouse* fromDW,
                         DataWarehouse* toDW) {
-        (ptr->*pmf)(pc, patches, matls, fromDW, toDW, arg1, arg2, arg3, arg4, arg5);
+        (ptr->*pmf)(pg, patches, matls, fromDW, toDW, arg1, arg2, arg3, arg4, arg5);
       }
     }; // end Action5
+    // end CPU Action classes
+
+    // begin GPU Action classes
+    template<class T>
+    class ActionGPU : public ActionGPUBase {
+      T* ptr;
+      void (T::*pmf)(const ProcessorGroup* pg,
+                     const PatchSubset* patches,
+                     const MaterialSubset* matls,
+                     DataWarehouse* fromDW,
+                     DataWarehouse* toDW);
+      void (T::*pmfgpu)(const ProcessorGroup* pg,
+                        const PatchSubset* patches,
+                        const MaterialSubset* matls,
+                        DataWarehouse* fromDW,
+                        DataWarehouse* toDW,
+                        int device);
+    public: // class ActionGPU
+      ActionGPU( T* ptr,
+                 void (T::*pmf)(const ProcessorGroup* pg,
+                                const PatchSubset* patches,
+                                const MaterialSubset* matls,
+                                DataWarehouse* fromDW,
+                                DataWarehouse* toDW),
+                 T* ptrgpu,
+                 void (T::*pmfgpu)(const ProcessorGroup* pg,
+                                   const PatchSubset* patches,
+                                   const MaterialSubset* matls,
+                                   DataWarehouse* fromDW,
+                                   DataWarehouse* toDW,
+                                   int device) )
+                 : ptr(ptr), pmf(pmf), pmfgpu(pmfgpu) {}
+      virtual ~ActionGPU() {}
+
+      //////////
+      // Insert Documentation Here:
+      virtual void doit(const ProcessorGroup* pg,
+                        const PatchSubset* patches,
+                        const MaterialSubset* matls,
+                        DataWarehouse* fromDW,
+                        DataWarehouse* toDW) {
+        (ptr->*pmf)(pg, patches, matls, fromDW, toDW);
+      }
+
+      //////////
+      // Insert Documentation Here:
+      virtual void doitGPU(const ProcessorGroup* pg,
+                           const PatchSubset* patches,
+                           const MaterialSubset* matls,
+                           DataWarehouse* fromDW,
+                           DataWarehouse* toDW,
+                           int device) {
+        (ptr->*pmfgpu)(pg, patches, matls, fromDW, toDW, device);
+      }
+    }; // end class ActionGPU
+
+    template<class T, class Arg1>
+    class ActionGPU1 : public ActionGPUBase {
+      T* ptr;
+      void (T::*pmf)(const ProcessorGroup* pg,
+                     const PatchSubset* patches,
+                     const MaterialSubset* matls,
+                     DataWarehouse* fromDW,
+                     DataWarehouse* toDW,
+                     Arg1 arg1);
+      void (T::*pmfgpu)(const ProcessorGroup* pg,
+                        const PatchSubset* patches,
+                        const MaterialSubset* matls,
+                        DataWarehouse* fromDW,
+                        DataWarehouse* toDW,
+                        int device,
+                        Arg1 arg1);
+      Arg1 arg1;
+    public: // class ActionGPU1
+      ActionGPU1( T* ptr,
+                 void (T::*pmf)(const ProcessorGroup* pg,
+                                const PatchSubset* patches,
+                                const MaterialSubset* matls,
+                                DataWarehouse* fromDW,
+                                DataWarehouse* toDW,
+                                Arg1 arg1),
+                 T* ptrgpu,
+                 void (T::*pmfgpu)(const ProcessorGroup* pg,
+                                   const PatchSubset* patches,
+                                   const MaterialSubset* matls,
+                                   DataWarehouse* fromDW,
+                                   DataWarehouse* toDW,
+                                   int device,
+                                   Arg1 arg1),
+                 Arg1 arg1 )
+                 : ptr(ptr), pmf(pmf), pmfgpu(pmfgpu), arg1(arg1) {}
+      virtual ~ActionGPU1() {}
+
+      //////////
+      // Insert Documentation Here:
+      virtual void doit(const ProcessorGroup* pg,
+                        const PatchSubset* patches,
+                        const MaterialSubset* matls,
+                        DataWarehouse* fromDW,
+                        DataWarehouse* toDW) {
+        (ptr->*pmf)(pg, patches, matls, fromDW, toDW, arg1);
+      }
+
+      //////////
+      // Insert Documentation Here:
+      virtual void doitGPU(const ProcessorGroup* pg,
+                           const PatchSubset* patches,
+                           const MaterialSubset* matls,
+                           DataWarehouse* fromDW,
+                           DataWarehouse* toDW,
+                           int device) {
+        (ptr->*pmfgpu)(pg, patches, matls, fromDW, toDW, device, arg1);
+      }
+    }; // end class ActionGPU1
+
+    template<class T, class Arg1, class Arg2>
+    class ActionGPU2 : public ActionGPUBase {
+      T* ptr;
+      void (T::*pmf)(const ProcessorGroup* pg,
+                     const PatchSubset* patches,
+                     const MaterialSubset* matls,
+                     DataWarehouse* fromDW,
+                     DataWarehouse* toDW,
+                     Arg1 arg1,
+                     Arg2 arg2);
+      void (T::*pmfgpu)(const ProcessorGroup* pg,
+                        const PatchSubset* patches,
+                        const MaterialSubset* matls,
+                        DataWarehouse* fromDW,
+                        DataWarehouse* toDW,
+                        int device,
+                        Arg1 arg1, Arg2 arg2);
+      Arg1 arg1;
+      Arg2 arg2;
+    public: // class ActionGPU2
+      ActionGPU2( T* ptr,
+                 void (T::*pmf)(const ProcessorGroup* pg,
+                                const PatchSubset* patches,
+                                const MaterialSubset* matls,
+                                DataWarehouse* fromDW,
+                                DataWarehouse* toDW,
+                                Arg1 arg1, Arg2 arg2),
+                 T* ptrgpu,
+                 void (T::*pmfgpu)(const ProcessorGroup* pg,
+                                   const PatchSubset* patches,
+                                   const MaterialSubset* matls,
+                                   DataWarehouse* fromDW,
+                                   DataWarehouse* toDW,
+                                   int device,
+                                   Arg1 arg1, Arg2 arg2),
+                 Arg1 arg1, Arg2 arg2 )
+                 : ptr(ptr), pmf(pmf), pmfgpu(pmfgpu), arg1(arg1), arg2(arg2) {}
+      virtual ~ActionGPU2() {}
+
+      //////////
+      // Insert Documentation Here:
+      virtual void doit(const ProcessorGroup* pg,
+                        const PatchSubset* patches,
+                        const MaterialSubset* matls,
+                        DataWarehouse* fromDW,
+                        DataWarehouse* toDW) {
+        (ptr->*pmf)(pg, patches, matls, fromDW, toDW, arg1, arg2);
+      }
+
+      //////////
+      // Insert Documentation Here:
+      virtual void doitGPU(const ProcessorGroup* pg,
+                           const PatchSubset* patches,
+                           const MaterialSubset* matls,
+                           DataWarehouse* fromDW,
+                           DataWarehouse* toDW,
+                           int device) {
+        (ptr->*pmfgpu)(pg, patches, matls, fromDW, toDW, device, arg1, arg2);
+      }
+    }; // end class ActionGPU2
+
+    template<class T, class Arg1, class Arg2, class Arg3>
+    class ActionGPU3 : public ActionGPUBase {
+      T* ptr;
+      void (T::*pmf)(const ProcessorGroup* pg,
+                     const PatchSubset* patches,
+                     const MaterialSubset* matls,
+                     DataWarehouse* fromDW,
+                     DataWarehouse* toDW,
+                     Arg1 arg1, Arg2 arg2, Arg3 arg3);
+      void (T::*pmfgpu)(const ProcessorGroup* pg,
+                        const PatchSubset* patches,
+                        const MaterialSubset* matls,
+                        DataWarehouse* fromDW,
+                        DataWarehouse* toDW,
+                        int device,
+                        Arg1 arg1, Arg2 arg2, Arg3 arg3);
+      Arg1 arg1;
+      Arg2 arg2;
+      Arg3 arg3;
+    public: // class ActionGPU3
+      ActionGPU3( T* ptr,
+                 void (T::*pmf)(const ProcessorGroup* pg,
+                                const PatchSubset* patches,
+                                const MaterialSubset* matls,
+                                DataWarehouse* fromDW,
+                                DataWarehouse* toDW,
+                                Arg1 arg1, Arg2 arg2, Arg3 arg3),
+                 T* ptrgpu,
+                 void (T::*pmfgpu)(const ProcessorGroup* pg,
+                                   const PatchSubset* patches,
+                                   const MaterialSubset* matls,
+                                   DataWarehouse* fromDW,
+                                   DataWarehouse* toDW,
+                                   int device,
+                                   Arg1 arg1, Arg2 arg2, Arg3 arg3),
+                 Arg1 arg1, Arg2 arg2, Arg3 arg3 )
+                 : ptr(ptr), pmf(pmf), pmfgpu(pmfgpu), arg1(arg1), arg2(arg2), arg3(arg3) {}
+      virtual ~ActionGPU3() {}
+
+      //////////
+      // Insert Documentation Here:
+      virtual void doit(const ProcessorGroup* pg,
+                        const PatchSubset* patches,
+                        const MaterialSubset* matls,
+                        DataWarehouse* fromDW,
+                        DataWarehouse* toDW) {
+        (ptr->*pmf)(pg, patches, matls, fromDW, toDW, arg1, arg2, arg3);
+      }
+
+      //////////
+      // Insert Documentation Here:
+      virtual void doitGPU(const ProcessorGroup* pg,
+                           const PatchSubset* patches,
+                           const MaterialSubset* matls,
+                           DataWarehouse* fromDW,
+                           DataWarehouse* toDW,
+                           int device) {
+        (ptr->*pmfgpu)(pg, patches, matls, fromDW, toDW, device, arg1, arg2, arg3);
+      }
+    }; // end class ActionGPU3
+
+
+
+    template<class T, class Arg1, class Arg2, class Arg3, class Arg4>
+    class ActionGPU4 : public ActionGPUBase {
+      T* ptr;
+      void (T::*pmf)(const ProcessorGroup* pg,
+                     const PatchSubset* patches,
+                     const MaterialSubset* matls,
+                     DataWarehouse* fromDW,
+                     DataWarehouse* toDW,
+                     Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4);
+      void (T::*pmfgpu)(const ProcessorGroup* pg,
+                        const PatchSubset* patches,
+                        const MaterialSubset* matls,
+                        DataWarehouse* fromDW,
+                        DataWarehouse* toDW,
+                        int device,
+                        Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4);
+      Arg1 arg1;
+      Arg2 arg2;
+      Arg3 arg3;
+      Arg4 arg4;
+    public: // class ActionGPU4
+      ActionGPU4( T* ptr,
+                 void (T::*pmf)(const ProcessorGroup* pg,
+                                const PatchSubset* patches,
+                                const MaterialSubset* matls,
+                                DataWarehouse* fromDW,
+                                DataWarehouse* toDW,
+                                Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4),
+                 T* ptrgpu,
+                 void (T::*pmfgpu)(const ProcessorGroup* pg,
+                                   const PatchSubset* patches,
+                                   const MaterialSubset* matls,
+                                   DataWarehouse* fromDW,
+                                   DataWarehouse* toDW,
+                                   int device,
+                                   Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4),
+                 Arg1 arg1,
+                 Arg2 arg2,
+                 Arg3 arg3,
+                 Arg4 arg4 )
+                 : ptr(ptr), pmf(pmf), pmfgpu(pmfgpu), arg1(arg1), arg2(arg2), arg3(arg3), arg4(arg4) {}
+      virtual ~ActionGPU4() {}
+
+      //////////
+      // Insert Documentation Here:
+      virtual void doit(const ProcessorGroup* pg,
+                        const PatchSubset* patches,
+                        const MaterialSubset* matls,
+                        DataWarehouse* fromDW,
+                        DataWarehouse* toDW) {
+        (ptr->*pmf)(pg, patches, matls, fromDW, toDW, arg1, arg2, arg3, arg4);
+      }
+
+      //////////
+      // Insert Documentation Here:
+      virtual void doitGPU(const ProcessorGroup* pg,
+                           const PatchSubset* patches,
+                           const MaterialSubset* matls,
+                           DataWarehouse* fromDW,
+                           DataWarehouse* toDW,
+                           int device) {
+        (ptr->*pmfgpu)(pg, patches, matls, fromDW, toDW, device, arg1, arg2, arg3, arg4);
+      }
+    }; // end class ActionGPU4
+
+    template<class T, class Arg1, class Arg2, class Arg3, class Arg4, class Arg5>
+    class ActionGPU5 : public ActionGPUBase {
+      T* ptr;
+      void (T::*pmf)(const ProcessorGroup* pg,
+                     const PatchSubset* patches,
+                     const MaterialSubset* matls,
+                     DataWarehouse* fromDW,
+                     DataWarehouse* toDW,
+                     Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4, Arg5 arg5);
+      void (T::*pmfgpu)(const ProcessorGroup* pg,
+                        const PatchSubset* patches,
+                        const MaterialSubset* matls,
+                        DataWarehouse* fromDW,
+                        DataWarehouse* toDW,
+                        int device,
+                        Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4, Arg5 arg5);
+      Arg1 arg1;
+      Arg2 arg2;
+      Arg3 arg3;
+      Arg4 arg4;
+      Arg5 arg5;
+    public: // class ActionGPU5
+      ActionGPU5( T* ptr,
+                 void (T::*pmf)(const ProcessorGroup* pg,
+                                const PatchSubset* patches,
+                                const MaterialSubset* matls,
+                                DataWarehouse* fromDW,
+                                DataWarehouse* toDW,
+                                Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4, Arg5 arg5),
+                 T* ptrgpu,
+                 void (T::*pmfgpu)(const ProcessorGroup* pg,
+                                   const PatchSubset* patches,
+                                   const MaterialSubset* matls,
+                                   DataWarehouse* fromDW,
+                                   DataWarehouse* toDW,
+                                   int device,
+                                   Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4, Arg5 arg5),
+                 Arg1 arg1,
+                 Arg2 arg2,
+                 Arg3 arg3,
+                 Arg4 arg4,
+                 Arg5 arg5 )
+                 : ptr(ptr), pmf(pmf), pmfgpu(pmfgpu), arg1(arg1), arg2(arg2), arg3(arg3), arg4(arg4), arg5(arg5) {}
+      virtual ~ActionGPU5() {}
+
+      //////////
+      // Insert Documentation Here:
+      virtual void doit(const ProcessorGroup* pg,
+                        const PatchSubset* patches,
+                        const MaterialSubset* matls,
+                        DataWarehouse* fromDW,
+                        DataWarehouse* toDW) {
+        (ptr->*pmf)(pg, patches, matls, fromDW, toDW, arg1, arg2, arg3, arg4, arg5);
+      }
+
+      //////////
+      // Insert Documentation Here:
+      virtual void doitGPU(const ProcessorGroup* pg,
+                           const PatchSubset* patches,
+                           const MaterialSubset* matls,
+                           DataWarehouse* fromDW,
+                           DataWarehouse* toDW,
+                           int device) {
+        (ptr->*pmfgpu)(pg, patches, matls, fromDW, toDW, device, arg1, arg2, arg3, arg4, arg5);
+      }
+    }; // end class ActionGPU5
+    // end GPU Action definitions
+
 
   public: // class Task
     
@@ -411,38 +727,17 @@ WARNING
       initialize();
     }
     
+    // begin CPU Task definitions
     template<class T>
     Task(const std::string& taskName,
          T* ptr,
          void (T::*pmf)(const ProcessorGroup* pg,
                         const PatchSubset* patches,
                         const MaterialSubset* matls,
-                        DataWarehouse*,
-                        DataWarehouse*) )
-      : d_taskName( taskName ), 
-        d_action( scinew Action<T>(ptr, pmf) )
-    {
-      d_tasktype = Normal;
-      initialize();
-    }
-    
-    template<class T>
-    Task(void (T::*pmfgpu)(const ProcessorGroup* pg,
-                           const PatchSubset* patches,
-                           const MaterialSubset* matls,
-                           DataWarehouse* fromDW,
-                           DataWarehouse* toDW,
-                           int device),
-         const std::string& taskNameGPU,
-         const std::string& taskName,
-         T* ptr,
-         void (T::*pmf)(const ProcessorGroup*,
-                        const PatchSubset* patches,
-                        const MaterialSubset* matls,
                         DataWarehouse* fromDW,
                         DataWarehouse* toDW) )
-      : d_taskName( taskName ), d_taskNameGPU(taskNameGPU),
-        d_action( scinew ActionGPU<T>(ptr, pmf, pmfgpu) )
+      : d_taskName( taskName ), 
+        d_action( scinew Action<T>(ptr, pmf) )
     {
       d_tasktype = Normal;
       initialize();
@@ -451,14 +746,14 @@ WARNING
     template<class T, class Arg1>
     Task(const std::string& taskName,
          T* ptr,
-         void (T::*pmf)(const ProcessorGroup*,
+         void (T::*pmf)(const ProcessorGroup* pg,
                         const PatchSubset* patches,
                         const MaterialSubset* matls,
-                        DataWarehouse*,
-                        DataWarehouse*,
-                        Arg1),
+                        DataWarehouse* fromDW,
+                        DataWarehouse* toDW,
+                        Arg1 arg1),
          Arg1 arg1)
-      : d_taskName( taskName ), 
+      : d_taskName( taskName ),
         d_action( scinew Action1<T, Arg1>(ptr, pmf, arg1) )
     {
       d_tasktype = Normal;
@@ -468,14 +763,14 @@ WARNING
     template<class T, class Arg1, class Arg2>
     Task(const std::string& taskName,
          T* ptr,
-         void (T::*pmf)(const ProcessorGroup*,
+         void (T::*pmf)(const ProcessorGroup* pg,
                         const PatchSubset* patches,
                         const MaterialSubset* matls,
-                        DataWarehouse*,
-                        DataWarehouse*,
+                        DataWarehouse* fromDW,
+                        DataWarehouse* toDW,
                         Arg1, Arg2),
          Arg1 arg1, Arg2 arg2)
-      : d_taskName( taskName ), 
+      : d_taskName( taskName ),
         d_action( scinew Action2<T, Arg1, Arg2>(ptr, pmf, arg1, arg2) )
     {
       d_tasktype = Normal;
@@ -485,14 +780,14 @@ WARNING
     template<class T, class Arg1, class Arg2, class Arg3>
     Task(const std::string& taskName,
          T* ptr,
-         void (T::*pmf)(const ProcessorGroup*,
+         void (T::*pmf)(const ProcessorGroup* pg,
                         const PatchSubset* patches,
                         const MaterialSubset* matls,
-                        DataWarehouse*,
-                        DataWarehouse*,
+                        DataWarehouse* fromDW,
+                        DataWarehouse* toDW,
                         Arg1, Arg2, Arg3),
          Arg1 arg1, Arg2 arg2, Arg3 arg3)
-      : d_taskName( taskName ), 
+      : d_taskName( taskName ),
         d_action( scinew Action3<T, Arg1, Arg2, Arg3>(ptr, pmf, arg1, arg2, arg3) )
     {
       d_tasktype = Normal;
@@ -502,11 +797,11 @@ WARNING
     template<class T, class Arg1, class Arg2, class Arg3, class Arg4>
     Task(const std::string& taskName,
          T* ptr,
-         void (T::*pmf)(const ProcessorGroup*,
+         void (T::*pmf)(const ProcessorGroup* pg,
                         const PatchSubset* patches,
                         const MaterialSubset* matls,
-                        DataWarehouse*,
-                        DataWarehouse*,
+                        DataWarehouse* fromDW,
+                        DataWarehouse* toDW,
                         Arg1, Arg2, Arg3, Arg4),
          Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4)
       : d_taskName( taskName ), 
@@ -519,19 +814,173 @@ WARNING
     template<class T, class Arg1, class Arg2, class Arg3, class Arg4, class Arg5>
     Task(const std::string& taskName,
          T* ptr,
-         void (T::*pmf)(const ProcessorGroup*,
+         void (T::*pmf)(const ProcessorGroup* pg,
                         const PatchSubset* patches,
                         const MaterialSubset* matls,
-                        DataWarehouse*,
-                        DataWarehouse*,
+                        DataWarehouse* fromDW,
+                        DataWarehouse* toDW,
                         Arg1, Arg2, Arg3, Arg4, Arg5),
          Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4, Arg5 arg5)
-      : d_taskName( taskName ), 
+      : d_taskName( taskName ),
         d_action( scinew Action5<T, Arg1, Arg2, Arg3, Arg4, Arg5>(ptr, pmf, arg1, arg2, arg3, arg4, arg5) )
     {
       d_tasktype = Normal;
       initialize();
     }
+    // end CPU Task definitions
+
+
+    // begin GPU Task definitions
+    template<class T>
+    Task(void (T::*pmfgpu)(const ProcessorGroup* pg,
+                           const PatchSubset* patches,
+                           const MaterialSubset* matls,
+                           DataWarehouse* fromDW,
+                           DataWarehouse* toDW,
+                           int device),
+         const std::string& taskNameGPU,
+         const std::string& taskName,
+         T* ptr,
+         void (T::*pmf)(const ProcessorGroup* pg,
+                        const PatchSubset* patches,
+                        const MaterialSubset* matls,
+                        DataWarehouse* fromDW,
+                        DataWarehouse* toDW) )
+      : d_taskName( taskName ), d_taskNameGPU(taskNameGPU),
+        d_action( scinew ActionGPU<T>(ptr, pmf, pmfgpu) )
+    {
+      d_tasktype = Normal;
+      initialize();
+    }
+
+    template<class T, class Arg1>
+    Task(void (T::*pmfgpu)(const ProcessorGroup* pg,
+                           const PatchSubset* patches,
+                           const MaterialSubset* matls,
+                           DataWarehouse* fromDW,
+                           DataWarehouse* toDW,
+                           int device,
+                           Arg1 arg1),
+         const std::string& taskNameGPU,
+         const std::string& taskName,
+         T* ptr,
+         void (T::*pmf)(const ProcessorGroup* pg,
+                        const PatchSubset* patches,
+                        const MaterialSubset* matls,
+                        DataWarehouse* fromDW,
+                        DataWarehouse* toDW,
+                        Arg1 arg1),
+         int device,
+         Arg1 arg1)
+      : d_taskName( taskName ), d_taskNameGPU(taskNameGPU),
+        d_actionGPU( scinew ActionGPU1<T, Arg1>(ptr, pmf, pmfgpu, arg1) )
+    {
+      d_tasktype = Normal;
+      initialize();
+    }
+
+    template<class T, class Arg1, class Arg2>
+    Task(void (T::*pmfgpu)(const ProcessorGroup* pg,
+                           const PatchSubset* patches,
+                           const MaterialSubset* matls,
+                           DataWarehouse* fromDW,
+                           DataWarehouse* toDW,
+                           int device,
+                           Arg1 arg1, Arg2 arg2),
+         const std::string& taskNameGPU,
+         const std::string& taskName,
+         T* ptr,
+         void (T::*pmf)(const ProcessorGroup* pg,
+                        const PatchSubset* patches,
+                        const MaterialSubset* matls,
+                        DataWarehouse* fromDW,
+                        DataWarehouse* toDW,
+                        Arg1 arg1, Arg2 arg2),
+         Arg1 arg1, Arg2 arg2)
+      : d_taskName( taskName ), d_taskNameGPU(taskNameGPU),
+        d_actionGPU( scinew ActionGPU2<T, Arg1, Arg2>(ptr, pmf, pmfgpu, arg1, arg2) )
+    {
+      d_tasktype = Normal;
+      initialize();
+    }
+
+    template<class T, class Arg1, class Arg2, class Arg3>
+    Task(void (T::*pmfgpu)(const ProcessorGroup* pg,
+                           const PatchSubset* patches,
+                           const MaterialSubset* matls,
+                           DataWarehouse* fromDW,
+                           DataWarehouse* toDW,
+                           int device,
+                           Arg1 arg1, Arg2 arg2, Arg3 arg3),
+         const std::string& taskNameGPU,
+         const std::string& taskName,
+         T* ptr,
+         void (T::*pmf)(const ProcessorGroup* pg,
+                        const PatchSubset* patches,
+                        const MaterialSubset* matls,
+                        DataWarehouse* fromDW,
+                        DataWarehouse* toDW,
+                        Arg1 arg1, Arg2 arg2, Arg3 arg3),
+         Arg1 arg1, Arg2 arg2, Arg3 arg3)
+      : d_taskName( taskName ), d_taskNameGPU(taskNameGPU),
+        d_actionGPU( scinew ActionGPU3<T, Arg1, Arg2, Arg3>(ptr, pmf, pmfgpu, arg1, arg2, arg3) )
+    {
+      d_tasktype = Normal;
+      initialize();
+    }
+
+
+
+    template<class T, class Arg1, class Arg2, class Arg3, class Arg4>
+    Task(void (T::*pmfgpu)(const ProcessorGroup* pg,
+                           const PatchSubset* patches,
+                           const MaterialSubset* matls,
+                           DataWarehouse* fromDW,
+                           DataWarehouse* toDW,
+                           int device,
+                           Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4),
+         const std::string& taskNameGPU,
+         const std::string& taskName,
+         T* ptr,
+         void (T::*pmf)(const ProcessorGroup* pg,
+                        const PatchSubset* patches,
+                        const MaterialSubset* matls,
+                        DataWarehouse* fromDW,
+                        DataWarehouse* toDW,
+                        Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4),
+         Arg1 arg1, Arg2 arg2, Arg3 arg3,Arg4 arg4)
+      : d_taskName( taskName ), d_taskNameGPU(taskNameGPU),
+        d_actionGPU( scinew ActionGPU4<T, Arg1, Arg2, Arg3, Arg4>(ptr, pmf, pmfgpu, arg1, arg2, arg3, arg4) )
+    {
+      d_tasktype = Normal;
+      initialize();
+    }
+
+    template<class T, class Arg1, class Arg2, class Arg3, class Arg4, class Arg5>
+    Task(void (T::*pmfgpu)(const ProcessorGroup* pg,
+                           const PatchSubset* patches,
+                           const MaterialSubset* matls,
+                           DataWarehouse* fromDW,
+                           DataWarehouse* toDW,
+                           int device,
+                           Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4, Arg5 arg5),
+         const std::string& taskNameGPU,
+         const std::string& taskName,
+         T* ptr,
+         void (T::*pmf)(const ProcessorGroup* pg,
+                        const PatchSubset* patches,
+                        const MaterialSubset* matls,
+                        DataWarehouse* fromDW,
+                        DataWarehouse* toDW,
+                        Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4, Arg5 arg5),
+         Arg1 arg1, Arg2 arg2, Arg3 arg3,Arg4 arg4, Arg5 arg5)
+      : d_taskName( taskName ), d_taskNameGPU(taskNameGPU),
+        d_actionGPU( scinew ActionGPU5<T, Arg1, Arg2, Arg3, Arg4, Arg5>(ptr, pmf, pmfgpu, arg1, arg2, arg3, arg4, arg5) )
+    {
+      d_tasktype = Normal;
+      initialize();
+    }
+    // end GPU Task definitions
 
     void initialize();
     
@@ -854,7 +1303,7 @@ WARNING
 
 protected:
     ActionBase* d_action;
-    ActionBaseGPU* d_actionGPU;
+    ActionGPUBase* d_actionGPU;
 
 private:
     Dependency* comp_head;
