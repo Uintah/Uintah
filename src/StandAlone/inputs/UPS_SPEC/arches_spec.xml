@@ -234,8 +234,6 @@
             <inlet                      spec="MULTIPLE STRING"/>
           </scalar>
         </ScalarEfficiency>
-        <carbon_balance                 spec="OPTIONAL BOOLEAN" />
-        <sulfur_balance                 spec="OPTIONAL BOOLEAN" />
         <ramping_inlet_flowrate         spec="OPTIONAL BOOLEAN" />
         <Prefill                        spec="OPTIONAL NO_DATA"
                                         attribute1="bc REQUIRED STRING">
