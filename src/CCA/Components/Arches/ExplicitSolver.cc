@@ -274,7 +274,6 @@ ExplicitSolver::problemSetup(const ProblemSpecP& params)
       throw InvalidValue("current MMS "
                          "not supported: " + d_mms, __FILE__, __LINE__);
 
-    d_numSourceBoundaries = d_boundaryCondition->getNumSourceBndry();
   }
 }
 
@@ -313,12 +312,6 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       d_turbModel->sched_initFilterMatrix(level, sched, patches, matls);
   }
 #endif
-  if (d_boundaryCondition->getNumSourceBndry() > 0){
-    d_boundaryCondition->sched_computeInletAreaBCSource(sched, patches, matls);
-    d_boundaryCondition->sched_computeScalarSourceTerm(sched, patches, matls);
-    d_boundaryCondition->sched_computeMomSourceTerm(sched, patches, matls);
-    //add other ones here too.
-  } 
 
   // Get a reference to all the DQMOM equations
   DQMOMEqnFactory& dqmomFactory  = DQMOMEqnFactory::self(); 
@@ -654,14 +647,6 @@ int ExplicitSolver::noSolve(const LevelP& level,
   //                     viscosityIN
 
   sched_setInitialGuess(sched, patches, matls);
-
-  if (d_boundaryCondition->getNumSourceBndry() > 0){
-     d_boundaryCondition->sched_computeInletAreaBCSource( sched, patches, matls);
-     d_boundaryCondition->sched_computeScalarSourceTerm(  sched, patches, matls);
-     d_boundaryCondition->sched_computeMomSourceTerm(     sched, patches, matls);
-     //add other ones here too.
-  }
-
 
   // check if filter is defined...
 #ifdef PetscFilter
