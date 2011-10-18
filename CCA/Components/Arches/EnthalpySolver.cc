@@ -967,24 +967,11 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
     // outputs: scalCoefSBLM
     if (d_boundaryCondition->anyArchesPhysicalBC()) {
       d_boundaryCondition->scalarBC(patch, &enthalpyVars, &constEnthalpyVars);
-
-      /*if (d_boundaryCondition->getIntrusionBC()) {
-        d_boundaryCondition->intrusionEnergyExBC(pc, patch, cellinfo,
-                                              &enthalpyVars,&constEnthalpyVars);
-        d_boundaryCondition->intrusionEnthalpyBC(pc, patch, delta_t, cellinfo,
-                                              &enthalpyVars,&constEnthalpyVars);
-      }*/
     }
 
     if (d_boundaryCondition->isUsingNewBC()) {
       d_boundaryCondition->scalarBC(patch, &enthalpyVars, &constEnthalpyVars);
 
-      /*if (d_boundaryCondition->getIntrusionBC()) {
-        d_boundaryCondition->intrusionEnergyExBC(pc, patch, cellinfo,
-                                              &enthalpyVars,&constEnthalpyVars);
-        d_boundaryCondition->intrusionEnthalpyBC(pc, patch, delta_t, cellinfo,
-                                              &enthalpyVars,&constEnthalpyVars);
-      }*/
     }
 
     // apply multimaterial intrusion wallbc

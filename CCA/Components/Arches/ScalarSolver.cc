@@ -603,9 +603,6 @@ void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
                                     &scalarVars, &constScalarVars);
       //d_boundaryCondition->scalarBC__new(pc, patch, 
       //                              &scalarVars, &constScalarVars);
-      /*if (d_boundaryCondition->getIntrusionBC())
-        d_boundaryCondition->intrusionScalarBC(pc, patch, cellinfo,
-                                               &scalarVars, &constScalarVars);*/
     }
     // apply multimaterial intrusion wallbc ...
     // NOTE: Why not do this in scalarBC?

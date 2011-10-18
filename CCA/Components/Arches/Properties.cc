@@ -1047,9 +1047,6 @@ Properties::reComputeProps(const ProcessorGroup* pc,
       new_dw->put(sum_vartype(den_ref),timelabels->ref_density);
     }
 
-    /*if ((d_bc->getIntrusionBC())&& d_reactingFlow )
-      d_bc->intrusionTemperatureBC(pc, patch, cellType, temperature);*/
-
     if (d_MAlab && d_DORadiationCalc && !initialize) {
       bool d_energyEx = d_bc->getIfCalcEnergyExchange();
       d_bc->mmWallTemperatureBC(patch, cellType, solidTemp, temperature,

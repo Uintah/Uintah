@@ -328,10 +328,6 @@ namespace Uintah {
       void problemSetup(const ProblemSpecP& params);
 
       // GROUP: Access functions
-      ////////////////////////////////////////////////////////////////////////
-      int getNumSourceBndry() {
-        return d_numSourceBoundaries;
-      }
 
       bool getWallBC() { 
         return d_wallBoundary; 
@@ -449,10 +445,6 @@ namespace Uintah {
       // sets boolean for cut cells
       void setCutCells(bool cutCells){
         d_cutCells = cutCells;
-      }
-
-      inline double getIntrusionSourceVelocity(int whichIntrusion) {
-        return d_sourceBoundaryInfo[whichIntrusion]->totalVelocity;
       }
 
       ////////////////////////////////////////////////////////////////////////
@@ -1084,62 +1076,6 @@ namespace Uintah {
         void problemSetup(ProblemSpecP& params);
       };
 
-      //*-------------------------------------*
-      // BCSourceInfo
-      // a struct to hold infromation for a specific
-      // geometry piece that applies a source term 
-      // on the surface of itself
-      //*-------------------------------------*
-      class BCSourceInfo
-      {
-        public:
-          BCSourceInfo();
-          BCSourceInfo(bool calcVariance, bool reactingScalarSolve);
-          ~BCSourceInfo();
-
-          //The geometry piece          
-          std::vector<GeometryPieceP> d_geomPiece;
-          //Area information
-          double area_x; //total area with normals in the x-direction
-          double area_y; //total area with normals in the y-direction
-          double area_z; //total area with normals in the z-direction
-          VarLabel* total_area_label; //total area of all directions
-          double summed_area;
-          bool computedArea; //a bool to tell the code if the area has 
-          // been computed for this particular object 
-
-          //Normal information
-          Vector normal;
-          //Flux information
-          double umom_flux; //velocities
-          double vmom_flux;
-          double wmom_flux;
-          double f_flux;   //mixture fraction
-          double h_flux;   //enthalpy
-          double totalMassFlux;
-          double totalVelocity;
-          double totalFlowArea;
-          string velocityType;
-          string velocityRelation;
-          InletStream streamMixturefraction; //inlet values
-          Stream calcStream; // calculated values
-          bool d_calcVariance;
-          bool d_reactingScalarSolve;
-
-          //Mixture fraction inlet value
-          double mixfrac_inlet;
-
-          //relational information
-          Vector axisStart;
-          Vector axisEnd;
-          Vector point;
-          bool doAreaCalc;
-
-          //---methods---                
-          //Problem setup
-          void problemSetup(ProblemSpecP& params);
-      };
-
       void computeScalarSourceTerm(const ProcessorGroup*,
           const PatchSubset* patches,
           const MaterialSubset*,
@@ -1238,10 +1174,6 @@ namespace Uintah {
         int d_BC_ID; 
       };
       vector<d_extraScalarBC*> d_extraScalarBCs; 
-
-      //BC source term stuff
-      std::vector<BCSourceInfo* > d_sourceBoundaryInfo;
-      int d_numSourceBoundaries;
 
       typedef std::map<std::string, struct EfficiencyInfo> EfficiencyMap;
       EfficiencyMap d_effVars;

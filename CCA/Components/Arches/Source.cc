@@ -187,16 +187,6 @@ Source::calculateVelocitySource(const Patch* patch,
                cellinfo->fac2w, cellinfo->fac3w, cellinfo->fac4w,
                cellinfo->ktsdw, cellinfo->kbsdw); 
 
-  // ++ jeremy ++ 
-  if (d_boundaryCondition->getNumSourceBndry() > 0){        
-    for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
-      vars->uVelNonlinearSrc[*iter] += vars->umomBoundarySrc[*iter];
-      vars->vVelNonlinearSrc[*iter] += vars->vmomBoundarySrc[*iter];
-      vars->wVelNonlinearSrc[*iter] += vars->wmomBoundarySrc[*iter];
-    }
-  }
-  // -- jeremy --
-  
 }
 
 //****************************************************************************
@@ -257,12 +247,6 @@ Source::calculateScalarSource(const ProcessorGroup* pc,
                constvars->old_density, constvars->old_scalar,
                cellinfo->sew, cellinfo->sns, cellinfo->stb, delta_t);
 
-// Here we need to add the boundary source term if there are some.
-  if (d_boundaryCondition->getNumSourceBndry() > 0){
-    for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
-      vars->scalarNonlinearSrc[*iter] += vars->scalarBoundarySrc[*iter];
-    }
-  }
 }
 void 
 Source::addOtherScalarSource( const ProcessorGroup* pc, 
@@ -304,13 +288,6 @@ Source::calculateScalarSource__new(const ProcessorGroup* pc,
     vars->scalarNonlinearSrc[curr] += apo*constvars->old_scalar[curr];
     
   }
-
-  // Here we need to add the boundary source term if there are some.
-  if (d_boundaryCondition->getNumSourceBndry() > 0){
-    for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
-      vars->scalarNonlinearSrc[*iter] += vars->scalarBoundarySrc[*iter];
-    }
-  } 
 }
 
 //****************************************************************************

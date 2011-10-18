@@ -893,14 +893,6 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
                                       &constVelocityVars);
       }
 
-     /*if (d_boundaryCondition->getIntrusionBC()) {
-        // if 0'ing stuff below for zero friction drag
-#if 0
-        d_boundaryCondition->intrusionMomExchangeBC(pc, patch, index,
-                                                    cellinfo, &velocityVars,
-                                                    &constVelocityVars);
-#endif
-      }*/
     }
 
     if (d_boundaryCondition->isUsingNewBC()) {
