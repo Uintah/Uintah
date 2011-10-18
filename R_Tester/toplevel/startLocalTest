@@ -137,6 +137,8 @@ fi
 
 #__________________________________
 # Now run the tests
+/bin/rm -rf log >/dev/null 2>&1
+
 echo ""
 echo ""
 date
@@ -147,6 +149,7 @@ for componentTest in $selectedCompTests; do
   # clean up old test results
   /bin/rm -f $componentTest.log >/dev/null 2>&1
   /bin/rm -rf $componentTest-results >/dev/null 2>&1
+  /bin/rm -rf $componentTest-short.log >/dev/null 2>&1
 
   # create the do<component>tests  python script
   doTestScript="do${componentTest}tests"
@@ -169,16 +172,30 @@ for componentTest in $selectedCompTests; do
   #__________________________________
   # run the python script that contains all the
   # tests for that component. If the return code != 0 capture it
-
-  "./$doTestScript" | tee "${componentTest}.log"
+  
+  "./$doTestScript" | tee comp.log 2>&1
   
   exitCode=${PIPESTATUS[0]}
+  
+  mv comp.log "${componentTest}.log"
+  
   echo "$componentTest exit Code: $exitCode"
+  
+  if test $exitCode = "0"; then
+    echo "Passed: ${componentTest}-${BUILD_TYPE} tests! " >> log
+  else
+    echo "Failed: ${componentTest}-${BUILD_TYPE} tests " >> log
+  fi
+  
+  if [ -f "${componentTest}-short.log" ]; then
+    cat "${componentTest}-short.log" >> log
+  fi
+  
   
   if test $exitCode != "0"; then
     retval=$exitCode
   fi
-
+  
   echo ""
   echo ""
 done
