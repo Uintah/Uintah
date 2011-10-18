@@ -87,7 +87,6 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Arches/CellInformation.h>
 #include <CCA/Components/Arches/ExplicitSolver.h>
 #include <CCA/Components/Arches/PhysicalConstants.h>
-#include <CCA/Components/Arches/PicardNonlinearSolver.h>
 #include <CCA/Components/Arches/Properties.h>
 #include <CCA/Components/Arches/SmagorinskyModel.h>
 #include <CCA/Components/Arches/ScaleSimilarityModel.h>
@@ -222,9 +221,6 @@ Arches::problemSetup(const ProblemSpecP& params,
     if (db->findBlock("ExplicitSolver")->findBlock("MixtureFractionSolver"))
       d_calcScalar = true;
       db->findBlock("ExplicitSolver")->findBlock("MixtureFractionSolver")->getWithDefault("initial_value",d_init_mix_frac,0.0); 
-  } else if (db->findBlock("PicardSolver")){
-    if (db->findBlock("PicardSolver")->findBlock("MixtureFractionSolver"))
-      d_calcScalar = true;
   }
   if (!d_calcScalar)
     throw InvalidValue("Density being independent variable or equivalently mixture fraction transport disabled is not supported in current implementation. Please include the <MixtureFractionSolver> section as a child of <Arches>.", __FILE__, __LINE__);
@@ -251,9 +247,6 @@ Arches::problemSetup(const ProblemSpecP& params,
       if (db->findBlock("ExplicitSolver")->findBlock("newEnthalpySolver")){ 
         d_calcNewEnthalpy = true; 
       } 
-    } else if (db->findBlock("PicardSolver")) {
-      if (db->findBlock("PicardSolver")->findBlock("EnthalpySolver"))
-        d_calcEnthalpy = true;
     }
     // Moved model_mixture_fraction_variance to properties
     db->findBlock("Properties")->require("use_mixing_model", d_calcVariance);
@@ -269,13 +262,6 @@ Arches::problemSetup(const ProblemSpecP& params,
     db->findBlock("ExplicitSolver")->getWithDefault("extraProjection",     d_extraProjection,false);  
     db->findBlock("ExplicitSolver")->require("initial_dt", d_init_dt);
     db->findBlock("ExplicitSolver")->require("variable_dt", d_variableTimeStep);
-    
-  } else if (db->findBlock("PicardSolver")){
-    nlSolver = "picard";
-    db->findBlock("PicardSolver")->getWithDefault("scalarUnderflowCheck",d_underflow,false);
-    db->findBlock("PicardSolver")->getWithDefault("extraProjection",     d_extraProjection,false);  
-    db->findBlock("PicardSolver")->require("initial_dt", d_init_dt);
-    db->findBlock("PicardSolver")->require("variable_dt", d_variableTimeStep);
   }
 
   if(db->findBlock("MMS")) {
@@ -477,17 +463,7 @@ Arches::problemSetup(const ProblemSpecP& params,
     throw InternalError("ARCHES:couldn't get hypreSolver port", __FILE__, __LINE__);
   }
 
-  if(nlSolver == "picard") {
-    d_nlSolver = scinew PicardNonlinearSolver(d_lab, d_MAlab, d_props, 
-                                              d_boundaryCondition,
-                                              d_turbModel, d_physicalConsts,
-                                              d_calcScalar,
-                                              d_calcEnthalpy,
-                                              d_calcVariance,
-                                              d_myworld,
-                                              hypreSolver);
-  }
-  else if (nlSolver == "explicit") {
+  if (nlSolver == "explicit") {
     d_nlSolver = scinew ExplicitSolver(d_lab, d_MAlab, d_props,
                                        d_boundaryCondition,                     
                                        d_turbModel, d_scaleSimilarityModel,     
