@@ -19,7 +19,7 @@
 *   <Sources>
 *     <src label = "my_source" type = "bowman_nox" > 
 			 	<!-- Bowman NOx rate expression --> 
-			 	<no2_label 								  spec="OPTIONAL STRING" need_applies_to="type bowman_nox"/> <!-- mass fraction label for NO2 (default = NO2) --> 
+			 	<n2_label 								  spec="OPTIONAL STRING" need_applies_to="type bowman_nox"/> <!-- mass fraction label for N2 (default = N2) --> 
         <A                          spec="REQUIRED DOUBLE" need_applies_to="type bowman_nox"/> <!-- Pre-exponential factor --> 
         <E_R                        spec="REQUIRED DOUBLE" need_applies_to="type bowman_nox"/> <!-- Activation temperature, code multiplies the -1!! --> 
         <o2_label                   spec="OPTIONAL STRING" need_applies_to="type bowman_nox"/> <!-- o2 label (default = O2) --> 
@@ -84,17 +84,17 @@ private:
 
   ArchesLabel* _field_labels;
 
-  double _MW_NO2;           ///< molecular weight of no2
+  double _MW_N2;            ///< molecular weight of no2
   double _MW_O2;            ///< moleculat weight of o2
   double _A;                ///< pre-exponential factor [units?]
   double _E_R;              ///< activation temperature [K] POSITIVE VALUE! Code will multiply the negative
 
-  std::string _no2_name;          ///< string name for no2 (from table)
+  std::string _n2_name;           ///< string name for no2 (from table)
   std::string _o2_name;           ///< string name for o2  (from table)
   std::string _rho_name;          ///< string name for rho (from table)
   std::string _temperature_name;  ///< string name for temperature (from table)
 
-  const VarLabel* _no2_label; ///< no2 label
+  const VarLabel* _n2_label;  ///< n2 label
   const VarLabel* _o2_label;  ///< o2  label 
   const VarLabel* _rho_label; ///< rho label 
   const VarLabel* _temperature_label; ///< temperature label 

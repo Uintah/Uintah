@@ -38,12 +38,12 @@ BowmanNOx::problemSetup(const ProblemSpecP& inputdb)
   db->getWithDefault("A", _A, 6.0e16); 
   db->getWithDefault("E_R", _E_R, 69090); 
   db->getWithDefault("o2_label", _o2_name, "O2"); 
-  db->getWithDefault("no2_label", _no2_name, "NO2"); 
+  db->getWithDefault("n2_label", _n2_name, "N2"); 
   db->getWithDefault("density_label", _rho_name, "density"); 
   db->getWithDefault("temperature_label", _temperature_name, "temperature"); 
 
   _field_labels->add_species( _o2_name ); 
-  _field_labels->add_species( _no2_name ); 
+  _field_labels->add_species( _n2_name ); 
   _field_labels->add_species( _rho_name ); 
   _field_labels->add_species( _temperature_name ); 
 
@@ -69,12 +69,12 @@ BowmanNOx::sched_computeSource( const LevelP& level, SchedulerP& sched, int time
   }
 
   // resolve some labels: 
-  _no2_label = VarLabel::find( _no2_name ); 
+  _n2_label = VarLabel::find( _n2_name ); 
   _o2_label  = VarLabel::find( _o2_name  ); 
   _rho_label = VarLabel::find( _rho_name ); 
   _temperature_label = VarLabel::find( _temperature_name ); 
 
-  tsk->requires( Task::OldDW, _no2_label, Ghost::None, 0 ); 
+  tsk->requires( Task::OldDW, _n2_label, Ghost::None, 0 ); 
   tsk->requires( Task::OldDW, _o2_label, Ghost::None, 0 ); 
   tsk->requires( Task::OldDW, _rho_label, Ghost::None, 0 ); 
   tsk->requires( Task::OldDW, _temperature_label, Ghost::None, 0 ); 
@@ -117,12 +117,12 @@ BowmanNOx::computeSource( const ProcessorGroup* pc,
       rate.initialize(0.0); 
     } 
 
-    constCCVariable<double> NO2; 
+    constCCVariable<double> N2; 
     constCCVariable<double> O2; 
     constCCVariable<double> rho; 
     constCCVariable<double> T; 
 
-    old_dw->get( NO2 , _no2_label         , matlIndex , patch , Ghost::None , 0 );
+    old_dw->get( N2 , _n2_label          , matlIndex , patch , Ghost::None , 0 );
     old_dw->get( O2  , _o2_label          , matlIndex , patch , Ghost::None , 0 );
     old_dw->get( rho , _rho_label         , matlIndex , patch , Ghost::None , 0 );
     old_dw->get( T   , _temperature_label , matlIndex , patch , Ghost::None , 0 );
@@ -136,7 +136,7 @@ BowmanNOx::computeSource( const ProcessorGroup* pc,
       IntVector c = *iter; 
 
       //convert to mol/cm^3
-      double no2 = NO2[c] * rho[c] / _MW_NO2 * 1.0e-6; 
+      double n2  = N2[c] * rho[c] / _MW_N2 * 1.0e-6; 
       double o2  = O2[c] * rho[c] / _MW_O2 * 1.0e-6; 
 
       double T_pow = pow( T[c], 0.5 ); 
@@ -144,7 +144,7 @@ BowmanNOx::computeSource( const ProcessorGroup* pc,
 
       double my_exp = -1.0 * _E_R / T[c]; 
 
-      rate[c] = _A / T_pow * exp( my_exp ) * no2 * o2_pow; 
+      rate[c] = _A / T_pow * exp( my_exp ) * n2 * o2_pow; 
 
     }
   }
