@@ -34,6 +34,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Schedulers/MPIScheduler.h>
 #include <CCA/Components/Schedulers/DynamicMPIScheduler.h>
 #include <CCA/Components/Schedulers/ThreadedMPIScheduler.h>
+#include <CCA/Components/Schedulers/GPUThreadedMPIScheduler.h>
 
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Parallel/Parallel.h>
@@ -59,9 +60,8 @@ SchedulerCommon* SchedulerFactory::create(ProblemSpecP& ps,
   // Default settings
   if (Uintah::Parallel::usingMPI()) {
     if (scheduler == "") {
-      //Uintah::Parallel::noThreading();
       if (Uintah::Parallel::getMaxThreads() > 0) {
-        scheduler = "ThreadedMPI";
+        scheduler = (Uintah::Parallel::usingGPU() ? "GPUThreadedMPI" : "ThreadedMPI");
       } else {
         scheduler = "MPIScheduler";
       }
@@ -70,6 +70,10 @@ SchedulerCommon* SchedulerFactory::create(ProblemSpecP& ps,
     if (scheduler == "") {
       scheduler = "SingleProcessorScheduler";
     }
+  }
+
+  if ((Uintah::Parallel::getMaxThreads() > 0) && ((scheduler != "ThreadedMPI") || (scheduler != "GPUThreadedMPI"))) {
+    throw ProblemSetupException("Threaded Scheduler needed for -nthreads", __FILE__, __LINE__);
   }
 
   if (world->myrank() == 0) {
@@ -84,13 +88,11 @@ SchedulerCommon* SchedulerFactory::create(ProblemSpecP& ps,
     sch = scinew DynamicMPIScheduler(world, output, NULL);
   } else if (scheduler == "ThreadedMPI") {
     sch = scinew ThreadedMPIScheduler(world, output, NULL);
+  } else if (scheduler == "GPUThreadedMPI") {
+    sch = scinew GPUThreadedMPIScheduler(world, output, NULL);
   } else {
     sch = 0;
     throw ProblemSetupException("Unknown scheduler", __FILE__, __LINE__);
-  }
-
-  if ((Uintah::Parallel::getMaxThreads() > 0) && (scheduler != "ThreadedMPI")) {
-    throw ProblemSetupException("Threaded Scheduler needed for -nthreads", __FILE__, __LINE__);
   }
 
   return sch;
