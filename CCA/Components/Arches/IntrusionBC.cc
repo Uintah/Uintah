@@ -51,6 +51,7 @@ IntrusionBC::IntrusionBC( const ArchesLabel* lab, Properties* props, int WALL ) 
   _sHelp.push_back( +1.0 ); 
 
   _intrusion_on = false; 
+  _do_energy_exchange = false; 
 
 }
 
@@ -151,8 +152,11 @@ IntrusionBC::problemSetup( const ProblemSpecP& params )
       } 
 
       //temperature of the intrusion
-      db_intrusion->getWithDefault( "energy_exchange", _do_energy_exchange, false ); 
+      intrusion.temperature = -1.0;
       db_intrusion->getWithDefault( "temperature", intrusion.temperature, 298.0 ); 
+      if ( intrusion.temperature > 0.0 ){ 
+        _do_energy_exchange = true; 
+      } 
 
       //make an area varlable
       intrusion.bc_area = VarLabel::create( name + "_bc_area", sum_vartype::getTypeDescription() ); 
@@ -649,13 +653,15 @@ IntrusionBC::sched_setIntrusionT( SchedulerP& sched,
                                   const MaterialSet* matls )
 { 
 
-  Task* tsk = scinew Task("IntrusionBC::setIntrusionT", this, &IntrusionBC::setIntrusionT); 
+  if ( _do_energy_exchange ){ 
+    Task* tsk = scinew Task("IntrusionBC::setIntrusionT", this, &IntrusionBC::setIntrusionT); 
 
-  const VarLabel* _T_label = VarLabel::find("temperature"); 
+    _T_label = VarLabel::find("temperature"); 
 
-  tsk->modifies( _T_label );  
+    tsk->modifies( _T_label );  
 
-  sched->addTask( tsk, patches, matls ); 
+    sched->addTask( tsk, patches, matls );
+  }
 
 } 
 
