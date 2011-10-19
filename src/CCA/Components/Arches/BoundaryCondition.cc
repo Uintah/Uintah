@@ -84,14 +84,9 @@ using namespace Uintah;
 #include <CCA/Components/Arches/fortran/bcuvel_fort.h>
 #include <CCA/Components/Arches/fortran/bcvvel_fort.h>
 #include <CCA/Components/Arches/fortran/bcwvel_fort.h>
-//#include <CCA/Components/Arches/fortran/profv_fort.h>
-#include <CCA/Components/Arches/fortran/intrusion_computevel_fort.h>
-#include <CCA/Components/Arches/fortran/mmbcenthalpy_energyex_fort.h>
-#include <CCA/Components/Arches/fortran/mmbcvelocity_momex_fort.h>
 #include <CCA/Components/Arches/fortran/mmbcvelocity_fort.h>
 #include <CCA/Components/Arches/fortran/mmcelltypeinit_fort.h>
 #include <CCA/Components/Arches/fortran/mmwallbc_fort.h>
-#include <CCA/Components/Arches/fortran/mmwallbc_trans_fort.h>
 #include <CCA/Components/Arches/fortran/mm_computevel_fort.h>
 #include <CCA/Components/Arches/fortran/mm_explicit_fort.h>
 #include <CCA/Components/Arches/fortran/mm_explicit_oldvalue_fort.h>
@@ -3980,9 +3975,6 @@ BoundaryCondition::getScalarFlowRate(const ProcessorGroup*,
 
     new_dw->put(sum_vartype(scalarOUT-scalarIN), d_lab->d_scalarFlowRateLabel);
 
-    double co2IN = 0.0;
-    double co2OUT = 0.0;
-
     // --- new efficiency calculator --- 
     for (BoundaryCondition::SpeciesEffMap::iterator iter = d_speciesEffInfo.begin(); iter != d_speciesEffInfo.end(); iter++){
       double IN = 0.0;
@@ -4061,8 +4053,6 @@ BoundaryCondition::getScalarEfficiency(const ProcessorGroup*,
     double scalarFlowRate = 0.0;
     double enthalpyFlowRate = 0.0;
     double totalFlowRate = 0.0;
-    double totalCarbonFlowRate = 0.0;
-    double totalSulfurFlowRate = 0.0;
     double totalEnthalpyFlowRate = 0.0;
     double scalarEfficiency = 0.0;
     double enthalpyEfficiency = 0.0;
@@ -5571,6 +5561,7 @@ BoundaryCondition::computeBCArea__NEW(const ProcessorGroup*,
           double dx_1 = 0.0;
           double dx_2 = 0.0; 
           IntVector shift; 
+          shift = IntVector(0,0,0);
 
           if ( foundIterator ) {
 

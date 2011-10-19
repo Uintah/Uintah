@@ -13,7 +13,10 @@ using namespace Uintah;
 
 DORadiation::DORadiation( std::string src_name, ArchesLabel* labels, BoundaryCondition* bc, 
                       vector<std::string> req_label_names, const ProcessorGroup* my_world ) 
-: _labels( labels ), _bc(bc), _my_world(my_world), SourceTermBase( src_name, labels->d_sharedState, req_label_names )
+: SourceTermBase( src_name, labels->d_sharedState, req_label_names ), 
+  _labels( labels ), 
+  _bc(bc), 
+  _my_world(my_world)
 {
 
   // NOTE: This boundary condition here is bogus.  Passing it for 

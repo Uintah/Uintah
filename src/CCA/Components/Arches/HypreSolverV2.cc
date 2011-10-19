@@ -96,6 +96,7 @@ HypreSolver::setRHS_X(const ProcessorGroup* pc,
 bool
 HypreSolver::pressLinearSolve()
 {
+  return false; 
 }
 //______________________________________________________________________
 // 
