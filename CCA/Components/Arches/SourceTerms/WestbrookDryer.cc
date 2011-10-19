@@ -13,7 +13,8 @@ using namespace Uintah;
 
 WestbrookDryer::WestbrookDryer( std::string src_name, ArchesLabel* field_labels,
                             vector<std::string> req_label_names ) 
-: _field_labels(field_labels), SourceTermBase(src_name, field_labels->d_sharedState, req_label_names)
+: SourceTermBase(src_name, field_labels->d_sharedState, req_label_names), 
+  _field_labels(field_labels)
 { 
 
   _label_sched_init = false; 

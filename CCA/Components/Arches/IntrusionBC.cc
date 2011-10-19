@@ -269,15 +269,6 @@ IntrusionBC::sched_computeProperties( SchedulerP& sched,
 {
   Task* tsk = scinew Task("IntrusionBC::computeProperties", this, &IntrusionBC::computeProperties); 
 
-  MixingRxnModel* mixingTable = _props->getMixRxnModel(); 
-  MixingRxnModel::VarMap iv_vars = mixingTable->getIVVars(); 
-
-  for ( MixingRxnModel::VarMap::iterator i = iv_vars.begin(); i != iv_vars.end(); i++ ){ 
-
-    tsk->requires( Task::NewDW, i->second, Ghost::AroundCells, 0 ); 
-
-  }
-
   sched->addTask(tsk, patches, matls); 
 }
 void 
@@ -291,9 +282,6 @@ IntrusionBC::computeProperties( const ProcessorGroup*,
 
     typedef std::vector<std::string> StringVec; 
     typedef std::map<std::string, double> StringDoubleMap;
-    const Patch* patch = patches->get(p); 
-    int archIndex = 0; 
-    int index = _lab->d_sharedState->getArchesMaterial( archIndex )->getDWIndex(); 
 
     MixingRxnModel* mixingTable = _props->getMixRxnModel(); 
     StringVec iv_var_names = mixingTable->getAllIndepVars(); 
@@ -304,7 +292,7 @@ IntrusionBC::computeProperties( const ProcessorGroup*,
 
       if ( iIntrusion->second.type != IntrusionBC::SIMPLE_WALL ) { 
 
-        for ( int i = 0; i < iv_var_names.size(); i++ ){ 
+        for ( unsigned int i = 0; i < iv_var_names.size(); i++ ){ 
 
           StringDoubleMap::iterator ivar = iIntrusion->second.varnames_values_map.find(iv_var_names[i]); 
 

@@ -100,10 +100,10 @@ private:
   std::string _h2o_label_name; 
   std::string _T_label_name; 
 
-  const ProcessorGroup* _my_world;
   RadiationModel* _DO_model; 
-  BoundaryCondition* _bc; 
   ArchesLabel* _labels; 
+  BoundaryCondition* _bc; 
+  const ProcessorGroup* _my_world;
 
   const VarLabel* _co2_label; 
   const VarLabel* _h2o_label; 

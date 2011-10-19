@@ -51,18 +51,14 @@ SRCS += \
         $(SRCDIR)/fixval.F \
         $(SRCDIR)/fixval_trans.F \
         $(SRCDIR)/inlbcs.F \
-        $(SRCDIR)/intrusion_computevel.F \
         $(SRCDIR)/mascal_scalar.F \
         $(SRCDIR)/mm_computevel.F\
         $(SRCDIR)/mm_explicit.F\
         $(SRCDIR)/mm_explicit_oldvalue.F\
         $(SRCDIR)/mm_explicit_vel.F\
         $(SRCDIR)/mmbcvelocity.F \
-        $(SRCDIR)/mmbcvelocity_momex.F \
-        $(SRCDIR)/mmbcenthalpy_energyex.F \
         $(SRCDIR)/mmcelltypeinit.F \
         $(SRCDIR)/mmwallbc.F \
-        $(SRCDIR)/mmwallbc_trans.F \
         $(SRCDIR)/prescoef_var.F \
         $(SRCDIR)/pressrcpred.F \
         $(SRCDIR)/pressrcpred_var.F \
@@ -112,7 +108,6 @@ $(SRCDIR)/mmbcvelocity.$(OBJEXT): $(SRCDIR)/mmbcvelocity_fort.h
 $(SRCDIR)/mmcelltypeinit.$(OBJEXT): $(SRCDIR)/mmcelltypeinit_fort.h
 $(SRCDIR)/mmenthalpywallbc.$(OBJEXT): $(SRCDIR)/mmenthalpywallbc_fort.h
 $(SRCDIR)/mmwallbc.$(OBJEXT): $(SRCDIR)/mmwallbc_fort.h
-$(SRCDIR)/mmwallbc_trans.$(OBJEXT): $(SRCDIR)/mmwallbc_trans_fort.h
 $(SRCDIR)/prescoef_var.$(OBJEXT): $(SRCDIR)/prescoef_var_fort.h
 $(SRCDIR)/pressrcpred.$(OBJEXT): $(SRCDIR)/pressrcpred_fort.h
 $(SRCDIR)/pressrcpred_var.$(OBJEXT): $(SRCDIR)/pressrcpred_var_fort.h
@@ -129,8 +124,5 @@ $(SRCDIR)/vvelsrc.$(OBJEXT): $(SRCDIR)/vvelsrc_fort.h
 $(SRCDIR)/wallbc.$(OBJEXT): $(SRCDIR)/wallbc_fort.h
 $(SRCDIR)/wvelcoef.$(OBJEXT): $(SRCDIR)/wvelcoef_fort.h
 $(SRCDIR)/wvelsrc.$(OBJEXT): $(SRCDIR)/wvelsrc_fort.h
-$(SRCDIR)/intrusion_computevel.$(OBJEXT): $(SRCDIR)/intrusion_computevel_fort.h
-$(SRCDIR)/mmbcvelocity_momex.$(OBJEXT): $(SRCDIR)/mmbcvelocity_momex_fort.h
-$(SRCDIR)/mmbcenthalpy_energyex.$(OBJEXT): $(SRCDIR)/mmbcenthalpy_energyex_fort.h
 $(SRCDIR)/get_ramping_factor.$(OBJEXT): $(SRCDIR)/get_ramping_factor_fort.h
 

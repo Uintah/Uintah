@@ -314,10 +314,10 @@ namespace Uintah{
     private: 
 
       std::vector<Boundary> _intrusions; 
-      int _WALL; 
       IntrusionMap _intrusion_map; 
       const ArchesLabel* _lab; 
       Properties* _props;
+      int _WALL; 
       bool _intrusion_on; 
       bool _do_energy_exchange; 
 
