@@ -595,11 +595,23 @@ void SerialMPM::scheduleInitializePressureBCs(const LevelP& level,
     delete d_loadCurveIndex;
 }
 
-void SerialMPM::scheduleComputeStableTimestep(const LevelP&,
-                                              SchedulerP&)
+void SerialMPM::scheduleComputeStableTimestep(const LevelP& level,
+                                              SchedulerP& sched)
 {
   // Nothing to do here - delt is computed as a by-product of the
   // constitutive model
+  // However, this task needs to do something in the case that MPM
+  // is being run on more than one level.
+  Task* t = 0;
+  cout_doing << UintahParallelComponent::d_myworld->myrank() << " MPM::scheduleComputeStableTimestep \t\t\t\tL-" <<level->getIndex() << endl;
+
+  t = scinew Task("MPM::actuallyComputeStableTimestep",
+                   this, &SerialMPM::actuallyComputeStableTimestep);
+
+  const MaterialSet* mpm_matls = d_sharedState->allMPMMaterials();
+
+  t->computes(d_sharedState->get_delt_label(),level.get_rep());
+  sched->addTask(t,level->eachPatch(), mpm_matls);
 }
 
 void
@@ -2029,11 +2041,15 @@ void SerialMPM::actuallyInitializeAddedMaterial(const ProcessorGroup*,
 
 
 void SerialMPM::actuallyComputeStableTimestep(const ProcessorGroup*,
-                                              const PatchSubset*,
-                                              const MaterialSubset*,
-                                              DataWarehouse*,
-                                              DataWarehouse*)
+                                              const PatchSubset* patches,
+                                              const MaterialSubset* ,
+                                              DataWarehouse* old_dw,
+                                              DataWarehouse* new_dw)
 {
+  // Put something here to satisfy the need for a reduction operation in
+  // the case that there are multiple levels present
+  const Level* level = getLevel(patches);
+  new_dw->put(delt_vartype(999.0), lb->delTLabel, level);
 }
 
 void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
