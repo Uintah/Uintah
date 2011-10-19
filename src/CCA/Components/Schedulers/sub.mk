@@ -51,6 +51,7 @@ SRCS += \
 	$(SRCDIR)/SingleProcessorScheduler.cc \
 	$(SRCDIR)/TaskGraph.cc \
 	$(SRCDIR)/ThreadedMPIScheduler.cc \
+	$(SRCDIR)/GPUThreadedMPIScheduler.cc \
 	$(SRCDIR)/ThreadPool.cc \
 	$(SRCDIR)/DependencyException.cc \
 	$(SRCDIR)/IncorrectAllocation.cc \
