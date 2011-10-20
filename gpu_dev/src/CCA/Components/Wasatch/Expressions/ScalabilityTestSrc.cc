@@ -5,13 +5,14 @@
 #include <spatialops/structured/SpatialFieldStore.h>
 
 template< typename FieldT >
-ScalabilityTestSrc<FieldT>::ScalabilityTestSrc( const Expr::Tag varTag,
-                                 const int nvar,
-                                 const Expr::ExpressionID& id,
-                                 const Expr::ExpressionRegistry& reg )
+ScalabilityTestSrc<FieldT>::
+ScalabilityTestSrc( const Expr::Tag varTag,
+                    const int nvar,
+                    const Expr::ExpressionID& id,
+                    const Expr::ExpressionRegistry& reg )
 : Expr::Expression<FieldT>( id, reg ),
-phiTag_( varTag ),
-nvar_( nvar )
+  phiTag_( varTag ),
+  nvar_  ( nvar   )
 {
   tmpVec_.resize( nvar, 0.0 );
 }
@@ -56,7 +57,6 @@ void
 ScalabilityTestSrc<FieldT>::evaluate()
 {
   FieldT& val = this->value();
-  val = 0.0;
   
   // pack iterators into a vector
   iterVec_.clear();
@@ -102,8 +102,8 @@ template< typename FieldT >
 ScalabilityTestSrc<FieldT>::Builder::
 Builder( const Expr::Tag phiTag,
         const int nvar )
-: tag_( phiTag ),
-nvar_( nvar )
+: tag_ ( phiTag ),
+  nvar_( nvar   )
 {}
 
 //--------------------------------------------------------------------

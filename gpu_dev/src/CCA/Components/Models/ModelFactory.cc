@@ -77,7 +77,14 @@ ModelFactory::~ModelFactory()
 
 vector<ModelInterface*> ModelFactory::getModels()
 {
+  //cout << "calling getModels: " << d_models.size() << " models returned" << endl;
   return d_models;
+}
+
+void ModelFactory::clearModels()
+{
+  //cout << "clean up " << d_models.size() << " models" << endl;
+  d_models.clear();
 }
 
 void

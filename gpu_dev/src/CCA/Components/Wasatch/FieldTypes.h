@@ -37,15 +37,16 @@ namespace Wasatch{
 
   /**
    *  \brief returns the staggered location of type FieldT.
-   */  
+   */
   template< typename FieldT >
   Direction get_staggered_location()
   {
-    if     ( SpatialOps::CompareDirection< typename FieldT::Location::StagLoc, typename SpatialOps::XDIR >::same() ) return XDIR;
-    else if( SpatialOps::CompareDirection< typename FieldT::Location::StagLoc, typename SpatialOps::YDIR >::same() ) return YDIR;
-    else if( SpatialOps::CompareDirection< typename FieldT::Location::StagLoc, typename SpatialOps::ZDIR >::same() ) return ZDIR;
+    typedef typename SpatialOps::structured::GetNonzeroDir<typename FieldT::Location::Offset>::DirT  DirT;
+    if     ( SpatialOps::IsSameType<DirT,SpatialOps::XDIR>::result ) return XDIR;
+    else if( SpatialOps::IsSameType<DirT,SpatialOps::YDIR>::result ) return YDIR;
+    else if( SpatialOps::IsSameType<DirT,SpatialOps::ZDIR>::result ) return ZDIR;
     return NODIR;
-  }  
+  }
   /** @} */
 
 } // namespace Wasatch

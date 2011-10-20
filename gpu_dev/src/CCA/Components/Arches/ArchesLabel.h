@@ -103,7 +103,6 @@ namespace Uintah {
       // Density Labels
 
       const VarLabel* d_densityCPLabel;
-      const VarLabel* d_densityEKTLabel;
       const VarLabel* d_densityGuessLabel;
       const VarLabel* d_densityTempLabel;
       const VarLabel* d_densityOldOldLabel;
@@ -143,16 +142,11 @@ namespace Uintah {
       // W-Velocity Labels
       const VarLabel* d_wVelocitySPBCLabel;
 
-      const VarLabel* d_uVelocityEKTLabel;
-      const VarLabel* d_vVelocityEKTLabel;
-      const VarLabel* d_wVelocityEKTLabel;
-
       // Scalar Labels
       //computed for old_dw in paramInit
       // computed for new_dw in setInitialGuess
 
       const VarLabel* d_scalarSPLabel;
-      const VarLabel* d_scalarEKTLabel;
       const VarLabel* d_scalarTempLabel;
       const VarLabel* d_scalarFELabel;
 
@@ -181,7 +175,6 @@ namespace Uintah {
 
       // reactive scalars
       const VarLabel* d_reactscalarSPLabel;
-      const VarLabel* d_reactscalarEKTLabel;
       const VarLabel* d_reactscalarTempLabel;
       const VarLabel* d_reactscalarFELabel;
 
@@ -315,7 +308,6 @@ namespace Uintah {
 
       // for enthalpy equation
       const VarLabel* d_enthalpySPLabel;
-      const VarLabel* d_enthalpyEKTLabel;
       const VarLabel* d_enthalpyTempLabel;
       const VarLabel* d_enthalpyFELabel;
       
@@ -377,9 +369,6 @@ namespace Uintah {
       const VarLabel* d_negativeDensityGuess_label;
       const VarLabel* d_negativeDensityGuessPred_label;
       const VarLabel* d_negativeDensityGuessInterm_label;
-      const VarLabel* d_negativeEKTDensityGuess_label;
-      const VarLabel* d_negativeEKTDensityGuessPred_label;
-      const VarLabel* d_negativeEKTDensityGuessInterm_label;
       const VarLabel* d_densityLag_label;
       const VarLabel* d_densityLagPred_label;
       const VarLabel* d_densityLagInterm_label;

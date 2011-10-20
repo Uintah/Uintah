@@ -123,8 +123,7 @@ public:
              const PatchSet* patches,
              const MaterialSet* matls,
              const TimeIntegratorLabel* timelabels,
-             bool extraProjection,
-             bool doing_EKT_now);
+             bool extraProjection);
 
   ///////////////////////////////////////////////////////////////////////
   // Schedule the build of the linearized momentum matrix
@@ -132,28 +131,24 @@ public:
                                const PatchSet* patches,
                                const MaterialSet* matls,
                                const TimeIntegratorLabel* timelabels,
-                               bool extraProjection,
-                               bool doing_EKT_now);
+                               bool extraProjection );
 
 
   void solveVelHat(const LevelP& level,
                    SchedulerP&,
-                   const TimeIntegratorLabel* timelabels,
-                   bool d_EKTCorrection);
+                   const TimeIntegratorLabel* timelabels );
 
   ///////////////////////////////////////////////////////////////////////
   // Schedule the build of the linearized eqn
   void sched_buildLinearMatrixVelHat(SchedulerP&, 
                                      const PatchSet* patches,
                                      const MaterialSet* matls,
-                                     const TimeIntegratorLabel* timelabels,
-                                     bool d_EKTCorrection);
+                                     const TimeIntegratorLabel* timelabels );
 
   void sched_averageRKHatVelocities(SchedulerP& sched,
                                     const PatchSet* patches,
                                     const MaterialSet* matls,
-                                    const TimeIntegratorLabel* timelabels,
-                                    bool d_EKTCorrection);
+                                    const TimeIntegratorLabel* timelabels );
 
   void sched_prepareExtraProjection(SchedulerP& sched, 
                                     const PatchSet* patches,
@@ -166,10 +161,6 @@ public:
     d_discretize->setFilter(filter);
   }
 #endif
-  const bool& getPressureCorrectionFlag() const
-    {
-      return d_pressure_correction;
-    }
   inline void setMMS(bool doMMS) {
     d_doMMS=doMMS;
   }
@@ -195,8 +186,7 @@ private:
                          DataWarehouse* old_dw,
                          DataWarehouse* new_dw,
                          const TimeIntegratorLabel* timelabels,
-                         bool extraProjection,
-                         bool doing_EKT_now);
+                         bool extraProjection );
 
 
   void buildLinearMatrixVelHat(const ProcessorGroup* pc,
@@ -204,16 +194,14 @@ private:
                                const MaterialSubset* matls,
                                DataWarehouse*,
                                DataWarehouse*,
-                               const TimeIntegratorLabel* timelabels,
-                               bool d_EKTCorrection);
+                               const TimeIntegratorLabel* timelabels );
 
   void averageRKHatVelocities(const ProcessorGroup*,
                               const PatchSubset* patches,
                               const MaterialSubset* matls,
                               DataWarehouse* old_dw,
                               DataWarehouse* new_dw,
-                              const TimeIntegratorLabel* timelabels,
-                              bool d_EKTCorrection);
+                              const TimeIntegratorLabel* timelabels );
 
   void prepareExtraProjection(const ProcessorGroup* pc,
                                const PatchSubset* patches,
@@ -231,7 +219,7 @@ private:
   const MPMArchesLabel* d_MAlab;
   bool d_momentum_coupling;
   bool d_central;
-  bool d_pressure_correction;
+
   // computes coefficients
   Discretization* d_discretize;
   // computes sources

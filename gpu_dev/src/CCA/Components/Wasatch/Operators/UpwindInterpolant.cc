@@ -10,8 +10,8 @@
 
 //--------------------------------------------------------------------
 
-template< typename PhiVolT, typename PhiFaceT >
-UpwindInterpolant<PhiVolT,PhiFaceT>::
+template< typename SrcT, typename DestT >
+UpwindInterpolant<SrcT,DestT>::
 UpwindInterpolant()
 {
   advectiveVelocity_ = NULL;
@@ -19,10 +19,10 @@ UpwindInterpolant()
 
 //--------------------------------------------------------------------
 
-template< typename PhiVolT, typename PhiFaceT >
+template< typename SrcT, typename DestT >
 void
-UpwindInterpolant<PhiVolT,PhiFaceT>::
-set_advective_velocity( const PhiFaceT& theAdvectiveVelocity )
+UpwindInterpolant<SrcT,DestT>::
+set_advective_velocity( const DestT& theAdvectiveVelocity )
 {
   // !!! NOT THREAD SAFE !!! USE LOCK
   advectiveVelocity_ = &theAdvectiveVelocity;
@@ -30,69 +30,60 @@ set_advective_velocity( const PhiFaceT& theAdvectiveVelocity )
 
 //--------------------------------------------------------------------
 
-template< typename PhiVolT, typename PhiFaceT >
-UpwindInterpolant<PhiVolT,PhiFaceT>::
+template< typename SrcT, typename DestT >
+UpwindInterpolant<SrcT,DestT>::
 ~UpwindInterpolant()
 {}  
 
 //--------------------------------------------------------------------
 
-template< typename PhiVolT, typename PhiFaceT >
+template< typename SrcT, typename DestT >
 void 
-UpwindInterpolant<PhiVolT,PhiFaceT>::
-apply_to_field( const PhiVolT& src, PhiFaceT& dest )
+UpwindInterpolant<SrcT,DestT>::
+apply_to_field( const SrcT& src, DestT& dest )
 {
-  using SpatialOps::structured::IntVec;
+  using namespace SpatialOps::structured;
+  typedef s2detail::ExtentsAndOffsets<SrcT,DestT> Extents;
 
-  if( advectiveVelocity_ == NULL ){
-    std::ostringstream msg;
-    msg << "ERROR: advecting velocity has not been set in UpwindInterpolant." << std::endl
-        << "       be sure to call set_advective_velocity() prior to apply_to_field()" << std::endl;
-    throw std::runtime_error( msg.str() );
-  }
+  const MemoryWindow& ws = src.window_with_ghost();
 
-  const SpatialOps::structured::Stencil2Helper<PhiVolT,PhiFaceT>
-    helper( src.window_with_ghost(), dest.window_with_ghost() );
+  const MemoryWindow ws1( ws.glob_dim(),
+                          ws.offset() + Extents::Src1Offset::int_vec(),
+                          ws.extent() + Extents::Src1Extent::int_vec() + ws.has_bc()*Extents::Src1ExtentBC::int_vec(),
+                          ws.has_bc(0), ws.has_bc(1), ws.has_bc(2) );
 
-  const IntVec sinc = helper.src_increment ();
-  const IntVec dinc = helper.dest_increment();
+  const MemoryWindow ws2( ws.glob_dim(),
+                          ws.offset() + Extents::Src2Offset::int_vec(),
+                          ws.extent() + Extents::Src2Extent::int_vec() + ws.has_bc()*Extents::Src2ExtentBC::int_vec(),
+                          ws.has_bc(0), ws.has_bc(1), ws.has_bc(2) );
 
-  typename PhiFaceT::iterator       idest  = dest.begin() + helper.dest_offset();
-  typename PhiFaceT::const_iterator advVel = advectiveVelocity_->begin() + helper.dest_offset();
-  typename PhiVolT ::const_iterator isrcm  = src.begin() + helper.src_offset_lo();
-  typename PhiVolT ::const_iterator isrcp  = src.begin() + helper.src_offset_hi();
+  const MemoryWindow& wdest = dest.window_with_ghost();
 
-  const IntVec lo = helper.low ();
-  const IntVec hi = helper.high();
+  const MemoryWindow wd( wdest.glob_dim(),
+                         wdest.offset() + Extents::DestOffset::int_vec(),
+                         wdest.extent() + Extents::DestExtent::int_vec() + wdest.has_bc()*Extents::DestExtentBC::int_vec(),
+                         wdest.has_bc(0), wdest.has_bc(1), wdest.has_bc(2) );
 
-  for( int k=lo[2]; k<hi[2]; ++k ){
-    for( int j=lo[1]; j<hi[1]; ++j ){
-      for( int i=lo[0]; i<hi[0]; ++i ){
-        
-        if( *advVel > 0.0 ){
-          *idest = *isrcm;
-        }
-        else if( *advVel < 0.0 ){
-          *idest = *isrcp;
-        }
-        else{
-          *idest = 0.5 * ( *isrcp + *isrcm );
-        }
 
-        advVel += dinc[0];
-        idest  += dinc[0];
-        isrcm  += sinc[0];
-        isrcp  += sinc[0];
-      }
-      advVel += dinc[1];
-      idest  += dinc[1];
-      isrcm  += sinc[1];
-      isrcp  += sinc[1];
-    }
-    advVel += dinc[2];
-    idest  += dinc[2];
-    isrcm  += sinc[2];
-    isrcp  += sinc[2];
+# ifndef NDEBUG
+  assert( ws1.extent() == ws2.extent() && ws1.extent() == wd.extent() );
+# endif
+
+  // build fields using these newly created windows to do the stencil operation.
+  DestT    d( wd, &dest[0], ExternalStorage );
+  DestT aVel( wd, &((*advectiveVelocity_)[0]), ExternalStorage );
+  SrcT    s1( ws1, &src[0], ExternalStorage );
+  SrcT    s2( ws2, &src[0], ExternalStorage );
+
+  typename DestT::iterator      id  = d .begin();
+  typename DestT::iterator      ide = d .end();
+  typename DestT::iterator      iav = aVel.begin();
+  typename SrcT::const_iterator is1 = s1.begin();
+  typename SrcT::const_iterator is2 = s2.begin();
+  for( ; id!=ide; ++id, ++iav, ++is1, ++is2 ){
+    if     ( *iav > 0.0 ) *id = *is1;
+    else if( *iav < 0.0 ) *id = *is2;
+    else                  *id = 0.5*( *is1 + *is2 );
   }
 
   advectiveVelocity_ = NULL;

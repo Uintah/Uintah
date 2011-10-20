@@ -78,7 +78,7 @@ HypreSolver::problemSetup(const ProblemSpecP& params)
 
   if(!db) {
     ostringstream warn;
-    warn << "INPUT FILE ERROR: ARCHES:PressureSolver: missing <parameters> tag \n";
+    warn << "INPUT FILE ERROR: ARCHES:PressureSolver: missing <Parameters> tag \n";
     throw ProblemSetupException(warn.str(), __FILE__, __LINE__); 
   } 
   

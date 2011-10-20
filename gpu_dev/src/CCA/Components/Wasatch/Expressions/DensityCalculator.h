@@ -31,60 +31,54 @@ class DensityCalculator
    subset of the eta's which can be weighted by density */
   /* RhoetaExEta and ReEEta mean "Rhoeta Excluded Eta" and are using to show  a 
    subset of the eta's which can NOT be weighted by density */
-  const Expr::TagList rhoEtaTags_;
-  Expr::TagList RhoetaExEtaNames_;
-  const Expr::TagList RhoetaIncEtaNames_;
-  const Expr::TagList OrderedEtaTags_;
+  const Expr::TagList rhoEtaTags_, rhoEtaIncEtaNames_, orderedEtaTags_;
+  Expr::TagList rhoEtaExEtaNames_;
   
   const BSpline* const evaluator_;
   
   IndepVarVec rhoEta_;
-  IndepVarVec RhoetaExEta_;
-  VarIter     RhoetaIncEtaIters_;
-  ConstIter   RhoetaExEtaIters_;
+  IndepVarVec rhoEtaExEta_;
+  VarIter     rhoEtaIncEtaIters_;
+  ConstIter   rhoEtaExEtaIters_;
   ConstIter   rhoEtaIters_;
   
-  
-  PointValues RhoetaIncEtaPoint_;
-  PointValues RhoetaExEtaPoint_;
+  PointValues rhoEtaIncEtaPoint_;
+  PointValues rhoEtaExEtaPoint_;
   PointValues rhoEtaPoint_;
   
   std::vector<int> ReIindex;
   
   // Linear solver function variables
-  // A vector for the jacobian matrix
-  std::vector<double> J;
-  // A vector for the functions
-  std::vector<double> g;
-  // A vector to store all eta values in the same order as the table
-  std::vector<double> OrderedEta;
+  std::vector<double> J;           ///< A vector for the jacobian matrix
+  std::vector<double> g;           ///< A vector for the functions
+  std::vector<double> orderedEta;  ///< A vector to store all eta values in the same order as the table
   
   
   DensityCalculator( const BSpline* const spline,
-                    const Expr::TagList& RhoEtaTags,           ///< rho*eta tag
-                    const Expr::TagList& RhoetaIncEtaNames,    ///< Tag for ReIEta
-                    const Expr::TagList& OrderedEtaTags,       ///< Tag for all of the eta's in the corect order
-                    const Expr::ExpressionID& id,
-                    const Expr::ExpressionRegistry& reg );
+                     const Expr::TagList& RhoEtaTags,           ///< rho*eta tag
+                     const Expr::TagList& RhoetaIncEtaNames,    ///< Tag for ReIEta
+                     const Expr::TagList& OrderedEtaTags,       ///< Tag for all of the eta's in the corect order
+                     const Expr::ExpressionID& id,
+                     const Expr::ExpressionRegistry& reg );
   
   void lin_solver( std::vector<double>& ReIeta, 
-                  const std::vector<double>& ReEeta,
-                  const std::vector<double>& RhoEta,
-                  std::vector<int>& ReIindex,
-                  double& rho,
-                  const BSpline&,
-                  const double rtol );
+                   const std::vector<double>& ReEeta,
+                   const std::vector<double>& RhoEta,
+                   std::vector<int>& ReIindex,
+                   double& rho,
+                   const BSpline&,
+                   const double rtol );
   
 public:
   class Builder : public Expr::ExpressionBuilder
   {
-    const Expr::TagList rhoEtaTs_, RhoetaIncEtaNs_, RhoetaExEtaNs_, OrderedEtaTs_;
+    const Expr::TagList rhoEtaTs_, rhoEtaIncEtaNs_, rhoEtaExEtaNs_, orderedEtaTs_;
     const BSpline* const spline_;
   public:
     Builder( const BSpline* const spline,
-            const Expr::TagList& RhoEtaTags,
-            const Expr::TagList& RhoetaIncEtaNames,
-            const Expr::TagList& OrderedEtaTags);
+             const Expr::TagList& rhoEtaTags,
+             const Expr::TagList& rhoEtaIncEtaNames,
+             const Expr::TagList& orderedEtaTags );
     
     Expr::ExpressionBase*
     build( const Expr::ExpressionID& id,
@@ -111,23 +105,23 @@ public:
 template< typename FieldT >
 DensityCalculator<FieldT>::
 DensityCalculator( const BSpline* const spline,
-                  const Expr::TagList& RhoEtaTags,                   
-                  const Expr::TagList& RhoetaIncEtaNames,
-                  const Expr::TagList& OrderedEtaTags,
-                  const Expr::ExpressionID& id,
-                  const Expr::ExpressionRegistry& reg  )
+                   const Expr::TagList& rhoEtaTags,
+                   const Expr::TagList& rhoetaIncEtaNames,
+                   const Expr::TagList& orderedEtaTags,
+                   const Expr::ExpressionID& id,
+                   const Expr::ExpressionRegistry& reg )
 : Expr::Expression<FieldT>(id,reg),
-rhoEtaTags_       ( RhoEtaTags        ),
-RhoetaIncEtaNames_( RhoetaIncEtaNames ),
-OrderedEtaTags_   ( OrderedEtaTags    ),
-evaluator_        ( spline            )
+  rhoEtaTags_       ( rhoEtaTags        ),
+  rhoEtaIncEtaNames_( rhoetaIncEtaNames ),
+  orderedEtaTags_   ( orderedEtaTags    ),
+  evaluator_        ( spline            )
 {
   ReIindex.clear();
   int counter=0;
   bool match;
-  for (typename Expr::TagList::const_iterator i=OrderedEtaTags_.begin(); i!=OrderedEtaTags_.end(); i++, counter++) {
+  for (typename Expr::TagList::const_iterator i=orderedEtaTags_.begin(); i!=orderedEtaTags_.end(); i++, counter++) {
     match=0;
-    for (typename Expr::TagList::const_iterator j=RhoetaIncEtaNames_.begin(); j!=RhoetaIncEtaNames_.end(); j++) {
+    for (typename Expr::TagList::const_iterator j=rhoEtaIncEtaNames_.begin(); j!=rhoEtaIncEtaNames_.end(); j++) {
       if (*i==*j) {
         ReIindex.push_back( counter );
         match=1;
@@ -136,7 +130,7 @@ evaluator_        ( spline            )
     }
     
     if (!match)  {
-      RhoetaExEtaNames_.push_back( *i );
+      rhoEtaExEtaNames_.push_back( *i );
     }
     
   }
@@ -159,7 +153,7 @@ advertise_dependents( Expr::ExprDeps& exprDeps )
   for( Expr::TagList::const_iterator inam=rhoEtaTags_.begin(); inam!=rhoEtaTags_.end(); ++inam ){
     exprDeps.requires_expression( *inam );
   }
-  for( Expr::TagList::const_iterator inam=RhoetaExEtaNames_.begin(); inam!=RhoetaExEtaNames_.end(); ++inam ){
+  for( Expr::TagList::const_iterator inam=rhoEtaExEtaNames_.begin(); inam!=rhoEtaExEtaNames_.end(); ++inam ){
     exprDeps.requires_expression( *inam );
   }
 }
@@ -177,9 +171,9 @@ bind_fields( const Expr::FieldManagerList& fml )
   for( Expr::TagList::const_iterator inam=rhoEtaTags_.begin(); inam!=rhoEtaTags_.end(); ++inam ){
     rhoEta_.push_back( &fm.field_ref( *inam ) );
   }
-  RhoetaExEta_.clear();
-  for( Expr::TagList::const_iterator inam=RhoetaExEtaNames_.begin(); inam!=RhoetaExEtaNames_.end(); ++inam ){
-    RhoetaExEta_.push_back( &fm.field_ref( *inam ) );
+  rhoEtaExEta_.clear();
+  for( Expr::TagList::const_iterator inam=rhoEtaExEtaNames_.begin(); inam!=rhoEtaExEtaNames_.end(); ++inam ){
+    rhoEtaExEta_.push_back( &fm.field_ref( *inam ) );
   }
 }
 
@@ -192,24 +186,24 @@ evaluate()
 {
   DepVarVec& results = this->get_value_vec();
   
-  DepVarVec RhoetaIncEta;
+  DepVarVec rhoEtaIncEta;
   typename DepVarVec::iterator iReIEta = results.begin();
   FieldT& rho = **iReIEta;
   ++iReIEta;
   for( ; iReIEta!=results.end(); ++iReIEta ){
-    RhoetaIncEta.push_back( *iReIEta );
+    rhoEtaIncEta.push_back( *iReIEta );
   }
   
   
-  RhoetaIncEtaIters_.clear();
-  RhoetaExEtaIters_.clear();
+  rhoEtaIncEtaIters_.clear();
+  rhoEtaExEtaIters_.clear();
   rhoEtaIters_.clear();  
   
-  for( typename DepVarVec::iterator i=RhoetaIncEta.begin(); i!=RhoetaIncEta.end(); ++i ){
-    RhoetaIncEtaIters_.push_back( (*i)->begin() );
+  for( typename DepVarVec::iterator i=rhoEtaIncEta.begin(); i!=rhoEtaIncEta.end(); ++i ){
+    rhoEtaIncEtaIters_.push_back( (*i)->begin() );
   }
-  for( typename IndepVarVec::iterator i=RhoetaExEta_.begin(); i!=RhoetaExEta_.end(); ++i ){
-    RhoetaExEtaIters_.push_back( (*i)->begin() );
+  for( typename IndepVarVec::iterator i=rhoEtaExEta_.begin(); i!=rhoEtaExEta_.end(); ++i ){
+    rhoEtaExEtaIters_.push_back( (*i)->begin() );
   }
   for( typename IndepVarVec::const_iterator i=rhoEta_.begin(); i!=rhoEta_.end(); ++i ){
     rhoEtaIters_.push_back( (*i)->begin() );
@@ -223,28 +217,28 @@ evaluate()
     *irho = 0.2;
     
     // extract indep vars at this grid point
-    RhoetaIncEtaPoint_.clear();
+    rhoEtaIncEtaPoint_.clear();
     rhoEtaPoint_.clear();
     for( typename ConstIter::const_iterator i=rhoEtaIters_.begin(); i!=rhoEtaIters_.end(); ++i ){
       rhoEtaPoint_.push_back( **i );
-      RhoetaIncEtaPoint_.push_back( **i / (*irho + 1e-11) );
+      rhoEtaIncEtaPoint_.push_back( **i / (*irho + 1e-11) );
     }
-    RhoetaExEtaPoint_.clear();
-    for( typename ConstIter::const_iterator i=RhoetaExEtaIters_.begin(); i!=RhoetaExEtaIters_.end(); ++i ){
-      RhoetaExEtaPoint_.push_back( **i );
+    rhoEtaExEtaPoint_.clear();
+    for( typename ConstIter::const_iterator i=rhoEtaExEtaIters_.begin(); i!=rhoEtaExEtaIters_.end(); ++i ){
+      rhoEtaExEtaPoint_.push_back( **i );
     }
     
     // calculate the result
-    lin_solver ( RhoetaIncEtaPoint_, RhoetaExEtaPoint_, rhoEtaPoint_, ReIindex, *irho , *evaluator_, 1e-11);
+    lin_solver( rhoEtaIncEtaPoint_, rhoEtaExEtaPoint_, rhoEtaPoint_, ReIindex, *irho , *evaluator_, 1e-11 );
     
     // increment all iterators to the next grid point
-    typename PointValues::const_iterator iReIEta=RhoetaIncEtaPoint_.begin();
-    for( typename VarIter::iterator i=RhoetaIncEtaIters_.begin(); i!=RhoetaIncEtaIters_.end(); ++i, ++iReIEta ){
+    typename PointValues::const_iterator iReIEta=rhoEtaIncEtaPoint_.begin();
+    for( typename VarIter::iterator i=rhoEtaIncEtaIters_.begin(); i!=rhoEtaIncEtaIters_.end(); ++i, ++iReIEta ){
       **i = *iReIEta;
       ++(*i);
     }
     for( typename ConstIter::iterator i=rhoEtaIters_.begin(); i!=rhoEtaIters_.end(); ++i )  ++(*i);
-    for( typename ConstIter::iterator i=RhoetaExEtaIters_.begin(); i!=RhoetaExEtaIters_.end(); ++i )  ++(*i);
+    for( typename ConstIter::iterator i=rhoEtaExEtaIters_.begin(); i!=rhoEtaExEtaIters_.end(); ++i )  ++(*i);
     
   } // grid loop
 }
@@ -254,13 +248,13 @@ evaluate()
 template< typename FieldT >
 DensityCalculator<FieldT>::
 Builder::Builder( const BSpline* const spline,
-                 const Expr::TagList& rhoEtaTags,
-                 const Expr::TagList& RhoetaIncEtaNames,
-                 const Expr::TagList& OrderedEtaTags)
-: spline_      ( spline            ),
-RhoetaIncEtaNs_( RhoetaIncEtaNames ),
-rhoEtaTs_      ( rhoEtaTags        ),
-OrderedEtaTs_  ( OrderedEtaTags    )
+                  const Expr::TagList& rhoEtaTags,
+                  const Expr::TagList& rhoEtaIncEtaNames,
+                  const Expr::TagList& orderedEtaTags )
+: spline_        ( spline            ),
+  rhoEtaIncEtaNs_( rhoEtaIncEtaNames ),
+  rhoEtaTs_      ( rhoEtaTags        ),
+  orderedEtaTs_  ( orderedEtaTags    )
 {}
 
 //--------------------------------------------------------------------
@@ -269,30 +263,30 @@ template< typename FieldT >
 Expr::ExpressionBase*
 DensityCalculator<FieldT>::
 Builder::build( const Expr::ExpressionID& id,
-               const Expr::ExpressionRegistry& reg ) const
+                const Expr::ExpressionRegistry& reg ) const
 {
-  return new DensityCalculator<FieldT>( spline_, rhoEtaTs_, RhoetaIncEtaNs_, OrderedEtaTs_, id, reg );
+  return new DensityCalculator<FieldT>( spline_, rhoEtaTs_, rhoEtaIncEtaNs_, orderedEtaTs_, id, reg );
 }
 
 //====================================================================
 
 extern "C"{
-  void dgetrf_(int* m,
-               int* n,
-               double A[],
-               int* lda,
-               int* ipiv,
-               int* info );
+  void dgetrf_( int* m,
+                int* n,
+                double A[],
+                int* lda,
+                int* ipiv,
+                int* info );
   
   void dgetrs_( char* trans,
-               int* n,
-               int* nrhs,
-               double A[],
-               int* lda,
-               int* ipiv,
-               double b[],
-               int* ldb,
-               int* info );
+                int* n,
+                int* nrhs,
+                double A[],
+                int* lda,
+                int* ipiv,
+                double b[],
+                int* ldb,
+                int* info );
 }
 
 template< typename FieldT >
@@ -310,9 +304,9 @@ DensityCalculator<FieldT>::lin_solver( std::vector<double>& ReIeta,
   double rlxFac = 1.0;
   
   if (size==0) {
-    OrderedEta.clear();
-    OrderedEta=ReEeta;
-    rho = eval.value(OrderedEta);
+    orderedEta.clear();
+    orderedEta=ReEeta;
+    rho = eval.value(orderedEta);
   }
   else {
     std::cout << ", Lambda=" << ReEeta[0] << ", rhoeta(real)=" << rhoEta[0] << std::endl;
@@ -327,13 +321,13 @@ DensityCalculator<FieldT>::lin_solver( std::vector<double>& ReIeta,
     do {
       itCounter++;
       // Creating the ordered eta vector
-      OrderedEta.clear();
-      OrderedEta=ReEeta;
+      orderedEta.clear();
+      orderedEta=ReEeta;
       for (int i=0; i<ReIindex.size(); i++) {
-        OrderedEta.insert(OrderedEta.begin()+ReIindex[i],ReIeta[i]);
+        orderedEta.insert(orderedEta.begin()+ReIindex[i],ReIeta[i]);
       }
       
-      const double rhotmp = eval.value(OrderedEta);
+      const double rhotmp = eval.value( orderedEta );
       
       // Loop over different etas
       for( int k=0; k<size; ++k ){
@@ -345,13 +339,13 @@ DensityCalculator<FieldT>::lin_solver( std::vector<double>& ReIeta,
         }
         
         // Recreating the ordered eta vector
-        OrderedEta.clear();
-        OrderedEta=ReEeta;
+        orderedEta.clear();
+        orderedEta=ReEeta;
         for (int i=0; i<ReIindex.size(); i++) {
-          OrderedEta.insert(OrderedEta.begin()+ReIindex[i],ReIetaTmp[i]);
+          orderedEta.insert( orderedEta.begin()+ReIindex[i], ReIetaTmp[i] );
         }
         
-        const double rhoplus = eval.value(&OrderedEta[0]);
+        const double rhoplus = eval.value(&orderedEta[0]);
         
         // Calculating the function members
         g[k] = -( ReIeta[k] - (rhoEta[k] / rhotmp));

@@ -13,7 +13,8 @@ using namespace Uintah;
 
 WestbrookDryer::WestbrookDryer( std::string src_name, ArchesLabel* field_labels,
                             vector<std::string> req_label_names ) 
-: _field_labels(field_labels), SourceTermBase(src_name, field_labels->d_sharedState, req_label_names)
+: SourceTermBase(src_name, field_labels->d_sharedState, req_label_names), 
+  _field_labels(field_labels)
 { 
 
   _label_sched_init = false; 
@@ -57,12 +58,12 @@ WestbrookDryer::problemSetup(const ProblemSpecP& inputdb)
   db->require("fuel_mass_fraction", d_MF_HC_f1);           // Mass fraction of C_xH_y when f=1
   db->require("oxidizer_O2_mass_fraction", d_MF_O2_f0);    // Mass fraction of O2 when f=0
   // labels: 
-  db->getWithDefault("temperature_label", d_T_label, "temperature"); // The name of the mixture fraction label
-  db->getWithDefault("density_label", d_rho_label, "density");       // The name of the density label 
-  db->require("cstar_fraction_label", d_cstar_label);                // The name of the C* mixture fraction label
-  db->require("equil_fraction_label", d_ceq_label);                  // The name of the secondary mixture fraciton label
-  db->require("mw_label", d_mw_label);                               // The name of the MW label
-  db->require("o2_label", d_o2_label);                               // The name of the O2 label
+  db->getWithDefault("temperature_label", d_T_label, "temperature");          // The name of the mixture fraction label
+  db->getWithDefault("density_label", d_rho_label, "density");                // The name of the density label 
+  db->require("cstar_fraction_label", d_cstar_label);                         // The name of the C* mixture fraction label
+  db->require("equil_fraction_label", d_ceq_label);                           // The name of the secondary mixture fraciton label
+  db->getWithDefault("mw_label", d_mw_label, "mixture_molecular_weight");     // The name of the MW label
+  db->getWithDefault("o2_label", d_o2_label, "O2");                           // The name of the O2 label
 
   // add for table lookup
   _field_labels->add_species( d_mw_label ); 

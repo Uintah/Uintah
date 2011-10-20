@@ -112,7 +112,6 @@ ArchesLabel::ArchesLabel()
 
   // Density Labels
   d_densityCPLabel      =  VarLabel::create("densityCP",      CC_double);
-  d_densityEKTLabel     =  VarLabel::create("densityEKT",     CC_double);
   d_densityGuessLabel   =  VarLabel::create("densityGuess",   CC_double);
   d_densityTempLabel    =  VarLabel::create("densityTemp",    CC_double);
   d_densityOldOldLabel  =  VarLabel::create("densityOldOld",  CC_double);
@@ -141,10 +140,6 @@ ArchesLabel::ArchesLabel()
   d_uVelocitySPBCLabel = VarLabel::create("uVelocitySPBC", SFCX_double);
   d_vVelocitySPBCLabel = VarLabel::create("vVelocitySPBC", SFCY_double);
   d_wVelocitySPBCLabel = VarLabel::create("wVelocitySPBC", SFCZ_double);
-
-  d_uVelocityEKTLabel = VarLabel::create("uVelocityEKT", SFCX_double);
-  d_vVelocityEKTLabel = VarLabel::create("vVelocityEKT", SFCY_double);
-  d_wVelocityEKTLabel = VarLabel::create("wVelocityEKT", SFCZ_double);
   
   // labels for ref density and pressure
   d_refDensity_label      =  VarLabel::create("refDensityLabel",      sum_variable);
@@ -154,7 +149,6 @@ ArchesLabel::ArchesLabel()
 
   // Scalar 
   d_scalarSPLabel    =  VarLabel::create("scalarSP",    CC_double);
-  d_scalarEKTLabel   =  VarLabel::create("scalarEKT",   CC_double);
   d_scalarTempLabel  =  VarLabel::create("scalarTemp",  CC_double);
   d_scalarFELabel    =  VarLabel::create("scalarFE",    CC_double);
 
@@ -173,7 +167,6 @@ ArchesLabel::ArchesLabel()
 
   // reactive scalar
   d_reactscalarSPLabel    =  VarLabel::create("reactscalarSP",    CC_double);
-  d_reactscalarEKTLabel   =  VarLabel::create("reactscalarEKT",   CC_double);
   d_reactscalarTempLabel  =  VarLabel::create("reactscalarTemp",  CC_double);
   d_reactscalarFELabel    =  VarLabel::create("reactscalarFE",    CC_double);
 
@@ -272,7 +265,6 @@ ArchesLabel::ArchesLabel()
 
   // enthalpy labels
   d_enthalpySPLabel    =  VarLabel::create("enthalpySP",    CC_double);
-  d_enthalpyEKTLabel   =  VarLabel::create("enthalpyEKT",   CC_double);
   d_enthalpyTempLabel  =  VarLabel::create("enthalpyTemp",  CC_double);
   d_enthalpyFELabel    =  VarLabel::create("enthalpyFE",    CC_double);
   d_enthalpyRXNLabel   =  VarLabel::create("enthalpyRXN",   CC_double);
@@ -349,9 +341,6 @@ ArchesLabel::ArchesLabel()
   d_negativeDensityGuess_label           =  VarLabel::create("negativeDensityGuess",           sum_variable);
   d_negativeDensityGuessPred_label       =  VarLabel::create("negativeDensityGuessPred",       sum_variable);
   d_negativeDensityGuessInterm_label     =  VarLabel::create("negativeDensityGuessInterm",     sum_variable);
-  d_negativeEKTDensityGuess_label        =  VarLabel::create("negativeEKTDensityGuess",        sum_variable);
-  d_negativeEKTDensityGuessPred_label    =  VarLabel::create("negativeEKTDensityGuessPred",    sum_variable);
-  d_negativeEKTDensityGuessInterm_label  =  VarLabel::create("negativeEKTDensityGuessInterm",  sum_variable);
   d_densityLag_label                     =  VarLabel::create("densityLag",                     sum_variable);
   d_densityLagPred_label                 =  VarLabel::create("densityLagPred",                 sum_variable);
   d_densityLagInterm_label               =  VarLabel::create("densityLagInterm",               sum_variable);
@@ -551,7 +540,6 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_totalAreaOUTLabel);
   VarLabel::destroy(d_denAccumLabel);
   VarLabel::destroy(d_densityCPLabel);
-  VarLabel::destroy(d_densityEKTLabel);
   VarLabel::destroy(d_densityGuessLabel);
   VarLabel::destroy(d_densityTempLabel);
   VarLabel::destroy(d_densityOldOldLabel);
@@ -569,11 +557,7 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_uVelocitySPBCLabel);
   VarLabel::destroy(d_vVelocitySPBCLabel);
   VarLabel::destroy(d_wVelocitySPBCLabel);
-  VarLabel::destroy(d_uVelocityEKTLabel);
-  VarLabel::destroy(d_vVelocityEKTLabel);
-  VarLabel::destroy(d_wVelocityEKTLabel);
   VarLabel::destroy(d_scalarSPLabel);
-  VarLabel::destroy(d_scalarEKTLabel);
   VarLabel::destroy(d_scalarTempLabel);
   VarLabel::destroy(d_scalarFELabel);
   VarLabel::destroy(d_scalarVarSPLabel);
@@ -582,7 +566,6 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_scalarTotCoefLabel);
   VarLabel::destroy(d_scalNonLinSrcSBLMLabel);
   VarLabel::destroy(d_reactscalarSPLabel);
-  VarLabel::destroy(d_reactscalarEKTLabel);
   VarLabel::destroy(d_reactscalarTempLabel);
   VarLabel::destroy(d_reactscalarFELabel);
   VarLabel::destroy(d_reactscalCoefSBLMLabel);
@@ -655,7 +638,6 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_divConstraintLabel); 
   VarLabel::destroy(d_pressurePredLabel);
   VarLabel::destroy(d_enthalpySPLabel);
-  VarLabel::destroy(d_enthalpyEKTLabel);
   VarLabel::destroy(d_enthalpyTempLabel);
   VarLabel::destroy(d_enthalpyFELabel);
   VarLabel::destroy(d_enthalpyRXNLabel);
@@ -706,9 +688,6 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_negativeDensityGuess_label);
   VarLabel::destroy(d_negativeDensityGuessPred_label);
   VarLabel::destroy(d_negativeDensityGuessInterm_label);
-  VarLabel::destroy(d_negativeEKTDensityGuess_label);
-  VarLabel::destroy(d_negativeEKTDensityGuessPred_label);
-  VarLabel::destroy(d_negativeEKTDensityGuessInterm_label);
   VarLabel::destroy(d_densityLag_label);
   VarLabel::destroy(d_densityLagPred_label);
   VarLabel::destroy(d_densityLagInterm_label);

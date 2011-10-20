@@ -50,7 +50,7 @@ public:
            const Expr::ExpressionRegistry& reg ) const;
 
   private:
-  const Expr::Tag rhophit_, rhot_;
+    const Expr::Tag rhophit_, rhot_;
   };
 
   ~PrimVar();

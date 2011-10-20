@@ -132,9 +132,9 @@ public:
                                          const Expr::ExpressionRegistry& reg ) const;
   protected:
     const FieldTagInfo info_;
-    std::vector<Expr::Tag> srcT_;
-    Expr::Tag densityT_;
-    bool isConstDensity_;
+    const std::vector<Expr::Tag> srcT_;
+    const Expr::Tag densityT_;
+    const bool isConstDensity_;
   };
 
   virtual void evaluate();
@@ -150,11 +150,10 @@ protected:
   const bool haveConvection_, haveDiffusion_;
   const bool doXDir_, doYDir_, doZDir_;
   
-  
   const Expr::Tag densityTag_;
 
   const SVolField* rho_;
-  bool isConstDensity_;
+  const bool isConstDensity_;
   const DensityInterpT* densityInterpOp_;
 
   std::vector<Expr::Tag> srcTags_;
@@ -183,7 +182,6 @@ protected:
              const Expr::ExpressionRegistry& reg );
     
   virtual ~ScalarRHS();
-
 };
 
 #endif

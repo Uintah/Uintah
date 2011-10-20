@@ -193,7 +193,7 @@ namespace Wasatch {
   MomentTransportEquation( const std::string thisPhiName,
                           const Expr::ExpressionID rhsID )
   : Wasatch::TransportEquation( thisPhiName, rhsID, 
-                               get_staggered_location<FieldT>() )
+                                get_staggered_location<FieldT>() )
   {}
   
   //------------------------------------------------------------------

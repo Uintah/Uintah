@@ -93,43 +93,44 @@ void
 MomRHSPart<FieldT>::
 evaluate()
 {
+  using namespace SpatialOps;
   FieldT& result = this->value();
-  result = 0.0;
+  result <<= 0.0;
 
   SpatialOps::SpatFldPtr<FieldT> tmp = SpatialOps::SpatialFieldStore<FieldT>::self().get( result );
 
   if( cfluxXt_ != emptyTag_ ){
     divXOp_->apply_to_field( *cFluxX_, *tmp );
-    result -= *tmp;
+    result <<= result - *tmp;
   }
 
   if( cfluxYt_ != emptyTag_ ){
     divYOp_->apply_to_field( *cFluxY_, *tmp );
-    result -= *tmp;
+    result <<= result - *tmp;
   }
 
   if( cfluxZt_ != emptyTag_ ){
     divZOp_->apply_to_field( *cFluxZ_, *tmp );
-    result -= *tmp;
+    result <<= result - *tmp;
   }
 
   if( tauXt_ != emptyTag_ ){
     divXOp_->apply_to_field( *tauX_, *tmp );
-    result -= *tmp;
+    result <<= result - *tmp;
   }
 
   if( tauYt_ != emptyTag_ ){
     divYOp_->apply_to_field( *tauY_, *tmp );
-    result -= *tmp;
+    result <<= result - *tmp;
   }
 
   if( tauZt_ != emptyTag_ ){
     divZOp_->apply_to_field( *tauZ_, *tmp );
-    result -= *tmp;
+    result <<= result - *tmp;
   }
 
   if( bodyForcet_ != emptyTag_ ){
-    result += *bodyForce_;
+    result <<= result + *bodyForce_;
   }
 
 }
@@ -145,12 +146,12 @@ Builder::Builder( const Expr::Tag& convFluxX,
                   const Expr::Tag& tauY,
                   const Expr::Tag& tauZ,
                   const Expr::Tag& bodyForce )              
-  : cfluxXt_( convFluxX ),
-    cfluxYt_( convFluxY ),
-    cfluxZt_( convFluxZ ),
-    tauXt_( tauX ),
-    tauYt_( tauY ),
-    tauZt_( tauZ ),
+  : cfluxXt_   ( convFluxX ),
+    cfluxYt_   ( convFluxY ),
+    cfluxZt_   ( convFluxZ ),
+    tauXt_     ( tauX      ),
+    tauYt_     ( tauY      ),
+    tauZt_     ( tauZ      ),
     bodyForcet_( bodyForce )
 {}
 

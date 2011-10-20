@@ -83,27 +83,13 @@ namespace Wasatch{
     globSize[1] = SpatialOps::structured::get_ny_with_ghost<FieldT>( gs[1], bcPlus[1] );
     globSize[2] = SpatialOps::structured::get_nz_with_ghost<FieldT>( gs[2], bcPlus[2] );
 
-    // assumes that we have one layer of extra cells specified.
     using SpatialOps::structured::IntVec;
     IntVec glob(0,0,0), extent(0,0,0), offset(0,0,0);
     for( size_t i=0; i<3; ++i ){
       glob  [i] = globSize[i];
       extent[i] = globSize[i];
-      // if we have a physical BC on the left side we will have extra
-      // cells from uintah.  we want to ignore that in SpatialOps so we
-      // move in our window on the left side.
-      if( bcMinus[i] == 1 ){
-        extent[i] -= extraCells[i];
-        offset[i] += extraCells[i];
-      }
     }
-    // if we have a physical BC on the right side we also have extra
-    // cells.  We want to ignore that if we are on any field except a
-    // staggered field in that direction.
-    if( bcPlus[0] == 1 && get_staggered_location<FieldT>() != XDIR )  extent[0] -= extraCells[0];
-    if( bcPlus[1] == 1 && get_staggered_location<FieldT>() != YDIR )  extent[1] -= extraCells[1];
-    if( bcPlus[2] == 1 && get_staggered_location<FieldT>() != ZDIR )  extent[2] -= extraCells[2];
-    return SpatialOps::structured::MemoryWindow( glob, offset, extent );
+    return SpatialOps::structured::MemoryWindow( glob, offset, extent, bcPlus[0], bcPlus[1], bcPlus[2] );
   }
 
   //------------------------------------------------------------------
@@ -113,20 +99,20 @@ namespace Wasatch{
   template<> Uintah::Ghost::GhostType get_uintah_ghost_type<SpatialOps::structured::SSurfYField>(){ return Uintah::Ghost::AroundFaces; }
   template<> Uintah::Ghost::GhostType get_uintah_ghost_type<SpatialOps::structured::SSurfZField>(){ return Uintah::Ghost::AroundFaces; }
 
-  template<> Uintah::Ghost::GhostType get_uintah_ghost_type<SpatialOps::structured::XVolField  >(){ return Uintah::Ghost::AroundCells; }
-  template<> Uintah::Ghost::GhostType get_uintah_ghost_type<SpatialOps::structured::XSurfXField>(){ return Uintah::Ghost::AroundFaces; }
+  template<> Uintah::Ghost::GhostType get_uintah_ghost_type<SpatialOps::structured::XVolField  >(){ return Uintah::Ghost::AroundFaces; }
+  template<> Uintah::Ghost::GhostType get_uintah_ghost_type<SpatialOps::structured::XSurfXField>(){ return Uintah::Ghost::AroundCells; }
   template<> Uintah::Ghost::GhostType get_uintah_ghost_type<SpatialOps::structured::XSurfYField>(){ return Uintah::Ghost::AroundFaces; }
   template<> Uintah::Ghost::GhostType get_uintah_ghost_type<SpatialOps::structured::XSurfZField>(){ return Uintah::Ghost::AroundFaces; }
 
-  template<> Uintah::Ghost::GhostType get_uintah_ghost_type<SpatialOps::structured::YVolField  >(){ return Uintah::Ghost::AroundCells; }
+  template<> Uintah::Ghost::GhostType get_uintah_ghost_type<SpatialOps::structured::YVolField  >(){ return Uintah::Ghost::AroundFaces; }
   template<> Uintah::Ghost::GhostType get_uintah_ghost_type<SpatialOps::structured::YSurfXField>(){ return Uintah::Ghost::AroundFaces; }
-  template<> Uintah::Ghost::GhostType get_uintah_ghost_type<SpatialOps::structured::YSurfYField>(){ return Uintah::Ghost::AroundFaces; }
+  template<> Uintah::Ghost::GhostType get_uintah_ghost_type<SpatialOps::structured::YSurfYField>(){ return Uintah::Ghost::AroundCells; }
   template<> Uintah::Ghost::GhostType get_uintah_ghost_type<SpatialOps::structured::YSurfZField>(){ return Uintah::Ghost::AroundFaces; }
 
-  template<> Uintah::Ghost::GhostType get_uintah_ghost_type<SpatialOps::structured::ZVolField  >(){ return Uintah::Ghost::AroundCells; }
+  template<> Uintah::Ghost::GhostType get_uintah_ghost_type<SpatialOps::structured::ZVolField  >(){ return Uintah::Ghost::AroundFaces; }
   template<> Uintah::Ghost::GhostType get_uintah_ghost_type<SpatialOps::structured::ZSurfXField>(){ return Uintah::Ghost::AroundFaces; }
   template<> Uintah::Ghost::GhostType get_uintah_ghost_type<SpatialOps::structured::ZSurfYField>(){ return Uintah::Ghost::AroundFaces; }
-  template<> Uintah::Ghost::GhostType get_uintah_ghost_type<SpatialOps::structured::ZSurfZField>(){ return Uintah::Ghost::AroundFaces; }
+  template<> Uintah::Ghost::GhostType get_uintah_ghost_type<SpatialOps::structured::ZSurfZField>(){ return Uintah::Ghost::AroundCells; }
 
   //------------------------------------------------------------------
 
@@ -142,10 +128,10 @@ namespace Wasatch{
   declare_method( FaceTypes<VOLT>::YFace );     \
   declare_method( FaceTypes<VOLT>::ZFace );
 
-  declare_variants( SVolField );
-  declare_variants( XVolField );
-  declare_variants( YVolField );
-  declare_variants( ZVolField );
+  declare_variants( SpatialOps::structured::SVolField );
+  declare_variants( SpatialOps::structured::XVolField );
+  declare_variants( SpatialOps::structured::YVolField );
+  declare_variants( SpatialOps::structured::ZVolField );
 
   //------------------------------------------------------------------
 

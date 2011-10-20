@@ -110,16 +110,12 @@ public:
    virtual void sched_computeScalarVariance(SchedulerP&,
                                             const PatchSet* patches,
                                             const MaterialSet* matls,
-                                            const TimeIntegratorLabel* timelabels,
-                                            bool d_EKTCorrection,
-                                            bool doing_EKT_now);
+                                            const TimeIntegratorLabel* timelabels);
 
    virtual void sched_computeScalarDissipation(SchedulerP&,
                                                const PatchSet* patches,
                                                const MaterialSet* matls,
-                                               const TimeIntegratorLabel* timelabels,
-                                               bool d_EKTCorrection,
-                                               bool doing_EKT_now);
+                                               const TimeIntegratorLabel* timelabels);
    ///////////////////////////////////////////////////////////////////////
    // Get the molecular viscosity
    double getMolecularViscosity() const; 
@@ -188,18 +184,14 @@ private:
                               const MaterialSubset* matls,
                               DataWarehouse* old_dw,
                               DataWarehouse* new_dw,
-                              const TimeIntegratorLabel* timelabels,
-                              bool d_EKTCorrection,
-                              bool doing_EKT_now);
+                              const TimeIntegratorLabel* timelabels);
 
    void computeScalarDissipation(const ProcessorGroup*,
                                  const PatchSubset* patches,
                                  const MaterialSubset* matls,
                                  DataWarehouse* old_dw,
                                  DataWarehouse* new_dw,
-                                 const TimeIntegratorLabel* timelabels,
-                                 bool d_EKTCorrection,
-                                 bool doing_EKT_now);
+                                 const TimeIntegratorLabel* timelabels);
 
 private:
       double d_CF; //model constant

@@ -1,7 +1,10 @@
 #ifndef DiffusiveFlux_Expr_h
 #define DiffusiveFlux_Expr_h
 
+//-- ExprLib includes --//
 #include <expression/Expr_Expression.h>
+
+//-- SpatialOps includes --//
 #include <spatialops/structured/FVStaggeredOperatorTypes.h>
 
 
@@ -30,7 +33,6 @@ template< typename ScalarT, typename FluxT >
 class DiffusiveFlux
   : public Expr::Expression< FluxT >
 {
-  
   typedef typename SpatialOps::structured::OperatorTypeBuilder<SpatialOps::Gradient,   ScalarT,  FluxT>::type  GradT;
   typedef typename SpatialOps::structured::OperatorTypeBuilder<SpatialOps::Interpolant,SVolField,FluxT>::type  DensityInterpT;
   
@@ -38,12 +40,12 @@ class DiffusiveFlux
   const Expr::Tag phiTag_, coefTag_, rhoTag_;
   const double coefVal_;
 
-  const GradT* gradOp_;
+  const GradT*          gradOp_;
   const DensityInterpT* densityInterpOp_;
   
-  const ScalarT* phi_;
+  const ScalarT*   phi_;
   const SVolField* rho_;
-  const FluxT* coef_;
+  const FluxT*     coef_;
 
   DiffusiveFlux( const Expr::Tag rhoTag,
                  const Expr::Tag phiTag,
@@ -81,7 +83,6 @@ public:
              const Expr::Tag coefTag,
              const Expr::Tag rhoTag = Expr::Tag() )
       : isConstCoef_( false ),
-//        isConstDensity_( rhoTag == Expr::Tag() ),
         rhot_(rhoTag),
         phit_(phiTag),
         coeft_(coefTag),
@@ -103,7 +104,6 @@ public:
              const double coef,
              const Expr::Tag rhoTag = Expr::Tag() )
       : isConstCoef_( true ),
-//        isConstDensity_( rhoTag == Expr::Tag() ),
         rhot_(rhoTag),
         phit_(phiTag),
         coef_(coef)
@@ -161,7 +161,6 @@ class DiffusiveFlux2
   typedef typename SpatialOps::structured::OperatorTypeBuilder<SpatialOps::Interpolant,ScalarT,  FluxT>::type  InterpT;
   typedef typename SpatialOps::structured::OperatorTypeBuilder<SpatialOps::Interpolant,SVolField,FluxT>::type  DensityInterpT;
   
-//  const bool isConstDensity_;
   const Expr::Tag phiTag_, coefTag_, rhoTag_;
 
   const GradT* gradOp_;
@@ -201,19 +200,17 @@ public:
     Builder( const Expr::Tag phiTag, 
              const Expr::Tag coefTag,
              const Expr::Tag rhoTag = Expr::Tag() )
-    : //isConstDensity_(rhoTag == Expr::Tag()),
-      rhot_(rhoTag), 
+    : rhot_(rhoTag),
       phit_(phiTag), 
       coeft_( coefTag )
     {}
 
     Expr::ExpressionBase*
     build( const Expr::ExpressionID& id,
-           const Expr::ExpressionRegistry& reg ) const    {
+           const Expr::ExpressionRegistry& reg ) const{
       return new DiffusiveFlux2<ScalarT,FluxT>( rhot_, phit_, coeft_, id, reg );
     }
   private:
-//    const bool isConstDensity_;
     const Expr::Tag phit_,coeft_,rhot_;
   };
 

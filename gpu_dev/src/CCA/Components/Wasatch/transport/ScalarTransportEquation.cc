@@ -12,6 +12,9 @@
 //-- ExprLib includes --//
 #include <expression/ExprLib.h>
 
+//-- SpatialOps includes --//
+#include <spatialops/structured/IndexTriplet.h>
+
 //-- Uintah includes --//
 #include <Core/Parallel/Parallel.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
@@ -373,7 +376,8 @@ namespace Wasatch{
                            const Expr::Tag densityTag,
                            const bool isConstDensity,
                            const Expr::ExpressionID rhsID )
-    : Wasatch::TransportEquation( solnVarName, rhsID, get_staggered_location<FieldT>() )
+    : Wasatch::TransportEquation( solnVarName, rhsID,
+                                  get_staggered_location<FieldT>() )
   {
 
     // defining the primary variable ans solutioan variable tags regarding to the type of 
@@ -442,7 +446,7 @@ namespace Wasatch{
                                  graphHelper,
                                  localPatches,
                                  patchInfoMap,
-                                 materials );    
+                                 materials );
   }
   
   //------------------------------------------------------------------
