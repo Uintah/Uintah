@@ -470,7 +470,6 @@ void Diamm::computeStressTensor(const PatchSubset* patches,
 
       // NEED TO FIND R
       Matrix3 tensorR, tensorU;
-      double d_tol = 1.0e-10;
 
       // Look into using Rebecca's PD algorithm
       deformationGradient_new[idx].polarDecompositionRMB(tensorU, tensorR);
