@@ -131,7 +131,8 @@ CompMooneyRivlin::allocateCMDataAddRequires(Task* task,
 
 void CompMooneyRivlin::allocateCMDataAdd(DataWarehouse* new_dw,
                                          ParticleSubset* addset,
-          map<const VarLabel*, ParticleVariableBase*>* newState,
+                                         map<const VarLabel*,
+                                         ParticleVariableBase*>* newState,
                                          ParticleSubset* delset,
                                          DataWarehouse* )
 {
@@ -146,14 +147,15 @@ void CompMooneyRivlin::computeStableTimestep(const Patch* patch,
                                              const MPMMaterial* matl,
                                              DataWarehouse* new_dw)
 {
-   // This is only called for the initial timestep - all other timesteps
-   // are computed as a side-effect of computeStressTensor
+  // This is only called for the initial timestep - all other timesteps
+  // are computed as a side-effect of computeStressTensor
   Vector dx = patch->dCell();
   int dwi = matl->getDWIndex();
   // Retrieve the array of constitutive parameters
   ParticleSubset* pset = new_dw->getParticleSubset(dwi, patch);
   constParticleVariable<double> pmass, pvolume;
   constParticleVariable<Vector> pvelocity;
+
   new_dw->get(pmass,     lb->pMassLabel,     pset);
   new_dw->get(pvolume,   lb->pVolumeLabel,   pset);
   new_dw->get(pvelocity, lb->pVelocityLabel, pset);
@@ -176,13 +178,13 @@ void CompMooneyRivlin::computeStableTimestep(const Patch* patch,
      WaveSpeed=Vector(Max(c_dil+fabs(pvelocity[idx].x()),WaveSpeed.x()),
                       Max(c_dil+fabs(pvelocity[idx].y()),WaveSpeed.y()),
                       Max(c_dil+fabs(pvelocity[idx].z()),WaveSpeed.z()));
-    }
-    WaveSpeed = dx/WaveSpeed;
-    double delT_new = WaveSpeed.minComponent();
-    if(delT_new < 1.e-12)
-      new_dw->put(delt_vartype(DBL_MAX), lb->delTLabel, patch->getLevel());
-    else
-      new_dw->put(delt_vartype(delT_new), lb->delTLabel, patch->getLevel());
+  }
+  WaveSpeed = dx/WaveSpeed;
+  double delT_new = WaveSpeed.minComponent();
+  if(delT_new < 1.e-12)
+    new_dw->put(delt_vartype(DBL_MAX), lb->delTLabel, patch->getLevel());
+  else
+    new_dw->put(delt_vartype(delT_new), lb->delTLabel, patch->getLevel());
 }
 
 void CompMooneyRivlin::computeStressTensor(const PatchSubset* patches,
@@ -215,25 +217,26 @@ void CompMooneyRivlin::computeStressTensor(const PatchSubset* patches,
     constParticleVariable<Matrix3> deformationGradient;
     ParticleVariable<Matrix3> pstress;
     constParticleVariable<double> pmass;
-    ParticleVariable<double> pvolume,p_q;
+    ParticleVariable<double> pvolume;
     constParticleVariable<Vector> pvelocity,psize;
-    ParticleVariable<double> pdTdt;
+    ParticleVariable<double> pdTdt,p_q;
 
     delt_vartype delT;
     old_dw->get(delT, lb->delTLabel, getLevel(patches));
 
     Ghost::GhostType  gac   = Ghost::AroundCells;
-    old_dw->get(px,                  lb->pXLabel,                        pset);
-    old_dw->get(pmass,               lb->pMassLabel,                     pset);
-    old_dw->get(psize,               lb->pSizeLabel,                     pset);
-    old_dw->get(pvelocity,           lb->pVelocityLabel,                 pset);
-    old_dw->get(deformationGradient, lb->pDeformationMeasureLabel,       pset);
-    new_dw->allocateAndPut(pstress,  lb->pStressLabel_preReloc,          pset);
-    new_dw->allocateAndPut(pvolume,  lb->pVolumeLabel_preReloc,          pset);
-    new_dw->allocateAndPut(pdTdt,    lb->pdTdtLabel_preReloc,            pset);
+    old_dw->get(px,                  lb->pXLabel,                  pset);
+    old_dw->get(pmass,               lb->pMassLabel,               pset);
+    old_dw->get(psize,               lb->pSizeLabel,               pset);
+    old_dw->get(pvelocity,           lb->pVelocityLabel,           pset);
+    old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
+
+    new_dw->allocateAndPut(pstress,  lb->pStressLabel_preReloc,    pset);
+    new_dw->allocateAndPut(pvolume,  lb->pVolumeLabel_preReloc,    pset);
+    new_dw->allocateAndPut(pdTdt,    lb->pdTdtLabel_preReloc,      pset);
+    new_dw->allocateAndPut(p_q,      lb->p_qLabel_preReloc,        pset);
     new_dw->allocateAndPut(deformationGradient_new,
                                   lb->pDeformationMeasureLabel_preReloc, pset);
-    new_dw->allocateAndPut(p_q,      lb->p_qLabel_preReloc,              pset);
 
     ParticleVariable<Matrix3> velGrad;
     new_dw->allocateTemporary(velGrad, pset);
@@ -289,6 +292,7 @@ void CompMooneyRivlin::computeStressTensor(const PatchSubset* patches,
     CCVariable<double> J_CC;
     new_dw->allocateTemporary(J_CC,       patch);
     J_CC.initialize(0.);
+
     if(flag->d_doPressureStabilization) {
       CCVariable<double> vol_0_CC;
       CCVariable<double> vol_CC;
@@ -320,10 +324,9 @@ void CompMooneyRivlin::computeStressTensor(const PatchSubset* patches,
       }
     } //end of pressureStabilization loop  at the patch level
 
-
     for(ParticleSubset::iterator iter = pset->begin();iter!=pset->end();iter++){
       particleIndex idx = *iter;
-      
+
       // Assign zero internal heating by default - modify if necessary.
       pdTdt[idx] = 0.0;
 
@@ -389,10 +392,10 @@ void CompMooneyRivlin::computeStressTensor(const PatchSubset* patches,
 
       se += e;
     }  // end loop over particles
-        
+
     WaveSpeed = dx/WaveSpeed;
     double delT_new = WaveSpeed.minComponent();
-    
+
     if(delT_new < 1.e-12)
       new_dw->put(delt_vartype(DBL_MAX), lb->delTLabel);
     else
@@ -400,7 +403,7 @@ void CompMooneyRivlin::computeStressTensor(const PatchSubset* patches,
 
     if (flag->d_reductionVars->accStrainEnergy ||
         flag->d_reductionVars->strainEnergy) {
-      new_dw->put(sum_vartype(se),        lb->StrainEnergyLabel);
+      new_dw->put(sum_vartype(se),      lb->StrainEnergyLabel);
     }
     delete interpolator;
   }

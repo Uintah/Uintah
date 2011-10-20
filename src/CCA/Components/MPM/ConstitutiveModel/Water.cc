@@ -29,7 +29,6 @@ DEALINGS IN THE SOFTWARE.
 
 
 #include <CCA/Components/MPM/ConstitutiveModel/Water.h>
-#include <Core/Malloc/Allocator.h>
 #include <Core/Grid/Patch.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <Core/Grid/Variables/NCVariable.h>
@@ -46,10 +45,9 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Exceptions/ParameterNotFound.h>
 #include <Core/Math/MinMax.h>
 #include <Core/Malloc/Allocator.h>
-#include <fstream>
 #include <iostream>
 
-using std::cerr;
+using namespace std;
 using namespace Uintah;
 
 Water::Water(ProblemSpecP& ps, MPMFlags* Mflag)
@@ -104,9 +102,9 @@ void Water::initializeCMData(const Patch* patch,
 }
 
 void Water::allocateCMDataAddRequires(Task* task,
-                                            const MPMMaterial* matl,
-                                            const PatchSet* patches,
-                                            MPMLabel* ) const
+                                      const MPMMaterial* matl,
+                                      const PatchSet* patches,
+                                      MPMLabel* ) const
 {
   const MaterialSubset* matlset = matl->thisMaterial();
 
@@ -118,29 +116,22 @@ void Water::allocateCMDataAddRequires(Task* task,
 
 
 void Water::allocateCMDataAdd(DataWarehouse* new_dw,
-                                    ParticleSubset* addset,
-                                    map<const VarLabel*, ParticleVariableBase*>* newState,
-                                    ParticleSubset* delset,
-                                    DataWarehouse* )
+                              ParticleSubset* addset,
+                              map<const VarLabel*,
+                              ParticleVariableBase*>* newState,
+                              ParticleSubset* delset,
+                              DataWarehouse* )
 {
   // Copy the data common to all constitutive models from the particle to be 
   // deleted to the particle to be added. 
   // This method is defined in the ConstitutiveModel base class.
   copyDelToAddSetForConvertExplicit(new_dw, delset, addset, newState);
-  
-  // Copy the data local to this constitutive model from the particles to 
-  // be deleted to the particles to be added
 }
 
-void Water::addParticleState(std::vector<const VarLabel*>& ,
-                                   std::vector<const VarLabel*>& )
-{
-  // Add the local particle state data for this constitutive model.
-}
 
 void Water::computeStableTimestep(const Patch* patch,
-                                        const MPMMaterial* matl,
-                                        DataWarehouse* new_dw)
+                                 const MPMMaterial* matl,
+                                 DataWarehouse* new_dw)
 {
   // This is only called for the initial timestep - all other timesteps
   // are computed as a side-effect of computeStressTensor
@@ -151,8 +142,8 @@ void Water::computeStableTimestep(const Patch* patch,
   constParticleVariable<double> pmass, pvolume;
   constParticleVariable<Vector> pvelocity;
 
-  new_dw->get(pmass,     lb->pMassLabel, pset);
-  new_dw->get(pvolume,   lb->pVolumeLabel, pset);
+  new_dw->get(pmass,     lb->pMassLabel,     pset);
+  new_dw->get(pvolume,   lb->pVolumeLabel,   pset);
   new_dw->get(pvelocity, lb->pVelocityLabel, pset);
 
   double c_dil = 0.0;
@@ -173,13 +164,13 @@ void Water::computeStableTimestep(const Patch* patch,
 }
 
 void Water::computeStressTensor(const PatchSubset* patches,
-                                      const MPMMaterial* matl,
-                                      DataWarehouse* old_dw,
-                                      DataWarehouse* new_dw)
+                                const MPMMaterial* matl,
+                                DataWarehouse* old_dw,
+                                DataWarehouse* new_dw)
 {
   for(int pp=0;pp<patches->size();pp++){
     const Patch* patch = patches->get(pp);
-    Matrix3 velGrad,Shear;
+    Matrix3 tensorL,Shear;
     double J, p,se=0.;
     double c_dil=0.0;
     Vector WaveSpeed(1.e-12,1.e-12,1.e-12);
@@ -203,8 +194,7 @@ void Water::computeStressTensor(const PatchSubset* patches,
     ParticleVariable<Matrix3> pstress;
     constParticleVariable<double> pmass;
     ParticleVariable<double> pvolume;
-    constParticleVariable<Vector> pvelocity;
-    constParticleVariable<Vector> psize;
+    constParticleVariable<Vector> pvelocity,psize;
     ParticleVariable<double> pdTdt,p_q;
 
     delt_vartype delT;
@@ -213,16 +203,19 @@ void Water::computeStressTensor(const PatchSubset* patches,
     Ghost::GhostType  gac   = Ghost::AroundCells;
     old_dw->get(px,                  lb->pXLabel,                  pset);
     old_dw->get(pmass,               lb->pMassLabel,               pset);
+    old_dw->get(psize,               lb->pSizeLabel,               pset);
     old_dw->get(pvelocity,           lb->pVelocityLabel,           pset);
     old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
-    old_dw->get(psize,               lb->pSizeLabel,               pset);
-    
-    new_dw->allocateAndPut(pstress,          lb->pStressLabel_preReloc,  pset);
-    new_dw->allocateAndPut(pvolume,          lb->pVolumeLabel_preReloc,  pset);
-    new_dw->allocateAndPut(pdTdt,            lb->pdTdtLabel_preReloc,    pset);
-    new_dw->allocateAndPut(p_q,              lb->p_qLabel_preReloc,      pset);
+
+    new_dw->allocateAndPut(pstress,  lb->pStressLabel_preReloc,    pset);
+    new_dw->allocateAndPut(pvolume,  lb->pVolumeLabel_preReloc,    pset);
+    new_dw->allocateAndPut(pdTdt,    lb->pdTdtLabel_preReloc,      pset);
+    new_dw->allocateAndPut(p_q,      lb->p_qLabel_preReloc,        pset);
     new_dw->allocateAndPut(deformationGradient_new,
                                   lb->pDeformationMeasureLabel_preReloc, pset);
+
+    ParticleVariable<Matrix3> velGrad;
+    new_dw->allocateTemporary(velGrad, pset);
 
     double viscosity = d_initialData.d_Viscosity;
     double bulk  = d_initialData.d_Bulk;
@@ -241,54 +234,52 @@ void Water::computeStressTensor(const PatchSubset* patches,
         iter != pset->end(); iter++){
       particleIndex idx = *iter;
       
-      // Assign zero internal heating by default - modify if necessary.
-      pdTdt[idx] = 0.0;
-
-      velGrad.set(0.0);
+      tensorL.set(0.0);
       if(!flag->d_axisymmetric){
         // Get the node indices that surround the cell
         interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],deformationGradient[idx]);
 
-        computeVelocityGradient(velGrad,ni,d_S, oodx, gvelocity);
+        computeVelocityGradient(tensorL,ni,d_S, oodx, gvelocity);
       } else {  // axi-symmetric kinematics
         // Get the node indices that surround the cell
         interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,d_S,
                                                                    psize[idx],deformationGradient[idx]);
         // x -> r, y -> z, z -> theta
-        computeAxiSymVelocityGradient(velGrad,ni,d_S,S,oodx,gvelocity,px[idx]);
+        computeAxiSymVelocityGradient(tensorL,ni,d_S,S,oodx,gvelocity,px[idx]);
       }
 
-      deformationGradient_new[idx]=(velGrad*delT+Identity)
+      deformationGradient_new[idx]=(tensorL*delT+Identity)
                                     *deformationGradient[idx];
+      velGrad[idx]=tensorL;
      }
 
     // The following is used only for pressure stabilization
     CCVariable<double> J_CC;
-    new_dw->allocateTemporary(J_CC,     patch);
+    new_dw->allocateTemporary(J_CC,       patch);
     J_CC.initialize(0.);
 
     if(flag->d_doPressureStabilization) {
       CCVariable<double> vol_0_CC;
       CCVariable<double> vol_CC;
       new_dw->allocateTemporary(vol_0_CC, patch);
-      new_dw->allocateTemporary(vol_CC, patch);
+      new_dw->allocateTemporary(vol_CC,   patch);
 
       vol_0_CC.initialize(0.);
       vol_CC.initialize(0.);
       for(ParticleSubset::iterator iter = pset->begin();
           iter != pset->end(); iter++){
         particleIndex idx = *iter;
-  
+
         // get the volumetric part of the deformation
         J = deformationGradient_new[idx].Determinant();
-  
+
         // Get the deformed volume
         pvolume[idx]=(pmass[idx]/rho_orig)*J;
-  
+
         IntVector cell_index;
         patch->findCell(px[idx],cell_index);
-  
-        vol_CC[cell_index]+=pvolume[idx];
+
+        vol_CC[cell_index]  +=pvolume[idx];
         vol_0_CC[cell_index]+=pmass[idx]/rho_orig;
       }
 
@@ -296,11 +287,13 @@ void Water::computeStressTensor(const PatchSubset* patches,
         IntVector c = *iter;
         J_CC[c]=vol_CC[c]/vol_0_CC[c];
       }
-    }
+    } //end of pressureStabilization loop  at the patch level
 
-    for(ParticleSubset::iterator iter = pset->begin();
-        iter != pset->end(); iter++){
-        particleIndex idx = *iter;
+    for(ParticleSubset::iterator iter = pset->begin();iter!=pset->end();iter++){
+      particleIndex idx = *iter;
+
+      // Assign zero internal heating by default - modify if necessary.
+      pdTdt[idx] = 0.0;
 
       if(flag->d_doPressureStabilization) {
         IntVector cell_index;
@@ -308,7 +301,8 @@ void Water::computeStressTensor(const PatchSubset* patches,
 
         // get the original volumetric part of the deformation
         J = deformationGradient_new[idx].Determinant();
-       // Change F such that the determinant is equal to the average for
+
+        // Change F such that the determinant is equal to the average for
         // the cell
         deformationGradient_new[idx]*=cbrt(J_CC[cell_index])/cbrt(J);
       }
@@ -316,7 +310,7 @@ void Water::computeStressTensor(const PatchSubset* patches,
       J = deformationGradient_new[idx].Determinant();
 
       // Calculate rate of deformation D, and deviatoric rate DPrime,
-      Matrix3 D = (velGrad + velGrad.Transpose())*0.5;
+      Matrix3 D = (velGrad[idx] + velGrad[idx].Transpose())*0.5;
       Matrix3 DPrime = D - Identity*onethird*D.Trace();
 
       // Get the deformed volume and current density
@@ -343,7 +337,7 @@ void Water::computeStressTensor(const PatchSubset* patches,
       if (flag->d_artificial_viscosity) {
         double dx_ave = (dx.x() + dx.y() + dx.z())/3.0;
         double c_bulk = sqrt(bulk/rho_cur);
-        Matrix3 D=(velGrad + velGrad.Transpose())*0.5;
+        Matrix3 D=(velGrad[idx] + velGrad[idx].Transpose())*0.5;
         p_q[idx] = artificialBulkViscosity(D.Trace(), c_bulk, rho_cur, dx_ave);
       } else {
         p_q[idx] = 0.;
@@ -360,6 +354,12 @@ void Water::computeStressTensor(const PatchSubset* patches,
     }
     delete interpolator;
   }
+}
+
+void Water::addParticleState(std::vector<const VarLabel*>& ,
+                                   std::vector<const VarLabel*>& )
+{
+  // Add the local particle state data for this constitutive model.
 }
 
 void Water::carryForward(const PatchSubset* patches,
