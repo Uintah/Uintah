@@ -17,6 +17,7 @@ d_constant_init(0.0), d_step_dir("x"), d_step_start(0.0), d_step_end(0.0), d_ste
 {
   d_boundaryCond = scinew BoundaryCondition_new( d_fieldLabels ); 
   d_disc = scinew Discretization_new(); 
+  _using_new_intrusion = false; 
 }
 
 EqnBase::~EqnBase()

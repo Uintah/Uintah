@@ -91,17 +91,6 @@ namespace Wasatch{
 
   //==================================================================
 
-  template< typename FieldT >
-  Direction set_direction()
-  {
-    if     ( SpatialOps::CompareDirection< typename FieldT::Location::StagLoc, typename SpatialOps::XDIR >::same() ) return XDIR;
-    else if( SpatialOps::CompareDirection< typename FieldT::Location::StagLoc, typename SpatialOps::YDIR >::same() ) return YDIR;
-    else if( SpatialOps::CompareDirection< typename FieldT::Location::StagLoc, typename SpatialOps::ZDIR >::same() ) return ZDIR;
-    return NODIR;
-  }
-
-  //==================================================================
-
   Expr::Tag mom_tag( const std::string& momName )
   {
     return Expr::Tag( momName, Expr::STATE_N );
@@ -248,17 +237,12 @@ namespace Wasatch{
                              Uintah::ProblemSpecP params,
                              Uintah::SolverInterface& linSolver)
     : Wasatch::TransportEquation( momName,
-                                  get_mom_rhs_id<FieldT>( factory,
-                                                       velName,
-                                                       momName,
-                                                       params,
-                                                       linSolver),
+                                  get_mom_rhs_id<FieldT>( factory, velName, momName, params, linSolver ),
                                   get_staggered_location<FieldT>() ),
-      dir_( set_direction<FieldT>() ),
       normalStressID_  ( Expr::ExpressionID::null_id() ),
       normalConvFluxID_( Expr::ExpressionID::null_id() ),
       pressureID_      ( Expr::ExpressionID::null_id() ),
-		  isviscous_			 ( params->findBlock("Viscosity")?true:false)
+      isviscous_       ( params->findBlock("Viscosity") ? true : false )
   {
     set_vel_tags( params, velTags_ );
 
@@ -284,9 +268,9 @@ namespace Wasatch{
     doymom = params->get( "Y-Momentum", ymomname );
     dozmom = params->get( "Z-Momentum", zmomname );
     //
-    if (dir_ == XDIR) thisMomName_ = xmomname;
-    if (dir_ == YDIR) thisMomName_ = ymomname;
-    if (dir_ == ZDIR) thisMomName_ = zmomname;
+    if (stagLoc_ == XDIR) thisMomName_ = xmomname;
+    if (stagLoc_ == YDIR) thisMomName_ = ymomname;
+    if (stagLoc_ == ZDIR) thisMomName_ = zmomname;
     Expr::TagList tauTags;
     const std::string thisMomDirName = this->dir_name();
     set_tau_tags<FieldT>( params, tauTags, thisMomDirName );
@@ -299,15 +283,15 @@ namespace Wasatch{
       const Expr::Tag viscTag = parse_nametag( params->findBlock("Viscosity")->findBlock("NameTag") );
       if( doxmom ){
         const Expr::ExpressionID stressID = setup_stress< XFace >( tauxt, viscTag, thisVelTag, velTags_[0], dilTag, factory );
-        if( dir_ == XDIR )  normalStressID_ = stressID;
+        if( stagLoc_ == XDIR )  normalStressID_ = stressID;
       }
       if( doymom ){
         const Expr::ExpressionID stressID = setup_stress< YFace >( tauyt, viscTag, thisVelTag, velTags_[1], dilTag, factory );
-        if( dir_ == YDIR )  normalStressID_ = stressID;
+        if( stagLoc_ == YDIR )  normalStressID_ = stressID;
       }
       if( dozmom ){
         const Expr::ExpressionID stressID = setup_stress< ZFace >( tauzt, viscTag, thisVelTag, velTags_[2], dilTag, factory );
-        if( dir_ == ZDIR )  normalStressID_ = stressID;
+        if( stagLoc_ == ZDIR )  normalStressID_ = stressID;
       }  
       factory.cleave_from_children( normalStressID_   );
       factory.cleave_from_parents( normalStressID_   );
@@ -323,15 +307,15 @@ namespace Wasatch{
 
     if( doxmom ){
       const Expr::ExpressionID id = setup_convective_flux< XFace, XVolField >( cfxt, thisMomTag, velTags_[0], factory );
-      if( dir_ == XDIR )  normalConvFluxID_ = id;
+      if( stagLoc_ == XDIR )  normalConvFluxID_ = id;
     }
     if( doymom ){
       const Expr::ExpressionID id = setup_convective_flux< YFace, YVolField >( cfyt, thisMomTag, velTags_[1], factory );
-      if( dir_ == YDIR )  normalConvFluxID_ = id;
+      if( stagLoc_ == YDIR )  normalConvFluxID_ = id;
     }
     if( dozmom ){
       const Expr::ExpressionID id = setup_convective_flux< ZFace, ZVolField >( cfzt, thisMomTag, velTags_[2], factory );
-      if( dir_ == ZDIR )  normalConvFluxID_ = id;
+      if( stagLoc_ == ZDIR )  normalConvFluxID_ = id;
     }
         
     /*
@@ -407,146 +391,146 @@ namespace Wasatch{
                                  const PatchInfoMap& patchInfoMap,
                                  const Uintah::MaterialSubset* const materials)
   {
-    typedef typename SpatialOps::structured::FaceTypes<FieldT>::XFace XFace;
-    typedef typename SpatialOps::structured::FaceTypes<FieldT>::YFace YFace;
-    typedef typename SpatialOps::structured::FaceTypes<FieldT>::ZFace ZFace;
-        
-    
-    // build bcs for momentum
-    process_boundary_conditions( Expr::Tag( this->solution_variable_name(),
-                         Expr::STATE_N ),
-              this->staggered_location(),
-              graphHelper,
-              localPatches,
-              patchInfoMap,
-              materials );   
-    
-    // build bcs for velocity - cos we don't have a mechanism now to set them
-    // on interpolated density field
-    Expr::Tag velTag;
-    switch (this->staggered_location()) {
-      case XDIR:
-        velTag = velTags_[0];
-        break;
-      case YDIR:
-        velTag = velTags_[1];
-        break;
-      case ZDIR:
-        velTag = velTags_[2];
-        break;
-      default:
-        break;
-    }
-    process_boundary_conditions( velTag,
-              this->staggered_location(),
-              graphHelper,
-              localPatches,
-              patchInfoMap,
-              materials);            
-    
-
-//    // set bcs for density
-//    const Expr::Tag densTag( "density", Expr::STATE_N );
-//    const Direction denDir = NODIR;
-//    build_bcs( densTag,
-//              denDir,
+//    typedef typename SpatialOps::structured::FaceTypes<FieldT>::XFace XFace;
+//    typedef typename SpatialOps::structured::FaceTypes<FieldT>::YFace YFace;
+//    typedef typename SpatialOps::structured::FaceTypes<FieldT>::ZFace ZFace;
+//
+//
+//    // build bcs for momentum
+//    process_boundary_conditions( Expr::Tag( this->solution_variable_name(),
+//                         Expr::STATE_N ),
+//              this->staggered_location(),
+//              graphHelper,
+//              localPatches,
+//              patchInfoMap,
+//              materials );
+//
+//    // build bcs for velocity - cos we don't have a mechanism now to set them
+//    // on interpolated density field
+//    Expr::Tag velTag;
+//    switch (this->staggered_location()) {
+//      case XDIR:
+//        velTag = velTags_[0];
+//        break;
+//      case YDIR:
+//        velTag = velTags_[1];
+//        break;
+//      case ZDIR:
+//        velTag = velTags_[2];
+//        break;
+//      default:
+//        break;
+//    }
+//    process_boundary_conditions( velTag,
+//              this->staggered_location(),
 //              graphHelper,
 //              localPatches,
 //              patchInfoMap,
 //              materials);            
 //
-//    // set bcs for viscosity
-//    const Expr::Tag viscTag( "viscosity", Expr::STATE_N );
-//    const Direction viscDir = NODIR;
-//    build_bcs( viscTag,
-//              viscDir,
-//              graphHelper,
-//              localPatches,
-//              patchInfoMap,
-//              materials);            
-    
-    // build bcs for normal stresses and normal convective fluxes
-    
-    Expr::ExpressionFactory& factory = *graphHelper.exprFactory;
-    if(isviscous_) {
-      Expr::Tag normalStressTag = factory.get_registry().get_label(normalStressID_);
-      process_boundary_conditions( normalStressTag,
-                this->staggered_location(),
-                graphHelper,
-                localPatches,
-                patchInfoMap,
-                materials,
-                false);        
-    }
-    
-//      Expr::Tag normalConvFluxTag = factory.get_registry().get_label(normalConvFluxID_);    
-//      process_boundary_conditions( normalConvFluxTag,
-//                                  this->staggered_location(),
-//                                  graphHelper,
-//                                  localPatches,
-//                                  patchInfoMap,
-//                                  materials,
-//                                  true);             
-    
-//    build_bcs( rhs_part_tag(mom_tag(thisMomName_)),
-//            this->staggered_location(),
-//            graphHelper,
-//            localPatches,
-//            patchInfoMap,
-//            materials );    
-//    if( dir_ == XDIR ) {
-//	    build_bcs<XFace>( normalStressTag.name(),
-//              this->staggered_location(),
-//              graphHelper,
-//              localPatches,
-//              patchInfoMap,
-//              materials );    
-//      build_bcs<XFace>( normalConvFluxTag.name(),
+//
+////    // set bcs for density
+////    const Expr::Tag densTag( "density", Expr::STATE_N );
+////    const Direction denDir = NODIR;
+////    build_bcs( densTag,
+////              denDir,
+////              graphHelper,
+////              localPatches,
+////              patchInfoMap,
+////              materials);
+////
+////    // set bcs for viscosity
+////    const Expr::Tag viscTag( "viscosity", Expr::STATE_N );
+////    const Direction viscDir = NODIR;
+////    build_bcs( viscTag,
+////              viscDir,
+////              graphHelper,
+////              localPatches,
+////              patchInfoMap,
+////              materials);
+//
+//    // build bcs for normal stresses and normal convective fluxes
+//
+//    Expr::ExpressionFactory& factory = *graphHelper.exprFactory;
+//    if(isviscous_) {
+//      Expr::Tag normalStressTag = factory.get_registry().get_label(normalStressID_);
+//      process_boundary_conditions( normalStressTag,
 //                this->staggered_location(),
 //                graphHelper,
 //                localPatches,
 //                patchInfoMap,
-//                materials );       
+//                materials,
+//                false);
 //    }
-//    if (dir_ == YDIR ) {
-//      build_bcs<YFace>( normalStressTag.name(),
-//                       this->staggered_location(),
-//                       graphHelper,
-//                       localPatches,
-//                       patchInfoMap,
-//                       materials );    
-//      build_bcs<YFace>( normalConvFluxTag.name(),
-//                       this->staggered_location(),
-//                       graphHelper,
-//                       localPatches,
-//                       patchInfoMap,
-//                       materials );       
-//      
-//    }
-//    if (dir_ == ZDIR) {
-//      build_bcs<ZFace>( normalStressTag.name(),
-//                       this->staggered_location(),
-//                       graphHelper,
-//                       localPatches,
-//                       patchInfoMap,
-//                       materials );    
-//      build_bcs<ZFace>( normalConvFluxTag.name(),
-//                       this->staggered_location(),
-//                       graphHelper,
-//                       localPatches,
-//                       patchInfoMap,
-//                       materials );       
-//      
-//    }
-    
-    
-    // build bcs for pressure
-//    build_bcs( pressure_tag(),
-//              NODIR,
-//              graphHelper,
-//              localPatches,
-//              patchInfoMap,
-//              materials );            
+//
+////      Expr::Tag normalConvFluxTag = factory.get_registry().get_label(normalConvFluxID_);
+////      process_boundary_conditions( normalConvFluxTag,
+////                                  this->staggered_location(),
+////                                  graphHelper,
+////                                  localPatches,
+////                                  patchInfoMap,
+////                                  materials,
+////                                  true);
+//
+////    build_bcs( rhs_part_tag(mom_tag(thisMomName_)),
+////            this->staggered_location(),
+////            graphHelper,
+////            localPatches,
+////            patchInfoMap,
+////            materials );
+////    if( stagLoc_ == XDIR ) {
+////	    build_bcs<XFace>( normalStressTag.name(),
+////              this->staggered_location(),
+////              graphHelper,
+////              localPatches,
+////              patchInfoMap,
+////              materials );
+////      build_bcs<XFace>( normalConvFluxTag.name(),
+////                this->staggered_location(),
+////                graphHelper,
+////                localPatches,
+////                patchInfoMap,
+////                materials );
+////    }
+////    if (stagLoc_ == YDIR ) {
+////      build_bcs<YFace>( normalStressTag.name(),
+////                       this->staggered_location(),
+////                       graphHelper,
+////                       localPatches,
+////                       patchInfoMap,
+////                       materials );
+////      build_bcs<YFace>( normalConvFluxTag.name(),
+////                       this->staggered_location(),
+////                       graphHelper,
+////                       localPatches,
+////                       patchInfoMap,
+////                       materials );
+////
+////    }
+////    if (stagLoc_ == ZDIR) {
+////      build_bcs<ZFace>( normalStressTag.name(),
+////                       this->staggered_location(),
+////                       graphHelper,
+////                       localPatches,
+////                       patchInfoMap,
+////                       materials );
+////      build_bcs<ZFace>( normalConvFluxTag.name(),
+////                       this->staggered_location(),
+////                       graphHelper,
+////                       localPatches,
+////                       patchInfoMap,
+////                       materials );
+////
+////    }
+//
+//
+//    // build bcs for pressure
+////    build_bcs( pressure_tag(),
+////              NODIR,
+////              graphHelper,
+////              localPatches,
+////              patchInfoMap,
+////              materials );
   }
   
   //------------------------------------------------------------------

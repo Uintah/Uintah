@@ -68,7 +68,7 @@ bind_fields( const Expr::FieldManagerList& fml )
 
   phi_ = &scalarFM.field_ref( phiTag_ );
   rho_ = &fml.template field_manager<SVolField>().field_ref( rhoTag_ );
-  if( !isConstCoef_    ) coef_ = &fluxFM.field_ref( coefTag_ );
+  if( !isConstCoef_ ) coef_ = &fluxFM.field_ref( coefTag_ );
 }
 
 //--------------------------------------------------------------------
@@ -78,7 +78,7 @@ void
 DiffusiveFlux<ScalarT, FluxT>::
 bind_operators( const SpatialOps::OperatorDatabase& opDB )
 {
-  gradOp_ = opDB.retrieve_operator<GradT>();
+  gradOp_          = opDB.retrieve_operator<GradT>();
   densityInterpOp_ = opDB.retrieve_operator<DensityInterpT>();
 }
 
@@ -95,17 +95,15 @@ evaluate()
   gradOp_->apply_to_field( *phi_, result );  // J = grad(phi)
   
   if( isConstCoef_ ){
-    result *= -coefVal_;  // J = - gamma * grad(phi)
+    result <<= -result * coefVal_;  // J = - gamma * grad(phi)
   }
   else{
     result <<= -result * *coef_;  // J =  - gamma * grad(phi)
   }
   
-//  if (!isConstDensity_ ) {
-    SpatFldPtr<FluxT> interpRho = SpatialFieldStore<FluxT>::self().get(result);
-    densityInterpOp_->apply_to_field( *rho_, *interpRho );
-    result <<= result * *interpRho;               // J = - rho * gamma * grad(phi)
-  //}
+  SpatFldPtr<FluxT> interpRho = SpatialFieldStore<FluxT>::self().get(result);
+  densityInterpOp_->apply_to_field( *rho_, *interpRho );
+  result <<= result * *interpRho;               // J = - rho * gamma * grad(phi)
 }
 
 
@@ -120,7 +118,6 @@ DiffusiveFlux2( const Expr::Tag rhoTag,
                 const Expr::ExpressionID& id,
                 const Expr::ExpressionRegistry& reg  )
   : Expr::Expression<FluxT>(id,reg),
-//    isConstDensity_( rhoTag == Expr::Tag() ),
     rhoTag_ ( rhoTag  ),
     phiTag_ ( phiTag  ),
     coefTag_( coefTag )
@@ -185,10 +182,9 @@ evaluate()
   gradOp_  ->apply_to_field( *phi_, *fluxTmp );  // J = grad(phi)
   interpOp_->apply_to_field( *coef_, result  );
   result <<= -result * *fluxTmp;                 // J = - gamma * grad(phi)
-//  if (!isConstDensity_) {
-    densityInterpOp_->apply_to_field( *rho_, *fluxTmp );
-    result <<= result * *fluxTmp;               // J = - rho * gamma * grad(phi)
-//  }
+
+  densityInterpOp_->apply_to_field( *rho_, *fluxTmp );
+  result <<= result * *fluxTmp;               // J = - rho * gamma * grad(phi)
 }
 
 //--------------------------------------------------------------------

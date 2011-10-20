@@ -2209,30 +2209,24 @@ CompDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
 //______________________________________________________________________
   void 
 CompDynamicProcedure::sched_computeScalarVariance(SchedulerP& sched, 
-    const PatchSet* patches,
-    const MaterialSet* matls,
-    const TimeIntegratorLabel* timelabels,
-    bool d_EKTCorrection,
-    bool doing_EKT_now)
+                                                  const PatchSet* patches,
+                                                  const MaterialSet* matls,
+                                                  const TimeIntegratorLabel* timelabels)
 {
   string taskname =  "CompDynamicProcedure::computeScalarVaraince" +
     timelabels->integrator_step_name;
-  if (doing_EKT_now) taskname += "EKTnow";
+    
   Task* tsk = scinew Task(taskname, this,
       &CompDynamicProcedure::computeScalarVariance,
-      timelabels, d_EKTCorrection, doing_EKT_now);
+      timelabels);
 
 
   // Requires, only the scalar corresponding to matlindex = 0 is
   //           required. For multiple scalars this will be put in a loop
 
   Ghost::GhostType  gac = Ghost::AroundCells;
-  if (doing_EKT_now){
-    tsk->requires(Task::NewDW, d_lab->d_scalarEKTLabel, gac, 1);
-  }else{
-    tsk->requires(Task::NewDW, d_mf_label, gac, 1);
-  }
 
+  tsk->requires(Task::NewDW, d_mf_label,              gac, 1);
   tsk->requires(Task::NewDW, d_lab->d_densityCPLabel, gac, 1);
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,  gac, 1);
 
@@ -2241,8 +2235,7 @@ CompDynamicProcedure::sched_computeScalarVariance(SchedulerP& sched,
     tsk->requires(Task::OldDW, d_lab->d_refDensity_label);
 
   // Computes
-  if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First) 
-      &&((!(d_EKTCorrection))||((d_EKTCorrection)&&(doing_EKT_now)))) {
+  if ( timelabels->integrator_step_number == TimeIntegratorStepNumber::First ) {
     tsk->computes(d_lab->d_scalarVarSPLabel);
     tsk->computes(d_lab->d_normalizedScalarVarLabel);
   }
@@ -2258,13 +2251,11 @@ CompDynamicProcedure::sched_computeScalarVariance(SchedulerP& sched,
 //
   void 
 CompDynamicProcedure::computeScalarVariance(const ProcessorGroup* pc,
-    const PatchSubset* patches,
-    const MaterialSubset*,
-    DataWarehouse* old_dw,
-    DataWarehouse* new_dw,
-    const TimeIntegratorLabel* timelabels,
-    bool d_EKTCorrection,
-    bool doing_EKT_now)
+                                            const PatchSubset* patches,
+                                            const MaterialSubset*,
+                                            DataWarehouse* old_dw,
+                                            DataWarehouse* new_dw,
+                                            const TimeIntegratorLabel* timelabels)
 {
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
@@ -2278,16 +2269,11 @@ CompDynamicProcedure::computeScalarVariance(const ProcessorGroup* pc,
     // Get the velocity, density and viscosity from the old data warehouse
 
     Ghost::GhostType  gac = Ghost::AroundCells;
-    if (doing_EKT_now){
-      new_dw->get(scalar, d_lab->d_scalarEKTLabel, indx, patch, gac, 1);
-    }else{
-      new_dw->get(scalar, d_mf_label, indx,  patch, gac, 1);
-    } 
+    new_dw->get(scalar, d_mf_label, indx,  patch, gac, 1);
 
     new_dw->get(density, d_lab->d_densityCPLabel, indx, patch, gac, 1);
 
-    if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First) 
-        &&((!(d_EKTCorrection))||((d_EKTCorrection)&&(doing_EKT_now)))) {
+    if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First)) {
       new_dw->allocateAndPut(scalarVar,           d_lab->d_scalarVarSPLabel,         indx, patch);
       new_dw->allocateAndPut(normalizedScalarVar, d_lab->d_normalizedScalarVarLabel, indx,patch);
     }
@@ -2487,29 +2473,23 @@ CompDynamicProcedure::computeScalarVariance(const ProcessorGroup* pc,
 //****************************************************************************
   void 
 CompDynamicProcedure::sched_computeScalarDissipation(SchedulerP& sched, 
-    const PatchSet* patches,
-    const MaterialSet* matls,
-    const TimeIntegratorLabel* timelabels,
-    bool d_EKTCorrection,
-    bool doing_EKT_now)
+                                                     const PatchSet* patches,
+                                                     const MaterialSet* matls,
+                                                     const TimeIntegratorLabel* timelabels)
 {
   string taskname =  "CompDynamicProcedure::computeScalarDissipation" +
     timelabels->integrator_step_name;
-  if (doing_EKT_now) taskname += "EKTnow";
+    
   Task* tsk = scinew Task(taskname, this,
-      &CompDynamicProcedure::computeScalarDissipation,
-      timelabels, d_EKTCorrection, doing_EKT_now);
+                         &CompDynamicProcedure::computeScalarDissipation,
+                         timelabels);
 
 
   // Requires, only the scalar corresponding to matlindex = 0 is
   //           required. For multiple scalars this will be put in a loop
   // assuming scalar dissipation is computed before turbulent viscosity calculation 
   Ghost::GhostType  gac = Ghost::AroundCells;
-  if (doing_EKT_now){
-    tsk->requires(Task::NewDW, d_lab->d_scalarEKTLabel, gac, 1);
-  }else{
-    tsk->requires(Task::NewDW, d_mf_label,  gac, 1);
-  }
+  tsk->requires(Task::NewDW, d_mf_label,  gac, 1);
 
   if (d_dynScalarModel){
     tsk->requires(Task::NewDW, d_lab->d_scalarDiffusivityLabel, gac, 1);
@@ -2521,12 +2501,11 @@ CompDynamicProcedure::sched_computeScalarDissipation(SchedulerP& sched,
   tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, Ghost::None);
 
   // Computes
-  if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First) 
-      &&((!(d_EKTCorrection))||((d_EKTCorrection)&&(doing_EKT_now))))
+  if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First){
     tsk->computes(d_lab->d_scalarDissSPLabel);
-  else
+  }else{
     tsk->modifies(d_lab->d_scalarDissSPLabel);
-
+  }
   sched->addTask(tsk, patches, matls);
 }
 
@@ -2534,13 +2513,11 @@ CompDynamicProcedure::sched_computeScalarDissipation(SchedulerP& sched,
 //
   void 
 CompDynamicProcedure::computeScalarDissipation(const ProcessorGroup*,
-    const PatchSubset* patches,
-    const MaterialSubset*,
-    DataWarehouse*,
-    DataWarehouse* new_dw,
-    const TimeIntegratorLabel* timelabels,
-    bool d_EKTCorrection,
-    bool doing_EKT_now)
+                                               const PatchSubset* patches,
+                                               const MaterialSubset*,
+                                               DataWarehouse*,
+                                               DataWarehouse* new_dw,
+                                               const TimeIntegratorLabel* timelabels)
 {
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
@@ -2552,11 +2529,7 @@ CompDynamicProcedure::computeScalarDissipation(const ProcessorGroup*,
     CCVariable<double> scalarDiss;  // dissipation..chi
 
     Ghost::GhostType  gac = Ghost::AroundCells;
-    if (doing_EKT_now){
-      new_dw->get(scalar, d_lab->d_scalarEKTLabel, indx, patch,gac, 1);
-    }else{
-      new_dw->get(scalar, d_mf_label, indx, patch, gac, 1);
-    }
+    new_dw->get(scalar, d_mf_label, indx, patch, gac, 1);
 
     if (d_dynScalarModel){
       new_dw->get(viscosity, d_lab->d_scalarDiffusivityLabel, indx, patch, gac, 1);
@@ -2564,8 +2537,7 @@ CompDynamicProcedure::computeScalarDissipation(const ProcessorGroup*,
       new_dw->get(viscosity, d_lab->d_viscosityCTSLabel,      indx, patch, gac, 1);
     }
 
-    if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First) 
-        &&((!(d_EKTCorrection))||((d_EKTCorrection)&&(doing_EKT_now)))){
+    if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First){
       new_dw->allocateAndPut(scalarDiss, d_lab->d_scalarDissSPLabel, indx, patch);
     }else{
       new_dw->getModifiable(scalarDiss, d_lab->d_scalarDissSPLabel,  indx, patch);

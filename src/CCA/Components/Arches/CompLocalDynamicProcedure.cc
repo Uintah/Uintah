@@ -2860,15 +2860,13 @@ void
 CompLocalDynamicProcedure::sched_computeScalarVariance(SchedulerP& sched, 
                                                        const PatchSet* patches,
                                                        const MaterialSet* matls,
-                                                       const TimeIntegratorLabel* timelabels,
-                                                       bool d_EKTCorrection,
-                                                       bool doing_EKT_now)
+                                                       const TimeIntegratorLabel* timelabels)
 {
   string taskname =  "CompLocalDynamicProcedure::computeScalarVaraince" +
                      timelabels->integrator_step_name;
   Task* tsk = scinew Task(taskname, this,
                           &CompLocalDynamicProcedure::computeScalarVariance,
-                          timelabels, d_EKTCorrection, doing_EKT_now);
+                          timelabels);
 
   Ghost::GhostType  gac = Ghost::AroundCells;
   tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel, gac, 1);
@@ -2890,8 +2888,7 @@ CompLocalDynamicProcedure::computeScalarVariance(const ProcessorGroup* pc,
                                                  const MaterialSubset*,
                                                  DataWarehouse*,
                                                  DataWarehouse* new_dw,
-                                                 const TimeIntegratorLabel* timelabels,
-                                                 bool, bool)
+                                                 const TimeIntegratorLabel* timelabels)
 {
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
@@ -3045,15 +3042,13 @@ void
 CompLocalDynamicProcedure::sched_computeScalarDissipation(SchedulerP& sched, 
                                                           const PatchSet* patches,
                                                           const MaterialSet* matls,
-                                                          const TimeIntegratorLabel* timelabels,
-                                                          bool d_EKTCorrection,
-                                                          bool doing_EKT_now)
+                                                          const TimeIntegratorLabel* timelabels )
 {
   string taskname =  "CompLocalDynamicProcedure::computeScalarDissipation" +
                      timelabels->integrator_step_name;
   Task* tsk = scinew Task(taskname, this,
                           &CompLocalDynamicProcedure::computeScalarDissipation,
-                          timelabels, d_EKTCorrection, doing_EKT_now);
+                          timelabels );
 
   
   // Requires, only the scalar corresponding to matlindex = 0 is
@@ -3085,8 +3080,7 @@ CompLocalDynamicProcedure::computeScalarDissipation(const ProcessorGroup*,
                                                     const MaterialSubset*,
                                                     DataWarehouse*,
                                                     DataWarehouse* new_dw,
-                                                    const TimeIntegratorLabel* timelabels,
-                                                    bool, bool)
+                                                    const TimeIntegratorLabel* timelabels)
 {
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);

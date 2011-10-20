@@ -51,6 +51,7 @@ IntrusionBC::IntrusionBC( const ArchesLabel* lab, Properties* props, int WALL ) 
   _sHelp.push_back( +1.0 ); 
 
   _intrusion_on = false; 
+  _do_energy_exchange = false; 
 
 }
 
@@ -148,6 +149,13 @@ IntrusionBC::problemSetup( const ProblemSpecP& params )
           temp.push_back(0); 
         } 
         intrusion.directions = temp; 
+      } 
+
+      //temperature of the intrusion
+      intrusion.temperature = -1.0;
+      db_intrusion->getWithDefault( "temperature", intrusion.temperature, 298.0 ); 
+      if ( intrusion.temperature > 0.0 ){ 
+        _do_energy_exchange = true; 
       } 
 
       //make an area varlable
@@ -261,15 +269,6 @@ IntrusionBC::sched_computeProperties( SchedulerP& sched,
 {
   Task* tsk = scinew Task("IntrusionBC::computeProperties", this, &IntrusionBC::computeProperties); 
 
-  MixingRxnModel* mixingTable = _props->getMixRxnModel(); 
-  MixingRxnModel::VarMap iv_vars = mixingTable->getIVVars(); 
-
-  for ( MixingRxnModel::VarMap::iterator i = iv_vars.begin(); i != iv_vars.end(); i++ ){ 
-
-    tsk->requires( Task::NewDW, i->second, Ghost::AroundCells, 0 ); 
-
-  }
-
   sched->addTask(tsk, patches, matls); 
 }
 void 
@@ -283,9 +282,6 @@ IntrusionBC::computeProperties( const ProcessorGroup*,
 
     typedef std::vector<std::string> StringVec; 
     typedef std::map<std::string, double> StringDoubleMap;
-    const Patch* patch = patches->get(p); 
-    int archIndex = 0; 
-    int index = _lab->d_sharedState->getArchesMaterial( archIndex )->getDWIndex(); 
 
     MixingRxnModel* mixingTable = _props->getMixRxnModel(); 
     StringVec iv_var_names = mixingTable->getAllIndepVars(); 
@@ -296,7 +292,7 @@ IntrusionBC::computeProperties( const ProcessorGroup*,
 
       if ( iIntrusion->second.type != IntrusionBC::SIMPLE_WALL ) { 
 
-        for ( int i = 0; i < iv_var_names.size(); i++ ){ 
+        for ( unsigned int i = 0; i < iv_var_names.size(); i++ ){ 
 
           StringDoubleMap::iterator ivar = iIntrusion->second.varnames_values_map.find(iv_var_names[i]); 
 
@@ -420,10 +416,10 @@ IntrusionBC::sched_setCellType( SchedulerP& sched,
 }
 void 
 IntrusionBC::setCellType( const ProcessorGroup*, 
-                            const PatchSubset* patches, 
-                            const MaterialSubset* matls, 
-                            DataWarehouse* old_dw, 
-                            DataWarehouse* new_dw )
+                          const PatchSubset* patches, 
+                          const MaterialSubset* matls, 
+                          DataWarehouse* old_dw, 
+                          DataWarehouse* new_dw )
 { 
   for ( int p = 0; p < patches->size(); p++ ){ 
 
@@ -638,3 +634,69 @@ IntrusionBC::addScalarRHS( const int p,
     }
   }
 } 
+
+void 
+IntrusionBC::sched_setIntrusionT( SchedulerP& sched, 
+                                  const PatchSet* patches, 
+                                  const MaterialSet* matls )
+{ 
+
+  if ( _do_energy_exchange ){ 
+    Task* tsk = scinew Task("IntrusionBC::setIntrusionT", this, &IntrusionBC::setIntrusionT); 
+
+    _T_label = VarLabel::find("temperature"); 
+
+    tsk->modifies( _T_label );  
+
+    sched->addTask( tsk, patches, matls );
+  }
+
+} 
+
+void 
+IntrusionBC::setIntrusionT( const ProcessorGroup*, 
+                            const PatchSubset* patches, 
+                            const MaterialSubset* matls, 
+                            DataWarehouse* old_dw, 
+                            DataWarehouse* new_dw )
+                           
+{ 
+  for ( int p = 0; p < patches->size(); p++ ){ 
+
+    const Patch* patch = patches->get(p); 
+    int archIndex = 0; 
+    int index = _lab->d_sharedState->getArchesMaterial( archIndex )->getDWIndex(); 
+    Box patch_box = patch->getBox(); 
+
+    CCVariable<double> temperature; 
+    new_dw->getModifiable( temperature, _T_label, index, patch ); 
+
+    for ( IntrusionMap::iterator iter = _intrusion_map.begin(); iter != _intrusion_map.end(); ++iter ){ 
+
+      for ( int i = 0; i < (int)iter->second.geometry.size(); i++ ){ 
+
+        GeometryPieceP piece = iter->second.geometry[i]; 
+        Box geometry_box  = piece->getBoundingBox(); 
+        Box intersect_box = geometry_box.intersect( patch_box ); 
+
+        if ( !(intersect_box.degenerate()) ) { 
+
+          for ( CellIterator icell = patch->getCellCenterIterator(intersect_box); !icell.done(); icell++ ) { 
+
+            IntVector c = *icell; 
+
+            // check current cell
+            bool curr_cell = in_or_out( c, piece, patch, iter->second.inverted ); 
+
+            if ( curr_cell ) { 
+
+              temperature[c] = iter->second.temperature; 
+
+            }
+          }
+        }
+      }
+    }
+  }
+}
+

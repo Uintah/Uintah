@@ -219,9 +219,6 @@ public:
   inline void setExtraProjection(bool extraProjection) {
     d_extraProjection=extraProjection;
   }
-  inline void setEKTCorrection(bool EKTCorrection) {
-    d_EKTCorrection=EKTCorrection;
-  }
   inline void setCalcExtraScalars(bool calcExtraScalars) {
   }
   inline void setExtraScalars(vector<ExtraScalarSolver*>* extraScalars) {
@@ -379,7 +376,7 @@ private:
   TimeIntegratorLabel* nosolve_timelabels;
   int numTimeIntegratorLevels;
   bool nosolve_timelabels_allocated;
-  bool d_pressure_correction;
+
   const PatchSet* d_perproc_patches;
   bool d_3d_periodic;
   double d_u_norm,d_v_norm,d_w_norm, d_rho_norm;
@@ -387,7 +384,6 @@ private:
   double d_H_air;
   bool d_doMMS;
   bool d_extraProjection;
-  bool d_EKTCorrection;
   bool d_KE_fromFC;
 
   PartVel* d_partVel; 

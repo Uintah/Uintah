@@ -109,7 +109,6 @@ MomentumSolver::problemSetup(const ProblemSpecP& params)
     throw InvalidValue("Convection scheme not supported: " + conv_scheme, __FILE__, __LINE__);
   }
   
-  db->getWithDefault("pressure_correction",         d_pressure_correction,false);
   db->getWithDefault("filter_divergence_constraint",d_filter_divergence_constraint,false);
 
   d_source = scinew Source(d_physicalConsts);
@@ -147,8 +146,7 @@ MomentumSolver::solve(SchedulerP& sched,
                       const PatchSet* patches,
                       const MaterialSet* matls,
                       const TimeIntegratorLabel* timelabels,
-                      bool extraProjection,
-                      bool doing_EKT_now)
+                      bool extraProjection)
 {
   //computes stencil coefficients and source terms
   // require : pressureCPBC, [u,v,w]VelocityCPBC, densityIN, viscosityIN (new_dw)
@@ -157,7 +155,7 @@ MomentumSolver::solve(SchedulerP& sched,
   //           [u,v,w]VelLinSrcPBLM, [u,v,w]VelNonLinSrcPBLM
 
   sched_buildLinearMatrix(sched, patches, matls, timelabels,
-                          extraProjection, doing_EKT_now);
+                          extraProjection);
     
 
 }
@@ -170,20 +168,17 @@ MomentumSolver::sched_buildLinearMatrix(SchedulerP& sched,
                                         const PatchSet* patches,
                                         const MaterialSet* matls,
                                         const TimeIntegratorLabel* timelabels,
-                                        bool extraProjection,
-                                        bool doing_EKT_now)
+                                        bool extraProjection)
 {
   string taskname =  "MomentumSolver::BuildCoeff" +
                      timelabels->integrator_step_name;
   if (extraProjection){
     taskname += "extraProjection";
   }
-  if (doing_EKT_now){
-    taskname += "EKTnow";
-  }
+
   Task* tsk = scinew Task(taskname,
                           this, &MomentumSolver::buildLinearMatrix,
-                          timelabels, extraProjection, doing_EKT_now);
+                          timelabels, extraProjection);
 
   Task::WhichDW parent_old_dw;
   if (timelabels->recursion){
@@ -202,7 +197,7 @@ MomentumSolver::sched_buildLinearMatrix(SchedulerP& sched,
   tsk->requires(Task::NewDW,   d_lab->d_wVelRhoHatLabel,  gaf, 1);
   
   tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, Ghost::None);
-  if ((extraProjection)||(doing_EKT_now)){
+  if ( extraProjection ){
     tsk->requires(Task::NewDW, d_lab->d_pressureExtraProjectionLabel,gac, 1);
   }else{
     tsk->requires(Task::NewDW, timelabels->pressure_out,  gac, 1);
@@ -215,12 +210,6 @@ MomentumSolver::sched_buildLinearMatrix(SchedulerP& sched,
   tsk->modifies(d_lab->d_uVelocitySPBCLabel);
   tsk->modifies(d_lab->d_vVelocitySPBCLabel);
   tsk->modifies(d_lab->d_wVelocitySPBCLabel);
-  
-  if ((doing_EKT_now)&&(timelabels->integrator_step_name == "Predictor")){
-    tsk->computes(d_lab->d_uVelocityEKTLabel);
-    tsk->computes(d_lab->d_vVelocityEKTLabel);
-    tsk->computes(d_lab->d_wVelocityEKTLabel);
-  }
 
   sched->addTask(tsk, patches, matls);
 }
@@ -235,8 +224,7 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
                                   DataWarehouse* old_dw,
                                   DataWarehouse* new_dw,
                                   const TimeIntegratorLabel* timelabels,
-                                  bool extraProjection,
-                                  bool doing_EKT_now)
+                                  bool extraProjection)
 {
   DataWarehouse* parent_old_dw;
   if (timelabels->recursion){
@@ -262,7 +250,7 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
     new_dw->get(constVelocityVars.cellType, d_lab->d_cellTypeLabel,  indx, patch, gac, 1);
     new_dw->get(constVelocityVars.density,  d_lab->d_densityCPLabel, indx, patch, gac, 1);
 
-    if ((extraProjection)||(doing_EKT_now)){
+    if ( extraProjection ){
       new_dw->get(constVelocityVars.pressure, d_lab->d_pressureExtraProjectionLabel, indx, patch, gac, 1);
     }else{
       new_dw->get(constVelocityVars.pressure, timelabels->pressure_out,              indx, patch, gac, 1);
@@ -292,65 +280,47 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
     }else {
       d_rhsSolver->calculateVelocity(patch, delta_t, cellinfo, &velocityVars,
                                      constVelocityVars.density, constVelocityVars.pressure);
-
-      /*if (d_boundaryCondition->getIntrusionBC())
-        d_boundaryCondition->calculateIntrusionVel(pc, patch,
-                                                   index, cellinfo,
-                                                   &velocityVars,
-                                                   &constVelocityVars);*/
     }
     
     // boundary condition
-		if ( !d_boundaryCondition->isUsingNewBC() ) { 
-    	if ((d_boundaryCondition->getOutletBC())||(d_boundaryCondition->getPressureBC())){
+    if ( !d_boundaryCondition->isUsingNewBC() ) { 
+      if ((d_boundaryCondition->getOutletBC())||(d_boundaryCondition->getPressureBC())){     
 
-    	  d_boundaryCondition->addPresGradVelocityOutletPressureBC(patch, cellinfo,
-    	                                                            delta_t, &velocityVars,
-    	                                                            &constVelocityVars);
-    	  d_boundaryCondition->velocityOutletPressureTangentBC(patch, 
-    	                                        &velocityVars, &constVelocityVars);
+        d_boundaryCondition->addPresGradVelocityOutletPressureBC(patch, cellinfo,            
+                                                                  delta_t, &velocityVars,    
+                                                                  &constVelocityVars);       
+        d_boundaryCondition->velocityOutletPressureTangentBC(patch,                          
+                                              &velocityVars, &constVelocityVars);            
 
-    	}
-		} else { 
+      }                                                                                      
+    } else { 
 
-				Patch::FaceType mface = Patch::xminus; 
-				Patch::FaceType pface = Patch::xplus; 
-				d_boundaryCondition->delPForOutletPressure__NEW( patch, indx, delta_t, 
-																												 mface, pface, 
-																												 velocityVars.uVelRhoHat, 
-																												 constVelocityVars.pressure, 
-																												 constVelocityVars.density ); 
-				mface = Patch::yminus; 
-				pface = Patch::yplus; 
-				d_boundaryCondition->delPForOutletPressure__NEW( patch, indx, delta_t, 
-																												 mface, pface, 
-																												 velocityVars.vVelRhoHat, 
-																												 constVelocityVars.pressure, 
-																												 constVelocityVars.density ); 
-				mface = Patch::zminus; 
-				pface = Patch::zplus; 
-				d_boundaryCondition->delPForOutletPressure__NEW( patch, indx, delta_t, 
-																												 mface, pface, 
-																												 velocityVars.wVelRhoHat, 
-																												 constVelocityVars.pressure, 
-																												 constVelocityVars.density ); 
+      Patch::FaceType mface = Patch::xminus;                                                          
+      Patch::FaceType pface = Patch::xplus;                                                           
+      d_boundaryCondition->delPForOutletPressure__NEW( patch, indx, delta_t,                          
+                                                       mface, pface,                                  
+                                                       velocityVars.uVelRhoHat,                       
+                                                       constVelocityVars.pressure,                    
+                                                       constVelocityVars.density );                   
+      mface = Patch::yminus;                                                                          
+      pface = Patch::yplus;                                                                           
+      d_boundaryCondition->delPForOutletPressure__NEW( patch, indx, delta_t,                          
+                                                       mface, pface,                                  
+                                                       velocityVars.vVelRhoHat,                       
+                                                       constVelocityVars.pressure,                    
+                                                       constVelocityVars.density );                   
+      mface = Patch::zminus;                                                                          
+      pface = Patch::zplus;                                                                           
+      d_boundaryCondition->delPForOutletPressure__NEW( patch, indx, delta_t,                          
+                                                       mface, pface,                                  
+                                                       velocityVars.wVelRhoHat,                       
+                                                       constVelocityVars.pressure,                    
+                                                       constVelocityVars.density );                   
 
-    	  d_boundaryCondition->velocityOutletPressureTangentBC(patch, 
-    	                                        &velocityVars, &constVelocityVars);
+      d_boundaryCondition->velocityOutletPressureTangentBC(patch,                                 
+                                                           &velocityVars, &constVelocityVars);                               
 
-		} 
-
-    SFCXVariable<double> uVel_EKT;
-    SFCYVariable<double> vVel_EKT;
-    SFCZVariable<double> wVel_EKT;
-    if ((doing_EKT_now)&&(timelabels->integrator_step_name == "Predictor")){
-      new_dw->allocateAndPut(uVel_EKT, d_lab->d_uVelocityEKTLabel, indx, patch);
-      new_dw->allocateAndPut(vVel_EKT, d_lab->d_vVelocityEKTLabel, indx, patch);
-      new_dw->allocateAndPut(wVel_EKT, d_lab->d_wVelocityEKTLabel, indx, patch);
-      uVel_EKT.copyData(velocityVars.uVelRhoHat);
-      vVel_EKT.copyData(velocityVars.vVelRhoHat);
-      wVel_EKT.copyData(velocityVars.wVelRhoHat);
-    }
+    }                                                                                                 
   }
 }
 
@@ -359,8 +329,7 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
 //****************************************************************************
 void MomentumSolver::solveVelHat(const LevelP& level,
                                  SchedulerP& sched,
-                                 const TimeIntegratorLabel* timelabels,
-                                 bool d_EKTCorrection)
+                                 const TimeIntegratorLabel* timelabels)
 {
   const PatchSet* patches = level->eachPatch();
   const MaterialSet* matls = d_lab->d_sharedState->allArchesMaterials();
@@ -383,7 +352,7 @@ void MomentumSolver::solveVelHat(const LevelP& level,
   }
 
   sched_buildLinearMatrixVelHat(sched, patches, matls, 
-                                timelabels, d_EKTCorrection);
+                                timelabels);
 
 }
 
@@ -396,14 +365,13 @@ void
 MomentumSolver::sched_buildLinearMatrixVelHat(SchedulerP& sched,
                                               const PatchSet* patches,
                                               const MaterialSet* matls,
-                                              const TimeIntegratorLabel* timelabels,
-                                              bool d_EKTCorrection)
+                                              const TimeIntegratorLabel* timelabels)
 {
   string taskname =  "MomentumSolver::BuildCoeffVelHat" +
                      timelabels->integrator_step_name;
   Task* tsk = scinew Task(taskname, 
                           this, &MomentumSolver::buildLinearMatrixVelHat,
-                          timelabels, d_EKTCorrection);
+                          timelabels);
 
   
   Task::WhichDW parent_old_dw;
@@ -445,24 +413,12 @@ MomentumSolver::sched_buildLinearMatrixVelHat(SchedulerP& sched,
     tsk->requires(Task::NewDW,   d_lab->d_densityTempLabel, gac, 1);
   }
 
-  if (d_EKTCorrection){
-    old_values_dw = Task::NewDW;
-  }
-
   tsk->requires(Task::NewDW, d_lab->d_densityCPLabel,     gac, 1);
   tsk->requires(Task::NewDW, d_lab->d_denRefArrayLabel,   gac, 1);
   tsk->requires(Task::NewDW, d_lab->d_viscosityCTSLabel,  gac, 2);
   tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel, gaf, 2);
   tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel, gaf, 2);
   tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel, gaf, 2);
-
-  if (d_pressure_correction){
-    if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First){
-      tsk->requires(Task::OldDW, timelabels->pressure_guess, gac, 1);
-    }else{
-      tsk->requires(Task::NewDW, timelabels->pressure_guess, gac, 1);
-    }
-  }
   
   // required for computing div constraint
 //#ifdef divergenceconstraint
@@ -530,7 +486,6 @@ MomentumSolver::sched_buildLinearMatrixVelHat(SchedulerP& sched,
     SourceTermBase& src = factor.retrieve_source_term( *iter ); 
     const VarLabel* srcLabel = src.getSrcLabel(); 
     tsk->requires(Task::NewDW, srcLabel, gn, 0); 
-
   }
 
   sched->addTask(tsk, patches, matls);
@@ -548,8 +503,7 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
                                         const MaterialSubset* /*matls*/,
                                         DataWarehouse* old_dw,
                                         DataWarehouse* new_dw,
-                                        const TimeIntegratorLabel* timelabels,
-                                        bool d_EKTCorrection)
+                                        const TimeIntegratorLabel* timelabels)
 {
   DataWarehouse* parent_old_dw;
   if (timelabels->recursion){
@@ -594,9 +548,6 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
       old_values_dw->get(constVelocityVars.old_density, d_lab->d_densityTempLabel, indx, patch, gac, 1);
     }
 
-    if (d_EKTCorrection){
-      old_values_dw = new_dw;
-    }
     old_values_dw->get(constVelocityVars.old_uVelocity, d_lab->d_uVelocitySPBCLabel, indx, patch, gn, 0);
     old_values_dw->get(constVelocityVars.old_vVelocity, d_lab->d_vVelocitySPBCLabel, indx, patch, gn, 0);
     old_values_dw->get(constVelocityVars.old_wVelocity, d_lab->d_wVelocitySPBCLabel, indx, patch, gn, 0);
@@ -607,14 +558,6 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
     new_dw->get(constVelocityVars.uVelocity,   d_lab->d_uVelocitySPBCLabel, indx, patch, gaf, 2);
     new_dw->get(constVelocityVars.vVelocity,   d_lab->d_vVelocitySPBCLabel, indx, patch, gaf, 2);
     new_dw->get(constVelocityVars.wVelocity,   d_lab->d_wVelocitySPBCLabel, indx, patch, gaf, 2);
-
-    if (d_pressure_correction){
-      if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First){
-        old_dw->get(constVelocityVars.pressure, timelabels->pressure_guess, indx, patch, gac, 1);
-      }else{
-        new_dw->get(constVelocityVars.pressure, timelabels->pressure_guess, indx, patch, gac, 1);
-      }
-    }
 
 //#ifdef divergenceconstraint
     if (timelabels->multiple_steps){
@@ -944,14 +887,6 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
                                       &constVelocityVars);
       }
 
-     /*if (d_boundaryCondition->getIntrusionBC()) {
-        // if 0'ing stuff below for zero friction drag
-#if 0
-        d_boundaryCondition->intrusionMomExchangeBC(pc, patch, index,
-                                                    cellinfo, &velocityVars,
-                                                    &constVelocityVars);
-#endif
-      }*/
     }
 
     if (d_boundaryCondition->isUsingNewBC()) {
@@ -1007,12 +942,6 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
                                          time_shiftmms, 
                                          delta_t);
     }
-
-
-    if (d_pressure_correction) {
-      d_rhsSolver->calculateVelocity(patch, delta_t, cellinfo, &velocityVars,
-                                     constVelocityVars.new_density,constVelocityVars.pressure);
-    }
     
     //__________________________________
     //
@@ -1034,29 +963,29 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
 
     } 
 
-		if ( !d_boundaryCondition->isUsingNewBC() ) { 
-    	if ((d_boundaryCondition->getOutletBC())||
-    	    (d_boundaryCondition->getPressureBC())) {
+                if ( !d_boundaryCondition->isUsingNewBC() ) { 
+        if ((d_boundaryCondition->getOutletBC())||
+            (d_boundaryCondition->getPressureBC())) {
 
-    	    d_boundaryCondition->velRhoHatOutletPressureBC( patch, 
-    	                                                    velocityVars.uVelRhoHat, 
-    	                                                    velocityVars.vVelRhoHat, 
-    	                                                    velocityVars.wVelRhoHat, 
-    	                                                    constVelocityVars.old_uVelocity, 
-    	                                                    constVelocityVars.old_vVelocity, 
-    	                                                    constVelocityVars.old_wVelocity, 
-    	                                                    constVelocityVars.cellType ); 
-    	}
-		} else { 
-    	    d_boundaryCondition->velocityOutletPressureBC__NEW( patch, 
-																															indx, 
-    	                                                    		velocityVars.uVelRhoHat, 
-    	                                                    		velocityVars.vVelRhoHat, 
-    	                                                    		velocityVars.wVelRhoHat, 
-    	                                                    		constVelocityVars.old_uVelocity, 
-    	                                                    		constVelocityVars.old_vVelocity, 
-    	                                                    		constVelocityVars.old_wVelocity ); 
-		} 
+            d_boundaryCondition->velRhoHatOutletPressureBC( patch, 
+                                                            velocityVars.uVelRhoHat, 
+                                                            velocityVars.vVelRhoHat, 
+                                                            velocityVars.wVelRhoHat, 
+                                                            constVelocityVars.old_uVelocity, 
+                                                            constVelocityVars.old_vVelocity, 
+                                                            constVelocityVars.old_wVelocity, 
+                                                            constVelocityVars.cellType ); 
+        }
+                } else { 
+            d_boundaryCondition->velocityOutletPressureBC__NEW( patch, 
+                                                                                                                                                                                                                                                        indx, 
+                                                                        velocityVars.uVelRhoHat, 
+                                                                        velocityVars.vVelRhoHat, 
+                                                                        velocityVars.wVelRhoHat, 
+                                                                        constVelocityVars.old_uVelocity, 
+                                                                        constVelocityVars.old_vVelocity, 
+                                                                        constVelocityVars.old_wVelocity ); 
+                } 
 
 
 //#ifdef divergenceconstraint    
@@ -1089,28 +1018,21 @@ void
 MomentumSolver::sched_averageRKHatVelocities(SchedulerP& sched,
                                              const PatchSet* patches,
                                              const MaterialSet* matls,
-                                             const TimeIntegratorLabel* timelabels,
-                                             bool d_EKTCorrection)
+                                             const TimeIntegratorLabel* timelabels)
 {
   string taskname =  "MomentumSolver::averageRKHatVelocities" +
                      timelabels->integrator_step_name;
   Task* tsk = scinew Task(taskname, this,
                           &MomentumSolver::averageRKHatVelocities,
-                          timelabels, d_EKTCorrection);
+                          timelabels);
   
   Ghost::GhostType  gn = Ghost::None;
   Ghost::GhostType  gac = Ghost::AroundCells;
   
-  if (d_EKTCorrection) {
-    tsk->requires(Task::NewDW, d_lab->d_uVelocityEKTLabel,gn, 0);
-    tsk->requires(Task::NewDW, d_lab->d_vVelocityEKTLabel,gn, 0);
-    tsk->requires(Task::NewDW, d_lab->d_wVelocityEKTLabel,gn, 0);
-  }
-  else {
-    tsk->requires(Task::OldDW, d_lab->d_uVelocitySPBCLabel,gn, 0);
-    tsk->requires(Task::OldDW, d_lab->d_vVelocitySPBCLabel,gn, 0);
-    tsk->requires(Task::OldDW, d_lab->d_wVelocitySPBCLabel,gn, 0);
-  }
+  tsk->requires(Task::OldDW,   d_lab->d_uVelocitySPBCLabel,gn, 0);  
+  tsk->requires(Task::OldDW,   d_lab->d_vVelocitySPBCLabel,gn, 0);  
+  tsk->requires(Task::OldDW,   d_lab->d_wVelocitySPBCLabel,gn, 0);  
+  
   tsk->requires(Task::OldDW,   d_lab->d_densityCPLabel,    gac,1);
   tsk->requires(Task::NewDW,   d_lab->d_cellTypeLabel,     gn, 0);
 
@@ -1134,8 +1056,7 @@ MomentumSolver::averageRKHatVelocities(const ProcessorGroup*,
                                        const MaterialSubset*,
                                        DataWarehouse* old_dw,
                                        DataWarehouse* new_dw,
-                                       const TimeIntegratorLabel* timelabels,
-                                       bool d_EKTCorrection)
+                                       const TimeIntegratorLabel* timelabels)
 {
   for (int p = 0; p < patches->size(); p++) {
 
@@ -1160,17 +1081,11 @@ MomentumSolver::averageRKHatVelocities(const ProcessorGroup*,
     
     old_dw->get(old_density, d_lab->d_densityCPLabel, indx, patch, gac, 1);
     new_dw->get(cellType,    d_lab->d_cellTypeLabel,  indx, patch, gn, 0);
-    if (d_EKTCorrection) {
-      new_dw->get(old_uvel, d_lab->d_uVelocityEKTLabel, indx, patch, gn, 0);
-      new_dw->get(old_vvel, d_lab->d_vVelocityEKTLabel, indx, patch, gn, 0);
-      new_dw->get(old_wvel, d_lab->d_wVelocityEKTLabel, indx, patch, gn, 0);
-    }
-    else {
-      old_dw->get(old_uvel, d_lab->d_uVelocitySPBCLabel, indx, patch, gn, 0);
-      old_dw->get(old_vvel, d_lab->d_vVelocitySPBCLabel, indx, patch, gn, 0);
-      old_dw->get(old_wvel, d_lab->d_wVelocitySPBCLabel, indx, patch, gn, 0);
-    }
 
+    old_dw->get(old_uvel, d_lab->d_uVelocitySPBCLabel, indx, patch, gn, 0);  
+    old_dw->get(old_vvel, d_lab->d_vVelocitySPBCLabel, indx, patch, gn, 0);  
+    old_dw->get(old_wvel, d_lab->d_wVelocitySPBCLabel, indx, patch, gn, 0);  
+    
     new_dw->get(temp_density, d_lab->d_densityTempLabel, indx, patch, gac,1);
     new_dw->get(new_density, d_lab->d_densityCPLabel,    indx, patch, gac,1);
 
@@ -1233,28 +1148,24 @@ MomentumSolver::averageRKHatVelocities(const ProcessorGroup*,
       }
     }
     
-//__________________________________
-// Apply boundary conditions
+    //__________________________________
+    // Apply boundary conditions
     if ( !d_boundaryCondition->isUsingNewBC() ) { 
-    	if (d_boundaryCondition->anyArchesPhysicalBC()) {
+      if (d_boundaryCondition->anyArchesPhysicalBC()) {
 
-    	  d_boundaryCondition->velRhoHatOutletPressureBC( patch, 
-    	                                                  new_uvel, new_vvel, new_wvel,
-    	                                                  old_uvel, old_vvel, old_wvel, 
-    	                                                  cellType ); 
-			} 
-		} else { 
-
-    	  d_boundaryCondition->velocityOutletPressureBC__NEW( patch, 
-																														indx, 
-    	                                                  		new_uvel, new_vvel, new_wvel,
-    	                                                  		old_uvel, old_vvel, old_wvel ); 
-
-		}
+        d_boundaryCondition->velRhoHatOutletPressureBC( patch,                            
+                                                        new_uvel, new_vvel, new_wvel,     
+                                                        old_uvel, old_vvel, old_wvel,     
+                                                        cellType );                       
+      } 
+    } else { 
+      d_boundaryCondition->velocityOutletPressureBC__NEW( patch, 
+                                                          indx, 
+                                                          new_uvel, new_vvel, new_wvel,  
+                                                          old_uvel, old_vvel, old_wvel );
+    }
 
     d_boundaryCondition->setHattedIntrusionVelocity( p, new_uvel, new_vvel, new_wvel, new_density ); 
-
-
   }  // patches
 }
 // ****************************************************************************
@@ -1355,8 +1266,7 @@ MomentumSolver::prepareExtraProjection(const ProcessorGroup* pc,
                                               indx, 
                                               time_shift);
       }
-      if ((d_boundaryCondition->getOutletBC())||
-          (d_boundaryCondition->getPressureBC()))
+      if ( d_boundaryCondition->getOutletBC() || d_boundaryCondition->getPressureBC() )
         d_boundaryCondition->velRhoHatOutletPressureBC( patch, 
                                                         velocityVars.uVelRhoHat, 
                                                         velocityVars.vVelRhoHat, 

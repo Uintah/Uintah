@@ -74,7 +74,7 @@ TabPropsEvaluator<FieldT>::
 TabPropsEvaluator( const BSpline* const spline,
                    const VarNames& ivarNames,
                    const Expr::ExpressionID& id,
-                   const Expr::ExpressionRegistry& reg  )
+                   const Expr::ExpressionRegistry& reg )
   : Expr::Expression<FieldT>(id,reg),
     indepVarNames_( ivarNames   )
 {
@@ -190,6 +190,5 @@ Builder::build( const Expr::ExpressionID& id,
 {
   return new TabPropsEvaluator<FieldT>( spline_, ivarNames_, id, reg );
 }
-
 
 #endif // TabPropsEvaluator_Expr_h

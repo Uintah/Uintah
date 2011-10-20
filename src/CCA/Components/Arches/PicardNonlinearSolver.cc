@@ -153,9 +153,6 @@ PicardNonlinearSolver::problemSetup(const ProblemSpecP& params)
                                       d_physicalConsts);
   d_momSolver->problemSetup(db);
 
-  d_pressure_correction = d_momSolver->getPressureCorrectionFlag();
-  d_pressSolver->setPressureCorrectionFlag(d_pressure_correction);
-
   if (d_calScalar) {
     d_scalarSolver = scinew ScalarSolver(d_lab, d_MAlab,
                                          d_turbModel, d_boundaryCondition,
@@ -458,29 +455,25 @@ PicardNonlinearSolver::recursiveSolver(const ProcessorGroup* pg,
 
   
   d_scalarSolver->solve(                     subsched, local_patches, local_matls, 
-                                             d_timeIntegratorLabels[curr_level],
-                                                                    false, false);
+                                             d_timeIntegratorLabels[curr_level] );
 
   if (d_enthalpySolve){
     d_enthalpySolver->solve(          level, subsched, local_patches, local_matls,
-                                             d_timeIntegratorLabels[curr_level],
-                                                                    false, false);
+                                             d_timeIntegratorLabels[curr_level]);
   }
 
   if (d_calcVariance) {
     d_turbModel->sched_computeScalarVariance(subsched, local_patches, local_matls,
-                                             d_timeIntegratorLabels[curr_level], 
-                                                                    false, false);
+                                             d_timeIntegratorLabels[curr_level]);
                                                                     
     d_turbModel->sched_computeScalarDissipation(
                                               subsched, local_patches, local_matls,
-                                              d_timeIntegratorLabels[curr_level], 
-                                                                    false, false);
+                                              d_timeIntegratorLabels[curr_level]);
   }
 
   d_props->sched_reComputeProps(             subsched, local_patches, local_matls,
                                              d_timeIntegratorLabels[curr_level],
-                                                       true, false, false, false);
+                                                       true, false);
  
   d_props->sched_computeDenRefArray(         subsched, local_patches, local_matls,
                                              d_timeIntegratorLabels[curr_level]);
@@ -492,8 +485,7 @@ PicardNonlinearSolver::recursiveSolver(const ProcessorGroup* pg,
     // first computes, hatted velocities and then computes
     // the pressure poisson equation
   d_momSolver->solveVelHat(         level, subsched,
-                                           d_timeIntegratorLabels[curr_level],
-                                                                        false);
+                                           d_timeIntegratorLabels[curr_level] );
                              
   // using RKSSP averaging to perform underrelaxation
   if (d_timeIntegratorLabels[curr_level]->factor_new < 1.0) {
@@ -510,42 +502,33 @@ PicardNonlinearSolver::recursiveSolver(const ProcessorGroup* pg,
     if (d_calcVariance) {
       d_turbModel->sched_computeScalarVariance(
                                              subsched, local_patches, local_matls,
-                                             d_timeIntegratorLabels[curr_level],
-                                                                    false, false);
+                                             d_timeIntegratorLabels[curr_level]);
                                                                     
       d_turbModel->sched_computeScalarDissipation(
                                              subsched, local_patches, local_matls,
-                                             d_timeIntegratorLabels[curr_level],
-                                                                    false, false);
+                                             d_timeIntegratorLabels[curr_level]);
     }
     d_props->sched_reComputeProps(           subsched, local_patches, local_matls,
                                              d_timeIntegratorLabels[curr_level],
-                                                      false, false, false, false);
+                                                      false, false);
 
     d_momSolver->sched_averageRKHatVelocities(subsched, local_patches, local_matls,
-                                              d_timeIntegratorLabels[curr_level],
-                                                                            false);
+                                              d_timeIntegratorLabels[curr_level] );
                                                                             
     d_timeIntegratorLabels[curr_level]->integrator_step_number = TimeIntegratorStepNumber::First;
   }
 
   d_props->sched_computeDrhodt(              subsched, local_patches, local_matls,
-                                             d_timeIntegratorLabels[curr_level],
-                                                                    false, false);
+                                             d_timeIntegratorLabels[curr_level]);
 
   d_pressSolver->sched_solve(                level, subsched, 
                                              d_timeIntegratorLabels[curr_level],
-                                                             false, false, false);
+                                                             false);
   
   // project velocities using the projection step
     d_momSolver->solve(                      subsched, local_patches, local_matls,
                                              d_timeIntegratorLabels[curr_level],
-                                                                    false, false);
-
-  if (d_pressure_correction){
-    sched_updatePressure(                    subsched, local_patches, local_matls,
-                                             d_timeIntegratorLabels[curr_level]);
-  }
+                                                                    false);
 
   if (d_boundaryCondition->anyArchesPhysicalBC()) {
     d_boundaryCondition->sched_getFlowINOUT( subsched, local_patches, local_matls,
@@ -871,19 +854,16 @@ int PicardNonlinearSolver::noSolve(const LevelP& level,
 
   if (d_calcVariance) {
     d_turbModel->sched_computeScalarVariance(       sched, patches, matls,
-                                                    nosolve_timelabels, 
-                                                    false, false);
+                                                    nosolve_timelabels);
                                               
     d_turbModel->sched_computeScalarDissipation(    sched, patches, matls,
-                                                    nosolve_timelabels, 
-                                                    false, false);
+                                                    nosolve_timelabels);
   }
 
   d_props->sched_computePropsFirst_mm(              sched, patches, matls);
 
   d_props->sched_computeDrhodt(                     sched, patches, matls,
-                                                    nosolve_timelabels,
-                                                    false, false);
+                                                    nosolve_timelabels);
 
   d_boundaryCondition->sched_setInletFlowRates(     sched, patches, matls);
 
@@ -2156,61 +2136,7 @@ PicardNonlinearSolver::printTotalKE(const ProcessorGroup* ,
     }
   }
 }
-//______________________________________________________________________
-//
-void 
-PicardNonlinearSolver::sched_updatePressure(SchedulerP& sched, 
-                                            const PatchSet* patches,
-                                            const MaterialSet* matls,
-                                            const TimeIntegratorLabel* timelabels)
-{
-  string taskname =  "PicardNonlinearSolver::updatePressure" +
-                     timelabels->integrator_step_name;
-  Task* tsk = scinew Task(taskname,
-                          this, &PicardNonlinearSolver::updatePressure,
-                          timelabels);
-  
-  tsk->requires(Task::OldDW, timelabels->pressure_guess, Ghost::None, 0);
 
-  tsk->modifies(timelabels->pressure_out);
-
-  sched->addTask(tsk, patches, matls);
-  
-}
-//______________________________________________________________________
-//
-void 
-PicardNonlinearSolver::updatePressure(const ProcessorGroup* ,
-                                      const PatchSubset* patches,
-                                      const MaterialSubset*,
-                                      DataWarehouse* old_dw,
-                                      DataWarehouse* new_dw,
-                                      const TimeIntegratorLabel* timelabels)
-{
-  for (int p = 0; p < patches->size(); p++) {
-    const Patch *patch = patches->get(p);
-    int archIndex = 0; // only one arches material
-    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
-    
-    constCCVariable<double> pressure_guess;
-    CCVariable<double> pressure;
-    
-    Ghost::GhostType  gn = Ghost::None;
-    new_dw->getModifiable(pressure, timelabels->pressure_out,   indx, patch);
-    old_dw->get(pressure_guess,     timelabels->pressure_guess, indx, patch, gn, 0);
-    
-    IntVector idxLo = patch->getFortranCellLowIndex();
-    IntVector idxHi = patch->getFortranCellHighIndex();
-    for (int ColX = idxLo.x(); ColX <= idxHi.x(); ColX++) {
-      for (int ColY = idxLo.y(); ColY <= idxHi.y(); ColY++) {
-        for (int ColZ = idxLo.z(); ColZ <= idxHi.z(); ColZ++) {
-            IntVector currCell(ColX,ColY,ColZ);
-            pressure[currCell] += pressure_guess[currCell];
-        }
-      }
-    }
-  }
-}
 //****************************************************************************
 // Schedule saving of temp copies of variables
 //****************************************************************************

@@ -33,9 +33,9 @@ class ScalabilityTestSrc : public Expr::Expression<FieldT>
   std::vector<double> tmpVec_;
   
   ScalabilityTestSrc( const Expr::Tag var,
-                  const int nvar,
-                  const Expr::ExpressionID& id,
-                  const Expr::ExpressionRegistry& reg );
+                      const int nvar,
+                      const Expr::ExpressionID& id,
+                      const Expr::ExpressionRegistry& reg );
   
   ~ScalabilityTestSrc();
   
@@ -49,9 +49,9 @@ public:
   {
   public:
     Expr::ExpressionBase* build( const Expr::ExpressionID& id,
-                                const Expr::ExpressionRegistry& reg ) const;
+                                 const Expr::ExpressionRegistry& reg ) const;
     Builder( const Expr::Tag var,
-            const int nvar );
+             const int nvar );
   private:
     const Expr::Tag tag_;
     const int nvar_;

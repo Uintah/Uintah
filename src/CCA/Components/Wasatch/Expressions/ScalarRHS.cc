@@ -41,9 +41,9 @@ ScalarRHS<FieldT>::ScalarRHS( const FieldTagInfo& fieldTags,
     doYDir_( convTagY_ != Expr::Tag() || diffTagY_ != Expr::Tag() ),
     doZDir_( convTagZ_ != Expr::Tag() || diffTagZ_ != Expr::Tag() ),
 
-    densityTag_( densityTag ),
+    densityTag_    ( densityTag     ),
     isConstDensity_( isConstDensity ),
-    srcTags_( srcTags )
+    srcTags_       ( srcTags        )
 {
   srcTags_.push_back( ScalarRHS<FieldT>::resolve_field_tag( SOURCE_TERM, fieldTags ) );
   nullify_fields();
@@ -62,8 +62,7 @@ void ScalarRHS<FieldT>::nullify_fields()
 {
   xConvFlux_ = NULL;  yConvFlux_ = NULL;  zConvFlux_ = NULL;
   xDiffFlux_ = NULL;  yDiffFlux_ = NULL;  zDiffFlux_ = NULL;
-    
-  divOpX_ = NULL;  divOpY_ = NULL;  divOpZ_ = NULL;
+  divOpX_    = NULL;  divOpY_    = NULL;  divOpZ_    = NULL;
 }
   
 //------------------------------------------------------------------
@@ -149,43 +148,43 @@ void ScalarRHS<FieldT>::evaluate()
   using namespace SpatialOps;
   
   FieldT& rhs = this->value();
-  rhs = 0.0;
+  rhs <<= 0.0;
     
   SpatialOps::SpatFldPtr<FieldT> tmp = SpatialOps::SpatialFieldStore<FieldT>::self().get( rhs );
     
   if( doXDir_ ){
     if( haveConvection_ ){
       divOpX_->apply_to_field( *xConvFlux_, *tmp );
-      rhs -= *tmp;
+      rhs <<= rhs - *tmp;
     }
     if( haveDiffusion_ ){
       divOpX_->apply_to_field( *xDiffFlux_, *tmp );
-      rhs -= *tmp;
+      rhs <<= rhs - *tmp;
     }
   }
-    
+
   if( doYDir_ ){
     if( haveConvection_ ){
       divOpY_->apply_to_field( *yConvFlux_, *tmp );
-      rhs -= *tmp;
+      rhs <<= rhs - *tmp;
     }
     if( haveDiffusion_ ){
       divOpY_->apply_to_field( *yDiffFlux_, *tmp );
-      rhs -= *tmp;
+      rhs <<= rhs - *tmp;
     }
   }
-    
+
   if( doZDir_ ){
     if( haveConvection_ ){
       divOpZ_->apply_to_field( *zConvFlux_, *tmp );
-      rhs -= *tmp;
+      rhs <<= rhs - *tmp;
     }
     if( haveDiffusion_ ){
       divOpZ_->apply_to_field( *zDiffFlux_, *tmp );
-      rhs -= *tmp;
+      rhs <<= rhs - *tmp;
     }
   }
-    
+
   typename SrcVec::const_iterator isrc;
   for( isrc=srcTerm_.begin(); isrc!=srcTerm_.end(); ++isrc ){
     if (isConstDensity_) {
@@ -193,7 +192,7 @@ void ScalarRHS<FieldT>::evaluate()
       rhs <<= rhs + (**isrc / densVal );
     }
     else 
-      rhs += **isrc;
+      rhs <<= rhs + **isrc;
   }
     
 }

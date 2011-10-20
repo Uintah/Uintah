@@ -84,14 +84,9 @@ using namespace Uintah;
 #include <CCA/Components/Arches/fortran/bcuvel_fort.h>
 #include <CCA/Components/Arches/fortran/bcvvel_fort.h>
 #include <CCA/Components/Arches/fortran/bcwvel_fort.h>
-//#include <CCA/Components/Arches/fortran/profv_fort.h>
-#include <CCA/Components/Arches/fortran/intrusion_computevel_fort.h>
-#include <CCA/Components/Arches/fortran/mmbcenthalpy_energyex_fort.h>
-#include <CCA/Components/Arches/fortran/mmbcvelocity_momex_fort.h>
 #include <CCA/Components/Arches/fortran/mmbcvelocity_fort.h>
 #include <CCA/Components/Arches/fortran/mmcelltypeinit_fort.h>
 #include <CCA/Components/Arches/fortran/mmwallbc_fort.h>
-#include <CCA/Components/Arches/fortran/mmwallbc_trans_fort.h>
 #include <CCA/Components/Arches/fortran/mm_computevel_fort.h>
 #include <CCA/Components/Arches/fortran/mm_explicit_fort.h>
 #include <CCA/Components/Arches/fortran/mm_explicit_oldvalue_fort.h>
@@ -119,7 +114,6 @@ BoundaryCondition::BoundaryCondition(const ArchesLabel* label,
   d_wallBdry = 0;
   d_pressureBC = 0;
   d_outletBC = 0;
-  d_intrusionBC = 0;
   _using_new_intrusion = false; 
 
   // x-direction
@@ -153,9 +147,6 @@ BoundaryCondition::~BoundaryCondition()
   for (int ii = 0; ii < d_numInlets; ii++){
     delete d_flowInlets[ii];
   }
-  if(d_intrusionBC){
-    delete d_intrusionBC;
-  }
   for ( EfficiencyMap::iterator iter = d_effVars.begin(); iter != d_effVars.end(); iter++){
     VarLabel::destroy(iter->second.label);
   }
@@ -188,56 +179,31 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
   ProblemSpecP db = params->findBlock("BoundaryConditions");
   d_flowfieldCellTypeVal = -1;
   d_numInlets = 0;
-  d_numSourceBoundaries = 0;
   int total_cellTypes = 100;
 
   d_newBC = scinew BoundaryCondition_new( d_lab ); // need to declare a new boundary condition here 
                                                    // while transition to new code is taking place
   if(db.get_rep()==0)
   {
-    proc0cout << "No Boundary Conditions Specified\n";
+    proc0cout << "No Boundary Conditions Specified \n";
     d_inletBoundary = false;
     d_wallBoundary = false;
     d_pressureBoundary = false;
     d_outletBoundary = false;
-    d_intrusionBoundary = false;
-    d_carbon_balance=false;
-    d_sulfur_balance=false;
     d_use_new_bcs = false; 
     _using_new_intrusion = false;
   }
   else
   {
 
+     // new bc:                                                 
      d_use_new_bcs = false; 
      if ( db->findBlock("use_new_bcs") ) { 
        d_use_new_bcs = true; 
      }
-     // new bc:                                                 
      if ( d_use_new_bcs ) { 
        setupBCs( db_params );
      }
-
-    db->getWithDefault("carbon_balance", d_carbon_balance, false);
-    db->getWithDefault("sulfur_balance", d_sulfur_balance, false);
-    //--- instrusions with boundary sources -----
-    if (ProblemSpecP intrusionbcs_db = db->findBlock("IntrusionWithBCSource")){
-      for (ProblemSpecP intrusionbcs_db = db->findBlock("IntrusionWithBCSource");
-          intrusionbcs_db != 0; intrusionbcs_db = intrusionbcs_db->findNextBlock("IntrusionWithBCSource")){
-        d_sourceBoundaryInfo.push_back(scinew BCSourceInfo(d_calcVariance, d_reactingScalarSolve));
-
-        d_sourceBoundaryInfo[d_numSourceBoundaries]->problemSetup(intrusionbcs_db);
-        //compute the density and other properties for this inlet stream
-        d_sourceBoundaryInfo[d_numSourceBoundaries]->streamMixturefraction.d_initEnthalpy = true;
-        d_sourceBoundaryInfo[d_numSourceBoundaries]->streamMixturefraction.d_scalarDisp=0.0;
-        d_sourceBoundaryInfo[d_numSourceBoundaries]->streamMixturefraction.d_mixVarVariance.push_back(0.0);
-        string bc_type = "bc_source"; 
-        d_props->computeInletProperties(d_sourceBoundaryInfo[d_numSourceBoundaries]->streamMixturefraction,
-            d_sourceBoundaryInfo[d_numSourceBoundaries]->calcStream, bc_type);
-        ++d_numSourceBoundaries;
-
-      }
-    }
 
     if ( d_use_new_bcs ) { 
 
@@ -264,10 +230,10 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
       } 
     }
 
-    if ( db->findBlock("NewIntrusionBC") ){ 
+    if ( db->findBlock("intrusions") ){ 
 
       _intrusionBC = scinew IntrusionBC( d_lab, d_props, BoundaryCondition::MMWALL ); 
-      ProblemSpecP db_new_intrusion = db->findBlock("NewIntrusionBC"); 
+      ProblemSpecP db_new_intrusion = db->findBlock("intrusions"); 
       _using_new_intrusion = true; 
 
       _intrusionBC->problemSetup( db_new_intrusion ); 
@@ -405,21 +371,6 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
       proc0cout << "Outlet boundary not specified"<<endl;
       d_outletBoundary = false;
     }
-
-    if (ProblemSpecP intrusion_db = db->findBlock("intrusions")) {
-      d_intrusionBoundary = true;
-      if ( d_use_new_bcs ) { 
-        d_intrusionBC = scinew IntrusionBdry(WALL);
-      } else { 
-        d_intrusionBC = scinew IntrusionBdry(INTRUSION);
-      } 
-      d_intrusionBC->problemSetup(intrusion_db);
-      //++total_cellTypes;
-    }
-    else {
-      proc0cout << "Intrusion boundary not specified"<<endl;
-      d_intrusionBoundary = false;
-    }
   }
 
   d_mmWallID = -10; // invalid cell type
@@ -430,11 +381,8 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
       d_mmWallID = MMWALL; 
     } 
   }
-  if ((d_MAlab)&&(d_intrusionBoundary)){
-    d_mmWallID = d_intrusionBC->d_cellTypeID;
-    if (d_use_new_bcs) { 
-      d_mmWallID = WALL; 
-    } 
+  if ( d_MAlab ){
+    d_mmWallID = WALL; 
   }
   //adding mms access
   if (d_doMMS) {
@@ -593,30 +541,6 @@ BoundaryCondition::cellTypeInit(const ProcessorGroup*,
               cellType[*iter] = d_flowInlets[ii]->d_cellTypeID;
           }
         }
-      }
-    }
-    if (d_intrusionBoundary) {
-      Box patchInteriorBox = patch->getBox();
-      int nofGeomPieces = (int)d_intrusionBC->d_geomPiece.size();
-      for (int ii = 0; ii < nofGeomPieces; ii++) {
-        GeometryPieceP  piece = d_intrusionBC->d_geomPiece[ii];
-        Box geomBox = piece->getBoundingBox();
-        Box b = geomBox.intersect(patchInteriorBox);
-        if ( !(b.degenerate()) && !d_intrusionBC->inverse ) {
-          for (CellIterator iter = patch->getCellCenterIterator(b);!iter.done(); iter++) {
-            Point p = patch->cellPosition(*iter);
-            if ( piece->inside(p) ) {
-              cellType[*iter] = d_intrusionBC->d_cellTypeID;
-            } 
-          }
-        } else if ( d_intrusionBC->inverse ) { 
-          for (CellIterator iter = patch->getCellIterator();!iter.done(); iter++) {
-            Point p = patch->cellPosition(*iter);
-            if ( !piece->inside(p) ) {
-              cellType[*iter] = d_intrusionBC->d_cellTypeID;
-            } 
-          }
-        } 
       }
     }
   }
@@ -836,7 +760,7 @@ BoundaryCondition::mmWallCellTypeInit(const ProcessorGroup*,
       // resets old mmwall type back to flow field and sets cells with void fraction
       // of less than .5 to mmWall
 
-      if (d_intrusionBoundary || _using_new_intrusion) {
+      if ( _using_new_intrusion ) {
         for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
           for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
             for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
@@ -1622,7 +1546,7 @@ BoundaryCondition::pressureBC(const Patch* patch,
   
   //__________________________________
   //  intrusion Boundary Conditions
-  if(d_intrusionBC){
+  if(_using_new_intrusion){
     for(CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
       IntVector c = *iter;
       if(cellType[c] == wall_BC){
@@ -1816,7 +1740,7 @@ BoundaryCondition::scalarBC__new(const Patch* patch,
     }
 
     if (xminus){
-      //domani boundary bc's 
+      //domain boundary bc's 
       if (constvars->cellType[curr - IntVector(1,0,0)] == wall){
 
         vars->scalarTotCoef[curr].w = 0.0;
@@ -1830,28 +1754,6 @@ BoundaryCondition::scalarBC__new(const Patch* patch,
   }
 }
 
-
-//****************************************************************************
-void
-BoundaryCondition::intrusionTemperatureBC(const Patch* patch,
-                                          constCCVariable<int>& cellType,
-                                          CCVariable<double>& temperature)
-{
-  IntVector idxLo = patch->getFortranCellLowIndex();
-  IntVector idxHi = patch->getFortranCellHighIndex();
-  for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-    for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-        IntVector currCell = IntVector(colX, colY, colZ);          
-        if (cellType[currCell]==d_intrusionBC->d_cellTypeID){
-          temperature[currCell] = d_intrusionBC->d_temperature;
-        }
-      }
-    }
-  }
-}
-//______________________________________________________________________
-//
 void
 BoundaryCondition::mmWallTemperatureBC(const Patch* patch,
                                        constCCVariable<int>& cellType,
@@ -1885,183 +1787,14 @@ BoundaryCondition::mmWallTemperatureBC(const Patch* patch,
   }  // z
 }
 
-//______________________________________________________________________
-//
 void 
-BoundaryCondition::intrusionMomExchangeBC(const Patch* patch,
-                                          int index, CellInformation* cellinfo,
-                                          ArchesVariables* vars,
-                                          ArchesConstVariables* constvars)
-{
-  // Call the fortran routines
-  switch(index) {
-  case 1:
-    intrusionuVelMomExBC(patch, cellinfo, vars, constvars);
-    break;
-  case 2:
-    intrusionvVelMomExBC(patch, cellinfo, vars, constvars);
-    break;
-  case 3:
-    intrusionwVelMomExBC(patch, cellinfo, vars, constvars);
-    break;
-  default:
-    cerr << "Invalid Index value" << endl;
-    break;
-
-  }
-}
-//______________________________________________________________________
-//
-void 
-BoundaryCondition::intrusionuVelMomExBC(const Patch* patch,
-                                        CellInformation* cellinfo,
-                                        ArchesVariables* vars,
-                                        ArchesConstVariables* constvars)
-{
-  // Get the low and high index for the patch and the variables
-  IntVector idxLoU = patch->getSFCXFORTLowIndex__Old();
-  IntVector idxHiU = patch->getSFCXFORTHighIndex__Old();
-  int ioff = 1;
-  int joff = 0;
-  int koff = 0;
-  double Viscos = d_physicalConsts->getMolecularViscosity();
-  fort_mmbcvelocity_momex(idxLoU, idxHiU,
-                          vars->uVelocityCoeff[Arches::AN],
-                          vars->uVelocityCoeff[Arches::AS],
-                          vars->uVelocityCoeff[Arches::AT],
-                          vars->uVelocityCoeff[Arches::AB],
-                          vars->uVelLinearSrc,
-                          cellinfo->sewu, cellinfo->sns, cellinfo->stb,
-                          cellinfo->yy, cellinfo->yv, cellinfo->zz,
-                          cellinfo->zw, Viscos, constvars->cellType, 
-                          d_intrusionBC->d_cellTypeID, ioff, joff, koff);
-}
-
-//______________________________________________________________________
-//
-void 
-BoundaryCondition::intrusionvVelMomExBC(const Patch* patch,
-                                        CellInformation* cellinfo,
-                                        ArchesVariables* vars,
-                                        ArchesConstVariables* constvars)
-{
-  // Get the low and high index for the patch and the variables
-  IntVector idxLoU = patch->getSFCYFORTLowIndex__Old();
-  IntVector idxHiU = patch->getSFCYFORTHighIndex__Old();
-  int ioff = 0;
-  int joff = 1;
-  int koff = 0;
-  double Viscos = d_physicalConsts->getMolecularViscosity();
-  fort_mmbcvelocity_momex(idxLoU, idxHiU,
-                          vars->vVelocityCoeff[Arches::AT],
-                          vars->vVelocityCoeff[Arches::AB],
-                          vars->vVelocityCoeff[Arches::AE],
-                          vars->vVelocityCoeff[Arches::AW],
-                          vars->vVelLinearSrc,
-                          cellinfo->snsv, cellinfo->stb, cellinfo->sew,
-                          cellinfo->zz, cellinfo->zw, cellinfo->xx,
-                          cellinfo->xu, Viscos, constvars->cellType, 
-                          d_intrusionBC->d_cellTypeID, ioff, joff, koff);
-}
-//______________________________________________________________________
-//
-void 
-BoundaryCondition::intrusionwVelMomExBC(const Patch* patch,
-                                        CellInformation* cellinfo,
-                                        ArchesVariables* vars,
-                                        ArchesConstVariables* constvars)
-{
-  // Get the low and high index for the patch and the variables
-  IntVector idxLoU = patch->getSFCZFORTLowIndex__Old();
-  IntVector idxHiU = patch->getSFCZFORTHighIndex__Old();
-  int ioff = 0;
-  int joff = 0;
-  int koff = 1;
-  double Viscos = d_physicalConsts->getMolecularViscosity();
-  fort_mmbcvelocity_momex(idxLoU, idxHiU,
-                          vars->wVelocityCoeff[Arches::AE],
-                          vars->wVelocityCoeff[Arches::AW],
-                          vars->wVelocityCoeff[Arches::AN],
-                          vars->wVelocityCoeff[Arches::AS],
-                          vars->wVelLinearSrc,
-                          cellinfo->stbw, cellinfo->sew, cellinfo->sns,
-                          cellinfo->xx, cellinfo->xu, cellinfo->yy,
-                          cellinfo->yv, Viscos, constvars->cellType, 
-                          d_intrusionBC->d_cellTypeID, ioff, joff, koff);
-}
-//______________________________________________________________________
-//
-void 
-BoundaryCondition::intrusionEnergyExBC(const Patch* patch,
-                                       CellInformation* cellinfo,
-                                       ArchesVariables* vars,
-                                       ArchesConstVariables* constvars)
-{
-  // Get the low and high index for the patch and the variables
-  IntVector idxLo = patch->getFortranCellLowIndex();
-  IntVector idxHi = patch->getFortranCellHighIndex();
-  double Viscos = d_physicalConsts->getMolecularViscosity();
-  fort_mmbcenthalpy_energyex(idxLo, idxHi,
-                             vars->scalarNonlinearSrc,
-                             constvars->temperature,
-                             constvars->cp,
-                             cellinfo->sew, cellinfo->sns, cellinfo->stb,
-                             cellinfo->xx, cellinfo->xu,
-                             cellinfo->yy, cellinfo->yv,
-                             cellinfo->zz, cellinfo->zw,
-                             Viscos,
-                             constvars->cellType, 
-                             d_intrusionBC->d_cellTypeID);
-}
-
-//______________________________________________________________________
-// applies multimaterial bc's for scalars and pressure
-void
-BoundaryCondition::intrusionScalarBC( const Patch* patch,
-                                      CellInformation*,
-                                      ArchesVariables* vars,
-                                      ArchesConstVariables* constvars)
-{
-  // Get the low and high index for the patch
-  IntVector idxLo = patch->getFortranCellLowIndex();
-  IntVector idxHi = patch->getFortranCellHighIndex();
-  //fortran call
-  fort_mmwallbc(idxLo, idxHi,
-                vars->scalarCoeff[Arches::AE], vars->scalarCoeff[Arches::AW],
-                vars->scalarCoeff[Arches::AN], vars->scalarCoeff[Arches::AS],
-                vars->scalarCoeff[Arches::AT], vars->scalarCoeff[Arches::AB],
-                vars->scalarNonlinearSrc, vars->scalarLinearSrc,
-                constvars->cellType, d_intrusionBC->d_cellTypeID);
-}
-//______________________________________________________________________
-//
-void
-BoundaryCondition::intrusionEnthalpyBC( const Patch* patch, 
-                                        double delta_t,
-                                        CellInformation* cellinfo,
-                                        ArchesVariables* vars,
-                                        ArchesConstVariables* constvars)
-{
-  // Get the low and high index for the patch
-  IntVector idxLo = patch->getFortranCellLowIndex();
-  IntVector idxHi = patch->getFortranCellHighIndex();
-  //fortran call
-  fort_mmwallbc_trans(idxLo, idxHi,
-                      vars->scalarCoeff[Arches::AE],
-                      vars->scalarCoeff[Arches::AW],
-                      vars->scalarCoeff[Arches::AN],
-                      vars->scalarCoeff[Arches::AS],
-                      vars->scalarCoeff[Arches::AT],
-                      vars->scalarCoeff[Arches::AB],
-                      vars->scalarNonlinearSrc,
-                      vars->scalarLinearSrc,
-                      constvars->old_enthalpy,
-                      constvars->old_density,
-                      constvars->cellType, d_intrusionBC->d_cellTypeID,
-                      cellinfo->sew, cellinfo->sns, cellinfo->stb, 
-                      delta_t);
-}
-
+BoundaryCondition::sched_setIntrusionTemperature( SchedulerP& sched, 
+                                                  const PatchSet* patches,
+                                                  const MaterialSet* matls) 
+{ 
+  // Interface to new intrusions
+  _intrusionBC->sched_setIntrusionT( sched, patches, matls ); 
+} 
 
 //______________________________________________________________________
 // compute multimaterial wall bc
@@ -2197,70 +1930,6 @@ BoundaryCondition::mmscalarWallBC( const Patch* patch,
 }
 
 //______________________________________________________________________
-// New intrusion scalar BC
-void 
-BoundaryCondition::mmscalarWallBC__new( const Patch* patch,
-                                        CellInformation*,
-                                        ArchesVariables* vars,
-                                        ArchesConstVariables* constvars)
-{
-  // **NOTE**
-  // Why is there a special d_mmWallID? This isn't consistent with how wallid is handled
-
-  // Get the wall boundary and flow field codes
-  for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
-    IntVector curr = *iter;
-
-    if (constvars->cellType[curr] == d_mmWallID) {
-      vars->scalarConvCoef[curr].e = 0.0;
-      vars->scalarConvCoef[curr].w = 0.0;
-      vars->scalarConvCoef[curr].n = 0.0;
-      vars->scalarConvCoef[curr].s = 0.0;
-      vars->scalarConvCoef[curr].t = 0.0;
-      vars->scalarConvCoef[curr].b = 0.0;
-
-      vars->scalarTotCoef[curr].e = 0.0;
-      vars->scalarTotCoef[curr].w = 0.0;
-      vars->scalarTotCoef[curr].n = 0.0;
-      vars->scalarTotCoef[curr].s = 0.0;
-      vars->scalarTotCoef[curr].t = 0.0;
-      vars->scalarTotCoef[curr].b = 0.0;
-  
-      vars->scalarNonlinearSrc[curr] = 0.0;
-      vars->scalarLinearSrc[curr] = -1.0;
-    }
-    else {
-      if (constvars->cellType[curr + IntVector(1,0,0)]==d_mmWallID){
-        vars->scalarConvCoef[curr].e = 0.0;
-        vars->scalarTotCoef[curr].e = 0.0;
-      }
-      if (constvars->cellType[curr - IntVector(1,0,0)]==d_mmWallID){
-        vars->scalarConvCoef[curr].w = 0.0;
-        vars->scalarTotCoef[curr].w = 0.0;
-      }
-      if (constvars->cellType[curr + IntVector(0,1,0)]==d_mmWallID){
-        vars->scalarConvCoef[curr].n = 0.0;
-        vars->scalarTotCoef[curr].n = 0.0;
-      }
-      if (constvars->cellType[curr - IntVector(0,1,0)]==d_mmWallID){
-        vars->scalarConvCoef[curr].s = 0.0;
-        vars->scalarTotCoef[curr].s = 0.0;
-      }
-       if (constvars->cellType[curr + IntVector(0,0,1)]==d_mmWallID){
-        vars->scalarConvCoef[curr].t = 0.0;
-        vars->scalarTotCoef[curr].t = 0.0;
-      } 
-       if (constvars->cellType[curr - IntVector(0,0,1)]==d_mmWallID){
-        vars->scalarConvCoef[curr].b = 0.0;
-        vars->scalarTotCoef[curr].b = 0.0;
-      } 
-    }
-
-  }
-}
- 
-
-//______________________________________________________________________
 // applies multimaterial bc's for enthalpy
 void
 BoundaryCondition::mmEnthalpyWallBC( const Patch* patch,
@@ -2299,37 +1968,6 @@ BoundaryCondition::WallBdry::problemSetup(ProblemSpecP& params)
   ProblemSpecP geomObjPS = params->findBlock("geom_object");
   GeometryPieceFactory::create(geomObjPS, d_geomPiece);
 }
-
-//****************************************************************************
-// constructor for BoundaryCondition::WallBdry
-//****************************************************************************
-BoundaryCondition::IntrusionBdry::IntrusionBdry(int cellID):
-  d_cellTypeID(cellID)
-{
-}
-
-//****************************************************************************
-// Problem Setup for BoundaryCondition::WallBdry
-//****************************************************************************
-void 
-BoundaryCondition::IntrusionBdry::problemSetup(ProblemSpecP& params)
-{
-  if (params->findBlock("temperature"))
-    params->require("temperature", d_temperature);
-  else
-    d_temperature = 300;
-  ProblemSpecP geomObjPS = params->findBlock("geom_object");
-  GeometryPieceFactory::create(geomObjPS, d_geomPiece);
-
-  inverse = false; 
-
-  if ( params->findBlock( "inverse" ) )
-    inverse = true; 
-
-}
-
-
-
 
 //****************************************************************************
 // constructor for BoundaryCondition::FlowInlet
@@ -2694,763 +2332,7 @@ BoundaryCondition::FlowOutlet::problemSetup(ProblemSpecP& params)
     streamMixturefraction.d_rxnVars.push_back(reactscalar);
   }
 }
-//****************************************************************************
-// Constructor Setup for BoundaryCondition::BCSourceInfo
-//****************************************************************************
-BoundaryCondition::BCSourceInfo::BCSourceInfo(bool calcVariance, bool reactingScalarSolve):
-d_calcVariance(calcVariance), d_reactingScalarSolve(reactingScalarSolve)
-{
-  //initialize some variables
-  area_x = 0.0;
-  area_y = 0.0;
-  area_z = 0.0;
-  umom_flux = 0.0;
-  vmom_flux = 0.0;
-  wmom_flux = 0.0;
-  f_flux = 0.0;
-  h_flux = 0.0;
-  totalMassFlux = 0.0;
-  totalVelocity = 0.0;
-  summed_area = 0.0;
-  computedArea = false;
-   total_area_label = VarLabel::create("flowarea",
-                                        ReductionVariable<double, Reductions::Sum<double> >::getTypeDescription());
 
-
-}
-//****************************************************************************
-// Destructor Setup for BoundaryCondition::BCSourceInfo
-//****************************************************************************
-BoundaryCondition::BCSourceInfo::~BCSourceInfo(){
-                VarLabel::destroy(total_area_label);
-}
-//****************************************************************************
-// Problem Setup for BoundaryCondition::BCSourceInfo
-//****************************************************************************
-void 
-BoundaryCondition::BCSourceInfo::problemSetup(ProblemSpecP& params)
-{
-  //You can pick MassFlux or Velocity
-  if (ProblemSpecP massfluxchild = params->findBlock("MassFlux")){
-    doAreaCalc = true;        
-    massfluxchild->require("massflux_value", totalMassFlux); //value of the vector
-
-    massfluxchild->getAttribute("type",velocityType); //relative or absolute
-    if (velocityType == "relative"){
-      massfluxchild->getAttribute("relation",velocityRelation); // choose "point" or "axis"
-
-      if (velocityRelation == "point"){
-        massfluxchild->require("point_location", point);
-      }
-      else if (velocityRelation == "axis"){
-        massfluxchild->require("axis_start",axisStart); //Starting and ending point of the axis
-        massfluxchild->require("axis_end",  axisEnd);
-      }
-    }else if (velocityType == "absolute"){
-      massfluxchild->require("normals",normal); //since it is absolute, we need tell it what faces and how to scale it. ie v_{face,i} = n_i*V
-      proc0cout << "normal =" << normal<<endl;
-    }else{
-      throw ParameterNotFound(" Must specify an absolute or relative attribute for the <Velocity> or <MassFlux>.",__FILE__,__LINE__); 
-    }
-
-  }else if (ProblemSpecP velchild = params->findBlock("Velocity")){
-    velchild->require("velocity_value", totalVelocity); //value of the vector
-
-    velchild->getAttribute("type",velocityType); //relative or absolute
-    if (velocityType == "relative"){
-      velchild->getAttribute("relation",velocityRelation); // choose "point" or "axis"
-
-      if (velocityRelation == "point"){
-        velchild->require("point_location", point);        
-
-      }else if (velocityRelation == "axis"){
-        velchild->require("axis_start",axisStart); //Starting and ending point of the axis
-        velchild->require("axis_end",  axisEnd);
-      }
-    }
-    else if (velocityType == "absolute"){
-      velchild->require("normals",normal); //since it is absolute, we need tell it what faces and how to scale it. ie v_{face,i} = n_i*V
-      proc0cout << "normal =" << normal<<endl;
-    }else{
-      throw ParameterNotFound(" Must specify an absolute or relative attribute for the <Velocity> or <MassFlux>.",__FILE__,__LINE__); 
-    }
-  }else{
-    throw ParameterNotFound(" Please enter a MassFlux or Velocity for the <IntrusionWithBCSource> block!",__FILE__,__LINE__);
-  }
-                                                  
-
-  // Get the scalar information
-  if (ProblemSpecP mfchild = params->findBlock("MixtureFraction")){
-    mfchild->require("inlet_value",mixfrac_inlet);
-  }
-  //for getting the inlet properties
-  //hard coded for now!
-  d_calcVariance = false;
-  d_reactingScalarSolve = false;
-  streamMixturefraction.d_mixVars.push_back(mixfrac_inlet);
-  if (d_calcVariance){
-    streamMixturefraction.d_mixVarVariance.push_back(0.0);
-  }
-  double reactscalar;
-  if (d_reactingScalarSolve) {
-    params->require("reacting_scalar", reactscalar);
-    streamMixturefraction.d_rxnVars.push_back(reactscalar);
-  }
-
-  // Get the geometry piece(s)
-  if (ProblemSpecP geomObjPS = params->findBlock("geom_object")){
-    GeometryPieceFactory::create(geomObjPS, d_geomPiece);
-  }else{
-    throw ParameterNotFound(" Must specify a geometry piece for BCSource.\nPlease add a <geom_object> to the <IntrusionWithBCSource> block in the inputfile.  Stopping...",__FILE__,__LINE__);
-  }
-}
-
-//-------------------------------------------------------------
-// Schedule to compute the boudary source inlet areas
-//-------------------------------------------------------------
-void 
-BoundaryCondition::sched_computeInletAreaBCSource(SchedulerP& sched, 
-                                                  const PatchSet* patches,
-                                                  const MaterialSet* matls)
-{
-  Task* tsk = scinew Task("BoundaryCondition::computeInletAreaBCSource",
-                          this, 
-                          &BoundaryCondition::computeInletAreaBCSource);
-
-  int nofBoundaryPieces = (int)d_sourceBoundaryInfo.size();        
-  for (int bp = 0; bp < nofBoundaryPieces; bp++){
-    tsk->computes(d_sourceBoundaryInfo[bp]->total_area_label);
-  }
-  sched->addTask(tsk, patches, matls);
-}
-//****************************************************************************
-// Compute surface area of inlet for BoundaryCondition::BCSourceInfo
-//****************************************************************************
-void
-BoundaryCondition::computeInletAreaBCSource(const ProcessorGroup*,
-                                            const PatchSubset* patches,
-                                            const MaterialSubset*,
-                                            DataWarehouse* old_dw,
-                                            DataWarehouse* new_dw)
-{
-
-  //Loop through current patch...compute area        
-  for (int p = 0; p < patches->size(); p++) {
-    const Patch* patch = patches->get(p);
-    Box patchInteriorBox = patch->getBox();
-        
-    int nofBoundaryPieces = (int)d_sourceBoundaryInfo.size();
-
-    //assuming a uniform mesh!
-    Vector dx = patch->dCell();
-
-    for (int bp = 0; bp < nofBoundaryPieces; bp++){
-      
-      // Zero out the area here...total area will be put in total_area member
-      d_sourceBoundaryInfo[bp]->area_x = 0.0;
-      d_sourceBoundaryInfo[bp]->area_y = 0.0;
-      d_sourceBoundaryInfo[bp]->area_z = 0.0;
-    
-      // The main loop for computing the source term
-      //**get the geometry piece for this boundary source block**
-      // we could have more than one geometry piece per block.
-      int nofGeomPieces = (int)d_sourceBoundaryInfo[bp]->d_geomPiece.size();
-    
-      for (int gp = 0; gp < nofGeomPieces; gp++){
-        
-        GeometryPieceP piece = d_sourceBoundaryInfo[bp]->d_geomPiece[gp];
-        Box geomBox = piece->getBoundingBox();
-        Box b = geomBox.intersect(patchInteriorBox);
-  
-        if (!(b.degenerate()) && !(d_sourceBoundaryInfo[bp]->computedArea)){
-          
-          //iterator over cells and see if a boundary source needs adding.
-          for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
-          
-            Point p = patch->cellPosition(*iter);
-            Point p_xp = patch->cellPosition(*iter + IntVector(1,0,0));
-            Point p_xm = patch->cellPosition(*iter - IntVector(1,0,0));
-            Point p_yp = patch->cellPosition(*iter + IntVector(0,1,0));
-            Point p_ym = patch->cellPosition(*iter - IntVector(0,1,0));
-            Point p_zp = patch->cellPosition(*iter + IntVector(0,0,1));
-            Point p_zm = patch->cellPosition(*iter - IntVector(0,0,1));
-          
-            if (piece->inside(p)){
-                       
-               //Now check neighbors
-               // x+
-               if (!(piece->inside(p_xp)))
-                       d_sourceBoundaryInfo[bp]->area_x += dx.y()*dx.z();
-               // x-
-               if (!(piece->inside(p_xm)))
-                       d_sourceBoundaryInfo[bp]->area_x += dx.y()*dx.z();
-               // y+        
-               if (!(piece->inside(p_yp)))
-                       d_sourceBoundaryInfo[bp]->area_y += dx.x()*dx.z();
-               // y-
-               if (!(piece->inside(p_ym)))
-                       d_sourceBoundaryInfo[bp]->area_y += dx.x()*dx.z();
-               // z+
-               if (!(piece->inside(p_zp)))
-                       d_sourceBoundaryInfo[bp]->area_z += dx.x()*dx.y();
-               // z-
-               if (!(piece->inside(p_zm)))
-                       d_sourceBoundaryInfo[bp]->area_z += dx.x()*dx.y();
-            }
-          }  // cell iterator
-        }else{
-          new_dw->put(sum_vartype(0), d_sourceBoundaryInfo[bp]->total_area_label);
-        }        
-      }  // geom pieces
-
-      double inlet_area;
-      inlet_area = d_sourceBoundaryInfo[bp]->area_y + d_sourceBoundaryInfo[bp]->area_z;
-
-      new_dw->put(sum_vartype(inlet_area), d_sourceBoundaryInfo[bp]->total_area_label);        
-
-    }  // boundary pieces
-  }  // patches
-}
-// *------------------------------------------------*
-// Schedule the compute of the boundary source term
-// *------------------------------------------------*
-void 
-BoundaryCondition::sched_computeMomSourceTerm(SchedulerP& sched,
-                                              const PatchSet* patches,
-                                              const MaterialSet* matls)
-{
-  Task* tsk = scinew Task("BoundaryCondition::computeMomSourceTerm", this, 
-                          &BoundaryCondition::computeMomSourceTerm);
-
-  tsk->modifies(d_lab->d_umomBoundarySrcLabel);
-  tsk->modifies(d_lab->d_vmomBoundarySrcLabel);
-  tsk->modifies(d_lab->d_wmomBoundarySrcLabel);
-  tsk->requires(Task::OldDW, d_lab->d_cellTypeLabel, Ghost::AroundCells, 2);
-
-  int nofBoundaryPieces = (int)d_sourceBoundaryInfo.size();
-  for (int bp = 0; bp < nofBoundaryPieces; bp++){
-    tsk->requires(Task::NewDW, d_sourceBoundaryInfo[bp]->total_area_label);
-  }
-  sched->addTask(tsk, patches, matls);         
-          
-}
-// *------------------------------------------------*
-// Carry out the compute of the boundary source term
-// *------------------------------------------------*
-void 
-BoundaryCondition::computeMomSourceTerm(const ProcessorGroup*,
-                                        const PatchSubset* patches,
-                                        const MaterialSubset*,
-                                        DataWarehouse* old_dw,
-                                        DataWarehouse* new_dw )
-{
-  for (int p = 0; p < patches->size(); p++) {
-    const Patch* patch = patches->get(p);
-    int archIndex = 0; // only one arches material
-    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
-    Box patchInteriorBox = patch->getBox();
-    
-    SFCXVariable<double> umomSource;
-    SFCYVariable<double> vmomSource;
-    SFCZVariable<double> wmomSource;
-    constCCVariable<int> cellType;
-
-    new_dw->getModifiable(umomSource, d_lab->d_umomBoundarySrcLabel, indx, patch);
-    new_dw->getModifiable(vmomSource, d_lab->d_vmomBoundarySrcLabel, indx, patch);
-    new_dw->getModifiable(wmomSource, d_lab->d_wmomBoundarySrcLabel, indx, patch);
-    old_dw->get(cellType, d_lab->d_cellTypeLabel, indx, patch,  Ghost::AroundCells, 2);
-
-    umomSource.initialize(0.0);
-    vmomSource.initialize(0.0);
-    wmomSource.initialize(0.0);
-
-    //assuming a uniform mesh!
-    Vector dx = patch->dCell();
-
-    IntVector idxLo = patch->getCellLowIndex();
-    IntVector idxHi = patch->getCellHighIndex();
-
-    IntVector idxLos = patch->getSFCYLowIndex();
-    IntVector idxHis = patch->getSFCYHighIndex();
-
-    IntVector idxLof = patch->getFortranCellLowIndex();
-    IntVector idxHif = patch->getFortranCellHighIndex();
-
-    IntVector idxLoe = patch->getExtraCellLowIndex();
-    IntVector idxHie = patch->getExtraCellHighIndex();
-
-    int nofBoundaryPieces = (int)d_sourceBoundaryInfo.size();
-
-    for (int bp = 0; bp < nofBoundaryPieces; bp++){
-      // The main loop for computing the source term
-      //**get the geometry piece for this boundary source block**
-      // we could have more than one geometry piece per block.
-      int nofGeomPieces = (int)d_sourceBoundaryInfo[bp]->d_geomPiece.size();
-    
-      sum_vartype total_area;
-      double area;
-
-      // We only need to populate the area once
-      if (!(d_sourceBoundaryInfo[bp]->computedArea)) {
-        new_dw->get(total_area, d_sourceBoundaryInfo[bp]->total_area_label);
-        area = total_area;
-        d_sourceBoundaryInfo[bp]->summed_area = total_area;
-        d_sourceBoundaryInfo[bp]->computedArea = true;
-      }
-                      
-      d_sourceBoundaryInfo[bp]->totalVelocity = d_sourceBoundaryInfo[bp]->totalMassFlux/(d_sourceBoundaryInfo[bp]->calcStream.d_density*d_sourceBoundaryInfo[bp]->summed_area);
-
-
-      for (int gp = 0; gp < nofGeomPieces; gp++){
-
-        GeometryPieceP piece = d_sourceBoundaryInfo[bp]->d_geomPiece[gp];
-        Box geomBox = piece->getBoundingBox();
-        Box b = geomBox.intersect(patchInteriorBox);
-        
-        for (CellIterator iter=patch->getCellIterator();!iter.done(); iter++){
-          Point p = patch->cellPosition(*iter);
-          Point p_xp = patch->cellPosition(*iter + IntVector(1,0,0));
-          Point p_xm = patch->cellPosition(*iter - IntVector(1,0,0));
-          Point p_yp = patch->cellPosition(*iter + IntVector(0,1,0));
-          Point p_ym = patch->cellPosition(*iter - IntVector(0,1,0));
-          Point p_ymm = patch->cellPosition(*iter - IntVector(0,2,0));
-          Point p_zp = patch->cellPosition(*iter + IntVector(0,0,1));
-          Point p_zm = patch->cellPosition(*iter - IntVector(0,0,1));
-          Point p_zmm = patch->cellPosition(*iter - IntVector(0,0,2));
-        
-//          if (cellType[*iter] == d_flowfieldCellTypeVal){
-          if (!(piece->inside(p))){
-            
-            //this is a nasty embedded set of if's....will fix in the future.
-            // x+
-            if ((piece->inside(p_xp))){
-              if (d_sourceBoundaryInfo[bp]->velocityType == "absolute"){                
-              }
-              else if (d_sourceBoundaryInfo[bp]->velocityType == "relative"){
-                if (d_sourceBoundaryInfo[bp]->velocityRelation == "axis"){
-                }
-                else if (d_sourceBoundaryInfo[bp]->velocityRelation == "point"){
-                }
-              }
-            }
-            // x-
-            if ((piece->inside(p_xm))){
-              if (d_sourceBoundaryInfo[bp]->velocityType == "absolute"){                
-              }
-              else if (d_sourceBoundaryInfo[bp]->velocityType == "relative"){
-                if (d_sourceBoundaryInfo[bp]->velocityRelation == "axis"){
-                }
-                else if (d_sourceBoundaryInfo[bp]->velocityRelation == "point"){
-                }
-              }
-            }
-        
-            // y+ is a wall
-//            if (cellType[*iter + IntVector(0,1,0)] == d_intrusionBC->d_cellTypeID){
-            if ((piece->inside(p_yp))){                
-              if (d_sourceBoundaryInfo[bp]->velocityType == "absolute"){                
-              }
-              else if (d_sourceBoundaryInfo[bp]->velocityType == "relative"){
-                if (d_sourceBoundaryInfo[bp]->velocityRelation == "axis"){
-                  //hard coding for jennifer for now.
-                  double y = (p.y()-dx.y()/2.0) - d_sourceBoundaryInfo[bp]->axisStart[1];                
-                  double z = p.z() - d_sourceBoundaryInfo[bp]->axisStart[2];
-                  double theta = atan(z/y);
-
-                  double y_comp = d_sourceBoundaryInfo[bp]->totalVelocity*cos(theta);
-                
-                  vmomSource[*iter] = d_sourceBoundaryInfo[bp]->calcStream.d_density*y_comp*y_comp*dx.x()*dx.z();
-                }
-                else if (d_sourceBoundaryInfo[bp]->velocityRelation == "point"){
-                }
-
-              }
-
-            }        
-            // y- is a wall
-            IntVector testi = *iter + IntVector(0,1,0);
-            IntVector testi2 = *iter;
-//            if (cellType[*iter - IntVector(0,1,0)] == d_intrusionBC->d_cellTypeID && 
-//                            testi.y() < idxHi.y()  ){
-            if (piece->inside(p_ym) && testi.y() < idxHi.y()){
-                      //cout << "------for y- -------" << endl;
-                      //cout << "  cell type - 1  =  " << cellType[*iter-IntVector(0,1,0)] << endl;
-                      //cout << "  cell type + 0  =  " << cellType[*iter] << endl;                                                
-              if (d_sourceBoundaryInfo[bp]->velocityType == "absolute"){                
-              }
-              else if (d_sourceBoundaryInfo[bp]->velocityType == "relative"){
-                if (d_sourceBoundaryInfo[bp]->velocityRelation == "axis"){
-                  //hard coding for jennifer for now.
-                  double y = (p.y()-dx.y()/2.0) - d_sourceBoundaryInfo[bp]->axisStart[1];                
-                  double z = p.z() - d_sourceBoundaryInfo[bp]->axisStart[2];
-                  double theta = atan(z/y);
-
-                  double y_comp = -1.0*d_sourceBoundaryInfo[bp]->totalVelocity*cos(theta);
-                  vmomSource[*iter+IntVector(0,1,0)] = -1.0*d_sourceBoundaryInfo[bp]->calcStream.d_density*
-                                                                                            y_comp*y_comp*dx.x()*dx.z();
-
-                }
-                else if (d_sourceBoundaryInfo[bp]->velocityRelation == "point"){
-                }
-
-              }
-
-            }
-
-            //because we are adding the source term to the j+1 face, 
-            // we have to do an additional check for patch boundaries
-            bool yminus = patch->getBCType(Patch::yminus);
-            if (yminus && testi2.y() == idxLo.y()){
-//                    if (cellType[*iter - IntVector(0,2,0)] == d_intrusionBC->d_cellTypeID && 
-//                            cellType[*iter - IntVector(0,1,0)] != d_intrusionBC->d_cellTypeID){
-              if (piece->inside(p_ymm) && !(piece->inside(p_ym))){        
-            
-                if (d_sourceBoundaryInfo[bp]->velocityType == "absolute"){                
-                }
-                else if (d_sourceBoundaryInfo[bp]->velocityType == "relative"){
-                  if (d_sourceBoundaryInfo[bp]->velocityRelation == "axis"){
-                          //hard coding for jennifer for now.
-                          double y = (p.y()-dx.y()/2.0) - d_sourceBoundaryInfo[bp]->axisStart[1];                
-                          double z = p.z() - d_sourceBoundaryInfo[bp]->axisStart[2];
-                          double theta = atan(z/y);
-
-                          double y_comp = -1.0*d_sourceBoundaryInfo[bp]->totalVelocity*cos(theta);
-                          vmomSource[*iter] = -1.0*d_sourceBoundaryInfo[bp]->calcStream.d_density*
-                                                                                            y_comp*y_comp*dx.x()*dx.z();
-
-                  }
-                  else if (d_sourceBoundaryInfo[bp]->velocityRelation == "point"){
-                  }
-                }
-              }
-            }
-            // z+ is a wall
-//            if (cellType[*iter + IntVector(0,0,1)] == d_intrusionBC->d_cellTypeID){
-            if (piece->inside(p_zp)){
-
-              if (d_sourceBoundaryInfo[bp]->velocityType == "absolute"){
-              }
-              else if (d_sourceBoundaryInfo[bp]->velocityType == "relative"){
-                if (d_sourceBoundaryInfo[bp]->velocityRelation == "axis"){
-                  //hard coding for jennifer for now.
-                  double y = p.y() - d_sourceBoundaryInfo[bp]->axisStart[1];
-                  double z = (p.z()-dx.z()/2.0) - d_sourceBoundaryInfo[bp]->axisStart[2];
-                  double theta = atan(z/y);
-
-                  double z_comp = d_sourceBoundaryInfo[bp]->totalVelocity*sin(theta);
- 
-                  wmomSource[*iter] = d_sourceBoundaryInfo[bp]->calcStream.d_density*z_comp*z_comp*dx.x()*dx.y();
-
-                }
-                else if (d_sourceBoundaryInfo[bp]->velocityRelation == "point"){
-                }
-              }
-            }
-            // z- is a wall
-            testi = *iter + IntVector(0,0,1);
-//            if (cellType[*iter - IntVector(0,0,1)] == d_intrusionBC->d_cellTypeID && 
-//                            testi.z() < idxHi.z()){
-            if (piece->inside(p_zm) && testi.z() < idxHi.z()){
-
-              if (d_sourceBoundaryInfo[bp]->velocityType == "absolute"){                
-              }
-              else if (d_sourceBoundaryInfo[bp]->velocityType == "relative"){
-                if (d_sourceBoundaryInfo[bp]->velocityRelation == "axis"){
-                  //hard coding for jennifer for now.
-                  double y = p.y() - d_sourceBoundaryInfo[bp]->axisStart[1];                
-                  double z = (p.z()-dx.z()/2.0) - d_sourceBoundaryInfo[bp]->axisStart[2];
-                  double theta = atan(z/y);
-
-                  double z_comp = d_sourceBoundaryInfo[bp]->totalVelocity*sin(theta);
-                  wmomSource[*iter+IntVector(0,0,1)] = -1.0*d_sourceBoundaryInfo[bp]->calcStream.d_density*
-                                                                                            z_comp*z_comp*dx.x()*dx.y();
-
-                }
-                else if (d_sourceBoundaryInfo[bp]->velocityRelation == "point"){
-                }
-              }
-            }
-            //because we are adding the source term to the j+1 face, 
-            // we have to do an additional check for patch boundaries
-            bool zminus = patch->getBCType(Patch::zminus);
-            if (zminus && testi2.z() == idxLo.z()){
-//              if (cellType[*iter - IntVector(0,0,2)] == d_intrusionBC->d_cellTypeID && 
-//                      cellType[*iter - IntVector(0,0,1)] != d_intrusionBC->d_cellTypeID){
-              if (piece->inside(p_zmm) && !(piece->inside(p_zm))){         
-                
-                if (d_sourceBoundaryInfo[bp]->velocityType == "absolute"){                
-                }
-                else if (d_sourceBoundaryInfo[bp]->velocityType == "relative"){
-                  if (d_sourceBoundaryInfo[bp]->velocityRelation == "axis"){
-                  //hard coding for jennifer for now.
-                    double y = p.y() - d_sourceBoundaryInfo[bp]->axisStart[1];                
-                    double z = (p.z()-dx.z()/2.0) - d_sourceBoundaryInfo[bp]->axisStart[2];
-                    double theta = atan(z/y);
-
-                    double z_comp = d_sourceBoundaryInfo[bp]->totalVelocity*sin(theta);
-                    wmomSource[*iter] = -1.0*d_sourceBoundaryInfo[bp]->calcStream.d_density*
-                                                                                            z_comp*z_comp*dx.x()*dx.y();
-
-
-                  }else if (d_sourceBoundaryInfo[bp]->velocityRelation == "point"){
-                  }
-                }
-              }
-            }
-          }
-        }
-      } // end Geometry Pieces loop
-    } // end of Boundary Pieces loop 
-  }
-}
-// *--------------------------------------------------------*
-// Schedule the compute of the boundary source term-scalar
-// *--------------------------------------------------------*
-void 
-BoundaryCondition::sched_computeScalarSourceTerm(SchedulerP& sched,
-                                                 const PatchSet* patches,
-                                                 const MaterialSet* matls
-                                                                                                  )
-{
-  Task* tsk = scinew Task("BoundaryCondition::computeScalarSourceTerm", this, 
-                          &BoundaryCondition::computeScalarSourceTerm);
-
-  tsk->modifies(d_lab->d_scalarBoundarySrcLabel);
-  tsk->modifies(d_lab->d_enthalpyBoundarySrcLabel);
-  tsk->requires(Task::OldDW, d_lab->d_cellTypeLabel, Ghost::AroundCells, 1);
-
-  sched->addTask(tsk, patches, matls);           
-}
-// *--------------------------------------------------------*
-// Perform the compute of the boundary source term-scalar
-// This includes: Mixture fraction, Enthalpy
-// *--------------------------------------------------------*
-void 
-BoundaryCondition::computeScalarSourceTerm(const ProcessorGroup*,
-                                            const PatchSubset* patches,
-                                           const MaterialSubset*,
-                                           DataWarehouse* old_dw,
-                                           DataWarehouse* new_dw)
-{
-  for (int p = 0; p < patches->size(); p++) {
-    const Patch* patch = patches->get(p);
-    int archIndex = 0; // only one arches material
-    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
-    Box patchInteriorBox = patch->getBox();
-
-    //assuming a uniform mesh!
-    Vector dx = patch->dCell();
-
-    CCVariable<double> scalarBoundarySrc;
-    CCVariable<double> enthalpyBoundarySrc;
-    constCCVariable<int> cellType;
-
-    new_dw->getModifiable(scalarBoundarySrc,   d_lab->d_scalarBoundarySrcLabel,   indx, patch);
-    new_dw->getModifiable(enthalpyBoundarySrc, d_lab->d_enthalpyBoundarySrcLabel, indx, patch);
-    old_dw->get(cellType, d_lab->d_cellTypeLabel, indx, patch, Ghost::AroundCells, 1);
-
-    scalarBoundarySrc.initialize(0.0);
-    enthalpyBoundarySrc.initialize(0.0);
-
-    IntVector idxLo = patch->getFortranCellLowIndex();
-    IntVector idxHi = patch->getFortranCellHighIndex();
-
-    int nofBoundaryPieces = (int)d_sourceBoundaryInfo.size();
-
-    for (int bp = 0; bp < nofBoundaryPieces; bp++){
-      // The main loop for computing the source term
-      //**get the geometry piece for this boundary source block**
-      // we could have more than one geometry piece per block.
-      int nofGeomPieces = (int)d_sourceBoundaryInfo[bp]->d_geomPiece.size();
-    
-      for (int gp = 0; gp < nofGeomPieces; gp++){
-        
-        GeometryPieceP piece = d_sourceBoundaryInfo[bp]->d_geomPiece[gp];
-        Box geomBox = piece->getBoundingBox();
-        Box b = geomBox.intersect(patchInteriorBox);
-        
-        //iterator over all patch cells and see if a boundary source needs adding.
-        for (CellIterator iter=patch->getCellIterator(); 
-          !iter.done(); iter++){
-        
-          Point p = patch->cellPosition(*iter);
-          Point p_xp = patch->cellPosition(*iter + IntVector(1,0,0));
-          Point p_xm = patch->cellPosition(*iter - IntVector(1,0,0));
-          Point p_yp = patch->cellPosition(*iter + IntVector(0,1,0));
-          Point p_ym = patch->cellPosition(*iter - IntVector(0,1,0));
-          Point p_zp = patch->cellPosition(*iter + IntVector(0,0,1));
-          Point p_zm = patch->cellPosition(*iter - IntVector(0,0,1));
-      
-          //Here we could have used pcell instead of using the geometric intersection.
-          // However, the geometry is set using the intrusion mechanism which does
-          // the same thing we are doing here.  Note that for face centered variables (ie, mom. terms)
-          // the pcell must be used.        
-          if (!(piece->inside(p))){ 
-
-            //Now check neighbors
-            // x+
-            if ((piece->inside(p_xp))){                 
-              // source term = \int \rho u \phi \cdot dS        
-//              scalarBoundarySrc[*iter] = d_sourceBoundaryInfo[bp]->calcStream.d_density*d_sourceBoundaryInfo[bp]->totalVelocity*
-//                                                                 d_sourceBoundaryInfo[bp]->normal[0]*        
-//                                                                 d_sourceBoundaryInfo[bp]->mixfrac_inlet*
-//                                                                 dx.y()*dx.z();
-//              if (d_enthalpySolve)
-//                      enthalpyBoundarySrc[*iter] = d_sourceBoundaryInfo[bp]->calcStream.d_density*d_sourceBoundaryInfo[bp]->totalVelocity*
-//                                                                      d_sourceBoundaryInfo[bp]->normal[0]*
-//                                                                      d_sourceBoundaryInfo[bp]->calcStream.d_enthalpy*
-//                                                                      dx.y()*dx.z();                                                           
-            }
-            // x-
-            if ((piece->inside(p_xm))){
-//            scalarBoundarySrc[*iter] = d_sourceBoundaryInfo[bp]->calcStream.d_density*d_sourceBoundaryInfo[bp]->totalVelocity*
-//                                                               d_sourceBoundaryInfo[bp]->normal[0]*        
-//                                                               d_sourceBoundaryInfo[bp]->mixfrac_inlet*
-//                                                               dx.y()*dx.z();                                                        
-//            if (d_enthalpySolve)
-//                    enthalpyBoundarySrc[*iter] = d_sourceBoundaryInfo[bp]->calcStream.d_density*d_sourceBoundaryInfo[bp]->totalVelocity*
-//                                                                    d_sourceBoundaryInfo[bp]->normal[0]*
-//                                                                    d_sourceBoundaryInfo[bp]->calcStream.d_enthalpy*
-//                                                                    dx.y()*dx.z();
-            }
-            // y+
-            if ((piece->inside(p_yp))){                
-              //hard coding for jennifer for now.
-              double y = p.y() - d_sourceBoundaryInfo[bp]->axisStart[1];                
-              double z = p.z() - d_sourceBoundaryInfo[bp]->axisStart[2];
-              double theta = atan(z/y);
-              double y_comp = Abs(d_sourceBoundaryInfo[bp]->totalVelocity*cos(theta));                        
-                                      
-              scalarBoundarySrc[*iter] += d_sourceBoundaryInfo[bp]->calcStream.d_density*y_comp*
-                                                                 d_sourceBoundaryInfo[bp]->mixfrac_inlet*
-                                                                 dx.x()*dx.z();                
-                                                                 
-              if (d_enthalpySolve)
-                      enthalpyBoundarySrc[*iter] += d_sourceBoundaryInfo[bp]->calcStream.d_density*y_comp*
-                                                                               d_sourceBoundaryInfo[bp]->calcStream.d_enthalpy*
-                                                                               dx.x()*dx.z();                                                                                                   
-            }
-            // y-
-            if ((piece->inside(p_ym))){                
-              //hard coding for jennifer for now.
-              double y = p.y() - d_sourceBoundaryInfo[bp]->axisStart[1];                
-              double z = p.z() - d_sourceBoundaryInfo[bp]->axisStart[2];
-              double theta = atan(z/y);
-              double y_comp = Abs(d_sourceBoundaryInfo[bp]->totalVelocity*cos(theta));        
-
-              scalarBoundarySrc[*iter] += d_sourceBoundaryInfo[bp]->calcStream.d_density*y_comp*
-                                                                 d_sourceBoundaryInfo[bp]->mixfrac_inlet*
-                                                                 dx.x()*dx.z();
-              if (d_enthalpySolve)
-                      enthalpyBoundarySrc[*iter] += d_sourceBoundaryInfo[bp]->calcStream.d_density*y_comp*
-                                                                               d_sourceBoundaryInfo[bp]->calcStream.d_enthalpy*
-                                                                               dx.x()*dx.z();
-            }
-            // z+
-            if ((piece->inside(p_zp))){
-              double y = p.y() - d_sourceBoundaryInfo[bp]->axisStart[1];                
-              double z = p.z() - d_sourceBoundaryInfo[bp]->axisStart[2];
-              double theta = atan(z/y);
-              double z_comp = Abs(d_sourceBoundaryInfo[bp]->totalVelocity*sin(theta));
-              scalarBoundarySrc[*iter] += d_sourceBoundaryInfo[bp]->calcStream.d_density*z_comp*
-                                                                 d_sourceBoundaryInfo[bp]->mixfrac_inlet*
-                                                                 dx.x()*dx.y();                                
-              if (d_enthalpySolve)
-                      enthalpyBoundarySrc[*iter] += d_sourceBoundaryInfo[bp]->calcStream.d_density*z_comp*
-                                                                               d_sourceBoundaryInfo[bp]->calcStream.d_enthalpy*
-                                                                               dx.x()*dx.y();                                                                                                                                   
-            }
-            // z-
-            if ((piece->inside(p_zm))){
-              double y = p.y() - d_sourceBoundaryInfo[bp]->axisStart[1];                
-              double z = p.z() - d_sourceBoundaryInfo[bp]->axisStart[2];
-              double theta = atan(z/y);
-              double z_comp = Abs(d_sourceBoundaryInfo[bp]->totalVelocity*sin(theta));
-
-
-              scalarBoundarySrc[*iter] += d_sourceBoundaryInfo[bp]->calcStream.d_density*z_comp*
-                                                                 d_sourceBoundaryInfo[bp]->mixfrac_inlet*
-                                                                 dx.x()*dx.y();
-                                                                 
-              if (d_enthalpySolve)        
-                      enthalpyBoundarySrc[*iter] += d_sourceBoundaryInfo[bp]->calcStream.d_density*z_comp*
-                                                                               d_sourceBoundaryInfo[bp]->calcStream.d_enthalpy*
-                                                                               dx.x()*dx.y();                                                                                                   
-                                                                                                 
-            }                                 
-          }
-        }
-      } // end Geometry Pieces loop
-    } // end Boundary Pieces loop
-  } // end patch loop
-        
-}
-
-//______________________________________________________________________
-//
-void
-BoundaryCondition::calculateIntrusionVel(const Patch* patch,
-                                         int index,
-                                         CellInformation* ,
-                                         ArchesVariables* vars,
-                                         ArchesConstVariables* constvars)
-{
-  int ioff, joff, koff;
-  IntVector idxLoU;
-  IntVector idxHiU;
-
-  switch(index) {
-
-  case Arches::XDIR:
-
-    idxLoU = patch->getSFCXFORTLowIndex__Old();
-    idxHiU = patch->getSFCXFORTHighIndex__Old();
-    ioff = 1; joff = 0; koff = 0;
-
-    fort_intrusion_computevel(vars->uVelRhoHat,
-                              ioff, joff, koff,
-                              constvars->cellType,
-                              idxLoU, idxHiU,
-                              d_intrusionBC->d_cellTypeID);
-
-    break;
-
-  case Arches::YDIR:
-
-    idxLoU = patch->getSFCYFORTLowIndex__Old();
-    idxHiU = patch->getSFCYFORTHighIndex__Old();
-    ioff = 0; joff = 1; koff = 0;
-
-    fort_intrusion_computevel(vars->vVelRhoHat,
-                              ioff, joff, koff,
-                              constvars->cellType,
-                              idxLoU, idxHiU,
-                              d_intrusionBC->d_cellTypeID);
-
-    break;
-
-  case Arches::ZDIR:
-
-    idxLoU = patch->getSFCZFORTLowIndex__Old();
-    idxHiU = patch->getSFCZFORTHighIndex__Old();
-
-    ioff = 0; joff = 0; koff = 1;
-    
-    fort_intrusion_computevel(vars->wVelRhoHat,
-                       ioff, joff, koff,
-                       constvars->cellType,
-                       idxLoU, idxHiU,
-                       d_intrusionBC->d_cellTypeID);
-
-    break;
-
-  default:
-    
-    throw InvalidValue("Invalid index in Source::calcVelSrc", __FILE__, __LINE__);
-    
-  }
-  
-}
 //______________________________________________________________________
 //
 void
@@ -5031,23 +3913,11 @@ BoundaryCondition::sched_getScalarFlowRate(SchedulerP& sched,
   tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel, gn, 0);
   tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel, gn, 0);
   tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel,      gn, 0);
-  if (d_carbon_balance){
-    tsk->requires(Task::NewDW, d_lab->d_co2INLabel, gn, 0);
-  }
-  if (d_sulfur_balance){
-    tsk->requires(Task::NewDW, d_lab->d_so2INLabel, gn, 0);
-  }
   if (d_enthalpySolve){
     tsk->requires(Task::NewDW, d_lab->d_enthalpySPLabel, gn, 0);
   }
   
   tsk->computes(d_lab->d_scalarFlowRateLabel);
-  if (d_carbon_balance){
-    tsk->computes(d_lab->d_CO2FlowRateLabel);
-  }
-  if (d_sulfur_balance){
-    tsk->computes(d_lab->d_SO2FlowRateLabel);
-  }
   if (d_enthalpySolve){
     tsk->computes(d_lab->d_enthalpyFlowRateLabel);
   }
@@ -5082,10 +3952,6 @@ BoundaryCondition::getScalarFlowRate(const ProcessorGroup*,
     ArchesConstVariables constVars;
 
     constCCVariable<double> scalar;
-    constCCVariable<double> co2;
-    constCCVariable<double> co2_es;
-    constCCVariable<double> so2_es;
-    constCCVariable<double> so2;
     constCCVariable<double> enthalpy;
     
     Ghost::GhostType  gac = Ghost::AroundCells;
@@ -5109,15 +3975,6 @@ BoundaryCondition::getScalarFlowRate(const ProcessorGroup*,
 
     new_dw->put(sum_vartype(scalarOUT-scalarIN), d_lab->d_scalarFlowRateLabel);
 
-    double co2IN = 0.0;
-    double co2OUT = 0.0;
-    if (d_carbon_balance) {
-      new_dw->get(co2, d_lab->d_co2INLabel, indx, patch, gn, 0);
-      getVariableFlowRate(patch, cellinfo, &constVars, co2,
-                        &co2IN, &co2OUT); 
-      new_dw->put(sum_vartype(co2OUT-co2IN), d_lab->d_CO2FlowRateLabel);
-    }
-
     // --- new efficiency calculator --- 
     for (BoundaryCondition::SpeciesEffMap::iterator iter = d_speciesEffInfo.begin(); iter != d_speciesEffInfo.end(); iter++){
       double IN = 0.0;
@@ -5132,14 +3989,6 @@ BoundaryCondition::getScalarFlowRate(const ProcessorGroup*,
       new_dw->put(sum_vartype(OUT-IN), iter->second.flowRateLabel);
 
     }
-
-    double so2IN = 0.0;
-    double so2OUT = 0.0;
-    if (d_sulfur_balance) {
-      new_dw->get(so2, d_lab->d_so2INLabel, indx, patch, gn, 0);
-      getVariableFlowRate(patch, cellinfo, &constVars, so2, &so2IN, &so2OUT); 
-      new_dw->put(sum_vartype(so2OUT-so2IN), d_lab->d_SO2FlowRateLabel);
-    } 
         
     double enthalpyIN = 0.0;
     double enthalpyOUT = 0.0;
@@ -5170,14 +4019,6 @@ void BoundaryCondition::sched_getScalarEfficiency(SchedulerP& sched,
   tsk->requires(Task::NewDW, d_lab->d_scalarFlowRateLabel);
   tsk->computes(d_lab->d_scalarEfficiencyLabel);
 
-  if (d_carbon_balance) {
-    tsk->requires(Task::NewDW, d_lab->d_CO2FlowRateLabel);
-    tsk->computes(d_lab->d_carbonEfficiencyLabel);
-  }
-  if (d_sulfur_balance) {
-    tsk->requires(Task::NewDW, d_lab->d_SO2FlowRateLabel);
-    tsk->computes(d_lab->d_sulfurEfficiencyLabel);
-  }
   if (d_enthalpySolve) {
     tsk->requires(Task::NewDW, d_lab->d_enthalpyFlowRateLabel);
     tsk->requires(Task::NewDW, d_lab->d_totalRadSrcLabel);
@@ -5210,31 +4051,17 @@ BoundaryCondition::getScalarEfficiency(const ProcessorGroup*,
     sum_vartype sum_totalRadSrc;
     delt_vartype flowRate;
     double scalarFlowRate = 0.0;
-    double CO2FlowRate = 0.0;
-    double SO2FlowRate = 0.0;
     double enthalpyFlowRate = 0.0;
     double totalFlowRate = 0.0;
-    double totalCarbonFlowRate = 0.0;
-    double totalSulfurFlowRate = 0.0;
     double totalEnthalpyFlowRate = 0.0;
     double scalarEfficiency = 0.0;
-    double carbonEfficiency = 0.0;
-    double sulfurEfficiency = 0.0;
     double enthalpyEfficiency = 0.0;
     double totalRadSrc = 0.0;
     double normTotalRadSrc = 0.0;
 
     new_dw->get(sum_scalarFlowRate, d_lab->d_scalarFlowRateLabel);
     scalarFlowRate = sum_scalarFlowRate;
-    if (d_carbon_balance) {
-      new_dw->get(sum_CO2FlowRate, d_lab->d_CO2FlowRateLabel);
-      CO2FlowRate = sum_CO2FlowRate;
-    }
 
-    if (d_sulfur_balance) {
-      new_dw->get(sum_SO2FlowRate, d_lab->d_SO2FlowRateLabel);
-      SO2FlowRate = sum_SO2FlowRate;
-    }
     if (d_enthalpySolve) {
       new_dw->get(sum_enthalpyFlowRate, d_lab->d_enthalpyFlowRateLabel);
       enthalpyFlowRate = sum_enthalpyFlowRate;
@@ -5250,10 +4077,6 @@ BoundaryCondition::getScalarEfficiency(const ProcessorGroup*,
       double scalarValue = fi->streamMixturefraction.d_mixVars[0];
       if (scalarValue > 0.0)
           totalFlowRate += fi->flowRate;
-      if ((d_carbon_balance)&&(scalarValue > 0.0))
-            totalCarbonFlowRate += fi->flowRate * fi->fcr;
-      if ((d_sulfur_balance)&&(scalarValue > 0.0))
-            totalSulfurFlowRate += fi->flowRate * fi->fsr;
       if ((d_enthalpySolve)&&(scalarValue > 0.0))
             totalEnthalpyFlowRate += fi->flowRate * fi->calcStream.getEnthalpy();
     }
@@ -5263,22 +4086,6 @@ BoundaryCondition::getScalarEfficiency(const ProcessorGroup*,
       proc0cout << "WARNING! No mixture fraction in the domain."<<endl;
     }
     new_dw->put(delt_vartype(scalarEfficiency), d_lab->d_scalarEfficiencyLabel);
-
-    if (d_carbon_balance) {
-      if (totalCarbonFlowRate > 0.0)
-        carbonEfficiency = CO2FlowRate * 12.0/44.0 /totalCarbonFlowRate;
-      else 
-        throw InvalidValue("No carbon in the domain", __FILE__, __LINE__);
-      new_dw->put(delt_vartype(carbonEfficiency), d_lab->d_carbonEfficiencyLabel);
-    }
-
-    if (d_sulfur_balance) {
-      if (totalSulfurFlowRate > 0.0)
-        sulfurEfficiency = SO2FlowRate * 32.0/64.0 /totalSulfurFlowRate;
-      else 
-        throw InvalidValue("No sulfur in the domain", __FILE__, __LINE__);
-      new_dw->put(delt_vartype(sulfurEfficiency), d_lab->d_sulfurEfficiencyLabel);
-    }
 
     // new efficiency calculation
     for ( EfficiencyMap::iterator iter = d_effVars.begin(); iter != d_effVars.end(); iter++){
@@ -6470,9 +5277,6 @@ BoundaryCondition::setAreaFraction( const ProcessorGroup*,
     new_dw->getModifiable( volFraction, d_lab->d_volFractionLabel, indx, patch );  
 
     int flowType = -1; 
-    if (d_intrusionBoundary) 
-      d_newBC->setAreaFraction( patch, areaFraction, volFraction, cellType, d_intrusionBC->d_cellTypeID, flowType ); 
-
     if (d_MAlab)
       d_newBC->setAreaFraction( patch, areaFraction, volFraction, cellType, d_mmWallID, flowType ); 
 
@@ -6680,41 +5484,6 @@ BoundaryCondition::cellTypeInit__NEW(const ProcessorGroup*,
         }
       }
     }
-
-    // Initialize intrusions 
-    if ( d_intrusionBoundary ){ 
-
-      Box patchInteriorBox = patch->getBox();
-      int nofGeomPieces = (int)d_intrusionBC->d_geomPiece.size();
-
-      for (int ii = 0; ii < nofGeomPieces; ii++) {
-
-        GeometryPieceP  piece = d_intrusionBC->d_geomPiece[ii];
-        Box geomBox = piece->getBoundingBox();
-        Box b = geomBox.intersect(patchInteriorBox);
-
-        if ( !(b.degenerate()) && !d_intrusionBC->inverse ) {
-
-          for (CellIterator iter = patch->getCellCenterIterator(b);!iter.done(); iter++) {
-            Point p = patch->cellPosition(*iter);
-            if ( piece->inside(p) ) {
-              cellType[*iter] = INTRUSION; 
-            } 
-          }
-
-        } else if ( d_intrusionBC->inverse ) { 
-          // If outside of the geometry, then count it as an intrusion (inverse behavior from above)
-
-          for (CellIterator iter = patch->getCellIterator();!iter.done(); iter++) {
-            Point p = patch->cellPosition(*iter);
-            if ( !piece->inside(p) ) {
-              cellType[*iter] = INTRUSION;
-            } 
-          }
-
-        } 
-      }
-    } 
   }
 }
 
@@ -6792,6 +5561,7 @@ BoundaryCondition::computeBCArea__NEW(const ProcessorGroup*,
           double dx_1 = 0.0;
           double dx_2 = 0.0; 
           IntVector shift; 
+          shift = IntVector(0,0,0);
 
           if ( foundIterator ) {
 

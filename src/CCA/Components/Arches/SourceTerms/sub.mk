@@ -16,6 +16,7 @@ SRCS += \
         $(SRCDIR)/TabRxnRate.cc \
         $(SRCDIR)/IntrusionInlet.cc \
 				$(SRCDIR)/DORadiation.cc \
+				$(SRCDIR)/BowmanNOx.cc \
         $(SRCDIR)/MMS1.cc
 
 

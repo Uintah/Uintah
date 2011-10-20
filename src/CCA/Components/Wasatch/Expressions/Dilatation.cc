@@ -11,9 +11,9 @@ Dilatation( const Expr::Tag vel1tag,
             const Expr::ExpressionID& id,
             const Expr::ExpressionRegistry& reg  )
   : Expr::Expression<FieldT>(id,reg),
-  vel1t_( vel1tag ),
-  vel2t_( vel2tag ),
-  vel3t_( vel3tag )
+    vel1t_( vel1tag ),
+    vel2t_( vel2tag ),
+    vel3t_( vel3tag )
 {}
 
 //--------------------------------------------------------------------
@@ -70,6 +70,7 @@ void
 Dilatation<FieldT,Vel1T,Vel2T,Vel3T>::
 evaluate()
 {
+  using namespace SpatialOps;
   FieldT& dil = this->value();
   dil=0.0;
   if( vel1t_ != Expr::Tag() ){
@@ -78,12 +79,12 @@ evaluate()
   if( vel2t_ != Expr::Tag() ){
     SpatialOps::SpatFldPtr<FieldT> tmp = SpatialOps::SpatialFieldStore<FieldT>::self().get( dil );
     vel2GradOp_->apply_to_field( *vel2_, *tmp );
-    dil += *tmp;
+    dil <<= dil + *tmp;
   }
   if( vel3t_ != Expr::Tag() ){
     SpatialOps::SpatFldPtr<FieldT> tmp = SpatialOps::SpatialFieldStore<FieldT>::self().get( dil );
     vel3GradOp_->apply_to_field( *vel3_, *tmp );
-    dil += *tmp;
+    dil <<= dil + *tmp;
   }
 }
 

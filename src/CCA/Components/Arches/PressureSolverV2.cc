@@ -159,9 +159,7 @@ PressureSolver::problemSetup(const ProblemSpecP& params)
 void PressureSolver::sched_solve(const LevelP& level,
                                  SchedulerP& sched,
                                  const TimeIntegratorLabel* timelabels,
-                                 bool extraProjection,
-                                 bool d_EKTCorrection,
-                                 bool doing_EKT_now)
+                                 bool extraProjection)
 {
 
   LoadBalancer* lb = sched->getLoadBalancer();
@@ -173,20 +171,20 @@ void PressureSolver::sched_solve(const LevelP& level,
   string pressLabel = "NULL";
   
   sched_buildLinearMatrix( sched, perproc_patches, matls, 
-                           timelabels, extraProjection, d_EKTCorrection, doing_EKT_now); 
+                           timelabels, extraProjection); 
                            
   sched_setGuessForX(      sched, perproc_patches, matls,  
-                           timelabels, extraProjection, d_EKTCorrection, doing_EKT_now);
+                           timelabels, extraProjection);
                         
   sched_setRHS_X_wrap(     sched, perproc_patches, matls,
-                           timelabels, extraProjection, d_EKTCorrection, doing_EKT_now);
+                           timelabels, extraProjection);
 
   sched_SolveSystem(       sched, perproc_patches, matls, 
-                           timelabels, extraProjection, doing_EKT_now);
+                           timelabels, extraProjection);
 
 
   schedExtract_X(          sched, perproc_patches, matls,
-                           timelabels, extraProjection, doing_EKT_now,  pressLabel);
+                           timelabels, extraProjection, pressLabel);
                  
   sched_normalizePress(    sched, perproc_patches, matls, pressLabel,timelabels);
 
@@ -204,9 +202,7 @@ PressureSolver::sched_buildLinearMatrix(SchedulerP& sched,
                                         const PatchSet* patches,
                                         const MaterialSet* matls,
                                         const TimeIntegratorLabel* timelabels,
-                                        bool extraProjection,
-                                        bool d_EKTCorrection,
-                                        bool doing_EKT_now)
+                                        bool extraProjection)
 {
   //  build pressure equation coefficients and source
   string taskname =  "PressureSolver::buildLinearMatrix_" +
@@ -214,17 +210,13 @@ PressureSolver::sched_buildLinearMatrix(SchedulerP& sched,
   if (extraProjection){
     taskname += "_extraProjection";
   }
-  if (doing_EKT_now){
-    taskname += "_EKTnow";
-  }
   
   printSchedule(patches,dbg,taskname);
   
   Task* tsk = scinew Task(taskname, this,
                           &PressureSolver::buildLinearMatrix,
                           patches,
-                          timelabels, extraProjection,
-                          d_EKTCorrection, doing_EKT_now);
+                          timelabels, extraProjection);
     
 
   Task::WhichDW parent_old_dw;
@@ -256,9 +248,7 @@ PressureSolver::sched_buildLinearMatrix(SchedulerP& sched,
     tsk->requires(Task::NewDW, d_lab->d_mmgasVolFracLabel, gac, 1);
   }
 
-  if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
-      &&(((!(extraProjection))&&(!(d_EKTCorrection)))
-         ||((d_EKTCorrection)&&(doing_EKT_now)))) {
+  if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First) && !extraProjection ) {
     tsk->computes(d_lab->d_presCoefPBLMLabel);
     tsk->computes(d_lab->d_presNonLinSrcPBLMLabel);
   } else {
@@ -281,9 +271,7 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
                                   DataWarehouse* new_dw,
                                   const PatchSet* patchSet,
                                   const TimeIntegratorLabel* timelabels,
-                                  bool extraProjection,
-                                  bool d_EKTCorrection,
-                                  bool doing_EKT_now)
+                                  bool extraProjection)
 {
   // create matrix.
   bool isFirstTimestep = (d_lab->d_sharedState->getCurrentTopLevelTimeStep() == 1);
@@ -326,11 +314,7 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
     new_dw->get(constVars.divergence,   d_lab->d_divConstraintLabel,d_indx, patch, gn, 0);
 #endif
 
-    if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
-        &&(((!(extraProjection))&&(!(d_EKTCorrection)))
-           ||((d_EKTCorrection)&&(doing_EKT_now)))){
-           
-
+    if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First) && !extraProjection ) {
       new_dw->allocateAndPut(vars.pressCoeff,        d_lab->d_presCoefPBLMLabel,      d_indx, patch);
       new_dw->allocateAndPut(vars.pressNonlinearSrc, d_lab->d_presNonLinSrcPBLMLabel, d_indx, patch);
     }else{
@@ -357,11 +341,10 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
       mmModifyPressureCoeffs(patch, &vars,  &constVars);
 
     }
- 
+    
     d_source->calculatePressureSourcePred(pc, patch, delta_t,
                                           cellinfo, &vars,
-                                          &constVars,
-                                          doing_EKT_now);
+                                          &constVars);
 
     if (d_doMMS){
       d_source->calculatePressMMSSourcePred(pc, patch, delta_t,
@@ -397,9 +380,7 @@ PressureSolver::sched_setGuessForX(SchedulerP& sched,
                                    const PatchSet* patches,                        
                                    const MaterialSet* matls,                       
                                    const TimeIntegratorLabel* timelabels,          
-                                   bool extraProjection,                           
-                                   bool d_EKTCorrection,                           
-                                   bool doing_EKT_now)                             
+                                   bool extraProjection)                             
 { 
 
   string taskname =  "PressureSolver::sched_setGuessForX_" +
@@ -416,11 +397,11 @@ PressureSolver::sched_setGuessForX(SchedulerP& sched,
        
   Task* tsk = scinew Task(taskname, this,
                           &PressureSolver::setGuessForX,
-                          timelabels, extraProjection, d_EKTCorrection, doing_EKT_now);
+                          timelabels, extraProjection);
                           
   Ghost::GhostType  gn = Ghost::None;
 
-  if (!((d_pressure_correction)||(extraProjection) ||((d_EKTCorrection)&&(doing_EKT_now)))){
+  if (!extraProjection){
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First){
       tsk->requires(Task::OldDW, timelabels->pressure_guess, gn, 0);
       tsk->computes( d_lab->d_pressureGuessLabel);
@@ -447,9 +428,7 @@ PressureSolver::setGuessForX ( const ProcessorGroup* pg,
                                DataWarehouse* old_dw,                      
                                DataWarehouse* new_dw,                      
                                const TimeIntegratorLabel* timelabels,      
-                               const bool extraProjection,                 
-                               const bool d_EKTCorrection,                 
-                               const bool doing_EKT_now )                  
+                               const bool extraProjection )                  
 { 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -468,7 +447,7 @@ PressureSolver::setGuessForX ( const ProcessorGroup* pg,
     cout << " timelabel->pressure_out:   " << timelabels->pressure_out->getName() << endl;
 #endif
     
-    if (!((d_pressure_correction)||(extraProjection) ||((d_EKTCorrection)&&(doing_EKT_now)))){
+    if ( !extraProjection ){
       if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First){
         
         new_dw->allocateAndPut(guess,     d_lab->d_pressureGuessLabel, d_indx, patch);
@@ -501,9 +480,7 @@ PressureSolver::sched_setRHS_X_wrap(SchedulerP& sched,
                                     const PatchSet* patches,
                                     const MaterialSet* matls,
                                     const TimeIntegratorLabel* timelabels,
-                                    bool extraProjection,
-                                    bool d_EKTCorrection,
-                                    bool doing_EKT_now)
+                                    bool extraProjection)
 { 
 
   string taskname =  "PressureSolver::setRHS_X_wrap_" +
@@ -513,7 +490,7 @@ PressureSolver::sched_setRHS_X_wrap(SchedulerP& sched,
      
   Task* tsk = scinew Task(taskname, this,
                           &PressureSolver::setRHS_X_wrap,
-                          timelabels, extraProjection, d_EKTCorrection, doing_EKT_now);
+                          timelabels, extraProjection );
 
   Ghost::GhostType  gn = Ghost::None;
   
@@ -536,9 +513,7 @@ PressureSolver::setRHS_X_wrap ( const ProcessorGroup* pg,
                                  DataWarehouse* old_dw,
                                  DataWarehouse* new_dw,
                                  const TimeIntegratorLabel* timelabels,
-                                 const bool extraProjection,
-                                 const bool d_EKTCorrection,
-                                 const bool doing_EKT_now )
+                                 const bool extraProjection )
 { 
   Ghost::GhostType  gn = Ghost::None;
   
@@ -580,8 +555,7 @@ PressureSolver::sched_SolveSystem(SchedulerP& sched,
                                   const PatchSet* patches,
                                   const MaterialSet* matls,
                                   const TimeIntegratorLabel* timelabels,
-                                  bool extraProjection,
-                                  bool doing_EKT_now)
+                                  bool extraProjection)
 {
   //__________________________________
   //  Hypre
@@ -594,7 +568,7 @@ PressureSolver::sched_SolveSystem(SchedulerP& sched,
     bool modifies_x = false;
     const VarLabel* pressLabel;
     
-    if ( extraProjection || doing_EKT_now ){
+    if ( extraProjection ){
     
       pressLabel = d_lab->d_pressureExtraProjectionLabel;
       
@@ -631,9 +605,6 @@ PressureSolver::sched_SolveSystem(SchedulerP& sched,
 
     if (extraProjection){
       taskname += "_extraProjection";
-    }
-    if (doing_EKT_now){
-      taskname += "_EKTnow";
     }
 
     printSchedule(patches,dbg,taskname);
@@ -706,7 +677,6 @@ PressureSolver::schedExtract_X(SchedulerP& sched,
                                const MaterialSet* matls,
                                const TimeIntegratorLabel* timelabels,
                                bool extraProjection,
-                               bool doing_EKT_now,
                                string& pressLabelName)
 { 
 
@@ -716,7 +686,7 @@ PressureSolver::schedExtract_X(SchedulerP& sched,
    
   WhichCM compute_or_modify = none;
   const VarLabel* pressLabel;
-  if ((extraProjection)||(doing_EKT_now)){
+  if ( extraProjection ){
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First){
       pressLabel = d_lab->d_pressureExtraProjectionLabel;
       compute_or_modify = Computes;

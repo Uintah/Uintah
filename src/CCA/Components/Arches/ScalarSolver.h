@@ -120,27 +120,21 @@ public:
   void solve(SchedulerP& sched,
              const PatchSet* patches,
              const MaterialSet* matls,
-             const TimeIntegratorLabel* timelabels,
-             bool d_EKTCorrection,
-             bool doing_EKT_now);
+             const TimeIntegratorLabel* timelabels);
 
   ///////////////////////////////////////////////////////////////////////
   // Schedule Build of linearized matrix
   void sched_buildLinearMatrix(SchedulerP&, 
                                const PatchSet* patches,
                                const MaterialSet* matls,
-                               const TimeIntegratorLabel* timelabels,
-                               bool d_EKTCorrection,
-                               bool doing_EKT_now);
+                               const TimeIntegratorLabel* timelabels);
 
   ///////////////////////////////////////////////////////////////////////
   // Schedule Linear Solve for Scalar
   void sched_scalarLinearSolve(SchedulerP&, 
                                const PatchSet* patches,
                                const MaterialSet* matls,
-                               const TimeIntegratorLabel* timelabels,
-                               bool d_EKTCorrection,
-                               bool doing_EKT_now);
+                               const TimeIntegratorLabel* timelabels);
 
   inline void setMMS(bool doMMS) {
     d_doMMS=doMMS;
@@ -164,9 +158,7 @@ private:
                          const MaterialSubset* /*matls*/,
                          DataWarehouse* old_dw,
                          DataWarehouse* new_dw,
-                         const TimeIntegratorLabel* timelabels,
-                         bool d_EKTCorrection,
-                         bool doing_EKT_now);
+                         const TimeIntegratorLabel* timelabels);
 
   ///////////////////////////////////////////////////////////////////////
   // Actually Solver the Linear System for Scalar
@@ -177,9 +169,7 @@ private:
                          const MaterialSubset* /*matls*/,
                          DataWarehouse* old_dw,
                          DataWarehouse* new_dw,
-                         const TimeIntegratorLabel* timelabels,
-                         bool d_EKTCorrection,
-                         bool doing_EKT_now);
+                         const TimeIntegratorLabel* timelabels);
 
   void calculateScalarCoeff__new( const ProcessorGroup*,
                                  const Patch* patch,
