@@ -1788,8 +1788,10 @@ BoundaryCondition::sched_setIntrusionTemperature( SchedulerP& sched,
                                                   const PatchSet* patches,
                                                   const MaterialSet* matls) 
 { 
-  // Interface to new intrusions
-  _intrusionBC->sched_setIntrusionT( sched, patches, matls ); 
+  if ( _using_new_intrusion ){ 
+    // Interface to new intrusions
+    _intrusionBC->sched_setIntrusionT( sched, patches, matls ); 
+  }
 } 
 
 //______________________________________________________________________
