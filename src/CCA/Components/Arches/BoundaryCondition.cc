@@ -232,7 +232,7 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
 
     if ( db->findBlock("intrusions") ){ 
 
-      _intrusionBC = scinew IntrusionBC( d_lab, d_props, BoundaryCondition::MMWALL ); 
+      _intrusionBC = scinew IntrusionBC( d_lab, d_props, BoundaryCondition::INTRUSION ); 
       ProblemSpecP db_new_intrusion = db->findBlock("intrusions"); 
       _using_new_intrusion = true; 
 
@@ -375,15 +375,11 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
 
   d_mmWallID = -10; // invalid cell type
   // if multimaterial then add an id for multimaterial wall
-  if (d_MAlab){ 
-    d_mmWallID = MMWALL; //total_cellTypes;
-    if (d_use_new_bcs) { 
-      d_mmWallID = MMWALL; 
-    } 
-  }
+  // trying to reduce all interior walls to type:INTRUSION
   if ( d_MAlab ){
-    d_mmWallID = WALL; 
+    d_mmWallID = INTRUSION; 
   }
+
   //adding mms access
   if (d_doMMS) {
 

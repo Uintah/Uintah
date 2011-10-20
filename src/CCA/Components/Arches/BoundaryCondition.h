@@ -359,7 +359,7 @@ namespace Uintah {
       // mm Wall boundary ID
       int getMMWallId() const {
         if ( d_use_new_bcs ) {
-          return MMWALL; 
+          return INTRUSION; 
         } else { 
           return d_mmWallID; 
         }
