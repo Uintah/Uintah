@@ -228,6 +228,8 @@ private:
       int outletfield;
       bool d_SHRadiationCalc, lprobone, lprobtwo, lprobthree, lradcal, lwsgg, lplanckmean, lpatchmean;
       bool _using_props_calculator; 
+      double d_wall_abskg; 
+      double d_wall_temp; 
 
       OffsetArray1<double> fraction;
       OffsetArray1<double> fractiontwo;

@@ -212,6 +212,9 @@ DORadiationModel::problemSetup(const ProblemSpecP& params)
   symtry = -3;
   sfield = -4;
   outletfield = -5;
+
+  db->getWithDefault("wall_temperature", d_wall_temp, 293.0); 
+  db->getWithDefault("wall_abskg", d_wall_abskg, 1.0); 
 }
 
 void
@@ -334,7 +337,10 @@ DORadiationModel::boundarycondition(const ProcessorGroup*,
     
   fort_rdombc(idxLo, idxHi, constvars->cellType, ffield, vars->temperature,
               vars->ABSKG,
-              xminus, xplus, yminus, yplus, zminus, zplus, lprobone, lprobtwo, lprobthree);
+              xminus, xplus, yminus, yplus, zminus, zplus, 
+              lprobone, lprobtwo, lprobthree, d_wall_temp, d_wall_abskg );
+
+
 }
 //***************************************************************************
 // Solves for intensity in the D.O method
