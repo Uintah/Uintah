@@ -188,8 +188,8 @@ void ProgramBurn::allocateCMDataAddRequires(Task* task,
   // for the particle convert operation
   // This method is defined in the ConstitutiveModel base class.
   addSharedRForConvertExplicit(task, matlset, patches);
+  task->requires(Task::NewDW, pProgressFLabel_preReloc,   matlset,Ghost::None);
   task->requires(Task::NewDW, pLocalizedLabel_preReloc,   matlset,Ghost::None);
-
 }
 
 
@@ -209,14 +209,21 @@ void ProgramBurn::allocateCMDataAdd(DataWarehouse* new_dw,
   constParticleVariable<int> o_Localized;
   new_dw->allocateTemporary(pLocalized,addset);
   new_dw->get(o_Localized,pLocalizedLabel_preReloc,delset);
+
+  ParticleVariable<int>      pProgressF;
+  constParticleVariable<int> o_ProgressF;
+  new_dw->allocateTemporary(pProgressF,addset);
+  new_dw->get(o_ProgressF,pProgressFLabel_preReloc,delset);
   
   // Copy the data local to this constitutive model from the particles to 
   // be deleted to the particles to be added
   ParticleSubset::iterator o,n = addset->begin();
   for (o=delset->begin(); o != delset->end(); o++, n++) {
     pLocalized[*n] = o_Localized[*o];
+    pProgressF[*n] = o_ProgressF[*o];
   }
   (*newState)[pLocalizedLabel]=pLocalized.clone();
+  (*newState)[pProgressFLabel]=pProgressF.clone();
 }
 
 void ProgramBurn::addParticleState(std::vector<const VarLabel*>& from,
@@ -330,7 +337,6 @@ void ProgramBurn::computeStressTensor(const PatchSubset* patches,
     new_dw->allocateAndPut(pLocalized_new,    pLocalizedLabel_preReloc,   pset);
 
     new_dw->allocateTemporary(velGrad,                             pset);
-
 
     constNCVariable<Vector> gvelocity;
     new_dw->get(gvelocity, lb->gVelocityStarLabel, dwi, patch, gac, NGN);
@@ -580,8 +586,8 @@ void ProgramBurn::addComputesAndRequires(Task* task,
   const MaterialSubset* matlset = matl->thisMaterial();
   addSharedCRForExplicit(task, matlset, patches);
 
-  task->requires(Task::OldDW, pProgressFLabel,         matlset, Ghost::None);
   task->requires(Task::OldDW, lb->pParticleIDLabel,   matlset, Ghost::None);
+  task->requires(Task::OldDW, pProgressFLabel,        matlset, Ghost::None);
   task->requires(Task::OldDW, pLocalizedLabel,        matlset, Ghost::None);
   task->computes(pProgressFLabel_preReloc,            matlset);
   task->computes(pLocalizedLabel_preReloc,            matlset);
@@ -593,6 +599,7 @@ void ProgramBurn::addInitialComputesAndRequires(Task* task,
 { 
   const MaterialSubset* matlset = matl->thisMaterial();
   task->computes(pProgressFLabel,       matlset);
+  task->computes(pLocalizedLabel,       matlset);
 }
 
 void ProgramBurn::getDamageParameter(const Patch* patch,
