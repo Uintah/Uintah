@@ -819,9 +819,7 @@ ParticleCreator::checkForSurface( const GeometryPieceP piece, const Point p,
   //   in.  If any of those points are not also inside the object
   //  the current point is on the surface
   
-  d_lock.readUnlock();
   int ss = 0;
-  
   // Check to the left (-x)
   if(!piece->inside(p-Vector(dxpp.x(),0.,0.)))
     ss++;
@@ -842,12 +840,11 @@ ParticleCreator::checkForSurface( const GeometryPieceP piece, const Point p,
   if(!piece->inside(p+Vector(0.,0.,dxpp.z())))
     ss++;
 #endif
-  
+
   if(ss>0){
     return 1;
   }
   else {
     return 0;
   }
-  d_lock.readUnlock();
 }
