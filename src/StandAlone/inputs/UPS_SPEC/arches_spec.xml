@@ -478,6 +478,8 @@
             	  <max_iter                 spec="REQUIRED INTEGER" />
             	</LinearSolver>
             	<spherical_harmonics        spec="OPTIONAL BOOLEAN" />                                   <!-- Spherical harmonics, default = false (works?) --> 
+              <wall_temperature           spec="OPTIONAL DOUBLE 'positive'"/> <!-- solid domain wall boundary conditions --> 
+              <wall_abskg                 spec="OPTIONAL DOUBLE"/>            <!-- solid domain wall boundary conditions --> 
 						</DORadiationModel>
 
 
