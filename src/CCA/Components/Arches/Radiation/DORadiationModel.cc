@@ -37,7 +37,7 @@ DEALINGS IN THE SOFTWARE.
 
 #include <CCA/Components/Arches/Radiation/RadiationSolver.h>
 #include <CCA/Components/Arches/Radiation/DORadiationModel.h>
-#include <CCA/Components/Arches/Radiation/RadLinearSolver.h>
+#include <CCA/Components/Arches/Radiation/RadPetscSolver.h>
 #ifdef HAVE_HYPRE
 #include <CCA/Components/Arches/Radiation/RadHypreSolver.h>
 #endif
@@ -197,7 +197,7 @@ DORadiationModel::problemSetup(const ProblemSpecP& params)
   db->findBlock("LinearSolver")->getAttribute("type",linear_sol);
 
   if (linear_sol == "petsc"){ 
-    d_linearSolver = scinew RadLinearSolver(d_myworld);
+    d_linearSolver = scinew RadPetscSolver(d_myworld);
 #ifdef HAVE_HYPRE
   }else if (linear_sol == "hypre"){ 
     d_linearSolver = scinew RadHypreSolver(d_myworld);
@@ -205,7 +205,7 @@ DORadiationModel::problemSetup(const ProblemSpecP& params)
   }
   
 
-//  d_linearSolver = scinew RadLinearSolver(d_myworld);
+//  d_linearSolver = scinew RadPetscSolver(d_myworld);
   d_linearSolver->problemSetup(db);
 
   ffield = -1;

@@ -29,8 +29,8 @@ DEALINGS IN THE SOFTWARE.
 
 
 
-#ifndef Uintah_Components_Arches_RadLinearSolver_h
-#define Uintah_Components_Arches_RadLinearSolver_h
+#ifndef Uintah_Components_Arches_RadPetscSolver_h
+#define Uintah_Components_Arches_RadPetscSolver_h
 
 #include <sci_defs/petsc_defs.h>
 
@@ -56,13 +56,13 @@ class ProcessorGroup;
 
 /**************************************
 CLASS
-   RadLinearSolver
+   RadPetscSolver
    
-   Class RadLinearSolver uses gmres solver
+   Class RadPetscSolver uses gmres solver
    solver
 
 GENERAL INFORMATION
-   RadLinearSolver.h - declaration of the class
+   RadPetscSolver.h - declaration of the class
    
    Author: Rajesh Rawat (rawat@crsim.utah.edu)
    
@@ -76,26 +76,26 @@ KEYWORDS
 
 
 DESCRIPTION
-   Class RadLinearSolver is a gmres linear solver
+   Class RadPetscSolver is a gmres linear solver
 
 WARNING
    none
 
 ****************************************/
 
-class RadLinearSolver: public RadiationSolver {
+class RadPetscSolver: public RadiationSolver {
 
 public:
 
       // GROUP: Constructors:
       ////////////////////////////////////////////////////////////////////////
-      // Construct an instance of a RadLinearSolver.
-      RadLinearSolver(const ProcessorGroup* myworld);
+      // Construct an instance of a RadPetscSolver.
+      RadPetscSolver(const ProcessorGroup* myworld);
 
       // GROUP: Destructors:
       ////////////////////////////////////////////////////////////////////////
       // Virtual Destructor
-      virtual ~RadLinearSolver();
+      virtual ~RadPetscSolver();
 
       // GROUP: Problem Setup:
       ////////////////////////////////////////////////////////////////////////
@@ -153,7 +153,7 @@ private:
    Mat A;
    Vec d_x, d_b, d_u;
 #endif
-}; // End class RadLinearSolver.h
+}; // End class RadPetscSolver.h
 
 } // End namespace Uintah
 
