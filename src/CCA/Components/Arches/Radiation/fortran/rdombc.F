@@ -56,8 +56,8 @@ C
                      if (lprobtwo)then
                      tg(i,j,k) = 0.0d0
                      end if
-                     ABSKG(I,J,K) = 1.0d0  
-                     tg(i,j,k) = 293.0d0
+                     ABSKG(I,J,K) = wall_abskg
+                     tg(i,j,k) = wall_temp
 
                  END IF
                endif
@@ -69,8 +69,8 @@ C
                      if (lprobtwo)then
                      tg(i,j,k) = 0.0d0
                      end if
-                     ABSKG(I,J,K) = 1.0d0
-                     tg(i,j,k) = 293.0d0
+                     ABSKG(I,J,K) = wall_abskg
+                     tg(i,j,k) = wall_temp
 
                   END IF
                endif
@@ -88,8 +88,8 @@ C
                      if (lprobtwo)then
                      tg(i,j,k) = 0.0d0
                      end if
-                     ABSKG(I,J,K) = 1.0d0
-                     tg(i,j,k) = 293.0d0
+                     ABSKG(I,J,K) = wall_abskg
+                     tg(i,j,k) = wall_temp
 
                   END IF
                endif
@@ -101,8 +101,8 @@ C
                      if (lprobtwo)then
                      tg(i,j,k) = 0.0d0
                      end if
-                     ABSKG(I,J,K) = 1.0d0
-                     tg(i,j,k) = 293.0d0
+                     ABSKG(I,J,K) = wall_abskg
+                     tg(i,j,k) = wall_temp
 
                   END IF
                endif
@@ -120,8 +120,8 @@ C
                      if (lprobtwo)then
                      tg(i,j,k) = 0.0d0
                      end if
-                     ABSKG(I,J,K) = 1.0d0 
-                     tg(i,j,k) = 293.0d0
+                     ABSKG(I,J,K) = wall_abskg
+                     tg(i,j,k) = wall_temp
  
                  END IF
                endif
@@ -133,8 +133,8 @@ C
                      if (lprobtwo)then
                      tg(i,j,k) = 0.0d0
                      end if
-                     ABSKG(I,J,K) = 1.0d0 
-                     tg(i,j,k) = 293.0d0
+                     ABSKG(I,J,K) = wall_abskg
+                     tg(i,j,k) = wall_temp
 
                   END IF
                endif
