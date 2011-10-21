@@ -281,9 +281,11 @@
                 </OutletBC>
                 
                 <intrusions>
+                  <intrusion type="simple_wall" label="block">
                     <geom_object>
                       <cylinder label = "hot block"/>
                     </geom_object>
+                  </intrusion>
                 </intrusions>
                 
             </BoundaryConditions>

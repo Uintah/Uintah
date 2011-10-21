@@ -335,12 +335,14 @@
                 </OutletBC>
                 
                 <intrusions>
+                  <intrusion type="simple_wall" label="pipe">
                     <geom_object>
                         <difference>
                             <cylinder label = "outer cylinder"/>
                             <cylinder label = "inner cylinder"/>
                         </difference>
                     </geom_object>
+                  </intrusion>
                 </intrusions>
                 
             </BoundaryConditions>
