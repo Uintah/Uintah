@@ -41,9 +41,9 @@ SRCS += \
         $(SRCDIR)/DORadiationModel.cc
 
 ifeq ($(HAVE_PETSC),yes)
-  SRCS += $(SRCDIR)/RadLinearSolver.cc
+  SRCS += $(SRCDIR)/RadPetscSolver.cc
 else
-  SRCS += $(SRCDIR)/FakeRadLinearSolver.cc
+  SRCS += $(SRCDIR)/FakeRadPetscSolver.cc
 endif
 
 ifeq ($(HAVE_HYPRE),yes)

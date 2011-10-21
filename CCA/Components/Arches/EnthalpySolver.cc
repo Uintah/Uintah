@@ -43,7 +43,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Arches/PropertyModels/PropertyModelFactory.h>
 #include <CCA/Components/Arches/RHSSolver.h>
 #include <CCA/Components/Arches/Radiation/DORadiationModel.h>
-#include <CCA/Components/Arches/Radiation/RadLinearSolver.h>
+#include <CCA/Components/Arches/Radiation/RadPetscSolver.h>
 #include <CCA/Components/Arches/Radiation/RadiationModel.h>
 #include <CCA/Components/Arches/Source.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermBase.h>
