@@ -301,6 +301,9 @@ namespace Uintah {
           const PatchSet* patches,
           const MaterialSet* matls); 
 
+      void sched_setupNewIntrusionCellType( SchedulerP& sched, 
+        const PatchSet* patches, const MaterialSet* matls );
+
       void setHattedIntrusionVelocity( const int p,
                                        SFCXVariable<double>& u, 
                                        SFCYVariable<double>& v, 

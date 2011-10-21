@@ -6629,6 +6629,15 @@ BoundaryCondition::setHattedIntrusionVelocity( const int p,
   } 
 } 
 void
+BoundaryCondition::sched_setupNewIntrusionCellType( SchedulerP& sched, const PatchSet* patches, const MaterialSet* matls )
+{
+  if ( _using_new_intrusion ) { 
+    _intrusionBC->sched_setCellType( sched, patches, matls ); 
+  }
+}
+
+
+void
 BoundaryCondition::sched_setupNewIntrusions( SchedulerP& sched, const PatchSet* patches, const MaterialSet* matls )
 {
 
@@ -6636,7 +6645,6 @@ BoundaryCondition::sched_setupNewIntrusions( SchedulerP& sched, const PatchSet* 
     //_intrusionBC->sched_computeBCArea( sched, patches, matls ); 
     //_intrusionBC->sched_computeProperties( sched, patches, matls ); 
     //_intrusionBC->sched_setIntrusionVelocities( sched, patches, matls );  
-    _intrusionBC->sched_setCellType( sched, patches, matls ); 
   }
 
 }
