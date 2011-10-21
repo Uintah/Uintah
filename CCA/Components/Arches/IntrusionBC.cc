@@ -267,9 +267,9 @@ IntrusionBC::sched_computeProperties( SchedulerP& sched,
                                       const PatchSet* patches, 
                                       const MaterialSet* matls )
 {
-  Task* tsk = scinew Task("IntrusionBC::computeProperties", this, &IntrusionBC::computeProperties); 
+//  Task* tsk = scinew Task("IntrusionBC::computeProperties", this, &IntrusionBC::computeProperties); 
 
-  sched->addTask(tsk, patches, matls); 
+//  sched->addTask(tsk, patches, matls); 
 }
 void 
 IntrusionBC::computeProperties( const ProcessorGroup*, 
@@ -283,14 +283,14 @@ IntrusionBC::computeProperties( const ProcessorGroup*,
     typedef std::vector<std::string> StringVec; 
     typedef std::map<std::string, double> StringDoubleMap;
 
-    MixingRxnModel* mixingTable = _props->getMixRxnModel(); 
-    StringVec iv_var_names = mixingTable->getAllIndepVars(); 
-
-    vector<double> iv; 
-
     for ( IntrusionMap::iterator iIntrusion = _intrusion_map.begin(); iIntrusion != _intrusion_map.end(); ++iIntrusion ){ 
 
       if ( iIntrusion->second.type != IntrusionBC::SIMPLE_WALL ) { 
+
+        MixingRxnModel* mixingTable = _props->getMixRxnModel(); 
+        StringVec iv_var_names = mixingTable->getAllIndepVars(); 
+
+        vector<double> iv; 
 
         for ( unsigned int i = 0; i < iv_var_names.size(); i++ ){ 
 
@@ -349,15 +349,15 @@ IntrusionBC::sched_setIntrusionVelocities( SchedulerP& sched,
                                   const PatchSet* patches, 
                                   const MaterialSet* matls )
 {
-  Task* tsk = scinew Task("IntrusionBC::setIntrusionVelocities", this, &IntrusionBC::setIntrusionVelocities); 
+//  Task* tsk = scinew Task("IntrusionBC::setIntrusionVelocities", this, &IntrusionBC::setIntrusionVelocities); 
 
-  for ( IntrusionMap::iterator i = _intrusion_map.begin(); i != _intrusion_map.end(); ++i ){ 
+//  for ( IntrusionMap::iterator i = _intrusion_map.begin(); i != _intrusion_map.end(); ++i ){ 
 
-    tsk->requires( Task::NewDW, i->second.bc_area ); 
+//    tsk->requires( Task::NewDW, i->second.bc_area ); 
 
-  } 
+//  } 
 
-  sched->addTask(tsk, patches, matls); 
+//  sched->addTask(tsk, patches, matls); 
 }
 void 
 IntrusionBC::setIntrusionVelocities( const ProcessorGroup*, 
@@ -458,10 +458,35 @@ IntrusionBC::setCellType( const ProcessorGroup*,
               cell_type[c] = _WALL; 
               vol_fraction[c] = 0.0; 
               area_fraction[c] = Vector(0.,0.,0.); 
-              area_fraction[c+IntVector(1,0,0)] = Vector(0.,0.,0.);
-              area_fraction[c+IntVector(0,1,0)] = Vector(0.,0.,0.);
-              area_fraction[c+IntVector(0,0,1)] = Vector(0.,0.,0.);
 
+            } else { 
+
+              // this is flow...is the neighbor a solid? 
+              // -x direction 
+              IntVector n = c - IntVector(1,0,0); 
+              bool neighbor_cell = in_or_out( n, piece, patch, iter->second.inverted );  
+
+              Vector af = Vector(1.,1.,1.); 
+
+              if ( neighbor_cell ){
+                af -= Vector(1.,0,0); 
+              } 
+              // -y direciton
+              n = c - IntVector(0,1,0); 
+              neighbor_cell = in_or_out( n, piece, patch, iter->second.inverted );  
+
+              if ( neighbor_cell ){
+                af -= Vector(0,1.,0); 
+              } 
+              
+              // -z direciton
+              n = c - IntVector(0,0,1); 
+              neighbor_cell = in_or_out( n, piece, patch, iter->second.inverted );  
+
+              if ( neighbor_cell ){
+                af -= Vector(0,0,1.); 
+              } 
+                
             } 
 
             // now loop through all 6 directions to set area fraction

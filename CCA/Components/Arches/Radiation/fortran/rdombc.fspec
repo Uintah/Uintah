@@ -2,5 +2,6 @@ void rdombc(IntVector idxlo, IntVector idxhi,
             constCCVariable<int> pcell, int ffield,
             CCVariable<double> tg,
             CCVariable<double> abskg, 
-	    bool xminus, bool xplus, bool yminus, bool yplus, bool zminus,
-     	    bool zplus, bool lprobone, bool lprobtwo, bool lprobthree);
+	          bool xminus, bool xplus, bool yminus, bool yplus, bool zminus,
+     	      bool zplus, bool lprobone, bool lprobtwo, bool lprobthree, 
+            double wall_temp, double wall_abskg);
