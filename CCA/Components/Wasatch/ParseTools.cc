@@ -25,9 +25,10 @@ namespace Wasatch{
     param->getAttribute( "name", tag.name() );
     param->getAttribute( "state", state );
 
-    if     ( state == "STATE_NONE" )  tag.context() = Expr::STATE_NONE;
-    else if( state == "STATE_N"    )  tag.context() = Expr::STATE_N;
-    else if( state == "STATE_NP1"  )  tag.context() = Expr::STATE_NP1;
+    if     ( state.compare("STATE_NONE"   ) == 0 )  tag.context() = Expr::STATE_NONE;
+    else if( state.compare("STATE_N"      ) == 0 )  tag.context() = Expr::STATE_N;
+    else if( state.compare("STATE_NP1"    ) == 0 )  tag.context() = Expr::STATE_NP1;
+    else if( state.compare("CARRY_FORWARD") == 0 )  tag.context() = Expr::CARRY_FORWARD;
  
     return tag; 
   }

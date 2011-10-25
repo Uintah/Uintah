@@ -455,12 +455,13 @@ namespace Wasatch{
   Expr::ExpressionID
   ScalarTransportEquation<FieldT>::
   initial_condition( Expr::ExpressionFactory& icFactory )
-  {    
-    if (isStrong_ && !isConstDensity_) {     
+  {
+    if (isStrong_ && !isConstDensity_) {
       // register expression to calculate the initial condition of the solution variable from the initial
       // conditions on primitive variable and density in the cases that we are solving for e.g. rho*phi
       typedef typename Multiplier<FieldT,SVolField>::Builder  Mult;
-      return icFactory.register_expression( solnVarTag_, new Mult(primVarTag_,densityTag_) );
+      return icFactory.register_expression( solnVarTag_, new Mult( primVarTag_,
+                                                                   Expr::Tag(densityTag_.name(),Expr::STATE_NONE) ) );
     }
     return icFactory.get_registry().get_id( Expr::Tag( this->solution_variable_name(),
                                                        Expr::STATE_N ) );
@@ -487,22 +488,6 @@ namespace Wasatch{
     params->get("PrimitiveVariable",primVarName);
     return primVarName;
   }
-  
-  //------------------------------------------------------------------
-  
-  //==================================================================
-  
-  Expr::Tag soln_var_tag( const std::string& solnVarName )
-  {
-    return Expr::Tag( solnVarName, Expr::STATE_N );
-  }
-  //==================================================================
-  
-  Expr::Tag density_tag( const std::string& densityName )
-  {
-    return Expr::Tag( densityName, Expr::STATE_NONE );
-  }
-  //==================================================================
 
   //------------------------------------------------------------------
 

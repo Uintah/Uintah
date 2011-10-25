@@ -254,11 +254,12 @@ namespace Wasatch{
     typedef typename SpatialOps::structured::FaceTypes<FieldT>::ZFace ZFace;
     //__________________
     // dilatation
-    const Expr::Tag dilTag( "dilatation", Expr::STATE_N );    
+    const Expr::Tag dilTag( "dilatation", Expr::STATE_NONE );
     if( !factory.get_registry().have_entry( dilTag ) ){
+      typedef typename Dilatation<SVolField,XVolField,YVolField,ZVolField>::Builder Dilatation;
       // if dilatation expression has not been registered, then register it
-      const Expr::ExpressionID dilID = factory.register_expression( dilTag, new typename Dilatation<SVolField,XVolField,YVolField,ZVolField>::Builder(velTags_[0],velTags_[1],velTags_[2]));
-    }    
+      const Expr::ExpressionID dilID = factory.register_expression( dilTag, new Dilatation(velTags_[0],velTags_[1],velTags_[2]) );
+    }
 
     //___________________________________
     // diffusive flux (stress components)
