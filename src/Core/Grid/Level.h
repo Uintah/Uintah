@@ -38,6 +38,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Util/Handle.h>
 #include <CCA/Ports/LoadBalancer.h>
 #include <Core/Containers/OffsetArray1.h>
+#include <Core/Thread/CrowdMonitor.h>
 
 #ifdef max
 // some uintah 3p utilities define max, so undefine it before BBox chokes on it.
@@ -62,6 +63,7 @@ namespace Uintah {
   using SCIRun::IntVector;
   using SCIRun::BBox;
   using SCIRun::OffsetArray1;
+  using SCIRun::CrowdMonitor;
 
   class PatchBVH;
   class BoundCondBase;
@@ -312,6 +314,7 @@ private:
   typedef std::map<std::pair<IntVector, IntVector>, vector<const Patch*>, IntVectorCompare> selectCache;
   mutable selectCache d_selectCache; // we like const Levels in most places :) 
   PatchBVH* d_bvh;
+  mutable CrowdMonitor    d_cachelock;
 };
 
   UINTAHSHARE const Level* getLevel(const PatchSubset* subset);
