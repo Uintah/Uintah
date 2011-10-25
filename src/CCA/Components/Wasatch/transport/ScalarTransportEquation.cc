@@ -23,9 +23,9 @@
 using std::endl;
 
 namespace Wasatch{
-  
+
   //------------------------------------------------------------------
-  
+
   template< typename FieldT>
   void setup_diffusive_flux_expression( Uintah::ProblemSpecP diffFluxParams,
                                         const Expr::Tag densityTag,
@@ -42,18 +42,18 @@ namespace Wasatch{
 
     std::string dir;
     diffFluxParams->get("Direction",dir);
-    
+
     // see if we have an expression set for the diffusive flux.
     Uintah::ProblemSpecP nameTagParam = diffFluxParams->findBlock("NameTag");
     if( nameTagParam ){
       diffFluxTag = parse_nametag( nameTagParam );
     }
     else{ // build an expression for the diffusive flux.
-      
+
       diffFluxTag = Expr::Tag( primVarName+"_diffFlux_"+dir, Expr::STATE_NONE );
-      
+
       Expr::ExpressionBuilder* builder = NULL;
-      
+
       if( dir=="X" ){
         if( diffFluxParams->findBlock("ConstantDiffusivity") ){
           typedef typename DiffusiveFlux<typename MyOpTypes::GradX::SrcFieldType, typename MyOpTypes::GradX::DestFieldType>::Builder Flux;
@@ -103,17 +103,17 @@ namespace Wasatch{
           builder = scinew Flux( primVarTag, coef, densityTag );
         }
       }
-      
+
       if( builder == NULL ){
         std::ostringstream msg;
         msg << "Could not build a diffusive flux expression for '" << primVarName << "'" << endl;
         throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
       }
-      
+
       factory.register_expression( diffFluxTag, builder );
-      
+
     }
-    
+
       typename ScalarRHS<FieldT>::FieldSelector fs;
       if     ( dir=="X" ) fs=ScalarRHS<FieldT>::DIFFUSIVE_FLUX_X;
       else if( dir=="Y" ) fs=ScalarRHS<FieldT>::DIFFUSIVE_FLUX_Y;
@@ -123,12 +123,12 @@ namespace Wasatch{
         msg << "Invalid direction selection for diffusive flux expression" << endl;
         throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
       }
-    
+
       info[ fs ] = diffFluxTag;
   }
-    
+
   //------------------------------------------------------------------
-  
+
   template< typename FieldT>
   void setup_diffusive_velocity_expression( Uintah::ProblemSpecP diffVelParams,
                                             const Expr::Tag primVarTag,
@@ -138,21 +138,21 @@ namespace Wasatch{
     typedef OpTypes<FieldT> MyOpTypes;
     const std::string& primVarName = primVarTag.name();
     Expr::Tag diffVelTag;  // we will populate this.
-        
+
     std::string dir;
     diffVelParams->get("Direction",dir);
-    
+
     // see if we have an expression set for the diffusive velocity.
     Uintah::ProblemSpecP nameTagParam = diffVelParams->findBlock("NameTag");
     if( nameTagParam ){
       diffVelTag = parse_nametag( nameTagParam );
     }
     else{ // build an expression for the diffusive velocity.
-      
+
       diffVelTag = Expr::Tag( primVarName+"_diffVelocity_"+dir, Expr::STATE_NONE );
-      
+
       Expr::ExpressionBuilder* builder = NULL;
-      
+
       if( dir=="X" ){
         if( diffVelParams->findBlock("ConstantDiffusivity") ){
           typedef typename DiffusiveVelocity<typename MyOpTypes::GradX>::Builder Velocity;
@@ -201,17 +201,17 @@ namespace Wasatch{
           builder = scinew Velocity( primVarTag, coef );
         }
       }
-      
+
       if( builder == NULL ){
         std::ostringstream msg;
         msg << "Could not build a diffusive velocity expression for '" << primVarName << "'" << endl;
         throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
       }
-      
+
       factory.register_expression( diffVelTag, builder );
-      
+
     }
-    
+
     typename ScalarRHS<FieldT>::FieldSelector fs;
     if     ( dir=="X" ) fs=ScalarRHS<FieldT>::DIFFUSIVE_FLUX_X;
     else if( dir=="Y" ) fs=ScalarRHS<FieldT>::DIFFUSIVE_FLUX_Y;
@@ -221,12 +221,12 @@ namespace Wasatch{
       msg << "Invalid direction selection for diffusive velocity expression" << endl;
       throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
     }
-    
+
     info[ fs ] = diffVelTag;
   }
-  
+
   //------------------------------------------------------------------
-  
+
   template< typename FieldT >
   void setup_convective_flux_expression( Uintah::ProblemSpecP convFluxParams,
                                          const Expr::Tag solnVarTag,
@@ -239,23 +239,23 @@ namespace Wasatch{
 
     typedef OpTypes<FieldT> Ops;
     const std::string& solnVarName = solnVarTag.name();
-    
-    
+
+
     Expr::Tag convFluxTag;
     Expr::Tag advVelocityTag;
-    
+
     // get the direction
     std::string dir;
     convFluxParams->get("Direction",dir);
-    
+
     // get the interpolation method (UPWIND, CENTRAL, etc...)
     std::string interpMethod;
     convFluxParams->get("Method",interpMethod);
     const Wasatch::ConvInterpMethods convInterpMethod = Wasatch::get_conv_interp_method(interpMethod);
-    
+
     // get the tag for the advective velocity
     Uintah::ProblemSpecP advVelocityTagParam = convFluxParams->findBlock( "AdvectiveVelocity" );
-    
+
     if (advVelocityTagParam) {
       advVelocityTag = parse_nametag( advVelocityTagParam->findBlock( "NameTag" ) );
     }
@@ -269,91 +269,91 @@ namespace Wasatch{
 
     // see if we have an expression set for the advective flux.
     Uintah::ProblemSpecP nameTagParam = convFluxParams->findBlock("NameTag");
-    if( nameTagParam ){      
+    if( nameTagParam ){
       convFluxTag = parse_nametag( nameTagParam );
 
-      // if no expression was specified, build one for the convective flux.  
-    } else {             
+      // if no expression was specified, build one for the convective flux.
+    } else {
       convFluxTag = Expr::Tag( solnVarName + "_convective_flux_" + dir, Expr::STATE_NONE );
       Expr::ExpressionBuilder* builder = NULL;
-      
+
       if( dir=="X" ){
         proc0cout << "SETTING UP CONVECTIVE FLUX EXPRESSION IN X DIRECTION USING " << interpMethod << std::endl;
         typedef typename OperatorTypeBuilder<Interpolant,XVolField,typename FaceTypes<FieldT>::XFace>::type VelInterpOpT;
 
         switch (convInterpMethod) {
-            
+
           case CENTRAL: // for central and upwind, use specified interpolants
             typedef typename ConvectiveFlux< typename Ops::InterpC2FX, VelInterpOpT >::Builder convFluxCent;
             builder = scinew convFluxCent(solnVarTag, advVelocityTag);
             break;
-            
+
           case UPWIND:
             typedef typename ConvectiveFluxLimiter< typename Ops::InterpC2FXUpwind, VelInterpOpT >::Builder convFluxUpw;
             builder = scinew convFluxUpw(solnVarTag, advVelocityTag, convInterpMethod);
             break;
-            
+
           default: // for all other limiter types
             typedef typename ConvectiveFluxLimiter< typename Ops::InterpC2FXLimiter, VelInterpOpT >::Builder convFluxLim;
-            builder = scinew convFluxLim(solnVarTag, advVelocityTag, convInterpMethod);          
+            builder = scinew convFluxLim(solnVarTag, advVelocityTag, convInterpMethod);
             break;
         }
       }
       else if( dir=="Y" ){
         proc0cout << "SETTING UP CONVECTIVE FLUX EXPRESSION IN Y DIRECTION USING " << interpMethod << std::endl;
         typedef typename OperatorTypeBuilder<Interpolant,YVolField,typename FaceTypes<FieldT>::YFace>::type VelInterpOpT;
-        
+
         switch (convInterpMethod) {
-            
+
           case CENTRAL: // for central and upwind, use specified interpolants
             typedef typename ConvectiveFlux< typename Ops::InterpC2FY, VelInterpOpT >::Builder convFluxCent;
             builder = scinew convFluxCent(solnVarTag, advVelocityTag);
             break;
-            
+
           case UPWIND:
             typedef typename ConvectiveFluxLimiter< typename Ops::InterpC2FYUpwind, VelInterpOpT >::Builder convFluxUpw;
             builder = scinew convFluxUpw(solnVarTag, advVelocityTag, convInterpMethod);
             break;
-            
+
           default: // for all other limiter types
             typedef typename ConvectiveFluxLimiter< typename Ops::InterpC2FYLimiter, VelInterpOpT >::Builder convFluxLim;
-            builder = scinew convFluxLim(solnVarTag, advVelocityTag, convInterpMethod);          
+            builder = scinew convFluxLim(solnVarTag, advVelocityTag, convInterpMethod);
             break;
-        }        
+        }
       }
       else if( dir=="Z") {
         proc0cout << "SETTING UP CONVECTIVE FLUX EXPRESSION IN Z DIRECTION USING " << interpMethod << std::endl;
         typedef typename OperatorTypeBuilder<Interpolant,ZVolField,typename FaceTypes<FieldT>::ZFace>::type VelInterpOpT;
-        
+
         switch (convInterpMethod) {
-            
+
           case CENTRAL: // for central and upwind, use specified interpolants
             typedef typename ConvectiveFlux< typename Ops::InterpC2FZ, VelInterpOpT >::Builder convFluxCent;
             builder = scinew convFluxCent(solnVarTag, advVelocityTag);
             break;
-            
+
           case UPWIND:
             typedef typename ConvectiveFluxLimiter< typename Ops::InterpC2FZUpwind, VelInterpOpT >::Builder convFluxUpw;
             builder = scinew convFluxUpw(solnVarTag, advVelocityTag, convInterpMethod);
             break;
-            
+
           default: // for all other limiter types
             typedef typename ConvectiveFluxLimiter< typename Ops::InterpC2FZLimiter, VelInterpOpT >::Builder convFluxLim;
-            builder = scinew convFluxLim(solnVarTag, advVelocityTag, convInterpMethod);          
+            builder = scinew convFluxLim(solnVarTag, advVelocityTag, convInterpMethod);
             break;
-        }        
+        }
       }
-      
-      if( builder == NULL ){        
+
+      if( builder == NULL ){
         std::ostringstream msg;
         msg << "ERROR: Could not build a convective flux expression for '" << solnVarName << "'" << endl;
         throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
-        
+
       }
-      
+
       factory.register_expression( convFluxTag, builder );
     }
-    
+
     typename ScalarRHS<FieldT>::FieldSelector fs;
     if      ( dir=="X" ) fs = ScalarRHS<FieldT>::CONVECTIVE_FLUX_X;
     else if ( dir=="Y" ) fs = ScalarRHS<FieldT>::CONVECTIVE_FLUX_Y;
@@ -377,28 +377,28 @@ namespace Wasatch{
                            const bool isConstDensity,
                            const Expr::ExpressionID rhsID )
     : Wasatch::TransportEquation( solnVarName, rhsID,
-                                  get_staggered_location<FieldT>() )
+                                  get_staggered_location<FieldT>() ),
+      isConstDensity_( isConstDensity ),
+      densityTag_( densityTag )
   {
 
-    // defining the primary variable ans solutioan variable tags regarding to the type of 
-    // the equations that we are solving and throwing appropriate error messages regarding 
+    // defining the primary variable ans solutioan variable tags regarding to the type of
+    // the equations that we are solving and throwing appropriate error messages regarding
     // to the input file arguments.
     params->get("StrongForm",isStrong_);
-    isConstDensity_ = isConstDensity;
-    densityTag_ = densityTag;
 
     const bool existPrimVar = params->findBlock("PrimitiveVariable");
-    
+
     if (isConstDensity_) {
       solnVarTag_ = Expr::Tag::Tag( solnVarName, Expr::STATE_N );
       primVarTag_ = solnVarTag_;
-      
+
       if (existPrimVar) {
         std::ostringstream msg;
         msg << "ERROR: For constant density cases the primitive variable will be the same as the solution variable. So, you don't need to specify it. Please remove the \"PrimitiveVariable\" block from the \"TransportEquation\" block in your input file." << endl;
         throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
-      }        
-      
+      }
+
     }
     else {
       solnVarTag_ = Expr::Tag::Tag( solnVarName, Expr::STATE_N );
@@ -407,8 +407,8 @@ namespace Wasatch{
         std::ostringstream msg;
         msg << "ERROR: When you are solving a transport equation with constant density in its strong form, you need to specify your primitive variable and solution variable separately separately. Please include the \"PrimitiveVariable\" block in your input file in the \"TransportEquation\" block." << endl;
         throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
-      }        
-      else if (isStrong_ && existPrimVar ) { 
+      }
+      else if (isStrong_ && existPrimVar ) {
         const std::string primVarName = get_primvar_name( params );
         primVarTag_ = Expr::Tag::Tag( primVarName, Expr::STATE_NONE );
       }
@@ -416,23 +416,23 @@ namespace Wasatch{
         std::ostringstream msg;
         msg << "ERROR: For solving the transport equations in weak form the primitive variable will be the same as the solution variable. So, you don't need to specify it. Please remove the \"PrimitiveVariable\" block from the \"TransportEquation\" block in your input file." << endl;
         throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
-      }       
+      }
       else {
         primVarTag_ = solnVarTag_;
 
       }
     }
   }
-  
+
   //------------------------------------------------------------------
-  
+
   template< typename FieldT >
   ScalarTransportEquation<FieldT>::~ScalarTransportEquation()
   {}
-  
+
   //------------------------------------------------------------------
-  
-  template< typename FieldT >  
+
+  template< typename FieldT >
   void ScalarTransportEquation<FieldT>::
   setup_boundary_conditions( const GraphHelper& graphHelper,
                              const Uintah::PatchSet* const localPatches,
@@ -448,9 +448,9 @@ namespace Wasatch{
                                  patchInfoMap,
                                  materials );
   }
-  
+
   //------------------------------------------------------------------
-  
+
   template<typename FieldT>
   Expr::ExpressionID
   ScalarTransportEquation<FieldT>::
@@ -465,9 +465,9 @@ namespace Wasatch{
     return icFactory.get_registry().get_id( Expr::Tag( this->solution_variable_name(),
                                                        Expr::STATE_N ) );
   }
-  
+
   //------------------------------------------------------------------
-  
+
   template<typename FieldT>
   std::string
   ScalarTransportEquation<FieldT>::get_solnvar_name( Uintah::ProblemSpecP params )
@@ -476,9 +476,9 @@ namespace Wasatch{
     params->get("SolutionVariable",solnVarName);
     return solnVarName;
   }
-  
+
   //------------------------------------------------------------------
-  
+
   template<typename FieldT>
   std::string
   ScalarTransportEquation<FieldT>::get_primvar_name( Uintah::ProblemSpecP params )
@@ -505,7 +505,7 @@ namespace Wasatch{
   //==================================================================
 
   //------------------------------------------------------------------
-  
+
   template<typename FieldT>
   Expr::ExpressionID
   ScalarTransportEquation<FieldT>::get_rhs_expr_id( const Expr::Tag densityTag,
@@ -522,13 +522,13 @@ namespace Wasatch{
     // throwing errors with respect to input file definition.
     const std::string solnVarName = get_solnvar_name( params );
     std::string primVarName;
-    
+
     Expr::Tag primVarTag, solnVarTag;
     //Expr::Tag advVelocityTagX, advVelocityTagY, advVelocityTagZ;
     bool isStrong;
-    
+
     params->get("StrongForm",isStrong);
-    
+
     solnVarTag = Expr::Tag( solnVarName, Expr::STATE_N );
 
     if (isConstDensity || !isStrong) {
@@ -537,27 +537,27 @@ namespace Wasatch{
     else {
       const std::string primVarName = get_primvar_name( params );
       primVarTag = Expr::Tag( primVarName, Expr::STATE_NONE );
-      
+
       factory.register_expression( primVarTag, new typename PrimVar<FieldT,SVolField>::Builder( solnVarTag, densityTag));
-    }    
-    
+    }
+
     //_________________
     // Diffusive Fluxes
     if (!isConstDensity) {
       for( Uintah::ProblemSpecP diffFluxParams=params->findBlock("DiffusiveFluxExpression");
            diffFluxParams != 0;
            diffFluxParams=diffFluxParams->findNextBlock("DiffusiveFluxExpression") ){
-      
+
         setup_diffusive_flux_expression<FieldT>( diffFluxParams, densityTag, primVarTag, isStrong, factory, info );
-      } 
+      }
     }
     else {
       for( Uintah::ProblemSpecP diffVelParams=params->findBlock("DiffusiveFluxExpression");
           diffVelParams != 0;
           diffVelParams=diffVelParams->findNextBlock("DiffusiveFluxExpression") ){
-        
+
         setup_diffusive_velocity_expression<FieldT>( diffVelParams, primVarTag, factory, info );
-      } 
+      }
     }
 
 
@@ -576,14 +576,14 @@ namespace Wasatch{
       msg << "ERROR: This part is not written for weak form yet." << endl;
       throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
     }
-    
+
     //_____________
     // Source Terms
     std::vector<Expr::Tag> srcTags;
     for( Uintah::ProblemSpecP sourceTermParams=params->findBlock("SourceTermExpression");
          sourceTermParams != 0;
          sourceTermParams=sourceTermParams->findNextBlock("SourceTermExpression") ){
-      
+
       const Expr::Tag srcTag = parse_nametag( sourceTermParams->findBlock("NameTag") );
       srcTags.push_back( srcTag );
 
@@ -596,10 +596,10 @@ namespace Wasatch{
       std::ostringstream msg;
       msg << "ERROR: This part is not written for weak form yet." << endl;
       throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
-    }    
+    }
   }
-  
-  //------------------------------------------------------------------  
+
+  //------------------------------------------------------------------
 
   //==================================================================
   // Explicit template instantiation

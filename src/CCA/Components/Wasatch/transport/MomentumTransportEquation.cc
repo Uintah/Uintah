@@ -150,7 +150,7 @@ namespace Wasatch{
   }
 
   //==================================================================
-  
+
   void set_vel_tags( Uintah::ProblemSpecP params,
                      Expr::TagList& velTags )
   {
@@ -168,14 +168,14 @@ namespace Wasatch{
   }
 
   //==================================================================
-  
+
   template< typename FieldT >
-  void 
+  void
   set_tau_tags( Uintah::ProblemSpecP params,
                     Expr::TagList& tauTags,
                const std::string thisMomDirName)
   {
-    std::string xmomname, ymomname, zmomname; 
+    std::string xmomname, ymomname, zmomname;
     Uintah::ProblemSpecP doxmom,doymom,dozmom;
     Uintah::ProblemSpecP isviscous;
     isviscous = params->findBlock("Viscosity");
@@ -190,14 +190,14 @@ namespace Wasatch{
     if( dozmom && isviscous) tauTags.push_back( Expr::Tag("tau_z" + thisMomDirName , Expr::STATE_NONE) );
     else         tauTags.push_back( Expr::Tag() );
   }
-  
+
   //==================================================================
-  
+
   void set_convflux_tags( Uintah::ProblemSpecP params,
                Expr::TagList& cfTags,
                const Expr::Tag thisMomTag )
   {
-    std::string xmomname, ymomname, zmomname; 
+    std::string xmomname, ymomname, zmomname;
     Uintah::ProblemSpecP doxmom,doymom,dozmom;
     doxmom = params->get( "X-Momentum", xmomname );
     doymom = params->get( "Y-Momentum", ymomname );
@@ -210,7 +210,7 @@ namespace Wasatch{
     if( dozmom ) cfTags.push_back( Expr::Tag(thisMomTag.name() + "_convFlux_z", Expr::STATE_NONE) );
     else         cfTags.push_back( Expr::Tag() );
   }
-  
+
   //==================================================================
 
   template< typename FieldT >
@@ -220,7 +220,7 @@ namespace Wasatch{
                   const std::string momName,
                   Uintah::ProblemSpecP params,
                   Uintah::SolverInterface& linSolver )
-  {   
+  {
     const Expr::Tag momTag = mom_tag( momName );
     const Expr::Tag rhsFull( momTag.name() + "_rhs_full", Expr::STATE_NONE );
     return factory.register_expression( rhsFull, new typename MomRHS<FieldT>::Builder( pressure_tag(), rhs_part_tag(momTag) ) );
@@ -277,7 +277,7 @@ namespace Wasatch{
     const Expr::Tag tauxt = tauTags[0];
     const Expr::Tag tauyt = tauTags[1];
     const Expr::Tag tauzt = tauTags[2];
-    
+
      // check if inviscid or not
     if (isviscous_) {
       const Expr::Tag viscTag = parse_nametag( params->findBlock("Viscosity")->findBlock("NameTag") );
@@ -292,7 +292,7 @@ namespace Wasatch{
       if( dozmom ){
         const Expr::ExpressionID stressID = setup_stress< ZFace >( tauzt, viscTag, thisVelTag, velTags_[2], dilTag, factory );
         if( stagLoc_ == ZDIR )  normalStressID_ = stressID;
-      }  
+      }
       factory.cleave_from_children( normalStressID_   );
       factory.cleave_from_parents( normalStressID_   );
     }
@@ -317,7 +317,7 @@ namespace Wasatch{
       const Expr::ExpressionID id = setup_convective_flux< ZFace, ZVolField >( cfzt, thisMomTag, velTags_[2], factory );
       if( stagLoc_ == ZDIR )  normalConvFluxID_ = id;
     }
-        
+
     /*
       jcs still to do:
       - create expression for body force
@@ -330,33 +330,33 @@ namespace Wasatch{
                                  new typename MomRHSPart<FieldT>::Builder( cfxt, cfyt, cfzt,
                                                                            tauxt, tauyt, tauzt,
                                                                            bodyForcet) );
-    
+
     //__________________
-    
+
     // Here we should register an expression to get \nabla.(\rho*v)
     // I.C for \nabla.(\rho*v)???...
-    
+
     // density time derivative
     const Expr::Tag d2rhodt2t;//( "density-acceleration", Expr::STATE_NONE); // for now this is empty
 
     factory.register_expression( thisVelTag, new typename PrimVar<FieldT,SVolField>::Builder( thisMomTag, densTag));
-        
+
     //__________________
-    // pressure    
+    // pressure
     Uintah::ProblemSpecP pressureParams = params->findBlock( "Pressure" );
     Uintah::SolverParameters* sparams = linSolver.readParameters( pressureParams, "" );
     sparams->setSolveOnExtraCells( false );
-    
+
     if( !factory.get_registry().have_entry( pressure_tag() ) ){
       // if pressure expression has not be registered, then register it
       Expr::Tag fxt, fyt, fzt;
       if( doxmom )  fxt = Expr::Tag( xmomname + "_rhs_partial", Expr::STATE_NONE );
       if( doymom )  fyt = Expr::Tag( ymomname + "_rhs_partial", Expr::STATE_NONE );
-      if( dozmom )  fzt = Expr::Tag( zmomname + "_rhs_partial", Expr::STATE_NONE );   
-            
+      if( dozmom )  fzt = Expr::Tag( zmomname + "_rhs_partial", Expr::STATE_NONE );
+
       Expr::TagList ptags;
       ptags.push_back( pressure_tag() );
-      ptags.push_back( Expr::Tag( pressure_tag().name() + "_rhs", pressure_tag().context() ) );            
+      ptags.push_back( Expr::Tag( pressure_tag().name() + "_rhs", pressure_tag().context() ) );
       pressureID_ = factory.register_expression( ptags,
                                                  new typename Pressure::Builder( fxt, fyt, fzt,
                                                                                  d2rhodt2t, *sparams, linSolver) );
@@ -385,7 +385,7 @@ namespace Wasatch{
 
   template< typename FieldT >
   void
-  MomentumTransportEquation<FieldT>::  
+  MomentumTransportEquation<FieldT>::
   setup_boundary_conditions( const GraphHelper& graphHelper,
                                  const Uintah::PatchSet* const localPatches,
                                  const PatchInfoMap& patchInfoMap,
@@ -426,7 +426,7 @@ namespace Wasatch{
 //              graphHelper,
 //              localPatches,
 //              patchInfoMap,
-//              materials);            
+//              materials);
 //
 //
 ////    // set bcs for density
@@ -532,7 +532,7 @@ namespace Wasatch{
 ////              patchInfoMap,
 ////              materials );
   }
-  
+
   //------------------------------------------------------------------
 
   template< typename FieldT >

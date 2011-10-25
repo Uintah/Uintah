@@ -5,22 +5,22 @@
   Copyright (c) Institute for Clean & Secure Energy (ICSE), University of Utah.
 
   License for the specific language governing rights and limitations under
-  Permission is hereby granted, free of charge, to any person obtaining a 
+  Permission is hereby granted, free of charge, to any person obtaining a
   copy of this software and associated documentation files (the "Software"),
-  to deal in the Software without restriction, including without limitation 
-  the rights to use, copy, modify, merge, publish, distribute, sublicense, 
-  and/or sell copies of the Software, and to permit persons to whom the 
+  to deal in the Software without restriction, including without limitation
+  the rights to use, copy, modify, merge, publish, distribute, sublicense,
+  and/or sell copies of the Software, and to permit persons to whom the
   Software is furnished to do so, subject to the following conditions:
 
-  The above copyright notice and this permission notice shall be included 
+  The above copyright notice and this permission notice shall be included
   in all copies or substantial portions of the Software.
 
-  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS 
-  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
-  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL 
-  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
-  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
-  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
   DEALINGS IN THE SOFTWARE.
 
 */
@@ -122,9 +122,9 @@ namespace Wasatch{
 
   //--------------------------------------------------------------------
 
-  void Wasatch::problemSetup( const Uintah::ProblemSpecP& params, 
+  void Wasatch::problemSetup( const Uintah::ProblemSpecP& params,
                               const Uintah::ProblemSpecP& ,  /* jcs not sure what this param is for */
-                              Uintah::GridP& grid, 
+                              Uintah::GridP& grid,
                               Uintah::SimulationStateP& sharedState )
   {
     sharedState_ = sharedState;
@@ -163,7 +163,7 @@ namespace Wasatch{
         throw std::runtime_error( msg.str() );
       }
     }
-    
+
     // ADD BLOCK FOR IO FIELDS
     Uintah::ProblemSpecP archiverParams = params->findBlock("DataArchiver");
     for( Uintah::ProblemSpecP saveLabelParams=archiverParams->findBlock("save");
@@ -172,13 +172,13 @@ namespace Wasatch{
       std::string saveTheLabel;
       saveLabelParams->getAttribute("label",saveTheLabel);
       ioFieldSet_.insert(saveTheLabel);
-    }      
-    
+    }
+
     Uintah::ProblemSpecP wasatchParams = params->findBlock("Wasatch");
     //
     // Material
     //
-    Uintah::SimpleMaterial* mymaterial = scinew Uintah::SimpleMaterial();  
+    Uintah::SimpleMaterial* mymaterial = scinew Uintah::SimpleMaterial();
     sharedState->registerSimpleMaterial(mymaterial);
 
     // we are able to get the solver port from here
@@ -188,12 +188,12 @@ namespace Wasatch{
     } else if (linSolver_) {
       proc0cout << "Detected solver port... \n";
     }
-    
+
     //
     std::string timeIntegrator;
-    wasatchParams->get("TimeIntegrator",timeIntegrator);    
+    wasatchParams->get("TimeIntegrator",timeIntegrator);
     if (timeIntegrator=="RK3SSP") nRKStages_ = 3;
-    
+
     //
     // create expressions explicitly defined in the input file.  These
     // are typically associated with, e.g. initial conditions.
@@ -208,7 +208,7 @@ namespace Wasatch{
     Uintah::ProblemSpecP momEqnParams   = wasatchParams->findBlock("MomentumEquations");
     Uintah::ProblemSpecP densityParams  = wasatchParams->findBlock("Density");
     bool existSrcTerm=false;
-    
+
     for( Uintah::ProblemSpecP transEqnParams=wasatchParams->findBlock("TransportEquation");
         transEqnParams != 0;
         transEqnParams=transEqnParams->findNextBlock("TransportEquation") ){
@@ -236,9 +236,9 @@ namespace Wasatch{
           throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
         }
         densityTag = parse_nametag( densityParams->findBlock("NameTag") );
-      } 
+      }
     }
-    
+
     //
     // Build transport equations.  This registers all expressions as
     // appropriate for solution of each transport equation.
@@ -248,7 +248,7 @@ namespace Wasatch{
          transEqnParams=transEqnParams->findNextBlock("TransportEquation") ){
       adaptors_.push_back( parse_equation( transEqnParams, densityTag, isConstDensity, graphCategories_ ) );
     }
-    
+
     //
     // Build coupled transport equations scalability test for wasatch.
     //
@@ -267,11 +267,11 @@ namespace Wasatch{
         << err.what() << endl;
         throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
       }
-      
-    }    
+
+    }
 
     //
-    // Build momentum transport equations.  This registers all expressions 
+    // Build momentum transport equations.  This registers all expressions
     // required for solution of each momentum equation.
     //
     for( Uintah::ProblemSpecP momEqnParams=wasatchParams->findBlock("MomentumEquations");
@@ -290,9 +290,9 @@ namespace Wasatch{
         throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
       }
     }
-    
+
     //
-    // Build moment transport equations.  This registers all expressions 
+    // Build moment transport equations.  This registers all expressions
     // required for solution of each momentum equation.
     //
     for( Uintah::ProblemSpecP momEqnParams=wasatchParams->findBlock("MomentTransportEquation");
@@ -311,8 +311,6 @@ namespace Wasatch{
         throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
       }
     }
-    
-    
 
     timeStepper_ = scinew TimeStepper( sharedState_->get_delt_label(),
                                        *graphCategories_[ ADVANCE_SOLUTION ]->exprFactory );
@@ -333,21 +331,21 @@ namespace Wasatch{
     //
     {
       const Uintah::PatchSet* patches = get_patchset( USE_FOR_OPERATORS, level, sched );
-      
-        for( int ipss=0; ipss<patches->size(); ++ipss ){
-          const Uintah::PatchSubset* pss = patches->getSubset(ipss);
-          for( int ip=0; ip<pss->size(); ++ip ){
-            SpatialOps::OperatorDatabase* const opdb = scinew SpatialOps::OperatorDatabase();
-            const Uintah::Patch* const patch = pss->get(ip);
-            build_operators( *patch, *opdb );
-            PatchInfo& pi = patchInfoMap_[patch->getID()];
-            pi.operators = opdb;
-            pi.patchID = patch->getID();
-            //std::cout << "Set up operators for Patch ID: " << patch->getID() << " on process " << Uintah::Parallel::getMPIRank() << std::endl;
-          }
+
+      for( int ipss=0; ipss<patches->size(); ++ipss ){
+        const Uintah::PatchSubset* pss = patches->getSubset(ipss);
+        for( int ip=0; ip<pss->size(); ++ip ){
+          SpatialOps::OperatorDatabase* const opdb = scinew SpatialOps::OperatorDatabase();
+          const Uintah::Patch* const patch = pss->get(ip);
+          build_operators( *patch, *opdb );
+          PatchInfo& pi = patchInfoMap_[patch->getID()];
+          pi.operators = opdb;
+          pi.patchID = patch->getID();
+          //std::cout << "Set up operators for Patch ID: " << patch->getID() << " on process " << Uintah::Parallel::getMPIRank() << std::endl;
         }
+      }
     }
-    
+
     const Uintah::PatchSet* const localPatches = get_patchset( USE_FOR_TASKS, level, sched );
     const Uintah::MaterialSet* const materials = sharedState_->allMaterials();
 
@@ -359,7 +357,7 @@ namespace Wasatch{
     // set the time
     exprFactory.register_expression( Expr::Tag(StringNames::self().time,Expr::STATE_NONE),
                                      scinew SetCurrentTime::Builder(sharedState_, 1));
-    
+
     //_____________________________________________
     // Build the initial condition expression graph
     if( !icGraphHelper->rootIDs.empty() ){
@@ -451,7 +449,7 @@ namespace Wasatch{
       create_timestepper_on_patches( allPatches, materials, level, sched, iStage );
 
       proc0cout << "Wasatch: done creating solution task(s)" << std::endl;
-      
+
       // jcs notes:
       //
       //   eachPatch() returns a PatchSet that will result in the task
@@ -464,14 +462,14 @@ namespace Wasatch{
       //       any global MPI syncronizations occurr (e.g. in a linear
       //       solve)
       //    also need to set a flag on the task: task->setType(Task::OncePerProc);
-      
-      
+
+
       // -----------------------------------------------------------------------
       // BOUNDARY CONDITIONS TREATMENT
       // -----------------------------------------------------------------------
       const GraphHelper* gh = graphCategories_[ ADVANCE_SOLUTION ];
       typedef std::vector<EqnTimestepAdaptorBase*> EquationAdaptors;
-      
+
       for( EquationAdaptors::const_iterator ia=adaptors_.begin(); ia!=adaptors_.end(); ++ia ){
         EqnTimestepAdaptorBase* const adaptor = *ia;
         TransportEquation* transEq = adaptor->equation();
@@ -493,7 +491,7 @@ namespace Wasatch{
       }
     }
   }
-  
+
   //--------------------------------------------------------------------
 
   void
@@ -537,7 +535,7 @@ namespace Wasatch{
           << e.what() << std::endl;
           proc0cout << msg.str() << endl;
           throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
-        }        
+        }
       }
     }
 
@@ -578,10 +576,10 @@ namespace Wasatch{
 
 //       proc0cout << std::endl
 //                 << "Wasatch: executing 'Wasatch::computeDelT()' on all patches"
-//                 << std::endl;    
+//                 << std::endl;
       new_dw->put( Uintah::delt_vartype(deltat),
                   sharedState_->get_delt_label(),
-                  Uintah::getLevel(patches) );        
+                  Uintah::getLevel(patches) );
       //                   material );
       // jcs it seems that we cannot specify a material here.  Why not?
   }
