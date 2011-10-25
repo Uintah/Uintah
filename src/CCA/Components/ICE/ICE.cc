@@ -297,6 +297,7 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
     d_delT_knob = 0.5;      // default value when running implicit
     d_solver_parameters = d_solver->readParameters(impSolver, "implicitPressure");
     d_solver_parameters->setSolveOnExtraCells(false);
+    d_solver_parameters->setRestartTimestepOnFailure(true);
     impSolver->require("max_outer_iterations",      d_max_iter_implicit);
     impSolver->require("outer_iteration_tolerance", d_outer_iter_tolerance);
     impSolver->getWithDefault("iters_before_timestep_restart",    
