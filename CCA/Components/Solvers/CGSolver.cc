@@ -261,7 +261,6 @@ public:
   {
   }
   ~CGSolverParams() {}
-  bool restart;
 };
 
 template<class Types>
@@ -897,7 +896,7 @@ public:
              << e << " residual, " 
               << mflops<< " MFLOPS, " << memrate << " GB/sec)\n";
       }else{
-        if(params->restart){
+        if(params->getRestartTimestepOnFailure()){
            cout << "CGSolver not converging, requesting smaller timestep\n";
           new_dw->abortTimestep();
           new_dw->restartTimestep();
@@ -975,8 +974,7 @@ SolverParameters* CGSolver::readParameters(ProblemSpecP& params, const string& v
       }
     }
   }
-  p->restart=true;
-  
+    
   if(p->norm == CGSolverParams::L2)
     p->tolerance *= p->tolerance;
   return p;

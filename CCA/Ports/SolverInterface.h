@@ -47,7 +47,7 @@ namespace Uintah {
   class UINTAHSHARE SolverParameters {
   public:
     SolverParameters() : solveOnExtraCells(false), residualNormalizationFactor(1), dynamicTolerance(false), 
-                        outputFileName("NULL"){}
+                        restartableTimestep(false), outputFileName("NULL") {}
     
     void setSolveOnExtraCells(bool s) {
       solveOnExtraCells = s;
@@ -73,6 +73,15 @@ namespace Uintah {
       return dynamicTolerance;
     }
     
+    //If convergence fails call for the timestep to be restarted.
+    void setRestartTimestepOnFailure(bool s){
+      restartableTimestep=s;
+    }
+    
+    bool getRestartTimestepOnFailure() const {
+      return restartableTimestep;
+    }
+    
     // Used for outputting A, X & B to files
     void setOutputFileName(std::string s){
       outputFileName=s;
@@ -90,6 +99,7 @@ namespace Uintah {
     bool   solveOnExtraCells;
     double residualNormalizationFactor;
     bool   dynamicTolerance;
+    bool   restartableTimestep;
     std::string outputFileName;
   };
   
