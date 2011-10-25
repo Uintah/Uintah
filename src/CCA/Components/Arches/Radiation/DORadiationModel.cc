@@ -65,7 +65,6 @@ using namespace Uintah;
 #include <CCA/Components/Arches/Radiation/fortran/radcoef_fort.h>
 #include <CCA/Components/Arches/Radiation/fortran/radwsgg_fort.h>
 #include <CCA/Components/Arches/Radiation/fortran/radcal_fort.h>
-#include <CCA/Components/Arches/Radiation/fortran/rdombc_fort.h>
 #include <CCA/Components/Arches/Radiation/fortran/rdomsolve_fort.h>
 #include <CCA/Components/Arches/Radiation/fortran/rdomsrc_fort.h>
 #include <CCA/Components/Arches/Radiation/fortran/rdomflux_fort.h>
@@ -325,22 +324,34 @@ DORadiationModel::boundarycondition(const ProcessorGroup*,
                                     ArchesVariables* vars,
                                     ArchesConstVariables* constvars)
 {
-  IntVector idxLo = patch->getFortranCellLowIndex();
-  IntVector idxHi = patch->getFortranCellHighIndex();
+           
+  //__________________________________
+  // loop over computational domain faces
+  vector<Patch::FaceType> bf;
+  patch->getBoundaryFaces(bf);
   
-  bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
-  bool xplus =  patch->getBCType(Patch::xplus)  != Patch::Neighbor;
-  bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
-  bool yplus =  patch->getBCType(Patch::yplus)  != Patch::Neighbor;
-  bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
-  bool zplus =  patch->getBCType(Patch::zplus)  != Patch::Neighbor;
+  for( vector<Patch::FaceType>::const_iterator iter = bf.begin(); iter != bf.end(); ++iter ){
+    Patch::FaceType face = *iter;
     
-  fort_rdombc(idxLo, idxHi, constvars->cellType, ffield, vars->temperature,
-              vars->ABSKG,
-              xminus, xplus, yminus, yplus, zminus, zplus, 
-              lprobone, lprobtwo, lprobthree, d_wall_temp, d_wall_abskg );
-
-
+    Patch::FaceIteratorType PEC = Patch::ExtraPlusEdgeCells;
+    
+      
+    for (CellIterator iter =  patch->getFaceIterator(face, PEC); !iter.done(); iter++) {
+      IntVector c = *iter;
+      if (constvars->cellType[c] != ffield ){
+        vars->temperature[c] = d_wall_temp;
+        vars->ABSKG[c]       = d_wall_abskg;
+      }
+    }
+    
+    
+    if (lprobone || lprobtwo || lprobthree ){  // will this ever be used?  --Todd
+      for (CellIterator iter =  patch->getFaceIterator(face, PEC); !iter.done(); iter++) {
+        IntVector c = *iter;
+        vars->temperature[c] = 0.0;
+      }
+    }
+  }
 }
 //***************************************************************************
 // Solves for intensity in the D.O method

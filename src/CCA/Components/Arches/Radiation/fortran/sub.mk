@@ -45,7 +45,6 @@ SRCS += \
         $(SRCDIR)/radcoef.F \
         $(SRCDIR)/radcal.F \
         $(SRCDIR)/radwsgg.F \
-        $(SRCDIR)/rdombc.F \
         $(SRCDIR)/rdombmcalc.F \
         $(SRCDIR)/rdomflux.F \
         $(SRCDIR)/rdomsolve.F \
@@ -65,7 +64,6 @@ $(SRCDIR)/radwsgg.$(OBJEXT): $(SRCDIR)/radwsgg_fort.h
 $(SRCDIR)/rordr.$(OBJEXT): $(SRCDIR)/rordr_fort.h
 $(SRCDIR)/rordrss.$(OBJEXT): $(SRCDIR)/rordrss_fort.h
 $(SRCDIR)/rordrtn.$(OBJEXT): $(SRCDIR)/rordrtn_fort.h
-$(SRCDIR)/rdombc.$(OBJEXT): $(SRCDIR)/rdombc_fort.h
 $(SRCDIR)/rdombmcalc.$(OBJEXT): $(SRCDIR)/rdombmcalc_fort.h
 $(SRCDIR)/rdomsolve.$(OBJEXT): $(SRCDIR)/rdomsolve_fort.h
 $(SRCDIR)/rdomsrc.$(OBJEXT): $(SRCDIR)/rdomsrc_fort.h
