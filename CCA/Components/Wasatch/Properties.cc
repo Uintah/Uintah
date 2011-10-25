@@ -152,10 +152,10 @@ namespace Wasatch{
 
     //________________________________________________________________
     // create an expression specifically for density.
-    
+
     Uintah::ProblemSpecP densityParams = params->findBlock("ExtractDensity");
     if (densityParams != 0) {
-      
+
       std::vector<Expr::Tag> rhoEtaNames;
       std::vector<Expr::Tag> reiEtaNames;
       for( Uintah::ProblemSpecP rhoEtaParams = densityParams->findBlock("DensityWeightedIVar");
@@ -167,8 +167,8 @@ namespace Wasatch{
         const Expr::Tag reiEtaTag = parse_nametag( reiEtaParams->findBlock("NameTag") );
         reiEtaNames.push_back( reiEtaTag );
       }
-      
-      
+
+
       //_______________________________________
       // extract density variable information
       std::string dvarTableName;
@@ -181,13 +181,13 @@ namespace Wasatch{
         throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
       }
       const BSpline* const spline = table.find_entry( dvarTableName );
-      
+
       //_____________________________________
       // register the expression for density
       typedef DensityCalculator<SpatialOps::structured::SVolField>::Builder DensCalc;
       gh.exprFactory->register_expression( densityTag,
                                            scinew DensCalc( spline->clone(), rhoEtaNames, reiEtaNames, ivarNames ));
-      
+
     }
 
   }
@@ -198,10 +198,10 @@ namespace Wasatch{
                              GraphCategories& gc )
   {
     //_________________________________________________________________________________
-    // extracting the density tag in the cases that it is needed and also throwing the 
-    // error messages in different error conditions regarding to the input file  
+    // extracting the density tag in the cases that it is needed and also throwing the
+    // error messages in different error conditions regarding to the input file
 
-    Uintah::ProblemSpecP densityParams = params->findBlock("Density");
+    Uintah::ProblemSpecP densityParams  = params->findBlock("Density");
     Uintah::ProblemSpecP tabPropsParams = params->findBlock("TabProps");
 
     Expr::Tag densityTag = Expr::Tag();

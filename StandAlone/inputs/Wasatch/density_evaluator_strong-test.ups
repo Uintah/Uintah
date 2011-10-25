@@ -78,6 +78,7 @@
       
       <ExtractDensity>
         <NameInTable>Density</NameInTable>
+        <NameTag name="rho" state="CARRY_FORWARD" />
         <DensityWeightedIVar>
           <NameTag name="rhof" state="STATE_N" />
           <RelatedIVar>
