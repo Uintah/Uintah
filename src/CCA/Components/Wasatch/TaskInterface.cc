@@ -232,9 +232,9 @@ namespace Wasatch{
               << std::setw(10) << "Mode " << std::left << std::setw(20) << "Field Name"
               << "DW  #Ghost PatchID" << endl
               << "-----------------------------------------------------------------------" << endl;
+    if( Uintah::Parallel::getMPIRank() == 0 )
+      fml.dump_fields(std::cout);
 #   endif
-    
-    Expr::ExpressionTree& tempTree = const_cast<Expr::ExpressionTree&>(tree);
 
     //______________________________
     // cycle through each field type
@@ -252,44 +252,77 @@ namespace Wasatch{
 
         Expr::FieldInfo& fieldInfo = ii->second;
 
+        const Expr::Tag fieldTag( fieldInfo.varlabel->getName(), fieldInfo.context );
+
         // see if this field is required by the given tree
-        const Expr::Tag fieldTag( fieldInfo.varlabel->getName(), fieldInfo.context );        
-        if( !tree.has_field(fieldTag))  continue;
+        if( !tree.has_field(fieldTag) ){
+          continue;
+        }
+
+        if( fieldInfo.context == Expr::CARRY_FORWARD ){
+          fieldInfo.mode = Expr::COMPUTES;
+          fieldInfo.useOldDataWarehouse = false;
+          task.requires( Uintah::Task::OldDW,
+                         fieldInfo.varlabel,
+                         patches, Uintah::Task::NormalDomain,
+                         materials, Uintah::Task::NormalDomain,
+                         fieldInfo.ghostType, fieldInfo.nghost );
+
+#         ifdef WASATCH_TASK_FIELD_DIAGNOSTICS
+          proc0cout << std::setw(10) << "(REQUIRES)"
+                    << std::setw(20) << std::left << fieldInfo.varlabel->getName()
+                    << "OLD   "
+                    << std::left << std::setw(5) << fieldInfo.nghost
+                    << *patches << endl;
+#         endif
+        }
 
         //________________
-        // set field mode 
+        // set field mode
         if( tree.computes_field( fieldTag ) ){
+
           // if the field uses dynamic allocation, then the uintah task should not be aware of this field
-          if (!tempTree.get_expr_is_persistent( fieldTag ))  continue;
-          if (rkStage==1) fieldInfo.mode = Expr::COMPUTES;
-          // TSAAD: have a look at this another time. In principle, these should
-          // be Modifies NOT requires, but it does not work wen we use MODIFIES
-          //else fieldInfo.mode = Expr::MODIFIES;
-          //if (fieldInfo.varlabel->getName() == "time") fieldInfo.mode = Expr::MODIFIES;          
-          else  {
-            //if (!tempTree.get_field_is_persistent( fieldTag) )  continue;
+          // jcs the const_cast is a hack because of the lack of const on the is_persistent method...
+          // jcs HACK - BUG IN EXPRLIB!!!  Tree cleaving is causing problems with persistency.
+          //     this should really go outside the enclosing if() statement!
+          if( ! const_cast<Expr::ExpressionTree&>(tree).is_persistent(fieldTag) ){
+            continue;
+          }
+
+          if( rkStage==1 ){
+            fieldInfo.mode = Expr::COMPUTES;
+            fieldInfo.useOldDataWarehouse = false;
+          }
+          else{
+            // TSAAD: have a look at this another time. In principle, these should
+            // be Modifies NOT requires, but it does not work when we use MODIFIES
             fieldInfo.mode = Expr::MODIFIES;
-            //fieldInfo.useOldDataWarehouse = false;
+            fieldInfo.useOldDataWarehouse = false;
           }
         }
+        else if( fieldInfo.context == Expr::STATE_N ){
+          fieldInfo.mode = Expr::REQUIRES;
+          fieldInfo.useOldDataWarehouse = true;
+        }
         else{
-          //if (!tempTree.get_field_is_persistent( fieldTag) )  continue;
           fieldInfo.mode = Expr::REQUIRES;
           if( newDWFields.find( fieldTag ) == newDWFields.end() )
-            if (rkStage ==1 )
+            if( rkStage == 1 )
               fieldInfo.useOldDataWarehouse = true;
-            else 
+            else
               fieldInfo.useOldDataWarehouse = false;
           else
             fieldInfo.useOldDataWarehouse = false;
         }
-        if (tree.name()!="set time" && tree.name()!="initialization" && fieldInfo.varlabel->getName()=="time") {
+        if( tree.name()!="set time" &&
+            tree.name()!="initialization" &&
+            fieldInfo.varlabel->getName()=="time" ){
           fieldInfo.mode = Expr::REQUIRES;
         }
         // jcs : old dw is (should be) read only.
         Uintah::Task::WhichDW dw = Uintah::Task::NewDW;
         if( fieldInfo.useOldDataWarehouse ) dw = Uintah::Task::OldDW;
-        
+
         switch( fieldInfo.mode ){
 
         case Expr::COMPUTES:

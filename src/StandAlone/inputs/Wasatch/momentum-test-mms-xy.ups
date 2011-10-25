@@ -10,7 +10,7 @@
 
     <Density>
       <IsConstant>true</IsConstant>
-      <NameTag name="density" state="STATE_N" />
+      <NameTag name="density" state="STATE_NONE" />
     </Density>
 
     <!-- Set the initial condition expression for x-momentum -->
@@ -32,28 +32,16 @@
         <YCoordinate> <NameTag name="YYVOL" state="STATE_NONE"/> </YCoordinate>
       </VelocityY>
     </TaylorVortexMMS>
-                
-    <BasicExpression type="SVOL">
-      <TaskList>initialization</TaskList>
-      <NameTag name="density" state="STATE_N" />
-      <Constant>1.0</Constant>
-    </BasicExpression>
-    
-    <BasicExpression type="SVOL">
-      <TaskList>initialization</TaskList>
-      <NameTag name="viscosity" state="STATE_N" />
-      <Constant>0.001</Constant>
-    </BasicExpression>
-    
+
     <BasicExpression type="SVOL">
       <TaskList>advance_solution</TaskList>
-      <NameTag name="viscosity" state="STATE_N" />
+      <NameTag name="viscosity" state="STATE_NONE" />
       <Constant>0.001</Constant>
     </BasicExpression>
 
     <BasicExpression type="SVOL">
       <TaskList>advance_solution</TaskList>
-      <NameTag name="density" state="STATE_N" />
+      <NameTag name="density" state="STATE_NONE" />
       <Constant>1.0</Constant>
     </BasicExpression>
 
@@ -64,7 +52,7 @@
       <Y-Velocity>v</Y-Velocity>
       <Y-Momentum>y-mom</Y-Momentum>
       <Viscosity>
-        <NameTag name="viscosity" state="STATE_N" />
+        <NameTag name="viscosity" state="STATE_NONE" />
       </Viscosity>
       
       <Pressure>

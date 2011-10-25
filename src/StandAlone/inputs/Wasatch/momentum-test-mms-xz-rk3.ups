@@ -10,7 +10,7 @@
 
     <Density>
       <IsConstant>true</IsConstant>
-      <NameTag name="density" state="STATE_N" />
+      <NameTag name="density" state="STATE_NONE" />
     </Density>
 
     <TimeIntegrator>RK3SSP</TimeIntegrator>
@@ -36,26 +36,14 @@
     </TaylorVortexMMS>
                 
     <BasicExpression type="SVOL">
-      <TaskList>initialization</TaskList>
-      <NameTag name="density" state="STATE_N" />
-      <Constant>1.0</Constant>
-    </BasicExpression>
-    
-    <BasicExpression type="SVOL">
-      <TaskList>initialization</TaskList>
-      <NameTag name="viscosity" state="STATE_N" />
-      <Constant>0.001</Constant>
-    </BasicExpression>
-    
-    <BasicExpression type="SVOL">
       <TaskList>advance_solution</TaskList>
-      <NameTag name="viscosity" state="STATE_N" />
+      <NameTag name="viscosity" state="STATE_NONE" />
       <Constant>0.001</Constant>
     </BasicExpression>
 
     <BasicExpression type="SVOL">
       <TaskList>advance_solution</TaskList>
-      <NameTag name="density" state="STATE_N" />
+      <NameTag name="density" state="STATE_NONE" />
       <Constant>1.0</Constant>
     </BasicExpression>
 
@@ -66,7 +54,7 @@
       <Z-Velocity>w</Z-Velocity>
       <Z-Momentum>z-mom</Z-Momentum>
       <Viscosity>
-        <NameTag name="viscosity" state="STATE_N" />
+        <NameTag name="viscosity" state="STATE_NONE" />
       </Viscosity>
       
       <Pressure>
