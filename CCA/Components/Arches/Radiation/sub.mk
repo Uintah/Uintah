@@ -57,7 +57,6 @@ $(SRCDIR)/DORadiationModel.$(OBJEXT): $(SRCDIR)/fortran/radarray_fort.h
 $(SRCDIR)/DORadiationModel.$(OBJEXT): $(SRCDIR)/fortran/radcal_fort.h
 $(SRCDIR)/DORadiationModel.$(OBJEXT): $(SRCDIR)/fortran/radcoef_fort.h
 $(SRCDIR)/DORadiationModel.$(OBJEXT): $(SRCDIR)/fortran/radwsgg_fort.h
-$(SRCDIR)/DORadiationModel.$(OBJEXT): $(SRCDIR)/fortran/rdombc_fort.h
 $(SRCDIR)/DORadiationModel.$(OBJEXT): $(SRCDIR)/fortran/rdomsolve_fort.h
 $(SRCDIR)/DORadiationModel.$(OBJEXT): $(SRCDIR)/fortran/rdomsrc_fort.h
 $(SRCDIR)/DORadiationModel.$(OBJEXT): $(SRCDIR)/fortran/rdomflux_fort.h
