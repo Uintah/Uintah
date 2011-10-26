@@ -718,6 +718,7 @@ public:
     task->computes(X_label);
     task->computes(D_label);
     task->computes(d_label);
+    task->computes(tolerance_label);
     task->computes(diag_label);
     if(params->norm != CGSolverParams::L2){
       task->computes(err_label);
@@ -827,7 +828,6 @@ public:
       
       //__________________________________
       //  Main iteration
-      cout << " dynamicTolerance " << tolerance << " staticTolerance " << params->tolerance << endl;
       while(niter < params->maxiterations && !(e < tolerance)){
         niter++;
         subsched->advanceDataWarehouse(grid);
