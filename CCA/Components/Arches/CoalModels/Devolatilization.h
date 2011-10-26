@@ -70,8 +70,6 @@ public:
   /** @brief  Return the VarLabel for the model term for char */
   inline const VarLabel* getCharSourceLabel() {
     return d_charLabel; };
-   
-
 
 protected:
 

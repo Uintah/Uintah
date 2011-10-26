@@ -687,7 +687,6 @@ Arches::scheduleInitialize(const LevelP& level,
 
   sched_scalarInit(level, sched);
 
-
   // computing flow inlet areas
   if (d_boundaryCondition->getInletBC()){
     d_boundaryCondition->sched_calculateArea(sched, patches, matls);

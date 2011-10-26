@@ -5281,6 +5281,10 @@ BoundaryCondition::setAreaFraction( const ProcessorGroup*,
     if (d_wallBdry) 
       d_newBC->setAreaFraction( patch, areaFraction, volFraction, cellType, d_wallBdry->d_cellTypeID, flowType ); 
 
+    d_newBC->setAreaFraction( patch, areaFraction, volFraction, cellType, WALL, flowType ); 
+    d_newBC->setAreaFraction( patch, areaFraction, volFraction, cellType, INTRUSION, flowType ); 
+    d_newBC->setAreaFraction( patch, areaFraction, volFraction, cellType, MMWALL, flowType ); 
+
   }
 }
 
