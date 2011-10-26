@@ -373,12 +373,12 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
     }
   }
 
-  d_mmWallID = -10; // invalid cell type
   // if multimaterial then add an id for multimaterial wall
   // trying to reduce all interior walls to type:INTRUSION
-  if ( d_MAlab ){
-    d_mmWallID = INTRUSION; 
-  }
+  d_mmWallID = INTRUSION;
+//  if ( d_MAlab ){
+//    d_mmWallID = INTRUSION; 
+//  }
 
   //adding mms access
   if (d_doMMS) {
