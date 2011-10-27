@@ -319,7 +319,7 @@ public:
     aden_label = VarLabel::create(A->getName()+" aden", sum_vartype::getTypeDescription());
     diag_label = VarLabel::create(A->getName()+" inverse diagonal", sol_type::getTypeDescription());
     
-    tolerance_label = VarLabel::create("tolerance", max_vartype::getTypeDescription());
+    tolerance_label = VarLabel::create("tolerance", sum_vartype::getTypeDescription());
     
     VarLabel* tmp_flop_label = VarLabel::create(A->getName()+" flops", sumlong_vartype::getTypeDescription());
     tmp_flop_label->allowMultipleComputes();
@@ -640,10 +640,14 @@ public:
         double tolerance = params->tolerance;
         if(params->getDynamicTolerance()) {                
           double iprod      = ::Dot(B,B,iter, flops, memrefs);      
-          double sum_b      = sqrt(iprod);                       
-          tolerance         = tolerance / (sum_b);                        
+          double sum_b      = sqrt(iprod);           
+          tolerance         = tolerance / (sum_b); 
+          if(isinf(tolerance) ){
+            tolerance = 0;
+          }                       
         }
-        new_dw->put( max_vartype(tolerance), tolerance_label );
+       
+        new_dw->put( sum_vartype(tolerance), tolerance_label );
         
         
         // Calculate error term
@@ -732,7 +736,7 @@ public:
     
     //__________________________________
     double tolerance=0;
-    max_vartype tol;
+    sum_vartype tol;
     subsched->get_dw(3)->get(tol, tolerance_label);
     tolerance=tol;
     
