@@ -642,7 +642,7 @@ public:
           double iprod      = ::Dot(B,B,iter, flops, memrefs);      
           double sum_b      = sqrt(iprod);           
           tolerance         = tolerance / (sum_b); 
-          if(isinf(tolerance) ){
+          if(std::isinf(tolerance) ){
             tolerance = 0;
           }                       
         }
