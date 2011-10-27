@@ -416,8 +416,8 @@ void BoundaryCondition_new::setAreaFraction(
       Vector tempV = areaFraction[c]; 
       tempV[0] = 0.;
       areaFraction[c] = tempV;
-      areaFraction[cxm] = Vector(0.,0.,0.);
-      volFraction[cxm]  = 0.;
+//      areaFraction[cxm] = Vector(0.,0.,0.);
+//      volFraction[cxm]  = 0.;
     }
 
     // y-minus is a wall but curr cell is flow
@@ -425,8 +425,8 @@ void BoundaryCondition_new::setAreaFraction(
       Vector tempV = areaFraction[c]; 
       tempV[1] = 0.;
       areaFraction[c] = tempV;
-      areaFraction[cym] = Vector(0.,0.,0.);
-      volFraction[cym]  = 0.;
+//      areaFraction[cym] = Vector(0.,0.,0.);
+//      volFraction[cym]  = 0.;
     }
 
     // z-minus is a wall but curr cell is flowType
@@ -434,8 +434,8 @@ void BoundaryCondition_new::setAreaFraction(
       Vector tempV = areaFraction[c]; 
       tempV[2] = 0.;
       areaFraction[c] = tempV;
-      areaFraction[czm] = Vector(0.,0.,0.);
-      volFraction[czm]  = 0.;
+//      areaFraction[czm] = Vector(0.,0.,0.);
+//      volFraction[czm]  = 0.;
     }
 
     // x-plus is a wall but curr cell is flow 
@@ -443,8 +443,8 @@ void BoundaryCondition_new::setAreaFraction(
       Vector tempV = areaFraction[c]; 
       tempV[0] = 0.;
       areaFraction[c] = tempV;
-      areaFraction[cxp] = Vector(0.,0.,0.);
-      volFraction[cxp]  = 0.;
+//      areaFraction[cxp] = Vector(0.,0.,0.);
+//      volFraction[cxp]  = 0.;
     }
 
     // y-plus is a wall but curr cell is flow
@@ -452,8 +452,8 @@ void BoundaryCondition_new::setAreaFraction(
       Vector tempV = areaFraction[c]; 
       tempV[1] = 0.;
       areaFraction[c] = tempV;
-      areaFraction[cyp] = Vector(0.,0.,0.);
-      volFraction[cyp]  = 0.;
+//      areaFraction[cyp] = Vector(0.,0.,0.);
+//      volFraction[cyp]  = 0.;
     }
 
     // z-plus is a wall but curr cell is flowType
@@ -461,8 +461,8 @@ void BoundaryCondition_new::setAreaFraction(
       Vector tempV = areaFraction[c]; 
       tempV[2] = 0.;
       areaFraction[c] = tempV;
-      areaFraction[czp] = Vector(0.,0.,0.);
-      volFraction[czp]  = 0.;
+//      areaFraction[czp] = Vector(0.,0.,0.);
+//      volFraction[czp]  = 0.;
     }
   }
 }
