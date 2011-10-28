@@ -78,6 +78,7 @@ BowmanNOx::sched_computeSource( const LevelP& level, SchedulerP& sched, int time
   tsk->requires( Task::OldDW, _o2_label, Ghost::None, 0 ); 
   tsk->requires( Task::OldDW, _rho_label, Ghost::None, 0 ); 
   tsk->requires( Task::OldDW, _temperature_label, Ghost::None, 0 ); 
+  tsk->requires( Task::OldDW, _field_labels->d_volFractionLabel, Ghost::None, 0 ); 
 
   sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials()); 
 
@@ -121,11 +122,13 @@ BowmanNOx::computeSource( const ProcessorGroup* pc,
     constCCVariable<double> O2; 
     constCCVariable<double> rho; 
     constCCVariable<double> T; 
+    constCCVariable<double> vol_fraction; 
 
     old_dw->get( N2 , _n2_label          , matlIndex , patch , Ghost::None , 0 );
     old_dw->get( O2  , _o2_label          , matlIndex , patch , Ghost::None , 0 );
     old_dw->get( rho , _rho_label         , matlIndex , patch , Ghost::None , 0 );
     old_dw->get( T   , _temperature_label , matlIndex , patch , Ghost::None , 0 );
+    old_dw->get( vol_fraction, _field_labels->d_volFractionLabel, matlIndex, patch, Ghost::None, 0 ); 
 
     delt_vartype DT; 
     old_dw->get(DT, _field_labels->d_sharedState->get_delt_label()); 
@@ -144,7 +147,7 @@ BowmanNOx::computeSource( const ProcessorGroup* pc,
 
       double my_exp = -1.0 * _E_R / T[c]; 
 
-      rate[c] = _A / T_pow * exp( my_exp ) * n2 * o2_pow; 
+      rate[c] = _A / T_pow * exp( my_exp ) * n2 * o2_pow * vol_fraction[c]; 
 
     }
   }
