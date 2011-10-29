@@ -273,33 +273,33 @@ Properties::problemSetup(const ProblemSpecP& params)
     if ( db_enthalpy_solver->findBlock( "EnthalpySolver" ) ){ 
       db_enthalpy_solver = db_enthalpy_solver->findBlock("EnthalpySolver");
 
-      if (db_enthalpy_solver->findBlock("DORadiationModel"))
+      if (db_enthalpy_solver->findBlock("DORadiationModel")) {
         d_radiationCalc = true; 
-      else 
+        d_DORadiationCalc = true;
+      } else {
         proc0cout << "ATTENTION: NO WORKING RADIATION MODEL TURNED ON!" << endl; 
-
+      }
+      
       if (d_radiationCalc) {
-
-        if (db_enthalpy_solver->findBlock("DORadiationModel"))
-          d_DORadiationCalc = true; 
 
         d_opl = 0.0;
 
-        if (!d_DORadiationCalc)
-          db->require("optically_thin_model_opl",d_opl);
         if (d_tabulated_soot) {
+          
           db->getWithDefault("empirical_soot",d_empirical_soot,false);
-          if (d_empirical_soot)
-            throw InvalidValue("Table has soot, do not use empirical soot model!",
-                               __FILE__, __LINE__);
+          
+          if (d_empirical_soot){
+            throw InvalidValue("Table has soot, do not use empirical soot model!", __FILE__, __LINE__);
+          }
         }
         else {
           db->getWithDefault("empirical_soot",d_empirical_soot,true);
-          if (d_empirical_soot) 
+          if (d_empirical_soot) {
             db->getWithDefault("soot_factor", d_sootFactor, 1.0);
+          }
 
-        }
-      }
+        }  // tabulated_soot
+      }  // radiation
     }
   } else { 
 
@@ -524,8 +524,9 @@ Properties::sched_reComputeProps(SchedulerP& sched,
     }
 
     if (d_radiationCalc) {
-      if (!d_DORadiationCalc)
+      if (!d_DORadiationCalc) {
         tsk->modifies(d_lab->d_absorpINLabel);
+      }
       tsk->modifies(d_lab->d_sootFVINLabel);
     }
 
@@ -726,9 +727,10 @@ Properties::reComputeProps(const ProcessorGroup* pc,
       }
 
       if (d_radiationCalc) {
-        if (!d_DORadiationCalc)
+        if (!d_DORadiationCalc){
           new_dw->allocateAndPut(absorption, d_lab->d_absorpINLabel,
                                                                indx, patch);
+        }
         new_dw->allocateAndPut(sootFV, d_lab->d_sootFVINLabel, indx,patch);
       }
 
@@ -788,8 +790,9 @@ Properties::reComputeProps(const ProcessorGroup* pc,
       }
       //__________________________________
       if (d_radiationCalc) {
-        if (!d_DORadiationCalc)
+        if (!d_DORadiationCalc) {
           new_dw->getModifiable(absorption, d_lab->d_absorpINLabel, indx, patch);
+        }
         new_dw->getModifiable(sootFV,       d_lab->d_sootFVINLabel, indx,patch);
       }
 
@@ -846,8 +849,9 @@ Properties::reComputeProps(const ProcessorGroup* pc,
     }
 
     if (d_radiationCalc) {
-      if (!d_DORadiationCalc)
+      if (!d_DORadiationCalc) {
         absorption.initialize(0.0);
+      }
       sootFV.initialize(0.0);
     }
 
@@ -1014,9 +1018,10 @@ Properties::reComputeProps(const ProcessorGroup* pc,
               }
               else sootFV[currCell] = 0.0;
             }  
-            if (!d_DORadiationCalc)
+            if (!d_DORadiationCalc){
               absorption[currCell] = 0.01+ Min(0.5,(4.0/d_opl)*log(1.0+350.0*
                                      sootFV[currCell]*temperature[currCell]*d_opl));
+            }
           }
           //__________________________________
           if (d_MAlab) {
@@ -1079,9 +1084,11 @@ Properties::sched_computePropsFirst_mm(SchedulerP& sched,
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,       gn, 0);
   tsk->requires(Task::NewDW, d_lab->d_mmgasVolFracLabel,   gn, 0);
   
-  if (d_bc->getIfCalcEnergyExchange()) 
-    if (d_DORadiationCalc)
-      tsk->requires(Task::NewDW, d_MAlab->integTemp_CCLabel, gn, 0);    
+  if (d_bc->getIfCalcEnergyExchange()){ 
+    if (d_DORadiationCalc) {
+      tsk->requires(Task::NewDW, d_MAlab->integTemp_CCLabel, gn, 0); 
+    }
+  } 
 
   //__________________________________
   if (d_reactingFlow) {
@@ -1135,19 +1142,21 @@ Properties::sched_computePropsFirst_mm(SchedulerP& sched,
 
   //__________________________________
   if (d_radiationCalc) {
-    if (!d_DORadiationCalc)
+    if (!d_DORadiationCalc) {
       tsk->computes(d_lab->d_absorpINLabel);
+    }
+    
     tsk->computes(d_lab->d_sootFVINLabel);
     if (d_DORadiationCalc) {
-    tsk->computes(d_lab->d_h2oINLabel);
-    tsk->computes(d_lab->d_radiationSRCINLabel);
-    tsk->computes(d_lab->d_radiationFluxEINLabel);
-    tsk->computes(d_lab->d_radiationFluxWINLabel);
-    tsk->computes(d_lab->d_radiationFluxNINLabel);
-    tsk->computes(d_lab->d_radiationFluxSINLabel);
-    tsk->computes(d_lab->d_radiationFluxTINLabel);
-    tsk->computes(d_lab->d_radiationFluxBINLabel);
-    tsk->computes(d_lab->d_abskgINLabel);
+      tsk->computes(d_lab->d_h2oINLabel);
+      tsk->computes(d_lab->d_radiationSRCINLabel);
+      tsk->computes(d_lab->d_radiationFluxEINLabel);
+      tsk->computes(d_lab->d_radiationFluxWINLabel);
+      tsk->computes(d_lab->d_radiationFluxNINLabel);
+      tsk->computes(d_lab->d_radiationFluxSINLabel);
+      tsk->computes(d_lab->d_radiationFluxTINLabel);
+      tsk->computes(d_lab->d_radiationFluxBINLabel);
+      tsk->computes(d_lab->d_abskgINLabel);
     }
   }
 
@@ -1339,10 +1348,11 @@ Properties::computePropsFirst_mm(const ProcessorGroup*,
     CCVariable<double> mixMW_new; 
     constCCVariable<double> solidTemp;
 
-    if (d_bc->getIfCalcEnergyExchange())
-      if (d_DORadiationCalc)
+    if (d_bc->getIfCalcEnergyExchange()) {
+      if (d_DORadiationCalc) {
         new_dw->get(solidTemp, d_MAlab->integTemp_CCLabel, indx, patch,gn, 0);
-
+      }
+    }
     if (d_reactingFlow) {
       old_dw->get(tempIN,   d_lab->d_tempINLabel,   indx, patch,gn, 0);
       old_dw->get(cpIN,     d_lab->d_cpINLabel,     indx, patch,gn, 0);
@@ -1410,15 +1420,13 @@ Properties::computePropsFirst_mm(const ProcessorGroup*,
     if (d_radiationCalc) {
 
       if (!d_DORadiationCalc) {
-        old_dw->get(absorpIN, d_lab->d_absorpINLabel, indx, patch,
-                    gn, 0);
+        old_dw->get(absorpIN, d_lab->d_absorpINLabel, indx, patch, gn, 0);
         new_dw->allocateAndPut(absorpIN_new, d_lab->d_absorpINLabel, indx, patch);
         absorpIN_new.copyData(absorpIN);
       }
 
 
-      old_dw->get(sootFVIN, d_lab->d_sootFVINLabel, indx, patch,
-                  gn, 0);
+      old_dw->get(sootFVIN, d_lab->d_sootFVINLabel, indx, patch, gn, 0);
 
       //      new_dw->allocateAndPut(abskgIN_new, d_lab->d_abskgINLabel, 
       //                       indx, patch);

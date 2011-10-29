@@ -53,8 +53,6 @@ SRCS += \
         $(SRCDIR)/rordr.F \
         $(SRCDIR)/rordrss.F \
         $(SRCDIR)/rordrtn.F \
-        $(SRCDIR)/rshsolve.F \
-        $(SRCDIR)/rshresults.F \
         $(SRCDIR)/soot.F
 
 $(SRCDIR)/radarray.$(OBJEXT): $(SRCDIR)/radarray_fort.h
@@ -69,6 +67,4 @@ $(SRCDIR)/rdomsolve.$(OBJEXT): $(SRCDIR)/rdomsolve_fort.h
 $(SRCDIR)/rdomsrc.$(OBJEXT): $(SRCDIR)/rdomsrc_fort.h
 $(SRCDIR)/rdomflux.$(OBJEXT): $(SRCDIR)/rdomflux_fort.h
 $(SRCDIR)/rdomvolq.$(OBJEXT): $(SRCDIR)/rdomvolq_fort.h
-$(SRCDIR)/rshsolve.$(OBJEXT): $(SRCDIR)/rshsolve_fort.h
-$(SRCDIR)/rshresults.$(OBJEXT): $(SRCDIR)/rshresults_fort.h
 
