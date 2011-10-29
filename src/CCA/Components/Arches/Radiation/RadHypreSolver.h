@@ -148,6 +148,8 @@ private:
   int d_volume, d_nblocks, d_dim, d_stencilSize;
   int *d_stencilIndices;
   int d_A_num_ghost[6];
+  int d_iteration;
+  
   double d_convgTol; // convergence tolerence
   double d_initResid;
   double d_residual;

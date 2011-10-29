@@ -226,7 +226,7 @@ private:
       int sfield;
       int pbcfld;
       int outletfield;
-      bool lprobone, lprobtwo, lprobthree, lradcal, lwsgg, lplanckmean, lpatchmean;
+      bool d_SHRadiationCalc, lprobone, lprobtwo, lprobthree, lradcal, lwsgg, lplanckmean, lpatchmean;
       bool _using_props_calculator; 
       double d_wall_abskg; 
       double d_wall_temp; 
@@ -239,6 +239,8 @@ private:
       OffsetArray1<double> omu;
       OffsetArray1<double> oeta;
       OffsetArray1<double> wt;
+      OffsetArray1<double> arean;
+      OffsetArray1<double> areatb;
 
       OffsetArray1<double> rgamma;
       OffsetArray1<double> sd15;

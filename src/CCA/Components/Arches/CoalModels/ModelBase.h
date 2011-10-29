@@ -102,10 +102,6 @@ public:
   inline const VarLabel* getGasSourceLabel() {
     return d_gasLabel; }; 
 
-  /** @brief  Return the VarLabel for the model term for char */
-  //virtual const VarLabel* getCharSourceLabel() = 0;
-
-
   /** @brief  Return the quadrature node */
   inline int getquadNode() {
     return d_quadNode; };
@@ -124,6 +120,7 @@ protected:
 
   vector<string> d_icLabels;          ///< All required internal coordinate labels (from DQMOM factory) needed to compute this model
   vector<string> d_scalarLabels;      ///< All required scalar labels (from scalarFactory) needed to compute this model
+  vector<const VarLabel*> _extra_local_labels; ///< All new local labels that the model uses/needs/computes
   map<string, string> LabelToRoleMap; ///< Map of internal coordinate or scalar labels to their role in the model
 
   const VarLabel* d_modelLabel;       ///< Label storing the value of this model

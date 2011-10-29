@@ -375,28 +375,28 @@
     <!-- Wasatch common tags - to be relocated soon -->
 
     <NameTag				spec="OPTIONAL NO_DATA"
-                                        attribute1="name REQUIRED STRING"
-                                        attribute2="state REQUIRED STRING 'STATE_NONE,STATE_NP1,STATE_N'" />
+                            attribute1="name REQUIRED STRING"
+                            attribute2="state REQUIRED STRING 'STATE_NONE,STATE_NP1,STATE_N,CARRY_FORWARD'" />
     <!-- Spec for basic expression types -->
-    <BasicExpression			spec="MULTIPLE NO_DATA"
-                                        attribute1="type REQUIRED STRING 'SVOL,XVOL,YVOL,ZVOL"
-                                        children1="ONE_OF(CHILD Constant,LinearFunction, ParabolicFunction,SineFunction,GaussianFunction,DoubleTanhFunction,SineTime)" >
+    <BasicExpression		spec="MULTIPLE NO_DATA"
+                            attribute1="type REQUIRED STRING 'SVOL,XVOL,YVOL,ZVOL"
+                            children1="ONE_OF(CHILD Constant,LinearFunction, ParabolicFunction,SineFunction,GaussianFunction,DoubleTanhFunction,SineTime)" >
       <TaskList				spec="REQUIRED STRING 'initialization,timestep_size,advance_solution'" />
       <NameTag				spec="REQUIRED" />
       <Constant				spec="OPTIONAL DOUBLE" />
-      <LinearFunction			spec="OPTIONAL NO_DATA"
-                                        attribute1="slope REQUIRED DOUBLE"      
-                                        attribute2="intercept REQUIRED DOUBLE" >
+      <LinearFunction		spec="OPTIONAL NO_DATA"
+                            attribute1="slope REQUIRED DOUBLE"      
+                            attribute2="intercept REQUIRED DOUBLE" >
         <!-- jcs need to specify independent variable for this function -->
         <NameTag			spec="REQUIRED" />
       </LinearFunction>
       
       <!-- parabolic function: a x^2 + b x + c !-->
       <ParabolicFunction    spec="OPTIONAL NO_DATA"
-                                  attribute1="a REQUIRED DOUBLE"
-                                  attribute2="b REQUIRED DOUBLE"
-                                  attribute3="c REQUIRED DOUBLE">
-        <NameTag             spec="REQUIRED"/>
+                            attribute1="a REQUIRED DOUBLE"
+                            attribute2="b REQUIRED DOUBLE"
+                            attribute3="c REQUIRED DOUBLE">
+        <NameTag            spec="REQUIRED"/>
       </ParabolicFunction>
       
       <!-- sinetime: a x^2 + b x + c !-->
@@ -405,29 +405,29 @@
 
       
       <!-- Sine function with frequency, amplitude, and offset !-->
-      <SineFunction    spec="OPTIONAL NO_DATA"
-                                  attribute1="amplitude REQUIRED DOUBLE"
-                                  attribute2="frequency REQUIRED DOUBLE"
-                                  attribute3="offset REQUIRED DOUBLE">
-        <NameTag             spec="REQUIRED"/>
+      <SineFunction    		spec="OPTIONAL NO_DATA"
+                            attribute1="amplitude REQUIRED DOUBLE"
+                            attribute2="frequency REQUIRED DOUBLE"
+                            attribute3="offset REQUIRED DOUBLE">
+        <NameTag            spec="REQUIRED"/>
       </SineFunction>
       
       <!-- double hyperbolic tangent !-->
-      <DoubleTanhFunction    spec="OPTIONAL NO_DATA"
-                                  attribute1="amplitude REQUIRED DOUBLE"
-                                  attribute2="width REQUIRED DOUBLE"
-                                  attribute3="midpointUp REQUIRED DOUBLE"
-                                  attribute4="midpointDown REQUIRED DOUBLE">
-        <NameTag             spec="REQUIRED"/>
+      <DoubleTanhFunction   spec="OPTIONAL NO_DATA"
+                            attribute1="amplitude REQUIRED DOUBLE"
+                            attribute2="width REQUIRED DOUBLE"
+                            attribute3="midpointUp REQUIRED DOUBLE"
+                            attribute4="midpointDown REQUIRED DOUBLE">
+        <NameTag            spec="REQUIRED"/>
       </DoubleTanhFunction>
       
       <!-- Gaussian distribution !-->
-      <GaussianFunction    spec="OPTIONAL NO_DATA"
-                                  attribute1="amplitude REQUIRED DOUBLE"
-                                  attribute2="deviation REQUIRED DOUBLE"
-                                  attribute3="mean REQUIRED DOUBLE"
-                                  attribute4="baseline REQUIRED DOUBLE">
-        <NameTag             spec="REQUIRED"/>
+      <GaussianFunction    	spec="OPTIONAL NO_DATA"
+                            attribute1="amplitude REQUIRED DOUBLE"
+                            attribute2="deviation REQUIRED DOUBLE"
+                            attribute3="mean REQUIRED DOUBLE"
+                            attribute4="baseline REQUIRED DOUBLE">
+        <NameTag            spec="REQUIRED"/>
       </GaussianFunction>
 
       

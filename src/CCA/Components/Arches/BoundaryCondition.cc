@@ -232,7 +232,7 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
 
     if ( db->findBlock("intrusions") ){ 
 
-      _intrusionBC = scinew IntrusionBC( d_lab, d_props, BoundaryCondition::MMWALL ); 
+      _intrusionBC = scinew IntrusionBC( d_lab, d_props, BoundaryCondition::INTRUSION ); 
       ProblemSpecP db_new_intrusion = db->findBlock("intrusions"); 
       _using_new_intrusion = true; 
 
@@ -373,17 +373,13 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
     }
   }
 
-  d_mmWallID = -10; // invalid cell type
   // if multimaterial then add an id for multimaterial wall
-  if (d_MAlab){ 
-    d_mmWallID = MMWALL; //total_cellTypes;
-    if (d_use_new_bcs) { 
-      d_mmWallID = MMWALL; 
-    } 
-  }
-  if ( d_MAlab ){
-    d_mmWallID = WALL; 
-  }
+  // trying to reduce all interior walls to type:INTRUSION
+  d_mmWallID = INTRUSION;
+//  if ( d_MAlab ){
+//    d_mmWallID = INTRUSION; 
+//  }
+
   //adding mms access
   if (d_doMMS) {
 
@@ -1792,8 +1788,10 @@ BoundaryCondition::sched_setIntrusionTemperature( SchedulerP& sched,
                                                   const PatchSet* patches,
                                                   const MaterialSet* matls) 
 { 
-  // Interface to new intrusions
-  _intrusionBC->sched_setIntrusionT( sched, patches, matls ); 
+  if ( _using_new_intrusion ){ 
+    // Interface to new intrusions
+    //_intrusionBC->sched_setIntrusionT( sched, patches, matls ); 
+  }
 } 
 
 //______________________________________________________________________
@@ -5283,6 +5281,10 @@ BoundaryCondition::setAreaFraction( const ProcessorGroup*,
     if (d_wallBdry) 
       d_newBC->setAreaFraction( patch, areaFraction, volFraction, cellType, d_wallBdry->d_cellTypeID, flowType ); 
 
+    d_newBC->setAreaFraction( patch, areaFraction, volFraction, cellType, WALL, flowType ); 
+    d_newBC->setAreaFraction( patch, areaFraction, volFraction, cellType, INTRUSION, flowType ); 
+    d_newBC->setAreaFraction( patch, areaFraction, volFraction, cellType, MMWALL, flowType ); 
+
   }
 }
 
@@ -6627,18 +6629,26 @@ BoundaryCondition::setHattedIntrusionVelocity( const int p,
                                                constCCVariable<double>& density ) 
 { 
   if ( _using_new_intrusion ) { 
-    _intrusionBC->setHattedVelocity( p, u, v, w, density );
+    //_intrusionBC->setHattedVelocity( p, u, v, w, density );
   } 
 } 
+void
+BoundaryCondition::sched_setupNewIntrusionCellType( SchedulerP& sched, const PatchSet* patches, const MaterialSet* matls )
+{
+  if ( _using_new_intrusion ) { 
+    _intrusionBC->sched_setCellType( sched, patches, matls ); 
+  }
+}
+
+
 void
 BoundaryCondition::sched_setupNewIntrusions( SchedulerP& sched, const PatchSet* patches, const MaterialSet* matls )
 {
 
   if ( _using_new_intrusion ) { 
-    _intrusionBC->sched_computeBCArea( sched, patches, matls ); 
-    _intrusionBC->sched_computeProperties( sched, patches, matls ); 
-    _intrusionBC->sched_setIntrusionVelocities( sched, patches, matls );  
-    _intrusionBC->sched_setCellType( sched, patches, matls ); 
+    //_intrusionBC->sched_computeBCArea( sched, patches, matls ); 
+    //_intrusionBC->sched_computeProperties( sched, patches, matls ); 
+    //_intrusionBC->sched_setIntrusionVelocities( sched, patches, matls );  
   }
 
 }

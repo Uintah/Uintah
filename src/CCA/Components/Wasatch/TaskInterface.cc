@@ -29,8 +29,8 @@
 
 using std::endl;
 
-#define WASATCH_TASK_DIAGNOSTICS
-#define WASATCH_TASK_FIELD_DIAGNOSTICS
+//#define WASATCH_TASK_DIAGNOSTICS
+//#define WASATCH_TASK_FIELD_DIAGNOSTICS
 
 namespace Wasatch{
 
@@ -97,9 +97,9 @@ namespace Wasatch{
                      const std::set<std::string>& ioFieldSet);
 
     ~TreeTaskExecute();
-    
+
     void schedule( Expr::TagSet newDWFields, const int rkStage );
-    
+
     PatchTreeMap get_patch_tree_map() {return patchTreeMap_;}
 
   };
@@ -133,40 +133,39 @@ namespace Wasatch{
       std::ofstream fout( fnam.str().c_str() );
       tree->write_tree(fout);
     }
-    
+
     if( createUniqueTreePerPatch_ ){
 
       // only set up trees on the patches that we own on this process.
       const Uintah::PatchSet*  perproc_patchset = sched->getLoadBalancer()->getPerProcessorPatchSet(level);
       const Uintah::PatchSubset* const localPatches = perproc_patchset->getSubset(Uintah::Parallel::getMPIRank());
-      //std::cout << "looking at patch " << localPatches->size() << " of " << patches->size() << " patches on process " << Uintah::Parallel::getMPIRank() << std::endl;
       for( int ip=0; ip<localPatches->size(); ++ip ){
         const Uintah::Patch* const patch = localPatches->get(ip);
-        proc0cout << "Setting up tree '" << taskName_ << "' on patch (" << patch->getID() << ")" << endl;
+//        proc0cout << "Setting up tree '" << taskName_ << "' on patch (" << patch->getID() << ")" << endl;
         TreePtr tree( new Expr::ExpressionTree( *masterTree_ ) );
         tree->set_patch_id( patch->getID() );
-        
+
         std::set<std::string>::iterator ioFieldSetIter = ioFieldSet.begin();
-        
+
         while (ioFieldSetIter != ioFieldSet.end()) {
-          const Expr::Tag fieldStateN (*ioFieldSetIter, Expr::STATE_N);
+          const Expr::Tag fieldStateN    (*ioFieldSetIter, Expr::STATE_N   );
           const Expr::Tag fieldStateNONE (*ioFieldSetIter, Expr::STATE_NONE);
 
           if (tree->has_field(fieldStateN)) {
-            if (tree->has_expression(tree->get_id(fieldStateN))) {  
+            if (tree->has_expression(tree->get_id(fieldStateN))) {
               tree->set_expr_is_persistent( fieldStateN, true, *fml_);
-            }            
-          }  
-          
+            }
+          }
+
           if (tree->has_field(fieldStateNONE)) {
             if (tree->has_expression(tree->get_id(fieldStateNONE))) {
-              tree->set_expr_is_persistent( fieldStateNONE, true, *fml_);          
-            }            
+              tree->set_expr_is_persistent( fieldStateNONE, true, *fml_);
+            }
           }
-          
+
           ioFieldSetIter++;
         }
-        
+
         tree->register_fields( *fml_ );
         patchTreeMap_[ patch->getID() ] = std::make_pair( tree,  scinew Uintah::Task( taskName_, this, &TreeTaskExecute::execute, rkStage ));
       }
@@ -211,7 +210,7 @@ namespace Wasatch{
                       const Uintah::PatchSubset* const patches,
                       const Uintah::MaterialSubset* const materials,
                       const Expr::TagSet& newDWFields,
-                      const int rkStage)
+                      const int rkStage )
   {
     // this is done once when the task is scheduled.  The purpose of
     // this method is to collect the fields from the ExpressionTree
@@ -233,9 +232,9 @@ namespace Wasatch{
               << std::setw(10) << "Mode " << std::left << std::setw(20) << "Field Name"
               << "DW  #Ghost PatchID" << endl
               << "-----------------------------------------------------------------------" << endl;
+    if( Uintah::Parallel::getMPIRank() == 0 )
+      fml.dump_fields(std::cout);
 #   endif
-    
-    Expr::ExpressionTree& tempTree = const_cast<Expr::ExpressionTree&>(tree);
 
     //______________________________
     // cycle through each field type
@@ -253,44 +252,77 @@ namespace Wasatch{
 
         Expr::FieldInfo& fieldInfo = ii->second;
 
+        const Expr::Tag fieldTag( fieldInfo.varlabel->getName(), fieldInfo.context );
+
         // see if this field is required by the given tree
-        const Expr::Tag fieldTag( fieldInfo.varlabel->getName(), fieldInfo.context );        
-        if( !tree.has_field(fieldTag))  continue;
+        if( !tree.has_field(fieldTag) ){
+          continue;
+        }
+
+        if( fieldInfo.context == Expr::CARRY_FORWARD ){
+          fieldInfo.mode = Expr::COMPUTES;
+          fieldInfo.useOldDataWarehouse = false;
+          task.requires( Uintah::Task::OldDW,
+                         fieldInfo.varlabel,
+                         patches, Uintah::Task::NormalDomain,
+                         materials, Uintah::Task::NormalDomain,
+                         fieldInfo.ghostType, fieldInfo.nghost );
+
+#         ifdef WASATCH_TASK_FIELD_DIAGNOSTICS
+          proc0cout << std::setw(10) << "(REQUIRES)"
+                    << std::setw(20) << std::left << fieldInfo.varlabel->getName()
+                    << "OLD   "
+                    << std::left << std::setw(5) << fieldInfo.nghost
+                    << *patches << endl;
+#         endif
+        }
 
         //________________
-        // set field mode 
+        // set field mode
         if( tree.computes_field( fieldTag ) ){
+
           // if the field uses dynamic allocation, then the uintah task should not be aware of this field
-          if (!tempTree.get_expr_is_persistent( fieldTag ))  continue;
-          if (rkStage==1) fieldInfo.mode = Expr::COMPUTES;
-          // TSAAD: have a look at this another time. In principle, these should
-          // be Modifies NOT requires, but it does not work wen we use MODIFIES
-          //else fieldInfo.mode = Expr::MODIFIES;
-          //if (fieldInfo.varlabel->getName() == "time") fieldInfo.mode = Expr::MODIFIES;          
-          else  {
-            //if (!tempTree.get_field_is_persistent( fieldTag) )  continue;
+          // jcs the const_cast is a hack because of the lack of const on the is_persistent method...
+          // jcs HACK - BUG IN EXPRLIB!!!  Tree cleaving is causing problems with persistency.
+          //     this should really go outside the enclosing if() statement!
+          if( ! const_cast<Expr::ExpressionTree&>(tree).is_persistent(fieldTag) ){
+            continue;
+          }
+
+          if( rkStage==1 ){
+            fieldInfo.mode = Expr::COMPUTES;
+            fieldInfo.useOldDataWarehouse = false;
+          }
+          else{
+            // TSAAD: have a look at this another time. In principle, these should
+            // be Modifies NOT requires, but it does not work when we use MODIFIES
             fieldInfo.mode = Expr::MODIFIES;
-            //fieldInfo.useOldDataWarehouse = false;
+            fieldInfo.useOldDataWarehouse = false;
           }
         }
+        else if( fieldInfo.context == Expr::STATE_N ){
+          fieldInfo.mode = Expr::REQUIRES;
+          fieldInfo.useOldDataWarehouse = true;
+        }
         else{
-          //if (!tempTree.get_field_is_persistent( fieldTag) )  continue;
           fieldInfo.mode = Expr::REQUIRES;
           if( newDWFields.find( fieldTag ) == newDWFields.end() )
-            if (rkStage ==1 )
+            if( rkStage == 1 )
               fieldInfo.useOldDataWarehouse = true;
-            else 
+            else
               fieldInfo.useOldDataWarehouse = false;
           else
             fieldInfo.useOldDataWarehouse = false;
         }
-        if (tree.name()!="set time" && tree.name()!="initialization" && fieldInfo.varlabel->getName()=="time") {
+        if( tree.name()!="set time" &&
+            tree.name()!="initialization" &&
+            fieldInfo.varlabel->getName()=="time" ){
           fieldInfo.mode = Expr::REQUIRES;
         }
         // jcs : old dw is (should be) read only.
         Uintah::Task::WhichDW dw = Uintah::Task::NewDW;
         if( fieldInfo.useOldDataWarehouse ) dw = Uintah::Task::OldDW;
-        
+
         switch( fieldInfo.mode ){
 
         case Expr::COMPUTES:
@@ -302,11 +334,6 @@ namespace Wasatch{
           task.computes( fieldInfo.varlabel,
                          patches, Uintah::Task::NormalDomain,
                          materials, Uintah::Task::NormalDomain );
-//          else task.modifies( fieldInfo.varlabel,
-//                             patches, Uintah::Task::NormalDomain,
-//                             materials, Uintah::Task::NormalDomain );
-            
-              
           break;
 
         case Expr::REQUIRES:
@@ -329,6 +356,7 @@ namespace Wasatch{
                          patches, Uintah::Task::NormalDomain,
                          materials, Uintah::Task::NormalDomain );
           break;
+
         } // switch
 
 #       ifdef WASATCH_TASK_FIELD_DIAGNOSTICS
@@ -385,7 +413,7 @@ namespace Wasatch{
 
     // jcs eachPatch vs. allPatches (gang schedule vs. independent...)
     scheduler_->addTask( task, patches_, materials_ );
-    
+
     if( hasPressureExpression_ ){
       Pressure& pexpr = dynamic_cast<Pressure&>( tree->get_expression( pressure_tag() ) );
       pexpr.schedule_solver( Uintah::getLevelP(pss), scheduler_, materials_, rkStage );
@@ -423,7 +451,6 @@ namespace Wasatch{
       // resolve the tree
       TreePtr tree;
       if( createUniqueTreePerPatch_ ){
-        //proc0cout << "Resolving tree for patch " << patch->getID() << std::endl;
         PatchTreeMap::iterator iptm = patchTreeMap_.find( patch->getID() );
         ASSERT( iptm != patchTreeMap_.end() );
         tree = iptm->second.first;
@@ -436,15 +463,18 @@ namespace Wasatch{
 
         const int material = materials->get(im);
         try{
-//           proc0cout << endl
-//                     << "Wasatch: executing graph '" << taskName_
-//                     << "' for patch " << patch->getID()
-//                     << " and material " << material
-//                     << endl;
-
-//     fml_->dump_fields(cout);            
+#         ifdef WASATCH_TASK_DIAGNOSTICS
+          proc0cout << endl
+              << "Wasatch: executing graph '" << taskName_
+              << "' for patch " << patch->getID()
+              << " and material " << material
+              << endl;
+          if( Uintah::Parallel::getMPIRank() == 0 ){
+            fml_->dump_fields(std::cout);
+          }
+#         endif
           fml_->allocate_fields( Expr::AllocInfo( oldDW, newDW, material, patch, pg ) );
-          
+
           if( hasPressureExpression_ ){
             Pressure& pexpr = dynamic_cast<Pressure&>( tree->get_expression( pressure_tag() ) );
             pexpr.bind_uintah_vars( newDW, patch, material, rkStage );
@@ -452,9 +482,11 @@ namespace Wasatch{
           }
 
           tree->bind_fields( *fml_ );
-          tree->bind_operators( opdb );          
+          tree->bind_operators( opdb );
           tree->execute_tree();
-//           proc0cout << "Wasatch: done executing graph '" << taskName_ << "'" << endl;
+#         ifdef WASATCH_TASK_DIAGNOSTICS
+          proc0cout << "Wasatch: done executing graph '" << taskName_ << "'" << endl;
+#         endif
           fml_->deallocate_fields();
         }
         catch( std::exception& e ){
@@ -569,8 +601,8 @@ namespace Wasatch{
   }
 
   //------------------------------------------------------------------
-  
-  Expr::ExpressionTree::TreePtr 
+
+  Expr::ExpressionTree::TreePtr
   TaskInterface::get_time_tree()
   {
     typedef Expr::ExpressionTree::TreePtr TreePtr;
@@ -580,7 +612,7 @@ namespace Wasatch{
       Wasatch::TreeTaskExecute* taskexec = *iex;
       PatchTreeMap ptmap= taskexec->get_patch_tree_map();
       const PatchTreeMap::iterator iptm = ptmap.begin();
-      //ASSERT( iptm != patchTreeMap_.end() );      
+      //ASSERT( iptm != patchTreeMap_.end() );
       //Uintah::Task* const task = iptm->second.second;
       TreePtr tree = iptm->second.first;
       if (tree->name()=="set time") {
@@ -589,7 +621,7 @@ namespace Wasatch{
     }
     throw std::runtime_error( "TaskInterface::get_time_tree() could not resolve a valid tree");
   }
-  
+
   //------------------------------------------------------------------
 
 } // namespace Wasatch

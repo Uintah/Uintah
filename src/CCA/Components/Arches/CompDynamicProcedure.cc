@@ -2075,7 +2075,7 @@ CompDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
     bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
     bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
     bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
-    int wall_celltypeval = d_boundaryCondition->wallCellType();
+    int wall_celltypeval = BoundaryCondition::WALL; //d_boundaryCondition->wallCellType();
     if (xminus) {
       int colX = indexLow.x();
       for (int colZ = indexLow.z(); colZ <=  indexHigh.z(); colZ ++) {

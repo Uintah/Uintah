@@ -49,6 +49,7 @@ using namespace Uintah;
 RadHypreSolver::RadHypreSolver(const ProcessorGroup* myworld)
    : d_myworld(myworld)
 {
+  d_iteration = 0;
 }
 
 // ****************************************************************************
@@ -307,9 +308,6 @@ RadHypreSolver::setMatrix(const ProcessorGroup* pc,
   HYPRE_StructMatrixAssemble(d_A);
   //cerr << "Matrix Assemble time = " << Time::currentSeconds()-start_time << endl;
 
-#if 0
-  HYPRE_StructMatrixPrint("driver.out.A", d_A, 0);
-#endif
 
   hypre_TFree(d_value);
 
@@ -347,16 +345,20 @@ RadHypreSolver::setMatrix(const ProcessorGroup* pc,
     HYPRE_StructVectorSetBoxValues(d_x, d_ilower[ib], d_iupper[ib], d_value);
   }
 
-  HYPRE_StructVectorAssemble(d_b);
-
-#if 0
-  HYPRE_StructVectorPrint("driver.out.b", d_b, 0);
-#endif
-  
+  HYPRE_StructVectorAssemble(d_b); 
   HYPRE_StructVectorAssemble(d_x);
-
+  
 #if 0
-  HYPRE_StructVectorPrint("driver.out.x0", d_x, 0);  
+  int patchID = patch->getID();
+  char A_fname[100],B_fname[100], X_fname[100];
+
+  sprintf(B_fname,"output/b.patch.%i.%i",patchID, d_iteration);
+  sprintf(X_fname,"output/x.patch.%i.%i",patchID, d_iteration);
+  sprintf(A_fname,"output/A.patch.%i.%i",patchID, d_iteration);
+  
+  HYPRE_StructVectorPrint(B_fname, d_b, 0);
+  HYPRE_StructMatrixPrint(A_fname, d_A, 0);
+  HYPRE_StructVectorPrint(X_fname, d_x, 0);  
 #endif
   
   hypre_TFree(d_value);

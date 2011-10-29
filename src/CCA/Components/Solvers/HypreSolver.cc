@@ -105,7 +105,6 @@ namespace Uintah {
     int jump;
     int logging;
     bool symmetric;
-    bool restart;
   };
 
   template<class Types>
@@ -680,7 +679,7 @@ namespace Uintah {
         //__________________________________
         // Test for convergence
         if(final_res_norm > tolerance || finite(final_res_norm) == 0){
-          if(params->restart){
+          if( params->getRestartTimestepOnFailure() ){
             if(pg->myrank() == 0)
               cout << "HypreSolver not converged in " << num_iterations 
                    << "iterations, final residual= " << final_res_norm 
@@ -906,7 +905,6 @@ namespace Uintah {
       p->logging = 0;
     }
     p->symmetric = true;
-    p->restart   = true;
     return p;
   }
   

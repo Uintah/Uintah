@@ -32,7 +32,6 @@ namespace Wasatch{
    *  \param gh - the GraphHelper associated with this instance of TabProps.
    */
   void parse_tabprops( Uintah::ProblemSpecP& params,
-                       const Expr::Tag densityTag,
                        GraphHelper& gh )
   {
     std::string fileName;
@@ -152,10 +151,10 @@ namespace Wasatch{
 
     //________________________________________________________________
     // create an expression specifically for density.
-    
+
     Uintah::ProblemSpecP densityParams = params->findBlock("ExtractDensity");
     if (densityParams != 0) {
-      
+
       std::vector<Expr::Tag> rhoEtaNames;
       std::vector<Expr::Tag> reiEtaNames;
       for( Uintah::ProblemSpecP rhoEtaParams = densityParams->findBlock("DensityWeightedIVar");
@@ -167,8 +166,8 @@ namespace Wasatch{
         const Expr::Tag reiEtaTag = parse_nametag( reiEtaParams->findBlock("NameTag") );
         reiEtaNames.push_back( reiEtaTag );
       }
-      
-      
+
+
       //_______________________________________
       // extract density variable information
       std::string dvarTableName;
@@ -181,13 +180,13 @@ namespace Wasatch{
         throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
       }
       const BSpline* const spline = table.find_entry( dvarTableName );
-      
+
       //_____________________________________
       // register the expression for density
       typedef DensityCalculator<SpatialOps::structured::SVolField>::Builder DensCalc;
-      gh.exprFactory->register_expression( densityTag,
+      gh.exprFactory->register_expression( parse_nametag( densityParams->findBlock("NameTag") ),
                                            scinew DensCalc( spline->clone(), rhoEtaNames, reiEtaNames, ivarNames ));
-      
+
     }
 
   }
@@ -198,13 +197,12 @@ namespace Wasatch{
                              GraphCategories& gc )
   {
     //_________________________________________________________________________________
-    // extracting the density tag in the cases that it is needed and also throwing the 
-    // error messages in different error conditions regarding to the input file  
+    // extracting the density tag in the cases that it is needed and also throwing the
+    // error messages in different error conditions regarding to the input file
 
-    Uintah::ProblemSpecP densityParams = params->findBlock("Density");
+    Uintah::ProblemSpecP densityParams  = params->findBlock("Density");
     Uintah::ProblemSpecP tabPropsParams = params->findBlock("TabProps");
 
-    Expr::Tag densityTag = Expr::Tag();
     if (tabPropsParams) {
       if (tabPropsParams->findBlock("ExtractDensity") && !densityParams) {
         std::ostringstream msg;
@@ -212,20 +210,8 @@ namespace Wasatch{
             << "       Please include the \"Density\" block in wasatch in your input file." << endl;
         throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
       }
-      else if (tabPropsParams->findBlock("ExtractDensity") && densityParams) {
-
-        bool existDensity = densityParams->findBlock("NameTag");
-        if (!existDensity) {
-          std::ostringstream msg;
-          msg << "ERROR: You need to define and register a tag for density to be used in \"ExtractDensity\" block." << endl
-              << "       Please include a block for density tag in \"Density\" block." << endl;
-          throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
-        }
-        densityTag = parse_nametag( densityParams->findBlock("NameTag") );
-      }
     }
 
-    
     for( Uintah::ProblemSpecP tabPropsParams = params->findBlock("TabProps");
          tabPropsParams != 0;
          tabPropsParams = tabPropsParams->findNextBlock("TabProps") ){
@@ -241,8 +227,8 @@ namespace Wasatch{
         msg << "ERROR: unsupported task list '" << taskListName << "'" << endl;
         throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
       }
-      
-      parse_tabprops( tabPropsParams, densityTag, *gc[cat] );
+
+      parse_tabprops( tabPropsParams, *gc[cat] );
     }
   }
 
