@@ -62,8 +62,6 @@ $(SRCDIR)/DORadiationModel.$(OBJEXT): $(SRCDIR)/fortran/rdomsrc_fort.h
 $(SRCDIR)/DORadiationModel.$(OBJEXT): $(SRCDIR)/fortran/rdomflux_fort.h
 $(SRCDIR)/DORadiationModel.$(OBJEXT): $(SRCDIR)/fortran/rdombmcalc_fort.h
 $(SRCDIR)/DORadiationModel.$(OBJEXT): $(SRCDIR)/fortran/rdomvolq_fort.h
-$(SRCDIR)/DORadiationModel.$(OBJEXT): $(SRCDIR)/fortran/rshsolve_fort.h
-$(SRCDIR)/DORadiationModel.$(OBJEXT): $(SRCDIR)/fortran/rshresults_fort.h
 
 
 

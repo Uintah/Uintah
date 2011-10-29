@@ -34,6 +34,8 @@ C
 
       double precision PI,PI1,SIG
       double precision val, factor
+      double precision areaew, arean, areatb
+      double precision volume
 
       DATA SIG/5.67D-08/
 
@@ -86,12 +88,13 @@ C
          
       end if
 
-      volume(ii,jj,kk) = sew(ii) * sns(jj) * stb(kk)
-      su(ii,jj,kk) = esrcg(ii,jj,kk)*volume(ii,jj,kk)
+      volume = sew(ii) * sns(jj) * stb(kk)
+      su(ii,jj,kk) = esrcg(ii,jj,kk)*volume
 
-      areaew = sns(jj)*stb(kk)
-      arean(ii) = sew(ii)*stb(kk)                 
-      areatb(ii) = sew(ii) * sns(jj)
+      areaew = sns(jj) * stb(kk)
+      arean  = sew(ii) * stb(kk)                 
+      areatb = sew(ii) * sns(jj)
+      
       if (pcell(ii,jj,kk).ne.ffield) then
 c  call fixval assume abskg to be one but change it in props calculation
 
@@ -124,11 +127,11 @@ c     Empirical model for emissivity at boundaries
          
          if (plusY) then
             if (pcell(ii,jj-1,kk).eq.ffield) then
-               as(ii,jj,kk) = abs(oeta(l))*arean(ii)
+               as(ii,jj,kk) = abs(oeta(l))*arean
             else
                as(ii,jj,kk) = 0.0d0
                su(ii,jj,kk) = su(ii,jj,kk) + 
-     &              (abs(oeta(l))*arean(ii)) *
+     &              (abs(oeta(l))*arean) *
      &         PI1 * (SIG * abs(fraction(bands)) *
 c     Empirical model for emissivity at boundaries
      &              1.0d0*
@@ -136,11 +139,11 @@ c     Empirical model for emissivity at boundaries
             end if
          else
             if (pcell(ii,jj+1,kk).eq.ffield) then
-               as(ii,jj,kk) = abs(oeta(l))*arean(ii)
+               as(ii,jj,kk) = abs(oeta(l))*arean
             else
                as(ii,jj,kk) = 0.0d0
                su(ii,jj,kk) = su(ii,jj,kk) + 
-     &              (abs(oeta(l))*arean(ii)) *
+     &              (abs(oeta(l))*arean) *
      &         PI1 * (SIG * abs(fraction(bands)) *
 c     Empirical model for emissivity at boundaries
      &              1.0d0*
@@ -150,11 +153,11 @@ c     Empirical model for emissivity at boundaries
 
          if (plusZ) then
             if (pcell(ii,jj,kk-1).eq.ffield) then
-               ab(ii,jj,kk) = abs(oxi(l))*areatb(ii)
+               ab(ii,jj,kk) = abs(oxi(l))*areatb
             else
                ab(ii,jj,kk) = 0.0d0
                su(ii,jj,kk) = su(ii,jj,kk) + 
-     &              (abs(oxi(l))*areatb(ii)) *
+     &              (abs(oxi(l))*areatb) *
      &         PI1 * (SIG * abs(fraction(bands)) *
 c     Empirical model for emissivity at boundaries
      &              1.0d0*
@@ -162,11 +165,11 @@ c     Empirical model for emissivity at boundaries
             end if
          else
             if (pcell(ii,jj,kk+1).eq.ffield) then
-               ab(ii,jj,kk) = abs(oxi(l))*areatb(ii)
+               ab(ii,jj,kk) = abs(oxi(l))*areatb
             else
                ab(ii,jj,kk) = 0.0d0
                su(ii,jj,kk) = su(ii,jj,kk) + 
-     &              (abs(oxi(l))*areatb(ii)) * 
+     &              (abs(oxi(l))*areatb) * 
 c     Empirical model for emissivity at boundaries
      &              1.0d0*
      &         PI1 * (SIG * abs(fraction(bands)) *
@@ -174,9 +177,8 @@ c     Empirical model for emissivity at boundaries
             end if
          endif
          
-         ap(ii,jj,kk) =  abs(omu(l))*areaew + abs(oeta(l))*arean(ii) + 
-     &        abs(oxi(l))*areatb(ii) + abskg(ii,jj,kk)*
-     &        volume(ii,jj,kk)
+         ap(ii,jj,kk) =  abs(omu(l))*areaew + abs(oeta(l))*arean + 
+     &        abs(oxi(l))*areatb + abskg(ii,jj,kk) * volume
          
       endif
 10    continue
