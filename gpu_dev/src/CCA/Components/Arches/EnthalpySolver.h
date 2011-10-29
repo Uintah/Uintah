@@ -218,7 +218,6 @@ private:
   // RMCRT radiation model 
   Ray* d_RMCRT;
 
-  int d_radCounter; //to decide how often radiation calc is done
   int d_radCalcFreq;
   bool d_radiationCalc;
   bool d_DORadiationCalc;

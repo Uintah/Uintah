@@ -192,7 +192,10 @@ clean::
 cleanreally::
 	rm -f $(patsubst %,%/*.$(OBJEXT), $(ALLOBJSUBDIRS))
 	rm -f $(patsubst %,%/depend.mk, $(ALLOBJSUBDIRS))
+ifneq ($(IS_OSX),yes)
+        # Fails on Mac case-insensitive file systems... (sigh)
 	rm -f $(patsubst %,%/core, $(ALLOBJSUBDIRS))
+endif
 	rm -f $(patsubst %,%/*.d, $(ALLOBJSUBDIRS))
 	for fname in $(patsubst %,%/ii_files, $(ALLOBJSUBDIRS)); \
 	  do if test -d $$fname; then rm -rf $$fname; fi; done

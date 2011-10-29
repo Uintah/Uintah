@@ -45,7 +45,6 @@ SRCS += \
         $(SRCDIR)/radcoef.F \
         $(SRCDIR)/radcal.F \
         $(SRCDIR)/radwsgg.F \
-        $(SRCDIR)/rdombc.F \
         $(SRCDIR)/rdombmcalc.F \
         $(SRCDIR)/rdomflux.F \
         $(SRCDIR)/rdomsolve.F \
@@ -54,8 +53,6 @@ SRCS += \
         $(SRCDIR)/rordr.F \
         $(SRCDIR)/rordrss.F \
         $(SRCDIR)/rordrtn.F \
-        $(SRCDIR)/rshsolve.F \
-        $(SRCDIR)/rshresults.F \
         $(SRCDIR)/soot.F
 
 $(SRCDIR)/radarray.$(OBJEXT): $(SRCDIR)/radarray_fort.h
@@ -65,12 +62,9 @@ $(SRCDIR)/radwsgg.$(OBJEXT): $(SRCDIR)/radwsgg_fort.h
 $(SRCDIR)/rordr.$(OBJEXT): $(SRCDIR)/rordr_fort.h
 $(SRCDIR)/rordrss.$(OBJEXT): $(SRCDIR)/rordrss_fort.h
 $(SRCDIR)/rordrtn.$(OBJEXT): $(SRCDIR)/rordrtn_fort.h
-$(SRCDIR)/rdombc.$(OBJEXT): $(SRCDIR)/rdombc_fort.h
 $(SRCDIR)/rdombmcalc.$(OBJEXT): $(SRCDIR)/rdombmcalc_fort.h
 $(SRCDIR)/rdomsolve.$(OBJEXT): $(SRCDIR)/rdomsolve_fort.h
 $(SRCDIR)/rdomsrc.$(OBJEXT): $(SRCDIR)/rdomsrc_fort.h
 $(SRCDIR)/rdomflux.$(OBJEXT): $(SRCDIR)/rdomflux_fort.h
 $(SRCDIR)/rdomvolq.$(OBJEXT): $(SRCDIR)/rdomvolq_fort.h
-$(SRCDIR)/rshsolve.$(OBJEXT): $(SRCDIR)/rshsolve_fort.h
-$(SRCDIR)/rshresults.$(OBJEXT): $(SRCDIR)/rshresults_fort.h
 

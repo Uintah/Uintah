@@ -683,9 +683,9 @@ Arches::scheduleInitialize(const LevelP& level,
   //
   // compute the cell area fraction 
   d_boundaryCondition->sched_setAreaFraction( sched, patches, matls ); 
+  d_boundaryCondition->sched_setupNewIntrusionCellType( sched, patches, matls ); 
 
   sched_scalarInit(level, sched);
-
 
   // computing flow inlet areas
   if (d_boundaryCondition->getInletBC()){

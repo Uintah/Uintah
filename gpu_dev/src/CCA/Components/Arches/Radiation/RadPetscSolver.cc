@@ -30,7 +30,7 @@ DEALINGS IN THE SOFTWARE.
 
 //----- PetscSolver.cc ----------------------------------------------
 
-#include <CCA/Components/Arches/Radiation/RadLinearSolver.h>
+#include <CCA/Components/Arches/Radiation/RadPetscSolver.h>
 #include <Core/Thread/Time.h>
 #include <CCA/Components/Arches/Arches.h>
 #include <CCA/Components/Arches/ArchesLabel.h>
@@ -57,9 +57,9 @@ using namespace Uintah;
 
 
 // ****************************************************************************
-// Default constructor for RadLinearSolver
+// Default constructor for RadPetscSolver
 // ****************************************************************************
-RadLinearSolver::RadLinearSolver(const ProcessorGroup* myworld)
+RadPetscSolver::RadPetscSolver(const ProcessorGroup* myworld)
    : d_myworld(myworld)
 {
 }
@@ -67,7 +67,7 @@ RadLinearSolver::RadLinearSolver(const ProcessorGroup* myworld)
 // ****************************************************************************
 // Destructor
 // ****************************************************************************
-RadLinearSolver::~RadLinearSolver()
+RadPetscSolver::~RadPetscSolver()
 {
   //finalizePetscSolver();
 }
@@ -76,7 +76,7 @@ RadLinearSolver::~RadLinearSolver()
 // Problem setup
 // ****************************************************************************
 void 
-RadLinearSolver::problemSetup(const ProblemSpecP& params)
+RadPetscSolver::problemSetup(const ProblemSpecP& params)
 {
   if (params) {
     ProblemSpecP db = params->findBlock("LinearSolver");
@@ -135,7 +135,7 @@ RadLinearSolver::problemSetup(const ProblemSpecP& params)
   int argc = 4;
   char** argv;
   argv = scinew  char*[argc];
-  argv[0] = const_cast<char*>("RadLinearSolver::problemSetup");
+  argv[0] = const_cast<char*>("RadPetscSolver::problemSetup");
   argv[1] = const_cast<char*>("-no_signal_handler");
   argv[2] = const_cast<char*>("-log_exclude_actions");
   argv[3] = const_cast<char*>("-log_exclude_objects");
@@ -151,11 +151,11 @@ RadLinearSolver::problemSetup(const ProblemSpecP& params)
 // This function creates the Petsc local to global mapping and some global
 // vector/matrix size parameters
 void 
-RadLinearSolver::matrixCreate(const PatchSet* allpatches,
+RadPetscSolver::matrixCreate(const PatchSet* allpatches,
                               const PatchSubset* mypatches)
 {
 
-  //cout << d_myworld->myrank() <<"    RadLinearSolver::matrixCreate " << *mypatches << endl;
+  //cout << d_myworld->myrank() <<"    RadPetscSolver::matrixCreate " << *mypatches << endl;
   // for global index get a petsc index that
   // make it a data memeber
   int numProcs = d_myworld->size();
@@ -182,7 +182,7 @@ RadLinearSolver::matrixCreate(const PatchSet* allpatches,
 // Fill linear parallel matrix
 // ****************************************************************************
 void 
-RadLinearSolver::setMatrix(const ProcessorGroup* ,
+RadPetscSolver::setMatrix(const ProcessorGroup* ,
                            const Patch* patch,
                            ArchesVariables* vars,
                            bool plusX, bool plusY, bool plusZ,
@@ -196,7 +196,7 @@ RadLinearSolver::setMatrix(const ProcessorGroup* ,
                            CCVariable<double>& AT)
 
 {
-  //cout << d_myworld->myrank() <<"    RadLinearSolver::setMatrix " << patch->getGridIndex() <<  endl;
+  //cout << d_myworld->myrank() <<"    RadPetscSolver::setMatrix " << patch->getGridIndex() <<  endl;
 
   //__________________________________
   //  create the Petsc matrix A and vectors X, B and U.  This routine is called
@@ -361,9 +361,9 @@ RadLinearSolver::setMatrix(const ProcessorGroup* ,
 //______________________________________________________________________
 //
 bool
-RadLinearSolver::radLinearSolve()
+RadPetscSolver::radLinearSolve()
 {
-  //cout << d_myworld->myrank() <<"    RadLinearSolver::radLinearSolve "<<  endl;
+  //cout << d_myworld->myrank() <<"    RadPetscSolver::radLinearSolve "<<  endl;
   bool test;
   test = PetscLinearSolve(A, d_b, d_x, d_u,
                           d_pcType, d_kspType, d_overlap,
@@ -374,14 +374,14 @@ RadLinearSolver::radLinearSolve()
 //______________________________________________________________________
 //
 void
-RadLinearSolver::copyRadSoln(const Patch* patch, ArchesVariables* vars)
+RadPetscSolver::copyRadSoln(const Patch* patch, ArchesVariables* vars)
 {
   PetscToUintah_Vector(patch, vars->cenint, d_x, d_petscLocalToGlobal);
 }
 //______________________________________________________________________
 //  Destroy Petsc objects
 void
-RadLinearSolver::destroyMatrix() 
+RadPetscSolver::destroyMatrix() 
 {
   destroyPetscObjects(A, d_x, d_b, d_u);
 }

@@ -248,6 +248,8 @@ class CGSolverParams : public SolverParameters {
 public:
   double tolerance;
   double initial_tolerance;
+  int maxiterations;
+  
   enum Norm {
     L1, L2, LInfinity
   };
@@ -261,7 +263,6 @@ public:
   {
   }
   ~CGSolverParams() {}
-  bool restart;
 };
 
 template<class Types>
@@ -311,18 +312,23 @@ public:
       throw ProblemSetupException("Unknown data warehouse for initial guess", __FILE__, __LINE__);
     }
     typedef typename Types::sol_type sol_type;
-    R_label = VarLabel::create(A->getName()+" R", sol_type::getTypeDescription());
-    D_label = VarLabel::create(A->getName()+" D", sol_type::getTypeDescription());
-    Q_label = VarLabel::create(A->getName()+" Q", sol_type::getTypeDescription());
-    d_label = VarLabel::create(A->getName()+" d", sum_vartype::getTypeDescription());
+    R_label     = VarLabel::create(A->getName()+" R", sol_type::getTypeDescription());
+    D_label     = VarLabel::create(A->getName()+" D", sol_type::getTypeDescription());
+    Q_label     = VarLabel::create(A->getName()+" Q", sol_type::getTypeDescription());
+    d_label     = VarLabel::create(A->getName()+" d", sum_vartype::getTypeDescription());
     aden_label = VarLabel::create(A->getName()+" aden", sum_vartype::getTypeDescription());
     diag_label = VarLabel::create(A->getName()+" inverse diagonal", sol_type::getTypeDescription());
+    
+    tolerance_label = VarLabel::create("tolerance", sum_vartype::getTypeDescription());
+    
     VarLabel* tmp_flop_label = VarLabel::create(A->getName()+" flops", sumlong_vartype::getTypeDescription());
     tmp_flop_label->allowMultipleComputes();
     flop_label = tmp_flop_label;
+    
     VarLabel* tmp_memref_label = VarLabel::create(A->getName()+" memrefs", sumlong_vartype::getTypeDescription());
     tmp_memref_label->allowMultipleComputes();
     memref_label = tmp_memref_label;
+    
     switch(params->norm){
     case CGSolverParams::L1:
       err_label = VarLabel::create(A->getName()+" err", sum_vartype::getTypeDescription());
@@ -344,6 +350,8 @@ public:
     VarLabel::destroy(diag_label);
     VarLabel::destroy(flop_label);
     VarLabel::destroy(memref_label);
+    VarLabel::destroy(tolerance_label);
+    
     if(err_label != d_label)
       VarLabel::destroy(err_label);
     VarLabel::destroy(aden_label);
@@ -629,6 +637,19 @@ public:
         double dnew = ::Dot(R, D, iter, flops, memrefs);
         new_dw->put(sum_vartype(dnew), d_label);
         
+        double tolerance = params->tolerance;
+        if(params->getDynamicTolerance()) {                
+          double iprod      = ::Dot(B,B,iter, flops, memrefs);      
+          double sum_b      = sqrt(iprod);           
+          tolerance         = tolerance / (sum_b); 
+          if(std::isinf(tolerance) ){
+            tolerance = 0;
+          }                       
+        }
+       
+        new_dw->put( sum_vartype(tolerance), tolerance_label );
+        
+        
         // Calculate error term
         double residualNormalization = params->getResidualNormalizationFactor();       
         
@@ -683,11 +704,6 @@ public:
     level->findCellIndexRange(l, h);
 
     int niter=0;
-    int toomany=0;
-    IntVector diff(h-l);
-    int size = diff.x()*diff.y()*diff.z();
-    if(toomany == 0)
-      toomany=2*size;
 
     subsched->advanceDataWarehouse(grid);
 
@@ -706,6 +722,7 @@ public:
     task->computes(X_label);
     task->computes(D_label);
     task->computes(d_label);
+    task->computes(tolerance_label);
     task->computes(diag_label);
     if(params->norm != CGSolverParams::L2){
       task->computes(err_label);
@@ -715,9 +732,14 @@ public:
 
     subsched->compile();
     subsched->get_dw(3)->setScrubbing(DataWarehouse::ScrubNone);
-    subsched->execute();
+    subsched->execute();    
     
     //__________________________________
+    double tolerance=0;
+    sum_vartype tol;
+    subsched->get_dw(3)->get(tol, tolerance_label);
+    tolerance=tol;
+    
     double e=0;
     switch(params->norm){
     case CGSolverParams::L1:
@@ -807,9 +829,10 @@ public:
       subsched->addTask(task, level->eachPatch(), matlset);
       subsched->compile();
       
+      
       //__________________________________
       //  Main iteration
-      while(niter < toomany && !(e < params->tolerance)){
+      while(niter < params->maxiterations && !(e < tolerance)){
         niter++;
         subsched->advanceDataWarehouse(grid);
         subsched->get_dw(2)->setScrubbing(DataWarehouse::ScrubComplete);
@@ -888,7 +911,7 @@ public:
     double mflops = (double(flops)*1.e-6)/dt;
     double memrate = (double(memrefs)*1.e-9)/dt;
     if(pg->myrank() == 0){
-      if(niter < toomany) {
+      if(niter < params->maxiterations) {
         cout << "Solve of " << X_label->getName() 
               << " on level " << level->getIndex()
              << " completed in "
@@ -897,13 +920,13 @@ public:
              << e << " residual, " 
               << mflops<< " MFLOPS, " << memrate << " GB/sec)\n";
       }else{
-        if(params->restart){
+        if(params->getRestartTimestepOnFailure()){
            cout << "CGSolver not converging, requesting smaller timestep\n";
           new_dw->abortTimestep();
           new_dw->restartTimestep();
         }else {
         throw ConvergenceFailure("CGSolve variable: "+X_label->getName(), 
-                          niter, e, params->tolerance,__FILE__,__LINE__);
+                          niter, e, tolerance,__FILE__,__LINE__);
         }
       }
     }
@@ -933,6 +956,7 @@ private:
   const VarLabel* aden_label;
   const VarLabel* flop_label;
   const VarLabel* memref_label;
+  const VarLabel* tolerance_label;
 
   const CGSolverParams* params;
   bool modifies_x;
@@ -949,8 +973,11 @@ SolverParameters* CGSolver::readParameters(ProblemSpecP& params, const string& v
       string variable;
       if(param->getAttribute("variable", variable) && variable != varname)
         continue;
-      param->get("initial_tolerance", p->initial_tolerance);
-      param->get("tolerance", p->tolerance);
+        
+      param->get("initial_tolerance",           p->initial_tolerance);
+      param->get("tolerance",                   p->tolerance);
+      param->getWithDefault ("maxiterations",   p->maxiterations,  75);
+      
       string norm;
       if(param->get("norm", norm)){
         if(norm == "L1" || norm == "l1") {
@@ -975,8 +1002,7 @@ SolverParameters* CGSolver::readParameters(ProblemSpecP& params, const string& v
       }
     }
   }
-  p->restart=true;
-  
+    
   if(p->norm == CGSolverParams::L2)
     p->tolerance *= p->tolerance;
   return p;

@@ -301,6 +301,9 @@ namespace Uintah {
           const PatchSet* patches,
           const MaterialSet* matls); 
 
+      void sched_setupNewIntrusionCellType( SchedulerP& sched, 
+        const PatchSet* patches, const MaterialSet* matls );
+
       void setHattedIntrusionVelocity( const int p,
                                        SFCXVariable<double>& u, 
                                        SFCYVariable<double>& v, 
@@ -359,7 +362,7 @@ namespace Uintah {
       // mm Wall boundary ID
       int getMMWallId() const {
         if ( d_use_new_bcs ) {
-          return MMWALL; 
+          return INTRUSION; 
         } else { 
           return d_mmWallID; 
         }

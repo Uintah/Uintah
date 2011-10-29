@@ -30,7 +30,7 @@ DEALINGS IN THE SOFTWARE.
 
 //----- PetscSolver.cc ----------------------------------------------
 
-#include <CCA/Components/Arches/Radiation/RadLinearSolver.h>
+#include <CCA/Components/Arches/Radiation/RadPetscSolver.h>
 #include <Core/Exceptions/InternalError.h>
 
 using namespace std;
@@ -38,9 +38,9 @@ using namespace Uintah;
 
 
 // ****************************************************************************
-// Default constructor for RadLinearSolver
+// Default constructor for RadPetscSolver
 // ****************************************************************************
-RadLinearSolver::RadLinearSolver(const ProcessorGroup* myworld)
+RadPetscSolver::RadPetscSolver(const ProcessorGroup* myworld)
    : d_myworld(myworld)
 {
   throw InternalError("PetscSolver not configured", __FILE__, __LINE__);
@@ -49,7 +49,7 @@ RadLinearSolver::RadLinearSolver(const ProcessorGroup* myworld)
 // ****************************************************************************
 // Destructor
 // ****************************************************************************
-RadLinearSolver::~RadLinearSolver()
+RadPetscSolver::~RadPetscSolver()
 {
 // Comment out the following till better place to finalize PETSC is found
 //  finalizeSolver();
@@ -59,14 +59,14 @@ RadLinearSolver::~RadLinearSolver()
 // Problem setup
 // ****************************************************************************
 void 
-RadLinearSolver::problemSetup(const ProblemSpecP& )
+RadPetscSolver::problemSetup(const ProblemSpecP& )
 {
   throw InternalError("PetscSolver not configured", __FILE__, __LINE__);
 }
 
 
 void 
-RadLinearSolver::matrixCreate(const PatchSet* ,
+RadPetscSolver::matrixCreate(const PatchSet* ,
                           const PatchSubset* )
 {
   throw InternalError("PetscSolver not configured", __FILE__, __LINE__);
@@ -76,7 +76,7 @@ RadLinearSolver::matrixCreate(const PatchSet* ,
 // Fill linear parallel matrix
 // ****************************************************************************
 void 
-RadLinearSolver::setMatrix(const ProcessorGroup* ,
+RadPetscSolver::setMatrix(const ProcessorGroup* ,
                            const Patch* ,
                            ArchesVariables* ,
                            bool , bool , bool ,
@@ -94,20 +94,20 @@ RadLinearSolver::setMatrix(const ProcessorGroup* ,
 
 
 bool
-RadLinearSolver::radLinearSolve()
+RadPetscSolver::radLinearSolve()
 {
   throw InternalError("PetscSolver not configured", __FILE__, __LINE__);
 }
 
 
 void
-RadLinearSolver::copyRadSoln(const Patch* , ArchesVariables* )
+RadPetscSolver::copyRadSoln(const Patch* , ArchesVariables* )
 {
   throw InternalError("PetscSolver not configured", __FILE__, __LINE__);
 }
 
 void
-RadLinearSolver::destroyMatrix() 
+RadPetscSolver::destroyMatrix() 
 {
   throw InternalError("PetscSolver not configured", __FILE__, __LINE__);
 }

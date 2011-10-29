@@ -52,7 +52,7 @@ DEALINGS IN THE SOFTWARE.
 
 #include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Ports/Scheduler.h>
-
+#include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/DbgOutput.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Variables/PerPatch.h>
@@ -112,7 +112,7 @@ PressureSolver::~PressureSolver()
 // Problem Setup
 //______________________________________________________________________
 void 
-PressureSolver::problemSetup(const ProblemSpecP& params)
+PressureSolver::problemSetup(ProblemSpecP& params)
 {
   ProblemSpecP db = params->findBlock("PressureSolver");
   d_pressRef = d_physicalConsts->getRefPoint();
@@ -144,6 +144,21 @@ PressureSolver::problemSetup(const ProblemSpecP& params)
     d_hypreSolver_parameters->setDynamicTolerance(true);
     
     d_linearSolver = scinew HypreSolver(d_myworld);
+    
+    //__________________________________
+    // bulletproofing
+    ProblemSpecP ps_root = params->getRootNode();
+    ProblemSpecP sol_ps = ps_root->findBlock( "Solver" );
+    string solver = "None";
+    if( sol_ps ) {
+      sol_ps->getAttribute( "type", solver );
+    }
+    if( !sol_ps || (solver != "hypre" || solver == "HypreSolver") ){
+      ostringstream msg;
+      msg << "\n ERROR:Arches:PressureSolver  You've specified the hypre solver in only one of two required places\n";
+      msg << " Please add  <Solver type=\"hypre\" /> directly beneath <SimulationComponent type=\"arches\" /> \n";
+      throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
+    }
   }
 #endif
   else {
