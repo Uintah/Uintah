@@ -77,7 +77,7 @@ public:
 
   //______________________________________________________________________
   // Set up the problem specification database
-  void problemSetup(const ProblemSpecP& params);
+  void problemSetup(ProblemSpecP& params);
 
 
   //______________________________________________________________________
