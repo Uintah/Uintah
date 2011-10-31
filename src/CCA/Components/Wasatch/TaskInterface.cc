@@ -241,7 +241,7 @@ namespace Wasatch{
     for( Expr::FieldManagerList::iterator ifm=fml.begin(); ifm!=fml.end(); ++ifm ){
 
       typedef Expr::FieldManagerBase::PropertyMap PropertyMap;
-      PropertyMap& properties = (*ifm)->properties();
+      PropertyMap& properties = ifm->second->properties();
       PropertyMap::iterator ipm = properties.find("UintahInfo");
       assert( ipm != properties.end() );
       Expr::IDInfoMap& infomap = boost::any_cast< boost::reference_wrapper<Expr::IDInfoMap> >(ipm->second);
