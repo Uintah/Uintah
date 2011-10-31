@@ -532,7 +532,6 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
     new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
     CellInformation* cellinfo = cellInfoP.get().get_rep();
 
-    // from old_dw get PCELL, DENO, FO
     new_dw->get(constEnthalpyVars.cellType, d_lab->d_cellTypeLabel, indx, patch, gac, 1);
 
     DataWarehouse* old_values_dw;
@@ -543,11 +542,13 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
     }
     old_values_dw->get(constEnthalpyVars.old_enthalpy, d_lab->d_enthalpySPLabel, indx, patch, gn, 0);
     old_values_dw->get(constEnthalpyVars.old_density,  d_lab->d_densityCPLabel,  indx, patch, gn, 0);
-
-    // from new_dw get DEN, VIS, F, U, V, W
+    new_dw->get(       constEnthalpyVars.enthalpy,     d_lab->d_enthalpySPLabel, indx, patch, gn, 0);
+   
     new_dw->get(constEnthalpyVars.density, d_lab->d_densityCPLabel, indx, patch,  gac, 2);
 
 
+    //__________________________________
+    //  abskp
     enthalpyVars.ABSKP.allocate(patch->getExtraCellLowIndex(),
                                      patch->getExtraCellHighIndex());
     if(d_use_abskp){
@@ -556,21 +557,26 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
       enthalpyVars.ABSKP.initialize(0.0);
     }
 
-    if (d_dynScalarModel)
+    //__________________________________
+    //
+    if (d_dynScalarModel){
       new_dw->get(constEnthalpyVars.viscosity, d_lab->d_enthalpyDiffusivityLabel, indx, patch, gac, 2);
-    else
+    }else {
       new_dw->get(constEnthalpyVars.viscosity, d_lab->d_viscosityCTSLabel,        indx, patch,  gac, 2);
-
-    new_dw->get(constEnthalpyVars.enthalpy, d_lab->d_enthalpySPLabel, indx, patch, gn, 0);
+    }
+    
     if (d_conv_scheme > 0) {
       new_dw->get(constEnthalpyVars.scalar, d_lab->d_enthalpySPLabel, indx, patch,  gac, 2);
     }
     
-    // for explicit get old values
+    //__________________________________
+    //
     new_dw->get(constEnthalpyVars.uVelocity, d_lab->d_uVelocitySPBCLabel,  indx, patch, gaf, 1);
     new_dw->get(constEnthalpyVars.vVelocity, d_lab->d_vVelocitySPBCLabel,  indx, patch, gaf, 1);
     new_dw->get(constEnthalpyVars.wVelocity, d_lab->d_wVelocitySPBCLabel,  indx, patch, gaf, 1);
     
+    //__________________________________
+    //
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First){
       old_dw->getCopy(enthalpyVars.temperature, d_lab->d_tempINLabel, indx, patch, gac, 1);
       old_dw->get(constEnthalpyVars.cp,         d_lab->d_cpINLabel,   indx, patch, gac, 1);
@@ -580,20 +586,33 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
       new_dw->get(constEnthalpyVars.cp,         d_lab->d_cpINLabel,   indx, patch, gac, 1);
     }
 
+    //__________________________________
     // allocate matrix coeffs
-  if ( timelabels->integrator_step_number == TimeIntegratorStepNumber::First ) {
-    for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++) {
-      new_dw->allocateAndPut(enthalpyVars.scalarCoeff[ii],
-                             d_lab->d_enthCoefSBLMLabel, ii, patch);
-      enthalpyVars.scalarCoeff[ii].initialize(0.0);
-      
-      new_dw->allocateAndPut(enthalpyVars.scalarDiffusionCoeff[ii],
-                             d_lab->d_enthDiffCoefLabel, ii, patch);
-      enthalpyVars.scalarDiffusionCoeff[ii].initialize(0.0);
+    if ( timelabels->integrator_step_number == TimeIntegratorStepNumber::First ) {
+      for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++) {
+        new_dw->allocateAndPut( enthalpyVars.scalarCoeff[ii],         d_lab->d_enthCoefSBLMLabel, ii, patch);
+        new_dw->allocateAndPut( enthalpyVars.scalarDiffusionCoeff[ii],d_lab->d_enthDiffCoefLabel, ii, patch);
+
+        enthalpyVars.scalarCoeff[ii].initialize(0.0);
+        enthalpyVars.scalarDiffusionCoeff[ii].initialize(0.0);
+      }
+      new_dw->allocateAndPut( enthalpyVars.scalarNonlinearSrc,        d_lab->d_enthNonLinSrcSBLMLabel, indx, patch);
+      enthalpyVars.scalarNonlinearSrc.initialize(0.0);
     }
-    new_dw->allocateAndPut(enthalpyVars.scalarNonlinearSrc,
-                           d_lab->d_enthNonLinSrcSBLMLabel, indx, patch);
-    enthalpyVars.scalarNonlinearSrc.initialize(0.0);
+    else {
+      for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++) {
+        new_dw->getModifiable(enthalpyVars.scalarCoeff[ii],           d_lab->d_enthCoefSBLMLabel, ii, patch);
+        new_dw->getModifiable(enthalpyVars.scalarDiffusionCoeff[ii],  d_lab->d_enthDiffCoefLabel, ii, patch);
+
+        enthalpyVars.scalarCoeff[ii].initialize(0.0);
+        enthalpyVars.scalarDiffusionCoeff[ii].initialize(0.0);
+      }
+      new_dw->getModifiable(enthalpyVars.scalarNonlinearSrc,       d_lab->d_enthNonLinSrcSBLMLabel, indx, patch);
+      enthalpyVars.scalarNonlinearSrc.initialize(0.0);
+    }
+
+
+    //__________________________________
     // Adding new sources from factory:
     SourceTermFactory& factory = SourceTermFactory::self(); 
     for (vector<std::string>::iterator iter = d_new_sources.begin(); 
@@ -603,35 +622,11 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
       const VarLabel* srcLabel = src.getSrcLabel(); 
       new_dw->get( enthalpyVars.otherSource, srcLabel, indx, patch, Ghost::None, 0); 
     }
-  }
-  else {
-    for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++) {
-      new_dw->getModifiable(enthalpyVars.scalarCoeff[ii],
-                             d_lab->d_enthCoefSBLMLabel, ii, patch);
-      enthalpyVars.scalarCoeff[ii].initialize(0.0);
-      new_dw->getModifiable(enthalpyVars.scalarDiffusionCoeff[ii],
-                             d_lab->d_enthDiffCoefLabel, ii, patch);
-      enthalpyVars.scalarDiffusionCoeff[ii].initialize(0.0);
-    }
-    new_dw->getModifiable(enthalpyVars.scalarNonlinearSrc,
-                           d_lab->d_enthNonLinSrcSBLMLabel, indx, patch);
-    enthalpyVars.scalarNonlinearSrc.initialize(0.0);
-    // Adding new sources from factory:
-    SourceTermFactory& factory = SourceTermFactory::self(); 
-    for (vector<std::string>::iterator iter = d_new_sources.begin(); 
-       iter != d_new_sources.end(); iter++){
-
-      SourceTermBase& src = factory.retrieve_source_term( *iter ); 
-      const VarLabel* srcLabel = src.getSrcLabel(); 
-      // here we have made the assumption that the momentum source is always a vector... 
-      // and that we only have one.  probably want to fix this. 
-      new_dw->get( enthalpyVars.otherSource, srcLabel, indx, patch, Ghost::None, 0); 
-    }
-  }
-
-  //boundary source terms
-  new_dw->getModifiable(enthalpyVars.enthalpyBoundarySrc, 
-                        d_lab->d_enthalpyBoundarySrcLabel, indx, patch);
+    
+    //__________________________________
+    //boundary source terms
+    new_dw->getModifiable(enthalpyVars.enthalpyBoundarySrc, 
+                          d_lab->d_enthalpyBoundarySrcLabel, indx, patch);
 
     for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++) {
       new_dw->allocateTemporary(enthalpyVars.scalarConvectCoeff[ii],  patch);
@@ -849,8 +844,8 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
                                                      d_energyEx);
           }
 
-            int wall = d_boundaryCondition->wallCellType();
-            d_DORadiation->intensitysolve(pc, patch, cellinfo,
+          int wall = d_boundaryCondition->wallCellType();
+          d_DORadiation->intensitysolve(pc, patch, cellinfo,
                                           &enthalpyVars, &constEnthalpyVars, wall );
         }
 
