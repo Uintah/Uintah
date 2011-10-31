@@ -405,15 +405,9 @@ EnthalpySolver::sched_buildLinearMatrix(const LevelP& level,
       if (d_MAlab && d_boundaryCondition->getIfCalcEnergyExchange()) {
         tsk->requires(Task::NewDW, d_MAlab->integTemp_CCLabel, gn, 0);
       }
-    }
+    
+      if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First ) {
 
-    if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First ) {
-
-      if (!d_DORadiationCalc){
-        tsk->requires(Task::OldDW, d_lab->d_absorpINLabel, gn, 0);
-      }
-
-      if (d_DORadiationCalc) {
         tsk->requires(Task::OldDW, d_lab->d_radiationSRCINLabel,    gn, 0);
         tsk->requires(Task::OldDW, d_lab->d_radiationFluxEINLabel,  gn, 0);
         tsk->requires(Task::OldDW, d_lab->d_radiationFluxWINLabel,  gn, 0);
@@ -433,13 +427,8 @@ EnthalpySolver::sched_buildLinearMatrix(const LevelP& level,
         tsk->computes(d_lab->d_radiationFluxTINLabel);
         tsk->computes(d_lab->d_radiationFluxBINLabel);
         tsk->modifies(d_lab->d_radiationVolqINLabel);
-      }
-    } else {
-      if (!d_DORadiationCalc){
-        tsk->requires(Task::NewDW, d_lab->d_absorpINLabel, gn, 0);
-      }
-      
-      if (d_DORadiationCalc) {
+
+      } else {
         tsk->modifies(d_lab->d_abskgINLabel);
         tsk->modifies(d_lab->d_radiationSRCINLabel);
         tsk->modifies(d_lab->d_radiationFluxEINLabel);
@@ -449,8 +438,8 @@ EnthalpySolver::sched_buildLinearMatrix(const LevelP& level,
         tsk->modifies(d_lab->d_radiationFluxTINLabel);
         tsk->modifies(d_lab->d_radiationFluxBINLabel);
         tsk->modifies(d_lab->d_radiationVolqINLabel);
-      }
-    }  // first timestep
+      }  // first timestep
+    }  // DORadiation
   }  // d_radiationCalc
 
   if (d_MAlab && d_boundaryCondition->getIfCalcEnergyExchange()) {
@@ -483,8 +472,6 @@ EnthalpySolver::sched_buildLinearMatrix(const LevelP& level,
      const VarLabel* srcLabel = src.getSrcLabel(); 
      tsk->requires(Task::NewDW, srcLabel, gn, 0); 
   }
-
-
 
   tsk->requires(Task::NewDW, timelabels->negativeDensityGuess);
 
@@ -665,10 +652,6 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
 
     if (d_radiationCalc) {
       
-      if (!d_DORadiationCalc) {  //optically thin model
-        which_dw->get(constEnthalpyVars.absorption, d_lab->d_absorpINLabel, indx, patch, gn, 0);
-      }
-      
       if (d_DORadiationCalc) {
         d_DORadiation->d_linearSolver->matrixCreate(d_perproc_patches, patches);
         radCounter = d_lab->d_sharedState->getCurrentTopLevelTimeStep();
@@ -733,24 +716,6 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
           new_dw->getModifiable(enthalpyVars.ABSKG,  d_lab->d_abskgINLabel,         indx, patch);
         }
       }
-      else {
-        IntVector lo = patch->getExtraCellLowIndex();
-        IntVector hi = patch->getExtraCellHighIndex();
-        enthalpyVars.qfluxe.allocate( lo, hi );
-        enthalpyVars.qfluxe.initialize( 0.0 );
-        enthalpyVars.qfluxw.allocate( lo, hi );
-        enthalpyVars.qfluxw.initialize( 0.0 );
-        enthalpyVars.qfluxn.allocate( lo, hi );
-        enthalpyVars.qfluxn.initialize( 0.0 );
-        enthalpyVars.qfluxs.allocate( lo, hi );
-        enthalpyVars.qfluxs.initialize( 0.0 );
-        enthalpyVars.qfluxt.allocate( lo, hi );
-        enthalpyVars.qfluxt.initialize( 0.0 );
-        enthalpyVars.qfluxb.allocate( lo, hi );
-        enthalpyVars.qfluxb.initialize( 0.0 );
-        enthalpyVars.volq.allocate(   lo, hi );
-        enthalpyVars.volq.initialize(   0.0 );
-      }  // DO radiation
     }
 
     if (d_MAlab && d_boundaryCondition->getIfCalcEnergyExchange()) {
@@ -876,7 +841,7 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
                                            &enthalpyVars, &constEnthalpyVars);
 
           if (d_MAlab && d_boundaryCondition->getIfCalcEnergyExchange()) {
-            bool d_energyEx = d_boundaryCondition->getIfCalcEnergyExchange();
+            bool d_energyEx = true;
             new_dw->get(solidTemp, d_MAlab->integTemp_CCLabel, indx, patch, gn, 0);
 
             d_boundaryCondition->mmWallTemperatureBC(patch, constEnthalpyVars.cellType,
@@ -903,10 +868,6 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
 #if 0
         d_DORadiation->d_linearSolver->destroyMatrix();
 #endif
-      }
-      else{    // optically thin radiation model
-        d_source->computeEnthalpyRadThinSrc(pc, patch, cellinfo,
-                                            &enthalpyVars, &constEnthalpyVars);
       }
     }
 

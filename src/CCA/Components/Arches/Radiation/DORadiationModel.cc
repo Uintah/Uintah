@@ -31,28 +31,23 @@ DEALINGS IN THE SOFTWARE.
 //----- DORadiationModel.cc --------------------------------------------------
 
 #include <sci_defs/hypre_defs.h>
-
-#include <fstream> // work around compiler bug with RHEL 3
-
-
-#include <CCA/Components/Arches/Radiation/RadiationSolver.h>
+#include <CCA/Components/Arches/BoundaryCondition.h>
 #include <CCA/Components/Arches/Radiation/DORadiationModel.h>
 #include <CCA/Components/Arches/Radiation/RadPetscSolver.h>
+#include <CCA/Components/Arches/Radiation/RadiationSolver.h>
+#include <CCA/Ports/DataWarehouse.h>
+#include <Core/Exceptions/InternalError.h>
+#include <Core/Exceptions/InvalidValue.h>
+#include <Core/Math/MiscMath.h>
+#include <Core/Parallel/ProcessorGroup.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/Thread/Time.h>
+#include <cmath>
+
 #ifdef HAVE_HYPRE
 #include <CCA/Components/Arches/Radiation/RadHypreSolver.h>
 #endif
-#include <CCA/Components/Arches/BoundaryCondition.h>
-#include <Core/Exceptions/InternalError.h>
-#include <Core/Thread/Time.h>
-
-#include <Core/ProblemSpec/ProblemSpecP.h>
-#include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Exceptions/InvalidValue.h>
-#include <CCA/Ports/DataWarehouse.h>
-#include <Core/Parallel/ProcessorGroup.h>
-#include <cmath>
-#include <Core/Math/MiscMath.h>
-
 
 using namespace std;
 using namespace Uintah;
@@ -194,9 +189,6 @@ DORadiationModel::problemSetup(const ProblemSpecP& params)
   // ** WARNING ** ffield/Symmetry/sfield/outletfield hardcoded to -1,-3,-4,-5
   // These have been copied from BoundaryCondition.cc
   ffield = -1;
-  symtry = -3;
-  sfield = -4;
-  outletfield = -5;
 
   db->getWithDefault("wall_temperature", d_wall_temp, 293.0); 
   db->getWithDefault("wall_abskg", d_wall_abskg, 1.0); 
