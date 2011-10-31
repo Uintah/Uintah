@@ -50,18 +50,6 @@ GENERAL INFORMATION
     
     Copyright U of U 2002
 
-KEYWORDS
-
-DESCRIPTION
-
-PATTERNS
-    None
-
-WARNINGS
-    None
-
-POSSIBLE REVISIONS
-    None
 ***************************************************************************/
 #include <CCA/Components/Arches/Radiation/RadiationModel.h>
 #include <CCA/Components/Arches/Radiation/RadiationSolver.h>
@@ -213,19 +201,11 @@ private:
       int d_sn, d_totalOrds; // totalOrdinates = sn*(sn+2)
 
       void computeOrdinatesOPL();
-
-      int MAXITR;
-      double QACCU, d_opl, af, qerr, totsrc;
-      int iflag, iriter;
+      
       int lambda;
-      double wavemin, wavemax, dom, omega, srcsum;
+      double  d_opl;
       int ffield;
       int wall;
-      int symtry;
-      int pfield;
-      int sfield;
-      int pbcfld;
-      int outletfield;
       bool lprobone, lprobtwo, lprobthree, lradcal, lwsgg, lplanckmean, lpatchmean;
       bool _using_props_calculator; 
       double d_wall_abskg; 
@@ -234,7 +214,6 @@ private:
       OffsetArray1<double> fraction;
       OffsetArray1<double> fractiontwo;
 
-      //      OffsetArray1<double> ord;
       OffsetArray1<double> oxi;
       OffsetArray1<double> omu;
       OffsetArray1<double> oeta;
