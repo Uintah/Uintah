@@ -1,5 +1,6 @@
 //----- Ray.cc ----------------------------------------------
 #include <CCA/Components/Models/Radiation/RMCRT/Ray.h>
+#include <CCA/Components/Models/Radiation/RMCRT/MersenneTwister.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Grid/DbgOutput.h>
 #include <time.h>
@@ -271,6 +272,7 @@ Ray::rayTrace( const ProcessorGroup* pc,
 { 
   const Level* level = getLevel(patches);
   int maxLevels = level->getGrid()->numLevels();
+  MTRand _mTwister; 
   
   // Determine the size of the domain.
   IntVector domainLo, domainHi;

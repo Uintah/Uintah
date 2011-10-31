@@ -5,7 +5,6 @@
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/CCVariable.h>
-#include <CCA/Components/Models/Radiation/RMCRT/MersenneTwister.h>
 #include <iostream>
 #include <cmath>
 #include <string>
@@ -67,7 +66,6 @@ namespace Uintah{
       
       double _sigma_over_pi; // Stefan Boltzmann divided by pi (W* m-2* K-4)
 
-      MTRand _mTwister; 
       bool _benchmark_1; 
 
       const VarLabel* d_sigmaT4_label; 
