@@ -241,7 +241,7 @@ namespace Wasatch{
     for( Expr::FieldManagerList::iterator ifm=fml.begin(); ifm!=fml.end(); ++ifm ){
 
       typedef Expr::FieldManagerBase::PropertyMap PropertyMap;
-      PropertyMap& properties = (*ifm)->properties();
+      PropertyMap& properties = ifm->second->properties();
       PropertyMap::iterator ipm = properties.find("UintahInfo");
       assert( ipm != properties.end() );
       Expr::IDInfoMap& infomap = boost::any_cast< boost::reference_wrapper<Expr::IDInfoMap> >(ipm->second);
@@ -251,15 +251,14 @@ namespace Wasatch{
       for( Expr::IDInfoMap::iterator ii=infomap.begin(); ii!=infomap.end(); ++ii ){
 
         Expr::FieldInfo& fieldInfo = ii->second;
-
-        const Expr::Tag fieldTag( fieldInfo.varlabel->getName(), fieldInfo.context );
+        const Expr::Tag& fieldTag = ii->first;
 
         // see if this field is required by the given tree
         if( !tree.has_field(fieldTag) ){
           continue;
         }
 
-        if( fieldInfo.context == Expr::CARRY_FORWARD ){
+        if( fieldTag.context() == Expr::CARRY_FORWARD ){
           fieldInfo.mode = Expr::COMPUTES;
           fieldInfo.useOldDataWarehouse = false;
           task.requires( Uintah::Task::OldDW,
@@ -300,7 +299,7 @@ namespace Wasatch{
             fieldInfo.useOldDataWarehouse = false;
           }
         }
-        else if( fieldInfo.context == Expr::STATE_N ){
+        else if( fieldTag.context() == Expr::STATE_N ){
           fieldInfo.mode = Expr::REQUIRES;
           fieldInfo.useOldDataWarehouse = true;
         }
@@ -402,7 +401,7 @@ namespace Wasatch{
         const Expr::FieldDeps::FldHelpers& fh = imp->second->field_helpers();
         for( Expr::FieldDeps::FldHelpers::const_iterator ifld=fh.begin(); ifld!=fh.end(); ++ifld ){
           const Expr::FieldDeps::FieldHelperBase& fhb = **ifld;
-          const Expr::Tag tag( fhb.name(),fhb.context() );
+          const Expr::Tag& tag = fhb.tag();
           if( tree->get_expression( tag ).is_placeholder() ) continue;
           newDWFields.insert( tag );
         }
