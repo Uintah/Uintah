@@ -852,9 +852,38 @@ __global__ void FirstOrderAdvectorGPU::q_FC_operatorKernel(uint3 domainSize,
                                                            uint3 domainLower,
                                                            uint3 adjOffset,
                                                            int ghostLayers,
+                                                           int face,
+                                                           int oppositeFace,
+                                                           double **OFS,
                                                            double *q_CC,
                                                            double *q_FC)
 {
+  // calculate the thread indices
+  int tidX = blockDim.x * blockIdx.x + threadIdx.x;
+  int tidY = blockDim.y * blockIdx.y + threadIdx.y;
+
+  int num_slices = domainSize.z - ghostLayers;
+  int dx = domainSize.x;
+  int dy = domainSize.y;
+
+
+   if (tidX < (dx - ghostLayers) && tidY < (dy - ghostLayers) && tidX > 0 && tidY > 0) {
+    for (int slice = ghostLayers; slice < num_slices; slice++) {
+      int index = INDEX3D(dx,dy, tidX, tidY, slice);
+      int adjIndex = INDEX3D(dx,dy, tidX+adjOffset.x, tidY+adjOffset.y, slice+ adjOffset.z);
+      
+      double outfluxVol = OFS[index][face];
+      double influxVol  = OFS[adjIndex][oppositeFace];
+      double q_faceFlux = q_CC[index] * influxVol - q_CC[adjIndex] * outfluxVol;
+      
+      double q_tmp_FC = fabs(q_faceFlux)/((outfluxVol+influxVol) + 1.0e-100);
+
+      if(q_faceFlux == 0.0)
+        q_FC[adjIndex] = q_CC[adjIndex];
+      else
+        q_FC[adjIndex] = q_tmp_FC;
+    }
+  }
 }
     
 // A kernel that computes the flux of q across a face.  The flux is need by the AMR refluxing operation.
@@ -862,7 +891,30 @@ __global__ void FirstOrderAdvectorGPU::q_FC_flux_operatorKernel(uint3 domainSize
                                                                 uint3 domainLower,
                                                                 uint3 adjOffset,
                                                                 int ghostLayers,
+                                                                int face,
+                                                                int oppositeFace,
+                                                                double **OFS,
                                                                 double *q_CC,
                                                                 double *q_FC_flux)
 {
+  // calculate the thread indices
+  int tidX = blockDim.x * blockIdx.x + threadIdx.x;
+  int tidY = blockDim.y * blockIdx.y + threadIdx.y;
+
+  int num_slices = domainSize.z - ghostLayers;
+  int dx = domainSize.x;
+  int dy = domainSize.y;
+
+  if (tidX < (dx - ghostLayers) && tidY < (dy - ghostLayers) && tidX > 0 && tidY > 0) {
+    for (int slice = ghostLayers; slice < num_slices; slice++) {
+      int index = INDEX3D(dx,dy, tidX, tidY, slice);
+      int adjIndex = INDEX3D(dx,dy, tidX+adjOffset.x, tidY+adjOffset.y, slice+ adjOffset.z);
+
+      q_FC_flux[index] += q_CC[adjIndex]*OFS[c][face] - q_CC[index]*OFS[adjIndex][oppositeFace];
+    }
+  }
+
 }
+
+
+

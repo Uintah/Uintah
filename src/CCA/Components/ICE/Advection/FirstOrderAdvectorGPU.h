@@ -177,12 +177,18 @@ namespace Uintah {
     /// @param domainLower A three component vector that gives the lower corner of the work area as (x,y,z)
     /// @param adjOffset Offset is x, y or z
     /// @param ghostLayers The number of layers of ghost cells
+    /// @param face the current face being investigated
+    /// @param oppositeFace the face opposite "face"
+    /// @param OFS a pointer to the six component array that is used for fluxes
     /// @param q_CC Pointer to q_CC allocated on the device
     /// @param q_FC Pointer to q_[X,Y,Z]FC allocated on the device
     __global__ void q_FC_operatorKernel(uint3 domainSize,
                                         uint3 domainLower,
                                         uint3 adjOffset,
                                         int ghostLayers,
+                                        int face,
+                                        int oppositeFace,
+                                        double **OFS,
                                         double *q_CC,
                                         double *q_FC);
     
@@ -197,6 +203,9 @@ namespace Uintah {
                                                uint3 domainLower,
                                                uint3 adjOffset,
                                                int ghostLayers,
+                                               int face,
+                                               int oppositeFace,
+                                               double **OFS,
                                                double *q_CC,
                                                double *q_FC_flux);
   };
