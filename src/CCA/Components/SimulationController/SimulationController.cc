@@ -152,6 +152,20 @@ namespace Uintah {
       }
     }
 
+    retp = PAPI_query_event(PAPI_L2_TCM);
+    if ( retp != PAPI_OK) {
+      if (d_myworld->myrank() == 0) {
+        cout<< "WARNNING: Cannot query PAPI_L2_TCM event! Error code = " << retp << endl;
+      }
+    }
+
+    retp = PAPI_query_event(PAPI_L3_TCM);
+    if ( retp != PAPI_OK) {
+      if (d_myworld->myrank() == 0) {
+        cout<< "WARNNING: Cannot query PAPI_L3_TCM event! Error code = " << retp << endl;
+      }
+    }
+
     retp = PAPI_add_event(d_eventSet, PAPI_FP_OPS);
     if ( retp != PAPI_OK)  {
       if (d_myworld->myrank() == 0) {
@@ -162,7 +176,21 @@ namespace Uintah {
     retp = PAPI_add_event(d_eventSet, PAPI_L1_TCM);
     if ( retp != PAPI_OK)  {
       if (d_myworld->myrank() == 0) {
-        cout<< "WARNNING: Cannot add PAPI_FP_OPS event! Error code = " << retp << endl;
+        cout<< "WARNNING: Cannot add PAPI_L1_TCM event! Error code = " << retp << endl;
+      }
+    }
+
+    retp = PAPI_add_event(d_eventSet, PAPI_L2_TCM);
+    if ( retp != PAPI_OK)  {
+      if (d_myworld->myrank() == 0) {
+        cout<< "WARNNING: Cannot add PAPI_L2_TCM event! Error code = " << retp << endl;
+      }
+    }
+
+    retp = PAPI_add_event(d_eventSet, PAPI_L3_TCM);
+    if ( retp != PAPI_OK)  {
+      if (d_myworld->myrank() == 0) {
+        cout<< "WARNNING: Cannot add PAPI_L3_TCM event! Error code = " << retp << endl;
       }
     }
 
@@ -581,6 +609,8 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
 #ifdef USE_PAPI_COUNTERS
   double flop;				// total FLOPS
   double l1_misses;			// total L1 cache misses
+  double l2_misses;			// total L2 cache misses
+  double l3_misses;			// total L3 cache misses
   int retp = -1;			// return value for error checking
 
   retp = PAPI_read(d_eventSet, d_eventValues);
@@ -589,11 +619,15 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
     if (d_myworld->myrank() == 0) {
       cout << "WARNNING: Cannot read PAPI event set! Error value = " << retp << endl;
     }
-    flop = 0;
+    flop      = 0;
     l1_misses = 0;
+    l2_misses = 0;
+    l3_misses = 0;
   } else {
-	  flop = (double) d_eventValues[0];
+	  flop      = (double) d_eventValues[0];
 	  l1_misses = (double) d_eventValues[1];
+	  l2_misses = (double) d_eventValues[2];
+	  l3_misses = (double) d_eventValues[3];
   }
 
   retp = PAPI_reset(d_eventSet);
@@ -647,6 +681,10 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
   toReduceMax.push_back(double_int(flop, rank));
   toReduce.push_back(l1_misses);
   toReduceMax.push_back(double_int(l1_misses, rank));
+  toReduce.push_back(l2_misses);
+  toReduceMax.push_back(double_int(l2_misses, rank));
+  toReduce.push_back(l3_misses);
+  toReduceMax.push_back(double_int(l3_misses, rank));
 #endif
   statLabels.push_back("Mem usage");
   statLabels.push_back("Recompile");
@@ -662,10 +700,13 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
 #ifdef USE_PAPI_COUNTERS
   statLabels.push_back("FLOP");
   statLabels.push_back("L1CacheMisses");
+  statLabels.push_back("L2CacheMisses");
+  statLabels.push_back("L3CacheMisses");
 #endif
 
-  if (highwater) // add highwater to the end so we know where everything else is (as highwater is conditional)
+  if (highwater) { // add highwater to the end so we know where everything else is (as highwater is conditional)
     toReduce.push_back(highwater);
+  }
   avgReduce.resize(toReduce.size());
   maxReduce.resize(toReduce.size());
 
