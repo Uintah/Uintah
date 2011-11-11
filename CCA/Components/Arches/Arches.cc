@@ -554,6 +554,7 @@ Arches::problemSetup(const ProblemSpecP& params,
       weight_name += node; 
 
       EqnBase& a_weight = eqn_factory.retrieve_scalar_eqn( weight_name );
+      eqn_factory.set_weight_eqn( weight_name, &a_weight );
       DQMOMEqn& weight = dynamic_cast<DQMOMEqn&>(a_weight);
       weight.setAsWeight(); 
       weight.problemSetup( w_db, iqn );
@@ -575,6 +576,7 @@ Arches::problemSetup(const ProblemSpecP& params,
         final_name += node; 
 
         EqnBase& an_ic = eqn_factory.retrieve_scalar_eqn( final_name );
+        eqn_factory.set_abscissa_eqn( final_name, &an_ic );
         an_ic.problemSetup( ic_db, iqn );  
 
       }
@@ -1814,25 +1816,11 @@ Arches::sched_weightedAbsInit( const LevelP& level,
     const VarLabel* gasmodelLabel = model->getGasSourceLabel(); 
 
     tsk->computes( modelLabel );
-    tsk->computes( gasmodelLabel );  
+    tsk->computes( gasmodelLabel ); 
 
-    string modelType = model->getType();
-    if( modelType == "Devolatilization" ) {
-      Devolatilization* devolmodel = dynamic_cast<Devolatilization*>(model);
-      const VarLabel* charmodelLabel = devolmodel->getCharSourceLabel();
-      tsk->computes( charmodelLabel );
-    } else if( modelType == "CharOxidation" ) {
-      CharOxidation* charoxymodel = dynamic_cast<CharOxidation*>(model);
-      const VarLabel* particletempLabel = charoxymodel->getParticleTempSourceLabel();
-      tsk->computes( particletempLabel );
-      const VarLabel* surfacerateLabel = charoxymodel->getSurfaceRateLabel();
-      tsk->computes( surfacerateLabel );
-      const VarLabel* PO2surfLabel = charoxymodel->getPO2surfLabel();
-      tsk->computes( PO2surfLabel );
-    } else if( modelType == "HeatTransfer" ) {
-      HeatTransfer* heatmodel = dynamic_cast<HeatTransfer*>(model);
-      const VarLabel* abskpLabel = heatmodel->getabskpLabel();
-      tsk->computes( abskpLabel );
+    vector<const VarLabel*> extraLocalLabels = model->getExtraLocalLabels(); 
+    for (vector<const VarLabel*>::iterator iexmodel = extraLocalLabels.begin(); iexmodel != extraLocalLabels.end(); iexmodel++){
+      tsk->computes( *iexmodel );
     }
 
     model->sched_initVars( level, sched ); 
@@ -1970,35 +1958,14 @@ Arches::weightedAbsInit( const ProcessorGroup* ,
       new_dw->allocateAndPut( gas_source, gasModelLabel, matlIndex, patch ); 
       gas_source.initialize(0.0); 
 
-      string modelType = model->getType();
-      if( modelType == "Devolatilization" ) {
-        Devolatilization* devolmodel = dynamic_cast<Devolatilization*>(model);
-        const VarLabel* charmodelLabel = devolmodel->getCharSourceLabel();
-        CCVariable<double> char_source;
-        new_dw->allocateAndPut( char_source, charmodelLabel, matlIndex, patch );
-        char_source.initialize(0.0);
-      } else if( modelType == "CharOxidation" ) {
-        CharOxidation* charoxymodel = dynamic_cast<CharOxidation*>(model);
-        const VarLabel* particletempLabel = charoxymodel->getParticleTempSourceLabel();
-        CCVariable<double> particle_temp_source;
-        new_dw->allocateAndPut( particle_temp_source, particletempLabel, matlIndex, patch );
-        particle_temp_source.initialize(0.0);
-        const VarLabel* surfacerateLabel = charoxymodel->getSurfaceRateLabel();
-        CCVariable<double> surface_rate;
-        new_dw->allocateAndPut( surface_rate, surfacerateLabel, matlIndex, patch );
-        surface_rate.initialize(0.0);
-        const VarLabel* PO2surfLabel = charoxymodel->getPO2surfLabel();
-        CCVariable<double> PO2surf;
-        new_dw->allocateAndPut( PO2surf, PO2surfLabel, matlIndex, patch );
-        PO2surf.initialize(0.0);
-      } else if( modelType == "HeatTransfer" ) {
-        HeatTransfer* heatmodel = dynamic_cast<HeatTransfer*>(model);
-        const VarLabel* abskpLabel = heatmodel->getabskpLabel();
-        CCVariable<double> abskp;
-        new_dw->allocateAndPut( abskp, abskpLabel, matlIndex, patch );
-        abskp.initialize(0.0);
 
+      vector<const VarLabel*> extraLocalLabels = model->getExtraLocalLabels();
+      for (vector<const VarLabel*>::iterator iexmodel = extraLocalLabels.begin(); iexmodel != extraLocalLabels.end(); iexmodel++){
+        CCVariable<double> extraVar;
+        new_dw->allocateAndPut( extraVar, *iexmodel, matlIndex, patch );
+        extraVar.initialize(0.0);
       }
+
     }
   }
   proc0cout << endl;

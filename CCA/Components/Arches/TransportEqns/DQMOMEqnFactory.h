@@ -64,6 +64,13 @@ public:
   /** @brief Register a scalar eqn with the builder.    */
   void register_scalar_eqn( const std::string name, 
                             DQMOMEqnBuilderBase* builder);
+
+  /** @brief Register a weight eqn.    */
+  void set_weight_eqn( const std::string name, EqnBase* eqn ); 
+
+  /** @brief Register an abscissa eqn.    */
+  void set_abscissa_eqn( const std::string name, EqnBase* eqn );
+
   /** @brief Retrieve a given scalar eqn.    */
   EqnBase& retrieve_scalar_eqn( const std::string name ); 
 
@@ -73,6 +80,14 @@ public:
   /** @brief Get access to the eqn map */ 
   EqnMap& retrieve_all_eqns(){
     return eqns_; };
+
+  /** @brief Get access to the weights eqn map */
+  EqnMap& retrieve_weights_eqns(){
+    return weights_eqns_; };
+
+  /** @brief Get access to the abscissas eqn map */
+  EqnMap& retrieve_abscissas_eqns(){
+    return abscissas_eqns_; };
 
   /** @brief Set number quadrature nodes */ 
   inline void set_quad_nodes( int qn ) {
@@ -87,6 +102,9 @@ private:
 
   BuildMap builders_; 
   EqnMap eqns_; 
+  EqnMap weights_eqns_;
+  EqnMap abscissas_eqns_;
+
 
   DQMOMEqnFactory(); 
   ~DQMOMEqnFactory(); 

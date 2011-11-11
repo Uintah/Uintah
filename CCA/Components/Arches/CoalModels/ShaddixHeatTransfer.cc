@@ -67,7 +67,14 @@ ShaddixHeatTransfer::problemSetup(const ProblemSpecP& params, int qn)
   HeatTransfer::problemSetup( params, qn );
 
   ProblemSpecP db = params; 
-  
+ 
+  if(_radiation){
+    //d_volq_label = VarLabel::find("new_radiationVolq");
+    //d_abskg_label = VarLabel::find("new_abskg");
+    d_volq_label = d_fieldLabels->d_radiationVolqINLabel;
+    d_abskg_label = d_fieldLabels->d_abskgINLabel;
+  }
+ 
   // check for viscosity
   const ProblemSpecP params_root = db->getRootNode(); 
   if (params_root->findBlock("PhysicalConstants")) {
@@ -264,11 +271,17 @@ ShaddixHeatTransfer::sched_computeModel( const LevelP& level, SchedulerP& sched,
     tsk->computes(d_modelLabel);
     tsk->computes(d_gasLabel); 
     tsk->computes(d_abskpLabel);
+    tsk->computes(d_qconvLabel);
+    tsk->computes(d_qradLabel);
   } else {
     tsk->modifies(d_modelLabel);
     tsk->modifies(d_gasLabel);  
     tsk->modifies(d_abskpLabel);
+    tsk->modifies(d_qconvLabel);
+    tsk->modifies(d_qradLabel);
   }
+
+  tsk->requires( Task::OldDW, d_fieldLabels->d_sharedState->get_delt_label(), Ghost::None, 0);
 
   DQMOMEqnFactory& dqmom_eqn_factory = DQMOMEqnFactory::self();
   CoalModelFactory& modelFactory = CoalModelFactory::self();
@@ -308,15 +321,15 @@ ShaddixHeatTransfer::sched_computeModel( const LevelP& level, SchedulerP& sched,
   
   // also require paticle velocity, gas velocity, and density
   ArchesLabel::PartVelMap::const_iterator iQuad = d_fieldLabels->partVel.find(d_quadNode);
-  tsk->requires(Task::OldDW, iQuad->second, Ghost::None, 0);
+  tsk->requires(Task::NewDW, iQuad->second, Ghost::None, 0);
   tsk->requires( Task::OldDW, d_fieldLabels->d_newCCVelocityLabel, Ghost::None, 0);
   tsk->requires(Task::OldDW, d_fieldLabels->d_densityCPLabel, Ghost::None, 0);
   tsk->requires(Task::OldDW, d_fieldLabels->d_cpINLabel, Ghost::None, 0);
  
   if(_radiation){
-    tsk->requires(Task::OldDW, d_fieldLabels->d_radiationSRCINLabel,  Ghost::None, 0);
-    tsk->requires(Task::OldDW, d_fieldLabels->d_abskgINLabel,  Ghost::None, 0);   
-    tsk->requires(Task::OldDW, d_fieldLabels->d_radiationVolqINLabel, Ghost::None, 0);
+    //tsk->requires(Task::OldDW, d_fieldLabels->d_radiationSRCINLabel,  Ghost::None, 0);
+    tsk->requires(Task::OldDW, d_abskg_label,  Ghost::None, 0);   
+    tsk->requires(Task::OldDW, d_volq_label, Ghost::None, 0);
   }
 
   // always require the gas-phase temperature
@@ -459,6 +472,10 @@ ShaddixHeatTransfer::computeModel( const ProcessorGroup * pc,
     int archIndex = 0;
     int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
+    delt_vartype DT;
+    old_dw->get(DT, d_fieldLabels->d_sharedState->get_delt_label());
+    double dt = DT;
+
     CCVariable<double> heat_rate;
     if ( new_dw->exists( d_modelLabel, matlIndex, patch) ) {
       new_dw->getModifiable( heat_rate, d_modelLabel, matlIndex, patch ); 
@@ -483,11 +500,26 @@ ShaddixHeatTransfer::computeModel( const ProcessorGroup * pc,
       abskp.initialize(0.0);
     }
     
+    CCVariable<double> qconv;
+    if( new_dw->exists( d_qconvLabel, matlIndex, patch) ) {
+      new_dw->getModifiable( qconv, d_qconvLabel, matlIndex, patch );
+    } else {
+      new_dw->allocateAndPut( qconv, d_qconvLabel, matlIndex, patch );
+      qconv.initialize(0.0);
+    }
+
+    CCVariable<double> qrad;
+    if( new_dw->exists( d_qradLabel, matlIndex, patch) ) {
+      new_dw->getModifiable( qrad, d_qradLabel, matlIndex, patch );
+    } else {
+      new_dw->allocateAndPut( qrad, d_qradLabel, matlIndex, patch );
+      qrad.initialize(0.0);
+    }
 
     // get particle velocity used to calculate Reynolds number
     constCCVariable<Vector> partVel;  
     ArchesLabel::PartVelMap::const_iterator iQuad = d_fieldLabels->partVel.find(d_quadNode);
-    old_dw->get( partVel, iQuad->second, matlIndex, patch, gn, 0);
+    new_dw->get( partVel, iQuad->second, matlIndex, patch, gn, 0);
     
     // gas velocity used to calculate Reynolds number
     constCCVariable<Vector> gasVel; 
@@ -498,15 +530,15 @@ ShaddixHeatTransfer::computeModel( const ProcessorGroup * pc,
     constCCVariable<double> cpg;
     old_dw->get(cpg, d_fieldLabels->d_cpINLabel, matlIndex, patch, gn, 0 );
 
-    constCCVariable<double> radiationSRCIN;
+    //constCCVariable<double> radiationSRCIN;
     constCCVariable<double> abskgIN;
     constCCVariable<double> radiationVolqIN;
     CCVariable<double> enthNonLinSrc;
 
     if(_radiation){
-      old_dw->get(radiationSRCIN, d_fieldLabels->d_radiationSRCINLabel, matlIndex, patch, gn, 0);
-      old_dw->get(abskgIN, d_fieldLabels->d_abskgINLabel, matlIndex, patch, gn, 0);
-      old_dw->get(radiationVolqIN, d_fieldLabels->d_radiationVolqINLabel, matlIndex, patch, gn, 0);
+      //old_dw->get(radiationSRCIN, d_fieldLabels->d_radiationSRCINLabel, matlIndex, patch, gn, 0);
+      old_dw->get(abskgIN, d_abskg_label, matlIndex, patch, gn, 0);
+      old_dw->get(radiationVolqIN, d_volq_label, matlIndex, patch, gn, 0);
     }
 
     constCCVariable<double> temperature;
@@ -591,6 +623,8 @@ ShaddixHeatTransfer::computeModel( const ProcessorGroup * pc,
         heat_rate_ = 0.0;
         gas_heat_rate_ = 0.0;
         abskp_ = 0.0;
+        Q_convection = 0.0;
+        Q_radiation = 0.0;
       } else {
 
         if(d_unweighted){
@@ -652,7 +686,7 @@ ShaddixHeatTransfer::computeModel( const ProcessorGroup * pc,
         // Convection part: -----------------------
 
         // Reynolds number
-        Re = abs(gas_velocity.length() - particle_velocity.length())*unscaled_length*density/visc;
+        Re = std::abs(gas_velocity.length() - particle_velocity.length())*unscaled_length*density/visc;
 
         // Nusselt number
         Nu = 2.0 + 0.65*pow(Re,0.50)*pow(Pr,(1.0/3.0));
@@ -673,11 +707,11 @@ ShaddixHeatTransfer::computeModel( const ProcessorGroup * pc,
         rkg = props(gas_temperature, unscaled_particle_temperature); // [=] J/s/m/K
 
         // A BLOWING CORRECTION TO THE HEAT TRANSFER MODEL IS EMPLOYED
-        kappa =  -surface_rate[c]*unscaled_length*specific_heat[c]/(2*rkg);
-        if(abs(exp(kappa)-1) < 1e-16){
+        kappa =  -surface_rate[c]*unscaled_length*specific_heat[c]/(2.0*rkg);
+        if(std::abs(exp(kappa)-1) < 1e-16){
           blow = 1.0;
         } else {
-          blow = kappa/(exp(kappa)-1);
+          blow = kappa/(exp(kappa)-1.0);
         }
         // Q_convection (see Section 5.4 of LES_Coal document)
         Q_convection = Nu*pi*blow*rkg*unscaled_length*(gas_temperature - unscaled_particle_temperature);
@@ -685,7 +719,7 @@ ShaddixHeatTransfer::computeModel( const ProcessorGroup * pc,
 
 
         // Radiation part: -------------------------
-        bool DO_NEW_ABSKP = false; 
+        bool DO_NEW_ABSKP = false;
         Q_radiation = 0.0;
         if ( _radiation  && DO_NEW_ABSKP){ 
           // New Glacier Code for ABSKP: 
@@ -696,18 +730,14 @@ ShaddixHeatTransfer::computeModel( const ProcessorGroup * pc,
 
           //what goes next?!
         } else if ( _radiation && !DO_NEW_ABSKP ) { 
-
           double Qabs = 0.8;
-          double Apsc = (pi/4)*Qabs*pow(unscaled_length,2);
-          double Eb = 4*sigma*pow(unscaled_particle_temperature,4);
+          double Apsc = (pi/4.0)*Qabs*pow(unscaled_length,2.0);
+          double Eb = 4.0*sigma*pow(unscaled_particle_temperature,4.0);
           FSum = radiationVolqIN[c];    
           Q_radiation = Apsc*(FSum - Eb);
-          abskp_ = pi/4*Qabs*unscaled_weight*pow(unscaled_length,2); 
-
+          abskp_ = pi/4.0*Qabs*unscaled_weight*pow(unscaled_length,2.0); 
         } else {
-
           abskp_ = 0.0;
-
         }
 
         // Calculate particle enthalpy using composite Simpson's rule
@@ -736,9 +766,9 @@ ShaddixHeatTransfer::computeModel( const ProcessorGroup * pc,
         Cpci += heatcp(bi);
         Cphi += heatcph(bi);
         Cpai += heatap(bi);
-        Hc = hi*Cpci/3;
-        Hh = hi*Cphi/3;
-        Ha = hi*Cpai/3;
+        Hc = hi*Cpci/3.0;
+        Hh = hi*Cphi/3.0;
+        Ha = hi*Cpai/3.0;
 
         // Particle enthalpy in J/kg
         if((unscaled_raw_coal_mass + max(0.0,unscaled_char_mass) + unscaled_ash_mass) > 0.0){
@@ -849,7 +879,9 @@ ShaddixHeatTransfer::computeModel( const ProcessorGroup * pc,
       heat_rate[c] = heat_rate_;
       gas_heat_rate[c] = gas_heat_rate_;
       abskp[c] = abskp_;
- 
+      qconv[c] = Q_convection;
+      qrad[c] = Q_radiation;
+
     }//end cell loop
 #endif
 

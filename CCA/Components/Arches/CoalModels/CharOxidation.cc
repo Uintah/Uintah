@@ -36,22 +36,26 @@ CharOxidation::CharOxidation( std::string modelName,
   // Create the particle temperature source term associated with this model
   std::string particletempSourceName = modelName + "_particletempSource";
   d_particletempLabel = VarLabel::create( particletempSourceName, CCVariable<double>::getTypeDescription() );
+  _extra_local_labels.push_back(d_particletempLabel);
 
   // Create the char oxidation surface rate term associated with this model
   std::string surfacerateName = modelName + "_surfacerate";
   d_surfacerateLabel = VarLabel::create( surfacerateName, CCVariable<double>::getTypeDescription() );
+  _extra_local_labels.push_back(d_surfacerateLabel);
 
   // Create the char oxidation PO2 surf term associated with this model
   std::string PO2surfName = modelName + "_PO2surf";
   d_PO2surfLabel = VarLabel::create( PO2surfName, CCVariable<double>::getTypeDescription() );
+  _extra_local_labels.push_back(d_PO2surfLabel);
 
 }
 
 CharOxidation::~CharOxidation()
 {
-  VarLabel::destroy(d_particletempLabel);
-  VarLabel::destroy(d_surfacerateLabel);
-  VarLabel::destroy(d_PO2surfLabel);
+  for (vector<const VarLabel*>::iterator iter = _extra_local_labels.begin();
+       iter != _extra_local_labels.end(); iter++) {
+    VarLabel::destroy( *iter );
+  }
 }
 
 //---------------------------------------------------------------------------
@@ -95,15 +99,15 @@ CharOxidation::sched_dummyInit( const LevelP& level, SchedulerP& sched )
 
   tsk->requires( Task::OldDW, d_modelLabel, gn, 0);
   tsk->requires( Task::OldDW, d_gasLabel,   gn, 0);
-  tsk->requires( Task::OldDW, d_particletempLabel,   gn, 0);
-  tsk->requires( Task::OldDW, d_surfacerateLabel,   gn, 0);
-  tsk->requires( Task::OldDW, d_PO2surfLabel,   gn, 0);
 
   tsk->computes(d_modelLabel);
   tsk->computes(d_gasLabel); 
-  tsk->computes(d_particletempLabel);
-  tsk->computes(d_surfacerateLabel);
-  tsk->computes(d_PO2surfLabel);
+
+  for (std::vector<const VarLabel*>::iterator iter = _extra_local_labels.begin();
+       iter != _extra_local_labels.end(); iter++){
+    tsk->computes(*iter);
+    tsk->requires( Task::OldDW, *iter,   gn, 0);
+  }
 
   sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
 
@@ -140,34 +144,27 @@ CharOxidation::dummyInit( const ProcessorGroup* pc,
 
     CCVariable<double> ModelTerm;
     CCVariable<double> GasModelTerm;
-    CCVariable<double> ParticleTempModelTerm;
-    CCVariable<double> SurfaceRateModelTerm;
-    CCVariable<double> PO2surfModelTerm;
-
 
     constCCVariable<double> oldModelTerm;
     constCCVariable<double> oldGasModelTerm;
-    constCCVariable<double> oldParticleTempModelTerm;
-    constCCVariable<double> oldSurfaceRateModelTerm;
-    constCCVariable<double> oldPO2surfModelTerm;
 
     new_dw->allocateAndPut( ModelTerm,    d_modelLabel, matlIndex, patch );
     new_dw->allocateAndPut( GasModelTerm, d_gasLabel,   matlIndex, patch ); 
-    new_dw->allocateAndPut( ParticleTempModelTerm, d_particletempLabel,   matlIndex, patch );
-    new_dw->allocateAndPut( SurfaceRateModelTerm, d_surfacerateLabel,   matlIndex, patch );
-    new_dw->allocateAndPut( PO2surfModelTerm, d_PO2surfLabel,   matlIndex, patch );
 
     old_dw->get( oldModelTerm,    d_modelLabel, matlIndex, patch, gn, 0 );
     old_dw->get( oldGasModelTerm, d_gasLabel,   matlIndex, patch, gn, 0 );
-    old_dw->get( oldParticleTempModelTerm, d_particletempLabel,   matlIndex, patch, gn, 0 );
-    old_dw->get( oldSurfaceRateModelTerm, d_surfacerateLabel,   matlIndex, patch, gn, 0 );
-    old_dw->get( oldPO2surfModelTerm, d_PO2surfLabel,   matlIndex, patch, gn, 0 );
 
     ModelTerm.copyData(oldModelTerm);
     GasModelTerm.copyData(oldGasModelTerm);
-    ParticleTempModelTerm.copyData(oldParticleTempModelTerm);
-    SurfaceRateModelTerm.copyData(oldSurfaceRateModelTerm);
-    PO2surfModelTerm.copyData(oldPO2surfModelTerm);
+
+    for (std::vector<const VarLabel*>::iterator iter = _extra_local_labels.begin();
+         iter != _extra_local_labels.end(); iter++){
+      CCVariable<double> tempVar;
+      constCCVariable<double> oldtempVar;
+      new_dw->allocateAndPut(tempVar, *iter, matlIndex, patch );
+      old_dw->get( oldtempVar, *iter,   matlIndex, patch, gn, 0 );
+      tempVar.copyData(oldtempVar);
+    }
 
   }
 }

@@ -84,6 +84,7 @@ public:
                          DataWarehouse* old_dw, 
                          DataWarehouse* new_dw,
                          int timeSubStep);
+
   /** @brief Schedule the initialization of the variables */ 
   void sched_initializeVariables( const LevelP& level, SchedulerP& sched );
 
@@ -144,6 +145,10 @@ public:
   template<class phiType>
   void clipPhi( const Patch* p, 
                      phiType& phi );
+  template<class phiType>
+  void clipWeightedPhi( const Patch* p,
+                         phiType& phi,
+                         constCCVariable<double> weight);
 
   // --------------------------------------
   // Access functions:

@@ -562,7 +562,7 @@ CharOxidationShaddix::computeModel( const ProcessorGroup * pc,
         PO2_inf = O2[c]/WO2/MWmix[c];
 
         //if((unscaled_raw_coal_mass+unscaled_char_mass-small) > 0 && PO2_inf > 1e-6) {
-        if((PO2_inf < 1e-6) || (unscaled_char_mass < small)) {
+        if((PO2_inf < 1e-6) || ((unscaled_raw_coal_mass+unscaled_char_mass) < small)) {
           PO2_surf = 0.0;
           CO2CO = 0.0;
           q = 0.0;
@@ -590,8 +590,8 @@ CharOxidationShaddix::computeModel( const ProcessorGroup * pc,
 
           // Solving diffusion of O2:
           // Newton_Raphson method - faster does not always converge 
-          /* 
-          for ( int iter = 0; iter < 10; iter++) {
+           
+          for ( int iter = 0; iter < 12; iter++) {
             icount++;
             CO2CO = 0.02*(pow(PO2_surf,0.21))*exp(3070.0/unscaled_particle_temperature);
             OF = 0.5*(1.0 + CO2CO*(1+CO2CO));
@@ -620,8 +620,8 @@ CharOxidationShaddix::computeModel( const ProcessorGroup * pc,
             PO2_surf -= delta + f1*delta/(f2-f1);
             PO2_surf = min(PO2_inf,max(0.0,PO2_surf));
           }
-          */
-          if(abs(f1) > d_tol || isnan(f1)){ //switching to bisection technique
+          
+          if(std::abs(f1) > d_tol || isnan(f1)){ //switching to bisection technique
             lower_bound = 0.0;
             upper_bound = PO2_inf;
             for ( int iter = 0; iter < d_totIter; iter++) {
@@ -648,7 +648,7 @@ CharOxidationShaddix::computeModel( const ProcessorGroup * pc,
               //q = k1*k2*(pow(PO2_surf,n))/(k1*(pow(PO2_surf,n))+k2);
               f2 = PO2_surf - gamma - (PO2_inf-gamma)*exp(-(q*unscaled_length)/(2*Conc*DO2));
 
-              if (abs(f2) < d_tol){
+              if (std::abs(f2) < d_tol){
                 break;
               }
 
@@ -663,7 +663,7 @@ CharOxidationShaddix::computeModel( const ProcessorGroup * pc,
               //q = k1*k2*(pow(PO2_surf,n))/(k1*(pow(PO2_surf,n))+k2);
               f1 = PO2_surf - gamma - (PO2_inf-gamma)*exp(-(q*unscaled_length)/(2*Conc*DO2));
 
-              if (abs(f1) < d_tol){
+              if (std::abs(f1) < d_tol){
                 break;
               }
 
@@ -697,12 +697,8 @@ CharOxidationShaddix::computeModel( const ProcessorGroup * pc,
         char_production_rate_ = devolChar[c];
               
         char_reaction_rate_ = -pi*(pow(unscaled_length,2.0))*WC*q;
-        rateMax = min((-0.2*unscaled_char_mass/dt),0.0);
-        char_reaction_rate_ = min(max(char_reaction_rate_,rateMax),0.0);
-
         particle_temp_rate_ = -pi*(pow(unscaled_length,2.0))*q/(1.0+CO2CO)*(CO2CO*HF_CO2 + HF_CO); // in J/s
-
-          
+  
           //cout << "O2 " << O2[c] << " CO2 " << CO2[c] << " H2O " << H2O[c] << " N2 " << N2[c] << " MW_mix " << MW_mix << " Conc " << Conc << " DO2 " << DO2 << " q " << q << endl;
           //if(abs(PO2_surf/PO2_inf -1.0) > 0.01){
           //  cout << " PO2_inf " << PO2_inf << " PO2_surf " << PO2_surf << " MWmix " << MWmix[c] << " f1 " << f1 << " f2 " << f2 << " f3 " << f3 << " icount " << icount << endl;
