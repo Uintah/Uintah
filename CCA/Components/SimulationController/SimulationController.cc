@@ -138,10 +138,10 @@ namespace Uintah {
       }
     }
 
-    retp = PAPI_query_event(PAPI_FP_OPS);
+    retp = PAPI_query_event(PAPI_DP_OPS);
     if ( retp != PAPI_OK) {
       if (d_myworld->myrank() == 0) {
-        cout<< "WARNNING: Cannot query PAPI_FP_OPS event! Error code = " << retp << endl;
+        cout<< "WARNNING: Cannot query PAPI_DP_OPS event! Error code = " << retp << endl;
       }
     }
 
@@ -166,10 +166,10 @@ namespace Uintah {
       }
     }
 
-    retp = PAPI_add_event(d_eventSet, PAPI_FP_OPS);
+    retp = PAPI_add_event(d_eventSet, PAPI_DP_OPS);
     if ( retp != PAPI_OK)  {
       if (d_myworld->myrank() == 0) {
-        cout<< "WARNNING: Cannot add PAPI_FP_OPS event! Error code = " << retp << endl;
+        cout<< "WARNNING: Cannot add PAPI_DP_OPS event! Error code = " << retp << endl;
       }
     }
 
