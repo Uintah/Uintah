@@ -88,22 +88,20 @@ DQMOMEqn::problemSetup(const ProblemSpecP& inputdb, int qn)
 
   db->getWithDefault("turbulentPrandtlNumber",d_turbPrNo,0.4);
 
-  if( !d_weight ) {
-    // save the weight label instead of having to find it every time
-    DQMOMEqnFactory& dqmomFactory = DQMOMEqnFactory::self();
-    string name = "w_qn";
-    string node; 
-    std::stringstream out;
-    out << d_quadNode;
-    node = out.str();
-    name += node;
-    EqnBase& temp_eqn = dqmomFactory.retrieve_scalar_eqn(name);
-    DQMOMEqn& eqn = dynamic_cast<DQMOMEqn&>(temp_eqn);
-    d_weightLabel = eqn.getTransportEqnLabel();
-    d_w_small = eqn.getSmallClip();
-    if( d_w_small == 0.0 ) {
-      d_w_small = 1e-16;
-    }
+  // save the weight label instead of having to find it every time
+  DQMOMEqnFactory& dqmomFactory = DQMOMEqnFactory::self();
+  string name = "w_qn";
+  string node; 
+  std::stringstream out;
+  out << d_quadNode;
+  node = out.str();
+  name += node;
+  EqnBase& temp_eqn = dqmomFactory.retrieve_scalar_eqn(name);
+  DQMOMEqn& eqn = dynamic_cast<DQMOMEqn&>(temp_eqn);
+  d_weightLabel = eqn.getTransportEqnLabel();
+  d_w_small = eqn.getSmallClip();
+  if( d_w_small == 0.0 ) {
+    d_w_small = 1e-16;
   }
 
   // Discretization information:
@@ -485,6 +483,12 @@ DQMOMEqn::sched_buildTransportEqn( const LevelP& level, SchedulerP& sched, int t
   tsk->requires(Task::OldDW, d_fieldLabels->d_wVelocitySPBCLabel, Ghost::AroundCells, 1); 
 #endif
 
+  //DQMOMEqnFactory& dqmomFactory  = DQMOMEqnFactory::self();
+
+  if( !d_weight ) {
+    tsk->requires(Task::OldDW, d_weightLabel, Ghost::AroundCells, 0);
+  }
+
   // extra srcs
   if (d_addExtraSources) {
     SourceTermFactory& src_factory = SourceTermFactory::self(); 
@@ -564,7 +568,7 @@ DQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
 
     ArchesLabel::PartVelMap::iterator iter = d_fieldLabels->partVel.find(d_quadNode);
     new_dw->get( partVel, iter->second, matlIndex, patch, gac, 1 ); 
- 
+
     new_dw->getModifiable(phi, d_transportVarLabel, matlIndex, patch);
     new_dw->getModifiable(Fdiff, d_FdiffLabel, matlIndex, patch);
     new_dw->getModifiable(Fconv, d_FconvLabel, matlIndex, patch); 
@@ -573,8 +577,11 @@ DQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
     Fconv.initialize(0.0);
     Fdiff.initialize(0.0); 
 
-    //----BOUNDARY CONDITIONS
-    // For first time step, bc's have been set in dqmomInit
+    constCCVariable<double> w;
+    if(!d_weight){
+      old_dw->get(w, d_weightLabel, matlIndex, patch, gn, 0);
+    }
+
     computeBCs( patch, d_eqnName, phi );
 
     //----CONVECTION
@@ -588,15 +595,20 @@ DQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
     //----SUM UP RHS
     for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
       IntVector c = *iter; 
-
+ 
       RHS[c] += Fdiff[c] - Fconv[c];
 
       if (d_addSources) {
        
         // Right now, no source term for weights. The conditional statement prevents errors coming from solving Ax=b,
         // it should be removed if the source term for weights isn't zero.
-        //if(!d_weight) RHS[c] += src[c]*vol;           
-        RHS[c] += src[c]*vol;
+        if(!d_weight){
+          if(w[c] > d_w_small){ 
+            RHS[c] += src[c]*vol;   
+          }
+        }
+ 
+        //RHS[c] += src[c]*vol;
 #ifdef VERIFY_DQMOM_TRANSPORT
         if (d_addExtraSources) { 
           // Going to subtract out the src from the Ax=b solver
@@ -646,6 +658,8 @@ DQMOMEqn::sched_solveTransportEqn( const LevelP& level, SchedulerP& sched, int t
   tsk->modifies(d_transportVarLabel);
   tsk->modifies(d_oldtransportVarLabel); 
   tsk->requires(Task::NewDW, d_RHSLabel, Ghost::None, 0);
+  if( !d_weight ) 
+      tsk->requires(Task::NewDW, d_weightLabel, Ghost::None, 0);
 
   //Old
   tsk->requires(Task::OldDW, d_transportVarLabel, Ghost::None, 0);
@@ -694,18 +708,27 @@ DQMOMEqn::solveTransportEqn( const ProcessorGroup* pc,
     curr_ssp_time = curr_time + factor * dt; 
     d_timeIntegrator->timeAvePhi( patch, phi, rk1_phi, timeSubStep, curr_ssp_time ); 
 
-    if (d_doClipping) 
-      clipPhi( patch, phi ); 
+
+    if(d_weight){
+      if (d_doClipping)
+        clipPhi( patch, phi);
+    } else {
+      constCCVariable<double> w;
+      new_dw->get(w, d_weightLabel, matlIndex, patch, gn, 0);
+      if (d_doClipping)
+        clipWeightedPhi( patch, phi, w);
+    }
 
     //----BOUNDARY CONDITIONS
     // For first time step, bc's have been set in dqmomInit
     computeBCs( patch, d_eqnName, phi );
 
     // copy averaged phi into oldphi
-    oldphi.copyData(phi); 
+    oldphi.copyData(phi);
 
   }
 }
+
 //---------------------------------------------------------------------------
 // Method: Schedule the compute of the IC values
 //---------------------------------------------------------------------------
@@ -716,25 +739,12 @@ DQMOMEqn::sched_getUnscaledValues( const LevelP& level, SchedulerP& sched )
 
   Task* tsk = scinew Task(taskname, this, &DQMOMEqn::getUnscaledValues);
   
-  //Ghost::GhostType  gn  = Ghost::None;
-  DQMOMEqnFactory& dqmomFactory  = DQMOMEqnFactory::self(); 
-
   //NEW
   tsk->modifies(d_icLabel);
   tsk->modifies(d_transportVarLabel); 
 
   if( !d_weight ) {
-    string name = "w_qn"; 
-    string node; 
-    std::stringstream out; 
-    out << d_quadNode; 
-    node = out.str(); 
-    name += node; 
-
-    EqnBase& eqn = dqmomFactory.retrieve_scalar_eqn( name ); 
-    const VarLabel* weightLabel = eqn.getTransportEqnLabel(); 
-    
-    tsk->modifies( weightLabel ); 
+    tsk->modifies( d_weightLabel ); 
   }
  
   sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
@@ -771,6 +781,7 @@ DQMOMEqn::getUnscaledValues( const ProcessorGroup* pc,
       // now loop over all cells
       for (CellIterator iter=patch->getCellIterator(0); !iter.done(); iter++){
         IntVector c = *iter;
+
         w_actual[c] = w[c]*d_scalingConstant;
       }
 
@@ -797,8 +808,9 @@ DQMOMEqn::getUnscaledValues( const ProcessorGroup* pc,
         for (CellIterator iter=patch->getCellIterator(0); !iter.done(); iter++){
   
           IntVector c = *iter;
-         
-          if (w[c] > d_w_small){
+ 
+          //if (w[c] > d_w_small){
+          if (w[c] > 0.0){
             ic[c] = (wa[c]/w[c])*d_scalingConstant;
           }  else {
             ic[c] = 0.0;
@@ -833,7 +845,34 @@ DQMOMEqn::clipPhi( const Patch* p,
     if (d_doHighClip) { 
       if (phi[c] > d_highClip) 
         phi[c] = d_highClip; 
-    } 
+    }
+    if(phi[c]<d_w_small)
+      phi[c] = 0.0; 
+  }
+}
+
+template<class phiType> void
+DQMOMEqn::clipWeightedPhi( const Patch* p,
+                           phiType& phi,
+                           constCCVariable<double> weight )
+{
+  // probably should put these "if"s outside the loop   
+  for (CellIterator iter=p->getCellIterator(0); !iter.done(); iter++){
+
+    IntVector c = *iter;
+
+    if (d_doLowClip) {
+      if (phi[c]/weight[c] < d_lowClip)
+        phi[c] = weight[c]*d_lowClip;
+    }
+
+    if (d_doHighClip) {
+      if (phi[c]/weight[c] > d_highClip)
+        phi[c] = weight[c]*d_highClip;
+    }
+    if(weight[c]<d_w_small)
+      phi[c] = 0.0;
+
   }
 }
 
@@ -895,13 +934,20 @@ DQMOMEqn::dummyInit( const ProcessorGroup* pc,
     CCVariable<double> fdiff;
     CCVariable<double> rhs;
     constCCVariable<double> phi_oldDW; 
+    constCCVariable<Vector> pvel_oldDW;
+    constCCVariable<double> src_oldDW;
 
     ArchesLabel::PartVelMap::iterator iter = d_fieldLabels->partVel.find(d_quadNode);
 
     new_dw->allocateAndPut( phi, d_transportVarLabel, matlIndex, patch ); 
     new_dw->allocateAndPut( old_phi, d_oldtransportVarLabel, matlIndex, patch ); 
     new_dw->allocateAndPut( ic, d_icLabel, matlIndex, patch ); 
-    if (d_weight) new_dw->allocateAndPut( pvel, iter->second, matlIndex, patch ); 
+    if (d_weight){
+      new_dw->allocateAndPut( pvel, iter->second, matlIndex, patch );
+      pvel.initialize(Vector(0.0,0.0,0.0)); 
+      old_dw->get(pvel_oldDW, iter->second, matlIndex, patch, gn, 0);
+      pvel.copyData( pvel_oldDW );
+    }
     new_dw->allocateAndPut( src, d_sourceLabel, matlIndex, patch ); 
     new_dw->allocateAndPut( fconv, d_FconvLabel, matlIndex, patch );
     new_dw->allocateAndPut( fdiff, d_FdiffLabel, matlIndex, patch );
@@ -914,5 +960,8 @@ DQMOMEqn::dummyInit( const ProcessorGroup* pc,
 
     old_dw->get(phi_oldDW, d_transportVarLabel, matlIndex, patch, gn, 0);
     phi.copyData( phi_oldDW ); 
+
+    old_dw->get(src_oldDW, d_sourceLabel, matlIndex, patch, gn, 0);
+    src.copyData( src_oldDW );
   }
 }

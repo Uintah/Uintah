@@ -643,8 +643,12 @@ SimpleHeatTransfer::computeModel( const ProcessorGroup * pc,
         } else {
           abskp_ = 0.0;
         }
-      
-        heat_rate_ = (Q_convection + Q_radiation)/(mp_Cp*d_pt_scaling_constant);
+    
+        if(d_unweighted){  
+          heat_rate_ = (Q_convection + Q_radiation)/(mp_Cp*d_pt_scaling_constant);
+        } else {
+          heat_rate_ = (Q_convection + Q_radiation)*unscaled_weight/(mp_Cp*d_pt_scaling_constant*d_w_scaling_constant);
+        }
         //cout << "Qconv " << Q_convection << " Qrad " << Q_radiation << endl;
         gas_heat_rate_ = -unscaled_weight*Q_convection;
  

@@ -53,6 +53,25 @@ DQMOMEqnFactory::register_scalar_eqn( const std::string name, DQMOMEqnBuilderBas
     throw InvalidValue(errmsg,__FILE__,__LINE__);
   }
 }
+
+//---------------------------------------------------------------------------
+// Method: Register a weight Eqn. 
+//---------------------------------------------------------------------------
+void
+DQMOMEqnFactory::set_weight_eqn( const std::string name, EqnBase* eqn )
+{
+  weights_eqns_[name] = eqn;
+}
+
+//---------------------------------------------------------------------------
+// Method: Register an abscissa Eqn. 
+//---------------------------------------------------------------------------
+void
+DQMOMEqnFactory::set_abscissa_eqn( const std::string name, EqnBase* eqn )
+{
+  abscissas_eqns_[name] = eqn;
+}
+
 //---------------------------------------------------------------------------
 // Method: Retrieve a scalar Eqn. 
 //---------------------------------------------------------------------------
@@ -76,6 +95,7 @@ DQMOMEqnFactory::retrieve_scalar_eqn( const std::string name )
 
   return *eqn;
 }
+
 //-----------------------------------------------------------------------------
 // Method: Determine if scalar eqn is contained in the factory
 //-----------------------------------------------------------------------------

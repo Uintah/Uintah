@@ -467,7 +467,7 @@ BadHawkDevol::computeModel( const ProcessorGroup * pc,
 
       IntVector c = *iter; 
 
-      if (weight[c] < d_w_small ) {
+      if ((weight[c] < d_w_small) && !d_unweighted) {
         devol_rate[c] = 0.0;
         gas_devol_rate[c] = 0.0;
       } else {
@@ -496,8 +496,13 @@ BadHawkDevol::computeModel( const ProcessorGroup * pc,
           devol_rate[c] = -1.0*(k1+k2)*(raw_coal_mass);  
         else 
           devol_rate[c] = 0.0;
-
-        testVal = (Y1_*k1 + Y2_*k2)*wa_raw_coal_mass[c]*d_rc_scaling_factor*d_w_scaling_factor; 
+    
+        if(d_unweighted){
+          testVal = (Y1_*k1 + Y2_*k2)*wa_raw_coal_mass[c]*weight[c]*d_rc_scaling_factor*d_w_scaling_factor;
+        } else {
+          testVal = (Y1_*k1 + Y2_*k2)*wa_raw_coal_mass[c]*d_rc_scaling_factor*d_w_scaling_factor; 
+        }
+ 
         //testVal uses the weighted abscissa so that the gas source is from all (total) particles
         if (testVal > 1.0e-16 )
           gas_devol_rate[c] = testVal; 
