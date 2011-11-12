@@ -105,6 +105,10 @@ public:
   /** @brief  Return the quadrature node */
   inline int getquadNode() {
     return d_quadNode; };
+
+  /** @brief Returns a list of any extra local labels this model may compute **/
+  inline const vector<const VarLabel*> getExtraLocalLabels(){
+    return _extra_local_labels; };
  
   inline void setUnweightedAbscissas(bool d_unw){
     d_unweighted = d_unw;

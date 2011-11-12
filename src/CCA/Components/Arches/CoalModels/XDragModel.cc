@@ -264,8 +264,6 @@ XDragModel::sched_computeModel( const LevelP& level, SchedulerP& sched, int time
 
   d_timeSubStep = timeSubStep; 
 
-  tsk->requires( Task::OldDW, d_fieldLabels->d_sharedState->get_delt_label(), Ghost::None, 0);
-
   if (d_timeSubStep == 0 && !d_labelSchedInit) {
     // Every model term needs to set this flag after the varLabel is computed. 
     // transportEqn.cleanUp should reinitialize this flag at the end of the time step. 
@@ -300,7 +298,7 @@ XDragModel::sched_computeModel( const LevelP& level, SchedulerP& sched, int time
 
   // require particle velocity
   ArchesLabel::PartVelMap::const_iterator i = d_fieldLabels->partVel.find(d_quadNode);
-  tsk->requires( Task::OldDW, i->second, gn, 0 );
+  tsk->requires( Task::NewDW, i->second, gn, 0 );
 
   for (vector<std::string>::iterator iter = d_icLabels.begin();
       iter != d_icLabels.end(); iter++) {
@@ -405,7 +403,7 @@ XDragModel::computeModel( const ProcessorGroup* pc,
 
     constCCVariable<Vector> partVel;
     ArchesLabel::PartVelMap::const_iterator iter = d_fieldLabels->partVel.find(d_quadNode);
-    old_dw->get(partVel, iter->second, matlIndex, patch, gn, 0);
+    new_dw->get(partVel, iter->second, matlIndex, patch, gn, 0);
 
     constCCVariable<double> weight;
     old_dw->get( weight, d_weight_label, matlIndex, patch, gn, 0 );
@@ -441,18 +439,18 @@ XDragModel::computeModel( const ProcessorGroup* pc,
         sphPart = cart2sph( cartPart );
 
         double diff = sphGas.z() - sphPart.z();
-        double Re  = abs(diff)*length/(kvisc/den[c]);
+        double Re  = std::abs(diff)*length/(kvisc/den[c]);
         double phi;
 
-        if(Re < 1) {
-          phi = 1;
-        } else if(Re>1000) {
+        if(Re < 1.0) {
+          phi = 1.0;
+        } else if(Re>1000.0) {
           phi = 0.0183*Re;
         } else {
           phi = 1. + .15*pow(Re, 0.687);
         }
 
-        double t_p = rhop/(18*kvisc)*pow(length,2);
+        double t_p = rhop/(18.0*kvisc)*pow(length,2.0);
 
         if(d_unweighted){
           model[c] = (phi/t_p*(cartGas.x()-cartPart.x())+gravity.x())/(d_xvel_scaling_factor);
@@ -460,13 +458,7 @@ XDragModel::computeModel( const ProcessorGroup* pc,
           model[c]= weight[c]*(phi/t_p*(cartGas.x()-cartPart.x())+gravity.x())/d_xvel_scaling_factor;
         }
 
-        gas_source[c] = -weight[c]*d_w_scaling_factor*rhop/6.0*pi*phi/t_p*(cartGas.x()-cartPart.x())*pow(length,3);
-
-        /*
-        //KLUDGE: more implicit clipping
-        model[c] = min(model[c], 1e7);
-        model[c] = max(model[c],-1e7);
-        */
+        gas_source[c] = -weight[c]*d_w_scaling_factor*rhop/6.0*pi*phi/t_p*(cartGas.x()-cartPart.x())*pow(length,3.0);
 
         /*
         // Debugging

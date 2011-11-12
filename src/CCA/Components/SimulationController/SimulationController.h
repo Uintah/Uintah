@@ -31,7 +31,7 @@ DEALINGS IN THE SOFTWARE.
 #ifndef UINTAH_HOMEBREW_SIMULATIONCONTROLLER_H
 #define UINTAH_HOMEBREW_SIMULATIONCONTROLLER_H
 
-#include <sci_defs/papi_defs.h> // for PAPI flop counters
+#include <sci_defs/papi_defs.h> // for PAPI performance counters
 
 #include <Core/Parallel/UintahParallelComponent.h>
 #include <CCA/Ports/DataWarehouseP.h>
@@ -138,7 +138,7 @@ class DataArchive;
       bool d_doMultiTaskgraphing;
 
       /* for restarting */
-      bool           d_restarting;
+      bool d_restarting;
       std::string d_fromDir;
       int d_restartTimestep;
       int d_restartIndex;
@@ -158,8 +158,12 @@ class DataArchive;
       bool d_restartRemoveOldDir;
 
 #ifdef USE_PAPI_COUNTERS
-      int event_set;                  // PAPI event set
-      long long event_values[1];      // PAPI event value
+      /*
+       * NOTE: the size of the d_eventValues array should be equal to the
+       * number of PAPI events added to the event set in SimulationCOntroller.cc
+       */
+      int d_eventSet;                  // PAPI event set
+      long long d_eventValues[4];      // PAPI event value
 #endif
 
 

@@ -3483,7 +3483,7 @@ if test "$sci_required_papi" = "yes"; then
                         $_papi_lib,
                         ,
                         [int *event_set = (int*)malloc(sizeof(int));
-                        *event_set = PAPI_FP_OPS;
+                        *event_set = PAPI_DP_OPS;
                         long long *flops = (long long *)malloc(sizeof(long long));
                         PAPI_start_counters(event_set, 1);
                         PAPI_stop_counters(flops, 1);

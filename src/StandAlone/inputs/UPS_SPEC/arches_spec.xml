@@ -86,7 +86,7 @@
         <O                              spec="REQUIRED DOUBLE" />
         <S                              spec="REQUIRED DOUBLE" />
         <initial_ash_mass               spec="REQUIRED MULTIPLE_DOUBLES" />
-        <initial_fixcarb_mass           spec="REQUIRED MULTIPLE_DOUBLES" />
+        <initial_fixcarb_mass           spec="OPTIONAL MULTIPLE_DOUBLES" />
         <particle_density               spec="OPTIONAL DOUBLE" />
       </Coal_Properties>
       
@@ -642,7 +642,7 @@
         <Weights                        spec="REQUIRED NO_DATA">
           <doDiff                       spec="OPTIONAL BOOLEAN"/>
           <doConv                       spec="OPTIONAL BOOLEAN"/>
-          <conv_scheme                  spec="OPTIONAL STRING 'upwind, minmod, super_bee'"/>
+          <conv_scheme                  spec="OPTIONAL STRING 'upwind, roe_minmod, super_bee'"/>
           <turbulentPrandtlNumber       spec="OPTIONAL DOUBLE" />
           <initialization               spec="OPTIONAL NO_DATA"
                                         attribute1="type REQUIRED STRING 'env_constant, constant, env_step, step'">
@@ -676,7 +676,7 @@
                                         attribute1="label REQUIRED STRING">
           <doDiff                       spec="OPTIONAL BOOLEAN"/>
           <doConv                       spec="OPTIONAL BOOLEAN"/>
-          <conv_scheme                  spec="OPTIONAL STRING 'upwind, minmod, super_bee'"/>
+          <conv_scheme                  spec="OPTIONAL STRING 'upwind, roe_minmod, super_bee'"/>
           <turbulentPrandtlNumber       spec="OPTIONAL DOUBLE" />
           <initialization               spec="OPTIONAL NO_DATA"
                                         attribute1="type REQUIRED STRING 'env_constant, constant, env_step'">

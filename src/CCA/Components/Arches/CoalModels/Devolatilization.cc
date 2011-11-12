@@ -3,7 +3,6 @@
 #include <CCA/Components/Arches/TransportEqns/EqnBase.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
 #include <CCA/Components/Arches/ArchesLabel.h>
-
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Grid/SimulationState.h>
@@ -37,12 +36,15 @@ Devolatilization::Devolatilization( std::string modelName,
   // Create the gas phase source term associated with this model
   std::string charSourceName = modelName + "_charSource";
   d_charLabel = VarLabel::create( charSourceName, CCVariable<double>::getTypeDescription() );
-
+  _extra_local_labels.push_back(d_charLabel);
 }
 
 Devolatilization::~Devolatilization()
 {
-  VarLabel::destroy(d_charLabel);
+  for (vector<const VarLabel*>::iterator iter = _extra_local_labels.begin();
+       iter != _extra_local_labels.end(); iter++) {
+    VarLabel::destroy( *iter );
+  }
 }
 
 //---------------------------------------------------------------------------
@@ -86,11 +88,15 @@ Devolatilization::sched_dummyInit( const LevelP& level, SchedulerP& sched )
 
   tsk->requires( Task::OldDW, d_modelLabel, gn, 0);
   tsk->requires( Task::OldDW, d_gasLabel,   gn, 0);
-  tsk->requires( Task::OldDW, d_charLabel,   gn, 0);
 
   tsk->computes(d_modelLabel);
   tsk->computes(d_gasLabel); 
-  tsk->computes(d_charLabel);
+
+  for (std::vector<const VarLabel*>::iterator iter = _extra_local_labels.begin();
+       iter != _extra_local_labels.end(); iter++){
+    tsk->computes(*iter);
+    tsk->requires( Task::OldDW, *iter,   gn, 0);
+  }
 
   sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
 
@@ -127,23 +133,27 @@ Devolatilization::dummyInit( const ProcessorGroup* pc,
 
     CCVariable<double> ModelTerm;
     CCVariable<double> GasModelTerm;
-    CCVariable<double> CharModelTerm;
 
     constCCVariable<double> oldModelTerm;
     constCCVariable<double> oldGasModelTerm;
-    constCCVariable<double> oldCharModelTerm;
 
     new_dw->allocateAndPut( ModelTerm,    d_modelLabel, matlIndex, patch );
     new_dw->allocateAndPut( GasModelTerm, d_gasLabel,   matlIndex, patch ); 
-    new_dw->allocateAndPut( CharModelTerm, d_charLabel,   matlIndex, patch );
    
     old_dw->get( oldModelTerm,    d_modelLabel, matlIndex, patch, gn, 0 );
     old_dw->get( oldGasModelTerm, d_gasLabel,   matlIndex, patch, gn, 0 );
-    old_dw->get( oldCharModelTerm, d_charLabel,   matlIndex, patch, gn, 0 );
 
     ModelTerm.copyData(oldModelTerm);
     GasModelTerm.copyData(oldGasModelTerm);
-    CharModelTerm.copyData(oldCharModelTerm);
+
+    for (std::vector<const VarLabel*>::iterator iter = _extra_local_labels.begin();
+         iter != _extra_local_labels.end(); iter++){
+      CCVariable<double> tempVar;
+      constCCVariable<double> oldtempVar;
+      new_dw->allocateAndPut(tempVar, *iter, matlIndex, patch );
+      old_dw->get( oldtempVar, *iter,   matlIndex, patch, gn, 0 );
+      tempVar.copyData(oldtempVar);
+    }
   }
 }
 

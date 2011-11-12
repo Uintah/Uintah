@@ -37,12 +37,24 @@ HeatTransfer::HeatTransfer( std::string modelName,
   // Create the absorption coefficient term associated with this model
   std::string abskpName = modelName + "_abskp";
   d_abskpLabel = VarLabel::create( abskpName, CCVariable<double>::getTypeDescription() );
+  _extra_local_labels.push_back(d_abskpLabel);
+
+  std::string qconvName = modelName + "_Qconv";
+  d_qconvLabel = VarLabel::create( qconvName, CCVariable<double>::getTypeDescription() );
+  _extra_local_labels.push_back(d_qconvLabel);
+
+  std::string qradName = modelName + "_Qrad";
+  d_qradLabel = VarLabel::create( qradName, CCVariable<double>::getTypeDescription() );
+  _extra_local_labels.push_back(d_qradLabel);
 
 }
 
 HeatTransfer::~HeatTransfer()
 {
-  VarLabel::destroy(d_abskpLabel);
+  for (vector<const VarLabel*>::iterator iter = _extra_local_labels.begin();
+       iter != _extra_local_labels.end(); iter++) {
+    VarLabel::destroy( *iter );
+  }
 }
 
 //---------------------------------------------------------------------------
@@ -99,11 +111,15 @@ HeatTransfer::sched_dummyInit( const LevelP& level, SchedulerP& sched )
 
   tsk->requires( Task::OldDW, d_modelLabel, gn, 0);
   tsk->requires( Task::OldDW, d_gasLabel,   gn, 0);
-  tsk->requires( Task::OldDW, d_abskpLabel,   gn, 0);
 
   tsk->computes(d_modelLabel);
   tsk->computes(d_gasLabel); 
-  tsk->computes(d_abskpLabel);
+
+  for (std::vector<const VarLabel*>::iterator iter = _extra_local_labels.begin();
+       iter != _extra_local_labels.end(); iter++){
+    tsk->computes(*iter);
+    tsk->requires( Task::OldDW, *iter,   gn, 0);
+  }
 
   sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
 
@@ -140,23 +156,27 @@ HeatTransfer::dummyInit( const ProcessorGroup* pc,
 
     CCVariable<double> ModelTerm;
     CCVariable<double> GasModelTerm;
-    CCVariable<double> abskpTerm;
 
     constCCVariable<double> oldModelTerm;
     constCCVariable<double> oldGasModelTerm;
-    constCCVariable<double> oldabskpTerm;
 
     new_dw->allocateAndPut( ModelTerm,    d_modelLabel, matlIndex, patch );
-    new_dw->allocateAndPut( GasModelTerm, d_gasLabel,   matlIndex, patch ); 
-    new_dw->allocateAndPut( abskpTerm, d_abskpLabel,   matlIndex, patch );
+    new_dw->allocateAndPut( GasModelTerm, d_gasLabel,   matlIndex, patch );
 
     old_dw->get( oldModelTerm,    d_modelLabel, matlIndex, patch, gn, 0 );
     old_dw->get( oldGasModelTerm, d_gasLabel,   matlIndex, patch, gn, 0 );
-    old_dw->get( oldabskpTerm, d_abskpLabel,   matlIndex, patch, gn, 0 );
-    
+
     ModelTerm.copyData(oldModelTerm);
     GasModelTerm.copyData(oldGasModelTerm);
-    abskpTerm.copyData(oldabskpTerm);
+
+    for (std::vector<const VarLabel*>::iterator iter = _extra_local_labels.begin();
+         iter != _extra_local_labels.end(); iter++){
+      CCVariable<double> tempVar;
+      constCCVariable<double> oldtempVar;
+      new_dw->allocateAndPut(tempVar, *iter, matlIndex, patch );
+      old_dw->get( oldtempVar, *iter,   matlIndex, patch, gn, 0 );
+      tempVar.copyData(oldtempVar);
+    }
 
   }
 }

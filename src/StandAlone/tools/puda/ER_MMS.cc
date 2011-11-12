@@ -85,7 +85,6 @@ Uintah::ER_MMS( DataArchive * da, CommandLineFlags & clf )
       IntVector worstCell(-9,-9,-9);
       
       Vector dx = level->dCell();             // you need to normalize the variable A by the 
-      double normalization = dx.length();     // cell spacing so the Linear interpolation will work
       double A = 0.1;
       //__________________________________
       // Patch loop

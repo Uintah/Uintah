@@ -161,6 +161,8 @@ private:
   const VarLabel* d_weight_label;               ///< Weight label
 
   const VarLabel* d_abskp;  ///< Label for thermal conductivity (of the particles, I think???)
+  const VarLabel* d_volq_label;
+  const VarLabel* d_abskg_label;
 
   double visc;
   double yelem[5];              ///< Fractions of each element in coal (C, H, N, O, S respectively)
@@ -190,6 +192,8 @@ private:
   double d_ash_scaling_constant;  ///< Scaling factor for ash mass
   double d_pl_scaling_constant;   ///< Scaling factor for particle size (length)
   double d_pt_scaling_constant;   ///< Scaling factor for particle temperature
+
+  //bool _radiation;                ///< Radiation flag
 
 }; // end ShaddixHeatTransfer
 } // end namespace Uintah

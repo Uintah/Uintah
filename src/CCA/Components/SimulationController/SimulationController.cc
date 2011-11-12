@@ -29,7 +29,7 @@ DEALINGS IN THE SOFTWARE.
 
 
 #include <sci_defs/malloc_defs.h>
-#include <sci_defs/papi_defs.h> // for PAPI flop counters
+#include <sci_defs/papi_defs.h> // for PAPI performance counters
 
 #include <CCA/Components/SimulationController/SimulationController.h>
 #include <Core/Parallel/ProcessorGroup.h>
@@ -112,35 +112,96 @@ namespace Uintah {
     d_sim = 0;
 
     d_grid_ps=d_ups->findBlock("Grid");
-#ifdef USE_PAPI_COUNTERS
-    event_set = PAPI_NULL;
 
-    int retp = PAPI_library_init(PAPI_VER_CURRENT);
-    if (retp != PAPI_VER_CURRENT)
-      if (d_myworld->myrank() == 0)
-        cout<< "WARNNING: Cannot init PAPI counter! Error code= " << retp << endl;
-    retp=PAPI_thread_init(pthread_self);
-    if (retp != PAPI_OK)
-      if (d_myworld->myrank() == 0)
-        cout<< "WARNNING: Cannot init thread PAPI counter! Error code= " << retp << endl;
-    retp = PAPI_create_eventset(&event_set);
-    if ( retp != PAPI_OK) 
-      if (d_myworld->myrank() == 0)
-        cout<< "WARNNING: Cannot create PAPI counter! Error code= " << retp << endl;
-    retp = PAPI_query_event (PAPI_FP_OPS);
-    if ( retp != PAPI_OK) 
-      if (d_myworld->myrank() == 0)
-        cout<< "WARNNING: Cannot query PAPI counter! Error code= " << retp << endl;
-    retp = PAPI_add_event(event_set, PAPI_FP_OPS);
-    if ( retp != PAPI_OK) 
-      if (d_myworld->myrank() == 0)
-        cout<< "WARNNING: Cannot add PAPI counter! Error code= " << retp << endl;
-    retp = PAPI_start(event_set);
-    if ( retp != PAPI_OK) 
-      if (d_myworld->myrank() == 0)
-        cout<< "WARNNING: Cannot start PAPI counter! Error code= " << retp << endl;
+#ifdef USE_PAPI_COUNTERS
+    d_eventSet = PAPI_NULL;
+    int retp = -1;
+
+    retp = PAPI_library_init(PAPI_VER_CURRENT);
+    if (retp != PAPI_VER_CURRENT) {
+      if (d_myworld->myrank() == 0) {
+        cout<< "WARNNING: Cannot initialize PAPI library! Error code = " << retp << endl;
+      }
+    }
+
+    retp = PAPI_thread_init(pthread_self);
+    if (retp != PAPI_OK) {
+      if (d_myworld->myrank() == 0) {
+        cout<< "WARNNING: Cannot initialize PAPI thread support! Error code = " << retp << endl;
+      }
+    }
+
+    retp = PAPI_create_eventset(&d_eventSet);
+    if ( retp != PAPI_OK) {
+      if (d_myworld->myrank() == 0) {
+        cout<< "WARNNING: Cannot create PAPI event set! Error code = " << retp << endl;
+      }
+    }
+
+    retp = PAPI_query_event(PAPI_DP_OPS);
+    if ( retp != PAPI_OK) {
+      if (d_myworld->myrank() == 0) {
+        cout<< "WARNNING: Cannot query PAPI_DP_OPS event! Error code = " << retp << endl;
+      }
+    }
+
+    retp = PAPI_query_event(PAPI_L1_TCM);
+    if ( retp != PAPI_OK) {
+      if (d_myworld->myrank() == 0) {
+        cout<< "WARNNING: Cannot query PAPI_L1_TCM event! Error code = " << retp << endl;
+      }
+    }
+
+    retp = PAPI_query_event(PAPI_L2_TCM);
+    if ( retp != PAPI_OK) {
+      if (d_myworld->myrank() == 0) {
+        cout<< "WARNNING: Cannot query PAPI_L2_TCM event! Error code = " << retp << endl;
+      }
+    }
+
+    retp = PAPI_query_event(PAPI_L3_TCM);
+    if ( retp != PAPI_OK) {
+      if (d_myworld->myrank() == 0) {
+        cout<< "WARNNING: Cannot query PAPI_L3_TCM event! Error code = " << retp << endl;
+      }
+    }
+
+    retp = PAPI_add_event(d_eventSet, PAPI_DP_OPS);
+    if ( retp != PAPI_OK)  {
+      if (d_myworld->myrank() == 0) {
+        cout<< "WARNNING: Cannot add PAPI_DP_OPS event! Error code = " << retp << endl;
+      }
+    }
+
+    retp = PAPI_add_event(d_eventSet, PAPI_L1_TCM);
+    if ( retp != PAPI_OK)  {
+      if (d_myworld->myrank() == 0) {
+        cout<< "WARNNING: Cannot add PAPI_L1_TCM event! Error code = " << retp << endl;
+      }
+    }
+
+    retp = PAPI_add_event(d_eventSet, PAPI_L2_TCM);
+    if ( retp != PAPI_OK)  {
+      if (d_myworld->myrank() == 0) {
+        cout<< "WARNNING: Cannot add PAPI_L2_TCM event! Error code = " << retp << endl;
+      }
+    }
+
+    retp = PAPI_add_event(d_eventSet, PAPI_L3_TCM);
+    if ( retp != PAPI_OK)  {
+      if (d_myworld->myrank() == 0) {
+        cout<< "WARNNING: Cannot add PAPI_L3_TCM event! Error code = " << retp << endl;
+      }
+    }
+
+    retp = PAPI_start(d_eventSet);
+    if ( retp != PAPI_OK) {
+      if (d_myworld->myrank() == 0) {
+        cout<< "WARNNING: Cannot start PAPI event set! Error code = " << retp << endl;
+      }
+    }
 #endif
-  }
+  } // end SimulationController constructor
 
   SimulationController::~SimulationController()
   {
@@ -546,18 +607,34 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
 
  
 #ifdef USE_PAPI_COUNTERS
-  double flop;
-  int retp=PAPI_read(event_set, event_values);
+  double flop;				// total FLOPS
+  double l1_misses;			// total L1 cache misses
+  double l2_misses;			// total L2 cache misses
+  double l3_misses;			// total L3 cache misses
+  int retp = -1;			// return value for error checking
+
+  retp = PAPI_read(d_eventSet, d_eventValues);
   //cout << d_myworld->myrank() << "PAPI Counter:::: " << event_values[0] <<endl;
   if (retp != PAPI_OK) {
-    if (d_myworld->myrank() == 0) 
-      cout<< "WARNNING: Cannot read PAPI counter! Error value = " << retp << endl;
-    flop = 0;
-  } else flop = (double) event_values[0]  ;
-  retp = PAPI_reset(event_set);
+    if (d_myworld->myrank() == 0) {
+      cout << "WARNNING: Cannot read PAPI event set! Error value = " << retp << endl;
+    }
+    flop      = 0;
+    l1_misses = 0;
+    l2_misses = 0;
+    l3_misses = 0;
+  } else {
+	  flop      = (double) d_eventValues[0];
+	  l1_misses = (double) d_eventValues[1];
+	  l2_misses = (double) d_eventValues[2];
+	  l3_misses = (double) d_eventValues[3];
+  }
+
+  retp = PAPI_reset(d_eventSet);
   if (retp != PAPI_OK) {
-    if (d_myworld->myrank() == 0) 
-      cout<< "WARNNING: Cannot reset PAPI counter! Error value = " << retp << endl;
+    if (d_myworld->myrank() == 0) {
+      cout << "WARNNING: Cannot reset PAPI event set! Error value = " << retp << endl;
+    }
   }
 #endif
 
@@ -601,7 +678,13 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
   toReduceMax.push_back(double_int(d_sharedState->outputTime,rank));
 #ifdef USE_PAPI_COUNTERS
   toReduce.push_back(flop);
-  toReduceMax.push_back(double_int(flop,rank));
+  toReduceMax.push_back(double_int(flop, rank));
+  toReduce.push_back(l1_misses);
+  toReduceMax.push_back(double_int(l1_misses, rank));
+  toReduce.push_back(l2_misses);
+  toReduceMax.push_back(double_int(l2_misses, rank));
+  toReduce.push_back(l3_misses);
+  toReduceMax.push_back(double_int(l3_misses, rank));
 #endif
   statLabels.push_back("Mem usage");
   statLabels.push_back("Recompile");
@@ -616,10 +699,14 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
   statLabels.push_back("Output");
 #ifdef USE_PAPI_COUNTERS
   statLabels.push_back("FLOP");
+  statLabels.push_back("L1CacheMisses");
+  statLabels.push_back("L2CacheMisses");
+  statLabels.push_back("L3CacheMisses");
 #endif
 
-  if (highwater) // add highwater to the end so we know where everything else is (as highwater is conditional)
+  if (highwater) { // add highwater to the end so we know where everything else is (as highwater is conditional)
     toReduce.push_back(highwater);
+  }
   avgReduce.resize(toReduce.size());
   maxReduce.resize(toReduce.size());
 
