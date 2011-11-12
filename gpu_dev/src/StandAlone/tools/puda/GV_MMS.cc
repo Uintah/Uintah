@@ -49,12 +49,6 @@ Uintah::GV_MMS( DataArchive * da, CommandLineFlags & clf )
 
     //__________________________________
     //  hard coded constants!!!!
-//    double mu    = 384.615;
-//    double bulk  = 833.333;
-    double E     = 1000.;
-    double rho0  = 1000.0;
-    double c     = sqrt(E/rho0);
-//    double A0     = 1.;                    // << This is normalized below
     int    TotalNumParticles  = 0;   
     double max_errorAllLevels = 0.0;
     double TotalSumError      = 0.0;

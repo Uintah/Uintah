@@ -338,6 +338,8 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
       CoalModelFactory& modelFactory = CoalModelFactory::self(); 
       DQMOMEqnFactory::EqnMap& dqmom_eqns = dqmomFactory.retrieve_all_eqns(); 
+      DQMOMEqnFactory::EqnMap& weights_eqns = dqmomFactory.retrieve_weights_eqns();
+      DQMOMEqnFactory::EqnMap& abscissas_eqns = dqmomFactory.retrieve_abscissas_eqns();
 
       // Compute the particle velocities
       d_partVel->schedComputePartVel( level, sched, curr_level ); 
@@ -345,12 +347,21 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       // ---- schedule the solution of the transport equations ----
       
       // Evaluate DQMOM equations
-      for ( DQMOMEqnFactory::EqnMap::iterator iEqn = dqmom_eqns.begin(); 
-            iEqn != dqmom_eqns.end(); iEqn++){
-        
+ 
+      for ( DQMOMEqnFactory::EqnMap::iterator iEqn = weights_eqns.begin();
+            iEqn != weights_eqns.end(); iEqn++){
+
         DQMOMEqn* dqmom_eqn = dynamic_cast<DQMOMEqn*>(iEqn->second);
 
         dqmom_eqn->sched_evalTransportEqn( level, sched, curr_level ); 
+      }
+
+      for ( DQMOMEqnFactory::EqnMap::iterator iEqn = abscissas_eqns.begin();
+            iEqn != abscissas_eqns.end(); iEqn++){
+
+        DQMOMEqn* dqmom_eqn = dynamic_cast<DQMOMEqn*>(iEqn->second);
+
+        dqmom_eqn->sched_evalTransportEqn( level, sched, curr_level );
       }
      
       // Clean up after DQMOM equation evaluations & calculate unscaled DQMOM scalar values 
