@@ -6,7 +6,6 @@
 #include <set>
 
 #include <expression/Expr_ExpressionID.h>
-#include <CCA/Components/Wasatch/transport/TransportEquation.h>
 
 /**
  *  \file GraphHelperTools.h
@@ -16,7 +15,6 @@
  */
 
 namespace Expr{
-  class ExpressionBuilder;
   class ExpressionFactory;
 }
 
