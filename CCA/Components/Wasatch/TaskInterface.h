@@ -140,7 +140,7 @@ namespace Wasatch{
                    const PatchInfoMap& info,
                    const bool createUniqueTreePerPatch,
                    const int RKStage,
-                   const std::set<std::string>& ioFieldSet,                  
+                   const std::set<std::string>& ioFieldSet,
                    Expr::FieldManagerList* fml = NULL );
 
     ~TaskInterface();
@@ -158,7 +158,7 @@ namespace Wasatch{
      *  This sets all field requirements for the Uintah task and
      *  scheduled it for execution.
      */
-    void schedule( const Expr::TagSet& newDWFields, int RKStage );
+    void schedule( const Expr::TagSet& newDWFields, const int RKStage );
 
 
     /**
@@ -167,8 +167,8 @@ namespace Wasatch{
      *  This sets all field requirements for the Uintah task and
      *  scheduled it for execution.
      */
-    void schedule(int RKStage);
-    
+    void schedule( const int RKStage);
+
     Expr::ExpressionTree::TreePtr get_time_tree();
 
   private:
