@@ -84,7 +84,6 @@ The UPS interface is:
 
 namespace Uintah {
 
-
 class ArchesLabel; 
 class MPMArchesLabel; 
 class TimeIntegratorLabel; 
@@ -173,9 +172,6 @@ public:
   /** @brief Load table into memory */ 
   void loadMixingTable( const string & inputfile );
 
-  /** @brief Interpolate values from the table using the species index */ 
-  double tableLookUp( std::vector<double> iv, int var_index);
-
   enum BoundaryType { DIRICHLET, NEUMANN };
 
   struct DepVarCont {
@@ -184,19 +180,644 @@ public:
     int index; 
 
   }; 
+	
 
+	/*********interp derived classes*****************************************/
+	
+  /** @brief A base class for Interpolation */
+  class Interp_class {
+
+	public:
+		Interp_class(){};
+		virtual ~Interp_class(){};
+	
+		virtual inline double find_val( std::vector<double> iv, int var_index)
+
+		{return 0;};
+	
+	protected:
+
+		std::vector<int>  d_allIndepVarNo;
+		std::vector<double> table_vals;
+		std::vector<std::vector<double> >  table2;
+		std::vector< std::vector <double> >  indep;
+		std::vector< std::vector <double > >  ind_1;
+		std::vector<int> lo_index;
+		std::vector<int> hi_index;
+  };
+
+	class Interp1 : public Interp_class {
+		
+	public:
+		Interp1(std::vector<int> d_allIndepVarNum, std::vector<std::vector<double> > table, 
+						std::vector< std::vector <double> > i1) {
+			d_allIndepVarNo = d_allIndepVarNum;
+			ind_1 = i1;
+			table2 = table;
+			
+			table_vals = vector<double>(2);
+			lo_index = vector<int>(1);
+			hi_index = vector<int>(1);
+			};
+
+		~Interp1(){};
+		
+		inline double find_val( std::vector <double> iv, int var_index) {
+			
+			int i1dep_ind = 0;     
+			int mid = 0;
+			int lo_ind = 0;
+			int hi_ind = d_allIndepVarNo[0] - 1;
+			double iv_val = iv[0];
+			
+			if (ind_1[i1dep_ind][lo_ind] != iv_val && ind_1[i1dep_ind][hi_ind] != iv_val) {
+				while ((hi_ind-lo_ind) > 1) {
+					mid = (lo_ind+hi_ind)/2;
+					if (ind_1[i1dep_ind][mid] > iv_val ) {
+						hi_ind = mid;
+					} else if (ind_1[i1dep_ind][mid] < iv_val) {
+						lo_ind = mid;
+					} else {
+						//if (i1[i1dep_ind][mid] == iv[0])
+						lo_ind = mid;											
+						hi_ind = mid;
+					} 
+				}
+			} else if (ind_1[i1dep_ind][lo_ind] == iv_val) {
+				hi_ind = 1;
+			} else {
+				lo_ind = hi_ind-1;   
+			}
+			
+			lo_index[0] = lo_ind;
+			hi_index[0] = hi_ind;
+			
+			if (iv_val < ind_1[i1dep_ind][0]) {
+				hi_index[0] = 0;
+				lo_index[0] = 0;
+			}
+			
+			table_vals[0] = table2[var_index][lo_index[0]];
+			table_vals[1] = table2[var_index][hi_index[0]];
+			
+			double var_val = (table_vals[1]-table_vals[0])/(ind_1[i1dep_ind][lo_index[0]+1]-ind_1[0][lo_index[0]])*(iv[0]-ind_1[0][lo_index[0]])+ table_vals[0];
+			return var_val;
+			
+		};
+	};
+	
+	class Interp2 : public Interp_class {
+	
+	public:
+
+		Interp2(std::vector<int> d_allIndepVarNum,std::vector<std::vector<double> > table,
+						std::vector< std::vector <double> > indep_headers,std::vector< std::vector <double > > i1){
+			d_allIndepVarNo = d_allIndepVarNum;
+			indep = indep_headers;
+			ind_1 = i1;
+			table2 = table;
+			
+			table_vals = vector<double>(4);
+			lo_index = vector<int>(2);
+			hi_index = vector<int>(2);
+		
+		};
+		~Interp2(){};
+		
+		inline double find_val( std::vector<double> iv, int var_index)
+
+		{
+			
+			int mid = 0;
+			double var_value = 0.0;
+			int lo_ind;
+			int hi_ind;
+			double iv_val;
+						
+			//binary search loop 2-> N
+			for (int i = 1; i < 2; i++) {	
+				lo_ind = 0;
+				hi_ind = d_allIndepVarNo[i] - 1;
+				iv_val = iv[i];
+				
+				if (indep[i-1][lo_ind] != iv_val &&  indep[i-1][hi_ind] != iv_val) {
+					while ((hi_ind-lo_ind) > 1) {
+						mid = (lo_ind+hi_ind)/2;
+						if (indep[i-1][mid] > iv_val ) {
+							hi_ind = mid;
+						} else if (indep[i-1][mid] < iv_val ){
+							lo_ind = mid;
+						} else {
+							//if (indep_headers[i-1][mid] ==  iv[i])
+							lo_ind = mid;
+							hi_ind = mid;
+						} 
+					}			   
+				} else if (indep[i-1][lo_ind] == iv_val) {
+					hi_ind = 1; 
+				} else {
+					lo_ind = hi_index[i]-1;  
+				}
+				lo_index[i] = lo_ind;
+				hi_index[i] = hi_ind;
+				
+				if (iv_val < indep[i-1][0]) {
+					lo_index[i] = 0;
+					hi_index[i] = 0;
+				}
+				
+			}
+			
+			//binary search for i1
+			int i1dep_ind = lo_index[1];     //assume i1 is dep on last var
+			
+			lo_ind = 0;
+			hi_ind = d_allIndepVarNo[0] - 1;
+			iv_val = iv[0];
+			
+			if (ind_1[i1dep_ind][lo_ind] != iv_val && ind_1[i1dep_ind][hi_ind] != iv_val) {
+				while ((hi_ind-lo_ind) > 1) {
+					mid = (lo_ind+hi_ind)/2;
+					if (ind_1[i1dep_ind][mid] > iv_val ) {
+						hi_ind = mid;
+					} else if (ind_1[i1dep_ind][mid] < iv_val) {
+						lo_ind = mid;
+					} else {
+						//if (i1[i1dep_ind][mid] == iv[0])
+						lo_ind = mid;											
+						hi_ind = mid;
+					} 
+				}
+			} else if (ind_1[i1dep_ind][lo_ind] == iv_val) {
+				hi_ind = 1;
+			} else {
+				lo_ind = hi_ind-1;   
+			}
+			
+			lo_index[0] = lo_ind;
+			hi_index[0] = hi_ind;
+			
+			if (iv_val < ind_1[i1dep_ind][0]) {
+				hi_index[0] = 0;
+				lo_index[0] = 0;
+			}
+			
+			table_vals[0] = table2[var_index][d_allIndepVarNo[0] * lo_index[1] + lo_index[0]];
+			table_vals[1] = table2[var_index][d_allIndepVarNo[0] * lo_index[1] + hi_index[0]];
+			table_vals[2] = table2[var_index][d_allIndepVarNo[0] * hi_index[1] + lo_index[0]];
+			table_vals[3] = table2[var_index][d_allIndepVarNo[0] * hi_index[1] + hi_index[0]]; 
+			
+			table_vals[0] = (table_vals[2] - table_vals[0])/(indep[0][lo_index[1]+1]-indep[0][lo_index[1]])*(iv[1]-indep[0][lo_index[1]]) + table_vals[0];
+			table_vals[1] = (table_vals[3] - table_vals[1])/(indep[0][lo_index[1]+1]-indep[0][lo_index[1]])*(iv[1]-indep[0][lo_index[1]]) + table_vals[1];
+			
+			double var_val = (table_vals[1]-table_vals[0])/(ind_1[i1dep_ind][lo_index[0]+1]-ind_1[i1dep_ind][lo_index[0]])*(iv[0]-ind_1[i1dep_ind][lo_index[0]])+ table_vals[0];
+			return var_val;
+			
+		};
+	protected:	
+		
+	}; 
+	
+	class Interp3 : public Interp_class {
+		
+	public:
+		Interp3(std::vector<int> d_allIndepVarNum,std::vector<std::vector<double> > table,
+						std::vector< std::vector <double> > indep_headers,std::vector< std::vector <double > > i1){
+		  d_allIndepVarNo = d_allIndepVarNum;
+			indep = indep_headers;
+			ind_1 = i1;
+			table2 = table;
+	 
+			table_vals = vector<double>(8);
+			lo_index = vector<int>(3);
+			hi_index = vector<int>(3);
+		};
+		~Interp3(){};
+		
+		inline double find_val( std::vector<double> iv, int var_index)
+
+		{
+			int mid = 0;
+			double var_value = 0.0;
+			int lo_ind;
+			int hi_ind;
+			double iv_val;
+			bool Ncheck = false;
+			
+			//binary search loop 2-> N
+			for (int i = 1; i < 3; i++) {	
+				lo_ind = 0;
+				hi_ind = d_allIndepVarNo[i] - 1;
+				iv_val = iv[i];
+				
+				if (indep[i-1][lo_ind] != iv_val &&  indep[i-1][hi_ind] != iv_val) {
+					while ((hi_ind-lo_ind) > 1) {
+						mid = (lo_ind+hi_ind)/2;
+						if (indep[i-1][mid] > iv_val ) {
+							hi_ind = mid;
+						} else if (indep[i-1][mid] < iv_val ){
+							lo_ind = mid;
+						} else {
+							//if (indep_headers[i-1][mid] ==  iv[i])
+							lo_ind = mid;
+							hi_ind = mid;
+						} 
+					}			   
+				} else if (indep[i-1][lo_ind] == iv_val) {
+					hi_ind = 1; 
+				} else {
+					lo_ind = hi_index[i]-1;  
+					if (i == 2) {
+						Ncheck = true;
+					}
+					
+				}
+				lo_index[i] = lo_ind;
+				hi_index[i] = hi_ind;
+				
+				if (iv_val < indep[i-1][0]) {
+					lo_index[i] = 0;
+					hi_index[i] = 0;
+				}
+			}
+			int i1dep_ind = 0;
+			//binary search for i1
+			if (Ncheck) {
+				i1dep_ind = hi_index[2];
+			} else {
+			 i1dep_ind = lo_index[2];     //assume i1 is dep on last var
+			}
+				
+				
+			lo_ind = 0;
+			hi_ind = d_allIndepVarNo[0] - 1;
+			iv_val = iv[0];
+			
+			if (ind_1[i1dep_ind][lo_ind] != iv_val && ind_1[i1dep_ind][hi_ind] != iv_val) {
+				while ((hi_ind-lo_ind) > 1) {
+					mid = (lo_ind+hi_ind)/2;
+					if (ind_1[i1dep_ind][mid] > iv_val ) {
+						hi_ind = mid;
+					} else if (ind_1[i1dep_ind][mid] < iv_val) {
+						lo_ind = mid;
+					} else {
+						//if (i1[i1dep_ind][mid] == iv[0])
+						lo_ind = mid;											
+						hi_ind = mid;
+					} 
+				}
+			} else if (ind_1[i1dep_ind][lo_ind] == iv_val) {
+				hi_ind = 1;
+			} else {
+				lo_ind = hi_ind-1;   
+			}
+			
+			lo_index[0] = lo_ind;
+			hi_index[0] = hi_ind;
+			
+			if (iv_val < ind_1[i1dep_ind][0]) {
+				hi_index[0] = 0;
+				lo_index[0] = 0;
+			}
+
+			table_vals[0] = table2[var_index][d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[2] + d_allIndepVarNo[0] * lo_index[1] + lo_index[0]];
+			table_vals[1] = table2[var_index][d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[2] + d_allIndepVarNo[0] * lo_index[1] + hi_index[0]];
+			table_vals[2] = table2[var_index][d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[2] + d_allIndepVarNo[0] * hi_index[1] + lo_index[0]];
+			table_vals[3] = table2[var_index][d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[2] + d_allIndepVarNo[0] * hi_index[1] + hi_index[0]]; 
+			table_vals[4] = table2[var_index][d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[2] + d_allIndepVarNo[0] * lo_index[1] + lo_index[0]];
+			table_vals[5] = table2[var_index][d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[2] + d_allIndepVarNo[0] * lo_index[1] + hi_index[0]];
+			table_vals[6] = table2[var_index][d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[2] + d_allIndepVarNo[0] * hi_index[1] + lo_index[0]];
+			table_vals[7] = table2[var_index][d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[2] + d_allIndepVarNo[0] * hi_index[1] + hi_index[0]];
+			
+						table_vals[0] = (table_vals[4] - table_vals[0])/(indep[1][lo_index[2]+1]-indep[1][lo_index[2]])*(iv[2]-indep[1][lo_index[2]]) + table_vals[0]; 
+			table_vals[1] = (table_vals[5] - table_vals[1])/(indep[1][lo_index[2]+1]-indep[1][lo_index[2]])*(iv[2]-indep[1][lo_index[2]]) + table_vals[1];
+			table_vals[2] = (table_vals[6] - table_vals[2])/(indep[1][lo_index[2]+1]-indep[1][lo_index[2]])*(iv[2]-indep[1][lo_index[2]]) + table_vals[2];
+			table_vals[3] = (table_vals[7] - table_vals[3])/(indep[1][lo_index[2]+1]-indep[1][lo_index[2]])*(iv[2]-indep[1][lo_index[2]]) + table_vals[3];
+			
+			table_vals[0] = (table_vals[2]-table_vals[0])/(indep[0][lo_index[1]+1]-indep[0][lo_index[1]])*(iv[1]-indep[0][lo_index[1]]) + table_vals[0]; 
+			table_vals[1] = (table_vals[3]-table_vals[1])/(indep[0][lo_index[1]+1]-indep[0][lo_index[1]])*(iv[1]-indep[0][lo_index[1]]) + table_vals[1];
+
+			double var_val = (table_vals[1]-table_vals[0])/(ind_1[i1dep_ind][lo_index[0]+1]-ind_1[i1dep_ind][lo_index[0]])*(iv[0]-ind_1[i1dep_ind][lo_index[0]])+table_vals[0];
+			/*
+			table_vals[0] = (table_vals[1] - table_vals[0])/(ind_1[i1dep_ind][lo_index[0]+1]-ind_1[i1dep_ind][lo_index[0]])*(iv[0]-ind_1[i1dep_ind][lo_index[0]])+table_vals[0];
+			table_vals[1] = (table_vals[3] - table_vals[2])/(ind_1[i1dep_ind][lo_index[0]+1]-ind_1[i1dep_ind][lo_index[0]])*(iv[0]-ind_1[i1dep_ind][lo_index[0]])+table_vals[2];
+			table_vals[2] = (table_vals[5] - table_vals[4])/(ind_1[i1dep_ind][lo_index[0]+1]-ind_1[i1dep_ind][lo_index[0]])*(iv[0]-ind_1[i1dep_ind][lo_index[0]])+table_vals[4];                                                                                                                
+			table_vals[3] = (table_vals[7] - table_vals[6])/(ind_1[i1dep_ind][lo_index[0]+1]-ind_1[i1dep_ind][lo_index[0]])*(iv[0]-ind_1[i1dep_ind][lo_index[0]])+table_vals[6];
+
+			table_vals[0] = (table_vals[1]-table_vals[0])/(indep[0][lo_index[1]+1]-indep[0][lo_index[1]])*(iv[1]-indep[0][lo_index[1]]) + table_vals[0];
+			table_vals[1] = (table_vals[3]-table_vals[2])/(indep[0][lo_index[1]+1]-indep[0][lo_index[1]])*(iv[1]-indep[0][lo_index[1]]) + table_vals[2];
+      
+			double var_val = (table_vals[1] - table_vals[0])/(indep[1][lo_index[2]+1]-indep[1][lo_index[2]])*(iv[2]-indep[1][lo_index[2]]) + table_vals[0];
+			*/
+
+			return var_val;
+		};
+	}; 
+	
+	class Interp4 : public Interp_class {
+	public:
+		Interp4(std::vector<int> d_allIndepVarNum,std::vector<std::vector<double> > table,
+						std::vector< std::vector <double> > indep_headers,std::vector< std::vector <double > > i1){
+
+			d_allIndepVarNo = d_allIndepVarNum;
+			indep = indep_headers;
+			ind_1 = i1;
+			table2 = table;
+			
+			table_vals = vector<double>(16);
+			lo_index = vector<int>(4);
+			hi_index = vector<int>(4);
+		};
+		~Interp4(){};
+		
+		inline double find_val(std::vector<double> iv, int var_index)
+		{
+			int mid = 0;
+			double var_value = 0.0;
+			int lo_ind;
+			int hi_ind;
+			double iv_val;
+			
+			//binary search loop 2-> N
+			for (int i = 1; i < 4; i++) {	
+				lo_ind = 0;
+				hi_ind = d_allIndepVarNo[i] - 1;
+				iv_val = iv[i];
+				
+				if (indep[i-1][lo_ind] != iv_val &&  indep[i-1][hi_ind] != iv_val) {
+					while ((hi_ind-lo_ind) > 1) {
+						mid = (lo_ind+hi_ind)/2;
+						if (indep[i-1][mid] > iv_val ) {
+							hi_ind = mid;
+						} else if (indep[i-1][mid] < iv_val ){
+							lo_ind = mid;
+						} else {
+							//if (indep_headers[i-1][mid] ==  iv[i])
+							lo_ind = mid;
+							hi_ind = mid;
+						} 
+					}			   
+				} else if (indep[i-1][lo_ind] == iv_val) {
+					hi_ind = 1; 
+				} else {
+					lo_ind = hi_index[i]-1;  
+				}
+				lo_index[i] = lo_ind;
+				hi_index[i] = hi_ind;
+				
+				if (iv_val < indep[i-1][0]) {
+					lo_index[i] = 0;
+					hi_index[i] = 0;
+				}
+			}
+			
+			//binary search for i1
+			int i1dep_ind = lo_index[3];     //assume i1 is dep on last var
+			
+			lo_ind = 0;
+			hi_ind = d_allIndepVarNo[0] - 1;
+			iv_val = iv[0];
+			
+			if (ind_1[i1dep_ind][lo_ind] != iv_val && ind_1[i1dep_ind][hi_ind] != iv_val) {
+				while ((hi_ind-lo_ind) > 1) {
+					mid = (lo_ind+hi_ind)/2;
+					if (ind_1[i1dep_ind][mid] > iv_val ) {
+						hi_ind = mid;
+					} else if (ind_1[i1dep_ind][mid] < iv_val) {
+						lo_ind = mid;
+					} else {
+						//if (i1[i1dep_ind][mid] == iv[0])
+						lo_ind = mid;											
+						hi_ind = mid;
+					} 
+				}
+			} else if (ind_1[i1dep_ind][lo_ind] == iv_val) {
+				hi_ind = 1;
+			} else {
+				lo_ind = hi_ind-1;   
+			}
+			
+			lo_index[0] = lo_ind;
+			hi_index[0] = hi_ind;
+			
+			if (iv_val < ind_1[i1dep_ind][0]) {
+				hi_index[0] = 0;
+				lo_index[0] = 0;
+			}
+			
+			//popvals
+			table_vals[0] = table2[var_index][d_allIndepVarNo[2]*d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[3]+d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[2] + d_allIndepVarNo[0] * lo_index[1] + lo_index[0]];
+			table_vals[1] = table2[var_index][d_allIndepVarNo[2]*d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[3]+d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[2] + d_allIndepVarNo[0] * lo_index[1] + hi_index[0]];
+			table_vals[2] = table2[var_index][d_allIndepVarNo[2]*d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[3]+d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[2] + d_allIndepVarNo[0] * hi_index[1] + lo_index[0]];
+			table_vals[3] = table2[var_index][d_allIndepVarNo[2]*d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[3]+d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[2] + d_allIndepVarNo[0] * hi_index[1] + hi_index[0]]; 
+			table_vals[4] = table2[var_index][d_allIndepVarNo[2]*d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[3]+d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[2] + d_allIndepVarNo[0] * lo_index[1] + lo_index[0]];
+			table_vals[5] = table2[var_index][d_allIndepVarNo[2]*d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[3]+d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[2] + d_allIndepVarNo[0] * lo_index[1] + hi_index[0]];
+			table_vals[6] = table2[var_index][d_allIndepVarNo[2]*d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[3]+d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[2] + d_allIndepVarNo[0] * hi_index[1] + lo_index[0]];
+			table_vals[7] = table2[var_index][d_allIndepVarNo[2]*d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[3]+d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[2] + d_allIndepVarNo[0] * hi_index[1] + hi_index[0]];
+			table_vals[8] = table2[var_index][d_allIndepVarNo[2]*d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[3]+d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[2] + d_allIndepVarNo[0] * lo_index[1] + lo_index[0]];
+			table_vals[9] = table2[var_index][d_allIndepVarNo[2]*d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[3]+d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[2] + d_allIndepVarNo[0] * lo_index[1] + hi_index[0]];
+			table_vals[10] = table2[var_index][d_allIndepVarNo[2]*d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[3]+d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[2] + d_allIndepVarNo[0] * hi_index[1] + lo_index[0]];
+			table_vals[11] = table2[var_index][d_allIndepVarNo[2]*d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[3]+d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[2] + d_allIndepVarNo[0] * hi_index[1] + hi_index[0]]; 
+			table_vals[12] = table2[var_index][d_allIndepVarNo[2]*d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[3]+d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[2] + d_allIndepVarNo[0] * lo_index[1] + lo_index[0]];
+			table_vals[13] = table2[var_index][d_allIndepVarNo[2]*d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[3]+d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[2] + d_allIndepVarNo[0] * lo_index[1] + hi_index[0]];
+			table_vals[14] = table2[var_index][d_allIndepVarNo[2]*d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[3]+d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[2] + d_allIndepVarNo[0] * hi_index[1] + lo_index[0]];
+			table_vals[15] = table2[var_index][d_allIndepVarNo[2]*d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[3]+d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[2] + d_allIndepVarNo[0] * hi_index[1] + hi_index[0]];
+			
+			int npts =0;
+			for (int i = 3; i > 0; i--) {	
+				npts = pow(2.0,i);
+				for (int k=0; k < npts; k++) {
+					table_vals[k] = (table_vals[k+npts]-table_vals[k])/(indep[i-1][lo_index[i]+1]-indep[i-1][lo_index[i]])*(iv[i]-indep[i-1][lo_index[i]])+table_vals[k];
+				}
+			}
+			
+			table_vals[0] = (table_vals[1]-table_vals[0])/(ind_1[i1dep_ind][lo_index[0]+1]-ind_1[i1dep_ind][lo_index[0]])*(iv[0]-ind_1[i1dep_ind][lo_index[0]])+table_vals[0];
+			var_value = table_vals[0];
+			return var_value;
+			
+		};
+	};
+	
+	class InterpN : public Interp_class {
+	  public:
+		InterpN(std::vector<int> d_allIndepVarNum,std::vector<std::vector<double> > table,
+						std::vector< std::vector <double> > indep_headers,std::vector< std::vector <double > > i1, int d_indepvarscount)
+		{
+		  multiples = vector<int>(d_indepvarscount);
+		  multtemp = 0;
+		  for (int i = 0; i < d_indepvarscount; i++) {
+			  multtemp = 1;
+			  for (int j = 0; j<i; j++) {
+				  multtemp = multtemp * d_allIndepVarNum[j];
+			  }
+			  multiples[i] = multtemp;
+		  }
+  	
+		  int npts = pow(2.0,d_indepvarscount);
+		  value_pop = vector< vector <bool> > (npts);
+		
+		  for (int i =0; i < npts; i++) {
+			  value_pop[i] = vector<bool>(d_indepvarscount );
+		  }
+		
+		  //bool matrix for use in lookup
+		  int temp_pts;
+		  double temp_pts_d;
+		  for (int i=0; i < npts; i++) {
+			  for (int j = d_indepvarscount-1; j >= 0; j--) {
+				  temp_pts_d = pow(2.0, j);
+				  temp_pts = floor((i/temp_pts_d));
+				  if ((temp_pts % 2) == 0) {
+					  value_pop[i][j] = true;
+				  } else {
+					  value_pop[i][j] = false;
+				  }
+			  }
+		  }
+			
+			d_allIndepVarNo = d_allIndepVarNum;
+			indep = indep_headers;
+			ind_1 = i1;
+			table2 = table;
+			
+			table_vals = vector<double>(npts);
+			lo_index = vector<int>(d_indepvarscount);
+			hi_index = vector<int>(d_indepvarscount);
+			ivcount = d_indepvarscount;
+			
+		};
+		~InterpN(){};
+		
+		inline double find_val(std::vector<double> iv, int var_index)
+		{
+			
+			int mid = 0;
+			double var_value = 0.0;
+			int lo_ind;
+			int hi_ind;
+			double iv_val;
+			 
+			//binary search loop 2-> N
+			for (int i = 1; i < ivcount; i++) {	
+			  lo_ind = 0;
+			  hi_ind = d_allIndepVarNo[i] - 1;
+			  iv_val = iv[i];
+			 
+			  if (indep[i-1][lo_ind] != iv_val &&  indep[i-1][hi_ind] != iv_val) {
+			  while ((hi_ind-lo_ind) > 1) {
+			    mid = (lo_ind+hi_ind)/2;
+			    if (indep[i-1][mid] > iv_val ) {
+			      hi_ind = mid;
+			    } else if (indep[i-1][mid] < iv_val ){
+			      lo_ind = mid;
+					}  else {
+			    //if (indep_headers[i-1][mid] ==  iv[i])
+			      lo_ind = mid;
+						hi_ind = mid;
+			    } 
+				}			   
+			 } else if (indep[i-1][lo_ind] == iv_val) {
+			   hi_ind = 1; 
+			 } else {
+			   lo_ind = hi_ind-1;  
+			 }
+			  lo_index[i] = lo_ind;
+			  hi_index[i] = hi_ind;
+			 
+			  if (iv_val < indep[i-1][0]) {
+					lo_index[i] = 0;
+					hi_index[i] = 0;
+				}
+			 }
+			 
+			 //binary search for i1
+			int i1dep_ind = lo_index[ivcount-1];     //assume i1 is dep on last var
+			lo_ind = 0;
+			hi_ind = d_allIndepVarNo[0] - 1;
+			iv_val = iv[0];
+			 
+			if (ind_1[i1dep_ind][lo_ind] != iv_val && ind_1[i1dep_ind][hi_ind] != iv_val) {
+			  while ((hi_ind-lo_ind) > 1) {
+			    mid = (lo_ind+hi_ind)/2;
+			    if (ind_1[i1dep_ind][mid] > iv_val ) {
+			      hi_ind = mid;
+			    } else if (ind_1[i1dep_ind][mid] < iv_val) {
+			      lo_ind = mid;
+			    } else {
+			    //if (i1[i1dep_ind][mid] == iv[0])
+			      lo_ind = mid;											
+			      hi_ind = mid;
+			    } 
+			  }
+			 
+			} else if (ind_1[i1dep_ind][lo_ind] == iv_val) {
+			  hi_ind = 1;
+			} else {
+			  lo_ind = hi_ind-1;   
+			}
+
+			lo_index[0] = lo_ind;
+			hi_index[0] = hi_ind;
+			 
+			if (iv_val < ind_1[i1dep_ind][0]) {
+			  hi_index[0] = 0;
+			  lo_index[0] = 0;
+			}
+			
+			int npts = 0; 
+
+			npts = pow(2.0,ivcount);
+			int tab_index;
+			
+			//interpolant loop - 2parts read-in & calc
+			for (int i=0; i < npts; i++) {
+				tab_index = 0;
+				for (int j = ivcount-1; j >= 0; j--) {
+					if (value_pop[i][j]) { //determines hi/lo on bool
+						tab_index = tab_index + multiples[j]*lo_index[j];
+					} else {
+						tab_index = tab_index + multiples[j]*hi_index[j];
+					}
+				}
+				table_vals[i] = table2[var_index][tab_index];
+			} 
+			 
+			for (int i = ivcount-1; i > 0; i--) {
+				npts = pow(2.0,i);
+				for (int k=0; k < npts; k++) {
+					table_vals[k] = (table_vals[k+npts]-table_vals[k])/(indep[i-1][lo_index[i]+1]-indep[i-1][lo_index[i]])*(iv[i]-indep[i-1][lo_index[i]])+table_vals[k];
+				}
+			}
+			
+			table_vals[0] = (table_vals[1]-table_vals[0])/(ind_1[i1dep_ind][lo_index[0]+1]-ind_1[i1dep_ind][lo_index[0]])*(iv[0]-ind_1[i1dep_ind][lo_index[0]])+table_vals[0];
+			
+			var_value = table_vals[0];
+			return var_value;
+			
+		}
+		
+	  protected:
+		int ivcount;
+		std::vector<int> multiples;
+		std::vector <std::vector <bool> > value_pop;
+		int multtemp;
+	};
+	
+  //*******************************************end interp classes//
+  
   typedef std::map<string, DepVarCont >       DepVarMap;
   typedef std::map<string, int >               IndexMap; 
 
   double getTableValue( std::vector<double>, std::string ); 
 
 	void tableMatching(); 
-
-
+	
 protected :
-
+	
 private:
 
+	Interp_class * ND_interp;
+	
   bool d_table_isloaded;    ///< Boolean: has the table been loaded?
   bool d_noisy_hl_warning;  ///< Provide information about heat loss clipping
   bool d_allocate_soot;     ///< For new DORadiation source term...allocate soot variable 
@@ -234,9 +855,9 @@ private:
 
   //previous Arches specific variables: 
   std::vector<std::vector<double> > i1; 
-  std::vector<double> i2; 
-  std::vector<double> i3; 
   std::vector <std::vector <double> > table;
+	
+  std::vector <std::vector <double> > indep_headers;
 
   /// A dependent variable wrapper
   struct ADepVar {
@@ -272,7 +893,6 @@ private:
   void getEnthalpyIndexInfo(); 
 
 }; // end class ClassicTableInterface
-  
 } // end namespace Uintah
 
 #endif
