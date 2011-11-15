@@ -98,13 +98,6 @@ namespace Wasatch{
 
   //==================================================================
 
-  Expr::Tag pressure_tag()
-  {
-    return Expr::Tag( "pressure", Expr::STATE_NONE );
-  }
-
-  //==================================================================
-
   Expr::Tag rhs_part_tag( const Expr::Tag& momTag )
   {
     return Expr::Tag( momTag.name() + "_rhs_partial", Expr::STATE_NONE );

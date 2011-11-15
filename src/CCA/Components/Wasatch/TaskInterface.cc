@@ -21,8 +21,6 @@
 #include "TaskInterface.h"
 #include <CCA/Components/Wasatch/Expressions/Pressure.h>
 
-#include <CCA/Components/Wasatch/transport/MomentumTransportEquation.h>
-#include <CCA/Components/Wasatch/Expressions/Pressure.h>
 
 #include <stdexcept>
 #include <fstream>
