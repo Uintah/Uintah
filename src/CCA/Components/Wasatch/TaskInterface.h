@@ -102,7 +102,7 @@ namespace Wasatch{
                    const bool createUniqueTreePerPatch,
                    const int RKStage,
                    const std::set<std::string>& ioFieldSet,
-                   Expr::FieldManagerList* fml = NULL);
+                   Expr::FieldManagerList* fml = NULL );
 
     /**
      *  \brief Create a TaskInterface from a list of root expressions

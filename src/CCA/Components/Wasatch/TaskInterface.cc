@@ -56,7 +56,6 @@ namespace Wasatch{
     const std::string taskName_;        ///< the name of the task
     const PatchInfoMap& patchInfoMap_;  ///< information for each individual patch.
     Expr::FieldManagerList* const fml_; ///< the FieldManagerList for this TaskInterface
-    //const std::set<std::string>& ioFieldSet_;
 
     const bool hasPressureExpression_;
 
@@ -92,7 +91,7 @@ namespace Wasatch{
                      const PatchInfoMap& info,
                      const bool createUniqueTreePerPatch,
                      const int rkStage,
-                     const std::set<std::string>& ioFieldSet);
+                     const std::set<std::string>& ioFieldSet );
 
     ~TreeTaskExecute();
 
@@ -139,7 +138,6 @@ namespace Wasatch{
       const Uintah::PatchSubset* const localPatches = perproc_patchset->getSubset(Uintah::Parallel::getMPIRank());
       for( int ip=0; ip<localPatches->size(); ++ip ){
         const Uintah::Patch* const patch = localPatches->get(ip);
-//        proc0cout << "Setting up tree '" << taskName_ << "' on patch (" << patch->getID() << ")" << endl;
         TreePtr tree( new Expr::ExpressionTree( *masterTree_ ) );
         tree->set_patch_id( patch->getID() );
 
@@ -609,8 +607,6 @@ namespace Wasatch{
       Wasatch::TreeTaskExecute* taskexec = *iex;
       PatchTreeMap ptmap= taskexec->get_patch_tree_map();
       const PatchTreeMap::iterator iptm = ptmap.begin();
-      //ASSERT( iptm != patchTreeMap_.end() );
-      //Uintah::Task* const task = iptm->second.second;
       TreePtr tree = iptm->second.first;
       if (tree->name()=="set time") {
         return tree;
