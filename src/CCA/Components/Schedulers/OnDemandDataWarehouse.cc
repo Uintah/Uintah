@@ -577,8 +577,10 @@ OnDemandDataWarehouse::recvMPI(DependencyBatch* batch,
       ASSERT(recvset);
 
       ParticleVariableBase* var = 0;
+      d_lock.readLock();
       if (d_varDB.exists(label, matlIndex, patch)) {
         var = dynamic_cast<ParticleVariableBase*>(d_varDB.get(label, matlIndex, patch));
+        d_lock.readUnlock();
         ASSERT(var->isForeign())
       }
       else {
@@ -599,6 +601,7 @@ OnDemandDataWarehouse::recvMPI(DependencyBatch* batch,
           int allocated_particles = old_dw->d_foreignParticleQuantities[make_pair(matlIndex, patch)];
           var->allocate(allocated_particles);
         }
+        d_lock.readUnlock();  //upgrade to write lock
         d_lock.writeLock();
         d_varDB.put(label, matlIndex, patch, var, true);
         d_lock.writeUnlock();
