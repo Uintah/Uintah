@@ -67,6 +67,7 @@
 #include <Core/Grid/Level.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Exceptions/VariableNotFoundInGrid.h>
+#include <CCA/Ports/SolverInterface.h>
 
 using namespace Uintah;
 using namespace std;
