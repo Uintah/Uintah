@@ -780,6 +780,21 @@ PressureSolver::Extract_X ( const ProcessorGroup* pg,
     d_linearSolver->copyPressSoln(patch, &vars);
     
     
+    //__________________________________
+    //  set boundary conditons on pressure
+    vector<Patch::FaceType> bf;
+    patch->getBoundaryFaces(bf);
+    Patch::FaceIteratorType PEC = Patch::ExtraPlusEdgeCells;
+    
+    for( vector<Patch::FaceType>::const_iterator itr = bf.begin(); itr != bf.end(); ++itr ){
+      Patch::FaceType face = *itr;
+      for(CellIterator iter=patch->getFaceIterator(face, PEC); !iter.done(); iter++) {
+        IntVector c = *iter;
+        vars.pressure[c] = 0;
+      }
+    }
+    
+    
     if ( d_always_construct_A ) {   // always destroy if you always construct
       d_linearSolver->destroyMatrix(); 
     }
