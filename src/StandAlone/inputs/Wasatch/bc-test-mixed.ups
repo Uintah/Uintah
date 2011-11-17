@@ -160,16 +160,16 @@
 
 
   <Time>
-    <maxTime>0.0002</maxTime>
+    <maxTime>0.0003</maxTime>
     <initTime>0.0</initTime>
-    <delt_min>0.00005</delt_min>
-    <delt_max>0.00005</delt_max>
+    <delt_min>0.00001</delt_min>
+    <delt_max>0.00001</delt_max>
     <timestep_multiplier>1.0</timestep_multiplier>
   </Time>
 
 
   <DataArchiver>
-    <filebase>boundary-conditions-test.uda</filebase>
+    <filebase>bc-test-mixed.uda</filebase>
     <outputTimestepInterval>2</outputTimestepInterval>
     <outputInitTimestep/>
     <checkpoint cycle = "2" interval = "0.0001"/>
@@ -297,7 +297,7 @@
       </Face>
       <Face side="y+">
         <BCType id="all" var="Neumann" label="phi-z-scalar">
-          <value> -10.0 </value>
+          <value> 10.0 </value>
         </BCType>
       </Face>
       <Face side="z-">
@@ -318,8 +318,8 @@
       <Box label="1">
         <lower>[0,0,0]</lower>
         <upper>[1,1,1]</upper>
-        <resolution>[12,12,12]</resolution>
-        <patches>[1,1,1]</patches>
+        <resolution>[60,60,60]</resolution>
+        <patches>[3,3,3]</patches>
       </Box>
       <periodic>[0,0,0]</periodic>
     </Level>

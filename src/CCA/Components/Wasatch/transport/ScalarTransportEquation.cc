@@ -440,8 +440,9 @@ namespace Wasatch{
                              const Uintah::MaterialSubset* const materials )
   {
     // see BCHelperTools.cc
-    process_boundary_conditions( Expr::Tag( this->solution_variable_name(),
+    process_boundary_conditions<FieldT>( Expr::Tag( this->solution_variable_name(),
                                             Expr::STATE_N ),
+                                 this->solution_variable_name(),
                                  this->staggered_location(),
                                  graphHelper,
                                  localPatches,

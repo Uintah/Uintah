@@ -246,14 +246,27 @@ Pressure::evaluate()
   SVolField& pressure = *results[0];
   SVolField& rhs      = *results[1];
   rhs = 0.0;
-  //
-  // set_pressure_bc((this->names())[0],matrix_, pressure, rhs, patch_);
-  //
+		//
   namespace SS = SpatialOps::structured;
-  const SS::MemoryWindow& w = rhs.window_with_ghost();
-  SpatialOps::SpatFldPtr<SS::SSurfXField> tmpx  = SpatialOps::SpatialFieldStore<SS::SSurfXField >::self().get( w );
-  SpatialOps::SpatFldPtr<SS::SSurfYField> tmpy  = SpatialOps::SpatialFieldStore<SS::SSurfYField >::self().get( w );
-  SpatialOps::SpatFldPtr<SS::SSurfZField> tmpz  = SpatialOps::SpatialFieldStore<SS::SSurfZField >::self().get( w );
+  //const SS::MemoryWindow& w = rhs.window_with_ghost();
+  SpatialOps::SpatFldPtr<SS::SSurfXField> tmpx;
+  SpatialOps::SpatFldPtr<SS::SSurfYField> tmpy;
+  SpatialOps::SpatFldPtr<SS::SSurfZField> tmpz;  
+  if (doX_) {
+    const SS::MemoryWindow& wx = fx_->window_with_ghost();
+    tmpx  = SpatialOps::SpatialFieldStore<SS::SSurfXField >::self().get( wx );
+  }
+  
+  if (doY_) {
+    const SS::MemoryWindow& wy = fy_->window_with_ghost();
+    tmpy  = SpatialOps::SpatialFieldStore<SS::SSurfYField >::self().get( wy );
+  }
+  
+  if (doZ_) {
+    const SS::MemoryWindow& wz = fz_->window_with_ghost();
+    tmpz  = SpatialOps::SpatialFieldStore<SS::SSurfZField >::self().get( wz );
+  }
+  
   SpatialOps::SpatFldPtr<SVolField> tmp = SpatialOps::SpatialFieldStore<SVolField>::self().get( rhs );
   //set_pressure_bc(this->name(), pressure, rhs, patch);
   //___________________________________________________
@@ -281,6 +294,11 @@ Pressure::evaluate()
   if( doDens_ ){
     rhs <<= rhs + *d2rhodt2_;
   }
+  //
+  // fix pressure rhs and modify pressure matrix
+  //std::cout << rhs[25] << std::endl;
+  update_pressure_rhs((this->names())[0],matrix_, pressure, rhs, patch_);
+  //set_pressure_rhs((this->names())[0],matrix_, rhs, patch_);
 }
 
 //--------------------------------------------------------------------

@@ -467,7 +467,8 @@ namespace Wasatch{
       // -----------------------------------------------------------------------
       // BOUNDARY CONDITIONS TREATMENT
       // -----------------------------------------------------------------------
-      const GraphHelper* gh = graphCategories_[ ADVANCE_SOLUTION ];
+      const GraphHelper* icGraphHelper = graphCategories_[ INITIALIZATION ];
+      const GraphHelper* advSolGraphHelper = graphCategories_[ ADVANCE_SOLUTION ];
       typedef std::vector<EqnTimestepAdaptorBase*> EquationAdaptors;
 
       for( EquationAdaptors::const_iterator ia=adaptors_.begin(); ia!=adaptors_.end(); ++ia ){
@@ -478,7 +479,7 @@ namespace Wasatch{
         // set up boundary conditions on this transport equation
         try{
           proc0cout << "Setting BCs for transport equation '" << eqnLabel << "'" << std::endl;
-          transEq->setup_boundary_conditions(*gh, localPatches, patchInfoMap_, materials->getUnion());
+          transEq->setup_boundary_conditions(*advSolGraphHelper, localPatches, patchInfoMap_, materials->getUnion());
         }
         catch( std::runtime_error& e ){
           std::ostringstream msg;
