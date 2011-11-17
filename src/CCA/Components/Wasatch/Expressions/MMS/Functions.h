@@ -83,7 +83,6 @@ evaluate()
 {
   using namespace SpatialOps;
   ValT& phi = this->value();
-  //std::cout << "Time in source term = " << *t_ << std::endl;
   phi <<= sin( *t_ );
 }
 
