@@ -1,5 +1,20 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
 
+<!--
+  TaylorGreenVortex:
+  
+    Reference  "Small-scale structure of the Taylor-Green vortex", M. Brachet et al.
+                J. Fluid Mech, vol. 130, pp. 411-452, 1983.
+      
+    Initial conditions:
+      A = ( 2.0/sqrt(3) ) * sin(angle);      
+      vel_CC[c].x( A * sin(x) * cos(y) * cos(z));
+      vel_CC[c].y( A * sin(y) * cos(x) * cos(z));
+      vel_CC[c].z( A * sin(z) * cos(x) * cos(y));
+      
+     These equations are slightly different than eq. 1.1 in reference and have
+     been provided by James Sutherland
+-->
 
 <Uintah_specification> 
 <!--Please use a consistent set of units, (mks, cgs,...)-->
@@ -8,18 +23,19 @@
    </Meta>
 
    <SimulationComponent type="ice" />
+   <Solver type="hypre"/>
    
     <!--____________________________________________________________________-->
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
    <Time>
-       <maxTime>            10.0        </maxTime>
-       <initTime>           0.0         </initTime>
-       <delt_min>           0.0         </delt_min>
-       <delt_max>           1.0         </delt_max>
-       <delt_init>          1.0e-5      </delt_init>
-       <timestep_multiplier>1.0         </timestep_multiplier>
-       <max_Timesteps>     2        </max_Timesteps>
+       <maxTime>            0.01      </maxTime>     
+       <initTime>           0.0       </initTime>    
+       <delt_min>           0.0       </delt_min>    
+       <delt_max>           0.01      </delt_max>   
+       <delt_init>          0.01      </delt_init>
+       <timestep_multiplier>1.0       </timestep_multiplier>
+       <max_Timesteps>     2          </max_Timesteps>
    </Time>
    
     <!--____________________________________________________________________-->
@@ -27,31 +43,26 @@
     <!--____________________________________________________________________-->
     <Grid>
     <BoundaryConditions>
-      <Face side = "z-">
-        <BCType id = "0"   label = "Symmetric" var = "symmetry">  </BCType>
-      </Face>
-      <Face side = "z+">
-        <BCType id = "0"   label = "Symmetric" var = "symmetry">  </BCType>
-      </Face>
     </BoundaryConditions>
        <Level>
            <Box label="1">
-              <lower>        [0,0,-0.05]    </lower>
-              <upper>        [6.28318530717959,6.28318530717959, 0.05]    </upper>
-              <extraCells>   [0,0,1]              </extraCells>
-              <patches>      [1,1,1]              </patches>
-              <resolution>   [50,50,2]          </resolution>
+              <lower>        [0,0,0]    </lower>
+              <upper>[6.283185307179586,6.283185307179586,6.283185307179586]</upper>
+              <extraCells>   [0,0,0]    </extraCells>
+              <patches>      [2,2,2]    </patches>
+              <resolution>   [32,32,32] </resolution>
            </Box>
-           <periodic>       [1,1,0]           </periodic>
+           <periodic>       [1,1,1]     </periodic>
        </Level>
     </Grid>    
     <!--____________________________________________________________________-->
     <!--      O  U  P  U  T     V  A  R  I  A  B  L  E  S                   -->
     <!--____________________________________________________________________-->
    <DataArchiver>
-      <filebase>mms_1.uda</filebase>
-      <!--<outputTimestepInterval>1</outputTimestepInterval> -->
-      <outputInterval>0.1</outputInterval>
+      <filebase>taylorGreenVortex.uda</filebase>
+      <outputInitTimestep/>
+      <outputTimestepInterval>1</outputTimestepInterval>
+      <!--<outputInterval>0.1</outputInterval> -->
       <save label="press_equil_CC"/>
       <save label="delP_Dilatate"/>
       <save label="press_CC"/>      
@@ -63,9 +74,7 @@
       <save label="TotalIntEng"/>
       <save label="TotalMass"/>
       <save label="TotalMomentum"/>
-       <outputInitTimestep/>
    </DataArchiver>
-
     
     <!--____________________________________________________________________-->
     <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
@@ -73,12 +82,11 @@
     <CFD>
          <cfl>0.2</cfl>
       <ICE>
-        <advection type = "FirstOrder"/>
-        
+        <advection type = "SecondOrder"/>
         
         <customInitialization>
-          <manufacturedSolution type="mms_1">
-            <A>   1    </A>
+          <manufacturedSolution type="mms_3">
+            <angle>   1.570796326794897    </angle>
           </manufacturedSolution> 
         </customInitialization>
            
@@ -89,16 +97,12 @@
         
         <ImplicitSolver>
            <max_outer_iterations>      20    </max_outer_iterations>
-           <outer_iteration_tolerance> 1e-8 </outer_iteration_tolerance>
+           <outer_iteration_tolerance> 1e-7  </outer_iteration_tolerance>
            <iters_before_timestep_restart> 5 </iters_before_timestep_restart>
            <Parameters variable="implicitPressure">
-
-            <norm>     LInfinity     </norm>
-            <criteria> Absolute      </criteria>
-
             <solver>         cg      </solver>
             <preconditioner> pfmg    </preconditioner>
-            <tolerance>      1.e-10  </tolerance>
+            <tolerance>      1.e-8   </tolerance>
             <maxiterations>  7500    </maxiterations>
             <npre>           1       </npre>
             <npost>          1       </npost>
@@ -106,7 +110,6 @@
             <jump>           0       </jump>
            </Parameters>
         </ImplicitSolver> 
-        
       </ICE>
     </CFD>
 
@@ -125,16 +128,16 @@
        <ICE>
          <material name = "BackgroundGas">
            <EOS type = "ideal_gas">                     </EOS>
-           <dynamic_viscosity>   0.00002                    </dynamic_viscosity>
+           <dynamic_viscosity>   0.001                  </dynamic_viscosity>
            <thermal_conductivity>0.0                    </thermal_conductivity>
            <specific_heat>      716.0                   </specific_heat>
            <gamma>              1.4                     </gamma>
            <geom_object>
                 <box label="wholeDomain">
-                    <min>       [ -10., -10., -10. ]       </min>
-                    <max>       [  10.,  10.,  10. ]       </max>
+                    <min>       [ -10., -10., -10. ]     </min>
+                    <max>       [  10.,  10.,  10. ]     </max>
                 </box>
-               <res>                 [2,2,2]            </res>
+               <res>           [2,2,2]                  </res>
                <velocity>      [0.,0.,0.]               </velocity>
                <density>       1.1792946927374306000e+00</density>
                <pressure>      101325.0                 </pressure>     
@@ -143,22 +146,23 @@
          </material>
       </ICE>       
     </MaterialProperties> 
+    
     <!--____________________________________________________________________-->
     <!--  Use passiveScalar model to advect a scalar around                -->
     <Models>
        <Model type="PassiveScalar">
         <material>BackgroundGas</material>
         <scalar name="f">
-        <test_conservation>       true            </test_conservation>
+        <test_conservation>  true  </test_conservation>
         <constants>
-          <diffusivity>              0.0           </diffusivity>
+          <diffusivity>   0.0   </diffusivity>
          </constants>
          <geom_object>
             <difference>
             <box label="wholeDomain">             </box>
             <box label="scalarSlug">
-              <min>         [-0.0,-0.0,-0.0]       </min>
-              <max>         [ 0.5, 0.5, 0.5]       </max>
+              <min>         [2.09,  2.09,  2.09]  </min>
+              <max>         [4.188, 4.188, 4.188] </max>
             </box>
             </difference>
             <scalar>    0.00           </scalar>
