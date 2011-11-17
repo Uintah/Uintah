@@ -15,7 +15,7 @@ template< typename ValT >
 class SineTime : public Expr::Expression<ValT>
 {
 public:
-  
+
   /**
    *  \brief Builds a Sin(t) expression.
    */
@@ -27,13 +27,13 @@ public:
   private:
     const Expr::Tag tt_;
   };
-  
+
   void advertise_dependents( Expr::ExprDeps& exprDeps );
   void bind_fields( const Expr::FieldManagerList& fml );
   void evaluate();
-  
+
 private:
-  
+
   SineTime( const Expr::Tag& tTag,
            const Expr::ExpressionID& id,
            const Expr::ExpressionRegistry& reg);
@@ -107,21 +107,5 @@ build( const Expr::ExpressionID& id,
 }
 
 //--------------------------------------------------------------------
-
-//====================================================================
-
-// Explicit template instantiation for supported versions of this expression
-#include <CCA/Components/Wasatch/FieldTypes.h>
-using namespace Wasatch;
-
-#define DECLARE_TIME_FUNCTIONS( VOL ) 	\
-template class SineTime< VOL >;	\
-
-DECLARE_TIME_FUNCTIONS( SVolField );
-DECLARE_TIME_FUNCTIONS( XVolField );
-DECLARE_TIME_FUNCTIONS( YVolField );
-DECLARE_TIME_FUNCTIONS( ZVolField );
-//==========================================================================
-
 
 #endif // Wasatch_MMS_Functions
