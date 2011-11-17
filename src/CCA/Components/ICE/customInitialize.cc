@@ -99,13 +99,25 @@ void customInitialization_problemSetup( const ProblemSpecP& cfd_ice_ps,
     }
     
     //__________________________________
-    //  method of manufactured solutions 1
+    //  method of manufactured solutions
     ProblemSpecP mms_ps= c_init_ps->findBlock("manufacturedSolution");
     if(mms_ps) {
-      cib->which = "mms_1";
-      cib->doesComputePressure = true;
-      cib->mms_inputs = scinew mms();
-      mms_ps->require("A", cib->mms_inputs->A);
+      
+      map<string,string> whichmms;
+      mms_ps->getAttributes(whichmms);
+      
+      cib->which = whichmms["type"];
+      
+      if(cib->which == "mms_1") {
+        cib->doesComputePressure = true;
+        cib->mms_inputs = scinew mms();
+        mms_ps->require("A", cib->mms_inputs->A);
+      }
+      if(cib->which == "mms_3") {
+        cib->doesComputePressure = false;
+        cib->mms_inputs = scinew mms();
+        mms_ps->require("angle", cib->mms_inputs->angle);
+      }
     } 
     
     //__________________________________
@@ -287,5 +299,30 @@ void customInitialization(const Patch* patch,
       temp_CC[c]= press_CC[c]/ ( (gamma - 1.0) * cv * rho_CC[c] );
     }
   } // mms_2
+  
+  //__________________________________
+  // method of manufactured solution 3
+  // See:  "Small-scale structure of the Taylor-Green vortex", M. Brachet et al.
+  //       J. Fluid Mech, vol. 130, pp. 411-452, 1983.
+  //   These equations are slightly different than eq. 1.1 in reference and have
+  //   been provided by James Sutherland
+  
+  if(cib->which == "mms_3"){
+    double angle = cib->mms_inputs->angle;
+    double A = ( 2.0/sqrt(3) ) * sin(angle); 
+    
+    for(CellIterator iter=patch->getExtraCellIterator(); !iter.done();iter++) {
+      IntVector c = *iter;
+      Point pt = patch->cellPosition(c);
+      double x = pt.x(); 
+      double y = pt.y();
+      double z = pt.z();
+
+      vel_CC[c].x( A * sin(x) * cos(y) * cos(z));
+      vel_CC[c].y( A * sin(y) * cos(x) * cos(z));
+      vel_CC[c].z( A * sin(z) * cos(x) * cos(y));
+    }
+  } // mms_3
+  
 }
 } // end uintah namespace
