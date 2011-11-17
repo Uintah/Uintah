@@ -76,19 +76,15 @@ namespace Wasatch{
     SCIRun::IntVector bcMinus, bcPlus;
     get_bc_logicals( patch, bcMinus, bcPlus );
     const SCIRun::IntVector& extraCells = patch->getExtraCells();
-
+    //ASSERT( extraCells == IntVector(0,0,0) );
     const SCIRun::IntVector gs = patch->getExtraCellHighIndex(0) - patch->getExtraCellLowIndex(0);
-    SCIRun::IntVector globSize;
-    globSize[0] = SpatialOps::structured::get_nx_with_ghost<FieldT>( gs[0], bcPlus[0] );
-    globSize[1] = SpatialOps::structured::get_ny_with_ghost<FieldT>( gs[1], bcPlus[1] );
-    globSize[2] = SpatialOps::structured::get_nz_with_ghost<FieldT>( gs[2], bcPlus[2] );
 
     using SpatialOps::structured::IntVec;
-    IntVec glob(0,0,0), extent(0,0,0), offset(0,0,0);
-    for( size_t i=0; i<3; ++i ){
-      glob  [i] = globSize[i];
-      extent[i] = globSize[i];
-    }
+    const IntVec glob( SpatialOps::structured::get_nx_with_ghost<FieldT>(gs[0],bcPlus[0]),
+                       SpatialOps::structured::get_ny_with_ghost<FieldT>(gs[1],bcPlus[1]),
+                       SpatialOps::structured::get_nz_with_ghost<FieldT>(gs[2],bcPlus[2]) );
+    const IntVec extent = glob;
+    const IntVec offset(0,0,0);
     return SpatialOps::structured::MemoryWindow( glob, offset, extent, bcPlus[0], bcPlus[1], bcPlus[2] );
   }
 
@@ -121,7 +117,7 @@ namespace Wasatch{
   template SpatialOps::structured::MemoryWindow                         \
   get_memory_window_for_uintah_field<FIELDT>( const Uintah::Patch* const ); \
   template Uintah::Ghost::GhostType get_uintah_ghost_type<FIELDT>();
-  
+
 #define declare_variants( VOLT )                \
   declare_method( VOLT );                       \
   declare_method( FaceTypes<VOLT>::XFace );     \
