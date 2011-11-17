@@ -111,8 +111,6 @@ ViscoScram::ViscoScram(ProblemSpecP& ps,MPMFlags* Mflag)
     ps->require("gamma", d_murnahanEOSData.gamma);
     ps->require("P0",    d_murnahanEOSData.P0);
     ps->require("bulkPrime", d_murnahanEOSData.bulkPrime);
-    // takes precedence over Modified
-    d_useModifiedEOS = false;
   }
 
   // JWL EOS inputs
@@ -126,7 +124,6 @@ ViscoScram::ViscoScram(ProblemSpecP& ps,MPMFlags* Mflag)
     ps->require("om",d_JWLEOSData.om);
     // takes precedence over Murnaghan and Modified
     d_useMurnahanEOS = false;
-    d_useModifiedEOS = false;
   }
   if(d_useJWLEOS) {
     d_useJWLCEOS = false;
