@@ -202,11 +202,6 @@ namespace Uintah {
     void doit(const ProcessorGroup* pg, std::vector<OnDemandDataWarehouseP>& oddws,
 	      std::vector<DataWarehouseP>& dws);
 
-//#ifdef HAVE_CUDA
- //   void doit(const ProcessorGroup* pg, vector<OnDemandDataWarehouseP>& oddws,
-//	      vector<DataWarehouseP>& dws, int device);
-//#endif
-//
     // Called after doit and mpi data sent (packed in buffers) finishes.
     // Handles internal dependencies and scrubbing.
     // Called after doit finishes.
@@ -223,8 +218,11 @@ namespace Uintah {
     const MaterialSubset* getMaterials() const {
       return matls;
     }
-    void assignResource( int idx ) {
+    void assignResource(int idx) {
       resourceIndex = idx;
+    }
+    void assignDevice (int device) {
+      deviceNum = device;
     }
     int getAssignedResourceIndex() const {
       return resourceIndex;
@@ -299,6 +297,7 @@ namespace Uintah {
     Mutex internalDependencyLock;
     
     int resourceIndex;
+    int deviceNum;
 
     DetailedTask(const Task&);
     DetailedTask& operator=(const Task&);

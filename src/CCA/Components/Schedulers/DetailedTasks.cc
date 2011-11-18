@@ -149,9 +149,10 @@ DetailedTasks::assignMessageTags(int me)
       pair<int, int> fromToPair = make_pair(from, to);    
       batches_[i]->messageTag = ++perPairBatchIndices[fromToPair]; /* start with
                                                                       one */
-      if (messagedbg.active())
+      if (messagedbg.active()) {
         messagedbg << me << " assigning message num " << batch->messageTag << " from task " << batch->fromTask->getName() << " to task " << batch->toTasks.front()->getName()
           << ", process " << from << " to process " << to << "\n";
+      }
     }
   }
 
@@ -226,16 +227,17 @@ DetailedTask::DetailedTask(Task* task, const PatchSubset* patches,
 
 DetailedTask::~DetailedTask()
 {
-  if(patches && patches->removeReference())
+  if(patches && patches->removeReference()) {
     delete patches;
-  if(matls && matls->removeReference())
+  }
+  if(matls && matls->removeReference()) {
     delete matls;
+  }
 }
 
-  void
-DetailedTask::doit(const ProcessorGroup* pg,
-    vector<OnDemandDataWarehouseP>& oddws,
-    vector<DataWarehouseP>& dws)
+void DetailedTask::doit(const ProcessorGroup* pg,
+                   vector<OnDemandDataWarehouseP>& oddws,
+                   vector<DataWarehouseP>& dws)
 {
   TAU_PROFILE("DetailedTask::doit", " ", TAU_USER); 
   if( mixedDebug.active() ) {
@@ -248,23 +250,26 @@ DetailedTask::doit(const ProcessorGroup* pg,
 
     list<InternalDependency>::iterator iter = internalDependencies.begin();
 
-    for( int i = 0; iter != internalDependencies.end(); iter++, i++ )
-    {
+    for( int i = 0; iter != internalDependencies.end(); iter++, i++ ) {
       mixedDebug << i << ":    " << *((*iter).prerequisiteTask->getTask()) << "\n";
     }
     cerrLock.unlock();
   }
-  for(int i=0;i<(int)dws.size();i++){
-    if(oddws[i] != 0)
+  for(int i=0;i<(int)dws.size();i++) {
+    if(oddws[i] != 0) {
       oddws[i]->pushRunningTask(task, &oddws);
+    }
   }
+
+  // determine if task will be executed on CPU or GPU
   if(Parallel::usingGPU()) {
-    task->doitGPU(pg, patches, matls, dws, 0);
+    task->doitGPU(pg, patches, matls, dws, deviceNum);
   } else { 
       task->doit(pg, patches, matls, dws);
   }
-  for(int i=0;i<(int)dws.size();i++){
-    if(oddws[i] != 0){
+
+  for(int i=0;i<(int)dws.size();i++) {
+    if(oddws[i] != 0) {
       oddws[i]->checkTasksAccesses(patches, matls);
       oddws[i]->popRunningTask();
     }
@@ -280,7 +285,7 @@ void DetailedTasks::initializeScrubs(vector<OnDemandDataWarehouseP>& dws, int dw
     if (dwmap[i] < 0)
       continue;
     OnDemandDataWarehouse* dw = dws[dwmap[i]].get_rep();
-    if(dw != 0 && dw->getScrubMode() == DataWarehouse::ScrubComplete){
+    if(dw != 0 && dw->getScrubMode() == DataWarehouse::ScrubComplete) {
       // only a OldDW or a CoarseOldDW will have scrubComplete 
       //   But we know a future taskgraph (in a w-cycle) will need the vars if there are fine dws 
       //   between New and Old.  In this case, the scrub count needs to be complemented with CoarseOldDW
@@ -304,8 +309,7 @@ void DetailedTasks::initializeScrubs(vector<OnDemandDataWarehouseP>& dws, int dw
     scrubout << Parallel::getMPIRank() << " End initialize scrubs\n";
 }
 
-  void
-DetailedTask::scrub(vector<OnDemandDataWarehouseP>& dws)
+void DetailedTask::scrub(vector<OnDemandDataWarehouseP>& dws)
 {
   const Task* task = getTask();
 
@@ -695,21 +699,21 @@ DetailedDep* DetailedTasks::findMatchingDetailedDep(DependencyBatch* batch, Deta
 
   return valid_dep;
 }
+
 /*************************
  * This function will create the detailed dependency for the
  * parameters passed in.  If a similar detailed dependency
- * already exists it will combine those depedencies into a single
+ * already exists it will combine those dependencies into a single
  * dependency.  
  *
  * Dependencies are ordered from oldest to newest in a linked list.  It is vital that 
  * this order is maintained.  Failure to maintain this order can cause messages to be combined 
- * inconsistently across different tasks causing various problems.  New depdencies are added
- * to the end of the list.  If a depdency was combined then the extended dependency is added
+ * inconsistently across different tasks causing various problems.  New dependencies are added
+ * to the end of the list.  If a dependency was combined then the extended dependency is added
  * at the same location that i was first combined.  This is to ensure all future dependencies
  * combine with the same dependencies as the original.
  */
-  void
-DetailedTasks::possiblyCreateDependency(DetailedTask* from,
+void DetailedTasks::possiblyCreateDependency(DetailedTask* from,
     Task::Dependency* comp,
     const Patch* fromPatch,
     DetailedTask* to,

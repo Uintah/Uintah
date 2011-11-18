@@ -64,8 +64,8 @@ void GPUSchedulerTest::problemSetup(const ProblemSpecP& params,
                                     GridP& grid,
                                     SimulationStateP& sharedState) {
   sharedState_ = sharedState;
-  ProblemSpecP poisson = params->findBlock("GPUSchedulerTest");
-  poisson->require("delt", delt_);
+  ProblemSpecP gpuSchedTest = params->findBlock("GPUSchedulerTest");
+  gpuSchedTest->require("delt", delt_);
   simpleMaterial_ = scinew SimpleMaterial();
   sharedState->registerSimpleMaterial(simpleMaterial_);
 }

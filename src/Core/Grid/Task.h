@@ -208,12 +208,12 @@ WARNING
 
       //////////
       // Insert Documentation Here:
-      virtual void doit(const ProcessorGroup* pc,
+      virtual void doit(const ProcessorGroup* pg,
                         const PatchSubset* patches,
                         const MaterialSubset* matls,
                         DataWarehouse* fromDW,
                         DataWarehouse* toDW) {
-        (ptr->*pmf)(pc, patches, matls, fromDW, toDW, arg1, arg2);
+        (ptr->*pmf)(pg, patches, matls, fromDW, toDW, arg1, arg2);
       }
     }; // end class Action2
 
@@ -1122,12 +1122,12 @@ WARNING
     
     //////////
     // Tells the task to actually execute the function assigned to it.
-    virtual void doit(const ProcessorGroup* pc, const PatchSubset*,
+    virtual void doit(const ProcessorGroup* pg, const PatchSubset*,
               const MaterialSubset*, vector<DataWarehouseP>& dws);
 
     //////////
     // Tells the task to actually execute the function assigned to it on the specified GPU.
-    virtual void doitGPU(const ProcessorGroup* pc, const PatchSubset*,
+    virtual void doitGPU(const ProcessorGroup* pg, const PatchSubset*,
               const MaterialSubset*, vector<DataWarehouseP>& dws, int device);
 
     inline const char* getName() const {
