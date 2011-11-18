@@ -60,7 +60,6 @@ SRCS += \
         $(SRCDIR)/SimulationState.cc       \
         $(SRCDIR)/SimulationTime.cc        \
         $(SRCDIR)/Task.cc                  \
-        $(SRCDIR)/CUDATask.cc              \
         $(SRCDIR)/TOBSplineInterpolator.cc \
         $(SRCDIR)/UnknownVariable.cc       \
         $(SRCDIR)/cpdiInterpolator.cc      \

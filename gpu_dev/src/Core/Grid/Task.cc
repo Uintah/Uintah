@@ -72,6 +72,10 @@ Task::ActionBase::~ActionBase()
 {
 }
 
+Task::ActionGPUBase::~ActionGPUBase()
+{
+}
+
 Task::~Task()
 {
   delete d_action;
@@ -973,10 +977,6 @@ namespace Uintah {
     case Task::Output:
       out << "Output";
       break;
-    case Task::GPU:
-      out << "GPU";
-      break;
-
     }
     return out;
   }

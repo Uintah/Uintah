@@ -33,7 +33,6 @@
 #include <Core/Grid/Variables/NCVariable.h>
 #include <Core/Grid/Variables/NodeIterator.h>
 #include <Core/Grid/SimulationState.h>
-#include <Core/Grid/CUDATask.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/SimpleMaterial.h>
 #include <Core/Grid/Variables/VarTypes.h>
