@@ -40,10 +40,8 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Util/FancyAssert.h>
 #include <Core/Malloc/Allocator.h>
 
-#include <sci_defs/cuda_defs.h>
-
 #ifdef HAVE_CUDA
-#include <Core/Grid/CUDATask.h>
+#include <sci_defs/cuda_defs.h>
 #endif
 
 using namespace Uintah;
@@ -61,7 +59,7 @@ SingleProcessorScheduler::SingleProcessorScheduler(const ProcessorGroup* myworld
 {
   d_generation = 0;
   m_parent = parent;
-  useGPU = Uintah::Parallel::usingGPU();
+  useGPU = Parallel::usingGPU();
 }
 
 SingleProcessorScheduler::~SingleProcessorScheduler()
@@ -136,40 +134,19 @@ SingleProcessorScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
   
   dts->initializeScrubs(dws, dwmap);
   
-  for(int i=0;i<ntasks;i++){
+  for(int i=0;i<ntasks;i++) {
     double start = Time::currentSeconds();
     DetailedTask* task = dts->getTask( i );
     
     taskdbg << d_myworld->myrank() << " SPS: Initiating: "; printTask(taskdbg, task); taskdbg << '\n';
 
-    if (trackingVarsPrintLocation_ & SchedulerCommon::PRINT_BEFORE_EXEC)
+    if (trackingVarsPrintLocation_ & SchedulerCommon::PRINT_BEFORE_EXEC) {
       printTrackedVars(task, SchedulerCommon::PRINT_BEFORE_EXEC);
+    }
       
-    // CUDA device to run on
-    int deviceToUse = -1;
-      
-    if(useGPU)
-    {
-        // if it is a cuda task, execute it as such
-        if(task->getTask()->getType() == Task::GPU)
-        {    
-            // find the least occupied device
-            int leastOccupied = 999999;
-            for(unsigned int i = 0; i < d_cudaDevices.size(); i++)
-            {
-                // We probably want a lock here on the multithreaded schedulers
-                if(d_cudaDevices[i].runningKernels() < leastOccupied)
-                {
-                    leastOccupied = d_cudaDevices[i].runningKernels();
-                    deviceToUse = i;
-                }
-            }
-            task->doit(d_myworld, dws, plain_old_dws, d_cudaDevices[deviceToUse].getDevicePtr(),&d_cudaDevices[deviceToUse]);
-        }
-        else // just do the normal doit
-        {
+    if(useGPU) {
+            // task->doitGPU(d_myworld, dws, plain_old_dws, d_cudaDevices[deviceToUse].getDevicePtr(),&d_cudaDevices[deviceToUse]);
             task->doit(d_myworld, dws, plain_old_dws);
-        }
     } else {
         task->doit(d_myworld, dws, plain_old_dws);
     }
@@ -177,14 +154,6 @@ SingleProcessorScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
     if (trackingVarsPrintLocation_ & SchedulerCommon::PRINT_AFTER_EXEC)
       printTrackedVars(task, SchedulerCommon::PRINT_AFTER_EXEC);
 
-    if(useGPU)
-    {
-        if(task->getTask()->getType() == Task::GPU)
-        {
-            d_cudaDevices[deviceToUse].decrementRunningKernels();
-        }
-    }
-      
     task->done(dws);
     
     taskdbg << d_myworld->myrank() << " SPS: Completed:  "; printTask(taskdbg, task); taskdbg << '\n';

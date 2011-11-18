@@ -117,7 +117,7 @@ WARNING
 
   private:
 
-    // begin CPU Action definitions
+    // begin CPU Action declarations
     template<class T>
     class Action : public ActionBase {
       
@@ -327,9 +327,10 @@ WARNING
         (ptr->*pmf)(pg, patches, matls, fromDW, toDW, arg1, arg2, arg3, arg4, arg5);
       }
     }; // end Action5
-    // end CPU Action classes
+    // end CPU Action declarations
 
-    // begin GPU Action classes
+
+    // begin GPU Action declarations
     template<class T>
     class ActionGPU : public ActionGPUBase {
       T* ptr;
@@ -351,7 +352,6 @@ WARNING
                                 const MaterialSubset* matls,
                                 DataWarehouse* fromDW,
                                 DataWarehouse* toDW),
-                 T* ptrgpu,
                  void (T::*pmfgpu)(const ProcessorGroup* pg,
                                    const PatchSubset* patches,
                                    const MaterialSubset* matls,
@@ -408,7 +408,6 @@ WARNING
                                 DataWarehouse* fromDW,
                                 DataWarehouse* toDW,
                                 Arg1 arg1),
-                 T* ptrgpu,
                  void (T::*pmfgpu)(const ProcessorGroup* pg,
                                    const PatchSubset* patches,
                                    const MaterialSubset* matls,
@@ -469,7 +468,6 @@ WARNING
                                 DataWarehouse* fromDW,
                                 DataWarehouse* toDW,
                                 Arg1 arg1, Arg2 arg2),
-                 T* ptrgpu,
                  void (T::*pmfgpu)(const ProcessorGroup* pg,
                                    const PatchSubset* patches,
                                    const MaterialSubset* matls,
@@ -530,7 +528,6 @@ WARNING
                                 DataWarehouse* fromDW,
                                 DataWarehouse* toDW,
                                 Arg1 arg1, Arg2 arg2, Arg3 arg3),
-                 T* ptrgpu,
                  void (T::*pmfgpu)(const ProcessorGroup* pg,
                                    const PatchSubset* patches,
                                    const MaterialSubset* matls,
@@ -594,7 +591,6 @@ WARNING
                                 DataWarehouse* fromDW,
                                 DataWarehouse* toDW,
                                 Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4),
-                 T* ptrgpu,
                  void (T::*pmfgpu)(const ProcessorGroup* pg,
                                    const PatchSubset* patches,
                                    const MaterialSubset* matls,
@@ -660,7 +656,6 @@ WARNING
                                 DataWarehouse* fromDW,
                                 DataWarehouse* toDW,
                                 Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4, Arg5 arg5),
-                 T* ptrgpu,
                  void (T::*pmfgpu)(const ProcessorGroup* pg,
                                    const PatchSubset* patches,
                                    const MaterialSubset* matls,
@@ -697,17 +692,24 @@ WARNING
         (ptr->*pmfgpu)(pg, patches, matls, fromDW, toDW, device, arg1, arg2, arg3, arg4, arg5);
       }
     }; // end class ActionGPU5
-    // end GPU Action definitions
+    // end GPU Action declarations
 
 
   public: // class Task
     
     enum WhichDW {
-      OldDW=0, NewDW=1, CoarseOldDW=2, CoarseNewDW=3, ParentOldDW=4, ParentNewDW=5, 
+      OldDW=0,
+      NewDW=1,
+      CoarseOldDW=2,
+      CoarseNewDW=3,
+      ParentOldDW=4,
+      ParentNewDW=5,
       TotalDWs=6
     };
+
     enum {
-      NoDW = -1, InvalidDW = -2
+      NoDW = -1,
+      InvalidDW = -2
     };
     
     enum TaskType {
@@ -716,7 +718,6 @@ WARNING
       InitialSend,
       OncePerProc, // make sure to pass a PerProcessorPatchSet to the addTask function
       Output,
-      GPU
     };
     
     Task(const std::string& taskName, TaskType type)
@@ -727,7 +728,7 @@ WARNING
       initialize();
     }
     
-    // begin CPU Task definitions
+    // begin CPU Task declarations
     template<class T>
     Task(const std::string& taskName,
          T* ptr,
@@ -827,10 +828,10 @@ WARNING
       d_tasktype = Normal;
       initialize();
     }
-    // end CPU Task definitions
+    // end CPU Task declarations
 
 
-    // begin GPU Task definitions
+    // begin GPU Task declarations
     template<class T>
     Task(void (T::*pmfgpu)(const ProcessorGroup* pg,
                            const PatchSubset* patches,
@@ -847,7 +848,7 @@ WARNING
                         DataWarehouse* fromDW,
                         DataWarehouse* toDW) )
       : d_taskName( taskName ), d_taskNameGPU(taskNameGPU),
-        d_action( scinew ActionGPU<T>(ptr, pmf, pmfgpu) )
+        d_actionGPU( scinew ActionGPU<T>(ptr, pmf, pmfgpu) )
     {
       d_tasktype = Normal;
       initialize();
@@ -980,7 +981,7 @@ WARNING
       d_tasktype = Normal;
       initialize();
     }
-    // end GPU Task definitions
+    // end GPU Task declarations
 
     void initialize();
     
@@ -1302,7 +1303,7 @@ WARNING
     std::string d_taskNameGPU;
 
 protected:
-    ActionBase* d_action;
+    ActionBase*    d_action;
     ActionGPUBase* d_actionGPU;
 
 private:

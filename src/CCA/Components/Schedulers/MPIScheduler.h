@@ -155,10 +155,12 @@ WARNING
         }
       }
     }
-    mpi_timing_info_s     mpi_info_;
-    MPIScheduler* parentScheduler;
+    mpi_timing_info_s  mpi_info_;
+    MPIScheduler*      parentScheduler;
+
     // Performs the reduction task. (In Mixed, gives the task to a thread.)    
     virtual void initiateReduction( DetailedTask          * task );    
+
   protected:
     // Runs the task. (In Mixed, gives the task to a thread.)
     virtual void initiateTask( DetailedTask          * task,
@@ -171,18 +173,15 @@ WARNING
     virtual void wait_till_all_done();
     
     virtual void verifyChecksum();
-    MessageLog log;
+    MessageLog  log;
+    Output*     oport_;
+    CommRecMPI  sends_;
+    CommRecMPI  recvs_;
 
-
-    Output*       oport_;
-
-    CommRecMPI            sends_;
-    CommRecMPI            recvs_;
-
-    double           d_lasttime;
-    std::vector<const char*>    d_labels;
-    std::vector<double>   d_times;
-    ofstream         timingStats, avgStats, maxStats;
+    double                   d_lasttime;
+    std::vector<const char*> d_labels;
+    std::vector<double>      d_times;
+    ofstream                 timingStats, avgStats, maxStats;
 
     void emitTime(const char* label);
     void emitTime(const char* label, double time);

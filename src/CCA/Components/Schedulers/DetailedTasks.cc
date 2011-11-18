@@ -258,7 +258,11 @@ DetailedTask::doit(const ProcessorGroup* pg,
     if(oddws[i] != 0)
       oddws[i]->pushRunningTask(task, &oddws);
   }
-  task->doit(pg, patches, matls, dws);
+  if(Parallel::usingGPU()) {
+    task->doitGPU(pg, patches, matls, dws, 0);
+  } else { 
+      task->doit(pg, patches, matls, dws);
+  }
   for(int i=0;i<(int)dws.size();i++){
     if(oddws[i] != 0){
       oddws[i]->checkTasksAccesses(patches, matls);
@@ -266,45 +270,6 @@ DetailedTask::doit(const ProcessorGroup* pg,
     }
   }
 }
-
-#ifdef HAVE_CUDA
-  void
-DetailedTask::doit(const ProcessorGroup* pg,
-    vector<OnDemandDataWarehouseP>& oddws,
-    vector<DataWarehouseP>& dws,
-    int cudadevice,
-    CUDADevice *devstruct)
-{
-  TAU_PROFILE("DetailedTask::doit", " ", TAU_USER);
-  if( mixedDebug.active() ) {
-    cerrLock.lock();
-    mixedDebug << "DetailedTask " << this << " begin doit()\n";
-    mixedDebug << " task is " << task << "\n";
-    mixedDebug << "   num Pending Deps: " << numPendingInternalDependencies << "\n";
-    mixedDebug << "   Originally needed deps (" << internalDependencies.size()
-      << "):\n";
-
-    list<InternalDependency>::iterator iter = internalDependencies.begin();
-
-    for( int i = 0; iter != internalDependencies.end(); iter++, i++ )
-    {
-      mixedDebug << i << ":    " << *((*iter).prerequisiteTask->getTask()) << "\n";
-    }
-    cerrLock.unlock();
-  }
-  for(int i=0;i<(int)dws.size();i++){
-    if(oddws[i] != 0)
-      oddws[i]->pushRunningTask(task, &oddws);
-  }
-  dynamic_cast<CUDATask *>(task)->doit(pg, patches, matls, dws, cudadevice, devstruct);
-  for(int i=0;i<(int)dws.size();i++){
-    if(oddws[i] != 0){
-      oddws[i]->checkTasksAccesses(patches, matls);
-      oddws[i]->popRunningTask();
-    }
-  }
-}
-#endif
 
 void DetailedTasks::initializeScrubs(vector<OnDemandDataWarehouseP>& dws, int dwmap[])
 {
