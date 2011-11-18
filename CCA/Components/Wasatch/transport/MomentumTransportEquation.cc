@@ -402,9 +402,88 @@ namespace Wasatch{
   MomentumTransportEquation<FieldT>::
   ~MomentumTransportEquation()
   {}
+  
+  //------------------------------------------------------------------  
+  
+  template< typename FieldT >
+  void
+  MomentumTransportEquation<FieldT>::
+  setup_initial_boundary_conditions( const GraphHelper& graphHelper,
+                                    const Uintah::PatchSet* const localPatches,
+                                    const PatchInfoMap& patchInfoMap,
+                                    const Uintah::MaterialSubset* const materials)
+  {    
+    
+    Expr::ExpressionFactory& factory = *graphHelper.exprFactory;
+
+    typedef typename SpatialOps::structured::FaceTypes<FieldT>::XFace XFace;
+    typedef typename SpatialOps::structured::FaceTypes<FieldT>::YFace YFace;
+    typedef typename SpatialOps::structured::FaceTypes<FieldT>::ZFace ZFace;
+    typedef typename NormalFaceSelector<FieldT>::NormalFace NormalFace;
+    
+    // set initial bcs for momentum
+    if (factory.get_registry().have_entry(mom_tag(thisMomName_))) {
+
+      process_boundary_conditions<FieldT>( Expr::Tag( this->solution_variable_name(),
+                                                   Expr::STATE_N ),
+                                        this->solution_variable_name(),
+                                        this->staggered_location(),
+                                        graphHelper,
+                                        localPatches,
+                                        patchInfoMap,
+                                        materials );
+    }
+    
+    // set bcs for velocity - cos we don't have a mechanism now to set them
+    // on interpolated density field
+    Expr::Tag velTag;
+    switch (this->staggered_location()) {
+      case XDIR:
+        velTag = velTags_[0];
+        break;
+      case YDIR:
+        velTag = velTags_[1];
+        break;
+      case ZDIR:
+        velTag = velTags_[2];
+        break;
+      default:
+        break;
+    }
+    if (factory.get_registry().have_entry(velTag)) {
+      process_boundary_conditions<FieldT>( velTag,
+                                          velTag.name(),
+                                          this->staggered_location(),
+                                          graphHelper,
+                                          localPatches,
+                                          patchInfoMap,
+                                          materials);      
+    }    
+    // set bcs for pressure
+    if (factory.get_registry().have_entry(pressure_tag())) {
+      process_boundary_conditions<SVolField>( pressure_tag(),
+                                             "pressure",
+                                             NODIR,
+                                             graphHelper,
+                                             localPatches,
+                                             patchInfoMap,
+                                             materials );
+    }
+    // set bcs for partial rhs
+    if (factory.get_registry().have_entry(rhs_part_tag(mom_tag(thisMomName_)))) {
+      process_boundary_conditions<FieldT>( rhs_part_tag(mom_tag(thisMomName_)),
+                                          rhs_part_tag(mom_tag(thisMomName_)).name(),
+                                          this->staggered_location(),
+                                          graphHelper,
+                                          localPatches,
+                                          patchInfoMap,
+                                          materials);
+    }    
+    
+  }  
 
   //------------------------------------------------------------------
-
+  
   template< typename FieldT >
   void
   MomentumTransportEquation<FieldT>::
@@ -470,15 +549,15 @@ namespace Wasatch{
                                         materials);
     
 
-    // set bcs for density
-    const Expr::Tag densTag( "density", Expr::STATE_NONE );
-    process_boundary_conditions<SVolField>( densTag,
-                                           "density",
-                                           NODIR,
-                                           graphHelper,
-                                           localPatches,
-                                           patchInfoMap,
-                                           materials );    
+//    // set bcs for density
+//    const Expr::Tag densTag( "density", Expr::STATE_NONE );
+//    process_boundary_conditions<SVolField>( densTag,
+//                                           "density",
+//                                           NODIR,
+//                                           graphHelper,
+//                                           localPatches,
+//                                           patchInfoMap,
+//                                           materials );    
 //    // set bcs for viscosity
 //    const Expr::Tag viscTag( "viscosity", Expr::STATE_N );
 //    const Direction viscDir = NODIR;
@@ -489,28 +568,28 @@ namespace Wasatch{
 //              patchInfoMap,
 //              materials);
 
-    // set bcs for normal stresses
-    Expr::ExpressionFactory& factory = *graphHelper.exprFactory;
-    if(isviscous_) {
-      Expr::Tag normalStressTag = factory.get_registry().get_label(normalStressID_);
-      process_boundary_conditions<NormalFace>( normalStressTag,
-                                  normalStressTag.name(),
-                NODIR,
-                graphHelper,
-                localPatches,
-                patchInfoMap,
-                materials);
-    }
-
-    // set bcs for normal convective fluxes
-    Expr::Tag normalConvFluxTag = factory.get_registry().get_label(normalConvFluxID_);
-    process_boundary_conditions<NormalFace>( normalConvFluxTag,
-                                normalConvFluxTag.name(),
-                                NODIR,                                
-                                graphHelper,
-                                localPatches,
-                                patchInfoMap,
-                                materials);
+//    // set bcs for normal stresses
+//    Expr::ExpressionFactory& factory = *graphHelper.exprFactory;
+//    if(isviscous_) {
+//      Expr::Tag normalStressTag = factory.get_registry().get_label(normalStressID_);
+//      process_boundary_conditions<NormalFace>( normalStressTag,
+//                                  normalStressTag.name(),
+//                NODIR,
+//                graphHelper,
+//                localPatches,
+//                patchInfoMap,
+//                materials);
+//    }
+//
+//    // set bcs for normal convective fluxes
+//    Expr::Tag normalConvFluxTag = factory.get_registry().get_label(normalConvFluxID_);
+//    process_boundary_conditions<NormalFace>( normalConvFluxTag,
+//                                normalConvFluxTag.name(),
+//                                NODIR,                                
+//                                graphHelper,
+//                                localPatches,
+//                                patchInfoMap,
+//                                materials);
 
   }
 

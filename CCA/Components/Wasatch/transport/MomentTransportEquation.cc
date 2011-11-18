@@ -212,6 +212,16 @@ namespace Wasatch {
     return icFactory.get_registry().get_id( Expr::Tag( this->solution_variable_name(),
                                                       Expr::STATE_N ) );
   }
+
+  //------------------------------------------------------------------
+  
+  template< typename FieldT >  
+  void MomentTransportEquation<FieldT>::
+  setup_initial_boundary_conditions(const GraphHelper& graphHelper,
+                            const Uintah::PatchSet* const localPatches,
+                            const PatchInfoMap& patchInfoMap,
+                            const Uintah::MaterialSubset* const materials)
+  {  }
   
   //------------------------------------------------------------------
   

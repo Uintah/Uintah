@@ -58,6 +58,16 @@ namespace Wasatch{
   {}
 
   //------------------------------------------------------------------
+  
+  void 
+  TemperatureTransportEquation::
+  setup_initial_boundary_conditions( const GraphHelper& graphHelper,
+                            const Uintah::PatchSet* const localPatches,
+                            const PatchInfoMap& patchInfoMap,
+                            const Uintah::MaterialSubset* const materials)
+  {}
+  
+  //------------------------------------------------------------------
 
   void 
   TemperatureTransportEquation::
