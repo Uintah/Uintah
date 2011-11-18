@@ -62,7 +62,11 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <sci_defs/uintah_defs.h>
+
+#ifdef HAVE_CUDA
 #include <sci_defs/cuda_defs.h>
+#include <CCA/Components/Examples/GPUSchedulerTest.h>
+#endif
 
 #ifndef NO_WASATCH
 #include <CCA/Components/Wasatch/Wasatch.h>
@@ -195,7 +199,10 @@ ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world,
   } 
   if (sim_comp == "poissongpu1" || sim_comp == "POISSONGPU1") {
     return scinew PoissonGPU1(world);
-  } 
+  }
+  if (sim_comp == "gpuschedulertest" || sim_comp == "GPUSCHEDULERTEST") {
+    return scinew GPUSchedulerTest(world);
+  }
 #endif
   if (sim_comp == "regriddertest" || sim_comp == "REGRIDDERTEST") {
     return scinew RegridderTest(world);
