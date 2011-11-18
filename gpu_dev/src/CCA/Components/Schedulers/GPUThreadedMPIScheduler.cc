@@ -194,12 +194,11 @@ GPUThreadedMPIScheduler::createSubScheduler()
 }
 
 void
-GPUThreadedMPIScheduler::runTask( DetailedTask         * task, int iteration, int t_id /*=0*/)
+GPUThreadedMPIScheduler::runTask(DetailedTask* task, int iteration, int t_id /*=0*/)
 {
   TAU_PROFILE("GPUThreadedMPIScheduler::runTask()", " ", TAU_USER);
 
-  if(waitout.active())
-  {
+  if(waitout.active()) {
     waittimes[task->getTask()->getName()]+=CurrentWaitTime;
     CurrentWaitTime=0;
   }
@@ -211,10 +210,14 @@ GPUThreadedMPIScheduler::runTask( DetailedTask         * task, int iteration, in
   }
 
   vector<DataWarehouseP> plain_old_dws(dws.size());
-  for(int i=0;i<(int)dws.size();i++)
+  for(int i=0;i<(int)dws.size();i++) {
     plain_old_dws[i] = dws[i].get_rep();
   //const char* tag = AllocatorSetDefaultTag(task->getTask()->getName());
+  }
 
+  // TODO need mechanism to determine which deviceID to use when there are multiple available
+  int device = 0;
+  task->assignDevice(device);
   task->doit(d_myworld, dws, plain_old_dws);
   //AllocatorSetDefaultTag(tag);
 
@@ -311,8 +314,9 @@ GPUThreadedMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
   DetailedTasks* dts = tg->getDetailedTasks();
 
   if(dts == 0){
-    if (d_myworld->myrank() == 0)
+    if (d_myworld->myrank() == 0) {
       cerr << "GPUThreadedMPIScheduler skipping execute, no tasks\n";
+    }
     return;
   }
 
@@ -349,15 +353,13 @@ GPUThreadedMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
   mpi_info_.totalwaitmpi = 0;
 
   int numTasksDone = 0;
-
-
-  bool abort=false;
+  bool abort = false;
   int abort_point = 987654;
-
   int i = 0;
 
-  if (reloc_new_posLabel_ && dws[dwmap[Task::OldDW]] != 0)
+  if (reloc_new_posLabel_ && dws[dwmap[Task::OldDW]] != 0) {
     dws[dwmap[Task::OldDW]]->exchangeParticleQuantities(dts, getLoadBalancer(), reloc_new_posLabel_, iteration);
+  }
 
   TAU_PROFILE_TIMER(doittimer, "Task execution", 
       "[GPUThreadedMPIScheduler::execute() loop] ", TAU_USER);
@@ -367,8 +369,9 @@ GPUThreadedMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
   // hook to post all the messages up front
   if (useDynamicScheduling_ && !d_sharedState->isCopyDataTimestep()) {
     // post the receives in advance
-    for (int i = 0; i < ntasks; i++)
+    for (int i = 0; i < ntasks; i++) {
       initiateTask( dts->localTask(i), abort, abort_point, iteration );
+    }
   }
 #endif
 
@@ -409,14 +412,13 @@ GPUThreadedMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
        
       DetailedTask * task = dts->getNextInternalReadyTask();
 
-      if ((task->getTask()->getType() == Task::Reduction) )  //save the reduction task for later
-      {
+      if ((task->getTask()->getType() == Task::Reduction) ) { //save the reduction task for later
         if(!abort) {
          assignTask(task, iteration);
          //initiateReduction(task);
         }
         numTasksDone++;
-	if (taskdbg.active()){
+	if (taskdbg.active()) {
           cerrLock.lock();
           taskdbg << d_myworld->myrank() << " Task Reduction ready and assigned " << *task << " deps needed: " << task->getExternalDepCount() << endl;
           cerrLock.unlock();
@@ -426,7 +428,7 @@ GPUThreadedMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
         initiateTask( task, abort, abort_point, iteration );
         task->markInitiated();
         task->checkExternalDepCount();
-	if (taskdbg.active()){
+	if (taskdbg.active()) {
           cerrLock.lock();
           taskdbg << d_myworld->myrank() << " Task internal ready " << *task << " deps needed: " << task->getExternalDepCount() << endl;
           cerrLock.unlock();

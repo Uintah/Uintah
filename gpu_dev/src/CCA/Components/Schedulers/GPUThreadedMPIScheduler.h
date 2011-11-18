@@ -87,15 +87,15 @@ WARNING
     
     virtual bool useInternalDeps() { return !d_sharedState->isCopyDataTimestep();}
     
-    void runTask( DetailedTask* task, int iteration, int t_id=0 );
+    void runTask( DetailedTask* task, int iteration, int t_id = 0 );
     
     void postMPISends( DetailedTask* task, int iteration, int t_id);
     
     void assignTask( DetailedTask* task, int iteration);
     
-    ConditionVariable     d_nextsignal;
+    ConditionVariable      d_nextsignal;
     Mutex                  d_nextmutex;   //conditional wait mutex
-    GPUTaskWorker*            t_worker[16];  //workers
+    GPUTaskWorker*         t_worker[16];  //workers
     Thread*                t_thread[16];
     /*Thread share data*/
     /*
@@ -109,7 +109,7 @@ WARNING
   private:
     
     Output*       oport_t;
-    CommRecMPI            sends_[16+1];
+    CommRecMPI    sends_[16+1];
     //map<Thread*, CommReMPI> tsends_;
     GPUThreadedMPIScheduler(const GPUThreadedMPIScheduler&);
     GPUThreadedMPIScheduler& operator=(const GPUThreadedMPIScheduler&);
@@ -139,15 +139,15 @@ public:
 
 
 private:
-  int                    d_id;
-  GPUThreadedMPIScheduler*  d_scheduler;
-  DetailedTask*          d_task;
-  int                    d_iteration;
-  Mutex                  d_runmutex;
-  ConditionVariable      d_runsignal;
-  bool                   d_quit;
-  int                    d_rank;
-  CommRecMPI             d_sends_;
+  int                      d_id;
+  GPUThreadedMPIScheduler* d_scheduler;
+  DetailedTask*            d_task;
+  int                      d_iteration;
+  Mutex                    d_runmutex;
+  ConditionVariable        d_runsignal;
+  bool                     d_quit;
+  int                      d_rank;
+  CommRecMPI               d_sends_;
 };
 
 } // End namespace Uintah
