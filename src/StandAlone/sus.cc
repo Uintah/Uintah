@@ -626,7 +626,7 @@ main( int argc, char *argv[], char *env[] )
     SolverInterface* solve = 0;
     solve = SolverFactory::create(ups, world, solver);
     if(Uintah::Parallel::getMPIRank() == 0 && solve!=0) {
-      cout << "Implicit Solver:" << solve->getName() << endl;
+      cout << "Implicit Solver: \t" << solve->getName() << endl;
     }
 
     MALLOC_TRACE_TAG("main():create components");

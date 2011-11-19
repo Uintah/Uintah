@@ -119,7 +119,7 @@ namespace Uintah {
   public:
     DependencyBatch(int to, DetailedTask* fromTask, DetailedTask* toTask)
       : comp_next(0), fromTask(fromTask),
-	head(0), messageTag(-1), to(to), 
+	head(0), messageTag(-1), to(to),
 	received_(false), madeMPIRequest_(false),
 	lock_(0)
     {

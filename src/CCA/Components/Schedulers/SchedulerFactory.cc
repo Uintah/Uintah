@@ -72,8 +72,8 @@ SchedulerCommon* SchedulerFactory::create(ProblemSpecP& ps,
     }
   }
 
-  if ((Uintah::Parallel::getMaxThreads() > 0) && ((scheduler != "ThreadedMPI") || (scheduler != "GPUThreadedMPI"))) {
-    throw ProblemSetupException("Threaded Scheduler needed for -nthreads", __FILE__, __LINE__);
+  if ((Uintah::Parallel::getMaxThreads() > 0) && ((scheduler != "ThreadedMPI") && (scheduler != "GPUThreadedMPI"))) {
+    throw ProblemSetupException("Threaded or GPU Threaded Scheduler needed for -nthreads", __FILE__, __LINE__);
   }
 
   if (world->myrank() == 0) {

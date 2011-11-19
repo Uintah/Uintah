@@ -1108,19 +1108,23 @@ namespace Uintah {
       const PatchSubset* patches = task.getPatches();
       if(patches){
         out << ", on patch";
-        if(patches->size() > 1)
+        if(patches->size() > 1) {
           out << "es";
+        }
         out << " ";
         for(int i=0;i<patches->size();i++){
-          if(i>0)
+          if(i>0) {
             out << ",";
+          }
           out << patches->get(i)->getID();
         }
         // a once-per-proc task is liable to have multiple levels, and thus calls to getLevel(patches) will fail
-        if (task.getTask()->getType() == Task::OncePerProc)
+        if (task.getTask()->getType() == Task::OncePerProc) {
           out << ", on multiple levels";
-        else if (patches->size() > 1)
+        }
+        else if (patches->size() > 1) {
           out << ", Level " << getLevel(patches)->getIndex();
+        }
       }
       const MaterialSubset* matls = task.getMaterials();
       if(matls){
