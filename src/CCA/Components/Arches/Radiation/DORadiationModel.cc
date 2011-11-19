@@ -29,21 +29,32 @@ DEALINGS IN THE SOFTWARE.
 
 
 //----- DORadiationModel.cc --------------------------------------------------
-
-#include <sci_defs/hypre_defs.h>
+#include <CCA/Components/Arches/ArchesLabel.h>
+#include <CCA/Components/Arches/ArchesMaterial.h>
 #include <CCA/Components/Arches/BoundaryCondition.h>
+#include <CCA/Components/Arches/PropertyModels/PropertyModelBase.h>
+#include <CCA/Components/Arches/PropertyModels/PropertyModelFactory.h>
 #include <CCA/Components/Arches/Radiation/DORadiationModel.h>
 #include <CCA/Components/Arches/Radiation/RadPetscSolver.h>
 #include <CCA/Components/Arches/Radiation/RadiationSolver.h>
+#include <CCA/Components/MPMArches/MPMArchesLabel.h>
 #include <CCA/Ports/DataWarehouse.h>
+#include <CCA/Ports/Scheduler.h>
+
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Exceptions/InvalidValue.h>
+#include <Core/Grid/DbgOutput.h>
+#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/Variables/PerPatch.h>
+#include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Thread/Time.h>
 #include <cmath>
+#include <sci_defs/hypre_defs.h>
+
 
 #ifdef HAVE_HYPRE
 #include <CCA/Components/Arches/Radiation/RadHypreSolver.h>
@@ -61,17 +72,24 @@ using namespace Uintah;
 #include <CCA/Components/Arches/Radiation/fortran/rdomsrc_fort.h>
 #include <CCA/Components/Arches/Radiation/fortran/rdomflux_fort.h>
 #include <CCA/Components/Arches/Radiation/fortran/rdomvolq_fort.h>
+static DebugStream dbg("ARCHES_RADIATION",false);
 //****************************************************************************
 // Default constructor for DORadiationModel
 //****************************************************************************
-DORadiationModel::DORadiationModel(BoundaryCondition* bndry_cond,
+DORadiationModel::DORadiationModel(const ArchesLabel* label,
+                                   BoundaryCondition* bndry_cond,
                                    const ProcessorGroup* myworld):
-                                   RadiationModel(),d_boundaryCondition(bndry_cond),
+                                   RadiationModel(), d_lab(label), 
+                                   d_boundaryCondition(bndry_cond),
                                    d_myworld(myworld)
 {
   d_linearSolver = 0;
+  d_radCalcFreq = 0; 
   _props_calculator = 0;
-  _using_props_calculator = false; 
+  d_perproc_patches = 0;
+  _using_props_calculator = false;
+  d_use_abskp = false;
+  d_MAlab = scinew MPMArchesLabel();
 }
 
 //****************************************************************************
@@ -79,8 +97,11 @@ DORadiationModel::DORadiationModel(BoundaryCondition* bndry_cond,
 //****************************************************************************
 DORadiationModel::~DORadiationModel()
 {
+  delete d_MAlab;
   delete d_linearSolver;
-  delete _props_calculator; 
+  delete _props_calculator;
+  if(d_perproc_patches && d_perproc_patches->removeReference())
+    delete d_perproc_patches; 
 }
 
 //****************************************************************************
@@ -88,30 +109,28 @@ DORadiationModel::~DORadiationModel()
 //**************************************************************************** 
 
 void 
-DORadiationModel::problemSetup(const ProblemSpecP& params)
+DORadiationModel::problemSetup(ProblemSpecP& params)
 
 {
-  ProblemSpecP db = params->findBlock("DORadiationModel");
-
+  params->getWithDefault("radiationCalcFreq",         d_radCalcFreq, 3);
+  params->getWithDefault("radCalcForAllRKSteps",      d_radRKsteps,  false);
+  params->getWithDefault("radCalcForAllImplicitSteps",d_radImpsteps, false);
+  
   string prop_model;
-
+  ProblemSpecP db = params->findBlock("DORadiationModel");
+  //__________________________________
+  // property calculator
   if ( db->findBlock("property_calculator") ){ 
 
     std::string calculator_type; 
     db->findBlock("property_calculator")->getAttribute("type",calculator_type);
 
     if ( calculator_type == "constant" ){ 
-
       _props_calculator = scinew ConstantProperties(); 
-
     } else if ( calculator_type == "burns_christon" ){ 
-
       _props_calculator = scinew BurnsChriston(); 
-
     } else { 
-
       throw InvalidValue("Error: Property calculator not recognized.",__FILE__, __LINE__); 
-
     } 
 
     ProblemSpecP db_pc = db->findBlock("property_calculator"); 
@@ -122,9 +141,20 @@ DORadiationModel::problemSetup(const ProblemSpecP& params)
     } 
   } 
 
+
+  //__________________________________
+  // article absorption coefficient 
+  PropertyModelFactory& prop_factory = PropertyModelFactory::self();
+  d_use_abskp = prop_factory.find_property_model( "abskp");
+  
+  if(d_use_abskp){
+    PropertyModelBase& abskpModel = prop_factory.retrieve_property_model( "abskp");
+    d_abskpLabel = abskpModel.getPropLabel(); 
+  }
+  
+ 
   if (db) {
     db->getWithDefault("ordinates",d_sn,2);
-//    db->getWithDefault("opl",d_xumax,3.0); too sensitive to have default
     db->require("opl",d_opl);
     db->getWithDefault("property_model",prop_model,"radcoef");
   }
@@ -140,7 +170,7 @@ DORadiationModel::problemSetup(const ProblemSpecP& params)
   if (prop_model == "radcoef"){ 
     lradcal     = false;
     lwsgg       = false;
-    lambda      = 1;
+    d_lambda      = 1;
     lplanckmean = false;
     lpatchmean  = false;
   }
@@ -149,7 +179,7 @@ DORadiationModel::problemSetup(const ProblemSpecP& params)
     cout << "WARNING! Serial and parallel results may deviate for this model" << endl;
     lradcal     = true;
     lwsgg       = false;
-    lambda      = 6;
+    d_lambda      = 6;
     lplanckmean = false;
     lpatchmean  = true;
   }
@@ -158,7 +188,7 @@ DORadiationModel::problemSetup(const ProblemSpecP& params)
     throw InternalError("WSGG radiation model does not run in parallel and has been disabled", __FILE__, __LINE__);
     lradcal       = false;
     lwsgg         = true;
-    lambda        = 4;
+    d_lambda        = 4;
     lplanckmean   = false;
     lpatchmean    = false;
   }
@@ -186,8 +216,6 @@ DORadiationModel::problemSetup(const ProblemSpecP& params)
   
   d_linearSolver->problemSetup(db);
   
-  // ** WARNING ** ffield/Symmetry/sfield/outletfield hardcoded to -1,-3,-4,-5
-  // These have been copied from BoundaryCondition.cc
   ffield = -1;
 
   db->getWithDefault("wall_temperature", d_wall_temp, 293.0); 
@@ -228,6 +256,263 @@ DORadiationModel::computeOrdinatesOPL() {
    //           fort_rordrtn(d_sn, ord, oxi, omu, oeta, wt);
 }
 
+//______________________________________________________________________
+//  This is the main task called by Enthalpysolver
+void
+DORadiationModel::sched_computeSource( const LevelP& level, 
+                                       SchedulerP& sched, 
+                                       const MaterialSet* matls,
+                                       const TimeIntegratorLabel* timelabels, 
+                                       const bool isFirstIntegrationStep )
+{
+
+  if(d_perproc_patches && d_perproc_patches->removeReference())
+    delete d_perproc_patches;
+    
+  LoadBalancer* lb  = sched->getLoadBalancer();
+  d_perproc_patches = lb->getPerProcessorPatchSet(level);
+  d_perproc_patches->addReference();
+  
+  string taskname =  "DORadiation::sched_computeSource";      
+                       
+  Task* tsk = scinew Task(taskname, this,
+                        &DORadiationModel::computeSource,
+                        timelabels, isFirstIntegrationStep);
+  
+  
+  Ghost::GhostType  gac = Ghost::AroundCells;
+  Ghost::GhostType  gn = Ghost::None;
+  
+  Task::WhichDW which_dw = Task::NewDW;
+  if (isFirstIntegrationStep) {
+    which_dw = Task::OldDW;
+  }
+  
+  tsk->requires(which_dw,      d_lab->d_tempINLabel,   gac, 1);
+  tsk->requires(which_dw,      d_lab->d_cpINLabel,     gac, 1);
+  tsk->requires(which_dw,      d_lab->d_co2INLabel,    gac, 1);
+  tsk->requires(which_dw,      d_lab->d_h2oINLabel,    gac, 1);
+  tsk->requires(which_dw,      d_lab->d_sootFVINLabel, gac, 1);
+  
+  tsk->requires(Task::NewDW,   d_lab->d_cellInfoLabel, gn);
+  tsk->requires(Task::NewDW,   d_lab->d_cellTypeLabel, gac, 1);
+
+  if (isFirstIntegrationStep ) {
+
+    tsk->requires(Task::OldDW, d_lab->d_radiationSRCINLabel,    gn, 0);
+    tsk->requires(Task::OldDW, d_lab->d_radiationFluxEINLabel,  gn, 0);
+    tsk->requires(Task::OldDW, d_lab->d_radiationFluxWINLabel,  gn, 0);
+    tsk->requires(Task::OldDW, d_lab->d_radiationFluxNINLabel,  gn, 0);
+    tsk->requires(Task::OldDW, d_lab->d_radiationFluxSINLabel,  gn, 0);
+    tsk->requires(Task::OldDW, d_lab->d_radiationFluxTINLabel,  gn, 0);
+    tsk->requires(Task::OldDW, d_lab->d_radiationFluxBINLabel,  gn, 0);
+    tsk->requires(Task::OldDW, d_lab->d_radiationVolqINLabel,   gn, 0);
+    tsk->requires(Task::OldDW, d_lab->d_abskgINLabel,           gn, 0);
+
+    tsk->computes(d_lab->d_abskgINLabel);
+    tsk->computes(d_lab->d_radiationSRCINLabel);
+    tsk->computes(d_lab->d_radiationFluxEINLabel);
+    tsk->computes(d_lab->d_radiationFluxWINLabel);
+    tsk->computes(d_lab->d_radiationFluxNINLabel);
+    tsk->computes(d_lab->d_radiationFluxSINLabel);
+    tsk->computes(d_lab->d_radiationFluxTINLabel);
+    tsk->computes(d_lab->d_radiationFluxBINLabel);
+    tsk->modifies(d_lab->d_radiationVolqINLabel);
+  } else {
+    tsk->modifies(d_lab->d_abskgINLabel);
+    tsk->modifies(d_lab->d_radiationSRCINLabel);
+    tsk->modifies(d_lab->d_radiationFluxEINLabel);
+    tsk->modifies(d_lab->d_radiationFluxWINLabel);
+    tsk->modifies(d_lab->d_radiationFluxNINLabel);
+    tsk->modifies(d_lab->d_radiationFluxSINLabel);
+    tsk->modifies(d_lab->d_radiationFluxTINLabel);
+    tsk->modifies(d_lab->d_radiationFluxBINLabel);
+    tsk->modifies(d_lab->d_radiationVolqINLabel);
+  }
+  
+  //__________________________________
+  if(d_use_abskp){
+    tsk->requires(Task::OldDW, d_abskpLabel,   gn, 0);
+  }
+  
+  if ( timelabels->integrator_last_step ){
+    tsk->computes(d_lab->d_totalRadSrcLabel);
+  }
+  
+  cout << " energy exchange " << d_boundaryCondition->getIfCalcEnergyExchange() << endl;
+  if (d_MAlab && d_boundaryCondition->getIfCalcEnergyExchange()) {
+    tsk->requires(Task::NewDW, d_MAlab->integTemp_CCLabel, gn, 0);
+  }
+  
+  sched->addTask(tsk, d_perproc_patches , matls);
+}
+
+//______________________________________________________________________
+//
+void
+DORadiationModel::computeSource( const ProcessorGroup* pc, 
+                                 const PatchSubset* patches, 
+                                 const MaterialSubset* matls, 
+                                 DataWarehouse* old_dw, 
+                                 DataWarehouse* new_dw, 
+                                 const TimeIntegratorLabel* timelabels,
+                                 bool isFirstIntegrationStep )
+{
+
+
+  int radCounter = d_lab->d_sharedState->getCurrentTopLevelTimeStep();
+
+  int archIndex = 0; // only one arches material
+  int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+  double new_total_src = 0.0;
+    
+  
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    printTask(patches, patch,dbg,"DORadiation::computeSource");
+    
+
+    // Get the PerPatch CellInformation data
+    PerPatch<CellInformationP> cellInfoP;
+    new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
+    CellInformation* cellinfo = cellInfoP.get().get_rep();
+    
+     DataWarehouse* which_dw = new_dw;
+    if (isFirstIntegrationStep){
+      which_dw = old_dw;
+    }
+
+    d_linearSolver->matrixCreate( d_perproc_patches, patches);
+
+    ArchesVariables      radVars;
+    ArchesConstVariables constRadVars;
+    
+    Ghost::GhostType  gac = Ghost::AroundCells;
+    Ghost::GhostType  gn = Ghost::None;
+    
+    // all integrator steps:
+    which_dw->get(constRadVars.co2,     d_lab->d_co2INLabel,    indx, patch, gac, 1);
+    which_dw->get(constRadVars.h2o,     d_lab->d_h2oINLabel,    indx, patch, gac, 1);
+    which_dw->get(constRadVars.sootFV,  d_lab->d_sootFVINLabel, indx, patch, gac, 1);
+    new_dw->get(  constRadVars.cellType,d_lab->d_cellTypeLabel, indx, patch, gac, 1);
+    
+    radVars.ESRCG.allocate(patch->getExtraCellLowIndex(Arches::ONEGHOSTCELL),
+                           patch->getExtraCellHighIndex(Arches::ONEGHOSTCELL));
+
+    //__________________________________
+    //  abskp
+    radVars.ABSKP.allocate(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
+    if(d_use_abskp){
+      old_dw->copyOut(radVars.ABSKP, d_abskpLabel,indx, patch, gn, 0);
+    } else {
+      radVars.ABSKP.initialize(0.0);
+    }
+    
+    
+    if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First){
+      old_dw->getCopy(radVars.temperature, d_lab->d_tempINLabel, indx, patch, gac, 1);
+    }
+    else {
+      new_dw->getCopy(radVars.temperature, d_lab->d_tempINLabel, indx, patch, gac, 1);
+    }
+
+    if ( isFirstIntegrationStep ){
+      new_dw->allocateAndPut(radVars.qfluxe, d_lab->d_radiationFluxEINLabel, indx, patch);
+      old_dw->copyOut(       radVars.qfluxe, d_lab->d_radiationFluxEINLabel, indx, patch, gn, 0);
+
+      new_dw->allocateAndPut(radVars.qfluxw, d_lab->d_radiationFluxWINLabel, indx, patch);
+      old_dw->copyOut(       radVars.qfluxw, d_lab->d_radiationFluxWINLabel, indx, patch, gn, 0);
+
+      new_dw->allocateAndPut(radVars.qfluxn, d_lab->d_radiationFluxNINLabel, indx, patch);
+      old_dw->copyOut(       radVars.qfluxn, d_lab->d_radiationFluxNINLabel, indx, patch, gn, 0);
+
+      new_dw->allocateAndPut(radVars.qfluxs, d_lab->d_radiationFluxSINLabel, indx, patch);
+      old_dw->copyOut(       radVars.qfluxs, d_lab->d_radiationFluxSINLabel, indx, patch, gn, 0);
+
+      new_dw->allocateAndPut(radVars.qfluxt, d_lab->d_radiationFluxTINLabel, indx, patch);
+      old_dw->copyOut(       radVars.qfluxt, d_lab->d_radiationFluxTINLabel, indx, patch, gn, 0);
+
+      new_dw->allocateAndPut(radVars.qfluxb, d_lab->d_radiationFluxBINLabel, indx, patch);
+      old_dw->copyOut(       radVars.qfluxb, d_lab->d_radiationFluxBINLabel, indx, patch, gn, 0);
+      
+      new_dw->allocateAndPut(radVars.src,    d_lab->d_radiationSRCINLabel,   indx, patch);
+      old_dw->copyOut(       radVars.src,    d_lab->d_radiationSRCINLabel,   indx, patch, gn, 0);
+
+      new_dw->allocateAndPut(radVars.ABSKG,  d_lab->d_abskgINLabel,          indx, patch);
+      old_dw->copyOut(       radVars.ABSKG,  d_lab->d_abskgINLabel,          indx, patch, gn, 0);
+      
+      new_dw->getModifiable( radVars.volq,   d_lab->d_radiationVolqINLabel,  indx, patch);
+
+    } else {         // after first step
+      new_dw->getModifiable(radVars.qfluxe, d_lab->d_radiationFluxEINLabel, indx, patch);
+      new_dw->getModifiable(radVars.qfluxw, d_lab->d_radiationFluxWINLabel, indx, patch);
+      new_dw->getModifiable(radVars.qfluxn, d_lab->d_radiationFluxNINLabel, indx, patch);
+      new_dw->getModifiable(radVars.qfluxs, d_lab->d_radiationFluxSINLabel, indx, patch);
+      new_dw->getModifiable(radVars.qfluxt, d_lab->d_radiationFluxTINLabel, indx, patch);
+      new_dw->getModifiable(radVars.qfluxb, d_lab->d_radiationFluxBINLabel, indx, patch);
+      new_dw->getModifiable(radVars.volq,   d_lab->d_radiationVolqINLabel,  indx, patch);
+      new_dw->getModifiable(radVars.src,    d_lab->d_radiationSRCINLabel,   indx, patch);
+      new_dw->getModifiable(radVars.ABSKG,  d_lab->d_abskgINLabel,          indx, patch);
+    }
+
+    //__________________________________
+    //Radiation calculation
+
+    bool first_step = isFirstIntegrationStep;
+
+    if ( radCounter%d_radCalcFreq == 0){
+      if (  (first_step  && !timelabels->recursion )
+           ||(!first_step && d_radRKsteps)
+           ||(timelabels->recursion && d_radImpsteps) ) {
+              
+        radVars.src.initialize(0.0);
+        radVars.qfluxe.initialize(0.0);
+        radVars.qfluxw.initialize(0.0);
+        radVars.qfluxn.initialize(0.0);
+        radVars.qfluxs.initialize(0.0);
+        radVars.qfluxt.initialize(0.0);
+        radVars.qfluxb.initialize(0.0);
+        radVars.ABSKG.initialize(0.0);
+        radVars.ESRCG.initialize(0.0);
+
+        computeRadiationProps(pc, patch, cellinfo, &radVars, &constRadVars);
+
+        // apply boundary conditons
+        boundarycondition(    pc, patch, cellinfo, &radVars, &constRadVars);
+
+
+        if (d_MAlab && d_boundaryCondition->getIfCalcEnergyExchange()) {
+          bool d_energyEx = true;
+          constCCVariable<double> solidTemp;
+          new_dw->get(solidTemp, d_MAlab->integTemp_CCLabel, indx, patch, gn, 0);
+
+          d_boundaryCondition->mmWallTemperatureBC(patch, constRadVars.cellType,
+                                                   solidTemp, radVars.temperature,
+                                                   d_energyEx);
+        }
+
+        int wall = d_boundaryCondition->wallCellType();
+        intensitysolve(pc, patch, cellinfo, &radVars, &constRadVars, wall );
+      }
+    }
+  
+    if ((timelabels->integrator_last_step)){
+    
+      for(CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
+        IntVector c = *iter;
+        int i = c.x();
+        int j = c.y();
+        int k = c.z();
+        double vol=cellinfo->sew[i]*cellinfo->sns[j]*cellinfo->stb[k];
+        new_total_src += vol*radVars.src[c];
+      }
+      new_dw->put(sum_vartype(new_total_src), d_lab->d_totalRadSrcLabel);
+    }
+    
+  }
+}
+
+
 //****************************************************************************
 //  Actually compute the properties here
 //****************************************************************************
@@ -253,12 +538,10 @@ DORadiationModel::computeRadiationProps(const ProcessorGroup*,
                constvars->co2, constvars->h2o, constvars->cellType, ffield,
                d_opl, constvars->sootFV, vars->ABSKP, vars->ABSKG, vars->ESRCG, vars->shgamma,
                cellinfo->xx, cellinfo->yy, cellinfo->zz, fraction, fractiontwo,
-               lprobone, lprobtwo, lprobthree, lambda, lradcal);
+               lprobone, lprobtwo, lprobthree, d_lambda, lradcal);
 
   if (_using_props_calculator){
-
     _props_calculator->computeProps( patch, vars->ABSKG );                                      
-
   }
 }
 
@@ -325,7 +608,7 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
   sd7.initialize(0.0);    
   sd3.initialize(0.0);    
 
-  if (lambda > 1) {
+  if (d_lambda > 1) {
     fort_radarray(rgamma, sd15, sd, sd7, sd3);
   }
 
@@ -370,14 +653,15 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
   //__________________________________
   //begin discrete ordinates
 
-  for (int bands =1; bands <=lambda; bands++){
+  for (int bands =1; bands <=d_lambda; bands++){
+
     vars->volq.initialize(0.0);
 
     if(lwsgg == true){    
       fort_radwsgg(idxLo, idxHi, vars->ABSKG, vars->ESRCG, vars->shgamma,
                    bands, constvars->cellType, ffield, 
                    constvars->co2, constvars->h2o, constvars->sootFV, 
-                   vars->temperature, lambda, fraction, fractiontwo);
+                   vars->temperature, d_lambda, fraction, fractiontwo);
     }
 
     if(lradcal==true){    
@@ -385,7 +669,7 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
                   cellinfo->xx, cellinfo->yy, cellinfo->zz, bands, 
                   constvars->cellType, ffield, 
                   constvars->co2, constvars->h2o, constvars->sootFV, 
-                  vars->temperature, lprobone, lprobtwo, lplanckmean, lpatchmean, lambda, fraction, rgamma, 
+                  vars->temperature, lprobone, lprobtwo, lplanckmean, lpatchmean, d_lambda, fraction, rgamma, 
                   sd15, sd, sd7, sd3, d_opl);
     }
 
@@ -400,6 +684,7 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
       an.initialize(0.0);
       at.initialize(0.0);
       bool plusX, plusY, plusZ;
+      
       fort_rdomsolve(idxLo, idxHi, constvars->cellType, ffield, 
                      cellinfo->sew, cellinfo->sns, cellinfo->stb, 
                      vars->ESRCG, direcn, oxi, omu,oeta, wt, 
@@ -413,11 +698,13 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
                                 
       //      timeRadMatrix += Time::currentSeconds() - timeSetMat;
       bool converged =  d_linearSolver->radLinearSolve();
+      
       if (converged) {
         d_linearSolver->copyRadSoln(patch, vars);
       }else {
         throw InternalError("Radiation solver not converged", __FILE__, __LINE__);
       }
+      
       d_linearSolver->destroyMatrix();
 
       fort_rdomvolq(idxLo, idxHi, direcn, wt, vars->cenint, vars->volq);

@@ -92,7 +92,7 @@ DORadiation::problemSetup(const ProblemSpecP& inputdb)
   db->getWithDefault( "h2o_label", _h2o_label_name, "H2O" ); 
   db->getWithDefault( "T_label", _T_label_name, "temperature" ); 
 
-  _DO_model = scinew DORadiationModel( _bc, _my_world ); 
+  _DO_model = scinew DORadiationModel( _labels, _bc, _my_world ); 
   _DO_model->problemSetup( db ); 
 
   _labels->add_species( _co2_label_name ); 
