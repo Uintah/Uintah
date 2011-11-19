@@ -110,11 +110,13 @@ BoundaryCondition::BoundaryCondition(const ArchesLabel* label,
                                      d_enthalpySolve(calcEnthalpy),
                                      d_calcVariance(calcVariance)
 {
+
   MM_CUTOFF_VOID_FRAC = 0.5;
   d_wallBdry = 0;
   d_pressureBC = 0;
   d_outletBC = 0;
-  _using_new_intrusion = false; 
+  _using_new_intrusion  = false; 
+  d_calcEnergyExchange  = false;
 
   // x-direction
   index_map[0][0] = 0;
