@@ -126,6 +126,9 @@ namespace Uintah {
       void q_FC_fluxes(const CCVariable<T>& q_CC, 
                        const string& desc,
                        advectVarBasket* vb);
+  };
+
+/*
       
     ///////////////////////////
     // GPU Kernel Prototypes //
@@ -208,7 +211,7 @@ namespace Uintah {
                                                double **OFS,
                                                double *q_CC,
                                                double *q_FC_flux);
-  };
+*/
 }
 
 #endif
