@@ -34,6 +34,7 @@ SRCDIR   := CCA/Components/ICE/Advection
 
 SRCS     += $(SRCDIR)/Advector.cc \
  	$(SRCDIR)/FirstOrderAdvector.cc \
+ 	$(SRCDIR)/FirstOrderAdvectorGPU.cu \
 	$(SRCDIR)/SecondOrderAdvector.cc \
  	$(SRCDIR)/SecondOrderBase.cc \
 	$(SRCDIR)/AdvectionFactory.cc
