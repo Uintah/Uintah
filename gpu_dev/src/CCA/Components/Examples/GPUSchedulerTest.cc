@@ -92,12 +92,12 @@ void GPUSchedulerTest::scheduleComputeStableTimestep(const LevelP& level, Schedu
 //
 void GPUSchedulerTest::scheduleTimeAdvance(const LevelP& level, SchedulerP& sched) {
 
-  // CPU task
-  Task* task = scinew Task("GPUSchedulerTest::timeAdvance", this, &GPUSchedulerTest::timeAdvance);
-  task->requires(Task::OldDW, phi_label, Ghost::AroundNodes, 1);
-  task->computes(phi_label);
-  task->computes(residual_label);
-  sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
+//  // CPU task
+//  Task* task = scinew Task("GPUSchedulerTest::timeAdvance", this, &GPUSchedulerTest::timeAdvance);
+//  task->requires(Task::OldDW, phi_label, Ghost::AroundNodes, 1);
+//  task->computes(phi_label);
+//  task->computes(residual_label);
+//  sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
 
   // GPU task
   Task* gpuTask = scinew Task(&GPUSchedulerTest::timeAdvanceGPU, "GPUSchedulerTest::timeAdvanceGPU",

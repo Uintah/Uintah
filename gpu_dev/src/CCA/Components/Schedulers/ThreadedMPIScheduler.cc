@@ -944,8 +944,7 @@ TaskWorker::run()
     if (d_quit) {
       if( taskdbg.active() ) {
       cerrLock.lock();
-       taskdbg << "Worker " << d_rank  << "-" << d_id 
-        << "quiting   " << "\n";
+       taskdbg << "Worker " << d_rank  << "-" << d_id << " quitting   " << "\n";
       cerrLock.unlock();
       }
       return;

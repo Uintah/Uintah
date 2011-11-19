@@ -946,8 +946,7 @@ GPUTaskWorker::run()
     if (d_quit) {
       if( taskdbg.active() ) {
       cerrLock.lock();
-       taskdbg << "Worker " << d_rank  << "-" << d_id 
-        << "quiting   " << "\n";
+       taskdbg << "Worker " << d_rank  << "-" << d_id << " quitting   " << "\n";
       cerrLock.unlock();
       }
       return;
@@ -955,15 +954,14 @@ GPUTaskWorker::run()
 
     if( taskdbg.active() ) {
       cerrLock.lock();
-      taskdbg << "Worker " << d_rank  << "-" << d_id 
-        << ": executeTask:   " << *d_task << "\n";
+      taskdbg << "Worker " << d_rank  << "-" << d_id << ": executeTask:   " << *d_task << "\n";
       cerrLock.unlock();
     }
     ASSERT(d_task!=NULL);
     try {
-      if (d_task->getTask()->getType() == Task::Reduction){
+      if (d_task->getTask()->getType() == Task::Reduction) {
         d_scheduler->initiateReduction(d_task);
-      } else{
+      } else {
       d_scheduler->runTask(d_task, d_iteration, d_id);
       }
     } catch (Exception& e){

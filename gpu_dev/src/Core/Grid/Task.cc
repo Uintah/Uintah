@@ -779,10 +779,10 @@ getOtherLevelPatchSubset(Task::DomainSpec dom,
 
 //__________________________________
 void
-Task::doit (const ProcessorGroup* pc,
-	     const PatchSubset* patches,
-	     const MaterialSubset* matls,
-	     vector < DataWarehouseP > &dws)
+Task::doit(const ProcessorGroup* pc,
+	         const PatchSubset* patches,
+	         const MaterialSubset* matls,
+	         vector<DataWarehouseP>& dws)
 {
   DataWarehouse* fromDW = mapDataWarehouse(Task::OldDW, dws);
   DataWarehouse* toDW = mapDataWarehouse(Task::NewDW, dws);
