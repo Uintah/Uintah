@@ -11,3 +11,4 @@ TODO List for Implementing GPU Support in Uintah
 	b) AdvectSlabs
 
 7) Cell iterator generalized function?
+8) Buildbot testing GPU branch.
