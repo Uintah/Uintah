@@ -39,6 +39,20 @@ namespace Wasatch{
     TemperatureTransportEquation( Expr::ExpressionFactory& solnExprFactory );
 
     ~TemperatureTransportEquation();
+    
+    /**
+     *  Set up the boundary condition on initial conditions evaluators for this
+     *  TransportEquation. Each derived class must implement this
+     *  method.  Boundary conditions are imposed by adding additional
+     *  tasks to modify values in an Expression after it is evaluated.
+     *  This is done by attaching a functor to the applicable expression
+     *  via the <code>Expression::process_after_evaluate</code> method.
+     */
+    void setup_initial_boundary_conditions( const GraphHelper& graphHelper,
+                                                   const Uintah::PatchSet* const localPatches,
+                                                   const PatchInfoMap& patchInfoMap,
+                                                   const Uintah::MaterialSubset* const materials);
+    
 
     void setup_boundary_conditions( const GraphHelper& graphHelper,
                                    const Uintah::PatchSet* const localPatches,

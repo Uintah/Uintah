@@ -434,7 +434,8 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
       // retrieve all depenedent variables from table
       for ( DepVarMap::iterator i = depend_storage.begin(); i != depend_storage.end(); ++i ){
 
-          double table_value = tableLookUp( iv, i->second.index ); 
+      //    double table_value = tableLookUp( iv, i->second.index ); 
+				double table_value = ND_interp->find_val( iv, i->second.index );
           table_value *= eps_vol[c]; 
           (*i->second.var)[c] = table_value;
 
@@ -537,7 +538,8 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
           // now get state for boundary cell: 
           for ( DepVarMap::iterator i = depend_storage.begin(); i != depend_storage.end(); ++i ){
 
-              double table_value = tableLookUp( iv, i->second.index ); 
+            //  double table_value = tableLookUp( iv, i->second.index ); 
+						double table_value = ND_interp->find_val( iv, i->second.index );
               table_value *= eps_vol[c]; 
               (*i->second.var)[c] = table_value;
 
@@ -696,12 +698,19 @@ ClassicTableInterface::computeHeatLoss( const ProcessorGroup* pc,
 
         // actually compute the heat loss: 
         IndexMap::iterator i_index = d_enthalpyVarIndexMap.find( "sensibleenthalpy" ); 
-        double sensible_enthalpy    = tableLookUp( iv, i_index->second ); 
+       // double sensible_enthalpy    = tableLookUp( iv, i_index->second ); 
+				double sensible_enthalpy    = ND_interp->find_val( iv, i_index->second );
+				
+				
+				
+				
         i_index = d_enthalpyVarIndexMap.find( "adiabaticenthalpy" ); 
 
         double adiabatic_enthalpy = 0.0;
         if ( !_use_mf_for_hl ) { 
-          adiabatic_enthalpy = tableLookUp( iv, i_index->second ); 
+  //        adiabatic_enthalpy = tableLookUp( iv, i_index->second ); 
+					adiabatic_enthalpy = ND_interp->find_val( iv, i_index->second ); 
+					
         } else { 
           // WARNING: Hardcoded index for development testing
           // only works for "coal" tables
@@ -847,11 +856,14 @@ ClassicTableInterface::computeFirstEnthalpy( const ProcessorGroup* pc,
 
       double current_heat_loss = d_hl_scalar_init; // may want to make this more sophisticated later(?)
       IndexMap::iterator i_index = d_enthalpyVarIndexMap.find( "sensibleenthalpy" ); 
-      double sensible_enthalpy    = tableLookUp( iv, i_index->second ); 
+ //     double sensible_enthalpy    = tableLookUp( iv, i_index->second ); 
+			double sensible_enthalpy    = ND_interp->find_val( iv, i_index->second );
+			
       i_index = d_enthalpyVarIndexMap.find( "adiabaticenthalpy" ); 
       double adiabatic_enthalpy = 0.0; 
       if ( !_use_mf_for_hl ){ 
-        adiabatic_enthalpy = tableLookUp( iv, i_index->second ); 
+        //adiabatic_enthalpy = tableLookUp( iv, i_index->second ); 
+				adiabatic_enthalpy = ND_interp->find_val( iv, i_index->second );
       } else { 
         //WARNING: Development only
         adiabatic_enthalpy = _H_fuel * iv[2] + _H_ox * (1.0-iv[2]);
@@ -909,9 +921,12 @@ ClassicTableInterface::oldTableHack( const InletStream& inStream, Stream& outStr
     double sensible_enthalpy = 0.0; 
 
     IndexMap::iterator i_index = d_enthalpyVarIndexMap.find( "sensibleenthalpy" ); 
-    sensible_enthalpy    = tableLookUp( iv, i_index->second ); 
+//    sensible_enthalpy    = tableLookUp( iv, i_index->second ); 
+		sensible_enthalpy    = ND_interp->find_val( iv, i_index->second );
+		
     i_index = d_enthalpyVarIndexMap.find( "adiabaticenthalpy" ); 
-    adiab_enthalpy = tableLookUp( iv, i_index->second ); 
+//    adiab_enthalpy = tableLookUp( iv, i_index->second ); 
+		adiab_enthalpy = ND_interp->find_val( iv, i_index->second );
 
     enthalpy          = inStream.d_enthalpy; 
 
@@ -935,16 +950,26 @@ ClassicTableInterface::oldTableHack( const InletStream& inStream, Stream& outStr
   }
 
   IndexMap::iterator i_index = d_depVarIndexMap.find( "density" );
-  outStream.d_density = tableLookUp( iv, i_index->second ); 
+  //  outStream.d_density = tableLookUp( iv, i_index->second ); 
+	outStream.d_density = ND_interp->find_val( iv, i_index->second );
+	
   if (!d_coldflow) { 
     i_index = d_depVarIndexMap.find( "temperature" );
-    outStream.d_temperature = tableLookUp( iv, i_index->second ); 
+   // outStream.d_temperature = tableLookUp( iv, i_index->second ); 
+		outStream.d_temperature = ND_interp->find_val( iv, i_index->second );
+		
     i_index = d_depVarIndexMap.find( "specificheat" );
-    outStream.d_cp          = tableLookUp( iv, i_index->second ); 
+    // outStream.d_cp          = tableLookUp( iv, i_index->second ); 
+		outStream.d_cp          = ND_interp->find_val( iv, i_index->second ); 
+		
     i_index = d_depVarIndexMap.find( "H2O" );
-    outStream.d_h2o         = tableLookUp( iv, i_index->second ); 
+    // outStream.d_h2o         = tableLookUp( iv, i_index->second );
+		outStream.d_h2o         = ND_interp->find_val( iv, i_index->second );
+	 	
     i_index = d_depVarIndexMap.find( "CO2" );
-    outStream.d_co2         = tableLookUp( iv, i_index->second ); 
+    //outStream.d_co2         = tableLookUp( iv, i_index->second ); 
+		outStream.d_co2         = ND_interp->find_val( iv, i_index->second ); 
+		
     outStream.d_heatLoss    = current_heat_loss; 
     if (inStream.d_initEnthalpy) outStream.d_enthalpy = init_enthalpy; 
   }
@@ -1107,173 +1132,9 @@ ClassicTableInterface::getEnthalpyIndexInfo()
 }
 
 //-------------------------------------
-  double
-ClassicTableInterface::tableLookUp( std::vector<double> iv, int var_index)
-{
 
-  if ( var_index > d_varscount ) {
-    ostringstream exception;
-    exception << "Error: Attempted to lookup a variable with an index out of range: " << var_index << endl;
-    throw InternalError(exception.str(),__FILE__,__LINE__);
-  }
 
-  double fmg=0.0, fpmg=0.0,s1=0.0,s2=0.0,var_value=0.0;
-  double dhl_lo=0.0, dhl_hi=0.0;
-  int nhl_lo=0, nhl_hi=0; 
-  
-  // compute index of iv3:
-  if ( d_indepvarscount == 3 ){ 
-	  
-    int mid = 0;
-    nhl_hi = d_allIndepVarNum[2] - 1;
-	  
-    if (i3[nhl_hi] != iv[2] && i3[nhl_lo] != iv[2]) {
-      while ((nhl_hi-nhl_lo)>1) {
-        mid = (nhl_hi+nhl_lo)/2;
-        if (i3[mid] > iv[2]) {
-          nhl_hi = mid;
-        } else if (i3[mid] < iv[2]) {
-          nhl_lo = mid;
-        } else {
-          nhl_hi = mid;
-          nhl_lo = mid;
-        }
-      }
-    } else if (i3[nhl_lo] == iv[2]) {
-      nhl_hi = 1;
-    } else {
-      nhl_lo = nhl_hi;
-    } 
 
-    dhl_lo = i3[nhl_hi-1] - iv[2];
-    dhl_hi = i3[nhl_hi] - iv[2];
-
-    if (iv[2] < i3[0]) {
-      nhl_lo = 0;
-      nhl_hi = 0;
-      dhl_lo = i3[d_allIndepVarNum[2]-2] - iv[2];  
-      dhl_hi = i3[d_allIndepVarNum[2]-1] - iv[2];
-    }  
-	  
-  } else {
-
-    nhl_lo = 0; 
-    nhl_hi = 0; 
-    dhl_lo = 0.0; 
-    dhl_hi = 1.0; 
-
-  }
-
-  
-
-  int nx_lo=0, nx_hi=0;
-	  
-  //Non-uniform iv1
-  double df1=0.0, df2=0.0;
-	  
-  nx_hi = d_allIndepVarNum[0] - 1;  
-  int mid = 0;
-	  
-  if (i1[nhl_lo][nx_hi] != iv[0] && i1[nhl_lo][nx_lo] != iv[0]) {
-    while ((nx_hi-nx_lo)>1) {
-      mid = (nx_lo + nx_hi)/2;
-      if (i1[nhl_lo][mid] > iv[0]) {
-        nx_hi = mid;
-      } else if (i1[nhl_lo][mid] < iv[0]) {
-        nx_lo = mid;
-      } else {
-        nx_hi = mid;
-        nx_lo = mid;
-      }
-    }
-  } else if (i1[nhl_lo][nx_lo] == iv[0]) {
-    nx_hi = 1;
-  } else {
-    nx_lo = nx_hi;
-  } 
-
-  df1 = i1[nhl_lo][nx_hi-1] - iv[0];
-  df2 = i1[nhl_lo][nx_hi]-iv[0];
-	  
-  if (iv[0] < i1[nhl_lo][0]) {
-    nx_lo = 0;
-    nx_hi = 0;
-    df1 = i1[nhl_lo][d_allIndepVarNum[0]-2] - iv[0];
-    df2 = i1[nhl_lo][d_allIndepVarNum[0]-1] - iv[0];
-  } 
-	  
-  // Supports non-uniform normalized variance lookup  
-
-  //Index for variances
-  int k_lo = 0, k_hi=0;
-  //Weighing factors for variance
-  double dk1=0.0,dk2=0.0;  
-
-  if ( d_indepvarscount > 1 ) {  
-    k_hi = d_allIndepVarNum[1] -1;
-    if (i2[k_lo] != iv[1] && i2[k_hi] != iv[1]) {
-	  while ((k_hi - k_lo)>1) {
-        mid = (k_lo + k_hi)/2;
-        if (i2[mid] > iv[1]) {
-        k_hi = mid;
-        } else if (i2[mid] < iv[1]) {
-          k_lo = mid;
-        } else {
-          k_hi = mid;
-          k_lo = mid;
-        }
-      }
-    } else if (i2[k_lo] == iv[1]) {
-      k_hi = 1;
-    } else {
-      k_lo = k_hi;
-    } 
-		
-    dk1 = i2[k_hi-1] - iv[1];
-    dk2 = i2[k_hi] - iv[1];
-		
-    if (iv[1] < i2[0]) {
-      k_lo = 0;
-      k_hi = 0;
-      dk1 = i2[d_allIndepVarNum[1]-2] - iv[1];
-      dk2 = i2[d_allIndepVarNum[1]-1] - iv[1];
-    }
-		
-  } else { 
-
-    // Set the values to get the first entry
-    k_lo=0;
-    k_hi=0;
-    dk1=0.0;
-    dk2=1.0;
-
-  }
-  for ( int m_index = nhl_lo; m_index <= nhl_hi; m_index++ ) {
-
-    //Interpolating the values
-    fmg = ( dk1 * table[var_index][m_index*d_allIndepVarNum[0] * d_allIndepVarNum[1] + k_hi*d_allIndepVarNum[0] + nx_lo] - 
-        dk2 * table[var_index][m_index*d_allIndepVarNum[0] * d_allIndepVarNum[1] + k_lo*d_allIndepVarNum[0] + nx_lo])/(dk1-dk2);
-
-    fpmg = ( dk1 * table[var_index][m_index*d_allIndepVarNum[0] * d_allIndepVarNum[1] + k_hi*d_allIndepVarNum[0] + nx_hi] - 
-        dk2 * table[var_index][m_index*d_allIndepVarNum[0] * d_allIndepVarNum[1] + k_lo*d_allIndepVarNum[0] + nx_hi])/(dk1-dk2);
-
-    if(nhl_lo==nhl_hi){
-
-      s1=(df1*fpmg-df2*fmg)/(df1-df2);
-      s2=s1;
-      break;
-
-    } else if(m_index == nhl_lo) {
-      s1=(df1*fpmg-df2*fmg)/(df1-df2);
-    } else {
-      s2=(df1*fpmg-df2*fmg)/(df1-df2);
-    }
-  }
-
-  var_value = (dhl_lo*s2-dhl_hi*s1)/(dhl_lo-dhl_hi);
-  return var_value; 
-
-}
 //-----------------------------------------
   void
 ClassicTableInterface::loadMixingTable( const string & inputfile )
@@ -1288,7 +1149,7 @@ ClassicTableInterface::loadMixingTable( const string & inputfile )
     throw ProblemSetupException("Unable to open the given input file: " + inputfile, __FILE__, __LINE__);
   }
 
-  d_indepvarscount = getInt(    gzFp );
+  d_indepvarscount = getInt( gzFp );
 
   proc0cout << " Total number of independent variables: " << d_indepvarscount << endl;
 
@@ -1326,9 +1187,6 @@ ClassicTableInterface::loadMixingTable( const string & inputfile )
     std::string variable; 
     variable = getString( gzFp );
     d_allDepVarNames[ii] = variable ; 
-
-    //proc0cout << "  " << d_allDepVarNames[ii] << endl;
-
   }
 
   // Units
@@ -1338,75 +1196,38 @@ ClassicTableInterface::loadMixingTable( const string & inputfile )
     d_allDepVarUnits[ii] =  units ; 
   }
 
-  // Allocate independent variable grids
-  if ( d_indepvarscount == 1 ) {
-
-    i1 = vector<vector<double> >(0);
-    i1[0] = vector<double>( d_allIndepVarNum[0] ); 
-
-  } else if ( d_indepvarscount == 2 ) { 
-
-    i1 = vector<vector<double> >( d_allIndepVarNum[1] ); 
-    for ( int i = 0; i < d_allIndepVarNum[1]; i++ ){
-      i1[i] = vector<double>( d_allIndepVarNum[0] ); 
-    }
-
-  } else if ( d_indepvarscount == 3 ) { 
-
-    i1 = vector<vector<double> >( d_allIndepVarNum[2] ); 
-    for ( int i = 0; i < d_allIndepVarNum[2]; i++ ){
-      i1[i] = vector<double>( d_allIndepVarNum[0] ); 
-    }
+  //indep vars grids
+  indep_headers = vector<vector<double> >(d_indepvarscount);  //vector contains 2 -> N dimensions
+  for (int i = 0; i < d_indepvarscount - 1; i++) {
+    indep_headers[i] = vector<double>(d_allIndepVarNum[i+1]);
   }
-
-  if ( d_indepvarscount > 1 )
-    i2=vector<double>(d_allIndepVarNum[1]);
-  if ( d_indepvarscount > 2 )
-    i3=vector<double>(d_allIndepVarNum[2]); 
-
-  if ( d_indepvarscount == 3 ) {
-    for (int i = 0; i < d_allIndepVarNum[2]; i++){
-      double v = getDouble( gzFp ); 
-      i3[i] = v; 
-    }
+  i1 = vector<vector<double> >(d_allIndepVarNum[d_indepvarscount-1]);
+  for (int i = 0; i < d_allIndepVarNum[d_indepvarscount-1]; i++) {
+	  i1[i] = vector<double>(d_allIndepVarNum[0]);
   }
-
-  if ( d_indepvarscount > 1 ) { 
-    for (int i = 0; i < d_allIndepVarNum[1]; i++){ 
-      double v = getDouble( gzFp ); 
-      i2[i] = v; 
-    }
+  //assign values (backwards)
+  for (int i = d_indepvarscount-2; i>=0; i--) {
+	  for (int j = 0; j < d_allIndepVarNum[i+1] ; j++) {
+	    double v = getDouble( gzFp );
+	    indep_headers[i][j] = v;
+	  }
   }
-
-  int size=0;
-  if ( d_indepvarscount == 1 ) 
-    size = d_allIndepVarNum[0]; 
-  else if ( d_indepvarscount == 2 ) 
-    size = d_allIndepVarNum[0]*
-      d_allIndepVarNum[1]; 
-  else if ( d_indepvarscount == 3 )
-    size = d_allIndepVarNum[0]*
-      d_allIndepVarNum[1]*
-      d_allIndepVarNum[2]; 
+	
+  int size=1;
+  //ND size
+  for (int i = 0; i < d_indepvarscount; i++) {
+	  size = size*d_allIndepVarNum[i];
+  }
 
   // getting heat loss bounds: 
   if ( index_is_hl != -1 ) { 
     if ( index_is_hl == 0 ) {
-
-      //d_hl_lower_bound = double(i1[0]);
-      //d_hl_upper_bound = double(i1[hl_grid_size]);
-
-    } else if ( index_is_hl == 1 ) { 
-
-      d_hl_lower_bound = i2[0];
-      d_hl_upper_bound = i2[hl_grid_size];
-
-    } else if ( index_is_hl == 2 ) { 
-
-      d_hl_lower_bound = i3[0];
-      d_hl_upper_bound = i3[hl_grid_size];
-
-    } 
+      d_hl_lower_bound = (i1[0][0]);
+      d_hl_upper_bound = (i1[hl_grid_size][0]);
+    } else { 
+	    d_hl_lower_bound = indep_headers[index_is_hl-1][0];
+	    d_hl_upper_bound = indep_headers[index_is_hl-1][d_allIndepVarNum[index_is_hl]-1];
+    }  
     proc0cout << " Lower bounds on heat loss = " << d_hl_lower_bound << endl;
     proc0cout << " Upper bounds on heat loss = " << d_hl_upper_bound << endl;
   } 
@@ -1415,88 +1236,85 @@ ClassicTableInterface::loadMixingTable( const string & inputfile )
   for ( int i = 0; i < d_varscount; i++ ){ 
     table[i] = vector<double>(size);
   }
-
-  if ( d_indepvarscount == 1 ){
-
-    for (int kk=0; kk< d_varscount; kk++){
-
-      for (int i = 0; i < d_allIndepVarNum[0]; i++){
-        double v = getDouble( gzFp ); 
-        i1[kk][i] = v;
-      }
-
-      for ( int ii = 0; ii < d_allIndepVarNum[0]; ii++ ){
-        table[kk][ii] = getDouble( gzFp ); 
-      }
-    }
-
-  } else if ( d_indepvarscount == 2 ){
-
-    for (int kk=0; kk< d_varscount; kk++){
-
-      for ( int mm = 0; mm < d_allIndepVarNum[1]; mm++ ){ 
-
-        for (int i = 0; i < d_allIndepVarNum[0]; i++){
-          double v = getDouble( gzFp ); 
-          i1[mm][i] = v;
-        }
-
-        for ( int jj = 0; jj < d_allIndepVarNum[1]; jj++ ){
-          for ( int ii = 0; ii < d_allIndepVarNum[0]; ii++ ){
-            table[kk][ii + jj*d_allIndepVarNum[0]] = getDouble( gzFp ); 
-          }
-        }
-      }
-    }
-
-  } else if ( d_indepvarscount == 3 ){ 
-
-    proc0cout << "Reading in the dependent variables: " << endl;
-    bool read_assign = true; 
-    for (int kk=0; kk< d_varscount; kk++){
-
-      proc0cout << " loading --> " << d_allDepVarNames[kk] << endl;
-      for ( int mm = 0; mm < d_allIndepVarNum[2]; mm++ ){ 
-
-        if ( read_assign ) { 
-          for (int i = 0; i < d_allIndepVarNum[0]; i++){
-            double v = getDouble( gzFp ); 
-            i1[mm][i] = v;
-          }
-        } else { 
-          for (int i = 0; i < d_allIndepVarNum[0]; i++){
-            // read but don't assign 
-            // doing this for now because it was causing some weirdness 
-            double v = getDouble( gzFp ); 
-            //operation to remove warning. 
-            v += 0.0;
-          }
-        }
-
-        for ( int jj = 0; jj < d_allIndepVarNum[1]; jj++ ){
-          for ( int ii = 0; ii < d_allIndepVarNum[0]; ii++ ){
-            double v = getDouble( gzFp ); 
-            table[kk][ii + jj*d_allIndepVarNum[0] + mm*d_allIndepVarNum[0]*d_allIndepVarNum[1]] = v; 
-          }
-        }
-      }
-      if ( read_assign ) { read_assign = false; }
-    }
-
-  }
-
+	
+  double size2 = size/d_allIndepVarNum[d_indepvarscount-1];
+  proc0cout << "Table size " << size << endl;
+  
+  proc0cout << "Reading in the dependent variables: " << endl;
+  bool read_assign = true; 
+	if (d_indepvarscount > 1) {
+	  for (int kk = 0; kk < d_varscount; kk++) {
+	    proc0cout << " loading ---> " << d_allDepVarNames[kk] << endl;
+	
+	    for (int mm = 0; mm < d_allIndepVarNum[d_indepvarscount-1]; mm++) {
+			  if (read_assign) {
+				  for (int i = 0; i < d_allIndepVarNum[0]; i++) {
+					  double v = getDouble(gzFp);
+					  i1[mm][i] = v;
+				  }
+			  } else {
+				  //read but don't assign inbetween vals
+				  for (int i = 0; i < d_allIndepVarNum[0]; i++) {
+					  double v = getDouble(gzFp);
+					  v += 0.0;
+				  }
+			  }
+			    for (int j=0; j<size2; j++) {
+				    double v = getDouble(gzFp);
+				    table[kk][j + mm*size2] = v;
+				  }
+			  }
+		  if ( read_assign ) { read_assign = false; }
+	  } 
+	} else {
+		for (int kk = 0; kk < d_varscount; kk++) {
+			proc0cout << "loading --->" << d_allDepVarNames[kk] << endl;
+			if (read_assign) {
+				for (int i=0; i<d_allIndepVarNum[0]; i++) {
+					double v = getDouble(gzFp);
+					i1[0][i] = v;
+				}
+			} else { 
+			  for (int i=0; i<d_allIndepVarNum[0]; i++) {
+					double v = getDouble(gzFp);
+					v += 0.0;
+				}	
+			}
+			for (int j=0; j<size; j++) {
+				double v = getDouble(gzFp);
+				table[kk][j] = v;
+			}
+			if (read_assign){read_assign = false;}
+	  }
+	}
+  
   // Closing the file pointer
   gzclose( gzFp );
 
+	proc0cout << "creating object " << endl;
+	
+	if (d_indepvarscount == 1) {
+		ND_interp = new Interp1(d_allIndepVarNum, table, i1);
+  }	else if (d_indepvarscount == 2) {
+ 	  ND_interp = new Interp2(d_allIndepVarNum, table, indep_headers, i1);
+  } else if (d_indepvarscount == 3) {
+	  ND_interp = new Interp3(d_allIndepVarNum, table, indep_headers, i1);
+  } else if (d_indepvarscount == 4) {
+		ND_interp = new Interp4(d_allIndepVarNum, table, indep_headers, i1);
+	} else {  //IV > 4
+		ND_interp = new InterpN(d_allIndepVarNum, table, indep_headers, i1, d_indepvarscount);
+	}
+	  
   proc0cout << "Table successfully loaded into memory!" << endl;
 
 }
-
+//---------------------------
 double ClassicTableInterface::getTableValue( std::vector<double> iv, std::string variable )
 {
   IndexMap::iterator i_index = d_enthalpyVarIndexMap.find( variable ); 
-  double value    = tableLookUp( iv, i_index->second ); 
-  return value; 
+  //double value    = tableLookUp( iv, i_index->second ); 
+  double value = ND_interp->find_val(iv, i_index->second );
+	return value; 
 }
 
 void ClassicTableInterface::checkForConstants( const string & inputfile ) { 

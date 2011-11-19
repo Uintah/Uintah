@@ -77,7 +77,7 @@
         
         
         <customInitialization>
-          <manufacturedSolution>
+          <manufacturedSolution type="mms_1">
             <A>   1    </A>
           </manufacturedSolution> 
         </customInitialization>

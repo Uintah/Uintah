@@ -55,24 +55,26 @@ namespace Wasatch {
    *
    *  \param materials a pointer to the Uintah::MaterialSubset.
    */
-  
+  template < typename FieldT >
   void process_boundary_conditions( const Expr::Tag phiTag,
+                                   const std::string fieldName,
                      const Direction staggeredLocation,
                      const GraphHelper& graphHelper,
                      const Uintah::PatchSet* const localPatches,
                      const PatchInfoMap& patchInfoMap,
-                     const Uintah::MaterialSubset* const materials,
-                     bool isNormalStress=false);  
+                     const Uintah::MaterialSubset* const materials);  
    
 //  void set_pressure_matrix_bc( const Expr::Tag pressureTag, 
 //                              Uintah::CCVariable<Uintah::Stencil7>& pressureMatrix,
 //                              const Uintah::Patch* patch);
 
-  void set_pressure_bc( const Expr::Tag pressureTag, 
+  void update_pressure_rhs( const Expr::Tag pressureTag, 
                        Uintah::CCVariable<Uintah::Stencil7>& pressureMatrix,
                         SVolField& pressureField,
                         SVolField& pressureRHS,
                         const Uintah::Patch* patch);
+  
+  
 }
 
 #endif // Wasatch_BCHelperTools_h

@@ -23,8 +23,10 @@
       </turbulence>
       
       <customInitialization             spec="OPTIONAL NO_DATA" >
-        <manufacturedSolution           spec="OPTIONAL NO_DATA" >
-          <A                            spec="REQUIRED DOUBLE" />
+        <manufacturedSolution           spec="OPTIONAL NO_DATA"
+                                        attribute1="type  REQUIRED STRING 'mms_1 mms_2 mms_3'"> 
+          <A                            spec="OPTIONAL DOUBLE" />
+          <angle                        spec="OPTIONAL DOUBLE" />
         </manufacturedSolution>
         
         <vortices                       spec="OPTIONAL NO_DATA" >

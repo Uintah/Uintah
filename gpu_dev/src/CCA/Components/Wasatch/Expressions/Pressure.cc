@@ -7,7 +7,7 @@
 
 //-- Uintah Includes --//
 #include <CCA/Ports/SolverInterface.h>
-  
+
 //-- SpatialOps Includes --//
 #include <spatialops/OperatorDatabase.h>
 #include <spatialops/structured/SpatialFieldStore.h>
@@ -15,6 +15,15 @@
 #include <spatialops/FieldExpressions.h>
 
 namespace Wasatch {
+
+//==================================================================
+
+Expr::Tag pressure_tag()
+{
+  return Expr::Tag( "pressure", Expr::STATE_NONE );
+}
+
+//==================================================================
 
 Pressure::Pressure( const Expr::Tag& fxtag,
                     const Expr::Tag& fytag,
@@ -37,7 +46,7 @@ Pressure::Pressure( const Expr::Tag& fxtag,
     doZ_( fztag != Expr::Tag() ),
 
     doDens_( d2rhodt2tag != Expr::Tag() ),
-  
+
     didAllocateMatrix_(false),
 
     solverParams_( solverParams ),
@@ -45,10 +54,10 @@ Pressure::Pressure( const Expr::Tag& fxtag,
 
     // note that this does not provide any ghost entries in the matrix...
     matrixLabel_  ( Uintah::VarLabel::create( "pressure_matrix", Uintah::CCVariable<Uintah::Stencil7>::getTypeDescription() ) ),
-    pressureLabel_( Uintah::VarLabel::create( (this->names())[0].name(), 
+    pressureLabel_( Uintah::VarLabel::create( (this->names())[0].name(),
                                               Wasatch::get_uintah_field_type_descriptor<SVolField>(),
                                               Wasatch::get_uintah_ghost_descriptor<SVolField>() ) ),
-    prhsLabel_    ( Uintah::VarLabel::create( (this->names())[1].name(), 
+    prhsLabel_    ( Uintah::VarLabel::create( (this->names())[1].name(),
                                               Wasatch::get_uintah_field_type_descriptor<SVolField>(),
                                               Wasatch::get_uintah_ghost_descriptor<SVolField>() ) )
 {}
@@ -72,14 +81,14 @@ Pressure::schedule_solver( const Uintah::LevelP& level,
 {
   // TODO: investigate why projection only works for the first RK stage when running
   // in parallel (specifically hypre)
-  solver_.scheduleSolve( level, sched, materials, matrixLabel_, 
+  solver_.scheduleSolve( level, sched, materials, matrixLabel_,
                         Uintah::Task::NewDW, pressureLabel_, true, prhsLabel_, Uintah::Task::NewDW, 0, Uintah::Task::OldDW, &solverParams_ );
 
 //  if (RKStage==1) {
-//    solver_.scheduleSolve( level, sched, materials, matrixLabel_, 
+//    solver_.scheduleSolve( level, sched, materials, matrixLabel_,
 //                          Uintah::Task::NewDW, pressureLabel_, true, prhsLabel_, Uintah::Task::NewDW, 0, Uintah::Task::OldDW, &solverParams_ );
 //  } else {
-////    solver_.scheduleSolve( level, sched, materials, matrixLabel_, 
+////    solver_.scheduleSolve( level, sched, materials, matrixLabel_,
 ////                          Uintah::Task::NewDW, pressureLabel_, true, prhsLabel_, Uintah::Task::NewDW, pressureLabel_, Uintah::Task::NewDW, &solverParams_ );
 //  }
 
@@ -98,13 +107,13 @@ Pressure::declare_uintah_vars( Uintah::Task& task,
 }
 
 //--------------------------------------------------------------------
-  
+
 void
 Pressure::bind_uintah_vars( Uintah::DataWarehouse* const dw,
                            const Uintah::Patch* const patch,
                            const int material,
                            const int RKStage )
-{ 
+{
   if (didAllocateMatrix_) {
     //std::cout << "RKStage "<< RKStage << "did allocate matrix \n";
     // Todd: instead of checking for allocation - check for new timestep or some other ingenious solution
@@ -114,13 +123,13 @@ Pressure::bind_uintah_vars( Uintah::DataWarehouse* const dw,
     //setup_matrix(patch);
   } else {
     //std::cout << "RKStage "<< RKStage << "before allocate and put matrix \n";
-    dw->allocateAndPut( matrix_, matrixLabel_, material, patch );    
-    ///std::cout << "after allocate and put matrix \n";    
+    dw->allocateAndPut( matrix_, matrixLabel_, material, patch );
+    ///std::cout << "after allocate and put matrix \n";
     setup_matrix(patch);
     didAllocateMatrix_=true;
-  }    
+  }
 }
-  
+
 //--------------------------------------------------------------------
 
 void
@@ -156,17 +165,17 @@ Pressure::bind_operators( const SpatialOps::OperatorDatabase& opDB )
   interpX_ = opDB.retrieve_operator<FxInterp>();
   interpY_ = opDB.retrieve_operator<FyInterp>();
   interpZ_ = opDB.retrieve_operator<FzInterp>();
-  
+
   divXOp_ = opDB.retrieve_operator<DivX>();
   divYOp_ = opDB.retrieve_operator<DivY>();
   divZOp_ = opDB.retrieve_operator<DivZ>();
-  
+
 }
 
 //--------------------------------------------------------------------
 
 void
-Pressure::setup_matrix(const Uintah::Patch* const patch) 
+Pressure::setup_matrix(const Uintah::Patch* const patch)
 {
   // construct the coefficient matrix: \nabla^2
   // We should probably move the matrix construction to the evaluate() method.
@@ -175,12 +184,12 @@ Pressure::setup_matrix(const Uintah::Patch* const patch)
   double p = 0.0;
   // n: north, s: south, e: east, w: west, t: top, b: bottom coefficient
   double n=0.0, s=0.0, e=0.0, w=0.0, t=0.0, b=0.0;
-  
+
   IntVector l,h;
   l = patch->getCellLowIndex();
   h = patch->getCellHighIndex();
   const Uintah::Vector spacing = patch->dCell();
-  
+
   if (doX_) {
     const double dx2 = spacing[0]*spacing[0];
     e = 1.0/dx2;
@@ -200,7 +209,7 @@ Pressure::setup_matrix(const Uintah::Patch* const patch)
     p -= 2.0/dz2;
   }
 
-  for(Uintah::CellIterator iter(patch->getCellIterator()); !iter.done(); iter++){    
+  for(Uintah::CellIterator iter(patch->getCellIterator()); !iter.done(); iter++){
     IntVector iCell = *iter;
     Uintah::Stencil7&  coefs = matrix_[iCell];
     coefs.w = w;
@@ -209,21 +218,21 @@ Pressure::setup_matrix(const Uintah::Patch* const patch)
     coefs.s = s;
     coefs.b = b;
     coefs.t = t;
-    coefs.p = p;           
+    coefs.p = p;
   }
-  
+
   //
 //  typedef std::vector<SVolField*> SVolFieldVec;
 //  SVolFieldVec& results = this->get_value_vec();
 //  SVolField& pressureField = *results[0];
 //  SVolField& pRhs = *results[1];
 //  pRhs = 0.0;
-//  
+//
 //  set_pressure_bc(this->name(),matrix_, pressureField, pRhs, patch);
 }
-    
+
 //--------------------------------------------------------------------
-    
+
 void
 Pressure::evaluate()
 {
@@ -237,14 +246,27 @@ Pressure::evaluate()
   SVolField& pressure = *results[0];
   SVolField& rhs      = *results[1];
   rhs = 0.0;
-  //
-  // set_pressure_bc((this->names())[0],matrix_, pressure, rhs, patch_);
-  //
+		//
   namespace SS = SpatialOps::structured;
-  const SS::MemoryWindow& w = rhs.window_with_ghost();
-  SpatialOps::SpatFldPtr<SS::SSurfXField> tmpx  = SpatialOps::SpatialFieldStore<SS::SSurfXField >::self().get( w );
-  SpatialOps::SpatFldPtr<SS::SSurfYField> tmpy  = SpatialOps::SpatialFieldStore<SS::SSurfYField >::self().get( w );
-  SpatialOps::SpatFldPtr<SS::SSurfZField> tmpz  = SpatialOps::SpatialFieldStore<SS::SSurfZField >::self().get( w );
+  //const SS::MemoryWindow& w = rhs.window_with_ghost();
+  SpatialOps::SpatFldPtr<SS::SSurfXField> tmpx;
+  SpatialOps::SpatFldPtr<SS::SSurfYField> tmpy;
+  SpatialOps::SpatFldPtr<SS::SSurfZField> tmpz;  
+  if (doX_) {
+    const SS::MemoryWindow& wx = fx_->window_with_ghost();
+    tmpx  = SpatialOps::SpatialFieldStore<SS::SSurfXField >::self().get( wx );
+  }
+  
+  if (doY_) {
+    const SS::MemoryWindow& wy = fy_->window_with_ghost();
+    tmpy  = SpatialOps::SpatialFieldStore<SS::SSurfYField >::self().get( wy );
+  }
+  
+  if (doZ_) {
+    const SS::MemoryWindow& wz = fz_->window_with_ghost();
+    tmpz  = SpatialOps::SpatialFieldStore<SS::SSurfZField >::self().get( wz );
+  }
+  
   SpatialOps::SpatFldPtr<SVolField> tmp = SpatialOps::SpatialFieldStore<SVolField>::self().get( rhs );
   //set_pressure_bc(this->name(), pressure, rhs, patch);
   //___________________________________________________
@@ -272,6 +294,11 @@ Pressure::evaluate()
   if( doDens_ ){
     rhs <<= rhs + *d2rhodt2_;
   }
+  //
+  // fix pressure rhs and modify pressure matrix
+  //std::cout << rhs[25] << std::endl;
+  update_pressure_rhs((this->names())[0],matrix_, pressure, rhs, patch_);
+  //set_pressure_rhs((this->names())[0],matrix_, rhs, patch_);
 }
 
 //--------------------------------------------------------------------

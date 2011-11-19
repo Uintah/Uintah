@@ -284,6 +284,8 @@
       <slope_mu_p_over_mu0         spec="OPTIONAL DOUBLE" />
       <T_0                         spec="OPTIONAL DOUBLE" />
       <zeta                        spec="OPTIONAL DOUBLE" />
+      <alpha                       spec="OPTIONAL DOUBLE" />
+      <alphap                      spec="OPTIONAL DOUBLE" />
     </shear_modulus_model>
     <specific_heat                 spec="OPTIONAL DOUBLE" />
     <specific_heat_model           spec="OPTIONAL NO_DATA"
