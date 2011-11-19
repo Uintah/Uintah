@@ -36,6 +36,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/Patch.h>
 
 namespace Uintah {
+  
  // multiple vortices
   struct vortices{   
     vector<Point> origin;
@@ -46,7 +47,8 @@ namespace Uintah {
   
 // method of manufactured solutions  
   struct mms{         
-    double A;
+    double A;      // mms_1
+    double angle;  // mms_3
     ~mms() {};
   };
 

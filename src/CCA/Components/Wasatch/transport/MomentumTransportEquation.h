@@ -17,11 +17,6 @@
 namespace Wasatch{
 
   /**
-   *  \brief obtain the tag for the pressure
-   */
-  Expr::Tag pressure_tag();
-
-  /**
    *  \ingroup WasatchCore
    *  \class MomentumTransportEquation
    *  \author James C. Sutherland
@@ -57,6 +52,16 @@ namespace Wasatch{
                                Uintah::SolverInterface& linSolver);
 
     ~MomentumTransportEquation();
+    
+    /**
+     *  \brief apply the boundary conditions on the initial condition 
+     *         associated with this transport equation
+     */
+    void setup_initial_boundary_conditions( const GraphHelper& graphHelper,
+                                           const Uintah::PatchSet* const localPatches,
+                                           const PatchInfoMap& patchInfoMap,
+                                           const Uintah::MaterialSubset* const materials);
+    
 
     /**
      *  \brief setup the boundary conditions associated with this momentum equation
@@ -64,7 +69,7 @@ namespace Wasatch{
     void setup_boundary_conditions( const GraphHelper& graphHelper,
                                     const Uintah::PatchSet* const localPatches,
                                     const PatchInfoMap& patchInfoMap,
-                                    const Uintah::MaterialSubset* const materials);    
+                                    const Uintah::MaterialSubset* const materials);
     /**
      *  \brief setup the initial conditions for this momentum equation.
      */
@@ -77,7 +82,7 @@ namespace Wasatch{
      *         equation. Scope should be within the TransportEquation tag.
      */
     static std::string get_phi_name( Uintah::ProblemSpecP params );
-  
+
   private:
 
     const bool isviscous_;

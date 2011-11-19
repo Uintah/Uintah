@@ -100,6 +100,20 @@ namespace Wasatch{
     Expr::ExpressionID get_rhs_id() const{ return rhsExprID_; }
     
     /**
+     *  Set up the boundary condition on initial conditions evaluators for this
+     *  TransportEquation. Each derived class must implement this
+     *  method.  Boundary conditions are imposed by adding additional
+     *  tasks to modify values in an Expression after it is evaluated.
+     *  This is done by attaching a functor to the applicable expression
+     *  via the <code>Expression::process_after_evaluate</code> method.
+     */
+    virtual void setup_initial_boundary_conditions( const GraphHelper& graphHelper,
+                                           const Uintah::PatchSet* const localPatches,
+                                           const PatchInfoMap& patchInfoMap,
+                                           const Uintah::MaterialSubset* const materials) = 0;
+    
+    
+    /**
      *  Set up the boundary condition evaluators for this
      *  TransportEquation. Each derived class must implement this
      *  method.  Boundary conditions are imposed by adding additional

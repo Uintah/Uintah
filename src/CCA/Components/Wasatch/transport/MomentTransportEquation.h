@@ -71,7 +71,15 @@ namespace Wasatch{
                             const Expr::ExpressionID id );
     
     ~MomentTransportEquation();
-    
+
+    /**
+     *  \brief apply the boundary conditions on the initial condition 
+     *         associated with this transport equation
+     */
+    void setup_initial_boundary_conditions( const GraphHelper& graphHelper,
+                                           const Uintah::PatchSet* const localPatches,
+                                           const PatchInfoMap& patchInfoMap,
+                                           const Uintah::MaterialSubset* const materials);    
     
     /**
      *  \brief setup the boundary conditions associated with this transport equation

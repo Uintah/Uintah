@@ -42,7 +42,6 @@
 #include <CCA/Components/Arches/CellInformationP.h>
 #include <CCA/Components/Arches/EnthalpySolver.h>
 #include <CCA/Components/Arches/NonlinearSolver.h>
-#include <CCA/Components/Arches/PicardNonlinearSolver.h>
 #include <CCA/Components/Arches/TurbulenceModel.h>
 #include <CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
@@ -68,6 +67,7 @@
 #include <Core/Grid/Level.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Exceptions/VariableNotFoundInGrid.h>
+#include <CCA/Ports/SolverInterface.h>
 
 using namespace Uintah;
 using namespace std;

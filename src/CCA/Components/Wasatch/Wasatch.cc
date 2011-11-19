@@ -381,6 +381,35 @@ namespace Wasatch{
       // within the TaskInterface object.
       task->schedule( icCoordHelper_->field_tags(), 1 );
       taskInterfaceList_.push_back( task );
+      
+      // -----------------------------------------------------------------------
+      // INITIAL BOUNDARY CONDITIONS TREATMENT
+      // -----------------------------------------------------------------------
+      const Uintah::PatchSet* const localPatches = get_patchset( USE_FOR_OPERATORS, level, sched );      
+      const Uintah::MaterialSet* const materials = sharedState_->allMaterials();      
+      const GraphHelper* icGraphHelper = graphCategories_[ INITIALIZATION ];
+      typedef std::vector<EqnTimestepAdaptorBase*> EquationAdaptors;
+      
+      for( EquationAdaptors::const_iterator ia=adaptors_.begin(); ia!=adaptors_.end(); ++ia ){
+        EqnTimestepAdaptorBase* const adaptor = *ia;
+        TransportEquation* transEq = adaptor->equation();
+        std::string eqnLabel = transEq->solution_variable_name();
+        //______________________________________________________
+        // set up boundary conditions on this transport equation
+        try{
+          proc0cout << "Setting Initial BCs for transport equation '" << eqnLabel << "'" << std::endl;
+          transEq->setup_initial_boundary_conditions(*icGraphHelper, localPatches, patchInfoMap_, materials->getUnion());
+        }
+        catch( std::runtime_error& e ){
+          std::ostringstream msg;
+          msg << e.what()
+          << std::endl
+          << "ERORR while setting initial boundary conditions on equation '" << eqnLabel << "'"
+          << std::endl;
+          throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+        }
+      }
+      
     }
     proc0cout << "Wasatch: done creating initialization task(s)" << std::endl;
   }
@@ -467,7 +496,8 @@ namespace Wasatch{
       // -----------------------------------------------------------------------
       // BOUNDARY CONDITIONS TREATMENT
       // -----------------------------------------------------------------------
-      const GraphHelper* gh = graphCategories_[ ADVANCE_SOLUTION ];
+      const GraphHelper* icGraphHelper = graphCategories_[ INITIALIZATION ];
+      const GraphHelper* advSolGraphHelper = graphCategories_[ ADVANCE_SOLUTION ];
       typedef std::vector<EqnTimestepAdaptorBase*> EquationAdaptors;
 
       for( EquationAdaptors::const_iterator ia=adaptors_.begin(); ia!=adaptors_.end(); ++ia ){
@@ -478,7 +508,7 @@ namespace Wasatch{
         // set up boundary conditions on this transport equation
         try{
           proc0cout << "Setting BCs for transport equation '" << eqnLabel << "'" << std::endl;
-          transEq->setup_boundary_conditions(*gh, localPatches, patchInfoMap_, materials->getUnion());
+          transEq->setup_boundary_conditions(*advSolGraphHelper, localPatches, patchInfoMap_, materials->getUnion());
         }
         catch( std::runtime_error& e ){
           std::ostringstream msg;

@@ -3,8 +3,6 @@
 
 #include <map>
 
-#include <Core/Grid/Variables/VarLabel.h>
-
 /**
  *  \file PatchInfo.h
  */

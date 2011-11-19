@@ -157,6 +157,17 @@ namespace Wasatch{
   ScalabilityTestTransportEquation<FieldT>::~ScalabilityTestTransportEquation()
   {}
   
+  //------------------------------------------------------------------  
+  
+  template< typename FieldT >  
+  void ScalabilityTestTransportEquation<FieldT>::
+  setup_initial_boundary_conditions( const GraphHelper& graphHelper,
+                                         const Uintah::PatchSet* const localPatches,
+                                         const PatchInfoMap& patchInfoMap,
+                                         const Uintah::MaterialSubset* const materials)
+  {    
+  }  
+  
   //------------------------------------------------------------------
   
   template< typename FieldT >  

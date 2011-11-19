@@ -22,6 +22,11 @@ namespace Uintah{
 namespace Wasatch{
 
 /**
+ *  \brief obtain the tag for the pressure
+ */
+Expr::Tag pressure_tag();
+
+/**
  *  \class 	Pressure
  *  \ingroup 	Expressions
  *  \ingroup	WasatchCore
@@ -77,8 +82,8 @@ class Pressure
   typedef SpatialOps::structured::BasicOpTypes<SVolField>::DivZ  DivZ;
   const DivX* divXOp_;
   const DivY* divYOp_;
-  const DivZ* divZOp_;  
-  
+  const DivZ* divZOp_;
+
   typedef Uintah::CCVariable<Uintah::Stencil7> MatType;
   MatType matrix_;
   const Uintah::Patch* patch_;

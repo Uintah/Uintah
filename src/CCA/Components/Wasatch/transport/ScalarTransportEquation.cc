@@ -430,6 +430,31 @@ namespace Wasatch{
   ScalarTransportEquation<FieldT>::~ScalarTransportEquation()
   {}
 
+  //------------------------------------------------------------------  
+
+  template< typename FieldT >
+  void ScalarTransportEquation<FieldT>::
+  setup_initial_boundary_conditions( const GraphHelper& graphHelper,
+                                         const Uintah::PatchSet* const localPatches,
+                                         const PatchInfoMap& patchInfoMap,
+                                         const Uintah::MaterialSubset* const materials)
+  {
+    
+    Expr::ExpressionFactory& factory = *graphHelper.exprFactory;
+    const Expr::Tag phiTag( this->solution_variable_name(), Expr::STATE_N );
+    if (factory.get_registry().have_entry(phiTag)) {
+      const Expr::ExpressionID phiID = factory.get_registry().get_id(phiTag);
+      process_boundary_conditions<FieldT>( phiTag,
+                                          this->solution_variable_name(),
+                                          this->staggered_location(),
+                                          graphHelper,
+                                          localPatches,
+                                          patchInfoMap,
+                                          materials );          
+    }
+  }
+  
+
   //------------------------------------------------------------------
 
   template< typename FieldT >
@@ -440,8 +465,9 @@ namespace Wasatch{
                              const Uintah::MaterialSubset* const materials )
   {
     // see BCHelperTools.cc
-    process_boundary_conditions( Expr::Tag( this->solution_variable_name(),
+    process_boundary_conditions<FieldT>( Expr::Tag( this->solution_variable_name(),
                                             Expr::STATE_N ),
+                                 this->solution_variable_name(),
                                  this->staggered_location(),
                                  graphHelper,
                                  localPatches,
