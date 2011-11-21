@@ -11,10 +11,12 @@
 using namespace std;
 using namespace Uintah; 
 
-DORadiation::DORadiation( std::string src_name, ArchesLabel* labels, BoundaryCondition* bc, 
+DORadiation::DORadiation( std::string src_name, ArchesLabel* labels, MPMArchesLabel* MAlab,
+                          BoundaryCondition* bc, 
                       vector<std::string> req_label_names, const ProcessorGroup* my_world ) 
 : SourceTermBase( src_name, labels->d_sharedState, req_label_names ), 
-  _labels( labels ), 
+  _labels( labels ),
+  _MAlab(MAlab), 
   _bc(bc), 
   _my_world(my_world)
 {
@@ -92,7 +94,7 @@ DORadiation::problemSetup(const ProblemSpecP& inputdb)
   db->getWithDefault( "h2o_label", _h2o_label_name, "H2O" ); 
   db->getWithDefault( "T_label", _T_label_name, "temperature" ); 
 
-  _DO_model = scinew DORadiationModel( _labels, _bc, _my_world ); 
+  _DO_model = scinew DORadiationModel( _labels, _MAlab, _bc, _my_world ); 
   _DO_model->problemSetup( db ); 
 
   _labels->add_species( _co2_label_name ); 

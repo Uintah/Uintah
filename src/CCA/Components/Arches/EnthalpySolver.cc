@@ -114,7 +114,7 @@ EnthalpySolver::problemSetup(const ProblemSpecP& params)
   if (db->findBlock("DORadiationModel")) {
     d_DORadiationCalc = true;
     d_radiationCalc   = true; 
-    d_DORadiation = scinew DORadiationModel( d_lab, d_boundaryCondition, d_myworld);
+    d_DORadiation = scinew DORadiationModel( d_lab, d_MAlab, d_boundaryCondition, d_myworld);
     d_DORadiation->problemSetup(db);
   }
 
