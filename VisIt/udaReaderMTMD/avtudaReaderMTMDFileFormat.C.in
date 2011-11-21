@@ -42,11 +42,12 @@
 
 #include <VisIt/udaReaderMTMD/avtudaReaderMTMDFileFormat.h>
 
-#include <stdio.h>
-#include <cstring>
+#include <cstdio>
+#include <string>
 #include <cmath>
 #include <dlfcn.h>
 #include <string>
+#include <vector>
 
 #ifdef PARALLEL
 #  include <mpi.h>
@@ -78,6 +79,8 @@
 
 using std::max;
 using std::min;
+using std::vector;
+using std::string;
 
 //#ifdef PARALLEL
 // we only get the option for  serialized reads if compiling the parallel version
