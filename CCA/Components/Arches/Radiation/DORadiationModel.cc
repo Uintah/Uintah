@@ -290,10 +290,10 @@ DORadiationModel::sched_computeSource( const LevelP& level,
   }
   
   tsk->requires(which_dw,      d_lab->d_tempINLabel,   gac, 1);
-  tsk->requires(which_dw,      d_lab->d_cpINLabel,     gac, 1);
-  tsk->requires(which_dw,      d_lab->d_co2INLabel,    gac, 1);
-  tsk->requires(which_dw,      d_lab->d_h2oINLabel,    gac, 1);
-  tsk->requires(which_dw,      d_lab->d_sootFVINLabel, gac, 1);
+  tsk->requires(which_dw,      d_lab->d_cpINLabel,     gn,  0);
+  tsk->requires(which_dw,      d_lab->d_co2INLabel,    gn,  0);
+  tsk->requires(which_dw,      d_lab->d_h2oINLabel,    gn,  0);
+  tsk->requires(which_dw,      d_lab->d_sootFVINLabel, gn,  0);
   
   tsk->requires(Task::NewDW,   d_lab->d_cellInfoLabel, gn);
   tsk->requires(Task::NewDW,   d_lab->d_cellTypeLabel, gac, 1);
@@ -392,9 +392,9 @@ DORadiationModel::computeSource( const ProcessorGroup* pc,
     Ghost::GhostType  gn = Ghost::None;
     
     // all integrator steps:
-    which_dw->get(constRadVars.co2,     d_lab->d_co2INLabel,    indx, patch, gac, 1);
-    which_dw->get(constRadVars.h2o,     d_lab->d_h2oINLabel,    indx, patch, gac, 1);
-    which_dw->get(constRadVars.sootFV,  d_lab->d_sootFVINLabel, indx, patch, gac, 1);
+    which_dw->get(constRadVars.co2,     d_lab->d_co2INLabel,    indx, patch, gn,  0);
+    which_dw->get(constRadVars.h2o,     d_lab->d_h2oINLabel,    indx, patch, gn,  0);
+    which_dw->get(constRadVars.sootFV,  d_lab->d_sootFVINLabel, indx, patch, gn,  0);
     new_dw->get(  constRadVars.cellType,d_lab->d_cellTypeLabel, indx, patch, gac, 1);
     
     radVars.ESRCG.allocate(patch->getExtraCellLowIndex(Arches::ONEGHOSTCELL),
