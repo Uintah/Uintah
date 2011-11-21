@@ -110,7 +110,7 @@ while( $ans == "y" || $ans == "Y" || $redo == "n" )
     
   set FONT = "$FONT_DEFAULT -fill $fontColor -background $bkgrdColor"
   
-  @ num  = `echo $firstFrame | awk -F. '{print $2 }'`
+  @ num  = `echo $firstFrame | awk -F. '{printf "%i", $2 }'`
   echo " Now converting $firstFrame to $num.png"
   convert $firstFrame $num.png
   
@@ -154,7 +154,7 @@ echo "Now converting $ext files into png files so ffmpeg can digest them"
 @ count  = 0
 
 foreach i ( *.*.$ext)
-  @ num  = `echo $i | awk -F. '{print $2 }'`
+  @ num  = `echo $i | awk -F. '{printf "%i", $2 }'`
   echo " Now converting $i to $num.png"
   convert $i -depth 8 $num.png
   
