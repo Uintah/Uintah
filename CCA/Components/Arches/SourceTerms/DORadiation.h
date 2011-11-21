@@ -5,6 +5,7 @@
 #include <Core/Grid/SimulationStateP.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermBase.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermFactory.h>
+#include <CCA/Components/MPMArches/MPMArchesLabel.h>
 
 /** 
 * @class  DORadiation
@@ -47,7 +48,7 @@ namespace Uintah{
 class DORadiation: public SourceTermBase {
 public: 
 
-  DORadiation( std::string srcName, ArchesLabel* labels, BoundaryCondition* bc, 
+  DORadiation( std::string srcName, ArchesLabel* labels, MPMArchesLabel* MAlab, BoundaryCondition* bc, 
                 vector<std::string> reqLabelNames, const ProcessorGroup* my_world );
   ~DORadiation();
 
@@ -78,12 +79,13 @@ public:
       ~Builder(){}; 
 
       DORadiation* build()
-      { return scinew DORadiation( _name, _labels, _bc, _required_label_names, _my_world ); };
+      { return scinew DORadiation( _name, _labels, _MAlab, _bc, _required_label_names, _my_world ); };
 
     private: 
 
       std::string _name; 
       ArchesLabel* _labels; 
+      MPMArchesLabel* _MAlab;
       BoundaryCondition* _bc; 
       const ProcessorGroup* _my_world; 
       vector<std::string> _required_label_names; 
@@ -101,7 +103,8 @@ private:
   std::string _T_label_name; 
 
   RadiationModel* _DO_model; 
-  ArchesLabel* _labels; 
+  ArchesLabel*    _labels; 
+  MPMArchesLabel* _MAlab;
   BoundaryCondition* _bc; 
   const ProcessorGroup* _my_world;
 

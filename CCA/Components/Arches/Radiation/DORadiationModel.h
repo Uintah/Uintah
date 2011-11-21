@@ -57,7 +57,6 @@ GENERAL INFORMATION
 
 namespace Uintah {
   class ArchesLabel;
-  class MPMArchesLabel;
   class BoundaryCondition;
 
 class DORadiationModel: public RadiationModel {
@@ -65,6 +64,7 @@ class DORadiationModel: public RadiationModel {
 public:
 
       DORadiationModel(const ArchesLabel* label,
+                       const MPMArchesLabel* MAlab,
                        BoundaryCondition* bndry_cond, 
                        const ProcessorGroup* myworld);
 

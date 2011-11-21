@@ -77,9 +77,12 @@ static DebugStream dbg("ARCHES_RADIATION",false);
 // Default constructor for DORadiationModel
 //****************************************************************************
 DORadiationModel::DORadiationModel(const ArchesLabel* label,
+                                   const MPMArchesLabel* MAlab,
                                    BoundaryCondition* bndry_cond,
                                    const ProcessorGroup* myworld):
-                                   RadiationModel(), d_lab(label), 
+                                   RadiationModel(), 
+                                   d_lab(label),
+                                   d_MAlab(MAlab), 
                                    d_boundaryCondition(bndry_cond),
                                    d_myworld(myworld)
 {
@@ -89,7 +92,6 @@ DORadiationModel::DORadiationModel(const ArchesLabel* label,
   d_perproc_patches = 0;
   _using_props_calculator = false;
   d_use_abskp = false;
-  d_MAlab = scinew MPMArchesLabel();
 }
 
 //****************************************************************************
@@ -97,7 +99,6 @@ DORadiationModel::DORadiationModel(const ArchesLabel* label,
 //****************************************************************************
 DORadiationModel::~DORadiationModel()
 {
-  delete d_MAlab;
   delete d_linearSolver;
   delete _props_calculator;
   if(d_perproc_patches && d_perproc_patches->removeReference())
