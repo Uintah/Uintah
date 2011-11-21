@@ -127,10 +127,10 @@ DORadiation::sched_computeSource( const LevelP& level, SchedulerP& sched, int ti
 
     tsk->computes(_src_label);
 
-    tsk->requires( Task::OldDW, _co2_label, gac, 1 ); 
-    tsk->requires( Task::OldDW, _h2o_label, gac, 1 ); 
-    tsk->requires( Task::OldDW, _T_label, gac, 1 ); 
-    tsk->requires( Task::OldDW, _labels->d_sootFVINLabel, gac, 1 ); 
+    tsk->requires( Task::OldDW, _co2_label, gn,  0 ); 
+    tsk->requires( Task::OldDW, _h2o_label, gn,  0 ); 
+    tsk->requires( Task::OldDW, _T_label,   gac, 1 ); 
+    tsk->requires( Task::OldDW, _labels->d_sootFVINLabel, gn, 0 ); 
 
     for (std::vector<const VarLabel*>::iterator iter = _extra_local_labels.begin(); 
          iter != _extra_local_labels.end(); iter++){
@@ -144,10 +144,10 @@ DORadiation::sched_computeSource( const LevelP& level, SchedulerP& sched, int ti
 
     tsk->modifies(_src_label); 
 
-    tsk->requires( Task::NewDW, _co2_label, gac, 1 ); 
-    tsk->requires( Task::NewDW, _h2o_label, gac, 1 ); 
-    tsk->requires( Task::NewDW, _T_label, gac, 1 ); 
-    tsk->requires( Task::NewDW, _labels->d_sootFVINLabel, gac, 1); 
+    tsk->requires( Task::NewDW, _co2_label, gn,  0 ); 
+    tsk->requires( Task::NewDW, _h2o_label, gn,  0 ); 
+    tsk->requires( Task::NewDW, _T_label,   gac, 1 ); 
+    tsk->requires( Task::NewDW, _labels->d_sootFVINLabel, gn, 0); 
 
     for (std::vector<const VarLabel*>::iterator iter = _extra_local_labels.begin(); 
          iter != _extra_local_labels.end(); iter++){
@@ -183,7 +183,6 @@ DORadiation::computeSource( const ProcessorGroup* pc,
     const Patch* patch = patches->get(p);
     int archIndex = 0;
     int matlIndex = _labels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
-    Ghost::GhostType  gac = Ghost::AroundCells;
 
     int timestep = _labels->d_sharedState->getCurrentTopLevelTimeStep(); 
 
@@ -203,13 +202,15 @@ DORadiation::computeSource( const ProcessorGroup* pc,
     } 
 
     ArchesVariables radiation_vars; 
-    ArchesConstVariables const_radiation_vars; 
-
+    ArchesConstVariables const_radiation_vars;
+     
+    Ghost::GhostType  gn = Ghost::None;
+    Ghost::GhostType  gac = Ghost::AroundCells;
     if ( timeSubStep == 0 ) { 
 
-      old_dw->get( const_radiation_vars.co2       , _co2_label               , matlIndex , patch , gac , 1 );
-      old_dw->get( const_radiation_vars.h2o       , _h2o_label               , matlIndex , patch , gac , 1 );
-      old_dw->get( const_radiation_vars.sootFV    , _labels->d_sootFVINLabel        , matlIndex , patch , gac , 1 ); 
+      old_dw->get( const_radiation_vars.co2       , _co2_label               , matlIndex , patch , gn , 0 );
+      old_dw->get( const_radiation_vars.h2o       , _h2o_label               , matlIndex , patch , gn , 0 );
+      old_dw->get( const_radiation_vars.sootFV    , _labels->d_sootFVINLabel , matlIndex , patch , gn , 0 ); 
       old_dw->getCopy( radiation_vars.temperature , _T_label                 , matlIndex , patch , gac , 1 );
       old_dw->get( const_radiation_vars.cellType  , _labels->d_cellTypeLabel , matlIndex , patch , gac , 1 );
 
@@ -241,11 +242,12 @@ DORadiation::computeSource( const ProcessorGroup* pc,
 
     } else { 
 
-      new_dw->get( const_radiation_vars.co2, _co2_label, matlIndex, patch, gac, 1 ); 
-      new_dw->get( const_radiation_vars.h2o, _h2o_label, matlIndex, patch, gac, 1 ); 
-      new_dw->getCopy( radiation_vars.temperature, _T_label, matlIndex, patch, gac, 1 ); 
-      new_dw->get( const_radiation_vars.sootFV, _labels->d_sootFVINLabel, matlIndex, patch, gac, 1 ); 
-      old_dw->get( const_radiation_vars.cellType          , _labels->d_cellTypeLabel, matlIndex, patch  , gac ,  1 ); 
+      new_dw->get(     const_radiation_vars.co2,    _co2_label, matlIndex, patch, gn, 0 ); 
+      new_dw->get(     const_radiation_vars.h2o,    _h2o_label, matlIndex, patch, gn, 0 ); 
+       
+      new_dw->get(     const_radiation_vars.sootFV,    _labels->d_sootFVINLabel, matlIndex, patch, gn, 0 ); 
+      old_dw->get(     const_radiation_vars.cellType , _labels->d_cellTypeLabel, matlIndex, patch, gn ,  0 ); 
+      new_dw->getCopy( radiation_vars.temperature,  _T_label,   matlIndex, patch, gn, 0 );
 
       new_dw->getModifiable( radiation_vars.qfluxe , _radiationFluxELabel , matlIndex , patch );
       new_dw->getModifiable( radiation_vars.qfluxw , _radiationFluxWLabel , matlIndex , patch );
