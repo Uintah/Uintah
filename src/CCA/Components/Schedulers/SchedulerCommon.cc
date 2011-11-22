@@ -71,7 +71,9 @@ DEALINGS IN THE SOFTWARE.
 
 #include <time.h>
 
+#ifdef HAVE_CUDA
 #include <sci_defs/cuda_defs.h>
+#endif
 
 using namespace Uintah;
 using namespace SCIRun;
@@ -115,35 +117,6 @@ SchedulerCommon::SchedulerCommon(const ProcessorGroup* myworld, Output* oport)
   m_locallyComputedPatchVarMap = scinew LocallyComputedPatchVarMap;
   reloc_new_posLabel_ = 0;
   maxGhost=0;
-    
-  // Take a look at the CUDA Devices if it is specified
-  if(Uintah::Parallel::usingGPU())
-  {
-      int devCount;
-      cudaGetDeviceCount(&devCount);
-      
-      if(devCount < 1)
-      {
-          throw ProblemSetupException("ERROR:SchedulerCommon: Uintah was compiled with GPU support, but no GPUs are attached to this node.",__FILE__,__LINE__);
-      }
-      
-      // Add devices to the device vector if they have the correct compute capability
-      cudaDeviceProp devprop;
-      for(int i=0; i < devCount; i++)
-      {
-          cudaGetDeviceProperties(&devprop,i);
-          if(devprop.major > 1 || (devprop.major == 1 && devprop.minor > 2))
-          {
-              d_cudaDevices.push_back(CUDADevice(i));
-          }
-      }
-      
-      // make sure we have at least one CUDA Device
-      if(d_cudaDevices.size() < 1)
-      {
-          throw new ProblemSetupException("ERROR:SchedulerCommon: Uintah was compiled with GPU support, but no GPUs have compute capability 2.0.",__FILE__,__LINE__);
-      }
-  }
 }
 
 SchedulerCommon::~SchedulerCommon()

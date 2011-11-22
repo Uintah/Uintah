@@ -38,7 +38,6 @@ SRCS += \
 	$(SRCDIR)/DetailedTasks.cc \
 	$(SRCDIR)/MemoryLog.cc \
 	$(SRCDIR)/CommRecMPI.cc \
-	$(SRCDIR)/CUDADevice.cc \
 	$(SRCDIR)/MPIScheduler.cc \
 	$(SRCDIR)/DynamicMPIScheduler.cc \
 	$(SRCDIR)/MessageLog.cc \

@@ -1,14 +1,38 @@
+------------------------------------------------
 TODO List for Implementing GPU Support in Uintah
 ------------------------------------------------
 
-1) SingleProcessorScheduler
-2) HeatEquationGPU
-3) Poisson2GPU
-4) MPIScheduler
-5) ThreadedMPI Scheduler
-6) Advection Tasks
-	a) AdvectQ
-	b) AdvectSlabs
+1.) Finish GPU RT setup
 
-7) Cell iterator generalized function?
-8) Buildbot testing GPU branch.
+2.) Finish adding infrastructure support to schedule GPU Task
+
+3.) Extend #2 to work with an arbitrary number of GPU Tasks
+	a.) CHPC & Keeneland tests
+
+4.) Refine GPU Scheduler
+	a.) Complete correctness testing on GPU Task scheduler
+	b.) Implement queue of streams to handle multiple GPU tasks
+	c.) CHPC & Keeneland tests
+	
+5.) Create mechanism to check for cudaMemCpyAsync D2H completion
+
+6.) Tie 2-5 together for complete design
+	a.) CHPC & Keeneland tests
+	
+7.) Work on performance optimizations
+	a.) use of shared memory
+	b.) caching data on GPU (if we aren't already by this time)	
+	c.) 
+
+8.) Finish porting remainder of planned ICE tasks
+	a.) first and second order advection tasks
+	b.) computeEquilibrationPressure
+
+	
+------------------------------------------------
+Misc:
+------------------------------------------------
+
+1.) Cell iterator generalized function?
+
+2.) Buildbot testing GPU branch.
