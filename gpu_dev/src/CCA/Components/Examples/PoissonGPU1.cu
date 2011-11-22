@@ -41,7 +41,6 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Grid/BoundaryConditions/BCDataArray.h>
 #include <Core/Grid/BoundaryConditions/BoundCond.h>
-#include <CCA/Components/Schedulers/CUDADevice.h>
 
 #include <sci_defs/cuda_defs.h>
 
@@ -212,9 +211,7 @@ void PoissonGPU1::timeAdvance(const ProcessorGroup*,
                               const PatchSubset* patches,
                               const MaterialSubset* matls,
                               DataWarehouse* old_dw,
-                              DataWarehouse* new_dw) {   //,
-//                            int deviceID = 0,
-//                            CUDADevice *deviceProperties = NULL) {
+                              DataWarehouse* new_dw) {
 
   int matl = 0;
   int previousPatchSize = 0;// this is to see if we need to release and reallocate between computations

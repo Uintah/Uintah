@@ -34,7 +34,6 @@ DEALINGS IN THE SOFTWARE.
 
 #include <Core/Parallel/UintahParallelComponent.h>
 #include <CCA/Ports/SimulationInterface.h>
-#include <CCA/Components/Schedulers/CUDADevice.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/Variables/VarLabel.h>
 
@@ -108,10 +107,8 @@ WARNING
     void timeAdvance(const ProcessorGroup*,
                      const PatchSubset* patches,
                      const MaterialSubset* matls,
-		     DataWarehouse* old_dw,
+		                 DataWarehouse* old_dw,
                      DataWarehouse* new_dw); //,
-                   //  int deviceID,
-                   //  CUDADevice *deviceProperties);
                      
     SimulationStateP sharedState_;
     double delt_;

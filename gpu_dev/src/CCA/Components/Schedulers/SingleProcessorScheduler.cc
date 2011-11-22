@@ -40,10 +40,6 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Util/FancyAssert.h>
 #include <Core/Malloc/Allocator.h>
 
-#ifdef HAVE_CUDA
-#include <sci_defs/cuda_defs.h>
-#endif
-
 using namespace Uintah;
 using namespace std;
 using namespace SCIRun;
@@ -59,7 +55,6 @@ SingleProcessorScheduler::SingleProcessorScheduler(const ProcessorGroup* myworld
 {
   d_generation = 0;
   m_parent = parent;
-  useGPU = Parallel::usingGPU();
 }
 
 SingleProcessorScheduler::~SingleProcessorScheduler()
@@ -144,13 +139,6 @@ SingleProcessorScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
       printTrackedVars(task, SchedulerCommon::PRINT_BEFORE_EXEC);
     }
       
-    if(useGPU) {
-            // task->doitGPU(d_myworld, dws, plain_old_dws, d_cudaDevices[deviceToUse].getDevicePtr(),&d_cudaDevices[deviceToUse]);
-            task->doit(d_myworld, dws, plain_old_dws);
-    } else {
-        task->doit(d_myworld, dws, plain_old_dws);
-    }
-
     if (trackingVarsPrintLocation_ & SchedulerCommon::PRINT_AFTER_EXEC)
       printTrackedVars(task, SchedulerCommon::PRINT_AFTER_EXEC);
 

@@ -90,7 +90,6 @@ WARNING
     virtual void verifyChecksum();
 
     SingleProcessorScheduler* m_parent;
-    bool useGPU;
   };
 } // End namespace Uintah
    

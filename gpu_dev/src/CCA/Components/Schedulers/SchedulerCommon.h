@@ -41,12 +41,6 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/SimulationStateP.h>
 #include <Core/Util/DebugStream.h>
 
-#include <sci_defs/cuda_defs.h>
-
-#ifdef HAVE_CUDA
-#include <CCA/Components/Schedulers/CUDADevice.h>
-#endif
-
 #include   <iosfwd>
 #include   <set>
 
@@ -335,14 +329,8 @@ WARNING
     std::set<const VarLabel*, VarLabel::Compare> d_initRequiredVars;
     std::set<const VarLabel*, VarLabel::Compare> d_computedVars;
 
-    //max ghost cells of all tasks - will be used for loadbalancer to create neighorhood
+    //max ghost cells of all tasks - will be used for loadbalancer to create neighborhood
     int maxGhost;
-      
-    // GPU Based variables
-protected:
-#ifdef HAVE_CUDA
-    vector<CUDADevice> d_cudaDevices;
-#endif
   };
 } // End namespace Uintah
 
