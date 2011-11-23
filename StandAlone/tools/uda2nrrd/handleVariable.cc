@@ -144,7 +144,7 @@ handleData( QueryInfo &    qinfo,
     if( !args.quiet ) cout << "Writing nrrd file: " << filename + filetype << "\n";
 
     char answer = 'y';
-    if( validFile( filename + filetype ) ) {
+    if( !args.force_overwrite && validFile( filename + filetype ) ) {
       cout << "\nWARNING: File already exists... overwrite? [y/n]\n";
       cin >> answer;
     }

@@ -39,6 +39,7 @@ struct Args {
   bool      quiet;
   bool      attached_header;
   bool      remove_boundary;
+  bool      force_overwrite;
   Matrix_Op matrix_op;
 
   Args() {
@@ -47,6 +48,7 @@ struct Args {
     quiet = false;
     attached_header = true;
     remove_boundary = false;
+    force_overwrite = false;
     matrix_op = None;
   }
 

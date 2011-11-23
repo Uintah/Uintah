@@ -134,6 +134,7 @@ usage( const string& badarg, const string& progname )
   cerr << "  -o,--out <outputfilename> [defaults to 'particles_t#######' or '<varName>_t######']\n";
   cerr << "  -oi <index> [default to 0] - Output index to use in naming file.\n";
   cerr << "  -dh,--detatched-header - writes the data with detached headers.  The default is to not do this.\n";
+  cerr << "  -ow,--overwrite - overwrite existing output files without prompting.\n";
   //    cerr << "  -binary (prints out the data in binary)\n";
   
   cerr << "\nTimestep Specifier Optoins\n";
@@ -230,6 +231,8 @@ main(int argc, char** argv)
       args.verbose = true;
     } else if (s == "-q" || s == "--quiet") {
       args.quiet = true;
+    } else if (s == "-ow" || s == "--overwrite") {
+      args.force_overwrite = true;
     } else if (s == "-tlow" || s == "--timesteplow") {
       time_step_lower = strtoul(argv[++i],(char**)NULL,10);
     } else if (s == "-thigh" || s == "--timestephigh") {
@@ -366,7 +369,7 @@ main(int argc, char** argv)
         cerr << "\n";
         vi = 0;
         for( ; vi < vars.size(); vi++) {
-          cout << "vars[" << vi << "] = " << vars[vi] << "\n";
+          cout << "vars[" << vi << "] = " << vars[vi] << " (" << types[vi]->getName() << ")\n";
         }
         cerr << "\nExiting!!\n\n";
         Thread::exitAll( 1 );
