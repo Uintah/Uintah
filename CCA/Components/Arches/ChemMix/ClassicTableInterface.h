@@ -289,8 +289,7 @@ public:
 		{
 			
 			int mid = 0;
-			double var_value = 0.0;
-			int lo_ind;
+      int lo_ind;
 			int hi_ind;
 			double iv_val;
 						
@@ -398,7 +397,6 @@ public:
 
 		{
 			int mid = 0;
-			double var_value = 0.0;
 			int lo_ind;
 			int hi_ind;
 			double iv_val;
