@@ -1332,7 +1332,7 @@ ClassicTableInterface::loadMixingTable( const string & inputfile )
     table[i] = vector<double>(size);
   }
 	
-  double size2 = size/d_allIndepVarNum[d_indepvarscount-1];
+  int size2 = size/d_allIndepVarNum[d_indepvarscount-1];
   proc0cout << "Table size " << size << endl;
   
   proc0cout << "Reading in the dependent variables: " << endl;
