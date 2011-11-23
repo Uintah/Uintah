@@ -397,6 +397,7 @@ public:
 
 		{
 			int mid = 0;
+      double var_val = 0.0;
 			int lo_ind;
 			int hi_ind;
 			double iv_val;
@@ -487,7 +488,7 @@ public:
 			table_vals[6] = table2[var_index][d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[2] + d_allIndepVarNo[0] * hi_index[1] + lo_index[0]];
 			table_vals[7] = table2[var_index][d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[2] + d_allIndepVarNo[0] * hi_index[1] + hi_index[0]];
 			
-						table_vals[0] = (table_vals[4] - table_vals[0])/(indep[1][lo_index[2]+1]-indep[1][lo_index[2]])*(iv[2]-indep[1][lo_index[2]]) + table_vals[0]; 
+      table_vals[0] = (table_vals[4] - table_vals[0])/(indep[1][lo_index[2]+1]-indep[1][lo_index[2]])*(iv[2]-indep[1][lo_index[2]]) + table_vals[0]; 
 			table_vals[1] = (table_vals[5] - table_vals[1])/(indep[1][lo_index[2]+1]-indep[1][lo_index[2]])*(iv[2]-indep[1][lo_index[2]]) + table_vals[1];
 			table_vals[2] = (table_vals[6] - table_vals[2])/(indep[1][lo_index[2]+1]-indep[1][lo_index[2]])*(iv[2]-indep[1][lo_index[2]]) + table_vals[2];
 			table_vals[3] = (table_vals[7] - table_vals[3])/(indep[1][lo_index[2]+1]-indep[1][lo_index[2]])*(iv[2]-indep[1][lo_index[2]]) + table_vals[3];
@@ -495,18 +496,7 @@ public:
 			table_vals[0] = (table_vals[2]-table_vals[0])/(indep[0][lo_index[1]+1]-indep[0][lo_index[1]])*(iv[1]-indep[0][lo_index[1]]) + table_vals[0]; 
 			table_vals[1] = (table_vals[3]-table_vals[1])/(indep[0][lo_index[1]+1]-indep[0][lo_index[1]])*(iv[1]-indep[0][lo_index[1]]) + table_vals[1];
 
-			double var_val = (table_vals[1]-table_vals[0])/(ind_1[i1dep_ind][lo_index[0]+1]-ind_1[i1dep_ind][lo_index[0]])*(iv[0]-ind_1[i1dep_ind][lo_index[0]])+table_vals[0];
-			/*
-			table_vals[0] = (table_vals[1] - table_vals[0])/(ind_1[i1dep_ind][lo_index[0]+1]-ind_1[i1dep_ind][lo_index[0]])*(iv[0]-ind_1[i1dep_ind][lo_index[0]])+table_vals[0];
-			table_vals[1] = (table_vals[3] - table_vals[2])/(ind_1[i1dep_ind][lo_index[0]+1]-ind_1[i1dep_ind][lo_index[0]])*(iv[0]-ind_1[i1dep_ind][lo_index[0]])+table_vals[2];
-			table_vals[2] = (table_vals[5] - table_vals[4])/(ind_1[i1dep_ind][lo_index[0]+1]-ind_1[i1dep_ind][lo_index[0]])*(iv[0]-ind_1[i1dep_ind][lo_index[0]])+table_vals[4];                                                                                                                
-			table_vals[3] = (table_vals[7] - table_vals[6])/(ind_1[i1dep_ind][lo_index[0]+1]-ind_1[i1dep_ind][lo_index[0]])*(iv[0]-ind_1[i1dep_ind][lo_index[0]])+table_vals[6];
-
-			table_vals[0] = (table_vals[1]-table_vals[0])/(indep[0][lo_index[1]+1]-indep[0][lo_index[1]])*(iv[1]-indep[0][lo_index[1]]) + table_vals[0];
-			table_vals[1] = (table_vals[3]-table_vals[2])/(indep[0][lo_index[1]+1]-indep[0][lo_index[1]])*(iv[1]-indep[0][lo_index[1]]) + table_vals[2];
-      
-			double var_val = (table_vals[1] - table_vals[0])/(indep[1][lo_index[2]+1]-indep[1][lo_index[2]])*(iv[2]-indep[1][lo_index[2]]) + table_vals[0];
-			*/
+			var_val = (table_vals[1]-table_vals[0])/(ind_1[i1dep_ind][lo_index[0]+1]-ind_1[i1dep_ind][lo_index[0]])*(iv[0]-ind_1[i1dep_ind][lo_index[0]])+table_vals[0];
 
 			return var_val;
 		};
@@ -623,7 +613,7 @@ public:
 			
 			int npts =0;
 			for (int i = 3; i > 0; i--) {	
-				npts = pow(2.0,i);
+				npts = (int)pow(2.0,i);
 				for (int k=0; k < npts; k++) {
 					table_vals[k] = (table_vals[k+npts]-table_vals[k])/(indep[i-1][lo_index[i]+1]-indep[i-1][lo_index[i]])*(iv[i]-indep[i-1][lo_index[i]])+table_vals[k];
 				}
@@ -651,7 +641,7 @@ public:
 			  multiples[i] = multtemp;
 		  }
   	
-		  int npts = pow(2.0,d_indepvarscount);
+		  int npts = (int)pow(2.0,d_indepvarscount);
 		  value_pop = vector< vector <bool> > (npts);
 		
 		  for (int i =0; i < npts; i++) {
@@ -664,7 +654,7 @@ public:
 		  for (int i=0; i < npts; i++) {
 			  for (int j = d_indepvarscount-1; j >= 0; j--) {
 				  temp_pts_d = pow(2.0, j);
-				  temp_pts = floor((i/temp_pts_d));
+				  temp_pts = (int)floor((i/temp_pts_d));
 				  if ((temp_pts % 2) == 0) {
 					  value_pop[i][j] = true;
 				  } else {
@@ -683,6 +673,7 @@ public:
 			hi_index = vector<int>(d_indepvarscount);
 			ivcount = d_indepvarscount;
 			
+      
 		};
 		~InterpN(){};
 		
@@ -764,7 +755,7 @@ public:
 			
 			int npts = 0; 
 
-			npts = pow(2.0,ivcount);
+			npts = (int)pow(2.0,ivcount);
 			int tab_index;
 			
 			//interpolant loop - 2parts read-in & calc
@@ -781,7 +772,7 @@ public:
 			} 
 			 
 			for (int i = ivcount-1; i > 0; i--) {
-				npts = pow(2.0,i);
+				npts = (int)pow(2.0,i);
 				for (int k=0; k < npts; k++) {
 					table_vals[k] = (table_vals[k+npts]-table_vals[k])/(indep[i-1][lo_index[i]+1]-indep[i-1][lo_index[i]])*(iv[i]-indep[i-1][lo_index[i]])+table_vals[k];
 				}
