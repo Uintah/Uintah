@@ -272,17 +272,15 @@ namespace Wasatch{
 #         endif
         }
 
+        // if the field uses dynamic allocation, then the uintah task should not be aware of this field
+        // jcs the const_cast is a hack because of the lack of const on the is_persistent method...
+        if( ! const_cast<Expr::ExpressionTree&>(tree).is_persistent(fieldTag) ){
+          continue;
+        }
+
         //________________
         // set field mode
         if( tree.computes_field( fieldTag ) ){
-
-          // if the field uses dynamic allocation, then the uintah task should not be aware of this field
-          // jcs the const_cast is a hack because of the lack of const on the is_persistent method...
-          // jcs HACK - BUG IN EXPRLIB!!!  Tree cleaving is causing problems with persistency.
-          //     this should really go outside the enclosing if() statement!
-          if( ! const_cast<Expr::ExpressionTree&>(tree).is_persistent(fieldTag) ){
-            continue;
-          }
 
           if( rkStage==1 ){
             fieldInfo.mode = Expr::COMPUTES;
@@ -314,9 +312,8 @@ namespace Wasatch{
             fieldInfo.varlabel->getName()=="time" ){
           fieldInfo.mode = Expr::REQUIRES;
         }
-        // jcs : old dw is (should be) read only.
-        Uintah::Task::WhichDW dw = Uintah::Task::NewDW;
-        if( fieldInfo.useOldDataWarehouse ) dw = Uintah::Task::OldDW;
+
+        const Uintah::Task::WhichDW dw = ( fieldInfo.useOldDataWarehouse ) ? Uintah::Task::OldDW : Uintah::Task::NewDW;
 
         switch( fieldInfo.mode ){
 
@@ -325,7 +322,6 @@ namespace Wasatch{
           proc0cout << std::setw(10) << "COMPUTES";
 #         endif
           ASSERT( dw == Uintah::Task::NewDW );
-          // jcs note that we need ghost information on the computes fields as well!
           task.computes( fieldInfo.varlabel,
                          patches, Uintah::Task::NormalDomain,
                          materials, Uintah::Task::NormalDomain );
