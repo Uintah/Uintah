@@ -440,28 +440,28 @@ void BoundaryCondition_new::setAreaFraction(
 
     // x-plus is a wall but curr cell is flow 
     if ( cellType[c] == flowType && cellType[cxp] == wallType ) {
-      Vector tempV = areaFraction[c]; 
-      tempV[0] = 0.;
-      areaFraction[c] = tempV;
-//      areaFraction[cxp] = Vector(0.,0.,0.);
+//      Vector tempV = areaFraction[c]; 
+//      tempV[0] = 0.;
+//      areaFraction[c] = tempV;
+      areaFraction[cxp] = Vector(0.,1.,1.);
 //      volFraction[cxp]  = 0.;
     }
 
     // y-plus is a wall but curr cell is flow
     if ( cellType[c] == flowType && cellType[cyp] == wallType ) {
-      Vector tempV = areaFraction[c]; 
-      tempV[1] = 0.;
-      areaFraction[c] = tempV;
-//      areaFraction[cyp] = Vector(0.,0.,0.);
+//      Vector tempV = areaFraction[c]; 
+//      tempV[1] = 0.;
+//      areaFraction[c] = tempV;
+      areaFraction[cyp] = Vector(1.,0.,1.);
 //      volFraction[cyp]  = 0.;
     }
 
     // z-plus is a wall but curr cell is flowType
     if (cellType[c] == flowType && cellType[czp] == wallType ) {
-      Vector tempV = areaFraction[c]; 
-      tempV[2] = 0.;
-      areaFraction[c] = tempV;
-//      areaFraction[czp] = Vector(0.,0.,0.);
+//      Vector tempV = areaFraction[c]; 
+//      tempV[2] = 0.;
+//      areaFraction[c] = tempV;
+      areaFraction[czp] = Vector(0.,0.,1.);
 //      volFraction[czp]  = 0.;
     }
   }
