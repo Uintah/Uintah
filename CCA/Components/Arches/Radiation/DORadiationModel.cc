@@ -84,8 +84,9 @@ DORadiationModel::DORadiationModel(const ArchesLabel* label,
                                    d_lab(label),
                                    d_MAlab(MAlab), 
                                    d_boundaryCondition(bndry_cond),
-                                   d_myworld(myworld)
+                                   d_myworld(myworld), lprobone(false), lprobtwo(false), lprobthree(false)
 {
+
   d_linearSolver = 0;
   d_radCalcFreq = 0; 
   _props_calculator = 0;
@@ -164,9 +165,6 @@ DORadiationModel::problemSetup(ProblemSpecP& params)
     d_opl=0.18;
   }
 
-  lprobone   = false;
-  lprobtwo   = false;
-  lprobthree = false;
 
   if (prop_model == "radcoef"){ 
     lradcal     = false;
@@ -219,8 +217,9 @@ DORadiationModel::problemSetup(ProblemSpecP& params)
   
   ffield = -1;
 
-  db->getWithDefault("wall_temperature", d_wall_temp, 293.0); 
   db->getWithDefault("wall_abskg", d_wall_abskg, 1.0); 
+  db->getWithDefault("intrusion_abskg", d_intrusion_abskg, 1.0); 
+
 }
 //______________________________________________________________________
 //
@@ -566,21 +565,11 @@ DORadiationModel::boundarycondition(const ProcessorGroup*,
     Patch::FaceType face = *iter;
     
     Patch::FaceIteratorType PEC = Patch::ExtraPlusEdgeCells;
-    
       
     for (CellIterator iter =  patch->getFaceIterator(face, PEC); !iter.done(); iter++) {
       IntVector c = *iter;
       if (constvars->cellType[c] != ffield ){
-        vars->temperature[c] = d_wall_temp;
         vars->ABSKG[c]       = d_wall_abskg;
-      }
-    }
-    
-    
-    if (lprobone || lprobtwo || lprobthree ){  // will this ever be used?  --Todd
-      for (CellIterator iter =  patch->getFaceIterator(face, PEC); !iter.done(); iter++) {
-        IntVector c = *iter;
-        vars->temperature[c] = 0.0;
       }
     }
   }
@@ -691,7 +680,7 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
                      vars->ESRCG, direcn, oxi, omu,oeta, wt, 
                      vars->temperature, vars->ABSKG,
                      su, aw, as, ab, ap, ae, an, at,
-                     plusX, plusY, plusZ, fraction, bands);
+                     plusX, plusY, plusZ, fraction, bands, d_intrusion_abskg);
 
       //      double timeSetMat = Time::currentSeconds();
       d_linearSolver->setMatrix(pg ,patch, vars, plusX, plusY, plusZ, 

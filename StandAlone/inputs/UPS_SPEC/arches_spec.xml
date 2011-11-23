@@ -165,13 +165,14 @@
         </TabProps>
 
         <ClassicTable                   spec="OPTIONAL NO_DATA">
-          <inputfile                    spec="REQUIRED STRING" /> <!-- table to be opened --> 
-          <cold_flow                    spec="OPTIONAL BOOLEAN"/> <!-- use for simple two stream mixing --> 
-          <noisy_hl_warning             spec="OPTIONAL NO_DATA"/> <!-- warn when heat loss is clipped to bounds --> 
-          <hl_scalar_init               spec="OPTIONAL DOUBLE" /> <!-- initial heat loss value in the domain --> 
+          <inputfile                    spec="REQUIRED STRING" />  <!-- table to be opened --> 
+          <cold_flow                    spec="OPTIONAL BOOLEAN"/>  <!-- use for simple two stream mixing --> 
+          <noisy_hl_warning             spec="OPTIONAL NO_DATA"/>  <!-- warn when heat loss is clipped to bounds --> 
+          <hl_scalar_init               spec="OPTIONAL DOUBLE" />  <!-- initial heat loss value in the domain --> 
           <NOT_ADIABATIC                spec="OPTIONAL NO_DATA" /> <!-- DEVELOPER SWITCH --> 
           <mf_for_hl                    spec="OPTIONAL NO_DATA"/>  <!-- DEVELOPER SWITCH --> 
           <enthalpy_label               spec="OPTIONAL STRING" />  <!-- Pointer to the enthalpy equation.  default = enthalpySP -->
+          <temperature_label_name       spec="OPTIONAL STRING"/>   <!-- The string label identifier from the table for temperature --> 
           <coal                         spec="OPTIONAL NO_DATA" 
                                         attribute1="fp_label REQUIRED STRING"     
                                         attribute2="eta_label REQUIRED STRING"/> <!-- Attributes must match the transported IVs specified in the TransportEqn node --> 
@@ -211,7 +212,10 @@
            <inverted                    spec="OPTIONAL NO_DATA"/>                 <!-- inverts the solid def. so that points inside the solid 
                                                                                        are actually outside the solid and vice versa --> 
 
-           <temperature                 spec="OPTIONAL DOUBLE 'positive'"/>       <!-- solid temperature --> 
+           <constant_temperature        spec="OPTIONAL NO_DATA"
+                                        attribute1="T REQUIRED DOUBLE 'positive'"/>       <!-- Set the intrusion to a constant temperature --> 
+           <mpm_temperature             spec="OPTIONAL NO_DATA"/> <!-- This tag turns on two-way energy exchange between the solid and gas --> 
+                                                                                                                                                             
            
          </intrusion>
         </intrusions>
@@ -250,6 +254,8 @@
           <scalar_filename              spec="OPTIONAL STRING"/>
           <vel_function                 spec="OPTIONAL STRING"/>
           <scalar_function              spec="OPTIONAL STRING"/>
+          <swirl_cent                   spec="OPTIONAL VECTOR"/>
+          <swirl_no                     spec="OPTIONAL DOUBLE 'positive'"/>
 
           <name                         spec="OPTIONAL STRING" />
           <Flow_rate                    spec="OPTIONAL DOUBLE" />
@@ -315,8 +321,8 @@
               <max_iter                 spec="REQUIRED INTEGER" />
             </LinearSolver>
             <spherical_harmonics        spec="OPTIONAL BOOLEAN" />
-            <wall_temperature           spec="OPTIONAL DOUBLE 'positive'"/> <!-- solid domain wall boundary conditions --> 
             <wall_abskg                 spec="OPTIONAL DOUBLE"/>            <!-- solid domain wall boundary conditions --> 
+            <intrusion_abskg            spec="OPTIONAL DOUBLE"/>            <!-- solid intrusion boundary condition --> 
           </DORadiationModel>
         </EnthalpySolver>
 
@@ -478,8 +484,8 @@
             	  <max_iter                 spec="REQUIRED INTEGER" />
             	</LinearSolver>
             	<spherical_harmonics        spec="OPTIONAL BOOLEAN" />                                   <!-- Spherical harmonics, default = false (works?) --> 
-              <wall_temperature           spec="OPTIONAL DOUBLE 'positive'"/> <!-- solid domain wall boundary conditions --> 
               <wall_abskg                 spec="OPTIONAL DOUBLE"/>            <!-- solid domain wall boundary conditions --> 
+              <intrusion_abskg            spec="OPTIONAL DOUBLE"/>            <!-- solid intrusion boundary condition --> 
 						</DORadiationModel>
 
 
@@ -496,6 +502,7 @@
             <cstar_fraction_label       spec="REQUIRED STRING" need_applies_to="type westbrook_dryer"/> <!-- C*H mass fraction label --> 
             <equil_fraction_label       spec="REQUIRED STRING" need_applies_to="type westbrook_dryer"/> <!-- CH mass fraction label (equilibrium calc) --> 
             <mw_label                   spec="OPTIONAL STRING" need_applies_to="type westbrook_dryer"/> <!-- mixture molecular weight label (default = mixture_molecular_weight) --> 
+            <n2_label                   spec="OPTIONAL STRING" need_applies_to="type bowman_nox"/> <!-- N2 label (default = O2) --> 
             <o2_label                   spec="OPTIONAL STRING" need_applies_to="type westbrook_dryer, bowman_nox"/> <!-- o2 label (default = O2) --> 
             <temperature_label          spec="OPTIONAL STRING" need_applies_to="type westbrook_dryer, bowman_nox"/> <!-- temperature label (default = temperature) --> 
             <density_label              spec="OPTIONAL STRING" need_applies_to="type westbrook_dryer, bowman_nox"/> <!-- density label (default = "density) --> 

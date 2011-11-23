@@ -186,6 +186,7 @@ protected:
       }; 
 
 private:
+
       const ProcessorGroup* d_myworld;
       const ArchesLabel*    d_lab;
       const MPMArchesLabel* d_MAlab;
@@ -202,11 +203,13 @@ private:
       int d_lambda;
       double  d_opl;
       int ffield;
-      
-      bool lprobone, lprobtwo, lprobthree, lradcal, lwsgg, lplanckmean, lpatchmean;
-       
+      bool lradcal, lwsgg, lplanckmean, lpatchmean;
+      //not clear if these work so forcing them to be switched off: 
+      bool lprobone, lprobtwo, lprobthree; 
+      bool _using_props_calculator; 
+
       double d_wall_abskg; 
-      double d_wall_temp; 
+      double d_intrusion_abskg; 
 
       OffsetArray1<double> fraction;
       OffsetArray1<double> fractiontwo;
@@ -225,10 +228,8 @@ private:
       OffsetArray1<double> srcbm;
       OffsetArray1<double> srcpone;
       OffsetArray1<double> qfluxbbm;
-      
 
       PropertyCalculatorBase* _props_calculator; 
-      bool _using_props_calculator;
  
       bool d_use_abskp;
       const VarLabel* d_abskpLabel;

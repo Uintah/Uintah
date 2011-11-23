@@ -291,6 +291,7 @@ ClassicTableInterface::sched_getState( const LevelP& level,
   if ( modify_ref_den )
     tsk->computes(time_labels->ref_density); 
   tsk->requires( Task::NewDW, d_lab->d_volFractionLabel, gn, 0 ); 
+  tsk->requires( Task::NewDW, d_lab->d_cellTypeLabel, gn, 0 ); 
 
   sched->addTask( tsk, level->eachPatch(), d_lab->d_sharedState->allArchesMaterials() ); 
 }
@@ -316,9 +317,10 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
     int archIndex = 0; 
     int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
-    // volume fraction: 
     constCCVariable<double> eps_vol; 
+    constCCVariable<int> cell_type; 
     new_dw->get( eps_vol, d_lab->d_volFractionLabel, matlIndex, patch, gn, 0 ); 
+    new_dw->get( cell_type, d_lab->d_cellTypeLabel, matlIndex, patch, gn, 0 ); 
 
     //independent variables:
     std::vector<constCCVariable<double> > indep_storage; 
@@ -440,17 +442,28 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
           (*i->second.var)[c] = table_value;
 
           if (i->first == "density") {
+
             arches_density[c] = table_value; 
+
             if (d_MAlab)
               mpmarches_denmicro[c] = table_value; 
+
           } else if (i->first == "temperature" && !d_coldflow) {
+
             arches_temperature[c] = table_value; 
+
           } else if (i->first == "specificheat" && !d_coldflow) {
+
             arches_cp[c] = table_value; 
+
           } else if (i->first == "CO2" && !d_coldflow) {
+
             arches_co2[c] = table_value; 
+
           } else if (i->first == "H2O" && !d_coldflow) {
+
             arches_h2o[c] = table_value; 
+
           }
 
       }
@@ -541,6 +554,7 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
             //  double table_value = tableLookUp( iv, i->second.index ); 
 						double table_value = ND_interp->find_val( iv, i->second.index );
               table_value *= eps_vol[c]; 
+              //double orig_save = (*i->second.var)[c]; 
               (*i->second.var)[c] = table_value;
 
               if (i->first == "density") {
@@ -550,8 +564,10 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
                 //arches_density[c] = ghost_value; 
                 // This gets density = bc value in extra cell 
                 arches_density[c] = table_value; 
+
                 if (d_MAlab)
                   mpmarches_denmicro[c] = table_value; 
+
               } else if (i->first == "temperature" && !d_coldflow) {
                 arches_temperature[c] = table_value; 
               } else if (i->first == "specificheat" && !d_coldflow) {
@@ -565,6 +581,85 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
           iv.resize(0);
         }
         bc_values.resize(0);
+          
+        //_______________________________________
+        //correct for solid wall temperatures
+        //Q: do we want to do this here? 
+        std::string T_name = "SolidWallTemperature"; 
+
+        const BoundCondBase* bc = patch->getArrayBCValues( face, matlIndex,
+            T_name, bound_ptr,
+            nu, child );
+
+        const DepVarMap::iterator iter = depend_storage.find(_temperature_label_name); 
+
+        const BoundCond<double> *new_bcs =  dynamic_cast<const BoundCond<double> *>(bc);
+        if ( new_bcs != 0 ) {
+
+          if ( iter == depend_storage.end() ) { 
+            throw InternalError("Error: SolidWallTemperature was specified in the <BoundaryCondition> section yet I could not find a temperature variable (default label=temperature). Consider setting/checking <temperature_label_name> in the input file. " ,__FILE__,__LINE__);
+          } 
+
+          // if new_bcs == 0, then it assumes you intelligently set the temperature some other way. 
+          double bc_value     = new_bcs->getValue();
+          std::string bc_kind = new_bcs->getBCType__NEW(); 
+
+          double dx = 0.0;
+          double the_sign = 1.0; 
+
+          if ( bc_kind == "Dirichlet" ) { 
+
+            for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++){
+
+              IntVector c   =   *bound_ptr; 
+              if ( cell_type[c] == BoundaryCondition_new::WALL ){ 
+                (*iter->second.var)[c] = bc_value; 
+              }
+
+            }  
+
+          } else if ( bc_kind == "Neumann" ) { 
+
+            Vector Dx = patch->dCell(); 
+            switch (face) {
+              case Patch::xminus:
+                dx = Dx.x(); 
+                the_sign = -1.0;
+                break; 
+              case Patch::xplus:
+                dx = Dx.x(); 
+                break; 
+              case Patch::yminus:
+                dx = Dx.y(); 
+                the_sign = -1.0; 
+                break; 
+              case Patch::yplus:
+                dx = Dx.y(); 
+                break; 
+              case Patch::zminus:
+                dx = Dx.z(); 
+                the_sign = -1.0; 
+                break; 
+              case Patch::zplus:
+                dx = Dx.z(); 
+                break; 
+              default: 
+                throw InvalidValue("Error: Face type not recognized.",__FILE__,__LINE__); 
+                break; 
+            }
+
+            for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++){
+
+              IntVector c   =   *bound_ptr; 
+              IntVector cp1 = ( *bound_ptr - insideCellDir ); 
+        
+              if ( cell_type[c] == BoundaryCondition_new::WALL ){ 
+                (*iter->second.var)[c] = (*iter->second.var)[cp1] + the_sign * dx * bc_value; 
+              }
+
+            }  
+          } 
+        } 
       }
     }
 
@@ -718,7 +813,7 @@ ClassicTableInterface::computeHeatLoss( const ProcessorGroup* pc,
           adiabatic_enthalpy = _H_fuel * iv[2] + _H_ox * (1.0-iv[2]);
         }
         double current_heat_loss  = 0.0;
-        double small = 1e-10; 
+        double small = 1.0; 
         if ( calcEnthalpy ) {
           
           double numerator = adiabatic_enthalpy - enthalpy[c]; 
