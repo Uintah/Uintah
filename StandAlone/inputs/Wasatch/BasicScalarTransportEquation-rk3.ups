@@ -11,9 +11,17 @@
 
     <Density>
       <IsConstant>true</IsConstant>
+      <NameTag name="rho" state="STATE_NONE" />
     </Density>
+    
+    <BasicExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="rho" state="STATE_NONE" />
+      <Constant> 1.0 </Constant>      
+    </BasicExpression>
          
-<TimeIntegrator>RK3SSP</TimeIntegrator>
+    <TimeIntegrator>RK3SSP</TimeIntegrator>
+
     <!-- Set the initial condition expression for phi1 -->
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
@@ -43,7 +51,7 @@
     <TransportEquation equation="generic">
 
       <SolutionVariable>phi1</SolutionVariable>
-      <StrongFrom>true</StrongFrom>
+      <StrongForm>true</StrongForm>
 
       <DiffusiveFluxExpression>
         <Direction>X</Direction>
