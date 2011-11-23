@@ -21,6 +21,9 @@ class BoundaryCondition_new {
 
 public: 
 
+  //** WARNING: This needs to be duplicated in BoundaryCondition.h for now until BoundaryCondition goes away **//
+  enum BC_TYPE { VELOCITY_INLET, MASSFLOW_INLET, VELOCITY_FILE, MASSFLOW_FILE, PRESSURE, OUTLET, WALL, MMWALL, INTRUSION, SWIRL }; 
+
   BoundaryCondition_new(const ArchesLabel* fieldLabels);
 
   ~BoundaryCondition_new();

@@ -830,6 +830,7 @@ private:
   double d_H_air;           ///< Oxidizer Enthalpy
   double d_hl_lower_bound;  ///< Heat loss lower bound
   double d_hl_upper_bound;  ///< Heat loss upper bound
+  double d_wall_temp;       ///< Temperature at a domain wall 
 
   
   int d_indepvarscount;     ///< Number of independent variables

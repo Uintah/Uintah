@@ -83,6 +83,8 @@ MixingRxnModel::problemSetupCommon( const ProblemSpecP& params )
 
   ProblemSpecP db = params; 
 
+  db->getWithDefault("temperature_label_name", _temperature_label_name, "temperature"); 
+
   // create a transform object
   if ( db->findBlock("coal") ) {
 

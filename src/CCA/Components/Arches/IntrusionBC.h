@@ -56,6 +56,7 @@ namespace Uintah{
 
   class VarLabel; 
   class ArchesLabel;
+  class MPMArchesLabel; 
   class ArchesVariables; 
   class ArchesConstVariables; 
   class Properties; 
@@ -66,7 +67,7 @@ namespace Uintah{
 
       enum INTRUSION_TYPE { INLET, SIMPLE_WALL }; 
 
-      IntrusionBC( const ArchesLabel* lab, Properties* props, int WALL ); 
+      IntrusionBC( const ArchesLabel* lab, const MPMArchesLabel* mpmlab, Properties* props, int WALL ); 
       ~IntrusionBC(); 
 
       /** @brief Interface to input file */
@@ -316,10 +317,12 @@ namespace Uintah{
       std::vector<Boundary> _intrusions; 
       IntrusionMap _intrusion_map; 
       const ArchesLabel* _lab; 
+      const MPMArchesLabel* _mpmlab; 
       Properties* _props;
       int _WALL; 
       bool _intrusion_on; 
       bool _do_energy_exchange; 
+      bool _mpm_energy_exchange; 
 
       std::vector<IntVector> _dHelp;
       std::vector<IntVector> _faceDirHelp; 

@@ -538,8 +538,6 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
       }
 
-      d_boundaryCondition->sched_setIntrusionTemperature( sched, patches, matls ); 
-
       // Property models after table lookup
       for ( PropertyModelFactory::PropMap::iterator iprop = all_prop_models.begin(); 
             iprop != all_prop_models.end(); iprop++){
@@ -561,6 +559,9 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       d_momSolver->sched_averageRKHatVelocities(sched, patches, matls,
                                             d_timeIntegratorLabels[curr_level] );
     } 
+
+    d_boundaryCondition->sched_setIntrusionTemperature( sched, patches, matls ); 
+
 
     d_props->sched_computeDrhodt(sched, patches, matls,
                                  d_timeIntegratorLabels[curr_level]);
@@ -801,6 +802,7 @@ ExplicitSolver::sched_setInitialGuess(SchedulerP& sched,
   tsk->requires(Task::OldDW, d_lab->d_newCCVelocityLabel, gn, 0);
   tsk->requires(Task::OldDW, d_lab->d_areaFractionLabel,  gn, 0); 
   tsk->requires(Task::OldDW, d_lab->d_volFractionLabel,   gn, 0); 
+  tsk->requires(Task::OldDW, d_lab->d_densityGuessLabel,  gn, 0); 
 
   if (!(d_MAlab))
     tsk->computes(d_lab->d_cellInfoLabel);
@@ -1803,6 +1805,12 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
     }else{
       old_dw->get(cellType, d_lab->d_cellTypeLabel,   indx, patch, gn, 0);
     }
+    
+
+    constCCVariable<double> old_density_guess; 
+    old_dw->get( old_density_guess, d_lab->d_densityGuessLabel, indx, patch, gn, 0); 
+
+
     constSFCXVariable<double> uVelocity;
     constSFCYVariable<double> vVelocity;
     constSFCZVariable<double> wVelocity;
@@ -2017,6 +2025,7 @@ ExplicitSolver::sched_dummySolve(SchedulerP& sched,
   tsk->computes(d_lab->d_SO2FlowRateLabel);
   tsk->computes(d_lab->d_scalarFlowRateLabel);
   tsk->computes(d_lab->d_divConstraintLabel);
+  tsk->computes(d_lab->d_densityGuessLabel); 
       
   sched->addTask(tsk, patches, matls); 
 }
@@ -2051,6 +2060,9 @@ ExplicitSolver::dummySolve(const ProcessorGroup* ,
     new_dw->allocateAndPut(div_new,     d_lab->d_divConstraintLabel, indx, patch);
     div_new.copyData(div); 
     pressure_new.copyData(pressure);
+
+    CCVariable<double> density_guess; 
+    new_dw->allocateAndPut(density_guess, d_lab->d_densityGuessLabel, indx, patch); 
 
     constCCVariable<double> pressureExtraProjection;
     CCVariable<double> pressureExtraProjection_new;

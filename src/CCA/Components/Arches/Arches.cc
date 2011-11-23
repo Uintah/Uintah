@@ -748,6 +748,7 @@ Arches::scheduleInitialize(const LevelP& level,
 
   if ( d_boundaryCondition->isUsingNewBC() ) { 
     d_boundaryCondition->sched_computeBCArea__NEW( sched, level, patches, matls ); 
+    //d_boundaryCondition->printBCInfo(); 
     d_boundaryCondition->sched_setupBCInletVelocities__NEW( sched, patches, matls ); 
     d_boundaryCondition->sched_setInitProfile__NEW( sched, patches, matls ); 
     d_boundaryCondition->sched_setPrefill__NEW( sched, patches, matls ); 
@@ -848,6 +849,7 @@ Arches::sched_paramInit(const LevelP& level,
     tsk->computes(d_lab->d_pressurePSLabel);
     tsk->computes(d_lab->d_areaFractionLabel); 
     tsk->computes(d_lab->d_volFractionLabel); 
+    tsk->computes(d_lab->d_densityGuessLabel); 
 
     if (!((d_timeIntegratorType == "FE")||(d_timeIntegratorType == "BE"))){
       tsk->computes(d_lab->d_pressurePredLabel);
@@ -941,6 +943,10 @@ Arches::paramInit(const ProcessorGroup* pg,
     PerPatch<CellInformationP> cellInfoP;
     cellInfoP.setData(scinew CellInformation(patch));
     new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
+
+    CCVariable<double> density_guess; 
+    new_dw->allocateAndPut( density_guess, d_lab->d_densityGuessLabel, indx, patch ); 
+    density_guess.initialize(0.0);
 
     SFCXVariable<double> uVelocity;
     SFCYVariable<double> vVelocity;

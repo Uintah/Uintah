@@ -119,7 +119,7 @@ DORadiation::sched_computeSource( const LevelP& level, SchedulerP& sched, int ti
   _co2_label = VarLabel::find( _co2_label_name ); 
   _h2o_label = VarLabel::find( _h2o_label_name ); 
   _T_label   = VarLabel::find( _T_label_name ); 
-
+  
   if (timeSubStep == 0 && !_label_sched_init) {
     // Every source term needs to set this flag after the varLabel is computed. 
     // transportEqn.cleanUp should reinitialize this flag at the end of the time step. 
@@ -226,19 +226,20 @@ DORadiation::computeSource( const ProcessorGroup* pc,
       new_dw->allocateAndPut( radiation_vars.ABSKP  , _abskpLabel          , matlIndex , patch );
 
       new_dw->allocateAndPut( divQ, _src_label, matlIndex, patch ); 
+      divQ.initialize(0.0);
       radiation_vars.ESRCG.allocate( patch->getExtraCellLowIndex(1), patch->getExtraCellHighIndex(1) );  
 
-      radiation_vars.src.initialize(0.0);
-      radiation_vars.qfluxe.initialize(0.0);
-      radiation_vars.qfluxw.initialize(0.0);
-      radiation_vars.qfluxn.initialize(0.0);
-      radiation_vars.qfluxs.initialize(0.0);
-      radiation_vars.qfluxt.initialize(0.0);
-      radiation_vars.qfluxb.initialize(0.0);
-      radiation_vars.ABSKG.initialize(0.0);
-      radiation_vars.ABSKP.initialize(0.0); 
-      radiation_vars.ESRCG.initialize(0.0);
-      divQ.initialize(0.0); 
+      // copy old solution into newly allocated variable
+      old_dw->copyOut( radiation_vars.qfluxe, _radiationFluxELabel, matlIndex, patch, Ghost::None, 0 );  
+      old_dw->copyOut( radiation_vars.qfluxw, _radiationFluxWLabel, matlIndex, patch, Ghost::None, 0 );  
+      old_dw->copyOut( radiation_vars.qfluxn, _radiationFluxNLabel, matlIndex, patch, Ghost::None, 0 );  
+      old_dw->copyOut( radiation_vars.qfluxs, _radiationFluxSLabel, matlIndex, patch, Ghost::None, 0 );  
+      old_dw->copyOut( radiation_vars.qfluxt, _radiationFluxTLabel, matlIndex, patch, Ghost::None, 0 );  
+      old_dw->copyOut( radiation_vars.qfluxb, _radiationFluxBLabel, matlIndex, patch, Ghost::None, 0 );  
+      old_dw->copyOut( radiation_vars.ABSKG,  _abskgLabel, matlIndex, patch, Ghost::None, 0 );  
+      old_dw->copyOut( radiation_vars.ABSKP,  _abskpLabel, matlIndex, patch, Ghost::None, 0 );  
+      old_dw->copyOut( radiation_vars.volq,   _radiationVolqLabel, matlIndex, patch, Ghost::None, 0 );  
+      old_dw->copyOut( radiation_vars.src,    _radiationSRCLabel, matlIndex, patch, Ghost::None, 0 );  
 
     } else { 
 
@@ -261,7 +262,6 @@ DORadiation::computeSource( const ProcessorGroup* pc,
       new_dw->getModifiable( radiation_vars.ABSKP  , _abskpLabel          , matlIndex , patch );
 
       new_dw->getModifiable( divQ, _src_label, matlIndex, patch ); 
-      divQ.initialize(0.0); 
 
       radiation_vars.ESRCG.allocate( patch->getExtraCellLowIndex(1), patch->getExtraCellHighIndex(1) );  
 
@@ -279,15 +279,15 @@ DORadiation::computeSource( const ProcessorGroup* pc,
         _DO_model->intensitysolve( pc, patch, cellinfo, &radiation_vars, &const_radiation_vars, BoundaryCondition::WALL ); 
 
       }
+    }
 
-      for ( CellIterator iter = patch->getCellIterator(); !iter.done(); iter++ ){ 
+    for ( CellIterator iter = patch->getCellIterator(); !iter.done(); iter++ ){ 
 
-        IntVector c = *iter;
-        divQ[c] = radiation_vars.src[c]; 
+      IntVector c = *iter;
+      divQ[c] = radiation_vars.src[c]; 
 
-      }
+    }
 
-    } 
   } // end patch loop
 }
 
@@ -307,6 +307,7 @@ DORadiation::sched_dummyInit( const LevelP& level, SchedulerP& sched )
        iter != _extra_local_labels.end(); iter++){
 
     tsk->computes(*iter); 
+    tsk->requires( Task::OldDW, *iter, Ghost::None, 0 ); 
 
   }
 
@@ -335,9 +336,16 @@ DORadiation::dummyInit( const ProcessorGroup* pc,
 
     for (std::vector<const VarLabel*>::iterator iter = _extra_local_labels.begin(); 
          iter != _extra_local_labels.end(); iter++){
-      CCVariable<double> tempVar; 
-      new_dw->allocateAndPut(tempVar, *iter, matlIndex, patch ); 
-      tempVar.initialize(0.0); 
+
+      CCVariable<double> temp_var; 
+      constCCVariable<double> const_temp_var; 
+
+      new_dw->allocateAndPut(temp_var, *iter, matlIndex, patch ); 
+      //This next line is to get around scrubbing.
+      old_dw->get( const_temp_var, *iter, matlIndex, patch, Ghost::None, 0 ); 
+
+      temp_var.initialize(0.0);
+      
     }
   }
 }
