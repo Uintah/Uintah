@@ -391,8 +391,8 @@ DensityCalculator<FieldT>::nonlinear_solver( std::vector<double>& ReIeta,
       return false;
     }
 //    std::cout << "converged in " << itCounter << " iterations.  eta=" << ReIeta[0] << ", rhoeta=" << rho*ReIeta[0] << ", rho=" << rho << std::endl;
-    return true;
   }
+  return true;
 }
 
 //====================================================================
