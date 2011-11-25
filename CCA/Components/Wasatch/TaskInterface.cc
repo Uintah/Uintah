@@ -272,15 +272,16 @@ namespace Wasatch{
 #         endif
         }
 
-        // if the field uses dynamic allocation, then the uintah task should not be aware of this field
-        // jcs the const_cast is a hack because of the lack of const on the is_persistent method...
-        if( ! const_cast<Expr::ExpressionTree&>(tree).is_persistent(fieldTag) ){
-          continue;
-        }
-
         //________________
         // set field mode
         if( tree.computes_field( fieldTag ) ){
+
+          // if the field uses dynamic allocation, then the uintah task should not be aware of this field
+          // jcs the const_cast is a hack because of the lack of const on the is_persistent method...
+          if( ! const_cast<Expr::ExpressionTree&>(tree).is_persistent(fieldTag) ){
+            continue;
+          }
+
 
           if( rkStage==1 ){
             fieldInfo.mode = Expr::COMPUTES;
