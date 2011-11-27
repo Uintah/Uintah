@@ -313,6 +313,7 @@
             <opl                        spec="REQUIRED DOUBLE" />
             <ordinates                  spec="OPTIONAL INTEGER" />
             <property_model             spec="OPTIONAL STRING 'radcoef, patchmean, wsggm'" />
+            <const_wall_temperature     spec="OPTIONAL NO_DATA" /> <!-- sets all solid wall temperatures to 293.0K --> 
             <LinearSolver               spec="OPTIONAL NO_DATA" 
                                         attribute1="type REQUIRED STRING 'hypre, petsc'">
               <res_tol                  spec="REQUIRED DOUBLE" />
@@ -476,6 +477,7 @@
             	<opl                        spec="REQUIRED DOUBLE" />                                    <!-- optical path length --> 
             	<ordinates                  spec="OPTIONAL INTEGER" />                                   <!-- number of ordinants, default = 2 --> 
             	<property_model             spec="OPTIONAL STRING 'radcoef, patchmean, wsggm'" />        <!-- optical property model, default = radcoef --> 
+              <const_wall_temperature     spec="OPTIONAL NO_DATA" /> <!-- sets all solid wall temperatures to 293.0K --> 
             	<LinearSolver               spec="OPTIONAL NO_DATA"                                      
             	                            attribute1="type REQUIRED STRING 'hypre, petsc'">
             	  <res_tol                  spec="REQUIRED DOUBLE" />
