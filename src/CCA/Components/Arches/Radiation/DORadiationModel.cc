@@ -217,6 +217,11 @@ DORadiationModel::problemSetup(ProblemSpecP& params)
   
   ffield = -1;
 
+  d_do_const_wall_T = false; 
+  if ( db->findBlock("const_wall_temperature" )) { 
+    d_do_const_wall_T = true; 
+    d_wall_temperature = 293.0; 
+  }
   db->getWithDefault("wall_abskg", d_wall_abskg, 1.0); 
   db->getWithDefault("intrusion_abskg", d_intrusion_abskg, 1.0); 
 
@@ -565,11 +570,21 @@ DORadiationModel::boundarycondition(const ProcessorGroup*,
     Patch::FaceType face = *iter;
     
     Patch::FaceIteratorType PEC = Patch::ExtraPlusEdgeCells;
-      
-    for (CellIterator iter =  patch->getFaceIterator(face, PEC); !iter.done(); iter++) {
-      IntVector c = *iter;
-      if (constvars->cellType[c] != ffield ){
-        vars->ABSKG[c]       = d_wall_abskg;
+    
+    if ( d_do_const_wall_T ) {   
+      for (CellIterator iter =  patch->getFaceIterator(face, PEC); !iter.done(); iter++) {
+        IntVector c = *iter;
+        if (constvars->cellType[c] != ffield ){
+          vars->temperature[c] = d_wall_temperature; 
+          vars->ABSKG[c]       = d_wall_abskg;
+        }
+      }
+    } else { 
+      for (CellIterator iter =  patch->getFaceIterator(face, PEC); !iter.done(); iter++) {
+        IntVector c = *iter;
+        if (constvars->cellType[c] != ffield ){
+          vars->ABSKG[c]       = d_wall_abskg;
+        }
       }
     }
   }

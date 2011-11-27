@@ -314,6 +314,7 @@
                              = 0.36 * 27 / 54 = 0.18 -->
                         <opl>0.18</opl>
                         <ordinates>4</ordinates>
+                        <const_wall_temperature/>
                         <LinearSolver type="hypre">
                             <max_iter>7500</max_iter>
                             <res_tol>1.0e-09</res_tol>

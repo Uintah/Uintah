@@ -209,7 +209,10 @@ private:
       bool _using_props_calculator; 
 
       double d_wall_abskg; 
+      double d_wall_temperature; 
       double d_intrusion_abskg; 
+
+      bool d_do_const_wall_T;
 
       OffsetArray1<double> fraction;
       OffsetArray1<double> fractiontwo;
