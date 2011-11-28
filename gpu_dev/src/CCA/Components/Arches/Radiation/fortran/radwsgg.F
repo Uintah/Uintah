@@ -108,9 +108,9 @@ C      IMPLICIT NONE
 	    b(4) = -0.437d0
 	end if
 
-      DO 80 K=idxlo(3)-1,idxhi(3)+1
-        DO 70 J=idxlo(2)-1,idxhi(2)+1
-          DO 60 I=idxlo(1)-1,idxhi(1)+1
+      DO 80 K=idxlo(3),idxhi(3)
+        DO 70 J=idxlo(2),idxhi(2)
+          DO 60 I=idxlo(1),idxhi(1)
 
           IF (PCELL(I,J,K).EQ.FFIELD) THEN
 

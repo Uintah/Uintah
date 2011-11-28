@@ -337,9 +337,9 @@
             <convection_scheme>central-upwind</convection_scheme>
             <radiationCalcFreq>5</radiationCalcFreq>
             <radCalcForAllRKSteps>false</radCalcForAllRKSteps>
-            <!-- didn't do radiation for clearwater? -->
             <DORadiationModel>
                 <opl>3.0</opl>
+                <const_wall_temperature/>
                 <LinearSolver type="petsc">
                     <res_tol>1.0e-10</res_tol>
                     <ksptype>gmres</ksptype>

@@ -413,56 +413,44 @@ void BoundaryCondition_new::setAreaFraction(
 
     // x-minus is a wall but curr cell is flow 
     if ( cellType[c] == flowType && cellType[cxm] == wallType ) {
-      Vector tempV = areaFraction[c]; 
-      tempV[0] = 0.;
-      areaFraction[c] = tempV;
-//      areaFraction[cxm] = Vector(0.,0.,0.);
-//      volFraction[cxm]  = 0.;
+      Vector T = areaFraction[c]; 
+      T[0] = 0.;
+      areaFraction[c] = T;
     }
 
     // y-minus is a wall but curr cell is flow
     if ( cellType[c] == flowType && cellType[cym] == wallType ) {
-      Vector tempV = areaFraction[c]; 
-      tempV[1] = 0.;
-      areaFraction[c] = tempV;
-//      areaFraction[cym] = Vector(0.,0.,0.);
-//      volFraction[cym]  = 0.;
+      Vector T = areaFraction[c]; 
+      T[1] = 0.;
+      areaFraction[c] = Vector(1.,0.,1.);
     }
 
     // z-minus is a wall but curr cell is flowType
     if (cellType[c] == flowType && cellType[czm] == wallType ) {
-      Vector tempV = areaFraction[c]; 
-      tempV[2] = 0.;
-      areaFraction[c] = tempV;
-//      areaFraction[czm] = Vector(0.,0.,0.);
-//      volFraction[czm]  = 0.;
+      Vector T = areaFraction[c]; 
+      T[2] = 0.;
+      areaFraction[c] = Vector(1.,1.,0.);
     }
 
     // x-plus is a wall but curr cell is flow 
     if ( cellType[c] == flowType && cellType[cxp] == wallType ) {
-      Vector tempV = areaFraction[c]; 
-      tempV[0] = 0.;
-      areaFraction[c] = tempV;
-//      areaFraction[cxp] = Vector(0.,0.,0.);
-//      volFraction[cxp]  = 0.;
+      Vector T = areaFraction[cxp];
+      T[0] = 0.; 
+      areaFraction[cxp] = T;
     }
 
     // y-plus is a wall but curr cell is flow
     if ( cellType[c] == flowType && cellType[cyp] == wallType ) {
-      Vector tempV = areaFraction[c]; 
-      tempV[1] = 0.;
-      areaFraction[c] = tempV;
-//      areaFraction[cyp] = Vector(0.,0.,0.);
-//      volFraction[cyp]  = 0.;
+      Vector T = areaFraction[cyp];
+      T[1] = 0.; 
+      areaFraction[cyp] = T;
     }
 
     // z-plus is a wall but curr cell is flowType
     if (cellType[c] == flowType && cellType[czp] == wallType ) {
-      Vector tempV = areaFraction[c]; 
-      tempV[2] = 0.;
-      areaFraction[c] = tempV;
-//      areaFraction[czp] = Vector(0.,0.,0.);
-//      volFraction[czp]  = 0.;
+      Vector T = areaFraction[czp];
+      T[2] = 0.; 
+      areaFraction[czp] = T;
     }
   }
 }

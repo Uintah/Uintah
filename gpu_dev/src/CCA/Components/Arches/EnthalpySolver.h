@@ -95,12 +95,7 @@ class EnthalpySolver {
 
 public:
 
-  // GROUP: Constructors:
-  ////////////////////////////////////////////////////////////////////////
-  // Construct an instance of the Enthalpy solver.
-  // PRECONDITIONS
-  // POSTCONDITIONS
-  //   A linear level solver is partially constructed.  
+
   EnthalpySolver(const ArchesLabel* label, 
                  const MPMArchesLabel* MAlb, 
                  TurbulenceModel* turb_model, 
@@ -108,9 +103,7 @@ public:
                  PhysicalConstants* physConst,
                  const ProcessorGroup* myworld);
 
-  // GROUP: Destructors:
-  ////////////////////////////////////////////////////////////////////////
-  // Destructor
+
   ~EnthalpySolver();
 
   // GROUP: Problem Setup :
@@ -128,9 +121,8 @@ public:
   inline bool checkRadiation() const{
     return d_radiationCalc;
   }
-  inline void set_iteration_number(int iteration_number) {
-    d_iteration_number = iteration_number;
-  }
+
+
   inline void setAdiabaticAirEnthalpy(double H_air) {
     d_H_air = H_air;
   }
@@ -200,7 +192,6 @@ private:
   const ArchesLabel* d_lab;
   const MPMArchesLabel* d_MAlab;
 
-  ArchesVariables* d_enthalpyVars;
   // computes coefficients
   Discretization* d_discretize;
   // computes sources
@@ -213,16 +204,15 @@ private:
   BoundaryCondition* d_boundaryCondition;
   // physical constants
   PhysicalConstants* d_physicalConsts;
-  // radiation model
+  
+  
+  // radiation models
   RadiationModel* d_DORadiation;
-  // RMCRT radiation model 
   Ray* d_RMCRT;
-
-  int d_radCalcFreq;
   bool d_radiationCalc;
   bool d_DORadiationCalc;
-  const Patch* d_pressRefPatch;
-  int d_pressRefProc;
+  bool d_doRMCRT;
+  
   const PatchSet* d_perproc_patches;
 
   const ProcessorGroup* d_myworld;
@@ -230,16 +220,11 @@ private:
   int d_limiter_type;
   int d_boundary_limiter_type;
   bool d_central_limiter;
-  bool d_radRKsteps;
-  bool d_radImpsteps;
   bool d_dynScalarModel;
   double d_turbPrNo;
-  int d_iteration_number;
   double d_H_air;
   bool d_doMMS;
-  bool d_doRMCRT; 
-  bool d_use_abskp;
-  const VarLabel* d_abskpLabel;
+  
   vector<string> d_new_sources; 
 
 }; // End class EnthalpySolver

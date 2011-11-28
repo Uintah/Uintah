@@ -169,6 +169,8 @@ namespace Uintah {
 
     protected :
 
+      std::string _temperature_label_name; 
+
       class TransformBase { 
 
         public: 

@@ -110,11 +110,13 @@ BoundaryCondition::BoundaryCondition(const ArchesLabel* label,
                                      d_enthalpySolve(calcEnthalpy),
                                      d_calcVariance(calcVariance)
 {
+
   MM_CUTOFF_VOID_FRAC = 0.5;
   d_wallBdry = 0;
   d_pressureBC = 0;
   d_outletBC = 0;
-  _using_new_intrusion = false; 
+  _using_new_intrusion  = false; 
+  d_calcEnergyExchange  = false;
 
   // x-direction
   index_map[0][0] = 0;
@@ -232,7 +234,7 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
 
     if ( db->findBlock("intrusions") ){ 
 
-      _intrusionBC = scinew IntrusionBC( d_lab, d_props, BoundaryCondition::INTRUSION ); 
+      _intrusionBC = scinew IntrusionBC( d_lab, d_MAlab, d_props, BoundaryCondition::INTRUSION ); 
       ProblemSpecP db_new_intrusion = db->findBlock("intrusions"); 
       _using_new_intrusion = true; 
 
@@ -1790,7 +1792,7 @@ BoundaryCondition::sched_setIntrusionTemperature( SchedulerP& sched,
 { 
   if ( _using_new_intrusion ){ 
     // Interface to new intrusions
-    //_intrusionBC->sched_setIntrusionT( sched, patches, matls ); 
+    _intrusionBC->sched_setIntrusionT( sched, patches, matls ); 
   }
 } 
 
@@ -2112,6 +2114,14 @@ BoundaryCondition::FlowInlet::problemSetup(ProblemSpecP& params)
 
   } else 
       throw InvalidValue("Error: FlowInlet velocity_type not recognized.", __FILE__, __LINE__); 
+
+  // ---- swirl ------------
+  params->getWithDefault("swirl_no", swirl_no, 0.0 ); 
+  params->getWithDefault("swirl_cent", swirl_cent, Vector(0,0,0) );
+  do_swirl = false; 
+  if ( swirl_no > 0.0 ) { 
+    do_swirl = true; 
+  } 
 
   // ---- Scalar inlet information --- 
   params->getWithDefault("scalar_type", input_type, "flat");
@@ -2583,6 +2593,8 @@ BoundaryCondition::velRhoHatInletBC(const Patch* patch,
 {
   double time = d_lab->d_sharedState->getElapsedTime();
   double current_time = time + time_shift;
+  Vector Dx = patch->dCell(); 
+
   // Get the low and high index for the patch and the variables
   IntVector idxLo = patch->getFortranCellLowIndex();
   IntVector idxHi = patch->getFortranCellHighIndex();
@@ -2602,11 +2614,18 @@ BoundaryCondition::velRhoHatInletBC(const Patch* patch,
       bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
       bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
 
+      double cent_y = fi->swirl_cent[1];
+      double cent_z = fi->swirl_cent[2]; 
+      double dy = Dx.y(); 
+      double dz = Dx.z(); 
+
       fort_inlbcs(vars->uVelRhoHat, vars->vVelRhoHat, vars->wVelRhoHat,
                   idxLo, idxHi, constvars->new_density, constvars->cellType, 
                   fi->d_cellTypeID, current_time,
                   xminus, xplus, yminus, yplus, zminus, zplus,
-                  fi->d_ramping_inlet_flowrate);
+                  fi->d_ramping_inlet_flowrate, dy, dz, 
+                  fi->do_swirl, cent_y, cent_z, fi->swirl_no );
+
     }
   } else { 
 
@@ -2660,7 +2679,7 @@ BoundaryCondition::velRhoHatInletBC(const Patch* patch,
 
               } else if ( face == Patch::yminus || face == Patch::yplus ){ 
 
-                setSwirl( patch, face, vars->vVelRhoHat, vars->wVelRhoHat, vars->uVelRhoHat, 
+               setSwirl( patch, face, vars->vVelRhoHat, vars->wVelRhoHat, vars->uVelRhoHat, 
                     constvars->new_density, bound_ptr, bc_iter->second.velocity, bc_iter->second.swirl_no, bc_iter->second.swirl_cent  ); 
 
               } else if ( face == Patch::zminus || face == Patch::zplus ){ 
@@ -3830,6 +3849,7 @@ BoundaryCondition::initInletBC(const ProcessorGroup*,
 {
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
+    Vector Dx = patch->dCell(); 
     int archIndex = 0; // only one arches material
     int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
     constCCVariable<int> cellType;
@@ -3868,11 +3888,17 @@ BoundaryCondition::initInletBC(const ProcessorGroup*,
         // Get a copy of the current flow inlet
         FlowInlet* fi = d_flowInlets[indx];
     
-        fort_inlbcs(uVelocity, vVelocity, wVelocity,
+        double cent_y = fi->swirl_cent[1];
+        double cent_z = fi->swirl_cent[2]; 
+        double dy = Dx.y(); 
+        double dz = Dx.z(); 
+
+        fort_inlbcs( uVelocity, vVelocity, wVelocity, 
                     idxLo, idxHi, density, cellType, 
                     fi->d_cellTypeID, current_time,
                     xminus, xplus, yminus, yplus, zminus, zplus,
-                    fi->d_ramping_inlet_flowrate);
+                    fi->d_ramping_inlet_flowrate, dy, dz, 
+                    fi->do_swirl, cent_y, cent_z, fi->swirl_no );
       }
     }  
     
@@ -5325,7 +5351,7 @@ BoundaryCondition::setupBCs( ProblemSpecP& db )
         my_info.name = name;
         std::stringstream color; 
         color << bc_type_index; 
-        my_info.total_area_label = VarLabel::create( "bc_area"+color.str(), ReductionVariable<double, Reductions::Sum<double> >::getTypeDescription());
+        my_info.total_area_label = VarLabel::create( "bc_area"+color.str()+name, ReductionVariable<double, Reductions::Sum<double> >::getTypeDescription());
 
         if ( type == "VelocityInlet" ){
 
@@ -5340,6 +5366,7 @@ BoundaryCondition::setupBCs( ProblemSpecP& db )
 
           my_info.type = MASSFLOW_INLET;
           my_info.velocity = Vector(0,0,0); 
+          my_info.mass_flow_rate = 0.0;
           found_bc = true; 
 
           // note that the mass flow rate is in the BCstruct value 
@@ -5616,12 +5643,12 @@ BoundaryCondition::computeBCArea__NEW(const ProcessorGroup*,
                 }
               }
             }
-
-            new_dw->put( sum_vartype(area), bc_iter->second.total_area_label );
-
           }
         }
       }
+
+      new_dw->put( sum_vartype(area), bc_iter->second.total_area_label );
+  
     }
   }
 }
@@ -5699,32 +5726,36 @@ BoundaryCondition::setupBCInletVelocities__NEW(const ProcessorGroup*,
           bool foundIterator = 
             getIteratorBCValueBCKind( patch, face, child, bc_iter->second.name, matl_index, bc_value, bound_ptr, bc_kind); 
 
-          // Notice: 
-          // In the case of mass flow inlets, we are going to assume the density is constant across the inlet
-          // so as to compute the average velocity.  As a result, we will just use the first iterator: 
-          bound_ptr.reset(); 
-
           if ( foundIterator ) {
+
+            // Notice: 
+            // In the case of mass flow inlets, we are going to assume the density is constant across the inlet
+            // so as to compute the average velocity.  As a result, we will just use the first iterator: 
+            bound_ptr.reset(); 
+            if ( (bc_iter->second).type == MASSFLOW_INLET ) {
+              (bc_iter->second).mass_flow_rate = bc_value; 
+              (bc_iter->second).velocity[norm] = (bc_iter->second).mass_flow_rate / 
+                                               ( area * density[*bound_ptr] );
+            } else if ( (bc_iter->second).type == SWIRL ) { 
+                (bc_iter->second).mass_flow_rate = bc_value; 
+                (bc_iter->second).velocity[norm] = (bc_iter->second).mass_flow_rate / 
+                                                 ( area * density[*bound_ptr] ); 
+            } 
 
             switch ( bc_iter->second.type ) {
 
               case ( VELOCITY_INLET ): 
-                proc0cout << " Velocity inlet found for face: " << face << " with area = " << area << endl;
                 bc_iter->second.mass_flow_rate = bc_iter->second.velocity[norm] * area * density[*bound_ptr];
                 break;
               case ( MASSFLOW_INLET ): 
-                proc0cout << " Massflow inlet found for face: " << face << " with area = " << area << endl;
                 bc_iter->second.mass_flow_rate = bc_value; 
                 bc_iter->second.velocity[norm] = bc_iter->second.mass_flow_rate / 
                                                  ( area * density[*bound_ptr] );
-                proc0cout << "     Computed velocity from rho = " << density[*bound_ptr] << " is v = " << bc_iter->second.velocity[norm] << endl;
                 break;
               case ( SWIRL ):
-                proc0cout << " Swirl inlet found for face: " << face << " with area = " << area << endl;
                 bc_iter->second.mass_flow_rate = bc_value; 
                 bc_iter->second.velocity[norm] = bc_iter->second.mass_flow_rate / 
                                                  ( area * density[*bound_ptr] ); 
-                proc0cout << "     Computed velocity from rho = " << density[*bound_ptr] << " is v = " << bc_iter->second.velocity[norm] << endl;
                 break; 
 
               case ( VELOCITY_FILE ): 

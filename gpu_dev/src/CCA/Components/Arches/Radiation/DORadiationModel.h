@@ -53,59 +53,38 @@ GENERAL INFORMATION
 ***************************************************************************/
 #include <CCA/Components/Arches/Radiation/RadiationModel.h>
 #include <CCA/Components/Arches/Radiation/RadiationSolver.h>
+#include <CCA/Components/Arches/TimeIntegratorLabel.h>
 
 namespace Uintah {
-
-class BoundaryCondition;
+  class ArchesLabel;
+  class BoundaryCondition;
 
 class DORadiationModel: public RadiationModel {
 
 public:
 
-      // GROUP: Constructors:
-      ///////////////////////////////////////////////////////////////////////
-      //
-      // Constructor taking
-      //   [in] 
-      //
-      DORadiationModel(BoundaryCondition* bndry_cond, const ProcessorGroup* myworld);
+      DORadiationModel(const ArchesLabel* label,
+                       const MPMArchesLabel* MAlab,
+                       BoundaryCondition* bndry_cond, 
+                       const ProcessorGroup* myworld);
 
-      // GROUP: Destructors :
-      ///////////////////////////////////////////////////////////////////////
-      //
-      // Virtual destructor for radiation model
-      //
+
       virtual ~DORadiationModel();
 
-      // GROUP: Problem Setup :
-      ///////////////////////////////////////////////////////////////////////
-      //
-      // Set up the problem specification database
-      //
-      virtual void problemSetup(const ProblemSpecP& params);
-    
-      // GROUP: Actual Action Methods :
-      ///////////////////////////////////////////////////////////////////////
-      /*
-      virtual void computeRadiationProps(const ProcessorGroup* pc,
-                                       const Patch* patch,
-                                       CellInformation* cellinfo,
-                                       ArchesVariables* vars);
-      */
+
+      virtual void problemSetup(ProblemSpecP& params);
+
       virtual void computeRadiationProps(const ProcessorGroup* pc,
                                          const Patch* patch,
                                          CellInformation* cellinfo,
                                          ArchesVariables* vars,
                                          ArchesConstVariables* constvars);
-      //
-      /////////////////////////////////////////////////////////////////////////
       
       virtual void boundarycondition(const ProcessorGroup* pc,
                                      const Patch* patch,
                                      CellInformation* cellinfo, 
                                      ArchesVariables* vars,
                                      ArchesConstVariables* constvars);
-      ////////////////////////////////////////////////////////////////////////
 
       virtual void intensitysolve(const ProcessorGroup* pc,
                                   const Patch* patch,
@@ -113,10 +92,26 @@ public:
                                   ArchesVariables* vars,
                                   ArchesConstVariables* constvars, 
                                   int wall_type);
-      ////////////////////////////////////////////////////////////////////////
+
+      //__________________________________
+      //  This task is called by enthalpy solver
+      //  and it computes div_q
+      virtual void sched_computeSource( const LevelP& level, 
+                                SchedulerP& sched, 
+                                const MaterialSet* matls,
+                                const TimeIntegratorLabel* timelabels,
+                                const bool isFirstIntegrationStep );
+                                       
+      virtual void computeSource( const ProcessorGroup* pc, 
+                          const PatchSubset* patches, 
+                          const MaterialSubset* matls, 
+                          DataWarehouse* old_dw, 
+                          DataWarehouse* new_dw,
+                          const TimeIntegratorLabel* timelabels,  
+                          bool isFirstIntegrationStep );
 
 protected: 
-       // boundary condition
+
       BoundaryCondition* d_boundaryCondition;
 
       /// For other analytical properties.
@@ -130,6 +125,8 @@ protected:
           virtual void computeProps( const Patch* patch, CCVariable<double>& abskg )=0;  // for now only assume abskg
       };
 
+      //__________________________________
+      //
       class ConstantProperties : public PropertyCalculatorBase  { 
 
         public: 
@@ -138,38 +135,34 @@ protected:
 
           bool problemSetup( const ProblemSpecP& db ) {
               
-            bool property_on = false; 
             ProblemSpecP db_prop = db; 
-
             db_prop->getWithDefault("abskg",_value,1.0); 
-            property_on = true; 
+            
+            bool property_on = true; 
 
             return property_on; 
           };
 
           void computeProps( const Patch* patch, CCVariable<double>& abskg ){ 
             abskg.initialize(_value); 
-
           }; 
 
         private: 
           double _value; 
       }; 
-
+      //__________________________________
+      //
       class  BurnsChriston : public PropertyCalculatorBase  { 
 
         public: 
           BurnsChriston();
           ~BurnsChriston();
 
-          bool problemSetup( const ProblemSpecP& db ) {
-            
-            bool property_on = false; 
+          bool problemSetup( const ProblemSpecP& db ) { 
             ProblemSpecP db_prop = db; 
-
-            db_prop->require("grid",grid); 
-            property_on = true; 
-
+            db_prop->require("grid",grid);
+             
+            bool property_on = true; 
             return property_on; 
           };
 
@@ -178,14 +171,12 @@ protected:
             Vector Dx = patch->dCell(); 
 
             for (CellIterator iter = patch->getCellIterator(); !iter.done(); ++iter){ 
-
               IntVector c = *iter; 
               std::cout << abskg[c] << std::endl;
               abskg[c] = 0.90 * ( 1.0 - 2.0 * fabs( ( c[0] - (grid.x() - 1.0) /2.0) * Dx[0]) )
                               * ( 1.0 - 2.0 * fabs( ( c[1] - (grid.y() - 1.0) /2.0) * Dx[1]) )
                               * ( 1.0 - 2.0 * fabs( ( c[2] - (grid.z() - 1.0) /2.0) * Dx[2]) ) 
                               + 0.1;
-
             } 
           }; 
 
@@ -196,20 +187,32 @@ protected:
 
 private:
 
-      double d_xumax;
+      const ProcessorGroup* d_myworld;
+      const ArchesLabel*    d_lab;
+      const MPMArchesLabel* d_MAlab;
+      const PatchSet* d_perproc_patches;
+      
+      int  d_radCalcFreq;
+      bool d_radRKsteps;
+      bool d_radImpsteps;
       
       int d_sn, d_totalOrds; // totalOrdinates = sn*(sn+2)
 
       void computeOrdinatesOPL();
       
-      int lambda;
+      int d_lambda;
       double  d_opl;
       int ffield;
-      int wall;
-      bool lprobone, lprobtwo, lprobthree, lradcal, lwsgg, lplanckmean, lpatchmean;
+      bool lradcal, lwsgg, lplanckmean, lpatchmean;
+      //not clear if these work so forcing them to be switched off: 
+      bool lprobone, lprobtwo, lprobthree; 
       bool _using_props_calculator; 
+
       double d_wall_abskg; 
-      double d_wall_temp; 
+      double d_wall_temperature; 
+      double d_intrusion_abskg; 
+
+      bool d_do_const_wall_T;
 
       OffsetArray1<double> fraction;
       OffsetArray1<double> fractiontwo;
@@ -228,10 +231,11 @@ private:
       OffsetArray1<double> srcbm;
       OffsetArray1<double> srcpone;
       OffsetArray1<double> qfluxbbm;
-      const ProcessorGroup* d_myworld;
 
       PropertyCalculatorBase* _props_calculator; 
-
+ 
+      bool d_use_abskp;
+      const VarLabel* d_abskpLabel;
 
 
 }; // end class RadiationModel

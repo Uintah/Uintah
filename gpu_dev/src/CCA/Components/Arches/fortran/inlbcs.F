@@ -42,7 +42,8 @@ c*********************************************************************
       integer IST, IEND, JST, JEND, KST, KEND
 
       integer i, j, k
-      double precision factor
+      double precision factor, y,z
+      double precision denom, ave_u
 
 c*********************************************************************
 c     Get the indices of interest
@@ -60,6 +61,8 @@ c*********************************************************************
 C-----------------------------------------------------------------------
 C     EAST AND WEST INLETS
 C-----------------------------------------------------------------------
+
+C************ SWIRL ONLY ON X- FACES! ************
       if (xminus.or.xplus) then
          DO 120 K = kst,kend
             DO 100 J = jst,jend
@@ -68,6 +71,27 @@ C-----------------------------------------------------------------------
                      UU(ist,J,K) = factor*UU(ist-1,J,K) *
      &                    DEN(ist-1,J,K)
      &                    / (PT5*(DEN(ist-1,J,K) + DEN(IST,J,K)))
+                    if ( do_swirl ) then 
+
+                      y = J * dy - cent_y
+                      z = K * dz + dz/2.0 - cent_z
+
+                      denom = y*y + z*z
+                      denom = denom**0.5
+
+                      ave_u = PT5 * ( UU(ist,J,K)+UU(ist-1,J,K) )
+
+                     VV(ist-1,J,K) = -1.0 * z * swirl_no * ave_u / denom
+
+                      y = J * dy + dy/2.0 - cent_y
+                      z = K * dz - cent_z
+
+                      denom = y*y + z*z
+                      denom = denom**0.5
+
+                      WW(ist-1,J,K) = y * swirl_no * ave_u / denom
+
+                    endif 
                   ENDIF
                endif
                if (xplus) then
