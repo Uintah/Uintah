@@ -79,6 +79,7 @@ DEALINGS IN THE SOFTWARE.
 #include <sci_defs/malloc_defs.h>
 #include <sci_defs/mpi_defs.h>
 #include <sci_defs/uintah_defs.h>
+#include <sci_defs/cuda_defs.h>
 
 #include <svn_info.h>
 

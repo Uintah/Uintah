@@ -79,6 +79,7 @@ Task::ActionGPUBase::~ActionGPUBase()
 Task::~Task()
 {
   delete d_action;
+  delete d_actionGPU;
   Dependency* dep = req_head;
   while(dep){
     Dependency* next = dep->next;
@@ -779,7 +780,7 @@ getOtherLevelPatchSubset(Task::DomainSpec dom,
 
 //__________________________________
 void
-Task::doit(const ProcessorGroup* pc,
+Task::doit(const ProcessorGroup* pg,
 	         const PatchSubset* patches,
 	         const MaterialSubset* matls,
 	         vector<DataWarehouseP>& dws)
@@ -787,12 +788,12 @@ Task::doit(const ProcessorGroup* pc,
   DataWarehouse* fromDW = mapDataWarehouse(Task::OldDW, dws);
   DataWarehouse* toDW = mapDataWarehouse(Task::NewDW, dws);
   if(d_action) {
-    d_action->doit(pc, patches, matls, fromDW, toDW);
+    d_action->doit(pg, patches, matls, fromDW, toDW);
   }
 }
 
 void
-Task::doitGPU(const ProcessorGroup* pc,
+Task::doitGPU(const ProcessorGroup* pg,
               const PatchSubset* patches,
               const MaterialSubset* matls,
               vector<DataWarehouseP>& dws,
@@ -801,7 +802,7 @@ Task::doitGPU(const ProcessorGroup* pc,
   DataWarehouse* fromDW = mapDataWarehouse(Task::OldDW, dws);
   DataWarehouse* toDW = mapDataWarehouse(Task::NewDW, dws);
   if(d_actionGPU) {
-    d_actionGPU->doitGPU(pc, patches, matls, fromDW, toDW, device);
+    d_actionGPU->doitGPU(pg, patches, matls, fromDW, toDW, device);
   }
 }
 
