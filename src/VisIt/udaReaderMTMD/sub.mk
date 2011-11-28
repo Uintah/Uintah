@@ -31,18 +31,18 @@
 
 # Makefile fragment for the VisIt directory
 
-# 'SRCDIR' get's overwritten when the actual rules execute in make, so
-# I use my VISIT_SRCDIR to avoid this from happening...
-
 ifeq ($(BUILD_VISIT),yes)
 
+# Override this from configure if you want to install -public (to Visit 
+# install dir instead of user's .visit directory).
+VISIT_PLUGIN_INSTALL_TYPE = -private
+
+# 'SRCDIR' get's overwritten when the actual rules execute in make, so
+# I use my VISIT_SRCDIR to avoid this from happening...
 VISIT_SRCDIR := VisIt/udaReaderMTMD
 
 # Force the make system to do the visit_stuff:
-
 ALLTARGETS := $(ALLTARGETS) visit_stuff
-
-# 
 
 #
 # List of the .h, .C, and .xml files in the src side that need to be linked on the bin side.
@@ -63,24 +63,19 @@ $(links_to_create) :
 	@echo "Creating symbolic link to $@... this occurs only one time."
 	@ln -fs $(SRCTOP_ABS)/$(VISIT_SRCDIR)/`basename $@` $@
 
-# Override this from configure if you want to install -public (to Visit 
-# install dir instead of user's .visit directory).
-INSTALL_TYPE = -private
-
 #
 # This creates the VisIt Makefile.  Have to move your Makefile out of
 # the way, rename VisIt's Makefile, and put ours back.
 #
 ${VISIT_SRCDIR}/Makefile.visit : lib/libStandAlone_tools_uda2vis.${SO_OR_A_FILE}
-	@echo create visit makefile
+	@echo creating VisIt Makefile...
 	@cd ${VISIT_SRCDIR}; \
           rm -f Makefile.visit; \
           mv Makefile Makefile.sci; \
-          ${VISIT_INSTALL_DIR}/bin/xml2cmake ${INSTALL_TYPE} -clobber udaReaderMTMD.xml; \
+          ${VISIT_INSTALL_DIR}/bin/xml2cmake ${VISIT_PLUGIN_INSTALL_TYPE} -clobber udaReaderMTMD.xml; \
           ${VISIT_INSTALL_DIR}/bin/xml2info -clobber $(OBJTOP_ABS)/${VISIT_SRCDIR}/udaReaderMTMD.xml; \
           cmake . -DVISIT_DISABLE_SETTING_COMPILER:BOOL=TRUE -DCMAKE_CXX_COMPILER:FILEPATH=${CXX} -DCMAKE_CXX_FLAGS:STRING="-I${OBJTOP_ABS} -I${SRCTOP_ABS} ${CXXFLAGS}"; \
           cp Makefile Makefile.visit;
-
 
 #
 # The following says that the .C file is dependent on the .C.in file.  If the .C file is out of date,

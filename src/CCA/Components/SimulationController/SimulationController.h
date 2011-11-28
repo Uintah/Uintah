@@ -163,7 +163,7 @@ class DataArchive;
        * number of PAPI events added to the event set in SimulationCOntroller.cc
        */
       int d_eventSet;                  // PAPI event set
-      long long d_eventValues[4];      // PAPI event value
+      long long d_eventValues[5];      // PAPI event value
 #endif
 
 

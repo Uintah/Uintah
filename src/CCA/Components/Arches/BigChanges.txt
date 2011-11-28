@@ -105,3 +105,25 @@ ______________________________________________________________________
 10/12/11 Todd
 Changed the replaced the Arches:hypre pressure solver with the UCF implentation.
 revision 47717
+
+
+______________________________________________________________________
+10/29/11 Todd
+
+Removed radiation models that don't work (spherical harmonics & optically thin).
+Properties.cc:
+  - added {} & cleaned up problemSetup
+
+DORadiationModel
+  - eliminated spherical harmonics code.
+  - consistent formatting
+
+
+Fortran code:
+  - deleted spherical harmonics routines.
+  - only pass in the variables that are needed by the subroutine.  There's no 
+    need to pass in every variable you can think of.
+  - If a variable is local to the subroutine don't allocated arrays
+    outside of the route and them pass them in.  Just use a local variable.
+  
+* This should not change the answers

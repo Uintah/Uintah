@@ -103,6 +103,7 @@ namespace Uintah {
 
     public:
 
+      //** WARNING: This needs to be duplicated in BoundaryCond_new.h for now until BoundaryCondition goes away **//
       enum BC_TYPE { VELOCITY_INLET, MASSFLOW_INLET, VELOCITY_FILE, MASSFLOW_FILE, PRESSURE, OUTLET, WALL, MMWALL, INTRUSION, SWIRL }; 
 
       // GROUP: Constructors:
@@ -804,6 +805,26 @@ namespace Uintah {
 
       };
 
+      void printBCInfo(){ 
+
+        for ( BCInfoMap::iterator bc_iter = d_bc_information.begin(); 
+            bc_iter != d_bc_information.end(); bc_iter++){
+
+            std::cout << "/---------------------------------------------------------------/\n" << std::endl;
+            std::cout << "Boundary type is: " << bc_iter->second.type << std::endl; 
+            std::cout << "name: " << bc_iter->second.name << std::endl; 
+            std::cout << "velocity components: " << bc_iter->second.velocity[0] << ", " << bc_iter->second.velocity[1] << ", " << bc_iter->second.velocity[2] << std::endl; 
+            std::cout << "mass flow rate: " << bc_iter->second.mass_flow_rate << std::endl;
+            std::cout << "file name: " << bc_iter->second.filename << std::endl;
+            std::cout << "swirl no: " << bc_iter->second.swirl_no << " and centroid = " << bc_iter->second.swirl_cent << endl;
+            std::cout << "enthalpy: " << bc_iter->second.enthalpy << std::endl;
+            std::cout << "density: " << bc_iter->second.density << std::endl;
+            std::cout << "area: " << bc_iter->second.total_area_label << std::endl;
+            std::cout << "/---------------------------------------------------------------/\n" << std::endl;
+
+        }
+      }; 
+
       typedef std::map<BC_TYPE, std::string> BCNameMap;
       typedef std::map<int, BCInfo>      BCInfoMap;
 
@@ -815,12 +836,13 @@ namespace Uintah {
                                           const PatchSet* patches,
                                           const MaterialSet* matls );
 
+      BCInfoMap d_bc_information;                           ///< Contains information about each boundary condition spec. (from UPS)
+
     private:
 
       /** @brief Setup new boundary conditions specified under the <Grid><BoundaryCondition> section */
       void setupBCs( ProblemSpecP& db ); 
 
-      BCInfoMap d_bc_information;                           ///< Contains information about each boundary condition spec. (from UPS)
       BCNameMap d_bc_type_to_string;                        ///< Matches the BC integer ID with the string name
       bool d_use_new_bcs;                                   ///< Turn on/off the new BC mech. 
       std::map<std::string, std::vector<GeometryPieceP> > d_prefill_map;  ///< Contains inlet name/geometry piece pairing
@@ -1005,6 +1027,9 @@ namespace Uintah {
           VarLabel* d_area_label;
           VarLabel* d_flowRate_label;
           string d_inlet_name; 
+          double swirl_no; 
+          Vector swirl_cent; 
+          bool do_swirl; 
       };
 
       ////////////////////////////////////////////////////////////////////////
@@ -1175,7 +1200,7 @@ namespace Uintah {
     Iterator nu;  // not used
 
     const BoundCondBase* bc = patch->getArrayBCValues(face,mat_id,
-                                                                            desc, bound_ptr,
+                                                      desc, bound_ptr,
                                                       nu, child);
     const BoundCond<T> *new_bcs =  dynamic_cast<const BoundCond<T> *>(bc);
 

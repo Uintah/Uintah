@@ -80,53 +80,48 @@ class RadiationModel {
 
 public:
 
-      // GROUP: Constructors:
-      ///////////////////////////////////////////////////////////////////////
-      //
-      // Constructor taking
-      //   [in] 
-      //
       RadiationModel();
 
-      // GROUP: Destructors :
-      ///////////////////////////////////////////////////////////////////////
-      //
-      // Virtual destructor for mixing model
-      //
       virtual ~RadiationModel();
 
-      // GROUP: Problem Setup :
-      ///////////////////////////////////////////////////////////////////////
-      //
-      // Set up the problem specification database
-      //
-      virtual void problemSetup(const ProblemSpecP& params) = 0;
+
+      virtual void problemSetup(ProblemSpecP& params) = 0;
  
-      // GROUP: Actual Action Methods :
-      ///////////////////////////////////////////////////////////////////////
-      //
+
       virtual void computeRadiationProps(const ProcessorGroup*,
                                          const Patch* patch,
                                          CellInformation* cellinfo,
                                          ArchesVariables* vars,
                                          ArchesConstVariables* constvars) = 0;
 
-
-      /////////////////////////////////////////////////////////////////////////
-      //
       virtual void boundarycondition(const ProcessorGroup*,
                                      const Patch* patch,
                                      CellInformation* cellinfo,
                                      ArchesVariables* vars,
                                      ArchesConstVariables* constvars)  = 0;
 
-      /////////////////////////////////////////////////////////////////////////
-      //
       virtual void intensitysolve(const ProcessorGroup*,
                                   const Patch* patch,
                                   CellInformation* cellinfo,
                                   ArchesVariables* vars,
                                   ArchesConstVariables* constvars, int wall_type )  = 0;
+
+      //______________________________________________________________________
+      //
+      virtual void sched_computeSource( const LevelP& level, 
+                                        SchedulerP& sched, 
+                                        const MaterialSet* matls,
+                                        const TimeIntegratorLabel* timelabels,
+                                        const bool isFirstIntegrationStep ) = 0;
+                                
+      virtual void computeSource( const ProcessorGroup* pc, 
+                                  const PatchSubset* patches,             
+                                  const MaterialSubset* matls,            
+                                  DataWarehouse* old_dw,                  
+                                  DataWarehouse* new_dw,
+                                  const TimeIntegratorLabel* timelabels,          
+                                  bool isFirstIntegrationStep ) = 0;
+                                  
   RadiationSolver* d_linearSolver;
  protected:
       void computeOpticalLength();

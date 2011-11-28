@@ -138,6 +138,13 @@ namespace Uintah {
       }
     }
 
+    retp = PAPI_query_event(PAPI_FP_OPS);
+    if ( retp != PAPI_OK) {
+      if (d_myworld->myrank() == 0) {
+        cout<< "WARNNING: Cannot query PAPI_FP_OPS event! Error code = " << retp << endl;
+      }
+    }
+
     retp = PAPI_query_event(PAPI_DP_OPS);
     if ( retp != PAPI_OK) {
       if (d_myworld->myrank() == 0) {
@@ -163,6 +170,13 @@ namespace Uintah {
     if ( retp != PAPI_OK) {
       if (d_myworld->myrank() == 0) {
         cout<< "WARNNING: Cannot query PAPI_L3_TCM event! Error code = " << retp << endl;
+      }
+    }
+
+    retp = PAPI_add_event(d_eventSet, PAPI_FP_OPS);
+    if ( retp != PAPI_OK)  {
+      if (d_myworld->myrank() == 0) {
+        cout<< "WARNNING: Cannot add PAPI_FP_OPS event! Error code = " << retp << endl;
       }
     }
 
@@ -608,6 +622,7 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
  
 #ifdef USE_PAPI_COUNTERS
   double flop;				// total FLOPS
+  double vflop;				// total vectorized FLOPS
   double l1_misses;			// total L1 cache misses
   double l2_misses;			// total L2 cache misses
   double l3_misses;			// total L3 cache misses
@@ -620,14 +635,16 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
       cout << "WARNNING: Cannot read PAPI event set! Error value = " << retp << endl;
     }
     flop      = 0;
+    vflop     = 0;
     l1_misses = 0;
     l2_misses = 0;
     l3_misses = 0;
   } else {
 	  flop      = (double) d_eventValues[0];
-	  l1_misses = (double) d_eventValues[1];
-	  l2_misses = (double) d_eventValues[2];
-	  l3_misses = (double) d_eventValues[3];
+	  vflop     = (double) d_eventValues[1];
+	  l1_misses = (double) d_eventValues[2];
+	  l2_misses = (double) d_eventValues[3];
+	  l3_misses = (double) d_eventValues[4];
   }
 
   retp = PAPI_reset(d_eventSet);
@@ -679,6 +696,8 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
 #ifdef USE_PAPI_COUNTERS
   toReduce.push_back(flop);
   toReduceMax.push_back(double_int(flop, rank));
+  toReduce.push_back(vflop);
+  toReduceMax.push_back(double_int(vflop, rank));
   toReduce.push_back(l1_misses);
   toReduceMax.push_back(double_int(l1_misses, rank));
   toReduce.push_back(l2_misses);
@@ -699,6 +718,7 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
   statLabels.push_back("Output");
 #ifdef USE_PAPI_COUNTERS
   statLabels.push_back("FLOP");
+  statLabels.push_back("VFLOP");
   statLabels.push_back("L1CacheMisses");
   statLabels.push_back("L2CacheMisses");
   statLabels.push_back("L3CacheMisses");

@@ -1,5 +1,6 @@
 #include <CCA/Components/Arches/IntrusionBC.h>
 #include <CCA/Components/Arches/ArchesLabel.h>
+#include <CCA/Components/MPMArches/MPMArchesLabel.h>
 #include <CCA/Components/Arches/Properties.h>
 #include <CCA/Components/Arches/ChemMix/MixingRxnModel.h>
 #include <CCA/Components/Arches/ArchesVariables.h>
@@ -15,8 +16,8 @@
 using namespace Uintah; 
 
 //_________________________________________
-IntrusionBC::IntrusionBC( const ArchesLabel* lab, Properties* props, int WALL ) : 
-  _lab(lab), _props(props), _WALL(WALL)
+IntrusionBC::IntrusionBC( const ArchesLabel* lab, const MPMArchesLabel* mpmlab, Properties* props, int WALL ) : 
+  _lab(lab), _mpmlab(mpmlab), _props(props), _WALL(WALL)
 {
   // helper for the intvector direction 
   _dHelp.push_back( IntVector(-1,0,0) ); 
@@ -52,6 +53,7 @@ IntrusionBC::IntrusionBC( const ArchesLabel* lab, Properties* props, int WALL ) 
 
   _intrusion_on = false; 
   _do_energy_exchange = false; 
+  _mpm_energy_exchange = false;
 
 }
 
@@ -151,10 +153,17 @@ IntrusionBC::problemSetup( const ProblemSpecP& params )
         intrusion.directions = temp; 
       } 
 
-      //temperature of the intrusion
-      intrusion.temperature = -1.0;
-      db_intrusion->getWithDefault( "temperature", intrusion.temperature, 298.0 ); 
-      if ( intrusion.temperature > 0.0 ){ 
+      //temperature of the intrusion 
+      // Either choose constant T or an integrated T from MPM
+      intrusion.temperature = 298.0; 
+      if ( db_intrusion->findBlock( "constant_temperature" ) ){ 
+        db_intrusion->findBlock("constant_temperature")->getAttribute("T", intrusion.temperature);
+        _do_energy_exchange = true; 
+      } 
+      if ( db_intrusion->findBlock( "mpm_temperature" ) ){ 
+        if ( _do_energy_exchange ){ 
+          throw ProblemSetupException("Error: Cannot specify both <constant_temperature> and <mpm_temperature>.", __FILE__, __LINE__);  
+        } 
         _do_energy_exchange = true; 
       } 
 
@@ -665,7 +674,6 @@ IntrusionBC::sched_setIntrusionT( SchedulerP& sched,
                                   const PatchSet* patches, 
                                   const MaterialSet* matls )
 { 
-
   if ( _do_energy_exchange ){ 
     Task* tsk = scinew Task("IntrusionBC::setIntrusionT", this, &IntrusionBC::setIntrusionT); 
 
@@ -673,9 +681,12 @@ IntrusionBC::sched_setIntrusionT( SchedulerP& sched,
 
     tsk->modifies( _T_label );  
 
+    if ( _mpmlab && _mpm_energy_exchange ){ 
+      tsk->requires( Task::NewDW, _mpmlab->integTemp_CCLabel, Ghost::None, 0 );  
+    } 
+
     sched->addTask( tsk, patches, matls );
   }
-
 } 
 
 void 
@@ -696,6 +707,11 @@ IntrusionBC::setIntrusionT( const ProcessorGroup*,
     CCVariable<double> temperature; 
     new_dw->getModifiable( temperature, _T_label, index, patch ); 
 
+    constCCVariable<double> mpm_temperature; 
+    if ( _mpmlab && _mpm_energy_exchange ){ 
+      new_dw->get( mpm_temperature, _mpmlab->integTemp_CCLabel, index, patch, Ghost::None, 0 ); 
+    }
+
     for ( IntrusionMap::iterator iter = _intrusion_map.begin(); iter != _intrusion_map.end(); ++iter ){ 
 
       for ( int i = 0; i < (int)iter->second.geometry.size(); i++ ){ 
@@ -706,17 +722,33 @@ IntrusionBC::setIntrusionT( const ProcessorGroup*,
 
         if ( !(intersect_box.degenerate()) ) { 
 
-          for ( CellIterator icell = patch->getCellCenterIterator(intersect_box); !icell.done(); icell++ ) { 
+          if ( _mpm_energy_exchange ){ 
+            for ( CellIterator icell = patch->getCellCenterIterator(intersect_box); !icell.done(); icell++ ) { 
 
-            IntVector c = *icell; 
+              IntVector c = *icell; 
 
-            // check current cell
-            bool curr_cell = in_or_out( c, piece, patch, iter->second.inverted ); 
+              // check current cell
+              bool curr_cell = in_or_out( c, piece, patch, iter->second.inverted ); 
 
-            if ( curr_cell ) { 
+              if ( curr_cell ) { 
 
-              temperature[c] = iter->second.temperature; 
+                temperature[c] = mpm_temperature[c]; 
 
+              }
+            }
+          } else { 
+            for ( CellIterator icell = patch->getCellCenterIterator(intersect_box); !icell.done(); icell++ ) { 
+
+              IntVector c = *icell; 
+
+              // check current cell
+              bool curr_cell = in_or_out( c, piece, patch, iter->second.inverted ); 
+
+              if ( curr_cell ) { 
+
+                temperature[c] = iter->second.temperature; 
+
+              }
             }
           }
         }

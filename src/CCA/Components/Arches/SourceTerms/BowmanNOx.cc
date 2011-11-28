@@ -21,6 +21,10 @@ BowmanNOx::BowmanNOx( std::string src_name, ArchesLabel* field_labels,
   _src_label = VarLabel::create( src_name, CCVariable<double>::getTypeDescription() ); 
 
   _source_type = CC_SRC; 
+
+  _MW_O2 = 32.00; 
+  _MW_N2 = 28.00; 
+
 }
 
 BowmanNOx::~BowmanNOx()
@@ -130,9 +134,9 @@ BowmanNOx::computeSource( const ProcessorGroup* pc,
     old_dw->get( T   , _temperature_label , matlIndex , patch , Ghost::None , 0 );
     old_dw->get( vol_fraction, _field_labels->d_volFractionLabel, matlIndex, patch, Ghost::None, 0 ); 
 
-    delt_vartype DT; 
-    old_dw->get(DT, _field_labels->d_sharedState->get_delt_label()); 
-    double dt = DT;
+//    delt_vartype DT; 
+//    old_dw->get(DT, _field_labels->d_sharedState->get_delt_label()); 
+//    double dt = DT;
 
     for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
 
@@ -147,8 +151,11 @@ BowmanNOx::computeSource( const ProcessorGroup* pc,
 
       double my_exp = -1.0 * _E_R / T[c]; 
 
-      rate[c] = _A / T_pow * exp( my_exp ) * n2 * o2_pow * vol_fraction[c]; 
+      rate[c] = _A / T_pow * exp( my_exp ) * n2 * o2_pow * 30000; 
 
+      if ( rate[c] < 1.0e-16 ){
+        rate[c] = 0.0;
+      } 
     }
   }
 }

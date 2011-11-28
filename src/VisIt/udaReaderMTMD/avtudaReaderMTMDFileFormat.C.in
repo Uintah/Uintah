@@ -42,11 +42,12 @@
 
 #include <VisIt/udaReaderMTMD/avtudaReaderMTMDFileFormat.h>
 
-#include <stdio.h>
-#include <cstring>
+#include <cstdio>
+#include <string>
 #include <cmath>
 #include <dlfcn.h>
 #include <string>
+#include <vector>
 
 #ifdef PARALLEL
 #  include <mpi.h>
@@ -69,6 +70,7 @@
 #include <avtStructuredDomainNesting.h>
 #include <avtVariableCache.h>
 #include <avtMaterial.h>
+#include <avtCallback.h>
 
 #include <DebugStream.h>
 #include <InvalidVariableException.h>
@@ -78,6 +80,8 @@
 
 using std::max;
 using std::min;
+using std::vector;
+using std::string;
 
 //#ifdef PARALLEL
 // we only get the option for  serialized reads if compiling the parallel version
@@ -1211,9 +1215,18 @@ avtudaReaderMTMDFileFormat::GetVar(int timestate, int domain, const char *varnam
     int n = (qhigh[0]-qlow[0])*(qhigh[1]-qlow[1])*(qhigh[2]-qlow[2]);
 
     // replace nan's with a large negative number
-    for (int i=0; i<n*gd->components; i++) {
+    for (int i=0; i<n*gd->components; i++) 
+    {
+      bool haveWarned=false;
       if (std::isnan(gd->data[i]))
+      {
         gd->data[i] = -1e16;
+        if (!haveWarned)
+        {
+          avtCallback::IssueWarning("NaNs exist in this file. They have been replaced by the value -1e16.");
+          haveWarned=true;
+        }
+      }
     }
 
     rv->SetNumberOfComponents(gd->components);
@@ -1269,9 +1282,18 @@ avtudaReaderMTMDFileFormat::GetVar(int timestate, int domain, const char *varnam
 #endif
 
     // replace nan's with a large negative number
-    for (int i=0; i<pd->num*pd->components; i++) {
+    for (int i=0; i<pd->num*pd->components; i++) 
+    {
+      bool haveWarned=false;
       if (std::isnan(pd->data[i]))
+      {
         pd->data[i] = -1e16;
+        if (!haveWarned)
+        {
+          avtCallback::IssueWarning("NaNs exist in this file. They have been replaced by the value -1e16.");
+          haveWarned=true;
+        }
+      }
     }
 
     rv->SetNumberOfComponents(pd->components);

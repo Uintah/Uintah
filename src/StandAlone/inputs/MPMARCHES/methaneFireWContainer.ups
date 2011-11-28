@@ -274,6 +274,7 @@
                     <radCalcForAllRKSteps>false</radCalcForAllRKSteps>
                     <DORadiationModel>
                         <opl>3.0</opl>
+                        <const_wall_temperature/>
                         <LinearSolver type = "hypre">
                             <res_tol>1.0e-10</res_tol>
                             <ksptype>gmres</ksptype>

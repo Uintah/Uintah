@@ -11,10 +11,12 @@
 using namespace std;
 using namespace Uintah; 
 
-DORadiation::DORadiation( std::string src_name, ArchesLabel* labels, BoundaryCondition* bc, 
+DORadiation::DORadiation( std::string src_name, ArchesLabel* labels, MPMArchesLabel* MAlab,
+                          BoundaryCondition* bc, 
                       vector<std::string> req_label_names, const ProcessorGroup* my_world ) 
 : SourceTermBase( src_name, labels->d_sharedState, req_label_names ), 
-  _labels( labels ), 
+  _labels( labels ),
+  _MAlab(MAlab), 
   _bc(bc), 
   _my_world(my_world)
 {
@@ -92,7 +94,7 @@ DORadiation::problemSetup(const ProblemSpecP& inputdb)
   db->getWithDefault( "h2o_label", _h2o_label_name, "H2O" ); 
   db->getWithDefault( "T_label", _T_label_name, "temperature" ); 
 
-  _DO_model = scinew DORadiationModel( _bc, _my_world ); 
+  _DO_model = scinew DORadiationModel( _labels, _MAlab, _bc, _my_world ); 
   _DO_model->problemSetup( db ); 
 
   _labels->add_species( _co2_label_name ); 
@@ -117,7 +119,7 @@ DORadiation::sched_computeSource( const LevelP& level, SchedulerP& sched, int ti
   _co2_label = VarLabel::find( _co2_label_name ); 
   _h2o_label = VarLabel::find( _h2o_label_name ); 
   _T_label   = VarLabel::find( _T_label_name ); 
-
+  
   if (timeSubStep == 0 && !_label_sched_init) {
     // Every source term needs to set this flag after the varLabel is computed. 
     // transportEqn.cleanUp should reinitialize this flag at the end of the time step. 
@@ -125,10 +127,10 @@ DORadiation::sched_computeSource( const LevelP& level, SchedulerP& sched, int ti
 
     tsk->computes(_src_label);
 
-    tsk->requires( Task::OldDW, _co2_label, gac, 1 ); 
-    tsk->requires( Task::OldDW, _h2o_label, gac, 1 ); 
-    tsk->requires( Task::OldDW, _T_label, gac, 1 ); 
-    tsk->requires( Task::OldDW, _labels->d_sootFVINLabel, gac, 1 ); 
+    tsk->requires( Task::OldDW, _co2_label, gn,  0 ); 
+    tsk->requires( Task::OldDW, _h2o_label, gn,  0 ); 
+    tsk->requires( Task::OldDW, _T_label,   gac, 1 ); 
+    tsk->requires( Task::OldDW, _labels->d_sootFVINLabel, gn, 0 ); 
 
     for (std::vector<const VarLabel*>::iterator iter = _extra_local_labels.begin(); 
          iter != _extra_local_labels.end(); iter++){
@@ -142,10 +144,10 @@ DORadiation::sched_computeSource( const LevelP& level, SchedulerP& sched, int ti
 
     tsk->modifies(_src_label); 
 
-    tsk->requires( Task::NewDW, _co2_label, gac, 1 ); 
-    tsk->requires( Task::NewDW, _h2o_label, gac, 1 ); 
-    tsk->requires( Task::NewDW, _T_label, gac, 1 ); 
-    tsk->requires( Task::NewDW, _labels->d_sootFVINLabel, gac, 1); 
+    tsk->requires( Task::NewDW, _co2_label, gn,  0 ); 
+    tsk->requires( Task::NewDW, _h2o_label, gn,  0 ); 
+    tsk->requires( Task::NewDW, _T_label,   gac, 1 ); 
+    tsk->requires( Task::NewDW, _labels->d_sootFVINLabel, gn, 0); 
 
     for (std::vector<const VarLabel*>::iterator iter = _extra_local_labels.begin(); 
          iter != _extra_local_labels.end(); iter++){
@@ -181,7 +183,6 @@ DORadiation::computeSource( const ProcessorGroup* pc,
     const Patch* patch = patches->get(p);
     int archIndex = 0;
     int matlIndex = _labels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
-    Ghost::GhostType  gac = Ghost::AroundCells;
 
     int timestep = _labels->d_sharedState->getCurrentTopLevelTimeStep(); 
 
@@ -201,13 +202,15 @@ DORadiation::computeSource( const ProcessorGroup* pc,
     } 
 
     ArchesVariables radiation_vars; 
-    ArchesConstVariables const_radiation_vars; 
-
+    ArchesConstVariables const_radiation_vars;
+     
+    Ghost::GhostType  gn = Ghost::None;
+    Ghost::GhostType  gac = Ghost::AroundCells;
     if ( timeSubStep == 0 ) { 
 
-      old_dw->get( const_radiation_vars.co2       , _co2_label               , matlIndex , patch , gac , 1 );
-      old_dw->get( const_radiation_vars.h2o       , _h2o_label               , matlIndex , patch , gac , 1 );
-      old_dw->get( const_radiation_vars.sootFV    , _labels->d_sootFVINLabel        , matlIndex , patch , gac , 1 ); 
+      old_dw->get( const_radiation_vars.co2       , _co2_label               , matlIndex , patch , gn , 0 );
+      old_dw->get( const_radiation_vars.h2o       , _h2o_label               , matlIndex , patch , gn , 0 );
+      old_dw->get( const_radiation_vars.sootFV    , _labels->d_sootFVINLabel , matlIndex , patch , gn , 0 ); 
       old_dw->getCopy( radiation_vars.temperature , _T_label                 , matlIndex , patch , gac , 1 );
       old_dw->get( const_radiation_vars.cellType  , _labels->d_cellTypeLabel , matlIndex , patch , gac , 1 );
 
@@ -223,27 +226,29 @@ DORadiation::computeSource( const ProcessorGroup* pc,
       new_dw->allocateAndPut( radiation_vars.ABSKP  , _abskpLabel          , matlIndex , patch );
 
       new_dw->allocateAndPut( divQ, _src_label, matlIndex, patch ); 
+      divQ.initialize(0.0);
       radiation_vars.ESRCG.allocate( patch->getExtraCellLowIndex(1), patch->getExtraCellHighIndex(1) );  
 
-      radiation_vars.src.initialize(0.0);
-      radiation_vars.qfluxe.initialize(0.0);
-      radiation_vars.qfluxw.initialize(0.0);
-      radiation_vars.qfluxn.initialize(0.0);
-      radiation_vars.qfluxs.initialize(0.0);
-      radiation_vars.qfluxt.initialize(0.0);
-      radiation_vars.qfluxb.initialize(0.0);
-      radiation_vars.ABSKG.initialize(0.0);
-      radiation_vars.ABSKP.initialize(0.0); 
-      radiation_vars.ESRCG.initialize(0.0);
-      divQ.initialize(0.0); 
+      // copy old solution into newly allocated variable
+      old_dw->copyOut( radiation_vars.qfluxe, _radiationFluxELabel, matlIndex, patch, Ghost::None, 0 );  
+      old_dw->copyOut( radiation_vars.qfluxw, _radiationFluxWLabel, matlIndex, patch, Ghost::None, 0 );  
+      old_dw->copyOut( radiation_vars.qfluxn, _radiationFluxNLabel, matlIndex, patch, Ghost::None, 0 );  
+      old_dw->copyOut( radiation_vars.qfluxs, _radiationFluxSLabel, matlIndex, patch, Ghost::None, 0 );  
+      old_dw->copyOut( radiation_vars.qfluxt, _radiationFluxTLabel, matlIndex, patch, Ghost::None, 0 );  
+      old_dw->copyOut( radiation_vars.qfluxb, _radiationFluxBLabel, matlIndex, patch, Ghost::None, 0 );  
+      old_dw->copyOut( radiation_vars.ABSKG,  _abskgLabel, matlIndex, patch, Ghost::None, 0 );  
+      old_dw->copyOut( radiation_vars.ABSKP,  _abskpLabel, matlIndex, patch, Ghost::None, 0 );  
+      old_dw->copyOut( radiation_vars.volq,   _radiationVolqLabel, matlIndex, patch, Ghost::None, 0 );  
+      old_dw->copyOut( radiation_vars.src,    _radiationSRCLabel, matlIndex, patch, Ghost::None, 0 );  
 
     } else { 
 
-      new_dw->get( const_radiation_vars.co2, _co2_label, matlIndex, patch, gac, 1 ); 
-      new_dw->get( const_radiation_vars.h2o, _h2o_label, matlIndex, patch, gac, 1 ); 
-      new_dw->getCopy( radiation_vars.temperature, _T_label, matlIndex, patch, gac, 1 ); 
-      new_dw->get( const_radiation_vars.sootFV, _labels->d_sootFVINLabel, matlIndex, patch, gac, 1 ); 
-      old_dw->get( const_radiation_vars.cellType          , _labels->d_cellTypeLabel, matlIndex, patch  , gac ,  1 ); 
+      new_dw->get(     const_radiation_vars.co2,    _co2_label, matlIndex, patch, gn, 0 ); 
+      new_dw->get(     const_radiation_vars.h2o,    _h2o_label, matlIndex, patch, gn, 0 ); 
+       
+      new_dw->get(     const_radiation_vars.sootFV,    _labels->d_sootFVINLabel, matlIndex, patch, gn, 0 ); 
+      old_dw->get(     const_radiation_vars.cellType , _labels->d_cellTypeLabel, matlIndex, patch, gn ,  0 ); 
+      new_dw->getCopy( radiation_vars.temperature,  _T_label,   matlIndex, patch, gn, 0 );
 
       new_dw->getModifiable( radiation_vars.qfluxe , _radiationFluxELabel , matlIndex , patch );
       new_dw->getModifiable( radiation_vars.qfluxw , _radiationFluxWLabel , matlIndex , patch );
@@ -257,7 +262,6 @@ DORadiation::computeSource( const ProcessorGroup* pc,
       new_dw->getModifiable( radiation_vars.ABSKP  , _abskpLabel          , matlIndex , patch );
 
       new_dw->getModifiable( divQ, _src_label, matlIndex, patch ); 
-      divQ.initialize(0.0); 
 
       radiation_vars.ESRCG.allocate( patch->getExtraCellLowIndex(1), patch->getExtraCellHighIndex(1) );  
 
@@ -275,15 +279,15 @@ DORadiation::computeSource( const ProcessorGroup* pc,
         _DO_model->intensitysolve( pc, patch, cellinfo, &radiation_vars, &const_radiation_vars, BoundaryCondition::WALL ); 
 
       }
+    }
 
-      for ( CellIterator iter = patch->getCellIterator(); !iter.done(); iter++ ){ 
+    for ( CellIterator iter = patch->getCellIterator(); !iter.done(); iter++ ){ 
 
-        IntVector c = *iter;
-        divQ[c] = radiation_vars.src[c]; 
+      IntVector c = *iter;
+      divQ[c] = radiation_vars.src[c]; 
 
-      }
+    }
 
-    } 
   } // end patch loop
 }
 
@@ -303,6 +307,7 @@ DORadiation::sched_dummyInit( const LevelP& level, SchedulerP& sched )
        iter != _extra_local_labels.end(); iter++){
 
     tsk->computes(*iter); 
+    tsk->requires( Task::OldDW, *iter, Ghost::None, 0 ); 
 
   }
 
@@ -331,9 +336,16 @@ DORadiation::dummyInit( const ProcessorGroup* pc,
 
     for (std::vector<const VarLabel*>::iterator iter = _extra_local_labels.begin(); 
          iter != _extra_local_labels.end(); iter++){
-      CCVariable<double> tempVar; 
-      new_dw->allocateAndPut(tempVar, *iter, matlIndex, patch ); 
-      tempVar.initialize(0.0); 
+
+      CCVariable<double> temp_var; 
+      constCCVariable<double> const_temp_var; 
+
+      new_dw->allocateAndPut(temp_var, *iter, matlIndex, patch ); 
+      //This next line is to get around scrubbing.
+      old_dw->get( const_temp_var, *iter, matlIndex, patch, Ghost::None, 0 ); 
+
+      temp_var.initialize(0.0);
+      
     }
   }
 }

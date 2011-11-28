@@ -2,4 +2,5 @@ void inlbcs(SFCXVariable<double> uu, SFCYVariable<double> vv,
      SFCZVariable<double> ww, IntVector idxLo, IntVector idxHi,
      constCCVariable<double> den, constCCVariable<int> pcell, int pfield,
      double time, bool xminus, bool xplus, bool yminus, bool yplus,
-     bool zminus, bool zplus, bool ramping);
+     bool zminus, bool zplus, bool ramping, 
+     double dy, double dz, bool do_swirl, double cent_y, double cent_z, double swirl_no );
