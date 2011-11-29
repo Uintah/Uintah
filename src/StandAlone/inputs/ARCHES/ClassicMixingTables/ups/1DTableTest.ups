@@ -5,6 +5,7 @@
     <title>One Dimensional Test Case</title>
   </Meta>
   <SimulationComponent type="arches" />
+   <Solver type="hypre" />
 
   <Time>
     <maxTime>.50</maxTime>
@@ -190,12 +191,12 @@
          <timeIntegratorType>RK2SSP</timeIntegratorType>
 
          <PressureSolver>
-           <linear_solver>petsc</linear_solver>
+           <linear_solver>hypre</linear_solver>
            <Parameters>
-             <tolerance>       1.0e-9</tolerance>
-             <solver>        cg    </solver>
-             <preconditioner>jacobi</preconditioner>
-             <maxiterations>      250    </maxiterations>
+             <tolerance>     1.0e-9 </tolerance>
+             <solver>         cg    </solver>
+             <preconditioner> pfmg  </preconditioner>
+             <maxiterations> 250    </maxiterations>
            </Parameters>
          </PressureSolver>
 

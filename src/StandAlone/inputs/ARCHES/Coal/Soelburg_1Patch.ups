@@ -5,6 +5,8 @@
         <title>Soelburg Gasification Case, 1-Patch</title>
     </Meta>
     <SimulationComponent type="arches" />
+    <Solver type="hypre" />
+
     <Time>
         <maxTime>1.0</maxTime>
         <max_Timesteps>500</max_Timesteps>
@@ -901,12 +903,12 @@
                 <scalarUnderflowCheck>true</scalarUnderflowCheck>
                 
                 <PressureSolver>
-                    <linear_solver>petsc</linear_solver>
+                    <linear_solver>hypre</linear_solver>
                     <Parameters>
                         <tolerance>       1.0e-9</tolerance>
-                        <solver>        cg    </solver>
-                        <preconditioner>jacobi</preconditioner>
-                        <maxiterations>      75    </maxiterations>
+                        <solver>          cg    </solver>
+                        <preconditioner>  pfmg  </preconditioner>
+                        <maxiterations>   75    </maxiterations>
                     </Parameters>
                 </PressureSolver>
                 
