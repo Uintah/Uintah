@@ -257,10 +257,10 @@ Builder::Builder( const BSpline* const spline,
                   const Expr::TagList& rhoEtaTags,
                   const Expr::TagList& rhoEtaIncEtaNames,
                   const Expr::TagList& orderedEtaTags )
-: spline_        ( spline            ),
-  rhoEtaIncEtaNs_( rhoEtaIncEtaNames ),
+: rhoEtaIncEtaNs_( rhoEtaIncEtaNames ),
   rhoEtaTs_      ( rhoEtaTags        ),
-  orderedEtaTs_  ( orderedEtaTags    )
+  orderedEtaTs_  ( orderedEtaTags    ),
+  spline_        ( spline            )
 {}
 
 //--------------------------------------------------------------------
@@ -305,7 +305,7 @@ DensityCalculator<FieldT>::nonlinear_solver( std::vector<double>& ReIeta,
                                              const BSpline& eval,
                                              const double rtol )
 {
-  const int neq = rhoEta.size();
+  const size_t neq = rhoEta.size();
   unsigned int itCounter = 0;
   const unsigned int maxIter = 100;
 //  double rlxFac = 1.0;      // jcs note that if you apply relaxation you need to update your guess for rho...
@@ -368,11 +368,12 @@ DensityCalculator<FieldT>::nonlinear_solver( std::vector<double>& ReIeta,
 
       // jcs why not use dgesv instead?
       // Factor general matrix J using Gaussian elimination with partial pivoting
-      dgetrf_(&neq, &neq, &J[0], &neq, &ipiv[0], &info);
+      const int numEqns = neq;
+      dgetrf_(&numEqns, &numEqns, &J[0], &numEqns, &ipiv[0], &info);
       assert( info==0 );
       // Solving J * delta = g
       // note that on entry, g is the rhs and on exit, g is the solution (delta).
-      dgetrs_(&mode, &neq, &one, &J[0], &neq, &ipiv[0], &g[0], &neq, &info);
+      dgetrs_(&mode, &numEqns, &one, &J[0], &numEqns, &ipiv[0], &g[0], &numEqns, &info);
       assert(info==0);
 
       relErr = 0.0;
