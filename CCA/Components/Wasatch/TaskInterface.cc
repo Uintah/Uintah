@@ -342,6 +342,13 @@ namespace Wasatch{
           proc0cout << std::setw(10) << "MODIFIES";
 #         endif
           ASSERT( dw == Uintah::Task::NewDW );
+          // jcs it appears that we need to set a "requires" so that
+          // the proper ghost inforation is incoporated since
+          // "modifies" does not allow us to do that.
+          task.requires( dw, fieldInfo.varlabel,
+                         patches, Uintah::Task::NormalDomain,
+                         materials, Uintah::Task::NormalDomain,
+                         fieldInfo.ghostType, fieldInfo.nghost );
           task.modifies( fieldInfo.varlabel,
                          patches, Uintah::Task::NormalDomain,
                          materials, Uintah::Task::NormalDomain );
