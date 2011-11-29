@@ -228,8 +228,6 @@ namespace Wasatch{
               << std::setw(10) << "Mode " << std::left << std::setw(20) << "Field Name"
               << "DW  #Ghost PatchID" << endl
               << "-----------------------------------------------------------------------" << endl;
-    if( Uintah::Parallel::getMPIRank() == 0 )
-      fml.dump_fields(std::cout);
 #   endif
 
     //______________________________
