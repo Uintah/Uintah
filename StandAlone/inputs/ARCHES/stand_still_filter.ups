@@ -105,11 +105,11 @@
           </Parameters>
           
 <!--
-          <linear_solver>petsc</linear_solver>
+          <linear_solver>hypre</linear_solver>
           <Parameters>
             <tolerance>       1.0e-9</tolerance>
             <solver>        cg    </solver>
-            <preconditioner>jacobi</preconditioner>
+            <preconditioner>pfmg  </preconditioner>
             <maxiterations>      75    </maxiterations>
           </Parameters>
 -->

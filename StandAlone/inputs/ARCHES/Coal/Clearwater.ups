@@ -10,6 +10,8 @@
         -->
     </Meta>
     <SimulationComponent type="arches" />
+    <Solver type="hypre" />
+    
     <Time>
         <maxTime>5.0</maxTime>
         <initTime>0.0</initTime>
@@ -466,12 +468,12 @@
                 <scalarUnderflowCheck>true</scalarUnderflowCheck>
                 
                 <PressureSolver>
-                    <linear_solver>petsc</linear_solver>
+                    <linear_solver>hypre</linear_solver>
                     <Parameters>
-                        <tolerance>       1.0e-9</tolerance>
+                        <tolerance>     1.0e-9</tolerance>
                         <solver>        cg    </solver>
-                        <preconditioner>jacobi</preconditioner>
-                        <maxiterations>      75    </maxiterations>
+                        <preconditioner>pfmg  </preconditioner>
+                        <maxiterations> 75    </maxiterations>
                     </Parameters>
                 </PressureSolver>
                 

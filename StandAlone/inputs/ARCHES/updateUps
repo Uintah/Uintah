@@ -19,10 +19,20 @@ foreach fff ( $these[*]:q )
   # change parameters -> Parameters
   # change res_tol    -> tolerance
   # change max_iter   -> maxiterations
+  # change petsc      -> hypre
+  # change jacobi     -> pfmg
   # from all lines between <PressureSolver> and </PressureSolver>
   sed  -i /"<PressureSolver"/,/"\/PressureSolver"/s/"parameters"/"Parameters"/g  $fff
   sed  -i /"<PressureSolver"/,/"\/PressureSolver"/s/"res_tol"/"tolerance"/g      $fff 
   sed  -i /"<PressureSolver"/,/"\/PressureSolver"/s/"max_iter"/"maxiterations"/g $fff
+  sed  -i /"<PressureSolver"/,/"\/PressureSolver"/s/"petsc"/"hypre"/g $fff
+  sed  -i /"<PressureSolver"/,/"\/PressureSolver"/s/"jacobi"/"pfmg  "/g $fff
   
-end
+  #__________________________________
+  # add <Solver type= "hypre" /> after <SimulationComponent = * />
+  grep  -q "Solver type" $fff
+  if ( $status != "0" ) then
+    sed -i /"<SimulationComponent"/a\ '\ \ \ \ <Solver type= "hypre" />' $fff
+  endif
+  
 exit()
