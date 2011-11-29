@@ -118,9 +118,9 @@ DiffusiveFlux2( const Expr::Tag rhoTag,
                 const Expr::ExpressionID& id,
                 const Expr::ExpressionRegistry& reg  )
   : Expr::Expression<FluxT>(id,reg),
-    rhoTag_ ( rhoTag  ),
     phiTag_ ( phiTag  ),
-    coefTag_( coefTag )
+    coefTag_( coefTag ),
+    rhoTag_ ( rhoTag  )
 {}
 
 //--------------------------------------------------------------------

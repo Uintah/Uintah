@@ -83,10 +83,10 @@ public:
              const Expr::Tag coefTag,
              const Expr::Tag rhoTag = Expr::Tag() )
       : isConstCoef_( false ),
-        phit_(phiTag),
+        phit_ (phiTag),
         coeft_(coefTag),
-        rhot_(rhoTag),
-        coef_(0.0)
+        rhot_ (rhoTag),
+        coef_ (0.0)
     {}
 
     /**
@@ -104,8 +104,8 @@ public:
              const double coef,
              const Expr::Tag rhoTag = Expr::Tag() )
       : isConstCoef_( true ),
-        rhot_(rhoTag),
         phit_(phiTag),
+        rhot_(rhoTag),
         coef_(coef)
     {}
 
