@@ -257,8 +257,8 @@ Builder::Builder( const BSpline* const spline,
                   const Expr::TagList& rhoEtaTags,
                   const Expr::TagList& rhoEtaIncEtaNames,
                   const Expr::TagList& orderedEtaTags )
-: rhoEtaIncEtaNs_( rhoEtaIncEtaNames ),
-  rhoEtaTs_      ( rhoEtaTags        ),
+: rhoEtaTs_      ( rhoEtaTags        ),
+  rhoEtaIncEtaNs_( rhoEtaIncEtaNames ),
   orderedEtaTs_  ( orderedEtaTags    ),
   spline_        ( spline            )
 {}

@@ -38,8 +38,6 @@ namespace Wasatch{
     const std::string& primVarName = primVarTag.name();
     Expr::Tag diffFluxTag;  // we will populate this.
 
-    const bool isConstDensity = (densityTag==Expr::Tag());
-
     std::string dir;
     diffFluxParams->get("Direction",dir);
 
@@ -430,7 +428,7 @@ namespace Wasatch{
   ScalarTransportEquation<FieldT>::~ScalarTransportEquation()
   {}
 
-  //------------------------------------------------------------------  
+  //------------------------------------------------------------------
 
   template< typename FieldT >
   void ScalarTransportEquation<FieldT>::
@@ -439,7 +437,7 @@ namespace Wasatch{
                                          const PatchInfoMap& patchInfoMap,
                                          const Uintah::MaterialSubset* const materials)
   {
-    
+
     Expr::ExpressionFactory& factory = *graphHelper.exprFactory;
     const Expr::Tag phiTag( this->solution_variable_name(), Expr::STATE_N );
     if (factory.get_registry().have_entry(phiTag)) {
@@ -450,10 +448,10 @@ namespace Wasatch{
                                           graphHelper,
                                           localPatches,
                                           patchInfoMap,
-                                          materials );          
+                                          materials );
     }
   }
-  
+
 
   //------------------------------------------------------------------
 
