@@ -39,6 +39,14 @@ namespace Uintah {
 template< class T >
 bool areAllValuesPositive( T                 & src, 
                            SCIRun::IntVector & neg_cell );
+
+//______________________________________________________________________
+//   This function examines all the values for being numbers.  If a 
+//   inf or nan is found the function returns false along 
+//   with the first cell index.
+template< class T >
+bool areAllValuesNumbers( T                 & src, 
+                           SCIRun::IntVector & neg_cell );
 }
 
 #endif
