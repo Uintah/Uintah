@@ -76,10 +76,54 @@ areAllValuesPositive( T & src, IntVector & neg_cell )
   return true;      
 }
 
+//______________________________________________________________________
+//   This function examines all the values for being numbers.  If a 
+//   inf or nan is found the function returns false along 
+//   with the first cell index.
+template< class T >
+bool
+areAllValuesNumbers( T & src, IntVector & neg_cell )
+{ 
+  double    numCells = 0;
+  double    sum_src = 0;
+  int       sumNan = 0;
+  int       sumInf = 0;
+  IntVector l = src.getLowIndex();
+  IntVector h = src.getHighIndex();
+  CellIterator iterLim = CellIterator(l,h);
+  
+  for(CellIterator iter=iterLim; !iter.done();iter++) {
+    IntVector c = *iter;
+    sumInf += isinf(src[c]);       // check for infs
+    sumNan += isnan(src[c]);       // check for nans
+    sum_src += src[c]/(fabs(src[c]) + d_SMALLNUM);
+    numCells++;
+  }
+
+  // now find the first cell where the value is inf or nan   
+  if ( (fabs(sum_src - numCells) > 1.0e-2) || sumNan !=0) {
+    for(CellIterator iter=iterLim; !iter.done();iter++) {
+      IntVector c = *iter;
+      if (isinf(src[c]) != 0 || isnan(src[c]) !=0) {
+        neg_cell = c;
+        return false;
+      }
+    }
+  } 
+  neg_cell = IntVector(0,0,0); 
+  return true;      
+}
+
 // Explicit template instantiations:
 template bool areAllValuesPositive( CCVariable<double> &, IntVector & );
 template bool areAllValuesPositive( SFCXVariable<double> &, IntVector & );
 template bool areAllValuesPositive( SFCYVariable<double> &, IntVector & );
 template bool areAllValuesPositive( SFCZVariable<double> &, IntVector & );
+
+// Explicit template instantiations:
+template bool areAllValuesNumbers( CCVariable<double> &, IntVector & );
+template bool areAllValuesNumbers( SFCXVariable<double> &, IntVector & );
+template bool areAllValuesNumbers( SFCYVariable<double> &, IntVector & );
+template bool areAllValuesNumbers( SFCZVariable<double> &, IntVector & );
 
 } // end namespace Uintah
