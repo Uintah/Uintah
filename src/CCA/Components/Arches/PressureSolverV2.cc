@@ -104,33 +104,24 @@ PressureSolver::problemSetup(ProblemSpecP& params)
   if (d_doMMS){
     d_source->problemSetup(db);
   }
-  string linear_sol;
-  db->require("linear_solver", linear_sol);
+  
+  d_hypreSolver_parameters = d_hypreSolver->readParameters(db, "pressure");
+  d_hypreSolver_parameters->setSolveOnExtraCells(false);
+  d_hypreSolver_parameters->setDynamicTolerance(true);
 
-  if (linear_sol == "hypre"){
-    d_hypreSolver_parameters = d_hypreSolver->readParameters(db, "pressure");
-    d_hypreSolver_parameters->setSolveOnExtraCells(false);
-    d_hypreSolver_parameters->setDynamicTolerance(true);
-    
-    //__________________________________
-    // bulletproofing
-    ProblemSpecP ps_root = params->getRootNode();
-    ProblemSpecP sol_ps = ps_root->findBlock( "Solver" );
-    string solver = "None";
-    if( sol_ps ) {
-      sol_ps->getAttribute( "type", solver );
-    }
-    if( !sol_ps || (solver != "hypre" && solver != "HypreSolver" && solver != "CGSolver") ){
-      ostringstream msg;
-      msg << "\n ERROR:Arches:PressureSolver  You've specified the hypre solver in only one of two required places\n";
-      msg << " Please add  <Solver type=\"hypre\" /> directly beneath <SimulationComponent type=\"arches\" /> \n";
-      throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
-    }
+  //__________________________________
+  // bulletproofing
+  ProblemSpecP ps_root = params->getRootNode();
+  ProblemSpecP sol_ps = ps_root->findBlock( "Solver" );
+  string solver = "None";
+  if( sol_ps ) {
+    sol_ps->getAttribute( "type", solver );
   }
-
-  else {
-    throw InvalidValue("Linear solver option"
-                       " not supported" + linear_sol, __FILE__, __LINE__);
+  if( !sol_ps || (solver != "hypre" && solver != "HypreSolver" && solver != "CGSolver") ){
+    ostringstream msg;
+    msg << "\n ERROR:Arches:PressureSolver  You've specified the hypre solver in only one of two required places\n";
+    msg << " Please add  <Solver type=\"hypre\" /> directly beneath <SimulationComponent type=\"arches\" /> \n";
+    throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
   }
 }
 

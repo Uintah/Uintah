@@ -91,7 +91,6 @@
 
       <PressureSolver>
         <normalize_pressure>true    </normalize_pressure>
-        <linear_solver>     hypre   </linear_solver>
         <Parameters>
           <tolerance>      1.0e-10  </tolerance>
           <solver>          cg      </solver>
