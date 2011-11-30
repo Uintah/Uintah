@@ -361,16 +361,13 @@ private:
       SimulationStateP d_sharedState;
       // Variable labels that are used by the simulation controller
       ArchesLabel* d_lab;
-      // for multimaterial
+
       const MPMArchesLabel* d_MAlab;
 #ifdef PetscFilter
       Filter* d_filter;
 #endif
 
 //      int nofTimeSteps;
-#ifdef multimaterialform
-      MultiMaterialInterface* d_mmInterface;
-#endif
 
     string d_timeIntegratorType;
 
