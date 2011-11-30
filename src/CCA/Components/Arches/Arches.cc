@@ -150,9 +150,6 @@ Arches::Arches(const ProcessorGroup* myworld) :
   d_calcNewEnthalpy       =  0;
   d_doingRestart          =  false;
 
-#ifdef multimaterialform
-  d_mmInterface = 0;
-#endif
   nofTimeSteps                     =  0;
   init_timelabel_allocated         =  false;
   d_analysisModule                 =  false;
@@ -177,9 +174,7 @@ Arches::~Arches()
   delete d_boundaryCondition;
   delete d_nlSolver;
   delete d_physicalConsts;
-#ifdef multimaterialform
-  delete d_mmInterface;
-#endif
+
   if (init_timelabel_allocated)
     delete init_timelabel;
   if (d_analysisModule) {

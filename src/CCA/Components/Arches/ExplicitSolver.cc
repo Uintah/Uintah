@@ -156,13 +156,13 @@ ExplicitSolver::problemSetup(const ProblemSpecP& params)
                                           d_physicalConsts, d_myworld,
                                           d_hypreSolver);
   d_pressSolver->setMMS(d_doMMS);
-  d_pressSolver->problemSetup(db); // d_mmInterface
+  d_pressSolver->problemSetup(db);
 
   d_momSolver = scinew MomentumSolver(d_lab, d_MAlab,
                                         d_turbModel, d_boundaryCondition,
                                         d_physicalConsts);
   d_momSolver->setMMS(d_doMMS);
-  d_momSolver->problemSetup(db); // d_mmInterface
+  d_momSolver->problemSetup(db);
 
   if (d_calScalar) {
     d_scalarSolver = scinew ScalarSolver(d_lab, d_MAlab,
