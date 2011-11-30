@@ -64,7 +64,7 @@ static DebugStream threaddbg("ThreadDBG",false);
 
 
 TaskWorker::TaskWorker(ThreadedMPIScheduler* scheduler, int id) :
-   d_id(id), d_scheduler(scheduler), d_schedulergpu(0), d_task(NULL), d_iteration(0),
+   d_id(id), d_scheduler(scheduler), d_schedulergpu(NULL), d_task(NULL), d_iteration(0),
    d_runmutex("run mutex"),  d_runsignal("run condition"), d_quit(false),
    d_rank(scheduler->getProcessorGroup()->myrank())
 {
@@ -72,16 +72,21 @@ TaskWorker::TaskWorker(ThreadedMPIScheduler* scheduler, int id) :
 }
 
 TaskWorker::TaskWorker(GPUThreadedMPIScheduler* scheduler, int id) :
-   d_id(id), d_scheduler(0), d_schedulergpu(scheduler), d_task(NULL), d_iteration(0),
+   d_id(id), d_scheduler(NULL), d_schedulergpu(scheduler), d_task(NULL), d_iteration(0),
    d_runmutex("run mutex"),  d_runsignal("run condition"), d_quit(false),
    d_rank(scheduler->getProcessorGroup()->myrank())
 {
   d_runmutex.lock();
 }
 
+TaskWorker::~TaskWorker()
+{
+}
+
 void TaskWorker::run()
 {
   threaddbg << "Binding thread id " << d_id+1 << " to cpu " << d_id+1 << endl;
+  bool useGPU = Uintah::Parallel::usingGPU();
 
   Thread::self()->set_myid(d_id+1);
   Thread::self()->set_affinity(d_id+1);
@@ -106,11 +111,20 @@ void TaskWorker::run()
     }
     ASSERT(d_task!=NULL);
 
+//    WAIT_FOR_DEBUGGER();
     try {
       if (d_task->getTask()->getType() == Task::Reduction) {
-        d_scheduler->initiateReduction(d_task);
+        if (useGPU) {
+          d_schedulergpu->initiateReduction(d_task);
+        } else {
+          d_scheduler->initiateReduction(d_task);
+        }
       } else {
-        d_scheduler->runTask(d_task, d_iteration, d_id);
+        if (useGPU) {
+          d_schedulergpu->runTask(d_task, d_iteration, d_id);
+        } else {
+            d_scheduler->runTask(d_task, d_iteration, d_id);
+        }
       }
     } catch (Exception& e) {
       cerrLock.lock();
@@ -128,11 +142,20 @@ void TaskWorker::run()
     }
 
     //signal main thread for next task
-    d_scheduler->d_nextmutex.lock();
+    if (useGPU) {
+      d_schedulergpu->d_nextmutex.lock();
+    } else {
+      d_scheduler->d_nextmutex.lock();
+    }
     d_runmutex.lock();
     d_task = NULL;
     d_iteration = 0;
-    d_scheduler->d_nextsignal.conditionSignal();
-    d_scheduler->d_nextmutex.unlock();
+    if (useGPU) {
+      d_schedulergpu->d_nextsignal.conditionSignal();
+      d_schedulergpu->d_nextmutex.unlock();
+    } else {
+        d_scheduler->d_nextsignal.conditionSignal();
+        d_scheduler->d_nextmutex.unlock();
+    }
   }
 }
