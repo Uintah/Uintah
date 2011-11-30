@@ -38,6 +38,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Util/constHandle.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Geometry/IntVector.h>
+#include <Core/Parallel/Parallel.h>
 
 #include <map>
 #include <set>
@@ -112,7 +113,7 @@ WARNING
 
   private:
 
-    // begin CPU Action declarations
+    // begin CPU Action constructors
     template<class T>
     class Action : public ActionBase {
       
@@ -322,10 +323,10 @@ WARNING
         (ptr->*pmf)(pg, patches, matls, fromDW, toDW, arg1, arg2, arg3, arg4, arg5);
       }
     }; // end Action5
-    // end CPU Action declarations
+    // end CPU Action constructors
 
 
-    // begin GPU Action declarations
+    // begin GPU Action constructors
     template<class T>
     class ActionGPU : public ActionGPUBase {
       T* ptr;
@@ -557,7 +558,7 @@ WARNING
         (ptr->*pmfgpu)(pg, patches, matls, fromDW, toDW, device, arg1, arg2, arg3, arg4, arg5);
       }
     }; // end class ActionGPU5
-    // end GPU Action declarations
+    // end GPU Action constructors
 
 
   public: // class Task
@@ -593,10 +594,9 @@ WARNING
     {
       d_tasktype = type;
       initialize();
-//      std::cout << "In BASIC CPU Task CTOR" << std::endl;
     }
     
-    // begin CPU Task declarations
+    // begin CPU Task constructors
     template<class T>
     Task(const std::string& taskName,
          T* ptr,
@@ -612,7 +612,6 @@ WARNING
     {
       d_tasktype = Normal;
       initialize();
-//      std::cout << "In 0-Arg CPU Task CTOR" << std::endl;
     }
 
     template<class T, class Arg1>
@@ -709,10 +708,10 @@ WARNING
       d_tasktype = Normal;
       initialize();
     }
-    // end CPU Task declarations
+    // end CPU Task constructors
 
 
-    // begin GPU Task declarations
+    // begin GPU Task constructors
     template<class T>
     Task(void (T::*pmfgpu)(const ProcessorGroup* pg,
                            const PatchSubset* patches,
@@ -733,9 +732,9 @@ WARNING
         d_action(scinew Action<T>(ptr, pmf)),
         d_actionGPU(scinew ActionGPU<T>(ptr, pmfgpu))
     {
-      d_tasktype = Normal;
       initialize();
-//      std::cout << "In 0-Arg GPU Task CTOR" << std::endl;
+      d_tasktype = Normal;
+      d_usesGPU = (Parallel::usingGPU() ? true : false);
     }
 
     template<class T, class Arg1>
@@ -762,8 +761,9 @@ WARNING
         d_action(scinew Action1<T, Arg1>(ptr, pmf, arg1)),
         d_actionGPU(scinew ActionGPU1<T, Arg1>(ptr, pmfgpu, arg1))
     {
-      d_tasktype = Normal;
       initialize();
+      d_tasktype = Normal;
+      d_usesGPU = (Parallel::usingGPU() ? true : false);
     }
 
     template<class T, class Arg1, class Arg2>
@@ -789,8 +789,9 @@ WARNING
         d_action(scinew Action2<T, Arg1, Arg2>(ptr, pmf, arg1, arg2)),
         d_actionGPU(scinew ActionGPU2<T, Arg1, Arg2>(ptr, pmfgpu, arg1, arg2))
     {
-      d_tasktype = Normal;
       initialize();
+      d_tasktype = Normal;
+      d_usesGPU = (Parallel::usingGPU() ? true : false);
     }
 
     template<class T, class Arg1, class Arg2, class Arg3>
@@ -816,8 +817,9 @@ WARNING
         d_action(scinew Action3<T, Arg1, Arg2, Arg3>(ptr, pmf, arg1, arg2, arg3)),
         d_actionGPU(scinew ActionGPU3<T, Arg1, Arg2, Arg3>(ptr, pmfgpu, arg1, arg2, arg3))
     {
-      d_tasktype = Normal;
       initialize();
+      d_tasktype = Normal;
+      d_usesGPU = (Parallel::usingGPU() ? true : false);
     }
 
 
@@ -845,8 +847,9 @@ WARNING
         d_action(scinew Action4<T, Arg1, Arg2, Arg3, Arg4>(ptr, pmf, arg1, arg2, arg3, arg4)),
         d_actionGPU(scinew ActionGPU4<T, Arg1, Arg2, Arg3, Arg4>(ptr, pmfgpu, arg1, arg2, arg3, arg4))
     {
-      d_tasktype = Normal;
       initialize();
+      d_tasktype = Normal;
+      d_usesGPU = (Parallel::usingGPU() ? true : false);
     }
 
     template<class T, class Arg1, class Arg2, class Arg3, class Arg4, class Arg5>
@@ -872,10 +875,11 @@ WARNING
         d_action(scinew Action5<T, Arg1, Arg2, Arg3, Arg4, Arg5>(ptr, pmf, arg1, arg2, arg3, arg4, arg5)),
         d_actionGPU(scinew ActionGPU5<T, Arg1, Arg2, Arg3, Arg4, Arg5>(ptr, pmfgpu, arg1, arg2, arg3, arg4, arg5))
     {
-      d_tasktype = Normal;
       initialize();
+      d_tasktype = Normal;
+      d_usesGPU = (Parallel::usingGPU() ? true : false);
     }
-    // end GPU Task declarations
+    // end GPU Task constructors
 
     void initialize();
     
@@ -885,13 +889,9 @@ WARNING
     bool inline getHasSubScheduler() const { return d_hasSubScheduler; }
     void usesMPI(bool state=true);
     void usesThreads(bool state);
-    bool usesThreads() const {
-      return d_usesThreads;
-    }
+    bool inline usesThreads() const { return d_usesThreads; }
     void usesGPU(bool state);
-    bool usesGPU() const {
-      return d_usesGPU;
-    }
+    bool usesGPU() const { return d_usesGPU; }
     
     //////////
     // Insert Documentation Here:
@@ -1025,7 +1025,7 @@ WARNING
               const MaterialSubset*, vector<DataWarehouseP>& dws, int device);
 
     inline const char* getName() const {
-      return d_taskName.c_str();
+      return (d_usesGPU ? d_taskNameGPU : d_taskName).c_str();
     }
     inline const PatchSet* getPatchSet() const {
       return patch_set;
