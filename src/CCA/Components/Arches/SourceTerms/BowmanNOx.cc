@@ -143,8 +143,8 @@ BowmanNOx::computeSource( const ProcessorGroup* pc,
       IntVector c = *iter; 
 
       //convert to mol/cm^3
-      double n2  = N2[c] * rho[c] / _MW_N2 * 1.0e-6; 
-      double o2  = O2[c] * rho[c] / _MW_O2 * 1.0e-6; 
+      double n2  = N2[c] * rho[c] / _MW_N2 * 1.0e-3; 
+      double o2  = O2[c] * rho[c] / _MW_O2 * 1.0e-3; 
 
       double T_pow = pow( T[c], 0.5 ); 
       double o2_pow = pow( o2, 0.5 ); 
