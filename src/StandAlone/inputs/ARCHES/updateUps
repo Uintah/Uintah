@@ -21,12 +21,14 @@ foreach fff ( $these[*]:q )
   # change max_iter   -> maxiterations
   # change petsc      -> hypre
   # change jacobi     -> pfmg
+  # delete always_construct_A
   # from all lines between <PressureSolver> and </PressureSolver>
   sed  -i /"<PressureSolver"/,/"\/PressureSolver"/s/"parameters"/"Parameters"/g  $fff
   sed  -i /"<PressureSolver"/,/"\/PressureSolver"/s/"res_tol"/"tolerance"/g      $fff 
   sed  -i /"<PressureSolver"/,/"\/PressureSolver"/s/"max_iter"/"maxiterations"/g $fff
   sed  -i /"<PressureSolver"/,/"\/PressureSolver"/s/"petsc"/"hypre"/g $fff
   sed  -i /"<PressureSolver"/,/"\/PressureSolver"/s/"jacobi"/"pfmg  "/g $fff
+  sed  -i /"always_construct_A"/d $fff
   
   #__________________________________
   # add <Solver type= "hypre" /> after <SimulationComponent = * />
