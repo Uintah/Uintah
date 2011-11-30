@@ -51,7 +51,6 @@ SRCS += $(SRCDIR)/Arches.cc                    \
         $(SRCDIR)/ExplicitTimeInt.cc           \
         $(SRCDIR)/IncDynamicProcedure.cc       \
         $(SRCDIR)/IntrusionBC.cc               \
-        $(SRCDIR)/LinearSolver.cc              \
         $(SRCDIR)/LU.cc                        \
         $(SRCDIR)/MomentumSolver.cc            \
         $(SRCDIR)/NonlinearSolver.cc           \
@@ -70,15 +69,9 @@ SRCS += $(SRCDIR)/Arches.cc                    \
 
 ifeq ($(HAVE_PETSC),yes)
   SRCS += $(SRCDIR)/PetscCommon.cc \
-          $(SRCDIR)/PetscSolver.cc \
-          $(SRCDIR)/Filter.cc      
-else
-  SRCS += $(SRCDIR)/FakePetscSolver.cc
+          $(SRCDIR)/Filter.cc
 endif
 
-ifeq ($(HAVE_HYPRE),yes)
-  SRCS += $(SRCDIR)/HypreSolverV2.cc
-endif
 
 PSELIBS := \
         CCA/Components/Arches/fortran   \
