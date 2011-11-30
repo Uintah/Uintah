@@ -111,7 +111,6 @@ void TaskWorker::run()
     }
     ASSERT(d_task!=NULL);
 
-//    WAIT_FOR_DEBUGGER();
     try {
       if (d_task->getTask()->getType() == Task::Reduction) {
         if (useGPU) {
