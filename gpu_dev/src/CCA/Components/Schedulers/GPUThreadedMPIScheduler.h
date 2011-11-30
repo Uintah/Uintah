@@ -43,7 +43,7 @@ using std::ofstream;
 
 class Task;
 class DetailedTask;
-class GPUTaskWorker;
+class TaskWorker;
 
 /**************************************
 
@@ -74,29 +74,32 @@ WARNING
   
 ****************************************/
   class GPUThreadedMPIScheduler : public MPIScheduler  {
+
   public:
     GPUThreadedMPIScheduler(const ProcessorGroup* myworld, Output* oport, GPUThreadedMPIScheduler* parentScheduler = 0);
-     ~GPUThreadedMPIScheduler();
     
-    virtual void problemSetup(const ProblemSpecP& prob_spec,
-                              SimulationStateP& state);
+    ~GPUThreadedMPIScheduler();
+
+    virtual void problemSetup(const ProblemSpecP& prob_spec, SimulationStateP& state);
       
     virtual SchedulerP createSubScheduler();
     
     virtual void execute(int tgnum = 0, int iteration = 0);
     
-    virtual bool useInternalDeps() { return !d_sharedState->isCopyDataTimestep();}
+    virtual bool useInternalDeps() { return !d_sharedState->isCopyDataTimestep(); }
     
-    void runTask( DetailedTask* task, int iteration, int t_id = 0 );
+    void runTask(DetailedTask* task, int iteration, int t_id = 0);
     
-    void postMPISends( DetailedTask* task, int iteration, int t_id);
+    void postMPISends(DetailedTask* task, int iteration, int t_id);
     
-    void assignTask( DetailedTask* task, int iteration);
+    void assignTask(DetailedTask* task, int iteration);
     
     ConditionVariable      d_nextsignal;
     Mutex                  d_nextmutex;   //conditional wait mutex
-    GPUTaskWorker*         t_worker[16];  //workers
+    TaskWorker*            t_worker[16];  //workers
     Thread*                t_thread[16];
+    Mutex                  dlbLock;   //load balancer lock
+
     /*Thread share data*/
     /*
     ConditionVariable*     t_runsignal[16];  //signal from sheduler to task
@@ -104,51 +107,20 @@ WARNING
     DetailedTask*          t_task[16];     //current running tasks;
     int                    t_iteration[16];     //current running tasks;
     */
-    Mutex                  dlbLock;   //load balancer lock
     
+
   private:
     
-    Output*       oport_t;
-    CommRecMPI    sends_[16+1];
-    //map<Thread*, CommReMPI> tsends_;
+    Output*                oport_t;
+    CommRecMPI             sends_[16+1];
+    QueueAlg               taskQueueAlg_;
+    int                    numThreads_;
+
     GPUThreadedMPIScheduler(const GPUThreadedMPIScheduler&);
     GPUThreadedMPIScheduler& operator=(const GPUThreadedMPIScheduler&);
     
-    QueueAlg taskQueueAlg_;
-    int numThreads_;
     int getAviableThreadNum();
   };
-
-class GPUTaskWorker : public Runnable {
-
-public:
-  
-  GPUTaskWorker(GPUThreadedMPIScheduler* scheduler, int id);
-
-  void assignTask(DetailedTask* task, int iteration);
-
-  DetailedTask* getTask();
-
-  void run();
-
-  void quit(){d_quit=true;};
-
-
-  
-  friend class GPUThreadedMPIScheduler;
-
-
-private:
-  int                      d_id;
-  GPUThreadedMPIScheduler* d_scheduler;
-  DetailedTask*            d_task;
-  int                      d_iteration;
-  Mutex                    d_runmutex;
-  ConditionVariable        d_runsignal;
-  bool                     d_quit;
-  int                      d_rank;
-  CommRecMPI               d_sends_;
-};
 
 } // End namespace Uintah
    

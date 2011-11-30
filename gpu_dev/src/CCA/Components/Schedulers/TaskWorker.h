@@ -84,6 +84,8 @@ class TaskWorker : public Runnable {
 
     TaskWorker(GPUThreadedMPIScheduler* scheduler, int id);
 
+    ~TaskWorker();
+
     void assignTask(DetailedTask* task, int iteration);
 
     DetailedTask* getTask();
