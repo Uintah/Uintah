@@ -102,12 +102,26 @@ DESCRIPTION
                     const MaterialSubset* matls,
 		                DataWarehouse* old_dw,
                     DataWarehouse* new_dw);
+
+    void initializeGPU(const ProcessorGroup* pg,
+                    const PatchSubset* patches,
+                    const MaterialSubset* matls,
+                    DataWarehouse* old_dw,
+                    DataWarehouse* new_dw,
+                    int device);
                     
     void computeStableTimestep(const ProcessorGroup* pg,
 			                         const PatchSubset* patches,
 			                         const MaterialSubset* matls,
 			                         DataWarehouse* old_dw,
                                DataWarehouse* new_dw);
+
+    void computeStableTimestepGPU(const ProcessorGroup* pg,
+                               const PatchSubset* patches,
+                               const MaterialSubset* matls,
+                               DataWarehouse* old_dw,
+                               DataWarehouse* new_dw,
+                               int device);
                                
     void timeAdvance(const ProcessorGroup* pg,
 		                 const PatchSubset* patches,

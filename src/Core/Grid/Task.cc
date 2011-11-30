@@ -80,18 +80,21 @@ Task::~Task()
 {
   delete d_action;
   delete d_actionGPU;
+
   Dependency* dep = req_head;
   while(dep){
     Dependency* next = dep->next;
     delete dep;
     dep=next;
   }
+
   dep = comp_head;
   while(dep){
     Dependency* next = dep->next;
     delete dep;
     dep=next;
   }
+
   dep = mod_head;
   while(dep){
     Dependency* next = dep->next;
@@ -99,16 +102,20 @@ Task::~Task()
     dep=next;
   }
   
-  if(matl_set && matl_set->removeReference())
+  if(matl_set && matl_set->removeReference()) {
     delete matl_set;
+  }
 
-  if(patch_set && patch_set->removeReference())
+  if(patch_set && patch_set->removeReference()) {
     delete patch_set;
+  }
 
   // easier to periodically delete this than to force a call to a cleanup
   // function, and probably not very expensive.
-  if (globalMatlSubset && globalMatlSubset->removeReference())
+  if (globalMatlSubset && globalMatlSubset->removeReference()) {
     delete globalMatlSubset;
+  }
+
   globalMatlSubset = 0;
 }
 
@@ -118,11 +125,13 @@ void Task::setSets(const PatchSet* ps, const MaterialSet* ms)
   ASSERT(patch_set == 0);
   ASSERT(matl_set == 0);
   patch_set=ps;
-  if(patch_set)
+  if(patch_set) {
     patch_set->addReference();
+  }
   matl_set=ms;
-  if(matl_set)
+  if(matl_set) {
     matl_set->addReference();
+  }
 }
 
 //__________________________________

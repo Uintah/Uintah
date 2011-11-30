@@ -96,8 +96,7 @@ map<string,double> exectimes;
 MPIScheduler::MPIScheduler(const ProcessorGroup* myworld,
 			                     Output* oport,
 			                     MPIScheduler* parentScheduler) :
-  SchedulerCommon( myworld, oport), log( myworld, oport ),
-  parentScheduler( parentScheduler ), oport_( oport )
+  SchedulerCommon( myworld, oport), parentScheduler( parentScheduler ), log( myworld, oport ), oport_( oport )
 {
   d_lasttime=Time::currentSeconds();
   reloc_new_posLabel_=0;
