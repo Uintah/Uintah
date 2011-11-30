@@ -44,6 +44,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Ports/ModelMaker.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Exceptions/InvalidValue.h>
+#include <Core/Exceptions/ConvergenceFailure.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/AMR.h>
 #include <Core/Grid/AMR_CoarsenRefine.h>
@@ -66,6 +67,8 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Util/DebugStream.h>
 
 #include <iomanip>
+#include <errno.h>
+#include <fenv.h>
 
 
 using namespace Uintah;
@@ -1133,6 +1136,13 @@ void MPMICE::actuallyInitialize(const ProcessorGroup*,
             <<neg_cell << " sp_vol_CC is negative\n";
         throw ProblemSetupException(warn.str(), __FILE__, __LINE__ );
       }
+      if( !areAllValuesNumbers(speedSound, neg_cell) ) {
+        warn<<"ERROR MPMICE::actuallyInitialize, mat "<<indx<< " cell "
+            <<neg_cell << " speedSound is nan\n";
+        warn << "speedSound = " << speedSound[neg_cell] << " sp_vol_CC = " << sp_vol_CC[neg_cell]
+             << " rho_micro = " << rho_micro[neg_cell] << " Temp_CC = " << Temp_CC[neg_cell] << endl;
+        throw ProblemSetupException(warn.str(), __FILE__, __LINE__ );
+      }
 
       //---- P R I N T   D A T A ------        
       if (d_ice->switchDebug_Initialize){      
@@ -1876,6 +1886,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
     // use eos evaulations for rho_micro_mpm
 
     for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
+
       const IntVector& c = *iter;
       double total_mat_vol = 0.0;
       for (int m = 0; m < numALLMatls; m++) {
@@ -1990,6 +2001,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
          converged = true;
          //__________________________________
          // Find the speed of sound based on the converged solution
+         //feclearexcept(FE_ALL_EXCEPT);
          for (int m = 0; m < numALLMatls; m++)  {
            if(ice_matl[m]){
              ice_matl[m]->getEOS()->computePressEOS(rho_micro[m][c],gamma[m][c],
@@ -2004,8 +2016,23 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
                                      dp_drho[m],c_2,mpm_matl[m],Temp[m][c]);
            }
            speedSound[m][c] = sqrt(c_2);         // Isentropic speed of sound
+
+           //____ BB : B U L L E T   P R O O F I N G----
+           // catch inf and nan speed sound values
+           //if (fetestexcept(FE_INVALID) != 0 || c_2 == 0.0) {
+           //  ostringstream warn;
+           //  warn<<"ERROR MPMICE::computeEquilPressure, mat= "<< m << " cell= "
+           //      << c << " sound speed is imaginary.\n";
+           //  warn << "speedSound = " << speedSound[m][c] << " c_2 = " << c_2 
+           //       << " press_eos = " << press_eos[m]
+           //       << " dp_drho = " << dp_drho[m]
+           //       << " dp_de = " << dp_de[m]
+           //       << " rho_micro = " << rho_micro[m][c] << " Temp = " << Temp[m][c] << endl;
+           //  throw ProblemSetupException(warn.str(), __FILE__, __LINE__ );
+           //}
          }
        }
+
        // Save iteration data for output in case of crash
        if(ds_EqPress.active()){
          EqPress_dbg dbg;
@@ -2036,9 +2063,9 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
      //  then try a binary search
      if(count >= d_ice->d_max_iter_equilibration) {
         int lev = patch->getLevel()->getIndex();
-        cout << "WARNING:MPMICE:ComputeEquilibrationPressure "
-             << " Cell : " << c << " on level " << lev << " having a difficult time converging. \n"
-             << " Now performing a binary pressure search " << endl;
+        //cout << "WARNING:MPMICE:ComputeEquilibrationPressure "
+        //     << " Cell : " << c << " on level " << lev << " having a difficult time converging. \n"
+        //    << " Now performing a binary pressure search " << endl;
 
         binaryPressureSearch( Temp, rho_micro, vol_frac, rho_CC_new,
                               speedSound,  dp_drho,  dp_de, 
@@ -2170,6 +2197,23 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
       }
     }
 
+    //____ BB : B U L L E T   P R O O F I N G----
+    //for (int m = 0; m < numALLMatls; m++) {
+    //  Material* matl = d_sharedState->getMaterial( m );
+    //  int indx = matl->getDWIndex();
+    //  for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+    //    if (isnan(kappa[m][*iter]) || isinf(kappa[m][*iter])) {
+    //      ostringstream warn;
+    //      warn<<"MPMICE:(L-"<<m<<"):computeEquilibrationPressure, mat "<<indx<<" cell "
+    //             << *iter << " kappa = " << kappa[m][*iter] 
+    //             << " vol_frac = " << vol_frac[m][*iter] 
+    //             << " sp_vol_new = " << sp_vol_new[m][*iter] 
+    //             << " speedSound = " << speedSound[m][*iter] << endl;
+    //      throw InvalidValue(warn.str(), __FILE__, __LINE__);
+    //    }
+    //  }
+    //}
+
 #if 0
     //__________________________________
     //  compute f_theta  (alternate)
@@ -2246,6 +2290,7 @@ void MPMICE::binaryPressureSearch(  StaticArray<constCCVariable<double> >& Temp,
   StaticArray<double> vfR(numALLMatls);
   StaticArray<double> vfL(numALLMatls);
   Pm = press[c];
+  double residual = 1.0;
 
   while ( count < d_ice->d_max_iter_equilibration && converged == false) {
     count++;
@@ -2267,7 +2312,8 @@ void MPMICE::binaryPressureSearch(  StaticArray<constCCVariable<double> >& Temp,
       vol_frac[m][c] = rho_CC_new[m][c]/rho_micro[m][c];
       sum += vol_frac[m][c];
     }  // loop over matls
-    double residual = 1. - sum;
+
+    residual = 1. - sum;
 
     if(fabs(residual) <= convergence_crit){
       converged = true;
@@ -2276,6 +2322,7 @@ void MPMICE::binaryPressureSearch(  StaticArray<constCCVariable<double> >& Temp,
       // Find the speed of sound at ijk
       // needed by eos and the the explicit
       // del pressure function
+      //feclearexcept(FE_ALL_EXCEPT);
       for (int m = 0; m < numALLMatls; m++)  {
         Material* matl = d_sharedState->getMaterial( m );
         ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
@@ -2293,6 +2340,20 @@ void MPMICE::binaryPressureSearch(  StaticArray<constCCVariable<double> >& Temp,
                                   dp_drho[m],c_2,mpm_matl,Temp[m][c]);
         }
         speedSound[m][c] = sqrt(c_2);     // Isentropic speed of sound
+
+        //____ BB : B U L L E T   P R O O F I N G----
+        // catch inf and nan speed sound values
+        //if (fetestexcept(FE_INVALID) != 0 || c_2 == 0.0) {
+        //  ostringstream warn;
+        //  warn<<"ERROR MPMICE::binaryPressSearch, mat= "<< m << " cell= "
+        //      << c << " sound speed is imaginary.\n";
+        //  warn << "speedSound = " << speedSound[m][c] << " c_2 = " << c_2 
+        //       << " press_eos = " << press_eos[m]
+        //       << " dp_drho = " << dp_drho[m]
+        //       << " dp_de = " << dp_de[m]
+        //       << " rho_micro = " << rho_micro[m][c] << " Temp = " << Temp[m][c] << endl;
+        //  throw ProblemSetupException(warn.str(), __FILE__, __LINE__ );
+        //}
       }
     }
     // Initial guess
@@ -2347,7 +2408,47 @@ void MPMICE::binaryPressureSearch(  StaticArray<constCCVariable<double> >& Temp,
     }
     Pm = .5*(Pleft + Pright);
  //   cout << setprecision(15);
+
   }   // end of converged
+
+#ifdef D_STRICT
+  if (count >= d_ice->d_max_iter_equilibration) {
+    ostringstream desc;
+    desc << "**ERROR** Binary pressure search failed to converge" << endl;
+    throw ConvergenceFailure(desc.str(), d_ice->d_max_iter_equilibration,
+                             fabs(residual), convergence_crit, __FILE__, __LINE__);
+  }
+#else
+  if (count >= d_ice->d_max_iter_equilibration) {
+    cout << "**WARNING** Binary pressure search failed to converge after "
+         << d_ice->d_max_iter_equilibration << " iterations.  Final residual is "
+         << fabs(residual) << " and convergence tolerance is " << convergence_crit << endl;
+    cout << "  Continuing with unconverged value of pressure = " << Pm << endl;
+    press_new[c] = Pm;
+    //__________________________________
+    // Find the speed of sound at ijk
+    // needed by eos and the the explicit
+    // del pressure function
+    for (int m = 0; m < numALLMatls; m++)  {
+      Material* matl = d_sharedState->getMaterial( m );
+      ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
+      MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
+      if(ice_matl){       // ICE
+        ice_matl->getEOS()->computePressEOS(rho_micro[m][c],gamma[m][c],
+                                            cv[m][c],Temp[m][c],press_eos[m],
+                                            dp_drho[m],dp_de[m]);
+        c_2 = dp_drho[m] + dp_de[m] *
+                     (press_eos[m]/(rho_micro[m][c]*rho_micro[m][c]));
+      }
+      if(mpm_matl){       // MPM
+        mpm_matl->getConstitutiveModel()->
+                computePressEOSCM(rho_micro[m][c],press_eos[m],press_ref,
+                                  dp_drho[m],c_2,mpm_matl,Temp[m][c]);
+      }
+      speedSound[m][c] = sqrt(c_2);     // Isentropic speed of sound
+    }
+  }
+#endif
 }
 
 //______________________________________________________________________
