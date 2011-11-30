@@ -127,3 +127,50 @@ Fortran code:
     outside of the route and them pass them in.  Just use a local variable.
   
 * This should not change the answers
+
+
+
+______________________________________________________________________
+11/30/11 Todd
+Date: 2011-11-30 14:04:54 -0700 (Wed, 30 Nov 2011)
+New Revision: 47894
+
+Removed:
+   trunk/src/CCA/Components/Arches/FakePetscSolver.cc
+   trunk/src/CCA/Components/Arches/HypreSolverV2.cc
+   trunk/src/CCA/Components/Arches/HypreSolverV2.h
+   trunk/src/CCA/Components/Arches/LinearSolver.cc
+   trunk/src/CCA/Components/Arches/LinearSolver.h
+   trunk/src/CCA/Components/Arches/PetscSolver.cc
+   trunk/src/CCA/Components/Arches/PetscSolver.h
+Modified:
+   trunk/src/CCA/Components/Arches/ArchesLabel.cc
+   trunk/src/CCA/Components/Arches/ArchesLabel.h
+   trunk/src/CCA/Components/Arches/EnthalpySolver.cc
+   trunk/src/CCA/Components/Arches/PressureSolverV2.cc
+   trunk/src/CCA/Components/Arches/PressureSolverV2.h
+   trunk/src/CCA/Components/Arches/ScalarSolver.cc
+   trunk/src/CCA/Components/Arches/sub.mk
+   trunk/src/StandAlone/inputs/ARCHES/updateUps
+   trunk/src/StandAlone/inputs/MPMARCHES/steamGen.ups
+   trunk/src/StandAlone/inputs/UPS_SPEC/arches_spec.xml
+Log:
+Removed Petsc option from the pressure solver.
+
+-cleaned up PressureSolverV2.h
+
+- removed option to only setup matrix once.  The coefficient calculation
+   is intermingled with RHS, deep inside some fortran code (hard to untangle).
+   It's not that expensive.
+
+*This should not change the answers
+
+
+
+
+
+
+
+
+
+
