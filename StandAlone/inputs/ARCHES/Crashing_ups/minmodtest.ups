@@ -570,7 +570,6 @@
                 <timeIntegratorType>FE</timeIntegratorType>
 
               <PressureSolver>
-                  <linear_solver>hypre</linear_solver>
                   <Parameters>
                     <solver>cg</solver>
                     <tolerance>1.0e-16</tolerance>

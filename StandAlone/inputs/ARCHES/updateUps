@@ -17,18 +17,28 @@ foreach fff ( $these[*]:q )
   echo "Now modifying " $fff
   #__________________________________
   # change parameters -> Parameters
+  # change ksptype    -> solver
+  # change pctype     -> preconditioner
   # change res_tol    -> tolerance
   # change max_iter   -> maxiterations
   # change petsc      -> hypre
   # change jacobi     -> pfmg
   # delete always_construct_A
+  # delete linear_solver
   # from all lines between <PressureSolver> and </PressureSolver>
+  
+
   sed  -i /"<PressureSolver"/,/"\/PressureSolver"/s/"parameters"/"Parameters"/g  $fff
+  sed  -i /"<PressureSolver"/,/"\/PressureSolver"/s/"ksptype"/"solver"/g         $fff
+  sed  -i /"<PressureSolver"/,/"\/PressureSolver"/s/"pctype"/"preconditioner"/g  $fff
   sed  -i /"<PressureSolver"/,/"\/PressureSolver"/s/"res_tol"/"tolerance"/g      $fff 
   sed  -i /"<PressureSolver"/,/"\/PressureSolver"/s/"max_iter"/"maxiterations"/g $fff
   sed  -i /"<PressureSolver"/,/"\/PressureSolver"/s/"petsc"/"hypre"/g $fff
   sed  -i /"<PressureSolver"/,/"\/PressureSolver"/s/"jacobi"/"pfmg  "/g $fff
   sed  -i /"always_construct_A"/d $fff
+  
+  sed  -i /"<PressureSolver"/,/"\/PressureSolver"/s/"linear_solver"/"junk"/g $fff
+  sed  -i /"junk"/d $fff
   
   #__________________________________
   # add <Solver type= "hypre" /> after <SimulationComponent = * />
@@ -36,5 +46,6 @@ foreach fff ( $these[*]:q )
   if ( $status != "0" ) then
     sed -i /"<SimulationComponent"/a\ '\ \ \ \ <Solver type= "hypre" />' $fff
   endif
+end
   
 exit()

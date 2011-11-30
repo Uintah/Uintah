@@ -385,7 +385,6 @@
         <restartOnNegativeDensityGuess>false</restartOnNegativeDensityGuess>
 
         <PressureSolver>
-          <linear_solver>hypre</linear_solver>
           <Parameters>
             <tolerance>1.0e-16</tolerance>
             <solver>cg</solver>

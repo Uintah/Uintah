@@ -468,7 +468,6 @@
                 <scalarUnderflowCheck>true</scalarUnderflowCheck>
                 
                 <PressureSolver>
-                    <linear_solver>hypre</linear_solver>
                     <Parameters>
                         <tolerance>     1.0e-9</tolerance>
                         <solver>        cg    </solver>

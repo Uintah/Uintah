@@ -356,7 +356,6 @@
         <PressureSolver                 spec="REQUIRED NO_DATA" >
           <do_only_last_projection      spec="OPTIONAL BOOLEAN" />
           <normalize_pressure           spec="OPTIONAL BOOLEAN" /> 
-          <linear_solver                spec="REQUIRED STRING 'hypre'" />
         <Parameters                     spec="OPTIONAL NO_DATA"
                                           attribute1="variable OPTIONAL STRING 'implicitPressure'" >
           <initial_tolerance            spec="OPTIONAL DOUBLE 'positive'"/>
