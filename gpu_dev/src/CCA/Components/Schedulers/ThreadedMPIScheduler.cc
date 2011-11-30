@@ -33,6 +33,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Schedulers/ThreadedMPIScheduler.h>
 #include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <CCA/Components/Schedulers/TaskGraph.h>
+#include <CCA/Components/Schedulers/TaskWorker.h>
 
 #include <Core/Exceptions/ProblemSetupException.h>
 
@@ -920,71 +921,4 @@ ThreadedMPIScheduler::assignTask( DetailedTask* task, int iteration)
    t_worker[targetThread]->d_iteration = iteration;
    t_worker[targetThread]->d_runsignal.conditionSignal();
    t_worker[targetThread]->d_runmutex.unlock();
-}
-
-/** Computing Thread Methods***/
-TaskWorker::TaskWorker(ThreadedMPIScheduler* scheduler, int id ) : 
-   d_id( id ), d_scheduler(scheduler),  d_task(NULL), d_iteration(0),
-   d_runmutex("run mutex"),  d_runsignal("run condition"), d_quit(false), 
-   d_rank(scheduler->getProcessorGroup()->myrank())
-{
-  d_runmutex.lock();
-}
-
-void
-TaskWorker::run()
-{
-  threaddbg << "Binding thread id " << d_id+1 << " to cpu " << d_id+1 << endl;
-  Thread::self()->set_myid(d_id+1);
-  Thread::self()->set_affinity(d_id+1);
-  while(true) {
-    //wait for main thread signal
-    d_runsignal.wait(d_runmutex);
-    d_runmutex.unlock();
-    if (d_quit) {
-      if( taskdbg.active() ) {
-      cerrLock.lock();
-       taskdbg << "Worker " << d_rank  << "-" << d_id << " quitting   " << "\n";
-      cerrLock.unlock();
-      }
-      return;
-    }
-
-    if( taskdbg.active() ) {
-      cerrLock.lock();
-      taskdbg << "Worker " << d_rank  << "-" << d_id 
-        << ": executeTask:   " << *d_task << "\n";
-      cerrLock.unlock();
-    }
-    ASSERT(d_task!=NULL);
-    try {
-      if (d_task->getTask()->getType() == Task::Reduction){
-        d_scheduler->initiateReduction(d_task);
-      } else{
-      d_scheduler->runTask(d_task, d_iteration, d_id);
-      }
-    } catch (Exception& e){
-      cerrLock.lock();
-      cerr << "Worker " << d_rank << "-" << d_id << 
-        ": Caught exception: " << e.message() << "\n";
-      if(e.stackTrace())
-          cerr << "Stack trace: " << e.stackTrace() << '\n';
-      cerrLock.unlock();
-    }
-
-    if( taskdbg.active() ) {
-      cerrLock.lock();
-      taskdbg << "Worker " << d_rank << "-" << d_id 
-        << ": finishTask:   " << *d_task << "\n";
-      cerrLock.unlock();
-    }
-
-    //signal main thread for next task
-    d_scheduler->d_nextmutex.lock();
-    d_runmutex.lock();
-    d_task = NULL;
-    d_iteration = 0;
-    d_scheduler->d_nextsignal.conditionSignal();
-    d_scheduler->d_nextmutex.unlock();
-  }
 }

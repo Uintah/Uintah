@@ -587,10 +587,13 @@ WARNING
     
     Task(const std::string& taskName, TaskType type)
       :  d_taskName(taskName),
-         d_action(0)
+         d_taskNameGPU(""),
+         d_action(0),
+         d_actionGPU(0)
     {
       d_tasktype = type;
       initialize();
+//      std::cout << "In BASIC CPU Task CTOR" << std::endl;
     }
     
     // begin CPU Task declarations
@@ -601,12 +604,15 @@ WARNING
                         const PatchSubset* patches,
                         const MaterialSubset* matls,
                         DataWarehouse* fromDW,
-                        DataWarehouse* toDW) )
-      : d_taskName( taskName ), 
-        d_action( scinew Action<T>(ptr, pmf) )
+                        DataWarehouse* toDW))
+      : d_taskName(taskName),
+        d_taskNameGPU(""),
+        d_action(scinew Action<T>(ptr, pmf)),
+        d_actionGPU(0)
     {
       d_tasktype = Normal;
       initialize();
+//      std::cout << "In 0-Arg CPU Task CTOR" << std::endl;
     }
 
     template<class T, class Arg1>
@@ -619,8 +625,10 @@ WARNING
                         DataWarehouse* toDW,
                         Arg1 arg1),
          Arg1 arg1)
-      : d_taskName( taskName ),
-        d_action( scinew Action1<T, Arg1>(ptr, pmf, arg1) )
+      : d_taskName(taskName),
+        d_taskNameGPU(""),
+        d_action(scinew Action1<T, Arg1>(ptr, pmf, arg1)),
+        d_actionGPU(0)
     {
       d_tasktype = Normal;
       initialize();
@@ -636,8 +644,10 @@ WARNING
                         DataWarehouse* toDW,
                         Arg1, Arg2),
          Arg1 arg1, Arg2 arg2)
-      : d_taskName( taskName ),
-        d_action( scinew Action2<T, Arg1, Arg2>(ptr, pmf, arg1, arg2) )
+      : d_taskName(taskName),
+        d_taskNameGPU(""),
+        d_action(scinew Action2<T, Arg1, Arg2>(ptr, pmf, arg1, arg2)),
+        d_actionGPU(0)
     {
       d_tasktype = Normal;
       initialize();
@@ -653,8 +663,10 @@ WARNING
                         DataWarehouse* toDW,
                         Arg1, Arg2, Arg3),
          Arg1 arg1, Arg2 arg2, Arg3 arg3)
-      : d_taskName( taskName ),
-        d_action( scinew Action3<T, Arg1, Arg2, Arg3>(ptr, pmf, arg1, arg2, arg3) )
+      : d_taskName(taskName),
+        d_taskNameGPU(""),
+        d_action(scinew Action3<T, Arg1, Arg2, Arg3>(ptr, pmf, arg1, arg2, arg3)),
+        d_actionGPU(0)
     {
       d_tasktype = Normal;
       initialize();
@@ -670,8 +682,10 @@ WARNING
                         DataWarehouse* toDW,
                         Arg1, Arg2, Arg3, Arg4),
          Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4)
-      : d_taskName( taskName ), 
-        d_action( scinew Action4<T, Arg1, Arg2, Arg3, Arg4>(ptr, pmf, arg1, arg2, arg3, arg4) )
+      : d_taskName(taskName),
+        d_taskNameGPU(""),
+        d_action(scinew Action4<T, Arg1, Arg2, Arg3, Arg4>(ptr, pmf, arg1, arg2, arg3, arg4)),
+        d_actionGPU(0)
     {
       d_tasktype = Normal;
       initialize();
@@ -687,8 +701,10 @@ WARNING
                         DataWarehouse* toDW,
                         Arg1, Arg2, Arg3, Arg4, Arg5),
          Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4, Arg5 arg5)
-      : d_taskName( taskName ),
-        d_action( scinew Action5<T, Arg1, Arg2, Arg3, Arg4, Arg5>(ptr, pmf, arg1, arg2, arg3, arg4, arg5) )
+      : d_taskName(taskName),
+        d_taskNameGPU(""),
+        d_action(scinew Action5<T, Arg1, Arg2, Arg3, Arg4, Arg5>(ptr, pmf, arg1, arg2, arg3, arg4, arg5)),
+        d_actionGPU(0)
     {
       d_tasktype = Normal;
       initialize();
@@ -719,6 +735,7 @@ WARNING
     {
       d_tasktype = Normal;
       initialize();
+//      std::cout << "In 0-Arg GPU Task CTOR" << std::endl;
     }
 
     template<class T, class Arg1>

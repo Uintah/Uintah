@@ -72,21 +72,22 @@ void GPUSchedulerTest::problemSetup(const ProblemSpecP& params,
 //______________________________________________________________________
 //
 void GPUSchedulerTest::scheduleInitialize(const LevelP& level, SchedulerP& sched) {
-  Task* task = scinew Task("GPUSchedulerTest::initialize", this, &GPUSchedulerTest::initialize);
+  Task* gpuTask = scinew Task(&GPUSchedulerTest::initializeGPU, "GPUSchedulerTest::initializeGPU",
+                           "GPUSchedulerTest::initialize", this, &GPUSchedulerTest::initialize);
 
-  task->computes(phi_label);
-  task->computes(residual_label);
-  sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
+  gpuTask->computes(phi_label);
+  gpuTask->computes(residual_label);
+  sched->addTask(gpuTask, level->eachPatch(), sharedState_->allMaterials());
 }
 //______________________________________________________________________
 //
 void GPUSchedulerTest::scheduleComputeStableTimestep(const LevelP& level, SchedulerP& sched) {
-  Task* task = scinew Task("GPUSchedulerTest::computeStableTimestep", this,
-                           &GPUSchedulerTest::computeStableTimestep);
+  Task* gpuTask = scinew Task(&GPUSchedulerTest::computeStableTimestepGPU, "GPUSchedulerTest::computeStableTimestepGPU",
+                           "GPUSchedulerTest::computeStableTimestep", this, &GPUSchedulerTest::computeStableTimestep);
 
-  task->requires(Task::NewDW, residual_label);
-  task->computes(sharedState_->get_delt_label(), level.get_rep());
-  sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
+  gpuTask->requires(Task::NewDW, residual_label);
+  gpuTask->computes(sharedState_->get_delt_label(), level.get_rep());
+  sched->addTask(gpuTask, level->eachPatch(), sharedState_->allMaterials());
 }
 //______________________________________________________________________
 //
@@ -107,6 +108,7 @@ void GPUSchedulerTest::scheduleTimeAdvance(const LevelP& level, SchedulerP& sche
   gpuTask->computes(residual_label);
   sched->addTask(gpuTask, level->eachPatch(), sharedState_->allMaterials());
 }
+
 //______________________________________________________________________
 //
 void GPUSchedulerTest::computeStableTimestep(const ProcessorGroup* pg,
@@ -120,6 +122,25 @@ void GPUSchedulerTest::computeStableTimestep(const ProcessorGroup* pg,
     cerr << "Residual=" << residual << '\n';
   }
   new_dw->put(delt_vartype(delt_), sharedState_->get_delt_label(), getLevel(patches));
+//  std::cout << std::endl << "\nIn computeStableTimestep\n" << std::endl;
+}
+
+//______________________________________________________________________
+//
+void GPUSchedulerTest::computeStableTimestepGPU(const ProcessorGroup* pg,
+                                             const PatchSubset* patches,
+                                             const MaterialSubset* matls,
+                                             DataWarehouse*  old_dw,
+                                             DataWarehouse* new_dw,
+                                             int device) {
+  if (pg->myrank() == 0) {
+    sum_vartype residual;
+    new_dw->get(residual, residual_label);
+    cerr << "Residual=" << residual << '\n';
+  }
+  new_dw->put(delt_vartype(delt_), sharedState_->get_delt_label(), getLevel(patches));
+
+//  std::cout << std::endl << "\nIn computeStableTimestepGPU\n" << std::endl;
 }
 
 //______________________________________________________________________
@@ -171,6 +192,60 @@ void GPUSchedulerTest::initialize(const ProcessorGroup* pg,
 
     new_dw->put(sum_vartype(-1), residual_label);
   }
+//  std::cout << std::endl << "\nIn initialize\n" << std::endl;
+}
+
+//______________________________________________________________________
+//
+void GPUSchedulerTest::initializeGPU(const ProcessorGroup* pg,
+                                  const PatchSubset* patches,
+                                  const MaterialSubset* matls,
+                                  DataWarehouse* old_dw,
+                                  DataWarehouse* new_dw,
+                                  int device) {
+  int matl = 0;
+  for (int p = 0; p < patches->size(); p++) {
+    const Patch* patch = patches->get(p);
+
+    NCVariable<double> phi;
+    new_dw->allocateAndPut(phi, phi_label, matl, patch);
+    phi.initialize(0.);
+
+    for (Patch::FaceType face = Patch::startFace; face <= Patch::endFace;
+        face = Patch::nextFace(face)) {
+      if (patch->getBCType(face) == Patch::None) {
+        int numChildren = patch->getBCDataArray(face)->getNumberChildren(matl);
+        for (int child = 0; child < numChildren; child++) {
+          Iterator nbound_ptr, nu;
+          const BoundCondBase* bcb = patch->getArrayBCValues(face, matl, "Phi", nu, nbound_ptr,
+                                                             child);
+          const BoundCond<double>* bc = dynamic_cast<const BoundCond<double>*>(bcb);
+          double value = bc->getValue();
+          for (nbound_ptr.reset(); !nbound_ptr.done(); nbound_ptr++) {
+            phi[*nbound_ptr] = value;
+          }
+          delete bcb;
+        }
+      }
+    }
+
+#if 0
+    if(patch->getBCType(Patch::xminus) != Patch::Neighbor) {
+      IntVector l,h;
+      patch->getFaceNodes(Patch::xminus, 0, l, h);
+
+      for(NodeIterator iter(l,h); !iter.done(); iter++) {
+        if (phi[*iter] != 1.0) {
+          cout << "phi_old[" << *iter << "]=" << phi[*iter] << endl;
+        }
+        phi[*iter]=1;
+      }
+    }
+#endif
+
+    new_dw->put(sum_vartype(-1), residual_label);
+  }
+//  std::cout << std::endl << "\nIn initializeGPU\n" << std::endl;
 }
 
 //______________________________________________________________________
@@ -221,9 +296,8 @@ void GPUSchedulerTest::timeAdvance(const ProcessorGroup* pg,
       residual += diff * diff;
     }
     new_dw->put(sum_vartype(residual), residual_label);
-
-    std::cout << std::endl << std::endl << std::endl;
   }
+//  std::cout << std::endl << "\nIn timeAdvance\n" << std::endl;
 }
 
 //______________________________________________________________________
@@ -275,7 +349,6 @@ void GPUSchedulerTest::timeAdvanceGPU(const ProcessorGroup* pg,
       residual += diff * diff;
     }
     new_dw->put(sum_vartype(residual), residual_label);
-
-    std::cout << std::endl << std::endl << std::endl;
   }
+//  std::cout << std::endl << "\nIn timeAdvanceGPU\n" << std::endl;
 }

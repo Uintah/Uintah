@@ -49,6 +49,7 @@ SRCS += \
 	$(SRCDIR)/SendState.cc \
 	$(SRCDIR)/SingleProcessorScheduler.cc \
 	$(SRCDIR)/TaskGraph.cc \
+	$(SRCDIR)/TaskWorker.cc \
 	$(SRCDIR)/ThreadedMPIScheduler.cc \
 	$(SRCDIR)/GPUThreadedMPIScheduler.cc \
 	$(SRCDIR)/ThreadPool.cc \
