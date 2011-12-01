@@ -136,6 +136,9 @@ namespace Wasatch{
       // only set up trees on the patches that we own on this process.
       const Uintah::PatchSet*  perproc_patchset = sched->getLoadBalancer()->getPerProcessorPatchSet(level);
       const Uintah::PatchSubset* const localPatches = perproc_patchset->getSubset(Uintah::Parallel::getMPIRank());
+      
+      Uintah::Task* tsk = scinew Uintah::Task( taskName_, this, &TreeTaskExecute::execute, rkStage );
+      
       for( int ip=0; ip<localPatches->size(); ++ip ){
         const Uintah::Patch* const patch = localPatches->get(ip);
         TreePtr tree( new Expr::ExpressionTree( *masterTree_ ) );
@@ -163,7 +166,7 @@ namespace Wasatch{
         }
 
         tree->register_fields( *fml_ );
-        patchTreeMap_[ patch->getID() ] = std::make_pair( tree,  scinew Uintah::Task( taskName_, this, &TreeTaskExecute::execute, rkStage ));
+        patchTreeMap_[ patch->getID() ] = std::make_pair( tree, tsk );
       }
     }
     else{
