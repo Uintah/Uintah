@@ -88,13 +88,19 @@ fi
 
 
 #__________________________________
-#  Run the all component tests
-
+#  Run the component tests
 cd TestScripts
 failed=0
 
-# find all the component tests which are python scripts
-componentTests=`ls *.py | grep -v __init__ | sed "s/.py//g"`
+# If the env var TEST_COMPONENTS is set, use it instead of all the components
+if test ${TEST_COMPONENTS:+1}; then
+  echo ""
+  echo "Using TEST_COMPONENTS env var for list of components to test: ($TEST_COMPONENTS)"
+  componentTests=$TEST_COMPONENTS
+else
+  # find all of the component tests which are python scripts
+  componentTests=`ls *.py | grep -v __init__ | sed "s/.py//g"`
+fi
 
 #  main loop over components RT tests
 for componentTest in $componentTests; do
