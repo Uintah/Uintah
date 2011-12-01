@@ -622,7 +622,7 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
  
 #ifdef USE_PAPI_COUNTERS
   double flop;				// total FLOPS
-  double vflop;				// total vectorized FLOPS
+  double vflop;				// total FLOPS optimized to additionally count scaled double precision vector operations
   double l1_misses;			// total L1 cache misses
   double l2_misses;			// total L2 cache misses
   double l3_misses;			// total L3 cache misses
