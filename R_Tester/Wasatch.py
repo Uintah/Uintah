@@ -29,19 +29,19 @@ from helpers.modUPS import modUPS
 UNUSED_TESTS = []
 
 NIGHTLYTESTS = [
-  ("BasicScalarTransportEquation",  "BasicScalarTransportEquation.ups", 1, "Linux",   ["exactComparison","no_restart"] ),                 \
-  ("TabPropsInterface",             "TabPropsInterface.ups",           1,  "Linux",   ["exactComparison","no_restart","no_memoryTest"] ), \
-  ("convection-test2",              "convection-test2.ups",            2,  "Linux",   ["exactComparison","no_restart"] ),                 \
-  ("convection-test",               "convection-test.ups",             3,  "Linux",   ["exactComparison","no_restart"] ),                 \
-  ("convection-test3",              "convection-test3.ups",            1,  "Linux",   ["exactComparison","no_restart"] ),                 \
-  ("convection-superbee",           "convection-test-superbee.ups",    1,  "Linux",   ["exactComparison","no_restart"] ),                 \
-  ("bc-test-mixed",                 "bc-test-mixed.ups",               27, "Linux",   ["exactComparison","no_restart"] ),                 \
-  ("ScalarTransportEquation",       "ScalarTransportEquation.ups",     1,  "Linux",   ["exactComparison","no_restart"] ),                 \
-  ("momentum-test-mms-xy",          "momentum-test-mms-xy.ups",        4,  "Linux",   ["exactComparison","no_restart"] ),                 \
-  ("momentum-test-mms-xz",          "momentum-test-mms-xz.ups",        4,  "Linux",   ["exactComparison","no_restart"] ),                 \
-  ("momentum-test-mms-yz",          "momentum-test-mms-yz.ups",        4,  "Linux",   ["exactComparison","no_restart"] ),                 \
-  ("scalability-test",              "scalability-test.ups",            1,  "Linux",   ["exactComparison","no_restart"] ),                 \
-  ("momentum-test-mms-3D",          "momentum-test-mms-3D.ups",        8,  "Linux",   ["exactComparison","no_restart"] ),                 \
+  ("BasicScalarTransportEquation",  "BasicScalarTransportEquation.ups",1,  "Linux",  ["exactComparison","no_restart"] ),                 \
+  ("TabPropsInterface",             "TabPropsInterface.ups",           1,  "Linux",  ["exactComparison","no_restart","no_memoryTest"] ), \
+  ("convection-test2",              "convection-test2.ups",            2,  "Linux",  ["exactComparison","no_restart"] ),                 \
+  ("convection-test",               "convection-test.ups",             3,  "Linux",  ["exactComparison","no_restart"] ),                 \
+  ("convection-test3",              "convection-test3.ups",            1,  "Linux",  ["exactComparison","no_restart"] ),                 \
+  ("convection-superbee",           "convection-test-superbee.ups",    1,  "Linux",  ["exactComparison","no_restart"] ),                 \
+  ("bc-test-mixed",                 "bc-test-mixed.ups",               4,  "Linux",  ["exactComparison","no_restart"] ),                 \
+  ("ScalarTransportEquation",       "ScalarTransportEquation.ups",     1,  "Linux",  ["exactComparison","no_restart"] ),                 \
+  ("momentum-test-mms-xy",          "momentum-test-mms-xy.ups",        4,  "Linux",  ["exactComparison","no_restart"] ),                 \
+  ("momentum-test-mms-xz",          "momentum-test-mms-xz.ups",        4,  "Linux",  ["exactComparison","no_restart"] ),                 \
+  ("momentum-test-mms-yz",          "momentum-test-mms-yz.ups",        4,  "Linux",  ["exactComparison","no_restart"] ),                 \
+  ("scalability-test",              "scalability-test.ups",            1,  "Linux",  ["exactComparison","no_restart"] ),                 \
+  ("momentum-test-mms-3D",          "momentum-test-mms-3D.ups",        8,  "Linux",  ["exactComparison","no_restart"] ),                 \
   ("bc-test-svol-xdir",             "bc-test-svol-xdir.ups",           4,  "Linux",  ["exactComparison","no_restart","no_memoryTest"] ),  \
   ("bc-test-svol-ydir",             "bc-test-svol-ydir.ups",           4,  "Linux",  ["exactComparison","no_restart","no_memoryTest"] ),  \
   ("bc-test-svol-zdir",             "bc-test-svol-zdir.ups",           4,  "Linux",  ["exactComparison","no_restart","no_memoryTest"] ),  \
@@ -65,7 +65,7 @@ LOCALTESTS = [
   ("convection-test",               "convection-test.ups",          3,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   \
   ("convection-test3",              "convection-test3.ups",         1,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   \
   ("convection-superbee",           "convection-test-superbee.ups", 1,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   \
-  ("bc-test-mixed",                 "bc-test-mixed.ups",            27, "All",   ["exactComparison","no_restart","no_memoryTest"] ),   \
+  ("bc-test-mixed",                 "bc-test-mixed.ups",            4,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   \
   ("ScalarTransportEquation",       "ScalarTransportEquation.ups",  1,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   \
   ("momentum-test-mms-xy",          "momentum-test-mms-xy.ups",     4,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   \
   ("momentum-test-mms-xz",          "momentum-test-mms-xz.ups",     4,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   \
