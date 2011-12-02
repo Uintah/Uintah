@@ -86,6 +86,7 @@
         <O                              spec="REQUIRED DOUBLE" />
         <S                              spec="REQUIRED DOUBLE" />
         <initial_ash_mass               spec="REQUIRED MULTIPLE_DOUBLES" />
+        <initial_rawcoal_mass           spec="OPTIONAL MULTIPLE_DOUBLES" />
         <initial_fixcarb_mass           spec="OPTIONAL MULTIPLE_DOUBLES" />
         <particle_density               spec="OPTIONAL DOUBLE" />
       </Coal_Properties>
@@ -467,6 +468,7 @@
 
 						<!-- DO radiation model --> 
 						<calc_frequency 						spec="OPTIONAL INTEGER" need_applies_to="type do_radiation" /> <!-- calculate radiation every N steps, default = 3 --> 
+                                                <abskp_label        spec="OPTIONAL STRING" need_applies_to="type do_radiation"/>
   					<calc_on_all_RKsteps        spec="OPTIONAL BOOLEAN" need_applies_to="type do_radiation" /> <!-- calculate radiation every RK step, default = false --> 
 						<co2_label 									spec="OPTIONAL STRING"  need_applies_to="type do_radiation" /> <!-- string label of CO2, default = CO2 --> 
 						<h2o_label 									spec="OPTIONAL STRING"  need_applies_to="type do_radiation" /> <!-- string label of H2O, default = H2O --> 
@@ -617,7 +619,7 @@
         
           <model                        spec="MULTIPLE NO_DATA"
                                         attribute1="label REQUIRED STRING"
-                                        attribute2="type REQUIRED STRING 'KobayashiSarofimDevol, ConstantModel, 
+                                        attribute2="type REQUIRED STRING 'KobayashiSarofimDevol, YamamotoDevol, ConstantModel, 
                                                                           SimpleHeatTransfer, 
                                                                           XDrag, YDrag, ZDrag, 
                                                                           ShaddixHeatTransfer, CharOxidationShaddix'">
