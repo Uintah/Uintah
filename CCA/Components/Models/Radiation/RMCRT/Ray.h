@@ -56,7 +56,12 @@ namespace Uintah{
     private: 
       
       double _pi;
-      double _alpha;//absorptivity of the walls
+      double _alphaEW;//absorptivity of the East and West walls
+      double _alphaNS;//absorptivity of the North and South walls
+      double _alphaTB;//absorptivity of the top and bottom walls
+      double _TEW;
+      double _TNS;
+      double _TTB;
       double _Threshold;
       double _sigma; 
       int    _NoOfRays;
@@ -67,6 +72,7 @@ namespace Uintah{
       double _sigma_over_pi; // Stefan Boltzmann divided by pi (W* m-2* K-4)
 
       bool _benchmark_1; 
+      bool _benchmark_13pt2;
 
       const VarLabel* d_sigmaT4_label; 
       const VarLabel* d_abskgLabel;
