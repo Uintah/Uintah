@@ -612,10 +612,33 @@ namespace Wasatch{
 
   //==================================================================
   // Explicit template instantiation
-  template class ScalarTransportEquation< SVolField >;
-  template class ScalarTransportEquation< XVolField >;
-  template class ScalarTransportEquation< YVolField >;
-  template class ScalarTransportEquation< ZVolField >;
+#define INSTANTIATE( FIELDT )                                   \
+    template class ScalarTransportEquation< FIELDT >;           \
+                                                                \
+    template void setup_diffusive_flux_expression<FIELDT>(      \
+       Uintah::ProblemSpecP diffFluxParams,                     \
+       const Expr::Tag densityTag,                              \
+       const Expr::Tag primVarTag,                              \
+       const bool isStrong,                                     \
+       Expr::ExpressionFactory& factory,                        \
+       ScalarRHS<FIELDT>::FieldTagInfo& info );                 \
+                                                                \
+    template void setup_diffusive_velocity_expression<FIELDT>(  \
+       Uintah::ProblemSpecP diffVelParams,                      \
+       const Expr::Tag primVarTag,                              \
+       Expr::ExpressionFactory& factory,                        \
+       ScalarRHS<FIELDT>::FieldTagInfo& info );                 \
+                                                                \
+    template void setup_convective_flux_expression<FIELDT>(     \
+       Uintah::ProblemSpecP convFluxParams,                     \
+       const Expr::Tag solnVarName,                             \
+       Expr::ExpressionFactory& factory,                        \
+       ScalarRHS<FIELDT>::FieldTagInfo& info );
+
+  INSTANTIATE( SVolField );
+  INSTANTIATE( XVolField );
+  INSTANTIATE( YVolField );
+  INSTANTIATE( ZVolField );
   //==================================================================
 
 
