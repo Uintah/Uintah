@@ -14,7 +14,7 @@
 
 
 namespace Wasatch{
-  
+
   /**
    *  \ingroup WasatchCore
    *  \class ScalabilityTestTransportEquation
@@ -27,9 +27,9 @@ namespace Wasatch{
    *
    *  \f[
    *    \frac{\partial \rho \phi}{\partial t} =
-   *    - \frac{\partial \rho \phi u_x }{\partial x} 
-   *    - \frac{\partial \rho \phi u_y }{\partial y} 
-   *    - \frac{\partial \rho \phi u_z }{\partial z} 
+   *    - \frac{\partial \rho \phi u_x }{\partial x}
+   *    - \frac{\partial \rho \phi u_y }{\partial y}
+   *    - \frac{\partial \rho \phi u_z }{\partial z}
    *    - \frac{\partial J_{\phi,x}}{\partial x}
    *    - \frac{\partial J_{\phi,y}}{\partial y}
    *    - \frac{\partial J_{\phi,z}}{\partial z}
@@ -56,12 +56,12 @@ namespace Wasatch{
   class ScalabilityTestTransportEquation : public Wasatch::TransportEquation
   {
   public:
-    
+
     // these typedefs are provided for convenience.
     typedef typename FaceTypes<FieldT>::XFace  XFaceT; ///< The type of field on the x-faces of the volume.
     typedef typename FaceTypes<FieldT>::YFace  YFaceT; ///< The type of field on the y-faces of the volume.
     typedef typename FaceTypes<FieldT>::ZFace  ZFaceT; ///< The type of field on the z-faces of the volume.
-    
+
     /**
      *  \brief Construct a ScalabilityTestTransportEquation
      *  \param basePhiName This equation will be created n-times where n is a user
@@ -71,25 +71,25 @@ namespace Wasatch{
      *  \param thisPhiName The name of the solution variable for this ScalarTransportEquation
      *  \param id The Expr::ExpressionID for the RHS expression for this ScalarTransportEquation
      *
-     *  Note that the static member method get_rhs_expr_id can be useful to 
+     *  Note that the static member method get_rhs_expr_id can be useful to
      *  obtain the appropriate input arguments here.
      */
-    ScalabilityTestTransportEquation( const std::string basePhiName, 
+    ScalabilityTestTransportEquation( const std::string basePhiName,
                                       const std::string thisPhiName,
                                       const Expr::ExpressionID id );
-    
+
     ~ScalabilityTestTransportEquation();
-    
+
     /**
-     *  \brief apply the boundary conditions on the initial condition 
+     *  \brief apply the boundary conditions on the initial condition
      *         associated with this transport equation
      */
     void setup_initial_boundary_conditions( const GraphHelper& graphHelper,
                                            const Uintah::PatchSet* const localPatches,
                                            const PatchInfoMap& patchInfoMap,
                                            const Uintah::MaterialSubset* const materials);
-    
-    
+
+
     /**
      *  \brief setup the boundary conditions associated with this transport equation
      */
@@ -97,12 +97,12 @@ namespace Wasatch{
                                    const Uintah::PatchSet* const localPatches,
                                    const PatchInfoMap& patchInfoMap,
                                    const Uintah::MaterialSubset* const materials);
-    
+
     /**
      *  \brief setup the initial conditions for this transport equation.
      */
     Expr::ExpressionID initial_condition( Expr::ExpressionFactory& icFactory );
-    
+
     /**
      * \brief Parse the input file to determine the rhs expression id.
      *        Also registers convective flux, diffusive velocity, and
@@ -118,25 +118,25 @@ namespace Wasatch{
      *  \param params The Uintah::ProblemSpec XML description for this
      *         equation.  Scope should be within the ScalabilityTest tag.
      */
-    static Expr::ExpressionID get_rhs_expr_id(std::string thisPhiName, 
-                                              Expr::ExpressionFactory& factory, 
-                                              Uintah::ProblemSpecP params );        
+    static Expr::ExpressionID get_rhs_expr_id( const std::string thisPhiName,
+                                               Expr::ExpressionFactory& factory,
+                                               Uintah::ProblemSpecP params );
   private:
-    
+
   };
-  
-  
+
+
   template< typename FieldT >
-  void setup_diffusive_velocity_expression( std::string dir,
-                                       Expr::ExpressionFactory& factory,
-                                       typename ScalarRHS<FieldT>::FieldTagInfo& info );
-  
+  void setup_diffusive_velocity_expression( const std::string dir,
+                                            Expr::ExpressionFactory& factory,
+                                            typename ScalarRHS<FieldT>::FieldTagInfo& info );
+
   template< typename FieldT >
-  void setup_convective_flux_expression(std::string dir,  
-                                        std::string thisPhiName,
-                                        Expr::Tag advVelocityTag,
-                                        Expr::ExpressionFactory& factory,
-                                        typename ScalarRHS<FieldT>::FieldTagInfo& info );  
-    
+  void setup_convective_flux_expression( const std::string dir,
+                                         const std::string thisPhiName,
+                                         const Expr::Tag advVelocityTag,
+                                         Expr::ExpressionFactory& factory,
+                                         typename ScalarRHS<FieldT>::FieldTagInfo& info );
+
 } // namespace Wasatch
 #endif // Wasatch_ScalabilityTestTransportEquation_h
