@@ -63,6 +63,7 @@ if [ "$OS" = "Linux" ]; then
     ENV="      CC=gcc \\
        CXX=g++ \\
        F77=gfortran"   
+  fi  
       
 elif [ "$OS" = "Darwin" ]; then
   export PETSC_ARCH=darwin9.4.0-c-real-opt
