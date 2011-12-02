@@ -138,7 +138,9 @@ SingleProcessorScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
     if (trackingVarsPrintLocation_ & SchedulerCommon::PRINT_BEFORE_EXEC) {
       printTrackedVars(task, SchedulerCommon::PRINT_BEFORE_EXEC);
     }
-      
+
+    task->doit(d_myworld, dws, plain_old_dws);
+
     if (trackingVarsPrintLocation_ & SchedulerCommon::PRINT_AFTER_EXEC)
       printTrackedVars(task, SchedulerCommon::PRINT_AFTER_EXEC);
 
