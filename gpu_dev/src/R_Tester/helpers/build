@@ -57,6 +57,8 @@ if [ "$OS" = "Linux" ]; then
        --with-petsc=/usr/local/petsc \\
        --with-hypre=/usr/local/hypre \\
        --with-boost=/usr/local/boost \\
+       --with-cuda=/usr/local/cuda \\
+	   --with-cuda-sdk=/usr/local/cuda-4.0-sdk \\
        --enable-wasatch_3p \\
        USE_WASATCH=yes \\"
 
