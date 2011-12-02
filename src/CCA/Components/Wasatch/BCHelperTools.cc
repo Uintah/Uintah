@@ -226,7 +226,9 @@ namespace Wasatch {
       bc_value = new_bcs->getValue();
       bc_kind =  new_bcs->getBCType__NEW();
     }
-
+    
+    delete bc;
+    
     // Did I find an iterator
     return( bc_kind.compare("NotSet") != 0 );
   }
