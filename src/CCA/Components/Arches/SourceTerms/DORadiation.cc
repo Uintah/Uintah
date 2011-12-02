@@ -248,11 +248,6 @@ DORadiation::computeSource( const ProcessorGroup* pc,
       old_dw->copyOut( radiation_vars.ABSKP,  _abskpLocalLabel, matlIndex, patch, Ghost::None, 0 );
       old_dw->copyOut( radiation_vars.volq,   _radiationVolqLabel, matlIndex, patch, Ghost::None, 0 );  
       old_dw->copyOut( radiation_vars.src,    _radiationSRCLabel, matlIndex, patch, Ghost::None, 0 );  
-//      if ( _abskp_label_name != "new_abskp" ){
-//        old_dw->copyOut(radiation_vars.ABSKP, _abskpLabel, matlIndex, patch, gn, 0);
-//      } else {
-//        old_dw->copyOut( radiation_vars.ABSKP,  _abskpLocalLabel, matlIndex, patch, Ghost::None, 0 ); 
-//      }
 
     } else { 
 
@@ -273,10 +268,6 @@ DORadiation::computeSource( const ProcessorGroup* pc,
       new_dw->getModifiable( radiation_vars.src    , _radiationSRCLabel   , matlIndex , patch );
       new_dw->getModifiable( radiation_vars.ABSKG  , _abskgLabel          , matlIndex , patch );
       new_dw->getModifiable( radiation_vars.ABSKP  , _abskpLocalLabel          , matlIndex , patch );
-//      if ( _abskp_label_name != "new_abskp" ){  
-//        old_dw->copyOut(radiation_vars.ABSKP, _abskpLabel, matlIndex, patch, gn, 0);
-        //new_dw->getModifiable( radiation_vars.ABSKP  , _abskpLabel          , matlIndex , patch );
-//      } 
       new_dw->getModifiable( divQ, _src_label, matlIndex, patch ); 
 
       radiation_vars.ESRCG.allocate( patch->getExtraCellLowIndex(1), patch->getExtraCellHighIndex(1) );  
