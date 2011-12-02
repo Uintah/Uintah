@@ -1,8 +1,8 @@
 <config>  
- <!-- spaces are not allowed in component names
- <component>Arches</component>
- <component>ICE</component>
- <!--<component>Examples</component>-->
+ <!-- spaces are not allowed in component names-->
+<!-- <component>Arches</component> -->
+<!-- <component>ICE</component>-->
+ <component>Examples</component>
  <!--<component>MPM</component> -->
  <!--<component>MPMICE</component>-->
  <sus_path></sus_path>
