@@ -1,38 +1,38 @@
 /*
   The MIT License
 
-  Copyright (c) 2010 Institute for Clean and Secure Energy (ICSE), 
+  Copyright (c) 2010 Institute for Clean and Secure Energy (ICSE),
   University of Utah.
 
   License for the specific language governing rights and limitations under
-  Permission is hereby granted, free of charge, to any person obtaining a 
+  Permission is hereby granted, free of charge, to any person obtaining a
   copy of this software and associated documentation files (the "Software"),
-  to deal in the Software without restriction, including without limitation 
-  the rights to use, copy, modify, merge, publish, distribute, sublicense, 
-  and/or sell copies of the Software, and to permit persons to whom the 
+  to deal in the Software without restriction, including without limitation
+  the rights to use, copy, modify, merge, publish, distribute, sublicense,
+  and/or sell copies of the Software, and to permit persons to whom the
   Software is furnished to do so, subject to the following conditions:
 
-  The above copyright notice and this permission notice shall be included 
+  The above copyright notice and this permission notice shall be included
   in all copies or substantial portions of the Software.
 
-  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS 
-  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
-  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL 
-  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
-  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
-  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
   DEALINGS IN THE SOFTWARE.
 */
 
 
 /**
    \file
- 
+
    \mainpage
- 
+
    \author James C. Sutherland
    \date June, 2010
- 
+
    Wasatch is a Uintah component that interfaces to the Expression
    library and SpatialOps library to facilitate more rapid
    development of time-dependent PDE solvers.
@@ -59,10 +59,10 @@
    SpatialOps.  These have been developed by James C. Sutherland and
    support graph construction as well as field/operator operations,
    respectively.
- 
- 
+
+
    \par Development in Wasatch
- 
+
    Most developers will need to focus on the Expression library and
    not on Wasatch directly.  Typically, development should focus on
    creating Expressions that encapsulate a concise bit of
@@ -80,12 +80,12 @@
 
    For developers that need to deal with details in Wasatch, it
    interfaces to Uintah through several key areas:
- 
+
     - Parsing.  Uintah has its own XML parser (Uintah::ProblemSpec).
       Developers should work to minimize the intrusion of parser
       objects into application code as much as possible, as it
       destroys portability of the code.
- 
+
     - Task creation.  Uintah tasks are typically created by wrapping
       Expression tree objects using the Wasatch::TaskInterface class.
       If you find yourself writing a Uintah::Task directly in Wasatch,
@@ -151,6 +151,8 @@ namespace Wasatch{
     public Uintah::UintahParallelComponent,
     public Uintah::SimulationInterface
   {
+      typedef std::vector<EqnTimestepAdaptorBase*> EquationAdaptors;
+
   public:
 
     Wasatch( const Uintah::ProcessorGroup* myworld );
@@ -174,8 +176,8 @@ namespace Wasatch{
      *       integrator.
      *  </ul>
      */
-    void problemSetup( const Uintah::ProblemSpecP& params, 
-                       const Uintah::ProblemSpecP& restart_prob_spec, 
+    void problemSetup( const Uintah::ProblemSpecP& params,
+                       const Uintah::ProblemSpecP& restart_prob_spec,
                        Uintah::GridP& grid,
                        Uintah::SimulationStateP& );
 
@@ -208,17 +210,24 @@ namespace Wasatch{
      *       forward one time step.
      *  </ul>
      */
-    void scheduleTimeAdvance( const Uintah::LevelP& level, 
+    void scheduleTimeAdvance( const Uintah::LevelP& level,
                               Uintah::SchedulerP& );
 
+    const EquationAdaptors& equation_adaptors() const{ return adaptors_; }
+    GraphCategories& graph_categories(){ return graphCategories_; }
+    void disable_timestepper_creation(){ buildTimeIntegrator_ = false; }
+    const PatchInfoMap& patch_info_map() const{ return patchInfoMap_; }
+    std::list< const TaskInterface* >& task_interface_list(){ return taskInterfaceList_; }
+
   private:
+    bool buildTimeIntegrator_;
     int nRKStages_;
     std::set<std::string> ioFieldSet_;
     Uintah::SimulationStateP sharedState_; ///< access to some common things like the current timestep.
 
     /**
      *  a container of information for constructing ExprLib graphs.
-     *  These are then wrapped as Wasath::TaskInterface objects and
+     *  These are then wrapped as Wasatch::TaskInterface objects and
      *  plugged into Uintah.
      */
     GraphCategories graphCategories_;
@@ -228,10 +237,9 @@ namespace Wasatch{
     CoordHelper *icCoordHelper_;
 
     TimeStepper* timeStepper_;  ///< The TimeStepper used to advance equations registered here.
-    
+
     Uintah::SolverInterface* linSolver_;
 
-    typedef std::vector<EqnTimestepAdaptorBase*> EquationAdaptors;
     EquationAdaptors adaptors_;
 
     std::list< const TaskInterface*  > taskInterfaceList_;
