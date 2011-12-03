@@ -395,7 +395,7 @@ void BoundaryCondition_new::setAreaFraction(
   //
   // volFraction is the GAS volume fraction
 
-  for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
+  for (CellIterator iter=patch->getExtraCellIterator(); !iter.done(); iter++){
     
     IntVector c = *iter;
     IntVector cxm = *iter - IntVector(1,0,0);
@@ -430,27 +430,6 @@ void BoundaryCondition_new::setAreaFraction(
       Vector T = areaFraction[c]; 
       T[2] = 0.;
       areaFraction[c] = Vector(1.,1.,0.);
-    }
-
-    // x-plus is a wall but curr cell is flow 
-    if ( cellType[c] == flowType && cellType[cxp] == wallType ) {
-      Vector T = areaFraction[cxp];
-      T[0] = 0.; 
-      areaFraction[cxp] = T;
-    }
-
-    // y-plus is a wall but curr cell is flow
-    if ( cellType[c] == flowType && cellType[cyp] == wallType ) {
-      Vector T = areaFraction[cyp];
-      T[1] = 0.; 
-      areaFraction[cyp] = T;
-    }
-
-    // z-plus is a wall but curr cell is flowType
-    if (cellType[c] == flowType && cellType[czp] == wallType ) {
-      Vector T = areaFraction[czp];
-      T[2] = 0.; 
-      areaFraction[czp] = T;
     }
   }
 }
