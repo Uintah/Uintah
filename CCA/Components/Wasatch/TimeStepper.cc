@@ -154,7 +154,7 @@ namespace Wasatch{
     // This is required by the time integrator.
     {
       TaskInterface* const timeTask = scinew TaskInterface( timeID,
-                                                           "set time",
+                                                           "set_time",
                                                            *factory_,
                                                            level, sched, patches, materials,
                                                            patchInfoMap,
