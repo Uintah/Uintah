@@ -136,9 +136,9 @@ namespace Wasatch{
       // only set up trees on the patches that we own on this process.
       const Uintah::PatchSet*  perproc_patchset = sched->getLoadBalancer()->getPerProcessorPatchSet(level);
       const Uintah::PatchSubset* const localPatches = perproc_patchset->getSubset(Uintah::Parallel::getMPIRank());
-      
+
       Uintah::Task* tsk = scinew Uintah::Task( taskName_, this, &TreeTaskExecute::execute, rkStage );
-      
+
       for( int ip=0; ip<localPatches->size(); ++ip ){
         const Uintah::Patch* const patch = localPatches->get(ip);
         TreePtr tree( new Expr::ExpressionTree( *masterTree_ ) );
@@ -309,7 +309,7 @@ namespace Wasatch{
           else
             fieldInfo.useOldDataWarehouse = false;
         }
-        if( tree.name()!="set time" &&
+        if( tree.name()!="set_time" &&
             tree.name()!="initialization" &&
             fieldInfo.varlabel->getName()=="time" ){
           fieldInfo.mode = Expr::REQUIRES;
@@ -613,7 +613,7 @@ namespace Wasatch{
       PatchTreeMap ptmap= taskexec->get_patch_tree_map();
       const PatchTreeMap::iterator iptm = ptmap.begin();
       TreePtr tree = iptm->second.first;
-      if (tree->name()=="set time") {
+      if (tree->name()=="set_time") {
         return tree;
       }
     }
