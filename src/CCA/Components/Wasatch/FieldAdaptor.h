@@ -44,10 +44,25 @@ namespace Wasatch{
    *  \brief obtain the memory window for a uintah field that is to be wrapped as a SpatialOps field
    *  \param globSize - the full size of the parent field.
    *  \param patch - the patch that the field is associated with.
+   *
+   *  Note that if this signature is used, the field size will be deduced from the patch size as well
+   *  as the field type traits.  For most use cases from Wasatch, the other signature should be used.
    */
   template< typename FieldT >
   SpatialOps::structured::MemoryWindow
   get_memory_window_for_uintah_field( const Uintah::Patch* const patch );
+
+  /**
+   *  \ingroup WasatchFields
+   *  \brief obtain the memory window for a uintah field that is to be wrapped as a SpatialOps field
+   *  \param globSize - the full size of the parent field.
+   *  \param patch - the patch that the field is associated with.  Used to determine if the field is on a boundary.
+   *  \param fieldSize - the field size
+   */
+  template< typename FieldT >
+  SpatialOps::structured::MemoryWindow
+  get_memory_window_for_uintah_field( const Uintah::Patch* const patch,
+                                      const SCIRun::IntVector& fieldSize );
 
   /**
    *  \ingroup WasatchFields
@@ -64,7 +79,9 @@ namespace Wasatch{
   {
     using SCIRun::IntVector;
 
-    return new FieldT( get_memory_window_for_uintah_field<FieldT>( patch ),
+    const SCIRun::IntVector fieldSize = uintahVar.getHighIndex() - uintahVar.getLowIndex();
+
+    return new FieldT( get_memory_window_for_uintah_field<FieldT>( patch, fieldSize ),
                        const_cast<double*>( uintahVar.getPointer() ),
                        SpatialOps::structured::ExternalStorage );
   }
@@ -182,7 +199,7 @@ namespace Wasatch{
    *
    *  \return the Uintah::IntVector describing the number of ghost
    *          cells in each direction.
-   */  
+   */
   template<typename FieldT>
   inline Uintah::IntVector get_uintah_ghost_descriptor()
   {

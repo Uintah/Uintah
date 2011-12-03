@@ -206,11 +206,7 @@ private:
   bool d_dynScalarModel;
   double d_turbPrNo;
   bool d_doMMS;
-#ifdef multimaterialform
-   // set the values in problem setup
-   MultiMaterialInterface* d_mmInterface;
-   MultiMaterialSGSModel* d_mmSGSModel;
-#endif
+
    vector<string> d_new_sources; 
 
 

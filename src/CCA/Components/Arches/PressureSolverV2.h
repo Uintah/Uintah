@@ -53,10 +53,8 @@ class PhysicalConstants;
 class Discretization;
 class Source;
 class BoundaryCondition;
-class LinearSolver;
 class TimeIntegratorLabel;
 
-using namespace SCIRun;
 
 class PressureSolver {
 
@@ -86,10 +84,14 @@ public:
                    const TimeIntegratorLabel* timelabels,
                    bool extraProjection);
 
+  inline void setMMS(bool doMMS) {
+    d_doMMS=doMMS;
+  }
+
 
   //______________________________________________________________________
   // addHydrostaticTermtoPressure:
-  // Add the hydrostatic term to the relative pressure
+  // Add the hydrostatic term to the relative pressure    THIS BE PRIVATE -Todd
   void sched_addHydrostaticTermtoPressure(SchedulerP& sched,
                                           const PatchSet* patches,
                                           const MaterialSet* matls,
@@ -101,23 +103,11 @@ public:
                                     DataWarehouse* old_dw,
                                     DataWarehouse* new_dw,
                                     const TimeIntegratorLabel* timelabels);
-
-  inline void setMMS(bool doMMS) {
-    d_doMMS=doMMS;
-  }
-protected:
-
 private:
-  enum WhichCM{Computes=0, Modifies=1, none=-9};
-  enum whichSolver{hypre, petsc};
-  
-  //______________________________________________________________________/
-  // Default : Construct an empty instance of the Pressure solver.
-  PressureSolver(const ProcessorGroup* myworld);
   
   //______________________________________________________________________
   //  buildLinearMatrix:
-  //  Compute the matrix coefficient and place them in either
+  //  Compute the matrix coefficients & RHS and place them in either
   //  Hypre or Petsc data structures
   void sched_buildLinearMatrix(SchedulerP&, 
                                const PatchSet* patches,
@@ -140,77 +130,50 @@ private:
   //  timelabel->pressureGuess to the new_dw.
   
   void sched_setGuessForX(SchedulerP& sched,
-                          const PatchSet* patches,                        
-                          const MaterialSet* matls,                       
-                          const TimeIntegratorLabel* timelabels,          
+                          const PatchSet* patches,
+                          const MaterialSet* matls,
+                          const TimeIntegratorLabel* timelabels,
                           bool extraProjection);
                           
   void setGuessForX ( const ProcessorGroup* pg,
-                      const PatchSubset* patches,                          
-                      const MaterialSubset* matls,                               
-                      DataWarehouse* old_dw,                               
-                      DataWarehouse* new_dw,                               
-                      const TimeIntegratorLabel* timelabels,               
-                      const bool extraProjection);                     
-
-  //______________________________________________________________________
-  //  setPressRHS:
-  //  This is a wrapper task and passes the uintah data to either hypre or petsc
-  //  which fills in the vector X and RHS
-  void sched_setRHS_X_wrap(SchedulerP& sched,
-                           const PatchSet* patches,
-                           const MaterialSet* matls,
-                           const TimeIntegratorLabel* timelabels,
-                           bool extraProjection);
-                           
-  void setRHS_X_wrap ( const ProcessorGroup*,
-                       const PatchSubset* patches,
-                       const MaterialSubset*,
-                       DataWarehouse* ,
-                       DataWarehouse* ,
-                       const TimeIntegratorLabel* timelabels,
-                       const bool extraProjection);
+                      const PatchSubset* patches,
+                      const MaterialSubset* matls,
+                      DataWarehouse* old_dw,
+                      DataWarehouse* new_dw,
+                      const TimeIntegratorLabel* timelabels,
+                      const bool extraProjection);
                        
   //______________________________________________________________________
   // SolveSystem:
-  // This task calls either Petsc or Hypre to solve the system                    
+  // This task calls UCF:Hypre to solve the system 
   void sched_SolveSystem(SchedulerP& sched,
                          const PatchSet* patches,
                          const MaterialSet* matls,
                          const TimeIntegratorLabel* timelabels,
                          bool extraProjection);
-                         
-  void solveSystem(const ProcessorGroup* pg,
-                   const PatchSubset* patches,
-                   const MaterialSubset*,
-                   DataWarehouse* old_dw,
-                   DataWarehouse* new_dw,
-                   const TimeIntegratorLabel* timelabels);
-                         
+
   //______________________________________________________________________
-  //  Extract_X:
-  //  This task places the solution to the into a uintah array and sets the value
-  //  of the reference pressure.
-  void schedExtract_X(SchedulerP& sched,
-                      const PatchSet* patches,
-                      const MaterialSet* matls,
-                      const TimeIntegratorLabel* timelabels,
-                      bool extraProjection,
-                      string& pressLabel);
-                                 
-  void  Extract_X ( const ProcessorGroup* pg,
-                    const PatchSubset* patches,
-                    const MaterialSubset* matls,
-                    DataWarehouse* old_dw,
-                    DataWarehouse* new_dw,
-                    WhichCM compute_or_modify,
-                    const VarLabel* pressLabel,
-                    const VarLabel* refPressLabel,
-                    const string integratorPhase );
-                    
+  //  setRefPressure:
+  //  This sets the value of the reference pressure.
+  void sched_set_BC_RefPress(SchedulerP& sched,
+                             const PatchSet* patches,
+                             const MaterialSet* matls,
+                             const TimeIntegratorLabel* timelabels,
+                             bool extraProjection,
+                             string& pressLabel);
+
+  void  set_BC_RefPress ( const ProcessorGroup* pg,
+                          const PatchSubset* patches,
+                          const MaterialSubset* matls,
+                          DataWarehouse* old_dw,
+                          DataWarehouse* new_dw,
+                          const VarLabel* pressLabel,
+                          const VarLabel* refPressLabel,
+                          const string integratorPhase );
+
   //______________________________________________________________________
   //  normalizePress:
-  //  Subtract off the reference pressure from pressure field                 
+  //  Subtract off the reference pressure from pressure field
   void sched_normalizePress(SchedulerP& sched,
                             const PatchSet* patches,
                             const MaterialSet* matls,
@@ -224,58 +187,34 @@ private:
                         DataWarehouse* new_dw,
                         const VarLabel* pressLabel,
                         const VarLabel* refPressLabel);
-                                                                   
-                           
+
   //__________________________________
-  // Set stencil weights. (Pressure)
-  // It uses second order hybrid differencing for computing
-  // coefficients
+  // Set stencil weights
   void calculatePressureCoeff(const Patch* patch,
                               CellInformation* cellinfo,
                               ArchesVariables* vars,
                               ArchesConstVariables* constvars); 
 
   //__________________________________
-  // Modify stencil weights (Pressure) to account for voidage due
+  // Modify stencil weights to account for voidage due
   // to multiple materials
   void mmModifyPressureCoeffs(const Patch* patch,
                               ArchesVariables* vars,
                               ArchesConstVariables* constvars);
-                              
   //______________________________________________________________________
   //
- private:
-
-  bool d_always_construct_A;
-  bool d_construct_A;
-
   ArchesLabel* d_lab;
   const MPMArchesLabel* d_MAlab;
 
-  Discretization*     d_discretize;
   Source*             d_source;
-  LinearSolver*       d_linearSolver;
   BoundaryCondition*  d_boundaryCondition;
   PhysicalConstants*  d_physicalConsts;
-
-  // Maximum number of iterations to take before stopping/giving up.
-  int d_maxIterations;
   
-  int d_indx;         // Arches matl index.
+  int d_indx;             // Arches matl index.
   int d_iteration;
-  
-  int d_whichSolver;
-
-  //reference point for the solvers
-  IntVector d_pressRef;
+  IntVector d_pressRef;   // cell index for reference pressure
 
   const ProcessorGroup* d_myworld;
-  
-#ifdef multimaterialform
-  // set the values in problem setup
-  MultiMaterialInterface* d_mmInterface;
-  MultiMaterialSGSModel* d_mmSGSModel;
-#endif
 
   bool d_norm_press;
   bool d_doMMS;

@@ -9,6 +9,7 @@
   </Meta>
 
   <SimulationComponent type="arches" />
+  <Solver type="hypre" />
 
   <Time>
     <maxTime>25</maxTime>
@@ -182,23 +183,11 @@
         <timeIntegratorType>FE</timeIntegratorType> 
 
         <PressureSolver>
-        
-<!--
-          <linear_solver>hypre</linear_solver>
           <Parameters>
+            <tolerance>     1.0e-9</tolerance>
             <solver>        cg    </solver>
             <preconditioner>pfmg  </preconditioner>
-            <tolerance>   1.0e-10   </tolerance>
-            <maxiterations>      75    </maxiterations>
-          </Parameters>
--->          
-
-          <linear_solver>petsc</linear_solver>
-          <Parameters>
-            <tolerance>       1.0e-9</tolerance>
-            <solver>        cg    </solver>
-            <preconditioner>jacobi</preconditioner>
-            <maxiterations>      75    </maxiterations>
+            <maxiterations> 75    </maxiterations>
           </Parameters>
 
         </PressureSolver>

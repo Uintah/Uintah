@@ -112,7 +112,6 @@
         <timeIntegratorType>FE</timeIntegratorType> 
 
         <PressureSolver>
-          <linear_solver>hypre</linear_solver>
           <Parameters>
             <solver>           cg     </solver>
             <preconditioner>  pfmg    </preconditioner>

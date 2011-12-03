@@ -2,27 +2,27 @@
 
 The MIT License
 
-Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
-Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and
+Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI),
 University of Utah.
 
 License for the specific language governing rights and limitations under
-Permission is hereby granted, free of charge, to any person obtaining a 
+Permission is hereby granted, free of charge, to any person obtaining a
 copy of this software and associated documentation files (the "Software"),
-to deal in the Software without restriction, including without limitation 
-the rights to use, copy, modify, merge, publish, distribute, sublicense, 
-and/or sell copies of the Software, and to permit persons to whom the 
+to deal in the Software without restriction, including without limitation
+the rights to use, copy, modify, merge, publish, distribute, sublicense,
+and/or sell copies of the Software, and to permit persons to whom the
 Software is furnished to do so, subject to the following conditions:
 
-The above copyright notice and this permission notice shall be included 
+The above copyright notice and this permission notice shall be included
 in all copies or substantial portions of the Software.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS 
-OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL 
-THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
-FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 
 */
@@ -76,6 +76,11 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Arches/Filter.h>
 #endif
 
+#ifdef WASATCH_ARCHES
+#include <CCA/Components/Wasatch/Wasatch.h>
+#endif // WASATCH_ARCHES
+
+
 #include <cmath>
 
 using namespace std;
@@ -87,22 +92,22 @@ static DebugStream dbg("ARCHES", false);
 // Default constructor for ExplicitSolver
 // ****************************************************************************
 ExplicitSolver::
-ExplicitSolver(ArchesLabel* label, 
+ExplicitSolver(ArchesLabel* label,
                const MPMArchesLabel* MAlb,
-               Properties* props, 
+               Properties* props,
                BoundaryCondition* bc,
                TurbulenceModel* turbModel,
-               ScaleSimilarityModel* scaleSimilarityModel, 
+               ScaleSimilarityModel* scaleSimilarityModel,
                PhysicalConstants* physConst,
                bool calc_Scalar,
                bool calc_enthalpy,
                bool calc_variance,
                const ProcessorGroup* myworld,
-               SolverInterface* hypreSolver): 
+               SolverInterface* hypreSolver):
                NonlinearSolver(myworld),
-               d_lab(label), d_MAlab(MAlb), d_props(props), 
+               d_lab(label), d_MAlab(MAlb), d_props(props),
                d_boundaryCondition(bc), d_turbModel(turbModel),
-               d_scaleSimilarityModel(scaleSimilarityModel), 
+               d_scaleSimilarityModel(scaleSimilarityModel),
                d_calScalar(calc_Scalar),
                d_enthalpySolve(calc_enthalpy),
                d_calcVariance(calc_variance),
@@ -133,16 +138,16 @@ ExplicitSolver::~ExplicitSolver()
 }
 
 // ****************************************************************************
-// Problem Setup 
+// Problem Setup
 // ****************************************************************************
-void 
+void
 ExplicitSolver::problemSetup(const ProblemSpecP& params)
   // MultiMaterialInterface* mmInterface
-{ 
+{
   ProblemSpecP db = params->findBlock("ExplicitSolver");
-  ProblemSpecP test_probe_db = db->findBlock("ProbePoints"); 
+  ProblemSpecP test_probe_db = db->findBlock("ProbePoints");
   if ( test_probe_db ) {
-    d_probe_data = true; 
+    d_probe_data = true;
     IntVector prbPoint;
     for (ProblemSpecP probe_db = db->findBlock("ProbePoints");
          probe_db;
@@ -156,13 +161,13 @@ ExplicitSolver::problemSetup(const ProblemSpecP& params)
                                           d_physicalConsts, d_myworld,
                                           d_hypreSolver);
   d_pressSolver->setMMS(d_doMMS);
-  d_pressSolver->problemSetup(db); // d_mmInterface
+  d_pressSolver->problemSetup(db);
 
   d_momSolver = scinew MomentumSolver(d_lab, d_MAlab,
                                         d_turbModel, d_boundaryCondition,
                                         d_physicalConsts);
   d_momSolver->setMMS(d_doMMS);
-  d_momSolver->problemSetup(db); // d_mmInterface
+  d_momSolver->problemSetup(db);
 
   if (d_calScalar) {
     d_scalarSolver = scinew ScalarSolver(d_lab, d_MAlab,
@@ -180,7 +185,7 @@ ExplicitSolver::problemSetup(const ProblemSpecP& params)
   }
 
   db->getWithDefault("timeIntegratorType",d_timeIntegratorType,"FE");
-  
+
   if (d_timeIntegratorType == "FE") {
     d_timeIntegratorLabels.push_back(scinew TimeIntegratorLabel(d_lab,
                                      TimeIntegratorStepType::FE));
@@ -228,7 +233,7 @@ ExplicitSolver::problemSetup(const ProblemSpecP& params)
 
   db->getWithDefault("restartOnNegativeDensityGuess",
                      d_restart_on_negative_density_guess,false);
-  db->getWithDefault("NoisyDensityGuess", 
+  db->getWithDefault("NoisyDensityGuess",
                      d_noisyDensityGuess, false);
   db->getWithDefault("kineticEnergy_fromFC",d_KE_fromFC,false);
   db->getWithDefault("maxDensityLag",d_maxDensityLag,0.0);
@@ -251,7 +256,7 @@ ExplicitSolver::problemSetup(const ProblemSpecP& params)
     ProblemSpecP params_non_constant = params;
     const ProblemSpecP params_root = params_non_constant->getRootNode();
     ProblemSpecP db_mmsblock=params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("MMS");
-    
+
     if(!db_mmsblock->getAttribute("whichMMS",d_mms))
       d_mms="constantMMS";
 
@@ -281,7 +286,11 @@ ExplicitSolver::problemSetup(const ProblemSpecP& params)
 // Schedule non linear solve and carry out some actual operations
 // ****************************************************************************
 int ExplicitSolver::nonlinearSolve(const LevelP& level,
-                                   SchedulerP& sched)
+                                   SchedulerP& sched
+#                                  ifdef WASATCH_ARCHES
+                                   , Wasatch& wasatch,
+#                                  endif // WASATCH_ARCHES
+                                   )
 {
 
   const PatchSet* patches = level->eachPatch();
@@ -293,14 +302,14 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
   //initializes and allocates vars for new_dw
   // set initial guess
-  // require : old_dw -> pressureSPBC, [u,v,w]velocitySPBC, scalarSP, 
+  // require : old_dw -> pressureSPBC, [u,v,w]velocitySPBC, scalarSP,
   // densityCP, viscosityCTS
   // compute : new_dw -> pressureIN, [u,v,w]velocityIN, scalarIN, densityIN,
   //                     viscosityIN
 
   sched_setInitialGuess(sched, patches, matls);
 
-  d_boundaryCondition->sched_setAreaFraction(sched, patches, matls); 
+  d_boundaryCondition->sched_setAreaFraction(sched, patches, matls);
 
   // Start the iterations
 
@@ -308,52 +317,52 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 #ifdef PetscFilter
   if (d_turbModel->getFilter()) {
     // if the matrix is not initialized
-    if (!d_turbModel->getFilter()->isInitialized()) 
+    if (!d_turbModel->getFilter()->isInitialized())
       d_turbModel->sched_initFilterMatrix(level, sched, patches, matls);
   }
 #endif
 
   // Get a reference to all the DQMOM equations
-  DQMOMEqnFactory& dqmomFactory  = DQMOMEqnFactory::self(); 
-  if (dqmomFactory.get_quad_nodes() > 0) 
-    d_doDQMOM = true; 
-  else 
+  DQMOMEqnFactory& dqmomFactory  = DQMOMEqnFactory::self();
+  if (dqmomFactory.get_quad_nodes() > 0)
+    d_doDQMOM = true;
+  else
     d_doDQMOM = false; // probably need to sync this better with the bool being set in Arches
 
   for (int curr_level = 0; curr_level < numTimeIntegratorLevels; curr_level ++)
   {
 
-    // Clean up all property models 
-     PropertyModelFactory& propFactory = PropertyModelFactory::self(); 
-     PropertyModelFactory::PropMap& all_prop_models = propFactory.retrieve_all_property_models(); 
-     for ( PropertyModelFactory::PropMap::iterator iprop = all_prop_models.begin(); 
+    // Clean up all property models
+     PropertyModelFactory& propFactory = PropertyModelFactory::self();
+     PropertyModelFactory::PropMap& all_prop_models = propFactory.retrieve_all_property_models();
+     for ( PropertyModelFactory::PropMap::iterator iprop = all_prop_models.begin();
          iprop != all_prop_models.end(); iprop++){
 
-       PropertyModelBase* prop_model = iprop->second; 
-       prop_model->cleanUp(); 
+       PropertyModelBase* prop_model = iprop->second;
+       prop_model->cleanUp();
 
      }
 
     if (d_doDQMOM) {
 
-      CoalModelFactory& modelFactory = CoalModelFactory::self(); 
-      DQMOMEqnFactory::EqnMap& dqmom_eqns = dqmomFactory.retrieve_all_eqns(); 
+      CoalModelFactory& modelFactory = CoalModelFactory::self();
+      DQMOMEqnFactory::EqnMap& dqmom_eqns = dqmomFactory.retrieve_all_eqns();
       DQMOMEqnFactory::EqnMap& weights_eqns = dqmomFactory.retrieve_weights_eqns();
       DQMOMEqnFactory::EqnMap& abscissas_eqns = dqmomFactory.retrieve_abscissas_eqns();
 
       // Compute the particle velocities
-      d_partVel->schedComputePartVel( level, sched, curr_level ); 
+      d_partVel->schedComputePartVel( level, sched, curr_level );
 
       // ---- schedule the solution of the transport equations ----
-      
+
       // Evaluate DQMOM equations
- 
+
       for ( DQMOMEqnFactory::EqnMap::iterator iEqn = weights_eqns.begin();
             iEqn != weights_eqns.end(); iEqn++){
 
         DQMOMEqn* dqmom_eqn = dynamic_cast<DQMOMEqn*>(iEqn->second);
 
-        dqmom_eqn->sched_evalTransportEqn( level, sched, curr_level ); 
+        dqmom_eqn->sched_evalTransportEqn( level, sched, curr_level );
       }
 
       for ( DQMOMEqnFactory::EqnMap::iterator iEqn = abscissas_eqns.begin();
@@ -363,8 +372,8 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
         dqmom_eqn->sched_evalTransportEqn( level, sched, curr_level );
       }
-     
-      // Clean up after DQMOM equation evaluations & calculate unscaled DQMOM scalar values 
+
+      // Clean up after DQMOM equation evaluations & calculate unscaled DQMOM scalar values
       // (also, putting this in its own separate loop makes sure you don't require() before you compute())
       if (curr_level == numTimeIntegratorLevels-1){
         for( DQMOMEqnFactory::EqnMap::iterator iEqn = dqmom_eqns.begin();
@@ -373,16 +382,16 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
           DQMOMEqn* dqmom_eqn = dynamic_cast<DQMOMEqn*>(iEqn->second);
 
           // last time sub-step: so cleanup.
-          dqmom_eqn->sched_cleanUp( level, sched ); 
+          dqmom_eqn->sched_cleanUp( level, sched );
           //also get the abscissa values
-          dqmom_eqn->sched_getUnscaledValues( level, sched ); 
+          dqmom_eqn->sched_getUnscaledValues( level, sched );
         }
       }
 
       // schedule the models for evaluation
       //CoalModelFactory::ModelMap allModels = modelFactory.retrieve_all_models();
       //for (CoalModelFactory::ModelMap::iterator imodel = allModels.begin(); imodel != allModels.end(); imodel++){
-      //  imodel->second->sched_computeModel( level, sched, curr_level );  
+      //  imodel->second->sched_computeModel( level, sched, curr_level );
       //}
       modelFactory.sched_coalParticleCalculation( level, sched, curr_level );
 
@@ -402,18 +411,18 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
     sched_getDensityGuess(sched, patches, matls,
                                       d_timeIntegratorLabels[curr_level]);
-                                      
+
     sched_checkDensityGuess(sched, patches, matls,
                                       d_timeIntegratorLabels[curr_level]);
 
-    d_scalarSolver->solve(sched, patches, matls, 
+    d_scalarSolver->solve(sched, patches, matls,
                           d_timeIntegratorLabels[curr_level]);
 
     EqnFactory& eqn_factory = EqnFactory::self();
-    EqnFactory::EqnMap& scalar_eqns = eqn_factory.retrieve_all_eqns(); 
+    EqnFactory::EqnMap& scalar_eqns = eqn_factory.retrieve_all_eqns();
     for (EqnFactory::EqnMap::iterator iter = scalar_eqns.begin(); iter != scalar_eqns.end(); iter++){
-      EqnBase* eqn = iter->second; 
-        eqn->sched_evalTransportEqn( level, sched, curr_level ); 
+      EqnBase* eqn = iter->second;
+        eqn->sched_evalTransportEqn( level, sched, curr_level );
     }
 
     if (d_enthalpySolve)
@@ -423,7 +432,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     if (d_calcVariance) {
       d_turbModel->sched_computeScalarVariance(sched, patches, matls,
                                            d_timeIntegratorLabels[curr_level]);
-                                           
+
       d_turbModel->sched_computeScalarDissipation(sched, patches, matls,
                                            d_timeIntegratorLabels[curr_level]);
     }
@@ -440,18 +449,18 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 //    sched_updateDensityGuess(sched, patches, matls,
 //                                    d_timeIntegratorLabels[curr_level]);
 
-    // Property models needed before table lookup: 
-    for ( PropertyModelFactory::PropMap::iterator iprop = all_prop_models.begin(); 
+    // Property models needed before table lookup:
+    for ( PropertyModelFactory::PropMap::iterator iprop = all_prop_models.begin();
           iprop != all_prop_models.end(); iprop++){
 
-      PropertyModelBase* prop_model = iprop->second; 
+      PropertyModelBase* prop_model = iprop->second;
       if ( prop_model->beforeTableLookUp() )
-        prop_model->sched_computeProp( level, sched, curr_level ); 
+        prop_model->sched_computeProp( level, sched, curr_level );
 
     }
 
 
-    string mixmodel = d_props->getMixingModelType(); 
+    string mixmodel = d_props->getMixingModelType();
     if ( mixmodel != "TabProps" && mixmodel != "ClassicTable" && mixmodel != "ColdFlow")
       d_props->sched_reComputeProps(sched, patches, matls,
                                     d_timeIntegratorLabels[curr_level],
@@ -459,34 +468,34 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     else {
 
       bool initialize_it  = false;
-      bool modify_ref_den = true; 
-      if ( curr_level == 0 ) initialize_it = true; 
-      d_props->sched_reComputeProps_new( level, sched, d_timeIntegratorLabels[curr_level], initialize_it, modify_ref_den ); 
+      bool modify_ref_den = true;
+      if ( curr_level == 0 ) initialize_it = true;
+      d_props->sched_reComputeProps_new( level, sched, d_timeIntegratorLabels[curr_level], initialize_it, modify_ref_den );
 
     }
 
-    d_boundaryCondition->sched_setIntrusionTemperature( sched, patches, matls ); 
+    d_boundaryCondition->sched_setIntrusionTemperature( sched, patches, matls );
 
     // Property models needed after table lookup:
-    for ( PropertyModelFactory::PropMap::iterator iprop = all_prop_models.begin(); 
+    for ( PropertyModelFactory::PropMap::iterator iprop = all_prop_models.begin();
           iprop != all_prop_models.end(); iprop++){
 
-      PropertyModelBase* prop_model = iprop->second; 
-      prop_model->sched_computeProp( level, sched, curr_level ); 
+      PropertyModelBase* prop_model = iprop->second;
+      prop_model->sched_computeProp( level, sched, curr_level );
 
     }
 
     for (EqnFactory::EqnMap::iterator iter = scalar_eqns.begin(); iter != scalar_eqns.end(); iter++){
-      EqnBase* eqn = iter->second; 
-      //Transport is constructed above.  Here we only solve if densityGuess is not used. 
+      EqnBase* eqn = iter->second;
+      //Transport is constructed above.  Here we only solve if densityGuess is not used.
       if ( !eqn->getDensityGuessBool() )
-        eqn->sched_solveTransportEqn( level, sched, curr_level ); 
+        eqn->sched_solveTransportEqn( level, sched, curr_level );
     }
-    // Clean up after Scalar equation evaluations  
+    // Clean up after Scalar equation evaluations
     if (curr_level == numTimeIntegratorLevels-1){
       for (EqnFactory::EqnMap::iterator iter = scalar_eqns.begin(); iter != scalar_eqns.end(); iter++){
-        EqnBase* eqn = iter->second; 
-        eqn->sched_cleanUp( level, sched ); 
+        EqnBase* eqn = iter->second;
+        eqn->sched_cleanUp( level, sched );
       }
     }
 
@@ -508,8 +517,8 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     d_momSolver->solveVelHat(level, sched, d_timeIntegratorLabels[curr_level] );
 
     for (EqnFactory::EqnMap::iterator iter = scalar_eqns.begin(); iter != scalar_eqns.end(); iter++){
-      EqnBase* eqn = iter->second; 
-        eqn->sched_timeAve( level, sched, curr_level ); 
+      EqnBase* eqn = iter->second;
+        eqn->sched_timeAve( level, sched, curr_level );
     }
 
     // averaging for RKSSP
@@ -521,11 +530,11 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       if (d_calcVariance) {
         d_turbModel->sched_computeScalarVariance(sched, patches, matls,
                                             d_timeIntegratorLabels[curr_level]);
-                                            
+
         d_turbModel->sched_computeScalarDissipation(sched, patches, matls,
                                             d_timeIntegratorLabels[curr_level]);
       }
-    
+
       if (mixmodel != "TabProps" && mixmodel != "ClassicTable" && mixmodel != "ColdFlow")
         d_props->sched_reComputeProps(sched, patches, matls,
                                       d_timeIntegratorLabels[curr_level],
@@ -533,21 +542,21 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       else {
 
         bool initialize_it  = false;
-        bool modify_ref_den = false; 
-        d_props->sched_reComputeProps_new( level, sched, d_timeIntegratorLabels[curr_level], initialize_it, modify_ref_den ); 
+        bool modify_ref_den = false;
+        d_props->sched_reComputeProps_new( level, sched, d_timeIntegratorLabels[curr_level], initialize_it, modify_ref_den );
 
       }
 
       // Property models after table lookup
-      for ( PropertyModelFactory::PropMap::iterator iprop = all_prop_models.begin(); 
+      for ( PropertyModelFactory::PropMap::iterator iprop = all_prop_models.begin();
             iprop != all_prop_models.end(); iprop++){
 
-        PropertyModelBase* prop_model = iprop->second; 
-        prop_model->sched_computeProp( level, sched, curr_level ); 
+        PropertyModelBase* prop_model = iprop->second;
+        prop_model->sched_computeProp( level, sched, curr_level );
 
       }
 
-                                   
+
       sched_computeDensityLag(sched, patches, matls,
                               d_timeIntegratorLabels[curr_level],
                               true);
@@ -558,9 +567,9 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       //sched_syncRhoF(sched, patches, matls, d_timeIntegratorLabels[curr_level]);
       d_momSolver->sched_averageRKHatVelocities(sched, patches, matls,
                                             d_timeIntegratorLabels[curr_level] );
-    } 
+    }
 
-    d_boundaryCondition->sched_setIntrusionTemperature( sched, patches, matls ); 
+    d_boundaryCondition->sched_setIntrusionTemperature( sched, patches, matls );
 
 
     d_props->sched_computeDrhodt(sched, patches, matls,
@@ -568,7 +577,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
     d_pressSolver->sched_solve(level, sched, d_timeIntegratorLabels[curr_level],
                                false);
-  
+
     // project velocities using the projection step
     d_momSolver->solve(sched, patches, matls,
                        d_timeIntegratorLabels[curr_level], false);
@@ -581,7 +590,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
                                           false);
       d_pressSolver->sched_solve(level, sched, d_timeIntegratorLabels[curr_level],
                                  d_extraProjection);
-                           
+
       d_momSolver->solve(sched, patches, matls,
                        d_timeIntegratorLabels[curr_level],
                        d_extraProjection);
@@ -603,7 +612,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     }
 
 
-    // Schedule an interpolation of the face centered velocity data 
+    // Schedule an interpolation of the face centered velocity data
     sched_interpolateFromFCToCC(sched, patches, matls,
                         d_timeIntegratorLabels[curr_level]);
 
@@ -616,13 +625,13 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       d_scaleSimilarityModel->sched_reComputeTurbSubmodel(sched, patches, matls,
                                             d_timeIntegratorLabels[curr_level]);
     }
-    
+
     d_turbCounter = d_lab->d_sharedState->getCurrentTopLevelTimeStep();
     if ((d_turbCounter%d_turbModelCalcFreq == 0)&&
         ((curr_level==0)||((!(curr_level==0))&&d_turbModelRKsteps)))
       d_turbModel->sched_reComputeTurbSubmodel(sched, patches, matls,
                                             d_timeIntegratorLabels[curr_level]);
-    
+
 
     sched_printTotalKE(sched, patches, matls,
                        d_timeIntegratorLabels[curr_level]);
@@ -630,6 +639,43 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
        sched_saveFECopies(sched, patches, matls,
                                        d_timeIntegratorLabels[curr_level]);
     }
+
+#   ifdef WASATCH_ARCHES
+    /* hook in construction of task interface for moment transport equations here.
+     * This is within the RK loop, so we need to pass the stage as well.
+     *
+     * Note that at this point we should also build Expr::PlaceHolder objects
+     * for all "out-edges" in the Wasatch graph (required quantities from Arches)
+     * such as advecting velocity, etc.  These need to be consistent with the
+     * names given in the input file, which is a bit of a pain.  We will have
+     * to trust the user to get those right.
+     */
+    {
+      const Wasatch::EquationAdaptors& adaptors = wasatch.equation_adaptors();
+      const Wasatch::GraphHelper* const gh = wasatch.graph_categories()[ADVANCE_SOLUTION];
+      std::vector<std::string> solnVarNames;
+      for( Wasatch::EquationAdaptors::const_iterator ieq=adaptors.begin(); ieq!=adaptors.end(); ++ieq ){
+        const TransportEquation* const eq = (*ieq)->equation();
+        solnVarNames.push_back( eq->solution_variable_name() );
+        gh->rootIDs.push_back( eq->get_rhs_id() );
+      }
+
+      // jcs still need to fill in some gaps here.
+      TaskInterface* rhsTask = scinew TaskInterface( gh->rootIDs,
+                                                     "wasatch_task_rhs_stage_" + strRKStage.str(),
+                                                     *(gh->exprFactory),
+                                                     level, sched, patches, materials,
+                                                     wasatch->patch_info_map(),
+                                                     true,
+                                                     rkStage,  /* need to get this from Arches info */
+                                                     ioFieldSet /* need to build something here - probably need to parse input */
+                                                     );
+
+      // jcs need to build a CoordHelper (or graph the one from wasatch?) - see Wasatch::TimeStepper.cc...
+      wasatch->task_interface_list().push_back( rhsTask );
+      rhsTask->schedule( rkStage );  // note that there is another interface for this if we need some fields from the new DW.
+    }
+#   endif // WASATCH_ARCHES
   }
 
   // print information at probes provided in input file
@@ -657,7 +703,7 @@ int ExplicitSolver::noSolve(const LevelP& level,
 
   //initializes and allocates vars for new_dw
   // set initial guess
-  // require : old_dw -> pressureSPBC, [u,v,w]velocitySPBC, scalarSP, 
+  // require : old_dw -> pressureSPBC, [u,v,w]velocitySPBC, scalarSP,
   // densityCP, viscosityCTS
   // compute : new_dw -> pressureIN, [u,v,w]velocityIN, scalarIN, densityIN,
   //                     viscosityIN
@@ -668,7 +714,7 @@ int ExplicitSolver::noSolve(const LevelP& level,
 #ifdef PetscFilter
   if (d_turbModel->getFilter()) {
     // if the matrix is not initialized
-    if (!d_turbModel->getFilter()->isInitialized()) 
+    if (!d_turbModel->getFilter()->isInitialized())
       d_turbModel->sched_initFilterMatrix(          level, sched, patches, matls);
   }
 #endif
@@ -676,23 +722,23 @@ int ExplicitSolver::noSolve(const LevelP& level,
   if (d_calcVariance) {
     d_turbModel->sched_computeScalarVariance(             sched, patches, matls,
                                                           nosolve_timelabels);
-                                                          
+
     d_turbModel->sched_computeScalarDissipation(          sched, patches, matls,
                                                           nosolve_timelabels);
   }
 
   EqnFactory& eqn_factory = EqnFactory::self();
-  EqnFactory::EqnMap& scalar_eqns = eqn_factory.retrieve_all_eqns(); 
+  EqnFactory::EqnMap& scalar_eqns = eqn_factory.retrieve_all_eqns();
   for (EqnFactory::EqnMap::iterator iter = scalar_eqns.begin(); iter != scalar_eqns.end(); iter++){
 
-    EqnBase* eqn = iter->second; 
-    eqn->sched_dummyInit( level, sched ); 
+    EqnBase* eqn = iter->second;
+    eqn->sched_dummyInit( level, sched );
 
   }
 
-  string mixmodel = d_props->getMixingModelType(); 
+  string mixmodel = d_props->getMixingModelType();
   if ( mixmodel == "TabProps"  || mixmodel == "ClassicTable" )
-    d_props->sched_doTPDummyInit( level, sched ); 
+    d_props->sched_doTPDummyInit( level, sched );
 
   d_props->sched_computePropsFirst_mm(                    sched, patches, matls);
 
@@ -703,14 +749,14 @@ int ExplicitSolver::noSolve(const LevelP& level,
 
   sched_dummySolve(                                       sched, patches, matls);
 
-  sched_interpolateFromFCToCC(                            sched, patches, matls, 
+  sched_interpolateFromFCToCC(                            sched, patches, matls,
                                                           nosolve_timelabels);
 
   if (d_mixedModel) {
     d_scaleSimilarityModel->sched_reComputeTurbSubmodel(  sched, patches, matls,
                                                           nosolve_timelabels);
   }
-    
+
   d_turbModel->sched_reComputeTurbSubmodel(               sched, patches, matls,
                                                           nosolve_timelabels);
 
@@ -718,56 +764,56 @@ int ExplicitSolver::noSolve(const LevelP& level,
                                                           nosolve_timelabels);
 
   // DQMOM and scalar transport init
- 
+
   // Get a reference to all the DQMOM equations
-  DQMOMEqnFactory& dqmomFactory  = DQMOMEqnFactory::self(); 
-  if (dqmomFactory.get_quad_nodes() > 0) 
-    d_doDQMOM = true; 
-  else 
+  DQMOMEqnFactory& dqmomFactory  = DQMOMEqnFactory::self();
+  if (dqmomFactory.get_quad_nodes() > 0)
+    d_doDQMOM = true;
+  else
     d_doDQMOM = false; // probably need to sync this better with the bool being set in Arches
 
   if (d_doDQMOM) {
 
-    DQMOMEqnFactory::EqnMap& dqmom_eqns = dqmomFactory.retrieve_all_eqns(); 
-   
+    DQMOMEqnFactory::EqnMap& dqmom_eqns = dqmomFactory.retrieve_all_eqns();
+
     for (DQMOMEqnFactory::EqnMap::iterator ieqn = dqmom_eqns.begin(); ieqn != dqmom_eqns.end(); ieqn++){
-      
-      std::string currname = ieqn->first; 
+
+      std::string currname = ieqn->first;
       EqnBase* eqn = ieqn->second;
-      eqn->sched_dummyInit( level, sched ); 
+      eqn->sched_dummyInit( level, sched );
 
     }
 
-    CoalModelFactory& modelFactory = CoalModelFactory::self(); 
+    CoalModelFactory& modelFactory = CoalModelFactory::self();
     CoalModelFactory::ModelMap allModels = modelFactory.retrieve_all_models();
     for (CoalModelFactory::ModelMap::iterator imodel = allModels.begin(); imodel != allModels.end(); imodel++){
 
-      imodel->second->sched_dummyInit( level, sched );  
+      imodel->second->sched_dummyInit( level, sched );
 
     }
   }
 
   SourceTermFactory& src_factory = SourceTermFactory::self();
-  SourceTermFactory::SourceMap& sources = src_factory.retrieve_all_sources(); 
+  SourceTermFactory::SourceMap& sources = src_factory.retrieve_all_sources();
   for (SourceTermFactory::SourceMap::iterator iter = sources.begin(); iter != sources.end(); iter++){
 
-    SourceTermBase* src = iter->second; 
-    src->sched_dummyInit( level, sched ); 
+    SourceTermBase* src = iter->second;
+    src->sched_dummyInit( level, sched );
 
   }
 
-  PropertyModelFactory& propFactory = PropertyModelFactory::self(); 
-  PropertyModelFactory::PropMap& all_prop_models = propFactory.retrieve_all_property_models(); 
-  for ( PropertyModelFactory::PropMap::iterator iprop = all_prop_models.begin(); 
+  PropertyModelFactory& propFactory = PropertyModelFactory::self();
+  PropertyModelFactory::PropMap& all_prop_models = propFactory.retrieve_all_property_models();
+  for ( PropertyModelFactory::PropMap::iterator iprop = all_prop_models.begin();
       iprop != all_prop_models.end(); iprop++){
 
-    PropertyModelBase* prop_model = iprop->second; 
-    prop_model->sched_dummyInit( level, sched ); 
+    PropertyModelBase* prop_model = iprop->second;
+    prop_model->sched_dummyInit( level, sched );
 
   }
 
 
-  // Schedule an interpolation of the face centered velocity data 
+  // Schedule an interpolation of the face centered velocity data
   // to a cell centered vector for used by the viz tools
 
   // print information at probes provided in input file
@@ -779,16 +825,16 @@ int ExplicitSolver::noSolve(const LevelP& level,
 }
 
 // ****************************************************************************
-// Schedule initialize 
+// Schedule initialize
 // ****************************************************************************
-void 
-ExplicitSolver::sched_setInitialGuess(SchedulerP& sched, 
+void
+ExplicitSolver::sched_setInitialGuess(SchedulerP& sched,
                                       const PatchSet* patches,
                                       const MaterialSet* matls)
 {
   //copies old db to new_db and then uses non-linear
   //solver to compute new values
-  Task* tsk = scinew Task( "ExplicitSolver::setInitialGuess",this, 
+  Task* tsk = scinew Task( "ExplicitSolver::setInitialGuess",this,
                            &ExplicitSolver::setInitialGuess);
 
   Ghost::GhostType  gn = Ghost::None;
@@ -800,14 +846,14 @@ ExplicitSolver::sched_setInitialGuess(SchedulerP& sched,
   tsk->requires(Task::OldDW, d_lab->d_densityCPLabel,     gn, 0);
   tsk->requires(Task::OldDW, d_lab->d_viscosityCTSLabel,  gn, 0);
   tsk->requires(Task::OldDW, d_lab->d_newCCVelocityLabel, gn, 0);
-  tsk->requires(Task::OldDW, d_lab->d_areaFractionLabel,  gn, 0); 
-  tsk->requires(Task::OldDW, d_lab->d_volFractionLabel,   gn, 0); 
-  tsk->requires(Task::OldDW, d_lab->d_densityGuessLabel,  gn, 0); 
+  tsk->requires(Task::OldDW, d_lab->d_areaFractionLabel,  gn, 0);
+  tsk->requires(Task::OldDW, d_lab->d_volFractionLabel,   gn, 0);
+  tsk->requires(Task::OldDW, d_lab->d_densityGuessLabel,  gn, 0);
 
   if (!(d_MAlab))
     tsk->computes(d_lab->d_cellInfoLabel);
-  else 
-    tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, gn, 0); 
+  else
+    tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, gn, 0);
 
   tsk->computes(d_lab->d_cellTypeLabel);
   tsk->computes(d_lab->d_uVelocitySPBCLabel);
@@ -818,15 +864,15 @@ ExplicitSolver::sched_setInitialGuess(SchedulerP& sched,
   tsk->computes(d_lab->d_wVelRhoHatLabel);
   tsk->computes(d_lab->d_densityCPLabel);
   tsk->computes(d_lab->d_scalarSPLabel);
-  tsk->computes(d_lab->d_scalarBoundarySrcLabel);                
+  tsk->computes(d_lab->d_scalarBoundarySrcLabel);
   tsk->computes(d_lab->d_enthalpyBoundarySrcLabel);
-  tsk->computes(d_lab->d_umomBoundarySrcLabel);                
-  tsk->computes(d_lab->d_vmomBoundarySrcLabel);                
-  tsk->computes(d_lab->d_wmomBoundarySrcLabel); 
+  tsk->computes(d_lab->d_umomBoundarySrcLabel);
+  tsk->computes(d_lab->d_vmomBoundarySrcLabel);
+  tsk->computes(d_lab->d_wmomBoundarySrcLabel);
   tsk->computes(d_lab->d_viscosityCTSLabel);
-  tsk->computes(d_lab->d_areaFractionLabel); 
-  tsk->computes(d_lab->d_volFractionLabel); 
-  
+  tsk->computes(d_lab->d_areaFractionLabel);
+  tsk->computes(d_lab->d_volFractionLabel);
+
   //__________________________________
   if (d_MAlab){
     tsk->requires(Task::NewDW, d_lab->d_mmcellTypeLabel,   gn, 0);
@@ -837,7 +883,7 @@ ExplicitSolver::sched_setInitialGuess(SchedulerP& sched,
   //__________________________________
   if (d_enthalpySolve){
     tsk->requires(Task::OldDW, d_lab->d_enthalpySPLabel, gn, 0);
-    tsk->requires(Task::OldDW, d_lab->d_radiationVolqINLabel,  gn, 0); 
+    tsk->requires(Task::OldDW, d_lab->d_radiationVolqINLabel,  gn, 0);
     tsk->computes(d_lab->d_enthalpySPLabel);
     tsk->computes(d_lab->d_radiationVolqINLabel);
     tsk->computes(d_lab->d_enthalpyTempLabel);
@@ -854,7 +900,7 @@ ExplicitSolver::sched_setInitialGuess(SchedulerP& sched,
       tsk->computes(d_lab->d_enthalpyDiffusivityLabel);
     }
   }
-  
+
   //__________________________________
   tsk->computes(d_lab->d_scalarTempLabel);
   tsk->computes(d_lab->d_densityTempLabel);
@@ -867,15 +913,15 @@ ExplicitSolver::sched_setInitialGuess(SchedulerP& sched,
   }
   //Helper variable
   tsk->computes(d_lab->d_zerosrcVarLabel);
-  
+
   sched->addTask(tsk, patches, matls);
 }
 
 // ****************************************************************************
 // Schedule Interpolate from SFCX, SFCY, SFCZ to CC<Vector>
 // ****************************************************************************
-void 
-ExplicitSolver::sched_interpolateFromFCToCC(SchedulerP& sched, 
+void
+ExplicitSolver::sched_interpolateFromFCToCC(SchedulerP& sched,
                                             const PatchSet* patches,
                                             const MaterialSet* matls,
                                             const TimeIntegratorLabel* timelabels)
@@ -883,13 +929,13 @@ ExplicitSolver::sched_interpolateFromFCToCC(SchedulerP& sched,
   {
     string taskname =  "ExplicitSolver::interpFCToCC" +
                      timelabels->integrator_step_name;
-    Task* tsk = scinew Task(taskname, this, 
+    Task* tsk = scinew Task(taskname, this,
                          &ExplicitSolver::interpolateFromFCToCC, timelabels);
-    
+
     Ghost::GhostType  gac = Ghost::AroundCells;
     Ghost::GhostType  gaf = Ghost::AroundFaces;
     Ghost::GhostType  gn = Ghost::None;
-    
+
     tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, gn);
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
       tsk->requires(Task::OldDW, d_lab->d_uVelocitySPBCLabel, gaf, 1);
@@ -938,18 +984,18 @@ ExplicitSolver::sched_interpolateFromFCToCC(SchedulerP& sched,
       tsk->modifies(d_lab->d_continuityResidualLabel);
     }
     tsk->computes(timelabels->tke_out);
-      
-    sched->addTask(tsk, patches, matls);  
+
+    sched->addTask(tsk, patches, matls);
   }
   //__________________________________
   {
     string taskname =  "ExplicitSolver::computeVorticity" +
                      timelabels->integrator_step_name;
-    Task* tsk = scinew Task(taskname, this, 
+    Task* tsk = scinew Task(taskname, this,
                          &ExplicitSolver::computeVorticity, timelabels);
 
     Ghost::GhostType  gac = Ghost::AroundCells;
-    
+
     tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, Ghost::None);
     tsk->requires(Task::NewDW, d_lab->d_newCCUVelocityLabel,  gac, 1);
     tsk->requires(Task::NewDW, d_lab->d_newCCVVelocityLabel,  gac, 1);
@@ -966,27 +1012,27 @@ ExplicitSolver::sched_interpolateFromFCToCC(SchedulerP& sched,
       tsk->modifies(d_lab->d_vorticityZLabel);
       tsk->modifies(d_lab->d_vorticityLabel);
     }
-      
-    sched->addTask(tsk, patches, matls); 
+
+    sched->addTask(tsk, patches, matls);
   }
 }
 // ****************************************************************************
-// Actual interpolation from FC to CC Variable of type Vector 
+// Actual interpolation from FC to CC Variable of type Vector
 // ** WARNING ** For multiple patches we need ghost information for
 //               interpolation
 // ****************************************************************************
-void 
+void
 ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
                                       const PatchSubset* patches,
                                       const MaterialSubset*,
                                       DataWarehouse* old_dw,
                                       DataWarehouse* new_dw,
                                       const TimeIntegratorLabel* timelabels)
-{ 
+{
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
 
     constSFCXVariable<double> oldUVel;
     constSFCYVariable<double> oldVVel;
@@ -1021,7 +1067,7 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
     bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
     bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
     bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
-    
+
     IntVector idxLo = patch->getFortranCellLowIndex();
     IntVector idxHi = patch->getFortranCellHighIndex();
 
@@ -1061,7 +1107,7 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
             IntVector idxV(ii,jj+1,kk);
             IntVector idxW(ii,jj,kk+1);
 
-            double old_u = cellinfo->wfac[ii] * oldUVel[idx] + 
+            double old_u = cellinfo->wfac[ii] * oldUVel[idx] +
                            cellinfo->efac[ii] * oldUVel[idxU];
             double uhat = cellinfo->wfac[ii] * uHatVel_FCX[idx] +
                           cellinfo->efac[ii] * uHatVel_FCX[idxU];
@@ -1145,7 +1191,7 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
             IntVector idxV(ii,jj+1,kk);
             IntVector idxW(ii,jj,kk+1);
 
-            double old_u = cellinfo->wfac[ii] * oldUVel[idx] + 
+            double old_u = cellinfo->wfac[ii] * oldUVel[idx] +
                            cellinfo->efac[ii] * oldUVel[idxU];
             double uhat = cellinfo->wfac[ii] * uHatVel_FCX[idx] +
                           cellinfo->efac[ii] * uHatVel_FCX[idxU];
@@ -1172,7 +1218,7 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
             IntVector idxV(ii,jj+1,kk);
             IntVector idxW(ii,jj,kk+1);
 
-            double old_u = cellinfo->wfac[ii] * oldUVel[idx] + 
+            double old_u = cellinfo->wfac[ii] * oldUVel[idx] +
                            cellinfo->efac[ii] * oldUVel[idxU];
             double uhat = cellinfo->wfac[ii] * uHatVel_FCX[idx] +
                           cellinfo->efac[ii] * uHatVel_FCX[idxU];
@@ -1199,7 +1245,7 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
             IntVector idxV(ii,jj+1,kk);
             IntVector idxW(ii,jj,kk+1);
 
-            double old_u = cellinfo->wfac[ii] * oldUVel[idx] + 
+            double old_u = cellinfo->wfac[ii] * oldUVel[idx] +
                            cellinfo->efac[ii] * oldUVel[idxU];
             double uhat = cellinfo->wfac[ii] * uHatVel_FCX[idx] +
                           cellinfo->efac[ii] * uHatVel_FCX[idxU];
@@ -1226,7 +1272,7 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
             IntVector idxV(ii,jj+1,kk);
             IntVector idxW(ii,jj,kk+1);
 
-            double old_u = cellinfo->wfac[ii] * oldUVel[idx] + 
+            double old_u = cellinfo->wfac[ii] * oldUVel[idx] +
                            cellinfo->efac[ii] * oldUVel[idxU];
             double uhat = cellinfo->wfac[ii] * uHatVel_FCX[idx] +
                           cellinfo->efac[ii] * uHatVel_FCX[idxU];
@@ -1244,16 +1290,16 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
           }
         }
       }
-    } 
+    }
 
     new_dw->get(newUVel, d_lab->d_uVelocitySPBCLabel, indx, patch, gaf, 1);
     new_dw->get(newVVel, d_lab->d_vVelocitySPBCLabel, indx, patch, gaf, 1);
     new_dw->get(newWVel, d_lab->d_wVelocitySPBCLabel, indx, patch, gaf, 1);
     new_dw->get(drhodt,  d_lab->d_filterdrhodtLabel,  indx, patch, gn, 0);
     new_dw->get(density, d_lab->d_densityCPLabel,     indx, patch, gac, 1);
-    new_dw->get(div_constraint, 
+    new_dw->get(div_constraint,
                          d_lab->d_divConstraintLabel, indx, patch, gn, 0);
-    
+
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
       new_dw->allocateAndPut(newCCVel,      d_lab->d_newCCVelocityLabel,     indx, patch);
       new_dw->allocateAndPut(newCCVelMag,   d_lab->d_newCCVelMagLabel,       indx, patch);
@@ -1291,19 +1337,19 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
     for (int kk = idxLo.z(); kk <= idxHi.z(); ++kk) {
       for (int jj = idxLo.y(); jj <= idxHi.y(); ++jj) {
         for (int ii = idxLo.x(); ii <= idxHi.x(); ++ii) {
-          
+
           IntVector idx(ii,jj,kk);
           IntVector idxU(ii+1,jj,kk);
           IntVector idxV(ii,jj+1,kk);
           IntVector idxW(ii,jj,kk+1);
-          
+
           double new_u = cellinfo->wfac[ii] * newUVel[idx] +
                          cellinfo->efac[ii] * newUVel[idxU];
           double new_v = cellinfo->sfac[jj] * newVVel[idx] +
                          cellinfo->nfac[jj] * newVVel[idxV];
           double new_w = cellinfo->bfac[kk] * newWVel[idx] +
                          cellinfo->tfac[kk] * newWVel[idxW];
-          
+
           newCCVel[idx] = Vector(new_u,new_v,new_w);
           newCCUVel[idx] = new_u;
           newCCVVel[idx] = new_v;
@@ -1328,13 +1374,13 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
           IntVector idxU(ii+1,jj,kk);
           IntVector idxV(ii,jj+1,kk);
           IntVector idxW(ii,jj,kk+1);
-          
+
           double new_u = newUVel[idxU];
           double new_v = cellinfo->sfac[jj] * newVVel[idx] +
                          cellinfo->nfac[jj] * newVVel[idxV];
           double new_w = cellinfo->bfac[kk] * newWVel[idx] +
                          cellinfo->tfac[kk] * newWVel[idxW];
-          
+
           newCCVel[idx] = Vector(new_u,new_v,new_w);
           newCCUVel[idx] = new_u;
           newCCVVel[idx] = new_v;
@@ -1358,13 +1404,13 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
           IntVector idxU(ii+1,jj,kk);
           IntVector idxV(ii,jj+1,kk);
           IntVector idxW(ii,jj,kk+1);
-          
+
           double new_u = newUVel[idx];
           double new_v = cellinfo->sfac[jj] * newVVel[idx] +
                          cellinfo->nfac[jj] * newVVel[idxV];
           double new_w = cellinfo->bfac[kk] * newWVel[idx] +
                          cellinfo->tfac[kk] * newWVel[idxW];
-          
+
           newCCVel[idx] = Vector(new_u,new_v,new_w);
           newCCUVel[idx] = new_u;
           newCCVVel[idx] = new_v;
@@ -1388,13 +1434,13 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
           IntVector idxU(ii+1,jj,kk);
           IntVector idxV(ii,jj+1,kk);
           IntVector idxW(ii,jj,kk+1);
-          
+
           double new_u = cellinfo->wfac[ii] * newUVel[idx] +
                          cellinfo->efac[ii] * newUVel[idxU];
           double new_v = newVVel[idxV];
           double new_w = cellinfo->bfac[kk] * newWVel[idx] +
                          cellinfo->tfac[kk] * newWVel[idxW];
-          
+
           newCCVel[idx] = Vector(new_u,new_v,new_w);
           newCCUVel[idx] = new_u;
           newCCVVel[idx] = new_v;
@@ -1418,13 +1464,13 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
           IntVector idxU(ii+1,jj,kk);
           IntVector idxV(ii,jj+1,kk);
           IntVector idxW(ii,jj,kk+1);
-          
+
           double new_u = cellinfo->wfac[ii] * newUVel[idx] +
                          cellinfo->efac[ii] * newUVel[idxU];
           double new_v = newVVel[idx];
           double new_w = cellinfo->bfac[kk] * newWVel[idx] +
                          cellinfo->tfac[kk] * newWVel[idxW];
-          
+
           newCCVel[idx] = Vector(new_u,new_v,new_w);
           newCCUVel[idx] = new_u;
           newCCVVel[idx] = new_v;
@@ -1448,13 +1494,13 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
           IntVector idxU(ii+1,jj,kk);
           IntVector idxV(ii,jj+1,kk);
           IntVector idxW(ii,jj,kk+1);
-          
+
           double new_u = cellinfo->wfac[ii] * newUVel[idx] +
                          cellinfo->efac[ii] * newUVel[idxU];
           double new_v = cellinfo->sfac[jj] * newVVel[idx] +
                          cellinfo->nfac[jj] * newVVel[idxV];
           double new_w = newWVel[idxW];
-          
+
           newCCVel[idx] = Vector(new_u,new_v,new_w);
           newCCUVel[idx] = new_u;
           newCCVVel[idx] = new_v;
@@ -1478,13 +1524,13 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
           IntVector idxU(ii+1,jj,kk);
           IntVector idxV(ii,jj+1,kk);
           IntVector idxW(ii,jj,kk+1);
-          
+
           double new_u = cellinfo->wfac[ii] * newUVel[idx] +
                          cellinfo->efac[ii] * newUVel[idxU];
           double new_v = cellinfo->sfac[jj] * newVVel[idx] +
                          cellinfo->nfac[jj] * newVVel[idxV];
           double new_w = newWVel[idx];
-          
+
           newCCVel[idx] = Vector(new_u,new_v,new_w);
           newCCUVel[idx] = new_u;
           newCCVVel[idx] = new_v;
@@ -1513,7 +1559,7 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
           IntVector idxyminus(ii,jj-1,kk);
           IntVector idxzminus(ii,jj,kk-1);
           double vol =cellinfo->sns[jj]*cellinfo->stb[kk]*cellinfo->sew[ii];
-    
+
           divergence[idx] = (newUVel[idxU]-newUVel[idx])/cellinfo->sew[ii]+
                             (newVVel[idxV]-newVVel[idx])/cellinfo->sns[jj]+
                             (newWVel[idxW]-newWVel[idx])/cellinfo->stb[kk];
@@ -1530,25 +1576,25 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
                 }
       }
     }
-    new_dw->put(sum_vartype(total_kin_energy), timelabels->tke_out); 
+    new_dw->put(sum_vartype(total_kin_energy), timelabels->tke_out);
   }
 }
 
 // ****************************************************************************
 // Actual calculation of vorticity
 // ****************************************************************************
-void 
+void
 ExplicitSolver::computeVorticity(const ProcessorGroup* ,
                                  const PatchSubset* patches,
                                  const MaterialSubset*,
                                  DataWarehouse* old_dw,
                                  DataWarehouse* new_dw,
                                  const TimeIntegratorLabel* timelabels)
-{ 
+{
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
 
     CCVariable<double> vorticityX, vorticityY, vorticityZ, vorticity;
 
@@ -1568,7 +1614,7 @@ ExplicitSolver::computeVorticity(const ProcessorGroup* ,
     PerPatch<CellInformationP> cellInfoP;
     new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
     CellInformation* cellinfo = cellInfoP.get().get_rep();
-    
+
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
       new_dw->allocateAndPut(vorticityX, d_lab->d_vorticityXLabel, indx, patch);
       new_dw->allocateAndPut(vorticityY, d_lab->d_vorticityYLabel, indx, patch);
@@ -1596,7 +1642,7 @@ ExplicitSolver::computeVorticity(const ProcessorGroup* ,
           IntVector idxxminus(ii-1,jj,kk);
           IntVector idxyminus(ii,jj-1,kk);
           IntVector idxzminus(ii,jj,kk-1);
-          
+
           // ii,jj,kk velocity component cancels out when computing derivative,
           // so it has been ommited
 
@@ -1618,12 +1664,12 @@ ExplicitSolver::computeVorticity(const ProcessorGroup* ,
 // ****************************************************************************
 // Schedule probe data
 // ****************************************************************************
-void 
-ExplicitSolver::sched_probeData(SchedulerP& sched, 
+void
+ExplicitSolver::sched_probeData(SchedulerP& sched,
                                 const PatchSet* patches,
                                 const MaterialSet* matls)
 {
-  Task* tsk = scinew Task( "ExplicitSolver::probeData", this, 
+  Task* tsk = scinew Task( "ExplicitSolver::probeData", this,
                            &ExplicitSolver::probeData);
   Ghost::GhostType  gn = Ghost::None;
   tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel,  gn, 0);
@@ -1662,7 +1708,7 @@ ExplicitSolver::sched_probeData(SchedulerP& sched,
 // ****************************************************************************
 // Actual probe data
 // ****************************************************************************
-void 
+void
 ExplicitSolver::probeData(const ProcessorGroup* ,
                           const PatchSubset* patches,
                           const MaterialSubset*,
@@ -1673,7 +1719,7 @@ ExplicitSolver::probeData(const ProcessorGroup* ,
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
     double time = d_lab->d_sharedState->getElapsedTime();
 
   // Get the new velocity
@@ -1689,7 +1735,7 @@ ExplicitSolver::probeData(const ProcessorGroup* ,
     constCCVariable<double> pressure;
     constCCVariable<double> mixtureFraction;
     constCCVariable<double> kineticEnergy;
-    
+
     new_dw->get(newUVel,    d_lab->d_uVelocitySPBCLabel, indx, patch, gn, 0);
     new_dw->get(newVVel,    d_lab->d_vVelocitySPBCLabel, indx, patch, gn, 0);
     new_dw->get(newWVel,    d_lab->d_wVelocitySPBCLabel, indx, patch, gn, 0);
@@ -1703,12 +1749,12 @@ ExplicitSolver::probeData(const ProcessorGroup* ,
     new_dw->get(pressure,        d_lab->d_pressurePSLabel,   indx, patch, gn, 0);
     new_dw->get(mixtureFraction, d_lab->d_scalarSPLabel,     indx, patch, gn, 0);
     new_dw->get(kineticEnergy,   d_lab->d_kineticEnergyLabel,indx, patch, gn, 0);
-    
+
     constCCVariable<double> mixFracVariance;
     if (d_calcVariance) {
       new_dw->get(mixFracVariance, d_lab->d_scalarVarSPLabel, indx, patch, gn, 0);
     }
-    
+
     constCCVariable<double> gasfraction;
     constCCVariable<double> tempSolid;
     constCCVariable<double> totalHT;
@@ -1731,7 +1777,7 @@ ExplicitSolver::probeData(const ProcessorGroup* ,
     }
 
     constCCVariable<double> temperature;
-    if (d_enthalpySolve) 
+    if (d_enthalpySolve)
       new_dw->get(temperature, d_lab->d_tempINLabel, indx, patch, gn, 0);
 
     for (vector<IntVector>::const_iterator iter = d_probePoints.begin();
@@ -1774,9 +1820,9 @@ ExplicitSolver::probeData(const ProcessorGroup* ,
 }
 
 // ****************************************************************************
-// Actual initialize 
+// Actual initialize
 // ****************************************************************************
-void 
+void
 ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
                                 const PatchSubset* patches,
                                 const MaterialSubset*,
@@ -1788,11 +1834,11 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
-    
+    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+
     constCCVariable<double> denMicro;
     CCVariable<double> denMicro_new;
-    
+
     Ghost::GhostType  gn = Ghost::None;
     if (d_MAlab) {
       old_dw->get(denMicro, d_lab->d_densityMicroLabel,  indx, patch, gn, 0);
@@ -1805,10 +1851,10 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
     }else{
       old_dw->get(cellType, d_lab->d_cellTypeLabel,   indx, patch, gn, 0);
     }
-    
 
-    constCCVariable<double> old_density_guess; 
-    old_dw->get( old_density_guess, d_lab->d_densityGuessLabel, indx, patch, gn, 0); 
+
+    constCCVariable<double> old_density_guess;
+    old_dw->get( old_density_guess, d_lab->d_densityGuessLabel, indx, patch, gn, 0);
 
 
     constSFCXVariable<double> uVelocity;
@@ -1821,11 +1867,11 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
     constCCVariable<double> scalardiff;
     constCCVariable<double> enthalpydiff;
     constCCVariable<double> reactscalardiff;
-    constCCVariable<Vector> ccVel; 
-    constCCVariable<Vector> old_areaFraction; 
-    constCCVariable<double> old_volFraction; 
+    constCCVariable<Vector> ccVel;
+    constCCVariable<Vector> old_areaFraction;
+    constCCVariable<double> old_volFraction;
     constCCVariable<double> old_volq;
- 
+
     old_dw->get(uVelocity, d_lab->d_uVelocitySPBCLabel, indx, patch, gn, 0);
     old_dw->get(vVelocity, d_lab->d_vVelocitySPBCLabel, indx, patch, gn, 0);
     old_dw->get(wVelocity, d_lab->d_wVelocitySPBCLabel, indx, patch, gn, 0);
@@ -1833,8 +1879,8 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
     old_dw->get(density,   d_lab->d_densityCPLabel,     indx, patch, gn, 0);
     old_dw->get(viscosity, d_lab->d_viscosityCTSLabel,  indx, patch, gn, 0);
     old_dw->get(ccVel,     d_lab->d_newCCVelocityLabel, indx, patch, gn, 0);
-    old_dw->get(old_areaFraction, d_lab->d_areaFractionLabel, indx, patch, gn, 0); 
-    old_dw->get(old_volFraction, d_lab->d_volFractionLabel, indx, patch, gn, 0); 
+    old_dw->get(old_areaFraction, d_lab->d_areaFractionLabel, indx, patch, gn, 0);
+    old_dw->get(old_volFraction, d_lab->d_volFractionLabel, indx, patch, gn, 0);
 
     if (d_enthalpySolve){
       old_dw->get(enthalpy, d_lab->d_enthalpySPLabel, indx, patch, gn, 0);
@@ -1843,7 +1889,7 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
       new_dw->allocateAndPut(new_volq, d_lab->d_radiationVolqINLabel, indx, patch);
       new_volq.copyData(old_volq); // copy old into new
     }
-    
+
     if (d_dynScalarModel) {
       if (d_calScalar)
         old_dw->get(scalardiff,      d_lab->d_scalarDiffusivityLabel,     indx, patch, gn, 0);
@@ -1855,14 +1901,14 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
     CCVariable<int> cellType_new;
     new_dw->allocateAndPut(cellType_new, d_lab->d_cellTypeLabel, indx, patch);
     cellType_new.copyData(cellType);
-  
-    PerPatch<CellInformationP> cellInfoP; 
+
+    PerPatch<CellInformationP> cellInfoP;
     if (!(d_MAlab))
     {
       cellInfoP.setData(scinew CellInformation(patch));
-      new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, indx, patch); 
+      new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
     }
-    else 
+    else
     {
       new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
     }
@@ -1891,14 +1937,14 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
     new_dw->allocateAndPut(scalar_new, d_lab->d_scalarSPLabel, indx, patch);
     scalar_new.copyData(scalar); // copy old into new
 
-    CCVariable<Vector> new_areaFraction; 
-    new_dw->allocateAndPut(new_areaFraction, d_lab->d_areaFractionLabel, indx, patch); 
+    CCVariable<Vector> new_areaFraction;
+    new_dw->allocateAndPut(new_areaFraction, d_lab->d_areaFractionLabel, indx, patch);
     new_areaFraction.copyData(old_areaFraction); // copy old into new
 
-    CCVariable<double> new_volFraction; 
-    new_dw->allocateAndPut( new_volFraction, d_lab->d_volFractionLabel, indx, patch ); 
+    CCVariable<double> new_volFraction;
+    new_dw->allocateAndPut( new_volFraction, d_lab->d_volFractionLabel, indx, patch );
     new_volFraction.copyData( old_volFraction ); // copy old into new
- 
+
     new_dw->allocateAndPut(scalar_temp, d_lab->d_scalarTempLabel, indx, patch);
     scalar_temp.copyData(scalar); // copy old into new
 
@@ -1911,14 +1957,14 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
     if (d_enthalpySolve) {
       new_dw->allocateAndPut(new_enthalpy, d_lab->d_enthalpySPLabel, indx, patch);
       new_enthalpy.copyData(enthalpy);
-      
+
       new_dw->allocateAndPut(temp_enthalpy, d_lab->d_enthalpyTempLabel, indx, patch);
       temp_enthalpy.copyData(enthalpy);
     }
     CCVariable<double> density_new;
     new_dw->allocateAndPut(density_new, d_lab->d_densityCPLabel, indx, patch);
     density_new.copyData(density); // copy old into new
-    
+
     CCVariable<double> density_temp;
     new_dw->allocateAndPut(density_temp, d_lab->d_densityTempLabel, indx, patch);
     density_temp.copyData(density); // copy old into new
@@ -1926,8 +1972,8 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
     CCVariable<double> viscosity_new;
     new_dw->allocateAndPut(viscosity_new, d_lab->d_viscosityCTSLabel, indx, patch);
     viscosity_new.copyData(viscosity); // copy old into new
-    
-    
+
+
     CCVariable<double> scalardiff_new;
     CCVariable<double> enthalpydiff_new;
     CCVariable<double> reactscalardiff_new;
@@ -1942,7 +1988,7 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
       }
     }
 
-    if (d_doMMS) { 
+    if (d_doMMS) {
       SFCXVariable<double> uFmms;
       SFCYVariable<double> vFmms;
       SFCZVariable<double> wFmms;
@@ -1950,11 +1996,11 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
       SFCXVariable<double> ummsLnError;
       SFCYVariable<double> vmmsLnError;
       SFCZVariable<double> wmmsLnError;
-      
+
       new_dw->allocateAndPut(uFmms, d_lab->d_uFmmsLabel, indx, patch);
       new_dw->allocateAndPut(vFmms, d_lab->d_vFmmsLabel, indx, patch);
       new_dw->allocateAndPut(wFmms, d_lab->d_wFmmsLabel, indx, patch);
-      
+
       uFmms.initialize(0.0);
       vFmms.initialize(0.0);
       wFmms.initialize(0.0);
@@ -1994,20 +2040,20 @@ ExplicitSolver::sched_dummySolve(SchedulerP& sched,
                                  const MaterialSet* matls)
 {
 
-  d_boundaryCondition->sched_bcdummySolve( sched, patches, matls ); 
+  d_boundaryCondition->sched_bcdummySolve( sched, patches, matls );
 
-  Task* tsk = scinew Task( "ExplicitSolver::dataCopy",this, 
+  Task* tsk = scinew Task( "ExplicitSolver::dataCopy",this,
                            &ExplicitSolver::dummySolve);
 
   Ghost::GhostType  gn = Ghost::None;
-  
+
   if (d_extraProjection) {
     tsk->requires(Task::OldDW, d_lab->d_pressureExtraProjectionLabel, gn, 0);
     tsk->computes(d_lab->d_pressureExtraProjectionLabel);
   }
 
   tsk->requires(Task::OldDW, d_lab->d_divConstraintLabel,gn, 0);
-  tsk->requires(Task::OldDW, d_lab->d_pressurePSLabel,   gn, 0);  
+  tsk->requires(Task::OldDW, d_lab->d_pressurePSLabel,   gn, 0);
 
   // warning **only works for one scalar
   tsk->computes(d_lab->d_presNonLinSrcPBLMLabel);
@@ -2025,16 +2071,16 @@ ExplicitSolver::sched_dummySolve(SchedulerP& sched,
   tsk->computes(d_lab->d_SO2FlowRateLabel);
   tsk->computes(d_lab->d_scalarFlowRateLabel);
   tsk->computes(d_lab->d_divConstraintLabel);
-  tsk->computes(d_lab->d_densityGuessLabel); 
-      
-  sched->addTask(tsk, patches, matls); 
+  tsk->computes(d_lab->d_densityGuessLabel);
+
+  sched->addTask(tsk, patches, matls);
 }
 
 // ****************************************************************************
 // Actual Data Copy for first time step of MPMArches
 // ****************************************************************************
 
-void 
+void
 ExplicitSolver::dummySolve(const ProcessorGroup* ,
                            const PatchSubset* patches,
                            const MaterialSubset*,
@@ -2044,25 +2090,25 @@ ExplicitSolver::dummySolve(const ProcessorGroup* ,
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
 
     // gets for old dw variables
     constCCVariable<double> div;
     constCCVariable<double> pressure;
     CCVariable<double> div_new;
     CCVariable<double> pressure_new;
-    
+
     Ghost::GhostType  gn = Ghost::None;
     old_dw->get(div,      d_lab->d_divConstraintLabel, indx, patch, gn, 0);
     old_dw->get(pressure, d_lab->d_pressurePSLabel,    indx, patch, gn, 0);
-    
+
     new_dw->allocateAndPut(pressure_new, d_lab->d_pressurePSLabel,   indx, patch);
     new_dw->allocateAndPut(div_new,     d_lab->d_divConstraintLabel, indx, patch);
-    div_new.copyData(div); 
+    div_new.copyData(div);
     pressure_new.copyData(pressure);
 
-    CCVariable<double> density_guess; 
-    new_dw->allocateAndPut(density_guess, d_lab->d_densityGuessLabel, indx, patch); 
+    CCVariable<double> density_guess;
+    new_dw->allocateAndPut(density_guess, d_lab->d_densityGuessLabel, indx, patch);
 
     constCCVariable<double> pressureExtraProjection;
     CCVariable<double> pressureExtraProjection_new;
@@ -2109,8 +2155,8 @@ ExplicitSolver::dummySolve(const ProcessorGroup* ,
 }
 //______________________________________________________________________
 //
-void 
-ExplicitSolver::sched_printTotalKE(SchedulerP& sched, 
+void
+ExplicitSolver::sched_printTotalKE(SchedulerP& sched,
                                    const PatchSet* patches,
                                    const MaterialSet* matls,
                                    const TimeIntegratorLabel* timelabels)
@@ -2120,12 +2166,12 @@ ExplicitSolver::sched_printTotalKE(SchedulerP& sched,
   Task* tsk = scinew Task(taskname,
                           this, &ExplicitSolver::printTotalKE,
                           timelabels);
-  
+
   tsk->requires(Task::NewDW, timelabels->tke_out);
   sched->addTask(tsk, patches, matls);
 }
 //______________________________________________________________________
-void 
+void
 ExplicitSolver::printTotalKE(const ProcessorGroup* ,
                              const PatchSubset* ,
                              const MaterialSubset*,
@@ -2145,8 +2191,8 @@ ExplicitSolver::printTotalKE(const ProcessorGroup* ,
 //****************************************************************************
 // Schedule saving of temp copies of variables
 //****************************************************************************
-void 
-ExplicitSolver::sched_saveTempCopies(SchedulerP& sched, 
+void
+ExplicitSolver::sched_saveTempCopies(SchedulerP& sched,
                                      const PatchSet* patches,
                                      const MaterialSet* matls,
                                      const TimeIntegratorLabel* timelabels)
@@ -2156,25 +2202,25 @@ ExplicitSolver::sched_saveTempCopies(SchedulerP& sched,
   Task* tsk = scinew Task(taskname, this,
                           &ExplicitSolver::saveTempCopies,
                           timelabels);
-                          
+
   Ghost::GhostType  gn = Ghost::None;
   tsk->requires(Task::NewDW, d_lab->d_densityCPLabel, gn, 0);
   tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel,  gn, 0);
-  
+
   tsk->modifies(d_lab->d_densityTempLabel);
   tsk->modifies(d_lab->d_scalarTempLabel);
-  
+
   if (d_enthalpySolve){
     tsk->requires(Task::NewDW, d_lab->d_enthalpySPLabel,    gn, 0);
     tsk->modifies(d_lab->d_enthalpyTempLabel);
   }
-  
+
   sched->addTask(tsk, patches, matls);
 }
 //****************************************************************************
 // Actually save temp copies here
 //****************************************************************************
-void 
+void
 ExplicitSolver::saveTempCopies(const ProcessorGroup*,
                                const PatchSubset* patches,
                                const MaterialSubset*,
@@ -2187,7 +2233,7 @@ ExplicitSolver::saveTempCopies(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
     int indx = d_lab->d_sharedState->
-                     getArchesMaterial(archIndex)->getDWIndex(); 
+                     getArchesMaterial(archIndex)->getDWIndex();
 
     CCVariable<double> temp_density;
     CCVariable<double> temp_scalar;
@@ -2196,10 +2242,10 @@ ExplicitSolver::saveTempCopies(const ProcessorGroup*,
 
     new_dw->getModifiable(temp_density, d_lab->d_densityTempLabel,indx, patch);
     new_dw->getModifiable(temp_scalar,  d_lab->d_scalarTempLabel, indx, patch);
-    
+
     new_dw->copyOut(temp_density,       d_lab->d_densityCPLabel,  indx, patch);
     new_dw->copyOut(temp_scalar,        d_lab->d_scalarSPLabel,   indx, patch);
-    
+
     if (d_enthalpySolve) {
       new_dw->getModifiable(temp_enthalpy, d_lab->d_enthalpyTempLabel,indx, patch);
       new_dw->copyOut(temp_enthalpy,       d_lab->d_enthalpySPLabel, indx, patch);
@@ -2209,7 +2255,7 @@ ExplicitSolver::saveTempCopies(const ProcessorGroup*,
 //****************************************************************************
 // Schedule computation of density guess from the continuity equation
 //****************************************************************************
-void 
+void
 ExplicitSolver::sched_getDensityGuess(SchedulerP& sched,
                                       const PatchSet* patches,
                                       const MaterialSet* matls,
@@ -2223,9 +2269,9 @@ ExplicitSolver::sched_getDensityGuess(SchedulerP& sched,
                           timelabels);
 
   Task::WhichDW parent_old_dw;
-  if (timelabels->recursion){ 
+  if (timelabels->recursion){
     parent_old_dw = Task::ParentOldDW;
-  }else{ 
+  }else{
     parent_old_dw = Task::OldDW;
   }
   tsk->requires(parent_old_dw, d_lab->d_sharedState->get_delt_label());
@@ -2238,20 +2284,20 @@ ExplicitSolver::sched_getDensityGuess(SchedulerP& sched,
   if (timelabels->use_old_values){
     old_values_dw = parent_old_dw;
     tsk->requires(old_values_dw, d_lab->d_densityCPLabel,gn, 0);
-  }else{ 
+  }else{
     old_values_dw = Task::NewDW;
   }
-  
-  
+
+
   tsk->requires(Task::NewDW, d_lab->d_densityCPLabel,     gac, 1);
   tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel, gaf, 1);
   tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel, gaf, 1);
   tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel, gaf, 1);
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,      gn, 0);
-    
-  
+
+
   tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, gn);
-  
+
   //__________________________________
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First ){
     tsk->computes(d_lab->d_densityGuessLabel);
@@ -2259,13 +2305,13 @@ ExplicitSolver::sched_getDensityGuess(SchedulerP& sched,
     tsk->modifies(d_lab->d_densityGuessLabel);
   }
   tsk->computes(timelabels->negativeDensityGuess);
-  
+
   sched->addTask(tsk, patches, matls);
 }
 //****************************************************************************
 // Actually compute density guess from the continuity equation
 //****************************************************************************
-void 
+void
 ExplicitSolver::getDensityGuess(const ProcessorGroup*,
                                 const PatchSubset* patches,
                                 const MaterialSubset*,
@@ -2279,7 +2325,7 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
   }else{
     parent_old_dw = old_dw;
   }
-  
+
   delt_vartype delT;
   parent_old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
   double delta_t = delT;
@@ -2292,7 +2338,7 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
     int indx = d_lab->d_sharedState->
-                     getArchesMaterial(archIndex)->getDWIndex(); 
+                     getArchesMaterial(archIndex)->getDWIndex();
 
     CCVariable<double> densityGuess;
     constCCVariable<double> density;
@@ -2318,17 +2364,17 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
       new_dw->getModifiable(densityGuess, d_lab->d_densityGuessLabel,  indx, patch);
     }
     old_values_dw->copyOut(densityGuess, d_lab->d_densityCPLabel,indx, patch);
-    
+
     Ghost::GhostType  gac = Ghost::AroundCells;
     Ghost::GhostType  gaf = Ghost::AroundFaces;
     Ghost::GhostType  gn = Ghost::None;
-    
+
     new_dw->get(density,   d_lab->d_densityCPLabel,     indx,patch, gac, 1);
     new_dw->get(uVelocity, d_lab->d_uVelocitySPBCLabel, indx,patch, gaf, 1);
     new_dw->get(vVelocity, d_lab->d_vVelocitySPBCLabel, indx,patch, gaf, 1);
     new_dw->get(wVelocity, d_lab->d_wVelocitySPBCLabel, indx,patch, gaf, 1);
     new_dw->get(cellType,  d_lab->d_cellTypeLabel,      indx,patch, gn, 0);
-    
+
 // Need to skip first timestep since we start with unprojected velocities
 //    int currentTimeStep=d_lab->d_sharedState->getCurrentTopLevelTimeStep();
 //    if (currentTimeStep > 1) {
@@ -2368,20 +2414,20 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
 
           }
         }
-      } 
+      }
 
       if (negativeDensityGuess == 1.0 && !(d_noisyDensityGuess)) proc0cout << "NOTICE: Negative density guess occured on this patch.  Set <NoisyDensityGuess> to true to get full details." << endl;
 
-      // This replaces the ->anyArchesPhysicalBC if statement below when new BCs take over 
-      if ( d_boundaryCondition->isUsingNewBC() ) { 
+      // This replaces the ->anyArchesPhysicalBC if statement below when new BCs take over
+      if ( d_boundaryCondition->isUsingNewBC() ) {
 
-        std::vector<BoundaryCondition::BC_TYPE> bc_types; 
-        bc_types.push_back( BoundaryCondition::OUTLET ); 
+        std::vector<BoundaryCondition::BC_TYPE> bc_types;
+        bc_types.push_back( BoundaryCondition::OUTLET );
         bc_types.push_back( BoundaryCondition::PRESSURE );
 
-        d_boundaryCondition->zeroGradientBC( patch, indx, densityGuess, bc_types ); 
+        d_boundaryCondition->zeroGradientBC( patch, indx, densityGuess, bc_types );
 
-      } 
+      }
 
       if (d_boundaryCondition->anyArchesPhysicalBC()) {
         bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
@@ -2398,7 +2444,7 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
             for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
               IntVector currCell(colX, colY, colZ);
               IntVector xminusCell(colX-1, colY, colZ);
-        
+
               if ((cellType[xminusCell] == outlet_celltypeval)||
                   (cellType[xminusCell] == pressure_celltypeval)) {
                 densityGuess[xminusCell] = densityGuess[currCell];
@@ -2426,7 +2472,7 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
             for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
               IntVector currCell(colX, colY, colZ);
               IntVector yminusCell(colX, colY-1, colZ);
-        
+
               if ((cellType[yminusCell] == outlet_celltypeval)||
                   (cellType[yminusCell] == pressure_celltypeval)) {
                 densityGuess[yminusCell] = densityGuess[currCell];
@@ -2486,7 +2532,7 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
 //****************************************************************************
 // Schedule check for negative density guess
 //****************************************************************************
-void 
+void
 ExplicitSolver::sched_checkDensityGuess(SchedulerP& sched,
                                         const PatchSet* patches,
                                         const MaterialSet* matls,
@@ -2494,7 +2540,7 @@ ExplicitSolver::sched_checkDensityGuess(SchedulerP& sched,
 {
   string taskname =  "ExplicitSolver::checkDensityGuess" +
                      timelabels->integrator_step_name;
-                     
+
   Task* tsk = scinew Task(taskname, this,
                           &ExplicitSolver::checkDensityGuess,
                           timelabels);
@@ -2502,19 +2548,19 @@ ExplicitSolver::sched_checkDensityGuess(SchedulerP& sched,
   Task::WhichDW parent_old_dw;
   if (timelabels->recursion){
     parent_old_dw = Task::ParentOldDW;
-  }else{ 
+  }else{
     parent_old_dw = Task::OldDW;
   }
-  
+
   Task::WhichDW old_values_dw;
   if (timelabels->use_old_values){
     old_values_dw = parent_old_dw;
   }else {
     old_values_dw = Task::NewDW;
   }
-    
+
   tsk->requires(old_values_dw, d_lab->d_densityCPLabel,Ghost::None, 0);
-  
+
   tsk->requires(Task::NewDW, timelabels->negativeDensityGuess);
 
   tsk->modifies(d_lab->d_densityGuessLabel);
@@ -2524,7 +2570,7 @@ ExplicitSolver::sched_checkDensityGuess(SchedulerP& sched,
 //****************************************************************************
 // Actually check for negative density guess
 //****************************************************************************
-void 
+void
 ExplicitSolver::checkDensityGuess(const ProcessorGroup* pc,
                                   const PatchSubset* patches,
                                   const MaterialSubset*,
@@ -2538,18 +2584,18 @@ ExplicitSolver::checkDensityGuess(const ProcessorGroup* pc,
   }else{
     parent_old_dw = old_dw;
   }
-  
+
   double negativeDensityGuess = 0.0;
   sum_vartype nDG;
   new_dw->get(nDG, timelabels->negativeDensityGuess);
-  
+
   negativeDensityGuess = nDG;
 
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
     int indx = d_lab->d_sharedState->
-                     getArchesMaterial(archIndex)->getDWIndex(); 
+                     getArchesMaterial(archIndex)->getDWIndex();
 
     CCVariable<double> densityGuess;
     DataWarehouse* old_values_dw;
@@ -2571,13 +2617,13 @@ ExplicitSolver::checkDensityGuess(const ProcessorGroup* pc,
           proc0cout << "NOTICE: Negative density guess(es) occured. Reverting to old density." << endl;
         old_values_dw->copyOut(densityGuess, d_lab->d_densityCPLabel, indx, patch);
       }
-    }   
+    }
   }
 }
 //****************************************************************************
 // Schedule update of density guess
 //****************************************************************************
-void 
+void
 ExplicitSolver::sched_updateDensityGuess(SchedulerP& sched,
                                          const PatchSet* patches,
                                          const MaterialSet* matls,
@@ -2597,7 +2643,7 @@ ExplicitSolver::sched_updateDensityGuess(SchedulerP& sched,
 //****************************************************************************
 // Actually compute density guess from the continuity equation
 //****************************************************************************
-void 
+void
 ExplicitSolver::updateDensityGuess(const ProcessorGroup*,
                                    const PatchSubset* patches,
                                    const MaterialSubset*,
@@ -2610,7 +2656,7 @@ ExplicitSolver::updateDensityGuess(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
     int indx = d_lab->d_sharedState->
-                     getArchesMaterial(archIndex)->getDWIndex(); 
+                     getArchesMaterial(archIndex)->getDWIndex();
 
     CCVariable<double> densityGuess;
     constCCVariable<double> density;
@@ -2622,7 +2668,7 @@ ExplicitSolver::updateDensityGuess(const ProcessorGroup*,
 //****************************************************************************
 // Schedule syncronizing of rho*f with new density
 //****************************************************************************
-void 
+void
 ExplicitSolver::sched_syncRhoF(SchedulerP& sched,
                                const PatchSet* patches,
                                const MaterialSet* matls,
@@ -2646,7 +2692,7 @@ ExplicitSolver::sched_syncRhoF(SchedulerP& sched,
 //****************************************************************************
 // Actually syncronize of rho*f with new density
 //****************************************************************************
-void 
+void
 ExplicitSolver::syncRhoF(const ProcessorGroup*,
                          const PatchSubset* patches,
                          const MaterialSubset*,
@@ -2659,7 +2705,7 @@ ExplicitSolver::syncRhoF(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
     int indx = d_lab->d_sharedState->
-                     getArchesMaterial(archIndex)->getDWIndex(); 
+                     getArchesMaterial(archIndex)->getDWIndex();
 
     constCCVariable<double> densityGuess;
     constCCVariable<double> density;
@@ -2670,11 +2716,11 @@ ExplicitSolver::syncRhoF(const ProcessorGroup*,
     new_dw->get(densityGuess, d_lab->d_densityGuessLabel, indx, patch, Ghost::None, 0);
     new_dw->get(density,      d_lab->d_densityCPLabel,    indx, patch, Ghost::None, 0);
     new_dw->getModifiable(scalar, d_lab->d_scalarSPLabel, indx, patch);
-    
+
     if (d_enthalpySolve){
       new_dw->getModifiable(enthalpy,    d_lab->d_enthalpySPLabel,    indx, patch);
     }
-    
+
     IntVector idxLo = patch->getExtraCellLowIndex();
     IntVector idxHi = patch->getExtraCellHighIndex();
     for (int colZ = idxLo.z(); colZ < idxHi.z(); colZ ++) {
@@ -2702,8 +2748,8 @@ ExplicitSolver::syncRhoF(const ProcessorGroup*,
 //****************************************************************************
 // Schedule saving of FE copies of variables
 //****************************************************************************
-void 
-ExplicitSolver::sched_saveFECopies(SchedulerP& sched, 
+void
+ExplicitSolver::sched_saveFECopies(SchedulerP& sched,
                                    const PatchSet* patches,
                                    const MaterialSet* matls,
                                    const TimeIntegratorLabel* timelabels)
@@ -2713,13 +2759,13 @@ ExplicitSolver::sched_saveFECopies(SchedulerP& sched,
   Task* tsk = scinew Task(taskname, this,
                           &ExplicitSolver::saveFECopies,
                           timelabels);
-                          
+
   Ghost::GhostType  gn = Ghost::None;
   tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel, gn, 0);
-  
+
   if (d_enthalpySolve)
     tsk->requires(Task::NewDW, d_lab->d_enthalpySPLabel, gn, 0);
- 
+
   tsk->computes(d_lab->d_scalarFELabel);
   if (d_enthalpySolve)
     tsk->computes(d_lab->d_enthalpyFELabel);
@@ -2729,7 +2775,7 @@ ExplicitSolver::sched_saveFECopies(SchedulerP& sched,
 //****************************************************************************
 // Actually save temp copies here
 //****************************************************************************
-void 
+void
 ExplicitSolver::saveFECopies(const ProcessorGroup*,
                              const PatchSubset* patches,
                              const MaterialSubset*,
@@ -2741,7 +2787,7 @@ ExplicitSolver::saveFECopies(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
     int indx = d_lab->d_sharedState->
-                     getArchesMaterial(archIndex)->getDWIndex(); 
+                     getArchesMaterial(archIndex)->getDWIndex();
 
     CCVariable<double> temp_scalar;
     CCVariable<double> temp_reactscalar;
@@ -2749,7 +2795,7 @@ ExplicitSolver::saveFECopies(const ProcessorGroup*,
 
     new_dw->allocateAndPut(temp_scalar, d_lab->d_scalarFELabel, indx, patch);
     new_dw->copyOut(temp_scalar,        d_lab->d_scalarSPLabel, indx, patch);
-    
+
     if (d_enthalpySolve) {
       new_dw->allocateAndPut(temp_enthalpy, d_lab->d_enthalpyFELabel,indx, patch);
       new_dw->copyOut(temp_enthalpy,        d_lab->d_enthalpySPLabel,indx, patch);
@@ -2759,8 +2805,8 @@ ExplicitSolver::saveFECopies(const ProcessorGroup*,
 //****************************************************************************
 // Schedule computing mms error
 //****************************************************************************
-void 
-ExplicitSolver::sched_computeMMSError(SchedulerP& sched, 
+void
+ExplicitSolver::sched_computeMMSError(SchedulerP& sched,
                                       const PatchSet* patches,
                                       const MaterialSet* matls,
                                       const TimeIntegratorLabel* timelabels)
@@ -2773,7 +2819,7 @@ ExplicitSolver::sched_computeMMSError(SchedulerP& sched,
                           timelabels);
 
   Ghost::GhostType  gn = Ghost::None;
-  
+
   tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, gn);
   tsk->requires(Task::OldDW, d_lab->d_sharedState->get_delt_label());
   tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel, gn, 0);
@@ -2790,7 +2836,7 @@ ExplicitSolver::sched_computeMMSError(SchedulerP& sched,
   tsk->requires(Task::NewDW, d_lab->d_uFmmsLabel, gn, 0);
   tsk->requires(Task::NewDW, d_lab->d_vFmmsLabel, gn, 0);
   tsk->requires(Task::NewDW, d_lab->d_wFmmsLabel, gn, 0);
-  
+
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
     tsk->computes(d_lab->d_ummsLnErrorLabel);
     tsk->computes(d_lab->d_vmmsLnErrorLabel);
@@ -2823,7 +2869,7 @@ ExplicitSolver::sched_computeMMSError(SchedulerP& sched,
 //****************************************************************************
 // Actually compute mms error
 //****************************************************************************
-void 
+void
 ExplicitSolver::computeMMSError(const ProcessorGroup*,
                                 const PatchSubset* patches,
                                 const MaterialSubset*,
@@ -2840,13 +2886,13 @@ ExplicitSolver::computeMMSError(const ProcessorGroup*,
     DataWarehouse* parent_old_dw;
     if (timelabels->recursion) parent_old_dw = new_dw->getOtherDataWarehouse(Task::ParentOldDW);
     else parent_old_dw = old_dw;
-    
+
     delt_vartype delT;
     parent_old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
 
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
 
     constSFCXVariable<double> uVelocity;
     constSFCYVariable<double> vVelocity;
@@ -2855,7 +2901,7 @@ ExplicitSolver::computeMMSError(const ProcessorGroup*,
     constSFCXVariable<double> uFmms;
     constSFCYVariable<double> vFmms;
     constSFCZVariable<double> wFmms;
-    
+
     constCCVariable<double> scalar;
     //constCCVariable<double> pressure;
 
@@ -2880,13 +2926,13 @@ ExplicitSolver::computeMMSError(const ProcessorGroup*,
       new_dw->getModifiable(smmsLnError, d_lab->d_smmsLnErrorLabel,     indx, patch);
       new_dw->getModifiable(smmsLnError, d_lab->d_gradpmmsLnErrorLabel, indx, patch);
     }
-    
+
     ummsLnError.initialize(0.0);
     vmmsLnError.initialize(0.0);
     //wmmsLnError.initialize(0.0);
     //smmsLnError.initialize(0.0);
     //gradpmmsLnError.initialize(0.0);
-    
+
     Ghost::GhostType  gn = Ghost::None;
     new_dw->get(uVelocity, d_lab->d_uVelocitySPBCLabel, indx, patch, gn, 0);
     new_dw->get(vVelocity, d_lab->d_vVelocitySPBCLabel, indx, patch, gn, 0);
@@ -2947,19 +2993,19 @@ ExplicitSolver::computeMMSError(const ProcessorGroup*,
         smmsLnError[c] = testvalue;
       }
     }
-     
+
 
     //__________________________________
     // X-face Error Calculation
     double unumeratordiff = 0.0;
     double udenomexact = 0.0;
 
-    for (CellIterator iter=patch->getSFCXIterator(); !iter.done(); iter++){ 
+    for (CellIterator iter=patch->getSFCXIterator(); !iter.done(); iter++){
 
-      IntVector c = *iter; 
+      IntVector c = *iter;
       int colX = c.x();
       int colY = c.y();
-      
+
       double mmsvalue = 0.0;
       double mmsconvvalue = 0.0;
       double testvalue = 0.0;
@@ -2999,9 +3045,9 @@ ExplicitSolver::computeMMSError(const ProcessorGroup*,
     double vnumeratordiff = 0.0;
     double vdenomexact = 0.0;
 
-    for (CellIterator iter=patch->getSFCYIterator(); !iter.done(); iter++){ 
+    for (CellIterator iter=patch->getSFCYIterator(); !iter.done(); iter++){
 
-      IntVector c = *iter; 
+      IntVector c = *iter;
       int colX = c.x();
       int colY = c.y();
 
@@ -3040,9 +3086,9 @@ ExplicitSolver::computeMMSError(const ProcessorGroup*,
     double wnumeratordiff = 0.0;
     double wdenomexact = 0.0;
 
-    for (CellIterator iter=patch->getSFCZIterator(); !iter.done(); iter++){ 
+    for (CellIterator iter=patch->getSFCZIterator(); !iter.done(); iter++){
 
-      IntVector c = *iter; 
+      IntVector c = *iter;
       double mmsvalue  = 0.0;
       double testvalue = 0.0;
 
@@ -3070,30 +3116,30 @@ ExplicitSolver::computeMMSError(const ProcessorGroup*,
         wmmsLnError[c] = testvalue;
       }
     }
- 
-        
+
+
     //__________________________________
     //
     if (d_mmsErrorType == "L2"){
-      new_dw->put(sum_vartype(snumeratordiff), timelabels->smmsLnError); 
+      new_dw->put(sum_vartype(snumeratordiff), timelabels->smmsLnError);
       new_dw->put(sum_vartype(unumeratordiff), timelabels->ummsLnError);
       proc0cout << "putting vnum =" << vnumeratordiff << "into vmmsLnError" << endl;
       new_dw->put(sum_vartype(vnumeratordiff), timelabels->vmmsLnError);
-      new_dw->put(sum_vartype(wnumeratordiff), timelabels->wmmsLnError); 
-      
+      new_dw->put(sum_vartype(wnumeratordiff), timelabels->wmmsLnError);
+
       new_dw->put(sum_vartype(sdenomexact),    timelabels->smmsExactSol);
       new_dw->put(sum_vartype(udenomexact),    timelabels->ummsExactSol);
       new_dw->put(sum_vartype(vdenomexact),    timelabels->vmmsExactSol);
       new_dw->put(sum_vartype(wdenomexact),    timelabels->wmmsExactSol);
     }
     else if (d_mmsErrorType == "Linf"){
-      new_dw->put(max_vartype(snumeratordiff), timelabels->smmsLnError); 
+      new_dw->put(max_vartype(snumeratordiff), timelabels->smmsLnError);
       new_dw->put(max_vartype(unumeratordiff), timelabels->ummsLnError);
       new_dw->put(max_vartype(vnumeratordiff), timelabels->vmmsLnError);
       new_dw->put(max_vartype(wnumeratordiff), timelabels->wmmsLnError);
-      
+
       new_dw->put(max_vartype(sdenomexact),    timelabels->smmsExactSol);
-      new_dw->put(max_vartype(udenomexact),    timelabels->ummsExactSol); 
+      new_dw->put(max_vartype(udenomexact),    timelabels->ummsExactSol);
       new_dw->put(max_vartype(vdenomexact),    timelabels->vmmsExactSol);
       new_dw->put(max_vartype(wdenomexact),    timelabels->wmmsExactSol);
     }
@@ -3102,8 +3148,8 @@ ExplicitSolver::computeMMSError(const ProcessorGroup*,
 //****************************************************************************
 // Schedule computing density lag
 //****************************************************************************
-void 
-ExplicitSolver::sched_computeDensityLag(SchedulerP& sched, 
+void
+ExplicitSolver::sched_computeDensityLag(SchedulerP& sched,
                                         const PatchSet* patches,
                                         const MaterialSet* matls,
                                         const TimeIntegratorLabel* timelabels,
@@ -3117,7 +3163,7 @@ ExplicitSolver::sched_computeDensityLag(SchedulerP& sched,
   Ghost::GhostType  gn = Ghost::None;
   tsk->requires(Task::NewDW, d_lab->d_densityGuessLabel,gn, 0);
   tsk->requires(Task::NewDW, d_lab->d_densityCPLabel,   gn, 0);
- 
+
   if (after_average){
     if ((timelabels->integrator_step_name == "Corrector")||
         (timelabels->integrator_step_name == "CorrectorRK3")){
@@ -3133,7 +3179,7 @@ ExplicitSolver::sched_computeDensityLag(SchedulerP& sched,
 //****************************************************************************
 // Actually compute deensity lag
 //****************************************************************************
-void 
+void
 ExplicitSolver::computeDensityLag(const ProcessorGroup*,
                                   const PatchSubset* patches,
                                   const MaterialSubset*,
@@ -3147,11 +3193,11 @@ ExplicitSolver::computeDensityLag(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
     int indx = d_lab->d_sharedState->
-                     getArchesMaterial(archIndex)->getDWIndex(); 
+                     getArchesMaterial(archIndex)->getDWIndex();
 
     constCCVariable<double> densityGuess;
     constCCVariable<double> density;
-    
+
     Ghost::GhostType  gn = Ghost::None;
     new_dw->get(densityGuess, d_lab->d_densityGuessLabel, indx, patch, gn, 0);
     new_dw->get(density, d_lab->d_densityCPLabel,         indx, patch, gn, 0);
@@ -3170,19 +3216,19 @@ ExplicitSolver::computeDensityLag(const ProcessorGroup*,
     if (after_average){
       if ((timelabels->integrator_step_name == "Corrector")||
           (timelabels->integrator_step_name == "CorrectorRK3")){
-        new_dw->put(sum_vartype(densityLag), d_lab->d_densityLagAfterAverage_label); 
+        new_dw->put(sum_vartype(densityLag), d_lab->d_densityLagAfterAverage_label);
       }else{
-        new_dw->put(sum_vartype(densityLag), d_lab->d_densityLagAfterIntermAverage_label); 
+        new_dw->put(sum_vartype(densityLag), d_lab->d_densityLagAfterIntermAverage_label);
       }
     }else{
-      new_dw->put(sum_vartype(densityLag), timelabels->densityLag); 
+      new_dw->put(sum_vartype(densityLag), timelabels->densityLag);
     }
   }
 }
 //****************************************************************************
 // Schedule check for density lag
 //****************************************************************************
-void 
+void
 ExplicitSolver::sched_checkDensityLag(SchedulerP& sched,
                                       const PatchSet* patches,
                                       const MaterialSet* matls,
@@ -3211,7 +3257,7 @@ ExplicitSolver::sched_checkDensityLag(SchedulerP& sched,
 //****************************************************************************
 // Actually check for density lag
 //****************************************************************************
-void 
+void
 ExplicitSolver::checkDensityLag(const ProcessorGroup* pc,
                                 const PatchSubset* patches,
                                 const MaterialSubset*,
@@ -3238,11 +3284,11 @@ ExplicitSolver::checkDensityLag(const ProcessorGroup* pc,
 
     if (densityLag > d_maxDensityLag) {
         if (pc->myrank() == 0)
-          proc0cout << "WARNING: density lag " << densityLag 
+          proc0cout << "WARNING: density lag " << densityLag
                << " exceeding maximium "<< d_maxDensityLag
                << " specified. Restarting timestep." << endl;
         new_dw->abortTimestep();
         new_dw->restartTimestep();
-    }   
+    }
   }
 }

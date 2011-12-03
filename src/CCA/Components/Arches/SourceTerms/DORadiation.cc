@@ -58,8 +58,8 @@ DORadiation::DORadiation( std::string src_name, ArchesLabel* labels, MPMArchesLa
   _abskgLabel    =  VarLabel::create("new_abskg",    CC_double);
   _extra_local_labels.push_back(_abskgLabel); 
 
-  _abskpLabel = VarLabel::create("new_abskp", CC_double); 
-  _extra_local_labels.push_back(_abskpLabel); 
+  _abskpLocalLabel = VarLabel::create("new_abskp", CC_double); 
+  _extra_local_labels.push_back(_abskpLocalLabel); 
 
   //Declare the source type: 
   _source_type = CC_SRC; // or FX_SRC, or FY_SRC, or FZ_SRC, or CCVECTOR_SRC
@@ -93,6 +93,7 @@ DORadiation::problemSetup(const ProblemSpecP& inputdb)
   db->getWithDefault( "co2_label", _co2_label_name, "CO2" ); 
   db->getWithDefault( "h2o_label", _h2o_label_name, "H2O" ); 
   db->getWithDefault( "T_label", _T_label_name, "temperature" ); 
+  db->getWithDefault( "abskp_label", _abskp_label_name, "new_abskp" ); 
 
   _DO_model = scinew DORadiationModel( _labels, _MAlab, _bc, _my_world ); 
   _DO_model->problemSetup( db ); 
@@ -110,6 +111,9 @@ DORadiation::sched_computeSource( const LevelP& level, SchedulerP& sched, int ti
 {
   std::string taskname = "DORadiation::computeSource";
   Task* tsk = scinew Task(taskname, this, &DORadiation::computeSource, timeSubStep);
+
+  //resolve the abskp label -- allows for different methods for computing abskp: 
+  _abskpLabel = VarLabel::find( _abskp_label_name ); 
 
   _perproc_patches = level->eachPatch(); 
 
@@ -160,6 +164,12 @@ DORadiation::sched_computeSource( const LevelP& level, SchedulerP& sched, int ti
   tsk->requires(Task::OldDW, _labels->d_cellTypeLabel, gac, 1 ); 
   tsk->requires(Task::NewDW, _labels->d_cellInfoLabel, gn);
 
+
+  if ( _abskp_label_name != "new_abskp" ){ 
+    tsk->requires( Task::OldDW, _abskpLabel, gn, 0 ); 
+  }
+
+
   sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials()); 
 
 }
@@ -174,7 +184,6 @@ DORadiation::computeSource( const ProcessorGroup* pc,
                    DataWarehouse* new_dw, 
                    int timeSubStep )
 {
-
   _DO_model->d_linearSolver->matrixCreate( _perproc_patches, patches ); 
 
   //patch loop
@@ -223,8 +232,7 @@ DORadiation::computeSource( const ProcessorGroup* pc,
       new_dw->allocateAndPut( radiation_vars.volq   , _radiationVolqLabel  , matlIndex , patch );
       new_dw->allocateAndPut( radiation_vars.src    , _radiationSRCLabel   , matlIndex , patch );
       new_dw->allocateAndPut( radiation_vars.ABSKG  , _abskgLabel          , matlIndex , patch );
-      new_dw->allocateAndPut( radiation_vars.ABSKP  , _abskpLabel          , matlIndex , patch );
-
+      new_dw->allocateAndPut( radiation_vars.ABSKP  , _abskpLocalLabel          , matlIndex , patch );
       new_dw->allocateAndPut( divQ, _src_label, matlIndex, patch ); 
       divQ.initialize(0.0);
       radiation_vars.ESRCG.allocate( patch->getExtraCellLowIndex(1), patch->getExtraCellHighIndex(1) );  
@@ -237,7 +245,7 @@ DORadiation::computeSource( const ProcessorGroup* pc,
       old_dw->copyOut( radiation_vars.qfluxt, _radiationFluxTLabel, matlIndex, patch, Ghost::None, 0 );  
       old_dw->copyOut( radiation_vars.qfluxb, _radiationFluxBLabel, matlIndex, patch, Ghost::None, 0 );  
       old_dw->copyOut( radiation_vars.ABSKG,  _abskgLabel, matlIndex, patch, Ghost::None, 0 );  
-      old_dw->copyOut( radiation_vars.ABSKP,  _abskpLabel, matlIndex, patch, Ghost::None, 0 );  
+      old_dw->copyOut( radiation_vars.ABSKP,  _abskpLocalLabel, matlIndex, patch, Ghost::None, 0 );
       old_dw->copyOut( radiation_vars.volq,   _radiationVolqLabel, matlIndex, patch, Ghost::None, 0 );  
       old_dw->copyOut( radiation_vars.src,    _radiationSRCLabel, matlIndex, patch, Ghost::None, 0 );  
 
@@ -259,13 +267,16 @@ DORadiation::computeSource( const ProcessorGroup* pc,
       new_dw->getModifiable( radiation_vars.volq   , _radiationVolqLabel  , matlIndex , patch );
       new_dw->getModifiable( radiation_vars.src    , _radiationSRCLabel   , matlIndex , patch );
       new_dw->getModifiable( radiation_vars.ABSKG  , _abskgLabel          , matlIndex , patch );
-      new_dw->getModifiable( radiation_vars.ABSKP  , _abskpLabel          , matlIndex , patch );
-
+      new_dw->getModifiable( radiation_vars.ABSKP  , _abskpLocalLabel          , matlIndex , patch );
       new_dw->getModifiable( divQ, _src_label, matlIndex, patch ); 
 
       radiation_vars.ESRCG.allocate( patch->getExtraCellLowIndex(1), patch->getExtraCellHighIndex(1) );  
 
     } 
+
+    if ( _abskp_label_name != "new_abskp" ){
+      old_dw->copyOut(radiation_vars.ABSKP, _abskpLabel, matlIndex, patch, gn, 0);
+    }
 
     if ( do_radiation ){ 
 
