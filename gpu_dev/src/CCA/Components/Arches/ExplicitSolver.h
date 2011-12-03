@@ -2,27 +2,27 @@
 
 The MIT License
 
-Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
-Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
+Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and
+Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI),
 University of Utah.
 
 License for the specific language governing rights and limitations under
-Permission is hereby granted, free of charge, to any person obtaining a 
+Permission is hereby granted, free of charge, to any person obtaining a
 copy of this software and associated documentation files (the "Software"),
-to deal in the Software without restriction, including without limitation 
-the rights to use, copy, modify, merge, publish, distribute, sublicense, 
-and/or sell copies of the Software, and to permit persons to whom the 
+to deal in the Software without restriction, including without limitation
+the rights to use, copy, modify, merge, publish, distribute, sublicense,
+and/or sell copies of the Software, and to permit persons to whom the
 Software is furnished to do so, subject to the following conditions:
 
-The above copyright notice and this permission notice shall be included 
+The above copyright notice and this permission notice shall be included
 in all copies or substantial portions of the Software.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS 
-OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL 
-THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
-FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 
 */
@@ -36,20 +36,20 @@ DEALINGS IN THE SOFTWARE.
 /**************************************
 CLASS
    NonlinearSolver
-   
+
    Class ExplicitSolver is a subclass of NonlinearSolver
    which implements the Forward Euler/RK2/ RK3 methods
 
 GENERAL INFORMATION
    ExplicitSolver.h - declaration of the class
-   
+
    Author: Rajesh Rawat (rawat@crsim.utah.edu)
    Author of RK2/RK3 implementation: Stanislav Borodai (borodai@crsim.utah.edu)
-   
+
    Creation Date:   Mar 1, 2000
-   
-   C-SAFE 
-   
+
+   C-SAFE
+
    Copyright U of U 2000
 
 
@@ -73,29 +73,29 @@ namespace Uintah {
 class PressureSolver;
 class MomentumSolver;
 class ScalarSolver;
-class ExtraScalarSolver; 
+class ExtraScalarSolver;
 class TurbulenceModel;
 class ScaleSimilarityModel;
 class Properties;
 class BoundaryCondition;
 class PhysicalConstants;
 class EnthalpySolver;
-class RMCRTRadiationModel; 
-class PartVel; 
-class DQMOM; 
+class RMCRTRadiationModel;
+class PartVel;
+class DQMOM;
 class ExplicitSolver: public NonlinearSolver {
 
 public:
-  
+
   // GROUP: Constructors:
   ////////////////////////////////////////////////////////////////////////
-  // Solver initialized with all input data 
+  // Solver initialized with all input data
   ExplicitSolver(ArchesLabel* label,
                  const MPMArchesLabel* MAlb,
-                 Properties* props, 
+                 Properties* props,
                  BoundaryCondition* bc,
-                 TurbulenceModel* turbModel, 
-                 ScaleSimilarityModel* scaleSimilarityModel, 
+                 TurbulenceModel* turbModel,
+                 ScaleSimilarityModel* scaleSimilarityModel,
                  PhysicalConstants* physConst,
                  bool calcScalar,
                  bool calcEnthalpy,
@@ -119,12 +119,16 @@ public:
   // Solve the nonlinear system. (also does some actual computations)
   // The code returns 0 if there are no errors and
   // 1 if there is a nonlinear failure.
-  //    [in] 
+  //    [in]
   //        documentation here
-  //    [out] 
+  //    [out]
   //        documentation here
-  virtual int nonlinearSolve(const LevelP& level,
-                             SchedulerP& sched);
+  virtual int nonlinearSolve( const LevelP& level,
+                              SchedulerP& sched
+#                             ifdef WASATCH_ARCHES
+                              , Wasatch& wasatch
+#                             endif // WASATCH_ARCHES
+                             );
 
 
   ///////////////////////////////////////////////////////////////////////
@@ -136,9 +140,9 @@ public:
 
   ///////////////////////////////////////////////////////////////////////
   // Schedule the Initialization of non linear solver
-  //    [in] 
-  //        data User data needed for solve 
-  void sched_setInitialGuess(SchedulerP&, 
+  //    [in]
+  //        data User data needed for solve
+  void sched_setInitialGuess(SchedulerP&,
                              const PatchSet* patches,
                              const MaterialSet* matls);
 
@@ -153,13 +157,13 @@ public:
   ///////////////////////////////////////////////////////////////////////
   // Schedule the interpolation of velocities from Face Centered Variables
   //    to a Cell Centered Vector
-  //    [in] 
-  void sched_interpolateFromFCToCC(SchedulerP&, 
+  //    [in]
+  void sched_interpolateFromFCToCC(SchedulerP&,
                                    const PatchSet* patches,
                                    const MaterialSet* matls,
                                    const TimeIntegratorLabel* timelabels);
 
-  void sched_probeData(SchedulerP&, 
+  void sched_probeData(SchedulerP&,
                        const PatchSet* patches,
                        const MaterialSet* matls);
 
@@ -174,49 +178,49 @@ public:
                           const MaterialSet* matls,
                           const TimeIntegratorLabel* timelabels);
 
-  void sched_saveTempCopies(SchedulerP&, 
+  void sched_saveTempCopies(SchedulerP&,
                             const PatchSet* patches,
                             const MaterialSet* matls,
                             const TimeIntegratorLabel* timelabels);
 
-  void sched_saveFECopies(SchedulerP&, 
+  void sched_saveFECopies(SchedulerP&,
                           const PatchSet* patches,
                           const MaterialSet* matls,
                           const TimeIntegratorLabel* timelabels);
 
-  void sched_computeDensityLag(SchedulerP&, 
+  void sched_computeDensityLag(SchedulerP&,
                                const PatchSet* patches,
                                const MaterialSet* matls,
                                const TimeIntegratorLabel* timelabels,
                                bool after_average);
 
-  void sched_getDensityGuess(SchedulerP&, 
+  void sched_getDensityGuess(SchedulerP&,
                              const PatchSet* patches,
                              const MaterialSet* matls,
                              const TimeIntegratorLabel* timelabels);
 
-  void sched_checkDensityGuess(SchedulerP&, 
+  void sched_checkDensityGuess(SchedulerP&,
                                const PatchSet* patches,
                                const MaterialSet* matls,
                                const TimeIntegratorLabel* timelabels);
 
-  void sched_checkDensityLag(SchedulerP&, 
+  void sched_checkDensityLag(SchedulerP&,
                              const PatchSet* patches,
                              const MaterialSet* matls,
                              const TimeIntegratorLabel* timelabels,
                              bool after_average);
 
-  void sched_updateDensityGuess(SchedulerP&, 
+  void sched_updateDensityGuess(SchedulerP&,
                                 const PatchSet* patches,
                                 const MaterialSet* matls,
                                 const TimeIntegratorLabel* timelabels);
 
-  void sched_syncRhoF(SchedulerP&, 
+  void sched_syncRhoF(SchedulerP&,
                       const PatchSet* patches,
                       const MaterialSet* matls,
                       const TimeIntegratorLabel* timelabels);
 
-  void sched_computeMMSError(SchedulerP&, 
+  void sched_computeMMSError(SchedulerP&,
                              const PatchSet* patches,
                              const MaterialSet* matls,
                              const TimeIntegratorLabel* timelabels);
@@ -257,8 +261,8 @@ private:
   // GROUP: Action Methods (private) :
   ///////////////////////////////////////////////////////////////////////
   // Actually Initialize the non linear solver
-  //    [in] 
-  //        data User data needed for solve 
+  //    [in]
+  //        data User data needed for solve
   void setInitialGuess(const ProcessorGroup* pc,
                        const PatchSubset* patches,
                        const MaterialSubset* matls,
@@ -277,7 +281,7 @@ private:
 
   ///////////////////////////////////////////////////////////////////////
   // Actually Interpolate from SFCX, SFCY, SFCZ to CC<Vector>
-  //    [in] 
+  //    [in]
   void interpolateFromFCToCC(const ProcessorGroup* pc,
                              const PatchSubset* patches,
                              const MaterialSubset* matls,
@@ -380,8 +384,8 @@ private:
   void setPartVel( PartVel* partVel ) {
     d_partVel = partVel; };
 
-  void setDQMOMSolver( DQMOM* dqmomSolver ) { 
-    d_dqmomSolver = dqmomSolver; }; 
+  void setDQMOMSolver( DQMOM* dqmomSolver ) {
+    d_dqmomSolver = dqmomSolver; };
 
 private:
   // const VarLabel*
@@ -406,9 +410,9 @@ private:
   bool d_enthalpySolve;
   bool d_calcVariance;
   vector<IntVector> d_probePoints;
- 
-  
-  // Momentum Eqn Solver 
+
+
+  // Momentum Eqn Solver
   MomentumSolver* d_momSolver;
   // Scalar solver
   ScalarSolver* d_scalarSolver;
@@ -419,7 +423,7 @@ private:
   TimeIntegratorLabel* nosolve_timelabels;
   int numTimeIntegratorLevels;
   bool nosolve_timelabels_allocated;
- 
+
   bool d_3d_periodic;
   bool d_dynScalarModel;
   int d_turbModelCalcFreq;
@@ -428,7 +432,7 @@ private:
   double d_H_air;
   bool d_doMMS;
   bool d_restart_on_negative_density_guess;
-  bool d_noisyDensityGuess; 
+  bool d_noisyDensityGuess;
   string d_mms;
   string d_mmsErrorType;
   double d_airDensity, d_heDensity;
@@ -449,14 +453,14 @@ private:
   int d_numSourceBoundaries;
 
   //RMCRT Stuff
-  bool d_standAloneRMCRT; 
-  RMCRTRadiationModel* d_RMCRTRadiationModel;  
+  bool d_standAloneRMCRT;
+  RMCRTRadiationModel* d_RMCRTRadiationModel;
 
-  //DQMOM 
-  bool d_doDQMOM; 
-  PartVel* d_partVel; 
-  DQMOM* d_dqmomSolver; 
-  
+  //DQMOM
+  bool d_doDQMOM;
+  PartVel* d_partVel;
+  DQMOM* d_dqmomSolver;
+
   // Pressure Eqn Solver
   PressureSolver* d_pressSolver;
   SolverInterface* d_hypreSolver;             // infrastructure hypre solver

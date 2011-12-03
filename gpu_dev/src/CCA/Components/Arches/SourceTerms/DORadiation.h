@@ -101,6 +101,7 @@ private:
   std::string _co2_label_name; 
   std::string _h2o_label_name; 
   std::string _T_label_name; 
+  std::string _abskp_label_name; 
 
   RadiationModel* _DO_model; 
   ArchesLabel*    _labels; 
@@ -112,6 +113,7 @@ private:
   const VarLabel* _h2o_label; 
   const VarLabel* _T_label; 
   const VarLabel* _abskgLabel;
+  const VarLabel* _abskpLocalLabel;
   const VarLabel* _abskpLabel;
   const VarLabel* _radiationSRCLabel;
   const VarLabel* _radiationFluxELabel;

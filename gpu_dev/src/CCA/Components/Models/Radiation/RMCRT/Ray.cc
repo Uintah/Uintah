@@ -27,7 +27,7 @@ Ray::Ray()
 Ray::~Ray()
 {
   VarLabel::destroy(d_sigmaT4_label);
-  
+
   if(d_matlSet && d_matlSet->removeReference()) {
     delete d_matlSet;
   }
@@ -43,10 +43,16 @@ Ray::problemSetup( const ProblemSpecP& inputdb)
 
   db->getWithDefault( "NoOfRays"  , _NoOfRays  , 1000 );
   db->getWithDefault( "Threshold" , _Threshold , 0.01 );      //When to terminate a ray
-  db->getWithDefault( "Alpha"     , _alpha     , 0.2 );       //Absorption coefficient of the boundaries
+  db->getWithDefault( "AlphaEW"     , _alphaEW     , 0.5 );       //Absorption coefficient of the  EW boundaries
+  db->getWithDefault( "AlphaNS"     , _alphaNS     , 0.5 );       //Absorption coefficient of the NS boundaries
+  db->getWithDefault( "AlphaTB"     , _alphaTB     , 0.5 );       //Absorption coefficient of the TB boundaries
+  db->getWithDefault( "TEW"         , _TEW         ,  0  );       //Temperature of the  EW boundaries
+  db->getWithDefault( "TNS"         , _TNS         ,  0  );       //Temperature of the  NS boundaries
+  db->getWithDefault( "TTB"         , _TTB         ,  0  );       //Temperature of the  TB boundaries
   db->getWithDefault( "Slice"     , _slice     , 9 );         //Level in z direction of xy slice
   db->getWithDefault( "benchmark_1" , _benchmark_1, false );  //probably need to make this smarter...
-                                                              //depending on what isaac has in mind
+  //depending on what isaac has in mind
+  db->getWithDefault( "benchmark_13pt2" , _benchmark_13pt2, false );
   db->getWithDefault("StefanBoltzmann", _sigma, 5.67051e-8);  // Units are W/(m^2-K)
   _sigma_over_pi = _sigma/_pi;
 
@@ -56,17 +62,17 @@ Ray::problemSetup( const ProblemSpecP& inputdb)
 // Register the material index and label names
 void
 Ray::registerVarLabels(int   matlIndex,
-                       const VarLabel* abskg,
-                       const VarLabel* absorp,
-                       const VarLabel* temperature,
-                       const VarLabel* divQ)
+    const VarLabel* abskg,
+    const VarLabel* absorp,
+    const VarLabel* temperature,
+    const VarLabel* divQ)
 {
   d_matl             = matlIndex;
   d_abskgLabel       = abskg;
   d_absorpLabel      = absorp;
   d_temperatureLabel = temperature;
   d_divQLabel        = divQ;
-  
+
   //__________________________________
   //  define the materialSet
   d_matlSet = scinew MaterialSet();
@@ -84,7 +90,7 @@ Ray::sched_initProperties( const LevelP& level, SchedulerP& sched, const int tim
   std::string taskname = "Ray::schedule_initProperties"; 
   Task* tsk = scinew Task( taskname, this, &Ray::initProperties, time_sub_step ); 
   printSchedule(level,dbg,taskname);
-  
+
   if ( time_sub_step == 0 ) { 
     tsk->requires( Task::OldDW, d_abskgLabel,       Ghost::None, 0 ); 
     tsk->requires( Task::OldDW, d_temperatureLabel, Ghost::None, 0 ); 
@@ -106,47 +112,47 @@ Ray::sched_initProperties( const LevelP& level, SchedulerP& sched, const int tim
 //
 void
 Ray::initProperties( const ProcessorGroup* pc,
-                     const PatchSubset* patches,
-                     const MaterialSubset* matls,
-                     DataWarehouse* old_dw,
-                     DataWarehouse* new_dw, 
-                     const int time_sub_step )
+    const PatchSubset* patches,
+    const MaterialSubset* matls,
+    DataWarehouse* old_dw,
+    DataWarehouse* new_dw,
+    const int time_sub_step )
 {
   // patch loop
   const Level* level = getLevel(patches);
-  
+
   for (int p=0; p < patches->size(); p++){
 
     const Patch* patch = patches->get(p);
     printTask(patches,patch,dbg,"Doing Ray::InitProperties");
-    
+
     CCVariable<double> abskg; 
     CCVariable<double> absorp; 
-    CCVariable<double> sigmaT4;
+    CCVariable<double> sigmaT4OvrPi;
 
     constCCVariable<double> temperature; 
 
     if ( time_sub_step == 0 ) { 
 
       new_dw->allocateAndPut( abskg,    d_abskgLabel,     d_matl, patch ); 
-      new_dw->allocateAndPut( sigmaT4,  d_sigmaT4_label,  d_matl, patch ); 
+      new_dw->allocateAndPut( sigmaT4OvrPi,  d_sigmaT4_label,  d_matl, patch );
       new_dw->allocateAndPut( absorp,   d_absorpLabel,    d_matl, patch ); 
 
       abskg.initialize  ( 0.0 ); 
       absorp.initialize ( 0.0 ); 
-      sigmaT4.initialize( 0.0 );
+      sigmaT4OvrPi.initialize( 0.0 );
 
       old_dw->get(temperature,      d_temperatureLabel, d_matl, patch, Ghost::None, 0);
 
     } else { 
 
-      new_dw->getModifiable( sigmaT4, d_sigmaT4_label,  d_matl, patch ); 
+      new_dw->getModifiable( sigmaT4OvrPi, d_sigmaT4_label,  d_matl, patch );
       new_dw->getModifiable( absorp,  d_absorpLabel,    d_matl, patch ); 
       new_dw->getModifiable( abskg,   d_abskgLabel,     d_matl, patch ); 
       new_dw->get( temperature,     d_temperatureLabel, d_matl, patch, Ghost::None, 0 ); 
 
     }
-    
+
     IntVector pLow;
     IntVector pHigh;
     level->findInteriorCellIndexRange(pLow, pHigh);
@@ -160,22 +166,34 @@ Ray::initProperties( const ProcessorGroup* pc,
     for ( CellIterator iter = patch->getCellIterator(); !iter.done(); iter++ ){ 
 
       IntVector c = *iter; 
+      double temp2 = 0;
 
       if ( _benchmark_1 ) { 
         abskg[c] = 0.90 * ( 1.0 - 2.0 * fabs( ( c[0] - (Nx - 1.0) /2.0) * Dx[0]) )
-                        * ( 1.0 - 2.0 * fabs( ( c[1] - (Ny - 1.0) /2.0) * Dx[1]) )
-                        * ( 1.0 - 2.0 * fabs( ( c[2] - (Nz - 1.0) /2.0) * Dx[2]) ) 
-                        + 0.1;
+                            * ( 1.0 - 2.0 * fabs( ( c[1] - (Ny - 1.0) /2.0) * Dx[1]) )
+                            * ( 1.0 - 2.0 * fabs( ( c[2] - (Nz - 1.0) /2.0) * Dx[2]) )
+                            + 0.1;
 
-      } else { 
+        temp2 = temperature[c] * temperature[c];
+
+      }
+
+      else if (_benchmark_13pt2) {
+        abskg[c] = 1;
+        temp2 = 1500 * 1500 ;
+
+      }
+
+      else { 
 
         // need to put radcal calulation here: 
         abskg[c] = 0.0; 
-        absorp[c] = 0.0; 
+        absorp[c] = 0.0;
+        temp2 = temperature[c] * temperature[c];
 
       } 
-      double temp2 = temperature[c] * temperature[c] ;
-      sigmaT4[c] = _sigma_over_pi * temp2 * temp2; // \sigma T^4
+
+      sigmaT4OvrPi[c] = _sigma_over_pi * temp2 * temp2; // sigma T^4/pi
 
     }
   }
@@ -185,43 +203,43 @@ Ray::initProperties( const ProcessorGroup* pc,
 //---------------------------------------------------------------------------
 // 
 //---------------------------------------------------------------------------
-  void
+void
 Ray::sched_sigmaT4( const LevelP& level, 
-                    SchedulerP& sched )
+    SchedulerP& sched )
 {
 
   std::string taskname = "Ray::sched_sigmaT4";
   Task* tsk= scinew Task( taskname, this, &Ray::sigmaT4 );
 
   printSchedule(level,dbg,taskname);
-  
+
   tsk->requires( Task::OldDW, d_temperatureLabel, Ghost::None, 0 ); 
   tsk->computes(d_sigmaT4_label); 
 
   sched->addTask( tsk, level->eachPatch(), d_matlSet );
 }
 //---------------------------------------------------------------------------
-// Compute total intensity over all wave lengths (sigma * Temperature^4)
+// Compute total intensity over all wave lengths (sigma * Temperature^4/pi)
 //---------------------------------------------------------------------------
 void
 Ray::sigmaT4( const ProcessorGroup*,
-              const PatchSubset* patches,           
-              const MaterialSubset*,                
-              DataWarehouse* old_dw,                
-              DataWarehouse* new_dw )               
+    const PatchSubset* patches,
+    const MaterialSubset*,
+    DataWarehouse* old_dw,
+    DataWarehouse* new_dw )
 {
 
   for (int p=0; p < patches->size(); p++){
 
     const Patch* patch = patches->get(p);
     printTask(patches,patch,dbg,"Doing Ray::sigmaT4");
-   
+
     double sigma_over_pi = _sigma/M_PI;
-    
+
     constCCVariable<double> temp;
     constCCVariable<double> abskg;
     CCVariable<double> sigmaT4;             // sigma T ^4/pi
-    
+
     old_dw->get(temp,               d_temperatureLabel,   d_matl, patch, Ghost::None, 0);  
     new_dw->allocateAndPut(sigmaT4, d_sigmaT4_label,      d_matl, patch);
 
@@ -248,7 +266,7 @@ Ray::sched_rayTrace( const LevelP& level, SchedulerP& sched, const int time_sub_
   Ghost::GhostType  gac  = Ghost::AroundCells;
   tsk->requires( Task::NewDW , d_abskgLabel  ,  gac, SHRT_MAX);
   tsk->requires( Task::NewDW , d_sigmaT4_label, gac, SHRT_MAX);
-//  tsk->requires( Task::OldDW , d_lab->d_cellTypeLabel , Ghost::None , 0 );
+  //  tsk->requires( Task::OldDW , d_lab->d_cellTypeLabel , Ghost::None , 0 );
 
   if( time_sub_step == 0 ){
     tsk->computes( d_divQLabel ); 
@@ -264,26 +282,27 @@ Ray::sched_rayTrace( const LevelP& level, SchedulerP& sched, const int time_sub_
 //---------------------------------------------------------------------------
 void
 Ray::rayTrace( const ProcessorGroup* pc,
-               const PatchSubset* patches,
-               const MaterialSubset* matls,
-               DataWarehouse* old_dw,
-               DataWarehouse* new_dw,
-               const int time_sub_step )
+    const PatchSubset* patches,
+    const MaterialSubset* matls,
+    DataWarehouse* old_dw,
+    DataWarehouse* new_dw,
+    const int time_sub_step )
 { 
   const Level* level = getLevel(patches);
   int maxLevels = level->getGrid()->numLevels();
-  MTRand _mTwister; 
-  
+  MTRand _mTwister;
+
+
   // Determine the size of the domain.
   IntVector domainLo, domainHi;
   level->findInteriorCellIndexRange(domainLo, domainHi);
- 
-  constCCVariable<double> sigmaT4;
+
+  constCCVariable<double> sigmaT4OvrPi;
   constCCVariable<double> abskg;
   new_dw->getRegion( abskg   , d_abskgLabel ,   d_matl , level, domainLo, domainHi);
-  new_dw->getRegion( sigmaT4 , d_sigmaT4_label, d_matl , level, domainLo, domainHi);
-  
-  
+  new_dw->getRegion( sigmaT4OvrPi , d_sigmaT4_label, d_matl , level, domainLo, domainHi);
+
+
   double start=clock();
 
   // patch loop
@@ -300,14 +319,48 @@ Ray::rayTrace( const ProcessorGroup* pc,
       old_dw->getModifiable( divQ,  d_divQLabel, d_matl, patch );
     }
 
-    double fs;                                         // fraction remaining after all current reflections
     unsigned long int size = 0;                        // current size of PathIndex
-    double rho = 1.0 - _alpha;                         // reflectivity
     Vector Dx = patch->dCell();                        // cell spacing
+
+
+    int face;                                         // takes values of 0 if ray strikes E/W face, 1 if N/S face, 2 if T/B face 
+    double local_alpha[3] = {_alphaEW,_alphaNS,_alphaTB};  // emissivity of the E/W, N/S, and T/B domain walls
+    double local_sigmaT4OvrPi[3] = {0,0,0};  // intensity of the E/W, N/S, and T/B domain walls
+    double local_T[3] = {_TEW, _TNS, _TTB};
+
+        if(_benchmark_1){
+          local_alpha[0] = 1;
+          local_alpha[1] = 1;
+          local_alpha[2] = 1;
+          local_T[0] = 0;
+          local_T[1] = 0;
+          local_T[2] = 0;
+        }
+
+        else if(_benchmark_13pt2){
+          local_alpha[0] = 0;
+          local_alpha[1] = 0;
+          local_alpha[2] = 1;
+          _TEW = 1000;
+          _TNS = 1000;
+          _TTB = 1000;
+        }
+
+
+    for (int ii=0; ii<3; ++ii){
+      local_sigmaT4OvrPi[ii] = local_alpha[ii] * _sigma_over_pi * local_T[ii]*local_T[ii]*local_T[ii]*local_T[ii];
+    }
+
+
 
 
     //__________________________________
     //
+
+
+
+
+
     for (CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){ 
 
       IntVector origin = *iter; 
@@ -315,170 +368,212 @@ Ray::rayTrace( const ProcessorGroup* pc,
       int j = origin.y();
       int k = origin.z();
 
-      double chi_Iin_cv = 0;
-      double chi = abskg[origin];
-      
-      // ray loop
-      for (int iRay=0; iRay < _NoOfRays; iRay++){
+        double chiSumI = 0;
+        double chi = abskg[origin];
 
-        IntVector cur = origin;
 
-        _mTwister.seed((i + j +k) * iRay +1);        
+        // ray loop
+        for (int iRay=0; iRay < _NoOfRays; iRay++){
 
-        double DyDxRatio = Dx.y() / Dx.x(); //noncubic
-        double DzDxRatio = Dx.z() / Dx.x(); //noncubic
 
-        Vector ray_location;
-        Vector ray_location_prev;
-        ray_location[0] =   i +  _mTwister.rand() ;
-        ray_location[1] =   j +  _mTwister.rand() * DyDxRatio ; //noncubic
-        ray_location[2] =   k +  _mTwister.rand() * DzDxRatio ; //noncubic
+          IntVector cur = origin;
+          IntVector prevCell = cur;
 
-        // see http://www.cgafaq.info/wiki/aandom_Points_On_Sphere for explanation
+          if(_benchmark_1 || _benchmark_13pt2) _mTwister.seed((i + j +k) * iRay +1);
 
-        double plusMinus_one = 2 * _mTwister.rand() - 1;
-        double r = sqrt(1 - plusMinus_one * plusMinus_one);    // Radius of circle at z
-        double theta = 2 * M_PI * _mTwister.rand();            // Uniform betwen 0-2Pi
+          double DyDxRatio = Dx.y() / Dx.x(); //noncubic
+          double DzDxRatio = Dx.z() / Dx.x(); //noncubic
 
-        Vector direction_vector;
-        direction_vector[0] = r*cos(theta);                   // Convert to cartesian
-        direction_vector[1] = r*sin(theta);
-        direction_vector[2] = plusMinus_one;                  // Uniform between -1 to 1
+          Vector ray_location;
+          Vector ray_location_prev;
+          ray_location[0] =   i +  _mTwister.rand() ;
+          ray_location[1] =   j +  _mTwister.rand() * DyDxRatio ; //noncubic
+          ray_location[2] =   k +  _mTwister.rand() * DzDxRatio ; //noncubic
 
-        Vector inv_direction_vector = Vector(1.0)/direction_vector;
+          // see http://www.cgafaq.info/wiki/aandom_Points_On_Sphere for explanation
 
-        int step[3];                                          // Gives +1 or -1 based on sign
-        bool sign[3];                
-        //bool opposite_sign[3];
-        for ( int ii= 0; ii<3; ii++){
-          if (inv_direction_vector[ii]>0){
-            step[ii] = 1;
-            sign[ii] = 1;
+          double plusMinus_one = 2 * _mTwister.rand() - 1;
+          double r = sqrt(1 - plusMinus_one * plusMinus_one);    // Radius of circle at z
+          double theta = 2 * M_PI * _mTwister.rand();            // Uniform betwen 0-2Pi
+
+          Vector direction_vector;
+          direction_vector[0] = r*cos(theta);                   // Convert to cartesian
+          direction_vector[1] = r*sin(theta);
+          direction_vector[2] = plusMinus_one;                  // Uniform between -1 to 1
+
+          Vector inv_direction_vector = Vector(1.0)/direction_vector;
+
+          int step[3];                                          // Gives +1 or -1 based on sign
+          bool sign[3];
+          for ( int ii= 0; ii<3; ii++){
+            if (inv_direction_vector[ii]>0){
+              step[ii] = 1;
+              sign[ii] = 1;
+            }
+            else{
+              step[ii] = -1;
+              sign[ii] = 0;//
+            }
           }
-          else{
-            step[ii] = -1;
-            sign[ii] = 0;// 
-          }
-        }
 
-        double tMaxX = (i + sign[0] - ray_location[0]) * inv_direction_vector[0];
-        double tMaxY = (j + sign[1] * DyDxRatio - ray_location[1]) * inv_direction_vector[1]; //noncubic
-        double tMaxZ = (k + sign[2] * DzDxRatio - ray_location[2]) * inv_direction_vector[2]; //noncubic
+          double tMaxX = (i + sign[0]             - ray_location[0]) * inv_direction_vector[0];
+          double tMaxY = (j + sign[1] * DyDxRatio - ray_location[1]) * inv_direction_vector[1]; //noncubic
+          double tMaxZ = (k + sign[2] * DzDxRatio - ray_location[2]) * inv_direction_vector[2]; //noncubic
 
-        //Length of t to traverse one cell
-        double tDeltaX = abs(inv_direction_vector[0]);
-        double tDeltaY = abs(inv_direction_vector[1]) * DyDxRatio; //noncubic
-        double tDeltaZ = abs(inv_direction_vector[2]) * DzDxRatio; //noncubic
-        double tMax_prev = 0;
-        bool in_domain = true;
+          //Length of t to traverse one cell
+          double tDeltaX = abs(inv_direction_vector[0]);
+          double tDeltaY = abs(inv_direction_vector[1]) * DyDxRatio; //noncubic
+          double tDeltaZ = abs(inv_direction_vector[2]) * DzDxRatio; //noncubic
+          double tMax_prev = 0;
+          bool in_domain = true;
 
-        //Initializes the following values for each ray
-        double intensity = 1.0;     
-        double optical_thickness = 0;
-        fs = 1;
-        
-        //+++++++Begin ray tracing+++++++++++++++++++
+          //Initializes the following values for each ray
+          double intensity = 1.0;
+          double fs = 1.0;
+          double optical_thickness = 0;
 
-        Vector temp_direction = direction_vector;   // Used for reflections
-        
-        //save the direction vector so that it can get modified by...
-        //the 2nd switch statement for reflections, but so that we can get the ray_location back into...
-        //the domain after it was updated following the first switch statement.         
+          //+++++++Begin ray tracing+++++++++++++++++++
 
-        //Threshold while loop
-        while (intensity > _Threshold){
+          Vector temp_direction = direction_vector;   // Used for reflections
 
-          //Domain while loop 
-          while (in_domain){
+          //save the direction vector so that it can get modified by...
+          //the 2nd switch statement for reflections, but so that we can get the ray_location back into...
+          //the domain after it was updated following the first switch statement.
 
-            size++;
-            IntVector prevCell = cur;
-            double disMin = -9;  // Common variable name in ray tracing. Represents ray segment length.
+          int nReflect = 0; // Number of reflections that a ray has undergone
 
-            //__________________________________
-            //  Determine which cell the ray will enter next
-            if (tMaxX < tMaxY){
-              if (tMaxX < tMaxZ){
-                cur[0]    = cur[0] + step[0];
-                disMin    = tMaxX - tMax_prev;
-                tMax_prev = tMaxX;
-                tMaxX     = tMaxX + tDeltaX;
+
+
+
+          //Threshold while loop
+          while (intensity > _Threshold){
+
+
+
+            //Domain while loop
+            while (in_domain){
+
+              size++;
+
+              prevCell = cur;
+              double disMin = -9;  // Common variable name in ray tracing. Represents ray segment length.
+
+              //__________________________________
+              //  Determine which cell the ray will enter next
+              if (tMaxX < tMaxY){
+                if (tMaxX < tMaxZ){
+                  cur[0]    = cur[0] + step[0];
+                  disMin    = tMaxX - tMax_prev;
+                  tMax_prev = tMaxX;
+                  tMaxX     = tMaxX + tDeltaX;
+                  face      = 0;
+                }
+                else {
+                  cur[2]    = cur[2] + step[2];
+                  disMin    = tMaxZ - tMax_prev;
+                  tMax_prev = tMaxZ;
+                  tMaxZ     = tMaxZ + tDeltaZ;
+                  face      = 2;
+                }
               }
               else {
-                cur[2]    = cur[2] + step[2];
-                disMin    = tMaxZ - tMax_prev;
-                tMax_prev = tMaxZ;
-                tMaxZ     = tMaxZ + tDeltaZ;
+                if(tMaxY <tMaxZ){
+                  cur[1]    = cur[1] + step[1];
+                  disMin    = tMaxY - tMax_prev;
+                  tMax_prev = tMaxY;
+                  tMaxY     = tMaxY + tDeltaY;
+                  face      = 1;
+                }
+                else {
+                  cur[2]    = cur[2] + step[2];
+                  disMin    = tMaxZ - tMax_prev;
+                  tMax_prev = tMaxZ;
+                  tMaxZ     = tMaxZ + tDeltaZ;
+                  face      =2;
+                }
               }
-            }
-            else {
-              if(tMaxY <tMaxZ){
-                cur[1]    = cur[1] + step[1];
-                disMin    = tMaxY - tMax_prev;
-                tMax_prev = tMaxY;
-                tMaxY     = tMaxY + tDeltaY;
-              }
-              else {
-                cur[2]    = cur[2] + step[2];
-                disMin    = tMaxZ - tMax_prev;
-                tMax_prev = tMaxZ;
-                tMaxZ     = tMaxZ + tDeltaZ;
-              }
-            }
-            
-            in_domain = containsCell(domainLo, domainHi, cur);
+
+              in_domain = containsCell(domainLo, domainHi, cur);
+
+
+              //__________________________________
+              //  Update the ray location
+              //this is necessary to find the absorb_coef at the endpoints of each step if doing interpolations
+              //ray_location_prev = ray_location;
+              //ray_location      = ray_location + (disMin * direction_vector);// If this line is used,  make sure that direction_vector is adjusted after a reflection
+
+              // The running total of alpha*length
+              double optical_thickness_prev = optical_thickness;
+              optical_thickness += Dx.x() * abskg[prevCell]*disMin; //as long as tDeltaY,Z tMaxY,Z and ray_location[1],[2]..
+              // were adjusted by DyDxRatio or DzDxRatio, this line is now correct for noncubic domains.
+
+
+
+              // update intensity
+              intensity = exp(-optical_thickness);
+
+              size++;
+
+              //Eqn 3-15(see below reference) while
+              //Third term inside the parentheses is accounted for in Inet. Chi is accounted for in Inet calc.
+
+              chiSumI += chi * sigmaT4OvrPi[prevCell] * ( exp(-optical_thickness_prev) - exp(-optical_thickness) ) * fs;;
+            } //end domain while loop.  ++++++++++++++
+
+            ++nReflect;
+
+
+
 
             //__________________________________
-            //  Update the ray location
-            //this is necessary to find the absorb_coef at the endpoints of each step
-            ray_location_prev = ray_location;   
-            ray_location      = ray_location + (disMin * direction_vector);
+            //  Reflections
 
-            // The running total of alpha*length
-            double optical_thickness_prev = optical_thickness;
-            optical_thickness += Dx.x() * abskg[prevCell]*disMin; //as long as tDeltaY,Z tMaxY,Z and ray_location[1],[2]..            
-                                                                  // were adjusted by DyDxRatio or DzDxRatio, this line is now correct for noncubic domains.  
-                              
+            if (intensity > _Threshold){
 
-            intensity = intensity*exp(-optical_thickness);  //update intensity by Beer's Law
-            size++;
+              //  wall emission 11/9/11
+              chiSumI += chi * local_sigmaT4OvrPi[face] * intensity;
+              // chiSumI += chi * local_sigmaT4OvrPi[face +sign[face]] * intensity;
+              // !! The above line will allow for 6 boundary temperatures
 
-            //Eqn 3-15(see below reference) while accounting for fs. 
-            //Third term inside the parentheses is accounted for in Inet. Chi is accounted for in Inet calc.
-            chi_Iin_cv += chi * (sigmaT4[prevCell] * ( exp(-optical_thickness_prev) - exp(-optical_thickness) ) * fs );
+              intensity =intensity * (1-local_alpha[face]);
+              fs=fs * (1-local_alpha[face]);
+              //intensity =intensity * (1-local_alpha[face]);
+              //fs=fs * (1-local_alpha[face]);
+              // !! The above 2 lines will allow for 6 boundary emissivities
 
-          } //end domain while loop.  ++++++++++++++
+              //put cur back inside the domain
+              cur = prevCell;
+              // apply reflection condition
+              step[face] *= -1; // begin stepping in opposite direction
+              sign[face] = (sign[face]==1) ? 0 : 1; //  swap sign from 1 to 0 or vice versa
 
-          //__________________________________
-          //  Reflections
-          if (intensity > _Threshold){
+              in_domain = 1;
 
-            //puts ray back inside the domain...; 
-            intensity*=rho;
-            //comment out for cold wall:  Iin_cv += _alpha * Iout_cv[cx] * exp(-optical_thickness)*fs;//!! Right now the temperature of the...
-            //boundary is simply the temp of the cell just inside the wall.This is accounting for emission from the walls reacing the origin
-            //for non-cold wall, make this a chi_Iin_cv.
-            //Comment out for cold, black walls: fs*=rho;//update fs after above Iin reassignment because the reflection is not attenuated by itself.
-          }  //end reflection if statement
+            }  //end reflection if statement
 
-        }  // end threshold while loop (ends ray tracing for that ray
-      }  // Ray loop
+          }  // end threshold while loop. ends ray tracing for that ray
+
+        }  // Ray loop
 
 
-      //__________________________________
-      //  Compute divQ
-      divQ[origin] = 4.0 * _pi * ( sigmaT4[origin] * abskg[origin] - (chi_Iin_cv/_NoOfRays) );
-    }  // end cell iterator 
+        //__________________________________
+        //  Compute divQ
+        divQ[origin] = 4.0 * _pi * ( sigmaT4OvrPi[origin] * abskg[origin] - (chiSumI/_NoOfRays) );
+        //cout << divQ[origin] << endl;
+
+    }  // end cell iterator
+
+
 
     double end =clock();
     double efficiency = size/((end-start)/ CLOCKS_PER_SEC);
     if (patch->getGridIndex() == 0) {
       cout<< endl;
       cout << " RMCRT REPORT: Patch 0" << endl;
-      cout << " Used "<< (end-start) * 1000 / CLOCKS_PER_SEC<< " milliseconds of CPU time. \n" << endl;// Convert time to ms 
+      cout << " Used "<< (end-start) * 1000 / CLOCKS_PER_SEC<< " milliseconds of CPU time. \n" << endl;// Convert time to ms
       cout << " Size: " << size << endl;
       cout << " Efficiency: " << efficiency << " steps per sec" << endl;
-      cout << endl; 
+      cout << endl;
     }
   }  //end patch loop
 }  // end ray trace method
@@ -486,19 +581,24 @@ Ray::rayTrace( const ProcessorGroup* pc,
 
 
 //______________________________________________________________________
-        inline bool 
+inline bool
 Ray::containsCell(const IntVector &low, const IntVector &high, const IntVector &cell)
 {
-   return  low.x() <= cell.x() && 
-           low.y() <= cell.y() &&
-           low.z() <= cell.z() &&
-           high.x() > cell.x() && 
-           high.y() > cell.y() &&
-           high.z() > cell.z();
+  return  low.x() <= cell.x() &&
+      low.y() <= cell.y() &&
+      low.z() <= cell.z() &&
+      high.x() > cell.x() &&
+      high.y() > cell.y() &&
+      high.z() > cell.z();
 }
 
 //______________________________________________________________________
 // ISAAC's NOTES: 
+//Dec 1. Clean up (removed ray viz stuff.
+//Nov 30. Modified so user can specify in the input file either benchmark_13pt2, benchmark_1, or no benchmark (real case)
+//Nov 18. Put in visualization stuff. It worked well.
+//Nov 16. Realized that the "correct" method for reflections is no different from Paula's (using fs). Reverted back to Paula's
+//Nov 9, 2011.  Added in reflections based on correct method of attenuating I for each reflection.
 //Jun 9. Ray_noncubic.cc now handles non-cubic cells. Created from Ray.cc as it was in the repository on Jun 9, 2011.
 //May 18. cleaned up comments
 //May 6. Changed to cell iterator

@@ -712,5 +712,7 @@ ScalarEqn::dummyInit( const ProcessorGroup* pc,
 
     phi.copyData(old_phi);
 
+    d_boundaryCond->setScalarValueBC( 0, patch, phi, d_eqnName ); 
+
   }
 }

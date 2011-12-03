@@ -359,7 +359,6 @@ namespace Uintah {
       const VarLabel* d_velocityDivergenceBCLabel;
       const VarLabel* d_continuityResidualLabel;
 
-      const VarLabel* d_InitNormLabel;
       const VarLabel* d_ScalarClippedLabel;
       const VarLabel* d_ReactScalarClippedLabel;
       const VarLabel* d_uVelNormLabel;

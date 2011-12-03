@@ -17,16 +17,16 @@
  *  \date July,2011
  *
  *  \brief Calculates a simple diffusive flux of the form
- *         \f$ J_i = -\rho \Gamma \frac{\partial \phi}{\partial x_i} \f$ 
+ *         \f$ J_i = -\rho \Gamma \frac{\partial \phi}{\partial x_i} \f$
  *         where \f$i=1,2,3\f$ is the coordinate direction.
  *         This requires knowledge of a the velocity field.
  *
  *  \tparam ScalarT the type for the scalar primary variable.
  *
- *  \tparam FluxT the type for the diffusive flux which is actually the scalarT faces. 
+ *  \tparam FluxT the type for the diffusive flux which is actually the scalarT faces.
  *
  *  Note that this requires the diffusion coefficient, \f$\Gamma\f$,
- *  to be evaluated at the same location as \f$J_i\f$ and 
+ *  to be evaluated at the same location as \f$J_i\f$ and
  *  \f$\frac{\partial \phi}{\partial x_i}\f$.
  */
 template< typename ScalarT, typename FluxT >
@@ -35,14 +35,14 @@ class DiffusiveFlux
 {
   typedef typename SpatialOps::structured::OperatorTypeBuilder<SpatialOps::Gradient,   ScalarT,  FluxT>::type  GradT;
   typedef typename SpatialOps::structured::OperatorTypeBuilder<SpatialOps::Interpolant,SVolField,FluxT>::type  DensityInterpT;
-  
+
   const bool  isConstCoef_;
   const Expr::Tag phiTag_, coefTag_, rhoTag_;
   const double coefVal_;
 
   const GradT*          gradOp_;
   const DensityInterpT* densityInterpOp_;
-  
+
   const ScalarT*   phi_;
   const SVolField* rho_;
   const FluxT*     coef_;
@@ -79,14 +79,14 @@ public:
      *
      *  \param rhoTag the Expr::Tag for the density which will be interpolated to FluxT field.
      */
-    Builder( const Expr::Tag phiTag, 
+    Builder( const Expr::Tag phiTag,
              const Expr::Tag coefTag,
              const Expr::Tag rhoTag = Expr::Tag() )
       : isConstCoef_( false ),
-        rhot_(rhoTag),
-        phit_(phiTag),
+        phit_ (phiTag),
         coeft_(coefTag),
-        coef_(0.0)
+        rhot_ (rhoTag),
+        coef_ (0.0)
     {}
 
     /**
@@ -100,12 +100,12 @@ public:
      *
      *  \param rhoTag the Expr::Tag for the density which will be interpolated to FluxT field.
      */
-    Builder( const Expr::Tag phiTag, 
+    Builder( const Expr::Tag phiTag,
              const double coef,
              const Expr::Tag rhoTag = Expr::Tag() )
       : isConstCoef_( true ),
-        rhot_(rhoTag),
         phit_(phiTag),
+        rhot_(rhoTag),
         coef_(coef)
     {}
 
@@ -146,7 +146,7 @@ public:
  *
  *  \tparam ScalarT the type for the scalar primary variable.
  *
- *  \tparam FluxT the type for the diffusive flux which is actually the scalarT faces. 
+ *  \tparam FluxT the type for the diffusive flux which is actually the scalarT faces.
  *
  *  \tparam InterpT The type of operator used in interpolating
  *       \f$\Gamma\f$ from the location of \f$\phi\f$ to the location
@@ -160,7 +160,7 @@ class DiffusiveFlux2
   typedef typename SpatialOps::structured::OperatorTypeBuilder<SpatialOps::Gradient,   ScalarT,  FluxT>::type  GradT;
   typedef typename SpatialOps::structured::OperatorTypeBuilder<SpatialOps::Interpolant,ScalarT,  FluxT>::type  InterpT;
   typedef typename SpatialOps::structured::OperatorTypeBuilder<SpatialOps::Interpolant,SVolField,FluxT>::type  DensityInterpT;
-  
+
   const Expr::Tag phiTag_, coefTag_, rhoTag_;
 
   const GradT* gradOp_;
@@ -197,12 +197,12 @@ public:
      *
      *  \param rhoTag the Expr::Tag for the density which will be interpolated to FluxT field.
      */
-    Builder( const Expr::Tag phiTag, 
+    Builder( const Expr::Tag phiTag,
              const Expr::Tag coefTag,
              const Expr::Tag rhoTag = Expr::Tag() )
-    : rhot_(rhoTag),
-      phit_(phiTag), 
-      coeft_( coefTag )
+    : phit_(phiTag),
+      coeft_( coefTag ),
+      rhot_(rhoTag)
     {}
 
     Expr::ExpressionBase*

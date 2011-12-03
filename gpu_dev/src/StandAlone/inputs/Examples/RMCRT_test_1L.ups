@@ -7,6 +7,7 @@
   </Meta>
 
   <SimulationComponent type="RMCRT_Test" />
+    <Solver type= "hypre" />
   <!--__________________________________-->
   <!-- run for 10 timesteps for RT memory -->
   <!-- and checkpoint testing             -->
@@ -47,9 +48,16 @@
     <Temperature>       64.804     </Temperature>
     <NoOfRays>          25        </NoOfRays>
     <Threshold>         0.05       </Threshold>
-    <Alpha>             1          </Alpha>
+    <AlphaEW>             1          </AlphaEW>
+	  <AlphaNS>             1          </AlphaNS>
+	  <AlphaTB>             1          </AlphaTB>
+    <TEW>                 000          </TEW>
+	  <TNS>                 000          </TNS>
+	  <TTB>                 000          </TTB>
     <Slice>             20         </Slice>
     <StefanBoltzmann>   5.67051e-8 </StefanBoltzmann>
     <benchmark_1>       true       </benchmark_1>
-  </RMCRT>
+    <benchmark_13pt2>   false       </benchmark_13pt2>
+
+	</RMCRT>
 </Uintah_specification>

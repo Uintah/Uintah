@@ -161,7 +161,7 @@ AMRSimulationController::run()
    double start;
   
    d_lb->resetCostForecaster();
-   while( ( time < d_timeinfo->maxTime ) && 
+   while( ( time < d_timeinfo->maxTime ) &&
           ( iterations < d_timeinfo->maxTimestep ) && 
           ( d_timeinfo->max_wall_time == 0 || getWallTime() < d_timeinfo->max_wall_time )  ) {
 

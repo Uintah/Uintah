@@ -216,6 +216,6 @@ void CZMaterial::computeRotationMatrix(Matrix3& Rotation,Matrix3& Rotation_tang,
   Rotationz(2,1) = (- axisz[2]*axisz[1])*cos(gamma) + axisz[2]*axisz[1] + axisz[0]*sin(gamma);
   Rotationz(2,2) = (cos(gamma) - axisz[2]*axisz[2])*cos(gamma) + axisz[2] *axisz[2];
 
-  Rotation_tang = Rotationz*Rotationy*Rotationz;
+  Rotation_tang = Rotationz*Rotationy*Rotationx;
 
 }

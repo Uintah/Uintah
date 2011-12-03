@@ -373,8 +373,6 @@
         <timeIntegratorType>RK2SSP</timeIntegratorType>
         <restartOnNegativeDensityGuess>false</restartOnNegativeDensityGuess>
         <PressureSolver>
-          <linear_solver>hypre</linear_solver>
-          <always_construct_A>false</always_construct_A>
           <Parameters>
             <tolerance>1.0e-9</tolerance>
             <solver>cg</solver>

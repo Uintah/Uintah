@@ -76,6 +76,7 @@ namespace Wasatch{
 
   Wasatch::Wasatch( const Uintah::ProcessorGroup* myworld )
     : Uintah::UintahParallelComponent( myworld ),
+      buildTimeIntegrator_( true ),
       nRKStages_(1)
   {
     // disable memory windowing on variables.  This will ensure that
@@ -381,15 +382,15 @@ namespace Wasatch{
       // within the TaskInterface object.
       task->schedule( icCoordHelper_->field_tags(), 1 );
       taskInterfaceList_.push_back( task );
-      
+
       // -----------------------------------------------------------------------
       // INITIAL BOUNDARY CONDITIONS TREATMENT
       // -----------------------------------------------------------------------
-      const Uintah::PatchSet* const localPatches = get_patchset( USE_FOR_OPERATORS, level, sched );      
-      const Uintah::MaterialSet* const materials = sharedState_->allMaterials();      
+      const Uintah::PatchSet* const localPatches = get_patchset( USE_FOR_OPERATORS, level, sched );
+      const Uintah::MaterialSet* const materials = sharedState_->allMaterials();
       const GraphHelper* icGraphHelper = graphCategories_[ INITIALIZATION ];
       typedef std::vector<EqnTimestepAdaptorBase*> EquationAdaptors;
-      
+
       for( EquationAdaptors::const_iterator ia=adaptors_.begin(); ia!=adaptors_.end(); ++ia ){
         EqnTimestepAdaptorBase* const adaptor = *ia;
         TransportEquation* transEq = adaptor->equation();
@@ -409,7 +410,7 @@ namespace Wasatch{
           throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
         }
       }
-      
+
     }
     proc0cout << "Wasatch: done creating initialization task(s)" << std::endl;
   }
@@ -475,7 +476,9 @@ namespace Wasatch{
 
       const Uintah::MaterialSet* const materials = sharedState_->allMaterials();
 
-      create_timestepper_on_patches( allPatches, materials, level, sched, iStage );
+      if( buildTimeIntegrator_ ){
+        create_timestepper_on_patches( allPatches, materials, level, sched, iStage );
+      }
 
       proc0cout << "Wasatch: done creating solution task(s)" << std::endl;
 

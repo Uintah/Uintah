@@ -136,6 +136,9 @@ namespace Wasatch{
       // only set up trees on the patches that we own on this process.
       const Uintah::PatchSet*  perproc_patchset = sched->getLoadBalancer()->getPerProcessorPatchSet(level);
       const Uintah::PatchSubset* const localPatches = perproc_patchset->getSubset(Uintah::Parallel::getMPIRank());
+
+      Uintah::Task* tsk = scinew Uintah::Task( taskName_, this, &TreeTaskExecute::execute, rkStage );
+
       for( int ip=0; ip<localPatches->size(); ++ip ){
         const Uintah::Patch* const patch = localPatches->get(ip);
         TreePtr tree( new Expr::ExpressionTree( *masterTree_ ) );
@@ -163,7 +166,7 @@ namespace Wasatch{
         }
 
         tree->register_fields( *fml_ );
-        patchTreeMap_[ patch->getID() ] = std::make_pair( tree,  scinew Uintah::Task( taskName_, this, &TreeTaskExecute::execute, rkStage ));
+        patchTreeMap_[ patch->getID() ] = std::make_pair( tree, tsk );
       }
     }
     else{
@@ -228,8 +231,6 @@ namespace Wasatch{
               << std::setw(10) << "Mode " << std::left << std::setw(20) << "Field Name"
               << "DW  #Ghost PatchID" << endl
               << "-----------------------------------------------------------------------" << endl;
-    if( Uintah::Parallel::getMPIRank() == 0 )
-      fml.dump_fields(std::cout);
 #   endif
 
     //______________________________
@@ -278,7 +279,7 @@ namespace Wasatch{
 
           // if the field uses dynamic allocation, then the uintah task should not be aware of this field
           // jcs the const_cast is a hack because of the lack of const on the is_persistent method...
-          if( ! const_cast<Expr::ExpressionTree&>(tree).is_persistent(fieldTag) ){
+          if( ! tree.is_persistent(fieldTag) ){
             continue;
           }
 
@@ -308,7 +309,7 @@ namespace Wasatch{
           else
             fieldInfo.useOldDataWarehouse = false;
         }
-        if( tree.name()!="set time" &&
+        if( tree.name()!="set_time" &&
             tree.name()!="initialization" &&
             fieldInfo.varlabel->getName()=="time" ){
           fieldInfo.mode = Expr::REQUIRES;
@@ -344,6 +345,13 @@ namespace Wasatch{
           proc0cout << std::setw(10) << "MODIFIES";
 #         endif
           ASSERT( dw == Uintah::Task::NewDW );
+          // jcs it appears that we need to set a "requires" so that
+          // the proper ghost inforation is incoporated since
+          // "modifies" does not allow us to do that.
+          task.requires( dw, fieldInfo.varlabel,
+                         patches, Uintah::Task::NormalDomain,
+                         materials, Uintah::Task::NormalDomain,
+                         fieldInfo.ghostType, fieldInfo.nghost );
           task.modifies( fieldInfo.varlabel,
                          patches, Uintah::Task::NormalDomain,
                          materials, Uintah::Task::NormalDomain );
@@ -605,7 +613,7 @@ namespace Wasatch{
       PatchTreeMap ptmap= taskexec->get_patch_tree_map();
       const PatchTreeMap::iterator iptm = ptmap.begin();
       TreePtr tree = iptm->second.first;
-      if (tree->name()=="set time") {
+      if (tree->name()=="set_time") {
         return tree;
       }
     }

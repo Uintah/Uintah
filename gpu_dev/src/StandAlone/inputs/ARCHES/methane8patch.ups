@@ -7,6 +7,7 @@
    </Meta>
 
    <SimulationComponent type="arches" />
+   <Solver type="hypre" />
 
    <Time>
         <maxTime>2.5</maxTime>
@@ -151,12 +152,11 @@
                 <timeIntegratorType>RK2SSP</timeIntegratorType>
 
                 <PressureSolver>
-                    <linear_solver>petsc</linear_solver>
                     <Parameters>
-                      <tolerance>       1.0e-9</tolerance>
+                      <tolerance>     1.0e-9</tolerance>
                       <solver>        cg    </solver>
-                      <preconditioner>jacobi</preconditioner>
-                      <maxiterations>      75    </maxiterations>
+                      <preconditioner>pfmg  </preconditioner>
+                      <maxiterations> 75    </maxiterations>
                     </Parameters>
                 </PressureSolver>
 

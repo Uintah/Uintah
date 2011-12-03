@@ -160,10 +160,10 @@ class DataArchive;
 #ifdef USE_PAPI_COUNTERS
       /*
        * NOTE: the size of the d_eventValues array should be equal to the
-       * number of PAPI events added to the event set in SimulationCOntroller.cc
+       * number of PAPI events added to the event set in SimulationController.cc
        */
-      int d_eventSet;                  // PAPI event set
-      long long d_eventValues[5];      // PAPI event value
+      int       d_eventSet;            // PAPI event set
+      long long d_eventValues[5];      // PAPI event set values
 #endif
 
 

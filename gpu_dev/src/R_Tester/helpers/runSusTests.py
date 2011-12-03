@@ -447,9 +447,7 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
   if (np > max_parallelism):
     if np == 1.1:
       print "Skipping test %s because it requires mpi and max_parallism < 1.1" % testname;
-    else:
-      print "Skipping test %s because %s processors exceeds maximum of %s" % (testname, np, max_parallelism);
-    return -1; 
+      return -1; 
 
   do_uda_comparison_test  = tests_to_do[0]
   do_memory_test          = tests_to_do[1]

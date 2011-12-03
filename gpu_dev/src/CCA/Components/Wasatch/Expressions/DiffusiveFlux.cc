@@ -15,9 +15,9 @@ DiffusiveFlux<ScalarT, FluxT>::DiffusiveFlux( const Expr::Tag rhoTag,
                                      const Expr::ExpressionRegistry& reg  )
   : Expr::Expression<FluxT>( id, reg ),
     isConstCoef_( false ),
-    rhoTag_ ( rhoTag  ),
     phiTag_ ( phiTag  ),
     coefTag_( coefTag ),
+    rhoTag_ ( rhoTag  ),
     coefVal_( 0.0 )
 {}
 
@@ -31,9 +31,9 @@ DiffusiveFlux<ScalarT, FluxT>::DiffusiveFlux( const Expr::Tag rhoTag,
                                      const Expr::ExpressionRegistry& reg  )
   : Expr::Expression<FluxT>( id, reg ),
     isConstCoef_( true  ),
-    rhoTag_ ( rhoTag ),
     phiTag_ ( phiTag ),
     coefTag_( "NULL", Expr::INVALID_CONTEXT ),
+    rhoTag_ ( rhoTag ),
     coefVal_( coef )
 {}
 
@@ -93,14 +93,14 @@ evaluate()
   FluxT& result = this->value();
 
   gradOp_->apply_to_field( *phi_, result );  // J = grad(phi)
-  
+
   if( isConstCoef_ ){
     result <<= -result * coefVal_;  // J = - gamma * grad(phi)
   }
   else{
     result <<= -result * *coef_;  // J =  - gamma * grad(phi)
   }
-  
+
   SpatFldPtr<FluxT> interpRho = SpatialFieldStore<FluxT>::self().get(result);
   densityInterpOp_->apply_to_field( *rho_, *interpRho );
   result <<= result * *interpRho;               // J = - rho * gamma * grad(phi)
@@ -118,9 +118,9 @@ DiffusiveFlux2( const Expr::Tag rhoTag,
                 const Expr::ExpressionID& id,
                 const Expr::ExpressionRegistry& reg  )
   : Expr::Expression<FluxT>(id,reg),
-    rhoTag_ ( rhoTag  ),
     phiTag_ ( phiTag  ),
-    coefTag_( coefTag )
+    coefTag_( coefTag ),
+    rhoTag_ ( rhoTag  )
 {}
 
 //--------------------------------------------------------------------
@@ -176,7 +176,7 @@ evaluate()
 {
   using namespace SpatialOps;
   FluxT& result = this->value();
-  
+
   SpatFldPtr<FluxT> fluxTmp = SpatialFieldStore<FluxT>::self().get( result );
 
   gradOp_  ->apply_to_field( *phi_, *fluxTmp );  // J = grad(phi)

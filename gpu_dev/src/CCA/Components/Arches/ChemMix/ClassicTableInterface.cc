@@ -594,6 +594,9 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
         const DepVarMap::iterator iter = depend_storage.find(_temperature_label_name); 
 
         const BoundCond<double> *new_bcs =  dynamic_cast<const BoundCond<double> *>(bc);
+
+        delete bc; 
+
         if ( new_bcs != 0 ) {
 
           if ( iter == depend_storage.end() ) { 

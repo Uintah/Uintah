@@ -89,10 +89,10 @@ namespace Wasatch{
     typedef ZVolField Vel2T;
   };
 
-  //==================================================================  
-  
+  //==================================================================
+
   template< typename FieldT> struct NormalFaceSelector;
-  
+
   template<> struct NormalFaceSelector<SpatialOps::structured::XVolField>
   {
   private:
@@ -100,12 +100,12 @@ namespace Wasatch{
   public:
     typedef SpatialOps::structured::FaceTypes<FieldT>::XFace NormalFace;
   };
-  
+
   template<> struct NormalFaceSelector<SpatialOps::structured::YVolField>
   {
   private:
     typedef SpatialOps::structured::YVolField FieldT;
-  public:    
+  public:
     typedef SpatialOps::structured::FaceTypes<FieldT>::YFace NormalFace;
   };
 
@@ -113,9 +113,9 @@ namespace Wasatch{
   {
   private:
     typedef SpatialOps::structured::ZVolField FieldT;
-  public:    
+  public:
     typedef SpatialOps::structured::FaceTypes<FieldT>::ZFace NormalFace;
-  };  
+  };
 
   //==================================================================
 
@@ -260,10 +260,10 @@ namespace Wasatch{
     : Wasatch::TransportEquation( momName,
                                   get_mom_rhs_id<FieldT>( factory, velName, momName, params, linSolver ),
                                   get_staggered_location<FieldT>() ),
+      isviscous_       ( params->findBlock("Viscosity") ? true : false ),
       normalStressID_  ( Expr::ExpressionID::null_id() ),
       normalConvFluxID_( Expr::ExpressionID::null_id() ),
-      pressureID_      ( Expr::ExpressionID::null_id() ),
-      isviscous_       ( params->findBlock("Viscosity") ? true : false )
+      pressureID_      ( Expr::ExpressionID::null_id() )
   {
     set_vel_tags( params, velTags_ );
 
@@ -402,9 +402,9 @@ namespace Wasatch{
   MomentumTransportEquation<FieldT>::
   ~MomentumTransportEquation()
   {}
-  
-  //------------------------------------------------------------------  
-  
+
+  //------------------------------------------------------------------
+
   template< typename FieldT >
   void
   MomentumTransportEquation<FieldT>::
@@ -412,15 +412,15 @@ namespace Wasatch{
                                     const Uintah::PatchSet* const localPatches,
                                     const PatchInfoMap& patchInfoMap,
                                     const Uintah::MaterialSubset* const materials)
-  {    
-    
+  {
+
     Expr::ExpressionFactory& factory = *graphHelper.exprFactory;
 
     typedef typename SpatialOps::structured::FaceTypes<FieldT>::XFace XFace;
     typedef typename SpatialOps::structured::FaceTypes<FieldT>::YFace YFace;
     typedef typename SpatialOps::structured::FaceTypes<FieldT>::ZFace ZFace;
     typedef typename NormalFaceSelector<FieldT>::NormalFace NormalFace;
-    
+
     // set initial bcs for momentum
     if (factory.get_registry().have_entry(mom_tag(thisMomName_))) {
 
@@ -433,7 +433,7 @@ namespace Wasatch{
                                         patchInfoMap,
                                         materials );
     }
-    
+
     // set bcs for velocity - cos we don't have a mechanism now to set them
     // on interpolated density field
     Expr::Tag velTag;
@@ -457,8 +457,8 @@ namespace Wasatch{
                                           graphHelper,
                                           localPatches,
                                           patchInfoMap,
-                                          materials);      
-    }    
+                                          materials);
+    }
     // set bcs for pressure
     if (factory.get_registry().have_entry(pressure_tag())) {
       process_boundary_conditions<SVolField>( pressure_tag(),
@@ -478,12 +478,12 @@ namespace Wasatch{
                                           localPatches,
                                           patchInfoMap,
                                           materials);
-    }    
-    
-  }  
+    }
+
+  }
 
   //------------------------------------------------------------------
-  
+
   template< typename FieldT >
   void
   MomentumTransportEquation<FieldT>::
@@ -547,7 +547,7 @@ namespace Wasatch{
                                         localPatches,
                                         patchInfoMap,
                                         materials);
-    
+
 
 //    // set bcs for density
 //    const Expr::Tag densTag( "density", Expr::STATE_NONE );
@@ -557,7 +557,7 @@ namespace Wasatch{
 //                                           graphHelper,
 //                                           localPatches,
 //                                           patchInfoMap,
-//                                           materials );    
+//                                           materials );
 //    // set bcs for viscosity
 //    const Expr::Tag viscTag( "viscosity", Expr::STATE_N );
 //    const Direction viscDir = NODIR;
@@ -585,7 +585,7 @@ namespace Wasatch{
 //    Expr::Tag normalConvFluxTag = factory.get_registry().get_label(normalConvFluxID_);
 //    process_boundary_conditions<NormalFace>( normalConvFluxTag,
 //                                normalConvFluxTag.name(),
-//                                NODIR,                                
+//                                NODIR,
 //                                graphHelper,
 //                                localPatches,
 //                                patchInfoMap,
