@@ -2062,7 +2062,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
      // If the pressure solution has stalled out 
      //  then try a binary search
      if(count >= d_ice->d_max_iter_equilibration) {
-        int lev = patch->getLevel()->getIndex();
+        //int lev = patch->getLevel()->getIndex();
         //cout << "WARNING:MPMICE:ComputeEquilibrationPressure "
         //     << " Cell : " << c << " on level " << lev << " having a difficult time converging. \n"
         //    << " Now performing a binary pressure search " << endl;
@@ -2414,13 +2414,13 @@ void MPMICE::binaryPressureSearch(  StaticArray<constCCVariable<double> >& Temp,
 #ifdef D_STRICT
   if (count >= d_ice->d_max_iter_equilibration) {
     ostringstream desc;
-    desc << "**ERROR** Binary pressure search failed to converge" << endl;
+    desc << "**ERROR** Binary pressure search failed to converge in cell" << c << endl;
     throw ConvergenceFailure(desc.str(), d_ice->d_max_iter_equilibration,
                              fabs(residual), convergence_crit, __FILE__, __LINE__);
   }
 #else
   if (count >= d_ice->d_max_iter_equilibration) {
-    cout << "**WARNING** Binary pressure search failed to converge after "
+    cout << "**WARNING** Binary pressure search failed to converge in cell " << c << " after "
          << d_ice->d_max_iter_equilibration << " iterations.  Final residual is "
          << fabs(residual) << " and convergence tolerance is " << convergence_crit << endl;
     cout << "  Continuing with unconverged value of pressure = " << Pm << endl;
@@ -2446,6 +2446,9 @@ void MPMICE::binaryPressureSearch(  StaticArray<constCCVariable<double> >& Temp,
                                   dp_drho[m],c_2,mpm_matl,Temp[m][c]);
       }
       speedSound[m][c] = sqrt(c_2);     // Isentropic speed of sound
+      cout << "    Material " << m << " vol. frac = " << vol_frac[m][c]
+           << " rho = " << rho_micro[m][c] << " press = " << press_eos[m] 
+           << " dp_drho = " << dp_drho[m] << " c^2 = " << c_2 << endl;
     }
   }
 #endif
