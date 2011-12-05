@@ -315,7 +315,7 @@ public:
 				} else if (indep[i-1][lo_ind] == iv_val) {
 					hi_ind = 1; 
 				} else {
-					lo_ind = hi_index[i]-1;  
+					lo_ind = hi_ind-1;  
 				}
 				lo_index[i] = lo_ind;
 				hi_index[i] = hi_ind;
@@ -425,7 +425,7 @@ public:
 				} else if (indep[i-1][lo_ind] == iv_val) {
 					hi_ind = 1; 
 				} else {
-					lo_ind = hi_index[i]-1;  
+					lo_ind = hi_ind-1;  
 					if (i == 2) {
 						Ncheck = true;
 					}
@@ -548,7 +548,7 @@ public:
 				} else if (indep[i-1][lo_ind] == iv_val) {
 					hi_ind = 1; 
 				} else {
-					lo_ind = hi_index[i]-1;  
+					lo_ind = hi_ind-1;  
 				}
 				lo_index[i] = lo_ind;
 				hi_index[i] = hi_ind;
