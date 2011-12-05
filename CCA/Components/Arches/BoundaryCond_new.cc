@@ -395,7 +395,7 @@ void BoundaryCondition_new::setAreaFraction(
   //
   // volFraction is the GAS volume fraction
 
-  for (CellIterator iter=patch->getExtraCellIterator(); !iter.done(); iter++){
+  for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
     
     IntVector c = *iter;
     IntVector cxm = *iter - IntVector(1,0,0);
@@ -422,14 +422,60 @@ void BoundaryCondition_new::setAreaFraction(
     if ( cellType[c] == flowType && cellType[cym] == wallType ) {
       Vector T = areaFraction[c]; 
       T[1] = 0.;
-      areaFraction[c] = Vector(1.,0.,1.);
+      areaFraction[c] = T;
     }
 
     // z-minus is a wall but curr cell is flowType
     if (cellType[c] == flowType && cellType[czm] == wallType ) {
       Vector T = areaFraction[c]; 
       T[2] = 0.;
-      areaFraction[c] = Vector(1.,1.,0.);
+      areaFraction[c] = T;
+    }
+  }
+  //__________________________________
+  // loop over computational domain faces
+  vector<Patch::FaceType> bf;
+  patch->getBoundaryFaces(bf);
+  
+  for( vector<Patch::FaceType>::const_iterator iter = bf.begin(); iter != bf.end(); ++iter ){
+    Patch::FaceType face = *iter;
+    
+    Patch::FaceIteratorType PEC = Patch::ExtraPlusEdgeCells;
+    
+    for (CellIterator iter =  patch->getFaceIterator(face, PEC); !iter.done(); iter++) {
+      IntVector c = *iter;
+      if ( cellType[c] == wallType ){
+
+        int index = -1; 
+        switch (face) {
+          case Patch::xminus:
+            index = 0; 
+            break;
+          case Patch::xplus:
+            index = 0; 
+            break;
+          case Patch::yminus:
+            index = 1; 
+            break;
+          case Patch::yplus:
+            index = 1; 
+            break;
+          case Patch::zminus:
+            index = 2; 
+            break;
+          case Patch::zplus:
+            index = 2; 
+            break;
+          default: 
+            throw InvalidValue("Error: Face type not recognized.",__FILE__,__LINE__); 
+            break; 
+        } // end switch statement
+
+        Vector T = areaFraction[c]; 
+        T[index] = 0.;
+        areaFraction[c] = T; 
+
+      }
     }
   }
 }
