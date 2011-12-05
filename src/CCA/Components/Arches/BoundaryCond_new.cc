@@ -446,33 +446,10 @@ void BoundaryCondition_new::setAreaFraction(
       IntVector c = *iter;
       if ( cellType[c] == wallType ){
 
-        int index = -1; 
-        switch (face) {
-          case Patch::xminus:
-            index = 0; 
-            break;
-          case Patch::xplus:
-            index = 0; 
-            break;
-          case Patch::yminus:
-            index = 1; 
-            break;
-          case Patch::yplus:
-            index = 1; 
-            break;
-          case Patch::zminus:
-            index = 2; 
-            break;
-          case Patch::zplus:
-            index = 2; 
-            break;
-          default: 
-            throw InvalidValue("Error: Face type not recognized.",__FILE__,__LINE__); 
-            break; 
-        } // end switch statement
+        int P_dir = patch->getFaceAxes(face)[0];  //principal dir.
 
         Vector T = areaFraction[c]; 
-        T[index] = 0.;
+        T[P_dir] = 0.;
         areaFraction[c] = T; 
 
       }
