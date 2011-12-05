@@ -102,7 +102,7 @@
                                 attribute1="name OPTIONAL STRING" >
         <dynamic_viscosity    spec="REQUIRED DOUBLE 'positive'" />
         <EOS                  spec="REQUIRED NO_DATA"
-                                attribute1="type REQUIRED STRING 'ideal_gas, hard_sphere_gas, TST, Thomsen_Hartka_water, JWL, JWLC, Murnaghan, BirchMurnaghan, Gruneisen, Tillotson, KnaussSeaWater'" >
+                                attribute1="type REQUIRED STRING 'ideal_gas, hard_sphere_gas, TST, Thomsen_Hartka_water, JWL, JWLC, Murnaghan, BirchMurnaghan, Gruneisen, Tillotson, KnaussSeaWater, KumariDass'" >
           <!--  TST  -->
           <a                  spec="REQUIRED DOUBLE" need_applies_to='type  TST, Thomsen_Hartka_water Tillotson' />
           <a                  spec="OPTIONAL DOUBLE" need_applies_to='type  KnaussSeaWater BirchMurnaghan' />
@@ -127,6 +127,12 @@
           <!--  Murnaghan  -->
           <n                  spec="REQUIRED DOUBLE 'positive'" need_applies_to='type Murnaghan' />
           <K                  spec="REQUIRED DOUBLE 'positive'" need_applies_to='type Murnaghan' />
+
+          <!--  Murnaghan  -->
+          <rho0               spec="REQUIRED DOUBLE 'positive'" need_applies_to='type KumariDass' />
+          <B0                 spec="REQUIRED DOUBLE 'positive'" need_applies_to='type KumariDass' />
+          <B0prime            spec="REQUIRED DOUBLE 'positive'" need_applies_to='type KumariDass' />
+          <lambda             spec="REQUIRED DOUBLE 'positive'" need_applies_to='type KumariDass' />
 
           <!-- BirchMurnaghan -->
           <useSpecificHeatModel spec="OPTIONAL BOOLEAN" need_applies_to='type BirchMurnaghan'/>
