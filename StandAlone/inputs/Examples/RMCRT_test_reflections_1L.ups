@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+
+<Uintah_specification>
+
+  <Meta>
+      <title>RMCRT</title>
+  </Meta>
+
+  <SimulationComponent type="RMCRT_Test" />
+    <Solver type= "hypre" />
+  <!--__________________________________-->
+  <!-- run for 2 timesteps for RT memory -->
+  <!-- and checkpoint testing             -->
+  <Time>
+    <maxTime>       2.0      </maxTime>
+    <initTime>      0.0       </initTime>
+    <delt_min>      0.00001   </delt_min>
+    <delt_max>      1         </delt_max>
+    <max_Timesteps> 2         </max_Timesteps>
+    <timestep_multiplier>  1  </timestep_multiplier>
+  </Time>
+  <!--__________________________________-->
+  <Grid>
+    <Level>
+      <Box label = "0">                              
+         <lower>      [0,0,0]     </lower>         
+         <upper>      [1, 1, 1]   </upper>         
+         <resolution> [41,41,41]  </resolution>    
+         <patches>    [1,1,1]     </patches> 
+         <extraCells> [0,0,0]     </extraCells>      
+      </Box>                                         
+    </Level>
+  </Grid>
+  <!--__________________________________-->
+  <DataArchiver>
+  <filebase>rmcrt_1L.uda</filebase>
+      <outputTimestepInterval>1</outputTimestepInterval>
+      <save label = "color"   />
+      <save label = "divQ"    />
+      <save label = "abskg"   />
+      <save label = "sigmaT4" />
+      <checkpoint cycle = "2" timestepInterval = "2"/>
+  </DataArchiver>
+  
+  
+  <!--__________________________________ -->
+  <RMCRT>
+    <Temperature>       64.804     </Temperature>
+    <NoOfRays>          100       </NoOfRays>
+    <Threshold>         0.001       </Threshold>
+    <AlphaEW>             0          </AlphaEW>
+    <AlphaNS>             0          </AlphaNS>
+    <AlphaTB>             1          </AlphaTB>
+    <TEW>                 1000          </TEW>
+    <TNS>                 1000          </TNS>
+    <TTB>                 1000          </TTB>
+		<Slice>             20         </Slice>
+    <StefanBoltzmann>   5.67051e-8 </StefanBoltzmann>
+    <benchmark_1>       false       </benchmark_1>
+    <benchmark_13pt2>   true       </benchmark_13pt2>
+  </RMCRT>
+</Uintah_specification>
