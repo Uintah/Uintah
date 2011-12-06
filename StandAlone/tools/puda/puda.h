@@ -43,6 +43,7 @@ namespace Uintah {
     bool do_varsummary;
     bool be_brief;
     bool do_monica1;
+    bool do_monica2;
     bool do_jim1;
     bool do_AA_MMS_1;
     bool do_AA_MMS_2;
