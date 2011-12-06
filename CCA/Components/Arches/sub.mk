@@ -140,6 +140,7 @@ $(SRCDIR)/BoundaryCondition.$(OBJEXT): $(SRCDIR)/fortran/bcvvel_fort.h
 $(SRCDIR)/BoundaryCondition.$(OBJEXT): $(SRCDIR)/fortran/bcwvel_fort.h
 $(SRCDIR)/BoundaryCondition.$(OBJEXT): $(SRCDIR)/fortran/celltypeInit_fort.h
 $(SRCDIR)/BoundaryCondition.$(OBJEXT): $(SRCDIR)/fortran/inlbcs_fort.h
+$(SRCDIR)/BoundaryCondition.$(OBJEXT): $(SRCDIR)/fortran/mmbcvelocity_fort.h
 $(SRCDIR)/BoundaryCondition.$(OBJEXT): $(SRCDIR)/fortran/mm_computevel_fort.h
 $(SRCDIR)/BoundaryCondition.$(OBJEXT): $(SRCDIR)/fortran/mm_explicit_fort.h
 $(SRCDIR)/BoundaryCondition.$(OBJEXT): $(SRCDIR)/fortran/mm_explicit_oldvalue_fort.h
