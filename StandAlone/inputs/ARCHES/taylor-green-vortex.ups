@@ -13,6 +13,7 @@
     <delt_min>0.001</delt_min>
     <delt_max>0.001</delt_max>
     <timestep_multiplier>0.5</timestep_multiplier>
+    <max_Timesteps> 100 </max_Timesteps>
   </Time>
   <DataArchiver>
     <filebase>taylor-green-vortex.uda</filebase>
@@ -32,7 +33,7 @@
     <Level>
       <Box label="1">
         <lower>[0,0,0]</lower>
-        <upper>[1.0,1.0,1.0]</upper>
+        <upper>[6.283185307179586,6.283185307179586,6.283185307179586]</upper>
         <resolution>[32,32,32]</resolution>
         <extraCells>[0,0,0]</extraCells>
         <patches>[1,1,1]</patches>
