@@ -3292,3 +3292,12 @@ ExplicitSolver::checkDensityLag(const ProcessorGroup* pc,
     }
   }
 }
+void ExplicitSolver::setInitVelConditionInterface( const Patch* patch, 
+                                             SFCXVariable<double>& uvel, 
+                                             SFCYVariable<double>& vvel, 
+                                             SFCZVariable<double>& wvel )  
+{
+  
+  d_momSolver->setInitVelCondition( patch, uvel, vvel, wvel ); 
+  
+}

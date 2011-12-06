@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!-- DOCTYPE Uintah_specification SYSTEM "input.dtd" -->
+<!-- @version: -->
+<Uintah_specification>
+  <Meta>
+    <title>Arches "3d" Periodic Box Taylor-Green</title>
+  </Meta>
+  <SimulationComponent type="arches"/>
+  <Solver type="hypre"/>
+  <Time>
+    <maxTime>1</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>0.00001</delt_min>
+    <delt_max>0.001</delt_max>
+    <timestep_multiplier>0.5</timestep_multiplier>
+  </Time>
+  <DataArchiver>
+    <filebase>taylor-green-vortex.uda</filebase>
+    <outputTimestepInterval>10</outputTimestepInterval>
+    <outputInitTimestep/>
+    <save label="totalKineticEnergy"/>
+    <save label="pressurePS"/>
+    <save label="newCCVelocity"/>
+    <save label="uVelocitySPBC"/>
+    <save label="vVelocitySPBC"/>
+    <save label="wVelocitySPBC"/>
+    <save label="mixture_fraction_sb"/>
+    <save label="mixture_fraction_rmm"/>
+    <save label="continuityResidual"/>
+    <save label="velocityDivergence"/>
+    <checkpoint cycle="2" interval="0.05"/>
+    <compression>gzip</compression>
+  </DataArchiver>
+  <Grid>
+    <Level>
+      <Box label="1">
+        <lower>[0,0,0]</lower>
+        <upper>[1.0,1.0,1.0]</upper>
+        <resolution>[32,32,32]</resolution>
+        <extraCells>[0,0,0]</extraCells>
+        <patches>[1,1,1]</patches>
+      </Box>
+      <periodic>[1,1,1]</periodic>
+    </Level>
+  </Grid>
+  <PhysicalConstants>
+    <gravity>[0,0,0]</gravity>
+    <reference_point>[0,0,0]</reference_point>
+    <viscosity>0.0001</viscosity>
+  </PhysicalConstants>
+  <CFD>
+<!-- ARCHES specification -->
+    <ARCHES>
+<!-- TIME INTEGRATOR -->
+      <TimeIntegrator>
+        <ExplicitIntegrator order="first"/>
+      </TimeIntegrator>
+<!-- SCALARS -->
+      <TransportEqns>
+        <Eqn label="mixture_fraction_sb" type="CCscalar">
+          <doDiff>true</doDiff>
+          <doConv>true</doConv>
+          <conv_scheme>super_bee</conv_scheme>
+          <addSources>false</addSources>
+          <initialization type="geometry_fill">
+            <geom_object>
+              <sphere label="blob">
+                <origin>[.5,.5,.5]</origin>
+                <radius>.2</radius>
+              </sphere>
+            </geom_object>
+            <constant>1.0</constant>
+          </initialization>
+          <Clipping>
+            <low>0.0</low>
+            <high>1.0</high>
+          </Clipping>
+        </Eqn>
+        <Eqn label="mixture_fraction_rmm" type="CCscalar">
+          <doDiff>true</doDiff>
+          <doConv>true</doConv>
+          <conv_scheme>roe_minmod</conv_scheme>
+          <addSources>false</addSources>
+          <initialization type="geometry_fill">
+            <geom_object>
+              <sphere label="blob"/>
+            </geom_object>
+            <constant>1.0</constant>
+          </initialization>
+          <Clipping>
+            <low>0.0</low>
+            <high>1.0</high>
+          </Clipping>
+        </Eqn>
+      </TransportEqns>
+      <Turbulence model="smagorinsky">
+        <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
+        <cf>0.0</cf>
+        <fac_mesh>1.0</fac_mesh>
+        <filterl>0.000001</filterl>
+        <var_const>0.1</var_const>
+      </Turbulence>
+      <Properties>
+        <use_mixing_model>false</use_mixing_model>
+        <ColdFlowMixingModel>
+          <Stream>
+            <density>1.00</density>
+            <temperature>298</temperature>
+          </Stream>
+          <Stream>
+            <density>1.00</density>
+            <temperature>298</temperature>
+          </Stream>
+        </ColdFlowMixingModel>
+      </Properties>
+<!--
+      <BoundaryConditions>
+      </BoundaryConditions>
+-->
+      <ExplicitSolver>
+        <initial_dt>1</initial_dt>
+        <variable_dt>true</variable_dt>
+        <timeIntegratorType>RK2SSP</timeIntegratorType>
+        <PressureSolver>
+          <normalize_pressure>true</normalize_pressure>
+          <Parameters>
+            <solver>cg</solver>
+            <preconditioner>  pfmg    </preconditioner>
+            <tolerance>      1.0e-10  </tolerance>
+            <maxiterations>    75     </maxiterations>
+          </Parameters>
+        </PressureSolver>
+        <MomentumSolver>
+          <convection_scheme>central</convection_scheme>
+          <initialization type="taylor-green">
+            <c>1.5708</c>
+          </initialization>
+        </MomentumSolver>
+        <MixtureFractionSolver>
+          <convection_scheme>central-upwind</convection_scheme>
+        </MixtureFractionSolver>
+      </ExplicitSolver>
+    </ARCHES>
+  </CFD>
+</Uintah_specification>
