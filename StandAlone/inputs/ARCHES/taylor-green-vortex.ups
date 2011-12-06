@@ -8,9 +8,9 @@
   <SimulationComponent type="arches"/>
   <Solver type="hypre"/>
   <Time>
-    <maxTime>1</maxTime>
+    <maxTime>1.0</maxTime>
     <initTime>0.0</initTime>
-    <delt_min>0.00001</delt_min>
+    <delt_min>0.001</delt_min>
     <delt_max>0.001</delt_max>
     <timestep_multiplier>0.5</timestep_multiplier>
   </Time>
