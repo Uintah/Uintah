@@ -120,7 +120,7 @@
       <ExplicitSolver>
         <initial_dt>1</initial_dt>
         <variable_dt>true</variable_dt>
-        <timeIntegratorType>RK2SSP</timeIntegratorType>
+        <timeIntegratorType>FE</timeIntegratorType>
         <PressureSolver>
           <normalize_pressure>true</normalize_pressure>
           <Parameters>
