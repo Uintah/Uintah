@@ -77,6 +77,7 @@ MomentumSolver(const ArchesLabel* label,
   d_discretize = 0;
   d_source = 0;
   d_rhsSolver = 0;
+  _init_type = "none";  
 }
 
 //****************************************************************************
@@ -87,6 +88,9 @@ MomentumSolver::~MomentumSolver()
   delete d_discretize;
   delete d_source;
   delete d_rhsSolver;
+  if ( _init_type != "none" ){ 
+    delete _init_function; 
+  }
 }
 
 //****************************************************************************
@@ -108,6 +112,30 @@ MomentumSolver::problemSetup(const ProblemSpecP& params)
   }else{
     throw InvalidValue("Convection scheme not supported: " + conv_scheme, __FILE__, __LINE__);
   }
+
+  // -------------- initialization   
+  if ( db->findBlock("initialization") ){ 
+  
+    ProblemSpecP db_init = db->findBlock("initialization"); 
+    db->findBlock("initialization")->getAttribute("type", _init_type); 
+
+    if ( _init_type == "constant" ){ 
+  
+      _init_function = scinew ConstantVel(); 
+
+    } else if ( _init_type == "taylor-green" ){ 
+    
+      _init_function = scinew TaylorGreen3D(); 
+
+    } else { 
+
+      throw InvalidValue("Initialization type not recognized: " + _init_type, __FILE__, __LINE__);
+
+    } 
+
+    _init_function->problemSetup( db_init ); 
+
+  } 
   
   db->getWithDefault("filter_divergence_constraint",d_filter_divergence_constraint,false);
 
@@ -136,6 +164,20 @@ MomentumSolver::problemSetup(const ProblemSpecP& params)
   d_rhsSolver->setMMS(d_doMMS);
 
   d_mixedModel=d_turbModel->getMixedModel();
+}
+
+void MomentumSolver::setInitVelCondition( const Patch* patch, 
+                                          SFCXVariable<double>& uvel, 
+                                          SFCYVariable<double>& vvel, 
+                                          SFCZVariable<double>& wvel )  
+{
+  if ( _init_type != "none" ){ 
+
+    _init_function->setXVel( patch, uvel ); 
+    _init_function->setYVel( patch, vvel ); 
+    _init_function->setZVel( patch, wvel ); 
+
+  }
 }
 
 //****************************************************************************

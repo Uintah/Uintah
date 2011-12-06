@@ -1188,6 +1188,10 @@ Arches::paramInit(const ProcessorGroup* pg,
 
       }
     }
+
+    //----- momentum initial condition
+    d_nlSolver->setInitVelConditionInterface( patch, uVelocity, vVelocity, wVelocity ); 
+
   } // patches
 }
 

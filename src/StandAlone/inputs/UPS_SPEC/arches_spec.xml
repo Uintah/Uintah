@@ -352,6 +352,17 @@
           <src                          spec="MULTIPLE NO_DATA" 
                                         attribute1="label REQUIRED STRING"
                                         attribute2="type REQUIRED STRING"/>
+
+          <initialization               spec="OPTIONAL NO_DATA"           
+                                        attribute1="type REQUIRED STRING 'constant, taylor-green'">
+
+           <const_u                     spec="REQUIRED DOUBLE" need_applies_to="type constant"/>
+           <const_v                     spec="REQUIRED DOUBLE" need_applies_to="type constant"/>
+           <const_w                     spec="REQUIRED DOUBLE" need_applies_to="type constant"/>
+
+           <c                           spec="REQUIRED DOUBLE" need_applies_to="type taylor-green"/> 
+
+          </initialization>
         </MomentumSolver>
 
         <PressureSolver                 spec="REQUIRED NO_DATA" >

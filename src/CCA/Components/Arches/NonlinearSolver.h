@@ -34,6 +34,9 @@ DEALINGS IN THE SOFTWARE.
 #define Uintah_Component_Arches_NonlinearSolver_h
 
 #include <CCA/Components/Arches/Arches.h>
+#include <Core/Grid/Variables/SFCXVariable.h>
+#include <Core/Grid/Variables/SFCYVariable.h>
+#include <Core/Grid/Variables/SFCZVariable.h>
 
 /**************************************
 CLASS
@@ -142,6 +145,12 @@ public:
   virtual void setPartVel(PartVel* partVel) = 0; 
 
   virtual void setDQMOMSolver(DQMOM* dqmomSolver) = 0;
+
+  virtual void setInitVelConditionInterface( const Patch* patch, 
+                                     SFCXVariable<double>& uvel, 
+                                     SFCYVariable<double>& vvel, 
+                                     SFCZVariable<double>& wvel ) = 0;
+
 protected:
    const ProcessorGroup* d_myworld;
    string d_timeIntegratorType;
