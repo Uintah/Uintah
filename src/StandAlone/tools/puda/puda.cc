@@ -76,6 +76,7 @@ DEALINGS IN THE SOFTWARE.
 
 #include <StandAlone/tools/puda/asci.h>
 #include <StandAlone/tools/puda/monica1.h>
+#include <StandAlone/tools/puda/monica2.h>
 #include <StandAlone/tools/puda/jim1.h>
 #include <StandAlone/tools/puda/jim2.h>
 #include <StandAlone/tools/puda/AA_MMS.h>
@@ -132,6 +133,7 @@ usage( const std::string& badarg, const std::string& progname )
   cerr << "  -jim1\n";
   cerr << "  -jim2\n";
   cerr << "  -monica1             (Finds the maximum pressure in the domain.)\n";
+  cerr << "  -monica2             (Finds the sum of the cell centered kinetic energy in the domain.)\n";
   cerr << "  -AA_MMS_1            (1D periodic bar MMS)\n";
   cerr << "  -AA_MMS_2            (3D Axis aligned MMS)\n";
   cerr << "  -GV_MMS            (GeneralizedVortex MMS)\n"; //MMS
@@ -286,6 +288,8 @@ main(int argc, char** argv)
       clf.be_brief = true;
     } else if(s == "-monica1"){
       clf.do_monica1 = true;
+    } else if(s == "-monica2"){
+      clf.do_monica2 = true;
     } else if(s == "-jim1"){
       clf.do_jim1 = true;
     } else if(s == "-jim2"){
@@ -471,6 +475,10 @@ main(int argc, char** argv)
 
     if( clf.do_monica1 ){
       monica1( da, clf );
+    }
+
+    if( clf.do_monica2 ){
+      monica2( da, clf );
     }
 
     if( clf.do_jim1 ){

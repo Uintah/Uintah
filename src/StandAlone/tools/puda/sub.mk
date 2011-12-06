@@ -34,6 +34,7 @@ PROGRAM := StandAlone/tools/puda/puda
 SRCS := \
 	$(SRCDIR)/asci.cc        \
 	$(SRCDIR)/monica1.cc     \
+	$(SRCDIR)/monica2.cc     \
 	$(SRCDIR)/jim1.cc        \
 	$(SRCDIR)/jim2.cc        \
 	$(SRCDIR)/jim3.cc        \
@@ -42,8 +43,8 @@ SRCS := \
 	$(SRCDIR)/tecplot.cc     \
 	$(SRCDIR)/util.cc        \
 	$(SRCDIR)/varsummary.cc  \
-	$(SRCDIR)/puda.cc	\
-	$(SRCDIR)/GV_MMS.cc	\
+	$(SRCDIR)/puda.cc        \
+	$(SRCDIR)/GV_MMS.cc      \
 	$(SRCDIR)/ER_MMS.cc
 
 ifeq ($(IS_STATIC_BUILD),yes)
@@ -63,12 +64,12 @@ else # Non-static build
         Core/Parallel      \
         Core/ProblemSpec   \
         Core/Util          \
-        Core/Containers  \
-        Core/Exceptions  \
-        Core/Geometry    \
-        Core/OS          \
-        Core/Persistent  \
-        Core/Thread      \
+        Core/Containers    \
+        Core/Exceptions    \
+        Core/Geometry      \
+        Core/OS            \
+        Core/Persistent    \
+        Core/Thread        \
         Core/Util        
   endif
 endif
