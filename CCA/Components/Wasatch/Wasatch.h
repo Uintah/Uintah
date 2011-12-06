@@ -218,6 +218,7 @@ namespace Wasatch{
     void disable_timestepper_creation(){ buildTimeIntegrator_ = false; }
     const PatchInfoMap& patch_info_map() const{ return patchInfoMap_; }
     std::list< const TaskInterface* >& task_interface_list(){ return taskInterfaceList_; }
+    const std::set<std::string>& io_field_set(){ return ioFieldSet_; }
 
   private:
     bool buildTimeIntegrator_;
