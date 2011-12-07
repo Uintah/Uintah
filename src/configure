@@ -642,6 +642,8 @@ INC_HYPRE_H
 DEF_HYPRE
 HAVE_HYPRE
 BUILD_WASATCH
+BUILD_WASATCH_IN_ARCHES
+DEF_WASATCH_IN_ARCHES
 TABPROPS_LIB_DIR_FLAG
 TABPROPS_LIB_FLAG
 INC_TABPROPS_H
@@ -933,6 +935,7 @@ with_freetype
 with_ftgl
 with_visit
 enable_wasatch_3p
+enable_wasatch_in_arches
 enable_static
 enable_verbosity
 enable_threads
@@ -1583,6 +1586,9 @@ Optional Features:
   --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
 --enable-wasatch_3p     Download and build the Wasatch Thirdparty libraries
                           - TabProps oExprLibs SpatialOps.
+--enable-wasatch-in-arches
+                          Turn on the use of Wasatch objects in the Arches
+                          component.
 --enable-static         Build a statically linked version of Uintah. Set to
                           'full' to force full static link.
 --enable-verbosity      Turn on verbose configure output
@@ -3566,6 +3572,17 @@ else
 fi
 
   sci_arg_enable_list="$sci_arg_enable_list --enable-wasatch_3p --disable-wasatch_3p"
+
+
+
+  # Check whether --enable-wasatch_in_arches was given.
+if test "${enable_wasatch_in_arches+set}" = set; then :
+  enableval=$enable_wasatch_in_arches; wasatch_in_arches="yes"
+else
+  wasatch_in_arches=="no"
+fi
+
+  sci_arg_enable_list="$sci_arg_enable_list --enable-wasatch_in_arches --disable-wasatch_in_arches"
 
 
 
@@ -6281,6 +6298,7 @@ BUILD_ICE=yes
 BUILD_MPM=yes
 BUILD_MODELS_RADIATION=yes
 BUILD_WASATCH=no
+USE_WASATCH=no
 DEF_ARCHES=""
 DEF_ICE=""
 DEF_MPM=""
@@ -40975,9 +40993,24 @@ fi
 
 
 
+##  --  Handle --enable-wasatch-in-arches --------------------------------
+
+if test "$wasatch_in_arches" = "yes"; then
+   if test "$USE_WASATCH" != yes; then
+      add_important_warning "Turning on Wasatch for use in Arches."
+      { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Turning on Wasatch for use in Arches." >&5
+$as_echo "$as_me: WARNING: Turning on Wasatch for use in Arches." >&2;}
+      USE_WASATCH=yes
+   fi
+   DEF_WASATCH="#define WASATCH_IN_ARCHES 1";
+   BUILD_WASATCH_IN_ARCHES="yes"
+fi
+
+
+
 ##  --  Determine whether we can use WASATCH OR NOT ----------------------
 
-if test "$USE_WASATCH" = yes; then
+if test "$USE_WASATCH" = "yes"; then
    if test "$HAVE_BOOST" = "yes" &&
      test "$HAVE_TABPROPS" = "yes" &&
      test "$HAVE_SPATIALOPS" = "yes" &&
@@ -40992,6 +41025,7 @@ else
      test "$HAVE_SPATIALOPS" = "yes" &&
      test "$HAVE_EXPRLIB" = "yes"; then
     BUILD_WASATCH=yes
+    add_important_warning "All prereqs satisfied, turning on Wasatch component."
     { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: All prereqs satisfied" >&5
 $as_echo "$as_me: WARNING: All prereqs satisfied" >&2;}
   fi
