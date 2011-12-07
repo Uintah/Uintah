@@ -435,13 +435,13 @@ SCI_ARG_ENABLE(wasatch_3p,
   AC_HELP_STRING(--enable-wasatch_3p,
                  Download and build the Wasatch Thirdparty libraries - TabProps oExprLibs SpatialOps.),
   [wasatch_3p="yes"],
-  [wasatch_3p=="no"])
+  [wasatch_3p="no"])
 
 SCI_ARG_ENABLE(wasatch_in_arches,
   AC_HELP_STRING(--enable-wasatch-in-arches,
                  Turn on the use of Wasatch objects in the Arches component.),
   [wasatch_in_arches="yes"],
-  [wasatch_in_arches=="no"])
+  [wasatch_in_arches="no"])
 
 SCI_ARG_ENABLE(static,
   AC_HELP_STRING(--enable-static,
