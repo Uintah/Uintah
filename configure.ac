@@ -2956,7 +2956,10 @@ if test "$with_mpi_extra_libs"; then
          fi
          the_base=`basename $lib | cut -f"1" -d"." | sed 's/lib//g'` 
          MPI_EXTRA_LIB_FLAG="$MPI_EXTRA_LIB_FLAG -l$the_base"
-         MPI_EXTRA_LIB_DIR="$MPI_EXTRA_LIB_DIR -L$the_dir"
+         if test "$the_dir" != "/usr/lib" -a "$the_dir" != "/usr/lib64"; then
+            # Don't add /usr/lib or /usr/lib64 to the path...
+            MPI_EXTRA_LIB_DIR="$MPI_EXTRA_LIB_DIR -L$the_dir"
+         fi
       fi
    done
 fi
