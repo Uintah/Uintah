@@ -2,7 +2,7 @@
 %_________________________________
 % This octave file plots the radiative flux divergence (deldotq)
 % of a 2D center slice of a 3D domainprofile and computes
-% the L2norm of the deldotq relative to the benchmark 99 case
+% the L2norm of the  divergence of q
 % 
 %
 % Example usage:
@@ -11,17 +11,59 @@ clear all;
 close all;
 format short e;
 
+%______________________________________________________________________
+%______________________________________________________________________
+%   B E N C H M A R K   1
+function [divQ_exact] = benchMark1(x_CC)
+  printf("BenchMark 1");
+  
+  x_exact = 0:(1/40):1;
+  ExactSol = zeros(41);
+
+  ExactSol = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 3.07561, 2.94305, 2.81667, 2.69362,...
+  2.57196, 2.45069, 2.32896, 2.20616, 2.08181,...
+  1.95549, 1.82691, 1.69575, 1.56180, 1.42485, 1.28473, 1.1413,...
+  .99443, .84405, .6901, .53255, .37165];
+
+  % The makes the exact solution symmetric
+  j=41;
+  for q=1:20
+    ExactSol(q) = ExactSol(j);
+    j=j-1;
+  end
+
+  %Do a pchip interpolation to any resolution
+  divQ_exact = interp1(x_exact, ExactSol, x_CC, 'pchip');
+  
+endfunction
+
+%______________________________________________________________________
+%    B E N C H M A R K   2    
+function [divQ_exact] = benchMark2(x_CC)
+  printf("BenchMark 2\n");
+  %  I S A A C   P L E A S E   F I L L   T H I S   I N .
+  printf("...end\n");
+endfunction
+
+%______________________________________________________________________
+
 function Usage
-  printf('compare_Deldotq.m <options>\n') 
+  printf('RMCRT.m <options>\n') 
   printf('options:\n') 
-  printf(' -uda <udaFileName> - name of the uda file \n') 
-  printf(' -pDir <1,2,3> - principal direction \n') 
-  printf(' -mat - material index \n') 
+  printf(' -uda <udaFileName>  - name of the uda file \n') 
+  printf(' -bm  <1,2,..>       - benchmark test to compare against \n')
+  printf(' -pDir <1,2,3>       - principal direction \n') 
+  printf(' -mat                - material index \n') 
+  printf(' -L                  - level index, default 0\n')
   printf(' -plot <true, false> - produce a plot \n') 
-  printf(' -ts - Timestep to compute L2 error, default is the last timestep\n') 
-  printf(' -o <fname> - Dump the output (L2norm) to a file\n') 
+  printf(' -ts                 - Timestep to compute L2 error, default is the last timestep\n') 
+  printf(' -o <fname>          - Dump the output (L2norm) to a file\n') 
   printf('----------------------------------------------------------\n')
 end 
+
+
+%______________________________________________________________________
+%______________________________________________________________________
 
 %________________________________ 
 % Parse User inputs 
@@ -33,13 +75,13 @@ endif
 
 %__________________________________
 % defaults
-symbol      = {'+','*r','xg'};     %????
 pDir        = 1;
 mat         = 0;
 makePlot    = "true";
 ts          = 999;
 output_file = 'L2norm';
-L           = 0;                     %%%%%%   Warning this is hardcoded
+level       = 0;
+benchmark   = -9;
 
 % Parse the command line arguments
 arg_list = argv ();
@@ -59,7 +101,18 @@ for i = 1:2:nargin
     ts = str2num(opt_value); 
   elseif (strcmp(option,"-o") ) 
     output_file = opt_value; 
+  elseif (strcmp(option,"-L") ) 
+    level = str2num(opt_value);
+  elseif (strcmp(option,"-bm") ) 
+    benchmark = str2num(opt_value);
   end 
+end
+
+%__________________________________
+% bulletproofing
+if( benchmark == -9 )
+  error ("An invalid benchmark test was selected.  Please correct this");
+  exit
 end
 
 %________________________________
@@ -73,6 +126,7 @@ if( s0 ~=0 || s1 ~= 0 )
   disp(' b) the utilities (puda/lineextract) have been compiled');
 end
 
+
 %________________________________
 % extract the physical time
 c0 = sprintf('puda -timesteps %s | grep : | cut -f 2 -d":" >& tmp',uda);
@@ -80,8 +134,8 @@ c0 = sprintf('puda -timesteps %s | grep : | cut -f 2 -d":" >& tmp',uda);
 physicalTime = load('tmp');
 
 if(ts == 999) % default
-  ts = length(physicalTime)
-endif
+  ts = length(physicalTime);
+end
 %________________________________
 % extract the grid information from the uda file
 c0 = sprintf('puda -gridstats %s >& tmp',uda); unix(c0);
@@ -89,20 +143,12 @@ c0 = sprintf('puda -gridstats %s >& tmp',uda); unix(c0);
 [s,r1] = unix('grep -m1 -w "Total Number of Cells" tmp |cut -d":" -f2 | tr -d "[]int"');
 [s,r2] = unix('grep -m1 -w "Domain Length" tmp |cut -d":" -f2 | tr -d "[]"');
 
-resolution = str2num(r1)
-domainLength = str2num(r2)
-
-%Adjust the spacing because exact data starts at boundaries, my data
-%starts at 1/2 dx.
-x_exactSol = 0:(1/40):1;
-Nx = resolution(pDir);
-dx = domainLength(pDir)/Nx
-% x_CC = (dx -1/(2*dx) ):( dx ) :domainLength(pDir) - dx/2;
+resolution = str2num(r1);
+domainLength = str2num(r2);
 
 %__________________________________
 % Extract the data from the uda
 % find the y direction
-
 xDir = 1;
 yDir = 2;
 zDir = 3;
@@ -119,40 +165,26 @@ elseif(pDir == 3)
   startEnd = sprintf('-istart %i  %i    %i  -iend   %i  %i   %i',xHalf, yHalf,   0,    xHalf, yHalf, resolution(zDir)-1);
 end
 
-startEnd
-
-c1 = sprintf('lineextract -v %s -l %i -cellCoords -timestep %i %s -o divQ.dat -m %i -uda %s','divQ >& /dev/null',L,ts-1,startEnd,mat,uda);
+c1 = sprintf('lineextract -v %s -l %i -cellCoords -timestep %i %s -o divQ.dat -m %i -uda %s','divQ >& /dev/null',level,ts-1,startEnd,mat,uda);
 [s1, r1] = unix(c1);
 
 divQ_sim = load('divQ.dat');
 x_CC     = divQ_sim(:,pDir);         % This is actually x_CC or y_CC or z_CC
 
-%______________________________
-% computes exact solution !! mine
-ExactSol = zeros(41);
-
-ExactSol = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 3.07561, 2.94305, 2.81667, 2.69362,...
-2.57196, 2.45069, 2.32896, 2.20616, 2.08181,...
-1.95549, 1.82691, 1.69575, 1.56180, 1.42485, 1.28473, 1.1413,...
-.99443, .84405, .6901, .53255, .37165];
-
-% The makes the exact solution symmetric
-j=41;
-for q=1:20
-  ExactSol(q) = ExactSol(j);
-  j=j-1;
+%__________________________________
+% compute the exact solution
+if (benchmark == 1)
+  [divQ_exact] = benchMark1(x_CC);
+elseif (benchmark == 2 )
+  [divQ_exact] = benchMark2(x_CC);
 end
-
-%Do a pchip interpolation to any resolution
-divQ_exact = interp1(x_exactSol, ExactSol, x_CC, 'pchip');
-
 
 %______________________________
 % compute the L2 norm
 clear d;
 d = 0;
-d = abs(divQ_sim(:,4) - divQ_exact); %!! mine
-L2_norm = sqrt( sum(d.^2)/length(x_CC) )
+d = abs(divQ_sim(:,4) - divQ_exact);
+L2_norm = sqrt( sum(d.^2)/length(x_CC) );
 
 % write L2_norm to a file
 nargv = length(output_file);
@@ -163,16 +195,14 @@ if (nargv > 0)
 end
 
 % cleanup 
-unix('/bin/rm divQ.dat tmp');% !! 
-divQ_sim
-divQ_exact
+unix('/bin/rm divQ.dat tmp');
 
 %______________________________
 % Plot the results
 if (strcmp(makePlot,"true"))
-  subplot(2,1,1),plot(x_CC, divQ_sim(:,4), 'b:o;computed;', x_CC, divQ_exact, 'r:+;exact;')
-  ylabel('divQ')
-  xlabel('X')
+  subplot(2,1,1),plot(x_CC, divQ_sim(:,4), 'b:o;computed;', x_CC, divQ_exact, 'r:+;exact;');
+  ylabel('divQ');
+  xlabel('X');
   title('divQ versus Exact solns');
   grid on;
 
@@ -182,10 +212,12 @@ if (strcmp(makePlot,"true"))
   xlabel('X');
   grid on;
 
-  unix('/bin/rm divQ.ps')
-  print('divQ.ps','-dps', '-FTimes-Roman:14')
+  unix('/bin/rm divQ.ps >&/dev/null');
+  print('divQ.ps','-dps', '-FTimes-Roman:14');
   pause
 
 end
+
+
 
 
