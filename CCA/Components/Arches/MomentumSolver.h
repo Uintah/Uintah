@@ -338,9 +338,9 @@ private:
           z = c.z() * Dx.z() + Dx.z()/2.0;
 
           uvel[c] = 2.0/sqrt(3.0) * sin( _c + 2.0*_pi/3.0 ) 
-            * sin( x ) 
-            * cos( y )
-            * cos( z ); 
+            * sin( 2 * _pi * x ) 
+            * cos( 2 * _pi * y )
+            * cos( 2 * _pi * z ); 
         }    
       };
 
@@ -359,9 +359,9 @@ private:
           z = c.z() * Dx.z() + Dx.z()/2.0;
 
           vvel[c] = 2.0/sqrt(3.0) * sin( _c - 2.0*_pi/3.0 ) 
-            * sin( y ) 
-            * cos( x )
-            * cos( z ); 
+            * sin( 2 * _pi * y ) 
+            * cos( 2 * _pi * x )
+            * cos( 2 * _pi * z ); 
         }    
       }; 
 
@@ -379,9 +379,9 @@ private:
           z = c.z() * Dx.z();
 
           wvel[c] = 2.0/sqrt(3.0) * sin( _c ) 
-            * sin( z ) 
-            * cos( x )
-            * cos( y ); 
+            * sin( 2 * _pi * z ) 
+            * cos( 2 * _pi * x )
+            * cos( 2 * _pi * y ); 
         }    
       }; 
  
