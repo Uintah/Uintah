@@ -56,6 +56,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/CellIterator.h>
+#include <Core/Grid/BoundaryConditions/BCUtils.h>
 
 #include <Core/Exceptions/ParameterNotFound.h>
 #include <Core/Exceptions/ProblemSetupException.h>
