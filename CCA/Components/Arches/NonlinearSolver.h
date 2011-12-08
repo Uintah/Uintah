@@ -119,7 +119,11 @@ public:
   //    [out] 
   //        documentation here
   virtual int nonlinearSolve( const LevelP& level,
-                              SchedulerP& sched) = 0;
+                              SchedulerP& sched
+#                             ifdef WASATCH_IN_ARCHES
+                              , Wasatch::Wasatch& wasatch
+#                             endif // WASATCH_IN_ARCHES
+                              ) = 0;
 
   ///////////////////////////////////////////////////////////////////////
   // Interface for dummy Solve of the nonlinear System

@@ -11,6 +11,9 @@
 #include "PatchInfo.h"
 #include "GraphHelperTools.h"
 
+//-- ExprLib includes --//
+#include <expression/ExpressionTree.h>
+
 // forward declarations
 namespace Uintah{
   class DataWarehouse;
@@ -18,6 +21,10 @@ namespace Uintah{
   class ProcessorGroup;
   class Material;
   class Patch;
+}
+
+namespace Expr{
+  class FieldManagerList;
 }
 
 

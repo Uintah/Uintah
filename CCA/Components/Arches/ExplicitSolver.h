@@ -127,7 +127,7 @@ public:
   virtual int nonlinearSolve( const LevelP& level,
                               SchedulerP& sched
 #                             ifdef WASATCH_IN_ARCHES
-                              , Wasatch& wasatch
+                              , Wasatch::Wasatch& wasatch
 #                             endif // WASATCH_IN_ARCHES
                              );
 

@@ -151,9 +151,10 @@ namespace Wasatch{
     public Uintah::UintahParallelComponent,
     public Uintah::SimulationInterface
   {
-      typedef std::vector<EqnTimestepAdaptorBase*> EquationAdaptors;
 
   public:
+
+    typedef std::vector<EqnTimestepAdaptorBase*> EquationAdaptors;
 
     Wasatch( const Uintah::ProcessorGroup* myworld );
 
