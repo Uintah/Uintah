@@ -48,14 +48,15 @@ void is_BC_specified(const ProblemSpecP& prob_spec, string variable, const Mater
   Vector periodic;
   level_ps->getWithDefault("periodic", periodic, Vector(0,0,0));
   
-  // If a face is periodic then is_BC_set = true
+
   map<string,bool> is_BC_set;
-  is_BC_set["x-"] = (periodic.x() ==1) ? true:false;
-  is_BC_set["x+"] = (periodic.x() ==1) ? true:false;
-  is_BC_set["y-"] = (periodic.y() ==1) ? true:false;
-  is_BC_set["y+"] = (periodic.y() ==1) ? true:false;
-  is_BC_set["z-"] = (periodic.z() ==1) ? true:false;
-  is_BC_set["z+"] = (periodic.z() ==1) ? true:false;
+  
+  is_BC_set["x-"] = false;
+  is_BC_set["x+"] = false;
+  is_BC_set["y-"] = false;
+  is_BC_set["y+"] = false;
+  is_BC_set["z-"] = false;
+  is_BC_set["z+"] = false;
    
   ProblemSpecP bc_ps  = grid_ps->findBlock("BoundaryConditions"); 
   // loop over all faces
@@ -64,7 +65,7 @@ void is_BC_specified(const ProblemSpecP& prob_spec, string variable, const Mater
    
     map<string,string> face;
     face_ps->getAttributes(face);
-    
+   
     // loop over all BCTypes  
     for(ProblemSpecP bc_iter = face_ps->findBlock("BCType"); bc_iter != 0;
                      bc_iter = bc_iter->findNextBlock("BCType")){
@@ -100,6 +101,34 @@ void is_BC_specified(const ProblemSpecP& prob_spec, string variable, const Mater
            << " ) was not specified on face (" << face 
            << ") for  materialSubset " << *matls << endl;
       throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+    }
+  }
+  
+  //__________________________________
+  // Duplicate periodic BC and normal BCs
+  if(periodic.length() != 0){
+    bool failed = false;
+    string dir = "";
+  
+    if( periodic[0]==1 && ( is_BC_set["x-"] == true || is_BC_set["x+"] == true)){
+      dir = "x";
+      failed = true;
+    }
+    if( periodic[1]==1 && ( is_BC_set["y-"] == true || is_BC_set["y+"] == true)){
+      dir = dir + ", y";
+      failed = true;
+    }
+    if( periodic[2]==1 && ( is_BC_set["z-"] == true || is_BC_set["x+"] == true)){
+      dir = dir + ", z";
+      failed = true;
+    } 
+    
+    if( failed ){
+      ostringstream warn;
+      warn <<"\n__________________________________\n "
+           << "ERROR: A periodic AND a normal boundary condition have been specifed for \n"
+           << " direction(s): ("<< dir << ")  You can only have one or the other"<< endl;
+      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);   
     }
   }
 }
