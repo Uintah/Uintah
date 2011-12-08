@@ -48,18 +48,18 @@ void is_BC_specified(const ProblemSpecP& prob_spec, string variable, const Mater
   Vector periodic;
   level_ps->getWithDefault("periodic", periodic, Vector(0,0,0));
   
-
-  map<string,bool> is_BC_set;
-  
-  is_BC_set["x-"] = false;
-  is_BC_set["x+"] = false;
-  is_BC_set["y-"] = false;
-  is_BC_set["y+"] = false;
-  is_BC_set["z-"] = false;
-  is_BC_set["z+"] = false;
+  map<string,bool> is_BC_set;     
+  map<string,bool> is_periodic;
+  is_BC_set["x-"] = false;   is_periodic["x-"] = periodic[0];
+  is_BC_set["x+"] = false;   is_periodic["x+"] = periodic[0];
+  is_BC_set["y-"] = false;   is_periodic["y-"] = periodic[1];
+  is_BC_set["y+"] = false;   is_periodic["y+"] = periodic[1];
+  is_BC_set["z-"] = false;   is_periodic["z-"] = periodic[2];
+  is_BC_set["z+"] = false;   is_periodic["z+"] = periodic[2];
    
   ProblemSpecP bc_ps  = grid_ps->findBlock("BoundaryConditions"); 
-  // loop over all faces
+  
+  // loop over all faces and determine if a BC has been set
   for (ProblemSpecP face_ps = bc_ps->findBlock("Face");face_ps != 0; 
                     face_ps=face_ps->findNextBlock("Face")) {
    
@@ -94,7 +94,8 @@ void is_BC_specified(const ProblemSpecP& prob_spec, string variable, const Mater
   for( map<string,bool>::iterator iter = is_BC_set.begin();iter !=  is_BC_set.end(); iter++ ){
     string face = (*iter).first;
     bool isSet = (*iter).second;
-    if (!isSet){
+    
+    if (!isSet && !is_periodic[face]){   // BC not set and not periodic
       ostringstream warn;
       warn <<"\n__________________________________\n"  
            << "ERROR: The boundary condition for ( " << variable
@@ -109,7 +110,7 @@ void is_BC_specified(const ProblemSpecP& prob_spec, string variable, const Mater
   if(periodic.length() != 0){
     bool failed = false;
     string dir = "";
-  
+    // periodic and the BC has been set
     if( periodic[0]==1 && ( is_BC_set["x-"] == true || is_BC_set["x+"] == true)){
       dir = "x";
       failed = true;
