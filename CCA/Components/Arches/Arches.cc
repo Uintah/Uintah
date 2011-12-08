@@ -113,9 +113,9 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Math/MinMax.h>
 #include <Core/Math/MiscMath.h>
 
-#ifdef WASATCH_ARCHES
+#ifdef WASATCH_IN_ARCHES
 #include <CCA/Components/Wasatch/Wasatch.h>
-#endif // WASATCH_ARCHES
+#endif // WASATCH_IN_ARCHES
 
 #include <iostream>
 #include <fstream>
@@ -138,9 +138,9 @@ const int Arches::NDIM = 3;
 // ****************************************************************************
 Arches::Arches(const ProcessorGroup* myworld) :
   UintahParallelComponent(myworld)
-# ifdef WASATCH_ARCHES
+# ifdef WASATCH_IN_ARCHES
   , d_wasatch( new Wasatch(myworld) )
-# endif // WASATCH_ARCHES
+# endif // WASATCH_IN_ARCHES
 {
   d_lab =  scinew  ArchesLabel();
   d_MAlab                 =  0;      //will  be  set  by  setMPMArchesLabel
@@ -195,9 +195,9 @@ Arches::~Arches()
   }
   releasePort("solver");
 
-# ifdef WASATCH_ARCHES
+# ifdef WASATCH_IN_ARCHES
   delete d_wasatch;
-# endif // WASATCH_ARCHES
+# endif // WASATCH_IN_ARCHES
 }
 
 // ****************************************************************************
@@ -315,9 +315,9 @@ Arches::problemSetup(const ProblemSpecP& params,
     d_timeIntegrator->problemSetup(time_db);
   }
 
-# ifdef WASATCH_ARCHES
+# ifdef WASATCH_IN_ARCHES
   d_wasatch->problemSetup( db->findBlock("Wasatch") );
-# endif // WASATCH_ARCHES
+# endif // WASATCH_IN_ARCHES
 
   ProblemSpecP transportEqn_db = db->findBlock("TransportEqns");
   if (transportEqn_db) {
@@ -663,9 +663,9 @@ void
 Arches::scheduleInitialize(const LevelP& level,
                            SchedulerP& sched)
 {
-# ifdef WASATCH_ARCHES
+# ifdef WASATCH_IN_ARCHES
   d_wasatch->scheduleInitialize( level, sched );
-# endif // WASATCH_ARCHES
+# endif // WASATCH_IN_ARCHES
 
   const PatchSet* patches= level->eachPatch();
   const MaterialSet* matls = d_sharedState->allArchesMaterials();
@@ -833,9 +833,9 @@ void
 Arches::restartInitialize()
 {
   d_doingRestart = true;
-# ifdef WASATCH_ARCHES
+# ifdef WASATCH_IN_ARCHES
   d_wasatch->restartInitialize();
-# endif // WASATCH_ARCHES
+# endif // WASATCH_IN_ARCHES
 }
 
 // ****************************************************************************
@@ -1426,11 +1426,11 @@ Arches::scheduleTimeAdvance( const LevelP& level,
   double time = d_lab->d_sharedState->getElapsedTime();
   nofTimeSteps++ ;
 
-# ifdef WASATCH_ARCHES
+# ifdef WASATCH_IN_ARCHES
   // disable wasatch's time integrator because Arches is handling it.
   d_wasatch->disable_timestepper_creation();
   d_wasatch->scheduleTimeAdvance( level, sched );
-# endif // WASATCH_ARCHES
+# endif // WASATCH_IN_ARCHES
 
   if (d_MAlab) {
 #ifndef ExactMPMArchesInitialize
@@ -1441,23 +1441,23 @@ Arches::scheduleTimeAdvance( const LevelP& level,
     }
     else
       d_nlSolver->nonlinearSolve(level, sched
-#       ifdef WASATCH_ARCHES
+#       ifdef WASATCH_IN_ARCHES
           , *d_wasatch
-#       endif // WASATCH_ARCHES
+#       endif // WASATCH_IN_ARCHES
           );
 #else
     d_nlSolver->nonlinearSolve(level, sched
-#       ifdef WASATCH_ARCHES
+#       ifdef WASATCH_IN_ARCHES
           , *d_wasatch
-#       endif // WASATCH_ARCHES
+#       endif // WASATCH_IN_ARCHES
     );
 #endif
   }
   else {
     d_nlSolver->nonlinearSolve(level, sched
-#       ifdef WASATCH_ARCHES
+#       ifdef WASATCH_IN_ARCHES
           , *d_wasatch
-#       endif // WASATCH_ARCHES
+#       endif // WASATCH_IN_ARCHES
     );
   }
 
@@ -1467,7 +1467,7 @@ Arches::scheduleTimeAdvance( const LevelP& level,
 
   if (d_doingRestart) {
 
-#   ifdef WASATCH_ARCHES
+#   ifdef WASATCH_IN_ARCHES
     setup_operators( level, patchInfoMap_ );
 #   endif
 
@@ -1492,9 +1492,9 @@ Arches::scheduleTimeAdvance( const LevelP& level,
 bool Arches::needRecompile(double time, double dt,
                             const GridP& grid)
 {
-# ifdef WASATCH_ARCHES
+# ifdef WASATCH_IN_ARCHES
   ASSERT( false ); // not ready yet.
-# endif // WASATCH_ARCHES
+# endif // WASATCH_IN_ARCHES
 
   bool temp;
   if ( d_lab->recompile_taskgraph ) {

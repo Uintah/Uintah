@@ -76,9 +76,10 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Arches/Filter.h>
 #endif
 
-#ifdef WASATCH_ARCHES
+#ifdef WASATCH_IN_ARCHES
 #include <CCA/Components/Wasatch/Wasatch.h>
-#endif // WASATCH_ARCHES
+#include <CCA/Components/Wasatch/FieldTypes.h>
+#endif // WASATCH_IN_ARCHES
 
 
 #include <cmath>
@@ -287,9 +288,9 @@ ExplicitSolver::problemSetup(const ProblemSpecP& params)
 // ****************************************************************************
 int ExplicitSolver::nonlinearSolve(const LevelP& level,
                                    SchedulerP& sched
-#                                  ifdef WASATCH_ARCHES
+#                                  ifdef WASATCH_IN_ARCHES
                                    , Wasatch& wasatch,
-#                                  endif // WASATCH_ARCHES
+#                                  endif // WASATCH_IN_ARCHES
                                    )
 {
 
@@ -640,7 +641,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
                                        d_timeIntegratorLabels[curr_level]);
     }
 
-#   ifdef WASATCH_ARCHES
+#   ifdef WASATCH_IN_ARCHES
     /* hook in construction of task interface for moment transport equations here.
      * This is within the RK loop, so we need to pass the stage as well.
      *
@@ -660,13 +661,13 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       gh->exprFactory->register_expression( Expr::Tag(xVelName,Expr::STATE_N  ), new typename XVelT::Builder() );
 
       // register placeholder expressions for y velocity string name: "vVelocitySPBC"
-      typedef Expr::PlaceHolder<XVolField>  YVelT;
-      std::string xVelName = d_lab->d_vVelocitySPBCLabel->getName();
+      typedef Expr::PlaceHolder<YVolField>  YVelT;
+      std::string yVelName = d_lab->d_vVelocitySPBCLabel->getName();
       gh->exprFactory->register_expression( Expr::Tag(xVelName,Expr::STATE_N  ), new typename YVelT::Builder() );
 
       // register placeholder expressions for z velocity string name: "wVelocitySPBC"
-      typedef Expr::PlaceHolder<XVolField>  ZVelT;
-      std::string xVelName = d_lab->d_wVelocitySPBCLabel->getName();      
+      typedef Expr::PlaceHolder<ZVolField>  ZVelT;
+      std::string yVelName = d_lab->d_wVelocitySPBCLabel->getName();      
       gh->exprFactory->register_expression( Expr::Tag(xVelName,Expr::STATE_N  ), new typename ZVelT::Builder() );
       
       std::vector<std::string> solnVarNames;
@@ -694,7 +695,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       wasatch->task_interface_list().push_back( wasatchRHSTask );
       rhsTask->schedule( curr_level );  // note that there is another interface for this if we need some fields from the new DW.
     }
-#   endif // WASATCH_ARCHES
+#   endif // WASATCH_IN_ARCHES
   }
 
   // print information at probes provided in input file
