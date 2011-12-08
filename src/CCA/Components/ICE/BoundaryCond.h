@@ -59,9 +59,7 @@ static DebugStream cout_BC_CC("ICE_BC_CC", false);
 static DebugStream cout_BC_FC("ICE_BC_FC", false);
 
   class DataWarehouse;
-
-  void is_BC_specified(const ProblemSpecP& prob_spec, string variable, const MaterialSubset* matls);
-  
+ 
   void BC_bulletproofing(const ProblemSpecP& prob_spec,SimulationStateP& sharedState );
   
   //__________________________________
@@ -145,20 +143,20 @@ static DebugStream cout_BC_FC("ICE_BC_FC", false);
   void set_CFI_BC( CCVariable<double>& q_CC, const Patch* patch);
   
   
-template<class T> 
+  template<class T> 
   void setBC(T& variable, 
              const  string& kind,
              const string& comp,    
              const Patch* patch,    
              const int mat_id);
 
- int setSymmetryBC_CC( const Patch* patch,
+  int setSymmetryBC_CC( const Patch* patch,
                        const Patch::FaceType face,
                        CCVariable<Vector>& var_CC,               
                        Iterator& bound_ptr);
 
- template<class T>
- int setDirichletBC_FC( const Patch* patch,
+  template<class T>
+  int setDirichletBC_FC( const Patch* patch,
                         const Patch::FaceType face,       
                         T& vel_FC,                        
                         Iterator& bound_ptr,                  
@@ -244,55 +242,6 @@ bool getIteratorBCValueBCKind( const Patch* patch,
   }
   
   return false;
-}
-
-/* --------------------------------------------------------------------- 
- Function~  setNeumanBC_CC--
- ---------------------------------------------------------------------  */
- template<class T>
- int setNeumannBC_CC( const Patch* patch,
-                      const Patch::FaceType face,
-                      CCVariable<T>& var,               
-                      Iterator& bound_ptr,                 
-                      T& value,                         
-                      const Vector& cell_dx)                  
-{
- IntVector oneCell = patch->faceDirection(face);
- IntVector dir= patch->getFaceAxes(face);
- double dx = cell_dx[dir[0]];
-
- int nCells = 0;
-
- if (value == T(0)) {   //    Z E R O  N E U M A N N
-   for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
-     IntVector adjCell = *bound_ptr - oneCell;
-     var[*bound_ptr] = var[adjCell];
-   }
-   nCells += bound_ptr.size();;
- }else{                //    N E U M A N N
-   for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
-     IntVector adjCell = *bound_ptr - oneCell;
-     var[*bound_ptr] = var[adjCell] - value * dx;
-   }
-   nCells += bound_ptr.size();;
- }
- return nCells;
-}
-
-/* --------------------------------------------------------------------- 
- Function~  setDirichletBC_CC--
- ---------------------------------------------------------------------  */
- template<class T>
- int setDirichletBC_CC( CCVariable<T>& var,     
-                        Iterator& bound_ptr,    
-                        T& value) 
-{
- for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
-   var[*bound_ptr] = value;
- }
- int nCells = bound_ptr.size();
- return nCells;
-
 }
 
 /* --------------------------------------------------------------------- 
