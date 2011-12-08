@@ -73,7 +73,14 @@ ifeq ($(HAVE_PETSC),yes)
 endif
 
 
+PSELIBS :=
+ifeq ($(BUILD_WASATCH_IN_ARCHES),yes)
 PSELIBS := \
+        CCA/Components/Wasatch
+endif
+
+PSELIBS := \
+        $(PSELIBS) \
         CCA/Components/Arches/fortran   \
         CCA/Components/Arches/Mixing    \
         CCA/Components/Models           \
