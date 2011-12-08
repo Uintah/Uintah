@@ -3,8 +3,11 @@
 
   <CFD>
     <ARCHES                             spec="OPTIONAL NO_DATA" >
-
-
+    
+      <WASATCH-ARCHES                             spec="OPTIONAL NO_DATA" >
+        <include href="wasatch_spec.xml" section="Wasatch"/>
+      </WASATCH-ARCHES>
+      
       <set_initial_condition             spec="OPTIONAL NO_DATA"
                                         attribute1="inputfile REQUIRED STRING"/>
       <new_BC_on_restart                spec="OPTIONAL NO_DATA" />
