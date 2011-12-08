@@ -79,6 +79,12 @@ DEALINGS IN THE SOFTWARE.
 #ifdef WASATCH_IN_ARCHES
 #include <CCA/Components/Wasatch/Wasatch.h>
 #include <CCA/Components/Wasatch/FieldTypes.h>
+#include <CCA/Components/Wasatch/transport/TransportEquation.h>
+#include <CCA/Components/Wasatch/transport/ParseEquation.h>
+#include <CCA/Components/Wasatch/GraphHelperTools.h>
+#include <CCA/Components/Wasatch/TaskInterface.h>
+#include <expression/ExprLib.h>
+#include <expression/PlaceHolderExpr.h>
 #endif // WASATCH_IN_ARCHES
 
 
@@ -289,7 +295,7 @@ ExplicitSolver::problemSetup(const ProblemSpecP& params)
 int ExplicitSolver::nonlinearSolve(const LevelP& level,
                                    SchedulerP& sched
 #                                  ifdef WASATCH_IN_ARCHES
-                                   , Wasatch& wasatch,
+                                   , Wasatch::Wasatch& wasatch
 #                                  endif // WASATCH_IN_ARCHES
                                    )
 {
@@ -652,48 +658,49 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
      * to trust the user to get those right.
      */
     {
-      const Wasatch::EquationAdaptors& adaptors = wasatch.equation_adaptors();
-      const Wasatch::GraphHelper* const gh = wasatch.graph_categories()[ADVANCE_SOLUTION];
-      
+      const Wasatch::Wasatch::EquationAdaptors& adaptors = wasatch.equation_adaptors();
+      Wasatch::GraphHelper* const gh = wasatch.graph_categories()[Wasatch::ADVANCE_SOLUTION];
+
       // register placeholder expressions for x velocity string name: "uVelocitySPBC"
-      typedef Expr::PlaceHolder<XVolField>  XVelT;      
+      typedef Expr::PlaceHolder<XVolField>  XVelT;
       std::string xVelName = d_lab->d_uVelocitySPBCLabel->getName();
-      gh->exprFactory->register_expression( Expr::Tag(xVelName,Expr::STATE_N  ), new typename XVelT::Builder() );
+      gh->exprFactory->register_expression( Expr::Tag(xVelName,Expr::STATE_N  ), new XVelT::Builder() );
 
       // register placeholder expressions for y velocity string name: "vVelocitySPBC"
       typedef Expr::PlaceHolder<YVolField>  YVelT;
       std::string yVelName = d_lab->d_vVelocitySPBCLabel->getName();
-      gh->exprFactory->register_expression( Expr::Tag(xVelName,Expr::STATE_N  ), new typename YVelT::Builder() );
+      gh->exprFactory->register_expression( Expr::Tag(yVelName,Expr::STATE_N  ), new YVelT::Builder() );
 
       // register placeholder expressions for z velocity string name: "wVelocitySPBC"
       typedef Expr::PlaceHolder<ZVolField>  ZVelT;
-      std::string yVelName = d_lab->d_wVelocitySPBCLabel->getName();      
-      gh->exprFactory->register_expression( Expr::Tag(xVelName,Expr::STATE_N  ), new typename ZVelT::Builder() );
-      
+      std::string zVelName = d_lab->d_wVelocitySPBCLabel->getName();
+      gh->exprFactory->register_expression( Expr::Tag(zVelName,Expr::STATE_N  ), new ZVelT::Builder() );
+
       std::vector<std::string> solnVarNames;
-      for( Wasatch::EquationAdaptors::const_iterator ieq=adaptors.begin(); ieq!=adaptors.end(); ++ieq ){
-        const TransportEquation* const eq = (*ieq)->equation();
+      for( Wasatch::Wasatch::EquationAdaptors::const_iterator ieq=adaptors.begin(); ieq!=adaptors.end(); ++ieq ){
+        const Wasatch::TransportEquation* const eq = (*ieq)->equation();
         solnVarNames.push_back( eq->solution_variable_name() );
-        gh->rootIDs.push_back( eq->get_rhs_id() );
+        gh->rootIDs.insert( eq->get_rhs_id() );
       }
-            
+
       // jcs still need to fill in some gaps here.
       std::stringstream strRKStage;
       strRKStage << curr_level;
       const std::set<std::string>& ioFieldSet = wasatch.io_field_set();
-      TaskInterface* wasatchRHSTask = scinew TaskInterface( gh->rootIDs,
-                                                     "wasatch_task_rhs_stage_" + strRKStage.str(),
-                                                     *(gh->exprFactory),
-                                                     level, sched, patches, materials,
-                                                     wasatch->patch_info_map(),
-                                                     true,
-                                                     curr_level,  /* need to get this from Arches info */
-                                                     ioFieldSet   /* need to build something here - probably need to parse input */
-                                                     );
+      Wasatch::TaskInterface* wasatchRHSTask =
+        scinew Wasatch::TaskInterface( gh->rootIDs,
+                                       "wasatch_task_rhs_stage_" + strRKStage.str(),
+                                       *(gh->exprFactory),
+                                       level, sched, patches, matls,
+                                       wasatch.patch_info_map(),
+                                       true,
+                                       curr_level,  /* need to get this from Arches info */
+                                       ioFieldSet   /* need to build something here - probably need to parse input */
+                                       );
 
       // jcs need to build a CoordHelper (or graph the one from wasatch?) - see Wasatch::TimeStepper.cc...
-      wasatch->task_interface_list().push_back( wasatchRHSTask );
-      rhsTask->schedule( curr_level );  // note that there is another interface for this if we need some fields from the new DW.
+      wasatch.task_interface_list().push_back( wasatchRHSTask );
+      wasatchRHSTask->schedule( curr_level );  // note that there is another interface for this if we need some fields from the new DW.
     }
 #   endif // WASATCH_IN_ARCHES
   }
@@ -3312,12 +3319,12 @@ ExplicitSolver::checkDensityLag(const ProcessorGroup* pc,
     }
   }
 }
-void ExplicitSolver::setInitVelConditionInterface( const Patch* patch, 
-                                             SFCXVariable<double>& uvel, 
-                                             SFCYVariable<double>& vvel, 
-                                             SFCZVariable<double>& wvel )  
+void ExplicitSolver::setInitVelConditionInterface( const Patch* patch,
+                                             SFCXVariable<double>& uvel,
+                                             SFCYVariable<double>& vvel,
+                                             SFCZVariable<double>& wvel )
 {
-  
-  d_momSolver->setInitVelCondition( patch, uvel, vvel, wvel ); 
-  
+
+  d_momSolver->setInitVelCondition( patch, uvel, vvel, wvel );
+
 }

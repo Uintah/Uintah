@@ -106,6 +106,12 @@ WARNING
 
 // Filtering of drhodt is now an input parameter for Properties
 
+# ifdef WASATCH_IN_ARCHES
+  namespace Wasatch{
+    class Wasatch;
+  }
+# endif // WASATCH_IN_ARCHES
+
 namespace Uintah {
 
   class VarLabel;
@@ -123,9 +129,6 @@ namespace Uintah {
   class ExplicitTimeInt;
   class PartVel;
   class DQMOM;
-# ifdef WASATCH_IN_ARCHES
-  class Wasatch;
-# endif // WASATCH_IN_ARCHES
 
 #ifdef PetscFilter
   class Filter;
@@ -340,7 +343,7 @@ private:
   void registerPropertyModels( ProblemSpecP& db );
 
 # ifdef WASATCH_IN_ARCHES
-  const Wasatch* d_wasatch;
+  Wasatch::Wasatch* const d_wasatch;
 # endif // WASATCH_IN_ARCHES
 
       double d_init_dt; // The initial dt from input file.

@@ -139,7 +139,7 @@ const int Arches::NDIM = 3;
 Arches::Arches(const ProcessorGroup* myworld) :
   UintahParallelComponent(myworld)
 # ifdef WASATCH_IN_ARCHES
-  , d_wasatch( new Wasatch(myworld) )
+  , d_wasatch( new Wasatch::Wasatch(myworld) )
 # endif // WASATCH_IN_ARCHES
 {
   d_lab =  scinew  ArchesLabel();
@@ -316,7 +316,7 @@ Arches::problemSetup(const ProblemSpecP& params,
   }
 
 # ifdef WASATCH_IN_ARCHES
-  d_wasatch->problemSetup( db->findBlock("Wasatch") );
+  d_wasatch->problemSetup( db->findBlock("Wasatch"), materials_ps, grid, sharedState );
 # endif // WASATCH_IN_ARCHES
 
   ProblemSpecP transportEqn_db = db->findBlock("TransportEqns");
@@ -1466,10 +1466,6 @@ Arches::scheduleTimeAdvance( const LevelP& level,
   }
 
   if (d_doingRestart) {
-
-#   ifdef WASATCH_IN_ARCHES
-    setup_operators( level, patchInfoMap_ );
-#   endif
 
     if (d_newBC_on_Restart) {
       const PatchSet* patches= level->eachPatch();
