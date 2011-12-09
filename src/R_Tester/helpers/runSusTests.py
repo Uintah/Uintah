@@ -502,11 +502,16 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
   SVN_OPTIONS = "-svnStat -svnDiff"
   #SVN_OPTIONS = "" # When debugging, if you don't want to spend time waiting for SVN, uncomment this line.
 
-  # set the command for sus, based on # of processors
+  # set the command for sus, based on # of processors (or if it's a GPU test)
   # the /usr/bin/time is to tell how long it took
   if np == 1:
-    command = "/usr/bin/time -p %s/sus %s" % (susdir, SVN_OPTIONS)
-    mpimsg = ""
+    if testname == "GPU":
+      GPUARGS = "-nthreads 4 -gpu"
+      command = "/usr/bin/time -p %s %s %s/sus %s -mpi" %s % (MPIHEAD, int(np), susdir, SVN_OPTIONS, GPUARGS)
+      mpimsg = " (mpi %s proc)" % (int(np))
+    else :
+      command = "/usr/bin/time -p %s/sus %s" % (susdir, SVN_OPTIONS)
+      mpimsg = "
   else:
     command = "/usr/bin/time -p %s %s %s/sus %s -mpi" % (MPIHEAD, int(np), susdir, SVN_OPTIONS)
     mpimsg = " (mpi %s proc)" % (int(np))
