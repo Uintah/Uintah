@@ -53,6 +53,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/DbgOutput.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
+#include <Core/Parallel/Parallel.h>
 
 using namespace std;
 using SCIRun::Point;

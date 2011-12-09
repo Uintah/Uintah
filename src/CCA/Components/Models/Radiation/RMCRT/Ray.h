@@ -123,16 +123,6 @@ namespace Uintah{
                      const Patch::FaceIteratorType type,
                      const Patch::FaceType face);
 
-
-    bool getIteratorBCValueBCKind( const Patch* patch, 
-                                   const Patch::FaceType face,
-                                   const int child,
-                                   const string& desc,
-                                   const int mat_id,
-                                   double& bc_value,
-                                   Iterator& bound_ptr,
-                                   string& bc_kind);
-
   }; // class Ray
 } // namespace Uintah
 

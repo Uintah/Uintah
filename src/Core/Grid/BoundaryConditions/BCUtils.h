@@ -28,6 +28,8 @@ DEALINGS IN THE SOFTWARE.
 */
 #ifndef Packages_Uintah_Core_Grid_BC_BCUtils_h
 #define Packages_Uintah_Core_Grid_BC_BCUtils_h
+#include <Core/Grid/BoundaryConditions/BCDataArray.h>
+#include <Core/Grid/BoundaryConditions/BoundCond.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Patch.h>
@@ -35,6 +37,84 @@ DEALINGS IN THE SOFTWARE.
 namespace Uintah {
 
 void is_BC_specified(const ProblemSpecP& prob_spec, string variable, const MaterialSubset* matls);
+  
+  
+/* --------------------------------------------------------------------- 
+ For a given domain face, material, variable this returns 
+ the following:
+    - boundary condition iterator
+    - any value associated with that BC
+    - BC_kind ( Dirichlet, symmetry, Neumann.....)
+ ---------------------------------------------------------------------  */
+template <class T>
+bool getIteratorBCValueBCKind( const Patch* patch, 
+                               const Patch::FaceType face,
+                               const int child,
+                               const string& desc,
+                               const int mat_id,
+                               T& bc_value,
+                               Iterator& bound_ptr,
+                               string& bc_kind)
+{ 
+  bc_value=T(-9);
+  bc_kind="NotSet";
+  bool foundBC = false;
+
+  //__________________________________
+  //  Any variable with zero Neumann BC
+  if (desc == "zeroNeumann" ){
+    bc_kind = "zeroNeumann";
+    bc_value = T(0.0);
+    foundBC = true;
+  }
+  
+  const BoundCondBase* bc;
+  const BoundCond<T>* new_bcs;
+  const BCDataArray* bcd = patch->getBCDataArray(face);
+  //__________________________________
+  //  non-symmetric BCs
+  // find the bc_value and kind
+  if( !foundBC ){
+    bc = bcd->getBoundCondData(mat_id,desc,child);
+    new_bcs = dynamic_cast<const BoundCond<T> *>(bc);
+
+    if (new_bcs != 0) {
+      bc_value = new_bcs->getValue();
+      bc_kind  = new_bcs->getBCType__NEW();
+      foundBC = true;
+    }
+    delete bc;
+  }
+  
+  //__________________________________
+  // Symmetry
+  if( !foundBC ){
+    bc = bcd->getBoundCondData(mat_id,"Symmetric",child);
+    string test  = bc->getBCType__NEW();
+
+    if (test == "symmetry") {
+      bc_kind  = "symmetry";
+      bc_value = T(0.0);
+      foundBC = true;
+    }
+    delete bc;
+  }
+  
+  //__________________________________
+  //  Now deteriming the iterator
+  if(foundBC){
+    // For this face find the iterator
+    bcd->getCellFaceIterator(mat_id,bound_ptr,child);
+    
+    // bulletproofing
+    if (bound_ptr.done()){  // size of the iterator is 0
+      return false;
+    }
+    return true;
+  }
+  return false;
+}  
+  
   
 //______________________________________________________________________
 //  Neumann BC:  CCVariable

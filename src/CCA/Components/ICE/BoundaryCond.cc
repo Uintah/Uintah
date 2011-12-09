@@ -40,7 +40,6 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/Variables/PerPatch.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Task.h>
-#include <Core/Grid/BoundaryConditions/BCUtils.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/CellIterator.h>
 
