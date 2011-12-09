@@ -7,7 +7,7 @@
   </Meta>
 
   <SimulationComponent type="RMCRT_Test" />
-    <Solver type= "hypre" />
+  
   <!--__________________________________-->
   <!-- run for 10 timesteps for RT memory -->
   <!-- and checkpoint testing             -->
@@ -19,16 +19,71 @@
     <max_Timesteps> 10         </max_Timesteps>
     <timestep_multiplier>  1  </timestep_multiplier>
   </Time>
-  <!--__________________________________-->
+
+  <!--____________________________________________________________________-->
+  <!--      G  R  I  D     V  A  R  I  A  B  L  E  S                      -->
+  <!--____________________________________________________________________-->
   <Grid>
+    <BoundaryConditions>
+      <Face side = "x-">
+        <BCType id = "0"   label = "color"     var = "Neumann"> 
+                            <value> 0. </value> 
+        </BCType> 
+        <BCType id = "0"   label = "abskg"     var = "Neumann">
+                            <value> 0. </value>
+        </BCType>
+      </Face>
+      <Face side = "x+">
+        <BCType id = "0"   label = "color"     var = "Neumann">
+                           <value> 0. </value>                
+        </BCType>
+        <BCType id = "0"   label = "abskg"     var = "Neumann">
+                           <value> 0. </value>
+        </BCType>
+      </Face>
+      <Face side = "y-">
+        <BCType id = "0"   label = "color"     var = "Neumann">
+                           <value> 0. </value>
+        </BCType>
+        <BCType id = "0"   label = "abskg"     var = "Neumann">
+                           <value> 0. </value>
+        </BCType> 
+      </Face>               
+      <Face side = "y+">
+        <BCType id = "0"   label = "color"     var = "Neumann">
+                            <value> 0. </value>
+        </BCType>
+        <BCType id = "0"   label = "abskg"     var = "Neumann">
+                           <value> 0. </value>
+        </BCType>
+      </Face>
+      <Face side = "z-">
+        <BCType id = "0"   label = "color"     var = "Neumann">
+                           <value> 0. </value>
+        </BCType>
+        <BCType id = "0"   label = "abskg"     var = "Neumann">
+                           <value> 0. </value>
+        </BCType>
+      </Face>
+      <Face side = "z+">
+        <BCType id = "0"   label = "color"     var = "Neumann">
+                           <value> 0. </value>
+        </BCType>
+        <BCType id = "0"   label = "abskg"     var = "Neumann">
+                           <value> 0. </value>
+        </BCType>
+      </Face>
+    </BoundaryConditions>
+
     <Level>
       <Box label = "0">                              
          <lower>      [0,0,0]     </lower>         
          <upper>      [1, 1, 1]   </upper>         
          <resolution> [41,41,41]  </resolution>    
          <patches>    [1,1,1]     </patches> 
-         <extraCells> [0,0,0]     </extraCells>      
-      </Box>                                         
+         <extraCells> [1,1,1]     </extraCells>
+      </Box>
+      <periodic> [0,0,0] </periodic>                                     
     </Level>
   </Grid>
   <!--__________________________________-->
@@ -46,18 +101,17 @@
   <!--__________________________________ -->
   <RMCRT>
     <Temperature>       64.804     </Temperature>
-    <NoOfRays>          25        </NoOfRays>
+    <abskg>             999        </abskg>
+    <NoOfRays>          25         </NoOfRays>
     <Threshold>         0.05       </Threshold>
-    <AlphaEW>             1          </AlphaEW>
-	  <AlphaNS>             1          </AlphaNS>
-	  <AlphaTB>             1          </AlphaTB>
-    <TEW>                 000          </TEW>
-	  <TNS>                 000          </TNS>
-	  <TTB>                 000          </TTB>
+    <AlphaEW>             1        </AlphaEW>
+    <AlphaNS>             1        </AlphaNS>
+    <AlphaTB>             1        </AlphaTB>
+    <TEW>                 000      </TEW>
+    <TNS>                 000      </TNS>
+    <TTB>                 000      </TTB>
     <Slice>             20         </Slice>
     <StefanBoltzmann>   5.67051e-8 </StefanBoltzmann>
     <benchmark_1>       true       </benchmark_1>
-    <benchmark_13pt2>   false       </benchmark_13pt2>
-
-	</RMCRT>
+  </RMCRT>
 </Uintah_specification>

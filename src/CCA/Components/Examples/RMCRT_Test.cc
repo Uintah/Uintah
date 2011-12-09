@@ -60,6 +60,7 @@ using SCIRun::DebugStream;
 
 static DebugStream dbg("RMCRT_Test", false);
 
+
 namespace Uintah
 {
 //______________________________________________________________________
@@ -79,6 +80,7 @@ RMCRT_Test::RMCRT_Test ( const ProcessorGroup* myworld ): UintahParallelComponen
   d_doFakeRMCRT = false;
   d_doRealRMCRT = false;
   d_initColor = -9;
+  d_initAbskg = -9;
   d_orderOfInterpolation = -9;
   d_CoarseLevelRMCRTMethod = true;
   d_multiLevelRMCRTMethod  = false;
@@ -129,6 +131,7 @@ void RMCRT_Test::problemSetup(const ProblemSpecP& prob_spec,
   d_radiusOfBall     = 0.10 * d_gridMax.x();
   d_radiusOfOrbit    = 0.25 * d_gridMax.x();
   d_angularVelocity  = 10;
+  
 
   //__________________________________
   //  pseudo RMCRT
@@ -154,10 +157,25 @@ void RMCRT_Test::problemSetup(const ProblemSpecP& prob_spec,
                                  d_colorLabel,
                                  d_divQLabel );
                                  
-    rmcrt_db->get("Temperature",  d_initColor);
+    rmcrt_db->require("Temperature",  d_initColor);
+    rmcrt_db->require("abskg",        d_initAbskg);
     
     d_realRMCRT->problemSetup( rmcrt_db );
-    cout << "__________________________________ Reading in RMCRT section of ups file" << endl;
+    proc0cout << "__________________________________ Reading in RMCRT section of ups file" << endl;
+  }
+  //__________________________________
+  //  bullet proofing
+  IntVector extraCells = grid->getLevel(0)->getExtraCells();
+  IntVector periodic   = grid->getLevel(0)->getPeriodicBoundaries();
+
+  for (int dir=0; dir<3; dir++){
+    if(periodic[dir] != 1 && extraCells[dir] !=1) {
+      ostringstream warn;
+      warn<< "\n \n INPUT FILE ERROR: \n You must have either a periodic boundary " << periodic
+          << " or one extraCell "<< extraCells << " specified in each direction";
+
+      throw ProblemSetupException(warn.str(),__FILE__,__LINE__);
+    }
   }
   
   //__________________________________
@@ -226,7 +244,7 @@ void RMCRT_Test::problemSetup(const ProblemSpecP& prob_spec,
           << " <useLockStep> true </useLockStep> \n"
           << " inside of the <AMR> section. \n"; 
       throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
-    }  
+    }
   }
 }
   
@@ -240,6 +258,7 @@ void RMCRT_Test::scheduleInitialize ( const LevelP& level,
                             &RMCRT_Test::initialize );
 
   task->computes( d_colorLabel );
+  task->computes( d_abskgLabel );
   sched->addTask( task, level->eachPatch(), d_sharedState->allMaterials() );
 }
 
@@ -357,6 +376,9 @@ void RMCRT_Test::pseudoCFD ( const ProcessorGroup*,
         IntVector c(*iter);
         color[c] = color_old[c] + 0.01 * divQ[c];
       }
+      
+      // set boundary conditions 
+      d_realRMCRT->setBC(color,  d_colorLabel->getName(), patch, d_matl);
     }
   }
 }
@@ -733,7 +755,9 @@ void RMCRT_Test::initialize (const ProcessorGroup*,
       int matl = matls->get(m);
 
      CCVariable<double> color;
-      new_dw->allocateAndPut(color, d_colorLabel, matl, patch);
+     CCVariable<double> abskg;
+     new_dw->allocateAndPut(color, d_colorLabel, matl, patch);
+     new_dw->allocateAndPut(abskg, d_abskgLabel, matl, patch);
 
      for ( CellIterator iter(patch->getExtraCellIterator()); !iter.done(); iter++) {
         IntVector idx(*iter);
@@ -746,6 +770,7 @@ void RMCRT_Test::initialize (const ProcessorGroup*,
         
         if( d_doRealRMCRT ){
           color[idx] = d_initColor;
+          abskg[idx] = d_initAbskg;
         }
       }
     }
@@ -976,6 +1001,5 @@ void RMCRT_Test::coarsen_Q ( const ProcessorGroup*,
       }  // fine patch loop
     }
   }  // course patch loop 
-}  
-
+}
 } // namespace Uintah

@@ -3,13 +3,15 @@
 #include <CCA/Components/Models/Radiation/RMCRT/MersenneTwister.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Grid/DbgOutput.h>
+#include <Core/Grid/BoundaryConditions/BCUtils.h>
 #include <time.h>
 
 //--------------------------------------------------------------
 //
 using namespace Uintah;
 using namespace std;
-static DebugStream dbg("RAY", false);
+static DebugStream dbg("RAY",       false);
+static DebugStream dbg_BC("RAY_BC", false);
 //---------------------------------------------------------------------------
 // Method: Constructor. he's not creating an instance to the class yet
 //---------------------------------------------------------------------------
@@ -54,6 +56,13 @@ Ray::problemSetup( const ProblemSpecP& inputdb)
   db->getWithDefault( "benchmark_13pt2" , _benchmark_13pt2, false );
   db->getWithDefault("StefanBoltzmann",   _sigma, 5.67051e-8);  // Units are W/(m^2-K)
   _sigma_over_pi = _sigma/_pi;
+  
+  const MaterialSubset* mss = d_matlSet->getUnion();
+  
+  ProblemSpecP root_ps = db->getRootNode();
+ 
+  is_BC_specified(root_ps, d_temperatureLabel->getName(), mss);
+  is_BC_specified(root_ps, d_abskgLabel->getName(),       mss);
 }
 
 //______________________________________________________________________
@@ -153,31 +162,38 @@ Ray::initProperties( const ProcessorGroup* pc,
 
     int Nx = pHigh[0] - pLow[0];
     int Ny = pHigh[1] - pLow[1];
-    int Nz = pHigh[2] - pLow[2];   
+    int Nz = pHigh[2] - pLow[2];
 
     Vector Dx = patch->dCell(); 
 
-    for ( CellIterator iter = patch->getCellIterator(); !iter.done(); iter++ ){ 
-      IntVector c = *iter; 
-      double temp2 = 0;
 
-      if ( _benchmark_1 ) { 
+    //__________________________________
+    //  Benchmark initializations
+    if ( _benchmark_1 ) {
+      for ( CellIterator iter = patch->getCellIterator(); !iter.done(); iter++ ){
+        IntVector c = *iter;
         abskg[c] = 0.90 * ( 1.0 - 2.0 * fabs( ( c[0] - (Nx - 1.0) /2.0) * Dx[0]) )
                         * ( 1.0 - 2.0 * fabs( ( c[1] - (Ny - 1.0) /2.0) * Dx[1]) )
                         * ( 1.0 - 2.0 * fabs( ( c[2] - (Nz - 1.0) /2.0) * Dx[2]) ) 
-                        + 0.1;
-        temp2 = temperature[c] * temperature[c];
+                        + 0.1;                  
       }
-      else if (_benchmark_13pt2) {
+      // apply boundary conditions
+      setBC(abskg, d_abskgLabel->getName(), patch, d_matl);
+    }
+    else if (_benchmark_13pt2) {
+      for ( CellIterator iter = patch->getCellIterator(); !iter.done(); iter++ ){ 
+        IntVector c = *iter;
         abskg[c] = 1;
-        temp2 = 1500 * 1500 ;
       }
-      else { 
-        // need to put radcal calulation here: 
-        abskg[c] = 0.0; 
-        absorp[c] = 0.0;
-        temp2 = temperature[c] * temperature[c];
-      } 
+      // apply boundary conditions
+      setBC(abskg, d_abskgLabel->getName(), patch, d_matl);
+    }    
+
+    //__________________________________
+    //  compute sigmaT4
+    for ( CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++ ){ 
+      IntVector c = *iter; 
+      double temp2 = temperature[c] * temperature[c];
       sigmaT4Pi[c] = _sigma_over_pi * temp2 * temp2; // sigma T^4/pi
     }
   }
@@ -197,7 +213,7 @@ Ray::sched_sigmaT4( const LevelP& level,
 
   printSchedule(level,dbg,taskname);
 
-  tsk->requires( Task::OldDW, d_temperatureLabel, Ghost::None, 0 ); 
+  tsk->requires( Task::NewDW, d_temperatureLabel, Ghost::None, 0 ); 
   tsk->computes(d_sigmaT4_label); 
 
   sched->addTask( tsk, level->eachPatch(), d_matlSet );
@@ -209,7 +225,7 @@ void
 Ray::sigmaT4( const ProcessorGroup*,
               const PatchSubset* patches,           
               const MaterialSubset*,                
-              DataWarehouse* old_dw,                
+              DataWarehouse*,                
               DataWarehouse* new_dw )               
 {
 
@@ -221,13 +237,12 @@ Ray::sigmaT4( const ProcessorGroup*,
     double sigma_over_pi = _sigma/M_PI;
 
     constCCVariable<double> temp;
-    constCCVariable<double> abskg;
     CCVariable<double> sigmaT4;             // sigma T ^4/pi
 
-    old_dw->get(temp,               d_temperatureLabel,   d_matl, patch, Ghost::None, 0);  
+    new_dw->get(temp,               d_temperatureLabel,   d_matl, patch, Ghost::None, 0);  
     new_dw->allocateAndPut(sigmaT4, d_sigmaT4_label,      d_matl, patch);
 
-    for (CellIterator iter = patch->getCellIterator();!iter.done();iter++){
+    for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
       const IntVector& c = *iter;
       double T_sqrd = temp[c] * temp[c];
       sigmaT4[c] = sigma_over_pi * T_sqrd * T_sqrd;
@@ -305,8 +320,7 @@ Ray::rayTrace( const ProcessorGroup* pc,
 
     unsigned long int size = 0;                        // current size of PathIndex
     Vector Dx = patch->dCell();                        // cell spacing
-
-    int face;                                              // takes values of 0 if ray strikes E/W face, 1 if N/S face, 2 if T/B face 
+ 
     double local_alpha[3] = {_alphaEW,_alphaNS,_alphaTB};  // emissivity of the E/W, N/S, and T/B domain walls
     double local_sigmaT4Pi[3] = {0,0,0};                   // intensity of the E/W, N/S, and T/B domain walls
     double local_T[3] = {_TEW, _TNS, _TTB};
@@ -413,6 +427,8 @@ Ray::rayTrace( const ProcessorGroup* pc,
 
         //Threshold while loop
         while (intensity > _Threshold){
+        
+          int face = -9;
 
           while (in_domain){
             size++;
@@ -545,6 +561,166 @@ Ray::containsCell(const IntVector &low, const IntVector &high, const IntVector &
            high.x() > cell.x() && 
            high.y() > cell.y() &&
            high.z() > cell.z();
+}
+
+
+//______________________________________________________________________
+//  Set Boundary conditions
+void 
+Ray::setBC(CCVariable<double>& Q_CC,
+           const string& desc,
+           const Patch* patch,
+           const int mat_id)
+{
+  if(patch->hasBoundaryFaces() == false){
+    return;
+  }
+    
+  dbg_BC << "setBC \t"<< desc <<" "
+             << " mat_id = " << mat_id <<  ", Patch: "<< patch->getID() << endl;
+
+  // Iterate over the faces encompassing the domain
+  vector<Patch::FaceType> bf;
+  patch->getBoundaryFaces(bf);
+  
+  for( vector<Patch::FaceType>::const_iterator iter = bf.begin(); iter != bf.end(); ++iter ){
+    Patch::FaceType face = *iter;
+    int nCells = 0;
+    string bc_kind = "NotSet";
+       
+    IntVector dir= patch->getFaceAxes(face);
+    Vector cell_dx = patch->dCell();
+    int numChildren = patch->getBCDataArray(face)->getNumberChildren(mat_id);
+    
+    // iterate over each geometry object along that face
+    for (int child = 0;  child < numChildren; child++) {
+      double bc_value = -9;
+      Iterator bound_ptr;
+      
+      bool foundIterator = 
+        getIteratorBCValueBCKind( patch, face, child, desc, mat_id,
+                                  bc_value, bound_ptr,bc_kind); 
+                                   
+      if(foundIterator) {
+
+        //__________________________________
+        // Dirichlet
+        if(bc_kind == "Dirichlet"){
+           nCells += setDirichletBC_CC<double>( Q_CC, bound_ptr, bc_value);
+        }
+        //__________________________________
+        // Neumann
+        else if(bc_kind == "Neumann"){
+           nCells += setNeumannBC_CC<double>( patch, face, Q_CC, bound_ptr, bc_value, cell_dx);
+        }                                   
+        //__________________________________
+        //  Symmetry
+        else if ( bc_kind == "symmetry" || bc_kind == "zeroNeumann" ) {
+          bc_value = 0.0;
+          nCells += setNeumannBC_CC<double>( patch, face, Q_CC, bound_ptr, bc_value, cell_dx);
+        }
+
+        //__________________________________
+        //  debugging
+        if( dbg_BC.active() ) {
+          bound_ptr.reset();
+          dbg_BC <<"Face: "<< patch->getFaceName(face) <<" numCellsTouched " << nCells
+               <<"\t child " << child  <<" NumChildren "<<numChildren 
+               <<"\t BC kind "<< bc_kind <<" \tBC value "<< bc_value
+               <<"\t bound limits = "<< bound_ptr << endl;
+        }
+      }  // if iterator found
+    }  // child loop
+    
+    dbg_BC << "    "<< patch->getFaceName(face) << " \t " << bc_kind << " numChildren: " << numChildren 
+               << " nCellsTouched: " << nCells << endl;
+    //__________________________________
+    //  bulletproofing
+#if 0
+    Patch::FaceIteratorType type = Patch::ExtraPlusEdgeCells;
+    int nFaceCells = numFaceCells(patch,  type, face);
+
+    if(nCells != nFaceCells){
+      ostringstream warn;
+      warn << "ERROR: ICE: setSpecificVolBC Boundary conditions were not set correctly ("<< desc<< ", " 
+           << patch->getFaceName(face) << ", " << bc_kind  << " numChildren: " << numChildren 
+           << " nCells Touched: " << nCells << " nCells on boundary: "<< nFaceCells<<") " << endl;
+      throw InternalError(warn.str(), __FILE__, __LINE__);
+    }
+#endif
+  }  // faces loop
+}
+
+//______________________________________________________________________
+//  Find the iterator, Value for that specifice BC
+bool 
+Ray::getIteratorBCValueBCKind( const Patch* patch, 
+                               const Patch::FaceType face,             
+                               const int child,                        
+                               const string& desc,                     
+                               const int mat_id,                       
+                               double& bc_value,                       
+                               Iterator& bound_ptr,                    
+                               string& bc_kind) 
+{ 
+  bc_value=double(-9);
+  bc_kind="NotSet";
+  bool foundBC = false;
+
+  //__________________________________
+  //  Any variable with zero Neumann BC
+  if (desc == "zeroNeumann" ){
+    bc_kind = "zeroNeumann";
+    bc_value = 0.0;
+    foundBC = true;
+  }
+
+  const BoundCondBase* bc;
+  const BoundCond<double>* new_bcs;
+  const BCDataArray* bcd = patch->getBCDataArray(face);
+  //__________________________________
+  //  non-symmetric BCs
+  // find the bc_value and kind
+  if( !foundBC ){
+    bc = bcd->getBoundCondData(mat_id,desc,child);
+    new_bcs = dynamic_cast<const BoundCond<double> *>(bc);
+
+    if (new_bcs != 0) {
+      bc_value = new_bcs->getValue();
+      bc_kind  = new_bcs->getBCType__NEW();
+      foundBC = true;
+    }
+    delete bc;
+  }
+
+  //__________________________________
+  // Symmetry
+  if( !foundBC ){
+    bc = bcd->getBoundCondData(mat_id,"Symmetric",child);
+    string test  = bc->getBCType__NEW();
+
+    if (test == "symmetry") {
+      bc_kind  = "symmetry";
+      bc_value = 0.0;
+      foundBC = true;
+    }
+    delete bc;
+  }
+
+  //__________________________________
+  //  Now deteriming the iterator
+  if(foundBC){
+    // For this face find the iterator
+    bcd->getCellFaceIterator(mat_id,bound_ptr,child);
+
+    // bulletproofing
+    if (bound_ptr.done()){  // size of the iterator is 0
+      return false;
+    }
+    return true;
+  }
+
+  return false;
 }
 
 //______________________________________________________________________
