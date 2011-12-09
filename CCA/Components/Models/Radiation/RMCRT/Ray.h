@@ -3,8 +3,11 @@
 
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Grid/SimulationState.h>
+#include <Core/Grid/BoundaryConditions/BCDataArray.h>
+#include <Core/Grid/BoundaryConditions/BoundCond.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/CCVariable.h>
+
 #include <iostream>
 #include <cmath>
 #include <string>
@@ -52,6 +55,11 @@ namespace Uintah{
                             const VarLabel* absorp,
                             const VarLabel* temperature,
                             const VarLabel* divQ);
+                            
+    void setBC(CCVariable<double>& Q_CC,
+               const string& desc,
+               const Patch* patch,          
+               const int mat_id);
 
     private: 
       
@@ -107,6 +115,23 @@ namespace Uintah{
       inline bool containsCell(const IntVector &low, 
                                const IntVector &high, 
                                const IntVector &cell);
+
+    //______________________________________________________________________
+    //   Boundary Conditions
+
+    int numFaceCells(const Patch* patch,
+                     const Patch::FaceIteratorType type,
+                     const Patch::FaceType face);
+
+
+    bool getIteratorBCValueBCKind( const Patch* patch, 
+                                   const Patch::FaceType face,
+                                   const int child,
+                                   const string& desc,
+                                   const int mat_id,
+                                   double& bc_value,
+                                   Iterator& bound_ptr,
+                                   string& bc_kind);
 
   }; // class Ray
 } // namespace Uintah

@@ -13,16 +13,67 @@
     <initTime>      0.0       </initTime>
     <delt_min>      0.00001   </delt_min>
     <delt_max>      1         </delt_max>
-    <max_Timesteps> 1         </max_Timesteps>
+    <max_Timesteps> 10        </max_Timesteps>
     <timestep_multiplier>  1  </timestep_multiplier>
   </Time>
   <!--__________________________________-->
   <Grid>
+    <BoundaryConditions>
+      <Face side = "x-">
+        <BCType id = "0"   label = "color"     var = "Neumann"> 
+                            <value> 0. </value> 
+        </BCType> 
+        <BCType id = "0"   label = "abskg"     var = "Neumann">
+                            <value> 0. </value>
+        </BCType>
+      </Face>
+      <Face side = "x+">
+        <BCType id = "0"   label = "color"     var = "Neumann">
+                           <value> 0. </value>                
+        </BCType>
+        <BCType id = "0"   label = "abskg"     var = "Neumann">
+                           <value> 0. </value>
+        </BCType>
+      </Face>
+      <Face side = "y-">
+        <BCType id = "0"   label = "color"     var = "Neumann">
+                           <value> 0. </value>
+        </BCType>
+        <BCType id = "0"   label = "abskg"     var = "Neumann">
+                           <value> 0. </value>
+        </BCType> 
+      </Face>               
+      <Face side = "y+">
+        <BCType id = "0"   label = "color"     var = "Neumann">
+                            <value> 0. </value>
+        </BCType>
+        <BCType id = "0"   label = "abskg"     var = "Neumann">
+                           <value> 0. </value>
+        </BCType>
+      </Face>
+      <Face side = "z-">
+        <BCType id = "0"   label = "color"     var = "Neumann">
+                           <value> 0. </value>
+        </BCType>
+        <BCType id = "0"   label = "abskg"     var = "Neumann">
+                           <value> 0. </value>
+        </BCType>
+      </Face>
+      <Face side = "z+">
+        <BCType id = "0"   label = "color"     var = "Neumann">
+                           <value> 0. </value>
+        </BCType>
+        <BCType id = "0"   label = "abskg"     var = "Neumann">
+                           <value> 0. </value>
+        </BCType>
+      </Face>
+    </BoundaryConditions>
+    
     <Level>
       <Box label = "0">                              
          <lower>      [0,0,0]     </lower>         
          <upper>      [1, 1, 1]   </upper>         
-         <resolution> [10,10,10]  </resolution>    
+         <resolution> [41,41,41]  </resolution>    
          <patches>    [1,1,1]     </patches> 
          <extraCells> [1,1,1]     </extraCells>      
       </Box>                                         
@@ -32,7 +83,7 @@
       <Box label = "1">                              
          <lower>      [ 0,0,0]      </lower>         
          <upper>      [1, 1, 1]     </upper>         
-         <resolution> [20,20,20]    </resolution>        
+         <resolution> [164,164,164] </resolution>        
          <patches>    [1,1,1]       </patches>   
          <extraCells> [1,1,1]       </extraCells>         
       </Box>                                         
@@ -75,7 +126,7 @@
   </AMR>    
   <!--__________________________________-->
   <DataArchiver>
-  <filebase>rmcrtTest.uda</filebase>
+  <filebase>RMCRT_ML.uda</filebase>
       <outputTimestepInterval>1</outputTimestepInterval>
       <!--  1L
       <save label = "color"   />
@@ -90,11 +141,12 @@
       <save label = "sigmaT4" levels="1"/>
       
       <!--<save label = "refineFlag"/> -->
-      <checkpoint cycle = "2" timestepInterval = "1"/>
+      <checkpoint cycle = "2" timestepInterval = "2"/>
   </DataArchiver>
   
   
   <!--__________________________________ -->
+  <!--
   <pseudoRMCRT>
     <ballRadius>  0.1     </ballRadius>
     <orbitRadius> 0.25    </orbitRadius>
@@ -102,18 +154,22 @@
     <CoarseLevelRMCRTMethod> false     </CoarseLevelRMCRTMethod>
     <multiLevelRMCRTMethod>  true      </multiLevelRMCRTMethod>
   </pseudoRMCRT>
+  -->
   
-  <!-- ray tracer  
+  <!-- ray tracer    -->  
   <RMCRT>
-    <Temperature>       1        </Temperature>
-    <NoOfRays>          100        </NoOfRays>
-    <Threshold>         0.05      </Threshold>
-    <Alpha>             1          </Alpha>
+    <Temperature>       64.804     </Temperature>
+    <abskg>             999        </abskg>
+    <NoOfRays>          25         </NoOfRays>
+    <Threshold>         0.05       </Threshold>
+    <AlphaEW>             1        </AlphaEW>
+    <AlphaNS>             1        </AlphaNS>
+    <AlphaTB>             1        </AlphaTB>
+    <TEW>                 000      </TEW>
+    <TNS>                 000      </TNS>
+    <TTB>                 000      </TTB>
     <Slice>             20         </Slice>
     <StefanBoltzmann>   5.67051e-8 </StefanBoltzmann>
     <benchmark_1>       true       </benchmark_1>
   </RMCRT>
-  -->
-
- 
 </Uintah_specification>

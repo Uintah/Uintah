@@ -7,7 +7,8 @@
     <!--__________________________________-->
     <!-- Used by Arches and Examples/RMCRT_test -->
     <RMCRT                    spec="OPTIONAL NO_DATA" >
-      <Temperature            spec="OPTIONAL DOUBLE  'positive'"/>      <!-- needed by RMCRT_test -->                   
+      <Temperature            spec="OPTIONAL DOUBLE  'positive'"/>      <!-- needed by RMCRT_test -->
+      <abskg                  spec="OPTIONAL DOUBLE  'positive'"/>                   
       <NoOfRays               spec="OPTIONAL INTEGER 'positive'"/>        
       <Threshold              spec="OPTIONAL DOUBLE  'positive'"/>        
       <AlphaEW                spec="OPTIONAL DOUBLE  'positive'"/>        

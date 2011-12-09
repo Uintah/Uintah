@@ -204,6 +204,7 @@ WARNING
     double         d_radiusOfOrbit;
     double         d_angularVelocity;
     double         d_initColor;
+    double         d_initAbskg;
     int            d_matl;
     bool           d_CoarseLevelRMCRTMethod;
     bool           d_multiLevelRMCRTMethod;
