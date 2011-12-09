@@ -1,17 +1,18 @@
-#include <Core/Grid/BoundaryConditions/BCDataArray.h>
-#include <Core/Grid/BoundaryConditions/BCGeomBase.h>
-#include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Parallel/ProcessorGroup.h>
-#include <Core/Exceptions/InvalidState.h>
-#include <Core/Grid/SimulationState.h>
-#include <CCA/Ports/SchedulerP.h>
-#include <CCA/Ports/Scheduler.h>
-#include <Core/Grid/Task.h>
 #include <CCA/Components/Arches/ArchesLabel.h>
 #include <CCA/Components/Arches/ArchesMaterial.h>
 #include <CCA/Components/Arches/BoundaryCond_new.h>
-#include <Core/Exceptions/ProblemSetupException.h>
+#include <CCA/Ports/Scheduler.h>
+#include <CCA/Ports/SchedulerP.h>
+
+#include <Core/Exceptions/InvalidState.h>
 #include <Core/Exceptions/InvalidValue.h>
+#include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/Grid/BoundaryConditions/BCUtils.h>
+#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/Task.h>
+#include <Core/Parallel/ProcessorGroup.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
+
 
 //===========================================================================
 
