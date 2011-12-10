@@ -223,58 +223,10 @@ public:
                         CellInformation* cellinfo,
                         ArchesVariables* vars,
                         ArchesConstVariables* constvars);
-
-  void calculateVelMMSSource(const ProcessorGroup* pc,
-                               const Patch* patch,
-                               double delta_t, double time,
-                               CellInformation* cellinfo,
-                               ArchesVariables* vars,
-                               ArchesConstVariables* constvars);
-
-  void calculateScalarMMSSource(const ProcessorGroup* pc,
-                             const Patch* patch,
-                             double delta_t, 
-                             CellInformation* cellinfo,
-                             ArchesVariables* vars,
-                             ArchesConstVariables* constvars);
-
-  void calculatePressMMSSourcePred(const ProcessorGroup* pc,
-                                   const Patch* patch,
-                                   double delta_t,
-                                   CellInformation* cellinfo,
-                                   ArchesVariables* vars,
-                                   ArchesConstVariables* constvars); 
-
-  void calculateScalarBoundarySource(const ProcessorGroup*,
-                                     const Patch* patch,
-                                     double delta_t,
-                                     CellInformation* cellinfo,
-                                     ArchesVariables* vars,
-                                     ArchesConstVariables* constvars);
-                                      
-  void calculateUmomBoundarySource(const ProcessorGroup*,
-                                   const Patch* patch,
-                                   double delta_t,
-                                   CellInformation* cellinfo,
-                                   ArchesVariables* vars,
-                                   ArchesConstVariables* constvars); 
-  void calculateVmomBoundarySource(const ProcessorGroup*,
-                                   const Patch* patch,
-                                   double delta_t,
-                                   CellInformation* cellinfo,
-                                   ArchesVariables* vars,
-                                   ArchesConstVariables* constvars); 
-                                   
-  void calculateWmomBoundarySource(const ProcessorGroup*,
-                                   const Patch* patch,
-                                   double delta_t,
-                                   CellInformation* cellinfo,
-                                   ArchesVariables* vars,
-                                   ArchesConstVariables* constvars);
                                    
   void setBoundary(BoundaryCondition* boundaryCondition){
                   d_boundaryCondition = boundaryCondition;
-      } 
+      }; 
 
 private:
 

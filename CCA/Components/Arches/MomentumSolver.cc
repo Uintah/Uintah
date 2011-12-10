@@ -716,13 +716,6 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
                                       delta_t,
                                       cellinfo, &velocityVars,
                                       &constVelocityVars);
-    if (d_doMMS){
-      d_source->calculateVelMMSSource(pc, patch, 
-                                    delta_t, time,
-                                    cellinfo, &velocityVars,
-                                    &constVelocityVars);
-    }
-
 
     //__________________________________
     // for scalesimilarity model add stress tensor to the source of velocity eqn.
