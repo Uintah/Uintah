@@ -98,6 +98,11 @@ public:
                                     DataWarehouse* old_dw,
                                     DataWarehouse* new_dw,
                                     const TimeIntegratorLabel* timelabels);
+
+  inline std::vector<std::string> get_pressure_source_ref(){ 
+    return d_new_sources;
+  } 
+
 private:
   
   //______________________________________________________________________

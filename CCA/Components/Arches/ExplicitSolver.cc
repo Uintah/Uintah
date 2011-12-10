@@ -2332,6 +2332,23 @@ ExplicitSolver::sched_getDensityGuess(SchedulerP& sched,
   }
   tsk->computes(timelabels->negativeDensityGuess);
 
+  // extra mass source terms
+  std::vector<std::string> extra_sources; 
+  extra_sources = d_pressSolver->get_pressure_source_ref(); 
+  SourceTermFactory& factory = SourceTermFactory::self(); 
+  for (vector<std::string>::iterator iter = extra_sources.begin();
+      iter != extra_sources.end(); iter++){
+
+    SourceTermBase& src = factory.retrieve_source_term( *iter );
+    const VarLabel* srcLabel = src.getSrcLabel(); 
+
+    if ( timelabels->integrator_step_number == TimeIntegratorStepNumber::First ){ 
+      tsk->requires( Task::OldDW, srcLabel, gn, 0 ); 
+    } else { 
+      tsk->requires( Task::NewDW, srcLabel, gn, 0 ); 
+    } 
+  }
+
   sched->addTask(tsk, patches, matls);
 }
 //****************************************************************************
@@ -2401,48 +2418,108 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
     new_dw->get(wVelocity, d_lab->d_wVelocitySPBCLabel, indx,patch, gaf, 1);
     new_dw->get(cellType,  d_lab->d_cellTypeLabel,      indx,patch, gn, 0);
 
+    // For adding other source terms as specified in the pressure solver section
+    SourceTermFactory& factory = SourceTermFactory::self(); 
+    std::vector<std::string> extra_sources; 
+    extra_sources = d_pressSolver->get_pressure_source_ref(); 
+    std::vector<constCCVariable<double> > src_values; 
+    bool have_extra_srcs = false; 
+
+    for (std::vector<std::string>::iterator iter = extra_sources.begin();
+        iter != extra_sources.end(); iter++){
+
+      SourceTermBase& src = factory.retrieve_source_term( *iter );
+      const VarLabel* srcLabel = src.getSrcLabel(); 
+      constCCVariable<double> src_value; 
+
+      if ( timelabels->integrator_step_number == TimeIntegratorStepNumber::First ){
+       old_dw->get( src_value, srcLabel, indx, patch, gn, 0 );
+      } else { 
+       new_dw->get( src_value, srcLabel, indx, patch, gn, 0 );
+      } 
+
+      src_values.push_back( src_value ); 
+
+      have_extra_srcs = true; 
+
+    }
+
 // Need to skip first timestep since we start with unprojected velocities
 //    int currentTimeStep=d_lab->d_sharedState->getCurrentTopLevelTimeStep();
 //    if (currentTimeStep > 1) {
 //
-      IntVector idxLo = patch->getFortranCellLowIndex();
-      IntVector idxHi = patch->getFortranCellHighIndex();
-      for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-        for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-          for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-            IntVector currCell(colX, colY, colZ);
-            IntVector xplusCell(colX+1, colY, colZ);
-            IntVector xminusCell(colX-1, colY, colZ);
-            IntVector yplusCell(colX, colY+1, colZ);
-            IntVector yminusCell(colX, colY-1, colZ);
-            IntVector zplusCell(colX, colY, colZ+1);
-            IntVector zminusCell(colX, colY, colZ-1);
+      if ( have_extra_srcs ){ 
 
+        for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) { 
 
-            densityGuess[currCell] -= delta_t * 0.5* (
-            ((density[currCell]+density[xplusCell])*uVelocity[xplusCell] -
-             (density[currCell]+density[xminusCell])*uVelocity[currCell]) /
-            cellinfo->sew[colX] +
-            ((density[currCell]+density[yplusCell])*vVelocity[yplusCell] -
-             (density[currCell]+density[yminusCell])*vVelocity[currCell]) /
-            cellinfo->sns[colY] +
-            ((density[currCell]+density[zplusCell])*wVelocity[zplusCell] -
-             (density[currCell]+density[zminusCell])*wVelocity[currCell]) /
-            cellinfo->stb[colZ]);
+          IntVector currCell   = *iter;
+          IntVector xplusCell  = *iter + IntVector(1,0,0);
+          IntVector xminusCell = *iter + IntVector(-1,0,0);
+          IntVector yplusCell  = *iter + IntVector(0,1,0);
+          IntVector yminusCell = *iter + IntVector(0,-1,0);
+          IntVector zplusCell  = *iter + IntVector(0,0,1);
+          IntVector zminusCell = *iter + IntVector(0,0,-1);
 
-            if (densityGuess[currCell] < 0.0 && d_noisyDensityGuess) {
-              proc0cout << "Negative density guess occured at " << currCell << " with a value of " << densityGuess[currCell] << endl;
-              negativeDensityGuess = 1.0;
-            }
-            else if (densityGuess[currCell] < 0.0 && !(d_noisyDensityGuess)) {
-              negativeDensityGuess = 1.0;
-            }
+          densityGuess[currCell] -= delta_t * 0.5* (
+          ((density[currCell]+density[xplusCell])*uVelocity[xplusCell] -
+           (density[currCell]+density[xminusCell])*uVelocity[currCell]) /
+          cellinfo->sew[currCell.x()] +
+          ((density[currCell]+density[yplusCell])*vVelocity[yplusCell] -
+           (density[currCell]+density[yminusCell])*vVelocity[currCell]) /
+          cellinfo->sns[currCell.y()] +
+          ((density[currCell]+density[zplusCell])*wVelocity[zplusCell] -
+           (density[currCell]+density[zminusCell])*wVelocity[currCell]) /
+          cellinfo->stb[currCell.z()]);
 
+          for ( std::vector<constCCVariable<double> >::iterator viter = src_values.begin(); viter != src_values.end(); viter++ ){ 
+
+            densityGuess[currCell] += (*viter)[currCell];
+
+          } 
+
+          if (densityGuess[currCell] < 0.0 && d_noisyDensityGuess) {
+            proc0cout << "Negative density guess occured at " << currCell << " with a value of " << densityGuess[currCell] << endl;
+            negativeDensityGuess = 1.0;
+          }
+          else if (densityGuess[currCell] < 0.0 && !(d_noisyDensityGuess)) {
+            negativeDensityGuess = 1.0;
           }
         }
-      }
 
-      if (negativeDensityGuess == 1.0 && !(d_noisyDensityGuess)) proc0cout << "NOTICE: Negative density guess occured on this patch.  Set <NoisyDensityGuess> to true to get full details." << endl;
+      } else { 
+
+        for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) { 
+
+          IntVector currCell   = *iter;
+          IntVector xplusCell  = *iter + IntVector(1,0,0);
+          IntVector xminusCell = *iter + IntVector(-1,0,0);
+          IntVector yplusCell  = *iter + IntVector(0,1,0);
+          IntVector yminusCell = *iter + IntVector(0,-1,0);
+          IntVector zplusCell  = *iter + IntVector(0,0,1);
+          IntVector zminusCell = *iter + IntVector(0,0,-1);
+
+          densityGuess[currCell] -= delta_t * 0.5* (
+          ((density[currCell]+density[xplusCell])*uVelocity[xplusCell] -
+           (density[currCell]+density[xminusCell])*uVelocity[currCell]) /
+          cellinfo->sew[currCell.x()] +
+          ((density[currCell]+density[yplusCell])*vVelocity[yplusCell] -
+           (density[currCell]+density[yminusCell])*vVelocity[currCell]) /
+          cellinfo->sns[currCell.y()] +
+          ((density[currCell]+density[zplusCell])*wVelocity[zplusCell] -
+           (density[currCell]+density[zminusCell])*wVelocity[currCell]) /
+          cellinfo->stb[currCell.z()]);
+
+          if (densityGuess[currCell] < 0.0 && d_noisyDensityGuess) {
+            proc0cout << "Negative density guess occured at " << currCell << " with a value of " << densityGuess[currCell] << endl;
+            negativeDensityGuess = 1.0;
+          }
+          else if (densityGuess[currCell] < 0.0 && !(d_noisyDensityGuess)) {
+            negativeDensityGuess = 1.0;
+          }
+        }
+      } 
+
+      if ( !d_noisyDensityGuess ) proc0cout << "NOTICE: Set <NoisyDenstyGuess> in <ExplicitSolver> to true to check for negative density guesses" << std::endl;
 
       // This replaces the ->anyArchesPhysicalBC if statement below when new BCs take over
       if ( d_boundaryCondition->isUsingNewBC() ) {
@@ -2464,6 +2541,8 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
         bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
         int outlet_celltypeval = d_boundaryCondition->outletCellType();
         int pressure_celltypeval = d_boundaryCondition->pressureCellType();
+        IntVector idxLo = patch->getFortranCellLowIndex();
+        IntVector idxHi = patch->getFortranCellHighIndex();
         if (xminus) {
           int colX = idxLo.x();
           for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
