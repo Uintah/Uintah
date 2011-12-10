@@ -84,11 +84,6 @@ public:
                    const TimeIntegratorLabel* timelabels,
                    bool extraProjection);
 
-  inline void setMMS(bool doMMS) {
-    d_doMMS=doMMS;
-  }
-
-
   //______________________________________________________________________
   // addHydrostaticTermtoPressure:
   // Add the hydrostatic term to the relative pressure    THIS BE PRIVATE -Todd
@@ -217,11 +212,12 @@ private:
   const ProcessorGroup* d_myworld;
 
   bool d_norm_press;
-  bool d_doMMS;
   bool d_do_only_last_projection;
   
   SolverInterface* d_hypreSolver;
   SolverParameters* d_hypreSolver_parameters;
+
+  vector<std::string> d_new_sources; 
   
   
 }; // End class PressureSolver

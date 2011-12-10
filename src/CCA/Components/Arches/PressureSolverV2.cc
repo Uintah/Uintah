@@ -101,13 +101,21 @@ PressureSolver::problemSetup(ProblemSpecP& params)
 
   // make source and boundary_condition objects
   d_source = scinew Source(d_physicalConsts);
-  if (d_doMMS){
-    d_source->problemSetup(db);
-  }
   
   d_hypreSolver_parameters = d_hypreSolver->readParameters(db, "pressure");
   d_hypreSolver_parameters->setSolveOnExtraCells(false);
   d_hypreSolver_parameters->setDynamicTolerance(true);
+
+  //__________________________________
+  // allow for addition of mass source terms
+  if (db->findBlock("src")){
+    string srcname; 
+    for (ProblemSpecP src_db = db->findBlock("src"); src_db != 0; src_db = src_db->findNextBlock("src")){
+      src_db->getAttribute("label", srcname);
+      //which sources are turned on for this equation
+      d_new_sources.push_back( srcname ); 
+    }
+  }
 
   //__________________________________
   // bulletproofing
@@ -313,11 +321,6 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
                                           cellinfo, &vars,
                                           &constVars);
 
-    if (d_doMMS){
-      d_source->calculatePressMMSSourcePred(pc, patch, delta_t,
-                                            cellinfo, &vars,
-                                            &constVars);
-    }
     // do multimaterial bc; this is done before 
     // calculatePressDiagonal because unlike the outlet
     // boundaries in the explicit projection, we want to 
