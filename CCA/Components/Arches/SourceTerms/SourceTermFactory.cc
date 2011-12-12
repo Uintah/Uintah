@@ -76,3 +76,23 @@ SourceTermFactory::retrieve_source_term( const std::string name )
 
   return *prop;
 }
+
+//---------------------------------------------------------------------------
+// Method: Find if a property model is included in the map. 
+//---------------------------------------------------------------------------
+bool
+SourceTermFactory::source_term_exists( const std::string name )
+{
+  bool return_value;
+
+  const SourceMap::iterator isource= _sources.find( name );
+
+  if( isource != _sources.end() ) {
+    return_value = true;
+  } else {
+    return_value = false;
+  }
+
+  return return_value;
+}
+

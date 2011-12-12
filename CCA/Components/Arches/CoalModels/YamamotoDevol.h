@@ -114,6 +114,7 @@ private:
   
   bool compute_part_temp; ///< Boolean: is particle temperature computed? 
                           //   (if not, gas temp = particle temp)
+  bool part_temp_from_enth;
   bool compute_char_mass;
 
   double d_rc_scaling_factor;   ///< Scaling factor for raw coal internal coordinate

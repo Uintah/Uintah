@@ -108,12 +108,18 @@ void sched_dummyInit( const LevelP& level, SchedulerP& sched );
   inline const VarLabel* getqradLabel() {
     return d_qradLabel; };
 
+  inline const VarLabel* getpTLabel() {
+    return d_pTLabel; };
+
 protected:
 
   bool _radiation;
+  bool new_radiation;
+  bool old_radiation;
   const VarLabel* d_abskpLabel;
   const VarLabel* d_qconvLabel;
   const VarLabel* d_qradLabel;
+  const VarLabel* d_pTLabel;
   double d_w_scaling_constant;
   double d_w_small; // "small" clip value for zero weights
 

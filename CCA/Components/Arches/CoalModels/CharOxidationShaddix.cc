@@ -78,6 +78,8 @@ CharOxidationShaddix::CharOxidationShaddix( std::string modelName,
   // Enthalpy of formation (J/mol)
   HF_CO2 = -393509.0;
   HF_CO  = -110525.0;
+
+  part_temp_from_enth = false;
 }
 
 CharOxidationShaddix::~CharOxidationShaddix()
@@ -139,6 +141,9 @@ CharOxidationShaddix::problemSetup(const ProblemSpecP& params, int qn)
                || role_name == "char_mass"
                || role_name == "particle_temperature" ) {
         LabelToRoleMap[temp_label_name] = role_name;
+      } else if( role_name == "particle_temperature_from_enthalpy" ) {
+        LabelToRoleMap[temp_label_name] = role_name;
+        part_temp_from_enth = true;
       } else {
         std::string errmsg = "ERROR: CharOxidationShaddix: problemSetup(): Invalid variable role for Char Oxidation model!";
         throw InvalidValue(errmsg,__FILE__,__LINE__);
@@ -312,6 +317,12 @@ CharOxidationShaddix::sched_computeModel( const LevelP& level, SchedulerP& sched
           throw InvalidValue(errmsg,__FILE__,__LINE__);
         }
 
+      } else if ( iMap->second == "particle_temperature_from_enthalpy") {
+        //std::string pt_temp_name = iMap->first;
+        d_particle_temperature_label = VarLabel::find(iMap->first);
+        d_pt_scaling_constant = 1.0;
+        tsk->requires(Task::OldDW, d_particle_temperature_label, Ghost::None, 0);
+
       } else if( iMap->second == "particle_length" ) {
         if (dqmom_eqn_factory.find_scalar_eqn(*iter) ) {
           EqnBase& t_current_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(*iter);
@@ -468,7 +479,7 @@ CharOxidationShaddix::computeModel( const ProcessorGroup * pc,
     old_dw->get(den, d_fieldLabels->d_densityCPLabel, matlIndex, patch, gn, 0 ); 
 
     constCCVariable<double> temperature;
-    constCCVariable<double> w_particle_temperature;
+    constCCVariable<double> particle_temperature;
     constCCVariable<double> w_particle_length;
     constCCVariable<double> w_raw_coal_mass;
     constCCVariable<double> w_char_mass;
@@ -482,7 +493,7 @@ CharOxidationShaddix::computeModel( const ProcessorGroup * pc,
     constCCVariable<double> oldPO2surf_;
 
     old_dw->get( temperature, d_fieldLabels->d_tempINLabel, matlIndex, patch, gn, 0 );
-    old_dw->get( w_particle_temperature, d_particle_temperature_label, matlIndex, patch, gn, 0 );
+    old_dw->get( particle_temperature, d_particle_temperature_label, matlIndex, patch, gn, 0 );
     old_dw->get( w_particle_length, d_particle_length_label, matlIndex, patch, gn, 0 );
     old_dw->get( w_raw_coal_mass, d_raw_coal_mass_label, matlIndex, patch, gn, 0 );
     old_dw->get( w_char_mass, d_char_mass_label, matlIndex, patch, gn, 0 );
@@ -510,16 +521,12 @@ CharOxidationShaddix::computeModel( const ProcessorGroup * pc,
       double scaled_weight;
       double unscaled_weight;
       // temperature - particle
-      double scaled_particle_temperature;
       double unscaled_particle_temperature;
       // paticle length
-      double scaled_length;
       double unscaled_length;
       // particle raw coal mass
-      double scaled_raw_coal_mass;
       double unscaled_raw_coal_mass;
       // particle char mass
-      double scaled_char_mass;
       double unscaled_char_mass;
      
       if (weight_is_small && !d_unweighted) {
@@ -533,25 +540,26 @@ CharOxidationShaddix::computeModel( const ProcessorGroup * pc,
         if(d_unweighted){
           scaled_weight = weight[c];
           unscaled_weight = weight[c]*d_w_scaling_constant;
-          scaled_particle_temperature = w_particle_temperature[c];
-          unscaled_particle_temperature = w_particle_temperature[c]*d_pt_scaling_constant;
-          scaled_length = w_particle_length[c];
+          if(part_temp_from_enth){
+            unscaled_particle_temperature = particle_temperature[c];
+          } else {
+            unscaled_particle_temperature = particle_temperature[c]*d_pt_scaling_constant;
+          }
           unscaled_length = w_particle_length[c]*d_pl_scaling_constant;
-          scaled_raw_coal_mass = w_raw_coal_mass[c];
           unscaled_raw_coal_mass = w_raw_coal_mass[c]*d_rc_scaling_constant;
-          scaled_char_mass = w_char_mass[c];
           unscaled_char_mass = w_char_mass[c]*d_rh_scaling_constant;
 
         } else {
           scaled_weight = weight[c];
           unscaled_weight = weight[c]*d_w_scaling_constant;
-          scaled_particle_temperature = (w_particle_temperature[c])/scaled_weight;
-          unscaled_particle_temperature = (w_particle_temperature[c]*d_pt_scaling_constant)/scaled_weight;
-          scaled_length = w_particle_length[c]/scaled_weight;
+          if(part_temp_from_enth){
+            unscaled_particle_temperature = particle_temperature[c];
+            unscaled_particle_temperature = max(273.0, min(unscaled_particle_temperature,3000.0));
+          } else {
+            unscaled_particle_temperature = (particle_temperature[c]*d_pt_scaling_constant)/scaled_weight;
+          }
           unscaled_length = (w_particle_length[c]*d_pl_scaling_constant)/scaled_weight;
-          scaled_raw_coal_mass = w_raw_coal_mass[c]/scaled_weight;
           unscaled_raw_coal_mass = (w_raw_coal_mass[c]*d_rc_scaling_constant)/scaled_weight;
-          scaled_char_mass = w_char_mass[c]/scaled_weight;
           unscaled_char_mass = (w_char_mass[c]*d_rh_scaling_constant)/scaled_weight;
         } 
 
@@ -603,7 +611,7 @@ CharOxidationShaddix::computeModel( const ProcessorGroup * pc,
             //q = k1*k2*(pow(PO2_surf,n))/(k1*(pow(PO2_surf,n))+k2);
             f1 = PO2_surf - gamma - (PO2_inf-gamma)*exp(-(q*unscaled_length)/(2*Conc*DO2));
 
-            if (abs(f1) < d_tol)
+            if (std::abs(f1) < d_tol)
               break;
 
             PO2_surf += delta;
