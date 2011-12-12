@@ -235,6 +235,7 @@ namespace Wasatch{
   {
     const int ng = get_n_ghost<FieldT>();
     return Uintah::IntVector(ng,ng,ng);
+//    return Uintah::IntVector(0,0,0);
   }
 
   //====================================================================

@@ -49,6 +49,33 @@ namespace Wasatch {
 
   //-----------------------------------------------------------------------------
 
+  void get_face_offset( const Uintah::Patch::FaceType& face,
+                        const bool hasExtraCells,
+                        SpatialOps::structured::IntVec& faceOffset )
+  {
+    namespace SS = SpatialOps::structured;
+    if( hasExtraCells ){
+      switch( face ){
+        case Uintah::Patch::xminus: faceOffset = SS::IntVec(1,0,0);   break;
+        case Uintah::Patch::xplus : faceOffset = SS::IntVec(0,0,0);   break;
+        case Uintah::Patch::yminus: faceOffset = SS::IntVec(0,1,0);   break;
+        case Uintah::Patch::yplus : faceOffset = SS::IntVec(0,0,0);   break;
+        case Uintah::Patch::zminus: faceOffset = SS::IntVec(0,0,1);   break;
+        case Uintah::Patch::zplus : faceOffset = SS::IntVec(0,0,0);   break;
+        default:                                                      break;
+      }
+    } else {
+      switch( face ){
+        case Uintah::Patch::xminus: faceOffset = SS::IntVec(0,0,0);   break;
+        case Uintah::Patch::xplus : faceOffset = SS::IntVec(1,0,0);   break;
+        case Uintah::Patch::yminus: faceOffset = SS::IntVec(0,0,0);   break;
+        case Uintah::Patch::yplus : faceOffset = SS::IntVec(0,1,0);   break;
+        case Uintah::Patch::zminus: faceOffset = SS::IntVec(0,0,0);   break;
+        case Uintah::Patch::zplus : faceOffset = SS::IntVec(0,0,1);   break;
+        default:                                                      break;
+      }
+    }
+  }
   /**
    *  \ingroup WasatchCore
    *
@@ -63,7 +90,8 @@ namespace Wasatch {
                           const SpatialOps::structured::IntVec faceOffset,
                           const SCIRun::IntVector insideCellDir,
                           SpatialOps::structured::IntVec& bcPointIJK,
-                          SpatialOps::structured::IntVec& ghostPointIJK )
+                          SpatialOps::structured::IntVec& ghostPointIJK,
+                          const bool hasExtraCells)
   {
     namespace SS = SpatialOps::structured;
     const SS::IntVec interiorCellIJK(bc_point_indices[0],bc_point_indices[1],bc_point_indices[2]);
@@ -71,9 +99,9 @@ namespace Wasatch {
     const SS::IntVec stgrdBndFaceIJK( bc_point_indices[0] + insideCellDir[0],
                                       bc_point_indices[1] + insideCellDir[1],
                                       bc_point_indices[2] + insideCellDir[2] );
-//    const SS::IntVec interiorStgrdCellIJK( bc_point_indices[0] - insideCellDir[0],
-//                                     bc_point_indices[1] - insideCellDir[1],
-//                                     bc_point_indices[2] - insideCellDir[2] );
+    const SS::IntVec interiorStgrdCellIJK( bc_point_indices[0] - insideCellDir[0],
+                                     bc_point_indices[1] - insideCellDir[1],
+                                     bc_point_indices[2] - insideCellDir[2] );
 
     const SS::IntVec stgrdGhostPlusBndFaceIJK( bc_point_indices[0] + 2*insideCellDir[0],
                                      bc_point_indices[1] + 2*insideCellDir[1],
@@ -81,16 +109,30 @@ namespace Wasatch {
 
     if (is_staggered_bc(staggeredLocation,face) ) {
       switch (bcSide) {
-        case SpatialOps::structured::MINUS_SIDE:
-          bcPointIJK = interiorCellIJK;
-          ghostPointIJK = stgrdBndFaceIJK;
-          //interiorCellIJK = interiorStgrdCellIJK;
+        case SpatialOps::structured::MINUS_SIDE: {
+          if (hasExtraCells) {
+            bcPointIJK = interiorStgrdCellIJK;
+            ghostPointIJK = interiorCellIJK;
+          } else {
+											 // this stuff works with boundary layer cells
+            bcPointIJK = interiorCellIJK;
+            ghostPointIJK = stgrdBndFaceIJK;
+            //interiorCellIJK = interiorStgrdCellIJK;
+          }
           break;
-        case SpatialOps::structured::PLUS_SIDE:
-          bcPointIJK = (bc_kind.compare("Dirichlet")==0 ? stgrdBndFaceIJK : interiorCellIJK);
-          ghostPointIJK = (bc_kind.compare("Dirichlet")==0 ? stgrdGhostPlusBndFaceIJK : stgrdBndFaceIJK);
-          //interiorCellIJK = (bc_kind.compare("Dirichlet")==0 ? interiorStgrdCellIJK : stgrdBndFaceIJK);
+        }
+        case SpatialOps::structured::PLUS_SIDE: {
+          if (hasExtraCells) {
+            bcPointIJK = (bc_kind.compare("Dirichlet")==0 ? interiorCellIJK : interiorStgrdCellIJK);
+            ghostPointIJK = (bc_kind.compare("Dirichlet")==0 ? stgrdBndFaceIJK : interiorCellIJK);
+          } else {
+												// this stuff works with boundary layer cells
+            bcPointIJK = (bc_kind.compare("Dirichlet")==0 ? stgrdBndFaceIJK : interiorCellIJK);
+            ghostPointIJK = (bc_kind.compare("Dirichlet")==0 ? stgrdGhostPlusBndFaceIJK : stgrdBndFaceIJK);
+            //interiorCellIJK = (bc_kind.compare("Dirichlet")==0 ? interiorStgrdCellIJK : stgrdBndFaceIJK);
+          }
           break;
+        }
         default:
           break;
       }
@@ -226,9 +268,9 @@ namespace Wasatch {
       bc_value = new_bcs->getValue();
       bc_kind =  new_bcs->getBCType__NEW();
     }
-    
+
     delete bc;
-    
+
     // Did I find an iterator
     return( bc_kind.compare("NotSet") != 0 );
   }
@@ -254,20 +296,25 @@ namespace Wasatch {
                            const SpatialOps::OperatorDatabase& opdb,
                            std::string& bc_kind,
                            const SpatialOps::structured::BCSide bcSide,
-                           const SpatialOps::structured::IntVec& faceOffset)
+                           const SpatialOps::structured::IntVec& faceOffset,
+                           const bool hasExtraCells)
   {
     namespace SS = SpatialOps::structured;
     typedef SS::ConstValEval BCEvalT; // basic functor for constant functions.
-    SCIRun::IntVector cellOffset = patch->getExtraCellLowIndex(0); // cell offset used to calculate local cell index with respect to patch.
+    SCIRun::IntVector patchCellOffset = patch->getCellLowIndex(0); // cell offset used to calculate local cell index with respect to patch.
     SCIRun::IntVector insideCellDir = patch->faceDirection(face);
-    proc0cout << "SETTING BOUNDARY CONDITION ON "<< fieldName << " FACE:" << face << std::endl;
+//    proc0cout << "SETTING BOUNDARY CONDITION ON "<< fieldName << " FACE:" << face << std::endl;
     for( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
       SCIRun::IntVector bc_point_indices(*bound_ptr);
-      bc_point_indices = bc_point_indices - cellOffset; // get local cell index (with respect to patch). SpatialOps needs local cell indices.
+      //std::cout << "bc point indices " << bc_point_indices << std::endl << std::endl;
+      bc_point_indices = bc_point_indices - patchCellOffset; // get local cell index (with respect to patch). SpatialOps needs local cell indices.
       SS::IntVec bcPointIJK;
       SS::IntVec ghostPointIJK;
-      get_bc_points_ijk ( staggeredLocation, face, bcSide, bc_kind, bc_point_indices, faceOffset, insideCellDir, bcPointIJK,ghostPointIJK);
-      set_bc_on_point< FieldT, BcT >( patch, graphHelper, phiTag,fieldName, bcPointIJK, ghostPointIJK, bcSide, bc_value, opdb, is_staggered_bc(staggeredLocation, face), bc_kind);
+      get_bc_points_ijk ( staggeredLocation, face, bcSide, bc_kind, bc_point_indices, faceOffset, insideCellDir, bcPointIJK,ghostPointIJK, hasExtraCells);
+      set_bc_on_point< FieldT, BcT >( patch, graphHelper, phiTag,fieldName,
+                                     bcPointIJK, ghostPointIJK, bcSide, bc_value,
+                                     opdb, is_staggered_bc(staggeredLocation, face),
+                                     bc_kind);
     }
   }
 
@@ -318,36 +365,29 @@ namespace Wasatch {
     typedef BCOpTypeSelector<FieldT,BCEvalT> BCOpT;
     SS::IntVec faceOffset(0,0,0);
     SCIRun::IntVector insideCellDir = patch->faceDirection(face);
-    SCIRun::IntVector cellOffset = patch->getExtraCellLowIndex(0);
-    switch( face ){
-      case Uintah::Patch::xminus: faceOffset = SS::IntVec(0,0,0);   break;
-      case Uintah::Patch::xplus : faceOffset = SS::IntVec(1,0,0);   break;
-      case Uintah::Patch::yminus: faceOffset = SS::IntVec(0,0,0);   break;
-      case Uintah::Patch::yplus : faceOffset = SS::IntVec(0,1,0);   break;
-      case Uintah::Patch::zminus: faceOffset = SS::IntVec(0,0,0);   break;
-      case Uintah::Patch::zplus : faceOffset = SS::IntVec(0,0,1);   break;
-      default:                                                      break;
-    }
+    //SCIRun::IntVector patchCellOffset = patch->getCellLowIndex(0);
+    const bool hasExtraCells = ( patch->getExtraCells() != SCIRun::IntVector(0,0,0) );
+    get_face_offset( face, hasExtraCells, faceOffset );
 
     if( bc_kind.compare("Dirichlet")==0 ){
       switch( face ){
         case Uintah::Patch::xminus:
-          set_bcs_on_face<FieldT,typename BCOpT::DirichletX>(bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, SpatialOps::structured::MINUS_SIDE,faceOffset);
+          set_bcs_on_face<FieldT,typename BCOpT::DirichletX>(bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, SpatialOps::structured::MINUS_SIDE,faceOffset, hasExtraCells);
           break;
         case Uintah::Patch::xplus:
-          set_bcs_on_face<FieldT,typename BCOpT::DirichletX>(bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, SpatialOps::structured::PLUS_SIDE,faceOffset);
+          set_bcs_on_face<FieldT,typename BCOpT::DirichletX>(bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, SpatialOps::structured::PLUS_SIDE,faceOffset, hasExtraCells);
           break;
         case Uintah::Patch::yminus:
-          set_bcs_on_face<FieldT,typename BCOpT::DirichletY>(bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, SpatialOps::structured::MINUS_SIDE,faceOffset);
+          set_bcs_on_face<FieldT,typename BCOpT::DirichletY>(bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, SpatialOps::structured::MINUS_SIDE,faceOffset, hasExtraCells);
           break;
         case Uintah::Patch::yplus:
-          set_bcs_on_face<FieldT,typename BCOpT::DirichletY>(bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, SpatialOps::structured::PLUS_SIDE,faceOffset);
+          set_bcs_on_face<FieldT,typename BCOpT::DirichletY>(bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, SpatialOps::structured::PLUS_SIDE,faceOffset, hasExtraCells);
           break;
         case Uintah::Patch::zminus:
-          set_bcs_on_face<FieldT,typename BCOpT::DirichletZ>(bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, SpatialOps::structured::MINUS_SIDE,faceOffset);
+          set_bcs_on_face<FieldT,typename BCOpT::DirichletZ>(bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, SpatialOps::structured::MINUS_SIDE,faceOffset, hasExtraCells);
           break;
         case Uintah::Patch::zplus:
-          set_bcs_on_face<FieldT,typename BCOpT::DirichletZ>(bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, SpatialOps::structured::PLUS_SIDE,faceOffset);
+          set_bcs_on_face<FieldT,typename BCOpT::DirichletZ>(bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, SpatialOps::structured::PLUS_SIDE,faceOffset, hasExtraCells);
           break;
         case Uintah::Patch::numFaces:
           throw Uintah::ProblemSetupException( "An invalid face Patch::numFaces was encountered while setting boundary conditions", __FILE__, __LINE__ );
@@ -360,22 +400,22 @@ namespace Wasatch {
     } else if (bc_kind.compare("Neumann")==0 ){
       switch( face ){
         case Uintah::Patch::xminus:
-          set_bcs_on_face<FieldT,typename BCOpT::NeumannX>(bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, SpatialOps::structured::MINUS_SIDE,faceOffset);
+          set_bcs_on_face<FieldT,typename BCOpT::NeumannX>(bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, SpatialOps::structured::MINUS_SIDE,faceOffset, hasExtraCells);
           break;
         case Uintah::Patch::xplus:
-          set_bcs_on_face<FieldT,typename BCOpT::NeumannX>(bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, SpatialOps::structured::PLUS_SIDE,faceOffset);
+          set_bcs_on_face<FieldT,typename BCOpT::NeumannX>(bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, SpatialOps::structured::PLUS_SIDE,faceOffset, hasExtraCells);
           break;
         case Uintah::Patch::yminus:
-          set_bcs_on_face<FieldT,typename BCOpT::NeumannY>(bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, SpatialOps::structured::MINUS_SIDE,faceOffset);
+          set_bcs_on_face<FieldT,typename BCOpT::NeumannY>(bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, SpatialOps::structured::MINUS_SIDE,faceOffset, hasExtraCells);
           break;
         case Uintah::Patch::yplus:
-          set_bcs_on_face<FieldT,typename BCOpT::NeumannY>(bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, SpatialOps::structured::PLUS_SIDE,faceOffset);
+          set_bcs_on_face<FieldT,typename BCOpT::NeumannY>(bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, SpatialOps::structured::PLUS_SIDE,faceOffset, hasExtraCells);
           break;
         case Uintah::Patch::zminus:
-          set_bcs_on_face<FieldT,typename BCOpT::NeumannZ>(bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, SpatialOps::structured::MINUS_SIDE,faceOffset);
+          set_bcs_on_face<FieldT,typename BCOpT::NeumannZ>(bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, SpatialOps::structured::MINUS_SIDE,faceOffset, hasExtraCells);
           break;
         case Uintah::Patch::zplus:
-          set_bcs_on_face<FieldT,typename BCOpT::NeumannZ>(bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, SpatialOps::structured::PLUS_SIDE,faceOffset);
+          set_bcs_on_face<FieldT,typename BCOpT::NeumannZ>(bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, SpatialOps::structured::PLUS_SIDE,faceOffset, hasExtraCells);
           break;
         case Uintah::Patch::numFaces:
           throw Uintah::ProblemSetupException( "An invalid face Patch::numFaces was encountered while setting boundary conditions", __FILE__, __LINE__ );
@@ -409,20 +449,17 @@ namespace Wasatch {
 
     SS::IntVec faceOffset(0,0,0);
     SCIRun::IntVector insideCellDir = patch->faceDirection(face);
-    SCIRun::IntVector cellOffset = patch->getExtraCellLowIndex(0);
-    switch( face ){
-      case Uintah::Patch::xminus: faceOffset = SS::IntVec(0,0,0);  break;
-      case Uintah::Patch::xplus : faceOffset = SS::IntVec(1,0,0);   break;
-      default:                                                      break;
-    }
+    //SCIRun::IntVector patchCellOffset = patch->getCellLowIndex(0);
+    const bool hasExtraCells = (patch->getExtraCells() != SCIRun::IntVector(0,0,0));
+    get_face_offset(face, hasExtraCells, faceOffset);
 
     if( bc_kind.compare("Dirichlet")==0 ){
       switch( face ){
         case Uintah::Patch::xminus:
-          set_bcs_on_face<FieldT, BCOpT::DirichletX>(bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, SpatialOps::structured::MINUS_SIDE,faceOffset);
+          set_bcs_on_face<FieldT, BCOpT::DirichletX>(bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, SpatialOps::structured::MINUS_SIDE,faceOffset, hasExtraCells);
           break;
         case Uintah::Patch::xplus:
-          set_bcs_on_face<FieldT, BCOpT::DirichletX>(bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, SpatialOps::structured::PLUS_SIDE,faceOffset);
+          set_bcs_on_face<FieldT, BCOpT::DirichletX>(bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, SpatialOps::structured::PLUS_SIDE,faceOffset, hasExtraCells);
           break;
         case Uintah::Patch::numFaces:
           throw Uintah::ProblemSetupException( "An invalid face Patch::numFaces was encountered while setting boundary conditions", __FILE__, __LINE__ );
@@ -435,10 +472,10 @@ namespace Wasatch {
     } else if (bc_kind.compare("Neumann")==0 ){
       switch( face ){
         case Uintah::Patch::xminus:
-          set_bcs_on_face<FieldT, BCOpT::NeumannX>(bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, SpatialOps::structured::MINUS_SIDE,faceOffset);
+          set_bcs_on_face<FieldT, BCOpT::NeumannX>(bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, SpatialOps::structured::MINUS_SIDE,faceOffset, hasExtraCells);
           break;
         case Uintah::Patch::xplus:
-          set_bcs_on_face<FieldT, BCOpT::NeumannX>(bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, SpatialOps::structured::PLUS_SIDE,faceOffset);
+          set_bcs_on_face<FieldT, BCOpT::NeumannX>(bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, SpatialOps::structured::PLUS_SIDE,faceOffset, hasExtraCells);
           break;
         case Uintah::Patch::numFaces:
           throw Uintah::ProblemSetupException( "An invalid face Patch::numFaces was encountered while setting boundary conditions", __FILE__, __LINE__ );
@@ -472,20 +509,17 @@ namespace Wasatch {
 
     SS::IntVec faceOffset(0,0,0);
     SCIRun::IntVector insideCellDir = patch->faceDirection(face);
-    SCIRun::IntVector cellOffset = patch->getExtraCellLowIndex(0);
-    switch( face ){
-      case Uintah::Patch::yminus: faceOffset = SS::IntVec(0,0,0);   break;
-      case Uintah::Patch::yplus : faceOffset = SS::IntVec(0,1,0);   break;
-      default:                                                      break;
-    }
+    const bool hasExtraCells = (patch->getExtraCells() != SCIRun::IntVector(0,0,0));
+    //SCIRun::IntVector patchCellOffset = patch->getCellLowIndex(0);
+    get_face_offset(face, hasExtraCells, faceOffset);
 
     if( bc_kind.compare("Dirichlet")==0 ){
       switch( face ){
         case Uintah::Patch::yminus:
-          set_bcs_on_face<FieldT, BCOpT::DirichletY>(bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, SpatialOps::structured::MINUS_SIDE,faceOffset);
+          set_bcs_on_face<FieldT, BCOpT::DirichletY>(bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, SpatialOps::structured::MINUS_SIDE,faceOffset, hasExtraCells);
           break;
         case Uintah::Patch::yplus:
-          set_bcs_on_face<FieldT, BCOpT::DirichletY>(bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, SpatialOps::structured::PLUS_SIDE,faceOffset);
+          set_bcs_on_face<FieldT, BCOpT::DirichletY>(bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, SpatialOps::structured::PLUS_SIDE,faceOffset, hasExtraCells);
           break;
         case Uintah::Patch::numFaces:
           throw Uintah::ProblemSetupException( "An invalid face Patch::numFaces was encountered while setting boundary conditions", __FILE__, __LINE__ );
@@ -498,10 +532,10 @@ namespace Wasatch {
     } else if (bc_kind.compare("Neumann")==0 ){
       switch( face ){
         case Uintah::Patch::yminus:
-          set_bcs_on_face<FieldT, BCOpT::NeumannY>(bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, SpatialOps::structured::MINUS_SIDE,faceOffset);
+          set_bcs_on_face<FieldT, BCOpT::NeumannY>(bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, SpatialOps::structured::MINUS_SIDE,faceOffset, hasExtraCells);
           break;
         case Uintah::Patch::yplus:
-          set_bcs_on_face<FieldT, BCOpT::NeumannY>(bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, SpatialOps::structured::PLUS_SIDE,faceOffset);
+          set_bcs_on_face<FieldT, BCOpT::NeumannY>(bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, SpatialOps::structured::PLUS_SIDE,faceOffset, hasExtraCells);
           break;
         case Uintah::Patch::numFaces:
           throw Uintah::ProblemSetupException( "An invalid face Patch::numFaces was encountered while setting boundary conditions", __FILE__, __LINE__ );
@@ -531,23 +565,19 @@ namespace Wasatch {
     typedef FaceTypes<ZVolField>::ZFace FieldT;
     typedef SS::ConstValEval BCEvalT; // basic functor for constant functions.
     typedef BCOpTypeSelector<FieldT,BCEvalT> BCOpT;
-
     SS::IntVec faceOffset(0,0,0);
     SCIRun::IntVector insideCellDir = patch->faceDirection(face);
-    SCIRun::IntVector cellOffset = patch->getExtraCellLowIndex(0);
-    switch( face ){
-      case Uintah::Patch::zminus: faceOffset = SS::IntVec(0,0,0);   break;
-      case Uintah::Patch::zplus : faceOffset = SS::IntVec(0,0,1);   break;
-      default:                                                      break;
-    }
+    const bool hasExtraCells = (patch->getExtraCells() != SCIRun::IntVector(0,0,0));
+    //SCIRun::IntVector patchCellOffset = patch->getCellLowIndex(0);
+    get_face_offset(face, hasExtraCells, faceOffset);
 
     if( bc_kind.compare("Dirichlet")==0 ){
       switch( face ){
         case Uintah::Patch::zminus:
-          set_bcs_on_face<FieldT, BCOpT::DirichletZ>(bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, SpatialOps::structured::MINUS_SIDE,faceOffset);
+          set_bcs_on_face<FieldT, BCOpT::DirichletZ>(bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, SpatialOps::structured::MINUS_SIDE,faceOffset, hasExtraCells);
           break;
         case Uintah::Patch::zplus:
-          set_bcs_on_face<FieldT, BCOpT::DirichletZ>(bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, SpatialOps::structured::PLUS_SIDE,faceOffset);
+          set_bcs_on_face<FieldT, BCOpT::DirichletZ>(bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, SpatialOps::structured::PLUS_SIDE,faceOffset, hasExtraCells);
           break;
         case Uintah::Patch::numFaces:
           throw Uintah::ProblemSetupException( "An invalid face Patch::numFaces was encountered while setting boundary conditions", __FILE__, __LINE__ );
@@ -560,10 +590,10 @@ namespace Wasatch {
     } else if (bc_kind.compare("Neumann")==0 ){
       switch( face ){
         case Uintah::Patch::zminus:
-          set_bcs_on_face<FieldT, BCOpT::NeumannZ>(bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, SpatialOps::structured::MINUS_SIDE,faceOffset);
+          set_bcs_on_face<FieldT, BCOpT::NeumannZ>(bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, SpatialOps::structured::MINUS_SIDE,faceOffset, hasExtraCells);
           break;
         case Uintah::Patch::zplus:
-          set_bcs_on_face<FieldT, BCOpT::NeumannZ>(bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, SpatialOps::structured::PLUS_SIDE,faceOffset);
+          set_bcs_on_face<FieldT, BCOpT::NeumannZ>(bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, SpatialOps::structured::PLUS_SIDE,faceOffset, hasExtraCells);
           break;
         case Uintah::Patch::numFaces:
           throw Uintah::ProblemSetupException( "An invalid face Patch::numFaces was encountered while setting boundary conditions", __FILE__, __LINE__ );
@@ -645,10 +675,14 @@ namespace Wasatch {
               double bc_value = -9;
               std::string bc_kind = "NotSet";
               SCIRun::Iterator bound_ptr;
-              // NOTE TO SELF: The Uintah boundary iterator, in the absence of extra cells, as is the case in Wasatch,
-              // will give the zero-based ijk indices of the SCALAR interior cells, adjacent to the boundary.
+              //
+              // TSAAD NOTE TO SELF:
+              // In the abscence of extra cells, the uintah bc iterator will return the indices of interior scalar cells adjacent to the boundary. These will be zero based.
+              // In the presence of extra cells, the uintah bc iterator will return the indices of the scalar extra cells. These will start with [-1,-1,-1].
+              //
               // ALSO NOTE: that even with staggered scalar Wasatch fields, there is NO additional ghost cell on the x+ face. So
               // nx_staggered = nx_scalar
+              //
               bool foundIterator = get_iter_bcval_bckind( patch, face, child, fieldName, materialID, bc_value, bound_ptr, bc_kind);
               SS::IntVec faceOffset(0,0,0);
               if (foundIterator) {
@@ -725,11 +759,11 @@ namespace Wasatch {
 
               case Uintah::Patch::xminus:
                 for( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
-                  SCIRun::IntVector cellOffset = patch->getExtraCellLowIndex(0); // cell offset used to calculate local cell index with respect to patch.
+                  SCIRun::IntVector patchCellOffset = patch->getCellLowIndex(0); // cell offset used to calculate local cell index with respect to patch.
                   SCIRun::IntVector bc_point_indices(*bound_ptr);
                   pressureMatrix[bc_point_indices].w = 0.0;
 
-                  bc_point_indices = bc_point_indices - cellOffset;
+                  bc_point_indices = bc_point_indices - patchCellOffset;
                   // get flat index and manually set values for pressure and pressure rhs
                   const SS::IntVec   intCellIJK( bc_point_indices[0],   bc_point_indices[1], bc_point_indices[2] );
                   const SS::IntVec ghostCellIJK( bc_point_indices[0]-1, bc_point_indices[1], bc_point_indices[2] );
@@ -741,11 +775,11 @@ namespace Wasatch {
               break;
               case Uintah::Patch::xplus:
                 for( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
-                  SCIRun::IntVector cellOffset = patch->getExtraCellLowIndex(0); // cell offset used to calculate local cell index with respect to patch.
+                  SCIRun::IntVector patchCellOffset = patch->getCellLowIndex(0); // cell offset used to calculate local cell index with respect to patch.
                   SCIRun::IntVector bc_point_indices(*bound_ptr);
                   pressureMatrix[bc_point_indices].e = 0.0;
 
-                  bc_point_indices = bc_point_indices - cellOffset;
+                  bc_point_indices = bc_point_indices - patchCellOffset;
                   // get flat index
                   const SS::IntVec   intCellIJK( bc_point_indices[0],   bc_point_indices[1], bc_point_indices[2] );
                   const SS::IntVec ghostCellIJK( bc_point_indices[0] + 1, bc_point_indices[1], bc_point_indices[2] );
@@ -757,11 +791,11 @@ namespace Wasatch {
               break;
               case Uintah::Patch::yminus:
                 for( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
-                  SCIRun::IntVector cellOffset = patch->getExtraCellLowIndex(0); // cell offset used to calculate local cell index with respect to patch.
+                  SCIRun::IntVector patchCellOffset = patch->getCellLowIndex(0); // cell offset used to calculate local cell index with respect to patch.
                   SCIRun::IntVector bc_point_indices(*bound_ptr);
                   pressureMatrix[bc_point_indices].s = 0.0;
 
-                  bc_point_indices = bc_point_indices - cellOffset;
+                  bc_point_indices = bc_point_indices - patchCellOffset;
                   // get flat index
                   const SS::IntVec   intCellIJK( bc_point_indices[0], bc_point_indices[1],   bc_point_indices[2] );
                   const SS::IntVec ghostCellIJK( bc_point_indices[0], bc_point_indices[1]-1, bc_point_indices[2] );
@@ -773,11 +807,11 @@ namespace Wasatch {
                 break;
               case Uintah::Patch::yplus:
                 for( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
-                  SCIRun::IntVector cellOffset = patch->getExtraCellLowIndex(0); // cell offset used to calculate local cell index with respect to patch.
+                  SCIRun::IntVector patchCellOffset = patch->getCellLowIndex(0); // cell offset used to calculate local cell index with respect to patch.
                   SCIRun::IntVector bc_point_indices(*bound_ptr);
                   pressureMatrix[bc_point_indices].n = 0.0;
 
-                  bc_point_indices = bc_point_indices - cellOffset;
+                  bc_point_indices = bc_point_indices - patchCellOffset;
                   // get flat index
                   const SS::IntVec   intCellIJK( bc_point_indices[0], bc_point_indices[1]  , bc_point_indices[2] );
                   const SS::IntVec ghostCellIJK( bc_point_indices[0], bc_point_indices[1]+1, bc_point_indices[2] );
@@ -789,11 +823,11 @@ namespace Wasatch {
                 break;
               case Uintah::Patch::zminus:
                 for( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
-                  SCIRun::IntVector cellOffset = patch->getExtraCellLowIndex(0); // cell offset used to calculate local cell index with respect to patch.
+                  SCIRun::IntVector patchCellOffset = patch->getCellLowIndex(0); // cell offset used to calculate local cell index with respect to patch.
                   SCIRun::IntVector bc_point_indices(*bound_ptr);
                   pressureMatrix[bc_point_indices].b = 0.0;
 
-                  bc_point_indices = bc_point_indices - cellOffset;
+                  bc_point_indices = bc_point_indices - patchCellOffset;
                   // get flat index
                   const SS::IntVec   intCellIJK( bc_point_indices[0], bc_point_indices[1], bc_point_indices[2]   );
                   const SS::IntVec ghostCellIJK( bc_point_indices[0], bc_point_indices[1], bc_point_indices[2]-1 );
@@ -805,11 +839,11 @@ namespace Wasatch {
                 break;
               case Uintah::Patch::zplus:
                 for( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
-                  SCIRun::IntVector cellOffset = patch->getExtraCellLowIndex(0); // cell offset used to calculate local cell index with respect to patch.
+                  SCIRun::IntVector patchCellOffset = patch->getCellLowIndex(0); // cell offset used to calculate local cell index with respect to patch.
                   SCIRun::IntVector bc_point_indices(*bound_ptr);
                   pressureMatrix[bc_point_indices].t = 0.0;
 
-                  bc_point_indices = bc_point_indices - cellOffset;
+                  bc_point_indices = bc_point_indices - patchCellOffset;
                   // get flat index
                   const SS::IntVec   intCellIJK( bc_point_indices[0], bc_point_indices[1], bc_point_indices[2]   );
                   const SS::IntVec ghostCellIJK( bc_point_indices[0], bc_point_indices[1], bc_point_indices[2]+1 );
@@ -836,12 +870,12 @@ namespace Wasatch {
               case Uintah::Patch::xminus:
 
                 for( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
-                  SCIRun::IntVector cellOffset = patch->getExtraCellLowIndex(0); // cell offset used to calculate local cell index with respect to patch.
+                  SCIRun::IntVector patchCellOffset = patch->getCellLowIndex(0); // cell offset used to calculate local cell index with respect to patch.
                   SCIRun::IntVector bc_point_indices(*bound_ptr);
                   Uintah::Stencil7&  coefs = pressureMatrix[bc_point_indices];
                   coefs.w = 0.0;
 
-                  bc_point_indices = bc_point_indices - cellOffset;
+                  bc_point_indices = bc_point_indices - patchCellOffset;
                   // get flat index
                   const SS::IntVec   intCellIJK( bc_point_indices[0],   bc_point_indices[1], bc_point_indices[2] );
                   const SS::IntVec ghostCellIJK( bc_point_indices[0]-1, bc_point_indices[1], bc_point_indices[2] );
@@ -855,12 +889,12 @@ namespace Wasatch {
                 break;
               case Uintah::Patch::xplus:
                 for( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
-                  SCIRun::IntVector cellOffset = patch->getExtraCellLowIndex(0); // cell offset used to calculate local cell index with respect to patch.
+                  SCIRun::IntVector patchCellOffset = patch->getCellLowIndex(0); // cell offset used to calculate local cell index with respect to patch.
                   SCIRun::IntVector bc_point_indices(*bound_ptr);
                   Uintah::Stencil7&  coefs = pressureMatrix[bc_point_indices];
                   coefs.e = 0.0;
 
-                  bc_point_indices = bc_point_indices - cellOffset;
+                  bc_point_indices = bc_point_indices - patchCellOffset;
                   // get flat index
                   const SS::IntVec   intCellIJK( bc_point_indices[0],   bc_point_indices[1], bc_point_indices[2] );
                   const SS::IntVec ghostCellIJK( bc_point_indices[0]+1, bc_point_indices[1], bc_point_indices[2] );
@@ -873,12 +907,12 @@ namespace Wasatch {
                 break;
               case Uintah::Patch::yminus:
                 for( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
-                  SCIRun::IntVector cellOffset = patch->getExtraCellLowIndex(0); // cell offset used to calculate local cell index with respect to patch.
+                  SCIRun::IntVector patchCellOffset = patch->getCellLowIndex(0); // cell offset used to calculate local cell index with respect to patch.
                   SCIRun::IntVector bc_point_indices(*bound_ptr);
                   Uintah::Stencil7&  coefs = pressureMatrix[bc_point_indices];
                   coefs.s = 0.0;
 
-                  bc_point_indices = bc_point_indices - cellOffset;
+                  bc_point_indices = bc_point_indices - patchCellOffset;
                   // get flat index
                   const SS::IntVec   intCellIJK( bc_point_indices[0], bc_point_indices[1],   bc_point_indices[2] );
                   const SS::IntVec ghostCellIJK( bc_point_indices[0], bc_point_indices[1]-1, bc_point_indices[2] );
@@ -891,12 +925,12 @@ namespace Wasatch {
                 break;
               case Uintah::Patch::yplus:
                 for( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
-                  SCIRun::IntVector cellOffset = patch->getExtraCellLowIndex(0); // cell offset used to calculate local cell index with respect to patch.
+                  SCIRun::IntVector patchCellOffset = patch->getCellLowIndex(0); // cell offset used to calculate local cell index with respect to patch.
                   SCIRun::IntVector bc_point_indices(*bound_ptr);
                   Uintah::Stencil7&  coefs = pressureMatrix[bc_point_indices];
                   coefs.n = 0.0;
 
-                  bc_point_indices = bc_point_indices - cellOffset;
+                  bc_point_indices = bc_point_indices - patchCellOffset;
                   // get flat index
                   const SS::IntVec   intCellIJK( bc_point_indices[0], bc_point_indices[1],   bc_point_indices[2] );
                   const SS::IntVec ghostCellIJK( bc_point_indices[0], bc_point_indices[1]+1, bc_point_indices[2] );
@@ -909,12 +943,12 @@ namespace Wasatch {
                 break;
               case Uintah::Patch::zminus:
                 for( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
-                  SCIRun::IntVector cellOffset = patch->getExtraCellLowIndex(0); // cell offset used to calculate local cell index with respect to patch.
+                  SCIRun::IntVector patchCellOffset = patch->getCellLowIndex(0); // cell offset used to calculate local cell index with respect to patch.
                   SCIRun::IntVector bc_point_indices(*bound_ptr);
                   Uintah::Stencil7&  coefs = pressureMatrix[bc_point_indices];
                   coefs.b = 0.0;
 
-                  bc_point_indices = bc_point_indices - cellOffset;
+                  bc_point_indices = bc_point_indices - patchCellOffset;
                   // get flat index
                   const SS::IntVec   intCellIJK( bc_point_indices[0], bc_point_indices[1], bc_point_indices[2]   );
                   const SS::IntVec ghostCellIJK( bc_point_indices[0], bc_point_indices[1], bc_point_indices[2]-1 );
@@ -927,12 +961,12 @@ namespace Wasatch {
                 break;
               case Uintah::Patch::zplus:
                 for( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
-                  SCIRun::IntVector cellOffset = patch->getExtraCellLowIndex(0); // cell offset used to calculate local cell index with respect to patch.
+                  SCIRun::IntVector patchCellOffset = patch->getCellLowIndex(0); // cell offset used to calculate local cell index with respect to patch.
                   SCIRun::IntVector bc_point_indices(*bound_ptr);
                   Uintah::Stencil7&  coefs = pressureMatrix[bc_point_indices];
                   coefs.t = 0.0;
 
-                  bc_point_indices = bc_point_indices - cellOffset;
+                  bc_point_indices = bc_point_indices - patchCellOffset;
                   // get flat index
                   const SS::IntVec   intCellIJK( bc_point_indices[0], bc_point_indices[1], bc_point_indices[2]   );
                   const SS::IntVec ghostCellIJK( bc_point_indices[0], bc_point_indices[1], bc_point_indices[2]+1 );
