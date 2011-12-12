@@ -15,6 +15,7 @@ SRCS += \
   $(SRCDIR)/HeatTransfer.cc \
   $(SRCDIR)/SimpleHeatTransfer.cc \
   $(SRCDIR)/ShaddixHeatTransfer.cc \
+  $(SRCDIR)/EnthalpyShaddix.cc \
   $(SRCDIR)/XDragModel.cc \
   $(SRCDIR)/YDragModel.cc \
   $(SRCDIR)/ZDragModel.cc \
