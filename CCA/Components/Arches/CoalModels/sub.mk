@@ -22,4 +22,5 @@ SRCS += \
   $(SRCDIR)/DragModel.cc
 
 $(SRCDIR)/ShaddixHeatTransfer.$(OBJEXT): $(SRCDIR)/fortran/rqpart_fort.h
+$(SRCDIR)/EnthalpyShaddix.$(OBJEXT): $(SRCDIR)/fortran/rqpart_fort.h
 $(SRCDIR)/SimpleHeatTransfer.$(OBJEXT): $(SRCDIR)/fortran/rqpart_fort.h
