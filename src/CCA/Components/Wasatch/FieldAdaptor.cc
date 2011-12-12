@@ -74,8 +74,8 @@ namespace Wasatch{
     SCIRun::IntVector bcMinus, bcPlus;
     get_bc_logicals( patch, bcMinus, bcPlus );
 
-    const SCIRun::IntVector gs = patch->getExtraCellHighIndex(0) - patch->getExtraCellLowIndex(0);
-//    const SCIRun::IntVector gs = patch->getCellHighIndex(0) - patch->getCellLowIndex(0);
+//    const SCIRun::IntVector gs = patch->getExtraCellHighIndex(0) - patch->getExtraCellLowIndex(0);
+    const SCIRun::IntVector gs = patch->getCellHighIndex(0) - patch->getCellLowIndex(0);
 
     using SpatialOps::structured::IntVec;
 
