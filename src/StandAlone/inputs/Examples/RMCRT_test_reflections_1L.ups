@@ -94,6 +94,7 @@
   
   <!--__________________________________ -->
   <RMCRT>
+    <randomSeed>         false     </randomSeed>
     <Temperature>       1500       </Temperature>
     <abskg>              1.0       </abskg>
     <NoOfRays>          100        </NoOfRays>

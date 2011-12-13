@@ -52,6 +52,7 @@ Ray::problemSetup( const ProblemSpecP& inputdb)
   db->getWithDefault( "TNS"       , _TNS       ,  0  );       //Temperature of the  NS boundaries               
   db->getWithDefault( "TTB"       , _TTB       ,  0  );       //Temperature of the  TB boundaries               
   db->getWithDefault( "Slice"     , _slice     , 9 );         //Level in z direction of xy slice
+  db->getWithDefault( "randomSeed", _isSeedRandom, true );    // random or deterministic seed.
   db->getWithDefault( "benchmark_1" ,     _benchmark_1,     false );  
   db->getWithDefault( "benchmark_13pt2" , _benchmark_13pt2, false );
   db->getWithDefault("StefanBoltzmann",   _sigma, 5.67051e-8);  // Units are W/(m^2-K)
@@ -361,7 +362,7 @@ Ray::rayTrace( const ProcessorGroup* pc,
         IntVector cur = origin;
         IntVector prevCell = cur;
 
-        if(_benchmark_1 || _benchmark_13pt2){
+        if(_isSeedRandom == false){
           _mTwister.seed((i + j +k) * iRay +1);
         }
         

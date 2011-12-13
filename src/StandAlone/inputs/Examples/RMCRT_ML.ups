@@ -158,6 +158,7 @@
   
   <!-- ray tracer    -->  
   <RMCRT>
+    <randomSeed>         false     </randomSeed>
     <Temperature>       64.804     </Temperature>
     <abskg>             999        </abskg>
     <NoOfRays>          25         </NoOfRays>
