@@ -84,3 +84,78 @@ void ExplicitTimeInt::problemSetup(const ProblemSpecP& params)
   else
             throw InvalidValue("Explicit time integration order must be one of: first, second, third!  Please fix input file.",__FILE__, __LINE__);             
 }
+//---------------------------------------------------------------------------
+// Method: Schedule a time update
+//---------------------------------------------------------------------------
+void ExplicitTimeInt::sched_fe_update( SchedulerP& sched, 
+                                       const PatchSet* patches, 
+                                       const MaterialSet* matls, 
+                                       std::vector<const VarLabel*> phi,
+                                       std::vector<const VarLabel*> rhs, 
+                                       int rkstep )
+{
+  
+  Task* tsk = scinew Task("ExplicitTimeInt::fe_update", this, &ExplicitTimeInt::fe_update, phi, rhs, rkstep); 
+  Ghost::GhostType gn = Ghost::None; 
+
+  // phi
+  for ( std::vector<const VarLabel*>::iterator iter = phi.begin(); iter != phi.end(); iter++ ){ 
+
+    tsk->modifies( *iter ); 
+
+  } 
+  // rhs
+  for ( std::vector<const VarLabel*>::iterator iter = rhs.begin(); iter != rhs.end(); iter++ ){ 
+
+    tsk->requires( Task::NewDW, *iter, gn, 0 ); 
+
+  } 
+
+  sched->addTask( tsk, patches, matls ); 
+
+}
+
+void ExplicitTimeInt::fe_update( const ProcessorGroup*, 
+                                 const PatchSubset* patches, 
+                                 const MaterialSubset* matls, 
+                                 DataWarehouse* old_dw, 
+                                 DataWarehouse* new_dw, 
+                                 std::vector<const VarLabel*> phi_lab, 
+                                 std::vector<const VarLabel*> rhs_lab, 
+                                 int rkstep )
+{ 
+  int N = phi_lab.size(); 
+  for (int p = 0; p < patches->size(); p++) {
+
+    const Patch* patch = patches->get(p);
+    int archIndex = 0; 
+    int indx = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    Ghost::GhostType gn = Ghost::None; 
+
+    for ( int i = 0; i < N; i++){ 
+
+      CCVariable<double> phi; 
+      constCCVariable<double> rhs; 
+
+      new_dw->getModifiable( phi, phi_lab[i], indx, patch ); 
+      new_dw->get( rhs, rhs_lab[i], indx, patch, gn, 0 ); 
+
+      std::string eqn_name = "some_eqn"; 
+
+      delt_vartype DT;
+      old_dw->get(DT, d_fieldLabels->d_sharedState->get_delt_label());
+      double dt = DT; 
+
+      double curr_time = d_fieldLabels->d_sharedState->getElapsedTime(); 
+      double curr_ssp_time = curr_time + time_factor[rkstep] * dt;
+
+      singlePatchFEUpdate( patch, 
+                           phi, 
+                           rhs, 
+                           dt, curr_ssp_time, 
+                           eqn_name ); 
+
+    } 
+  }
+} 
+
