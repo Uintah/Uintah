@@ -124,6 +124,8 @@ void ExplicitTimeInt::sched_fe_update( SchedulerP& sched,
 
   } 
 
+  tsk->requires(Task::OldDW, d_fieldLabels->d_sharedState->get_delt_label(), Ghost::None, 0);
+
   sched->addTask( tsk, patches, matls ); 
 
 }
@@ -202,6 +204,8 @@ void ExplicitTimeInt::sched_time_ave( SchedulerP& sched,
     tsk->modifies( lab ); 
 
   } 
+
+  tsk->requires(Task::OldDW, d_fieldLabels->d_sharedState->get_delt_label(), Ghost::None, 0);
 
   sched->addTask( tsk, patches, matls ); 
 
