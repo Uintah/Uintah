@@ -58,6 +58,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Arches/CoalModels/HeatTransfer.h>
 #include <CCA/Components/Arches/CoalModels/SimpleHeatTransfer.h>
 #include <CCA/Components/Arches/CoalModels/ShaddixHeatTransfer.h>
+#include <CCA/Components/Arches/CoalModels/EnthalpyShaddix.h>
 #include <CCA/Components/Arches/CoalModels/CharOxidationShaddix.h>
 #include <CCA/Components/Arches/CoalModels/XDragModel.h>
 #include <CCA/Components/Arches/CoalModels/YDragModel.h>
@@ -2671,6 +2672,9 @@ void Arches::registerModels(ProblemSpecP& db)
           model_factory.register_model( temp_model_name, modelBuilder );
         } else if ( model_type == "ShaddixHeatTransfer" ) {
           ModelBuilder* modelBuilder = scinew ShaddixHeatTransferBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
+          model_factory.register_model( temp_model_name, modelBuilder );
+        } else if ( model_type == "EnthalpyShaddix" ) {
+          ModelBuilder* modelBuilder = scinew EnthalpyShaddixBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
           model_factory.register_model( temp_model_name, modelBuilder );
         } else if ( model_type == "XDrag" ) {
           ModelBuilder* modelBuilder = scinew XDragModelBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
