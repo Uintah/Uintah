@@ -56,6 +56,22 @@ public:
                      constphiT& new_den, 
                      int step, double time ); 
 
+    /** @brief An task interface to the singlePatchFEUpdate */ 
+    void sched_fe_update( SchedulerP& sched, 
+                          const PatchSet* patches, 
+                          const MaterialSet* matls, 
+                          std::vector<const VarLabel*> phi,
+                          std::vector<const VarLabel*> rhs, 
+                          int rkstep );
+    void fe_update( const ProcessorGroup*, 
+                    const PatchSubset* patches, 
+                    const MaterialSubset* matls, 
+                    DataWarehouse*, 
+                    DataWarehouse* new_dw,
+                    std::vector<const VarLabel*> phi_lab,
+                    std::vector<const VarLabel*> rhs_lab, 
+                    int rkstep );
+
     Vector ssp_beta, ssp_alpha; 
     Vector time_factor; 
 
