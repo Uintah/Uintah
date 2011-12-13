@@ -273,12 +273,14 @@ ShaddixHeatTransfer::sched_computeModel( const LevelP& level, SchedulerP& sched,
     tsk->computes(d_abskpLabel);
     tsk->computes(d_qconvLabel);
     tsk->computes(d_qradLabel);
+    tsk->computes(d_pTLabel);
   } else {
     tsk->modifies(d_modelLabel);
     tsk->modifies(d_gasLabel);  
     tsk->modifies(d_abskpLabel);
     tsk->modifies(d_qconvLabel);
     tsk->modifies(d_qradLabel);
+    tsk->modifies(d_pTLabel);
   }
 
   tsk->requires( Task::OldDW, d_fieldLabels->d_sharedState->get_delt_label(), Ghost::None, 0);
@@ -325,11 +327,21 @@ ShaddixHeatTransfer::sched_computeModel( const LevelP& level, SchedulerP& sched,
   tsk->requires( Task::OldDW, d_fieldLabels->d_newCCVelocityLabel, Ghost::None, 0);
   tsk->requires(Task::OldDW, d_fieldLabels->d_densityCPLabel, Ghost::None, 0);
   tsk->requires(Task::OldDW, d_fieldLabels->d_cpINLabel, Ghost::None, 0);
- 
+
+/* 
   if(_radiation){
     //tsk->requires(Task::OldDW, d_fieldLabels->d_radiationSRCINLabel,  Ghost::None, 0);
     tsk->requires(Task::OldDW, d_abskg_label,  Ghost::None, 0);   
     tsk->requires(Task::OldDW, d_volq_label, Ghost::None, 0);
+  }
+*/
+
+  if(old_radiation){
+    d_volq_label = d_fieldLabels->d_radiationVolqINLabel;
+    d_abskg_label = d_fieldLabels->d_abskgINLabel;
+  } else if(new_radiation){
+    d_volq_label = VarLabel::find("new_radiationVolq");
+    d_abskg_label = VarLabel::find("new_abskg");
   }
 
   // always require the gas-phase temperature
@@ -514,6 +526,14 @@ ShaddixHeatTransfer::computeModel( const ProcessorGroup * pc,
     } else {
       new_dw->allocateAndPut( qrad, d_qradLabel, matlIndex, patch );
       qrad.initialize(0.0);
+    }
+
+    CCVariable<double> pT;
+    if( new_dw->exists( d_pTLabel, matlIndex, patch) ) {
+      new_dw->getModifiable( pT, d_pTLabel, matlIndex, patch );
+    } else {
+      new_dw->allocateAndPut( pT, d_pTLabel, matlIndex, patch );
+      pT.initialize(0.0);
     }
 
     // get particle velocity used to calculate Reynolds number
