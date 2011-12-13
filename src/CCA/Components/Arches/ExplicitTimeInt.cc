@@ -92,10 +92,11 @@ void ExplicitTimeInt::sched_fe_update( SchedulerP& sched,
                                        const MaterialSet* matls, 
                                        std::vector<std::string> phi,
                                        std::vector<std::string> rhs, 
+                                       bool allocate_otf, 
                                        int rkstep )
 {
   
-  Task* tsk = scinew Task("ExplicitTimeInt::fe_update", this, &ExplicitTimeInt::fe_update, phi, rhs, rkstep); 
+  Task* tsk = scinew Task("ExplicitTimeInt::fe_update", this, &ExplicitTimeInt::fe_update, phi, rhs, allocate_otf, rkstep); 
   Ghost::GhostType gn = Ghost::None; 
 
   // phi
@@ -103,7 +104,15 @@ void ExplicitTimeInt::sched_fe_update( SchedulerP& sched,
 
     const VarLabel* lab = VarLabel::find( *iter ); 
 
-    tsk->modifies( lab ); 
+    if ( allocate_otf && rkstep == 0 ){ 
+
+      tsk->computes( lab ); 
+
+    } else { 
+
+      tsk->modifies( lab ); 
+
+    }
 
   } 
   // rhs
@@ -126,6 +135,7 @@ void ExplicitTimeInt::fe_update( const ProcessorGroup*,
                                  DataWarehouse* new_dw, 
                                  std::vector<std::string> phi_tag, 
                                  std::vector<std::string> rhs_tag, 
+                                 bool allocate_otf, 
                                  int rkstep )
 { 
   int N = phi_tag.size(); 
@@ -144,7 +154,12 @@ void ExplicitTimeInt::fe_update( const ProcessorGroup*,
       const VarLabel* phi_lab = VarLabel::find( phi_tag[i] ); 
       const VarLabel* rhs_lab = VarLabel::find( rhs_tag[i] ); 
 
-      new_dw->getModifiable( phi , phi_lab , indx , patch );
+      if ( allocate_otf && rkstep == 0 ){ 
+        new_dw->allocateAndPut( phi , phi_lab , indx , patch );
+        phi.initialize(0.0); 
+      } else { 
+        new_dw->getModifiable( phi , phi_lab , indx , patch );
+      } 
       new_dw->get( rhs           , rhs_lab , indx , patch , gn , 0 );
 
       std::string eqn_name = "some_eqn"; 

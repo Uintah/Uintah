@@ -62,6 +62,7 @@ public:
                           const MaterialSet* matls, 
                           std::vector<std::string> phi,
                           std::vector<std::string> rhs, 
+                          bool allocate_otf, 
                           int rkstep );
     void fe_update( const ProcessorGroup*, 
                     const PatchSubset* patches, 
@@ -70,6 +71,7 @@ public:
                     DataWarehouse* new_dw,
                     std::vector<std::string> phi_lab,
                     std::vector<std::string> rhs_lab, 
+                    bool allocate_otf, 
                     int rkstep );
 
     /** @brief An task interface to the timeAvePhi */ 
