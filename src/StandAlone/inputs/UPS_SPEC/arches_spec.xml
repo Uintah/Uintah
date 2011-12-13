@@ -388,6 +388,7 @@
           <skip                         spec="OPTIONAL INTEGER" />                                        
           <solver                       spec="REQUIRED STRING 'smg, SMG, PFMG, pfmg, SparseMSG, sparsemsg, CG, cg, Hybrid, hybrid, GMRES, gmres'" />                         
           <tolerance                    spec="REQUIRED DOUBLE 'positive'" /> 
+					<relax_type 									spec="OPTIONAL INTEGER 'positive'"/> <!-- 0=jacobi,1=weighted jacobi,2=rb symmetric,3=rb non-symmetric --> 
         </Parameters>
         </PressureSolver>
 
