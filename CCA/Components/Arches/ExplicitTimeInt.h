@@ -60,17 +60,31 @@ public:
     void sched_fe_update( SchedulerP& sched, 
                           const PatchSet* patches, 
                           const MaterialSet* matls, 
-                          std::vector<const VarLabel*> phi,
-                          std::vector<const VarLabel*> rhs, 
+                          std::vector<std::string> phi,
+                          std::vector<std::string> rhs, 
                           int rkstep );
     void fe_update( const ProcessorGroup*, 
                     const PatchSubset* patches, 
                     const MaterialSubset* matls, 
-                    DataWarehouse*, 
+                    DataWarehouse* old_dw, 
                     DataWarehouse* new_dw,
-                    std::vector<const VarLabel*> phi_lab,
-                    std::vector<const VarLabel*> rhs_lab, 
+                    std::vector<std::string> phi_lab,
+                    std::vector<std::string> rhs_lab, 
                     int rkstep );
+
+    /** @brief An task interface to the timeAvePhi */ 
+    void sched_time_ave( SchedulerP& sched, 
+                         const PatchSet* patches, 
+                         const MaterialSet* matls, 
+                         std::vector<std::string> phi,
+                         int rkstep );
+    void time_ave( const ProcessorGroup*, 
+                   const PatchSubset* patches, 
+                   const MaterialSubset* matls, 
+                   DataWarehouse* old_dw, 
+                   DataWarehouse* new_dw,
+                   std::vector<std::string> phi_lab,
+                   int rkstep );
 
     Vector ssp_beta, ssp_alpha; 
     Vector time_factor; 

@@ -90,8 +90,8 @@ void ExplicitTimeInt::problemSetup(const ProblemSpecP& params)
 void ExplicitTimeInt::sched_fe_update( SchedulerP& sched, 
                                        const PatchSet* patches, 
                                        const MaterialSet* matls, 
-                                       std::vector<const VarLabel*> phi,
-                                       std::vector<const VarLabel*> rhs, 
+                                       std::vector<std::string> phi,
+                                       std::vector<std::string> rhs, 
                                        int rkstep )
 {
   
@@ -99,15 +99,19 @@ void ExplicitTimeInt::sched_fe_update( SchedulerP& sched,
   Ghost::GhostType gn = Ghost::None; 
 
   // phi
-  for ( std::vector<const VarLabel*>::iterator iter = phi.begin(); iter != phi.end(); iter++ ){ 
+  for ( std::vector<std::string>::iterator iter = phi.begin(); iter != phi.end(); iter++ ){ 
 
-    tsk->modifies( *iter ); 
+    const VarLabel* lab = VarLabel::find( *iter ); 
+
+    tsk->modifies( lab ); 
 
   } 
   // rhs
-  for ( std::vector<const VarLabel*>::iterator iter = rhs.begin(); iter != rhs.end(); iter++ ){ 
+  for ( std::vector<std::string>::iterator iter = rhs.begin(); iter != rhs.end(); iter++ ){ 
 
-    tsk->requires( Task::NewDW, *iter, gn, 0 ); 
+    const VarLabel* lab = VarLabel::find( *iter ); 
+
+    tsk->requires( Task::NewDW, lab, gn, 0 ); 
 
   } 
 
@@ -120,11 +124,11 @@ void ExplicitTimeInt::fe_update( const ProcessorGroup*,
                                  const MaterialSubset* matls, 
                                  DataWarehouse* old_dw, 
                                  DataWarehouse* new_dw, 
-                                 std::vector<const VarLabel*> phi_lab, 
-                                 std::vector<const VarLabel*> rhs_lab, 
+                                 std::vector<std::string> phi_tag, 
+                                 std::vector<std::string> rhs_tag, 
                                  int rkstep )
 { 
-  int N = phi_lab.size(); 
+  int N = phi_tag.size(); 
   for (int p = 0; p < patches->size(); p++) {
 
     const Patch* patch = patches->get(p);
@@ -137,8 +141,11 @@ void ExplicitTimeInt::fe_update( const ProcessorGroup*,
       CCVariable<double> phi; 
       constCCVariable<double> rhs; 
 
-      new_dw->getModifiable( phi, phi_lab[i], indx, patch ); 
-      new_dw->get( rhs, rhs_lab[i], indx, patch, gn, 0 ); 
+      const VarLabel* phi_lab = VarLabel::find( phi_tag[i] ); 
+      const VarLabel* rhs_lab = VarLabel::find( rhs_tag[i] ); 
+
+      new_dw->getModifiable( phi , phi_lab , indx , patch );
+      new_dw->get( rhs           , rhs_lab , indx , patch , gn , 0 );
 
       std::string eqn_name = "some_eqn"; 
 
@@ -159,3 +166,66 @@ void ExplicitTimeInt::fe_update( const ProcessorGroup*,
   }
 } 
 
+//---------------------------------------------------------------------------
+// Method: Schedule a time average
+//---------------------------------------------------------------------------
+void ExplicitTimeInt::sched_time_ave( SchedulerP& sched, 
+                                      const PatchSet* patches, 
+                                      const MaterialSet* matls, 
+                                      std::vector<std::string> phi,
+                                      int rkstep )
+{
+  
+  Task* tsk = scinew Task("ExplicitTimeInt::time_ave", this, &ExplicitTimeInt::time_ave, phi, rkstep); 
+  Ghost::GhostType gn = Ghost::None; 
+
+  for ( std::vector<std::string>::iterator iter = phi.begin(); iter != phi.end(); iter++ ){ 
+
+    const VarLabel* lab = VarLabel::find( *iter ); 
+
+    tsk->requires( Task::OldDW, lab, gn, 0 ); 
+    tsk->modifies( lab ); 
+
+  } 
+
+  sched->addTask( tsk, patches, matls ); 
+
+}
+
+void ExplicitTimeInt::time_ave( const ProcessorGroup*, 
+                                const PatchSubset* patches, 
+                                const MaterialSubset* matls, 
+                                DataWarehouse* old_dw, 
+                                DataWarehouse* new_dw, 
+                                std::vector<std::string> phi_tag, 
+                                int rkstep )
+{ 
+  for (int p = 0; p < patches->size(); p++) {
+
+    const Patch* patch = patches->get(p);
+    int archIndex = 0; 
+    int indx = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    Ghost::GhostType gn = Ghost::None; 
+
+    for ( std::vector<std::string>::iterator i = phi_tag.begin(); i != phi_tag.end(); i++ ){ 
+
+      CCVariable<double> phi; 
+      constCCVariable<double> old_phi;
+
+      const VarLabel* phi_lab = VarLabel::find( *i ); 
+
+      new_dw->getModifiable( phi , phi_lab , indx , patch );
+      old_dw->get( old_phi       , phi_lab , indx , patch , gn , 0 );
+
+      delt_vartype DT;
+      old_dw->get(DT, d_fieldLabels->d_sharedState->get_delt_label());
+      double dt = DT; 
+
+      double curr_time = d_fieldLabels->d_sharedState->getElapsedTime(); 
+      double curr_ssp_time = curr_time + time_factor[rkstep] * dt;
+
+      timeAvePhi( patch, phi, old_phi, rkstep, curr_ssp_time ); 
+
+    } 
+  }
+} 
