@@ -1,8 +1,6 @@
 #include <CCA/Components/Wasatch/FieldAdaptor.h>
 #include <Core/Grid/Patch.h>
 
-#include <spatialops/structured/FVTools.h>
-
 #include <map>
 #include <string>
 #include <algorithm>
@@ -76,31 +74,21 @@ namespace Wasatch{
     SCIRun::IntVector bcMinus, bcPlus;
     get_bc_logicals( patch, bcMinus, bcPlus );
 
-    const SCIRun::IntVector gs = patch->getExtraCellHighIndex(0) - patch->getExtraCellLowIndex(0);
+//    const SCIRun::IntVector gs = patch->getExtraCellHighIndex(0) - patch->getExtraCellLowIndex(0);
+    const SCIRun::IntVector gs = patch->getCellHighIndex(0) - patch->getCellLowIndex(0);
 
     using SpatialOps::structured::IntVec;
-    const IntVec glob( SpatialOps::structured::get_nx_with_ghost<FieldT>(gs[0],bcPlus[0]),
-                       SpatialOps::structured::get_ny_with_ghost<FieldT>(gs[1],bcPlus[1]),
-                       SpatialOps::structured::get_nz_with_ghost<FieldT>(gs[2],bcPlus[2]) );
+
+    const IntVec glob( gs[0] + FieldT::Ghost::NGHOST*2 + (bcPlus[0] ? FieldT::Location::BCExtra::X : 0),
+                       gs[1] + FieldT::Ghost::NGHOST*2 + (bcPlus[1] ? FieldT::Location::BCExtra::Y : 0),
+                       gs[2] + FieldT::Ghost::NGHOST*2 + (bcPlus[2] ? FieldT::Location::BCExtra::Z : 0) );
     const IntVec extent = glob;
     const IntVec offset(0,0,0);
-    return SpatialOps::structured::MemoryWindow( glob, offset, extent, bcPlus[0], bcPlus[1], bcPlus[2] );
-  }
 
-  //------------------------------------------------------------------
+//    std::cout << "obtaining temporary field from patch with dim: " << gs
+//        << "  field dim: " << glob
+//        << std::endl;
 
-  template< typename FieldT >
-  SpatialOps::structured::MemoryWindow
-  get_memory_window_for_uintah_field( const Uintah::Patch* const patch,
-                                      const SCIRun::IntVector& fieldSize )
-  {
-    SCIRun::IntVector bcMinus, bcPlus;
-    get_bc_logicals( patch, bcMinus, bcPlus );
-
-    using SpatialOps::structured::IntVec;
-    const IntVec glob( fieldSize[0], fieldSize[1], fieldSize[2] );
-    const IntVec extent = glob;
-    const IntVec offset(0,0,0);
     return SpatialOps::structured::MemoryWindow( glob, offset, extent, bcPlus[0], bcPlus[1], bcPlus[2] );
   }
 
@@ -129,12 +117,9 @@ namespace Wasatch{
   //------------------------------------------------------------------
 
   // macro shortcuts for explicit template instantiation
-#define declare_method( FIELDT )                                                    \
-  template SpatialOps::structured::MemoryWindow                                     \
-  get_memory_window_for_uintah_field<FIELDT>( const Uintah::Patch* const );         \
-  template SpatialOps::structured::MemoryWindow                                     \
-  get_memory_window_for_uintah_field<FIELDT>( const Uintah::Patch* const,           \
-                                              const SCIRun::IntVector& fieldSize ); \
+#define declare_method( FIELDT )                                                \
+  template SpatialOps::structured::MemoryWindow                                 \
+  get_memory_window_for_uintah_field<FIELDT>( const Uintah::Patch* const );     \
   template Uintah::Ghost::GhostType get_uintah_ghost_type<FIELDT>();
 
 #define declare_variants( VOLT )                \

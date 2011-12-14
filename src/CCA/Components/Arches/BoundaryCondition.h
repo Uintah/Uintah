@@ -46,6 +46,7 @@
 #include <Core/Grid/Variables/SFCZVariable.h>
 #include <Core/Grid/BoundaryConditions/BoundCond.h>
 #include <Core/Grid/BoundaryConditions/BCDataArray.h>
+#include <Core/Grid/BoundaryConditions/BCUtils.h>
 #include   <vector>
 
 /**************************************
@@ -116,54 +117,54 @@ namespace Uintah {
 
       typedef std::map<std::string, constCCVariable<double> > HelperMap; 
       typedef std::vector<string> HelperVec;  
-			
-			/** @brief Stuct for hold face centered offsets relative to the cell centered boundary index. */
-			struct FaceOffSets { 
-				// Locations are determined by: 
-				//   (i,j,k) location = boundary_index - offset;
-				
-				public: 
-					IntVector io; 		///< Interior cell offset 
-					IntVector bo;     ///< Boundary cell offset 
-					IntVector eo; 		///< Extra cell offset
+                        
+                        /** @brief Stuct for hold face centered offsets relative to the cell centered boundary index. */
+                        struct FaceOffSets { 
+                                // Locations are determined by: 
+                                //   (i,j,k) location = boundary_index - offset;
+                                
+                                public: 
+                                        IntVector io;           ///< Interior cell offset 
+                                        IntVector bo;     ///< Boundary cell offset 
+                                        IntVector eo;           ///< Extra cell offset
 
-				  int sign;         ///< Sign of the normal for the face (ie, -1 for minus faces and +1 for plus faces )
+                                  int sign;         ///< Sign of the normal for the face (ie, -1 for minus faces and +1 for plus faces )
 
-					double dx; 				///< cell size in the dimension of face normal (ie, distance between cell centers)
+                                        double dx;                              ///< cell size in the dimension of face normal (ie, distance between cell centers)
 
-			};
+                        };
 
-		 inline const FaceOffSets getFaceOffsets( const IntVector& face_normal, const Patch::FaceType face, const Vector Dx ){  
+                 inline const FaceOffSets getFaceOffsets( const IntVector& face_normal, const Patch::FaceType face, const Vector Dx ){  
 
-			 FaceOffSets offsets; 
-			 offsets.io = IntVector(0,0,0);
-			 offsets.bo = IntVector(0,0,0); 
-			 offsets.eo = IntVector(0,0,0); 
+                         FaceOffSets offsets; 
+                         offsets.io = IntVector(0,0,0);
+                         offsets.bo = IntVector(0,0,0); 
+                         offsets.eo = IntVector(0,0,0); 
 
-			 if ( face == Patch::xminus || face == Patch::yminus || face == Patch::zminus ) { 
+                         if ( face == Patch::xminus || face == Patch::yminus || face == Patch::zminus ) { 
 
-				 offsets.bo = face_normal; 
-				 offsets.sign = -1; 
+                                 offsets.bo = face_normal; 
+                                 offsets.sign = -1; 
 
-			 } else { 
+                         } else { 
 
-				 offsets.io = face_normal; 
-				 offsets.eo = IntVector( -1*face_normal.x(), -1*face_normal.y(), -1*face_normal.z() ); 
-				 offsets.sign = +1; 
+                                 offsets.io = face_normal; 
+                                 offsets.eo = IntVector( -1*face_normal.x(), -1*face_normal.y(), -1*face_normal.z() ); 
+                                 offsets.sign = +1; 
 
-			 } 
+                         } 
 
-			 if ( face == Patch::xminus || face == Patch::xplus) { 
-				 offsets.dx = Dx.x(); 
-			 } else if ( face == Patch::yminus || face == Patch::yplus ) { 
-				 offsets.dx = Dx.y(); 
-			 } else { 
-				 offsets.dx = Dx.z(); 
-			 } 
+                         if ( face == Patch::xminus || face == Patch::xplus) { 
+                                 offsets.dx = Dx.x(); 
+                         } else if ( face == Patch::yminus || face == Patch::yplus ) { 
+                                 offsets.dx = Dx.y(); 
+                         } else { 
+                                 offsets.dx = Dx.z(); 
+                         } 
 
-			 return offsets; 
+                         return offsets; 
 
-		 };
+                 };
 
      inline IntrusionBC* get_intrusion_ref(){ 
        return _intrusionBC; 
@@ -253,7 +254,7 @@ namespace Uintah {
         CCVariable<double>& enthalpy, HelperMap ivGridVarMap, HelperVec ivNames, Iterator bound_ptr );
 
       void velocityOutletPressureBC__NEW( const Patch* patch, 
-                                       		int  matl_index, 
+                                                int  matl_index, 
                                           SFCXVariable<double>& uvel, 
                                           SFCYVariable<double>& vvel, 
                                           SFCZVariable<double>& wvel, 
@@ -261,13 +262,13 @@ namespace Uintah {
                                           constSFCYVariable<double>& old_vvel, 
                                           constSFCZVariable<double>& old_wvel );
 
-			template <class velType>
-			void delPForOutletPressure__NEW( const Patch* patch, 
+                        template <class velType>
+                        void delPForOutletPressure__NEW( const Patch* patch, 
                                        int  matl_index, 
                                        double dt, 
-																			 Patch::FaceType mface,
-																			 Patch::FaceType pface, 
-																			 velType& vel, 
+                                                                                                                                                         Patch::FaceType mface,
+                                                                                                                                                         Patch::FaceType pface, 
+                                                                                                                                                         velType& vel, 
                                        constCCVariable<double>& P,
                                        constCCVariable<double>& density );
 
@@ -1179,50 +1180,11 @@ namespace Uintah {
       BoundaryCondition_new* d_newBC; 
 
       int index_map[3][3];
-      
 
-  /* --------------------------------------------------------------------- 
-  Function~  getIteratorBCValueBCKind--
-  Purpose~   does the actual work
-  ---------------------------------------------------------------------  */
-  template <class T>
-  bool getIteratorBCValueBCKind( const Patch* patch, 
-                                 const Patch::FaceType face,
-                                 const int child,
-                                 const string& desc,
-                                 const int mat_id,
-                                 T& bc_value,
-                                 Iterator& bound_ptr,
-                                 string& bc_kind)
-  {
-    //__________________________________
-    //  find the iterator, BC value and BC kind
-    Iterator nu;  // not used
 
-    const BoundCondBase* bc = patch->getArrayBCValues(face,mat_id,
-                                                      desc, bound_ptr,
-                                                      nu, child);
-    const BoundCond<T> *new_bcs =  dynamic_cast<const BoundCond<T> *>(bc);
-
-    bc_value=T(-9);
-    bc_kind="NotSet";
-
-    if (new_bcs != 0) {      // non-symmetric
-      bc_value = new_bcs->getValue();
-      bc_kind =  new_bcs->getBCType__NEW();
-    }        
-    delete bc;
-
-    // Did I find an iterator
-    if( bc_kind == "NotSet" ){
-      return false;
-    }else{
-      return true;
-    }
-  }
-
-  inline int getNormal( Patch::FaceType face ) { 
-
+  inline int getNormal( Patch::FaceType face ) {        // This routine can be replaced with:
+                                                        //  IntVector axes = patch->getFaceAxes(face);
+                                                        //  int P_dir = axes[0];  // principal direction  --Todd
     int the_norm = -1; 
 
     switch ( face ) { 

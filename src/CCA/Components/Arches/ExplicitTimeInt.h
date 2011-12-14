@@ -56,6 +56,38 @@ public:
                      constphiT& new_den, 
                      int step, double time ); 
 
+    /** @brief An task interface to the singlePatchFEUpdate */ 
+    void sched_fe_update( SchedulerP& sched, 
+                          const PatchSet* patches, 
+                          const MaterialSet* matls, 
+                          std::vector<std::string> phi,
+                          std::vector<std::string> rhs, 
+                          bool allocate_otf, 
+                          int rkstep );
+    void fe_update( const ProcessorGroup*, 
+                    const PatchSubset* patches, 
+                    const MaterialSubset* matls, 
+                    DataWarehouse* old_dw, 
+                    DataWarehouse* new_dw,
+                    std::vector<std::string> phi_lab,
+                    std::vector<std::string> rhs_lab, 
+                    bool allocate_otf, 
+                    int rkstep );
+
+    /** @brief An task interface to the timeAvePhi */ 
+    void sched_time_ave( SchedulerP& sched, 
+                         const PatchSet* patches, 
+                         const MaterialSet* matls, 
+                         std::vector<std::string> phi,
+                         int rkstep );
+    void time_ave( const ProcessorGroup*, 
+                   const PatchSubset* patches, 
+                   const MaterialSubset* matls, 
+                   DataWarehouse* old_dw, 
+                   DataWarehouse* new_dw,
+                   std::vector<std::string> phi_lab,
+                   int rkstep );
+
     Vector ssp_beta, ssp_alpha; 
     Vector time_factor; 
 

@@ -2,6 +2,7 @@
 #include <CCA/Components/Arches/TransportEqns/EqnFactory.h>
 #include <CCA/Components/Arches/TransportEqns/EqnBase.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
+#include <CCA/Components/Arches/SourceTerms/SourceTermFactory.h>
 #include <CCA/Components/Arches/ArchesLabel.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <CCA/Ports/Scheduler.h>
@@ -25,6 +26,8 @@ HeatTransfer::HeatTransfer( std::string modelName,
 : ModelBase(modelName, sharedState, fieldLabels, icLabelNames, scalarLabelNames, qn)
 {
   _radiation = false;
+  old_radiation = false;
+  new_radiation = false;
   d_quadNode = qn;
 
   // Create a label for this model
@@ -46,6 +49,13 @@ HeatTransfer::HeatTransfer( std::string modelName,
   std::string qradName = modelName + "_Qrad";
   d_qradLabel = VarLabel::create( qradName, CCVariable<double>::getTypeDescription() );
   _extra_local_labels.push_back(d_qradLabel);
+
+  //std::string pTName = modelName + "_pT";
+
+  std::string pTName = modelName.insert(modelName.size()-4,"_pT");
+
+  d_pTLabel = VarLabel::create( pTName, CCVariable<double>::getTypeDescription() );
+  _extra_local_labels.push_back(d_pTLabel);
 
 }
 
@@ -73,9 +83,17 @@ HeatTransfer::problemSetup(const ProblemSpecP& params, int qn)
   DQMOMEqnFactory& dqmom_eqn_factory = DQMOMEqnFactory::self();
 
   // Check for radiation 
-  const ProblemSpecP params_root = db->getRootNode(); 
-  if(params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ExplicitSolver")->findBlock("EnthalpySolver")->findBlock("DORadiationModel")) {
-    _radiation = true; //if gas phase radiation is turned on
+  const ProblemSpecP params_root = db->getRootNode();
+  if(params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ExplicitSolver")->findBlock("EnthalpySolver")) {
+    const ProblemSpecP db_enth = params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ExplicitSolver")->findBlock("EnthalpySolver");
+    if(db_enth->findBlock("DORadiationModel")) {
+      old_radiation = true; //if gas phase radiation is turned on
+      _radiation = old_radiation;
+    }
+  } else {
+    SourceTermFactory& source_factory = SourceTermFactory::self();
+    new_radiation = source_factory.source_term_exists( "divQ");
+    _radiation = new_radiation;
   }
 
   //user can specifically turn off radiation heat transfer

@@ -7,7 +7,7 @@
                                                                         ideal_gas, membrane, murnaghanMPM, mw_visco_elastic, rigid, shell_CNH,
                                                                         small_strain_plastic, trans_iso_hyper, visco_plastic,
                                                                         visco_scram, visco_trans_iso_hyper, water, kayenta, hypo_elastic_fortran, diamm, cnh_mms,
-                                                                        cnh_damage, cnhp_damage, UCNH, program_burn,jwlpp_mpm, p_alpha, nonlocal_drucker_prager, simplified_geo_model'">
+                                                                        cnh_damage, cnhp_damage, UCNH, program_burn,jwlpp_mpm, p_alpha, nonlocal_drucker_prager, Arenisca'">
     <A                             spec="OPTIONAL DOUBLE" />
     <allow_no_tension              spec="OPTIONAL BOOLEAN" />
     <alpha                         spec="OPTIONAL DOUBLE" />
@@ -643,7 +643,7 @@
     <initial_xstress      spec="OPTIONAL DOUBLE"/>
     <initial_ystress      spec="OPTIONAL DOUBLE"/>
     <initial_zstress      spec="OPTIONAL DOUBLE"/>
-  <!-- The floowing are for the simplifiedGeoModel -->
+  <!-- The floowing are for the Arenisca model -->
     <FSLOPE                        spec="OPTIONAL DOUBLE"  />
     <FSLOPE_p                      spec="OPTIONAL DOUBLE"  />
     <B0                            spec="OPTIONAL DOUBLE"  />
@@ -656,7 +656,7 @@
     <p4_fluid_effect               spec="OPTIONAL DOUBLE"  />
     <kinematic_hardening_constant  spec="OPTIONAL DOUBLE"  />
     <fluid_B0                      spec="OPTIONAL DOUBLE"  />
-    <fluid_pressur_initial         spec="OPTIONAL DOUBLE"  />
+    <fluid_pressure_initial         spec="OPTIONAL DOUBLE"  />
   </constitutive_model>
 
 

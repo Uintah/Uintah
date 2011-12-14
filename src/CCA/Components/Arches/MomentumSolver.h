@@ -156,6 +156,11 @@ public:
                                     const TimeIntegratorLabel* timelabels,
                                     bool set_BC);
 
+  void setInitVelCondition( const Patch* patch, 
+                            SFCXVariable<double>& uvel, 
+                            SFCYVariable<double>& vvel, 
+                            SFCZVariable<double>& wvel );
+
 #ifdef PetscFilter
   inline void setDiscretizationFilter(Filter* filter) {
     d_discretize->setFilter(filter);
@@ -167,8 +172,6 @@ public:
   inline void setMomentumCoupling(bool doMC) {
     d_momentum_coupling = doMC;
   }
-
-protected: 
 
 private:
 
@@ -212,8 +215,6 @@ private:
                                bool set_BC);
 
 
-private:
-
   // const VarLabel* (required)
   const ArchesLabel* d_lab;
   const MPMArchesLabel* d_MAlab;
@@ -237,6 +238,160 @@ private:
   bool d_mixedModel;
   bool d_doMMS;
   vector<string> d_new_sources; 
+
+
+  //--------------------- for initialization -----------
+  class VelocityInitBase { 
+    
+    public:
+
+      VelocityInitBase(){}; 
+      virtual ~VelocityInitBase(){}; 
+
+      virtual void problemSetup( ProblemSpecP db ) = 0; 
+      virtual void setXVel( const Patch* patch, SFCXVariable<double>& vel ) = 0;
+      virtual void setYVel( const Patch* patch, SFCYVariable<double>& vel ) = 0;
+      virtual void setZVel( const Patch* patch, SFCZVariable<double>& vel ) = 0;
+
+    protected: 
+
+      std::string _init_type; 
+
+  }; 
+
+  VelocityInitBase* _init_function; 
+  std::string _init_type; 
+
+  // constant initialization ------------------------
+  class ConstantVel : public VelocityInitBase { 
+
+    public: 
+
+      ConstantVel(){ 
+        _const_u = 0.0;
+        _const_v = 0.0;
+        _const_w = 0.0;
+      };
+      ~ConstantVel(){}; 
+
+      void problemSetup( ProblemSpecP db ){ 
+
+        db->getWithDefault( "const_u", _const_u, 0.0 ); 
+        db->getWithDefault( "const_v", _const_v, 0.0 ); 
+        db->getWithDefault( "const_w", _const_w, 0.0 ); 
+
+      }; 
+
+      void setXVel( const Patch* patch, SFCXVariable<double>& uvel ){ 
+
+        uvel.initialize( _const_u ); 
+
+      }; 
+      
+      void setYVel( const Patch* patch, SFCYVariable<double>& vvel ){ 
+
+        vvel.initialize( _const_v ); 
+
+      }; 
+
+      void setZVel( const Patch* patch, SFCZVariable<double>& wvel ){ 
+
+        wvel.initialize( _const_w ); 
+
+      }; 
+
+    private: 
+
+      double _const_u;
+      double _const_v; 
+      double _const_w;  
+
+  };  
+
+  // taylor-green initialization ------------------------
+  class TaylorGreen3D : public VelocityInitBase { 
+
+    public: 
+
+      TaylorGreen3D(){ 
+        _pi = acos(-1.0); 
+      };
+      ~TaylorGreen3D(){}; 
+
+      void problemSetup( ProblemSpecP db ){ 
+
+        db->getWithDefault( "c", _c, 2.0 ); 
+
+      }; 
+
+      void setXVel( const Patch* patch, SFCXVariable<double>& uvel ){ 
+
+        double x,y,z;
+        Vector Dx = patch->dCell(); 
+
+        for (CellIterator iter=patch->getSFCXIterator(); !iter.done(); iter++){
+
+          IntVector c = *iter;
+
+          x = c.x() * Dx.x(); 
+          y = c.y() * Dx.y() + Dx.y()/2.0;
+          z = c.z() * Dx.z() + Dx.z()/2.0;
+
+          uvel[c] = 2.0/sqrt(3.0) * sin( _c + 2.0*_pi/3.0 ) 
+            * sin( 2 * _pi * x ) 
+            * cos( 2 * _pi * y )
+            * cos( 2 * _pi * z ); 
+        }    
+      };
+
+      
+      void setYVel( const Patch* patch, SFCYVariable<double>& vvel ){ 
+
+        double x,y,z;
+        Vector Dx = patch->dCell(); 
+
+        for (CellIterator iter=patch->getSFCYIterator(); !iter.done(); iter++){
+
+          IntVector c = *iter;
+
+          x = c.x() * Dx.x() + Dx.x()/2.0; 
+          y = c.y() * Dx.y();
+          z = c.z() * Dx.z() + Dx.z()/2.0;
+
+          vvel[c] = 2.0/sqrt(3.0) * sin( _c - 2.0*_pi/3.0 ) 
+            * sin( 2 * _pi * y ) 
+            * cos( 2 * _pi * x )
+            * cos( 2 * _pi * z ); 
+        }    
+      }; 
+
+      void setZVel( const Patch* patch, SFCZVariable<double>& wvel ){ 
+
+        double x,y,z;
+        Vector Dx = patch->dCell(); 
+
+        for (CellIterator iter=patch->getSFCZIterator(); !iter.done(); iter++){
+
+          IntVector c = *iter;
+
+          x = c.x() * Dx.x() + Dx.x()/2.0; 
+          y = c.y() * Dx.y() + Dx.y()/2.0;
+          z = c.z() * Dx.z();
+
+          wvel[c] = 2.0/sqrt(3.0) * sin( _c ) 
+            * sin( 2 * _pi * z ) 
+            * cos( 2 * _pi * x )
+            * cos( 2 * _pi * y ); 
+        }    
+      }; 
+ 
+    private: 
+
+      double _c; 
+      double _pi;
+
+  };  
+  
 
 }; // End class MomentumSolver
 } // End namespace Uintah

@@ -29,13 +29,13 @@
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
    <Time>
-       <maxTime>            0.01      </maxTime>     
+       <maxTime>            1.0      </maxTime>     
        <initTime>           0.0       </initTime>    
-       <delt_min>           0.0       </delt_min>    
-       <delt_max>           0.01      </delt_max>   
-       <delt_init>          0.01      </delt_init>
+       <delt_min>           0.001     </delt_min>
+       <delt_max>           0.001     </delt_max>   
+       <delt_init>          0.001      </delt_init>
        <timestep_multiplier>1.0       </timestep_multiplier>
-       <max_Timesteps>     2          </max_Timesteps>
+       <max_Timesteps>     100          </max_Timesteps>
    </Time>
    
     <!--____________________________________________________________________-->
@@ -49,7 +49,7 @@
               <lower>        [0,0,0]    </lower>
               <upper>[6.283185307179586,6.283185307179586,6.283185307179586]</upper>
               <extraCells>   [0,0,0]    </extraCells>
-              <patches>      [2,2,2]    </patches>
+              <patches>      [1,1,1]    </patches>
               <resolution>   [32,32,32] </resolution>
            </Box>
            <periodic>       [1,1,1]     </periodic>
@@ -61,7 +61,7 @@
    <DataArchiver>
       <filebase>taylorGreenVortex.uda</filebase>
       <outputInitTimestep/>
-      <outputTimestepInterval>1</outputTimestepInterval>
+      <outputTimestepInterval>10</outputTimestepInterval>
       <!--<outputInterval>0.1</outputInterval> -->
       <save label="press_equil_CC"/>
       <save label="delP_Dilatate"/>
@@ -69,11 +69,12 @@
       <save label="rho_CC"/>
       <save label="vel_CC"/> 
       <save label="temp_CC"/>
+      <!--
       <save label="scalar-f"/>
       <save label="sum_scalar_f"/>
       <save label="TotalIntEng"/>
       <save label="TotalMass"/>
-      <save label="TotalMomentum"/>
+      <save label="TotalMomentum"/> -->
    </DataArchiver>
     
     <!--____________________________________________________________________-->
@@ -102,7 +103,7 @@
            <Parameters variable="implicitPressure">
             <solver>         cg      </solver>
             <preconditioner> pfmg    </preconditioner>
-            <tolerance>      1.e-8   </tolerance>
+            <tolerance>      1.e-10   </tolerance>
             <maxiterations>  7500    </maxiterations>
             <npre>           1       </npre>
             <npost>          1       </npost>
@@ -128,7 +129,7 @@
        <ICE>
          <material name = "BackgroundGas">
            <EOS type = "ideal_gas">                     </EOS>
-           <dynamic_viscosity>   0.001                  </dynamic_viscosity>
+           <dynamic_viscosity>   0.0001                  </dynamic_viscosity>
            <thermal_conductivity>0.0                    </thermal_conductivity>
            <specific_heat>      716.0                   </specific_heat>
            <gamma>              1.4                     </gamma>
@@ -148,7 +149,7 @@
     </MaterialProperties> 
     
     <!--____________________________________________________________________-->
-    <!--  Use passiveScalar model to advect a scalar around                -->
+    <!--  Use passiveScalar model to advect a scalar around                
     <Models>
        <Model type="PassiveScalar">
         <material>BackgroundGas</material>
@@ -173,5 +174,5 @@
          </geom_object>
        </scalar>
       </Model>
-    </Models>      
+    </Models>      -->
 </Uintah_specification>

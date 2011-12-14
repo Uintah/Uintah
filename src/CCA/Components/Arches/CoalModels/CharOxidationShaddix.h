@@ -154,6 +154,7 @@ private:
   double d_rc_scaling_constant;   ///< Scaling factor for raw coal
   double d_pl_scaling_constant;   ///< Scaling factor for particle size (length)
   double d_pt_scaling_constant;   ///< Scaling factor for particle temperature
+  bool   part_temp_from_enth;
 
 }; // end CharOxidationShaddix
 } // end namespace Uintah

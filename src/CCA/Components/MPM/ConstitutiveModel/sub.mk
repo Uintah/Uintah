@@ -66,7 +66,7 @@ SRCS   += \
         $(SRCDIR)/P_Alpha.cc                    \
         $(SRCDIR)/SoilFoam.cc	                \
        	$(SRCDIR)/NonLocalDruckerPrager.cc      \
-        $(SRCDIR)/simplifiedGeoModel.cc
+        $(SRCDIR)/Arenisca.cc
 
 ifneq ($(NO_FORTRAN),yes)
   SRCS   += \

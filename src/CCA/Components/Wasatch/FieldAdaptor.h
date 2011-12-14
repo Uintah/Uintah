@@ -39,6 +39,10 @@ namespace Wasatch{
     ZVOL, ZSURFX, ZSURFY, ZSURFZ
   };
 
+  void get_bc_logicals( const Uintah::Patch* const patch,
+                        SCIRun::IntVector& bcMinus,
+                        SCIRun::IntVector& bcPlus );
+
   /**
    *  \ingroup WasatchFields
    *  \brief obtain the memory window for a uintah field that is to be wrapped as a SpatialOps field
@@ -54,18 +58,6 @@ namespace Wasatch{
 
   /**
    *  \ingroup WasatchFields
-   *  \brief obtain the memory window for a uintah field that is to be wrapped as a SpatialOps field
-   *  \param globSize - the full size of the parent field.
-   *  \param patch - the patch that the field is associated with.  Used to determine if the field is on a boundary.
-   *  \param fieldSize - the field size
-   */
-  template< typename FieldT >
-  SpatialOps::structured::MemoryWindow
-  get_memory_window_for_uintah_field( const Uintah::Patch* const patch,
-                                      const SCIRun::IntVector& fieldSize );
-
-  /**
-   *  \ingroup WasatchFields
    *
    *  \brief wrap a uintah field to obtain a SpatialOps field,
    *         returning a new pointer.  The caller is responsible for
@@ -77,11 +69,49 @@ namespace Wasatch{
   inline FieldT* wrap_uintah_field_as_spatialops( UFT& uintahVar,
                                                   const Uintah::Patch* const patch )
   {
+    /*
+     * NOTE: before changing things here, look at the line:
+     *    Uintah::OnDemandDataWarehouse::d_combineMemory = false;
+     * in Wasatch.cc.  This is currently preventing Uintah from
+     * combining patch memory.
+     */
+
     using SCIRun::IntVector;
 
-    const SCIRun::IntVector fieldSize = uintahVar.getHighIndex() - uintahVar.getLowIndex();
+    const SCIRun::IntVector lowIx       = uintahVar.getLowIndex();
+    const SCIRun::IntVector highIx      = uintahVar.getHighIndex();
+    const SCIRun::IntVector fieldSize   = uintahVar.getWindow()->getData()->size();
+    const SCIRun::IntVector fieldOffset = uintahVar.getWindow()->getOffset();
+    const SCIRun::IntVector fieldExtent = highIx - lowIx;
 
-    return new FieldT( get_memory_window_for_uintah_field<FieldT>( patch, fieldSize ),
+    using SpatialOps::structured::IntVec;
+
+    const IntVec size( fieldSize[0],
+                       fieldSize[1],
+                       fieldSize[2] );
+    const IntVec extent( fieldExtent[0],
+                         fieldExtent[1],
+                         fieldExtent[2] );
+    const IntVec offset( lowIx[0]-fieldOffset[0],
+                         lowIx[1]-fieldOffset[1],
+                         lowIx[2]-fieldOffset[2] );
+//
+//    std::cout << "Patch [" << patch->getID() << "] size: " << patch->getExtraCellHighIndex(0) - patch->getExtraCellLowIndex(0)
+//                  << "  hi: " << highIx
+//                  << "  lo: " << lowIx
+//                  << "  s : " << fieldSize
+//                  << "  os: " << fieldOffset
+//                  << std::endl
+//                  << "         size: " << size
+//                  << " offset: " << offset
+//                  << " extent: " << extent
+//                  << std::endl;
+
+    SCIRun::IntVector bcMinus, bcPlus;
+    get_bc_logicals( patch, bcMinus, bcPlus );
+
+    return new FieldT( SpatialOps::structured::MemoryWindow( size, offset, extent,
+                                                             bcPlus[0], bcPlus[1], bcPlus[2] ),
                        const_cast<double*>( uintahVar.getPointer() ),
                        SpatialOps::structured::ExternalStorage );
   }
@@ -205,6 +235,7 @@ namespace Wasatch{
   {
     const int ng = get_n_ghost<FieldT>();
     return Uintah::IntVector(ng,ng,ng);
+//    return Uintah::IntVector(0,0,0);
   }
 
   //====================================================================

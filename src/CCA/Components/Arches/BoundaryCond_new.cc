@@ -1,17 +1,18 @@
-#include <Core/Grid/BoundaryConditions/BCDataArray.h>
-#include <Core/Grid/BoundaryConditions/BCGeomBase.h>
-#include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Parallel/ProcessorGroup.h>
-#include <Core/Exceptions/InvalidState.h>
-#include <Core/Grid/SimulationState.h>
-#include <CCA/Ports/SchedulerP.h>
-#include <CCA/Ports/Scheduler.h>
-#include <Core/Grid/Task.h>
 #include <CCA/Components/Arches/ArchesLabel.h>
 #include <CCA/Components/Arches/ArchesMaterial.h>
 #include <CCA/Components/Arches/BoundaryCond_new.h>
-#include <Core/Exceptions/ProblemSetupException.h>
+#include <CCA/Ports/Scheduler.h>
+#include <CCA/Ports/SchedulerP.h>
+
+#include <Core/Exceptions/InvalidState.h>
 #include <Core/Exceptions/InvalidValue.h>
+#include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/Grid/BoundaryConditions/BCUtils.h>
+#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/Task.h>
+#include <Core/Parallel/ProcessorGroup.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
+
 
 //===========================================================================
 
@@ -395,7 +396,7 @@ void BoundaryCondition_new::setAreaFraction(
   //
   // volFraction is the GAS volume fraction
 
-  for (CellIterator iter=patch->getExtraCellIterator(); !iter.done(); iter++){
+  for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
     
     IntVector c = *iter;
     IntVector cxm = *iter - IntVector(1,0,0);
@@ -422,14 +423,37 @@ void BoundaryCondition_new::setAreaFraction(
     if ( cellType[c] == flowType && cellType[cym] == wallType ) {
       Vector T = areaFraction[c]; 
       T[1] = 0.;
-      areaFraction[c] = Vector(1.,0.,1.);
+      areaFraction[c] = T;
     }
 
     // z-minus is a wall but curr cell is flowType
     if (cellType[c] == flowType && cellType[czm] == wallType ) {
       Vector T = areaFraction[c]; 
       T[2] = 0.;
-      areaFraction[c] = Vector(1.,1.,0.);
+      areaFraction[c] = T;
+    }
+  }
+  //__________________________________
+  // loop over computational domain faces
+  vector<Patch::FaceType> bf;
+  patch->getBoundaryFaces(bf);
+  
+  for( vector<Patch::FaceType>::const_iterator iter = bf.begin(); iter != bf.end(); ++iter ){
+    Patch::FaceType face = *iter;
+    
+    Patch::FaceIteratorType PEC = Patch::ExtraPlusEdgeCells;
+    
+    for (CellIterator iter =  patch->getFaceIterator(face, PEC); !iter.done(); iter++) {
+      IntVector c = *iter;
+      if ( cellType[c] == wallType ){
+
+        int P_dir = patch->getFaceAxes(face)[0];  //principal dir.
+
+        Vector T = areaFraction[c]; 
+        T[P_dir] = 0.;
+        areaFraction[c] = T; 
+
+      }
     }
   }
 }

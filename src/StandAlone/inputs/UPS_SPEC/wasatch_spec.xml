@@ -195,6 +195,7 @@
             <skip             spec="REQUIRED INTEGER" />                                        
             <solver           spec="REQUIRED STRING 'smg, SMG, PFMG, pfmg, SparseMSG, sparsemsg, CG, cg, Hybrid, hybrid, GMRES, gmres amg'" />                               
             <tolerance        spec="REQUIRED DOUBLE" />                                         
+            <relax_type       spec="OPTIONAL INTEGER '0,3'"/> <!-- 0=jacobi,1=weighted jacobi,2=rb symmetric,3=rb non-symmetric --> 
           </Parameters>
       </Pressure>
     </MomentumEquations>

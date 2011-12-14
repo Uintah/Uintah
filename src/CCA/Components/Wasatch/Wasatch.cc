@@ -79,6 +79,16 @@ namespace Wasatch{
       buildTimeIntegrator_( true ),
       nRKStages_(1)
   {
+    proc0cout << std::endl
+              << "-------------------------------------------------------------" << std::endl
+              << "Wasatch was built against:" << std::endl
+              << "  SpatialOps HASH: " << SOPS_REPO_HASH << std::endl
+              << "             DATE: " << SOPS_REPO_DATE << std::endl
+              << "     ExprLib HASH: " << EXPR_REPO_HASH << std::endl
+              << "             DATE: " << EXPR_REPO_DATE << std::endl
+              << "-------------------------------------------------------------" << std::endl
+              << std::endl;
+
     // disable memory windowing on variables.  This will ensure that
     // each variable is allocated its own memory on each patch,
     // precluding memory blocks being defined across multiple patches.
