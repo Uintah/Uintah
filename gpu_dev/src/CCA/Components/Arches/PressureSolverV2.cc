@@ -35,6 +35,8 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Arches/ArchesMaterial.h>
 #include <CCA/Components/Arches/BoundaryCondition.h>
 #include <CCA/Components/Arches/Discretization.h>
+#include <CCA/Components/Arches/SourceTerms/SourceTermBase.h>
+#include <CCA/Components/Arches/SourceTerms/SourceTermFactory.h>
 
 #include <CCA/Components/Arches/PhysicalConstants.h>
 #include <CCA/Components/Arches/Source.h>
@@ -101,13 +103,21 @@ PressureSolver::problemSetup(ProblemSpecP& params)
 
   // make source and boundary_condition objects
   d_source = scinew Source(d_physicalConsts);
-  if (d_doMMS){
-    d_source->problemSetup(db);
-  }
   
   d_hypreSolver_parameters = d_hypreSolver->readParameters(db, "pressure");
   d_hypreSolver_parameters->setSolveOnExtraCells(false);
   d_hypreSolver_parameters->setDynamicTolerance(true);
+
+  //__________________________________
+  // allow for addition of mass source terms
+  if (db->findBlock("src")){
+    string srcname; 
+    for (ProblemSpecP src_db = db->findBlock("src"); src_db != 0; src_db = src_db->findNextBlock("src")){
+      src_db->getAttribute("label", srcname);
+      //which sources are turned on for this equation
+      d_new_sources.push_back( srcname ); 
+    }
+  }
 
   //__________________________________
   // bulletproofing
@@ -225,7 +235,15 @@ PressureSolver::sched_buildLinearMatrix(SchedulerP& sched,
     tsk->modifies(d_lab->d_presCoefPBLMLabel);
     tsk->modifies(d_lab->d_presNonLinSrcPBLMLabel);
   }
-  
+
+  // add access to sources: 
+  SourceTermFactory& factory = SourceTermFactory::self(); 
+  for (vector<std::string>::iterator iter = d_new_sources.begin();
+      iter != d_new_sources.end(); iter++){
+    SourceTermBase& src = factory.retrieve_source_term( *iter );
+    const VarLabel* srcLabel = src.getSrcLabel(); 
+    tsk->requires( Task::NewDW, srcLabel, gn, 0 ); 
+  }
 
   sched->addTask(tsk, patches, matls);
 }
@@ -313,11 +331,27 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
                                           cellinfo, &vars,
                                           &constVars);
 
-    if (d_doMMS){
-      d_source->calculatePressMMSSourcePred(pc, patch, delta_t,
-                                            cellinfo, &vars,
-                                            &constVars);
+    // Add other source terms to the pressure: 
+    SourceTermFactory& factory = SourceTermFactory::self(); 
+    for (vector<std::string>::iterator iter = d_new_sources.begin();
+        iter != d_new_sources.end(); iter++){
+
+      SourceTermBase& src = factory.retrieve_source_term( *iter );
+      const VarLabel* srcLabel = src.getSrcLabel(); 
+      constCCVariable<double> src_value; 
+      new_dw->get( src_value, srcLabel, d_indx, patch, gn, 0 );
+
+      // This may not be the most efficient way of adding the sources
+      // to the RHS but in general we only expect 1 src to be added.
+      // If the numbers of sources grow (>2), we may need to redo this. 
+      for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) { 
+
+        IntVector c = *iter; 
+        vars.pressNonlinearSrc[c] += src_value[c]; 
+
+      }
     }
+
     // do multimaterial bc; this is done before 
     // calculatePressDiagonal because unlike the outlet
     // boundaries in the explicit projection, we want to 

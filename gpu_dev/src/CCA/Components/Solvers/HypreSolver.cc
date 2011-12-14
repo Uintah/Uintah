@@ -104,6 +104,7 @@ namespace Uintah {
     int skip;
     int jump;
     int logging;
+		int relax_type; 
     bool symmetric;
   };
 
@@ -442,8 +443,7 @@ namespace Uintah {
           HYPRE_StructPFMGSetTol        (solver,      tolerance);
           HYPRE_StructPFMGSetRelChange  (solver,      0);
 
-          /* weighted Jacobi = 1; red-black GS = 2 */
-          HYPRE_StructPFMGSetRelaxType   (solver,  1);                           
+          HYPRE_StructPFMGSetRelaxType   (solver,  params->relax_type);                           
           HYPRE_StructPFMGSetNumPreRelax (solver,  params->npre);                
           HYPRE_StructPFMGSetNumPostRelax(solver,  params->npost);               
           HYPRE_StructPFMGSetSkipRelax   (solver,  params->skip);                
@@ -481,8 +481,7 @@ namespace Uintah {
           HYPRE_StructSparseMSGSetTol      (solver, tolerance);           
           HYPRE_StructSparseMSGSetRelChange(solver, 0);                           
 
-          /* weighted Jacobi = 1; red-black GS = 2 */
-          HYPRE_StructSparseMSGSetRelaxType   (solver,  1);                           
+          HYPRE_StructSparseMSGSetRelaxType   (solver,  params->relax_type);                           
           HYPRE_StructSparseMSGSetNumPreRelax (solver,  params->npre);                
           HYPRE_StructSparseMSGSetNumPostRelax(solver,  params->npost);               
           HYPRE_StructSparseMSGSetLogging     (solver,  params->logging);             
@@ -781,8 +780,7 @@ namespace Uintah {
         HYPRE_StructPFMGSetTol        (precond_solver,   precond_tolerance); 
         HYPRE_StructPFMGSetZeroGuess  (precond_solver);
 
-        /* weighted Jacobi = 1; red-black GS = 2 */
-        HYPRE_StructPFMGSetRelaxType   (precond_solver,  1);              
+        HYPRE_StructPFMGSetRelaxType   (precond_solver,  params->relax_type);              
         HYPRE_StructPFMGSetNumPreRelax (precond_solver,  params->npre);   
         HYPRE_StructPFMGSetNumPostRelax(precond_solver,  params->npost);  
         HYPRE_StructPFMGSetSkipRelax   (precond_solver,  params->skip);   
@@ -800,8 +798,7 @@ namespace Uintah {
         HYPRE_StructSparseMSGSetTol       (precond_solver,  precond_tolerance);                              
         HYPRE_StructSparseMSGSetZeroGuess (precond_solver);                                    
 
-        /* weighted Jacobi = 1; red-black GS = 2 */
-        HYPRE_StructSparseMSGSetRelaxType   (precond_solver,  1);              
+        HYPRE_StructSparseMSGSetRelaxType   (precond_solver,  params->relax_type);              
         HYPRE_StructSparseMSGSetNumPreRelax (precond_solver,  params->npre);   
         HYPRE_StructSparseMSGSetNumPostRelax(precond_solver,  params->npost);  
         HYPRE_StructSparseMSGSetLogging     (precond_solver,  0);              
@@ -889,6 +886,8 @@ namespace Uintah {
         param->getWithDefault ("skip",            p->skip,           0);          
         param->getWithDefault ("jump",            p->jump,           0);          
         param->getWithDefault ("logging",         p->logging,        0);          
+				param->getWithDefault ("relax_type",      p->relax_type,     1); // Jacobi = 0; weighted Jacobi = 1; 
+																																			   // red-black GS symmetric = 2; red-black GS non-symmetrix = 3;
 
         found=true;
       }
@@ -903,6 +902,7 @@ namespace Uintah {
       p->skip    = 0;
       p->jump    = 0;
       p->logging = 0;
+			p->relax_type = 1; 
     }
     p->symmetric = true;
     return p;

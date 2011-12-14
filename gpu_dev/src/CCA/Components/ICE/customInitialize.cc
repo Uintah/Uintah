@@ -309,7 +309,8 @@ void customInitialization(const Patch* patch,
   
   if(cib->which == "mms_3"){
     double angle = cib->mms_inputs->angle;
-    double A = ( 2.0/sqrt(3) ) * sin(angle); 
+    double A = ( 2.0/sqrt(3) ) ; 
+    double B = (2.0 * M_PI/3.0);
     
     for(CellIterator iter=patch->getExtraCellIterator(); !iter.done();iter++) {
       IntVector c = *iter;
@@ -318,9 +319,9 @@ void customInitialization(const Patch* patch,
       double y = pt.y();
       double z = pt.z();
 
-      vel_CC[c].x( A * sin(x) * cos(y) * cos(z));
-      vel_CC[c].y( A * sin(y) * cos(x) * cos(z));
-      vel_CC[c].z( A * sin(z) * cos(x) * cos(y));
+      vel_CC[c].x( A * sin(angle + B) * cos(y) * cos(z) * sin(x));
+      vel_CC[c].y( A * sin(angle - B) * cos(x) * cos(z) * sin(y));
+      vel_CC[c].z( A * sin(angle)     * cos(x) * cos(y) * sin(z));
     }
   } // mms_3
   

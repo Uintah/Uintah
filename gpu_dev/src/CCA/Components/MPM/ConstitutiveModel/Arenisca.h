@@ -28,8 +28,8 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#ifndef __SIMPLE_GEO_MODEL_H__
-#define __SIMPLE_GEO_MODEL_H__
+#ifndef __ARENISCA_H__
+#define __ARENISCA_H__
 
 
 #include <CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
@@ -47,7 +47,7 @@ namespace Uintah {
 
   ****************************************/
 
-  class simpleGeoModel_BB : public ConstitutiveModel {
+  class Arenisca : public ConstitutiveModel {
     // Create datatype for storing model parameters
   public:
     struct CMData {
@@ -61,7 +61,7 @@ namespace Uintah {
       double p4_fluid_effect;
       double kinematic_hardening_constant;
       double fluid_B0;
-      double fluid_pressur_initial;
+      double fluid_pressure_initial;
       double PEAKI1;
       double B0;
       double G0;
@@ -79,28 +79,28 @@ namespace Uintah {
     const VarLabel* pBackStressIsoLabel;
     const VarLabel* pBackStressIsoLabel_preReloc;
   private:
-    CMData d_cm;
+    CMData d_initialData;
 
     // Prevent copying of this class
     // copy constructor
 
-    simpleGeoModel_BB& operator=(const simpleGeoModel_BB &cm);
+    Arenisca& operator=(const Arenisca &cm);
 
     void initializeLocalMPMLabels();
 
   public:
     // constructor
-    simpleGeoModel_BB(ProblemSpecP& ps, MPMFlags* flag);
-    simpleGeoModel_BB(const simpleGeoModel_BB* cm);
+    Arenisca(ProblemSpecP& ps, MPMFlags* flag);
+    Arenisca(const Arenisca* cm);
 
     // destructor
-    virtual ~simpleGeoModel_BB();
+    virtual ~Arenisca();
 
     virtual void outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag = true);
 
     // clone
 
-    simpleGeoModel_BB* clone();
+    Arenisca* clone();
 
     // compute stable timestep for this patch
     virtual void computeStableTimestep(const Patch* patch,
@@ -113,18 +113,6 @@ namespace Uintah {
                                      DataWarehouse* old_dw,
                                      DataWarehouse* new_dw);
 
-    
-    // Actual return algorithm
-    void computeStress(const long64 idx, int& lvl, const double delT, 
-                       const double lame, const double lame_inv, 
-                       const Matrix3& L_new, const Matrix3& F_old,
-                       const Matrix3& Sig_old, const Matrix3& Alpha_old,
-                       const double& eps_p, const double& epsv_e, const double& epsv_p, 
-                       double& eps_p_new, double& epsv_e_new, double& epsv_p_new, 
-                       const double& kappa, double& kappa_new, 
-                       Matrix3& Eps_inc, Matrix3& F_new, Matrix3& R_new,
-                       Matrix3& Sig_new);
-
     void computeInvariants(Matrix3& stress, Matrix3& S,  double& I1, double& J2);
 
     void computeInvariants(const Matrix3& stress, Matrix3& S,  double& I1, double& J2);
@@ -135,11 +123,6 @@ namespace Uintah {
 
     double YieldFunction(Matrix3& stress, const double& FSLOPE, const double& kappa, const double& cap_radius, const double&PEAKI1);
 
-    double evalYieldFunction(const double& J2, const double& I1, 
-                             const double& df_dI1, 
-                             const double& kappa, 
-                             const double& cap_radius, 
-                             const double& tension_I1_hard) ;
 
     // carry forward CM data for RigidMPM
     virtual void carryForward(const PatchSubset* patches,
@@ -199,7 +182,7 @@ namespace Uintah {
 } // End namespace Uintah
 
 
-#endif  // __SIMPLIFIED_GEO_MODEL_H__
+#endif  // __ARENISCA_H__
 
 
 

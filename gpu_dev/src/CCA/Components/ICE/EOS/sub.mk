@@ -43,6 +43,7 @@ SRCS     += $(SRCDIR)/EquationOfState.cc    \
 	$(SRCDIR)/Tillotson.cc              \
 	$(SRCDIR)/Thomsen_Hartka_water.cc   \
 	$(SRCDIR)/KnaussSeaWater.cc         \
+	$(SRCDIR)/KumariDass.cc             \
 	$(SRCDIR)/Murnaghan.cc              \
 	$(SRCDIR)/BirchMurnaghan.cc
 

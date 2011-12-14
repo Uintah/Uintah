@@ -78,6 +78,7 @@ WARNING
 ****************************************/
 
 #include <sci_defs/petsc_defs.h>
+#include <sci_defs/uintah_defs.h>
 #include <CCA/Components/OnTheFlyAnalysis/AnalysisModule.h>
 #include <Core/Parallel/UintahParallelComponent.h>
 #include <CCA/Components/OnTheFlyAnalysis/AnalysisModuleFactory.h>
@@ -105,6 +106,12 @@ WARNING
 
 // Filtering of drhodt is now an input parameter for Properties
 
+# ifdef WASATCH_IN_ARCHES
+  namespace Wasatch{
+    class Wasatch;
+  }
+# endif // WASATCH_IN_ARCHES
+
 namespace Uintah {
 
   class VarLabel;
@@ -122,9 +129,6 @@ namespace Uintah {
   class ExplicitTimeInt;
   class PartVel;
   class DQMOM;
-# ifdef WASATCH_ARCHES
-  class Wasatch;
-# endif // WASATCH_ARCHES
 
 #ifdef PetscFilter
   class Filter;
@@ -338,9 +342,9 @@ private:
   /** @brief Registers all possible Property Models by instantiating a builder in the factory */
   void registerPropertyModels( ProblemSpecP& db );
 
-# ifdef WASATCH_ARCHES
-  const Wasatch* d_wasatch;
-# endif // WASATCH_ARCHES
+# ifdef WASATCH_IN_ARCHES
+  Wasatch::Wasatch* const d_wasatch;
+# endif // WASATCH_IN_ARCHES
 
       double d_init_dt; // The initial dt from input file.
       double d_init_mix_frac; // The initial value of mixture fraction in the domain (for paramInit)

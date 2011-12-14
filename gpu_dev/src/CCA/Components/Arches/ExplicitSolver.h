@@ -67,6 +67,7 @@ WARNING
 #include <CCA/Components/Arches/NonlinearSolver.h>
 #include <CCA/Ports/DataWarehouseP.h>
 #include <CCA/Ports/SolverInterface.h>
+#include <Core/Grid/Variables/VarTypes.h>
 
 namespace Uintah {
   using namespace SCIRun;
@@ -125,9 +126,9 @@ public:
   //        documentation here
   virtual int nonlinearSolve( const LevelP& level,
                               SchedulerP& sched
-#                             ifdef WASATCH_ARCHES
-                              , Wasatch& wasatch
-#                             endif // WASATCH_ARCHES
+#                             ifdef WASATCH_IN_ARCHES
+                              , Wasatch::Wasatch& wasatch
+#                             endif // WASATCH_IN_ARCHES
                              );
 
 
@@ -249,7 +250,10 @@ public:
     d_numSourceBoundaries = numSourceBoundaries;
   }
 
-protected :
+  void setInitVelConditionInterface( const Patch* patch, 
+                                     SFCXVariable<double>& uvel, 
+                                     SFCYVariable<double>& vvel, 
+                                     SFCZVariable<double>& wvel );
 
 private:
 

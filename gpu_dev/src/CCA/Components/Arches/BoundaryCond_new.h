@@ -61,46 +61,6 @@ public:
     const int wallType, 
     const int flowType );
 
-  // The stuff below needs better commenting when I have this figured out. 
-  /* --------------------------------------------------------------------- 
-  Function~  getIteratorBCValueBCKind--
-  Purpose~   does the actual work
-  ---------------------------------------------------------------------  */
-  template <class T>
-  bool getIteratorBCValueBCKind( const Patch* patch, 
-                                 const Patch::FaceType face,
-                                 const int child,
-                                 const string& desc,
-                                 const int mat_id,
-                                 T& bc_value,
-                                 Iterator& bound_ptr,
-                                 string& bc_kind)
-  {
-    //__________________________________
-    //  find the iterator, BC value and BC kind
-    Iterator nu;  // not used
-
-    const BoundCondBase* bc = patch->getArrayBCValues(face,mat_id,
-                                                                            desc, bound_ptr,
-                                                      nu, child);
-    const BoundCond<T> *new_bcs =  dynamic_cast<const BoundCond<T> *>(bc);
-
-    bc_value=T(-9);
-    bc_kind="NotSet";
-    if (new_bcs != 0) {      // non-symmetric
-      bc_value = new_bcs->getValue();
-      bc_kind =  new_bcs->getBCType__NEW();
-    }        
-    delete bc;
-
-    // Did I find an iterator
-    if( bc_kind == "NotSet" ){
-      return false;
-    }else{
-      return true;
-    }
-  }
-
   void sched_computeBCArea( SchedulerP& sched, 
                             const PatchSet* patches, 
                             const MaterialSet* matls );

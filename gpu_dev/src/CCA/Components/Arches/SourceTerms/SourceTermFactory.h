@@ -58,6 +58,9 @@ public:
    */
   SourceTermBase& retrieve_source_term( const std::string name );
 
+  /** @brief Determine if a source term is contained in the factory. */
+  bool source_term_exists( const std::string name );
+
   typedef std::map< std::string, SourceTermBase::Builder* > BuildMap;
   typedef std::map< std::string, SourceTermBase*    >       SourceMap;
 

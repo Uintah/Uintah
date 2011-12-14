@@ -56,6 +56,7 @@ YamamotoDevol::YamamotoDevol( std::string modelName,
   c4 = 836.7;
   c5 = -301.1;
 
+  part_temp_from_enth = false;
   compute_part_temp = false;
   compute_char_mass = false;
 }
@@ -75,6 +76,7 @@ YamamotoDevol::problemSetup(const ProblemSpecP& params, int qn)
 
   ProblemSpecP db = params; 
   compute_part_temp = false;
+  part_temp_from_enth = false;
   compute_char_mass = false;
 
   string label_name;
@@ -118,6 +120,9 @@ YamamotoDevol::problemSetup(const ProblemSpecP& params, int qn)
       } else if( role_name == "particle_temperature" ) {  
         LabelToRoleMap[temp_label_name] = role_name;
         compute_part_temp = true;
+      } else if( role_name == "particle_temperature_from_enthalpy" ) {
+        LabelToRoleMap[temp_label_name] = role_name;
+        part_temp_from_enth = true;
       } else if( role_name == "char_mass" ) {    
         LabelToRoleMap[temp_label_name] = role_name;        
         compute_char_mass = true;                           
@@ -148,7 +153,8 @@ YamamotoDevol::problemSetup(const ProblemSpecP& params, int qn)
 
   // -----------------------------------------------------------------
   // Look for required scalars
-  /*
+ 
+/* 
   ProblemSpecP db_scalarvars = params->findBlock("scalarVars");
   if (db_scalarvars) {
     for( ProblemSpecP variable = db_scalarvars->findBlock("variable");
@@ -168,19 +174,18 @@ YamamotoDevol::problemSetup(const ProblemSpecP& params, int qn)
       // user specifies "role" of each scalar
       // if it isn't an internal coordinate or a scalar, it's required explicitly
       // ( see comments in Arches::registerModels() for details )
-      if ( role_name == "raw_coal_mass") {
+      if( role_name == "particle_temperature_from_enthalpy" ) {  
         LabelToRoleMap[temp_label_name] = role_name;
-      } else if( role_name == "particle_temperature" ) {  
-        LabelToRoleMap[temp_label_name] = role_name;
-        compute_part_temp = true;
+        part_temp_from_enth = true;
       } else {
         std::string errmsg;
-        errmsg = "Invalid variable role for Yamamoto Devolatilization model: must be \"particle_temperature\" or \"raw_coal_mass\", you specified \"" + role_name + "\".";
+        errmsg = "Invalid variable role for Yamamoto Devolatilization model: must be \"particle_temperature\", you specified \"" + role_name + "\".";
         throw InvalidValue(errmsg,__FILE__,__LINE__);
       }
     }
   }
-  */
+  
+
 
   // fix the d_scalarLabels to point to the correct quadrature node (since there is 1 model per quad node)
   for ( vector<std::string>::iterator iString = d_scalarLabels.begin(); 
@@ -196,6 +201,9 @@ YamamotoDevol::problemSetup(const ProblemSpecP& params, int qn)
 
     std::replace( d_scalarLabels.begin(), d_scalarLabels.end(), temp_ic_name, temp_ic_name_full);
   }
+*/
+
+
 }
 
 //---------------------------------------------------------------------------
@@ -272,6 +280,13 @@ YamamotoDevol::sched_computeModel( const LevelP& level, SchedulerP& sched, int t
           throw InvalidValue(errmsg,__FILE__,__LINE__);
         }
 
+
+      } else if ( iMap->second == "particle_temperature_from_enthalpy") {
+        std::string pt_temp_name = iMap->first;
+        d_particle_temperature_label = VarLabel::find(pt_temp_name);
+        d_pt_scaling_factor = 1.0;
+        tsk->requires(Task::OldDW, d_particle_temperature_label, Ghost::None, 0);
+
       } else if ( iMap->second == "raw_coal_mass") {
         if (dqmom_eqn_factory.find_scalar_eqn(*iter) ) {
           EqnBase& t_current_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(*iter);
@@ -314,14 +329,16 @@ YamamotoDevol::sched_computeModel( const LevelP& level, SchedulerP& sched, int t
   }
   
   // for each required scalar variable:
-
+/*
   for( vector<std::string>::iterator iter = d_scalarLabels.begin();
        iter != d_scalarLabels.end(); ++iter) {
     map<string, string>::iterator iMap = LabelToRoleMap.find(*iter);
     
-    /*
+    
     if( iMap != LabelToRoleMap.end() ) {
-      if( iMap->second == <insert role name here> ) {
+      if( iMap->second == "particle_temperature_from_enthalpy" ) {
+        d_particle_temperature_label = VarLabel::find( iMap->first );
+
         if( eqn_factory.find_scalar_eqn(*iter) ) {
           EqnBase& current_eqn = eqn_factory.retrieve_scalar_eqn(*iter);
           d_<insert role name here>_label = current_eqn.getTransportEqnLabel();
@@ -340,9 +357,10 @@ YamamotoDevol::sched_computeModel( const LevelP& level, SchedulerP& sched, int t
                            "\" was required, but you did not specify a role for it!\n";
       throw InvalidValue( errmsg, __FILE__, __LINE__);
     }
-    */
+    
 
   } //end for
+*/
 
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials()); 
 
@@ -397,7 +415,7 @@ YamamotoDevol::computeModel( const ProcessorGroup * pc,
     }
 
     constCCVariable<double> temperature; // holds gas OR particle temperature...
-    if (compute_part_temp) {
+    if (compute_part_temp || part_temp_from_enth) {
       old_dw->get( temperature, d_particle_temperature_label, matlIndex, patch, gn, 0 );
     } else {
       old_dw->get( temperature, d_fieldLabels->d_tempINLabel, matlIndex, patch, gac, 1 );
@@ -473,7 +491,8 @@ YamamotoDevol::computeModel( const ProcessorGroup * pc,
           } else {
             // gas temp
             unscaled_temperature = temperature[c];
-          }
+            unscaled_temperature = max(273.0, min(unscaled_temperature,3000.0));
+          } 
           scaled_raw_coal_mass = wa_raw_coal_mass[c]/weight[c];
           unscaled_raw_coal_mass = scaled_raw_coal_mass*d_rc_scaling_factor;
 

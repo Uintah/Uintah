@@ -43,7 +43,8 @@ SRCS     += \
 	$(SRCDIR)/SideBCData.cc \
 	$(SRCDIR)/CircleBCData.cc \
 	$(SRCDIR)/AnnulusBCData.cc \
-	$(SRCDIR)/RectangleBCData.cc
+	$(SRCDIR)/RectangleBCData.cc \
+	$(SRCDIR)/BCUtils.cc       
 
 PSELIBS := \
 	Core/Util \

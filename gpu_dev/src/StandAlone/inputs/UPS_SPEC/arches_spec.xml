@@ -3,8 +3,11 @@
 
   <CFD>
     <ARCHES                             spec="OPTIONAL NO_DATA" >
-
-
+    
+      <WASATCH-ARCHES                             spec="OPTIONAL NO_DATA" >
+        <include href="wasatch_spec.xml" section="Wasatch"/>
+      </WASATCH-ARCHES>
+      
       <set_initial_condition             spec="OPTIONAL NO_DATA"
                                         attribute1="inputfile REQUIRED STRING"/>
       <new_BC_on_restart                spec="OPTIONAL NO_DATA" />
@@ -352,11 +355,24 @@
           <src                          spec="MULTIPLE NO_DATA" 
                                         attribute1="label REQUIRED STRING"
                                         attribute2="type REQUIRED STRING"/>
+
+          <initialization               spec="OPTIONAL NO_DATA"           
+                                        attribute1="type REQUIRED STRING 'constant, taylor-green'">
+
+           <const_u                     spec="REQUIRED DOUBLE" need_applies_to="type constant"/>
+           <const_v                     spec="REQUIRED DOUBLE" need_applies_to="type constant"/>
+           <const_w                     spec="REQUIRED DOUBLE" need_applies_to="type constant"/>
+
+           <c                           spec="REQUIRED DOUBLE" need_applies_to="type taylor-green"/> 
+
+          </initialization>
         </MomentumSolver>
 
         <PressureSolver                 spec="REQUIRED NO_DATA" >
           <do_only_last_projection      spec="OPTIONAL BOOLEAN" />
           <normalize_pressure           spec="OPTIONAL BOOLEAN" /> 
+          <src                          spec="MULTIPLE NO_DATA" 
+                                        attribute1="label REQUIRED STRING"/>
         <Parameters                     spec="OPTIONAL NO_DATA"
                                           attribute1="variable OPTIONAL STRING 'implicitPressure'" >
           <initial_tolerance            spec="OPTIONAL DOUBLE 'positive'"/>
@@ -372,6 +388,7 @@
           <skip                         spec="OPTIONAL INTEGER" />                                        
           <solver                       spec="REQUIRED STRING 'smg, SMG, PFMG, pfmg, SparseMSG, sparsemsg, CG, cg, Hybrid, hybrid, GMRES, gmres'" />                         
           <tolerance                    spec="REQUIRED DOUBLE 'positive'" /> 
+          <relax_type                   spec="OPTIONAL INTEGER '0,3'"/> <!-- 0=jacobi,1=weighted jacobi,2=rb symmetric,3=rb non-symmetric --> 
         </Parameters>
         </PressureSolver>
 
@@ -622,7 +639,7 @@
                                         attribute2="type REQUIRED STRING 'KobayashiSarofimDevol, YamamotoDevol, ConstantModel, 
                                                                           SimpleHeatTransfer, 
                                                                           XDrag, YDrag, ZDrag, 
-                                                                          ShaddixHeatTransfer, CharOxidationShaddix'">
+                                                                          ShaddixHeatTransfer, EnthalpyShaddix, CharOxidationShaddix'">
 
             <ICVars                     spec="OPTIONAL NO_DATA"> <!-- block containing list of internal coordinates the DQMOM model depends on -->
               <variable                 spec="MULTIPLE NO_DATA"

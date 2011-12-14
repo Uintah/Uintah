@@ -451,7 +451,13 @@ SCI_ARG_ENABLE(wasatch_3p,
   AC_HELP_STRING(--enable-wasatch_3p,
                  Download and build the Wasatch Thirdparty libraries - TabProps oExprLibs SpatialOps.),
   [wasatch_3p="yes"],
-  [wasatch_3p=="no"])
+  [wasatch_3p="no"])
+
+SCI_ARG_ENABLE(wasatch_in_arches,
+  AC_HELP_STRING(--enable-wasatch-in-arches,
+                 Turn on the use of Wasatch objects in the Arches component.),
+  [wasatch_in_arches="yes"],
+  [wasatch_in_arches="no"])
 
 SCI_ARG_ENABLE(static,
   AC_HELP_STRING(--enable-static,
@@ -992,6 +998,7 @@ BUILD_ICE=yes
 BUILD_MPM=yes
 BUILD_MODELS_RADIATION=yes
 BUILD_WASATCH=no
+USE_WASATCH=no
 DEF_ARCHES=""
 DEF_ICE=""
 DEF_MPM=""
@@ -2972,7 +2979,10 @@ if test "$with_mpi_extra_libs"; then
          fi
          the_base=`basename $lib | cut -f"1" -d"." | sed 's/lib//g'` 
          MPI_EXTRA_LIB_FLAG="$MPI_EXTRA_LIB_FLAG -l$the_base"
-         MPI_EXTRA_LIB_DIR="$MPI_EXTRA_LIB_DIR -L$the_dir"
+         if test "$the_dir" != "/usr/lib" -a "$the_dir" != "/usr/lib64"; then
+            # Don't add /usr/lib or /usr/lib64 to the path...
+            MPI_EXTRA_LIB_DIR="$MPI_EXTRA_LIB_DIR -L$the_dir"
+         fi
       fi
    done
 fi
@@ -3870,9 +3880,23 @@ AC_SUBST(INC_TABPROPS_H)
 AC_SUBST(TABPROPS_LIB_FLAG)
 AC_SUBST(TABPROPS_LIB_DIR_FLAG)
 
+##  --  Handle --enable-wasatch-in-arches --------------------------------
+
+if test "$wasatch_in_arches" = "yes"; then
+   if test "$USE_WASATCH" != yes; then
+      add_important_warning "Turning on Wasatch for use in Arches."
+      AC_MSG_WARN(Turning on Wasatch for use in Arches.)
+      USE_WASATCH=yes
+   fi
+   DEF_WASATCH="#define WASATCH_IN_ARCHES 1";
+   BUILD_WASATCH_IN_ARCHES="yes"
+fi
+AC_SUBST(DEF_WASATCH_IN_ARCHES)
+AC_SUBST(BUILD_WASATCH_IN_ARCHES)
+
 ##  --  Determine whether we can use WASATCH OR NOT ----------------------
 
-if test "$USE_WASATCH" = yes; then
+if test "$USE_WASATCH" = "yes"; then
    if test "$HAVE_BOOST" = "yes" &&
      test "$HAVE_TABPROPS" = "yes" &&
      test "$HAVE_SPATIALOPS" = "yes" &&
@@ -3887,6 +3911,7 @@ else
      test "$HAVE_SPATIALOPS" = "yes" &&
      test "$HAVE_EXPRLIB" = "yes"; then
     BUILD_WASATCH=yes
+    add_important_warning "All prereqs satisfied, turning on Wasatch component."
     AC_MSG_WARN(All prereqs satisfied, turning on Wasatch component.)
   fi
 fi

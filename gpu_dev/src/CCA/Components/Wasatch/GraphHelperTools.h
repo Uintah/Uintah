@@ -20,7 +20,7 @@ namespace Expr{
 
 namespace Wasatch{
 
-  class TransportEquation;
+  class TransportEquation;  // forward declartation
 
   /** \addtogroup WasatchGraph
    *  @{
@@ -44,7 +44,7 @@ namespace Wasatch{
   /**
    *  \brief a list of transport equations to be solved.
    */
-  typedef std::list<Wasatch::TransportEquation*> TransEqns;
+  typedef std::list<TransportEquation*> TransEqns;
 
   /**
    *  \brief a set of ExpressionID generally to be used to store the
