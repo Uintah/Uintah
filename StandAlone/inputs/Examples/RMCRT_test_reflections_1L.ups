@@ -8,14 +8,14 @@
 
   <SimulationComponent type="RMCRT_Test" />
   <!--__________________________________-->
-  <!-- run for 2 timesteps for RT memory -->
+  <!-- run for 10 timesteps for RT memory -->
   <!-- and checkpoint testing             -->
   <Time>
     <maxTime>       2.0      </maxTime>
     <initTime>      0.0       </initTime>
     <delt_min>      0.00001   </delt_min>
     <delt_max>      1         </delt_max>
-    <max_Timesteps> 2         </max_Timesteps>
+    <max_Timesteps> 10         </max_Timesteps>
     <timestep_multiplier>  1  </timestep_multiplier>
   </Time>
   <!--__________________________________-->
@@ -42,7 +42,7 @@
                            <value> 1000 </value>
         </BCType>
         <BCType id = "0"   label = "abskg"     var = "Dirichlet">
-                           <value> 1. </value>
+                           <value> 0. </value>
         </BCType> 
       </Face>               
       <Face side = "y+">
@@ -50,7 +50,7 @@
                             <value> 1000 </value>
         </BCType>
         <BCType id = "0"   label = "abskg"     var = "Dirichlet">
-                           <value> 1. </value>
+                           <value> 0. </value>
         </BCType>
       </Face>
       <Face side = "z-">
@@ -82,7 +82,8 @@
   </Grid>
   <!--__________________________________-->
   <DataArchiver>
-  <filebase>rmcrt_1L.uda</filebase>
+  <filebase>rmcrt_1L_reflections.uda</filebase>
+      <!--<outputInitTimestep/> -->
       <outputTimestepInterval>1</outputTimestepInterval>
       <save label = "color"   />
       <save label = "divQ"    />
@@ -97,7 +98,7 @@
     <randomSeed>         false     </randomSeed>
     <Temperature>       1500       </Temperature>
     <abskg>              1.0       </abskg>
-    <NoOfRays>          100        </NoOfRays>
+    <NoOfRays>          10         </NoOfRays>
     <Threshold>         0.001      </Threshold>
     <AlphaEW>             0        </AlphaEW>
     <AlphaNS>             0        </AlphaNS>

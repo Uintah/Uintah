@@ -775,6 +775,9 @@ void RMCRT_Test::initialize (const ProcessorGroup*,
           abskg[idx] = d_initAbskg;
         }
       }
+       // set boundary conditions 
+      d_realRMCRT->setBC(color,  d_colorLabel->getName(), patch, matl);
+      d_realRMCRT->setBC(abskg,  d_abskgLabel->getName(), patch, matl);
     }
   }
 }
