@@ -455,6 +455,7 @@
     <delt_init            spec="OPTIONAL DOUBLE  'positive'" />
     <max_delt_increase    spec="OPTIONAL DOUBLE  'positive'" />
     <max_initial_delt     spec="OPTIONAL DOUBLE  'positive'" />
+    <initial_delt_range   spec="OPTIONAL DOUBLE  'positive'" />
     <override_restart_delt spec="OPTIONAL DOUBLE  'positive'" />
     <timestep_multiplier  spec="REQUIRED DOUBLE  'positive'" />
   </Time>
