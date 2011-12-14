@@ -3,10 +3,18 @@
 
 <symbolicLinks></symbolicLinks>
 
+<!-- Ray convergence test 
 <test>
-  <name>RMCRT</name>
+  <name>RMCRT_OA_Ray</name>
   <ups>RMCRT_test_1L.ups</ups>
   <tst>ray.tst</tst>
+</test> -->
+
+<!-- Grid convergence test -->
+<test>
+  <name>RMCRT_OA_Ray</name>
+  <ups>RMCRT_test_1L.ups</ups>
+  <tst>dx.tst</tst>
 </test>
 
 </config>
