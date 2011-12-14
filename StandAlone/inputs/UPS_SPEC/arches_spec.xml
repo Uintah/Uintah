@@ -639,7 +639,7 @@
                                         attribute2="type REQUIRED STRING 'KobayashiSarofimDevol, YamamotoDevol, ConstantModel, 
                                                                           SimpleHeatTransfer, 
                                                                           XDrag, YDrag, ZDrag, 
-                                                                          ShaddixHeatTransfer, CharOxidationShaddix'">
+                                                                          ShaddixHeatTransfer, EnthalpyShaddix, CharOxidationShaddix'">
 
             <ICVars                     spec="OPTIONAL NO_DATA"> <!-- block containing list of internal coordinates the DQMOM model depends on -->
               <variable                 spec="MULTIPLE NO_DATA"
