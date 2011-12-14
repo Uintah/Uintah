@@ -24,11 +24,13 @@ from helpers.runSusTests import runSusTests
 #  2) If the processors is > 1.0 then an mpirun command will be used
 #  3) Performance_tests are not run on a debug build.
 #______________________________________________________________________
-NIGHTLYTESTS = [   ("poisson1",         "poisson1.ups",      1, "ALL"),
-                   ("RMCRT_test_1L",    "RMCRT_test_1L.ups", 1, "ALL", ["exactComparison"]) ]
+NIGHTLYTESTS = [   ("poisson1",         "poisson1.ups",         1, "ALL"),
+                   ("RMCRT_test_1L",    "RMCRT_test_1L.ups",    1, "ALL", ["exactComparison"]),
+                   ("RMCRT_1L_reflect", "RMCRT_1L_reflect.ups", 1, "ALL", ["exactComparison"]) ]
 
 # Tests that are run during local regression testing
-LOCALTESTS   = [   ("RMCRT_test_1L",    "RMCRT_test_1L.ups", 1, "ALL", ["exactComparison"]) ]
+LOCALTESTS   = [   ("RMCRT_test_1L",    "RMCRT_test_1L.ups",    1, "ALL", ["exactComparison"]),
+                   ("RMCRT_1L_reflect", "RMCRT_1L_reflect.ups", 1, "ALL", ["exactComparison"]) ]
 
 
 #__________________________________
