@@ -119,7 +119,7 @@ void Arenisca::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
   ProblemSpecP cm_ps = ps;
   if (output_cm_tag) {
     cm_ps = ps->appendChild("constitutive_model");
-    cm_ps->setAttribute("type","simplified_geo_model");
+    cm_ps->setAttribute("type","Arenisca");
   }
 
   cm_ps->appendElement("FSLOPE",d_initialData.FSLOPE);
@@ -453,7 +453,7 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
         // Determine a characteristic length of the elastic zone
         double char_length_yield_surface;
         if (pKappa[idx]<-1.0e90){
-          char_length_yield_surface = abs(2.0*PEAKI1_hardening);
+          char_length_yield_surface = abs(2.0*(PEAKI1_hardening-FSLOPE*I1_trial));
         } else {
           if (PEAKI1_hardening-(pKappa[idx]-cap_radius) 
               < -2.0*(FSLOPE*(pKappa_new[idx]-cap_radius)-PEAKI1_hardening)){
@@ -752,6 +752,7 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
             cap_radius=-CR*(FSLOPE*pKappa_loop-PEAKI1_hardening);
 
             f_new_loop=YieldFunction(stress_iteration,FSLOPE,pKappa_loop,cap_radius,PEAKI1_hardening);
+            f_new_loop=sqrt(abs(f_new_loop));
 
 	        } // ###4 (END LOOP: nested return algorithm)
 
@@ -775,6 +776,7 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
 
        double f_new;
 	      f_new=YieldFunction(stress_new[idx],FSLOPE,pKappa_new[idx],cap_radius,PEAKI1_hardening);
+       f_new=sqrt(abs(f_new));
        double J2_new,I1_new;
        Matrix3 S_new;
        computeInvariants(stress_new[idx], S_new, I1_new, J2_new);
@@ -785,6 +787,7 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
 	        cerr<<"ERROR!  did not return to yield surface (Arenisca.cc)"<<endl;
 	        cerr<<"sqrt(J2_new)= "<<sqrt(J2_new)<<endl;
 	        cerr<<"I1_new= "<<I1_new<<endl;
+	        cerr<<"pKappa_new[idx]= "<<pKappa_new[idx]<<endl;
          cerr<<"f_new= "<<f_new<<endl;
 	        exit(1);
 	      }
