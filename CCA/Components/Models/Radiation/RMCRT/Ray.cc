@@ -45,12 +45,6 @@ Ray::problemSetup( const ProblemSpecP& inputdb)
 
   db->getWithDefault( "NoOfRays"  , _NoOfRays  , 1000 );
   db->getWithDefault( "Threshold" , _Threshold , 0.01 );      //When to terminate a ray
-  db->getWithDefault( "AlphaEW"   , _alphaEW   , 0.5 );       //Absorption coefficient of the  EW boundaries    
-  db->getWithDefault( "AlphaNS"   , _alphaNS   , 0.5 );       //Absorption coefficient of the NS boundaries     
-  db->getWithDefault( "AlphaTB"   , _alphaTB   , 0.5 );       //Absorption coefficient of the TB boundaries     
-  db->getWithDefault( "TEW"       , _TEW       ,  0  );       //Temperature of the  EW boundaries               
-  db->getWithDefault( "TNS"       , _TNS       ,  0  );       //Temperature of the  NS boundaries               
-  db->getWithDefault( "TTB"       , _TTB       ,  0  );       //Temperature of the  TB boundaries               
   db->getWithDefault( "Slice"     , _slice     , 9 );         //Level in z direction of xy slice
   db->getWithDefault( "randomSeed", _isSeedRandom, true );    // random or deterministic seed.
   db->getWithDefault( "benchmark_1" ,     _benchmark_1,     false );  
@@ -324,34 +318,10 @@ Ray::rayTrace( const ProcessorGroup* pc,
     unsigned long int size = 0;                        // current size of PathIndex
     Vector Dx = patch->dCell();                        // cell spacing
  
-    double local_alpha[3] = {_alphaEW,_alphaNS,_alphaTB};  // emissivity of the E/W, N/S, and T/B domain walls
-    double local_sigmaT4Pi[3] = {0,0,0};                   // intensity of the E/W, N/S, and T/B domain walls
-    double local_T[3] = {_TEW, _TNS, _TTB};
 
-    if(_benchmark_1){
-      local_alpha[0] = 1;
-      local_alpha[1] = 1;
-      local_alpha[2] = 1;
-      local_T[0] = 0;
-      local_T[1] = 0;
-      local_T[2] = 0;
-    }
-    else if(_benchmark_13pt2){
-      local_alpha[0] = 0;
-      local_alpha[1] = 0;
-      local_alpha[2] = 1;
-      _TEW = 1000;
-      _TNS = 1000;
-      _TTB = 1000;
-    }
-
-    for (int ii=0; ii<3; ++ii){
-      local_sigmaT4Pi[ii] = local_alpha[ii] * _sigma_over_pi * local_T[ii]*local_T[ii]*local_T[ii]*local_T[ii];
-    }
     //__________________________________
     //
     for (CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){ 
-
       IntVector origin = *iter; 
       int i = origin.x();
       int j = origin.y();
@@ -362,7 +332,7 @@ Ray::rayTrace( const ProcessorGroup* pc,
        IntVector pHigh;
        level->findInteriorCellIndexRange(pLow, pHigh);
        int Nx = pHigh[0] - pLow[0];
-       if (i==Nx/2 && k==Nx/2){
+       if (i==Nx/2 && j==Nx/2){
      */
 
       double SumI = 0;
@@ -435,7 +405,6 @@ Ray::rayTrace( const ProcessorGroup* pc,
         //the domain after it was updated following the first switch statement.
 
         int nReflect = 0; // Number of reflections that a ray has undergone
-
         //Threshold while loop
         while (intensity > _Threshold){
         
@@ -500,7 +469,6 @@ Ray::rayTrace( const ProcessorGroup* pc,
 
             //Eqn 3-15(see below reference) while
             //Third term inside the parentheses is accounted for in Inet. Chi is accounted for in Inet calc.
-
             SumI += sigmaT4Pi[prevCell] * ( exp(-optical_thickness_prev) - exp(-optical_thickness) ) * fs;;
           } //end domain while loop.  ++++++++++++++
 
@@ -511,20 +479,13 @@ Ray::rayTrace( const ProcessorGroup* pc,
 
           if (intensity > _Threshold){
 
-            //  wall emission 11/9/11
-            SumI += local_sigmaT4Pi[face] * intensity;
+            //  wall emission 12/15/11
+            SumI += abskg[cur]*sigmaT4Pi[cur] * intensity;
 
-            // sumI +=  local_sigmaT4Pi[face +sign[face]] * intensity;
-            // !! The above line will allow for 6 boundary temperatures
-
-            intensity = intensity * (1-local_alpha[face]);
+            intensity = intensity * (1-abskg[cur]);
             
-            fs = fs * (1-local_alpha[face]);
+            fs = fs * (1-abskg[cur]);
             
-            //intensity =intensity * (1-local_alpha[face]);
-            //fs=fs * (1-local_alpha[face]);
-            // !! The above 2 lines will allow for 6 boundary emissivities
-
             //put cur back inside the domain
             cur = prevCell;
             
@@ -542,7 +503,7 @@ Ray::rayTrace( const ProcessorGroup* pc,
       //  Compute divQ
       divQ[origin] = 4.0 * _pi * abskg[origin] * ( sigmaT4Pi[origin] - (SumI/_NoOfRays) );
       //cout << divQ[origin] << endl;
-       // } // end quick debug testing
+     // } // end quick debug testing
     }  // end cell iterator
 
 
@@ -665,6 +626,7 @@ Ray::setBC(CCVariable<double>& Q_CC,
 
 //______________________________________________________________________
 // ISAAC's NOTES: 
+//Dec 15. Now uses interactive BCs correctly from input file
 //Dec 1. Clean up (removed ray viz stuff.
 //Nov 30. Modified so user can specify in the input file either benchmark_13pt2, benchmark_1, or no benchmark (real case)
 //Nov 18. Put in visualization stuff. It worked well.
