@@ -61,9 +61,8 @@
 \section{Overview of Uintah} \label{sec:overview} The \textbf{Uintah}
 library is composed of several executables and a generic library
 framework for solving PDEs on structured AMR grids on large parallel
-supercomputers. The \textbf{\emph{VisIt}} and \textbf{\emph{Teem}}
-applications are used to visualize data generated from
-\textbf{Uintah}.
+supercomputers. \textbf{\emph{VisIt}} is used to visualize data
+generated from \textbf{Uintah}.
 
 \subsection{Obtaining the Code}
 Uintah can be obtained either as a compressed tarball from
@@ -81,15 +80,18 @@ directory.
 
 \section{Installation Overview}
 
-If \textbf{Uintah} is installed on a workstation and one wants to
-visualize the data generated, the visualization tools
-\textbf{\emph{VisIt}} and \textbf{\emph{Teem}} should be installed
-prior to installation of \textbf{Uintah}.  The configure script used
-by \textbf{Uintah} depends on the presence of these libraries.
+\textbf{Uintah} can be installed individually and in conjunction with
+the visualization tool, \textbf{\emph{VisIt}}.  It is recommended for
+first time users to install \textbf{Uintah} first and then install
+\textbf{\emph{VisIt}} second. Once you have a working build of
+\textbf{Uintah} then go ahead and install \textbf{\emph{VisIt}}.  The
+configure script used by \textbf{Uintah} will have to be slightly
+modified to include the location of the \textbf{\emph{VisIt}}
+installation directory.  
 
-However, if \textbf{Uintah} is installed on a supercomputer, the
-visualization tools do not need to be installed prior to installation
-of \textbf{Uintah}.
+However, if \textbf{Uintah} is installed on a supercomputer,
+\textbf{\emph{VisIt}} does not need to be installed prior to
+installation of \textbf{Uintah}.
 
 The installation procedure follows the basic outline:
 
@@ -97,14 +99,16 @@ The installation procedure follows the basic outline:
 
 \item Install basic dependencies: MPI, Blas, Lapack, Hypre, PETSc, \emph{etc}.
 
-\item Install visualization tools (optional if installing on a supercomputer)
-
 \item Configure Uintah
 
 \item Compile Uintah
 
+\item Install visualization tools (optional if installing on a
+  supercomputer or first time users) and reconfigure Uintah.
+
 
 \end{enumerate}
+
 
 
 \section{Generic Library Dependencies}
@@ -373,7 +377,111 @@ make install
 \emph{Note, under Mac OSX, Hypre does not handle the "--enable-shared" configure
   flag correctly.}
 
-\section{Installing Visualization Tools}
+\section{Configuring and Building Uintah}
+
+\subsection{Configure}
+
+The following information specifies how to run the ``configure''
+script to prepare for building the Uintah executable.  ``Configure''
+is a program that checks the computer's environment and looks for the
+location of libraries and header files, etc.  When it finishes
+running, it will create the \TT{configVars.mk} file which will include all
+the information it has determined about the computer.  The following
+lines show \textbf{generically} how to use ``configure''.
+
+Goto the directory \TT{ \textasciitilde/uintah} and create the
+following directories: \TT{dbg} (debug) and \TT{opt} (optimized)
+
+\begin{verbatim}
+cd ~/uintah-1.4.1
+mkdir dbg opt
+\end{verbatim}
+
+Go to the \TT{dbg} directory and enter the following:
+
+\begin{verbatim}
+../src/configure --enable-debug        
+\end{verbatim}
+
+
+After the configuration process, type \TT{make} to compile Uintah.
+
+If you wish to attach a debugger to Uintah, make sure you use the \TT{--enable-debug} configure option.
+
+If you would like to reduce the amount of output given by the make system when making Uintah, 
+you can set the environment variable \TT{SCI\_MAKE\_BE\_QUIET} to true:
+
+\begin{verbatim}
+setenv SCI_MAKE_BE_QUIET true
+\end{verbatim}
+
+Once a debug build has finished, change to the \TT{opt} directory and
+enter the following configure line:
+
+\begin{verbatim}
+../src/configure '--enable-optimize=-O3 -mfpmath=sse' 
+\end{verbatim}
+
+The debug/optimize flags do the following:  --enable-debug adds ``-g''
+to the compile line; --enable-optimize, if used without parameters,
+adds ``-O2'' to the compile line.  Otherwise it adds the parameters
+specified during configure.
+
+\subsubsection{Other configure options}
+
+Other useful configure options are seen below.  Note, depending on
+where libraries are installed on your system, you may or may not need
+to specify some (or all) of these options:
+
+\begin{verbatim}
+--with-mpi=/usr/lib64/openmpi <= Specifies location of MPI
+--enable-64bit                <= Specifies a 32 or 64bit build
+--enable-32bit
+--with-petsc=/path/petsc-2.3.3-p13 <= Specifies location of PETSc
+--with-hypre=/path/hypre-2.0.0/hypre_install  <= Specifies location of Hypre
+
+F77=gfortran-4.3               <= Specifies compilers (Fortran, C, C++).
+CC=/usr/bin/gcc-4.3
+CXX=/usr/bin/g++-4.3
+PETSC_ARCH=linux-gnu-c-real-opt <= Specifies PETSc architecture
+
+        --without-fortran     <= Turns off the use of Fortran (and the Arches/Radiation component.)
+
+        USE_ARCHES=no         <= Turn off the building of specific Uintah components.
+        USE_ICE=no               (Note, turning off Arches also turns off SpatialOps.)
+        USE_MPM=no
+        USE_RADIATION=no
+
+\end{verbatim}
+To compile the Wasatch component add:
+\begin{verbatim}
+  --with-boost=<path to boost install>
+  --enable-wasatch_3p
+\end{verbatim}
+to the configure line.
+
+To see a full list of all the configure options type:
+
+\begin{verbatim}
+    ../src/configure --help
+\end{verbatim}
+
+
+\subsection{Build}
+
+Then build the software by typing \TT{make} at the command line and create symbolic links to the inputs directory found in \TT{\textasciitilde/uintah/src/StandAlone/inputs}.
+\begin{verbatim}
+   make
+\end{verbatim}
+
+
+Please see the \textbf{User Guide}
+\url{http://www.uintah.utah.edu/trac/chrome/site/uintah.pdf} on how to use
+the various tools and executables within the \textbf{Uintah}
+framework.
+
+
+\section{Installing VisIt}
 
 Visualization of \textbf{Uintah} data is currently possible using
 \textbf{\emph{VisIt}}. The VisIt package from LLNL is general purpose
@@ -389,46 +497,6 @@ the Uintah team.
 % has access to a reasonable shared memory resource, (e.g. an 8 core
 % desktop system).
 
-\subsection{Teem Installation}
-\label{subsec:teem}
-
-\emph{Note, Teem is only needed for UdaToNrrd (which is used to
-  translate UDA into NRRD files for visualization with the Manta or
-  RTRT ray tracers.  Users of \textbf{\emph{VisIt}} do not need to install Teem.}
-
-Download Teem from
-\url{http://teem.sourceforge.net/download/index.html}.  Teem uses
-CMake to configure the build system. Installation instructions for
-Teem are found at \url{http://teem.sourceforge.net/build.html}.
-Simplified instructions are as follows:
-
-\begin{verbatim}
-tar zxf teem-1.10.0-src.tar.gz
-cd teem-1.10.0-src/
-mkdir teem-build
-cd teem-build
-ccmake ../
-\end{verbatim}
-
-Use the arrow keys to scroll down to the fourth line
-BUILD\_SHARED\_LIBS and press the return key to toggle the ON flag.
-
-\begin{verbatim}
-Press the 'c' key
-
-Press the 'g' key
-
-make
-make install
-\end{verbatim}
-The Teem libraries and include files will be install in /usr/local
-hierarchy.  If you have a /usr/local/lib64 directory please make a
-symbolic link to the libteem.so found in /usr/local/lib, i.e.
-
-\begin{verbatim}
-cd /usr/local/lib64
-ln -s ../lib/libteem.so libteem.so
-\end{verbatim}
 
 \subsection{VisIt Installation}
 
@@ -556,10 +624,7 @@ visit_bin_dir
   \emph{visit\_bin\_dir} directory.
 
 \begin{verbatim}
-
-    --with-visit=/full_path/visit_bin_dir/  --with-teem='location for
-teem'
-
+    --with-visit=/full_path/visit_bin_dir/ 
 \end{verbatim}
 
 \end{enumerate}
@@ -823,112 +888,6 @@ data.
 %  Click "g" to generate the cmake files. you can now build Manta again by typing make. 
 % \end{enumerate}
 
-\section{Configuring and Building Uintah}
-
-\subsection{Configure}
-
-The following information specifies how to run the ``configure''
-script to prepare for building the Uintah executable.  ``Configure''
-is a program that checks the computer's environment and looks for the
-location of libraries and header files, etc.  When it finishes
-running, it will create the \TT{configVars.mk} file which will include all
-the information it has determined about the computer.  The following
-lines show \textbf{generically} how to use ``configure''.
-
-Goto the directory \TT{ \textasciitilde/uintah} and create the following directories:
-\TT{dbg} (debug) and \TT{opt} (optimized)
-
-\begin{verbatim}
-cd ~/uintah-1.4
-mkdir dbg opt
-\end{verbatim}
-
-Go to the \TT{dbg} directory and enter the following:
-
-(Note, if you are not planning on using (or have not installed) VisIt,
-then do NOT use the \TT{--with-team} and \TT{--with-visit} shown below!)
-
-\begin{verbatim}
-../src/configure                 \
-          --enable-debug         \
-          --with-teem=/usr/local \
-          --with-visit=/home/user_name/VisIt/
-\end{verbatim}
-
-
-After the configuration process, type \TT{make} to compile Uintah.
-
-If you wish to attach a debugger to Uintah, make sure you use the \TT{--enable-debug} configure option.
-
-If you would like to reduce the amount of output given by the make system when making Uintah, 
-you can set the environment variable \TT{SCI\_MAKE\_BE\_QUIET} to true:
-
-\begin{verbatim}
-setenv SCI_MAKE_BE_QUIET true
-\end{verbatim}
-
-Once a debug build has finished, change to the \TT{opt} directory and
-enter the following configure line:
-
-\begin{verbatim}
-../src/configure                              \
-          '--enable-optimize=-O3 -mfpmath=sse' \
-          --enable-assertion-level=0          \
-          --with-teem=/usr/local              \
-          --with-visit=/home/user_name/VisIt/
-\end{verbatim}
-
-The debug/optimize flags do the following:  --enable-debug adds ``-g''
-to the compile line; --enable-optimize, if used without parameters,
-adds ``-O2'' to the compile line.  Otherwise it adds the parameters
-specified during configure.
-
-\subsubsection{Other configure options}
-
-Other useful configure options are seen below.  Note, depending on
-where libraries are installed on your system, you may or may not need
-to specify some (or all) of these options:
-
-\begin{verbatim}
---with-mpi=/usr/lib64/openmpi <= Specifies location of MPI
---enable-64bit                <= Specifies a 32 or 64bit build
---enable-32bit
---with-petsc=/path/petsc-2.3.3-p13 <= Specifies location of PETSc
---with-hypre=/path/hypre-2.0.0/hypre_install  <= Specifies location of Hypre
-
-F77=gfortran-4.3               <= Specifies compilers (Fortran, C, C++).
-CC=/usr/bin/gcc-4.3
-CXX=/usr/bin/g++-4.3
-PETSC_ARCH=linux-gnu-c-real-opt <= Specifies PETSc architecture
-
-        --without-fortran     <= Turns off the use of Fortran (and the Arches/Radiation component.)
-
-        USE_ARCHES=no         <= Turn off the building of specific Uintah components.
-        USE_ICE=no               (Note, turning off Arches also turns off SpatialOps.)
-        USE_MPM=no
-        USE_RADIATION=no
-
-\end{verbatim}
-To compile the Wasatch component add:
-\begin{verbatim}
-  --with-boost=<path to boost install>
-  --enable-wasatch_3p
-\end{verbatim}
-to the configure line.
-
-\subsection{Build}
-
-Then build the software by typing \TT{make} at the command line and create symbolic links to the inputs directory found in \TT{\textasciitilde/uintah/src/StandAlone/inputs}.
-\begin{verbatim}
-make
-make link_inputs
-\end{verbatim}
-
-
-Please see the \textbf{User Guide}
-\url{http://www.uintah.utah.edu/trac/chrome/site/uintah.pdf} on how to use
-the various tools and executables within the \textbf{Uintah}
-framework.
 
 \section{Mac OSX Installation}
 
@@ -945,12 +904,11 @@ These can be found in the "Optional Installs" directory on the Mac OS
 X Installation CD for newer versions (i.e. Tiger, Leopard) or on the
 included Developer CD if your version of OSX is older). If you don't
 have the installation CD you can download older versions from:
-\begin{verbatim}
-  \url{http://connect.apple.com}
-\end{verbatim}
- Double-click
-the XCodeTools.mpkg and follow the installer instructions.  This will
-install GCC, as well as many other useful developer tools.
+\url{http://connect.apple.com}
+
+Double-click the XCodeTools.mpkg and follow the installer
+instructions.  This will install GCC, as well as many other useful
+developer tools.
 
 \subsection{Installing Fortran Compiler}
 Download gfortran from \url{http://hpc.sourceforge.net/} making sure
@@ -1318,4 +1276,53 @@ make -j#
 		\begin{verbatim}
 			make all
 		\end{verbatim}}
+\section{Appendix: Teem Installation}
+
+\label{subsec:teem}
+
+\emph{ \textbf{Note:}Teem is only needed for UdaToNrrd (which is used to
+  translate UDA into NRRD files for visualization with the Manta or
+  RTRT ray tracers.  Users of \textbf{\emph{VisIt}} do not need to install Teem.}
+
+Download Teem from
+\url{http://teem.sourceforge.net/download/index.html}.  Teem uses
+CMake to configure the build system. Installation instructions for
+Teem are found at \url{http://teem.sourceforge.net/build.html}.
+Simplified instructions are as follows:
+
+\begin{verbatim}
+tar zxf teem-1.10.0-src.tar.gz
+cd teem-1.10.0-src/
+mkdir teem-build
+cd teem-build
+ccmake ../
+\end{verbatim}
+
+Use the arrow keys to scroll down to the fourth line
+BUILD\_SHARED\_LIBS and press the return key to toggle the ON flag.
+
+\begin{verbatim}
+Press the 'c' key
+
+Press the 'g' key
+
+make
+make install
+\end{verbatim}
+The Teem libraries and include files will be install in /usr/local
+hierarchy.  If you have a /usr/local/lib64 directory please make a
+symbolic link to the libteem.so found in /usr/local/lib, i.e.
+
+\begin{verbatim}
+cd /usr/local/lib64
+ln -s ../lib/libteem.so libteem.so
+\end{verbatim}
+
+After Teem has been installed then add the location of your Teem
+install to the \textbf{Uintah} as in:
+
+\begin{verbatim}
+--with-teem=/usr/local
+\end{verbatim}
+
 \end{document}
