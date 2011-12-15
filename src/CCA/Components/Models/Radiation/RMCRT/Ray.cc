@@ -357,6 +357,14 @@ Ray::rayTrace( const ProcessorGroup* pc,
       int j = origin.y();
       int k = origin.z();
 
+      // Allow for quick debugging test
+     /*  IntVector pLow;
+       IntVector pHigh;
+       level->findInteriorCellIndexRange(pLow, pHigh);
+       int Nx = pHigh[0] - pLow[0];
+       if (i==Nx/2 && k==Nx/2){
+     */
+
       double SumI = 0;
 
       // ray loop
@@ -534,7 +542,7 @@ Ray::rayTrace( const ProcessorGroup* pc,
       //  Compute divQ
       divQ[origin] = 4.0 * _pi * abskg[origin] * ( sigmaT4Pi[origin] - (SumI/_NoOfRays) );
       //cout << divQ[origin] << endl;
-
+       // } // end quick debug testing
     }  // end cell iterator
 
 
