@@ -11,11 +11,11 @@
   <!-- run for 10 timesteps for RT memory -->
   <!-- and checkpoint testing             -->
   <Time>
-    <maxTime>       2.0      </maxTime>
+    <maxTime>       1.0      </maxTime>
     <initTime>      0.0       </initTime>
     <delt_min>      0.00001   </delt_min>
     <delt_max>      1         </delt_max>
-    <max_Timesteps> 10         </max_Timesteps>
+    <max_Timesteps> 1         </max_Timesteps>
     <timestep_multiplier>  1  </timestep_multiplier>
   </Time>
   <!--__________________________________-->
@@ -58,7 +58,7 @@
                            <value> 1000 </value>
         </BCType>
         <BCType id = "0"   label = "abskg"     var = "Dirichlet">
-                           <value> 0. </value>
+                           <value> 1. </value>
         </BCType>
       </Face>
       <Face side = "z+">
@@ -66,7 +66,7 @@
                            <value> 1000 </value>
         </BCType>
         <BCType id = "0"   label = "abskg"     var = "Dirichlet">
-                           <value> 0. </value>
+                           <value> 1. </value>
         </BCType>
       </Face>
     </BoundaryConditions>
@@ -100,12 +100,6 @@
     <abskg>              1.0       </abskg>
     <NoOfRays>          10         </NoOfRays>
     <Threshold>         0.001      </Threshold>
-    <AlphaEW>             0        </AlphaEW>
-    <AlphaNS>             0        </AlphaNS>
-    <AlphaTB>             1        </AlphaTB>
-    <TEW>                 1000     </TEW>
-    <TNS>                 1000     </TNS>
-    <TTB>                 1000     </TTB>
     <Slice>             20         </Slice>
     <StefanBoltzmann>   5.67051e-8 </StefanBoltzmann>
     <benchmark_13pt2>   true       </benchmark_13pt2>
