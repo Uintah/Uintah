@@ -295,13 +295,15 @@ Ray::rayTrace( const ProcessorGroup* pc,
 
   // Determine the size of the domain.
   IntVector domainLo, domainHi;
-  level->findInteriorCellIndexRange(domainLo, domainHi);
+  IntVector domainLo_EC, domainHi_EC;
+  
+  level->findInteriorCellIndexRange(domainLo, domainHi);     // excluding extraCells
+  level->findCellIndexRange(domainLo_EC, domainHi_EC);       // including extraCells
 
   constCCVariable<double> sigmaT4Pi;
-  constCCVariable<double> abskg;
-  new_dw->getRegion( abskg   ,   d_abskgLabel ,   d_matl , level, domainLo, domainHi);
-  new_dw->getRegion( sigmaT4Pi , d_sigmaT4_label, d_matl , level, domainLo, domainHi);
-
+  constCCVariable<double> abskg;                               
+  new_dw->getRegion( abskg   ,   d_abskgLabel ,   d_matl , level, domainLo_EC, domainHi_EC);
+  new_dw->getRegion( sigmaT4Pi , d_sigmaT4_label, d_matl , level, domainLo_EC, domainHi_EC);
 
   double start=clock();
 
