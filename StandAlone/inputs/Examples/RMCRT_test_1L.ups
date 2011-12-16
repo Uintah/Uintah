@@ -26,51 +26,51 @@
   <Grid>
     <BoundaryConditions>
       <Face side = "x-">
-        <BCType id = "0"   label = "color"     var = "Neumann"> 
+        <BCType id = "0"   label = "color"     var = "Dirichlet"> 
                             <value> 0. </value> 
         </BCType> 
-        <BCType id = "0"   label = "abskg"     var = "Neumann">
-                            <value> 0. </value>
+        <BCType id = "0"   label = "abskg"     var = "Dirichlet">
+                            <value> 1. </value>
         </BCType>
       </Face>
       <Face side = "x+">
-        <BCType id = "0"   label = "color"     var = "Neumann">
+        <BCType id = "0"   label = "color"     var = "Dirichlet">
                            <value> 0. </value>                
         </BCType>
-        <BCType id = "0"   label = "abskg"     var = "Neumann">
-                           <value> 0. </value>
+        <BCType id = "0"   label = "abskg"     var = "Dirichlet">
+                           <value> 1. </value>
         </BCType>
       </Face>
       <Face side = "y-">
-        <BCType id = "0"   label = "color"     var = "Neumann">
+        <BCType id = "0"   label = "color"     var = "Dirichlet">
                            <value> 0. </value>
         </BCType>
-        <BCType id = "0"   label = "abskg"     var = "Neumann">
-                           <value> 0. </value>
+        <BCType id = "0"   label = "abskg"     var = "Dirichlet">
+                           <value> 1. </value>
         </BCType> 
       </Face>               
       <Face side = "y+">
-        <BCType id = "0"   label = "color"     var = "Neumann">
+        <BCType id = "0"   label = "color"     var = "Dirichlet">
                             <value> 0. </value>
         </BCType>
-        <BCType id = "0"   label = "abskg"     var = "Neumann">
-                           <value> 0. </value>
+        <BCType id = "0"   label = "abskg"     var = "Dirichlet">
+                           <value> 1. </value>
         </BCType>
       </Face>
       <Face side = "z-">
-        <BCType id = "0"   label = "color"     var = "Neumann">
+        <BCType id = "0"   label = "color"     var = "Dirichlet">
                            <value> 0. </value>
         </BCType>
-        <BCType id = "0"   label = "abskg"     var = "Neumann">
-                           <value> 0. </value>
+        <BCType id = "0"   label = "abskg"     var = "Dirichlet">
+                           <value> 1. </value>
         </BCType>
       </Face>
       <Face side = "z+">
-        <BCType id = "0"   label = "color"     var = "Neumann">
+        <BCType id = "0"   label = "color"     var = "Dirichlet">
                            <value> 0. </value>
         </BCType>
-        <BCType id = "0"   label = "abskg"     var = "Neumann">
-                           <value> 0. </value>
+        <BCType id = "0"   label = "abskg"     var = "Dirichlet">
+                           <value> 1. </value>
         </BCType>
       </Face>
     </BoundaryConditions>
