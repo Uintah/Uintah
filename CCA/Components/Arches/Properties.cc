@@ -338,7 +338,7 @@ Properties::computeInletProperties(const InletStream& inStream,
   else if ( mixModel == "ClassicTable"){
     d_mixingRxnTable->oldTableHack( inStream, outStream, d_calcEnthalpy, bc_type ); 
   } else if ( mixModel == "ColdFlow" ) {
-		// nothing to do here -- put here as a place holder until Properties is deleted
+    d_mixingRxnTable->oldTableHack( inStream, outStream, d_calcEnthalpy, bc_type ); 
   }
   else {
     throw InvalidValue("Mixing Model not supported", __FILE__, __LINE__);
