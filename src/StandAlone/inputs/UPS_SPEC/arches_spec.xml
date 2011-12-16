@@ -116,7 +116,7 @@
       <Properties                       spec="REQUIRED NO_DATA"
                                           children1="ONE_OF(CHILD ColdFlowMixingModel, NewStaticMixingTable, TabProps, ClassicTable, ColdFlow)" >
 
-        <use_mixing_model               spec="REQUIRED BOOLEAN" /> 
+        <use_mixing_model               spec="OPTIONAL BOOLEAN" /> <!-- default if false --> 
         <empirical_soot                 spec="OPTIONAL BOOLEAN" />
         <filter_drhodt                  spec="OPTIONAL BOOLEAN" />
         <first_order_drhodt             spec="OPTIONAL BOOLEAN" />
