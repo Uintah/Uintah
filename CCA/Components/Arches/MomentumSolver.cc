@@ -1034,7 +1034,7 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
     double factor_old = timelabels->factor_old;
     double factor_new = timelabels->factor_new;
     double factor_divide = timelabels->factor_divide;
-    
+
     for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
       const IntVector c = *iter;                                                                 
       velocityVars.divergence[c] = (factor_old*old_divergence[c]+                              
