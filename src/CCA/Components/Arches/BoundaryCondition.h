@@ -262,13 +262,13 @@ namespace Uintah {
                                           constSFCYVariable<double>& old_vvel, 
                                           constSFCZVariable<double>& old_wvel );
 
-                        template <class velType>
-                        void delPForOutletPressure__NEW( const Patch* patch, 
+      template <class velType>
+      void delPForOutletPressure__NEW( const Patch* patch, 
                                        int  matl_index, 
                                        double dt, 
-                                                                                                                                                         Patch::FaceType mface,
-                                                                                                                                                         Patch::FaceType pface, 
-                                                                                                                                                         velType& vel, 
+                                       Patch::FaceType mface,
+                                       Patch::FaceType pface, 
+                                       velType& vel, 
                                        constCCVariable<double>& P,
                                        constCCVariable<double>& density );
 
