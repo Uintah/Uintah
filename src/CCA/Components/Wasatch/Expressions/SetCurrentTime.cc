@@ -5,10 +5,8 @@
 namespace Wasatch{
 
   SetCurrentTime::SetCurrentTime( const Uintah::SimulationStateP sharedState,
-                                 const int RKStage,
-                                  const Expr::ExpressionID& id,
-                                  const Expr::ExpressionRegistry& reg  )
-    : Expr::Expression<double>( id, reg ),
+                                  const int RKStage )
+    : Expr::Expression<double>(),
       state_( sharedState ),
       RKStage_( RKStage )
   {}
@@ -32,19 +30,20 @@ namespace Wasatch{
 
   //--------------------------------------------------------------------
 
-  SetCurrentTime::Builder::Builder( const Uintah::SimulationStateP sharedState,
-                                   const int RKStage)
-    : state_( sharedState ),
+  SetCurrentTime::Builder::Builder( const Expr::Tag& result,
+                                    const Uintah::SimulationStateP sharedState,
+                                    const int RKStage )
+    : ExpressionBuilder(result),
+      state_( sharedState ),
       RKStage_(RKStage)
   {}
 
   //--------------------------------------------------------------------
 
   Expr::ExpressionBase*
-  SetCurrentTime::Builder::build( const Expr::ExpressionID& id,
-                                  const Expr::ExpressionRegistry& reg ) const
+  SetCurrentTime::Builder::build() const
   {
-    return new SetCurrentTime( state_, RKStage_, id, reg );
+    return new SetCurrentTime( state_, RKStage_ );
   }
 
 } // namespace Wasatch

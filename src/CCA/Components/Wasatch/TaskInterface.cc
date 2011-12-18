@@ -147,8 +147,8 @@ namespace Wasatch{
         std::set<std::string>::iterator ioFieldSetIter = ioFieldSet.begin();
 
         while (ioFieldSetIter != ioFieldSet.end()) {
-          const Expr::Tag fieldStateN    (*ioFieldSetIter, Expr::STATE_N   );
-          const Expr::Tag fieldStateNONE (*ioFieldSetIter, Expr::STATE_NONE);
+          const Expr::Tag fieldStateN   (*ioFieldSetIter, Expr::STATE_N   );
+          const Expr::Tag fieldStateNONE(*ioFieldSetIter, Expr::STATE_NONE);
 
           if (tree->has_field(fieldStateN)) {
             if (tree->has_expression(tree->get_id(fieldStateN))) {

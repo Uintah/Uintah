@@ -22,9 +22,9 @@
 #include <Core/Exceptions/ProblemSetupException.h>
 
 namespace Wasatch {
-  
+
   //------------------------------------------------------------------
-  
+
   template< typename FieldT >
   void setup_growth_expression( Uintah::ProblemSpecP growthParams,
                                const std::string& basePhiName,
@@ -33,7 +33,7 @@ namespace Wasatch {
                                const int nEqs,
                                Expr::TagList& growthTags,
                                const Expr::TagList& weightsTagList,
-                               const Expr::TagList& abscissaeTagList,                               
+                               const Expr::TagList& abscissaeTagList,
                                Expr::ExpressionFactory& factory )
   {
     Expr::Tag growthTag; // this tag will be populated
@@ -41,86 +41,86 @@ namespace Wasatch {
 
     std::string growthModel;
     growthParams->get("GrowthModel",growthModel);
-    
+
     // see if we have a basic expression set for the growth.
     Uintah::ProblemSpecP nameTagParam = growthParams->findBlock("NameTag");
-    
+
     if( nameTagParam ){
-      growthTag = parse_nametag( nameTagParam );      
-      
+      growthTag = parse_nametag( nameTagParam );
+
     } else { // if no expression was specified, build one based on the given info
       growthTag = Expr::Tag( thisPhiName + "_growth_" + growthModel, Expr::STATE_NONE );
       // now check what model the user has specified
       if (growthModel == "CONSTANT") {
         std::stringstream currentMomentOrderStr;
         currentMomentOrderStr << momentOrder;
-        const Expr::Tag phiTag( basePhiName + "_" + currentMomentOrderStr.str(), Expr::STATE_N );      
-        
+        const Expr::Tag phiTag( basePhiName + "_" + currentMomentOrderStr.str(), Expr::STATE_N );
+
         if (growthParams->findBlock("ConstantGrowthCoefficient")) {
           typedef typename UniformGrowth<FieldT>::Builder UniformGrowth;
           double growthRateVal;
           growthParams->get("ConstantCoefficient",growthRateVal);
-          builder = scinew UniformGrowth(phiTag, growthRateVal);
+          builder = scinew UniformGrowth(growthTag, phiTag, growthRateVal);
         }
       }  else if (growthModel == "MONOSURFACE") {
         std::stringstream nextMomentOrderStr;
         nextMomentOrderStr << momentOrder + 1;
-        const Expr::Tag phiTag( basePhiName + "_" + nextMomentOrderStr.str(), Expr::STATE_N );      
+        const Expr::Tag phiTag( basePhiName + "_" + nextMomentOrderStr.str(), Expr::STATE_N );
         if (growthParams->findBlock("ConstantGrowthCoefficient")) {
           typedef typename MonosurfaceGrowth<FieldT>::Builder growth;
           double coef;
           growthParams->get("ConstantGrowthCoefficient",coef);
-          builder = scinew growth(phiTag, coef, momentOrder);
+          builder = scinew growth(growthTag, phiTag, coef, momentOrder);
         }
         if (nEqs == momentOrder + 1) {
           // register a moment closure expression
           const Expr::Tag momentClosureTag( basePhiName + "_" + nextMomentOrderStr.str(), Expr::STATE_N );
           typedef typename QuadratureClosure<FieldT>::Builder MomClosure;
-          factory.register_expression(momentClosureTag, scinew MomClosure(weightsTagList,abscissaeTagList,momentOrder+1));
+          factory.register_expression(scinew MomClosure(momentClosureTag,weightsTagList,abscissaeTagList,momentOrder+1));
         }
       } else if (growthModel == "BULK_DIFFUSION") {
         std::stringstream previousMomentOrderStr;
         previousMomentOrderStr << momentOrder - 1;
-        const Expr::Tag phiTag( basePhiName + "_" + previousMomentOrderStr.str(), Expr::STATE_N );      
+        const Expr::Tag phiTag( basePhiName + "_" + previousMomentOrderStr.str(), Expr::STATE_N );
         if (growthParams->findBlock("ConstantGrowthCoefficient")) {
           typedef typename BulkDiffusionGrowth<FieldT>::Builder growth;
           double coef;
           growthParams->get("ConstantGrowthCoefficient",coef);
           std::cout << "coefficient = " << coef << std::endl;
-          builder = scinew growth(phiTag, coef, momentOrder);
+          builder = scinew growth(growthTag, phiTag, coef, momentOrder);
         }
         if ( momentOrder == 0) {
           // register a moment closure expression
           const Expr::Tag momentClosureTag( basePhiName + "_" + previousMomentOrderStr.str(), Expr::STATE_N );
           typedef typename QuadratureClosure<FieldT>::Builder MomClosure;
-          factory.register_expression(momentClosureTag, scinew MomClosure(weightsTagList,abscissaeTagList,momentOrder));
+          factory.register_expression(scinew MomClosure(momentClosureTag,weightsTagList,abscissaeTagList,momentOrder));
         }
       }
-      
+
     }
     growthTags.push_back(growthTag);
-    factory.register_expression( growthTag, builder );
+    factory.register_expression( builder );
   }
-  
+
   //------------------------------------------------------------------
-  
+
   std::string
   get_population_name( Uintah::ProblemSpecP params )
   {
     std::string phiName;
     params->get("PopulationName",phiName);
     return phiName;
-  }  
-  
+  }
+
   //------------------------------------------------------------------
-  
+
   template<typename FieldT>
   Expr::ExpressionID
   MomentTransportEquation<FieldT>::
   get_moment_rhs_id(Expr::ExpressionFactory& factory,
                     Uintah::ProblemSpecP params,
                     Expr::TagList& weightsTags,
-                    Expr::TagList& abscissaeTags,                    
+                    Expr::TagList& abscissaeTags,
                     const double momentOrder)
   {
     std::stringstream momentOrderStr;
@@ -129,112 +129,112 @@ namespace Wasatch {
     int nEnv = 1;
     params->get( "NumberOfEnvironments", nEnv );
     const int nEqs = 2*nEnv;
-    
+
     const std::string basePhiName = "m_" + PopulationName;
-    const std::string thisPhiName = "m_" + PopulationName + "_" + momentOrderStr.str();    
+    const std::string thisPhiName = "m_" + PopulationName + "_" + momentOrderStr.str();
     const Expr::Tag thisPhiTag    = Expr::Tag( thisPhiName, Expr::STATE_N );
 
     //____________
     // start setting up the right-hand-side terms: these include expressions
     // for growth, nucleation, birth, death, and any othery fancy source terms
     Expr::TagList rhsTags;
-    typename ScalarRHS<FieldT>::FieldTagInfo info;  
-    
+    typename ScalarRHS<FieldT>::FieldTagInfo info;
+
     //____________
     // Growth
     for( Uintah::ProblemSpecP growthParams=params->findBlock("GrowthExpression");
         growthParams != 0;
         growthParams=growthParams->findNextBlock("GrowthExpression") ){
-      setup_growth_expression <FieldT>( growthParams, 
-                                       basePhiName, 
-                                       thisPhiName, 
-                                       momentOrder, 
-                                       nEqs, 
-                                       rhsTags,
-                                       weightsTags,
-                                       abscissaeTags, 
-                                       factory );            
+      setup_growth_expression <FieldT>( growthParams,
+                                        basePhiName,
+                                        thisPhiName,
+                                        momentOrder,
+                                        nEqs,
+                                        rhsTags,
+                                        weightsTags,
+                                        abscissaeTags,
+                                        factory );
     }
-    
+
     //_________________
     // Diffusive Fluxes
     for( Uintah::ProblemSpecP diffFluxParams=params->findBlock("DiffusiveFluxExpression");
         diffFluxParams != 0;
         diffFluxParams=diffFluxParams->findNextBlock("DiffusiveFluxExpression") ){
       setup_diffusive_velocity_expression<FieldT>( diffFluxParams, thisPhiTag, factory, info );
-      
+
     }
-    
+
     //__________________
     // Convective Fluxes
     for( Uintah::ProblemSpecP convFluxParams=params->findBlock("ConvectiveFluxExpression");
         convFluxParams != 0;
         convFluxParams=convFluxParams->findNextBlock("ConvectiveFluxExpression") ){
-      
+
       setup_convective_flux_expression<FieldT>( convFluxParams, thisPhiTag, factory, info );
-      
+
     }
     //
-    // Because of the forms that the ScalarRHS expression builders are defined, 
+    // Because of the forms that the ScalarRHS expression builders are defined,
     // we need a density tag and a boolean variable to be passed into this expression
-    // builder. So we just define an empty tag and a false boolean to be passed into 
+    // builder. So we just define an empty tag and a false boolean to be passed into
     // the builder of ScalarRHS in order to prevent any errors in ScalarRHS
-    
+
     const Expr::Tag densT = Expr::Tag();
     const bool tempConstDens = false;
-    return factory.register_expression( Expr::Tag( thisPhiName + "_rhs", Expr::STATE_NONE ),
-                                       scinew typename ScalarRHS<FieldT>::Builder(info,rhsTags,densT, tempConstDens ));    
-  }  
-  
+    const Expr::Tag rhsTag( thisPhiName + "_rhs", Expr::STATE_NONE );
+    return factory.register_expression( scinew typename ScalarRHS<FieldT>::Builder(rhsTag,info,rhsTags,densT, tempConstDens ));
+  }
+
   //------------------------------------------------------------------
-  
+
   template< typename FieldT >
   MomentTransportEquation<FieldT>::
   MomentTransportEquation( const std::string thisPhiName,
                           const Expr::ExpressionID rhsID )
-  : Wasatch::TransportEquation( thisPhiName, rhsID, 
+  : Wasatch::TransportEquation( thisPhiName, rhsID,
                                 get_staggered_location<FieldT>() )
   {}
-  
+
   //------------------------------------------------------------------
-  
+
   template< typename FieldT >
   MomentTransportEquation<FieldT>::~MomentTransportEquation()
   {}
-  
+
   //------------------------------------------------------------------
-  
+
   template<typename FieldT>
   Expr::ExpressionID
   MomentTransportEquation<FieldT>::
   initial_condition( Expr::ExpressionFactory& icFactory )
   {
-    return icFactory.get_registry().get_id( Expr::Tag( this->solution_variable_name(),
+    return icFactory.get_id( Expr::Tag( this->solution_variable_name(),
                                                       Expr::STATE_N ) );
   }
 
   //------------------------------------------------------------------
-  
-  template< typename FieldT >  
+
+  template< typename FieldT >
   void MomentTransportEquation<FieldT>::
   setup_initial_boundary_conditions(const GraphHelper& graphHelper,
                             const Uintah::PatchSet* const localPatches,
                             const PatchInfoMap& patchInfoMap,
                             const Uintah::MaterialSubset* const materials)
   {  }
-  
+
   //------------------------------------------------------------------
-  
-  template< typename FieldT >  
+
+  template< typename FieldT >
   void MomentTransportEquation<FieldT>::
   setup_boundary_conditions(const GraphHelper& graphHelper,
                             const Uintah::PatchSet* const localPatches,
                             const PatchInfoMap& patchInfoMap,
                             const Uintah::MaterialSubset* const materials)
   {  }
-  
+
   //------------------------------------------------------------------
-  
+
   //==================================================================
   // Explicit template instantiation
   template class MomentTransportEquation< SVolField >;
@@ -242,6 +242,6 @@ namespace Wasatch {
   template class MomentTransportEquation< YVolField >;
   template class MomentTransportEquation< ZVolField >;
   //==================================================================
-        
+
 } // namespace Wasatch
 

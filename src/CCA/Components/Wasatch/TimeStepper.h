@@ -6,7 +6,7 @@
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 
-#include <expression/Expr_ExpressionID.h>
+#include <expression/ExpressionID.h>
 #include <expression/FieldManager.h> // field type conversion tools
 #include <expression/ExpressionFactory.h>
 #include <expression/PlaceHolderExpr.h>
@@ -103,7 +103,7 @@ namespace Wasatch{
                            Uintah::DataWarehouse* const,
                            Uintah::DataWarehouse* const,
                            const int rkStage );
-    
+
     void
     update_current_time( const Uintah::ProcessorGroup* const pg,
                          const Uintah::PatchSubset* const patches,
@@ -112,7 +112,7 @@ namespace Wasatch{
                          Uintah::DataWarehouse* const newDW,
                          Expr::ExpressionTree::TreePtr timeTree,
                          const int rkStage );
-    
+
 
   public:
 
@@ -120,7 +120,7 @@ namespace Wasatch{
      *  \brief Construct a TimeStepper object to advance equations forward in time
      *
      *  \param deltaTLabel - the VarLabel associated with the time step value
-     * 
+     *
      *  \param factory - the ExpressionFactory that will be used to
      *                   construct the trees for any transport
      *                   equations added to this library.  The same
@@ -200,7 +200,7 @@ namespace Wasatch{
   TimeStepper::add_equation( const std::string& solnVarName,
                              Expr::ExpressionID rhsID )
   {
-    const std::string& rhsName = factory_->get_registry().get_label(rhsID).name();
+    const std::string& rhsName = factory_->get_label(rhsID).name();
     const Uintah::TypeDescription* typeDesc = get_uintah_field_type_descriptor<FieldT>();
     const Uintah::IntVector ghostDesc       = get_uintah_ghost_descriptor<FieldT>();
     Uintah::VarLabel* solnVarLabel = Uintah::VarLabel::create( solnVarName, typeDesc, ghostDesc );
@@ -212,8 +212,8 @@ namespace Wasatch{
     createdVarLabels_.push_back( rhsVarLabel );
 
     typedef Expr::PlaceHolder<FieldT>  FieldExpr;
-    factory_->register_expression( Expr::Tag(solnVarName,Expr::STATE_N  ), new typename FieldExpr::Builder() );
-    factory_->register_expression( Expr::Tag(solnVarName,Expr::STATE_NP1), new typename FieldExpr::Builder() );
+    factory_->register_expression( new typename FieldExpr::Builder(Expr::Tag(solnVarName,Expr::STATE_N  )) );
+    factory_->register_expression( new typename FieldExpr::Builder(Expr::Tag(solnVarName,Expr::STATE_NP1)) );
   }
 
   //==================================================================

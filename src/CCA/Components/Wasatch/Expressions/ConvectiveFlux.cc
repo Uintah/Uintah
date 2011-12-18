@@ -12,25 +12,23 @@
 
 template< typename PhiInterpT, typename VelInterpT >
 ConvectiveFlux<PhiInterpT, VelInterpT>::
-ConvectiveFlux( const Expr::Tag phiTag,
-                const Expr::Tag velTag,
-                const Expr::ExpressionID& id,
-                const Expr::ExpressionRegistry& reg  )
-  : Expr::Expression<PhiFaceT>(id,reg),
+ConvectiveFlux( const Expr::Tag& phiTag,
+                const Expr::Tag& velTag )
+  : Expr::Expression<PhiFaceT>(),
     phiTag_( phiTag ),
     velTag_( velTag )
 {}
 
 //--------------------------------------------------------------------
 
-template< typename PhiInterpT, typename VelInterpT > 
+template< typename PhiInterpT, typename VelInterpT >
 ConvectiveFlux<PhiInterpT, VelInterpT>::
 ~ConvectiveFlux()
 {}
 
 //--------------------------------------------------------------------
 
-template< typename PhiInterpT, typename VelInterpT > 
+template< typename PhiInterpT, typename VelInterpT >
 void ConvectiveFlux<PhiInterpT, VelInterpT>::
 advertise_dependents( Expr::ExprDeps& exprDeps )
 {
@@ -40,20 +38,20 @@ advertise_dependents( Expr::ExprDeps& exprDeps )
 
 //--------------------------------------------------------------------
 
-template< typename PhiInterpT, typename VelInterpT > 
+template< typename PhiInterpT, typename VelInterpT >
 void ConvectiveFlux<PhiInterpT, VelInterpT>::
 bind_fields( const Expr::FieldManagerList& fml )
 {
   const Expr::FieldManager<PhiVolT>& phiVolFM = fml.template field_manager<PhiVolT>();
   phi_ = &phiVolFM.field_ref( phiTag_ );
-  
+
   const Expr::FieldManager<VelVolT>& velVolFM = fml.template field_manager<VelVolT>();
   vel_ = &velVolFM.field_ref( velTag_ );
 }
 
 //--------------------------------------------------------------------
 
-template< typename PhiInterpT, typename VelInterpT > 
+template< typename PhiInterpT, typename VelInterpT >
 void ConvectiveFlux<PhiInterpT, VelInterpT>::
 bind_operators( const SpatialOps::OperatorDatabase& opDB )
 {
@@ -63,7 +61,7 @@ bind_operators( const SpatialOps::OperatorDatabase& opDB )
 
 //--------------------------------------------------------------------
 
-template< typename PhiInterpT, typename VelInterpT > 
+template< typename PhiInterpT, typename VelInterpT >
 void ConvectiveFlux<PhiInterpT, VelInterpT>::evaluate()
 {
   PhiFaceT& result = this->value();
@@ -82,25 +80,21 @@ void ConvectiveFlux<PhiInterpT, VelInterpT>::evaluate()
 
 //--------------------------------------------------------------------
 
-template< typename PhiInterpT, typename VelInterpT > 
+template< typename PhiInterpT, typename VelInterpT >
 Expr::ExpressionBase*
-ConvectiveFlux<PhiInterpT, VelInterpT>::
-Builder::build( const Expr::ExpressionID& id,
-                const Expr::ExpressionRegistry& reg ) const
+ConvectiveFlux<PhiInterpT, VelInterpT>::Builder::build() const
 {
-  return new ConvectiveFlux<PhiInterpT,VelInterpT>( phiT_, velT_, id, reg );
+  return new ConvectiveFlux<PhiInterpT,VelInterpT>( phiT_, velT_ );
 }
 
 //====================================================================
 
 template< typename PhiInterpT, typename VelInterpT >
 ConvectiveFluxLimiter<PhiInterpT, VelInterpT>::
-ConvectiveFluxLimiter( const Expr::Tag phiTag,
-                       const Expr::Tag velTag,
-                       const Wasatch::ConvInterpMethods limiterType,
-                       const Expr::ExpressionID& id,
-                       const Expr::ExpressionRegistry& reg )
-  : Expr::Expression<PhiFaceT>(id,reg),
+ConvectiveFluxLimiter( const Expr::Tag& phiTag,
+                       const Expr::Tag& velTag,
+                       const Wasatch::ConvInterpMethods limiterType )
+  : Expr::Expression<PhiFaceT>(),
     phiTag_( phiTag ),
     velTag_( velTag ),
     limiterType_( limiterType )
@@ -108,14 +102,14 @@ ConvectiveFluxLimiter( const Expr::Tag phiTag,
 
 //--------------------------------------------------------------------
 
-template< typename PhiInterpT, typename VelInterpT > 
+template< typename PhiInterpT, typename VelInterpT >
 ConvectiveFluxLimiter<PhiInterpT, VelInterpT>::
 ~ConvectiveFluxLimiter()
 {}
 
 //--------------------------------------------------------------------
 
-template< typename PhiInterpT, typename VelInterpT > 
+template< typename PhiInterpT, typename VelInterpT >
 void
 ConvectiveFluxLimiter<PhiInterpT, VelInterpT>::
 advertise_dependents( Expr::ExprDeps& exprDeps )
@@ -126,21 +120,21 @@ advertise_dependents( Expr::ExprDeps& exprDeps )
 
 //--------------------------------------------------------------------
 
-template< typename PhiInterpT, typename VelInterpT > 
+template< typename PhiInterpT, typename VelInterpT >
 void
 ConvectiveFluxLimiter<PhiInterpT, VelInterpT>::
 bind_fields( const Expr::FieldManagerList& fml )
 {
   const Expr::FieldManager<PhiVolT>& phiVolFM = fml.template field_manager<PhiVolT>();
   phi_ = &phiVolFM.field_ref( phiTag_ );
-  
+
   const Expr::FieldManager<VelVolT>& velVolFM = fml.template field_manager<VelVolT>();
   vel_ = &velVolFM.field_ref( velTag_ );
 }
 
 //--------------------------------------------------------------------
 
-template< typename PhiInterpT, typename VelInterpT > 
+template< typename PhiInterpT, typename VelInterpT >
 void
 ConvectiveFluxLimiter<PhiInterpT, VelInterpT>::
 bind_operators( const SpatialOps::OperatorDatabase& opDB )
@@ -151,23 +145,23 @@ bind_operators( const SpatialOps::OperatorDatabase& opDB )
 
 //--------------------------------------------------------------------
 
-template< typename PhiInterpT, typename VelInterpT > 
+template< typename PhiInterpT, typename VelInterpT >
 void
 ConvectiveFluxLimiter<PhiInterpT, VelInterpT>::evaluate()
 {
   using namespace SpatialOps;
   PhiFaceT& result = this->value();
-  
+
   // note that PhiFaceT and VelFaceT should on the same mesh location
   SpatialOps::SpatFldPtr<VelFaceT> velInterp = SpatialOps::SpatialFieldStore<VelFaceT>::self().get( result );
-  
+
   // move the velocity from staggered volume to phi faces
   velInterpOp_->apply_to_field( *vel_, *velInterp );
 
   phiInterpOp_->set_advective_velocity( *velInterp );
   phiInterpOp_->set_flux_limiter_type( limiterType_ );
   phiInterpOp_->apply_to_field( *phi_, result );
-  
+
   result <<= result * *velInterp;
 }
 

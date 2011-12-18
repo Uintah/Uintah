@@ -4,7 +4,7 @@
 #include <tabprops/BSpline.h>
 #include <tabprops/StateTable.h>
 
-#include <expression/Expr_Expression.h>
+#include <expression/Expression.h>
 
 /**
  *  \ingroup WasatchExpressions
@@ -57,9 +57,7 @@ class DensityCalculator
   DensityCalculator( const BSpline* const spline,
                      const Expr::TagList& RhoEtaTags,           ///< rho*eta tag
                      const Expr::TagList& RhoetaIncEtaNames,    ///< Tag for ReIEta
-                     const Expr::TagList& OrderedEtaTags,       ///< Tag for all of the eta's in the corect order
-                     const Expr::ExpressionID& id,
-                     const Expr::ExpressionRegistry& reg );
+                     const Expr::TagList& OrderedEtaTags );     ///< Tag for all of the eta's in the corect order
 
   bool nonlinear_solver( std::vector<double>& ReIeta,
                          const std::vector<double>& ReEeta,
@@ -75,14 +73,13 @@ public:
     const Expr::TagList rhoEtaTs_, rhoEtaIncEtaNs_, rhoEtaExEtaNs_, orderedEtaTs_;
     const BSpline* const spline_;
   public:
-    Builder( const BSpline* const spline,
+    Builder( const Expr::Tag& result,
+             const BSpline* const spline,
              const Expr::TagList& rhoEtaTags,
              const Expr::TagList& rhoEtaIncEtaNames,
              const Expr::TagList& orderedEtaTags );
 
-    Expr::ExpressionBase*
-    build( const Expr::ExpressionID& id,
-          const Expr::ExpressionRegistry& reg ) const;
+    Expr::ExpressionBase* build() const;
   };
 
   ~DensityCalculator();
@@ -107,10 +104,8 @@ DensityCalculator<FieldT>::
 DensityCalculator( const BSpline* const spline,
                    const Expr::TagList& rhoEtaTags,
                    const Expr::TagList& rhoetaIncEtaNames,
-                   const Expr::TagList& orderedEtaTags,
-                   const Expr::ExpressionID& id,
-                   const Expr::ExpressionRegistry& reg )
-: Expr::Expression<FieldT>(id,reg),
+                   const Expr::TagList& orderedEtaTags )
+: Expr::Expression<FieldT>(),
   rhoEtaTags_       ( rhoEtaTags        ),
   rhoEtaIncEtaNames_( rhoetaIncEtaNames ),
   orderedEtaTags_   ( orderedEtaTags    ),
@@ -253,11 +248,13 @@ evaluate()
 
 template< typename FieldT >
 DensityCalculator<FieldT>::
-Builder::Builder( const BSpline* const spline,
+Builder::Builder( const Expr::Tag& result,
+                  const BSpline* const spline,
                   const Expr::TagList& rhoEtaTags,
                   const Expr::TagList& rhoEtaIncEtaNames,
                   const Expr::TagList& orderedEtaTags )
-: rhoEtaTs_      ( rhoEtaTags        ),
+: ExpressionBuilder(result),
+  rhoEtaTs_      ( rhoEtaTags        ),
   rhoEtaIncEtaNs_( rhoEtaIncEtaNames ),
   orderedEtaTs_  ( orderedEtaTags    ),
   spline_        ( spline            )
@@ -268,10 +265,9 @@ Builder::Builder( const BSpline* const spline,
 template< typename FieldT >
 Expr::ExpressionBase*
 DensityCalculator<FieldT>::
-Builder::build( const Expr::ExpressionID& id,
-                const Expr::ExpressionRegistry& reg ) const
+Builder::build() const
 {
-  return new DensityCalculator<FieldT>( spline_, rhoEtaTs_, rhoEtaIncEtaNs_, orderedEtaTs_, id, reg );
+  return new DensityCalculator<FieldT>( spline_, rhoEtaTs_, rhoEtaIncEtaNs_, orderedEtaTs_);
 }
 
 //====================================================================

@@ -58,7 +58,7 @@ namespace Wasatch{
           double coef;
           diffFluxParams->get("ConstantDiffusivity",coef);
           // calling the appropriate form of DiffusiveFlux expression according to constant or variable density.
-          builder = scinew Flux( primVarTag, coef, densityTag );
+          builder = scinew Flux( diffFluxTag, primVarTag, coef, densityTag );
         }
         else if( diffFluxParams->findBlock("DiffusionCoefficient") ){
           /**
@@ -72,7 +72,7 @@ namespace Wasatch{
            */
           typedef typename DiffusiveFlux2< typename MyOpTypes::GradX::SrcFieldType, typename MyOpTypes::GradX::DestFieldType >::Builder Flux;
           const Expr::Tag coef = parse_nametag( diffFluxParams->findBlock("DiffusionCoefficient")->findBlock("NameTag") );
-          builder = scinew Flux( primVarTag, coef, densityTag );
+          builder = scinew Flux( diffFluxTag, primVarTag, coef, densityTag );
         }
       }
       else if( dir=="Y" ){
@@ -80,12 +80,12 @@ namespace Wasatch{
           typedef typename DiffusiveFlux< typename MyOpTypes::GradY::SrcFieldType, typename MyOpTypes::GradY::DestFieldType >::Builder Flux;
           double coef;
           diffFluxParams->get("ConstantDiffusivity",coef);
-          builder = scinew Flux( primVarTag, coef, densityTag );
+          builder = scinew Flux( diffFluxTag, primVarTag, coef, densityTag );
         }
         else if( diffFluxParams->findBlock("DiffusionCoefficient") ){
           typedef typename DiffusiveFlux2< typename MyOpTypes::GradY::SrcFieldType, typename MyOpTypes::GradY::DestFieldType >::Builder Flux;
           const Expr::Tag coef = parse_nametag( diffFluxParams->findBlock("DiffusionCoefficient")->findBlock("NameTag") );
-          builder = scinew Flux( primVarTag, coef, densityTag );
+          builder = scinew Flux( diffFluxTag, primVarTag, coef, densityTag );
         }
       }
       else if( dir=="Z") {
@@ -93,12 +93,12 @@ namespace Wasatch{
           typedef typename DiffusiveFlux< typename MyOpTypes::GradZ::SrcFieldType, typename MyOpTypes::GradZ::DestFieldType >::Builder Flux;
           double coef;
           diffFluxParams->get("ConstantDiffusivity",coef);
-          builder = scinew Flux( primVarTag, coef, densityTag );
+          builder = scinew Flux( diffFluxTag, primVarTag, coef, densityTag );
         }
         else if( diffFluxParams->findBlock("DiffusionCoefficient") ){
           typedef typename DiffusiveFlux2< typename MyOpTypes::GradZ::SrcFieldType, typename MyOpTypes::GradZ::DestFieldType >::Builder Flux;
           const Expr::Tag coef = parse_nametag( diffFluxParams->findBlock("DiffusionCoefficient")->findBlock("NameTag") );
-          builder = scinew Flux( primVarTag, coef, densityTag );
+          builder = scinew Flux( diffFluxTag, primVarTag, coef, densityTag );
         }
       }
 
@@ -108,7 +108,7 @@ namespace Wasatch{
         throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
       }
 
-      factory.register_expression( diffFluxTag, builder );
+      factory.register_expression( builder );
 
     }
 
@@ -156,7 +156,7 @@ namespace Wasatch{
           typedef typename DiffusiveVelocity<typename MyOpTypes::GradX>::Builder Velocity;
           double coef;
           diffVelParams->get("ConstantDiffusivity",coef);
-          builder = scinew Velocity( primVarTag, coef );
+          builder = scinew Velocity( diffVelTag, primVarTag, coef );
         }
         else if( diffVelParams->findBlock("DiffusionCoefficient") ){
           /**
@@ -170,7 +170,7 @@ namespace Wasatch{
            */
           typedef typename DiffusiveVelocity2< typename MyOpTypes::GradX, typename MyOpTypes::InterpC2FX >::Builder Velocity;
           const Expr::Tag coef = parse_nametag( diffVelParams->findBlock("DiffusionCoefficient")->findBlock("NameTag") );
-          builder = scinew Velocity( primVarTag, coef );
+          builder = scinew Velocity( diffVelTag, primVarTag, coef );
         }
       }
       else if( dir=="Y" ){
@@ -178,12 +178,12 @@ namespace Wasatch{
           typedef typename DiffusiveVelocity< typename MyOpTypes::GradY >::Builder Velocity;
           double coef;
           diffVelParams->get("ConstantDiffusivity",coef);
-          builder = scinew Velocity( primVarTag, coef );
+          builder = scinew Velocity( diffVelTag, primVarTag, coef );
         }
         else if( diffVelParams->findBlock("DiffusionCoefficient") ){
           typedef typename DiffusiveVelocity2< typename MyOpTypes::GradY, typename MyOpTypes::InterpC2FY >::Builder Velocity;
           const Expr::Tag coef = parse_nametag( diffVelParams->findBlock("DiffusionCoefficient")->findBlock("NameTag") );
-          builder = scinew Velocity( primVarTag, coef );
+          builder = scinew Velocity( diffVelTag, primVarTag, coef );
         }
       }
       else if( dir=="Z") {
@@ -191,12 +191,12 @@ namespace Wasatch{
           typedef typename DiffusiveVelocity< typename MyOpTypes::GradZ >::Builder Velocity;
           double coef;
           diffVelParams->get("ConstantDiffusivity",coef);
-          builder = scinew Velocity( primVarTag, coef );
+          builder = scinew Velocity( diffVelTag, primVarTag, coef );
         }
         else if( diffVelParams->findBlock("DiffusionCoefficient") ){
           typedef typename DiffusiveVelocity2< typename MyOpTypes::GradZ, typename MyOpTypes::InterpC2FZ >::Builder Velocity;
           const Expr::Tag coef = parse_nametag( diffVelParams->findBlock("DiffusionCoefficient")->findBlock("NameTag") );
-          builder = scinew Velocity( primVarTag, coef );
+          builder = scinew Velocity( diffVelTag, primVarTag, coef );
         }
       }
 
@@ -206,7 +206,7 @@ namespace Wasatch{
         throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
       }
 
-      factory.register_expression( diffVelTag, builder );
+      factory.register_expression( builder );
 
     }
 
@@ -283,17 +283,17 @@ namespace Wasatch{
 
           case CENTRAL: // for central and upwind, use specified interpolants
             typedef typename ConvectiveFlux< typename Ops::InterpC2FX, VelInterpOpT >::Builder convFluxCent;
-            builder = scinew convFluxCent(solnVarTag, advVelocityTag);
+            builder = scinew convFluxCent(convFluxTag, solnVarTag, advVelocityTag);
             break;
 
           case UPWIND:
             typedef typename ConvectiveFluxLimiter< typename Ops::InterpC2FXUpwind, VelInterpOpT >::Builder convFluxUpw;
-            builder = scinew convFluxUpw(solnVarTag, advVelocityTag, convInterpMethod);
+            builder = scinew convFluxUpw(convFluxTag, solnVarTag, advVelocityTag, convInterpMethod);
             break;
 
           default: // for all other limiter types
             typedef typename ConvectiveFluxLimiter< typename Ops::InterpC2FXLimiter, VelInterpOpT >::Builder convFluxLim;
-            builder = scinew convFluxLim(solnVarTag, advVelocityTag, convInterpMethod);
+            builder = scinew convFluxLim(convFluxTag, solnVarTag, advVelocityTag, convInterpMethod);
             break;
         }
       }
@@ -305,17 +305,17 @@ namespace Wasatch{
 
           case CENTRAL: // for central and upwind, use specified interpolants
             typedef typename ConvectiveFlux< typename Ops::InterpC2FY, VelInterpOpT >::Builder convFluxCent;
-            builder = scinew convFluxCent(solnVarTag, advVelocityTag);
+            builder = scinew convFluxCent(convFluxTag, solnVarTag, advVelocityTag);
             break;
 
           case UPWIND:
             typedef typename ConvectiveFluxLimiter< typename Ops::InterpC2FYUpwind, VelInterpOpT >::Builder convFluxUpw;
-            builder = scinew convFluxUpw(solnVarTag, advVelocityTag, convInterpMethod);
+            builder = scinew convFluxUpw(convFluxTag, solnVarTag, advVelocityTag, convInterpMethod);
             break;
 
           default: // for all other limiter types
             typedef typename ConvectiveFluxLimiter< typename Ops::InterpC2FYLimiter, VelInterpOpT >::Builder convFluxLim;
-            builder = scinew convFluxLim(solnVarTag, advVelocityTag, convInterpMethod);
+            builder = scinew convFluxLim(convFluxTag, solnVarTag, advVelocityTag, convInterpMethod);
             break;
         }
       }
@@ -327,17 +327,17 @@ namespace Wasatch{
 
           case CENTRAL: // for central and upwind, use specified interpolants
             typedef typename ConvectiveFlux< typename Ops::InterpC2FZ, VelInterpOpT >::Builder convFluxCent;
-            builder = scinew convFluxCent(solnVarTag, advVelocityTag);
+            builder = scinew convFluxCent(convFluxTag, solnVarTag, advVelocityTag);
             break;
 
           case UPWIND:
             typedef typename ConvectiveFluxLimiter< typename Ops::InterpC2FZUpwind, VelInterpOpT >::Builder convFluxUpw;
-            builder = scinew convFluxUpw(solnVarTag, advVelocityTag, convInterpMethod);
+            builder = scinew convFluxUpw(convFluxTag, solnVarTag, advVelocityTag, convInterpMethod);
             break;
 
           default: // for all other limiter types
             typedef typename ConvectiveFluxLimiter< typename Ops::InterpC2FZLimiter, VelInterpOpT >::Builder convFluxLim;
-            builder = scinew convFluxLim(solnVarTag, advVelocityTag, convInterpMethod);
+            builder = scinew convFluxLim(convFluxTag, solnVarTag, advVelocityTag, convInterpMethod);
             break;
         }
       }
@@ -349,7 +349,7 @@ namespace Wasatch{
 
       }
 
-      factory.register_expression( convFluxTag, builder );
+      factory.register_expression( builder );
     }
 
     typename ScalarRHS<FieldT>::FieldSelector fs;
@@ -433,22 +433,22 @@ namespace Wasatch{
   template< typename FieldT >
   void ScalarTransportEquation<FieldT>::
   setup_initial_boundary_conditions( const GraphHelper& graphHelper,
-                                         const Uintah::PatchSet* const localPatches,
-                                         const PatchInfoMap& patchInfoMap,
-                                         const Uintah::MaterialSubset* const materials)
+                                     const Uintah::PatchSet* const localPatches,
+                                     const PatchInfoMap& patchInfoMap,
+                                     const Uintah::MaterialSubset* const materials)
   {
 
     Expr::ExpressionFactory& factory = *graphHelper.exprFactory;
     const Expr::Tag phiTag( this->solution_variable_name(), Expr::STATE_N );
-    if (factory.get_registry().have_entry(phiTag)) {
-      const Expr::ExpressionID phiID = factory.get_registry().get_id(phiTag);
+    if( factory.have_entry(phiTag) ){
+      const Expr::ExpressionID phiID = factory.get_id(phiTag);
       process_boundary_conditions<FieldT>( phiTag,
-                                          this->solution_variable_name(),
-                                          this->staggered_location(),
-                                          graphHelper,
-                                          localPatches,
-                                          patchInfoMap,
-                                          materials );
+                                           this->solution_variable_name(),
+                                           this->staggered_location(),
+                                           graphHelper,
+                                           localPatches,
+                                           patchInfoMap,
+                                           materials );
     }
   }
 
@@ -463,14 +463,13 @@ namespace Wasatch{
                              const Uintah::MaterialSubset* const materials )
   {
     // see BCHelperTools.cc
-    process_boundary_conditions<FieldT>( Expr::Tag( this->solution_variable_name(),
-                                            Expr::STATE_N ),
-                                 this->solution_variable_name(),
-                                 this->staggered_location(),
-                                 graphHelper,
-                                 localPatches,
-                                 patchInfoMap,
-                                 materials );
+    process_boundary_conditions<FieldT>( Expr::Tag( this->solution_variable_name(),Expr::STATE_N ),
+                                         this->solution_variable_name(),
+                                         this->staggered_location(),
+                                         graphHelper,
+                                         localPatches,
+                                         patchInfoMap,
+                                         materials );
   }
 
   //------------------------------------------------------------------
@@ -484,11 +483,10 @@ namespace Wasatch{
       // register expression to calculate the initial condition of the solution variable from the initial
       // conditions on primitive variable and density in the cases that we are solving for e.g. rho*phi
       typedef typename Multiplier<FieldT,SVolField>::Builder  Mult;
-      return icFactory.register_expression( solnVarTag_, new Mult( primVarTag_,
-                                                                   Expr::Tag(densityTag_.name(),Expr::STATE_NONE) ) );
+      return icFactory.register_expression( new Mult( solnVarTag_, primVarTag_,
+                                                      Expr::Tag(densityTag_.name(),Expr::STATE_NONE) ) );
     }
-    return icFactory.get_registry().get_id( Expr::Tag( this->solution_variable_name(),
-                                                       Expr::STATE_N ) );
+    return icFactory.get_id( Expr::Tag( this->solution_variable_name(), Expr::STATE_N ) );
   }
 
   //------------------------------------------------------------------
@@ -547,7 +545,7 @@ namespace Wasatch{
       const std::string primVarName = get_primvar_name( params );
       primVarTag = Expr::Tag( primVarName, Expr::STATE_NONE );
 
-      factory.register_expression( primVarTag, new typename PrimVar<FieldT,SVolField>::Builder( solnVarTag, densityTag));
+      factory.register_expression( new typename PrimVar<FieldT,SVolField>::Builder( primVarTag, solnVarTag, densityTag));
     }
 
     //_________________
@@ -597,9 +595,10 @@ namespace Wasatch{
       srcTags.push_back( srcTag );
 
     }
-    if (isStrong)
-      return factory.register_expression( Expr::Tag( solnVarName+"_rhs", Expr::STATE_NONE ),
-                                          scinew typename ScalarRHS<FieldT>::Builder(info,srcTags, densityTag, isConstDensity) );
+    if (isStrong){
+      const Expr::Tag rhsTag( solnVarName+"_rhs", Expr::STATE_NONE );
+      return factory.register_expression( scinew typename ScalarRHS<FieldT>::Builder(rhsTag, info, srcTags, densityTag, isConstDensity) );
+    }
     else{
       // Here we shoulld use diffusive flux for scalaRHS in weak form
       std::ostringstream msg;

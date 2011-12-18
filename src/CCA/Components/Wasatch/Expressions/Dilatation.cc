@@ -5,12 +5,10 @@
 
 template< typename FieldT, typename Vel1T, typename Vel2T, typename Vel3T >
 Dilatation<FieldT,Vel1T,Vel2T,Vel3T>::
-Dilatation( const Expr::Tag vel1tag,
-            const Expr::Tag vel2tag,
-            const Expr::Tag vel3tag,
-            const Expr::ExpressionID& id,
-            const Expr::ExpressionRegistry& reg  )
-  : Expr::Expression<FieldT>(id,reg),
+Dilatation( const Expr::Tag& vel1tag,
+            const Expr::Tag& vel2tag,
+            const Expr::Tag& vel3tag )
+  : Expr::Expression<FieldT>(),
     vel1t_( vel1tag ),
     vel2t_( vel2tag ),
     vel3t_( vel3tag )
@@ -92,21 +90,21 @@ evaluate()
 
 template< typename FieldT, typename Vel1T, typename Vel2T, typename Vel3T >
 Dilatation<FieldT,Vel1T,Vel2T,Vel3T>::
-Builder::Builder( const Expr::Tag vel1tag,
-                  const Expr::Tag vel2tag,
-                  const Expr::Tag vel3tag )
-  : v1t_( vel1tag ), v2t_( vel2tag ), v3t_( vel3tag )
+Builder::Builder( const Expr::Tag& result,
+                  const Expr::Tag& vel1tag,
+                  const Expr::Tag& vel2tag,
+                  const Expr::Tag& vel3tag )
+  : ExpressionBuilder(result),
+    v1t_( vel1tag ), v2t_( vel2tag ), v3t_( vel3tag )
 {}
 
 //--------------------------------------------------------------------
 
 template< typename FieldT, typename Vel1T, typename Vel2T, typename Vel3T >
 Expr::ExpressionBase*
-Dilatation<FieldT,Vel1T,Vel2T,Vel3T>::
-Builder::build( const Expr::ExpressionID& id,
-                const Expr::ExpressionRegistry& reg ) const
+Dilatation<FieldT,Vel1T,Vel2T,Vel3T>::Builder::build() const
 {
-  return new Dilatation<FieldT,Vel1T,Vel2T,Vel3T>( v1t_, v2t_, v3t_, id, reg );
+  return new Dilatation<FieldT,Vel1T,Vel2T,Vel3T>( v1t_, v2t_, v3t_ );
 }
 
 //--------------------------------------------------------------------

@@ -3,7 +3,7 @@
 
 #include <CCA/Components/Wasatch/Operators/OperatorTypes.h>
 
-#include <expression/Expr_Expression.h>
+#include <expression/Expression.h>
 
 /**
  *  \class Multiplier
@@ -12,9 +12,9 @@
  *
  *   Note: It is currently assumed that \f$Var2$\f is basically density which is
  *         "SVolField"s type. Therefore, no interpolation of the variables occurs
- *         in that case. In other cases, the \f$Var2$\f is interpolated to the 
+ *         in that case. In other cases, the \f$Var2$\f is interpolated to the
  *         location of \f$Var1$\f.
- *         Note that, in order to use as something else you may need to add new 
+ *         Note that, in order to use as something else you may need to add new
  *         instantiaions to the class
  */
 template< typename Field1T,   // jcs why do you have these templated if you assume they are SVolField as you state above?
@@ -30,21 +30,18 @@ class Multiplier
   const Field1T* var1_;
   const InterpT* interpOp_;
 
-  Multiplier( const Expr::Tag var1Tag,
-              const Expr::Tag var2Tag,
-              const Expr::ExpressionID& id,
-              const Expr::ExpressionRegistry& reg );
+  Multiplier( const Expr::Tag& var1Tag,
+              const Expr::Tag& var2Tag );
 
 public:
   class Builder : public Expr::ExpressionBuilder
   {
   public:
-    Builder( const Expr::Tag var1Tag,
-             const Expr::Tag var2Tag );
-    
-    Expr::ExpressionBase*
-    build( const Expr::ExpressionID& id,
-           const Expr::ExpressionRegistry& reg ) const;
+    Builder( const Expr::Tag& result,
+             const Expr::Tag& var1Tag,
+             const Expr::Tag& var2Tag );
+    ~Builder(){}
+    Expr::ExpressionBase* build() const;
 
   private:
   const Expr::Tag var1t_, var2t_;
@@ -70,21 +67,18 @@ class Multiplier<FieldT,FieldT>
   const FieldT* var1_;
   const FieldT* var2_;
 
-  Multiplier( const Expr::Tag var1Tag,
-              const Expr::Tag var2Tag,
-              const Expr::ExpressionID& id,
-              const Expr::ExpressionRegistry& reg );
+  Multiplier( const Expr::Tag& var1Tag,
+              const Expr::Tag& var2Tag );
 
 public:
   class Builder : public Expr::ExpressionBuilder
   {
   public:
-    Builder( const Expr::Tag var1Tag,
-             const Expr::Tag var2Tag );
-    
-    Expr::ExpressionBase*
-    build( const Expr::ExpressionID& id,
-           const Expr::ExpressionRegistry& reg ) const;
+    Builder( const Expr::Tag& result,
+             const Expr::Tag& var1Tag,
+             const Expr::Tag& var2Tag );
+    ~Builder(){}
+    Expr::ExpressionBase* build() const;
 
   private:
   const Expr::Tag var1t_, var2t_;

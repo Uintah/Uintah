@@ -1,7 +1,7 @@
 #ifndef UniformGrowth_Expr_h
 #define UniformGrowth_Expr_h
 
-#include <expression/Expr_Expression.h>
+#include <expression/Expression.h>
 #include <spatialops/structured/SpatialFieldStore.h>
 
 /**
@@ -17,27 +17,22 @@ class UniformGrowth
   const FieldT* phi_;
   const Expr::Tag phiTag_;
   const double growthRateVal_;
-  UniformGrowth( const Expr::Tag phiTag,
-                const double growthRateVal,
-                const Expr::ExpressionID& id,
-                const Expr::ExpressionRegistry& reg  );
+  UniformGrowth( const Expr::Tag& phiTag,
+                 const double growthRateVal );
 
 public:
   class Builder : public Expr::ExpressionBuilder
   {
   public:
-    Builder( const Expr::Tag phiTag,
-            const double growthRateVal)
-    : phit_(phiTag),
-    growthrateval_(growthRateVal)
+    Builder( const Expr::Tag& result,
+             const Expr::Tag& phiTag,
+             const double growthRateVal )
+    : ExpressionBuilder(result),
+      phit_(phiTag),
+      growthrateval_(growthRateVal)
     {}
-
-    Expr::ExpressionBase*
-    build( const Expr::ExpressionID& id,
-          const Expr::ExpressionRegistry& reg ) const 
-    {
-      return new UniformGrowth<FieldT>(phit_, growthrateval_, id, reg);
-    }
+    ~Builder(){}
+    Expr::ExpressionBase* build() const{ return new UniformGrowth<FieldT>(phit_, growthrateval_); }
 
   private:
     const Expr::Tag phit_;
@@ -47,11 +42,8 @@ public:
   ~UniformGrowth();
 
   void advertise_dependents( Expr::ExprDeps& exprDeps );
-
   void bind_fields( const Expr::FieldManagerList& fml );
-
   void bind_operators( const SpatialOps::OperatorDatabase& opDB );
-
   void evaluate();
 
 };
@@ -68,13 +60,11 @@ public:
 
 template< typename FieldT >
 UniformGrowth<FieldT>::
-UniformGrowth( const Expr::Tag phiTag,
-              const double growthRateVal,
-                const Expr::ExpressionID& id,
-                const Expr::ExpressionRegistry& reg  )
-  : Expr::Expression<FieldT>(id,reg),
-		phiTag_(phiTag),
-		growthRateVal_(growthRateVal)
+UniformGrowth( const Expr::Tag& phiTag,
+               const double growthRateVal )
+  : Expr::Expression<FieldT>(),
+    phiTag_(phiTag),
+    growthRateVal_(growthRateVal)
 {}
 
 //--------------------------------------------------------------------
@@ -102,7 +92,7 @@ UniformGrowth<FieldT>::
 bind_fields( const Expr::FieldManagerList& fml )
 {
   const Expr::FieldManager<FieldT>& fm = fml.template field_manager<FieldT>();
-  phi_ = &fm.field_ref( phiTag_ );  
+  phi_ = &fm.field_ref( phiTag_ );
 }
 
 //--------------------------------------------------------------------
