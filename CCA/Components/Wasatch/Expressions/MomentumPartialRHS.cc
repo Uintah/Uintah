@@ -14,10 +14,8 @@ MomRHSPart( const Expr::Tag& convFluxX,
             const Expr::Tag& tauX,
             const Expr::Tag& tauY,
             const Expr::Tag& tauZ,
-            const Expr::Tag& bodyForce,
-            const Expr::ExpressionID& id,
-            const Expr::ExpressionRegistry& reg )
-  : Expr::Expression<FieldT>(id,reg),
+            const Expr::Tag& bodyForce )
+  : Expr::Expression<FieldT>(),
     cfluxXt_( convFluxX ),
     cfluxYt_( convFluxY ),
     cfluxZt_( convFluxZ ),
@@ -139,14 +137,16 @@ evaluate()
 
 template< typename FieldT >
 MomRHSPart<FieldT>::
-Builder::Builder( const Expr::Tag& convFluxX,
+Builder::Builder( const Expr::Tag& result,
+                  const Expr::Tag& convFluxX,
                   const Expr::Tag& convFluxY,
                   const Expr::Tag& convFluxZ,
                   const Expr::Tag& tauX,
                   const Expr::Tag& tauY,
                   const Expr::Tag& tauZ,
-                  const Expr::Tag& bodyForce )              
-  : cfluxXt_   ( convFluxX ),
+                  const Expr::Tag& bodyForce )
+  : ExpressionBuilder(result),
+    cfluxXt_   ( convFluxX ),
     cfluxYt_   ( convFluxY ),
     cfluxZt_   ( convFluxZ ),
     tauXt_     ( tauX      ),
@@ -159,11 +159,9 @@ Builder::Builder( const Expr::Tag& convFluxX,
 
 template< typename FieldT >
 Expr::ExpressionBase*
-MomRHSPart<FieldT>::
-Builder::build( const Expr::ExpressionID& id,
-                const Expr::ExpressionRegistry& reg ) const
+MomRHSPart<FieldT>::Builder::build() const
 {
-  return new MomRHSPart<FieldT>( cfluxXt_, cfluxYt_, cfluxZt_, tauXt_, tauYt_, tauZt_, bodyForcet_, id, reg );
+  return new MomRHSPart<FieldT>( cfluxXt_, cfluxYt_, cfluxZt_, tauXt_, tauYt_, tauZt_, bodyForcet_ );
 }
 
 //--------------------------------------------------------------------

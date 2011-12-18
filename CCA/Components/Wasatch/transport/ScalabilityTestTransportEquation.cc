@@ -38,13 +38,13 @@ namespace Wasatch{
 
     if( dir=="X" ){
       typedef typename DiffusiveVelocity<typename MyOpTypes::GradX>::Builder Flux;
-      builder = scinew Flux( phiTag, 1.0 );
+      builder = scinew Flux(diffFluxTag,  phiTag, 1.0 );
     } else if( dir=="Y" ){
       typedef typename DiffusiveVelocity<typename MyOpTypes::GradY>::Builder Flux;
-      builder = scinew Flux( phiTag, 1.0 );
+      builder = scinew Flux( diffFluxTag, phiTag, 1.0 );
     } else if( dir=="Z" ){
       typedef typename DiffusiveVelocity<typename MyOpTypes::GradZ>::Builder Flux;
-      builder = scinew Flux( phiTag, 1.0 );
+      builder = scinew Flux( diffFluxTag, phiTag, 1.0 );
     }
 
     if( builder == NULL ){
@@ -53,7 +53,7 @@ namespace Wasatch{
       throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
     }
 
-    factory.register_expression( diffFluxTag, builder );
+    factory.register_expression( builder );
 
     typename ScalarRHS<FieldT>::FieldSelector fs;
     if     ( dir=="X" ) fs=ScalarRHS<FieldT>::DIFFUSIVE_FLUX_X;
@@ -96,7 +96,7 @@ namespace Wasatch{
       proc0cout << "SETTING UP X-CONVECTIVE-FLUX EXPRESSION USING CENTRAL DIFFERENCING"  << std::endl;
       typedef typename OperatorTypeBuilder<Interpolant,XVolField,typename FaceTypes<FieldT>::XFace>::type VelInterpOpT;
       typedef typename ConvectiveFlux< typename Ops::InterpC2FX, VelInterpOpT >::Builder convFluxCent;
-      builder = scinew convFluxCent(phiTag, advVelocityTag);
+      builder = scinew convFluxCent(convFluxTag, phiTag, advVelocityTag);
 
     }
     else if( dir=="Y" ){
@@ -104,7 +104,7 @@ namespace Wasatch{
       typedef typename OperatorTypeBuilder<Interpolant,YVolField,typename FaceTypes<FieldT>::YFace>::type VelInterpOpT;
 
       typedef typename ConvectiveFlux< typename Ops::InterpC2FY, VelInterpOpT >::Builder convFluxCent;
-      builder = scinew convFluxCent(phiTag, advVelocityTag);
+      builder = scinew convFluxCent(convFluxTag, phiTag, advVelocityTag);
 
     }
     else if( dir=="Z") {
@@ -112,7 +112,7 @@ namespace Wasatch{
       typedef typename OperatorTypeBuilder<Interpolant,ZVolField,typename FaceTypes<FieldT>::ZFace>::type VelInterpOpT;
 
       typedef typename ConvectiveFlux< typename Ops::InterpC2FZ, VelInterpOpT >::Builder convFluxCent;
-      builder = scinew convFluxCent(phiTag, advVelocityTag);
+      builder = scinew convFluxCent(convFluxTag, phiTag, advVelocityTag);
 
     }
 
@@ -123,7 +123,7 @@ namespace Wasatch{
 
     }
 
-    factory.register_expression( convFluxTag, builder );
+    factory.register_expression( builder );
 
 
     typename ScalarRHS<FieldT>::FieldSelector fs;
@@ -145,8 +145,8 @@ namespace Wasatch{
   template< typename FieldT >
   ScalabilityTestTransportEquation<FieldT>::
   ScalabilityTestTransportEquation( const std::string basePhiName,
-                                   const std::string thisPhiName,
-                          const Expr::ExpressionID rhsID )
+                                    const std::string thisPhiName,
+                                    const Expr::ExpressionID rhsID )
   : Wasatch::TransportEquation( thisPhiName, rhsID,
                                 get_staggered_location<FieldT>() )
   {}
@@ -162,21 +162,20 @@ namespace Wasatch{
   template< typename FieldT >
   void ScalabilityTestTransportEquation<FieldT>::
   setup_initial_boundary_conditions( const GraphHelper& graphHelper,
-                                         const Uintah::PatchSet* const localPatches,
-                                         const PatchInfoMap& patchInfoMap,
-                                         const Uintah::MaterialSubset* const materials)
-  {
-  }
+                                     const Uintah::PatchSet* const localPatches,
+                                     const PatchInfoMap& patchInfoMap,
+                                     const Uintah::MaterialSubset* const materials )
+  {}
 
   //------------------------------------------------------------------
 
   template< typename FieldT >
-  void ScalabilityTestTransportEquation<FieldT>::setup_boundary_conditions(const GraphHelper& graphHelper,
-                                                                  const Uintah::PatchSet* const localPatches,
-                                                                  const PatchInfoMap& patchInfoMap,
-                                                                  const Uintah::MaterialSubset* const materials)
-  {
-  }
+  void ScalabilityTestTransportEquation<FieldT>::
+  setup_boundary_conditions( const GraphHelper& graphHelper,
+                             const Uintah::PatchSet* const localPatches,
+                             const PatchInfoMap& patchInfoMap,
+                             const Uintah::MaterialSubset* const materials)
+                             {}
 
   //------------------------------------------------------------------
 
@@ -185,8 +184,7 @@ namespace Wasatch{
   ScalabilityTestTransportEquation<FieldT>::
   initial_condition( Expr::ExpressionFactory& icFactory )
   {
-    return icFactory.get_registry().get_id( Expr::Tag( this->solution_variable_name(),
-                                                      Expr::STATE_N ) );
+    return icFactory.get_id( Expr::Tag( this->solution_variable_name(), Expr::STATE_N ) );
   }
 
   //------------------------------------------------------------------
@@ -243,14 +241,15 @@ namespace Wasatch{
 
       const Expr::Tag srcTag ( thisPhiName + "_src", Expr::STATE_NONE );
       typedef typename ScalabilityTestSrc<FieldT>::Builder coupledSrcTerm;
-      factory.register_expression( srcTag, scinew coupledSrcTerm( basePhiTag, nEqs) );
+      factory.register_expression( scinew coupledSrcTerm( srcTag, basePhiTag, nEqs) );
       srcTags.push_back( srcTag );
     }
 
     const Expr::Tag densT = Expr::Tag();
     const bool tempConstDens = false;
-    return factory.register_expression( Expr::Tag( thisPhiName + "_rhs", Expr::STATE_NONE ),
-                                       scinew typename ScalarRHS<FieldT>::Builder(info,srcTags,densT,tempConstDens) );
+    return factory.register_expression(
+        scinew typename ScalarRHS<FieldT>::Builder(Expr::Tag( thisPhiName + "_rhs", Expr::STATE_NONE ),
+                                                   info,srcTags,densT,tempConstDens) );
   }
 
   //------------------------------------------------------------------

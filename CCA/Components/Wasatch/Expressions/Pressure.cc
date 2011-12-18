@@ -25,15 +25,15 @@ Expr::Tag pressure_tag()
 
 //==================================================================
 
-Pressure::Pressure( const Expr::Tag& fxtag,
+Pressure::Pressure( const std::string& pressureName,
+                    const std::string& pressureRHSName,
+                    const Expr::Tag& fxtag,
                     const Expr::Tag& fytag,
                     const Expr::Tag& fztag,
                     const Expr::Tag& d2rhodt2tag,
                     const Uintah::SolverParameters& solverParams,
-                    Uintah::SolverInterface& solver,
-                    const Expr::ExpressionID& id,
-                    const Expr::ExpressionRegistry& reg )
-  : Expr::Expression<SVolField>(id,reg),
+                    Uintah::SolverInterface& solver )
+  : Expr::Expression<SVolField>(),
 
     fxt_( fxtag ),
     fyt_( fytag ),
@@ -54,10 +54,10 @@ Pressure::Pressure( const Expr::Tag& fxtag,
 
     // note that this does not provide any ghost entries in the matrix...
     matrixLabel_  ( Uintah::VarLabel::create( "pressure_matrix", Uintah::CCVariable<Uintah::Stencil7>::getTypeDescription() ) ),
-    pressureLabel_( Uintah::VarLabel::create( (this->names())[0].name(),
+    pressureLabel_( Uintah::VarLabel::create( pressureName,
                                               Wasatch::get_uintah_field_type_descriptor<SVolField>(),
                                               Wasatch::get_uintah_ghost_descriptor<SVolField>() ) ),
-    prhsLabel_    ( Uintah::VarLabel::create( (this->names())[1].name(),
+    prhsLabel_    ( Uintah::VarLabel::create( pressureRHSName,
                                               Wasatch::get_uintah_field_type_descriptor<SVolField>(),
                                               Wasatch::get_uintah_ghost_descriptor<SVolField>() ) )
 {}
@@ -251,22 +251,22 @@ Pressure::evaluate()
   //const SS::MemoryWindow& w = rhs.window_with_ghost();
   SpatialOps::SpatFldPtr<SS::SSurfXField> tmpx;
   SpatialOps::SpatFldPtr<SS::SSurfYField> tmpy;
-  SpatialOps::SpatFldPtr<SS::SSurfZField> tmpz;  
+  SpatialOps::SpatFldPtr<SS::SSurfZField> tmpz;
   if (doX_) {
     const SS::MemoryWindow& wx = fx_->window_with_ghost();
     tmpx  = SpatialOps::SpatialFieldStore<SS::SSurfXField >::self().get( wx );
   }
-  
+
   if (doY_) {
     const SS::MemoryWindow& wy = fy_->window_with_ghost();
     tmpy  = SpatialOps::SpatialFieldStore<SS::SSurfYField >::self().get( wy );
   }
-  
+
   if (doZ_) {
     const SS::MemoryWindow& wz = fz_->window_with_ghost();
     tmpz  = SpatialOps::SpatialFieldStore<SS::SSurfZField >::self().get( wz );
   }
-  
+
   SpatialOps::SpatFldPtr<SVolField> tmp = SpatialOps::SpatialFieldStore<SVolField>::self().get( rhs );
   //set_pressure_bc(this->name(), pressure, rhs, patch);
   //___________________________________________________
@@ -303,13 +303,15 @@ Pressure::evaluate()
 
 //--------------------------------------------------------------------
 
-Pressure::Builder::Builder( const Expr::Tag& fxtag,
+Pressure::Builder::Builder( const Expr::TagList& result,
+                            const Expr::Tag& fxtag,
                             const Expr::Tag& fytag,
                             const Expr::Tag& fztag,
                             const Expr::Tag& d2rhodt2tag,
                             const Uintah::SolverParameters& sparams,
                             Uintah::SolverInterface& solver )
- : fxt_( fxtag ),
+ : ExpressionBuilder(result),
+   fxt_( fxtag ),
    fyt_( fytag ),
    fzt_( fztag ),
    d2rhodt2t_( d2rhodt2tag ),
@@ -320,10 +322,10 @@ Pressure::Builder::Builder( const Expr::Tag& fxtag,
 //--------------------------------------------------------------------
 
 Expr::ExpressionBase*
-Pressure::Builder::build( const Expr::ExpressionID& id,
-                          const Expr::ExpressionRegistry& reg ) const
+Pressure::Builder::build() const
 {
-  return new Pressure( fxt_, fyt_, fzt_, d2rhodt2t_, sparams_, solver_, id, reg );
+  const Expr::TagList& ptags = get_computed_field_tags();
+  return new Pressure( ptags[0].name(), ptags[1].name(), fxt_, fyt_, fzt_, d2rhodt2t_, sparams_, solver_ );
 }
 
 } // namespace Wasatch

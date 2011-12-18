@@ -9,10 +9,8 @@
 
 template< typename GradT >
 DiffusiveVelocity<GradT>::DiffusiveVelocity( const Expr::Tag phiTag,
-                                             const Expr::Tag coefTag,
-                                             const Expr::ExpressionID& id,
-                                             const Expr::ExpressionRegistry& reg  )
-  : Expr::Expression<VelT>( id, reg ),
+                                             const Expr::Tag coefTag )
+  : Expr::Expression<VelT>(),
     isConstCoef_( false ),
     phiTag_ ( phiTag  ),
     coefTag_( coefTag ),
@@ -23,10 +21,8 @@ DiffusiveVelocity<GradT>::DiffusiveVelocity( const Expr::Tag phiTag,
 
 template< typename GradT >
 DiffusiveVelocity<GradT>::DiffusiveVelocity( const Expr::Tag phiTag,
-                                             const double coef,
-                                             const Expr::ExpressionID& id,
-                                             const Expr::ExpressionRegistry& reg  )
-  : Expr::Expression<VelT>( id, reg ),
+                                             const double coef )
+  : Expr::Expression<VelT>(),
     isConstCoef_( true ),
     phiTag_ ( phiTag ),
     coefTag_( Expr::Tag() ),
@@ -100,11 +96,9 @@ evaluate()
 
 template< typename GradT, typename InterpT >
 DiffusiveVelocity2<GradT,InterpT>::
-DiffusiveVelocity2( const Expr::Tag phiTag,
-                    const Expr::Tag coefTag,
-                    const Expr::ExpressionID& id,
-                    const Expr::ExpressionRegistry& reg  )
-  : Expr::Expression<VelT>(id,reg),
+DiffusiveVelocity2( const Expr::Tag& phiTag,
+                    const Expr::Tag& coefTag )
+  : Expr::Expression<VelT>(),
     phiTag_ ( phiTag  ),
     coefTag_( coefTag )
 {}

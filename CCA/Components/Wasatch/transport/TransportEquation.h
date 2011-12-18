@@ -6,8 +6,8 @@
 //-- ExprLib includes --//
 #include <expression/Tag.h>
 #include <expression/ExpressionFactory.h>
-#include <expression/Expr_ExpressionID.h>
-#include <expression/Expr_Context.h>
+#include <expression/ExpressionID.h>
+#include <expression/Context.h>
 
 //-- Uintah framework includes --//
 #include <Core/Grid/Patch.h>

@@ -1,4 +1,4 @@
-/* ---------------------------------------------------------------------------------------------- 
+/* ----------------------------------------------------------------------------------------------
    %%%%%%      %%%%%%    %%      %%  %%      %%  %%%%%%%%    %%%%%%  %%%%%%%%%%  %%      %%%%%%    %%      %%
  %%          %%      %%  %%%%    %%  %%      %%  %%        %%            %%      %%    %%      %%  %%%%    %%
  %%          %%      %%  %%  %%  %%    %%  %%    %%%%%%    %%            %%      %%    %%      %%  %%  %%  %%
@@ -10,7 +10,7 @@
 #define ConvectiveFlux_h
 
 //-- ExprLib includes --//
-#include <expression/Expr_Expression.h>
+#include <expression/Expression.h>
 #include <CCA/Components/Wasatch/ConvectiveInterpolationMethods.h>
 
 /**
@@ -37,11 +37,11 @@
 template< typename PhiInterpT, typename VelInterpT > // scalar interpolant and velocity interpolant
 class ConvectiveFlux
   : public Expr::Expression<typename PhiInterpT::DestFieldType>
-{  
+{
   // PhiInterpT: an interpolant from staggered or non-staggered volume field to staggered or non-staggered face field
   typedef typename PhiInterpT::SrcFieldType  PhiVolT;  ///< source field is a scalar volume
   typedef typename PhiInterpT::DestFieldType PhiFaceT; ///< destination field is scalar face
-  
+
   // VelInterpT: an interpolant from Staggered volume field to scalar face field
   typedef typename VelInterpT::SrcFieldType  VelVolT;  ///< source field is always a staggered volume field.
   typedef typename VelInterpT::DestFieldType VelFaceT;
@@ -52,23 +52,21 @@ class ConvectiveFlux
   const VelVolT* vel_;
   PhiInterpT* phiInterpOp_;
   const VelInterpT* velInterpOp_;
-  
+
 public:
-  ConvectiveFlux( const Expr::Tag phiTag,
-                  const Expr::Tag velTag,
-                  const Expr::ExpressionID& id,
-                  const Expr::ExpressionRegistry& reg  );
+  ConvectiveFlux( const Expr::Tag& phiTag,
+                  const Expr::Tag& velTag );
   ~ConvectiveFlux();
-  
+
   void advertise_dependents( Expr::ExprDeps& exprDeps );
   void bind_fields( const Expr::FieldManagerList& fml );
   void bind_operators( const SpatialOps::OperatorDatabase& opDB );
   void evaluate();
-  
+
   class Builder : public Expr::ExpressionBuilder
   {
     const Expr::Tag phiT_, velT_;
-    
+
   public:
     /**
      *  \brief Construct a convective flux given an expression for
@@ -80,15 +78,13 @@ public:
      *  \param velTag the Expr::Tag for the velocity field.
      *         The velocity field is a face field.
      */
-    Builder( const Expr::Tag phiTag,
-             const Expr::Tag velTag )
-      : phiT_(phiTag), velT_(velTag)
+    Builder( const Expr::Tag& result,
+             const Expr::Tag& phiTag,
+             const Expr::Tag& velTag )
+      : ExpressionBuilder(result),
+        phiT_(phiTag), velT_(velTag)
     {}
-		
-    Expr::ExpressionBase*
-    build( const Expr::ExpressionID& id,
-           const Expr::ExpressionRegistry& reg ) const;
-
+    Expr::ExpressionBase* build() const;
     ~Builder(){}
   };
 };
@@ -124,10 +120,10 @@ public:
 template< typename PhiInterpT, typename VelInterpT > // scalar interpolant and velocity interpolant
 class ConvectiveFluxLimiter
   : public Expr::Expression<typename PhiInterpT::DestFieldType>
-{  
+{
   typedef typename PhiInterpT::SrcFieldType  PhiVolT;  ///< source field is a scalar volume
   typedef typename PhiInterpT::DestFieldType PhiFaceT; ///< destination field is scalar face
-  
+
   typedef typename VelInterpT::SrcFieldType  VelVolT;  ///< source field is always a staggered volume field.
   typedef typename VelInterpT::DestFieldType VelFaceT;
 
@@ -140,12 +136,10 @@ class ConvectiveFluxLimiter
   PhiInterpT* phiInterpOp_;
   const VelInterpT* velInterpOp_;
 
-  ConvectiveFluxLimiter( const Expr::Tag phiTag,
-                         const Expr::Tag velTag,
-                         Wasatch::ConvInterpMethods limiterType,
-                         const Expr::ExpressionID& id,
-                         const Expr::ExpressionRegistry& reg );
-  
+  ConvectiveFluxLimiter( const Expr::Tag& phiTag,
+                         const Expr::Tag& velTag,
+                         Wasatch::ConvInterpMethods limiterType );
+
 public:
   class Builder : public Expr::ExpressionBuilder
   {
@@ -164,22 +158,24 @@ public:
      *
      *  \param limiterType the type of flux limiter to use.
      */
-    Builder( const Expr::Tag phiTag,
-             const Expr::Tag velTag,
-            Wasatch::ConvInterpMethods limiterType)
-      : phiT_( phiTag ), velT_( velTag ), limiterType_( limiterType )
+    Builder( const Expr::Tag& result,
+             const Expr::Tag& phiTag,
+             const Expr::Tag& velTag,
+             Wasatch::ConvInterpMethods limiterType )
+      : ExpressionBuilder(result),
+        phiT_( phiTag ), velT_( velTag ),
+        limiterType_( limiterType )
     {}
-    
-    Expr::ExpressionBase* build( const Expr::ExpressionID& id,
-                                const Expr::ExpressionRegistry& reg ) const
+    ~Builder(){}
+    Expr::ExpressionBase* build() const
     {
-      return new ConvectiveFluxLimiter<PhiInterpT,VelInterpT>( phiT_, velT_, limiterType_, id, reg );
+      return new ConvectiveFluxLimiter<PhiInterpT,VelInterpT>( phiT_, velT_, limiterType_ );
     }
     ~Builder(){}
   };
-  
+
   ~ConvectiveFluxLimiter();
-  
+
   void advertise_dependents( Expr::ExprDeps& exprDeps );
   void bind_fields( const Expr::FieldManagerList& fml );
   void bind_operators( const SpatialOps::OperatorDatabase& opDB );
@@ -187,4 +183,4 @@ public:
 };
 
 
-#endif // /ConvectiveFlux_Expr_h
+#endif // /ConvectiveFlux_h

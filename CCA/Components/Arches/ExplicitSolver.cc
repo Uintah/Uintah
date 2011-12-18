@@ -663,17 +663,17 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       // register placeholder expressions for x velocity string name: "uVelocitySPBC"
       typedef Expr::PlaceHolder<XVolField>  XVelT;
       std::string xVelName = d_lab->d_uVelocitySPBCLabel->getName();
-      gh->exprFactory->register_expression( Expr::Tag(xVelName,Expr::STATE_N  ), new XVelT::Builder() );
+      gh->exprFactory->register_expression( new XVelT::Builder(Expr::Tag(xVelName,Expr::STATE_N)) );
 
       // register placeholder expressions for y velocity string name: "vVelocitySPBC"
       typedef Expr::PlaceHolder<YVolField>  YVelT;
       std::string yVelName = d_lab->d_vVelocitySPBCLabel->getName();
-      gh->exprFactory->register_expression( Expr::Tag(yVelName,Expr::STATE_N  ), new YVelT::Builder() );
+      gh->exprFactory->register_expression( new YVelT::Builder(Expr::Tag(yVelName,Expr::STATE_N)) );
 
       // register placeholder expressions for z velocity string name: "wVelocitySPBC"
       typedef Expr::PlaceHolder<ZVolField>  ZVelT;
       std::string zVelName = d_lab->d_wVelocitySPBCLabel->getName();
-      gh->exprFactory->register_expression( Expr::Tag(zVelName,Expr::STATE_N  ), new ZVelT::Builder() );
+      gh->exprFactory->register_expression( new ZVelT::Builder(Expr::Tag(zVelName,Expr::STATE_N)) );
 
       std::vector<std::string> solnVarNames;
       for( Wasatch::Wasatch::EquationAdaptors::const_iterator ieq=adaptors.begin(); ieq!=adaptors.end(); ++ieq ){
@@ -2333,20 +2333,20 @@ ExplicitSolver::sched_getDensityGuess(SchedulerP& sched,
   tsk->computes(timelabels->negativeDensityGuess);
 
   // extra mass source terms
-  std::vector<std::string> extra_sources; 
-  extra_sources = d_pressSolver->get_pressure_source_ref(); 
-  SourceTermFactory& factory = SourceTermFactory::self(); 
+  std::vector<std::string> extra_sources;
+  extra_sources = d_pressSolver->get_pressure_source_ref();
+  SourceTermFactory& factory = SourceTermFactory::self();
   for (vector<std::string>::iterator iter = extra_sources.begin();
       iter != extra_sources.end(); iter++){
 
     SourceTermBase& src = factory.retrieve_source_term( *iter );
-    const VarLabel* srcLabel = src.getSrcLabel(); 
+    const VarLabel* srcLabel = src.getSrcLabel();
 
-    if ( timelabels->integrator_step_number == TimeIntegratorStepNumber::First ){ 
-      tsk->requires( Task::OldDW, srcLabel, gn, 0 ); 
-    } else { 
-      tsk->requires( Task::NewDW, srcLabel, gn, 0 ); 
-    } 
+    if ( timelabels->integrator_step_number == TimeIntegratorStepNumber::First ){
+      tsk->requires( Task::OldDW, srcLabel, gn, 0 );
+    } else {
+      tsk->requires( Task::NewDW, srcLabel, gn, 0 );
+    }
   }
 
   sched->addTask(tsk, patches, matls);
@@ -2419,28 +2419,28 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
     new_dw->get(cellType,  d_lab->d_cellTypeLabel,      indx,patch, gn, 0);
 
     // For adding other source terms as specified in the pressure solver section
-    SourceTermFactory& factory = SourceTermFactory::self(); 
-    std::vector<std::string> extra_sources; 
-    extra_sources = d_pressSolver->get_pressure_source_ref(); 
-    std::vector<constCCVariable<double> > src_values; 
-    bool have_extra_srcs = false; 
+    SourceTermFactory& factory = SourceTermFactory::self();
+    std::vector<std::string> extra_sources;
+    extra_sources = d_pressSolver->get_pressure_source_ref();
+    std::vector<constCCVariable<double> > src_values;
+    bool have_extra_srcs = false;
 
     for (std::vector<std::string>::iterator iter = extra_sources.begin();
         iter != extra_sources.end(); iter++){
 
       SourceTermBase& src = factory.retrieve_source_term( *iter );
-      const VarLabel* srcLabel = src.getSrcLabel(); 
-      constCCVariable<double> src_value; 
+      const VarLabel* srcLabel = src.getSrcLabel();
+      constCCVariable<double> src_value;
 
       if ( timelabels->integrator_step_number == TimeIntegratorStepNumber::First ){
        old_dw->get( src_value, srcLabel, indx, patch, gn, 0 );
-      } else { 
+      } else {
        new_dw->get( src_value, srcLabel, indx, patch, gn, 0 );
-      } 
+      }
 
-      src_values.push_back( src_value ); 
+      src_values.push_back( src_value );
 
-      have_extra_srcs = true; 
+      have_extra_srcs = true;
 
     }
 
@@ -2448,9 +2448,9 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
 //    int currentTimeStep=d_lab->d_sharedState->getCurrentTopLevelTimeStep();
 //    if (currentTimeStep > 1) {
 //
-      if ( have_extra_srcs ){ 
+      if ( have_extra_srcs ){
 
-        for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) { 
+        for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
 
           IntVector currCell   = *iter;
           IntVector xplusCell  = *iter + IntVector(1,0,0);
@@ -2471,11 +2471,11 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
            (density[currCell]+density[zminusCell])*wVelocity[currCell]) /
           cellinfo->stb[currCell.z()]);
 
-          for ( std::vector<constCCVariable<double> >::iterator viter = src_values.begin(); viter != src_values.end(); viter++ ){ 
+          for ( std::vector<constCCVariable<double> >::iterator viter = src_values.begin(); viter != src_values.end(); viter++ ){
 
             densityGuess[currCell] += (*viter)[currCell];
 
-          } 
+          }
 
           if (densityGuess[currCell] < 0.0 && d_noisyDensityGuess) {
             proc0cout << "Negative density guess occured at " << currCell << " with a value of " << densityGuess[currCell] << endl;
@@ -2486,9 +2486,9 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
           }
         }
 
-      } else { 
+      } else {
 
-        for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) { 
+        for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
 
           IntVector currCell   = *iter;
           IntVector xplusCell  = *iter + IntVector(1,0,0);
@@ -2517,7 +2517,7 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
             negativeDensityGuess = 1.0;
           }
         }
-      } 
+      }
 
       if ( !d_noisyDensityGuess ) proc0cout << "NOTICE: Set <NoisyDenstyGuess> in <ExplicitSolver> to true to check for negative density guesses" << std::endl;
 

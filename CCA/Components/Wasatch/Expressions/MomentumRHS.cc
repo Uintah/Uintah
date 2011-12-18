@@ -9,10 +9,8 @@
 template< typename FieldT >
 MomRHS<FieldT>::
 MomRHS( const Expr::Tag& pressure,
-        const Expr::Tag& partRHS,
-        const Expr::ExpressionID& id,
-        const Expr::ExpressionRegistry& reg )
-  : Expr::Expression<FieldT>(id,reg),
+        const Expr::Tag& partRHS )
+  : Expr::Expression<FieldT>(),
     pressuret_( pressure ),
     rhsPartt_( partRHS ),
    emptyTag_( Expr::Tag() )
@@ -31,7 +29,7 @@ template< typename FieldT >
 void
 MomRHS<FieldT>::
 advertise_dependents( Expr::ExprDeps& exprDeps )
-{  
+{
   if( pressuret_ != emptyTag_ )    exprDeps.requires_expression( pressuret_ );;
   exprDeps.requires_expression( rhsPartt_ );
 }
@@ -71,7 +69,7 @@ evaluate()
   FieldT& result = this->value();
   result = 0.0;
   if ( pressuret_ != emptyTag_ ){
-    gradOp_->apply_to_field( *pressure_, result );    
+    gradOp_->apply_to_field( *pressure_, result );
     result <<= -result;
   }
   result += *rhsPart_;
@@ -81,9 +79,11 @@ evaluate()
 
 template< typename FieldT >
 MomRHS<FieldT>::
-Builder::Builder( const Expr::Tag& pressure,
+Builder::Builder( const Expr::Tag& result,
+                  const Expr::Tag& pressure,
                   const Expr::Tag& partRHS )
-  : pressuret_( pressure ),
+  : ExpressionBuilder(result),
+    pressuret_( pressure ),
     rhspt_( partRHS )
 {}
 
@@ -91,11 +91,9 @@ Builder::Builder( const Expr::Tag& pressure,
 
 template< typename FieldT >
 Expr::ExpressionBase*
-MomRHS<FieldT>::
-Builder::build( const Expr::ExpressionID& id,
-                const Expr::ExpressionRegistry& reg ) const
+MomRHS<FieldT>::Builder::build() const
 {
-  return new MomRHS<FieldT>( pressuret_, rhspt_, id, reg );
+  return new MomRHS<FieldT>( pressuret_, rhspt_ );
 }
 
 //--------------------------------------------------------------------

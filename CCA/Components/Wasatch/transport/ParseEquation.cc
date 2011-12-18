@@ -185,7 +185,6 @@ namespace Wasatch{
     EquationAdaptors adaptors;
     EqnTimestepAdaptorBase* adaptor = NULL;
     Wasatch::TransportEquation* scaltesteqn = NULL;
-    Expr::ExpressionBuilder* icBuilder = NULL;
 
     std::string basePhiName;
     params->get( "SolutionVariable", basePhiName );
@@ -211,8 +210,7 @@ namespace Wasatch{
             Expr::Tag icTag( thisPhiName, Expr::STATE_N );
             Expr::Tag indepVarTag( "XXVOL", Expr::STATE_NONE );
             typedef Expr::SinFunction<XVolField>::Builder Builder;
-            icBuilder = scinew Builder( indepVarTag, 1.0, 1, 0.0);
-            icGraphHelper->exprFactory->register_expression( icTag, icBuilder );
+            icGraphHelper->exprFactory->register_expression( scinew Builder( icTag, indepVarTag, 1.0, 1, 0.0) );
 
             // create the transport equation with all-to-all source term
             typedef ScalabilityTestTransportEquation< XVolField > ScalTestEqn;
@@ -235,8 +233,7 @@ namespace Wasatch{
             Expr::Tag icTag( thisPhiName, Expr::STATE_N );
             Expr::Tag indepVarTag( "XYVOL", Expr::STATE_NONE );
             typedef Expr::SinFunction<YVolField>::Builder Builder;
-            icBuilder = scinew Builder( indepVarTag, 1.0, 1, 0.0);
-            icGraphHelper->exprFactory->register_expression( icTag, icBuilder );
+            icGraphHelper->exprFactory->register_expression( scinew Builder( icTag, indepVarTag, 1.0, 1, 0.0) );
 
             // create the transport equation with all-to-all source term
             typedef ScalabilityTestTransportEquation< YVolField > ScalTestEqn;
@@ -260,8 +257,7 @@ namespace Wasatch{
             Expr::Tag icTag( thisPhiName, Expr::STATE_N );
             Expr::Tag indepVarTag( "ZZVOL", Expr::STATE_NONE );
             typedef Expr::SinFunction<ZVolField>::Builder Builder;
-            icBuilder = scinew Builder( indepVarTag, 1.0, 1, 0.0);
-            icGraphHelper->exprFactory->register_expression( icTag, icBuilder );
+            icGraphHelper->exprFactory->register_expression( scinew Builder( icTag, indepVarTag, 1.0, 1, 0.0) );
 
             // create the transport equation with all-to-all source term
             typedef ScalabilityTestTransportEquation< ZVolField > ScalTestEqn;
@@ -288,16 +284,15 @@ namespace Wasatch{
           Expr::Tag icTag( thisPhiName, Expr::STATE_N );
           Expr::Tag indepVarTag( "XSVOL", Expr::STATE_NONE );
           typedef Expr::SinFunction<SVolField>::Builder Builder;
-          icBuilder = scinew Builder( indepVarTag, 1.0, 1, 0.0);
-          icGraphHelper->exprFactory->register_expression( icTag, icBuilder );
+          icGraphHelper->exprFactory->register_expression( scinew Builder( icTag, indepVarTag, 1.0, 1, 0.0) );
 
           // create the transport equation with all-to-all source term
           typedef ScalabilityTestTransportEquation< SVolField > ScalTestEqn;
           scaltesteqn = scinew ScalTestEqn( basePhiName,
-                                           thisPhiName,
-                                           ScalTestEqn::get_rhs_expr_id( thisPhiName,
-                                                                        *solnGraphHelper->exprFactory,
-                                                                         params )
+                                            thisPhiName,
+                                            ScalTestEqn::get_rhs_expr_id( thisPhiName,
+                                                                         *solnGraphHelper->exprFactory,
+                                                                          params )
                                            );
           adaptor = scinew EqnTimestepAdaptor< SVolField >( scaltesteqn );
           adaptors.push_back(adaptor);
@@ -373,7 +368,6 @@ namespace Wasatch{
 
     if( doxvel && doxmom ){
       proc0cout << "Setting up X momentum transport equation" << std::endl;
-
       typedef MomentumTransportEquation< XVolField > MomTransEq;
       momtranseq = scinew MomTransEq( xvelname,
                                       xmomname,
@@ -387,7 +381,6 @@ namespace Wasatch{
 
     if( doyvel && doymom ){
       proc0cout << "Setting up Y momentum transport equation" << std::endl;
-
       typedef MomentumTransportEquation< YVolField > MomTransEq;
       momtranseq = scinew MomTransEq( yvelname,
                                       ymomname,
@@ -401,7 +394,6 @@ namespace Wasatch{
 
     if( dozvel && dozmom ){
       proc0cout << "Setting up Z momentum transport equation" << std::endl;
-
       typedef MomentumTransportEquation< ZVolField > MomTransEq;
       momtranseq = scinew MomTransEq( zvelname,
                                       zmomname,
@@ -483,8 +475,7 @@ namespace Wasatch{
     //
     // register the qmom expression
     //
-    factory.register_expression( weightsAndAbscissaeTags,
-                                scinew typename QMOM<FieldT>::Builder(transportedMomentTags) );
+    factory.register_expression( scinew typename QMOM<FieldT>::Builder(weightsAndAbscissaeTags,transportedMomentTags) );
 
   }
 

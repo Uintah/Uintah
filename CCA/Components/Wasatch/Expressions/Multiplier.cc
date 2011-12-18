@@ -11,22 +11,18 @@
 
 template< typename Field1T, typename Field2T >
 Multiplier<Field1T,Field2T>::
-Multiplier( const Expr::Tag var1Tag,
-            const Expr::Tag var2Tag,
-            const Expr::ExpressionID& id,
-            const Expr::ExpressionRegistry& reg  )
-  : Expr::Expression<Field1T>(id,reg),
+Multiplier( const Expr::Tag& var1Tag,
+            const Expr::Tag& var2Tag )
+  : Expr::Expression<Field1T>(),
     var1t_( var1Tag ),
     var2t_( var2Tag )
 {}
 
 template< typename FieldT >
 Multiplier<FieldT,FieldT>::
-Multiplier( const Expr::Tag var1Tag,
-            const Expr::Tag var2Tag,
-            const Expr::ExpressionID& id,
-            const Expr::ExpressionRegistry& reg  )
-  : Expr::Expression<FieldT>(id,reg),
+Multiplier( const Expr::Tag& var1Tag,
+            const Expr::Tag& var2Tag )
+  : Expr::Expression<FieldT>(),
     var1t_( var1Tag ),
     var2t_( var2Tag )
 {}
@@ -126,17 +122,21 @@ evaluate()
 
 template< typename Field1T, typename Field2T >
 Multiplier<Field1T,Field2T>::
-Builder::Builder( const Expr::Tag var1Tag,
-                  const Expr::Tag var2Tag )
-  : var1t_( var1Tag ),
+Builder::Builder( const Expr::Tag& result,
+                  const Expr::Tag& var1Tag,
+                  const Expr::Tag& var2Tag )
+  : ExpressionBuilder(result),
+    var1t_( var1Tag ),
     var2t_( var2Tag )
 {}
 
 template< typename FieldT >
 Multiplier<FieldT,FieldT>::
-Builder::Builder( const Expr::Tag var1Tag,
-                  const Expr::Tag var2Tag )
-  : var1t_( var1Tag ),
+Builder::Builder( const Expr::Tag& result,
+                  const Expr::Tag& var1Tag,
+                  const Expr::Tag& var2Tag )
+  : ExpressionBuilder(result),
+    var1t_( var1Tag ),
     var2t_( var2Tag )
 {}
 
@@ -144,20 +144,16 @@ Builder::Builder( const Expr::Tag var1Tag,
 
 template< typename Field1T, typename Field2T >
 Expr::ExpressionBase*
-Multiplier<Field1T,Field2T>::
-Builder::build( const Expr::ExpressionID& id,
-                const Expr::ExpressionRegistry& reg ) const
+Multiplier<Field1T,Field2T>::Builder::build() const
 {
-  return new Multiplier<Field1T,Field2T>( var1t_, var2t_, id, reg );
+  return new Multiplier<Field1T,Field2T>( var1t_, var2t_ );
 }
 
 template< typename FieldT >
 Expr::ExpressionBase*
-Multiplier<FieldT,FieldT>::
-Builder::build( const Expr::ExpressionID& id,
-                const Expr::ExpressionRegistry& reg ) const
+Multiplier<FieldT,FieldT>::Builder::build() const
 {
-  return new Multiplier<FieldT,FieldT>( var1t_,var2t_, id, reg );
+  return new Multiplier<FieldT,FieldT>( var1t_,var2t_ );
 }
 
 //====================================================================

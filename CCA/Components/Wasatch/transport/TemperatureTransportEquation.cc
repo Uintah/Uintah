@@ -43,9 +43,9 @@ namespace Wasatch{
     typedef DiffusiveVelocity2< Ops::GradZ, Ops::InterpC2FZ >::Builder HeatFluxZ;
 
     // fourier heat flux
-    solnExprFactory.register_expression( heatFluxXtag, scinew HeatFluxX( tcondTag, tempTag ) );
-    solnExprFactory.register_expression( heatFluxYtag, scinew HeatFluxY( tcondTag, tempTag ) );
-    solnExprFactory.register_expression( heatFluxZtag, scinew HeatFluxZ( tcondTag, tempTag ) );
+    solnExprFactory.register_expression( scinew HeatFluxX( heatFluxXtag, tcondTag, tempTag ) );
+    solnExprFactory.register_expression( scinew HeatFluxY( heatFluxYtag, tcondTag, tempTag ) );
+    solnExprFactory.register_expression( scinew HeatFluxZ( heatFluxZtag, tcondTag, tempTag ) );
 
     // species heat flux
 
@@ -58,25 +58,25 @@ namespace Wasatch{
   {}
 
   //------------------------------------------------------------------
-  
-  void 
+
+  void
   TemperatureTransportEquation::
   setup_initial_boundary_conditions( const GraphHelper& graphHelper,
                             const Uintah::PatchSet* const localPatches,
                             const PatchInfoMap& patchInfoMap,
                             const Uintah::MaterialSubset* const materials)
   {}
-  
+
   //------------------------------------------------------------------
 
-  void 
+  void
   TemperatureTransportEquation::
   setup_boundary_conditions( const GraphHelper& graphHelper,
                                  const Uintah::PatchSet* const localPatches,
                                  const PatchInfoMap& patchInfoMap,
                                  const Uintah::MaterialSubset* const materials)
   {}
-  
+
   //------------------------------------------------------------------
 
   Expr::ExpressionID
@@ -84,7 +84,7 @@ namespace Wasatch{
   initial_condition( Expr::ExpressionFactory& icFactory )
   {
     const StringNames& sName = StringNames::self();
-    return icFactory.get_registry().get_id( Expr::Tag( sName.temperature, Expr::STATE_N ) );
+    return icFactory.get_id( Expr::Tag( sName.temperature, Expr::STATE_N ) );
   }
 
   //------------------------------------------------------------------
@@ -104,15 +104,15 @@ namespace Wasatch{
     info[ ScalarRHS<FieldT>::DIFFUSIVE_FLUX_Z ] = Tag( sName.zHeatFlux, STATE_NONE );
 
     //
-    // Because of the forms that the ScalarRHS expression builders are defined, 
+    // Because of the forms that the ScalarRHS expression builders are defined,
     // we need a density tag and a boolean variable to be passed into this expression
-    // builder. So we just define an empty tag and a false boolean to be passed into 
+    // builder. So we just define an empty tag and a false boolean to be passed into
     // the builder of ScalarRHS in order to prevent any errors in ScalarRHS
-    
+
     const Expr::Tag densT = Expr::Tag();
     const bool tempConstDens = false;
-    return factory.register_expression( Tag(sName.temperature+"_rhs",STATE_NONE),
-                                        scinew ScalarRHS<FieldT>::Builder(info,densT,tempConstDens) );
+    const Tag rhsTag(sName.temperature+"_rhs",STATE_NONE);
+    return factory.register_expression( scinew ScalarRHS<FieldT>::Builder(rhsTag,info,densT,tempConstDens) );
   }
 
   //------------------------------------------------------------------

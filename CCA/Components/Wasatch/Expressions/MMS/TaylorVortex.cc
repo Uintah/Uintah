@@ -10,10 +10,8 @@ VelocityX( const Expr::Tag& xtag,
            const Expr::Tag& ytag,
            const Expr::Tag& ttag,
            const double A,
-           const double nu,
-           const Expr::ExpressionID& id,
-           const Expr::ExpressionRegistry& reg )
-  : Expr::Expression<ValT>( id, reg ),
+           const double nu )
+  : Expr::Expression<ValT>(),
     A_(A), nu_(nu), xTag_( xtag ), yTag_( ytag ), tTag_( ttag )
 {}
 
@@ -60,12 +58,14 @@ evaluate()
 
 template< typename ValT >
 VelocityX<ValT>::Builder::
-Builder( const Expr::Tag xtag,
-         const Expr::Tag ytag,
-         const Expr::Tag ttag,
+Builder( const Expr::Tag& result,
+         const Expr::Tag& xtag,
+         const Expr::Tag& ytag,
+         const Expr::Tag& ttag,
          const double A,
          const double nu)
-  : A_(A),
+  : ExpressionBuilder(result),
+    A_(A),
     nu_(nu),
     xt_( xtag ),
     yt_( ytag ),
@@ -77,10 +77,9 @@ Builder( const Expr::Tag xtag,
 template< typename ValT >
 Expr::ExpressionBase*
 VelocityX<ValT>::Builder::
-build( const Expr::ExpressionID& id,
-       const Expr::ExpressionRegistry& reg ) const
+build() const
 {
-  return new VelocityX<ValT>( xt_, yt_, tt_, A_, nu_, id, reg );
+  return new VelocityX<ValT>( xt_, yt_, tt_, A_, nu_ );
 }
 
 //--------------------------------------------------------------------
@@ -95,10 +94,8 @@ VelocityY( const Expr::Tag& xtag,
            const Expr::Tag& ytag,
            const Expr::Tag& ttag,
            const double A,
-           const double nu,
-           const Expr::ExpressionID& id,
-           const Expr::ExpressionRegistry& reg )
-  : Expr::Expression<ValT>( id, reg ),
+           const double nu )
+  : Expr::Expression<ValT>(),
     A_(A), nu_(nu), xTag_( xtag ), yTag_( ytag ), tTag_( ttag )
 {}
 
@@ -145,12 +142,14 @@ evaluate()
 
 template< typename ValT >
 VelocityY<ValT>::Builder::
-Builder( const Expr::Tag xtag,
-         const Expr::Tag ytag,
-         const Expr::Tag ttag,
+Builder( const Expr::Tag& result,
+         const Expr::Tag& xtag,
+         const Expr::Tag& ytag,
+         const Expr::Tag& ttag,
          const double A,
          const double nu )
-  : A_(A),
+  : ExpressionBuilder(result),
+    A_(A),
     nu_(nu),
     xt_( xtag ),
     yt_( ytag ),
@@ -162,10 +161,9 @@ Builder( const Expr::Tag xtag,
 template< typename ValT >
 Expr::ExpressionBase*
 VelocityY<ValT>::Builder::
-build( const Expr::ExpressionID& id,
-       const Expr::ExpressionRegistry& reg ) const
+build() const
 {
-  return new VelocityY<ValT>( xt_, yt_, tt_, A_, nu_, id, reg );
+  return new VelocityY<ValT>( xt_, yt_, tt_, A_, nu_ );
 }
 
 //--------------------------------------------------------------------
@@ -180,10 +178,8 @@ GradPX( const Expr::Tag& xtag,
         const Expr::Tag& ytag,
         const Expr::Tag& ttag,
         const double A,
-        const double nu,
-        const Expr::ExpressionID& id,
-        const Expr::ExpressionRegistry& reg )
-  : Expr::Expression<ValT>( id, reg ),
+        const double nu )
+  : Expr::Expression<ValT>(),
     A_(A), nu_(nu), xTag_( xtag ), yTag_( ytag ), tTag_( ttag )
 {}
 
@@ -230,12 +226,14 @@ evaluate()
 
 template< typename ValT >
 GradPX<ValT>::Builder::
-Builder( const Expr::Tag xtag,
-         const Expr::Tag ytag,
-         const Expr::Tag ttag,
+Builder( const Expr::Tag& result,
+         const Expr::Tag& xtag,
+         const Expr::Tag& ytag,
+         const Expr::Tag& ttag,
          const double A,
          const double nu )
-  : A_(A),
+  : ExpressionBuilder(result),
+    A_(A),
     nu_(nu),
     xt_( xtag ),
     yt_( ytag ),
@@ -247,10 +245,9 @@ Builder( const Expr::Tag xtag,
 template< typename ValT >
 Expr::ExpressionBase*
 GradPX<ValT>::Builder::
-build( const Expr::ExpressionID& id,
-       const Expr::ExpressionRegistry& reg ) const
+build() const
 {
-  return new GradPX<ValT>( xt_, yt_, tt_, A_, nu_, id, reg );
+  return new GradPX<ValT>( xt_, yt_, tt_, A_, nu_ );
 }
 
 //--------------------------------------------------------------------
@@ -265,10 +262,8 @@ GradPY( const Expr::Tag& xtag,
         const Expr::Tag& ytag,
         const Expr::Tag& ttag,
         const double A,
-        const double nu,
-        const Expr::ExpressionID& id,
-        const Expr::ExpressionRegistry& reg )
-  : Expr::Expression<ValT>( id, reg ),
+        const double nu )
+  : Expr::Expression<ValT>(),
     A_(A), nu_(nu), xTag_( xtag ), yTag_( ytag ), tTag_( ttag )
 {}
 
@@ -315,12 +310,14 @@ evaluate()
 
 template< typename ValT >
 GradPY<ValT>::Builder::
-Builder( const Expr::Tag xtag,
-         const Expr::Tag ytag,
-         const Expr::Tag ttag,
+Builder( const Expr::Tag& result,
+         const Expr::Tag& xtag,
+         const Expr::Tag& ytag,
+         const Expr::Tag& ttag,
          const double A,
          const double nu )
-  : A_(A),
+  : ExpressionBuilder(result),
+    A_(A),
     nu_(nu),
     xt_( xtag ),
     yt_( ytag ),
@@ -332,10 +329,9 @@ Builder( const Expr::Tag xtag,
 template< typename ValT >
 Expr::ExpressionBase*
 GradPY<ValT>::Builder::
-build( const Expr::ExpressionID& id,
-       const Expr::ExpressionRegistry& reg ) const
+build() const
 {
-  return new GradPY<ValT>( xt_, yt_, tt_, A_, nu_, id, reg );
+  return new GradPY<ValT>( xt_, yt_, tt_, A_, nu_ );
 }
 
 //--------------------------------------------------------------------
@@ -347,12 +343,10 @@ build( const Expr::ExpressionID& id,
 template<typename ValT>
 TaylorGreenVel3D<ValT>::
 TaylorGreenVel3D( const Expr::Tag& xtag,
-          const Expr::Tag& ytag,
-          const Expr::Tag& ztag,
-          const double angle,
-          const Expr::ExpressionID& id,
-          const Expr::ExpressionRegistry& reg )
-: Expr::Expression<ValT>( id, reg ),
+                  const Expr::Tag& ytag,
+                  const Expr::Tag& ztag,
+                  const double angle )
+: Expr::Expression<ValT>(),
   angle_(angle), xTag_( xtag ), yTag_( ytag ), zTag_( ztag )
 {}
 
@@ -397,11 +391,13 @@ evaluate()
 
 template< typename ValT >
 TaylorGreenVel3D<ValT>::Builder::
-Builder( const Expr::Tag xtag,
-        const Expr::Tag ytag,
-        const Expr::Tag ztag,
-        const double angle)
-: angle_(angle),
+Builder( const Expr::Tag& result,
+         const Expr::Tag& xtag,
+         const Expr::Tag& ytag,
+         const Expr::Tag& ztag,
+         const double angle)
+: ExpressionBuilder(result),
+  angle_(angle),
   xt_( xtag ),
   yt_( ytag ),
   zt_( ztag )
@@ -412,10 +408,9 @@ Builder( const Expr::Tag xtag,
 template< typename ValT >
 Expr::ExpressionBase*
 TaylorGreenVel3D<ValT>::Builder::
-build( const Expr::ExpressionID& id,
-      const Expr::ExpressionRegistry& reg ) const
+build() const
 {
-  return new TaylorGreenVel3D<ValT>( xt_, yt_, zt_, angle_, id, reg );
+  return new TaylorGreenVel3D<ValT>( xt_, yt_, zt_, angle_ );
 }
 
 //--------------------------------------------------------------------
