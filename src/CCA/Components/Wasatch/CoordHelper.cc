@@ -37,21 +37,21 @@ namespace Wasatch{
     // build expressions to set coordinates.  If any initialization
     // expressions require the coordinates, then this will trigger
     // their construction and incorporation into a graph.
-    exprFactory.register_expression( xsvt_, scinew Coordinate<SVolField>::Builder(*this,XDIR) );
-    exprFactory.register_expression( ysvt_, scinew Coordinate<SVolField>::Builder(*this,YDIR) );
-    exprFactory.register_expression( zsvt_, scinew Coordinate<SVolField>::Builder(*this,ZDIR) );
-                                          
-    exprFactory.register_expression( xxvt_, scinew Coordinate<XVolField>::Builder(*this,XDIR) );
-    exprFactory.register_expression( yxvt_, scinew Coordinate<XVolField>::Builder(*this,YDIR) );
-    exprFactory.register_expression( zxvt_, scinew Coordinate<XVolField>::Builder(*this,ZDIR) );
-                                          
-    exprFactory.register_expression( xyvt_, scinew Coordinate<YVolField>::Builder(*this,XDIR) );
-    exprFactory.register_expression( yyvt_, scinew Coordinate<YVolField>::Builder(*this,YDIR) );
-    exprFactory.register_expression( zyvt_, scinew Coordinate<YVolField>::Builder(*this,ZDIR) );
-                                          
-    exprFactory.register_expression( xzvt_, scinew Coordinate<ZVolField>::Builder(*this,XDIR) );
-    exprFactory.register_expression( yzvt_, scinew Coordinate<ZVolField>::Builder(*this,YDIR) );
-    exprFactory.register_expression( zzvt_, scinew Coordinate<ZVolField>::Builder(*this,ZDIR) );
+    exprFactory.register_expression( scinew Coordinate<SVolField>::Builder(xsvt_,*this,XDIR) );
+    exprFactory.register_expression( scinew Coordinate<SVolField>::Builder(ysvt_,*this,YDIR) );
+    exprFactory.register_expression( scinew Coordinate<SVolField>::Builder(zsvt_,*this,ZDIR) );
+
+    exprFactory.register_expression( scinew Coordinate<XVolField>::Builder(xxvt_,*this,XDIR) );
+    exprFactory.register_expression( scinew Coordinate<XVolField>::Builder(yxvt_,*this,YDIR) );
+    exprFactory.register_expression( scinew Coordinate<XVolField>::Builder(zxvt_,*this,ZDIR) );
+
+    exprFactory.register_expression( scinew Coordinate<YVolField>::Builder(xyvt_,*this,XDIR) );
+    exprFactory.register_expression( scinew Coordinate<YVolField>::Builder(yyvt_,*this,YDIR) );
+    exprFactory.register_expression( scinew Coordinate<YVolField>::Builder(zyvt_,*this,ZDIR) );
+
+    exprFactory.register_expression( scinew Coordinate<ZVolField>::Builder(xzvt_,*this,XDIR) );
+    exprFactory.register_expression( scinew Coordinate<ZVolField>::Builder(yzvt_,*this,YDIR) );
+    exprFactory.register_expression( scinew Coordinate<ZVolField>::Builder(zzvt_,*this,ZDIR) );
   }
 
   //------------------------------------------------------------------
@@ -106,15 +106,15 @@ namespace Wasatch{
     if( xSVolCoord_ ) reg_field<SVolField>( xSVol_, xsvt_, task, pss, mss );
     if( ySVolCoord_ ) reg_field<SVolField>( ySVol_, ysvt_, task, pss, mss );
     if( zSVolCoord_ ) reg_field<SVolField>( zSVol_, zsvt_, task, pss, mss );
-                                                         
+
     if( xXVolCoord_ ) reg_field<XVolField>( xXVol_, xxvt_, task, pss, mss );
     if( yXVolCoord_ ) reg_field<XVolField>( yXVol_, yxvt_, task, pss, mss );
     if( zXVolCoord_ ) reg_field<XVolField>( zXVol_, zxvt_, task, pss, mss );
-                                                         
+
     if( xYVolCoord_ ) reg_field<YVolField>( xYVol_, xyvt_, task, pss, mss );
     if( yYVolCoord_ ) reg_field<YVolField>( yYVol_, yyvt_, task, pss, mss );
     if( zYVolCoord_ ) reg_field<YVolField>( zYVol_, zyvt_, task, pss, mss );
-                                                         
+
     if( xZVolCoord_ ) reg_field<ZVolField>( xZVol_, xzvt_, task, pss, mss );
     if( yZVolCoord_ ) reg_field<ZVolField>( yZVol_, yzvt_, task, pss, mss );
     if( zZVolCoord_ ) reg_field<ZVolField>( zZVol_, zzvt_, task, pss, mss );

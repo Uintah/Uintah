@@ -5,7 +5,7 @@
 #include <tabprops/StateTable.h>
 #include <tabprops/BSpline.h>
 
-#include <expression/Expr_Expression.h>
+#include <expression/Expression.h>
 
 /**
  *  \ingroup	Expressions
@@ -34,9 +34,7 @@ class TabPropsEvaluator
   Evaluators  evaluators_;
 
   TabPropsEvaluator( const BSpline* const spline,
-                     const VarNames& ivarNames,
-                     const Expr::ExpressionID& id,
-                     const Expr::ExpressionRegistry& reg );
+                     const VarNames& ivarNames );
 
 public:
   class Builder : public Expr::ExpressionBuilder
@@ -44,12 +42,11 @@ public:
     const BSpline* const spline_;
     const VarNames ivarNames_;
   public:
-    Builder( const BSpline* spline,
+    Builder( const Expr::Tag& result,
+             const BSpline* spline,
              const VarNames& ivarNames );
-
-    Expr::ExpressionBase*
-    build( const Expr::ExpressionID& id,
-           const Expr::ExpressionRegistry& reg ) const;
+    ~Builder(){}
+    Expr::ExpressionBase* build() const;
   };
 
   ~TabPropsEvaluator();
@@ -72,10 +69,8 @@ public:
 template< typename FieldT >
 TabPropsEvaluator<FieldT>::
 TabPropsEvaluator( const BSpline* const spline,
-                   const VarNames& ivarNames,
-                   const Expr::ExpressionID& id,
-                   const Expr::ExpressionRegistry& reg )
-  : Expr::Expression<FieldT>(id,reg),
+                   const VarNames& ivarNames )
+  : Expr::Expression<FieldT>(),
     indepVarNames_( ivarNames   )
 {
   evaluators_.push_back( spline );
@@ -147,7 +142,7 @@ evaluate()
 
   // loop over grid points.  iii is a dummy variable.
   for( typename FieldT::const_iterator iii=results[0]->begin(); iii!=results[0]->end(); ++iii ){
-  
+
     // loop over fields to be evaluated
     typename DVarIter::iterator iresult = dvarIters.begin();
     for( typename Evaluators::const_iterator ieval=evaluators_.begin(); ieval!=evaluators_.end(); ++ieval, ++iresult ){
@@ -174,9 +169,11 @@ evaluate()
 
 template< typename FieldT >
 TabPropsEvaluator<FieldT>::
-Builder::Builder( const BSpline* const spline,
+Builder::Builder( const Expr::Tag& result,
+                  const BSpline* const spline,
                   const VarNames& ivarNames )
-  : spline_   ( spline    ),
+  : ExpressionBuilder(result),
+    spline_   ( spline    ),
     ivarNames_( ivarNames )
 {}
 
@@ -185,10 +182,9 @@ Builder::Builder( const BSpline* const spline,
 template< typename FieldT >
 Expr::ExpressionBase*
 TabPropsEvaluator<FieldT>::
-Builder::build( const Expr::ExpressionID& id,
-                const Expr::ExpressionRegistry& reg ) const
+Builder::build() const
 {
-  return new TabPropsEvaluator<FieldT>( spline_, ivarNames_, id, reg );
+  return new TabPropsEvaluator<FieldT>( spline_, ivarNames_ );
 }
 
 #endif // TabPropsEvaluator_Expr_h

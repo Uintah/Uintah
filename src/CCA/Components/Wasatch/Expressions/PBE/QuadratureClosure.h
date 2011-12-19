@@ -1,7 +1,7 @@
 #ifndef MomentClosure_Expr_h
 #define MomentClosure_Expr_h
 
-#include <expression/Expr_Expression.h>
+#include <expression/Expression.h>
 #include <spatialops/structured/FVStaggeredFieldTypes.h>
 #include <spatialops/structured/FVStaggeredOperatorTypes.h>
 #include <spatialops/FieldExpressionsExtended.h>
@@ -16,40 +16,40 @@ class QuadratureClosure
  : public Expr::Expression<FieldT>
 {
 
-  const Expr::TagList weightsTagList_; // these are the tags of all the known moments  
-  const Expr::TagList abscissaeTagList_; // these are the tags of all the known moments    
+  const Expr::TagList weightsTagList_; // these are the tags of all the known moments
+  const Expr::TagList abscissaeTagList_; // these are the tags of all the known moments
   const double momentOrder_; // order of this unclosed moment. this will be used int he quadrature
-  
+
   typedef std::vector<const FieldT*> FieldVec;
   FieldVec weights_;
   FieldVec abscissae_;
-  
+
   QuadratureClosure( const Expr::TagList weightsTagList_,
                      const Expr::TagList abscissaeTagList_,
-                     const double momentOrder,
-                     const Expr::ExpressionID& id,
-                     const Expr::ExpressionRegistry& reg  );
+                     const double momentOrder );
 
 public:
   class Builder : public Expr::ExpressionBuilder
   {
   public:
-    Builder( const Expr::TagList weightsTagList, const Expr::TagList abscissaeTagList, const double momentOrder )
-      : weightstaglist_(weightsTagList),
+    Builder( const Expr::Tag& result,
+             const Expr::TagList& weightsTagList,
+             const Expr::TagList& abscissaeTagList,
+             const double momentOrder )
+      : ExpressionBuilder(result),
+        weightstaglist_(weightsTagList),
         abscissaetaglist_(abscissaeTagList),
         momentorder_(momentOrder)
     {}
-
-    Expr::ExpressionBase*
-    build( const Expr::ExpressionID& id,
-           const Expr::ExpressionRegistry& reg ) const 
+    ~Builder(){}
+    Expr::ExpressionBase* build() const
     {
-      return new QuadratureClosure<FieldT>(weightstaglist_,abscissaetaglist_, momentorder_, id, reg);
+      return new QuadratureClosure<FieldT>( weightstaglist_,abscissaetaglist_, momentorder_ );
     }
 
   private:
-    const Expr::TagList weightstaglist_; // these are the tags of all the known moments  
-    const Expr::TagList abscissaetaglist_; // these are the tags of all the known moments    
+    const Expr::TagList weightstaglist_; // these are the tags of all the known moments
+    const Expr::TagList abscissaetaglist_; // these are the tags of all the known moments
     const double momentorder_;
   };
 
@@ -76,10 +76,8 @@ template< typename FieldT >
 QuadratureClosure<FieldT>::
 QuadratureClosure( const Expr::TagList weightsTagList,
                    const Expr::TagList abscissaeTagList,
-                   const double momentOrder,
-                   const Expr::ExpressionID& id,
-                   const Expr::ExpressionRegistry& reg  )
-  : Expr::Expression<FieldT>(id,reg),
+                   const double momentOrder )
+  : Expr::Expression<FieldT>(),
     weightsTagList_(weightsTagList),
     abscissaeTagList_(abscissaeTagList),
     momentOrder_(momentOrder)
@@ -98,7 +96,7 @@ template< typename FieldT >
 void
 QuadratureClosure<FieldT>::
 advertise_dependents( Expr::ExprDeps& exprDeps )
-{  
+{
   exprDeps.requires_expression( weightsTagList_ );
   exprDeps.requires_expression( abscissaeTagList_ );
 }
@@ -115,10 +113,10 @@ bind_fields( const Expr::FieldManagerList& fml )
   abscissae_.clear();
   for (Expr::TagList::const_iterator iweight=weightsTagList_.begin(); iweight!=weightsTagList_.end(); iweight++) {
     weights_.push_back(&volfm.field_ref(*iweight));
-  }  
+  }
   for (Expr::TagList::const_iterator iabscissa=abscissaeTagList_.begin(); iabscissa!=abscissaeTagList_.end(); iabscissa++) {
     abscissae_.push_back(&volfm.field_ref(*iabscissa));
-  }  
+  }
 }
 
 //--------------------------------------------------------------------
@@ -140,7 +138,7 @@ evaluate()
   FieldT& result = this->value();
   result = 0.0;
   typename FieldVec::const_iterator abscissaeIterator = abscissae_.begin();
-  for( typename FieldVec::const_iterator weightsIterator=weights_.begin(); 
+  for( typename FieldVec::const_iterator weightsIterator=weights_.begin();
        weightsIterator!=weights_.end();
        ++weightsIterator, ++abscissaeIterator) {
     result <<= result + (**weightsIterator) * pow(**abscissaeIterator,momentOrder_);

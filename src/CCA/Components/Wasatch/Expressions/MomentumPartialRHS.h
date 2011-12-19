@@ -1,7 +1,7 @@
 #ifndef MomentumPartialRHS_Expr_h
 #define MomentumPartialRHS_Expr_h
 
-#include <expression/Expr_Expression.h>
+#include <expression/Expression.h>
 
 #include <spatialops/structured/FVStaggered.h>
 
@@ -27,11 +27,11 @@
  *  the component of momentum this equation is describing.  We define
  *
  *  \f[
- *     F_i \equiv -\frac{\partial \rho u_i u_j}{\partial x_j} 
+ *     F_i \equiv -\frac{\partial \rho u_i u_j}{\partial x_j}
  *                -\frac{\partial \tau_{ij}}{\partial x_j}
  *                -\rho g_i
  *  \f]
- *  so that the momentum equations are written as 
+ *  so that the momentum equations are written as
  *  \f[
  *    \frac{\partial \rho u_i}{\partial t} = F_i -\frac{\partial p}{\partial x_i}
  *  \f]
@@ -50,7 +50,7 @@ class MomRHSPart
   typedef typename OpTypes::DivX  DivX;
   typedef typename OpTypes::DivY  DivY;
   typedef typename OpTypes::DivZ  DivZ;
-  
+
 
   const Expr::Tag cfluxXt_, cfluxYt_, cfluxZt_, tauXt_, tauYt_, tauZt_, bodyForcet_, emptyTag_;
 
@@ -69,16 +69,15 @@ class MomRHSPart
               const Expr::Tag& tauX,
               const Expr::Tag& tauY,
               const Expr::Tag& tauZ,
-              const Expr::Tag& bodyForce,
-              const Expr::ExpressionID& id,
-              const Expr::ExpressionRegistry& reg );
+              const Expr::Tag& bodyForce );
 
 public:
   class Builder : public Expr::ExpressionBuilder
   {
     const Expr::Tag cfluxXt_, cfluxYt_, cfluxZt_, tauXt_, tauYt_, tauZt_, bodyForcet_;
   public:
-    Builder( const Expr::Tag& convFluxX,
+    Builder( const Expr::Tag& result,
+             const Expr::Tag& convFluxX,
              const Expr::Tag& convFluxY,
              const Expr::Tag& convFluxZ,
              const Expr::Tag& tauX,
@@ -86,9 +85,7 @@ public:
              const Expr::Tag& tauZ,
              const Expr::Tag& bodyForce );
 
-    Expr::ExpressionBase*
-    build( const Expr::ExpressionID& id,
-           const Expr::ExpressionRegistry& reg ) const;
+    Expr::ExpressionBase* build() const;
   };
 
   ~MomRHSPart();

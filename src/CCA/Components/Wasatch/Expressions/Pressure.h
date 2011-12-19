@@ -2,7 +2,7 @@
 #define Pressure_Expr_h
 
 //-- ExprLib Includes --//
-#include <expression/Expr_Expression.h>
+#include <expression/Expression.h>
 
 //-- Wasatch Includes --//
 #include <CCA/Components/Wasatch/FieldTypes.h>
@@ -88,14 +88,14 @@ class Pressure
   MatType matrix_;
   const Uintah::Patch* patch_;
 
-  Pressure( const Expr::Tag& fxtag,
+  Pressure( const std::string& pressureName,
+            const std::string& pressureRHSName,
+            const Expr::Tag& fxtag,
             const Expr::Tag& fytag,
             const Expr::Tag& fztag,
             const Expr::Tag& d2rhodt2tag,
             const Uintah::SolverParameters& solverParams,
-            Uintah::SolverInterface& solver,
-            const Expr::ExpressionID& id,
-            const Expr::ExpressionRegistry& reg );
+            Uintah::SolverInterface& solver );
 
 public:
   class Builder : public Expr::ExpressionBuilder
@@ -104,16 +104,15 @@ public:
     const Uintah::SolverParameters& sparams_;
     Uintah::SolverInterface& solver_;
   public:
-    Builder( const Expr::Tag& fxtag,
+    Builder( const Expr::TagList& result,
+             const Expr::Tag& fxtag,
              const Expr::Tag& fytag,
              const Expr::Tag& fztag,
              const Expr::Tag& d2rhodt2tag,
              const Uintah::SolverParameters& sparams,
              Uintah::SolverInterface& solver );
-
-    Expr::ExpressionBase*
-    build( const Expr::ExpressionID& id,
-           const Expr::ExpressionRegistry& reg ) const;
+    ~Builder(){}
+    Expr::ExpressionBase* build() const;
   };
 
   ~Pressure();

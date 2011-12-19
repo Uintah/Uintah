@@ -426,6 +426,15 @@ ColdFlow::getState( const ProcessorGroup* pc,
   }
 }
 
+void ColdFlow::oldTableHack( const InletStream& inStream, Stream& outStream, bool calcEnthalpy, const string bc_type )
+{
+  std::vector<double> iv(1);
+  iv[0] = inStream.d_mixVars[0]; 
+  int pos = 0; //for density
+  outStream.d_density = coldFlowMixing( iv, pos ); 
+
+}
+
 //--------------------------------------------------------------------------- 
 // schedule Compute Heat Loss
 //--------------------------------------------------------------------------- 
@@ -500,7 +509,7 @@ ColdFlow::dummyInit( const ProcessorGroup* pc,
   }
 }
 
-  double
+double
 ColdFlow::coldFlowMixing( std::vector<double>& iv, int pos )
 {
 

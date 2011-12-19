@@ -12,12 +12,6 @@
       <abskg                  spec="OPTIONAL DOUBLE  'positive'"/>                   
       <NoOfRays               spec="OPTIONAL INTEGER 'positive'"/>        
       <Threshold              spec="OPTIONAL DOUBLE  'positive'"/>        
-      <AlphaEW                spec="OPTIONAL DOUBLE  'positive'"/>        
-      <AlphaTB                spec="OPTIONAL DOUBLE  'positive'"/>        
-      <AlphaNS                spec="OPTIONAL DOUBLE  'positive'"/>        
-      <TEW                    spec="OPTIONAL DOUBLE  'positive'"/>        
-      <TNS                    spec="OPTIONAL DOUBLE  'positive'"/>        
-      <TTB                    spec="OPTIONAL DOUBLE  'positive'"/>        
       <Slice                  spec="OPTIONAL DOUBLE"/>                    
       <StefanBoltzmann        spec="OPTIONAL DOUBLE  'positive'"/>        
       <benchmark_1            spec="OPTIONAL BOOLEAN"/>                   

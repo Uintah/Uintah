@@ -29,10 +29,10 @@
  *  the full RHS for use with the time integrator.
  *
  *  Note: In the case that we are solving a scalar transport equation with
- *        constant density we move out the density by devision from all  
- *        terms except the source term. For the source term in this case we 
- *        devide the specified source term expression by density here in 
- *        ScalarRHS. 
+ *        constant density we move out the density by devision from all
+ *        terms except the source term. For the source term in this case we
+ *        devide the specified source term expression by density here in
+ *        ScalarRHS.
  *        So, you should be carfule with the cases that source terms are
  *        NOT defined in the INPUT FILE but they will be added to the RHS
  *        automatically during the solution process and they are almost
@@ -79,7 +79,7 @@ public:
    *       capability.
    */
   typedef std::map< FieldSelector, Expr::Tag > FieldTagInfo; //< Defines a map to hold information on ExpressionIDs for the RHS.
-   
+
 
   /**
    *  \class Builder
@@ -103,13 +103,16 @@ public:
      *
      *  \param isConstDensity a boolean o show if density is constant or not.
      */
-    Builder( const FieldTagInfo& fieldInfo,
-             const Expr::Tag densityTag,
+    Builder( const Expr::Tag& result,
+             const FieldTagInfo& fieldInfo,
+             const Expr::Tag& densityTag,
              const bool isConstDensity);
 
     /**
      *  \brief Constructs a builder for a ScalarRHS object. This is being
      *         used by ScalarTransportEqu.
+     *
+     *  \param result the value of this expression
      *
      *  \param fieldInfo the FieldTagInfo object that holds
      *         information for the various expressions that form the
@@ -121,15 +124,13 @@ public:
      *
      *  \param isConstDensity a boolean o show if density is constant or not.
      */
-    Builder( const FieldTagInfo& fieldInfo,
+    Builder( const Expr::Tag& result,
+             const FieldTagInfo& fieldInfo,
              const std::vector<Expr::Tag>& srcTags,
-             const Expr::Tag densityTag,
+             const Expr::Tag& densityTag,
              const bool isConstDensity);
-
     virtual ~Builder(){}
-
-    virtual Expr::ExpressionBase* build( const Expr::ExpressionID& id,
-                                         const Expr::ExpressionRegistry& reg ) const;
+    virtual Expr::ExpressionBase* build() const;
   protected:
     const FieldTagInfo info_;
     const std::vector<Expr::Tag> srcT_;
@@ -149,7 +150,7 @@ protected:
 
   const bool haveConvection_, haveDiffusion_;
   const bool doXDir_, doYDir_, doZDir_;
-  
+
   const Expr::Tag densityTag_;
 
   const SVolField* rho_;
@@ -173,14 +174,12 @@ protected:
 
   static Expr::Tag resolve_field_tag( const typename ScalarRHS<FieldT>::FieldSelector field,
                                       const typename ScalarRHS<FieldT>::FieldTagInfo& info );
-    
+
   ScalarRHS( const FieldTagInfo& fieldTags,
              const std::vector<Expr::Tag>& srcTags,
              const Expr::Tag densityTag,
-             const bool  isConstDensity,
-             const Expr::ExpressionID& id,
-             const Expr::ExpressionRegistry& reg );
-    
+             const bool  isConstDensity );
+
   virtual ~ScalarRHS();
 };
 

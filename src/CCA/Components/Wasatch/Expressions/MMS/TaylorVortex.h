@@ -1,9 +1,9 @@
 #ifndef Wasatch_Taylor_Vortex
 #define Wasatch_Taylor_Vortex
 
-#include <expression/Expr_Expression.h>
+#include <expression/Expression.h>
 
-	
+
 /**
  *  \class VelocityX
  *  \author Amir Biglari
@@ -16,27 +16,28 @@
  *  \f]
  *  where
  *   - \f$A\f$ is the amplitude of the function
- *   - \f$t\f$ is the time variable 
+ *   - \f$t\f$ is the time variable
  *   - \f$\nu\f$ is kinematic viscousity
  */
 template< typename ValT >
 class VelocityX : public Expr::Expression<ValT>
 {
 public:
-		
+
   /**
    *  \brief Builds a Taylor Vortex velocity function in x direction Expression.
    */
   struct Builder : public Expr::ExpressionBuilder
   {
-    Builder( const Expr::Tag xTag,  ///< x coordinate
-             const Expr::Tag yTag,  ///< y coordinate
-             const Expr::Tag tTag,  ///< time
-             const double A=1.0,    ///< Amplitude of the function
-             const double nu=0.1    ///< Kinematic viscosity of the fluid
+    Builder( const Expr::Tag& result,
+             const Expr::Tag& xTag,  ///< x coordinate
+             const Expr::Tag& yTag,  ///< y coordinate
+             const Expr::Tag& tTag,  ///< time
+             const double A=1.0,     ///< Amplitude of the function
+             const double nu=0.1     ///< Kinematic viscosity of the fluid
              );
-    Expr::ExpressionBase* build( const Expr::ExpressionID& id,
-                                 const Expr::ExpressionRegistry& reg ) const;
+    ~Builder(){}
+    Expr::ExpressionBase* build() const;
   private:
     const double A_, nu_;
     const Expr::Tag xt_, yt_, tt_;
@@ -45,25 +46,23 @@ public:
   void advertise_dependents( Expr::ExprDeps& exprDeps );
   void bind_fields( const Expr::FieldManagerList& fml );
   void evaluate();
-		
+
 private:
-		
+
   VelocityX( const Expr::Tag& xTag,
              const Expr::Tag& yTag,
              const Expr::Tag& tTag,
              const double A,
-             const double nu,
-             const Expr::ExpressionID& id,
-             const Expr::ExpressionRegistry& reg);
+             const double nu );
   const double A_, nu_;
   const Expr::Tag xTag_, yTag_, tTag_;
   const ValT* x_;
-  const ValT* y_;	
+  const ValT* y_;
   const double* t_;
 };
-	
+
 //====================================================================
-	
+
 /**
  *  \class VelocityY
  *  \author Amir Biglari
@@ -76,54 +75,53 @@ private:
  *  \f]
  *  where
  *   - \f$A\f$ is the amplitude of the function
- *   - \f$t\f$ is the time variable 
+ *   - \f$t\f$ is the time variable
  *   - \f$\nu\f$ is kinematic viscousity
  */
 template< typename ValT >
 class VelocityY : public Expr::Expression<ValT>
 {
 public:
-		
+
   /**
    *  \brief Builds a Taylor Vortex Velocity Function in y direction Expression.
    */
   struct Builder : public Expr::ExpressionBuilder
   {
-    Builder( const Expr::Tag xTag,  ///< x-coordinate
-             const Expr::Tag yTag,  ///< y-coordinate
-             const Expr::Tag tTag,  ///< time
+    Builder( const Expr::Tag& result,
+             const Expr::Tag& xTag,  ///< x-coordinate
+             const Expr::Tag& yTag,  ///< y-coordinate
+             const Expr::Tag& tTag,  ///< time
              const double A=1.0,    ///< Amplitude of the function
              const double nu=0.1    ///< Kinematic viscosity of the fluid
              );
-    Expr::ExpressionBase* build( const Expr::ExpressionID& id,
-                                 const Expr::ExpressionRegistry& reg ) const;
+    ~Builder(){}
+    Expr::ExpressionBase* build() const;
   private:
     const double A_, nu_;
     const Expr::Tag xt_, yt_, tt_;
   };
-		
+
   void advertise_dependents( Expr::ExprDeps& exprDeps );
   void bind_fields( const Expr::FieldManagerList& fml );
   void evaluate();
-		
+
 private:
-		
+
   VelocityY( const Expr::Tag& xTag,
              const Expr::Tag& yTag,
              const Expr::Tag& tTag,
              const double A,
-             const double nu,
-             const Expr::ExpressionID& id,
-             const Expr::ExpressionRegistry& reg);
+             const double nu );
   const double A_, nu_;
   const Expr::Tag xTag_, yTag_, tTag_;
   const ValT* x_;
-  const ValT* y_;	
+  const ValT* y_;
   const double* t_;
 };
-	
+
 //====================================================================
-	
+
 /**
  *  \class GradPX
  *  \author Amir Biglari
@@ -140,52 +138,51 @@ private:
  *  \f]
  *  where
  *   - \f$A\f$ is the amplitude of the function
- *   - \f$t\f$ is the time variable 
+ *   - \f$t\f$ is the time variable
  *   - \f$\nu\f$ is kinematic viscousity
  */
 template< typename ValT >
 class GradPX : public Expr::Expression<ValT>
 {
 public:
-		
+
   /**
    *  \brief Builds an Expression for Taylor Vortex Pressure Function gradient in x direction.
    */
   struct Builder : public Expr::ExpressionBuilder
   {
-    Builder( const Expr::Tag xTag,  ///< x-coordinate
-             const Expr::Tag yTag,  ///< y-coordinate
-             const Expr::Tag tTag,  ///< time
+    Builder( const Expr::Tag& result,
+             const Expr::Tag& xTag,  ///< x-coordinate
+             const Expr::Tag& yTag,  ///< y-coordinate
+             const Expr::Tag& tTag,  ///< time
              const double A=1.0,    ///< Amplitude of the function
              const double nu=0.1    ///< Kinematic viscosity of the fluid
              );
-    Expr::ExpressionBase* build( const Expr::ExpressionID& id,
-                                 const Expr::ExpressionRegistry& reg ) const;
+    ~Builder(){}
+    Expr::ExpressionBase* build() const;
   private:
     const double A_, nu_;
     const Expr::Tag xt_, yt_, tt_;
   };
-		
+
   void advertise_dependents( Expr::ExprDeps& exprDeps );
   void bind_fields( const Expr::FieldManagerList& fml );
   void evaluate();
-		
+
 private:
-		
+
   GradPX( const Expr::Tag& xTag,
           const Expr::Tag& yTag,
           const Expr::Tag& tTag,
           const double A,
-          const double nu,
-          const Expr::ExpressionID& id,
-          const Expr::ExpressionRegistry& reg );
+          const double nu );
   const double A_, nu_;
   const Expr::Tag xTag_, yTag_, tTag_;
   const ValT* x_;
-  const ValT* y_;	
+  const ValT* y_;
   const double* t_;
 };
-	
+
 //====================================================================
 
 /**
@@ -204,49 +201,48 @@ private:
  *  \f]
  *  where
  *   - \f$A\f$ is the amplitude of the function
- *   - \f$t\f$ is the time variable 
+ *   - \f$t\f$ is the time variable
  *   - \f$\nu\f$ is kinematic viscousity
  */
 template< typename ValT >
 class GradPY : public Expr::Expression<ValT>
 {
 public:
-		
+
   /**
    *  \brief Builds an Expression for Taylor vortex pressure gradient in y direction.
    */
   struct Builder : public Expr::ExpressionBuilder
   {
-    Builder( const Expr::Tag xTag,  ///< x-coordinate
-             const Expr::Tag yTag,  ///< y-coordinate
-             const Expr::Tag tTag,  ///< time
+    Builder( const Expr::Tag& result,
+             const Expr::Tag& xTag,  ///< x-coordinate
+             const Expr::Tag& yTag,  ///< y-coordinate
+             const Expr::Tag& tTag,  ///< time
              const double A=1.0,    ///< Amplitude of the function
              const double nu=0.1    ///< Kinematic viscosity of the fluid
              );
-    Expr::ExpressionBase* build( const Expr::ExpressionID& id,
-                                 const Expr::ExpressionRegistry& reg ) const;
+    ~Builder(){}
+    Expr::ExpressionBase* build() const;
   private:
     const double A_, nu_;
     const Expr::Tag xt_, yt_, tt_;
   };
-		
+
   void advertise_dependents( Expr::ExprDeps& exprDeps );
   void bind_fields( const Expr::FieldManagerList& fml );
   void evaluate();
-		
+
 private:
 
   GradPY( const Expr::Tag& xTag,
           const Expr::Tag& yTag,
           const Expr::Tag& tTag,
           const double A,
-          const double nu,
-          const Expr::ExpressionID& id,
-          const Expr::ExpressionRegistry& reg );
+          const double nu );
   const double A_, nu_;
   const Expr::Tag xTag_, yTag_, tTag_;
   const ValT* x_;
-  const ValT* y_;	
+  const ValT* y_;
   const double* t_;
 };
 
@@ -277,44 +273,42 @@ template< typename ValT >
 class TaylorGreenVel3D : public Expr::Expression<ValT>
 {
 public:
-  
+
   /**
    *  \brief Builds a Taylor Vortex velocity function in x direction Expression.
    */
   struct Builder : public Expr::ExpressionBuilder
   {
-    Builder( const Expr::Tag xTag,  ///< x coordinate
-            const Expr::Tag yTag,  ///< y coordinate
-            const Expr::Tag zTag,  ///< z
-            const double angle=0.1    ///< Kinematic viscosity of the fluid
+    Builder( const Expr::Tag& result,
+             const Expr::Tag& xTag,  ///< x coordinate
+             const Expr::Tag& yTag,  ///< y coordinate
+             const Expr::Tag& zTag,  ///< z
+             const double angle=0.1    ///< Kinematic viscosity of the fluid
             );
-    Expr::ExpressionBase* build( const Expr::ExpressionID& id,
-                                const Expr::ExpressionRegistry& reg ) const;
+    Expr::ExpressionBase* build() const;
   private:
     const double angle_;
     const Expr::Tag xt_, yt_, zt_;
   };
-  
+
   void advertise_dependents( Expr::ExprDeps& exprDeps );
   void bind_fields( const Expr::FieldManagerList& fml );
   void evaluate();
-  
+
 private:
-  
+
   TaylorGreenVel3D( const Expr::Tag& xTag,
-            const Expr::Tag& yTag,
-            const Expr::Tag& zTag,
-            const double angle,
-            const Expr::ExpressionID& id,
-            const Expr::ExpressionRegistry& reg);
+                    const Expr::Tag& yTag,
+                    const Expr::Tag& zTag,
+                    const double angle );
   const double angle_;
   const Expr::Tag xTag_, yTag_, zTag_;
   const ValT* x_;
-  const ValT* y_;	
-  const ValT* z_;	  
+  const ValT* y_;
+  const ValT* z_;
 };
 
 //====================================================================
 
-	
+
 #endif // Wasatch_Taylor_Vortex

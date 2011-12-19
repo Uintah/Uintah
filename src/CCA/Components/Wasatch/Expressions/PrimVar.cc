@@ -11,22 +11,18 @@
 
 template< typename FieldT, typename DensT >
 PrimVar<FieldT,DensT>::
-PrimVar( const Expr::Tag rhoPhiTag,
-         const Expr::Tag rhoTag,
-         const Expr::ExpressionID& id,
-         const Expr::ExpressionRegistry& reg  )
-  : Expr::Expression<FieldT>(id,reg),
+PrimVar( const Expr::Tag& rhoPhiTag,
+         const Expr::Tag& rhoTag )
+  : Expr::Expression<FieldT>(),
     rhophit_( rhoPhiTag ),
     rhot_   ( rhoTag    )
 {}
 
 template< typename FieldT >
 PrimVar<FieldT,FieldT>::
-PrimVar( const Expr::Tag rhoPhiTag,
-         const Expr::Tag rhoTag,
-         const Expr::ExpressionID& id,
-         const Expr::ExpressionRegistry& reg  )
-  : Expr::Expression<FieldT>(id,reg),
+PrimVar( const Expr::Tag& rhoPhiTag,
+         const Expr::Tag& rhoTag )
+  : Expr::Expression<FieldT>(),
     rhophit_( rhoPhiTag ),
     rhot_   ( rhoTag    )
 {}
@@ -125,17 +121,21 @@ evaluate()
 
 template< typename FieldT, typename DensT >
 PrimVar<FieldT,DensT>::
-Builder::Builder( const Expr::Tag rhoPhiTag,
-                  const Expr::Tag rhoTag )
-  : rhophit_( rhoPhiTag ),
+Builder::Builder( const Expr::Tag& result,
+                  const Expr::Tag& rhoPhiTag,
+                  const Expr::Tag& rhoTag )
+  : ExpressionBuilder(result),
+    rhophit_( rhoPhiTag ),
     rhot_   ( rhoTag    )
 {}
 
 template< typename FieldT >
 PrimVar<FieldT,FieldT>::
-Builder::Builder( const Expr::Tag rhoPhiTag,
-                  const Expr::Tag rhoTag )
-  : rhophit_( rhoPhiTag ),
+Builder::Builder( const Expr::Tag& result,
+                  const Expr::Tag& rhoPhiTag,
+                  const Expr::Tag& rhoTag )
+  : ExpressionBuilder(result),
+    rhophit_( rhoPhiTag ),
     rhot_   ( rhoTag    )
 {}
 
@@ -143,20 +143,16 @@ Builder::Builder( const Expr::Tag rhoPhiTag,
 
 template< typename FieldT, typename DensT >
 Expr::ExpressionBase*
-PrimVar<FieldT,DensT>::
-Builder::build( const Expr::ExpressionID& id,
-                const Expr::ExpressionRegistry& reg ) const
+PrimVar<FieldT,DensT>::Builder::build() const
 {
-  return new PrimVar<FieldT,DensT>( rhophit_, rhot_, id, reg );
+  return new PrimVar<FieldT,DensT>( rhophit_, rhot_ );
 }
 
 template< typename FieldT >
 Expr::ExpressionBase*
-PrimVar<FieldT,FieldT>::
-Builder::build( const Expr::ExpressionID& id,
-                const Expr::ExpressionRegistry& reg ) const
+PrimVar<FieldT,FieldT>::Builder::build() const
 {
-  return new PrimVar<FieldT,FieldT>( rhophit_, rhot_, id, reg );
+  return new PrimVar<FieldT,FieldT>( rhophit_, rhot_ );
 }
 
 //====================================================================

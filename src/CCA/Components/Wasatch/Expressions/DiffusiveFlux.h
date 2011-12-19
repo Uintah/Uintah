@@ -2,7 +2,7 @@
 #define DiffusiveFlux_Expr_h
 
 //-- ExprLib includes --//
-#include <expression/Expr_Expression.h>
+#include <expression/Expression.h>
 
 //-- SpatialOps includes --//
 #include <spatialops/structured/FVStaggeredOperatorTypes.h>
@@ -47,17 +47,13 @@ class DiffusiveFlux
   const SVolField* rho_;
   const FluxT*     coef_;
 
-  DiffusiveFlux( const Expr::Tag rhoTag,
-                 const Expr::Tag phiTag,
-                 const Expr::Tag coefTag,
-                 const Expr::ExpressionID& id,
-                 const Expr::ExpressionRegistry& reg );
+  DiffusiveFlux( const Expr::Tag& rhoTag,
+                 const Expr::Tag& phiTag,
+                 const Expr::Tag& coefTag );
 
-  DiffusiveFlux( const Expr::Tag rhoTag,
-                 const Expr::Tag phiTag,
-                 const double coefTag,
-                 const Expr::ExpressionID& id,
-                 const Expr::ExpressionRegistry& reg );
+  DiffusiveFlux( const Expr::Tag& rhoTag,
+                 const Expr::Tag& phiTag,
+                 const double coefTag );
 
 public:
   /**
@@ -79,10 +75,12 @@ public:
      *
      *  \param rhoTag the Expr::Tag for the density which will be interpolated to FluxT field.
      */
-    Builder( const Expr::Tag phiTag,
-             const Expr::Tag coefTag,
+    Builder( const Expr::Tag& result,
+             const Expr::Tag& phiTag,
+             const Expr::Tag& coefTag,
              const Expr::Tag rhoTag = Expr::Tag() )
-      : isConstCoef_( false ),
+      : ExpressionBuilder(result),
+        isConstCoef_( false ),
         phit_ (phiTag),
         coeft_(coefTag),
         rhot_ (rhoTag),
@@ -100,21 +98,21 @@ public:
      *
      *  \param rhoTag the Expr::Tag for the density which will be interpolated to FluxT field.
      */
-    Builder( const Expr::Tag phiTag,
+    Builder( const Expr::Tag& result,
+             const Expr::Tag& phiTag,
              const double coef,
              const Expr::Tag rhoTag = Expr::Tag() )
-      : isConstCoef_( true ),
+      : ExpressionBuilder(result),
+        isConstCoef_( true ),
         phit_(phiTag),
         rhot_(rhoTag),
         coef_(coef)
     {}
 
-    Expr::ExpressionBase*
-    build( const Expr::ExpressionID& id,
-           const Expr::ExpressionRegistry& reg ) const
+    Expr::ExpressionBase* build() const
     {
-      if( isConstCoef_ ) return new DiffusiveFlux<ScalarT, FluxT>( rhot_, phit_, coef_, id, reg );
-      else               return new DiffusiveFlux<ScalarT, FluxT>( rhot_, phit_, coeft_, id, reg );
+      if( isConstCoef_ ) return new DiffusiveFlux<ScalarT, FluxT>( rhot_, phit_, coef_  );
+      else               return new DiffusiveFlux<ScalarT, FluxT>( rhot_, phit_, coeft_ );
     }
   private:
     const bool isConstCoef_;
@@ -171,11 +169,9 @@ class DiffusiveFlux2
   const SVolField* rho_;
   const ScalarT* coef_;
 
-  DiffusiveFlux2( const Expr::Tag rhoTag,
-                  const Expr::Tag phiTag,
-                  const Expr::Tag coefTag,
-                  const Expr::ExpressionID& id,
-                  const Expr::ExpressionRegistry& reg );
+  DiffusiveFlux2( const Expr::Tag& rhoTag,
+                  const Expr::Tag& phiTag,
+                  const Expr::Tag& coefTag );
 
 public:
   /**
@@ -197,19 +193,17 @@ public:
      *
      *  \param rhoTag the Expr::Tag for the density which will be interpolated to FluxT field.
      */
-    Builder( const Expr::Tag phiTag,
-             const Expr::Tag coefTag,
+    Builder( const Expr::Tag& result,
+             const Expr::Tag& phiTag,
+             const Expr::Tag& coefTag,
              const Expr::Tag rhoTag = Expr::Tag() )
-    : phit_(phiTag),
+    : ExpressionBuilder(result),
+      phit_(phiTag),
       coeft_( coefTag ),
       rhot_(rhoTag)
     {}
-
-    Expr::ExpressionBase*
-    build( const Expr::ExpressionID& id,
-           const Expr::ExpressionRegistry& reg ) const{
-      return new DiffusiveFlux2<ScalarT,FluxT>( rhot_, phit_, coeft_, id, reg );
-    }
+    ~Builder(){}
+    Expr::ExpressionBase* build() const{ return new DiffusiveFlux2<ScalarT,FluxT>( rhot_, phit_, coeft_ ); }
   private:
     const Expr::Tag phit_,coeft_,rhot_;
   };

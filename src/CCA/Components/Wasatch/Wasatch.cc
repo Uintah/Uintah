@@ -366,8 +366,9 @@ namespace Wasatch{
 
     //_______________________________________
     // set the time
-    exprFactory.register_expression( Expr::Tag(StringNames::self().time,Expr::STATE_NONE),
-                                     scinew SetCurrentTime::Builder(sharedState_, 1));
+    exprFactory.register_expression( scinew SetCurrentTime::Builder(Expr::Tag(StringNames::self().time,Expr::STATE_NONE),
+                                                                    sharedState_,
+                                                                    1) );
 
     //_____________________________________________
     // Build the initial condition expression graph
@@ -552,14 +553,13 @@ namespace Wasatch{
     //_____________________________________________________________
     // create an expression to set the current time as a field that
     // will be available to all expressions if needed.
-    const Expr::Tag TimeTag (StringNames::self().time,Expr::STATE_NONE);
+    const Expr::Tag timeTag (StringNames::self().time,Expr::STATE_NONE);
     Expr::ExpressionID timeID;
     if( rkStage==1 ) {
       timeID =
-      exprFactory.register_expression( TimeTag,
-                                       scinew SetCurrentTime::Builder(sharedState_, rkStage) );
+      exprFactory.register_expression( scinew SetCurrentTime::Builder( timeTag, sharedState_, rkStage) );
     } else {
-      timeID = exprFactory.get_registry().get_id(TimeTag);
+      timeID = exprFactory.get_id(timeTag);
     }
 
     //___________________________________________

@@ -41,7 +41,50 @@ endfunction
 %    B E N C H M A R K   2    
 function [divQ_exact] = benchMark2(x_CC)
   printf("BenchMark 2\n");
-  %  I S A A C   P L E A S E   F I L L   T H I S   I N .
+
+  n = resolution(zDir); %number of cells in the z direction (between the plates)
+
+  %This script computes the exact solution to any resolution at the cell centers 
+  %for the benchmark case described by Modest in section 13.5.
+  %Plane medium with specified temp field.  We fix the abskg at 1/m
+  %and fix the T of the two walls to be the same.  No scattering.  Analytical  soln
+  %to DivQ is given by the last eqn of Modest  section 13.5.  
+
+  eps = 1;        % Emissivity of walls
+  Tw = 1000;      % Temp of walls
+  Tm = 1500;      % Temp of mediumm
+  sigma = 5.67051e-8;
+  k = 1;          %optical thickness at x=L
+  %the below line is adjusted to give cell centered answers
+  x = linspace(1/(2*n),k*(1-1/(2*n)), n*k); 
+
+  theta = linspace(0,pi/2, 100000); %use 100,000 to get 9 digits of accuracy
+  mu = cos(theta);
+
+
+  %compute ExpInt2 and ExpInt3 as functions of Tau
+  ExpInt2 = zeros(length(x),1);%Exponential integrals from Modest pg 429
+  ExpInt3 = zeros(length(x),1);
+
+  %perfrom the integration over dmu using trapezoid  rule
+  for ix=1:length(ExpInt2)
+    for imu = 2:length(mu)
+      ExpInt2(ix) =  ExpInt2(ix) + ( exp(-x(ix)/mu(imu-1)) + exp(-x(ix)/mu(imu)) )/2 * (mu(imu-1) - mu(imu)); %final term is dmu
+      ExpInt3(ix) =  ExpInt3(ix) + ( mu(imu-1) * exp(-x(ix)/mu(imu-1)) + mu(imu) * exp(-x(ix)/mu(imu)))/2 * (mu(imu-1) - mu(imu)); 
+    end
+  end
+
+  %compute the exact soln of DivQ according to final eqn in Modest section 13.5
+  DivQ = zeros(n,1);%radiative flux divergence
+  for ix=1:length(DivQ)-1
+    DivQ(ix) = sigma*(Tw^4 - Tm^4) * -2*( ExpInt2(ix*k) + ExpInt2(length(DivQ)*k-ix*k +k) ) / (  1 +  (1/eps -1)*( 1-2*ExpInt3(length(DivQ)*k) )  ) ;
+  end
+  ExpInt2_0 = 1;%Definition of ExpInt at Tau=0;
+
+  DivQ(length(DivQ)) = sigma*(Tw^4 - Tm^4) * -2*( ExpInt2(length(DivQ)*k) + ExpInt2_0 ) / (  1 +  (1/eps -1)*( 1-2*ExpInt3(length(DivQ)*k) )  ) ;
+  DivQ(length(DivQ)) = ( DivQ(length(DivQ)) + DivQ(length(DivQ)-1) ) / 2; %This is how we get the cell centered value of the last point. 
+  %We use the boundary condition (two lines up) averaged with the previous
+
   printf("...end\n");
 endfunction
 

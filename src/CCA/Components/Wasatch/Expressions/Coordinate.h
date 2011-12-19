@@ -25,10 +25,8 @@ namespace Wasatch{
     : public Expr::PlaceHolder<FieldT>
   {
     Coordinate( CoordHelper& coordHelper,
-                const Direction dir,
-                const Expr::ExpressionID& id,
-                const Expr::ExpressionRegistry& reg )
-      : Expr::PlaceHolder<FieldT>(id,reg)
+                const Direction dir )
+      : Expr::PlaceHolder<FieldT>()
     {
       coordHelper.requires_coordinate<FieldT>( dir );
     }
@@ -39,19 +37,16 @@ namespace Wasatch{
     public:
       /**
        *  \brief Build a Coordinate expression.
+       *  \param result the coordinate calculated by this expression
        *  \param coordHelper - the CoordHelper object.
        *  \param dir - the Direction to set for this coordinate (e.g. x, y, z)
        */
-      Builder( CoordHelper& coordHelper, const Direction dir )
-        : coordHelper_( coordHelper ),
+      Builder( const Expr::Tag& result, CoordHelper& coordHelper, const Direction dir )
+        : ExpressionBuilder(result),
+          coordHelper_( coordHelper ),
           dir_( dir )
       {}
-      Expr::ExpressionBase*
-      build( const Expr::ExpressionID& id,
-             const Expr::ExpressionRegistry& reg ) const
-      {
-        return new Coordinate<FieldT>(coordHelper_,dir_,id,reg);
-      }
+      Expr::ExpressionBase* build() const{ return new Coordinate<FieldT>(coordHelper_,dir_); }
     private:
       CoordHelper& coordHelper_;
       const Direction dir_;

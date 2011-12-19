@@ -14,12 +14,9 @@
 #include <CCA/Components/Wasatch/FieldTypes.h>
 #include <CCA/Components/Wasatch/ParseTools.h>
 
-
 using std::string;
 
-
 namespace Wasatch{
-
 
   //==================================================================
 
@@ -151,7 +148,7 @@ namespace Wasatch{
 
     typedef typename Stress< FaceFieldT, Vel1T, Vel2T, ViscT >::Builder StressT;
 
-    return factory.register_expression( stressTag, scinew StressT( viscTag, vel1Tag, vel2Tag, dilTag ) );
+    return factory.register_expression( scinew StressT( stressTag, viscTag, vel1Tag, vel2Tag, dilTag ) );
   }
 
   //==================================================================
@@ -167,7 +164,7 @@ namespace Wasatch{
     typedef typename SpatialOps::structured::OperatorTypeBuilder< SpatialOps::Interpolant, AdvelT, FluxT >::type  AdvelInterpOp;
 
     typedef typename ConvectiveFlux< MomInterpOp, AdvelInterpOp >::Builder ConvFlux;
-    return factory.register_expression( fluxTag, scinew ConvFlux( momTag, advelTag ) );
+    return factory.register_expression( scinew ConvFlux( fluxTag, momTag, advelTag ) );
   }
 
   //==================================================================
@@ -193,8 +190,8 @@ namespace Wasatch{
   template< typename FieldT >
   void
   set_tau_tags( Uintah::ProblemSpecP params,
-                    Expr::TagList& tauTags,
-               const std::string thisMomDirName)
+                Expr::TagList& tauTags,
+                const std::string thisMomDirName)
   {
     std::string xmomname, ymomname, zmomname;
     Uintah::ProblemSpecP doxmom,doymom,dozmom;
@@ -205,18 +202,18 @@ namespace Wasatch{
     dozmom = params->get( "Z-Momentum", zmomname );
     //
     if( doxmom && isviscous ) tauTags.push_back( Expr::Tag("tau_x" + thisMomDirName , Expr::STATE_NONE) );
-    else         tauTags.push_back( Expr::Tag() );
-    if( doymom && isviscous) tauTags.push_back( Expr::Tag("tau_y" + thisMomDirName , Expr::STATE_NONE) );
-    else         tauTags.push_back( Expr::Tag() );
-    if( dozmom && isviscous) tauTags.push_back( Expr::Tag("tau_z" + thisMomDirName , Expr::STATE_NONE) );
-    else         tauTags.push_back( Expr::Tag() );
+    else                      tauTags.push_back( Expr::Tag() );
+    if( doymom && isviscous ) tauTags.push_back( Expr::Tag("tau_y" + thisMomDirName , Expr::STATE_NONE) );
+    else                      tauTags.push_back( Expr::Tag() );
+    if( dozmom && isviscous ) tauTags.push_back( Expr::Tag("tau_z" + thisMomDirName , Expr::STATE_NONE) );
+    else                      tauTags.push_back( Expr::Tag() );
   }
 
   //==================================================================
 
   void set_convflux_tags( Uintah::ProblemSpecP params,
-               Expr::TagList& cfTags,
-               const Expr::Tag thisMomTag )
+                          Expr::TagList& cfTags,
+                          const Expr::Tag thisMomTag )
   {
     std::string xmomname, ymomname, zmomname;
     Uintah::ProblemSpecP doxmom,doymom,dozmom;
@@ -244,7 +241,7 @@ namespace Wasatch{
   {
     const Expr::Tag momTag = mom_tag( momName );
     const Expr::Tag rhsFull( momTag.name() + "_rhs_full", Expr::STATE_NONE );
-    return factory.register_expression( rhsFull, new typename MomRHS<FieldT>::Builder( pressure_tag(), rhs_part_tag(momTag) ) );
+    return factory.register_expression( new typename MomRHS<FieldT>::Builder( rhsFull, pressure_tag(), rhs_part_tag(momTag) ) );
   }
 
   //==================================================================
@@ -276,10 +273,10 @@ namespace Wasatch{
     //__________________
     // dilatation
     const Expr::Tag dilTag( "dilatation", Expr::STATE_NONE );
-    if( !factory.get_registry().have_entry( dilTag ) ){
+    if( !factory.have_entry( dilTag ) ){
       typedef typename Dilatation<SVolField,XVolField,YVolField,ZVolField>::Builder Dilatation;
       // if dilatation expression has not been registered, then register it
-      const Expr::ExpressionID dilID = factory.register_expression( dilTag, new Dilatation(velTags_[0],velTags_[1],velTags_[2]) );
+      const Expr::ExpressionID dilID = factory.register_expression( new Dilatation(dilTag, velTags_[0],velTags_[1],velTags_[2]) );
     }
 
     //___________________________________
@@ -348,8 +345,8 @@ namespace Wasatch{
     //_________________________________________________________
     // register expression to calculate the partial RHS (absent
     // pressure gradient) for use in the projection
-    factory.register_expression( rhs_part_tag( thisMomTag ),
-                                 new typename MomRHSPart<FieldT>::Builder( cfxt, cfyt, cfzt,
+    factory.register_expression( new typename MomRHSPart<FieldT>::Builder( rhs_part_tag( thisMomTag ),
+                                                                           cfxt, cfyt, cfzt,
                                                                            tauxt, tauyt, tauzt,
                                                                            bodyForcet) );
 
@@ -361,7 +358,7 @@ namespace Wasatch{
     // density time derivative
     const Expr::Tag d2rhodt2t;//( "density-acceleration", Expr::STATE_NONE); // for now this is empty
 
-    factory.register_expression( thisVelTag, new typename PrimVar<FieldT,SVolField>::Builder( thisMomTag, densTag));
+    factory.register_expression( new typename PrimVar<FieldT,SVolField>::Builder( thisVelTag, thisMomTag, densTag ));
 
     //__________________
     // pressure
@@ -369,7 +366,7 @@ namespace Wasatch{
     Uintah::SolverParameters* sparams = linSolver.readParameters( pressureParams, "" );
     sparams->setSolveOnExtraCells( false );
 
-    if( !factory.get_registry().have_entry( pressure_tag() ) ){
+    if( !factory.have_entry( pressure_tag() ) ){
       // if pressure expression has not be registered, then register it
       Expr::Tag fxt, fyt, fzt;
       if( doxmom )  fxt = Expr::Tag( xmomname + "_rhs_partial", Expr::STATE_NONE );
@@ -379,21 +376,23 @@ namespace Wasatch{
       Expr::TagList ptags;
       ptags.push_back( pressure_tag() );
       ptags.push_back( Expr::Tag( pressure_tag().name() + "_rhs", pressure_tag().context() ) );
-      pressureID_ = factory.register_expression( ptags,
-                                                 new typename Pressure::Builder( fxt, fyt, fzt,
-                                                                                 d2rhodt2t, *sparams, linSolver) );
-      factory.cleave_from_children( pressureID_   );
-      factory.cleave_from_parents( pressureID_       );
+      const Expr::ExpressionBuilder* const pbuilder = new typename Pressure::Builder( ptags, fxt, fyt, fzt,
+                                                                                       d2rhodt2t, *sparams, linSolver);
+      std::cout << "PRESSURE: " << std::endl
+          << pbuilder->get_computed_field_tags() << std::endl;
+      pressureID_ = factory.register_expression( pbuilder );
+      factory.cleave_from_children( pressureID_ );
+      factory.cleave_from_parents ( pressureID_ );
     }
     else{
-      pressureID_ = factory.get_registry().get_id( pressure_tag() );
+      pressureID_ = factory.get_id( pressure_tag() );
     }
 
     //________________________________________________________________
     // Several expressions require ghost updates after they are calculated
     // jcs note that we need to set BCs on these quantities as well.
-    factory.cleave_from_children( normalConvFluxID_   );
-    factory.cleave_from_parents( normalConvFluxID_ );
+    factory.cleave_from_children( normalConvFluxID_ );
+    factory.cleave_from_parents ( normalConvFluxID_ );
   }
 
   //------------------------------------------------------------------
@@ -409,11 +408,10 @@ namespace Wasatch{
   void
   MomentumTransportEquation<FieldT>::
   setup_initial_boundary_conditions( const GraphHelper& graphHelper,
-                                    const Uintah::PatchSet* const localPatches,
-                                    const PatchInfoMap& patchInfoMap,
-                                    const Uintah::MaterialSubset* const materials)
+                                     const Uintah::PatchSet* const localPatches,
+                                     const PatchInfoMap& patchInfoMap,
+                                     const Uintah::MaterialSubset* const materials)
   {
-
     Expr::ExpressionFactory& factory = *graphHelper.exprFactory;
 
     typedef typename SpatialOps::structured::FaceTypes<FieldT>::XFace XFace;
@@ -422,62 +420,54 @@ namespace Wasatch{
     typedef typename NormalFaceSelector<FieldT>::NormalFace NormalFace;
 
     // set initial bcs for momentum
-    if (factory.get_registry().have_entry(mom_tag(thisMomName_))) {
-
+    if (factory.have_entry(mom_tag(thisMomName_))) {
       process_boundary_conditions<FieldT>( Expr::Tag( this->solution_variable_name(),
-                                                   Expr::STATE_N ),
-                                        this->solution_variable_name(),
-                                        this->staggered_location(),
-                                        graphHelper,
-                                        localPatches,
-                                        patchInfoMap,
-                                        materials );
+                                                      Expr::STATE_N ),
+                                           this->solution_variable_name(),
+                                           this->staggered_location(),
+                                           graphHelper,
+                                           localPatches,
+                                           patchInfoMap,
+                                           materials );
     }
 
     // set bcs for velocity - cos we don't have a mechanism now to set them
     // on interpolated density field
     Expr::Tag velTag;
     switch (this->staggered_location()) {
-      case XDIR:
-        velTag = velTags_[0];
-        break;
-      case YDIR:
-        velTag = velTags_[1];
-        break;
-      case ZDIR:
-        velTag = velTags_[2];
-        break;
-      default:
-        break;
+      case XDIR:  velTag=velTags_[0];  break;
+      case YDIR:  velTag=velTags_[1];  break;
+      case ZDIR:  velTag=velTags_[2];  break;
+      default:                         break;
     }
-    if (factory.get_registry().have_entry(velTag)) {
+    if (factory.have_entry(velTag)) {
       process_boundary_conditions<FieldT>( velTag,
-                                          velTag.name(),
-                                          this->staggered_location(),
-                                          graphHelper,
-                                          localPatches,
-                                          patchInfoMap,
-                                          materials);
+                                           velTag.name(),
+                                           this->staggered_location(),
+                                           graphHelper,
+                                           localPatches,
+                                           patchInfoMap,
+                                           materials );
     }
     // set bcs for pressure
-    if (factory.get_registry().have_entry(pressure_tag())) {
+    if (factory.have_entry(pressure_tag())) {
       process_boundary_conditions<SVolField>( pressure_tag(),
-                                             "pressure",
-                                             NODIR,
-                                             graphHelper,
-                                             localPatches,
-                                             patchInfoMap,
-                                             materials );
+                                              "pressure",
+                                              NODIR,
+                                              graphHelper,
+                                              localPatches,
+                                              patchInfoMap,
+                                              materials );
     }
     // set bcs for partial rhs
-    if (factory.get_registry().have_entry(rhs_part_tag(mom_tag(thisMomName_)))) {
+    if (factory.have_entry(rhs_part_tag(mom_tag(thisMomName_)))) {
       process_boundary_conditions<FieldT>( rhs_part_tag(mom_tag(thisMomName_)),
-                                          rhs_part_tag(mom_tag(thisMomName_)).name(),
-                                          this->staggered_location(),
-                                          graphHelper,
-                                          localPatches,
-                                          patchInfoMap,
-                                          materials);
+                                           rhs_part_tag(mom_tag(thisMomName_)).name(),
+                                           this->staggered_location(),
+                                           graphHelper,
+                                           localPatches,
+                                           patchInfoMap,
+                                           materials );
     }
 
   }
@@ -499,54 +489,47 @@ namespace Wasatch{
 
     // set bcs for momentum
     process_boundary_conditions<FieldT>( Expr::Tag( this->solution_variable_name(),
-                         Expr::STATE_N ),
-                         this->solution_variable_name(),
-              this->staggered_location(),
-              graphHelper,
-              localPatches,
-              patchInfoMap,
-              materials );
+                                                    Expr::STATE_N ),
+                                         this->solution_variable_name(),
+                                         this->staggered_location(),
+                                         graphHelper,
+                                         localPatches,
+                                         patchInfoMap,
+                                         materials );
 
     // set bcs for velocity - cos we don't have a mechanism now to set them
     // on interpolated density field
     Expr::Tag velTag;
     switch (this->staggered_location()) {
-      case XDIR:
-        velTag = velTags_[0];
-        break;
-      case YDIR:
-        velTag = velTags_[1];
-        break;
-      case ZDIR:
-        velTag = velTags_[2];
-        break;
-      default:
-        break;
+      case XDIR:  velTag=velTags_[0];  break;
+      case YDIR:  velTag=velTags_[1];  break;
+      case ZDIR:  velTag=velTags_[2];  break;
+      default:                         break;
     }
     process_boundary_conditions<FieldT>( velTag,
-                                velTag.name(),
-              this->staggered_location(),
-              graphHelper,
-              localPatches,
-              patchInfoMap,
-              materials);
+                                         velTag.name(),
+                                         this->staggered_location(),
+                                         graphHelper,
+                                         localPatches,
+                                         patchInfoMap,
+                                         materials );
 
     // set bcs for pressure
     process_boundary_conditions<SVolField>( pressure_tag(),
-                                "pressure",
-                                NODIR,
-                                graphHelper,
-                                localPatches,
-                                patchInfoMap,
-                                materials );
+                                            "pressure",
+                                            NODIR,
+                                            graphHelper,
+                                            localPatches,
+                                            patchInfoMap,
+                                            materials );
     // set bcs for partial rhs
     process_boundary_conditions<FieldT>( rhs_part_tag(mom_tag(thisMomName_)),
-                                        rhs_part_tag(mom_tag(thisMomName_)).name(),
-                                        this->staggered_location(),
-                                        graphHelper,
-                                        localPatches,
-                                        patchInfoMap,
-                                        materials);
+                                         rhs_part_tag(mom_tag(thisMomName_)).name(),
+                                         this->staggered_location(),
+                                         graphHelper,
+                                         localPatches,
+                                         patchInfoMap,
+                                         materials );
 
 
 //    // set bcs for density
@@ -571,7 +554,7 @@ namespace Wasatch{
 //    // set bcs for normal stresses
 //    Expr::ExpressionFactory& factory = *graphHelper.exprFactory;
 //    if(isviscous_) {
-//      Expr::Tag normalStressTag = factory.get_registry().get_label(normalStressID_);
+//      Expr::Tag normalStressTag = factory.get_label(normalStressID_);
 //      process_boundary_conditions<NormalFace>( normalStressTag,
 //                                  normalStressTag.name(),
 //                NODIR,
@@ -582,7 +565,7 @@ namespace Wasatch{
 //    }
 //
 //    // set bcs for normal convective fluxes
-//    Expr::Tag normalConvFluxTag = factory.get_registry().get_label(normalConvFluxID_);
+//    Expr::Tag normalConvFluxTag = factory.get_label(normalConvFluxID_);
 //    process_boundary_conditions<NormalFace>( normalConvFluxTag,
 //                                normalConvFluxTag.name(),
 //                                NODIR,
@@ -600,8 +583,7 @@ namespace Wasatch{
   MomentumTransportEquation<FieldT>::
   initial_condition( Expr::ExpressionFactory& icFactory )
   {
-    return icFactory.get_registry().get_id( Expr::Tag( this->solution_variable_name(),
-                                                       Expr::STATE_N ) );
+    return icFactory.get_id( Expr::Tag( this->solution_variable_name(), Expr::STATE_N ) );
   }
 
   //------------------------------------------------------------------

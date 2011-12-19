@@ -3,7 +3,7 @@
 #include <spatialops/structured/FVStaggeredFieldTypes.h>
 #include <spatialops/structured/FVStaggeredOperatorTypes.h>
 
-#include <expression/Expr_Expression.h>
+#include <expression/Expression.h>
 
 /**
  *  \ingroup WasatchExpressions
@@ -38,58 +38,58 @@ class MonosurfaceGrowth
  : public Expr::Expression<FieldT>
 {
   /* declare private variables such as fields, operators, etc. here */
-  const Expr::Tag phiTag_, growthCoefTag_;  
-  const double growthCoefVal_;  
-  const double momentOrder_; // this is the order of the moment equation in which the growth rate is used  
+  const Expr::Tag phiTag_, growthCoefTag_;
+  const double growthCoefVal_;
+  const double momentOrder_; // this is the order of the moment equation in which the growth rate is used
   const bool isConstCoef_;
   const FieldT* phi_; // this will correspond to m(k+1)
   const FieldT* growthCoef_; // this will correspond to the coefficient in the growth rate term
 
-  MonosurfaceGrowth( const Expr::Tag phiTag,
-                     const Expr::Tag growthCoefTag,
-                     const double momentOrder,
-                     const Expr::ExpressionID& id,
-                     const Expr::ExpressionRegistry& reg  );
+  MonosurfaceGrowth( const Expr::Tag& phiTag,
+                     const Expr::Tag& growthCoefTag,
+                     const double momentOrder );
 
-  MonosurfaceGrowth( const Expr::Tag phiTag,
+  MonosurfaceGrowth( const Expr::Tag& phiTag,
                      const double growthCoefVal,
-                     const double momentOrder,
-                     const Expr::ExpressionID& id,
-                     const Expr::ExpressionRegistry& reg  );
-  
+                     const double momentOrder );
+
 
 public:
   class Builder : public Expr::ExpressionBuilder
   {
   public:
-    Builder(const Expr::Tag phiTag, 
-            const Expr::Tag growthCoefTag, 
-            const double momentOrder )
-      : phit_(phiTag),
+    Builder( const Expr::Tag& result,
+             const Expr::Tag& phiTag,
+             const Expr::Tag& growthCoefTag,
+             const double momentOrder )
+      : ExpressionBuilder(result),
+        phit_(phiTag),
         growthcoeft_(growthCoefTag),
-		    growthcoefval_(0.0),
+        growthcoefval_(0.0),
         momentorder_(momentOrder),
-				isconstcoef_( false )
+        isconstcoef_( false )
     {}
-    
-    Builder( const Expr::Tag phiTag, const double growthCoefVal, const double momentOrder )
-      : phit_(phiTag),
+
+    Builder( const Expr::Tag& result,
+             const Expr::Tag& phiTag,
+             const double growthCoefVal,
+             const double momentOrder )
+      : ExpressionBuilder(result),
+        phit_(phiTag),
         growthcoefval_(growthCoefVal),
         momentorder_(momentOrder),
-				isconstcoef_( true )    
+        isconstcoef_( true )
     {}
-    
 
-    Expr::ExpressionBase*
-    build( const Expr::ExpressionID& id,
-           const Expr::ExpressionRegistry& reg ) const
+    ~Builder(){}
+    Expr::ExpressionBase* build() const
     {
-      if (isconstcoef_) return new MonosurfaceGrowth<FieldT>( phit_, growthcoefval_, momentorder_, id, reg);
-      else 										return new MonosurfaceGrowth<FieldT>( phit_, growthcoeft_, momentorder_, id, reg);
+      if (isconstcoef_) return new MonosurfaceGrowth<FieldT>( phit_, growthcoefval_, momentorder_ );
+      else              return new MonosurfaceGrowth<FieldT>( phit_, growthcoeft_,   momentorder_ );
     }
 
   private:
-    const Expr::Tag phit_, growthcoeft_; 
+    const Expr::Tag phit_, growthcoeft_;
     const double growthcoefval_;
     const double momentorder_;
     const bool isconstcoef_;
@@ -116,12 +116,10 @@ public:
 
 template< typename FieldT >
 MonosurfaceGrowth<FieldT>::
-MonosurfaceGrowth( const Expr::Tag phiTag,
-                   const Expr::Tag growthCoefTag,
-                   const double momentOrder,
-                   const Expr::ExpressionID& id,
-                   const Expr::ExpressionRegistry& reg  )
-  : Expr::Expression<FieldT>(id,reg),
+MonosurfaceGrowth( const Expr::Tag& phiTag,
+                   const Expr::Tag& growthCoefTag,
+                   const double momentOrder )
+  : Expr::Expression<FieldT>(),
     phiTag_(phiTag),
     growthCoefTag_(growthCoefTag),
     growthCoefVal_(0.0),
@@ -133,12 +131,10 @@ MonosurfaceGrowth( const Expr::Tag phiTag,
 
 template< typename FieldT >
 MonosurfaceGrowth<FieldT>::
-MonosurfaceGrowth( const Expr::Tag phiTag,
+MonosurfaceGrowth( const Expr::Tag& phiTag,
                    const double growthCoefVal,
-                   const double momentOrder,
-                   const Expr::ExpressionID& id,
-                   const Expr::ExpressionRegistry& reg  )
-: Expr::Expression<FieldT>(id,reg),
+                   const double momentOrder )
+: Expr::Expression<FieldT>(),
   phiTag_(phiTag),
   growthCoefTag_("NULL", Expr::INVALID_CONTEXT),
   growthCoefVal_(growthCoefVal),

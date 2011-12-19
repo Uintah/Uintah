@@ -1,24 +1,24 @@
 #ifndef DiffusiveVelocity_Expr_h
 #define DiffusiveVelocity_Expr_h
 
-#include <expression/Expr_Expression.h>
+#include <expression/Expression.h>
 
 /**
  *  \ingroup WasatchExpressions
- *  \class  DiffusiveVelocity 
+ *  \class  DiffusiveVelocity
  *  \author Amir Biglari
  *  \date   Aug, 2011
  *
  *  \brief Calculates a simple diffusive velocity of the form
- *         \f$ V_i = -\Gamma \frac{\partial \phi}{\partial x_i} \f$ 
+ *         \f$ V_i = -\Gamma \frac{\partial \phi}{\partial x_i} \f$
  *         where \f$i=1,2,3\f$ is the coordinate direction.
- *         This requires knowledge of a the velocity field. This 
- *         expression is suitable mostly for the cases that we 
- *         have constant density or Temperature equation etc. to be 
+ *         This requires knowledge of a the velocity field. This
+ *         expression is suitable mostly for the cases that we
+ *         have constant density or Temperature equation etc. to be
  *         used instead of diffusive flux expression
  *
  *  Note that this requires the diffusion coefficient, \f$\Gamma\f$,
- *  to be evaluated at the same location as \f$V_i\f$ and 
+ *  to be evaluated at the same location as \f$V_i\f$ and
  *  \f$\frac{\partial \phi}{\partial x_i}\f$.
  *
  *  \par Template Parameters
@@ -44,14 +44,10 @@ class DiffusiveVelocity
   const VelT* coef_;
 
   DiffusiveVelocity( const Expr::Tag phiTag,
-                     const Expr::Tag coefTag,
-                     const Expr::ExpressionID& id,
-                     const Expr::ExpressionRegistry& reg );
+                     const Expr::Tag coefTag );
 
   DiffusiveVelocity( const Expr::Tag phiTag,
-                     const double coefTag,
-                     const Expr::ExpressionID& id,
-                     const Expr::ExpressionRegistry& reg );
+                     const double coefTag );
 
 public:
   /**
@@ -71,8 +67,11 @@ public:
      *  \param coefTag the Expr::Tag for the diffusion coefficient
      *         (located at same points as the diffusive velocity field).
      */
-    Builder( const Expr::Tag phiTag, const Expr::Tag coefTag )
-      : isConstCoef_( false ),
+    Builder( const Expr::Tag& result,
+             const Expr::Tag& phiTag,
+             const Expr::Tag& coefTag )
+      : ExpressionBuilder(result),
+        isConstCoef_( false ),
         phit_ ( phiTag  ),
         coeft_( coefTag ),
         coef_ ( 0.0     )
@@ -87,19 +86,20 @@ public:
      *  \param coef the value (constant in space and time) for the
      *         diffusion coefficient.
      */
-    Builder( const Expr::Tag phiTag, const double coef )
-      : isConstCoef_( true ),
+    Builder( const Expr::Tag& result,
+             const Expr::Tag& phiTag,
+             const double coef )
+      : ExpressionBuilder(result),
+        isConstCoef_( true ),
         phit_ ( phiTag      ),
         coeft_( Expr::Tag() ),
         coef_ ( coef        )
     {}
-
-    Expr::ExpressionBase*
-    build( const Expr::ExpressionID& id,
-           const Expr::ExpressionRegistry& reg ) const
+    ~Builder(){}
+    Expr::ExpressionBase* build() const
     {
-      if( isConstCoef_ ) return new DiffusiveVelocity<GradT>( phit_, coef_,  id, reg );
-      else               return new DiffusiveVelocity<GradT>( phit_, coeft_, id, reg );
+      if( isConstCoef_ ) return new DiffusiveVelocity<GradT>( phit_, coef_ );
+      else               return new DiffusiveVelocity<GradT>( phit_, coeft_);
     }
   private:
     const bool isConstCoef_;
@@ -152,10 +152,8 @@ class DiffusiveVelocity2
   const ScalarT* phi_;
   const ScalarT* coef_;
 
-  DiffusiveVelocity2( const Expr::Tag phiTag,
-                      const Expr::Tag coefTag,
-                      const Expr::ExpressionID& id,
-                      const Expr::ExpressionRegistry& reg );
+  DiffusiveVelocity2( const Expr::Tag& phiTag,
+                      const Expr::Tag& coefTag );
 
 public:
   /**
@@ -175,15 +173,14 @@ public:
      *  \param coefTag the Expr::Tag for the diffusion coefficient
      *         (located at same points as the scalar field).
      */
-    Builder( const Expr::Tag phiTag, const Expr::Tag coefTag )
-      : phit_(phiTag), coeft_( coefTag )
+    Builder( const Expr::Tag& result,
+             const Expr::Tag& phiTag,
+             const Expr::Tag& coefTag )
+      : ExpressionBuilder(result),
+        phit_(phiTag), coeft_( coefTag )
     {}
-
-    Expr::ExpressionBase*
-    build( const Expr::ExpressionID& id,
-           const Expr::ExpressionRegistry& reg ) const    {
-      return new DiffusiveVelocity2<GradT,InterpT>( phit_, coeft_, id, reg );
-    }
+    ~Builder(){}
+    Expr::ExpressionBase* build() const{ return new DiffusiveVelocity2<GradT,InterpT>( phit_, coeft_ ); }
   private:
     const Expr::Tag phit_,coeft_;
   };

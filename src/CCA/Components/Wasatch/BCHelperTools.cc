@@ -166,7 +166,7 @@ namespace Wasatch {
     typedef SpatialOps::structured::BoundaryCondition<FieldT,BCVal> BC;
     typedef typename BCOpT::BCEvalT BCEvaluator;
     Expr::ExpressionFactory& factory = *gh.exprFactory;
-    const Expr::ExpressionID phiID = factory.get_registry().get_id(phiTag);
+    const Expr::ExpressionID phiID = factory.get_id(phiTag);
     Expr::Expression<FieldT>& phiExpr = dynamic_cast<Expr::Expression<FieldT>&>( factory.retrieve_expression( phiID, patch->getID(), true ) );
 
     //FieldT& phiField = phiExpr.value();

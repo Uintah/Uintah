@@ -10,6 +10,7 @@
 <AllTests>
   <replace_lines>
     <max_Timesteps>1</max_Timesteps>
+    <randomSeed> true </randomSeed>
   </replace_lines>
 </AllTests>
 

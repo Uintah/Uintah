@@ -7,12 +7,10 @@
 
 template< typename StressT, typename Vel1T, typename Vel2T, typename ViscT >
 Stress<StressT,Vel1T,Vel2T,ViscT>::
-Stress( const Expr::Tag viscTag,
-        const Expr::Tag vel1Tag,
-        const Expr::Tag vel2Tag,
-        const Expr::ExpressionID& id,
-        const Expr::ExpressionRegistry& reg  )
-  : Expr::Expression<StressT>(id,reg),
+Stress( const Expr::Tag& viscTag,
+        const Expr::Tag& vel1Tag,
+        const Expr::Tag& vel2Tag )
+  : Expr::Expression<StressT>(),
     visct_( viscTag ),
     vel1t_( vel1Tag ),
     vel2t_( vel2Tag )
@@ -78,9 +76,9 @@ evaluate()
 
   vel1GradOp_->apply_to_field( *vel1_, stress ); // dui/dxj
   vel2GradOp_->apply_to_field( *vel2_, *tmp   ); // duj/dxi
-  
+
   stress <<= stress + *tmp; // dui/dxj + duj/dxi
-  
+
   viscInterpOp_->apply_to_field( *visc_, *tmp );
   stress <<= -stress * *tmp; // -mu * (dui/dxj + duj/dxi)
 }
@@ -89,11 +87,13 @@ evaluate()
 
 template< typename StressT, typename Vel1T, typename Vel2T, typename ViscT >
 Stress<StressT,Vel1T,Vel2T,ViscT>::
-Builder::Builder( const Expr::Tag viscTag,
-                  const Expr::Tag vel1Tag,
-                  const Expr::Tag vel2Tag,
-                  const Expr::Tag dilTag )
-  : visct_( viscTag ),
+Builder::Builder( const Expr::Tag& result,
+                  const Expr::Tag& viscTag,
+                  const Expr::Tag& vel1Tag,
+                  const Expr::Tag& vel2Tag,
+                  const Expr::Tag& dilTag )
+  : ExpressionBuilder(result),
+    visct_( viscTag ),
     vel1t_( vel1Tag ),
     vel2t_( vel2Tag )
 {}
@@ -102,11 +102,9 @@ Builder::Builder( const Expr::Tag viscTag,
 
 template< typename StressT, typename Vel1T, typename Vel2T, typename ViscT >
 Expr::ExpressionBase*
-Stress<StressT,Vel1T,Vel2T,ViscT>::
-Builder::build( const Expr::ExpressionID& id,
-                const Expr::ExpressionRegistry& reg ) const
+Stress<StressT,Vel1T,Vel2T,ViscT>::Builder::build() const
 {
-  return new Stress<StressT,Vel1T,Vel2T,ViscT>( visct_, vel1t_, vel2t_, id, reg );
+  return new Stress<StressT,Vel1T,Vel2T,ViscT>( visct_, vel1t_, vel2t_ );
 }
 
 
@@ -115,12 +113,10 @@ Builder::build( const Expr::ExpressionID& id,
 
 template< typename StressT, typename VelT, typename ViscT >
 Stress<StressT,VelT,VelT,ViscT>::
-Stress( const Expr::Tag viscTag,
-        const Expr::Tag velTag,
-        const Expr::Tag dilTag,
-        const Expr::ExpressionID& id,
-        const Expr::ExpressionRegistry& reg  )
-  : Expr::Expression<StressT>(id,reg),
+Stress( const Expr::Tag& viscTag,
+        const Expr::Tag& velTag,
+        const Expr::Tag& dilTag )
+  : Expr::Expression<StressT>(),
     visct_( viscTag ),
     velt_ ( velTag  ),
     dilt_ ( dilTag  )
@@ -195,11 +191,13 @@ evaluate()
 
 template< typename StressT, typename VelT, typename ViscT >
 Stress<StressT,VelT,VelT,ViscT>::
-Builder::Builder( const Expr::Tag viscTag,
-                  const Expr::Tag vel1Tag,
-                  const Expr::Tag vel2Tag,
-                  const Expr::Tag dilTag )
-  : visct_( viscTag ),
+Builder::Builder( const Expr::Tag& result,
+                  const Expr::Tag& viscTag,
+                  const Expr::Tag& vel1Tag,
+                  const Expr::Tag& vel2Tag,
+                  const Expr::Tag& dilTag )
+  : ExpressionBuilder(result),
+    visct_( viscTag ),
     velt_ ( vel1Tag ),
     dilt_ ( dilTag  )
 {}
@@ -208,11 +206,9 @@ Builder::Builder( const Expr::Tag viscTag,
 
 template< typename StressT, typename VelT, typename ViscT >
 Expr::ExpressionBase*
-Stress<StressT,VelT,VelT,ViscT>::
-Builder::build( const Expr::ExpressionID& id,
-                const Expr::ExpressionRegistry& reg ) const
+Stress<StressT,VelT,VelT,ViscT>::Builder::build() const
 {
-  return new Stress<StressT,VelT,VelT,ViscT>( visct_, velt_, dilt_, id, reg );
+  return new Stress<StressT,VelT,VelT,ViscT>( visct_, velt_, dilt_ );
 }
 
 //====================================================================
