@@ -3,10 +3,25 @@
 
 <symbolicLinks></symbolicLinks>
 
+<!-- Ray convergence test using Burns & Christon benchmark -->
 <test>
-  <name>RMCRT</name>
+  <name>RMCRT_OA_Ray</name>
   <ups>RMCRT_test_1L.ups</ups>
   <tst>ray.tst</tst>
-</test>
+</test> 
 
+<!-- Grid convergence test using Burns & Christon benchmark
+<test>
+  <name>RMCRT_OA_Ray</name>
+  <ups>RMCRT_test_1L.ups</ups>
+  <tst>dx.tst</tst>
+</test>
+-->
+<!-- Error versus refinement ratio using Burns & Christon benchmark 
+<test>
+  <name>RMCRT_refineRatio</name>
+  <ups>RMCRT_ML.ups</ups>
+  <tst>refineRatio.tst</tst>
+</test>
+-->
 </config>

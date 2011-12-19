@@ -8,12 +8,10 @@
 #include <spatialops/structured/SpatialFieldStore.h>
 
 template< typename ScalarT, typename FluxT >
-DiffusiveFlux<ScalarT, FluxT>::DiffusiveFlux( const Expr::Tag rhoTag,
-                                     const Expr::Tag phiTag,
-                                     const Expr::Tag coefTag,
-                                     const Expr::ExpressionID& id,
-                                     const Expr::ExpressionRegistry& reg  )
-  : Expr::Expression<FluxT>( id, reg ),
+DiffusiveFlux<ScalarT, FluxT>::DiffusiveFlux( const Expr::Tag& rhoTag,
+                                              const Expr::Tag& phiTag,
+                                              const Expr::Tag& coefTag )
+  : Expr::Expression<FluxT>(),
     isConstCoef_( false ),
     phiTag_ ( phiTag  ),
     coefTag_( coefTag ),
@@ -24,12 +22,10 @@ DiffusiveFlux<ScalarT, FluxT>::DiffusiveFlux( const Expr::Tag rhoTag,
 //--------------------------------------------------------------------
 
 template< typename ScalarT, typename FluxT >
-DiffusiveFlux<ScalarT, FluxT>::DiffusiveFlux( const Expr::Tag rhoTag,
-                                     const Expr::Tag phiTag,
-                                     const double coef,
-                                     const Expr::ExpressionID& id,
-                                     const Expr::ExpressionRegistry& reg  )
-  : Expr::Expression<FluxT>( id, reg ),
+DiffusiveFlux<ScalarT, FluxT>::DiffusiveFlux( const Expr::Tag& rhoTag,
+                                              const Expr::Tag& phiTag,
+                                              const double coef )
+  : Expr::Expression<FluxT>(),
     isConstCoef_( true  ),
     phiTag_ ( phiTag ),
     coefTag_( "NULL", Expr::INVALID_CONTEXT ),
@@ -112,12 +108,10 @@ evaluate()
 
 template< typename ScalarT, typename FluxT >
 DiffusiveFlux2<ScalarT, FluxT>::
-DiffusiveFlux2( const Expr::Tag rhoTag,
-                const Expr::Tag phiTag,
-                const Expr::Tag coefTag,
-                const Expr::ExpressionID& id,
-                const Expr::ExpressionRegistry& reg  )
-  : Expr::Expression<FluxT>(id,reg),
+DiffusiveFlux2( const Expr::Tag& rhoTag,
+                const Expr::Tag& phiTag,
+                const Expr::Tag& coefTag )
+  : Expr::Expression<FluxT>(),
     phiTag_ ( phiTag  ),
     coefTag_( coefTag ),
     rhoTag_ ( rhoTag  )

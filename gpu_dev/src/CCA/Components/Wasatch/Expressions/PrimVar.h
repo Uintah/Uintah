@@ -3,7 +3,7 @@
 
 #include <CCA/Components/Wasatch/Operators/OperatorTypes.h>
 
-#include <expression/Expr_Expression.h>
+#include <expression/Expression.h>
 
 /**
  *  \class 	PrimVar
@@ -33,21 +33,18 @@ class PrimVar
   const FieldT* rhophi_;
   const InterpT* interpOp_;
 
-  PrimVar( const Expr::Tag rhoPhiTag,
-           const Expr::Tag rhoTag,
-           const Expr::ExpressionID& id,
-           const Expr::ExpressionRegistry& reg );
+  PrimVar( const Expr::Tag& rhoPhiTag,
+           const Expr::Tag& rhoTag );
 
 public:
   class Builder : public Expr::ExpressionBuilder
   {
   public:
-    Builder( const Expr::Tag rhoPhiTag,
-             const Expr::Tag rhoTag );
-    
-    Expr::ExpressionBase*
-    build( const Expr::ExpressionID& id,
-           const Expr::ExpressionRegistry& reg ) const;
+    Builder( const Expr::Tag& result,
+             const Expr::Tag& rhoPhiTag,
+             const Expr::Tag& rhoTag );
+    ~Builder(){}
+    Expr::ExpressionBase* build() const;
 
   private:
     const Expr::Tag rhophit_, rhot_;
@@ -73,21 +70,18 @@ class PrimVar<FieldT,FieldT>
   const FieldT* rho_;
   const FieldT* rhophi_;
 
-  PrimVar( const Expr::Tag rhoPhiTag,
-           const Expr::Tag rhoTag,
-           const Expr::ExpressionID& id,
-           const Expr::ExpressionRegistry& reg );
+  PrimVar( const Expr::Tag& rhoPhiTag,
+           const Expr::Tag& rhoTag );
 
 public:
   class Builder : public Expr::ExpressionBuilder
   {
   public:
-    Builder( const Expr::Tag rhoPhiTag,
-             const Expr::Tag rhoTag );
-    
-    Expr::ExpressionBase*
-    build( const Expr::ExpressionID& id,
-           const Expr::ExpressionRegistry& reg ) const;
+    Builder( const Expr::Tag& result,
+             const Expr::Tag& rhoPhiTag,
+             const Expr::Tag& rhoTag );
+    ~Builder(){}
+    Expr::ExpressionBase* build() const;
 
   private:
   const Expr::Tag rhophit_, rhot_;

@@ -1,7 +1,7 @@
 #ifndef MomentumRHS_Expr_h
 #define MomentumRHS_Expr_h
 
-#include <expression/Expr_Expression.h>
+#include <expression/Expression.h>
 #include <spatialops/structured/FVStaggeredOperatorTypes.h>
 #include <spatialops/structured/FVStaggeredFieldTypes.h>
 
@@ -34,9 +34,7 @@ class MomRHS
   const Grad* gradOp_;
 
   MomRHS( const Expr::Tag& pressure,
-          const Expr::Tag& partRHS,
-          const Expr::ExpressionID& id,
-          const Expr::ExpressionRegistry& reg );
+          const Expr::Tag& partRHS );
 
 public:
   class Builder : public Expr::ExpressionBuilder
@@ -44,18 +42,17 @@ public:
     const Expr::Tag pressuret_, rhspt_;
   public:
     /**
+     *  \param result the result of this expression
      *  \param pressure the expression to compute the pressure as a scalar volume field
-     *
      *  \param partRHS the expression to compute the other terms in
      *         the momentum RHS (body force, divergence of convection
      *         and stress)
      */
-    Builder( const Expr::Tag& pressure,
+    Builder( const Expr::Tag& result,
+             const Expr::Tag& pressure,
              const Expr::Tag& partRHS );
-
-    Expr::ExpressionBase*
-    build( const Expr::ExpressionID& id,
-           const Expr::ExpressionRegistry& reg ) const;
+    ~Builder(){}
+    Expr::ExpressionBase* build() const;
   };
 
   ~MomRHS();

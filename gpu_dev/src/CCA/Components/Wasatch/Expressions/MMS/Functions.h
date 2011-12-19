@@ -1,7 +1,7 @@
 #ifndef Wasatch_MMS_Functions
 #define Wasatch_MMS_Functions
 
-#include <expression/Expr_Expression.h>
+#include <expression/Expression.h>
 
 /**
  *  \class SineTime
@@ -21,9 +21,10 @@ public:
    */
   struct Builder : public Expr::ExpressionBuilder
   {
-    Builder( const Expr::Tag tTag);
-    Expr::ExpressionBase* build( const Expr::ExpressionID& id,
-                                const Expr::ExpressionRegistry& reg ) const;
+    Builder( const Expr::Tag& result,
+             const Expr::Tag& tTag );
+    ~Builder(){}
+    Expr::ExpressionBase* build() const;
   private:
     const Expr::Tag tt_;
   };
@@ -34,9 +35,7 @@ public:
 
 private:
 
-  SineTime( const Expr::Tag& tTag,
-           const Expr::ExpressionID& id,
-           const Expr::ExpressionRegistry& reg);
+  SineTime( const Expr::Tag& tTag );
   const Expr::Tag tTag_;
   const double* t_;
 };
@@ -46,11 +45,9 @@ private:
 
 template<typename ValT>
 SineTime<ValT>::
-SineTime( const Expr::Tag& ttag,
-         const Expr::ExpressionID& id,
-         const Expr::ExpressionRegistry& reg )
-: Expr::Expression<ValT>( id, reg ),
-tTag_( ttag )
+SineTime( const Expr::Tag& ttag )
+: Expr::Expression<ValT>(),
+  tTag_( ttag )
 {}
 
 //--------------------------------------------------------------------
@@ -90,19 +87,19 @@ evaluate()
 
 template< typename ValT >
 SineTime<ValT>::Builder::
-Builder(         const Expr::Tag ttag)
-: tt_( ttag )
+Builder( const Expr::Tag& result,
+         const Expr::Tag& ttag )
+: ExpressionBuilder(result),
+  tt_( ttag )
 {}
 
 //--------------------------------------------------------------------
 
 template< typename ValT >
 Expr::ExpressionBase*
-SineTime<ValT>::Builder::
-build( const Expr::ExpressionID& id,
-      const Expr::ExpressionRegistry& reg ) const
+SineTime<ValT>::Builder::build() const
 {
-  return new SineTime<ValT>( tt_, id, reg );
+  return new SineTime<ValT>( tt_ );
 }
 
 //--------------------------------------------------------------------

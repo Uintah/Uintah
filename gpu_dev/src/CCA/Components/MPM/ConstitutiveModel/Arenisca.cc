@@ -119,7 +119,7 @@ void Arenisca::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
   ProblemSpecP cm_ps = ps;
   if (output_cm_tag) {
     cm_ps = ps->appendChild("constitutive_model");
-    cm_ps->setAttribute("type","simplified_geo_model");
+    cm_ps->setAttribute("type","Arenisca");
   }
 
   cm_ps->appendElement("FSLOPE",d_initialData.FSLOPE);
@@ -414,7 +414,8 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
 
       // update the actual stress:
       Matrix3 unrotated_stress = (tensorR.Transpose())*(stress_old[idx]*tensorR);
-      trial_stress[idx] = unrotated_stress + (Identity*lame*(D.Trace()*delT) + D*delT*2.0*shear);
+      Matrix3 stress_diff = (Identity*lame*(D.Trace()*delT) + D*delT*2.0*shear);
+      trial_stress[idx] = unrotated_stress + stress_diff;
 
       // compute shifted stress
       trial_stress[idx] = trial_stress[idx] - pBackStress[idx];
@@ -453,7 +454,7 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
         // Determine a characteristic length of the elastic zone
         double char_length_yield_surface;
         if (pKappa[idx]<-1.0e90){
-          char_length_yield_surface = abs(2.0*PEAKI1_hardening);
+          char_length_yield_surface = abs(2.0*(PEAKI1_hardening-FSLOPE*I1_trial));
         } else {
           if (PEAKI1_hardening-(pKappa[idx]-cap_radius) 
               < -2.0*(FSLOPE*(pKappa_new[idx]-cap_radius)-PEAKI1_hardening)){
@@ -544,17 +545,33 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
 
         } // ###2 (END: plasticity vertex treatment)
 
-        Matrix3 trial_stress_ALI=trial_stress[idx];
-
         if (condition_return_to_vertex == 0){ // ###3 (BEGIN CONDITION: nested return algorithm)
+
+        Matrix3 trial_stress_loop;
+        int num_subcycles = floor (sqrt(f_trial[idx])/(char_length_yield_surface/100) + 1);
+        trial_stress[idx] = trial_stress[idx] + pBackStress[idx];
+        trial_stress[idx] = trial_stress[idx] - stress_diff;
+        stress_diff = stress_diff/num_subcycles;
+        pKappa_new[idx] = pKappa[idx];
+        pPlasticStrain_new[idx] = pPlasticStrain[idx];
+        pPlasticStrainVol_new[idx] = pPlasticStrainVol[idx];
+        pBackStress_new[idx] = pBackStress[idx];
+        stress_new[idx] = trial_stress[idx];
+
+        for (int subcycle_counter=0 ; subcycle_counter<=num_subcycles-1 ; subcycle_counter++){ // ###SUBCYCLING LOOP
+
+          trial_stress[idx] = stress_new[idx];
+          trial_stress[idx] = trial_stress[idx] + stress_diff;
+          trial_stress[idx] = trial_stress[idx] - pBackStress_new[idx];
+          trial_stress_loop = trial_stress[idx];
 
 	         double gamma = 0.0;;
 	         double gammaOld;
 	         double I1_iteration,J2_iteration;
 	         double beta_cap,FSLOPE_cap;
           double f_new_loop = 1e99;
-          Matrix3 pBackStress_loop = pBackStress[idx];
-          double pKappa_loop = pKappa[idx];
+          Matrix3 pBackStress_loop = pBackStress_new[idx];
+          double pKappa_loop = pKappa_new[idx];
 	         int max_number_of_iterations = 100;
 	         int counter = 1;
 	         Matrix3 P,M,G;
@@ -636,7 +653,7 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
               }
               stress_iteration = stress_iteration_temp;
 
-            }else if (I1_iteration<pKappa[idx]){ // ###5 (ELSE: fast return algorithm)
+            }else if (I1_iteration<pKappa_new[idx]){ // ###5 (ELSE: fast return algorithm)
 
               beta_cap = sqrt( 1.0 - (pKappa_loop-I1_iteration)*(pKappa_loop-I1_iteration)/
                          ( (cap_radius)*(cap_radius) ) );
@@ -677,7 +694,7 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
 	           } // ###6 (END: calculation of G and M tensors)
 
             // compute the projection direction tensor
-            double deltaBackStressIso_temp = exp(p3_crush_curve+pPlasticStrainVol[idx]);
+            double deltaBackStressIso_temp = exp(p3_crush_curve+pPlasticStrainVol_new[idx]);
             deltaBackStress = stress_iteration*kinematic_hardening_constant;
             deltaBackStressIso = Identity*( 3.0*fluid_B0*
                                 (exp(p3_crush_curve+p4_fluid_effect)-1.0) * deltaBackStressIso_temp
@@ -690,10 +707,10 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
 
             // compute the new value for gamma
             gammaOld = gamma;
-	           gamma = ( G.Contract(trial_stress_ALI-stress_iteration) )/( G.Contract(P) );
+	           gamma = ( G.Contract(trial_stress_loop-stress_iteration) )/( G.Contract(P) );
 
             // compute new trial stress in the loop
-	           stress_iteration = trial_stress_ALI - P*gamma;
+	           stress_iteration = trial_stress_loop - P*gamma;
             stress_iteration = stress_iteration + pBackStress_loop;
             trial_stress[idx] = trial_stress[idx] + pBackStress_loop;
             double I1_plasStrain,J2_plasStrain;
@@ -701,24 +718,24 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
             plasStrain_loop = M*gamma;
 
             computeInvariants(plasStrain_loop, S_plasStrain, I1_plasStrain, J2_plasStrain);
-            deltaBackStressIso_temp = exp(p3_crush_curve+pPlasticStrainVol[idx]);
+            deltaBackStressIso_temp = exp(p3_crush_curve+pPlasticStrainVol_new[idx]);
             deltaBackStress = stress_iteration*kinematic_hardening_constant*sqrt(J2_plasStrain);
             deltaBackStressIso = Identity*( 3.0*fluid_B0*
                                 (exp(p3_crush_curve+p4_fluid_effect)-1.0) * deltaBackStressIso_temp
                                 /( (deltaBackStressIso_temp-1.0)*(deltaBackStressIso_temp-1.0) ) )*
                                 plasStrain_loop.Trace();
-            pBackStress_loop = pBackStress[idx] + deltaBackStress + deltaBackStressIso;
+            pBackStress_loop = pBackStress_new[idx] + deltaBackStress + deltaBackStressIso;
             stress_iteration = stress_iteration - pBackStress_loop;
             trial_stress[idx] = trial_stress[idx] - pBackStress_loop;
-            trial_stress_ALI = trial_stress[idx];
+            trial_stress_loop = trial_stress[idx];
             double hardeningEns;
             if (I1_iteration>=pKappa_loop){
               hardeningEns = -2.0*hardening_modulus*(FSLOPE*I1_iteration-PEAKI1_hardening)/G.Norm();
             }else{
               beta_cap = 1.0 - (pKappa_loop-I1_iteration)*(pKappa_loop-I1_iteration)/
                          ( (cap_radius)*(cap_radius) );
-              double pKappa_tempA = exp(p3_crush_curve+p4_fluid_effect+pPlasticStrainVol[idx]+(M*gamma).Trace());
-              double pKappa_tempA1 = exp(p3_crush_curve+pPlasticStrainVol[idx]+(M*gamma).Trace());
+              double pKappa_tempA = exp(p3_crush_curve+p4_fluid_effect+pPlasticStrainVol_new[idx]+(M*gamma).Trace());
+              double pKappa_tempA1 = exp(p3_crush_curve+pPlasticStrainVol_new[idx]+(M*gamma).Trace());
               hardeningEns = -2.0*beta_cap*(FSLOPE*I1_iteration-PEAKI1_hardening)
                                  *hardening_modulus/G.Norm()
                              +2.0/G.Norm()*CR*(FSLOPE*I1_iteration-PEAKI1_hardening)
@@ -736,11 +753,11 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
             }
             Matrix3 G_unit = G/G.Norm();
             gamma=gammaOld+(G_unit.Contract(P)/( G_unit.Contract(P)+hardeningEns ))*(gamma-gammaOld);
-	           stress_iteration = trial_stress_ALI - P*gamma;
+	           stress_iteration = trial_stress_loop - P*gamma;
 
             // update the position of the cap
-            double pKappa_temp = exp(p3_crush_curve+p4_fluid_effect+pPlasticStrainVol[idx]+(M*gamma).Trace());
-            double pKappa_temp1 = exp(p3_crush_curve+pPlasticStrainVol[idx]+(M*gamma).Trace());
+            double pKappa_temp = exp(p3_crush_curve+p4_fluid_effect+pPlasticStrainVol_new[idx]+(M*gamma).Trace());
+            double pKappa_temp1 = exp(p3_crush_curve+pPlasticStrainVol_new[idx]+(M*gamma).Trace());
             pKappa_loop = pKappa_loop + ( exp(-p1_crush_curve*(pKappa_loop-cap_radius-p0_crush_curve))
                              /( p3_crush_curve*p1_crush_curve ) -
                              3.0*fluid_B0*(exp(p3_crush_curve+p4_fluid_effect)-1.0)*pKappa_temp
@@ -748,10 +765,11 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
                              3.0*fluid_B0*(exp(p3_crush_curve+p4_fluid_effect)-1.0)*pKappa_temp1
                              /( (pKappa_temp1-1.0)*(pKappa_temp1-1.0) ) )
                              *(M*(gamma-gammaOld)).Trace()/(1.0+FSLOPE*CR);
-            PEAKI1_hardening = PEAKI1*FSLOPE + hardening_modulus*(pPlasticStrain[idx]+(M*gamma).Norm());
+            PEAKI1_hardening = PEAKI1*FSLOPE + hardening_modulus*(pPlasticStrain_new[idx]+(M*gamma).Norm());
             cap_radius=-CR*(FSLOPE*pKappa_loop-PEAKI1_hardening);
 
             f_new_loop=YieldFunction(stress_iteration,FSLOPE,pKappa_loop,cap_radius,PEAKI1_hardening);
+            f_new_loop=sqrt(abs(f_new_loop));
 
 	        } // ###4 (END LOOP: nested return algorithm)
 
@@ -761,20 +779,26 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
 
          double shear_inverse = 0.5/shear;
 	        double lame_inverse = (-1.0)*lame/(2.0*shear*(2.0*shear+3.0*lame));
-         Matrix3 diff_stress_iteration = trial_stress_ALI - stress_new[idx];
+         Matrix3 diff_stress_iteration = trial_stress_loop - stress_new[idx];
 	        Matrix3 strain_iteration = (Identity*lame_inverse*(diff_stress_iteration.Trace()) +
                                     diff_stress_iteration*shear_inverse);
          // update total plastic strain magnitude
-	        pPlasticStrain_new[idx] = pPlasticStrain[idx] + strain_iteration.Norm();
+	        pPlasticStrain_new[idx] = pPlasticStrain_new[idx] + strain_iteration.Norm();
          // update volumetric part of the plastic strain magnitude
-         pPlasticStrainVol_new[idx] = pPlasticStrainVol[idx] + strain_iteration.Trace();
+         pPlasticStrainVol_new[idx] = pPlasticStrainVol_new[idx] + strain_iteration.Trace();
          // update volumetric part of the elastic strain magnitude
          pElasticStrainVol_new[idx] = pElasticStrainVol_new[idx] - strain_iteration.Trace();
+         stress_new[idx] = stress_new[idx] + pBackStress_new[idx];
+
+       } // ###SUBCYCLING LOOP
+
+       stress_new[idx] = stress_new[idx] - pBackStress_new[idx];
 
        } // ###3 (END CONDITION: nested return algorithm)
 
        double f_new;
 	      f_new=YieldFunction(stress_new[idx],FSLOPE,pKappa_new[idx],cap_radius,PEAKI1_hardening);
+       f_new=sqrt(abs(f_new));
        double J2_new,I1_new;
        Matrix3 S_new;
        computeInvariants(stress_new[idx], S_new, I1_new, J2_new);
@@ -785,6 +809,7 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
 	        cerr<<"ERROR!  did not return to yield surface (Arenisca.cc)"<<endl;
 	        cerr<<"sqrt(J2_new)= "<<sqrt(J2_new)<<endl;
 	        cerr<<"I1_new= "<<I1_new<<endl;
+	        cerr<<"pKappa_new[idx]= "<<pKappa_new[idx]<<endl;
          cerr<<"f_new= "<<f_new<<endl;
 	        exit(1);
 	      }

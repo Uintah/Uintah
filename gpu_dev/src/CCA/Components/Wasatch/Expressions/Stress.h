@@ -1,7 +1,7 @@
 #ifndef Stress_Expr_h
 #define Stress_Expr_h
 
-#include <expression/Expr_Expression.h>
+#include <expression/Expression.h>
 #include <spatialops/structured/FVStaggeredOperatorTypes.h>
 
 /**
@@ -41,17 +41,16 @@ class Stress
   const Vel1T* vel1_;
   const Vel2T* vel2_;
 
-  Stress( const Expr::Tag viscTag,
-          const Expr::Tag vel1Tag,
-          const Expr::Tag vel2Tag,
-          const Expr::ExpressionID& id,
-          const Expr::ExpressionRegistry& reg );
+  Stress( const Expr::Tag& viscTag,
+          const Expr::Tag& vel1Tag,
+          const Expr::Tag& vel2Tag );
 
 public:
   class Builder : public Expr::ExpressionBuilder
   {
   public:
     /**
+     *  \param result the stress component being calculated
      *  \param viscTag the viscosity
      *  \param vel1Tag the first velocity component
      *  \param vel2Tag the second velocity component
@@ -59,14 +58,13 @@ public:
      *  \param dilTag the dilatation tag. If supplied, the
      *         dilatational stress term will be added.
      */
-    Builder( const Expr::Tag viscTag,
-             const Expr::Tag vel1Tag,
-             const Expr::Tag vel2Tag,
-             const Expr::Tag dilTag );
-
-    Expr::ExpressionBase*
-    build( const Expr::ExpressionID& id,
-           const Expr::ExpressionRegistry& reg ) const;
+    Builder( const Expr::Tag& result,
+             const Expr::Tag& viscTag,
+             const Expr::Tag& vel1Tag,
+             const Expr::Tag& vel2Tag,
+             const Expr::Tag& dilTag );
+    ~Builder(){}
+    Expr::ExpressionBase* build() const;
 
   private:
     const Expr::Tag visct_, vel1t_, vel2t_;
@@ -105,17 +103,16 @@ class Stress< StressT, VelT, VelT, ViscT >
   const VelT*  vel_;
   const ViscT* dil_;
 
-  Stress( const Expr::Tag viscTag,
-          const Expr::Tag velTag,
-          const Expr::Tag dilTag,
-          const Expr::ExpressionID& id,
-          const Expr::ExpressionRegistry& reg );
+  Stress( const Expr::Tag& viscTag,
+          const Expr::Tag& velTag,
+          const Expr::Tag& dilTag );
 
 public:
   class Builder : public Expr::ExpressionBuilder
   {
   public:
     /**
+     *  \param result the stress component calculated here
      *  \param viscTag the viscosity
      *  \param vel1Tag the first velocity component
      *  \param vel2Tag the second velocity component
@@ -127,14 +124,13 @@ public:
      *  ignored.  It is kept for consistency with the off-diagonal
      *  stress builder.
      */
-    Builder( const Expr::Tag viscTag,
-             const Expr::Tag vel1Tag,
-             const Expr::Tag vel2Tag,
-             const Expr::Tag dilTag );
-
-    Expr::ExpressionBase*
-    build( const Expr::ExpressionID& id,
-           const Expr::ExpressionRegistry& reg ) const;
+    Builder( const Expr::Tag& result,
+             const Expr::Tag& viscTag,
+             const Expr::Tag& vel1Tag,
+             const Expr::Tag& vel2Tag,
+             const Expr::Tag& dilTag );
+    ~Builder(){}
+    Expr::ExpressionBase* build() const;
 
   private:
     const Expr::Tag visct_, velt_, dilt_;

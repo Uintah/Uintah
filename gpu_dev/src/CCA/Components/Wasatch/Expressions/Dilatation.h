@@ -1,7 +1,7 @@
 #ifndef Dilatation_Expr_h
 #define Dilatation_Expr_h
 
-#include <expression/Expr_Expression.h>
+#include <expression/Expression.h>
 
 #include <spatialops/structured/FVStaggeredOperatorTypes.h>
 
@@ -37,11 +37,9 @@ class Dilatation
   const Vel2GradT* vel2GradOp_;
   const Vel3GradT* vel3GradOp_;
 
-  Dilatation( const Expr::Tag vel1tag,
-              const Expr::Tag vel2tag,
-              const Expr::Tag vel3tag,
-              const Expr::ExpressionID& id,
-              const Expr::ExpressionRegistry& reg );
+  Dilatation( const Expr::Tag& vel1tag,
+              const Expr::Tag& vel2tag,
+              const Expr::Tag& vel3tag );
 
 public:
   class Builder : public Expr::ExpressionBuilder
@@ -53,13 +51,12 @@ public:
      *  \param vel2tag the velocity corresponding to the Vel2T template parameter
      *  \param vel3tag the velocity corresponding to the Vel3T template parameter
      */
-    Builder( const Expr::Tag vel1tag,
-             const Expr::Tag vel2tag,
-             const Expr::Tag vel3tag );
-
-    Expr::ExpressionBase*
-    build( const Expr::ExpressionID& id,
-           const Expr::ExpressionRegistry& reg ) const;
+    Builder( const Expr::Tag& result,
+             const Expr::Tag& vel1tag,
+             const Expr::Tag& vel2tag,
+             const Expr::Tag& vel3tag );
+    ~Builder(){}
+    Expr::ExpressionBase* build() const;
 
   private:
     const Expr::Tag v1t_, v2t_, v3t_;

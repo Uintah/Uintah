@@ -1,7 +1,7 @@
 #ifndef SetCurrentTime_Expr_h
 #define SetCurrentTime_Expr_h
 
-#include <expression/Expr_Expression.h>
+#include <expression/Expression.h>
 
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/SimulationStateP.h>
@@ -25,36 +25,31 @@ class SetCurrentTime
   double deltat_;
 
   SetCurrentTime( const Uintah::SimulationStateP sharedState,
-                  const int RKStage,
-                  const Expr::ExpressionID& id,
-                  const Expr::ExpressionRegistry& reg );
+                  const int RKStage );
 
 public:
   int RKStage;
-  
+
   class Builder : public Expr::ExpressionBuilder
   {
     const Uintah::SimulationStateP state_;
     const int RKStage_;
-    
+
   public:
-    Builder( const Uintah::SimulationStateP sharedState, const int RKStage );
-    Expr::ExpressionBase* build( const Expr::ExpressionID& id,
-                                 const Expr::ExpressionRegistry& reg ) const;
+    Builder( const Expr::Tag& result,
+             const Uintah::SimulationStateP sharedState,
+             const int RKStage );
+    ~Builder(){}
+    Expr::ExpressionBase* build() const;
   };
 
   ~SetCurrentTime();
 
   void advertise_dependents( Expr::ExprDeps& exprDeps ){}
-
   void bind_fields( const Expr::FieldManagerList& fml ){}
-
   void bind_operators( const SpatialOps::OperatorDatabase& opDB ){}
-
   void evaluate();
-  
   void set_integrator_stage( const int RKStage ){RKStage_ = RKStage;}
-  
   void set_deltat( const double deltat ) {deltat_ = deltat;}
 };
 

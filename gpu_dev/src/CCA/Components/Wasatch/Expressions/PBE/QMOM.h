@@ -3,7 +3,7 @@
 #include <spatialops/structured/FVStaggeredFieldTypes.h>
 #include <spatialops/structured/FVStaggeredOperatorTypes.h>
 
-#include <expression/Expr_Expression.h>
+#include <expression/Expression.h>
 #include <math.h>
 
 // declare lapack eigenvalue solver
@@ -25,23 +25,19 @@ class QMOM : public Expr::Expression<FieldT>
   typedef std::vector<const FieldT*> FieldTVec;
   FieldTVec knownMoments_;
   const Expr::TagList knownMomentsTagList_;
-  QMOM( const Expr::TagList knownMomentsTagList,
-        const Expr::ExpressionID& id,
-        const Expr::ExpressionRegistry& reg );
+  QMOM( const Expr::TagList knownMomentsTagList );
 
 public:
   class Builder : public Expr::ExpressionBuilder
   {
   public:
-    Builder( const Expr::TagList knownMomentsTagList )
-    : knownMomentsTagList_( knownMomentsTagList )
+    Builder( const Expr::TagList& result,
+             const Expr::TagList& knownMomentsTagList )
+    : ExpressionBuilder(result),
+      knownMomentsTagList_( knownMomentsTagList )
     {}
-    
-    Expr::ExpressionBase*
-    build( const Expr::ExpressionID& id,
-           const Expr::ExpressionRegistry& reg ) const {
-      return new QMOM<FieldT>( knownMomentsTagList_, id, reg );
-    }
+    ~Builder(){}
+    Expr::ExpressionBase* build() const{ return new QMOM<FieldT>( knownMomentsTagList_ ); }
 
   private:
     const Expr::TagList knownMomentsTagList_;
@@ -66,10 +62,8 @@ public:
 
 template<typename FieldT>
 QMOM<FieldT>::
-QMOM( const Expr::TagList knownMomentsTaglist,
-       const Expr::ExpressionID& id,
-       const Expr::ExpressionRegistry& reg  )
-  : Expr::Expression<FieldT>(id,reg),
+QMOM( const Expr::TagList knownMomentsTaglist )
+  : Expr::Expression<FieldT>(),
     knownMomentsTagList_( knownMomentsTaglist )
 {}
 
@@ -101,7 +95,7 @@ bind_fields( const Expr::FieldManagerList& fml )
        iMomTag!=knownMomentsTagList_.end();
        ++iMomTag ){
     knownMoments_.push_back( &fm.field_ref(*iMomTag) );
-  }      
+  }
 }
 
 //--------------------------------------------------------------------
@@ -122,7 +116,7 @@ evaluate()
   using namespace SpatialOps;
   using namespace SCIRun;
   // the results vector is organized as follows:
-  // (w0, a0, w1, a1, et...) 
+  // (w0, a0, w1, a1, et...)
   typedef std::vector<FieldT*> ResultsVec;
   ResultsVec& results = this->get_value_vec();
   //
@@ -138,7 +132,7 @@ evaluate()
   double* b = new double[abSize];
   double* jMatrix = new double[abSize*abSize];
   double* eigenValues = new double[abSize];
-  double* weights = new double[abSize];  
+  double* weights = new double[abSize];
   // loop over every point in the patch. get a sample iterator for any of the
   // fields.
   const FieldT* sampleField = knownMoments_[0];
@@ -152,18 +146,18 @@ evaluate()
   for (int i=0; i<nMoments; i++) {
     typename FieldT::const_interior_iterator thisIterator = knownMoments_[i]->interior_begin();
     knownMomentsIterators.push_back(thisIterator);
-    
+
     typename FieldT::interior_iterator thisResultsIterator = results[i]->interior_begin();
     resultsIterators.push_back(thisResultsIterator);
   }
   //
-  while (sampleIterator!=sampleField->interior_end()) {        
+  while (sampleIterator!=sampleField->interior_end()) {
     // for every point, calculate the quadrature weights and abscissae
     // start by putting together the p matrix. this is documented in an associated pdf
     for (int iRow=0; iRow<=nMoments-2; iRow += 2) {
       // get the the iRow moment for this point
       p[iRow][1] = *knownMomentsIterators[iRow];
-      // get the the (iRow+1) moment for all points      
+      // get the the (iRow+1) moment for all points
       p[iRow+1][1] = -*knownMomentsIterators[iRow+1];
     }
     // keep filling the p matrix. this gets easier now
@@ -183,8 +177,8 @@ evaluate()
     //
     //
     alpha[0]=0.0;
-    for (int jCol=1; jCol<nMoments; jCol++) 
-      alpha[jCol] = p[0][jCol+1]/(p[0][jCol]*p[0][jCol-1]);      
+    for (int jCol=1; jCol<nMoments; jCol++)
+      alpha[jCol] = p[0][jCol+1]/(p[0][jCol]*p[0][jCol-1]);
 
 //    for (int iRow=0; iRow<nMoments; iRow++) {
 //        printf("alpha[%i] = %f \t \t",iRow,alpha[iRow]);
@@ -203,7 +197,7 @@ evaluate()
         errorMsg 	<< endl
                   << "ERROR: Negative number detected in constructing the b auxiliary matrix while processing the QMOM expression." << std::endl
 					        << "Value: b["<<jCol<<"] = "<<rhsB << std::endl;
-        throw std::runtime_error( errorMsg.str() );        
+        throw std::runtime_error( errorMsg.str() );
       }
       b[jCol] = -sqrt(rhsB);
     }
@@ -232,10 +226,10 @@ evaluate()
 
     //__________
     // Eigenvalue solve
-    /* Query and allocate the optimal workspace */    
+    /* Query and allocate the optimal workspace */
     int n = abSize, lda = abSize, info, lwork;
     double wkopt;
-    double* work;    
+    double* work;
     lwork = -1;
     char jobz='V';
     char matType = 'U';
@@ -248,14 +242,14 @@ evaluate()
 //    for (int iRow=0; iRow<abSize; iRow++) {
 //      printf("Eigen[%i] = %.12f \t \t",iRow,eigenValues[iRow]);
 //    }
-//    printf("\n");    
+//    printf("\n");
     //__________
     // save the weights and abscissae
     m0 = *knownMomentsIterators[0];
     for (int i=0; i<abSize; i++) {
       int matLoc = i*abSize;
       weights[i] = jMatrix[matLoc]*jMatrix[matLoc]/m0;
-    }    
+    }
     for (int i=0; i<abSize; i++) {
       int matLoc = 2*i;
       *resultsIterators[matLoc] = weights[i];
@@ -265,10 +259,10 @@ evaluate()
 //    for (int i=0; i<abSize; i++) {
 //      int matLoc = 2*i;
 //      printf("w[%i] = %.12f ",i,*resultsIterators[matLoc]);
-//      printf("a[%i] = %.12f ",i,*resultsIterators[matLoc+1]);      
+//      printf("a[%i] = %.12f ",i,*resultsIterators[matLoc+1]);
 //    }
 //    printf("\n");
-        
+
     //__________
     // increment iterators
     ++sampleIterator;

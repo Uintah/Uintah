@@ -1628,7 +1628,7 @@ BoundaryCondition::pressureBC(const Patch* patch,
     std::vector<BC_TYPE> add_types; 
     add_types.push_back( OUTLET ); 
     add_types.push_back( PRESSURE ); 
-    int sign = 1; 
+    int sign = -1; 
 
     zeroStencilDirection( patch, matl_index, sign, A, add_types ); 
 
@@ -1639,7 +1639,7 @@ BoundaryCondition::pressureBC(const Patch* patch,
     sub_types.push_back( VELOCITY_FILE ); 
     sub_types.push_back( MASSFLOW_FILE ); 
     sub_types.push_back( SWIRL );
-    sign = -1;
+    sign = 1;
 
     zeroStencilDirection( patch, matl_index, sign, A, sub_types ); 
 

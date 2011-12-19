@@ -45,12 +45,6 @@ Ray::problemSetup( const ProblemSpecP& inputdb)
 
   db->getWithDefault( "NoOfRays"  , _NoOfRays  , 1000 );
   db->getWithDefault( "Threshold" , _Threshold , 0.01 );      //When to terminate a ray
-  db->getWithDefault( "AlphaEW"   , _alphaEW   , 0.5 );       //Absorption coefficient of the  EW boundaries    
-  db->getWithDefault( "AlphaNS"   , _alphaNS   , 0.5 );       //Absorption coefficient of the NS boundaries     
-  db->getWithDefault( "AlphaTB"   , _alphaTB   , 0.5 );       //Absorption coefficient of the TB boundaries     
-  db->getWithDefault( "TEW"       , _TEW       ,  0  );       //Temperature of the  EW boundaries               
-  db->getWithDefault( "TNS"       , _TNS       ,  0  );       //Temperature of the  NS boundaries               
-  db->getWithDefault( "TTB"       , _TTB       ,  0  );       //Temperature of the  TB boundaries               
   db->getWithDefault( "Slice"     , _slice     , 9 );         //Level in z direction of xy slice
   db->getWithDefault( "randomSeed", _isSeedRandom, true );    // random or deterministic seed.
   db->getWithDefault( "benchmark_1" ,     _benchmark_1,     false );  
@@ -295,13 +289,15 @@ Ray::rayTrace( const ProcessorGroup* pc,
 
   // Determine the size of the domain.
   IntVector domainLo, domainHi;
-  level->findInteriorCellIndexRange(domainLo, domainHi);
+  IntVector domainLo_EC, domainHi_EC;
+  
+  level->findInteriorCellIndexRange(domainLo, domainHi);     // excluding extraCells
+  level->findCellIndexRange(domainLo_EC, domainHi_EC);       // including extraCells
 
   constCCVariable<double> sigmaT4Pi;
-  constCCVariable<double> abskg;
-  new_dw->getRegion( abskg   ,   d_abskgLabel ,   d_matl , level, domainLo, domainHi);
-  new_dw->getRegion( sigmaT4Pi , d_sigmaT4_label, d_matl , level, domainLo, domainHi);
-
+  constCCVariable<double> abskg;                               
+  new_dw->getRegion( abskg   ,   d_abskgLabel ,   d_matl , level, domainLo_EC, domainHi_EC);
+  new_dw->getRegion( sigmaT4Pi , d_sigmaT4_label, d_matl , level, domainLo_EC, domainHi_EC);
 
   double start=clock();
 
@@ -322,38 +318,22 @@ Ray::rayTrace( const ProcessorGroup* pc,
     unsigned long int size = 0;                        // current size of PathIndex
     Vector Dx = patch->dCell();                        // cell spacing
  
-    double local_alpha[3] = {_alphaEW,_alphaNS,_alphaTB};  // emissivity of the E/W, N/S, and T/B domain walls
-    double local_sigmaT4Pi[3] = {0,0,0};                   // intensity of the E/W, N/S, and T/B domain walls
-    double local_T[3] = {_TEW, _TNS, _TTB};
 
-    if(_benchmark_1){
-      local_alpha[0] = 1;
-      local_alpha[1] = 1;
-      local_alpha[2] = 1;
-      local_T[0] = 0;
-      local_T[1] = 0;
-      local_T[2] = 0;
-    }
-    else if(_benchmark_13pt2){
-      local_alpha[0] = 0;
-      local_alpha[1] = 0;
-      local_alpha[2] = 1;
-      _TEW = 1000;
-      _TNS = 1000;
-      _TTB = 1000;
-    }
-
-    for (int ii=0; ii<3; ++ii){
-      local_sigmaT4Pi[ii] = local_alpha[ii] * _sigma_over_pi * local_T[ii]*local_T[ii]*local_T[ii]*local_T[ii];
-    }
     //__________________________________
     //
     for (CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){ 
-
       IntVector origin = *iter; 
       int i = origin.x();
       int j = origin.y();
       int k = origin.z();
+
+      // Allow for quick debugging test
+     /* IntVector pLow;
+       IntVector pHigh;
+       level->findInteriorCellIndexRange(pLow, pHigh);
+       int Nx = pHigh[0] - pLow[0];
+       if (i==Nx/2 && j==Nx/2){
+     */
 
       double SumI = 0;
 
@@ -425,7 +405,6 @@ Ray::rayTrace( const ProcessorGroup* pc,
         //the domain after it was updated following the first switch statement.
 
         int nReflect = 0; // Number of reflections that a ray has undergone
-
         //Threshold while loop
         while (intensity > _Threshold){
         
@@ -490,34 +469,26 @@ Ray::rayTrace( const ProcessorGroup* pc,
 
             //Eqn 3-15(see below reference) while
             //Third term inside the parentheses is accounted for in Inet. Chi is accounted for in Inet calc.
-
-            SumI += sigmaT4Pi[prevCell] * ( exp(-optical_thickness_prev) - exp(-optical_thickness) ) * fs;;
+            SumI += sigmaT4Pi[prevCell] * ( exp(-optical_thickness_prev) - exp(-optical_thickness) ) * fs;
           } //end domain while loop.  ++++++++++++++
+
+          intensity = exp(-optical_thickness);
+
+          //  wall emission 12/15/11
+          SumI += abskg[cur]*sigmaT4Pi[cur] * intensity;
+
+          intensity = intensity * (1-abskg[cur]);
 
           //__________________________________
           //  Reflections
-          ++nReflect;
-          intensity = exp(-optical_thickness);
-
           if (intensity > _Threshold){
 
-            //  wall emission 11/9/11
-            SumI += local_sigmaT4Pi[face] * intensity;
-
-            // sumI +=  local_sigmaT4Pi[face +sign[face]] * intensity;
-            // !! The above line will allow for 6 boundary temperatures
-
-            intensity = intensity * (1-local_alpha[face]);
-            
-            fs = fs * (1-local_alpha[face]);
-            
-            //intensity =intensity * (1-local_alpha[face]);
-            //fs=fs * (1-local_alpha[face]);
-            // !! The above 2 lines will allow for 6 boundary emissivities
+            ++nReflect;
+            fs = fs * (1-abskg[cur]);
 
             //put cur back inside the domain
             cur = prevCell;
-            
+
             // apply reflection condition
             step[face] *= -1;                      // begin stepping in opposite direction
             sign[face] = (sign[face]==1) ? 0 : 1; //  swap sign from 1 to 0 or vice versa
@@ -531,8 +502,8 @@ Ray::rayTrace( const ProcessorGroup* pc,
       //__________________________________
       //  Compute divQ
       divQ[origin] = 4.0 * _pi * abskg[origin] * ( sigmaT4Pi[origin] - (SumI/_NoOfRays) );
-      //cout << divQ[origin] << endl;
-
+     //cout << divQ[origin] << endl;
+      // } // end quick debug testing
     }  // end cell iterator
 
 
@@ -553,66 +524,66 @@ Ray::rayTrace( const ProcessorGroup* pc,
 
 
 //______________________________________________________________________
-inline bool
+  inline bool
 Ray::containsCell(const IntVector &low, const IntVector &high, const IntVector &cell)
 {
-   return  low.x() <= cell.x() && 
-           low.y() <= cell.y() &&
-           low.z() <= cell.z() &&
-           high.x() > cell.x() && 
-           high.y() > cell.y() &&
-           high.z() > cell.z();
+  return  low.x() <= cell.x() && 
+    low.y() <= cell.y() &&
+    low.z() <= cell.z() &&
+    high.x() > cell.x() && 
+    high.y() > cell.y() &&
+    high.z() > cell.z();
 }
 
 
 //______________________________________________________________________
 //  Set Boundary conditions
-void 
+  void 
 Ray::setBC(CCVariable<double>& Q_CC,
-           const string& desc,
-           const Patch* patch,
-           const int mat_id)
+    const string& desc,
+    const Patch* patch,
+    const int mat_id)
 {
   if(patch->hasBoundaryFaces() == false){
     return;
   }
-    
+
   dbg_BC << "setBC \t"<< desc <<" "
-             << " mat_id = " << mat_id <<  ", Patch: "<< patch->getID() << endl;
+    << " mat_id = " << mat_id <<  ", Patch: "<< patch->getID() << endl;
 
   // Iterate over the faces encompassing the domain
   vector<Patch::FaceType> bf;
   patch->getBoundaryFaces(bf);
-  
+
   for( vector<Patch::FaceType>::const_iterator iter = bf.begin(); iter != bf.end(); ++iter ){
     Patch::FaceType face = *iter;
     int nCells = 0;
     string bc_kind = "NotSet";
-       
+
     IntVector dir= patch->getFaceAxes(face);
     Vector cell_dx = patch->dCell();
     int numChildren = patch->getBCDataArray(face)->getNumberChildren(mat_id);
-    
+
     // iterate over each geometry object along that face
     for (int child = 0;  child < numChildren; child++) {
       double bc_value = -9;
       Iterator bound_ptr;
-      
+
       bool foundIterator = 
         getIteratorBCValueBCKind( patch, face, child, desc, mat_id,
-                                  bc_value, bound_ptr,bc_kind); 
-                                   
+            bc_value, bound_ptr,bc_kind); 
+
       if(foundIterator) {
 
         //__________________________________
         // Dirichlet
         if(bc_kind == "Dirichlet"){
-           nCells += setDirichletBC_CC<double>( Q_CC, bound_ptr, bc_value);
+          nCells += setDirichletBC_CC<double>( Q_CC, bound_ptr, bc_value);
         }
         //__________________________________
         // Neumann
         else if(bc_kind == "Neumann"){
-           nCells += setNeumannBC_CC<double>( patch, face, Q_CC, bound_ptr, bc_value, cell_dx);
+          nCells += setNeumannBC_CC<double>( patch, face, Q_CC, bound_ptr, bc_value, cell_dx);
         }                                   
         //__________________________________
         //  Symmetry
@@ -626,15 +597,15 @@ Ray::setBC(CCVariable<double>& Q_CC,
         if( dbg_BC.active() ) {
           bound_ptr.reset();
           dbg_BC <<"Face: "<< patch->getFaceName(face) <<" numCellsTouched " << nCells
-               <<"\t child " << child  <<" NumChildren "<<numChildren 
-               <<"\t BC kind "<< bc_kind <<" \tBC value "<< bc_value
-               <<"\t bound limits = "<< bound_ptr << endl;
+            <<"\t child " << child  <<" NumChildren "<<numChildren 
+            <<"\t BC kind "<< bc_kind <<" \tBC value "<< bc_value
+            <<"\t bound limits = "<< bound_ptr << endl;
         }
       }  // if iterator found
     }  // child loop
-    
+
     dbg_BC << "    "<< patch->getFaceName(face) << " \t " << bc_kind << " numChildren: " << numChildren 
-               << " nCellsTouched: " << nCells << endl;
+      << " nCellsTouched: " << nCells << endl;
     //__________________________________
     //  bulletproofing
 #if 0
@@ -644,8 +615,8 @@ Ray::setBC(CCVariable<double>& Q_CC,
     if(nCells != nFaceCells){
       ostringstream warn;
       warn << "ERROR: ICE: setSpecificVolBC Boundary conditions were not set correctly ("<< desc<< ", " 
-           << patch->getFaceName(face) << ", " << bc_kind  << " numChildren: " << numChildren 
-           << " nCells Touched: " << nCells << " nCells on boundary: "<< nFaceCells<<") " << endl;
+        << patch->getFaceName(face) << ", " << bc_kind  << " numChildren: " << numChildren 
+        << " nCells Touched: " << nCells << " nCells on boundary: "<< nFaceCells<<") " << endl;
       throw InternalError(warn.str(), __FILE__, __LINE__);
     }
 #endif
@@ -655,6 +626,7 @@ Ray::setBC(CCVariable<double>& Q_CC,
 
 //______________________________________________________________________
 // ISAAC's NOTES: 
+//Dec 15. Now uses interactive BCs correctly from input file
 //Dec 1. Clean up (removed ray viz stuff.
 //Nov 30. Modified so user can specify in the input file either benchmark_13pt2, benchmark_1, or no benchmark (real case)
 //Nov 18. Put in visualization stuff. It worked well.

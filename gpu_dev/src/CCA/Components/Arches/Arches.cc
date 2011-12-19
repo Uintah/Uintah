@@ -255,7 +255,8 @@ Arches::problemSetup(const ProblemSpecP& params,
       }
     }
     // Moved model_mixture_fraction_variance to properties
-    db->findBlock("Properties")->require("use_mixing_model", d_calcVariance);
+    db->findBlock("Properties")->getWithDefault("use_mixing_model", d_calcVariance, false);
+
     // db->require("model_mixture_fraction_variance", d_calcVariance);
   }
   db->getWithDefault("turnonMixedModel",    d_mixedModel,false);

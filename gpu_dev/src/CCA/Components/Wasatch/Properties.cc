@@ -108,8 +108,6 @@ namespace Wasatch{
 
       const BSpline* const spline = table.find_entry( dvarTableName );
 
-      Expr::ExpressionBuilder* builder = NULL;
-
       //____________________________________________
       // get the type of field that we will evaluate
       std::string fieldType;
@@ -118,22 +116,22 @@ namespace Wasatch{
       switch( get_field_type(fieldType) ){
       case SVOL: {
         typedef TabPropsEvaluator<SpatialOps::structured::SVolField>::Builder PropEvaluator;
-        builder = scinew PropEvaluator( spline->clone(), ivarNames );
+        gh.exprFactory->register_expression( scinew PropEvaluator( dvarTag, spline->clone(), ivarNames ) );
         break;
       }
       case XVOL: {
         typedef TabPropsEvaluator<SpatialOps::structured::SSurfXField>::Builder PropEvaluator;
-        builder = scinew PropEvaluator( spline->clone(), ivarNames );
+        gh.exprFactory->register_expression( scinew PropEvaluator( dvarTag, spline->clone(), ivarNames ) );
         break;
       }
       case YVOL: {
         typedef TabPropsEvaluator<SpatialOps::structured::SSurfYField>::Builder PropEvaluator;
-        builder = scinew PropEvaluator( spline->clone(), ivarNames );
+        gh.exprFactory->register_expression( scinew PropEvaluator( dvarTag, spline->clone(), ivarNames ) );
         break;
       }
       case ZVOL: {
         typedef TabPropsEvaluator<SpatialOps::structured::SSurfZField>::Builder PropEvaluator;
-        builder = scinew PropEvaluator( spline->clone(), ivarNames );
+        gh.exprFactory->register_expression( scinew PropEvaluator( dvarTag, spline->clone(), ivarNames ) );
         break;
       }
       default:
@@ -142,11 +140,6 @@ namespace Wasatch{
             << __FILE__ << " : " << __LINE__ << endl;
         throw std::runtime_error( msg.str() );
       }
-
-      //____________________________
-      // register the expression
-      gh.exprFactory->register_expression( dvarTag, builder );
-
     }
 
     //________________________________________________________________
@@ -184,8 +177,8 @@ namespace Wasatch{
       //_____________________________________
       // register the expression for density
       typedef DensityCalculator<SpatialOps::structured::SVolField>::Builder DensCalc;
-      gh.exprFactory->register_expression( parse_nametag( densityParams->findBlock("NameTag") ),
-                                           scinew DensCalc( spline->clone(), rhoEtaNames, reiEtaNames, ivarNames ));
+      gh.exprFactory->register_expression( scinew DensCalc( parse_nametag( densityParams->findBlock("NameTag") ),
+                                                            spline->clone(), rhoEtaNames, reiEtaNames, ivarNames ) );
 
     }
 
