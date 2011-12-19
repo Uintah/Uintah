@@ -1,6 +1,6 @@
 #!/bin/csh
 #__________________________________
-# 10/04/11
+10/04/11
 #  updateUps  <ups files>
 #    This script changes the names of xml tags inside a ups file
 #__________________________________
@@ -10,7 +10,7 @@ if ($#argv == 0 ) then
 endif
 
 set these = ($argv[*])
- 
+      
 foreach fff ( $these[*]:q )
 
   cp $fff $fff.org
@@ -26,7 +26,7 @@ foreach fff ( $these[*]:q )
   # delete always_construct_A
   # delete linear_solver
   # from all lines between <PressureSolver> and </PressureSolver>
-  
+                                  
 
   sed  -i /"<PressureSolver"/,/"\/PressureSolver"/s/"parameters"/"Parameters"/g  $fff
   sed  -i /"<PressureSolver"/,/"\/PressureSolver"/s/"ksptype"/"solver"/g         $fff
@@ -36,16 +36,81 @@ foreach fff ( $these[*]:q )
   sed  -i /"<PressureSolver"/,/"\/PressureSolver"/s/"petsc"/"hypre"/g $fff
   sed  -i /"<PressureSolver"/,/"\/PressureSolver"/s/"jacobi"/"pfmg  "/g $fff
   sed  -i /"always_construct_A"/d $fff
-  
-  sed  -i /"<PressureSolver"/,/"\/PressureSolver"/s/"linear_solver"/"junk"/g $fff
-  sed  -i /"junk"/d $fff
-  
+
   #__________________________________
   # add <Solver type= "hypre" /> after <SimulationComponent = * />
   grep  -q "Solver type" $fff
   if ( $status != "0" ) then
     sed -i /"<SimulationComponent"/a\ '\ \ \ \ <Solver type= "hypre" />' $fff
   endif
+
+  sed  -i /"<PressureSolver"/,/"\/PressureSolver"/s/"linear_solver"/"junk"/g $fff
+  sed  -i /"junk"/d $fff
+  
+  #check time integrator type
+  grep -q "FE" $fff
+  if ( $status == "0" ) then 
+    set INT_TYPE="one"
+  endif 
+  grep -q "RK2SSP" $fff
+  if ( $status == "0" ) then 
+   set INT_TYPE="two"
+  endif 
+  grep -q "RK3SSP" $fff
+  if ( $status == "0" ) then 
+    set INT_TYPE="three"
+  endif 
+  sed  -i /"timeIntegratorType"/d $fff
+  
+  #_________________________________
+  # add <TimeIntegrator> after <ARCHES>
+  echo "Setting time integrator to order="$INT_TYPE
+  grep -q "TimeIntegrator" $fff
+  if ( $status != "0" ) then 
+    if ( $INT_TYPE == "one" ) then 
+      sed -i /"<ARCHES"/a\ '\ \ \ \ \ \ <TimeIntegrator> \n \ \ \ \ \ \ \ \ <ExplicitTimeInt order="first"/> \n \ \ \ \ \ </TimeIntegrator>' $fff
+    else if ( $INT_TYPE == "two" ) then 
+      sed -i /"<ARCHES"/a\ '\ \ \ \ \ \ <TimeIntegrator> \n \ \ \ \ \ \ \ \ <ExplicitTimeInt order="second"/> \n \ \ \ \ \ </TimeIntegrator>' $fff
+    else 
+      sed -i /"<ARCHES"/a\ '\ \ \ \ \ \ <TimeIntegrator> \n \ \ \ \ \ \ \ \ <ExplicitTimeInt order="third"/> \n \ \ \ \ \ </TimeIntegrator>' $fff
+    endif
+  endif
+
+  echo "Re-indenting your xml file. Newly indented file can be found here:"$fff".ni"
+  xmllint -format $fff > $fff.ni
+
+  #common formatting help:
+  #putting in returns after major section headings
+  sed -i /"<\/Meta"/G $fff.ni
+  sed -i /"<SimulationComponent"/G $fff.ni
+  sed -i /"<\/Time"/G $fff.ni
+  sed -i /"<\/DataArchiver"/G $fff.ni
+  sed -i /"<\/BoundaryConditions"/G $fff.ni
+  sed -i /"<\/Grid"/G $fff.ni
+  sed -i /"<\/PhysicalCon"/G $fff.ni
+  sed -i /"<\/ARCHES"/G $fff.ni
+  sed -i /"<ARCHES"/G $fff.ni
+  sed -i /"<\/CFD"/G $fff.ni
+  sed -i /"<\/TimeIntegrator"/G $fff.ni
+  sed -i /"<\/MMS"/G $fff.ni
+  sed -i /"<\/Coal_Properties"/G $fff.ni
+  sed -i /"<\/PropertyModel"/G $fff.ni
+  sed -i /"<\/PressureSolver"/G $fff.ni
+  sed -i /"<\/Turbulence"/G $fff.ni
+  sed -i /"<\/Properties"/G $fff.ni
+  sed -i /"<\/TransportEq"/G $fff.ni
+  sed -i /"<\/Sources"/G $fff.ni
+  sed -i /"<\/Eqn"/G $fff.ni
+  sed -i /"<\/DQMOM"/G $fff.ni
+  sed -i /"<\/VelModel"/G $fff.ni
+  sed -i /"<\/Models"/G $fff.ni
+  sed -i /"<\/Weights"/G $fff.ni
+  sed -i /"<\/Ic"/G $fff.ni
+  sed -i /"<\/Moment"/G $fff.ni
+  sed -i /"<\/MixtureFractionSol"/G $fff.ni
+  sed -i /"<\/Enthalpy"/G $fff.ni
+  
+
 end
   
 exit()
