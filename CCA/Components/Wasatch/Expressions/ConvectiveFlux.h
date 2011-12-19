@@ -171,7 +171,6 @@ public:
     {
       return new ConvectiveFluxLimiter<PhiInterpT,VelInterpT>( phiT_, velT_, limiterType_ );
     }
-    ~Builder(){}
   };
 
   ~ConvectiveFluxLimiter();
