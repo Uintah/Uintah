@@ -190,7 +190,21 @@ ExplicitSolver::problemSetup(const ProblemSpecP& params)
     d_enthalpySolver->problemSetup(db);
   }
 
-  db->getWithDefault("timeIntegratorType",d_timeIntegratorType,"FE");
+  const ProblemSpecP params_root = db->getRootNode();
+  std::string t_order; 
+  ProblemSpecP db_time_int = params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("TimeIntegrator");
+  db_time_int->findBlock("ExplicitIntegrator")->getAttribute("order", t_order);
+
+  //translate order to the older code: 
+  if ( t_order == "first" ){ 
+    d_timeIntegratorType = "FE"; 
+  } else if ( t_order == "second" ){ 
+    d_timeIntegratorType = "RK2SSP"; 
+  } else if ( t_order == "third" ) {
+    d_timeIntegratorType = "RK3SSP"; 
+  } else { 
+    throw InvalidValue("Error: <ExplicitIntegrator> order attribute must be one of: first, second, third!  Please fix input file.",__FILE__, __LINE__);             
+  } 
 
   if (d_timeIntegratorType == "FE") {
     d_timeIntegratorLabels.push_back(scinew TimeIntegratorLabel(d_lab,

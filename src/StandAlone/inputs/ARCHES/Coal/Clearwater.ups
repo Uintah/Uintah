@@ -1,442 +1,434 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- @version: -->
 <Uintah_specification>
-    <Meta>
-        <title>CLearwater Coal Model - Reacting Coal Pr = 2.5, U_out/U_in = 1.5</title>
-        <!-- 
+  <Meta>
+    <title>CLearwater Coal Model - Reacting Coal Pr = 2.5, U_out/U_in = 1.5</title>
+<!-- 
         NOTE: This input file is for the air-fired coal cases run for the Clearwater
               Clean Coal Conference, June 2009.  The initial conditions are not 
               rigorously correct, but they are the values used in our input file.
         -->
-    </Meta>
-    <SimulationComponent type="arches" />
-    <Solver type="hypre" />
-    
-    <Time>
-        <maxTime>5.0</maxTime>
-        <initTime>0.0</initTime>
-        <delt_min>0.0000001</delt_min>
-        <delt_max>0.01</delt_max>
-        <timestep_multiplier>0.3</timestep_multiplier>
-    </Time>
-    <DataArchiver>
-        <filebase>Clearwater_Air-Fired_Coal.uda</filebase>
-        <outputInterval>0.007</outputInterval>
-        <outputInitTimestep/>
-        <save label="tempIN"/>
-        <save label="uvwout"/>
-        <save label="totalflowIN"/>
-        <save label="totalflowOUT"/>
-        <save label="denAccum"/>
-        <save label="netflowOUTBC"/>
-        <save label="totalKineticEnergy"/>
-        <save label="pressurePS"/>
-        <save label="newCCUVelocity"/>
-        <save label="newCCVVelocity"/>
-        <save label="newCCWVelocity"/>
-        <save label="newCCVelocity"/>
-        <save label="scalarSP"/>
-        <save label="densityCP"/>
-        <save label="viscosityCTS"/>
-        <save label="vorticity"/>
-        <save label="velocityDivergence"/>
-        <save label="continuityResidual"/>
-        <save label="filterdrhodt"/>
-        <save label="cellType"/>
-        <save label = "tempIN"/>
-        <save label = "heatLoss"/>
+  </Meta>
 
-        <!-- 
+  <SimulationComponent type="arches"/>
+
+  <Solver type="hypre"/>
+  <Time>
+    <maxTime>5.0</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>0.0000001</delt_min>
+    <delt_max>0.01</delt_max>
+    <timestep_multiplier>0.3</timestep_multiplier>
+  </Time>
+
+  <DataArchiver>
+    <filebase>Clearwater_Air-Fired_Coal.uda</filebase>
+    <outputInterval>0.007</outputInterval>
+    <outputInitTimestep/>
+    <save label="tempIN"/>
+    <save label="uvwout"/>
+    <save label="totalflowIN"/>
+    <save label="totalflowOUT"/>
+    <save label="denAccum"/>
+    <save label="netflowOUTBC"/>
+    <save label="totalKineticEnergy"/>
+    <save label="pressurePS"/>
+    <save label="newCCUVelocity"/>
+    <save label="newCCVVelocity"/>
+    <save label="newCCWVelocity"/>
+    <save label="newCCVelocity"/>
+    <save label="scalarSP"/>
+    <save label="densityCP"/>
+    <save label="viscosityCTS"/>
+    <save label="vorticity"/>
+    <save label="velocityDivergence"/>
+    <save label="continuityResidual"/>
+    <save label="filterdrhodt"/>
+    <save label="cellType"/>
+    <save label="tempIN"/>
+    <save label="heatLoss"/>
+<!-- 
         ===================================
              DQMOM Coal Variables
         ==================================-->
+    <save label="w_qn0"/>
+    <save label="w_qn1"/>
+    <save label="length_qn0"/>
+    <save label="length_qn0_icv"/>
+    <save label="length_qn1"/>
+    <save label="length_qn1_icv"/>
+    <save label="RCmass_qn0"/>
+    <save label="RCmass_qn0_icv"/>
+    <save label="RCmass_qn1"/>
+    <save label="RCmass_qn1_icv"/>
+    <save label="vel_qn0"/>
+    <save label="vel_qn1"/>
+    <save label="sarofim_qn0"/>
+    <save label="sarofim_qn1"/>
+    <save label="gasDevolRate_qn0"/>
+    <save label="gasDevolRate_qn1"/>
+    <save label="eta"/>
+    <save label="eta_source"/>
+    <checkpoint cycle="2" interval="0.05"/>
+    <outputDoubleAsFloat/>
+    <compression>gzip</compression>
+  </DataArchiver>
 
-        <save label = "w_qn0" />
-        <save label = "w_qn1" />
-
-        <save label = "length_qn0" />
-        <save label = "length_qn0_icv"/>
-
-        <save label = "length_qn1" />
-        <save label = "length_qn1_icv"/>
-
-        <save label = "RCmass_qn0" />
-        <save label = "RCmass_qn0_icv"/>
-
-        <save label = "RCmass_qn1" />
-        <save label = "RCmass_qn1_icv"/>
-
-        <save label = "vel_qn0" />
-        <save label = "vel_qn1"/>
-
-        <save label = "sarofim_qn0"/>
-        <save label = "sarofim_qn1"/>
-
-        <save label = "gasDevolRate_qn0"/>
-        <save label = "gasDevolRate_qn1"/>
-
-        <save label = "eta"/>
-        <save label = "eta_source"/>
-
-        
-        <checkpoint cycle="2" interval="0.05"/>
-        <outputDoubleAsFloat/>
-        <compression>gzip</compression>
-    </DataArchiver>
-    
-    <Grid>
-        
-        <BoundaryConditions>
-
-            <!--  ======================================================
+  <Grid>
+    <BoundaryConditions>
+<!--  ======================================================
                         Initial conditions for burner inlet
                   ====================================================== -->
-            <Face circle = "x-" origin = "0 .183 .183" radius = "0.007895" >
-                <BCType id="0" label="eta" var="Dirichlet">
-                    <value>0.0</value>
-                </BCType>
+      <Face circle="x-" origin="0 .183 .183" radius="0.007895">
+        <BCType id="0" label="eta" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="0" label="w_qn0" var="Dirichlet">
+          <value>0.5</value>
+        </BCType>
+        <BCType id="0" label="w_qn1" var="Dirichlet">
+          <value>0.5</value>
+        </BCType>
+        <BCType id="0" label="length_qn0" var="Dirichlet">
+          <value>1.75</value>
+<!-- 35 microns -->
+        </BCType>
+        <BCType id="0" label="length_qn1" var="Dirichlet">
+          <value>3.75</value>
+<!-- 75 microns -->
+        </BCType>
+        <BCType id="0" label="RCmass_qn0" var="Dirichlet">
+          <value>0.191</value>
+<!-- 1.91e-11 kg raw coal -->
+        </BCType>
+        <BCType id="0" label="RCmass_qn1" var="Dirichlet">
+          <value>2.10</value>
+<!-- 2.10e-10 kg raw coal -->
+        </BCType>
+      </Face>
+      <Face side="x-">
+        <BCType id="0" label="eta" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="0" label="length_qn0" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="0" label="length_qn1" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="0" label="RCmass_qn0" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="0" label="RCmass_qn1" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="0" label="w_qn0" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="0" label="w_qn1" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+      </Face>
+      <Face side="y-">
+        <BCType id="0" label="eta" var="Neumann">
+          <value>.0</value>
+        </BCType>
+        <BCType id="0" label="length_qn0" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="0" label="length_qn1" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="0" label="RCmass_qn0" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="0" label="RCmass_qn1" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="0" label="w_qn0" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="0" label="w_qn1" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+      </Face>
+      <Face side="y+">
+        <BCType id="0" label="eta" var="Neumann">
+          <value>.0</value>
+        </BCType>
+        <BCType id="0" label="length_qn0" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="0" label="length_qn1" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="0" label="RCmass_qn0" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="0" label="RCmass_qn1" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="0" label="w_qn0" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="0" label="w_qn1" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+      </Face>
+      <Face side="z-">
+        <BCType id="0" label="eta" var="Neumann">
+          <value>.0</value>
+        </BCType>
+        <BCType id="0" label="length_qn0" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="0" label="length_qn1" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="0" label="RCmass_qn0" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="0" label="RCmass_qn1" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="0" label="w_qn0" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="0" label="w_qn1" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+      </Face>
+      <Face side="z+">
+        <BCType id="0" label="eta" var="Neumann">
+          <value>.0</value>
+        </BCType>
+        <BCType id="0" label="length_qn0" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="0" label="length_qn1" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="0" label="RCmass_qn0" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="0" label="RCmass_qn1" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="0" label="w_qn0" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+        <BCType id="0" label="w_qn1" var="Dirichlet">
+          <value>0.0</value>
+        </BCType>
+      </Face>
+    </BoundaryConditions>
 
-                <BCType id = "0" label = "w_qn0" var = "Dirichlet">
-                    <value>0.5</value>
-                </BCType>
-                <BCType id = "0" label = "w_qn1" var = "Dirichlet">
-                    <value>0.5</value>
-                </BCType>
+    <Level>
+      <Box label="1">
+        <lower>[0,0,0]</lower>
+        <upper>[.7314,.366,.366]</upper>
+        <resolution>[200,100,100]</resolution>
+        <extraCells>[1,1,1]</extraCells>
+        <patches>[6,4,4]</patches>
+      </Box>
+    </Level>
+  </Grid>
 
-                <BCType id = "0" label = "length_qn0" var = "Dirichlet">
-                    <value>1.75</value> <!-- 35 microns -->
-                </BCType>
-                <BCType id = "0" label = "length_qn1" var = "Dirichlet">
-                    <value>3.75</value> <!-- 75 microns -->
-                </BCType>
+  <PhysicalConstants>
+    <gravity>[-9.8,0,0]</gravity>
+    <reference_point>[-1,-1,-1]</reference_point>
+    <viscosity>0.000020</viscosity>
+  </PhysicalConstants>
 
-                <BCType id = "0" label = "RCmass_qn0" var = "Dirichlet">
-                    <value>0.191</value> <!-- 1.91e-11 kg raw coal --> 
-                </BCType>
-                <BCType id = "0" label = "RCmass_qn1" var = "Dirichlet">
-                    <value>2.10</value> <!-- 2.10e-10 kg raw coal -->
-                </BCType>
+  <CFD>
+<!-- ARCHES specification -->
+    <ARCHES>
 
-            </Face>
+<!-- TIME INTEGRATOR -->
+      <TimeIntegrator>
+        <ExplicitIntegrator order="second"/>
+      </TimeIntegrator>
 
-            <Face side = "x-">
-                <BCType id = "0" label="eta" var="Dirichlet">
-                    <value>0.0</value>
-                </BCType>
-                <BCType id = "0" label = "length_qn0" var = "Dirichlet">
-                    <value>0.0</value>
-                </BCType>
-                <BCType id = "0" label = "length_qn1" var = "Dirichlet">
-                    <value>0.0</value>
-                </BCType>
-                <BCType id = "0" label = "RCmass_qn0" var = "Dirichlet">
-                    <value>0.0</value>
-                </BCType>
-                <BCType id = "0" label = "RCmass_qn1" var = "Dirichlet">
-                    <value>0.0</value>
-                </BCType>
-                <BCType id = "0" label = "w_qn0" var = "Dirichlet">
-                    <value>0.0</value>
-                </BCType>
-                <BCType id = "0" label = "w_qn1" var = "Dirichlet">
-                    <value>0.0</value>
-                </BCType>
-            </Face>
-            <Face side = "y-">
-                <BCType id = "0" label="eta" var="Neumann">
-                    <value>.0</value>
-                </BCType>
-                <BCType id = "0" label = "length_qn0" var = "Dirichlet">
-                    <value>0.0</value>
-                </BCType>
-                <BCType id = "0" label = "length_qn1" var = "Dirichlet">
-                    <value>0.0</value>
-                </BCType>
-                <BCType id = "0" label = "RCmass_qn0" var = "Dirichlet">
-                    <value>0.0</value>
-                </BCType>
-                <BCType id = "0" label = "RCmass_qn1" var = "Dirichlet">
-                    <value>0.0</value>
-                </BCType>
-                <BCType id = "0" label = "w_qn0" var = "Dirichlet">
-                    <value>0.0</value>
-                </BCType>
-                <BCType id = "0" label = "w_qn1" var = "Dirichlet">
-                    <value>0.0</value>
-                </BCType>
-            </Face>
-            <Face side = "y+">
-                <BCType id = "0" label="eta" var="Neumann">
-                    <value>.0</value>
-                </BCType>
-                <BCType id = "0" label = "length_qn0" var = "Dirichlet">
-                    <value>0.0</value>
-                </BCType>
-                <BCType id = "0" label = "length_qn1" var = "Dirichlet">
-                    <value>0.0</value>
-                </BCType>
-                <BCType id = "0" label = "RCmass_qn0" var = "Dirichlet">
-                    <value>0.0</value>
-                </BCType>
-                <BCType id = "0" label = "RCmass_qn1" var = "Dirichlet">
-                    <value>0.0</value>
-                </BCType>
-                <BCType id = "0" label = "w_qn0" var = "Dirichlet">
-                    <value>0.0</value>
-                </BCType>
-                <BCType id = "0" label = "w_qn1" var = "Dirichlet">
-                    <value>0.0</value>
-                </BCType>
-            </Face>
-            <Face side = "z-">
-                <BCType id = "0" label="eta" var="Neumann">
-                    <value>.0</value>
-                </BCType>
-                <BCType id = "0" label = "length_qn0" var = "Dirichlet">
-                    <value>0.0</value>
-                </BCType>
-                <BCType id = "0" label = "length_qn1" var = "Dirichlet">
-                    <value>0.0</value>
-                </BCType>
-                <BCType id = "0" label = "RCmass_qn0" var = "Dirichlet">
-                    <value>0.0</value>
-                </BCType>
-                <BCType id = "0" label = "RCmass_qn1" var = "Dirichlet">
-                    <value>0.0</value>
-                </BCType>
-                <BCType id = "0" label = "w_qn0" var = "Dirichlet">
-                    <value>0.0</value>
-                </BCType>
-                <BCType id = "0" label = "w_qn1" var = "Dirichlet">
-                    <value>0.0</value>
-                </BCType>
-            </Face>
-            <Face side = "z+">
-                <BCType id = "0" label="eta" var="Neumann">
-                    <value>.0</value>
-                </BCType>
-                <BCType id = "0" label = "length_qn0" var = "Dirichlet">
-                    <value>0.0</value>
-                </BCType>
-                <BCType id = "0" label = "length_qn1" var = "Dirichlet">
-                    <value>0.0</value>
-                </BCType>
-                <BCType id = "0" label = "RCmass_qn0" var = "Dirichlet">
-                    <value>0.0</value>
-                </BCType>
-                <BCType id = "0" label = "RCmass_qn1" var = "Dirichlet">
-                    <value>0.0</value>
-                </BCType>
-                <BCType id = "0" label = "w_qn0" var = "Dirichlet">
-                    <value>0.0</value>
-                </BCType>
-                <BCType id = "0" label = "w_qn1" var = "Dirichlet">
-                    <value>0.0</value>
-                </BCType>
-            </Face>
-        </BoundaryConditions>  
-        
-        <Level>
-            <Box label="1">
-                <lower>[0,0,0]</lower>
-                <upper>[.7314,.366,.366]</upper>
-                <resolution>[200,100,100]</resolution>
-                <extraCells>[1,1,1]</extraCells>
-                <patches>[6,4,4]</patches>
-            </Box>
-        </Level>
-        
-    </Grid>
-    
-    <PhysicalConstants>
-        <gravity>[-9.8,0,0]</gravity>
-        <reference_point>[-1,-1,-1]</reference_point>
-        <viscosity>0.000020</viscosity>
-    </PhysicalConstants>
-    
-    <CFD>
-        <!-- ARCHES specification -->
-        <ARCHES>
-            
-            
-            <!-- TIME INTEGRATOR -->
-            <TimeIntegrator>
-                <ExplicitIntegrator order="second"/>
-            </TimeIntegrator>
-            
-            <!-- Extra Transport Equations -->
-            <TransportEqns>
-                <Eqn label = "eta" type = "CCscalar">
-                    <doDiff>true</doDiff>
-                    <doConv>true</doConv>
-                    <addSources>true</addSources>
-                    <conv_scheme>upwind</conv_scheme>
-                    <src label = "eta_source"/>
-                </Eqn>
-                
-                <Sources>
-                    <src label = "eta_source" type = "coal_gas_devol">
-                        <devol_model_name>sarofim</devol_model_name>
-                    </src>
-                </Sources>
-            </TransportEqns>
-            
-            <DQMOM>
-                
-                <number_quad_nodes>2</number_quad_nodes>
-                
-                <LU_solver_tolerance>1.0e-5</LU_solver_tolerance>
-                
-                <VelModel>
-                    <kinematic_viscosity>.00001</kinematic_viscosity>
-                    <eta>.00005</eta>
-                    <rho_ratio>1000.0</rho_ratio>
-                    <epsilon>0.05</epsilon>
-                </VelModel>
-                
-                <Models>
-                    
-                    <model label="sarofim" type="KobayashiSarofimDevol">
-                        <ICVars>
-                            <variable label="RCmass" role="raw_coal_mass_fraction" />
-                        </ICVars>
-                    </model>
-                    
-                </Models>
-                
-                <Weights>
-                    <!-- w [=] #/m^3 -->
-                    <doDiff>false</doDiff>
-                    <doConv>true</doConv>
-                    <initial_value qn="0" value = "0."/>
-                    <initial_value qn="1" value = "0."/>
-                    <scaling_const>1.0e8</scaling_const>
-                    <Clipping>
-                        <low>0.0</low>
-                    </Clipping>
-                </Weights>
-                
-                <Ic label="length">
-                    <!-- l [=] m -->
-                    <doDiff>false</doDiff>
-                    <doConv>true</doConv>
-                    <initial_value qn="0" value = "0."/>
-                    <initial_value qn="1" value = "0."/>
-                    <scaling_const>1e-5</scaling_const>
-                    <Clipping>
-                        <low>0.0</low>
-                    </Clipping>
-                </Ic>
-                
-                <Ic label="RCmass">
-                    <!-- alpha_c [=] kg raw coal -->
-                    <doDiff>false</doDiff>
-                    <doConv>true</doConv>
-                    <model label="sarofim" />
-                    <initial_value qn="0" value = "0."/>
-                    <initial_value qn="1" value = "0."/>
-                    <scaling_const>1e-10</scaling_const>
-                    <Clipping>
-                        <low>0.0</low>
-                    </Clipping>
-                </Ic>
-                
-                <Moment><m>[0,0]</m></Moment>
-                <Moment><m>[0,1]</m></Moment>
-                <Moment><m>[1,0]</m></Moment>
-                <Moment><m>[0,2]</m></Moment>
-                <Moment><m>[2,0]</m></Moment>
-                <Moment><m>[1,2]</m></Moment>
-                
-            </DQMOM>
-            
-            <Turbulence model="compdynamicprocedure">
-                <variance_coefficient>5.0</variance_coefficient>
-                <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
-                <dynamicScalarModel>false</dynamicScalarModel>
-                <filter_cs_squared>false</filter_cs_squared>
-            </Turbulence>
-            
-            <Properties>
-                
-                <empirical_soot>false</empirical_soot>
-                <use_mixing_model>false</use_mixing_model>
-                
-                <NewStaticMixingTable>
-                    <sulfur_chem>false</sulfur_chem>
-                    <soot_precursors>false</soot_precursors>
-                    <inputfile>CH4_equil_clipped.mxn.gz</inputfile> 
-                    <loud_heatloss_warning>false</loud_heatloss_warning>
-                </NewStaticMixingTable>
-                
-                <first_order_drhodt>true</first_order_drhodt>
-                <filter_drhodt>false</filter_drhodt>
-                <inverse_density_average>false</inverse_density_average>
-                
-            </Properties>
-            
-            <BoundaryConditions>
-                <!--secondary inlet --> 
-                <FlowInlet>
-                    <InletVelocity>8</InletVelocity>
-                    <geom_object>
-                        <cylinder label = "secondaryinlet">
-                            <bottom>[-5,.183,.183]</bottom>
-                            <top>[0,.183,.183]</top>
-                            <radius> 0.017525 </radius>
-                        </cylinder>
-                    </geom_object>
-                    
-                    <mixture_fraction>.0</mixture_fraction>
-                </FlowInlet>
-                <!-- primary inlet -->
-                <FlowInlet>
-                    <InletVelocity>5</InletVelocity>
-                    <mixture_fraction>.0</mixture_fraction>
-                    <geom_object>
-                        <cylinder label="primaryinlet">
-                            <bottom>[-5,.183,.183]</bottom>
-                            <top>[0,.183,.183]</top>
-                            <radius> 0.007895 </radius>
-                        </cylinder>
-                    </geom_object>
-                </FlowInlet>
-                
-                <WallBC>
-                    <geom_object>
-                        <box label="botWall">
-                            <min>[-1,-1,-1]</min>
-                            <max>[0,4,4]</max>
-                        </box>
-                    </geom_object>
-                </WallBC>
-                
-                <OutletBC>
-                    <mixture_fraction>0.0</mixture_fraction>
-                    <geom_object>
-                        <box label="topWall">
-                            <min>[.7314,-1,-1]</min>
-                            <max>[2,4,4]</max>
-                        </box>
-                        <box label="posY_xzWall">
-                        <min>[0, 0.366,-1]</min>
-                        <max>[3, 4, 4]</max>
-                        </box>
-                        <box label="zeroY_xzWall">
-                        <min>[0,-1,-1]</min>
-                        <max>[3,0,4]</max>
-                        </box>
-                        <box label="posZ_xyWall">
-                        <min>[0, -1, .366]</min>
-                        <max>[3, 4, 4]</max>
-                        </box>
-                        <box label="zeroZ_xyWall">
-                        <min>[0,-1,-1]</min>
-                        <max>[3,4,0]</max>
-                        </box>
-                    </geom_object>
-                </OutletBC>
-                <!--PressureBC>
+
+<!-- Extra Transport Equations -->
+      <TransportEqns>
+        <Eqn label="eta" type="CCscalar">
+          <doDiff>true</doDiff>
+          <doConv>true</doConv>
+          <addSources>true</addSources>
+          <conv_scheme>upwind</conv_scheme>
+          <src label="eta_source"/>
+        </Eqn>
+
+        <Sources>
+          <src label="eta_source" type="coal_gas_devol">
+            <devol_model_name>sarofim</devol_model_name>
+          </src>
+        </Sources>
+
+      </TransportEqns>
+
+      <DQMOM>
+        <number_quad_nodes>2</number_quad_nodes>
+        <LU_solver_tolerance>1.0e-5</LU_solver_tolerance>
+        <VelModel>
+          <kinematic_viscosity>.00001</kinematic_viscosity>
+          <eta>.00005</eta>
+          <rho_ratio>1000.0</rho_ratio>
+          <epsilon>0.05</epsilon>
+        </VelModel>
+
+        <Models>
+          <model label="sarofim" type="KobayashiSarofimDevol">
+            <ICVars>
+              <variable label="RCmass" role="raw_coal_mass_fraction"/>
+            </ICVars>
+          </model>
+        </Models>
+
+        <Weights>
+<!-- w [=] #/m^3 -->
+          <doDiff>false</doDiff>
+          <doConv>true</doConv>
+          <initial_value qn="0" value="0."/>
+          <initial_value qn="1" value="0."/>
+          <scaling_const>1.0e8</scaling_const>
+          <Clipping>
+            <low>0.0</low>
+          </Clipping>
+        </Weights>
+
+        <Ic label="length">
+<!-- l [=] m -->
+          <doDiff>false</doDiff>
+          <doConv>true</doConv>
+          <initial_value qn="0" value="0."/>
+          <initial_value qn="1" value="0."/>
+          <scaling_const>1e-5</scaling_const>
+          <Clipping>
+            <low>0.0</low>
+          </Clipping>
+        </Ic>
+
+        <Ic label="RCmass">
+<!-- alpha_c [=] kg raw coal -->
+          <doDiff>false</doDiff>
+          <doConv>true</doConv>
+          <model label="sarofim"/>
+          <initial_value qn="0" value="0."/>
+          <initial_value qn="1" value="0."/>
+          <scaling_const>1e-10</scaling_const>
+          <Clipping>
+            <low>0.0</low>
+          </Clipping>
+        </Ic>
+
+        <Moment>
+          <m>[0,0]</m>
+        </Moment>
+
+        <Moment>
+          <m>[0,1]</m>
+        </Moment>
+
+        <Moment>
+          <m>[1,0]</m>
+        </Moment>
+
+        <Moment>
+          <m>[0,2]</m>
+        </Moment>
+
+        <Moment>
+          <m>[2,0]</m>
+        </Moment>
+
+        <Moment>
+          <m>[1,2]</m>
+        </Moment>
+
+      </DQMOM>
+
+      <Turbulence model="compdynamicprocedure">
+        <variance_coefficient>5.0</variance_coefficient>
+        <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
+        <dynamicScalarModel>false</dynamicScalarModel>
+        <filter_cs_squared>false</filter_cs_squared>
+      </Turbulence>
+
+      <Properties>
+        <empirical_soot>false</empirical_soot>
+        <use_mixing_model>false</use_mixing_model>
+        <NewStaticMixingTable>
+          <sulfur_chem>false</sulfur_chem>
+          <soot_precursors>false</soot_precursors>
+          <inputfile>CH4_equil_clipped.mxn.gz</inputfile>
+          <loud_heatloss_warning>false</loud_heatloss_warning>
+        </NewStaticMixingTable>
+        <first_order_drhodt>true</first_order_drhodt>
+        <filter_drhodt>false</filter_drhodt>
+        <inverse_density_average>false</inverse_density_average>
+      </Properties>
+
+      <BoundaryConditions>
+<!--secondary inlet -->
+        <FlowInlet>
+          <InletVelocity>8</InletVelocity>
+          <geom_object>
+            <cylinder label="secondaryinlet">
+              <bottom>[-5,.183,.183]</bottom>
+              <top>[0,.183,.183]</top>
+              <radius> 0.017525 </radius>
+            </cylinder>
+          </geom_object>
+          <mixture_fraction>.0</mixture_fraction>
+        </FlowInlet>
+<!-- primary inlet -->
+        <FlowInlet>
+          <InletVelocity>5</InletVelocity>
+          <mixture_fraction>.0</mixture_fraction>
+          <geom_object>
+            <cylinder label="primaryinlet">
+              <bottom>[-5,.183,.183]</bottom>
+              <top>[0,.183,.183]</top>
+              <radius> 0.007895 </radius>
+            </cylinder>
+          </geom_object>
+        </FlowInlet>
+        <WallBC>
+          <geom_object>
+            <box label="botWall">
+              <min>[-1,-1,-1]</min>
+              <max>[0,4,4]</max>
+            </box>
+          </geom_object>
+        </WallBC>
+        <OutletBC>
+          <mixture_fraction>0.0</mixture_fraction>
+          <geom_object>
+            <box label="topWall">
+              <min>[.7314,-1,-1]</min>
+              <max>[2,4,4]</max>
+            </box>
+            <box label="posY_xzWall">
+              <min>[0, 0.366,-1]</min>
+              <max>[3, 4, 4]</max>
+            </box>
+            <box label="zeroY_xzWall">
+              <min>[0,-1,-1]</min>
+              <max>[3,0,4]</max>
+            </box>
+            <box label="posZ_xyWall">
+              <min>[0, -1, .366]</min>
+              <max>[3, 4, 4]</max>
+            </box>
+            <box label="zeroZ_xyWall">
+              <min>[0,-1,-1]</min>
+              <max>[3,4,0]</max>
+            </box>
+          </geom_object>
+        </OutletBC>
+<!--PressureBC>
                     <geom_object>
                         <box label="posY_xzWall">
                             <min>[0, 0.366,-1]</min>
@@ -457,40 +449,36 @@
                     </geom_object>
                     <mixture_fraction>0.040</mixture_fraction>
                 </PressureBC-->
-            </BoundaryConditions>
-            
-            <ExplicitSolver>
-                
-                <timeIntegratorType>RK2SSP</timeIntegratorType>
-                
-                <initial_dt>0.05</initial_dt>
-                <variable_dt>true</variable_dt>
-                <scalarUnderflowCheck>true</scalarUnderflowCheck>
-                
-                <PressureSolver>
-                    <Parameters>
-                        <tolerance>     1.0e-9</tolerance>
-                        <solver>        cg    </solver>
-                        <preconditioner>pfmg  </preconditioner>
-                        <maxiterations> 75    </maxiterations>
-                    </Parameters>
-                </PressureSolver>
-                
-                <MomentumSolver>
-                    <convection_scheme>central</convection_scheme>
-                </MomentumSolver>
-                
-                <MixtureFractionSolver>
-                    <convection_scheme>central-upwind</convection_scheme>
-                    <initial_value>0.04</initial_value>
-                </MixtureFractionSolver>
-                
-                <EnthalpySolver>
-                    <convection_scheme>central-upwind</convection_scheme>
-                    <radiationCalcFreq>5</radiationCalcFreq>
-                    <radCalcForAllRKSteps>false</radCalcForAllRKSteps>
-                    <!-- didn't do radiation for clearwater? -->
-                    <!--DORadiationModel>
+      </BoundaryConditions>
+
+      <ExplicitSolver>
+        <initial_dt>0.05</initial_dt>
+        <variable_dt>true</variable_dt>
+        <scalarUnderflowCheck>true</scalarUnderflowCheck>
+        <PressureSolver>
+          <Parameters>
+            <tolerance>     1.0e-9</tolerance>
+            <solver>        cg    </solver>
+            <preconditioner>pfmg  </preconditioner>
+            <maxiterations> 75    </maxiterations>
+          </Parameters>
+        </PressureSolver>
+
+        <MomentumSolver>
+          <convection_scheme>central</convection_scheme>
+        </MomentumSolver>
+
+        <MixtureFractionSolver>
+          <convection_scheme>central-upwind</convection_scheme>
+          <initial_value>0.04</initial_value>
+        </MixtureFractionSolver>
+
+        <EnthalpySolver>
+          <convection_scheme>central-upwind</convection_scheme>
+          <radiationCalcFreq>5</radiationCalcFreq>
+          <radCalcForAllRKSteps>false</radCalcForAllRKSteps>
+<!-- didn't do radiation for clearwater? -->
+<!--DORadiationModel>
                      <opl>3.0</opl>
                      <LinearSolver type="petsc">
                      <res_tol>1.0e-10</res_tol>
@@ -498,11 +486,12 @@
                      <pctype>blockjacobi</pctype>
                      <max_iter>75</max_iter>
                      </LinearSolver>
-                    </DORadiationModel--> 
-                </EnthalpySolver>
-                
-            </ExplicitSolver>
-            
-        </ARCHES>
-    </CFD>
+                    </DORadiationModel-->
+        </EnthalpySolver>
+
+      </ExplicitSolver>
+    </ARCHES>
+
+  </CFD>
+
 </Uintah_specification>
