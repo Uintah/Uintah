@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <!-- @version: -->
 <Uintah_specification>
-
   <Meta>
     <title>Laminar Channel Flow</title>
   </Meta>
@@ -9,7 +8,6 @@
   <SimulationComponent type="mpmarches"/>
 
   <Solver type="hypre"/>
-
   <Time>
     <maxTime>5.0</maxTime>
     <initTime>0.0</initTime>
@@ -39,7 +37,6 @@
     <time_integrator>explicit</time_integrator>
     <interpolator>linear</interpolator>
   </MPM>
-
   <MaterialProperties>
     <MPM>
       <material name="Nothingness">
@@ -51,7 +48,7 @@
         </constitutive_model>
         <thermal_conductivity>  0.4494           </thermal_conductivity>
         <specific_heat>         940.36           </specific_heat>
-        <!-- NO GEOMETRY OBJECT NEEDED FOR THIS CASE -->
+<!-- NO GEOMETRY OBJECT NEEDED FOR THIS CASE -->
       </material>
       <contact>
         <type>null</type>
@@ -60,10 +57,8 @@
       </contact>
     </MPM>
   </MaterialProperties>
-
   <Grid>
     <BoundaryConditions>
-
       <Face side="x-" name="x- face">
         <BCType id="all" label="mixture_fraction" var="Dirichlet">
           <value>1.0</value>
@@ -105,7 +100,6 @@
         <patches>[1,1,1]</patches>
       </Box>
     </Level>
-
   </Grid>
 
   <PhysicalConstants>
@@ -115,16 +109,16 @@
   </PhysicalConstants>
 
   <CFD>
-
-    <!-- ARCHES specification -->
+<!-- ARCHES specification -->
     <ARCHES>
 
-      <!-- TIME INTEGRATOR -->
+<!-- TIME INTEGRATOR -->
       <TimeIntegrator>
         <ExplicitIntegrator order="second"/>
       </TimeIntegrator>
 
-      <!-- SCALARS -->
+
+<!-- SCALARS -->
       <TransportEqns>
         <Eqn label="mixture_fraction" type="CCscalar">
           <doDiff>true</doDiff>
@@ -139,11 +133,13 @@
             <high>1.0</high>
           </Clipping>
         </Eqn>
+
       </TransportEqns>
 
       <Turbulence model="smagorinsky">
         <variance_coefficient>0.1</variance_coefficient>
-        <cf>0.0</cf> <!-- turn off turbulence model --> 
+        <cf>0.0</cf>
+<!-- turn off turbulence model -->
         <fac_mesh>1.0</fac_mesh>
         <filterl>0.000001</filterl>
         <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
@@ -164,7 +160,6 @@
       </Properties>
 
       <BoundaryConditions>
-
         <FlowInlet>
           <Flow_rate>.01</Flow_rate>
           <mixture_fraction>1.0</mixture_fraction>
@@ -175,7 +170,6 @@
             </box>
           </geom_object>
         </FlowInlet>
-
         <WallBC>
           <geom_object>
             <box label="posY_xzWall">
@@ -196,7 +190,6 @@
             </box>
           </geom_object>
         </WallBC>
-
         <OutletBC>
           <mixture_fraction>0.0</mixture_fraction>
           <geom_object>
@@ -209,11 +202,8 @@
       </BoundaryConditions>
 
       <ExplicitSolver>
-
         <initial_dt>0.05</initial_dt>
         <variable_dt>true</variable_dt>
-        <timeIntegratorType>RK2SSP</timeIntegratorType>
-
         <PressureSolver>
           <Parameters>
             <tolerance>1.0e-16</tolerance>
@@ -233,7 +223,6 @@
         </MixtureFractionSolver>
 
       </ExplicitSolver>
-
     </ARCHES>
 
   </CFD>

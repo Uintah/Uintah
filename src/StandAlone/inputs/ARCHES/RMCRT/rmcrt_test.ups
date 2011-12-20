@@ -58,7 +58,7 @@
     <ARCHES>
 
       <TimeIntegrator>
-        <ExplicitTimeInt order="first"/>
+        <ExplicitIntegrator order="first"/>
       </TimeIntegrator>
 
 

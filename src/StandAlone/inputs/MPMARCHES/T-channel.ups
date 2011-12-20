@@ -1,79 +1,80 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
 <!-- DOCTYPE Uintah_specification SYSTEM "input.dtd" -->
 <!-- @version: -->
-
 <Uintah_specification>
-  
   <Meta>
     <title>T-channel</title>
   </Meta>
 
-  <SimulationComponent type="arches" />
-  <Solver type="hypre" />
+  <SimulationComponent type="arches"/>
 
+  <Solver type="hypre"/>
   <Time>
     <maxTime>25</maxTime>
     <initTime>0.0</initTime>
     <delt_min>0.00001</delt_min>
     <delt_max>5</delt_max>
-    <!--<max_Timesteps> 10 </max_Timesteps> -->
+<!--<max_Timesteps> 10 </max_Timesteps> -->
     <timestep_multiplier>0.1</timestep_multiplier>
   </Time>
-  
-  <!--__________________________________-->
+
+<!--__________________________________-->
   <DataArchiver>
     <filebase>T-channel.uda</filebase>
-    <!--<outputInitTimestep/>
+<!--<outputInitTimestep/>
     <outputTimestepInterval>1</outputTimestepInterval> -->
-    
     <outputInterval>0.01</outputInterval>
-
-    <save label = "totalKineticEnergy"/>
-    <save label = "pressurePS"/>
-    <save label = "scalarSP"/>
-    <save label = "newCCVelocity"/>
-    <save label = "densityCP"/>
-    <save label = "viscosityCTS"/>
-    <save label = "continuityResidual"/>
-    <save label = "velocityDivergence"/>
-    <save label = "cellType"/>
-    <checkpoint cycle = "2" interval = "0.05"/>
-
+    <save label="totalKineticEnergy"/>
+    <save label="pressurePS"/>
+    <save label="scalarSP"/>
+    <save label="newCCVelocity"/>
+    <save label="densityCP"/>
+    <save label="viscosityCTS"/>
+    <save label="continuityResidual"/>
+    <save label="velocityDivergence"/>
+    <save label="cellType"/>
+    <checkpoint cycle="2" interval="0.05"/>
     <compression>gzip</compression>
   </DataArchiver>
-  
-  <!--__________________________________-->
-  <!--   You must run this with 16 proc -->
+
+<!--__________________________________-->
+<!--   You must run this with 16 proc -->
   <Grid>
-      <Level>
-           <Box label = "horizontalLeg">
-              <lower>        [-1.0, 0.5, -0.5]  </lower>
-              <upper>        [ 1.0, 1.0,  0.5]  </upper>
-              <extraCells>   [1,1,1]            </extraCells>
-              <patches>      [5,1,2]            </patches>
-              <resolution>   [200,25,25]        </resolution>
-           </Box>
-           <Box label = "verticalLeg">
-              <lower>        [-0.2, 0.0, -0.5]  </lower>
-              <upper>        [ 0.2, 0.5,  0.5]  </upper>
-              <extraCells>   [1,1,1]            </extraCells>
-              <patches>      [3,1,2]            </patches>
-              <resolution>   [40,25,25]         </resolution>
-           </Box>
-       </Level>
-    </Grid>
-  <!--__________________________________-->
+    <Level>
+      <Box label="horizontalLeg">
+        <lower>        [-1.0, 0.5, -0.5]  </lower>
+        <upper>        [ 1.0, 1.0,  0.5]  </upper>
+        <extraCells>   [1,1,1]            </extraCells>
+        <patches>      [5,1,2]            </patches>
+        <resolution>   [200,25,25]        </resolution>
+      </Box>
+      <Box label="verticalLeg">
+        <lower>        [-0.2, 0.0, -0.5]  </lower>
+        <upper>        [ 0.2, 0.5,  0.5]  </upper>
+        <extraCells>   [1,1,1]            </extraCells>
+        <patches>      [3,1,2]            </patches>
+        <resolution>   [40,25,25]         </resolution>
+      </Box>
+    </Level>
+  </Grid>
+
+<!--__________________________________-->
   <PhysicalConstants>
     <gravity>[0,0,0]</gravity>
     <reference_point>[80,0,0]</reference_point>
     <viscosity>0.0</viscosity>
   </PhysicalConstants>
 
-  <!--__________________________________-->
+<!--__________________________________-->
   <CFD>
     <ARCHES>
-      
-      <Turbulence model = "smagorinsky">
+
+      <TimeIntegrator>
+        <ExplicitIntegrator order="first"/>
+      </TimeIntegrator>
+
+
+      <Turbulence model="smagorinsky">
         <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
         <cf>0.0</cf>
         <fac_mesh>1.0</fac_mesh>
@@ -94,94 +95,78 @@
           </Stream>
         </ColdFlowMixingModel>
       </Properties>
-      
-      <!--__________________________________-->
+
+<!--__________________________________-->
       <BoundaryConditions>
-      
-      
-        <!-- Bottom Y- face of T -->
+<!-- Bottom Y- face of T -->
         <FlowInlet>
           <InletVelocity>   1.0 </InletVelocity>
           <mixture_fraction>0.0 </mixture_fraction>
           <geom_object>
-            <box label = "y- wall bottom T">
+            <box label="y- wall bottom T">
               <min>     [-0.2, -0.1, -0.5]    </min>
               <max>     [ 0.2,  0.0,  0.5]    </max>
             </box>
           </geom_object>
         </FlowInlet>
-      
-      
-        <!-- Bottom x- face of T -->
+<!-- Bottom x- face of T -->
         <WallBC>
           <geom_object>
-            <box label = "x- walls">
+            <box label="x- walls">
               <min>     [-0.25, 0.0, -0.51]    </min>
               <max>     [-0.2,  0.5,   0.51]    </max>
             </box>
-            
-        <!-- Bottom X+ face of T -->
-            <box label = "x+ walls">
+<!-- Bottom X+ face of T -->
+            <box label="x+ walls">
               <min>     [0.2,   0.0, -0.51]    </min>
               <max>     [0.25,  0.5,  0.51]    </max>
             </box>
-        
-        <!-- Bottom of Y- face of horizontal leg -->
-            <box label = "y- left">
+<!-- Bottom of Y- face of horizontal leg -->
+            <box label="y- left">
               <min>     [-1.1,  0.45, -0.51]    </min>
               <max>     [ -0.2,  0.5,  0.51]    </max>
             </box>
-            
-            <box label = "y- right">
+            <box label="y- right">
               <min>     [ 0.2,  0.45, -0.51]    </min>
               <max>     [ 1.1,  0.5,  0.51]    </max>
             </box>
-        
-        <!-- Top, Y+ face of T -->
-            <box label = "y+ wall">
+<!-- Top, Y+ face of T -->
+            <box label="y+ wall">
               <min>     [-1.1, 1.0, -0.51]    </min>
               <max>     [1.1,  1.1,  0.51]    </max>
             </box>
-        
-        <!-- Z minus face of T -->
-            <box label = "z- wall">
+<!-- Z minus face of T -->
+            <box label="z- wall">
               <min>     [-1.1, -1.1, -0.55]    </min>
               <max>     [ 1.1,  1.1, -0.5]    </max>
             </box>
-        
-        <!-- Z plus face of T -->
-            <box label = "z+ wall">
+<!-- Z plus face of T -->
+            <box label="z+ wall">
               <min>     [-1.1,-1.1,  0.5]    </min>
               <max>     [ 1.1, 1.1,  0.55]    </max>
             </box>
           </geom_object>
         </WallBC>
-
-        <!-- X minus face of horizontal leg -->
+<!-- X minus face of horizontal leg -->
         <OutletBC>
           <mixture_fraction>0.0</mixture_fraction>
           <geom_object>
-            <box label = "x- horizontalLeg">
+            <box label="x- horizontalLeg">
               <min>       [-1.1, 0.5,-0.5]   </min>
               <max>       [-1.0, 1.0, 0.5]   </max>
             </box>
-            
-            <box label = "x+ horzontialLeg">
+            <box label="x+ horzontialLeg">
               <min>       [ 1.0, 0.5,-0.5]   </min>
               <max>       [ 1.1, 1.0, 0.5]   </max>
             </box>
           </geom_object>
-        </OutletBC>        
-        
+        </OutletBC>
       </BoundaryConditions>
-      <!--__________________________________-->
-      
+
+<!--__________________________________-->
       <ExplicitSolver>
-
-      <initial_dt>1.0</initial_dt>
-      <variable_dt>true</variable_dt>
-        <timeIntegratorType>FE</timeIntegratorType> 
-
+        <initial_dt>1.0</initial_dt>
+        <variable_dt>true</variable_dt>
         <PressureSolver>
           <Parameters>
             <tolerance>     1.0e-9</tolerance>
@@ -189,9 +174,8 @@
             <preconditioner>pfmg  </preconditioner>
             <maxiterations> 75    </maxiterations>
           </Parameters>
-
         </PressureSolver>
-        
+
         <MomentumSolver>
           <convection_scheme>central</convection_scheme>
         </MomentumSolver>
@@ -202,7 +186,7 @@
 
       </ExplicitSolver>
     </ARCHES>
+
   </CFD>
 
 </Uintah_specification>
-
