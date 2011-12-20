@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <!-- @version: -->
 <Uintah_specification>
-
   <Meta>
     <title>A Square Boiler with non-mpm walls</title>
   </Meta>
@@ -9,7 +8,6 @@
   <SimulationComponent type="mpmarches"/>
 
   <Solver type="hypre"/>
-
   <Time>
     <maxTime>2.0</maxTime>
     <initTime>0.0</initTime>
@@ -27,19 +25,19 @@
     <save label="vVelocitySPBC"/>
     <save label="wVelocitySPBC"/>
     <save label="enthalpy"/>
-    <!-- Radiation variables -->
+<!-- Radiation variables -->
     <save label="divQ"/>
     <save label="heatLoss"/>
     <save label="new_radiationVolq"/>
     <save label="new_radiationFluxN"/>
     <save label="new_radiationFluxS"/>
     <save label="new_abskg"/>
-    <!-- Table Variables -->
-    <!-- iv's -->
+<!-- Table Variables -->
+<!-- iv's -->
     <save label="mixture_fraction"/>
     <save label="mixture_fraction_RHS"/>
-    <!-- for debugging the RHS -->
-    <!-- dv's -->
+<!-- for debugging the RHS -->
+<!-- dv's -->
     <save label="adiabaticenthalpy" table_lookup="true"/>
     <save label="sensibleenthalpy" table_lookup="true"/>
     <save label="density" table_lookup="true"/>
@@ -57,7 +55,6 @@
     <time_integrator>explicit</time_integrator>
     <interpolator>linear</interpolator>
   </MPM>
-
   <MaterialProperties>
     <MPM>
       <material name="Nothingness">
@@ -69,7 +66,7 @@
         </constitutive_model>
         <thermal_conductivity>  0.4494           </thermal_conductivity>
         <specific_heat>         940.36           </specific_heat>
-        <!-- NO GEOMETRY OBJECT NEEDED FOR THIS CASE -->
+<!-- NO GEOMETRY OBJECT NEEDED FOR THIS CASE -->
       </material>
       <contact>
         <type>null</type>
@@ -78,10 +75,8 @@
       </contact>
     </MPM>
   </MaterialProperties>
-
   <Grid>
     <BoundaryConditions>
-
       <Face side="x-" name="x- face">
         <BCType id="1" label="SolidWallTemperature" var="Dirichlet">
           <value>1800</value>
@@ -108,7 +103,7 @@
       <Face circle="x-" origin="0 1.5 1.5" radius=".5">
         <BCType id="all" label="enthalpy" var="Dirichlet">
           <value>-1.8781499999999998e+06</value>
-          <!-- obtained from the table for f = 1 -->
+<!-- obtained from the table for f = 1 -->
         </BCType>
         <BCType id="all" label="mixture_fraction" var="Dirichlet">
           <value>1.0</value>
@@ -249,7 +244,6 @@
         <patches>[1,1,1]</patches>
       </Box>
     </Level>
-
   </Grid>
 
   <PhysicalConstants>
@@ -259,16 +253,16 @@
   </PhysicalConstants>
 
   <CFD>
-
-    <!-- ARCHES specification -->
+<!-- ARCHES specification -->
     <ARCHES>
 
-      <!-- TIME INTEGRATOR -->
+<!-- TIME INTEGRATOR -->
       <TimeIntegrator>
         <ExplicitIntegrator order="second"/>
       </TimeIntegrator>
 
-      <!-- SCALARS -->
+
+<!-- SCALARS -->
       <TransportEqns>
         <Eqn label="mixture_fraction" type="CCscalar">
           <doDiff>true</doDiff>
@@ -283,6 +277,7 @@
             <high>1.0</high>
           </Clipping>
         </Eqn>
+
         <Eqn label="enthalpy" type="CCscalar">
           <doDiff>true</doDiff>
           <doConv>true</doConv>
@@ -292,6 +287,7 @@
           </initialization>
           <src label="divQ"/>
         </Eqn>
+
         <Sources>
           <src label="divQ" type="do_radiation">
             <calc_frequency>5</calc_frequency>
@@ -308,6 +304,7 @@
             </DORadiationModel>
           </src>
         </Sources>
+
       </TransportEqns>
 
       <Turbulence model="smagorinsky">
@@ -328,7 +325,6 @@
       </Properties>
 
       <BoundaryConditions>
-
         <FlowInlet>
           <Flow_rate>.10</Flow_rate>
           <mixture_fraction>1.0</mixture_fraction>
@@ -340,7 +336,6 @@
             </cylinder>
           </geom_object>
         </FlowInlet>
-
         <WallBC>
           <geom_object>
             <box label="botWall">
@@ -365,7 +360,6 @@
             </box>
           </geom_object>
         </WallBC>
-
         <OutletBC>
           <mixture_fraction>0.0</mixture_fraction>
           <geom_object>
@@ -378,12 +372,9 @@
       </BoundaryConditions>
 
       <ExplicitSolver>
-
         <initial_dt>0.05</initial_dt>
         <variable_dt>true</variable_dt>
-        <timeIntegratorType>RK2SSP</timeIntegratorType>
         <restartOnNegativeDensityGuess>false</restartOnNegativeDensityGuess>
-
         <PressureSolver>
           <Parameters>
             <tolerance>1.0e-16</tolerance>
@@ -401,10 +392,9 @@
           <convection_scheme>central-upwind</convection_scheme>
         </MixtureFractionSolver>
 
-        <!-- current direction for the new enthalpy solver -->
+<!-- current direction for the new enthalpy solver -->
         <newEnthalpySolver/>
       </ExplicitSolver>
-
     </ARCHES>
 
   </CFD>

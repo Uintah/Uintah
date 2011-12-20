@@ -48,6 +48,7 @@ foreach fff ( $these[*]:q )
   sed  -i /"junk"/d $fff
   
   #check time integrator type
+  set INT_TYPE="already set"
   grep -q "FE" $fff
   if ( $status == "0" ) then 
     set INT_TYPE="one"
