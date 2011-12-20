@@ -155,7 +155,7 @@ def generateGS() :
       MPIRUN = os.environ['MPIRUN']    # first try the environmental variable
     except :
       MPIRUN = "mpirun"
-      rc = os.system("which mpirun>&/dev/null")
+      rc = os.system("which mpirun > /dev/null 2>&1 ")
 
       if rc == 256:
         print "ERROR:generateGoldStandards.py "
