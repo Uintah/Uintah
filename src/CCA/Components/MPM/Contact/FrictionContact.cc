@@ -221,45 +221,46 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
 
     for(int m=0;m<numMatls;m++){
       int dwi = matls->get(m);
+      MPMBoundCond bc;
+      bc.setBoundaryCondition(patch,dwi,"Symmetric",  gsurfnorm[m],interp_type);
 
-      ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch,
-                                                       gan, NGP, lb->pXLabel);
-
-      constParticleVariable<Point> px;
-      constParticleVariable<Vector> psize;
-      constParticleVariable<Matrix3> deformationGradient;
-
-      old_dw->get(px,                   lb->pXLabel,                  pset);
-      old_dw->get(psize,                lb->pSizeLabel,               pset);
-      old_dw->get(deformationGradient,  lb->pDeformationMeasureLabel, pset);
-
-      new_dw->allocateAndPut(gnormtraction[m],lb->gNormTractionLabel,dwi,patch);
-      new_dw->allocateAndPut(gstress[m],      lb->gStressLabel,      dwi,patch);
-      gstress[m].initialize(Matrix3(0.0));
-
-     MPMBoundCond bc;
-     bc.setBoundaryCondition(patch,dwi,"Symmetric",  gsurfnorm[m],interp_type);
-
-     for(NodeIterator iter=patch->getExtraNodeIterator();
+      for(NodeIterator iter=patch->getExtraNodeIterator();
                        !iter.done();iter++){
          IntVector c = *iter;
          double length = gsurfnorm[m][c].length();
          if(length>1.0e-15){
             gsurfnorm[m][c] = gsurfnorm[m][c]/length;
          }
-     }
+      }
+    }  // loop over matls
+
+    for(int m=0;m<numMatls;m++){
+      int dwi = matls->get(m);
+
+      ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch,
+                                                       gan, NGP, lb->pXLabel);
+      constParticleVariable<Point> px;
+      constParticleVariable<Vector> psize;
+      constParticleVariable<Matrix3> pstress, deformationGradient;
+
+      old_dw->get(px,                   lb->pXLabel,                  pset);
+      old_dw->get(psize,                lb->pSizeLabel,               pset);
+      old_dw->get(deformationGradient,  lb->pDeformationMeasureLabel, pset);
+      old_dw->get(pstress,              lb->pStressLabel,             pset);
+
+      new_dw->allocateAndPut(gnormtraction[m],lb->gNormTractionLabel,dwi,patch);
+      new_dw->allocateAndPut(gstress[m],      lb->gStressLabel,      dwi,patch);
+      gstress[m].initialize(Matrix3(0.0));
 
       // Next, interpolate the stress to the grid
-      constParticleVariable<Matrix3> pstress;
-      old_dw->get(pstress, lb->pStressLabel, pset);
-
       for(ParticleSubset::iterator iter = pset->begin();
           iter != pset->end(); iter++){
         particleIndex idx = *iter;
 
         // Get the node indices that surround the cell
-        interpolator->findCellAndWeights(px[idx], ni, S, psize[idx],deformationGradient[idx]);
-        
+        interpolator->findCellAndWeights(px[idx], ni, S, psize[idx],
+                                         deformationGradient[idx]);
+
         // Add each particles contribution to the local mass & velocity
         // Must use the node indices
         for(int k = 0; k < flag->d_8or27; k++) {
