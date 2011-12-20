@@ -55,7 +55,7 @@ if test "$MACHINE" = "blaze"; then
   WEBLOG=http://blaze.sci.utah.edu/~csafe-tester/SCIRun.${ID}.html
 fi
 
-if test "$MACHINE" = "coconino"; then
+if test "$MACHINE" = "coconino" -o "$MACHINE" = "kaibab"; then
   DEFAULT_MAIL_TO="ahumphrey@sci.utah.edu"
   DEFAULT_REMAKE_LOG_TO="ahumphrey@sci.utah.edu"
   REPLY_TO="ahumphrey@sci.utah.edu"
@@ -70,6 +70,7 @@ if test "$MACHINE" = "coconino"; then
   HTMLLOG=/home/csafe-tester/public_html/SCIRun.${ID}.html
   WEBLOG=http://www.uintah.utah.edu:8050/~csafe-tester/SCIRun.${ID}.html
 fi
+
 
 #______________________________________________________________________
 
@@ -289,7 +290,7 @@ else
 
 
   echo $PATH
-  if test "$MACHINE" = "coconino"; then
+  if test "$MACHINE" = "coconino" -o "$MACHINE" = "kaibab"; then
     svn co https://code.sci.utah.edu/svn/uintah/branches/gpu_dev/src src  > "$BUILDROOT"/svn_co.log 2>&1
   else
     svn co https://code.sci.utah.edu/svn/uintah/trunk/src src  > "$BUILDROOT"/svn_co.log 2>&1
