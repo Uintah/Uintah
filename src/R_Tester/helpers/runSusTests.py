@@ -469,7 +469,7 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
     MPIRUN = environ['MPIRUN']    # first try the environmental variable
   except :
     MPIRUN = "mpirun"
-    rc = system("which mpirun>/dev/null")
+    rc = system("which mpirun > /dev/null 2>&1")
 
     if rc == 256:
       print "ERROR:runSusTests.py "
@@ -487,12 +487,12 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
     MPIHEAD="%s -x MALLOC_STATS -x SCI_SIGNALMODE -np" % MPIRUN 
   
                                    # openmpi
-  rc = system("mpirun -x TERM echo 'hello' >& /dev/null")
+  rc = system("mpirun -x TERM echo 'hello' > /dev/null 2>&1")
   if rc == 0:
     MPIHEAD="%s -x MALLOC_STATS -x SCI_SIGNALMODE -np" % MPIRUN
   
                                    #  mvapich
-  rc = system("mpirun -genvlist TERM echo 'hello' >& /dev/null")
+  rc = system("mpirun -genvlist TERM echo 'hello' > /dev/null 2>&1")
   if rc == 0:
     MPIHEAD="%s -genvlist MALLOC_STATS,SCI_SIGNALMODE -np" % MPIRUN
     
