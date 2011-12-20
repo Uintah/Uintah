@@ -328,7 +328,7 @@ Ray::rayTrace( const ProcessorGroup* pc,
       int k = origin.z();
 
       // Allow for quick debugging test
-     /* IntVector pLow;
+     /*  IntVector pLow;
        IntVector pHigh;
        level->findInteriorCellIndexRange(pLow, pHigh);
        int Nx = pHigh[0] - pLow[0];
@@ -495,6 +495,7 @@ Ray::rayTrace( const ProcessorGroup* pc,
 
             in_domain = 1;
 
+
           }  // if reflection
         }  // threshold while loop.
       }  // Ray loop
@@ -502,8 +503,8 @@ Ray::rayTrace( const ProcessorGroup* pc,
       //__________________________________
       //  Compute divQ
       divQ[origin] = 4.0 * _pi * abskg[origin] * ( sigmaT4Pi[origin] - (SumI/_NoOfRays) );
-     //cout << divQ[origin] << endl;
-      // } // end quick debug testing
+      //cout << divQ[origin] << endl;
+     // } // end quick debug testing
     }  // end cell iterator
 
 
@@ -524,32 +525,32 @@ Ray::rayTrace( const ProcessorGroup* pc,
 
 
 //______________________________________________________________________
-  inline bool
+inline bool
 Ray::containsCell(const IntVector &low, const IntVector &high, const IntVector &cell)
 {
   return  low.x() <= cell.x() && 
-    low.y() <= cell.y() &&
-    low.z() <= cell.z() &&
-    high.x() > cell.x() && 
-    high.y() > cell.y() &&
-    high.z() > cell.z();
+          low.y() <= cell.y() &&
+          low.z() <= cell.z() &&
+          high.x() > cell.x() && 
+          high.y() > cell.y() &&
+          high.z() > cell.z();
 }
 
 
 //______________________________________________________________________
 //  Set Boundary conditions
-  void 
+void 
 Ray::setBC(CCVariable<double>& Q_CC,
-    const string& desc,
-    const Patch* patch,
-    const int mat_id)
+       const string& desc,
+       const Patch* patch,
+       const int mat_id)
 {
   if(patch->hasBoundaryFaces() == false){
     return;
   }
 
   dbg_BC << "setBC \t"<< desc <<" "
-    << " mat_id = " << mat_id <<  ", Patch: "<< patch->getID() << endl;
+        << " mat_id = " << mat_id <<  ", Patch: "<< patch->getID() << endl;
 
   // Iterate over the faces encompassing the domain
   vector<Patch::FaceType> bf;
@@ -571,7 +572,7 @@ Ray::setBC(CCVariable<double>& Q_CC,
 
       bool foundIterator = 
         getIteratorBCValueBCKind( patch, face, child, desc, mat_id,
-            bc_value, bound_ptr,bc_kind); 
+                        bc_value, bound_ptr,bc_kind); 
 
       if(foundIterator) {
 
@@ -597,15 +598,15 @@ Ray::setBC(CCVariable<double>& Q_CC,
         if( dbg_BC.active() ) {
           bound_ptr.reset();
           dbg_BC <<"Face: "<< patch->getFaceName(face) <<" numCellsTouched " << nCells
-            <<"\t child " << child  <<" NumChildren "<<numChildren 
-            <<"\t BC kind "<< bc_kind <<" \tBC value "<< bc_value
-            <<"\t bound limits = "<< bound_ptr << endl;
+             <<"\t child " << child  <<" NumChildren "<<numChildren 
+             <<"\t BC kind "<< bc_kind <<" \tBC value "<< bc_value
+             <<"\t bound limits = "<< bound_ptr << endl;
         }
       }  // if iterator found
     }  // child loop
 
     dbg_BC << "    "<< patch->getFaceName(face) << " \t " << bc_kind << " numChildren: " << numChildren 
-      << " nCellsTouched: " << nCells << endl;
+               << " nCellsTouched: " << nCells << endl;
     //__________________________________
     //  bulletproofing
 #if 0
@@ -615,8 +616,8 @@ Ray::setBC(CCVariable<double>& Q_CC,
     if(nCells != nFaceCells){
       ostringstream warn;
       warn << "ERROR: ICE: setSpecificVolBC Boundary conditions were not set correctly ("<< desc<< ", " 
-        << patch->getFaceName(face) << ", " << bc_kind  << " numChildren: " << numChildren 
-        << " nCells Touched: " << nCells << " nCells on boundary: "<< nFaceCells<<") " << endl;
+           << patch->getFaceName(face) << ", " << bc_kind  << " numChildren: " << numChildren 
+           << " nCells Touched: " << nCells << " nCells on boundary: "<< nFaceCells<<") " << endl;
       throw InternalError(warn.str(), __FILE__, __LINE__);
     }
 #endif
