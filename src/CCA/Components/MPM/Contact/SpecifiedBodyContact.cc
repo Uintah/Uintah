@@ -266,6 +266,7 @@ void SpecifiedBodyContact::exMomIntegrated(const ProcessorGroup*,
   StaticArray<constNCVariable<Vector> > gvelocity(numMatls);
   StaticArray<constNCVariable<Vector> > ginternalForce(numMatls);
   StaticArray<constNCVariable<double> > gvolume(numMatls);
+  NCVariable<Vector>                    gsurfnorm;
 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -281,14 +282,13 @@ void SpecifiedBodyContact::exMomIntegrated(const ProcessorGroup*,
      new_dw->get(ginternalForce[m], lb->gInternalForceLabel,dwi,patch,gnone,0);
      new_dw->get(gvolume[m],        lb->gVolumeLabel,       dwi,patch,gnone,0);
      new_dw->getModifiable(gvelocity_star[m], lb->gVelocityStarLabel,dwi,patch);
-   }
+    }
 
-   // Compute the normals for the rigid material
-   NCVariable<Vector>        gsurfnorm;
-   new_dw->allocateAndPut(gsurfnorm, lb->gSurfNormLabel, d_material, patch);
-   gsurfnorm.initialize(Vector(0.0,0.0,0.0));
-
+    // Compute the normals for the rigid material
    if(d_NormalOnly){
+     new_dw->allocateAndPut(gsurfnorm,lb->gSurfNormLabel,d_material,patch);
+     gsurfnorm.initialize(Vector(0.0,0.0,0.0));
+
      ParticleSubset* pset = old_dw->getParticleSubset(d_material, patch,
                                                       gan, NGP, lb->pXLabel);
      constParticleVariable<Point> px;
