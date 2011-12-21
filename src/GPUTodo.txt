@@ -37,4 +37,4 @@ Misc:
 
 2.) Buildbot testing GPU branch.
 
-3.) Fix buildbot.
+3.) Finish buildbot.
