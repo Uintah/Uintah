@@ -384,6 +384,8 @@ ThreadedMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
   static int totaltasks;
   set<DetailedTask*> pending_tasks;
 
+
+
   while( numTasksDone < ntasks) {
     i++;
 
@@ -436,6 +438,8 @@ ThreadedMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
         pending_tasks.insert(task);
       }
     }
+   for (int i=0; i < numThreads_; i++)
+      t_worker[i]->resetWaittime(Time::currentSeconds());
 
     while (dts->numExternalReadyTasks() > 0) { //greedly assign tasks
       // run a task that has its communication complete
@@ -592,6 +596,8 @@ ThreadedMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
     d_sharedState->taskLocalCommTime += mpi_info_.totalrecv + mpi_info_.totalsend;
     d_sharedState->taskWaitCommTime += mpi_info_.totalwaitmpi;
     d_sharedState->taskGlobalCommTime += mpi_info_.totalreduce;
+    for (int i=0; i < numThreads_; i++)
+      d_sharedState->taskWaitThreadTime += t_worker[i]->getWaittime();
   }
 
   // Don't need to lock sends 'cause all threads are done at this point.
@@ -926,8 +932,8 @@ ThreadedMPIScheduler::assignTask( DetailedTask* task, int iteration)
 /** Computing Thread Methods***/
 TaskWorker::TaskWorker(ThreadedMPIScheduler* scheduler, int id ) : 
    d_id( id ), d_scheduler(scheduler),  d_task(NULL), d_iteration(0),
-   d_runmutex("run mutex"),  d_runsignal("run condition"), d_quit(false), 
-   d_rank(scheduler->getProcessorGroup()->myrank())
+   d_runmutex("run mutex"),  d_runsignal("run condition"), d_quit(false),
+   d_waittime(0.0),d_waitstart(0.0),  d_rank(scheduler->getProcessorGroup()->myrank())
 {
   d_runmutex.lock();
 }
@@ -942,6 +948,7 @@ TaskWorker::run()
     //wait for main thread signal
     d_runsignal.wait(d_runmutex);
     d_runmutex.unlock();
+    d_waittime += Time::currentSeconds()-d_waitstart;
     if (d_quit) {
       if( taskdbg.active() ) {
       cerrLock.lock();
@@ -986,7 +993,19 @@ TaskWorker::run()
     d_runmutex.lock();
     d_task = NULL;
     d_iteration = 0;
+    d_waitstart = Time::currentSeconds();
     d_scheduler->d_nextsignal.conditionSignal();
     d_scheduler->d_nextmutex.unlock();
   }
+}
+
+double TaskWorker::getWaittime()
+{
+    return  d_waittime;
+}
+
+void TaskWorker::resetWaittime(double start)
+{
+    d_waitstart  = start;
+    d_waittime = 0.0;
 }
