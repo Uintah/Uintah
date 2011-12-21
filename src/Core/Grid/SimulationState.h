@@ -257,6 +257,7 @@ public:
   double taskGlobalCommTime;
   double taskWaitCommTime;
   double outputTime;
+  double taskWaitThreadTime;
 
   //percent time in overhead samples
   double overhead[OVERHEAD_WINDOW];

@@ -133,7 +133,8 @@ public:
 
   void quit(){d_quit=true;};
 
-
+  double getWaittime();
+  void resetWaittime(double start);
   
   friend class ThreadedMPIScheduler;
 
@@ -148,6 +149,8 @@ private:
   bool                   d_quit;
   int                    d_rank;
   CommRecMPI            d_sends_;
+  double                 d_waitstart;
+  double                 d_waittime;
 };
 
 } // End namespace Uintah

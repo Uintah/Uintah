@@ -443,6 +443,7 @@ void SimulationState::clearStats()
   taskGlobalCommTime = 0;
   taskLocalCommTime = 0;
   taskWaitCommTime = 0;
+  taskWaitThreadTime = 0;
   outputTime = 0;
 }
 
