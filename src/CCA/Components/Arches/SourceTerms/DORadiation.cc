@@ -234,8 +234,9 @@ DORadiation::computeSource( const ProcessorGroup* pc,
       new_dw->allocateAndPut( radiation_vars.ABSKG  , _abskgLabel          , matlIndex , patch );
       new_dw->allocateAndPut( radiation_vars.ABSKP  , _abskpLocalLabel          , matlIndex , patch );
       new_dw->allocateAndPut( divQ, _src_label, matlIndex, patch ); 
-      divQ.initialize(0.0);
       radiation_vars.ESRCG.allocate( patch->getExtraCellLowIndex(1), patch->getExtraCellHighIndex(1) );  
+      divQ.initialize(0.0);
+      radiation_vars.ESRCG.initialize(0.0); 
 
       // copy old solution into newly allocated variable
       old_dw->copyOut( radiation_vars.qfluxe, _radiationFluxELabel, matlIndex, patch, Ghost::None, 0 );  
@@ -271,6 +272,7 @@ DORadiation::computeSource( const ProcessorGroup* pc,
       new_dw->getModifiable( divQ, _src_label, matlIndex, patch ); 
 
       radiation_vars.ESRCG.allocate( patch->getExtraCellLowIndex(1), patch->getExtraCellHighIndex(1) );  
+      radiation_vars.ESRCG.initialize(0.0); 
 
     } 
 
