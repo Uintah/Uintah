@@ -150,6 +150,9 @@ DESCRIPTION
     double    d_vol_const;
     Vector    d_vel_after_stop;
     int       d_material;
+    int       NGP;
+    int       NGN;
+    bool      d_NormalOnly;
     std::string    d_filename;
     IntVector d_direction;
     std::vector< std::pair<double, Vector> > d_vel_profile;

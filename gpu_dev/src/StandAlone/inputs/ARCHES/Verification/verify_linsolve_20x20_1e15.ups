@@ -4,9 +4,10 @@
   <Meta>
     <title>Arches DQMOM Verification - Linear System, 20 x 20 Matrix, Condition Number = 10^15</title>
   </Meta>
-  <SimulationComponent type="arches" />
-  <Solver type="hypre" />
-  
+
+  <SimulationComponent type="arches"/>
+
+  <Solver type="hypre"/>
   <Time>
     <maxTime>0.02</maxTime>
     <max_Timesteps>1</max_Timesteps>
@@ -18,95 +19,77 @@
 
   <DataArchiver>
     <filebase>DQMOM_Verification_Solver_20x20.uda</filebase>
-    <outputInitTimestep />
-    <!--outputInterval>0.01</outputInterval-->
+    <outputInitTimestep/>
+<!--outputInterval>0.01</outputInterval-->
     <outputTimestepInterval>1</outputTimestepInterval>
-
-    <save label = "totalKineticEnergy"/>
-    <save label = "totalummsLnError"/>
-    <save label = "totalummsExactSol"/>
-    <save label = "pressurePS"/>
-    <save label = "scalarSP"/>
-    <save label = "newCCUVelocity"/>  
-    <save label = "newCCVVelocity"/>  
-    <save label = "newCCWVelocity"/>  
-    <save label = "uVelocitySPBC"/>
-    <save label = "vVelocitySPBC"/>
-    <save label = "wVelocitySPBC"/>
-    <save label = "densityCP"/>
-    <save label = "viscosityCTS"/>
-    <save label = "continuityResidual"/>
-    <save label = "velocityDivergence"/>
-    <save label = "ummsLnError"/>
-
+    <save label="totalKineticEnergy"/>
+    <save label="totalummsLnError"/>
+    <save label="totalummsExactSol"/>
+    <save label="pressurePS"/>
+    <save label="scalarSP"/>
+    <save label="newCCUVelocity"/>
+    <save label="newCCVVelocity"/>
+    <save label="newCCWVelocity"/>
+    <save label="uVelocitySPBC"/>
+    <save label="vVelocitySPBC"/>
+    <save label="wVelocitySPBC"/>
+    <save label="densityCP"/>
+    <save label="viscosityCTS"/>
+    <save label="continuityResidual"/>
+    <save label="velocityDivergence"/>
+    <save label="ummsLnError"/>
 <!-- ===================================
           Scalar Variables
      ==================================-->
-    
-    <save label = "scalar1" />
-    <save label = "scalar2" />
-    <save label = "scalar3" />
-
-
+    <save label="scalar1"/>
+    <save label="scalar2"/>
+    <save label="scalar3"/>
 <!-- ===================================
           DQMOM Coal Variables
      ==================================-->
-
-    <save label = "vel_qn0" />
-    <save label = "vel_qn1"/>
-    <save label = "vel_qn2"/>
-
-    <save label = "w_qn0" />
-    <save label = "w_qn0_icv" />
-    <save label = "w_qn0_src" />
-
-    <save label = "w_qn1" />
-    <save label = "w_qn1_icv" />
-    <save label = "w_qn1_src" />
-
-    <save label = "w_qn2" />
-    <save label = "w_qn2_icv" />
-    <save label = "w_qn2_src" />
-
-    <save label = "length_qn0" />
-    <save label = "length_qn0_icv"/>
-    <save label = "length_qn0_src"/>
-
-    <save label = "length_qn1" />
-    <save label = "length_qn1_icv"/>
-    <save label = "length_qn1_src"/>
-
-    <save label = "length_qn2" />
-    <save label = "length_qn2_icv"/>
-    <save label = "length_qn2_src"/>
-
-    <save label = "RCmass_qn0" />
-    <save label = "RCmass_qn0_src" />
-    <save label = "RCmass_qn0_icv"/>
-
-    <save label = "RCmass_qn1" />
-    <save label = "RCmass_qn1_src" />
-    <save label = "RCmass_qn1_icv"/>
-
-    <save label = "RCmass_qn2" />
-    <save label = "RCmass_qn2_icv"/>
-    <save label = "RCmass_qn2_src"/>
-
+    <save label="vel_qn0"/>
+    <save label="vel_qn1"/>
+    <save label="vel_qn2"/>
+    <save label="w_qn0"/>
+    <save label="w_qn0_icv"/>
+    <save label="w_qn0_src"/>
+    <save label="w_qn1"/>
+    <save label="w_qn1_icv"/>
+    <save label="w_qn1_src"/>
+    <save label="w_qn2"/>
+    <save label="w_qn2_icv"/>
+    <save label="w_qn2_src"/>
+    <save label="length_qn0"/>
+    <save label="length_qn0_icv"/>
+    <save label="length_qn0_src"/>
+    <save label="length_qn1"/>
+    <save label="length_qn1_icv"/>
+    <save label="length_qn1_src"/>
+    <save label="length_qn2"/>
+    <save label="length_qn2_icv"/>
+    <save label="length_qn2_src"/>
+    <save label="RCmass_qn0"/>
+    <save label="RCmass_qn0_src"/>
+    <save label="RCmass_qn0_icv"/>
+    <save label="RCmass_qn1"/>
+    <save label="RCmass_qn1_src"/>
+    <save label="RCmass_qn1_icv"/>
+    <save label="RCmass_qn2"/>
+    <save label="RCmass_qn2_icv"/>
+    <save label="RCmass_qn2_src"/>
 <!-- ===================================
           Moment Labels
      ==================================-->
-
-    <!--save label = "moment_00" />
+<!--save label = "moment_00" />
     <save label = "moment_10" />
     <save label = "moment_01" /-->
-
-    <checkpoint cycle = "2" interval = "0.05"/>
+    <checkpoint cycle="2" interval="0.05"/>
     <compression>gzip</compression>
   </DataArchiver>
 
   <Grid>
     <Level>
-      <Box label = "1">
+      <Box label="1">
         <lower>[0,0,0]</lower>
         <upper>[1.0,1.0,1.0]</upper>
         <resolution>[4,4,4]</resolution>
@@ -124,10 +107,10 @@
   </PhysicalConstants>
 
   <CFD>
-
-    <!-- ARCHES specification -->
+<!-- ARCHES specification -->
     <ARCHES>
-      <MMS whichMMS="constantMMS" >
+
+      <MMS whichMMS="constantMMS">
         <mmsErrorType>Linf</mmsErrorType>
         <constantMMS>
           <cu>1.0</cu>
@@ -139,141 +122,164 @@
         </constantMMS>
       </MMS>
 
-      <!-- TIME INTEGRATOR -->
+<!-- TIME INTEGRATOR -->
       <TimeIntegrator>
-          <ExplicitIntegrator order="first"/>
+        <ExplicitIntegrator order="first"/>
       </TimeIntegrator>
-      
-      <Turbulence model = "smagorinsky">
+
+
+      <Turbulence model="smagorinsky">
         <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
         <cf>0.0</cf>
         <fac_mesh>1.0</fac_mesh>
         <filterl>0.000001</filterl>
       </Turbulence>
 
-        <TransportEqns>
-            <!-- this scalar variable tests the step function initialization mechanism 
+      <TransportEqns>
+<!-- this scalar variable tests the step function initialization mechanism 
                   when step function location is based on physical location -->
-            <Eqn label="scalar1" type="CCscalar">
-                <doDiff>true</doDiff>
-                <doConv>true</doConv>
-                <addSources>true</addSources>
-                <conv_scheme>upwind</conv_scheme>
-                <initialization type="step">
-                    <step_direction>z</step_direction>
-                    <step_value>4</step_value>
-                    <step_start>0.5</step_start>
-                    <step_end>2.0</step_end>
-                </initialization>
-            </Eqn>
+        <Eqn label="scalar1" type="CCscalar">
+          <doDiff>true</doDiff>
+          <doConv>true</doConv>
+          <addSources>true</addSources>
+          <conv_scheme>upwind</conv_scheme>
+          <initialization type="step">
+            <step_direction>z</step_direction>
+            <step_value>4</step_value>
+            <step_start>0.5</step_start>
+            <step_end>2.0</step_end>
+          </initialization>
+        </Eqn>
 
-            <!-- this scalar variable tests the step function initialization mechanism
+<!-- this scalar variable tests the step function initialization mechanism
                   when step function location is based on cell location -->
-            <Eqn label="scalar2" type="CCscalar">
-                <doDiff>true</doDiff>
-                <doConv>true</doConv>
-                <addSources>true</addSources>
-                <conv_scheme>upwind</conv_scheme>
-                <initialization type="step">
-                    <step_direction>z</step_direction>
-                    <step_value>4</step_value>
-                    <step_cellstart>3</step_cellstart>
-                    <step_cellend>5</step_cellend>
-                </initialization>
-            </Eqn>
+        <Eqn label="scalar2" type="CCscalar">
+          <doDiff>true</doDiff>
+          <doConv>true</doConv>
+          <addSources>true</addSources>
+          <conv_scheme>upwind</conv_scheme>
+          <initialization type="step">
+            <step_direction>z</step_direction>
+            <step_value>4</step_value>
+            <step_cellstart>3</step_cellstart>
+            <step_cellend>5</step_cellend>
+          </initialization>
+        </Eqn>
 
-            <!-- this scalar variable tests the constant initialization mechanism -->
-            <Eqn label="scalar3" type="CCscalar">
-                <doDiff>true</doDiff>
-                <doConv>true</doConv>
-                <addSources>true</addSources>
-                <conv_scheme>upwind</conv_scheme>
-                <initialization type="constant">
-                    <constant>3.0</constant>
-                </initialization>
-            </Eqn>
-            
-        </TransportEqns>
+<!-- this scalar variable tests the constant initialization mechanism -->
+        <Eqn label="scalar3" type="CCscalar">
+          <doDiff>true</doDiff>
+          <doConv>true</doConv>
+          <addSources>true</addSources>
+          <conv_scheme>upwind</conv_scheme>
+          <initialization type="constant">
+            <constant>3.0</constant>
+          </initialization>
+        </Eqn>
+
+      </TransportEqns>
 
       <DQMOM>
-
         <Verify_Linear_Solver>
-            <A>linear_solver_verification_A_20x20_1e15.dat</A>
-            <X>linear_solver_verification_X_20x20_1e15.dat</X>
-            <B>linear_solver_verification_B_20x20_1e15.dat</B>
-            <R>linear_solver_verification_R_20x20_1e15.dat</R>
-            <normR>linear_solver_verification_NormalizedR_20x20_1e15.dat</normR>
-            <norms>linear_solver_verification_norms_20x20_1e15.dat</norms>
-            <dimension>20</dimension>
-            <tolerance>0.1</tolerance>
+          <A>linear_solver_verification_A_20x20_1e15.dat</A>
+          <X>linear_solver_verification_X_20x20_1e15.dat</X>
+          <B>linear_solver_verification_B_20x20_1e15.dat</B>
+          <R>linear_solver_verification_R_20x20_1e15.dat</R>
+          <normR>linear_solver_verification_NormalizedR_20x20_1e15.dat</normR>
+          <norms>linear_solver_verification_norms_20x20_1e15.dat</norms>
+          <dimension>20</dimension>
+          <tolerance>0.1</tolerance>
         </Verify_Linear_Solver>
-
         <LinearSolver>
-            <tolerance>1e-5</tolerance>
-            <type>Lapack</type>
+          <tolerance>1e-5</tolerance>
+          <type>Lapack</type>
         </LinearSolver>
-
         <number_quad_nodes>3</number_quad_nodes>
         <save_moments>true</save_moments>
         <adiabGas_nonadiabPart>true</adiabGas_nonadiabPart>
-
         <VelModel>
-            <kinematic_viscosity>0.00001</kinematic_viscosity>
-            <rho_ratio>1000</rho_ratio>
-            <regime>2</regime>
-            <L>.4</L>
-            <eta>1.0e-4</eta>
+          <kinematic_viscosity>0.00001</kinematic_viscosity>
+          <rho_ratio>1000</rho_ratio>
+          <regime>2</regime>
+          <L>.4</L>
+          <eta>1.0e-4</eta>
         </VelModel>
 
         <Weights>
-            <!-- w [=] #/m^3 -->
-            <doDiff>false</doDiff>
-            <doConv>true</doConv>
-            <initialization type="step">
-                <step_direction>z</step_direction>
-                <step_start>0.0</step_start>
-                <step_end>0.5</step_end>
-                <step_value>1</step_value>
-            </initialization>
-            <scaling_const>1</scaling_const>
+<!-- w [=] #/m^3 -->
+          <doDiff>false</doDiff>
+          <doConv>true</doConv>
+          <initialization type="step">
+            <step_direction>z</step_direction>
+            <step_start>0.0</step_start>
+            <step_end>0.5</step_end>
+            <step_value>1</step_value>
+          </initialization>
+          <scaling_const>1</scaling_const>
         </Weights>
 
         <Ic label="length">
-            <!-- l [=] m -->
-            <doDiff>false</doDiff>
-            <doConv>true</doConv>
-            <initialization type="env_step">
-                <step_direction>z</step_direction>
-                <step_start>0.0</step_start>
-                <step_end>0.5</step_end>
-                <env_step_value qn="0" value="3.76e-5" />
-                <env_step_value qn="1" value="9.10e-5" />
-                <env_step_value qn="2" value="1.18e-4" />
-            </initialization>
-            <scaling_const>1.00e-5</scaling_const>
+<!-- l [=] m -->
+          <doDiff>false</doDiff>
+          <doConv>true</doConv>
+          <initialization type="env_step">
+            <step_direction>z</step_direction>
+            <step_start>0.0</step_start>
+            <step_end>0.5</step_end>
+            <env_step_value qn="0" value="3.76e-5"/>
+            <env_step_value qn="1" value="9.10e-5"/>
+            <env_step_value qn="2" value="1.18e-4"/>
+          </initialization>
+          <scaling_const>1.00e-5</scaling_const>
         </Ic>
 
         <Ic label="RCmass">
-            <!-- alpha_c [=] kg -->
-            <doDiff>false</doDiff>
-            <doConv>true</doConv>
-            <initialization type="env_constant">
-                <env_constant qn="0" value="2.65e-11" />
-                <env_constant qn="1" value="3.75e-10" />
-                <env_constant qn="2" value="8.14e-10" />
-            </initialization>
-            <scaling_const>1.00e-10</scaling_const>
+<!-- alpha_c [=] kg -->
+          <doDiff>false</doDiff>
+          <doConv>true</doConv>
+          <initialization type="env_constant">
+            <env_constant qn="0" value="2.65e-11"/>
+            <env_constant qn="1" value="3.75e-10"/>
+            <env_constant qn="2" value="8.14e-10"/>
+          </initialization>
+          <scaling_const>1.00e-10</scaling_const>
         </Ic>
 
-        <Moment><m>[0,0]</m></Moment>
-        <Moment><m>[0,1]</m></Moment>
-        <Moment><m>[1,0]</m></Moment>
-        <Moment><m>[0,2]</m></Moment>
-        <Moment><m>[2,0]</m></Moment>
-        <Moment><m>[1,2]</m></Moment>
-        <Moment><m>[3,2]</m></Moment>
-        <Moment><m>[0,3]</m></Moment>
-        <Moment><m>[3,0]</m></Moment>
+        <Moment>
+          <m>[0,0]</m>
+        </Moment>
+
+        <Moment>
+          <m>[0,1]</m>
+        </Moment>
+
+        <Moment>
+          <m>[1,0]</m>
+        </Moment>
+
+        <Moment>
+          <m>[0,2]</m>
+        </Moment>
+
+        <Moment>
+          <m>[2,0]</m>
+        </Moment>
+
+        <Moment>
+          <m>[1,2]</m>
+        </Moment>
+
+        <Moment>
+          <m>[3,2]</m>
+        </Moment>
+
+        <Moment>
+          <m>[0,3]</m>
+        </Moment>
+
+        <Moment>
+          <m>[3,0]</m>
+        </Moment>
 
       </DQMOM>
 
@@ -294,14 +300,11 @@
 <!--
       <BoundaryConditions>
       </BoundaryConditions>
--->
-  
-      <ExplicitSolver>
 
-      <initial_dt>1</initial_dt>
-      <variable_dt>true</variable_dt>
-        <timeIntegratorType>FE</timeIntegratorType>
-        
+-->
+      <ExplicitSolver>
+        <initial_dt>1</initial_dt>
+        <variable_dt>true</variable_dt>
         <PressureSolver>
           <Parameters>
             <solver>           cg     </solver>
@@ -322,7 +325,7 @@
 
       </ExplicitSolver>
     </ARCHES>
+
   </CFD>
 
 </Uintah_specification>
-

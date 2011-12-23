@@ -3,9 +3,10 @@
   <Meta>
     <title>RMCRT Benchmark</title>
   </Meta>
-  <SimulationComponent type="arches"/>
-  <Solver type="hypre" />
 
+  <SimulationComponent type="arches"/>
+
+  <Solver type="hypre"/>
   <Time>
     <maxTime>10.0</maxTime>
     <max_Timesteps>1</max_Timesteps>
@@ -14,6 +15,7 @@
     <delt_max>0.01</delt_max>
     <timestep_multiplier>0.35</timestep_multiplier>
   </Time>
+
   <DataArchiver>
     <filebase>RMCRT_test.uda</filebase>
     <outputInterval>0.01</outputInterval>
@@ -33,6 +35,7 @@
     <outputDoubleAsFloat/>
     <compression>gzip</compression>
   </DataArchiver>
+
   <Grid>
     <Level>
       <Box label="1">
@@ -44,13 +47,20 @@
       </Box>
     </Level>
   </Grid>
+
   <PhysicalConstants>
     <gravity>[-9.8,0,0]</gravity>
     <reference_point>[-1,-1,-1]</reference_point>
     <viscosity>0.000020</viscosity>
   </PhysicalConstants>
+
   <CFD>
     <ARCHES>
+
+      <TimeIntegrator>
+        <ExplicitIntegrator order="first"/>
+      </TimeIntegrator>
+
 
       <Turbulence model="compdynamicprocedure">
         <variance_coefficient>0.1</variance_coefficient>
@@ -96,11 +106,8 @@
       </BoundaryConditions>
 
       <ExplicitSolver>
-
         <initial_dt>0.05</initial_dt>
         <variable_dt>true</variable_dt>
-        <timeIntegratorType>FE</timeIntegratorType>
-
         <PressureSolver>
           <Parameters>
             <solver>           cg     </solver>
@@ -124,7 +131,7 @@
           <radiationCalcFreq>1</radiationCalcFreq>
           <radCalcForAllRKSteps>true</radCalcForAllRKSteps>
           <RMCRT>
-            <!-- ray tracer -->
+<!-- ray tracer -->
             <NoOfRays>100</NoOfRays>
             <Threshold>0.05</Threshold>
             <Alpha>1</Alpha>
@@ -134,7 +141,8 @@
         </EnthalpySolver>
 
       </ExplicitSolver>
-
     </ARCHES>
+
   </CFD>
+
 </Uintah_specification>

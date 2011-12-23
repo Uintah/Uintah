@@ -693,6 +693,8 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
   toReduceMax.push_back(double_int(d_sharedState->taskWaitCommTime,rank));
   toReduce.push_back(d_sharedState->outputTime);
   toReduceMax.push_back(double_int(d_sharedState->outputTime,rank));
+  toReduce.push_back(d_sharedState->taskWaitThreadTime);
+  toReduceMax.push_back(double_int(d_sharedState->taskWaitThreadTime,rank));
 #ifdef USE_PAPI_COUNTERS
   toReduce.push_back(flop);
   toReduceMax.push_back(double_int(flop, rank));
@@ -716,6 +718,7 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
   statLabels.push_back("TaskLocalComm");
   statLabels.push_back("TaskWaitCommTime");
   statLabels.push_back("Output");
+  statLabels.push_back("TaskWaitThreadTime");
 #ifdef USE_PAPI_COUNTERS
   statLabels.push_back("FLOP");
   statLabels.push_back("VFLOP");

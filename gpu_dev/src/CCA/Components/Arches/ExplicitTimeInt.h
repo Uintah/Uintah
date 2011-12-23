@@ -199,11 +199,12 @@ private:
                                     int step, double time )
   {
 
-                for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
-      IntVector c = *iter; 
-                        phi[*iter] = ssp_alpha[step]*old_phi[c] + ssp_beta[step]*phi[c];        
-    }
+    for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
 
+      IntVector c = *iter; 
+      phi[*iter] = ssp_alpha[step] * old_phi[c] + ssp_beta[step] * phi[c];        
+
+    }
 
 #ifdef VERIFY_TIMEINT
     // This computes the L_inf norm of the error for the integrator test. 
@@ -230,7 +231,6 @@ private:
     cout << endl;
     cout << "**********************************************************************" << endl;
 #endif  
-
 
   }
 

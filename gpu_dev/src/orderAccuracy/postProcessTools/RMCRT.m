@@ -39,9 +39,12 @@ endfunction
 
 %______________________________________________________________________
 %    B E N C H M A R K   2    
-function [divQ_exact] = benchMark2(x_CC)
+function [DivQ] = benchMark2(x_CC)
   printf("BenchMark 2\n");
 
+  [s,r1] = unix('grep -m1 -w "Total Number of Cells" tmp |cut -d":" -f2 | tr -d "[]int"');
+  resolution = str2num(r1);
+  zDir = 3;
   n = resolution(zDir); %number of cells in the z direction (between the plates)
 
   %This script computes the exact solution to any resolution at the cell centers 
@@ -88,7 +91,89 @@ function [divQ_exact] = benchMark2(x_CC)
   printf("...end\n");
 endfunction
 
+
 %______________________________________________________________________
+%   B E N C H M A R K   3
+function [ExactSol] = benchMark3(x_CC)
+  printf("BenchMark 3");
+  
+  load bench3Exact.txt;
+
+  [s,r1] = unix('grep -m1 -w "Total Number of Cells" tmp |cut -d":" -f2 | tr -d "[]int"');
+  resolution = str2num(r1);
+
+  zDir = 3;
+  n = resolution(zDir); %number of cells in the z direction (between the plates)
+
+  ExactSol = bench3Exact;
+  
+  x243 = 1/(2*243):1/243 :1-1/(2*243);
+
+  Exact81 = ExactSol(2:3:242);
+  Exact27 = Exact81(2:3:80);
+  Exact9  = Exact27(2:3:26);
+  Exact3  = Exact9(2:3:8);
+
+  if (n == 81)
+    ExactSol = Exact81;
+  end
+  if (n == 27)
+    ExactSol = Exact27; 
+  end
+  if (n == 9)   
+    ExactSol = Exact9;
+  end
+  if (n == 3)   
+    ExactSol = Exact3;
+  end
+  if (n !=3 && n != 9 && n!= 27 && n != 81 && n!=243)
+    ExactSol = interp1(x243, ExactSol, x_CC, 'pchip');
+  end
+
+endfunction
+
+%______________________________________________________________________
+%   B E N C H M A R K   4
+function [ExactSol] = benchMark4(x_CC)
+  printf("BenchMark 4");
+  
+  load b4divQCenterExact.txt;
+
+  [s,r1] = unix('grep -m1 -w "Total Number of Cells" tmp |cut -d":" -f2 | tr -d "[]int"');
+  resolution = str2num(r1);
+
+  zDir = 3;
+  n = resolution(zDir); %number of cells in the z direction (between the plates)
+
+  ExactSol = b4divQCenterExact;
+  
+  x243 = 1/(2*243):1/243 :1-1/(2*243);
+
+  Exact81 = ExactSol(2:3:242);
+  Exact27 = Exact81(2:3:80);
+  Exact9  = Exact27(2:3:26);
+  Exact3  = Exact9(2:3:8);
+
+  if (n == 81)
+    ExactSol = Exact81;
+  end
+  if (n == 27)
+    ExactSol = Exact27; 
+  end
+  if (n == 9)   
+    ExactSol = Exact9;
+  end
+  if (n == 3)   
+    ExactSol = Exact3;
+  end
+  if (n !=3 && n != 9 && n!= 27 && n != 81 && n!=243)
+    ExactSol = interp1(x243, ExactSol, x_CC, 'pchip');
+  end
+
+endfunction
+
+%______________________________________________________________________
+
 
 function Usage
   printf('RMCRT.m <options>\n') 
@@ -219,6 +304,8 @@ x_CC     = divQ_sim(:,pDir);         % This is actually x_CC or y_CC or z_CC
 if (benchmark == 1)
   [divQ_exact] = benchMark1(x_CC);
 elseif (benchmark == 2 )
+  [divQ_exact] = benchMark2(x_CC);
+elseif (benchmark == 3 )
   [divQ_exact] = benchMark2(x_CC);
 end
 

@@ -1,16 +1,14 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
 <!-- DOCTYPE Uintah_specification SYSTEM "input.dtd" -->
 <!-- @version: -->
-
 <Uintah_specification>
-  
   <Meta>
     <title>This input file doesn't do anything interesting</title>
   </Meta>
 
-  <SimulationComponent type="arches" />
-  <Solver type="hypre" />
+  <SimulationComponent type="arches"/>
 
+  <Solver type="hypre"/>
   <Time>
     <maxTime>25</maxTime>
     <initTime>0.0</initTime>
@@ -23,28 +21,26 @@
   <DataArchiver>
     <filebase>stand_still.uda</filebase>
     <outputInterval>0.01</outputInterval>
-
-    <save label = "totalKineticEnergy"/>
-    <save label = "pressurePS"/>
-    <save label = "scalarSP"/>
-    <save label = "newCCUVelocity"/>  
-    <save label = "newCCVVelocity"/>  
-    <save label = "newCCWVelocity"/>  
-    <save label = "uVelocitySPBC"/>
-    <save label = "vVelocitySPBC"/>
-    <save label = "wVelocitySPBC"/>
-    <save label = "densityCP"/>
-    <save label = "viscosityCTS"/>
-    <save label = "continuityResidual"/>
-    <save label = "velocityDivergence"/>
-    <checkpoint cycle = "2" interval = "0.05"/>
-
+    <save label="totalKineticEnergy"/>
+    <save label="pressurePS"/>
+    <save label="scalarSP"/>
+    <save label="newCCUVelocity"/>
+    <save label="newCCVVelocity"/>
+    <save label="newCCWVelocity"/>
+    <save label="uVelocitySPBC"/>
+    <save label="vVelocitySPBC"/>
+    <save label="wVelocitySPBC"/>
+    <save label="densityCP"/>
+    <save label="viscosityCTS"/>
+    <save label="continuityResidual"/>
+    <save label="velocityDivergence"/>
+    <checkpoint cycle="2" interval="0.05"/>
     <compression>gzip</compression>
   </DataArchiver>
 
   <Grid>
     <Level>
-      <Box label = "1">
+      <Box label="1">
         <lower>[0,0,0]</lower>
         <upper>[1.0,1.0,3.0]</upper>
         <resolution>[8,8,8]</resolution>
@@ -63,10 +59,15 @@
 
   <CFD>
     <ARCHES>
-      
-      <Turbulence model = "compdynamicprocedure">
-          <variance_coefficient>0.1</variance_coefficient>
-          <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
+
+      <TimeIntegrator>
+        <ExplicitIntegrator order="first"/>
+      </TimeIntegrator>
+
+
+      <Turbulence model="compdynamicprocedure">
+        <variance_coefficient>0.1</variance_coefficient>
+        <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
       </Turbulence>
 
       <Properties>
@@ -86,14 +87,11 @@
 <!--
       <BoundaryConditions>
       </BoundaryConditions>
+
 -->
-
       <ExplicitSolver>
-
-      <initial_dt>1</initial_dt>
-      <variable_dt>true</variable_dt>
-        <timeIntegratorType>FE</timeIntegratorType> 
-
+        <initial_dt>1</initial_dt>
+        <variable_dt>true</variable_dt>
         <PressureSolver>
           <Parameters>
             <solver>           cg     </solver>
@@ -102,7 +100,6 @@
             <maxiterations>    75     </maxiterations>
             <skip>              1     </skip>
           </Parameters>
-          
 <!--
           <Parameters>
             <tolerance>       1.0e-9</tolerance>
@@ -112,7 +109,7 @@
           </Parameters>
 -->
         </PressureSolver>
-        
+
         <MomentumSolver>
           <convection_scheme>central</convection_scheme>
         </MomentumSolver>
@@ -123,7 +120,7 @@
 
       </ExplicitSolver>
     </ARCHES>
+
   </CFD>
 
 </Uintah_specification>
-

@@ -4,8 +4,10 @@
   <Meta>
     <title>Steam Generator</title>
   </Meta>
+
   <SimulationComponent type="mpmarches"/>
-  <Solver type="hypre" />
+
+  <Solver type="hypre"/>
   <Time>
     <maxTime>2.0</maxTime>
     <initTime>0.0</initTime>
@@ -14,6 +16,7 @@
     <timestep_multiplier>0.4</timestep_multiplier>
     <max_Timesteps>25</max_Timesteps>
   </Time>
+
   <DataArchiver>
     <filebase>steamGen.uda</filebase>
     <outputInitTimestep/>
@@ -25,12 +28,12 @@
     <save label="newCCVelocity"/>
     <save label="vorticity"/>
     <save label="scalarSP"/>
-    <!-- Table Variables -->
-    <!-- iv's -->
+<!-- Table Variables -->
+<!-- iv's -->
     <save label="mixture_fraction"/>
     <save label="scalarVarSP"/>
     <save label="heatLoss"/>
-    <!-- dv's -->
+<!-- dv's -->
     <save label="temperature" table_lookup="true"/>
     <save label="density" table_lookup="true"/>
     <save label="CO2" table_lookup="true"/>
@@ -38,10 +41,11 @@
     <save label="CO" table_lookup="true"/>
     <save label="OH" table_lookup="true"/>
     <save label="NO" table_lookup="true"/>
-    <!--checkpoint cycle="2" walltimeStart="1800" walltimeInterval="1800"/-->
+<!--checkpoint cycle="2" walltimeStart="1800" walltimeInterval="1800"/-->
     <checkpoint cycle="2" interval="0.01"/>
     <compression>gzip</compression>
   </DataArchiver>
+
   <MPM>
     <time_integrator>explicit</time_integrator>
     <interpolator>linear</interpolator>
@@ -245,6 +249,7 @@
         </BCType>
       </Face>
     </BoundaryConditions>
+
     <Level>
       <Box label="1">
         <lower>[0 , -1.6, -1.6]</lower>
@@ -255,19 +260,24 @@
       </Box>
     </Level>
   </Grid>
+
   <PhysicalConstants>
     <gravity>[-9.8,0,0]</gravity>
     <reference_point>[-1,-1,-1]</reference_point>
     <viscosity>0.000020</viscosity>
   </PhysicalConstants>
+
   <CFD>
-    <!-- ARCHES specification -->
+<!-- ARCHES specification -->
     <ARCHES>
-      <!-- TIME INTEGRATOR -->
+
+<!-- TIME INTEGRATOR -->
       <TimeIntegrator>
         <ExplicitIntegrator order="second"/>
       </TimeIntegrator>
-      <!-- SCALARS -->
+
+
+<!-- SCALARS -->
       <TransportEqns>
         <Eqn label="mixture_fraction" type="CCscalar">
           <doDiff>true</doDiff>
@@ -282,6 +292,7 @@
             <high>1.0</high>
           </Clipping>
         </Eqn>
+
         <Eqn label="reacting_scalar" type="CCscalar">
           <doDiff>true</doDiff>
           <doConv>true</doConv>
@@ -295,7 +306,9 @@
             <high>1.0</high>
           </Clipping>
         </Eqn>
+
       </TransportEqns>
+
       <Turbulence model="smagorinsky">
         <variance_coefficient>0.1</variance_coefficient>
         <cf>0.17</cf>
@@ -303,12 +316,14 @@
         <filterl>0.000001</filterl>
         <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
       </Turbulence>
+
       <Properties>
         <use_mixing_model>true</use_mixing_model>
         <ClassicTable>
           <inputfile>inputs/ARCHES/ClassicMixingTables/methane/CH4_equil_nonadiabatic.mix.gz</inputfile>
         </ClassicTable>
       </Properties>
+
       <BoundaryConditions>
         <FlowInlet>
           <Flow_rate>1.0</Flow_rate>
@@ -367,10 +382,10 @@
           </geom_object>
         </intrusions>
       </BoundaryConditions>
+
       <ExplicitSolver>
         <initial_dt>0.05</initial_dt>
         <variable_dt>true</variable_dt>
-        <timeIntegratorType>RK2SSP</timeIntegratorType>
         <restartOnNegativeDensityGuess>false</restartOnNegativeDensityGuess>
         <PressureSolver>
           <Parameters>
@@ -381,12 +396,15 @@
             <skip>1</skip>
           </Parameters>
         </PressureSolver>
+
         <MomentumSolver>
           <convection_scheme>central</convection_scheme>
         </MomentumSolver>
+
         <MixtureFractionSolver>
           <convection_scheme>central-upwind</convection_scheme>
         </MixtureFractionSolver>
+
         <EnthalpySolver>
           <convection_scheme>central-upwind</convection_scheme>
           <radiationCalcFreq>5</radiationCalcFreq>
@@ -402,9 +420,12 @@
             </LinearSolver>
           </DORadiationModel>
         </EnthalpySolver>
+
       </ExplicitSolver>
     </ARCHES>
+
   </CFD>
+
   <Multimaterial>
     <fluidThermalConductivity>0.03</fluidThermalConductivity>
     <heatExchange>false</heatExchange>

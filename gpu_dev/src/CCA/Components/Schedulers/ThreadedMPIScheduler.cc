@@ -204,7 +204,7 @@ ThreadedMPIScheduler::runTask( DetailedTask         * task, int iteration, int t
     waittimes[task->getTask()->getName()]+=CurrentWaitTime;
     CurrentWaitTime=0;
   }
-  
+
   double taskstart = Time::currentSeconds();
   
   if (trackingVarsPrintLocation_ & SchedulerCommon::PRINT_BEFORE_EXEC) {
@@ -436,6 +436,10 @@ ThreadedMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
         pending_tasks.insert(task);
       }
     }
+    
+   for (int i=0; i < numThreads_; i++) {
+     t_worker[i]->resetWaittime(Time::currentSeconds());
+   }
 
     while (dts->numExternalReadyTasks() > 0) { //greedly assign tasks
       // run a task that has its communication complete
@@ -592,6 +596,10 @@ ThreadedMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
     d_sharedState->taskLocalCommTime += mpi_info_.totalrecv + mpi_info_.totalsend;
     d_sharedState->taskWaitCommTime += mpi_info_.totalwaitmpi;
     d_sharedState->taskGlobalCommTime += mpi_info_.totalreduce;
+    
+    for (int i=0; i < numThreads_; i++) {
+      d_sharedState->taskWaitThreadTime += t_worker[i]->getWaittime();
+    }
   }
 
   // Don't need to lock sends 'cause all threads are done at this point.

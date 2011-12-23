@@ -1,16 +1,14 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
 <!-- DOCTYPE Uintah_specification SYSTEM "input.dtd" -->
 <!-- @version: -->
-
 <Uintah_specification>
-  
   <Meta>
     <title>Arches "2D" Periodic Box Almgren MMS </title>
   </Meta>
 
-  <SimulationComponent type="arches" />
-  <Solver type="hypre" />
-  
+  <SimulationComponent type="arches"/>
+
+  <Solver type="hypre"/>
   <Time>
     <maxTime>0.1</maxTime>
     <initTime>0.0</initTime>
@@ -22,30 +20,29 @@
   <DataArchiver>
     <filebase>constantMMS.uda</filebase>
     <outputInterval>0.01</outputInterval>
-
-    <save label = "totalKineticEnergy"/>
-    <save label = "totalummsLnError"/>
-    <save label = "totalummsExactSol"/>
-    <save label = "pressurePS"/>
-    <save label = "scalarSP"/>
-    <save label = "newCCUVelocity"/>  
-    <save label = "newCCVVelocity"/>  
-    <save label = "newCCWVelocity"/>  
-    <save label = "uVelocitySPBC"/>
-    <save label = "vVelocitySPBC"/>
-    <save label = "wVelocitySPBC"/>
-    <save label = "densityCP"/>
-    <save label = "viscosityCTS"/>
-    <save label = "continuityResidual"/>
-    <save label = "velocityDivergence"/>
-    <save label = "ummsLnError"/>
-    <checkpoint cycle = "2" interval = "0.05"/>
+    <save label="totalKineticEnergy"/>
+    <save label="totalummsLnError"/>
+    <save label="totalummsExactSol"/>
+    <save label="pressurePS"/>
+    <save label="scalarSP"/>
+    <save label="newCCUVelocity"/>
+    <save label="newCCVVelocity"/>
+    <save label="newCCWVelocity"/>
+    <save label="uVelocitySPBC"/>
+    <save label="vVelocitySPBC"/>
+    <save label="wVelocitySPBC"/>
+    <save label="densityCP"/>
+    <save label="viscosityCTS"/>
+    <save label="continuityResidual"/>
+    <save label="velocityDivergence"/>
+    <save label="ummsLnError"/>
+    <checkpoint cycle="2" interval="0.05"/>
     <compression>gzip</compression>
   </DataArchiver>
 
   <Grid>
     <Level>
-      <Box label = "1">
+      <Box label="1">
         <lower>[0,0,0]</lower>
         <upper>[1.0,1.0,3.0]</upper>
         <resolution>[8,8,8]</resolution>
@@ -63,10 +60,15 @@
   </PhysicalConstants>
 
   <CFD>
-
-    <!-- ARCHES specification -->
+<!-- ARCHES specification -->
     <ARCHES>
-      <MMS whichMMS="constantMMS" >
+
+      <TimeIntegrator>
+        <ExplicitIntegrator order="first"/>
+      </TimeIntegrator>
+
+
+      <MMS whichMMS="constantMMS">
         <mmsErrorType>Linf</mmsErrorType>
         <constantMMS>
           <cu>1.0</cu>
@@ -77,8 +79,7 @@
         </constantMMS>
       </MMS>
 
-      
-      <Turbulence model = "smagorinsky">
+      <Turbulence model="smagorinsky">
         <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
         <cf>0.0</cf>
         <fac_mesh>1.0</fac_mesh>
@@ -103,14 +104,11 @@
 <!--
       <BoundaryConditions>
       </BoundaryConditions>
+
 -->
-
       <ExplicitSolver>
-
-      <initial_dt>1</initial_dt>
-      <variable_dt>true</variable_dt>
-        <timeIntegratorType>FE</timeIntegratorType> 
-
+        <initial_dt>1</initial_dt>
+        <variable_dt>true</variable_dt>
         <PressureSolver>
           <Parameters>
             <solver>           cg     </solver>
@@ -131,7 +129,7 @@
 
       </ExplicitSolver>
     </ARCHES>
+
   </CFD>
 
 </Uintah_specification>
-

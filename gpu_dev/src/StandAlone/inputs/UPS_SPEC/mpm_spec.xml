@@ -121,6 +121,7 @@
         <velocity_after_stop             spec="OPTIONAL VECTOR" />
         <filename                        spec="OPTIONAL STRING" />
         <master_material                 spec="OPTIONAL INTEGER" />
+        <normal_only                     spec="OPTIONAL BOOLEAN" />
       </contact>
       <material                          spec="MULTIPLE NO_DATA"
                                            attribute1="name OPTIONAL STRING" >
