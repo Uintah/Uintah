@@ -66,6 +66,7 @@ static DebugStream threaddbg("ThreadDBG",false);
 TaskWorker::TaskWorker(ThreadedMPIScheduler* scheduler, int id) :
    d_id(id), d_scheduler(scheduler), d_schedulergpu(NULL), d_task(NULL), d_iteration(0),
    d_runmutex("run mutex"),  d_runsignal("run condition"), d_quit(false),
+   d_waittime(0.0),d_waitstart(0.0),
    d_rank(scheduler->getProcessorGroup()->myrank())
 {
   d_runmutex.lock();
@@ -74,6 +75,7 @@ TaskWorker::TaskWorker(ThreadedMPIScheduler* scheduler, int id) :
 TaskWorker::TaskWorker(GPUThreadedMPIScheduler* scheduler, int id) :
    d_id(id), d_scheduler(NULL), d_schedulergpu(scheduler), d_task(NULL), d_iteration(0),
    d_runmutex("run mutex"),  d_runsignal("run condition"), d_quit(false),
+   d_waittime(0.0),d_waitstart(0.0),
    d_rank(scheduler->getProcessorGroup()->myrank())
 {
   d_runmutex.lock();
@@ -95,6 +97,8 @@ void TaskWorker::run()
     //wait for main thread signal
     d_runsignal.wait(d_runmutex);
     d_runmutex.unlock();
+    d_waittime += Time::currentSeconds()-d_waitstart;
+
     if (d_quit) {
       if(taskdbg.active()) {
         cerrLock.lock();
@@ -146,9 +150,12 @@ void TaskWorker::run()
     } else {
       d_scheduler->d_nextmutex.lock();
     }
+
     d_runmutex.lock();
     d_task = NULL;
     d_iteration = 0;
+    d_waitstart = Time::currentSeconds();
+
     if (useGPU) {
       d_schedulergpu->d_nextsignal.conditionSignal();
       d_schedulergpu->d_nextmutex.unlock();
@@ -158,3 +165,15 @@ void TaskWorker::run()
     }
   }
 }
+
+double TaskWorker::getWaittime()
+{
+    return  d_waittime;
+}
+
+void TaskWorker::resetWaittime(double start)
+{
+    d_waitstart  = start;
+    d_waittime = 0.0;
+}
+

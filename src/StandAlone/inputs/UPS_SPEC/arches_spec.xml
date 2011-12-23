@@ -394,7 +394,6 @@
 
         <restartOnNegativeDensityGuess  spec="OPTIONAL BOOLEAN" /> <!--default = false-->
         <NoisyDensityGuess              spec="OPTIONAL BOOLEAN" /> <!--default = false-->
-        <timeIntegratorType             spec="REQUIRED STRING 'RK3SSP, RK2SSP, FE'" />
         <turbModelCalcForAllRKSteps     spec="OPTIONAL BOOLEAN" />
         <turbModelCalcFreq              spec="OPTIONAL INTEGER" />
       </ExplicitSolver>

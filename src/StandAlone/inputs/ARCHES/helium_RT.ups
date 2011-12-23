@@ -1,164 +1,160 @@
-<?xml version='1.0' encoding='ISO-8859-1' ?>
+<?xml version="1.0" encoding="ISO-8859-1"?>
 <Uintah_specification>
-
-   <Meta>
+  <Meta>
    </Meta>
 
-   <SimulationComponent type="arches" />
-   <Solver type="hypre" />
-  
-   <Time>
-     <maxTime>         10.0        </maxTime>
-     <initTime>        0.0         </initTime>
-     <delt_min>        0.00001     </delt_min>
-     <delt_max>        0.01        </delt_max>
-     <max_Timesteps>   50          </max_Timesteps>
-     <timestep_multiplier>0.35     </timestep_multiplier>
-   </Time>
+  <SimulationComponent type="arches"/>
 
-   <DataArchiver>
-     <filebase>helium_RT.uda</filebase>         
-     <outputTimestepInterval>5</outputTimestepInterval>          
-     <save label = "totalKineticEnergy"/>           
-     <save label = "pressurePS"/>                   
-     <save label = "newCCUVelocity"/>               
-     <save label = "newCCVVelocity"/>               
-     <save label = "newCCWVelocity"/>               
-     <save label = "scalarSP"/>                     
-     <save label = "densityCP"/>                    
-     <save label = "viscosityCTS"/>                 
-     <save label = "cellType"/>                     
-     <checkpoint cycle = "2" interval = "0.01"/>    
-   </DataArchiver>
+  <Solver type="hypre"/>
+  <Time>
+    <maxTime>         10.0        </maxTime>
+    <initTime>        0.0         </initTime>
+    <delt_min>        0.00001     </delt_min>
+    <delt_max>        0.01        </delt_max>
+    <max_Timesteps>   50          </max_Timesteps>
+    <timestep_multiplier>0.35     </timestep_multiplier>
+  </Time>
 
-    <Grid>
-      <Level>
-        <Box label = "1">
-          <lower>       [0,0,0]   </lower>               
-          <upper>       [3,3,3]   </upper>               
-          <resolution>  [30,30,30]</resolution>  
-          <extraCells>  [1,1,1]   </extraCells>     
-          <patches>     [1,1,1]   </patches>           
-        </Box>
-      </Level>
-    </Grid>
+  <DataArchiver>
+    <filebase>helium_RT.uda</filebase>
+    <outputTimestepInterval>5</outputTimestepInterval>
+    <save label="totalKineticEnergy"/>
+    <save label="pressurePS"/>
+    <save label="newCCUVelocity"/>
+    <save label="newCCVVelocity"/>
+    <save label="newCCWVelocity"/>
+    <save label="scalarSP"/>
+    <save label="densityCP"/>
+    <save label="viscosityCTS"/>
+    <save label="cellType"/>
+    <checkpoint cycle="2" interval="0.01"/>
+  </DataArchiver>
 
-   <PhysicalConstants>
-     <gravity>         [-9.8,0,0]    </gravity>
-     <reference_point>       [-1,-1,-1]    </reference_point>
-     <viscosity>       0.000020      </viscosity>
-   </PhysicalConstants>
+  <Grid>
+    <Level>
+      <Box label="1">
+        <lower>       [0,0,0]   </lower>
+        <upper>       [3,3,3]   </upper>
+        <resolution>  [30,30,30]</resolution>
+        <extraCells>  [1,1,1]   </extraCells>
+        <patches>     [1,1,1]   </patches>
+      </Box>
+    </Level>
+  </Grid>
 
-   <CFD>
-      <ARCHES>
+  <PhysicalConstants>
+    <gravity>         [-9.8,0,0]    </gravity>
+    <reference_point>       [-1,-1,-1]    </reference_point>
+    <viscosity>       0.000020      </viscosity>
+  </PhysicalConstants>
 
-        <Turbulence model = "compdynamicprocedure">
-          <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
-        </Turbulence>
+  <CFD>
+    <ARCHES>
 
-        <Properties>
-          <use_mixing_model> false     </use_mixing_model>
-          <ColdFlowMixingModel>
-            <Stream>
-              <density>       0.133       </density>
-              <temperature>   298         </temperature>
-            </Stream>
-            <Stream>
-              <density>       1.184344    </density>
-              <temperature>   298         </temperature>
-            </Stream>
-          </ColdFlowMixingModel>
-        </Properties>
+      <TimeIntegrator>
+        <ExplicitIntegrator order="second"/>
+      </TimeIntegrator>
 
-        <!--__________________________________-->
-        <BoundaryConditions>
-            <FlowInlet>
-              <InletVelocity>0.01</InletVelocity>
-              <mixture_fraction>0.0</mixture_fraction>
-              <geom_object>
-                <box label = "botwall">
-                  <min>     [-1,-1,-1]    </min>
-                  <max>     [0,5,5]       </max>
-                </box>
-              </geom_object>
-            </FlowInlet>
 
-            <FlowInlet>
-              <InletVelocity>0.351</InletVelocity>
-              <mixture_fraction>1.0</mixture_fraction>
-              <geom_object>
-                <cylinder label = "inlet">
-                  <bottom>  [-5,1.5,1.5]  </bottom>
-                  <top>     [0,1.5,1.5]   </top>
-                  <radius> .5             </radius>
-                </cylinder>
-              </geom_object>
-            </FlowInlet>
+      <Turbulence model="compdynamicprocedure">
+        <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
+      </Turbulence>
 
-            <PressureBC>
-              <mixture_fraction>0.0</mixture_fraction>
-              <geom_object>
-                <box label = "posY_xzWall">
-                  <min>     [0,3,-1]    </min>
-                  <max>     [3,4,4]     </max>
-                </box>
-                <box label = "zeroY_xzWall">
-                  <min>     [0,-1,-1]   </min>
-                  <max>     [3,0,4]     </max>
-                </box>
-                <box label = "posZ_xyWall">
-                  <min>     [0,-1,3]    </min>
-                  <max>     [3,4,4]     </max>
-                </box>
-                <box label = "zeroZ_xyWall">        
-                  <min>     [0,-1,-1]   </min>
-                  <max>     [3,4,0]     </max>
-                </box>
-              </geom_object>
-            </PressureBC>
+      <Properties>
+        <use_mixing_model> false     </use_mixing_model>
+        <ColdFlowMixingModel>
+          <Stream>
+            <density>       0.133       </density>
+            <temperature>   298         </temperature>
+          </Stream>
+          <Stream>
+            <density>       1.184344    </density>
+            <temperature>   298         </temperature>
+          </Stream>
+        </ColdFlowMixingModel>
+      </Properties>
 
-            <OutletBC>
-              <mixture_fraction>0.0</mixture_fraction>
-              <geom_object>
-                <box label = "topWall">
-                  <min>       [3,-1,-1]   </min>
-                  <max>       [4,4,4]     </max>
-                </box>
-              </geom_object>
-            </OutletBC>
-        </BoundaryConditions>
-        <!--__________________________________-->
-        
+<!--__________________________________-->
+      <BoundaryConditions>
+        <FlowInlet>
+          <InletVelocity>0.01</InletVelocity>
+          <mixture_fraction>0.0</mixture_fraction>
+          <geom_object>
+            <box label="botwall">
+              <min>     [-1,-1,-1]    </min>
+              <max>     [0,5,5]       </max>
+            </box>
+          </geom_object>
+        </FlowInlet>
+        <FlowInlet>
+          <InletVelocity>0.351</InletVelocity>
+          <mixture_fraction>1.0</mixture_fraction>
+          <geom_object>
+            <cylinder label="inlet">
+              <bottom>  [-5,1.5,1.5]  </bottom>
+              <top>     [0,1.5,1.5]   </top>
+              <radius> .5             </radius>
+            </cylinder>
+          </geom_object>
+        </FlowInlet>
+        <PressureBC>
+          <mixture_fraction>0.0</mixture_fraction>
+          <geom_object>
+            <box label="posY_xzWall">
+              <min>     [0,3,-1]    </min>
+              <max>     [3,4,4]     </max>
+            </box>
+            <box label="zeroY_xzWall">
+              <min>     [0,-1,-1]   </min>
+              <max>     [3,0,4]     </max>
+            </box>
+            <box label="posZ_xyWall">
+              <min>     [0,-1,3]    </min>
+              <max>     [3,4,4]     </max>
+            </box>
+            <box label="zeroZ_xyWall">
+              <min>     [0,-1,-1]   </min>
+              <max>     [3,4,0]     </max>
+            </box>
+          </geom_object>
+        </PressureBC>
+        <OutletBC>
+          <mixture_fraction>0.0</mixture_fraction>
+          <geom_object>
+            <box label="topWall">
+              <min>       [3,-1,-1]   </min>
+              <max>       [4,4,4]     </max>
+            </box>
+          </geom_object>
+        </OutletBC>
+      </BoundaryConditions>
 
-        <ExplicitSolver>
-
-          <initial_dt>0.05</initial_dt>
-          <variable_dt>true</variable_dt>
-
-          <timeIntegratorType>  RK2SSP      </timeIntegratorType>              
-
+<!--__________________________________-->
+      <ExplicitSolver>
+        <initial_dt>0.05</initial_dt>
+        <variable_dt>true</variable_dt>
 <!--      <EKTCorrection>       true      </EKTCorrection>  -->
+        <PressureSolver>
+          <Parameters>
+            <tolerance>     1.0e-10  </tolerance>
+            <solver>         cg      </solver>
+            <preconditioner> pfmg    </preconditioner>
+            <maxiterations>  75      </maxiterations>
+            <skip>           1       </skip>
+          </Parameters>
+        </PressureSolver>
 
-          <PressureSolver>                                             
-            <Parameters>                                             
-                <tolerance>     1.0e-10  </tolerance>                           
-                <solver>         cg      </solver>                                  
-                <preconditioner> pfmg    </preconditioner>                
-                <maxiterations>  75      </maxiterations>   
-                <skip>           1       </skip>                           
-            </Parameters>                                            
-          </PressureSolver>                                            
+        <MomentumSolver>
+          <convection_scheme>central</convection_scheme>
+        </MomentumSolver>
 
-          <MomentumSolver>                                             
-              <convection_scheme>central</convection_scheme>           
-          </MomentumSolver>                                            
+        <MixtureFractionSolver>
+          <convection_scheme>central-upwind</convection_scheme>
+        </MixtureFractionSolver>
 
-          <MixtureFractionSolver>                                      
-              <convection_scheme>central-upwind</convection_scheme>    
-          </MixtureFractionSolver>                               
+      </ExplicitSolver>
+    </ARCHES>
 
-        </ExplicitSolver>
-      </ARCHES>
-    </CFD>
+  </CFD>
+
 </Uintah_specification>
-

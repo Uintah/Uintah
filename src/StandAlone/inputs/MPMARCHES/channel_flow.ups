@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <!-- @version: -->
 <Uintah_specification>
+
   <Meta>
     <title>Laminar Channel Flow</title>
   </Meta>
@@ -8,19 +9,20 @@
   <SimulationComponent type="mpmarches"/>
 
   <Solver type="hypre"/>
+
   <Time>
     <maxTime>5.0</maxTime>
     <initTime>0.0</initTime>
     <delt_min>1.0e-6</delt_min>
     <delt_max>0.1</delt_max>
     <timestep_multiplier>0.4</timestep_multiplier>
-    <max_Timesteps>50</max_Timesteps>
+    <max_Timesteps>5</max_Timesteps>
   </Time>
 
   <DataArchiver>
-    <filebase>channel_flow.uda</filebase>
+    <filebase>new_channel_flow.uda</filebase>
     <outputInitTimestep/>
-    <outputTimestepInterval>2</outputTimestepInterval>
+    <outputTimestepInterval>1</outputTimestepInterval>
     <save label="uVelocitySPBC"/>
     <save label="vVelocitySPBC"/>
     <save label="wVelocitySPBC"/>
@@ -37,6 +39,7 @@
     <time_integrator>explicit</time_integrator>
     <interpolator>linear</interpolator>
   </MPM>
+
   <MaterialProperties>
     <MPM>
       <material name="Nothingness">
@@ -48,7 +51,7 @@
         </constitutive_model>
         <thermal_conductivity>  0.4494           </thermal_conductivity>
         <specific_heat>         940.36           </specific_heat>
-<!-- NO GEOMETRY OBJECT NEEDED FOR THIS CASE -->
+        <!-- NO GEOMETRY OBJECT NEEDED FOR THIS CASE -->
       </material>
       <contact>
         <type>null</type>
@@ -57,34 +60,54 @@
       </contact>
     </MPM>
   </MaterialProperties>
+
   <Grid>
     <BoundaryConditions>
+
       <Face side="x-" name="x- face">
+        <BCType id="all" label="velocity inlet" var="MassFlowInlet">
+          <value>0.01</value>
+        </BCType>
         <BCType id="all" label="mixture_fraction" var="Dirichlet">
           <value>1.0</value>
         </BCType>
       </Face>
       <Face side="x+" name="x+ wall">
+        <BCType id="all" label="the outlet" var="OutletBC">
+          <value>0.0</value>
+        </BCType>
         <BCType id="all" label="mixture_fraction" var="Neumann">
           <value>0.0</value>
         </BCType>
       </Face>
       <Face side="y-" name="y- wall">
+        <BCType id="all" label="ymwall" var="WallBC">
+          <value>0.0</value>
+        </BCType>
         <BCType id="all" label="mixture_fraction" var="Neumann">
           <value>0.0</value>
         </BCType>
       </Face>
       <Face side="y+" name="y+ wall">
+        <BCType id="all" label="ypwall" var="WallBC">
+          <value>0.0</value>
+        </BCType>
         <BCType id="all" label="mixture_fraction" var="Neumann">
           <value>0.0</value>
         </BCType>
       </Face>
       <Face side="z-" name="z- wall">
+        <BCType id="all" label="zmwall" var="WallBC">
+          <value>0.0</value>
+        </BCType>
         <BCType id="all" label="mixture_fraction" var="Neumann">
           <value>0.0</value>
         </BCType>
       </Face>
       <Face side="z+" name="z+ wall">
+        <BCType id="all" label="zpwall" var="WallBC">
+          <value>0.0</value>
+        </BCType>
         <BCType id="all" label="mixture_fraction" var="Neumann">
           <value>0.0</value>
         </BCType>
@@ -100,6 +123,7 @@
         <patches>[1,1,1]</patches>
       </Box>
     </Level>
+
   </Grid>
 
   <PhysicalConstants>
@@ -109,16 +133,16 @@
   </PhysicalConstants>
 
   <CFD>
-<!-- ARCHES specification -->
+
+    <!-- ARCHES specification -->
     <ARCHES>
 
-<!-- TIME INTEGRATOR -->
+      <!-- TIME INTEGRATOR -->
       <TimeIntegrator>
         <ExplicitIntegrator order="second"/>
       </TimeIntegrator>
 
-
-<!-- SCALARS -->
+      <!-- SCALARS -->
       <TransportEqns>
         <Eqn label="mixture_fraction" type="CCscalar">
           <doDiff>true</doDiff>
@@ -133,13 +157,11 @@
             <high>1.0</high>
           </Clipping>
         </Eqn>
-
       </TransportEqns>
 
       <Turbulence model="smagorinsky">
         <variance_coefficient>0.1</variance_coefficient>
-        <cf>0.0</cf>
-<!-- turn off turbulence model -->
+        <cf>0.0</cf> <!-- turn off turbulence model --> 
         <fac_mesh>1.0</fac_mesh>
         <filterl>0.000001</filterl>
         <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
@@ -160,50 +182,14 @@
       </Properties>
 
       <BoundaryConditions>
-        <FlowInlet>
-          <Flow_rate>.01</Flow_rate>
-          <mixture_fraction>1.0</mixture_fraction>
-          <geom_object>
-            <box label="inlet">
-              <min>[-1,0,0]</min>
-              <max>[0,2,2]</max>
-            </box>
-          </geom_object>
-        </FlowInlet>
-        <WallBC>
-          <geom_object>
-            <box label="posY_xzWall">
-              <min>[-1,1,-1]</min>
-              <max>[7,3,3]</max>
-            </box>
-            <box label="zeroY_xzWall">
-              <min>[-1,-1,-1]</min>
-              <max>[7,0,3]</max>
-            </box>
-            <box label="posZ_xyWall">
-              <min>[-1,-1,1]</min>
-              <max>[7,3,3]</max>
-            </box>
-            <box label="zeroZ_xyWall">
-              <min>[-1,-1,-1]</min>
-              <max>[6,3,0]</max>
-            </box>
-          </geom_object>
-        </WallBC>
-        <OutletBC>
-          <mixture_fraction>0.0</mixture_fraction>
-          <geom_object>
-            <box label="outlet">
-              <min>[6,-1,-1]</min>
-              <max>[7,3,3]</max>
-            </box>
-          </geom_object>
-        </OutletBC>
+        <use_new_bcs/>
       </BoundaryConditions>
 
       <ExplicitSolver>
+
         <initial_dt>0.05</initial_dt>
         <variable_dt>true</variable_dt>
+
         <PressureSolver>
           <Parameters>
             <tolerance>1.0e-16</tolerance>
@@ -223,6 +209,7 @@
         </MixtureFractionSolver>
 
       </ExplicitSolver>
+
     </ARCHES>
 
   </CFD>

@@ -4,9 +4,10 @@
   <Meta>
     <title> Acid Base Chemistry with Mixing Table </title>
   </Meta>
+
   <SimulationComponent type="arches"/>
-  <Solver type="hypre" />
-  
+
+  <Solver type="hypre"/>
   <Time>
     <maxTime>.50</maxTime>
     <max_Timesteps>25</max_Timesteps>
@@ -15,6 +16,7 @@
     <delt_max>0.01</delt_max>
     <timestep_multiplier>0.2</timestep_multiplier>
   </Time>
+
   <DataArchiver>
     <filebase> acidbase_jet.uda </filebase>
     <outputTimestepInterval> 5 </outputTimestepInterval>
@@ -43,6 +45,7 @@
     <checkpoint cycle="2" interval="0.002"/>
     <compression>gzip</compression>
   </DataArchiver>
+
   <Grid>
     <Level>
       <Box label="1">
@@ -153,24 +156,29 @@
         </BCType>
       </Face>
     </BoundaryConditions>
+
   </Grid>
+
   <PhysicalConstants>
     <gravity> [-9.8,0,0] </gravity>
     <reference_point> [-1,-1,-1] </reference_point>
     <viscosity> 0.001 </viscosity>
   </PhysicalConstants>
+
   <CFD>
-    <!-- ARCHES specification -->
+<!-- ARCHES specification -->
     <ARCHES>
-      <!-- TIME INTEGRATOR -->
+
+<!-- TIME INTEGRATOR -->
       <TimeIntegrator>
         <ExplicitIntegrator order="second"/>
       </TimeIntegrator>
-      <!-- TIME INTEGRATOR: Specifics of Explicit Solver including Pressure -->
+
+
+<!-- TIME INTEGRATOR: Specifics of Explicit Solver including Pressure -->
       <ExplicitSolver>
         <initial_dt> 0.01 </initial_dt>
         <variable_dt> true </variable_dt>
-        <timeIntegratorType> RK2SSP </timeIntegratorType>
         <restartOnNegativeDensityGuess> false </restartOnNegativeDensityGuess>
         <PressureSolver>
           <Parameters>
@@ -181,15 +189,18 @@
             <skip>           1    </skip>
           </Parameters>
         </PressureSolver>
+
         <MomentumSolver>
           <convection_scheme> central </convection_scheme>
         </MomentumSolver>
+
         <MixtureFractionSolver>
           <convection_scheme> flux_limited </convection_scheme>
           <limiter_type> superbee </limiter_type>
         </MixtureFractionSolver>
+
       </ExplicitSolver>
-      <!-- TURBULENCE Specification -->
+<!-- TURBULENCE Specification -->
       <Turbulence model="smagorinsky">
         <variance_coefficient> 0.1 </variance_coefficient>
         <cf> 0.17 </cf>
@@ -197,7 +208,8 @@
         <filterl> 0.000001 </filterl>
         <turbulentPrandtlNumber> 0.4 </turbulentPrandtlNumber>
       </Turbulence>
-      <!-- TABLE and Properties -->
+
+<!-- TABLE and Properties -->
       <Properties>
         <use_mixing_model> false </use_mixing_model>
         <ClassicTable>
@@ -206,7 +218,8 @@
           <acidbase fp_label="mixture_fraction" eta_label="rxn_extent"/>
         </ClassicTable>
       </Properties>
-      <!-- EXTRA SCALARS -->
+
+<!-- EXTRA SCALARS -->
       <TransportEqns>
         <Eqn label="mixture_fraction" type="CCscalar">
           <doDiff> true </doDiff>
@@ -216,6 +229,7 @@
             <constant> 0.0 </constant>
           </initialization>
         </Eqn>
+
         <Eqn label="rxn_extent" type="CCscalar">
           <doDiff> true </doDiff>
           <doConv> true </doConv>
@@ -226,6 +240,7 @@
           </initialization>
           <src label="rxn_extent_src"/>
         </Eqn>
+
         <Eqn label="empty" type="CCscalar">
           <doDiff> true </doDiff>
           <doConv> true </doConv>
@@ -234,6 +249,7 @@
             <constant> 0.0 </constant>
           </initialization>
         </Eqn>
+
         <Eqn label="residence_time" type="CCscalar">
           <doDiff> true </doDiff>
           <doConv> true </doConv>
@@ -244,6 +260,7 @@
           </initialization>
           <src label="residence_time_src"/>
         </Eqn>
+
         <Sources>
           <src label="residence_time_src" type="constant_src">
             <constant> 1000.0 </constant>
@@ -252,8 +269,10 @@
             <rxn_rate> Vtest2 </rxn_rate>
           </src>
         </Sources>
+
       </TransportEqns>
-      <!-- BOUNDARY Specification -->
+
+<!-- BOUNDARY Specification -->
       <BoundaryConditions>
         <FlowInlet>
           <Flow_rate>40000</Flow_rate>
@@ -305,8 +324,11 @@
           </geom_object>
         </OutletBC>
       </BoundaryConditions>
+
     </ARCHES>
+
   </CFD>
+
   <Multimaterial>
     <fluidThermalConductivity> 0.03 </fluidThermalConductivity>
     <heatExchange> false </heatExchange>
