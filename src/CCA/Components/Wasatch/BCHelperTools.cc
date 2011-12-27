@@ -461,6 +461,10 @@ namespace Wasatch {
         case Uintah::Patch::xplus:
           set_bcs_on_face<FieldT, BCOpT::DirichletX>(bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, SpatialOps::structured::PLUS_SIDE,faceOffset, hasExtraCells);
           break;
+        case Uintah::Patch::yminus:  case Uintah::Patch::yplus:
+        case Uintah::Patch::zminus:  case Uintah::Patch::zplus:
+          throw Uintah::ProblemSetupException( "Invalid face", __FILE__, __LINE__ );
+          break;
         case Uintah::Patch::numFaces:
           throw Uintah::ProblemSetupException( "An invalid face Patch::numFaces was encountered while setting boundary conditions", __FILE__, __LINE__ );
           break;
@@ -476,6 +480,10 @@ namespace Wasatch {
           break;
         case Uintah::Patch::xplus:
           set_bcs_on_face<FieldT, BCOpT::NeumannX>(bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, SpatialOps::structured::PLUS_SIDE,faceOffset, hasExtraCells);
+          break;
+        case Uintah::Patch::yminus:  case Uintah::Patch::yplus:
+        case Uintah::Patch::zminus:  case Uintah::Patch::zplus:
+          throw Uintah::ProblemSetupException( "Invalid face", __FILE__, __LINE__ );
           break;
         case Uintah::Patch::numFaces:
           throw Uintah::ProblemSetupException( "An invalid face Patch::numFaces was encountered while setting boundary conditions", __FILE__, __LINE__ );
@@ -521,6 +529,10 @@ namespace Wasatch {
         case Uintah::Patch::yplus:
           set_bcs_on_face<FieldT, BCOpT::DirichletY>(bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, SpatialOps::structured::PLUS_SIDE,faceOffset, hasExtraCells);
           break;
+        case Uintah::Patch::xminus:  case Uintah::Patch::xplus:
+        case Uintah::Patch::zminus:  case Uintah::Patch::zplus:
+          throw Uintah::ProblemSetupException( "Invalid face", __FILE__, __LINE__ );
+          break;
         case Uintah::Patch::numFaces:
           throw Uintah::ProblemSetupException( "An invalid face Patch::numFaces was encountered while setting boundary conditions", __FILE__, __LINE__ );
           break;
@@ -537,7 +549,11 @@ namespace Wasatch {
         case Uintah::Patch::yplus:
           set_bcs_on_face<FieldT, BCOpT::NeumannY>(bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, SpatialOps::structured::PLUS_SIDE,faceOffset, hasExtraCells);
           break;
-        case Uintah::Patch::numFaces:
+        case Uintah::Patch::xminus:  case Uintah::Patch::xplus:
+        case Uintah::Patch::zminus:  case Uintah::Patch::zplus:
+          throw Uintah::ProblemSetupException( "Invalid face", __FILE__, __LINE__ );
+          break;
+       case Uintah::Patch::numFaces:
           throw Uintah::ProblemSetupException( "An invalid face Patch::numFaces was encountered while setting boundary conditions", __FILE__, __LINE__ );
           break;
         case Uintah::Patch::invalidFace:
@@ -579,6 +595,10 @@ namespace Wasatch {
         case Uintah::Patch::zplus:
           set_bcs_on_face<FieldT, BCOpT::DirichletZ>(bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, SpatialOps::structured::PLUS_SIDE,faceOffset, hasExtraCells);
           break;
+        case Uintah::Patch::yminus:  case Uintah::Patch::yplus:
+        case Uintah::Patch::xminus:  case Uintah::Patch::xplus:
+          throw Uintah::ProblemSetupException( "Invalid face", __FILE__, __LINE__ );
+          break;
         case Uintah::Patch::numFaces:
           throw Uintah::ProblemSetupException( "An invalid face Patch::numFaces was encountered while setting boundary conditions", __FILE__, __LINE__ );
           break;
@@ -594,6 +614,10 @@ namespace Wasatch {
           break;
         case Uintah::Patch::zplus:
           set_bcs_on_face<FieldT, BCOpT::NeumannZ>(bound_ptr,face,staggeredLocation,patch,graphHelper,phiTag,fieldName,bc_value,opdb,bc_kind, SpatialOps::structured::PLUS_SIDE,faceOffset, hasExtraCells);
+          break;
+        case Uintah::Patch::yminus:  case Uintah::Patch::yplus:
+        case Uintah::Patch::xminus:  case Uintah::Patch::xplus:
+          throw Uintah::ProblemSetupException( "Invalid face", __FILE__, __LINE__ );
           break;
         case Uintah::Patch::numFaces:
           throw Uintah::ProblemSetupException( "An invalid face Patch::numFaces was encountered while setting boundary conditions", __FILE__, __LINE__ );
