@@ -772,240 +772,53 @@ namespace Wasatch {
 
         if (foundIterator) {
 
-          if ( bc_kind.compare("Dirichlet") == 0 ) {
-
+            SS::IntVec bcPointGhostOffset(0,0,0);
+            double denom = 0.0;
             switch( face ){
-
-              case Uintah::Patch::xminus:
-                for( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
-                  SCIRun::IntVector patchCellOffset = patch->getCellLowIndex(0); // cell offset used to calculate local cell index with respect to patch.
-                  SCIRun::IntVector bc_point_indices(*bound_ptr);
-                  pressureMatrix[bc_point_indices].w = 0.0;
-
-                  bc_point_indices = bc_point_indices - patchCellOffset;
-                  // get flat index and manually set values for pressure and pressure rhs
-                  const SS::IntVec   intCellIJK( bc_point_indices[0],   bc_point_indices[1], bc_point_indices[2] );
-                  const SS::IntVec ghostCellIJK( bc_point_indices[0]-1, bc_point_indices[1], bc_point_indices[2] );
-                  const int iInterior = pressureField.window_without_ghost().flat_index(   intCellIJK );
-                  const int iGhost    = pressureField.window_without_ghost().flat_index( ghostCellIJK );
-                  //pressureField[iGhost] = 2*bc_value - pressureField[iInterior];
-                  pressureRHS[iInterior] -= pressureField[iGhost]/dx2;
-                }
-              break;
-              case Uintah::Patch::xplus:
-                for( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
-                  SCIRun::IntVector patchCellOffset = patch->getCellLowIndex(0); // cell offset used to calculate local cell index with respect to patch.
-                  SCIRun::IntVector bc_point_indices(*bound_ptr);
-                  pressureMatrix[bc_point_indices].e = 0.0;
-
-                  bc_point_indices = bc_point_indices - patchCellOffset;
-                  // get flat index
-                  const SS::IntVec   intCellIJK( bc_point_indices[0],   bc_point_indices[1], bc_point_indices[2] );
-                  const SS::IntVec ghostCellIJK( bc_point_indices[0] + 1, bc_point_indices[1], bc_point_indices[2] );
-                  const int iInterior = pressureField.window_without_ghost().flat_index(   intCellIJK );
-                  const int iGhost    = pressureField.window_without_ghost().flat_index( ghostCellIJK );
-                  //pressureField[iGhost] = 2*bc_value - pressureField[iInterior];
-                  pressureRHS[iInterior] -= pressureField[iGhost]/dx2;
-                }
-              break;
-              case Uintah::Patch::yminus:
-                for( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
-                  SCIRun::IntVector patchCellOffset = patch->getCellLowIndex(0); // cell offset used to calculate local cell index with respect to patch.
-                  SCIRun::IntVector bc_point_indices(*bound_ptr);
-                  pressureMatrix[bc_point_indices].s = 0.0;
-
-                  bc_point_indices = bc_point_indices - patchCellOffset;
-                  // get flat index
-                  const SS::IntVec   intCellIJK( bc_point_indices[0], bc_point_indices[1],   bc_point_indices[2] );
-                  const SS::IntVec ghostCellIJK( bc_point_indices[0], bc_point_indices[1]-1, bc_point_indices[2] );
-                  const int iInterior = pressureField.window_without_ghost().flat_index(   intCellIJK );
-                  const int iGhost    = pressureField.window_without_ghost().flat_index( ghostCellIJK );
-                  //pressureField[iGhost] = 2*bc_value - pressureField[iInterior];
-                  pressureRHS[iInterior] -= pressureField[iGhost]/dy2;
-                }
-                break;
-              case Uintah::Patch::yplus:
-                for( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
-                  SCIRun::IntVector patchCellOffset = patch->getCellLowIndex(0); // cell offset used to calculate local cell index with respect to patch.
-                  SCIRun::IntVector bc_point_indices(*bound_ptr);
-                  pressureMatrix[bc_point_indices].n = 0.0;
-
-                  bc_point_indices = bc_point_indices - patchCellOffset;
-                  // get flat index
-                  const SS::IntVec   intCellIJK( bc_point_indices[0], bc_point_indices[1]  , bc_point_indices[2] );
-                  const SS::IntVec ghostCellIJK( bc_point_indices[0], bc_point_indices[1]+1, bc_point_indices[2] );
-                  const int iInterior = pressureField.window_without_ghost().flat_index(   intCellIJK );
-                  const int iGhost    = pressureField.window_without_ghost().flat_index( ghostCellIJK );
-                  //pressureField[iGhost] = 2*bc_value - pressureField[iInterior];
-                  pressureRHS[iInterior] -= pressureField[iGhost]/dy2;
-                }
-                break;
-              case Uintah::Patch::zminus:
-                for( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
-                  SCIRun::IntVector patchCellOffset = patch->getCellLowIndex(0); // cell offset used to calculate local cell index with respect to patch.
-                  SCIRun::IntVector bc_point_indices(*bound_ptr);
-                  pressureMatrix[bc_point_indices].b = 0.0;
-
-                  bc_point_indices = bc_point_indices - patchCellOffset;
-                  // get flat index
-                  const SS::IntVec   intCellIJK( bc_point_indices[0], bc_point_indices[1], bc_point_indices[2]   );
-                  const SS::IntVec ghostCellIJK( bc_point_indices[0], bc_point_indices[1], bc_point_indices[2]-1 );
-                  const int iInterior = pressureField.window_without_ghost().flat_index(   intCellIJK );
-                  const int iGhost    = pressureField.window_without_ghost().flat_index( ghostCellIJK );
-                  //pressureField[iGhost] = 2*bc_value - pressureField[iInterior];
-                  pressureRHS[iInterior] -= pressureField[iGhost]/dz2;
-                }
-                break;
-              case Uintah::Patch::zplus:
-                for( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
-                  SCIRun::IntVector patchCellOffset = patch->getCellLowIndex(0); // cell offset used to calculate local cell index with respect to patch.
-                  SCIRun::IntVector bc_point_indices(*bound_ptr);
-                  pressureMatrix[bc_point_indices].t = 0.0;
-
-                  bc_point_indices = bc_point_indices - patchCellOffset;
-                  // get flat index
-                  const SS::IntVec   intCellIJK( bc_point_indices[0], bc_point_indices[1], bc_point_indices[2]   );
-                  const SS::IntVec ghostCellIJK( bc_point_indices[0], bc_point_indices[1], bc_point_indices[2]+1 );
-                  const int iInterior = pressureField.window_without_ghost().flat_index(   intCellIJK );
-                  const int iGhost    = pressureField.window_without_ghost().flat_index( ghostCellIJK );
-                  //pressureField[iGhost] = 2*bc_value - pressureField[iInterior];
-                  pressureRHS[iInterior] -= pressureField[iGhost]/dz2;
-                }
-                break;
-
+              case Uintah::Patch::xminus:  bcPointGhostOffset[0] = -1;  denom = dx2;  break;
+              case Uintah::Patch::xplus :  bcPointGhostOffset[0] =  1;  denom = dx2;  break;
+              case Uintah::Patch::yminus:  bcPointGhostOffset[1] = -1;  denom = dy2;  break;
+              case Uintah::Patch::yplus :  bcPointGhostOffset[1] =  1;  denom = dy2;  break;
+              case Uintah::Patch::zminus:  bcPointGhostOffset[2] = -1;  denom = dz2;  break;
+              case Uintah::Patch::zplus :  bcPointGhostOffset[2] =  1;  denom = dz2;  break;
               case Uintah::Patch::numFaces:
                 throw Uintah::ProblemSetupException( "An invalid face of type Patch::numFaces was encountered while setting boundary conditions", __FILE__, __LINE__ );
                 break;
-
               case Uintah::Patch::invalidFace:
                 throw Uintah::ProblemSetupException( "An invalid face of type Patch::invalidFace was encountered while setting boundary conditions", __FILE__, __LINE__ );
                 break;
+            } // switch
+
+            // cell offset used to calculate local cell index with respect to patch.
+            const SCIRun::IntVector patchCellOffset = patch->getCellLowIndex(0);
+
+            for( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
+              SCIRun::IntVector bc_point_indices(*bound_ptr);
+              Uintah::Stencil7& coefs = pressureMatrix[bc_point_indices];
+
+              switch(face){
+              case Uintah::Patch::xminus: coefs.w = 0.0; break;
+              case Uintah::Patch::xplus : coefs.e = 0.0; break;
+              case Uintah::Patch::yminus: coefs.s = 0.0; break;
+              case Uintah::Patch::yplus : coefs.n = 0.0; break;
+              case Uintah::Patch::zminus: coefs.b = 0.0; break;
+              case Uintah::Patch::zplus : coefs.t = 0.0; break;
+              }
+
+              bc_point_indices = bc_point_indices - patchCellOffset;
+
+              const SS::IntVec   intCellIJK( bc_point_indices[0],
+                                             bc_point_indices[1],
+                                             bc_point_indices[2] );
+              const SS::IntVec ghostCellIJK( bc_point_indices[0]+bcPointGhostOffset[0],
+                                             bc_point_indices[1]+bcPointGhostOffset[1],
+                                             bc_point_indices[2]+bcPointGhostOffset[2] );
+
+              const int iInterior = pressureField.window_without_ghost().flat_index(   intCellIJK );
+              const int iGhost    = pressureField.window_without_ghost().flat_index( ghostCellIJK );
+
+              pressureRHS[iInterior] -= pressureField[iGhost]/denom;
             }
-
-          }
-          else if( bc_kind.compare("Neumann") == 0 ){
-
-            switch( face ){
-              case Uintah::Patch::xminus:
-
-                for( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
-                  SCIRun::IntVector patchCellOffset = patch->getCellLowIndex(0); // cell offset used to calculate local cell index with respect to patch.
-                  SCIRun::IntVector bc_point_indices(*bound_ptr);
-                  Uintah::Stencil7&  coefs = pressureMatrix[bc_point_indices];
-                  coefs.w = 0.0;
-
-                  bc_point_indices = bc_point_indices - patchCellOffset;
-                  // get flat index
-                  const SS::IntVec   intCellIJK( bc_point_indices[0],   bc_point_indices[1], bc_point_indices[2] );
-                  const SS::IntVec ghostCellIJK( bc_point_indices[0]-1, bc_point_indices[1], bc_point_indices[2] );
-
-                  const int iInterior = pressureField.window_without_ghost().flat_index(   intCellIJK );
-                  const int iGhost    = pressureField.window_without_ghost().flat_index( ghostCellIJK );
-
-                  //pressureField[iGhost] = pressureField[iInterior] - 2*dx*bc_value;
-                  pressureRHS[iInterior] -= pressureField[iGhost]/dx2;
-                }
-                break;
-              case Uintah::Patch::xplus:
-                for( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
-                  SCIRun::IntVector patchCellOffset = patch->getCellLowIndex(0); // cell offset used to calculate local cell index with respect to patch.
-                  SCIRun::IntVector bc_point_indices(*bound_ptr);
-                  Uintah::Stencil7&  coefs = pressureMatrix[bc_point_indices];
-                  coefs.e = 0.0;
-
-                  bc_point_indices = bc_point_indices - patchCellOffset;
-                  // get flat index
-                  const SS::IntVec   intCellIJK( bc_point_indices[0],   bc_point_indices[1], bc_point_indices[2] );
-                  const SS::IntVec ghostCellIJK( bc_point_indices[0]+1, bc_point_indices[1], bc_point_indices[2] );
-                  const int iInterior = pressureField.window_without_ghost().flat_index(   intCellIJK );
-                  const int iGhost    = pressureField.window_without_ghost().flat_index( ghostCellIJK );
-
-                  //pressureField[iGhost] = - pressureField[iInterior] + 2*dx*bc_value;
-                  pressureRHS[iInterior] -= pressureField[iGhost]/dx2;
-                }
-                break;
-              case Uintah::Patch::yminus:
-                for( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
-                  SCIRun::IntVector patchCellOffset = patch->getCellLowIndex(0); // cell offset used to calculate local cell index with respect to patch.
-                  SCIRun::IntVector bc_point_indices(*bound_ptr);
-                  Uintah::Stencil7&  coefs = pressureMatrix[bc_point_indices];
-                  coefs.s = 0.0;
-
-                  bc_point_indices = bc_point_indices - patchCellOffset;
-                  // get flat index
-                  const SS::IntVec   intCellIJK( bc_point_indices[0], bc_point_indices[1],   bc_point_indices[2] );
-                  const SS::IntVec ghostCellIJK( bc_point_indices[0], bc_point_indices[1]-1, bc_point_indices[2] );
-                  const int iInterior = pressureField.window_without_ghost().flat_index(   intCellIJK );
-                  const int iGhost    = pressureField.window_without_ghost().flat_index( ghostCellIJK );
-
-                  //pressureField[iGhost] = pressureField[iInterior] - 2*dy*bc_value;
-                  pressureRHS[iInterior] -= pressureField[iGhost]/dy2;
-                }
-                break;
-              case Uintah::Patch::yplus:
-                for( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
-                  SCIRun::IntVector patchCellOffset = patch->getCellLowIndex(0); // cell offset used to calculate local cell index with respect to patch.
-                  SCIRun::IntVector bc_point_indices(*bound_ptr);
-                  Uintah::Stencil7&  coefs = pressureMatrix[bc_point_indices];
-                  coefs.n = 0.0;
-
-                  bc_point_indices = bc_point_indices - patchCellOffset;
-                  // get flat index
-                  const SS::IntVec   intCellIJK( bc_point_indices[0], bc_point_indices[1],   bc_point_indices[2] );
-                  const SS::IntVec ghostCellIJK( bc_point_indices[0], bc_point_indices[1]+1, bc_point_indices[2] );
-                  const int iInterior = pressureField.window_without_ghost().flat_index(   intCellIJK );
-                  const int iGhost    = pressureField.window_without_ghost().flat_index( ghostCellIJK );
-
-                  //pressureField[iGhost] = - pressureField[iInterior] + 2*dy*bc_value;
-                  pressureRHS[iInterior] -= pressureField[iGhost]/dy2;
-                }
-                break;
-              case Uintah::Patch::zminus:
-                for( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
-                  SCIRun::IntVector patchCellOffset = patch->getCellLowIndex(0); // cell offset used to calculate local cell index with respect to patch.
-                  SCIRun::IntVector bc_point_indices(*bound_ptr);
-                  Uintah::Stencil7&  coefs = pressureMatrix[bc_point_indices];
-                  coefs.b = 0.0;
-
-                  bc_point_indices = bc_point_indices - patchCellOffset;
-                  // get flat index
-                  const SS::IntVec   intCellIJK( bc_point_indices[0], bc_point_indices[1], bc_point_indices[2]   );
-                  const SS::IntVec ghostCellIJK( bc_point_indices[0], bc_point_indices[1], bc_point_indices[2]-1 );
-                  const int iInterior = pressureField.window_without_ghost().flat_index(   intCellIJK );
-                  const int iGhost    = pressureField.window_without_ghost().flat_index( ghostCellIJK );
-
-                  //pressureField[iGhost] = pressureField[iInterior] - 2*dz*bc_value;
-                  pressureRHS[iInterior] -= pressureField[iGhost]/dz2;
-                }
-                break;
-              case Uintah::Patch::zplus:
-                for( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
-                  SCIRun::IntVector patchCellOffset = patch->getCellLowIndex(0); // cell offset used to calculate local cell index with respect to patch.
-                  SCIRun::IntVector bc_point_indices(*bound_ptr);
-                  Uintah::Stencil7&  coefs = pressureMatrix[bc_point_indices];
-                  coefs.t = 0.0;
-
-                  bc_point_indices = bc_point_indices - patchCellOffset;
-                  // get flat index
-                  const SS::IntVec   intCellIJK( bc_point_indices[0], bc_point_indices[1], bc_point_indices[2]   );
-                  const SS::IntVec ghostCellIJK( bc_point_indices[0], bc_point_indices[1], bc_point_indices[2]+1 );
-                  const int iInterior = pressureField.window_without_ghost().flat_index(   intCellIJK );
-                  const int iGhost    = pressureField.window_without_ghost().flat_index( ghostCellIJK );
-
-                  //pressureField[iGhost] = -pressureField[iInterior] + 2*dz*bc_value;
-                  pressureRHS[iInterior] -= pressureField[iGhost]/dz2;
-                }
-                break;
-
-              case Uintah::Patch::numFaces:
-                throw Uintah::ProblemSetupException( "An invalid face of type Patch::numFaces was encountered while setting boundary conditions", __FILE__, __LINE__ );
-                break;
-
-              case Uintah::Patch::invalidFace:
-                throw Uintah::ProblemSetupException( "An invalid face of type Patch::invalidFace was encountered while setting boundary conditions", __FILE__, __LINE__ );
-                break;
-            }
-          }
         }
       } // child loop
     } // face loop
