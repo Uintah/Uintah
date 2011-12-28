@@ -510,7 +510,6 @@ namespace Wasatch{
       // -----------------------------------------------------------------------
       // BOUNDARY CONDITIONS TREATMENT
       // -----------------------------------------------------------------------
-      const GraphHelper* icGraphHelper = graphCategories_[ INITIALIZATION ];
       const GraphHelper* advSolGraphHelper = graphCategories_[ ADVANCE_SOLUTION ];
       typedef std::vector<EqnTimestepAdaptorBase*> EquationAdaptors;
 
