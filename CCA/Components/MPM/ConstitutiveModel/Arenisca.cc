@@ -453,8 +453,12 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
 
         // Determine a characteristic length of the elastic zone
         double char_length_yield_surface;
-        if (pKappa[idx]<-1.0e90){
-          char_length_yield_surface = abs(2.0*(PEAKI1_hardening-FSLOPE*I1_trial));
+        if (pKappa[idx]<-1.0e80){
+          if (I1_trial<0.0){
+            char_length_yield_surface = abs(2.0*(PEAKI1_hardening-FSLOPE*I1_trial));
+          } else {
+            char_length_yield_surface = abs(2.0*(PEAKI1_hardening));
+          }
         } else {
           if (PEAKI1_hardening-(pKappa[idx]-cap_radius) 
               < -2.0*(FSLOPE*(pKappa_new[idx]-cap_radius)-PEAKI1_hardening)){
