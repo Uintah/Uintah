@@ -226,12 +226,12 @@ namespace Wasatch{
     //    where those would be added.
     //
 
-#   ifdef WASATCH_TASK_FIELD_DIAGNOSTICS
+//#   ifdef WASATCH_TASK_FIELD_DIAGNOSTICS
     proc0cout << "Field requirements for task '" << tree.name() << "'" << endl
               << std::setw(10) << "Mode " << std::left << std::setw(20) << "Field Name"
               << "DW  #Ghost PatchID" << endl
               << "-----------------------------------------------------------------------" << endl;
-#   endif
+//#   endif
 
     //______________________________
     // cycle through each field type
@@ -257,7 +257,7 @@ namespace Wasatch{
 
         // Use the old DW on the first RK stage.  Thereafter,
         // we modify the values already in the new DW.
-        fieldInfo.useOldDataWarehouse = (rkStage > 1);
+        fieldInfo.useOldDataWarehouse = (rkStage < 1);
 
         if( fieldTag.context() == Expr::CARRY_FORWARD ){
           fieldInfo.mode = Expr::COMPUTES;
@@ -268,13 +268,13 @@ namespace Wasatch{
                          materials, Uintah::Task::NormalDomain,
                          fieldInfo.ghostType, fieldInfo.nghost );
 
-#         ifdef WASATCH_TASK_FIELD_DIAGNOSTICS
+//#         ifdef WASATCH_TASK_FIELD_DIAGNOSTICS
           proc0cout << std::setw(10) << "(REQUIRES)"
                     << std::setw(20) << std::left << fieldInfo.varlabel->getName()
                     << "OLD   "
                     << std::left << std::setw(5) << fieldInfo.nghost
                     << *patches << endl;
-#         endif
+//#         endif
         }
 
         //________________
@@ -291,7 +291,7 @@ namespace Wasatch{
         }
         else if( fieldTag.context() == Expr::STATE_N ){
           fieldInfo.mode = Expr::REQUIRES;
-          fieldInfo.useOldDataWarehouse = true;
+          fieldInfo.useOldDataWarehouse = (rkStage < 2);
         }
         else{
           fieldInfo.mode = Expr::REQUIRES;
@@ -309,9 +309,9 @@ namespace Wasatch{
         switch( fieldInfo.mode ){
 
         case Expr::COMPUTES:
-#         ifdef WASATCH_TASK_FIELD_DIAGNOSTICS
+//#         ifdef WASATCH_TASK_FIELD_DIAGNOSTICS
           proc0cout << std::setw(10) << "COMPUTES";
-#         endif
+//#         endif
           ASSERT( dw == Uintah::Task::NewDW );
           task.computes( fieldInfo.varlabel,
                          patches, Uintah::Task::NormalDomain,
@@ -319,9 +319,9 @@ namespace Wasatch{
           break;
 
         case Expr::REQUIRES:
-#         ifdef WASATCH_TASK_FIELD_DIAGNOSTICS
+//#         ifdef WASATCH_TASK_FIELD_DIAGNOSTICS
           proc0cout << std::setw(10) << "REQUIRES";
-#         endif
+//#         endif
           task.requires( dw,
                          fieldInfo.varlabel,
                          patches, Uintah::Task::NormalDomain,
@@ -330,9 +330,9 @@ namespace Wasatch{
           break;
 
         case Expr::MODIFIES:
-#         ifdef WASATCH_TASK_FIELD_DIAGNOSTICS
+//#         ifdef WASATCH_TASK_FIELD_DIAGNOSTICS
           proc0cout << std::setw(10) << "MODIFIES";
-#         endif
+//#         endif
           ASSERT( dw == Uintah::Task::NewDW );
           // jcs it appears that we need to set a "requires" so that
           // the proper ghost inforation is incoporated since
@@ -348,20 +348,20 @@ namespace Wasatch{
 
         } // switch
 
-#       ifdef WASATCH_TASK_FIELD_DIAGNOSTICS
+//#       ifdef WASATCH_TASK_FIELD_DIAGNOSTICS
         proc0cout << std::setw(20) << std::left << fieldInfo.varlabel->getName();
         if( fieldInfo.useOldDataWarehouse ){ proc0cout << "OLD   "; }
         else{ proc0cout << "NEW   "; }
         proc0cout << std::left << std::setw(5) << fieldInfo.nghost
                   << *patches << endl;
-#       endif
+//#       endif
 
       } // field loop
     } // field type loop
 
-#   ifdef WASATCH_TASK_FIELD_DIAGNOSTICS
+//#   ifdef WASATCH_TASK_FIELD_DIAGNOSTICS
     proc0cout << endl;
-#   endif
+//#   endif
 
   }
 
@@ -372,9 +372,9 @@ namespace Wasatch{
   {
     ASSERT( !hasBeenScheduled_ );
 
-#   ifdef WASATCH_TASK_DIAGNOSTICS
+//#   ifdef WASATCH_TASK_DIAGNOSTICS
     proc0cout << "Scheduling task '" << taskName_ << "'" << endl;
-#   endif
+//#   endif
 
     const PatchTreeMap::iterator iptm = patchTreeMap_.begin();
     ASSERT( iptm != patchTreeMap_.end() );
