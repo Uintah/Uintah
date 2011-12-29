@@ -37,10 +37,15 @@ namespace Uintah{
       /** @brief Interface to input file information */
       void  problemSetup( const ProblemSpecP& inputdb ); 
 
-      /** @brief Algorithm for tracing rays through a patch */ 
+      /** @brief Algorithm for tracing rays through a single level*/ 
       void sched_rayTrace( const LevelP& level, 
                            SchedulerP& sched, 
                            const int time_sub_step );
+                           
+      /** @brief Algorithm for RMCRT using multilevel dataOnion approach*/ 
+      void sched_rayTrace_dataOnion( const LevelP& level, 
+                                     SchedulerP& sched, 
+                                     const int time_sub_step );
 
       /** @brief Schedule compute of blackbody intensity */ 
       void sched_sigmaT4( const LevelP& level, 
@@ -91,19 +96,26 @@ namespace Uintah{
 
       //----------------------------------------
       void rayTrace( const ProcessorGroup* pc, 
-          const PatchSubset* patches, 
-          const MaterialSubset* matls, 
-          DataWarehouse* old_dw, 
-          DataWarehouse* new_dw,
-          const int time_sub_step ); 
+                     const PatchSubset* patches, 
+                     const MaterialSubset* matls, 
+                     DataWarehouse* old_dw, 
+                     DataWarehouse* new_dw,
+                     const int time_sub_step ); 
+      //__________________________________
+      void rayTrace_dataOnion( const ProcessorGroup* pc, 
+                               const PatchSubset* patches, 
+                               const MaterialSubset* matls, 
+                               DataWarehouse* old_dw, 
+                               DataWarehouse* new_dw,
+                               const int time_sub_step );
       
       //----------------------------------------
       void initProperties( const ProcessorGroup* pc, 
-          const PatchSubset* patches, 
-          const MaterialSubset* matls, 
-          DataWarehouse* old_dw, 
-          DataWarehouse* new_dw,
-          int time_sub_step ); 
+                           const PatchSubset* patches, 
+                           const MaterialSubset* matls, 
+                           DataWarehouse* old_dw, 
+                           DataWarehouse* new_dw,
+                           int time_sub_step ); 
 
       //----------------------------------------
       void sigmaT4( const ProcessorGroup* pc,
