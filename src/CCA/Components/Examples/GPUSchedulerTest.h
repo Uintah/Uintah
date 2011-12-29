@@ -36,7 +36,6 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Ports/SimulationInterface.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/Variables/VarLabel.h>
-
 #include <CCA/Components/Examples/uintahshare.h>
 
 namespace Uintah {
@@ -117,11 +116,11 @@ DESCRIPTION
                                DataWarehouse* new_dw);
 
     void computeStableTimestepGPU(const ProcessorGroup* pg,
-                               const PatchSubset* patches,
-                               const MaterialSubset* matls,
-                               DataWarehouse* old_dw,
-                               DataWarehouse* new_dw,
-                               int device);
+                                  const PatchSubset* patches,
+                                  const MaterialSubset* matls,
+                                  DataWarehouse* old_dw,
+                                  DataWarehouse* new_dw,
+                                  int device);
                                
     void timeAdvance(const ProcessorGroup* pg,
 		                 const PatchSubset* patches,

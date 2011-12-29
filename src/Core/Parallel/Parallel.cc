@@ -100,13 +100,13 @@ Parallel::usingGPU()
 void
 Parallel::setUsingGPU( bool useGPU )
 {
-   ::usingGPU = useGPU;
+  ::usingGPU = useGPU;
 }
 
 int
 Parallel::getMaxThreads()
 {
-   return ::maxThreads;
+  return ::maxThreads;
 }
 
 void

@@ -186,7 +186,7 @@ usage( const std::string & message,
       cerr << "Valid options are:\n";
       cerr << "-h[elp]              : This usage information.\n";
       cerr << "-AMR                 : use AMR simulation controller\n";
-      cerr << "-gpu                 : use available GPU devices\n";
+      cerr << "-gpu                 : use available GPU devices, requires a multi-threaded GPU scheduler \n";
       cerr << "-nthreads <#>        : number of threads per MPI process, requires a multi-threaded scheduler\n";
       cerr << "-layout NxMxO        : Eg: 2x1x1.  MxNxO must equal number\n";
       cerr << "                           of boxes you are using.\n";

@@ -32,9 +32,6 @@ DEALINGS IN THE SOFTWARE.
 #define UINTAH_HOMEBREW_DetailedTasks_H
 
 #include <CCA/Components/Schedulers/OnDemandDataWarehouseP.h>
-#ifdef HAVE_CUDA
-#include <sci_defs/cuda_defs.h>
-#endif
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Patch.h>
