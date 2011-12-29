@@ -56,13 +56,13 @@ GENERAL INFORMATION
 
    GPUThreadedMPIScheduler.h
 
-   Steven G. Parker
+   Alan Humphrey, after Steven G. Parker & Qingyu Meng
    Department of Computer Science
    University of Utah
 
    Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
   
-   Copyright (C) 2000 SCI Group
+   Copyright (C) 2011 SCI Group
 
 KEYWORDS
    Scheduler_Brain_Damaged
@@ -99,14 +99,6 @@ WARNING
     TaskWorker*            t_worker[16];  //workers
     Thread*                t_thread[16];
     Mutex                  dlbLock;   //load balancer lock
-
-    /*Thread share data*/
-    /*
-    ConditionVariable*     t_runsignal[16];  //signal from sheduler to task
-    Mutex*                 t_runmutex[16];   //conditional wait mutex
-    DetailedTask*          t_task[16];     //current running tasks;
-    int                    t_iteration[16];     //current running tasks;
-    */
     
 
   private:

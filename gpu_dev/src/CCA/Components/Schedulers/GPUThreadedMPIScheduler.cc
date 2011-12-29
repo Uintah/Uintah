@@ -34,11 +34,8 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <CCA/Components/Schedulers/TaskGraph.h>
 #include <CCA/Components/Schedulers/TaskWorker.h>
-
 #include <Core/Exceptions/ProblemSetupException.h>
-
 #include <CCA/Ports/Output.h>
-
 #include <Core/Thread/Time.h>
 #include <Core/Thread/Thread.h>
 #include <Core/Thread/Mutex.h>
@@ -57,6 +54,7 @@ using namespace SCIRun;
 #else
 #define UINTAHSHARE
 #endif
+
 // Debug: Used to sync cerr so it is readable (when output by
 // multiple threads at the same time)  From sus.cc:
 extern UINTAHSHARE SCIRun::Mutex       cerrLock;
@@ -138,8 +136,10 @@ void GPUThreadedMPIScheduler::problemSetup(const ProblemSpecP& prob_spec, Simula
   }
   
   if ( d_myworld->myrank()==0) {
-    cout <<"   WARNING: Multi-thread/MPI hybrid scheduler is EXPERIMENTAL, not all tasks are thread safe yet." << endl;
-    cout <<"   Using one thread for scheduling, " << numThreads_ << " threads for task execution."<< endl;
+    cout << "\tWARNING: " << (Uintah::Parallel::usingGPU() ? "GPU " : "")
+         << "Multi-thread/MPI hybrid scheduler is EXPERIMENTAL "
+         << "not all tasks are thread safe yet."  << endl
+         << "\tUsing 1 thread for scheduling, " << numThreads_ << " threads for task execution." << endl;
   }
 
  /* d_nextsignal = scinew ConditionVariable("NextCondition");
@@ -147,7 +147,7 @@ void GPUThreadedMPIScheduler::problemSetup(const ProblemSpecP& prob_spec, Simula
 
   char name[1024];
   
-  for( int i = 0; i < numThreads_; i++ ){
+  for( int i = 0; i < numThreads_; i++ ) {
     TaskWorker * worker = scinew TaskWorker( this, i );
     t_worker[i] = worker;
     sprintf( name, "Computing Worker %d-%d", Parallel::getRootProcessorGroup()->myrank(), i );
@@ -156,6 +156,7 @@ void GPUThreadedMPIScheduler::problemSetup(const ProblemSpecP& prob_spec, Simula
     //t->detach();
   }
   
+//  WAIT_FOR_DEBUGGER();
   log.problemSetup(prob_spec);
   SchedulerCommon::problemSetup(prob_spec, state);
   Thread::self()->set_affinity(0); //bind main thread to cpu 0
@@ -254,9 +255,7 @@ void GPUThreadedMPIScheduler::runTask(DetailedTask* task, int iteration, int t_i
   sends_[t_id].testsome( d_myworld );
  // sendsLock.unlock(); // Dd... could do better?
 
-
   mpi_info_.totaltestmpi += Time::currentSeconds() - teststart;
-  
  
   if(parentScheduler) { //add my timings to the parent scheduler
   //  if(d_myworld->myrank()==0)
@@ -315,8 +314,9 @@ void GPUThreadedMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
   dts->initializeScrubs(dws, dwmap);
   dts->initTimestep();
 
-  for (int i = 0; i < ntasks; i++)
+  for (int i = 0; i < ntasks; i++) {
     dts->localTask(i)->resetDependencyCounts();
+  }
 
   if(timeout.active()) {
     d_labels.clear();
@@ -544,7 +544,9 @@ void GPUThreadedMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
     float queuelength = lengthsum/totaltasks;
     float allqueuelength = 0;
     MPI_Reduce(&queuelength, &allqueuelength, 1 , MPI_FLOAT, MPI_SUM, 0, d_myworld->getComm());
-    if (me == 0) cout  << "average queue length:" << allqueuelength/d_myworld->size() << endl;
+    if (me == 0) {
+      cout  << "average queue length:" << allqueuelength/d_myworld->size() << endl;
+    }
   }
 
   if(timeout.active()) {
@@ -556,8 +558,7 @@ void GPUThreadedMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
     emitTime("Total recv time", mpi_info_.totalrecv - mpi_info_.totalrecvmpi - mpi_info_.totalwaitmpi);
     emitTime("Total task time", mpi_info_.totaltask);
     emitTime("Total MPI reduce time", mpi_info_.totalreducempi);
-    //emitTime("Total reduction time", 
-    //         mpi_info_.totalreduce - mpi_info_.totalreducempi);
+    //emitTime("Total reduction time", mpi_info_.totalreduce - mpi_info_.totalreducempi);
     emitTime("Total comm time", mpi_info_.totalrecv + mpi_info_.totalsend + mpi_info_.totalreduce);
 
     double time      = Time::currentSeconds();
@@ -630,10 +631,8 @@ void GPUThreadedMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
     double maxTask = -1, avgTask = -1;
     double maxComm = -1, avgComm = -1;
     double maxCell = -1, avgCell = -1;
-    MPI_Reduce(&d_times[0], &d_totaltimes[0], (int)d_times.size(), MPI_DOUBLE,
-        MPI_SUM, 0, d_myworld->getComm());
-    MPI_Reduce(&d_times[0], &d_maxtimes[0], (int)d_times.size(), MPI_DOUBLE,
-        MPI_MAX, 0, d_myworld->getComm());
+    MPI_Reduce(&d_times[0], &d_totaltimes[0], (int)d_times.size(), MPI_DOUBLE, MPI_SUM, 0, d_myworld->getComm());
+    MPI_Reduce(&d_times[0], &d_maxtimes[0], (int)d_times.size(), MPI_DOUBLE, MPI_MAX, 0, d_myworld->getComm());
 
     double total = 0, avgTotal = 0, maxTotal = 0;
     for(int i=0;i<(int)d_totaltimes.size();i++) {
@@ -803,7 +802,7 @@ void GPUThreadedMPIScheduler::postMPISends( DetailedTask         * task, int ite
       // pass it in if the particle data is on the old dw
       LoadBalancer* lb = 0;
 
-      if(!reloc_new_posLabel_ && parentScheduler){
+      if(!reloc_new_posLabel_ && parentScheduler) {
         posDW = dws[req->req->task->mapDataWarehouse(Task::ParentOldDW)].get_rep();
         posLabel = parentScheduler->reloc_new_posLabel_;
       } else {
@@ -882,7 +881,11 @@ void GPUThreadedMPIScheduler::postMPISends( DetailedTask         * task, int ite
 int GPUThreadedMPIScheduler::getAviableThreadNum()
 {
   int num =0;
-  for (int i=0; i < numThreads_; i++) if (t_worker[i]->d_task == NULL) num++;
+  for (int i=0; i < numThreads_; i++) {
+    if (t_worker[i]->d_task == NULL) {
+      num++;
+    }
+  }
   return num;
 }
 
@@ -901,7 +904,7 @@ void  GPUThreadedMPIScheduler::assignTask( DetailedTask* task, int iteration)
      }
    }
    d_nextmutex.unlock();
-   //send task and weakup worker
+   //send task and wake up worker
    ASSERT(targetThread>=0);
    t_worker[targetThread]->d_runmutex.lock();
    t_worker[targetThread]->d_task = task;

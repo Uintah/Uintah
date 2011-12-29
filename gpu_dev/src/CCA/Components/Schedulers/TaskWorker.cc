@@ -66,8 +66,7 @@ static DebugStream threaddbg("ThreadDBG",false);
 TaskWorker::TaskWorker(ThreadedMPIScheduler* scheduler, int id) :
    d_id(id), d_scheduler(scheduler), d_schedulergpu(NULL), d_task(NULL), d_iteration(0),
    d_runmutex("run mutex"),  d_runsignal("run condition"), d_quit(false),
-   d_waittime(0.0),d_waitstart(0.0),
-   d_rank(scheduler->getProcessorGroup()->myrank())
+   d_waittime(0.0), d_waitstart(0.0), d_rank(scheduler->getProcessorGroup()->myrank())
 {
   d_runmutex.lock();
 }
@@ -75,8 +74,7 @@ TaskWorker::TaskWorker(ThreadedMPIScheduler* scheduler, int id) :
 TaskWorker::TaskWorker(GPUThreadedMPIScheduler* scheduler, int id) :
    d_id(id), d_scheduler(NULL), d_schedulergpu(scheduler), d_task(NULL), d_iteration(0),
    d_runmutex("run mutex"),  d_runsignal("run condition"), d_quit(false),
-   d_waittime(0.0),d_waitstart(0.0),
-   d_rank(scheduler->getProcessorGroup()->myrank())
+   d_waittime(0.0), d_waitstart(0.0), d_rank(scheduler->getProcessorGroup()->myrank())
 {
   d_runmutex.lock();
 }
@@ -87,8 +85,9 @@ TaskWorker::~TaskWorker()
 
 void TaskWorker::run()
 {
+//  WAIT_FOR_DEBUGGER();
   threaddbg << "Binding thread id " << d_id+1 << " to cpu " << d_id+1 << endl;
-  bool useGPU = Uintah::Parallel::usingGPU();
+  bool useGPU = Uintah::Parallel::usingGPU() && d_schedulergpu;
 
   Thread::self()->set_myid(d_id+1);
   Thread::self()->set_affinity(d_id+1);

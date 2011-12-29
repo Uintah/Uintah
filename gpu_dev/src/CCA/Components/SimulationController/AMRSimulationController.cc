@@ -912,11 +912,10 @@ AMRSimulationController::scheduleComputeStableTimestep( const GridP& grid,
     d_sim->scheduleComputeStableTimestep(grid->getLevel(i), sched);
   }
 
-  Task* task = scinew Task("coarsenDelt", this,
-      &AMRSimulationController::coarsenDelt);
+  Task* task = scinew Task("coarsenDelt", this, &AMRSimulationController::coarsenDelt);
 
   for (int i = 0; i < grid->numLevels(); i++) {
-    //coarsen delt requires each levels delt varaible
+    //coarsen delt requires each levels delt variable
     task->requires(Task::NewDW,d_sharedState->get_delt_label(),grid->getLevel(i).get_rep());
   }
 

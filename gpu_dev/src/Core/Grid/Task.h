@@ -103,11 +103,11 @@ WARNING
     public:
       virtual ~ActionGPUBase();
       virtual void doitGPU(const ProcessorGroup* pg,
-                        const PatchSubset* patches,
-                        const MaterialSubset* matls,
-                        DataWarehouse* fromDW,
-                        DataWarehouse* toDW,
-                        int device) = 0;
+                           const PatchSubset* patches,
+                           const MaterialSubset* matls,
+                           DataWarehouse* fromDW,
+                           DataWarehouse* toDW,
+                           int device) = 0;
     };
 
 
@@ -590,7 +590,7 @@ WARNING
       :  d_taskName(taskName),
          d_taskNameGPU(""),
          d_action(0),
-         d_actionGPU(0)
+         d_actionGPU(NULL)
     {
       d_tasktype = type;
       initialize();
@@ -608,7 +608,7 @@ WARNING
       : d_taskName(taskName),
         d_taskNameGPU(""),
         d_action(scinew Action<T>(ptr, pmf)),
-        d_actionGPU(0)
+        d_actionGPU(NULL)
     {
       d_tasktype = Normal;
       initialize();
@@ -627,7 +627,7 @@ WARNING
       : d_taskName(taskName),
         d_taskNameGPU(""),
         d_action(scinew Action1<T, Arg1>(ptr, pmf, arg1)),
-        d_actionGPU(0)
+        d_actionGPU(NULL)
     {
       d_tasktype = Normal;
       initialize();
@@ -646,7 +646,7 @@ WARNING
       : d_taskName(taskName),
         d_taskNameGPU(""),
         d_action(scinew Action2<T, Arg1, Arg2>(ptr, pmf, arg1, arg2)),
-        d_actionGPU(0)
+        d_actionGPU(NULL)
     {
       d_tasktype = Normal;
       initialize();
@@ -665,7 +665,7 @@ WARNING
       : d_taskName(taskName),
         d_taskNameGPU(""),
         d_action(scinew Action3<T, Arg1, Arg2, Arg3>(ptr, pmf, arg1, arg2, arg3)),
-        d_actionGPU(0)
+        d_actionGPU(NULL)
     {
       d_tasktype = Normal;
       initialize();
@@ -684,7 +684,7 @@ WARNING
       : d_taskName(taskName),
         d_taskNameGPU(""),
         d_action(scinew Action4<T, Arg1, Arg2, Arg3, Arg4>(ptr, pmf, arg1, arg2, arg3, arg4)),
-        d_actionGPU(0)
+        d_actionGPU(NULL)
     {
       d_tasktype = Normal;
       initialize();
@@ -703,7 +703,7 @@ WARNING
       : d_taskName(taskName),
         d_taskNameGPU(""),
         d_action(scinew Action5<T, Arg1, Arg2, Arg3, Arg4, Arg5>(ptr, pmf, arg1, arg2, arg3, arg4, arg5)),
-        d_actionGPU(0)
+        d_actionGPU(NULL)
     {
       d_tasktype = Normal;
       initialize();
@@ -734,7 +734,7 @@ WARNING
     {
       initialize();
       d_tasktype = Normal;
-      d_usesGPU = (Parallel::usingGPU() ? true : false);
+      d_usesGPU = Parallel::usingGPU() && d_actionGPU;
     }
 
     template<class T, class Arg1>
@@ -763,7 +763,7 @@ WARNING
     {
       initialize();
       d_tasktype = Normal;
-      d_usesGPU = (Parallel::usingGPU() ? true : false);
+      d_usesGPU = Parallel::usingGPU() && d_actionGPU;
     }
 
     template<class T, class Arg1, class Arg2>
@@ -791,7 +791,7 @@ WARNING
     {
       initialize();
       d_tasktype = Normal;
-      d_usesGPU = (Parallel::usingGPU() ? true : false);
+      d_usesGPU = Parallel::usingGPU() && d_actionGPU;
     }
 
     template<class T, class Arg1, class Arg2, class Arg3>
@@ -819,7 +819,7 @@ WARNING
     {
       initialize();
       d_tasktype = Normal;
-      d_usesGPU = (Parallel::usingGPU() ? true : false);
+      d_usesGPU = Parallel::usingGPU() && d_actionGPU;
     }
 
 
@@ -849,7 +849,7 @@ WARNING
     {
       initialize();
       d_tasktype = Normal;
-      d_usesGPU = (Parallel::usingGPU() ? true : false);
+      d_usesGPU = Parallel::usingGPU() && d_actionGPU;
     }
 
     template<class T, class Arg1, class Arg2, class Arg3, class Arg4, class Arg5>
@@ -877,7 +877,7 @@ WARNING
     {
       initialize();
       d_tasktype = Normal;
-      d_usesGPU = (Parallel::usingGPU() ? true : false);
+      d_usesGPU = Parallel::usingGPU() && d_actionGPU;
     }
     // end GPU Task constructors
 

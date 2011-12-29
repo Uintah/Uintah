@@ -262,7 +262,7 @@ void DetailedTask::doit(const ProcessorGroup* pg,
   }
 
   // determine if task will be executed on CPU or GPU
-  if(Parallel::usingGPU()) {
+  if(task->usesGPU()) {
     task->doitGPU(pg, patches, matls, dws, deviceNum);
   } else { 
       task->doit(pg, patches, matls, dws);
