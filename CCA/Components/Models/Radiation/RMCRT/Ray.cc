@@ -1,6 +1,7 @@
 //----- Ray.cc ----------------------------------------------
 #include <CCA/Components/Models/Radiation/RMCRT/Ray.h>
 #include <CCA/Components/Models/Radiation/RMCRT/MersenneTwister.h>
+#include <Core/Containers/StaticArray.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Grid/DbgOutput.h>
 #include <Core/Grid/BoundaryConditions/BCUtils.h>
@@ -283,7 +284,6 @@ Ray::rayTrace( const ProcessorGroup* pc,
                const int time_sub_step )
 { 
   const Level* level = getLevel(patches);
-  int maxLevels = level->getGrid()->numLevels();
   MTRand _mTwister;
 
 
@@ -522,6 +522,311 @@ Ray::rayTrace( const ProcessorGroup* pc,
   }  //end patch loop
 }  // end ray trace method
 
+
+
+//---------------------------------------------------------------------------
+// Ray tracing using the multilevel data onion scheme
+//---------------------------------------------------------------------------
+void
+Ray::sched_rayTrace_dataOnion( const LevelP& level, 
+                               SchedulerP& sched, 
+                               const int time_sub_step )
+{
+  int maxLevels = level->getGrid()->numLevels() -1;
+  int L_indx = level->getIndex();
+  
+  if(L_indx != maxLevels){     // only schedule on the finest level
+    return;
+  }
+  std::string taskname = "Ray::sched_rayTrace_dataOnion";
+  Task* tsk= scinew Task( taskname, this, &Ray::rayTrace_dataOnion, time_sub_step );
+  printSchedule(level,dbg,taskname);
+
+  Task::DomainSpec  ND  = Task::NormalDomain;
+  #define allPatches 0
+  #define allMatls 0
+  Ghost::GhostType  gn  = Ghost::None;
+  
+  // finest level
+  tsk->requires(Task::NewDW, d_abskgLabel,     gn, 0);
+  tsk->requires(Task::NewDW, d_sigmaT4_label,  gn, 0);
+  
+  // coarser levels
+  tsk->requires(Task::NewDW, d_abskgLabel,     allPatches, Task::CoarseLevel,allMatls, ND, gn, 0);
+  tsk->requires(Task::NewDW, d_sigmaT4_label,  allPatches, Task::CoarseLevel,allMatls, ND, gn, 0);
+  
+  if( time_sub_step == 0 ){
+    tsk->computes( d_divQLabel ); 
+  } else {
+    tsk->modifies( d_divQLabel );
+  }
+  sched->addTask( tsk, level->eachPatch(), d_matlSet );
+}
+
+
+//---------------------------------------------------------------------------
+// Ray tracer using the multilevel "data onion" scheme
+//---------------------------------------------------------------------------
+void
+Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
+                         const PatchSubset* finePatches,
+                         const MaterialSubset* matls,
+                         DataWarehouse* old_dw,
+                         DataWarehouse* new_dw,
+                         const int time_sub_step )
+{ 
+  const Level* fineLevel = getLevel(finePatches);
+  int maxLevels    = fineLevel->getGrid()->numLevels();
+  int levelPatchID = fineLevel->getPatch(0)->getID();
+  MTRand _mTwister;
+
+  //__________________________________
+  //retrieve all of the  data for all levels
+  StaticArray< constCCVariable<double> > abskg(maxLevels);
+  StaticArray< constCCVariable<double> >sigmaT4Pi(maxLevels);
+  vector<Vector> Dx(maxLevels);
+  double DyDx[maxLevels];
+  double DzDx[maxLevels];
+
+  for(int L = 0; L<maxLevels; L++){
+    LevelP level = new_dw->getGrid()->getLevel(L);
+    IntVector domainLo_EC, domainHi_EC;
+    level->findCellIndexRange(domainLo_EC, domainHi_EC);       // including extraCells
+                               
+    new_dw->getRegion( abskg[L]   ,   d_abskgLabel ,   d_matl , level.get_rep(), domainLo_EC, domainHi_EC);
+    new_dw->getRegion( sigmaT4Pi[L] , d_sigmaT4_label, d_matl , level.get_rep(), domainLo_EC, domainHi_EC);
+    Vector dx = level->dCell();
+    DyDx[L] = dx.y() / dx.x();
+    DzDx[L] = dx.z() / dx.x();
+    Dx[L] = dx;
+  }
+  
+  // Determine the size of the domain.
+  IntVector fineDomainLo, fineDomainHi;
+  fineLevel->findInteriorCellIndexRange(fineDomainLo, fineDomainHi);     // excluding extraCells
+
+  double start=clock();
+
+  //__________________________________
+  //patch loop
+  for (int p=0; p < finePatches->size(); p++){
+
+    const Patch* finePatch = finePatches->get(p);
+    printTask(finePatches, finePatch,dbg,"Doing Ray::rayTrace_dataOnion");
+
+    CCVariable<double> divQ;    
+    if( time_sub_step == 0 ){
+      new_dw->allocateAndPut( divQ, d_divQLabel, d_matl, finePatch );
+      divQ.initialize( 0.0 );
+    }else{
+      old_dw->getModifiable( divQ,  d_divQLabel, d_matl, finePatch );
+    }
+
+    unsigned long int size = 0;                             // current size of PathIndex
+    int L = maxLevels -1;
+ 
+    //__________________________________
+    //
+    for (CellIterator iter = finePatch->getCellIterator(); !iter.done(); iter++){ 
+
+      IntVector origin = *iter; 
+      int i = origin.x();
+      int j = origin.y();
+      int k = origin.z();
+      
+      // Allow for quick debugging test
+     /*  IntVector pLow;
+       IntVector pHigh;
+       level->findInteriorCellIndexRange(pLow, pHigh);
+       int Nx = pHigh[0] - pLow[0];
+       if (i==Nx/2 && k==Nx/2){
+     */
+
+      double SumI = 0;
+
+
+      //__________________________________
+      //  ray loop
+      for (int iRay=0; iRay < _NoOfRays; iRay++){
+        IntVector cur = origin;
+        IntVector prevCell = cur;
+
+        if(_isSeedRandom == false){
+          _mTwister.seed((i + j +k) * iRay +1);
+        }
+        
+        Vector ray_location;
+        Vector ray_location_prev;
+        ray_location[0] =   i +  _mTwister.rand() ;
+        ray_location[1] =   j +  _mTwister.rand() * DyDx[L] ; 
+        ray_location[2] =   k +  _mTwister.rand() * DzDx[L]; 
+
+        // see http://www.cgafaq.info/wiki/aandom_Points_On_Sphere for explanation
+
+        double plusMinus_one = 2 * _mTwister.rand() - 1;
+        double r = sqrt(1 - plusMinus_one * plusMinus_one);    // Radius of circle at z
+        double theta = 2 * M_PI * _mTwister.rand();            // Uniform betwen 0-2Pi
+
+        Vector direction_vector;
+        direction_vector[0] = r*cos(theta);                   // Convert to cartesian
+        direction_vector[1] = r*sin(theta);
+        direction_vector[2] = plusMinus_one;                  
+        Vector inv_direction_vector = Vector(1.0)/direction_vector;
+
+        int step[3];                                          // Gives +1 or -1 based on sign
+        bool sign[3];
+        for ( int ii= 0; ii<3; ii++){
+          if (inv_direction_vector[ii]>0){
+            step[ii] = 1;
+            sign[ii] = 1;
+          }
+          else{
+            step[ii] = -1;
+            sign[ii] = 0;
+          }
+        }
+
+        double tMaxX = (i + sign[0]           - ray_location[0]) * inv_direction_vector[0];
+        double tMaxY = (j + sign[1] * DyDx[L] - ray_location[1]) * inv_direction_vector[1];
+        double tMaxZ = (k + sign[2] * DzDx[L] - ray_location[2]) * inv_direction_vector[2];
+
+        //Length of t to traverse one cell
+        double tDeltaX = abs(inv_direction_vector[0]);
+        double tDeltaY = abs(inv_direction_vector[1]) * DyDx[L];
+        double tDeltaZ = abs(inv_direction_vector[2]) * DzDx[L];
+        double tMax_prev = 0;
+        bool in_domain = true;
+
+        //Initializes the following values for each ray
+        double intensity = 1.0;
+        double fs = 1.0;
+        double optical_thickness = 0;
+
+        //+++++++Begin ray tracing+++++++++++++++++++
+
+        Vector temp_direction = direction_vector;   // Used for reflections
+
+        //save the direction vector so that it can get modified by...
+        //the 2nd switch statement for reflections, but so that we can get the ray_location back into...
+        //the domain after it was updated following the first switch statement.
+
+        int nReflect = 0; // Number of reflections that a ray has undergone
+
+        //__________________________________
+        //  Threshold  loop
+        while (intensity > _Threshold){
+          
+          int face = -9;
+          
+          while (in_domain){
+            size++;
+            
+            prevCell = cur;
+            double disMin = -9;  // Common variable name in ray tracing. Represents ray segment length.
+
+            //__________________________________
+            //  Determine which cell the ray will enter next
+            if (tMaxX < tMaxY){
+              if (tMaxX < tMaxZ){
+                cur[0]    = cur[0] + step[0];
+                disMin    = tMaxX - tMax_prev;
+                tMax_prev = tMaxX;
+                tMaxX     = tMaxX + tDeltaX;
+                face      = 0;
+              }
+              else {
+                cur[2]    = cur[2] + step[2];
+                disMin    = tMaxZ - tMax_prev;
+                tMax_prev = tMaxZ;
+                tMaxZ     = tMaxZ + tDeltaZ;
+                face      = 2;
+              }
+            }
+            else {
+              if(tMaxY <tMaxZ){
+                cur[1]    = cur[1] + step[1];
+                disMin    = tMaxY - tMax_prev;
+                tMax_prev = tMaxY;
+                tMaxY     = tMaxY + tDeltaY;
+                face      = 1;
+              }
+              else {
+                cur[2]    = cur[2] + step[2];
+                disMin    = tMaxZ - tMax_prev;
+                tMax_prev = tMaxZ;
+                tMaxZ     = tMaxZ + tDeltaZ;
+                face      = 2;
+              }
+            }
+
+            in_domain = containsCell(fineDomainLo, fineDomainHi, cur);
+
+            //__________________________________
+            //  Update the ray location
+            //this is necessary to find the absorb_coef at the endpoints of each step if doing interpolations
+            //ray_location_prev = ray_location;
+            //ray_location      = ray_location + (disMin * direction_vector);// If this line is used,  make sure that direction_vector is adjusted after a reflection
+
+            // The running total of alpha*length
+            double optical_thickness_prev = optical_thickness;
+            optical_thickness += Dx[L].x() * abskg[L][prevCell]*disMin; //as long as tDeltaY,Z tMaxY,Z and ray_location[1],[2]..
+            // were adjusted by DyDxRatio or DzDxRatio, this line is now correct for noncubic domains.
+
+            size++;
+
+            //Eqn 3-15(see below reference) while
+            //Third term inside the parentheses is accounted for in Inet. Chi is accounted for in Inet calc.
+            SumI += sigmaT4Pi[L][prevCell] * ( exp(-optical_thickness_prev) - exp(-optical_thickness) ) * fs;
+          } //end domain while loop.  ++++++++++++++
+
+          intensity = exp(-optical_thickness);
+
+          //  wall emission 12/15/11
+          SumI += abskg[L][cur]*sigmaT4Pi[L][cur] * intensity;
+
+          intensity = intensity * (1-abskg[L][cur]);
+
+          //__________________________________
+          //  Reflections
+          if (intensity > _Threshold){
+
+            ++nReflect;
+            fs = fs * (1-abskg[L][cur]);
+
+            //put cur back inside the domain
+            cur = prevCell;
+
+            // apply reflection condition
+            step[face] *= -1;                      // begin stepping in opposite direction
+            sign[face] = (sign[face]==1) ? 0 : 1; //  swap sign from 1 to 0 or vice versa
+
+            in_domain = 1;
+
+
+          }  // if reflection
+        }  // threshold while loop.
+      }  // Ray loop
+
+      //__________________________________
+      //  Compute divQ
+      divQ[origin] = 4.0 * _pi * abskg[L][origin] * ( sigmaT4Pi[L][origin] - (SumI/_NoOfRays) );
+      
+      //cout << divQ[origin] << endl;
+       // } // end quick debug testing
+    }  // end cell iterator
+
+    double end =clock();
+    double efficiency = size/((end-start)/ CLOCKS_PER_SEC);
+    if (finePatch->getGridIndex() == levelPatchID) {
+      cout<< endl;
+      cout << " RMCRT REPORT: Patch " << levelPatchID <<endl;
+      cout << " Used "<< (end-start) * 1000 / CLOCKS_PER_SEC<< " milliseconds of CPU time. \n" << endl;// Convert time to ms
+      cout << " Size: " << size << endl;
+      cout << " Efficiency: " << efficiency << " steps per sec" << endl;
+      cout << endl;
+    }
+  }  //end finePatch loop
+}  // end ray trace method
 
 
 //______________________________________________________________________

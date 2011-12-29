@@ -288,23 +288,33 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
   GridP grid = level->getGrid();
   int maxLevels = level->getGrid()->numLevels();
   
-  //__________________________________
+  //______________________________________________________________________
+  //   D A T A   O N I O N   A P P R O A C H
   //  If the RMCRT is performed on each fine patch with a halo of coarse patches
   //  around the fine patch
   if(d_multiLevelRMCRTMethod){
+    const LevelP& fineLevel = grid->getLevel(maxLevels-1);
+    const PatchSet* finestPatches = fineLevel->eachPatch();
+
+    // compute Radiative properties on the finest level
+    if(d_doRealRMCRT){
+      int time_sub_step = 0;
+      d_realRMCRT->sched_initProperties( fineLevel, sched, time_sub_step );
+    }
+
+    // coarsen data to the coarser levels
     for (int l = 0; l < maxLevels-1; l++) {
       const LevelP& level = grid->getLevel(l);
       scheduleCoarsenAll (level, sched);
     }
     
-    // only schedule RMCRT and pseudoCFD on the finest level
-    const LevelP& fineLevel = grid->getLevel(maxLevels-1);
-    const PatchSet* patches = fineLevel->eachPatch();
-    scheduleShootRays_multiLevel( sched, patches, matls );
-    schedulePseudoCFD( sched, patches, matls );
+    // only schedule RMCRT and pseudoCFD on the finest level    
+    scheduleShootRays_multiLevel( sched, fineLevel,     matls );
+    schedulePseudoCFD(            sched, finestPatches, matls );
   }
   
-  //__________________________________
+  //______________________________________________________________________
+  //   2 - L E V E L   A P P R O A C H
   //  If the RMCRT is performed on only the coarse level
   // and the results are interpolated to the fine level
   if(d_CoarseLevelRMCRTMethod){
@@ -389,22 +399,30 @@ void RMCRT_Test::pseudoCFD ( const ProcessorGroup*,
 //______________________________________________________________________
 //
 void RMCRT_Test::scheduleShootRays_multiLevel(SchedulerP& sched,
-                                              const PatchSet* patches,
+                                              const LevelP& level,
                                               const MaterialSet* matls)
 {
-  printSchedule(patches,dbg,"RMCRT_Test::scheduleShootRays_multiLevel");
+  printSchedule(level,dbg,"RMCRT_Test::scheduleShootRays_multiLevel");
   
   Task* t = scinew Task("RMCRT_Test::shootRays_multiLevel",
                   this, &RMCRT_Test::shootRays_multiLevel);
 
-  Task::DomainSpec  ND  = Task::NormalDomain;
-  #define allPatches 0
-  #define allMatls 0
-  t->requires(Task::OldDW, d_colorLabel,  d_gn, 0);
-  t->requires(Task::OldDW, d_colorLabel,  allPatches, Task::CoarseLevel,allMatls, ND, d_gn, 0);
+  if (d_doFakeRMCRT){
+    Task::DomainSpec  ND  = Task::NormalDomain;
+    #define allPatches 0
+    #define allMatls 0
+    t->requires(Task::OldDW, d_colorLabel,  d_gn, 0);
+    t->requires(Task::OldDW, d_colorLabel,  allPatches, Task::CoarseLevel,allMatls, ND, d_gn, 0);
+
+    t->computes( d_divQLabel );
+    sched->addTask(t, level->eachPatch(), matls);
+  }
   
-  t->computes( d_divQLabel );
-  sched->addTask(t, patches, matls);
+  if(d_doRealRMCRT){
+    int time_sub_step = 0;
+    d_realRMCRT->sched_rayTrace_dataOnion(level,sched,time_sub_step);
+  }
+  
 }
 //______________________________________________________________________
 void RMCRT_Test::shootRays_multiLevel ( const ProcessorGroup*,
@@ -632,7 +650,7 @@ void RMCRT_Test::scheduleRefine_Q(SchedulerP& sched,
   int L_indx = fineLevel->getIndex();
   
   if(L_indx > 0 ){
-     printSchedule(patches,dbg,"RMCRT_Test::scheduleRefine_Q");
+     printSchedule(patches,dbg,"RMCRT_Test::scheduleRefine_Q (divQ)");
 
     Task* task = scinew Task("RMCRT_Test::refine_Q",this, 
                              &RMCRT_Test::refine_Q);
