@@ -116,6 +116,14 @@ DEALINGS IN THE SOFTWARE.
 
 #ifdef WASATCH_IN_ARCHES
 #include <CCA/Components/Wasatch/Wasatch.h>
+#include <CCA/Components/Wasatch/FieldTypes.h>
+#include <CCA/Components/Wasatch/transport/TransportEquation.h>
+#include <CCA/Components/Wasatch/transport/ParseEquation.h>
+#include <CCA/Components/Wasatch/GraphHelperTools.h>
+#include <CCA/Components/Wasatch/TaskInterface.h>
+#include <expression/ExprLib.h>
+#include <expression/PlaceHolderExpr.h>
+#include <expression/ExpressionFactory.h>
 #endif // WASATCH_IN_ARCHES
 
 #include <iostream>
@@ -316,11 +324,69 @@ Arches::problemSetup(const ProblemSpecP& params,
 
     d_timeIntegrator->problemSetup(time_db);
   }
-
+  
+//------------------------------------------------------------------------------
+//   WASATCH CODE BLOCK
+//------------------------------------------------------------------------------
 # ifdef WASATCH_IN_ARCHES
-  d_wasatch->problemSetup( db->findBlock("Wasatch"), materials_ps, grid, sharedState );
-# endif // WASATCH_IN_ARCHES
 
+  // we must attach the solver to Wasatch "manually"
+  d_wasatch->attachPort("solver",  dynamic_cast<SolverInterface*>(getPort("solver")));
+  d_wasatch->disable_wasatch_material();
+  // let Wasatch parse its xml block to setup the transport equations. Here, we
+  // should pass the entire uintah input file params.
+  d_wasatch->problemSetup( params, materials_ps, grid, sharedState );  
+  
+  Wasatch::GraphHelper* const gh = d_wasatch->graph_categories()[Wasatch::ADVANCE_SOLUTION];  
+  // NOTE: WE ARE LIMITED TO SVOLFIELDS WHEN USING WASATCH-IN-ARCHES FOR THE TIME
+  // BEING.
+  //____________________________________________________________________________  
+  // Register the velocity field from Arches as placeholder expressions. 
+  // put these in the advance solution graph
+  std::string xVelName = d_lab->d_uVelocitySPBCLabel->getName();
+  const Expr::Tag xVelTag( xVelName, Expr::STATE_N );
+  if( !(gh->exprFactory->have_entry( xVelTag )) ) {
+    // register placeholder expressions for x velocity string name: "uVelocitySPBC"
+    std::cout << xVelName << std::endl;
+    typedef Expr::PlaceHolder<XVolField>  XVelT;
+    gh->exprFactory->register_expression( new XVelT::Builder(Expr::Tag(xVelName,Expr::STATE_N)) );        
+  }
+  //
+  std::string yVelName = d_lab->d_vVelocitySPBCLabel->getName();
+  const Expr::Tag yVelTag( yVelName, Expr::STATE_N );
+  if( !(gh->exprFactory->have_entry( yVelTag )) ) {
+    // register placeholder expressions for y velocity string name: "vVelocitySPBC"
+    typedef Expr::PlaceHolder<YVolField>  YVelT;
+    gh->exprFactory->register_expression( new YVelT::Builder(Expr::Tag(yVelName,Expr::STATE_N)) );
+  }
+  //
+  std::string zVelName = d_lab->d_wVelocitySPBCLabel->getName();
+  const Expr::Tag zVelTag( zVelName, Expr::STATE_N );
+  if( !(gh->exprFactory->have_entry( zVelTag )) ) {
+    // register placeholder expressions for z velocity string name: "wVelocitySPBC"
+    typedef Expr::PlaceHolder<ZVolField>  ZVelT;
+    gh->exprFactory->register_expression( new ZVelT::Builder(Expr::Tag(zVelName,Expr::STATE_N)) );        
+  }
+  
+  //____________________________________________________________________________   
+  // Register the Wasatch transported variables as placeholder expressions. 
+  // Because we will NOT build a Wasatch timestepper, we should register the
+  // transported Wasatch variables as placeholder expressions. We can grab those
+  // from the equation adaptors after parsing the Wasatch xml block.
+  const Wasatch::Wasatch::EquationAdaptors& adaptors = d_wasatch->equation_adaptors();
+  typedef Expr::PlaceHolder<SVolField>  FieldExpr;
+  for( Wasatch::Wasatch::EquationAdaptors::const_iterator ia=adaptors.begin(); ia!=adaptors.end(); ++ia ) {
+    Wasatch::TransportEquation* transEq = (*ia)->equation();
+    std::string solnVarName = transEq->solution_variable_name();    
+    if( !gh->exprFactory->have_entry( Expr::Tag(solnVarName,Expr::STATE_N  ) ) )
+      gh->exprFactory->register_expression( new FieldExpr::Builder(Expr::Tag(solnVarName,Expr::STATE_N)) );
+    if( !gh->exprFactory->have_entry( Expr::Tag(solnVarName,Expr::STATE_NP1  ) ) )
+      gh->exprFactory->register_expression( new FieldExpr::Builder(Expr::Tag(solnVarName,Expr::STATE_NP1)) );
+  }      
+  
+# endif // WASATCH_IN_ARCHES
+//------------------------------------------------------------------------------  
+  
   ProblemSpecP transportEqn_db = db->findBlock("TransportEqns");
   if (transportEqn_db) {
     // register source terms
@@ -666,6 +732,10 @@ Arches::scheduleInitialize(const LevelP& level,
                            SchedulerP& sched)
 {
 # ifdef WASATCH_IN_ARCHES
+  // must set wasatch materials after problemsetup so that we can access
+  // sharedState->allArchesMaterials(). This is dictated by Uintah.
+  // NOTE: you must also disable wasatch material creation in the problemsetup.
+  d_wasatch->set_wasatch_materials(d_sharedState->allArchesMaterials());
   d_wasatch->scheduleInitialize( level, sched );
 # endif // WASATCH_IN_ARCHES
 
@@ -1428,12 +1498,6 @@ Arches::scheduleTimeAdvance( const LevelP& level,
   double time = d_lab->d_sharedState->getElapsedTime();
   nofTimeSteps++ ;
 
-# ifdef WASATCH_IN_ARCHES
-  // disable wasatch's time integrator because Arches is handling it.
-  d_wasatch->disable_timestepper_creation();
-  d_wasatch->scheduleTimeAdvance( level, sched );
-# endif // WASATCH_IN_ARCHES
-
   if (d_MAlab) {
 #ifndef ExactMPMArchesInitialize
     //    if (nofTimeSteps < 2) {
@@ -1444,13 +1508,13 @@ Arches::scheduleTimeAdvance( const LevelP& level,
     else
       d_nlSolver->nonlinearSolve(level, sched
 #       ifdef WASATCH_IN_ARCHES
-          , *d_wasatch
+          , *d_wasatch, d_timeIntegrator
 #       endif // WASATCH_IN_ARCHES
           );
 #else
     d_nlSolver->nonlinearSolve(level, sched
 #       ifdef WASATCH_IN_ARCHES
-          , *d_wasatch
+          , *d_wasatch, d_timeIntegrator
 #       endif // WASATCH_IN_ARCHES
     );
 #endif
@@ -1458,7 +1522,7 @@ Arches::scheduleTimeAdvance( const LevelP& level,
   else {
     d_nlSolver->nonlinearSolve(level, sched
 #       ifdef WASATCH_IN_ARCHES
-          , *d_wasatch
+          , *d_wasatch, d_timeIntegrator
 #       endif // WASATCH_IN_ARCHES
     );
   }
@@ -1482,6 +1546,12 @@ Arches::scheduleTimeAdvance( const LevelP& level,
       d_lab->recompile_taskgraph = true;
     }
   }
+  
+# ifdef WASATCH_IN_ARCHES
+  // disable wasatch's time integrator because Arches is handling it.
+  d_wasatch->disable_timestepper_creation();  
+  d_wasatch->scheduleTimeAdvance( level, sched );  
+# endif // WASATCH_IN_ARCHES  
 }
 
 // ****************************************************************************
@@ -1491,7 +1561,7 @@ bool Arches::needRecompile(double time, double dt,
                             const GridP& grid)
 {
 # ifdef WASATCH_IN_ARCHES
-  ASSERT( false ); // not ready yet.
+  //ASSERT( false ); // not ready yet.
 # endif // WASATCH_IN_ARCHES
 
   bool temp;

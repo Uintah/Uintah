@@ -233,6 +233,7 @@ namespace Wasatch{
 
   template< typename FieldT >
   Expr::ExpressionID
+  MomentumTransportEquation<FieldT>::
   get_mom_rhs_id( Expr::ExpressionFactory& factory,
                   const std::string velName,
                   const std::string momName,
@@ -253,9 +254,10 @@ namespace Wasatch{
                              const Expr::Tag densTag,
                              Expr::ExpressionFactory& factory,
                              Uintah::ProblemSpecP params,
+                             const Expr::ExpressionID rhsID,
                              Uintah::SolverInterface& linSolver)
     : Wasatch::TransportEquation( momName,
-                                  get_mom_rhs_id<FieldT>( factory, velName, momName, params, linSolver ),
+                                  rhsID,
                                   get_staggered_location<FieldT>() ),
       isviscous_       ( params->findBlock("Viscosity") ? true : false ),
       normalStressID_  ( Expr::ExpressionID::null_id() ),

@@ -308,7 +308,8 @@ ExplicitSolver::problemSetup(const ProblemSpecP& params)
 int ExplicitSolver::nonlinearSolve(const LevelP& level,
                                    SchedulerP& sched
 #                                  ifdef WASATCH_IN_ARCHES
-                                   , Wasatch::Wasatch& wasatch
+                                   , Wasatch::Wasatch& wasatch, 
+                                   ExplicitTimeInt* d_timeIntegrator
 #                                  endif // WASATCH_IN_ARCHES
                                    )
 {
@@ -661,7 +662,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     }
 
 #   ifdef WASATCH_IN_ARCHES
-    /* hook in construction of task interface for moment transport equations here.
+    /* hook in construction of task interface for wasatch transport equations here.
      * This is within the RK loop, so we need to pass the stage as well.
      *
      * Note that at this point we should also build Expr::PlaceHolder objects
@@ -674,32 +675,19 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       const Wasatch::Wasatch::EquationAdaptors& adaptors = wasatch.equation_adaptors();
       Wasatch::GraphHelper* const gh = wasatch.graph_categories()[Wasatch::ADVANCE_SOLUTION];
 
-      // register placeholder expressions for x velocity string name: "uVelocitySPBC"
-      typedef Expr::PlaceHolder<XVolField>  XVelT;
-      std::string xVelName = d_lab->d_uVelocitySPBCLabel->getName();
-      gh->exprFactory->register_expression( new XVelT::Builder(Expr::Tag(xVelName,Expr::STATE_N)) );
-
-      // register placeholder expressions for y velocity string name: "vVelocitySPBC"
-      typedef Expr::PlaceHolder<YVolField>  YVelT;
-      std::string yVelName = d_lab->d_vVelocitySPBCLabel->getName();
-      gh->exprFactory->register_expression( new YVelT::Builder(Expr::Tag(yVelName,Expr::STATE_N)) );
-
-      // register placeholder expressions for z velocity string name: "wVelocitySPBC"
-      typedef Expr::PlaceHolder<ZVolField>  ZVelT;
-      std::string zVelName = d_lab->d_wVelocitySPBCLabel->getName();
-      gh->exprFactory->register_expression( new ZVelT::Builder(Expr::Tag(zVelName,Expr::STATE_N)) );
-
-      std::vector<std::string> solnVarNames;
-      for( Wasatch::Wasatch::EquationAdaptors::const_iterator ieq=adaptors.begin(); ieq!=adaptors.end(); ++ieq ){
-        const Wasatch::TransportEquation* const eq = (*ieq)->equation();
-        solnVarNames.push_back( eq->solution_variable_name() );
-        gh->rootIDs.insert( eq->get_rhs_id() );
-      }
-
-      // jcs still need to fill in some gaps here.
+      std::vector<std::string> phi;
+      std::vector<std::string> phi_rhs;
+      
+      for( Wasatch::Wasatch::EquationAdaptors::const_iterator ia=adaptors.begin(); ia!=adaptors.end(); ++ia ) {
+        Wasatch::TransportEquation* transEq = (*ia)->equation();
+        std::string solnVarName = transEq->solution_variable_name();
+        phi.push_back(solnVarName);
+        phi_rhs.push_back(solnVarName + "_rhs");
+      }      
+      //
       std::stringstream strRKStage;
       strRKStage << curr_level;
-      const std::set<std::string>& ioFieldSet = wasatch.io_field_set();
+      const std::set<std::string>& ioFieldSet = wasatch.io_field_set();              
       Wasatch::TaskInterface* wasatchRHSTask =
         scinew Wasatch::TaskInterface( gh->rootIDs,
                                        "wasatch_task_rhs_stage_" + strRKStage.str(),
@@ -707,13 +695,17 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
                                        level, sched, patches, matls,
                                        wasatch.patch_info_map(),
                                        true,
-                                       curr_level,  /* need to get this from Arches info */
-                                       ioFieldSet   /* need to build something here - probably need to parse input */
+                                       curr_level+1,
+                                       ioFieldSet 
                                        );
 
       // jcs need to build a CoordHelper (or graph the one from wasatch?) - see Wasatch::TimeStepper.cc...
       wasatch.task_interface_list().push_back( wasatchRHSTask );
-      wasatchRHSTask->schedule( curr_level );  // note that there is another interface for this if we need some fields from the new DW.
+      wasatchRHSTask->schedule( curr_level +1 );  
+      // note that there is another interface for this if we need some fields from the new DW.      
+      d_timeIntegrator->sched_fe_update(sched, patches, matls, phi, phi_rhs, curr_level, true);
+      if(curr_level>0) d_timeIntegrator->sched_time_ave(sched, patches, matls, phi, curr_level, true);
+      //d_timeIntegrator->sched_wasatch_time_ave(sched, patches, matls, phi, phi_rhs, curr_level);            
     }
 #   endif // WASATCH_IN_ARCHES
   }

@@ -68,6 +68,7 @@ WARNING
 #include <CCA/Ports/DataWarehouseP.h>
 #include <CCA/Ports/SolverInterface.h>
 #include <Core/Grid/Variables/VarTypes.h>
+#include <CCA/Components/Arches/ExplicitTimeInt.h>
 
 namespace Uintah {
   using namespace SCIRun;
@@ -127,7 +128,8 @@ public:
   virtual int nonlinearSolve( const LevelP& level,
                               SchedulerP& sched
 #                             ifdef WASATCH_IN_ARCHES
-                              , Wasatch::Wasatch& wasatch
+                              , Wasatch::Wasatch& wasatch,
+                             ExplicitTimeInt* d_timeIntegrator
 #                             endif // WASATCH_IN_ARCHES
                              );
 

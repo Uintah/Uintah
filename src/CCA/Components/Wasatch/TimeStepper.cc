@@ -112,10 +112,10 @@ namespace Wasatch{
   //==================================================================
 
   TimeStepper::TimeStepper( const Uintah::VarLabel* const deltaTLabel,
-                            Expr::ExpressionFactory& factory )
-    : factory_( &factory ),
+                            GraphHelper& solnGraphHelper )
+    : solnGraphHelper_( &solnGraphHelper ),
       deltaTLabel_( deltaTLabel ),
-      coordHelper_( new CoordHelper( factory ) )
+      coordHelper_( new CoordHelper( *(solnGraphHelper_->exprFactory) ) )
   {}
 
   //------------------------------------------------------------------
@@ -155,7 +155,7 @@ namespace Wasatch{
     {
       TaskInterface* const timeTask = scinew TaskInterface( timeID,
                                                             "set_time",
-                                                            *factory_,
+                                                            *(solnGraphHelper_->exprFactory),
                                                             level, sched, patches, materials,
                                                             patchInfoMap,
                                                             true, 1, ioFieldSet );
@@ -176,9 +176,9 @@ namespace Wasatch{
       //     field manager list for all of the stages?  Otherwise we
       //     will have all sorts of name clashes?
 
-      TaskInterface* rhsTask = scinew TaskInterface( rhsIDs_,
+      TaskInterface* rhsTask = scinew TaskInterface( solnGraphHelper_->rootIDs,
                                                      "rhs_" + strRKStage.str(),
-                                                     *factory_,
+                                                     *(solnGraphHelper_->exprFactory),
                                                      level, sched, patches, materials,
                                                      patchInfoMap,
                                                      true,

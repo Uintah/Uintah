@@ -54,6 +54,7 @@
 
 //-- Wasatch includes --//
 #include "Wasatch.h"
+#include "WasatchMaterial.h"
 #include "CoordHelper.h"
 #include "FieldAdaptor.h"
 #include "StringNames.h"
@@ -77,6 +78,7 @@ namespace Wasatch{
   Wasatch::Wasatch( const Uintah::ProcessorGroup* myworld )
     : Uintah::UintahParallelComponent( myworld ),
       buildTimeIntegrator_( true ),
+      buildWasatchMaterial_( true),
       nRKStages_(1)
   {
     proc0cout << std::endl
@@ -123,7 +125,7 @@ namespace Wasatch{
     }
 
     delete icCoordHelper_;
-    delete timeStepper_;
+    if (buildTimeIntegrator_) delete timeStepper_;
 
     for( GraphCategories::iterator igc=graphCategories_.begin(); igc!=graphCategories_.end(); ++igc ){
       delete igc->second->exprFactory;
@@ -186,12 +188,16 @@ namespace Wasatch{
     }
 
     Uintah::ProblemSpecP wasatchParams = params->findBlock("Wasatch");
+    if (!wasatchParams) return;
+
     //
     // Material
     //
-    Uintah::SimpleMaterial* mymaterial = scinew Uintah::SimpleMaterial();
-    sharedState->registerSimpleMaterial(mymaterial);
-
+    if (buildWasatchMaterial_) {
+      Uintah::WasatchMaterial* mat= scinew Uintah::WasatchMaterial();
+      sharedState->registerWasatchMaterial(mat);
+    }
+    
     // we are able to get the solver port from here
     linSolver_ = dynamic_cast<Uintah::SolverInterface*>(getPort("solver"));
     if(!linSolver_) {
@@ -323,8 +329,10 @@ namespace Wasatch{
       }
     }
 
-    timeStepper_ = scinew TimeStepper( sharedState_->get_delt_label(),
-                                       *graphCategories_[ ADVANCE_SOLUTION ]->exprFactory );
+    if( buildTimeIntegrator_ ){
+      timeStepper_ = scinew TimeStepper( sharedState_->get_delt_label(),
+                                         *graphCategories_[ ADVANCE_SOLUTION ] );
+    }
   }
 
   //--------------------------------------------------------------------
@@ -332,6 +340,14 @@ namespace Wasatch{
   void Wasatch::scheduleInitialize( const Uintah::LevelP& level,
                                     Uintah::SchedulerP& sched )
   {
+    // accessing the sharedState_->allWasatchMaterials() must be done after
+    // problemSetup. The sharedstate class will create this material set
+    // in postgridsetup, which is called after problemsetup. This is dictated
+    // by Uintah.
+    if (buildWasatchMaterial_) {
+      set_wasatch_materials(sharedState_->allWasatchMaterials());
+    }
+    
     //_______________________________________________________________
     // Set up the operators associated with the local patches.  We
     // only need to do this once, so we choose to do it here.  It
@@ -358,7 +374,7 @@ namespace Wasatch{
     }
 
     const Uintah::PatchSet* const localPatches = get_patchset( USE_FOR_TASKS, level, sched );
-    const Uintah::MaterialSet* const materials = sharedState_->allMaterials();
+    const Uintah::MaterialSet* const materials = materials_;//sharedState_->allWasatchMaterials();
 
     GraphHelper* const icGraphHelper = graphCategories_[ INITIALIZATION ];
 
@@ -398,7 +414,7 @@ namespace Wasatch{
       // INITIAL BOUNDARY CONDITIONS TREATMENT
       // -----------------------------------------------------------------------
       const Uintah::PatchSet* const localPatches = get_patchset( USE_FOR_OPERATORS, level, sched );
-      const Uintah::MaterialSet* const materials = sharedState_->allMaterials();
+      const Uintah::MaterialSet* const materials = materials_;//sharedState_->allWasatchMaterials();
       const GraphHelper* icGraphHelper = graphCategories_[ INITIALIZATION ];
       typedef std::vector<EqnTimestepAdaptorBase*> EquationAdaptors;
 
@@ -436,7 +452,7 @@ namespace Wasatch{
     // jcs: was getting patch set this way (from discussions with Justin).
     const Uintah::PatchSet* const localPatches = get_patchset(USE_FOR_TASKS,level,sched);
 
-    const Uintah::MaterialSet* materials = sharedState_->allMaterials();
+    const Uintah::MaterialSet* materials = materials_;//sharedState_->allWasatchMaterials();
 
     if( tsGraphHelper->rootIDs.size() > 0 ){
 
@@ -468,7 +484,7 @@ namespace Wasatch{
       //              materials->getUnion() );
       // jcs why can't we specify a metrial here?  It doesn't seem to be working if I do.
 
-      sched->addTask( task, localPatches, sharedState_->allMaterials() );
+      sched->addTask( task, localPatches, materials_);//sharedState_->allWasatchMaterials() );
     }
 
     proc0cout << "Wasatch: done creating timestep task(s)" << std::endl;
@@ -485,7 +501,7 @@ namespace Wasatch{
       const Uintah::PatchSet* const allPatches = get_patchset( USE_FOR_TASKS, level, sched );
       const Uintah::PatchSet* const localPatches = get_patchset( USE_FOR_OPERATORS, level, sched );
 
-      const Uintah::MaterialSet* const materials = sharedState_->allMaterials();
+      const Uintah::MaterialSet* const materials = materials_;//sharedState_->allWasatchMaterials();
 
       if( buildTimeIntegrator_ ){
         create_timestepper_on_patches( allPatches, materials, level, sched, iStage );

@@ -23,6 +23,7 @@ public:
     ~ExplicitTimeInt(); 
     /** @brief Input file interface and constant intialization */ 
     void problemSetup(const ProblemSpecP& params);
+    
    /** @brief A template forward Euler update for a single 
                variable for a single patch */ 
     template <class phiT, class constphiT>
@@ -30,7 +31,8 @@ public:
                               phiT& phi, 
                               constphiT& RHS, 
                               double dt, double time, 
-                              const string eqnName );
+                              const string eqnName,
+                              const bool wasatch_update=false);
    /** @brief A template forward Euler update for a single 
                variable for a single patch */ 
     template <class phiT, class constphiT>
@@ -40,12 +42,13 @@ public:
                               constphiT& RHS, 
                               double dt, double time,
                               const string eqnName );
+  
     /** @brief A template for time averaging using a Runge-kutta form without density*/  
     template <class phiT, class constphiT>
     void timeAvePhi( const Patch* patch, 
                      phiT& phi, 
                      constphiT& old_phi, 
-                     int step, double time );
+                     int step, double time);
 
     /** @brief A template for time averaging using a Runge-kutta form with density */ 
     template <class phiT, class constphiT>
@@ -56,14 +59,14 @@ public:
                      constphiT& new_den, 
                      int step, double time ); 
 
-    /** @brief An task interface to the singlePatchFEUpdate */ 
+    /** @brief A task interface to the singlePatchFEUpdate */ 
     void sched_fe_update( SchedulerP& sched, 
-                          const PatchSet* patches, 
-                          const MaterialSet* matls, 
-                          std::vector<std::string> phi,
-                          std::vector<std::string> rhs, 
-                          bool allocate_otf, 
-                          int rkstep );
+                         const PatchSet* patches, 
+                         const MaterialSet* matls, 
+                         std::vector<std::string> phi,
+                         std::vector<std::string> rhs, 
+                         int rkstep,const bool wasatch_update=false );
+  
     void fe_update( const ProcessorGroup*, 
                     const PatchSubset* patches, 
                     const MaterialSubset* matls, 
@@ -71,22 +74,22 @@ public:
                     DataWarehouse* new_dw,
                     std::vector<std::string> phi_lab,
                     std::vector<std::string> rhs_lab, 
-                    bool allocate_otf, 
-                    int rkstep );
-
-    /** @brief An task interface to the timeAvePhi */ 
+                    int rkstep, const bool wasatch_update=false );
+    
+    /** @brief A task interface to the timeAvePhi */ 
     void sched_time_ave( SchedulerP& sched, 
                          const PatchSet* patches, 
                          const MaterialSet* matls, 
                          std::vector<std::string> phi,
-                         int rkstep );
+                         int rkstep, const bool wasatch_update=false );
+  
     void time_ave( const ProcessorGroup*, 
                    const PatchSubset* patches, 
                    const MaterialSubset* matls, 
                    DataWarehouse* old_dw, 
                    DataWarehouse* new_dw,
                    std::vector<std::string> phi_lab,
-                   int rkstep );
+                   int rkstep, const bool wasatch_update=false );
 
     Vector ssp_beta, ssp_alpha; 
     Vector time_factor; 
@@ -108,9 +111,21 @@ private:
                                              phiT& phi, 
                                              constphiT& RHS, 
                                              double dt, double time, 
-                                             const string eqnName )
+                                             const string eqnName,
+                                             const bool wasatch_update)
   {
-
+    
+    // tsaad: to avoid the multiplications in calculating the volume in the 
+    // cell iterator loop, I separated the wasatch FE update from the arches
+    // FE update loop below.
+    if (wasatch_update) {
+      for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
+        IntVector c = *iter; 
+        phi[c] += dt*RHS[c]; 
+      } 
+      return;
+    }
+    
 #ifdef VERIFY_TIMEINT
     cout << "**********************************************************************" << endl;
     cout << endl;
@@ -122,7 +137,6 @@ private:
     double pi = acos(-1.0); 
     double RHS_test = cos(2.0*pi*time); 
 #endif 
-
 
     Vector dx = patch->dCell();
     for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){

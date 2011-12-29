@@ -119,6 +119,8 @@
 #include "GraphHelperTools.h"
 #include "FieldTypes.h"
 
+#include <expression/ExpressionFactory.h>
+
 namespace Expr{ class ExpressionID; }
 
 namespace Uintah{ class Task; }
@@ -216,17 +218,23 @@ namespace Wasatch{
 
     const EquationAdaptors& equation_adaptors() const{ return adaptors_; }
     GraphCategories& graph_categories(){ return graphCategories_; }
+    Expr::ExpressionFactory* solution_factory(){ return (graphCategories_[ADVANCE_SOLUTION])->exprFactory; } 
     void disable_timestepper_creation(){ buildTimeIntegrator_ = false; }
+    void disable_wasatch_material(){ buildWasatchMaterial_ = false; }    
     const PatchInfoMap& patch_info_map() const{ return patchInfoMap_; }
     std::list< const TaskInterface* >& task_interface_list(){ return taskInterfaceList_; }
     const std::set<std::string>& io_field_set(){ return ioFieldSet_; }
+    void set_wasatch_materials(const Uintah::MaterialSet* const materials) { materials_ = materials; }
+    const Uintah::MaterialSet* const get_wasatch_materials(){ return materials_; }
 
   private:
     bool buildTimeIntegrator_;
+    bool buildWasatchMaterial_;
     int nRKStages_;
     std::set<std::string> ioFieldSet_;
     Uintah::SimulationStateP sharedState_; ///< access to some common things like the current timestep.
-
+    const Uintah::MaterialSet* materials_;
+    
     /**
      *  a container of information for constructing ExprLib graphs.
      *  These are then wrapped as Wasatch::TaskInterface objects and

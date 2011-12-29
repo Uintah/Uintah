@@ -302,7 +302,7 @@ namespace Wasatch {
     typedef SS::ConstValEval BCEvalT; // basic functor for constant functions.
     SCIRun::IntVector patchCellOffset = patch->getCellLowIndex(0); // cell offset used to calculate local cell index with respect to patch.
     SCIRun::IntVector insideCellDir = patch->faceDirection(face);
-//    proc0cout << "SETTING BOUNDARY CONDITION ON "<< fieldName << " FACE:" << face << std::endl;
+    proc0cout << "SETTING BOUNDARY CONDITION ON "<< fieldName << " FACE:" << face << std::endl;
     for( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
       SCIRun::IntVector bc_point_indices(*bound_ptr);
       //std::cout << "bc point indices " << bc_point_indices << std::endl << std::endl;
