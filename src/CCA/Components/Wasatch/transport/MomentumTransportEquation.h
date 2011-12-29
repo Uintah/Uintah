@@ -49,10 +49,18 @@ namespace Wasatch{
                                const Expr::Tag densTag,
                                Expr::ExpressionFactory& factory,
                                Uintah::ProblemSpecP params,
+                               const Expr::ExpressionID rhsID,
                                Uintah::SolverInterface& linSolver);
 
     ~MomentumTransportEquation();
 
+    static Expr::ExpressionID
+    get_mom_rhs_id( Expr::ExpressionFactory& factory,
+                   const std::string velName,
+                   const std::string momName,
+                   Uintah::ProblemSpecP params,
+                   Uintah::SolverInterface& linSolver );
+    
     /**
      *  \brief apply the boundary conditions on the initial condition
      *         associated with this transport equation

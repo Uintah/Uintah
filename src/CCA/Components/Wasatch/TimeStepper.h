@@ -12,6 +12,8 @@
 #include <expression/PlaceHolderExpr.h>
 #include <expression/ExprLib.h>
 
+#include "GraphHelperTools.h"
+
 #include "PatchInfo.h"
 #include "FieldAdaptor.h"
 #include "FieldTypes.h"
@@ -75,10 +77,7 @@ namespace Wasatch{
     YVolFields   yVolFields_;    ///< A vector of the y-volume fields being solved by this time integrator.
     ZVolFields   zVolFields_;    ///< A vector of the z-volume fields being solved by this time integrator.
 
-    typedef std::set< Expr::ExpressionID > RHSIDList;
-    RHSIDList rhsIDs_;  ///< A list of all of the RHS evaluators associated with this integrator.
-
-    Expr::ExpressionFactory* const factory_;  ///< the factory that is associated with this time stepper.
+    GraphHelper* const solnGraphHelper_;
     const Uintah::VarLabel* const deltaTLabel_;  ///< label for the time step variable.
 
     CoordHelper* coordHelper_;   ///< provides ability to obtain coordinate values on any field type.
@@ -128,7 +127,7 @@ namespace Wasatch{
      *                   expressions in each transport equation.
      */
     TimeStepper( const Uintah::VarLabel* deltaTLabel,
-                 Expr::ExpressionFactory& factory );
+                 GraphHelper& solnGraphHelper );
 
     ~TimeStepper();
 
@@ -200,20 +199,20 @@ namespace Wasatch{
   TimeStepper::add_equation( const std::string& solnVarName,
                              Expr::ExpressionID rhsID )
   {
-    const std::string& rhsName = factory_->get_label(rhsID).name();
+    const std::string& rhsName = solnGraphHelper_->exprFactory->get_label(rhsID).name();
     const Uintah::TypeDescription* typeDesc = get_uintah_field_type_descriptor<FieldT>();
     const Uintah::IntVector ghostDesc       = get_uintah_ghost_descriptor<FieldT>();
     Uintah::VarLabel* solnVarLabel = Uintah::VarLabel::create( solnVarName, typeDesc, ghostDesc );
     Uintah::VarLabel* rhsVarLabel  = Uintah::VarLabel::create( rhsName,     typeDesc, ghostDesc );
     std::vector< FieldInfo<FieldT> >& fields = field_info_selctor<FieldT>();
     fields.push_back( FieldInfo<FieldT>( solnVarName, solnVarLabel, rhsVarLabel ) );
-    rhsIDs_.insert( rhsID );
+    //rhsIDs_.insert( rhsID );
     createdVarLabels_.push_back( solnVarLabel );
     createdVarLabels_.push_back( rhsVarLabel );
 
     typedef Expr::PlaceHolder<FieldT>  FieldExpr;
-    factory_->register_expression( new typename FieldExpr::Builder(Expr::Tag(solnVarName,Expr::STATE_N  )) );
-    factory_->register_expression( new typename FieldExpr::Builder(Expr::Tag(solnVarName,Expr::STATE_NP1)) );
+    solnGraphHelper_->exprFactory->register_expression( new typename FieldExpr::Builder(Expr::Tag(solnVarName,Expr::STATE_N  )) );
+    solnGraphHelper_->exprFactory->register_expression( new typename FieldExpr::Builder(Expr::Tag(solnVarName,Expr::STATE_NP1)) );
   }
 
   //==================================================================
