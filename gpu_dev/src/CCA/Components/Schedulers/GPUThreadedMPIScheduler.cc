@@ -429,8 +429,9 @@ void GPUThreadedMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
       // tasks get in this queue automatically when their receive count hits 0
       //   in DependencyBatch::received, which is called when a message is delivered.
       if(queuelength.active()) {
-        if((int)histogram.size()<dts->numExternalReadyTasks()+1)
+        if((int)histogram.size()<dts->numExternalReadyTasks()+1) {
           histogram.resize(dts->numExternalReadyTasks()+1);
+        }
         histogram[dts->numExternalReadyTasks()]++;
       }
 
