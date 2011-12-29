@@ -365,6 +365,9 @@ namespace Uintah {
     DetailedTask* getNextExternalReadyTask();
     int numExternalReadyTasks() { return mpiCompletedTasks_.size(); }
 
+    DetailedTask* getNextGPUReadyTask();
+    int numGPUReadyTasks() { return gpuReadyTasks_.size(); }
+
     void createScrubCounts();
 
     bool mustConsiderInternalDependencies()
@@ -445,9 +448,10 @@ namespace Uintah {
     typedef std::queue<DetailedTask*> TaskQueue;
     typedef std::priority_queue<DetailedTask*, vector<DetailedTask*>, DetailedTaskPriorityComparison> TaskPQueue;
     
-    TaskQueue readyTasks_; 
-    TaskQueue initiallyReadyTasks_;
+    TaskQueue  readyTasks_;
+    TaskQueue  initiallyReadyTasks_;
     TaskPQueue mpiCompletedTasks_;
+    TaskQueue  gpuReadyTasks_;
 
     // This "generation" number is to keep track of which InternalDependency
     // links have been satisfied in the current timestep and avoids the
