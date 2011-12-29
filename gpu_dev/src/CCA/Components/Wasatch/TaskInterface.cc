@@ -255,6 +255,10 @@ namespace Wasatch{
           continue;
         }
 
+        // Use the old DW on the first RK stage.  Thereafter,
+        // we modify the values already in the new DW.
+        fieldInfo.useOldDataWarehouse = (rkStage > 1);
+
         if( fieldTag.context() == Expr::CARRY_FORWARD ){
           fieldInfo.mode = Expr::COMPUTES;
           fieldInfo.useOldDataWarehouse = false;
@@ -283,17 +287,7 @@ namespace Wasatch{
             continue;
           }
 
-
-          if( rkStage==1 ){
-            fieldInfo.mode = Expr::COMPUTES;
-            fieldInfo.useOldDataWarehouse = false;
-          }
-          else{
-            // TSAAD: have a look at this another time. In principle, these should
-            // be Modifies NOT requires, but it does not work when we use MODIFIES
-            fieldInfo.mode = Expr::MODIFIES;
-            fieldInfo.useOldDataWarehouse = false;
-          }
+          fieldInfo.mode = (rkStage==1) ? Expr::COMPUTES : Expr::MODIFIES;
         }
         else if( fieldTag.context() == Expr::STATE_N ){
           fieldInfo.mode = Expr::REQUIRES;
@@ -301,12 +295,7 @@ namespace Wasatch{
         }
         else{
           fieldInfo.mode = Expr::REQUIRES;
-          if( newDWFields.find( fieldTag ) == newDWFields.end() )
-            if( rkStage == 1 )
-              fieldInfo.useOldDataWarehouse = true;
-            else
-              fieldInfo.useOldDataWarehouse = false;
-          else
+          if( newDWFields.find( fieldTag ) != newDWFields.end() )
             fieldInfo.useOldDataWarehouse = false;
         }
         if( tree.name()!="set_time" &&

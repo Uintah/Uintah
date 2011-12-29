@@ -103,7 +103,18 @@ ClassicTableInterface::problemSetup( const ProblemSpecP& propertiesParameters )
   // only solve for heat loss if a working radiation model is found
   const ProblemSpecP params_root = db_classic->getRootNode();
   ProblemSpecP db_enthalpy  =  params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ExplicitSolver")->findBlock("EnthalpySolver");
-  d_allocate_soot = true; 
+  ProblemSpecP db_sources   =  params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("TransportEqns")->findBlock("Sources"); 
+  d_allocate_soot = false; 
+  if ( db_sources ) { 
+    for (ProblemSpecP src_db = db_sources->findBlock("src");
+        src_db !=0; src_db = src_db->findNextBlock("src")){
+      std::string type="null";
+      src_db->getAttribute("type",type); 
+      if ( type == "do_radiation" ){ 
+        d_allocate_soot = true; 
+      } 
+    }
+  } 
   if (db_enthalpy) { 
     ProblemSpecP db_radiation = params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ExplicitSolver")->findBlock("EnthalpySolver")->findBlock("DORadiationModel");
     d_adiabatic = true; 
@@ -111,10 +122,6 @@ ClassicTableInterface::problemSetup( const ProblemSpecP& propertiesParameters )
       proc0cout << "Found a working radiation model -- will implement case with heat loss" << endl;
       d_adiabatic = false; 
       d_allocate_soot = false; // needed for new DORadiation source term 
-    } else { 
-      proc0cout << "No working radiation model found -- will NOT implement case with heat loss" << endl;
-      d_adiabatic = true; 
-      d_allocate_soot = true; // needed for new DORadiation source term
     }
   } else {
     d_adiabatic = true; 

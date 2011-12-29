@@ -43,7 +43,8 @@ SRCS    +=                              \
         $(SRCDIR)/TimeStepper.cc        \
         $(SRCDIR)/Wasatch.cc            \
         $(SRCDIR)/BCHelperTools.cc      \
-        $(SRCDIR)/ConvectiveInterpolationMethods.cc
+        $(SRCDIR)/ConvectiveInterpolationMethods.cc \
+        $(SRCDIR)/WasatchMaterial.cc        
 
 PSELIBS :=                        \
 	Core/Geometry             \
