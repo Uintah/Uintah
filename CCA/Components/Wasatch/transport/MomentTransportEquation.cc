@@ -221,7 +221,20 @@ namespace Wasatch {
                             const Uintah::PatchSet* const localPatches,
                             const PatchInfoMap& patchInfoMap,
                             const Uintah::MaterialSubset* const materials)
-  {  }
+  {  
+    Expr::ExpressionFactory& factory = *graphHelper.exprFactory;
+    const Expr::Tag phiTag( this->solution_variable_name(), Expr::STATE_N );
+    if (factory.have_entry(phiTag)) {
+      process_boundary_conditions<FieldT>( phiTag,
+                                          this->solution_variable_name(),
+                                          this->staggered_location(),
+                                          graphHelper,
+                                          localPatches,
+                                          patchInfoMap,
+                                          materials );
+    }    
+    
+  }
 
   //------------------------------------------------------------------
 
@@ -231,7 +244,18 @@ namespace Wasatch {
                             const Uintah::PatchSet* const localPatches,
                             const PatchInfoMap& patchInfoMap,
                             const Uintah::MaterialSubset* const materials)
-  {  }
+  {  
+    
+    // see BCHelperTools.cc
+    process_boundary_conditions<FieldT>( Expr::Tag( this->solution_variable_name(),
+                                                   Expr::STATE_N ),
+                                        this->solution_variable_name(),
+                                        this->staggered_location(),
+                                        graphHelper,
+                                        localPatches,
+                                        patchInfoMap,
+                                        materials );    
+  }
 
   //------------------------------------------------------------------
 
