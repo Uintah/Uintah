@@ -82,12 +82,11 @@ void GPUSchedulerTest::scheduleInitialize(const LevelP& level, SchedulerP& sched
 //______________________________________________________________________
 //
 void GPUSchedulerTest::scheduleComputeStableTimestep(const LevelP& level, SchedulerP& sched) {
-  Task* multiTask = scinew Task(&GPUSchedulerTest::computeStableTimestepGPU, "GPUSchedulerTest::computeStableTimestepGPU",
-                                "GPUSchedulerTest::computeStableTimestep", this, &GPUSchedulerTest::computeStableTimestep);
+  Task* task = scinew Task("GPUSchedulerTest::computeStableTimestep", this, &GPUSchedulerTest::computeStableTimestep);
 
-  multiTask->requires(Task::NewDW, residual_label);
-  multiTask->computes(sharedState_->get_delt_label(), level.get_rep());
-  sched->addTask(multiTask, level->eachPatch(), sharedState_->allMaterials());
+  task->requires(Task::NewDW, residual_label);
+  task->computes(sharedState_->get_delt_label(), level.get_rep());
+  sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
 }
 //______________________________________________________________________
 //

@@ -47,6 +47,8 @@ DEALINGS IN THE SOFTWARE.
 #include <map>
 #include <set>
 
+#include <sci_defs/cuda_defs.h>
+
 namespace Uintah {
   using SCIRun::Min;
   using SCIRun::Max;
@@ -316,9 +318,12 @@ namespace Uintah {
 
   class DetailedTasks {
   public:
-    DetailedTasks(SchedulerCommon* sc, const ProcessorGroup* pg,
-		  DetailedTasks* first, const TaskGraph* taskgraph, const std::set<int> &neighborhood_processors,
-		  bool mustConsiderInternalDependencies = false);
+    DetailedTasks(SchedulerCommon* sc,
+                  const ProcessorGroup* pg,
+		              DetailedTasks* first,
+		              const TaskGraph* taskgraph,
+		              const std::set<int> &neighborhood_processors,
+		              bool mustConsiderInternalDependencies = false);
     ~DetailedTasks();
 
     void add(DetailedTask* task);
@@ -338,17 +343,16 @@ namespace Uintah {
 				  const Patch* fromPatch,
 				  DetailedTask* to, Task::Dependency* req,
 				  const Patch* toPatch, int matl,
-				  const IntVector& low, const IntVector& high,
-                                  DetailedDep::CommCondition cond);
+				  const IntVector& low, const IntVector& high, DetailedDep::CommCondition cond);
 
     DetailedTask* getOldDWSendTask(int proc);
 
-    void logMemoryUse(ostream& out, unsigned long& total,
-		      const std::string& tag);
+    void logMemoryUse(ostream& out, unsigned long& total, const std::string& tag);
 
     void initTimestep();
     
     void computeLocalTasks(int me);
+
     int numLocalTasks() const {
       return (int)localtasks_.size();
     }
@@ -365,8 +369,11 @@ namespace Uintah {
     DetailedTask* getNextExternalReadyTask();
     int numExternalReadyTasks() { return mpiCompletedTasks_.size(); }
 
+#ifdef HAVE_CUDA
+    void addGPUTask(DetailedTask* task);
     DetailedTask* getNextGPUReadyTask();
     int numGPUReadyTasks() { return gpuReadyTasks_.size(); }
+#endif
 
     void createScrubCounts();
 
@@ -435,8 +442,7 @@ namespace Uintah {
     std::vector<DependencyBatch*> batches_;
     DetailedDep* initreq_;
     
-    // True for mixed scheduler which needs to keep track of internal
-    // depedencies.
+    // True for mixed scheduler which needs to keep track of internal depedencies.
     bool mustConsiderInternalDependencies_;
 
     // In the future, we may want to prioritize tasks for the MixedScheduler
@@ -448,10 +454,12 @@ namespace Uintah {
     typedef std::queue<DetailedTask*> TaskQueue;
     typedef std::priority_queue<DetailedTask*, vector<DetailedTask*>, DetailedTaskPriorityComparison> TaskPQueue;
     
-    TaskQueue  readyTasks_;
-    TaskQueue  initiallyReadyTasks_;
-    TaskPQueue mpiCompletedTasks_;
-    TaskQueue  gpuReadyTasks_;
+    TaskQueue   readyTasks_;
+    TaskQueue   initiallyReadyTasks_;
+    TaskPQueue  mpiCompletedTasks_;
+#ifdef HAVE_CUDA
+    TaskPQueue  gpuReadyTasks_;
+#endif
 
     // This "generation" number is to keep track of which InternalDependency
     // links have been satisfied in the current timestep and avoids the
