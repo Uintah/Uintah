@@ -5330,9 +5330,9 @@ BoundaryCondition::setupBCs( ProblemSpecP& db )
   d_bc_type_to_string.insert( std::make_pair( MASSFLOW_INLET , "MassFlowInlet" ) );
   d_bc_type_to_string.insert( std::make_pair( VELOCITY_FILE  , "VelocityFileInput" ) );
   d_bc_type_to_string.insert( std::make_pair( PRESSURE       , "PressureBC" ) );
-  d_bc_type_to_string.insert( std::make_pair( OUTLET         , "Outlet" ) );
+  d_bc_type_to_string.insert( std::make_pair( OUTLET         , "OutletBC" ) );
   d_bc_type_to_string.insert( std::make_pair( SWIRL          , "Swirl" ) ); 
-  d_bc_type_to_string.insert( std::make_pair( WALL           , "Wall" ) );
+  d_bc_type_to_string.insert( std::make_pair( WALL           , "WallBC" ) );
 
   // Now actually look for the boundary types
   if ( db_bc ) { 
