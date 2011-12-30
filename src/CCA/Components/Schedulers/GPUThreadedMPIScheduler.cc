@@ -73,8 +73,8 @@ static DebugStream queuelength("QueueLength",false);
 static DebugStream threaddbg("ThreadDBG",false);
 
 GPUThreadedMPIScheduler::GPUThreadedMPIScheduler(const ProcessorGroup* myworld,
-			                                           Output* oport,
-			                                           GPUThreadedMPIScheduler* parentScheduler) :
+                                                 Output* oport,
+                                                 GPUThreadedMPIScheduler* parentScheduler) :
   MPIScheduler( myworld, oport, parentScheduler),
   d_nextsignal("next condition"), d_nextmutex("next mutex"), dlbLock( "loadbalancer lock")
 {
@@ -125,13 +125,13 @@ void GPUThreadedMPIScheduler::problemSetup(const ProblemSpecP& prob_spec, Simula
   numThreads_ = Uintah::Parallel::getMaxThreads() - 1;
   if (numThreads_ < 1) {
     if (d_myworld->myrank() == 0) {
-	    cerr << "Error: no thread number specified" << endl;
-	    throw ProblemSetupException("This scheduler requires number of threads > 1, use  -nthreads <num> ", __FILE__, __LINE__);
+      cerr << "Error: no thread number specified" << endl;
+      throw ProblemSetupException("This scheduler requires number of threads > 1, use  -nthreads <num> ", __FILE__, __LINE__);
      }
   } else if (numThreads_ > 32) {
     if (d_myworld->myrank() == 0) {
-	    cerr << "Error: thread number too large" << endl;
-	    throw ProblemSetupException("Too many number of threads. This scheduler only supports up to 32 threads", __FILE__, __LINE__);
+      cerr << "Error: thread number too large" << endl;
+      throw ProblemSetupException("Too many number of threads. This scheduler only supports up to 32 threads", __FILE__, __LINE__);
     }
   }
   
@@ -391,12 +391,12 @@ void GPUThreadedMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
     //unsigned long memuse, highwater, maxMemUse;
     //checkMemoryUse( memuse, highwater, maxMemUse );
 
-    DetailedTask * task = 0;
+    DetailedTask* task = 0;
 
     // if we have an internally-ready task, initiate its recvs
     if (dts->numInternalReadyTasks() > 0) { 
        
-      DetailedTask * task = dts->getNextInternalReadyTask();
+      DetailedTask* task = dts->getNextInternalReadyTask();
 
       if ((task->getTask()->getType() == Task::Reduction) ) { //save the reduction task for later
         if(!abort) {
@@ -411,9 +411,12 @@ void GPUThreadedMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
         }
       }
       else {
+        // post MPI recvs
         initiateTask( task, abort, abort_point, iteration );
+
         task->markInitiated();
         task->checkExternalDepCount();
+
         if (taskdbg.active()) {
           cerrLock.lock();
           taskdbg << d_myworld->myrank() << " Task internal ready " << *task << " deps needed: " << task->getExternalDepCount() << endl;
@@ -424,18 +427,25 @@ void GPUThreadedMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
       }
     }
 
-    while (dts->numExternalReadyTasks() > 0) { //greedly assign tasks
+
+    while (dts->numExternalReadyTasks() > 0 || dts->numGPUReadyTasks() > 0) { //greedily assign tasks
       // run a task that has its communication complete
       // tasks get in this queue automatically when their receive count hits 0
       //   in DependencyBatch::received, which is called when a message is delivered.
-      if(queuelength.active()) {
-        if((int)histogram.size()<dts->numExternalReadyTasks()+1) {
+      if (queuelength.active()) {
+        if ((int)histogram.size() < dts->numExternalReadyTasks()+1) {
           histogram.resize(dts->numExternalReadyTasks()+1);
         }
         histogram[dts->numExternalReadyTasks()]++;
       }
 
-      DetailedTask * task = dts->getNextExternalReadyTask();
+      DetailedTask* task = NULL;
+
+      if (dts->numExternalReadyTasks() > 0) {
+        task = dts->getNextExternalReadyTask();
+      }
+
+
 #ifdef USE_TAU_PROFILING
       int id;
       const PatchSubset* patches = task->getPatches();
@@ -484,6 +494,8 @@ void GPUThreadedMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
       ASSERTEQ(task->getExternalDepCount(), 0);
       assignTask(task, iteration);
       numTasksDone++;
+
+
       //cout << d_myworld->myrank() << " finished task(0) " << *task << " scheduled in phase: " << task->getTask()->d_phase << ", tasks finished in that phase: " <<  phaseTasksDone[task->getTask()->d_phase] << " current phase:" << currphase << endl; 
 #ifdef USE_TAU_PROFILING
       TAU_MAPPING_PROFILE_STOP(doitprofiler);
@@ -493,7 +505,9 @@ void GPUThreadedMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
 
     if (numTasksDone < ntasks) {
       processMPIRecvs(TEST);   // process some MPI
-      if(dts->numExternalReadyTasks()>0 || dts->numInternalReadyTasks()>0 ) {
+      if(dts->numExternalReadyTasks() > 0 ||
+         dts->numInternalReadyTasks() > 0 ||
+         dts->numGPUReadyTasks()      > 0) {
          continue;                          //if we have work to do
       }
       d_nextmutex.lock();
@@ -587,8 +601,7 @@ void GPUThreadedMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
     // Copy the restart flag to all processors
     int myrestart = dws[dws.size()-1]->timestepRestarted();
     int netrestart;
-    MPI_Allreduce(&myrestart, &netrestart, 1, MPI_INT, MPI_LOR,
-        d_myworld->getComm());
+    MPI_Allreduce(&myrestart, &netrestart, 1, MPI_INT, MPI_LOR, d_myworld->getComm());
     if(netrestart) {
       dws[dws.size()-1]->restartTimestep();
       if (dws[0]) {
@@ -616,8 +629,9 @@ void GPUThreadedMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
 
       // go through all materials since getting an MPMMaterial correctly would depend on MPM
       for (int m = 0; m < d_sharedState->getNumMatls(); m++) {
-        if (dw->haveParticleSubset(m, patch))
+        if (dw->haveParticleSubset(m, patch)) {
           numParticles += dw->getParticleSubset(m, patch)->numParticles();
+        }
       }
     }
     d_labels.push_back("NumPatches");

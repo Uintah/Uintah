@@ -46,6 +46,7 @@
 #include <Core/Util/ProgressiveWarning.h>
 
 #include <sci_defs/config_defs.h>
+#include <sci_defs/cuda_defs.h>
 #include <sci_algorithm.h>
 #include <Core/Thread/Mutex.h>
 
@@ -130,7 +131,7 @@ DependencyBatch::~DependencyBatch()
   delete lock_;
 }
 
-  void
+void
 DetailedTasks::assignMessageTags(int me)
 {
   // maps from, to (process) pairs to indices for each batch of that pair
@@ -169,13 +170,13 @@ DetailedTasks::assignMessageTags(int me)
   }
 } // end assignMessageTags()
 
-  void
+void
 DetailedTasks::add(DetailedTask* task)
 {
   tasks_.push_back(task);
 }
 
-  void
+void
 DetailedTasks::computeLocalTasks(int me)
 {
   initiallyReadyTasks_ = TaskQueue();
@@ -194,8 +195,7 @@ DetailedTasks::computeLocalTasks(int me)
 
         if( mixedDebug.active() ) {
           cerrLock.lock();
-          mixedDebug << "Initially Ready Task: " 
-            << task->getTask()->getName() << "\n";
+          mixedDebug << "Initially Ready Task: " << task->getTask()->getName() << "\n";
           cerrLock.unlock();
         }
       }
@@ -1004,6 +1004,7 @@ void DetailedTask::checkExternalDepCount()
   //cout << Parallel::getMPIRank() << " Task " << this->getTask()->getName() << " ext deps: " << externalDependencyCount_ << " int deps: " << numPendingInternalDependencies << endl;
   if (externalDependencyCount_ == 0 && taskGroup->sc_->useInternalDeps() && initiated_ && externallyReady_ == false && (task->getType() != Task::OncePerProc || Uintah::Parallel::getMaxThreads() > 1 )) { 
     //cout << Parallel::getMPIRank() << " Task " << this->getTask()->getName() << " ready\n";
+
     taskGroup->mpiCompletedTasks_.push(this);
     externallyReady_ = true;
   }
@@ -1016,7 +1017,7 @@ void DetailedTask::resetDependencyCounts()
   initiated_ = false;
 }
 
-  void
+void
 DetailedTask::addInternalDependency(DetailedTask* prerequisiteTask,
     const VarLabel* var)
 {
@@ -1042,7 +1043,7 @@ DetailedTask::addInternalDependency(DetailedTask* prerequisiteTask,
   }
 }
 
-  void
+void
 DetailedTask::done(vector<OnDemandDataWarehouseP>& dws)
 {
   // Important to scrub first, before dealing with the internal dependencies
@@ -1159,7 +1160,7 @@ namespace Uintah {
     }
 }
 
-  void
+void
 DetailedTasks::internalDependenciesSatisfied(DetailedTask* task)
 {
   if( mixedDebug.active() ) {
@@ -1186,7 +1187,7 @@ DetailedTasks::internalDependenciesSatisfied(DetailedTask* task)
 #endif
 }
 
-  DetailedTask*
+DetailedTask*
 DetailedTasks::getNextInternalReadyTask()
 {
   // Block until the list has an item in it.
@@ -1202,7 +1203,7 @@ DetailedTasks::getNextInternalReadyTask()
   return nextTask;
 }
 
-  DetailedTask*
+DetailedTask*
 DetailedTasks::getNextExternalReadyTask()
 {
   DetailedTask* nextTask = mpiCompletedTasks_.top();
@@ -1211,7 +1212,21 @@ DetailedTasks::getNextExternalReadyTask()
   return nextTask;
 }
 
-  void
+DetailedTask*
+DetailedTasks::getNextGPUReadyTask()
+{
+  DetailedTask* nextTask = gpuReadyTasks_.top();
+  gpuReadyTasks_.pop();
+  //cout << Parallel::getMPIRank() << "    Getting: " << *nextTask << "  new size: " << gpuReadyTasks_.size() << endl;
+  return nextTask;
+}
+
+void DetailedTasks::addGPUTask(DetailedTask* task)
+{
+  gpuReadyTasks_.push(task);
+}
+
+void
 DetailedTasks::initTimestep()
 {
   readyTasks_ = initiallyReadyTasks_;
