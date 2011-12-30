@@ -42,6 +42,8 @@ DEALINGS IN THE SOFTWARE.
 
 #include   <cstring>
 
+#include <sci_defs/cuda_defs.h>
+
 #define USE_PACKING
 
 using namespace std;
@@ -215,9 +217,22 @@ void GPUThreadedMPIScheduler::runTask(DetailedTask* task, int iteration, int t_i
   //const char* tag = AllocatorSetDefaultTag(task->getTask()->getName());
   }
 
-  // TODO need mechanism to determine which deviceID to use when there are multiple available
-  int device = 0;
-  task->assignDevice(device);
+  // TODO need a better mechanism to determine which deviceID to use when there are multiple available
+  // find the "best" device for cudaSetDevice() , for now this is the one with the most SMs
+  int num_devices, device, max_device;
+  cudaGetDeviceCount(&num_devices);
+  if (num_devices > 1) {
+    int max_multiprocessors = 0;
+    for (device = 0; device < num_devices; device++) {
+      cudaDeviceProp properties;
+      cudaGetDeviceProperties(&properties, device);
+      if (max_multiprocessors < properties.multiProcessorCount) {
+        max_multiprocessors = properties.multiProcessorCount;
+        max_device = device;
+      }
+    }
+  }
+  task->assignDevice(max_device);
   task->doit(d_myworld, dws, plain_old_dws);
   //AllocatorSetDefaultTag(tag);
 

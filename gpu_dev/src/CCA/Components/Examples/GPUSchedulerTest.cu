@@ -43,6 +43,8 @@
 #include <Core/Grid/BoundaryConditions/BCDataArray.h>
 #include <Core/Grid/BoundaryConditions/BoundCond.h>
 
+#include <sci_defs/cuda_defs.h>
+
 using namespace std;
 using namespace Uintah;
 
@@ -206,6 +208,45 @@ void GPUSchedulerTest::initializeGPU(const ProcessorGroup* pg,
 
 //______________________________________________________________________
 //
+// @brief A kernel that applies the stencil used in timeAdvance(...)
+// @param domainSize a three component vector that gives the size of the domain as (x,y,z)
+// @param domainLower a three component vector that gives the lower corner of the work area as (x,y,z)
+// @param ghostLayers the number of layers of ghost cells
+// @param phi pointer to the source phi allocated on the device
+// @param newphi pointer to the sink phi allocated on the device
+__global__ void timeAdvanceTestKernel(uint3 domainSize,
+                                      uint3 domainLower,
+                                      int NGC,
+                                      double *phi,
+                                      double *newphi) {
+
+// calculate the thread indices
+  int tidX = blockDim.x * blockIdx.x + threadIdx.x;
+  int tidY = blockDim.y * blockIdx.y + threadIdx.y;
+
+  int num_slices = domainSize.z - NGC;
+  int dx = domainSize.x;
+  int dy = domainSize.y;
+
+  if (tidX < (dx - NGC) && tidY < (dy - NGC) && tidX > 0 && tidY > 0) {
+    for (int slice = NGC; slice < num_slices; slice++) {
+
+      //__________________________________
+      //  GPU Stencil
+      newphi[INDEX3D(dx, dy, tidX, tidY, slice)] =
+          (1.0 / 6.0)
+          * (phi[INDEX3D(dx, dy, tidX - 1, tidY, slice)]
+             + phi[INDEX3D(dx, dy, tidX + 1, tidY, slice)]
+             + phi[INDEX3D(dx, dy, tidX, tidY - 1, slice)]
+             + phi[INDEX3D(dx, dy, tidX, tidY + 1, slice)]
+             + phi[INDEX3D(dx, dy, tidX, tidY, slice - 1)]
+             + phi[INDEX3D(dx, dy, tidX, tidY, slice + 1)]);
+    }
+  }
+}
+
+//______________________________________________________________________
+//
 void GPUSchedulerTest::timeAdvance(const ProcessorGroup* pg,
                                    const PatchSubset* patches,
                                    const MaterialSubset* matls,
@@ -262,45 +303,83 @@ void GPUSchedulerTest::timeAdvanceGPU(const ProcessorGroup* pg,
                                       DataWarehouse* new_dw,
                                       int device) {
   int matl = 0;
+  int size = 0;
+  int ghostLayers = 1;
 
-  for (int p = 0; p < patches->size(); p++) {
+  // this is to see if we need to release and reallocate between computations
+  int previousPatchSize = 0;
+
+  // declare device and host memory
+  double* newphi_device;
+  double* phi_device;
+  double* phi_host;
+  double* newphi_host;
+
+  cudaSetDevice(device);
+
+  // Do time steps
+  int numPatches = patches->size();
+  for (int p = 0; p < numPatches; p++) {
     const Patch* patch = patches->get(p);
     constNCVariable<double> phi;
+    old_dw->get(phi, phi_label, matl, patch, Ghost::AroundNodes, ghostLayers);
 
-    old_dw->get(phi, phi_label, matl, patch, Ghost::AroundNodes, 1);
     NCVariable<double> newphi;
-
     new_dw->allocateAndPut(newphi, phi_label, matl, patch);
     newphi.copyPatch(phi, newphi.getLowIndex(), newphi.getHighIndex());
 
     double residual = 0;
     IntVector l = patch->getNodeLowIndex();
     IntVector h = patch->getNodeHighIndex();
+    IntVector s = h - l;
+    int xdim = s.x(), ydim = s.y(), zdim = s.z();
+    size = xdim * ydim * zdim * sizeof(double);
 
     l += IntVector(patch->getBCType(Patch::xminus) == Patch::Neighbor ? 0 : 1,
-                   patch->getBCType(Patch::yminus) == Patch::Neighbor ? 0 : 1,
-                   patch->getBCType(Patch::zminus) == Patch::Neighbor ? 0 : 1);
+        patch->getBCType(Patch::yminus) == Patch::Neighbor ? 0 : 1,
+        patch->getBCType(Patch::zminus) == Patch::Neighbor ? 0 : 1);
     h -= IntVector(patch->getBCType(Patch::xplus) == Patch::Neighbor ? 0 : 1,
-                   patch->getBCType(Patch::yplus) == Patch::Neighbor ? 0 : 1,
-                   patch->getBCType(Patch::zplus) == Patch::Neighbor ? 0 : 1);
+        patch->getBCType(Patch::yplus) == Patch::Neighbor ? 0 : 1,
+        patch->getBCType(Patch::zplus) == Patch::Neighbor ? 0 : 1);
 
-    //__________________________________
-    //  Stencil 
-    for (NodeIterator iter(l, h); !iter.done(); iter++) {
-      IntVector n = *iter;
-
-      //std::cout << "When cell is " << n << "   memory location is " << &(phi[n]) << std::endl;
-
-      newphi[n] = (1. / 6)
-                  * (phi[n + IntVector(1, 0, 0)] + phi[n + IntVector(-1, 0, 0)]
-                     + phi[n + IntVector(0, 1, 0)]
-                     + phi[n + IntVector(0, -1, 0)]
-                     + phi[n + IntVector(0, 0, 1)]
-                     + phi[n + IntVector(0, 0, -1)]);
-
-      double diff = newphi[n] - phi[n];
-      residual += diff * diff;
+    // check if we need to reallocate
+    if (size != previousPatchSize) {
+      if (previousPatchSize != 0) {
+        cudaFree(phi_device);
+        cudaFree(newphi_device);
+      }
+      cudaMalloc(&phi_device, size);
+      cudaMalloc(&newphi_device, size);
     }
+
+    //  Memory Allocation
+    phi_host = (double*)phi.getWindow()->getData()->getPointer();
+    newphi_host = (double*)newphi.getWindow()->getData()->getPointer();
+
+    // allocate space on the device
+    cudaMemcpy(phi_device, phi_host, size, cudaMemcpyHostToDevice);
+    cudaMemcpy(newphi_device, newphi_host, size, cudaMemcpyHostToDevice);
+
+    uint3 domainSize = make_uint3(xdim, ydim, zdim);
+    uint3 domainLower = make_uint3(l.x(), l.y(), l.z());
+    int totalBlocks = size / (sizeof(double) * xdim * ydim * zdim);
+    dim3 threadsPerBlock(xdim, ydim, zdim);
+
+    if (size % (totalBlocks) != 0) {
+      totalBlocks++;
+    }
+
+    // launch kernel
+    timeAdvanceTestKernel<<< totalBlocks, threadsPerBlock >>>(domainSize, domainLower, ghostLayers, phi_device, newphi_device);
+
+    cudaDeviceSynchronize();
+    cudaMemcpy(newphi_host, newphi_device, size, cudaMemcpyDeviceToHost);
+
     new_dw->put(sum_vartype(residual), residual_label);
-  }
+
+  }  // end patch for loop
+
+  // free up allocated memory
+  cudaFree(phi_device);
+  cudaFree(newphi_device);
 }
