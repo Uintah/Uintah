@@ -53,7 +53,7 @@ SRCS     += \
 	$(SRCDIR)/AdvectSlabs.cc     \
 	$(SRCDIR)/AdvectSlabsGPU.cu  \
 	$(SRCDIR)/PoissonGPU1.cu     \
-	$(SRCDIR)/GPUSchedulerTest.cc
+	$(SRCDIR)/GPUSchedulerTest.cu
        
 ifeq ($(BUILD_MODELS_RADIATION),yes)
   SRCS +=$(SRCDIR)/RMCRT_Test.cc	
