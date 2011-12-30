@@ -18,7 +18,7 @@
 <Test>
     <Title>1</Title>
     <sus_cmd> sus </sus_cmd>
-    <postProcess_cmd>RMCRT_wrapper  -bm 1 </postProcess_cmd>
+    <postProcess_cmd>RMCRT_wrapper  -bm 1 -L 0</postProcess_cmd>
     <x>1</x>
     <replace_values>
          /Uintah_specification/Grid/Level/Box[@label=0]/resolution :[41,41,41]
@@ -29,7 +29,7 @@
 <Test>
     <Title>2</Title>
     <sus_cmd> sus </sus_cmd>
-    <postProcess_cmd>RMCRT_wrapper  -bm 1</postProcess_cmd>
+    <postProcess_cmd>RMCRT_wrapper  -bm 1 -L 0</postProcess_cmd>
     <x>2</x>
     <replace_values>
          /Uintah_specification/Grid/Level/Box[@label=0]/resolution :[41,41,41]
@@ -39,7 +39,7 @@
 <Test>
     <Title>4</Title>
     <sus_cmd> sus </sus_cmd>
-    <postProcess_cmd>RMCRT_wrapper  -bm 1</postProcess_cmd>
+    <postProcess_cmd>RMCRT_wrapper  -bm 1 -L 0</postProcess_cmd>
     <x>4</x>
     <replace_values>
          /Uintah_specification/Grid/Level/Box[@label=0]/resolution :[41,41,41]
@@ -49,7 +49,7 @@
 <Test>
     <Title>8</Title>
     <sus_cmd> sus </sus_cmd>
-    <postProcess_cmd>RMCRT_wrapper  -bm 1</postProcess_cmd>
+    <postProcess_cmd>RMCRT_wrapper  -bm 1 -L 0</postProcess_cmd>
     <x>8</x>
     <replace_values>
          /Uintah_specification/Grid/Level/Box[@label=0]/resolution :[41,41,41]
@@ -60,7 +60,7 @@
 <Test>
     <Title>16</Title>
     <sus_cmd> sus </sus_cmd>
-    <postProcess_cmd>RMCRT_wrapper  -bm 1</postProcess_cmd>
+    <postProcess_cmd>RMCRT_wrapper  -bm 1 -L 0</postProcess_cmd>
     <x>16</x>
     <replace_values>
          /Uintah_specification/Grid/Level/Box[@label=0]/resolution :[41,41,41]
