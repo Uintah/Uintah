@@ -17,7 +17,7 @@
 <Test>
     <Title>8</Title>
     <sus_cmd> sus </sus_cmd>
-    <postProcess_cmd>RMCRT_wrapper -bm 1</postProcess_cmd>
+    <postProcess_cmd>RMCRT_wrapper -bm 1 -L 0</postProcess_cmd>
     <x>8</x>
     <replace_lines>
       <NoOfRays>          8        </NoOfRays>
@@ -27,7 +27,7 @@
 <Test>
     <Title>16</Title>
     <sus_cmd> sus </sus_cmd>
-    <postProcess_cmd>RMCRT_wrapper  -bm 1</postProcess_cmd>
+    <postProcess_cmd>RMCRT_wrapper  -bm 1 -L 0</postProcess_cmd>
     <x>16</x>
     <replace_lines>
       <NoOfRays>          16        </NoOfRays>
@@ -37,7 +37,7 @@
 <Test>
     <Title>32</Title>
     <sus_cmd> sus </sus_cmd>
-    <postProcess_cmd>RMCRT_wrapper -bm 1</postProcess_cmd>
+    <postProcess_cmd>RMCRT_wrapper -bm 1 -L 0</postProcess_cmd>
     <x>32</x>
     <replace_lines>
       <NoOfRays>          32        </NoOfRays>
@@ -47,7 +47,7 @@
 <Test>
     <Title>64</Title>
     <sus_cmd> sus </sus_cmd>
-    <postProcess_cmd>RMCRT_wrapper -bm 1</postProcess_cmd>
+    <postProcess_cmd>RMCRT_wrapper -bm 1 -L 0</postProcess_cmd>
     <x>64</x>
     <replace_lines>
       <NoOfRays>          64        </NoOfRays>
@@ -57,7 +57,7 @@
 <Test>
     <Title>128</Title>
     <sus_cmd> sus </sus_cmd>
-    <postProcess_cmd>RMCRT_wrapper -bm 1</postProcess_cmd>
+    <postProcess_cmd>RMCRT_wrapper -bm 1 -L 0</postProcess_cmd>
     <x>128</x>
     <replace_lines>
       <NoOfRays>          128        </NoOfRays>

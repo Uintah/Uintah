@@ -306,7 +306,7 @@ if (benchmark == 1)
 elseif (benchmark == 2 )
   [divQ_exact] = benchMark2(x_CC);
 elseif (benchmark == 3 )
-  [divQ_exact] = benchMark2(x_CC);
+  [divQ_exact] = benchMark3(x_CC);
 end
 
 %______________________________
