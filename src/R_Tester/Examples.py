@@ -25,7 +25,7 @@ from helpers.runSusTests import runSusTests
 #  3) Performance_tests are not run on a debug build.
 #______________________________________________________________________
 NIGHTLYTESTS = [   ("poisson1",         "poisson1.ups",         1, "ALL"),
-                   ("RMCRT_test_1L",    "RMCRT_test_1L.ups",    1, "ALL", ["exactComparison"]), ]
+                   ("RMCRT_test_1L",    "RMCRT_test_1L.ups",    1, "ALL", ["exactComparison"]),
                    ("RMCRT_1L_reflect", "RMCRT_1L_reflect.ups", 1, "ALL", ["exactComparison"]) ]
 
 # Tests that are run during local regression testing
