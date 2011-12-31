@@ -41,7 +41,6 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Arches/RHSSolver.h>
 #include <CCA/Components/Arches/Radiation/DORadiationModel.h>
 #include <CCA/Components/Arches/Radiation/RadPetscSolver.h>
-#include <CCA/Components/Arches/Radiation/RadiationModel.h>
 #include <CCA/Components/Arches/Source.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermBase.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermFactory.h>
@@ -114,7 +113,7 @@ EnthalpySolver::problemSetup(const ProblemSpecP& params)
     d_DORadiationCalc = true;
     d_radiationCalc   = true; 
     d_DORadiation = scinew DORadiationModel( d_lab, d_MAlab, d_boundaryCondition, d_myworld);
-    d_DORadiation->problemSetup(db);
+    d_DORadiation->problemSetup(db, false);
   }
 
   if (db->findBlock("RMCRT")){

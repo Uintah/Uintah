@@ -85,7 +85,7 @@ public:
       virtual ~RadiationModel();
 
 
-      virtual void problemSetup(ProblemSpecP& params) = 0;
+      virtual void problemSetup(ProblemSpecP& params, bool stand_alone_src) = 0;
  
 
       virtual void computeRadiationProps(const ProcessorGroup*,

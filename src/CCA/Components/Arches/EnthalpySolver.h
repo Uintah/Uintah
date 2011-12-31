@@ -87,7 +87,7 @@ namespace Uintah {
   class Source;
   class BoundaryCondition;
   class RHSSolver;
-  class RadiationModel;
+  class DORadiationModel;
   class Ray; 
   class TimeIntegratorLabel;
 
@@ -207,7 +207,7 @@ private:
   
   
   // radiation models
-  RadiationModel* d_DORadiation;
+  DORadiationModel* d_DORadiation;
   Ray* d_RMCRT;
   bool d_radiationCalc;
   bool d_DORadiationCalc;
