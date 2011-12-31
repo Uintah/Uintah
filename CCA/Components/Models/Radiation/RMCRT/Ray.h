@@ -67,7 +67,7 @@ namespace Uintah{
                const int mat_id);
 
     private: 
-      
+      enum DIR {X, Y, Z, NONE};
       double _pi;
       double _alphaEW;//absorptivity of the East and West walls
       double _alphaNS;//absorptivity of the North and South walls
