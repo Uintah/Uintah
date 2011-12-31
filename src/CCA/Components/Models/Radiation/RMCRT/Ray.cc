@@ -346,15 +346,6 @@ Ray::rayTrace( const ProcessorGroup* pc,
         if(_isSeedRandom == false){
           _mTwister.seed((i + j +k) * iRay +1);
         }
-        
-        double DyDxRatio = Dx.y() / Dx.x(); //noncubic
-        double DzDxRatio = Dx.z() / Dx.x(); //noncubic
-
-        Vector ray_location;
-        Vector ray_location_prev;
-        ray_location[0] =   i +  _mTwister.rand() ;
-        ray_location[1] =   j +  _mTwister.rand() * DyDxRatio ; //noncubic
-        ray_location[2] =   k +  _mTwister.rand() * DzDxRatio ; //noncubic
 
         // see http://www.cgafaq.info/wiki/aandom_Points_On_Sphere for explanation
 
@@ -380,6 +371,15 @@ Ray::rayTrace( const ProcessorGroup* pc,
             sign[ii] = 0;//
           }
         }
+        
+        double DyDxRatio = Dx.y() / Dx.x(); //noncubic
+        double DzDxRatio = Dx.z() / Dx.x(); //noncubic
+
+        Vector ray_location;
+        Vector ray_location_prev;
+        ray_location[0] =   i +  _mTwister.rand() ;
+        ray_location[1] =   j +  _mTwister.rand() * DyDxRatio ; //noncubic
+        ray_location[2] =   k +  _mTwister.rand() * DzDxRatio ; //noncubic
 
         double tMaxX = (i + sign[0]             - ray_location[0]) * inv_direction_vector[0];
         double tMaxY = (j + sign[1] * DyDxRatio - ray_location[1]) * inv_direction_vector[1];
