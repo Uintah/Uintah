@@ -36,7 +36,6 @@
 SRCDIR := CCA/Components/Arches/Radiation
 
 SRCS += \
-        $(SRCDIR)/RadiationModel.cc   \
         $(SRCDIR)/RadiationSolver.cc  \
         $(SRCDIR)/DORadiationModel.cc
 
