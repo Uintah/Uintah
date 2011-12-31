@@ -15,7 +15,7 @@
     <initTime>      0.0       </initTime>
     <delt_min>      0.00001   </delt_min>
     <delt_max>      1         </delt_max>
-    <max_Timesteps> 1         </max_Timesteps>
+    <max_Timesteps> 10         </max_Timesteps>
     <timestep_multiplier>  1  </timestep_multiplier>
   </Time>
   <!--__________________________________-->
