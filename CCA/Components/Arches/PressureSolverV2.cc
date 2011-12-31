@@ -365,7 +365,18 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
     discrete->calculatePressDiagonal(patch, &vars);
 
     d_boundaryCondition->pressureBC(patch, d_indx, &vars, &constVars);
-    
+
+    //if( patch->containsCell(d_pressRef)){
+    //  Stencil7& A = vars.pressCoeff[d_pressRef];
+    //  A.e = 0.0;
+    //  A.w = 0.0;
+    //  A.n = 0.0;
+    //  A.s = 0.0;
+    //  A.t = 0.0;
+    //  A.b = 0.0;
+    //  A.p = 1.0;
+    //  vars.pressNonlinearSrc[d_pressRef] = 1.0;
+    //}
   }
   delete discrete;
 }
@@ -855,6 +866,7 @@ PressureSolver::calculatePressureCoeff(const Patch* patch,
     A.t *= -1.0; 
     A.b *= -1.0;
   }
+
 }
 
 
