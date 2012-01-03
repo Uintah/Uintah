@@ -218,6 +218,8 @@ private:
 
   bool d_norm_press;
   bool d_do_only_last_projection;
+  bool d_use_ref_point; 
+  double d_ref_value; 
   
   SolverInterface* d_hypreSolver;
   SolverParameters* d_hypreSolver_parameters;

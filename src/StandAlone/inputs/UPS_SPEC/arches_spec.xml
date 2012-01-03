@@ -373,6 +373,8 @@
           <normalize_pressure           spec="OPTIONAL BOOLEAN" /> 
           <src                          spec="MULTIPLE NO_DATA" 
                                         attribute1="label REQUIRED STRING"/>
+          <use_ref_point                spec="OPTIONAL NO_DATA"
+                                        attribute1="value REQUIRED DOUBLE"/> 
         <Parameters                     spec="OPTIONAL NO_DATA"
                                           attribute1="variable OPTIONAL STRING 'implicitPressure'" >
           <initial_tolerance            spec="OPTIONAL DOUBLE 'positive'"/>

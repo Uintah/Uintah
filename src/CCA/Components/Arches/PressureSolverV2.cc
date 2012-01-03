@@ -101,6 +101,13 @@ PressureSolver::problemSetup(ProblemSpecP& params)
   db->getWithDefault("normalize_pressure",      d_norm_press, false);
   db->getWithDefault("do_only_last_projection", d_do_only_last_projection, false);
 
+  //fix pressure at a point.
+  d_use_ref_point = false; 
+  if ( db->findBlock("use_ref_point") ){ 
+    d_use_ref_point = true; 
+    db->findBlock("use_ref_point")->getAttribute("value", d_ref_value); 
+  } 
+
   // make source and boundary_condition objects
   d_source = scinew Source(d_physicalConsts);
   
@@ -366,17 +373,22 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
 
     d_boundaryCondition->pressureBC(patch, d_indx, &vars, &constVars);
 
-    //if( patch->containsCell(d_pressRef)){
-    //  Stencil7& A = vars.pressCoeff[d_pressRef];
-    //  A.e = 0.0;
-    //  A.w = 0.0;
-    //  A.n = 0.0;
-    //  A.s = 0.0;
-    //  A.t = 0.0;
-    //  A.b = 0.0;
-    //  A.p = 1.0;
-    //  vars.pressNonlinearSrc[d_pressRef] = 1.0;
-    //}
+    if( patch->containsCell(d_pressRef) && d_use_ref_point ){
+      if ( constVars.cellType[d_pressRef] != -1 ){ 
+        ostringstream msg;
+        msg << "\n ERROR:Arches:PressureSolver  Reference point is not a flow cell.\n";
+        throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
+      } 
+      Stencil7& A = vars.pressCoeff[d_pressRef];
+      A.e = 0.0;
+      A.w = 0.0;
+      A.n = 0.0;
+      A.s = 0.0;
+      A.t = 0.0;
+      A.b = 0.0;
+      A.p = 1.0;
+      vars.pressNonlinearSrc[d_pressRef] = 1.0;
+    }
   }
   delete discrete;
 }
