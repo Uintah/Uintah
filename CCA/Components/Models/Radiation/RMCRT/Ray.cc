@@ -650,7 +650,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
 
       double SumI = 0;
       
-      vector<Vector> tMax(maxLevels);
+      Vector tMax;
       vector<Vector> tDelta(maxLevels);
 
       //__________________________________
@@ -700,13 +700,13 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
         // define tMax & tDelta on all levels
         // go from finest to coarset level so you can compare 
         // with 1L rayTrace results.
+       // Vector randNum = Vector(_mTwister.rand(), _mTwister.rand(), _mTwister.rand());
+        
+        tMax.x( (sign[0]  - _mTwister.rand())            * inv_direction[0] );  
+        tMax.y( (sign[1]  - _mTwister.rand()) * DyDx[L]  * inv_direction[1] );  
+        tMax.z( (sign[2]  - _mTwister.rand()) * DzDx[L]  * inv_direction[2] );  
+        
         for(int Lev = maxLevels-1; Lev>-1; Lev--){
-          
-          tMax[Lev].x( (sign[0]  - _mTwister.rand())              * inv_direction[0] );
-          tMax[Lev].y( (sign[1]  - _mTwister.rand()) * DyDx[Lev]  * inv_direction[1] );
-          tMax[Lev].z( (sign[2]  - _mTwister.rand()) * DzDx[Lev]  * inv_direction[2] );
-//          dbg2 << "lev " << Lev << " sign " << sign[0] << " inv_direction " << inv_direction << " tMaxX " << tMax[Lev].x() << endl;
-
           //Length of t to traverse one cell
           tDelta[Lev].x( abs(inv_direction[0]) );
           tDelta[Lev].y( abs(inv_direction[1]) * DyDx[Lev] );
@@ -720,6 +720,8 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
         double fs             = 1.0;
         int    nReflect       = 0;             // Number of reflections
         double optical_thickness = 0;
+        bool   onFinePatch    = true;
+        const Level* level    = fineLevel;
 
         //______________________________________________________________________
         //  Threshold  loop
@@ -737,16 +739,17 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
             
             //__________________________________
             //  Determine the princple direction the ray is traveling
+            //
             DIR dir = NONE;
-            if (tMax[L].x() < tMax[L].y()){
-              if (tMax[L].x() < tMax[L].z()){
+            if (tMax.x() < tMax.y()){
+              if (tMax.x() < tMax.z()){
                 dir = X;
               } else {
                 dir = Z;
               }
             }
             else {
-              if(tMax[L].y() <tMax[L].z()){
+              if(tMax.y() <tMax.z()){
                 dir = Y;
               } else {
                 dir = Z;
@@ -757,20 +760,31 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
             cur[dir]  = cur[dir] + step[dir];
             
             //__________________________________
-            // Jump to the coarser level?
-            if( ! finePatch->containsCell(cur) ){
-              cur = fineLevel->mapCellToCoarser(cur); 
-              const Level* level = fineLevel->getCoarserLevel().get_rep();
+            // Logic for moving between levels
+            // currently you can only move  from fine to coarse level
+            if( onFinePatch && finePatch->containsCell(cur) == false ){
+              cur   = level->mapCellToCoarser(cur); 
+              level = level->getCoarserLevel().get_rep();
               level->findInteriorCellIndexRange(domainLo, domainHi);     // excluding extraCells
-              L = level->getIndex();
-              dbg2 << " switching Levels:  L: " << L << " cur " << cur << endl;
+              L     = level->getIndex();
+              onFinePatch = false;
+              dbg2 << " Jumping off fine patch switching Levels:  prev L: " << prevLev << " cur L " << L << " cur " << cur << endl;
+              
+            }    // TODD: CLEAN THIS UP
+            else if ( onFinePatch == false && level->containsCell(cur) == false && L > 0 ){
+              cout << " Trying to switch : L " << L << endl;
+              cur   = level->mapCellToCoarser(cur); 
+              level = level->getCoarserLevel().get_rep();
+              level->findInteriorCellIndexRange(domainLo, domainHi); 
+              L     = level->getIndex();
+              dbg2 << " Switching Levels:  prev L: " << prevLev << " cur L " << L << " cur " << cur << endl;
             }
             
             //__________________________________
             //  update marching variables
-            disMin        = tMax[L][dir] - tMax_prev;        // Todd:   replace tMax[L][dir]
-            tMax_prev     = tMax[L][dir];
-            tMax[L][dir]  = tMax[L][dir] + tDelta[L][dir];
+            disMin        = tMax[dir] - tMax_prev;        // Todd:   replace tMax[dir]
+            tMax_prev     = tMax[dir];
+            tMax[dir]     = tMax[dir] + tDelta[L][dir];
             face          = dir;
      
 
@@ -784,7 +798,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
 
             // The running total of alpha*length
             double optical_thickness_prev = optical_thickness;
-            optical_thickness += Dx[prevLev].x() * abskg[prevLev][prevCell]*disMin; //as long as tDelta[L].y(),Z tMax[L].y(),Z and ray_location[1],[2]..
+            optical_thickness += Dx[prevLev].x() * abskg[prevLev][prevCell]*disMin; //as long as tDelta[L].y(),Z tMax.y(),Z and ray_location[1],[2]..
             // were adjusted by DyDxRatio or DzDxRatio, this line is now correct for noncubic domains.
 
             size++;
@@ -820,6 +834,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
             // apply reflection condition
             step[face] *= -1;                      // begin stepping in opposite direction
             sign[face] = (sign[face]==1) ? 0 : 1;  //  swap sign from 1 to 0 or vice versa
+            dbg2 << " REFLECTING " << endl;
           }  // if reflection
         }  // threshold while loop.
       }  // Ray loop
@@ -859,6 +874,74 @@ Ray::containsCell(const IntVector &low, const IntVector &high, const IntVector &
           high.z() > cell.z();
 }
 
+
+//---------------------------------------------------------------------------
+// 
+//---------------------------------------------------------------------------
+void
+Ray::sched_setBoundaryConditions( const LevelP& level, 
+                                  SchedulerP& sched )
+{
+
+  std::string taskname = "Ray::sched_setBoundaryConditions";
+  Task* tsk= scinew Task( taskname, this, &Ray::setBoundaryConditions );
+
+  printSchedule(level,dbg,taskname);
+
+  tsk->modifies(d_sigmaT4_label); 
+  tsk->modifies(d_abskgLabel);
+
+  sched->addTask( tsk, level->eachPatch(), d_matlSet );
+}
+//---------------------------------------------------------------------------
+void
+Ray::setBoundaryConditions( const ProcessorGroup*,
+                            const PatchSubset* patches,           
+                            const MaterialSubset*,                
+                            DataWarehouse*,                
+                            DataWarehouse* new_dw )               
+{
+
+  for (int p=0; p < patches->size(); p++){
+
+    const Patch* patch = patches->get(p);
+    
+    vector<Patch::FaceType> bf;
+    patch->getBoundaryFaces(bf);
+    
+    if( bf.size() > 0){
+    
+      printTask(patches,patch,dbg,"Doing Ray::setBoundaryConditions");
+
+      double sigma_over_pi = _sigma/M_PI;
+
+      CCVariable<double> temp;
+      CCVariable<double> abskg;
+      CCVariable<double> sigmaT4Pi;
+
+      new_dw->allocateTemporary(temp,  patch);
+      new_dw->getModifiable( abskg,     d_abskgLabel,    d_matl, patch );
+      new_dw->getModifiable( sigmaT4Pi, d_sigmaT4_label,  d_matl, patch );
+
+      setBC(abskg, d_abskgLabel->getName(),       patch, d_matl);
+      setBC(temp,  d_temperatureLabel->getName(), patch, d_matl);
+
+      //__________________________________
+      // loop over boundary faces and compute sigma T^4
+      for( vector<Patch::FaceType>::const_iterator itr = bf.begin(); itr != bf.end(); ++itr ){
+        Patch::FaceType face = *itr;
+
+        Patch::FaceIteratorType PEC = Patch::ExtraPlusEdgeCells;
+
+        for(CellIterator iter=patch->getFaceIterator(face, PEC); !iter.done();iter++) {
+          const IntVector& c = *iter;
+          double T_sqrd = temp[c] * temp[c];
+          sigmaT4Pi[c] = sigma_over_pi * T_sqrd * T_sqrd;
+        }
+      } 
+    } // has a boundaryFace
+  }
+}
 
 //______________________________________________________________________
 //  Set Boundary conditions
