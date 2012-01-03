@@ -387,7 +387,7 @@ void RMCRT_Test::pseudoCFD ( const ProcessorGroup*,
 
       for ( CellIterator iter(patch->getExtraCellIterator()); !iter.done(); iter++) {
         IntVector c(*iter);
-        color[c] = color_old[c] + 0.01 * divQ[c];
+        color[c] = color_old[c] - 0.000015 * divQ[c];
       }
       
       // set boundary conditions 
