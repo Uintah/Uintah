@@ -306,6 +306,7 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
     for (int l = 0; l < maxLevels-1; l++) {
       const LevelP& level = grid->getLevel(l);
       scheduleCoarsenAll (level, sched);
+      d_realRMCRT->sched_setBoundaryConditions( level, sched );
     }
     
     // only schedule RMCRT and pseudoCFD on the finest level    

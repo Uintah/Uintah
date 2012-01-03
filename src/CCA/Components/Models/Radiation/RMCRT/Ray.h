@@ -34,6 +34,8 @@ namespace Uintah{
       Ray(); 
       ~Ray(); 
 
+      //__________________________________
+      //  TASKS
       /** @brief Interface to input file information */
       void  problemSetup( const ProblemSpecP& inputdb ); 
 
@@ -52,8 +54,16 @@ namespace Uintah{
                           SchedulerP& sched );
 
       /** @brief Initializes properties for the algorithm */ 
-      void sched_initProperties( const LevelP&, SchedulerP& sched, const int time_sub_step );
+      void sched_initProperties( const LevelP&, 
+                                 SchedulerP& sched, 
+                                 const int time_sub_step );
+                                 
+      /** @brief Set boundary conditions and compute sigmaT4 */
+      void  sched_setBoundaryConditions( const LevelP& level, 
+                                         SchedulerP& sched );
       
+      //__________________________________
+      //  Helpers
       /** @brief map the component VarLabels to RMCRT VarLabels */
      void registerVarLabels(int   matl,
                             const VarLabel*  abskg,
@@ -132,6 +142,12 @@ namespace Uintah{
     //______________________________________________________________________
     //   Boundary Conditions
 
+      void setBoundaryConditions( const ProcessorGroup*,
+                                  const PatchSubset* patches,           
+                                  const MaterialSubset*,                
+                                  DataWarehouse*,                
+                                  DataWarehouse* new_dw );
+                                  
     int numFaceCells(const Patch* patch,
                      const Patch::FaceIteratorType type,
                      const Patch::FaceType face);
