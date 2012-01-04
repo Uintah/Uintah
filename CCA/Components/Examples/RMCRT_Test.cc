@@ -384,10 +384,16 @@ void RMCRT_Test::pseudoCFD ( const ProcessorGroup*,
       old_dw->get(color_old,  d_colorLabel, d_matl, patch, d_gn,0);       
       
       color.initialize(0.0);
-
+      
+      const double rhoSTP = 118.39; // density at standard temp and pressure [g/m^3] 
+      double deltaTime = 0.0243902; // !! Should be dynamic
+      const double specHeat = 1.012; // specific heat [J/K]
+      double rho = 0;
       for ( CellIterator iter(patch->getExtraCellIterator()); !iter.done(); iter++) {
         IntVector c(*iter);
-        color[c] = color_old[c] - 0.000015 * divQ[c];
+        // rho = rhoSTP *298 / 1500; // more accurate, but "hard codes" temperature to 1500 
+        rho = rhoSTP * 298 / color[c]; // calculate density based on ideal gas law
+        color[c] = color_old[c] - (1/rho) * (1/specHeat) * deltaTime * divQ[c];
       }
       
       // set boundary conditions 
