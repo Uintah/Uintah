@@ -230,6 +230,11 @@ namespace Uintah {
                               DataWarehouse*,
                               DataWarehouse* new_dw);
 
+      void setVelFromExtraValue__NEW( const Patch* patch, const Patch::FaceType& face, 
+        SFCXVariable<double>& uVel, SFCYVariable<double>& vVel, SFCZVariable<double>& wVel,
+        constCCVariable<double>& density, 
+        Iterator bound_ptr, Vector value );
+
       void setVel__NEW( const Patch* patch, const Patch::FaceType& face, 
         SFCXVariable<double>& uVel, SFCYVariable<double>& vVel, SFCZVariable<double>& wVel, 
         constCCVariable<double>& density, 
