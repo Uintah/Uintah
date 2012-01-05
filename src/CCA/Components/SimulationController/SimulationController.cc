@@ -164,7 +164,7 @@ namespace Uintah {
       }
     }
 
-    // query all the events to find which are supported, flag those that are unsupported
+    // query all the events to find that are supported, flag those that are unsupported
     // WAIT_FOR_DEBUGGER();
     for (map<int, PapiEvent>::iterator iter=d_papiEvents.begin(); iter!=d_papiEvents.end(); iter++) {
     	retp = PAPI_query_event(iter->first);
@@ -186,7 +186,7 @@ namespace Uintah {
       }
     }
 
-    // iterate through valid events map, add valid events to the event set, remove those that cannot be added
+    // iterate through PAPI events that are supported, flag those that cannot be added
     d_eventValues = scinew long long[d_papiEvents.size()];
     int index = 0;
     for(map<int ,PapiEvent>::iterator iter=d_papiEvents.begin(); iter!=d_papiEvents.end(); iter++) {
@@ -215,7 +215,9 @@ namespace Uintah {
   SimulationController::~SimulationController()
   {
     delete d_timeinfo;
+#ifdef USE_PAPI_COUNTERS
     delete d_eventValues;
+#endif
   }
 
   void SimulationController::doCombinePatches(std::string fromDir, bool reduceUda)
