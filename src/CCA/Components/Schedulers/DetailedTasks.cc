@@ -1426,6 +1426,8 @@ string DetailedTask::getName() const
   return name_;
 }
 
+/*comparing the priority of two detailed tasks
+ True means give rtask priority*/
 bool DetailedTaskPriorityComparison::operator() (DetailedTask*& ltask, DetailedTask*& rtask) {
   QueueAlg alg = ltask->getTaskGroup()->getTaskPriorityAlg();
   ASSERT(alg == rtask->getTaskGroup()->getTaskPriorityAlg());
@@ -1435,11 +1437,9 @@ bool DetailedTaskPriorityComparison::operator() (DetailedTask*& ltask, DetailedT
   if (alg == Random) return (random()%2==0);   //Random;
   
   if (ltask->getTask()->getSortedOrder() > rtask->getTask()->getSortedOrder()){
-   // cout << "task order" << ltask->getTask()->getSortedOrder() << " > " << rtask->getTask()->getSortedOrder() << endl;
     return true;
   }
   if (ltask->getTask()->getSortedOrder() < rtask->getTask()->getSortedOrder()){
-   // cout << "task order" << ltask->getTask()->getSortedOrder() << " < " << rtask->getTask()->getSortedOrder() << endl;
     return false;
   }
   

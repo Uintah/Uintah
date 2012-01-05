@@ -118,7 +118,7 @@ WARNING
     void postMPISends( DetailedTask* task, int iteration );
 
     void runTask( DetailedTask* task, int iteration );
-    void runReductionTask( DetailedTask* task );        
+    void runReductionTask( DetailedTask* task, int ncomm = 0);        
 
     void addToSendList(const MPI_Request& request, int bytes, AfterCommunicationHandler* buf, const std::string& var);
 
@@ -159,7 +159,7 @@ WARNING
     mpi_timing_info_s     mpi_info_;
     MPIScheduler* parentScheduler;
     // Performs the reduction task. (In Mixed, gives the task to a thread.)    
-    virtual void initiateReduction( DetailedTask          * task );    
+    virtual void initiateReduction( DetailedTask          * task, int tag=0);    
   protected:
     // Runs the task. (In Mixed, gives the task to a thread.)
     virtual void initiateTask( DetailedTask          * task,
