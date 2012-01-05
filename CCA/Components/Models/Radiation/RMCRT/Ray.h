@@ -137,7 +137,8 @@ namespace Uintah{
       //__________________________________
       inline bool containsCell(const IntVector &low, 
                                const IntVector &high, 
-                               const IntVector &cell);
+                               const IntVector &cell,
+                               const int &face);
 
     //______________________________________________________________________
     //   Boundary Conditions

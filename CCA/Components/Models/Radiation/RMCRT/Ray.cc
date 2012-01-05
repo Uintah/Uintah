@@ -452,7 +452,7 @@ Ray::rayTrace( const ProcessorGroup* pc,
               }
             }
 
-            in_domain = containsCell(domainLo, domainHi, cur);
+            in_domain = containsCell(domainLo, domainHi, cur, face);
 
             //__________________________________
             //  Update the ray location
@@ -788,7 +788,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
             face          = dir;
      
 
-            in_domain = containsCell(domainLo, domainHi, cur);
+            in_domain = containsCell(domainLo, domainHi, cur, face);
 
             //__________________________________
             //  Update the ray location
@@ -864,14 +864,10 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
 
 //______________________________________________________________________
 inline bool
-Ray::containsCell(const IntVector &low, const IntVector &high, const IntVector &cell)
+Ray::containsCell(const IntVector &low, const IntVector &high, const IntVector &cell, const int &face)
 {
-  return  low.x() <= cell.x() && 
-          low.y() <= cell.y() &&
-          low.z() <= cell.z() &&
-          high.x() > cell.x() && 
-          high.y() > cell.y() &&
-          high.z() > cell.z();
+  return  low[face] <= cell[face] &&
+          high[face] > cell[face];
 }
 
 
