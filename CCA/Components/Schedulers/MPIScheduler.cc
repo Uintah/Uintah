@@ -209,7 +209,7 @@ MPIScheduler::initiateTask( DetailedTask          * task,
 } // end initiateTask()
 
 void
-MPIScheduler::initiateReduction( DetailedTask          * task )
+MPIScheduler::initiateReduction( DetailedTask          * task, int ncomm)
 {
   TAU_PROFILE("MPIScheduler::initiateReduction()", " ", TAU_USER); 
   {
@@ -218,7 +218,7 @@ MPIScheduler::initiateReduction( DetailedTask          * task )
 
     double reducestart = Time::currentSeconds();
 
-    runReductionTask(task);
+    runReductionTask(task, ncomm);
 
     double reduceend = Time::currentSeconds();
 
@@ -307,13 +307,13 @@ MPIScheduler::runTask( DetailedTask         * task, int iteration)
 } // end runTask()
 
 void
-MPIScheduler::runReductionTask( DetailedTask         * task )
+MPIScheduler::runReductionTask( DetailedTask         * task, int ncomm)
 {
   const Task::Dependency* mod = task->getTask()->getModifies();
   ASSERT(!mod->next);
   
   OnDemandDataWarehouse* dw = dws[mod->mapDataWarehouse()].get_rep();
-  dw->reduceMPI(mod->var, mod->reductionLevel, mod->matls, task->getTask()->d_phase);
+  dw->reduceMPI(mod->var, mod->reductionLevel, mod->matls, ncomm);
   task->done(dws);
 
   cerrLock.lock(); taskdbg << d_myworld->myrank() << " Completed: \t";

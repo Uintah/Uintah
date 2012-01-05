@@ -110,7 +110,6 @@ WARNING
     
     Output*       oport_t;
     CommRecMPI            sends_[16+1];
-    //map<Thread*, CommReMPI> tsends_;
     ThreadedMPIScheduler(const ThreadedMPIScheduler&);
     ThreadedMPIScheduler& operator=(const ThreadedMPIScheduler&);
     
@@ -147,10 +146,10 @@ private:
   Mutex d_runmutex;
   ConditionVariable d_runsignal;
   bool                   d_quit;
+  double                 d_waittime;
+  double                 d_waitstart;
   int                    d_rank;
   CommRecMPI            d_sends_;
-  double                 d_waitstart;
-  double                 d_waittime;
 };
 
 } // End namespace Uintah
