@@ -123,16 +123,16 @@ class DataArchive;
       void initSimulationStatsVars ( void );
       void printSimulationStats    ( int timestep, double delt, double time );
 
-      ProblemSpecP d_ups;
-      ProblemSpecP d_grid_ps;         // Problem Spec for the Grid
-      SimulationStateP d_sharedState;
-      SchedulerP d_scheduler;
-      LoadBalancer* d_lb;
-      Output* d_output;
-      SimulationTime* d_timeinfo;
+      ProblemSpecP         d_ups;
+      ProblemSpecP         d_grid_ps;         // Problem Spec for the Grid
+      SimulationStateP     d_sharedState;
+      SchedulerP           d_scheduler;
+      LoadBalancer*        d_lb;
+      Output*              d_output;
+      SimulationTime*      d_timeinfo;
       SimulationInterface* d_sim;
-      Regridder* d_regridder;
-      DataArchive* d_archive;
+      Regridder*           d_regridder;
+      DataArchive*         d_archive;
 
       bool d_doAMR;
       bool d_doMultiTaskgraphing;
@@ -158,12 +158,21 @@ class DataArchive;
       bool d_restartRemoveOldDir;
 
 #ifdef USE_PAPI_COUNTERS
-      /*
-       * NOTE: the size of the d_eventValues array should be equal to the
-       * number of PAPI events added to the event set in SimulationController.cc
-       */
-      int       d_eventSet;            // PAPI event set
-      long long d_eventValues[5];      // PAPI event set values
+      int                    d_eventSet;            // PAPI event set
+      long long*             d_eventValues;         // PAPI event set values
+      struct PapiEvent {
+    	  int    eventValueIndex;
+    	  string name;
+    	  string simStatName;
+    	  bool   isSupported;
+    	  PapiEvent(string _name, string _simStatName)
+    	  	  : name(_name), simStatName(_simStatName)
+    	  {
+    		  eventValueIndex = -1;
+    		  isSupported = false;
+    	  }
+      };
+      std::map<int, PapiEvent> d_papiEvents;
 #endif
 
 

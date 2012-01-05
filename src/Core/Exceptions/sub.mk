@@ -50,7 +50,8 @@ SRCS   += \
           $(SRCDIR)/ProblemSetupException.cc  \
           $(SRCDIR)/TypeMismatchException.cc  \
           $(SRCDIR)/UintahPetscError.cc       \
-          $(SRCDIR)/VariableNotFoundInGrid.cc 
+          $(SRCDIR)/VariableNotFoundInGrid.cc \
+          $(SRCDIR)/PapiInitializationError.cc
 
 PSELIBS := 
 LIBS := $(TRACEBACK_LIB) $(DL_LIBRARY)
