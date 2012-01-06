@@ -303,21 +303,20 @@ void GPUSchedulerTest::timeAdvanceGPU(const ProcessorGroup* pg,
                                       DataWarehouse* new_dw,
                                       int device) {
   int matl = 0;
-  int size = 0;
   int ghostLayers = 1;
-
-  // this is to see if we need to release and reallocate between computations
-  int previousPatchSize = 0;
 
   // declare device and host memory
   double* newphi_device;
   double* phi_device;
   double* phi_host;
+  double* phi_hostPinned;
   double* newphi_host;
+  double* newphi_hostPinned;
 
-  cudaSetDevice(device);
+  CUDA_SAFE_CALL( cudaSetDevice(device) );
 
   // Do time steps
+  int previousPatchSize = 0; // see if we need to release and reallocate between computations
   int numPatches = patches->size();
   for (int p = 0; p < numPatches; p++) {
     const Patch* patch = patches->get(p);
@@ -333,7 +332,6 @@ void GPUSchedulerTest::timeAdvanceGPU(const ProcessorGroup* pg,
     IntVector h = patch->getNodeHighIndex();
     IntVector s = h - l;
     int xdim = s.x(), ydim = s.y(), zdim = s.z();
-    size = xdim * ydim * zdim * sizeof(double);
 
     l += IntVector(patch->getBCType(Patch::xminus) == Patch::Neighbor ? 0 : 1,
         patch->getBCType(Patch::yminus) == Patch::Neighbor ? 0 : 1,
@@ -343,37 +341,41 @@ void GPUSchedulerTest::timeAdvanceGPU(const ProcessorGroup* pg,
         patch->getBCType(Patch::zplus) == Patch::Neighbor ? 0 : 1);
 
     // check if we need to reallocate
-    if (size != previousPatchSize) {
+    int nbytes = xdim * ydim * zdim * sizeof(double);
+    if (nbytes != previousPatchSize) {
       if (previousPatchSize != 0) {
-        cudaFree(phi_device);
-        cudaFree(newphi_device);
+        CUDA_SAFE_CALL( cudaFree(phi_device) );
+        CUDA_SAFE_CALL( cudaFree(newphi_device) );
       }
-      cudaMalloc(&phi_device, size);
-      cudaMalloc(&newphi_device, size);
+      // use host alloc so we can use pinned mem for async API
+      cutilSafeCall( cudaMallocHost((void**)&phi_hostPinned, nbytes) );
+      cutilSafeCall( cudaMallocHost((void**)&newphi_hostPinned, nbytes) );
+
+      // now the malloc device mem
+      CUDA_SAFE_CALL( cudaMalloc((void**)&phi_device, nbytes) );
+      CUDA_SAFE_CALL( cudaMalloc((void**)&newphi_device, nbytes) );
     }
 
     //  Memory Allocation
     phi_host = (double*)phi.getWindow()->getData()->getPointer();
+    CUDA_SAFE_CALL( cudaMemcpy(phi_hostPinned, phi_host, nbytes, cudaMemcpyHostToHost) );
     newphi_host = (double*)newphi.getWindow()->getData()->getPointer();
+    CUDA_SAFE_CALL( cudaMemcpy(newphi_hostPinned, newphi_host, nbytes, cudaMemcpyHostToHost) );
 
-    // allocate space on the device
-    cudaMemcpy(phi_device, phi_host, size, cudaMemcpyHostToDevice);
-    cudaMemcpy(newphi_device, newphi_host, size, cudaMemcpyHostToDevice);
-
+    // configure kernel launch
     uint3 domainSize = make_uint3(xdim, ydim, zdim);
     uint3 domainLower = make_uint3(l.x(), l.y(), l.z());
-    int totalBlocks = size / (sizeof(double) * xdim * ydim * zdim);
+    int totalBlocks = nbytes / (sizeof(double) * xdim * ydim * zdim);
     dim3 threadsPerBlock(xdim, ydim, zdim);
-
-    if (size % (totalBlocks) != 0) {
+    if (nbytes % (totalBlocks) != 0) {
       totalBlocks++;
     }
 
-    // launch kernel
+    // async copy host2device -> launch kernel -> async host2device
+    cudaMemcpyAsync(phi_device, phi_hostPinned, nbytes, cudaMemcpyHostToDevice);
+    cudaMemcpyAsync(newphi_device, newphi_hostPinned, nbytes, cudaMemcpyHostToDevice);
     timeAdvanceTestKernel<<< totalBlocks, threadsPerBlock >>>(domainSize, domainLower, ghostLayers, phi_device, newphi_device);
-
-    cudaDeviceSynchronize();
-    cudaMemcpy(newphi_host, newphi_device, size, cudaMemcpyDeviceToHost);
+    cudaMemcpyAsync(newphi_host, newphi_device, nbytes, cudaMemcpyDeviceToHost);
 
     new_dw->put(sum_vartype(residual), residual_label);
 
@@ -381,5 +383,7 @@ void GPUSchedulerTest::timeAdvanceGPU(const ProcessorGroup* pg,
 
   // free up allocated memory
   cudaFree(phi_device);
+  cudaFreeHost(phi_hostPinned);
   cudaFree(newphi_device);
+  cudaFreeHost(newphi_hostPinned);
 }
