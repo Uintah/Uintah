@@ -51,17 +51,27 @@ GENERAL INFORMATION
     Copyright U of U 2002
 
 ***************************************************************************/
-#include <CCA/Components/Arches/Radiation/RadiationModel.h>
+//#include <CCA/Components/Arches/Radiation/RadiationModel.h>
 #include <CCA/Components/Arches/Radiation/RadiationSolver.h>
 #include <CCA/Components/Arches/TimeIntegratorLabel.h>
+#include <CCA/Components/Arches/ArchesVariables.h>
+#include <CCA/Components/Arches/ArchesConstVariables.h>
+#include <CCA/Components/Arches/Arches.h>
+#include <CCA/Ports/SchedulerP.h>
+#include <CCA/Ports/DataWarehouseP.h>
+#include <Core/Grid/LevelP.h>
+#include <Core/Grid/Patch.h>
+#include <Core/Grid/Variables/VarLabel.h>
 
 namespace Uintah {
   class ArchesLabel;
   class BoundaryCondition;
 
-class DORadiationModel: public RadiationModel {
+class DORadiationModel{
 
 public:
+
+      RadiationSolver* d_linearSolver;
 
       DORadiationModel(const ArchesLabel* label,
                        const MPMArchesLabel* MAlab,
@@ -72,7 +82,7 @@ public:
       virtual ~DORadiationModel();
 
 
-      virtual void problemSetup(ProblemSpecP& params);
+      virtual void problemSetup(ProblemSpecP& params, bool stand_alone_src );
 
       virtual void computeRadiationProps(const ProcessorGroup* pc,
                                          const Patch* patch,
@@ -187,6 +197,8 @@ protected:
 
 private:
 
+      void computeOpticalLength();
+      double d_opl; // optical length
       const ProcessorGroup* d_myworld;
       const ArchesLabel*    d_lab;
       const MPMArchesLabel* d_MAlab;
@@ -201,7 +213,6 @@ private:
       void computeOrdinatesOPL();
       
       int d_lambda;
-      double  d_opl;
       int ffield;
       bool lradcal, lwsgg, lplanckmean, lpatchmean;
       //not clear if these work so forcing them to be switched off: 

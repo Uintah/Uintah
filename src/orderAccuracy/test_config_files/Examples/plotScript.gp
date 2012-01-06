@@ -37,16 +37,16 @@ fit f3(x) 'L2norm.dat' using 1:4 via a3, b3
 
 
 set label 'x_Error = a * (#Rays)^b' at screen 0.2,0.4
-set label 'a = %3.5g',a1      at screen 0.2,0.375
-set label 'b = %3.5g',b1      at screen 0.2,0.35
+set label 'a = %14.15g',a1      at screen 0.2,0.375
+set label 'b = %14.15g',b1      at screen 0.2,0.35
 
 set label 'y_Error = a * (#Rays)^b' at screen 0.2,0.3
-set label 'a = %3.5g',a2      at screen 0.2,0.275
-set label 'b = %3.5g',b2      at screen 0.2,0.25
+set label 'a = %14.15g',a2      at screen 0.2,0.275
+set label 'b = %14.15g',b2      at screen 0.2,0.25
 
 set label 'z_Error = a * (#Rays)^b' at screen 0.2,0.2
-set label 'a = %3.5g',a3      at screen 0.2,0.175
-set label 'b = %3.5g',b3      at screen 0.2,0.15
+set label 'a = %14.15g',a3      at screen 0.2,0.175
+set label 'b = %14.15g',b3      at screen 0.2,0.15
 
 
 plot 'L2norm.dat' using 1:2 t 'X Error' with points, \

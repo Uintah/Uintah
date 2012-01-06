@@ -41,7 +41,7 @@
 
 namespace Uintah{
 
-  class RadiationModel; 
+  class DORadiationModel; 
   class ArchesLabel; 
   class BoundaryCondition; 
 
@@ -103,7 +103,7 @@ private:
   std::string _T_label_name; 
   std::string _abskp_label_name; 
 
-  RadiationModel* _DO_model; 
+  DORadiationModel* _DO_model; 
   ArchesLabel*    _labels; 
   MPMArchesLabel* _MAlab;
   BoundaryCondition* _bc; 

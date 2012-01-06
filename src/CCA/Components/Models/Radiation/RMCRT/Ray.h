@@ -34,21 +34,36 @@ namespace Uintah{
       Ray(); 
       ~Ray(); 
 
+      //__________________________________
+      //  TASKS
       /** @brief Interface to input file information */
       void  problemSetup( const ProblemSpecP& inputdb ); 
 
-      /** @brief Algorithm for tracing rays through a patch */ 
+      /** @brief Algorithm for tracing rays through a single level*/ 
       void sched_rayTrace( const LevelP& level, 
                            SchedulerP& sched, 
                            const int time_sub_step );
+                           
+      /** @brief Algorithm for RMCRT using multilevel dataOnion approach*/ 
+      void sched_rayTrace_dataOnion( const LevelP& level, 
+                                     SchedulerP& sched, 
+                                     const int time_sub_step );
 
       /** @brief Schedule compute of blackbody intensity */ 
       void sched_sigmaT4( const LevelP& level, 
                           SchedulerP& sched );
 
       /** @brief Initializes properties for the algorithm */ 
-      void sched_initProperties( const LevelP&, SchedulerP& sched, const int time_sub_step );
+      void sched_initProperties( const LevelP&, 
+                                 SchedulerP& sched, 
+                                 const int time_sub_step );
+                                 
+      /** @brief Set boundary conditions and compute sigmaT4 */
+      void  sched_setBoundaryConditions( const LevelP& level, 
+                                         SchedulerP& sched );
       
+      //__________________________________
+      //  Helpers
       /** @brief map the component VarLabels to RMCRT VarLabels */
      void registerVarLabels(int   matl,
                             const VarLabel*  abskg,
@@ -62,7 +77,7 @@ namespace Uintah{
                const int mat_id);
 
     private: 
-      
+      enum DIR {X, Y, Z, NONE};
       double _pi;
       double _alphaEW;//absorptivity of the East and West walls
       double _alphaNS;//absorptivity of the North and South walls
@@ -91,19 +106,26 @@ namespace Uintah{
 
       //----------------------------------------
       void rayTrace( const ProcessorGroup* pc, 
-          const PatchSubset* patches, 
-          const MaterialSubset* matls, 
-          DataWarehouse* old_dw, 
-          DataWarehouse* new_dw,
-          const int time_sub_step ); 
+                     const PatchSubset* patches, 
+                     const MaterialSubset* matls, 
+                     DataWarehouse* old_dw, 
+                     DataWarehouse* new_dw,
+                     const int time_sub_step ); 
+      //__________________________________
+      void rayTrace_dataOnion( const ProcessorGroup* pc, 
+                               const PatchSubset* patches, 
+                               const MaterialSubset* matls, 
+                               DataWarehouse* old_dw, 
+                               DataWarehouse* new_dw,
+                               const int time_sub_step );
       
       //----------------------------------------
       void initProperties( const ProcessorGroup* pc, 
-          const PatchSubset* patches, 
-          const MaterialSubset* matls, 
-          DataWarehouse* old_dw, 
-          DataWarehouse* new_dw,
-          int time_sub_step ); 
+                           const PatchSubset* patches, 
+                           const MaterialSubset* matls, 
+                           DataWarehouse* old_dw, 
+                           DataWarehouse* new_dw,
+                           int time_sub_step ); 
 
       //----------------------------------------
       void sigmaT4( const ProcessorGroup* pc,
@@ -115,11 +137,18 @@ namespace Uintah{
       //__________________________________
       inline bool containsCell(const IntVector &low, 
                                const IntVector &high, 
-                               const IntVector &cell);
+                               const IntVector &cell,
+                               const int &face);
 
     //______________________________________________________________________
     //   Boundary Conditions
 
+      void setBoundaryConditions( const ProcessorGroup*,
+                                  const PatchSubset* patches,           
+                                  const MaterialSubset*,                
+                                  DataWarehouse*,                
+                                  DataWarehouse* new_dw );
+                                  
     int numFaceCells(const Patch* patch,
                      const Patch::FaceIteratorType type,
                      const Patch::FaceType face);

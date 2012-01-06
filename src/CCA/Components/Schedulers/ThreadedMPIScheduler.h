@@ -76,10 +76,10 @@ WARNING
   class ThreadedMPIScheduler : public MPIScheduler  {
   public:
     ThreadedMPIScheduler(const ProcessorGroup* myworld, Output* oport, ThreadedMPIScheduler* parentScheduler = 0);
-
      ~ThreadedMPIScheduler();
     
-    virtual void problemSetup(const ProblemSpecP& prob_spec, SimulationStateP& state);
+    virtual void problemSetup(const ProblemSpecP& prob_spec,
+                              SimulationStateP& state);
       
     virtual SchedulerP createSubScheduler();
     
@@ -93,12 +93,10 @@ WARNING
     
     void assignTask( DetailedTask* task, int iteration);
     
-    ConditionVariable      d_nextsignal;
-    Mutex                  d_nextmutex;   // conditional wait mutex
-    TaskWorker*            t_worker[16];  // workers
+    ConditionVariable     d_nextsignal;
+    Mutex                  d_nextmutex;   //conditional wait mutex
+    TaskWorker*            t_worker[16];  //workers
     Thread*                t_thread[16];
-    Mutex                  dlbLock;       // load balancer lock
-
     /*Thread share data*/
     /*
     ConditionVariable*     t_runsignal[16];  //signal from sheduler to task
@@ -106,18 +104,17 @@ WARNING
     DetailedTask*          t_task[16];     //current running tasks;
     int                    t_iteration[16];     //current running tasks;
     */
-
+    Mutex                  dlbLock;   //load balancer lock
     
   private:
     
-    Output*                oport_t;
-    CommRecMPI             sends_[16+1];
-    QueueAlg               taskQueueAlg_;
-    int                    numThreads_;
-
+    Output*       oport_t;
+    CommRecMPI            sends_[16+1];
     ThreadedMPIScheduler(const ThreadedMPIScheduler&);
     ThreadedMPIScheduler& operator=(const ThreadedMPIScheduler&);
-
+    
+    QueueAlg taskQueueAlg_;
+    int numThreads_;
     int getAviableThreadNum();
   };
 

@@ -266,9 +266,12 @@ if(ts == 999) % default
 end
 %________________________________
 % extract the grid information from the uda file
+% at the right level
 c0 = sprintf('puda -gridstats %s >& tmp',uda); unix(c0);
+c1 = sprintf('sed -n /"Level: index %i"/,/"Total Number of Cells"/{p} tmp >& tmp.clean',level);
+unix(c1);
 
-[s,r1] = unix('grep -m1 -w "Total Number of Cells" tmp |cut -d":" -f2 | tr -d "[]int"');
+[s,r1] = unix('grep -m1 -w "Total Number of Cells" tmp.clean |cut -d":" -f2 | tr -d "[]int"');
 [s,r2] = unix('grep -m1 -w "Domain Length" tmp |cut -d":" -f2 | tr -d "[]"');
 
 resolution = str2num(r1);
@@ -293,7 +296,7 @@ elseif(pDir == 3)
   startEnd = sprintf('-istart %i  %i    %i  -iend   %i  %i   %i',xHalf, yHalf,   0,    xHalf, yHalf, resolution(zDir)-1);
 end
 
-c1 = sprintf('lineextract -v %s -l %i -cellCoords -timestep %i %s -o divQ.dat -m %i -uda %s','divQ >& /dev/null',level,ts-1,startEnd,mat,uda);
+c1 = sprintf('lineextract -v %s -l %i -cellCoords -timestep %i %s -o divQ.dat -m %i -uda %s >&/dev/null','divQ',level,ts-1,startEnd,mat,uda);
 [s1, r1] = unix(c1);
 
 divQ_sim = load('divQ.dat');
@@ -306,7 +309,7 @@ if (benchmark == 1)
 elseif (benchmark == 2 )
   [divQ_exact] = benchMark2(x_CC);
 elseif (benchmark == 3 )
-  [divQ_exact] = benchMark2(x_CC);
+  [divQ_exact] = benchMark3(x_CC);
 end
 
 %______________________________
@@ -325,7 +328,7 @@ if (nargv > 0)
 end
 
 % cleanup 
-unix('/bin/rm divQ.dat tmp');
+unix('/bin/rm divQ.dat tmp tmp.clean');
 
 %______________________________
 % Plot the results

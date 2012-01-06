@@ -119,7 +119,7 @@ WARNING
                              
                              
     void scheduleShootRays_multiLevel(SchedulerP& sched,
-                                      const PatchSet* patches,
+                                      const LevelP& level,
                                       const MaterialSet* matls);
     
     void shootRays_multiLevel( const ProcessorGroup*,

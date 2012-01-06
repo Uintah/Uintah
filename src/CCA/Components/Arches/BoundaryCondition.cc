@@ -2659,14 +2659,9 @@ BoundaryCondition::velRhoHatInletBC(const Patch* patch,
             bound_ptr.reset(); 
 
             if ( bc_iter->second.type == VELOCITY_INLET || bc_iter->second.type == MASSFLOW_INLET ) { 
-              //---- set velocities
-              //if ( face == Patch::xminus || face == Patch::xplus ) { 
-                setVel__NEW( patch, face, vars->uVelRhoHat, vars->vVelRhoHat, vars->wVelRhoHat, constvars->new_density, bound_ptr, bc_iter->second.velocity ); 
-              //} else if ( face == Patch::yminus || face == Patch::yplus ){ 
-              //  setVel__NEW( patch, face, vars->vVelRhoHat, vars->wVelRhoHat, vars->uVelRhoHat, constvars->new_density, bound_ptr, bc_iter->second.velocity ); 
-              //} else if ( face == Patch::zminus || face == Patch::zplus ){ 
-              //  setVel__NEW( patch, face, vars->wVelRhoHat, vars->uVelRhoHat, vars->vVelRhoHat, constvars->new_density, bound_ptr, bc_iter->second.velocity ); 
-              //} 
+
+              setVel__NEW( patch, face, vars->uVelRhoHat, vars->vVelRhoHat, vars->wVelRhoHat, constvars->new_density, bound_ptr, bc_iter->second.velocity ); 
+
             } else if ( bc_iter->second.type == SWIRL ) { 
 
               if ( face == Patch::xminus || face == Patch::xplus ) { 
@@ -2690,11 +2685,10 @@ BoundaryCondition::velRhoHatInletBC(const Patch* patch,
               } 
 
             } else if ( bc_iter->second.type == VELOCITY_FILE ) {
-              //---- set velocities
-              //setVelFromInput__NEW( patch, face, uVelocity, vVelocity, wVelocity, bound_ptr, bc_iter->second.filename ); 
-              //---- set the enthalpy
-              //if ( d_enthalpySolve ) 
-              //  setEnthalpyFromInput__NEW( patch, face, enthalpy, ivGridVarMap, allIndepVarNames, bound_ptr ); 
+
+              setVelFromExtraValue__NEW( patch, face, vars->uVelRhoHat, vars->vVelRhoHat, vars->wVelRhoHat, constvars->new_density, bound_ptr, bc_iter->second.velocity ); 
+              //enthalpy? 
+
             }
 
           }
@@ -2702,7 +2696,6 @@ BoundaryCondition::velRhoHatInletBC(const Patch* patch,
       }
     }
   } 
-  
 }
 
 //****************************************************************************
@@ -5330,9 +5323,9 @@ BoundaryCondition::setupBCs( ProblemSpecP& db )
   d_bc_type_to_string.insert( std::make_pair( MASSFLOW_INLET , "MassFlowInlet" ) );
   d_bc_type_to_string.insert( std::make_pair( VELOCITY_FILE  , "VelocityFileInput" ) );
   d_bc_type_to_string.insert( std::make_pair( PRESSURE       , "PressureBC" ) );
-  d_bc_type_to_string.insert( std::make_pair( OUTLET         , "Outlet" ) );
+  d_bc_type_to_string.insert( std::make_pair( OUTLET         , "OutletBC" ) );
   d_bc_type_to_string.insert( std::make_pair( SWIRL          , "Swirl" ) ); 
-  d_bc_type_to_string.insert( std::make_pair( WALL           , "Wall" ) );
+  d_bc_type_to_string.insert( std::make_pair( WALL           , "WallBC" ) );
 
   // Now actually look for the boundary types
   if ( db_bc ) { 
@@ -5759,7 +5752,9 @@ BoundaryCondition::setupBCInletVelocities__NEW(const ProcessorGroup*,
                 break; 
 
               case ( VELOCITY_FILE ): 
-                // here we should read in the file 
+                // here we should read in the file ???
+                // do nothing I believe....
+                // things are handled in setInitProfile. 
 
                 break; 
               default: 
@@ -6123,6 +6118,91 @@ void BoundaryCondition::setVel__NEW( const Patch* patch, const Patch::FaceType& 
  }
 }
 
+void BoundaryCondition::setVelFromExtraValue__NEW( const Patch* patch, const Patch::FaceType& face, 
+        SFCXVariable<double>& uVel, SFCYVariable<double>& vVel, SFCZVariable<double>& wVel,
+        constCCVariable<double>& density, 
+        Iterator bound_ptr, Vector value )
+{
+
+ //get the face direction
+ IntVector insideCellDir = patch->faceDirection(face);
+
+ switch ( face ) {
+
+   case Patch::xminus :
+
+     for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
+
+       IntVector c  = *bound_ptr; 
+       IntVector cp = *bound_ptr - insideCellDir; 
+
+       uVel[cp] = uVel[c] * density[c] / ( 0.5 * ( density[c] + density[cp] )); 
+
+     }
+
+     break; 
+   case Patch::xplus: 
+
+     for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
+
+       IntVector c  = *bound_ptr; 
+       IntVector cp = *bound_ptr - insideCellDir; 
+
+       uVel[cp] = uVel[c] * density[c] / ( 0.5 * ( density[c] + density[cp] )); 
+
+     }
+     break; 
+   case Patch::yminus: 
+
+     for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
+
+       IntVector c  = *bound_ptr; 
+       IntVector cp = *bound_ptr - insideCellDir; 
+
+       vVel[cp] = vVel[c] * density[c] / ( 0.5 * ( density[c] + density[cp] )); 
+
+     }
+     break; 
+   case Patch::yplus: 
+
+     for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
+
+       IntVector c  = *bound_ptr; 
+       IntVector cp = *bound_ptr - insideCellDir; 
+
+       vVel[cp] = vVel[c] * density[c] / ( 0.5 * ( density[c] + density[cp] )); 
+
+     }
+     break; 
+   case Patch::zminus: 
+
+     for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
+
+       IntVector c  = *bound_ptr; 
+       IntVector cp = *bound_ptr - insideCellDir; 
+
+       wVel[cp] = wVel[c] * density[c] / ( 0.5 * ( density[c] + density[cp] )); 
+
+     }
+     break; 
+   case Patch::zplus: 
+
+     for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
+
+       IntVector c  = *bound_ptr; 
+       IntVector cp = *bound_ptr - insideCellDir; 
+
+       wVel[cp] = wVel[c] * density[c] / ( 0.5 * ( density[c] + density[cp] )); 
+
+     }
+     break; 
+   default:
+
+     break;
+
+ }
+}
+
 void BoundaryCondition::setVelFromInput__NEW( const Patch* patch, const Patch::FaceType& face, 
         SFCXVariable<double>& uVel, SFCYVariable<double>& vVel, SFCZVariable<double>& wVel,
         Iterator bound_ptr, std::string file_name )
@@ -6145,6 +6225,10 @@ void BoundaryCondition::setVelFromInput__NEW( const Patch* patch, const Patch::F
     input_files.insert( make_pair( varname, which_file)).first; 
   }
   gzclose( file ); 
+
+  if ( total_variables == 0 ){ 
+    throw ProblemSetupException("Error: Number of variables in reference file is zero! See file: " + file_name, __FILE__, __LINE__);
+  } 
 
   typedef std::map<IntVector, double> CellToValue; 
   CellToValue u_input; 
