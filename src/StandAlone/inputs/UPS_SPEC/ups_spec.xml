@@ -322,7 +322,7 @@
         <xymax                         spec="REQUIRED VECTOR" /> 
         <thickness                     spec="REQUIRED DOUBLE" /> 
         <normal                        spec="REQUIRED VECTOR" /> 
-        <corr_edge                     spec="REQUIRED STRING 'y+, y-'" />
+        <corr_edge                     spec="REQUIRED STRING 'x+, x-, y+, y-'" />
         <curve                         spec="REQUIRED STRING 'sin'" />
         <wavelength                    spec="REQUIRED DOUBLE" /> 
         <amplitude                     spec="REQUIRED DOUBLE" /> 
