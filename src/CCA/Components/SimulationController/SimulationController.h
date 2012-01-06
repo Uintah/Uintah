@@ -168,7 +168,7 @@ class DataArchive;
     	  PapiEvent(string _name, string _simStatName)
     	  	  : name(_name), simStatName(_simStatName)
     	  {
-    		  eventValueIndex = -1;
+    		  eventValueIndex = 0;
     		  isSupported = false;
     	  }
       };

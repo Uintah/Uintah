@@ -151,16 +151,16 @@ namespace Uintah {
     if (retp != PAPI_VER_CURRENT) {
       if (d_myworld->myrank() == 0) {
         cout << "WARNNING: Cannot initialize PAPI library! Error code = " << retp << endl;
-        throw PapiInitializationError("Fatal PAPI library initialization error. Check that your PAPI build can be initialized correctly.", __FILE__, __LINE__);
       }
+      throw PapiInitializationError("PAPI library initialization error occurred. Check that your PAPI library can be initialized correctly.", __FILE__, __LINE__);
     }
     retp = PAPI_thread_init(pthread_self);
     if (retp != PAPI_OK) {
       if (d_myworld->myrank() == 0) {
         cout << "WARNNING: Cannot initialize PAPI thread support! Error code = " << retp << endl;
-        if (Parallel::getMaxThreads() < 1) {
-        	throw PapiInitializationError("Fatal PAPI Pthread initialization error. Check that your PAPI build supports Pthreads.", __FILE__, __LINE__);
-        }
+      }
+      if (Parallel::getMaxThreads() > 1) {
+      	throw PapiInitializationError("PAPI Pthread initialization error occurred. Check that your PAPI build supports Pthreads.", __FILE__, __LINE__);
       }
     }
 
@@ -184,6 +184,7 @@ namespace Uintah {
       if (d_myworld->myrank() == 0) {
         cout << "WARNNING: Cannot create PAPI event set! Error code = " << retp << endl;
       }
+      throw PapiInitializationError("PAPI event set creation error. Unable to create hardware counter event set.", __FILE__, __LINE__);
     }
 
     // iterate through PAPI events that are supported, flag those that cannot be added
@@ -208,6 +209,7 @@ namespace Uintah {
       if (d_myworld->myrank() == 0) {
         cout << "WARNNING: Cannot start PAPI event set! Error code = " << retp << endl;
       }
+      throw PapiInitializationError("PAPI event set start error. Unable to start hardware counter event set.", __FILE__, __LINE__);
     }
 #endif
   } // end SimulationController constructor
@@ -632,11 +634,7 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
     if (d_myworld->myrank() == 0) {
       cout << "WARNNING: Cannot read PAPI event set! Error value = " << retp << endl;
     }
-    flop      = 0;
-    vflop     = 0;
-    l1_misses = 0;
-    l2_misses = 0;
-    l3_misses = 0;
+    throw PapiInitializationError("PAPI read error. Unable to read hardware event set values.", __FILE__, __LINE__);
   } else {
 	  flop      = (double) d_eventValues[d_papiEvents.find(PAPI_FP_OPS)->second.eventValueIndex];
 	  vflop     = (double) d_eventValues[d_papiEvents.find(PAPI_DP_OPS)->second.eventValueIndex];
@@ -645,11 +643,13 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
 	  l3_misses = (double) d_eventValues[d_papiEvents.find(PAPI_L3_TCM)->second.eventValueIndex];
   }
 
+  // zero the values in the hardware counter event set array
   retp = PAPI_reset(d_eventSet);
   if (retp != PAPI_OK) {
     if (d_myworld->myrank() == 0) {
       cout << "WARNNING: Cannot reset PAPI event set! Error value = " << retp << endl;
     }
+    throw PapiInitializationError("PAPI reset error on hardware event set. Unable to reset event set values.", __FILE__, __LINE__);
   }
 #endif
 
