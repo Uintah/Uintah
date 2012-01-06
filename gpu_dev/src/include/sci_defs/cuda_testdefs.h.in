@@ -39,6 +39,7 @@
 #  include <cutil.h>
 #  include <cuda_runtime_api.h>
 #  include <cuda_runtime.h>
+#  include <cutil_inline.h>
 #endif
 
 #endif
