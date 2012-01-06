@@ -97,6 +97,7 @@ namespace Uintah{
       bool _benchmark_1; 
       bool _benchmark_13pt2;
       bool _isSeedRandom;
+      bool _solveBoundaryFlux;
 
       const VarLabel* d_sigmaT4_label; 
       const VarLabel* d_abskgLabel;
