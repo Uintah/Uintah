@@ -257,7 +257,7 @@ namespace Wasatch{
 
         // Use the old DW on the first RK stage.  Thereafter,
         // we modify the values already in the new DW.
-        fieldInfo.useOldDataWarehouse = (rkStage > 1);
+        fieldInfo.useOldDataWarehouse = (rkStage < 1);
 
         if( fieldTag.context() == Expr::CARRY_FORWARD ){
           fieldInfo.mode = Expr::COMPUTES;
@@ -291,7 +291,7 @@ namespace Wasatch{
         }
         else if( fieldTag.context() == Expr::STATE_N ){
           fieldInfo.mode = Expr::REQUIRES;
-          fieldInfo.useOldDataWarehouse = true;
+          fieldInfo.useOldDataWarehouse = (rkStage < 2);
         }
         else{
           fieldInfo.mode = Expr::REQUIRES;

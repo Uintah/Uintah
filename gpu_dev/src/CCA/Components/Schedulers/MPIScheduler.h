@@ -100,7 +100,8 @@ WARNING
     MPIScheduler(const ProcessorGroup* myworld, Output* oport, MPIScheduler* parentScheduler = 0);
     virtual ~MPIScheduler();
       
-    virtual void problemSetup(const ProblemSpecP& prob_spec, SimulationStateP& state);
+    virtual void problemSetup(const ProblemSpecP& prob_spec,
+                              SimulationStateP& state);
       
     //////////
     // Insert Documentation Here:
@@ -117,7 +118,7 @@ WARNING
     void postMPISends( DetailedTask* task, int iteration );
 
     void runTask( DetailedTask* task, int iteration );
-    void runReductionTask( DetailedTask* task );        
+    void runReductionTask( DetailedTask* task, int ncomm = 0);        
 
     void addToSendList(const MPI_Request& request, int bytes, AfterCommunicationHandler* buf, const std::string& var);
 
@@ -155,12 +156,10 @@ WARNING
         }
       }
     }
-    mpi_timing_info_s  mpi_info_;
-    MPIScheduler*      parentScheduler;
-
+    mpi_timing_info_s     mpi_info_;
+    MPIScheduler* parentScheduler;
     // Performs the reduction task. (In Mixed, gives the task to a thread.)    
-    virtual void initiateReduction( DetailedTask          * task );    
-
+    virtual void initiateReduction( DetailedTask          * task, int tag=0);    
   protected:
     // Runs the task. (In Mixed, gives the task to a thread.)
     virtual void initiateTask( DetailedTask          * task,
@@ -173,15 +172,18 @@ WARNING
     virtual void wait_till_all_done();
     
     virtual void verifyChecksum();
-    MessageLog  log;
-    Output*     oport_;
-    CommRecMPI  sends_;
-    CommRecMPI  recvs_;
+    MessageLog log;
 
-    double                   d_lasttime;
-    std::vector<const char*> d_labels;
-    std::vector<double>      d_times;
-    ofstream                 timingStats, avgStats, maxStats;
+
+    Output*       oport_;
+
+    CommRecMPI            sends_;
+    CommRecMPI            recvs_;
+
+    double           d_lasttime;
+    std::vector<const char*>    d_labels;
+    std::vector<double>   d_times;
+    ofstream         timingStats, avgStats, maxStats;
 
     void emitTime(const char* label);
     void emitTime(const char* label, double time);

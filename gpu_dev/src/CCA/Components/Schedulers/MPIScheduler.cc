@@ -93,10 +93,11 @@ map<string,double> exectimes;
 
  
 
-MPIScheduler::MPIScheduler(const ProcessorGroup* myworld,
-			                     Output* oport,
-			                     MPIScheduler* parentScheduler) :
-  SchedulerCommon( myworld, oport), parentScheduler( parentScheduler ), log( myworld, oport ), oport_( oport )
+MPIScheduler::MPIScheduler( const ProcessorGroup * myworld,
+			          Output         * oport,
+			          MPIScheduler   * parentScheduler) :
+  SchedulerCommon( myworld, oport ),
+  parentScheduler( parentScheduler ), log( myworld, oport ), oport_(oport)
 {
   d_lasttime=Time::currentSeconds();
   reloc_new_posLabel_=0;
@@ -166,8 +167,9 @@ MPIScheduler::verifyChecksum()
     checksum += graphs[i]->getTasks().size();
   mpidbg << d_myworld->myrank() << " (Allreduce) Checking checksum of " << checksum << '\n';
   int result_checksum;
-  MPI_Allreduce(&checksum, &result_checksum, 1, MPI_INT, MPI_MIN, d_myworld->getComm());
-  if(checksum != result_checksum) {
+  MPI_Allreduce(&checksum, &result_checksum, 1, MPI_INT, MPI_MIN,
+		d_myworld->getComm());
+  if(checksum != result_checksum){
     cerr << "Failed task checksum comparison!\n";
     cerr << "Processor: " << d_myworld->myrank() << " of "
 	 << d_myworld->size() << ": has sum " << checksum
@@ -194,32 +196,29 @@ MPIScheduler::wait_till_all_done()
 }
 
 void
-MPIScheduler::initiateTask(DetailedTask* task,
-                           bool only_old_recvs,
-                           int abort_point,
-                           int iteration)
+MPIScheduler::initiateTask( DetailedTask          * task,
+			    bool only_old_recvs, int abort_point, int iteration )
 {
   MALLOC_TRACE_TAG_SCOPE("MPIScheduler::initiateTask");
-  TAU_PROFILE("MPIScheduler::initiateTask()", " ", TAU_USER);
+  TAU_PROFILE("MPIScheduler::initiateTask()", " ", TAU_USER); 
 
   postMPIRecvs(task, only_old_recvs, abort_point, iteration);
-  if (only_old_recvs) {
+  if(only_old_recvs) {
     return;
   }
-}  // end initiateTask()
+} // end initiateTask()
 
 void
-MPIScheduler::initiateReduction( DetailedTask* task )
+MPIScheduler::initiateReduction( DetailedTask          * task, int ncomm)
 {
   TAU_PROFILE("MPIScheduler::initiateReduction()", " ", TAU_USER); 
   {
-    if(reductionout.active() && d_myworld->myrank()==0) {
+    if(reductionout.active() && d_myworld->myrank()==0)
       reductionout << "Running Reduction Task: " << task->getName() << endl;
-    }
 
     double reducestart = Time::currentSeconds();
 
-    runReductionTask(task);
+    runReductionTask(task, ncomm);
 
     double reduceend = Time::currentSeconds();
 
@@ -230,12 +229,13 @@ MPIScheduler::initiateReduction( DetailedTask* task )
 }
 
 void
-MPIScheduler::runTask( DetailedTask* task, int iteration)
+MPIScheduler::runTask( DetailedTask         * task, int iteration)
 {
   MALLOC_TRACE_TAG_SCOPE("MPIScheduler::runTask");
   TAU_PROFILE("MPIScheduler::runTask()", " ", TAU_USER); 
 
-  if(waitout.active()) {
+  if(waitout.active())
+  {
     waittimes[task->getTask()->getName()]+=CurrentWaitTime;
     CurrentWaitTime=0;
   }
@@ -261,17 +261,20 @@ MPIScheduler::runTask( DetailedTask* task, int iteration)
 
   double dtask = Time::currentSeconds()-taskstart;
  
-  if(execout.active()) {
+  if(execout.active())
+  {
     exectimes[task->getTask()->getName()]+=dtask;
   }
 
   //if i do not have a sub scheduler 
-  if(!task->getTask()->getHasSubScheduler()) {
+  if(!task->getTask()->getHasSubScheduler())
+  {
     //add my task time to the total time
     mpi_info_.totaltask += dtask;  
     //if(d_myworld->myrank()==0)
     //  cout << "adding: " << dtask << " to counters, new total: " << mpi_info_.totaltask << endl;
-    if(!d_sharedState->isCopyDataTimestep() && task->getTask()->getType()!=Task::Output) {
+    if(!d_sharedState->isCopyDataTimestep() && task->getTask()->getType()!=Task::Output)
+    {
       //if(d_myworld->myrank()==0 && task->getPatches()!=0)
       //  cout << d_myworld->myrank() << " adding: " << task->getTask()->getName() << " to profile:" << dtask << " on patches:" << *(task->getPatches()) << endl;
       //add contribution for patchlist
@@ -304,13 +307,13 @@ MPIScheduler::runTask( DetailedTask* task, int iteration)
 } // end runTask()
 
 void
-MPIScheduler::runReductionTask( DetailedTask         * task )
+MPIScheduler::runReductionTask( DetailedTask         * task, int ncomm)
 {
   const Task::Dependency* mod = task->getTask()->getModifies();
   ASSERT(!mod->next);
   
   OnDemandDataWarehouse* dw = dws[mod->mapDataWarehouse()].get_rep();
-  dw->reduceMPI(mod->var, mod->reductionLevel, mod->matls, task->getTask()->d_phase);
+  dw->reduceMPI(mod->var, mod->reductionLevel, mod->matls, ncomm);
   task->done(dws);
 
   cerrLock.lock(); taskdbg << d_myworld->myrank() << " Completed: \t";

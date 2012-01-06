@@ -7,55 +7,59 @@
   </Meta>
 
   <SimulationComponent type="RMCRT_Test" />
+  
   <!--__________________________________-->
   <!-- run for 10 timesteps for RT memory -->
   <!-- and checkpoint testing             -->
   <Time>
-    <maxTime>       1.0      </maxTime>
+    <maxTime>       10.0      </maxTime>
     <initTime>      0.0       </initTime>
     <delt_min>      0.00001   </delt_min>
     <delt_max>      1         </delt_max>
-    <max_Timesteps> 10         </max_Timesteps>
+    <max_Timesteps> 10        </max_Timesteps>
     <timestep_multiplier>  1  </timestep_multiplier>
   </Time>
-  <!--__________________________________-->
+
+  <!--____________________________________________________________________-->
+  <!--      G  R  I  D     V  A  R  I  A  B  L  E  S                      -->
+  <!--____________________________________________________________________-->
   <Grid>
     <BoundaryConditions>
       <Face side = "x-">
         <BCType id = "0"   label = "color"     var = "Dirichlet"> 
-                            <value> 1000 </value> 
+                            <value> 0. </value> 
         </BCType> 
         <BCType id = "0"   label = "abskg"     var = "Dirichlet">
-                            <value> 0. </value>
+                            <value> 1. </value>
         </BCType>
       </Face>
       <Face side = "x+">
         <BCType id = "0"   label = "color"     var = "Dirichlet">
-                           <value> 1000 </value>                
+                           <value> 0. </value>                
         </BCType>
         <BCType id = "0"   label = "abskg"     var = "Dirichlet">
-                           <value> 0. </value>
+                           <value> 1. </value>
         </BCType>
       </Face>
       <Face side = "y-">
         <BCType id = "0"   label = "color"     var = "Dirichlet">
-                           <value> 1000 </value>
+                           <value> 0. </value>
         </BCType>
         <BCType id = "0"   label = "abskg"     var = "Dirichlet">
-                           <value> 0. </value>
+                           <value> 1. </value>
         </BCType> 
       </Face>               
       <Face side = "y+">
         <BCType id = "0"   label = "color"     var = "Dirichlet">
-                            <value> 1000 </value>
+                            <value> 0. </value>
         </BCType>
         <BCType id = "0"   label = "abskg"     var = "Dirichlet">
-                           <value> 0. </value>
+                           <value> 1. </value>
         </BCType>
       </Face>
       <Face side = "z-">
         <BCType id = "0"   label = "color"     var = "Dirichlet">
-                           <value> 1000 </value>
+                           <value> 0. </value>
         </BCType>
         <BCType id = "0"   label = "abskg"     var = "Dirichlet">
                            <value> 1. </value>
@@ -63,13 +67,14 @@
       </Face>
       <Face side = "z+">
         <BCType id = "0"   label = "color"     var = "Dirichlet">
-                           <value> 1000 </value>
+                           <value> 0. </value>
         </BCType>
         <BCType id = "0"   label = "abskg"     var = "Dirichlet">
                            <value> 1. </value>
         </BCType>
       </Face>
     </BoundaryConditions>
+
     <Level>
       <Box label = "0">                              
          <lower>      [0,0,0]     </lower>         
@@ -79,16 +84,45 @@
          <extraCells> [1,1,1]     </extraCells>      
       </Box>                                         
     </Level>
+
+    <Level>
+      <Box label = "1">                              
+         <lower>      [ 0,0,0]      </lower>         
+         <upper>      [1, 1, 1]     </upper>         
+         <resolution> [41,41,41] </resolution>        
+         <patches>    [1,1,1]       </patches>   
+         <extraCells> [1,1,1]       </extraCells>         
+      </Box>                                         
+    </Level>
+
   </Grid>
   <!--__________________________________-->
+  <AMR>
+    <useLockStep> true </useLockStep>
+    <RMCRT>
+      <orderOfInterpolation>    1    </orderOfInterpolation>
+      <manualGrid>             true  </manualGrid>
+      <CoarseLevelRMCRTMethod> false  </CoarseLevelRMCRTMethod>
+      <multiLevelRMCRTMethod>  true </multiLevelRMCRTMethod>
+    </RMCRT>  
+  </AMR>    
+  <!--__________________________________-->
   <DataArchiver>
-  <filebase>rmcrt_1L_reflections.uda</filebase>
-      <!--<outputInitTimestep/> -->
+  <filebase>RMCRT_bm1_DO.uda</filebase>
       <outputTimestepInterval>1</outputTimestepInterval>
+      <!--  1L
       <save label = "color"   />
       <save label = "divQ"    />
       <save label = "abskg"   />
       <save label = "sigmaT4" />
+      -->  
+      <!--  2L -->
+      <save label = "color"   levels="-1"/>
+      <save label = "divQ"    levels="-1"/>
+      <save label = "abskg" />
+      <save label = "sigmaT4" levels="1"/>
+      
+      <!--<save label = "refineFlag"/> -->
       <checkpoint cycle = "2" timestepInterval = "2"/>
   </DataArchiver>
   
@@ -96,12 +130,12 @@
   <!--__________________________________ -->
   <RMCRT>
     <randomSeed>         false     </randomSeed>
-    <Temperature>       1500       </Temperature>
-    <abskg>              1.0       </abskg>
-    <NoOfRays>          10         </NoOfRays>
-    <Threshold>         0.001      </Threshold>
+    <Temperature>       64.804     </Temperature>
+    <abskg>             999        </abskg>
+    <NoOfRays>          25         </NoOfRays>
+    <Threshold>         0.05       </Threshold>
     <Slice>             20         </Slice>
     <StefanBoltzmann>   5.67051e-8 </StefanBoltzmann>
-    <benchmark_13pt2>   true       </benchmark_13pt2>
+    <benchmark_1>       true       </benchmark_1>
   </RMCRT>
 </Uintah_specification>

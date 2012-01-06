@@ -96,7 +96,7 @@ DORadiation::problemSetup(const ProblemSpecP& inputdb)
   db->getWithDefault( "abskp_label", _abskp_label_name, "new_abskp" ); 
 
   _DO_model = scinew DORadiationModel( _labels, _MAlab, _bc, _my_world ); 
-  _DO_model->problemSetup( db ); 
+  _DO_model->problemSetup( db, true ); 
 
   _labels->add_species( _co2_label_name ); 
   _labels->add_species( _h2o_label_name ); 

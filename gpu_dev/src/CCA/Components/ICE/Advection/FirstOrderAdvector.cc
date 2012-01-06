@@ -128,7 +128,6 @@ void FirstOrderAdvector::inFluxOutFluxVolume(
   int NGC =1;  // number of ghostCells
   for(CellIterator iter = patch->getExtraCellIterator(NGC); !iter.done(); iter++) {  
     const IntVector& c = *iter;
-      std::cout << c << endl;
     
     delY_top    = std::max(0.0, (vvel_FC[c+IntVector(0,1,0)] * delT));
     delY_bottom = std::max(0.0,-(vvel_FC[c                 ] * delT));
@@ -156,7 +155,6 @@ void FirstOrderAdvector::inFluxOutFluxVolume(
     for(int face = TOP; face <= BACK; face++ )  {
       total_fluxout  += ofs.d_fflux[face];
     }
-    std::cout << "total_fluxout: " << total_fluxout<<std::endl;
     if(total_fluxout > vol){
       error = true;
     }

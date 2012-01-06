@@ -80,7 +80,6 @@ DORadiationModel::DORadiationModel(const ArchesLabel* label,
                                    const MPMArchesLabel* MAlab,
                                    BoundaryCondition* bndry_cond,
                                    const ProcessorGroup* myworld):
-                                   RadiationModel(), 
                                    d_lab(label),
                                    d_MAlab(MAlab), 
                                    d_boundaryCondition(bndry_cond),
@@ -111,12 +110,18 @@ DORadiationModel::~DORadiationModel()
 //**************************************************************************** 
 
 void 
-DORadiationModel::problemSetup(ProblemSpecP& params)
+DORadiationModel::problemSetup( ProblemSpecP& params, bool stand_alone_src )
 
 {
-  params->getWithDefault("radiationCalcFreq",         d_radCalcFreq, 3);
-  params->getWithDefault("radCalcForAllRKSteps",      d_radRKsteps,  false);
-  params->getWithDefault("radCalcForAllImplicitSteps",d_radImpsteps, false);
+
+  //stand_alone_src indicates if the DORadiation model is invoked from the 
+  //EnthalpySolver (should be false)  or the new SourceTerm (should be true) 
+
+  if ( !stand_alone_src ) { 
+    params->getWithDefault("radiationCalcFreq",         d_radCalcFreq, 3);
+    params->getWithDefault("radCalcForAllRKSteps",      d_radRKsteps,  false);
+    params->getWithDefault("radCalcForAllImplicitSteps",d_radImpsteps, false);
+  }
   
   string prop_model;
   ProblemSpecP db = params->findBlock("DORadiationModel");

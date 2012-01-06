@@ -981,7 +981,8 @@ TaskGraph::createDetailedDependencies()
     DetailedTask* task = dts_->getTask(i);
     task->task->d_phase=currphase;
     //cout << d_myworld->myrank()  << " Task: " << *task << " phase: " << currphase << endl;
-    if (task->task->getType() == Task::Reduction || ( task->task->getType() == Task::OncePerProc && Uintah::Parallel::getMaxThreads() < 1 )) {
+    //if (task->task->getType() == Task::Reduction || ( task->task->getType() == Task::OncePerProc && Uintah::Parallel::getMaxThreads() < 1 )) {
+    if (task->task->getType() == Task::Reduction || task->task->getType() == Task::OncePerProc ) {
       currphase++;
       lastReductionTask = task;
     }
