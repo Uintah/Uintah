@@ -313,6 +313,9 @@ void GPUSchedulerTest::timeAdvanceGPU(const ProcessorGroup* pg,
   double* newphi_host;
   double* newphi_hostPinned;
 
+  cudaStream_t stream;
+  cudaEvent_t asyncCopyComplete;
+
   CUDA_SAFE_CALL( cudaSetDevice(device) );
 
   // Do time steps
@@ -348,12 +351,12 @@ void GPUSchedulerTest::timeAdvanceGPU(const ProcessorGroup* pg,
         CUDA_SAFE_CALL( cudaFree(newphi_device) );
       }
       // use host alloc so we can use pinned mem for async API
-      cutilSafeCall( cudaMallocHost((void**)&phi_hostPinned, nbytes) );
-      cutilSafeCall( cudaMallocHost((void**)&newphi_hostPinned, nbytes) );
+      cutilSafeCall( cudaMallocHost(&phi_hostPinned, nbytes) );
+      cutilSafeCall( cudaMallocHost(&newphi_hostPinned, nbytes) );
 
       // now the malloc device mem
-      CUDA_SAFE_CALL( cudaMalloc((void**)&phi_device, nbytes) );
-      CUDA_SAFE_CALL( cudaMalloc((void**)&newphi_device, nbytes) );
+      CUDA_SAFE_CALL( cudaMalloc(&phi_device, nbytes) );
+      CUDA_SAFE_CALL( cudaMalloc(&newphi_device, nbytes) );
     }
 
     //  Memory Allocation
@@ -371,11 +374,36 @@ void GPUSchedulerTest::timeAdvanceGPU(const ProcessorGroup* pg,
       totalBlocks++;
     }
 
+    // set up stream and event
+    cudaStreamCreate(&stream);
+    cudaEventCreate(&asyncCopyComplete);
+
     // async copy host2device -> launch kernel -> async host2device
-    cudaMemcpyAsync(phi_device, phi_hostPinned, nbytes, cudaMemcpyHostToDevice);
-    cudaMemcpyAsync(newphi_device, newphi_hostPinned, nbytes, cudaMemcpyHostToDevice);
-    timeAdvanceTestKernel<<< totalBlocks, threadsPerBlock >>>(domainSize, domainLower, ghostLayers, phi_device, newphi_device);
-    cudaMemcpyAsync(newphi_host, newphi_device, nbytes, cudaMemcpyDeviceToHost);
+    cudaMemcpyAsync(phi_device, phi_hostPinned, nbytes, cudaMemcpyHostToDevice, stream);
+    cudaMemcpyAsync(newphi_device, newphi_hostPinned, nbytes, cudaMemcpyHostToDevice, stream);
+    timeAdvanceTestKernel<<< totalBlocks, threadsPerBlock, 0, stream >>>(domainSize, domainLower, ghostLayers, phi_device, newphi_device);
+
+    cudaEventRecord(asyncCopyComplete, stream);
+    cudaMemcpyAsync(newphi_host, newphi_device, nbytes, cudaMemcpyDeviceToHost, stream);
+
+    while (cudaEventQuery(asyncCopyComplete) == cudaErrorNotReady) {
+      /*
+       * This is a simple busy wait to show proof of concept. For the infrastructure,
+       * we will use this idea (via callback, etc) so the host control thread can quickly
+       * dispatch GPU work while maintaining responsiveness to CPU threads signaling for
+       * more CPU work.
+       *
+       * Realistically, there is not much benefit from using these calls with only
+       * one kernel launch (as in this example), but when we have many and can get
+       * multi-way overlap we should see benefits, e.g. many streams and a
+       * mechanism to use eventQuery to notify the control thread of event success.
+       *
+       * Next step is to create infrastructures support for a queue of streams and a map
+       * of async H2D copies to tasks and event queries to signal the control thread that
+       * a particular task has its memory prepared on the device or has completed its work.
+       *
+       */
+    }
 
     new_dw->put(sum_vartype(residual), residual_label);
 
@@ -386,4 +414,6 @@ void GPUSchedulerTest::timeAdvanceGPU(const ProcessorGroup* pg,
   cudaFreeHost(phi_hostPinned);
   cudaFree(newphi_device);
   cudaFreeHost(newphi_hostPinned);
+  cudaStreamDestroy(stream);
+  cudaEventDestroy(asyncCopyComplete);
 }
