@@ -172,7 +172,7 @@ public:
   /** @brief Load table into memory */ 
   void loadMixingTable( const string & inputfile );
 
-  enum BoundaryType { DIRICHLET, NEUMANN };
+  enum BoundaryType { DIRICHLET, NEUMANN, FROMFILE };
 
   struct DepVarCont {
 

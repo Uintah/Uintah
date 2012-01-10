@@ -351,6 +351,8 @@ ColdFlow::getState( const ProcessorGroup* pc,
             which_bc.push_back(ColdFlow::DIRICHLET); 
           } else if (bc_kind == "Neumann" ) { 
             which_bc.push_back(ColdFlow::NEUMANN); 
+          } else if (bc_kind == "FromFile") { 
+            which_bc.push_back(ColdFlow::FROMFILE);
           } else
             throw InvalidValue( "Error: BC type not supported for property calculation", __FILE__, __LINE__ ); 
 
@@ -378,6 +380,9 @@ ColdFlow::getState( const ProcessorGroup* pc,
                 iv.push_back( bc_values[i] ); 
                 break; 
               case ColdFlow::NEUMANN:
+                iv.push_back(0.5*(indep_storage[i][c] + indep_storage[i][cp1]));  
+                break; 
+              case ColdFlow::FROMFILE:
                 iv.push_back(0.5*(indep_storage[i][c] + indep_storage[i][cp1]));  
                 break; 
               default: 
