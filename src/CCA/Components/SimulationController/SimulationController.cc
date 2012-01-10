@@ -196,8 +196,8 @@ namespace Uintah {
           if (d_myworld->myrank() == 0) {
         	cout << "WARNNING: Cannot add PAPI event: " << iter->second.name << "! Error code = " << retp << " "
         		 << "no stats will be printed for " << iter->second.simStatName << endl;
-        	iter->second.isSupported = false;
           }
+          iter->second.isSupported = false;
         } else {
         	iter->second.eventValueIndex = index;
         	index++;
