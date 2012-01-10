@@ -5751,12 +5751,6 @@ BoundaryCondition::setupBCInletVelocities__NEW(const ProcessorGroup*,
                                                  ( area * density[*bound_ptr] ); 
                 break; 
 
-              case ( VELOCITY_FILE ): 
-                // here we should read in the file ???
-                // do nothing I believe....
-                // things are handled in setInitProfile. 
-
-                break; 
               default: 
                 break; 
             }
@@ -6058,6 +6052,8 @@ void BoundaryCondition::setVel__NEW( const Patch* patch, const Patch::FaceType& 
        IntVector c  = *bound_ptr; 
        IntVector cp = *bound_ptr - insideCellDir; 
 
+//       cout << " ON THE MINUS FACE, value.y() == " << value.y() << endl;
+//
        vVel[c] = value.y();
        vVel[cp] = value.y() * density[c] / ( 0.5 * ( density[c] + density[cp] )); 
 
@@ -6744,7 +6740,7 @@ BoundaryCondition::setHattedIntrusionVelocity( const int p,
                                                constCCVariable<double>& density ) 
 { 
   if ( _using_new_intrusion ) { 
-    //_intrusionBC->setHattedVelocity( p, u, v, w, density );
+//    _intrusionBC->setHattedVelocity( p, u, v, w, density );
   } 
 } 
 void
@@ -6761,9 +6757,9 @@ BoundaryCondition::sched_setupNewIntrusions( SchedulerP& sched, const PatchSet* 
 {
 
   if ( _using_new_intrusion ) { 
-    //_intrusionBC->sched_computeBCArea( sched, patches, matls ); 
-    //_intrusionBC->sched_computeProperties( sched, patches, matls ); 
-    //_intrusionBC->sched_setIntrusionVelocities( sched, patches, matls );  
+//    _intrusionBC->sched_computeBCArea( sched, patches, matls ); 
+//    _intrusionBC->sched_computeProperties( sched, patches, matls ); 
+//    _intrusionBC->sched_setIntrusionVelocities( sched, patches, matls );  
   }
 
 }

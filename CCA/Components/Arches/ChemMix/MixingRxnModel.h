@@ -88,7 +88,7 @@ namespace Uintah {
       // Useful typedefs
       typedef std::map<string, const VarLabel* >           VarMap;
       typedef std::map<string, CCVariable<double>* >       CCMap; 
-      typedef std::map<string, double >           doubleMap; 
+      typedef std::map<string, double >                    doubleMap; 
 
       MixingRxnModel( const ArchesLabel* labels, const MPMArchesLabel* MAlabels );
 

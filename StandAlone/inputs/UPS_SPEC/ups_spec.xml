@@ -591,12 +591,12 @@
         <BCType             spec="MULTIPLE NO_DATA"
                               attribute1="id        REQUIRED STRING '0,1,2,3,4,5,6,all'"
                               attribute2="var       REQUIRED STRING 'Neumann, Dirichlet, symmetry, LODI, computeFromDensity, Sine, creep, slip Custom, 
-                              VelocityInlet, PressureBC, WallBC, OutletBC, VelocityFileInput, MassFlowInlet, Swirl  '"
+                              VelocityInlet, PressureBC, WallBC, OutletBC, VelocityFileInput, MassFlowInlet, Swirl, FromFile  '"
                               attribute3="label     REQUIRED STRING " >
                                                                 
           <value            spec="REQUIRED STRING"  need_applies_to="var Neumann Dirichlet LODI computeFromDensity Sine creep slip Custom 
                                                                      MassFlowInlet Swirl" />
-          <inputfile        spec="REQUIRED STRING"  need_applies_to="var VelocityFileInput" />
+          <inputfile        spec="REQUIRED STRING"  need_applies_to="var VelocityFileInput, FromFile" />
           <vecvalue         spec="REQUIRED VECTOR"  need_applies_to="var VelocityInlet"/>
           <swirl_no         spec="REQUIRED DOUBLE"  need_applies_to="var Swirl"/>
           <swirl_centroid   spec="REQUIRED VECTOR"  need_applies_to="var Swirl"/>
