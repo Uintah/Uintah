@@ -196,7 +196,6 @@ void Poisson1::timeAdvance(const ProcessorGroup*,
                            DataWarehouse* new_dw)
 {
   int matl = 0;
-
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     constNCVariable<double> phi;
@@ -218,67 +217,10 @@ void Poisson1::timeAdvance(const ProcessorGroup*,
                    patch->getBCType(Patch::yplus)  == Patch::Neighbor?0:1,
                    patch->getBCType(Patch::zplus)  == Patch::Neighbor?0:1);
     
-
-
-    /*
-        3-Dimensional with 1 Proc
-        -------------------------
-
-        double *phi_data = (double*)phi.getWindow()->getData()->getPointer();
-        double *newphi_data = (double*)newphi.getWindow()->getData()->getPointer();
-
-
-        IntVector offset   = phi.getWindow()->getOffset();
-
-        int zhigh = h.z();
-        int yhigh = h.y();
-        int xhigh = h.x();
-        int ghostLayers = 1;
-        IntVector dataSize = phi.getWindow()->getData()->size();
-
-        int ystride = dataSize.y();
-        int xstride = dataSize.x();
-
-        std::cout << "strides: " << xstride << "  " << ystride << std::endl;
-        std::cout << "low: " << l << std::endl;
-        std::cout << "high: " << h << std::endl;
-        std::cout << "offset: " << offset << std::endl;
-
-        for (int k = l.z(); k < zhigh; k++) {
-          for (int j = l.y(); j < yhigh; j++) {
-            for (int i = l.x(); i < xhigh; i++) {
-
-              // For an array of [ A ][ B ][ C ], we can index it thus:
-              // (a * B * C) + (b * C) + (c * 1)
-              int idx = i + (j * xstride) + (k * xstride * ystride);
-
-              //std::cout << "When i,j,k (x,y,z) is " << i << "," << j << "," << k << "   memory location is " << &(phi_data[idx]) << std::endl;
-
-              int xminus = (i - 1) + (j * xstride) + (k * xstride * ystride);
-              int xplus  = (i + 1) + (j * xstride) + (k * xstride * ystride);
-              int yminus = i + ((j - 1) * xstride) + (k * xstride * ystride);
-              int yplus  = i + ((j + 1) * xstride) + (k * xstride * ystride);
-              int zminus = i + (j * xstride) + ((k - 1) * xstride * ystride);
-              int zplus  = i + (j * xstride) + ((k + 1) * xstride * ystride);
-
-              newphi_data[idx] = (1. / 6) * (phi_data[xminus] + phi_data[xplus] + phi_data[yminus]
-                  + phi_data[yplus] + phi_data[zminus] + phi_data[zplus]);
-
-              double diff = newphi_data[idx] - phi_data[idx];
-              residual += diff * diff;
-
-            }
-          }
-        }
-
-    std::cout << std::endl;
-*/
     //__________________________________
     //  Stencil 
     for(NodeIterator iter(l, h);!iter.done(); iter++){
       IntVector n = *iter;
-
-      //std::cout << "When cell is " << n << "   memory location is " << &(phi[n]) << std::endl;
 
       newphi[n]=(1./6)*(
         phi[n+IntVector(1,0,0)] + phi[n+IntVector(-1,0,0)] +
@@ -289,7 +231,5 @@ void Poisson1::timeAdvance(const ProcessorGroup*,
       residual += diff * diff;
     }
     new_dw->put(sum_vartype(residual), residual_label);
-
-    std::cout << std::endl << std::endl << std::endl;
   }
 }

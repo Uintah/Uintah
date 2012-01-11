@@ -102,11 +102,30 @@ WARNING
                                DataWarehouse* old_dw,
                                DataWarehouse* new_dw);
                                
-    void timeAdvance(const ProcessorGroup*,
-                     const PatchSubset* patches,
-                     const MaterialSubset* matls,
-		     DataWarehouse* old_dw,
-                     DataWarehouse* new_dw);
+    void timeAdvanceCPU(const ProcessorGroup*,
+                        const PatchSubset* patches,
+                        const MaterialSubset* matls,
+                        DataWarehouse* old_dw,
+                        DataWarehouse* new_dw);
+
+    void timeAdvance1DP(const ProcessorGroup*,
+                        const PatchSubset* patches,
+                        const MaterialSubset* matls,
+                        DataWarehouse* old_dw,
+                        DataWarehouse* new_dw);
+
+    void timeAdvance3DP(const ProcessorGroup*,
+                        const PatchSubset* patches,
+                        const MaterialSubset* matls,
+                        DataWarehouse* old_dw,
+                        DataWarehouse* new_dw);
+
+    void timeAdvanceGPU(const ProcessorGroup*,
+                        const PatchSubset* patches,
+                        const MaterialSubset* matls,
+                        DataWarehouse* old_dw,
+                        DataWarehouse* new_dw);
+
                      
     SimulationStateP sharedState_;
     double delt_;
