@@ -72,7 +72,7 @@
          <lower>     [0,0,0]        </lower>         
          <upper>     [1.0,1.0,1.0]  </upper>         
          <resolution>[50,50,50]     </resolution>    
-         <patches>   [2,1,1]        </patches>       
+         <patches>   [1,1,1]        </patches>       
       </Box>                                         
     </Level>
   </Grid>

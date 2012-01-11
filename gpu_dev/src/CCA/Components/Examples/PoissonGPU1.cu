@@ -185,22 +185,24 @@ __global__ void timeAdvanceKernel(uint3 domainSize,
 
   if (tidX < (dx - ghostLayers) && tidY < (dy - ghostLayers) && tidX > 0 && tidY > 0) {
     for (int slice = ghostLayers; slice < num_slices; slice++) {
+      int idx = (slice) + (tidY * dx) + (tidX * dx * dy);
 
-      newphi[INDEX3D(dx, dy, tidX, tidY, slice)] =
-          (1.0 / 6.0)
-          * (phi[INDEX3D(dx, dy, tidX - 1, tidY, slice)]
-             + phi[INDEX3D(dx, dy, tidX + 1, tidY, slice)]
-             + phi[INDEX3D(dx, dy, tidX, tidY - 1, slice)]
-             + phi[INDEX3D(dx, dy, tidX, tidY + 1, slice)]
-             + phi[INDEX3D(dx, dy, tidX, tidY, slice - 1)]
-             + phi[INDEX3D(dx, dy, tidX, tidY, slice + 1)]);
+      int xminus = (slice - 1) + (tidY * dx) + (tidX * dx * dy);
+      int xplus  = (slice + 1) + (tidY * dx) + (tidX * dx * dy);
+      int yminus = slice + ((tidY - 1) * dx) + (tidX * dx * dy);
+      int yplus  = slice + ((tidY + 1) * dx) + (tidX * dx * dy);
+      int zminus = slice + (tidY * dx) + ((tidX - 1) * dx * dy);
+      int zplus  = slice + (tidY * dx) + ((tidX + 1) * dx * dy);
 
-      //double diff = newphi[INDEX3D(dx, dy, tidX, tidY, slice)]
-      //               - phi[INDEX3D(dx, dy, tidX, tidY, slice)];
+      newphi[idx] =
+               (1.0 / 6.0)
+                 * (phi[xminus]
+                  + phi[xplus]
+                  + phi[yminus]
+                  + phi[yplus]
+                  + phi[zminus]
+                  + phi[zplus]);
 
-      // this will cause a race condition. what we need is a reduction to compute this
-      // in conjunction with atomicAdd() and __shared__ double[] residual_device;
-      //*residual += diff * diff;;
     }
   }
 }
@@ -223,86 +225,83 @@ void PoissonGPU1::timeAdvance(const ProcessorGroup*,
   double* phi_device;
   double* phi_host;
   double* newphi_host;
-
-  // find the "best" device for cudaSetDevice()
-  int num_devices, device;
-  cudaGetDeviceCount(&num_devices);
-  if (num_devices > 1) {
-    int max_multiprocessors = 0, max_device = 0;
-    for (device = 0; device < num_devices; device++) {
-      cudaDeviceProp properties;
-      cudaGetDeviceProperties(&properties, device);
-      if (max_multiprocessors < properties.multiProcessorCount) {
-        max_multiprocessors = properties.multiProcessorCount;
-        max_device = device;
-      }
-    }
-    cudaSetDevice(max_device);
-  }
-
-  // Do time steps
-  int numPatches = patches->size();
-  for (int p = 0; p < numPatches; p++) {
-    const Patch* patch = patches->get(p);
-    constNCVariable<double> phi;
-    old_dw->get(phi, phi_label, matl, patch, Ghost::AroundNodes, ghostLayers);
-
-    NCVariable<double> newphi;
-    new_dw->allocateAndPut(newphi, phi_label, matl, patch);
-    newphi.copyPatch(phi, newphi.getLowIndex(), newphi.getHighIndex());
-
-    double residual = 0;
-    IntVector l = patch->getNodeLowIndex();
-    IntVector h = patch->getNodeHighIndex();
-    IntVector s = h - l;
-    int xdim = s.x(), ydim = s.y(), zdim = s.z();
-    size = xdim * ydim * zdim * sizeof(double);
-
-    l += IntVector(patch->getBCType(Patch::xminus) == Patch::Neighbor ? 0 : 1,
-        patch->getBCType(Patch::yminus) == Patch::Neighbor ? 0 : 1,
-        patch->getBCType(Patch::zminus) == Patch::Neighbor ? 0 : 1);
-    h -= IntVector(patch->getBCType(Patch::xplus) == Patch::Neighbor ? 0 : 1,
-        patch->getBCType(Patch::yplus) == Patch::Neighbor ? 0 : 1,
-        patch->getBCType(Patch::zplus) == Patch::Neighbor ? 0 : 1);
-
-    // check if we need to reallocate
-    if (size != previousPatchSize) {
-      if (previousPatchSize != 0) {
-        cudaFree(phi_device);
-        cudaFree(newphi_device);
-      }
-      cudaMalloc(&phi_device, size);
-      cudaMalloc(&newphi_device, size);
-    }
-
-    //__________________________________
-    //  Memory Allocation
-    phi_host = (double*)phi.getWindow()->getData()->getPointer();
-    newphi_host = (double*)newphi.getWindow()->getData()->getPointer();
-
-    // allocate space on the device
-    // TODO
-    // Fix this so when we have >= CCv2.0 we can use pinned host mem for phi
-    cudaMemcpy(phi_device, phi_host, size, cudaMemcpyHostToDevice);
-    cudaMemcpy(newphi_device, newphi_host, size, cudaMemcpyHostToDevice);
-
-    uint3 domainSize = make_uint3(xdim, ydim, zdim);
-    uint3 domainLower = make_uint3(l.x(), l.y(), l.z());
-    int totalBlocks = size / (sizeof(double) * xdim * ydim * zdim);
-    dim3 threadsPerBlock(xdim, ydim, zdim);
-
-    if (size % (totalBlocks) != 0) {
-      totalBlocks++;
-    }
-
-    // launch kernel
-    timeAdvanceKernel<<< totalBlocks, threadsPerBlock >>>(domainSize, domainLower, ghostLayers, phi_device, newphi_device, &residual);
-
-    cudaDeviceSynchronize();
-    cudaMemcpy(newphi_host, newphi_device, size, cudaMemcpyDeviceToHost);
-
-    new_dw->put(sum_vartype(residual), residual_label);
-
+//
+//  // find the "best" device for cudaSetDevice()
+//  int num_devices, device;
+//  cudaGetDeviceCount(&num_devices);
+//  if (num_devices > 1) {
+//    int max_multiprocessors = 0, max_device = 0;
+//    for (device = 0; device < num_devices; device++) {
+//      cudaDeviceProp properties;
+//      cudaGetDeviceProperties(&properties, device);
+//      if (max_multiprocessors < properties.multiProcessorCount) {
+//        max_multiprocessors = properties.multiProcessorCount;
+//        max_device = device;
+//      }
+//    }
+//    cudaSetDevice(max_device);
+//  }
+//  // Do time steps
+//  int numPatches = patches->size();
+//  for (int p = 0; p < numPatches; p++) {
+//    const Patch* patch = patches->get(p);
+//    constNCVariable<double> phi;
+//    old_dw->get(phi, phi_label, matl, patch, Ghost::AroundNodes, ghostLayers);
+//
+//    NCVariable<double> newphi;
+//    new_dw->allocateAndPut(newphi, phi_label, matl, patch);
+//    newphi.copyPatch(phi, newphi.getLowIndex(), newphi.getHighIndex());
+//
+//    double residual = 0;
+//    IntVector l = patch->getNodeLowIndex();
+//    IntVector h = patch->getNodeHighIndex();
+//    int xdim = h.x() + 1, ydim = h.y() + 1, zdim = h.z() + 1;
+//    size = xdim * ydim * zdim * sizeof(double);
+//
+//    l += IntVector(patch->getBCType(Patch::xminus) == Patch::Neighbor ? 0 : 1,
+//        patch->getBCType(Patch::yminus) == Patch::Neighbor ? 0 : 1,
+//        patch->getBCType(Patch::zminus) == Patch::Neighbor ? 0 : 1);
+//    h -= IntVector(patch->getBCType(Patch::xplus) == Patch::Neighbor ? 0 : 1,
+//        patch->getBCType(Patch::yplus) == Patch::Neighbor ? 0 : 1,
+//        patch->getBCType(Patch::zplus) == Patch::Neighbor ? 0 : 1);
+//
+//    // check if we need to reallocate
+//    if (size != previousPatchSize) {
+//      if (previousPatchSize != 0) {
+//        cudaFree(phi_device);
+//        cudaFree(newphi_device);
+//      }
+//      cudaMalloc(&phi_device, size);
+//      cudaMalloc(&newphi_device, size);
+//    }
+//
+//    //__________________________________
+//    //  Memory Allocation
+//    phi_host    = (double*)phi.getWindow()->getData()->getPointer();
+//    newphi_host = (double*)newphi.getWindow()->getData()->getPointer();
+//
+//    // allocate space on the device
+//    // TODO
+//    // Fix this so when we have >= CCv2.0 we can use pinned host mem for phi
+//    cudaMemcpy(phi_device,    phi_host,    size, cudaMemcpyHostToDevice);
+//    cudaMemcpy(newphi_device, newphi_host, size, cudaMemcpyHostToDevice);
+//
+//    uint3 domainSize = make_uint3(xdim, ydim, zdim);
+//    uint3 domainLower = make_uint3(l.x(), l.y(), l.z());
+//    int totalBlocks = size / (sizeof(double) * xdim * ydim * zdim);
+//    dim3 threadsPerBlock(xdim, ydim, zdim);
+//
+//    if (size % (totalBlocks) != 0) {
+//      totalBlocks++;
+//    }
+//    // launch kernel
+//    timeAdvanceKernel<<< totalBlocks, threadsPerBlock >>>(domainSize, domainLower, ghostLayers, phi_device, newphi_device, &residual);
+//
+//    cudaDeviceSynchronize();
+//    cudaMemcpy(newphi_host, newphi_device, size, cudaMemcpyDeviceToHost);
+//
+//
+//    new_dw->put(sum_vartype(residual), residual_label);
 //    //__________________________________
 //    //  3D-Pointer Stencil
 //    double*** phi_data = (double***)phi.getWindow()->getData()->get3DPointer();
@@ -331,47 +330,78 @@ void PoissonGPU1::timeAdvance(const ProcessorGroup*,
 //      }
 //    }
 //    new_dw->put(sum_vartype(residual), residual_label);
-//
-//    //__________________________________
-//    // 1D-Pointer Stencil
-//    double *phi_data = (double*)phi.getWindow()->getData()->getPointer();
-//    double *newphi_data = (double*)newphi.getWindow()->getData()->getPointer();
-//
-//    int zhigh = h.z();
-//    int yhigh = h.y();
-//    int xhigh = h.x();
-//    int ghostLayers = 1;
-//    int ystride = yhigh + ghostLayers;
-//    int xstride = xhigh + ghostLayers;
-//
-//    for (int i = l.z(); i < zhigh; i++) {
-//      for (int j = l.y(); j < yhigh; j++) {
-//        for (int k = l.x(); k < xhigh; k++) {
-//
-//          // For an array of [ A ][ B ][ C ], we can index it thus:
-//          // (a * B * C) + (b * C) + (c * 1)
-//          int idx = i + (j * xstride) + (k * xstride * ystride);
-//
-//          int xminus = (i - 1) + (j * xstride) + (k * xstride * ystride);
-//          int xplus  = (i + 1) + (j * xstride) + (k * xstride * ystride);
-//          int yminus = i + ((j - 1) * xstride) + (k * xstride * ystride);
-//          int yplus  = i + ((j + 1) * xstride) + (k * xstride * ystride);
-//          int zminus = i + (j * xstride) + ((k - 1) * xstride * ystride);
-//          int zplus  = i + (j * xstride) + ((k + 1) * xstride * ystride);
-//
-//          newphi_data[idx] = (1. / 6) * (phi_data[xminus] + phi_data[xplus] + phi_data[yminus]
-//              + phi_data[yplus] + phi_data[zminus] + phi_data[zplus]);
-//
-//          double diff = newphi_data[idx] - phi_data[idx];
-//          residual += diff * diff;
-//        }
-//      }
-//    }
-//    new_dw->put(sum_vartype(residual), residual_label);
 
+  // Do time steps
+  int numPatches = patches->size();
+  int z = 0;
+  for (int p = 0; p < numPatches; p++) {
+    const Patch* patch = patches->get(p);
+    constNCVariable<double> phi;
+    old_dw->get(phi, phi_label, matl, patch, Ghost::AroundNodes, ghostLayers);
+
+    NCVariable<double> newphi;
+    new_dw->allocateAndPut(newphi, phi_label, matl, patch);
+    newphi.copyPatch(phi, newphi.getLowIndex(), newphi.getHighIndex());
+
+    double residual = 0;
+    IntVector l = patch->getNodeLowIndex();
+    IntVector h = patch->getNodeHighIndex();
+    IntVector s = h - l;
+    int xdim = s.x(), ydim = s.y(), zdim = s.z();
+    size = xdim * ydim * zdim * sizeof(double);
+
+    l += IntVector(patch->getBCType(Patch::xminus) == Patch::Neighbor ? 0 : 1,
+        patch->getBCType(Patch::yminus) == Patch::Neighbor ? 0 : 1,
+        patch->getBCType(Patch::zminus) == Patch::Neighbor ? 0 : 1);
+    h -= IntVector(patch->getBCType(Patch::xplus) == Patch::Neighbor ? 0 : 1,
+        patch->getBCType(Patch::yplus) == Patch::Neighbor ? 0 : 1,
+        patch->getBCType(Patch::zplus) == Patch::Neighbor ? 0 : 1);
+
+
+    //__________________________________
+    // 1D-Pointer Stencil
+    double *phi_data = (double*)phi.getWindow()->getData()->getPointer();
+    double *newphi_data = (double*)newphi.getWindow()->getData()->getPointer();
+
+    int zhigh = h.z();
+    int yhigh = h.y();
+    int xhigh = h.x();
+    int ghostLayers = 1;
+    int ystride = ydim;
+    int xstride = xdim;
+
+    int lowx = l.x();
+    int lowy = l.y();
+    int lowz = l.z();
+
+    for (int i = lowz; i < zhigh; i++) {
+      for (int j = lowy; j < yhigh; j++) {
+        for (int k = lowx; k < xhigh; k++) {
+
+          // For an array of [ A ][ B ][ C ], we can index it thus:
+          // (a * B * C) + (b * C) + (c * 1)
+          int idx = i + (j * xstride) + (k * xstride * ystride);
+
+          int xminus = (i - 1) + (j * xstride) + (k * xstride * ystride);
+          int xplus  = (i + 1) + (j * xstride) + (k * xstride * ystride);
+          int yminus = i + ((j - 1) * xstride) + (k * xstride * ystride);
+          int yplus  = i + ((j + 1) * xstride) + (k * xstride * ystride);
+          int zminus = i + (j * xstride) + ((k - 1) * xstride * ystride);
+          int zplus  = i + (j * xstride) + ((k + 1) * xstride * ystride);
+
+          newphi_data[idx] = (1. / 6) * (phi_data[xminus] + phi_data[xplus] + phi_data[yminus]
+              + phi_data[yplus] + phi_data[zminus] + phi_data[zplus]);
+
+          double diff = newphi_data[idx] - phi_data[idx];
+          residual += diff * diff;
+        }
+      }
+    }
+    new_dw->put(sum_vartype(residual), residual_label);
+    z++;
   }  // end patch for loop
 
   // free up allocated memory
-  cudaFree(phi_device);
-  cudaFree(newphi_device);
+  //cudaFree(phi_device);
+  //cudaFree(newphi_device);
 }
