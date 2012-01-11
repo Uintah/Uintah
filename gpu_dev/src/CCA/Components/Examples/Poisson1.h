@@ -80,32 +80,32 @@ WARNING
                               const ProblemSpecP& restart_prob_spec, 
                               GridP& grid, SimulationStateP&);
     virtual void scheduleInitialize(const LevelP& level,
-				        SchedulerP& sched);
+                SchedulerP& sched);
                                     
     virtual void scheduleComputeStableTimestep(const LevelP& level,
-					            SchedulerP&);
+                      SchedulerP&);
                                                
     virtual void scheduleTimeAdvance( const LevelP& level, 
-				          SchedulerP&);
+                  SchedulerP&);
 
   private:
     void initialize(const ProcessorGroup*,
-		      const PatchSubset* patches, 
+          const PatchSubset* patches,
                     const MaterialSubset* matls,
-		      DataWarehouse* old_dw, 
+          DataWarehouse* old_dw,
                     DataWarehouse* new_dw);
                     
                     
     void computeStableTimestep(const ProcessorGroup*,
-			          const PatchSubset* patches,
-			          const MaterialSubset* matls,
-			          DataWarehouse* old_dw,
+                const PatchSubset* patches,
+                const MaterialSubset* matls,
+                DataWarehouse* old_dw,
                                DataWarehouse* new_dw);
                                
     void timeAdvance(const ProcessorGroup*,
-		       const PatchSubset* patches,
-		       const MaterialSubset* matls,
-		       DataWarehouse* old_dw,
+           const PatchSubset* patches,
+           const MaterialSubset* matls,
+           DataWarehouse* old_dw,
                      DataWarehouse* new_dw);
                      
     SimulationStateP sharedState_;
@@ -116,7 +116,7 @@ WARNING
 
     Poisson1(const Poisson1&);
     Poisson1& operator=(const Poisson1&);
-	 
+
   };
 }
 
