@@ -258,6 +258,15 @@
       <!-- Specify a staggered direction for this scalar. If the scalar is non-staggered, this block is not needed -->                          
       <StaggeredDirection  spec="OPTIONAL STRING 'X,Y,Z'"/>
       
+      <!-- Specify molecular volume to use in calculations -->
+      <MolecVolume spec="OPTIONAL DOUBLE"/>
+      
+      <!-- Specify surface engery to use in calculations -->
+      <SurfaceEnergy spec="OPTIONAL DOUBLE"/>
+      
+      <!-- Boolean determines physical or validation eqns for QMOM-->
+      <PhysicsOn spec="OPTIONAL BOOLEAN"/>
+                  
       <!-- ================================================================================== -->            
       <!-- GROWTH EXPRESSION -->
       <GrowthExpression	spec="MULTIPLE NO_DATA"
@@ -276,6 +285,28 @@
         <NameTag		spec="OPTIONAL" />
       </GrowthExpression>
       
+      <!-- ================================================================================== -->            
+      <!-- BIRTH EXPRESSION -->
+      <BirthExpression spec="MULTIPLE NO_DATA"
+                             children1="ONE_OF(CHILD ConstantBirthRate, BirthRate, NameTag)">
+        <BirthModel spec="REQUIRED STRING 'POINT, UNIFORM, NORMAL'"/>
+        
+        <!-- specify constant birth rate -->
+        <ConstantBirthRate spec="OPTIONAL DOUBLE" />
+        
+        <!-- specify an expression for the birth rate -->
+        <BirthRate spec="OPTIONAL NO_DATA">
+          <NameTag spec="REQUIRED"/>
+        </BirthRate>
+        
+        <!-- specify an expression for the birth term -->
+        <NameTag spec="OPTIONAL"/>
+        
+        <StandardDeviation spec="OPTIONAL DOUBLE" />  <!-- Required for normal or uniform, std dev of norm, 1/2 width for uniform -->
+        <MaxCutoff spec="OPTIONAL DOUBLE" />  <!-- Required for normal, dictates intergral maximum -->
+        <MinCutoff spec="OPTIONAL DOUBLE" />  <!-- Required for normal, dictates intergral minimum -->
+      </BirthExpression>      
+                        
       <!-- ================================================================================== -->            
       <!-- CONVECTIVE FLUX -->
       <ConvectiveFluxExpression	spec="MULTIPLE NO_DATA">
