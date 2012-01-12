@@ -5268,6 +5268,11 @@ void BoundaryCondition::sched_setAreaFraction(SchedulerP& sched,
   Task* tsk = scinew Task( "BoundaryCondition::setAreaFraction",this, &BoundaryCondition::setAreaFraction);
 
   tsk->modifies(d_lab->d_areaFractionLabel); 
+#ifdef WASATCH_IN_ARCHES
+  tsk->modifies(d_lab->d_areaFractionFXLabel); 
+  tsk->modifies(d_lab->d_areaFractionFYLabel); 
+  tsk->modifies(d_lab->d_areaFractionFZLabel); 
+#endif
   tsk->modifies(d_lab->d_volFractionLabel); 
   tsk->requires( Task::NewDW, d_lab->d_cellTypeLabel, Ghost::AroundCells, 1 ); 
  
@@ -5286,11 +5291,21 @@ BoundaryCondition::setAreaFraction( const ProcessorGroup*,
     int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
     CCVariable<Vector>   areaFraction; 
+#ifdef WASATCH_IN_ARCHES
+    SFCXVariable<double> areaFractionFX; 
+    SFCYVariable<double> areaFractionFY; 
+    SFCZVariable<double> areaFractionFZ; 
+#endif
     CCVariable<double>   volFraction; 
     constCCVariable<int> cellType; 
 
     new_dw->get( cellType, d_lab->d_cellTypeLabel, indx, patch, Ghost::AroundCells, 1 ); 
     new_dw->getModifiable( areaFraction, d_lab->d_areaFractionLabel, indx, patch );  
+#ifdef WASATCH_IN_ARCHES
+    new_dw->getModifiable( areaFractionFX, d_lab->d_areaFractionFXLabel, indx, patch );  
+    new_dw->getModifiable( areaFractionFY, d_lab->d_areaFractionFYLabel, indx, patch );  
+    new_dw->getModifiable( areaFractionFZ, d_lab->d_areaFractionFZLabel, indx, patch );  
+#endif 
     new_dw->getModifiable( volFraction, d_lab->d_volFractionLabel, indx, patch );  
 
     int flowType = -1; 
@@ -5304,6 +5319,15 @@ BoundaryCondition::setAreaFraction( const ProcessorGroup*,
     d_newBC->setAreaFraction( patch, areaFraction, volFraction, cellType, INTRUSION, flowType ); 
     d_newBC->setAreaFraction( patch, areaFraction, volFraction, cellType, MMWALL, flowType ); 
 
+#ifdef WASATCH_IN_ARCHES
+    //copy for wasatch-arches: 
+    for (CellIterator iter=patch->getExtraCellIterator(); !iter.done(); iter++){
+      IntVector c = *iter; 
+      areaFractionFX[c] = areaFraction[c].x(); 
+      areaFractionFY[c] = areaFraction[c].y(); 
+      areaFractionFZ[c] = areaFraction[c].z(); 
+    }
+#endif 
   }
 }
 
