@@ -5,7 +5,7 @@
 #include <tabprops/StateTable.h>
 #ifdef TABPROPS_BSPLINE
 # include <tabprops/BSpline.h>
-  typedef InterpT InterpT;
+  typedef BSpline InterpT;
 #else
 # include <tabprops/Linear.h>
   typedef LinearInterp InterpT;
