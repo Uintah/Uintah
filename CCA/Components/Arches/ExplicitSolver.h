@@ -139,7 +139,12 @@ public:
   // so that they retain the right guess for the next step
 
   virtual int noSolve(const LevelP& level,
-                      SchedulerP& sched);
+                      SchedulerP& sched
+#                             ifdef WASATCH_IN_ARCHES
+                      , Wasatch::Wasatch& wasatch,
+                      ExplicitTimeInt* d_timeIntegrator
+#                             endif // WASATCH_IN_ARCHES
+                      );  
 
   ///////////////////////////////////////////////////////////////////////
   // Schedule the Initialization of non linear solver

@@ -723,7 +723,12 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 // ****************************************************************************
 
 int ExplicitSolver::noSolve(const LevelP& level,
-                            SchedulerP& sched)
+                            SchedulerP& sched
+#                                  ifdef WASATCH_IN_ARCHES
+                            , Wasatch::Wasatch& wasatch, 
+                            ExplicitTimeInt* d_timeIntegrator
+#                                  endif // WASATCH_IN_ARCHES
+                            )
 {
   const PatchSet* patches = level->eachPatch();
   const MaterialSet* matls = d_lab->d_sharedState->allArchesMaterials();
@@ -853,6 +858,24 @@ int ExplicitSolver::noSolve(const LevelP& level,
   if (d_probe_data)
     sched_probeData(sched, patches, matls);
 
+#   ifdef WASATCH_IN_ARCHES
+  {
+    const Wasatch::Wasatch::EquationAdaptors& adaptors = wasatch.equation_adaptors();
+    Wasatch::GraphHelper* const gh = wasatch.graph_categories()[Wasatch::ADVANCE_SOLUTION];
+    
+    std::vector<std::string> phi;
+    //std::vector<std::string> phi_rhs;
+    
+    for( Wasatch::Wasatch::EquationAdaptors::const_iterator ia=adaptors.begin(); ia!=adaptors.end(); ++ia ) {
+      Wasatch::TransportEquation* transEq = (*ia)->equation();
+      std::string solnVarName = transEq->solution_variable_name();
+      phi.push_back(solnVarName);
+      //phi_rhs.push_back(solnVarName + "_rhs");
+    }
+    d_timeIntegrator->sched_dummy_init(sched, patches, matls, phi);
+  }
+#   endif // WASATCH_IN_ARCHES
+  
   return(0);
 }
 

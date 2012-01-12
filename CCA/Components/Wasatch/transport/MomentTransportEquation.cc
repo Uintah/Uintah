@@ -276,6 +276,29 @@ namespace Wasatch {
       setup_convective_flux_expression<FieldT>( convFluxParams, thisPhiTag, factory, info );
 
     }
+    
+    //_____________
+    // volume fraction for embedded boundaries Terms
+    Expr::Tag volFracTag = Expr::Tag();
+    if (params->findBlock("VolumeFractionExpression")) {
+      volFracTag = parse_nametag( params->findBlock("VolumeFractionExpression")->findBlock("NameTag") );
+    }
+    
+    Expr::Tag xAreaFracTag = Expr::Tag();
+    if (params->findBlock("XAreaFractionExpression")) {
+      xAreaFracTag = parse_nametag( params->findBlock("XAreaFractionExpression")->findBlock("NameTag") );
+    }
+    
+    Expr::Tag yAreaFracTag = Expr::Tag();
+    if (params->findBlock("YAreaFractionExpression")) {
+      yAreaFracTag = parse_nametag( params->findBlock("YAreaFractionExpression")->findBlock("NameTag") );
+    }
+    
+    Expr::Tag zAreaFracTag = Expr::Tag();
+    if (params->findBlock("ZAreaFractionExpression")) {
+      zAreaFracTag = parse_nametag( params->findBlock("ZAreaFractionExpression")->findBlock("NameTag") );
+    }
+    
     //
     // Because of the forms that the ScalarRHS expression builders are defined,
     // we need a density tag and a boolean variable to be passed into this expression
@@ -285,7 +308,7 @@ namespace Wasatch {
     const Expr::Tag densT = Expr::Tag();
     const bool tempConstDens = false;
     const Expr::Tag rhsTag( thisPhiName + "_rhs", Expr::STATE_NONE );
-    return factory.register_expression( scinew typename ScalarRHS<FieldT>::Builder(rhsTag,info,rhsTags,densT, tempConstDens ));
+    return factory.register_expression( scinew typename ScalarRHS<FieldT>::Builder(rhsTag,info,rhsTags,densT,volFracTag,xAreaFracTag,yAreaFracTag,zAreaFracTag,tempConstDens ));
   }
 
   //------------------------------------------------------------------

@@ -90,6 +90,20 @@ public:
                    DataWarehouse* new_dw,
                    std::vector<std::string> phi_lab,
                    int rkstep, const bool wasatch_update=false );
+  
+  /** @brief A task interface to the singlePatchFEUpdate */ 
+  void sched_dummy_init( SchedulerP& sched, 
+                       const PatchSet* patches, 
+                       const MaterialSet* matls, 
+                       std::vector<std::string> phi);
+  
+  void dummy_init( const ProcessorGroup*, 
+                 const PatchSubset* patches, 
+                 const MaterialSubset* matls, 
+                 DataWarehouse* old_dw, 
+                 DataWarehouse* new_dw,
+                 std::vector<std::string> phi_lab );
+  
 
     Vector ssp_beta, ssp_alpha; 
     Vector time_factor; 

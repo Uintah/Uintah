@@ -145,6 +145,25 @@
       </DiffusiveFluxExpression>
       
       <!-- ================================================================================== -->            
+      <!-- Specification of the embedded boundary via volume and area fractions -->
+      <VolumeFractionExpression	spec="OPTIONAL NO_DATA">
+        <NameTag  spec="REQUIRED" />
+      </VolumeFractionExpression>
+
+      <XAreaFractionExpression	spec="OPTIONAL NO_DATA">
+        <NameTag  spec="REQUIRED" />
+      </XAreaFractionExpression>
+
+      <YAreaFractionExpression	spec="OPTIONAL NO_DATA">
+        <NameTag  spec="REQUIRED" />
+      </YAreaFractionExpression>
+
+      <ZAreaFractionExpression	spec="OPTIONAL NO_DATA">
+        <NameTag  spec="REQUIRED" />
+      </ZAreaFractionExpression>
+      
+      
+      <!-- ================================================================================== -->            
       <!-- Specification of the source term -->
       <SourceTermExpression	spec="MULTIPLE NO_DATA">
         <!-- specify the name of one or more source term expressions to be added to this transport equation -->

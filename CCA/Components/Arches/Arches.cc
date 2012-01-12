@@ -351,6 +351,7 @@ Arches::problemSetup(const ProblemSpecP& params,
     typedef Expr::PlaceHolder<XVolField>  XVelT;
     gh->exprFactory->register_expression( new XVelT::Builder(Expr::Tag(xVelName,Expr::STATE_N)) );        
   }
+  
   //
   std::string yVelName = d_lab->d_vVelocitySPBCLabel->getName();
   const Expr::Tag yVelTag( yVelName, Expr::STATE_N );
@@ -359,6 +360,7 @@ Arches::problemSetup(const ProblemSpecP& params,
     typedef Expr::PlaceHolder<YVolField>  YVelT;
     gh->exprFactory->register_expression( new YVelT::Builder(Expr::Tag(yVelName,Expr::STATE_N)) );
   }
+  
   //
   std::string zVelName = d_lab->d_wVelocitySPBCLabel->getName();
   const Expr::Tag zVelTag( zVelName, Expr::STATE_N );
@@ -366,6 +368,43 @@ Arches::problemSetup(const ProblemSpecP& params,
     // register placeholder expressions for z velocity string name: "wVelocitySPBC"
     typedef Expr::PlaceHolder<ZVolField>  ZVelT;
     gh->exprFactory->register_expression( new ZVelT::Builder(Expr::Tag(zVelName,Expr::STATE_N)) );        
+  }
+  
+  //____________________________________________________________________________  
+  // Register the volume and area fractions for embedded geometry
+  std::string volFractionName = d_lab->d_volFractionLabel->getName();
+  const Expr::Tag volFractionTag( volFractionName, Expr::STATE_N );
+  if( !(gh->exprFactory->have_entry( volFractionTag )) ) {
+    // register placeholder expressions for volume fraction field: "volFraction"
+    typedef Expr::PlaceHolder<SVolField>  VolFracT;
+    gh->exprFactory->register_expression( new VolFracT::Builder(Expr::Tag(volFractionName,Expr::STATE_N)) );        
+  }
+  
+  // x area fraction
+  std::string xAreaFractionName = d_lab->d_areaFractionFXLabel->getName();
+  const Expr::Tag xAreaFractionTag( xAreaFractionName, Expr::STATE_N );
+  if( !(gh->exprFactory->have_entry( xAreaFractionTag )) ) {
+    // register placeholder expressions for volume fraction field: "areaFractionFX"
+    typedef Expr::PlaceHolder<XVolField>  XAreaFractionT;
+    gh->exprFactory->register_expression( new XAreaFractionT::Builder(Expr::Tag(xAreaFractionName,Expr::STATE_N)) );        
+  }
+
+  // x area fraction
+  std::string yAreaFractionName = d_lab->d_areaFractionFYLabel->getName();
+  const Expr::Tag yAreaFractionTag( yAreaFractionName, Expr::STATE_N );
+  if( !(gh->exprFactory->have_entry( yAreaFractionTag )) ) {
+    // register placeholder expressions for volume fraction field: "areaFractionFY"
+    typedef Expr::PlaceHolder<YVolField>  YAreaFractionT;
+    gh->exprFactory->register_expression( new YAreaFractionT::Builder(Expr::Tag(yAreaFractionName,Expr::STATE_N)) );        
+  }
+
+  // x area fraction
+  std::string zAreaFractionName = d_lab->d_areaFractionFZLabel->getName();
+  const Expr::Tag zAreaFractionTag( zAreaFractionName, Expr::STATE_N );
+  if( !(gh->exprFactory->have_entry( zAreaFractionTag )) ) {
+    // register placeholder expressions for volume fraction field: "areaFractionFZ"
+    typedef Expr::PlaceHolder<ZVolField>  ZAreaFractionT;
+    gh->exprFactory->register_expression( new ZAreaFractionT::Builder(Expr::Tag(zAreaFractionName,Expr::STATE_N)) );        
   }
   
   //____________________________________________________________________________   
@@ -1521,7 +1560,11 @@ Arches::scheduleTimeAdvance( const LevelP& level,
     //    if (nofTimeSteps < 2) {
     if (time < 1.0E-10) {
       proc0cout << "Calculating at time step = " << nofTimeSteps << endl;
-      d_nlSolver->noSolve(level, sched);
+      d_nlSolver->noSolve(level, sched
+#       ifdef WASATCH_IN_ARCHES
+          , *d_wasatch, d_timeIntegrator
+#       endif // WASATCH_IN_ARCHES
+                          );      
     }
     else
       d_nlSolver->nonlinearSolve(level, sched
@@ -1565,11 +1608,21 @@ Arches::scheduleTimeAdvance( const LevelP& level,
     }
   }
   
+#ifndef ExactMPMArchesInitialize
 # ifdef WASATCH_IN_ARCHES
+  if (time > 1.0E-10) {
   // disable wasatch's time integrator because Arches is handling it.
   d_wasatch->disable_timestepper_creation();  
   d_wasatch->scheduleTimeAdvance( level, sched );  
+  }
 # endif // WASATCH_IN_ARCHES  
+#else
+# ifdef WASATCH_IN_ARCHES
+    // disable wasatch's time integrator because Arches is handling it.
+    d_wasatch->disable_timestepper_creation();  
+    d_wasatch->scheduleTimeAdvance( level, sched );  
+# endif // WASATCH_IN_ARCHES  
+#endif
 }
 
 // ****************************************************************************
