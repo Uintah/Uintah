@@ -246,10 +246,12 @@ namespace Wasatch{
     }
 
     const Expr::Tag densT = Expr::Tag();
+    //const Expr::Tag volFracTag = Expr::Tag();    
+    const Expr::Tag emptyTag = Expr::Tag();    
     const bool tempConstDens = false;
     return factory.register_expression(
         scinew typename ScalarRHS<FieldT>::Builder(Expr::Tag( thisPhiName + "_rhs", Expr::STATE_NONE ),
-                                                   info,srcTags,densT,tempConstDens) );
+                                                   info,srcTags,densT,emptyTag, emptyTag, emptyTag, emptyTag,tempConstDens) );
   }
 
   //------------------------------------------------------------------
