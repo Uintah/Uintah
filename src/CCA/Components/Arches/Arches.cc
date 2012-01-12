@@ -937,6 +937,11 @@ Arches::sched_paramInit(const LevelP& level,
     tsk->computes(d_lab->d_pressurePSLabel);
     tsk->computes(d_lab->d_areaFractionLabel);
     tsk->computes(d_lab->d_volFractionLabel);
+#ifdef WASATCH_IN_ARCHES
+    tsk->computes(d_lab->d_areaFractionFXLabel); 
+    tsk->computes(d_lab->d_areaFractionFYLabel); 
+    tsk->computes(d_lab->d_areaFractionFZLabel); 
+#endif 
     tsk->computes(d_lab->d_densityGuessLabel);
 
     if (!((d_timeIntegratorType == "FE")||(d_timeIntegratorType == "BE"))){
@@ -1064,8 +1069,21 @@ Arches::paramInit(const ProcessorGroup* pg,
     CCVariable<double> mmgasVolFrac;
     CCVariable<Vector> areaFraction;
     CCVariable<double> volFraction;
+#ifdef WASATCH_IN_ARCHES
+    SFCXVariable<double> areaFractionFX; 
+    SFCYVariable<double> areaFractionFY; 
+    SFCZVariable<double> areaFractionFZ; 
+#endif 
 
     new_dw->allocateAndPut( areaFraction, d_lab->d_areaFractionLabel, indx, patch );
+#ifdef WASATCH_IN_ARCHES
+    new_dw->allocateAndPut( areaFractionFX, d_lab->d_areaFractionFXLabel, indx, patch );
+    new_dw->allocateAndPut( areaFractionFY, d_lab->d_areaFractionFYLabel, indx, patch );
+    new_dw->allocateAndPut( areaFractionFZ, d_lab->d_areaFractionFZLabel, indx, patch );
+    areaFractionFX.initialize(1.0);
+    areaFractionFY.initialize(1.0);
+    areaFractionFZ.initialize(1.0);
+#endif 
     new_dw->allocateAndPut( volFraction, d_lab->d_volFractionLabel, indx, patch );
     areaFraction.initialize(Vector(1.,1.,1.));
     volFraction.initialize(1.0);
