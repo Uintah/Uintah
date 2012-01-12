@@ -6052,8 +6052,6 @@ void BoundaryCondition::setVel__NEW( const Patch* patch, const Patch::FaceType& 
        IntVector c  = *bound_ptr; 
        IntVector cp = *bound_ptr - insideCellDir; 
 
-//       cout << " ON THE MINUS FACE, value.y() == " << value.y() << endl;
-//
        vVel[c] = value.y();
        vVel[cp] = value.y() * density[c] / ( 0.5 * ( density[c] + density[cp] )); 
 
