@@ -143,7 +143,7 @@ namespace Wasatch{
     sharedState_ = sharedState;
 
     // disallow specification of extraCells
-/*    {
+    {
       std::ostringstream msg;
       bool foundExtraCells = false;
       Uintah::ProblemSpecP grid = params->findBlock("Grid");
@@ -175,7 +175,7 @@ namespace Wasatch{
             << endl;
         throw std::runtime_error( msg.str() );
       }
-    } */
+    } 
 
     // ADD BLOCK FOR IO FIELDS
     Uintah::ProblemSpecP archiverParams = params->findBlock("DataArchiver");
