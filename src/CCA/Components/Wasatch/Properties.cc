@@ -106,7 +106,7 @@ namespace Wasatch{
       proc0cout << "Constructing property evaluator for '" << dvarTag
                 << "' from file '" << fileName << "'." << std::endl;
 
-      const BSpline* const spline = table.find_entry( dvarTableName );
+      const InterpT* const spline = table.find_entry( dvarTableName );
 
       //____________________________________________
       // get the type of field that we will evaluate
@@ -172,7 +172,7 @@ namespace Wasatch{
             << std::endl;
         throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
       }
-      const BSpline* const spline = table.find_entry( dvarTableName );
+      const InterpT* const spline = table.find_entry( dvarTableName );
 
       //_____________________________________
       // register the expression for density

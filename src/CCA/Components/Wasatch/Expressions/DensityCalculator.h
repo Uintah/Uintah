@@ -34,7 +34,7 @@ class DensityCalculator
   const Expr::TagList rhoEtaTags_, rhoEtaIncEtaNames_, orderedEtaTags_;
   Expr::TagList rhoEtaExEtaNames_;
 
-  const BSpline* const evaluator_;
+  const InterpT* const evaluator_;
 
   IndepVarVec rhoEta_;
   IndepVarVec rhoEtaExEta_;
@@ -54,7 +54,7 @@ class DensityCalculator
   std::vector<double> orderedEta;  ///< A vector to store all eta values in the same order as the table
 
 
-  DensityCalculator( const BSpline* const spline,
+  DensityCalculator( const InterpT* const spline,
                      const Expr::TagList& RhoEtaTags,           ///< rho*eta tag
                      const Expr::TagList& RhoetaIncEtaNames,    ///< Tag for ReIEta
                      const Expr::TagList& OrderedEtaTags );     ///< Tag for all of the eta's in the corect order
@@ -64,17 +64,17 @@ class DensityCalculator
                          const std::vector<double>& RhoEta,
                          std::vector<int>& ReIindex,
                          double& rho,
-                         const BSpline&,
+                         const InterpT&,
                          const double rtol );
 
 public:
   class Builder : public Expr::ExpressionBuilder
   {
     const Expr::TagList rhoEtaTs_, rhoEtaIncEtaNs_, rhoEtaExEtaNs_, orderedEtaTs_;
-    const BSpline* const spline_;
+    const InterpT* const spline_;
   public:
     Builder( const Expr::Tag& result,
-             const BSpline* const spline,
+             const InterpT* const spline,
              const Expr::TagList& rhoEtaTags,
              const Expr::TagList& rhoEtaIncEtaNames,
              const Expr::TagList& orderedEtaTags );
@@ -101,7 +101,7 @@ public:
 
 template< typename FieldT >
 DensityCalculator<FieldT>::
-DensityCalculator( const BSpline* const spline,
+DensityCalculator( const InterpT* const spline,
                    const Expr::TagList& rhoEtaTags,
                    const Expr::TagList& rhoetaIncEtaNames,
                    const Expr::TagList& orderedEtaTags )
@@ -249,7 +249,7 @@ evaluate()
 template< typename FieldT >
 DensityCalculator<FieldT>::
 Builder::Builder( const Expr::Tag& result,
-                  const BSpline* const spline,
+                  const InterpT* const spline,
                   const Expr::TagList& rhoEtaTags,
                   const Expr::TagList& rhoEtaIncEtaNames,
                   const Expr::TagList& orderedEtaTags )
@@ -298,7 +298,7 @@ DensityCalculator<FieldT>::nonlinear_solver( std::vector<double>& ReIeta,
                                              const std::vector<double>& rhoEta,
                                              std::vector<int>& ReIindex,
                                              double& rho,
-                                             const BSpline& eval,
+                                             const InterpT& eval,
                                              const double rtol )
 {
   const size_t neq = rhoEta.size();
