@@ -149,9 +149,11 @@
     <n                             spec="OPTIONAL DOUBLE" />
     <meanstrain_nucleation         spec="OPTIONAL DOUBLE" />
     <melting_temp_model            spec="OPTIONAL NO_DATA"
-                                     attribute1="type REQUIRED STRING 'constant_Tm, scg_Tm'" >
+                                     attribute1="type REQUIRED STRING 'constant_Tm, linear_Tm, scg_Tm, bps_Tm'" >
       <a                           spec="OPTIONAL DOUBLE" />
+      <b                           spec="OPTIONAL DOUBLE" />
       <Gamma_0                     spec="OPTIONAL DOUBLE" />
+      <K_T                         spec="OPTIONAL DOUBLE" />
       <T_m0                        spec="OPTIONAL DOUBLE" />
     </melting_temp_model>
     <om                            spec="OPTIONAL DOUBLE" />
