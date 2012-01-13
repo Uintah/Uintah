@@ -35,6 +35,13 @@
       <mme_src_t_start        spec="OPTIONAL DOUBLE" need_applies_to="type mass_momentum_energy_src"/>
       <mme_src_t_final        spec="OPTIONAL DOUBLE" need_applies_to="type mass_momentum_energy_src"/>
       
+      <!-- Test -->
+      <Test                   spec="OPTIONAL NO_DATA">            
+        <fromMaterial         spec="OPTIONAL STRING" />           
+        <toMaterial           spec="OPTIONAL STRING" />
+        <rate                 spec="REQUIRED DOUBLE 'positive'"/>
+        <startTime            spec="REQUIRED DOUBLE 'positive'"/>
+      </Test>
       
       <!-- LightTime -->
       <LightTime              spec="OPTIONAL NO_DATA">            
@@ -123,7 +130,6 @@
         <geom_object                spec="OPTIONAL" />
       </RadiationModel>
       
-      <rate                         spec="OPTIONAL DOUBLE" />
       <refPressure                  spec="OPTIONAL DOUBLE" />
       
       <rho0                         spec="REQUIRED DOUBLE" need_applies_to="type Gruneisen JWL JWLC JWLpp Murnaghan Tillotson" />

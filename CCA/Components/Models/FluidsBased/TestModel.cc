@@ -31,6 +31,7 @@ DEALINGS IN THE SOFTWARE.
 
 #include <CCA/Components/Models/FluidsBased/TestModel.h>
 #include <CCA/Ports/Scheduler.h>
+#include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Variables/CCVariable.h>
@@ -74,9 +75,17 @@ TestModel::~TestModel()
 void TestModel::problemSetup(GridP&, SimulationStateP& sharedState,
                              ModelSetup* )
 {
-  matl0 = sharedState->parseAndLookupMaterial(params, "fromMaterial");
-  matl1 = sharedState->parseAndLookupMaterial(params, "toMaterial");
-  params->require("rate", d_rate);
+  d_sharedState = sharedState;
+  ProblemSpecP test_ps = params->findBlock("Test");
+  if (!test_ps){
+     throw ProblemSetupException("TestModel: Couldn't find <Test> tag", __FILE__, __LINE__);    
+  }
+  
+  matl0 = sharedState->parseAndLookupMaterial(test_ps, "fromMaterial");
+  matl1 = sharedState->parseAndLookupMaterial(test_ps, "toMaterial");
+  
+  test_ps->require("rate", d_rate);
+  test_ps->getWithDefault("startTime",   d_startTime, 0.0);
 
   vector<int> m(2);
   m[0] = matl0->getDWIndex();
@@ -113,9 +122,8 @@ void TestModel::outputProblemSpec(ProblemSpecP& ps)
   
   model_ps->appendElement("fromMaterial",matl0->getName());
   model_ps->appendElement("toMaterial",  matl1->getName());
-  
-  model_ps->appendElement("rate",     d_rate );
-
+  model_ps->appendElement("startTime",   d_startTime);
+  model_ps->appendElement("rate",        d_rate ); 
 }
  
 //______________________________________________________________________
@@ -250,27 +258,32 @@ void TestModel::computeModelSources(const ProcessorGroup*,
     }
     //__________________________________
     //  Do some work
-    for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++){
-      IntVector c = *iter;
-      double massx = mass_0[c]*trate;
-      mass_src_0[c] -= massx;
-      mass_src_1[c] += massx;
-
-      Vector momx = vel_0[c]*massx;
-      mom_src_0[c] -= momx;
-      mom_src_1[c] += momx;
-      
-      double energyx = temp_0[c] * massx * cv[c];
-      eng_src_0[c] -= energyx;
-      eng_src_1[c] += energyx;
     
-      double vol_sourcex  = massx * sp_vol_0[c];
-      sp_vol_src_0[c] -= vol_sourcex;
-      sp_vol_src_1[c] += vol_sourcex;
-            
-      totalMassX += massx;
-      totalIntEngX += energyx;
+    double t  = d_sharedState->getElapsedTime();
+    if (t >= d_startTime){
+      for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++){
+        IntVector c = *iter;
+        double massx = mass_0[c]*trate;
+        mass_src_0[c] -= massx;
+        mass_src_1[c] += massx;
+
+        Vector momx = vel_0[c]*massx;
+        mom_src_0[c] -= momx;
+        mom_src_1[c] += momx;
+
+        double energyx = temp_0[c] * massx * cv[c];
+        eng_src_0[c] -= energyx;
+        eng_src_1[c] += energyx;
+
+        double vol_sourcex  = massx * sp_vol_0[c];
+        sp_vol_src_0[c] -= vol_sourcex;
+        sp_vol_src_1[c] += vol_sourcex;
+
+        totalMassX += massx;
+        totalIntEngX += energyx;
+      }
     }
+    
     new_dw->put(sum_vartype(totalMassX),  TestModel::totalMassXLabel);
     new_dw->put(sum_vartype(totalIntEngX),TestModel::totalIntEngXLabel);
   }
