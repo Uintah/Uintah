@@ -79,6 +79,7 @@ SRCS   += \
 	$(SRCDIR)/MeltingTempModel.cc \
 	$(SRCDIR)/MeltingTempModelFactory.cc \
 	$(SRCDIR)/ConstantMeltTemp.cc \
+	$(SRCDIR)/LinearMeltTemp.cc \
 	$(SRCDIR)/SCGMeltTemp.cc \
 	$(SRCDIR)/BPSMeltTemp.cc \
 	$(SRCDIR)/ViscoPlasticityModel.cc \
