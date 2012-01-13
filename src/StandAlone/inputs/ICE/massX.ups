@@ -14,7 +14,7 @@
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
    <Time>
-       <maxTime>            0.01        </maxTime>
+       <maxTime>            1.0        </maxTime>
        <initTime>           0.0         </initTime>
        <delt_min>           0.0         </delt_min>
        <delt_max>           1.0         </delt_max>
@@ -31,8 +31,8 @@
         <BCType id = "0"   label = "Pressure"     var = "Neumann">
                               <value> 0. </value>
         </BCType>
-        <BCType id = "all" label = "Velocity"     var = "Neumann">
-                              <value> [0.,0.,0.] </value>
+        <BCType id = "all" label = "Velocity"     var = "Dirichlet">
+                              <value> [1.,1.,1.] </value>
         </BCType>
         <BCType id = "all" label = "Temperature"  var = "Neumann">
                               <value> 0.0 </value>
@@ -40,16 +40,17 @@
         <BCType id = "all" label = "Density"      var = "Neumann">
                               <value> 0.0 </value>
         </BCType>
+        <!--
         <BCType id = "all" label = "SpecificVol"  var = "computeFromDensity">
                               <value> 0.0 </value>
-        </BCType>
+        </BCType>-->
       </Face>
       <Face side = "x+">
         <BCType id = "0"   label = "Pressure"     var = "Neumann">
                               <value> 0. </value>
         </BCType>
-        <BCType id = "all" label = "Velocity"     var = "Neumann">
-                              <value> [0.,0.,0.] </value>
+        <BCType id = "all" label = "Velocity"     var = "Dirichlet">
+                              <value> [1.,1.,1.]  </value>
         </BCType>
         <BCType id = "all" label = "Temperature"  var = "Neumann">
                               <value> 0.0 </value>
@@ -57,16 +58,17 @@
         <BCType id = "all" label = "Density"      var = "Neumann">
                               <value> 0.0 </value>
         </BCType>
+        <!--
         <BCType id = "all" label = "SpecificVol"  var = "computeFromDensity">
                               <value> 0.0 </value>
-        </BCType>
+        </BCType>-->
       </Face>
       <Face side = "y-">
         <BCType id = "0"   label = "Pressure"     var = "Neumann">
                               <value> 0. </value>
         </BCType>
-        <BCType id = "all" label = "Velocity"     var = "Neumann">
-                              <value> [0.,0.,0.] </value>
+        <BCType id = "all" label = "Velocity"     var = "Dirichlet">
+                              <value> [1.,1.,1.]  </value>
         </BCType>
         <BCType id = "all" label = "Temperature"  var = "Neumann">
                               <value> 0.0 </value>
@@ -74,16 +76,17 @@
         <BCType id = "all" label = "Density"      var = "Neumann">
                               <value> 0.0 </value>
         </BCType>
+        <!--
         <BCType id = "all" label = "SpecificVol"  var = "computeFromDensity">
                               <value> 0.0 </value>
-        </BCType>
+        </BCType>-->
       </Face>                  
       <Face side = "y+">
         <BCType id = "0"   label = "Pressure"     var = "Neumann">
                               <value> 0. </value>
         </BCType>
-        <BCType id = "all" label = "Velocity"     var = "Neumann">
-                              <value> [0.,0.,0.] </value>
+        <BCType id = "all" label = "Velocity"     var = "Dirichlet">
+                              <value> [1.,1.,1.]  </value>
         </BCType>
         <BCType id = "all" label = "Temperature"  var = "Neumann">
                               <value> 0.0 </value>
@@ -91,16 +94,17 @@
         <BCType id = "all" label = "Density"      var = "Neumann">
                               <value> 0.0 </value>
         </BCType>
+        <!--
         <BCType id = "all" label = "SpecificVol"  var = "computeFromDensity">
                               <value> 0.0 </value>
-        </BCType>
+        </BCType>-->
       </Face>
       <Face side = "z-">
         <BCType id = "0"   label = "Pressure"     var = "Neumann">
                               <value> 0. </value>
         </BCType>
-        <BCType id = "all" label = "Velocity"     var = "Neumann">
-                              <value> [0.,0.,0.] </value>
+        <BCType id = "all" label = "Velocity"     var = "Dirichlet">
+                              <value> [1.,1.,1.]  </value>
         </BCType>
         <BCType id = "all" label = "Temperature"  var = "Neumann">
                               <value> 0.0 </value>
@@ -108,16 +112,17 @@
         <BCType id = "all" label = "Density"      var = "Neumann">
                               <value> 0.0 </value>
         </BCType>
+        <!--
         <BCType id = "all" label = "SpecificVol"  var = "computeFromDensity">
                               <value> 0.0 </value>
-        </BCType>
+        </BCType>-->
       </Face>
       <Face side = "z+">
         <BCType id = "0"   label = "Pressure"     var = "Neumann">
                               <value> 0. </value>
         </BCType>
-        <BCType id = "all" label = "Velocity"     var = "Neumann">
-                              <value> [0.,0.,0.] </value>
+        <BCType id = "all" label = "Velocity"     var = "Dirichlet">
+                              <value> [1.,1.,1.]  </value>
         </BCType>
         <BCType id = "all" label = "Temperature"  var = "Neumann">
                               <value> 0.0 </value>
@@ -125,9 +130,10 @@
         <BCType id = "all" label = "Density"      var = "Neumann">
                               <value> 0.0 </value>       
         </BCType>
+        <!--
         <BCType id = "all" label = "SpecificVol"  var = "computeFromDensity">
                               <value> 0.0 </value>
-        </BCType>
+        </BCType>-->
       </Face>
     </BoundaryConditions>
        <Level>
@@ -154,13 +160,18 @@
       <save label="mom_L_ME_CC"/>
       <save label="eng_L_ME_CC"/>
       <save label="vol_frac_CC"/>
+      <save label="TotalMomentum"/>
+      <save label="TotalIntEng"/>
+      <save label="TotalMass"/>
+      <save label="totalMassExchanged"/>
+      <save label="totalIntEngExchanged"/>
    </DataArchiver>
    
     <!--____________________________________________________________________-->
     <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
     <!--____________________________________________________________________-->
     <CFD>
-         <cfl>0.4</cfl>
+         <cfl>0.3</cfl>
        <ICE>
         <advection type = "FirstOrder" />
       </ICE>        
@@ -180,7 +191,7 @@
     <!--____________________________________________________________________-->
     <MaterialProperties>
        <ICE>
-         <material >
+         <material name="product">
            <EOS type="ideal_gas">                     </EOS>
            <dynamic_viscosity>   0.0                    </dynamic_viscosity>
            <thermal_conductivity>0.0                    </thermal_conductivity>
@@ -213,7 +224,7 @@
            <geom_object>
                 <box label="blobInMiddle">              </box>
                <res>            [2,2,2]                 </res>
-               <velocity>       [0,0,0]                 </velocity>
+               <velocity>       [1,1,1]                 </velocity>
                <density>        1.789990995722571500e+00</density>
                <pressure>       101325.0                </pressure>
                <temperature>    300.0                   </temperature>
@@ -224,22 +235,31 @@
        <exchange_properties>       
          <exchange_coefficients>
             <momentum>          [1.0e10]          </momentum>
-            <heat>              [0.0e10]          </heat>
+            <heat>              [1.0e10]          </heat>
          </exchange_coefficients>
        </exchange_properties>
 
     </MaterialProperties>       
     
-        
+       
     <Models>
+      <Model type = "Test">
+        <Test>
+          <fromMaterial> reactant   </fromMaterial>
+          <toMaterial>   product    </toMaterial>
+          <rate>        100          </rate>
+          <startTime>    0.2         </startTime>
+        </Test>
+      </Model>
+<!--
       <Model type="mass_momentum_energy_src">
         <material> reactant   </material>
         <momentum_src>  [0,0,0]   </momentum_src>
         <mass_src>      1         </mass_src>
-        <!-- To maintain constant temperature, eng_src must be:
-                mass_src * specific_heat * initial_temperature -->
+         To maintain constant temperature, eng_src must be:
+                mass_src * specific_heat * initial_temperature
         <energy_src>    195870.    </energy_src>
-      </Model>
+      </Model>  -->
     </Models>       
 </Uintah_specification>
 
