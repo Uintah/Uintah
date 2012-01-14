@@ -117,5 +117,6 @@ LinearMeltTemp::computeMeltingTemp(const PlasticityState* state)
   } else if(d_useVolumeForm) {
      return d_Tm0*(1.0+d_a*(state->initialDensity/state->density));
   }
+  return d_Tm0;
 }
 
