@@ -28,55 +28,60 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#ifndef __LINEAR_MELT_TEMP_MODEL_H__
-#define __LINEAR_MELT_TEMP_MODEL_H__
+#ifndef __CUBIC_SPECIFIC_HEAT_MODEL_H__
+#define __CUBIC_SPECIFIC_HEAT_MODEL_H__
 
-#include "MeltingTempModel.h"
+#include "SpecificHeatModel.h"
 #include <Core/ProblemSpec/ProblemSpecP.h>
 
 namespace Uintah {
 
-  /*! \class LinearMeltTemp
-   *  \brief The melting temperature varies linearly with pressure
+  /*! \class CubicCp
+   *  \brief The specfic heat varies from the Debye cubic temperature dependence 
+   *    to constant at the asymptotic upper limit is reached.
    *  \author Joseph Peterson, 
-   *  \author C-SAFE and Department of Chemistry,
+   *  \author Department of Chemistry,
    *  \author University of Utah.
    *  \author Copyright (C) 2012 C-SAFE
    *
   */
-  class LinearMeltTemp : public MeltingTempModel {
+  class CubicCp : public SpecificHeatModel {
 
   private:
-    LinearMeltTemp& operator=(const LinearMeltTemp &mtm);
+    CubicCp& operator=(const CubicCp &smm);
 
-    bool d_usePressureForm;
-    bool d_useVolumeForm;
-
-    double d_Tm0;    // Initial melting temperature (K)
-    double d_a;      // Kraut-Kennedy coefficient 
-    double d_Gamma;  // Gruneisen gamma 
-    double d_b;      // Pressure coefficient (K/Pa)
-    double d_K_T;    // Isothermal bulk modulus (Pa)
-
-
+    double d_a;
+    double d_b;
+    double d_c0;   // kgK/J
+    double d_c1;   // kgK/J
+    double d_c2;   // kgK/J
+    double d_c3;   // kgK/J
+      
+    /*! A helper function to compute the Debye Temperature */
+    double computeDebyeT(double, double);
+      
   public:
          
-    /*! Construct a linear melt temp model. */
-    LinearMeltTemp();
-    LinearMeltTemp(ProblemSpecP& ps);
+    /*! Construct a constant specfic heat model. */
+    CubicCp();
+    CubicCp(ProblemSpecP& ps);
 
-    /*! Construct a copy of linear melt temp model. */
-    LinearMeltTemp(const LinearMeltTemp* mtm);
+    /*! Construct a copy of constant specfic heat model. */
+    CubicCp(const CubicCp* smm);
 
-    /*! Destructor of linear melt temp model.   */
-    virtual ~LinearMeltTemp();
+    /*! Destructor of constant specfic heat model.   */
+    virtual ~CubicCp();
          
     virtual void outputProblemSpec(ProblemSpecP& ps);
-
-    /*! Compute the melt temp */
-    double computeMeltingTemp(const PlasticityState* state);
+         
+    /*! Compute the specfic heat */
+    double computeSpecificHeat(const PlasticityState* state);
+      
+    /*! A helper function to compute the Gruneisen coefficient */
+    double computeGamma(double,double);
+      
   };
 } // End namespace Uintah
       
-#endif  // __LINEAR_MELT_TEMP_MODEL_H__
+#endif  // __CUBIC_SPECIFIC_HEAT_MODEL_H__
 
