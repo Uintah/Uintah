@@ -387,9 +387,11 @@
 
     <Models>
       <Model type="Test">
-        <fromMaterial>         reactant     </fromMaterial>
-        <toMaterial>   PBXproductGases      </toMaterial>
-        <rate> 100 </rate>
+        <Test>
+          <fromMaterial>         reactant     </fromMaterial>
+          <toMaterial>   PBXproductGases      </toMaterial>
+          <rate> 100 </rate>
+        </Test>
       </Model> 
     </Models>
 

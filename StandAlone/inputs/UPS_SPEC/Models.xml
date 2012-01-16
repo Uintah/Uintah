@@ -33,14 +33,15 @@
       <momentum_src           spec="REQUIRED VECTOR" need_applies_to="type mass_momentum_energy_src"/>
       
       <mme_src_t_start        spec="OPTIONAL DOUBLE" need_applies_to="type mass_momentum_energy_src"/>
-      <mme_src_t_final        spec="OPTIONAL DOUBLE" need_applies_to="type mass_momentum_energy_src"/>
-      
+      <mme_src_t_final        spec="OPTIONAL DOUBLE" need_applies_to="type mass_momentum_energy_src"/>  
+      <rate                   spec="OPTIONAL DOUBLE 'positive'"/> 
+
       <!-- Test -->
       <Test                   spec="OPTIONAL NO_DATA">            
         <fromMaterial         spec="OPTIONAL STRING" />           
         <toMaterial           spec="OPTIONAL STRING" />
         <rate                 spec="REQUIRED DOUBLE 'positive'"/>
-        <startTime            spec="REQUIRED DOUBLE 'positive'"/>
+        <startTime            spec="OPTIONAL DOUBLE 'positive'"/>
       </Test>
       
       <!-- LightTime -->
