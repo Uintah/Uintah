@@ -120,10 +120,11 @@ void TestModel::outputProblemSpec(ProblemSpecP& ps)
   ProblemSpecP model_ps = ps->appendChild("Model");
   model_ps->setAttribute("type","Test");
   
-  model_ps->appendElement("fromMaterial",matl0->getName());
-  model_ps->appendElement("toMaterial",  matl1->getName());
-  model_ps->appendElement("startTime",   d_startTime);
-  model_ps->appendElement("rate",        d_rate ); 
+  ProblemSpecP test_ps  = model_ps->appendChild("Test");
+  test_ps->appendElement("fromMaterial",matl0->getName());
+  test_ps->appendElement("toMaterial",  matl1->getName());
+  test_ps->appendElement("startTime",   d_startTime);
+  test_ps->appendElement("rate",        d_rate ); 
 }
  
 //______________________________________________________________________
