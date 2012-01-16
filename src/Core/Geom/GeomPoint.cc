@@ -46,7 +46,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/NotFinished.h>
 #include <Core/Persistent/PersistentSTL.h>
-
+#include <cstdio>
 #include <iostream>
 #include <algorithm>
 #include <cstdio>
