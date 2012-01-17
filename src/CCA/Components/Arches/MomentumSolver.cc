@@ -998,9 +998,8 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
 
     } 
 
-                if ( !d_boundaryCondition->isUsingNewBC() ) { 
-        if ((d_boundaryCondition->getOutletBC())||
-            (d_boundaryCondition->getPressureBC())) {
+    if ( !d_boundaryCondition->isUsingNewBC() ) { 
+      if ((d_boundaryCondition->getOutletBC())|| (d_boundaryCondition->getPressureBC())) {
 
             d_boundaryCondition->velRhoHatOutletPressureBC( patch, 
                                                             velocityVars.uVelRhoHat, 
@@ -1010,17 +1009,18 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
                                                             constVelocityVars.old_vVelocity, 
                                                             constVelocityVars.old_wVelocity, 
                                                             constVelocityVars.cellType ); 
-        }
-                } else { 
-            d_boundaryCondition->velocityOutletPressureBC__NEW( patch, 
-                                                                                                                                                                                                                                                        indx, 
-                                                                        velocityVars.uVelRhoHat, 
-                                                                        velocityVars.vVelRhoHat, 
-                                                                        velocityVars.wVelRhoHat, 
-                                                                        constVelocityVars.old_uVelocity, 
-                                                                        constVelocityVars.old_vVelocity, 
-                                                                        constVelocityVars.old_wVelocity ); 
-                } 
+      }
+    } else { 
+
+      d_boundaryCondition->velocityOutletPressureBC__NEW( patch, 
+                                                          indx,
+                                                          velocityVars.uVelRhoHat, 
+                                                          velocityVars.vVelRhoHat, 
+                                                          velocityVars.wVelRhoHat, 
+                                                          constVelocityVars.old_uVelocity, 
+                                                          constVelocityVars.old_vVelocity, 
+                                                          constVelocityVars.old_wVelocity ); 
+    } 
 
 
 //#ifdef divergenceconstraint    
