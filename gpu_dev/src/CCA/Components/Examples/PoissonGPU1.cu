@@ -97,7 +97,7 @@ void PoissonGPU1::scheduleComputeStableTimestep(const LevelP& level,
 //
 void PoissonGPU1::scheduleTimeAdvance(const LevelP& level,
                                       SchedulerP& sched) {
-  Task * task = scinew Task("PoissonGPU1::timeAdvance1DP", this, &PoissonGPU1::timeAdvance1DP);
+  Task * task = scinew Task("PoissonGPU1::timeAdvanceGPU", this, &PoissonGPU1::timeAdvanceGPU);
 
   task->requires(Task::OldDW, phi_label, Ghost::AroundNodes, 1);
   task->computes(phi_label);
@@ -250,10 +250,12 @@ void PoissonGPU1::timeAdvance1DP(const ProcessorGroup*,
     int ystride = yhigh + ghostLayers;
     int xstride = xhigh + ghostLayers;
 
-    for (int i = l.z(); i < zhigh; i++) {
-      for (int j = l.y(); j < yhigh; j++) {
-        for (int k = l.x(); k < xhigh; k++) {
+    cout << "high(x,y,z): " << xhigh << "," << yhigh << "," << zhigh << endl;
 
+    for (int k = l.z(); k < zhigh; k++) {
+      for (int j = l.y(); j < yhigh; j++) {
+        for (int i = l.x(); i < xhigh; i++) {
+          cout << "(x,y,z): " << k << "," << j << "," << i << endl;
           // For an array of [ A ][ B ][ C ], we can index it thus:
           // (a * B * C) + (b * C) + (c * 1)
           int idx = i + (j * xstride) + (k * xstride * ystride);
@@ -357,34 +359,30 @@ __global__ void timeAdvanceKernel(uint3 domainSize,
                                   double *phi,
                                   double *newphi,
                                   double *residual) {
-
-// calculate the thread indices
-  int tidX = blockDim.x * blockIdx.x + threadIdx.x;
-  int tidY = blockDim.y * blockIdx.y + threadIdx.y;
+  // calculate the thread indices
+  int i = blockDim.x * blockIdx.x + threadIdx.x;
+  int j = blockDim.y * blockIdx.y + threadIdx.y;
   //  int tidZ = blockDim.z * blockIdx.z + threadIdx.z;
+  
 
-  int num_slices = domainSize.z - ghostLayers;
-  int dx = domainSize.x;
-  int dy = domainSize.y;
+  int dx = domainSize.x + ghostLayers;
+  int dy = domainSize.y + ghostLayers;
+  if(i > 0 && j > 0 && i < domainSize.x && j < domainSize.z) {
+    for (int k = domainLower.z; k < domainSize.z; k++) {
+      // For an array of [ A ][ B ][ C ], we can index it thus:
+      // (a * B * C) + (b * C) + (c * 1)
+      int idx = INDEX3D(dx,dy,i,j,k); // i + (j * dx) + (k * dx * dy);
 
-  if (tidX < (dx - ghostLayers) && tidY < (dy - ghostLayers) && tidX > 0 && tidY > 0) {
-    for (int slice = ghostLayers; slice < num_slices; slice++) {
+      int xminus = INDEX3D(dx,dy, (i-1), j, k);
+      int xplus  = INDEX3D(dx,dy, (i+1), j, k);
+      int yminus = INDEX3D(dx,dy, i, (j-1), k);
+      int yplus  = INDEX3D(dx,dy, i, (j+1), k);
+      int zminus = INDEX3D(dx,dy, i, j, (k-1));
+      int zplus  = INDEX3D(dx,dy, i, j, (k+1));
 
-      newphi[INDEX3D(dx, dy, tidX, tidY, slice)] =
-          (1.0 / 6.0)
-          * (phi[INDEX3D(dx, dy, tidX - 1, tidY, slice)]
-             + phi[INDEX3D(dx, dy, tidX + 1, tidY, slice)]
-             + phi[INDEX3D(dx, dy, tidX, tidY - 1, slice)]
-             + phi[INDEX3D(dx, dy, tidX, tidY + 1, slice)]
-             + phi[INDEX3D(dx, dy, tidX, tidY, slice - 1)]
-             + phi[INDEX3D(dx, dy, tidX, tidY, slice + 1)]);
+      newphi[idx] = (1. / 6) * (phi[xminus] + phi[xplus] + phi[yminus]
+          + phi[yplus] + phi[zminus] + phi[zplus]);
 
-      //double diff = newphi[INDEX3D(dx, dy, tidX, tidY, slice)]
-      //               - phi[INDEX3D(dx, dy, tidX, tidY, slice)];
-
-      // this will cause a race condition. what we need is a reduction to compute this
-      // in conjunction with atomicAdd() and __shared__ double[] residual_device;
-      //*residual += diff * diff;;
     }
   }
 }
@@ -461,16 +459,16 @@ void PoissonGPU1::timeAdvanceGPU(const ProcessorGroup*,
 
     //__________________________________
     //  Memory Allocation
-    phi_host = (double*)phi.getWindow()->getData()->getPointer();
+    phi_host    = (double*)phi.getWindow()->getData()->getPointer();
     newphi_host = (double*)newphi.getWindow()->getData()->getPointer();
 
-    cudaMemcpy(phi_device, phi_host, size, cudaMemcpyHostToDevice);
-    cudaMemcpy(newphi_device, newphi_host, size, cudaMemcpyHostToDevice);
+    CUDA_SAFE_CALL(cudaMemcpy(phi_device,    phi_host,    size, cudaMemcpyHostToDevice));
+    CUDA_SAFE_CALL(cudaMemcpy(newphi_device, newphi_host, size, cudaMemcpyHostToDevice));
 
-    uint3 domainSize = make_uint3(xdim, ydim, zdim);
+    uint3 domainSize  = make_uint3(h.x(), h.y(), h.z());
     uint3 domainLower = make_uint3(l.x(), l.y(), l.z());
     int totalBlocks = size / (sizeof(double) * xdim * ydim * zdim);
-    dim3 threadsPerBlock(xdim, ydim, zdim);
+    dim3 threadsPerBlock(8, 8, 8);
 
     if (size % (totalBlocks) != 0) {
       totalBlocks++;
@@ -479,14 +477,20 @@ void PoissonGPU1::timeAdvanceGPU(const ProcessorGroup*,
     // launch kernel
     timeAdvanceKernel<<< totalBlocks, threadsPerBlock >>>(domainSize, domainLower, ghostLayers, phi_device, newphi_device, &residual);
 
-    cudaDeviceSynchronize();
-    cudaMemcpy(newphi_host, newphi_device, size, cudaMemcpyDeviceToHost);
+    cudaError_t error = cudaGetLastError();
+    if(error!=cudaSuccess) {
+      fprintf(stderr,"ERROR: %s\n", cudaGetErrorString(error) );
+      exit(-1);
+    } 
+
+    CUDA_SAFE_CALL(cudaDeviceSynchronize());
+    CUDA_SAFE_CALL(cudaMemcpy(newphi_host, newphi_device, size, cudaMemcpyDeviceToHost));
 
     new_dw->put(sum_vartype(residual), residual_label);
 
   } // end patch for loop
 
   // free up allocated memory
-  cudaFree(phi_device);
-  cudaFree(newphi_device);
+  CUDA_SAFE_CALL(cudaFree(phi_device));
+  CUDA_SAFE_CALL(cudaFree(newphi_device));
 }
