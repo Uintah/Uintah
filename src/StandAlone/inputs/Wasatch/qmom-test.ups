@@ -104,6 +104,8 @@
     <checkpoint cycle = "2" interval = "0.0001"/>
     <compression>gzip</compression>
     <save label="m_CACO3_0"/>
+    <save label="m_CACO3_1"/>
+    <save label="m_CACO3_2"/>    
     <save label="m_CACO3_3"/>    
     <save label="w_CACO3_0"/>    
     <save label="w_CACO3_1"/>    
@@ -117,8 +119,8 @@
       <Box label="1">
         <lower>[0,0,0]</lower>
         <upper>[1,1,1]</upper>
-        <resolution>[2,2,2]</resolution>
-        <patches>[1,1,1]</patches>
+        <resolution>[20,20,20]</resolution>
+        <patches>[2,2,2]</patches>
       </Box>
       <periodic>[1,1,1]</periodic>
     </Level>

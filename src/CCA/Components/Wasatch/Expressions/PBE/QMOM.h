@@ -6,6 +6,8 @@
 #include <expression/Expression.h>
 #include <math.h>
 
+//#define WASATCH_QMOM_DIAGNOSTICS
+
 // declare lapack eigenvalue solver
 extern "C"{
   void dsyev_( char* jobz, char* uplo, int* n, double* a, int* lda,
@@ -24,23 +26,36 @@ class QMOM : public Expr::Expression<FieldT>
 {
   typedef std::vector<const FieldT*> FieldTVec;
   FieldTVec knownMoments_;
+
+  const FieldT* superSaturation_;
+  
   const Expr::TagList knownMomentsTagList_;
-  QMOM( const Expr::TagList knownMomentsTagList );
+  const Expr::Tag superSaturationTag_;
+  const bool hasSuperSaturation_;
+  
+  QMOM( const Expr::TagList knownMomentsTagList,
+       const Expr::Tag superSaturationTag );
 
 public:
   class Builder : public Expr::ExpressionBuilder
   {
   public:
     Builder( const Expr::TagList& result,
-             const Expr::TagList& knownMomentsTagList )
+             const Expr::TagList& knownMomentsTagList,
+             const Expr::Tag& superSaturationTag)
     : ExpressionBuilder(result),
-      knownMomentsTagList_( knownMomentsTagList )
+      knownMomentsTagList_( knownMomentsTagList ),
+      superSaturationTag_ ( superSaturationTag  )
     {}
     ~Builder(){}
-    Expr::ExpressionBase* build() const{ return new QMOM<FieldT>( knownMomentsTagList_ ); }
+    Expr::ExpressionBase* build() const
+    { 
+      return new QMOM<FieldT>( knownMomentsTagList_, superSaturationTag_ ); 
+    }
 
   private:
     const Expr::TagList knownMomentsTagList_;
+    const Expr::Tag     superSaturationTag_;
   };
 
   ~QMOM();
@@ -62,9 +77,12 @@ public:
 
 template<typename FieldT>
 QMOM<FieldT>::
-QMOM( const Expr::TagList knownMomentsTaglist )
+QMOM( const Expr::TagList knownMomentsTaglist,
+      const Expr::Tag     superSaturationTag )
   : Expr::Expression<FieldT>(),
-    knownMomentsTagList_( knownMomentsTaglist )
+    knownMomentsTagList_( knownMomentsTaglist ),
+    superSaturationTag_ ( superSaturationTag  ),
+    hasSuperSaturation_ ( superSaturationTag_ != Expr::Tag() )
 {}
 
 //--------------------------------------------------------------------
@@ -80,6 +98,7 @@ QMOM<FieldT>::
 advertise_dependents( Expr::ExprDeps& exprDeps )
 {
   exprDeps.requires_expression( knownMomentsTagList_ );
+  if ( hasSuperSaturation_ ) exprDeps.requires_expression( superSaturationTag_ );
 }
 
 //--------------------------------------------------------------------
@@ -96,6 +115,8 @@ bind_fields( const Expr::FieldManagerList& fml )
        ++iMomTag ){
     knownMoments_.push_back( &fm.field_ref(*iMomTag) );
   }
+  
+  if ( hasSuperSaturation_ ) superSaturation_ = &fm.field_ref( superSaturationTag_ );
 }
 
 //--------------------------------------------------------------------
@@ -137,6 +158,11 @@ evaluate()
   // fields.
   const FieldT* sampleField = knownMoments_[0];
   typename FieldT::const_interior_iterator sampleIterator = sampleField->interior_begin();
+  
+  // grab an iterator for the supersaturation ratio field
+  typename FieldT::const_interior_iterator supersatIter;
+  if ( hasSuperSaturation_ ) supersatIter = superSaturation_->interior_begin();
+  
   double m0;
   //
   // create vector of iterators for the known moments and for the results
@@ -150,10 +176,33 @@ evaluate()
     typename FieldT::interior_iterator thisResultsIterator = results[i]->interior_begin();
     resultsIterators.push_back(thisResultsIterator);
   }
+  
+  
   //
   while (sampleIterator!=sampleField->interior_end()) {
+    
+    // check if we are in a region where supersaturation is nonzero
+    if (hasSuperSaturation_ && *supersatIter == 0) {
+      // in case the supersaturation is zero, set the weights and abscissae to zero
+      for (int i=0; i<abSize; i++) {
+        int matLoc = 2*i;
+        *resultsIterators[matLoc] = 0.0;     // weight
+        *resultsIterators[matLoc + 1] = 0.0; // abscissa
+      }      
+      // increment iterators
+      ++supersatIter;
+      ++sampleIterator;
+      for (int i=0; i<nMoments; i++) {
+        knownMomentsIterators[i] += 1;
+        resultsIterators[i] += 1;
+      }      
+      // continue
+      continue;
+    }
+    
     // for every point, calculate the quadrature weights and abscissae
-    // start by putting together the p matrix. this is documented in an associated pdf
+    // start by putting together the p matrix. this is documented in the wasatch
+    // pdf documentation.
     for (int iRow=0; iRow<=nMoments-2; iRow += 2) {
       // get the the iRow moment for this point
       p[iRow][1] = *knownMomentsIterators[iRow];
@@ -167,23 +216,27 @@ evaluate()
       }
     }
 
-//    for (int iRow=0; iRow<nMoments; iRow++) {
-//      for (int jCol=0; jCol<nMoments+1; jCol++) {
-//        printf("p[%i][%i] = %f \t \t",iRow,jCol,p[iRow][jCol]);
-//      }
-//      printf("\n");
-//    }
-
+#ifdef WASATCH_QMOM_DIAGNOSTICS
+    for (int iRow=0; iRow<nMoments; iRow++) {
+      for (int jCol=0; jCol<nMoments+1; jCol++) {
+        printf("p[%i][%i] = %f \t \t",iRow,jCol,p[iRow][jCol]);
+      }
+      printf("\n");
+    }
+#endif
+    
     //
     //
     alpha[0]=0.0;
     for (int jCol=1; jCol<nMoments; jCol++)
       alpha[jCol] = p[0][jCol+1]/(p[0][jCol]*p[0][jCol-1]);
 
-//    for (int iRow=0; iRow<nMoments; iRow++) {
-//        printf("alpha[%i] = %f \t \t",iRow,alpha[iRow]);
-//    }
-//    printf("\n");
+#ifdef WASATCH_QMOM_DIAGNOSTICS
+    for (int iRow=0; iRow<nMoments; iRow++) {
+        printf("alpha[%i] = %f \t \t",iRow,alpha[iRow]);
+    }
+    printf("\n");
+#endif
 
     //_________________________
     // construct a and b arrays
@@ -203,14 +256,18 @@ evaluate()
     }
     // fill in the last entry for a
     a[abSize-1] = alpha[2*(abSize-1) + 1] + alpha[2*(abSize-1)];
-//    for (int iRow=0; iRow<abSize; iRow++) {
-//      printf("a[%i] = %f \t \t",iRow,a[iRow]);
-//    }
-//    printf("\n");
-//    for (int iRow=0; iRow<abSize; iRow++) {
-//      printf("b[%i] = %f \t \t",iRow,b[iRow]);
-//    }
-//    printf("\n");
+    
+#ifdef WASATCH_QMOM_DIAGNOSTICS
+    for (int iRow=0; iRow<abSize; iRow++) {
+      printf("a[%i] = %f \t \t",iRow,a[iRow]);
+    }
+    printf("\n");
+    for (int iRow=0; iRow<abSize; iRow++) {
+      printf("b[%i] = %f \t \t",iRow,b[iRow]);
+    }
+    printf("\n");
+#endif
+    
     //___________________
     // construct J matrix
     for (int iRow=0; iRow<abSize - 1; iRow++) {
@@ -219,10 +276,13 @@ evaluate()
       jMatrix[iRow + 1 + iRow*abSize] = b[iRow];
     }
     jMatrix[abSize*abSize-1] = a[abSize - 1];
-//    for (int iRow=0; iRow<abSize*abSize; iRow++) {
-//      printf("J[%i] = %f \t \t",iRow,jMatrix[iRow]);
-//    }
-//    printf("\n");
+    
+#ifdef WASATCH_QMOM_DIAGNOSTICS
+    for (int iRow=0; iRow<abSize*abSize; iRow++) {
+      printf("J[%i] = %f \t \t",iRow,jMatrix[iRow]);
+    }
+    printf("\n");
+#endif
 
     //__________
     // Eigenvalue solve
@@ -237,12 +297,16 @@ evaluate()
     lwork = (int)wkopt;
     work = new double[lwork];
     // Solve eigenproblem. eigenvectors are stored in the jMatrix, columnwise
-    dsyev_( &jobz,&matType, &n, jMatrix, &lda, eigenValues, work, &lwork, &info );
+    dsyev_( &jobz, &matType, &n, jMatrix, &lda, eigenValues, work, &lwork, &info );
     delete[] work;
-//    for (int iRow=0; iRow<abSize; iRow++) {
-//      printf("Eigen[%i] = %.12f \t \t",iRow,eigenValues[iRow]);
-//    }
-//    printf("\n");
+    
+#ifdef WASATCH_QMOM_DIAGNOSTICS
+    for (int iRow=0; iRow<abSize; iRow++) {
+      printf("Eigen[%i] = %.12f \t \t",iRow,eigenValues[iRow]);
+    }
+    printf("\n");
+#endif
+    
     //__________
     // save the weights and abscissae
     m0 = *knownMomentsIterators[0];
@@ -255,16 +319,21 @@ evaluate()
       *resultsIterators[matLoc] = weights[i];
       *resultsIterators[matLoc + 1] = eigenValues[i];
     }
-//
-//    for (int i=0; i<abSize; i++) {
-//      int matLoc = 2*i;
-//      printf("w[%i] = %.12f ",i,*resultsIterators[matLoc]);
-//      printf("a[%i] = %.12f ",i,*resultsIterators[matLoc+1]);
-//    }
-//    printf("\n");
-
+    
+#ifdef WASATCH_QMOM_DIAGNOSTICS
+    for (int i=0; i<abSize; i++) {
+      int matLoc = 2*i;
+      printf("w[%i] = %.12f ",i,*resultsIterators[matLoc]);
+      printf("a[%i] = %.12f ",i,*resultsIterators[matLoc+1]);
+    }
+    printf("\n");
+    printf("__________________________________________________");
+    printf("\n");
+#endif
+    
     //__________
     // increment iterators
+    if (hasSuperSaturation_) ++supersatIter;
     ++sampleIterator;
     for (int i=0; i<nMoments; i++) {
       knownMomentsIterators[i] += 1;
