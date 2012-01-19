@@ -133,16 +133,44 @@ namespace Uintah {
      *
      * PAPI_FP_OPS - floating point operations executed
      * PAPI_DP_OPS - floating point operations executed; optimized to count scaled double precision vector operations
-     * PAPI_L1_TCM - level 1 total cache misses
      * PAPI_L2_TCM - level 2 total cache misses
      * PAPI_L3_TCM - level 3 total cache misses
      */
     d_papiEvents.insert(pair<int, PapiEvent>(PAPI_FP_OPS, PapiEvent("PAPI_FP_OPS", "FLOPS")));
     d_papiEvents.insert(pair<int, PapiEvent>(PAPI_DP_OPS, PapiEvent("PAPI_DP_OPS", "VFLOPS")));
-    d_papiEvents.insert(pair<int, PapiEvent>(PAPI_L1_TCM, PapiEvent("PAPI_L1_TCM", "L1CacheMisses")));
     d_papiEvents.insert(pair<int, PapiEvent>(PAPI_L2_TCM, PapiEvent("PAPI_L2_TCM", "L2CacheMisses")));
     d_papiEvents.insert(pair<int, PapiEvent>(PAPI_L3_TCM, PapiEvent("PAPI_L3_TCM", "L3CacheMisses")));
 
+    /*
+     * For meaningful error reporting
+     * in PAPI Version: 4.2.0.0 there are 25 error codes defined
+     */
+    d_papiErrorCodes.insert(pair<int, string>(-1,  "Invalid argument"));
+    d_papiErrorCodes.insert(pair<int, string>(-2,  "Insufficient memory"));
+    d_papiErrorCodes.insert(pair<int, string>(-3,  "A System/C library call failed"));
+    d_papiErrorCodes.insert(pair<int, string>(-4,  "Not supported by substrate"));
+    d_papiErrorCodes.insert(pair<int, string>(-5,  "Access to the counters was lost or interrupted"));
+    d_papiErrorCodes.insert(pair<int, string>(-6,  "Internal error, please send mail to the developers"));
+    d_papiErrorCodes.insert(pair<int, string>(-7,  "Hardware event does not exist"));
+    d_papiErrorCodes.insert(pair<int, string>(-8,  "Hardware event exists, but cannot be counted due to counter resource limitations"));
+    d_papiErrorCodes.insert(pair<int, string>(-9,  "EventSet is currently not running"));
+    d_papiErrorCodes.insert(pair<int, string>(-10, "EventSet is currently counting"));
+    d_papiErrorCodes.insert(pair<int, string>(-11, "No such EventSet available"));
+    d_papiErrorCodes.insert(pair<int, string>(-12, "Event in argument is not a valid preset"));
+    d_papiErrorCodes.insert(pair<int, string>(-13, "Hardware does not support performance counters"));
+    d_papiErrorCodes.insert(pair<int, string>(-14, "Unknown error code"));
+    d_papiErrorCodes.insert(pair<int, string>(-15, "Permission level does not permit operation"));
+    d_papiErrorCodes.insert(pair<int, string>(-16, "PAPI hasn't been initialized yet"));
+    d_papiErrorCodes.insert(pair<int, string>(-17, "Component index isn't set"));
+    d_papiErrorCodes.insert(pair<int, string>(-18, "Not supported"));
+    d_papiErrorCodes.insert(pair<int, string>(-19, "Not implemented"));
+    d_papiErrorCodes.insert(pair<int, string>(-20, "Buffer size exceeded"));
+    d_papiErrorCodes.insert(pair<int, string>(-21, "EventSet domain is not supported for the operation"));
+    d_papiErrorCodes.insert(pair<int, string>(-22, "Invalid or missing event attributes"));
+    d_papiErrorCodes.insert(pair<int, string>(-23, "Too many events or attributes"));
+    d_papiErrorCodes.insert(pair<int, string>(-24, "Bad combination of features"));
+
+    d_eventValues = scinew long long[d_papiEvents.size()];
     d_eventSet = PAPI_NULL;
     int retp = -1;
 
@@ -150,14 +178,16 @@ namespace Uintah {
     retp = PAPI_library_init(PAPI_VER_CURRENT);
     if (retp != PAPI_VER_CURRENT) {
       if (d_myworld->myrank() == 0) {
-        cout << "WARNNING: Cannot initialize PAPI library! Error code = " << retp << endl;
+        cout << "Error: Cannot initialize PAPI library!" << endl
+             << "       Error code = " << retp << " (" << d_papiErrorCodes.find(retp)->second << ")" << endl;
       }
       throw PapiInitializationError("PAPI library initialization error occurred. Check that your PAPI library can be initialized correctly.", __FILE__, __LINE__);
     }
     retp = PAPI_thread_init(pthread_self);
     if (retp != PAPI_OK) {
       if (d_myworld->myrank() == 0) {
-        cout << "WARNNING: Cannot initialize PAPI thread support! Error code = " << retp << endl;
+        cout << "Error: Cannot initialize PAPI thread support!" << endl
+             << "       Error code = " << retp << " (" << d_papiErrorCodes.find(retp)->second << ")" << endl;
       }
       if (Parallel::getMaxThreads() > 1) {
       	throw PapiInitializationError("PAPI Pthread initialization error occurred. Check that your PAPI build supports Pthreads.", __FILE__, __LINE__);
@@ -170,8 +200,9 @@ namespace Uintah {
     	retp = PAPI_query_event(iter->first);
         if (retp != PAPI_OK) {
           if (d_myworld->myrank() == 0) {
-            cout << "WARNNING: Cannot query PAPI event: " << iter->second.name << "! Error code = " << retp << " "
-           		 << "no stats will be printed for " << iter->second.simStatName << endl;
+            cout << "WARNNING: Cannot query PAPI event: " << iter->second.name << "!" << endl
+            	 << "          Error code = " << retp << " (" << d_papiErrorCodes.find(retp)->second << ")" << endl
+           		 << "          No stats will be printed for " << iter->second.simStatName << endl;
           }
         } else {
         	iter->second.isSupported = true;
@@ -182,32 +213,36 @@ namespace Uintah {
     retp = PAPI_create_eventset(&d_eventSet);
     if (retp != PAPI_OK) {
       if (d_myworld->myrank() == 0) {
-        cout << "WARNNING: Cannot create PAPI event set! Error code = " << retp << endl;
+        cout << "Error: Cannot create PAPI event set!" << endl
+             << "       Error code = " << retp << " (" << d_papiErrorCodes.find(retp)->second << ")" << endl;
       }
       throw PapiInitializationError("PAPI event set creation error. Unable to create hardware counter event set.", __FILE__, __LINE__);
     }
 
     // iterate through PAPI events that are supported, flag those that cannot be added
-    d_eventValues = scinew long long[d_papiEvents.size()];
     int index = 0;
-    for(map<int ,PapiEvent>::iterator iter=d_papiEvents.begin(); iter!=d_papiEvents.end(); iter++) {
-        retp = PAPI_add_event(d_eventSet, iter->first);
-        if ( (retp != PAPI_OK) && (iter->second.isSupported) )  { // this means queried OK but did not add
-          if (d_myworld->myrank() == 0) {
-        	cout << "WARNNING: Cannot add PAPI event: " << iter->second.name << "! Error code = " << retp << " "
-        		 << "no stats will be printed for " << iter->second.simStatName << endl;
-          }
-          iter->second.isSupported = false;
-        } else {
-        	iter->second.eventValueIndex = index;
-        	index++;
-        }
-    }
+    for (map<int, PapiEvent>::iterator iter = d_papiEvents.begin(); iter != d_papiEvents.end(); iter++) {
+		if (iter->second.isSupported) {
+			retp = PAPI_add_event(d_eventSet, iter->first);
+			if (retp != PAPI_OK) {
+				if (d_myworld->myrank() == 0) {
+					cout << "WARNNING: Cannot add PAPI event: " << iter->second.name << "!"  << endl
+				         << "          Error code = " << retp << " (" << d_papiErrorCodes.find(retp)->second << ")" << endl
+						 << "          No stats will be printed for " << iter->second.simStatName << endl;
+				}
+				iter->second.isSupported = false;
+			} else {
+				iter->second.eventValueIndex = index;
+				index++;
+			}
+		}
+	}
 
     retp = PAPI_start(d_eventSet);
     if (retp != PAPI_OK) {
       if (d_myworld->myrank() == 0) {
-        cout << "WARNNING: Cannot start PAPI event set! Error code = " << retp << endl;
+        cout << "WARNNING: Cannot start PAPI event set!"  << endl
+             << "          Error code = " << retp << " (" << d_papiErrorCodes.find(retp)->second << ")" << endl;
       }
       throw PapiInitializationError("PAPI event set start error. Unable to start hardware counter event set.", __FILE__, __LINE__);
     }
@@ -623,22 +658,20 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
 #ifdef USE_PAPI_COUNTERS
   double flop;				// total FLOPS
   double vflop;				// total FLOPS optimized to additionally count scaled double precision vector operations
-  double l1_misses;			// total L1 cache misses
   double l2_misses;			// total L2 cache misses
   double l3_misses;			// total L3 cache misses
   int retp = -1;			// return value for error checking
 
   retp = PAPI_read(d_eventSet, d_eventValues);
-  //cout << d_myworld->myrank() << "PAPI Counter:::: " << event_values[0] <<endl;
   if (retp != PAPI_OK) {
     if (d_myworld->myrank() == 0) {
-      cout << "WARNNING: Cannot read PAPI event set! Error value = " << retp << endl;
+      cout << "Error: Cannot read PAPI event set!" << endl
+           << "       Error code = " << retp << " (" << d_papiErrorCodes.find(retp)->second << ")" << endl;
     }
     throw PapiInitializationError("PAPI read error. Unable to read hardware event set values.", __FILE__, __LINE__);
   } else {
 	  flop      = (double) d_eventValues[d_papiEvents.find(PAPI_FP_OPS)->second.eventValueIndex];
 	  vflop     = (double) d_eventValues[d_papiEvents.find(PAPI_DP_OPS)->second.eventValueIndex];
-	  l1_misses = (double) d_eventValues[d_papiEvents.find(PAPI_L1_TCM)->second.eventValueIndex];
 	  l2_misses = (double) d_eventValues[d_papiEvents.find(PAPI_L2_TCM)->second.eventValueIndex];
 	  l3_misses = (double) d_eventValues[d_papiEvents.find(PAPI_L3_TCM)->second.eventValueIndex];
   }
@@ -647,7 +680,8 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
   retp = PAPI_reset(d_eventSet);
   if (retp != PAPI_OK) {
     if (d_myworld->myrank() == 0) {
-      cout << "WARNNING: Cannot reset PAPI event set! Error value = " << retp << endl;
+      cout << "WARNNING: Cannot reset PAPI event set!" << endl
+           << "          Error code = " << retp << " (" << d_papiErrorCodes.find(retp)->second << ")" << endl;
     }
     throw PapiInitializationError("PAPI reset error on hardware event set. Unable to reset event set values.", __FILE__, __LINE__);
   }
@@ -702,10 +736,6 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
 	  toReduce.push_back(vflop);
 	  toReduceMax.push_back(double_int(vflop, rank));
   }
-  if (d_papiEvents.find(PAPI_L1_TCM)->second.isSupported) {
-	  toReduce.push_back(l1_misses);
-	  toReduceMax.push_back(double_int(l1_misses, rank));
-  }
   if (d_papiEvents.find(PAPI_L2_TCM)->second.isSupported) {
 	  toReduce.push_back(l2_misses);
 	  toReduceMax.push_back(double_int(l2_misses, rank));
@@ -733,9 +763,6 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
   }
   if (d_papiEvents.find(PAPI_DP_OPS)->second.isSupported) {
 	  statLabels.push_back(d_papiEvents.find(PAPI_DP_OPS)->second.simStatName.c_str());
-  }
-  if (d_papiEvents.find(PAPI_L1_TCM)->second.isSupported) {
-	  statLabels.push_back(d_papiEvents.find(PAPI_L1_TCM)->second.simStatName.c_str());
   }
   if (d_papiEvents.find(PAPI_L2_TCM)->second.isSupported) {
 	  statLabels.push_back(d_papiEvents.find(PAPI_L2_TCM)->second.simStatName.c_str());
