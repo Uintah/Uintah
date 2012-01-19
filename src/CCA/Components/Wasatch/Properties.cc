@@ -21,7 +21,7 @@
 using std::endl;
 using std::flush;
 
-#ifndef TABPROPS_BSPLINE
+#ifndef TabProps_BSPLINE
 // jcs for some reason the serialization doesn't work without this:
 Interp1D i1d;
 Interp2D i2d;
