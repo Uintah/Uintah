@@ -127,9 +127,14 @@ namespace Uintah {
      * report stats in printSimulationStats().
      *
      * NOTE:
-     * 		all desired events may not be supported for a particular architecture and bad things
-     *      happen when an event cannot be queried or added to event sets, hence the PapiEvent
-     *      struct, map and logic in printSimulationStats()
+     * 		All desired events may not be supported for a particular architecture and bad things,
+     *      happen, e.g. misaligned event value array indices when an event can be queried but
+     *      not added to an event set, hence the PapiEvent struct, map and logic in printSimulationStats().
+     *
+     *      On some platforms, errors about resource limitations may be encountered, and is why we limit
+     *      this instrumentation to four events now (seems stable). At some point we will look into the
+     *      cost of multiplexing with PAPI, which will allow a user to count more events than total
+     *      physical counters by time sharing the existing counters. This comes at some loss in precision.
      *
      * PAPI_FP_OPS - floating point operations executed
      * PAPI_DP_OPS - floating point operations executed; optimized to count scaled double precision vector operations
@@ -141,10 +146,7 @@ namespace Uintah {
     d_papiEvents.insert(pair<int, PapiEvent>(PAPI_L2_TCM, PapiEvent("PAPI_L2_TCM", "L2CacheMisses")));
     d_papiEvents.insert(pair<int, PapiEvent>(PAPI_L3_TCM, PapiEvent("PAPI_L3_TCM", "L3CacheMisses")));
 
-    /*
-     * For meaningful error reporting
-     * in PAPI Version: 4.2.0.0 there are 25 error codes defined
-     */
+    // For meaningful error reporting - PAPI Version: 4.2.0.0 has 25 error codes defined
     d_papiErrorCodes.insert(pair<int, string>(-1,  "Invalid argument"));
     d_papiErrorCodes.insert(pair<int, string>(-2,  "Insufficient memory"));
     d_papiErrorCodes.insert(pair<int, string>(-3,  "A System/C library call failed"));
@@ -195,7 +197,6 @@ namespace Uintah {
     }
 
     // query all the events to find that are supported, flag those that are unsupported
-    // WAIT_FOR_DEBUGGER();
     for (map<int, PapiEvent>::iterator iter=d_papiEvents.begin(); iter!=d_papiEvents.end(); iter++) {
     	retp = PAPI_query_event(iter->first);
         if (retp != PAPI_OK) {
@@ -219,16 +220,19 @@ namespace Uintah {
       throw PapiInitializationError("PAPI event set creation error. Unable to create hardware counter event set.", __FILE__, __LINE__);
     }
 
-    // iterate through PAPI events that are supported, flag those that cannot be added
+    /* Iterate through PAPI events that are supported, flag those that cannot be added.
+     *   There are situations where an event may be queried but not added to an event set,
+     *   this is the purpose of this block of code.
+     */
     int index = 0;
     for (map<int, PapiEvent>::iterator iter = d_papiEvents.begin(); iter != d_papiEvents.end(); iter++) {
 		if (iter->second.isSupported) {
 			retp = PAPI_add_event(d_eventSet, iter->first);
-			if (retp != PAPI_OK) {
+			if (retp != PAPI_OK) { // this means the event queried OK but could not be added
 				if (d_myworld->myrank() == 0) {
 					cout << "WARNNING: Cannot add PAPI event: " << iter->second.name << "!"  << endl
-				         << "          Error code = " << retp << " (" << d_papiErrorCodes.find(retp)->second << ")" << endl
-						 << "          No stats will be printed for " << iter->second.simStatName << endl;
+                         << "          Error code = " << retp << " (" << d_papiErrorCodes.find(retp)->second << ")" << endl
+                         << "          No stats will be printed for " << iter->second.simStatName << endl;
 				}
 				iter->second.isSupported = false;
 			} else {
