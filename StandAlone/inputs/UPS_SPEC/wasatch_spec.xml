@@ -277,6 +277,11 @@
       <!-- Specify a staggered direction for this scalar. If the scalar is non-staggered, this block is not needed -->                          
       <StaggeredDirection  spec="OPTIONAL STRING 'X,Y,Z'"/>
       
+      <!-- Specify supersaturation ratio -->
+      <SuperSaturationExpression spec="OPTIONAL NO_DATA">
+        <NameTag            spec="REQUIRED" />
+      </SuperSaturationExpression>
+
       <!-- Specify molecular volume to use in calculations -->
       <MolecVolume spec="OPTIONAL DOUBLE"/>
       
