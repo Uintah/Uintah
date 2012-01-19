@@ -34,13 +34,6 @@ DEALINGS IN THE SOFTWARE.
 #define Uintah_Component_Arches_TabPropsInterface_h
 
 #include <tabprops/StateTable.h>
-#ifdef TABPROPS_BSPLINE
-# include <tabprops/BSpline.h>
-  typedef BSpline InterpT;
-#else
-# include <tabprops/Linear.h>
-  typedef LinearInterp InterpT;
-#endif
 
 #include <tabprops/Archive.h>
 #include <CCA/Components/Arches/ArchesMaterial.h>

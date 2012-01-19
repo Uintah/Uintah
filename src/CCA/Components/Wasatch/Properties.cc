@@ -21,6 +21,13 @@
 using std::endl;
 using std::flush;
 
+#ifndef TABPROPS_BSPLINE
+// jcs for some reason the serialization doesn't work without this:
+Interp1D i1d;
+Interp2D i2d;
+Interp3D i3d;
+#endif
+
 namespace Wasatch{
 
   //====================================================================
@@ -48,8 +55,10 @@ namespace Wasatch{
     catch( std::exception& e ){
       std::ostringstream msg;
       msg << e.what() << std::endl << std::endl
-          << "Could not open TabProps file '" << fileName << ".tbl'" << std::endl
-          << "Check to ensure that the file exists in the run dir." << std::endl
+          << "Error reading TabProps file '" << fileName << ".tbl'" << std::endl
+          << "Check to ensure that the file exists." << std::endl
+          << "It is also possible that there was an error loading the file.  This could be caused" << std::endl
+          << "by a file in a format incompatible with the version of TabProps linked in here." << std::endl
           << std::endl;
       throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
     }
@@ -105,11 +114,7 @@ namespace Wasatch{
 
       proc0cout << "Constructing property evaluator for '" << dvarTag
                 << "' from file '" << fileName << "'." << std::endl;
-#     ifdef TABPROPS_BSPLINE
-      const BSpline* const interp = table.find_entry( dvarTableName );
-#     else
-      const LinearInterp* const interp = table.find_entry( dvarTableName );
-#     endif
+      const InterpT* const interp = table.find_entry( dvarTableName );
       //____________________________________________
       // get the type of field that we will evaluate
       std::string fieldType;
