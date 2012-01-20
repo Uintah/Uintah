@@ -121,7 +121,15 @@ WARNING
     int                    numThreads_;
     int                    numGPUs_;
 
-    map<const VarLabel*, double*>    deviceVariableMemMap;
+    struct GPUVariable {
+      double* memLocation;
+      int     device;
+      GPUVariable(double* _memlocation, int _device)
+        : memLocation(_memlocation), device(_device) {
+      }
+    };
+
+    map<const VarLabel*, GPUVariable>    gpuVariables;
 
     GPUThreadedMPIScheduler(const GPUThreadedMPIScheduler&);
     GPUThreadedMPIScheduler& operator=(const GPUThreadedMPIScheduler&);
