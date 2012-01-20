@@ -347,14 +347,14 @@ void PoissonGPU1::timeAdvance3DP(const ProcessorGroup*,
 //______________________________________________________________________
 //
 // @brief A kernel that applies the stencil used in timeAdvance(...)
-// @param domainSize a three component vector that gives the size of the domain as (x,y,z)
 // @param domainLower a three component vector that gives the lower corner of the work area as (x,y,z)
+// @param domainHigh a three component vector that gives the highest non-ghost layer cell of the domain as (x,y,z)
 // @param ghostLayers the number of layers of ghost cells
 // @param phi pointer to the source phi allocated on the device
 // @param newphi pointer to the sink phi allocated on the device
 // @param residual the residual calculated by this individual kernel
-__global__ void timeAdvanceKernel(uint3 domainSize,
-                                  uint3 domainLower,
+__global__ void timeAdvanceKernel(uint3 domainLow,
+                                  uint3 domainHigh,
                                   int ghostLayers,
                                   double *phi,
                                   double *newphi,
@@ -362,27 +362,34 @@ __global__ void timeAdvanceKernel(uint3 domainSize,
   // calculate the thread indices
   int i = blockDim.x * blockIdx.x + threadIdx.x;
   int j = blockDim.y * blockIdx.y + threadIdx.y;
-  //  int tidZ = blockDim.z * blockIdx.z + threadIdx.z;
   
+  // Get the size of the data block in which the variables reside.
+  //  This is essentially the stride in the index calculations.
+  int dx = domainHigh.x + ghostLayers;
+  int dy = domainHigh.y + ghostLayers;
 
-  int dx = domainSize.x + ghostLayers;
-  int dy = domainSize.y + ghostLayers;
-  if(i > 0 && j > 0 && i < domainSize.x && j < domainSize.z) {
-    for (int k = domainLower.z; k < domainSize.z; k++) {
+  // If the threads are within the bounds of the ghost layers
+  //  the algorithm is allowed to stream along the z direction
+  //  applying the stencil to a line of cells.  The z direction
+  //  is streamed because it allows access of x and y elements
+  //  that are close to one another which should allow coalesced 
+  //  memory accesses.
+  if(i > 0 && j > 0 && i < domainHigh.x && j < domainHigh.y) {
+    for (int k = domainLow.z; k < domainHigh.z; k++) {
       // For an array of [ A ][ B ][ C ], we can index it thus:
       // (a * B * C) + (b * C) + (c * 1)
-      int idx = INDEX3D(dx,dy,i,j,k); // i + (j * dx) + (k * dx * dy);
+      int idx = INDEX3D(dx,dy,i,j,k);
 
-      int xminus = INDEX3D(dx,dy, (i-1), j, k);
-      int xplus  = INDEX3D(dx,dy, (i+1), j, k);
-      int yminus = INDEX3D(dx,dy, i, (j-1), k);
-      int yplus  = INDEX3D(dx,dy, i, (j+1), k);
-      int zminus = INDEX3D(dx,dy, i, j, (k-1));
-      int zplus  = INDEX3D(dx,dy, i, j, (k+1));
+      newphi[idx] = (1. / 6) 
+                  * (phi[INDEX3D(dx,dy, (i-1), j, k)] 
+                   + phi[INDEX3D(dx,dy, (i+1), j, k)]
+                   + phi[INDEX3D(dx,dy, i, (j-1), k)]
+                   + phi[INDEX3D(dx,dy, i, (j+1), k)]
+                   + phi[INDEX3D(dx,dy, i, j, (k-1))] 
+                   + phi[INDEX3D(dx,dy, i, j, (k+1))]);
 
-      newphi[idx] = (1. / 6) * (phi[xminus] + phi[xplus] + phi[yminus]
-          + phi[yplus] + phi[zminus] + phi[zplus]);
-
+      // Still need a way to compute the residual as a reduction
+      //  variable here.
     }
   }
 }
@@ -400,13 +407,14 @@ void PoissonGPU1::timeAdvanceGPU(const ProcessorGroup*,
   int size = 0;
   int ghostLayers = 1;
 
-  // declare device and host memory
-  double* newphi_device;
-  double* phi_device;
+  // Device and host memor pointersy
   double* phi_host;
+  double* phi_device;
   double* newphi_host;
+  double* newphi_device;
 
-  // find the "best" device for cudaSetDevice()
+  // Find the "best" device for cudaSetDevice() or in other words the device with 
+  //  the highes number of processors.
   int num_devices, device;
   cudaGetDeviceCount(&num_devices);
   if (num_devices > 1) {
@@ -436,6 +444,7 @@ void PoissonGPU1::timeAdvanceGPU(const ProcessorGroup*,
     double residual = 0;
     IntVector l = patch->getNodeLowIndex();
     IntVector h = patch->getNodeHighIndex();
+    // Calculate the memory block size
     IntVector s = h - l;
     int xdim = s.x(), ydim = s.y(), zdim = s.z();
     size = xdim * ydim * zdim * sizeof(double);
@@ -447,7 +456,8 @@ void PoissonGPU1::timeAdvanceGPU(const ProcessorGroup*,
         patch->getBCType(Patch::yplus) == Patch::Neighbor ? 0 : 1,
         patch->getBCType(Patch::zplus) == Patch::Neighbor ? 0 : 1);
 
-    // check if we need to reallocate
+    // Check if we need to reallocate due to a change in the 
+    //  size of this patch from the previous patch.
     if (size != previousPatchSize) {
       if (previousPatchSize != 0) {
         cudaFree(phi_device);
@@ -457,32 +467,49 @@ void PoissonGPU1::timeAdvanceGPU(const ProcessorGroup*,
       cudaMalloc(&newphi_device, size);
     }
 
-    //__________________________________
-    //  Memory Allocation
+    //___________________________________________
+    //  Host->Device Memory Allocation and copy
     phi_host    = (double*)phi.getWindow()->getData()->getPointer();
     newphi_host = (double*)newphi.getWindow()->getData()->getPointer();
 
     CUDA_SAFE_CALL(cudaMemcpy(phi_device,    phi_host,    size, cudaMemcpyHostToDevice));
     CUDA_SAFE_CALL(cudaMemcpy(newphi_device, newphi_host, size, cudaMemcpyHostToDevice));
 
-    uint3 domainSize  = make_uint3(h.x(), h.y(), h.z());
-    uint3 domainLower = make_uint3(l.x(), l.y(), l.z());
-    int totalBlocks = size / (sizeof(double) * xdim * ydim * zdim);
-    dim3 threadsPerBlock(8, 8, 8);
+    // Domain extents used by the kernel to prevent out of bounds accesses.
+    uint3 domainLow  = make_uint3(l.x(), l.y(), l.z());
+    uint3 domainHigh = make_uint3(h.x(), h.y(), h.z());
 
-    if (size % (totalBlocks) != 0) {
-      totalBlocks++;
+    // Threads per block must be power of 2 in each direction.  Here
+    //  8 is chosen as a test value in the x and y and 1 in the z,
+    //  as each of these (x,y) threads streams through the z direction.
+    dim3 threadsPerBlock(8, 8, 1);
+
+    // Set up the number of blocks of threads in each direction accounting for any
+    //  non-power of 8 end pieces.
+    int xBlocks = xdim / 8;
+    if( xdim % 8 != 0)
+    {
+      xBlocks++;
     }
+    int yBlocks = ydim / 8;
+    if( ydim % 8 != 0)
+    {
+      yBlocks++;
+    }
+    dim3 totalBlocks(xBlocks,yBlocks);
 
-    // launch kernel
-    timeAdvanceKernel<<< totalBlocks, threadsPerBlock >>>(domainSize, domainLower, ghostLayers, phi_device, newphi_device, &residual);
+    // Launch kernel
+    timeAdvanceKernel<<< totalBlocks, threadsPerBlock >>>(domainLow, domainHigh, ghostLayers, phi_device, newphi_device, &residual);
 
+    // Kernel error checking
     cudaError_t error = cudaGetLastError();
     if(error!=cudaSuccess) {
       fprintf(stderr,"ERROR: %s\n", cudaGetErrorString(error) );
       exit(-1);
     } 
 
+    //__________________________________
+    //  Device->Host Memory Copy
     CUDA_SAFE_CALL(cudaDeviceSynchronize());
     CUDA_SAFE_CALL(cudaMemcpy(newphi_host, newphi_device, size, cudaMemcpyDeviceToHost));
 
