@@ -74,8 +74,7 @@ void GPUSchedulerTest::problemSetup(const ProblemSpecP& params,
 //______________________________________________________________________
 //
 void GPUSchedulerTest::scheduleInitialize(const LevelP& level, SchedulerP& sched) {
-  Task* multiTask = scinew Task(&GPUSchedulerTest::initializeGPU, "GPUSchedulerTest::initializeGPU",
-                                "GPUSchedulerTest::initialize", this, &GPUSchedulerTest::initialize);
+  Task* multiTask = scinew Task("GPUSchedulerTest::initialize", this, &GPUSchedulerTest::initialize);
 
   multiTask->computes(phi_label);
   multiTask->computes(residual_label);
@@ -119,64 +118,11 @@ void GPUSchedulerTest::computeStableTimestep(const ProcessorGroup* pg,
 
 //______________________________________________________________________
 //
-void GPUSchedulerTest::computeStableTimestepGPU(const ProcessorGroup* pg,
-                                                const PatchSubset* patches,
-                                                const MaterialSubset* matls,
-                                                DataWarehouse*  old_dw,
-                                                DataWarehouse* new_dw,
-                                                int device) {
-  if (pg->myrank() == 0) {
-    sum_vartype residual;
-    new_dw->get(residual, residual_label);
-    cerr << "Residual=" << residual << '\n';
-  }
-  new_dw->put(delt_vartype(delt_), sharedState_->get_delt_label(), getLevel(patches));
-}
-
-//______________________________________________________________________
-//
 void GPUSchedulerTest::initialize(const ProcessorGroup* pg,
                                   const PatchSubset* patches,
                                   const MaterialSubset* matls,
                                   DataWarehouse* old_dw,
                                   DataWarehouse* new_dw) {
-  int matl = 0;
-  for (int p = 0; p < patches->size(); p++) {
-    const Patch* patch = patches->get(p);
-
-    NCVariable<double> phi;
-    new_dw->allocateAndPut(phi, phi_label, matl, patch);
-    phi.initialize(0.);
-
-    for (Patch::FaceType face = Patch::startFace; face <= Patch::endFace;
-        face = Patch::nextFace(face)) {
-      if (patch->getBCType(face) == Patch::None) {
-        int numChildren = patch->getBCDataArray(face)->getNumberChildren(matl);
-        for (int child = 0; child < numChildren; child++) {
-          Iterator nbound_ptr, nu;
-          const BoundCondBase* bcb = patch->getArrayBCValues(face, matl, "Phi", nu, nbound_ptr,
-                                                             child);
-          const BoundCond<double>* bc = dynamic_cast<const BoundCond<double>*>(bcb);
-          double value = bc->getValue();
-          for (nbound_ptr.reset(); !nbound_ptr.done(); nbound_ptr++) {
-            phi[*nbound_ptr] = value;
-          }
-          delete bcb;
-        }
-      }
-    }
-    new_dw->put(sum_vartype(-1), residual_label);
-  }
-}
-
-//______________________________________________________________________
-//
-void GPUSchedulerTest::initializeGPU(const ProcessorGroup* pg,
-                                     const PatchSubset* patches,
-                                     const MaterialSubset* matls,
-                                     DataWarehouse* old_dw,
-                                     DataWarehouse* new_dw,
-                                     int device) {
   int matl = 0;
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
@@ -309,9 +255,7 @@ void GPUSchedulerTest::timeAdvanceGPU(const ProcessorGroup* pg,
   double* newphi_device;
   double* phi_device;
   double* phi_host;
-  double* phi_hostPinned;
   double* newphi_host;
-  double* newphi_hostPinned;
 
   cudaStream_t stream;
   cudaEvent_t asyncCopyComplete;
@@ -350,9 +294,6 @@ void GPUSchedulerTest::timeAdvanceGPU(const ProcessorGroup* pg,
         CUDA_SAFE_CALL( cudaFree(phi_device) );
         CUDA_SAFE_CALL( cudaFree(newphi_device) );
       }
-      // use host alloc so we can use pinned mem for async API
-      cutilSafeCall( cudaMallocHost(&phi_hostPinned, nbytes) );
-      cutilSafeCall( cudaMallocHost(&newphi_hostPinned, nbytes) );
 
       // now the malloc device mem
       CUDA_SAFE_CALL( cudaMalloc(&phi_device, nbytes) );
@@ -361,9 +302,11 @@ void GPUSchedulerTest::timeAdvanceGPU(const ProcessorGroup* pg,
 
     //  Memory Allocation
     phi_host = (double*)phi.getWindow()->getData()->getPointer();
-    CUDA_SAFE_CALL( cudaMemcpy(phi_hostPinned, phi_host, nbytes, cudaMemcpyHostToHost) );
     newphi_host = (double*)newphi.getWindow()->getData()->getPointer();
-    CUDA_SAFE_CALL( cudaMemcpy(newphi_hostPinned, newphi_host, nbytes, cudaMemcpyHostToHost) );
+
+    // page-lock host memory for async copy to device
+    cutilSafeCall( cudaHostRegister(&phi_host, nbytes, cudaHostRegisterPortable) );
+    cutilSafeCall( cudaHostRegister(&newphi_host, nbytes, cudaHostRegisterPortable) );
 
     // configure kernel launch
     uint3 domainSize = make_uint3(xdim, ydim, zdim);
@@ -379,8 +322,8 @@ void GPUSchedulerTest::timeAdvanceGPU(const ProcessorGroup* pg,
     cudaEventCreate(&asyncCopyComplete);
 
     // async copy host2device -> launch kernel -> async host2device
-    cudaMemcpyAsync(phi_device, phi_hostPinned, nbytes, cudaMemcpyHostToDevice, stream);
-    cudaMemcpyAsync(newphi_device, newphi_hostPinned, nbytes, cudaMemcpyHostToDevice, stream);
+    cudaMemcpyAsync(phi_device, phi_host, nbytes, cudaMemcpyDefault, stream);
+    cudaMemcpyAsync(newphi_device, newphi_host, nbytes, cudaMemcpyDefault, stream);
     timeAdvanceTestKernel<<< totalBlocks, threadsPerBlock, 0, stream >>>(domainSize, domainLower, ghostLayers, phi_device, newphi_device);
 
     cudaEventRecord(asyncCopyComplete, stream);
@@ -411,9 +354,9 @@ void GPUSchedulerTest::timeAdvanceGPU(const ProcessorGroup* pg,
 
   // free up allocated memory
   cudaFree(phi_device);
-  cudaFreeHost(phi_hostPinned);
   cudaFree(newphi_device);
-  cudaFreeHost(newphi_hostPinned);
+  cudaHostUnregister(phi_host);
+  cudaHostUnregister(newphi_host);
   cudaStreamDestroy(stream);
   cudaEventDestroy(asyncCopyComplete);
 }
