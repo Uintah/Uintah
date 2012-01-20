@@ -463,6 +463,7 @@ void GPUThreadedMPIScheduler::execute(int tgnum /*=0*/,
     }
 
     // 1.) if we have an internally-ready CPU task, initiate its recvs
+    //       * meaning prepare the CPU task for the CPU external ready queue
     else if (dts->numInternalReadyTasks() > 0) {
       DetailedTask * task = dts->getNextInternalReadyTask();
 
@@ -493,6 +494,8 @@ void GPUThreadedMPIScheduler::execute(int tgnum /*=0*/,
     }
 
     // 2.) if we have a GPU task that has its MPI comm completed, now prepare device memory
+    //       this is the GPU analog to getting CPU tasks MPI recvs underway
+    //       * meaning prepare the GPU task for the GPU external ready queue
     else if (dts->numInternalReadyGPUTasks() > 0) {
       DetailedTask* task = dts->getNextInternalReadyGPUTask();
 
@@ -510,7 +513,7 @@ void GPUThreadedMPIScheduler::execute(int tgnum /*=0*/,
 
       if (taskdbg.active()) {
         cerrLock.lock();
-//        taskdbg << d_myworld->myrank() << " GPU task internal ready " << *task << " deps needed: " << task->getExternalDepCount() << endl;
+        // taskdbg << d_myworld->myrank() << " GPU task internal ready " << *task << " deps needed: " << task->getExternalDepCount() << endl;
         cerrLock.unlock();
         pending_tasks.insert(task);
       }
@@ -1032,10 +1035,10 @@ void GPUThreadedMPIScheduler::initiateGPUTask(DetailedTask* task,
   // TODO fix this
 }
 
-void GPUThreadedMPIScheduler::hostToDeviceVariableCopy (DetailedTask* dtask,
-                                                        const VarLabel* label,
-                                                        const Patch* patch,
-                                                        double* h_VarData) {
+void GPUThreadedMPIScheduler::hostToDeviceVariableCopy(DetailedTask* dtask,
+                                                       const VarLabel* label,
+                                                       const Patch* patch,
+                                                       double* h_VarData) {
 
   // get the patch's data extents
   IntVector l = patch->getNodeLowIndex();
@@ -1050,8 +1053,8 @@ void GPUThreadedMPIScheduler::hostToDeviceVariableCopy (DetailedTask* dtask,
   // allocate device memory and add to map associating it to its variable
   double* d_VarData;
   cudaSetDevice(dtask->getDeviceNum());
-  CUDA_SAFE_CALL( cudaMalloc(&d_VarData, numBytes));
-  deviceVariableMemMap.insert(pair<const VarLabel*, double*>(label, d_VarData));
+  CUDA_SAFE_CALL( cudaMalloc(&d_VarData, numBytes) );
+  gpuVariables.insert(pair<const VarLabel*, GPUVariable>(label, GPUVariable(d_VarData, dtask->getDeviceNum())));
 
   // now create the stream for this variable and an event to track h2d mem copy
   cudaStream_t stream;
@@ -1062,7 +1065,7 @@ void GPUThreadedMPIScheduler::hostToDeviceVariableCopy (DetailedTask* dtask,
   dtask->addHostToDeviceCopyEvent(label, &event);
 
   // set up the host2device memcopy and follow it with an event added to the stream
-  CUDA_SAFE_CALL( cudaMemcpyAsync(d_VarData, h_VarData, numBytes, cudaMemcpyDefault, stream));
+  CUDA_SAFE_CALL( cudaMemcpyAsync(d_VarData, h_VarData, numBytes, cudaMemcpyDefault, stream) );
   cudaEventRecord(event, stream);
 }
 
