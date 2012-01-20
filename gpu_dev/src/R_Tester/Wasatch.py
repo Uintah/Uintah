@@ -53,7 +53,8 @@ NIGHTLYTESTS = [
   ("bc-test-yvol-zdir",             "bc-test-yvol-zdir.ups",           4,  "Linux",  ["exactComparison","no_restart","no_memoryTest"] ),  \
   ("bc-test-zvol-xdir",             "bc-test-zvol-xdir.ups",           4,  "Linux",  ["exactComparison","no_restart","no_memoryTest"] ),  \
   ("bc-test-zvol-ydir",             "bc-test-zvol-ydir.ups",           4,  "Linux",  ["exactComparison","no_restart","no_memoryTest"] ),  \
-  ("bc-test-zvol-zdir",             "bc-test-zvol-zdir.ups",           4,  "Linux",  ["exactComparison","no_restart","no_memoryTest"] )  
+  ("bc-test-zvol-zdir",             "bc-test-zvol-zdir.ups",           4,  "Linux",  ["exactComparison","no_restart","no_memoryTest"] ),  \
+  ("qmom-test",                     "qmom-test.ups",                   4,  "Linux",  ["exactComparison","no_restart","no_memoryTest"] )    
 ]
 
 
@@ -83,7 +84,8 @@ LOCALTESTS = [
   ("bc-test-yvol-zdir",             "bc-test-yvol-zdir.ups",        4,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   \
   ("bc-test-zvol-xdir",             "bc-test-zvol-xdir.ups",        4,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   \
   ("bc-test-zvol-ydir",             "bc-test-zvol-ydir.ups",        4,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   \
-  ("bc-test-zvol-zdir",             "bc-test-zvol-zdir.ups",        4,  "All",   ["exactComparison","no_restart","no_memoryTest"] )  
+  ("bc-test-zvol-zdir",             "bc-test-zvol-zdir.ups",        4,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),   \
+  ("qmom-test",                     "qmom-test.ups",                4,  "All",   ["exactComparison","no_restart","no_memoryTest"] )    
 ]
 
 #__________________________________

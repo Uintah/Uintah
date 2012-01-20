@@ -45,7 +45,7 @@ class ScalarRHS : public Expr::Expression<FieldT>
 protected:
 
   typedef typename SpatialOps::structured::OperatorTypeBuilder<SpatialOps::Interpolant,SVolField,FieldT>::type  DensityInterpT;
-
+  
   typedef typename SpatialOps::structured::FaceTypes<FieldT> FaceTypes;
   typedef typename FaceTypes::XFace XFluxT; ///< The type of field for the x-face variables.
   typedef typename FaceTypes::YFace YFluxT; ///< The type of field for the y-face variables.
@@ -56,6 +56,10 @@ protected:
   typedef typename OpTypes::DivY   DivY; ///< Divergence operator (surface integral) in the y-direction
   typedef typename OpTypes::DivZ   DivZ; ///< Divergence operator (surface integral) in the z-direction
 
+  typedef typename SpatialOps::structured::OperatorTypeBuilder<SpatialOps::Interpolant,XVolField,XFluxT>::type  XVolToXFluxInterpT;
+  typedef typename SpatialOps::structured::OperatorTypeBuilder<SpatialOps::Interpolant,YVolField,YFluxT>::type  YVolToYFluxInterpT;
+  typedef typename SpatialOps::structured::OperatorTypeBuilder<SpatialOps::Interpolant,ZVolField,ZFluxT>::type  ZVolToZFluxInterpT;  
+  
 public:
 
   /**
@@ -106,6 +110,10 @@ public:
     Builder( const Expr::Tag& result,
              const FieldTagInfo& fieldInfo,
              const Expr::Tag& densityTag,
+             const Expr::Tag& volFracTag,
+             const Expr::Tag& xAreaFracTag,
+             const Expr::Tag& yAreaFracTag,
+             const Expr::Tag& zAreaFracTag,            
              const bool isConstDensity);
 
     /**
@@ -128,12 +136,20 @@ public:
              const FieldTagInfo& fieldInfo,
              const std::vector<Expr::Tag>& srcTags,
              const Expr::Tag& densityTag,
+             const Expr::Tag& volFracTag,
+             const Expr::Tag& xAreaFracTag,
+             const Expr::Tag& yAreaFracTag,
+             const Expr::Tag& zAreaFracTag,                        
              const bool isConstDensity);
     virtual ~Builder(){}
     virtual Expr::ExpressionBase* build() const;
   protected:
     const FieldTagInfo info_;
     const std::vector<Expr::Tag> srcT_;
+    const Expr::Tag volfracT_;
+    const Expr::Tag xareafracT_;
+    const Expr::Tag yareafracT_;
+    const Expr::Tag zareafracT_;    
     const Expr::Tag densityT_;
     const bool isConstDensity_;
   };
@@ -148,12 +164,23 @@ protected:
   const Expr::Tag convTagX_, convTagY_, convTagZ_;
   const Expr::Tag diffTagX_, diffTagY_, diffTagZ_;
 
-  const bool haveConvection_, haveDiffusion_;
+  const bool haveConvection_, haveDiffusion_;  
   const bool doXDir_, doYDir_, doZDir_;
 
+  const Expr::Tag volFracTag_, xAreaFracTag_, yAreaFracTag_, zAreaFracTag_;  
+  const bool haveVolFrac_, haveXAreaFrac_, haveYAreaFrac_, haveZAreaFrac_;
+    
   const Expr::Tag densityTag_;
 
   const SVolField* rho_;
+  const SVolField* volfrac_;
+  const XVolField* xareafrac_;
+  const YVolField* yareafrac_;
+  const ZVolField* zareafrac_;  
+  const XVolToXFluxInterpT* xAreaFracInterpOp_;
+  const YVolToYFluxInterpT* yAreaFracInterpOp_;
+  const ZVolToZFluxInterpT* zAreaFracInterpOp_;
+  
   const bool isConstDensity_;
   const DensityInterpT* densityInterpOp_;
 
@@ -178,6 +205,10 @@ protected:
   ScalarRHS( const FieldTagInfo& fieldTags,
              const std::vector<Expr::Tag>& srcTags,
              const Expr::Tag densityTag,
+             const Expr::Tag volFracTag,
+             const Expr::Tag xAreaFracTag,
+             const Expr::Tag yAreaFracTag,
+             const Expr::Tag zAreaFracTag,                                    
              const bool  isConstDensity );
 
   virtual ~ScalarRHS();

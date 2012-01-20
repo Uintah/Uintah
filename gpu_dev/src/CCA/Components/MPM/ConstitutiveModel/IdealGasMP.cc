@@ -412,35 +412,26 @@ IdealGasMP::addComputesAndRequires(Task* ,
 
 // The "CM" versions use the pressure-volume relationship of the CNH model
 double IdealGasMP::computeRhoMicroCM(double press, 
-                                      const double Temp,
+                                      const double,
                                       const MPMMaterial*,
-                                      double temperature,
+                                      double Temp,
                                       double rho_guess)
 {
   double gamma = d_initialData.gamma;
   double cv    = d_initialData.cv;
-
-  if(Temp > 10000){
-    cerr << "For this model you need to pass in the temperature in place " ;
-    cerr <<  "of the reference pressure" << endl;
-  }
-
-  return  press/((gamma - 1.0)*cv*Temp);
+  return  press/((gamma - 1.0) * cv * Temp);
 }
 
-void IdealGasMP::computePressEOSCM(double rhoM,double& pressure, 
-                                   double Temp,
-                                   double& dp_drho, double& tmp,
+void IdealGasMP::computePressEOSCM(double rhoM,
+                                   double& pressure, 
+                                   double,
+                                   double& dp_drho, 
+                                   double& tmp,
                                    const MPMMaterial*, 
-                                   double temperature)
+                                   double Temp)
 {
   double gamma = d_initialData.gamma;
   double cv    = d_initialData.cv;
-
-  if(Temp > 10000){
-    cerr << "For this model you need to pass in the temperature in place " ;
-    cerr <<  "of the reference pressure" << endl;
-  }
 
   pressure   = (gamma - 1.0)*rhoM*cv*Temp;
   dp_drho = (gamma - 1.0)*cv*Temp;

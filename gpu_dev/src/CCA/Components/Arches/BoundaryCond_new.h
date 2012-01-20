@@ -24,11 +24,16 @@ public:
   //** WARNING: This needs to be duplicated in BoundaryCondition.h for now until BoundaryCondition goes away **//
   enum BC_TYPE { VELOCITY_INLET, MASSFLOW_INLET, VELOCITY_FILE, MASSFLOW_FILE, PRESSURE, OUTLET, WALL, MMWALL, INTRUSION, SWIRL }; 
 
+  typedef std::map<IntVector, double> CellToValueMap; 
+  typedef std::map<Patch*, vector<CellToValueMap> > PatchToBCValueMap; 
+  typedef std::map<std::string, CellToValueMap> ScalarToBCValueMap; 
+
   BoundaryCondition_new(const ArchesLabel* fieldLabels);
 
   ~BoundaryCondition_new();
   /** @brief Interface for the input file and set constants */ 
-  void problemSetup();
+  void  problemSetup( ProblemSpecP& db, std::string eqn_name );
+
   /** @brief This method sets the boundary value of a scalar to 
              a value such that the interpolated value on the face results
              in the actual boundary condition. */   
@@ -65,6 +70,9 @@ public:
                             const PatchSet* patches, 
                             const MaterialSet* matls );
 
+  /** @brief Read in a file for boundary conditions **/ 
+  std::map<IntVector, double> readInputFile( std::string file_name ); 
+
 
   typedef std::map< std::string, const VarLabel* > LabelMap; 
 
@@ -74,6 +82,7 @@ private:
   const ArchesLabel* d_fieldLabels;
 
   LabelMap areaMap; 
+  ScalarToBCValueMap scalar_bc_from_file; 
 
   void computeBCArea( const ProcessorGroup*, 
                       const PatchSubset* patches, 

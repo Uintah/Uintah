@@ -112,7 +112,9 @@ namespace Wasatch{
     const Expr::Tag densT = Expr::Tag();
     const bool tempConstDens = false;
     const Tag rhsTag(sName.temperature+"_rhs",STATE_NONE);
-    return factory.register_expression( scinew ScalarRHS<FieldT>::Builder(rhsTag,info,densT,tempConstDens) );
+    //const Expr::Tag volFracTag = Expr::Tag();    
+    const Expr::Tag emptyTag = Expr::Tag();    
+    return factory.register_expression( scinew ScalarRHS<FieldT>::Builder(rhsTag,info,densT, emptyTag, emptyTag,emptyTag,emptyTag,tempConstDens) );
   }
 
   //------------------------------------------------------------------

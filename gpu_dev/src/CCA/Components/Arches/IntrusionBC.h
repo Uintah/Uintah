@@ -188,14 +188,14 @@ namespace Uintah{
           }; 
           virtual ~VelInletBase(){}; 
 
-          virtual inline void set_velocity( int dir, 
-                                       IntVector c, 
-                                       SFCXVariable<double>& u, 
-                                       SFCYVariable<double>& v, 
-                                       SFCZVariable<double>& w, 
-                                       constCCVariable<double>& den, 
-                                       double bc_density, 
-                                       Vector bc_velocity ) = 0; 
+          virtual void set_velocity( int dir, 
+                                     IntVector c, 
+                                     SFCXVariable<double>& u, 
+                                     SFCYVariable<double>& v, 
+                                     SFCZVariable<double>& w, 
+                                     constCCVariable<double>& den, 
+                                     double bc_density, 
+                                     Vector bc_velocity ) = 0; 
 
         protected: 
 

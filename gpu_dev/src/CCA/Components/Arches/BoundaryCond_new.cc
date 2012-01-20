@@ -12,6 +12,8 @@
 #include <Core/Grid/Task.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/IO/UintahZlibUtil.h>
+#include <Core/Parallel/Parallel.h>
 
 
 //===========================================================================
@@ -28,8 +30,109 @@ BoundaryCondition_new::~BoundaryCondition_new()
 //---------------------------------------------------------------------------
 // Method: Problem Setup 
 //---------------------------------------------------------------------------
-void BoundaryCondition_new::problemSetup()
-{}
+void BoundaryCondition_new::problemSetup( ProblemSpecP& db, std::string eqn_name )
+{
+
+  ProblemSpecP db_root = db->getRootNode();
+  ProblemSpecP db_bc   = db_root->findBlock("Grid")->findBlock("BoundaryConditions"); 
+
+  if ( db_bc ) { 
+    for ( ProblemSpecP db_face = db_bc->findBlock("Face"); db_face != 0; 
+          db_face = db_face->findNextBlock("Face") ){
+      
+      for ( ProblemSpecP db_BCType = db_face->findBlock("BCType"); db_BCType != 0; 
+          db_BCType = db_BCType->findNextBlock("BCType") ){
+
+        std::string name; 
+        std::string type; 
+        db_BCType->getAttribute("label", name);
+        db_BCType->getAttribute("var", type); 
+
+        if ( name == eqn_name ){ 
+
+          if ( type == "FromFile" ){ 
+
+            //Check reference file for this scalar
+            std::string file_name;
+            db_BCType->require("inputfile", file_name); 
+
+            gzFile file = gzopen( file_name.c_str(), "r" ); 
+            int total_variables;
+
+            if ( file == NULL ) { 
+              proc0cout << "Error opening file: " << file_name << " for boundary conditions. Errno: " << errno << endl;
+              throw ProblemSetupException("Unable to open the given input file: " + file_name, __FILE__, __LINE__);
+            }
+
+            total_variables = getInt( file ); 
+            std::string eqn_input_file; 
+            bool found_file = false; 
+            for ( int i = 0; i < total_variables; i++ ){
+              std::string varname  = getString( file );
+              eqn_input_file  = getString( file ); 
+
+              if ( varname == eqn_name ){ 
+                found_file = true; 
+                break; 
+              } 
+            }
+            gzclose( file ); 
+
+            if ( !found_file ){ 
+              proc0cout << "Error: Unable to find BC input file for equation: " << eqn_name << endl;
+              throw ProblemSetupException("Check this file for correctness:  " + file_name, __FILE__, __LINE__);
+            } 
+
+            //If file is found, now create a map from index to value
+            CellToValueMap bc_values;  
+            bc_values = readInputFile( eqn_input_file ); 
+
+            scalar_bc_from_file.insert(make_pair(eqn_name, bc_values)); 
+
+          } 
+        } 
+      }
+    }
+  }
+
+  //NOTES: 
+  // each scalar that has an input file for a BC will now be stored in scalar_bc_from_file 
+  // which is a map <eqn_name, CellToValue>. 
+  // Next step would ideally be to: 
+  //   1) create an object to store <patch*, CellToValue> where CellToValue is only on a specific patch
+  //   2) create a task that actually populates 1) 
+  //   3) use the storage container for the BC and iterate through to apply BC's
+  //   **RIGHT NOW IT IS CHECKING EACH CELL FOR BC!
+}
+std::map<IntVector, double>
+BoundaryCondition_new::readInputFile( std::string file_name )
+{
+
+  gzFile file = gzopen( file_name.c_str(), "r" ); 
+  if ( file == NULL ) { 
+    proc0cout << "Error opening file: " << file_name << " for boundary conditions. Errno: " << errno << endl;
+    throw ProblemSetupException("Unable to open the given input file: " + file_name, __FILE__, __LINE__);
+  }
+
+  std::string variable = getString( file ); 
+  int         num_points = getInt( file ); 
+  std::map<IntVector, double> result; 
+
+  for ( int i = 0; i < num_points; i++ ) {
+    int I = getInt( file ); 
+    int J = getInt( file ); 
+    int K = getInt( file ); 
+    double v = getDouble( file ); 
+
+    IntVector C(I,J,K);
+
+    result.insert( make_pair( C, v )).first; 
+
+  }
+
+  gzclose( file ); 
+  return result; 
+}
 //---------------------------------------------------------------------------
 // Method: Set Scalar BC values 
 //---------------------------------------------------------------------------
@@ -110,7 +213,27 @@ void BoundaryCondition_new::setScalarValueBC( const ProcessorGroup*,
             IntVector bp1(*bound_ptr - insideCellDir); 
             scalar[*bound_ptr] = scalar[bp1] + the_sign * dx * bc_value;
           }
-        }
+        } else if (bc_kind == "FromFile") { 
+
+          ScalarToBCValueMap::iterator i_scalar_bc_storage = scalar_bc_from_file.find( varname ); 
+
+          for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
+
+            CellToValueMap::iterator iter = i_scalar_bc_storage->second.find( *bound_ptr ); //<----WARNING ... May be slow here
+            if ( iter != i_scalar_bc_storage->second.end() ){ 
+
+              double file_bc_value = iter->second; 
+              IntVector bp1(*bound_ptr - insideCellDir);
+              scalar[*bound_ptr] = 2.0 * file_bc_value - scalar[bp1]; 
+
+            } else { 
+              // THIS NEED TO BE FIXED: 
+              //cout << " For cell: " << *bound_ptr << endl;
+              //throw InvalidValue("Error: Cell not found in BC input file for scalar: "+ varname,__FILE__,__LINE__); 
+              scalar[*bound_ptr] = 0;
+            } 
+          }
+        } 
       }
     }
   }

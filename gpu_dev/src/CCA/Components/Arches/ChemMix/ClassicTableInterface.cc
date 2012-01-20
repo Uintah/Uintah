@@ -518,8 +518,11 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
             which_bc.push_back(ClassicTableInterface::DIRICHLET); 
           } else if (bc_kind == "Neumann" ) { 
             which_bc.push_back(ClassicTableInterface::NEUMANN); 
-          } else
+          } else if (bc_kind == "FromFile") { 
+            which_bc.push_back(ClassicTableInterface::FROMFILE);
+          } else { 
             throw InvalidValue( "Error: BC type not supported for property calculation", __FILE__, __LINE__ ); 
+          }
 
           // currently assuming a constant value across the boundary
           bc_values.push_back( bc_value ); 
@@ -544,6 +547,10 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
                 break; 
 
               case ClassicTableInterface::NEUMANN:
+                iv.push_back( 0.5 * (indep_storage[i][c] + indep_storage[i][cp1]) );
+                break; 
+
+              case ClassicTableInterface::FROMFILE: 
                 iv.push_back( 0.5 * (indep_storage[i][c] + indep_storage[i][cp1]) );
                 break; 
 

@@ -108,5 +108,6 @@
     <Slice>             20         </Slice>
     <StefanBoltzmann>   5.67051e-8 </StefanBoltzmann>
     <benchmark_1>       true       </benchmark_1>
+    <solveBoundaryFlux> false      </solveBoundaryFlux>
   </RMCRT>
 </Uintah_specification>

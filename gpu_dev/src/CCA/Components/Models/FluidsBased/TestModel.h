@@ -125,10 +125,12 @@ WARNING
     MaterialSet* mymatls;
     Material* d_matl;
     double d_rate;
+    double d_startTime;   // time to start converting m0->m1
     bool d_is_mpm_matl;  // Is matl 0 a mpm_matl?
     
     const VarLabel* totalMassXLabel;
     const VarLabel* totalIntEngXLabel;
+    SimulationStateP d_sharedState;
   };
 }
 

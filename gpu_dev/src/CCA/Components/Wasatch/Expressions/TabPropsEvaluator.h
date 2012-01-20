@@ -3,7 +3,6 @@
 
 #include <tabprops/TabPropsConfig.h>
 #include <tabprops/StateTable.h>
-#include <tabprops/BSpline.h>
 
 #include <expression/Expression.h>
 
@@ -25,7 +24,7 @@ class TabPropsEvaluator
 {
   typedef std::vector<      FieldT*>  FieldVec;
   typedef std::vector<const FieldT*>  IndepVarVec;
-  typedef std::vector<const BSpline*> Evaluators;
+  typedef std::vector<const InterpT*> Evaluators;
   typedef std::vector<Expr::Tag>      VarNames;
 
   const VarNames indepVarNames_;
@@ -33,17 +32,17 @@ class TabPropsEvaluator
   IndepVarVec indepVars_;
   Evaluators  evaluators_;
 
-  TabPropsEvaluator( const BSpline* const spline,
+  TabPropsEvaluator( const InterpT* const interp,
                      const VarNames& ivarNames );
 
 public:
   class Builder : public Expr::ExpressionBuilder
   {
-    const BSpline* const spline_;
+    const InterpT* const interp_;
     const VarNames ivarNames_;
   public:
     Builder( const Expr::Tag& result,
-             const BSpline* spline,
+             const InterpT* interp,
              const VarNames& ivarNames );
     ~Builder(){}
     Expr::ExpressionBase* build() const;
@@ -68,12 +67,12 @@ public:
 
 template< typename FieldT >
 TabPropsEvaluator<FieldT>::
-TabPropsEvaluator( const BSpline* const spline,
+TabPropsEvaluator( const InterpT* const interp,
                    const VarNames& ivarNames )
   : Expr::Expression<FieldT>(),
     indepVarNames_( ivarNames   )
 {
-  evaluators_.push_back( spline );
+  evaluators_.push_back( interp );
 }
 
 //--------------------------------------------------------------------
@@ -170,10 +169,10 @@ evaluate()
 template< typename FieldT >
 TabPropsEvaluator<FieldT>::
 Builder::Builder( const Expr::Tag& result,
-                  const BSpline* const spline,
+                  const InterpT* const interp,
                   const VarNames& ivarNames )
   : ExpressionBuilder(result),
-    spline_   ( spline    ),
+    interp_   ( interp    ),
     ivarNames_( ivarNames )
 {}
 
@@ -184,7 +183,7 @@ Expr::ExpressionBase*
 TabPropsEvaluator<FieldT>::
 Builder::build() const
 {
-  return new TabPropsEvaluator<FieldT>( spline_, ivarNames_ );
+  return new TabPropsEvaluator<FieldT>( interp_, ivarNames_ );
 }
 
 #endif // TabPropsEvaluator_Expr_h

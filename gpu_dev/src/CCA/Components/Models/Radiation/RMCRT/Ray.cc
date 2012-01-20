@@ -52,6 +52,7 @@ Ray::problemSetup( const ProblemSpecP& inputdb)
   db->getWithDefault( "benchmark_1" ,     _benchmark_1,     false );  
   db->getWithDefault( "benchmark_13pt2" , _benchmark_13pt2, false );
   db->getWithDefault("StefanBoltzmann",   _sigma,           5.67051e-8);  // Units are W/(m^2-K)
+  db->getWithDefault( "solveBoundaryFlux" , _solveBoundaryFlux, false );
   _sigma_over_pi = _sigma/_pi;
   
   const MaterialSubset* mss = d_matlSet->getUnion();
@@ -1029,6 +1030,8 @@ Ray::setBC(CCVariable<double>& Q_CC,
 
 //______________________________________________________________________
 // ISAAC's NOTES: 
+//Jan 6. Began work on solving for boundary fluxes
+//Jan 5. Changed containsCell method to only need to compare two faces rather than 6
 //Dec 15. Now uses interactive BCs correctly from input file
 //Dec 1. Clean up (removed ray viz stuff.
 //Nov 30. Modified so user can specify in the input file either benchmark_13pt2, benchmark_1, or no benchmark (real case)
