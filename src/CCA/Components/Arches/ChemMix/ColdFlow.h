@@ -139,7 +139,7 @@ public:
         /** @brief Compute cold flow density and temperature for simple two stream mixing */ 
   double coldFlowMixing( std::vector<double>& iv, int pos );
 
-  enum BoundaryType { DIRICHLET, NEUMANN };
+  enum BoundaryType { DIRICHLET, NEUMANN, FROMFILE };
 
   struct DepVarCont {
 

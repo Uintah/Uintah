@@ -897,7 +897,7 @@ TabPropsInterface::getSplineInfo()
 
   for ( MixingRxnModel::VarMap::iterator i = d_dvVarMap.begin(); i != d_dvVarMap.end(); ++i ) {
 
-    const BSpline* spline = d_statetbl.find_entry( i->first ); 
+    const InterpT* spline = d_statetbl.find_entry( i->first ); 
 
     if ( spline == NULL ) {
       ostringstream exception; 
@@ -919,7 +919,7 @@ TabPropsInterface::getEnthalpySplineInfo()
 {
 
   cout_tabledbg << "TabPropsInterface::getEnthalpySplineInfo(): Looking for sensibleenthalpy" << endl;
-  const BSpline* spline = d_statetbl.find_entry( "sensibleenthalpy" );
+  const InterpT* spline = d_statetbl.find_entry( "sensibleenthalpy" );
 
   d_enthalpyVarSpline.insert( make_pair( "sensibleenthalpy", spline )).first; 
 

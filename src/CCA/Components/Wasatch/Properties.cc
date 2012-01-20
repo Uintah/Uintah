@@ -21,6 +21,13 @@
 using std::endl;
 using std::flush;
 
+#ifndef TabProps_BSPLINE
+// jcs for some reason the serialization doesn't work without this:
+Interp1D i1d;
+Interp2D i2d;
+Interp3D i3d;
+#endif
+
 namespace Wasatch{
 
   //====================================================================
@@ -48,8 +55,10 @@ namespace Wasatch{
     catch( std::exception& e ){
       std::ostringstream msg;
       msg << e.what() << std::endl << std::endl
-          << "Could not open TabProps file '" << fileName << ".tbl'" << std::endl
-          << "Check to ensure that the file exists in the run dir." << std::endl
+          << "Error reading TabProps file '" << fileName << ".tbl'" << std::endl
+          << "Check to ensure that the file exists." << std::endl
+          << "It is also possible that there was an error loading the file.  This could be caused" << std::endl
+          << "by a file in a format incompatible with the version of TabProps linked in here." << std::endl
           << std::endl;
       throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
     }
@@ -105,9 +114,7 @@ namespace Wasatch{
 
       proc0cout << "Constructing property evaluator for '" << dvarTag
                 << "' from file '" << fileName << "'." << std::endl;
-
-      const BSpline* const spline = table.find_entry( dvarTableName );
-
+      const InterpT* const interp = table.find_entry( dvarTableName );
       //____________________________________________
       // get the type of field that we will evaluate
       std::string fieldType;
@@ -116,22 +123,22 @@ namespace Wasatch{
       switch( get_field_type(fieldType) ){
       case SVOL: {
         typedef TabPropsEvaluator<SpatialOps::structured::SVolField>::Builder PropEvaluator;
-        gh.exprFactory->register_expression( scinew PropEvaluator( dvarTag, spline->clone(), ivarNames ) );
+        gh.exprFactory->register_expression( scinew PropEvaluator( dvarTag, interp->clone(), ivarNames ) );
         break;
       }
       case XVOL: {
         typedef TabPropsEvaluator<SpatialOps::structured::SSurfXField>::Builder PropEvaluator;
-        gh.exprFactory->register_expression( scinew PropEvaluator( dvarTag, spline->clone(), ivarNames ) );
+        gh.exprFactory->register_expression( scinew PropEvaluator( dvarTag, interp->clone(), ivarNames ) );
         break;
       }
       case YVOL: {
         typedef TabPropsEvaluator<SpatialOps::structured::SSurfYField>::Builder PropEvaluator;
-        gh.exprFactory->register_expression( scinew PropEvaluator( dvarTag, spline->clone(), ivarNames ) );
+        gh.exprFactory->register_expression( scinew PropEvaluator( dvarTag, interp->clone(), ivarNames ) );
         break;
       }
       case ZVOL: {
         typedef TabPropsEvaluator<SpatialOps::structured::SSurfZField>::Builder PropEvaluator;
-        gh.exprFactory->register_expression( scinew PropEvaluator( dvarTag, spline->clone(), ivarNames ) );
+        gh.exprFactory->register_expression( scinew PropEvaluator( dvarTag, interp->clone(), ivarNames ) );
         break;
       }
       default:
@@ -172,13 +179,13 @@ namespace Wasatch{
             << std::endl;
         throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
       }
-      const BSpline* const spline = table.find_entry( dvarTableName );
+      const InterpT* const interp = table.find_entry( dvarTableName );
 
       //_____________________________________
       // register the expression for density
       typedef DensityCalculator<SpatialOps::structured::SVolField>::Builder DensCalc;
       gh.exprFactory->register_expression( scinew DensCalc( parse_nametag( densityParams->findBlock("NameTag") ),
-                                                            spline->clone(), rhoEtaNames, reiEtaNames, ivarNames ) );
+                                                            interp->clone(), rhoEtaNames, reiEtaNames, ivarNames ) );
 
     }
 

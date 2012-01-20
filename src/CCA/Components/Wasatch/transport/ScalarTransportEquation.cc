@@ -595,9 +595,32 @@ namespace Wasatch{
       srcTags.push_back( srcTag );
 
     }
+    
+    //_____________
+    // volume fraction for embedded boundaries Terms
+    Expr::Tag volFracTag = Expr::Tag();
+    if (params->findBlock("VolumeFractionExpression")) {
+      volFracTag = parse_nametag( params->findBlock("VolumeFractionExpression")->findBlock("NameTag") );
+    }
+    
+    Expr::Tag xAreaFracTag = Expr::Tag();
+    if (params->findBlock("XAreaFractionExpression")) {
+      xAreaFracTag = parse_nametag( params->findBlock("XAreaFractionExpression")->findBlock("NameTag") );
+    }
+
+    Expr::Tag yAreaFracTag = Expr::Tag();
+    if (params->findBlock("YAreaFractionExpression")) {
+      yAreaFracTag = parse_nametag( params->findBlock("YAreaFractionExpression")->findBlock("NameTag") );
+    }
+
+    Expr::Tag zAreaFracTag = Expr::Tag();
+    if (params->findBlock("ZAreaFractionExpression")) {
+      zAreaFracTag = parse_nametag( params->findBlock("ZAreaFractionExpression")->findBlock("NameTag") );
+    }
+    
     if (isStrong){
       const Expr::Tag rhsTag( solnVarName+"_rhs", Expr::STATE_NONE );
-      return factory.register_expression( scinew typename ScalarRHS<FieldT>::Builder(rhsTag, info, srcTags, densityTag, isConstDensity) );
+      return factory.register_expression( scinew typename ScalarRHS<FieldT>::Builder(rhsTag, info, srcTags, densityTag, volFracTag, xAreaFracTag, yAreaFracTag, zAreaFracTag, isConstDensity) );
     }
     else{
       // Here we shoulld use diffusive flux for scalaRHS in weak form

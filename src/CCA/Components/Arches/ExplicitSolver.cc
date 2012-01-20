@@ -723,7 +723,12 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 // ****************************************************************************
 
 int ExplicitSolver::noSolve(const LevelP& level,
-                            SchedulerP& sched)
+                            SchedulerP& sched
+#                                  ifdef WASATCH_IN_ARCHES
+                            , Wasatch::Wasatch& wasatch, 
+                            ExplicitTimeInt* d_timeIntegrator
+#                                  endif // WASATCH_IN_ARCHES
+                            )
 {
   const PatchSet* patches = level->eachPatch();
   const MaterialSet* matls = d_lab->d_sharedState->allArchesMaterials();
@@ -853,6 +858,24 @@ int ExplicitSolver::noSolve(const LevelP& level,
   if (d_probe_data)
     sched_probeData(sched, patches, matls);
 
+#   ifdef WASATCH_IN_ARCHES
+  {
+    const Wasatch::Wasatch::EquationAdaptors& adaptors = wasatch.equation_adaptors();
+    Wasatch::GraphHelper* const gh = wasatch.graph_categories()[Wasatch::ADVANCE_SOLUTION];
+    
+    std::vector<std::string> phi;
+    //std::vector<std::string> phi_rhs;
+    
+    for( Wasatch::Wasatch::EquationAdaptors::const_iterator ia=adaptors.begin(); ia!=adaptors.end(); ++ia ) {
+      Wasatch::TransportEquation* transEq = (*ia)->equation();
+      std::string solnVarName = transEq->solution_variable_name();
+      phi.push_back(solnVarName);
+      //phi_rhs.push_back(solnVarName + "_rhs");
+    }
+    d_timeIntegrator->sched_dummy_init(sched, patches, matls, phi);
+  }
+#   endif // WASATCH_IN_ARCHES
+  
   return(0);
 }
 
@@ -879,6 +902,11 @@ ExplicitSolver::sched_setInitialGuess(SchedulerP& sched,
   tsk->requires(Task::OldDW, d_lab->d_viscosityCTSLabel,  gn, 0);
   tsk->requires(Task::OldDW, d_lab->d_newCCVelocityLabel, gn, 0);
   tsk->requires(Task::OldDW, d_lab->d_areaFractionLabel,  gn, 0);
+#ifdef WASATCH_IN_ARCHES
+  tsk->requires(Task::OldDW, d_lab->d_areaFractionFXLabel,  gn, 0);
+  tsk->requires(Task::OldDW, d_lab->d_areaFractionFYLabel,  gn, 0);
+  tsk->requires(Task::OldDW, d_lab->d_areaFractionFZLabel,  gn, 0);
+#endif
   tsk->requires(Task::OldDW, d_lab->d_volFractionLabel,   gn, 0);
   tsk->requires(Task::OldDW, d_lab->d_densityGuessLabel,  gn, 0);
 
@@ -903,6 +931,11 @@ ExplicitSolver::sched_setInitialGuess(SchedulerP& sched,
   tsk->computes(d_lab->d_wmomBoundarySrcLabel);
   tsk->computes(d_lab->d_viscosityCTSLabel);
   tsk->computes(d_lab->d_areaFractionLabel);
+#ifdef WASATCH_IN_ARCHES
+  tsk->computes(d_lab->d_areaFractionFXLabel);
+  tsk->computes(d_lab->d_areaFractionFYLabel);
+  tsk->computes(d_lab->d_areaFractionFZLabel);
+#endif
   tsk->computes(d_lab->d_volFractionLabel);
 
   //__________________________________
@@ -1901,6 +1934,11 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
     constCCVariable<double> reactscalardiff;
     constCCVariable<Vector> ccVel;
     constCCVariable<Vector> old_areaFraction;
+#ifdef WASATCH_IN_ARCHES
+    constSFCXVariable<double> old_areaFractionFX;
+    constSFCYVariable<double> old_areaFractionFY;
+    constSFCZVariable<double> old_areaFractionFZ;
+#endif 
     constCCVariable<double> old_volFraction;
     constCCVariable<double> old_volq;
 
@@ -1912,6 +1950,11 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
     old_dw->get(viscosity, d_lab->d_viscosityCTSLabel,  indx, patch, gn, 0);
     old_dw->get(ccVel,     d_lab->d_newCCVelocityLabel, indx, patch, gn, 0);
     old_dw->get(old_areaFraction, d_lab->d_areaFractionLabel, indx, patch, gn, 0);
+#ifdef WASATCH_IN_ARCHES
+    old_dw->get(old_areaFractionFX, d_lab->d_areaFractionFXLabel, indx, patch, gn, 0);
+    old_dw->get(old_areaFractionFY, d_lab->d_areaFractionFYLabel, indx, patch, gn, 0);
+    old_dw->get(old_areaFractionFZ, d_lab->d_areaFractionFZLabel, indx, patch, gn, 0);
+#endif
     old_dw->get(old_volFraction, d_lab->d_volFractionLabel, indx, patch, gn, 0);
 
     if (d_enthalpySolve){
@@ -1972,6 +2015,20 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
     CCVariable<Vector> new_areaFraction;
     new_dw->allocateAndPut(new_areaFraction, d_lab->d_areaFractionLabel, indx, patch);
     new_areaFraction.copyData(old_areaFraction); // copy old into new
+
+#ifdef WASATCH_IN_ARCHES
+    SFCXVariable<double> new_areaFractionFX; 
+    new_dw->allocateAndPut(new_areaFractionFX, d_lab->d_areaFractionFXLabel, indx, patch); 
+    new_areaFractionFX.copyData(new_areaFractionFX);
+
+    SFCYVariable<double> new_areaFractionFY; 
+    new_dw->allocateAndPut(new_areaFractionFY, d_lab->d_areaFractionFYLabel, indx, patch); 
+    new_areaFractionFY.copyData(new_areaFractionFY);
+
+    SFCZVariable<double> new_areaFractionFZ; 
+    new_dw->allocateAndPut(new_areaFractionFZ, d_lab->d_areaFractionFZLabel, indx, patch); 
+    new_areaFractionFZ.copyData(new_areaFractionFZ);
+#endif 
 
     CCVariable<double> new_volFraction;
     new_dw->allocateAndPut( new_volFraction, d_lab->d_volFractionLabel, indx, patch );

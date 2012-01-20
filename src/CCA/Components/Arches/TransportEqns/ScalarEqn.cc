@@ -70,6 +70,8 @@ ScalarEqn::problemSetup(const ProblemSpecP& inputdb)
 {
   ProblemSpecP db = inputdb; 
 
+  d_boundaryCond->problemSetup( db, d_eqnName ); 
+
   db->getWithDefault("turbulentPrandtlNumber",d_turbPrNo,0.4);
 
   if (db->findBlock("use_laminar_pr"))
@@ -536,6 +538,10 @@ ScalarEqn::solveTransportEqn( const ProcessorGroup* pc,
 
     if (d_doClipping) 
       clipPhi( patch, phi_at_jp1 ); 
+
+    //----BOUNDARY CONDITIONS
+    //    re-compute the boundary conditions after the update.  
+    computeBCs( patch, d_eqnName, phi_at_jp1 );
 
   }
 }

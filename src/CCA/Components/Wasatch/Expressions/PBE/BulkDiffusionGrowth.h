@@ -118,7 +118,8 @@ BulkDiffusionGrowth( const Expr::Tag& phiTag,
     phiTag_(phiTag),
     growthCoefTag_(growthCoefTag),
     growthCoefVal_(0.0),
-    momentOrder_(0.0),
+//    momentOrder_(0.0),
+    momentOrder_(momentOrder),
     isConstCoef_( false )
 {}
 
@@ -133,7 +134,8 @@ BulkDiffusionGrowth( const Expr::Tag& phiTag,
   phiTag_(phiTag),
   growthCoefTag_("NULL", Expr::INVALID_CONTEXT),
   growthCoefVal_(growthCoefVal),
-  momentOrder_(0.0),
+//  momentOrder_(0.0),
+  momentOrder_(momentOrder),
   isConstCoef_( true )
 {}
 

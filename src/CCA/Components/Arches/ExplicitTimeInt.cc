@@ -278,3 +278,58 @@ void ExplicitTimeInt::time_ave( const ProcessorGroup*,
     } 
   }
 } 
+
+//---------------------------------------------------------------------------
+// Method: Schedule a time update
+//---------------------------------------------------------------------------
+void ExplicitTimeInt::sched_dummy_init( SchedulerP& sched, 
+                                      const PatchSet* patches, 
+                                      const MaterialSet* matls, 
+                                      std::vector<std::string> phi )
+{
+  
+  Task* tsk = scinew Task("ExplicitTimeInt::dummy_init", this, &ExplicitTimeInt::dummy_init, phi);
+  Ghost::GhostType ghost_type = Uintah::Ghost::AroundCells; 
+  int n_extra = 1;
+
+  // phi
+  for ( std::vector<std::string>::iterator iter = phi.begin(); iter != phi.end(); iter++ ){ 
+    
+    const VarLabel* lab = VarLabel::find( *iter ); 
+    tsk->requires(Task::OldDW, lab, ghost_type, n_extra);       
+    tsk->computes( lab ); 
+  } 
+    
+  sched->addTask( tsk, patches, matls ); 
+  
+}
+
+void ExplicitTimeInt::dummy_init( const ProcessorGroup*, 
+                                const PatchSubset* patches, 
+                                const MaterialSubset* matls, 
+                                DataWarehouse* old_dw, 
+                                DataWarehouse* new_dw, 
+                                std::vector<std::string> phi_tag )
+{ 
+  int N = phi_tag.size(); 
+  for (int p = 0; p < patches->size(); p++) {
+    
+    const Patch* patch = patches->get(p);
+    int archIndex = 0; 
+    int indx = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    Ghost::GhostType ghost_type = Ghost::AroundCells; 
+    int n_extra = 1;
+        
+    for ( int i = 0; i < N; i++){ 
+      
+      CCVariable<double> phi; 
+      constCCVariable<double> phi_old; 
+      
+      const VarLabel* phi_lab = VarLabel::find( phi_tag[i] ); 
+      old_dw->get( phi_old           , phi_lab , indx , patch , ghost_type, n_extra  );
+      
+        new_dw->allocateAndPut( phi , phi_lab , indx , patch, ghost_type, n_extra );
+        phi.copyData(phi_old);
+    } 
+  }
+} 

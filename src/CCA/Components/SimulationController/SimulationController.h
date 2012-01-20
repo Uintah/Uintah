@@ -168,11 +168,12 @@ class DataArchive;
     	  PapiEvent(string _name, string _simStatName)
     	  	  : name(_name), simStatName(_simStatName)
     	  {
-    		  eventValueIndex = -1;
+    		  eventValueIndex = 0;
     		  isSupported = false;
     	  }
       };
       std::map<int, PapiEvent> d_papiEvents;
+      std::map<int, string>    d_papiErrorCodes;
 #endif
 
 

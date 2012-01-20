@@ -175,7 +175,7 @@ namespace Wasatch{
             << endl;
         throw std::runtime_error( msg.str() );
       }
-    }
+    } 
 
     // ADD BLOCK FOR IO FIELDS
     Uintah::ProblemSpecP archiverParams = params->findBlock("DataArchiver");

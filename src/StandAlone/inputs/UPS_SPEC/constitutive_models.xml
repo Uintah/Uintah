@@ -149,9 +149,11 @@
     <n                             spec="OPTIONAL DOUBLE" />
     <meanstrain_nucleation         spec="OPTIONAL DOUBLE" />
     <melting_temp_model            spec="OPTIONAL NO_DATA"
-                                     attribute1="type REQUIRED STRING 'constant_Tm, scg_Tm'" >
+                                     attribute1="type REQUIRED STRING 'constant_Tm, linear_Tm, scg_Tm, bps_Tm'" >
       <a                           spec="OPTIONAL DOUBLE" />
+      <b                           spec="OPTIONAL DOUBLE" />
       <Gamma_0                     spec="OPTIONAL DOUBLE" />
+      <K_T                         spec="OPTIONAL DOUBLE" />
       <T_m0                        spec="OPTIONAL DOUBLE" />
     </melting_temp_model>
     <om                            spec="OPTIONAL DOUBLE" />
@@ -289,7 +291,7 @@
     </shear_modulus_model>
     <specific_heat                 spec="OPTIONAL DOUBLE" />
     <specific_heat_model           spec="OPTIONAL NO_DATA"
-                                     attribute1="type REQUIRED STRING 'constant_Cp, copper_Cp, steel_Cp'">
+                                     attribute1="type REQUIRED STRING 'constant_Cp, linear_Cp, copper_Cp, steel_Cp'">
       <T_transition                spec="OPTIONAL DOUBLE" />
       <A_LowT                spec="OPTIONAL DOUBLE" />
       <B_LowT                spec="OPTIONAL DOUBLE" />
@@ -299,6 +301,12 @@
       <B_HighT               spec="OPTIONAL DOUBLE" />
       <C_HighT               spec="OPTIONAL DOUBLE" />
       <n_HighT               spec="OPTIONAL DOUBLE" />
+      <a                     spec="OPTIONAL DOUBLE" />
+      <b                     spec="OPTIONAL DOUBLE" />
+      <c0                    spec="OPTIONAL DOUBLE" />
+      <c1                    spec="OPTIONAL DOUBLE" />
+      <c2                    spec="OPTIONAL DOUBLE" />
+      <c3                    spec="OPTIONAL DOUBLE" />
     </specific_heat_model>
     <stability_check               spec="OPTIONAL NO_DATA"
                                      attribute1="type REQUIRED STRING 'acoustic, becker, drucker, drucker_becker, none'" />

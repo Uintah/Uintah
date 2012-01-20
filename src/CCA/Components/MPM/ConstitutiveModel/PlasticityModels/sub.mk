@@ -74,11 +74,13 @@ SRCS   += \
 	$(SRCDIR)/SpecificHeatModel.cc \
 	$(SRCDIR)/SpecificHeatModelFactory.cc \
 	$(SRCDIR)/ConstantCp.cc \
+	$(SRCDIR)/CubicCp.cc \
 	$(SRCDIR)/CopperCp.cc \
 	$(SRCDIR)/SteelCp.cc \
 	$(SRCDIR)/MeltingTempModel.cc \
 	$(SRCDIR)/MeltingTempModelFactory.cc \
 	$(SRCDIR)/ConstantMeltTemp.cc \
+	$(SRCDIR)/LinearMeltTemp.cc \
 	$(SRCDIR)/SCGMeltTemp.cc \
 	$(SRCDIR)/BPSMeltTemp.cc \
 	$(SRCDIR)/ViscoPlasticityModel.cc \

@@ -30,6 +30,7 @@ DEALINGS IN THE SOFTWARE.
 
 #include "MeltingTempModelFactory.h"
 #include "ConstantMeltTemp.h"
+#include "LinearMeltTemp.h"
 #include "SCGMeltTemp.h"
 #include "BPSMeltTemp.h"
 #include <Core/Exceptions/ProblemSetupException.h>
@@ -55,6 +56,8 @@ MeltingTempModel* MeltingTempModelFactory::create(ProblemSpecP& ps)
    
    if (mat_type == "constant_Tm")
       return(scinew ConstantMeltTemp(child));
+   else if (mat_type == "linear_Tm")
+      return(scinew LinearMeltTemp(child));
    else if (mat_type == "scg_Tm")
       return(scinew SCGMeltTemp(child));
    else if (mat_type == "bps_Tm")
@@ -72,6 +75,8 @@ MeltingTempModelFactory::createCopy(const MeltingTempModel* mtm)
 {
    if (dynamic_cast<const ConstantMeltTemp*>(mtm))
       return(scinew ConstantMeltTemp(dynamic_cast<const ConstantMeltTemp*>(mtm)));
+   else if (dynamic_cast<const LinearMeltTemp*>(mtm))
+      return(scinew LinearMeltTemp(dynamic_cast<const LinearMeltTemp*>(mtm)));
    else if (dynamic_cast<const SCGMeltTemp*>(mtm))
       return(scinew SCGMeltTemp(dynamic_cast<const SCGMeltTemp*>(mtm)));
    else if (dynamic_cast<const BPSMeltTemp*>(mtm))
