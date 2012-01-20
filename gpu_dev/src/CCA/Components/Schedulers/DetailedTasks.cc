@@ -44,11 +44,12 @@
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/FancyAssert.h>
 #include <Core/Util/ProgressiveWarning.h>
+#include <Core/Thread/Mutex.h>
 
 #include <sci_defs/config_defs.h>
 #include <sci_defs/cuda_defs.h>
+
 #include <sci_algorithm.h>
-#include <Core/Thread/Mutex.h>
 
 using namespace Uintah;
 using namespace std;
@@ -261,12 +262,16 @@ void DetailedTask::doit(const ProcessorGroup* pg,
     }
   }
 
+#ifdef HAVE_CUDA
   // determine if task will be executed on CPU or GPU
   if(task->usesGPU()) {
     task->doitGPU(pg, patches, matls, dws, deviceNum);
-  } else { 
+  } else {
       task->doit(pg, patches, matls, dws);
   }
+#else
+  task->doit(pg, patches, matls, dws);
+#endif
 
   for(int i=0;i<(int)dws.size();i++) {
     if(oddws[i] != 0) {
@@ -969,8 +974,7 @@ void DetailedTasks::possiblyCreateDependency(DetailedTask* from,
   }
 }
 
-  DetailedTask*
-DetailedTasks::getOldDWSendTask(int proc)
+DetailedTask* DetailedTasks::getOldDWSendTask(int proc)
 {
 
 #if SCI_ASSERTION_LEVEL>0
@@ -984,15 +988,13 @@ DetailedTasks::getOldDWSendTask(int proc)
   return tasks_[sendoldmap[proc]];
 }
 
-  void
-DetailedTask::addComputes(DependencyBatch* comp)
+void DetailedTask::addComputes(DependencyBatch* comp)
 {
   comp->comp_next=comp_head;
   comp_head=comp;
 }
 
-  bool
-DetailedTask::addRequires(DependencyBatch* req)
+bool DetailedTask::addRequires(DependencyBatch* req)
 {
   // return true if it is adding a new batch
   return reqs.insert(make_pair(req, req)).second;
@@ -1017,9 +1019,7 @@ void DetailedTask::resetDependencyCounts()
   initiated_ = false;
 }
 
-void
-DetailedTask::addInternalDependency(DetailedTask* prerequisiteTask,
-    const VarLabel* var)
+void DetailedTask::addInternalDependency(DetailedTask* prerequisiteTask, const VarLabel* var)
 {
   if (taskGroup->mustConsiderInternalDependencies()) {
     // Avoid unnecessary multiple internal dependency links between tasks.
@@ -1043,8 +1043,30 @@ DetailedTask::addInternalDependency(DetailedTask* prerequisiteTask,
   }
 }
 
-void
-DetailedTask::done(vector<OnDemandDataWarehouseP>& dws)
+#ifdef HAVE_CUDA
+bool DetailedTask::addCUDAStream(const VarLabel* label, cudaStream_t* stream)
+{
+  pair<map<const VarLabel*, cudaStream_t*>::iterator, bool> ret;
+  ret = gridVariableStreams.insert(pair<const VarLabel*, cudaStream_t*>(label, stream));
+  return ret.second ? true : false;
+}
+
+bool DetailedTask::addHostToDeviceCopyEvent(const VarLabel* label, cudaEvent_t* event)
+{
+  pair<map<const VarLabel*, cudaEvent_t*>::iterator, bool> ret;
+  ret = h2dCopies.insert(pair<const VarLabel*, cudaEvent_t*>(label, event));
+  return ret.second ? true : false;
+}
+
+bool DetailedTask::addDeviceToHostCopyEvent(const VarLabel* label, cudaEvent_t* event)
+{
+  pair<map<const VarLabel*, cudaEvent_t*>::iterator, bool> ret;
+  ret = d2hCopies.insert(pair<const VarLabel*, cudaEvent_t*>(label, event));
+  return ret.second ? true : false;
+}
+#endif
+
+void DetailedTask::done(vector<OnDemandDataWarehouseP>& dws)
 {
   // Important to scrub first, before dealing with the internal dependencies
   scrub(dws);
@@ -1187,8 +1209,7 @@ DetailedTasks::internalDependenciesSatisfied(DetailedTask* task)
 #endif
 }
 
-DetailedTask*
-DetailedTasks::getNextInternalReadyTask()
+DetailedTask* DetailedTasks::getNextInternalReadyTask()
 {
   // Block until the list has an item in it.
 #if !defined( _AIX )
@@ -1203,8 +1224,7 @@ DetailedTasks::getNextInternalReadyTask()
   return nextTask;
 }
 
-DetailedTask*
-DetailedTasks::getNextExternalReadyTask()
+DetailedTask* DetailedTasks::getNextExternalReadyTask()
 {
   DetailedTask* nextTask = mpiCompletedTasks_.top();
   mpiCompletedTasks_.pop();
@@ -1212,22 +1232,32 @@ DetailedTasks::getNextExternalReadyTask()
   return nextTask;
 }
 
-DetailedTask*
-DetailedTasks::getNextGPUReadyTask()
+
+#ifdef HAVE_CUDA
+DetailedTask* DetailedTasks::getNextInternalReadyGPUTask()
 {
-  DetailedTask* nextTask = gpuReadyTasks_.top();
-  gpuReadyTasks_.pop();
-  //cout << Parallel::getMPIRank() << "    Getting: " << *nextTask << "  new size: " << gpuReadyTasks_.size() << endl;
+  DetailedTask* nextTask = initiallyReadyGPUTasks_.top();
+  initiallyReadyGPUTasks_.pop();
+  //cout << Parallel::getMPIRank() << "    Getting: " << *nextTask << "  new size: " << readyGPUTasks_.size() << endl;
   return nextTask;
 }
 
-void DetailedTasks::addGPUTask(DetailedTask* task)
+DetailedTask* DetailedTasks::getNextExternalReadyGPUTask()
 {
-  gpuReadyTasks_.push(task);
+  DetailedTask* nextTask = copyCompletedGPUTasks_.top();
+  copyCompletedGPUTasks_.pop();
+  //cout << Parallel::getMPIRank() << "    Getting: " << *nextTask << "  new size: " << copyCompletedGPUTasks_.size() << endl;
+  return nextTask;
 }
 
-void
-DetailedTasks::initTimestep()
+void DetailedTasks::addReadyGPUTask(DetailedTask* task)
+{
+  initiallyReadyGPUTasks_.push(task);
+}
+#endif
+
+
+void DetailedTasks::initTimestep()
 {
   readyTasks_ = initiallyReadyTasks_;
 #if !defined( _AIX )

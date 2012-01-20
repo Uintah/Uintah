@@ -39,6 +39,7 @@ namespace Uintah {
 
 
 using std::vector;
+using std::map;
 using std::ofstream;
 
 class Task;
@@ -90,15 +91,26 @@ WARNING
     
     void runTask(DetailedTask* task, int iteration, int t_id = 0);
     
+    void runGPUTask(DetailedTask* task, int iteration, int t_id = 0);
+
     void postMPISends(DetailedTask* task, int iteration, int t_id);
     
     void assignTask(DetailedTask* task, int iteration);
     
+    void initiateGPUTask(DetailedTask* task, int iteration);
+
+    void prepareTaskDeviceMemory(DetailedTask* dtask);
+
+    void hostToDeviceVariableCopy (DetailedTask* dtask,
+                                   const VarLabel* label,
+                                   const Patch* patch,
+                                   double* h_VarData);
+
     ConditionVariable      d_nextsignal;
     Mutex                  d_nextmutex;   //conditional wait mutex
     TaskWorker*            t_worker[16];  //workers
     Thread*                t_thread[16];
-    Mutex                  dlbLock;   //load balancer lock
+    Mutex                  dlbLock;       //load balancer lock
     
 
   private:
@@ -107,10 +119,13 @@ WARNING
     CommRecMPI             sends_[16+1];
     QueueAlg               taskQueueAlg_;
     int                    numThreads_;
+    int                    numGPUs_;
+
+    map<const VarLabel*, double*>    deviceVariableMemMap;
 
     GPUThreadedMPIScheduler(const GPUThreadedMPIScheduler&);
     GPUThreadedMPIScheduler& operator=(const GPUThreadedMPIScheduler&);
-    
+    void setNumGPUs(); // set by cudaGetDeviceCount
     int getAviableThreadNum();
   };
 

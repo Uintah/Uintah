@@ -419,7 +419,7 @@ DynamicMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
                 (phaseSyncTask.find(currphase)!= phaseSyncTask.end() && 
                  phaseTasksDone[currphase] == phaseTasks[currphase]-1) ) //if there is work to do
       {
-        processMPIRecvs(TEST);  //recieve what is ready and do not block
+        processMPIRecvs(TEST);  // receive what is ready and do not block
       }
       else
       {

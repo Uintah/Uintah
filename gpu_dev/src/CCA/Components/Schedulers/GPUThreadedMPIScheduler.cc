@@ -34,6 +34,11 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <CCA/Components/Schedulers/TaskGraph.h>
 #include <CCA/Components/Schedulers/TaskWorker.h>
+#include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/Variables/NCVariable.h>
+#include <Core/Grid/Variables/SFCXVariable.h>
+#include <Core/Grid/Variables/SFCYVariable.h>
+#include <Core/Grid/Variables/SFCZVariable.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <CCA/Ports/Output.h>
 #include <Core/Thread/Time.h>
@@ -59,121 +64,37 @@ using namespace SCIRun;
 
 // Debug: Used to sync cerr so it is readable (when output by
 // multiple threads at the same time)  From sus.cc:
-extern UINTAHSHARE SCIRun::Mutex       cerrLock;
+extern UINTAHSHARE SCIRun::Mutex cerrLock;
 extern DebugStream taskdbg;
 extern DebugStream mpidbg;
-extern map<string,double> waittimes;
-extern map<string,double> exectimes;
+extern map<string, double> waittimes;
+extern map<string, double> exectimes;
 extern DebugStream waitout;
 extern DebugStream execout;
 
-static double CurrentWaitTime=0;
+static double CurrentWaitTime = 0;
 
 static DebugStream dbg("GPUThreadedMPIScheduler", false);
 static DebugStream timeout("GPUThreadedMPIScheduler.timings", false);
-static DebugStream queuelength("QueueLength",false);
-static DebugStream threaddbg("ThreadDBG",false);
+static DebugStream queuelength("QueueLength", false);
+static DebugStream threaddbg("ThreadDBG", false);
 
 GPUThreadedMPIScheduler::GPUThreadedMPIScheduler(const ProcessorGroup* myworld,
                                                  Output* oport,
                                                  GPUThreadedMPIScheduler* parentScheduler) :
-  MPIScheduler( myworld, oport, parentScheduler),
-  d_nextsignal("next condition"), d_nextmutex("next mutex"), dlbLock( "loadbalancer lock")
-{
+    MPIScheduler(myworld, oport, parentScheduler), d_nextsignal("next condition"),
+      d_nextmutex("next mutex"), dlbLock("loadbalancer lock") {
 
+  setNumGPUs();
 }
 
-void GPUThreadedMPIScheduler::problemSetup(const ProblemSpecP& prob_spec, SimulationStateP& state)
-{
-  //default taskReadyQueueAlg
-  taskQueueAlg_ = MostMessages;
-  string taskQueueAlg = "MostMessages";
-
-  ProblemSpecP params = prob_spec->findBlock("Scheduler");
-  if(params) {
-    params->get("taskReadyQueueAlg", taskQueueAlg);
-
-    if (taskQueueAlg == "FCFS") 
-      taskQueueAlg_ =  FCFS;
-    else if (taskQueueAlg == "Random")
-      taskQueueAlg_ =  Random;
-    else if (taskQueueAlg == "Stack")
-      taskQueueAlg_ =  Stack;
-    else if (taskQueueAlg == "MostChildren")
-      taskQueueAlg_ =  MostChildren;
-    else if (taskQueueAlg == "LeastChildren")
-      taskQueueAlg_ =  LeastChildren;
-    else if (taskQueueAlg == "MostAllChildren")
-      taskQueueAlg_ =  MostChildren;
-    else if (taskQueueAlg == "LeastAllChildren")
-      taskQueueAlg_ =  LeastChildren;
-    else if (taskQueueAlg == "MostL2Children")
-      taskQueueAlg_ =  MostL2Children;
-    else if (taskQueueAlg == "LeastL2Children")
-      taskQueueAlg_ =  LeastL2Children;
-    else if (taskQueueAlg == "MostMessages")
-      taskQueueAlg_ =  MostMessages;
-    else if (taskQueueAlg == "LeastMessages")
-      taskQueueAlg_ =  LeastMessages;
-    else if (taskQueueAlg == "PatchOrder")
-      taskQueueAlg_ =  PatchOrder;
-    else if (taskQueueAlg == "PatchOrderRandom")
-      taskQueueAlg_ =  PatchOrderRandom;
-  }
-  if (d_myworld->myrank() == 0) {
-      cout << "   Using \"" << taskQueueAlg <<  "\" Algorithm" << endl;
-  }
-
-  numThreads_ = Uintah::Parallel::getMaxThreads() - 1;
-  if (numThreads_ < 1) {
-    if (d_myworld->myrank() == 0) {
-      cerr << "Error: no thread number specified" << endl;
-      throw ProblemSetupException("This scheduler requires number of threads > 1, use  -nthreads <num> ", __FILE__, __LINE__);
-     }
-  } else if (numThreads_ > 32) {
-    if (d_myworld->myrank() == 0) {
-      cerr << "Error: thread number too large" << endl;
-      throw ProblemSetupException("Too many number of threads. This scheduler only supports up to 32 threads", __FILE__, __LINE__);
-    }
-  }
-  
-  if ( d_myworld->myrank()==0) {
-    cout << "\tWARNING: " << (Uintah::Parallel::usingGPU() ? "GPU " : "")
-         << "Multi-thread/MPI hybrid scheduler is EXPERIMENTAL "
-         << "not all tasks are thread safe yet."  << endl
-         << "\tUsing 1 thread for scheduling, " << numThreads_ << " threads for task execution." << endl;
-  }
-
- /* d_nextsignal = scinew ConditionVariable("NextCondition");
-  d_nextmutex = scinew Mutex("NextMutex");*/
-
-  char name[1024];
-  
-  for( int i = 0; i < numThreads_; i++ ) {
-    TaskWorker * worker = scinew TaskWorker( this, i );
-    t_worker[i] = worker;
-    sprintf( name, "Computing Worker %d-%d", Parallel::getRootProcessorGroup()->myrank(), i );
-    Thread * t = scinew Thread( worker, name );
-    t_thread[i] = t;
-    //t->detach();
-  }
-  
-//  WAIT_FOR_DEBUGGER();
-  log.problemSetup(prob_spec);
-  SchedulerCommon::problemSetup(prob_spec, state);
-  Thread::self()->set_affinity(0); //bind main thread to cpu 0
-
-}
-
-
-GPUThreadedMPIScheduler::~GPUThreadedMPIScheduler()
-{
-  for( int i = 0; i < numThreads_; i++ ) {
+GPUThreadedMPIScheduler::~GPUThreadedMPIScheduler() {
+  for (int i = 0; i < numThreads_; i++) {
     t_worker[i]->d_runmutex.lock();
     t_worker[i]->quit();
     t_worker[i]->d_runsignal.conditionSignal();
     t_worker[i]->d_runmutex.unlock();
-    t_thread[i]->setCleanupFunction( NULL );
+    t_thread[i]->setCleanupFunction(NULL);
     t_thread[i]->join();
   }
 
@@ -186,53 +107,121 @@ GPUThreadedMPIScheduler::~GPUThreadedMPIScheduler()
   }
 }
 
-SchedulerP GPUThreadedMPIScheduler::createSubScheduler()
-{
+void GPUThreadedMPIScheduler::problemSetup(const ProblemSpecP& prob_spec,
+                                           SimulationStateP& state) {
+  //default taskReadyQueueAlg
+  taskQueueAlg_ = MostMessages;
+  string taskQueueAlg = "MostMessages";
+
+  ProblemSpecP params = prob_spec->findBlock("Scheduler");
+  if (params) {
+    params->get("taskReadyQueueAlg", taskQueueAlg);
+
+    if (taskQueueAlg == "FCFS")
+      taskQueueAlg_ = FCFS;
+    else if (taskQueueAlg == "Random")
+      taskQueueAlg_ = Random;
+    else if (taskQueueAlg == "Stack")
+      taskQueueAlg_ = Stack;
+    else if (taskQueueAlg == "MostChildren")
+      taskQueueAlg_ = MostChildren;
+    else if (taskQueueAlg == "LeastChildren")
+      taskQueueAlg_ = LeastChildren;
+    else if (taskQueueAlg == "MostAllChildren")
+      taskQueueAlg_ = MostChildren;
+    else if (taskQueueAlg == "LeastAllChildren")
+      taskQueueAlg_ = LeastChildren;
+    else if (taskQueueAlg == "MostL2Children")
+      taskQueueAlg_ = MostL2Children;
+    else if (taskQueueAlg == "LeastL2Children")
+      taskQueueAlg_ = LeastL2Children;
+    else if (taskQueueAlg == "MostMessages")
+      taskQueueAlg_ = MostMessages;
+    else if (taskQueueAlg == "LeastMessages")
+      taskQueueAlg_ = LeastMessages;
+    else if (taskQueueAlg == "PatchOrder")
+      taskQueueAlg_ = PatchOrder;
+    else if (taskQueueAlg == "PatchOrderRandom")
+      taskQueueAlg_ = PatchOrderRandom;
+  }
+  if (d_myworld->myrank() == 0) {
+    cout << "   Using \"" << taskQueueAlg << "\" Algorithm" << endl;
+  }
+
+  numThreads_ = Uintah::Parallel::getMaxThreads() - 1;
+  if (numThreads_ < 1) {
+    if (d_myworld->myrank() == 0) {
+      cerr << "Error: no thread number specified" << endl;
+      throw ProblemSetupException(
+          "This scheduler requires number of threads > 1, use  -nthreads <num> ", __FILE__,
+          __LINE__);
+    }
+  } else if (numThreads_ > 32) {
+    if (d_myworld->myrank() == 0) {
+      cerr << "Error: thread number too large" << endl;
+      throw ProblemSetupException(
+          "Too many number of threads. This scheduler only supports up to 32 threads", __FILE__,
+          __LINE__);
+    }
+  }
+
+  if (d_myworld->myrank() == 0) {
+    cout << "\tWARNING: " << (Uintah::Parallel::usingGPU() ? "GPU " : "")
+         << "Multi-thread/MPI hybrid scheduler is EXPERIMENTAL "
+         << "not all tasks are thread safe yet." << endl << "\tUsing 1 thread for scheduling, "
+         << numThreads_ << " threads for task execution." << endl;
+  }
+
+  /* d_nextsignal = scinew ConditionVariable("NextCondition");
+   d_nextmutex = scinew Mutex("NextMutex");*/
+
+  char name[1024];
+
+  for (int i = 0; i < numThreads_; i++) {
+    TaskWorker * worker = scinew TaskWorker(this, i);
+    t_worker[i] = worker;
+    sprintf(name, "Computing Worker %d-%d", Parallel::getRootProcessorGroup()->myrank(), i);
+    Thread * t = scinew Thread(worker, name);
+    t_thread[i] = t;
+    //t->detach();
+  }
+
+//  WAIT_FOR_DEBUGGER();
+  log.problemSetup(prob_spec);
+  SchedulerCommon::problemSetup(prob_spec, state);
+  Thread::self()->set_affinity(0);  //bind main thread to cpu 0
+
+}
+
+SchedulerP GPUThreadedMPIScheduler::createSubScheduler() {
   GPUThreadedMPIScheduler* newsched = scinew GPUThreadedMPIScheduler(d_myworld, m_outPort, this);
   newsched->d_sharedState = d_sharedState;
   UintahParallelPort* lbp = getPort("load balancer");
   newsched->attachPort("load balancer", lbp);
-  newsched->d_sharedState=d_sharedState;
+  newsched->d_sharedState = d_sharedState;
   return newsched;
 }
 
-void GPUThreadedMPIScheduler::runTask(DetailedTask* task, int iteration, int t_id /*=0*/)
-{
+void GPUThreadedMPIScheduler::runTask(DetailedTask* task, int iteration, int t_id /*=0*/) {
   TAU_PROFILE("GPUThreadedMPIScheduler::runTask()", " ", TAU_USER);
 
-  if(waitout.active()) {
-    waittimes[task->getTask()->getName()]+=CurrentWaitTime;
-    CurrentWaitTime=0;
+  if (waitout.active()) {
+    waittimes[task->getTask()->getName()] += CurrentWaitTime;
+    CurrentWaitTime = 0;
   }
-  
+
   double taskstart = Time::currentSeconds();
-  
+
   if (trackingVarsPrintLocation_ & SchedulerCommon::PRINT_BEFORE_EXEC) {
     printTrackedVars(task, SchedulerCommon::PRINT_BEFORE_EXEC);
   }
 
   vector<DataWarehouseP> plain_old_dws(dws.size());
-  for(int i=0;i<(int)dws.size();i++) {
+  for (int i = 0; i < (int)dws.size(); i++) {
     plain_old_dws[i] = dws[i].get_rep();
-  //const char* tag = AllocatorSetDefaultTag(task->getTask()->getName());
+    //const char* tag = AllocatorSetDefaultTag(task->getTask()->getName());
   }
 
-  // TODO need a better mechanism to determine which deviceID to use when there are multiple available
-  // find the "best" device for cudaSetDevice() , for now this is the one with the most SMs
-  int num_devices, device, max_device;
-  cudaGetDeviceCount(&num_devices);
-  if (num_devices > 1) {
-    int max_multiprocessors = 0;
-    for (device = 0; device < num_devices; device++) {
-      cudaDeviceProp properties;
-      cudaGetDeviceProperties(&properties, device);
-      if (max_multiprocessors < properties.multiProcessorCount) {
-        max_multiprocessors = properties.multiProcessorCount;
-        max_device = device;
-      }
-    }
-  }
-  task->assignDevice(max_device);
   task->doit(d_myworld, dws, plain_old_dws);
   //AllocatorSetDefaultTag(tag);
 
@@ -240,72 +229,137 @@ void GPUThreadedMPIScheduler::runTask(DetailedTask* task, int iteration, int t_i
     printTrackedVars(task, SchedulerCommon::PRINT_AFTER_EXEC);
   }
 
-  double dtask = Time::currentSeconds()-taskstart;
- 
+  double dtask = Time::currentSeconds() - taskstart;
+
   dlbLock.lock();
-  if(execout.active()) {
-    exectimes[task->getTask()->getName()]+=dtask;
+  if (execout.active()) {
+    exectimes[task->getTask()->getName()] += dtask;
   }
 
   //if i do not have a sub scheduler 
-  if(!task->getTask()->getHasSubScheduler()) {
+  if (!task->getTask()->getHasSubScheduler()) {
     //add my task time to the total time
-    mpi_info_.totaltask += dtask;  
+    mpi_info_.totaltask += dtask;
     //if(d_myworld->myrank()==0)
     //  cout << "adding: " << dtask << " to counters, new total: " << mpi_info_.totaltask << endl;
-    if(!d_sharedState->isCopyDataTimestep() && task->getTask()->getType()!=Task::Output) {
+    if (!d_sharedState->isCopyDataTimestep() && task->getTask()->getType() != Task::Output) {
       //if(d_myworld->myrank()==0 && task->getPatches()!=0)
       //  cout << d_myworld->myrank() << " adding: " << task->getTask()->getName() << " to profile:" << dtask << " on patches:" << *(task->getPatches()) << endl;
       //add contribution for patchlist
-      getLoadBalancer()->addContribution(task,dtask);
+      getLoadBalancer()->addContribution(task, dtask);
     }
   }
   dlbLock.unlock();
 
-  postMPISends( task, iteration, t_id );
-  task->done(dws); // should this be timed with taskstart? - BJW
+  postMPISends(task, iteration, t_id);
+  task->done(dws);  // should this be timed with taskstart? - BJW
   double teststart = Time::currentSeconds();
 
- // sendsLock.lock(); // Dd... could do better?
-  sends_[t_id].testsome( d_myworld );
- // sendsLock.unlock(); // Dd... could do better?
+  // sendsLock.lock(); // Dd... could do better?
+  sends_[t_id].testsome(d_myworld);
+  // sendsLock.unlock(); // Dd... could do better?
 
   mpi_info_.totaltestmpi += Time::currentSeconds() - teststart;
- 
-  if(parentScheduler) { //add my timings to the parent scheduler
-  //  if(d_myworld->myrank()==0)
-  //    cout << "adding: " << mpi_info_.totaltask << " to parent counters, new total: " << parentScheduler->mpi_info_.totaltask << endl;
-    parentScheduler->mpi_info_.totaltask+=mpi_info_.totaltask;
-    parentScheduler->mpi_info_.totaltestmpi+=mpi_info_.totaltestmpi;
-    parentScheduler->mpi_info_.totalrecv+=mpi_info_.totalrecv;
-    parentScheduler->mpi_info_.totalsend+=mpi_info_.totalsend;
-    parentScheduler->mpi_info_.totalwaitmpi+=mpi_info_.totalwaitmpi;
-    parentScheduler->mpi_info_.totalreduce+=mpi_info_.totalreduce;
+
+  if (parentScheduler) {  //add my timings to the parent scheduler
+    //  if(d_myworld->myrank()==0)
+    //    cout << "adding: " << mpi_info_.totaltask << " to parent counters, new total: " << parentScheduler->mpi_info_.totaltask << endl;
+    parentScheduler->mpi_info_.totaltask += mpi_info_.totaltask;
+    parentScheduler->mpi_info_.totaltestmpi += mpi_info_.totaltestmpi;
+    parentScheduler->mpi_info_.totalrecv += mpi_info_.totalrecv;
+    parentScheduler->mpi_info_.totalsend += mpi_info_.totalsend;
+    parentScheduler->mpi_info_.totalwaitmpi += mpi_info_.totalwaitmpi;
+    parentScheduler->mpi_info_.totalreduce += mpi_info_.totalreduce;
   }
 
-} // end runTask()
+}  // end runTask()
 
-void GPUThreadedMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
-{
+void GPUThreadedMPIScheduler::runGPUTask(DetailedTask* task, int iteration, int t_id /*=0*/) {
+
+  TAU_PROFILE("GPUThreadedMPIScheduler::runTask()", " ", TAU_USER);
+
+  if (waitout.active()) {
+    waittimes[task->getTask()->getName()] += CurrentWaitTime;
+    CurrentWaitTime = 0;
+  }
+
+  double taskstart = Time::currentSeconds();
+
+  if (trackingVarsPrintLocation_ & SchedulerCommon::PRINT_BEFORE_EXEC) {
+    printTrackedVars(task, SchedulerCommon::PRINT_BEFORE_EXEC);
+  }
+
+  vector<DataWarehouseP> plain_old_dws(dws.size());
+  for (int i = 0; i < (int)dws.size(); i++) {
+    plain_old_dws[i] = dws[i].get_rep();
+    //const char* tag = AllocatorSetDefaultTag(task->getTask()->getName());
+  }
+
+  task->doit(d_myworld, dws, plain_old_dws);
+  //AllocatorSetDefaultTag(tag);
+
+  if (trackingVarsPrintLocation_ & SchedulerCommon::PRINT_AFTER_EXEC) {
+    printTrackedVars(task, SchedulerCommon::PRINT_AFTER_EXEC);
+  }
+
+  double dtask = Time::currentSeconds() - taskstart;
+
+  dlbLock.lock();
+  if (execout.active()) {
+    exectimes[task->getTask()->getName()] += dtask;
+  }
+
+  //if i do not have a sub scheduler
+  if (!task->getTask()->getHasSubScheduler()) {
+    // add my task time to the total time
+    mpi_info_.totaltask += dtask;
+    //if(d_myworld->myrank()==0)
+    //  cout << "adding: " << dtask << " to counters, new total: " << mpi_info_.totaltask << endl;
+    if (!d_sharedState->isCopyDataTimestep() && task->getTask()->getType() != Task::Output) {
+      // if(d_myworld->myrank()==0 && task->getPatches()!=0)
+      //   cout << d_myworld->myrank() << " adding: " << task->getTask()->getName() << " to profile:" << dtask << " on patches:" << *(task->getPatches()) << endl;
+      // add contribution for patchlist
+      getLoadBalancer()->addContribution(task, dtask);
+    }
+  }
+  dlbLock.unlock();
+
+  postMPISends(task, iteration, t_id);
+  task->done(dws);  // should this be timed with taskstart? - BJW
+  double teststart = Time::currentSeconds();
+
+  // sendsLock.lock(); // Dd... could do better?
+  sends_[t_id].testsome(d_myworld);
+  // sendsLock.unlock(); // Dd... could do better?
+
+  mpi_info_.totaltestmpi += Time::currentSeconds() - teststart;
+
+  if (parentScheduler) {  //add my timings to the parent scheduler
+    //  if(d_myworld->myrank()==0)
+    //    cout << "adding: " << mpi_info_.totaltask << " to parent counters, new total: " << parentScheduler->mpi_info_.totaltask << endl;
+    parentScheduler->mpi_info_.totaltask += mpi_info_.totaltask;
+    parentScheduler->mpi_info_.totaltestmpi += mpi_info_.totaltestmpi;
+    parentScheduler->mpi_info_.totalrecv += mpi_info_.totalrecv;
+    parentScheduler->mpi_info_.totalsend += mpi_info_.totalsend;
+    parentScheduler->mpi_info_.totalwaitmpi += mpi_info_.totalwaitmpi;
+    parentScheduler->mpi_info_.totalreduce += mpi_info_.totalreduce;
+  }
+
+}  // end runGPUTask()
+
+void GPUThreadedMPIScheduler::execute(int tgnum /*=0*/,
+                                      int iteration /*=0*/) {
   if (d_sharedState->isCopyDataTimestep()) {
     MPIScheduler::execute(tgnum, iteration);
     return;
-  }
-  MALLOC_TRACE_TAG_SCOPE("GPUThreadedMPIScheduler::execute");
+  }MALLOC_TRACE_TAG_SCOPE("GPUThreadedMPIScheduler::execute");
   TAU_PROFILE("GPUThreadedMPIScheduler::execute()", " ", TAU_USER);
 
-  TAU_PROFILE_TIMER(reducetimer, "Reductions", "[GPUThreadedMPIScheduler::execute()] " , TAU_USER);
-  TAU_PROFILE_TIMER(sendtimer, "Send Dependency", "[GPUThreadedMPIScheduler::execute()] " , TAU_USER);
-  TAU_PROFILE_TIMER(recvtimer, "Recv Dependency", "[GPUThreadedMPIScheduler::execute()] " , TAU_USER);
-  TAU_PROFILE_TIMER(outputtimer, "Task Graph Output", "[GPUThreadedMPIScheduler::execute()] ",
-      TAU_USER);
-  TAU_PROFILE_TIMER(testsometimer, "Test Some", "[GPUThreadedMPIScheduler::execute()] ",
-      TAU_USER);
-  TAU_PROFILE_TIMER(finalwaittimer, "Final Wait", "[GPUThreadedMPIScheduler::execute()] ",
-      TAU_USER);
-  TAU_PROFILE_TIMER(sorttimer, "Topological Sort", "[GPUThreadedMPIScheduler::execute()] ",
-      TAU_USER);
-  TAU_PROFILE_TIMER(sendrecvtimer, "Initial Send Recv", "[GPUThreadedMPIScheduler::execute()] ",
+  TAU_PROFILE_TIMER(reducetimer, "Reductions", "[GPUThreadedMPIScheduler::execute()] " , TAU_USER); TAU_PROFILE_TIMER(sendtimer, "Send Dependency", "[GPUThreadedMPIScheduler::execute()] " , TAU_USER); TAU_PROFILE_TIMER(recvtimer, "Recv Dependency", "[GPUThreadedMPIScheduler::execute()] " , TAU_USER); TAU_PROFILE_TIMER(outputtimer, "Task Graph Output", "[GPUThreadedMPIScheduler::execute()] ",
+      TAU_USER); TAU_PROFILE_TIMER(testsometimer, "Test Some", "[GPUThreadedMPIScheduler::execute()] ",
+      TAU_USER); TAU_PROFILE_TIMER(finalwaittimer, "Final Wait", "[GPUThreadedMPIScheduler::execute()] ",
+      TAU_USER); TAU_PROFILE_TIMER(sorttimer, "Topological Sort", "[GPUThreadedMPIScheduler::execute()] ",
+      TAU_USER); TAU_PROFILE_TIMER(sendrecvtimer, "Initial Send Recv", "[GPUThreadedMPIScheduler::execute()] ",
       TAU_USER);
 
   ASSERTRANGE(tgnum, 0, (int)graphs.size());
@@ -321,9 +375,10 @@ void GPUThreadedMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
 
   DetailedTasks* dts = tg->getDetailedTasks();
 
-  if(dts == 0){
-    if (d_myworld->myrank() == 0)
+  if (dts == 0) {
+    if (d_myworld->myrank() == 0) {
       cerr << "GPUThreadedMPIScheduler skipping execute, no tasks\n";
+    }
     return;
   }
 
@@ -334,10 +389,11 @@ void GPUThreadedMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
   dts->initializeScrubs(dws, dwmap);
   dts->initTimestep();
 
-  for (int i = 0; i < ntasks; i++)
+  for (int i = 0; i < ntasks; i++) {
     dts->localTask(i)->resetDependencyCounts();
+  }
 
-  if(timeout.active()){
+  if (timeout.active()) {
     d_labels.clear();
     d_times.clear();
     //emitTime("time since last execute");
@@ -361,123 +417,168 @@ void GPUThreadedMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
 
   int numTasksDone = 0;
 
-
-  bool abort=false;
+  bool abort = false;
   int abort_point = 987654;
 
-  if (reloc_new_posLabel_ && dws[dwmap[Task::OldDW]] != 0)
+  if (reloc_new_posLabel_ && dws[dwmap[Task::OldDW]] != 0) {
     dws[dwmap[Task::OldDW]]->exchangeParticleQuantities(dts, getLoadBalancer(), reloc_new_posLabel_, iteration);
+  }
 
   TAU_PROFILE_TIMER(doittimer, "Task execution",
-      "[GPUThreadedMPIScheduler::execute() loop] ", TAU_USER);
-  TAU_PROFILE_START(doittimer);
+      "[GPUThreadedMPIScheduler::execute() loop] ", TAU_USER); TAU_PROFILE_START(doittimer);
 
-  int currphase=0;
-  int currcomm=0;
+  int currphase = 0;
+  int currcomm = 0;
   map<int, int> phaseTasks;
   map<int, int> phaseTasksDone;
-  map<int,  DetailedTask *> phaseSyncTask;
-  dts->setTaskPriorityAlg(taskQueueAlg_ );
-  for (int i = 0; i < ntasks; i++){
+  map<int, DetailedTask *> phaseSyncTask;
+  dts->setTaskPriorityAlg(taskQueueAlg_);
+  for (int i = 0; i < ntasks; i++) {
     phaseTasks[dts->localTask(i)->getTask()->d_phase]++;
   }
 
-  if( dbg.active()) {
+  if (dbg.active()) {
     cerrLock.lock();
-    dbg << me << " Executing " << dts->numTasks() << " tasks ("
-      << ntasks << " local)"<< endl;
+    dbg << me << " Executing " << dts->numTasks() << " tasks (" << ntasks << " local)" << endl;
     cerrLock.unlock();
   }
 
   static vector<int> histogram;
   static int totaltasks;
+  static int currentGPU = 0;
   set<DetailedTask*> pending_tasks;
 
-  taskdbg << d_myworld->myrank() << " Switched to Task Phase " << currphase  << " , total task  " <<  phaseTasks[currphase] << endl;
-  for (int i=0; i < numThreads_; i++)
-      t_worker[i]->resetWaittime(Time::currentSeconds());
+  taskdbg << d_myworld->myrank() << " Switched to Task Phase " << currphase << " , total task  "
+          << phaseTasks[currphase] << endl;
+  for (int i = 0; i < numThreads_; i++)
+    t_worker[i]->resetWaittime(Time::currentSeconds());
 
   /*control loop for all tasks of task graph*/
-  while( numTasksDone < ntasks) {
+  while (numTasksDone < ntasks) {
 
-    if (phaseTasks[currphase] == phaseTasksDone[currphase]) { // this phase done, goto next phase
-        currphase++;
-        taskdbg << d_myworld->myrank() << " Switched to Task Phase " << currphase  << " , total task  " <<  phaseTasks[currphase] << endl;
+    if (phaseTasks[currphase] == phaseTasksDone[currphase]) {  // this phase done, goto next phase
+      currphase++;
+      taskdbg << d_myworld->myrank() << " Switched to Task Phase " << currphase << " , total task  "
+              << phaseTasks[currphase] << endl;
     }
-    // if we have an internally-ready task, initiate its recvs
+
+    // 1.) if we have an internally-ready CPU task, initiate its recvs
     else if (dts->numInternalReadyTasks() > 0) {
       DetailedTask * task = dts->getNextInternalReadyTask();
+
       //save the reduction task and once per proc task for later execution
-      if ((task->getTask()->getType() == Task::Reduction) || (task->getTask()->getType() == Task::OncePerProc))
-      {
-        phaseSyncTask[task->getTask()->d_phase]= task;
-  if (taskdbg.active()){
+      if ((task->getTask()->getType() == Task::Reduction) || (task->getTask()->getType() == Task::OncePerProc)) {
+        phaseSyncTask[task->getTask()->d_phase] = task;
+        if (taskdbg.active()) {
           cerrLock.lock();
-          taskdbg << d_myworld->myrank() << " Task Reduction/OPP ready " << *task << " deps needed: " << task->getExternalDepCount() << endl;
+          taskdbg << d_myworld->myrank() << " Task Reduction/OPP ready " << *task
+                  << " deps needed: " << task->getExternalDepCount() << endl;
           cerrLock.unlock();
-  }
+        }
       } else {
-        initiateTask( task, abort, abort_point, iteration );
+        initiateTask(task, abort, abort_point, iteration);
         task->markInitiated();
+
+        // put task in CPU external-ready queue if MPI recvs are complete
         task->checkExternalDepCount();
-  if (taskdbg.active()){
+
+        if (taskdbg.active()) {
           cerrLock.lock();
-          taskdbg << d_myworld->myrank() << " Task internal ready " << *task << " deps needed: " << task->getExternalDepCount() << endl;
+          taskdbg << d_myworld->myrank() << " Task internal ready " << *task << " deps needed: "
+                  << task->getExternalDepCount() << endl;
           cerrLock.unlock();
           pending_tasks.insert(task);
-  }
+        }
       }
     }
-    //if it is time to run reduction task
-    else if ((phaseSyncTask.find(currphase)!= phaseSyncTask.end()) && (phaseTasksDone[currphase] == phaseTasks[currphase]-1)){
-      if(queuelength.active())
-      {
-        if((int)histogram.size()<dts->numExternalReadyTasks()+1)
-          histogram.resize(dts->numExternalReadyTasks()+1);
+
+    // 2.) if we have a GPU task that has its MPI comm completed, now prepare device memory
+    else if (dts->numInternalReadyGPUTasks() > 0) {
+      DetailedTask* task = dts->getNextInternalReadyGPUTask();
+
+      initiateGPUTask(task, iteration);
+      task->markInitiated();
+
+      // assign a device to this GPU task, round robin fashion for now
+      task->assignDevice(currentGPU);
+      cudaSetDevice(currentGPU);
+      currentGPU++;
+      currentGPU %= this->numGPUs_;
+
+      // prepare GPU memory in advance of GPU task execution
+      prepareTaskDeviceMemory(task);
+
+      if (taskdbg.active()) {
+        cerrLock.lock();
+//        taskdbg << d_myworld->myrank() << " GPU task internal ready " << *task << " deps needed: " << task->getExternalDepCount() << endl;
+        cerrLock.unlock();
+        pending_tasks.insert(task);
+      }
+    }
+
+    // 3.) if it is time to run reduction task, do so
+    else if ((phaseSyncTask.find(currphase) != phaseSyncTask.end()) && (phaseTasksDone[currphase] == phaseTasks[currphase] - 1)) {
+      if (queuelength.active()) {
+        if ((int)histogram.size() < dts->numExternalReadyTasks() + 1) {
+          histogram.resize(dts->numExternalReadyTasks() + 1);
+        }
         histogram[dts->numExternalReadyTasks()]++;
       }
       DetailedTask *reducetask = phaseSyncTask[currphase];
-      taskdbg << d_myworld->myrank() << " Ready Reduce/OPP task " << reducetask->getTask()->getName() << endl;
-      if (reducetask->getTask()->getType() == Task::Reduction){
-        if(!abort){
+      taskdbg << d_myworld->myrank() << " Ready Reduce/OPP task "
+              << reducetask->getTask()->getName() << endl;
+      if (reducetask->getTask()->getType() == Task::Reduction) {
+        if (!abort) {
           currcomm++;
-          taskdbg << d_myworld->myrank() << " Running Reduce task " << reducetask->getTask()->getName() << " with communicator " << currcomm <<  endl;
+          taskdbg << d_myworld->myrank() << " Running Reduce task "
+                  << reducetask->getTask()->getName() << " with communicator " << currcomm << endl;
           assignTask(reducetask, currcomm);
         }
-      }
-      else { // Task::OncePerProc task
-        ASSERT(reducetask->getTask()->getType() ==  Task::OncePerProc);
-        initiateTask( reducetask, abort, abort_point, iteration );
+      } else {  // Task::OncePerProc task
+        ASSERT(reducetask->getTask()->getType() == Task::OncePerProc);
+        initiateTask(reducetask, abort, abort_point, iteration);
         reducetask->markInitiated();
-        while(reducetask->getExternalDepCount() > 0) {
+
+        while (reducetask->getExternalDepCount() > 0) {
           processMPIRecvs(WAIT_ONCE);
           reducetask->checkExternalDepCount();
         }
 
         assignTask(reducetask, iteration);
-        taskdbg << d_myworld->myrank() << " Runnding OPP task:  \t";
-        printTask(taskdbg, reducetask); taskdbg << '\n';
-      }
-      ASSERT(reducetask->getTask()->d_phase==currphase);
+        taskdbg << d_myworld->myrank() << " Running OPP task:  \t";
+        printTask(taskdbg, reducetask);
+        taskdbg << '\n';
+      }ASSERT(reducetask->getTask()->d_phase==currphase);
       numTasksDone++;
       phaseTasksDone[reducetask->getTask()->d_phase]++;
     }
 
-    // run a task that has its communication complete
-    // tasks get in this queue automatically when their receive count hits 0
-    //   in DependencyBatch::received, which is called when a message is delivered.
+    // 4.) Run a task that has its MPI communication complete. These tasks get in the external
+    //     ready queue automatically when their receive count hits 0 in DependencyBatch::received,
+    //     which is called when a message is delivered.
     else if (dts->numExternalReadyTasks() > 0) {
-      if(queuelength.active())
-      {
-        if((int)histogram.size()<dts->numExternalReadyTasks()+1)
-          histogram.resize(dts->numExternalReadyTasks()+1);
+
+      // this is for debugging
+      if (queuelength.active()) {
+        if ((int)histogram.size() < dts->numExternalReadyTasks() + 1) {
+          histogram.resize(dts->numExternalReadyTasks() + 1);
+        }
         histogram[dts->numExternalReadyTasks()]++;
       }
 
-      DetailedTask * task = dts->getNextExternalReadyTask();
-      if (taskdbg.active()){
+      DetailedTask* task = NULL;
+
+      // Place GPU-enabled task(s) into the internalReadyGPU Task queue for processing,
+      //   might be just one, but could be more than one consecutive GPU-enabled tasks.
+      while ((task = dts->getNextExternalReadyTask())->getTask()->usesGPU()) {
+        dts->addReadyGPUTask(task);
+      }
+
+      if (taskdbg.active()) {
         cerrLock.lock();
-        taskdbg << d_myworld->myrank() << " Dispatching task " << *task << "(" << dts->numExternalReadyTasks() <<"/"<< pending_tasks.size() <<" tasks in queue)"<<endl;
+        taskdbg << d_myworld->myrank() << " Dispatching task " << *task << "("
+                << dts->numExternalReadyTasks() << "/" << pending_tasks.size() << " tasks in queue)"
+                << endl;
         cerrLock.unlock();
         pending_tasks.erase(pending_tasks.find(task));
       }
@@ -486,17 +587,42 @@ void GPUThreadedMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
       numTasksDone++;
       phaseTasksDone[task->getTask()->d_phase]++;
     }
-    // nothing to do process mpi
-    else processMPIRecvs(TEST);
 
-  } // end while( numTasksDone < ntasks )
+    // 5.) if we have a GPU task with its device memory prepared, execute the task
+    else if (dts->numExternalReadyGPUTasks() > 0) {
+      DetailedTask * task = dts->getNextExternalReadyGPUTask();
+
+      if (taskdbg.active()) {
+        cerrLock.lock();
+        taskdbg << d_myworld->myrank() << " Dispatching task " << *task << "("
+                << dts->numExternalReadyTasks() << "/" << pending_tasks.size() << " tasks in queue)"
+                << endl;
+        cerrLock.unlock();
+        pending_tasks.erase(pending_tasks.find(task));
+      }
+//      // TODO - create the GPU analog to getExternalDepCount()
+//      ASSERTEQ(task->getExternalDepCount(), 0);
+      runGPUTask(task, iteration);
+      numTasksDone++;
+      phaseTasksDone[task->getTask()->d_phase]++;
+    }
+
+    // otherwise there's nothing to do but process mpi recvs
+    else {
+      processMPIRecvs(TEST);
+    }
+
+  }  // end while( numTasksDone < ntasks )
+
+
+
   TAU_PROFILE_STOP(doittimer);
 
-// wait for all tasks to finish
+  // wait for all tasks to finish
   wait_till_all_done();
   //if any thread is busy, conditional wait here
   d_nextmutex.lock();
-  while ( getAviableThreadNum() < numThreads_) {
+  while (getAviableThreadNum() < numThreads_) {
     d_nextsignal.wait(d_nextmutex);
   }
   d_nextmutex.unlock();
@@ -507,68 +633,68 @@ void GPUThreadedMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
   //if (d_generation > 2)
   //dws[dws.size()-2]->printParticleSubsets();
 
-  if(queuelength.active())
-  {
-    float lengthsum=0;
+  if (queuelength.active()) {
+    float lengthsum = 0;
     totaltasks += ntasks;
     // if (me == 0) cout << d_myworld->myrank() << " queue length histogram: ";
-    for (unsigned int i=1; i<histogram.size(); i++)
-    {
+    for (unsigned int i = 1; i < histogram.size(); i++) {
       // if (me == 0)cout << histogram[i] << " ";
       //cout << iter->first << ":" << iter->second << " ";
-      lengthsum = lengthsum + i*histogram[i];
+      lengthsum = lengthsum + i * histogram[i];
     }
     // if (me==0) cout << endl;
-    float queuelength = lengthsum/totaltasks;
+    float queuelength = lengthsum / totaltasks;
     float allqueuelength = 0;
-    MPI_Reduce(&queuelength, &allqueuelength, 1 , MPI_FLOAT, MPI_SUM, 0, d_myworld->getComm());
-    if (me == 0) cout  << "average queue length:" << allqueuelength/d_myworld->size() << endl;
+    MPI_Reduce(&queuelength, &allqueuelength, 1, MPI_FLOAT, MPI_SUM, 0, d_myworld->getComm());
+    if (me == 0)
+      cout << "average queue length:" << allqueuelength / d_myworld->size() << endl;
   }
 
-  if(timeout.active()){
+  if (timeout.active()) {
     emitTime("MPI send time", mpi_info_.totalsendmpi);
     //emitTime("MPI Testsome time", mpi_info_.totaltestmpi);
     emitTime("Total send time",
-        mpi_info_.totalsend - mpi_info_.totalsendmpi - mpi_info_.totaltestmpi);
+             mpi_info_.totalsend - mpi_info_.totalsendmpi - mpi_info_.totaltestmpi);
     emitTime("MPI recv time", mpi_info_.totalrecvmpi);
     emitTime("MPI wait time", mpi_info_.totalwaitmpi);
     emitTime("Total recv time",
-        mpi_info_.totalrecv - mpi_info_.totalrecvmpi - mpi_info_.totalwaitmpi);
+             mpi_info_.totalrecv - mpi_info_.totalrecvmpi - mpi_info_.totalwaitmpi);
     emitTime("Total task time", mpi_info_.totaltask);
     emitTime("Total MPI reduce time", mpi_info_.totalreducempi);
     //emitTime("Total reduction time",
     //         mpi_info_.totalreduce - mpi_info_.totalreducempi);
-    emitTime("Total comm time",
-        mpi_info_.totalrecv + mpi_info_.totalsend + mpi_info_.totalreduce);
+    emitTime("Total comm time", mpi_info_.totalrecv + mpi_info_.totalsend + mpi_info_.totalreduce);
 
-    double time      = Time::currentSeconds();
+    double time = Time::currentSeconds();
     double totalexec = time - d_lasttime;
 
     d_lasttime = time;
 
-    emitTime("Other excution time", totalexec - mpi_info_.totalsend -
-        mpi_info_.totalrecv - mpi_info_.totaltask - mpi_info_.totalreduce);
+    emitTime(
+        "Other excution time",
+        totalexec - mpi_info_.totalsend - mpi_info_.totalrecv - mpi_info_.totaltask
+        - mpi_info_.totalreduce);
   }
 
-  if (d_sharedState != 0) { // subschedulers don't have a sharedState
-    d_sharedState->taskExecTime += mpi_info_.totaltask - d_sharedState->outputTime; // don't count output time...
+  if (d_sharedState != 0) {  // subschedulers don't have a sharedState
+    d_sharedState->taskExecTime += mpi_info_.totaltask - d_sharedState->outputTime;  // don't count output time...
     d_sharedState->taskLocalCommTime += mpi_info_.totalrecv + mpi_info_.totalsend;
     d_sharedState->taskWaitCommTime += mpi_info_.totalwaitmpi;
     d_sharedState->taskGlobalCommTime += mpi_info_.totalreduce;
-    for (int i=0; i < numThreads_; i++)
+    for (int i = 0; i < numThreads_; i++) {
       d_sharedState->taskWaitThreadTime += t_worker[i]->getWaittime();
+    }
   }
 
   //if(timeout.active())
   //emitTime("final wait");
-  if(restartable && tgnum == (int) graphs.size() -1) {
+  if (restartable && tgnum == (int)graphs.size() - 1) {
     // Copy the restart flag to all processors
-    int myrestart = dws[dws.size()-1]->timestepRestarted();
+    int myrestart = dws[dws.size() - 1]->timestepRestarted();
     int netrestart;
-    MPI_Allreduce(&myrestart, &netrestart, 1, MPI_INT, MPI_LOR,
-        d_myworld->getComm());
-    if(netrestart) {
-      dws[dws.size()-1]->restartTimestep();
+    MPI_Allreduce(&myrestart, &netrestart, 1, MPI_INT, MPI_LOR, d_myworld->getComm());
+    if (netrestart) {
+      dws[dws.size() - 1]->restartTimestep();
       if (dws[0])
         dws[0]->setRestarted();
     }
@@ -576,20 +702,20 @@ void GPUThreadedMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
 
   finalizeTimestep();
 
-
   log.finishTimestep();
-  if(timeout.active() && !parentScheduler){ // only do on toplevel scheduler
+  if (timeout.active() && !parentScheduler) {  // only do on toplevel scheduler
     //emitTime("finalize");
 
     // add number of cells, patches, and particles
     int numCells = 0, numParticles = 0;
-    OnDemandDataWarehouseP dw = dws[dws.size()-1];
+    OnDemandDataWarehouseP dw = dws[dws.size() - 1];
     const GridP grid(const_cast<Grid*>(dw->getGrid()));
-    const PatchSubset* myPatches = getLoadBalancer()->getPerProcessorPatchSet(grid)->getSubset(d_myworld->myrank());
+    const PatchSubset* myPatches = getLoadBalancer()->getPerProcessorPatchSet(grid)->getSubset(
+        d_myworld->myrank());
     for (int p = 0; p < myPatches->size(); p++) {
       const Patch* patch = myPatches->get(p);
       IntVector range = patch->getExtraCellHighIndex() - patch->getExtraCellLowIndex();
-      numCells += range.x()*range.y()*range.z();
+      numCells += range.x() * range.y() * range.z();
 
       // go through all materials since getting an MPMMaterial correctly would depend on MPM
       for (int m = 0; m < d_sharedState->getNumMatls(); m++) {
@@ -609,23 +735,21 @@ void GPUThreadedMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
     double maxTask = -1, avgTask = -1;
     double maxComm = -1, avgComm = -1;
     double maxCell = -1, avgCell = -1;
-    MPI_Reduce(&d_times[0], &d_totaltimes[0], (int)d_times.size(), MPI_DOUBLE,
-        MPI_SUM, 0, d_myworld->getComm());
-    MPI_Reduce(&d_times[0], &d_maxtimes[0], (int)d_times.size(), MPI_DOUBLE,
-        MPI_MAX, 0, d_myworld->getComm());
+    MPI_Reduce(&d_times[0], &d_totaltimes[0], (int)d_times.size(), MPI_DOUBLE, MPI_SUM, 0,
+               d_myworld->getComm());
+    MPI_Reduce(&d_times[0], &d_maxtimes[0], (int)d_times.size(), MPI_DOUBLE, MPI_MAX, 0,
+               d_myworld->getComm());
 
     double total = 0, avgTotal = 0, maxTotal = 0;
-    for(int i=0;i<(int)d_totaltimes.size();i++) {
-      d_avgtimes[i] = d_totaltimes[i]/d_myworld->size();
+    for (int i = 0; i < (int)d_totaltimes.size(); i++) {
+      d_avgtimes[i] = d_totaltimes[i] / d_myworld->size();
       if (strcmp(d_labels[i], "Total task time") == 0) {
         avgTask = d_avgtimes[i];
         maxTask = d_maxtimes[i];
-      }
-      else if (strcmp(d_labels[i], "Total comm time") == 0) {
+      } else if (strcmp(d_labels[i], "Total comm time") == 0) {
         avgComm = d_avgtimes[i];
         maxComm = d_maxtimes[i];
-      }
-      else if (strncmp(d_labels[i], "Num", 3) == 0) {
+      } else if (strncmp(d_labels[i], "Num", 3) == 0) {
         if (strcmp(d_labels[i], "NumCells") == 0) {
           avgCell = d_avgtimes[i];
           maxCell = d_maxtimes[i];
@@ -634,14 +758,14 @@ void GPUThreadedMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
         continue;
       }
 
-      total+= d_times[i];
+      total += d_times[i];
       avgTotal += d_avgtimes[i];
       maxTotal += d_maxtimes[i];
     }
 
     // to not duplicate the code
-    vector <ofstream*> files;
-    vector <vector<double>* > data;
+    vector<ofstream*> files;
+    vector<vector<double>*> data;
     files.push_back(&timingStats);
     data.push_back(&d_times);
 
@@ -655,87 +779,92 @@ void GPUThreadedMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
     for (unsigned file = 0; file < files.size(); file++) {
       ofstream& out = *files[file];
       out << "Timestep " << d_sharedState->getCurrentTopLevelTimeStep() << endl;
-      for(int i=0;i<(int)(*data[file]).size();i++){
+      for (int i = 0; i < (int)(*data[file]).size(); i++) {
         out << "GPUThreadedMPIScheduler: " << d_labels[i] << ": ";
-        int len = (int)(strlen(d_labels[i])+strlen("GPUThreadedMPIScheduler: ")+strlen(": "));
-        for(int j=len;j<55;j++)
+        int len = (int)(strlen(d_labels[i]) + strlen("GPUThreadedMPIScheduler: ") + strlen(": "));
+        for (int j = len; j < 55; j++)
           out << ' ';
         double percent;
         if (strncmp(d_labels[i], "Num", 3) == 0)
-          percent = d_totaltimes[i] == 0 ? 100 : (*data[file])[i]/d_totaltimes[i]*100;
+          percent = d_totaltimes[i] == 0 ? 100 : (*data[file])[i] / d_totaltimes[i] * 100;
         else
-          percent = (*data[file])[i]/total*100;
-        out << (*data[file])[i] <<  " (" << percent << "%)\n";
+          percent = (*data[file])[i] / total * 100;
+        out << (*data[file])[i] << " (" << percent << "%)\n";
       }
       out << endl << endl;
     }
 
     if (me == 0) {
-      timeout << "  Avg. exec: " << avgTask << ", max exec: " << maxTask << " = " << (1-avgTask/maxTask)*100 << " load imbalance (exec)%\n";
-      timeout << "  Avg. comm: " << avgComm << ", max comm: " << maxComm << " = " << (1-avgComm/maxComm)*100 << " load imbalance (comm)%\n";
-      timeout << "  Avg.  vol: " << avgCell << ", max  vol: " << maxCell << " = " << (1-avgCell/maxCell)*100 << " load imbalance (theoretical)%\n";
+      timeout << "  Avg. exec: " << avgTask << ", max exec: " << maxTask << " = "
+              << (1 - avgTask / maxTask) * 100 << " load imbalance (exec)%\n";
+      timeout << "  Avg. comm: " << avgComm << ", max comm: " << maxComm << " = "
+              << (1 - avgComm / maxComm) * 100 << " load imbalance (comm)%\n";
+      timeout << "  Avg.  vol: " << avgCell << ", max  vol: " << maxCell << " = "
+              << (1 - avgCell / maxCell) * 100 << " load imbalance (theoretical)%\n";
     }
     double time = Time::currentSeconds();
     //double rtime=time-d_lasttime;
-    d_lasttime=time;
+    d_lasttime = time;
     //timeout << "GPUThreadedMPIScheduler: TOTAL                                    "
     //        << total << '\n';
     //timeout << "GPUThreadedMPIScheduler: time sum reduction (one processor only): "
     //        << rtime << '\n';
   }
 
-  if(execout.active())
-  {
-    static int count=0;
+  if (execout.active()) {
+    static int count = 0;
 
-    if(++count%10==0)
-    {
+    if (++count % 10 == 0) {
       ofstream fout;
       char filename[100];
-      sprintf(filename,"exectimes.%d.%d",d_myworld->size(),d_myworld->myrank());
+      sprintf(filename, "exectimes.%d.%d", d_myworld->size(), d_myworld->myrank());
       fout.open(filename);
 
-      for(map<string,double>::iterator iter=exectimes.begin();iter!=exectimes.end();iter++)
-        fout << fixed << d_myworld->myrank() << ": TaskExecTime: " << iter->second << " Task:" << iter->first << endl;
+      for (map<string, double>::iterator iter = exectimes.begin(); iter != exectimes.end(); iter++)
+        fout << fixed << d_myworld->myrank() << ": TaskExecTime: " << iter->second << " Task:"
+             << iter->first << endl;
       fout.close();
       //exectimes.clear();
     }
   }
-  if(waitout.active())
-  {
-    static int count=0;
+  if (waitout.active()) {
+    static int count = 0;
 
     //only output the wait times every so many timesteps
-    if(++count%100==0)
-    {
-      for(map<string,double>::iterator iter=waittimes.begin();iter!=waittimes.end();iter++)
-        waitout << fixed << d_myworld->myrank() << ": TaskWaitTime(TO): " << iter->second << " Task:" << iter->first << endl;
+    if (++count % 100 == 0) {
+      for (map<string, double>::iterator iter = waittimes.begin(); iter != waittimes.end(); iter++)
+        waitout << fixed << d_myworld->myrank() << ": TaskWaitTime(TO): " << iter->second
+                << " Task:" << iter->first << endl;
 
-      for(map<string,double>::iterator iter=DependencyBatch::waittimes.begin();iter!=DependencyBatch::waittimes.end();iter++)
-        waitout << fixed << d_myworld->myrank() << ": TaskWaitTime(FROM): " << iter->second << " Task:" << iter->first << endl;
+      for (map<string, double>::iterator iter = DependencyBatch::waittimes.begin();
+          iter != DependencyBatch::waittimes.end(); iter++)
+        waitout << fixed << d_myworld->myrank() << ": TaskWaitTime(FROM): " << iter->second
+                << " Task:" << iter->first << endl;
 
       waittimes.clear();
       DependencyBatch::waittimes.clear();
     }
   }
 
-  if( dbg.active()) {
+  if (dbg.active()) {
     dbg << me << " GPUThreadedMPIScheduler finished\n";
   }
   //pg_ = 0;
 }
 
-void GPUThreadedMPIScheduler::postMPISends( DetailedTask         * task, int iteration, int t_id )
-{
+void GPUThreadedMPIScheduler::postMPISends(DetailedTask * task,
+                                           int iteration,
+                                           int t_id) {
   MALLOC_TRACE_TAG_SCOPE("GPUThreadedMPIScheduler::postMPISends");
   double sendstart = Time::currentSeconds();
-  if( dbg.active()) {
-    cerrLock.lock();dbg << d_myworld->myrank() << " postMPISends - task " << *task << '\n';
+  if (dbg.active()) {
+    cerrLock.lock();
+    dbg << d_myworld->myrank() << " postMPISends - task " << *task << '\n';
     cerrLock.unlock();
   }
 
   // Send data to dependendents
-  for(DependencyBatch* batch = task->getComputes(); batch != 0; batch = batch->comp_next) {
+  for (DependencyBatch* batch = task->getComputes(); batch != 0; batch = batch->comp_next) {
 
     // Prepare to send a message
 #ifdef USE_PACKING
@@ -748,19 +877,19 @@ void GPUThreadedMPIScheduler::postMPISends( DetailedTask         * task, int ite
     ASSERTRANGE(to, 0, d_myworld->size());
     ostringstream ostr;
     ostr.clear();
-    for(DetailedDep* req = batch->head; req != 0; req = req->next) {
-      if ((req->condition == DetailedDep::FirstIteration && iteration > 0) || 
-          (req->condition == DetailedDep::SubsequentIterations && iteration == 0)) {
+    for (DetailedDep* req = batch->head; req != 0; req = req->next) {
+      if ((req->condition == DetailedDep::FirstIteration && iteration > 0)
+          || (req->condition == DetailedDep::SubsequentIterations && iteration == 0)) {
         // See comment in DetailedDep about CommCondition
-        if( dbg.active()) {
+        if (dbg.active()) {
           dbg << d_myworld->myrank() << "   Ignoring conditional send for " << *req << endl;
         }
         continue;
       }
       // if we send/recv to an output task, don't send/recv if not an output timestep
-      if (req->toTasks.front()->getTask()->getType() == Task::Output && 
-          !oport_->isOutputTimestep() && !oport_->isCheckpointTimestep()) {
-        if( dbg.active()) {
+      if (req->toTasks.front()->getTask()->getType() == Task::Output && !oport_->isOutputTimestep()
+          && !oport_->isCheckpointTimestep()) {
+        if (dbg.active()) {
           dbg << d_myworld->myrank() << "   Ignoring non-output-timestep send for " << *req << endl;
         }
         continue;
@@ -771,7 +900,8 @@ void GPUThreadedMPIScheduler::postMPISends( DetailedTask         * task, int ite
       if (dbg.active()) {
         ostr << *req << ' ';
         //if (to == 40 && d_sharedState->getCurrentTopLevelTimeStep() == 2 && d_myworld->myrank() == 43)
-        dbg << d_myworld->myrank() << " --> sending " << *req << ", ghost: " << req->req->gtype << ", " << req->req->numGhostCells << " from dw " << dw->getID() << '\n';
+        dbg << d_myworld->myrank() << " --> sending " << *req << ", ghost: " << req->req->gtype
+            << ", " << req->req->numGhostCells << " from dw " << dw->getID() << '\n';
       }
       const VarLabel* posLabel;
       OnDemandDataWarehouse* posDW;
@@ -780,14 +910,14 @@ void GPUThreadedMPIScheduler::postMPISends( DetailedTask         * task, int ite
       // pass it in if the particle data is on the old dw
       LoadBalancer* lb = 0;
 
-      if(!reloc_new_posLabel_ && parentScheduler) {
+      if (!reloc_new_posLabel_ && parentScheduler) {
         posDW = dws[req->req->task->mapDataWarehouse(Task::ParentOldDW)].get_rep();
         posLabel = parentScheduler->reloc_new_posLabel_;
       } else {
         // on an output task (and only on one) we require particle variables from the NewDW
         if (req->toTasks.front()->getTask()->getType() == Task::Output) {
           posDW = dws[req->req->task->mapDataWarehouse(Task::NewDW)].get_rep();
-        }else {
+        } else {
           posDW = dws[req->req->task->mapDataWarehouse(Task::OldDW)].get_rep();
           lb = getLoadBalancer();
         }
@@ -795,20 +925,20 @@ void GPUThreadedMPIScheduler::postMPISends( DetailedTask         * task, int ite
       }
       MPIScheduler* top = this;
 
-      while(top->parentScheduler) {
+      while (top->parentScheduler) {
         top = top->parentScheduler;
       }
 
       dw->sendMPI(batch, posLabel, mpibuff, posDW, req, lb);
     }
     // Post the send
-    if(mpibuff.count()>0) {
+    if (mpibuff.count() > 0) {
       ASSERT(batch->messageTag > 0);
       double start = Time::currentSeconds();
       void* buf;
       int count;
       MPI_Datatype datatype;
-     
+
 #ifdef USE_PACKING
       mpibuff.get_type(buf, count, datatype, d_myworld->getComm());
       mpibuff.pack(d_myworld->getComm(), count);
@@ -820,46 +950,45 @@ void GPUThreadedMPIScheduler::postMPISends( DetailedTask         * task, int ite
       //we need this empty message to enforce modify after read dependencies 
       //if(count>0)
       //{
-        if( dbg.active()) {
-          cerrLock.lock();
-          //if (to == 40 && d_sharedState->getCurrentTopLevelTimeStep() == 2 && d_myworld->myrank() == 43)
-          dbg << d_myworld->myrank() << " Sending message number " << batch->messageTag 
-            << " to " << to << ": " << ostr.str() << "\n"; 
-          cerrLock.unlock();
-          //dbg.setActive(false);
-        }
+      if (dbg.active()) {
+        cerrLock.lock();
         //if (to == 40 && d_sharedState->getCurrentTopLevelTimeStep() == 2 && d_myworld->myrank() == 43)
-        if( mpidbg.active()) {
-          mpidbg <<d_myworld->myrank() << " Sending message number " << batch->messageTag << ", to " << to << ", length: " << count << "\n";
-        }
+        dbg << d_myworld->myrank() << " Sending message number " << batch->messageTag << " to "
+            << to << ": " << ostr.str() << "\n";
+        cerrLock.unlock();
+        //dbg.setActive(false);
+      }
+      //if (to == 40 && d_sharedState->getCurrentTopLevelTimeStep() == 2 && d_myworld->myrank() == 43)
+      if (mpidbg.active()) {
+        mpidbg << d_myworld->myrank() << " Sending message number " << batch->messageTag << ", to "
+               << to << ", length: " << count << "\n";
+      }
 
-        numMessages_++;
-        int typeSize;
+      numMessages_++;
+      int typeSize;
 
-        MPI_Type_size(datatype,&typeSize);
-        messageVolume_+=count*typeSize;
+      MPI_Type_size(datatype, &typeSize);
+      messageVolume_ += count * typeSize;
 
-        MPI_Request requestid;
-        MPI_Isend(buf, count, datatype, to, batch->messageTag, d_myworld->getComm(), &requestid);
-        int bytes = count;
+      MPI_Request requestid;
+      MPI_Isend(buf, count, datatype, to, batch->messageTag, d_myworld->getComm(), &requestid);
+      int bytes = count;
 
-        //sendsLock.lock(); // Dd: ??
-        sends_[t_id].add( requestid, bytes, mpibuff.takeSendlist(), ostr.str(), batch->messageTag );
-        //sendsLock.unlock(); // Dd: ??
-        mpi_info_.totalsendmpi += Time::currentSeconds() - start;
+      //sendsLock.lock(); // Dd: ??
+      sends_[t_id].add(requestid, bytes, mpibuff.takeSendlist(), ostr.str(), batch->messageTag);
+      //sendsLock.unlock(); // Dd: ??
+      mpi_info_.totalsendmpi += Time::currentSeconds() - start;
       //}
     }
-  } // end for (DependencyBatch * batch = task->getComputes() )
-  double dsend = Time::currentSeconds()-sendstart;
+  }  // end for (DependencyBatch * batch = task->getComputes() )
+  double dsend = Time::currentSeconds() - sendstart;
   mpi_info_.totalsend += dsend;
 
-} // end postMPISends();
+}  // end postMPISends();
 
-
-int GPUThreadedMPIScheduler::getAviableThreadNum()
-{
-  int num =0;
-  for (int i=0; i < numThreads_; i++) {
+int GPUThreadedMPIScheduler::getAviableThreadNum() {
+  int num = 0;
+  for (int i = 0; i < numThreads_; i++) {
     if (t_worker[i]->d_task == NULL) {
       num++;
     }
@@ -867,26 +996,129 @@ int GPUThreadedMPIScheduler::getAviableThreadNum()
   return num;
 }
 
-void  GPUThreadedMPIScheduler::assignTask( DetailedTask* task, int iteration)
-{
-   d_nextmutex.lock();
-   if (getAviableThreadNum() == 0) {
-     d_nextsignal.wait(d_nextmutex);
-   }
-   //find an idle thread and assign task
-   int targetThread=-1;
-   for (int i=0; i < numThreads_; i++) {
-     if (t_worker[i]->d_task == NULL) {
-        targetThread=i;
-        break;
-     }
-   }
-   d_nextmutex.unlock();
-   //send task and wake up worker
-   ASSERT(targetThread>=0);
-   t_worker[targetThread]->d_runmutex.lock();
-   t_worker[targetThread]->d_task = task;
-   t_worker[targetThread]->d_iteration = iteration;
-   t_worker[targetThread]->d_runsignal.conditionSignal();
-   t_worker[targetThread]->d_runmutex.unlock();
+void GPUThreadedMPIScheduler::assignTask(DetailedTask* task,
+                                         int iteration) {
+  d_nextmutex.lock();
+  if (getAviableThreadNum() == 0) {
+    d_nextsignal.wait(d_nextmutex);
+  }
+  //find an idle thread and assign task
+  int targetThread = -1;
+  for (int i = 0; i < numThreads_; i++) {
+    if (t_worker[i]->d_task == NULL) {
+      targetThread = i;
+      break;
+    }
+  }
+  d_nextmutex.unlock();
+  //send task and wake up worker
+  ASSERT(targetThread>=0);
+  t_worker[targetThread]->d_runmutex.lock();
+  t_worker[targetThread]->d_task = task;
+  t_worker[targetThread]->d_iteration = iteration;
+  t_worker[targetThread]->d_runsignal.conditionSignal();
+  t_worker[targetThread]->d_runmutex.unlock();
 }
+
+void GPUThreadedMPIScheduler::setNumGPUs() {
+  cudaGetDeviceCount(&numGPUs_);
+}
+
+void GPUThreadedMPIScheduler::initiateGPUTask(DetailedTask* task,
+                                              int iteration) {
+  MALLOC_TRACE_TAG_SCOPE("GPUThreadedMPIScheduler::initiateGPUTask");
+  TAU_PROFILE("GPUThreadedMPIScheduler::initiateGPUTask()", " ", TAU_USER);
+
+  // TODO fix this
+}
+
+void GPUThreadedMPIScheduler::hostToDeviceVariableCopy (DetailedTask* dtask,
+                                                        const VarLabel* label,
+                                                        const Patch* patch,
+                                                        double* h_VarData) {
+
+  // get the patch's data extents
+  IntVector l = patch->getNodeLowIndex();
+  IntVector h = patch->getNodeHighIndex();
+  IntVector s = h - l;
+  int numBytes = s.x() * s.y() * s.z() * sizeof(double);
+
+  // page-lock host memory for async copy to device
+  // cudaHostRegisterPortable flag is used so returned memory will be considered pinned by all CUDA contexts
+  cudaHostRegister(h_VarData, numBytes, cudaHostRegisterPortable);
+
+  // allocate device memory and add to map associating it to its variable
+  double* d_VarData;
+  cudaSetDevice(dtask->getDeviceNum());
+  CUDA_SAFE_CALL( cudaMalloc(&d_VarData, numBytes));
+  deviceVariableMemMap.insert(pair<const VarLabel*, double*>(label, d_VarData));
+
+  // now create the stream for this variable and an event to track h2d mem copy
+  cudaStream_t stream;
+  cudaStreamCreate(&stream);
+  dtask->addCUDAStream(label, &stream);
+  cudaEvent_t event;
+  cudaEventCreate(&event);
+  dtask->addHostToDeviceCopyEvent(label, &event);
+
+  // set up the host2device memcopy and follow it with an event added to the stream
+  CUDA_SAFE_CALL( cudaMemcpyAsync(d_VarData, h_VarData, numBytes, cudaMemcpyDefault, stream));
+  cudaEventRecord(event, stream);
+}
+
+void GPUThreadedMPIScheduler::prepareTaskDeviceMemory(DetailedTask* dtask) {
+
+  // determine which variables it will require
+  const Task* task = dtask->getTask();
+  for (const Task::Dependency* req = task->getRequires(); req != 0; req = req->next) {
+    constHandle<PatchSubset> patches = req->getPatchesUnderDomain(dtask->getPatches());
+    constHandle<MaterialSubset> matls = req->getMaterialsUnderDomain(dtask->getMaterials());
+
+    // for now, we're only interested in grid variables
+    TypeDescription::Type type = req->var->typeDescription()->getType();
+    if (type == TypeDescription::CCVariable   || type == TypeDescription::NCVariable || type == TypeDescription::SFCXVariable ||
+        type == TypeDescription::SFCYVariable || type == TypeDescription::SFCZVariable) {
+
+      int dwIndex = req->mapDataWarehouse();
+      OnDemandDataWarehouseP dw = dws[dwIndex];
+
+      for (int i = 0; i < patches->size(); i++) {
+        for (int j = 0; j < matls->size(); j++) {
+
+          // get the host memory that will be copied to the device
+          if (type == TypeDescription::CCVariable) {
+            constCCVariable<double> ccVar;
+            dw->get(ccVar, req->var, matls->get(j), patches->get(i), req->gtype, req->numGhostCells);
+            double* h_VarData = (double*)ccVar.getWindow()->getPointer();
+            hostToDeviceVariableCopy(dtask, req->var, patches->get(i), h_VarData);
+
+          } else if (type == TypeDescription::NCVariable) {
+            constNCVariable<double> ncVar;
+            dw->get(ncVar, req->var, matls->get(j), patches->get(i), req->gtype, req->numGhostCells);
+            double* h_VarData = (double*)ncVar.getWindow()->getPointer();
+            hostToDeviceVariableCopy(dtask, req->var, patches->get(i), h_VarData);
+
+          } else if (type == TypeDescription::SFCXVariable) {
+            constSFCXVariable<double> sfcxVar;
+            dw->get(sfcxVar, req->var, matls->get(j), patches->get(i), req->gtype, req->numGhostCells);
+            double* h_VarData = (double*)sfcxVar.getWindow()->getPointer();
+            hostToDeviceVariableCopy(dtask, req->var, patches->get(i), h_VarData);
+
+          } else if (type == TypeDescription::SFCYVariable) {
+            constSFCYVariable<double> sfcyVar;
+            dw->get(sfcyVar, req->var, matls->get(j), patches->get(i), req->gtype, req->numGhostCells);
+            double* h_VarData = (double*)sfcyVar.getWindow()->getPointer();
+            hostToDeviceVariableCopy(dtask, req->var, patches->get(i), h_VarData);
+
+          } else if (type == TypeDescription::SFCZVariable) {
+            constSFCZVariable<double> sfczVar;
+            dw->get(sfczVar, req->var, matls->get(j), patches->get(i), req->gtype, req->numGhostCells);
+            double* h_VarData = (double*)sfczVar.getWindow()->getPointer();
+            hostToDeviceVariableCopy(dtask, req->var, patches->get(i), h_VarData);
+          }
+        }
+      }
+    }
+  }
+}
+
