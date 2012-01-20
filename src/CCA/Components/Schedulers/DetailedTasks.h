@@ -223,6 +223,9 @@ namespace Uintah {
     void assignDevice (int device) {
       deviceNum = device;
     }
+    int getDeviceNum () {
+      return deviceNum;
+    }
     int getAssignedResourceIndex() const {
       return resourceIndex;
     }
@@ -261,6 +264,12 @@ namespace Uintah {
     bool areInternalDependenciesSatisfied()
     { return (numPendingInternalDependencies == 0); }
 
+#ifdef HAVE_CUDA
+    bool addCUDAStream(const VarLabel* label, cudaStream_t* stream);
+    bool addHostToDeviceCopyEvent(const VarLabel* label, cudaEvent_t* stream);
+    bool addDeviceToHostCopyEvent(const VarLabel* label, cudaEvent_t* stream);
+#endif
+
   protected:
     friend class TaskGraph;
   private:
@@ -296,7 +305,13 @@ namespace Uintah {
     Mutex internalDependencyLock;
     
     int resourceIndex;
+
+#ifdef HAVE_CUDA
     int deviceNum;
+    std::map<const VarLabel*, cudaStream_t*>  gridVariableStreams;
+    std::map<const VarLabel*, cudaEvent_t*>   h2dCopies;
+    std::map<const VarLabel*, cudaEvent_t*>   d2hCopies;
+#endif
 
     DetailedTask(const Task&);
     DetailedTask& operator=(const Task&);
@@ -308,7 +323,8 @@ namespace Uintah {
     bool operator<(const DetailedTask& other);
     
     ProfileType d_profileType;
-  };
+
+  }; // end class DetailedTask
   
   class DetailedTaskPriorityComparison
   {
@@ -370,9 +386,11 @@ namespace Uintah {
     int numExternalReadyTasks() { return mpiCompletedTasks_.size(); }
 
 #ifdef HAVE_CUDA
-    void addGPUTask(DetailedTask* task);
-    DetailedTask* getNextGPUReadyTask();
-    int numGPUReadyTasks() { return gpuReadyTasks_.size(); }
+    void addReadyGPUTask(DetailedTask* task);
+    DetailedTask* getNextInternalReadyGPUTask();
+    DetailedTask* getNextExternalReadyGPUTask();
+    int numExternalReadyGPUTasks() { return copyCompletedGPUTasks_.size();  }
+    int numInternalReadyGPUTasks() { return initiallyReadyGPUTasks_.size(); }
 #endif
 
     void createScrubCounts();
@@ -457,8 +475,10 @@ namespace Uintah {
     TaskQueue   readyTasks_;
     TaskQueue   initiallyReadyTasks_;
     TaskPQueue  mpiCompletedTasks_;
+
 #ifdef HAVE_CUDA
-    TaskPQueue  gpuReadyTasks_;
+    TaskPQueue  initiallyReadyGPUTasks_; // GPU tasks with MPI comm completed
+    TaskPQueue  copyCompletedGPUTasks_;  // GPU tasks with MPI comm completed and GPU mem prepared
 #endif
 
     // This "generation" number is to keep track of which InternalDependency
