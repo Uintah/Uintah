@@ -1150,7 +1150,7 @@ void GPUThreadedMPIScheduler::checkD2HCopyDependencies(DetailedTasks* dts)
 
   do {
     task = dts->getNextCompletedGPUTask();
-    if ((ret = task->checkH2DCopyDependencies()) == cudaSuccess) {
+    if ((ret = task->checkD2HCopyDependencies()) == cudaSuccess) {
       task->done(dws);
     } else {
       dts->addCompletedGPUTask(task);

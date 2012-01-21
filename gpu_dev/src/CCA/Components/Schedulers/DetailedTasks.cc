@@ -1079,9 +1079,17 @@ cudaError_t DetailedTask::checkH2DCopyDependencies()
   return cudaSuccess;
 }
 
-void DetailedTask::checkD2HCopyDependencies()
+cudaError_t DetailedTask::checkD2HCopyDependencies()
 {
-
+  std::map<const VarLabel*, cudaEvent_t*>::iterator iter;
+  cudaError_t val = cudaErrorNotReady;
+  for (iter=d2hCopies.begin(); iter!=d2hCopies.end(); iter++) {
+    val = cudaEventQuery(*(iter->second));
+    if (val != cudaSuccess) {
+      return val;
+    }
+  }
+  return cudaSuccess;
 }
 #endif
 

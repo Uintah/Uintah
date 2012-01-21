@@ -269,7 +269,7 @@ namespace Uintah {
     bool addHostToDeviceCopyEvent(const VarLabel* label, cudaEvent_t* stream);
     bool addDeviceToHostCopyEvent(const VarLabel* label, cudaEvent_t* stream);
     cudaError_t checkH2DCopyDependencies();
-    void checkD2HCopyDependencies();
+    cudaError_t checkD2HCopyDependencies();
     void incrementH2DCopyCount() { h2dCopyCount_++; }
     void decrementH2DCopyCount() { h2dCopyCount_--; }
 #endif
