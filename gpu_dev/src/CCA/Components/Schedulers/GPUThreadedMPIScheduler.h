@@ -97,15 +97,6 @@ WARNING
     
     void assignTask(DetailedTask* task, int iteration);
     
-    void initiateGPUTask(DetailedTask* task, int iteration);
-
-    void prepareTaskDeviceMemory(DetailedTask* dtask);
-
-    void hostToDeviceVariableCopy (DetailedTask* dtask,
-                                   const VarLabel* label,
-                                   const Patch* patch,
-                                   double* h_VarData);
-
     ConditionVariable      d_nextsignal;
     Mutex                  d_nextmutex;   //conditional wait mutex
     TaskWorker*            t_worker[16];  //workers
@@ -132,9 +123,23 @@ WARNING
     map<const VarLabel*, GPUVariable>    gpuVariables;
 
     GPUThreadedMPIScheduler(const GPUThreadedMPIScheduler&);
+
     GPUThreadedMPIScheduler& operator=(const GPUThreadedMPIScheduler&);
+
     void setNumGPUs(); // set by cudaGetDeviceCount
+
     int getAviableThreadNum();
+
+    void initiateGPUTask(DetailedTask* dtask, int iteration);
+
+    void hostToDeviceVariableCopy (DetailedTask* dtask,
+                                   const VarLabel* label,
+                                   const Patch* patch,
+                                   double* h_VarData);
+
+    void checkH2DCopyDependencies(DetailedTasks* dts);
+
+    void checkD2HCopyDependencies(DetailedTasks* dts);
   };
 
 } // End namespace Uintah
