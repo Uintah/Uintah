@@ -1064,6 +1064,25 @@ bool DetailedTask::addDeviceToHostCopyEvent(const VarLabel* label, cudaEvent_t* 
   ret = d2hCopies.insert(pair<const VarLabel*, cudaEvent_t*>(label, event));
   return ret.second ? true : false;
 }
+
+cudaError_t DetailedTask::checkH2DCopyDependencies()
+{
+  std::map<const VarLabel*, cudaEvent_t*>::iterator iter;
+  cudaError_t val = cudaErrorNotReady;
+  for (iter=h2dCopies.begin(); iter!=h2dCopies.end(); iter++) {
+    val = cudaEventQuery(*(iter->second));
+    if (val != cudaSuccess) {
+      return val;
+    }
+  }
+  this->gpuExternallyReady_ = true;
+  return cudaSuccess;
+}
+
+void DetailedTask::checkD2HCopyDependencies()
+{
+
+}
 #endif
 
 void DetailedTask::done(vector<OnDemandDataWarehouseP>& dws)
@@ -1236,23 +1255,42 @@ DetailedTask* DetailedTasks::getNextExternalReadyTask()
 #ifdef HAVE_CUDA
 DetailedTask* DetailedTasks::getNextInternalReadyGPUTask()
 {
-  DetailedTask* nextTask = initiallyReadyGPUTasks_.top();
-  initiallyReadyGPUTasks_.pop();
+  DetailedTask* nextTask = initiallyReadyGPUTasks_.front();
+  initiallyReadyGPUTasks_.pop_front();
   //cout << Parallel::getMPIRank() << "    Getting: " << *nextTask << "  new size: " << readyGPUTasks_.size() << endl;
   return nextTask;
 }
 
+
 DetailedTask* DetailedTasks::getNextExternalReadyGPUTask()
 {
-  DetailedTask* nextTask = copyCompletedGPUTasks_.top();
-  copyCompletedGPUTasks_.pop();
+  DetailedTask* nextTask = h2dCopyCompletedGPUTasks_.top();
+  h2dCopyCompletedGPUTasks_.pop();
   //cout << Parallel::getMPIRank() << "    Getting: " << *nextTask << "  new size: " << copyCompletedGPUTasks_.size() << endl;
   return nextTask;
 }
 
-void DetailedTasks::addReadyGPUTask(DetailedTask* task)
+DetailedTask* DetailedTasks::getNextCompletedGPUTask()
 {
-  initiallyReadyGPUTasks_.push(task);
+  DetailedTask* nextTask = d2hCopyPendingGPUTasks_.front();
+  d2hCopyPendingGPUTasks_.pop_front();
+  //cout << Parallel::getMPIRank() << "    Getting: " << *nextTask << "  new size: " << getNextCompletedGPUTask.size() << endl;
+  return nextTask;
+}
+
+void DetailedTasks::addInitialReadyGPUTask(DetailedTask* task)
+{
+  initiallyReadyGPUTasks_.push_back(task);
+}
+
+void DetailedTasks::addExternalReadyGPUTask(DetailedTask* task)
+{
+  h2dCopyCompletedGPUTasks_.push(task);
+}
+
+void DetailedTasks::addCompletedGPUTask(DetailedTask* task)
+{
+  d2hCopyPendingGPUTasks_.push_back(task);
 }
 #endif
 
