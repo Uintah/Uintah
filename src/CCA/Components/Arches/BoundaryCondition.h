@@ -1114,6 +1114,12 @@ namespace Uintah {
       void insertIntoSpeciesMap ( std::string name, double mol_ratio );
     private:
 
+      // input information
+      typedef std::map<IntVector, double> CellToValue; 
+      CellToValue _u_input; 
+      CellToValue _v_input; 
+      CellToValue _w_input; 
+
       // const VarLabel* inputs
       const ArchesLabel* d_lab;
       // for multimaterial
