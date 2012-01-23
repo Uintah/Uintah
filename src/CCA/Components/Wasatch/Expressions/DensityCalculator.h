@@ -1,7 +1,6 @@
 #ifndef DensityCalculator_Expr_h
 #define DensityCalculator_Expr_h
 
-#include <tabprops/BSpline.h>
 #include <tabprops/StateTable.h>
 
 #include <expression/Expression.h>
