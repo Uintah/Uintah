@@ -134,7 +134,7 @@ WARNING
 
     void hostToDeviceVariableCopy (DetailedTask* dtask,
                                    const VarLabel* label,
-                                   const Patch* patch,
+                                   IntVector size,
                                    double* h_VarData);
 
     void checkH2DCopyDependencies(DetailedTasks* dts);

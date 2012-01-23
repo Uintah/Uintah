@@ -265,11 +265,13 @@ namespace Uintah {
     { return (numPendingInternalDependencies == 0); }
 
 #ifdef HAVE_CUDA
-    bool addCUDAStream(const VarLabel* label, cudaStream_t* stream);
+    bool addGridVariableCUDAStream(const VarLabel* label, cudaStream_t* stream);
     bool addHostToDeviceCopyEvent(const VarLabel* label, cudaEvent_t* stream);
     bool addDeviceToHostCopyEvent(const VarLabel* label, cudaEvent_t* stream);
-    cudaError_t checkH2DCopyDependencies();
-    cudaError_t checkD2HCopyDependencies();
+    cudaError_t checkH2DCopyDependencies(int device);
+    cudaError_t checkD2HCopyDependencies(int deviceNum);
+    void clearH2DCopyEvents();
+    void clearD2HCopyEvents();
     void incrementH2DCopyCount() { h2dCopyCount_++; }
     void decrementH2DCopyCount() { h2dCopyCount_--; }
 #endif
@@ -321,8 +323,8 @@ namespace Uintah {
 
     // these maps are needed to attach CUDA calls for a variable to the correct stream, etc
     std::map<const VarLabel*, cudaStream_t*>  gridVariableStreams;
-    std::map<const VarLabel*, cudaEvent_t*>   h2dCopies;
-    std::map<const VarLabel*, cudaEvent_t*>   d2hCopies;
+    std::vector<cudaEvent_t*>   h2dCopies;
+    std::vector<cudaEvent_t*>   d2hCopies;
 #endif
 
     DetailedTask(const Task&);
