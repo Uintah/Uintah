@@ -3845,7 +3845,7 @@ if test "$with_tabprops"; then
     if test ! -d $with_tabprops; then
       AC_MSG_ERROR( '$with_tabprops' directory does not exist. )
     fi
-    for file in include/tabprops/BSpline.h include/tabprops/LU.h include/tabprops/StateTable.h lib/tabprops/libtabprops.a; do
+    for file in include/tabprops/StateTable.h lib/tabprops/libtabprops.a; do
       if test ! -f $with_tabprops/$file; then
         AC_MSG_ERROR( '$with_tabprops/$file' does not exist. )
       fi
