@@ -505,7 +505,7 @@ void GPUThreadedMPIScheduler::execute(int tgnum /*=0*/,
       DetailedTask* task = dts->getNextInternalReadyGPUTask();
 
       // declare the primary CUDA context for the specified device, "currentGPU" this calls driverAPI -> cuCtxSetCurrent().
-      cudaSetDevice(currentGPU);
+      CUDA_SAFE_CALL( cudaSetDevice(currentGPU) );
 
       // assign a device to this GPU task, round robin fashion for now
       task->assignDevice(currentGPU);
@@ -1031,7 +1031,7 @@ void GPUThreadedMPIScheduler::assignTask(DetailedTask* task,
 }
 
 void GPUThreadedMPIScheduler::setNumGPUs() {
-  cudaGetDeviceCount(&numGPUs_);
+  CUDA_SAFE_CALL( cudaGetDeviceCount(&numGPUs_) );
 }
 
 void GPUThreadedMPIScheduler::initiateGPUTask(DetailedTask* dtask, int iteration) {
@@ -1110,27 +1110,27 @@ void GPUThreadedMPIScheduler::hostToDeviceVariableCopy(DetailedTask* dtask,
 
   // page-lock host memory for async copy to device
   // cudaHostRegisterPortable flag is used so returned memory will be considered pinned by all CUDA contexts
-  cudaHostRegister(h_VarData, numBytes, cudaHostRegisterPortable);
+  CUDA_SAFE_CALL( cudaHostRegister(h_VarData, numBytes, cudaHostRegisterPortable) );
 
   // allocate device memory and add to map associating it to its variable
   double* d_VarData;
 
   // set the device and CUDA context
-  cudaSetDevice(dtask->getDeviceNum());
+  CUDA_SAFE_CALL( cudaSetDevice(dtask->getDeviceNum()) );
   CUDA_SAFE_CALL( cudaMalloc(&d_VarData, numBytes) );
   gpuVariables.insert(pair<const VarLabel*, GPUVariable>(label, GPUVariable(d_VarData, dtask->getDeviceNum())));
 
   // now create the stream for this variable and an event to track h2d mem copy
   cudaStream_t stream;
-  cudaStreamCreate(&stream);
+  CUDA_SAFE_CALL( cudaStreamCreate(&stream) );
   dtask->addGridVariableCUDAStream(label, &stream);
   cudaEvent_t event;
-  cudaEventCreate(&event);
+  CUDA_SAFE_CALL( cudaEventCreate(&event) );
   dtask->addHostToDeviceCopyEvent(label, &event);
 
   // set up the host2device memcopy and follow it with an event added to the stream
   CUDA_SAFE_CALL( cudaMemcpyAsync(d_VarData, h_VarData, numBytes, cudaMemcpyDefault, stream) );
-  cudaEventRecord(event, stream);
+  CUDA_SAFE_CALL( cudaEventRecord(event, stream) );
 }
 
 void GPUThreadedMPIScheduler::checkH2DCopyDependencies(DetailedTasks* dts)
@@ -1141,7 +1141,7 @@ void GPUThreadedMPIScheduler::checkH2DCopyDependencies(DetailedTasks* dts)
   // find as many GPU tasks with H2D copies completed to add to GPU external ready queue
   do {
     task = dts->getNextInternalReadyGPUTask();
-    if ((ret = task->checkH2DCopyDependencies(task->getDeviceNum())) == cudaSuccess) {
+    if ((ret = task->checkH2DCopyDependencies()) == cudaSuccess) {
       // all work associated with this task variables h2d copies is complete - add to the GPU external ready queue
       dts->addExternalReadyGPUTask(task);
     } else {
@@ -1159,7 +1159,7 @@ void GPUThreadedMPIScheduler::checkD2HCopyDependencies(DetailedTasks* dts)
 
   do {
     task = dts->getNextCompletedGPUTask();
-    if ((ret = task->checkD2HCopyDependencies(task->getDeviceNum())) == cudaSuccess) {
+    if ((ret = task->checkD2HCopyDependencies()) == cudaSuccess) {
       task->done(dws);
     } else {
       dts->addCompletedGPUTask(task);

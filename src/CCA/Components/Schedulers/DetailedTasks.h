@@ -268,8 +268,8 @@ namespace Uintah {
     bool addGridVariableCUDAStream(const VarLabel* label, cudaStream_t* stream);
     bool addHostToDeviceCopyEvent(const VarLabel* label, cudaEvent_t* stream);
     bool addDeviceToHostCopyEvent(const VarLabel* label, cudaEvent_t* stream);
-    cudaError_t checkH2DCopyDependencies(int device);
-    cudaError_t checkD2HCopyDependencies(int deviceNum);
+    cudaError_t checkH2DCopyDependencies();
+    cudaError_t checkD2HCopyDependencies();
     void clearH2DCopyEvents();
     void clearD2HCopyEvents();
     void incrementH2DCopyCount() { h2dCopyCount_++; }
