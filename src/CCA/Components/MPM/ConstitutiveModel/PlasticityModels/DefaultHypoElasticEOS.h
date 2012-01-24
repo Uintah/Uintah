@@ -63,6 +63,9 @@ namespace Uintah {
 
   private:
 
+    // Store reference bulk modulus
+    double d_bulk;
+
     // Prevent copying of this class
     // copy constructor
     //DefaultHypoElasticEOS(const DefaultHypoElasticEOS &cm);
@@ -71,8 +74,8 @@ namespace Uintah {
   public:
     // constructors
     DefaultHypoElasticEOS(); // This constructor is used when there is
-                             // no equation_of_state tag in the input
-                             // file  ** WARNING **
+                                        // no equation_of_state tag in the input
+                                        // file  ** WARNING **
     DefaultHypoElasticEOS(ProblemSpecP& ps); 
     DefaultHypoElasticEOS(const DefaultHypoElasticEOS* cm);
          
@@ -81,6 +84,12 @@ namespace Uintah {
 
     virtual void outputProblemSpec(ProblemSpecP& ps);
          
+    // Set the bulk modulus
+    void setBulkModulus(const double& bulk)
+    {
+      d_bulk = bulk;
+    }
+
     //////////
     // Calculate the pressure using a equation of state
     double computePressure(const MPMMaterial* matl,
@@ -92,6 +101,29 @@ namespace Uintah {
     double eval_dp_dJ(const MPMMaterial* matl,
                       const double& detF,
                       const PlasticityState* state);
+    
+    // Compute pressure (option 1)
+    double computePressure(const double& rho_orig,
+                           const double& rho_cur);
+
+    // Compute pressure (option 2)
+    void computePressure(const double& rho_orig,
+                         const double& rho_cur,
+                         double& pressure,
+                         double& dp_drho,
+                         double& csquared);
+
+    // Compute bulk modulus
+    double computeBulkModulus(const double& rho_orig,
+                              const double& rho_cur);
+
+    // Compute strain energy
+    double computeStrainEnergy(const double& rho_orig,
+                               const double& rho_cur);
+
+    // Compute density given pressure
+    double computeDensity(const double& rho_orig,
+                          const double& pressure);
   };
 
 } // End namespace Uintah
