@@ -103,7 +103,7 @@
     <evolve_porosity               spec="OPTIONAL BOOLEAN" />
     <failure_mean           spec="OPTIONAL DOUBLE" />
     <failure_std            spec="OPTIONAL DOUBLE" />
-    <failure_distrib        spec="OPTIONAL STRING 'constant, gauss, weibull'" />
+    <failure_distrib        spec="OPTIONAL STRING 'constant, gauss, weibull, uniform'" />
     <exponent               spec="OPTIONAL DOUBLE" />
     <failure_seed           spec="OPTIONAL INTEGER" />
     <failure_by_stress             spec="OPTIONAL BOOLEAN" />
@@ -665,6 +665,13 @@
     <kinematic_hardening_constant  spec="OPTIONAL DOUBLE"  />
     <fluid_B0                      spec="OPTIONAL DOUBLE"  />
     <fluid_pressure_initial         spec="OPTIONAL DOUBLE"  />
+  <!-- The following are for the UCNH & JWLppMPM model initial stress -->
+  <useInitialStress                 spec="OPTIONAL BOOLEAN" />
+    <initial_pressure               spec="OPTIONAL DOUBLE"  />
+  <yield_distrib                    spec="OPTIONAL STRING 'constant, uniform'" />
+    <yield_range                    spec="OPTIONAL DOUBLE"  />
+    <yield_seed                     spec="OPTIONAL INTEGER"  />
+  <useEOSFactory                    spec="OPTIONAL BOOLEAN" />
   </constitutive_model>
 
 
