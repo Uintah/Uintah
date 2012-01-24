@@ -271,6 +271,9 @@ namespace Uintah {
               double d_SXoodx = d_S[k][j]*oodx[j];
               for (int i = 0; i<3; i++) {
                 velGrad(i,j) += gvel[i] * d_SXoodx;
+                //std::cerr << "Grid vel = " << gvel << " dS = " << d_S[k][j] 
+                //          << " oodx = " << oodx[j] << endl;
+                //std::cerr << " VelGrad(" << i << "," << j << ") = " << velGrad(i,j) << endl;
               }
             }
           }

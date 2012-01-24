@@ -159,6 +159,7 @@ HypoElasticPlastic::HypoElasticPlastic(ProblemSpecP& ps, MPMFlags* Mflag) :
   }
   
   d_eos = MPMEquationOfStateFactory::create(ps);
+  d_eos->setBulkModulus(d_initialData.Bulk);
   if(!d_eos){
     ostringstream desc;
     desc << "An error occured in the EquationOfStateFactory that has \n"
@@ -205,6 +206,7 @@ HypoElasticPlastic::HypoElasticPlastic(const HypoElasticPlastic* cm)
   d_plastic = PlasticityModelFactory::createCopy(cm->d_plastic);
   d_damage = DamageModelFactory::createCopy(cm->d_damage);
   d_eos = MPMEquationOfStateFactory::createCopy(cm->d_eos);
+  d_eos->setBulkModulus(d_initialData.Bulk);
   
   // Initialize local VarLabels
   initializeLocalMPMLabels();

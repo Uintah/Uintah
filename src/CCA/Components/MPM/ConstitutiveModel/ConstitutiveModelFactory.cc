@@ -68,6 +68,8 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/MPM/ConstitutiveModel/ViscoPlastic.h>
 #include <CCA/Components/MPM/ConstitutiveModel/NonLocalDruckerPrager.h>
 #include <CCA/Components/MPM/ConstitutiveModel/Arenisca.h>
+#include <CCA/Components/MPM/ConstitutiveModel/simpleGeoModel_BB.h>
+#include <CCA/Components/MPM/ConstitutiveModel/JWLppMPM.h>
 #include <CCA/Components/MPM/MPMFlags.h>
 
 #include <Core/Exceptions/ProblemSetupException.h>
@@ -235,6 +237,9 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
   
   else if (mat_type ==  "murnaghanMPM")
     return(scinew MurnaghanMPM(child,flags));
+  
+  else if (mat_type ==  "jwlpp_mpm")
+    return(scinew JWLppMPM(child,flags));
   
   else 
     throw ProblemSetupException("Unknown Material Type R ("+mat_type+")", __FILE__, __LINE__);
