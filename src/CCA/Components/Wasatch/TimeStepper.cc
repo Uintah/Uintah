@@ -33,12 +33,12 @@ namespace Wasatch{
   template<typename FieldT>
   void
   set_soln_field_requirements( Uintah::Task* const task,
-                               const std::vector< TimeStepper::FieldInfo<FieldT> >& fields,
+                               const std::set< TimeStepper::FieldInfo<FieldT> >& fields,
                                const Uintah::PatchSubset* const pss,
                                const Uintah::MaterialSubset* const mss,
                                const int rkStage )
   {
-    typedef typename std::vector< TimeStepper::FieldInfo<FieldT> > Fields;
+    typedef typename std::set< TimeStepper::FieldInfo<FieldT> > Fields;
     for( typename Fields::const_iterator ifld = fields.begin(); ifld!=fields.end(); ++ifld ){
       if (rkStage==1) task->computes( ifld->varLabel );
       else            task->modifies( ifld->varLabel );
@@ -65,7 +65,7 @@ namespace Wasatch{
 
   template<typename FieldT>
   void
-  do_update( const std::vector< TimeStepper::FieldInfo<FieldT> >& fields,
+  do_update( const std::set< TimeStepper::FieldInfo<FieldT> >& fields,
              const Uintah::Patch* const patch,
              const int material,
              Uintah::DataWarehouse* const oldDW,
@@ -73,7 +73,7 @@ namespace Wasatch{
              const double deltat,
              const int rkStage )
   {
-    typedef std::vector< TimeStepper::FieldInfo<FieldT> > Fields;
+    typedef std::set< TimeStepper::FieldInfo<FieldT> > Fields;
     for( typename Fields::const_iterator ifld=fields.begin(); ifld!=fields.end(); ++ifld ){
 
       typedef typename SelectUintahFieldType<FieldT>::const_type ConstUintahField;
