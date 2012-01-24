@@ -1063,15 +1063,15 @@ bool DetailedTask::addDeviceToHostCopyEvent(const VarLabel* label, cudaEvent_t* 
   return d2hCopies.back() != 0 ? true : false;
 }
 
-cudaError_t DetailedTask::checkH2DCopyDependencies(int device)
+cudaError_t DetailedTask::checkH2DCopyDependencies()
 {
   // sets the CUDA context, must be at least one per process per device
-  cudaSetDevice(device);
+  CUDA_SAFE_CALL( cudaSetDevice(this->getDeviceNum()) );
 
   std::vector<cudaEvent_t*>::iterator iter;
   cudaError_t val = cudaErrorNotReady;
   for (iter=h2dCopies.begin(); iter!=h2dCopies.end(); iter++) {
-    val = cudaEventQuery(*(*iter));
+    CUDA_SAFE_CALL( val = cudaEventQuery(*(*iter)) );
     // even one unrecorded event means all device mem is not ready
     if (val != cudaSuccess) {
       return val;
@@ -1082,15 +1082,15 @@ cudaError_t DetailedTask::checkH2DCopyDependencies(int device)
   return cudaSuccess;
 }
 
-cudaError_t DetailedTask::checkD2HCopyDependencies(int device)
+cudaError_t DetailedTask::checkD2HCopyDependencies()
 {
   // sets the CUDA context, must be at least one per process per device
-  cudaSetDevice(device);
+  CUDA_SAFE_CALL( cudaSetDevice(this->getDeviceNum()) );
 
   std::vector<cudaEvent_t*>::iterator iter;
   cudaError_t val = cudaErrorNotReady;
   for (iter=d2hCopies.begin(); iter!=d2hCopies.end(); iter++) {
-    val = cudaEventQuery(*(*iter));
+    CUDA_SAFE_CALL( val = cudaEventQuery(*(*iter)) );
     // even one unrecorded event means all result data is not back on the CPU
     if (val != cudaSuccess) {
       return val;
@@ -1102,26 +1102,24 @@ cudaError_t DetailedTask::checkD2HCopyDependencies(int device)
 
 void DetailedTask::clearH2DCopyEvents()
 {
-  // sets the CUDA context, must be at least one per process per device
-  cudaSetDevice(this->deviceNum);
+  // sets the CUDA context, different for each device
+  CUDA_SAFE_CALL( cudaSetDevice(this->deviceNum) );
 
   std::vector<cudaEvent_t*>::iterator iter;
-  cudaError_t val = cudaErrorNotReady;
   for (iter=h2dCopies.begin(); iter!=h2dCopies.end(); iter++) {
-    val = cudaEventDestroy(*(*iter));
+    CUDA_SAFE_CALL( cudaEventDestroy(*(*iter)) );
   }
   h2dCopies.clear();
 }
 
 void DetailedTask::clearD2HCopyEvents()
 {
-  // sets the CUDA context, must be at least one per process per device
-  cudaSetDevice(this->deviceNum);
+  // sets the CUDA context, different for each device
+  CUDA_SAFE_CALL( cudaSetDevice(this->deviceNum) );
 
   std::vector<cudaEvent_t*>::iterator iter;
-  cudaError_t val = cudaErrorNotReady;
   for (iter=d2hCopies.begin(); iter!=d2hCopies.end(); iter++) {
-    val = cudaEventDestroy(*(*iter));
+    CUDA_SAFE_CALL( cudaEventDestroy(*(*iter)) );
   }
   d2hCopies.clear();
 }
