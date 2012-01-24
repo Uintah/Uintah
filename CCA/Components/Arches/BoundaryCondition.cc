@@ -410,10 +410,11 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
   }
 
   //look for velocity file input information... 
-  ProblemSpecP db_root = db->getRootNode();
+  ProblemSpecP db_root = db_params->getRootNode();
   ProblemSpecP db_bc   = db_root->findBlock("Grid")->findBlock("BoundaryConditions"); 
 
   if ( db_bc ) { 
+
     for ( ProblemSpecP db_face = db_bc->findBlock("Face"); db_face != 0; 
           db_face = db_face->findNextBlock("Face") ){
       
