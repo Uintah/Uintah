@@ -136,7 +136,7 @@ PressureSolver::problemSetup(ProblemSpecP& params)
   }
   if( !sol_ps || (solver != "hypre" && solver != "HypreSolver" && solver != "CGSolver") ){
     ostringstream msg;
-    msg << "\n ERROR:Arches:PressureSolver  You've specified the hypre solver in only one of two required places\n";
+    msg << "\n ERROR:Arches:PressureSolver  You've haven't specified the solver type.\n";
     msg << " Please add  <Solver type=\"hypre\" /> directly beneath <SimulationComponent type=\"arches\" /> \n";
     throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
   }
