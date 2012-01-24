@@ -119,6 +119,7 @@ SmallStrainPlastic::SmallStrainPlastic(ProblemSpecP& ps,MPMFlags* Mflag)
   ps->get("check_max_stress_failure",d_checkStressTriax);
 
   d_eos = MPMEquationOfStateFactory::create(ps);
+  d_eos->setBulkModulus(d_initialData.Bulk);
   if(!d_eos){
     ostringstream desc;
     desc << "An error occured in the EquationOfStateFactory that has \n"
@@ -228,6 +229,7 @@ SmallStrainPlastic::SmallStrainPlastic(const SmallStrainPlastic* cm) :
   d_scalarDam.scalarDamageDist = cm->d_scalarDam.scalarDamageDist ;
 
   d_eos = MPMEquationOfStateFactory::createCopy(cm->d_eos);
+  d_eos->setBulkModulus(d_initialData.Bulk);
   d_shear = ShearModulusModelFactory::createCopy(cm->d_shear);
   d_melt = MeltingTempModelFactory::createCopy(cm->d_melt);
   d_computeSpecificHeat = cm->d_computeSpecificHeat;
