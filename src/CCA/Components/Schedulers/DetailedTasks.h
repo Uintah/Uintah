@@ -272,8 +272,9 @@ namespace Uintah {
     cudaError_t checkD2HCopyDependencies();
     void clearH2DCopyEvents();
     void clearD2HCopyEvents();
-    void incrementH2DCopyCount() { h2dCopyCount_++; }
-    void decrementH2DCopyCount() { h2dCopyCount_--; }
+    inline void incrementH2DCopyCount() { h2dCopyCount_++; }
+    inline void decrementH2DCopyCount() { h2dCopyCount_--; }
+    inline int getH2DCopyCount() { return h2dCopyCount_; }
 #endif
 
   protected:
@@ -294,10 +295,12 @@ namespace Uintah {
     bool externallyReady_;
     int  externalDependencyCount_;
 
+#ifdef HAVE_CUDA
     // these will be used when the mechanism to know when H2D & D2H copies are complete has been refined
     bool gpuExternallyReady_;
     int  h2dCopyCount_;
     int  d2hCopyCount_;
+#endif
 
     mutable std::string name_; /* doesn't get set until getName() is called
 			     the first time. */
@@ -330,9 +333,9 @@ namespace Uintah {
     DetailedTask(const Task&);
     DetailedTask& operator=(const Task&);
     
-    //specifies the type of task this is
-      //normal executes on either the patches cells or the patches coarse cells
-      //fine executes on the patches fine cells (for example coarsening)
+    // specifies the type of task this is:
+    //   * normal executes on either the patches cells or the patches coarse cells
+    //   * fine executes on the patches fine cells (for example coarsening)
     
     bool operator<(const DetailedTask& other);
     
@@ -400,12 +403,14 @@ namespace Uintah {
     int numExternalReadyTasks() { return mpiCompletedTasks_.size(); }
 
 #ifdef HAVE_CUDA
-    void addInitialReadyGPUTask(DetailedTask* task);
-    void addExternalReadyGPUTask(DetailedTask* task);
-    void addCompletedGPUTask(DetailedTask* task);
+    void addInitialReadyGPUTask(DetailedTask* dtask);
+    void addExternalReadyGPUTask(DetailedTask* dtask);
+    void addCompletedGPUTask(DetailedTask* dtask);
     DetailedTask* getNextInternalReadyGPUTask();
     DetailedTask* getNextExternalReadyGPUTask();
     DetailedTask* getNextCompletedGPUTask();
+    DetailedTask* peekNextInternalReadyGPUTask();
+    DetailedTask* peekNextExternalReadyGPUTask();
     int numExternalReadyGPUTasks() { return h2dCopyCompletedGPUTasks_.size(); }
     int numInternalReadyGPUTasks() { return initiallyReadyGPUTasks_.size(); }
     int numCompletedGPUTasks()     { return d2hCopyPendingGPUTasks_.size(); }
@@ -489,16 +494,15 @@ namespace Uintah {
     QueueAlg taskPriorityAlg_;
     typedef std::queue<DetailedTask*> TaskQueue;
     typedef std::priority_queue<DetailedTask*, vector<DetailedTask*>, DetailedTaskPriorityComparison> TaskPQueue;
-    typedef std::deque<DetailedTask*> TaskDeQueue;
     
     TaskQueue   readyTasks_;
     TaskQueue   initiallyReadyTasks_;
     TaskPQueue  mpiCompletedTasks_;
 
 #ifdef HAVE_CUDA
-    TaskDeQueue initiallyReadyGPUTasks_;   // GPU tasks with MPI comm completed
-    TaskPQueue  h2dCopyCompletedGPUTasks_; // ready to execute with GPU mem prepared and MPI comm completed
-    TaskDeQueue d2hCopyPendingGPUTasks_;   // need to call done and post MPIsends when all these copies complete
+    TaskPQueue initiallyReadyGPUTasks_;   // GPU tasks with MPI comm completed
+    TaskPQueue h2dCopyCompletedGPUTasks_; // ready to execute with GPU mem prepared and MPI comm completed
+    TaskPQueue d2hCopyPendingGPUTasks_;   // need to call done and post MPIsends when all these copies complete
 #endif
 
     // This "generation" number is to keep track of which InternalDependency

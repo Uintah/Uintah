@@ -886,12 +886,12 @@ WARNING
     virtual ~Task();
     
     void hasSubScheduler(bool state = true);
-    bool inline getHasSubScheduler() const { return d_hasSubScheduler; }
+    inline bool getHasSubScheduler() const { return d_hasSubScheduler; }
     void usesMPI(bool state=true);
     void usesThreads(bool state);
-    bool inline usesThreads() const { return d_usesThreads; }
+    inline bool usesThreads() const { return d_usesThreads; }
     void usesGPU(bool state);
-    bool usesGPU() const { return d_usesGPU; }
+    inline bool usesGPU() const { return d_usesGPU; }
     
     //////////
     // Insert Documentation Here:

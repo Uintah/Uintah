@@ -40,6 +40,7 @@ namespace Uintah {
 
 using std::vector;
 using std::map;
+using std::queue;
 using std::ofstream;
 
 class Task;
@@ -97,6 +98,29 @@ WARNING
     
     void assignTask(DetailedTask* task, int iteration);
     
+    double* gpuGetOldHostVariable(const VarLabel* label);
+
+    double* getOldDevicePointer(const VarLabel* label);
+
+    double* getNewDevicePointer(const VarLabel* label);
+
+    void initializeCudaStreams(int numStreams);
+
+    void initializeCudaEvents(int numEvents);
+
+    void clearCudaStreams();
+
+    void clearCudaEvents();
+
+    cudaStream_t* getCudaStream();
+
+    cudaEvent_t* getCudaEvent();
+
+    void addCudaStream(cudaStream_t* stream);
+
+    void addCudaEvent(cudaEvent_t* event);
+
+
     ConditionVariable      d_nextsignal;
     Mutex                  d_nextmutex;   //conditional wait mutex
     TaskWorker*            t_worker[16];  //workers
@@ -111,22 +135,30 @@ WARNING
     QueueAlg               taskQueueAlg_;
     int                    numThreads_;
     int                    numGPUs_;
+    int                    currentGPU_;
 
-    struct GPUVariable {
-      double* memLocation;
+    struct GPUGridVariable {
+      double* oldDevPtr;
+      double* newDevPtr;
       int     device;
-      GPUVariable(double* _memlocation, int _device)
-        : memLocation(_memlocation), device(_device) {
+      GPUGridVariable(double* _oldDevPtr, double* _newDevPtr, int _device)
+        : oldDevPtr(_oldDevPtr), newDevPtr(_newDevPtr), device(_device) {
       }
     };
 
-    map<const VarLabel*, GPUVariable>    gpuVariables;
+    map<const VarLabel*, GPUGridVariable> gpuVariables;
+
+    map<double*, double*> pinnedHostMemory;
+
+    queue<cudaStream_t*> cudaStreams;
+
+    queue<cudaEvent_t*> cudaEvents;
 
     GPUThreadedMPIScheduler(const GPUThreadedMPIScheduler&);
 
     GPUThreadedMPIScheduler& operator=(const GPUThreadedMPIScheduler&);
 
-    void setNumGPUs(); // set by cudaGetDeviceCount
+    void initializeGPUVars();
 
     int getAviableThreadNum();
 
@@ -135,7 +167,7 @@ WARNING
     void hostToDeviceVariableCopy (DetailedTask* dtask,
                                    const VarLabel* label,
                                    IntVector size,
-                                   double* h_VarData);
+                                   double* h_varData);
 
     void checkH2DCopyDependencies(DetailedTasks* dts);
 
