@@ -107,7 +107,6 @@ DetailedTasks::DetailedTasks(SchedulerCommon* sc, const ProcessorGroup* pg,
     sendoldmap[*iter]=tasks_.size();
     tasks_.push_back(newtask);
   }
-
 }
 
 DetailedTasks::~DetailedTasks()
@@ -224,6 +223,12 @@ DetailedTask::DetailedTask(Task* task, const PatchSubset* patches,
     ASSERT(is_sorted(matls->getVector().begin(), matls->getVector().end()));    
     matls->addReference();
   }
+#ifdef HAVE_CUDA
+    // these will be used when the mechanism to know when H2D & D2H copies are complete has been refined
+    gpuExternallyReady_ = false;
+    h2dCopyCount_ = -1;
+    d2hCopyCount_ = -1;
+#endif
 }
 
 DetailedTask::~DetailedTask()
@@ -1295,12 +1300,16 @@ DetailedTask* DetailedTasks::getNextExternalReadyTask()
 #ifdef HAVE_CUDA
 DetailedTask* DetailedTasks::getNextInternalReadyGPUTask()
 {
-  DetailedTask* nextTask = initiallyReadyGPUTasks_.front();
-  initiallyReadyGPUTasks_.pop_front();
+  DetailedTask* nextTask = initiallyReadyGPUTasks_.top();
+  initiallyReadyGPUTasks_.pop();
   //cout << Parallel::getMPIRank() << "    Getting: " << *nextTask << "  new size: " << readyGPUTasks_.size() << endl;
   return nextTask;
 }
 
+DetailedTask* DetailedTasks::peekNextInternalReadyGPUTask()
+{
+  return initiallyReadyGPUTasks_.top();
+}
 
 DetailedTask* DetailedTasks::getNextExternalReadyGPUTask()
 {
@@ -1310,27 +1319,32 @@ DetailedTask* DetailedTasks::getNextExternalReadyGPUTask()
   return nextTask;
 }
 
+DetailedTask* DetailedTasks::peekNextExternalReadyGPUTask()
+{
+  return h2dCopyCompletedGPUTasks_.top();
+}
+
 DetailedTask* DetailedTasks::getNextCompletedGPUTask()
 {
-  DetailedTask* nextTask = d2hCopyPendingGPUTasks_.front();
-  d2hCopyPendingGPUTasks_.pop_front();
+  DetailedTask* nextTask = d2hCopyPendingGPUTasks_.top();
+  d2hCopyPendingGPUTasks_.pop();
   //cout << Parallel::getMPIRank() << "    Getting: " << *nextTask << "  new size: " << getNextCompletedGPUTask.size() << endl;
   return nextTask;
 }
 
-void DetailedTasks::addInitialReadyGPUTask(DetailedTask* task)
+void DetailedTasks::addInitialReadyGPUTask(DetailedTask* dtask)
 {
-  initiallyReadyGPUTasks_.push_back(task);
+  initiallyReadyGPUTasks_.push(dtask);
 }
 
-void DetailedTasks::addExternalReadyGPUTask(DetailedTask* task)
+void DetailedTasks::addExternalReadyGPUTask(DetailedTask* dtask)
 {
-  h2dCopyCompletedGPUTasks_.push(task);
+  h2dCopyCompletedGPUTasks_.push(dtask);
 }
 
-void DetailedTasks::addCompletedGPUTask(DetailedTask* task)
+void DetailedTasks::addCompletedGPUTask(DetailedTask* dtask)
 {
-  d2hCopyPendingGPUTasks_.push_back(task);
+  d2hCopyPendingGPUTasks_.push(dtask);
 }
 #endif
 

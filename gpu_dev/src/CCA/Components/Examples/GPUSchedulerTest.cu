@@ -28,6 +28,7 @@
  */
 
 #include <CCA/Components/Examples/GPUSchedulerTest.h>
+#include <CCA/Components/Schedulers/GPUThreadedMPIScheduler.h>
 #include <CCA/Components/Examples/ExamplesLabel.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/Variables/NCVariable.h>
@@ -154,45 +155,6 @@ void GPUSchedulerTest::initialize(const ProcessorGroup* pg,
 
 //______________________________________________________________________
 //
-// @brief A kernel that applies the stencil used in timeAdvance(...)
-// @param domainSize a three component vector that gives the size of the domain as (x,y,z)
-// @param domainLower a three component vector that gives the lower corner of the work area as (x,y,z)
-// @param ghostLayers the number of layers of ghost cells
-// @param phi pointer to the source phi allocated on the device
-// @param newphi pointer to the sink phi allocated on the device
-__global__ void timeAdvanceTestKernel(uint3 domainSize,
-                                      uint3 domainLower,
-                                      int NGC,
-                                      double *phi,
-                                      double *newphi) {
-
-// calculate the thread indices
-  int tidX = blockDim.x * blockIdx.x + threadIdx.x;
-  int tidY = blockDim.y * blockIdx.y + threadIdx.y;
-
-  int num_slices = domainSize.z - NGC;
-  int dx = domainSize.x;
-  int dy = domainSize.y;
-
-  if (tidX < (dx - NGC) && tidY < (dy - NGC) && tidX > 0 && tidY > 0) {
-    for (int slice = NGC; slice < num_slices; slice++) {
-
-      //__________________________________
-      //  GPU Stencil
-      newphi[INDEX3D(dx, dy, tidX, tidY, slice)] =
-          (1.0 / 6.0)
-          * (phi[INDEX3D(dx, dy, tidX - 1, tidY, slice)]
-             + phi[INDEX3D(dx, dy, tidX + 1, tidY, slice)]
-             + phi[INDEX3D(dx, dy, tidX, tidY - 1, slice)]
-             + phi[INDEX3D(dx, dy, tidX, tidY + 1, slice)]
-             + phi[INDEX3D(dx, dy, tidX, tidY, slice - 1)]
-             + phi[INDEX3D(dx, dy, tidX, tidY, slice + 1)]);
-    }
-  }
-}
-
-//______________________________________________________________________
-//
 void GPUSchedulerTest::timeAdvance(const ProcessorGroup* pg,
                                    const PatchSubset* patches,
                                    const MaterialSubset* matls,
@@ -242,6 +204,57 @@ void GPUSchedulerTest::timeAdvance(const ProcessorGroup* pg,
 
 //______________________________________________________________________
 //
+// @brief A kernel that applies the stencil used in timeAdvance(...)
+// @param domainLower a three component vector that gives the lower corner of the work area as (x,y,z)
+// @param domainHigh a three component vector that gives the highest non-ghost layer cell of the domain as (x,y,z)
+// @param domainSize a three component vector that gives the size of the domain including ghost nodes
+// @param ghostLayers the number of layers of ghost cells
+// @param phi pointer to the source phi allocated on the device
+// @param newphi pointer to the sink phi allocated on the device
+// @param residual the residual calculated by this individual kernel
+__global__ void timeAdvanceKernel(uint3 domainLow,
+                                  uint3 domainHigh,
+                                  uint3 domainSize,
+                                  int ghostLayers,
+                                  double *phi,
+                                  double *newphi,
+                                  double *residual) {
+  // calculate the thread indices
+  int i = blockDim.x * blockIdx.x + threadIdx.x;
+  int j = blockDim.y * blockIdx.y + threadIdx.y;
+
+  // Get the size of the data block in which the variables reside.
+  //  This is essentially the stride in the index calculations.
+  int dx = domainSize.x;
+  int dy = domainSize.y;
+
+  // If the threads are within the bounds of the ghost layers
+  //  the algorithm is allowed to stream along the z direction
+  //  applying the stencil to a line of cells.  The z direction
+  //  is streamed because it allows access of x and y elements
+  //  that are close to one another which should allow coalesced
+  //  memory accesses.
+  if(i > 0 && j > 0 && i < domainHigh.x && j < domainHigh.y) {
+    for (int k = domainLow.z; k < domainHigh.z; k++) {
+      // For an array of [ A ][ B ][ C ], we can index it thus:
+      // (a * B * C) + (b * C) + (c * 1)
+      int idx = INDEX3D(dx,dy,i,j,k);
+
+      newphi[idx] = (1. / 6)
+                  * (phi[INDEX3D(dx,dy, (i-1), j, k)]
+                   + phi[INDEX3D(dx,dy, (i+1), j, k)]
+                   + phi[INDEX3D(dx,dy, i, (j-1), k)]
+                   + phi[INDEX3D(dx,dy, i, (j+1), k)]
+                   + phi[INDEX3D(dx,dy, i, j, (k-1))]
+                   + phi[INDEX3D(dx,dy, i, j, (k+1))]);
+
+      // Still need a way to compute the residual as a reduction variable here.
+    }
+  }
+}
+
+//______________________________________________________________________
+//
 void GPUSchedulerTest::timeAdvanceGPU(const ProcessorGroup* pg,
                                       const PatchSubset* patches,
                                       const MaterialSubset* matls,
@@ -249,26 +262,23 @@ void GPUSchedulerTest::timeAdvanceGPU(const ProcessorGroup* pg,
                                       DataWarehouse* new_dw,
                                       int device) {
   int matl = 0;
-  int ghostLayers = 1;
+//  int previousPatchSize = 0;  // this is to see if we need to release and reallocate between computations
+  int size = 0;
+  int NGC = 1;
 
-  // declare device and host memory
-  double* newphi_device;
-  double* phi_device;
-  double* phi_host;
-  double* newphi_host;
-
-  cudaStream_t stream;
-  cudaEvent_t asyncCopyComplete;
-
+  // set the CUDA context
   CUDA_SAFE_CALL( cudaSetDevice(device) );
 
+  // Device pointers
+  double* phi_device = dynamic_cast<GPUThreadedMPIScheduler*>(getPort("scheduler"))->getOldDevicePointer(phi_label);
+  double* newphi_device = dynamic_cast<GPUThreadedMPIScheduler*>(getPort("scheduler"))->getNewDevicePointer(phi_label);
+
   // Do time steps
-  int previousPatchSize = 0; // see if we need to release and reallocate between computations
   int numPatches = patches->size();
   for (int p = 0; p < numPatches; p++) {
     const Patch* patch = patches->get(p);
     constNCVariable<double> phi;
-    old_dw->get(phi, phi_label, matl, patch, Ghost::AroundNodes, ghostLayers);
+    old_dw->get(phi, phi_label, matl, patch, Ghost::AroundNodes, NGC);
 
     NCVariable<double> newphi;
     new_dw->allocateAndPut(newphi, phi_label, matl, patch);
@@ -277,86 +287,67 @@ void GPUSchedulerTest::timeAdvanceGPU(const ProcessorGroup* pg,
     double residual = 0;
     IntVector l = patch->getNodeLowIndex();
     IntVector h = patch->getNodeHighIndex();
-    IntVector s = h - l;
+    // Calculate the memory block size
+    IntVector s = phi.getWindow()->getData()->size();
     int xdim = s.x(), ydim = s.y(), zdim = s.z();
+    size = xdim * ydim * zdim * sizeof(double);
 
     l += IntVector(patch->getBCType(Patch::xminus) == Patch::Neighbor ? 0 : 1,
-        patch->getBCType(Patch::yminus) == Patch::Neighbor ? 0 : 1,
-        patch->getBCType(Patch::zminus) == Patch::Neighbor ? 0 : 1);
+                   patch->getBCType(Patch::yminus) == Patch::Neighbor ? 0 : 1,
+                   patch->getBCType(Patch::zminus) == Patch::Neighbor ? 0 : 1);
     h -= IntVector(patch->getBCType(Patch::xplus) == Patch::Neighbor ? 0 : 1,
-        patch->getBCType(Patch::yplus) == Patch::Neighbor ? 0 : 1,
-        patch->getBCType(Patch::zplus) == Patch::Neighbor ? 0 : 1);
+                   patch->getBCType(Patch::yplus) == Patch::Neighbor ? 0 : 1,
+                   patch->getBCType(Patch::zplus) == Patch::Neighbor ? 0 : 1);
 
-    // check if we need to reallocate
-    int nbytes = xdim * ydim * zdim * sizeof(double);
-    if (nbytes != previousPatchSize) {
-      if (previousPatchSize != 0) {
-        CUDA_SAFE_CALL( cudaFree(phi_device) );
-        CUDA_SAFE_CALL( cudaFree(newphi_device) );
-      }
 
-      // now the malloc device mem
-      CUDA_SAFE_CALL( cudaMalloc(&phi_device, nbytes) );
-      CUDA_SAFE_CALL( cudaMalloc(&newphi_device, nbytes) );
+    // Domain extents used by the kernel to prevent out of bounds accesses.
+    uint3 domainLow = make_uint3(l.x(), l.y(), l.z());
+    uint3 domainHigh = make_uint3(h.x(), h.y(), h.z());
+    uint3 domainSize = make_uint3(s.x(), s.y(), s.z());
+
+    // Threads per block must be power of 2 in each direction.  Here
+    //  8 is chosen as a test value in the x and y and 1 in the z,
+    //  as each of these (x,y) threads streams through the z direction.
+    dim3 threadsPerBlock(8, 8, 1);
+
+    // Set up the number of blocks of threads in each direction accounting for any
+    //  non-power of 8 end pieces.
+    int xBlocks = xdim / 8;
+    if (xdim % 8 != 0) {
+      xBlocks++;
+    }
+    int yBlocks = ydim / 8;
+    if (ydim % 8 != 0) {
+      yBlocks++;
+    }
+    dim3 totalBlocks(xBlocks, yBlocks);
+
+    // Launch kernel
+    timeAdvanceKernel<<< totalBlocks, threadsPerBlock >>>(domainLow, domainHigh, domainSize, NGC, phi_device, newphi_device, &residual);
+
+    // Kernel error checking (for now)
+    cudaError_t error = cudaGetLastError();
+    if (error != cudaSuccess) {
+      fprintf(stderr, "ERROR: %s\n", cudaGetErrorString(error));
+      exit(-1);
     }
 
-    //  Memory Allocation
-    phi_host = (double*)phi.getWindow()->getData()->getPointer();
-    newphi_host = (double*)newphi.getWindow()->getData()->getPointer();
+//    //__________________________________
+//    //  Device->Host Memory Copy
+//    CUDA_SAFE_CALL(cudaDeviceSynchronize());
 
-    // page-lock host memory for async copy to device
-    cutilSafeCall( cudaHostRegister(&phi_host, nbytes, cudaHostRegisterPortable) );
-    cutilSafeCall( cudaHostRegister(&newphi_host, nbytes, cudaHostRegisterPortable) );
 
-    // configure kernel launch
-    uint3 domainSize = make_uint3(xdim, ydim, zdim);
-    uint3 domainLower = make_uint3(l.x(), l.y(), l.z());
-    int totalBlocks = nbytes / (sizeof(double) * xdim * ydim * zdim);
-    dim3 threadsPerBlock(xdim, ydim, zdim);
-    if (nbytes % (totalBlocks) != 0) {
-      totalBlocks++;
-    }
-
-    // set up stream and event
-    cudaStreamCreate(&stream);
-    cudaEventCreate(&asyncCopyComplete);
-
-    // async copy host2device -> launch kernel -> async host2device
-    cudaMemcpyAsync(phi_device, phi_host, nbytes, cudaMemcpyDefault, stream);
-    cudaMemcpyAsync(newphi_device, newphi_host, nbytes, cudaMemcpyDefault, stream);
-    timeAdvanceTestKernel<<< totalBlocks, threadsPerBlock, 0, stream >>>(domainSize, domainLower, ghostLayers, phi_device, newphi_device);
-
-    cudaEventRecord(asyncCopyComplete, stream);
-    cudaMemcpyAsync(newphi_host, newphi_device, nbytes, cudaMemcpyDeviceToHost, stream);
-
-    while (cudaEventQuery(asyncCopyComplete) == cudaErrorNotReady) {
-      /*
-       * This is a simple busy wait to show proof of concept. For the infrastructure,
-       * we will use this idea (via callback, etc) so the host control thread can quickly
-       * dispatch GPU work while maintaining responsiveness to CPU threads signaling for
-       * more CPU work.
-       *
-       * Realistically, there is not much benefit from using these calls with only
-       * one kernel launch (as in this example), but when we have many and can get
-       * multi-way overlap we should see benefits, e.g. many streams and a
-       * mechanism to use eventQuery to notify the control thread of event success.
-       *
-       * Next step is to create infrastructures support for a queue of streams and a map
-       * of async H2D copies to tasks and event queries to signal the control thread that
-       * a particular task has its memory prepared on the device or has completed its work.
-       *
-       */
-    }
+    double* newphi_host = (double*)newphi.getWindow()->getData()->getPointer();
+    cutilSafeCall( cudaHostRegister(&newphi_host, size, cudaHostRegisterPortable) );
+//    CUDA_SAFE_CALL(cudaMemcpyAsync(newphi_host, newphi_device, size, cudaMemcpyDefault, *stream));
 
     new_dw->put(sum_vartype(residual), residual_label);
 
   }  // end patch for loop
 
   // free up allocated memory
-  cudaFree(phi_device);
-  cudaFree(newphi_device);
-  cudaHostUnregister(phi_host);
-  cudaHostUnregister(newphi_host);
-  cudaStreamDestroy(stream);
-  cudaEventDestroy(asyncCopyComplete);
+  CUDA_SAFE_CALL(cudaFree(phi_device));
+  CUDA_SAFE_CALL(cudaFree(newphi_device));
+
+  std::cout << "After Cuda free" << std::endl;
 }
