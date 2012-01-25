@@ -43,6 +43,7 @@ DEALINGS IN THE SOFTWARE.
 #include <iostream>
 
 using namespace Uintah;
+using namespace std;
 
 MieGruneisenEOSEnergy::MieGruneisenEOSEnergy(ProblemSpecP& ps)
 {
