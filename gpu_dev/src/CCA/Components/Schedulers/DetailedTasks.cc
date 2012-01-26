@@ -226,6 +226,7 @@ DetailedTask::DetailedTask(Task* task, const PatchSubset* patches,
 #ifdef HAVE_CUDA
     // these will be used when the mechanism to know when H2D & D2H copies are complete has been refined
     gpuExternallyReady_ = false;
+    completed_ = false;
     h2dCopyCount_ = -1;
     d2hCopyCount_ = -1;
 #endif
@@ -1056,16 +1057,28 @@ bool DetailedTask::addGridVariableCUDAStream(const VarLabel* label, cudaStream_t
   return ret.second ? true : false;
 }
 
-bool DetailedTask::addHostToDeviceCopyEvent(const VarLabel* label, cudaEvent_t* event)
+bool DetailedTask::addH2DCopyEvent(cudaEvent_t* event)
 {
-  h2dCopies.push_back(event);
-  return h2dCopies.back() != 0 ? true : false;
+  h2dCopyEvents.push_back(event);
+  return h2dCopyEvents.back() != 0 ? true : false;
 }
 
-bool DetailedTask::addDeviceToHostCopyEvent(const VarLabel* label, cudaEvent_t* event)
+bool DetailedTask::addD2HCopyEvent(cudaEvent_t* event)
 {
-  d2hCopies.push_back(event);
-  return d2hCopies.back() != 0 ? true : false;
+  d2hCopyEvents.push_back(event);
+  return d2hCopyEvents.back() != 0 ? true : false;
+}
+
+bool DetailedTask::addH2DStream(cudaStream_t* stream)
+{
+  h2dStreams.push_back(stream);
+  return h2dStreams.back() != 0 ? true : false;
+}
+
+bool DetailedTask::addD2HStream(cudaStream_t* stream)
+{
+  d2hStreams.push_back(stream);
+  return d2hStreams.back() != 0 ? true : false;
 }
 
 cudaError_t DetailedTask::checkH2DCopyDependencies()
@@ -1075,7 +1088,7 @@ cudaError_t DetailedTask::checkH2DCopyDependencies()
 
   std::vector<cudaEvent_t*>::iterator iter;
   cudaError_t val = cudaErrorNotReady;
-  for (iter=h2dCopies.begin(); iter!=h2dCopies.end(); iter++) {
+  for (iter=h2dCopyEvents.begin(); iter!=h2dCopyEvents.end(); iter++) {
     CUDA_SAFE_CALL( val = cudaEventQuery(*(*iter)) );
     // even one unrecorded event means all device mem is not ready
     if (val != cudaSuccess) {
@@ -1083,7 +1096,6 @@ cudaError_t DetailedTask::checkH2DCopyDependencies()
     }
   }
   this->gpuExternallyReady_ = true;
-  clearH2DCopyEvents();
   return cudaSuccess;
 }
 
@@ -1094,39 +1106,15 @@ cudaError_t DetailedTask::checkD2HCopyDependencies()
 
   std::vector<cudaEvent_t*>::iterator iter;
   cudaError_t val = cudaErrorNotReady;
-  for (iter=d2hCopies.begin(); iter!=d2hCopies.end(); iter++) {
+  for (iter=d2hCopyEvents.begin(); iter!=d2hCopyEvents.end(); iter++) {
     CUDA_SAFE_CALL( val = cudaEventQuery(*(*iter)) );
     // even one unrecorded event means all result data is not back on the CPU
     if (val != cudaSuccess) {
       return val;
     }
   }
-  clearD2HCopyEvents();
+  this->completed_ = true;
   return cudaSuccess;
-}
-
-void DetailedTask::clearH2DCopyEvents()
-{
-  // sets the CUDA context, different for each device
-  CUDA_SAFE_CALL( cudaSetDevice(this->deviceNum) );
-
-  std::vector<cudaEvent_t*>::iterator iter;
-  for (iter=h2dCopies.begin(); iter!=h2dCopies.end(); iter++) {
-    CUDA_SAFE_CALL( cudaEventDestroy(*(*iter)) );
-  }
-  h2dCopies.clear();
-}
-
-void DetailedTask::clearD2HCopyEvents()
-{
-  // sets the CUDA context, different for each device
-  CUDA_SAFE_CALL( cudaSetDevice(this->deviceNum) );
-
-  std::vector<cudaEvent_t*>::iterator iter;
-  for (iter=d2hCopies.begin(); iter!=d2hCopies.end(); iter++) {
-    CUDA_SAFE_CALL( cudaEventDestroy(*(*iter)) );
-  }
-  d2hCopies.clear();
 }
 #endif
 
