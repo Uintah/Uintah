@@ -1607,22 +1607,13 @@ Arches::scheduleTimeAdvance( const LevelP& level,
       d_lab->recompile_taskgraph = true;
     }
   }
-  
-#ifndef ExactMPMArchesInitialize
-# ifdef WASATCH_IN_ARCHES
-  if (time > 1.0E-10) {
-  // disable wasatch's time integrator because Arches is handling it.
+
+#ifdef WASATCH_IN_ARCHES
+  // disable Wasatch's time integrator because Arches is handling it.
   d_wasatch->disable_timestepper_creation();  
-  d_wasatch->scheduleTimeAdvance( level, sched );  
-  }
-# endif // WASATCH_IN_ARCHES  
-#else
-# ifdef WASATCH_IN_ARCHES
-    // disable wasatch's time integrator because Arches is handling it.
-    d_wasatch->disable_timestepper_creation();  
-    d_wasatch->scheduleTimeAdvance( level, sched );  
-# endif // WASATCH_IN_ARCHES  
-#endif
+  d_wasatch->scheduleTimeAdvance( level, sched );        
+#endif // WASATCH_IN_ARCHES  
+  
 }
 
 // ****************************************************************************

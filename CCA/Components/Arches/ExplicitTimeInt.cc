@@ -280,7 +280,7 @@ void ExplicitTimeInt::time_ave( const ProcessorGroup*,
 } 
 
 //---------------------------------------------------------------------------
-// Method: Schedule a time update
+// Method: schedule dummy initialize for wasatch transported variables
 //---------------------------------------------------------------------------
 void ExplicitTimeInt::sched_dummy_init( SchedulerP& sched, 
                                       const PatchSet* patches, 
@@ -328,8 +328,8 @@ void ExplicitTimeInt::dummy_init( const ProcessorGroup*,
       const VarLabel* phi_lab = VarLabel::find( phi_tag[i] ); 
       old_dw->get( phi_old           , phi_lab , indx , patch , ghost_type, n_extra  );
       
-        new_dw->allocateAndPut( phi , phi_lab , indx , patch, ghost_type, n_extra );
-        phi.copyData(phi_old);
+      new_dw->allocateAndPut( phi , phi_lab , indx , patch, ghost_type, n_extra );
+      phi.copyData(phi_old);
     } 
   }
 } 
