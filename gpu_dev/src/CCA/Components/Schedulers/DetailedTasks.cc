@@ -1313,23 +1313,15 @@ DetailedTask* DetailedTasks::peekNextInternalReadyGPUTask()
 
 DetailedTask* DetailedTasks::getNextExternalReadyGPUTask()
 {
-  DetailedTask* nextTask = h2dCopyCompletedGPUTasks_.top();
-  h2dCopyCompletedGPUTasks_.pop();
+  DetailedTask* nextTask = externalReadyGPUTasks_.top();
+  externalReadyGPUTasks_.pop();
   //cout << Parallel::getMPIRank() << "    Getting: " << *nextTask << "  new size: " << copyCompletedGPUTasks_.size() << endl;
   return nextTask;
 }
 
 DetailedTask* DetailedTasks::peekNextExternalReadyGPUTask()
 {
-  return h2dCopyCompletedGPUTasks_.top();
-}
-
-DetailedTask* DetailedTasks::getNextCompletedGPUTask()
-{
-  DetailedTask* nextTask = d2hCopyPendingGPUTasks_.top();
-  d2hCopyPendingGPUTasks_.pop();
-  //cout << Parallel::getMPIRank() << "    Getting: " << *nextTask << "  new size: " << getNextCompletedGPUTask.size() << endl;
-  return nextTask;
+  return externalReadyGPUTasks_.top();
 }
 
 void DetailedTasks::addInitialReadyGPUTask(DetailedTask* dtask)
@@ -1339,12 +1331,7 @@ void DetailedTasks::addInitialReadyGPUTask(DetailedTask* dtask)
 
 void DetailedTasks::addExternalReadyGPUTask(DetailedTask* dtask)
 {
-  h2dCopyCompletedGPUTasks_.push(dtask);
-}
-
-void DetailedTasks::addCompletedGPUTask(DetailedTask* dtask)
-{
-  d2hCopyPendingGPUTasks_.push(dtask);
+  externalReadyGPUTasks_.push(dtask);
 }
 #endif
 

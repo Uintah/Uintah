@@ -186,7 +186,7 @@ WARNING
 
     void checkH2DCopyDependencies(DetailedTasks* dts);
 
-    void checkD2HCopyDependencies(DetailedTasks* dts);
+    void checkD2HCopyDependencies(DetailedTasks* dts, int iteration);
 
     void freeDeviceRequiresMem();
 

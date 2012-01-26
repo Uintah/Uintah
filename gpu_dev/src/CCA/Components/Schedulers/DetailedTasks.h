@@ -295,20 +295,12 @@ namespace Uintah {
     bool externallyReady_;
     int  externalDependencyCount_;
 
-#ifdef HAVE_CUDA
-    // these will be used when the mechanism to know when H2D & D2H copies are complete has been refined
-    bool gpuExternallyReady_;
-    int  h2dCopyCount_;
-    int  d2hCopyCount_;
-#endif
-
     mutable std::string name_; /* doesn't get set until getName() is called
 			     the first time. */
 
     // Called when prerequisite tasks (dependencies) call done.
     void dependencySatisfied(InternalDependency* dep);
 
-    
     // Internal dependencies are dependencies within the same process.
     std::list<InternalDependency> internalDependencies;
     
@@ -321,15 +313,6 @@ namespace Uintah {
     
     int resourceIndex;
 
-#ifdef HAVE_CUDA
-    int deviceNum;
-
-    // these maps are needed to attach CUDA calls for a variable to the correct stream, etc
-    std::map<const VarLabel*, cudaStream_t*>  gridVariableStreams;
-    std::vector<cudaEvent_t*>   h2dCopies;
-    std::vector<cudaEvent_t*>   d2hCopies;
-#endif
-
     DetailedTask(const Task&);
     DetailedTask& operator=(const Task&);
     
@@ -340,6 +323,19 @@ namespace Uintah {
     bool operator<(const DetailedTask& other);
     
     ProfileType d_profileType;
+
+#ifdef HAVE_CUDA
+    // these will be used when the mechanism to know when H2D & D2H copies are complete has been refined
+    bool gpuExternallyReady_;
+    int  h2dCopyCount_;
+    int  d2hCopyCount_;
+    int  deviceNum;
+
+    // these maps are needed to attach CUDA calls for a variable to the correct stream, etc
+    std::map<const VarLabel*, cudaStream_t*>  gridVariableStreams;
+    std::vector<cudaEvent_t*>   h2dCopies;
+    std::vector<cudaEvent_t*>   d2hCopies;
+#endif
 
   }; // end class DetailedTask
   
@@ -402,20 +398,6 @@ namespace Uintah {
     DetailedTask* getNextExternalReadyTask();
     int numExternalReadyTasks() { return mpiCompletedTasks_.size(); }
 
-#ifdef HAVE_CUDA
-    void addInitialReadyGPUTask(DetailedTask* dtask);
-    void addExternalReadyGPUTask(DetailedTask* dtask);
-    void addCompletedGPUTask(DetailedTask* dtask);
-    DetailedTask* getNextInternalReadyGPUTask();
-    DetailedTask* getNextExternalReadyGPUTask();
-    DetailedTask* getNextCompletedGPUTask();
-    DetailedTask* peekNextInternalReadyGPUTask();
-    DetailedTask* peekNextExternalReadyGPUTask();
-    int numExternalReadyGPUTasks() { return h2dCopyCompletedGPUTasks_.size(); }
-    int numInternalReadyGPUTasks() { return initiallyReadyGPUTasks_.size(); }
-    int numCompletedGPUTasks()     { return d2hCopyPendingGPUTasks_.size(); }
-#endif
-
     void createScrubCounts();
 
     bool mustConsiderInternalDependencies()
@@ -440,6 +422,18 @@ namespace Uintah {
     
     void setTaskPriorityAlg(QueueAlg alg) { taskPriorityAlg_=alg; }
     QueueAlg getTaskPriorityAlg() { return taskPriorityAlg_; }
+
+#ifdef HAVE_CUDA
+    void addInitialReadyGPUTask(DetailedTask* dtask);
+    void addExternalReadyGPUTask(DetailedTask* dtask);
+    void addCompletedGPUTask(DetailedTask* dtask);
+    DetailedTask* getNextInternalReadyGPUTask();
+    DetailedTask* getNextExternalReadyGPUTask();
+    DetailedTask* peekNextInternalReadyGPUTask();
+    DetailedTask* peekNextExternalReadyGPUTask();
+    int numExternalReadyGPUTasks() { return externalReadyGPUTasks_.size(); }
+    int numInternalReadyGPUTasks() { return initiallyReadyGPUTasks_.size(); }
+#endif
 
   protected:
     friend class DetailedTask;
@@ -499,12 +493,6 @@ namespace Uintah {
     TaskQueue   initiallyReadyTasks_;
     TaskPQueue  mpiCompletedTasks_;
 
-#ifdef HAVE_CUDA
-    TaskPQueue initiallyReadyGPUTasks_;   // GPU tasks with MPI comm completed
-    TaskPQueue h2dCopyCompletedGPUTasks_; // ready to execute with GPU mem prepared and MPI comm completed
-    TaskPQueue d2hCopyPendingGPUTasks_;   // need to call done and post MPIsends when all these copies complete
-#endif
-
     // This "generation" number is to keep track of which InternalDependency
     // links have been satisfied in the current timestep and avoids the
     // need to traverse all InternalDependency links to reset values.
@@ -519,6 +507,11 @@ namespace Uintah {
 
     DetailedTasks(const DetailedTasks&);
     DetailedTasks& operator=(const DetailedTasks&);
+
+#ifdef HAVE_CUDA
+    TaskPQueue initiallyReadyGPUTasks_; // GPU tasks with MPI comm completed
+    TaskPQueue externalReadyGPUTasks_;  // ready to execute with GPU mem prepared and MPI comm completed
+#endif
 
   }; // end class DetailedTasks
 
