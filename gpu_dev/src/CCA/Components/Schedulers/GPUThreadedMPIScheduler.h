@@ -124,6 +124,10 @@ WARNING
 
     cudaEvent_t* getCudaEvent();
 
+    cudaStream_t* getCudaStream(UintahParallelComponent* component);
+
+    cudaEvent_t* getCudaEvent(UintahParallelComponent* component);
+
     void addCudaStream(cudaStream_t* stream);
 
     void addCudaEvent(cudaEvent_t* event);
@@ -166,9 +170,13 @@ WARNING
 
     map<double*, DetailedTask*> hostPtrToTasksMap;            // reverse lookup.... find the task given a host pointer
 
-    queue<cudaStream_t*> cudaStreams;
+    queue<cudaStream_t*> availableStreams;
 
-    queue<cudaEvent_t*> cudaEvents;
+    queue<cudaEvent_t*> availableEvents;
+
+    vector<cudaStream_t*> busyStreams;
+
+    vector<cudaEvent_t*> busyEvents;
 
     GPUThreadedMPIScheduler(const GPUThreadedMPIScheduler&);
 
@@ -195,6 +203,10 @@ WARNING
     void freeDeviceComputesMem();
 
     void freePinnedHostMem();
+
+    void registerStream(cudaStream_t* stream);
+
+    void registerEvent(cudaEvent_t* event);
 
     void reclaimStreams(DetailedTask* dtask, CopyType type);
 

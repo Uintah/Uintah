@@ -1050,6 +1050,7 @@ void DetailedTask::addInternalDependency(DetailedTask* prerequisiteTask, const V
 }
 
 #ifdef HAVE_CUDA
+// TODO - not using this right now
 bool DetailedTask::addGridVariableCUDAStream(const VarLabel* label, cudaStream_t* stream)
 {
   pair<map<const VarLabel*, cudaStream_t*>::iterator, bool> ret;

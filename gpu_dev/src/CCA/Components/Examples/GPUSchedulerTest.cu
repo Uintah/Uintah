@@ -317,9 +317,15 @@ void GPUSchedulerTest::timeAdvanceGPU(const ProcessorGroup* pg,
     dim3 totalBlocks(xBlocks, yBlocks);
 
     // setup and launch kernel
-    cudaStream_t* stream = sched->getCudaStream();
-    cudaEvent_t* event = sched->getCudaEvent();
-    timeAdvanceKernel<<< totalBlocks, threadsPerBlock, 0, *stream >>>(domainLow, domainHigh, domainSize, NGC, d_phi, d_newphi, &residual);
+    cudaStream_t* stream = sched->getCudaStream(this);
+    cudaEvent_t* event = sched->getCudaEvent(this);
+    timeAdvanceKernel<<< totalBlocks, threadsPerBlock, 0, *stream >>>(domainLow,
+                                                                      domainHigh,
+                                                                      domainSize,
+                                                                      NGC,
+                                                                      d_phi,
+                                                                      d_newphi,
+                                                                      &residual);
 
     // Kernel error checking (for now)
     cudaError_t error = cudaGetLastError();
