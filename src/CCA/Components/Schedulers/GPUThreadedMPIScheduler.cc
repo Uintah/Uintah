@@ -1272,9 +1272,10 @@ void GPUThreadedMPIScheduler::checkH2DCopyDependencies(DetailedTasks* dts)
       // all work associated with this task's h2d copies is complete
       dtask = dts->getNextInternalReadyGPUTask();
       dts->addExternalReadyGPUTask(dtask);
+
+      // this will recycle streams and events used by the DetailedTask for H2D copies
       reclaimStreams(dtask, H2D);
       reclaimEvents(dtask, H2D);
-      return;
     }
   }
 }
@@ -1289,8 +1290,13 @@ void GPUThreadedMPIScheduler::checkGPUTaskCompletion(DetailedTasks* dts, int ite
     if ((ret = dtask->checkD2HCopyDependencies()) == cudaSuccess) {
       dtask = dts->getNextExternalReadyGPUTask();
       postMPISends(dtask, iteration, 0); // t_id 0 (the control thread) for centralized threaded scheduler
+
+      // this will recycle streams and events used by the DetailedTask (requested from Scheduler)
+      //   for kernel invocation and D2H copies
       reclaimStreams(dtask, D2H);
       reclaimEvents(dtask, D2H);
+
+      // finish up... this is the end
       dtask->done(dws);
     }
   }
@@ -1301,7 +1307,7 @@ void GPUThreadedMPIScheduler::createCudaStreams(int numStreams)
   for(int i = 0; i < numStreams; i++) {
     cudaStream_t* stream = (cudaStream_t*) malloc(sizeof(cudaStream_t));
     cutilSafeCall( cudaStreamCreate(stream) );
-    cudaStreams.push(stream);
+    availableStreams.push(stream);
   }
 }
 
@@ -1310,57 +1316,100 @@ void GPUThreadedMPIScheduler::createCudaEvents(int numEvents)
   for(int i = 0; i < numEvents; i++) {
     cudaEvent_t* event = (cudaEvent_t*) malloc(sizeof(cudaEvent_t));
     cutilSafeCall( cudaEventCreate(event) );
-    cudaEvents.push(event);
+    availableEvents.push(event);
   }
 }
 
 void GPUThreadedMPIScheduler::clearCudaStreams()
 {
-  while (!cudaStreams.empty()) {
-    cudaStream_t* stream = cudaStreams.front();
-    cudaStreams.pop();
+  while (!availableStreams.empty()) {
+    cudaStream_t* stream = availableStreams.front();
+    availableStreams.pop();
     cudaStreamDestroy(*stream);
   }
 }
 
 void GPUThreadedMPIScheduler::clearCudaEvents()
 {
-  while (!cudaEvents.empty()) {
-    cudaEvent_t* event = cudaEvents.front();
-    cudaEvents.pop();
+  while (!availableEvents.empty()) {
+    cudaEvent_t* event = availableEvents.front();
+    availableEvents.pop();
     cudaEventDestroy(*event);
   }
 }
 
 cudaStream_t* GPUThreadedMPIScheduler::getCudaStream()
 {
-  if (cudaStreams.size() > 0) {
-    cudaStream_t* stream = cudaStreams.front();
-    cudaStreams.pop();
-    return stream;
+  cudaStream_t* stream;
+  if (availableStreams.size() > 0) {
+    stream = availableStreams.front();
+    availableStreams.pop();
   } else { // shouldn't need any more than the queue capacity, but in case
-    return ((cudaStream_t*) malloc(sizeof(cudaStream_t)));
+    stream = ((cudaStream_t*) malloc(sizeof(cudaStream_t)));
   }
+  return stream;
 }
 
 cudaEvent_t* GPUThreadedMPIScheduler::getCudaEvent()
 {
-  if (cudaEvents.size() > 0) {
-    cudaEvent_t* event = cudaEvents.front();
-    cudaEvents.pop();
-    return event;
+  cudaEvent_t* event;
+  if (availableEvents.size() > 0) {
+    event = availableEvents.front();
+    availableEvents.pop();
   } else { // shouldn't need any more than the queue capacity, but in case
-    return ((cudaEvent_t*)malloc(sizeof(cudaEvent_t)));
+    event = ((cudaEvent_t*)malloc(sizeof(cudaEvent_t)));
   }
+  return event;
 }
+
+cudaStream_t* GPUThreadedMPIScheduler::getCudaStream(UintahParallelComponent* component)
+{
+  cudaStream_t* stream;
+  if (availableStreams.size() > 0) {
+    stream = availableStreams.front();
+    availableStreams.pop();
+  } else { // shouldn't need any more than the queue capacity, but in case
+    stream = ((cudaStream_t*) malloc(sizeof(cudaStream_t)));
+  }
+
+  // register this stream so it can be reclaimed later
+  registerStream(stream);
+  return stream;
+}
+
+cudaEvent_t* GPUThreadedMPIScheduler::getCudaEvent(UintahParallelComponent* component)
+{
+  cudaEvent_t* event;
+  if (availableEvents.size() > 0) {
+    event = availableEvents.front();
+    availableEvents.pop();
+  } else { // shouldn't need any more than the queue capacity, but in case
+    event = ((cudaEvent_t*)malloc(sizeof(cudaEvent_t)));
+  }
+
+  // register this event so it can be reclaimed later
+  registerEvent(event);
+  return event;
+}
+
 void GPUThreadedMPIScheduler::addCudaStream(cudaStream_t* stream)
 {
-  cudaStreams.push(stream);
+  availableStreams.push(stream);
 }
 
 void GPUThreadedMPIScheduler::addCudaEvent(cudaEvent_t* event)
 {
-  cudaEvents.push(event);
+  availableEvents.push(event);
+}
+
+void GPUThreadedMPIScheduler::registerStream(cudaStream_t* stream)
+{
+  busyStreams.push_back(stream);
+}
+
+void GPUThreadedMPIScheduler::registerEvent(cudaEvent_t* event)
+{
+  busyEvents.push_back(event);
 }
 
 double* GPUThreadedMPIScheduler::getDeviceRequiresPtr(const VarLabel* label)
@@ -1438,24 +1487,41 @@ void GPUThreadedMPIScheduler::freePinnedHostMem()
 void GPUThreadedMPIScheduler::reclaimStreams(DetailedTask* dtask, CopyType type)
 {
   std::vector<cudaStream_t*>* dtaskStreams;
-  dtaskStreams = ((type == H2D) ? dtask->getH2DStreams() : dtask->getH2DStreams());
-
   std::vector<cudaStream_t*>::iterator iter;
+  dtaskStreams = ( (type == H2D) ? dtask->getH2DStreams() : dtask->getD2HStreams() );
+
+  // reclaim DetailedTask streams
   for (iter = dtaskStreams->begin(); iter != dtaskStreams->end(); iter++) {
-    this->cudaStreams.push(*iter);
+    this->availableStreams.push(*iter);
   }
   dtaskStreams->clear();
+
+  // reclaim Scheduler streams - these will be streams requested by the component
+  if (type == D2H) {
+    for (iter = busyStreams.begin(); iter != busyStreams.end(); iter++) {
+      this->availableStreams.push(*iter);
+    }
+    this->busyStreams.clear();
+  }
 }
 
 void GPUThreadedMPIScheduler::reclaimEvents(DetailedTask* dtask, CopyType type)
 {
   std::vector<cudaEvent_t*>* dtaskEvents;
-  dtaskEvents = ((type == H2D) ? dtask->getH2DCopyEvents() : dtask->getD2HCopyEvents());
-
   std::vector<cudaEvent_t*>::iterator iter;
+  dtaskEvents = ( (type == H2D) ? dtask->getH2DCopyEvents() : dtask->getD2HCopyEvents() );
+
+  // reclaim DetailedTask events
   for (iter = dtaskEvents->begin(); iter != dtaskEvents->end(); iter++) {
-    this->cudaEvents.push(*iter);
+    this->availableEvents.push(*iter);
   }
   dtaskEvents->clear();
 
+  // reclaim Scheduler events - these will be streams requested by the component
+  if (type == D2H) {
+    for (iter = busyEvents.begin(); iter != busyEvents.end(); iter++) {
+      this->availableEvents.push(*iter);
+    }
+    this->busyEvents.clear();
+  }
 }
