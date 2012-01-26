@@ -110,6 +110,8 @@ WARNING
 
     IntVector getDeviceComputesSize(const VarLabel* label);
 
+    void requestD2HCopy(const VarLabel* label, double* h_data, double* d_data, cudaStream_t* stream, cudaEvent_t* event);
+
     void createCudaStreams(int numStreams);
 
     void createCudaEvents(int numEvents);
@@ -156,9 +158,11 @@ WARNING
 
     map<const VarLabel*, GPUGridVariable> deviceComputesPtrs; // simply cudaFree these device allocations
 
-    map<const VarLabel*, GPUGridVariable> hostRequiresPtrs; // unmap all the host pointers that were page-locked
+    map<const VarLabel*, GPUGridVariable> hostRequiresPtrs;   // unmap all the host pointers that were page-locked
 
-    map<const VarLabel*, GPUGridVariable> hostComputesPtrs; // for lookup when component queries for place to put results
+    map<const VarLabel*, GPUGridVariable> hostComputesPtrs;   // for lookup when component queries for place to put results
+
+    map<double*, DetailedTask*> hostPtrToTasksMap;            // reverse lookup.... find the task given a host pointer
 
     queue<cudaStream_t*> cudaStreams;
 

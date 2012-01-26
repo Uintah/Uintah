@@ -1228,9 +1228,37 @@ void GPUThreadedMPIScheduler::h2dRequiresCopy(DetailedTask* dtask, const VarLabe
   dtask->incrementH2DCopyCount();
 }
 
-void GPUThreadedMPIScheduler::h2dComputesCopy (DetailedTask* dtask, const VarLabel* label, IntVector size, double* h_data)
+void GPUThreadedMPIScheduler::h2dComputesCopy (DetailedTask* dtask, const VarLabel* label, IntVector size, double* h_compData)
 {
+  // allocate device memory and add to map associating it to its variable
+  double* d_compData;
+  int nbytes = size.x() * size.y() * size.z() * sizeof(double);
 
+  // page-lock host memory for async copy to device
+  // cudaHostRegisterPortable flag is used so returned memory will be considered pinned by all CUDA contexts
+  CUDA_SAFE_CALL( cudaHostRegister((void*)&h_compData, nbytes, cudaHostRegisterPortable) );
+
+//  double* hostPinned;
+//  cutilSafeCall( cudaMallocHost((void**)&hostPinned, nbytes) );
+//  CUDA_SAFE_CALL( cudaMemcpy(hostPinned, h_varData, nbytes, cudaMemcpyHostToHost) );
+
+  // set the device and CUDA context
+  CUDA_SAFE_CALL( cudaSetDevice(dtask->getDeviceNum()) );
+  CUDA_SAFE_CALL( cudaMalloc(&d_compData, nbytes) );
+  deviceComputesPtrs.insert(pair<const VarLabel*, GPUGridVariable>(label, GPUGridVariable(d_compData, size, dtask->getDeviceNum())));
+  hostComputesPtrs.insert(pair<const VarLabel*, GPUGridVariable>(label, GPUGridVariable(h_compData, size, dtask->getDeviceNum())));
+  hostPtrToTasksMap.insert(pair<double*, DetailedTask*>(h_compData, dtask));
+
+  // now create the stream for this variable and an event to track h2d mem copy
+  cudaStream_t* stream = getCudaStream();
+  dtask->addGridVariableCUDAStream(label, stream);
+  cudaEvent_t* event = getCudaEvent();
+  dtask->addHostToDeviceCopyEvent(label, event);
+
+  // set up the host2device memcopy and follow it with an event added to the stream
+  CUDA_SAFE_CALL( cudaMemcpyAsync(d_compData, h_compData, nbytes, cudaMemcpyDefault, *stream) );
+  CUDA_SAFE_CALL( cudaEventRecord(*event, *stream) );
+  dtask->incrementH2DCopyCount();
 }
 
 void GPUThreadedMPIScheduler::checkH2DCopyDependencies(DetailedTasks* dts)
@@ -1360,6 +1388,21 @@ IntVector GPUThreadedMPIScheduler::getDeviceRequiresSize(const VarLabel* label)
 IntVector GPUThreadedMPIScheduler::getDeviceComputesSize(const VarLabel* label)
 {
   return deviceComputesPtrs.find(label)->second.size;
+}
+
+void GPUThreadedMPIScheduler::requestD2HCopy(const VarLabel* label,
+                                             double* h_data,
+                                             double* d_data,
+                                             cudaStream_t* stream,
+                                             cudaEvent_t* event)
+{
+  cudaSetDevice(hostComputesPtrs.find(label)->second.device);
+  IntVector size = hostComputesPtrs.find(label)->second.size;
+  int nbytes = size.x() * size.y() * size.z() * sizeof(double);
+  CUDA_SAFE_CALL( cudaMemcpyAsync(h_data, d_data, nbytes, cudaMemcpyDefault, *stream));
+  CUDA_SAFE_CALL( cudaEventRecord(*event, *stream) );
+  DetailedTask* dtask = hostPtrToTasksMap.find(d_data)->second;
+  dtask->addDeviceToHostCopyEvent(label, event);
 }
 
 void GPUThreadedMPIScheduler::freeDeviceRequiresMem()
