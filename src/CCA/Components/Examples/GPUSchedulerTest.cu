@@ -265,10 +265,13 @@ void GPUSchedulerTest::timeAdvanceGPU(const ProcessorGroup* pg,
   // set the CUDA context
   CUDA_SAFE_CALL( cudaSetDevice(device) );
 
+  // get a handle on the GPU scheduler to query for device and host pointers, etc
+  GPUThreadedMPIScheduler* sched = dynamic_cast<GPUThreadedMPIScheduler*>(getPort("scheduler"));
+
   // requisite pointers
-  double* d_phi    = dynamic_cast<GPUThreadedMPIScheduler*>(getPort("scheduler"))->getDeviceRequiresPtr(phi_label);
-  double* h_newphi = dynamic_cast<GPUThreadedMPIScheduler*>(getPort("scheduler"))->getHostComputesPtr(phi_label);
-  double* d_newphi = dynamic_cast<GPUThreadedMPIScheduler*>(getPort("scheduler"))->getDeviceComputesPtr(phi_label);
+  double* d_phi    = sched->getDeviceRequiresPtr(phi_label);
+  double* h_newphi = sched->getHostComputesPtr(phi_label);
+  double* d_newphi = sched->getDeviceComputesPtr(phi_label);
 
   // Do time steps
   int NGC = 1;
@@ -281,14 +284,14 @@ void GPUSchedulerTest::timeAdvanceGPU(const ProcessorGroup* pg,
     IntVector l = patch->getNodeLowIndex();
     IntVector h = patch->getNodeHighIndex();
     IntVector s = dynamic_cast<GPUThreadedMPIScheduler*>(getPort("scheduler"))->getDeviceRequiresSize(phi_label);
-    int xdim = s.x(), ydim = s.y(), zdim = s.z();
+    int xdim = s.x(), ydim = s.y();
 
     l += IntVector(patch->getBCType(Patch::xminus) == Patch::Neighbor ? 0 : 1,
                    patch->getBCType(Patch::yminus) == Patch::Neighbor ? 0 : 1,
                    patch->getBCType(Patch::zminus) == Patch::Neighbor ? 0 : 1);
-    h -= IntVector(patch->getBCType(Patch::xplus) == Patch::Neighbor ? 0 : 1,
-                   patch->getBCType(Patch::yplus) == Patch::Neighbor ? 0 : 1,
-                   patch->getBCType(Patch::zplus) == Patch::Neighbor ? 0 : 1);
+    h -= IntVector(patch->getBCType(Patch::xplus)  == Patch::Neighbor ? 0 : 1,
+                   patch->getBCType(Patch::yplus)  == Patch::Neighbor ? 0 : 1,
+                   patch->getBCType(Patch::zplus)  == Patch::Neighbor ? 0 : 1);
 
 
     // Domain extents used by the kernel to prevent out of bounds accesses.
@@ -314,8 +317,8 @@ void GPUSchedulerTest::timeAdvanceGPU(const ProcessorGroup* pg,
     dim3 totalBlocks(xBlocks, yBlocks);
 
     // setup and launch kernel
-    cudaStream_t* stream = dynamic_cast<GPUThreadedMPIScheduler*>(getPort("scheduler"))->getCudaStream();
-    cudaEvent_t* event = dynamic_cast<GPUThreadedMPIScheduler*>(getPort("scheduler"))->getCudaEvent();
+    cudaStream_t* stream = sched->getCudaStream();
+    cudaEvent_t* event = sched->getCudaEvent();
     timeAdvanceKernel<<< totalBlocks, threadsPerBlock, 0, *stream >>>(domainLow, domainHigh, domainSize, NGC, d_phi, d_newphi, &residual);
 
     // Kernel error checking (for now)
@@ -325,7 +328,7 @@ void GPUSchedulerTest::timeAdvanceGPU(const ProcessorGroup* pg,
       exit(-1);
     }
 
-    dynamic_cast<GPUThreadedMPIScheduler*>(getPort("scheduler"))->requestD2HCopy(phi_label, h_newphi, d_newphi, stream, event);
+    sched->requestD2HCopy(phi_label, h_newphi, d_newphi, stream, event);
 
     new_dw->put(sum_vartype(residual), residual_label);
 

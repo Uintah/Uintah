@@ -325,8 +325,9 @@ void GPUThreadedMPIScheduler::runGPUTask(DetailedTask* task, int iteration, int 
   }
   dlbLock.unlock();
 
-  postMPISends(task, iteration, t_id);
-  task->done(dws);
+  // postMPISends() and done() is called here for TaskWorker threads... for GPU tasks using the control
+  // thread, postMPISends() and done() are called in GPUThreadedMPIScheduler::checkD2HCopyDependencies
+
   double teststart = Time::currentSeconds();
 
   // sendsLock.lock(); // Dd... could do better?
@@ -500,14 +501,14 @@ void GPUThreadedMPIScheduler::execute(int tgnum /*=0*/,
     else if (dts->numInternalReadyGPUTasks() > 0) {
 
       // check highest priority GPU task with H2D copies completed and put into the GPU external ready queue
-      checkH2DCopyDependencies(dts); // may empty the queue
+      checkH2DCopyDependencies(dts); // may empty the queue, hence the check below
 
       // otherwise process another GridVariable
       if (dts->numInternalReadyGPUTasks() > 0) {
         DetailedTask* dtask = dts->getNextInternalReadyGPUTask();
 
         // declare the primary CUDA context for the specified device, "currentGPU_" this calls driverAPI -> cuCtxSetCurrent().
-        CUDA_SAFE_CALL( cudaSetDevice(currentGPU_));
+        CUDA_SAFE_CALL( cudaSetDevice(currentGPU_) );
 
         // assign a device to this GPU task, round robin fashion for now
         dtask->assignDevice(currentGPU_);
@@ -581,8 +582,7 @@ void GPUThreadedMPIScheduler::execute(int tgnum /*=0*/,
 
       DetailedTask* dtask = dts->getNextExternalReadyTask();
 
-      // Place GPU-enabled task(s) into the internalReadyGPU Task queue for processing,
-      //   might be just one, but could be more than one consecutive GPU-enabled tasks.
+      // if it's a GPU-enabled task, place it in the GPU internal-ready queue
       if (dtask->getTask()->usesGPU()) {
         dts->addInitialReadyGPUTask(dtask);
         continue;
@@ -621,11 +621,11 @@ void GPUThreadedMPIScheduler::execute(int tgnum /*=0*/,
       phaseTasksDone[dtask->getTask()->d_phase]++;
     }
 
-    // 6.) otherwise there's nothing to do but see if any GPU tasks have their D2H
-    //       copies completed so that done() can be called and process MPI recvs
+    // 6.) otherwise there's nothing to do but process MPI recvs and also see if any GPU tasks
+    //       have their D2H copies completed so that done() can be called
     else {
-      if (dts->numCompletedGPUTasks() > 0) {
-        checkD2HCopyDependencies(dts);
+      if (dts->numExternalReadyGPUTasks() > 0) {
+        checkD2HCopyDependencies(dts, iteration); // dtask->done(dws) called here
       }
       processMPIRecvs(TEST);
     }
@@ -1277,16 +1277,19 @@ void GPUThreadedMPIScheduler::checkH2DCopyDependencies(DetailedTasks* dts)
   }
 }
 
-void GPUThreadedMPIScheduler::checkD2HCopyDependencies(DetailedTasks* dts)
+void GPUThreadedMPIScheduler::checkD2HCopyDependencies(DetailedTasks* dts, int iteration)
 {
   // see if highest priority tasks has its D2H copies completed, if so, done() can be called
   DetailedTask* dtask = dts->peekNextExternalReadyGPUTask();
   cudaError_t ret;
-  int numTasks = dts->numCompletedGPUTasks();
+  int numTasks = dts->numExternalReadyGPUTasks();
 
   do {
     if ((ret = dtask->checkD2HCopyDependencies()) == cudaSuccess) {
-      dtask = dts->getNextCompletedGPUTask();
+      dtask = dts->getNextExternalReadyGPUTask();
+
+      // t_id 0 for centralized thread scheduler, o is the control thread
+      postMPISends(dtask, iteration, 0);
       dtask->done(dws);
     }
     numTasks--;
