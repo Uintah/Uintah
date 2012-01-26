@@ -261,34 +261,27 @@ void GPUSchedulerTest::timeAdvanceGPU(const ProcessorGroup* pg,
                                       DataWarehouse* old_dw,
                                       DataWarehouse* new_dw,
                                       int device) {
-  int matl = 0;
-//  int previousPatchSize = 0;  // this is to see if we need to release and reallocate between computations
-  int size = 0;
-  int NGC = 1;
 
   // set the CUDA context
   CUDA_SAFE_CALL( cudaSetDevice(device) );
 
-  // Device pointers
-  double* phi_device = dynamic_cast<GPUThreadedMPIScheduler*>(getPort("scheduler"))->getOldDevicePointer(phi_label);
-  double* newphi_device = dynamic_cast<GPUThreadedMPIScheduler*>(getPort("scheduler"))->getNewDevicePointer(phi_label);
+  // requisite pointers
+  double* d_phi    = dynamic_cast<GPUThreadedMPIScheduler*>(getPort("scheduler"))->getDeviceRequiresPtr(phi_label);
+  double* h_newphi = dynamic_cast<GPUThreadedMPIScheduler*>(getPort("scheduler"))->getHostComputesPtr(phi_label);
+  double* d_newphi = dynamic_cast<GPUThreadedMPIScheduler*>(getPort("scheduler"))->getDeviceComputesPtr(phi_label);
 
   // Do time steps
+  int size = 0;
+  int NGC = 1;
   int numPatches = patches->size();
   for (int p = 0; p < numPatches; p++) {
     const Patch* patch = patches->get(p);
-    constNCVariable<double> phi;
-    old_dw->get(phi, phi_label, matl, patch, Ghost::AroundNodes, NGC);
-
-    NCVariable<double> newphi;
-    new_dw->allocateAndPut(newphi, phi_label, matl, patch);
-    newphi.copyPatch(phi, newphi.getLowIndex(), newphi.getHighIndex());
-
     double residual = 0;
+
+    // Calculate the memory block size
     IntVector l = patch->getNodeLowIndex();
     IntVector h = patch->getNodeHighIndex();
-    // Calculate the memory block size
-    IntVector s = phi.getWindow()->getData()->size();
+    IntVector s = dynamic_cast<GPUThreadedMPIScheduler*>(getPort("scheduler"))->getDeviceRequiresSize(phi_label);
     int xdim = s.x(), ydim = s.y(), zdim = s.z();
     size = xdim * ydim * zdim * sizeof(double);
 
@@ -322,8 +315,11 @@ void GPUSchedulerTest::timeAdvanceGPU(const ProcessorGroup* pg,
     }
     dim3 totalBlocks(xBlocks, yBlocks);
 
+    cudaStream_t* stream = dynamic_cast<GPUThreadedMPIScheduler*>(getPort("scheduler"))->getCudaStream();
+    cudaEvent_t* event = dynamic_cast<GPUThreadedMPIScheduler*>(getPort("scheduler"))->getCudaEvent();
+
     // Launch kernel
-    timeAdvanceKernel<<< totalBlocks, threadsPerBlock >>>(domainLow, domainHigh, domainSize, NGC, phi_device, newphi_device, &residual);
+    timeAdvanceKernel<<< totalBlocks, threadsPerBlock, 0, *stream >>>(domainLow, domainHigh, domainSize, NGC, d_phi, d_newphi, &residual);
 
     // Kernel error checking (for now)
     cudaError_t error = cudaGetLastError();
@@ -332,22 +328,11 @@ void GPUSchedulerTest::timeAdvanceGPU(const ProcessorGroup* pg,
       exit(-1);
     }
 
-//    //__________________________________
-//    //  Device->Host Memory Copy
-//    CUDA_SAFE_CALL(cudaDeviceSynchronize());
-
-
-    double* newphi_host = (double*)newphi.getWindow()->getData()->getPointer();
-    cutilSafeCall( cudaHostRegister(&newphi_host, size, cudaHostRegisterPortable) );
-//    CUDA_SAFE_CALL(cudaMemcpyAsync(newphi_host, newphi_device, size, cudaMemcpyDefault, *stream));
+    CUDA_SAFE_CALL(cudaDeviceSynchronize());
+    cutilSafeCall( cudaHostRegister(&h_newphi, size, cudaHostRegisterPortable) );
+    CUDA_SAFE_CALL(cudaMemcpyAsync(h_newphi, d_newphi, size, cudaMemcpyDefault, *stream));
 
     new_dw->put(sum_vartype(residual), residual_label);
 
   }  // end patch for loop
-
-  // free up allocated memory
-  CUDA_SAFE_CALL(cudaFree(phi_device));
-  CUDA_SAFE_CALL(cudaFree(newphi_device));
-
-  std::cout << "After Cuda free" << std::endl;
 }
