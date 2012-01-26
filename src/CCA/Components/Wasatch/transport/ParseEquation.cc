@@ -638,19 +638,6 @@ namespace Wasatch{
         // WASATCH IN ARCHES.
         solnGraphHelper->rootIDs.insert(rhsID);
         }
-      //
-      // add task to time integrator
-      typedef std::set< Expr::ExpressionID > IDSet;
-      IDSet rootIDs = solnGraphHelper->rootIDs;
-      IDSet::iterator rootIDsIter = rootIDs.begin();
-      std::cout << "printing out root ids.\n";
-      std::cout << "Root IDs Empty? : " << rootIDs.empty() << std::endl;
-      while (rootIDsIter != rootIDs.end() ) {
-        std::cout << "printing out root ids.\n";
-        std::cout << (*(solnGraphHelper->exprFactory)).get_label(*rootIDsIter++) << std::endl;
-      }
-      
-      //
       }
     //
     // loop over the local adaptors and set the initial and boundary conditions on each equation attached to that adaptor
