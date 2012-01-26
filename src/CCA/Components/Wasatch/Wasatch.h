@@ -215,6 +215,15 @@ namespace Wasatch{
      */
     void scheduleTimeAdvance( const Uintah::LevelP& level,
                               Uintah::SchedulerP& );
+    
+    //__________________________________
+    //  AMR
+    virtual void scheduleCoarsen(const Uintah::LevelP& coarseLevel, 
+                                 Uintah::SchedulerP& sched);                        
+
+    virtual void scheduleRefineInterface(const Uintah::LevelP& /*fineLevel*/, 
+                                         Uintah::SchedulerP& /*scheduler*/,
+                                         bool, bool);
 
     const EquationAdaptors& equation_adaptors() const{ return adaptors_; }
     GraphCategories& graph_categories(){ return graphCategories_; }
