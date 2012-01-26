@@ -263,7 +263,8 @@ def generateGS() :
           THE_COMPONENT = __import__( component )
         except :
           print ""
-          print "Error: Component '%s' does not exist!  Goodbye." % component
+          print "Error: loading the component '%s'." % component
+          print "       Either that python file does not exist or there is a syntax error in the tests that have been defined.  Goodbye."
           print ""
           exit( -1 )
 

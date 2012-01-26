@@ -382,10 +382,8 @@ namespace Wasatch{
 
     //_______________________________________
     // set the time
-    exprFactory.register_expression( scinew SetCurrentTime::Builder(Expr::Tag(StringNames::self().time,Expr::STATE_NONE),
-                                                                    sharedState_,
-                                                                    1) );
-
+    const Expr::Tag timeTag( StringNames::self().time, Expr::STATE_NONE );
+    exprFactory.register_expression( scinew SetCurrentTime::Builder( timeTag, sharedState_, 1 ), true );
     //_____________________________________________
     // Build the initial condition expression graph
     if( !icGraphHelper->rootIDs.empty() ){
@@ -570,9 +568,8 @@ namespace Wasatch{
     // will be available to all expressions if needed.
     const Expr::Tag timeTag (StringNames::self().time,Expr::STATE_NONE);
     Expr::ExpressionID timeID;
-    if( rkStage==1 ) {
-      timeID =
-      exprFactory.register_expression( scinew SetCurrentTime::Builder( timeTag, sharedState_, rkStage) );
+    if( rkStage==1 ){
+      timeID = exprFactory.register_expression( scinew SetCurrentTime::Builder( timeTag, sharedState_, rkStage), true );
     } else {
       timeID = exprFactory.get_id(timeTag);
     }
@@ -671,7 +668,25 @@ namespace Wasatch{
     }
     return NULL;
   }
+ 
+ //------------------------------------------------------------------
+ 
+ void 
+ Wasatch::scheduleCoarsen(const Uintah::LevelP& /*coarseLevel*/,
+                          Uintah::SchedulerP& /*sched*/)
+  {
+  // do nothing for now
+  } 
 
-  //------------------------------------------------------------------
+ //------------------------------------------------------------------
+ 
+ void 
+ Wasatch::scheduleRefineInterface(const Uintah::LevelP& /*fineLevel*/, 
+                                  Uintah::SchedulerP& /*scheduler*/,
+                                  bool, bool)
+  {
+  // do nothing for now
+  } 
+//------------------------------------------------------------------
 
 } // namespace Wasatch
