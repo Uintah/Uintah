@@ -98,15 +98,21 @@ WARNING
     
     void assignTask(DetailedTask* task, int iteration);
     
-    double* gpuGetOldHostVariable(const VarLabel* label);
+    double* getDeviceRequiresPtr(const VarLabel* label);
 
-    double* getOldDevicePointer(const VarLabel* label);
+    double* getDeviceComputesPtr(const VarLabel* label);
 
-    double* getNewDevicePointer(const VarLabel* label);
+    double* getHostRequiresPtr(const VarLabel* label);
 
-    void initializeCudaStreams(int numStreams);
+    double* getHostComputesPtr(const VarLabel* label);
 
-    void initializeCudaEvents(int numEvents);
+    IntVector getDeviceRequiresSize(const VarLabel* label);
+
+    IntVector getDeviceComputesSize(const VarLabel* label);
+
+    void createCudaStreams(int numStreams);
+
+    void createCudaEvents(int numEvents);
 
     void clearCudaStreams();
 
@@ -138,17 +144,21 @@ WARNING
     int                    currentGPU_;
 
     struct GPUGridVariable {
-      double* oldDevPtr;
-      double* newDevPtr;
-      int     device;
-      GPUGridVariable(double* _oldDevPtr, double* _newDevPtr, int _device)
-        : oldDevPtr(_oldDevPtr), newDevPtr(_newDevPtr), device(_device) {
+      double*   ptr;
+      IntVector size;
+      int       device;
+      GPUGridVariable(double* ptr, IntVector _size, int _device)
+        : ptr(ptr), size(_size), device(_device) {
       }
     };
 
-    map<const VarLabel*, GPUGridVariable> gpuVariables;
+    map<const VarLabel*, GPUGridVariable> deviceRequiresPtrs; // simply cudaFree these device allocations
 
-    map<double*, double*> pinnedHostMemory;
+    map<const VarLabel*, GPUGridVariable> deviceComputesPtrs; // simply cudaFree these device allocations
+
+    map<const VarLabel*, GPUGridVariable> hostRequiresPtrs; // unmap all the host pointers that were page-locked
+
+    map<const VarLabel*, GPUGridVariable> hostComputesPtrs; // for lookup when component queries for place to put results
 
     queue<cudaStream_t*> cudaStreams;
 
@@ -162,16 +172,23 @@ WARNING
 
     int getAviableThreadNum();
 
-    void initiateGPUTask(DetailedTask* dtask, int iteration);
+    void initiateH2DRequiresCopies(DetailedTask* dtask, int iteration);
 
-    void hostToDeviceVariableCopy (DetailedTask* dtask,
-                                   const VarLabel* label,
-                                   IntVector size,
-                                   double* h_varData);
+    void initiateH2DComputesCopies(DetailedTask* dtask, int iteration);
+
+    void h2dRequiresCopy (DetailedTask* dtask, const VarLabel* label, IntVector size, double* h_reqData);
+
+    void h2dComputesCopy (DetailedTask* dtask, const VarLabel* label, IntVector size, double* h_compData);
 
     void checkH2DCopyDependencies(DetailedTasks* dts);
 
     void checkD2HCopyDependencies(DetailedTasks* dts);
+
+    void freeDeviceRequiresMem();
+
+    void freeDeviceComputesMem();
+
+    void freePinnedHostMem();
   };
 
 } // End namespace Uintah

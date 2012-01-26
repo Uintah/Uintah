@@ -499,30 +499,33 @@ void GPUThreadedMPIScheduler::execute(int tgnum /*=0*/,
     //       meaning prepare the GPU task for the GPU external ready queue
     else if (dts->numInternalReadyGPUTasks() > 0) {
 
-      // check for GPU tasks with H2D copies completed and put into the GPU external ready queue
-      checkH2DCopyDependencies(dts);
+      // check highest priority GPU task with H2D copies completed and put into the GPU external ready queue
+      checkH2DCopyDependencies(dts); // may empty the queue
 
       // otherwise process another GridVariable
-      DetailedTask* dtask = dts->getNextInternalReadyGPUTask();
+      if (dts->numInternalReadyGPUTasks() > 0) {
+        DetailedTask* dtask = dts->getNextInternalReadyGPUTask();
 
-      // declare the primary CUDA context for the specified device, "currentGPU_" this calls driverAPI -> cuCtxSetCurrent().
-      CUDA_SAFE_CALL( cudaSetDevice(currentGPU_) );
+        // declare the primary CUDA context for the specified device, "currentGPU_" this calls driverAPI -> cuCtxSetCurrent().
+        CUDA_SAFE_CALL( cudaSetDevice(currentGPU_));
 
-      // assign a device to this GPU task, round robin fashion for now
-      dtask->assignDevice(currentGPU_);
+        // assign a device to this GPU task, round robin fashion for now
+        dtask->assignDevice(currentGPU_);
 
-      currentGPU_++;
-      currentGPU_ %= this->numGPUs_;
+        currentGPU_++;
+        currentGPU_ %= this->numGPUs_;
 
-      // initiate H2D mem copies for this task's variables
-      initiateGPUTask(dtask, iteration);
-      dtask->markInitiated();
+        // initiate H2D mem copies for this task's variables
+        initiateH2DRequiresCopies(dtask, iteration);
+        initiateH2DComputesCopies(dtask, iteration);
+        dtask->markInitiated();
 
-      if (taskdbg.active()) {
-        cerrLock.lock();
-        // taskdbg << d_myworld->myrank() << " GPU task internal ready " << *task << " deps needed: " << task->getExternalDepCount() << endl;
-        cerrLock.unlock();
-        pending_tasks.insert(dtask);
+        if (taskdbg.active()) {
+          cerrLock.lock();
+          // taskdbg << d_myworld->myrank() << " GPU task internal ready " << *task << " deps needed: " << task->getExternalDepCount() << endl;
+          cerrLock.unlock();
+          pending_tasks.insert(dtask);
+        }
       }
     }
 
@@ -715,6 +718,10 @@ void GPUThreadedMPIScheduler::execute(int tgnum /*=0*/,
   }
 
   finalizeTimestep();
+
+  freeDeviceRequiresMem(); // call cudaFree on all device allocated memory
+  freeDeviceComputesMem(); // call cudaFree on all device allocated memory
+  freePinnedHostMem();     // unregister all host memory that was page-locked for async mem copies
 
   log.finishTimestep();
   if (timeout.active() && !parentScheduler) {  // only do on toplevel scheduler
@@ -1039,7 +1046,7 @@ void GPUThreadedMPIScheduler::initializeGPUVars() {
   currentGPU_ = 0;
 }
 
-void GPUThreadedMPIScheduler::initiateGPUTask(DetailedTask* dtask, int iteration) {
+void GPUThreadedMPIScheduler::initiateH2DRequiresCopies(DetailedTask* dtask, int iteration) {
 
   MALLOC_TRACE_TAG_SCOPE("GPUThreadedMPIScheduler::initiateGPUTask");
   TAU_PROFILE("GPUThreadedMPIScheduler::initiateGPUTask()", " ", TAU_USER);
@@ -1055,9 +1062,9 @@ void GPUThreadedMPIScheduler::initiateGPUTask(DetailedTask* dtask, int iteration
     int numPatches = patches->size();
     int numMatls   = matls->size();
     int numStreams = numPatches * numMatls;
-    int numEvents  = numPatches * numMatls;
-    initializeCudaStreams(numStreams);
-    initializeCudaEvents(numEvents);
+    int numEvents  = numStreams;
+    createCudaStreams(numStreams);
+    createCudaEvents(numEvents);
 
     // for now, we're only interested in grid variables
     TypeDescription::Type type = req->var->typeDescription()->getType();
@@ -1067,7 +1074,7 @@ void GPUThreadedMPIScheduler::initiateGPUTask(DetailedTask* dtask, int iteration
       int dwIndex = req->mapDataWarehouse();
       OnDemandDataWarehouseP dw = dws[dwIndex];
       IntVector size;
-      double* h_varData = NULL;
+      double* h_data = NULL;
 
       for (int i = 0; i < numPatches; i++) {
         for (int j = 0; j < numMatls; j++) {
@@ -1076,37 +1083,37 @@ void GPUThreadedMPIScheduler::initiateGPUTask(DetailedTask* dtask, int iteration
           if (type == TypeDescription::CCVariable) {
             constCCVariable<double> ccVar;
             dw->get(ccVar, req->var, matls->get(j), patches->get(i), req->gtype, req->numGhostCells);
-            h_varData = (double*)ccVar.getWindow()->getData()->getPointer();
+            h_data = (double*)ccVar.getWindow()->getData()->getPointer();
             size = ccVar.getWindow()->getData()->size();
-            hostToDeviceVariableCopy(dtask, req->var, size, h_varData);
+            h2dRequiresCopy(dtask, req->var, size, h_data);
 
           } else if (type == TypeDescription::NCVariable) {
             constNCVariable<double> ncVar;
             dw->get(ncVar, req->var, matls->get(j), patches->get(i), req->gtype, req->numGhostCells);
-            h_varData = (double*)ncVar.getWindow()->getData()->getPointer();
+            h_data = (double*)ncVar.getWindow()->getData()->getPointer();
             size = ncVar.getWindow()->getData()->size();
-            hostToDeviceVariableCopy(dtask, req->var, size, h_varData);
+            h2dRequiresCopy(dtask, req->var, size, h_data);
 
           } else if (type == TypeDescription::SFCXVariable) {
             constSFCXVariable<double> sfcxVar;
             dw->get(sfcxVar, req->var, matls->get(j), patches->get(i), req->gtype, req->numGhostCells);
-            h_varData = (double*)sfcxVar.getWindow()->getData()->getPointer();
+            h_data = (double*)sfcxVar.getWindow()->getData()->getPointer();
             size = sfcxVar.getWindow()->getData()->size();
-            hostToDeviceVariableCopy(dtask, req->var, size, h_varData);
+            h2dRequiresCopy(dtask, req->var, size, h_data);
 
           } else if (type == TypeDescription::SFCYVariable) {
             constSFCYVariable<double> sfcyVar;
             dw->get(sfcyVar, req->var, matls->get(j), patches->get(i), req->gtype, req->numGhostCells);
-            h_varData = (double*)sfcyVar.getWindow()->getData()->getPointer();
+            h_data = (double*)sfcyVar.getWindow()->getData()->getPointer();
             size = sfcyVar.getWindow()->getData()->size();
-            hostToDeviceVariableCopy(dtask, req->var, size, h_varData);
+            h2dRequiresCopy(dtask, req->var, size, h_data);
 
           } else if (type == TypeDescription::SFCZVariable) {
             constSFCZVariable<double> sfczVar;
             dw->get(sfczVar, req->var, matls->get(j), patches->get(i), req->gtype, req->numGhostCells);
-            h_varData = (double*)sfczVar.getWindow()->getData()->getPointer();
+            h_data = (double*)sfczVar.getWindow()->getData()->getPointer();
             size = sfczVar.getWindow()->getData()->size();
-            hostToDeviceVariableCopy(dtask, req->var, size, h_varData);
+            h2dRequiresCopy(dtask, req->var, size, h_data);
           }
         }
       }
@@ -1114,35 +1121,100 @@ void GPUThreadedMPIScheduler::initiateGPUTask(DetailedTask* dtask, int iteration
   }
 }
 
-void GPUThreadedMPIScheduler::hostToDeviceVariableCopy(DetailedTask* dtask,
-                                                       const VarLabel* label,
-                                                       IntVector size,
-                                                       double* h_varData) {
+void GPUThreadedMPIScheduler::initiateH2DComputesCopies(DetailedTask* dtask, int iteration) {
 
-  // get the patch's data extents
+  MALLOC_TRACE_TAG_SCOPE("GPUThreadedMPIScheduler::initiateGPUTask");
+  TAU_PROFILE("GPUThreadedMPIScheduler::initiateGPUTask()", " ", TAU_USER);
+
+  // determine which variables it will require
+  const Task* task = dtask->getTask();
+  for (const Task::Dependency* comp = task->getComputes(); comp != 0; comp = comp->next) {
+    constHandle<PatchSubset> patches = comp->getPatchesUnderDomain(dtask->getPatches());
+    constHandle<MaterialSubset> matls = comp->getMaterialsUnderDomain(dtask->getMaterials());
+
+    // this is so we can allocate persistent events and streams to distribute when needed
+    //   one stream and one event per variable per H2D copy (numPatches * numMatls)
+    int numPatches = patches->size();
+    int numMatls   = matls->size();
+    int numStreams = numPatches * numMatls;
+    int numEvents  = numPatches * numMatls;
+    createCudaStreams(numStreams);
+    createCudaEvents(numEvents);
+
+    // for now, we're only interested in grid variables
+    TypeDescription::Type type = comp->var->typeDescription()->getType();
+    if (type == TypeDescription::CCVariable   || type == TypeDescription::NCVariable || type == TypeDescription::SFCXVariable ||
+        type == TypeDescription::SFCYVariable || type == TypeDescription::SFCZVariable) {
+
+      int dwIndex = comp->mapDataWarehouse();
+      OnDemandDataWarehouseP dw = dws[dwIndex];
+      IntVector size;
+      double* h_data = NULL;
+
+      for (int i = 0; i < numPatches; i++) {
+        for (int j = 0; j < numMatls; j++) {
+
+          // get the host memory that will be copied to the device
+          if (type == TypeDescription::CCVariable) {
+            CCVariable<double> ccVar;
+            dw->allocateAndPut(ccVar, comp->var, matls->get(j), patches->get(i), comp->gtype, comp->numGhostCells);
+            h_data = (double*)ccVar.getWindow()->getData()->getPointer();
+            size = ccVar.getWindow()->getData()->size();
+            h2dComputesCopy(dtask, comp->var, size, h_data);
+
+          } else if (type == TypeDescription::NCVariable) {
+            NCVariable<double> ncVar;
+            dw->allocateAndPut(ncVar, comp->var, matls->get(j), patches->get(i), comp->gtype, comp->numGhostCells);
+            h_data = (double*)ncVar.getWindow()->getData()->getPointer();
+            size = ncVar.getWindow()->getData()->size();
+            h2dComputesCopy(dtask, comp->var, size, h_data);
+
+          } else if (type == TypeDescription::SFCXVariable) {
+            SFCXVariable<double> sfcxVar;
+            dw->allocateAndPut(sfcxVar, comp->var, matls->get(j), patches->get(i), comp->gtype, comp->numGhostCells);
+            h_data = (double*)sfcxVar.getWindow()->getData()->getPointer();
+            size = sfcxVar.getWindow()->getData()->size();
+            h2dComputesCopy(dtask, comp->var, size, h_data);
+
+          } else if (type == TypeDescription::SFCYVariable) {
+            SFCYVariable<double> sfcyVar;
+            dw->allocateAndPut(sfcyVar, comp->var, matls->get(j), patches->get(i), comp->gtype, comp->numGhostCells);
+            h_data = (double*)sfcyVar.getWindow()->getData()->getPointer();
+            size = sfcyVar.getWindow()->getData()->size();
+            h2dComputesCopy(dtask, comp->var, size, h_data);
+
+          } else if (type == TypeDescription::SFCZVariable) {
+            SFCZVariable<double> sfczVar;
+            dw->allocateAndPut(sfczVar, comp->var, matls->get(j), patches->get(i), comp->gtype, comp->numGhostCells);
+            h_data = (double*)sfczVar.getWindow()->getData()->getPointer();
+            size = sfczVar.getWindow()->getData()->size();
+            h2dComputesCopy(dtask, comp->var, size, h_data);
+          }
+        }
+      }
+    }
+  }
+}
+
+void GPUThreadedMPIScheduler::h2dRequiresCopy(DetailedTask* dtask, const VarLabel* label, IntVector size, double* h_reqData) {
+
+  // allocate device memory and add to map associating it to its variable
+  double* d_reqData;
   int nbytes = size.x() * size.y() * size.z() * sizeof(double);
 
   // page-lock host memory for async copy to device
   // cudaHostRegisterPortable flag is used so returned memory will be considered pinned by all CUDA contexts
-  CUDA_SAFE_CALL( cudaHostRegister((void*)&h_varData, nbytes, cudaHostRegisterPortable) );
+  CUDA_SAFE_CALL( cudaHostRegister((void*)&h_reqData, nbytes, cudaHostRegisterPortable) );
 
 //  double* hostPinned;
 //  cutilSafeCall( cudaMallocHost((void**)&hostPinned, nbytes) );
 //  CUDA_SAFE_CALL( cudaMemcpy(hostPinned, h_varData, nbytes, cudaMemcpyHostToHost) );
 
-
-  // allocate device memory and add to map associating it to its variable
-  double* d_varData;
-  double* d_varDataNew;
-
   // set the device and CUDA context
   CUDA_SAFE_CALL( cudaSetDevice(dtask->getDeviceNum()) );
-  CUDA_SAFE_CALL( cudaMalloc(&d_varData, nbytes) );
-  CUDA_SAFE_CALL( cudaMalloc(&d_varDataNew, nbytes) );
-  gpuVariables.insert(pair<const VarLabel*, GPUGridVariable>(label, GPUGridVariable(d_varData,
-                                                                                    d_varDataNew,
-                                                                                    dtask->getDeviceNum())));
-  pinnedHostMemory.insert(pair<double*, double*>(d_varData, h_varData));
+  CUDA_SAFE_CALL( cudaMalloc(&d_reqData, nbytes) );
+  deviceRequiresPtrs.insert(pair<const VarLabel*, GPUGridVariable>(label, GPUGridVariable(d_reqData, size, dtask->getDeviceNum())));
+  hostRequiresPtrs.insert(pair<const VarLabel*, GPUGridVariable>(label, GPUGridVariable(h_reqData, size, dtask->getDeviceNum())));
 
   // now create the stream for this variable and an event to track h2d mem copy
   cudaStream_t* stream = getCudaStream();
@@ -1151,9 +1223,14 @@ void GPUThreadedMPIScheduler::hostToDeviceVariableCopy(DetailedTask* dtask,
   dtask->addHostToDeviceCopyEvent(label, event);
 
   // set up the host2device memcopy and follow it with an event added to the stream
-  CUDA_SAFE_CALL( cudaMemcpyAsync(d_varData, h_varData, nbytes, cudaMemcpyDefault, *stream) );
+  CUDA_SAFE_CALL( cudaMemcpyAsync(d_reqData, h_reqData, nbytes, cudaMemcpyDefault, *stream) );
   CUDA_SAFE_CALL( cudaEventRecord(*event, *stream) );
   dtask->incrementH2DCopyCount();
+}
+
+void GPUThreadedMPIScheduler::h2dComputesCopy (DetailedTask* dtask, const VarLabel* label, IntVector size, double* h_data)
+{
+
 }
 
 void GPUThreadedMPIScheduler::checkH2DCopyDependencies(DetailedTasks* dts)
@@ -1164,8 +1241,8 @@ void GPUThreadedMPIScheduler::checkH2DCopyDependencies(DetailedTasks* dts)
   // see if highest priority tasks has its H2D copies completed, if so, add to GPU external ready queue
   if (dtask->getH2DCopyCount() > 0) {
     if ((ret = dtask->checkH2DCopyDependencies()) == cudaSuccess) {
-      // all work associated with this task's h2d copies is complete - add to the GPU external ready queue
-      dtask = dts->getNextInternalReadyGPUTask(); // queue-pop
+      // all work associated with this task's h2d copies is complete
+      dtask = dts->getNextInternalReadyGPUTask();
       dts->addExternalReadyGPUTask(dtask);
       return;
     }
@@ -1188,17 +1265,7 @@ void GPUThreadedMPIScheduler::checkD2HCopyDependencies(DetailedTasks* dts)
   } while (numTasks > 0);
 }
 
-double* GPUThreadedMPIScheduler::getOldDevicePointer(const VarLabel* label)
-{
-  return gpuVariables.find(label)->second.oldDevPtr;
-}
-
-double* GPUThreadedMPIScheduler::getNewDevicePointer(const VarLabel* label)
-{
-  return gpuVariables.find(label)->second.newDevPtr;
-}
-
-void GPUThreadedMPIScheduler::initializeCudaStreams(int numStreams)
+void GPUThreadedMPIScheduler::createCudaStreams(int numStreams)
 {
   for(int i = 0; i < numStreams; i++) {
     cudaStream_t* stream = (cudaStream_t*) malloc(sizeof(cudaStream_t));
@@ -1207,7 +1274,7 @@ void GPUThreadedMPIScheduler::initializeCudaStreams(int numStreams)
   }
 }
 
-void GPUThreadedMPIScheduler::initializeCudaEvents(int numEvents)
+void GPUThreadedMPIScheduler::createCudaEvents(int numEvents)
 {
   for(int i = 0; i < numEvents; i++) {
     cudaEvent_t* event = (cudaEvent_t*) malloc(sizeof(cudaEvent_t));
@@ -1265,3 +1332,59 @@ void GPUThreadedMPIScheduler::addCudaEvent(cudaEvent_t* event)
   cudaEvents.push(event);
 }
 
+double* GPUThreadedMPIScheduler::getDeviceRequiresPtr(const VarLabel* label)
+{
+  return deviceRequiresPtrs.find(label)->second.ptr;
+}
+
+double* GPUThreadedMPIScheduler::getDeviceComputesPtr(const VarLabel* label)
+{
+  return deviceComputesPtrs.find(label)->second.ptr;
+}
+
+double* GPUThreadedMPIScheduler::getHostRequiresPtr(const VarLabel* label)
+{
+  return hostRequiresPtrs.find(label)->second.ptr;
+}
+
+double* GPUThreadedMPIScheduler::getHostComputesPtr(const VarLabel* label)
+{
+  return hostComputesPtrs.find(label)->second.ptr;
+}
+
+IntVector GPUThreadedMPIScheduler::getDeviceRequiresSize(const VarLabel* label)
+{
+  return deviceRequiresPtrs.find(label)->second.size;
+}
+
+IntVector GPUThreadedMPIScheduler::getDeviceComputesSize(const VarLabel* label)
+{
+  return deviceComputesPtrs.find(label)->second.size;
+}
+
+void GPUThreadedMPIScheduler::freeDeviceRequiresMem()
+{
+  map<const VarLabel*, GPUGridVariable>::iterator iter;
+  for(iter=deviceRequiresPtrs.begin(); iter != deviceRequiresPtrs.end(); iter++) {
+    cudaSetDevice(iter->second.device); // set the CUDA context so the free() works
+    cudaFree(iter->second.ptr);
+  }
+}
+
+void GPUThreadedMPIScheduler::freeDeviceComputesMem()
+{
+  map<const VarLabel*, GPUGridVariable>::iterator iter;
+  for(iter=deviceComputesPtrs.begin(); iter != deviceComputesPtrs.end(); iter++) {
+    cudaSetDevice(iter->second.device); // set the CUDA context so the free() works
+    cudaFree(iter->second.ptr);
+  }
+}
+
+void GPUThreadedMPIScheduler::freePinnedHostMem()
+{
+  map<const VarLabel*, GPUGridVariable>::iterator iter;
+  for(iter=deviceComputesPtrs.begin(); iter != deviceComputesPtrs.end(); iter++) {
+    cudaSetDevice(iter->second.device); // set the CUDA context so the free() works
+    cudaHostUnregister(iter->second.ptr);
+  }
+}
