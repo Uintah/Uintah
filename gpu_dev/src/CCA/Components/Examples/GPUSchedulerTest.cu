@@ -271,7 +271,6 @@ void GPUSchedulerTest::timeAdvanceGPU(const ProcessorGroup* pg,
   double* d_newphi = dynamic_cast<GPUThreadedMPIScheduler*>(getPort("scheduler"))->getDeviceComputesPtr(phi_label);
 
   // Do time steps
-  int size = 0;
   int NGC = 1;
   int numPatches = patches->size();
   for (int p = 0; p < numPatches; p++) {
@@ -283,7 +282,6 @@ void GPUSchedulerTest::timeAdvanceGPU(const ProcessorGroup* pg,
     IntVector h = patch->getNodeHighIndex();
     IntVector s = dynamic_cast<GPUThreadedMPIScheduler*>(getPort("scheduler"))->getDeviceRequiresSize(phi_label);
     int xdim = s.x(), ydim = s.y(), zdim = s.z();
-    size = xdim * ydim * zdim * sizeof(double);
 
     l += IntVector(patch->getBCType(Patch::xminus) == Patch::Neighbor ? 0 : 1,
                    patch->getBCType(Patch::yminus) == Patch::Neighbor ? 0 : 1,
@@ -315,10 +313,9 @@ void GPUSchedulerTest::timeAdvanceGPU(const ProcessorGroup* pg,
     }
     dim3 totalBlocks(xBlocks, yBlocks);
 
+    // setup and launch kernel
     cudaStream_t* stream = dynamic_cast<GPUThreadedMPIScheduler*>(getPort("scheduler"))->getCudaStream();
     cudaEvent_t* event = dynamic_cast<GPUThreadedMPIScheduler*>(getPort("scheduler"))->getCudaEvent();
-
-    // Launch kernel
     timeAdvanceKernel<<< totalBlocks, threadsPerBlock, 0, *stream >>>(domainLow, domainHigh, domainSize, NGC, d_phi, d_newphi, &residual);
 
     // Kernel error checking (for now)
@@ -328,9 +325,7 @@ void GPUSchedulerTest::timeAdvanceGPU(const ProcessorGroup* pg,
       exit(-1);
     }
 
-    CUDA_SAFE_CALL(cudaDeviceSynchronize());
-    cutilSafeCall( cudaHostRegister(&h_newphi, size, cudaHostRegisterPortable) );
-    CUDA_SAFE_CALL(cudaMemcpyAsync(h_newphi, d_newphi, size, cudaMemcpyDefault, *stream));
+    dynamic_cast<GPUThreadedMPIScheduler*>(getPort("scheduler"))->requestD2HCopy(phi_label, h_newphi, d_newphi, stream, event);
 
     new_dw->put(sum_vartype(residual), residual_label);
 
