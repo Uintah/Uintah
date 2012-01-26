@@ -625,7 +625,7 @@ void GPUThreadedMPIScheduler::execute(int tgnum /*=0*/,
     //       have their D2H copies completed so that done() can be called
     else {
       if (dts->numExternalReadyGPUTasks() > 0) {
-        checkD2HCopyDependencies(dts, iteration); // dtask->done(dws) called here
+        checkGPUTaskCompletion(dts, iteration); // dtask->done(dws) called here
       }
       processMPIRecvs(TEST);
     }
@@ -1216,11 +1216,11 @@ void GPUThreadedMPIScheduler::h2dRequiresCopy(DetailedTask* dtask, const VarLabe
   deviceRequiresPtrs.insert(pair<const VarLabel*, GPUGridVariable>(label, GPUGridVariable(d_reqData, size, dtask->getDeviceNum())));
   hostRequiresPtrs.insert(pair<const VarLabel*, GPUGridVariable>(label, GPUGridVariable(h_reqData, size, dtask->getDeviceNum())));
 
-  // now create the stream for this variable and an event to track h2d mem copy
+  // get a stream and an event from the appropriate queues
   cudaStream_t* stream = getCudaStream();
-  dtask->addGridVariableCUDAStream(label, stream);
   cudaEvent_t* event = getCudaEvent();
-  dtask->addHostToDeviceCopyEvent(label, event);
+  dtask->addH2DStream(stream);
+  dtask->addH2DCopyEvent(event);
 
   // set up the host2device memcopy and follow it with an event added to the stream
   CUDA_SAFE_CALL( cudaMemcpyAsync(d_reqData, h_reqData, nbytes, cudaMemcpyDefault, *stream) );
@@ -1249,11 +1249,11 @@ void GPUThreadedMPIScheduler::h2dComputesCopy (DetailedTask* dtask, const VarLab
   hostComputesPtrs.insert(pair<const VarLabel*, GPUGridVariable>(label, GPUGridVariable(h_compData, size, dtask->getDeviceNum())));
   hostPtrToTasksMap.insert(pair<double*, DetailedTask*>(h_compData, dtask));
 
-  // now create the stream for this variable and an event to track h2d mem copy
+  // get a stream and an event from the appropriate queues
   cudaStream_t* stream = getCudaStream();
-  dtask->addGridVariableCUDAStream(label, stream);
   cudaEvent_t* event = getCudaEvent();
-  dtask->addHostToDeviceCopyEvent(label, event);
+  dtask->addH2DStream(stream);
+  dtask->addH2DCopyEvent(event);
 
   // set up the host2device memcopy and follow it with an event added to the stream
   CUDA_SAFE_CALL( cudaMemcpyAsync(d_compData, h_compData, nbytes, cudaMemcpyDefault, *stream) );
@@ -1272,28 +1272,28 @@ void GPUThreadedMPIScheduler::checkH2DCopyDependencies(DetailedTasks* dts)
       // all work associated with this task's h2d copies is complete
       dtask = dts->getNextInternalReadyGPUTask();
       dts->addExternalReadyGPUTask(dtask);
+      reclaimStreams(dtask, H2D);
+      reclaimEvents(dtask, H2D);
       return;
     }
   }
 }
 
-void GPUThreadedMPIScheduler::checkD2HCopyDependencies(DetailedTasks* dts, int iteration)
+void GPUThreadedMPIScheduler::checkGPUTaskCompletion(DetailedTasks* dts, int iteration)
 {
   // see if highest priority tasks has its D2H copies completed, if so, done() can be called
   DetailedTask* dtask = dts->peekNextExternalReadyGPUTask();
   cudaError_t ret;
-  int numTasks = dts->numExternalReadyGPUTasks();
 
-  do {
+  if (dtask->getD2HCopyCount() > 0) {
     if ((ret = dtask->checkD2HCopyDependencies()) == cudaSuccess) {
       dtask = dts->getNextExternalReadyGPUTask();
-
-      // t_id 0 for centralized thread scheduler, o is the control thread
-      postMPISends(dtask, iteration, 0);
+      postMPISends(dtask, iteration, 0); // t_id 0 (the control thread) for centralized threaded scheduler
+      reclaimStreams(dtask, D2H);
+      reclaimEvents(dtask, D2H);
       dtask->done(dws);
     }
-    numTasks--;
-  } while (numTasks > 0);
+  }
 }
 
 void GPUThreadedMPIScheduler::createCudaStreams(int numStreams)
@@ -1405,13 +1405,13 @@ void GPUThreadedMPIScheduler::requestD2HCopy(const VarLabel* label,
   CUDA_SAFE_CALL( cudaMemcpyAsync(h_data, d_data, nbytes, cudaMemcpyDefault, *stream));
   CUDA_SAFE_CALL( cudaEventRecord(*event, *stream) );
   DetailedTask* dtask = hostPtrToTasksMap.find(d_data)->second;
-  dtask->addDeviceToHostCopyEvent(label, event);
+  dtask->addD2HCopyEvent(event);
 }
 
 void GPUThreadedMPIScheduler::freeDeviceRequiresMem()
 {
-  map<const VarLabel*, GPUGridVariable>::iterator iter;
-  for(iter=deviceRequiresPtrs.begin(); iter != deviceRequiresPtrs.end(); iter++) {
+  std::map<const VarLabel*, GPUGridVariable>::iterator iter;
+  for(iter = deviceRequiresPtrs.begin(); iter != deviceRequiresPtrs.end(); iter++) {
     cudaSetDevice(iter->second.device); // set the CUDA context so the free() works
     cudaFree(iter->second.ptr);
   }
@@ -1419,7 +1419,7 @@ void GPUThreadedMPIScheduler::freeDeviceRequiresMem()
 
 void GPUThreadedMPIScheduler::freeDeviceComputesMem()
 {
-  map<const VarLabel*, GPUGridVariable>::iterator iter;
+  std::map<const VarLabel*, GPUGridVariable>::iterator iter;
   for(iter=deviceComputesPtrs.begin(); iter != deviceComputesPtrs.end(); iter++) {
     cudaSetDevice(iter->second.device); // set the CUDA context so the free() works
     cudaFree(iter->second.ptr);
@@ -1428,9 +1428,34 @@ void GPUThreadedMPIScheduler::freeDeviceComputesMem()
 
 void GPUThreadedMPIScheduler::freePinnedHostMem()
 {
-  map<const VarLabel*, GPUGridVariable>::iterator iter;
-  for(iter=deviceComputesPtrs.begin(); iter != deviceComputesPtrs.end(); iter++) {
+  std::map<const VarLabel*, GPUGridVariable>::iterator iter;
+  for(iter = deviceComputesPtrs.begin(); iter != deviceComputesPtrs.end(); iter++) {
     cudaSetDevice(iter->second.device); // set the CUDA context so the free() works
     cudaHostUnregister(iter->second.ptr);
   }
+}
+
+void GPUThreadedMPIScheduler::reclaimStreams(DetailedTask* dtask, CopyType type)
+{
+  std::vector<cudaStream_t*>* dtaskStreams;
+  dtaskStreams = ((type == H2D) ? dtask->getH2DStreams() : dtask->getH2DStreams());
+
+  std::vector<cudaStream_t*>::iterator iter;
+  for (iter = dtaskStreams->begin(); iter != dtaskStreams->end(); iter++) {
+    this->cudaStreams.push(*iter);
+  }
+  dtaskStreams->clear();
+}
+
+void GPUThreadedMPIScheduler::reclaimEvents(DetailedTask* dtask, CopyType type)
+{
+  std::vector<cudaEvent_t*>* dtaskEvents;
+  dtaskEvents = ((type == H2D) ? dtask->getH2DCopyEvents() : dtask->getD2HCopyEvents());
+
+  std::vector<cudaEvent_t*>::iterator iter;
+  for (iter = dtaskEvents->begin(); iter != dtaskEvents->end(); iter++) {
+    this->cudaEvents.push(*iter);
+  }
+  dtaskEvents->clear();
+
 }

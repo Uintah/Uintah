@@ -128,6 +128,8 @@ WARNING
 
     void addCudaEvent(cudaEvent_t* event);
 
+    enum CopyType {H2D, D2H};
+
 
     ConditionVariable      d_nextsignal;
     Mutex                  d_nextmutex;   //conditional wait mutex
@@ -186,13 +188,17 @@ WARNING
 
     void checkH2DCopyDependencies(DetailedTasks* dts);
 
-    void checkD2HCopyDependencies(DetailedTasks* dts, int iteration);
+    void checkGPUTaskCompletion(DetailedTasks* dts, int iteration);
 
     void freeDeviceRequiresMem();
 
     void freeDeviceComputesMem();
 
     void freePinnedHostMem();
+
+    void reclaimStreams(DetailedTask* dtask, CopyType type);
+
+    void reclaimEvents(DetailedTask* dtask, CopyType type);
   };
 
 } // End namespace Uintah

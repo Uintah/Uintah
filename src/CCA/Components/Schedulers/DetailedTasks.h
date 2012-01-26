@@ -266,15 +266,20 @@ namespace Uintah {
 
 #ifdef HAVE_CUDA
     bool addGridVariableCUDAStream(const VarLabel* label, cudaStream_t* stream);
-    bool addHostToDeviceCopyEvent(const VarLabel* label, cudaEvent_t* event);
-    bool addDeviceToHostCopyEvent(const VarLabel* label, cudaEvent_t* event);
+    bool addH2DCopyEvent(cudaEvent_t* event);
+    bool addD2HCopyEvent(cudaEvent_t* event);
+    bool addH2DStream(cudaStream_t* stream);
+    bool addD2HStream(cudaStream_t* stream);
     cudaError_t checkH2DCopyDependencies();
     cudaError_t checkD2HCopyDependencies();
-    void clearH2DCopyEvents();
-    void clearD2HCopyEvents();
+    std::vector<cudaStream_t*>* getH2DStreams() { return &h2dStreams; }
+    std::vector<cudaStream_t*>* getD2HStreams() { return &d2hStreams; }
+    std::vector<cudaEvent_t*>* getH2DCopyEvents()  { return &h2dCopyEvents;  }
+    std::vector<cudaEvent_t*>* getD2HCopyEvents()  { return &d2hCopyEvents;  }
     inline void incrementH2DCopyCount() { h2dCopyCount_++; }
     inline void decrementH2DCopyCount() { h2dCopyCount_--; }
     inline int getH2DCopyCount() { return h2dCopyCount_; }
+    inline int getD2HCopyCount() { return d2hCopyCount_; }
 #endif
 
   protected:
@@ -327,14 +332,17 @@ namespace Uintah {
 #ifdef HAVE_CUDA
     // these will be used when the mechanism to know when H2D & D2H copies are complete has been refined
     bool gpuExternallyReady_;
+    bool completed_;
     int  h2dCopyCount_;
     int  d2hCopyCount_;
     int  deviceNum;
 
     // these maps are needed to attach CUDA calls for a variable to the correct stream, etc
     std::map<const VarLabel*, cudaStream_t*>  gridVariableStreams;
-    std::vector<cudaEvent_t*>   h2dCopies;
-    std::vector<cudaEvent_t*>   d2hCopies;
+    std::vector<cudaStream_t*>  h2dStreams;
+    std::vector<cudaStream_t*>  d2hStreams;
+    std::vector<cudaEvent_t*>   h2dCopyEvents;
+    std::vector<cudaEvent_t*>   d2hCopyEvents;
 #endif
 
   }; // end class DetailedTask
