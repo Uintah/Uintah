@@ -104,5 +104,6 @@
     <StefanBoltzmann>   5.67051e-8 </StefanBoltzmann>
     <benchmark_13pt2>   true       </benchmark_13pt2>
     <solveBoundaryFlux> false      </solveBoundaryFlux>
+    <CCRays>            false      </CCRays>
   </RMCRT>
 </Uintah_specification>
