@@ -71,6 +71,7 @@ MPMFlags::MPMFlags(const ProcessorGroup* myworld)
   d_maxGridLevel = 1000;
                       
   d_erosionAlgorithm = "none";
+  d_doErosion = false;
   d_deleteRogueParticles = false;
   d_doThermalExpansion = true;
 
