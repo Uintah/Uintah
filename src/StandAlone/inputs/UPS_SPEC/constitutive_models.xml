@@ -163,6 +163,7 @@
                                                                        zerilli_armstrong, zerilli_armstrong_polymer'" >
       <A                           spec="OPTIONAL DOUBLE" />
       <a                           spec="OPTIONAL DOUBLE" />
+      <c_0                         spec="OPTIONAL DOUBLE" />
       <a_0                         spec="OPTIONAL DOUBLE" />
       <a_1                         spec="OPTIONAL DOUBLE" />
       <a_2                         spec="OPTIONAL DOUBLE" />
