@@ -413,7 +413,6 @@ Ray::rayTrace( const ProcessorGroup* pc,
           int face = -9;
 
           while (in_domain){
-            size++;
             
             prevCell = cur;
             double disMin = -9;  // Common variable name in ray tracing. Represents ray segment length.
@@ -731,7 +730,6 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
           int face = -9;
           
           while (in_domain){
-            size++;
             
             prevCell = cur;
             prevLev  = L;
