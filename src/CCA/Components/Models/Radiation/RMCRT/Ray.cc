@@ -53,6 +53,8 @@ Ray::problemSetup( const ProblemSpecP& inputdb)
   db->getWithDefault( "benchmark_13pt2" , _benchmark_13pt2, false );
   db->getWithDefault("StefanBoltzmann",   _sigma,           5.67051e-8);  // Units are W/(m^2-K)
   db->getWithDefault( "solveBoundaryFlux" , _solveBoundaryFlux, false );
+  db->getWithDefault( "CCRays"    ,       _CCRays,          false );  // if true, forces rays to always have CC origins
+
   _sigma_over_pi = _sigma/_pi;
   
   const MaterialSubset* mss = d_matlSet->getUnion();
@@ -378,9 +380,20 @@ Ray::rayTrace( const ProcessorGroup* pc,
 
         Vector ray_location;
         Vector ray_location_prev;
-        ray_location[0] =   i +  _mTwister.rand() ;
-        ray_location[1] =   j +  _mTwister.rand() * DyDxRatio ; //noncubic
-        ray_location[2] =   k +  _mTwister.rand() * DzDxRatio ; //noncubic
+
+        if(_CCRays){
+          ray_location[0] =   i +  0.5 ;
+          ray_location[1] =   j +  0.5 * DyDxRatio ; //noncubic
+          ray_location[2] =   k +  0.5 * DzDxRatio ; //noncubic
+
+        }
+
+        else{
+          ray_location[0] =   i +  _mTwister.rand() ;
+          ray_location[1] =   j +  _mTwister.rand() * DyDxRatio ; //noncubic
+          ray_location[2] =   k +  _mTwister.rand() * DzDxRatio ; //noncubic
+        }
+
 
         double tMaxX = (i + sign[0]             - ray_location[0]) * inv_direction_vector[0];
         double tMaxY = (j + sign[1] * DyDxRatio - ray_location[1]) * inv_direction_vector[1];
