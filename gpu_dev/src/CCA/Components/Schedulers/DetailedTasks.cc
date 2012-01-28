@@ -64,7 +64,6 @@ using namespace std;
 // multiple threads at the same time)  From sus.cc:
 extern UINTAHSHARE SCIRun::Mutex       cerrLock;
 extern DebugStream mixedDebug;
-extern DebugStream brydbg;
 static DebugStream dbg("TaskGraph", false);
 static DebugStream scrubout("Scrubbing", false);
 static DebugStream messagedbg("MessageTags", false);
@@ -224,11 +223,11 @@ DetailedTask::DetailedTask(Task* task, const PatchSubset* patches,
     matls->addReference();
   }
 #ifdef HAVE_CUDA
-    // these will be used when the mechanism to know when H2D & D2H copies are complete has been refined
     gpuExternallyReady_ = false;
     completed_ = false;
-    h2dCopyCount_ = -1;
-    d2hCopyCount_ = -1;
+    h2dCopyCount_ = 0;
+    d2hCopyCount_ = 0;
+    deviceNum_ = -1;
 #endif
 }
 
@@ -271,7 +270,7 @@ void DetailedTask::doit(const ProcessorGroup* pg,
 #ifdef HAVE_CUDA
   // determine if task will be executed on CPU or GPU
   if(task->usesGPU()) {
-    task->doitGPU(pg, patches, matls, dws, deviceNum);
+    task->doitGPU(pg, patches, matls, dws, deviceNum_);
   } else {
       task->doit(pg, patches, matls, dws);
   }
@@ -1084,18 +1083,18 @@ bool DetailedTask::addD2HStream(cudaStream_t* stream)
 
 cudaError_t DetailedTask::checkH2DCopyDependencies()
 {
-  // sets the CUDA context, must be at least one per process per device
+  // sets the CUDA context, for the call to cudaEventQuery()
   CUDA_SAFE_CALL( cudaSetDevice(this->getDeviceNum()) );
-
   std::vector<cudaEvent_t*>::iterator iter;
   cudaError_t val = cudaErrorNotReady;
   for (iter=h2dCopyEvents.begin(); iter!=h2dCopyEvents.end(); iter++) {
-    CUDA_SAFE_CALL( val = cudaEventQuery(*(*iter)) );
+    val = cudaEventQuery(*(*iter));
     // even one unrecorded event means all device mem is not ready
     if (val != cudaSuccess) {
       return val;
     }
   }
+  // otherwise this task is ready for execution
   this->gpuExternallyReady_ = true;
   return cudaSuccess;
 }
@@ -1271,6 +1270,7 @@ DetailedTask* DetailedTasks::getNextInternalReadyTask()
 #endif
   DetailedTask* nextTask = readyTasks_.front();
   readyTasks_.pop();
+  //  cout << Parallel::getMPIRank() << "    Getting: " << *nextTask << "  new size: " << readyTasks_.size() << endl;
 #if !defined( _AIX )
   readyQueueMutex_.unlock();
 #endif
@@ -1281,31 +1281,47 @@ DetailedTask* DetailedTasks::getNextExternalReadyTask()
 {
   DetailedTask* nextTask = mpiCompletedTasks_.top();
   mpiCompletedTasks_.pop();
-  //cout << Parallel::getMPIRank() << "    Getting: " << *nextTask << "  new size: " << mpiCompletedTasks_.size() << endl;
+//  cout << Parallel::getMPIRank() << "    Getting: " << *nextTask << "  new size: " << mpiCompletedTasks_.size() << endl;
   return nextTask;
 }
 
 
 #ifdef HAVE_CUDA
-DetailedTask* DetailedTasks::getNextInternalReadyGPUTask()
+DetailedTask* DetailedTasks::getNextInitiallyReadyGPUTask()
 {
   DetailedTask* nextTask = initiallyReadyGPUTasks_.top();
   initiallyReadyGPUTasks_.pop();
-  //cout << Parallel::getMPIRank() << "    Getting: " << *nextTask << "  new size: " << readyGPUTasks_.size() << endl;
+//  cout << Parallel::getMPIRank() << "    Getting: " << *nextTask << "  new size: " << initiallyReadyGPUTasks_.size() << endl;
   return nextTask;
 }
 
-DetailedTask* DetailedTasks::peekNextInternalReadyGPUTask()
+DetailedTask* DetailedTasks::getNextInternalReadyGPUTask()
 {
-  return initiallyReadyGPUTasks_.top();
+  DetailedTask* nextTask = internalReadyGPUTasks_.top();
+  internalReadyGPUTasks_.pop();
+  //cout << Parallel::getMPIRank() << "    Getting: " << *nextTask << "  new size: " << internalReadyGPUTasks__.size() << endl;
+  return nextTask;
 }
 
 DetailedTask* DetailedTasks::getNextExternalReadyGPUTask()
 {
   DetailedTask* nextTask = externalReadyGPUTasks_.top();
   externalReadyGPUTasks_.pop();
-  //cout << Parallel::getMPIRank() << "    Getting: " << *nextTask << "  new size: " << copyCompletedGPUTasks_.size() << endl;
+//  cout << Parallel::getMPIRank() << "    Getting: " << *nextTask << "  new size: " << externalReadyGPUTasks_.size() << endl;
   return nextTask;
+}
+
+DetailedTask* DetailedTasks::getNextCompletionPendingGPUTask()
+{
+  DetailedTask* nextTask = completionPendingGPUTasks_.top();
+  completionPendingGPUTasks_.pop();
+//  cout << Parallel::getMPIRank() << "    Getting: " << *nextTask << "  new size: " << completionPendingGPUTasks_.size() << endl;
+  return nextTask;
+}
+
+DetailedTask* DetailedTasks::peekNextInternalReadyGPUTask()
+{
+  return internalReadyGPUTasks_.top();
 }
 
 DetailedTask* DetailedTasks::peekNextExternalReadyGPUTask()
@@ -1313,14 +1329,29 @@ DetailedTask* DetailedTasks::peekNextExternalReadyGPUTask()
   return externalReadyGPUTasks_.top();
 }
 
-void DetailedTasks::addInitialReadyGPUTask(DetailedTask* dtask)
+DetailedTask* DetailedTasks::peekNextCompletionPendingGPUTask()
+{
+  return completionPendingGPUTasks_.top();
+}
+
+void DetailedTasks::addInitiallyReadyGPUTask(DetailedTask* dtask)
 {
   initiallyReadyGPUTasks_.push(dtask);
+}
+
+void DetailedTasks::addInternalReadyGPUTask(DetailedTask* dtask)
+{
+  internalReadyGPUTasks_.push(dtask);
 }
 
 void DetailedTasks::addExternalReadyGPUTask(DetailedTask* dtask)
 {
   externalReadyGPUTasks_.push(dtask);
+}
+
+void DetailedTasks::addCompletionPendingGPUTask(DetailedTask* dtask)
+{
+  completionPendingGPUTasks_.push(dtask);
 }
 #endif
 

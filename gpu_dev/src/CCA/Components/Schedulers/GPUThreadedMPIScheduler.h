@@ -78,6 +78,7 @@ WARNING
   class GPUThreadedMPIScheduler : public MPIScheduler  {
 
   public:
+
     GPUThreadedMPIScheduler(const ProcessorGroup* myworld, Output* oport, GPUThreadedMPIScheduler* parentScheduler = 0);
     
     ~GPUThreadedMPIScheduler();
@@ -112,28 +113,27 @@ WARNING
 
     void requestD2HCopy(const VarLabel* label, double* h_data, double* d_data, cudaStream_t* stream, cudaEvent_t* event);
 
-    void createCudaStreams(int numStreams);
+    void createCudaStreams(int numStreams, int device);
 
-    void createCudaEvents(int numEvents);
+    void createCudaEvents(int numEvents, int device);
 
     void clearCudaStreams();
 
     void clearCudaEvents();
 
-    cudaStream_t* getCudaStream();
+    cudaStream_t* getCudaStream(int device);
 
-    cudaEvent_t* getCudaEvent();
+    cudaEvent_t* getCudaEvent(int device);
 
-    cudaStream_t* getCudaStream(UintahParallelComponent* component);
+    cudaStream_t* getCudaStream(UintahParallelComponent* component, int device);
 
-    cudaEvent_t* getCudaEvent(UintahParallelComponent* component);
+    cudaEvent_t* getCudaEvent(UintahParallelComponent* component, int device);
 
-    void addCudaStream(cudaStream_t* stream);
+    void addCudaStream(cudaStream_t* stream, int device);
 
-    void addCudaEvent(cudaEvent_t* event);
+    void addCudaEvent(cudaEvent_t* event, int device);
 
     enum CopyType {H2D, D2H};
-
 
     ConditionVariable      d_nextsignal;
     Mutex                  d_nextmutex;   //conditional wait mutex
@@ -144,6 +144,36 @@ WARNING
 
   private:
     
+    GPUThreadedMPIScheduler(const GPUThreadedMPIScheduler&);
+
+    GPUThreadedMPIScheduler& operator=(const GPUThreadedMPIScheduler&);
+
+    void gpuInitialize();
+
+    int getAviableThreadNum();
+
+    void initiateH2DRequiresCopies(DetailedTask* dtask, int iteration);
+
+    void initiateH2DComputesCopies(DetailedTask* dtask, int iteration);
+
+    void h2dRequiresCopy (DetailedTask* dtask, const VarLabel* label, IntVector size, double* h_reqData);
+
+    void h2dComputesCopy (DetailedTask* dtask, const VarLabel* label, IntVector size, double* h_compData);
+
+    void registerStream(cudaStream_t* stream, int device);
+
+    void registerEvent(cudaEvent_t* event, int device);
+
+    void reclaimStreams(DetailedTask* dtask, CopyType type);
+
+    void reclaimEvents(DetailedTask* dtask, CopyType type);
+
+    void freeDeviceRequiresMem();
+
+    void freeDeviceComputesMem();
+
+    void freePinnedHostMem();
+
     Output*                oport_t;
     CommRecMPI             sends_[16+1];
     QueueAlg               taskQueueAlg_;
@@ -164,53 +194,20 @@ WARNING
 
     map<const VarLabel*, GPUGridVariable> deviceComputesPtrs; // simply cudaFree these device allocations
 
-    map<const VarLabel*, GPUGridVariable> hostRequiresPtrs;   // unmap all the host pointers that were page-locked
+    map<const VarLabel*, GPUGridVariable> hostRequiresPtrs;   // unregister requires host pointers that were page-locked
 
-    map<const VarLabel*, GPUGridVariable> hostComputesPtrs;   // for lookup when component queries for place to put results
+    map<const VarLabel*, GPUGridVariable> hostComputesPtrs;   // unregister computes host pointers that were page-locked
 
-    map<double*, DetailedTask*> hostPtrToTasksMap;            // reverse lookup.... find the task given a host pointer
+    map<double*, DetailedTask*> hostPtrToTasksMap;            // reverse lookup... find the task given a host pointer
 
-    queue<cudaStream_t*> availableStreams;
+    vector<queue<cudaStream_t*> >  idleStreams;
 
-    queue<cudaEvent_t*> availableEvents;
+    vector<queue<cudaEvent_t*> >   idleEvents;
 
-    vector<cudaStream_t*> busyStreams;
+    vector<vector<cudaStream_t*> > busyStreams;
 
-    vector<cudaEvent_t*> busyEvents;
+    vector<vector<cudaEvent_t*> >  busyEvents;
 
-    GPUThreadedMPIScheduler(const GPUThreadedMPIScheduler&);
-
-    GPUThreadedMPIScheduler& operator=(const GPUThreadedMPIScheduler&);
-
-    void initializeGPUVars();
-
-    int getAviableThreadNum();
-
-    void initiateH2DRequiresCopies(DetailedTask* dtask, int iteration);
-
-    void initiateH2DComputesCopies(DetailedTask* dtask, int iteration);
-
-    void h2dRequiresCopy (DetailedTask* dtask, const VarLabel* label, IntVector size, double* h_reqData);
-
-    void h2dComputesCopy (DetailedTask* dtask, const VarLabel* label, IntVector size, double* h_compData);
-
-    void checkH2DCopyDependencies(DetailedTasks* dts);
-
-    void checkGPUTaskCompletion(DetailedTasks* dts, int iteration);
-
-    void freeDeviceRequiresMem();
-
-    void freeDeviceComputesMem();
-
-    void freePinnedHostMem();
-
-    void registerStream(cudaStream_t* stream);
-
-    void registerEvent(cudaEvent_t* event);
-
-    void reclaimStreams(DetailedTask* dtask, CopyType type);
-
-    void reclaimEvents(DetailedTask* dtask, CopyType type);
   };
 
 } // End namespace Uintah

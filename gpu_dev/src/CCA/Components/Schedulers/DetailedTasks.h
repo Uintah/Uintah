@@ -221,10 +221,10 @@ namespace Uintah {
       resourceIndex = idx;
     }
     void assignDevice (int device) {
-      deviceNum = device;
+      deviceNum_ = device;
     }
     int getDeviceNum () {
-      return deviceNum;
+      return deviceNum_;
     }
     int getAssignedResourceIndex() const {
       return resourceIndex;
@@ -335,7 +335,7 @@ namespace Uintah {
     bool completed_;
     int  h2dCopyCount_;
     int  d2hCopyCount_;
-    int  deviceNum;
+    int  deviceNum_;
 
     // these maps are needed to attach CUDA calls for a variable to the correct stream, etc
     std::map<const VarLabel*, cudaStream_t*>  gridVariableStreams;
@@ -432,15 +432,21 @@ namespace Uintah {
     QueueAlg getTaskPriorityAlg() { return taskPriorityAlg_; }
 
 #ifdef HAVE_CUDA
-    void addInitialReadyGPUTask(DetailedTask* dtask);
+    void addInitiallyReadyGPUTask(DetailedTask* dtask);
+    void addInternalReadyGPUTask(DetailedTask* dtask);
     void addExternalReadyGPUTask(DetailedTask* dtask);
-    void addCompletedGPUTask(DetailedTask* dtask);
+    void addCompletionPendingGPUTask(DetailedTask* dtask);
+    DetailedTask* getNextInitiallyReadyGPUTask();
     DetailedTask* getNextInternalReadyGPUTask();
     DetailedTask* getNextExternalReadyGPUTask();
+    DetailedTask* getNextCompletionPendingGPUTask();
     DetailedTask* peekNextInternalReadyGPUTask();
     DetailedTask* peekNextExternalReadyGPUTask();
+    DetailedTask* peekNextCompletionPendingGPUTask();
+    int numIntiallyReadyGPUTasks() { return initiallyReadyGPUTasks_.size(); }
+    int numInternalReadyGPUTasks() { return internalReadyGPUTasks_.size(); }
     int numExternalReadyGPUTasks() { return externalReadyGPUTasks_.size(); }
-    int numInternalReadyGPUTasks() { return initiallyReadyGPUTasks_.size(); }
+    int numCompletionPendingGPUTasks() { return completionPendingGPUTasks_.size(); }
 #endif
 
   protected:
@@ -517,8 +523,10 @@ namespace Uintah {
     DetailedTasks& operator=(const DetailedTasks&);
 
 #ifdef HAVE_CUDA
-    TaskPQueue initiallyReadyGPUTasks_; // GPU tasks with MPI comm completed
-    TaskPQueue externalReadyGPUTasks_;  // ready to execute with GPU mem prepared and MPI comm completed
+    TaskPQueue initiallyReadyGPUTasks_; // prior MPI communication completed
+    TaskPQueue internalReadyGPUTasks_;  // ready to initiate h2d copies
+    TaskPQueue externalReadyGPUTasks_;  // h2d copies completed, ready to execute
+    TaskPQueue completionPendingGPUTasks_;
 #endif
 
   }; // end class DetailedTasks
