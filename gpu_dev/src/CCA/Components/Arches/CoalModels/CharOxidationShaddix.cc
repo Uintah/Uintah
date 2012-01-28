@@ -569,8 +569,8 @@ CharOxidationShaddix::computeModel( const ProcessorGroup * pc,
  
         PO2_inf = O2[c]/WO2/MWmix[c];
 
-        //if((unscaled_raw_coal_mass+unscaled_char_mass-small) > 0 && PO2_inf > 1e-6) {
-        if((PO2_inf < 1e-6) || ((unscaled_raw_coal_mass+unscaled_char_mass) < small)) {
+        //if((PO2_inf < 1e-6) || ((unscaled_raw_coal_mass+unscaled_char_mass) < small)) {
+       if((PO2_inf < 1e-10) || (unscaled_char_mass < small)) {
           PO2_surf = 0.0;
           CO2CO = 0.0;
           q = 0.0;

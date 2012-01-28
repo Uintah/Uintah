@@ -122,8 +122,6 @@ public:
 
 protected: 
 
-      BoundaryCondition* d_boundaryCondition;
-
       /// For other analytical properties.
       class PropertyCalculatorBase { 
 
@@ -199,9 +197,10 @@ private:
 
       void computeOpticalLength();
       double d_opl; // optical length
-      const ProcessorGroup* d_myworld;
       const ArchesLabel*    d_lab;
       const MPMArchesLabel* d_MAlab;
+      BoundaryCondition* d_boundaryCondition;
+      const ProcessorGroup* d_myworld;
       const PatchSet* d_perproc_patches;
       
       int  d_radCalcFreq;

@@ -116,6 +116,29 @@ namespace Uintah {
     double eval_dp_dJ(const MPMMaterial* matl,
                       const double& delF,
                       const PlasticityState* state);
+
+    // Compute pressure (option 1)
+    double computePressure(const double& rho_orig,
+                           const double& rho_cur);
+
+    // Compute pressure (option 2)
+    void computePressure(const double& rho_orig,
+                         const double& rho_cur,
+                         double& pressure,
+                         double& dp_drho,
+                         double& csquared);
+
+    // Compute bulk modulus
+    double computeBulkModulus(const double& rho_orig,
+                              const double& rho_cur);
+
+    // Compute strain energy
+    double computeStrainEnergy(const double& rho_orig,
+                               const double& rho_cur);
+
+    // Compute density given pressure
+    double computeDensity(const double& rho_orig,
+                          const double& pressure);
   };
 
 } // End namespace Uintah

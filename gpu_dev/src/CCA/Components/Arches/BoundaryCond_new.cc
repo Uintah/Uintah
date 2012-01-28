@@ -79,8 +79,9 @@ void BoundaryCondition_new::problemSetup( ProblemSpecP& db, std::string eqn_name
             gzclose( file ); 
 
             if ( !found_file ){ 
-              proc0cout << "Error: Unable to find BC input file for equation: " << eqn_name << endl;
-              throw ProblemSetupException("Check this file for correctness:  " + file_name, __FILE__, __LINE__);
+              stringstream err_msg; 
+              err_msg << "Error: Unable to find BC input file for scalar: " << eqn_name << " Check this file for errors: \n" << file_name << endl;
+              throw ProblemSetupException( err_msg.str(), __FILE__, __LINE__);
             } 
 
             //If file is found, now create a map from index to value

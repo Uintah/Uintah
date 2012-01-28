@@ -860,18 +860,35 @@ int ExplicitSolver::noSolve(const LevelP& level,
 
 #   ifdef WASATCH_IN_ARCHES
   {
+    
     const Wasatch::Wasatch::EquationAdaptors& adaptors = wasatch.equation_adaptors();
-    Wasatch::GraphHelper* const gh = wasatch.graph_categories()[Wasatch::ADVANCE_SOLUTION];
+    Wasatch::GraphHelper* const gh = wasatch.graph_categories()[Wasatch::ADVANCE_SOLUTION];      
     
-    std::vector<std::string> phi;
-    //std::vector<std::string> phi_rhs;
+    // create a dummy_init task to allow us to save all wasatch fields. Since there is
+    // no time integration, this dummy wasatch task will have no effect on the solution, albeit
+    // at the cost of a wasatch calculation during the dummy init step.
+    const std::set<std::string>& ioFieldSet = wasatch.io_field_set();              
+    Wasatch::TaskInterface* wasatchDummyInitTask =
+    scinew Wasatch::TaskInterface( gh->rootIDs,
+                                  "wasatch_task_dummy_init",
+                                  *(gh->exprFactory),
+                                  level, sched, patches, matls,
+                                  wasatch.patch_info_map(),
+                                  true,
+                                  1,
+                                  ioFieldSet 
+                                  );
+    wasatch.task_interface_list().push_back( wasatchDummyInitTask );
+    wasatchDummyInitTask->schedule( 1 );
     
+    // because of the dummy, dummy_init, we have to manually copy the wasatch 
+    // transported variables from the old dw to the new dw.
+    std::vector<std::string> phi;      
     for( Wasatch::Wasatch::EquationAdaptors::const_iterator ia=adaptors.begin(); ia!=adaptors.end(); ++ia ) {
       Wasatch::TransportEquation* transEq = (*ia)->equation();
       std::string solnVarName = transEq->solution_variable_name();
       phi.push_back(solnVarName);
-      //phi_rhs.push_back(solnVarName + "_rhs");
-    }
+    }          
     d_timeIntegrator->sched_dummy_init(sched, patches, matls, phi);
   }
 #   endif // WASATCH_IN_ARCHES

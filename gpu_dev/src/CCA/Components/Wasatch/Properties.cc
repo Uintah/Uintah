@@ -9,7 +9,7 @@
 #include <expression/ExpressionFactory.h>
 
 //--- TabProps includes ---//
-#include <tabprops/Archive.h>
+#include <tabprops/StateTable.h>
 
 //--- Uintah includes ---//
 #include <Core/Parallel/Parallel.h>
@@ -48,9 +48,7 @@ namespace Wasatch{
 
     StateTable table;
     try{
-      std::ifstream inFile( (fileName+".tbl").c_str(), std::ios_base::in );
-      InputArchive ia(inFile);
-      ia >> BOOST_SERIALIZATION_NVP(table);
+      table.read_table( fileName+".tbl" );
     }
     catch( std::exception& e ){
       std::ostringstream msg;
