@@ -518,7 +518,8 @@ double
 ColdFlow::coldFlowMixing( std::vector<double>& iv, int pos )
 {
 
-  double value = iv[0] * d_stream[pos][0] + ( 1 - iv[0] ) * d_stream[pos][1]; 
+  double value = iv[0] * 1.0/d_stream[pos][0] + ( 1 - iv[0] ) * 1.0/d_stream[pos][1]; 
+  value = 1.0/value; 
   return value; 
 
 }

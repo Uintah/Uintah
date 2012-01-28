@@ -121,6 +121,7 @@
         <filter_drhodt                  spec="OPTIONAL BOOLEAN" />
         <first_order_drhodt             spec="OPTIONAL BOOLEAN" />
         <inverse_density_average        spec="OPTIONAL BOOLEAN" />
+        <mixture_fraction_label         spec="OPTIONAL STRING" />
         <independent_variable           spec="MULTIPLE NO_DATA" 
                                             attribute1="active OPTIONAL STRING 'yes, true, no, false'"
                                             attribute2="name   REQUIRED STRING"
