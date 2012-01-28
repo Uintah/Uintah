@@ -558,7 +558,6 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
   parent_old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
   double delta_t = delT;
   delta_t *= timelabels->time_multiplier;
-  double time=d_lab->d_sharedState->getElapsedTime();
           
   for (int p = 0; p < patches->size(); p++) {
 

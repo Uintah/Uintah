@@ -103,6 +103,9 @@ namespace Uintah {
     MieGruneisenEOSEnergy(ProblemSpecP& ps); 
     MieGruneisenEOSEnergy(const MieGruneisenEOSEnergy* cm);
          
+    // Special operator for computing internal energy
+    double operator()(double eta) const;
+
     // destructor 
     virtual ~MieGruneisenEOSEnergy();
 
@@ -126,6 +129,69 @@ namespace Uintah {
     double eval_dp_dJ(const MPMMaterial* matl,
                       const double& delF,
                       const PlasticityState* state);
+
+    // Compute pressure (option 1)
+    double computePressure(const double& rho_orig,
+                           const double& rho_cur);
+
+    // Compute pressure (option 2)
+    void computePressure(const double& rho_orig,
+                         const double& rho_cur,
+                         double& pressure,
+                         double& dp_drho,
+                         double& csquared);
+
+    // Compute bulk modulus
+    double computeBulkModulus(const double& rho_orig,
+                              const double& rho_cur);
+
+    // Compute strain energy
+    double computeStrainEnergy(const double& rho_orig,
+                               const double& rho_cur);
+
+    // Compute density given pressure
+    double computeDensity(const double& rho_orig,
+                          const double& pressure);
+
+  private:
+
+    typedef double (MieGruneisenEOSEnergy::*pFuncPtr)(const double&, const double&);
+    typedef double (MieGruneisenEOSEnergy::*dpdJFuncPtr)(const double&, const double&);
+
+    // Find root of p(eta) - p0 = 0 using Ridder's method
+    double findEtaRidder(pFuncPtr pFunc,
+                         const double& rho_orig,
+                         const double& p0,
+                         double& etamin,
+                         double& etamax,
+                         const double& tolerance,
+                         const int& maxIter);
+
+    // Find root of p(eta) - p0 = 0 using Newton's method
+    double findEtaNewton(pFuncPtr pFunc,
+                         dpdJFuncPtr dpdJFunc, 
+                         const double& rho_orig,
+                         const double& p0,
+                         const double& J0, 
+                         const double& tolerance,
+                         const int& maxIter);
+
+    // Compute p for compressive volumetric deformations
+    double pCompression(const double& rho_orig,
+                        const double& eta);
+
+    // Compute dp/dJ for compressive volumetric deformations
+    double dpdJCompression(const double& rho_orig,
+                           const double& eta);
+
+    // Compute p for tensile volumetric deformations
+    double pTension(const double& rho_orig,
+                    const double& eta);
+
+    // Compute dp/dJ for tensile volumetric deformations
+    double dpdJTension(const double& rho_orig,
+                       const double& eta);
+
   };
 
 } // End namespace Uintah

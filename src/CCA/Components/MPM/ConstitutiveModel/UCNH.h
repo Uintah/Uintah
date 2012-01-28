@@ -60,6 +60,7 @@ namespace SCIRun {
 
 #include "ConstitutiveModel.h"  
 #include "ImplicitCM.h"
+#include "PlasticityModels/MPMEquationOfState.h"
 #include <CCA/Ports/DataWarehouseP.h>
 #include <Core/Disclosure/TypeDescription.h>
 #include <Core/Math/Matrix3.h>
@@ -92,6 +93,12 @@ namespace Uintah {
       
     const VarLabel* bElBarLabel;
     const VarLabel* bElBarLabel_preReloc;
+
+    struct YieldDistribution {
+      std::string dist;
+      double range;
+      int seed;
+    };
 
     // Damage Requirements //
     /////////////////////////
@@ -133,6 +140,8 @@ namespace Uintah {
     /////////////////////////////
     const VarLabel* pPlasticStrain_label;
     const VarLabel* pPlasticStrain_label_preReloc;
+    const VarLabel* pYieldStress_label;
+    const VarLabel* pYieldStress_label_preReloc;
       
   protected:
     // Flags indicating if damage and/or plasticity should be used
@@ -147,6 +156,7 @@ namespace Uintah {
       
     // Damage Requirments //
     ////////////////////////
+    YieldDistribution d_yield;
     FailureStressOrStrainData d_epsf;
     BrittleDamageData d_brittle_damage;
       
@@ -165,7 +175,14 @@ namespace Uintah {
     double d_tensile_cutoff;  // Fraction of the cohesion at which 
                               // tensile failure occurs
 
+    // Initial stress state
+    bool d_useInitialStress;
+    double d_init_pressure;  // Initial pressure
       
+    // Model factories
+    bool d_useEOSFactory;
+    MPMEquationOfState* d_eos;
+
   ///////////////
   // Functions //
   ///////////////
@@ -299,6 +316,10 @@ namespace Uintah {
   private:
     // Damage requirements //
     /////////////////////////
+    void getYieldStressDistribution(ProblemSpecP& ps);
+
+    void setYieldStressDistribution(const UCNH* cm);
+
     void getFailureStressOrStrainData(ProblemSpecP& ps);
 
     void getBrittleDamageData(ProblemSpecP& ps);

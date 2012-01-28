@@ -833,7 +833,8 @@ EnthalpyShaddix::calc_hcint(double Tp){
 
   double z1 = 380.0/Tp;
   double z2 = 1800.0/Tp;
-  double rawcoal_enthalpy = (Rgas/MW_avg)*g1(z1,z2);
+  //double rawcoal_enthalpy = (Rgas/MW_avg)*g1(z1,z2);
+  double rawcoal_enthalpy = 1046.0*Tp;
   return rawcoal_enthalpy; // J/kg
 }
 
@@ -842,7 +843,8 @@ EnthalpyShaddix::calc_hhint(double Tp){
 
   double z1 = 380.0/Tp;
   double z2 = 1800.0/Tp;
-  double char_enthalpy = (Rgas/12.0)*g1(z1,z2);
+  //double char_enthalpy = (Rgas/12.0)*g1(z1,z2);
+  double char_enthalpy = 1046.0*Tp;
   return char_enthalpy; // J/kg
 }
 

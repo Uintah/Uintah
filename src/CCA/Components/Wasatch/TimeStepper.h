@@ -63,14 +63,17 @@ namespace Wasatch{
                  Uintah::VarLabel* const rhsl )
         : varname( name ), varLabel( vl ), rhsLabel( rhsl )
       {}
+      bool operator==( const FieldInfo& fi ) const{ return varname.compare(fi.varname); }
+      bool operator<( const FieldInfo& fi ) const{ return varname < fi.varname; }
+      bool operator>( const FieldInfo& fi ) const{ return varname > fi.varname; }
     };
 
   private:
 
-    typedef std::vector< FieldInfo<SpatialOps::structured::SVolField> > ScalarFields;
-    typedef std::vector< FieldInfo<SpatialOps::structured::XVolField> > XVolFields;
-    typedef std::vector< FieldInfo<SpatialOps::structured::YVolField> > YVolFields;
-    typedef std::vector< FieldInfo<SpatialOps::structured::ZVolField> > ZVolFields;
+    typedef std::set< FieldInfo<SpatialOps::structured::SVolField> > ScalarFields;
+    typedef std::set< FieldInfo<SpatialOps::structured::XVolField> > XVolFields;
+    typedef std::set< FieldInfo<SpatialOps::structured::YVolField> > YVolFields;
+    typedef std::set< FieldInfo<SpatialOps::structured::ZVolField> > ZVolFields;
 
     ScalarFields scalarFields_;  ///< A vector of the scalar fields being solved by this time integrator.
     XVolFields   xVolFields_;    ///< A vector of the x-volume fields being solved by this time integrator.
@@ -91,7 +94,7 @@ namespace Wasatch{
      *         considering.
      */
     template<typename FieldT>
-    std::vector< FieldInfo<FieldT> >& field_info_selctor();
+    std::set< FieldInfo<FieldT> >& field_info_selctor();
 
     /**
      *  \brief the call-back for Uintah to execute this.
@@ -168,25 +171,25 @@ namespace Wasatch{
   //------------------------------------------------------------------
 
   template<>
-  inline std::vector< TimeStepper::FieldInfo<SpatialOps::structured::SVolField> >&
+  inline std::set< TimeStepper::FieldInfo<SpatialOps::structured::SVolField> >&
   TimeStepper::field_info_selctor<SpatialOps::structured::SVolField>()
   {
     return scalarFields_;
   }
   template<>
-  inline std::vector<TimeStepper::FieldInfo<SpatialOps::structured::XVolField> >&
+  inline std::set<TimeStepper::FieldInfo<SpatialOps::structured::XVolField> >&
   TimeStepper::field_info_selctor<SpatialOps::structured::XVolField>()
   {
     return xVolFields_;
   }
   template<>
-  inline std::vector<TimeStepper::FieldInfo<SpatialOps::structured::YVolField> >&
+  inline std::set<TimeStepper::FieldInfo<SpatialOps::structured::YVolField> >&
   TimeStepper::field_info_selctor<SpatialOps::structured::YVolField>()
   {
     return yVolFields_;
   }
   template<>
-  inline std::vector<TimeStepper::FieldInfo<SpatialOps::structured::ZVolField> >&
+  inline std::set<TimeStepper::FieldInfo<SpatialOps::structured::ZVolField> >&
   TimeStepper::field_info_selctor<SpatialOps::structured::ZVolField>()
   {
     return zVolFields_;
@@ -204,15 +207,15 @@ namespace Wasatch{
     const Uintah::IntVector ghostDesc       = get_uintah_ghost_descriptor<FieldT>();
     Uintah::VarLabel* solnVarLabel = Uintah::VarLabel::create( solnVarName, typeDesc, ghostDesc );
     Uintah::VarLabel* rhsVarLabel  = Uintah::VarLabel::create( rhsName,     typeDesc, ghostDesc );
-    std::vector< FieldInfo<FieldT> >& fields = field_info_selctor<FieldT>();
-    fields.push_back( FieldInfo<FieldT>( solnVarName, solnVarLabel, rhsVarLabel ) );
+    std::set< FieldInfo<FieldT> >& fields = field_info_selctor<FieldT>();
+    fields.insert( FieldInfo<FieldT>( solnVarName, solnVarLabel, rhsVarLabel ) );
     //rhsIDs_.insert( rhsID );
     createdVarLabels_.push_back( solnVarLabel );
     createdVarLabels_.push_back( rhsVarLabel );
 
     typedef Expr::PlaceHolder<FieldT>  FieldExpr;
-    solnGraphHelper_->exprFactory->register_expression( new typename FieldExpr::Builder(Expr::Tag(solnVarName,Expr::STATE_N  )) );
-    solnGraphHelper_->exprFactory->register_expression( new typename FieldExpr::Builder(Expr::Tag(solnVarName,Expr::STATE_NP1)) );
+    solnGraphHelper_->exprFactory->register_expression( new typename FieldExpr::Builder(Expr::Tag(solnVarName,Expr::STATE_N  )),true );
+    solnGraphHelper_->exprFactory->register_expression( new typename FieldExpr::Builder(Expr::Tag(solnVarName,Expr::STATE_NP1)),true );
   }
 
   //==================================================================

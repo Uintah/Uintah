@@ -399,16 +399,77 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
       db_whichmms->getWithDefault("cw",cw,1.0);
       db_whichmms->getWithDefault("cp",cp,1.0);
       db_whichmms->getWithDefault("phi0",phi0,0.5);
-    }
-   else if (d_mms == "almgrenMMS") {
+    } else if (d_mms == "almgrenMMS") {
       ProblemSpecP db_whichmms = db_mmsblock->findBlock("almgrenMMS");
       db_whichmms->getWithDefault("amplitude",amp,0.0);
       db_whichmms->require("viscosity",d_viscosity);
-    }
-    else
+    } else {
       throw InvalidValue("current MMS "
                          "not supported: " + d_mms, __FILE__, __LINE__);
+    }
   }
+
+  //look for velocity file input information... 
+  ProblemSpecP db_root = db_params->getRootNode();
+  ProblemSpecP db_bc   = db_root->findBlock("Grid")->findBlock("BoundaryConditions"); 
+
+  if ( db_bc ) { 
+
+    for ( ProblemSpecP db_face = db_bc->findBlock("Face"); db_face != 0; 
+          db_face = db_face->findNextBlock("Face") ){
+      
+      for ( ProblemSpecP db_BCType = db_face->findBlock("BCType"); db_BCType != 0; 
+          db_BCType = db_BCType->findNextBlock("BCType") ){
+
+        std::string name; 
+        std::string type; 
+        db_BCType->getAttribute("label", name);
+        db_BCType->getAttribute("var", type); 
+
+        if ( type == "VelocityFileInput" ){ 
+
+          std::string file_name;
+          db_BCType->require("inputfile", file_name); 
+
+          gzFile file = gzopen( file_name.c_str(), "r" ); 
+          int total_variables;
+          // name of variable, filename to open
+          std::map<std::string, std::string> input_files;
+
+          if ( file == NULL ) { 
+            proc0cout << "Error opening file: " << file_name << " for boundary conditions. Errno: " << errno << endl;
+            throw ProblemSetupException("Unable to open the given input file: " + file_name, __FILE__, __LINE__);
+          }
+
+          total_variables = getInt( file ); 
+          for ( int i = 0; i < total_variables; i++ ){
+            std::string varname  = getString( file );
+            std::string which_file  = getString( file ); 
+            input_files.insert( make_pair( varname, which_file)).first; 
+          }
+          gzclose( file ); 
+
+          if ( total_variables == 0 ){ 
+            throw ProblemSetupException("Error: Number of variables in reference file is zero! See file: " + file_name, __FILE__, __LINE__);
+          } 
+
+          std::map<string, string>::iterator iter = input_files.find( "uvel" ); 
+          _u_input = readInputFile__NEW( iter->second ); 
+
+          iter = input_files.find( "vvel" ); 
+          _v_input = readInputFile__NEW( iter->second ); 
+
+          iter = input_files.find( "wvel" ); 
+          _w_input = readInputFile__NEW( iter->second ); 
+
+        } 
+      }
+    }
+  }
+ // for ( CellToValue::iterator i=_u_input.begin(); i!=_u_input.end(); i++){ 
+ //   cout << " FOR U, celliter = " << i->first << " with value = " << i->second << endl;
+ // } 
+
 }
 
 //****************************************************************************
@@ -6226,42 +6287,6 @@ void BoundaryCondition::setVelFromInput__NEW( const Patch* patch, const Patch::F
         Iterator bound_ptr, std::string file_name )
 {
 
-  gzFile file = gzopen( file_name.c_str(), "r" ); 
-  int total_variables;
-  // name of variable, filename to open
-  std::map<std::string, std::string> input_files;
-
-  if ( file == NULL ) { 
-    proc0cout << "Error opening file: " << file_name << " for boundary conditions. Errno: " << errno << endl;
-    throw ProblemSetupException("Unable to open the given input file: " + file_name, __FILE__, __LINE__);
-  }
-
-  total_variables = getInt( file ); 
-  for ( int i = 0; i < total_variables; i++ ){
-    std::string varname  = getString( file );
-    std::string which_file  = getString( file ); 
-    input_files.insert( make_pair( varname, which_file)).first; 
-  }
-  gzclose( file ); 
-
-  if ( total_variables == 0 ){ 
-    throw ProblemSetupException("Error: Number of variables in reference file is zero! See file: " + file_name, __FILE__, __LINE__);
-  } 
-
-  typedef std::map<IntVector, double> CellToValue; 
-  CellToValue u_input; 
-  CellToValue v_input; 
-  CellToValue w_input; 
-
-  std::map<string, string>::iterator iter = input_files.find( "uvel" ); 
-  u_input = readInputFile__NEW( iter->second ); 
-
-  iter = input_files.find( "vvel" ); 
-  v_input = readInputFile__NEW( iter->second ); 
-
-  iter = input_files.find( "wvel" ); 
-  w_input = readInputFile__NEW( iter->second ); 
-
  //get the face direction
  IntVector insideCellDir = patch->faceDirection(face);
 
@@ -6271,18 +6296,18 @@ void BoundaryCondition::setVelFromInput__NEW( const Patch* patch, const Patch::F
 
      for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
         
-       CellToValue::iterator u_iter = u_input.find( *bound_ptr ); 
-       CellToValue::iterator v_iter = v_input.find( *bound_ptr ); 
-       CellToValue::iterator w_iter = w_input.find( *bound_ptr ); 
+       CellToValue::iterator u_iter = _u_input.find( *bound_ptr ); 
+       CellToValue::iterator v_iter = _v_input.find( *bound_ptr ); 
+       CellToValue::iterator w_iter = _w_input.find( *bound_ptr ); 
 
-       if ( u_iter != u_input.end() ){ 
+       if ( u_iter != _u_input.end() ){ 
         uVel[ *bound_ptr ] = u_iter->second; 
         uVel[ *bound_ptr - insideCellDir ] = u_iter->second; 
        }
 
-       if ( v_iter != v_input.end() ) 
+       if ( v_iter != _v_input.end() ) 
         vVel[ *bound_ptr ] = v_iter->second; 
-       if ( w_iter != w_input.end() )
+       if ( w_iter != _w_input.end() )
         wVel[ *bound_ptr ] = w_iter->second; 
 
      }
@@ -6292,18 +6317,18 @@ void BoundaryCondition::setVelFromInput__NEW( const Patch* patch, const Patch::F
 
      for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
 
-       CellToValue::iterator u_iter = u_input.find( *bound_ptr ); 
-       CellToValue::iterator v_iter = v_input.find( *bound_ptr ); 
-       CellToValue::iterator w_iter = w_input.find( *bound_ptr ); 
+       CellToValue::iterator u_iter = _u_input.find( *bound_ptr ); 
+       CellToValue::iterator v_iter = _v_input.find( *bound_ptr ); 
+       CellToValue::iterator w_iter = _w_input.find( *bound_ptr ); 
 
-       if ( u_iter != u_input.end() ){ 
+       if ( u_iter != _u_input.end() ){ 
         uVel[ *bound_ptr ] = u_iter->second; 
         uVel[ *bound_ptr - insideCellDir ] = u_iter->second; 
        }
 
-       if ( v_iter != v_input.end() )
+       if ( v_iter != _v_input.end() )
         vVel[ *bound_ptr ] = v_iter->second; 
-       if ( w_iter != w_input.end() ) 
+       if ( w_iter != _w_input.end() ) 
         wVel[ *bound_ptr ] = w_iter->second; 
 
      }
@@ -6312,18 +6337,18 @@ void BoundaryCondition::setVelFromInput__NEW( const Patch* patch, const Patch::F
 
      for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
 
-       CellToValue::iterator u_iter = u_input.find( *bound_ptr ); 
-       CellToValue::iterator v_iter = v_input.find( *bound_ptr ); 
-       CellToValue::iterator w_iter = w_input.find( *bound_ptr ); 
+       CellToValue::iterator u_iter = _u_input.find( *bound_ptr ); 
+       CellToValue::iterator v_iter = _v_input.find( *bound_ptr ); 
+       CellToValue::iterator w_iter = _w_input.find( *bound_ptr ); 
 
-       if ( v_iter != v_input.end()) { 
+       if ( v_iter != _v_input.end()) { 
        vVel[ *bound_ptr ] = v_iter->second; 
        vVel[ *bound_ptr - insideCellDir ] = v_iter->second; 
        }
 
-       if ( u_iter != u_input.end() ) 
+       if ( u_iter != _u_input.end() ) 
        uVel[ *bound_ptr ] = u_iter->second;
-       if ( w_iter != w_input.end() ) 
+       if ( w_iter != _w_input.end() ) 
        wVel[ *bound_ptr ] = w_iter->second; 
 
      }
@@ -6332,18 +6357,18 @@ void BoundaryCondition::setVelFromInput__NEW( const Patch* patch, const Patch::F
 
      for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
 
-       CellToValue::iterator u_iter = u_input.find( *bound_ptr ); 
-       CellToValue::iterator v_iter = v_input.find( *bound_ptr ); 
-       CellToValue::iterator w_iter = w_input.find( *bound_ptr ); 
+       CellToValue::iterator u_iter = _u_input.find( *bound_ptr ); 
+       CellToValue::iterator v_iter = _v_input.find( *bound_ptr ); 
+       CellToValue::iterator w_iter = _w_input.find( *bound_ptr ); 
 
-       if ( v_iter != v_input.end() ) {
+       if ( v_iter != _v_input.end() ) {
        vVel[ *bound_ptr ] = v_iter->second; 
        vVel[ *bound_ptr - insideCellDir ] = v_iter->second; 
        }
 
-       if ( u_iter != u_input.end() )
+       if ( u_iter != _u_input.end() )
        uVel[ *bound_ptr ] = u_iter->second;
-       if ( w_iter != w_input.end() ) 
+       if ( w_iter != _w_input.end() ) 
        wVel[ *bound_ptr ] = w_iter->second; 
 
      }
@@ -6352,18 +6377,18 @@ void BoundaryCondition::setVelFromInput__NEW( const Patch* patch, const Patch::F
 
      for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
 
-       CellToValue::iterator u_iter = u_input.find( *bound_ptr ); 
-       CellToValue::iterator v_iter = v_input.find( *bound_ptr ); 
-       CellToValue::iterator w_iter = w_input.find( *bound_ptr ); 
+       CellToValue::iterator u_iter = _u_input.find( *bound_ptr ); 
+       CellToValue::iterator v_iter = _v_input.find( *bound_ptr ); 
+       CellToValue::iterator w_iter = _w_input.find( *bound_ptr ); 
 
-       if ( w_iter != w_input.end() ) { 
+       if ( w_iter != _w_input.end() ) { 
        wVel[ *bound_ptr ] = w_iter->second; 
        wVel[ *bound_ptr - insideCellDir ] = w_iter->second;
        }
 
-       if ( u_iter != u_input.end() ) 
+       if ( u_iter != _u_input.end() ) 
        uVel[ *bound_ptr ] = u_iter->second;
-       if ( v_iter != v_input.end() ) 
+       if ( v_iter != _v_input.end() ) 
        vVel[ *bound_ptr ] = v_iter->second; 
 
      }
@@ -6372,18 +6397,18 @@ void BoundaryCondition::setVelFromInput__NEW( const Patch* patch, const Patch::F
 
      for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
 
-       CellToValue::iterator u_iter = u_input.find( *bound_ptr ); 
-       CellToValue::iterator v_iter = v_input.find( *bound_ptr ); 
-       CellToValue::iterator w_iter = w_input.find( *bound_ptr ); 
+       CellToValue::iterator u_iter = _u_input.find( *bound_ptr ); 
+       CellToValue::iterator v_iter = _v_input.find( *bound_ptr ); 
+       CellToValue::iterator w_iter = _w_input.find( *bound_ptr ); 
 
-       if ( w_iter != w_input.end() ) { 
+       if ( w_iter != _w_input.end() ) { 
        wVel[ *bound_ptr ] = w_iter->second; 
        wVel[ *bound_ptr - insideCellDir ] = w_iter->second; 
        }
 
-       if ( u_iter != u_input.end() ) 
+       if ( u_iter != _u_input.end() ) 
        uVel[ *bound_ptr ] = u_iter->second;
-       if ( v_iter != v_input.end() ) 
+       if ( v_iter != _v_input.end() ) 
        vVel[ *bound_ptr ] = v_iter->second; 
      }
      break; 
