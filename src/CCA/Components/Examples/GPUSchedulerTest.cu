@@ -283,7 +283,7 @@ void GPUSchedulerTest::timeAdvanceGPU(const ProcessorGroup* pg,
     // Calculate the memory block size
     IntVector l = patch->getNodeLowIndex();
     IntVector h = patch->getNodeHighIndex();
-    IntVector s = dynamic_cast<GPUThreadedMPIScheduler*>(getPort("scheduler"))->getDeviceRequiresSize(phi_label);
+    IntVector s = sched->getDeviceRequiresSize(phi_label);
     int xdim = s.x(), ydim = s.y();
 
     l += IntVector(patch->getBCType(Patch::xminus) == Patch::Neighbor ? 0 : 1,
@@ -317,8 +317,8 @@ void GPUSchedulerTest::timeAdvanceGPU(const ProcessorGroup* pg,
     dim3 totalBlocks(xBlocks, yBlocks);
 
     // setup and launch kernel
-    cudaStream_t* stream = sched->getCudaStream(this);
-    cudaEvent_t* event = sched->getCudaEvent(this);
+    cudaStream_t* stream = sched->getCudaStream(this, device);
+    cudaEvent_t* event = sched->getCudaEvent(this, device);
     timeAdvanceKernel<<< totalBlocks, threadsPerBlock, 0, *stream >>>(domainLow,
                                                                       domainHigh,
                                                                       domainSize,
@@ -333,6 +333,8 @@ void GPUSchedulerTest::timeAdvanceGPU(const ProcessorGroup* pg,
       fprintf(stderr, "ERROR: %s\n", cudaGetErrorString(error));
       exit(-1);
     }
+
+    CUDA_SAFE_CALL(cudaDeviceSynchronize());
 
     sched->requestD2HCopy(phi_label, h_newphi, d_newphi, stream, event);
 
