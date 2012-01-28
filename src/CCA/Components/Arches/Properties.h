@@ -297,6 +297,7 @@ private:
       // Variable labels used by simulation controller
       const ArchesLabel* d_lab;
       const MPMArchesLabel* d_MAlab;
+      const VarLabel* d_mf_label; 
 
       bool d_reactingFlow;
       PhysicalConstants* d_physicalConsts;

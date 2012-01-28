@@ -126,6 +126,9 @@ Properties::problemSetup(const ProblemSpecP& params)
   db->getWithDefault("filter_drhodt",          d_filter_drhodt,          false);
   db->getWithDefault("first_order_drhodt",     d_first_order_drhodt,     true);
   db->getWithDefault("inverse_density_average",d_inverse_density_average,false);
+  std::string mixture_fraction_name; 
+  db->getWithDefault("mixture_fraction_label", mixture_fraction_name, "scalarSP"); 
+  d_mf_label = VarLabel::find(mixture_fraction_name); 
   d_denRef = d_physicalConsts->getRefPoint();
   d_reactingFlow = true;
   // check to see if gas is adiabatic and (if DQMOM) particles are not:
@@ -368,7 +371,7 @@ Properties::sched_reComputeProps(SchedulerP& sched,
   Ghost::GhostType  gn = Ghost::None;
   
   tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, gn);
-  tsk->modifies(d_lab->d_scalarSPLabel);
+  tsk->modifies(d_mf_label);
 
   if (d_calcVariance){
     tsk->requires(Task::NewDW, d_lab->d_normalizedScalarVarLabel, gn, 0);
@@ -652,7 +655,7 @@ Properties::reComputeProps(const ProcessorGroup* pc,
       new_dw->get(cellType, d_lab->d_cellTypeLabel,   indx, patch, gn, 0);
     }
 
-    new_dw->getModifiable(scalar, d_lab->d_scalarSPLabel, indx, patch);
+    new_dw->getModifiable(scalar, d_mf_label, indx, patch);
 
     if (d_calcVariance) {
       new_dw->get(normalizedScalarVar, d_lab->d_normalizedScalarVarLabel, indx, patch, gn, 0);
