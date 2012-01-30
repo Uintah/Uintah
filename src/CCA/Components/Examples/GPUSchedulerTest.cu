@@ -263,7 +263,8 @@ void GPUSchedulerTest::timeAdvanceGPU(const ProcessorGroup* pg,
                                       int device) {
 
   // set the CUDA context
-  CUDA_SAFE_CALL( cudaSetDevice(device) );
+  cudaError_t retVal;
+  CUDA_SAFE_CALL( retVal = cudaSetDevice(device) );
 
   // get a handle on the GPU scheduler to query for device and host pointers, etc
   GPUThreadedMPIScheduler* sched = dynamic_cast<GPUThreadedMPIScheduler*>(getPort("scheduler"));
@@ -328,13 +329,13 @@ void GPUSchedulerTest::timeAdvanceGPU(const ProcessorGroup* pg,
                                                                       &residual);
 
     // Kernel error checking (for now)
-    cudaError_t error = cudaGetLastError();
-    if (error != cudaSuccess) {
-      fprintf(stderr, "ERROR: %s\n", cudaGetErrorString(error));
+    retVal = cudaGetLastError();
+    if (retVal != cudaSuccess) {
+      fprintf(stderr, "ERROR: %s\n", cudaGetErrorString(retVal));
       exit(-1);
     }
 
-    CUDA_SAFE_CALL(cudaDeviceSynchronize());
+//    CUDA_SAFE_CALL(retVal = cudaDeviceSynchronize());
 
     sched->requestD2HCopy(phi_label, h_newphi, d_newphi, stream, event);
 

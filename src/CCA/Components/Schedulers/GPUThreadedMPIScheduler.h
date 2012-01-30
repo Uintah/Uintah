@@ -182,6 +182,7 @@ WARNING
     int                    numThreads_;
     int                    numGPUs_;
     int                    currentGPU_;
+    bool                   isInitialGPUTimeStep_;
 
     struct GPUGridVariable {
       double*   ptr;

@@ -86,6 +86,7 @@ GPUThreadedMPIScheduler::GPUThreadedMPIScheduler(const ProcessorGroup* myworld,
       d_nextmutex("next mutex"), dlbLock("loadbalancer lock") {
 
   gpuInitialize();
+  isInitialGPUTimeStep_ = true;
 
   // we need one of these for each GPU, as each device will have it's own CUDA context
   for (int i = 0; i < numGPUs_; i++) {
@@ -530,6 +531,7 @@ void GPUThreadedMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/) {
       initiateH2DRequiresCopies(dtask, iteration);
       initiateH2DComputesCopies(dtask, iteration);
 
+      isInitialGPUTimeStep_ = false;
       dtask->markInitiated();
       dts->addInternalReadyGPUTask(dtask);
     }
@@ -545,9 +547,8 @@ void GPUThreadedMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/) {
     else if (dts->numInternalReadyGPUTasks() > 0) {
 
       DetailedTask* dtask = dts->peekNextInternalReadyGPUTask();
-      cudaError_t ret;
-
-      if ((ret = dtask->checkH2DCopyDependencies()) == cudaSuccess) {
+      cudaError_t retVal = dtask->checkH2DCopyDependencies();
+      if (retVal == cudaSuccess) {
         // all work associated with this task's h2d copies is complete
         dtask = dts->getNextInternalReadyGPUTask();
         dts->addExternalReadyGPUTask(dtask);
@@ -679,10 +680,10 @@ void GPUThreadedMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/) {
     else if (dts->numCompletionPendingGPUTasks() > 0) {
 
       DetailedTask* dtask = dts->peekNextCompletionPendingGPUTask();
-      cudaError_t ret;
+      cudaError_t retVal = dtask->checkD2HCopyDependencies();
 
       if (dtask->getD2HCopyCount() > 0) {
-        if ((ret = dtask->checkD2HCopyDependencies()) == cudaSuccess) {
+        if (retVal == cudaSuccess) {
           dtask = dts->getNextExternalReadyGPUTask();
           postMPISends(dtask, iteration, 0);  // t_id 0 (the control thread) for centralized threaded scheduler
 
@@ -711,10 +712,12 @@ void GPUThreadedMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/) {
 
 
   // Free up all the pointer maps for device and pinned host pointers
-  freeDeviceRequiresMem();           // call cudaFree on all device requires memory
-  freeDeviceComputesMem();           // call cudaFree on all device computes memory
-  unregisterHostRequiresPinnedMem(); // unregister the page-locked host requires memory
-  unregisterHostComputesPinnedMem(); // unregister the page-locked host computes memory
+  if (!isInitialGPUTimeStep_) {
+    freeDeviceRequiresMem();           // call cudaFree on all device requires memory
+    freeDeviceComputesMem();           // call cudaFree on all device computes memory
+    unregisterHostRequiresPinnedMem();  // unregister the page-locked host requires memory
+    unregisterHostComputesPinnedMem();  // unregister the page-locked host computes memory
+  }
 
 
   TAU_PROFILE_STOP(doittimer);
@@ -1139,22 +1142,22 @@ void GPUThreadedMPIScheduler::initiateH2DRequiresCopies(DetailedTask* dtask, int
     constHandle<PatchSubset> patches = req->getPatchesUnderDomain(dtask->getPatches());
     constHandle<MaterialSubset> matls = req->getMaterialsUnderDomain(dtask->getMaterials());
 
-    // this is so we can allocate persistent events and streams to distribute when needed
-    //   one stream and one event per variable per H2D copy (numPatches * numMatls)
-    int numPatches = patches->size();
-    int numMatls   = matls->size();
-    int numStreams = numPatches * numMatls;
-    int numEvents  = numStreams;
-    int device = dtask->getDeviceNum();
-
-    // knowing how many H2D "requires" copies we'll need, allocate streams and events for them
-    createCudaStreams(numStreams, device);
-    createCudaEvents(numEvents,  device);
-
     // for now, we're only interested in grid variables
     TypeDescription::Type type = req->var->typeDescription()->getType();
     if (type == TypeDescription::CCVariable   || type == TypeDescription::NCVariable || type == TypeDescription::SFCXVariable ||
         type == TypeDescription::SFCYVariable || type == TypeDescription::SFCZVariable) {
+
+      // this is so we can allocate persistent events and streams to distribute when needed
+      //   one stream and one event per variable per H2D copy (numPatches * numMatls)
+      int numPatches = patches->size();
+      int numMatls   = matls->size();
+      int numStreams = numPatches * numMatls;
+      int numEvents  = numStreams;
+      int device = dtask->getDeviceNum();
+
+      // knowing how many H2D "requires" copies we'll need, allocate streams and events for them
+      createCudaStreams(numStreams, device);
+      createCudaEvents(numEvents,  device);
 
       int dwIndex = req->mapDataWarehouse();
       OnDemandDataWarehouseP dw = dws[dwIndex];
@@ -1215,22 +1218,22 @@ void GPUThreadedMPIScheduler::initiateH2DComputesCopies(DetailedTask* dtask, int
     constHandle<PatchSubset> patches = comp->getPatchesUnderDomain(dtask->getPatches());
     constHandle<MaterialSubset> matls = comp->getMaterialsUnderDomain(dtask->getMaterials());
 
-    // this is so we can allocate persistent events and streams to distribute when needed
-    //   one stream and one event per variable per H2D copy (numPatches * numMatls)
-    int numPatches = patches->size();
-    int numMatls   = matls->size();
-    int numStreams = numPatches * numMatls;
-    int numEvents  = numPatches * numMatls;
-    int device = dtask->getDeviceNum();
-
-    // knowing how many H2D "computes" copies we'll need, allocate streams and events for them
-    createCudaStreams(numStreams, device);
-    createCudaEvents(numEvents, device);
-
     // for now, we're only interested in grid variables
     TypeDescription::Type type = comp->var->typeDescription()->getType();
     if (type == TypeDescription::CCVariable   || type == TypeDescription::NCVariable || type == TypeDescription::SFCXVariable ||
         type == TypeDescription::SFCYVariable || type == TypeDescription::SFCZVariable) {
+
+      // this is so we can allocate persistent events and streams to distribute when needed
+      //   one stream and one event per variable per H2D copy (numPatches * numMatls)
+      int numPatches = patches->size();
+      int numMatls   = matls->size();
+      int numStreams = numPatches * numMatls;
+      int numEvents  = numPatches * numMatls;
+      int device = dtask->getDeviceNum();
+
+      // knowing how many H2D "computes" copies we'll need, allocate streams and events for them
+      createCudaStreams(numStreams, device);
+      createCudaEvents(numEvents, device);
 
       int dwIndex = comp->mapDataWarehouse();
       OnDemandDataWarehouseP dw = dws[dwIndex];
@@ -1530,7 +1533,7 @@ void GPUThreadedMPIScheduler::requestD2HCopy(const VarLabel* label,
   CUDA_SAFE_CALL( retVal = cudaMemcpyAsync(h_data, d_data, nbytes, cudaMemcpyDefault, *stream) );
   CUDA_SAFE_CALL( retVal = cudaEventRecord(*event, *stream) );
 
-  dtask->incrementH2DCopyCount();
+  dtask->incrementD2HCopyCount();
 }
 
 cudaError_t GPUThreadedMPIScheduler::freeDeviceRequiresMem()
@@ -1616,7 +1619,8 @@ void GPUThreadedMPIScheduler::reclaimStreams(DetailedTask* dtask, CopyType type)
 
   // reclaim DetailedTask streams
   for (iter = dtaskStreams->begin(); iter != dtaskStreams->end(); iter++) {
-    this->idleStreams[device].push(*iter);
+    cudaStream_t* stream = *iter;
+    this->idleStreams[device].push(stream);
   }
   dtaskStreams->clear();
 }
@@ -1630,7 +1634,8 @@ void GPUThreadedMPIScheduler::reclaimEvents(DetailedTask* dtask, CopyType type)
 
   // reclaim DetailedTask events
   for (iter = dtaskEvents->begin(); iter != dtaskEvents->end(); iter++) {
-    this->idleEvents[device].push(*iter);
+    cudaEvent_t* event = *iter;
+    this->idleEvents[device].push(event);
   }
   dtaskEvents->clear();
 }

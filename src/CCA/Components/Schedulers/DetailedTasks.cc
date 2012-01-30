@@ -1060,47 +1060,49 @@ bool DetailedTask::addGridVariableCUDAStream(const VarLabel* label, cudaStream_t
 bool DetailedTask::addH2DCopyEvent(cudaEvent_t* event)
 {
   h2dCopyEvents.push_back(event);
-  bool retVal =  h2dCopyEvents.back() != 0 ? true : false;
+  bool retVal =  h2dCopyEvents.back() == event ? true : false;
   return retVal;
 }
 
 bool DetailedTask::addD2HCopyEvent(cudaEvent_t* event)
 {
   d2hCopyEvents.push_back(event);
-  bool retVal =  d2hCopyEvents.back() != 0 ? true : false;
+  bool retVal =  d2hCopyEvents.back() == event ? true : false;
   return retVal;
 }
 
 bool DetailedTask::addH2DStream(cudaStream_t* stream)
 {
   h2dStreams.push_back(stream);
-  bool retVal = h2dStreams.back() != 0 ? true : false;
+  bool retVal = h2dStreams.back() == stream ? true : false;
   return retVal;
 }
 
 bool DetailedTask::addD2HStream(cudaStream_t* stream)
 {
   d2hStreams.push_back(stream);
-  bool retVal =  d2hStreams.back() != 0 ? true : false;
+  bool retVal =  d2hStreams.back() == stream ? true : false;
   return retVal;
 }
 
 cudaError_t DetailedTask::checkH2DCopyDependencies()
 {
   // sets the CUDA context, for the call to cudaEventQuery()
-  CUDA_SAFE_CALL( cudaSetDevice(this->getDeviceNum()) );
-  std::vector<cudaEvent_t*>::iterator iter;
-  cudaError_t val = cudaErrorNotReady;
-  cudaEvent_t event = NULL;
+  cudaError_t retVal;
+  int device = this->getDeviceNum();
+  CUDA_SAFE_CALL( retVal = cudaSetDevice(device) );
 
-  // even one unrecorded event means all device mem is not ready
+  // even one unrecorded event means all device memory is not ready
+  cudaEvent_t* event = NULL;
+  retVal = cudaErrorNotReady;
+  std::vector<cudaEvent_t*>::iterator iter;
   for (iter=h2dCopyEvents.begin(); iter!=h2dCopyEvents.end(); iter++) {
-    event = *(*iter);
-    CUDA_SAFE_CALL( val = cudaEventQuery(event) );
-    if (val != cudaSuccess) {
-      return val;
+    event = *iter;
+    CUDA_SAFE_CALL( retVal = cudaEventQuery(*event) );
+    if (retVal != cudaSuccess) {
+      return retVal;
     }
-    val = cudaErrorNotReady;
+    retVal = cudaErrorNotReady;
   }
 
   // otherwise this task is ready for execution
@@ -1111,20 +1113,21 @@ cudaError_t DetailedTask::checkH2DCopyDependencies()
 cudaError_t DetailedTask::checkD2HCopyDependencies()
 {
   // sets the CUDA context, must be at least one per process per device
-  CUDA_SAFE_CALL( cudaSetDevice(this->getDeviceNum()) );
-
-  std::vector<cudaEvent_t*>::iterator iter;
-  cudaError_t val = cudaErrorNotReady;
-  cudaEvent_t event = NULL;
+  cudaError_t retVal;
+  int device = this->getDeviceNum();
+  CUDA_SAFE_CALL( retVal = cudaSetDevice(device) );
 
   // even one unrecorded event means all result data is not back on the CPU
+  cudaEvent_t* event = NULL;
+  retVal = cudaErrorNotReady;
+  std::vector<cudaEvent_t*>::iterator iter;
   for (iter=d2hCopyEvents.begin(); iter!=d2hCopyEvents.end(); iter++) {
-    event = *(*iter);
-    CUDA_SAFE_CALL( val = cudaEventQuery(event) );
-    if (val != cudaSuccess) {
-      return val;
+    event = *iter;
+    CUDA_SAFE_CALL( retVal = cudaEventQuery(*event) );
+    if (retVal != cudaSuccess) {
+      return retVal;
     }
-    val = cudaErrorNotReady;
+    retVal = cudaErrorNotReady;
   }
 
   this->completed_ = true;
