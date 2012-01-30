@@ -125,9 +125,9 @@ WARNING
 
     cudaEvent_t* getCudaEvent(int device);
 
-    cudaStream_t* getCudaStream(UintahParallelComponent* component, int device);
+    cudaStream_t* getCudaStream(const VarLabel*, int device);
 
-    cudaEvent_t* getCudaEvent(UintahParallelComponent* component, int device);
+    cudaEvent_t* getCudaEvent(const VarLabel*, int device);
 
     void addCudaStream(cudaStream_t* stream, int device);
 
@@ -168,11 +168,13 @@ WARNING
 
     void reclaimEvents(DetailedTask* dtask, CopyType type);
 
-    void freeDeviceRequiresMem();
+    cudaError_t freeDeviceRequiresMem();
 
-    void freeDeviceComputesMem();
+    cudaError_t freeDeviceComputesMem();
 
-    void freePinnedHostMem();
+    cudaError_t unregisterHostRequiresPinnedMem();
+
+    cudaError_t unregisterHostComputesPinnedMem();
 
     Output*                oport_t;
     CommRecMPI             sends_[16+1];
@@ -185,8 +187,8 @@ WARNING
       double*   ptr;
       IntVector size;
       int       device;
-      GPUGridVariable(double* ptr, IntVector _size, int _device)
-        : ptr(ptr), size(_size), device(_device) {
+      GPUGridVariable(double* _ptr, IntVector _size, int _device)
+        : ptr(_ptr), size(_size), device(_device) {
       }
     };
 
@@ -198,15 +200,11 @@ WARNING
 
     map<const VarLabel*, GPUGridVariable> hostComputesPtrs;   // unregister computes host pointers that were page-locked
 
-    map<double*, DetailedTask*> hostPtrToTasksMap;            // reverse lookup... find the task given a host pointer
+    map<double*, DetailedTask*>    currentDetailedTasks;      // reverse lookup... find the task given its d2h device pointer
 
     vector<queue<cudaStream_t*> >  idleStreams;
 
     vector<queue<cudaEvent_t*> >   idleEvents;
-
-    vector<vector<cudaStream_t*> > busyStreams;
-
-    vector<vector<cudaEvent_t*> >  busyEvents;
 
   };
 

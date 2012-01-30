@@ -317,8 +317,8 @@ void GPUSchedulerTest::timeAdvanceGPU(const ProcessorGroup* pg,
     dim3 totalBlocks(xBlocks, yBlocks);
 
     // setup and launch kernel
-    cudaStream_t* stream = sched->getCudaStream(this, device);
-    cudaEvent_t* event = sched->getCudaEvent(this, device);
+    cudaStream_t* stream = sched->getCudaStream(phi_label, device);
+    cudaEvent_t* event = sched->getCudaEvent(phi_label, device);
     timeAdvanceKernel<<< totalBlocks, threadsPerBlock, 0, *stream >>>(domainLow,
                                                                       domainHigh,
                                                                       domainSize,

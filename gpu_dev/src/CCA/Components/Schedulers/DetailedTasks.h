@@ -278,6 +278,8 @@ namespace Uintah {
     std::vector<cudaEvent_t*>* getD2HCopyEvents()  { return &d2hCopyEvents;  }
     inline void incrementH2DCopyCount() { h2dCopyCount_++; }
     inline void decrementH2DCopyCount() { h2dCopyCount_--; }
+    inline void incrementD2HCopyCount() { d2hCopyCount_++; }
+    inline void decrementD2HCopyCount() { d2hCopyCount_--; }
     inline int getH2DCopyCount() { return h2dCopyCount_; }
     inline int getD2HCopyCount() { return d2hCopyCount_; }
 #endif
@@ -523,10 +525,10 @@ namespace Uintah {
     DetailedTasks& operator=(const DetailedTasks&);
 
 #ifdef HAVE_CUDA
-    TaskPQueue initiallyReadyGPUTasks_; // prior MPI communication completed
-    TaskPQueue internalReadyGPUTasks_;  // ready to initiate h2d copies
-    TaskPQueue externalReadyGPUTasks_;  // h2d copies completed, ready to execute
-    TaskPQueue completionPendingGPUTasks_;
+    TaskPQueue initiallyReadyGPUTasks_;    // prior MPI communication completed
+    TaskPQueue internalReadyGPUTasks_;     // ready to initiate h2d copies
+    TaskPQueue externalReadyGPUTasks_;     // h2d copies completed, ready to execute
+    TaskPQueue completionPendingGPUTasks_; // waiting for d2h copies to complete
 #endif
 
   }; // end class DetailedTasks
