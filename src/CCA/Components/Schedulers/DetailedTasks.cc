@@ -224,10 +224,10 @@ DetailedTask::DetailedTask(Task* task, const PatchSubset* patches,
   }
 #ifdef HAVE_CUDA
     gpuExternallyReady_ = false;
-    completed_ = false;
-    h2dCopyCount_ = 0;
-    d2hCopyCount_ = 0;
-    deviceNum_ = -1;
+    completed_          = false;
+    h2dCopyCount_ =  0;
+    d2hCopyCount_ =  0;
+    deviceNum_    = -1;
 #endif
 }
 
@@ -1060,25 +1060,29 @@ bool DetailedTask::addGridVariableCUDAStream(const VarLabel* label, cudaStream_t
 bool DetailedTask::addH2DCopyEvent(cudaEvent_t* event)
 {
   h2dCopyEvents.push_back(event);
-  return h2dCopyEvents.back() != 0 ? true : false;
+  bool retVal =  h2dCopyEvents.back() != 0 ? true : false;
+  return retVal;
 }
 
 bool DetailedTask::addD2HCopyEvent(cudaEvent_t* event)
 {
   d2hCopyEvents.push_back(event);
-  return d2hCopyEvents.back() != 0 ? true : false;
+  bool retVal =  d2hCopyEvents.back() != 0 ? true : false;
+  return retVal;
 }
 
 bool DetailedTask::addH2DStream(cudaStream_t* stream)
 {
   h2dStreams.push_back(stream);
-  return h2dStreams.back() != 0 ? true : false;
+  bool retVal = h2dStreams.back() != 0 ? true : false;
+  return retVal;
 }
 
 bool DetailedTask::addD2HStream(cudaStream_t* stream)
 {
   d2hStreams.push_back(stream);
-  return d2hStreams.back() != 0 ? true : false;
+  bool retVal =  d2hStreams.back() != 0 ? true : false;
+  return retVal;
 }
 
 cudaError_t DetailedTask::checkH2DCopyDependencies()
@@ -1087,13 +1091,18 @@ cudaError_t DetailedTask::checkH2DCopyDependencies()
   CUDA_SAFE_CALL( cudaSetDevice(this->getDeviceNum()) );
   std::vector<cudaEvent_t*>::iterator iter;
   cudaError_t val = cudaErrorNotReady;
+  cudaEvent_t event = NULL;
+
+  // even one unrecorded event means all device mem is not ready
   for (iter=h2dCopyEvents.begin(); iter!=h2dCopyEvents.end(); iter++) {
-    val = cudaEventQuery(*(*iter));
-    // even one unrecorded event means all device mem is not ready
+    event = *(*iter);
+    CUDA_SAFE_CALL( val = cudaEventQuery(event) );
     if (val != cudaSuccess) {
       return val;
     }
+    val = cudaErrorNotReady;
   }
+
   // otherwise this task is ready for execution
   this->gpuExternallyReady_ = true;
   return cudaSuccess;
@@ -1106,13 +1115,18 @@ cudaError_t DetailedTask::checkD2HCopyDependencies()
 
   std::vector<cudaEvent_t*>::iterator iter;
   cudaError_t val = cudaErrorNotReady;
+  cudaEvent_t event = NULL;
+
+  // even one unrecorded event means all result data is not back on the CPU
   for (iter=d2hCopyEvents.begin(); iter!=d2hCopyEvents.end(); iter++) {
-    CUDA_SAFE_CALL( val = cudaEventQuery(*(*iter)) );
-    // even one unrecorded event means all result data is not back on the CPU
+    event = *(*iter);
+    CUDA_SAFE_CALL( val = cudaEventQuery(event) );
     if (val != cudaSuccess) {
       return val;
     }
+    val = cudaErrorNotReady;
   }
+
   this->completed_ = true;
   return cudaSuccess;
 }
@@ -1321,17 +1335,20 @@ DetailedTask* DetailedTasks::getNextCompletionPendingGPUTask()
 
 DetailedTask* DetailedTasks::peekNextInternalReadyGPUTask()
 {
-  return internalReadyGPUTasks_.top();
+  DetailedTask* dtask = internalReadyGPUTasks_.top();
+  return dtask;
 }
 
 DetailedTask* DetailedTasks::peekNextExternalReadyGPUTask()
 {
-  return externalReadyGPUTasks_.top();
+  DetailedTask* dtask = externalReadyGPUTasks_.top();
+  return dtask;
 }
 
 DetailedTask* DetailedTasks::peekNextCompletionPendingGPUTask()
 {
-  return completionPendingGPUTasks_.top();
+  DetailedTask* dtask = completionPendingGPUTasks_.top();
+  return dtask;
 }
 
 void DetailedTasks::addInitiallyReadyGPUTask(DetailedTask* dtask)
