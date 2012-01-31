@@ -117,10 +117,6 @@ WARNING
 
     void createCudaEvents(int numEvents, int device);
 
-    void clearCudaStreams();
-
-    void clearCudaEvents();
-
     cudaStream_t* getCudaStream(int device);
 
     cudaEvent_t* getCudaEvent(int device);
@@ -175,6 +171,10 @@ WARNING
     cudaError_t unregisterHostRequiresPinnedMem();
 
     cudaError_t unregisterHostComputesPinnedMem();
+
+    void clearCudaStreams();
+
+    void clearCudaEvents();
 
     void clearMaps();
 
