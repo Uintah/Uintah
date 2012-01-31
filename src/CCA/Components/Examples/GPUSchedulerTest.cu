@@ -212,13 +212,13 @@ void GPUSchedulerTest::timeAdvance(const ProcessorGroup* pg,
 // @param phi pointer to the source phi allocated on the device
 // @param newphi pointer to the sink phi allocated on the device
 // @param residual the residual calculated by this individual kernel
-__global__ void timeAdvanceKernel(uint3 domainLow,
-                                  uint3 domainHigh,
-                                  uint3 domainSize,
-                                  int ghostLayers,
-                                  double *phi,
-                                  double *newphi,
-                                  double *residual) {
+__global__ void timeAdvanceTestKernel(uint3 domainLow,
+                                      uint3 domainHigh,
+                                      uint3 domainSize,
+                                      int ghostLayers,
+                                      double *phi,
+                                      double *newphi,
+                                      double *residual) {
   // calculate the thread indices
   int i = blockDim.x * blockIdx.x + threadIdx.x;
   int j = blockDim.y * blockIdx.y + threadIdx.y;
@@ -320,7 +320,7 @@ void GPUSchedulerTest::timeAdvanceGPU(const ProcessorGroup* pg,
     // setup and launch kernel
     cudaStream_t* stream = sched->getCudaStream(phi_label, device);
     cudaEvent_t* event = sched->getCudaEvent(phi_label, device);
-    timeAdvanceKernel<<< totalBlocks, threadsPerBlock, 0, *stream >>>(domainLow,
+    timeAdvanceTestKernel<<< totalBlocks, threadsPerBlock, 0, *stream >>>(domainLow,
                                                                       domainHigh,
                                                                       domainSize,
                                                                       NGC,
