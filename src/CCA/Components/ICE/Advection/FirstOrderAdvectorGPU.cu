@@ -51,8 +51,9 @@ using std::endl;
 // GPU Kernel Prototypes //
 ///////////////////////////
 // The kernel that computes influx and outflux values essentially replacing the cell iterator.
-__global__ void inFluxOutFluxVolumeKernel(uint3 domainSize,
-                                          uint3 domainLower,
+__global__ void inFluxOutFluxVolumeKernel(uint3 domainLow,
+                                          uint3 domainHigh,
+                                          uint3 domainSize,
                                           uint3 cellSizes,
                                           int ghostLayers,
                                           double delt,
@@ -67,13 +68,13 @@ __global__ void inFluxOutFluxVolumeKernel(uint3 domainSize,
   int tidX = blockDim.x * blockIdx.x + threadIdx.x;
   int tidY = blockDim.y * blockIdx.y + threadIdx.y;
 
-  int num_slices = domainSize.z;
+  int num_slices = domainHigh.z;
   int dx = domainSize.x;
   int dy = domainSize.y;
   
   // In computing fluxes, we need the host cells too
-  if (tidX < dx && tidY < dy) {
-    for (int slice = 0; slice < num_slices; slice++) {
+  if (tidX > 0 && tidY > 0 && tidX < domainHigh.x && tidY < domainHigh.y) {
+    for (int slice = domainLow.z; slice < num_slices; slice++) {
       int index = INDEX3D(dx,dy, tidX,tidY, slice);
       double valueAdjacent = 0.0; // A temporary storage for adjacent values
       
@@ -144,8 +145,9 @@ __global__ void inFluxOutFluxVolumeKernel(uint3 domainSize,
 
 
 // A kernel that applies the advection operation to a number of slabs.
-__global__ void advectSlabsKernel(uint3 domainSize,
-                                  uint3 domainLower,
+__global__ void advectSlabsKernel(uint3 domainLow,
+                                  uint3 domainHigh,
+                                  uint3 domainSize,
                                   int ghostLayers,
                                   double *q_CC,
                                   double *q_advected,
@@ -160,15 +162,15 @@ __global__ void advectSlabsKernel(uint3 domainSize,
   int tidX = blockDim.x * blockIdx.x + threadIdx.x;
   int tidY = blockDim.y * blockIdx.y + threadIdx.y;
 
-  int num_slices = domainSize.z - ghostLayers;
+  int num_slices = domainHigh.z;;
   int dx = domainSize.x;
   int dy = domainSize.y;
 
   double q_face_flux[6];
   double faceVol[6];
 
-  if (tidX < (dx - ghostLayers) && tidY < (dy - ghostLayers) && tidX > 0 && tidY > 0) {
-    for (int slice = ghostLayers; slice < num_slices; slice++) {
+  if (tidX < domainHigh.x && tidY < domainHigh.y && tidX > 0 && tidY > 0) {
+    for (int slice = domainLow.z; slice < num_slices; slice++) {
       // Variables needed for each cell
       int cell = INDEX3D(dx,dy, tidX,tidY, slice);
       int adjCell;
@@ -178,7 +180,7 @@ __global__ void advectSlabsKernel(uint3 domainSize,
       double q_faceFlux_tmp;
 
       // Unrolled 'for' loop Above
-      adjCell          = INDEX3D(dx,dy, tidX, tidY+1, slice);
+      adjCell          = INDEX3D(dx,dy, tidX, (tidY+1), slice);
       influxVol        = OFS[adjCell][0];
       outfluxVol       = OFS[cell][0];
       q_faceFlux_tmp   = q_CC[adjCell]*influxVol - q_CC[cell]*outfluxVol;
@@ -187,7 +189,7 @@ __global__ void advectSlabsKernel(uint3 domainSize,
       sum_q_face_flux += q_face_flux[0];
 
       // Below
-      adjCell          = INDEX3D(dx,dy, tidX, tidY-1, slice);
+      adjCell          = INDEX3D(dx,dy, tidX, (tidY-1), slice);
       influxVol        = OFS[adjCell][1];
       outfluxVol       = OFS[cell][1];
       q_faceFlux_tmp   = q_CC[adjCell]*influxVol - q_CC[cell]*outfluxVol;
@@ -196,7 +198,7 @@ __global__ void advectSlabsKernel(uint3 domainSize,
       sum_q_face_flux += q_face_flux[1];
 
       // Right
-      adjCell          = INDEX3D(dx,dy, tidX+1, tidY, slice);
+      adjCell          = INDEX3D(dx,dy, (tidX+1), tidY, slice);
       influxVol        = OFS[adjCell][2];
       outfluxVol       = OFS[cell][2];
       q_faceFlux_tmp   = q_CC[adjCell]*influxVol - q_CC[cell]*outfluxVol;
@@ -205,7 +207,7 @@ __global__ void advectSlabsKernel(uint3 domainSize,
       sum_q_face_flux += q_face_flux[2];
 
       // Left
-      adjCell          = INDEX3D(dx,dy, tidX-1, tidY, slice);
+      adjCell          = INDEX3D(dx,dy, (tidX-1), tidY, slice);
       influxVol        = OFS[adjCell][3];
       outfluxVol       = OFS[cell][3];
       q_faceFlux_tmp   = q_CC[adjCell]*influxVol - q_CC[cell]*outfluxVol;
@@ -214,7 +216,7 @@ __global__ void advectSlabsKernel(uint3 domainSize,
       sum_q_face_flux += q_face_flux[3];
 
       // Front
-      adjCell          = INDEX3D(dx,dy, tidX, tidY, slice-1);
+      adjCell          = INDEX3D(dx,dy, tidX, tidY, (slice-1));
       influxVol        = OFS[adjCell][4];
       outfluxVol       = OFS[cell][4];
       q_faceFlux_tmp   = q_CC[adjCell]*influxVol - q_CC[cell]*outfluxVol;
@@ -223,7 +225,7 @@ __global__ void advectSlabsKernel(uint3 domainSize,
       sum_q_face_flux += q_face_flux[4];
 
       // Back
-      adjCell          = INDEX3D(dx,dy, tidX, tidY, slice+1);
+      adjCell          = INDEX3D(dx,dy, tidX, tidY, (slice+1));
       influxVol        = OFS[adjCell][5];
       outfluxVol       = OFS[cell][5];
       q_faceFlux_tmp   = q_CC[adjCell]*influxVol - q_CC[cell]*outfluxVol;
@@ -258,8 +260,9 @@ __global__ void advectSlabsKernel(uint3 domainSize,
 }
 
 // A kernel that computes the total flux through a face.
-__global__ void q_FC_operatorKernel(uint3 domainSize,
-                                    uint3 domainLower,
+__global__ void q_FC_operatorKernel(uint3 domainLow,
+                                    uint3 domainHigh,
+                                    uint3 domainSize,
                                     uint3 adjOffset,
                                     int ghostLayers,
                                     int face,
@@ -272,13 +275,13 @@ __global__ void q_FC_operatorKernel(uint3 domainSize,
   int tidX = blockDim.x * blockIdx.x + threadIdx.x;
   int tidY = blockDim.y * blockIdx.y + threadIdx.y;
 
-  int num_slices = domainSize.z - ghostLayers;
+  int num_slices = domainHigh.z;
   int dx = domainSize.x;
   int dy = domainSize.y;
 
 
-   if (tidX < (dx - ghostLayers) && tidY < (dy - ghostLayers) && tidX > 0 && tidY > 0) {
-    for (int slice = ghostLayers; slice < num_slices; slice++) {
+   if (tidX < domainHigh.x && tidY < domainHigh.y && tidX > 0 && tidY > 0) {
+    for (int slice = domainLow.x; slice < num_slices; slice++) {
       int index = INDEX3D(dx,dy, tidX, tidY, slice);
       int adjIndex = INDEX3D(dx,dy, tidX+adjOffset.x, tidY+adjOffset.y, slice+ adjOffset.z);
       
@@ -297,8 +300,9 @@ __global__ void q_FC_operatorKernel(uint3 domainSize,
 }
     
 // A kernel that computes the flux of q across a face.  The flux is need by the AMR refluxing operation.
-__global__ void q_FC_flux_operatorKernel(uint3 domainSize,
-                                         uint3 domainLower,
+__global__ void q_FC_flux_operatorKernel(uint3 domainLow,
+                                         uint3 domainHigh,
+                                         uint3 domainSize,
                                          uint3 adjOffset,
                                          int ghostLayers,
                                          int face,
@@ -311,12 +315,12 @@ __global__ void q_FC_flux_operatorKernel(uint3 domainSize,
   int tidX = blockDim.x * blockIdx.x + threadIdx.x;
   int tidY = blockDim.y * blockIdx.y + threadIdx.y;
 
-  int num_slices = domainSize.z - ghostLayers;
+  int num_slices = domainHigh.z;
   int dx = domainSize.x;
   int dy = domainSize.y;
 
-  if (tidX < (dx - ghostLayers) && tidY < (dy - ghostLayers) && tidX > 0 && tidY > 0) {
-    for (int slice = ghostLayers; slice < num_slices; slice++) {
+  if (tidX < domainHigh.x && tidY < domainHigh.y && tidX > 0 && tidY > 0) {
+    for (int slice = domainLow.z; slice < num_slices; slice++) {
       int index = INDEX3D(dx,dy, tidX, tidY, slice);
       int adjIndex = INDEX3D(dx,dy, tidX+adjOffset.x, tidY+adjOffset.y, slice+ adjOffset.z);
 
@@ -401,8 +405,6 @@ void FirstOrderAdvectorGPU::inFluxOutFluxVolume(
 {
   Vector dx = patch->dCell();
   double vol = dx.x()*dx.y()*dx.z();
-  //double delY_top, delY_bottom,delX_right, delX_left, delZ_front, delZ_back;
-  //double delX = dx.x(), delY = dx.y(), delZ = dx.z();
 
   //__________________________________
   //  At patch boundaries you need to extend
@@ -426,11 +428,13 @@ void FirstOrderAdvectorGPU::inFluxOutFluxVolume(
   }
 
 
-  IntVector l      = patch->getNodeLowIndex();
-  IntVector h      = patch->getNodeHighIndex();
-  IntVector s      = h-l+IntVector(1,1,1);
+  IntVector l      = patch->getExtraCellLowIndex(NGC);
+  IntVector h      = patch->getExtraCellHighIndex(NGC);
+  IntVector s      = (h-l);
+  int xdim = s.x(), ydim = s.y(), zdim = s.z();
   int size         = s.x()*s.y()*s.z()*sizeof(double);
 
+  /*
   // device pointers
   double *uuvel_FC;
   double *vvvel_FC;
@@ -466,19 +470,33 @@ void FirstOrderAdvectorGPU::inFluxOutFluxVolume(
   // set up domian specs
   uint3 domainSize  = make_uint3(s.x(),  s.y(),  s.z());
   uint3 domainLower = make_uint3(l.x(),  l.y(),  l.z());
+  uint3 domainHigh  = make_uint3(h.x(),  h.y(),  h.z());
   uint3 cellSizes   = make_uint3(dx.x(), dx.y(), dx.z());
   int ghostLayers   = 1;  // default for FirstOrderAdvector
 
-  // thread logistics
-  int totalBlocks = size / (sizeof(double) * s.x() * s.y() * s.z());
-  if (size % (totalBlocks) != 0) {
-      totalBlocks++;
+  // Threads per block must be power of 2 in each direction.  Here
+  //  8 is chosen as a test value in the x and y and 1 in the z,
+  //  as each of these (x,y) threads streams through the z direction.
+  dim3 threadsPerBlock(8, 8, 1);
+
+  // Set up the number of blocks of threads in each direction accounting for any
+  //  non-power of 8 end pieces.
+  int xBlocks = xdim / 8;
+  if( xdim % 8 != 0)
+  {
+    xBlocks++;
   }
-  dim3 threadsPerBlock(s.x(), s.y(), s.z());
+  int yBlocks = ydim / 8;
+  if( ydim % 8 != 0)
+  {
+    yBlocks++;
+  }
+  dim3 totalBlocks(xBlocks,yBlocks);
 
   // Kernel invocation
-  inFluxOutFluxVolumeKernel<<< totalBlocks, threadsPerBlock >>>(domainSize,
-                                                                domainLower,
+  inFluxOutFluxVolumeKernel<<< totalBlocks, threadsPerBlock >>>(domainLower,
+                                                                domainHigh,
+                                                                domainSize,
                                                                 cellSizes,
                                                                 ghostLayers,
                                                                 delT,
@@ -509,33 +527,34 @@ void FirstOrderAdvectorGPU::inFluxOutFluxVolume(
   cudaFree(wwvel_FC);
   cudaFree(OFS);
 
-/*
+*/
   const double *uvel_FCD = uvel_FC.getWindow()->getData()->getPointer();
   const double *vvel_FCD = vvel_FC.getWindow()->getData()->getPointer();
   const double *wvel_FCD = wvel_FC.getWindow()->getData()->getPointer();
-  double *OFS     = (double *)d_OFS.getWindow()->getData()->getPointer();  
+  double *OFS            = (double *)d_OFS.getWindow()->getData()->getPointer();
 
 
   double delt = delT;
-  IntVector h      = patch->getCellHighIndex();
   int tidX = 0;
   int tidY = 0;
-  int num_slices = h.z() + 2;
-  int dxx = h.x() + 2;
-  int dyy = h.y() + 2;
+  int num_slices = h.z();
+  int d = h.x();
+  int dy = h.y();
+  int dxx = s.x();
+  int dyy = s.y()-1;
   std::cout << "height: " << h << endl;
   std::cout << "dxx: " << dxx << endl;
   std::cout << "dyy: " << dyy << endl;
   std::cout << "slices: " << num_slices << endl;
   // In computing fluxes, we need the host cells too
-  for (int slice = 0; slice < num_slices; slice++) 
+  for (int slice = 0; slice <= num_slices; slice++)
   {
-   for(tidY = 0 ; tidY < dyy; tidY++)
+   for(tidY = 0; tidY <= dy; tidY++)
    {
-     for(tidX = 0 ; tidX < dxx; tidX++)
+     for(tidX = 0; tidX <= d; tidX++)
      {
       //std::cout << "x: " << tidX << "  y: " << tidY << "  z: " << slice << endl;
-      std::cout << "[int " << tidX - 1 << ", " << tidY - 1 << ", " << slice - 1 <<"]" << endl;
+      std::cout << "[int " << tidX << ", " << tidY << ", " << slice <<"]" << endl;
       int index = INDEX3D(dxx,dyy, tidX,tidY, slice);
       //std::cout << index << endl;
       double valueAdjacent = 0.0; // A temporary storage for adjacent values
@@ -551,13 +570,13 @@ void FirstOrderAdvectorGPU::inFluxOutFluxVolume(
 
       // NOTE REFACTOR THIS SECTION TO USE fmaxf(x,y)
       // The plus
-      valueAdjacent = vvel_FCD[INDEX3D(dxx,dyy, tidX,tidY + 1, slice)];
+      valueAdjacent = vvel_FCD[INDEX3D(dxx,dyy, tidX,(tidY + 1), slice)];
       delY_top      = std::max(0.0, valueAdjacent * delt);
 
-      valueAdjacent = uvel_FCD[INDEX3D(dxx,dyy, tidX + 1,tidY, slice)];
+      valueAdjacent = uvel_FCD[INDEX3D(dxx,dyy, (tidX + 1),tidY, slice)];
       delX_right    = std::max(0.0, valueAdjacent * delt);
 
-      valueAdjacent = wvel_FCD[INDEX3D(dxx,dyy, tidX,tidY, slice + 1)];
+      valueAdjacent = wvel_FCD[INDEX3D(dxx,dyy, tidX,tidY, (slice + 1))];
       delZ_front    = std::max(0.0, valueAdjacent * delt);
 
 
@@ -585,12 +604,12 @@ void FirstOrderAdvectorGPU::inFluxOutFluxVolume(
       double back   = delZ_back   * delX_Y;
 
       // copy values to correct values of OFS
-      OFS[index*6 + 0] = top;
-      OFS[index*6 + 1] = bottom;
-      OFS[index*6 + 2] = right;
-      OFS[index*6 + 3] = left;
-      OFS[index*6 + 4] = front;
-      OFS[index*6 + 5] = back;
+      OFS[6*index + 0] = top;
+      OFS[6*index+1] = bottom;
+      OFS[6*index+2] = right;
+      OFS[6*index+3] = left;
+      OFS[6*index+4] = front;
+      OFS[6*index+5] = back;
 
       //__________________________________
       //  Bullet proofing
@@ -599,11 +618,11 @@ void FirstOrderAdvectorGPU::inFluxOutFluxVolume(
       if(total_fluxout > (dx.x()*dx.y()*dx.z())){
         error = true;
       }
+     }
     }
   }
-  }
   // device and host memory pointers
- */ 
+
   
   //__________________________________
   // if total_fluxout > vol then 
