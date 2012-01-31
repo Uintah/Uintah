@@ -349,7 +349,7 @@ Arches::problemSetup(const ProblemSpecP& params,
     // register placeholder expressions for x velocity string name: "uVelocitySPBC"
     std::cout << xVelName << std::endl;
     typedef Expr::PlaceHolder<XVolField>  XVelT;
-    gh->exprFactory->register_expression( new XVelT::Builder(Expr::Tag(xVelName,Expr::STATE_N)) );        
+    gh->exprFactory->register_expression( new XVelT::Builder(xVelTag) );        
   }
   
   //
@@ -358,7 +358,7 @@ Arches::problemSetup(const ProblemSpecP& params,
   if( !(gh->exprFactory->have_entry( yVelTag )) ) {
     // register placeholder expressions for y velocity string name: "vVelocitySPBC"
     typedef Expr::PlaceHolder<YVolField>  YVelT;
-    gh->exprFactory->register_expression( new YVelT::Builder(Expr::Tag(yVelName,Expr::STATE_N)) );
+    gh->exprFactory->register_expression( new YVelT::Builder(yVelTag) );
   }
   
   //
@@ -367,7 +367,7 @@ Arches::problemSetup(const ProblemSpecP& params,
   if( !(gh->exprFactory->have_entry( zVelTag )) ) {
     // register placeholder expressions for z velocity string name: "wVelocitySPBC"
     typedef Expr::PlaceHolder<ZVolField>  ZVelT;
-    gh->exprFactory->register_expression( new ZVelT::Builder(Expr::Tag(zVelName,Expr::STATE_N)) );        
+    gh->exprFactory->register_expression( new ZVelT::Builder(zVelTag) );        
   }
   
   //____________________________________________________________________________  
