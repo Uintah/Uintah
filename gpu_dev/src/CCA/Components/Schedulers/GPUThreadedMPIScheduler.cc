@@ -111,6 +111,10 @@ GPUThreadedMPIScheduler::~GPUThreadedMPIScheduler() {
       maxStats.close();
     }
   }
+
+  // cleanup CUDA stream and event handles
+  clearCudaStreams();
+  clearCudaEvents();
 }
 
 void GPUThreadedMPIScheduler::problemSetup(const ProblemSpecP& prob_spec,
@@ -1647,3 +1651,4 @@ void GPUThreadedMPIScheduler::clearMaps()
   hostComputesPtrs.clear();
   currentDetailedTasks.clear();
 }
+
