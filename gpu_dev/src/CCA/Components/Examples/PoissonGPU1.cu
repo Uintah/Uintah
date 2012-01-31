@@ -349,12 +349,14 @@ void PoissonGPU1::timeAdvance3DP(const ProcessorGroup*,
 // @brief A kernel that applies the stencil used in timeAdvance(...)
 // @param domainLower a three component vector that gives the lower corner of the work area as (x,y,z)
 // @param domainHigh a three component vector that gives the highest non-ghost layer cell of the domain as (x,y,z)
+// @param domainSize a three component vector that gives the size of the domain including ghost nodes
 // @param ghostLayers the number of layers of ghost cells
 // @param phi pointer to the source phi allocated on the device
 // @param newphi pointer to the sink phi allocated on the device
 // @param residual the residual calculated by this individual kernel
 __global__ void timeAdvanceKernel(uint3 domainLow,
                                   uint3 domainHigh,
+                                  uint3 domainSize,
                                   int ghostLayers,
                                   double *phi,
                                   double *newphi,
@@ -365,8 +367,8 @@ __global__ void timeAdvanceKernel(uint3 domainLow,
   
   // Get the size of the data block in which the variables reside.
   //  This is essentially the stride in the index calculations.
-  int dx = domainHigh.x + ghostLayers;
-  int dy = domainHigh.y + ghostLayers;
+  int dx = domainSize.x;
+  int dy = domainSize.y;
 
   // If the threads are within the bounds of the ghost layers
   //  the algorithm is allowed to stream along the z direction
@@ -445,7 +447,7 @@ void PoissonGPU1::timeAdvanceGPU(const ProcessorGroup*,
     IntVector l = patch->getNodeLowIndex();
     IntVector h = patch->getNodeHighIndex();
     // Calculate the memory block size
-    IntVector s = h - l;
+    IntVector s = phi.getWindow()->getData()->size();
     int xdim = s.x(), ydim = s.y(), zdim = s.z();
     size = xdim * ydim * zdim * sizeof(double);
 
@@ -478,6 +480,7 @@ void PoissonGPU1::timeAdvanceGPU(const ProcessorGroup*,
     // Domain extents used by the kernel to prevent out of bounds accesses.
     uint3 domainLow  = make_uint3(l.x(), l.y(), l.z());
     uint3 domainHigh = make_uint3(h.x(), h.y(), h.z());
+    uint3 domainSize = make_uint3(s.x(), s.y(), s.z());
 
     // Threads per block must be power of 2 in each direction.  Here
     //  8 is chosen as a test value in the x and y and 1 in the z,
@@ -498,8 +501,9 @@ void PoissonGPU1::timeAdvanceGPU(const ProcessorGroup*,
     }
     dim3 totalBlocks(xBlocks,yBlocks);
 
+
     // Launch kernel
-    timeAdvanceKernel<<< totalBlocks, threadsPerBlock >>>(domainLow, domainHigh, ghostLayers, phi_device, newphi_device, &residual);
+    timeAdvanceKernel<<< totalBlocks, threadsPerBlock >>>(domainLow, domainHigh, domainSize, ghostLayers, phi_device, newphi_device, &residual);
 
     // Kernel error checking
     cudaError_t error = cudaGetLastError();
@@ -507,6 +511,8 @@ void PoissonGPU1::timeAdvanceGPU(const ProcessorGroup*,
       fprintf(stderr,"ERROR: %s\n", cudaGetErrorString(error) );
       exit(-1);
     } 
+
+
 
     //__________________________________
     //  Device->Host Memory Copy
@@ -520,4 +526,6 @@ void PoissonGPU1::timeAdvanceGPU(const ProcessorGroup*,
   // free up allocated memory
   CUDA_SAFE_CALL(cudaFree(phi_device));
   CUDA_SAFE_CALL(cudaFree(newphi_device));
+
+  
 }
