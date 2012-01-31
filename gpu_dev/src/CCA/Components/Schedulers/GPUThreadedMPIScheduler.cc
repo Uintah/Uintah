@@ -86,7 +86,6 @@ GPUThreadedMPIScheduler::GPUThreadedMPIScheduler(const ProcessorGroup* myworld,
       d_nextmutex("next mutex"), dlbLock("loadbalancer lock") {
 
   gpuInitialize();
-  isInitialGPUTimeStep_ = true;
 
   // we need one of these for each GPU, as each device will have it's own CUDA context
   for (int i = 0; i < numGPUs_; i++) {
@@ -531,7 +530,6 @@ void GPUThreadedMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/) {
       initiateH2DRequiresCopies(dtask, iteration);
       initiateH2DComputesCopies(dtask, iteration);
 
-      isInitialGPUTimeStep_ = false;
       dtask->markInitiated();
       dts->addInternalReadyGPUTask(dtask);
     }
@@ -684,7 +682,7 @@ void GPUThreadedMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/) {
 
       if (dtask->getD2HCopyCount() > 0) {
         if (retVal == cudaSuccess) {
-          dtask = dts->getNextExternalReadyGPUTask();
+          dtask = dts->getNextCompletionPendingGPUTask();
           postMPISends(dtask, iteration, 0);  // t_id 0 (the control thread) for centralized threaded scheduler
 
           // using CopyType::D2H will also recycle streams and events requested from Scheduler by
@@ -712,11 +710,12 @@ void GPUThreadedMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/) {
 
 
   // Free up all the pointer maps for device and pinned host pointers
-  if (!isInitialGPUTimeStep_) {
+  if (d_sharedState->getCurrentTopLevelTimeStep() != 0) {
     freeDeviceRequiresMem();           // call cudaFree on all device requires memory
     freeDeviceComputesMem();           // call cudaFree on all device computes memory
     unregisterHostRequiresPinnedMem();  // unregister the page-locked host requires memory
     unregisterHostComputesPinnedMem();  // unregister the page-locked host computes memory
+    clearMaps();
   }
 
 
@@ -1638,4 +1637,13 @@ void GPUThreadedMPIScheduler::reclaimEvents(DetailedTask* dtask, CopyType type)
     this->idleEvents[device].push(event);
   }
   dtaskEvents->clear();
+}
+
+void GPUThreadedMPIScheduler::clearMaps()
+{
+  deviceRequiresPtrs.clear();
+  deviceComputesPtrs.clear();
+  hostRequiresPtrs.clear();
+  hostComputesPtrs.clear();
+  currentDetailedTasks.clear();
 }

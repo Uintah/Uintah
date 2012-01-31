@@ -1098,7 +1098,12 @@ cudaError_t DetailedTask::checkH2DCopyDependencies()
   std::vector<cudaEvent_t*>::iterator iter;
   for (iter=h2dCopyEvents.begin(); iter!=h2dCopyEvents.end(); iter++) {
     event = *iter;
-    CUDA_SAFE_CALL( retVal = cudaEventQuery(*event) );
+
+    /* A return value of cudaSuccess indicates event completion, but we can't wrap cudaEventQuery
+     * with error handling like other calls, as cudaErrorNotReady is seen as fatal and execution is halted.
+     * cudaErrorNotReady simply means the event hasn't completed and is technically not an error.
+     */
+    retVal = cudaEventQuery(*event);
     if (retVal != cudaSuccess) {
       return retVal;
     }
@@ -1123,7 +1128,12 @@ cudaError_t DetailedTask::checkD2HCopyDependencies()
   std::vector<cudaEvent_t*>::iterator iter;
   for (iter=d2hCopyEvents.begin(); iter!=d2hCopyEvents.end(); iter++) {
     event = *iter;
-    CUDA_SAFE_CALL( retVal = cudaEventQuery(*event) );
+
+    /* A return value of cudaSuccess indicates event completion, but we can't wrap cudaEventQuery
+     * with error handling like other calls, as cudaErrorNotReady is seen as fatal and execution is halted.
+     * cudaErrorNotReady simply means the event hasn't completed and is technically not an error.
+     */
+    retVal = cudaEventQuery(*event);
     if (retVal != cudaSuccess) {
       return retVal;
     }
