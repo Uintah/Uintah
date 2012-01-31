@@ -176,13 +176,14 @@ WARNING
 
     cudaError_t unregisterHostComputesPinnedMem();
 
+    void clearMaps();
+
     Output*                oport_t;
     CommRecMPI             sends_[16+1];
     QueueAlg               taskQueueAlg_;
     int                    numThreads_;
     int                    numGPUs_;
     int                    currentGPU_;
-    bool                   isInitialGPUTimeStep_;
 
     struct GPUGridVariable {
       double*   ptr;
