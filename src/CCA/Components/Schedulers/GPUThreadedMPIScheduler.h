@@ -99,19 +99,19 @@ WARNING
     
     void assignTask(DetailedTask* task, int iteration);
     
-    double* getDeviceRequiresPtr(const VarLabel* label);
+    double* getDeviceRequiresPtr(const VarLabel* label, int matlIndex, const Patch* patch);
 
-    double* getDeviceComputesPtr(const VarLabel* label);
+    double* getDeviceComputesPtr(const VarLabel* label, int matlIndex, const Patch* patch);
 
-    double* getHostRequiresPtr(const VarLabel* label);
+    double* getHostRequiresPtr(const VarLabel* label, int matlIndex, const Patch* patch);
 
-    double* getHostComputesPtr(const VarLabel* label);
+    double* getHostComputesPtr(const VarLabel* label, int matlIndex, const Patch* patch);
 
-    IntVector getDeviceRequiresSize(const VarLabel* label);
+    IntVector getDeviceRequiresSize(const VarLabel* label, int matlIndex, const Patch* patch);
 
-    IntVector getDeviceComputesSize(const VarLabel* label);
+    IntVector getDeviceComputesSize(const VarLabel* label, int matlIndex, const Patch* patch);
 
-    void requestD2HCopy(const VarLabel* label, double* h_data, double* d_data, cudaStream_t* stream, cudaEvent_t* event);
+    void requestD2HCopy(const VarLabel* label, int matlIndex, const Patch* patch, cudaStream_t* stream, cudaEvent_t* event);
 
     void createCudaStreams(int numStreams, int device);
 
@@ -121,9 +121,9 @@ WARNING
 
     cudaEvent_t* getCudaEvent(int device);
 
-    cudaStream_t* getCudaStream(const VarLabel*, int device);
+    cudaStream_t* getCudaStream(const VarLabel* label, int matlIndex, const Patch* patch);
 
-    cudaEvent_t* getCudaEvent(const VarLabel*, int device);
+    cudaEvent_t* getCudaEvent(const VarLabel* label, int matlIndex, const Patch* patch);
 
     void addCudaStream(cudaStream_t* stream, int device);
 
@@ -152,9 +152,9 @@ WARNING
 
     void initiateH2DComputesCopies(DetailedTask* dtask, int iteration);
 
-    void h2dRequiresCopy (DetailedTask* dtask, const VarLabel* label, IntVector size, double* h_reqData);
+    void h2dRequiresCopy (DetailedTask* dtask, const VarLabel* label, int matlIndex, const Patch* patch, IntVector size, double* h_reqData);
 
-    void h2dComputesCopy (DetailedTask* dtask, const VarLabel* label, IntVector size, double* h_compData);
+    void h2dComputesCopy (DetailedTask* dtask, const VarLabel* label, int matlIndex, const Patch* patch, IntVector size, double* h_compData);
 
     void registerStream(cudaStream_t* stream, int device);
 
@@ -186,23 +186,22 @@ WARNING
     int                    currentGPU_;
 
     struct GPUGridVariable {
-      double*   ptr;
-      IntVector size;
-      int       device;
-      GPUGridVariable(double* _ptr, IntVector _size, int _device)
-        : ptr(_ptr), size(_size), device(_device) {
+      DetailedTask* dtask;
+      double*       ptr;
+      IntVector     size;
+      int           device;
+      GPUGridVariable(DetailedTask* _dtask, double* _ptr, IntVector _size, int _device)
+        : dtask(_dtask), ptr(_ptr), size(_size), device(_device) {
       }
     };
 
-    map<const VarLabel*, GPUGridVariable> deviceRequiresPtrs; // simply cudaFree these device allocations
+    map<VarLabelMatl<Patch>, GPUGridVariable> deviceRequiresPtrs; // simply uses cudaFree on these device allocations
 
-    map<const VarLabel*, GPUGridVariable> deviceComputesPtrs; // simply cudaFree these device allocations
+    map<VarLabelMatl<Patch>, GPUGridVariable> deviceComputesPtrs; // simply uses cudaFree on these device allocations
 
-    map<const VarLabel*, GPUGridVariable> hostRequiresPtrs;   // unregister requires host pointers that were page-locked
+    map<VarLabelMatl<Patch>, GPUGridVariable> hostRequiresPtrs;   // unregister all requires host pointers that were page-locked
 
-    map<const VarLabel*, GPUGridVariable> hostComputesPtrs;   // unregister computes host pointers that were page-locked
-
-    map<double*, DetailedTask*>    currentDetailedTasks;      // reverse lookup... find the task given its d2h device pointer
+    map<VarLabelMatl<Patch>, GPUGridVariable> hostComputesPtrs;   // unregister all computes host pointers that were page-locked
 
     vector<queue<cudaStream_t*> >  idleStreams;
 
