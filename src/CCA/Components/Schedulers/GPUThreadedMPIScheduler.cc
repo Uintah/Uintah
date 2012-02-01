@@ -117,8 +117,7 @@ GPUThreadedMPIScheduler::~GPUThreadedMPIScheduler() {
   clearCudaEvents();
 }
 
-void GPUThreadedMPIScheduler::problemSetup(const ProblemSpecP& prob_spec,
-                                           SimulationStateP& state) {
+void GPUThreadedMPIScheduler::problemSetup(const ProblemSpecP& prob_spec, SimulationStateP& state) {
   //default taskReadyQueueAlg
   taskQueueAlg_ = MostMessages;
   string taskQueueAlg = "MostMessages";
@@ -364,7 +363,9 @@ void GPUThreadedMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/) {
   if (d_sharedState->isCopyDataTimestep()) {
     MPIScheduler::execute(tgnum, iteration);
     return;
-  }MALLOC_TRACE_TAG_SCOPE("GPUThreadedMPIScheduler::execute");
+  }
+
+  MALLOC_TRACE_TAG_SCOPE("GPUThreadedMPIScheduler::execute");
   TAU_PROFILE("GPUThreadedMPIScheduler::execute()", " ", TAU_USER);
 
   TAU_PROFILE_TIMER(reducetimer, "Reductions", "[GPUThreadedMPIScheduler::execute()] " , TAU_USER); TAU_PROFILE_TIMER(sendtimer, "Send Dependency", "[GPUThreadedMPIScheduler::execute()] " , TAU_USER); TAU_PROFILE_TIMER(recvtimer, "Recv Dependency", "[GPUThreadedMPIScheduler::execute()] " , TAU_USER); TAU_PROFILE_TIMER(outputtimer, "Task Graph Output", "[GPUThreadedMPIScheduler::execute()] ",
@@ -760,16 +761,13 @@ void GPUThreadedMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/) {
   if (timeout.active()) {
     emitTime("MPI send time", mpi_info_.totalsendmpi);
     //emitTime("MPI Testsome time", mpi_info_.totaltestmpi);
-    emitTime("Total send time",
-             mpi_info_.totalsend - mpi_info_.totalsendmpi - mpi_info_.totaltestmpi);
+    emitTime("Total send time", mpi_info_.totalsend - mpi_info_.totalsendmpi - mpi_info_.totaltestmpi);
     emitTime("MPI recv time", mpi_info_.totalrecvmpi);
     emitTime("MPI wait time", mpi_info_.totalwaitmpi);
-    emitTime("Total recv time",
-             mpi_info_.totalrecv - mpi_info_.totalrecvmpi - mpi_info_.totalwaitmpi);
+    emitTime("Total recv time", mpi_info_.totalrecv - mpi_info_.totalrecvmpi - mpi_info_.totalwaitmpi);
     emitTime("Total task time", mpi_info_.totaltask);
     emitTime("Total MPI reduce time", mpi_info_.totalreducempi);
-    //emitTime("Total reduction time",
-    //         mpi_info_.totalreduce - mpi_info_.totalreducempi);
+    //emitTime("Total reduction time", mpi_info_.totalreduce - mpi_info_.totalreducempi);
     emitTime("Total comm time", mpi_info_.totalrecv + mpi_info_.totalsend + mpi_info_.totalreduce);
 
     double time = Time::currentSeconds();
@@ -1532,12 +1530,8 @@ void GPUThreadedMPIScheduler::requestD2HCopy(const VarLabel* label,
   cudaError_t retVal;
   VarLabelMatl<Patch> var(label, matlIndex, patch);
 
-  // get a handle on the task associated with this d2h copy
-  DetailedTask* dtask = hostComputesPtrs.find(var)->second.dtask;
-  dtask->addD2HStream(stream);
-  dtask->addD2HCopyEvent(event);
-
   // set the CUDA context
+  DetailedTask* dtask = hostComputesPtrs.find(var)->second.dtask;
   int device = dtask->getDeviceNum();
   CUDA_SAFE_CALL( retVal = cudaSetDevice(device) );
 
