@@ -282,7 +282,7 @@ void ScalarRHS<FieldT>::evaluate()
       }
     }
     if( haveDiffusion_ ){
-      if (haveXAreaFrac_) {
+      if (haveYAreaFrac_) {
         yAreaFracInterpOp_->apply_to_field( *yareafrac_, *tmpy );
         *tmpy <<= *tmpy * *yDiffFlux_;
         divOpY_->apply_to_field( *tmpy, *tmp );
@@ -296,7 +296,7 @@ void ScalarRHS<FieldT>::evaluate()
 
   if( doZDir_ ){
     if( haveConvection_ ){
-      if (haveYAreaFrac_) {
+      if (haveZAreaFrac_) {
         zAreaFracInterpOp_->apply_to_field( *zareafrac_, *tmpz );
         *tmpz <<= *tmpz * *zConvFlux_;
         divOpZ_->apply_to_field( *tmpz, *tmp );
@@ -307,7 +307,7 @@ void ScalarRHS<FieldT>::evaluate()
       }
     }
     if( haveDiffusion_ ){
-      if (haveYAreaFrac_) {
+      if (haveZAreaFrac_) {
         zAreaFracInterpOp_->apply_to_field( *zareafrac_, *tmpz );
         *tmpz <<= *tmpz * *zDiffFlux_;
         divOpZ_->apply_to_field( *tmpz, *tmp );
