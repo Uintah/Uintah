@@ -325,12 +325,12 @@ void GPUSchedulerTest::timeAdvanceGPU(const ProcessorGroup* pg,
     cudaStream_t* stream = sched->getCudaStream(phi_label, matl, patch);
     cudaEvent_t* event = sched->getCudaEvent(phi_label, matl, patch);
     timeAdvanceTestKernel<<< totalBlocks, threadsPerBlock, 0, *stream >>>(domainLow,
-                                                                      domainHigh,
-                                                                      domainSize,
-                                                                      NGC,
-                                                                      d_phi,
-                                                                      d_newphi,
-                                                                      &residual);
+                                                                          domainHigh,
+                                                                          domainSize,
+                                                                          NGC,
+                                                                          d_phi,
+                                                                          d_newphi,
+                                                                          &residual);
 
     // Kernel error checking (for now)
     retVal = cudaGetLastError();
@@ -339,8 +339,7 @@ void GPUSchedulerTest::timeAdvanceGPU(const ProcessorGroup* pg,
       exit(-1);
     }
 
-//    CUDA_SAFE_CALL(retVal = cudaDeviceSynchronize());
-
+    // get the results back to the host
     sched->requestD2HCopy(phi_label, matl, patch, stream, event);
 
     new_dw->put(sum_vartype(residual), residual_label);

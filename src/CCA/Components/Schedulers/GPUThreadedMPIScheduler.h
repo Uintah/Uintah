@@ -41,6 +41,7 @@ namespace Uintah {
 using std::vector;
 using std::map;
 using std::queue;
+using std::set;
 using std::ofstream;
 
 class Task;
@@ -168,6 +169,8 @@ WARNING
 
     cudaError_t freeDeviceComputesMem();
 
+    cudaError_t unregisterPageLockedHostMem();
+
     cudaError_t unregisterHostRequiresPinnedMem();
 
     cudaError_t unregisterHostComputesPinnedMem();
@@ -202,6 +205,8 @@ WARNING
     map<VarLabelMatl<Patch>, GPUGridVariable> hostRequiresPtrs;   // unregister all requires host pointers that were page-locked
 
     map<VarLabelMatl<Patch>, GPUGridVariable> hostComputesPtrs;   // unregister all computes host pointers that were page-locked
+
+    set<double*> pinnedHostPtrs;
 
     vector<queue<cudaStream_t*> >  idleStreams;
 
