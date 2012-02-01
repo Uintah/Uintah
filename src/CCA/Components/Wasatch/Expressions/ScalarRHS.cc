@@ -171,10 +171,10 @@ void ScalarRHS<FieldT>::bind_operators( const SpatialOps::OperatorDatabase& opDB
     if( (isrc->context() != Expr::INVALID_CONTEXT) && isConstDensity_)
       densityInterpOp_ = opDB.retrieve_operator<DensityInterpT>();
   }
-  if (haveVolFrac_) densityInterpOp_ = opDB.retrieve_operator<DensityInterpT>();
-  if ( haveXAreaFrac_ ) xAreaFracInterpOp_ = opDB.retrieve_operator<XVolToXFluxInterpT>();
-  if ( haveYAreaFrac_ ) yAreaFracInterpOp_ = opDB.retrieve_operator<YVolToYFluxInterpT>();
-  if ( haveZAreaFrac_ ) zAreaFracInterpOp_ = opDB.retrieve_operator<ZVolToZFluxInterpT>();
+  if ( haveVolFrac_   ) volFracInterpOp_   = opDB.retrieve_operator<SVolToFieldTInterpT>();
+  if ( haveXAreaFrac_ ) xAreaFracInterpOp_ = opDB.retrieve_operator<XVolToXFluxInterpT >();
+  if ( haveYAreaFrac_ ) yAreaFracInterpOp_ = opDB.retrieve_operator<YVolToYFluxInterpT >();
+  if ( haveZAreaFrac_ ) zAreaFracInterpOp_ = opDB.retrieve_operator<ZVolToZFluxInterpT >();
   
 }
 
@@ -319,18 +319,19 @@ void ScalarRHS<FieldT>::evaluate()
     }
   }
   
+  if ( haveVolFrac_ ) volFracInterpOp_->apply_to_field( *volfrac_, *tmp );    
+  
   typename SrcVec::const_iterator isrc;
-  for( isrc=srcTerm_.begin(); isrc!=srcTerm_.end(); ++isrc ){
+  for( isrc=srcTerm_.begin(); isrc!=srcTerm_.end(); ++isrc ) {
     if (isConstDensity_) {
       const double densVal = (*rho_)[0];
-      rhs <<= rhs + (**isrc / densVal );
+      if (haveVolFrac_) rhs <<= rhs + *tmp*(**isrc / densVal );
+      else  rhs <<= rhs + (**isrc / densVal );
     }
-    else
-      rhs <<= rhs + **isrc;
-  }
-  if ( haveVolFrac_ ) {
-				densityInterpOp_->apply_to_field( *volfrac_, *tmp );    
-    rhs <<= rhs * *tmp;
+    else {
+      if ( haveVolFrac_ )  rhs <<= rhs + **isrc * *tmp;
+      else rhs <<= rhs + **isrc;
+    }
   }
   
 }

@@ -56,6 +56,7 @@ protected:
   typedef typename OpTypes::DivY   DivY; ///< Divergence operator (surface integral) in the y-direction
   typedef typename OpTypes::DivZ   DivZ; ///< Divergence operator (surface integral) in the z-direction
 
+  typedef typename SpatialOps::structured::OperatorTypeBuilder<SpatialOps::Interpolant,SVolField,FieldT>::type  SVolToFieldTInterpT;
   typedef typename SpatialOps::structured::OperatorTypeBuilder<SpatialOps::Interpolant,XVolField,XFluxT>::type  XVolToXFluxInterpT;
   typedef typename SpatialOps::structured::OperatorTypeBuilder<SpatialOps::Interpolant,YVolField,YFluxT>::type  YVolToYFluxInterpT;
   typedef typename SpatialOps::structured::OperatorTypeBuilder<SpatialOps::Interpolant,ZVolField,ZFluxT>::type  ZVolToZFluxInterpT;  
@@ -177,6 +178,7 @@ protected:
   const XVolField* xareafrac_;
   const YVolField* yareafrac_;
   const ZVolField* zareafrac_;  
+  const SVolToFieldTInterpT* volFracInterpOp_;
   const XVolToXFluxInterpT* xAreaFracInterpOp_;
   const YVolToYFluxInterpT* yAreaFracInterpOp_;
   const ZVolToZFluxInterpT* zAreaFracInterpOp_;
