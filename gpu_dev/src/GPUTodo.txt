@@ -2,39 +2,35 @@
 TODO List for Implementing GPU Support in Uintah
 ------------------------------------------------
 
-1.) Finish GPU RT setup
+As of 02/01/12
 
-2.) Finish adding infrastructure support to schedule GPU Task
+GPU Scheduler is now scheduling GPU-enabled tasks with:
+  * arbitrary number of patches per process
+  * arbitrary number of GPUs per node
+Manages queues of persistent cudaStream_t handles (1 queue per device) for async data copies 
+Has working mechanisms to check for cudaMemCpyAsync H2H & D2H completion
+  
 
-3.) Extend #2 to work with an arbitrary number of GPU Tasks
-	a.) CHPC & Keeneland tests
+1.) Finish modifying remainder of ICE tasks to work with new GPU Scheduler interface
+  a.) First and second order advection tasks
+  b.) ComputeEquilibrationPressure
 
-4.) Refine GPU Scheduler
-	a.) Complete correctness testing on GPU Task scheduler
-	b.) Implement queue of streams to handle multiple GPU tasks
-	c.) CHPC & Keeneland tests
+2.) Keeneland tests with ICE
+
+3.) Present wrk at SIAM PP12 - 02/15/12
 	
-5.) Create mechanism to check for cudaMemCpyAsync D2H completion
+4.) Work on performance optimizations
+    a.) Use of shared memory and tiling
+    b.) Eliminate reallocation of device mem (ptr swap)
+    c.) GPU datawarehouse resident on GPU
 
-6.) Tie 2-5 together for complete design
-	a.) CHPC & Keeneland tests
-	
-7.) Work on performance optimizations
-	a.) use of shared memory
-	b.) caching data on GPU (if we aren't already by this time)	
-	c.) 
-
-8.) Finish porting remainder of planned ICE tasks
-	a.) first and second order advection tasks
-	b.) computeEquilibrationPressure
 
 	
 ------------------------------------------------
 Misc:
 ------------------------------------------------
 
-1.) Cell iterator generalized function?
+1.) Reintegrate branches/gpu_dev with trunk
 
-2.) Buildbot testing GPU branch.
+2.) Modify RT (opt/dbg) to reflect branch reintegration
 
-3.) Finish buildbot.
