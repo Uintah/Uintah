@@ -30,7 +30,7 @@ UNUSED_TESTS = []
 
 NIGHTLYTESTS = [
   ("BasicScalarTransportEquation",  "BasicScalarTransportEquation.ups",1,  "Linux",  ["exactComparison","no_restart"] ),                 \
-  ("BasicScalarTransportEq_2L",     "BasicScalarTransportEq_2L.ups",   1,  "Linux",  ["exactComparison","no_restart"] ),                 \
+  ("BasicScalarTransportEq_2L",     "BasicScalarTransportEq_2L.ups",   1,  "Linux",  ["exactComparison","no_restart","no_memoryTest"] ), \
   ("TabPropsInterface",             "TabPropsInterface.ups",           1,  "Linux",  ["exactComparison","no_restart","no_memoryTest"] ), \
   ("convection-test2",              "convection-test2.ups",            2,  "Linux",  ["exactComparison","no_restart"] ),                 \
   ("convection-test",               "convection-test.ups",             3,  "Linux",  ["exactComparison","no_restart"] ),                 \
