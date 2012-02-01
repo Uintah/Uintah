@@ -83,7 +83,8 @@ DetailedTasks::DetailedTasks(SchedulerCommon* sc, const ProcessorGroup* pg,
   currentDependencyGeneration_(1),
   extraCommunication_(0),
   readyQueueMutex_("DetailedTasks Ready Queue"),
-  readyQueueSemaphore_("Number of Ready DetailedTasks", 0)
+  mpiCompletedQueueMutex_("DetailedTasks MPI compelted Queue")
+  //readyQueueSemaphore_("Number of Ready DetailedTasks", 0)
 {
   // Set up mappings for the initial send tasks
   int dwmap[Task::TotalDWs];
@@ -994,10 +995,14 @@ DetailedTask::addRequires(DependencyBatch* req)
 void DetailedTask::checkExternalDepCount()
 {
   //cout << Parallel::getMPIRank() << " Task " << this->getTask()->getName() << " ext deps: " << externalDependencyCount_ << " int deps: " << numPendingInternalDependencies << endl;
-  if (externalDependencyCount_ == 0 && taskGroup->sc_->useInternalDeps() && initiated_ && externallyReady_ == false && (task->getType() != Task::OncePerProc || Uintah::Parallel::getMaxThreads() > 1 )) { 
+  if (externalDependencyCount_ == 0 && taskGroup->sc_->useInternalDeps() && initiated_ && task->getType() != Task::OncePerProc) { 
+    taskGroup->mpiCompletedQueueMutex_.lock();
     //cout << Parallel::getMPIRank() << " Task " << this->getTask()->getName() << " ready\n";
-    taskGroup->mpiCompletedTasks_.push(this);
-    externallyReady_ = true;
+    if (externallyReady_ == false) {
+      taskGroup->mpiCompletedTasks_.push(this);
+      externallyReady_ = true;
+    }
+    taskGroup->mpiCompletedQueueMutex_.unlock();
   }
 }
 
@@ -1155,9 +1160,9 @@ DetailedTasks::internalDependenciesSatisfied(DetailedTask* task)
     mixedDebug << "Begin internalDependenciesSatisfied\n";
     cerrLock.unlock();
   }
-#if !defined( _AIX )
+//#if !defined( _AIX )
   readyQueueMutex_.lock();
-#endif
+//#endif
 
   readyTasks_.push(task);
 
@@ -1167,45 +1172,77 @@ DetailedTasks::internalDependenciesSatisfied(DetailedTask* task)
       << readyTasks_.size() << " ready.\n";
     cerrLock.unlock();
   }
-#if !defined( _AIX )
+//#if !defined( _AIX )
   // need to make a non-binary semaphore under aix for this to work.
-  readyQueueSemaphore_.up();
+//  readyQueueSemaphore_.up();
   readyQueueMutex_.unlock();
-#endif
+//#endif
 }
 
-  DetailedTask*
-DetailedTasks::getNextInternalReadyTask()
+DetailedTask*
+DetailedTasks::getNextInternalReadyTask(bool block)
 {
   // Block until the list has an item in it.
-#if !defined( _AIX )
-  readyQueueSemaphore_.down();
-  readyQueueMutex_.lock();
-#endif
-  DetailedTask* nextTask = readyTasks_.front();
-  readyTasks_.pop();
-#if !defined( _AIX )
+//#if !defined( _AIX )
+//  readyQueueSemaphore_.down();
+  DetailedTask* nextTask = NULL;
+  if (block)
+    readyQueueMutex_.lock();
+  else if (!readyQueueMutex_.tryLock()) 
+    return nextTask;
+//#endif
+  if (!readyTasks_.empty()) {
+    nextTask = readyTasks_.front();
+    readyTasks_.pop();
+  }
+//#if !defined( _AIX )
   readyQueueMutex_.unlock();
-#endif
+//#endif
   return nextTask;
 }
 
+int 
+DetailedTasks::numInternalReadyTasks() { 
+  int size=0;
+  readyQueueMutex_.lock();
+  size = readyTasks_.size();
+  readyQueueMutex_.unlock();
+  return size;
+}
+
   DetailedTask*
-DetailedTasks::getNextExternalReadyTask()
+DetailedTasks::getNextExternalReadyTask(bool block)
 {
-  DetailedTask* nextTask = mpiCompletedTasks_.top();
-  mpiCompletedTasks_.pop();
+  DetailedTask* nextTask = NULL;
+  if (block)
+    mpiCompletedQueueMutex_.lock();
+  else if (!mpiCompletedQueueMutex_.tryLock()) 
+    return nextTask;
+  if (!mpiCompletedTasks_.empty()){
+    nextTask = mpiCompletedTasks_.top();
+    mpiCompletedTasks_.pop();
+  }
+  mpiCompletedQueueMutex_.unlock();
   //cout << Parallel::getMPIRank() << "    Getting: " << *nextTask << "  new size: " << mpiCompletedTasks_.size() << endl;
   return nextTask;
 }
 
-  void
+int
+DetailedTasks::numExternalReadyTasks() { 
+  int size = 0;
+  mpiCompletedQueueMutex_.lock();
+  size = mpiCompletedTasks_.size(); 
+  mpiCompletedQueueMutex_.unlock();
+  return size;
+}
+
+void
 DetailedTasks::initTimestep()
 {
   readyTasks_ = initiallyReadyTasks_;
-#if !defined( _AIX )
-  readyQueueSemaphore_.up((int)readyTasks_.size());
-#endif
+//#if !defined( _AIX )
+//  readyQueueSemaphore_.up((int)readyTasks_.size());
+//#endif
   incrementDependencyGeneration();
   initializeBatches();
 }

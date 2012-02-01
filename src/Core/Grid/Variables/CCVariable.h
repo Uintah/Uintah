@@ -108,10 +108,15 @@ WARNING
     CCVariable(const CCVariable<T>&);
 
   private:
+    static TypeDescription* td;
+    
     CCVariable<T>& operator=(const CCVariable<T>&);
 
     static Variable* maker();
   };
+
+  template<class T>
+  TypeDescription* CCVariable<T>::td = 0;
 
   template<class T>
   TypeDescription::Register
@@ -121,7 +126,6 @@ WARNING
   const TypeDescription*
   CCVariable<T>::getTypeDescription()
   {
-    static TypeDescription* td;
     if(!td){
       td = scinew TypeDescription(TypeDescription::CCVariable,
                                   "CCVariable", &maker,

@@ -175,7 +175,7 @@ typedef void (*SIG_HANDLER_T)(int);
 #  include <Core/Thread/AtomicCounter_default.cc>
 #endif
 
-#include <Core/Thread/CrowdMonitor_default.cc>
+#include <Core/Thread/CrowdMonitor_pthreads.cc>
 
 using SCIRun::ConditionVariable;
 using SCIRun::Mutex;
@@ -1093,7 +1093,7 @@ Mutex::lock()
 bool
 Mutex::tryLock()
 {
-  const int status = pthread_mutex_trylock(&priv_->mutex);
+  int status = pthread_mutex_trylock(&priv_->mutex);
   switch (status)
   {
   case 0:

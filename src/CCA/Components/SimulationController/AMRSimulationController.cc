@@ -504,12 +504,12 @@ AMRSimulationController::subCycleExecute(GridP& grid, int startDW, int dwStride,
     // we really only need to pass in whether the current DW is mapped to 0
     // or not
     // TODO - fix inter-Taskgraph scrubbing
-    if (Uintah::Parallel::getMaxThreads() < 1) { 
+    //if (Uintah::Parallel::getMaxThreads() < 1) { 
     d_scheduler->get_dw(curDW)->setScrubbing(oldScrubbing); // OldDW
     d_scheduler->get_dw(curDW+newDWStride)->setScrubbing(DataWarehouse::ScrubNonPermanent); // NewDW
     d_scheduler->get_dw(startDW)->setScrubbing(oldScrubbing); // CoarseOldDW
     d_scheduler->get_dw(startDW+dwStride)->setScrubbing(DataWarehouse::ScrubNonPermanent); // CoarseNewDW
-    }
+    //}
     
     // we need to unfinalize because execute finalizes all new DWs, and we need to write into them still
     // (even if we finalized only the NewDW in execute, we will still need to write into that DW)
@@ -541,12 +541,12 @@ AMRSimulationController::subCycleExecute(GridP& grid, int startDW, int dwStride,
       d_scheduler->mapDataWarehouse(Task::CoarseOldDW, startDW);
       d_scheduler->mapDataWarehouse(Task::CoarseNewDW, startDW+dwStride);
 
-    if (Uintah::Parallel::getMaxThreads() < 1) { 
+    //if (Uintah::Parallel::getMaxThreads() < 1) { 
       d_scheduler->get_dw(curDW)->setScrubbing(oldScrubbing); // OldDW
       d_scheduler->get_dw(curDW+newDWStride)->setScrubbing(DataWarehouse::ScrubNonPermanent); // NewDW
       d_scheduler->get_dw(startDW)->setScrubbing(oldScrubbing); // CoarseOldDW
       d_scheduler->get_dw(startDW+dwStride)->setScrubbing(DataWarehouse::ScrubNonPermanent); // CoarseNewDW
-    }
+    //}
       if (dbg.active())
         dbg << d_myworld->myrank() << "   Executing INT TG on level " << levelNum << " with old DW " 
             << curDW << "=" << d_scheduler->get_dw(curDW)->getID() << " and new " 
@@ -837,7 +837,7 @@ AMRSimulationController::executeTimestep(double t, double& delt, GridP& currentG
   do {
     bool restartable = d_sim->restartableTimesteps();
     d_scheduler->setRestartable(restartable);
-    if (Uintah::Parallel::getMaxThreads() < 1) { 
+    //if (Uintah::Parallel::getMaxThreads() < 1) { 
     if (restartable)
       d_scheduler->get_dw(0)->setScrubbing(DataWarehouse::ScrubNonPermanent);
     else
@@ -851,7 +851,7 @@ AMRSimulationController::executeTimestep(double t, double& delt, GridP& currentG
       else {
         d_scheduler->get_dw(1)->setScrubbing(DataWarehouse::ScrubNonPermanent);
       }
-    }
+    //}
     }
     
     if (d_scheduler->getNumTaskGraphs() == 1)

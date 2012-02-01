@@ -34,6 +34,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Util/Assert.h>
 #include <Core/Thread/Mutex.h>
+#include <Core/Thread/CrowdMonitor.h>
 #include <map>
 #include <vector>
 #include <iostream>
@@ -45,6 +46,7 @@ using std::map;
 using std::vector;
 
 static Mutex tdLock("TypeDescription::getMPIType lock");
+static CrowdMonitor tpLock("TypeDescription type lock"); 
 
 static map<string, const TypeDescription*>* types = 0;
 static vector<const TypeDescription*>* typelist=0;
@@ -70,6 +72,7 @@ void TypeDescription::deleteAll()
 
 void TypeDescription::register_type()
 {
+  tpLock.writeLock(); 
   if(!types){
     ASSERT(!killed);
     ASSERT(!typelist)
@@ -82,6 +85,7 @@ void TypeDescription::register_type()
     (*types)[getName()]=this;
   }
   typelist->push_back(this);
+  tpLock.writeUnlock(); 
 }
 
 TypeDescription::TypeDescription(Type type, const std::string& name,
@@ -132,13 +136,17 @@ string TypeDescription::getFileName() const
 
 const TypeDescription* TypeDescription::lookupType(const std::string& t)
 {
+  tpLock.readLock(); 
   if(!types){
-    types=scinew map<string, const TypeDescription*>;   
-    typelist=scinew vector<const TypeDescription*>;
+      tpLock.readUnlock();
+      return 0;
   }
   map<string, const TypeDescription*>::iterator iter = types->find(t);
-  if(iter == types->end())
+  if(iter == types->end()){
+      tpLock.readUnlock();
       return 0;
+  }
+  tpLock.readUnlock();
   return iter->second;
 }
 

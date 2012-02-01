@@ -455,6 +455,8 @@ private:
    //////////
    // Insert Documentation Here:
    mutable CrowdMonitor    d_lock;
+   mutable CrowdMonitor    d_lvlock;
+   mutable CrowdMonitor    d_plock;
    bool                    d_finalized;
    GridP                   d_grid;
 

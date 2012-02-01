@@ -130,16 +130,19 @@ WARNING
       value = op.getBenignValue();
     }
   private:
+    static TypeDescription* td;
     ReductionVariable<T, Op>& operator=(const ReductionVariable<T, Op>&copy);
     static Variable* maker();
     T value;
   };
    
   template<class T, class Op>
+  TypeDescription* ReductionVariable<T, Op>::td = 0;
+  
+  template<class T, class Op>
   const TypeDescription*
   ReductionVariable<T, Op>::getTypeDescription()
   {
-    static TypeDescription* td;
     if(!td){
       T* junk=0;
       td = scinew TypeDescription(TypeDescription::ReductionVariable,

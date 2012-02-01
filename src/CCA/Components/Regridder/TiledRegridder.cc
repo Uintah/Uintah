@@ -417,7 +417,7 @@ void TiledRegridder::problemSetup_BulletProofing(const int k)
 
     }
 
-    if(k!=0 && d_cellNum[k][dir] != 1 && d_minTileSize[k][dir] <= 4) {
+    if(k!=0 && d_cellNum[k][dir] != 1 && d_minTileSize[k][dir] < 4) {
       ostringstream msg;
       msg << "Problem Setup: Regridder: Min Patch Size needs to be greater than 4 cells in each dimension \n"
         << "except for 1-cell-wide dimensions.\n"
