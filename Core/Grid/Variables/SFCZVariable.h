@@ -108,11 +108,16 @@ WARNING
     SFCZVariable(const SFCZVariable<T>&);
 
   private:
+    static TypeDescription* td;
+    
     SFCZVariable<T>& operator=(const SFCZVariable<T>&);
 
     static Variable* maker();
   };
 
+  template<class T>
+  TypeDescription* SFCZVariable<T>::td = 0;
+  
   template<class T>
   TypeDescription::Register
   SFCZVariable<T>::registerMe(getTypeDescription());
@@ -121,7 +126,6 @@ WARNING
   const TypeDescription*
   SFCZVariable<T>::getTypeDescription()
   {
-    static TypeDescription* td;
     if(!td){
       td = scinew TypeDescription(TypeDescription::SFCZVariable,
                                   "SFCZVariable", &maker,

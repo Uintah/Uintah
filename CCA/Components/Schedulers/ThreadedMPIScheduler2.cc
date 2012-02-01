@@ -30,7 +30,7 @@ DEALINGS IN THE SOFTWARE.
 
 #include <TauProfilerForSCIRun.h>
 
-#include <CCA/Components/Schedulers/ThreadedMPIScheduler.h>
+#include <CCA/Components/Schedulers/ThreadedMPIScheduler2.h>
 #include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <CCA/Components/Schedulers/TaskGraph.h>
 
@@ -68,22 +68,23 @@ extern DebugStream execout;
 
 static double CurrentWaitTime=0;
 
-static DebugStream dbg("ThreadedMPIScheduler", false);
-static DebugStream timeout("ThreadedMPIScheduler.timings", false);
+static DebugStream dbg("ThreadedMPIScheduler2", false);
+static DebugStream timeout("ThreadedMPIScheduler2.timings", false);
 static DebugStream queuelength("QueueLength",false);
 static DebugStream threaddbg("ThreadDBG",false);
 
-ThreadedMPIScheduler::ThreadedMPIScheduler( const ProcessorGroup * myworld,
+ThreadedMPIScheduler2::ThreadedMPIScheduler2( const ProcessorGroup * myworld,
 			          Output         * oport,
-			          ThreadedMPIScheduler   * parentScheduler) :
+			          ThreadedMPIScheduler2   * parentScheduler) :
   MPIScheduler( myworld, oport, parentScheduler ), 
-  d_nextsignal("next condition"), d_nextmutex("next mutex"), dlbLock( "loadbalancer lock")
+  d_nextsignal("next condition"), d_nextmutex("next mutex"), dlbLock( "loadbalancer lock"),
+  schedulerLock("scheduler lock"), recvLock("MPI receive Lock")
 {
 
 }
 
 void
-ThreadedMPIScheduler::problemSetup(const ProblemSpecP& prob_spec,
+ThreadedMPIScheduler2::problemSetup(const ProblemSpecP& prob_spec,
                            SimulationStateP& state)
 {
   //default taskReadyQueueAlg
@@ -138,7 +139,7 @@ ThreadedMPIScheduler::problemSetup(const ProblemSpecP& prob_spec,
   
   if ( d_myworld->myrank()==0){
     cout <<"   WARNING: Multi-thread/MPI hybrid scheduler is EXPERIMENTAL, not all tasks are thread safe yet." << endl;
-    cout <<"   Using one thread for scheduling, " << numThreads_ << " threads for task execution."<< endl;
+    cout <<"   Creating " << numThreads_ << " more threads for scheduling and task execution."<< endl;
   }
 
  /* d_nextsignal = scinew ConditionVariable("NextCondition");
@@ -146,7 +147,7 @@ ThreadedMPIScheduler::problemSetup(const ProblemSpecP& prob_spec,
   char name[1024];
   
   for( int i = 0; i < numThreads_; i++ ){
-    TaskWorker * worker = scinew TaskWorker( this, i );
+    SchedulerWorker * worker = scinew SchedulerWorker( this, i );
     t_worker[i] = worker;
     sprintf( name, "Computing Worker %d-%d",
 	     Parallel::getRootProcessorGroup()->myrank(), i );
@@ -162,7 +163,7 @@ ThreadedMPIScheduler::problemSetup(const ProblemSpecP& prob_spec,
 }
 
 
-ThreadedMPIScheduler::~ThreadedMPIScheduler()
+ThreadedMPIScheduler2::~ThreadedMPIScheduler2()
 {
   for( int i = 0; i < numThreads_; i++ ){
     t_worker[i]->d_runmutex.lock();
@@ -183,9 +184,9 @@ ThreadedMPIScheduler::~ThreadedMPIScheduler()
 }
 
 SchedulerP
-ThreadedMPIScheduler::createSubScheduler()
+ThreadedMPIScheduler2::createSubScheduler()
 {
-  ThreadedMPIScheduler* newsched = scinew ThreadedMPIScheduler(d_myworld, m_outPort, this);
+  ThreadedMPIScheduler2* newsched = scinew ThreadedMPIScheduler2(d_myworld, m_outPort, this);
   newsched->d_sharedState = d_sharedState;
   UintahParallelPort* lbp = getPort("load balancer");
   newsched->attachPort("load balancer", lbp);
@@ -194,9 +195,9 @@ ThreadedMPIScheduler::createSubScheduler()
 }
 
 void
-ThreadedMPIScheduler::runTask( DetailedTask         * task, int iteration, int t_id /*=0*/)
+ThreadedMPIScheduler2::runTask( DetailedTask         * task, int iteration, int t_id /*=0*/)
 {
-  TAU_PROFILE("ThreadedMPIScheduler::runTask()", " ", TAU_USER); 
+  TAU_PROFILE("ThreadedMPIScheduler2::runTask()", " ", TAU_USER); 
 
   if(waitout.active())
   {
@@ -275,27 +276,27 @@ ThreadedMPIScheduler::runTask( DetailedTask         * task, int iteration, int t
 } // end runTask()
 
 void
-ThreadedMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
+ThreadedMPIScheduler2::execute(int tgnum /*=0*/, int iteration /*=0*/)
 {
   if (d_sharedState->isCopyDataTimestep()) {
     MPIScheduler::execute(tgnum, iteration);
     return;
   }
-  MALLOC_TRACE_TAG_SCOPE("ThreadedMPIScheduler::execute");
-  TAU_PROFILE("ThreadedMPIScheduler::execute()", " ", TAU_USER); 
+  MALLOC_TRACE_TAG_SCOPE("ThreadedMPIScheduler2::execute");
+  TAU_PROFILE("ThreadedMPIScheduler2::execute()", " ", TAU_USER); 
 
-  TAU_PROFILE_TIMER(reducetimer, "Reductions", "[ThreadedMPIScheduler::execute()] " , TAU_USER); 
-  TAU_PROFILE_TIMER(sendtimer, "Send Dependency", "[ThreadedMPIScheduler::execute()] " , TAU_USER); 
-  TAU_PROFILE_TIMER(recvtimer, "Recv Dependency", "[ThreadedMPIScheduler::execute()] " , TAU_USER); 
-  TAU_PROFILE_TIMER(outputtimer, "Task Graph Output", "[ThreadedMPIScheduler::execute()] ", 
+  TAU_PROFILE_TIMER(reducetimer, "Reductions", "[ThreadedMPIScheduler2::execute()] " , TAU_USER); 
+  TAU_PROFILE_TIMER(sendtimer, "Send Dependency", "[ThreadedMPIScheduler2::execute()] " , TAU_USER); 
+  TAU_PROFILE_TIMER(recvtimer, "Recv Dependency", "[ThreadedMPIScheduler2::execute()] " , TAU_USER); 
+  TAU_PROFILE_TIMER(outputtimer, "Task Graph Output", "[ThreadedMPIScheduler2::execute()] ", 
       TAU_USER); 
-  TAU_PROFILE_TIMER(testsometimer, "Test Some", "[ThreadedMPIScheduler::execute()] ", 
+  TAU_PROFILE_TIMER(testsometimer, "Test Some", "[ThreadedMPIScheduler2::execute()] ", 
       TAU_USER); 
-  TAU_PROFILE_TIMER(finalwaittimer, "Final Wait", "[ThreadedMPIScheduler::execute()] ", 
+  TAU_PROFILE_TIMER(finalwaittimer, "Final Wait", "[ThreadedMPIScheduler2::execute()] ", 
       TAU_USER); 
-  TAU_PROFILE_TIMER(sorttimer, "Topological Sort", "[ThreadedMPIScheduler::execute()] ", 
+  TAU_PROFILE_TIMER(sorttimer, "Topological Sort", "[ThreadedMPIScheduler2::execute()] ", 
       TAU_USER); 
-  TAU_PROFILE_TIMER(sendrecvtimer, "Initial Send Recv", "[ThreadedMPIScheduler::execute()] ", 
+  TAU_PROFILE_TIMER(sendrecvtimer, "Initial Send Recv", "[ThreadedMPIScheduler2::execute()] ", 
       TAU_USER); 
 
   ASSERTRANGE(tgnum, 0, (int)graphs.size());
@@ -309,18 +310,18 @@ ThreadedMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
     tg->remapTaskDWs(dwmap);
   }
 
-  DetailedTasks* dts = tg->getDetailedTasks();
+  dts = tg->getDetailedTasks();
 
   if(dts == 0){
     if (d_myworld->myrank() == 0)
-      cerr << "ThreadedMPIScheduler skipping execute, no tasks\n";
+      cerr << "ThreadedMPIScheduler2 skipping execute, no tasks\n";
     return;
   }
 
   //ASSERT(pg_ == 0);
   //pg_ = pg;
 
-  int ntasks = dts->numLocalTasks();
+  ntasks = dts->numLocalTasks();
   dts->initializeScrubs(dws, dwmap);
   dts->initTimestep();
 
@@ -349,27 +350,31 @@ ThreadedMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
   mpi_info_.totaltestmpi = 0;
   mpi_info_.totalwaitmpi = 0;
 
-  int numTasksDone = 0;
+  numTasksDone = 0;
 
 
-  bool abort=false;
-  int abort_point = 987654;
+  abort=false;
+  abort_point = 987654;
 
   if (reloc_new_posLabel_ && dws[dwmap[Task::OldDW]] != 0)
     dws[dwmap[Task::OldDW]]->exchangeParticleQuantities(dts, getLoadBalancer(), reloc_new_posLabel_, iteration);
 
   TAU_PROFILE_TIMER(doittimer, "Task execution", 
-      "[ThreadedMPIScheduler::execute() loop] ", TAU_USER); 
+      "[ThreadedMPIScheduler2::execute() loop] ", TAU_USER); 
   TAU_PROFILE_START(doittimer);
 
-  int currphase=0;
-  int currcomm=0;
-  map<int, int> phaseTasks;
-  map<int, int> phaseTasksDone;
-  map<int,  DetailedTask *> phaseSyncTask;
+  curriteration=iteration;
+  currphase=0;
+  currcomm=0;
+  numPhase=0;
+  phaseTasks.clear();
+  phaseTasksDone.clear();
+  phaseSyncTask.clear();
   dts->setTaskPriorityAlg(taskQueueAlg_ );
   for (int i = 0; i < ntasks; i++){
     phaseTasks[dts->localTask(i)->getTask()->d_phase]++;
+    if (dts->localTask(i)->getTask()->d_phase > numPhase)
+     numPhase=dts->localTask(i)->getTask()->d_phase;
   }
 
   if( dbg.active()) {
@@ -379,107 +384,21 @@ ThreadedMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
     cerrLock.unlock();
   }
 
-  static vector<int> histogram;
   static int totaltasks;
-  set<DetailedTask*> pending_tasks;
 
   taskdbg << d_myworld->myrank() << " Switched to Task Phase " << currphase  << " , total task  " <<  phaseTasks[currphase] << endl;
-  for (int i=0; i < numThreads_; i++)
-      t_worker[i]->resetWaittime(Time::currentSeconds());
+  for (int i=0; i < numThreads_; i++){
+      t_worker[i]->resetWaittime(Time::currentSeconds()); //reset wait time counter
+      /*sending signal to threads to wake them up*/
+      t_worker[i]->d_runmutex.lock();  
+      t_worker[i]->d_idle=false;
+      t_worker[i]->d_runsignal.conditionSignal();
+      t_worker[i]->d_runmutex.unlock();
+  }
 
   /*control loop for all tasks of task graph*/
-  while( numTasksDone < ntasks) {
-  
-    if (phaseTasks[currphase] == phaseTasksDone[currphase]) { // this phase done, goto next phase
-        currphase++;
-        taskdbg << d_myworld->myrank() << " Switched to Task Phase " << currphase  << " , total task  " <<  phaseTasks[currphase] << endl;
-    }
-    // if we have an internally-ready task, initiate its recvs
-    else if (dts->numInternalReadyTasks() > 0) { 
-      DetailedTask * task = dts->getNextInternalReadyTask();
-      //save the reduction task and once per proc task for later execution
-      if ((task->getTask()->getType() == Task::Reduction) || (task->getTask()->getType() == Task::OncePerProc))
-      {
-        phaseSyncTask[task->getTask()->d_phase]= task;
-	if (taskdbg.active()){
-          cerrLock.lock();
-          taskdbg << d_myworld->myrank() << " Task Reduction/OPP ready " << *task << " deps needed: " << task->getExternalDepCount() << endl;
-          cerrLock.unlock();
-	}
-      } else {
-        initiateTask( task, abort, abort_point, iteration );
-        task->markInitiated();
-        task->checkExternalDepCount();
-	if (taskdbg.active()){
-          cerrLock.lock();
-          taskdbg << d_myworld->myrank() << " Task internal ready " << *task << " deps needed: " << task->getExternalDepCount() << endl;
-          cerrLock.unlock();
-          pending_tasks.insert(task);
-	}
-      }
-    }
-    //if it is time to run reduction task
-    else if ((phaseSyncTask.find(currphase)!= phaseSyncTask.end()) && (phaseTasksDone[currphase] == phaseTasks[currphase]-1)){ 
-      if(queuelength.active())
-      {
-        if((int)histogram.size()<dts->numExternalReadyTasks()+1)
-          histogram.resize(dts->numExternalReadyTasks()+1);
-        histogram[dts->numExternalReadyTasks()]++;
-      }
-      DetailedTask *reducetask = phaseSyncTask[currphase];
-      taskdbg << d_myworld->myrank() << " Ready Reduce/OPP task " << reducetask->getTask()->getName() << endl;
-      if (reducetask->getTask()->getType() == Task::Reduction){
-        if(!abort){
-          currcomm++;
-          taskdbg << d_myworld->myrank() << " Running Reduce task " << reducetask->getTask()->getName() << " with communicator " << currcomm <<  endl;
-          assignTask(reducetask, currcomm);
-        }
-      }
-      else { // Task::OncePerProc task
-        ASSERT(reducetask->getTask()->getType() ==  Task::OncePerProc);
-        initiateTask( reducetask, abort, abort_point, iteration );
-        reducetask->markInitiated();
-        while(reducetask->getExternalDepCount() > 0) {
-          processMPIRecvs(WAIT_ONCE);
-          //reducetask->checkExternalDepCount();
-        }
-
-        assignTask(reducetask, iteration);
-        taskdbg << d_myworld->myrank() << " Runnding OPP task:  \t";
-        printTask(taskdbg, reducetask); taskdbg << '\n';
-      }
-      ASSERT(reducetask->getTask()->d_phase==currphase);
-      numTasksDone++;
-      phaseTasksDone[reducetask->getTask()->d_phase]++;
-    }
-
-    // run a task that has its communication complete
-    // tasks get in this queue automatically when their receive count hits 0
-    //   in DependencyBatch::received, which is called when a message is delivered.
-    else if (dts->numExternalReadyTasks() > 0) { 
-      if(queuelength.active())
-      {
-        if((int)histogram.size()<dts->numExternalReadyTasks()+1)
-          histogram.resize(dts->numExternalReadyTasks()+1);
-        histogram[dts->numExternalReadyTasks()]++;
-      }
-
-      DetailedTask * task = dts->getNextExternalReadyTask();
-      if (taskdbg.active()){
-        cerrLock.lock();
-        taskdbg << d_myworld->myrank() << " Dispatching task " << *task << "(" << dts->numExternalReadyTasks() <<"/"<< pending_tasks.size() <<" tasks in queue)"<<endl;
-        cerrLock.unlock();
-        pending_tasks.erase(pending_tasks.find(task));
-      }
-      ASSERTEQ(task->getExternalDepCount(), 0);
-      assignTask(task, iteration);
-      numTasksDone++;
-      phaseTasksDone[task->getTask()->d_phase]++;
-    } 
-    // nothing to do process mpi
-    else processMPIRecvs(TEST); 
-
-  } // end while( numTasksDone < ntasks )
+  runTasks(0);
+   // end while( numTasksDone < ntasks )
   TAU_PROFILE_STOP(doittimer);
   
 // wait for all tasks to finish 
@@ -646,8 +565,8 @@ ThreadedMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
       ofstream& out = *files[file];
       out << "Timestep " << d_sharedState->getCurrentTopLevelTimeStep() << endl;
       for(int i=0;i<(int)(*data[file]).size();i++){
-        out << "ThreadedMPIScheduler: " << d_labels[i] << ": ";
-        int len = (int)(strlen(d_labels[i])+strlen("ThreadedMPIScheduler: ")+strlen(": "));
+        out << "ThreadedMPIScheduler2: " << d_labels[i] << ": ";
+        int len = (int)(strlen(d_labels[i])+strlen("ThreadedMPIScheduler2: ")+strlen(": "));
         for(int j=len;j<55;j++)
           out << ' ';
         double percent;
@@ -668,9 +587,9 @@ ThreadedMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
     double time = Time::currentSeconds();
     //double rtime=time-d_lasttime;
     d_lasttime=time;
-    //timeout << "ThreadedMPIScheduler: TOTAL                                    "
+    //timeout << "ThreadedMPIScheduler2: TOTAL                                    "
     //        << total << '\n';
-    //timeout << "ThreadedMPIScheduler: time sum reduction (one processor only): " 
+    //timeout << "ThreadedMPIScheduler2: time sum reduction (one processor only): " 
     //        << rtime << '\n';
   }
 
@@ -710,15 +629,108 @@ ThreadedMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
   }
 
   if( dbg.active()) {
-    dbg << me << " ThreadedMPIScheduler finished\n";
+    dbg << me << " ThreadedMPIScheduler2 finished\n";
   }
   //pg_ = 0;
 }
 
-void
-ThreadedMPIScheduler::postMPISends( DetailedTask         * task, int iteration, int t_id )
+void 
+ThreadedMPIScheduler2::runTasks(int t_id)
 {
-  MALLOC_TRACE_TAG_SCOPE("ThreadedMPIScheduler::postMPISends");
+  DetailedTask * task=NULL;
+  while( numTasksDone < ntasks) {
+   
+    if ((task = dts->getNextInternalReadyTask(false))!=NULL) {
+      if ((task->getTask()->getType() == Task::Reduction) || (task->getTask()->getType() == Task::OncePerProc))
+      {
+        schedulerLock.lock();
+        phaseSyncTask[task->getTask()->d_phase]= task;
+        if (taskdbg.active()){
+          cerrLock.lock();
+          taskdbg << d_myworld->myrank() << " Task Reduction/OPP ready " << *task << " deps needed: " << task->getExternalDepCount() << endl;
+          cerrLock.unlock();
+        }
+        schedulerLock.unlock();
+      } else {
+        recvLock.lock();
+        initiateTask( task, abort, abort_point, curriteration );
+        task->markInitiated();
+        task->checkExternalDepCount();
+        recvLock.unlock();
+        if (taskdbg.active()){
+          cerrLock.lock();
+          taskdbg << d_myworld->myrank() << " Task internal ready " << *task << " deps needed: " << task->getExternalDepCount() << endl;
+          cerrLock.unlock();
+        }
+      }
+    }
+    else if ((task = dts->getNextExternalReadyTask(false))!=NULL){
+      if (taskdbg.active()){
+        cerrLock.lock();
+        taskdbg << d_myworld->myrank() << " Task external ready " << *task << "(" << dts->numExternalReadyTasks() << " tasks in queue)"<<endl;
+        cerrLock.unlock();
+      }
+      ASSERTEQ(task->getExternalDepCount(), 0);
+      schedulerLock.lock();
+      numTasksDone++;
+      phaseTasksDone[task->getTask()->d_phase]++;
+      schedulerLock.unlock();
+      runTask(task, curriteration, t_id);
+    } 
+    
+    else{
+      if (schedulerLock.tryLock()) {  //lower 
+        while (phaseTasks[currphase] == phaseTasksDone[currphase]
+               && currphase < numPhase){
+          currphase++;
+          if (taskdbg.active()){
+            cerrLock.lock();
+            taskdbg << d_myworld->myrank() << " Switched to Task Phase " << currphase  << " , total task  " <<  phaseTasks[currphase] << endl;          
+            cerrLock.unlock();
+          }
+        } 
+        if ((phaseSyncTask.find(currphase)!= phaseSyncTask.end()) && (phaseTasksDone[currphase] == phaseTasks[currphase]-1)){ 
+          DetailedTask *reducetask = phaseSyncTask[currphase];
+          ASSERT(reducetask->getTask()->d_phase==currphase);
+          numTasksDone++;
+          phaseTasksDone[reducetask->getTask()->d_phase]++;
+          taskdbg << d_myworld->myrank() << " Ready Reduce/OPP task " << reducetask->getTask()->getName() << endl;
+          if (reducetask->getTask()->getType() == Task::Reduction){
+            currcomm++;
+            taskdbg << d_myworld->myrank() << " Running Reduce task " << reducetask->getTask()->getName() << " with communicator " << currcomm <<  endl;
+            schedulerLock.unlock();
+            initiateReduction(reducetask, currcomm);
+          }
+          else { // Task::OncePerProc task
+            schedulerLock.unlock();
+            ASSERT(reducetask->getTask()->getType() ==  Task::OncePerProc);
+            recvLock.lock();
+            initiateTask( reducetask, abort, abort_point, curriteration );
+            reducetask->markInitiated();
+            while(reducetask->getExternalDepCount() > 0) {
+              processMPIRecvs(WAIT_ONCE);
+            }
+            recvLock.unlock();
+            taskdbg << d_myworld->myrank() << " Runnding OPP task:  \t";
+            printTask(taskdbg, reducetask); taskdbg << '\n';
+            runTask(reducetask, curriteration, t_id);
+          }
+        } else schedulerLock.unlock();
+      } // if trylock
+      else {
+        if (recvLock.tryLock()){
+          processMPIRecvs(TEST);
+          recvLock.unlock();
+        }
+      }
+    }
+  } //end while tasks
+}
+
+void
+ThreadedMPIScheduler2::postMPISends( DetailedTask         * task, int iteration, int t_id )
+{
+  MALLOC_TRACE_TAG_SCOPE("ThreadedMPIScheduler2::postMPISends");
   double sendstart = Time::currentSeconds();
   if( dbg.active()) {
     cerrLock.lock();dbg << d_myworld->myrank() << " postMPISends - task " << *task << '\n';
@@ -844,40 +856,16 @@ ThreadedMPIScheduler::postMPISends( DetailedTask         * task, int iteration, 
 
 
 int 
-ThreadedMPIScheduler::getAviableThreadNum()
+ThreadedMPIScheduler2::getAviableThreadNum()
 {
   int num =0;
-  for (int i=0; i < numThreads_; i++) if (t_worker[i]->d_task == NULL) num++;
+  for (int i=0; i < numThreads_; i++) if (t_worker[i]->d_idle) num++;
   return num;
 }
 
-void
-ThreadedMPIScheduler::assignTask( DetailedTask* task, int iteration)
-{
-   d_nextmutex.lock();
-   if (getAviableThreadNum() == 0) {
-     d_nextsignal.wait(d_nextmutex);
-   }
-   //find an idle thread and assign task
-   int targetThread=-1;
-   for (int i=0; i < numThreads_; i++)
-     if (t_worker[i]->d_task == NULL){
-        targetThread=i;
-        break;
-     }
-   d_nextmutex.unlock();
-   //send task and weakup worker
-   ASSERT(targetThread>=0);
-   t_worker[targetThread]->d_runmutex.lock();
-   t_worker[targetThread]->d_task = task;
-   t_worker[targetThread]->d_iteration = iteration;
-   t_worker[targetThread]->d_runsignal.conditionSignal();
-   t_worker[targetThread]->d_runmutex.unlock();
-}
-
-/** Computing Thread Methods***/
-TaskWorker::TaskWorker(ThreadedMPIScheduler* scheduler, int id ) : 
-   d_id( id ), d_scheduler(scheduler),  d_task(NULL), d_iteration(0),
+/** SchedulerWorker Thread Methods***/
+SchedulerWorker::SchedulerWorker(ThreadedMPIScheduler2* scheduler, int id ) : 
+   d_id( id ), d_scheduler(scheduler),  d_idle(true),
    d_runmutex("run mutex"),  d_runsignal("run condition"), d_quit(false),
    d_waittime(0.0),d_waitstart(0.0),  d_rank(scheduler->getProcessorGroup()->myrank())
 {
@@ -885,7 +873,7 @@ TaskWorker::TaskWorker(ThreadedMPIScheduler* scheduler, int id ) :
 }
 
 void
-TaskWorker::run()
+SchedulerWorker::run()
 {
   threaddbg << "Binding thread id " << d_id+1 << " to cpu " << d_id+1 << endl;
   Thread::self()->set_myid(d_id+1);
@@ -908,49 +896,35 @@ TaskWorker::run()
     if( taskdbg.active() ) {
       cerrLock.lock();
       taskdbg << "Worker " << d_rank  << "-" << d_id 
-        << ": executeTask:   " << *d_task << "\n";
+        << ": executeTasks \n";
       cerrLock.unlock();
     }
-    ASSERT(d_task!=NULL);
-    try {
-      if (d_task->getTask()->getType() == Task::Reduction){
-        d_scheduler->initiateReduction(d_task, d_iteration);
-      } else{
-      d_scheduler->runTask(d_task, d_iteration, d_id);
-      }
-    } catch (Exception& e){
-      cerrLock.lock();
-      cerr << "Worker " << d_rank << "-" << d_id << 
-        ": Caught exception: " << e.message() << "\n";
-      if(e.stackTrace())
-          cerr << "Stack trace: " << e.stackTrace() << '\n';
-      cerrLock.unlock();
-    }
+
+    d_scheduler->runTasks(d_id+1);
 
     if( taskdbg.active() ) {
       cerrLock.lock();
       taskdbg << "Worker " << d_rank << "-" << d_id 
-        << ": finishTask:   " << *d_task << "\n";
+        << ": finishTasks   \n";
       cerrLock.unlock();
     }
 
-    //signal main thread for next task
+    //signal main thread for next group of tasks
     d_scheduler->d_nextmutex.lock();
     d_runmutex.lock();
-    d_task = NULL;
-    d_iteration = 0;
     d_waitstart = Time::currentSeconds();
+    d_idle=true;
     d_scheduler->d_nextsignal.conditionSignal();
     d_scheduler->d_nextmutex.unlock();
   }
 }
 
-double TaskWorker::getWaittime()
+double SchedulerWorker::getWaittime()
 {
     return  d_waittime;
 }
 
-void TaskWorker::resetWaittime(double start)
+void SchedulerWorker::resetWaittime(double start)
 {
     d_waitstart  = start;
     d_waittime = 0.0;

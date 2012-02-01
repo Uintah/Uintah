@@ -34,6 +34,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Schedulers/MPIScheduler.h>
 #include <CCA/Components/Schedulers/DynamicMPIScheduler.h>
 #include <CCA/Components/Schedulers/ThreadedMPIScheduler.h>
+#include <CCA/Components/Schedulers/ThreadedMPIScheduler2.h>
 
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Parallel/Parallel.h>
@@ -83,12 +84,14 @@ SchedulerCommon* SchedulerFactory::create(ProblemSpecP& ps,
     sch = scinew DynamicMPIScheduler(world, output);
   } else if(scheduler == "ThreadedMPI"){
     sch = scinew ThreadedMPIScheduler(world, output);
+  } else if(scheduler == "ThreadedMPI2"){
+    sch = scinew ThreadedMPIScheduler2(world, output);
   } else {
     sch = 0;   
     throw ProblemSetupException("Unknown scheduler", __FILE__, __LINE__);
   }
 
-  if ((Uintah::Parallel::getMaxThreads() > 0) && (scheduler != "ThreadedMPI")) {
+  if ((Uintah::Parallel::getMaxThreads() > 0) && (scheduler != "ThreadedMPI") && (scheduler != "ThreadedMPI2")  ) {
     throw ProblemSetupException("Threaded Scheduler needed for -nthreads", __FILE__, __LINE__);
   }
   

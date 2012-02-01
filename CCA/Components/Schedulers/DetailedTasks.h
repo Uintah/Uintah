@@ -354,11 +354,11 @@ namespace Uintah {
 
     void emitEdges(ProblemSpecP edgesElement, int rank);
 
-    DetailedTask* getNextInternalReadyTask();
-    int numInternalReadyTasks() { return readyTasks_.size(); }
+    DetailedTask* getNextInternalReadyTask(bool block=true);
+    int numInternalReadyTasks();
 
-    DetailedTask* getNextExternalReadyTask();
-    int numExternalReadyTasks() { return mpiCompletedTasks_.size(); }
+    DetailedTask* getNextExternalReadyTask(bool block=true);
+    int numExternalReadyTasks();
 
     void createScrubCounts();
 
@@ -452,7 +452,8 @@ namespace Uintah {
     // for logging purposes - how much extra comm is going on
     int extraCommunication_;
     Mutex readyQueueMutex_;
-    Semaphore readyQueueSemaphore_;
+    Mutex mpiCompletedQueueMutex_;
+    //Semaphore readyQueueSemaphore_;
 
     ScrubCountTable scrubCountTable_;
 
