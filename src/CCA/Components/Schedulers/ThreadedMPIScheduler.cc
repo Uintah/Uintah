@@ -363,7 +363,6 @@ ThreadedMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
   TAU_PROFILE_START(doittimer);
 
   int currphase=0;
-  int currcomm=0;
   map<int, int> phaseTasks;
   map<int, int> phaseTasksDone;
   map<int,  DetailedTask *> phaseSyncTask;
@@ -430,9 +429,8 @@ ThreadedMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
       taskdbg << d_myworld->myrank() << " Ready Reduce/OPP task " << reducetask->getTask()->getName() << endl;
       if (reducetask->getTask()->getType() == Task::Reduction){
         if(!abort){
-          currcomm++;
-          taskdbg << d_myworld->myrank() << " Running Reduce task " << reducetask->getTask()->getName() << " with communicator " << currcomm <<  endl;
-          assignTask(reducetask, currcomm);
+          taskdbg << d_myworld->myrank() << " Running Reduce task " << reducetask->getTask()->getName() << " with communicator " << reducetask->getTask()->d_comm <<  endl;
+          assignTask(reducetask, iteration);
         }
       }
       else { // Task::OncePerProc task
@@ -914,7 +912,7 @@ TaskWorker::run()
     ASSERT(d_task!=NULL);
     try {
       if (d_task->getTask()->getType() == Task::Reduction){
-        d_scheduler->initiateReduction(d_task, d_iteration);
+        d_scheduler->initiateReduction(d_task);
       } else{
       d_scheduler->runTask(d_task, d_iteration, d_id);
       }

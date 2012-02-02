@@ -975,16 +975,19 @@ TaskGraph::createDetailedDependencies()
 
   // Assign task phase number based on the reduction tasks so a mixed thread/mpi
   // scheduler won't have out of order reduction problems.
-  DetailedTask* lastReductionTask = 0;
   int currphase=0;
+  int currcomm=0;
   for(int i=0;i<dts_->numTasks();i++){
     DetailedTask* task = dts_->getTask(i);
     task->task->d_phase=currphase;
     //cout << d_myworld->myrank()  << " Task: " << *task << " phase: " << currphase << endl;
-    //if (task->task->getType() == Task::Reduction || ( task->task->getType() == Task::OncePerProc && Uintah::Parallel::getMaxThreads() < 1 )) {
-    if (task->task->getType() == Task::Reduction || task->task->getType() == Task::OncePerProc ) {
+    if (task->task->getType() == Task::Reduction) {
+      task->task->d_comm=currcomm;
+      currcomm++;
       currphase++;
-      lastReductionTask = task;
+    }
+    if (task->task->getType() == Task::OncePerProc ) {
+      currphase++;
     }
   }
 
