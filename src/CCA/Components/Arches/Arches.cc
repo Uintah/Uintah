@@ -373,38 +373,38 @@ Arches::problemSetup(const ProblemSpecP& params,
   //____________________________________________________________________________  
   // Register the volume and area fractions for embedded geometry
   std::string volFractionName = d_lab->d_volFractionLabel->getName();
-  const Expr::Tag volFractionTag( volFractionName, Expr::STATE_N );
+  const Expr::Tag volFractionTag( volFractionName, Expr::STATE_NONE );
   if( !(gh->exprFactory->have_entry( volFractionTag )) ) {
     // register placeholder expressions for volume fraction field: "volFraction"
     typedef Expr::PlaceHolder<SVolField>  VolFracT;
-    gh->exprFactory->register_expression( new VolFracT::Builder(Expr::Tag(volFractionName,Expr::STATE_N)) );        
+    gh->exprFactory->register_expression( new VolFracT::Builder(volFractionTag) );        
   }
   
   // x area fraction
   std::string xAreaFractionName = d_lab->d_areaFractionFXLabel->getName();
-  const Expr::Tag xAreaFractionTag( xAreaFractionName, Expr::STATE_N );
+  const Expr::Tag xAreaFractionTag( xAreaFractionName, Expr::STATE_NONE );
   if( !(gh->exprFactory->have_entry( xAreaFractionTag )) ) {
     // register placeholder expressions for volume fraction field: "areaFractionFX"
     typedef Expr::PlaceHolder<XVolField>  XAreaFractionT;
-    gh->exprFactory->register_expression( new XAreaFractionT::Builder(Expr::Tag(xAreaFractionName,Expr::STATE_N)) );        
+    gh->exprFactory->register_expression( new XAreaFractionT::Builder(xAreaFractionTag) );        
   }
 
   // x area fraction
   std::string yAreaFractionName = d_lab->d_areaFractionFYLabel->getName();
-  const Expr::Tag yAreaFractionTag( yAreaFractionName, Expr::STATE_N );
+  const Expr::Tag yAreaFractionTag( yAreaFractionName, Expr::STATE_NONE );
   if( !(gh->exprFactory->have_entry( yAreaFractionTag )) ) {
     // register placeholder expressions for volume fraction field: "areaFractionFY"
     typedef Expr::PlaceHolder<YVolField>  YAreaFractionT;
-    gh->exprFactory->register_expression( new YAreaFractionT::Builder(Expr::Tag(yAreaFractionName,Expr::STATE_N)) );        
+    gh->exprFactory->register_expression( new YAreaFractionT::Builder(yAreaFractionTag) );        
   }
 
   // x area fraction
   std::string zAreaFractionName = d_lab->d_areaFractionFZLabel->getName();
-  const Expr::Tag zAreaFractionTag( zAreaFractionName, Expr::STATE_N );
+  const Expr::Tag zAreaFractionTag( zAreaFractionName, Expr::STATE_NONE );
   if( !(gh->exprFactory->have_entry( zAreaFractionTag )) ) {
     // register placeholder expressions for volume fraction field: "areaFractionFZ"
     typedef Expr::PlaceHolder<ZVolField>  ZAreaFractionT;
-    gh->exprFactory->register_expression( new ZAreaFractionT::Builder(Expr::Tag(zAreaFractionName,Expr::STATE_N)) );        
+    gh->exprFactory->register_expression( new ZAreaFractionT::Builder(zAreaFractionTag) );        
   }
   
   //____________________________________________________________________________   
