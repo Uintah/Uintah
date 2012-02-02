@@ -61,6 +61,7 @@ void Task::initialize()
     dwmap[i]=Task::InvalidDW;
   sortedOrder=-1;
   d_phase=-1;
+  d_comm=-1;
   maxGhostCells=0;
 }
 

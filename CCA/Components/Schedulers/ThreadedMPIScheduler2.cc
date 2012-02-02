@@ -365,7 +365,6 @@ ThreadedMPIScheduler2::execute(int tgnum /*=0*/, int iteration /*=0*/)
 
   curriteration=iteration;
   currphase=0;
-  currcomm=0;
   numPhase=0;
   phaseTasks.clear();
   phaseTasksDone.clear();
@@ -639,7 +638,7 @@ ThreadedMPIScheduler2::runTasks(int t_id)
 {
   DetailedTask * task=NULL;
   while( numTasksDone < ntasks) {
-   
+      
     if ((task = dts->getNextInternalReadyTask(false))!=NULL) {
       if ((task->getTask()->getType() == Task::Reduction) || (task->getTask()->getType() == Task::OncePerProc))
       {
@@ -677,29 +676,27 @@ ThreadedMPIScheduler2::runTasks(int t_id)
       schedulerLock.unlock();
       runTask(task, curriteration, t_id);
     } 
-    
-    else{
-      if (schedulerLock.tryLock()) {  //lower 
-        while (phaseTasks[currphase] == phaseTasksDone[currphase]
-               && currphase < numPhase){
-          currphase++;
-          if (taskdbg.active()){
-            cerrLock.lock();
+    else {
+     //processing schedule logic
+     schedulerLock.lock();
+     while (phaseTasks[currphase] == phaseTasksDone[currphase] && currphase < numPhase){
+       currphase++;
+       if (taskdbg.active()){
+        cerrLock.lock();
             taskdbg << d_myworld->myrank() << " Switched to Task Phase " << currphase  << " , total task  " <<  phaseTasks[currphase] << endl;          
             cerrLock.unlock();
           }
-        } 
-        if ((phaseSyncTask.find(currphase)!= phaseSyncTask.end()) && (phaseTasksDone[currphase] == phaseTasks[currphase]-1)){ 
+     } 
+     if ((phaseSyncTask.find(currphase)!= phaseSyncTask.end()) && (phaseTasksDone[currphase] == phaseTasks[currphase]-1)){ 
           DetailedTask *reducetask = phaseSyncTask[currphase];
           ASSERT(reducetask->getTask()->d_phase==currphase);
           numTasksDone++;
           phaseTasksDone[reducetask->getTask()->d_phase]++;
           taskdbg << d_myworld->myrank() << " Ready Reduce/OPP task " << reducetask->getTask()->getName() << endl;
           if (reducetask->getTask()->getType() == Task::Reduction){
-            currcomm++;
-            taskdbg << d_myworld->myrank() << " Running Reduce task " << reducetask->getTask()->getName() << " with communicator " << currcomm <<  endl;
+            taskdbg << d_myworld->myrank() << " Running Reduce task " << reducetask->getTask()->getName() << " with communicator " << reducetask->getTask()->d_comm <<  endl;
             schedulerLock.unlock();
-            initiateReduction(reducetask, currcomm);
+            initiateReduction(reducetask);
           }
           else { // Task::OncePerProc task
             schedulerLock.unlock();
@@ -715,15 +712,17 @@ ThreadedMPIScheduler2::runTasks(int t_id)
             printTask(taskdbg, reducetask); taskdbg << '\n';
             runTask(reducetask, curriteration, t_id);
           }
-        } else schedulerLock.unlock();
-      } // if trylock
-      else {
-        if (recvLock.tryLock()){
+    } 
+    else { 
+       schedulerLock.unlock();
+       //processing MPI receives
+      // if (recvLock.tryLock()){
+         recvLock.lock();
           processMPIRecvs(TEST);
           recvLock.unlock();
-        }
-      }
+       //}
     }
+   }
   } //end while tasks
 }
 
