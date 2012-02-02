@@ -30,7 +30,7 @@ DEALINGS IN THE SOFTWARE.
 
 
 #include "HyperElasticEOS.h"
-#include <Core/Exceptions/ParameterNotFound.h>
+#include <Core/Exceptions/InternalError.h>
 #include <Core/Exceptions/InvalidValue.h>
 #include <cmath>
 
@@ -54,7 +54,6 @@ HyperElasticEOS::HyperElasticEOS(const HyperElasticEOS* cm)
 HyperElasticEOS::~HyperElasticEOS()
 {
 }
-
 
 void HyperElasticEOS::outputProblemSpec(ProblemSpecP& ps)
 {
@@ -98,10 +97,12 @@ double
 HyperElasticEOS::computePressure(const double& rho_orig,
                                  const double& rho_cur)
 {
+  /*
   if (d_bulk < 0.0) {
-    throw ParameterNotFound("Please initialize bulk modulus in EOS before computing pressure",
+    throw InternalError("Please initialize bulk modulus in EOS before computing pressure",
                             __FILE__, __LINE__);
   }
+  */
 
   double J = rho_orig/rho_cur;
   double p = 0.5*d_bulk*(J - 1.0/J);
@@ -116,10 +117,12 @@ HyperElasticEOS::computePressure(const double& rho_orig,
                                  double& dp_drho,
                                  double& csquared)
 {
+  /*
   if (d_bulk < 0.0) {
-    throw ParameterNotFound("Please initialize bulk modulus in EOS before computing pressure",
+    throw InternalError("Please initialize bulk modulus in EOS before computing pressure",
                             __FILE__, __LINE__);
   }
+  */
 
   double J = rho_orig/rho_cur;
   pressure = 0.5*d_bulk*(J - 1.0/J);
@@ -133,10 +136,12 @@ double
 HyperElasticEOS::computeBulkModulus(const double& rho_orig,
                                     const double& rho_cur)
 {
+  /*
   if (d_bulk < 0.0) {
-    throw ParameterNotFound("Please initialize bulk modulus in EOS before computing modulus",
+    throw InternalError("Please initialize bulk modulus in EOS before computing modulus",
                             __FILE__, __LINE__);
   }
+  */
 
   double J = rho_orig/rho_cur;
   double bulk = 0.5*d_bulk*(1.0 + 1.0/J*J);
@@ -148,10 +153,12 @@ double
 HyperElasticEOS::computeStrainEnergy(const double& rho_orig,
                                      const double& rho_cur)
 {
+  /*
   if (d_bulk < 0.0) {
-    throw ParameterNotFound("Please initialize bulk modulus in EOS before computing energy",
+    throw InternalError("Please initialize bulk modulus in EOS before computing energy",
                             __FILE__, __LINE__);
   }
+  */
 
   double J = rho_orig/rho_cur;
   double U = 0.5*d_bulk*(0.5*(J*J - 1.0) - log(J));
@@ -163,10 +170,12 @@ double
 HyperElasticEOS::computeDensity(const double& rho_orig,
                                 const double& pressure)
 {
+  /*
   if (d_bulk < 0.0) {
-    throw ParameterNotFound("Please initialize bulk modulus in EOS before computing density",
+    throw InternalError("Please initialize bulk modulus in EOS before computing density",
                             __FILE__, __LINE__);
   }
+  */
   double numer1 = d_bulk*d_bulk + pressure*pressure;
   double sqrtNumer = sqrt(numer1);
   double rho = rho_orig/d_bulk*(-pressure + sqrtNumer);
