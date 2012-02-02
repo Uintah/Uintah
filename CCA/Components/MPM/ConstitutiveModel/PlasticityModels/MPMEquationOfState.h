@@ -52,6 +52,9 @@ namespace Uintah {
 
   class MPMEquationOfState {
 
+  protected:
+    double d_bulk;
+
   public:
          
     MPMEquationOfState();
@@ -59,9 +62,8 @@ namespace Uintah {
 
     virtual void outputProblemSpec(ProblemSpecP& ps) = 0;
          
-    void setBulkModulus(const double& )
-    {
-    }
+    void setBulkModulus(const double& bulk) {d_bulk = bulk;}
+    double initialBulkModulus() {return d_bulk;}
 
     ////////////////////////////////////////////////////////////////////////
     /*! Calculate the hydrostatic component of stress (pressure)

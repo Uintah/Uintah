@@ -49,8 +49,12 @@ MPMEquationOfState* MPMEquationOfStateFactory::create(ProblemSpecP& ps)
 {
    ProblemSpecP child = ps->findBlock("equation_of_state");
    if(!child) {
-      cerr << "**WARNING** Creating default linear equation of state" << endl;
-      return(scinew DefaultHypoElasticEOS(child));
+
+      cerr << "**WARNING** Creating default hyperelastic equation of state" << endl;
+      return(scinew HyperElasticEOS(child));
+
+      //cerr << "**WARNING** Creating default linear equation of state" << endl;
+      //return(scinew DefaultHypoElasticEOS(child));
       //throw ProblemSetupException("Cannot find equation_of_state tag", __FILE__, __LINE__);
    }
    string mat_type;
@@ -64,7 +68,7 @@ MPMEquationOfState* MPMEquationOfStateFactory::create(ProblemSpecP& ps)
    else if (mat_type == "default_hyper")
       return(scinew HyperElasticEOS(child));
    else {
-      cerr << "**WARNING** Creating default linear equation of state" << endl;
+      cerr << "**WARNING** Creating default hyperelastic equation of state" << endl;
       return(scinew HyperElasticEOS(child));
       //throw ProblemSetupException("Unknown MPMEquation of State Model ("+mat_type+")", __FILE__, __LINE__);
    }
@@ -83,7 +87,7 @@ MPMEquationOfStateFactory::createCopy(const MPMEquationOfState* eos)
       return(scinew DefaultHypoElasticEOS(dynamic_cast<const DefaultHypoElasticEOS*>(eos)));
 
    else {
-      cerr << "**WARNING** Creating a copy of the default linear equation of state" << endl;
+      cerr << "**WARNING** Creating a copy of the default hyperelastic equation of state" << endl;
       return(scinew HyperElasticEOS(dynamic_cast<const HyperElasticEOS*>(eos)));
       //throw ProblemSetupException("Cannot create copy of unknown MPM EOS", __FILE__, __LINE__);
    }

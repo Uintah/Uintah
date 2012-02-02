@@ -115,17 +115,14 @@ UCNH::UCNH(ProblemSpecP& ps, MPMFlags* Mflag)
     ps->getWithDefault("initial_pressure", d_init_pressure, 0.0);
   } 
 
-  // Equation of state factory for pressure
-  ps->getWithDefault("useEOSFactory", d_useEOSFactory, false);
-  if (d_useEOSFactory) {
-    d_eos = MPMEquationOfStateFactory::create(ps);
-    d_eos->setBulkModulus(d_initialData.Bulk);
-    if(!d_eos){
-      ostringstream desc;
-      desc << "An error occured in the MPM EquationOfStateFactory that has \n"
-           << " slipped through the existing bullet proofing. Please check and correct." << endl;
-      throw ParameterNotFound(desc.str(), __FILE__, __LINE__);
-    }
+  // Equation of state factory for pressure (default is DefaultHyperEOS)
+  d_eos = MPMEquationOfStateFactory::create(ps);
+  d_eos->setBulkModulus(d_initialData.Bulk);
+  if(!d_eos){
+    ostringstream desc;
+    desc << "An error occured in the MPM EquationOfStateFactory that has \n"
+         << " slipped through the existing bullet proofing. Please check and correct." << endl;
+    throw ParameterNotFound(desc.str(), __FILE__, __LINE__);
   }
 
   // Universal Labels
@@ -198,16 +195,13 @@ UCNH::UCNH(ProblemSpecP& ps, MPMFlags* Mflag, bool plas, bool dam)
   } 
 
   // Equation of state factory for pressure
-  ps->getWithDefault("useEOSFactory", d_useEOSFactory, false);
-  if (d_useEOSFactory) {
-    d_eos = MPMEquationOfStateFactory::create(ps);
-    d_eos->setBulkModulus(d_initialData.Bulk);
-    if(!d_eos){
-      ostringstream desc;
-      desc << "An error occured in the MPM EquationOfStateFactory that has \n"
-           << " slipped through the existing bullet proofing. Please check and correct." << endl;
-      throw ParameterNotFound(desc.str(), __FILE__, __LINE__);
-    }
+  d_eos = MPMEquationOfStateFactory::create(ps);
+  d_eos->setBulkModulus(d_initialData.Bulk);
+  if(!d_eos){
+    ostringstream desc;
+    desc << "An error occured in the MPM EquationOfStateFactory that has \n"
+         << " slipped through the existing bullet proofing. Please check and correct." << endl;
+    throw ParameterNotFound(desc.str(), __FILE__, __LINE__);
   }
 
   // Universal Labels
@@ -273,11 +267,8 @@ UCNH::UCNH(const UCNH* cm) : ConstitutiveModel(cm), ImplicitCM(cm)
   d_init_pressure = cm->d_init_pressure;
 
   // EOS from factory
-  d_useEOSFactory = cm->d_useEOSFactory;
-  if (d_useEOSFactory) {
-    d_eos = MPMEquationOfStateFactory::createCopy(cm->d_eos);
-    d_eos->setBulkModulus(d_initialData.Bulk);
-  }
+  d_eos = MPMEquationOfStateFactory::createCopy(cm->d_eos);
+  d_eos->setBulkModulus(d_initialData.Bulk);
 
   // Universal Labels
   bElBarLabel                = VarLabel::create("p.bElBar",
@@ -473,7 +464,6 @@ void UCNH::outputProblemSpec(ProblemSpecP& ps, bool output_cm_tag)
   cm_ps->appendElement("useModifiedEOS",           d_useModifiedEOS);
   cm_ps->appendElement("usePlasticity",            d_usePlasticity);
   cm_ps->appendElement("useDamage",                d_useDamage);
-  cm_ps->appendElement("useEOSFactory",            d_useEOSFactory);
 
   // Plasticity
   if(d_usePlasticity) {
@@ -530,9 +520,7 @@ void UCNH::outputProblemSpec(ProblemSpecP& ps, bool output_cm_tag)
   }
 
   // EOS from factory
-  if (d_useEOSFactory) {
-    d_eos->outputProblemSpec(cm_ps);
-  }
+  d_eos->outputProblemSpec(cm_ps);
 }
 
 UCNH* UCNH::clone()
@@ -562,9 +550,7 @@ UCNH::~UCNH()
   }
   
   // Delete EOS from factory
-  if (d_useEOSFactory) {
-    delete d_eos;
-  }
+  delete d_eos;
 
   // Universal Deletes
   VarLabel::destroy(bElBarLabel);
@@ -1146,14 +1132,7 @@ void UCNH::computePressEOSCM(const double rho_cur,double& pressure,
   double bulk = d_initialData.Bulk;
   double rho_orig = matl->getInitialDensity();
   
-  if (d_useEOSFactory) {
-
-    double p = 0.0;
-    d_eos->computePressure(rho_orig, rho_cur, p, dp_drho, cSquared);
-    pressure = -p + p_ref;
-    dp_drho = -dp_drho;
-
-  } else if (d_useModifiedEOS && rho_cur < rho_orig) {
+  if (d_useModifiedEOS && rho_cur < rho_orig) {
 
     double A = p_ref;           // MODIFIED EOS
     double n = bulk/p_ref;
@@ -1164,10 +1143,15 @@ void UCNH::computePressEOSCM(const double rho_cur,double& pressure,
 
   } else {                      // STANDARD EOS            
 
-    double p_g = .5*bulk*(rho_cur/rho_orig - rho_orig/rho_cur);
-    pressure   = p_ref + p_g;
-    dp_drho    = .5*bulk*(rho_orig/(rho_cur*rho_cur) + 1./rho_orig);
-    cSquared   = bulk/rho_cur;  // speed of sound squared
+    double p = 0.0;
+    d_eos->computePressure(rho_orig, rho_cur, p, dp_drho, cSquared);
+    pressure = -p + p_ref;
+    dp_drho = -dp_drho;
+
+    // double p_g = .5*bulk*(rho_cur/rho_orig - rho_orig/rho_cur);
+    // pressure   = p_ref + p_g;
+    // dp_drho    = .5*bulk*(rho_orig/(rho_cur*rho_cur) + 1./rho_orig);
+    // cSquared   = bulk/rho_cur;  // speed of sound squared
 
   }
 }
@@ -1186,7 +1170,14 @@ double UCNH::computeRhoMicroCM(double pressure,
   double rho_cur = -1.0;
   bool error = false;
   
-  if (d_useEOSFactory) {
+  if (d_useModifiedEOS && p_gauge < 0.0) {
+
+    double A = p_ref;           // MODIFIED EOS
+    double n = p_ref/bulk;
+    rho_cur = rho_orig*pow(pressure/A,n);
+
+  } else {                      // STANDARD EOS
+
     try {
       rho_cur = d_eos->computeDensity(rho_orig, -p_gauge);
     } catch (ConvergenceFailure& e) {
@@ -1200,13 +1191,8 @@ double UCNH::computeRhoMicroCM(double pressure,
       throw InvalidValue(desc.str(), __FILE__, __LINE__);
     }
 
-  } else if (d_useModifiedEOS && p_gauge < 0.0) {
-    double A = p_ref;           // MODIFIED EOS
-    double n = p_ref/bulk;
-    rho_cur = rho_orig*pow(pressure/A,n);
-  } else {                      // STANDARD EOS
-    double p_g_over_bulk = p_gauge/bulk;
-    rho_cur=rho_orig*(p_g_over_bulk + sqrt(p_g_over_bulk*p_g_over_bulk +1.));
+    // double p_g_over_bulk = p_gauge/bulk;
+    // rho_cur=rho_orig*(p_g_over_bulk + sqrt(p_g_over_bulk*p_g_over_bulk +1.));
   }
   return rho_cur;
 }
@@ -1611,11 +1597,8 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
       }
       
       // get the hydrostatic part of the stress
-      if (d_useEOSFactory) {
-        p = d_eos->computePressure(rho_orig, rho_cur);
-      } else {
-        p = 0.5*bulk*(J - 1.0/J);
-      }
+      p = d_eos->computePressure(rho_orig, rho_cur);
+      //p = 0.5*bulk*(J - 1.0/J);
       
       // compute the total stress (volumetric + deviatoric)
       pStress[idx] = Identity*p + tauDev/J;
@@ -1639,12 +1622,10 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
       }
       
       // Compute the strain energy for non-localized particles
-      if (d_useEOSFactory) {
-        U = d_eos->computeStrainEnergy(rho_orig, rho_cur);
-        bulk = d_eos->computeBulkModulus(rho_orig, rho_cur);
-      } else {
-        U = .5*bulk*(.5*(J*J - 1.0) - log(J));
-      }
+      U = d_eos->computeStrainEnergy(rho_orig, rho_cur);
+      bulk = d_eos->computeBulkModulus(rho_orig, rho_cur);
+      //  U = .5*bulk*(.5*(J*J - 1.0) - log(J));
+
       W = .5*shear*(bElBar_new[idx].Trace() - 3.0);
       double e = (U + W)*pVolume_new[idx]/J;
       se += e;

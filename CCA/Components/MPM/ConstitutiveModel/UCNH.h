@@ -180,7 +180,7 @@ namespace Uintah {
     double d_init_pressure;  // Initial pressure
 
     // Model factories
-    bool d_useEOSFactory;
+    //bool d_useEOSFactory;
     MPMEquationOfState* d_eos;
 
   ///////////////
