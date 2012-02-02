@@ -295,7 +295,11 @@ DWDatabase<DomainType>::initializeScrubs(int dwid, const FastHashTable<ScrubItem
 template<class DomainType>
 bool DWDatabase<DomainType>::exists(const VarLabel* label, int matlIndex, const DomainType* dom) const
 {
-  return vars.find(VarLabelMatl<DomainType>(label, matlIndex, getRealDomain(dom))) != vars.end();
+  VarLabelMatl<DomainType> v(label, matlIndex, getRealDomain(dom));
+  typename varDBtype::const_iterator iter = vars.find(v);
+  if (iter== vars.end()) return false;
+  if (iter->second.var==NULL) return false;
+  return true;
 }
 
 template<class DomainType>
