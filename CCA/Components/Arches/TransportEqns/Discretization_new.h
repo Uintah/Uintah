@@ -216,22 +216,30 @@ namespace Uintah{
         IntVector l = p->getCellLowIndex();
         IntVector h = p->getCellHighIndex(); 
 
-        if ( coord[0] == 1 ) {
+        bool fplus  = false; 
+        bool fminus = false; 
 
-          if ( c[0] == l[0] ) b.minus = true;
-          if ( c[0] == h[0] - 1 ) b.plus  = true; 
+        int I = -1; 
+        if ( coord[0] == 1 ) { 
+          fminus = p->getBCType(Patch::xminus) != Patch::Neighbor; 
+          fplus  = p->getBCType(Patch::xplus ) != Patch::Neighbor; 
+          I = 0; 
+        } else if ( coord[1] == 1 ){ 
+          fminus = p->getBCType(Patch::yminus) != Patch::Neighbor; 
+          fplus  = p->getBCType(Patch::yplus ) != Patch::Neighbor; 
+          I = 1; 
+        } else if ( coord[2] == 1 ){ 
+          fminus = p->getBCType(Patch::zminus) != Patch::Neighbor; 
+          fplus  = p->getBCType(Patch::zplus ) != Patch::Neighbor; 
+          I = 2; 
+        } 
 
-        } else if ( coord[1] == 1 ) {
-
-          if ( c[1] == l[1] ) b.minus = true;
-          if ( c[1] == h[1] - 1 ) b.plus  = true; 
-
-        } else if ( coord[2] == 1 ) {
-
-          if ( c[2] == l[2] ) b.minus = true;
-          if ( c[2] == h[2] - 1 ) b.plus  = true; 
-
-        }
+        if ( fminus && c[I] == l[I] ) { 
+          b.minus = true; 
+        } 
+        if ( fplus  && c[I] == h[I]-1 ) { 
+          b.plus = true; 
+        } 
 
         return b; 
       }
