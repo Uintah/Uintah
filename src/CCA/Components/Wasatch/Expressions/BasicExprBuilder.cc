@@ -100,6 +100,16 @@ namespace Wasatch{
       typedef typename SineTime<FieldT>::Builder Builder;
       builder = scinew Builder( tag, timeVarTag );
     }
+    
+    else if ( params->findBlock("ExprAlgebra") ) {
+      std::string algebraicOperation;
+      Uintah::ProblemSpecP valParams = params->findBlock("ExprAlgebra");
+      const Expr::Tag field1Tag = parse_nametag( valParams->findBlock("Field1")->findBlock("NameTag") );
+      const Expr::Tag field2Tag = parse_nametag( valParams->findBlock("Field2")->findBlock("NameTag") );
+      valParams->getAttribute("algebraicOperation",algebraicOperation);
+      typedef typename ExprAlgebra<FieldT>::Builder Builder;
+      builder = scinew Builder( tag, field1Tag, field2Tag, algebraicOperation );      
+    }    
 
     return builder;
   }

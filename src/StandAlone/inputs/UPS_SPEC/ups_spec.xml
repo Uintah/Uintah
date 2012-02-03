@@ -379,7 +379,7 @@
     <!-- Spec for basic expression types -->
     <BasicExpression		spec="MULTIPLE NO_DATA"
                             attribute1="type REQUIRED STRING 'SVOL,XVOL,YVOL,ZVOL"
-                            children1="ONE_OF(CHILD Constant,LinearFunction, ParabolicFunction,SineFunction,GaussianFunction,DoubleTanhFunction,SineTime)" >
+                            children1="ONE_OF(CHILD Constant,LinearFunction, ParabolicFunction,SineFunction,GaussianFunction,DoubleTanhFunction,SineTime,ExprAlgebra)" >
       <TaskList				spec="REQUIRED STRING 'initialization,timestep_size,advance_solution'" />
       <NameTag				spec="REQUIRED" />
       <Constant				spec="OPTIONAL DOUBLE" />
@@ -428,6 +428,17 @@
                             attribute4="baseline REQUIRED DOUBLE">
         <NameTag            spec="REQUIRED"/>
       </GaussianFunction>
+
+      <!-- Gaussian distribution !-->
+      <ExprAlgebra    	spec="OPTIONAL NO_DATA"
+                        attribute1="algebraicOperation REQUIRED STRING 'SUM, DIFFERENCE, PRODUCT'">
+        <Field1      spec="REQUIRED NO_DATA">
+          <NameTag        spec="REQUIRED"/>
+        </Field1>
+        <Field2      spec="REQUIRED NO_DATA">
+          <NameTag        spec="REQUIRED"/>
+        </Field2>
+      </ExprAlgebra>
 
       
     </BasicExpression>
