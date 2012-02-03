@@ -184,42 +184,53 @@ template< typename FieldT >
 void ScalarRHS<FieldT>::evaluate()
 {
   using namespace SpatialOps;
-
+  
   FieldT& rhs = this->value();
   rhs <<= 0.0;
-
+  
   SpatialOps::SpatFldPtr<FieldT> tmp = SpatialOps::SpatialFieldStore<FieldT>::self().get( rhs );
   
   
   namespace SS = SpatialOps::structured;
-  //const SS::MemoryWindow& w = rhs.window_with_ghost();
+  
   SpatialOps::SpatFldPtr<XFluxT> tmpx;
+  SpatialOps::SpatFldPtr<XFluxT> xAreaFracInterpolated;
+  
   SpatialOps::SpatFldPtr<YFluxT> tmpy;
+  SpatialOps::SpatFldPtr<YFluxT> yAreaFracInterpolated;  
+  
   SpatialOps::SpatFldPtr<ZFluxT> tmpz;
+  SpatialOps::SpatFldPtr<ZFluxT> zAreaFracInterpolated;  
+  
+  // get a few memory windows
   if (doXDir_ && haveXAreaFrac_) {
     if (haveDiffusion_) {
       const SS::MemoryWindow& wx = xDiffFlux_->window_with_ghost();
-      tmpx  = SpatialOps::SpatialFieldStore<XFluxT>::self().get( wx );      
+      tmpx  = SpatialOps::SpatialFieldStore<XFluxT>::self().get( wx );
+      xAreaFracInterpolated = SpatialOps::SpatialFieldStore<XFluxT>::self().get( wx );
     }
     else if (haveConvection_) {
       const SS::MemoryWindow& wx = xConvFlux_->window_with_ghost();
       tmpx  = SpatialOps::SpatialFieldStore<XFluxT>::self().get( wx );      
+      xAreaFracInterpolated = SpatialOps::SpatialFieldStore<XFluxT>::self().get( wx );      
     }
     else {
       std::ostringstream msg;
       msg << "ERROR: xAreaFraction specified without convection or diffusion in Scalar RHS. Please revise your input file." << std::endl;
       throw Uintah::InvalidValue( msg.str(), __FILE__, __LINE__ );      
     }
-
   }  
+  
   if (doYDir_ && haveYAreaFrac_) {
     if (haveDiffusion_) {
       const SS::MemoryWindow& wy = yDiffFlux_->window_with_ghost();
-      tmpy  = SpatialOps::SpatialFieldStore<YFluxT>::self().get( wy );      
+      tmpy  = SpatialOps::SpatialFieldStore<YFluxT>::self().get( wy );    
+      yAreaFracInterpolated = SpatialOps::SpatialFieldStore<YFluxT>::self().get( wy );      
     }
     else if (haveConvection_) {
       const SS::MemoryWindow& wy = yConvFlux_->window_with_ghost();
       tmpy  = SpatialOps::SpatialFieldStore<YFluxT>::self().get( wy );      
+      yAreaFracInterpolated = SpatialOps::SpatialFieldStore<YFluxT>::self().get( wy );            
     }
     else {
       std::ostringstream msg;
@@ -232,10 +243,12 @@ void ScalarRHS<FieldT>::evaluate()
     if (haveDiffusion_) {
       const SS::MemoryWindow& wz = zDiffFlux_->window_with_ghost();
       tmpz  = SpatialOps::SpatialFieldStore<ZFluxT>::self().get( wz );      
+      zAreaFracInterpolated = SpatialOps::SpatialFieldStore<ZFluxT>::self().get( wz );            
     }
     else if (haveConvection_) {
       const SS::MemoryWindow& wz = zConvFlux_->window_with_ghost();
       tmpz  = SpatialOps::SpatialFieldStore<ZFluxT>::self().get( wz );      
+      zAreaFracInterpolated = SpatialOps::SpatialFieldStore<ZFluxT>::self().get( wz );                  
     }
     else {
       std::ostringstream msg;
@@ -244,11 +257,21 @@ void ScalarRHS<FieldT>::evaluate()
     }
   }
   
+  // interpolate area fractions to XFLUXType
+  if ( doXDir_ && haveXAreaFrac_ ) 
+    xAreaFracInterpOp_->apply_to_field( *xareafrac_, *xAreaFracInterpolated );
+  
+  if ( doXDir_ && haveXAreaFrac_ ) 
+    yAreaFracInterpOp_->apply_to_field( *yareafrac_, *yAreaFracInterpolated );
+  
+  if ( doXDir_ && haveXAreaFrac_ ) 
+    zAreaFracInterpOp_->apply_to_field( *zareafrac_, *zAreaFracInterpolated );
+  
+  
   if( doXDir_ ){
     if( haveConvection_ ){
-      if (haveXAreaFrac_) {
-        xAreaFracInterpOp_->apply_to_field( *xareafrac_, *tmpx );
-        *tmpx <<= *tmpx * *xConvFlux_;
+      if (haveXAreaFrac_) {          
+        *tmpx <<= *xAreaFracInterpolated * *xConvFlux_;
         divOpX_->apply_to_field( *tmpx, *tmp );
         rhs <<= rhs - *tmp;        
       } else {
@@ -258,8 +281,7 @@ void ScalarRHS<FieldT>::evaluate()
     }
     if( haveDiffusion_ ){
       if (haveXAreaFrac_) {
-        xAreaFracInterpOp_->apply_to_field( *xareafrac_, *tmpx );
-        *tmpx <<= *tmpx * *xDiffFlux_;
+        *tmpx <<= *xAreaFracInterpolated * *xDiffFlux_;
         divOpX_->apply_to_field( *tmpx, *tmp );
         rhs <<= rhs - *tmp;        
       } else {
@@ -268,12 +290,11 @@ void ScalarRHS<FieldT>::evaluate()
       }
     }
   }
-
+  
   if( doYDir_ ){
     if( haveConvection_ ){
       if (haveYAreaFrac_) {
-        yAreaFracInterpOp_->apply_to_field( *yareafrac_, *tmpy );
-        *tmpy <<= *tmpy * *yConvFlux_;
+        *tmpy <<= *yAreaFracInterpolated * *yConvFlux_;
         divOpY_->apply_to_field( *tmpy, *tmp );
         rhs <<= rhs - *tmp;        
       } else {
@@ -283,8 +304,7 @@ void ScalarRHS<FieldT>::evaluate()
     }
     if( haveDiffusion_ ){
       if (haveYAreaFrac_) {
-        yAreaFracInterpOp_->apply_to_field( *yareafrac_, *tmpy );
-        *tmpy <<= *tmpy * *yDiffFlux_;
+        *tmpy <<= *yAreaFracInterpolated * *yDiffFlux_;
         divOpY_->apply_to_field( *tmpy, *tmp );
         rhs <<= rhs - *tmp;        
       } else {        
@@ -293,12 +313,11 @@ void ScalarRHS<FieldT>::evaluate()
       }
     }
   }
-
+  
   if( doZDir_ ){
     if( haveConvection_ ){
       if (haveZAreaFrac_) {
-        zAreaFracInterpOp_->apply_to_field( *zareafrac_, *tmpz );
-        *tmpz <<= *tmpz * *zConvFlux_;
+        *tmpz <<= *zAreaFracInterpolated * *zConvFlux_;
         divOpZ_->apply_to_field( *tmpz, *tmp );
         rhs <<= rhs - *tmp;        
       } else {        
@@ -308,8 +327,7 @@ void ScalarRHS<FieldT>::evaluate()
     }
     if( haveDiffusion_ ){
       if (haveZAreaFrac_) {
-        zAreaFracInterpOp_->apply_to_field( *zareafrac_, *tmpz );
-        *tmpz <<= *tmpz * *zDiffFlux_;
+        *tmpz <<= *zAreaFracInterpolated * *zDiffFlux_;
         divOpZ_->apply_to_field( *tmpz, *tmp );
         rhs <<= rhs - *tmp;        
       } else {                
@@ -318,6 +336,7 @@ void ScalarRHS<FieldT>::evaluate()
       }
     }
   }
+  
   
   if ( haveVolFrac_ ) volFracInterpOp_->apply_to_field( *volfrac_, *tmp );    
   
@@ -333,7 +352,6 @@ void ScalarRHS<FieldT>::evaluate()
       else rhs <<= rhs + **isrc;
     }
   }
-  
 }
 
 //------------------------------------------------------------------
