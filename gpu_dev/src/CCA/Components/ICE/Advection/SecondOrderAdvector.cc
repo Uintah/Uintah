@@ -249,15 +249,16 @@ SecondOrderAdvector::inFluxOutFluxVolume( const SFCXVariable<double>& uvel_FC,
   }
 }
 
-void SecondOrderAdvector::inFluxOutFluxVolumeGPU(const SFCXVariable<double>& uvel_FC,
-                                                 const SFCYVariable<double>& vvel_FC,
-                                                 const SFCZVariable<double>& wvel_FC,
+void SecondOrderAdvector::inFluxOutFluxVolumeGPU(const VarLabel* uvel_FCMELabel,
+                                                 const VarLabel* vvel_FCMELabel,
+                                                 const VarLabel* wvel_FCMELabel,
                                                  const double& delT,
                                                  const Patch* patch,
                                                  const int& indx,
                                                  const bool& bulletProofing_test,
                                                  DataWarehouse* new_dw,
-                                                 const int& device)
+                                                 const int& device,
+                                                 GPUThreadedMPIScheduler* sched)
 {
   throw InternalError("SecondOrderAdvector::inFluxOutFluxVolumeGPU not yet implemented.", __FILE__, __LINE__);
 }

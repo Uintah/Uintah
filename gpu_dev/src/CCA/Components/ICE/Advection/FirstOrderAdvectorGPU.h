@@ -44,14 +44,12 @@ namespace Uintah {
 
   public:
     FirstOrderAdvectorGPU();
-    FirstOrderAdvectorGPU(DataWarehouse* new_dw, 
-                       const Patch* patch,
-                       const bool isNewGrid);
+
+    FirstOrderAdvectorGPU(DataWarehouse* new_dw, const Patch* patch, const bool isNewGrid);
+
     virtual ~FirstOrderAdvectorGPU();
 
-    virtual FirstOrderAdvectorGPU* clone(DataWarehouse* new_dw, 
-                                      const Patch* patch,
-                                      const bool isNewGrid);
+    virtual FirstOrderAdvectorGPU* clone(DataWarehouse* new_dw, const Patch* patch, const bool isNewGrid);
 
 
     virtual void inFluxOutFluxVolume(const SFCXVariable<double>& uvel_CC,
@@ -63,15 +61,16 @@ namespace Uintah {
                                      const bool& bulletProof_test,
                                      DataWarehouse* new_dw);
 
-    virtual void inFluxOutFluxVolumeGPU(const SFCXVariable<double>& uvel_FC,
-                                        const SFCYVariable<double>& vvel_FC,
-                                        const SFCZVariable<double>& wvel_FC,
+    virtual void inFluxOutFluxVolumeGPU(const VarLabel* uvel_FCMELabel,
+                                        const VarLabel* vvel_FCMELabel,
+                                        const VarLabel* wvel_FCMELabel,
                                         const double& delT,
                                         const Patch* patch,
                                         const int& indx,
                                         const bool& bulletProofing_test,
                                         DataWarehouse* new_dw,
-                                        const int& device);
+                                        const int& device,
+                                        GPUThreadedMPIScheduler* sched);
 
     virtual void  advectQ(const CCVariable<double>& q_CC,
                           const Patch* patch,

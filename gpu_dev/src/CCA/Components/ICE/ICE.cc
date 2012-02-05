@@ -46,6 +46,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/ICE/EOS/EquationOfState.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <CCA/Components/OnTheFlyAnalysis/AnalysisModuleFactory.h>
+#include <CCA/Components/Schedulers/GPUThreadedMPIScheduler.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Ports/ModelMaker.h>
@@ -3862,9 +3863,11 @@ void ICE::computeDelPressAndUpdatePressCCGPU(const ProcessorGroup*,
       //__________________________________
       // Advection preprocessing
       // - divide vol_frac_cc/vol
-      bool bulletProof_test=true;
-      advector->inFluxOutFluxVolume(uvel_FC,vvel_FC,wvel_FC,delT,patch,indx,
-                                    bulletProof_test, new_dw);
+      bool bulletProof_test = true;
+      // get a handle on the GPU scheduler to query for device and host pointers, etc
+      GPUThreadedMPIScheduler* sched = dynamic_cast<GPUThreadedMPIScheduler*>(getPort("scheduler"));
+      advector->inFluxOutFluxVolumeGPU(lb->uvel_FCMELabel, lb->vvel_FCMELabel, lb->wvel_FCMELabel, delT, patch,
+                                       indx, bulletProof_test, new_dw, device, sched);
       //__________________________________
       //   advect vol_frac
       // common variables that get passed into the advection operators
@@ -5639,8 +5642,9 @@ void ICE::advectAndAdvanceInTimeGPU(const ProcessorGroup* /*pg*/,
       //__________________________________
       //   Advection preprocessing
       bool bulletProof_test=true;
-      advector->inFluxOutFluxVolume(uvel_FC,vvel_FC,wvel_FC,delT,patch,indx,
-                                    bulletProof_test, new_dw);
+      GPUThreadedMPIScheduler* sched = dynamic_cast<GPUThreadedMPIScheduler*>(getPort("scheduler"));
+      advector->inFluxOutFluxVolumeGPU(lb->uvel_FCMELabel, lb->vvel_FCMELabel, lb->wvel_FCMELabel, delT,
+                                       patch, indx, bulletProof_test, new_dw, device, sched);
       //__________________________________
       // mass
       advector->advectMass(mass_L, q_advected,  varBasket);
