@@ -198,6 +198,19 @@ void FirstOrderAdvector::inFluxOutFluxVolume(
   }
 }
 
+void FirstOrderAdvector::inFluxOutFluxVolumeGPU(const SFCXVariable<double>& uvel_FC,
+                                                const SFCYVariable<double>& vvel_FC,
+                                                const SFCZVariable<double>& wvel_FC,
+                                                const double& delT,
+                                                const Patch* patch,
+                                                const int& indx,
+                                                const bool& bulletProofing_test,
+                                                DataWarehouse* new_dw,
+                                                const int& device)
+{
+  throw InternalError("FirstOrderAdvector::inFluxOutFluxVolumeGPU not yet implemented. Use FirstOrderAdvectorGPU::inFluxOutFluxVolumeGPU", __FILE__, __LINE__);
+}
+
 /*_____________________________________________________________________
  Function~ advectQ
 _____________________________________________________________________*/

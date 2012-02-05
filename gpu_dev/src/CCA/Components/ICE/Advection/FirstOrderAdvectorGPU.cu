@@ -391,17 +391,107 @@ needs to be defined on all faces for these cells
 
 See schematic diagram at bottom of ice.cc for del* definitions
  ---------------------------------------------------------------------  */
+void FirstOrderAdvectorGPU::inFluxOutFluxVolume(const SFCXVariable<double>& uvel_FC,
+                                                const SFCYVariable<double>& vvel_FC,
+                                                const SFCZVariable<double>& wvel_FC,
+                                                const double& delT,
+                                                const Patch* patch,
+                                                const int& indx,
+                                                const bool& bulletProof_test,
+                                                DataWarehouse* new_dw)
+{
+  Vector dx = patch->dCell();
+  double vol = dx.x()*dx.y()*dx.z();
+  double delY_top, delY_bottom,delX_right, delX_left, delZ_front, delZ_back;
+  double delX = dx.x(), delY = dx.y(), delZ = dx.z();
 
-void FirstOrderAdvectorGPU::inFluxOutFluxVolume(
-                        const SFCXVariable<double>& uvel_FC,
-                        const SFCYVariable<double>& vvel_FC,
-                        const SFCZVariable<double>& wvel_FC,
-                        const double& delT, 
-                        const Patch* patch,
-                        const int& indx,
-                        const bool& bulletProof_test,
-                        DataWarehouse* new_dw)
+  //__________________________________
+  //  At patch boundaries you need to extend
+  // the computational footprint by one cell in ghostCells
+  bool error = false;
 
+  int NGC =1;  // number of ghostCells
+  for(CellIterator iter = patch->getExtraCellIterator(NGC); !iter.done(); iter++) {
+    const IntVector& c = *iter;
+
+    delY_top    = std::max(0.0, (vvel_FC[c+IntVector(0,1,0)] * delT));
+    delY_bottom = std::max(0.0,-(vvel_FC[c                 ] * delT));
+    delX_right  = std::max(0.0, (uvel_FC[c+IntVector(1,0,0)] * delT));
+    delX_left   = std::max(0.0,-(uvel_FC[c                 ] * delT));
+    delZ_front  = std::max(0.0, (wvel_FC[c+IntVector(0,0,1)] * delT));
+    delZ_back   = std::max(0.0,-(wvel_FC[c                 ] * delT));
+
+    //__________________________________
+    //   SLAB outfluxes
+    double delX_Z = delX * delZ;
+    double delX_Y = delX * delY;
+    double delY_Z = delY * delZ;
+    fflux& ofs = d_OFS[c];
+    ofs.d_fflux[TOP]   = delY_top   * delX_Z;
+    ofs.d_fflux[BOTTOM]= delY_bottom* delX_Z;
+    ofs.d_fflux[RIGHT] = delX_right * delY_Z;
+    ofs.d_fflux[LEFT]  = delX_left  * delY_Z;
+    ofs.d_fflux[FRONT] = delZ_front * delX_Y;
+    ofs.d_fflux[BACK]  = delZ_back  * delX_Y;
+
+    //__________________________________
+    //  Bullet proofing
+    double total_fluxout = 0.0;
+    for(int face = TOP; face <= BACK; face++ )  {
+      total_fluxout  += ofs.d_fflux[face];
+    }
+    if(total_fluxout > vol){
+      error = true;
+    }
+  }  //cell iterator
+
+  //__________________________________
+  // if total_fluxout > vol then
+  // -find the cell,
+  // -set the outflux slab vol in all cells = 0.0,
+  // -request that the timestep be restarted.
+  // -ignore if a timestep restart has already been requested
+  bool tsr = new_dw->timestepRestarted();
+
+  if (error && bulletProof_test && !tsr) {
+    vector<IntVector> badCells;
+    vector<fflux>  badOutflux;
+
+    for(CellIterator iter = patch->getExtraCellIterator(NGC); !iter.done(); iter++) {
+      IntVector c = *iter;
+      double total_fluxout = 0.0;
+      fflux& ofs = d_OFS[c];
+
+      for(int face = TOP; face <= BACK; face++ )  {
+        total_fluxout  += d_OFS[c].d_fflux[face];
+        d_OFS[c].d_fflux[face] = 0.0;
+      }
+      // keep track of which cells are bad
+      if (vol - total_fluxout < 0.0) {
+        badCells.push_back(c);
+        badOutflux.push_back(ofs);
+      }
+    }  // cell iter
+    warning_restartTimestep( badCells,badOutflux, vol, indx, patch, new_dw);
+  }  // if total_fluxout > vol
+
+  if (error && !bulletProof_test) {
+    std::ostringstream mesg;
+    std::cout << " WARNING: ICE Advection operator Influx/Outflux volume error:"
+         << " Patch " << patch->getID()
+              << ", Level " << patch->getLevel()->getIndex()<< std::endl;
+  }
+}
+
+void FirstOrderAdvectorGPU::inFluxOutFluxVolumeGPU(const SFCXVariable<double>& uvel_FC,
+                                                   const SFCYVariable<double>& vvel_FC,
+                                                   const SFCZVariable<double>& wvel_FC,
+                                                   const double& delT,
+                                                   const Patch* patch,
+                                                   const int& indx,
+                                                   const bool& bulletProof_test,
+                                                   DataWarehouse* new_dw,
+                                                   const int& device)
 {
   Vector dx = patch->dCell();
   double vol = dx.x()*dx.y()*dx.z();
@@ -412,20 +502,7 @@ void FirstOrderAdvectorGPU::inFluxOutFluxVolume(
   bool error = false;
   int NGC = 1;  // number of ghostCells
 
-  int num_devices, device;
-  cudaGetDeviceCount(&num_devices);
-  if (num_devices > 1) {
-    int max_multiprocessors = 0, max_device = 0;
-    for (device = 0; device < num_devices; device++) {
-      cudaDeviceProp properties;
-      cudaGetDeviceProperties(&properties, device);
-      if (max_multiprocessors < properties.multiProcessorCount) {
-        max_multiprocessors = properties.multiProcessorCount;
-        max_device = device;
-      }
-    }
-    cudaSetDevice(max_device);
-  }
+  cudaSetDevice(device);
 
 
   IntVector l      = patch->getExtraCellLowIndex(NGC);
