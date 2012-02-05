@@ -63,6 +63,16 @@ namespace Uintah {
                                      const int& indx,
                                      const bool& bulletProof_test,
                                      DataWarehouse* new_dw);
+
+    virtual void inFluxOutFluxVolumeGPU(const SFCXVariable<double>& uvel_FC,
+                                        const SFCYVariable<double>& vvel_FC,
+                                        const SFCZVariable<double>& wvel_FC,
+                                        const double& delT,
+                                        const Patch* patch,
+                                        const int& indx,
+                                        const bool& bulletProofing_test,
+                                        DataWarehouse* new_dw,
+                                        const int& device);
                          
     virtual void  advectQ(const CCVariable<double>& q_CC,
                           const Patch* patch,

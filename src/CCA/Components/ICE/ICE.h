@@ -471,6 +471,13 @@ namespace Uintah {
                                            DataWarehouse*,
                                            DataWarehouse*);
 
+      void computeDelPressAndUpdatePressCCGPU(const ProcessorGroup*,
+                                              const PatchSubset* patches,
+                                              const MaterialSubset* /*matls*/,
+                                              DataWarehouse* old_dw,
+                                              DataWarehouse* new_dw,
+                                              const int device);
+
       void computePressFC(const ProcessorGroup*, 
                           const PatchSubset* patches,
                           const MaterialSubset* matls,
@@ -540,6 +547,13 @@ namespace Uintah {
                                   const MaterialSubset* matls,
                                   DataWarehouse*,
                                   DataWarehouse*);
+
+      void advectAndAdvanceInTimeGPU(const ProcessorGroup* /*pg*/,
+                                     const PatchSubset* patches,
+                                     const MaterialSubset* /*matls*/,
+                                     DataWarehouse* old_dw,
+                                     DataWarehouse* new_dw,
+                                     const int device);
                                   
                                   
       void conservedtoPrimitive_Vars(const ProcessorGroup*,
