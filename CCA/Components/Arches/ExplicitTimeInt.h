@@ -91,12 +91,13 @@ public:
                    std::vector<std::string> phi_lab,
                    int rkstep, const bool wasatch_update=false );
   
-  /** @brief A task interface to the singlePatchFEUpdate */ 
+  /** @brief Schedule the dummy initialize for wasatch */ 
   void sched_dummy_init( SchedulerP& sched, 
                        const PatchSet* patches, 
                        const MaterialSet* matls, 
                        std::vector<std::string> phi);
-  
+
+  /** @brief Dummy initialize task for wasatch */   
   void dummy_init( const ProcessorGroup*, 
                  const PatchSubset* patches, 
                  const MaterialSubset* matls, 

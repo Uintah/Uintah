@@ -248,7 +248,7 @@ namespace Wasatch{
       if( !isConstDensity || existSrcTerm || momEqnParams) {
         if( !existDensity ) {
           std::ostringstream msg;
-          msg << "ERROR: For variable density cases or when we have source terms in transport equation or in momentum equation, the density expression tag" << endl
+          msg << "ERROR: For variable density cases or when source terms exist in transport equations (scalar, momentum, etc...), the density expression tag" << endl
               << "       must be provided in the <Density> block" << endl;
           throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
         }

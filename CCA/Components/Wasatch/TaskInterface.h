@@ -165,7 +165,7 @@ namespace Wasatch{
      *  This sets all field requirements for the Uintah task and
      *  scheduled it for execution.
      */
-    void schedule( const Expr::TagSet& newDWFields, const int RKStage );
+    void schedule( const Expr::TagSet& newDWFields, const int RKStage = 1 );
 
 
     /**
@@ -174,7 +174,7 @@ namespace Wasatch{
      *  This sets all field requirements for the Uintah task and
      *  scheduled it for execution.
      */
-    void schedule( const int RKStage);
+    void schedule( const int RKStage = 1);
 
     Expr::ExpressionTree::TreePtr get_time_tree();
 
