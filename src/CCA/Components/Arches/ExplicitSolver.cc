@@ -690,7 +690,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       const std::set<std::string>& ioFieldSet = wasatch.io_field_set();              
       Wasatch::TaskInterface* wasatchRHSTask =
         scinew Wasatch::TaskInterface( gh->rootIDs,
-                                       "wasatch_task_rhs_stage_" + strRKStage.str(),
+                                       "wasatch_in_arches_rhs_task_stage_" + strRKStage.str(),
                                        *(gh->exprFactory),
                                        level, sched, patches, matls,
                                        wasatch.patch_info_map(),
@@ -870,7 +870,7 @@ int ExplicitSolver::noSolve(const LevelP& level,
     const std::set<std::string>& ioFieldSet = wasatch.io_field_set();              
     Wasatch::TaskInterface* wasatchDummyInitTask =
     scinew Wasatch::TaskInterface( gh->rootIDs,
-                                  "wasatch_task_dummy_init",
+                                  "wasatch_in_arches_dummy_init_rhs_task",
                                   *(gh->exprFactory),
                                   level, sched, patches, matls,
                                   wasatch.patch_info_map(),
@@ -879,7 +879,7 @@ int ExplicitSolver::noSolve(const LevelP& level,
                                   ioFieldSet 
                                   );
     wasatch.task_interface_list().push_back( wasatchDummyInitTask );
-    wasatchDummyInitTask->schedule( 1 );
+    wasatchDummyInitTask->schedule();
     
     // because of the dummy, dummy_init, we have to manually copy the wasatch 
     // transported variables from the old dw to the new dw.

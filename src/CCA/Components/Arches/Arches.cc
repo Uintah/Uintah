@@ -217,7 +217,6 @@ Arches::problemSetup(const ProblemSpecP& params,
                      const ProblemSpecP& materials_ps,
                      GridP& grid, SimulationStateP& sharedState)
 {
-
   d_sharedState= sharedState;
   d_lab->setSharedState(sharedState);
   ArchesMaterial* mat= scinew ArchesMaterial();
@@ -337,7 +336,8 @@ Arches::problemSetup(const ProblemSpecP& params,
   // should pass the entire uintah input file params.
   d_wasatch->problemSetup( params, materials_ps, grid, sharedState );  
   
-  Wasatch::GraphHelper* const gh = d_wasatch->graph_categories()[Wasatch::ADVANCE_SOLUTION];  
+  Wasatch::GraphHelper* const solgh = d_wasatch->graph_categories()[Wasatch::ADVANCE_SOLUTION];  
+  Wasatch::GraphHelper* const initgh = d_wasatch->graph_categories()[Wasatch::INITIALIZATION];    
   // NOTE: WE ARE LIMITED TO SVOLFIELDS WHEN USING WASATCH-IN-ARCHES FOR THE TIME
   // BEING.
   //____________________________________________________________________________  
@@ -345,66 +345,73 @@ Arches::problemSetup(const ProblemSpecP& params,
   // put these in the advance solution graph
   std::string xVelName = d_lab->d_uVelocitySPBCLabel->getName();
   const Expr::Tag xVelTag( xVelName, Expr::STATE_N );
-  if( !(gh->exprFactory->have_entry( xVelTag )) ) {
+  if( !(solgh->exprFactory->have_entry( xVelTag )) ) {
     // register placeholder expressions for x velocity string name: "uVelocitySPBC"
     std::cout << xVelName << std::endl;
     typedef Expr::PlaceHolder<XVolField>  XVelT;
-    gh->exprFactory->register_expression( new XVelT::Builder(xVelTag) );        
+    solgh->exprFactory->register_expression( new XVelT::Builder(xVelTag) );        
   }
   
   //
   std::string yVelName = d_lab->d_vVelocitySPBCLabel->getName();
   const Expr::Tag yVelTag( yVelName, Expr::STATE_N );
-  if( !(gh->exprFactory->have_entry( yVelTag )) ) {
+  if( !(solgh->exprFactory->have_entry( yVelTag )) ) {
     // register placeholder expressions for y velocity string name: "vVelocitySPBC"
     typedef Expr::PlaceHolder<YVolField>  YVelT;
-    gh->exprFactory->register_expression( new YVelT::Builder(yVelTag) );
+    solgh->exprFactory->register_expression( new YVelT::Builder(yVelTag) );
   }
   
   //
   std::string zVelName = d_lab->d_wVelocitySPBCLabel->getName();
   const Expr::Tag zVelTag( zVelName, Expr::STATE_N );
-  if( !(gh->exprFactory->have_entry( zVelTag )) ) {
+  if( !(solgh->exprFactory->have_entry( zVelTag )) ) {
     // register placeholder expressions for z velocity string name: "wVelocitySPBC"
     typedef Expr::PlaceHolder<ZVolField>  ZVelT;
-    gh->exprFactory->register_expression( new ZVelT::Builder(zVelTag) );        
+    solgh->exprFactory->register_expression( new ZVelT::Builder(zVelTag) );        
   }
   
   //____________________________________________________________________________  
   // Register the volume and area fractions for embedded geometry
+  // volume fraction
   std::string volFractionName = d_lab->d_volFractionLabel->getName();
   const Expr::Tag volFractionTag( volFractionName, Expr::STATE_NONE );
-  if( !(gh->exprFactory->have_entry( volFractionTag )) ) {
+  if( !(initgh->exprFactory->have_entry( volFractionTag )) ) {
     // register placeholder expressions for volume fraction field: "volFraction"
     typedef Expr::PlaceHolder<SVolField>  VolFracT;
-    gh->exprFactory->register_expression( new VolFracT::Builder(volFractionTag) );        
+    initgh->exprFactory->register_expression( new VolFracT::Builder(Expr::Tag( volFractionName, Expr::STATE_NONE )) );        
+  }  
+  
+  if( !(solgh->exprFactory->have_entry( volFractionTag )) ) {
+    // register placeholder expressions for volume fraction field: "volFraction"
+    typedef Expr::PlaceHolder<SVolField>  VolFracT;
+    solgh->exprFactory->register_expression( new VolFracT::Builder(volFractionTag) );            
   }
   
   // x area fraction
   std::string xAreaFractionName = d_lab->d_areaFractionFXLabel->getName();
   const Expr::Tag xAreaFractionTag( xAreaFractionName, Expr::STATE_NONE );
-  if( !(gh->exprFactory->have_entry( xAreaFractionTag )) ) {
-    // register placeholder expressions for volume fraction field: "areaFractionFX"
+  if( !(solgh->exprFactory->have_entry( xAreaFractionTag )) ) {
+    // register placeholder expressions for x area fraction field: "areaFractionFX"
     typedef Expr::PlaceHolder<XVolField>  XAreaFractionT;
-    gh->exprFactory->register_expression( new XAreaFractionT::Builder(xAreaFractionTag) );        
+    solgh->exprFactory->register_expression( new XAreaFractionT::Builder(xAreaFractionTag) );        
   }
 
-  // x area fraction
+  // y area fraction
   std::string yAreaFractionName = d_lab->d_areaFractionFYLabel->getName();
   const Expr::Tag yAreaFractionTag( yAreaFractionName, Expr::STATE_NONE );
-  if( !(gh->exprFactory->have_entry( yAreaFractionTag )) ) {
-    // register placeholder expressions for volume fraction field: "areaFractionFY"
+  if( !(solgh->exprFactory->have_entry( yAreaFractionTag )) ) {
+    // register placeholder expressions for y area fraction field: "areaFractionFY"
     typedef Expr::PlaceHolder<YVolField>  YAreaFractionT;
-    gh->exprFactory->register_expression( new YAreaFractionT::Builder(yAreaFractionTag) );        
+    solgh->exprFactory->register_expression( new YAreaFractionT::Builder(yAreaFractionTag) );        
   }
 
-  // x area fraction
+  // z area fraction
   std::string zAreaFractionName = d_lab->d_areaFractionFZLabel->getName();
   const Expr::Tag zAreaFractionTag( zAreaFractionName, Expr::STATE_NONE );
-  if( !(gh->exprFactory->have_entry( zAreaFractionTag )) ) {
-    // register placeholder expressions for volume fraction field: "areaFractionFZ"
+  if( !(solgh->exprFactory->have_entry( zAreaFractionTag )) ) {
+    // register placeholder expressions for z area fraction field: "areaFractionFZ"
     typedef Expr::PlaceHolder<ZVolField>  ZAreaFractionT;
-    gh->exprFactory->register_expression( new ZAreaFractionT::Builder(zAreaFractionTag) );        
+    solgh->exprFactory->register_expression( new ZAreaFractionT::Builder(zAreaFractionTag) );        
   }
   
   //____________________________________________________________________________   
@@ -417,10 +424,10 @@ Arches::problemSetup(const ProblemSpecP& params,
   for( Wasatch::Wasatch::EquationAdaptors::const_iterator ia=adaptors.begin(); ia!=adaptors.end(); ++ia ) {
     Wasatch::TransportEquation* transEq = (*ia)->equation();
     std::string solnVarName = transEq->solution_variable_name();    
-    if( !gh->exprFactory->have_entry( Expr::Tag(solnVarName,Expr::STATE_N  ) ) )
-      gh->exprFactory->register_expression( new FieldExpr::Builder(Expr::Tag(solnVarName,Expr::STATE_N)) );
-    if( !gh->exprFactory->have_entry( Expr::Tag(solnVarName,Expr::STATE_NP1  ) ) )
-      gh->exprFactory->register_expression( new FieldExpr::Builder(Expr::Tag(solnVarName,Expr::STATE_NP1)) );
+    if( !solgh->exprFactory->have_entry( Expr::Tag(solnVarName,Expr::STATE_N  ) ) )
+      solgh->exprFactory->register_expression( new FieldExpr::Builder(Expr::Tag(solnVarName,Expr::STATE_N)) );
+    if( !solgh->exprFactory->have_entry( Expr::Tag(solnVarName,Expr::STATE_NP1  ) ) )
+      solgh->exprFactory->register_expression( new FieldExpr::Builder(Expr::Tag(solnVarName,Expr::STATE_NP1)) );
   }      
   
 # endif // WASATCH_IN_ARCHES
@@ -770,14 +777,6 @@ void
 Arches::scheduleInitialize(const LevelP& level,
                            SchedulerP& sched)
 {
-# ifdef WASATCH_IN_ARCHES
-  // must set wasatch materials after problemsetup so that we can access
-  // sharedState->allArchesMaterials(). This is dictated by Uintah.
-  // NOTE: you must also disable wasatch material creation in the problemsetup.
-  d_wasatch->set_wasatch_materials(d_sharedState->allArchesMaterials());
-  d_wasatch->scheduleInitialize( level, sched );
-# endif // WASATCH_IN_ARCHES
-
   const PatchSet* patches= level->eachPatch();
   const MaterialSet* matls = d_sharedState->allArchesMaterials();
 
@@ -938,6 +937,19 @@ Arches::scheduleInitialize(const LevelP& level,
     EqnBase* eqn = ieqn->second;
     eqn->sched_checkBCs( level, sched );
   }
+# ifdef WASATCH_IN_ARCHES
+  // must set wasatch materials after problemsetup so that we can access
+  // sharedState->allArchesMaterials(). This is dictated by Uintah.
+  // NOTE: you must also disable wasatch material creation in the problemsetup.
+  // the wasatch initialization must be called after Arches initializes its params
+  // in case you want to use any of those in the wasatch initialization. For example,
+  // if you want to use the volume fraction in the initialization of a wasatch transported
+  // variable, then arches must first schedule a calculation for the volume fraction
+  // before wasatch could use it.
+  d_wasatch->set_wasatch_materials(d_sharedState->allArchesMaterials());
+  d_wasatch->scheduleInitialize( level, sched );
+# endif // WASATCH_IN_ARCHES
+  
 }
 
 void
