@@ -518,6 +518,29 @@ Arches::problemSetup(const ProblemSpecP& params,
                               d_calcEnthalpy, d_calcVariance, d_myworld);
 
   d_props->problemSetup(db);
+  
+# ifdef WASATCH_IN_ARCHES
+  //create expressions to export table vals to wasatch
+
+  vector<string> WasTabExprs;
+  proc0cout << "Wasatch Table Expressions" << endl;
+  WasTabExprs = d_props->WasExprs();
+  proc0cout << "# of exprs" << WasTabExprs.size() << endl;
+  
+  for (int i = 0; i < WasTabExprs.size(); i++) {
+    proc0cout << "Creating Expression for " << WasTabExprs[i] ;
+    const Expr::Tag WasTabTag( WasTabExprs[i] , Expr::STATE_N );
+        
+    if( !(gh->exprFactory->have_entry( WasTabTag )) ) {
+
+      typedef Expr::PlaceHolder<SVolField>  FieldExpr;
+      gh->exprFactory->register_expression( new FieldExpr::Builder(WasTabTag));     
+      proc0cout << " done" << endl;
+    }
+    
+  }
+  
+# endif //WASATCH-IN-ARCHES
 
   // read boundary condition information
   d_boundaryCondition = scinew BoundaryCondition(d_lab, d_MAlab, d_physicalConsts,

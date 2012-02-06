@@ -428,8 +428,8 @@
                             attribute4="baseline REQUIRED DOUBLE">
         <NameTag            spec="REQUIRED"/>
       </GaussianFunction>
-
-      <!-- Gaussian distribution !-->
+      
+      <!-- Algebraic Operations Function - sum, product, difference between expressions !-->
       <ExprAlgebra    	spec="OPTIONAL NO_DATA"
                         attribute1="algebraicOperation REQUIRED STRING 'SUM, DIFFERENCE, PRODUCT'">
         <Field1      spec="REQUIRED NO_DATA">
@@ -439,9 +439,66 @@
           <NameTag        spec="REQUIRED"/>
         </Field2>
       </ExprAlgebra>
-
+      
       
     </BasicExpression>
+    
+    <PhysicsCoefficient     spec="MULTIPLE NO_DATA"
+                            attribute1="type REQUIRED STRING 'SVOL,XVOL,YVOL,ZVOL"
+                            children1="ONE_OF(CHILD PrecipitationBulkDiffusionCoefficient, PrecipitationMonosurfaceCoefficient, 
+                            PrecipitationClassicNucleationCoefficient, PrecipitationClassicRStarValue, PrecipitationSimpleRStarValue)">  
+      <TaskList				spec="REQUIRED STRING 'initialization,timestep_size,advance_solution'" />
+      <NameTag				spec="REQUIRED" />
+
+      <PrecipitationBulkDiffusionCoefficient spec = "OPTIONAL NO_DATA"
+                                             attribute1="Diff_Coef REQUIRED DOUBLE"
+                                             attribute2="Molec_Vol REQUIRED DOUBLE">                                  
+        <Supersaturation spec = "REQUIRED NO_DATA">                                      
+          <NameTag spec="REQUIRED"/>
+        </Supersaturation >
+        <EquilibriumConcentration spec = "REQUIRED NO_DATA">
+          <NameTag spec="REQUIRED"/>
+        </EquilibriumConcentration>
+      </PrecipitationBulkDiffusionCoefficient>
+      
+      <PrecipitationMonosurfaceCoefficient spec = "OPTIONAL NO_DATA"
+                                             attribute1="Diff_Coef REQUIRED DOUBLE"
+                                             attribute2="Molec_D REQUIRED DOUBLE"
+                                             attribute3="Surf_Eng REQUIRED DOUBLE"
+                                             attribute4="Temperature REQUIRED DOUBLE">
+        <Supersaturation spec = "REQUIRED NO_DATA">                                      
+          <NameTag spec="REQUIRED"/>
+        </Supersaturation>
+      </PrecipitationMonosurfaceCoefficient>
+      
+      <PrecipitationClassicNucleationCoefficient spec = "OPTIONAL NO_DATA"
+                                             attribute1="Molec_Vol REQUIRED DOUBLE"
+                                             attribute2="Surf_Eng REQUIRED DOUBLE"
+                                             attribute3="Temperature REQUIRED DOUBLE">
+        <Supersaturation spec = "REQUIRED NO_DATA">                                   
+          <NameTag spec="REQUIRED"/>
+        </Supersaturation>
+      </PrecipitationClassicNucleationCoefficient>     
+      
+      <PrecipitationSimpleRStarValue spec = "OPTIONAL NO_DATA"
+                        attribute1 = "R_0 REQUIRED DOUBLE"
+                        attribute2 = "Conversion_Fac REQUIRED DOUBLE">
+        <Supersaturation spec = "REQUIRED NO_DATA">                                    
+          <NameTag spec="REQUIRED"/>
+        </Supersaturation>
+      </PrecipitationSimpleRStarValue>
+      
+      <PrecipitationClassicRStarValue spec = "OPTIONAL NO_DATA"
+                                      attribute1 = "Surf_Eng REQUIRED DOUBLE"
+                                      attribute2 = "Molec_Vol REQUIRED DOUBLE"
+                                      attribute3 = "Temperature REQUIRED DOUBLE" 
+                                      attribute4 = "Conversion_Fac REQUIRED DOUBLE">
+        <Supersaturation spec = "REQUIRED NO_DATA">                                     
+          <NameTag spec="REQUIRED"/>
+        </Supersaturation>
+      </PrecipitationClassicRStarValue>
+       
+    </PhysicsCoefficient>
     <!-- ========================================= -->
 
   </CommonTags>

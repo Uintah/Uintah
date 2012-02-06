@@ -28,10 +28,8 @@ class QMOM : public Expr::Expression<FieldT>
   FieldTVec knownMoments_;
 
   const FieldT* superSaturation_;
-  
   const Expr::TagList knownMomentsTagList_;
   const Expr::Tag superSaturationTag_;
-  const bool hasSuperSaturation_;
   
   QMOM( const Expr::TagList knownMomentsTagList,
        const Expr::Tag superSaturationTag );
@@ -45,17 +43,17 @@ public:
              const Expr::Tag& superSaturationTag)
     : ExpressionBuilder(result),
       knownMomentsTagList_( knownMomentsTagList ),
-      superSaturationTag_ ( superSaturationTag  )
+      supersaturationt_ ( superSaturationTag  )
     {}
     ~Builder(){}
     Expr::ExpressionBase* build() const
     { 
-      return new QMOM<FieldT>( knownMomentsTagList_, superSaturationTag_ ); 
+      return new QMOM<FieldT>( knownMomentsTagList_, supersaturationt_ ); 
     }
 
   private:
     const Expr::TagList knownMomentsTagList_;
-    const Expr::Tag     superSaturationTag_;
+    const Expr::Tag     supersaturationt_;
   };
 
   ~QMOM();
@@ -81,8 +79,7 @@ QMOM( const Expr::TagList knownMomentsTaglist,
       const Expr::Tag     superSaturationTag )
   : Expr::Expression<FieldT>(),
     knownMomentsTagList_( knownMomentsTaglist ),
-    superSaturationTag_ ( superSaturationTag  ),
-    hasSuperSaturation_ ( superSaturationTag_ != Expr::Tag() )
+    superSaturationTag_ ( superSaturationTag  )
 {}
 
 //--------------------------------------------------------------------
@@ -98,9 +95,10 @@ QMOM<FieldT>::
 advertise_dependents( Expr::ExprDeps& exprDeps )
 {
   exprDeps.requires_expression( knownMomentsTagList_ );
-  if ( hasSuperSaturation_ ) exprDeps.requires_expression( superSaturationTag_ );
+  if ( superSaturationTag_ != Expr::Tag () ) {
+    exprDeps.requires_expression( superSaturationTag_ );
+  }
 }
-
 //--------------------------------------------------------------------
 
 template< typename FieldT >
@@ -115,8 +113,9 @@ bind_fields( const Expr::FieldManagerList& fml )
        ++iMomTag ){
     knownMoments_.push_back( &fm.field_ref(*iMomTag) );
   }
-  
-  if ( hasSuperSaturation_ ) superSaturation_ = &fm.field_ref( superSaturationTag_ );
+  if ( superSaturationTag_ != Expr::Tag () ) {
+    superSaturation_ = &fm.field_ref( superSaturationTag_ );
+  }
 }
 
 //--------------------------------------------------------------------
@@ -161,7 +160,9 @@ evaluate()
   
   // grab an iterator for the supersaturation ratio field
   typename FieldT::const_interior_iterator supersatIter;
-  if ( hasSuperSaturation_ ) supersatIter = superSaturation_->interior_begin();
+  if ( superSaturationTag_ != Expr::Tag() ) {
+    supersatIter = superSaturation_->interior_begin();
+  }
   
   double m0;
   //
@@ -182,7 +183,7 @@ evaluate()
   while (sampleIterator!=sampleField->interior_end()) {
     
     // check if we are in a region where supersaturation is nonzero
-    if (hasSuperSaturation_ && *supersatIter == 0) {
+    if ( (superSaturationTag_ != Expr::Tag() && *supersatIter == 0) || *knownMomentsIterators[0] == 0) {
       // in case the supersaturation is zero, set the weights and abscissae to zero
       for (int i=0; i<abSize; i++) {
         int matLoc = 2*i;
@@ -196,7 +197,6 @@ evaluate()
         knownMomentsIterators[i] += 1;
         resultsIterators[i] += 1;
       }      
-      // continue
       continue;
     }
     
@@ -333,7 +333,7 @@ evaluate()
     
     //__________
     // increment iterators
-    if (hasSuperSaturation_) ++supersatIter;
+    if (superSaturationTag_ != Expr::Tag () ) ++supersatIter;
     ++sampleIterator;
     for (int i=0; i<nMoments; i++) {
       knownMomentsIterators[i] += 1;

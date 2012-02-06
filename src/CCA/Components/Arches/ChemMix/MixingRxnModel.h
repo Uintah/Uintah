@@ -142,6 +142,10 @@ namespace Uintah {
 
       /** @brief Return a string list of dependent variables names in the order they were read */ 
       inline std::vector<string>& getAllDepVars(){ return d_allDepVarNames; };
+    
+      /** @brief Needed for wasatch-in-arches use of tables */
+      virtual inline std::vector<string> getAllDepVarsNames(){proc0cout << "defaulted"; return d_allDepVarNames;};
+    
 
       /** @brief  Insert the name of a dependent variable into the dependent variable map (dvVarMap), which maps strings to VarLabels */
       inline void insertIntoMap( const string var_name ){
