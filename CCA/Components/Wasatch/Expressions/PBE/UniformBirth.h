@@ -20,7 +20,7 @@ template< typename FieldT >
 class UniformBirth
 : public Expr::Expression<FieldT>
 {
-  /* declare private variables such as fields, operators, etc. here */
+
   const Expr::Tag phiTag_;
   const double momentOrder_; // this is the order of the moment equation in which the growth rate is used
   const double sig; 

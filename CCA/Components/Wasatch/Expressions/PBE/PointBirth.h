@@ -12,23 +12,26 @@
  *  \date January, 2012
  *
  *  \tparam FieldT the type of field.
- 
- *  Nucleation Source term for use in QMOM
-
+ *
+ *  \brief Nucleation Source term for use in QMOM
+ *  uses Dirac function for birht term b = del(r-r*)
+ *  TODO: (alex) add latex math equations
  */
 template< typename FieldT >
 class PointBirth
 : public Expr::Expression<FieldT>
 {
-  /* declare private variables such as fields, operators, etc. here */
-  const Expr::Tag phiTag_;
-  const double momentOrder_; // this is the order of the moment equation in which the growth rate is used
-  const FieldT* phi_; // this will correspond to m(k+1)
-  const double birthRate_;
+  // be careful on what phi (or moment) you pass to this expression
+  const Expr::Tag phiTag_, rStarTag_;
+  const double momentOrder_;  // this is the order of the moment equation in which the growth rate is used
+  const FieldT* phi_;         // this checks is m_k =/= 0
+  const FieldT* rStar_;
+  const double constRStar_;
 
   PointBirth( const Expr::Tag& phiTag,
-              const double birthRate,
-              const double momentOrder );
+              const Expr::Tag& rStarTag,
+              const double momentOrder,
+              const double constRStar);
 
  public:
   class Builder : public Expr::ExpressionBuilder
@@ -36,25 +39,26 @@ class PointBirth
     public:
       Builder( const Expr::Tag& result,
                const Expr::Tag& phiTag,
-               const double birthRate,
-	             const double momentOrder )
+               const Expr::Tag& rStarTag,
+	              const double momentOrder,
+               const double constRStar)
 	: ExpressionBuilder(result),
-	phit_(phiTag),
-  birthrate_(birthRate),    
-	momentorder_(momentOrder)
+  	phit_(phiTag),
+   rstart_(rStarTag),    
+  	momentorder_(momentOrder),
+   constrstar_(constRStar)
 	  {}
-    
     
       ~Builder(){}
     
       Expr::ExpressionBase* build() const
       {
-        return new PointBirth<FieldT>( phit_, birthrate_, momentorder_ );
+        return new PointBirth<FieldT>( phit_, rstart_, momentorder_, constrstar_ );
       }
     
     private:
-      const Expr::Tag phit_;
-      const double birthrate_;
+      const Expr::Tag phit_, rstart_;
+      const double constrstar_;
       const double momentorder_;
     };
   
@@ -67,26 +71,23 @@ class PointBirth
   
 };
 
-
-
 // ###################################################################
 //
 //                          Implementation
 //
 // ###################################################################
 
-
-
 template< typename FieldT >
 PointBirth<FieldT>::
 PointBirth( const Expr::Tag& phiTag,
-            const double birthRate,
-            const double momentOrder )
+            const Expr::Tag& rStarTag,
+            const double momentOrder,
+            const double constRStar)
 : Expr::Expression<FieldT>(),
   phiTag_(phiTag),
-  birthRate_(birthRate),
-  //momentOrder_(0.0)
-  momentOrder_(momentOrder)
+  rStarTag_(rStarTag),
+  momentOrder_(momentOrder),
+  constRStar_(constRStar)
 {}
 
 //--------------------------------------------------------------------
@@ -104,6 +105,9 @@ PointBirth<FieldT>::
 advertise_dependents( Expr::ExprDeps& exprDeps )
 {
   exprDeps.requires_expression( phiTag_ );
+  if (rStarTag_ != Expr::Tag () ) {
+    exprDeps.requires_expression( rStarTag_ );
+  }
 }
 
 //--------------------------------------------------------------------
@@ -114,8 +118,9 @@ PointBirth<FieldT>::
 bind_fields( const Expr::FieldManagerList& fml )
 {
   const Expr::FieldManager<FieldT>& fm = fml.template field_manager<FieldT>();
-  /* add additional code here to bind any fields required by this expression */
   phi_ = &fm.field_ref( phiTag_ );
+  if (rStarTag_ != Expr::Tag () )
+    rStar_ = &fm.field_ref( rStarTag_ );  
 }
 
 //--------------------------------------------------------------------
@@ -136,12 +141,11 @@ evaluate()
   using namespace SpatialOps;
   FieldT& result = this->value();
   
-  double rknot = 5.1;
-  //rknot = surf_eng*mol_val/R/T/log(S)
-  double B = birthRate_;
-  //B = J*exp(-16pi/3*(SurfEng/K_boltz/T)^3 * (MolecVol/log(S)/N_A)^2) 
-
-  result <<= B * pow(rknot,momentOrder_);
+  if (rStarTag_ != Expr::Tag () ) {
+    result <<= pow(*rStar_, momentOrder_); 
+  } else {
+    result <<= pow(constRStar_, momentOrder_);
+  }
  }
 
 //--------------------------------------------------------------------

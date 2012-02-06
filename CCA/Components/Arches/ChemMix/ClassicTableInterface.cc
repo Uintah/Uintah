@@ -370,8 +370,8 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
 
       // others: 
       CCVariable<double> drho_df; 
-      new_dw->allocateAndPut( drho_df, d_lab->d_drhodfCPLabel, matlIndex, patch ); 
 
+      new_dw->allocateAndPut( drho_df, d_lab->d_drhodfCPLabel, matlIndex, patch ); 
       if (!d_coldflow) { 
         new_dw->allocateAndPut( arches_temperature, d_lab->d_tempINLabel, matlIndex, patch ); 
         new_dw->allocateAndPut( arches_cp, d_lab->d_cpINLabel, matlIndex, patch ); 
@@ -412,7 +412,6 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
       // others:
       CCVariable<double> drho_dw; 
       new_dw->getModifiable( drho_dw, d_lab->d_drhodfCPLabel, matlIndex, patch ); 
-
       if (!d_coldflow) { 
         new_dw->getModifiable( arches_temperature, d_lab->d_tempINLabel, matlIndex, patch ); 
         new_dw->getModifiable( arches_cp, d_lab->d_cpINLabel, matlIndex, patch ); 
@@ -1499,4 +1498,10 @@ void ClassicTableInterface::checkForConstants( const string & inputfile ) {
 
   // Closing the file pointer
   gzclose( gzFp );
+}
+//---------------------
+vector<std::string> 
+ClassicTableInterface::getAllDepVarsNames() {
+  proc0cout << "returning names" << endl;
+  return d_allDepVarNames; 
 }

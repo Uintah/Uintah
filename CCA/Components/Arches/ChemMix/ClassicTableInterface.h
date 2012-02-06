@@ -154,6 +154,9 @@ public:
   /** @brief    Load list of dependent variables from the table 
       @returns  A vector<string>& that is a reference to the list of all dependent variables */
   const vector<string> & getAllDepVars();
+  
+  
+  virtual vector<std::string> getAllDepVarsNames();
 
   /** @brief    Load list of independent variables from the table
       @returns  A vector<string>& that is a reference to the list of all independent variables */ 

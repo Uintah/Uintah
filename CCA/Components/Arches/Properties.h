@@ -217,6 +217,12 @@ public:
   void sched_doTPDummyInit( const LevelP&, SchedulerP& );
 
 	void doTableMatching(); 
+  
+  //////////////////////////////////////////////////////////////////////
+  // fix for table values into wasatch
+# ifdef WASATCH_IN_ARCHES
+  const vector<string>  WasExprs();
+# endif //WASATCH_IN_ARCHES
 
 protected :
 
@@ -297,7 +303,6 @@ private:
       // Variable labels used by simulation controller
       const ArchesLabel* d_lab;
       const MPMArchesLabel* d_MAlab;
-      const VarLabel* d_mf_label; 
 
       bool d_reactingFlow;
       PhysicalConstants* d_physicalConsts;
