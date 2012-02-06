@@ -4,38 +4,63 @@
 <Uintah_specification>
 
    <Meta>
-       <title>Colliding Disks With Complex Physics</title>
+     <title>Colliding Disks, with 2 matls, 2 levels, damage and contact</title>
    </Meta>
 
    <SimulationComponent type="mpm" />
 
    <Time>
-       <maxTime>0.2</maxTime>
+       <maxTime>0.12</maxTime>
        <initTime>0.0</initTime>
        <delt_min>0.00001</delt_min>
        <delt_max>0.001</delt_max>
-       <timestep_multiplier>0.8</timestep_multiplier>
+       <timestep_multiplier>0.3</timestep_multiplier>
    </Time>
    <DataArchiver>
-        <filebase>disks_complex.uda</filebase>
+       <filebase>disks.2Level.uda</filebase>
        <outputInterval>.01</outputInterval>
        <save label = "KineticEnergy"/>
        <save label = "TotalMass"/>
        <save label = "StrainEnergy"/>
        <save label = "CenterOfMassPosition"/>
        <save label = "TotalMomentum"/>
-       <save label = "p.x"/>
-       <save label = "p.volume"/>
-       <save label = "p.stress"/>
-       <save label = "g.mass"/>
-       <save label = "g.stressFS"/>
+       <save label = "p.x" levels = "-1"/>
+       <save label = "p.epsf" levels = "-1"/>
+       <save label = "p.localized" levels = "-1"/>
+       <save label = "p.volume" levels = "-1"/>
+       <save label = "p.color" levels = "-1"/>
+       <save label = "p.stress" levels = "-1"/>
+       <save label = "g.mass" levels = "-1"/>
+       <save label = "g.stressFS" levels = "-1"/>
 
        <checkpoint cycle = "2" interval = "0.01"/>
    </DataArchiver>
 
-    <MPM>
+   <MPM>
        <time_integrator>explicit</time_integrator>
-    </MPM>
+       <interpolator>gimp</interpolator>
+       <withColor>      true      </withColor>
+       <artificial_viscosity>true</artificial_viscosity>
+       <artificial_viscosity_coeff1>0.3</artificial_viscosity_coeff1>
+       <artificial_viscosity_coeff2>3.0</artificial_viscosity_coeff2>
+       <DoExplicitHeatConduction>false</DoExplicitHeatConduction>
+       <erosion algorithm = "ZeroStress"/>
+   </MPM>
+
+    <AMR>
+      <MPM>
+        <min_grid_level>-1</min_grid_level>
+        <max_grid_level>-1</max_grid_level>
+      </MPM>
+      <Regridder type="Tiled">
+        <max_levels>2</max_levels>
+        <cell_refinement_ratio>    [[2,2,1]]         </cell_refinement_ratio>
+        <min_patch_size>           [[8,8,1]]         </min_patch_size>
+        <cell_stability_dilation>   [1,1,0]          </cell_stability_dilation>  
+        <min_boundary_cells>       [1,1,0]           </min_boundary_cells>
+      </Regridder>
+      <useLockStep>       true  </useLockStep>
+    </AMR>
 
     <PhysicalConstants>
        <gravity>[0,0,0]</gravity>
@@ -43,11 +68,11 @@
 
     <MaterialProperties>
        <MPM>
-           <material>
+           <material name="cmr">
               <density>1000.0</density>
               <constitutive_model type="comp_mooney_rivlin"> 
-                 <he_constant_1>100000.0</he_constant_1>
-                 <he_constant_2>20000.0</he_constant_2>
+                 <he_constant_1>200000.0</he_constant_1>
+                 <he_constant_2>40000.0</he_constant_2>
                  <he_PR>.49</he_PR>
                </constitutive_model>
               <thermal_conductivity>1.0</thermal_conductivity>
@@ -58,29 +83,50 @@
                      <top>[.25,.25,.1]</top>
                      <radius> .2 </radius>
                   </cylinder>
-                  <res>[2,2,2]</res>
-                  <velocity>[2.0,2.0,0]</velocity>
+                  <res>[2,2,1]</res>
+                  <velocity>[3.0,3.0,0]</velocity>
                   <temperature>12</temperature>
-               </geom_object>
+                  <color>             0               </color>
+              </geom_object>
            </material>
 
-           <material>
+           <material name = "cnhd">
               <density>1000.0</density>
-              <constitutive_model type="hypo_elastic">
-                 <G>1.2e6</G>
-                 <K>3.2e6</K>
-               </constitutive_model>
+              <constitutive_model type="cnh_damage">
+                 <shear_modulus>1.2e6</shear_modulus>
+                 <bulk_modulus>3.2e6</bulk_modulus>
+                 <failure_by_stress>  true         </failure_by_stress>
+                 <failure_mean> 2.0e5       </failure_mean>
+                 <failure_std>  1.0e5       </failure_std>
+                  <failure_distrib>gauss</failure_distrib>
+                  <failure_criteria>MaximumPrincipalStress</failure_criteria>
+              </constitutive_model>
               <thermal_conductivity>1.0</thermal_conductivity>
               <specific_heat>5</specific_heat>
+
               <geom_object>
-                  <cylinder label="gp2">
+                <difference>
+                  <cylinder label = "gp2">
                      <bottom>[.75,.75,.05]</bottom>
                      <top>[.75,.75,.1]</top>
                      <radius> .2 </radius>
                   </cylinder>
-                  <res>[2,2,2]</res>
-                  <velocity>[-2.0,-2.0,0]</velocity>
-                  <temperature>12</temperature>
+                  <box label="gp3">
+                     <min>[ 0.725, 0.725, 0.05 ]</min>
+                     <max>[ 0.775, 0.775, 0.10 ]</max>
+                  </box>
+                </difference>
+                <res>[2,2,1]</res>
+                <velocity>[-3.0,-3.0,0]</velocity>
+                <temperature>12</temperature>
+                <color>             0               </color>
+               </geom_object>
+              <geom_object>
+                <box label="gp3"/>
+                <res>[2,2,1]</res>
+                <velocity>[-3.0,-3.0,0]</velocity>
+                <temperature>12</temperature>
+                <color>             1               </color>
                </geom_object>
            </material>
 
@@ -95,43 +141,60 @@
        
     <Grid>
        <BoundaryConditions>
-                           <Face side = "x-">
-             <BCType id = "all" var = "Dirichlet" label = "Velocity">
-                   <value> [0.0,0.0,0.0] </value>
-             </BCType>
-         </Face>
-         <Face side = "x+">
-            <BCType id = "all" var = "Dirichlet" label = "Velocity">
-                 <value> [0.0,0.0,0.0] </value>
-            </BCType>
-         </Face>
-         <Face side = "y-">
-            <BCType id = "all" var = "Dirichlet" label = "Velocity">
-                   <value> [0.0,0.0,0.0] </value>
-            </BCType>
-         </Face>                  
-        <Face side = "y+">
-           <BCType id = "all" var = "Dirichlet" label = "Velocity">  
-                  <value> [0.0,0.0,0.0] </value>
-           </BCType>
-         </Face>
-         <Face side = "z-">
-           <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
-          </Face>
-          <Face side = "z+">
-           <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
-          </Face>     
+          <Face side = "x-">
+                  <BCType id = "all" var = "Dirichlet" label = "Velocity">
+                        <value> [0.0,0.0,0.0] </value>
+                   </BCType>
+           </Face>
+           <Face side = "x+">
+                  <BCType id = "all" var = "Dirichlet" label = "Velocity">
+                    <value> [0.0,0.0,0.0] </value>
+                  </BCType>
+           </Face>
+           <Face side = "y-">
+                  <BCType id = "all" var = "Dirichlet" label = "Velocity">
+                      <value> [0.0,0.0,0.0] </value>
+                  </BCType>
+           </Face>                  
+          <Face side = "y+">
+                  <BCType id = "all" var = "Dirichlet" label = "Velocity">
+                     <value> [0.0,0.0,0.0] </value>
+                 </BCType>
+           </Face>
+           <Face side = "z-">
+             <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+           </Face>
+           <Face side = "z+">
+             <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+           </Face>                           
        </BoundaryConditions>
        <Level>
            <Box label = "1">
-              <lower>[0,0,0]</lower>
-              <upper>[1.0,1.0,.15]</upper>
-               <resolution>[20,20,3]</resolution>
-              <patches>[2,2,1]</patches>
+              <lower>[0,0,0.05]</lower>
+              <upper>[1.0,1.0,.1]</upper>
+              <resolution>[20,20,1]</resolution>
+              <patches>[1,1,1]</patches>
+              <extraCells> [1,1,1]            </extraCells>
            </Box>
        </Level>
     </Grid>
+    <!--____________________________________________________________________-->
+    <DataAnalysis>
+       <Module name="particleExtract">
 
-    
+        <material>cnhd</material>
+        <samplingFrequency> 1e10 </samplingFrequency>
+        <timeStart>          0   </timeStart>
+        <timeStop>          100  </timeStop>
+        <colorThreshold>
+          0
+        </colorThreshold>
+
+        <Variables>
+          <analyze label="p.velocity"/>
+          <analyze label="p.stress"/>
+        </Variables>
+
+      </Module>
+    </DataAnalysis>
 </Uintah_specification>
-
