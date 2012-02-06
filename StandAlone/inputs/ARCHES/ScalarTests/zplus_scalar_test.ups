@@ -175,7 +175,6 @@
             <solver>cg</solver>
             <preconditioner>pfmg</preconditioner>
             <maxiterations>250</maxiterations>
-            <relax_type>2</relax_type>
           </Parameters>
         </PressureSolver>
 
