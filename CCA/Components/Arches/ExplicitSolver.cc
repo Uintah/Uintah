@@ -2599,8 +2599,6 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
         }
       }
 
-      if ( !d_noisyDensityGuess ) proc0cout << "NOTICE: Set <NoisyDenstyGuess> in <ExplicitSolver> to true to check for negative density guesses" << std::endl;
-
       // This replaces the ->anyArchesPhysicalBC if statement below when new BCs take over
       if ( d_boundaryCondition->isUsingNewBC() ) {
 

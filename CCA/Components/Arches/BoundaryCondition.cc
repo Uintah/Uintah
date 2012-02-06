@@ -6121,10 +6121,11 @@ void BoundaryCondition::setVel__NEW( const Patch* patch, const Patch::FaceType& 
      for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
 
        IntVector c  = *bound_ptr; 
-       IntVector cp = *bound_ptr - insideCellDir; 
+       IntVector cp = *bound_ptr + insideCellDir; 
+       IntVector cm = *bound_ptr - insideCellDir; 
 
-       uVel[c]  = value.x();
-       uVel[cp] = value.x() * density[c] / ( 0.5 * ( density[c] + density[cp] )); 
+       uVel[cp]  = value.x();
+       uVel[c]   = value.x() * density[c] / ( 0.5 * ( density[c] + density[cm] )); 
 
        vVel[c] = value.y(); 
        wVel[c] = value.z(); 
@@ -6150,10 +6151,11 @@ void BoundaryCondition::setVel__NEW( const Patch* patch, const Patch::FaceType& 
      for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
 
        IntVector c  = *bound_ptr; 
-       IntVector cp = *bound_ptr - insideCellDir; 
+       IntVector cp = *bound_ptr + insideCellDir; 
+       IntVector cm = *bound_ptr - insideCellDir; 
 
-       vVel[c] = value.y();
-       vVel[cp] = value.y() * density[c] / ( 0.5 * ( density[c] + density[cp] )); 
+       vVel[cp] = value.y();
+       vVel[c] = value.y() * density[c] / ( 0.5 * ( density[c] + density[cm] )); 
 
        uVel[c] = value.x(); 
        wVel[c] = value.z(); 
@@ -6180,10 +6182,11 @@ void BoundaryCondition::setVel__NEW( const Patch* patch, const Patch::FaceType& 
      for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
 
        IntVector c  = *bound_ptr; 
-       IntVector cp = *bound_ptr - insideCellDir; 
+       IntVector cp = *bound_ptr + insideCellDir; 
+       IntVector cm = *bound_ptr - insideCellDir; 
 
-       wVel[c] = value.z();
-       wVel[cp] = value.z() * density[c] / ( 0.5 * ( density[c] + density[cp] )); 
+       wVel[cp] = value.z();
+       wVel[c] = value.z() * density[c] / ( 0.5 * ( density[c] + density[cm] )); 
 
        uVel[c] = value.x(); 
        vVel[c] = value.y(); 
