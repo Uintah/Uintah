@@ -29,6 +29,7 @@
        <save label = "p.localized" levels = "-1"/>
        <save label = "p.volume" levels = "-1"/>
        <save label = "p.color" levels = "-1"/>
+       <save label = "p.particleID" levels = "-1"/>
        <save label = "p.stress" levels = "-1"/>
        <save label = "g.mass" levels = "-1"/>
        <save label = "g.stressFS" levels = "-1"/>
