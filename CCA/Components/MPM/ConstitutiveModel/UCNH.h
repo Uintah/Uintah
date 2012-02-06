@@ -129,13 +129,13 @@ namespace Uintah {
     const VarLabel* pLocalizedLabel;
     const VarLabel* pDamageLabel;
     const VarLabel* pDeformRateLabel;
+    const VarLabel* pTimeOfLocLabel;
     const VarLabel* pFailureStressOrStrainLabel_preReloc;
     const VarLabel* pLocalizedLabel_preReloc;
     const VarLabel* pDamageLabel_preReloc;
     const VarLabel* pDeformRateLabel_preReloc;
-//    const VarLabel* bBeBarLabel;
-//    const VarLabel* bBeBarLabel_preReloc;
-      
+    const VarLabel* pTimeOfLocLabel_preReloc;
+
     // Plasticity Requirements //
     /////////////////////////////
     const VarLabel* pPlasticStrain_label;
@@ -347,8 +347,11 @@ namespace Uintah {
                                               const double& pFailureStrain, 
                                               const int& pLocalized,
                                               int& pLocalized_new, 
+                                              const double& pTimeOfLoc,
+                                              double& pTimeOfLoc_new, 
                                               Matrix3& pStress_new,
-                                              const long64 particleID);
+                                              const long64 particleID,
+                                              double time);
 
     // Modify the stress for brittle damage
     void updateDamageAndModifyStress(const Matrix3& FF, 
