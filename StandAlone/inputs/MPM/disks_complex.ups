@@ -17,7 +17,7 @@
        <timestep_multiplier>0.3</timestep_multiplier>
    </Time>
    <DataArchiver>
-       <filebase>disks.2Level.uda</filebase>
+       <filebase>disks_complex.uda</filebase>
        <outputInterval>.01</outputInterval>
        <save label = "KineticEnergy"/>
        <save label = "TotalMass"/>
