@@ -332,7 +332,7 @@ void UCNH::getFailureStressOrStrainData(ProblemSpecP& ps)
   // By setting the default value to DBL_MAX, that makes 1/n=0, which makes c=1
   d_epsf.exponent= DBL_MAX; //Exponent used in vol. scaling of failure criteria
   d_epsf.refVol = 1.0; // Reference volume for scaling failure criteria
-  d_epsf.t_char = 1.0; // Characteristic time of damage evolution
+  d_epsf.t_char = 1.0e-99; // Characteristic time of damage evolution
 
   ps->require("failure_criteria", d_failure_criteria);
 
@@ -908,7 +908,7 @@ void UCNH::initializeCMData(const Patch* patch,
       for(;iter != pset->end();iter++){
         pFailureStrain[*iter] = d_brittle_damage.r0b;
         pLocalized[*iter]     = 0;
-        pTimeOfLoc[*iter]     = -1.e99;;
+        pTimeOfLoc[*iter]     = 1.e99;;
         pDamage[*iter]        = 0.0;
       }
     }  else if (d_epsf.dist == "gauss"){
@@ -2111,43 +2111,43 @@ void UCNH::updateFailedParticlesAndModifyStress(const Matrix3& defGrad,
   // Find if the particle has failed
   pLocalized_new = pLocalized;
   pTimeOfLoc_new = pTimeOfLoc;
-  if(d_failure_criteria=="MaximumPrincipalStress"){
-    double maxEigen=0.,medEigen=0.,minEigen=0.;
-    pStress.getEigenValues(maxEigen,medEigen,minEigen);
-    //The first eigenvalue returned by "eigen" is always the largest 
-    if (maxEigen > pFailureStr){
-      pLocalized_new = 1;
+  if (pLocalized == 0){
+    if(d_failure_criteria=="MaximumPrincipalStress"){
+      double maxEigen=0.,medEigen=0.,minEigen=0.;
+      pStress.getEigenValues(maxEigen,medEigen,minEigen);
+      //The first eigenvalue returned by "eigen" is always the largest 
+      if (maxEigen > pFailureStr){
+        pLocalized_new = 1;
+      }
+      if (pLocalized != pLocalized_new) {
+        cout << "Particle " << particleID << " has failed : MaxPrinStress = "
+             << maxEigen << " eps_f = " << pFailureStr << endl;
+        pTimeOfLoc_new = time;
+      }
     }
-    if (pLocalized != pLocalized_new) {
-      cout << "Particle " << particleID << " has failed : MaxPrinStress = "
-           << maxEigen << " eps_f = " << pFailureStr << endl;
-      pTimeOfLoc_new = time;
-    }
-  }
-  else if(d_failure_criteria=="MaximumPrincipalStrain"){
-    // Compute Finger tensor (left Cauchy-Green) 
-    Matrix3 bb = defGrad*defGrad.Transpose();
-    // Compute Eulerian strain tensor
-    Matrix3 ee = (Identity - bb.Inverse())*0.5;
+    else if(d_failure_criteria=="MaximumPrincipalStrain"){
+      // Compute Finger tensor (left Cauchy-Green) 
+      Matrix3 bb = defGrad*defGrad.Transpose();
+      // Compute Eulerian strain tensor
+      Matrix3 ee = (Identity - bb.Inverse())*0.5;
 
-    double maxEigen=0.,medEigen=0.,minEigen=0.;
-    ee.getEigenValues(maxEigen,medEigen,minEigen);
-    if (maxEigen > pFailureStr){
-      pLocalized_new = 1;
+      double maxEigen=0.,medEigen=0.,minEigen=0.;
+      ee.getEigenValues(maxEigen,medEigen,minEigen);
+      if (maxEigen > pFailureStr){
+        pLocalized_new = 1;
+      }
+      if (pLocalized != pLocalized_new) {
+        cout << "Particle " << particleID << " has failed : eps = " << maxEigen
+             << " eps_f = " << pFailureStr << endl;
+        pTimeOfLoc_new = time;
+      }
     }
-    if (pLocalized != pLocalized_new) {
-      cout << "Particle " << particleID << " has failed : eps = " << maxEigen
-           << " eps_f = " << pFailureStr << endl;
-      pTimeOfLoc_new = time;
-    }
-  }
-  else if(d_failure_criteria=="MohrColoumb"){
-    double maxEigen=0.,medEigen=0.,minEigen=0.;
-    pStress.getEigenValues(maxEigen,medEigen,minEigen);
-
-    double cohesion = pFailureStr;
-    if (pLocalized == 0){
-
+    else if(d_failure_criteria=="MohrColoumb"){
+      double maxEigen=0.,medEigen=0.,minEigen=0.;
+      pStress.getEigenValues(maxEigen,medEigen,minEigen);
+  
+      double cohesion = pFailureStr;
+  
       double epsMax=0.;
       // Tensile failure criteria (max princ stress > d_tensile_cutoff*cohesion)
       if (maxEigen > d_tensile_cutoff*cohesion){
@@ -2168,23 +2168,28 @@ void UCNH::updateFailedParticlesAndModifyStress(const Matrix3& defGrad,
              << epsMax << " cohesion = " << cohesion << endl;
         pTimeOfLoc_new = time;
       }
-    } // pLocalized==0
-  }
+    } // Mohr-Coloumb
+  } // pLocalized==0
 
   // If the particle has failed, apply various erosion algorithms
   if (flag->d_doErosion) {
     // Compute pressure
     double pressure = pStress.Trace()/3.0;
+    double failTime = time - pTimeOfLoc_new;
+    double D = exp(-failTime/d_epsf.t_char);
     if (pLocalized != 0) {
       if (d_allowNoTension) {
-        if (pressure > 0.0)
-            pStress = zero;
-          else
+        if (pressure > 0.0){
+            pStress*=D;
+        } else{
             pStress = Identity*pressure;
-      } else if (d_allowNoShear)
+        }
+      } else if (d_allowNoShear){
          pStress = Identity*pressure;
-      else if (d_setStressToZero)
-        pStress = zero;
+      }
+      else if (d_setStressToZero){
+        pStress*=D;
+      }
     }
   }
 }
