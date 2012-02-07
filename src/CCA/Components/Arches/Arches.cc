@@ -336,7 +336,7 @@ Arches::problemSetup(const ProblemSpecP& params,
   // should pass the entire uintah input file params.
   d_wasatch->problemSetup( params, materials_ps, grid, sharedState );  
   
-  Wasatch::GraphHelper* const solgh = d_wasatch->graph_categories()[Wasatch::ADVANCE_SOLUTION];  
+  Wasatch::GraphHelper* const solngh = d_wasatch->graph_categories()[Wasatch::ADVANCE_SOLUTION];  
   Wasatch::GraphHelper* const initgh = d_wasatch->graph_categories()[Wasatch::INITIALIZATION];    
   // NOTE: WE ARE LIMITED TO SVOLFIELDS WHEN USING WASATCH-IN-ARCHES FOR THE TIME
   // BEING.
@@ -345,29 +345,29 @@ Arches::problemSetup(const ProblemSpecP& params,
   // put these in the advance solution graph
   std::string xVelName = d_lab->d_uVelocitySPBCLabel->getName();
   const Expr::Tag xVelTag( xVelName, Expr::STATE_N );
-  if( !(solgh->exprFactory->have_entry( xVelTag )) ) {
+  if( !(solngh->exprFactory->have_entry( xVelTag )) ) {
     // register placeholder expressions for x velocity string name: "uVelocitySPBC"
     std::cout << xVelName << std::endl;
     typedef Expr::PlaceHolder<XVolField>  XVelT;
-    solgh->exprFactory->register_expression( new XVelT::Builder(xVelTag) );        
+    solngh->exprFactory->register_expression( new XVelT::Builder(xVelTag) );        
   }
   
   //
   std::string yVelName = d_lab->d_vVelocitySPBCLabel->getName();
   const Expr::Tag yVelTag( yVelName, Expr::STATE_N );
-  if( !(solgh->exprFactory->have_entry( yVelTag )) ) {
+  if( !(solngh->exprFactory->have_entry( yVelTag )) ) {
     // register placeholder expressions for y velocity string name: "vVelocitySPBC"
     typedef Expr::PlaceHolder<YVolField>  YVelT;
-    solgh->exprFactory->register_expression( new YVelT::Builder(yVelTag) );
+    solngh->exprFactory->register_expression( new YVelT::Builder(yVelTag) );
   }
   
   //
   std::string zVelName = d_lab->d_wVelocitySPBCLabel->getName();
   const Expr::Tag zVelTag( zVelName, Expr::STATE_N );
-  if( !(solgh->exprFactory->have_entry( zVelTag )) ) {
+  if( !(solngh->exprFactory->have_entry( zVelTag )) ) {
     // register placeholder expressions for z velocity string name: "wVelocitySPBC"
     typedef Expr::PlaceHolder<ZVolField>  ZVelT;
-    solgh->exprFactory->register_expression( new ZVelT::Builder(zVelTag) );        
+    solngh->exprFactory->register_expression( new ZVelT::Builder(zVelTag) );        
   }
   
   //____________________________________________________________________________  
@@ -381,37 +381,37 @@ Arches::problemSetup(const ProblemSpecP& params,
     initgh->exprFactory->register_expression( new VolFracT::Builder(Expr::Tag( volFractionName, Expr::STATE_NONE )) );        
   }  
   
-  if( !(solgh->exprFactory->have_entry( volFractionTag )) ) {
+  if( !(solngh->exprFactory->have_entry( volFractionTag )) ) {
     // register placeholder expressions for volume fraction field: "volFraction"
     typedef Expr::PlaceHolder<SVolField>  VolFracT;
-    solgh->exprFactory->register_expression( new VolFracT::Builder(volFractionTag) );            
+    solngh->exprFactory->register_expression( new VolFracT::Builder(volFractionTag) );            
   }
   
   // x area fraction
   std::string xAreaFractionName = d_lab->d_areaFractionFXLabel->getName();
   const Expr::Tag xAreaFractionTag( xAreaFractionName, Expr::STATE_NONE );
-  if( !(solgh->exprFactory->have_entry( xAreaFractionTag )) ) {
+  if( !(solngh->exprFactory->have_entry( xAreaFractionTag )) ) {
     // register placeholder expressions for x area fraction field: "areaFractionFX"
     typedef Expr::PlaceHolder<XVolField>  XAreaFractionT;
-    solgh->exprFactory->register_expression( new XAreaFractionT::Builder(xAreaFractionTag) );        
+    solngh->exprFactory->register_expression( new XAreaFractionT::Builder(xAreaFractionTag) );        
   }
 
   // y area fraction
   std::string yAreaFractionName = d_lab->d_areaFractionFYLabel->getName();
   const Expr::Tag yAreaFractionTag( yAreaFractionName, Expr::STATE_NONE );
-  if( !(solgh->exprFactory->have_entry( yAreaFractionTag )) ) {
+  if( !(solngh->exprFactory->have_entry( yAreaFractionTag )) ) {
     // register placeholder expressions for y area fraction field: "areaFractionFY"
     typedef Expr::PlaceHolder<YVolField>  YAreaFractionT;
-    solgh->exprFactory->register_expression( new YAreaFractionT::Builder(yAreaFractionTag) );        
+    solngh->exprFactory->register_expression( new YAreaFractionT::Builder(yAreaFractionTag) );        
   }
 
   // z area fraction
   std::string zAreaFractionName = d_lab->d_areaFractionFZLabel->getName();
   const Expr::Tag zAreaFractionTag( zAreaFractionName, Expr::STATE_NONE );
-  if( !(solgh->exprFactory->have_entry( zAreaFractionTag )) ) {
+  if( !(solngh->exprFactory->have_entry( zAreaFractionTag )) ) {
     // register placeholder expressions for z area fraction field: "areaFractionFZ"
     typedef Expr::PlaceHolder<ZVolField>  ZAreaFractionT;
-    solgh->exprFactory->register_expression( new ZAreaFractionT::Builder(zAreaFractionTag) );        
+    solngh->exprFactory->register_expression( new ZAreaFractionT::Builder(zAreaFractionTag) );        
   }
   
   //____________________________________________________________________________   
@@ -424,10 +424,10 @@ Arches::problemSetup(const ProblemSpecP& params,
   for( Wasatch::Wasatch::EquationAdaptors::const_iterator ia=adaptors.begin(); ia!=adaptors.end(); ++ia ) {
     Wasatch::TransportEquation* transEq = (*ia)->equation();
     std::string solnVarName = transEq->solution_variable_name();    
-    if( !solgh->exprFactory->have_entry( Expr::Tag(solnVarName,Expr::STATE_N  ) ) )
-      solgh->exprFactory->register_expression( new FieldExpr::Builder(Expr::Tag(solnVarName,Expr::STATE_N)) );
-    if( !solgh->exprFactory->have_entry( Expr::Tag(solnVarName,Expr::STATE_NP1  ) ) )
-      solgh->exprFactory->register_expression( new FieldExpr::Builder(Expr::Tag(solnVarName,Expr::STATE_NP1)) );
+    if( !solngh->exprFactory->have_entry( Expr::Tag(solnVarName,Expr::STATE_N  ) ) )
+      solngh->exprFactory->register_expression( new FieldExpr::Builder(Expr::Tag(solnVarName,Expr::STATE_N)) );
+    if( !solngh->exprFactory->have_entry( Expr::Tag(solnVarName,Expr::STATE_NP1  ) ) )
+      solngh->exprFactory->register_expression( new FieldExpr::Builder(Expr::Tag(solnVarName,Expr::STATE_NP1)) );
   }      
   
 # endif // WASATCH_IN_ARCHES
@@ -531,10 +531,10 @@ Arches::problemSetup(const ProblemSpecP& params,
     proc0cout << "Creating Expression for " << WasTabExprs[i] ;
     const Expr::Tag WasTabTag( WasTabExprs[i] , Expr::STATE_N );
         
-    if( !(gh->exprFactory->have_entry( WasTabTag )) ) {
+    if( !(solngh->exprFactory->have_entry( WasTabTag )) ) {
 
       typedef Expr::PlaceHolder<SVolField>  FieldExpr;
-      gh->exprFactory->register_expression( new FieldExpr::Builder(WasTabTag));     
+      solngh->exprFactory->register_expression( new FieldExpr::Builder(WasTabTag));     
       proc0cout << " done" << endl;
     }
     
