@@ -6,15 +6,24 @@
 #      <save label="TotalMass"/>
 #      <save label="KineticEnergy"/>
 #      <save label="TotalIntEng"/>
-#      <save label="TotalMomentum"/>
-#   and
-#      <debug label = "switchDebug_explicit_press"/> 
+#      <save label="TotalMomentum"/> 
 #
 #   to the ups file.
 #_________________________________________________________________________
-#_________________________________
+
 #  rip out "[" "]" from center of mass
 !sed 's/\[//g' TotalMomentum.dat | sed 's/\]//g' >TotalMom.dat
+
+# compute the relative quantities
+!awk 'NR==1 { init = $2}; NR>1 {printf("%16.15f %16.15f %16.15f\n", $1, $2, 1.0 - $2/init) }' TotalMass.dat > tmp
+!mv tmp TotalMass2.dat
+
+!awk 'NR==1 { init = $2}; NR>1 {printf("%16.15f %16.15f %16.15f\n", $1, $2, 1.0 - $2/init) }' TotalIntEng.dat > tmp
+!mv tmp TotalIntEng2.dat
+
+
+!awk 'NR==1 { init = $2}; NR>1 {printf("%16.15f %16.15f %16.15f\n", $1, $2, 1.0 - $2/init) }' KineticEnergy.dat > tmp
+!mv tmp KineticEnergy2.dat
 
 set ytics
 set xtics
@@ -36,26 +45,32 @@ set terminal x11 1
 set multiplot
 set size 0.51,0.51  
 set origin 0.0,0.0
-set ylabel "total mass"
+set ylabel "total mass"            textcolor lt 1
+set y2label "Relative Difference"  textcolor lt 2
 set y2tics
 
-plot   'TotalMass.dat'      using 1:2 t ''  w lines
+plot   'TotalMass2.dat'      using 1:2            t ''  w lines,\
+       'TotalMass2.dat'      using 1:3  axes x1y2 t 'relative' w lines
 
 #__________________________________
 #   totalInternalEnergy
 #__________________________________
 set origin 0.5,0.0
 
-set ylabel "Total Internal Energy"
-plot   'TotalIntEng.dat'    using 1:2  t '' w lines
+set ylabel "Total Internal Energy" textcolor lt 1
+set y2label "Relative Difference"  textcolor lt 2
+plot   'TotalIntEng2.dat'    using 1:2            t '' w lines,\
+       'TotalIntEng2.dat'    using 1:3  axes x1y2 t 'relative' w lines
 
 #__________________________________
 #  KineticEnergy.dat
 #__________________________________ 
 set origin 0.0,0.5
 
-set ylabel "KineticEnergy"
-plot   'KineticEnergy.dat'  using 1:2 t ''  w lines
+set ylabel "Kinetic Energy" textcolor lt 1
+set y2label "Relative Difference"  textcolor lt 2
+plot   'KineticEnergy2.dat'  using 1:2            t ''  w lines,\
+       'KineticEnergy2.dat'  using 1:3  axes x1y2 t 'relative' w lines
 
 #__________________________________
 #  totalMomentum.dat
@@ -63,12 +78,16 @@ plot   'KineticEnergy.dat'  using 1:2 t ''  w lines
 set origin 0.5,0.5
 
 set ylabel "total Momentum"
+set y2label ""
 plot   'TotalMom.dat'         using 1:2 t 'x'  w lines,\
        'TotalMom.dat'         using 1:3 t 'y'  w lines, \
        'TotalMom.dat'         using 1:4 t 'z'  w lines
        
 set nomultiplot   
 pause -1 "Hit return to continue"
+
+# cleanup
+!/bin/rm TotalMass2.dat TotalIntEng2.dat KineticEnergy2.dat 
 
 exit       
 
