@@ -111,7 +111,7 @@ Properties::~Properties()
 {
   delete d_mixingModel;
 
-  if ( mixModel == "TabProps" || mixModel == "ClassicTable" ){ 
+  if ( mixModel == "TabProps" || mixModel == "ClassicTable" || mixModel == "ColdFlow" ){ 
     delete d_mixingRxnTable; 
   }
 }
