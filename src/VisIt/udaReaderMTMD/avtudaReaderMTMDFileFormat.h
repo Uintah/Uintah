@@ -131,6 +131,7 @@ protected:
   virtual bool     HasInvariantSIL(void) const { return false; };
 
   void             AddExpressionsToMetadata(avtDatabaseMetaData *md);
+  void             CheckNaNs(int num,double *data,int level,int patch);
 
   // DATA MEMBERS
   bool useExtraCells;
