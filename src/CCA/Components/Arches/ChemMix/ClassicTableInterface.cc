@@ -567,30 +567,30 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
 
             //  double table_value = tableLookUp( iv, i->second.index ); 
 						double table_value = ND_interp->find_val( iv, i->second.index );
-              table_value *= eps_vol[c]; 
-              //double orig_save = (*i->second.var)[c]; 
-              (*i->second.var)[c] = table_value;
+            table_value *= eps_vol[c]; 
+            //double orig_save = (*i->second.var)[c]; 
+            (*i->second.var)[c] = table_value;
 
-              if (i->first == "density") {
-                // Two ways of setting density.  Note that the old ARCHES code used the table value directly and not the ghost_value as defined below. 
-                // This gets density = bc value on face:
-                //double ghost_value = 2.0*table_value - arches_density[cp1];
-                //arches_density[c] = ghost_value; 
-                // This gets density = bc value in extra cell 
-                arches_density[c] = table_value; 
+            if (i->first == "density") {
+              // Two ways of setting density.  Note that the old ARCHES code used the table value directly and not the ghost_value as defined below. 
+              // This gets density = bc value on face:
+              //double ghost_value = 2.0*table_value - arches_density[cp1];
+              //arches_density[c] = ghost_value; 
+              // This gets density = bc value in extra cell 
+              arches_density[c] = table_value; 
 
-                if (d_MAlab)
-                  mpmarches_denmicro[c] = table_value; 
+              if (d_MAlab)
+                mpmarches_denmicro[c] = table_value; 
 
-              } else if (i->first == "temperature" && !d_coldflow) {
-                arches_temperature[c] = table_value; 
-              } else if (i->first == "specificheat" && !d_coldflow) {
-                arches_cp[c] = table_value; 
-              } else if (i->first == "CO2" && !d_coldflow) {
-                arches_co2[c] = table_value; 
-              } else if (i->first == "H2O" && !d_coldflow) {
-                arches_h2o[c] = table_value; 
-              }
+            } else if (i->first == "temperature" && !d_coldflow) {
+              arches_temperature[c] = table_value; 
+            } else if (i->first == "specificheat" && !d_coldflow) {
+              arches_cp[c] = table_value; 
+            } else if (i->first == "CO2" && !d_coldflow) {
+              arches_co2[c] = table_value; 
+            } else if (i->first == "H2O" && !d_coldflow) {
+              arches_h2o[c] = table_value; 
+            }
           }
           iv.resize(0);
         }

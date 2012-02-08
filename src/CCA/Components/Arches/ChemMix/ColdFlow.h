@@ -46,12 +46,13 @@ DEALINGS IN THE SOFTWARE.
  * @author Jeremy Thornock
  * @date   Jan 2011
  *
- * @brief Table interface for those created with the Classic Arches Format 
+ * @brief ColdFlow interface
  *
  * @todo
  *
  * @details
- * This class provides and interface to classic Arches formatted tables.  
+ * This class computes the density and temperature for two non-reacting 
+ * streams. 
  
 This code checks for the following tags/attributes in the input file:
 The UPS interface is: 
@@ -118,13 +119,13 @@ public:
                  const bool with_energy_exch, 
                  const bool modify_ref_den );
 
-  /** @brief Schedule computeHeatLoss */
+  /** @brief Schedule computeHeatLoss -- Not used for this model. */
   void sched_computeHeatLoss( const LevelP& level, 
                               SchedulerP& sched, 
-                              const bool intialize_me, const bool calcEnthalpy ); 
+                              const bool intialize_me, const bool calcEnthalpy ){}; 
 
-  /** @brief  schedules computeFirstEnthalpy */
-  void sched_computeFirstEnthalpy( const LevelP& level, SchedulerP& sched ); 
+  /** @brief  schedules computeFirstEnthalpy -- Not used for this model. */
+  void sched_computeFirstEnthalpy( const LevelP& level, SchedulerP& sched ){}; 
 
   /** @brief Dummy initialization as required by MPMArches */
   void sched_dummyInit( const LevelP& level, SchedulerP& sched );
@@ -158,17 +159,15 @@ public:
 
 	void tableMatching(){}; 
 
-protected :
-
 private:
 
-        double d_stream[2][2];
+  double d_stream[2][2];
   
   IntVector d_ijk_den_ref;                ///< Reference density location
 
   vector<string> d_allUserDepVarNames;    ///< Vector storing all independent varaible names requested in input file
 
-        std::string d_cold_flow_mixfrac; 
+  std::string d_cold_flow_mixfrac; 
 
 }; // end class ColdFlow
   
