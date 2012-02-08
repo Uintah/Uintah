@@ -173,7 +173,7 @@
           <Parameters>
             <tolerance>1.0e-10</tolerance>
             <solver>cg</solver>
-            <preconditioner>pfmg</preconditioner>
+            <preconditioner>jacobi</preconditioner>
             <maxiterations>250</maxiterations>
           </Parameters>
         </PressureSolver>
