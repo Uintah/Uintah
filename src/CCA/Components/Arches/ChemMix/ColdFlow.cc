@@ -1,5 +1,4 @@
 /*
-
    The MIT License
 
    Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
@@ -408,8 +407,9 @@ ColdFlow::getState( const ProcessorGroup* pc,
                 mpmarches_denmicro[c] = table_value; 
             }
           }
-          iv.clear(); 
+          iv.resize(0);  
         }
+        bc_values.resize(0); 
       }
     }
 
