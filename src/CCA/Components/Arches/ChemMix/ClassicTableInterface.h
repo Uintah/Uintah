@@ -151,17 +151,6 @@ public:
                              DataWarehouse* old_dw, 
                              DataWarehouse* new_dw ); 
 
-  /** @brief    Load list of dependent variables from the table 
-      @returns  A vector<string>& that is a reference to the list of all dependent variables */
-  const vector<string> & getAllDepVars();
-  
-  
-  virtual vector<std::string> getAllDepVarsNames();
-
-  /** @brief    Load list of independent variables from the table
-      @returns  A vector<string>& that is a reference to the list of all independent variables */ 
-  const vector<string> & getAllIndepVars();
-
   /** @brief Dummy initialization as required by MPMArches */
   void sched_dummyInit( const LevelP& level, SchedulerP& sched );
 
@@ -837,7 +826,6 @@ private:
   IndexMap d_enthalpyVarIndexMap;         ///< Referece to the integer location of variables for heat loss calculation
 
   std::vector<int>    d_allIndepVarNum;        ///< Vector storing the grid size for the Independant variables
-  std::vector<string> d_allDepVarNames;        ///< Vector storing all dependent variable names from the table file
   std::vector<string> d_allDepVarUnits;        ///< Units for the dependent variables 
 
   vector<string> d_allUserDepVarNames;    ///< Vector storing all independent varaible names requested in input file

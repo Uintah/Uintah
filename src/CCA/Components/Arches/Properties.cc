@@ -2175,17 +2175,3 @@ Properties::doTableMatching(){
 
 }
 
-# ifdef WASATCH_IN_ARCHES
-//****************************************************************************
-// Function to transfer private varlabels into arches.cc
-//****************************************************************************
-const vector<string> 
-Properties::WasExprs(){
-//create expressions to export table vals to wasatch
- // typedef std::vector<std::string> StringVec;
-  proc0cout << "Wasatch Expressions" << endl;
-  std::vector<std::string> WasTabVec;
-  WasTabVec = d_mixingRxnTable->getAllDepVarsNames();
-  return WasTabVec;
-}
-# endif //WASATCH-IN-ARCHES

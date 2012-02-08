@@ -520,26 +520,21 @@ Arches::problemSetup(const ProblemSpecP& params,
   d_props->problemSetup(db);
   
 # ifdef WASATCH_IN_ARCHES
-  //create expressions to export table vals to wasatch
-
-  vector<string> WasTabExprs;
-  proc0cout << "Wasatch Table Expressions" << endl;
-  WasTabExprs = d_props->WasExprs();
-  proc0cout << "# of exprs" << WasTabExprs.size() << endl;
+  //create expressions to export dependent table vals into wasatch
+  typedef std::vector<std::string> StringVec;
+  MixingRxnModel* d_mixingTable = d_props->getMixRxnModel();
+  StringVec DepVarsString = d_mixingTable->getAllDepVars();
   
-  for (int i = 0; i < WasTabExprs.size(); i++) {
-    proc0cout << "Creating Expression for " << WasTabExprs[i] ;
-    const Expr::Tag WasTabTag( WasTabExprs[i] , Expr::STATE_N );
-        
-    if( !(solngh->exprFactory->have_entry( WasTabTag )) ) {
-
+  for (int i=0; i<DepVarsString.size(); i++) {
+    proc0cout << "Creating Wasatch Expression for " << DepVarsString[i] << "... ";
+    const Expr::Tag WasTableTag( DepVarsString[i] , Expr::STATE_N );
+    
+    if( !(solngh->exprFactory->have_entry( WasTableTag )) ) {
       typedef Expr::PlaceHolder<SVolField>  FieldExpr;
-      solngh->exprFactory->register_expression( new FieldExpr::Builder(WasTabTag));     
+      solngh->exprFactory->register_expression( new FieldExpr::Builder(WasTableTag));     
       proc0cout << " done" << endl;
     }
-    
   }
-  
 # endif //WASATCH-IN-ARCHES
 
   // read boundary condition information
