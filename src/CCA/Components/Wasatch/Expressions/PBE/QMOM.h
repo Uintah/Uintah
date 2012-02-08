@@ -317,7 +317,7 @@ evaluate()
     m0 = *knownMomentsIterators[0];
     for (int i=0; i<abSize; i++) {
       int matLoc = i*abSize;
-      weights[i] = jMatrix[matLoc]*jMatrix[matLoc]/m0;
+      weights[i] = jMatrix[matLoc]*jMatrix[matLoc]*m0;
     }
     for (int i=0; i<abSize; i++) {
       int matLoc = 2*i;
