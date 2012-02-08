@@ -217,12 +217,6 @@ public:
   void sched_doTPDummyInit( const LevelP&, SchedulerP& );
 
 	void doTableMatching(); 
-  
-  //////////////////////////////////////////////////////////////////////
-  // fix for table values into wasatch
-# ifdef WASATCH_IN_ARCHES
-  const vector<string>  WasExprs();
-# endif //WASATCH_IN_ARCHES
 
 protected :
 
