@@ -108,11 +108,11 @@ namespace Uintah {
     
   private:
     BCData d_bc;
+    Point  d_origin;
     double d_minorRadius;
     double d_majorRadius;
     double d_angleDegrees;
     const std::string d_face;
-    Point  d_origin;
   };
   
 } // End namespace Uintah

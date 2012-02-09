@@ -47,9 +47,11 @@ EllipseBCData::EllipseBCData() : BCGeomBase()
 {}
 
 EllipseBCData::EllipseBCData(Point& p, double minorRadius,double majorRadius, const std::string face, double angleDegrees)
-  : BCGeomBase(), d_minorRadius(minorRadius), 
-    d_majorRadius(majorRadius), d_origin(p), 
-    d_face(face),d_angleDegrees(angleDegrees)
+  : BCGeomBase(), d_origin(p), 
+    d_minorRadius(minorRadius), 
+    d_majorRadius(majorRadius),  
+    d_angleDegrees(angleDegrees),
+    d_face(face)
 {}
 
 EllipseBCData::~EllipseBCData()
