@@ -89,6 +89,23 @@ CrowdMonitor::readLock()
   Thread::couldBlockDone(oldstate);
 }
 
+bool
+CrowdMonitor::readTrylock()
+{
+  int status = pthread_rwlock_tryrdlock(&priv_->lock_);
+  switch (status)
+  {
+  case 0:
+    return true;
+
+  case EBUSY:
+    return false;
+
+  default: // EINVAL
+    throw ThreadError("pthread_rwlock_tryrdlock:  Uninitialized lock.");
+  }
+}
+
 void
 CrowdMonitor::readUnlock()
 {
@@ -101,7 +118,24 @@ CrowdMonitor::writeLock()
   int oldstate=Thread::couldBlock(name_);
   pthread_rwlock_wrlock(&priv_->lock_);
   Thread::couldBlockDone(oldstate);
-} // End namespace SCIRun
+}
+
+bool
+CrowdMonitor::writeTrylock()
+{
+  int status = pthread_rwlock_trywrlock(&priv_->lock_);
+  switch (status)
+  {
+  case 0:
+    return true;
+
+  case EBUSY:
+    return false;
+
+  default: // EINVAL
+    throw ThreadError("pthread_rwlock_trywrlock:  Uninitialized lock.");
+  }
+}
 
 void
 CrowdMonitor::writeUnlock()

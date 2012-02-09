@@ -101,8 +101,8 @@ WARNING
     SchedulerWorker*            t_worker[16];  //workers
     Thread*                t_thread[16]; 
     Mutex                  dlbLock;   //load balancer lock
-    Mutex                  schedulerLock; //scheduler lock
-    Mutex                  recvLock;
+    mutable CrowdMonitor   schedulerLock; //scheduler lock
+    mutable CrowdMonitor   recvLock;
     
     /* thread shared data, need lock protection when accessing them */
     DetailedTasks* dts; 
@@ -111,10 +111,9 @@ WARNING
     int ntasks;
     int currphase;
     int numPhase;
-    int currcomm;
-    map<int, int> phaseTasks;
-    map<int, int> phaseTasksDone;
-    map<int,  DetailedTask *> phaseSyncTask;
+    vector<int> phaseTasks;
+    vector<int> phaseTasksDone;
+    vector<DetailedTask *> phaseSyncTask;
     bool abort;
     int abort_point;
     set< DetailedTask * > pending_tasks;

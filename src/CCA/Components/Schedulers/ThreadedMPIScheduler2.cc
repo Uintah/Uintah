@@ -365,17 +365,18 @@ ThreadedMPIScheduler2::execute(int tgnum /*=0*/, int iteration /*=0*/)
 
   curriteration=iteration;
   currphase=0;
-  numPhase=0;
+  numPhase=tg->getNumTaskPhases();
   phaseTasks.clear();
+  phaseTasks.resize(numPhase);
   phaseTasksDone.clear();
+  phaseTasksDone.resize(numPhase);
   phaseSyncTask.clear();
+  phaseSyncTask.resize(numPhase);
   dts->setTaskPriorityAlg(taskQueueAlg_ );
   for (int i = 0; i < ntasks; i++){
     phaseTasks[dts->localTask(i)->getTask()->d_phase]++;
-    if (dts->localTask(i)->getTask()->d_phase > numPhase)
-     numPhase=dts->localTask(i)->getTask()->d_phase;
   }
-
+  
   if( dbg.active()) {
     cerrLock.lock();
     dbg << me << " Executing " << dts->numTasks() << " tasks (" 
@@ -636,26 +637,27 @@ ThreadedMPIScheduler2::execute(int tgnum /*=0*/, int iteration /*=0*/)
 void 
 ThreadedMPIScheduler2::runTasks(int t_id)
 {
-  DetailedTask * task=NULL;
   while( numTasksDone < ntasks) {
       
-    if ((task = dts->getNextInternalReadyTask(false))!=NULL) {
+    if (dts->numInternalReadyTasks()>0) {
+      DetailedTask * task=dts->getNextInternalReadyTask();
+      if (task==NULL) continue;
       if ((task->getTask()->getType() == Task::Reduction) || (task->getTask()->getType() == Task::OncePerProc))
       {
-        schedulerLock.lock();
+        schedulerLock.writeLock();
         phaseSyncTask[task->getTask()->d_phase]= task;
+        schedulerLock.writeUnlock();
         if (taskdbg.active()){
           cerrLock.lock();
           taskdbg << d_myworld->myrank() << " Task Reduction/OPP ready " << *task << " deps needed: " << task->getExternalDepCount() << endl;
           cerrLock.unlock();
         }
-        schedulerLock.unlock();
       } else {
-        recvLock.lock();
+        recvLock.writeLock();
         initiateTask( task, abort, abort_point, curriteration );
         task->markInitiated();
         task->checkExternalDepCount();
-        recvLock.unlock();
+        recvLock.writeUnlock();
         if (taskdbg.active()){
           cerrLock.lock();
           taskdbg << d_myworld->myrank() << " Task internal ready " << *task << " deps needed: " << task->getExternalDepCount() << endl;
@@ -663,31 +665,40 @@ ThreadedMPIScheduler2::runTasks(int t_id)
         }
       }
     }
-    else if ((task = dts->getNextExternalReadyTask(false))!=NULL){
+    else if (dts->numExternalReadyTasks()>0){
+      DetailedTask* task = dts->getNextExternalReadyTask();
+      if (task==NULL) continue;
       if (taskdbg.active()){
         cerrLock.lock();
         taskdbg << d_myworld->myrank() << " Task external ready " << *task << "(" << dts->numExternalReadyTasks() << " tasks in queue)"<<endl;
         cerrLock.unlock();
       }
       ASSERTEQ(task->getExternalDepCount(), 0);
-      schedulerLock.lock();
+      schedulerLock.writeLock();
       numTasksDone++;
       phaseTasksDone[task->getTask()->d_phase]++;
-      schedulerLock.unlock();
+      schedulerLock.writeUnlock();
       runTask(task, curriteration, t_id);
     } 
     else {
      //processing schedule logic
-     schedulerLock.lock();
-     while (phaseTasks[currphase] == phaseTasksDone[currphase] && currphase < numPhase){
-       currphase++;
-       if (taskdbg.active()){
-        cerrLock.lock();
-            taskdbg << d_myworld->myrank() << " Switched to Task Phase " << currphase  << " , total task  " <<  phaseTasks[currphase] << endl;          
-            cerrLock.unlock();
+     schedulerLock.readLock();
+     if (phaseTasks[currphase] == phaseTasksDone[currphase] && currphase < numPhase){
+       schedulerLock.readUnlock();
+       schedulerLock.writeLock();
+       while (phaseTasks[currphase] == phaseTasksDone[currphase] && currphase < numPhase){
+         currphase++;
+         if (taskdbg.active()){
+          cerrLock.lock();
+          taskdbg << d_myworld->myrank() << " Switched to Task Phase " << currphase  << " , total task  " <<  phaseTasks[currphase] << endl;          
+          cerrLock.unlock();
           }
-     } 
-     if ((phaseSyncTask.find(currphase)!= phaseSyncTask.end()) && (phaseTasksDone[currphase] == phaseTasks[currphase]-1)){ 
+       }
+       schedulerLock.writeUnlock();
+     } else if ((phaseSyncTask[currphase]!= NULL) && (phaseTasksDone[currphase] == phaseTasks[currphase]-1)){ 
+       schedulerLock.readUnlock();
+       schedulerLock.writeLock(); //after switch to write lock, check again
+       if ((phaseSyncTask[currphase]!= NULL) && (phaseTasksDone[currphase] == phaseTasks[currphase]-1)) {
           DetailedTask *reducetask = phaseSyncTask[currphase];
           ASSERT(reducetask->getTask()->d_phase==currphase);
           numTasksDone++;
@@ -695,32 +706,35 @@ ThreadedMPIScheduler2::runTasks(int t_id)
           taskdbg << d_myworld->myrank() << " Ready Reduce/OPP task " << reducetask->getTask()->getName() << endl;
           if (reducetask->getTask()->getType() == Task::Reduction){
             taskdbg << d_myworld->myrank() << " Running Reduce task " << reducetask->getTask()->getName() << " with communicator " << reducetask->getTask()->d_comm <<  endl;
-            schedulerLock.unlock();
+            schedulerLock.writeUnlock();
             initiateReduction(reducetask);
           }
           else { // Task::OncePerProc task
-            schedulerLock.unlock();
+            schedulerLock.writeUnlock();
             ASSERT(reducetask->getTask()->getType() ==  Task::OncePerProc);
-            recvLock.lock();
+            recvLock.writeLock();
             initiateTask( reducetask, abort, abort_point, curriteration );
             reducetask->markInitiated();
             while(reducetask->getExternalDepCount() > 0) {
               processMPIRecvs(WAIT_ONCE);
             }
-            recvLock.unlock();
+            recvLock.writeUnlock();
             taskdbg << d_myworld->myrank() << " Runnding OPP task:  \t";
             printTask(taskdbg, reducetask); taskdbg << '\n';
             runTask(reducetask, curriteration, t_id);
           }
-    } 
+       } else schedulerLock.writeUnlock(); 
+    } // end read check
     else { 
-       schedulerLock.unlock();
+       schedulerLock.readUnlock();
        //processing MPI receives
-      // if (recvLock.tryLock()){
-         recvLock.lock();
+       recvLock.readLock();
+       if (recvs_.numRequests()>0) {
+          recvLock.readUnlock();
+          recvLock.writeLock();
           processMPIRecvs(TEST);
-          recvLock.unlock();
-       //}
+          recvLock.writeUnlock();
+       } else recvLock.readUnlock();
     }
    }
   } //end while tasks

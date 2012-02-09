@@ -82,8 +82,8 @@ DetailedTasks::DetailedTasks(SchedulerCommon* sc, const ProcessorGroup* pg,
   mustConsiderInternalDependencies_(mustConsiderInternalDependencies),
   currentDependencyGeneration_(1),
   extraCommunication_(0),
-  readyQueueMutex_("DetailedTasks Ready Queue"),
-  mpiCompletedQueueMutex_("DetailedTasks MPI compelted Queue")
+  readyQueueLock_("DetailedTasks Ready Queue"),
+  mpiCompletedQueueLock_("DetailedTasks MPI compelted Queue")
   //readyQueueSemaphore_("Number of Ready DetailedTasks", 0)
 {
   // Set up mappings for the initial send tasks
@@ -996,13 +996,13 @@ void DetailedTask::checkExternalDepCount()
 {
   //cout << Parallel::getMPIRank() << " Task " << this->getTask()->getName() << " ext deps: " << externalDependencyCount_ << " int deps: " << numPendingInternalDependencies << endl;
   if (externalDependencyCount_ == 0 && taskGroup->sc_->useInternalDeps() && initiated_ && task->getType() != Task::OncePerProc) { 
-    taskGroup->mpiCompletedQueueMutex_.lock();
+    taskGroup->mpiCompletedQueueLock_.writeLock();
     //cout << Parallel::getMPIRank() << " Task " << this->getTask()->getName() << " ready\n";
     if (externallyReady_ == false) {
       taskGroup->mpiCompletedTasks_.push(this);
       externallyReady_ = true;
     }
-    taskGroup->mpiCompletedQueueMutex_.unlock();
+    taskGroup->mpiCompletedQueueLock_.writeUnlock();
   }
 }
 
@@ -1161,7 +1161,7 @@ DetailedTasks::internalDependenciesSatisfied(DetailedTask* task)
     cerrLock.unlock();
   }
 //#if !defined( _AIX )
-  readyQueueMutex_.lock();
+  readyQueueLock_.writeLock();
 //#endif
 
   readyTasks_.push(task);
@@ -1175,64 +1175,53 @@ DetailedTasks::internalDependenciesSatisfied(DetailedTask* task)
 //#if !defined( _AIX )
   // need to make a non-binary semaphore under aix for this to work.
 //  readyQueueSemaphore_.up();
-  readyQueueMutex_.unlock();
+  readyQueueLock_.writeUnlock();
 //#endif
 }
 
 DetailedTask*
-DetailedTasks::getNextInternalReadyTask(bool block)
+DetailedTasks::getNextInternalReadyTask()
 {
-  // Block until the list has an item in it.
-//#if !defined( _AIX )
-//  readyQueueSemaphore_.down();
   DetailedTask* nextTask = NULL;
-  if (block)
-    readyQueueMutex_.lock();
-  else if (!readyQueueMutex_.tryLock()) 
-    return nextTask;
-//#endif
+  readyQueueLock_.writeLock();
   if (!readyTasks_.empty()) {
     nextTask = readyTasks_.front();
     readyTasks_.pop();
   }
-//#if !defined( _AIX )
-  readyQueueMutex_.unlock();
-//#endif
+  readyQueueLock_.readUnlock();
   return nextTask;
 }
 
 int 
 DetailedTasks::numInternalReadyTasks() { 
   int size=0;
-  readyQueueMutex_.lock();
-  size = readyTasks_.size();
-  readyQueueMutex_.unlock();
+  if (readyQueueLock_.readTrylock()){
+    size = readyTasks_.size();
+    readyQueueLock_.readUnlock();
+  }
   return size;
 }
 
-  DetailedTask*
-DetailedTasks::getNextExternalReadyTask(bool block)
+DetailedTask*
+DetailedTasks::getNextExternalReadyTask()
 {
   DetailedTask* nextTask = NULL;
-  if (block)
-    mpiCompletedQueueMutex_.lock();
-  else if (!mpiCompletedQueueMutex_.tryLock()) 
-    return nextTask;
+  mpiCompletedQueueLock_.writeLock();
   if (!mpiCompletedTasks_.empty()){
     nextTask = mpiCompletedTasks_.top();
     mpiCompletedTasks_.pop();
   }
-  mpiCompletedQueueMutex_.unlock();
-  //cout << Parallel::getMPIRank() << "    Getting: " << *nextTask << "  new size: " << mpiCompletedTasks_.size() << endl;
+  mpiCompletedQueueLock_.writeUnlock();
   return nextTask;
 }
 
 int
 DetailedTasks::numExternalReadyTasks() { 
   int size = 0;
-  mpiCompletedQueueMutex_.lock();
-  size = mpiCompletedTasks_.size(); 
-  mpiCompletedQueueMutex_.unlock();
+  if (mpiCompletedQueueLock_.readTrylock()){
+    size = mpiCompletedTasks_.size(); 
+    mpiCompletedQueueLock_.readUnlock();
+  }
   return size;
 }
 
