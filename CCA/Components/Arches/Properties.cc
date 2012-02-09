@@ -279,7 +279,9 @@ Properties::problemSetup(const ProblemSpecP& params)
       if (db_enthalpy_solver->findBlock("DORadiationModel")) {
         d_radiationCalc = true; 
         d_DORadiationCalc = true;
-      } else {
+      } else if(db_enthalpy_solver->findBlock("RMCRT") ){
+        d_radiationCalc = true;
+      } else{
         proc0cout << "ATTENTION: NO WORKING RADIATION MODEL TURNED ON!" << endl; 
       }
       

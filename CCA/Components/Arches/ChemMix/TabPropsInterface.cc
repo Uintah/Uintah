@@ -96,9 +96,10 @@ TabPropsInterface::problemSetup( const ProblemSpecP& propertiesParameters )
   const ProblemSpecP params_root = db_tabprops->getRootNode();
   ProblemSpecP db_enthalpy  =  params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ExplicitSolver")->findBlock("EnthalpySolver");
   if (db_enthalpy) { 
-    ProblemSpecP db_radiation = params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ExplicitSolver")->findBlock("EnthalpySolver")->findBlock("DORadiationModel");
+    ProblemSpecP db_DO_rad    = params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ExplicitSolver")->findBlock("EnthalpySolver")->findBlock("DORadiationModel");
+    ProblemSpecP db_RMCRT_rad = params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ExplicitSolver")->findBlock("EnthalpySolver")->findBlock("RMCRT");
     d_adiabatic = true; 
-    if (db_radiation) { 
+    if (db_DO_rad || db_RMCRT_rad) { 
       proc0cout << "Found a working radiation model -- will implement case with heat loss" << endl;
       d_adiabatic = false; 
     } else { 
