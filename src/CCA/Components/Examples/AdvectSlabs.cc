@@ -118,7 +118,7 @@ AdvectSlabs::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
   Task* task = scinew Task("timeAdvance",
 			   this, &AdvectSlabs::timeAdvance);
 
-  task->requires(Task::OldDW, mass_label, Ghost::AroundCells, 1);
+  task->requires(Task::OldDW, mass_label, Ghost::AroundCells, 2);
   task->computes(mass_label);
   task->computes(massAdvected_label);
   sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
@@ -146,8 +146,8 @@ void AdvectSlabs::initialize(const ProcessorGroup*,
       int matl = matls->get(m);
 
       CCVariable<double> mass, massAd;
-      new_dw->allocateAndPut(mass,   mass_label,         matl, patch, Ghost::AroundCells, 1);
-      new_dw->allocateAndPut(massAd, massAdvected_label, matl, patch, Ghost::AroundCells, 1);
+      new_dw->allocateAndPut(mass,   mass_label,         matl, patch, Ghost::AroundCells, 2);
+      new_dw->allocateAndPut(massAd, massAdvected_label, matl, patch, Ghost::AroundCells, 2);
       mass.initialize(0.0);
       massAd.initialize(0.0);
         
@@ -174,19 +174,21 @@ void AdvectSlabs::timeAdvance(const ProcessorGroup* pg,
         const Patch* patch = patches->get(p);
         Vector dx = patch->dCell();            
         double invvol = 1.0/(dx.x() * dx.y() * dx.z());                     
-    
+
+
         d_OFS.initialize(ff);
         for(int m = 0;m<matls->size();m++){
           int matl = matls->get(m);
+
+
 
           // variable to get
           constCCVariable<double> mass;
           CCVariable<double>      mass2, massAd;
         
-          old_dw->get(mass, mass_label, matl, patch, Ghost::AroundCells, 1);
-          new_dw->allocateAndPut(mass2, mass_label, matl, patch, Ghost::AroundCells, 1 );
-          new_dw->allocateAndPut(massAd, massAdvected_label, matl, patch, Ghost::AroundCells, 1 );
-        
+          old_dw->get(mass, mass_label, matl, patch, Ghost::AroundCells, 2);
+          new_dw->allocateAndPut(mass2, mass_label, matl, patch, Ghost::AroundCells, 2 );
+          new_dw->allocateAndPut(massAd, massAdvected_label, matl, patch, Ghost::AroundCells, 2 );
           for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) { 
               const IntVector& c = *iter;  
         
@@ -201,6 +203,7 @@ void AdvectSlabs::timeAdvance(const ProcessorGroup* pg,
                 //      for consistent units you need to divide by cell volume
                 // 
                 IntVector ac = c + S_ac[f];     // slab adjacent cell
+
                 double outfluxVol = d_OFS[c ].d_fflux[OF_slab[f]];
                 double influxVol  = d_OFS[ac].d_fflux[IF_slab[f]];
                 
