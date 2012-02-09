@@ -58,6 +58,14 @@ void is_BC_specified(const ProblemSpecP& prob_spec, string variable, const Mater
   is_BC_set["z+"] = false;   is_periodic["z+"] = periodic[2];
    
   ProblemSpecP bc_ps  = grid_ps->findBlock("BoundaryConditions"); 
+  if(!bc_ps) {
+    ostringstream warn;
+    warn <<"\n__________________________________\n"               
+         << "ERROR: Cannot find the required xml tag"
+         << "\n\t <Grid> \n \t\t<BoundaryConditions>\n \t\t</BoundaryConditions>\n\t </Grid>";           
+    throw ProblemSetupException(warn.str(), __FILE__, __LINE__);  
+  }
+  
   
   // loop over all faces and determine if a BC has been set
   for (ProblemSpecP face_ps = bc_ps->findBlock("Face");face_ps != 0; 
