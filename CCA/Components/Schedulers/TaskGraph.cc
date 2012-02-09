@@ -985,11 +985,12 @@ TaskGraph::createDetailedDependencies()
       task->task->d_comm=currcomm;
       currcomm++;
       currphase++;
-    }
-    if (task->task->getType() == Task::OncePerProc ) {
+    } else if (task->task->getType() == Task::OncePerProc ) {
       currphase++;
     }
   }
+
+  numTaskPhases=currphase;
 
   TAU_PROFILE_STOP(rctimer);
   // Go through the modifies/requires and 

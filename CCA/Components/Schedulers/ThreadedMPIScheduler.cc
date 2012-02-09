@@ -363,9 +363,10 @@ ThreadedMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
   TAU_PROFILE_START(doittimer);
 
   int currphase=0;
-  map<int, int> phaseTasks;
-  map<int, int> phaseTasksDone;
-  map<int,  DetailedTask *> phaseSyncTask;
+  int numPhase=tg->getNumTaskPhases();
+  vector<int> phaseTasks(numPhase);
+  vector<int> phaseTasksDone(numPhase);
+  vector<DetailedTask *> phaseSyncTask(numPhase);
   dts->setTaskPriorityAlg(taskQueueAlg_ );
   for (int i = 0; i < ntasks; i++){
     phaseTasks[dts->localTask(i)->getTask()->d_phase]++;
@@ -418,7 +419,7 @@ ThreadedMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
       }
     }
     //if it is time to run reduction task
-    else if ((phaseSyncTask.find(currphase)!= phaseSyncTask.end()) && (phaseTasksDone[currphase] == phaseTasks[currphase]-1)){ 
+    else if ((phaseSyncTask[currphase]!= NULL) && (phaseTasksDone[currphase] == phaseTasks[currphase]-1)){ 
       if(queuelength.active())
       {
         if((int)histogram.size()<dts->numExternalReadyTasks()+1)
