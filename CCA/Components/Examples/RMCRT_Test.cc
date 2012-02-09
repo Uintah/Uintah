@@ -583,9 +583,12 @@ void RMCRT_Test::scheduleShootRays_onCoarseLevel(SchedulerP& sched,
     }
 
     if(d_doRealRMCRT){
-      int time_sub_step = 0;
       //d_realRMCRT->sched_sigmaT4(level,sched);
-      d_realRMCRT->sched_rayTrace(level,sched,time_sub_step);
+      
+      Task::WhichDW abskg_dw   = Task::NewDW;
+      Task::WhichDW sigmaT4_dw = Task::NewDW;
+      bool modifies_divQ       = false;
+      d_realRMCRT->sched_rayTrace(level,sched,abskg_dw,sigmaT4_dw,modifies_divQ);
     }  
   }
 }

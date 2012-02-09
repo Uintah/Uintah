@@ -41,8 +41,10 @@ namespace Uintah{
 
       /** @brief Algorithm for tracing rays through a single level*/ 
       void sched_rayTrace( const LevelP& level, 
-                           SchedulerP& sched, 
-                           const int time_sub_step );
+                           SchedulerP& sched,
+                           Task::WhichDW abskg_dw,
+                           Task::WhichDW sigma_dw,
+                           bool modifies_divQ );
                            
       /** @brief Algorithm for RMCRT using multilevel dataOnion approach*/ 
       void sched_rayTrace_dataOnion( const LevelP& level, 
@@ -51,7 +53,8 @@ namespace Uintah{
 
       /** @brief Schedule compute of blackbody intensity */ 
       void sched_sigmaT4( const LevelP& level, 
-                          SchedulerP& sched );
+                          SchedulerP& sched,
+                          Task::WhichDW temp_dw);
 
       /** @brief Initializes properties for the algorithm */ 
       void sched_initProperties( const LevelP&, 
@@ -99,6 +102,7 @@ namespace Uintah{
       bool _isSeedRandom;
       bool _solveBoundaryFlux;
       bool _CCRays;
+      bool _shouldSetBC;
 
       const VarLabel* d_sigmaT4_label; 
       const VarLabel* d_abskgLabel;
@@ -112,7 +116,9 @@ namespace Uintah{
                      const MaterialSubset* matls, 
                      DataWarehouse* old_dw, 
                      DataWarehouse* new_dw,
-                     const int time_sub_step ); 
+                     bool modifies_divQ,
+                     Task::WhichDW which_abskg_dw,
+                     Task::WhichDW which_sigmaT4_dw ); 
       //__________________________________
       void rayTrace_dataOnion( const ProcessorGroup* pc, 
                                const PatchSubset* patches, 
@@ -127,14 +133,15 @@ namespace Uintah{
                            const MaterialSubset* matls, 
                            DataWarehouse* old_dw, 
                            DataWarehouse* new_dw,
-                           int time_sub_step ); 
+                           const int time_sub_step ); 
 
       //----------------------------------------
       void sigmaT4( const ProcessorGroup* pc,
                     const PatchSubset* patches,
                     const MaterialSubset* matls,
                     DataWarehouse* old_dw,
-                    DataWarehouse* new_dw );
+                    DataWarehouse* new_dw,
+                    Task::WhichDW which_temp_dw );
 
       //__________________________________
       inline bool containsCell(const IntVector &low, 

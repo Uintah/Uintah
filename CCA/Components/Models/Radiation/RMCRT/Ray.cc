@@ -60,9 +60,11 @@ Ray::problemSetup( const ProblemSpecP& inputdb)
   const MaterialSubset* mss = d_matlSet->getUnion();
   
   ProblemSpecP root_ps = db->getRootNode();
- 
+  
+#if 0 
   is_BC_specified(root_ps, d_temperatureLabel->getName(), mss);
   is_BC_specified(root_ps, d_abskgLabel->getName(),       mss);
+#endif
 }
 
 //______________________________________________________________________
@@ -205,15 +207,16 @@ Ray::initProperties( const ProcessorGroup* pc,
 //---------------------------------------------------------------------------
 void
 Ray::sched_sigmaT4( const LevelP& level, 
-                    SchedulerP& sched )
+                    SchedulerP& sched,
+                    Task::WhichDW temp_dw )
 {
 
   std::string taskname = "Ray::sched_sigmaT4";
-  Task* tsk= scinew Task( taskname, this, &Ray::sigmaT4 );
+  Task* tsk= scinew Task( taskname, this, &Ray::sigmaT4, temp_dw );
 
   printSchedule(level,dbg,taskname);
-
-  tsk->requires( Task::NewDW, d_temperatureLabel, Ghost::None, 0 ); 
+  
+  tsk->requires( temp_dw, d_temperatureLabel, Ghost::None, 0 ); 
   tsk->computes(d_sigmaT4_label); 
 
   sched->addTask( tsk, level->eachPatch(), d_matlSet );
@@ -225,8 +228,9 @@ void
 Ray::sigmaT4( const ProcessorGroup*,
               const PatchSubset* patches,           
               const MaterialSubset*,                
-              DataWarehouse*,                
-              DataWarehouse* new_dw )               
+              DataWarehouse* old_dw, 
+              DataWarehouse* new_dw,
+              Task::WhichDW which_temp_dw )               
 {
 
   for (int p=0; p < patches->size(); p++){
@@ -239,7 +243,8 @@ Ray::sigmaT4( const ProcessorGroup*,
     constCCVariable<double> temp;
     CCVariable<double> sigmaT4;             // sigma T ^4/pi
 
-    new_dw->get(temp,               d_temperatureLabel,   d_matl, patch, Ghost::None, 0);  
+    DataWarehouse* temp_dw = new_dw->getOtherDataWarehouse(which_temp_dw);
+    temp_dw->get(temp,              d_temperatureLabel,   d_matl, patch, Ghost::None, 0);
     new_dw->allocateAndPut(sigmaT4, d_sigmaT4_label,      d_matl, patch);
 
     for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
@@ -254,23 +259,29 @@ Ray::sigmaT4( const ProcessorGroup*,
 // Method: Schedule the ray tracer
 //---------------------------------------------------------------------------
 void
-Ray::sched_rayTrace( const LevelP& level, SchedulerP& sched, const int time_sub_step )
+Ray::sched_rayTrace( const LevelP& level, 
+                     SchedulerP& sched,
+                     Task::WhichDW abskg_dw,
+                     Task::WhichDW sigma_dw,
+                     bool modifies_divQ )
 {
   std::string taskname = "Ray::sched_rayTrace";
-  Task* tsk= scinew Task( taskname, this, &Ray::rayTrace, time_sub_step );
+  Task* tsk= scinew Task( taskname, this, &Ray::rayTrace,
+                         modifies_divQ, abskg_dw, sigma_dw );
+                         
   printSchedule(level,dbg,taskname);
 
   // require an infinite number of ghost cells so  you can access
   // the entire domain.
   Ghost::GhostType  gac  = Ghost::AroundCells;
-  tsk->requires( Task::NewDW , d_abskgLabel  ,  gac, SHRT_MAX);
-  tsk->requires( Task::NewDW , d_sigmaT4_label, gac, SHRT_MAX);
+  tsk->requires( abskg_dw , d_abskgLabel  ,  gac, SHRT_MAX);
+  tsk->requires( sigma_dw , d_sigmaT4_label, gac, SHRT_MAX);
   //  tsk->requires( Task::OldDW , d_lab->d_cellTypeLabel , Ghost::None , 0 );
 
-  if( time_sub_step == 0 ){
-    tsk->computes( d_divQLabel ); 
+  if( modifies_divQ ){
+    tsk->modifies( d_divQLabel ); 
   } else {
-    tsk->modifies( d_divQLabel );
+    tsk->computes( d_divQLabel );
   }
   sched->addTask( tsk, level->eachPatch(), d_matlSet );
 
@@ -285,7 +296,9 @@ Ray::rayTrace( const ProcessorGroup* pc,
                const MaterialSubset* matls,
                DataWarehouse* old_dw,
                DataWarehouse* new_dw,
-               const int time_sub_step )
+               bool modifies_divQ,
+               Task::WhichDW which_abskg_dw,
+               Task::WhichDW which_sigmaT4_dw )
 { 
   const Level* level = getLevel(patches);
   MTRand _mTwister;
@@ -297,11 +310,14 @@ Ray::rayTrace( const ProcessorGroup* pc,
   
   level->findInteriorCellIndexRange(domainLo, domainHi);     // excluding extraCells
   level->findCellIndexRange(domainLo_EC, domainHi_EC);       // including extraCells
+  
+  DataWarehouse* abskg_dw   = new_dw->getOtherDataWarehouse(which_abskg_dw);
+  DataWarehouse* sigmaT4_dw = new_dw->getOtherDataWarehouse(which_sigmaT4_dw);
 
   constCCVariable<double> sigmaT4Pi;
   constCCVariable<double> abskg;                               
-  new_dw->getRegion( abskg   ,   d_abskgLabel ,   d_matl , level, domainLo_EC, domainHi_EC);
-  new_dw->getRegion( sigmaT4Pi , d_sigmaT4_label, d_matl , level, domainLo_EC, domainHi_EC);
+  abskg_dw->getRegion(   abskg   ,   d_abskgLabel ,   d_matl , level, domainLo_EC, domainHi_EC);
+  sigmaT4_dw->getRegion( sigmaT4Pi , d_sigmaT4_label, d_matl , level, domainLo_EC, domainHi_EC);
 
   double start=clock();
 
@@ -312,11 +328,11 @@ Ray::rayTrace( const ProcessorGroup* pc,
     printTask(patches,patch,dbg,"Doing Ray::rayTrace");
 
     CCVariable<double> divQ;    
-    if( time_sub_step == 0 ){
-      new_dw->allocateAndPut( divQ, d_divQLabel, d_matl, patch );
-      divQ.initialize( 0.0 );
-    }else{
+    if( modifies_divQ ){
       old_dw->getModifiable( divQ,  d_divQLabel, d_matl, patch );
+    }else{
+      new_dw->allocateAndPut( divQ, d_divQLabel, d_matl, patch );
+      divQ.initialize( 0.0 ); 
     }
 
     unsigned long int size = 0;                        // current size of PathIndex
