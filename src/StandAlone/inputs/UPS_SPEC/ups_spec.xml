@@ -643,7 +643,8 @@
         <alpha_momentum     spec="REQUIRED DOUBLE 'positive'"/>
         <alpha_temperature  spec="REQUIRED DOUBLE 'positive'"/>
       </microSlip>
-      
+
+       <!-- angle in degrees for ellipse -->
       <Face                 spec="MULTIPLE NO_DATA"
                               attribute1="annulus       OPTIONAL STRING 'x-, x+, y-, y+, z-, z+'"
                               attribute2="circle        OPTIONAL STRING 'x-, x+, y-, y+, z-, z+'"
@@ -652,14 +653,14 @@
                               attribute5="outer_radius  OPTIONAL DOUBLE 'positive'"
                               attribute6="side          OPTIONAL STRING 'x-, x+, y-, y+, z-, z+'"
                               attribute7="radius        OPTIONAL DOUBLE 'positive'" 
-                              attribute8="rectangle      OPTIONAL STRING 'x-, x+, y-, y+, z-, z+'" 
-                              attribute9="lower          OPTIONAL MULTIPLE_DOUBLES" 
-                              attribute10="upper          OPTIONAL MULTIPLE_DOUBLES"
-                              attribute11="ellipse       OPTIONAL STRING 'x-, x+, y-, y+, z-, z+'"                              
-                              attribute12="major_radius  OPTIONAL DOUBLE 'positive'"
-                              attribute13="minor_radius  OPTIONAL DOUBLE 'positive'"                                                            
-                              attribute14="angle         OPTIONAL DOUBLE 'positive'"                                                                                          
-                              attribute15="name          OPTIONAL STRING">
+                              attribute8="rectangle     OPTIONAL STRING 'x-, x+, y-, y+, z-, z+'" 
+                              attribute9="lower         OPTIONAL MULTIPLE_DOUBLES" 
+                              attribute10="upper        OPTIONAL MULTIPLE_DOUBLES"
+                              attribute11="ellipse      OPTIONAL STRING 'x-, x+, y-, y+, z-, z+'"                              
+                              attribute12="major_radius OPTIONAL DOUBLE 'positive'"
+                              attribute13="minor_radius OPTIONAL DOUBLE 'positive'"
+                              attribute14="angle        OPTIONAL DOUBLE 'positive'"                                                                                          
+                              attribute15="name         OPTIONAL STRING">
         <BCType             spec="MULTIPLE NO_DATA"
                               attribute1="id        REQUIRED STRING '0,1,2,3,4,5,6,all'"
                               attribute2="var       REQUIRED STRING 'Neumann, Dirichlet, symmetry, LODI, computeFromDensity, Sine, creep, slip Custom, 
