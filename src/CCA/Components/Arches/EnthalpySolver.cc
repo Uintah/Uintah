@@ -117,7 +117,8 @@ EnthalpySolver::problemSetup(const ProblemSpecP& params)
   }
 
   if (db->findBlock("RMCRT")){
-    d_doRMCRT = true; 
+    d_doRMCRT         = true;
+    d_radiationCalc   = true;
     ProblemSpecP rmcrt_db = db->findBlock("RMCRT"); 
     d_RMCRT = scinew Ray(); 
     int archIndex = 0;
@@ -271,12 +272,17 @@ EnthalpySolver::solve(const LevelP& level,
   //  Radiation
   // RMCRT: 
   if ( d_doRMCRT ) {
-    int sub_step = 0; 
-    if ( timelabels->integrator_step_number != TimeIntegratorStepNumber::First ) 
-      sub_step = 1; // at this point it is either zero or something greater than zero where this matters
-
-    d_RMCRT->sched_initProperties( level, sched, sub_step ); 
-    d_RMCRT->sched_rayTrace( level, sched, sub_step);
+    Task::WhichDW abskg_dw = Task::OldDW;
+    Task::WhichDW temp_dw  = Task::OldDW;
+    Task::WhichDW sigma_dw = Task::OldDW;
+    bool modifies_divQ     = false;
+    
+    if ( timelabels->integrator_step_number != TimeIntegratorStepNumber::First ){ 
+      modifies_divQ = true;
+    }
+   // d_RMCRT->sched_initProperties( level, sched, sub_step ); 
+    d_RMCRT->sched_sigmaT4( level, sched, temp_dw);
+    d_RMCRT->sched_rayTrace( level, sched, abskg_dw, sigma_dw, modifies_divQ );
   }
 
   // Discrete Ordanences
