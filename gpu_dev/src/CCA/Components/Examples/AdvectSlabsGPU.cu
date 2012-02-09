@@ -352,6 +352,13 @@ void AdvectSlabsGPU::timeAdvance(const ProcessorGroup* pg,
       // launch kernel
       timeAdvanceKernelAdvectSlabs<<< totalBlocks, threadsPerBlock >>>(domainSize, domainLower, ghostLayers, mass_device, newMass_device, massAd_device, invvol);
 
+      // Kernel error checking
+      cudaError_t error = cudaGetLastError();
+      if(error!=cudaSuccess) {
+        fprintf(stderr,"ERROR: %s\n", cudaGetErrorString(error) );
+        exit(-1);
+      }
+
       cudaDeviceSynchronize();
       cudaMemcpy(newMass_host, newMass_device, size, cudaMemcpyDeviceToHost);
       cudaMemcpy(massAd_host, massAd_device, size, cudaMemcpyDeviceToHost);
