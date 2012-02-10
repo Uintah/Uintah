@@ -40,9 +40,9 @@ class UniformBirth
 	       const double momentOrder, 
          const double sig     )
 	: ExpressionBuilder(result),
-	phit_(phiTag),
-  sig_(sig),    
-	momentorder_(momentOrder)
+	  phit_(phiTag),
+   sig_(sig),    
+	  momentorder_(momentOrder)
 	  {}
     
       ~Builder(){}
