@@ -48,6 +48,7 @@
        <erosion algorithm = "ZeroStress"/>
    </MPM>
 
+<!--
     <AMR>
       <MPM>
         <min_grid_level>-1</min_grid_level>
@@ -62,6 +63,7 @@
       </Regridder>
       <useLockStep>       true  </useLockStep>
     </AMR>
+-->
 
     <PhysicalConstants>
        <gravity>[0,0,0]</gravity>
@@ -173,8 +175,8 @@
            <Box label = "1">
               <lower>[0,0,0.05]</lower>
               <upper>[1.0,1.0,.1]</upper>
-              <resolution>[20,20,1]</resolution>
-              <patches>[1,1,1]</patches>
+              <resolution>[40,40,1]</resolution>
+              <patches>[2,2,1]</patches>
               <extraCells> [1,1,1]            </extraCells>
            </Box>
        </Level>
