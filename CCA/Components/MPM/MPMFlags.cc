@@ -87,6 +87,7 @@ MPMFlags::MPMFlags(const ProcessorGroup* myworld)
   d_doExplicitHeatConduction = true;
   d_doPressureStabilization = false;
   d_computeNodalHeatFlux = false;
+  d_computeScaleFactor = false;
   d_doTransientImplicitHeatConduction = true;
   d_prescribeDeformation = false;
   d_prescribedDeformationFile = "time_defgrad_rotation";
@@ -259,6 +260,9 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
       label_iter->getAttributes(labelName);
       if(labelName["label"] == "g.HeatFlux"){
         d_computeNodalHeatFlux = true;
+      }
+      if(labelName["label"] == "p.scalefactor"){
+        d_computeScaleFactor = true;
       }
     }
   }

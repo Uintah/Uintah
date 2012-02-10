@@ -379,6 +379,14 @@ protected:
                                DataWarehouse* old_dw,
                                DataWarehouse* new_dw);
 
+  // Used to compute the particles initial physical size
+  // for use in deformed particle visualization
+  virtual void computeParticleScaleFactor(const ProcessorGroup*,
+                                          const PatchSubset* patches,
+                                          const MaterialSubset* matls,
+                                          DataWarehouse* old_dw,
+                                          DataWarehouse* new_dw);
+
   void refine(const ProcessorGroup*,
               const PatchSubset* patches,
               const MaterialSubset* matls,
@@ -497,6 +505,10 @@ protected:
                                        const PatchSet*,
                                        const MaterialSet*);
 
+  virtual void scheduleComputeParticleScaleFactor(SchedulerP&, 
+                                                  const PatchSet*,
+                                                  const MaterialSet*);
+
   //////////
   // Insert Documentation Here:
   virtual void interpolateToParticlesAndUpdateMom1(const ProcessorGroup*,
@@ -557,7 +569,6 @@ protected:
   Output* dataArchiver;
 
   double           d_nextOutputTime;
-  double           d_outputInterval;
   double           d_SMALL_NUM_MPM;
   int              NGP;      // Number of ghost particles needed.
   int              NGN;      // Number of ghost nodes     needed.

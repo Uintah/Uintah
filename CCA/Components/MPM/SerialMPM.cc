@@ -250,10 +250,6 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,
 
   heatConductionModel = scinew HeatConduction(sharedState,lb,flags);
 
-  ProblemSpecP p = prob_spec->findBlock("DataArchiver");
-  if(!p->get("outputInterval", d_outputInterval))
-    d_outputInterval = 1.0;
-
   materialProblemSetup(restart_mat_ps, d_sharedState,flags);
 
   cohesiveZoneProblemSetup(restart_mat_ps, d_sharedState,flags);
@@ -671,6 +667,9 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
     scheduleInterpolateToParticlesAndUpdateMom2(sched, patches, matls);
   }
   scheduleInsertParticles(                    sched, patches, matls);
+  if(flags->d_computeScaleFactor){
+    scheduleComputeParticleScaleFactor(       sched, patches, matls);
+  }
 
   if(flags->d_canAddMPMMaterial){
     //  This checks to see if the model on THIS patch says that it's
@@ -698,7 +697,7 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
 
   if(d_analysisModule){                                                        
     d_analysisModule->scheduleDoAnalysis( sched, level);
-  }  
+  }
 }
 
 void SerialMPM::scheduleApplyExternalLoads(SchedulerP& sched,
@@ -1555,6 +1554,26 @@ void SerialMPM::scheduleInsertParticles(SchedulerP& sched,
   }
 }
 
+void SerialMPM::scheduleComputeParticleScaleFactor(SchedulerP& sched,
+                                                   const PatchSet* patches,
+                                                   const MaterialSet* matls)
+
+{
+  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(),
+                           getLevel(patches)->getGrid()->numLevels()))
+    return;
+
+  printSchedule(patches,cout_doing,"MPM::scheduleComputeParticleScaleFactor");
+
+  Task* t=scinew Task("MPM::computeParticleScaleFactor",this,
+                &SerialMPM::computeParticleScaleFactor);
+
+  t->requires(Task::OldDW, lb->pSizeLabel,  Ghost::None);
+  t->computes(lb->pScaleFactorLabel);
+
+  sched->addTask(t, patches, matls);
+}
+
 void SerialMPM::scheduleInterpolateParticleVelToGridMom(SchedulerP& sched,
                                                        const PatchSet* patches,
                                                        const MaterialSet* matls)
@@ -2067,8 +2086,6 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
     ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch); 
     vector<IntVector> ni(interpolator->size());
     vector<double> S(interpolator->size()); 
-
-
 
     string interp_type = flags->d_interpolator_type;
 
@@ -2751,9 +2768,9 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
         }
       } // faces
       
-    string interp_type = flags->d_interpolator_type;
-    MPMBoundCond bc;
-    bc.setBoundaryCondition(patch,dwi,"Symmetric",internalforce,interp_type);
+      string interp_type = flags->d_interpolator_type;
+      MPMBoundCond bc;
+      bc.setBoundaryCondition(patch,dwi,"Symmetric",internalforce,interp_type);
     }
 
     for(NodeIterator iter = patch->getNodeIterator();!iter.done();iter++){
@@ -4376,6 +4393,43 @@ void SerialMPM::insertParticles(const ProcessorGroup*,
       }
     }
   }
+}
+
+void SerialMPM::computeParticleScaleFactor(const ProcessorGroup*,
+                                           const PatchSubset* patches,
+                                           const MaterialSubset* ,
+                                           DataWarehouse* old_dw,
+                                           DataWarehouse* new_dw)
+{
+  // This task computes the particles initial physical size, to be used
+  // in scaling particles for the deformed particle vis feature
+
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    printTask(patches, patch,cout_doing, "Doing computeParticleScaleFactor");
+
+    int numMPMMatls=d_sharedState->getNumMPMMatls();
+    for(int m = 0; m < numMPMMatls; m++){
+      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      int dwi = mpm_matl->getDWIndex();
+      ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
+
+      constParticleVariable<Vector> psize;
+      ParticleVariable<Vector> pScaleFactor;
+      old_dw->get(psize,                   lb->pSizeLabel,         pset);
+      new_dw->allocateAndPut(pScaleFactor, lb->pScaleFactorLabel,  pset);
+
+      if(dataArchiver->isOutputTimestep()){
+        Vector dx = patch->dCell();
+        for(ParticleSubset::iterator iter  = pset->begin();
+                                     iter != pset->end(); iter++){
+          particleIndex idx = *iter;
+          pScaleFactor[idx] = psize[idx]*dx;
+        } // for particles
+      } // isOutputTimestep
+    } // matls
+  } // patches
+
 }
 
 void SerialMPM::interpolateParticleVelToGridMom(const ProcessorGroup*,
