@@ -44,13 +44,13 @@ ScalarRHS<FieldT>::ScalarRHS( const FieldTagInfo& fieldTags,
     doYDir_( convTagY_ != Expr::Tag() || diffTagY_ != Expr::Tag() ),
     doZDir_( convTagZ_ != Expr::Tag() || diffTagZ_ != Expr::Tag() ),
 
-    volFracTag_( volFracTag ),
-    haveVolFrac_( volFracTag_ != Expr::Tag() ),
+    volFracTag_( volFracTag ),    
 
     xAreaFracTag_( xAreaFracTag ),
     yAreaFracTag_( yAreaFracTag ),
     zAreaFracTag_( zAreaFracTag ),
 
+    haveVolFrac_( volFracTag_ != Expr::Tag() ),
     haveXAreaFrac_( xAreaFracTag_ != Expr::Tag() ),
     haveYAreaFrac_( yAreaFracTag_ != Expr::Tag() ),
     haveZAreaFrac_( zAreaFracTag_ != Expr::Tag() ),
