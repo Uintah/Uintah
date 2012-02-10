@@ -101,7 +101,8 @@ namespace Uintah {
     bool        d_doTransientImplicitHeatConduction;
     bool        d_doExplicitHeatConduction;
     bool        d_doPressureStabilization;
-    bool        d_computeNodalHeatFlux;  // compute the auxilary nodal heat flux 
+    bool        d_computeNodalHeatFlux;  // compute the auxilary nodal heat flux
+    bool        d_computeScaleFactor;    // compute the scale factor for viz 
     bool        d_doGridReset;   // Default is true, standard MPM
     double      d_min_part_mass; // Minimum particle mass before deletion  
     double      d_min_mass_for_acceleration; // Minimum mass to allow division by in computing acceleration
