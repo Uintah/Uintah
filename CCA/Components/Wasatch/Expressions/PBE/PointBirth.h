@@ -40,13 +40,13 @@ class PointBirth
       Builder( const Expr::Tag& result,
                const Expr::Tag& phiTag,
                const Expr::Tag& rStarTag,
-	              const double momentOrder,
+	       const double momentOrder,
                const double constRStar)
 	: ExpressionBuilder(result),
   	phit_(phiTag),
-   rstart_(rStarTag),    
-  	momentorder_(momentOrder),
-   constrstar_(constRStar)
+   rstart_(rStarTag),
+   constrstar_(constRStar),    
+  	momentorder_(momentOrder)
 	  {}
     
       ~Builder(){}
