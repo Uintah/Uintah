@@ -9,10 +9,10 @@
   <SimulationComponent type="mpm" />
 
   <Time>
-      <maxTime>3.0</maxTime>
+      <maxTime>2.0</maxTime>
       <initTime>0.0</initTime>
-      <delt_min>0.001</delt_min>
-      <delt_max>0.001</delt_max>
+      <delt_min>0.1</delt_min>
+      <delt_max>0.1</delt_max>
       <timestep_multiplier>0.3</timestep_multiplier>
   </Time>
 
@@ -29,8 +29,6 @@
       <save label = "p.deformationMeasure"/>
       <save label = "g.acceleration"/>
       <save label = "p.plasticStrainVol"/>
-      <save label = "p.elasticStrainVol"/>
-      <save label = "p.kappa"/>
       <checkpoint cycle = "2" timestepInterval = "20"/>
   </DataArchiver>
 
@@ -65,22 +63,21 @@
         <thermal_conductivity>174.0e-7</thermal_conductivity>
         <specific_heat>134.0e-8</specific_heat>
 
-        <constitutive_model type="simplified_geo_model">
-
+        <constitutive_model type="Arenisca">
             <B0>10000</B0>
             <G0>3750</G0>
             <hardening_modulus>0.0</hardening_modulus>
-            <FSLOPE> 0.057735026919 </FSLOPE>
-            <FSLOPE_p> 0.057735026919 </FSLOPE_p>
-            <PEAKI1> 6.123724356953976e2 </PEAKI1>
+            <kinematic_hardening_constant> 30.0 </kinematic_hardening_constant>
+            <FSLOPE> 1e-10 </FSLOPE>
+            <FSLOPE_p> 1e-10 </FSLOPE_p>
+            <PEAKI1> 35.355339059327378e10 </PEAKI1>
             <CR> 14.8 </CR>
-            <p0_crush_curve> -1837.0724 </p0_crush_curve>
-            <p1_crush_curve> 6.6666666666666666e-4 </p1_crush_curve>
+            <p0_crush_curve> -1e99 </p0_crush_curve>
+            <p1_crush_curve> -1e99 </p1_crush_curve>
             <p3_crush_curve> 0.5 </p3_crush_curve>
-            <p4_fluid_effect> 1.0 </p4_fluid_effect>
+            <p4_fluid_effect> 0.0 </p4_fluid_effect>
             <fluid_B0> 0.0 </fluid_B0>
-            <fluid_pressur_initial> 0.0 </fluid_pressur_initial>
-            <kinematic_hardening_constant> 0.0 </kinematic_hardening_constant>
+            <fluid_pressure_initial> 0.0 </fluid_pressure_initial>
         </constitutive_model>
 
         <geom_object>
@@ -103,7 +100,7 @@
   </MaterialProperties>
 
   <Grid>
-      <BoundaryConditions>                      
+      <BoundaryConditions>                       
       </BoundaryConditions>
       <Level>
         <Box label = "1">
