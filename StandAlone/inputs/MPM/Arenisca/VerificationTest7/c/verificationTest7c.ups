@@ -9,10 +9,10 @@
   <SimulationComponent type="mpm" />
 
   <Time>
-      <maxTime>1.0</maxTime>
+      <maxTime>0.6</maxTime>
       <initTime>0.0</initTime>
-      <delt_min>0.0001</delt_min>
-      <delt_max>0.0001</delt_max>
+      <delt_min>0.1</delt_min>
+      <delt_max>0.1</delt_max>
       <timestep_multiplier>0.3</timestep_multiplier>
   </Time>
 
@@ -77,7 +77,7 @@
             <p1_crush_curve> 6.6666666666666666e-4 </p1_crush_curve>
             <p3_crush_curve> 0.5 </p3_crush_curve>
             <p4_fluid_effect> 0.0 </p4_fluid_effect>
-            <fluid_B0> 0.0 </fluid_B0>
+            <fluid_B0> 1000.0 </fluid_B0>
             <fluid_pressur_initial> 0.0 </fluid_pressur_initial>
             <kinematic_hardening_constant> 0.0 </kinematic_hardening_constant>
         </constitutive_model>
