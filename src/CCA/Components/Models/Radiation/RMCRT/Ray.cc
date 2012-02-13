@@ -559,8 +559,10 @@ Ray::rayTrace( const ProcessorGroup* pc,
 //---------------------------------------------------------------------------
 void
 Ray::sched_rayTrace_dataOnion( const LevelP& level, 
-                               SchedulerP& sched, 
-                               const int time_sub_step )
+                               SchedulerP& sched,
+                               Task::WhichDW abskg_dw,
+                               Task::WhichDW sigma_dw,
+                               bool modifies_divQ )
 {
   int maxLevels = level->getGrid()->numLevels() -1;
   int L_indx = level->getIndex();
@@ -569,7 +571,9 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
     return;
   }
   std::string taskname = "Ray::sched_rayTrace_dataOnion";
-  Task* tsk= scinew Task( taskname, this, &Ray::rayTrace_dataOnion, time_sub_step );
+  Task* tsk= scinew Task( taskname, this, &Ray::rayTrace_dataOnion,
+                          modifies_divQ, abskg_dw, sigma_dw );
+                          
   printSchedule(level,dbg,taskname);
 
   Task::DomainSpec  ND  = Task::NormalDomain;
@@ -578,17 +582,18 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
   Ghost::GhostType  gn  = Ghost::None;
   
   // finest level
-  tsk->requires(Task::NewDW, d_abskgLabel,     gn, 0);
-  tsk->requires(Task::NewDW, d_sigmaT4_label,  gn, 0);
+  tsk->requires(abskg_dw, d_abskgLabel,     gn, 0);
+  tsk->requires(sigma_dw, d_sigmaT4_label,  gn, 0);
   
   // coarser levels
-  tsk->requires(Task::NewDW, d_abskgLabel,     allPatches, Task::CoarseLevel,allMatls, ND, gn, 0);
-  tsk->requires(Task::NewDW, d_sigmaT4_label,  allPatches, Task::CoarseLevel,allMatls, ND, gn, 0);
+  tsk->requires(abskg_dw, d_abskgLabel,     allPatches, Task::CoarseLevel,allMatls, ND, gn, 0);
+  tsk->requires(sigma_dw, d_sigmaT4_label,  allPatches, Task::CoarseLevel,allMatls, ND, gn, 0);
   
-  if( time_sub_step == 0 ){
-    tsk->computes( d_divQLabel ); 
-  } else {
+  if( modifies_divQ ){
     tsk->modifies( d_divQLabel );
+  } else {
+    
+    tsk->computes( d_divQLabel );
   }
   sched->addTask( tsk, level->eachPatch(), d_matlSet );
 }
@@ -603,7 +608,9 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
                          const MaterialSubset* matls,
                          DataWarehouse* old_dw,
                          DataWarehouse* new_dw,
-                         const int time_sub_step )
+                         bool modifies_divQ,
+                         Task::WhichDW which_abskg_dw,
+                         Task::WhichDW which_sigmaT4_dw )
 { 
   const Level* fineLevel = getLevel(finePatches);
   int maxLevels    = fineLevel->getGrid()->numLevels();
@@ -614,6 +621,10 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
   //retrieve all of the data for all levels
   StaticArray< constCCVariable<double> > abskg(maxLevels);
   StaticArray< constCCVariable<double> >sigmaT4Pi(maxLevels);
+ 
+  DataWarehouse* abskg_dw   = new_dw->getOtherDataWarehouse(which_abskg_dw);
+  DataWarehouse* sigmaT4_dw = new_dw->getOtherDataWarehouse(which_sigmaT4_dw);
+  
   vector<Vector> Dx(maxLevels);
   double DyDx[maxLevels];
   double DzDx[maxLevels];
@@ -623,8 +634,8 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
     IntVector domainLo_EC, domainHi_EC;
     level->findCellIndexRange(domainLo_EC, domainHi_EC);       // including extraCells
                                
-    new_dw->getRegion( abskg[L]   ,   d_abskgLabel ,   d_matl , level.get_rep(), domainLo_EC, domainHi_EC);
-    new_dw->getRegion( sigmaT4Pi[L] , d_sigmaT4_label, d_matl , level.get_rep(), domainLo_EC, domainHi_EC);
+    abskg_dw->getRegion(   abskg[L]   ,   d_abskgLabel ,   d_matl , level.get_rep(), domainLo_EC, domainHi_EC);
+    sigmaT4_dw->getRegion( sigmaT4Pi[L] , d_sigmaT4_label, d_matl , level.get_rep(), domainLo_EC, domainHi_EC);
     Vector dx = level->dCell();
     DyDx[L] = dx.y() / dx.x();
     DzDx[L] = dx.z() / dx.x();
@@ -650,16 +661,15 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
     IntVector finePatchHi = finePatch->getExtraCellHighIndex();
     
     CCVariable<double> divQ_fine;    
-    if( time_sub_step == 0 ){
+    if( modifies_divQ ){
+      old_dw->getModifiable( divQ_fine,  d_divQLabel, d_matl, finePatch );
+    }else{
       new_dw->allocateAndPut( divQ_fine, d_divQLabel, d_matl, finePatch );
       divQ_fine.initialize( 0.0 );
-    }else{
-      old_dw->getModifiable( divQ_fine,  d_divQLabel, d_matl, finePatch );
     }
 
     unsigned long int size = 0;                             // current size of PathIndex
 
- 
     //__________________________________
     //
     for (CellIterator iter = finePatch->getCellIterator(); !iter.done(); iter++){ 
