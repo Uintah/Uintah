@@ -145,8 +145,10 @@ set_flux_limiter_type( Wasatch::ConvInterpMethods limiterType )
 double calculate_flux_limiter_function( double r, Wasatch::ConvInterpMethods limiterType ) {
   // r is the ratio of successive gradients on the mesh
   // limiterType holds the name of the limiter function to be used
-  double temp = 0.0;
   const double infinity_ = 1.0e10;
+  if ( r < -infinity_ ) return 0.0;
+
+  double temp = 0.0;
   switch (limiterType) {
       
     case Wasatch::SUPERBEE:
@@ -175,7 +177,6 @@ double calculate_flux_limiter_function( double r, Wasatch::ConvInterpMethods lim
       } else {
         temp = 2.0;
       }
-
       break;
       
     case Wasatch::MC:      
