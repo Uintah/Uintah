@@ -48,8 +48,10 @@ namespace Uintah{
                            
       /** @brief Algorithm for RMCRT using multilevel dataOnion approach*/ 
       void sched_rayTrace_dataOnion( const LevelP& level, 
-                                     SchedulerP& sched, 
-                                     const int time_sub_step );
+                                     SchedulerP& sched,
+                                     Task::WhichDW abskg_dw,
+                                     Task::WhichDW sigma_dw,
+                                     bool modifies_divQ  );
 
       /** @brief Schedule compute of blackbody intensity */ 
       void sched_sigmaT4( const LevelP& level, 
@@ -125,7 +127,9 @@ namespace Uintah{
                                const MaterialSubset* matls, 
                                DataWarehouse* old_dw, 
                                DataWarehouse* new_dw,
-                               const int time_sub_step );
+                     bool modifies_divQ,
+                     Task::WhichDW which_abskg_dw,
+                     Task::WhichDW which_sigmaT4_dw );
       
       //----------------------------------------
       void initProperties( const ProcessorGroup* pc, 

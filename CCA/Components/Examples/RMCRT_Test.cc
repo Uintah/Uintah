@@ -426,8 +426,10 @@ void RMCRT_Test::scheduleShootRays_multiLevel(SchedulerP& sched,
   }
   
   if(d_doRealRMCRT){
-    int time_sub_step = 0;
-    d_realRMCRT->sched_rayTrace_dataOnion(level,sched,time_sub_step);
+    Task::WhichDW abskg_dw   = Task::NewDW;
+    Task::WhichDW sigmaT4_dw = Task::NewDW;
+    bool modifies_divQ       = false;
+    d_realRMCRT->sched_rayTrace_dataOnion(level,sched, abskg_dw, sigmaT4_dw, modifies_divQ);
   }
   
 }
