@@ -7,7 +7,6 @@
 
 #include <CCA/Components/Wasatch/Expressions/PBE/Birth.h>
 #include <CCA/Components/Wasatch/Expressions/PBE/Growth.h>
-#include <CCA/Components/Wasatch/Expressions/PBE/PointBirth.h>
 
 #include <CCA/Components/Wasatch/Expressions/PBE/QMOM.h>
 #include <CCA/Components/Wasatch/Expressions/ConvectiveFlux.h>
@@ -25,8 +24,6 @@
 
 namespace Wasatch {
 
-
-   
   //------------------------------------------------------------------  
   template< typename FieldT >
   void setup_growth_expression( Uintah::ProblemSpecP growthParams,
@@ -47,7 +44,6 @@ namespace Wasatch {
     if( growthParams->findBlock("GrowthCoefficientExpression") ){
       Uintah::ProblemSpecP nameTagParam = growthParams->findBlock("GrowthCoefficientExpression")->findBlock("NameTag");
       growthCoefTag = parse_nametag( nameTagParam );
-      //swap BasicExpr block of qmom exprs to here?
     }
         
     std::string growthModel;
@@ -109,8 +105,8 @@ namespace Wasatch {
                               Expr::TagList& birthTags,
                               Expr::ExpressionFactory& factory)
   {
-    //birth expr is of the form J * B(r0)
-    //where r0 can be an expr or const
+    //birth expr is of the form J * B0 * B(r*)
+    //where r* can be an expr or const
     Expr::Tag birthTag; // this tag will be populated
     Expr::ExpressionBuilder* builder = NULL;
     
@@ -124,12 +120,18 @@ namespace Wasatch {
       preCoef = 1.0;
     }
     
+    double stdDev;
+    if (birthParams->findBlock("StandardDeviation") ) {
+      birthParams->get("StandardDeviation",stdDev);
+    } else {
+      stdDev = 1.0;
+    }
+    
     Expr::Tag birthCoefTag; 
     //register coefficient expr if found
     if( birthParams->findBlock("BirthCoefficientExpression") ){
       Uintah::ProblemSpecP nameTagParam = birthParams->findBlock("BirthCoefficientExpression")->findBlock("NameTag");
       birthCoefTag = parse_nametag( nameTagParam );
-      //swap BasicExpr block of qmom exprs to here?
     }
     
     Expr::Tag RStarTag;
@@ -146,64 +148,14 @@ namespace Wasatch {
         ConstRStar = 1.0;
       }
     }
-    
-    //birthTag = Expr::Tag( thisPhiName + "_birth_" + birthModel, Expr::STATE_NONE );
-    // now check what model the user has specified
-    Expr::Tag birthTypeTag;
-    if (birthModel == "POINT" ) {
-      std::stringstream currentMomentOrderStr;
-      currentMomentOrderStr << momentOrder;
-      const Expr::Tag phiTag( basePhiName + "_" + currentMomentOrderStr.str(), Expr::STATE_N );
-      typedef typename PointBirth<FieldT>::Builder birthtype;
-      
-      birthTypeTag = Expr::Tag( thisPhiName + "_birthtype_" + birthModel, Expr::STATE_NONE );
-      builder = scinew birthtype(birthTypeTag, phiTag,  RStarTag, momentOrder, ConstRStar );  //this will have if statement to use tag or const r* val
-   factory.register_expression( builder );
-    } 
-    // TSAAD & ALEX: PLEASE DO NOT DELETE THE FOLLOWING
-    /* else if (birthModel == "UNIFORM" ) {
-        std::stringstream currentMomentOrderStr;
-        currentMomentOrderStr << momentOrder;
-        const Expr::Tag phiTag( basePhiName + "_" + currentMomentOrderStr.str(), Expr::STATE_N );
-        
-     //   if (birthParams->findBlock("ConstantBirthRate")) {
-        typedef typename UniformBirth<FieldT>::Builder birth;
-        double birthRate;
-        double sigma;
-        birthParams->get("ConstantBirthRate",birthRate);
-        birthParams->get("StandardDeviation",sigma);
-        builder = scinew birth(birthTag, phiTag, birthRate, momentOrder, sigma);
-   //     }
-        
-      } else if (birthModel == "NORMAL") {
-        std::stringstream currentMomentOrderStr;
-        currentMomentOrderStr << momentOrder;
-        const Expr::Tag phiTag( basePhiName + "_" + currentMomentOrderStr.str(), Expr::STATE_N );
-        
-        //   if (birthParams->findBlock("ConstantBirthRate")) {
-        typedef typename NormalBirth<FieldT>::Builder birth;
-        double birthRate;
-        double sigma;
-        double RMax;
-        double RMin;
-        birthParams->get("ConstantBirthRate",birthRate);
-        birthParams->get("StandardDeviation",sigma);
-        birthParams->get("MaxCutoff",RMax);
-        birthParams->get("MinCutoff",RMin);
-        builder = scinew birth(birthTag, phiTag, birthRate, momentOrder, sigma, RMax, RMin);
-      // }
-      } */
-     
-    Expr::ExpressionBuilder* builder2 = NULL;
 
     birthTag = Expr::Tag( thisPhiName + "_birth_" + birthModel, Expr::STATE_NONE );
     typedef typename Birth<FieldT>::Builder birth;
-    builder2 = scinew birth(birthTag, birthTypeTag, birthCoefTag, preCoef, momentOrder);
-  
+    builder = scinew birth(birthTag, birthCoefTag, RStarTag, preCoef, momentOrder, birthModel, ConstRStar, stdDev);
+    
     birthTags.push_back(birthTag);
-    factory.register_expression( builder2 );
+    factory.register_expression( builder );
   }
-  
   
   //------------------------------------------------------------------
   
