@@ -2052,7 +2052,8 @@ OnDemandDataWarehouse::getRegion(constGridVariableBase& constVar,
   IntVector diff(high-low);
 
   if (diff.x()*diff.y()*diff.z() > totalCells && missing_patches.size() > 0) {
-    cout << d_myworld->myrank() << "  Unknown Variable " << *label << " matl " << matlIndex << " for patch(es): ";
+    cout << d_myworld->myrank() << "  Unknown Variable " << *label << ", matl " << matlIndex 
+         << ", L-" << level->getIndex() << ", for patch(es): ";
     for (size_t i = 0; i < missing_patches.size(); i++) 
       cout << *missing_patches[i] << " ";
     cout << endl << " Original region: " << low << " " << high << endl;
