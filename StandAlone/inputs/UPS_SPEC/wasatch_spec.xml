@@ -308,7 +308,7 @@
         <!-- specify birth coefficient defualt to 1 if not set, dictaes J-->
         <PreBirthCoefficient spec="OPTIONAL DOUBLE" />
         
-        <!-- specify an expression for the birth rate -->
+        <!-- specify an expression for the birth rate, B0 -->
         <BirthCoefficientExpression spec="OPTIONAL NO_DATA">
           <NameTag spec="REQUIRED"/>
         </BirthCoefficientExpression>
@@ -320,8 +320,6 @@
         </RStarExpression>  
         
         <StandardDeviation spec="OPTIONAL DOUBLE" />  <!-- Required for normal or uniform, std dev of norm, 1/2 width for uniform -->
-        <MaxCutoff spec="OPTIONAL DOUBLE" />  <!-- Required for normal, dictates intergral maximum -->
-        <MinCutoff spec="OPTIONAL DOUBLE" />  <!-- Required for normal, dictates intergral minimum -->
       </BirthExpression>      
                         
       <!-- ================================================================================== -->            

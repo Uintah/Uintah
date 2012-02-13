@@ -278,7 +278,7 @@ namespace Wasatch{
       coefParams -> getAttribute("Conversion_Fac", CFCoef);
       coefParams -> getAttribute("Temperature", T);
       coefParams -> getAttribute("Molec_Vol",MolecularVolume);
-      coef = SurfaceEnergy*MolecularVolume/R/T*CFCoef;
+      coef = 2.0*SurfaceEnergy*MolecularVolume/R/T*CFCoef;
       const Expr::Tag saturationTag = parse_nametag( coefParams->findBlock("Supersaturation")->findBlock("NameTag") ); 
       typedef typename PrecipitationRCritical<FieldT>::Builder Builder;
       builder = scinew Builder(tag, saturationTag, coef);
