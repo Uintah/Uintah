@@ -170,83 +170,122 @@ void AdvectSlabsGPU::initialize(const ProcessorGroup*,
 // @param domainLower a three component vector that gives the lower corner of the work area as (x,y,z)
 // @param ghostLayers the number of layers of ghost cells
 // @param mass pointer to the source mass allocated on the device
-// @param newMass pointer to the sink mass allocated on the device
 // @param massAd pointer to the  massAdvected allocated on the device
+// @param OFS pointer to an array of 6 element double arrays
 // @param invol inverse of the volume of a single cell
 __global__ void timeAdvanceKernelAdvectSlabs(uint3 domainSize,
                                              uint3 domainLower,
                                              int ghostLayers,
                                              double *mass,
-                                             double *newMass,
                                              double *massAd,
+                                             double *newMass,
+                                             double *ofs,
                                              double invol) {
 
   // calculate the thread indices
   int tidX = blockDim.x * blockIdx.x + threadIdx.x;
   int tidY = blockDim.y * blockIdx.y + threadIdx.y;
 
+ 
+  // Indexing
   int num_slices = domainSize.z - ghostLayers;
   int dx = domainSize.x;
   int dy = domainSize.y;
+  int dxOFS = dx+1;
+  int dyOFS = dy+1;
 
   double q_face_flux[6];
   double faceVol[6];
 
-  if (tidX < (dx - ghostLayers) && tidY < (dy - ghostLayers) && tidX > 0 && tidY > 0) {
+  if (tidX < (dx-1) && tidY < (dy-1) && tidX > 0 && tidY > 0) {
+    int tidYminus = tidY - 1;
+    int tidYplus  = tidY + 1;
+    int tidXminus = tidX - 1;
+    int tidXplus  = tidX + 1;
     for (int slice = ghostLayers; slice < num_slices; slice++) {
       // Variables needed for each cell
       double sum_q_face_flux = 0.0;
-      int cell = INDEX3D(dx,dy, tidX,tidY, slice);
-      double outfluxVol = 1.0;
-      double influxVol  = 1.0;
-      double q_faceFlux_tmp;
+      int cell2 = INDEX3D(dx,dy, tidX,tidY, slice);
+      int cell  = 6*cell2; //INDEX3D(dxOFS,dyOFS, tidX,tidY, slice);
+      double influxVol  = 0.0;
+      double outfluxVol = 0.0;
+      double massCell   = mass[cell2];
       int adjCell;
 
-      // Unrolled 'for' loop Above
-      adjCell = INDEX3D(dx,dy, tidX, tidY+1, slice);
-      q_faceFlux_tmp = mass[adjCell]*influxVol - mass[cell]*outfluxVol;
-      q_face_flux[0] = q_faceFlux_tmp;
-      faceVol[0]   = outfluxVol + influxVol;
+      // Schematic of layout
+      // enum FACE {TOP(0), BOTTOM(1), RIGHT(2), LEFT(3), FRONT(4), BACK(5)};
+      //__________________________________
+      //  outflux/influx slabs
+      //  OF_slab[RIGHT] = RIGHT;         IF_slab[RIGHT]  = LEFT;
+      //  OF_slab[LEFT]  = LEFT;          IF_slab[LEFT]   = RIGHT;
+      //  OF_slab[TOP]   = TOP;           IF_slab[TOP]    = BOTTOM;
+      //  OF_slab[BOTTOM]= BOTTOM;        IF_slab[BOTTOM] = TOP;
+      //  OF_slab[FRONT] = FRONT;         IF_slab[FRONT]  = BACK;
+      //  OF_slab[BACK]  = BACK;          IF_slab[BACK]   = FRONT;
+
+      // Corresponding CPU code
+      // double outfluxVol = d_OFS[c ].d_fflux[OF_slab[f]];
+      // double influxVol  = d_OFS[ac].d_fflux[IF_slab[f]];
+
+
+      // Unrolled 'for' loop
+      // Above
+      adjCell    = INDEX3D(dxOFS,dyOFS, tidX, tidYplus, slice);
+      outfluxVol = ofs[cell];
+      influxVol  = ofs[(6*adjCell+1)];
+
+      q_face_flux[0]   = mass[adjCell]*influxVol - massCell*outfluxVol;
+      faceVol[0]       = outfluxVol + influxVol;
       sum_q_face_flux += q_face_flux[0];
 
       // Below
-      adjCell = INDEX3D(dx,dy, tidX, tidY-1, slice);
-      q_faceFlux_tmp = mass[adjCell]*influxVol - mass[cell]*outfluxVol;
-      q_face_flux[1] = q_faceFlux_tmp;
-      faceVol[1]   = outfluxVol + influxVol;
+      adjCell    = INDEX3D(dxOFS,dyOFS, tidX, tidYminus, slice);
+      outfluxVol = ofs[(cell+1)];
+      influxVol  = ofs[(6*adjCell)];
+
+      q_face_flux[1]   = mass[adjCell]*influxVol - massCell*outfluxVol;
+      faceVol[1]       = outfluxVol + influxVol;
       sum_q_face_flux += q_face_flux[1];
 
       // Right
-      adjCell = INDEX3D(dx,dy, tidX+1, tidY, slice);
-      q_faceFlux_tmp = mass[adjCell]*influxVol - mass[cell]*outfluxVol;
-      q_face_flux[2] = q_faceFlux_tmp;
-      faceVol[2]   = outfluxVol + influxVol;
+      adjCell    = INDEX3D(dxOFS,dyOFS, tidXplus, tidY, slice);
+      outfluxVol = ofs[(cell+2)];
+      influxVol  = ofs[(6*adjCell+3)];
+
+      q_face_flux[2]   = mass[adjCell]*influxVol - massCell*outfluxVol;
+      faceVol[2]       = outfluxVol + influxVol;
       sum_q_face_flux += q_face_flux[2];
 
       // Left
-      adjCell = INDEX3D(dx,dy, tidX-1, tidY, slice);
-      q_faceFlux_tmp = mass[adjCell]*influxVol - mass[cell]*outfluxVol;
-      q_face_flux[3] = q_faceFlux_tmp;
-      faceVol[3]   = outfluxVol + influxVol;
+      adjCell    = INDEX3D(dxOFS,dyOFS, tidXminus, tidY, slice);
+      outfluxVol = ofs[(cell+3)];
+      influxVol  = ofs[(6*adjCell+2)];
+
+      q_face_flux[3]   = mass[adjCell]*influxVol - massCell*outfluxVol;
+      faceVol[3]       = outfluxVol + influxVol;
       sum_q_face_flux += q_face_flux[3];
 
       // Front
-      adjCell = INDEX3D(dx,dy, tidX, tidY, slice-1);
-      q_faceFlux_tmp = mass[adjCell]*influxVol - mass[cell]*outfluxVol;
-      q_face_flux[4] = q_faceFlux_tmp;
-      faceVol[4]   = outfluxVol + influxVol;
+      adjCell    = INDEX3D(dxOFS,dyOFS, tidX, tidY, (slice-1));
+      outfluxVol = ofs[(cell+4)];
+      influxVol  = ofs[(6*adjCell+5)];
+
+      q_face_flux[4]   = mass[adjCell]*influxVol - massCell*outfluxVol;
+      faceVol[4]       = outfluxVol + influxVol;
       sum_q_face_flux += q_face_flux[4];
 
       // Back
-      adjCell          = INDEX3D(dx,dy, tidX, tidY, slice+1);
-      q_faceFlux_tmp   = mass[adjCell]*influxVol - mass[cell]*outfluxVol;
-      q_face_flux[5]   = q_faceFlux_tmp;
+      adjCell    = INDEX3D(dxOFS,dyOFS, tidX, tidY, (slice+1));
+      outfluxVol = ofs[(cell+5)];
+      influxVol  = ofs[(6*adjCell+4)];
+
+      q_face_flux[5]   = mass[adjCell]*influxVol - massCell*outfluxVol;
       faceVol[5]       = outfluxVol + influxVol;
       sum_q_face_flux += q_face_flux[5];
 
       // Sum all the Advected masses and adjust the new mass
-      massAd[cell]     = sum_q_face_flux*invol;
-      newMass[cell]    = mass[cell] - massAd[cell];
+      massAd[cell2]  = sum_q_face_flux*invol;
+      newMass[cell2] = massCell - massAd[cell2];
     }
   }
 }
@@ -264,9 +303,11 @@ void AdvectSlabsGPU::timeAdvance(const ProcessorGroup* pg,
   double* mass_device;
   double* newMass_device;
   double* massAd_device;
+  double* ofs_device;
   double* massAd_host;
   double* mass_host;
   double* newMass_host;
+  double* ofs_host;
 
   // find the "best" device for cudaSetDevice()
   int num_devices, device;
@@ -285,7 +326,8 @@ void AdvectSlabsGPU::timeAdvance(const ProcessorGroup* pg,
   }
 
   struct fflux ff;
-  for(int p=0;p<patches->size();p++){
+  for(int p=0;p<patches->size();p++) {
+   // std::cout << "prev patch size: " << previousPatchSize << std::endl;
     const Patch* patch = patches->get(p);
     Vector dx = patch->dCell();
     double invvol = 1.0/(dx.x() * dx.y() * dx.z());
@@ -308,60 +350,112 @@ void AdvectSlabsGPU::timeAdvance(const ProcessorGroup* pg,
       // needed is calculated.  Any memory allocation occur here.
       IntVector l = patch->getNodeLowIndex();
       IntVector h = patch->getNodeHighIndex();
+
+      // Sizes //
+      // Size of mass and advectedMass variables
       IntVector s = h - l;
       int xdim = s.x(), ydim = s.y(), zdim = s.z();
       size = xdim * ydim * zdim * sizeof(double);
+      // Size of the OFS variable
+      IntVector ofsSize = d_OFS.getWindow()->getData()->size();
+      int sizeOFS = 6*ofsSize.x()*ofsSize.y()*ofsSize.z()*sizeof(double);
 
       l += IntVector(patch->getBCType(Patch::xminus) == Patch::Neighbor ? 0 : 1,
-          patch->getBCType(Patch::yminus) == Patch::Neighbor ? 0 : 1,
-              patch->getBCType(Patch::zminus) == Patch::Neighbor ? 0 : 1);
+                     patch->getBCType(Patch::yminus) == Patch::Neighbor ? 0 : 1,
+                     patch->getBCType(Patch::zminus) == Patch::Neighbor ? 0 : 1);
       h -= IntVector(patch->getBCType(Patch::xplus) == Patch::Neighbor ? 0 : 1,
-          patch->getBCType(Patch::yplus) == Patch::Neighbor ? 0 : 1,
-              patch->getBCType(Patch::zplus) == Patch::Neighbor ? 0 : 1);
+                     patch->getBCType(Patch::yplus) == Patch::Neighbor ? 0 : 1,
+                     patch->getBCType(Patch::zplus) == Patch::Neighbor ? 0 : 1);
 
       // check if we need to reallocate
       if (size != previousPatchSize) {
         if (previousPatchSize != 0) {
           cudaFree(mass_device);
-          cudaFree(massAd_device);
           cudaFree(newMass_device);
+          cudaFree(massAd_device);
+          cudaFree(ofs_device);
         }
         cudaMalloc(&mass_device, size);
-        cudaMalloc(&newMass_device, size);
+        // Kernel error checking
+        cudaError_t error = cudaGetLastError();
+        if(error!=cudaSuccess) {
+          fprintf(stderr,"ERROR1: %s\n", cudaGetErrorString(error) );
+          exit(-1);
+        }
         cudaMalloc(&massAd_device, size);
+        // Kernel error checking
+        error = cudaGetLastError();
+        if(error!=cudaSuccess) {
+          fprintf(stderr,"ERROR3: %s\n", cudaGetErrorString(error) );
+          exit(-1);
+        }
+        cudaMalloc(&ofs_device, sizeOFS);
+        // Kernel error checking
+        error = cudaGetLastError();
+        if(error!=cudaSuccess) {
+          fprintf(stderr,"ERROR3: %s\n", cudaGetErrorString(error) );
+          exit(-1);
+        }
+        cudaMalloc(&newMass_device, size);
+        // Kernel error checking
+        error = cudaGetLastError();
+        if(error!=cudaSuccess) {
+          fprintf(stderr,"ERROR3: %s\n", cudaGetErrorString(error) );
+          exit(-1);
+        }
       }
 
       //__________________________________
       //  Memory Allocation
-      mass_host = (double*)mass.getWindow()->getData()->getPointer();
+      mass_host    = (double*)mass.getWindow()->getData()->getPointer();
       newMass_host = (double*)mass2.getWindow()->getData()->getPointer();
-      massAd_host = (double*)massAd.getWindow()->getData()->getPointer();
-
+      massAd_host  = (double*)massAd.getWindow()->getData()->getPointer();
+      ofs_host     = (double*)d_OFS.getWindow()->getData()->getPointer();
+#ifdef GJDKLAFJKDLASJCLKDMSALKCJDASKLNGDA
+      std::cout << "Dims of OFS: (" << ofsSize.x() <<","<< ofsSize.y() << "," << ofsSize.z() << ")" << std::endl;
+      std::cout << "Size: " << ofsSize.x()*ofsSize.y()*ofsSize.z() << std::endl;
+      std::cout << "Size of OFS: " <<  ofsSize.x()*ofssize.y()*ofsSize.z()* sizeof(struct fflux) << std::endl;
+      std::cout << "Size: " << size/sizeof(double) << " x6= " << 6*size << std::endl;
+#endif
       // allocate space on the device
-      cudaMemcpy(mass_device, mass_host, size, cudaMemcpyHostToDevice);
+      cudaMemcpy(mass_device, mass_host, size,    cudaMemcpyHostToDevice);
+      //cudaMemcpy(ofs_device,  ofs_host,  sizeOFS, cudaMemcpyHostToDevice);
 
-      uint3 domainSize = make_uint3(xdim, ydim, zdim);
+
+      uint3 domainSize  = make_uint3(xdim, ydim, zdim);
       uint3 domainLower = make_uint3(l.x(), l.y(), l.z());
-      int totalBlocks = size / (sizeof(double) * xdim * ydim * zdim);
-      dim3 threadsPerBlock(xdim, ydim, zdim);
+      // Threads per block must be power of 2 in each direction.  Here
+      //  8 is chosen as a test value in the x and y and 1 in the z,
+      //  as each of these (x,y) threads streams through the z direction.
+      dim3 threadsPerBlock(8, 8, 1);
 
-      if (size % (totalBlocks) != 0) {
-        totalBlocks++;
+      // Set up the number of blocks of threads in each direction accounting for any
+      //  non-power of 8 end pieces.
+      int xBlocks = xdim / 8;
+      if( xdim % 8 != 0)
+      {
+        xBlocks++;
       }
+      int yBlocks = ydim / 8;
+      if( ydim % 8 != 0)
+      {
+        yBlocks++;
+      }
+      dim3 totalBlocks(xBlocks,yBlocks);
 
       // launch kernel
-      timeAdvanceKernelAdvectSlabs<<< totalBlocks, threadsPerBlock >>>(domainSize, domainLower, ghostLayers, mass_device, newMass_device, massAd_device, invvol);
+      timeAdvanceKernelAdvectSlabs<<< totalBlocks, threadsPerBlock >>>(domainSize, domainLower, ghostLayers, mass_device,  massAd_device, newMass_device, ofs_device, invvol);
 
       // Kernel error checking
       cudaError_t error = cudaGetLastError();
       if(error!=cudaSuccess) {
-        fprintf(stderr,"ERROR: %s\n", cudaGetErrorString(error) );
+        fprintf(stderr,"ERROR5: %s\n", cudaGetErrorString(error) );
         exit(-1);
       }
 
       cudaDeviceSynchronize();
       cudaMemcpy(newMass_host, newMass_device, size, cudaMemcpyDeviceToHost);
-      cudaMemcpy(massAd_host, massAd_device, size, cudaMemcpyDeviceToHost);
+      //cudaMemcpy(massAd_host,  massAd_device,  size, cudaMemcpyDeviceToHost);
     }
   }
 
@@ -369,4 +463,5 @@ void AdvectSlabsGPU::timeAdvance(const ProcessorGroup* pg,
   cudaFree(mass_device);
   cudaFree(massAd_device);
   cudaFree(newMass_device);
+  cudaFree(ofs_device);
 }
