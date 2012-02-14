@@ -366,6 +366,7 @@ namespace Wasatch{
     //
     // force additional expressions on the graph
     //
+    std::cout << "forcing things on graph \n";
     for( Uintah::ProblemSpecP forceOnGraphParams=wasatchParams->findBlock("ForceOnGraph");
         forceOnGraphParams != 0;
         forceOnGraphParams=forceOnGraphParams->findNextBlock("ForceOnGraph") ){

@@ -16,6 +16,7 @@
 #include <CCA/Components/Wasatch/Expressions/PBE/Precipitation/PrecipitationClassicNucleationCoefficient.h>
 #include <CCA/Components/Wasatch/Expressions/PBE/Precipitation/PrecipitationRCritical.h>
 
+#include <CCA/Components/Wasatch/Expressions/VelocityMagnitude.h>
 
 //-- ExprLib includes --//
 #include <expression/ExprLib.h>
@@ -288,13 +289,41 @@ namespace Wasatch{
   }
 
   //------------------------------------------------------------------
-
+  
+  template<typename FieldT>
+  Expr::ExpressionBuilder*
+  build_post_processing_expr( Uintah::ProblemSpecP params )
+  {
+    const Expr::Tag tag = parse_nametag( params->findBlock("NameTag") );
+    
+    Expr::ExpressionBuilder* builder = NULL;
+    if( params->findBlock("VelocityMagnitude") ){
+      Uintah::ProblemSpecP valParams = params->findBlock("VelocityMagnitude");
+      Expr::Tag xVelTag = Expr::Tag();
+      if (valParams->findBlock("XVelocity")) 
+        xVelTag = parse_nametag( valParams->findBlock("XVelocity")->findBlock("NameTag") );
+      Expr::Tag yVelTag = Expr::Tag();
+      if (valParams->findBlock("YVelocity")) 
+        yVelTag = parse_nametag( valParams->findBlock("YVelocity")->findBlock("NameTag") );
+      Expr::Tag zVelTag = Expr::Tag();
+      if (valParams->findBlock("ZVelocity")) 
+        Expr::Tag zVelTag = parse_nametag( valParams->findBlock("ZVelocity")->findBlock("NameTag") );
+      typedef typename VelocityMagnitude<SVolField, XVolField, YVolField, ZVolField>::Builder Builder;
+      builder = scinew Builder(tag, xVelTag, yVelTag, zVelTag);
+    }    
+    return builder;
+  }
+  
+  //------------------------------------------------------------------
+  
   void
   create_expressions_from_input( Uintah::ProblemSpecP parser,
                                  GraphCategories& gc )
   {
     Expr::ExpressionBuilder* builder = NULL;
 
+    //___________________________________
+    // parse and build basid expressions
     for( Uintah::ProblemSpecP exprParams = parser->findBlock("BasicExpression");
          exprParams != 0;
          exprParams = exprParams->findNextBlock("BasicExpression") ){
@@ -328,7 +357,8 @@ namespace Wasatch{
       graphHelper->exprFactory->register_expression( builder );
     }
 
-
+    //________________________________________
+    // parse and build Taylor-Green Vortex MMS
     for( Uintah::ProblemSpecP exprParams = parser->findBlock("TaylorVortexMMS");
          exprParams != 0;
          exprParams = exprParams->findNextBlock("TaylorVortexMMS") ){
@@ -367,7 +397,8 @@ namespace Wasatch{
       graphHelper->exprFactory->register_expression( builder );
     }
     
-    
+    //___________________________________________________
+    // parse and build physical coefficients expressions    
     for( Uintah::ProblemSpecP exprParams = parser->findBlock("PhysicsCoefficient");
         exprParams != 0;
         exprParams = exprParams->findNextBlock("PhysicsCoefficient") ){
@@ -381,6 +412,42 @@ namespace Wasatch{
         case XVOL : builder = build_physics_coefficient_expr< XVolField >( exprParams );  break;
         case YVOL : builder = build_physics_coefficient_expr< YVolField >( exprParams );  break;
         case ZVOL : builder = build_physics_coefficient_expr< ZVolField >( exprParams );  break;
+        default:
+          std::ostringstream msg;
+          msg << "ERROR: unsupported field type '" << fieldType << "'" << endl
+          << __FILE__ << " : " << __LINE__ << endl;
+      }
+      
+      Category cat = INITIALIZATION;
+      if     ( taskListName == "initialization"   )   cat = INITIALIZATION;
+      else if( taskListName == "timestep_size"    )   cat = TIMESTEP_SELECTION;
+      else if( taskListName == "advance_solution" )   cat = ADVANCE_SOLUTION;
+      else{
+        std::ostringstream msg;
+        msg << "ERROR: unsupported task list '" << taskListName << "'" << endl
+        << __FILE__ << " : " << __LINE__ << endl;
+      }
+      
+      GraphHelper* const graphHelper = gc[cat];
+      graphHelper->exprFactory->register_expression( builder );
+    }
+    
+    //___________________________________________________
+    // parse and build post-processing expressions    
+    std::cout << "Looking for post processing expressions\n";
+    for( Uintah::ProblemSpecP exprParams = parser->findBlock("PostProcessingExpression");
+        exprParams != 0;
+        exprParams = exprParams->findNextBlock("PostProcessingExpression") ){
+      
+      std::string fieldType, taskListName;
+      exprParams->getAttribute("type",fieldType);
+      exprParams->require("TaskList",taskListName);
+      
+      switch( get_field_type(fieldType) ){
+        case SVOL : builder = build_post_processing_expr< SVolField >( exprParams );  break;
+        case XVOL : builder = build_post_processing_expr< XVolField >( exprParams );  break;
+        case YVOL : builder = build_post_processing_expr< YVolField >( exprParams );  break;
+        case ZVOL : builder = build_post_processing_expr< ZVolField >( exprParams );  break;
         default:
           std::ostringstream msg;
           msg << "ERROR: unsupported field type '" << fieldType << "'" << endl
