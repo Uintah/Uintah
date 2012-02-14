@@ -255,10 +255,10 @@ velocity field. This is usually used as an initial condition for the velocity.
  *
  *  The taylor vortex velocity field in x direction is given as
  *  \f[
- *    u(x,y,z)= \frac{2}{\sqrt{3}} \sin(\theta + 2\frac{2\pi}{3}) \sin x \cos y \cos z
+ *    u(x,y,z)= \frac{2}{\sqrt{3}} \sin(\theta + \frac{2\pi}{3}) \sin x \cos y \cos z
  *  \f]
  *  \f[
- *    v(x,y,z)= \frac{2}{\sqrt{3}} \sin(\theta - 2\frac{2\pi}{3}) \sin y \cos x \cos z
+ *    v(x,y,z)= \frac{2}{\sqrt{3}} \sin(\theta - \frac{2\pi}{3}) \sin y \cos x \cos z
  *  \f]
  *  \f[
  *    w(x,y,z)= \frac{2}{\sqrt{3}} \sin(\theta) \sin z \cos x \cos y
