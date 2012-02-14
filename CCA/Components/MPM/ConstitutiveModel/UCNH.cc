@@ -645,13 +645,11 @@ void UCNH::allocateCMDataAdd(DataWarehouse* new_dw,
 
     ParticleSubset::iterator o,n     = addset->begin();
     for (o=delset->begin(); o != delset->end(); o++, n++) {
-//      pBeBar[*n] = o_pBeBar[*o];
       pFailureStrain[*n]             = o_pFailureStrain[*o];
       pLocalized[*n]                 = o_pLocalized[*o];
       pTimeOfLoc[*n]                 = o_pTimeOfLoc[*o];
       pDamage[*n]                    = o_pDamage[*o];
     }
-//    (*newState)[bElBarLabel]         = pBeBar.clone();
     (*newState)[pFailureStressOrStrainLabel] = pFailureStrain.clone();
     (*newState)[pLocalizedLabel]     = pLocalized.clone();
     (*newState)[pTimeOfLocLabel]     = pTimeOfLoc.clone();
@@ -889,7 +887,6 @@ void UCNH::initializeCMData(const Patch* patch,
   
   // Damage
   if(d_useDamage) {
-//    ParticleVariable<Matrix3>     pBeBar;
     ParticleVariable<double>      pFailureStrain;
     ParticleVariable<int>         pLocalized;
     ParticleVariable<double>      pTimeOfLoc;
@@ -925,10 +922,10 @@ void UCNH::initializeCMData(const Patch* patch,
                                 d_epsf.refVol,d_epsf.exponent);
       
       for(;iter != pset->end();iter++){
-//        pBeBar[*iter]         = Identity;
         pFailureStrain[*iter] =  fabs(gaussGen.rand(pVolume[*iter]));
         pLocalized[*iter]     = 0;
         pTimeOfLoc[*iter]     = -1.e99;;
+        pDamage[*iter]        = 0.0;
       }
     } else if (d_epsf.dist == "weibull"){
       // Initialize a weibull random number generator
@@ -944,10 +941,10 @@ void UCNH::initializeCMData(const Patch* patch,
                               unique_seed,d_epsf.exponent);
       
       for(;iter != pset->end();iter++){
-//        pBeBar[*iter]         = Identity;
         pFailureStrain[*iter] = weibGen.rand(pVolume[*iter]);
         pLocalized[*iter]     = 0;
         pTimeOfLoc[*iter]     = -1.e99;;
+        pDamage[*iter]        = 0.0;
       }
     } else if (d_epsf.dist == "uniform") {
 
@@ -959,7 +956,6 @@ void UCNH::initializeCMData(const Patch* patch,
       unsigned int unique_seed = ((d_epsf.seed+patch_div_32+1) << patchID);
       MusilRNG* randGen = scinew MusilRNG(unique_seed);
       for(;iter != pset->end();iter++){
-//        pBeBar[*iter]         = Identity;
         pLocalized[*iter]     = 0;
         pTimeOfLoc[*iter]     = -1.e99;;
 
@@ -968,15 +964,16 @@ void UCNH::initializeCMData(const Patch* patch,
         double cc = pow(d_epsf.refVol/pVolume[*iter], 1.0/d_epsf.exponent); 
         double fail_eps = cc*(d_epsf.mean + range);
         pFailureStrain[*iter] = fail_eps;
+        pDamage[*iter]        = 0.0;
       }
       delete randGen;
 
     } else {
       for(;iter != pset->end();iter++){
-//        pBeBar[*iter]         = Identity;
         pFailureStrain[*iter] = d_epsf.mean;
         pLocalized[*iter]     = 0;
         pTimeOfLoc[*iter]     = -1.e99;;
+        pDamage[*iter]        = 0.0;
       }
     }
   }
@@ -1308,7 +1305,7 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
     constParticleVariable<double>  pPlasticStrain_old, pYieldStress_old, pcolor;
     constParticleVariable<long64>  pParticleID;
     constParticleVariable<Point>   px;
-    constParticleVariable<Matrix3> /*pBeBar,*/ pDefGrad, bElBar;
+    constParticleVariable<Matrix3> pDefGrad, bElBar;
     constParticleVariable<Vector>  pSize;
     constParticleVariable<Vector>  pVelocity;
     // New data containers
@@ -1317,7 +1314,7 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
     ParticleVariable<double>       pPlasticStrain, pYieldStress;
     ParticleVariable<double>       pFailureStrain_new, pVolume_new, pDamage_new;
     ParticleVariable<double>       pdTdt,p_q;
-    ParticleVariable<Matrix3>      /*pBeBar_new,*/ pDefGrad_new, pDeformRate;
+    ParticleVariable<Matrix3>      pDefGrad_new, pDeformRate;
     ParticleVariable<Matrix3>      pStress,bElBar_new;
     ParticleVariable<Matrix3>      velGrad;
     constNCVariable<Vector>        gDisp;
