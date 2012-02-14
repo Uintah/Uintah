@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 from os import environ,unsetenv,rmdir,mkdir,path,system,chdir,stat,getcwd,pathsep,symlink
-from time import asctime,localtime,strftime,time
+from time import strftime,time,gmtime
 from sys import argv,exit,stdout
 from string import upper,rstrip,rsplit
 from modUPS import modUPS
@@ -372,14 +372,14 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
     
     # timer
     test_timer = time() - test_time0
-    minutes, seconds = divmod(test_timer, 60)
-    hours, minutes = divmod(minutes, 60)
-    print "Test Timer: %d:%d:%d" %(hours,minutes,seconds)
+    print "Test Timer:",strftime("%H:%M:%S",gmtime(test_timer))
     
     # If the test passed put an svn revision stamp in the goldstandard
     # user root is running the cronjob
     user = getoutput("whoami");
-    print "Failcode %i user %s" %(failcode,user)
+    
+    if rc > 0:
+      print "Failed %i user %s" %(failcode,user)
     
     if failcode == 0 and (user == "csafe-tester" or user == "root"):
       print "Updating the svn revision file %s" %svn_revision
@@ -426,10 +426,8 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
     print ""
     print "Some tests failed"
     
-  comp_timer = time() - comp_time0 
-  minutes, seconds = divmod(comp_timer, 60)
-  hours, minutes   = divmod(minutes, 60)
-  print "Component Timer %d:%d:%d" % (hours,minutes,seconds)
+  comp_timer = time() - comp_time0
+  print "Component Timer:",strftime("%H:%M:%S",gmtime(comp_timer))
   return failcode
 
 #______________________________________________________________________

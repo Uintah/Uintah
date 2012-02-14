@@ -199,6 +199,11 @@ for componentTest in $selectedCompTests; do
   echo ""
   echo ""
 done
+echo "__________________________________"
+echo "  S U M M A R Y "
+cat log
+echo ""
+echo ""
 echo "return code: $retval"
 exit $retval
 
