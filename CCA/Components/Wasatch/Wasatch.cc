@@ -133,6 +133,34 @@ namespace Wasatch{
     }
   }
 
+  //--------------------------------------------------------------------  
+  
+  void force_expressions_on_graph( Uintah::ProblemSpecP forceOnGraphParams,
+                                   GraphCategories& gc, 
+                                   const std::string taskListName ) {
+    for( Uintah::ProblemSpecP exprParams = forceOnGraphParams->findBlock("AnyExpression");
+        exprParams != 0;
+        exprParams = exprParams->findNextBlock("AnyExpression") ){
+      
+      const Expr::Tag anyExpressionTag = parse_nametag( exprParams->findBlock("NameTag") );
+      
+      Category cat = INITIALIZATION;
+      if     ( taskListName == "initialization"   )   cat = INITIALIZATION;
+      else if( taskListName == "timestep_size"    )   cat = TIMESTEP_SELECTION;
+      else if( taskListName == "advance_solution" )   cat = ADVANCE_SOLUTION;
+      else{
+        std::ostringstream msg;
+        msg << "ERROR: unsupported task list '" << taskListName << "'" << endl
+        << __FILE__ << " : " << __LINE__ << endl;
+      }
+      
+      GraphHelper* const graphHelper = gc[cat];
+
+      const Expr::ExpressionID anyExpressionID = graphHelper->exprFactory->get_id(anyExpressionTag);
+      graphHelper->rootIDs.insert( anyExpressionID );
+    }    
+  }
+  
   //--------------------------------------------------------------------
 
   void Wasatch::problemSetup( const Uintah::ProblemSpecP& params,
@@ -333,7 +361,20 @@ namespace Wasatch{
       timeStepper_ = scinew TimeStepper( sharedState_->get_delt_label(),
                                          *graphCategories_[ ADVANCE_SOLUTION ] );
     }
-  }
+    
+    
+    //
+    // force additional expressions on the graph
+    //
+    for( Uintah::ProblemSpecP forceOnGraphParams=wasatchParams->findBlock("ForceOnGraph");
+        forceOnGraphParams != 0;
+        forceOnGraphParams=forceOnGraphParams->findNextBlock("ForceOnGraph") ){
+      std::string taskListName;
+      forceOnGraphParams->getAttribute("tasklist", taskListName);
+      force_expressions_on_graph(forceOnGraphParams, graphCategories_, taskListName);
+    } 
+    
+}
 
   //--------------------------------------------------------------------
 

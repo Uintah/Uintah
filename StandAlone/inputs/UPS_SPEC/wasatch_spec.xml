@@ -364,6 +364,12 @@
 
     </MomentTransportEquation>
 
+    <ForceOnGraph	      spec="MULTIPLE NO_DATA"
+                    attribute1="tasklist REQUIRED STRING 'initialization,advance_solution">
+      <AnyExpression       spec="MULTIPLE NO_DATA">
+        <NameTag			spec="REQUIRED" />
+      </AnyExpression>        
+    </ForceOnGraph>
 
   </Wasatch>
 
