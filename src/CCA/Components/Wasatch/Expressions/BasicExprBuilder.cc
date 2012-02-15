@@ -226,10 +226,13 @@ namespace Wasatch{
       coefParams -> getAttribute("Molec_Vol",MolecularVolume);
       coefParams -> getAttribute("Diff_Coef",DiffusionCoefficient);
       coef = MolecularVolume*DiffusionCoefficient;
+      bool hasOstwaldRipening = false;
+      if (coefParams->findBlock("OstwaldRipening") )
+        hasOstwaldRipening = true;
       const Expr::Tag saturationTag = parse_nametag( coefParams->findBlock("Supersaturation")->findBlock("NameTag") );
       const Expr::Tag eqTag  = parse_nametag( coefParams->findBlock("EquilibriumConcentration")->findBlock("NameTag") );
       typedef typename PrecipitationBulkDiffusionCoefficient<FieldT>::Builder Builder;
-      builder = scinew Builder(tag, saturationTag, eqTag, coef); 
+      builder = scinew Builder(tag, saturationTag, eqTag, coef, hasOstwaldRipening); 
     }
 
     else if (params->findBlock("PrecipitationMonosurfaceCoefficient") ) {      

@@ -297,6 +297,14 @@
         <GrowthCoefficientExpression   spec="OPTIONAL NO_DATA">  <!-- dictates g0 form -->
           <NameTag		spec="REQUIRED" />
         </GrowthCoefficientExpression> 
+        
+        <OstwaldRipening spec = "OPTIONAL NO_DATA" >  <!-- this calculates \bar{S} and creates a new term -->
+          <MolecularVolume  spec="REQUIRED DOUBLE" />
+          <SurfaceEnergy    spec="REQUIRED DOUBLE" />
+          <Temperature      spec="REQUIRED DOUBLE" />
+          <ConversionFactor spec="OPTIONAL DOUBLE" /> <!-- defaults to 1.0 -->
+          <RCutoff          spec="OPTIONAL DOUBLE" /> <!-- defaults to 0.1 -->
+        </OstwaldRipening>
 
       </GrowthExpression>
       
@@ -322,7 +330,7 @@
         
         <StandardDeviation spec="OPTIONAL DOUBLE" />  <!-- Required for normal or uniform, std dev of norm, 1/2 width for uniform -->
       </BirthExpression>      
-                        
+    
       <!-- ================================================================================== -->            
       <!-- CONVECTIVE FLUX -->
       <ConvectiveFluxExpression	spec="MULTIPLE NO_DATA">

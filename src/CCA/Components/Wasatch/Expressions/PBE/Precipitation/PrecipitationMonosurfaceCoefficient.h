@@ -15,8 +15,9 @@
  
  *  \brief calculates the expression containing the coefficient used in a
  *  precipitation reaction with monosurface nucleation growth
- *  g0 = B D d^3 exp(    
- *  g(r) = r^2
+ *  \f$ g_0 = \beta_A D d^3 \exp ( - \Delta G / K_B T ) \f$
+ *  \f$ \Delta G = \frac{\beta_L \gamma^2 d^2}{4 \beta_A k_B T \ln (S)} \f$
+ *  \f$ g(r) = r^2 \f$
  */
 template< typename FieldT >
 class PrecipitationMonosurfaceCoefficient
