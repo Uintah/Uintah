@@ -86,6 +86,7 @@ evaluate()
     InpterpVel3T2FieldTOp_->apply_to_field( *vel3_, *tmp );
     velMag <<= velMag + *tmp * *tmp;
   }
+  velMag <<= sqrt(velMag);
 }
 
 //--------------------------------------------------------------------
