@@ -61,6 +61,10 @@ if [ ! -d susdir ]; then
   ln -s ../StandAlone susdir
 fi
 
+if [ ! -d tools ]; then
+  ln -s ${SRCTOP}/tools tools
+fi
+
 if [ ! -d inputs ]; then
   ln -s ${SRCTOP}/StandAlone/inputs inputs
 fi
