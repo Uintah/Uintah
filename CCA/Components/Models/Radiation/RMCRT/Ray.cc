@@ -51,6 +51,7 @@ Ray::problemSetup( const ProblemSpecP& inputdb)
   db->getWithDefault( "randomSeed",       _isSeedRandom,    true );      // random or deterministic seed.
   db->getWithDefault( "benchmark_1" ,     _benchmark_1,     false );  
   db->getWithDefault( "benchmark_13pt2" , _benchmark_13pt2, false );
+  db->getWithDefault( "benchmark_3" ,     _benchmark_3,     false );
   db->getWithDefault("StefanBoltzmann",   _sigma,           5.67051e-8);  // Units are W/(m^2-K)
   db->getWithDefault( "solveBoundaryFlux" , _solveBoundaryFlux, false );
   db->getWithDefault( "CCRays"    ,       _CCRays,          false );  // if true, forces rays to always have CC origins
@@ -190,13 +191,34 @@ Ray::initProperties( const ProcessorGroup* pc,
       // apply boundary conditions
       setBC(abskg, d_abskgLabel->getName(), patch, d_matl);
     }    
+    else if (_benchmark_3) {
+
+      for ( CellIterator iter = patch->getCellIterator(); !iter.done(); iter++ ){
+        IntVector c = *iter;
+        abskg[c] = 0.90 * ( 1.0 - 2.0 * fabs( ( c[0] - (Nx - 1.0) /2.0) * Dx[0]) )
+                        * ( 1.0 - 2.0 * fabs( ( c[1] - (Ny - 1.0) /2.0) * Dx[1]) )
+                        * ( 1.0 - 2.0 * fabs( ( c[2] - (Nz - 1.0) /2.0) * Dx[2]) ) 
+                        + 0.1;  
+      }
+    }
 
     //__________________________________
     //  compute sigmaT4
-    for ( CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++ ){ 
-      IntVector c = *iter; 
-      double temp2 = temperature[c] * temperature[c];
-      sigmaT4Pi[c] = _sigma_over_pi * temp2 * temp2; // sigma T^4/pi
+
+    if(_benchmark_3) {
+      for ( CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++ ){ 
+        IntVector c = *iter; 
+        double temp2 = 1000 * abskg[c] * 1000 * abskg[c];
+        sigmaT4Pi[c] = _sigma_over_pi * temp2 * temp2; // sigma T^4/pi
+      }
+    }
+
+    else {
+      for ( CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++ ){ 
+        IntVector c = *iter; 
+        double temp2 = temperature[c] * temperature[c];
+        sigmaT4Pi[c] = _sigma_over_pi * temp2 * temp2; // sigma T^4/pi
+      }
     }
   }
 }
@@ -353,7 +375,7 @@ Ray::rayTrace( const ProcessorGroup* pc,
        level->findInteriorCellIndexRange(pLow, pHigh);
        int Nx = pHigh[0] - pLow[0];
        if (i==Nx/2 && j==Nx/2){
-     */
+     */  
 
       double SumI = 0;
 

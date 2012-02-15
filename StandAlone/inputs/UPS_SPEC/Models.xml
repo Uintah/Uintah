@@ -16,6 +16,7 @@
       <StefanBoltzmann        spec="OPTIONAL DOUBLE  'positive'"/>        
       <benchmark_1            spec="OPTIONAL BOOLEAN"/>                   
       <benchmark_13pt2        spec="OPTIONAL BOOLEAN"/>                   
+      <benchmark_3            spec="OPTIONAL BOOLEAN"/>                   
       <solveBoundaryFlux      spec="OPTIONAL BOOLEAN"/>                   
       <CCRays                 spec="OPTIONAL BOOLEAN"/> 
     </RMCRT>
