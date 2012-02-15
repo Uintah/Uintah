@@ -45,6 +45,7 @@ SRCS     +=                         \
 	$(SRCDIR)/SetCurrentTime.cc		\
 	$(SRCDIR)/Stress.cc 			\
 	$(SRCDIR)/VelocityMagnitude.cc 			\
+	$(SRCDIR)/Vorticity.cc 			\
 	$(SRCDIR)/Pressure.cc
 
 SUBDIRS := \

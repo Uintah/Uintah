@@ -20,7 +20,7 @@
  *  \tparam FieldT  The type of field for the velocity magnitue - usually SVOL.
  *  \tparam Vel1T   The type of field for the first velocity component.
  *  \tparam Vel2T   The type of field for the second velocity component.
- *  \tparam ViscT   The type of field for the viscosity.
+ *  \tparam Vel3T   The type of field for the second velocity component. 
  */
 template< typename FieldT,
 typename Vel1T,
