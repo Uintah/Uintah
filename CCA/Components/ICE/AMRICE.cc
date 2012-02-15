@@ -36,6 +36,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Exceptions/InvalidValue.h>
+#include <Core/Grid/AMR_CoarsenRefine.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Variables/PerPatch.h>
@@ -1027,20 +1028,21 @@ void AMRICE::coarsen(const ProcessorGroup*,
       new_dw->getModifiable(eng_adv,   lb->eng_advLabel,    indx, coarsePatch);
       new_dw->getModifiable(mom_adv,   lb->mom_advLabel,    indx, coarsePatch);  
       
-      // coarsen         
-      fineToCoarseOperator<double>(mass_adv,   "conserved", 
+      // coarsen
+      bool computesAve = false;
+      fineToCoarseOperator<double>(mass_adv,   computesAve, 
                          lb->mass_advLabel,   indx, new_dw, 
                          coarsePatch, coarseLevel, fineLevel);      
 
-      fineToCoarseOperator<double>(sp_vol_adv, "conserved",
+      fineToCoarseOperator<double>(sp_vol_adv, computesAve,
                          lb->sp_vol_advLabel, indx, new_dw, 
                          coarsePatch, coarseLevel, fineLevel);
 
-      fineToCoarseOperator<double>(eng_adv,   "conserved",   
+      fineToCoarseOperator<double>(eng_adv,   computesAve,   
                          lb->eng_advLabel,    indx, new_dw, 
                          coarsePatch, coarseLevel, fineLevel);
        
-      fineToCoarseOperator<Vector>( mom_adv,  "conserved",   
+      fineToCoarseOperator<Vector>( mom_adv,  computesAve,   
                          lb->mom_advLabel,    indx, new_dw, 
                          coarsePatch, coarseLevel, fineLevel);
       
@@ -1050,9 +1052,11 @@ void AMRICE::coarsen(const ProcessorGroup*,
           // pressure
         CCVariable<double> press_CC;                  
         new_dw->getModifiable(press_CC, lb->press_CCLabel,  0,    coarsePatch);
-        fineToCoarseOperator<double>(press_CC, "non-conserved",
-                         lb->press_CCLabel, 0,   new_dw, 
-                         coarsePatch, coarseLevel, fineLevel);
+        computesAve = true;
+        
+        fineToCoarseOperator<double>(press_CC, computesAve,
+                           lb->press_CCLabel, 0,   new_dw, 
+                           coarsePatch, coarseLevel, fineLevel);
       }                   
                          
                          
@@ -1067,9 +1071,11 @@ void AMRICE::coarsen(const ProcessorGroup*,
           if(tvar->matls->contains(indx)){
             CCVariable<double> q_CC_adv;
             new_dw->getModifiable(q_CC_adv, tvar->var_adv, indx, coarsePatch);
-            fineToCoarseOperator<double>(q_CC_adv, "conserved", 
-                       tvar->var_adv, indx, new_dw, 
-                       coarsePatch, coarseLevel, fineLevel);
+            computesAve = false;
+            
+            fineToCoarseOperator<double>(q_CC_adv, computesAve, 
+                               tvar->var_adv, indx, new_dw, 
+                               coarsePatch, coarseLevel, fineLevel);
             
             if(switchDebug_AMR_coarsen){  
               string name = tvar->var->getName();
