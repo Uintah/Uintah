@@ -20,7 +20,7 @@ if ( $#created == 0 ) then
   echo  "  csh/tcsh:  setenv SCI_DEBUG VarLabel:+"
   echo "before you run the input file."
 endif
-
+echo ""
 
 foreach C ( $created[*] )
   set found = "false"
@@ -30,6 +30,8 @@ foreach C ( $created[*] )
      endif
    end
    if ($found == "false") then
-     echo "VarLabel $C was not destroyed"
+     echo "            <<<  VarLabel ($C) was not deleted >>>"
    endif
 end
+echo ""
+exit 

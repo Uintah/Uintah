@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 from os import environ,unsetenv,rmdir,mkdir,path,system,chdir,stat,getcwd,pathsep,symlink
-from time import strftime,time,gmtime,asctime
+from time import strftime,time,gmtime,asctime,localtime
 from sys import argv,exit,stdout
 from string import upper,rstrip,rsplit
 from modUPS import modUPS
@@ -59,6 +59,7 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
   susdir        = path.normpath(path.join(getcwd(), argv[1]))
   gold_standard = path.normpath(path.join(getcwd(), argv[3]))
   helperspath   = "%s/%s" % (path.normpath(path.join(getcwd(), path.dirname(argv[0]))), "helpers")
+  toolspath     = path.normpath(path.join(getcwd(), "tools"))
   inputpath     = path.normpath(path.join(getcwd(), inputs_root()))
   
   global startpath
@@ -70,7 +71,7 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
   
   #__________________________________
   # set environmental variables
-  environ['PATH']              = "%s%s%s" % (helperspath, pathsep, environ['PATH'])
+  environ['PATH']              = "%s%s%s%s%s" % (helperspath, pathsep, toolspath, pathsep, environ['PATH'])
   environ['SCI_SIGNALMODE']    = 'exit'
   environ['SCI_EXCEPTIONMODE'] = 'abort'
   environ['MPI_TYPE_MAX']      = '10000'
@@ -477,6 +478,7 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
 
   if not do_memory_test :
       unsetenv('MALLOC_STATS')
+      unsetenv('SCI_DEBUG')
       
   MPIHEAD="%s -np" % MPIRUN       #default 
   
@@ -549,6 +551,7 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
   if do_memory_test == 1:
   
     environ['MALLOC_STRICT'] = "set"
+    environ['SCI_DEBUG']     ="VarLabel:+"
     
     if startFrom == "restart":
       malloc_stats_file = "restart_malloc_stats"        
@@ -696,6 +699,8 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
       elif memory_RC == 256:
           print "\t*** Warning, test %s failed memory leak test." % (testname)
           print memory_msg
+          # check that all VarLabels were deleted
+          rc = system("mem_leak_checkVarLabels sus.log.txt")  
       elif memory_RC == 2*256:
           print "\t*** Warning, test %s failed memory highwater test." % (testname)
           if short_message != "":
