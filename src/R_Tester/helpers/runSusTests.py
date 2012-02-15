@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 from os import environ,unsetenv,rmdir,mkdir,path,system,chdir,stat,getcwd,pathsep,symlink
-from time import strftime,time,gmtime
+from time import strftime,time,gmtime,asctime
 from sys import argv,exit,stdout
 from string import upper,rstrip,rsplit
 from modUPS import modUPS
