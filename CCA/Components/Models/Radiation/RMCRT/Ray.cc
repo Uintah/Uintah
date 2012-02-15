@@ -636,6 +636,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
                                
     abskg_dw->getRegion(   abskg[L]   ,   d_abskgLabel ,   d_matl , level.get_rep(), domainLo_EC, domainHi_EC);
     sigmaT4_dw->getRegion( sigmaT4Pi[L] , d_sigmaT4_label, d_matl , level.get_rep(), domainLo_EC, domainHi_EC);
+    
     Vector dx = level->dCell();
     DyDx[L] = dx.y() / dx.x();
     DzDx[L] = dx.z() / dx.x();
@@ -843,7 +844,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
 
             //Eqn 3-15(see below reference) while
             //Third term inside the parentheses is accounted for in Inet. Chi is accounted for in Inet calc.
-            SumI += sigmaT4Pi[L][prevCell] * ( exp(-optical_thickness_prev) - exp(-optical_thickness) ) * fs;
+            SumI += sigmaT4Pi[prevLev][prevCell] * ( exp(-optical_thickness_prev) - exp(-optical_thickness) ) * fs;
             
          //   dbg2 << "origin " << origin << "dir " << dir << " cur " << cur <<" prevCell " << prevCell << " sumI " << SumI << " in_domain " << in_domain << endl;
          //   dbg2 << "    tmaxX " << tMax[L].x() << " tmaxY " << tMax[L].y() << " tmaxZ " << tMax[L].z() << endl;
