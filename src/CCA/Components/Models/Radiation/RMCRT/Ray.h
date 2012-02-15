@@ -101,6 +101,7 @@ namespace Uintah{
 
       bool _benchmark_1; 
       bool _benchmark_13pt2;
+      bool _benchmark_3;
       bool _isSeedRandom;
       bool _solveBoundaryFlux;
       bool _CCRays;
