@@ -5429,11 +5429,11 @@ BoundaryCondition::setupBCs( ProblemSpecP& db )
         my_info.name = name;
         std::stringstream color; 
         color << bc_type_index; 
-        my_info.total_area_label = VarLabel::create( "bc_area"+color.str()+name, ReductionVariable<double, Reductions::Sum<double> >::getTypeDescription());
 
         if ( type == "VelocityInlet" ){
 
           my_info.type = VELOCITY_INLET; 
+          my_info.total_area_label = VarLabel::create( "bc_area"+color.str()+name, ReductionVariable<double, Reductions::Sum<double> >::getTypeDescription());
           db_BCType->require("vecvalue", my_info.velocity);
           found_bc = true; 
 
@@ -5443,6 +5443,7 @@ BoundaryCondition::setupBCs( ProblemSpecP& db )
         } else if ( type == "MassFlowInlet" ){
 
           my_info.type = MASSFLOW_INLET;
+          my_info.total_area_label = VarLabel::create( "bc_area"+color.str()+name, ReductionVariable<double, Reductions::Sum<double> >::getTypeDescription());
           my_info.velocity = Vector(0,0,0); 
           my_info.mass_flow_rate = 0.0;
           found_bc = true; 
@@ -5455,6 +5456,7 @@ BoundaryCondition::setupBCs( ProblemSpecP& db )
         } else if ( type == "VelocityFileInput" ){ 
 
           my_info.type = VELOCITY_FILE; 
+          my_info.total_area_label = VarLabel::create( "bc_area"+color.str()+name, ReductionVariable<double, Reductions::Sum<double> >::getTypeDescription());
           db_BCType->require("inputfile", my_info.filename); 
           my_info.velocity = Vector(0,0,0); 
           found_bc = true; 
@@ -5465,6 +5467,7 @@ BoundaryCondition::setupBCs( ProblemSpecP& db )
         } else if ( type == "Swirl" ){ 
 
           my_info.type = SWIRL; 
+          my_info.total_area_label = VarLabel::create( "bc_area"+color.str()+name, ReductionVariable<double, Reductions::Sum<double> >::getTypeDescription());
           db_BCType->require("swirl_no", my_info.swirl_no);
           db_BCType->require("swirl_centroid", my_info.swirl_cent); 
 
@@ -5478,6 +5481,7 @@ BoundaryCondition::setupBCs( ProblemSpecP& db )
         } else if ( type == "PressureBC" ){
 
           my_info.type = PRESSURE; 
+          my_info.total_area_label = VarLabel::create( "bc_area"+color.str()+name, ReductionVariable<double, Reductions::Sum<double> >::getTypeDescription());
           my_info.velocity = Vector(0,0,0); 
           found_bc = true; 
 
@@ -5487,6 +5491,7 @@ BoundaryCondition::setupBCs( ProblemSpecP& db )
         } else if ( type == "OutletBC" ){ 
 
           my_info.type = OUTLET; 
+          my_info.total_area_label = VarLabel::create( "bc_area"+color.str()+name, ReductionVariable<double, Reductions::Sum<double> >::getTypeDescription());
           my_info.velocity = Vector(0,0,0); 
           found_bc = true; 
 
@@ -5496,6 +5501,7 @@ BoundaryCondition::setupBCs( ProblemSpecP& db )
         } else if ( type == "WallBC" ){
 
           my_info.type = WALL;
+          my_info.total_area_label = VarLabel::create( "bc_area"+color.str()+name, ReductionVariable<double, Reductions::Sum<double> >::getTypeDescription());
           my_info.velocity = Vector(0,0,0); 
           db_BCType->getWithDefault("vecvalue", my_info.velocity, Vector(0,0,0)); // to allow for "moving" walls
           found_bc = true; 
