@@ -151,26 +151,9 @@ void fineToCoarseOperator(CCVariable<T>& q_CC,
       inv_RR = 1.0/( (double)(r_Ratio.x() * r_Ratio.y() * r_Ratio.z()) );
     }
 
-    T zero(0.0);
-    // iterate over coarse level cells
-    for(CellIterator iter(cl, ch); !iter.done(); iter++){
-      IntVector c = *iter;
-      T q_CC_tmp(zero);
-      IntVector fineStart = coarseLevel->mapCellToFiner(c);
-    
-      // for each coarse level cell iterate over the fine level cells   
-      for(CellIterator inside(IntVector(0,0,0),r_Ratio );
-                                          !inside.done(); inside++){
-        IntVector fc = fineStart + *inside;        
-        
-        if( fc.x() >= fl.x() && fc.y() >= fl.y() && fc.z() >= fl.z() &&
-            fc.x() <= fh.x() && fc.y() <= fh.y() && fc.z() <= fh.z() ) {
-          q_CC_tmp += fine_q_CC[fc];
-        }
-      }
-                         
-      q_CC[c] =q_CC_tmp * inv_RR;
-    }
+
+    coarsenDriver_std(cl, ch, fl, fh, r_Ratio, inv_RR, coarseLevel,                
+                      fine_q_CC, q_CC );
   }
   cout_dbg.setActive(false);// turn off the switch for cout_dbg
 }
