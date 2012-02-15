@@ -17,6 +17,7 @@
 #include <CCA/Components/Wasatch/Expressions/PBE/Precipitation/PrecipitationRCritical.h>
 
 #include <CCA/Components/Wasatch/Expressions/VelocityMagnitude.h>
+#include <CCA/Components/Wasatch/Expressions/Vorticity.h>
 
 //-- ExprLib includes --//
 #include <expression/ExprLib.h>
@@ -310,7 +311,31 @@ namespace Wasatch{
         Expr::Tag zVelTag = parse_nametag( valParams->findBlock("ZVelocity")->findBlock("NameTag") );
       typedef typename VelocityMagnitude<SVolField, XVolField, YVolField, ZVolField>::Builder Builder;
       builder = scinew Builder(tag, xVelTag, yVelTag, zVelTag);
+    } 
+    
+    else if( params->findBlock("Vorticity") ){
+      Uintah::ProblemSpecP valParams = params->findBlock("Vorticity");
+      std::string vorticityComponent;
+      valParams->require("Component",vorticityComponent);
+      
+      Expr::Tag vel1Tag = Expr::Tag();
+      if (valParams->findBlock("Vel1")) 
+        vel1Tag = parse_nametag( valParams->findBlock("Vel1")->findBlock("NameTag") );
+      Expr::Tag vel2Tag = Expr::Tag();
+      if (valParams->findBlock("Vel2")) 
+        vel2Tag = parse_nametag( valParams->findBlock("Vel2")->findBlock("NameTag") );
+      if (vorticityComponent == "X") {
+        typedef typename Vorticity<SVolField, ZVolField, YVolField>::Builder Builder;
+        builder = scinew Builder(tag, vel1Tag, vel2Tag);
+      } else if (vorticityComponent == "Y") {
+        typedef typename Vorticity<SVolField, XVolField, ZVolField>::Builder Builder;
+        builder = scinew Builder(tag, vel1Tag, vel2Tag);
+      } else if (vorticityComponent == "Z") {
+        typedef typename Vorticity<SVolField, YVolField, XVolField>::Builder Builder;
+        builder = scinew Builder(tag, vel1Tag, vel2Tag);
+      }
     }    
+    
     return builder;
   }
   

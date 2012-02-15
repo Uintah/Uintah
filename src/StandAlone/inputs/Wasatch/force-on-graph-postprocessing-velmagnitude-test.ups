@@ -32,6 +32,20 @@
       </VelocityMagnitude>
     </PostProcessingExpression>
 
+    <PostProcessingExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="vorticity_z" state="STATE_N" />
+      <Vorticity>
+      <Component>Z</Component>
+      <Vel1>
+        <NameTag name="y-mom" state="STATE_N" />
+      </Vel1>
+      <Vel2>
+        <NameTag name="x-mom" state="STATE_N" />
+      </Vel2>
+      </Vorticity>
+    </PostProcessingExpression>
+
     
     <!-- Set the initial condition expression for x-momentum -->
     <TaylorVortexMMS type="XVOL">
@@ -101,9 +115,13 @@
            <NameTag name="vel_magnitude" state="STATE_N" />
         </AnyExpression>
     </ForceOnGraph>
+
     <ForceOnGraph tasklist="advance_solution">
         <AnyExpression>
            <NameTag name="vel_magnitude" state="STATE_N" />
+        </AnyExpression>
+        <AnyExpression>
+           <NameTag name="vorticity_z" state="STATE_N" />
         </AnyExpression>
     </ForceOnGraph>
 
@@ -145,6 +163,7 @@
     <save label="x-mom_rhs_full"/>
     <save label="y-mom_rhs_full"/>
     <save label="vel_magnitude"/>
+    <save label="vorticity_z"/>
   </DataArchiver> 
 
   <Grid>
