@@ -15,8 +15,8 @@
  
  *  \brief calculates the expression containing the coefficient used in a
  *  precipitation reaction with bulk diffusion growth
- *  g0 = v D C_eq (S-1)    
- *  g(r) = 1/r
+ *  \f$ g_0 = \nu D C_{eq} (S-1) \f$ or \f$ (S - \bar{S}) \f$   
+ *  \f$ g(r) = 1/r \f$
 
  */
 template< typename FieldT >
@@ -27,10 +27,12 @@ class PrecipitationBulkDiffusionCoefficient
   const double growthCoefVal_;
   const FieldT* superSat_; //field from table of supersaturation
   const FieldT* eqConc_;   //field form table of equilibrium concentration
+  const bool hasOstwaldRipening_;
   
   PrecipitationBulkDiffusionCoefficient( const Expr::Tag& superSatTag,
                                          const Expr::Tag& eqConcTag,
-                                         const double growthCoefVal);
+                                         const double growthCoefVal,
+                                         const bool hasOstwaldRipening );
   
 public:
   class Builder : public Expr::ExpressionBuilder
@@ -39,23 +41,26 @@ public:
     Builder( const Expr::Tag& result,
             const Expr::Tag& superSatTag,
             const Expr::Tag& eqConcTag,
-            const double growthCoefVal)
+            const double growthCoefVal,
+            const bool hasOstwaldRipening )
     : ExpressionBuilder(result),
     supersatt_(superSatTag),
     eqconct_(eqConcTag),
-    growthcoefval_(growthCoefVal)
+    growthcoefval_(growthCoefVal),
+    hasostwaldripening_(hasOstwaldRipening)
     {}
     
     ~Builder(){}
     
     Expr::ExpressionBase* build() const
     {
-      return new PrecipitationBulkDiffusionCoefficient<FieldT>( supersatt_, eqconct_, growthcoefval_ );
+      return new PrecipitationBulkDiffusionCoefficient<FieldT>( supersatt_, eqconct_, growthcoefval_, hasostwaldripening_ );
     }
     
   private:
     const Expr::Tag supersatt_, eqconct_;
     const double growthcoefval_;
+    const bool hasostwaldripening_;
   };
   
   ~PrecipitationBulkDiffusionCoefficient();
@@ -81,11 +86,13 @@ template< typename FieldT >
 PrecipitationBulkDiffusionCoefficient<FieldT>::
 PrecipitationBulkDiffusionCoefficient( const Expr::Tag& superSatTag,
                                        const Expr::Tag& eqConcTag,
-                                       const double growthCoefVal)
+                                       const double growthCoefVal,
+                                       const bool hasOstwaldRipening )
 : Expr::Expression<FieldT>(),
 superSatTag_(superSatTag),
 eqConcTag_(eqConcTag),
-growthCoefVal_(growthCoefVal)
+growthCoefVal_(growthCoefVal),
+hasOstwaldRipening_(hasOstwaldRipening)
 {}
 
 //--------------------------------------------------------------------
@@ -135,7 +142,11 @@ evaluate()
 {
   using namespace SpatialOps;
   FieldT& result = this->value();
-  result <<= growthCoefVal_ * *eqConc_ * ( *superSat_ -1 );  // this is g0
+  if (!hasOstwaldRipening_) {
+    result <<= growthCoefVal_ * *eqConc_ * ( *superSat_ -1 );  // this is g0
+  } else {
+    result <<= growthCoefVal_ * *eqConc_ * ( *superSat_ );  // this is g0
+  }
 }
 
 //--------------------------------------------------------------------

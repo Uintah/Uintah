@@ -16,15 +16,15 @@
  
  *  \brief Implements any type of birth term
  *  takes the form of
- *  B  = J \times B0(S) \times IB(r)
+ *  \f$ B  = J \times B_0(S) \times IB(r) \f$
  *  J is a predetermined coefficeint
- *  B0(S) is an optional functionality for the coefficient
- *  IB is the integral of the birth source term
- *  IB(r) = \int_0^\inf B r^k dr, (k = moment order)
+ *  \f$ B_0(S) \f$ is an optional functionality for the coefficient
+ *  \f$ IB \f$ is the integral of the birth source term
+ *  \f$ IB(r) = \int_0^\inf B r^k dr \f$, (k = moment order)
  *  For Point and Uniform birth sources, an analytical 
  *  solution is possible and used here
  *  For Normal distribution birth, a 10-point trapezoid method is used,
- *  with limits set as +/- 3 \times std dev of r^*
+ *  with limits set as +/- 3 \times std dev of \f$ r^* \f$
  */
 
 //birth(birthTag, birthCoefTag, RStarTag, constcoef, momentOrder, birthModel, ConstRStar, stdDev)

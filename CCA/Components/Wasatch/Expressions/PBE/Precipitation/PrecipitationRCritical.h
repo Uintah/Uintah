@@ -13,7 +13,7 @@
  *  \tparam FieldT the type of field.
  *
  *  \brief calculates the R cirtical for Nucleation
- *  R* = R0 / log(S)
+ *  \f$ R^* = R_0 / \ln (S) \f$
  
  */
 template< typename FieldT >

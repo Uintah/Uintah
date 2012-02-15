@@ -15,7 +15,7 @@
  *                                                                                                                    
  *  \brief Nucleation Coeffcient Source term for use in QMOM                                                                     
  *  classic nucleation refers to this value as                                                                       
- *  J = exp( 16pi/3 (gamm/K_B/T)^3(V/N_A/ln(S)^2                                                                                                                  
+ *  \f$ B_0 = \exp ( 16 \pi /3 ( \gamma /K_B T)^3( \nu /N_A/ \ln(S)^2  \f$                                                                                                                
  */
 template< typename FieldT >
 class PrecipitationClassicNucleationCoefficient

@@ -7,6 +7,7 @@
 
 #include <CCA/Components/Wasatch/Expressions/PBE/Birth.h>
 #include <CCA/Components/Wasatch/Expressions/PBE/Growth.h>
+#include <CCA/Components/Wasatch/Expressions/PBE/Precipitation/OstwaldRipening.h>
 
 #include <CCA/Components/Wasatch/Expressions/PBE/QMOM.h>
 #include <CCA/Components/Wasatch/Expressions/ConvectiveFlux.h>
@@ -39,7 +40,6 @@ namespace Wasatch {
     Expr::Tag growthTag; // this tag will be populated
     Expr::ExpressionBuilder* builder = NULL;
     
-    //fix this block to run only once?
     Expr::Tag growthCoefTag;
     if( growthParams->findBlock("GrowthCoefficientExpression") ){
       Uintah::ProblemSpecP nameTagParam = growthParams->findBlock("GrowthCoefficientExpression")->findBlock("NameTag");
@@ -49,12 +49,9 @@ namespace Wasatch {
     std::string growthModel;
     growthParams->get("GrowthModel",growthModel);
     growthTag = Expr::Tag( thisPhiName + "_growth_" + growthModel, Expr::STATE_NONE);
-    double coef;
-    if (growthParams->findBlock("PreGrowthCoefficient") ) {
-      growthParams->get("PreGrowthCoefficient",coef);
-    } else {
-      coef = 1.0;
-    }
+    double constCoef = 1.0;
+    if (growthParams->findBlock("PreGrowthCoefficient") )
+      growthParams->get("PreGrowthCoefficient",constCoef);
       
     if (growthModel == "BULK_DIFFUSION") {      //g(r) = 1/r
       std::stringstream previousMomentOrderStr;
@@ -67,7 +64,7 @@ namespace Wasatch {
         factory.register_expression(scinew MomClosure(momentClosureTag,weightsTagList,abscissaeTagList,momentOrder));
       }
       typedef typename Growth<FieldT>::Builder growth;
-      builder = scinew growth(growthTag, phiTag, growthCoefTag, momentOrder, coef);
+      builder = scinew growth(growthTag, phiTag, growthCoefTag, momentOrder, constCoef);
         
     } else if (growthModel == "MONOSURFACE") { //g(r) = r^2
       std::stringstream nextMomentOrderStr;
@@ -80,18 +77,48 @@ namespace Wasatch {
         factory.register_expression(scinew MomClosure(momentClosureTag,weightsTagList,abscissaeTagList,momentOrder+1));
       }
       typedef typename Growth<FieldT>::Builder growth;
-      builder = scinew growth(growthTag, phiTag, growthCoefTag, momentOrder, coef);
+      builder = scinew growth(growthTag, phiTag, growthCoefTag, momentOrder, constCoef);
         
     } else if (growthModel == "CONSTANT") {   // g0
       std::stringstream currentMomentOrderStr;
       currentMomentOrderStr << momentOrder;
       const Expr::Tag phiTag( basePhiName + "_" + currentMomentOrderStr.str(), Expr::STATE_N );
       typedef typename Growth<FieldT>::Builder growth;
-      builder = scinew growth(growthTag, phiTag, growthCoefTag, momentOrder, coef);
+      builder = scinew growth(growthTag, phiTag, growthCoefTag, momentOrder, constCoef);
     }
 
     growthTags.push_back(growthTag);
     factory.register_expression( builder );
+    
+    if (growthParams->findBlock("OstwaldRipening") ){
+      Uintah::ProblemSpecP ostwaldParams = growthParams->findBlock("OstwaldRipening");
+      int nPts = nEqs/2;
+      Expr::Tag ostwaldTag; // this tag will be populated
+      Expr::ExpressionBuilder* builder2 = NULL;   
+      ostwaldTag = Expr::Tag( thisPhiName + "_Ostwald_Ripening", Expr::STATE_NONE );
+      
+      double Molec_Vol;
+      double Surf_Eng;
+      double Temperature;
+      double expCoef;
+      const double R = 8.314;
+      ostwaldParams->get("MolecularVolume", Molec_Vol);
+      ostwaldParams->get("SurfaceEnergy", Surf_Eng);
+      ostwaldParams->get("Temperature", Temperature);
+      double CFCoef = 1.0;
+      if (ostwaldParams->findBlock("ConversionFactor") )
+        ostwaldParams->get("ConversionFactor", CFCoef);  //converts small radii to SI
+      
+      double RCutoff = 0.1;                           //Does RCutoff need an expression in future?
+      if (ostwaldParams->findBlock("RCutoff") )
+        ostwaldParams->get("RCutoff",RCutoff);
+      expCoef = 2.0*Molec_Vol*Surf_Eng/R/Temperature * CFCoef;
+      
+      typedef typename OstwaldRipening<FieldT>::Builder ostwald;
+      builder2 = scinew ostwald(ostwaldTag, growthCoefTag, weightsTagList, abscissaeTagList, momentOrder, expCoef, RCutoff, constCoef, nPts);
+      growthTags.push_back(ostwaldTag);
+      factory.register_expression( builder2 );
+    }
   }
 
   //------------------------------------------------------------------
@@ -105,28 +132,22 @@ namespace Wasatch {
                               Expr::TagList& birthTags,
                               Expr::ExpressionFactory& factory)
   {
-    //birth expr is of the form J * B0 * B(r*)
-    //where r* can be an expr or const
+    //birth expr is of the form $\f J * B_0(S) * B(r^*) $\f
+    //where r* can be an expression or constant
     Expr::Tag birthTag; // this tag will be populated
     Expr::ExpressionBuilder* builder = NULL;
     
     std::string birthModel;
     birthParams->get("BirthModel",birthModel);
     
-    double preCoef;
-    if (birthParams->findBlock("PreBirthCoefficient") ) {
+    double preCoef = 1.0;
+    if (birthParams->findBlock("PreBirthCoefficient") ) 
       birthParams->get("PreBirthCoefficient",preCoef);
-    } else {
-      preCoef = 1.0;
-    }
     
-    double stdDev;
-    if (birthParams->findBlock("StandardDeviation") ) {
+    double stdDev = 1.0;
+    if (birthParams->findBlock("StandardDeviation") )
       birthParams->get("StandardDeviation",stdDev);
-    } else {
-      stdDev = 1.0;
-    }
-    
+        
     Expr::Tag birthCoefTag; 
     //register coefficient expr if found
     if( birthParams->findBlock("BirthCoefficientExpression") ){
@@ -136,17 +157,14 @@ namespace Wasatch {
     
     Expr::Tag RStarTag;
    //register RStar Expr, or use const RStar if found
-    double ConstRStar = 0.0;
+    double ConstRStar = 1.0;
     if( birthParams->findBlock("RStarExpression") ){
       Uintah::ProblemSpecP nameTagParam = birthParams->findBlock("RStarExpression")->findBlock("NameTag");
       RStarTag = parse_nametag( nameTagParam );
     } else {
       RStarTag = Expr::Tag ();
-      if (birthParams->findBlock("ConstantRStar") ) {
+      if (birthParams->findBlock("ConstantRStar") ) 
         birthParams->get("ConstantRStar",ConstRStar);
-      } else {
-        ConstRStar = 1.0;
-      }
     }
 
     birthTag = Expr::Tag( thisPhiName + "_birth_" + birthModel, Expr::STATE_NONE );

@@ -459,6 +459,7 @@
         <EquilibriumConcentration spec = "REQUIRED NO_DATA">
           <NameTag spec="REQUIRED"/>
         </EquilibriumConcentration>
+        <OstwaldRipening spec = "OPTIONAL NO_DATA"/> <!-- swaps between (S - \bar{S}) & (S - 1)-->
       </PrecipitationBulkDiffusionCoefficient>
       
       <PrecipitationMonosurfaceCoefficient spec = "OPTIONAL NO_DATA"
