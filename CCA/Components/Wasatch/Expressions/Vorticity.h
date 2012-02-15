@@ -6,7 +6,7 @@
 #include <spatialops/OperatorDatabase.h>
 #include <spatialops/structured/SpatialFieldStore.h>
 
-
+// helper struct to identify which faces or directions we take derivatives on
 template< typename Vel1T, typename Vel2T> struct VorticityFaceSelector;
 
 // for omega_x = dw/dy - dv/dz
