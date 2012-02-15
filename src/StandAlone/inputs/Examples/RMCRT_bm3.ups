@@ -103,11 +103,11 @@
     <randomSeed>         false     </randomSeed>
     <Temperature>       64.804     </Temperature>
     <abskg>             999        </abskg>
-    <NoOfRays>          1000000         </NoOfRays>
+    <NoOfRays>          10         </NoOfRays>
     <Threshold>         0.05       </Threshold>
     <Slice>             20         </Slice>
     <StefanBoltzmann>   5.67051e-8 </StefanBoltzmann>
-    <benchmark_3>       true       </benchmark_3>
+    <benchmark>         3          </benchmark>
     <solveBoundaryFlux> false      </solveBoundaryFlux>
     <CCRays>            false      </CCRays>
   </RMCRT>

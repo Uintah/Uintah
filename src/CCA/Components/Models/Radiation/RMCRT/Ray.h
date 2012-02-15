@@ -99,9 +99,7 @@ namespace Uintah{
       
       double _sigma_over_pi; // Stefan Boltzmann divided by pi (W* m-2* K-4)
 
-      bool _benchmark_1; 
-      bool _benchmark_13pt2;
-      bool _benchmark_3;
+      int  _benchmark; 
       bool _isSeedRandom;
       bool _solveBoundaryFlux;
       bool _CCRays;
