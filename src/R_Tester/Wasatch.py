@@ -59,7 +59,7 @@ NIGHTLYTESTS = [
   ("convection-test-svol-xdir",     "convection-test-svol-xdir.ups",   4,  "Linux",  ["exactComparison","no_restart","no_memoryTest"] ),  \
   ("convection-test-svol-ydir",     "convection-test-svol-ydir.ups",   4,  "Linux",  ["exactComparison","no_restart","no_memoryTest"] ),  \
   ("convection-test-svol-zdir",     "convection-test-svol-zdir.ups",   4,  "Linux",  ["exactComparison","no_restart","no_memoryTest"] ),  \
-  ("force-on-graph-postprocessing-velmagnitude-test",     "force-on-graph-postprocessing-velmagnitude-test.ups",   4,  "Linux",  ["exactComparison","no_restart","no_memoryTest"] )
+  ("force-on-graph-postprocessing-test",     "force-on-graph-postprocessing-test.ups",   4,  "Linux",  ["exactComparison","no_restart","no_memoryTest"] )
 ]
 
 
@@ -95,7 +95,7 @@ LOCALTESTS = [
   ("convection-test-svol-xdir",     "convection-test-svol-xdir.ups",   4,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),  \
   ("convection-test-svol-ydir",     "convection-test-svol-ydir.ups",   4,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),  \
   ("convection-test-svol-zdir",     "convection-test-svol-zdir.ups",   4,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),  \
-  ("force-on-graph-postprocessing-velmagnitude-test",     "force-on-graph-postprocessing-velmagnitude-test.ups",   4,  "All",  ["exactComparison","no_restart","no_memoryTest"] )        
+  ("force-on-graph-postprocessing-test",     "force-on-graph-postprocessing-test.ups",   4,  "All",  ["exactComparison","no_restart","no_memoryTest"] )        
 ]
 
 #__________________________________
