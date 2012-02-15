@@ -1488,7 +1488,7 @@ namespace Uintah{
        delete convection_helper; 
        delete the_interpolant; 
 
-      } else if ( convScheme == "super_bee" || convScheme == "roe_minmod" ) { 
+      } else if ( convScheme == "super_bee" || convScheme == "roe_minmod" || convScheme == "vanleer" ) { 
 
        FluxLimiterInterpolation<oldPhiT>* the_interpolant = scinew FluxLimiterInterpolation<oldPhiT>( convScheme ); 
        ConvHelper1<FluxLimiterInterpolation<oldPhiT>, oldPhiT>* convection_helper = 
@@ -1549,7 +1549,7 @@ namespace Uintah{
        delete convection_helper; 
        delete the_interpolant; 
 
-      } else if ( convScheme == "super_bee" || convScheme == "roe_minmod" ) { 
+      } else if ( convScheme == "super_bee" || convScheme == "roe_minmod" || convScheme == "vanleer" ) { 
 
        FluxLimiterInterpolation<oldPhiT>* the_interpolant = scinew FluxLimiterInterpolation<oldPhiT>( convScheme ); 
        ConvHelper1<FluxLimiterInterpolation<oldPhiT>, oldPhiT>* convection_helper = 
@@ -1601,7 +1601,7 @@ namespace Uintah{
        delete convection_helper; 
        delete the_interpolant; 
 
-      } else if ( convScheme == "super_bee" || convScheme == "roe_minmod" ) { 
+      } else if ( convScheme == "super_bee" || convScheme == "roe_minmod" || convScheme == "vanleer" ) { 
 
        FluxLimiterInterpolation<oldPhiT>* the_interpolant = scinew FluxLimiterInterpolation<oldPhiT>( convScheme ); 
        ConvHelper1<FluxLimiterInterpolation<oldPhiT>, oldPhiT>* convection_helper = 

@@ -422,7 +422,7 @@
           <src                          spec="MULTIPLE NO_DATA" 
                                         attribute1="label REQUIRED STRING"/>
           <initialization               spec="OPTIONAL NO_DATA"
-                                        attribute1="type REQUIRED STRING 'constant, step, geometry_fill'">
+                                        attribute1="type REQUIRED STRING 'constant, step, geometry_fill, sine-x, sine-y, sine-z'">
             <!-- constant value initialization -->
             <constant                   spec="OPTIONAL DOUBLE"/>
             <!-- constant within a geometry piece (geometry_fill) -->
