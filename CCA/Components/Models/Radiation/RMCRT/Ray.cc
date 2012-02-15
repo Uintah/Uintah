@@ -49,9 +49,7 @@ Ray::problemSetup( const ProblemSpecP& inputdb)
   db->getWithDefault( "Threshold" ,       _Threshold ,      0.01 );      // When to terminate a ray
   db->getWithDefault( "Slice"     ,       _slice     ,      9 );         // Level in z direction of xy slice
   db->getWithDefault( "randomSeed",       _isSeedRandom,    true );      // random or deterministic seed.
-  db->getWithDefault( "benchmark_1" ,     _benchmark_1,     false );  
-  db->getWithDefault( "benchmark_13pt2" , _benchmark_13pt2, false );
-  db->getWithDefault( "benchmark_3" ,     _benchmark_3,     false );
+  db->getWithDefault( "benchmark" ,       _benchmark,       0 );  
   db->getWithDefault("StefanBoltzmann",   _sigma,           5.67051e-8);  // Units are W/(m^2-K)
   db->getWithDefault( "solveBoundaryFlux" , _solveBoundaryFlux, false );
   db->getWithDefault( "CCRays"    ,       _CCRays,          false );  // if true, forces rays to always have CC origins
@@ -172,7 +170,7 @@ Ray::initProperties( const ProcessorGroup* pc,
 
     //__________________________________
     //  Benchmark initializations
-    if ( _benchmark_1 ) {
+    if ( _benchmark == 1 ) {
       for ( CellIterator iter = patch->getCellIterator(); !iter.done(); iter++ ){
         IntVector c = *iter;
         abskg[c] = 0.90 * ( 1.0 - 2.0 * fabs( ( c[0] - (Nx - 1.0) /2.0) * Dx[0]) )
@@ -183,7 +181,7 @@ Ray::initProperties( const ProcessorGroup* pc,
       // apply boundary conditions
       setBC(abskg, d_abskgLabel->getName(), patch, d_matl);
     }
-    else if (_benchmark_13pt2) {
+    else if (_benchmark == 2) {
       for ( CellIterator iter = patch->getCellIterator(); !iter.done(); iter++ ){ 
         IntVector c = *iter;
         abskg[c] = 1;
@@ -191,7 +189,7 @@ Ray::initProperties( const ProcessorGroup* pc,
       // apply boundary conditions
       setBC(abskg, d_abskgLabel->getName(), patch, d_matl);
     }    
-    else if (_benchmark_3) {
+    else if (_benchmark == 3) {
 
       for ( CellIterator iter = patch->getCellIterator(); !iter.done(); iter++ ){
         IntVector c = *iter;
@@ -201,11 +199,18 @@ Ray::initProperties( const ProcessorGroup* pc,
                         + 0.1;  
       }
     }
+    else if (_benchmark != 0){
 
+      ostringstream warn;
+      warn << "ERROR:  Benchmark value not set correctly." << endl;
+      warn << "Specify a value of 1 through 3 to run a benchmark case, or 0 otherwise." << endl;
+      throw InternalError(warn.str(), __FILE__, __LINE__);
+
+    }  
     //__________________________________
     //  compute sigmaT4
 
-    if(_benchmark_3) {
+    if(_benchmark == 3) {
       for ( CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++ ){ 
         IntVector c = *iter; 
         double temp2 = 1000 * abskg[c] * 1000 * abskg[c];
