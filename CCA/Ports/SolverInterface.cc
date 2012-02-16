@@ -45,5 +45,4 @@ SolverParameters::~SolverParameters()
 {
   solveOnExtraCells = true;
   residualNormalizationFactor = 1;
-  dynamicTolerance = false;
 }
