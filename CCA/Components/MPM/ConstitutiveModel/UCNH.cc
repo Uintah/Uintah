@@ -1606,6 +1606,7 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
       pStress[idx] = Identity*p + tauDev/J;
 
       if( d_useDamage){
+        pDamage_new[idx] = pDamage[idx];
         // Modify the stress if particle has failed/damaged
         if (d_brittleDamage) {
           updateDamageAndModifyStress(defGrad, pFailureStrain[idx],
@@ -2002,7 +2003,6 @@ void UCNH::addParticleState(std::vector<const VarLabel*>& from,
 
 
   // Check for damage (note that pFailureStrain is the energy threshold)
-  pDamage_new = pDamage;
   pFailureStrain_new = pFailureStrain;
 
   if (pressure <0.0) { 
