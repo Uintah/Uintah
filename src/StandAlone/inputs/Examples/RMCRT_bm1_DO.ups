@@ -136,6 +136,6 @@
     <Threshold>         0.05       </Threshold>
     <Slice>             20         </Slice>
     <StefanBoltzmann>   5.67051e-8 </StefanBoltzmann>
-    <benchmark_1>       true       </benchmark_1>
+    <benchmark>         1          </benchmark>
   </RMCRT>
 </Uintah_specification>
