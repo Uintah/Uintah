@@ -958,8 +958,7 @@ void RMCRT_Test::scheduleCoarsen_Q ( const LevelP& coarseLevel,
   if(modifies){
     t->modifies(variable);
   }else{
-    bool  fat = true;  // possibly (F)rom (A)nother (T)askgraph
-    t->requires(this_dw, variable, 0, Task::FineLevel, 0, Task::NormalDomain, d_gn, 0, fat);
+    t->requires(this_dw, variable, 0, Task::FineLevel, 0, Task::NormalDomain, d_gn, 0);
     t->computes(variable);
   }
   sched->addTask( t, coarseLevel->eachPatch(), d_sharedState->allMaterials() );
