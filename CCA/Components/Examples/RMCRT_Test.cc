@@ -303,8 +303,9 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
       d_realRMCRT->sched_initProperties( fineLevel, sched, time_sub_step );
     }
 
-    // coarsen data to the coarser levels
-    for (int l = 0; l < maxLevels-1; l++) {
+    // coarsen data to the coarser levels.  
+    // do it in reverse order
+    for (int l = maxLevels - 2; l >= 0; l--) {
       const LevelP& level = grid->getLevel(l);
       scheduleCoarsenAll (level, sched);
       d_realRMCRT->sched_setBoundaryConditions( level, sched );
