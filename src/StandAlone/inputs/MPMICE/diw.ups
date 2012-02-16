@@ -16,7 +16,7 @@
        <delt_min>           0.0         </delt_min>
        <delt_max>           1.0         </delt_max>
        <delt_init>          1.0e-4      </delt_init>
-       <timestep_multiplier>0.8         </timestep_multiplier>
+       <timestep_multiplier>0.3         </timestep_multiplier>
    </Time>
    
     <!--____________________________________________________________________-->
@@ -37,7 +37,7 @@
         <BCType id = "all" var = "Neumann" label = "Density">
                               <value> 0.0  </value>
         </BCType>
-        <BCType id = "all" var = "computefromDensity" label = "SpecificVol">
+        <BCType id = "all" var = "computeFromDensity" label = "SpecificVol">
                               <value> 0.0  </value>
         </BCType>
       </Face>
@@ -54,7 +54,7 @@
         <BCType id = "all" var = "Neumann" label = "Density">
                               <value> 0.0  </value>
         </BCType>
-        <BCType id = "all" var = "computefromDensity" label = "SpecificVol">
+        <BCType id = "all" var = "computeFromDensity" label = "SpecificVol">
                               <value> 0.0  </value>
         </BCType>
       </Face>
@@ -71,7 +71,7 @@
         <BCType id = "all" var = "Neumann" label = "Density">
                               <value> 0.0  </value>
         </BCType>
-        <BCType id = "all" var = "computefromDensity" label = "SpecificVol">
+        <BCType id = "all" var = "computeFromDensity" label = "SpecificVol">
                               <value> 0.0  </value>
         </BCType>
       </Face>                  
@@ -88,7 +88,7 @@
         <BCType id = "all" var = "Neumann" label = "Density">
                               <value> 0.0  </value>
         </BCType>
-        <BCType id = "all" var = "computefromDensity" label = "SpecificVol">
+        <BCType id = "all" var = "computeFromDensity" label = "SpecificVol">
                               <value> 0.0  </value>
         </BCType>
       </Face>
@@ -105,7 +105,7 @@
         <BCType id = "all" var = "Neumann" label = "Density">
                               <value> 0.0  </value>
         </BCType>
-        <BCType id = "all" var = "computefromDensity" label = "SpecificVol">
+        <BCType id = "all" var = "computeFromDensity" label = "SpecificVol">
                               <value> 0.0  </value>
         </BCType>
       </Face>                  
@@ -122,7 +122,7 @@
         <BCType id = "all" var = "Neumann" label = "Density">
                               <value> 0.0  </value>
         </BCType>
-        <BCType id = "all" var = "computefromDensity" label = "SpecificVol">
+        <BCType id = "all" var = "computeFromDensity" label = "SpecificVol">
                               <value> 0.0  </value>
         </BCType>
       </Face>
@@ -161,15 +161,15 @@
     <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
     <!--____________________________________________________________________-->
     <CFD>
-       <cfl>0.5</cfl>
+       <cfl>0.25</cfl>
        <ICE>
         <advection type = "FirstOrder" />
       </ICE>        
     </CFD>
     <MPM>
-        <time_integrator>explicit</time_integrator>
-        <interpolator>                   gimp       </interpolator>
-        <testForNegTemps_mpm>false</testForNegTemps_mpm>
+        <time_integrator>    explicit  </time_integrator>
+        <interpolator>       gimp      </interpolator>
+        <testForNegTemps_mpm>false     </testForNegTemps_mpm>
     </MPM>
 
     <!--____________________________________________________________________-->
@@ -212,7 +212,7 @@
       </MPM>
        <ICE>
          <material>
-            <EOS type = "ideal_gas">                     </EOS>
+            <EOS type = "ideal_gas">                    </EOS>
            <dynamic_viscosity>          0.0             </dynamic_viscosity>
            <thermal_conductivity>       0.0             </thermal_conductivity>
            <specific_heat>              716.0           </specific_heat>
