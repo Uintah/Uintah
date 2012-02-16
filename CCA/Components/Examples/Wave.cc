@@ -91,7 +91,8 @@ Wave::Wave(const ProcessorGroup* myworld)
   rk4steps[3].totalweight = 1/6.0;
 
 }
-
+//______________________________________________________________________
+//
 Wave::~Wave()
 {
   VarLabel::destroy(phi_label);
@@ -103,7 +104,8 @@ Wave::~Wave()
     VarLabel::destroy(rk4steps[i].newpi_label);
   }
 }
-
+//______________________________________________________________________
+//
 void Wave::problemSetup(const ProblemSpecP& params, 
                         const ProblemSpecP& restart_prob_spec, 
                         GridP& /*grid*/,  SimulationStateP& sharedState)
@@ -123,7 +125,8 @@ void Wave::problemSetup(const ProblemSpecP& params,
   sharedState->registerSimpleMaterial(mymat_);
 
 }
- 
+//______________________________________________________________________
+//
 void Wave::scheduleInitialize(const LevelP& level,
 			       SchedulerP& sched)
 {
@@ -133,7 +136,8 @@ void Wave::scheduleInitialize(const LevelP& level,
   task->computes(pi_label);
   sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
 }
- 
+//______________________________________________________________________
+// 
 void Wave::scheduleComputeStableTimestep(const LevelP& level,
 					  SchedulerP& sched)
 {
@@ -142,7 +146,8 @@ void Wave::scheduleComputeStableTimestep(const LevelP& level,
   task->computes(sharedState_->get_delt_label(),level.get_rep());
   sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
 }
-
+//______________________________________________________________________
+//
 void
 Wave::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
 {
@@ -150,7 +155,7 @@ Wave::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
     Task* task = scinew Task("timeAdvance",
                              this, &Wave::timeAdvanceEuler);
     task->requires(Task::OldDW, phi_label, Ghost::AroundCells, 1);
-    task->requires(Task::OldDW, pi_label, Ghost::None, 0);
+    task->requires(Task::OldDW, pi_label,  Ghost::None, 0);
     if(level->getIndex()>0){        // REFINE 
       addRefineDependencies(task, phi_label, true, true);
     }
@@ -162,7 +167,7 @@ Wave::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
     Task* task = scinew Task("setupRK4",
                              this, &Wave::setupRK4);
     task->requires(Task::OldDW, phi_label, Ghost::AroundCells, 1);
-    task->requires(Task::OldDW, pi_label, Ghost::None, 0);
+    task->requires(Task::OldDW, pi_label,  Ghost::None, 0);
     if(level->getIndex()>0){        // REFINE 
       // TODO, fix calls to addRefineDependencies and refineFaces
       addRefineDependencies(task, phi_label, true, true);
@@ -175,11 +180,12 @@ Wave::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
       Step* s = &rk4steps[i];
       Task* task = scinew Task("timeAdvance",
                                this, &Wave::timeAdvanceRK4, s);
-      //task->requires(Task::OldDW, sharedState_->get_delt_label());
-      task->requires(Task::OldDW, phi_label, Ghost::None);
-      task->requires(Task::OldDW, pi_label, Ghost::None);
-      task->requires(s->cur_dw, s->curphi_label, Ghost::AroundCells, 1);
-      task->requires(s->cur_dw, s->curpi_label, Ghost::None, 0);
+                               
+      task->requires(Task::OldDW, sharedState_->get_delt_label(), level.get_rep());
+      task->requires(Task::OldDW, phi_label,      Ghost::None);
+      task->requires(Task::OldDW, pi_label,       Ghost::None);
+      task->requires(s->cur_dw, s->curphi_label,  Ghost::AroundCells, 1);
+      task->requires(s->cur_dw, s->curpi_label,   Ghost::None, 0);
 
       if(level->getIndex()>0){        // REFINE 
         addRefineDependencies(task, s->curphi_label, true, true);
@@ -194,7 +200,8 @@ Wave::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
     throw ProblemSetupException("Unknown integration method for wave", __FILE__, __LINE__);
   }
 }
-
+//______________________________________________________________________
+//
 void Wave::initialize(const ProcessorGroup*,
 			const PatchSubset* patches,
 			const MaterialSubset* matls,
@@ -225,7 +232,8 @@ void Wave::initialize(const ProcessorGroup*,
     }
   }
 }
-
+//______________________________________________________________________
+//
 void Wave::computeStableTimestep(const ProcessorGroup*,
 				  const PatchSubset* patches,
 				  const MaterialSubset*,
@@ -239,6 +247,7 @@ void Wave::computeStableTimestep(const ProcessorGroup*,
   }
 }
 
+//______________________________________________________________________
 // This could be done with the RK4 version below, but this is simpler...
 void Wave::timeAdvanceEuler(const ProcessorGroup*,
                             const PatchSubset* patches,
@@ -312,7 +321,8 @@ void Wave::timeAdvanceEuler(const ProcessorGroup*,
     }
   }
 }
-
+//______________________________________________________________________
+//
 void Wave::setupRK4(const ProcessorGroup*,
                     const PatchSubset* patches,
                     const MaterialSubset* matls,
@@ -357,7 +367,8 @@ void Wave::setupRK4(const ProcessorGroup*,
     }
   }
 }
-
+//______________________________________________________________________
+//
 void Wave::timeAdvanceRK4(const ProcessorGroup*,
                           const PatchSubset* patches,
                           const MaterialSubset* matls,
