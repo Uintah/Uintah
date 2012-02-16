@@ -113,7 +113,6 @@ PressureSolver::problemSetup(ProblemSpecP& params)
   
   d_hypreSolver_parameters = d_hypreSolver->readParameters(db, "pressure");
   d_hypreSolver_parameters->setSolveOnExtraCells(false);
-  d_hypreSolver_parameters->setDynamicTolerance(true);
 
   //__________________________________
   // allow for addition of mass source terms
