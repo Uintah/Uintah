@@ -38,6 +38,7 @@ SRCS := \
 	$(SRCDIR)/jim1.cc        \
 	$(SRCDIR)/jim2.cc        \
 	$(SRCDIR)/jim3.cc        \
+	$(SRCDIR)/PIC.cc         \
 	$(SRCDIR)/AA_MMS.cc      \
 	$(SRCDIR)/rtdata.cc      \
 	$(SRCDIR)/tecplot.cc     \

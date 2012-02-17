@@ -79,6 +79,7 @@ DEALINGS IN THE SOFTWARE.
 #include <StandAlone/tools/puda/monica2.h>
 #include <StandAlone/tools/puda/jim1.h>
 #include <StandAlone/tools/puda/jim2.h>
+#include <StandAlone/tools/puda/PIC.h>
 #include <StandAlone/tools/puda/AA_MMS.h>
 #include <StandAlone/tools/puda/GV_MMS.h>
 #include <StandAlone/tools/puda/ER_MMS.h>
@@ -155,6 +156,8 @@ usage( const std::string& badarg, const std::string& progname )
   cerr << "  -timesteplow <int>   (only outputs timestep from int)\n";
   cerr << "  -timestephigh <int>  (only outputs timesteps upto int)\n";
   cerr << "  -matl,mat <int>      (only outputs data for matl)\n";
+  cerr << "  -pic                 (prints particle ids of all particles  in cell\n";
+  cerr << "                        <i> <j> <k> [ints] on the specified timesteps)\n";
   cerr << "*NOTE* to use -PTvar or -NVvar -rtdata must be used\n";
   cerr << "*NOTE* ptonly, patch, material, timesteplow, timestephigh "
        << "are used in conjuntion with -PTvar.\n\n";
@@ -239,6 +242,7 @@ main(int argc, char** argv)
   CommandLineFlags clf;
 
   int mat = -1; //not part of clf
+  int cellx, celly, cellz;
 
   // set defaults for cout.
   cout.setf(ios::scientific,ios::floatfield);
@@ -294,6 +298,12 @@ main(int argc, char** argv)
       clf.do_jim1 = true;
     } else if(s == "-jim2"){
       clf.do_jim2 = true;
+    } else if(s == "-pic"){
+      clf.do_PIC = true;
+
+      cellx = strtoul(argv[++i],(char**)NULL,10);
+      celly = strtoul(argv[++i],(char**)NULL,10);
+      cellz = strtoul(argv[++i],(char**)NULL,10);
     } else if(s == "-AA_MMS_1"){
       clf.do_AA_MMS_1 = true;
     } else if(s == "-AA_MMS_2"){
@@ -487,6 +497,10 @@ main(int argc, char** argv)
 
     if( clf.do_jim2 ){
       jim2( da, clf );
+    }
+
+    if( clf.do_PIC ){
+      PIC( da, clf, cellx, celly, cellz );
     }
 
     if( clf.do_AA_MMS_1 || clf.do_AA_MMS_2 ){
