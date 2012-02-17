@@ -30,7 +30,7 @@
     <save label="viscosityCTS"/>
     <save label="cellType"/>
     <save label="radiationVolqIN"/>
-    <save label="divQ"/>
+    <save label="radiationSRCIN"/>
     <checkpoint cycle="2" interval="0.01"/>
     <outputDoubleAsFloat/>
     <compression>gzip</compression>
