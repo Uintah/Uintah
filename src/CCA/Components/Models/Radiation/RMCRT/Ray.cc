@@ -607,13 +607,11 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
   Task::DomainSpec  ND  = Task::NormalDomain;
   #define allPatches 0
   #define allMatls 0
-  Ghost::GhostType  gn  = Ghost::None;
   Ghost::GhostType  gac  = Ghost::AroundCells;
-  bool  fat = true;  // possibly (F)rom (A)nother (T)askgraph
   
   // finest level
-  tsk->requires(abskg_dw, d_abskgLabel,     gn, 0);
-  tsk->requires(sigma_dw, d_sigmaT4_label,  gn, 0);
+  tsk->requires(abskg_dw, d_abskgLabel,     gac, SHRT_MAX);
+  tsk->requires(sigma_dw, d_sigmaT4_label,  gac, SHRT_MAX);
   
   // coarser levels
   tsk->requires(abskg_dw, d_abskgLabel,     allPatches, Task::CoarseLevel,allMatls, ND, gac, SHRT_MAX);
@@ -651,7 +649,9 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
   //retrieve all of the data for all levels
   StaticArray< constCCVariable<double> > abskg(maxLevels);
   StaticArray< constCCVariable<double> >sigmaT4Pi(maxLevels);
- 
+  constCCVariable<double> abskg_fine;
+  constCCVariable<double> sigmaT4Pi_fine;
+    
   DataWarehouse* abskg_dw   = new_dw->getOtherDataWarehouse(which_abskg_dw);
   DataWarehouse* sigmaT4_dw = new_dw->getOtherDataWarehouse(which_sigmaT4_dw);
   
@@ -662,19 +662,20 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
   for(int L = 0; L<maxLevels; L++){
     LevelP level = new_dw->getGrid()->getLevel(L);
     
-    if( level->hasFinerLevel() ){
-      IntVector domainLo_EC, domainHi_EC;
-      level->findCellIndexRange(domainLo_EC, domainHi_EC);       // including extraCells
+    IntVector domainLo_EC, domainHi_EC;
+    level->findCellIndexRange(domainLo_EC, domainHi_EC);       // including extraCells
 
-      abskg_dw->getRegion(   abskg[L]   ,   d_abskgLabel ,   d_matl , level.get_rep(), domainLo_EC, domainHi_EC);
-      sigmaT4_dw->getRegion( sigmaT4Pi[L] , d_sigmaT4_label, d_matl , level.get_rep(), domainLo_EC, domainHi_EC);
-    }
+    abskg_dw->getRegion(   abskg[L]   ,   d_abskgLabel ,   d_matl , level.get_rep(), domainLo_EC, domainHi_EC);
+    sigmaT4_dw->getRegion( sigmaT4Pi[L] , d_sigmaT4_label, d_matl , level.get_rep(), domainLo_EC, domainHi_EC);
     
     Vector dx = level->dCell();
     DyDx[L] = dx.y() / dx.x();
     DzDx[L] = dx.z() / dx.x();
     Dx[L] = dx;
   }
+  
+  abskg_fine     = abskg[maxLevels-1];
+  sigmaT4Pi_fine = sigmaT4Pi[maxLevels-1];
   
   // Determine the size of the domain.
   IntVector domainLo, domainHi;
@@ -689,10 +690,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
     const Patch* finePatch = finePatches->get(p);
     printTask(finePatches, finePatch,dbg,"Doing Ray::rayTrace_dataOnion");
 
-    CCVariable<double> divQ_fine;  
-    constCCVariable<double> abskg_fine;
-    constCCVariable<double> sigmaT4Pi_fine;
-    Ghost::GhostType  gn  = Ghost::None;
+    CCVariable<double> divQ_fine;
     
     if( modifies_divQ ){
       old_dw->getModifiable( divQ_fine,  d_divQLabel, d_matl, finePatch );
@@ -700,15 +698,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
       new_dw->allocateAndPut( divQ_fine, d_divQLabel, d_matl, finePatch );
       divQ_fine.initialize( 0.0 );
     }
-
-    abskg_dw->get(   abskg_fine,      d_abskgLabel,   d_matl, finePatch, gn, 0);
-    sigmaT4_dw->get( sigmaT4Pi_fine,  d_sigmaT4_label,d_matl, finePatch, gn, 0);
     
-    abskg[maxLevels-1]     = abskg_fine;
-    sigmaT4Pi[maxLevels-1] = sigmaT4Pi_fine;
-    
-    
-
     unsigned long int size = 0;                             // current size of PathIndex
 
     //__________________________________
@@ -742,7 +732,6 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
         int L       = maxLevels -1;  // finest level
         int prevLev = L;
         
-
         if(_isSeedRandom == false){
           _mTwister.seed((i + j +k) * iRay +1);
         }
@@ -866,7 +855,6 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
             tMax[dir]     = tMax[dir] + tDelta[L][dir];
             face          = dir;
      
-
             in_domain = containsCell(domainLo, domainHi, cur, face);
 
             //__________________________________
