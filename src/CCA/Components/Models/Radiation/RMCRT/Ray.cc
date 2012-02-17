@@ -3,6 +3,7 @@
 #include <CCA/Components/Models/Radiation/RMCRT/MersenneTwister.h>
 #include <Core/Containers/StaticArray.h>
 #include <Core/Exceptions/InternalError.h>
+#include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/DbgOutput.h>
 #include <Core/Grid/BoundaryConditions/BCUtils.h>
 #include <time.h>
@@ -54,15 +55,12 @@ Ray::problemSetup( const ProblemSpecP& inputdb)
   db->getWithDefault( "solveBoundaryFlux" , _solveBoundaryFlux, false );
   db->getWithDefault( "CCRays"    ,       _CCRays,          false );  // if true, forces rays to always have CC origins
 
-  if (_benchmark != (0 || 1 || 2 || 3) ){
-
+  if (_benchmark > 3 || _benchmark < 0  ){
     ostringstream warn;
-    warn << "ERROR:  Benchmark value not set correctly." << endl;
+    warn << "ERROR:  Benchmark value ("<< _benchmark <<") not set correctly." << endl;
     warn << "Specify a value of 1 through 3 to run a benchmark case, or 0 otherwise." << endl;
-    throw InternalError(warn.str(), __FILE__, __LINE__);
-
+    throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
   }
-
 
   _sigma_over_pi = _sigma/_pi;
   
