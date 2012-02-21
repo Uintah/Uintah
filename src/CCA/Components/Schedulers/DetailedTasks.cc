@@ -83,8 +83,9 @@ DetailedTasks::DetailedTasks(SchedulerCommon* sc, const ProcessorGroup* pg,
   mustConsiderInternalDependencies_(mustConsiderInternalDependencies),
   currentDependencyGeneration_(1),
   extraCommunication_(0),
-  readyQueueMutex_("DetailedTasks Ready Queue"),
-  readyQueueSemaphore_("Number of Ready DetailedTasks", 0)
+  readyQueueLock_("DetailedTasks Ready Queue"),
+  mpiCompletedQueueLock_("DetailedTasks MPI compelted Queue")
+  //readyQueueSemaphore_("Number of Ready DetailedTasks", 0)
 {
   // Set up mappings for the initial send tasks
   int dwmap[Task::TotalDWs];
@@ -1009,11 +1010,15 @@ bool DetailedTask::addRequires(DependencyBatch* req)
 void DetailedTask::checkExternalDepCount()
 {
   //cout << Parallel::getMPIRank() << " Task " << this->getTask()->getName() << " ext deps: " << externalDependencyCount_ << " int deps: " << numPendingInternalDependencies << endl;
-  if (externalDependencyCount_ == 0 && taskGroup->sc_->useInternalDeps() && initiated_ && externallyReady_ == false && (task->getType() != Task::OncePerProc || Uintah::Parallel::getMaxThreads() > 1 )) { 
+  if (externalDependencyCount_ == 0 && taskGroup->sc_->useInternalDeps() && initiated_ && task->getType() != Task::OncePerProc) { 
+    taskGroup->mpiCompletedQueueLock_.writeLock();
     //cout << Parallel::getMPIRank() << " Task " << this->getTask()->getName() << " ready\n";
 
-    taskGroup->mpiCompletedTasks_.push(this);
-    externallyReady_ = true;
+    if (externallyReady_ == false) {
+      taskGroup->mpiCompletedTasks_.push(this);
+      externallyReady_ = true;
+    }
+    taskGroup->mpiCompletedQueueLock_.writeUnlock();
   }
 }
 
@@ -1269,9 +1274,9 @@ DetailedTasks::internalDependenciesSatisfied(DetailedTask* task)
     mixedDebug << "Begin internalDependenciesSatisfied\n";
     cerrLock.unlock();
   }
-#if !defined( _AIX )
-  readyQueueMutex_.lock();
-#endif
+//#if !defined( _AIX )
+  readyQueueLock_.writeLock();
+//#endif
 
   readyTasks_.push(task);
 
@@ -1281,37 +1286,59 @@ DetailedTasks::internalDependenciesSatisfied(DetailedTask* task)
       << readyTasks_.size() << " ready.\n";
     cerrLock.unlock();
   }
-#if !defined( _AIX )
+//#if !defined( _AIX )
   // need to make a non-binary semaphore under aix for this to work.
-  readyQueueSemaphore_.up();
-  readyQueueMutex_.unlock();
-#endif
+//  readyQueueSemaphore_.up();
+  readyQueueLock_.writeUnlock();
+//#endif
 }
 
-DetailedTask* DetailedTasks::getNextInternalReadyTask()
+DetailedTask*
+DetailedTasks::getNextInternalReadyTask()
 {
-  // Block until the list has an item in it.
-#if !defined( _AIX )
-  readyQueueSemaphore_.down();
-  readyQueueMutex_.lock();
-#endif
-  DetailedTask* nextTask = readyTasks_.front();
-  readyTasks_.pop();
-  //  cout << Parallel::getMPIRank() << "    Getting: " << *nextTask << "  new size: " << readyTasks_.size() << endl;
-#if !defined( _AIX )
-  readyQueueMutex_.unlock();
-#endif
+  DetailedTask* nextTask = NULL;
+  readyQueueLock_.writeLock();
+  if (!readyTasks_.empty()) {
+    nextTask = readyTasks_.front();
+    readyTasks_.pop();
+  }
+  readyQueueLock_.readUnlock();
   return nextTask;
 }
 
-DetailedTask* DetailedTasks::getNextExternalReadyTask()
+int 
+DetailedTasks::numInternalReadyTasks() { 
+  int size=0;
+  if (readyQueueLock_.readTrylock()){
+    size = readyTasks_.size();
+    readyQueueLock_.readUnlock();
+  }
+  return size;
+}
+
+DetailedTask*
+DetailedTasks::getNextExternalReadyTask()
 {
-  DetailedTask* nextTask = mpiCompletedTasks_.top();
-  mpiCompletedTasks_.pop();
-//  cout << Parallel::getMPIRank() << "    Getting: " << *nextTask << "  new size: " << mpiCompletedTasks_.size() << endl;
+  DetailedTask* nextTask = NULL;
+  mpiCompletedQueueLock_.writeLock();
+  if (!mpiCompletedTasks_.empty()){
+    nextTask = mpiCompletedTasks_.top();
+    mpiCompletedTasks_.pop();
+  }
+  mpiCompletedQueueLock_.writeUnlock();
   return nextTask;
 }
 
+int
+DetailedTasks::numExternalReadyTasks()
+{
+  int size = 0;
+  if (mpiCompletedQueueLock_.readTrylock()){
+    size = mpiCompletedTasks_.size(); 
+    mpiCompletedQueueLock_.readUnlock();
+  }
+  return size;
+}
 
 #ifdef HAVE_CUDA
 DetailedTask* DetailedTasks::getNextInitiallyReadyGPUTask()
@@ -1386,12 +1413,13 @@ void DetailedTasks::addCompletionPendingGPUTask(DetailedTask* dtask)
 #endif
 
 
-void DetailedTasks::initTimestep()
+void
+DetailedTasks::initTimestep()
 {
   readyTasks_ = initiallyReadyTasks_;
-#if !defined( _AIX )
-  readyQueueSemaphore_.up((int)readyTasks_.size());
-#endif
+//#if !defined( _AIX )
+//  readyQueueSemaphore_.up((int)readyTasks_.size());
+//#endif
   incrementDependencyGeneration();
   initializeBatches();
 }

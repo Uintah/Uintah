@@ -45,6 +45,7 @@ namespace Uintah {
     bool do_monica1;
     bool do_monica2;
     bool do_jim1;
+    bool do_PIC;
     bool do_AA_MMS_1;
     bool do_AA_MMS_2;
     bool do_GV_MMS;
@@ -99,6 +100,7 @@ namespace Uintah {
       do_GV_MMS   = false; //MMS
       do_ER_MMS  = false;
       do_jim2       = false;
+      do_PIC        = false;
       do_monica1    = false;
       do_partvar    = false;
       do_asci       = false;

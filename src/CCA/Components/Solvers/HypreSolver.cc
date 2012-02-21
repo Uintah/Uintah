@@ -381,17 +381,8 @@ namespace Uintah {
         
         //__________________________________
         //  Dynamic tolerances  Arches uses this
-        double tolerance = params->tolerance;
         double precond_tolerance = 0.0;
         
-        if(params->getDynamicTolerance()) {
-          double old_tol    = params->tolerance;
-          double iprod      = hypre_StructInnerProd(HB,HB);
-          double sum_b      = sqrt(iprod);
-          tolerance         = old_tol / (sum_b);
-          precond_tolerance = tolerance;
-        }
-
         double solve_start = Time::currentSeconds();
         int num_iterations;
         double final_res_norm;
@@ -406,7 +397,7 @@ namespace Uintah {
           HYPRE_StructSMGCreate         (MPI_COMM_WORLD, &solver);         
           HYPRE_StructSMGSetMemoryUse   (solver,  0);                      
           HYPRE_StructSMGSetMaxIter     (solver,  params->maxiterations);  
-          HYPRE_StructSMGSetTol         (solver,  tolerance);      
+          HYPRE_StructSMGSetTol         (solver,  params->tolerance);      
           HYPRE_StructSMGSetRelChange   (solver,  0);                      
           HYPRE_StructSMGSetNumPreRelax (solver,  params->npre);           
           HYPRE_StructSMGSetNumPostRelax(solver,  params->npost);
@@ -440,7 +431,7 @@ namespace Uintah {
           HYPRE_StructSolver  solver;
           HYPRE_StructPFMGCreate        (pg->getComm(),&solver);
           HYPRE_StructPFMGSetMaxIter    (solver,      params->maxiterations);
-          HYPRE_StructPFMGSetTol        (solver,      tolerance);
+          HYPRE_StructPFMGSetTol        (solver,      params->tolerance);
           HYPRE_StructPFMGSetRelChange  (solver,      0);
 
           HYPRE_StructPFMGSetRelaxType   (solver,  params->relax_type);                           
@@ -478,7 +469,7 @@ namespace Uintah {
           HYPRE_StructSparseMSGCreate      (pg->getComm(), &solver);              
           HYPRE_StructSparseMSGSetMaxIter  (solver, params->maxiterations);       
           HYPRE_StructSparseMSGSetJump     (solver, params->jump);                
-          HYPRE_StructSparseMSGSetTol      (solver, tolerance);           
+          HYPRE_StructSparseMSGSetTol      (solver, params->tolerance);           
           HYPRE_StructSparseMSGSetRelChange(solver, 0);                           
 
           HYPRE_StructSparseMSGSetRelaxType   (solver,  params->relax_type);                           
@@ -515,7 +506,7 @@ namespace Uintah {
           HYPRE_StructSolver solver;
           HYPRE_StructPCGCreate(pg->getComm(), &solver);                
           HYPRE_PCGSetMaxIter  ((HYPRE_Solver)  solver,  params->maxiterations);  
-          HYPRE_PCGSetTol      ((HYPRE_Solver)  solver,  tolerance);      
+          HYPRE_PCGSetTol      ((HYPRE_Solver)  solver,  params->tolerance);      
           HYPRE_PCGSetTwoNorm  ((HYPRE_Solver)  solver,  1);                      
           HYPRE_PCGSetRelChange((HYPRE_Solver)  solver,  0);                      
           HYPRE_PCGSetLogging  ((HYPRE_Solver)  solver,  params->logging);        
@@ -570,7 +561,7 @@ namespace Uintah {
           HYPRE_StructHybridCreate           (pg->getComm(), &solver);  
           HYPRE_StructHybridSetDSCGMaxIter   (solver, 100);                                    
           HYPRE_StructHybridSetPCGMaxIter    (solver, params->maxiterations);                  
-          HYPRE_StructHybridSetTol           (solver, tolerance);                      
+          HYPRE_StructHybridSetTol           (solver, params->tolerance);                      
           HYPRE_StructHybridSetConvergenceTol(solver, 0.90);                                   
           HYPRE_StructHybridSetTwoNorm       (solver, 1);                                      
           HYPRE_StructHybridSetRelChange     (solver, 0);                                      
@@ -617,7 +608,7 @@ namespace Uintah {
           HYPRE_StructSolver solver;
           HYPRE_StructGMRESCreate(pg->getComm(),  &solver);                
           HYPRE_GMRESSetMaxIter  ((HYPRE_Solver)  solver,  params->maxiterations);  
-          HYPRE_GMRESSetTol      ((HYPRE_Solver)  solver,  tolerance);      
+          HYPRE_GMRESSetTol      ((HYPRE_Solver)  solver,  params->tolerance);      
           HYPRE_GMRESSetRelChange((HYPRE_Solver)  solver,  0);                      
           HYPRE_GMRESSetLogging  ((HYPRE_Solver)  solver,  params->logging);        
 
@@ -677,7 +668,7 @@ namespace Uintah {
         printTask( patches, patches->get(0), cout_doing, "HypreSolver:solve: testConvergence" );
         //__________________________________
         // Test for convergence
-        if(final_res_norm > tolerance || finite(final_res_norm) == 0){
+        if(final_res_norm > params->tolerance || finite(final_res_norm) == 0){
           if( params->getRestartTimestepOnFailure() ){
             if(pg->myrank() == 0)
               cout << "HypreSolver not converged in " << num_iterations 
@@ -688,7 +679,7 @@ namespace Uintah {
           } else {
             throw ConvergenceFailure("HypreSolver variable: "+X_label->getName()+", solver: "+params->solvertype+", preconditioner: "+params->precondtype,
                                      num_iterations, final_res_norm,
-                                     tolerance,__FILE__,__LINE__);
+                                     params->tolerance,__FILE__,__LINE__);
           }
         }
         //__________________________________

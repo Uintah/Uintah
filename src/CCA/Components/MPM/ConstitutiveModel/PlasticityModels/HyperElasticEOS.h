@@ -58,9 +58,6 @@ namespace Uintah {
 
   private:
 
-    // Initial bulk modulus
-    double d_bulk;
-
     // Prevent copying of this class
     // copy constructor
     //HyperElasticEOS(const HyperElasticEOS &cm);
@@ -79,13 +76,6 @@ namespace Uintah {
 
     virtual void outputProblemSpec(ProblemSpecP& ps);
          
-    //////////
-    // Set initial bulk modulus
-    void setBulkModulus(const double& bulk)
-    {
-      d_bulk = bulk;
-    }
-
     //////////
     // Calculate the pressure using a equation of state
     double computePressure(const MPMMaterial* matl,

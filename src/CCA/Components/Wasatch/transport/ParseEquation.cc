@@ -470,7 +470,7 @@ namespace Wasatch{
   {
     // check for supersaturation
     Expr::Tag superSaturationTag = Expr::Tag();
-    Uintah::ProblemSpecP superSaturationParams = momentEqsParams->findBlock("SuperSaturationExpression");
+    Uintah::ProblemSpecP superSaturationParams = momentEqsParams->findBlock("SupersaturationExpression");
     if (superSaturationParams) {
       superSaturationTag = parse_nametag( superSaturationParams->findBlock("NameTag") );
     }

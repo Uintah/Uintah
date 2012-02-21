@@ -102,7 +102,7 @@
     <Threshold>         0.001      </Threshold>
     <Slice>             20         </Slice>
     <StefanBoltzmann>   5.67051e-8 </StefanBoltzmann>
-    <benchmark_13pt2>   true       </benchmark_13pt2>
+    <benchmark>         2          </benchmark>
     <solveBoundaryFlux> false      </solveBoundaryFlux>
     <CCRays>            false      </CCRays>
   </RMCRT>

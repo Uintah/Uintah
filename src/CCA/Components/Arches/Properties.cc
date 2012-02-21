@@ -111,7 +111,7 @@ Properties::~Properties()
 {
   delete d_mixingModel;
 
-  if ( mixModel == "TabProps" || mixModel == "ClassicTable" ){ 
+  if ( mixModel == "TabProps" || mixModel == "ClassicTable" || mixModel == "ColdFlow" ){ 
     delete d_mixingRxnTable; 
   }
 }
@@ -126,6 +126,9 @@ Properties::problemSetup(const ProblemSpecP& params)
   db->getWithDefault("filter_drhodt",          d_filter_drhodt,          false);
   db->getWithDefault("first_order_drhodt",     d_first_order_drhodt,     true);
   db->getWithDefault("inverse_density_average",d_inverse_density_average,false);
+  std::string mixture_fraction_name;
+  db->getWithDefault("mixture_fraction_label", mixture_fraction_name, "scalarSP");
+  d_mf_label = VarLabel::find(mixture_fraction_name); 
   d_denRef = d_physicalConsts->getRefPoint();
   d_reactingFlow = true;
   // check to see if gas is adiabatic and (if DQMOM) particles are not:
@@ -276,7 +279,9 @@ Properties::problemSetup(const ProblemSpecP& params)
       if (db_enthalpy_solver->findBlock("DORadiationModel")) {
         d_radiationCalc = true; 
         d_DORadiationCalc = true;
-      } else {
+      } else if(db_enthalpy_solver->findBlock("RMCRT") ){
+        d_radiationCalc = true;
+      } else{
         proc0cout << "ATTENTION: NO WORKING RADIATION MODEL TURNED ON!" << endl; 
       }
       
@@ -368,7 +373,7 @@ Properties::sched_reComputeProps(SchedulerP& sched,
   Ghost::GhostType  gn = Ghost::None;
   
   tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, gn);
-  tsk->modifies(d_lab->d_scalarSPLabel);
+  tsk->modifies(d_mf_label);
 
   if (d_calcVariance){
     tsk->requires(Task::NewDW, d_lab->d_normalizedScalarVarLabel, gn, 0);
@@ -652,7 +657,7 @@ Properties::reComputeProps(const ProcessorGroup* pc,
       new_dw->get(cellType, d_lab->d_cellTypeLabel,   indx, patch, gn, 0);
     }
 
-    new_dw->getModifiable(scalar, d_lab->d_scalarSPLabel, indx, patch);
+    new_dw->getModifiable(scalar, d_mf_label, indx, patch);
 
     if (d_calcVariance) {
       new_dw->get(normalizedScalarVar, d_lab->d_normalizedScalarVarLabel, indx, patch, gn, 0);
@@ -2171,3 +2176,4 @@ Properties::doTableMatching(){
 	d_mixingRxnTable->tableMatching(); 
 
 }
+

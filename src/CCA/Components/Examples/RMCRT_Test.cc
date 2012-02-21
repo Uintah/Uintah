@@ -40,6 +40,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/GeometryPiece/GeometryPieceFactory.h>
 #include <Core/GeometryPiece/UnionGeometryPiece.h>
 #include <Core/Grid/AMR.h>
+#include <Core/Grid/AMR_CoarsenRefine.h>
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/SimpleMaterial.h>
@@ -302,8 +303,9 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
       d_realRMCRT->sched_initProperties( fineLevel, sched, time_sub_step );
     }
 
-    // coarsen data to the coarser levels
-    for (int l = 0; l < maxLevels-1; l++) {
+    // coarsen data to the coarser levels.  
+    // do it in reverse order
+    for (int l = maxLevels - 2; l >= 0; l--) {
       const LevelP& level = grid->getLevel(l);
       scheduleCoarsenAll (level, sched);
       d_realRMCRT->sched_setBoundaryConditions( level, sched );
@@ -426,8 +428,10 @@ void RMCRT_Test::scheduleShootRays_multiLevel(SchedulerP& sched,
   }
   
   if(d_doRealRMCRT){
-    int time_sub_step = 0;
-    d_realRMCRT->sched_rayTrace_dataOnion(level,sched,time_sub_step);
+    Task::WhichDW abskg_dw   = Task::NewDW;
+    Task::WhichDW sigmaT4_dw = Task::NewDW;
+    bool modifies_divQ       = false;
+    d_realRMCRT->sched_rayTrace_dataOnion(level,sched, abskg_dw, sigmaT4_dw,modifies_divQ);
   }
   
 }
@@ -583,9 +587,12 @@ void RMCRT_Test::scheduleShootRays_onCoarseLevel(SchedulerP& sched,
     }
 
     if(d_doRealRMCRT){
-      int time_sub_step = 0;
       //d_realRMCRT->sched_sigmaT4(level,sched);
-      d_realRMCRT->sched_rayTrace(level,sched,time_sub_step);
+      
+      Task::WhichDW abskg_dw   = Task::NewDW;
+      Task::WhichDW sigmaT4_dw = Task::NewDW;
+      bool modifies_divQ       = false;
+      d_realRMCRT->sched_rayTrace(level,sched,abskg_dw,sigmaT4_dw,modifies_divQ);
     }  
   }
 }
@@ -958,7 +965,6 @@ void RMCRT_Test::scheduleCoarsen_Q ( const LevelP& coarseLevel,
   sched->addTask( t, coarseLevel->eachPatch(), d_sharedState->allMaterials() );
 }
 
-
 //______________________________________________________________________
 void RMCRT_Test::coarsen_Q ( const ProcessorGroup*,
                              const PatchSubset* patches,
@@ -970,9 +976,7 @@ void RMCRT_Test::coarsen_Q ( const ProcessorGroup*,
                              Task::WhichDW which_dw )
 {
   const Level* coarseLevel = getLevel(patches);
-  const LevelP fineLevel = coarseLevel->getFinerLevel();
-  IntVector rr(fineLevel->getRefinementRatio());
-  double ratio = 1./(rr.x()*rr.y()*rr.z());
+  const Level* fineLevel = coarseLevel->getFinerLevel().get_rep();
   
   DataWarehouse* this_dw = new_dw;
   
@@ -984,7 +988,7 @@ void RMCRT_Test::coarsen_Q ( const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){  
     const Patch* coarsePatch = patches->get(p);
 
-    printTask(patches, coarsePatch,dbg,"Doing coarsen");
+    printTask(patches, coarsePatch,dbg,"Doing coarsen: " + variable->getName());
 
     // Find the overlapping regions...
     Level::selectType finePatches;
@@ -1001,34 +1005,11 @@ void RMCRT_Test::coarsen_Q ( const ProcessorGroup*,
       }
       Q_coarse.initialize(0.0);
 
-      for(int i=0;i<finePatches.size();i++){
-        const Patch* finePatch = finePatches[i];
-
-        constCCVariable<double> Q_fine;
-        this_dw->get(Q_fine, variable, matl, finePatch, d_gn, 0);
-
-        IntVector fl(finePatch->getCellLowIndex());
-        IntVector fh(finePatch->getCellHighIndex());
-
-        IntVector l(fineLevel->mapCellToCoarser(fl));
-        IntVector h(fineLevel->mapCellToCoarser(fh));
-
-        l = Max(l, coarsePatch->getCellLowIndex());
-        h = Min(h, coarsePatch->getCellHighIndex());
-
-        for(CellIterator iter(l, h); !iter.done(); iter++){
-          IntVector c = *iter;
-
-          double sumQ=0;
-          IntVector fineStart(coarseLevel->mapCellToFiner(c));
-
-          for(CellIterator inside(IntVector(0,0,0), fineLevel->getRefinementRatio());
-              !inside.done(); inside++){
-            sumQ += Q_fine[fineStart+*inside];
-          }
-          Q_coarse[c]=sumQ*ratio;
-        }  // intersection loop
-      }  // fine patch loop
+      // coarsen
+      bool computesAve = false;
+      fineToCoarseOperator(Q_coarse,   computesAve, 
+                           variable,   matl, new_dw,                   
+                           coarsePatch, coarseLevel, fineLevel);        
     }
   }  // course patch loop 
 }

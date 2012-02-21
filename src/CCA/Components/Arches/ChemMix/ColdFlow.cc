@@ -1,5 +1,4 @@
 /*
-
    The MIT License
 
    Copyright (c) 1997-2011 Center for the Simulation of Accidental Fires and 
@@ -74,7 +73,6 @@ ColdFlow::~ColdFlow()
 ColdFlow::problemSetup( const ProblemSpecP& propertiesParameters )
 {
   // Create sub-ProblemSpecP object
-  string tableFileName;
   ProblemSpecP db_coldflow = propertiesParameters->findBlock("ColdFlow");
   ProblemSpecP db_properties_root = propertiesParameters; 
 
@@ -121,6 +119,8 @@ ColdFlow::problemSetup( const ProblemSpecP& propertiesParameters )
 
   proc0cout << "  Matching sucessful!" << endl;
   proc0cout << endl;
+
+  problemSetupCommon( db_coldflow ); 
 
   proc0cout << "--- End Cold Flow information --- " << endl;
   proc0cout << endl;
@@ -177,6 +177,7 @@ ColdFlow::sched_getState( const LevelP& level,
   tsk->modifies( d_lab->d_densityCPLabel );  // lame .... fix me
   if ( modify_ref_den )
     tsk->computes(time_labels->ref_density); 
+  tsk->requires( Task::NewDW, d_lab->d_volFractionLabel, gn, 0 ); 
 
   sched->addTask( tsk, level->eachPatch(), d_lab->d_sharedState->allArchesMaterials() ); 
 }
@@ -201,6 +202,9 @@ ColdFlow::getState( const ProcessorGroup* pc,
     const Patch* patch = patches->get(p); 
     int archIndex = 0; 
     int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+
+    constCCVariable<double> eps_vol; 
+    new_dw->get( eps_vol, d_lab->d_volFractionLabel, matlIndex, patch, gn, 0 ); 
 
     //independent variables:
     std::vector<constCCVariable<double> > indep_storage; 
@@ -298,7 +302,7 @@ ColdFlow::getState( const ProcessorGroup* pc,
 
         std::map< std::string, int>::iterator i_to_i = iter_to_index.find( i->first ); 
         double table_value = coldFlowMixing( iv, i_to_i->second ); 
-
+        table_value *= eps_vol[c]; 
         (*i->second.var)[c] = table_value;
 
         if (i->first == "density") {
@@ -359,9 +363,6 @@ ColdFlow::getState( const ProcessorGroup* pc,
           // currently assuming a constant value across the mesh. 
           bc_values.push_back( bc_value ); 
 
-          bc_values.push_back(0.0);
-          which_bc.push_back(ColdFlow::DIRICHLET);
-
           delete bc; 
 
         }
@@ -376,15 +377,19 @@ ColdFlow::getState( const ProcessorGroup* pc,
           for ( int i = 0; i < (int) d_allIndepVarNames.size(); i++ ){
 
             switch (which_bc[i]) { 
+
               case ColdFlow::DIRICHLET:
                 iv.push_back( bc_values[i] ); 
                 break; 
+
               case ColdFlow::NEUMANN:
                 iv.push_back(0.5*(indep_storage[i][c] + indep_storage[i][cp1]));  
                 break; 
+
               case ColdFlow::FROMFILE:
                 iv.push_back(0.5*(indep_storage[i][c] + indep_storage[i][cp1]));  
-                break; 
+                break;
+
               default: 
                 throw InvalidValue( "Error: BC type not supported for property calculation", __FILE__, __LINE__ ); 
             }
@@ -395,7 +400,7 @@ ColdFlow::getState( const ProcessorGroup* pc,
 
             std::map< std::string, int>::iterator i_to_i = iter_to_index.find( i->first ); 
             double table_value = coldFlowMixing( iv, i_to_i->second ); 
-
+            table_value *= eps_vol[c]; 
             (*i->second.var)[c] = table_value;
 
             if (i->first == "density") {
@@ -406,8 +411,9 @@ ColdFlow::getState( const ProcessorGroup* pc,
                 mpmarches_denmicro[c] = table_value; 
             }
           }
-          iv.clear(); 
+          iv.resize(0);  
         }
+        bc_values.resize(0); 
       }
     }
 
@@ -438,24 +444,6 @@ void ColdFlow::oldTableHack( const InletStream& inStream, Stream& outStream, boo
   int pos = 0; //for density
   outStream.d_density = coldFlowMixing( iv, pos ); 
 
-}
-
-//--------------------------------------------------------------------------- 
-// schedule Compute Heat Loss
-//--------------------------------------------------------------------------- 
-  void 
-ColdFlow::sched_computeHeatLoss( const LevelP& level, SchedulerP& sched, const bool initialize_me, const bool calcEnthalpy )
-{
-  // nothing to do here. 
-}
-
-//--------------------------------------------------------------------------- 
-// schedule Compute First Enthalpy
-//--------------------------------------------------------------------------- 
-  void 
-ColdFlow::sched_computeFirstEnthalpy( const LevelP& level, SchedulerP& sched )
-{
-  // nothing to do here. 
 }
 
 //--------------------------------------------------------------------------- 
@@ -518,7 +506,8 @@ double
 ColdFlow::coldFlowMixing( std::vector<double>& iv, int pos )
 {
 
-  double value = iv[0] * d_stream[pos][0] + ( 1 - iv[0] ) * d_stream[pos][1]; 
+  double value = iv[0] * 1.0/d_stream[pos][0] + ( 1 - iv[0] ) * 1.0/d_stream[pos][1]; 
+  value = 1.0/value; 
   return value; 
 
 }

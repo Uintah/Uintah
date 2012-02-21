@@ -1,40 +1,37 @@
 #!/bin/csh
 #
 #_____________________________________________________________________.
-#   This script checks to see if all the variables that have
-#   been created with Varlabel::create are also destroyed.  This
-#   is useful in finding memory leaks.
-#   usage;    mem_leak_checkVarLabels <Arches/ICE/MPMICE/MPMLabels.cc>
-#
-#  NOTE: This script need gnu grep to work.
+#   This reports any VarLabels that have been created 
+#    but not destroyed.
+#   usage;    mem_leak_checkVarLabels < output file>
 #_____________________________________________________________________.
 
-set file = $argv
-if ($#argv != 1) then
-  echo " mem_leak_checkVarLabels   <fileName> "
+set out = $argv
+if ( ($#argv != 1) || (! -e $out ) ) then
+  echo " mem_leak_checkVarLabels   <outputfileName> "
   exit(1)
 endif
 
+set created   = ( `grep Created $out | cut -f2 -d:` )
+set destroyed = ( `grep Deleted $out | cut -f2 -d:` )
 
-grep --version | grep -q GNU
-if ( $status != 0  ) then
-  echo "This script uses gnu grep"
-  echo "Please use a machine that has gnu grep"
-  exit(1)
+if ( $#created == 0 ) then
+  echo "You must set the environmental variable:"
+  echo  "  csh/tcsh:  setenv SCI_DEBUG VarLabel:+"
+  echo "before you run the input file."
 endif
+echo ""
 
-set varLabels = (`grep "Label.*=" $file| cut -d= -f1`)
-echo "I'm examing the following variables \n "
-
-
-foreach XXX ( $varLabels[*]:q )
-  set has_comment = `echo $XXX | grep -c "/"`
-  # only check if there isn't a comment in front of the variable
-  if ( $has_comment == 0 ) then
-    echo $XXX
-    set numHits = `grep -w -c "$XXX" $file`
-    if ( $numHits < 2 ) then
-     echo "$XXX ------------------ has been created but hasn't been destroyed"
-    endif
-  endif
+foreach C ( $created[*] )
+  set found = "false"
+  foreach D ( $destroyed[*] )
+     if ($C == $D) then
+       set found = "true"
+     endif
+   end
+   if ($found == "false") then
+     echo "            <<<  VarLabel ($C) was not deleted >>>"
+   endif
 end
+echo ""
+exit 

@@ -62,10 +62,10 @@ void Task::initialize()
   for(int i=0;i<TotalDWs;i++) {
     dwmap[i]=Task::InvalidDW;
   }
-
-  sortedOrder = -1;
-  d_phase = -1;
-  maxGhostCells = 0;
+  sortedOrder=-1;
+  d_phase=-1;
+  d_comm=-1;
+  maxGhostCells=0;
 }
 
 Task::ActionBase::~ActionBase()
@@ -980,9 +980,6 @@ namespace Uintah {
       break;
     case Task::InitialSend:
       out << "InitialSend";
-      break;
-    case Task::OncePerProc:
-      out << "OncePerProc";
       break;
     case Task::Output:
       out << "Output";

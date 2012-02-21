@@ -636,18 +636,7 @@ public:
 
         double dnew = ::Dot(R, D, iter, flops, memrefs);
         new_dw->put(sum_vartype(dnew), d_label);
-        
-        double tolerance = params->tolerance;
-        if(params->getDynamicTolerance()) {                
-          double iprod      = ::Dot(B,B,iter, flops, memrefs);      
-          double sum_b      = sqrt(iprod);           
-          tolerance         = tolerance / (sum_b); 
-          if(std::isinf(tolerance) ){
-            tolerance = 0;
-          }                       
-        }
-       
-        new_dw->put( sum_vartype(tolerance), tolerance_label );
+        new_dw->put( sum_vartype(params->tolerance), tolerance_label );
         
         
         // Calculate error term

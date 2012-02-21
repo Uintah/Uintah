@@ -292,7 +292,7 @@
     </shear_modulus_model>
     <specific_heat                 spec="OPTIONAL DOUBLE" />
     <specific_heat_model           spec="OPTIONAL NO_DATA"
-                                     attribute1="type REQUIRED STRING 'constant_Cp, linear_Cp, copper_Cp, steel_Cp'">
+                                     attribute1="type REQUIRED STRING 'constant_Cp, cubic_Cp, copper_Cp, steel_Cp'">
       <T_transition                spec="OPTIONAL DOUBLE" />
       <A_LowT                spec="OPTIONAL DOUBLE" />
       <B_LowT                spec="OPTIONAL DOUBLE" />

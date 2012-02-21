@@ -527,11 +527,11 @@ YamamotoDevol::computeModel( const ProcessorGroup * pc,
           //rateMax = max((0.2*(unscaled_raw_coal_mass + min(0.0,unscaled_char_mass))*unscaled_weight/dt),0.0);
           //testVal_part = -kv*(unscaled_raw_coal_mass + min(0.0,unscaled_char_mass))*unscaled_weight/(d_rc_scaling_factor*d_w_scaling_factor);
           //testVal_gas = (Yv*kv)*(unscaled_raw_coal_mass+ min(0.0,unscaled_char_mass))*unscaled_weight;
-          //testVal_char = (1.0-Yv)*kv*(unscaled_raw_coal_mass + min(0.0,unscaled_char_mass));
+          //testVal_char = (1.0-Yv)*kv*(unscaled_raw_coal_mass + min(0.0,unscaled_char_mass))*unscaled_weight;
           rateMax = max((0.2*unscaled_raw_coal_mass*unscaled_weight/dt),0.0);
           testVal_part = -kv*unscaled_raw_coal_mass*unscaled_weight/(d_rc_scaling_factor*d_w_scaling_factor);
           testVal_gas = (Yv*kv)*unscaled_raw_coal_mass*unscaled_weight;
-          testVal_char = (1.0-Yv)*kv*unscaled_raw_coal_mass;
+          testVal_char = (1.0-Yv)*kv*unscaled_raw_coal_mass*unscaled_weight;
           if( testVal_part < (-rateMax/(d_rc_scaling_factor*d_w_scaling_factor))) {
             testVal_part = -rateMax/(d_rc_scaling_factor*d_w_scaling_factor);
             testVal_gas = Yv*rateMax;

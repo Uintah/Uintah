@@ -116,9 +116,10 @@ ClassicTableInterface::problemSetup( const ProblemSpecP& propertiesParameters )
     }
   } 
   if (db_enthalpy) { 
-    ProblemSpecP db_radiation = params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ExplicitSolver")->findBlock("EnthalpySolver")->findBlock("DORadiationModel");
+    ProblemSpecP db_DO_Rad    = params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ExplicitSolver")->findBlock("EnthalpySolver")->findBlock("DORadiationModel");
+    ProblemSpecP db_RMCRT_Rad = params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ExplicitSolver")->findBlock("EnthalpySolver")->findBlock("RMCRT");
     d_adiabatic = true; 
-    if (db_radiation) { 
+    if (db_DO_Rad || db_RMCRT_Rad) { 
       proc0cout << "Found a working radiation model -- will implement case with heat loss" << endl;
       d_adiabatic = false; 
       d_allocate_soot = false; // needed for new DORadiation source term 
@@ -567,30 +568,30 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
 
             //  double table_value = tableLookUp( iv, i->second.index ); 
 						double table_value = ND_interp->find_val( iv, i->second.index );
-              table_value *= eps_vol[c]; 
-              //double orig_save = (*i->second.var)[c]; 
-              (*i->second.var)[c] = table_value;
+            table_value *= eps_vol[c]; 
+            //double orig_save = (*i->second.var)[c]; 
+            (*i->second.var)[c] = table_value;
 
-              if (i->first == "density") {
-                // Two ways of setting density.  Note that the old ARCHES code used the table value directly and not the ghost_value as defined below. 
-                // This gets density = bc value on face:
-                //double ghost_value = 2.0*table_value - arches_density[cp1];
-                //arches_density[c] = ghost_value; 
-                // This gets density = bc value in extra cell 
-                arches_density[c] = table_value; 
+            if (i->first == "density") {
+              // Two ways of setting density.  Note that the old ARCHES code used the table value directly and not the ghost_value as defined below. 
+              // This gets density = bc value on face:
+              //double ghost_value = 2.0*table_value - arches_density[cp1];
+              //arches_density[c] = ghost_value; 
+              // This gets density = bc value in extra cell 
+              arches_density[c] = table_value; 
 
-                if (d_MAlab)
-                  mpmarches_denmicro[c] = table_value; 
+              if (d_MAlab)
+                mpmarches_denmicro[c] = table_value; 
 
-              } else if (i->first == "temperature" && !d_coldflow) {
-                arches_temperature[c] = table_value; 
-              } else if (i->first == "specificheat" && !d_coldflow) {
-                arches_cp[c] = table_value; 
-              } else if (i->first == "CO2" && !d_coldflow) {
-                arches_co2[c] = table_value; 
-              } else if (i->first == "H2O" && !d_coldflow) {
-                arches_h2o[c] = table_value; 
-              }
+            } else if (i->first == "temperature" && !d_coldflow) {
+              arches_temperature[c] = table_value; 
+            } else if (i->first == "specificheat" && !d_coldflow) {
+              arches_cp[c] = table_value; 
+            } else if (i->first == "CO2" && !d_coldflow) {
+              arches_co2[c] = table_value; 
+            } else if (i->first == "H2O" && !d_coldflow) {
+              arches_h2o[c] = table_value; 
+            }
           }
           iv.resize(0);
         }
@@ -1090,52 +1091,6 @@ ClassicTableInterface::oldTableHack( const InletStream& inStream, Stream& outStr
 }
 
 //--------------------------------------------------------------------------- 
-// Get all Dependent variables 
-//--------------------------------------------------------------------------- 
-/** @details
-
-  This method will first check to see if the table is loaded; if it is, it
-  will return a reference to d_allDepVarNames, which is a private vector<string>
-  of the ClassicTableInterface class
-  */
-  const vector<string> &
-ClassicTableInterface::getAllDepVars()
-{
-  if( d_table_isloaded == true ) {
-    vector<string>& d_allDepVarNames_ref(d_allDepVarNames);
-    return d_allDepVarNames_ref;
-  } else {
-    ostringstream exception;
-    exception << "Error: You requested a list of dependent variables " <<
-      "before specifying the table that you were using. " << endl;
-    throw InternalError(exception.str(),__FILE__,__LINE__);
-  }
-}
-
-//--------------------------------------------------------------------------- 
-// Get all independent Variables
-//--------------------------------------------------------------------------- 
-/** @details
-  This method will first check to see if the table is loaded; if it is, it
-  will return a reference to d_allIndepVarNames, which is a private
-  vector<string> of the ClassicTableInterface class
-  */
-  const vector<string> &
-ClassicTableInterface::getAllIndepVars()
-{
-  if( d_table_isloaded == true ) {
-    vector<string>& allIndepVarNames_ref(d_allIndepVarNames);
-    return allIndepVarNames_ref;
-  } 
-  else {
-    ostringstream exception;
-    exception << "Error: You requested a list of independent variables " <<
-      "before specifying the table that you were using. " << endl;
-    throw InternalError(exception.str(),__FILE__,__LINE__);
-  }
-}
-
-//--------------------------------------------------------------------------- 
 // schedule Dummy Init
 //--------------------------------------------------------------------------- 
   void 
@@ -1499,3 +1454,5 @@ void ClassicTableInterface::checkForConstants( const string & inputfile ) {
   // Closing the file pointer
   gzclose( gzFp );
 }
+//---------------------
+

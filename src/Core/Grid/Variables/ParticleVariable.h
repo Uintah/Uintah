@@ -198,6 +198,7 @@ public:
     ptr = getBasePointer();
   }
 protected:
+  static TypeDescription* td;
   ParticleVariable(const ParticleVariable<T>&);
   ParticleVariable<T>& operator=(const ParticleVariable<T>&);
 
@@ -213,13 +214,15 @@ private:
 };
 
   template<class T>
+  TypeDescription* ParticleVariable<T>::td = 0;
+
+  template<class T>
   TypeDescription::Register ParticleVariable<T>::registerMe(getTypeDescription());
 
   template<class T>
   const TypeDescription*
   ParticleVariable<T>::getTypeDescription()
   {
-    static TypeDescription* td;
     if(!td){
       td = scinew TypeDescription(TypeDescription::ParticleVariable,
                                   "ParticleVariable", &maker,

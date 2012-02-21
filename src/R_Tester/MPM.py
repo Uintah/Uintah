@@ -26,7 +26,7 @@ from helpers.runSusTests import runSusTests
 #______________________________________________________________________
 
 NIGHTLYTESTS = [  
-                 ("disks2mat4patch",                 "disks2mat4patch.ups",                4,  "Linux", ["exactComparison"]),    \
+                 ("disks_complex",                 "disks_complex.ups",                4,  "Linux", ["exactComparison"]),    \
                  ("heatcond2mat",                   "heatcond2mat.ups",                   1,  "Linux", ["exactComparison"]),    \
                  ("inclined_plane_sphere",          "inclined_plane_sphere.ups",          1,  "Linux", ["exactComparison"]),    \
                  ("foam_crush",                     "foam_crush.ups",                     4,  "Linux", ["exactComparison"]),    \
@@ -45,7 +45,7 @@ NIGHTLYTESTS = [
                  ("test_cyl_pene_no_ero",           "test_cyl_pene_no_ero.ups",           1,  "Linux", ["exactComparison"]),    \
                  ("test_gurson_beckerdrucker_mts",  "test_gurson_beckerdrucker_mts.ups",  1,  "Linux", ["exactComparison"]),    \
                  ("advect_3L_3D",                    "advect_3L_3D.ups",                  1,  "Linux", ["no_restart"]),    \
-                 ("disks2mat4patch",                "disks2mat4patch.ups",                4,  "Darwin", ["doesTestRun"]),    \
+                 ("disks_complex",                "disks_complex.ups",                4,  "Darwin", ["doesTestRun"]),    \
                  ("heatcond2mat",                   "heatcond2mat.ups",                   1,  "Darwin", ["doesTestRun"]),    \
                  ("inclined_plane_sphere",          "inclined_plane_sphere.ups",          1,  "Darwin", ["doesTestRun"]),    \
                  ("const_test_cmr",                 "const_test_cmr.ups",                 1,  "Darwin", ["doesTestRun"]),    \
@@ -63,7 +63,7 @@ NIGHTLYTESTS = [
 # Tests that are run during local regression testing              
 LOCALTESTS = [  
                  ("advect_3L_3D",                   "advect_3L_3D.ups",                   1,  "Linux", ["no_restart"]),    \
-                 ("disks2mat4patch",                "disks2mat4patch.ups",                4,  "Linux", ["exactComparison"]),    \
+                 ("disks_complex",                "disks_complex.ups",                4,  "Linux", ["exactComparison"]),    \
                  ("heatcond2mat",                   "heatcond2mat.ups",                   1,  "Linux", ["exactComparison"]),    \
                  ("inclined_plane_sphere",          "inclined_plane_sphere.ups",          1,  "Linux", ["exactComparison"]),    \
                  ("foam_crush",                     "foam_crush.ups",                     4,  "Linux", ["exactComparison"]),    \

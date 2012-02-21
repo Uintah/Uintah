@@ -39,7 +39,7 @@ DEALINGS IN THE SOFTWARE.
 using namespace Uintah;
 using namespace SCIRun;
 
-static const int    NLOCKS=123;
+static const int    NLOCKS=1024;
 static       Mutex* locks[NLOCKS];
 static       bool   initialized = false;
 static Mutex initlock("RefCounted initialization lock");

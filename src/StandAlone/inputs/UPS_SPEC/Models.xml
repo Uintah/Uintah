@@ -14,8 +14,7 @@
       <Threshold              spec="OPTIONAL DOUBLE  'positive'"/>        
       <Slice                  spec="OPTIONAL DOUBLE"/>                    
       <StefanBoltzmann        spec="OPTIONAL DOUBLE  'positive'"/>        
-      <benchmark_1            spec="OPTIONAL BOOLEAN"/>                   
-      <benchmark_13pt2        spec="OPTIONAL BOOLEAN"/>                   
+      <benchmark              spec="OPTIONAL INTEGER 'positive'"/>                    
       <solveBoundaryFlux      spec="OPTIONAL BOOLEAN"/>                   
       <CCRays                 spec="OPTIONAL BOOLEAN"/> 
     </RMCRT>

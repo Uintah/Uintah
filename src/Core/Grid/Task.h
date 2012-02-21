@@ -1038,6 +1038,7 @@ WARNING
     struct Edge;
       
     int d_phase;  //synchronized phase id, for dynamic task scheduling
+    int d_comm;  //task communicator id, for threaded task scheduling
     int maxGhostCells; //max ghost cells of this task
     std::set<Task*> childTasks;
     std::set<Task*> allChildTasks;

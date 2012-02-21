@@ -85,7 +85,7 @@ namespace Wasatch{
       UintahField phiNew;
       ConstUintahField phiOld, rhs;
       if (rkStage==1) {
-      	newDW->allocateAndPut( phiNew, ifld->varLabel, material, patch, gt, ng );  // note that these fields do have ghost info.
+        newDW->allocateAndPut( phiNew, ifld->varLabel, material, patch, gt, ng );  // note that these fields do have ghost info.
       } else {
         newDW->           getModifiable( phiNew, ifld->varLabel, material, patch, gt, ng );
       }

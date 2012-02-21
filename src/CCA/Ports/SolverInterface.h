@@ -46,7 +46,7 @@ namespace Uintah {
   class VarLabel;
   class UINTAHSHARE SolverParameters {
   public:
-    SolverParameters() : solveOnExtraCells(false), residualNormalizationFactor(1), dynamicTolerance(false), 
+    SolverParameters() : solveOnExtraCells(false), residualNormalizationFactor(1), 
                         restartableTimestep(false), outputFileName("NULL") {}
     
     void setSolveOnExtraCells(bool s) {
@@ -63,14 +63,6 @@ namespace Uintah {
     
     double getResidualNormalizationFactor() const {
       return residualNormalizationFactor;
-    }
-    
-    void setDynamicTolerance(bool s){
-      dynamicTolerance=s;
-    }
-    
-    bool getDynamicTolerance() const {
-      return dynamicTolerance;
     }
     
     //If convergence fails call for the timestep to be restarted.
@@ -98,7 +90,6 @@ namespace Uintah {
   private:
     bool   solveOnExtraCells;
     double residualNormalizationFactor;
-    bool   dynamicTolerance;
     bool   restartableTimestep;
     std::string outputFileName;
   };

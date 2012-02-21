@@ -364,10 +364,10 @@ ThreadedMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
   TAU_PROFILE_START(doittimer);
 
   int currphase=0;
-  int currcomm=0;
-  map<int, int> phaseTasks;
-  map<int, int> phaseTasksDone;
-  map<int,  DetailedTask *> phaseSyncTask;
+  int numPhase=tg->getNumTaskPhases();
+  vector<int> phaseTasks(numPhase);
+  vector<int> phaseTasksDone(numPhase);
+  vector<DetailedTask *> phaseSyncTask(numPhase);
   dts->setTaskPriorityAlg(taskQueueAlg_ );
   for (int i = 0; i < ntasks; i++){
     phaseTasks[dts->localTask(i)->getTask()->d_phase]++;
@@ -420,7 +420,7 @@ ThreadedMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
       }
     }
     //if it is time to run reduction task
-    else if ((phaseSyncTask.find(currphase)!= phaseSyncTask.end()) && (phaseTasksDone[currphase] == phaseTasks[currphase]-1)){ 
+    else if ((phaseSyncTask[currphase]!= NULL) && (phaseTasksDone[currphase] == phaseTasks[currphase]-1)){ 
       if(queuelength.active())
       {
         if((int)histogram.size()<dts->numExternalReadyTasks()+1)
@@ -431,9 +431,8 @@ ThreadedMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
       taskdbg << d_myworld->myrank() << " Ready Reduce/OPP task " << reducetask->getTask()->getName() << endl;
       if (reducetask->getTask()->getType() == Task::Reduction){
         if(!abort){
-          currcomm++;
-          taskdbg << d_myworld->myrank() << " Running Reduce task " << reducetask->getTask()->getName() << " with communicator " << currcomm <<  endl;
-          assignTask(reducetask, currcomm);
+          taskdbg << d_myworld->myrank() << " Running Reduce task " << reducetask->getTask()->getName() << " with communicator " << reducetask->getTask()->d_comm <<  endl;
+          assignTask(reducetask, iteration);
         }
       }
       else { // Task::OncePerProc task
@@ -442,7 +441,7 @@ ThreadedMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
         reducetask->markInitiated();
         while(reducetask->getExternalDepCount() > 0) {
           processMPIRecvs(WAIT_ONCE);
-          reducetask->checkExternalDepCount();
+          //reducetask->checkExternalDepCount();
         }
 
         assignTask(reducetask, iteration);

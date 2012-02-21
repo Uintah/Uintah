@@ -18,7 +18,7 @@
        <delt_min>           0.0         </delt_min>
        <delt_max>           1.0         </delt_max>
        <delt_init>          1.0e-4      </delt_init>
-       <timestep_multiplier>0.8         </timestep_multiplier>
+       <timestep_multiplier>0.3         </timestep_multiplier>
    </Time>
    
     <!--____________________________________________________________________-->
@@ -153,12 +153,16 @@
     <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
     <!--____________________________________________________________________-->
     <CFD>
-         <cfl>0.5</cfl>
+       <cfl>0.3</cfl>
        <ICE>
         <advection type = "FirstOrder" />
       </ICE>        
     </CFD>
-
+    <MPM>
+        <time_integrator>   explicit</time_integrator>
+        <interpolator>       gimp   </interpolator>
+        <testForNegTemps_mpm>false  </testForNegTemps_mpm>
+    </MPM>
     <!--____________________________________________________________________-->
     <!--     P  H  Y  S  I  C  A  L     C  O  N  S  T  A  N  T  S           -->
     <!--____________________________________________________________________-->   

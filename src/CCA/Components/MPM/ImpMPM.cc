@@ -165,10 +165,6 @@ void ImpMPM::problemSetup(const ProblemSpecP& prob_spec,
      throw InternalError("ImpMPM:couldn't get output port", __FILE__, __LINE__);
    }
 
-   ProblemSpecP p = prob_spec->findBlock("DataArchiver");
-   if(!p->get("outputInterval", d_outputInterval))
-      d_outputInterval = 1.0;
-
    ProblemSpecP mpm_ps = 0;
    ProblemSpecP restart_mat_ps = 0;
 

@@ -30,6 +30,8 @@ DEALINGS IN THE SOFTWARE.
 */
 
 #include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/Variables/VarLabel.h>
+#include <CCA/Ports/DataWarehouseP.h>
 
 namespace Uintah {
 
@@ -58,6 +60,17 @@ namespace Uintah {
                                      constCCVariable<double>& cMass,
                                      constCCVariable<T>& fine_q_CC,
                                      CCVariable<T>& coarse_q_CC );
+  template<class T>
+  void fineToCoarseOperator(CCVariable<T>& q_CC,
+                            const bool,
+                            const VarLabel* varLabel,
+                            const int indx,
+                            DataWarehouse* new_dw,
+                            const Patch* coarsePatch,
+                            const Level* coarseLevel,
+                            const Level* fineLevel);
+                                     
+
 }  // end namespace Uintah
 
 #endif // Uintah_AMR_CoarsenRefine_h

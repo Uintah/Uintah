@@ -108,10 +108,15 @@ WARNING
     NCVariable(const NCVariable<T>&);
 
   private:
+    static TypeDescription* td;
+
     NCVariable<T>& operator=(const NCVariable<T>&);
 
     static Variable* maker();
   };
+  
+  template<class T>
+  TypeDescription* NCVariable<T>::td = 0;
 
   template<class T>
   TypeDescription::Register
@@ -121,7 +126,6 @@ WARNING
   const TypeDescription*
   NCVariable<T>::getTypeDescription()
   {
-    static TypeDescription* td;
     if(!td){
       td = scinew TypeDescription(TypeDescription::NCVariable,
                                   "NCVariable", &maker,

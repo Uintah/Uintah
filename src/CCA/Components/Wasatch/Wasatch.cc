@@ -133,6 +133,34 @@ namespace Wasatch{
     }
   }
 
+  //--------------------------------------------------------------------  
+  
+  void force_expressions_on_graph( Uintah::ProblemSpecP forceOnGraphParams,
+                                   GraphCategories& gc, 
+                                   const std::string taskListName ) {
+    for( Uintah::ProblemSpecP exprParams = forceOnGraphParams->findBlock("AnyExpression");
+        exprParams != 0;
+        exprParams = exprParams->findNextBlock("AnyExpression") ){
+      
+      const Expr::Tag anyExpressionTag = parse_nametag( exprParams->findBlock("NameTag") );
+      
+      Category cat = INITIALIZATION;
+      if     ( taskListName == "initialization"   )   cat = INITIALIZATION;
+      else if( taskListName == "timestep_size"    )   cat = TIMESTEP_SELECTION;
+      else if( taskListName == "advance_solution" )   cat = ADVANCE_SOLUTION;
+      else{
+        std::ostringstream msg;
+        msg << "ERROR: unsupported task list '" << taskListName << "'" << endl
+        << __FILE__ << " : " << __LINE__ << endl;
+      }
+      
+      GraphHelper* const graphHelper = gc[cat];
+
+      const Expr::ExpressionID anyExpressionID = graphHelper->exprFactory->get_id(anyExpressionTag);
+      graphHelper->rootIDs.insert( anyExpressionID );
+    }    
+  }
+  
   //--------------------------------------------------------------------
 
   void Wasatch::problemSetup( const Uintah::ProblemSpecP& params,
@@ -248,7 +276,7 @@ namespace Wasatch{
       if( !isConstDensity || existSrcTerm || momEqnParams) {
         if( !existDensity ) {
           std::ostringstream msg;
-          msg << "ERROR: For variable density cases or when we have source terms in transport equation or in momentum equation, the density expression tag" << endl
+          msg << "ERROR: For variable density cases or when source terms exist in transport equations (scalar, momentum, etc...), the density expression tag" << endl
               << "       must be provided in the <Density> block" << endl;
           throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
         }
@@ -333,7 +361,21 @@ namespace Wasatch{
       timeStepper_ = scinew TimeStepper( sharedState_->get_delt_label(),
                                          *graphCategories_[ ADVANCE_SOLUTION ] );
     }
-  }
+    
+    
+    //
+    // force additional expressions on the graph
+    //
+    std::cout << "forcing things on graph \n";
+    for( Uintah::ProblemSpecP forceOnGraphParams=wasatchParams->findBlock("ForceOnGraph");
+        forceOnGraphParams != 0;
+        forceOnGraphParams=forceOnGraphParams->findNextBlock("ForceOnGraph") ){
+      std::string taskListName;
+      forceOnGraphParams->getAttribute("tasklist", taskListName);
+      force_expressions_on_graph(forceOnGraphParams, graphCategories_, taskListName);
+    } 
+    
+}
 
   //--------------------------------------------------------------------
 

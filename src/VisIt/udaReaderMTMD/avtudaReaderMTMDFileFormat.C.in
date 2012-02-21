@@ -88,7 +88,7 @@ using std::string;
 //#  define SERIALIZED_READS
 //#endif
 
-
+const double NAN_REPLACE_VAL=1.0E9;
 
 // ****************************************************************************
 //  Method: avtudaReaderMTMDFileFormat constructor
@@ -1214,20 +1214,7 @@ avtudaReaderMTMDFileFormat::GetVar(int timestate, int domain, const char *varnam
 
     int n = (qhigh[0]-qlow[0])*(qhigh[1]-qlow[1])*(qhigh[2]-qlow[2]);
 
-    // replace nan's with a large negative number
-    for (int i=0; i<n*gd->components; i++) 
-    {
-      bool haveWarned=false;
-      if (std::isnan(gd->data[i]))
-      {
-        gd->data[i] = -1e16;
-        if (!haveWarned)
-        {
-          avtCallback::IssueWarning("NaNs exist in this file. They have been replaced by the value -1e16.");
-          haveWarned=true;
-        }
-      }
-    }
+    CheckNaNs(n*gd->components,gd->data,level,local_patch);
 
     rv->SetNumberOfComponents(gd->components);
     rv->SetArray(gd->data, n*gd->components, 0);
@@ -1281,20 +1268,7 @@ avtudaReaderMTMDFileFormat::GetVar(int timestate, int domain, const char *varnam
     pd = (*getParticleData)(archive, grid, level, local_patch, varName, matlNo, timestate);
 #endif
 
-    // replace nan's with a large negative number
-    for (int i=0; i<pd->num*pd->components; i++) 
-    {
-      bool haveWarned=false;
-      if (std::isnan(pd->data[i]))
-      {
-        pd->data[i] = -1e16;
-        if (!haveWarned)
-        {
-          avtCallback::IssueWarning("NaNs exist in this file. They have been replaced by the value -1e16.");
-          haveWarned=true;
-        }
-      }
-    }
+    CheckNaNs(pd->num*pd->components,pd->data,level,local_patch);
 
     rv->SetNumberOfComponents(pd->components);
     rv->SetArray(pd->data, pd->num*pd->components, 0);
@@ -1366,4 +1340,62 @@ avtudaReaderMTMDFileFormat::GetAuxiliaryData(const char *var, int dom,
                                              DestructorFunction &df)
 {
   return NULL;
+}
+
+// ****************************************************************************
+//  Method: avtudaReaderMTMDFileFormat::CheckNaNs
+//
+//  Purpose:
+//      Check for and warn about NaN values in the file.
+//
+//  Arguments:
+//      num        data size
+//      data       data
+//      level      level that contains this patch
+//      patch      patch that contains these cells
+//
+//  Returns:    none
+//
+//  Programmer: cchriste
+//  Creation:   06.02.2012
+//
+//  Modifications:
+void
+avtudaReaderMTMDFileFormat::CheckNaNs(int num, double *data, int level, int patch)
+{
+  static int q=0;
+
+  // replace nan's with a large negative number
+  std::vector<int> nanCells;
+  for (int i=0; i<num; i++) 
+  {
+    if (std::isnan(data[i]))
+    {
+      data[i] = NAN_REPLACE_VAL;
+      nanCells.push_back(i);
+    }
+  }
+
+  if (!nanCells.empty())
+  {
+    std::stringstream sstr;
+    sstr << "NaNs exist in this file (patch "<<patch<<" of level "<<level
+         <<"). They have been replaced by the value "<< NAN_REPLACE_VAL<<".";
+    if (nanCells.size()>40)
+    {
+      sstr<<"\nFirst 20: ";
+      for (int i=0;i<nanCells.size() && i<20;i++)
+        sstr<<nanCells[i]<<",";
+      sstr<<"\nLast 20: ";
+      for (int i=nanCells.size()-21;i<nanCells.size();i++)
+        sstr<<nanCells[i]<<",";
+    }
+    else
+    {
+      for (int i=0;i<nanCells.size();i++)
+        sstr<<nanCells[i]<<(nanCells.size()!=(i+1)?",":".");
+    }
+    debug5<<"CheckNaNs: issuing warning..."<<endl;
+    avtCallback::IssueWarning(sstr.str().c_str());
+  }
 }

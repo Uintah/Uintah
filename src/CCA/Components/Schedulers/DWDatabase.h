@@ -247,11 +247,12 @@ DWDatabase<DomainType>::scrub(const VarLabel* label, int matlIndex, const Domain
   SCI_THROW(InternalError(msgstr.str(), __FILE__, __LINE__));
   }
 #endif
-  std::pair<typename varDBtype::const_iterator, typename varDBtype::const_iterator> ret = vars.equal_range(v);
-  for (typename varDBtype::const_iterator iter=ret.first; iter!=ret.second; ++iter){
-    delete iter->second.var;
+  std::pair<typename varDBtype::iterator, typename varDBtype::iterator> ret = vars.equal_range(v);
+  for (typename varDBtype::iterator iter=ret.first; iter!=ret.second; ++iter){
+    if (iter->second.var!=NULL) delete iter->second.var;
+    iter->second.var = NULL; //leave a hole in the map instead of erase, readonly to map
   }
-  vars.erase(v);
+  //vars.erase(v);
 
 }
 
@@ -271,7 +272,9 @@ DWDatabase<DomainType>::initializeScrubs(int dwid, const FastHashTable<ScrubItem
       ScrubItem* result = scrubcounts->lookup(&key);
       if(!result && !add){
         delete variter->second.var;
-        vars.erase(variter++);
+        //vars.erase(variter++);
+        //leave a hole in the map instead of erase, read only operation 
+        variter->second.var=NULL;  
       } else {
         if (result){
           if (add)
@@ -292,7 +295,11 @@ DWDatabase<DomainType>::initializeScrubs(int dwid, const FastHashTable<ScrubItem
 template<class DomainType>
 bool DWDatabase<DomainType>::exists(const VarLabel* label, int matlIndex, const DomainType* dom) const
 {
-  return vars.find(VarLabelMatl<DomainType>(label, matlIndex, getRealDomain(dom))) != vars.end();
+  VarLabelMatl<DomainType> v(label, matlIndex, getRealDomain(dom));
+  typename varDBtype::const_iterator iter = vars.find(v);
+  if (iter== vars.end()) return false;
+  if (iter->second.var==NULL) return false;
+  return true;
 }
 
 template<class DomainType>
