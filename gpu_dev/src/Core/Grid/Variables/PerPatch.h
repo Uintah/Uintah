@@ -100,10 +100,14 @@ WARNING
         ptr=(void*)&value;
       }
    private:
+      static TypeDescription* td;
       T value;
       // this function only exists to satisfy the TypeDescription, it will return null.
       static Variable* maker();
    };
+
+   template<class T>
+   TypeDescription* PerPatch<T>::td = 0;
    
    template<class T>
      Variable*
@@ -116,7 +120,6 @@ WARNING
       const TypeDescription*
       PerPatch<T>::getTypeDescription()
       {
-        static TypeDescription* td;
         if(!td){
           // this is a hack to get a non-null perpatch
           // var for some functions the perpatches are used in (i.e., task->computes).

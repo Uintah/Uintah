@@ -28,10 +28,8 @@ class QMOM : public Expr::Expression<FieldT>
   FieldTVec knownMoments_;
 
   const FieldT* superSaturation_;
-  
   const Expr::TagList knownMomentsTagList_;
   const Expr::Tag superSaturationTag_;
-  const bool hasSuperSaturation_;
   
   QMOM( const Expr::TagList knownMomentsTagList,
        const Expr::Tag superSaturationTag );
@@ -45,17 +43,17 @@ public:
              const Expr::Tag& superSaturationTag)
     : ExpressionBuilder(result),
       knownMomentsTagList_( knownMomentsTagList ),
-      superSaturationTag_ ( superSaturationTag  )
+      supersaturationt_ ( superSaturationTag  )
     {}
     ~Builder(){}
     Expr::ExpressionBase* build() const
     { 
-      return new QMOM<FieldT>( knownMomentsTagList_, superSaturationTag_ ); 
+      return new QMOM<FieldT>( knownMomentsTagList_, supersaturationt_ ); 
     }
 
   private:
     const Expr::TagList knownMomentsTagList_;
-    const Expr::Tag     superSaturationTag_;
+    const Expr::Tag     supersaturationt_;
   };
 
   ~QMOM();
@@ -81,8 +79,7 @@ QMOM( const Expr::TagList knownMomentsTaglist,
       const Expr::Tag     superSaturationTag )
   : Expr::Expression<FieldT>(),
     knownMomentsTagList_( knownMomentsTaglist ),
-    superSaturationTag_ ( superSaturationTag  ),
-    hasSuperSaturation_ ( superSaturationTag_ != Expr::Tag() )
+    superSaturationTag_ ( superSaturationTag  )
 {}
 
 //--------------------------------------------------------------------
@@ -98,9 +95,10 @@ QMOM<FieldT>::
 advertise_dependents( Expr::ExprDeps& exprDeps )
 {
   exprDeps.requires_expression( knownMomentsTagList_ );
-  if ( hasSuperSaturation_ ) exprDeps.requires_expression( superSaturationTag_ );
+  if ( superSaturationTag_ != Expr::Tag () ) {
+    exprDeps.requires_expression( superSaturationTag_ );
+  }
 }
-
 //--------------------------------------------------------------------
 
 template< typename FieldT >
@@ -115,8 +113,9 @@ bind_fields( const Expr::FieldManagerList& fml )
        ++iMomTag ){
     knownMoments_.push_back( &fm.field_ref(*iMomTag) );
   }
-  
-  if ( hasSuperSaturation_ ) superSaturation_ = &fm.field_ref( superSaturationTag_ );
+  if ( superSaturationTag_ != Expr::Tag () ) {
+    superSaturation_ = &fm.field_ref( superSaturationTag_ );
+  }
 }
 
 //--------------------------------------------------------------------
@@ -159,10 +158,12 @@ evaluate()
   const FieldT* sampleField = knownMoments_[0];
   typename FieldT::const_interior_iterator sampleIterator = sampleField->interior_begin();
   
-  // grab an iterator for the supersaturation ratio field
-  typename FieldT::const_interior_iterator supersatIter;
-  if ( hasSuperSaturation_ ) supersatIter = superSaturation_->interior_begin();
-  
+  // grab an iterator for the supersaturation ratio field, set to m_0 if blank
+  if ( superSaturationTag_ == Expr::Tag() ) {
+    superSaturation_ = knownMoments_[0];
+  }
+  typename FieldT::const_interior_iterator supersatIter = superSaturation_->interior_begin();
+
   double m0;
   //
   // create vector of iterators for the known moments and for the results
@@ -177,32 +178,31 @@ evaluate()
     resultsIterators.push_back(thisResultsIterator);
   }
   
-  
   //
   while (sampleIterator!=sampleField->interior_end()) {
     
     // check if we are in a region where supersaturation is nonzero
-    if (hasSuperSaturation_ && *supersatIter == 0) {
+    if ( (superSaturationTag_ != Expr::Tag() && *supersatIter < 1e-10) || (superSaturationTag_ != Expr::Tag() && *knownMomentsIterators[0] == 0) ) {
       // in case the supersaturation is zero, set the weights and abscissae to zero
       for (int i=0; i<abSize; i++) {
         int matLoc = 2*i;
         *resultsIterators[matLoc] = 0.0;     // weight
-        *resultsIterators[matLoc + 1] = 0.0; // abscissa
+        *resultsIterators[matLoc + 1] = 1.0; // abscissa
       }      
-      // increment iterators
-      ++supersatIter;
+      //increment iterators
       ++sampleIterator;
       for (int i=0; i<nMoments; i++) {
         knownMomentsIterators[i] += 1;
         resultsIterators[i] += 1;
-      }      
-      // continue
+      }  
+      ++supersatIter;
       continue;
     }
     
     // for every point, calculate the quadrature weights and abscissae
     // start by putting together the p matrix. this is documented in the wasatch
     // pdf documentation.
+ //   for ( int i=0; i<nMoments; i++) std::cout << "Moment[" << i <<"] = " << *knownMomentsIterators[i] << std::endl;
     for (int iRow=0; iRow<=nMoments-2; iRow += 2) {
       // get the the iRow moment for this point
       p[iRow][1] = *knownMomentsIterators[iRow];
@@ -249,7 +249,12 @@ evaluate()
         std::ostringstream errorMsg;
         errorMsg 	<< endl
                   << "ERROR: Negative number detected in constructing the b auxiliary matrix while processing the QMOM expression." << std::endl
-					        << "Value: b["<<jCol<<"] = "<<rhsB << std::endl;
+					        << "Value: b["<<jCol<<"] = "<<rhsB << std::endl
+        << "Value: M_0 " <<*knownMomentsIterators[0] << std::endl
+        << "Value: M_1 " <<*knownMomentsIterators[1] << std::endl
+        << "Value: M_2 " <<*knownMomentsIterators[2] << std::endl
+        << "Value: M_3 " <<*knownMomentsIterators[3] << std::endl;
+
         throw std::runtime_error( errorMsg.str() );
       }
       b[jCol] = -sqrt(rhsB);
@@ -312,7 +317,7 @@ evaluate()
     m0 = *knownMomentsIterators[0];
     for (int i=0; i<abSize; i++) {
       int matLoc = i*abSize;
-      weights[i] = jMatrix[matLoc]*jMatrix[matLoc]/m0;
+      weights[i] = jMatrix[matLoc]*jMatrix[matLoc]*m0;
     }
     for (int i=0; i<abSize; i++) {
       int matLoc = 2*i;
@@ -333,7 +338,6 @@ evaluate()
     
     //__________
     // increment iterators
-    if (hasSuperSaturation_) ++supersatIter;
     ++sampleIterator;
     for (int i=0; i<nMoments; i++) {
       knownMomentsIterators[i] += 1;

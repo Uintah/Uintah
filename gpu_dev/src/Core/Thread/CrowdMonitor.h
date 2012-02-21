@@ -94,6 +94,12 @@ WARNING
 	    // <b>CrowdMonitor</b>. Multiple threads may hold the
 	    // read-only lock simultaneously.
 	    void readLock();
+  
+      //////////
+	    // Try acquire the read-only lock associated with this
+	    // <b>CrowdMonitor</b>. Multiple threads may hold the
+	    // read-only lock simultaneously. Return true when success
+	    bool readTrylock();
     
 	    //////////
 	    // Release the read-only lock obtained from <i>readLock</i>.
@@ -108,6 +114,13 @@ WARNING
 	    // lock, and during the time that this lock is not held, no
 	    // threads may hold the read-only lock.
 	    void writeLock();
+
+	    //////////
+	    // Acquire the write lock associated with this
+	    // <b>CrowdMonitor</b>. Only one thread may hold the write
+	    // lock, and during the time that this lock is not held, no
+	    // threads may hold the read-only lock.Return true when success.
+	    bool writeTrylock();
 
 	    //////////
 	    // Release the write-only lock obtained from <i>writeLock</i>.

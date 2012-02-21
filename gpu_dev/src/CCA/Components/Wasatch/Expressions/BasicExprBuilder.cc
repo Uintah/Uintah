@@ -11,6 +11,14 @@
 #include <CCA/Components/Wasatch/Expressions/MMS/Functions.h>
 #include <CCA/Components/Wasatch/StringNames.h>
 
+#include <CCA/Components/Wasatch/Expressions/PBE/Precipitation/PrecipitationBulkDiffusionCoefficient.h>
+#include <CCA/Components/Wasatch/Expressions/PBE/Precipitation/PrecipitationMonosurfaceCoefficient.h>
+#include <CCA/Components/Wasatch/Expressions/PBE/Precipitation/PrecipitationClassicNucleationCoefficient.h>
+#include <CCA/Components/Wasatch/Expressions/PBE/Precipitation/PrecipitationRCritical.h>
+
+#include <CCA/Components/Wasatch/Expressions/VelocityMagnitude.h>
+#include <CCA/Components/Wasatch/Expressions/Vorticity.h>
+
 //-- ExprLib includes --//
 #include <expression/ExprLib.h>
 
@@ -100,6 +108,16 @@ namespace Wasatch{
       typedef typename SineTime<FieldT>::Builder Builder;
       builder = scinew Builder( tag, timeVarTag );
     }
+    
+    else if ( params->findBlock("ExprAlgebra") ) {
+      std::string algebraicOperation;
+      Uintah::ProblemSpecP valParams = params->findBlock("ExprAlgebra");
+      const Expr::Tag field1Tag = parse_nametag( valParams->findBlock("Field1")->findBlock("NameTag") );
+      const Expr::Tag field2Tag = parse_nametag( valParams->findBlock("Field2")->findBlock("NameTag") );
+      valParams->getAttribute("algebraicOperation",algebraicOperation);
+      typedef typename ExprAlgebra<FieldT>::Builder Builder;
+      builder = scinew Builder( tag, field1Tag, field2Tag, algebraicOperation );      
+    }    
 
     return builder;
   }
@@ -191,15 +209,149 @@ namespace Wasatch{
 
     return builder;
   }
+  //------------------------------------------------------------------
+  
+  template<typename FieldT>
+  Expr::ExpressionBuilder*
+  build_physics_coefficient_expr( Uintah::ProblemSpecP params )
+  {
+    const Expr::Tag tag = parse_nametag( params->findBlock("NameTag") );
+    Expr::ExpressionBuilder* builder = NULL;
+    std::string exprType;
+    Uintah::ProblemSpecP valParams = params->get("value",exprType);
+      
+    if (params->findBlock("PrecipitationBulkDiffusionCoefficient") ) {      
+      double coef, MolecularVolume, DiffusionCoefficient;     
+      Uintah::ProblemSpecP coefParams = params->findBlock("PrecipitationBulkDiffusionCoefficient");
+      coefParams -> getAttribute("Molec_Vol",MolecularVolume);
+      coefParams -> getAttribute("Diff_Coef",DiffusionCoefficient);
+      coef = MolecularVolume*DiffusionCoefficient;
+      bool hasOstwaldRipening = false;
+      if (coefParams->findBlock("OstwaldRipening") )
+        hasOstwaldRipening = true;
+      const Expr::Tag saturationTag = parse_nametag( coefParams->findBlock("Supersaturation")->findBlock("NameTag") );
+      const Expr::Tag eqTag  = parse_nametag( coefParams->findBlock("EquilibriumConcentration")->findBlock("NameTag") );
+      typedef typename PrecipitationBulkDiffusionCoefficient<FieldT>::Builder Builder;
+      builder = scinew Builder(tag, saturationTag, eqTag, coef, hasOstwaldRipening); 
+    }
+
+    else if (params->findBlock("PrecipitationMonosurfaceCoefficient") ) {      
+      double coef, expcoef, MolecularDiameter, DiffusionCoefficient, SurfaceEnergy , T;
+      const double K_B = 1.3806488e-23;
+      Uintah::ProblemSpecP coefParams = params->findBlock("PrecipitationMonosurfaceCoefficient");
+      coefParams -> getAttribute("Molec_D",MolecularDiameter);
+      coefParams -> getAttribute("Diff_Coef",DiffusionCoefficient);
+      coefParams -> getAttribute("Surf_Eng", SurfaceEnergy);
+      coefParams -> getAttribute("Temperature",T);
+      coef = DiffusionCoefficient * PI / MolecularDiameter / MolecularDiameter /MolecularDiameter;
+      expcoef = - SurfaceEnergy * SurfaceEnergy * MolecularDiameter * MolecularDiameter * PI / K_B / K_B / T / T;
+      const Expr::Tag saturationTag = parse_nametag( coefParams->findBlock("Supersaturation")->findBlock("NameTag") );
+      typedef typename PrecipitationMonosurfaceCoefficient<FieldT>::Builder Builder;
+      builder = scinew Builder(tag, saturationTag, coef, expcoef); 
+    } 
+
+    else if (params->findBlock("PrecipitationClassicNucleationCoefficient") ) {
+      double expcoef, SurfaceEnergy, MolecularVolume, T;
+      const double K_B = 1.3806488e-23;
+      const double N_A = 6.023e23;
+      Uintah::ProblemSpecP coefParams = params->findBlock("PrecipitationClassicNucleationCoefficient");
+      coefParams -> getAttribute("Molec_Vol",MolecularVolume);
+      coefParams -> getAttribute("Surf_Eng",SurfaceEnergy);
+      coefParams -> getAttribute("Temperature",T);
+      expcoef = -16 * PI / 3 * SurfaceEnergy * SurfaceEnergy * SurfaceEnergy / K_B / K_B / K_B / T / T / T * MolecularVolume * MolecularVolume / N_A / N_A;
+      const Expr::Tag saturationTag = parse_nametag( coefParams->findBlock("Supersaturation")->findBlock("NameTag") ); 
+      typedef typename PrecipitationClassicNucleationCoefficient<FieldT>::Builder Builder;
+      builder = scinew Builder(tag, saturationTag, expcoef);
+    }
+
+    else if (params->findBlock("PrecipitationSimpleRStarValue") ) {
+      double RKnot, coef, CFCoef;
+      Uintah::ProblemSpecP coefParams = params->findBlock("PrecipitationSimpleRStarValue");
+      coefParams -> getAttribute("R0", RKnot);
+      coefParams -> getAttribute("Conversion_Fac", CFCoef);
+      coef = RKnot*CFCoef;
+      const Expr::Tag saturationTag = parse_nametag( coefParams->findBlock("Supersaturation")->findBlock("NameTag") ); 
+      typedef typename PrecipitationRCritical<FieldT>::Builder Builder;
+      builder = scinew Builder(tag, saturationTag, coef);
+    }
+
+    else if (params->findBlock("PrecipitationClassicRStarValue") ) {
+      double SurfaceEnergy, MolecularVolume, T, CFCoef, coef;
+      const double R = 8.314;
+      Uintah::ProblemSpecP coefParams = params->findBlock("PrecipitationClassicRStarValue");
+      coefParams -> getAttribute("Surf_Eng", SurfaceEnergy);
+      coefParams -> getAttribute("Conversion_Fac", CFCoef);
+      coefParams -> getAttribute("Temperature", T);
+      coefParams -> getAttribute("Molec_Vol",MolecularVolume);
+      coef = 2.0*SurfaceEnergy*MolecularVolume/R/T*CFCoef;
+      const Expr::Tag saturationTag = parse_nametag( coefParams->findBlock("Supersaturation")->findBlock("NameTag") ); 
+      typedef typename PrecipitationRCritical<FieldT>::Builder Builder;
+      builder = scinew Builder(tag, saturationTag, coef);
+      //Note: both RStars are same basic form, same builder, but different coefficient parse
+    }
+    return builder;
+  }
 
   //------------------------------------------------------------------
-
+  
+  template<typename FieldT>
+  Expr::ExpressionBuilder*
+  build_post_processing_expr( Uintah::ProblemSpecP params )
+  {
+    const Expr::Tag tag = parse_nametag( params->findBlock("NameTag") );
+    
+    Expr::ExpressionBuilder* builder = NULL;
+    if( params->findBlock("VelocityMagnitude") ){
+      Uintah::ProblemSpecP valParams = params->findBlock("VelocityMagnitude");
+      Expr::Tag xVelTag = Expr::Tag();
+      if (valParams->findBlock("XVelocity")) 
+        xVelTag = parse_nametag( valParams->findBlock("XVelocity")->findBlock("NameTag") );
+      Expr::Tag yVelTag = Expr::Tag();
+      if (valParams->findBlock("YVelocity")) 
+        yVelTag = parse_nametag( valParams->findBlock("YVelocity")->findBlock("NameTag") );
+      Expr::Tag zVelTag = Expr::Tag();
+      if (valParams->findBlock("ZVelocity")) 
+        Expr::Tag zVelTag = parse_nametag( valParams->findBlock("ZVelocity")->findBlock("NameTag") );
+      typedef typename VelocityMagnitude<SVolField, XVolField, YVolField, ZVolField>::Builder Builder;
+      builder = scinew Builder(tag, xVelTag, yVelTag, zVelTag);
+    } 
+    
+    else if( params->findBlock("Vorticity") ){
+      Uintah::ProblemSpecP valParams = params->findBlock("Vorticity");
+      std::string vorticityComponent;
+      valParams->require("Component",vorticityComponent);
+      
+      Expr::Tag vel1Tag = Expr::Tag();
+      if (valParams->findBlock("Vel1")) 
+        vel1Tag = parse_nametag( valParams->findBlock("Vel1")->findBlock("NameTag") );
+      Expr::Tag vel2Tag = Expr::Tag();
+      if (valParams->findBlock("Vel2")) 
+        vel2Tag = parse_nametag( valParams->findBlock("Vel2")->findBlock("NameTag") );
+      if (vorticityComponent == "X") {
+        typedef typename Vorticity<SVolField, ZVolField, YVolField>::Builder Builder;
+        builder = scinew Builder(tag, vel1Tag, vel2Tag);
+      } else if (vorticityComponent == "Y") {
+        typedef typename Vorticity<SVolField, XVolField, ZVolField>::Builder Builder;
+        builder = scinew Builder(tag, vel1Tag, vel2Tag);
+      } else if (vorticityComponent == "Z") {
+        typedef typename Vorticity<SVolField, YVolField, XVolField>::Builder Builder;
+        builder = scinew Builder(tag, vel1Tag, vel2Tag);
+      }
+    }    
+    
+    return builder;
+  }
+  
+  //------------------------------------------------------------------
+  
   void
   create_expressions_from_input( Uintah::ProblemSpecP parser,
                                  GraphCategories& gc )
   {
     Expr::ExpressionBuilder* builder = NULL;
 
+    //___________________________________
+    // parse and build basid expressions
     for( Uintah::ProblemSpecP exprParams = parser->findBlock("BasicExpression");
          exprParams != 0;
          exprParams = exprParams->findNextBlock("BasicExpression") ){
@@ -233,7 +385,8 @@ namespace Wasatch{
       graphHelper->exprFactory->register_expression( builder );
     }
 
-
+    //________________________________________
+    // parse and build Taylor-Green Vortex MMS
     for( Uintah::ProblemSpecP exprParams = parser->findBlock("TaylorVortexMMS");
          exprParams != 0;
          exprParams = exprParams->findNextBlock("TaylorVortexMMS") ){
@@ -271,6 +424,78 @@ namespace Wasatch{
       GraphHelper* const graphHelper = gc[cat];
       graphHelper->exprFactory->register_expression( builder );
     }
+    
+    //___________________________________________________
+    // parse and build physical coefficients expressions    
+    for( Uintah::ProblemSpecP exprParams = parser->findBlock("PhysicsCoefficient");
+        exprParams != 0;
+        exprParams = exprParams->findNextBlock("PhysicsCoefficient") ){
+      
+      std::string fieldType, taskListName;
+      exprParams->getAttribute("type",fieldType);
+      exprParams->require("TaskList",taskListName);
+      
+      switch( get_field_type(fieldType) ){
+        case SVOL : builder = build_physics_coefficient_expr< SVolField >( exprParams );  break;
+        case XVOL : builder = build_physics_coefficient_expr< XVolField >( exprParams );  break;
+        case YVOL : builder = build_physics_coefficient_expr< YVolField >( exprParams );  break;
+        case ZVOL : builder = build_physics_coefficient_expr< ZVolField >( exprParams );  break;
+        default:
+          std::ostringstream msg;
+          msg << "ERROR: unsupported field type '" << fieldType << "'" << endl
+          << __FILE__ << " : " << __LINE__ << endl;
+      }
+      
+      Category cat = INITIALIZATION;
+      if     ( taskListName == "initialization"   )   cat = INITIALIZATION;
+      else if( taskListName == "timestep_size"    )   cat = TIMESTEP_SELECTION;
+      else if( taskListName == "advance_solution" )   cat = ADVANCE_SOLUTION;
+      else{
+        std::ostringstream msg;
+        msg << "ERROR: unsupported task list '" << taskListName << "'" << endl
+        << __FILE__ << " : " << __LINE__ << endl;
+      }
+      
+      GraphHelper* const graphHelper = gc[cat];
+      graphHelper->exprFactory->register_expression( builder );
+    }
+    
+    //___________________________________________________
+    // parse and build post-processing expressions    
+    std::cout << "Looking for post processing expressions\n";
+    for( Uintah::ProblemSpecP exprParams = parser->findBlock("PostProcessingExpression");
+        exprParams != 0;
+        exprParams = exprParams->findNextBlock("PostProcessingExpression") ){
+      
+      std::string fieldType, taskListName;
+      exprParams->getAttribute("type",fieldType);
+      exprParams->require("TaskList",taskListName);
+      
+      switch( get_field_type(fieldType) ){
+        case SVOL : builder = build_post_processing_expr< SVolField >( exprParams );  break;
+        case XVOL : builder = build_post_processing_expr< XVolField >( exprParams );  break;
+        case YVOL : builder = build_post_processing_expr< YVolField >( exprParams );  break;
+        case ZVOL : builder = build_post_processing_expr< ZVolField >( exprParams );  break;
+        default:
+          std::ostringstream msg;
+          msg << "ERROR: unsupported field type '" << fieldType << "'" << endl
+          << __FILE__ << " : " << __LINE__ << endl;
+      }
+      
+      Category cat = INITIALIZATION;
+      if     ( taskListName == "initialization"   )   cat = INITIALIZATION;
+      else if( taskListName == "timestep_size"    )   cat = TIMESTEP_SELECTION;
+      else if( taskListName == "advance_solution" )   cat = ADVANCE_SOLUTION;
+      else{
+        std::ostringstream msg;
+        msg << "ERROR: unsupported task list '" << taskListName << "'" << endl
+        << __FILE__ << " : " << __LINE__ << endl;
+      }
+      
+      GraphHelper* const graphHelper = gc[cat];
+      graphHelper->exprFactory->register_expression( builder );
+    }
+    
   }
 
   //------------------------------------------------------------------

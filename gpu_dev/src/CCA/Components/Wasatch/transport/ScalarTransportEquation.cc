@@ -403,7 +403,7 @@ namespace Wasatch{
 
       if (isStrong_ && !existPrimVar) {
         std::ostringstream msg;
-        msg << "ERROR: When you are solving a transport equation with constant density in its strong form, you need to specify your primitive variable and solution variable separately separately. Please include the \"PrimitiveVariable\" block in your input file in the \"TransportEquation\" block." << endl;
+        msg << "ERROR: When you are solving a transport equation with constant density in its strong form, you need to specify your primitive and solution variables separately. Please include the \"PrimitiveVariable\" block in your input file in the \"TransportEquation\" block." << endl;
         throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
       }
       else if (isStrong_ && existPrimVar ) {
@@ -412,7 +412,7 @@ namespace Wasatch{
       }
       else if (!isStrong_ && existPrimVar ) {
         std::ostringstream msg;
-        msg << "ERROR: For solving the transport equations in weak form the primitive variable will be the same as the solution variable. So, you don't need to specify it. Please remove the \"PrimitiveVariable\" block from the \"TransportEquation\" block in your input file." << endl;
+        msg << "ERROR: For solving the transport equations in weak form, the primitive variable will be the same as the solution variable. So, you don't need to specify it. Please remove the \"PrimitiveVariable\" block from the \"TransportEquation\" block in your input file." << endl;
         throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
       }
       else {

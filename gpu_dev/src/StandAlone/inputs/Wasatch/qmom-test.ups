@@ -58,35 +58,14 @@
     <MomentTransportEquation>
         <PopulationName>CACO3</PopulationName>
         <NumberOfEnvironments>2</NumberOfEnvironments>
-        <!--GrowthExpression>
-            <GrowthModel>BULK_DIFFUSION</GrowthModel>
-            <ConstantGrowthCoefficient>1.0</ConstantGrowthCoefficient>
-        </GrowthExpression-->
         
         <GrowthExpression>
             <GrowthModel>MONOSURFACE</GrowthModel>
-            <ConstantGrowthCoefficient>1.0</ConstantGrowthCoefficient>
+            <PreGrowthCoefficient>1.0</PreGrowthCoefficient>
         </GrowthExpression>
-        
-        
-      <!--DiffusiveFluxExpression>
-        <Direction>X</Direction>
-        <ConstantDiffusivity>0.1</ConstantDiffusivity>
-      </DiffusiveFluxExpression>
-
-      <DiffusiveFluxExpression>
-        <Direction>Y</Direction>
-        <ConstantDiffusivity>0.2</ConstantDiffusivity>
-      </DiffusiveFluxExpression>
-
-      <DiffusiveFluxExpression>
-        <Direction>Z</Direction>
-        <ConstantDiffusivity>0.3</ConstantDiffusivity>
-      </DiffusiveFluxExpression -->
 
     </MomentTransportEquation>
   </Wasatch>
-
 
   <Time>
     <maxTime>0.001</maxTime>
@@ -95,7 +74,6 @@
     <delt_max>0.00001</delt_max>
     <timestep_multiplier>1.0</timestep_multiplier>
   </Time>
-
 
   <DataArchiver>
     <filebase>qmom-test.uda</filebase>

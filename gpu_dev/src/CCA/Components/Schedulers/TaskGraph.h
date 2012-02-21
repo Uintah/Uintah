@@ -176,6 +176,10 @@ WARNING
      /// sets the iteration of the current taskgraph in a multi-TG environment
      /// starting with 0
      void setIteration(int iter) {currentIteration = iter;}
+
+     int getNumTaskPhases(){
+         return numTaskPhases;
+     }
      
      std::vector<Task*>& getTasks() {
        return d_tasks;
@@ -263,6 +267,9 @@ WARNING
 
      // how many times this taskgraph has executed this timestep
      int currentIteration;
+     
+     // how many task phases this taskgraph has
+     int numTaskPhases;
 
      typedef std::map<const VarLabel*, DetailedTask*, VarLabel::Compare>
      DetailedReductionTasksMap;

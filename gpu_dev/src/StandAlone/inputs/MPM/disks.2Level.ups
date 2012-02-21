@@ -29,7 +29,7 @@
        <save label = "p.color" levels = "-1"/>
        <save label = "p.stress" levels = "-1"/>
        <save label = "g.mass" levels = "-1"/>
-       <outputDoubleAsFloat/>
+       <save label = "g.stressFS" levels = "-1"/>
 
        <checkpoint cycle = "2" interval = "0.01"/>
    </DataArchiver>
@@ -47,14 +47,14 @@
       </MPM>
       <Regridder type="Tiled">
         <max_levels>2</max_levels>
-        <cell_refinement_ratio>    [[4,4,1]]         </cell_refinement_ratio>
+        <cell_refinement_ratio>    [[2,2,1]]         </cell_refinement_ratio>
         <min_patch_size>           [[8,8,1]]         </min_patch_size>
         <cell_stability_dilation>   [1,1,0]          </cell_stability_dilation>  
         <min_boundary_cells>       [1,1,0]           </min_boundary_cells>
 <!--
         <max_timestep_interval>      100              </max_timestep_interval>
--->
         <min_timestep_interval>      2              </min_timestep_interval>
+-->
       </Regridder>
       <useLockStep>       true  </useLockStep>
     </AMR>
@@ -80,7 +80,7 @@
                      <top>[.25,.25,.1]</top>
                      <radius> .2 </radius>
                   </cylinder>
-                  <res>[2,2,1]</res>
+                  <res>[2,2,2]</res>
                   <velocity>[2.0,2.0,0]</velocity>
                   <temperature>12</temperature>
                   <color>             0               </color>
@@ -98,14 +98,14 @@
                      <max>[ 0.775, 0.775, 0.10 ]</max>
                   </box>
                 </difference>
-                <res>[2,2,1]</res>
+                <res>[2,2,2]</res>
                 <velocity>[-2.0,-2.0,0]</velocity>
                 <temperature>12</temperature>
                 <color>             0               </color>
                </geom_object>
               <geom_object>
                 <box label="gp3"/>
-                <res>[2,2,1]</res>
+                <res>[2,2,2]</res>
                 <velocity>[-2.0,-2.0,0]</velocity>
                 <temperature>12</temperature>
                 <color>             1               </color>
@@ -153,11 +153,28 @@
               <lower>[0,0,0.05]</lower>
               <upper>[1.0,1.0,.1]</upper>
               <resolution>[20,20,1]</resolution>
-              <patches>[4,4,1]</patches>
+              <patches>[1,1,1]</patches>
               <extraCells> [1,1,1]            </extraCells>
            </Box>
        </Level>
     </Grid>
+    <!--____________________________________________________________________-->
+    <DataAnalysis>
+       <Module name="particleExtract">
 
+        <material>disks</material>
+        <samplingFrequency> 1e10 </samplingFrequency>
+        <timeStart>          0   </timeStart>
+        <timeStop>          100  </timeStop>
+        <colorThreshold>
+          0
+        </colorThreshold>
+
+        <Variables>
+          <analyze label="p.velocity"/>
+          <analyze label="p.stress"/>
+        </Variables>
+
+      </Module>
+    </DataAnalysis>
 </Uintah_specification>
-

@@ -6,8 +6,11 @@
     <TimeIntegrator     spec="OPTIONAL STRING 'RK3SSP, FE'" />
 
     <BasicExpression		spec="MULTIPLE" />
-    <!-- ========================================= -->
+    
+    <PhysicsCoefficient     spec="MULTIPLE" />
 
+    <PostProcessingExpression		spec="MULTIPLE" />
+    <!-- ========================================= -->
     <!-- Spec for Taylor Vortex MMS types -->
     <TaylorVortexMMS			spec="MULTIPLE NO_DATA"
                           attribute1="type REQUIRED STRING 'SVOL,XVOL,YVOL,ZVOL"
@@ -277,60 +280,57 @@
       <!-- Specify a staggered direction for this scalar. If the scalar is non-staggered, this block is not needed -->                          
       <StaggeredDirection  spec="OPTIONAL STRING 'X,Y,Z'"/>
       
-      <!-- Specify supersaturation ratio -->
-      <SuperSaturationExpression spec="OPTIONAL NO_DATA">
-        <NameTag            spec="REQUIRED" />
-      </SuperSaturationExpression>
-
-      <!-- Specify molecular volume to use in calculations -->
-      <MolecVolume spec="OPTIONAL DOUBLE"/>
+      <SupersaturationExpression spec = "OPTIONAL NO_DATA">
+        <NameTag spec="REQUIRED" />
+      </SupersaturationExpression>
       
-      <!-- Specify surface engery to use in calculations -->
-      <SurfaceEnergy spec="OPTIONAL DOUBLE"/>
-      
-      <!-- Boolean determines physical or validation eqns for QMOM-->
-      <PhysicsOn spec="OPTIONAL BOOLEAN"/>
-                  
       <!-- ================================================================================== -->            
       <!-- GROWTH EXPRESSION -->
-      <GrowthExpression	spec="MULTIPLE NO_DATA"
-                             children1="ONE_OF(CHILD ConstantGrowthCoefficient, GrowthCoefficient, NameTag)">
-        <GrowthModel     spec="REQUIRED STRING 'CONSTANT, MONOSURFACE, BULK_DIFFUSION'"/>
+      <!-- of the form G = alpha * g0 * g(r)-->
+      <GrowthExpression	spec="MULTIPLE NO_DATA">
+                            
+        <GrowthModel     spec="REQUIRED STRING 'CONSTANT, MONOSURFACE, BULK_DIFFUSION'"/> <!-- dictates g(r) -->
 
-        <!-- specify a constant growth coefficient -->        
-        <ConstantGrowthCoefficient    spec="OPTIONAL DOUBLE" />
+        <PreGrowthCoefficient spec="OPTIONAL DOUBLE" />  <!-- will default to 1 if not specified, dictates alpha -->
 
-        <!-- specify an expression for the growth coefficient -->        
-        <GrowthCoefficient   spec="OPTIONAL NO_DATA">
+        <!-- specify an expression for the growth coefficient if non is specified growth rate = constant-->        
+        <GrowthCoefficientExpression   spec="OPTIONAL NO_DATA">  <!-- dictates g0 form -->
           <NameTag		spec="REQUIRED" />
-        </GrowthCoefficient>
+        </GrowthCoefficientExpression> 
         
-        <!-- specify an expression for the growthrate -->
-        <NameTag		spec="OPTIONAL" />
+        <OstwaldRipening spec = "OPTIONAL NO_DATA" >  <!-- this calculates \bar{S} and creates a new term -->
+          <MolecularVolume  spec="REQUIRED DOUBLE" />
+          <SurfaceEnergy    spec="REQUIRED DOUBLE" />
+          <Temperature      spec="REQUIRED DOUBLE" />
+          <ConversionFactor spec="OPTIONAL DOUBLE" /> <!-- defaults to 1.0 -->
+          <RCutoff          spec="OPTIONAL DOUBLE" /> <!-- defaults to 0.1 -->
+        </OstwaldRipening>
+
       </GrowthExpression>
       
       <!-- ================================================================================== -->            
       <!-- BIRTH EXPRESSION -->
-      <BirthExpression spec="MULTIPLE NO_DATA"
-                             children1="ONE_OF(CHILD ConstantBirthRate, BirthRate, NameTag)">
-        <BirthModel spec="REQUIRED STRING 'POINT, UNIFORM, NORMAL'"/>
+      <!-- of the form B = J * B0 * b(rstar) -->
+      <BirthExpression spec="MULTIPLE NO_DATA" children1="ONE_OF(CHILD ConstantRStar, RStarExpression)">  <!-- note fix xml reqmts -->
+        <BirthModel spec="REQUIRED STRING 'POINT, UNIFORM, NORMAL'"/> <!-- dictates b(rstar) -->
         
-        <!-- specify constant birth rate -->
-        <ConstantBirthRate spec="OPTIONAL DOUBLE" />
+        <!-- specify birth coefficient defualt to 1 if not set, dictaes J-->
+        <PreBirthCoefficient spec="OPTIONAL DOUBLE" />
         
-        <!-- specify an expression for the birth rate -->
-        <BirthRate spec="OPTIONAL NO_DATA">
+        <!-- specify an expression for the birth rate, B0 -->
+        <BirthCoefficientExpression spec="OPTIONAL NO_DATA">
           <NameTag spec="REQUIRED"/>
-        </BirthRate>
+        </BirthCoefficientExpression>
         
-        <!-- specify an expression for the birth term -->
-        <NameTag spec="OPTIONAL"/>
+        <ConstantRStar spec="OPTIONAL DOUBLE"/>
+        
+        <RStarExpression spec="OPTIONAL NO_DATA">
+          <NameTag spec="REQUIRED"/>
+        </RStarExpression>  
         
         <StandardDeviation spec="OPTIONAL DOUBLE" />  <!-- Required for normal or uniform, std dev of norm, 1/2 width for uniform -->
-        <MaxCutoff spec="OPTIONAL DOUBLE" />  <!-- Required for normal, dictates intergral maximum -->
-        <MinCutoff spec="OPTIONAL DOUBLE" />  <!-- Required for normal, dictates intergral minimum -->
       </BirthExpression>      
-                        
+    
       <!-- ================================================================================== -->            
       <!-- CONVECTIVE FLUX -->
       <ConvectiveFluxExpression	spec="MULTIPLE NO_DATA">
@@ -373,6 +373,12 @@
 
     </MomentTransportEquation>
 
+    <ForceOnGraph	      spec="MULTIPLE NO_DATA"
+                    attribute1="tasklist REQUIRED STRING 'initialization,advance_solution">
+      <AnyExpression       spec="MULTIPLE NO_DATA">
+        <NameTag			spec="REQUIRED" />
+      </AnyExpression>        
+    </ForceOnGraph>
 
   </Wasatch>
 

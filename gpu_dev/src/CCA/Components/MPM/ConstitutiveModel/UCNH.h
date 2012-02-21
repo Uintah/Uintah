@@ -91,9 +91,6 @@ namespace Uintah {
       double Alpha;
     };
       
-    const VarLabel* bElBarLabel;
-    const VarLabel* bElBarLabel_preReloc;
-
     struct YieldDistribution {
       std::string dist;
       double range;
@@ -112,6 +109,7 @@ namespace Uintah {
       std::string scaling; /* Volume scaling method: "none" or "kayenta" */
       std::string dist;    /* Failure distro: "constant", "gauss" or "weibull"*/
       int seed;            /* seed for random number distribution generator */
+      double t_char;       /* characteristic time for damage to occur */
     };
 
     //Create datatype for brittle damage
@@ -125,17 +123,19 @@ namespace Uintah {
       bool printDamage;    /* Flag to print damage */
     };
 
+    const VarLabel* bElBarLabel;
+    const VarLabel* bElBarLabel_preReloc;
     const VarLabel* pFailureStressOrStrainLabel;
     const VarLabel* pLocalizedLabel;
     const VarLabel* pDamageLabel;
     const VarLabel* pDeformRateLabel;
+    const VarLabel* pTimeOfLocLabel;
     const VarLabel* pFailureStressOrStrainLabel_preReloc;
     const VarLabel* pLocalizedLabel_preReloc;
     const VarLabel* pDamageLabel_preReloc;
     const VarLabel* pDeformRateLabel_preReloc;
-    const VarLabel* bBeBarLabel;
-    const VarLabel* bBeBarLabel_preReloc;
-      
+    const VarLabel* pTimeOfLocLabel_preReloc;
+
     // Plasticity Requirements //
     /////////////////////////////
     const VarLabel* pPlasticStrain_label;
@@ -178,9 +178,9 @@ namespace Uintah {
     // Initial stress state
     bool d_useInitialStress;
     double d_init_pressure;  // Initial pressure
-      
+
     // Model factories
-    bool d_useEOSFactory;
+    //bool d_useEOSFactory;
     MPMEquationOfState* d_eos;
 
   ///////////////
@@ -215,7 +215,8 @@ namespace Uintah {
     //////////////////////////////
     virtual void allocateCMDataAdd(DataWarehouse* new_dw,
                                    ParticleSubset* subset,
-                                   map<const VarLabel*, ParticleVariableBase*>* newState,
+                                   map<const VarLabel*,
+                                   ParticleVariableBase*>* newState,
                                    ParticleSubset* delset,
                                    DataWarehouse* old_dw);
     
@@ -346,8 +347,11 @@ namespace Uintah {
                                               const double& pFailureStrain, 
                                               const int& pLocalized,
                                               int& pLocalized_new, 
+                                              const double& pTimeOfLoc,
+                                              double& pTimeOfLoc_new, 
                                               Matrix3& pStress_new,
-                                              const long64 particleID);
+                                              const long64 particleID,
+                                              double time);
 
     // Modify the stress for brittle damage
     void updateDamageAndModifyStress(const Matrix3& FF, 
@@ -358,7 +362,6 @@ namespace Uintah {
                                      double& pDamage_new, 
                                      Matrix3& pStress_new,
                                      const long64 particleID);
-      
       
     /*! Compute tangent stiffness matrix */
     void computeTangentStiffnessMatrix(const Matrix3& sigDev, 
@@ -378,12 +381,7 @@ namespace Uintah {
                                 const double& vol_old,
                                 const double& vol_new,
                                 double Kmatrix[24][24]);
-      
-
   };
 } // End namespace Uintah
-      
-
 
 #endif  // __UNIFIED_NEOHOOK_CONSTITUTIVE_MODEL_H__ 
-

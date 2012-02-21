@@ -105,6 +105,23 @@ CrowdMonitor::readLock()
   Thread::couldBlockDone(oldstate);
 }
 
+bool
+CrowdMonitor::readTrylock()
+{
+  int oldstate=Thread::couldBlock(name_);
+  priv_->lock.lock();
+  if (priv_->num_writers > 0){
+    priv_->lock.unlock();
+    Thread::couldBlockDone(oldstate);
+    return false;
+  } else { 
+    priv_->num_readers++;
+    priv_->lock.unlock();
+    Thread::couldBlockDone(oldstate);
+    return true;
+  }
+}
+
 void
 CrowdMonitor::readUnlock()
 {
@@ -131,7 +148,24 @@ CrowdMonitor::writeLock()
   priv_->num_writers++;
   priv_->lock.unlock();
   Thread::couldBlockDone(oldstate);
-} // End namespace SCIRun
+} 
+
+bool
+CrowdMonitor::writeTrylock()
+{
+  int oldstate=Thread::couldBlock(name_);
+  priv_->lock.lock();
+  if (priv_->num_writers || priv_->num_readers){
+    priv_->lock.lock();
+    Thread::couldBlockDone(oldstate);
+    return false;
+  } else {
+    priv_->num_writers++;
+    priv_->lock.unlock();
+    Thread::couldBlockDone(oldstate);
+    return true;
+  }
+}
 
 void
 CrowdMonitor::writeUnlock()

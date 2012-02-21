@@ -109,10 +109,15 @@ WARNING
     SFCYVariable(const SFCYVariable<T>&);
 
   private:
+    static TypeDescription* td;
+    
     SFCYVariable<T>& operator=(const SFCYVariable<T>&);
 
     static Variable* maker();
   };
+
+  template<class T>
+  TypeDescription* SFCYVariable<T>::td = 0;
 
   template<class T>
   TypeDescription::Register
@@ -122,7 +127,6 @@ WARNING
   const TypeDescription*
   SFCYVariable<T>::getTypeDescription()
   {
-    static TypeDescription* td;
     if(!td){
       td = scinew TypeDescription(TypeDescription::SFCYVariable,
                                   "SFCYVariable", &maker,

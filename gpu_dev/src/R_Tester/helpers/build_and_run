@@ -49,6 +49,10 @@ if [ ! -d TestScripts ]; then
   ln -s ../src/R_Tester TestScripts
 fi
 
+if [ ! -d tools ]; then
+  ln -s ${SRCTOP}/tools tools
+fi
+
 if [ ! -f replace_all_GS ]; then
   ln -s ../src/R_Tester/helpers/replace_all_GS replace_all_GS
 fi

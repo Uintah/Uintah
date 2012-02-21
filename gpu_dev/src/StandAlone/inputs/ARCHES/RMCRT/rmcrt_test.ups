@@ -30,7 +30,7 @@
     <save label="viscosityCTS"/>
     <save label="cellType"/>
     <save label="radiationVolqIN"/>
-    <save label="divQ"/>
+    <save label="radiationSRCIN"/>
     <checkpoint cycle="2" interval="0.01"/>
     <outputDoubleAsFloat/>
     <compression>gzip</compression>
@@ -134,7 +134,6 @@
 <!-- ray tracer -->
             <NoOfRays>100</NoOfRays>
             <Threshold>0.05</Threshold>
-            <Alpha>1</Alpha>
             <Slice>20</Slice>
             <StefanBoltzmann> 5.67051e-8 </StefanBoltzmann>
           </RMCRT>

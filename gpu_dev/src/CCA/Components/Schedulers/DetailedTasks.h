@@ -39,7 +39,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/Variables/PSPatchMatlGhostRange.h>
 #include <Core/Containers/FastHashTable.h>
 #include <Core/Thread/Mutex.h>
-#include <Core/Thread/Semaphore.h>
+#include <Core/Thread/CrowdMonitor.h>
 #include <Core/Thread/ConditionVariable.h>
 #include <list>
 #include <queue>
@@ -403,10 +403,10 @@ namespace Uintah {
     void emitEdges(ProblemSpecP edgesElement, int rank);
 
     DetailedTask* getNextInternalReadyTask();
-    int numInternalReadyTasks() { return readyTasks_.size(); }
+    int numInternalReadyTasks();
 
     DetailedTask* getNextExternalReadyTask();
-    int numExternalReadyTasks() { return mpiCompletedTasks_.size(); }
+    int numExternalReadyTasks();
 
     void createScrubCounts();
 
@@ -516,8 +516,10 @@ namespace Uintah {
 
     // for logging purposes - how much extra comm is going on
     int extraCommunication_;
-    Mutex readyQueueMutex_;
-    Semaphore readyQueueSemaphore_;
+    
+    mutable CrowdMonitor  readyQueueLock_;
+    mutable CrowdMonitor  mpiCompletedQueueLock_;
+    //Semaphore readyQueueSemaphore_;
 
     ScrubCountTable scrubCountTable_;
 

@@ -82,10 +82,10 @@ UCNH::UCNH(ProblemSpecP& ps, MPMFlags* Mflag)
                                 ParticleVariable<double>::getTypeDescription());
     pPlasticStrain_label_preReloc = VarLabel::create("p.plasticStrain+",
                                 ParticleVariable<double>::getTypeDescription());
-    pYieldStress_label          = VarLabel::create("p.yieldStress",
-                                  ParticleVariable<double>::getTypeDescription());
-    pYieldStress_label_preReloc = VarLabel::create("p.yieldStress+",
-                                  ParticleVariable<double>::getTypeDescription());
+    pYieldStress_label            = VarLabel::create("p.yieldStress",
+                                ParticleVariable<double>::getTypeDescription());
+    pYieldStress_label_preReloc   = VarLabel::create("p.yieldStress+",
+                                ParticleVariable<double>::getTypeDescription());
   } // End Plasticity
   
   // Damage
@@ -115,17 +115,14 @@ UCNH::UCNH(ProblemSpecP& ps, MPMFlags* Mflag)
     ps->getWithDefault("initial_pressure", d_init_pressure, 0.0);
   } 
 
-  // Equation of state factory for pressure
-  ps->getWithDefault("useEOSFactory", d_useEOSFactory, false);
-  if (d_useEOSFactory) {
-    d_eos = MPMEquationOfStateFactory::create(ps);
-    d_eos->setBulkModulus(d_initialData.Bulk);
-    if(!d_eos){
-      ostringstream desc;
-      desc << "An error occured in the MPM EquationOfStateFactory that has \n"
-           << " slipped through the existing bullet proofing. Please check and correct." << endl;
-      throw ParameterNotFound(desc.str(), __FILE__, __LINE__);
-    }
+  // Equation of state factory for pressure (default is DefaultHyperEOS)
+  d_eos = MPMEquationOfStateFactory::create(ps);
+  d_eos->setBulkModulus(d_initialData.Bulk);
+  if(!d_eos){
+    ostringstream desc;
+    desc << "An error occured in the MPM EquationOfStateFactory that has \n"
+         << " slipped through the existing bullet proofing. Please check and correct." << endl;
+    throw ParameterNotFound(desc.str(), __FILE__, __LINE__);
   }
 
   // Universal Labels
@@ -158,13 +155,13 @@ UCNH::UCNH(ProblemSpecP& ps, MPMFlags* Mflag, bool plas, bool dam)
     getYieldStressDistribution(ps);
 
     pPlasticStrain_label          = VarLabel::create("p.plasticStrain",
-                                                       ParticleVariable<double>::getTypeDescription());
+                               ParticleVariable<double>::getTypeDescription());
     pPlasticStrain_label_preReloc = VarLabel::create("p.plasticStrain+",
-                                                       ParticleVariable<double>::getTypeDescription());
-    pYieldStress_label          = VarLabel::create("p.yieldStress",
-                                  ParticleVariable<double>::getTypeDescription());
-    pYieldStress_label_preReloc = VarLabel::create("p.yieldStress+",
-                                  ParticleVariable<double>::getTypeDescription());
+                               ParticleVariable<double>::getTypeDescription());
+    pYieldStress_label            = VarLabel::create("p.yieldStress",
+                               ParticleVariable<double>::getTypeDescription());
+    pYieldStress_label_preReloc   = VarLabel::create("p.yieldStress+",
+                               ParticleVariable<double>::getTypeDescription());
   } // End Plasticity
   
   // Damage
@@ -181,7 +178,7 @@ UCNH::UCNH(ProblemSpecP& ps, MPMFlags* Mflag, bool plas, bool dam)
       // Get the failure stress/strain data
       getFailureStressOrStrainData(ps);
 
-    setErosionAlgorithm();
+      setErosionAlgorithm();
     }
     
     // Set the erosion algorithm
@@ -198,16 +195,13 @@ UCNH::UCNH(ProblemSpecP& ps, MPMFlags* Mflag, bool plas, bool dam)
   } 
 
   // Equation of state factory for pressure
-  ps->getWithDefault("useEOSFactory", d_useEOSFactory, false);
-  if (d_useEOSFactory) {
-    d_eos = MPMEquationOfStateFactory::create(ps);
-    d_eos->setBulkModulus(d_initialData.Bulk);
-    if(!d_eos){
-      ostringstream desc;
-      desc << "An error occured in the MPM EquationOfStateFactory that has \n"
-           << " slipped through the existing bullet proofing. Please check and correct." << endl;
-      throw ParameterNotFound(desc.str(), __FILE__, __LINE__);
-    }
+  d_eos = MPMEquationOfStateFactory::create(ps);
+  d_eos->setBulkModulus(d_initialData.Bulk);
+  if(!d_eos){
+    ostringstream desc;
+    desc << "An error occured in the MPM EquationOfStateFactory that has \n"
+         << " slipped through the existing bullet proofing. Please check and correct." << endl;
+    throw ParameterNotFound(desc.str(), __FILE__, __LINE__);
   }
 
   // Universal Labels
@@ -237,13 +231,13 @@ UCNH::UCNH(const UCNH* cm) : ConstitutiveModel(cm), ImplicitCM(cm)
     setYieldStressDistribution(cm);
 
     pPlasticStrain_label          = VarLabel::create("p.plasticStrain",
-                                  ParticleVariable<double>::getTypeDescription());
+                                ParticleVariable<double>::getTypeDescription());
     pPlasticStrain_label_preReloc = VarLabel::create("p.plasticStrain+",
-                                  ParticleVariable<double>::getTypeDescription());
+                                ParticleVariable<double>::getTypeDescription());
     pYieldStress_label          = VarLabel::create("p.yieldStress",
-                                  ParticleVariable<double>::getTypeDescription());
+                                ParticleVariable<double>::getTypeDescription());
     pYieldStress_label_preReloc = VarLabel::create("p.yieldStress+",
-                                  ParticleVariable<double>::getTypeDescription());
+                                ParticleVariable<double>::getTypeDescription());
   } // End Plasticity Setup
   
   // Damage Setup
@@ -255,14 +249,14 @@ UCNH::UCNH(const UCNH* cm) : ConstitutiveModel(cm), ImplicitCM(cm)
     if (flag->d_erosionAlgorithm == "BrittleDamage") {
       setBrittleDamageData(cm);
     } else {
-    // Set the failure strain data
-    setFailureStressOrStrainData(cm);
-    d_failure_criteria = cm->d_failure_criteria;
-    if(d_failure_criteria=="MohrColoumb"){
-      d_tensile_cutoff = cm->d_tensile_cutoff;
-      d_friction_angle = cm->d_friction_angle;
-   }
-  }
+      // Set the failure strain data
+      setFailureStressOrStrainData(cm);
+      d_failure_criteria = cm->d_failure_criteria;
+      if(d_failure_criteria=="MohrColoumb"){
+        d_tensile_cutoff = cm->d_tensile_cutoff;
+        d_friction_angle = cm->d_friction_angle;
+      }
+    }
 
     // Set the erosion algorithm
     setErosionAlgorithm(cm);
@@ -273,11 +267,8 @@ UCNH::UCNH(const UCNH* cm) : ConstitutiveModel(cm), ImplicitCM(cm)
   d_init_pressure = cm->d_init_pressure;
 
   // EOS from factory
-  d_useEOSFactory = cm->d_useEOSFactory;
-  if (d_useEOSFactory) {
-    d_eos = MPMEquationOfStateFactory::createCopy(cm->d_eos);
-    d_eos->setBulkModulus(d_initialData.Bulk);
-  }
+  d_eos = MPMEquationOfStateFactory::createCopy(cm->d_eos);
+  d_eos->setBulkModulus(d_initialData.Bulk);
 
   // Universal Labels
   bElBarLabel                = VarLabel::create("p.bElBar",
@@ -292,24 +283,22 @@ UCNH::UCNH(const UCNH* cm) : ConstitutiveModel(cm), ImplicitCM(cm)
 
 void UCNH::initializeLocalMPMLabels()
 {
-  bBeBarLabel         = VarLabel::create("p.beBar",
-                                         ParticleVariable<Matrix3>::getTypeDescription());
   pFailureStressOrStrainLabel = VarLabel::create("p.epsf",
-                                         ParticleVariable<double>::getTypeDescription());
-  pLocalizedLabel     = VarLabel::create("p.localized",
-                                         ParticleVariable<int>::getTypeDescription());
-  pDamageLabel     = VarLabel::create("p.damage",
-                                         ParticleVariable<double>::getTypeDescription());
-  
-  bBeBarLabel_preReloc        = VarLabel::create("p.beBar+",
-                                                  ParticleVariable<Matrix3>::getTypeDescription());
+                               ParticleVariable<double>::getTypeDescription());
+  pLocalizedLabel             = VarLabel::create("p.localized",
+                               ParticleVariable<int>::getTypeDescription());
+  pDamageLabel                = VarLabel::create("p.damage",
+                               ParticleVariable<double>::getTypeDescription());
+  pTimeOfLocLabel             = VarLabel::create("p.timeofloc",
+                               ParticleVariable<double>::getTypeDescription());
   pFailureStressOrStrainLabel_preReloc = VarLabel::create("p.epsf+",
-                                                  ParticleVariable<double>::getTypeDescription());
+                               ParticleVariable<double>::getTypeDescription());
   pLocalizedLabel_preReloc    = VarLabel::create("p.localized+",
-						  ParticleVariable<int>::getTypeDescription());
+                               ParticleVariable<int>::getTypeDescription());
   pDamageLabel_preReloc       = VarLabel::create("p.damage+",
-                                                  ParticleVariable<double>::getTypeDescription());
-
+                               ParticleVariable<double>::getTypeDescription());
+  pTimeOfLocLabel_preReloc    = VarLabel::create("p.timeofloc+",
+                               ParticleVariable<double>::getTypeDescription());
 }
 
 void UCNH::getYieldStressDistribution(ProblemSpecP& ps)
@@ -317,8 +306,8 @@ void UCNH::getYieldStressDistribution(ProblemSpecP& ps)
   d_yield.dist   = "constant";
   d_yield.range  = 0.0;  // yield stress = FlowStress +- range 
   d_yield.seed   = 0;    // seed for distribution generator
-  ps->getWithDefault("yield_distrib", d_yield.dist, "constant"); //"constant", "uniform"
-                                                                // "weibull" or "gauss" not implemented
+  ps->getWithDefault("yield_distrib", d_yield.dist, "constant");
+  //"constant", "uniform", "weibull" or "gauss" not implemented
   if (d_yield.dist == "uniform") {
     ps->require("yield_range", d_yield.range);
     ps->getWithDefault("yield_seed", d_yield.seed, 0.0);
@@ -343,6 +332,7 @@ void UCNH::getFailureStressOrStrainData(ProblemSpecP& ps)
   // By setting the default value to DBL_MAX, that makes 1/n=0, which makes c=1
   d_epsf.exponent= DBL_MAX; //Exponent used in vol. scaling of failure criteria
   d_epsf.refVol = 1.0; // Reference volume for scaling failure criteria
+  d_epsf.t_char = 1.0e-99; // Characteristic time of damage evolution
 
   ps->require("failure_criteria", d_failure_criteria);
 
@@ -382,6 +372,7 @@ void UCNH::getFailureStressOrStrainData(ProblemSpecP& ps)
     }
   }
   ps->get("failure_seed",    d_epsf.seed); //Seed for RN generator
+  ps->get("char_time",       d_epsf.t_char); //Characteristic time for damage
 }
 
 void UCNH::setFailureStressOrStrainData(const UCNH* cm)
@@ -393,6 +384,7 @@ void UCNH::setFailureStressOrStrainData(const UCNH* cm)
   d_epsf.scaling         = cm->d_epsf.scaling;
   d_epsf.exponent        = cm->d_epsf.exponent;
   d_epsf.refVol          = cm->d_epsf.refVol;
+  d_epsf.t_char          = cm->d_epsf.t_char;
 }
 
 void UCNH::setBrittleDamageData(const UCNH* cm)
@@ -472,7 +464,6 @@ void UCNH::outputProblemSpec(ProblemSpecP& ps, bool output_cm_tag)
   cm_ps->appendElement("useModifiedEOS",           d_useModifiedEOS);
   cm_ps->appendElement("usePlasticity",            d_usePlasticity);
   cm_ps->appendElement("useDamage",                d_useDamage);
-  cm_ps->appendElement("useEOSFactory",            d_useEOSFactory);
 
   // Plasticity
   if(d_usePlasticity) {
@@ -489,13 +480,20 @@ void UCNH::outputProblemSpec(ProblemSpecP& ps, bool output_cm_tag)
   // Damage
   if(d_useDamage) {
     if (flag->d_erosionAlgorithm == "BrittleDamage") {
-      cm_ps->appendElement("brittle_damage_initial_threshold",    d_brittle_damage.r0b);
-      cm_ps->appendElement("brittle_damage_fracture_energy",      d_brittle_damage.Gf);
-      cm_ps->appendElement("brittle_damage_constant_D",           d_brittle_damage.constant_D);
-      cm_ps->appendElement("brittle_damage_max_damage_increment", d_brittle_damage.maxDamageInc);
-      cm_ps->appendElement("brittle_damage_allowRecovery",        d_brittle_damage.allowRecovery);
-      cm_ps->appendElement("brittle_damage_recoveryCoeff",        d_brittle_damage.recoveryCoeff);
-      cm_ps->appendElement("brittle_damage_printDamage",          d_brittle_damage.printDamage);
+      cm_ps->appendElement("brittle_damage_initial_threshold",
+                            d_brittle_damage.r0b);
+      cm_ps->appendElement("brittle_damage_fracture_energy",
+                            d_brittle_damage.Gf);
+      cm_ps->appendElement("brittle_damage_constant_D",           
+                            d_brittle_damage.constant_D);
+      cm_ps->appendElement("brittle_damage_max_damage_increment", 
+                            d_brittle_damage.maxDamageInc);
+      cm_ps->appendElement("brittle_damage_allowRecovery",        
+                            d_brittle_damage.allowRecovery);
+      cm_ps->appendElement("brittle_damage_recoveryCoeff",        
+                            d_brittle_damage.recoveryCoeff);
+      cm_ps->appendElement("brittle_damage_printDamage",          
+                            d_brittle_damage.printDamage);
     } else {
     cm_ps->appendElement("failure_mean",     d_epsf.mean);
     cm_ps->appendElement("failure_std",      d_epsf.std);
@@ -506,6 +504,7 @@ void UCNH::outputProblemSpec(ProblemSpecP& ps, bool output_cm_tag)
     cm_ps->appendElement("scaling",          d_epsf.scaling);
     cm_ps->appendElement("exponent",         d_epsf.exponent);
     cm_ps->appendElement("reference_volume", d_epsf.refVol);
+    cm_ps->appendElement("char_time",        d_epsf.t_char);
 
     if(d_failure_criteria=="MohrColoumb"){
       cm_ps->appendElement("friction_angle", d_friction_angle);
@@ -521,9 +520,7 @@ void UCNH::outputProblemSpec(ProblemSpecP& ps, bool output_cm_tag)
   }
 
   // EOS from factory
-  if (d_useEOSFactory) {
-    d_eos->outputProblemSpec(cm_ps);
-  }
+  d_eos->outputProblemSpec(cm_ps);
 }
 
 UCNH* UCNH::clone()
@@ -548,14 +545,12 @@ UCNH::~UCNH()
     VarLabel::destroy(pLocalizedLabel_preReloc);
     VarLabel::destroy(pDamageLabel);
     VarLabel::destroy(pDamageLabel_preReloc);
-    VarLabel::destroy(bBeBarLabel);
-    VarLabel::destroy(bBeBarLabel_preReloc);
+    VarLabel::destroy(pTimeOfLocLabel);
+    VarLabel::destroy(pTimeOfLocLabel_preReloc);
   }
   
   // Delete EOS from factory
-  if (d_useEOSFactory) {
-    delete d_eos;
-  }
+  delete d_eos;
 
   // Universal Deletes
   VarLabel::destroy(bElBarLabel);
@@ -568,7 +563,8 @@ UCNH::~UCNH()
 //////////////////////////////
 void UCNH::allocateCMDataAdd(DataWarehouse* new_dw,
                              ParticleSubset* addset,
-                             map<const VarLabel*, ParticleVariableBase*>* newState,
+                             map<const VarLabel*,
+                             ParticleVariableBase*>* newState,
                              ParticleSubset* delset,
                              DataWarehouse* old_dw )
 {
@@ -584,8 +580,10 @@ void UCNH::allocateCMDataAdd(DataWarehouse* new_dw,
     new_dw->allocateTemporary(pstress,            addset);
     
     constParticleVariable<Matrix3> o_deformationGradient, o_stress;
-    new_dw->get(o_deformationGradient,lb->pDeformationMeasureLabel_preReloc, delset);
-    new_dw->get(o_stress,             lb->pStressLabel_preReloc,             delset);
+    new_dw->get(o_deformationGradient,lb->pDeformationMeasureLabel_preReloc,
+                                                   delset);
+    new_dw->get(o_stress,             lb->pStressLabel_preReloc,             
+                                                   delset);
     
     ParticleSubset::iterator o,n = addset->begin();
     for (o=delset->begin(); o != delset->end(); o++, n++) {
@@ -601,7 +599,6 @@ void UCNH::allocateCMDataAdd(DataWarehouse* new_dw,
   // be deleted to the particles to be added
   ParticleSubset::iterator nPlas = addset->begin();
   ParticleSubset::iterator nUniv = addset->begin();
-  
   
   // Plasticity
   if(d_usePlasticity) {
@@ -627,35 +624,35 @@ void UCNH::allocateCMDataAdd(DataWarehouse* new_dw,
   
   // Damage
   if(d_useDamage) {
-    constParticleVariable<Matrix3> o_pBeBar;
     constParticleVariable<double>  o_pFailureStrain;
     constParticleVariable<int>     o_pLocalized;
+    constParticleVariable<double>  o_pTimeOfLoc;
     constParticleVariable<double>  o_pDamage;
-    new_dw->get(o_pBeBar,          bBeBarLabel_preReloc,         delset);
-    new_dw->get(o_pFailureStrain,  pFailureStressOrStrainLabel_preReloc, delset);
+    new_dw->get(o_pFailureStrain,  pFailureStressOrStrainLabel_preReloc,delset);
     new_dw->get(o_pLocalized,      pLocalizedLabel_preReloc,     delset);
     new_dw->get(o_pDamage,         pDamageLabel_preReloc,        delset);
-    
-    ParticleVariable<Matrix3>      pBeBar;
+    new_dw->get(o_pTimeOfLoc,      pTimeOfLocLabel_preReloc,     delset);
+
     ParticleVariable<double>       pFailureStrain;
     ParticleVariable<int>          pLocalized;
+    ParticleVariable<double>       pTimeOfLoc;
     ParticleVariable<double>       pDamage;
 
-    new_dw->allocateTemporary(pBeBar,         addset);
     new_dw->allocateTemporary(pFailureStrain, addset);
     new_dw->allocateTemporary(pLocalized,     addset);
+    new_dw->allocateTemporary(pTimeOfLoc,     addset);
     new_dw->allocateTemporary(pDamage,        addset);    
 
     ParticleSubset::iterator o,n     = addset->begin();
     for (o=delset->begin(); o != delset->end(); o++, n++) {
-      pBeBar[*n] = o_pBeBar[*o];
       pFailureStrain[*n]             = o_pFailureStrain[*o];
       pLocalized[*n]                 = o_pLocalized[*o];
+      pTimeOfLoc[*n]                 = o_pTimeOfLoc[*o];
       pDamage[*n]                    = o_pDamage[*o];
     }
-    (*newState)[bElBarLabel]         = pBeBar.clone();
     (*newState)[pFailureStressOrStrainLabel] = pFailureStrain.clone();
     (*newState)[pLocalizedLabel]     = pLocalized.clone();
+    (*newState)[pTimeOfLocLabel]     = pTimeOfLoc.clone();
     (*newState)[pDamageLabel]        = pDamage.clone();
   } // End Damage
   
@@ -701,9 +698,10 @@ void UCNH::allocateCMDataAddRequires(Task* task,
   
   // Damage
   if(d_useDamage) {  
-    task->requires(Task::NewDW, bBeBarLabel_preReloc,         matlset, gnone);
-    task->requires(Task::NewDW, pFailureStressOrStrainLabel_preReloc, matlset, gnone);
+    task->requires(Task::NewDW, pFailureStressOrStrainLabel_preReloc, matlset,
+                                                                       gnone);
     task->requires(Task::NewDW, pLocalizedLabel_preReloc,     matlset, gnone);
+    task->requires(Task::NewDW, pTimeOfLocLabel_preReloc,     matlset, gnone);
     task->requires(Task::NewDW, pDamageLabel_preReloc,        matlset, gnone);
   }
   
@@ -713,8 +711,9 @@ void UCNH::allocateCMDataAddRequires(Task* task,
     addSharedRForConvertExplicit(task, matlset, patches);
     task->requires(Task::NewDW, pDeformRateLabel_preReloc,    matlset, gnone);
   } else { // Implicit only stuff
-    task->requires(Task::NewDW,lb->pStressLabel_preReloc,             matlset, gnone);
-    task->requires(Task::NewDW,lb->pDeformationMeasureLabel_preReloc, matlset, gnone);
+    task->requires(Task::NewDW,lb->pStressLabel_preReloc,     matlset, gnone);
+    task->requires(Task::NewDW,lb->pDeformationMeasureLabel_preReloc, matlset,
+                                                                       gnone);
   }
 }
 
@@ -754,42 +753,43 @@ void UCNH::carryForward(const PatchSubset* patches,
     if(d_usePlasticity) {
       ParticleVariable<double> pPlasticStrain, pYieldStress;
       constParticleVariable<double> pPlasticStrain_old, pYieldStress_old;
-      old_dw->get(pPlasticStrain_old,         pPlasticStrain_label,              pset);
-      old_dw->get(pYieldStress_old,           pYieldStress_label,                pset);
-      new_dw->allocateAndPut(pPlasticStrain,  pPlasticStrain_label_preReloc,     pset);
-      new_dw->allocateAndPut(pYieldStress,    pYieldStress_label_preReloc,       pset);
+      old_dw->get(pPlasticStrain_old,         pPlasticStrain_label,       pset);
+      old_dw->get(pYieldStress_old,           pYieldStress_label,         pset);
+      new_dw->allocateAndPut(pPlasticStrain,  pPlasticStrain_label_preReloc,
+                                                                          pset);
+      new_dw->allocateAndPut(pYieldStress,    pYieldStress_label_preReloc,pset);
       pPlasticStrain.copyData(pPlasticStrain_old);
       pYieldStress.copyData(pYieldStress_old);
     } // End Plasticity
     
     // Damage
     if(d_useDamage) {
-      constParticleVariable<Matrix3> pBeBar;
       constParticleVariable<double>  pFailureStrain;
       constParticleVariable<int>     pLocalized;
+      constParticleVariable<double>  pTimeOfLoc;
       constParticleVariable<double>  pDamage;
-      ParticleVariable<Matrix3>      pBeBar_new;
       ParticleVariable<double>       pFailureStrain_new;
       ParticleVariable<int>          pLocalized_new;
+      ParticleVariable<double>       pTimeOfLoc_new;
       ParticleVariable<double>       pDamage_new;
       
-      old_dw->get(pBeBar,         bBeBarLabel,                     pset);
       old_dw->get(pFailureStrain, pFailureStressOrStrainLabel,     pset);
       old_dw->get(pLocalized,     pLocalizedLabel,                 pset);
+      old_dw->get(pTimeOfLoc,     pTimeOfLocLabel,                 pset);
       old_dw->get(pDamage,        pDamageLabel,                    pset);
       
-      new_dw->allocateAndPut(pBeBar_new, 
-                             bBeBarLabel_preReloc,                 pset);
       new_dw->allocateAndPut(pFailureStrain_new,    
                              pFailureStressOrStrainLabel_preReloc, pset);
       new_dw->allocateAndPut(pLocalized_new,      
                              pLocalizedLabel_preReloc,             pset);
+      new_dw->allocateAndPut(pTimeOfLoc_new,      
+                             pTimeOfLocLabel_preReloc,             pset);
       new_dw->allocateAndPut(pDamage_new,      
                              pDamageLabel_preReloc,                pset);      
 
-      pBeBar_new.copyData(pBeBar);
       pFailureStrain_new.copyData(pFailureStrain);
       pLocalized_new.copyData(pLocalized);
+      pTimeOfLoc_new.copyData(pTimeOfLoc);
       pDamage_new.copyData(pDamage);
     } // End damage 
     
@@ -873,7 +873,8 @@ void UCNH::initializeCMData(const Patch* patch,
       for(;iterPlas != pset->end(); iterPlas++){
         pPlasticStrain[*iterPlas] = d_initialData.Alpha;
         double rand = (*randGen)();
-        pYieldStress[*iterPlas] = d_initialData.FlowStress + (2*rand-1)*d_yield.range;
+        pYieldStress[*iterPlas] = d_initialData.FlowStress 
+                                + (2*rand-1)*d_yield.range;
       }
       delete randGen;
     } else {
@@ -886,25 +887,25 @@ void UCNH::initializeCMData(const Patch* patch,
   
   // Damage
   if(d_useDamage) {
-    ParticleVariable<Matrix3>     pBeBar;
     ParticleVariable<double>      pFailureStrain;
     ParticleVariable<int>         pLocalized;
+    ParticleVariable<double>      pTimeOfLoc;
     constParticleVariable<double> pVolume;
     ParticleVariable<double>      pDamage;
     
     new_dw->get(pVolume,                   lb->pVolumeLabel,            pset);
-    new_dw->allocateAndPut(pBeBar,         bBeBarLabel,                 pset);
     new_dw->allocateAndPut(pFailureStrain, pFailureStressOrStrainLabel, pset);
     new_dw->allocateAndPut(pLocalized,     pLocalizedLabel,             pset);
+    new_dw->allocateAndPut(pTimeOfLoc,     pTimeOfLocLabel,             pset);
     new_dw->allocateAndPut(pDamage,        pDamageLabel,                pset);
     
     ParticleSubset::iterator iter = pset->begin();
 
     if (d_brittleDamage) {
       for(;iter != pset->end();iter++){
-        pBeBar[*iter]         = Identity;
         pFailureStrain[*iter] = d_brittle_damage.r0b;
         pLocalized[*iter]     = 0;
+        pTimeOfLoc[*iter]     = 1.e99;;
         pDamage[*iter]        = 0.0;
       }
     }  else if (d_epsf.dist == "gauss"){
@@ -921,9 +922,10 @@ void UCNH::initializeCMData(const Patch* patch,
                                 d_epsf.refVol,d_epsf.exponent);
       
       for(;iter != pset->end();iter++){
-        pBeBar[*iter]         = Identity;
         pFailureStrain[*iter] =  fabs(gaussGen.rand(pVolume[*iter]));
         pLocalized[*iter]     = 0;
+        pTimeOfLoc[*iter]     = -1.e99;;
+        pDamage[*iter]        = 0.0;
       }
     } else if (d_epsf.dist == "weibull"){
       // Initialize a weibull random number generator
@@ -939,11 +941,12 @@ void UCNH::initializeCMData(const Patch* patch,
                               unique_seed,d_epsf.exponent);
       
       for(;iter != pset->end();iter++){
-        pBeBar[*iter]         = Identity;
         pFailureStrain[*iter] = weibGen.rand(pVolume[*iter]);
         pLocalized[*iter]     = 0;
+        pTimeOfLoc[*iter]     = -1.e99;;
+        pDamage[*iter]        = 0.0;
       }
-    } else if (d_epsf.dist == "uniform") { 
+    } else if (d_epsf.dist == "uniform") {
 
       // Make the seed differ for each patch, otherwise each patch gets the
       // same set of random #s.
@@ -952,27 +955,25 @@ void UCNH::initializeCMData(const Patch* patch,
       patchID = patchID%32;
       unsigned int unique_seed = ((d_epsf.seed+patch_div_32+1) << patchID);
       MusilRNG* randGen = scinew MusilRNG(unique_seed);
-      //double rand = (*randGen)();
-      //double range = (2*rand - 1)*d_epsf.std;
-      //double cc = pow(d_epsf.refVol/pVolume[*iter], 1.0/d_epsf.exponent); 
-      //double fail_eps = cc*(d_epsf.mean + range);
       for(;iter != pset->end();iter++){
-        pBeBar[*iter]         = Identity;
         pLocalized[*iter]     = 0;
+        pTimeOfLoc[*iter]     = -1.e99;;
 
         double rand = (*randGen)(); 
         double range = (2*rand - 1)*d_epsf.std;
         double cc = pow(d_epsf.refVol/pVolume[*iter], 1.0/d_epsf.exponent); 
         double fail_eps = cc*(d_epsf.mean + range);
         pFailureStrain[*iter] = fail_eps;
+        pDamage[*iter]        = 0.0;
       }
       delete randGen;
 
     } else {
       for(;iter != pset->end();iter++){
-        pBeBar[*iter]         = Identity;
         pFailureStrain[*iter] = d_epsf.mean;
         pLocalized[*iter]     = 0;
+        pTimeOfLoc[*iter]     = -1.e99;;
+        pDamage[*iter]        = 0.0;
       }
     }
   }
@@ -1028,14 +1029,14 @@ void UCNH::addComputesAndRequires(Task* task,
     task->requires(Task::OldDW, lb->pParticleIDLabel,   matlset, gnone);
     
     // Other constitutive model and input dependent computes and requires
-    task->requires(Task::OldDW, bBeBarLabel,                    matlset, gnone);
     task->requires(Task::OldDW, pFailureStressOrStrainLabel,    matlset, gnone);
     task->requires(Task::OldDW, pLocalizedLabel,                matlset, gnone);
+    task->requires(Task::OldDW, pTimeOfLocLabel,                matlset, gnone);
     task->requires(Task::OldDW, pDamageLabel,                   matlset, gnone);
     
-    task->computes(bBeBarLabel_preReloc,                        matlset);
     task->computes(pFailureStressOrStrainLabel_preReloc,        matlset);
     task->computes(pLocalizedLabel_preReloc,                    matlset);
+    task->computes(pTimeOfLocLabel_preReloc,                    matlset);
     task->computes(pDamageLabel_preReloc,                       matlset);
     task->computes(lb->TotalLocalizedParticleLabel);   
   } else {
@@ -1079,11 +1080,6 @@ void UCNH::addComputesAndRequires(Task* task,
   }else{
     task->requires(Task::OldDW,         bElBarLabel,          matlset, gnone);
   }
-  
-  if(d_useDamage){
-    // Local stuff
-    task->requires(Task::ParentOldDW, bBeBarLabel, matlset, gnone);
-  }
 }
 
 void UCNH::addInitialComputesAndRequires(Task* task,
@@ -1099,9 +1095,9 @@ void UCNH::addInitialComputesAndRequires(Task* task,
   
   // Damage
   if(d_useDamage) {
-    task->computes(bBeBarLabel,                 matlset);
     task->computes(pFailureStressOrStrainLabel, matlset);
     task->computes(pLocalizedLabel,             matlset);
+    task->computes(pTimeOfLocLabel,             matlset);
     task->computes(pDamageLabel,                matlset);
     task->computes(lb->TotalLocalizedParticleLabel);
   }
@@ -1111,6 +1107,7 @@ void UCNH::addInitialComputesAndRequires(Task* task,
   task->computes(pDeformRateLabel,      matlset);
 }
 
+
 void UCNH::addRequiresDamageParameter(Task* task,
                                        const MPMMaterial* matl,
                                        const PatchSet* ) const
@@ -1118,11 +1115,10 @@ void UCNH::addRequiresDamageParameter(Task* task,
   if(d_useDamage) {
     const MaterialSubset* matlset = matl->thisMaterial();
     task->requires(Task::NewDW, pLocalizedLabel_preReloc, matlset, Ghost::None);
-
+    task->requires(Task::NewDW, pTimeOfLocLabel_preReloc, matlset, Ghost::None);
     task->requires(Task::NewDW, pDamageLabel_preReloc, matlset, Ghost::None);
   }
 }
-
 
 // Compute Functions //
 ///////////////////////
@@ -1135,14 +1131,7 @@ void UCNH::computePressEOSCM(const double rho_cur,double& pressure,
   double bulk = d_initialData.Bulk;
   double rho_orig = matl->getInitialDensity();
   
-  if (d_useEOSFactory) {
-
-    double p = 0.0;
-    d_eos->computePressure(rho_orig, rho_cur, p, dp_drho, cSquared);
-    pressure = -p + p_ref;
-    dp_drho = -dp_drho;
-
-  } else if (d_useModifiedEOS && rho_cur < rho_orig) {
+  if (d_useModifiedEOS && rho_cur < rho_orig) {
 
     double A = p_ref;           // MODIFIED EOS
     double n = bulk/p_ref;
@@ -1153,10 +1142,15 @@ void UCNH::computePressEOSCM(const double rho_cur,double& pressure,
 
   } else {                      // STANDARD EOS            
 
-    double p_g = .5*bulk*(rho_cur/rho_orig - rho_orig/rho_cur);
-    pressure   = p_ref + p_g;
-    dp_drho    = .5*bulk*(rho_orig/(rho_cur*rho_cur) + 1./rho_orig);
-    cSquared   = bulk/rho_cur;  // speed of sound squared
+    double p = 0.0;
+    d_eos->computePressure(rho_orig, rho_cur, p, dp_drho, cSquared);
+    pressure = -p + p_ref;
+    dp_drho = -dp_drho;
+
+    // double p_g = .5*bulk*(rho_cur/rho_orig - rho_orig/rho_cur);
+    // pressure   = p_ref + p_g;
+    // dp_drho    = .5*bulk*(rho_orig/(rho_cur*rho_cur) + 1./rho_orig);
+    // cSquared   = bulk/rho_cur;  // speed of sound squared
 
   }
 }
@@ -1175,7 +1169,14 @@ double UCNH::computeRhoMicroCM(double pressure,
   double rho_cur = -1.0;
   bool error = false;
   
-  if (d_useEOSFactory) {
+  if (d_useModifiedEOS && p_gauge < 0.0) {
+
+    double A = p_ref;           // MODIFIED EOS
+    double n = p_ref/bulk;
+    rho_cur = rho_orig*pow(pressure/A,n);
+
+  } else {                      // STANDARD EOS
+
     try {
       rho_cur = d_eos->computeDensity(rho_orig, -p_gauge);
     } catch (ConvergenceFailure& e) {
@@ -1189,13 +1190,8 @@ double UCNH::computeRhoMicroCM(double pressure,
       throw InvalidValue(desc.str(), __FILE__, __LINE__);
     }
 
-  } else if (d_useModifiedEOS && p_gauge < 0.0) {
-    double A = p_ref;           // MODIFIED EOS
-    double n = p_ref/bulk;
-    rho_cur = rho_orig*pow(pressure/A,n);
-  } else {                      // STANDARD EOS
-    double p_g_over_bulk = p_gauge/bulk;
-    rho_cur=rho_orig*(p_g_over_bulk + sqrt(p_g_over_bulk*p_g_over_bulk +1.));
+    // double p_g_over_bulk = p_gauge/bulk;
+    // rho_cur=rho_orig*(p_g_over_bulk + sqrt(p_g_over_bulk*p_g_over_bulk +1.));
   }
   return rho_cur;
 }
@@ -1278,8 +1274,8 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
     const Patch* patch = patches->get(pp);
 
     // Temporary and "get" variables
-    double delgamma = 0.0, fTrial = 0.0, IEl = 0.0, J = 0.0, Jinc = 0.0, muBar = 0.0; 
-    double p = 0.0, sTnorm = 0.0, U = 0.0, W = 0.0;
+    double delgamma = 0.0, fTrial = 0.0, IEl = 0.0, J = 0.0, Jinc = 0.0; 
+    double muBar = 0.0, p = 0.0, sTnorm = 0.0, U = 0.0, W = 0.0;
     double se=0.0;     // Strain energy placeholder
     double c_dil=0.0;  // Speed of sound
     long64 totalLocalizedParticle = 0;
@@ -1292,6 +1288,7 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
     int dwi              = matl->getDWIndex();
     ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
     Vector dx            = patch->dCell();
+    double time = d_sharedState->getElapsedTime();
 
     // Get Interpolator
     ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
@@ -1302,21 +1299,23 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
     // Particle and grid data universal to model type
     // Old data containers
     constParticleVariable<int>     pLocalized;
+    constParticleVariable<double>  pTimeOfLoc;
     constParticleVariable<Short27> pgCode;
     constParticleVariable<double>  pFailureStrain, pMass, pDamage;
     constParticleVariable<double>  pPlasticStrain_old, pYieldStress_old, pcolor;
     constParticleVariable<long64>  pParticleID;
     constParticleVariable<Point>   px;
-    constParticleVariable<Matrix3> pBeBar, pDefGrad, bElBar;
+    constParticleVariable<Matrix3> pDefGrad, bElBar;
     constParticleVariable<Vector>  pSize;
     constParticleVariable<Vector>  pVelocity;
     // New data containers
     ParticleVariable<int>          pLocalized_new;
+    ParticleVariable<double>       pTimeOfLoc_new;
     ParticleVariable<double>       pPlasticStrain, pYieldStress;
     ParticleVariable<double>       pFailureStrain_new, pVolume_new, pDamage_new;
     ParticleVariable<double>       pdTdt,p_q;
-    ParticleVariable<Matrix3>      pBeBar_new, pDefGrad_new, pDeformRate, bElBar_new;
-    ParticleVariable<Matrix3>      pStress;
+    ParticleVariable<Matrix3>      pDefGrad_new, pDeformRate;
+    ParticleVariable<Matrix3>      pStress,bElBar_new;
     ParticleVariable<Matrix3>      velGrad;
     constNCVariable<Vector>        gDisp;
     constNCVariable<Vector>        gVelocity;
@@ -1331,11 +1330,11 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
     // Plasticity gets
     if(d_usePlasticity) {
       old_dw->get(pPlasticStrain_old,         
-                             pPlasticStrain_label,                pset);
+                             pPlasticStrain_label,              pset);
       old_dw->get(pYieldStress_old,         
                              pYieldStress_label,                pset);
       new_dw->allocateAndPut(pPlasticStrain,  
-                             pPlasticStrain_label_preReloc,       pset);
+                             pPlasticStrain_label_preReloc,     pset);
       new_dw->allocateAndPut(pYieldStress,  
                              pYieldStress_label_preReloc,       pset);
       
@@ -1349,22 +1348,22 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
     
     // Damage gets
     if(d_useDamage) {
-      old_dw->get(pBeBar,                   bBeBarLabel,                    pset);
-      old_dw->get(pLocalized,               pLocalizedLabel,                pset);
-      old_dw->get(pFailureStrain,           pFailureStressOrStrainLabel,    pset);
-      old_dw->get(pParticleID,              lb->pParticleIDLabel,           pset);
-      old_dw->get(pDamage,                  pDamageLabel,                   pset);
+      old_dw->get(pLocalized,               pLocalizedLabel,             pset);
+      old_dw->get(pTimeOfLoc,               pTimeOfLocLabel,             pset);
+      old_dw->get(pFailureStrain,           pFailureStressOrStrainLabel, pset);
+      old_dw->get(pParticleID,              lb->pParticleIDLabel,        pset);
+      old_dw->get(pDamage,                  pDamageLabel,                pset);
       
       if (flag->d_fracture) {
         new_dw->get(pgCode,    lb->pgCodeLabel, pset);
         new_dw->get(GVelocity, lb->GVelocityStarLabel, dwi, patch, gac, NGN);
       }
-      new_dw->allocateAndPut(pBeBar_new, 
-                             bBeBarLabel_preReloc,                  pset);
       new_dw->allocateAndPut(pLocalized_new, 
                              pLocalizedLabel_preReloc,              pset);
+      new_dw->allocateAndPut(pTimeOfLoc_new, 
+                             pTimeOfLocLabel_preReloc,              pset);
       new_dw->allocateAndPut(pFailureStrain_new, 
-                             pFailureStressOrStrainLabel_preReloc,          pset);
+                             pFailureStressOrStrainLabel_preReloc,  pset);
       new_dw->allocateAndPut(pDamage_new, 
                              pDamageLabel_preReloc,                 pset);
       
@@ -1423,7 +1422,8 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
           for(int k=0; k<27; k++){
             pgFld[k]=pgCode[idx][k];
           }
-          computeVelocityGradient(velGrad_new,ni,d_S,oodx,pgFld,gVelocity,GVelocity);
+          computeVelocityGradient(velGrad_new,ni,d_S,oodx,pgFld,
+                                  gVelocity,GVelocity);
         } else {
             // Get the node indices that surround the cell
             interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,pSize[idx],
@@ -1448,7 +1448,8 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
       J = pDefGrad_new[idx].Determinant();
       if (!(J > 0.0)) {
         cerr << getpid() ;
-        cerr << "UCNH::idx = " << idx << " J = " << J << " matl = " << matl << endl;
+        cerr << "UCNH::idx = " << idx << " J = " << J 
+             << " matl = " << matl << endl;
         cerr << "F_old = " << pDefGrad[idx]     << endl;
         cerr << "F_inc = " << pDefGradInc       << endl;
         cerr << "F_new = " << pDefGrad_new[idx] << endl;
@@ -1465,7 +1466,7 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
         throw InvalidValue("**ERROR**:UCNH", __FILE__, __LINE__);
       }
     }
-      
+
     // The following is used only for pressure stabilization
     CCVariable<double> J_CC;
     new_dw->allocateTemporary(J_CC,       patch);
@@ -1500,7 +1501,7 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
         J_CC[c]=vol_CC[c]/vol_0_CC[c];
       }
     } //end of pressureStabilization loop  at the patch level
-      
+
     iter = pset->begin();
     for(; iter != pset->end(); iter++){
       particleIndex idx = *iter;  
@@ -1559,9 +1560,9 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
       // part of the left Cauchy-Green deformation tensor
       bElBarTrial = fBar*bElBar[idx]*fBar.Transpose();
       if(!d_usePlasticity){
-        double cubeRootJ       = cbrt(J);
-        double Jtothetwothirds = cubeRootJ*cubeRootJ;
-        bElBarTrial            = pDefGrad_new[idx]* pDefGrad_new[idx].Transpose()
+        double cubeRootJ      = cbrt(J);
+        double Jtothetwothirds= cubeRootJ*cubeRootJ;
+        bElBarTrial           = pDefGrad_new[idx]* pDefGrad_new[idx].Transpose()
                                  /Jtothetwothirds;
       }
       IEl   = onethird*bElBarTrial.Trace();
@@ -1574,8 +1575,7 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
       
       // Check for plastic loading
       double alpha;
-      if(d_usePlasticity)
-      { 
+      if(d_usePlasticity) { 
         flow = pYieldStress[idx];
         alpha  = pPlasticStrain[idx];
         fTrial = sTnorm - sqtwthds*(K*alpha + flow);
@@ -1599,39 +1599,39 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
       }
       
       // get the hydrostatic part of the stress
-      if (d_useEOSFactory) {
-        p = d_eos->computePressure(rho_orig, rho_cur);
-      } else {
-        p = 0.5*bulk*(J - 1.0/J);
-      }
+      p = d_eos->computePressure(rho_orig, rho_cur);
+      //p = 0.5*bulk*(J - 1.0/J);
       
       // compute the total stress (volumetric + deviatoric)
       pStress[idx] = Identity*p + tauDev/J;
 
       if( d_useDamage){
+        pDamage_new[idx] = pDamage[idx];
         // Modify the stress if particle has failed/damaged
-	if (d_brittleDamage) {
-	  updateDamageAndModifyStress(defGrad, pFailureStrain[idx], pFailureStrain_new[idx],
-		  pVolume_new[idx], pDamage[idx], pDamage_new[idx], pStress[idx],
-                  pParticleID[idx]);
+        if (d_brittleDamage) {
+          updateDamageAndModifyStress(defGrad, pFailureStrain[idx],
+                                      pFailureStrain_new[idx], pVolume_new[idx],
+                                      pDamage[idx], pDamage_new[idx],
+                                      pStress[idx], pParticleID[idx]);
           pLocalized_new[idx]= pLocalized[idx]; //not really used.
           if (pDamage_new[idx]>0.0) totalLocalizedParticle+=1;
-	}
-	else {
+        }
+        else {
           updateFailedParticlesAndModifyStress(defGrad, pFailureStrain[idx], 
                                            pLocalized[idx], pLocalized_new[idx],
-                                           pStress[idx], pParticleID[idx]);
-          if (pLocalized_new[idx]>0) totalLocalizedParticle+=1;
+                                           pTimeOfLoc[idx], pTimeOfLoc_new[idx],
+                                           pStress[idx], pParticleID[idx],time);
+          if (pLocalized_new[idx]>0){
+            totalLocalizedParticle+=1;
+          }
         }
       }
       
       // Compute the strain energy for non-localized particles
-      if (d_useEOSFactory) {
-        U = d_eos->computeStrainEnergy(rho_orig, rho_cur);
-        bulk = d_eos->computeBulkModulus(rho_orig, rho_cur);
-      } else {
-        U = .5*bulk*(.5*(J*J - 1.0) - log(J));
-      }
+      U = d_eos->computeStrainEnergy(rho_orig, rho_cur);
+      bulk = d_eos->computeBulkModulus(rho_orig, rho_cur);
+      //  U = .5*bulk*(.5*(J*J - 1.0) - log(J));
+
       W = .5*shear*(bElBar_new[idx].Trace() - 3.0);
       double e = (U + W)*pVolume_new[idx]/J;
       se += e;
@@ -1768,20 +1768,20 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
       if(flag->d_doGridReset){
         constNCVariable<Vector> dispNew;
         old_dw->get(dispNew,lb->dispNewLabel,dwi,patch, gac, 1);
-        computeDeformationGradientFromIncrementalDisplacement(
-                                                            dispNew, pset, px,
-                                                            pDefGrad,
-                                                            pDefGrad_new,
-                                                            dx, pSize, interpolator);
+        computeDeformationGradientFromIncrementalDisplacement(dispNew, pset, px,
+                                                              pDefGrad,
+                                                              pDefGrad_new,
+                                                              dx, pSize,
+                                                              interpolator);
       }
       else if(!flag->d_doGridReset){
         constNCVariable<Vector> gdisplacement;
         old_dw->get(gdisplacement, lb->gDisplacementLabel,dwi,patch,gac,1);
         computeDeformationGradientFromTotalDisplacement(gdisplacement,
-                                                      pset, px,
-                                                      pDefGrad_new,
-                                                      pDefGrad,
-                                                      dx, pSize,interpolator);
+                                                        pset, px,
+                                                        pDefGrad_new,
+                                                        pDefGrad,
+                                                        dx, pSize,interpolator);
       }
 
       if((d_usePlasticity || d_useDamage) && flag->d_doGridReset){
@@ -1811,7 +1811,7 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
           // Compute BeBar
           pRelDefGradBar = pDefGradInc/cbrt(pDefGradInc.Determinant());
 
-          pBeBar_new[idx] = pRelDefGradBar*pBeBar[idx]*pRelDefGradBar.Transpose();
+          pBeBar_new[idx]=pRelDefGradBar*pBeBar[idx]*pRelDefGradBar.Transpose();
         } else {
           J = pDefGrad_new[idx].Determinant();
           Matrix3 bElBar_new = pDefGrad_new[idx]
@@ -1857,7 +1857,8 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
           double kgeo[24][24];
         
           // Fill in the B and Bnl matrices and the dof vector
-          interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S, pSize[idx],pDefGrad[idx]);
+          interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S, pSize[idx],
+                                                    pDefGrad[idx]);
           loadBMats(l2g,dof,B,Bnl,d_S,ni,oodx);
           // kmat = B.transpose()*D*B*volold
           BtDB(B,D,kmat);
@@ -1896,7 +1897,8 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
           D[4][3] = D[3][4];
             
           // Fill in the B and Bnl matrices and the dof vector
-          interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S, pSize[idx],pDefGrad[idx]);
+          interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S, pSize[idx],
+                                                    pDefGrad[idx]);
           loadBMatsGIMP(l2g,dof,B,Bnl,d_S,ni,oodx);
           // kmat = B.transpose()*D*B*volold
           BtDBGIMP(B,D,kmat);
@@ -1958,14 +1960,15 @@ void UCNH::addParticleState(std::vector<const VarLabel*>& from,
   
   // Damage
   if(d_useDamage) {
-    from.push_back(bBeBarLabel);
     from.push_back(pFailureStressOrStrainLabel);
     from.push_back(pLocalizedLabel);
     from.push_back(pDamageLabel);
-    to.push_back(bBeBarLabel_preReloc);
+    from.push_back(pTimeOfLocLabel);
+
     to.push_back(pFailureStressOrStrainLabel_preReloc);
     to.push_back(pLocalizedLabel_preReloc);
     to.push_back(pDamageLabel_preReloc);
+    to.push_back(pTimeOfLocLabel_preReloc);
   }
   
   // Universal
@@ -2000,7 +2003,6 @@ void UCNH::addParticleState(std::vector<const VarLabel*>& from,
 
 
   // Check for damage (note that pFailureStrain is the energy threshold)
-  pDamage_new = pDamage;
   pFailureStrain_new = pFailureStrain;
 
   if (pressure <0.0) { 
@@ -2059,77 +2061,90 @@ void UCNH::addParticleState(std::vector<const VarLabel*>& from,
 
 	// Update stress
 	pStress = pStress*(1.0-damage);
-        if (d_brittle_damage.printDamage) cout << "Particle " << particleID << " damaged: "   \
-          " damage=" << pDamage_new << " epsMax=" << epsMax << " tau_b=" << tau_b << endl;
-        } else {
-	
+        if (d_brittle_damage.printDamage){
+          cout << "Particle " << particleID << " damaged: "
+               << " damage=" << pDamage_new << " epsMax=" << epsMax 
+               << " tau_b=" << tau_b << endl;
+        }
+      } else {
 	if (pDamage==0.0) return; // never damaged
 
 	//current energy less than previous; deactivate damage?
 	if (d_brittle_damage.allowRecovery) { //recovery
           pStress = pStress*d_brittle_damage.recoveryCoeff;
 	  pDamage_new = -pDamage; //flag it to be negative
-          if (d_brittle_damage.printDamage) cout << "Particle " << particleID << " damage halted: damage=" << pDamage_new << endl;
+          if (d_brittle_damage.printDamage){
+            cout << "Particle " << particleID << " damage halted: damage=" 
+                 << pDamage_new << endl;
+          }
 	}
 	else { //no recovery (default)
 	  pStress = pStress*(1.0-pDamage);
-          if (d_brittle_damage.printDamage) cout << "Particle " << particleID << " damaged: "   \
-            " damage=" << pDamage_new << " epsMax=" << epsMax << " tau_b=" << tau_b << endl;
+          if (d_brittle_damage.printDamage){
+            cout << "Particle " << particleID << " damaged: " 
+                 << " damage=" << pDamage_new << " epsMax=" << epsMax 
+                 << " tau_b=" << tau_b << endl;
+          }
 	}
       } // end if tau_b > pFailureStrain
 
   } //end if pressure
 
- }
-
+}
 
 // Modify the stress if particle has failed
 void UCNH::updateFailedParticlesAndModifyStress(const Matrix3& defGrad,
                                                  const double& pFailureStr,
                                                  const int& pLocalized,
                                                  int& pLocalized_new,
+                                                 const double& pTimeOfLoc,
+                                                 double& pTimeOfLoc_new,
                                                  Matrix3& pStress,
-                                                 const long64 particleID)
+                                                 const long64 particleID,
+                                                 double time)
 {
   Matrix3 Identity, zero(0.0); Identity.Identity();
 
   // Find if the particle has failed
   pLocalized_new = pLocalized;
-  if(d_failure_criteria=="MaximumPrincipalStress"){
-    double maxEigen=0.,medEigen=0.,minEigen=0.;
-    pStress.getEigenValues(maxEigen,medEigen,minEigen);
-    //The first eigenvalue returned by "eigen" is always the largest 
-    if (maxEigen > pFailureStr){
-      pLocalized_new = 1;
+  pTimeOfLoc_new = pTimeOfLoc;
+  if (pLocalized == 0){
+    if(d_failure_criteria=="MaximumPrincipalStress"){
+      double maxEigen=0.,medEigen=0.,minEigen=0.;
+      pStress.getEigenValues(maxEigen,medEigen,minEigen);
+      //The first eigenvalue returned by "eigen" is always the largest 
+      if (maxEigen > pFailureStr){
+        pLocalized_new = 1;
+      }
+      if (pLocalized != pLocalized_new) {
+        cout << "Particle " << particleID << " has failed : MaxPrinStress = "
+             << maxEigen << " eps_f = " << pFailureStr << endl;
+        pTimeOfLoc_new = time;
+      }
     }
-    if (pLocalized != pLocalized_new) {
-      cout << "Particle " << particleID << " has failed : MaxPrinStress = "
-           << maxEigen << " eps_f = " << pFailureStr << endl;
-    }
-  }
-  else if(d_failure_criteria=="MaximumPrincipalStrain"){
-    // Compute Finger tensor (left Cauchy-Green) 
-    Matrix3 bb = defGrad*defGrad.Transpose();
-    // Compute Eulerian strain tensor
-    Matrix3 ee = (Identity - bb.Inverse())*0.5;
+    else if(d_failure_criteria=="MaximumPrincipalStrain"){
+      // Compute Finger tensor (left Cauchy-Green) 
+      Matrix3 bb = defGrad*defGrad.Transpose();
+      // Compute Eulerian strain tensor
+      Matrix3 ee = (Identity - bb.Inverse())*0.5;
 
-    double maxEigen=0.,medEigen=0.,minEigen=0.;
-    ee.getEigenValues(maxEigen,medEigen,minEigen);
-    if (maxEigen > pFailureStr){
-      pLocalized_new = 1;
+      double maxEigen=0.,medEigen=0.,minEigen=0.;
+      ee.getEigenValues(maxEigen,medEigen,minEigen);
+      if (maxEigen > pFailureStr){
+        pLocalized_new = 1;
+      }
+      if (pLocalized != pLocalized_new) {
+        cout << "Particle " << particleID << " has failed : eps = " << maxEigen
+             << " eps_f = " << pFailureStr << endl;
+        pTimeOfLoc_new = time;
+      }
     }
-    if (pLocalized != pLocalized_new) {
-      cout << "Particle " << particleID << " has failed : eps = " << maxEigen
-      << " eps_f = " << pFailureStr << endl;
-    }
-  }
-  else if(d_failure_criteria=="MohrColoumb"){
-    double maxEigen=0.,medEigen=0.,minEigen=0.;
-    pStress.getEigenValues(maxEigen,medEigen,minEigen);
-
-    double cohesion = pFailureStr;
-    if (pLocalized == 0){
-
+    else if(d_failure_criteria=="MohrColoumb"){
+      double maxEigen=0.,medEigen=0.,minEigen=0.;
+      pStress.getEigenValues(maxEigen,medEigen,minEigen);
+  
+      double cohesion = pFailureStr;
+  
       double epsMax=0.;
       // Tensile failure criteria (max princ stress > d_tensile_cutoff*cohesion)
       if (maxEigen > d_tensile_cutoff*cohesion){
@@ -2148,24 +2163,30 @@ void UCNH::updateFailedParticlesAndModifyStress(const Matrix3& defGrad,
       if (pLocalized != pLocalized_new) {
         cout << "Particle " << particleID << " has failed : maxPrinStress = "
              << epsMax << " cohesion = " << cohesion << endl;
+        pTimeOfLoc_new = time;
       }
-    } // pLocalized==0
-  }
+    } // Mohr-Coloumb
+  } // pLocalized==0
 
   // If the particle has failed, apply various erosion algorithms
   if (flag->d_doErosion) {
     // Compute pressure
     double pressure = pStress.Trace()/3.0;
+    double failTime = time - pTimeOfLoc_new;
+    double D = exp(-failTime/d_epsf.t_char);
     if (pLocalized != 0) {
       if (d_allowNoTension) {
-        if (pressure > 0.0)
-            pStress = zero;
-          else
+        if (pressure > 0.0){
+            pStress*=D;
+        } else{
             pStress = Identity*pressure;
-      } else if (d_allowNoShear)
+        }
+      } else if (d_allowNoShear){
          pStress = Identity*pressure;
-      else if (d_setStressToZero)
-        pStress = zero;
+      }
+      else if (d_setStressToZero){
+        pStress*=D;
+      }
     }
   }
 }
@@ -2192,6 +2213,7 @@ void UCNH::computeStressTensorImplicit(const PatchSubset* patches,
   
   // Particle and grid data
   constParticleVariable<int>     pLocalized;
+  constParticleVariable<double>  pTimeOfLoc;
   constParticleVariable<double>  pFailureStrain;
   constParticleVariable<double>  pMass, pPlasticStrain, pDamage;
   constParticleVariable<long64>  pParticleID;
@@ -2200,6 +2222,7 @@ void UCNH::computeStressTensorImplicit(const PatchSubset* patches,
   constParticleVariable<Matrix3> pDefGrad, pBeBar;
   constNCVariable<Vector>        gDisp;
   ParticleVariable<int>          pLocalized_new;
+  ParticleVariable<double>       pTimeOfLoc_new;
   ParticleVariable<double>       pFailureStrain_new, pDamage_new;
   ParticleVariable<double>       pVolume_new, pdTdt, pPlasticStrain_new;
   ParticleVariable<Matrix3>      pDefGrad_new, pBeBar_new, pStress_new;
@@ -2237,17 +2260,19 @@ void UCNH::computeStressTensorImplicit(const PatchSubset* patches,
     
     // Damage gets and allocates
     if(d_useDamage){
-      old_dw->get(pLocalized,               pLocalizedLabel,                    pset);
-      old_dw->get(pFailureStrain,           pFailureStressOrStrainLabel,        pset);
-      old_dw->get(pDamage,                  pDamageLabel,                       pset);
-      old_dw->get(pParticleID,              lb->pParticleIDLabel,               pset); 
-
+      old_dw->get(pLocalized,               pLocalizedLabel,              pset);
+      old_dw->get(pTimeOfLoc,               pTimeOfLocLabel,              pset);
+      old_dw->get(pFailureStrain,           pFailureStressOrStrainLabel,  pset);
+      old_dw->get(pDamage,                  pDamageLabel,                 pset);
+      old_dw->get(pParticleID,              lb->pParticleIDLabel,         pset); 
       new_dw->allocateAndPut(pLocalized_new,
-                             pLocalizedLabel_preReloc,                          pset);
-      new_dw->allocateAndPut(pFailureStrain_new, 
-                             pFailureStressOrStrainLabel_preReloc,              pset);
+                             pLocalizedLabel_preReloc,                    pset);
+      new_dw->allocateAndPut(pTimeOfLoc_new,
+                             pTimeOfLocLabel_preReloc,                    pset);
+      new_dw->allocateAndPut(pFailureStrain_new,
+                             pFailureStressOrStrainLabel_preReloc,        pset);
       new_dw->allocateAndPut(pDamage_new, 
-                             pDamageLabel_preReloc,                             pset);
+                             pDamageLabel_preReloc,                       pset);
     }
     
     // Universal gets and allocates
@@ -2286,11 +2311,11 @@ void UCNH::computeStressTensorImplicit(const PatchSubset* patches,
       if(flag->d_doGridReset){
         constNCVariable<Vector> dispNew;
         new_dw->get(dispNew,lb->dispNewLabel,dwi,patch, gac, 1);
-        computeDeformationGradientFromIncrementalDisplacement(
-                                                              dispNew, pset, pX,
+        computeDeformationGradientFromIncrementalDisplacement(dispNew, pset, pX,
                                                               pDefGrad,
                                                               pDefGrad_new,
-                                                              dx, pSize, interpolator);
+                                                              dx, pSize,
+                                                              interpolator);
       }
       else /*if(!flag->d_doGridReset)*/{
         constNCVariable<Vector> gdisplacement;
@@ -2302,7 +2327,7 @@ void UCNH::computeStressTensorImplicit(const PatchSubset* patches,
       }
       
       // Unused because no "active stress carried over from CNHImplicit    
-      //     double time = d_sharedState->getElapsedTime();
+      double time = d_sharedState->getElapsedTime();
     
       for(iter = pset->begin(); iter != pset->end(); iter++){
         particleIndex idx = *iter;
@@ -2395,16 +2420,23 @@ void UCNH::computeStressTensorImplicit(const PatchSubset* patches,
         // Modify the stress if particle has damaged/failed
         if(d_useDamage){
 	  if (d_brittleDamage) {
-             updateDamageAndModifyStress(defGrad, pFailureStrain[idx], pFailureStrain_new[idx],
-                  pVolume_new[idx], pDamage[idx], pDamage_new[idx], pStress_new[idx],
-                  pParticleID[idx]);
+             updateDamageAndModifyStress(defGrad, pFailureStrain[idx],
+                                         pFailureStrain_new[idx],
+                                         pVolume_new[idx], pDamage[idx],
+                                         pDamage_new[idx], pStress_new[idx],
+                                         pParticleID[idx]);
 	  } else {
 	    updateFailedParticlesAndModifyStress(defGrad, pFailureStrain[idx], 
-                                               pLocalized[idx], pLocalized_new[idx],
-                                               pStress_new[idx], pParticleID[idx]);
+                                                 pLocalized[idx],
+                                                 pLocalized_new[idx],
+                                                 pTimeOfLoc[idx],
+                                                 pTimeOfLoc_new[idx],
+                                                 pStress_new[idx],
+                                                 pParticleID[idx],
+                                                 time);
 	  }
         }
-      
+
         // Compute the strain energy for non-localized particles
         double U = .5*bulk*(.5*(J*J - 1.0) - log(J));
         double W = .5*shear*(pBeBar_new[idx].Trace() - 3.0);
@@ -2414,7 +2446,7 @@ void UCNH::computeStressTensorImplicit(const PatchSubset* patches,
         if(d_useDamage && pLocalized_new[idx] != 0){
           se -= e;
         }
-      }
+      } // end loop over particles
       if (flag->d_reductionVars->accStrainEnergy ||
           flag->d_reductionVars->strainEnergy) {
         new_dw->put(sum_vartype(se), lb->StrainEnergyLabel);

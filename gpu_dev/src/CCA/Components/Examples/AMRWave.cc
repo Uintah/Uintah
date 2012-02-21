@@ -57,7 +57,8 @@ AMRWave::~AMRWave()
 {
 }
 
-
+//______________________________________________________________________
+//
 void AMRWave::problemSetup(const ProblemSpecP& params, 
                            const ProblemSpecP& restart_prob_spec, 
                            GridP& grid, SimulationStateP& sharedState)
@@ -83,7 +84,8 @@ void AMRWave::scheduleRefineInterface(const LevelP& fineLevel,
                                       bool needCoarseOld, bool needCoarseNew)
 {
 }
-
+//______________________________________________________________________
+//
 void AMRWave::scheduleCoarsen(const LevelP& coarseLevel, SchedulerP& sched)
 {
   if (!do_coarsen)
@@ -95,7 +97,8 @@ void AMRWave::scheduleCoarsen(const LevelP& coarseLevel, SchedulerP& sched)
   task->modifies(pi_label);
   sched->addTask(task, coarseLevel->eachPatch(), sharedState_->allMaterials());
 }
-
+//______________________________________________________________________
+//
 void AMRWave::scheduleRefine (const PatchSet* patches, SchedulerP& sched)
 {
   if (!do_refine)
@@ -111,7 +114,8 @@ void AMRWave::scheduleRefine (const PatchSet* patches, SchedulerP& sched)
   }
   sched->addTask(task, patches, sharedState_->allMaterials());
 }
-
+//______________________________________________________________________
+//
 void AMRWave::scheduleErrorEstimate(const LevelP& coarseLevel,
 				       SchedulerP& sched)
 {
@@ -121,19 +125,22 @@ void AMRWave::scheduleErrorEstimate(const LevelP& coarseLevel,
   task->modifies(sharedState_->get_refinePatchFlag_label(), sharedState_->refineFlagMaterials());
   sched->addTask(task, coarseLevel->eachPatch(), sharedState_->allMaterials());
 }
-
+//______________________________________________________________________
+//
 void AMRWave::scheduleInitialErrorEstimate(const LevelP& coarseLevel,
                                               SchedulerP& sched)
 {
   scheduleErrorEstimate(coarseLevel, sched);
 }
-
+//______________________________________________________________________
+//
 void AMRWave::scheduleTimeAdvance( const LevelP& level, 
                                    SchedulerP& sched)
 {
   Wave::scheduleTimeAdvance(level, sched);
 }
-
+//______________________________________________________________________
+//
 void AMRWave::errorEstimate(const ProcessorGroup*,
                             const PatchSubset* patches,
                             const MaterialSubset* matls,
@@ -187,7 +194,8 @@ void AMRWave::errorEstimate(const ProcessorGroup*,
     }
   }
 }
-
+//______________________________________________________________________
+//
 void AMRWave::refineCell(CCVariable<double>& finevar, constCCVariable<double>& coarsevar, IntVector fineIndex,
                     const Level* fineLevel, const Level* coarseLevel)
 {
@@ -245,7 +253,8 @@ void AMRWave::refineCell(CCVariable<double>& finevar, constCCVariable<double>& c
   //amrwave << ": " << finevar[fineIndex] << endl;
 
 }
-
+//______________________________________________________________________
+//
 void AMRWave::coarsenCell(CCVariable<double>& coarsevar, constCCVariable<double>& finevar, IntVector coarseIndex,
                     const Level* fineLevel, const Level* coarseLevel)
 {
@@ -267,7 +276,8 @@ void AMRWave::coarsenCell(CCVariable<double>& coarsevar, constCCVariable<double>
   coarsevar[coarseIndex]=tmp/(crr.x()*crr.y()*crr.z());
   // amrwave << ": " << coarsevar[coarseIndex] << endl;
 }
-
+//______________________________________________________________________
+//
 void AMRWave::refine(const ProcessorGroup*,
                      const PatchSubset* patches,
                      const MaterialSubset* matls,
@@ -321,7 +331,8 @@ void AMRWave::refine(const ProcessorGroup*,
     } // matls
   } // finePatches
 }
-
+//______________________________________________________________________
+//
 void AMRWave::coarsen(const ProcessorGroup*,
                       const PatchSubset* patches,
                       const MaterialSubset* matls,
@@ -367,7 +378,8 @@ void AMRWave::coarsen(const ProcessorGroup*,
     } // matls
   } // patches
 }
-
+//______________________________________________________________________
+//
 void AMRWave::addRefineDependencies(Task* task, const VarLabel* var,
                                     bool needCoarseOld, bool needCoarseNew)
 {
@@ -382,7 +394,8 @@ void AMRWave::addRefineDependencies(Task* task, const VarLabel* var,
     task->requires(Task::CoarseNewDW, var,
 		   0, Task::CoarseLevel, 0, Task::NormalDomain, gc, 1);
 }
-
+//______________________________________________________________________
+//
 void AMRWave::refineFaces(const Patch* finePatch, 
                  const Level* fineLevel,
 		 const Level* coarseLevel, 

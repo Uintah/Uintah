@@ -64,6 +64,10 @@ MPMLabel::MPMLabel()
   pScratchVecLabel  = VarLabel::create( "p.scratchvec",
 			ParticleVariable<Vector>::getTypeDescription() );
   
+  // for visualization only
+  pScaleFactorLabel = VarLabel::create( "p.scalefactor",
+			ParticleVariable<Vector>::getTypeDescription());
+  
   // for thermal stress
   pTempCurrentLabel = VarLabel::create( "p.tempCurrent",
                         ParticleVariable<double>::getTypeDescription() ); 
@@ -681,6 +685,7 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(czIDLabel_preReloc);
   VarLabel::destroy(pPressureLabel);
   VarLabel::destroy(pScratchVecLabel);
+  VarLabel::destroy(pScaleFactorLabel);
   VarLabel::destroy(pLocalizedMPMLabel);
   VarLabel::destroy(pSizeLabel);
   VarLabel::destroy(pSizeLabel_preReloc);

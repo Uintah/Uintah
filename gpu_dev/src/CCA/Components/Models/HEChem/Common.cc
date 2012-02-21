@@ -64,42 +64,42 @@ namespace Uintah {
                                               constNCVariable<double> &NCsolidMass, 
                                               constNCVariable<double> &NC_CCweight, 
                                               Vector &dx){
-        double gradRhoX = 0.25 * (
+        double gradRhoX = 0.25 * (           // xminus
                                   (NCsolidMass[nodeIdx[0]]*NC_CCweight[nodeIdx[0]]+
                                    NCsolidMass[nodeIdx[1]]*NC_CCweight[nodeIdx[1]]+
                                    NCsolidMass[nodeIdx[2]]*NC_CCweight[nodeIdx[2]]+
                                    NCsolidMass[nodeIdx[3]]*NC_CCweight[nodeIdx[3]])
-                                  -
+                                  -          // xplus
                                   (NCsolidMass[nodeIdx[4]]*NC_CCweight[nodeIdx[4]]+
                                    NCsolidMass[nodeIdx[5]]*NC_CCweight[nodeIdx[5]]+
                                    NCsolidMass[nodeIdx[6]]*NC_CCweight[nodeIdx[6]]+
                                    NCsolidMass[nodeIdx[7]]*NC_CCweight[nodeIdx[7]])
                                   )/dx.x();
         
-        double gradRhoY = 0.25 * (
+        double gradRhoY = 0.25 * (           // yminus
                                   (NCsolidMass[nodeIdx[0]]*NC_CCweight[nodeIdx[0]]+
                                    NCsolidMass[nodeIdx[1]]*NC_CCweight[nodeIdx[1]]+
                                    NCsolidMass[nodeIdx[4]]*NC_CCweight[nodeIdx[4]]+
                                    NCsolidMass[nodeIdx[5]]*NC_CCweight[nodeIdx[5]])
-                                  -
+                                  -          // yplus
                                   (NCsolidMass[nodeIdx[2]]*NC_CCweight[nodeIdx[2]]+
                                    NCsolidMass[nodeIdx[3]]*NC_CCweight[nodeIdx[3]]+
                                    NCsolidMass[nodeIdx[6]]*NC_CCweight[nodeIdx[6]]+
                                    NCsolidMass[nodeIdx[7]]*NC_CCweight[nodeIdx[7]])
                                   )/dx.y();
-        
-        double gradRhoZ = 0.25 * (
-                                  (NCsolidMass[nodeIdx[1]]*NC_CCweight[nodeIdx[1]]+
-                                   NCsolidMass[nodeIdx[3]]*NC_CCweight[nodeIdx[3]]+
-                                   NCsolidMass[nodeIdx[5]]*NC_CCweight[nodeIdx[5]]+
-                                   NCsolidMass[nodeIdx[7]]*NC_CCweight[nodeIdx[7]])
-                                  -
+       
+        double gradRhoZ = 0.25 * (           // zminus
                                   (NCsolidMass[nodeIdx[0]]*NC_CCweight[nodeIdx[0]]+
                                    NCsolidMass[nodeIdx[2]]*NC_CCweight[nodeIdx[2]]+
                                    NCsolidMass[nodeIdx[4]]*NC_CCweight[nodeIdx[4]]+
                                    NCsolidMass[nodeIdx[6]]*NC_CCweight[nodeIdx[6]])
+                                  -          // zplus
+                                  (NCsolidMass[nodeIdx[1]]*NC_CCweight[nodeIdx[1]]+
+                                   NCsolidMass[nodeIdx[3]]*NC_CCweight[nodeIdx[3]]+
+                                   NCsolidMass[nodeIdx[5]]*NC_CCweight[nodeIdx[5]]+
+                                   NCsolidMass[nodeIdx[7]]*NC_CCweight[nodeIdx[7]])
                                   )/dx.z();
-        
+
         double absGradRho = sqrt(gradRhoX*gradRhoX + gradRhoY*gradRhoY + gradRhoZ*gradRhoZ );
         
         return Vector(gradRhoX/absGradRho, gradRhoY/absGradRho, gradRhoZ/absGradRho);

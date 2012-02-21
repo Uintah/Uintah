@@ -10,7 +10,7 @@
 template< typename PhiVolT, typename PhiFaceT >
 FluxLimiterInterpolant<PhiVolT,PhiFaceT>::
 FluxLimiterInterpolant( const std::vector<int>& dim,
-                        const std::vector<bool> hasPlusFace )
+                       const std::vector<bool> hasPlusFace )
 {
   stride_ = calculate_stride(dim, hasPlusFace);
   
@@ -145,56 +145,78 @@ set_flux_limiter_type( Wasatch::ConvInterpMethods limiterType )
 double calculate_flux_limiter_function( double r, Wasatch::ConvInterpMethods limiterType ) {
   // r is the ratio of successive gradients on the mesh
   // limiterType holds the name of the limiter function to be used
+  const double infinity_ = 1.0e10;
+  if ( r < -infinity_ ) return 0.0;
+
   double temp = 0.0;
-  
   switch (limiterType) {
       
     case Wasatch::SUPERBEE:
-      temp = std::max( std::min(2.0*r, 1.0), std::min(r, 2.0) );
-      temp = std::max( 0.0, temp );
+      if ( r < infinity_ ) {
+        temp = std::max( std::min(2.0*r, 1.0), std::min(r, 2.0) );
+        temp = std::max( 0.0, temp );
+      } else {
+        temp = 2.0;
+      }
       break;
       
     case Wasatch::CHARM:
-      if (r > 0.0) temp = r*(3.0*r + 1)/((r+1)*(r+1));
-      else temp = 0.0;
+      if ( r < infinity_ ) {
+        if (r > 0.0) temp = r*(3.0*r + 1)/((r+1)*(r+1));
+        else temp = 0.0;
+      } else {
+        temp = 3.0;
+      }
       break;
       
     case Wasatch::KOREN:
-      temp = std::min(2.0*r, (r + 2.0)/3.0);
-      temp = std::min(temp, 2.0);
-      temp = std::max(0.0, temp);      
+      if ( r < infinity_ ) {
+        temp = std::min(2.0*r, (r + 2.0)/3.0);
+        temp = std::min(temp, 2.0);
+        temp = std::max(0.0, temp);              
+      } else {
+        temp = 2.0;
+      }
       break;
       
-    case Wasatch::MC:
-      temp = std::min(2.0*r, 0.5*(r + 1.0));
-      temp = std::min(temp, 2.0);
-      temp = std::max(0.0, temp);          
+    case Wasatch::MC:      
+      if ( r < infinity_ ) {
+        temp = std::min(2.0*r, 0.5*(r + 1.0));
+        temp = std::min(temp, 2.0);
+        temp = std::max(0.0, temp);          
+      } else {
+        temp = 2.0;
+      }      
       break;
       
     case Wasatch::OSPRE:
-      temp = 1.5*(r*r + r)/(r*r + r + 1.0);
+      temp=( r < infinity_ ) ? 1.5*(r*r + r)/(r*r + r + 1.0) : 1.5;
       break;
       
     case Wasatch::SMART:
-      temp = std::min(2.0*r, 0.75*r + 0.25);
-      temp = std::min(temp, 4.0);
-      temp = std::max(0.0, temp);          
+      if ( r < infinity_ ) {
+        temp = std::min(2.0*r, 0.75*r + 0.25);
+        temp = std::min(temp, 4.0);
+        temp = std::max(0.0, temp);          
+      } else {
+        temp = 4.0;
+      }            
       break;
       
     case Wasatch::VANLEER:
-      temp = (r + std::abs(r))/(1 + std::abs(r));
+      temp=( r < infinity_ ) ? (r + std::abs(r))/(1 + std::abs(r)) : 2.0;
       break;
       
     case Wasatch::HCUS:
-      temp = ( 1.5*(r + std::abs(r)) )/(r + 2.0);
+      temp=( r < infinity_ ) ? ( 1.5*(r + std::abs(r)) )/(r + 2.0) : 3.0;
       break;
       
     case Wasatch::MINMOD:
-      temp = std::max( 0.0, std::min(1.0, r) );
+      temp=( r < infinity_ ) ? std::max( 0.0, std::min(1.0, r) ) : 1.0;
       break;
       
     case Wasatch::HQUICK:
-      temp = ( 2*(r + std::abs(r)) )/(r + 3.0);    
+      temp=( r < infinity_ ) ? ( 2*(r + std::abs(r)) )/(r + 3.0) : 4.0;
       break;
 
     default:
@@ -244,7 +266,8 @@ apply_to_field( const PhiVolT &src, PhiFaceT &dest ) const
         
         if ((*advVel) > 0.0) {
           // for a minus face, if the velocity if positive, then use central approximation
-          *destFld = 0.5*(*srcFieldPlus + *srcFieldMinus);
+          //*destFld = 0.5*(*srcFieldPlus + *srcFieldMinus);
+          *destFld = *srcFieldMinus;
         }
         
         else if ((*advVel) < 0.0) { 
@@ -295,8 +318,8 @@ apply_to_field( const PhiVolT &src, PhiFaceT &dest ) const
         
         if ((*advVel) < 0.0) {
           // for a minus face, if the velocity if positive, then use central approximation
-          *destFld = 0.5*(*srcFieldPlus + *srcFieldMinus);
-          //*destFld = *srcFieldPlus;
+          //*destFld = 0.5*(*srcFieldPlus + *srcFieldMinus);
+          *destFld = *srcFieldPlus;
         }
         
         else if ((*advVel) > 0.0) { 

@@ -380,7 +380,7 @@
     <!-- Spec for basic expression types -->
     <BasicExpression		spec="MULTIPLE NO_DATA"
                             attribute1="type REQUIRED STRING 'SVOL,XVOL,YVOL,ZVOL"
-                            children1="ONE_OF(CHILD Constant,LinearFunction, ParabolicFunction,SineFunction,GaussianFunction,DoubleTanhFunction,SineTime)" >
+                            children1="ONE_OF(CHILD Constant,LinearFunction, ParabolicFunction,SineFunction,GaussianFunction,DoubleTanhFunction,SineTime,ExprAlgebra)" >
       <TaskList				spec="REQUIRED STRING 'initialization,timestep_size,advance_solution'" />
       <NameTag				spec="REQUIRED" />
       <Constant				spec="OPTIONAL DOUBLE" />
@@ -429,10 +429,113 @@
                             attribute4="baseline REQUIRED DOUBLE">
         <NameTag            spec="REQUIRED"/>
       </GaussianFunction>
-
+      
+      <!-- Algebraic Operations Function - sum, product, difference between expressions !-->
+      <ExprAlgebra    	spec="OPTIONAL NO_DATA"
+                        attribute1="algebraicOperation REQUIRED STRING 'SUM, DIFFERENCE, PRODUCT'">
+        <Field1      spec="REQUIRED NO_DATA">
+          <NameTag        spec="REQUIRED"/>
+        </Field1>
+        <Field2      spec="REQUIRED NO_DATA">
+          <NameTag        spec="REQUIRED"/>
+        </Field2>
+      </ExprAlgebra>
+      
       
     </BasicExpression>
+    
+    <PhysicsCoefficient     spec="MULTIPLE NO_DATA"
+                            attribute1="type REQUIRED STRING 'SVOL,XVOL,YVOL,ZVOL"
+                            children1="ONE_OF(CHILD PrecipitationBulkDiffusionCoefficient, PrecipitationMonosurfaceCoefficient, 
+                            PrecipitationClassicNucleationCoefficient, PrecipitationClassicRStarValue, PrecipitationSimpleRStarValue)">  
+      <TaskList				spec="REQUIRED STRING 'initialization,timestep_size,advance_solution'" />
+      <NameTag				spec="REQUIRED" />
+
+      <PrecipitationBulkDiffusionCoefficient spec = "OPTIONAL NO_DATA"
+                                             attribute1="Diff_Coef REQUIRED DOUBLE"
+                                             attribute2="Molec_Vol REQUIRED DOUBLE">                                  
+        <Supersaturation spec = "REQUIRED NO_DATA">                                      
+          <NameTag spec="REQUIRED"/>
+        </Supersaturation >
+        <EquilibriumConcentration spec = "REQUIRED NO_DATA">
+          <NameTag spec="REQUIRED"/>
+        </EquilibriumConcentration>
+        <OstwaldRipening spec = "OPTIONAL NO_DATA"/> <!-- swaps between (S - \bar{S}) & (S - 1)-->
+      </PrecipitationBulkDiffusionCoefficient>
+      
+      <PrecipitationMonosurfaceCoefficient spec = "OPTIONAL NO_DATA"
+                                             attribute1="Diff_Coef REQUIRED DOUBLE"
+                                             attribute2="Molec_D REQUIRED DOUBLE"
+                                             attribute3="Surf_Eng REQUIRED DOUBLE"
+                                             attribute4="Temperature REQUIRED DOUBLE">
+        <Supersaturation spec = "REQUIRED NO_DATA">                                      
+          <NameTag spec="REQUIRED"/>
+        </Supersaturation>
+      </PrecipitationMonosurfaceCoefficient>
+      
+      <PrecipitationClassicNucleationCoefficient spec = "OPTIONAL NO_DATA"
+                                             attribute1="Molec_Vol REQUIRED DOUBLE"
+                                             attribute2="Surf_Eng REQUIRED DOUBLE"
+                                             attribute3="Temperature REQUIRED DOUBLE">
+        <Supersaturation spec = "REQUIRED NO_DATA">                                   
+          <NameTag spec="REQUIRED"/>
+        </Supersaturation>
+      </PrecipitationClassicNucleationCoefficient>     
+      
+      <PrecipitationSimpleRStarValue spec = "OPTIONAL NO_DATA"
+                        attribute1 = "R_0 REQUIRED DOUBLE"
+                        attribute2 = "Conversion_Fac REQUIRED DOUBLE">
+        <Supersaturation spec = "REQUIRED NO_DATA">                                    
+          <NameTag spec="REQUIRED"/>
+        </Supersaturation>
+      </PrecipitationSimpleRStarValue>
+      
+      <PrecipitationClassicRStarValue spec = "OPTIONAL NO_DATA"
+                                      attribute1 = "Surf_Eng REQUIRED DOUBLE"
+                                      attribute2 = "Molec_Vol REQUIRED DOUBLE"
+                                      attribute3 = "Temperature REQUIRED DOUBLE" 
+                                      attribute4 = "Conversion_Fac REQUIRED DOUBLE">
+        <Supersaturation spec = "REQUIRED NO_DATA">                                     
+          <NameTag spec="REQUIRED"/>
+        </Supersaturation>
+      </PrecipitationClassicRStarValue>
+       
+    </PhysicsCoefficient>
     <!-- ========================================= -->
+
+
+    <!-- Spec for basic expression types -->
+    <PostProcessingExpression		spec="MULTIPLE NO_DATA"
+                            attribute1="type REQUIRED STRING 'SVOL,XVOL,YVOL,ZVOL"
+                            children1="ONE_OF(CHILD VelocityMagnitude Vorticity)" >
+      <TaskList				spec="REQUIRED STRING 'initialization, advance_solution'" />
+      <NameTag				spec="REQUIRED" />
+
+      <VelocityMagnitude  spec="OPTIONAL NO_DATA">
+        <XVelocity      spec="OPTIONAL NO_DATA">
+          <NameTag        spec="REQUIRED"/>
+        </XVelocity>
+        <YVelocity      spec="OPTIONAL NO_DATA">
+          <NameTag        spec="REQUIRED"/>
+        </YVelocity>
+        <ZVelocity      spec="OPTIONAL NO_DATA">
+          <NameTag        spec="REQUIRED"/>
+        </ZVelocity>     
+      </VelocityMagnitude>
+
+      <!-- Vorticity -->
+      <!-- Note that the order of the velocities matters: wx = dw/dy - dv/dz, wy = du/dz - dw/dx, wz = dv/dx - du/dy -->
+      <Vorticity  spec="OPTIONAL NO_DATA">
+        <Component spec="REQUIRED STRING 'X, Y, Z'" />
+        <Vel1      spec="OPTIONAL NO_DATA">
+          <NameTag        spec="REQUIRED"/>
+        </Vel1>
+        <Vel2      spec="OPTIONAL NO_DATA">
+          <NameTag        spec="REQUIRED"/>
+        </Vel2>
+      </Vorticity>
+
+    </PostProcessingExpression>
 
   </CommonTags>
   <!-- End Common Block -->
@@ -576,7 +679,8 @@
         <alpha_momentum     spec="REQUIRED DOUBLE 'positive'"/>
         <alpha_temperature  spec="REQUIRED DOUBLE 'positive'"/>
       </microSlip>
-      
+
+       <!-- angle in degrees for ellipse -->
       <Face                 spec="MULTIPLE NO_DATA"
                               attribute1="annulus       OPTIONAL STRING 'x-, x+, y-, y+, z-, z+'"
                               attribute2="circle        OPTIONAL STRING 'x-, x+, y-, y+, z-, z+'"
@@ -585,10 +689,14 @@
                               attribute5="outer_radius  OPTIONAL DOUBLE 'positive'"
                               attribute6="side          OPTIONAL STRING 'x-, x+, y-, y+, z-, z+'"
                               attribute7="radius        OPTIONAL DOUBLE 'positive'" 
-                              attribute8="rectangle      OPTIONAL STRING 'x-, x+, y-, y+, z-, z+'" 
-                              attribute9="lower          OPTIONAL MULTIPLE_DOUBLES" 
-                              attribute10="upper          OPTIONAL MULTIPLE_DOUBLES"
-                              attribute11="name          OPTIONAL STRING">
+                              attribute8="rectangle     OPTIONAL STRING 'x-, x+, y-, y+, z-, z+'" 
+                              attribute9="lower         OPTIONAL MULTIPLE_DOUBLES" 
+                              attribute10="upper        OPTIONAL MULTIPLE_DOUBLES"
+                              attribute11="ellipse      OPTIONAL STRING 'x-, x+, y-, y+, z-, z+'"                              
+                              attribute12="major_radius OPTIONAL DOUBLE 'positive'"
+                              attribute13="minor_radius OPTIONAL DOUBLE 'positive'"
+                              attribute14="angle        OPTIONAL DOUBLE 'positive'"                                                                                          
+                              attribute15="name         OPTIONAL STRING">
         <BCType             spec="MULTIPLE NO_DATA"
                               attribute1="id        REQUIRED STRING '0,1,2,3,4,5,6,all'"
                               attribute2="var       REQUIRED STRING 'Neumann, Dirichlet, symmetry, LODI, computeFromDensity, Sine, creep, slip Custom, 

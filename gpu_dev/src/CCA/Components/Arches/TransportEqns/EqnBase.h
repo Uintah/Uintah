@@ -311,8 +311,23 @@ void EqnBase::initializationFunction( const Patch* patch, phiType& phi, constPhi
         }
       }
     } else if ( d_initFunction == "mms1" ) {
-      //======= an MMS with the function phi = sin(2*pi*x)cos(2*pi*y)tan(2*pi*z) ======
+      //======= an MMS with the function phi = sin(2*pi*x)cos(2*pi*y) ======
       phi[c] = sin(2.0 * pi * x)*cos(2.0 * pi * y)* weight[c];
+
+    } else if ( d_initFunction == "sine-x" ) { 
+      //======= sin function in x ======
+
+      phi[c] = sin( 2.0 * pi * x ); 
+
+    } else if ( d_initFunction == "sine-y" ) { 
+      //======= sin function in y ======
+
+      phi[c] = sin( 2.0 * pi * y ); 
+
+    } else if ( d_initFunction == "sine-z" ) { 
+      //======= sin function in z ======
+
+      phi[c] = sin( 2.0 * pi * z ); 
 
     // ======= add other initialization functions below here ======
     } else {
@@ -409,6 +424,21 @@ void EqnBase::initializationFunction( const Patch* patch, phiType& phi, constCCV
     } else if ( d_initFunction == "mms1" ) {
       //======= an MMS with the function phi = sin(2*pi*x)cos(2*pi*y) ======
       phi[c] = sin(2.0 * pi * x)*cos(2.0 * pi * y);
+
+    } else if ( d_initFunction == "sine-x" ) { 
+      //======= sin function in x ======
+
+      phi[c] = sin( 2.0 * pi * x ); 
+
+    } else if ( d_initFunction == "sine-y" ) { 
+      //======= sin function in y ======
+
+      phi[c] = sin( 2.0 * pi * y ); 
+
+    } else if ( d_initFunction == "sine-z" ) { 
+      //======= sin function in z ======
+
+      phi[c] = sin( 2.0 * pi * z ); 
 
     } else if (d_initFunction == "geometry_fill") {
       //======= Fills a geometry piece with the value of d_constant_init ======

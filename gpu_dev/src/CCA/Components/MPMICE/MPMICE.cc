@@ -2080,11 +2080,11 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
       // ignore BP if timestep restart has already been requested
       bool tsr = new_dw->timestepRestarted();
       
-      ostringstream message;
+      string message;
       bool allTestsPassed = true;
       if(test_max_iter == d_ice->d_max_iter_equilibration && !tsr){
         allTestsPassed = false;
-        message << "Max. iterations reached ";
+        message += "Max. iterations reached ";
       }
       
       for (int m = 0; m < numALLMatls; m++) {
@@ -2093,24 +2093,24 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
       
       if ( fabs(sum - 1.0) > convergence_crit && !tsr) {  
         allTestsPassed = false;
-        message << " sum (volumeFractions) != 1 ";
+        message += " sum (volumeFractions) != 1 ";
       }
       
       if ( press_new[c] < 0.0 && !tsr) {
         allTestsPassed = false;
-        message << " Computed pressure is < 0 ";
+        message += " Computed pressure is < 0 ";
       }
       
       for (int m = 0; m < numALLMatls; m++){
         if ((rho_micro[m][c] < 0.0 || vol_frac[m][c] < 0.0) && !tsr) {
           allTestsPassed = false;
-          message <<" rho_micro < 0 || vol_frac < 0";
+          message += " rho_micro < 0 || vol_frac < 0";
         }
       }
       if(allTestsPassed != true){  // throw an exception of there's a problem
         ostringstream warn;
         warn << "\nMPMICE::ComputeEquilibrationPressure: Cell "<< c << ", L-"<<L_indx <<"\n"
-             << message.str()
+             << message
              <<"\nThis usually means that something much deeper has gone wrong with the simulation. "
              <<"\nCompute equilibration pressure task is rarely the problem. "
              << "For more debugging information set the environmental variable:  \n"

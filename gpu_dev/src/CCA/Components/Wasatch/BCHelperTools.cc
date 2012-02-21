@@ -393,6 +393,8 @@ namespace Wasatch {
         case Uintah::Patch::invalidFace:
           throw Uintah::ProblemSetupException( "An invalid face Patch::invalidFace was encountered while setting boundary conditions", __FILE__, __LINE__ );
           break;
+        default:
+          break;
       }
 
     } else if (bc_kind.compare("Neumann")==0 ){
@@ -420,6 +422,8 @@ namespace Wasatch {
           break;
         case Uintah::Patch::invalidFace:
           throw Uintah::ProblemSetupException( "An invalid face Patch::invalidFace was encountered while setting boundary conditions", __FILE__, __LINE__ );
+          break;
+        default:
           break;
       }
     }

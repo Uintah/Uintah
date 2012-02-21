@@ -56,9 +56,15 @@ NIGHTLYTESTS = [
    ("dqmom_test_4"           , "DQMOM_regression/dqmom_test_4.ups"       , 1.1 , "Linux"  , ["exactComparison"]) , 
    ("dqmom_test_5"           , "DQMOM_regression/dqmom_test_5.ups"       , 1.1 , "Linux"  , ["exactComparison"]) , 
    ("methane_jet"            , "ClassicMixingTables/ups/methane_jet.ups" , 1.1 , "Linux"  , ["exactComparison", "no_restart"]) , 
-   ("acidbase_jet"           , "ClassicMixingTables/ups/acidbase_jet.ups", 1.1 , "Linux"  , ["doesTestRun", "no_restart"]) ,
-   ("acidbase_jet_2D"        , "ClassicMixingTables/ups/acidbase_jet_2D.ups", 1.1, "Linux", ["doesTestRun", "no_restart"]) ,
-   ("1Dtabletest"            , "ClassicMixingTables/ups/1DTableTest.ups" , 1.1 , "Linux"  , ["doesTestRun", "no_restart"])
+   ("acidbase_jet"           , "ClassicMixingTables/ups/acidbase_jet.ups", 1.1 , "Linux"  , ["exactComparison", "no_restart"]) ,
+   ("acidbase_jet_2D"        , "ClassicMixingTables/ups/acidbase_jet_2D.ups", 1.1, "Linux", ["exactComparison", "no_restart"]) ,
+   ("1Dtabletest"            , "ClassicMixingTables/ups/1DTableTest.ups" , 1.1 , "Linux"  , ["exactComparison", "no_restart"]) , 
+   ("xplus_scalar_test"      , "ScalarTests/xplus_scalar_test.ups"       , 6   , "Linux"  , ["exactComparison", "no_restart"]) , 
+   ("yplus_scalar_test"      , "ScalarTests/yplus_scalar_test.ups"       , 6   , "Linux"  , ["exactComparison", "no_restart"]) , 
+   ("zplus_scalar_test"      , "ScalarTests/zplus_scalar_test.ups"       , 6   , "Linux"  , ["exactComparison", "no_restart"]) , 
+   ("xminus_scalar_test"     , "ScalarTests/xminus_scalar_test.ups"      , 6   , "Linux"  , ["exactComparison", "no_restart"]) , 
+   ("yminus_scalar_test"     , "ScalarTests/yminus_scalar_test.ups"      , 6   , "Linux"  , ["exactComparison", "no_restart"]) , 
+   ("zminus_scalar_test"     , "ScalarTests/zminus_scalar_test.ups"      , 6   , "Linux"  , ["exactComparison", "no_restart"])
 ]
 
 # Tests that are run during local regression testing
@@ -78,7 +84,13 @@ LOCALTESTS = [
    ("methane_jet"            , "ClassicMixingTables/ups/methane_jet.ups" , 1.1 , "All"   , ["exactComparison", "no_restart"]) ,
    ("acidbase_jet"           , "ClassicMixingTables/ups/acidbase_jet.ups", 1.1 , "All"   , ["exactComparison", "no_restart"]) ,
    ("acidbase_jet_2D"        , "ClassicMixingTables/ups/acidbase_jet_2D.ups", 1.1, "All" , ["exactComparison", "no_restart"]) ,
-   ("1DTableTest"            , "ClassicMixingTables/ups/1DTableTest.ups" , 1.1 , "All"   , ["exactComparison", "no_restart"])
+   ("1DTableTest"            , "ClassicMixingTables/ups/1DTableTest.ups" , 1.1 , "All"   , ["exactComparison", "no_restart"]) ,
+   ("xplus_scalar_test"      , "ScalarTests/xplus_scalar_test.ups"       , 6   , "All"  , ["exactComparison", "no_restart"]) , 
+   ("yplus_scalar_test"      , "ScalarTests/yplus_scalar_test.ups"       , 6   , "All"  , ["exactComparison", "no_restart"]) , 
+   ("zplus_scalar_test"      , "ScalarTests/zplus_scalar_test.ups"       , 6   , "All"  , ["exactComparison", "no_restart"]) , 
+   ("xminus_scalar_test"     , "ScalarTests/xminus_scalar_test.ups"      , 6   , "All"  , ["exactComparison", "no_restart"]) , 
+   ("yminus_scalar_test"     , "ScalarTests/yminus_scalar_test.ups"      , 6   , "All"  , ["exactComparison", "no_restart"]) , 
+   ("zminus_scalar_test"     , "ScalarTests/zminus_scalar_test.ups"      , 6   , "All"  , ["exactComparison", "no_restart"]) , 
 ]
 
 #__________________________________

@@ -16,6 +16,8 @@ TaskGraphDetailed SCI_DEBUG     prints out internal details of computes and requ
 WaitForDebugger   SCI_DEBUG     when an exception is thrown halt the program and print out
                                 the pid so you can attach a debugger to it.
 OnDemandDataWarehouse           outputs when a variable is retrieved or put into the data warehouse.
+VarLabel                        List when a VarLabel is created and deleted
+
 
 ICE:
 __________________________________

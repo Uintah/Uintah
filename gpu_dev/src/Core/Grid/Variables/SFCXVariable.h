@@ -108,10 +108,15 @@ WARNING
     SFCXVariable(const SFCXVariable<T>&);
 
   private:
+    static TypeDescription* td;
+    
     SFCXVariable<T>& operator=(const SFCXVariable<T>&);
 
     static Variable* maker();
   };
+  
+  template<class T>
+  TypeDescription* SFCXVariable<T>::td = 0;
 
   template<class T>
   TypeDescription::Register
@@ -121,7 +126,6 @@ WARNING
   const TypeDescription*
   SFCXVariable<T>::getTypeDescription()
   {
-    static TypeDescription* td;
     if(!td){
       td = scinew TypeDescription(TypeDescription::SFCXVariable,
                                   "SFCXVariable", &maker,

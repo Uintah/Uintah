@@ -33,6 +33,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/Patch.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Thread/Mutex.h>
+#include <Core/Util/DebugStream.h>
 #include <map>
 #include <iostream>
 #include <sstream>
@@ -40,6 +41,7 @@ DEALINGS IN THE SOFTWARE.
 using namespace Uintah;
 using namespace SCIRun;
 
+static DebugStream dbg("VarLabel", false);
 
 static map<string, VarLabel*> allLabels;
 string VarLabel::defaultCompressionMode = "none";
@@ -73,9 +75,11 @@ VarLabel::create(const string& name,
   else {
     label = scinew VarLabel(name, td, boundaryLayer, vartype);
     allLabels[name]=label;
+    dbg << "Created VarLabel: " << label->d_name << std::endl;
   }
   label->addReference();
-  lock.unlock();  
+  lock.unlock(); 
+  
   return label;
 }
 
@@ -88,10 +92,14 @@ VarLabel::destroy(const VarLabel* label)
     map<string, VarLabel*>::iterator iter = allLabels.find(label->d_name);
     if(iter != allLabels.end() && iter->second == label)
       allLabels.erase(iter); 
+      
+    dbg << "Deleted VarLabel: " << label->d_name << std::endl;  
     lock.unlock();
     delete label;
+    
     return true;
   }
+
   return false;
 }
 

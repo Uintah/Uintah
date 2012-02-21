@@ -37,6 +37,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/BoundaryConditions/SideBCData.h>
 #include <Core/Grid/BoundaryConditions/CircleBCData.h>
 #include <Core/Grid/BoundaryConditions/AnnulusBCData.h>
+#include <Core/Grid/BoundaryConditions/EllipseBCData.h>
 #include <Core/Grid/BoundaryConditions/RectangleBCData.h>
 #include <Core/Grid/BoundaryConditions/UnionBCData.h>
 #include <Core/Grid/BoundaryConditions/DifferenceBCData.h>
@@ -240,6 +241,58 @@ BCGeomBase* BoundCondReader::createBoundaryConditionFace(ProblemSpecP& face_ps,
     }
     bcGeom = scinew AnnulusBCData(p,i_r,o_r);
   }
+  else if (values.find("ellipse") != values.end()) {
+    fc = values["ellipse"];
+    whichPatchFace(fc, face_side, plusMinusFaces, p_dir);
+    string str_origin = values["origin"];
+    string str_minor_radius = values["minor_radius"];    
+    string str_major_radius = values["major_radius"];
+    string str_angle = values["angle"];    
+    std::stringstream origin_stream(str_origin);
+    std::stringstream minor_radius_stream(str_minor_radius);
+    std::stringstream major_radius_stream(str_major_radius);
+    std::stringstream angle_stream(str_angle);
+    double minor_r,major_r,origin[3], angle;
+    minor_radius_stream >> minor_r;
+    major_radius_stream >> major_r;
+    origin_stream >> origin[0] >> origin[1] >> origin[2];
+    Point p(origin[0],origin[1],origin[2]);
+    angle_stream >> angle;
+    
+    //  bullet proofing-- origin must be on the same plane as the face
+    bool test = true;
+    if(plusMinusFaces == -1){    // x-, y-, z- faces
+      test = (p(p_dir) != grid_LoPt(p_dir));
+    }
+    if(plusMinusFaces == 1){     // x+, y+, z+ faces
+      test = (p(p_dir) != grid_HiPt(p_dir));
+    }    
+    
+    if(test){
+      ostringstream warn;
+      warn<<"ERROR: Input file\n The Ellipse BC geometry is not correctly specified."
+      << " The origin " << p << " must be on the same plane" 
+      << " as face (" << fc <<"). Double check the origin and Level:box spec. \n\n";
+      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+    }
+    
+    if (major_r < minor_r) {
+      ostringstream warn;
+      warn<<"ERROR\n Ellipse BC geometry not correctly specified \n"
+      << " Major radius must be larger than minor radius \n\n";
+      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+    }    
+    
+    if (str_origin == "" || str_minor_radius == "" || str_major_radius == "" ) {
+      ostringstream warn;
+      warn<<"ERROR\n Ellipse BC geometry not correctly specified \n"
+      << " you must specify origin [x,y,z], inner_radius [r] outer_radius [r] \n\n";
+      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+    }
+    
+    bcGeom = scinew EllipseBCData(p,minor_r,major_r,fc,angle);
+  }
+  
   else if (values.find("rectangle") != values.end()) {
     fc = values["rectangle"];
     whichPatchFace(fc, face_side, plusMinusFaces, p_dir);
