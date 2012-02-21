@@ -717,7 +717,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
        int Nx = pHigh[0] - pLow[0];
        if (i==Nx/2 && k==Nx/2){
      */
-
+      //if(i==20 && j==20){
       double SumI = 0;
       
       Vector tMax;
@@ -834,6 +834,26 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
               cur   = level->mapCellToCoarser(cur); 
               level = level->getCoarserLevel().get_rep();
               level->findInteriorCellIndexRange(domainLo, domainHi);     // excluding extraCells
+              
+              //__________________________________
+              // Account for uniqueness of first step after reaching a new level
+              disMin        = (tMax[dir] - tMax_prev);       
+              tMax_prev     = tMax[dir];
+              tMax[dir]     = tMax[dir] + tDelta[L][dir];
+              
+              int coarsenRatio = 1;  // Todd:  do you know how to get this dynamically?
+              Vector lineup;
+              for (int ii=0; ii<3; ii++){
+                if (sign[ii]) {
+                  lineup[ii] = cur[ii] % coarsenRatio - (coarsenRatio - 1 );   
+                }  
+              
+                else {
+                  lineup[ii] = cur[ii] % coarsenRatio;
+                }
+              }
+              tMax += lineup * tDelta[L]; 
+              
               L     = level->getIndex();
               onFinePatch = false;
               dbg2 << " Jumping off fine patch switching Levels:  prev L: " << prevLev << " cur L " << L << " cur " << cur << endl;
@@ -850,10 +870,14 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
             
             //__________________________________
             //  update marching variables
-            disMin        = tMax[dir] - tMax_prev;        // Todd:   replace tMax[dir]
-            tMax_prev     = tMax[dir];
-            tMax[dir]     = tMax[dir] + tDelta[L][dir];
-            face          = dir;
+            else {
+              disMin        = tMax[dir] - tMax_prev;        // Todd:   replace tMax[dir]
+              tMax_prev     = tMax[dir];
+              tMax[dir]     = tMax[dir] + tDelta[L][dir];
+              
+            }
+
+            face = dir;
      
             in_domain = containsCell(domainLo, domainHi, cur, face);
 
@@ -911,7 +935,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
       divQ_fine[origin] = 4.0 * _pi * abskg_fine[origin] * ( sigmaT4Pi_fine[origin] - (SumI/_NoOfRays) );
       dbg2 << origin << "    divQ: " << divQ_fine[origin] << " term2 " << abskg_fine[origin] << " sumI term " << (SumI/_NoOfRays) << endl;
       
-      //cout << divQ[origin] << endl;
+      //cout << divQ_fine[origin] << endl;
        // } // end quick debug testing
     }  // end cell iterator
 
