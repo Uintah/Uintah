@@ -447,9 +447,13 @@ WARNING
     // Insert Documentation Here:
     void subpatchCapable(bool state=true);
 
-    enum DomainSpec {
+    enum MaterialDomainSpec {
       NormalDomain,  // <- Normal/default setting
-      OutOfDomain,   // <- Require things from another level or set of patches
+      OutOfDomain,   // <- Require things from all material 
+    };
+
+    enum PatchDomainSpec {
+      ThisLevel,  // <- Normal/default setting
       CoarseLevel,   // <- AMR :  The data on the coarse level under the range of the fine patches (including extra cells or boundary layers)
       FineLevel,     // <- AMR :  The data on the fine level under the range of the coarse patches (including extra cells or boundary layers)
       OtherGridDomain // for when we copy data to new grid after a regrid.
@@ -458,8 +462,8 @@ WARNING
     //////////
     // Most general case
     void requires(WhichDW, const VarLabel*,
-                  const PatchSubset* patches, DomainSpec patches_dom,
-                  const MaterialSubset* matls, DomainSpec matls_dom,
+                  const PatchSubset* patches, PatchDomainSpec patches_dom,
+                  const MaterialSubset* matls, MaterialDomainSpec matls_dom,
                   Ghost::GhostType gtype, int numGhostCells = 0, bool oldTG=false);
     
     //////////
@@ -488,13 +492,13 @@ WARNING
     //////////
     // Insert Documentation Here: 
     void requires(WhichDW, const VarLabel*,
-                  const MaterialSubset* matls, DomainSpec matls_dom,
+                  const MaterialSubset* matls, MaterialDomainSpec matls_dom,
                   Ghost::GhostType gtype, int numGhostCells = 0, bool oldTG=false);
     
     //////////
     // Requires only for reduction variables
     void requires(WhichDW, const VarLabel*, const Level* level = 0,
-                  const MaterialSubset* matls = 0, DomainSpec matls_dom = NormalDomain, bool oldTG=false);
+                  const MaterialSubset* matls = 0, MaterialDomainSpec matls_dom = NormalDomain, bool oldTG=false);
     
     //////////
     // Requires for reduction variables or perpatch veriables
@@ -508,8 +512,8 @@ WARNING
     //////////
     // Most general case
     void computes(const VarLabel*,
-                  const PatchSubset* patches, DomainSpec patches_domain, 
-                  const MaterialSubset* matls, DomainSpec matls_domain);
+                  const PatchSubset* patches, PatchDomainSpec patches_domain, 
+                  const MaterialSubset* matls, MaterialDomainSpec matls_domain);
     
     //////////
     // Insert Documentation Here:
@@ -523,23 +527,23 @@ WARNING
     //////////
     // Insert Documentation Here:
     void computes(const VarLabel*, const MaterialSubset* matls,
-                  DomainSpec matls_domain);
+                  MaterialDomainSpec matls_domain);
 
     //////////
     // Insert Documentation Here:
     void computes(const VarLabel*,
-                  const PatchSubset* patches, DomainSpec patches_domain);
+                  const PatchSubset* patches, PatchDomainSpec patches_domain);
 
     //////////
     // Insert Documentation Here:
     void computes(const VarLabel*, const Level* level,
-                  const MaterialSubset* matls = 0, DomainSpec matls_domain = NormalDomain);
+                  const MaterialSubset* matls = 0, MaterialDomainSpec matls_domain = NormalDomain);
 
      //////////
     // Most general case
     void modifies(const VarLabel*,
-                  const PatchSubset* patches, DomainSpec patches_domain, 
-                  const MaterialSubset* matls, DomainSpec matls_domain, bool oldTG=false);
+                  const PatchSubset* patches, PatchDomainSpec patches_domain, 
+                  const MaterialSubset* matls, MaterialDomainSpec matls_domain, bool oldTG=false);
     
     //////////
     // Insert Documentation Here:
@@ -553,7 +557,7 @@ WARNING
     //////////
     // Insert Documentation Here:
     void modifies(const VarLabel*, const MaterialSubset* matls,
-                  DomainSpec matls_domain, bool oldTG=false);
+                  MaterialDomainSpec matls_domain, bool oldTG=false);
    
     //////////
     // Insert Documentation Here:
@@ -562,7 +566,7 @@ WARNING
     //////////
     // Modify reduction vars
     void modifies(const VarLabel*, const Level* level,
-                  const MaterialSubset* matls = 0, DomainSpec matls_domain = NormalDomain, bool oldTG=false);
+                  const MaterialSubset* matls = 0, MaterialDomainSpec matls_domain = NormalDomain, bool oldTG=false);
     
     //////////
     // Tells the task to actually execute the function assigned to it.
@@ -605,8 +609,8 @@ WARNING
       Edge* req_tail;
       Edge* comp_head;
       Edge* comp_tail;
-      DomainSpec patches_dom;
-      DomainSpec matls_dom;
+      PatchDomainSpec patches_dom;
+      MaterialDomainSpec matls_dom;
       Ghost::GhostType gtype;
       WhichDW whichdw;  // Used only by Requires
       
@@ -621,15 +625,15 @@ WARNING
                  bool oldtg, 
                  const PatchSubset* patches,
                  const MaterialSubset* matls,
-                 DomainSpec patches_dom = NormalDomain,
-                 DomainSpec matls_dom = NormalDomain,
+                 PatchDomainSpec patches_dom = ThisLevel,
+                 MaterialDomainSpec matls_dom = NormalDomain,
                  Ghost::GhostType gtype = Ghost::None,
                  int numGhostCells = 0);
       Dependency(DepType deptype, Task* task, WhichDW dw, const VarLabel* var,
                  bool oldtg, 
                  const Level* reductionLevel,
                  const MaterialSubset* matls,
-                 DomainSpec matls_dom = NormalDomain);
+                 MaterialDomainSpec matls_dom = NormalDomain);
       ~Dependency();
       inline void addComp(Edge* edge);
       inline void addReq(Edge* edge);
@@ -642,7 +646,7 @@ WARNING
 
     private:
       static constHandle< PatchSubset >
-      getOtherLevelPatchSubset(DomainSpec dom,
+      getOtherLevelPatchSubset(PatchDomainSpec dom,
                                  const PatchSubset* subset,
                                  const PatchSubset* domainSubset, int ngc);
      

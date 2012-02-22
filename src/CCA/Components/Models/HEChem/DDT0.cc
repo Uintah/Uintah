@@ -293,7 +293,7 @@ void DDT0::scheduleComputeModelSources(SchedulerP& sched,
   const MaterialSubset* all_matls = d_sharedState->allMaterials()->getUnion();
   const MaterialSubset* ice_matls = d_sharedState->allICEMaterials()->getUnion();
   const MaterialSubset* mpm_matls = d_sharedState->allMPMMaterials()->getUnion();
-  Task::DomainSpec oms = Task::OutOfDomain;
+  Task::MaterialDomainSpec oms = Task::OutOfDomain;
 
   proc0cout << "\nDDT0:scheduleComputeModelSources oneMatl " << *d_one_matl<< " react_matl " << *react_matl 
                                                << " prod_matl " << *prod_matl 

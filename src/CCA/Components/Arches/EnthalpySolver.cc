@@ -343,7 +343,7 @@ EnthalpySolver::sched_buildLinearMatrix(const LevelP& level,
   Ghost::GhostType  gac = Ghost::AroundCells;
   Ghost::GhostType  gaf = Ghost::AroundFaces;
   Ghost::GhostType  gn = Ghost::None;
-  Task::DomainSpec oams = Task::OutOfDomain;  //outside of arches matlSet.
+  Task::MaterialDomainSpec oams = Task::OutOfDomain;  //outside of arches matlSet.
   
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,    gac, 1);
   tsk->requires(Task::NewDW, d_lab->d_enthalpySPLabel,  gac, 2);
@@ -731,7 +731,7 @@ EnthalpySolver::sched_enthalpyLinearSolve(SchedulerP& sched,
   
   Ghost::GhostType  gac = Ghost::AroundCells;
   Ghost::GhostType  gn = Ghost::None;
-  Task::DomainSpec oams = Task::OutOfDomain;  //outside of arches matlSet.
+  Task::MaterialDomainSpec oams = Task::OutOfDomain;  //outside of arches matlSet.
   
   tsk->requires(parent_old_dw, d_lab->d_sharedState->get_delt_label());
   

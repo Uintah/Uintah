@@ -604,7 +604,7 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
                           
   printSchedule(level,dbg,taskname);
 
-  Task::DomainSpec  ND  = Task::NormalDomain;
+  Task::MaterialDomainSpec  ND  = Task::NormalDomain;
   #define allPatches 0
   #define allMatls 0
   Ghost::GhostType  gac  = Ghost::AroundCells;

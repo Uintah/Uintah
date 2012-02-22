@@ -584,7 +584,7 @@ void AMRMPM::scheduleInterpolateParticlesToGrid_CFI(SchedulerP& sched,
                      this,&AMRMPM::interpolateParticlesToGrid_CFI);
 
     Ghost::GhostType  gac  = Ghost::AroundCells;
-    Task::DomainSpec  ND  = Task::NormalDomain;
+    Task::MaterialDomainSpec  ND  = Task::NormalDomain;
     
 /*`==========TESTING==========*/
     // Linear 1 coarse Level cells:
@@ -639,7 +639,7 @@ void AMRMPM::scheduleCoarsenNodalData_CFI(SchedulerP& sched,
                    this,&AMRMPM::coarsenNodalData_CFI, flag);
 
   Ghost::GhostType  gn  = Ghost::None;
-  Task::DomainSpec  ND  = Task::NormalDomain;
+  Task::MaterialDomainSpec  ND  = Task::NormalDomain;
   #define allPatches 0
   #define allMatls 0
 
@@ -922,7 +922,7 @@ void AMRMPM::scheduleInterpolateToParticlesAndUpdate_CFI(SchedulerP& sched,
                   this, &AMRMPM::interpolateToParticlesAndUpdate_CFI);
 
     Ghost::GhostType  gn  = Ghost::None;
-    Task::DomainSpec  ND  = Task::NormalDomain;
+    Task::MaterialDomainSpec  ND  = Task::NormalDomain;
     #define allPatches 0
     #define allMatls 0
     t->requires(Task::OldDW, d_sharedState->get_delt_label() );
@@ -2561,7 +2561,7 @@ void AMRMPM::scheduleDebug_CFI(SchedulerP& sched,
   if(level->hasFinerLevel()){ 
     #define allPatches 0
     #define allMatls 0
-    Task::DomainSpec  ND  = Task::NormalDomain;
+    Task::MaterialDomainSpec  ND  = Task::NormalDomain;
     t->requires(Task::NewDW, lb->gZOILabel, allPatches, Task::FineLevel,allMatls, ND, gn, 0);
   }
   

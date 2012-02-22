@@ -71,7 +71,7 @@ void ICE::scheduleSetupMatrix(  SchedulerP& sched,
   Task* t;
   Ghost::GhostType  gac = Ghost::AroundCells;  
   Ghost::GhostType  gn  = Ghost::None;
-  Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
+  Task::MaterialDomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
   int levelIndex = getLevel(patches)->getIndex();
   const MaterialSubset* press_matl = one_matl;
   
@@ -109,7 +109,7 @@ void ICE::scheduleSetupRHS(  SchedulerP& sched,
   Task* t;
   Ghost::GhostType  gac = Ghost::AroundCells;  
   Ghost::GhostType  gn  = Ghost::None;
-  Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
+  Task::MaterialDomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
   const Level* level = getLevel(patches);
   int levelIndex = level->getIndex();
  
@@ -177,7 +177,7 @@ void ICE::scheduleCompute_maxRHS(SchedulerP& sched,
   Task* t;
   t = scinew Task("ICE::compute_maxRHS", this, &ICE::compute_maxRHS);
   
-  Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
+  Task::MaterialDomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
   t->requires( Task::NewDW, lb->rhsLabel,  one_matl,oims,Ghost::None,0);
   t->computes(lb->max_RHSLabel);
   
@@ -198,7 +198,7 @@ void ICE::scheduleUpdatePressure(  SchedulerP& sched,
   Task* t;
   Ghost::GhostType  gn  = Ghost::None;
   Ghost::GhostType  gac = Ghost::AroundCells;
-  Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet. 
+  Task::MaterialDomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet. 
   //__________________________________
   // update the pressure
   cout_doing << d_myworld->myrank()<<" ICE::scheduleUpdatePressure" 
@@ -248,7 +248,7 @@ void ICE::scheduleRecomputeVel_FC(SchedulerP& sched,
            
   Ghost::GhostType  gac = Ghost::AroundCells;
   Ghost::GhostType  gn  = Ghost::None;
-  Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.               
+  Task::MaterialDomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.               
   t->requires(Task::ParentOldDW,lb->delTLabel,getLevel(patches));
 
   //__________________________________
@@ -291,7 +291,7 @@ void ICE::scheduleComputeDel_P(  SchedulerP& sched,
 {
   Task* t;
   Ghost::GhostType  gn  = Ghost::None;
-  Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
+  Task::MaterialDomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
   int levelIndex = getLevel(patches)->getIndex();
   //__________________________________
   // update the pressure
@@ -335,7 +335,7 @@ void ICE::scheduleImplicitPressureSolve(  SchedulerP& sched,
   t->hasSubScheduler();
   Ghost::GhostType  gac = Ghost::AroundCells;  
   Ghost::GhostType  gn  = Ghost::None;
-  Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
+  Task::MaterialDomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
   //__________________________________
   // The computes and requires when you're looking up 
   // from implicitPressure solve
