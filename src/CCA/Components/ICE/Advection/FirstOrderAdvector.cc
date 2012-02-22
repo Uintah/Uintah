@@ -198,20 +198,6 @@ void FirstOrderAdvector::inFluxOutFluxVolume(
   }
 }
 
-void FirstOrderAdvector::inFluxOutFluxVolumeGPU(const VarLabel* uvel_FCMELabel,
-                                                const VarLabel* vvel_FCMELabel,
-                                                const VarLabel* wvel_FCMELabel,
-                                                const double& delT,
-                                                const Patch* patch,
-                                                const int& indx,
-                                                const bool& bulletProofing_test,
-                                                DataWarehouse* new_dw,
-                                                const int& device,
-                                                GPUThreadedMPIScheduler* sched)
-{
-  throw InternalError("FirstOrderAdvector::inFluxOutFluxVolumeGPU not yet implemented. Use FirstOrderAdvectorGPU::inFluxOutFluxVolumeGPU", __FILE__, __LINE__);
-}
-
 /*_____________________________________________________________________
  Function~ advectQ
 _____________________________________________________________________*/
@@ -298,7 +284,6 @@ template <class T, typename F>
 
   for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) { 
     const IntVector& c = *iter;  
-    std::cout << "cell: " << c << std::endl;
     
     T q_face_flux[6];
     double faceVol[6];
@@ -311,7 +296,6 @@ template <class T, typename F>
       //      for consistent units you need to divide by cell volume
       // 
       IntVector ac = c + S_ac[f];     // slab adjacent cell
-      std::cout << "ac: " << ac << std::endl;
       double outfluxVol = d_OFS[c ].d_fflux[OF_slab[f]];
       double influxVol  = d_OFS[ac].d_fflux[IF_slab[f]];
 

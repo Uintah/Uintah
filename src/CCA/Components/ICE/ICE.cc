@@ -46,7 +46,6 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/ICE/EOS/EquationOfState.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <CCA/Components/OnTheFlyAnalysis/AnalysisModuleFactory.h>
-#include <CCA/Components/Schedulers/GPUThreadedMPIScheduler.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Ports/ModelMaker.h>
@@ -69,8 +68,6 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Containers/StaticArray.h>
 #include <Core/Math/Expon.h>
 #include <Core/Util/DebugStream.h>
-
-#include <sci_defs/cuda_defs.h>
 
 #include   <vector>
 #include   <sstream>
@@ -1305,15 +1302,8 @@ void ICE::scheduleComputeDelPressAndUpdatePressCC(SchedulerP& sched,
   int levelIndex = getLevel(patches)->getIndex();
   cout_doing << d_myworld->myrank() << " ICE::scheduleComputeDelPressAndUpdatePressCC" 
              << "\t\t\tL-"<< levelIndex<< endl;
-
-#ifdef HAVE_CUDA
-  Task *task = scinew Task(&ICE::computeDelPressAndUpdatePressCCGPU, "ICE::computeDelPressAndUpdatePressCCGPU",
-                           "ICE::computeDelPressAndUpdatePressCC", this, &ICE::computeDelPressAndUpdatePressCC);
-#else
   Task *task = scinew Task("ICE::computeDelPressAndUpdatePressCC",
                             this, &ICE::computeDelPressAndUpdatePressCC);
-#endif
-
   Ghost::GhostType  gac = Ghost::AroundCells;
   Ghost::GhostType  gn = Ghost::None;  
   Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
@@ -1717,14 +1707,8 @@ void ICE::scheduleAdvectAndAdvanceInTime(SchedulerP& sched,
   cout_doing << d_myworld->myrank() << " ICE::scheduleAdvectAndAdvanceInTime" 
              << "\t\t\t\tL-"<< levelIndex << endl;
              
-#ifdef HAVE_CUDA
-  Task* task = scinew Task(&ICE::advectAndAdvanceInTimeGPU, "ICE::advectAndAdvanceInTimeGPU",
-                           "ICE::advectAndAdvanceInTime", this, &ICE::advectAndAdvanceInTime);
-#else
   Task* task = scinew Task("ICE::advectAndAdvanceInTime",
                            this, &ICE::advectAndAdvanceInTime);
-#endif
-
   task->requires(Task::OldDW, lb->delTLabel,getLevel(patch_set));
   Ghost::GhostType  gac  = Ghost::AroundCells;
   task->requires(Task::NewDW, lb->uvel_FCMELabel,      gac,2);
@@ -3761,196 +3745,6 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
   }  // patch loop
 }
 
-void ICE::computeDelPressAndUpdatePressCCGPU(const ProcessorGroup*,
-                                             const PatchSubset* patches,
-                                             const MaterialSubset* /*matls*/,
-                                             DataWarehouse* old_dw,
-                                             DataWarehouse* new_dw,
-                                             const int device)
-{
-  const Level* level = getLevel(patches);
-  for(int p=0;p<patches->size();p++){
-    const Patch* patch = patches->get(p);
-    cout_doing << d_myworld->myrank() << " Doing explicit delPress on patch " << patch->getID()
-         <<  "\t\t\t ICE \tL-" <<level->getIndex()<< endl;
-
-    int numMatls  = d_sharedState->getNumMatls();
-    delt_vartype delT;
-    old_dw->get(delT, d_sharedState->get_delt_label(),level);
-    Vector dx     = patch->dCell();
-    double inv_vol    = 1.0/(dx.x()*dx.y()*dx.z());
-
-    bool newGrid = d_sharedState->isRegridTimestep();
-    Advector* advector = d_advector->clone(new_dw,patch,newGrid );
-
-    CCVariable<double> q_advected;
-    CCVariable<double> delP_Dilatate;
-    CCVariable<double> delP_MassX;
-    CCVariable<double> sum_rho_CC;
-    CCVariable<double> press_CC;
-    CCVariable<double> term1, term2;
-    constCCVariable<double>sumKappa, press_equil;
-    StaticArray<CCVariable<double> > placeHolder(0);
-    StaticArray<constCCVariable<double> > sp_vol_CC(numMatls);
-
-    const IntVector gc(1,1,1);
-    Ghost::GhostType  gn  = Ghost::None;
-    Ghost::GhostType  gac = Ghost::AroundCells;
-    new_dw->get(sumKappa,                lb->sumKappaLabel,      0,patch,gn,0);
-    new_dw->get(press_equil,             lb->press_equil_CCLabel,0,patch,gn,0);
-    new_dw->allocateAndPut( press_CC,    lb->press_CCLabel,      0, patch);
-    new_dw->allocateAndPut(delP_Dilatate,lb->delP_DilatateLabel, 0, patch);
-    new_dw->allocateAndPut(delP_MassX,   lb->delP_MassXLabel,    0, patch);
-    new_dw->allocateAndPut(term2,        lb->term2Label,         0, patch);
-    new_dw->allocateAndPut(sum_rho_CC,   lb->sum_rho_CCLabel,    0, patch);
-
-    new_dw->allocateTemporary(q_advected, patch);
-    new_dw->allocateTemporary(term1,      patch);
-
-    term1.initialize(0.);
-    term2.initialize(0.);
-    sum_rho_CC.initialize(0.0);
-    delP_Dilatate.initialize(0.0);
-    delP_MassX.initialize(0.0);
-
-    for(int m = 0; m < numMatls; m++) {
-      Material* matl = d_sharedState->getMaterial( m );
-      int indx = matl->getDWIndex();
-      constCCVariable<double> speedSound;
-      constCCVariable<double> vol_frac;
-      constCCVariable<double> rho_CC;
-      constSFCXVariable<double> uvel_FC;
-      constSFCYVariable<double> vvel_FC;
-      constSFCZVariable<double> wvel_FC;
-
-      new_dw->get(uvel_FC,     lb->uvel_FCMELabel,     indx,patch,gac, 2);
-      new_dw->get(vvel_FC,     lb->vvel_FCMELabel,     indx,patch,gac, 2);
-      new_dw->get(wvel_FC,     lb->wvel_FCMELabel,     indx,patch,gac, 2);
-      new_dw->get(vol_frac,    lb->vol_frac_CCLabel,   indx,patch,gac, 2);
-      new_dw->get(rho_CC,      lb->rho_CCLabel,        indx,patch,gn,0);
-      new_dw->get(sp_vol_CC[m],lb->sp_vol_CCLabel,     indx,patch,gn,0);
-      new_dw->get(speedSound,  lb->speedSound_CCLabel, indx,patch,gn,0);
-
-      SFCXVariable<double> vol_fracX_FC;
-      SFCYVariable<double> vol_fracY_FC;
-      SFCZVariable<double> vol_fracZ_FC;
-
-      new_dw->allocateAndPut(vol_fracX_FC, lb->vol_fracX_FCLabel,  indx,patch);
-      new_dw->allocateAndPut(vol_fracY_FC, lb->vol_fracY_FCLabel,  indx,patch);
-      new_dw->allocateAndPut(vol_fracZ_FC, lb->vol_fracZ_FCLabel,  indx,patch);
-
-
-      // lowIndex is the same for all vel_FC
-      IntVector lowIndex(patch->getExtraSFCXLowIndex());
-      double nan= getNan();
-      vol_fracX_FC.initialize(nan, lowIndex,patch->getExtraSFCXHighIndex());
-      vol_fracY_FC.initialize(nan, lowIndex,patch->getExtraSFCYHighIndex());
-      vol_fracZ_FC.initialize(nan, lowIndex,patch->getExtraSFCZHighIndex());
-
-
-      //---- P R I N T   D A T A ------
-      if (switchDebug_explicit_press ) {
-        ostringstream desc;
-        desc<<"middle_explicit_Pressure_Mat_"<<indx<<"_patch_"<<patch->getID();
-        printData(    indx, patch,1, desc.str(), "vol_frac",   vol_frac);
-        printData(    indx, patch,1, desc.str(), "speedSound", speedSound);
-        printData(    indx, patch,1, desc.str(), "sp_vol_CC",  sp_vol_CC[m]);
-        printData_FC( indx, patch,1, desc.str(), "uvel_FC",    uvel_FC);
-        printData_FC( indx, patch,1, desc.str(), "vvel_FC",    vvel_FC);
-        printData_FC( indx, patch,1, desc.str(), "wvel_FC",    wvel_FC);
-      }
-
-      //__________________________________
-      // Advection preprocessing
-      // - divide vol_frac_cc/vol
-      bool bulletProof_test = true;
-      // get a handle on the GPU scheduler to query for device and host pointers, etc
-      GPUThreadedMPIScheduler* sched = dynamic_cast<GPUThreadedMPIScheduler*>(getPort("scheduler"));
-      advector->inFluxOutFluxVolumeGPU(lb->uvel_FCMELabel, lb->vvel_FCMELabel, lb->wvel_FCMELabel, delT, patch,
-                                       indx, bulletProof_test, new_dw, device, sched);
-      //__________________________________
-      //   advect vol_frac
-      // common variables that get passed into the advection operators
-      advectVarBasket* varBasket = scinew advectVarBasket();
-      varBasket->doRefluxing = false;  // don't need to reflux here
-
-      advector->advectQ(vol_frac, patch, q_advected, varBasket,
-                        vol_fracX_FC, vol_fracY_FC,  vol_fracZ_FC, new_dw);
-
-      delete varBasket;
-
-      for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
-        IntVector c = *iter;
-        term2[c] -= q_advected[c];
-      }
-
-      //__________________________________
-      //   term1 contribution from models
-      if(d_models.size() > 0){
-        constCCVariable<double> modelMass_src, modelVol_src;
-        new_dw->get(modelMass_src, lb->modelMass_srcLabel, indx, patch, gn, 0);
-
-        for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
-         IntVector c = *iter;
-         term1[c] += modelMass_src[c] * (sp_vol_CC[m][c]* inv_vol);
-        }
-      }
-
-      //__________________________________
-      //  compute sum_rho_CC used by press_FC
-      for(CellIterator iter=patch->getExtraCellIterator(); !iter.done();iter++){
-        IntVector c = *iter;
-        sum_rho_CC[c] += rho_CC[c];
-      }
-    }  //matl loop
-    delete advector;
-
-    //__________________________________
-    //  add delP to press_equil
-    //  AMR:  hit the extra cells, BC aren't set an you need a valid pressure there
-    // THIS COULD BE TROUBLE
-    for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++) {
-      IntVector c = *iter;
-      press_CC[c] = press_equil[c];
-    }
-
-    for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
-      IntVector c = *iter;
-      double inv_sumKappa = 1.0/sumKappa[c];
-      delP_MassX[c]    =  term1[c] * inv_sumKappa;
-      delP_Dilatate[c] = -term2[c] * inv_sumKappa;
-      press_CC[c]      =  press_equil[c] + delP_MassX[c] + delP_Dilatate[c];
-      press_CC[c]      = max(1.0e-12, press_CC[c]);  // CLAMP
-//      delP_Dilatate[c] = press_CC[c] - delP_MassX[c] - press_equil[c];
-    }
-
-    //__________________________________
-    //  set boundary conditions
-    preprocess_CustomBCs("update_press_CC",old_dw, new_dw, lb,  patch, 999,
-                          d_customBC_var_basket);
-
-    setBC(press_CC, placeHolder, sp_vol_CC, d_surroundingMatl_indx,
-          "sp_vol", "Pressure", patch ,d_sharedState, 0, new_dw,
-          d_customBC_var_basket);
-#if SET_CFI_BC
-    set_CFI_BC<double>(press_CC,patch);
-#endif
-    delete_CustomBCs(d_customBC_var_basket);
-
-   //---- P R I N T   D A T A ------
-    if (switchDebug_explicit_press) {
-      ostringstream desc;
-      desc << "BOT_explicit_Pressure_patch_" << patch->getID();
-//    printData( 0, patch, 1,desc.str(), "term1",         term1);
-      printData( 0, patch, 1,desc.str(), "term2",         term2);
-      printData( 0, patch, 1,desc.str(), "sumKappa",      sumKappa);
-      printData( 0, patch, 1,desc.str(), "delP_Dilatate", delP_Dilatate);
-      printData( 0, patch, 1,desc.str(), "delP_MassX",    delP_MassX);
-      printData( 0, patch, 1,desc.str(), "Press_CC",      press_CC);
-    }
-  }  // patch loop
-}
-
 /* _____________________________________________________________________  
  Function~  ICE::computePressFC--
  Purpose~
@@ -5558,190 +5352,6 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* /*pg*/,
     delete advector;
   }  // patch loop
 }
-
-void ICE::advectAndAdvanceInTimeGPU(const ProcessorGroup* /*pg*/,
-                                    const PatchSubset* patches,
-                                    const MaterialSubset* /*matls*/,
-                                    DataWarehouse* old_dw,
-                                    DataWarehouse* new_dw,
-                                    const int device)
-{
-  const Level* level = getLevel(patches);
-  int L_indx = level->getIndex();
-
-  // the advection calculations care about the position of the old dw subcycle
-  double AMR_subCycleProgressVar = getSubCycleProgress(old_dw);
-
-  for(int p=0;p<patches->size();p++){
-    const Patch* patch = patches->get(p);
-
-    cout_doing << d_myworld->myrank() << " Doing Advect and Advance in Time on patch "
-               << patch->getID() << "\t\t ICE \tL-" <<L_indx
-               << " progressVar " << AMR_subCycleProgressVar << endl;
-
-    delt_vartype delT;
-    old_dw->get(delT, d_sharedState->get_delt_label(),level);
-
-    bool newGrid = d_sharedState->isRegridTimestep();
-    Advector* advector = d_advector->clone(new_dw,patch,newGrid );
-
-    CCVariable<double>  q_advected;
-    CCVariable<Vector>  qV_advected;
-    new_dw->allocateTemporary(q_advected,   patch);
-    new_dw->allocateTemporary(qV_advected,  patch);
-
-    int numMatls = d_sharedState->getNumICEMatls();
-
-    for (int m = 0; m < numMatls; m++ ) {
-      Material* matl = d_sharedState->getICEMaterial( m );
-      int indx = matl->getDWIndex();
-
-      CCVariable<double> mass_adv, int_eng_adv, sp_vol_adv;
-      CCVariable<Vector> mom_adv;
-      constCCVariable<double> int_eng_L_ME, mass_L,sp_vol_L;
-      constCCVariable<Vector> mom_L_ME;
-      constSFCXVariable<double > uvel_FC;
-      constSFCYVariable<double > vvel_FC;
-      constSFCZVariable<double > wvel_FC;
-
-      Ghost::GhostType  gac = Ghost::AroundCells;
-      new_dw->get(uvel_FC,     lb->uvel_FCMELabel,        indx,patch,gac,2);
-      new_dw->get(vvel_FC,     lb->vvel_FCMELabel,        indx,patch,gac,2);
-      new_dw->get(wvel_FC,     lb->wvel_FCMELabel,        indx,patch,gac,2);
-
-      new_dw->get(mass_L,      lb->mass_L_CCLabel,        indx,patch,gac,2);
-      new_dw->get(mom_L_ME,    lb->mom_L_ME_CCLabel,      indx,patch,gac,2);
-      new_dw->get(sp_vol_L,    lb->sp_vol_L_CCLabel,      indx,patch,gac,2);
-      new_dw->get(int_eng_L_ME,lb->eng_L_ME_CCLabel,      indx,patch,gac,2);
-
-      new_dw->allocateAndPut(mass_adv,    lb->mass_advLabel,   indx,patch);
-      new_dw->allocateAndPut(mom_adv,     lb->mom_advLabel,    indx,patch);
-      new_dw->allocateAndPut(int_eng_adv, lb->eng_advLabel,    indx,patch);
-      new_dw->allocateAndPut(sp_vol_adv,  lb->sp_vol_advLabel, indx,patch);
-
-      mass_adv.initialize(0.0);
-      mom_adv.initialize(Vector(0.0,0.0,0.0));
-      int_eng_adv.initialize(0.0);
-      sp_vol_adv.initialize(0.0);
-      q_advected.initialize(0.0);
-      qV_advected.initialize(Vector(0.0,0.0,0.0));
-
-      //__________________________________
-      // common variables that get passed into the advection operators
-      advectVarBasket* varBasket = scinew advectVarBasket();
-      varBasket->new_dw = new_dw;
-      varBasket->old_dw = old_dw;
-      varBasket->indx = indx;
-      varBasket->patch = patch;
-      varBasket->level = level;
-      varBasket->lb  = lb;
-      varBasket->doRefluxing = d_doRefluxing;
-      varBasket->useCompatibleFluxes = d_useCompatibleFluxes;
-      varBasket->AMR_subCycleProgressVar = AMR_subCycleProgressVar;
-
-      //__________________________________
-      //   Advection preprocessing
-      bool bulletProof_test=true;
-      GPUThreadedMPIScheduler* sched = dynamic_cast<GPUThreadedMPIScheduler*>(getPort("scheduler"));
-      advector->inFluxOutFluxVolumeGPU(lb->uvel_FCMELabel, lb->vvel_FCMELabel, lb->wvel_FCMELabel, delT,
-                                       patch, indx, bulletProof_test, new_dw, device, sched);
-      //__________________________________
-      // mass
-      advector->advectMass(mass_L, q_advected,  varBasket);
-
-      for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
-        IntVector c = *iter;
-        mass_adv[c]  = (mass_L[c] + q_advected[c]);
-      }
-      //__________________________________
-      // momentum
-      varBasket->is_Q_massSpecific   = true;
-      varBasket->desc = "mom";
-      advector->advectQ(mom_L_ME,mass_L,qV_advected, varBasket);
-
-      for(CellIterator iter = patch->getCellIterator(); !iter.done();  iter++){
-        IntVector c = *iter;
-        mom_adv[c] = (mom_L_ME[c] + qV_advected[c]) ;
-      }
-      //__________________________________
-      // internal energy
-      varBasket->is_Q_massSpecific = true;
-      varBasket->desc = "int_eng";
-      advector->advectQ(int_eng_L_ME, mass_L, q_advected, varBasket);
-
-      for(CellIterator iter = patch->getCellIterator(); !iter.done();  iter++){
-        IntVector c = *iter;
-        int_eng_adv[c] = (int_eng_L_ME[c] + q_advected[c]) ;
-      }
-      //__________________________________
-      // sp_vol[m] * mass
-      varBasket->is_Q_massSpecific = true;
-      varBasket->desc = "sp_vol";
-      advector->advectQ(sp_vol_L,mass_L, q_advected, varBasket);
-
-      for(CellIterator iter = patch->getCellIterator(); !iter.done();  iter++){
-        IntVector c = *iter;
-        sp_vol_adv[c] = (sp_vol_L[c] + q_advected[c]) ;
-      }
-      //__________________________________
-      // Advect model variables
-      if(d_models.size() > 0 && d_modelSetup->tvars.size() > 0){
-        vector<TransportedVariable*>::iterator t_iter;
-        for( t_iter  = d_modelSetup->tvars.begin();
-             t_iter != d_modelSetup->tvars.end(); t_iter++){
-          TransportedVariable* tvar = *t_iter;
-
-          if(tvar->matls->contains(indx)){
-            string Labelname = tvar->var->getName();
-            CCVariable<double> q_adv;
-            constCCVariable<double> q_L_CC;
-            new_dw->allocateAndPut(q_adv, tvar->var_adv,     indx, patch);
-            new_dw->get(q_L_CC,   tvar->var_Lagrangian, indx, patch, gac, 2);
-            q_adv.initialize(d_EVIL_NUM);
-
-            varBasket->desc = Labelname;
-            varBasket->is_Q_massSpecific = true;
-            advector->advectQ(q_L_CC,mass_L,q_advected, varBasket);
-
-            for(CellIterator iter = patch->getCellIterator(); !iter.done();  iter++){
-              IntVector c = *iter;
-              q_adv[c] = (q_L_CC[c] + q_advected[c]) ;
-            }
-
-            //---- P R I N T   D A T A ------
-            if (switchDebug_advance_advect ) {
-              ostringstream desc;
-              desc <<"BOT_Advection_after_BC_Mat_" <<indx<<"_patch_"
-                   <<patch->getID();
-              string Lag_labelName = tvar->var_Lagrangian->getName();
-              printData(indx, patch,1, desc.str(), Lag_labelName, q_L_CC);
-              printData(indx, patch,1, desc.str(), Labelname,     q_adv);
-            }
-          }
-        }
-      }
-
-      //---- P R I N T   D A T A ------
-      if (switchDebug_advance_advect ) {
-       ostringstream desc;
-       desc <<"BOT_Advection_Mat_" <<indx<<"_patch_"<<patch->getID();
-       printData(   indx, patch,1, desc.str(), "mass_L",      mass_L);
-       printVector( indx, patch,1, desc.str(), "mom_L_CC", 0, mom_L_ME);
-       printData(   indx, patch,1, desc.str(), "sp_vol_L",    sp_vol_L);
-       printData(   indx, patch,1, desc.str(), "int_eng_L_CC",int_eng_L_ME);
-
-       printData(   indx, patch,1, desc.str(), "mass_adv",     mass_adv);
-       printVector( indx, patch,1, desc.str(), "mom_adv", 0,   mom_adv);
-       printData(   indx, patch,1, desc.str(), "sp_vol_adv",   sp_vol_adv);
-       printData(   indx, patch,1, desc.str(), "int_eng_adv",  int_eng_adv);
-      }
-
-      delete varBasket;
-    }  // ice_matls loop
-    delete advector;
-  }  // patch loop
-}
-
 /* _____________________________________________________________________ 
  Function~  ICE::conservedtoPrimitive_Vars
  Purpose~ This task computes the primitive variables (rho,T,vel,sp_vol,...)

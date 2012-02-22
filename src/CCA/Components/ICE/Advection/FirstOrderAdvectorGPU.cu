@@ -391,112 +391,18 @@ needs to be defined on all faces for these cells
 
 See schematic diagram at bottom of ice.cc for del* definitions
  ---------------------------------------------------------------------  */
-void FirstOrderAdvectorGPU::inFluxOutFluxVolume(const SFCXVariable<double>& uvel_FC,
-                                                const SFCYVariable<double>& vvel_FC,
-                                                const SFCZVariable<double>& wvel_FC,
-                                                const double& delT,
-                                                const Patch* patch,
-                                                const int& indx,
-                                                const bool& bulletProof_test,
-                                                DataWarehouse* new_dw)
+
+void FirstOrderAdvectorGPU::inFluxOutFluxVolume(
+                        const SFCXVariable<double>& uvel_FC,
+                        const SFCYVariable<double>& vvel_FC,
+                        const SFCZVariable<double>& wvel_FC,
+                        const double& delT, 
+                        const Patch* patch,
+                        const int& indx,
+                        const bool& bulletProof_test,
+                        DataWarehouse* new_dw)
+
 {
-  Vector dx = patch->dCell();
-  double vol = dx.x()*dx.y()*dx.z();
-  double delY_top, delY_bottom,delX_right, delX_left, delZ_front, delZ_back;
-  double delX = dx.x(), delY = dx.y(), delZ = dx.z();
-
-  //__________________________________
-  //  At patch boundaries you need to extend
-  // the computational footprint by one cell in ghostCells
-  bool error = false;
-
-  int NGC =1;  // number of ghostCells
-  for(CellIterator iter = patch->getExtraCellIterator(NGC); !iter.done(); iter++) {
-    const IntVector& c = *iter;
-
-    delY_top    = std::max(0.0, (vvel_FC[c+IntVector(0,1,0)] * delT));
-    delY_bottom = std::max(0.0,-(vvel_FC[c                 ] * delT));
-    delX_right  = std::max(0.0, (uvel_FC[c+IntVector(1,0,0)] * delT));
-    delX_left   = std::max(0.0,-(uvel_FC[c                 ] * delT));
-    delZ_front  = std::max(0.0, (wvel_FC[c+IntVector(0,0,1)] * delT));
-    delZ_back   = std::max(0.0,-(wvel_FC[c                 ] * delT));
-
-    //__________________________________
-    //   SLAB outfluxes
-    double delX_Z = delX * delZ;
-    double delX_Y = delX * delY;
-    double delY_Z = delY * delZ;
-    fflux& ofs = d_OFS[c];
-    ofs.d_fflux[TOP]   = delY_top   * delX_Z;
-    ofs.d_fflux[BOTTOM]= delY_bottom* delX_Z;
-    ofs.d_fflux[RIGHT] = delX_right * delY_Z;
-    ofs.d_fflux[LEFT]  = delX_left  * delY_Z;
-    ofs.d_fflux[FRONT] = delZ_front * delX_Y;
-    ofs.d_fflux[BACK]  = delZ_back  * delX_Y;
-
-    //__________________________________
-    //  Bullet proofing
-    double total_fluxout = 0.0;
-    for(int face = TOP; face <= BACK; face++ )  {
-      total_fluxout  += ofs.d_fflux[face];
-    }
-    if(total_fluxout > vol){
-      error = true;
-    }
-  }  //cell iterator
-
-  //__________________________________
-  // if total_fluxout > vol then
-  // -find the cell,
-  // -set the outflux slab vol in all cells = 0.0,
-  // -request that the timestep be restarted.
-  // -ignore if a timestep restart has already been requested
-  bool tsr = new_dw->timestepRestarted();
-
-  if (error && bulletProof_test && !tsr) {
-    vector<IntVector> badCells;
-    vector<fflux>  badOutflux;
-
-    for(CellIterator iter = patch->getExtraCellIterator(NGC); !iter.done(); iter++) {
-      IntVector c = *iter;
-      double total_fluxout = 0.0;
-      fflux& ofs = d_OFS[c];
-
-      for(int face = TOP; face <= BACK; face++ )  {
-        total_fluxout  += d_OFS[c].d_fflux[face];
-        d_OFS[c].d_fflux[face] = 0.0;
-      }
-      // keep track of which cells are bad
-      if (vol - total_fluxout < 0.0) {
-        badCells.push_back(c);
-        badOutflux.push_back(ofs);
-      }
-    }  // cell iter
-    warning_restartTimestep( badCells,badOutflux, vol, indx, patch, new_dw);
-  }  // if total_fluxout > vol
-
-  if (error && !bulletProof_test) {
-    std::ostringstream mesg;
-    std::cout << " WARNING: ICE Advection operator Influx/Outflux volume error:"
-         << " Patch " << patch->getID()
-              << ", Level " << patch->getLevel()->getIndex()<< std::endl;
-  }
-}
-
-void FirstOrderAdvectorGPU::inFluxOutFluxVolumeGPU(const VarLabel* uvel_FCMELabel,
-                                                   const VarLabel* vvel_FCMELabel,
-                                                   const VarLabel* wvel_FCMELabel,
-                                                   const double& delT,
-                                                   const Patch* patch,
-                                                   const int& indx,
-                                                   const bool& bulletProof_test,
-                                                   DataWarehouse* new_dw,
-                                                   const int& device,
-                                                   GPUThreadedMPIScheduler* sched)
-{
-  cudaError_t retVal;
-  CUDA_SAFE_CALL( cudaSetDevice(device) );
-
   Vector dx = patch->dCell();
   double vol = dx.x()*dx.y()*dx.z();
 
@@ -506,19 +412,62 @@ void FirstOrderAdvectorGPU::inFluxOutFluxVolumeGPU(const VarLabel* uvel_FCMELabe
   bool error = false;
   int NGC = 1;  // number of ghostCells
 
+  int num_devices, device;
+  cudaGetDeviceCount(&num_devices);
+  if (num_devices > 1) {
+    int max_multiprocessors = 0, max_device = 0;
+    for (device = 0; device < num_devices; device++) {
+      cudaDeviceProp properties;
+      cudaGetDeviceProperties(&properties, device);
+      if (max_multiprocessors < properties.multiProcessorCount) {
+        max_multiprocessors = properties.multiProcessorCount;
+        max_device = device;
+      }
+    }
+    cudaSetDevice(max_device);
+  }
+
+
   IntVector l      = patch->getExtraCellLowIndex(NGC);
   IntVector h      = patch->getExtraCellHighIndex(NGC);
   IntVector s      = (h-l);
   int xdim = s.x(), ydim = s.y(), zdim = s.z();
   int size         = s.x()*s.y()*s.z()*sizeof(double);
 
+  /*
   // device pointers
-  double *uuvel_FC = sched->getDeviceRequiresPtr(uvel_FCMELabel, indx, patch);
-  double *vvvel_FC = sched->getDeviceRequiresPtr(vvel_FCMELabel, indx, patch);
-  double *wwvel_FC = sched->getDeviceRequiresPtr(wvel_FCMELabel, indx, patch);
-  double *OFS = (double *)d_OFS.getWindow()->getData()->getPointer();
+  double *uuvel_FC;
+  double *vvvel_FC;
+  double *wwvel_FC;
+  double *OFS;
+  const double *hostUvel_FC = uvel_FC.getWindow()->getData()->getPointer();
+  const double *hostVvel_FC = vvel_FC.getWindow()->getData()->getPointer();
+  const double *hostWvel_FC = wvel_FC.getWindow()->getData()->getPointer();
+  const double *hostOFS     = (const double *)d_OFS.getWindow()->getData()->getPointer();
 
-  // set up domain specs
+  // Memory copies host->device
+  cudaMalloc(&uuvel_FC, size);
+  cudaMalloc(&vvvel_FC, size);
+  cudaMalloc(&wwvel_FC, size);
+  cudaMalloc(&OFS,    6*size);
+
+  cudaMemcpy(uuvel_FC, hostUvel_FC,
+             size,
+             cudaMemcpyHostToDevice);
+  cudaMemcpy(vvvel_FC, hostVvel_FC,
+             size,
+             cudaMemcpyHostToDevice);
+  cudaMemcpy(wwvel_FC, hostWvel_FC,
+             size,
+             cudaMemcpyHostToDevice);
+  cudaMemcpy(OFS, hostOFS,
+             6*size,
+             cudaMemcpyHostToDevice);
+
+
+  // ADD PINNED FOR THE "error" VARIABLE!!!
+
+  // set up domian specs
   uint3 domainSize  = make_uint3(s.x(),  s.y(),  s.z());
   uint3 domainLower = make_uint3(l.x(),  l.y(),  l.z());
   uint3 domainHigh  = make_uint3(h.x(),  h.y(),  h.z());
@@ -533,35 +482,148 @@ void FirstOrderAdvectorGPU::inFluxOutFluxVolumeGPU(const VarLabel* uvel_FCMELabe
   // Set up the number of blocks of threads in each direction accounting for any
   //  non-power of 8 end pieces.
   int xBlocks = xdim / 8;
-  if( xdim % 8 != 0) { xBlocks++; }
-
+  if( xdim % 8 != 0)
+  {
+    xBlocks++;
+  }
   int yBlocks = ydim / 8;
-  if( ydim % 8 != 0) { yBlocks++; }
+  if( ydim % 8 != 0)
+  {
+    yBlocks++;
+  }
   dim3 totalBlocks(xBlocks,yBlocks);
 
   // Kernel invocation
-  cudaStream_t* stream = sched->getCudaStream(device);
-  cudaEvent_t* event = sched->getCudaEvent(device);
-  inFluxOutFluxVolumeKernel<<< totalBlocks, threadsPerBlock, 0, *stream >>>(domainLower,
-                                                                           domainHigh,
-                                                                           domainSize,
-                                                                           cellSizes,
-                                                                           ghostLayers,
-                                                                           delT,
-                                                                           uuvel_FC,
-                                                                           vvvel_FC,
-                                                                           wwvel_FC,
-                                                                           OFS);
+  inFluxOutFluxVolumeKernel<<< totalBlocks, threadsPerBlock >>>(domainLower,
+                                                                domainHigh,
+                                                                domainSize,
+                                                                cellSizes,
+                                                                ghostLayers,
+                                                                delT,
+                                                                uuvel_FC,
+                                                                vvvel_FC,
+                                                                wwvel_FC,
+                                                                OFS);
+  cudaDeviceSynchronize();
 
-  // Kernel error checking (for now)
-  retVal = cudaGetLastError();
-  if (retVal != cudaSuccess) {
-    fprintf(stderr, "ERROR: %s\n", cudaGetErrorString(retVal));
-    exit(-1);
+  // Memory copies device->host
+  cudaMemcpy((void *)hostUvel_FC, uuvel_FC,
+             size,
+             cudaMemcpyDeviceToHost);
+  cudaMemcpy((void *)hostVvel_FC, vvvel_FC,
+             size,
+             cudaMemcpyDeviceToHost);
+  cudaMemcpy((void *)hostWvel_FC, wwvel_FC,
+             size,
+             cudaMemcpyDeviceToHost);
+  cudaMemcpy((void *)hostOFS, OFS,
+             6*size,
+             cudaMemcpyDeviceToHost);
+
+
+  // Free up memory
+  cudaFree(uuvel_FC);
+  cudaFree(vvvel_FC);
+  cudaFree(wwvel_FC);
+  cudaFree(OFS);
+
+*/
+  const double *uvel_FCD = uvel_FC.getWindow()->getData()->getPointer();
+  const double *vvel_FCD = vvel_FC.getWindow()->getData()->getPointer();
+  const double *wvel_FCD = wvel_FC.getWindow()->getData()->getPointer();
+  double *OFS            = (double *)d_OFS.getWindow()->getData()->getPointer();
+
+
+  double delt = delT;
+  int tidX = 0;
+  int tidY = 0;
+  int num_slices = h.z();
+  int d = h.x();
+  int dy = h.y();
+  int dxx = s.x();
+  int dyy = s.y()-1;
+  std::cout << "height: " << h << endl;
+  std::cout << "dxx: " << dxx << endl;
+  std::cout << "dyy: " << dyy << endl;
+  std::cout << "slices: " << num_slices << endl;
+  // In computing fluxes, we need the host cells too
+  for (int slice = 0; slice <= num_slices; slice++)
+  {
+   for(tidY = 0; tidY <= dy; tidY++)
+   {
+     for(tidX = 0; tidX <= d; tidX++)
+     {
+      //std::cout << "x: " << tidX << "  y: " << tidY << "  z: " << slice << endl;
+      std::cout << "[int " << tidX << ", " << tidY << ", " << slice <<"]" << endl;
+      int index = INDEX3D(dxx,dyy, tidX,tidY, slice);
+      //std::cout << index << endl;
+      double valueAdjacent = 0.0; // A temporary storage for adjacent values
+
+      // Set to initial values, these are set are used as the else case
+      //   for the following if statements.
+      double delY_top    = 0.0;
+      double delY_bottom = 0.0;
+      double delX_right  = 0.0;
+      double delX_left   = 0.0;
+      double delZ_front  = 0.0;
+      double delZ_back   = 0.0;
+
+      // NOTE REFACTOR THIS SECTION TO USE fmaxf(x,y)
+      // The plus
+      valueAdjacent = vvel_FCD[INDEX3D(dxx,dyy, tidX,(tidY + 1), slice)];
+      delY_top      = std::max(0.0, valueAdjacent * delt);
+
+      valueAdjacent = uvel_FCD[INDEX3D(dxx,dyy, (tidX + 1),tidY, slice)];
+      delX_right    = std::max(0.0, valueAdjacent * delt);
+
+      valueAdjacent = wvel_FCD[INDEX3D(dxx,dyy, tidX,tidY, (slice + 1))];
+      delZ_front    = std::max(0.0, valueAdjacent * delt);
+
+
+
+      // The minus
+      valueAdjacent = vvel_FCD[index];
+      delY_bottom   = std::max(0.0, -(valueAdjacent * delt));
+
+      valueAdjacent = uvel_FCD[index];
+      delX_left     = std::max(0.0, -(valueAdjacent * delt));
+
+      valueAdjacent = wvel_FCD[index];
+      delZ_back     = std::max(0.0, -(valueAdjacent * delt));
+
+     //__________________________________
+      //   SLAB outfluxes
+      double delX_Z = dx.x() * dx.z();
+      double delX_Y = dx.x() * dx.y();
+      double delY_Z = dx.y() * dx.z();
+      double top    = delY_top    * delX_Z;
+      double bottom = delY_bottom * delX_Z;
+      double right  = delX_right  * delY_Z;
+      double left   = delX_left   * delY_Z;
+      double front  = delZ_front  * delX_Y;
+      double back   = delZ_back   * delX_Y;
+
+      // copy values to correct values of OFS
+      OFS[6*index + 0] = top;
+      OFS[6*index+1] = bottom;
+      OFS[6*index+2] = right;
+      OFS[6*index+3] = left;
+      OFS[6*index+4] = front;
+      OFS[6*index+5] = back;
+
+      //__________________________________
+      //  Bullet proofing
+      double total_fluxout = top + bottom + right + left + front + back;
+      std::cout << "total_fluxout: " << total_fluxout << endl;
+      if(total_fluxout > (dx.x()*dx.y()*dx.z())){
+        error = true;
+      }
+     }
+    }
   }
+  // device and host memory pointers
 
-  cudaStreamSynchronize(*stream);
-
+  
   //__________________________________
   // if total_fluxout > vol then 
   // -find the cell, 

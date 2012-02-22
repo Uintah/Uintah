@@ -61,17 +61,6 @@ namespace Uintah {
                                      const bool& bulletProof_test,
                                      DataWarehouse* new_dw);
 
-    virtual void inFluxOutFluxVolumeGPU(const VarLabel* uvel_FCMELabel,
-                                        const VarLabel* vvel_FCMELabel,
-                                        const VarLabel* wvel_FCMELabel,
-                                        const double& delT,
-                                        const Patch* patch,
-                                        const int& indx,
-                                        const bool& bulletProofing_test,
-                                        DataWarehouse* new_dw,
-                                        const int& device,
-                                        GPUThreadedMPIScheduler* sched);
-
     virtual void  advectQ(const CCVariable<double>& q_CC,
                           const Patch* patch,
                           CCVariable<double>& q_advected,
