@@ -246,7 +246,7 @@ OdtClosure::sched_reComputeTurbSubmodel(SchedulerP& sched,
   Ghost::GhostType  gn = Ghost::None;
   Ghost::GhostType  gac = Ghost::AroundCells;
   Ghost::GhostType  gaf = Ghost::AroundFaces;
-  Task::DomainSpec oams = Task::OutOfDomain;  //outside of arches matlSet.
+  Task::MaterialDomainSpec oams = Task::OutOfDomain;  //outside of arches matlSet.
   tsk->requires(Task::NewDW, d_lab->d_densityCPLabel,     gac, 1);
   tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel,      gac, 1);
 
@@ -1253,7 +1253,7 @@ OdtClosure::sched_computeScalarDissipation(SchedulerP& sched,
   //           required. For multiple scalars this will be put in a loop
   // assuming scalar dissipation is computed before turbulent viscosity calculation 
   Ghost::GhostType  gac = Ghost::AroundCells;
-  Task::DomainSpec oams = Task::OutOfDomain;  //outside of arches matlSet.
+  Task::MaterialDomainSpec oams = Task::OutOfDomain;  //outside of arches matlSet.
   tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel,    gac, 1);
   tsk->requires(Task::NewDW, d_lab->d_viscosityCTSLabel,gac, 1);
   

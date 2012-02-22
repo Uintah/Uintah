@@ -652,19 +652,17 @@ MPIScheduler::processMPIRecvs(int how_much)
   // Should only have external receives in the MixedScheduler version which
   // shouldn't use this function.
   // ASSERT(outstandingExtRecvs.empty());
+  if (recvs_.numRequests() == 0) return;
   double start = Time::currentSeconds();
 
   switch (how_much) {
   case TEST:
-    if (recvs_.numRequests() > 0)
-      recvs_.testsome(d_myworld);
+    recvs_.testsome(d_myworld);
     break;
   case WAIT_ONCE:
-    if(recvs_.numRequests() > 0) {
-      mpidbg << d_myworld->myrank() << " Start waiting once...\n";
-      recvs_.waitsome(d_myworld);
-      mpidbg << d_myworld->myrank() << " Done  waiting once...\n";
-    }
+    mpidbg << d_myworld->myrank() << " Start waiting once...\n";
+    recvs_.waitsome(d_myworld);
+    mpidbg << d_myworld->myrank() << " Done  waiting once...\n";
     break;
   case WAIT_ALL:
     // This will allow some receives to be "handled" by their

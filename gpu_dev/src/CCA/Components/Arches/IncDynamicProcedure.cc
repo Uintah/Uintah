@@ -149,7 +149,7 @@ IncDynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched,
   Ghost::GhostType  gn  = Ghost::None; 
   Ghost::GhostType  gac = Ghost::AroundCells;
   Ghost::GhostType  gaf = Ghost::AroundFaces;
-  Task::DomainSpec oams = Task::OutOfDomain;  //outside of arches matlSet.
+  Task::MaterialDomainSpec oams = Task::OutOfDomain;  //outside of arches matlSet.
   tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel,  gaf, 1);
   tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel,  gaf, 1);
   tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel,  gaf, 1);

@@ -264,7 +264,7 @@ namespace Wasatch{
           fieldInfo.useOldDataWarehouse = false;
           task.requires( Uintah::Task::OldDW,
                          fieldInfo.varlabel,
-                         patches, Uintah::Task::NormalDomain,
+                         patches, Uintah::Task::ThisLevel,
                          materials, Uintah::Task::NormalDomain,
                          fieldInfo.ghostType, fieldInfo.nghost );
 
@@ -314,7 +314,7 @@ namespace Wasatch{
 #         endif
           ASSERT( dw == Uintah::Task::NewDW );
           task.computes( fieldInfo.varlabel,
-                         patches, Uintah::Task::NormalDomain,
+                         patches, Uintah::Task::ThisLevel,
                          materials, Uintah::Task::NormalDomain );
           break;
 
@@ -324,7 +324,7 @@ namespace Wasatch{
 #         endif
           task.requires( dw,
                          fieldInfo.varlabel,
-                         patches, Uintah::Task::NormalDomain,
+                         patches, Uintah::Task::ThisLevel,
                          materials, Uintah::Task::NormalDomain,
                          fieldInfo.ghostType, fieldInfo.nghost );
           break;
@@ -338,11 +338,11 @@ namespace Wasatch{
           // the proper ghost inforation is incoporated since
           // "modifies" does not allow us to do that.
           task.requires( dw, fieldInfo.varlabel,
-                         patches, Uintah::Task::NormalDomain,
+                         patches, Uintah::Task::ThisLevel,
                          materials, Uintah::Task::NormalDomain,
                          fieldInfo.ghostType, fieldInfo.nghost );
           task.modifies( fieldInfo.varlabel,
-                         patches, Uintah::Task::NormalDomain,
+                         patches, Uintah::Task::ThisLevel,
                          materials, Uintah::Task::NormalDomain );
           break;
 

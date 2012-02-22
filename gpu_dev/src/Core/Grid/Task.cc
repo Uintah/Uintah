@@ -180,9 +180,9 @@ void
 Task::requires(WhichDW dw, 
                const VarLabel* var,
 	        const PatchSubset* patches,
-	        DomainSpec patches_dom,
+	        PatchDomainSpec patches_dom,
 	        const MaterialSubset* matls,
-	        DomainSpec matls_dom,
+	        MaterialDomainSpec matls_dom,
 	        Ghost::GhostType gtype,
 	        int numGhostCells,
 	        bool oldTG)
@@ -224,7 +224,7 @@ Task::requires(WhichDW dw,
 		int numGhostCells,
 		bool oldTG)
 {
-  requires(dw, var, patches, NormalDomain, matls, NormalDomain,
+  requires(dw, var, patches, ThisLevel, matls, NormalDomain,
            gtype, numGhostCells, oldTG);
 }
 
@@ -236,7 +236,7 @@ Task::requires(WhichDW dw,
 		 int numGhostCells,
 		 bool oldTG)
 {
-  requires(dw, var, 0, NormalDomain, 0, NormalDomain, gtype, numGhostCells, oldTG);
+  requires(dw, var, 0, ThisLevel, 0, NormalDomain, gtype, numGhostCells, oldTG);
 }
 
 //__________________________________
@@ -249,7 +249,7 @@ Task::requires(WhichDW dw,
 		 bool oldTG)
 
 {
-  requires(dw, var, 0, NormalDomain, matls, NormalDomain, gtype, numGhostCells, oldTG);
+  requires(dw, var, 0, ThisLevel, matls, NormalDomain, gtype, numGhostCells, oldTG);
 }
 
 //__________________________________
@@ -257,12 +257,12 @@ void
 Task::requires(WhichDW dw, 
                const VarLabel* var,
 		 const MaterialSubset* matls,
-		 DomainSpec matls_dom,
+		 MaterialDomainSpec matls_dom,
 		 Ghost::GhostType gtype,
 		 int numGhostCells,
 		 bool oldTG)
 {
-  requires(dw, var, 0, NormalDomain, matls, matls_dom, gtype, numGhostCells, oldTG);
+  requires(dw, var, 0, ThisLevel, matls, matls_dom, gtype, numGhostCells, oldTG);
 }
 
 //__________________________________
@@ -274,7 +274,7 @@ Task::requires(WhichDW dw,
                int numGhostCells, 
                bool oldTG)
 {
-  requires(dw, var, patches, NormalDomain, 0, NormalDomain, gtype, numGhostCells, oldTG);
+  requires(dw, var, patches, ThisLevel, 0, NormalDomain, gtype, numGhostCells, oldTG);
 }
 
 //__________________________________
@@ -288,7 +288,7 @@ Task::requires(WhichDW dw,
   if (vartype == TypeDescription::SoleVariable)
     requires(dw, var, (const Level*)0, matls);
   else if(vartype == TypeDescription::PerPatch )
-    requires(dw,var,patches,NormalDomain,matls,NormalDomain,Ghost::None,0);
+    requires(dw,var,patches,ThisLevel,matls,NormalDomain,Ghost::None,0);
   else
     SCI_THROW(InternalError("Requires should specify ghost type or level for this variable", __FILE__, __LINE__));
 }
@@ -309,7 +309,7 @@ Task::requires(WhichDW dw,
      || vartype == TypeDescription::SoleVariable)
     requires(dw, var, (const Level*)0, matls, NormalDomain, oldTG);
   else
-    requires(dw, var, 0, NormalDomain, matls, NormalDomain, Ghost::None, 0, oldTG);
+    requires(dw, var, 0, ThisLevel, matls, NormalDomain, Ghost::None, 0, oldTG);
 }
 
 //__________________________________
@@ -318,7 +318,7 @@ Task::requires(WhichDW dw,
                const VarLabel* var,
 		 const Level* level,
 		 const MaterialSubset * matls,
-		 DomainSpec matls_dom,
+		 MaterialDomainSpec matls_dom,
 		 bool oldTG)
 {
   TypeDescription::Type vartype = var->typeDescription()->getType();
@@ -350,9 +350,9 @@ Task::requires(WhichDW dw,
 void
 Task::computes(const VarLabel * var,
 		 const PatchSubset * patches,
-		 DomainSpec patches_dom,
+		 PatchDomainSpec patches_dom,
 		 const MaterialSubset * matls,
-		 DomainSpec matls_dom)
+		 MaterialDomainSpec matls_dom)
 {
   if (var->typeDescription()->isReductionVariable()) {
     if (matls == 0) {
@@ -386,28 +386,28 @@ Task::computes(const VarLabel * var,
       vartype == TypeDescription::SoleVariable)
     computes(var, (const Level*)0, matls);
   else
-    computes(var, patches, NormalDomain, matls, NormalDomain);
+    computes(var, patches, ThisLevel, matls, NormalDomain);
 }
 
 //__________________________________
 void
 Task::computes(const VarLabel* var, const MaterialSubset* matls)
 {
-  computes(var, 0, NormalDomain, matls, NormalDomain);
+  computes(var, 0, ThisLevel, matls, NormalDomain);
 }
 
 //__________________________________
 void
 Task::computes(const VarLabel* var, const MaterialSubset* matls,
-               DomainSpec matls_dom)
+               MaterialDomainSpec matls_dom)
 {
-  computes(var, 0, NormalDomain, matls, matls_dom);
+  computes(var, 0, ThisLevel, matls, matls_dom);
 }
 
 //__________________________________
 void
 Task::computes(const VarLabel* var, const PatchSubset* patches,
-               DomainSpec patches_dom)
+               PatchDomainSpec patches_dom)
 {
   computes(var, patches, patches_dom, 0, NormalDomain);
 }
@@ -417,7 +417,7 @@ void
 Task::computes(const VarLabel* var,
 		const Level* level,
 		const MaterialSubset * matls,
-		DomainSpec matls_dom)
+		MaterialDomainSpec matls_dom)
 {
   TypeDescription::Type vartype = var->typeDescription()->getType();
   if (!(vartype == TypeDescription::ReductionVariable ||
@@ -448,9 +448,9 @@ Task::computes(const VarLabel* var,
 void
 Task::modifies(const VarLabel* var,
 		const PatchSubset* patches,
-		DomainSpec patches_dom,
+		PatchDomainSpec patches_dom,
 		const MaterialSubset* matls,
-		DomainSpec matls_dom,
+		MaterialDomainSpec matls_dom,
 		bool oldTG)
 {
   if (matls == 0 && var->typeDescription()->isReductionVariable()) {
@@ -479,7 +479,7 @@ void
 Task::modifies(const VarLabel* var,
 		 const Level* level,
 		 const MaterialSubset* matls,
-		 DomainSpec matls_domain,
+		 MaterialDomainSpec matls_domain,
 		 bool oldTG)
 {
   const TypeDescription* vartype = var->typeDescription();
@@ -515,29 +515,29 @@ Task::modifies(const VarLabel* var,
 		const MaterialSubset* matls,
 		bool oldTG)
 {
-  modifies(var, patches, NormalDomain, matls, NormalDomain, oldTG);
+  modifies(var, patches, ThisLevel, matls, NormalDomain, oldTG);
 }
 
 //__________________________________
 void
 Task::modifies(const VarLabel* var, bool oldTG)
 {
-  modifies(var, 0, NormalDomain, 0, NormalDomain, oldTG);
+  modifies(var, 0, ThisLevel, 0, NormalDomain, oldTG);
 }
 
 //__________________________________
 void
 Task::modifies(const VarLabel* var, const MaterialSubset* matls, bool oldTG)
 {
-  modifies(var, 0, NormalDomain, matls, NormalDomain, oldTG);
+  modifies(var, 0, ThisLevel, matls, NormalDomain, oldTG);
 }
 
 //__________________________________
 void
 Task::modifies(const VarLabel* var, const MaterialSubset* matls,
-               DomainSpec matls_dom, bool oldTG)
+               MaterialDomainSpec matls_dom, bool oldTG)
 {
-  modifies(var, 0, NormalDomain, matls, matls_dom, oldTG);
+  modifies(var, 0, ThisLevel, matls, matls_dom, oldTG);
 }
 
 //__________________________________
@@ -646,8 +646,8 @@ Task::Dependency::Dependency(DepType deptype,
 			        bool oldTG,
 			        const PatchSubset* patches,
 			        const MaterialSubset* matls,
-			        DomainSpec patches_dom,
-			        DomainSpec matls_dom,
+			        PatchDomainSpec patches_dom,
+			        MaterialDomainSpec matls_dom,
 			        Ghost::GhostType gtype,
 			        int numGhostCells)
                              
@@ -672,10 +672,10 @@ Task::Dependency::Dependency(DepType deptype,
 			        bool oldTG,
 			        const Level* reductionLevel,
 			        const MaterialSubset* matls,
-			        DomainSpec matls_dom)
+			        MaterialDomainSpec matls_dom)
 
 : deptype(deptype), task(task), var(var), lookInOldTG(oldTG), patches(0), matls(matls),
-  reductionLevel(reductionLevel), patches_dom(NormalDomain),
+  reductionLevel(reductionLevel), patches_dom(ThisLevel),
   matls_dom(matls_dom), gtype(Ghost::None), whichdw(whichdw), numGhostCells(0)
 {
   if (var)
@@ -700,7 +700,7 @@ namespace Uintah {
   /*
 template <class T>
 constHandle< ComputeSubset<T> > Task::Dependency::
-getComputeSubsetUnderDomain(string domString, Task::DomainSpec dom,
+getComputeSubsetUnderDomain(string domString, Task::MaterialDomainSpec dom,
                             const ComputeSubset<T>* subset,
                             const ComputeSubset<T>* domainSubset)
 {
@@ -725,7 +725,7 @@ constHandle<PatchSubset>
 Task::Dependency::getPatchesUnderDomain(const PatchSubset* domainPatches) const
 {
   switch(patches_dom){
-  case Task::NormalDomain:
+  case Task::ThisLevel:
   case Task::OtherGridDomain: // use the same patches, we'll figure out where it corresponds on the other grid
     return PatchSubset::intersection(patches, domainPatches);
   case Task::CoarseLevel:
@@ -754,7 +754,7 @@ Task::Dependency::getMaterialsUnderDomain(const MaterialSubset* domainMaterials)
 
 //__________________________________
 constHandle< PatchSubset > Task::Dependency::
-getOtherLevelPatchSubset(Task::DomainSpec dom,
+getOtherLevelPatchSubset(Task::PatchDomainSpec dom,
                          const PatchSubset* subset,
                          const PatchSubset* domainSubset, int ngc)
 {
@@ -876,11 +876,8 @@ namespace Uintah {
         case Task::OtherGridDomain:
           out << "OtherGridDomain";
           break;  
-        case Task::OutOfDomain:
-          out << "OutOfDomain";
-          break;
-         case Task::NormalDomain:
-          out << "Normal domain";
+         case Task::ThisLevel:
+          out << "ThisLevel";
           break;
         default:
           break;

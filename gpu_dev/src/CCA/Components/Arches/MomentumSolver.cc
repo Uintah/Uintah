@@ -432,7 +432,7 @@ MomentumSolver::sched_buildLinearMatrixVelHat(SchedulerP& sched,
   Ghost::GhostType  gn = Ghost::None;
   Ghost::GhostType  gac = Ghost::AroundCells;
   Ghost::GhostType  gaf = Ghost::AroundFaces;
-  Task::DomainSpec oams = Task::OutOfDomain;  //outside of arches matlSet.
+  Task::MaterialDomainSpec oams = Task::OutOfDomain;  //outside of arches matlSet.
   
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, gac, 2);
   tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, gn);

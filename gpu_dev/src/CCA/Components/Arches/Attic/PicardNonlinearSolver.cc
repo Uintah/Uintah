@@ -221,7 +221,7 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
   
   Ghost::GhostType  gn = Ghost::None;
   Ghost::GhostType  gac = Ghost::AroundCells;
-  Task::DomainSpec oams = Task::OutOfDomain;  //outside of arches matlSet.
+  Task::MaterialDomainSpec oams = Task::OutOfDomain;  //outside of arches matlSet.
   
   tsk->requires(Task::OldDW, d_lab->d_sharedState->get_delt_label());
   if (dynamic_cast<const ScaleSimilarityModel*>(d_turbModel)) {

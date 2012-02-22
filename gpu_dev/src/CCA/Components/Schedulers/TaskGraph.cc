@@ -1290,7 +1290,7 @@ TaskGraph::createDetailedDependencies(DetailedTask* task,
               ASSERT( Max(fromNeighbor->getExtraLowIndex(basis, req->var->getBoundaryLayer()), l)==l);
               ASSERT(Min(fromNeighbor->getExtraHighIndex(basis, req->var->getBoundaryLayer()), h)==h);
             }
-            if (patch->getLevel()->getIndex() > 0 && patch != fromNeighbor && req->patches_dom == Task::NormalDomain) {
+            if (patch->getLevel()->getIndex() > 0 && patch != fromNeighbor && req->patches_dom == Task::ThisLevel) {
               // cull annoying overlapping AMR patch dependencies
               patch->cullIntersection(basis, req->var->getBoundaryLayer(), fromNeighbor, from_l, from_h);
               if (from_l == from_h) {

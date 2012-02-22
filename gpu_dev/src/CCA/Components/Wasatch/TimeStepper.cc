@@ -48,13 +48,13 @@ namespace Wasatch{
       //                       mss, Uintah::Task::NormalDomain );
       task->requires( Uintah::Task::OldDW,
                       ifld->varLabel,
-                      pss, Uintah::Task::NormalDomain,
+                      pss, Uintah::Task::ThisLevel,
                       mss, Uintah::Task::NormalDomain,
                       get_uintah_ghost_type<FieldT>(),
                       get_n_ghost<FieldT>() );
       task->requires( Uintah::Task::NewDW,
                       ifld->rhsLabel,
-                      pss, Uintah::Task::NormalDomain,
+                      pss, Uintah::Task::ThisLevel,
                       mss, Uintah::Task::NormalDomain,
                       get_uintah_ghost_type<FieldT>(),
                       get_n_ghost<FieldT>() );

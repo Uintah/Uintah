@@ -125,12 +125,13 @@ namespace Wasatch{
                           const Uintah::PatchSubset* const pss,
                           const Uintah::MaterialSubset* const mss )
   {
-    const Uintah::Task::DomainSpec domain = Uintah::Task::NormalDomain;
+    const Uintah::Task::MaterialDomainSpec domain = Uintah::Task::NormalDomain;
+    const Uintah::Task::PatchDomainSpec level = Uintah::Task::ThisLevel;
     vl = Uintah::VarLabel::create( tag.field_name(),
                                    get_uintah_field_type_descriptor<FieldT>(),
                                    get_uintah_ghost_descriptor<FieldT>() );
     fieldTags_.insert( tag );
-    task.computes( vl, pss, domain, mss, domain );
+    task.computes( vl, pss, level, mss, domain );
   }
 
   template<> inline void CoordHelper::requires_coordinate<SVolField>( const Direction dir )

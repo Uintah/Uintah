@@ -97,7 +97,7 @@ namespace Uintah {
     void scheduleRefineInterface_Variable(const LevelP& fineLevel,  
                                           SchedulerP& sched,        
                                           const VarLabel* var,      
-                                          Task::DomainSpec DS,      
+                                          Task::MaterialDomainSpec DS,      
                                           const MaterialSet* matls, 
                                           bool needCoarseOld,       
                                           bool needCoarseNew);      
