@@ -30,10 +30,8 @@ DEALINGS IN THE SOFTWARE.
 
 #ifndef UINTAH_ADVECTOR_H
 #define UINTAH_ADVECTOR_H
-
 #include <CCA/Components/ICE/Advection/FluxDatatypes.h>
 #include <CCA/Ports/DataWarehouse.h>
-#include <CCA/Components/Schedulers/GPUThreadedMPIScheduler.h>
 #include <Core/Grid/Variables/SFCXVariable.h>
 #include <Core/Grid/Variables/SFCYVariable.h>
 #include <Core/Grid/Variables/SFCZVariable.h>
@@ -68,12 +66,12 @@ namespace Uintah {
 
   public:
     Advector();
-
     virtual ~Advector();
     
     virtual Advector* clone(DataWarehouse* new_dw, 
                             const Patch* patch,
                             const bool isNewGrid) = 0;
+
 
     virtual void inFluxOutFluxVolume(const SFCXVariable<double>& uvel_FC,
                                      const SFCYVariable<double>& vvel_FC,
@@ -83,17 +81,6 @@ namespace Uintah {
                                      const int& indx,
                                      const bool& bulletProofing_test,
                                      DataWarehouse* new_dw) = 0;
-
-    virtual void inFluxOutFluxVolumeGPU(const VarLabel* uvel_FCMELabel,
-                                        const VarLabel* vvel_FCMELabel,
-                                        const VarLabel* wvel_FCMELabel,
-                                        const double& delT,
-                                        const Patch* patch,
-                                        const int& indx,
-                                        const bool& bulletProofing_test,
-                                        DataWarehouse* new_dw,
-                                        const int& device,
-                                        GPUThreadedMPIScheduler* sched) = 0;
 
     virtual void  advectQ(const CCVariable<double>& q_CC,
                           const Patch* patch,
