@@ -61,7 +61,7 @@ run "mkdir -p install"
 
 run "cd src"
 run "rm -rf SpatialOps"
-run "git clone git://software.crsim.utah.edu/SpatialOps"
+run "git clone --depth 1 git://software.crsim.utah.edu/SpatialOps"
 run "cd $BASE_BUILD_DIR/Wasatch3P/src/SpatialOps"
 
 INSTALL_HERE=$BASE_BUILD_DIR/Wasatch3P/install/SpatialOps
@@ -83,7 +83,7 @@ run "make install"
 
 run "cd .."
 run "rm -rf ExprLib"
-run "git clone git://software.crsim.utah.edu/ExprLib"
+run "git clone --depth 1 git://software.crsim.utah.edu/ExprLib"
 run "cd $BASE_BUILD_DIR/Wasatch3P/src/ExprLib"
 
 INSTALL_HERE=$BASE_BUILD_DIR/Wasatch3P/install/ExprLib
@@ -112,7 +112,7 @@ run "make install"
 
 run "cd .."
 run "rm -rf TabProps"
-run "git clone git://software.crsim.utah.edu/TabProps"
+run "git clone --depth 1 git://software.crsim.utah.edu/TabProps"
 run "cd $BASE_BUILD_DIR/Wasatch3P/src/TabProps"
 
 INSTALL_HERE=$BASE_BUILD_DIR/Wasatch3P/install/TabProps
