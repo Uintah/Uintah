@@ -102,8 +102,8 @@ Pressure::declare_uintah_vars( Uintah::Task& task,
                                const Uintah::MaterialSubset* const materials,
                                const int RKStage )
 {
-  if( RKStage == 1 ) task.computes( matrixLabel_, patches, Uintah::Task::NormalDomain, materials, Uintah::Task::NormalDomain );
-  else               task.modifies( matrixLabel_, patches, Uintah::Task::NormalDomain, materials, Uintah::Task::NormalDomain );
+  if( RKStage == 1 ) task.computes( matrixLabel_, patches, Uintah::Task::ThisLevel, materials, Uintah::Task::NormalDomain );
+  else               task.modifies( matrixLabel_, patches, Uintah::Task::ThisLevel, materials, Uintah::Task::NormalDomain );
 }
 
 //--------------------------------------------------------------------
