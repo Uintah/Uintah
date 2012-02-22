@@ -417,7 +417,7 @@ void RMCRT_Test::scheduleShootRays_multiLevel(SchedulerP& sched,
                   this, &RMCRT_Test::shootRays_multiLevel);
 
   if (d_doFakeRMCRT){
-    Task::DomainSpec  ND  = Task::NormalDomain;
+    Task::MaterialDomainSpec  ND  = Task::NormalDomain;
     #define allPatches 0
     #define allMatls 0
     t->requires(Task::OldDW, d_colorLabel,  d_gn, 0);
@@ -574,14 +574,15 @@ void RMCRT_Test::scheduleShootRays_onCoarseLevel(SchedulerP& sched,
     //  
     if (d_doFakeRMCRT){
       Ghost::GhostType  gn  = Ghost::None;
-      Task::DomainSpec  ND  = Task::NormalDomain;
+      Task::MaterialDomainSpec  ND  = Task::NormalDomain;
+      Task::PatchDomainSpec  TL  = Task::ThisLevel;
       #define allPatches 0
       #define allMatls 0
       
       Task* t = scinew Task("RMCRT_Test::shootRays_onCoarseLevel",
                       this, &RMCRT_Test::shootRays_onCoarseLevel);
       
-      t->requires(Task::OldDW, d_colorLabel,  allPatches, ND,allMatls, ND, gn,0);
+      t->requires(Task::OldDW, d_colorLabel,  allPatches, TL,allMatls, ND, gn,0);
       t->computes( d_divQLabel );
       sched->addTask(t, level->eachPatch(), matls);
     }
@@ -669,7 +670,7 @@ void RMCRT_Test::scheduleRefine_Q(SchedulerP& sched,
     Task* task = scinew Task("RMCRT_Test::refine_Q",this, 
                              &RMCRT_Test::refine_Q);
     
-    Task::DomainSpec  ND  = Task::NormalDomain;
+    Task::MaterialDomainSpec  ND  = Task::NormalDomain;
     #define allPatches 0
     #define allMatls 0
     task->requires(Task::NewDW, d_divQLabel, allPatches, Task::CoarseLevel, allMatls, ND, d_gn,0);

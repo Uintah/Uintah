@@ -724,7 +724,7 @@ void ICE::scheduleInitialize(const LevelP& level,SchedulerP& sched)
   Task* t = scinew Task("ICE::actuallyInitialize",
                   this, &ICE::actuallyInitialize);
 
-  Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
+  Task::MaterialDomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
   
   t->computes(lb->vel_CCLabel);
   t->computes(lb->rho_CCLabel); 
@@ -1082,7 +1082,7 @@ void ICE::scheduleComputePressure(SchedulerP& sched,
   }      
 
 
-  Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
+  Task::MaterialDomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
   Ghost::GhostType  gn = Ghost::None;
   t->requires(Task::OldDW, lb->delTLabel, getLevel(patches));  
   t->requires(Task::OldDW,lb->press_CCLabel, press_matl, oims, gn);
@@ -1156,7 +1156,7 @@ void ICE::scheduleComputeVel_FC(SchedulerP& sched,
             this, &ICE::computeVel_FC);
 
   Ghost::GhostType  gac = Ghost::AroundCells;
-  Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
+  Task::MaterialDomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
   t->requires(Task::OldDW, lb->delTLabel, getLevel(patches));  
   t->requires(Task::NewDW, lb->press_equil_CCLabel, press_matl, oims, gac,1);
   t->requires(Task::NewDW,lb->sp_vol_CCLabel,    /*all_matls*/ gac,1);
@@ -1306,7 +1306,7 @@ void ICE::scheduleComputeDelPressAndUpdatePressCC(SchedulerP& sched,
                             this, &ICE::computeDelPressAndUpdatePressCC);
   Ghost::GhostType  gac = Ghost::AroundCells;
   Ghost::GhostType  gn = Ghost::None;  
-  Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
+  Task::MaterialDomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
   task->requires( Task::OldDW, lb->delTLabel,getLevel(patches));   
   task->requires( Task::NewDW, lb->vol_frac_CCLabel,   gac,2);
   task->requires( Task::NewDW, lb->uvel_FCMELabel,     gac,2);
@@ -1354,7 +1354,7 @@ void ICE::scheduleComputePressFC(SchedulerP& sched,
                      this, &ICE::computePressFC);
                      
   Ghost::GhostType  gac = Ghost::AroundCells;
-  Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
+  Task::MaterialDomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
   task->requires(Task::NewDW,lb->press_CCLabel,   press_matl,oims, gac,1);
   task->requires(Task::NewDW,lb->sum_rho_CCLabel, press_matl,oims, gac,1);
 
@@ -1387,7 +1387,7 @@ ICE::scheduleAccumulateMomentumSourceSinks(SchedulerP& sched,
                        // EQ  & RATE FORM     
   t->requires(Task::OldDW, lb->delTLabel,getLevel(patches));  
   Ghost::GhostType  gac = Ghost::AroundCells;
-  Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
+  Task::MaterialDomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
   
   t->requires(Task::NewDW,lb->pressX_FCLabel,   press_matl,    oims, gac, 1);
   t->requires(Task::NewDW,lb->pressY_FCLabel,   press_matl,    oims, gac, 1);
@@ -1431,7 +1431,7 @@ void ICE::scheduleAccumulateEnergySourceSinks(SchedulerP& sched,
 
   Ghost::GhostType  gac = Ghost::AroundCells;
   Ghost::GhostType  gn  = Ghost::None;
-  Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
+  Task::MaterialDomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
   t->requires(Task::OldDW, lb->delTLabel,getLevel(patches));  
   t->requires(Task::NewDW, lb->press_CCLabel,     press_matl,oims, gn);
   t->requires(Task::NewDW, lb->delP_DilatateLabel,press_matl,oims, gn);
@@ -1505,7 +1505,7 @@ void ICE::scheduleComputeLagrangianSpecificVolume(SchedulerP& sched,
 
   Ghost::GhostType  gn  = Ghost::None;  
   Ghost::GhostType  gac = Ghost::AroundCells;
-  Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
+  Task::MaterialDomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
 
   t->requires(Task::OldDW, lb->delTLabel,getLevel(patches));  
   t->requires(Task::NewDW, lb->rho_CCLabel,               gn);
@@ -1592,7 +1592,7 @@ void ICE::scheduleAddExchangeToMomentumAndEnergy(SchedulerP& sched,
                 this, &ICE::addExchangeToMomentumAndEnergy);
 
   Ghost::GhostType  gn  = Ghost::None;
-//  Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
+//  Task::MaterialDomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
   t->requires(Task::OldDW, lb->delTLabel,getLevel(patches)); 
  
   if(d_exchCoeff->convective()){

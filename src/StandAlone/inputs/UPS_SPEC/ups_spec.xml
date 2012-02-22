@@ -507,7 +507,7 @@
     <!-- Spec for basic expression types -->
     <PostProcessingExpression		spec="MULTIPLE NO_DATA"
                             attribute1="type REQUIRED STRING 'SVOL,XVOL,YVOL,ZVOL"
-                            children1="ONE_OF(CHILD VelocityMagnitude Vorticity)" >
+                            children1="ONE_OF(CHILD VelocityMagnitude Vorticity InterpolateExpression)" >
       <TaskList				spec="REQUIRED STRING 'initialization, advance_solution'" />
       <NameTag				spec="REQUIRED" />
 
@@ -534,6 +534,12 @@
           <NameTag        spec="REQUIRED"/>
         </Vel2>
       </Vorticity>
+                        
+      <!-- Interpolate fields from different locations -->
+      <InterpolateExpression  spec="OPTIONAL NO_DATA"
+                              attribute1="type REQUIRED STRING 'SVOL,XVOL,YVOL,ZVOL">
+          <NameTag        spec="REQUIRED"/>
+      </InterpolateExpression>
 
     </PostProcessingExpression>
 

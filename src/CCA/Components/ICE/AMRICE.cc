@@ -250,7 +250,7 @@ _____________________________________________________________________*/
 void AMRICE::scheduleRefineInterface_Variable(const LevelP& fineLevel,
                                               SchedulerP& sched,
                                               const VarLabel* variable,
-                                              Task::DomainSpec DS,
+                                              Task::MaterialDomainSpec DS,
                                               const MaterialSet* matls,
                                               bool needCoarseOld,
                                               bool needCoarseNew)
@@ -312,8 +312,8 @@ void AMRICE::scheduleRefineInterface(const LevelP& fineLevel,
                << " coarseOld: " << needCoarseOld 
                << " coarseNew: " << needCoarseNew << endl;
   
-    Task::DomainSpec ND   = Task::NormalDomain;
-    Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
+    Task::MaterialDomainSpec ND   = Task::NormalDomain;
+    Task::MaterialDomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
     const MaterialSet* all_matls = d_sharedState->allMaterials();
     const MaterialSet* ice_matls = d_sharedState->allICEMaterials();
 
@@ -451,9 +451,9 @@ void AMRICE::scheduleSetBC_FineLevel(const PatchSet* patches,
     
     Task* t;
     t = scinew Task("AMRICE::setBC_FineLevel", this, &AMRICE::setBC_FineLevel);
-    Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
+    Task::MaterialDomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
     Ghost::GhostType  gn = Ghost::None;
-    Task::DomainSpec ND   = Task::NormalDomain;
+    Task::MaterialDomainSpec ND   = Task::NormalDomain;
 
     // need to interpolate these intermediate values
     t->requires(Task::NewDW, lb->gammaLabel,        0, Task::CoarseLevel, 0, ND, gn,0);
@@ -917,8 +917,8 @@ void AMRICE::scheduleCoarsen(const LevelP& coarseLevel,
              
   Task* task = scinew Task("AMRICE::coarsen",this, &AMRICE::coarsen);
 
-  Task::DomainSpec ND   = Task::NormalDomain;                            
-  Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.  
+  Task::MaterialDomainSpec ND   = Task::NormalDomain;                            
+  Task::MaterialDomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.  
   const MaterialSet* all_matls = d_sharedState->allMaterials();
   const MaterialSet* ice_matls = d_sharedState->allICEMaterials();
           
@@ -1802,7 +1802,7 @@ void AMRICE::scheduleErrorEstimate(const LevelP& coarseLevel,
                   this, &AMRICE::errorEstimate, initial);  
   
   Ghost::GhostType  gac  = Ghost::AroundCells; 
-  Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
+  Task::MaterialDomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
   bool  fat = true;  // possibly (F)rom (A)nother (T)askgraph
   
 
