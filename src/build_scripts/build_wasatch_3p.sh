@@ -57,12 +57,37 @@ run "mkdir -p src"
 run "mkdir -p install"
 
 ############################################################################
+# RadProps
+
+run "cd src"
+run "rm -rf RadProps"
+run "git clone --depth 1 git://software.crsim.utah.edu/RadProps.git RadProps"
+run "mkdir $BASE_BUILD_DIR/Wasatch3P/src/RadProps/build"
+run "cd $BASE_BUILD_DIR/Wasatch3P/src/RadProps/build"
+
+INSTALL_HERE=$BASE_BUILD_DIR/Wasatch3P/install/RadProps
+
+run \
+"cmake \
+  $DEBUG \
+  -DRadProps_ENABLE_TESTING=OFF \
+  -DCMAKE_INSTALL_PREFIX=${INSTALL_HERE} \
+  -DCMAKE_CXX_FLAGS=-fPIC \
+  .."
+#  -DTabProps_DIR=${BASE_BUILD_DIR}/Wasatch3P/install/TabProps/share \
+
+run "make VERBOSE=1"
+run "make install"
+run "cd ../../.."  # back to Wasatch3P
+
+############################################################################
 # SpatialOps
 
 run "cd src"
 run "rm -rf SpatialOps"
-run "git clone --depth 1 git://software.crsim.utah.edu/SpatialOps"
-run "cd $BASE_BUILD_DIR/Wasatch3P/src/SpatialOps"
+run "git clone --depth 1 git://software.crsim.utah.edu/SpatialOps.git SpatialOps"
+run "mkdir $BASE_BUILD_DIR/Wasatch3P/src/SpatialOps/build"
+run "cd $BASE_BUILD_DIR/Wasatch3P/src/SpatialOps/build"
 
 INSTALL_HERE=$BASE_BUILD_DIR/Wasatch3P/install/SpatialOps
 
@@ -73,18 +98,20 @@ run \
   -DBOOST_ROOT=$BOOST_DIR \
   -DCMAKE_INSTALL_PREFIX=${INSTALL_HERE} \
   -DCMAKE_CXX_FLAGS="-fPIC" \
-  ."
+  .."
 
 run "make -j4"
 run "make install"
+run "cd ../../.."  # back to Wasatch3P
 
 ############################################################################
 # ExprLib
 
-run "cd .."
+run "cd src"
 run "rm -rf ExprLib"
-run "git clone --depth 1 git://software.crsim.utah.edu/ExprLib"
-run "cd $BASE_BUILD_DIR/Wasatch3P/src/ExprLib"
+run "git clone --depth 1 git://software.crsim.utah.edu/ExprLib.git ExprLib"
+run "mkdir $BASE_BUILD_DIR/Wasatch3P/src/ExprLib/build"
+run "cd $BASE_BUILD_DIR/Wasatch3P/src/ExprLib/build"
 
 INSTALL_HERE=$BASE_BUILD_DIR/Wasatch3P/install/ExprLib
 SPATIAL_OPS_INSTALL_DIR=$BASE_BUILD_DIR/Wasatch3P/install/SpatialOps
@@ -102,18 +129,20 @@ run \
   \
   -DCMAKE_INSTALL_PREFIX=${INSTALL_HERE} \
   -DCMAKE_CXX_FLAGS="-fPIC" \
-  ."
+  .."
 
 run "make -j4"
 run "make install"
+run "cd ../../.."  # back to Wasatch3P
 
 ############################################################################
 # TabProps
 
-run "cd .."
+run "cd src"
 run "rm -rf TabProps"
-run "git clone --depth 1 git://software.crsim.utah.edu/TabProps"
-run "cd $BASE_BUILD_DIR/Wasatch3P/src/TabProps"
+run "git clone --depth 1 git://software.crsim.utah.edu/TabProps.git TabProps"
+run "mkdir $BASE_BUILD_DIR/Wasatch3P/src/TabProps/build"
+run "cd $BASE_BUILD_DIR/Wasatch3P/src/TabProps/build"
 
 INSTALL_HERE=$BASE_BUILD_DIR/Wasatch3P/install/TabProps
 
@@ -126,12 +155,14 @@ run \
   -DCMAKE_INSTALL_PREFIX=${INSTALL_HERE} \
   -DCMAKE_CXX_FLAGS=-fPIC \
   -DCMAKE_CXX_LINK_FLAGS=\"-lpthread -lz\" \
-  ."
+  .."
 
 run "make -j4"
 run "make install"
+run "cd ../../.."  # back to Wasatch3P
 
 ############################################################################
+
 
 echo ""
 echo "Done Building Wasatch Thirdparty Libraries."
