@@ -125,7 +125,7 @@ namespace Wasatch{
                           const Uintah::PatchSubset* const pss,
                           const Uintah::MaterialSubset* const mss )
   {
-    const Uintah::Task::DomainSpec domain = Uintah::Task::NormalDomain;
+    const Uintah::Task::MaterialDomainSpec domain = Uintah::Task::NormalDomain;
     vl = Uintah::VarLabel::create( tag.field_name(),
                                    get_uintah_field_type_descriptor<FieldT>(),
                                    get_uintah_ghost_descriptor<FieldT>() );

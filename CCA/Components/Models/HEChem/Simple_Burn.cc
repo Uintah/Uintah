@@ -231,7 +231,7 @@ void Simple_Burn::scheduleComputeModelSources(SchedulerP& sched,
   //  for burning criteria
   const MaterialSet* all_matls = d_sharedState->allMaterials();
   const MaterialSubset* all_matls_sub = all_matls->getUnion();  
-  Task::DomainSpec oms = Task::OutOfDomain;  //outside of mymatl set.
+  Task::MaterialDomainSpec oms = Task::OutOfDomain;  //outside of mymatl set.
   t->requires(Task::OldDW, Ilb->temp_CCLabel,      all_matls_sub, oms, gac,1);
   t->requires(Task::NewDW, Ilb->vol_frac_CCLabel,  all_matls_sub, oms, gac,1);
 

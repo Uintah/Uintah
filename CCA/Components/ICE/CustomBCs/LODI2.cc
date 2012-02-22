@@ -216,7 +216,7 @@ void addRequires_Lodi(Task* t,
 
   
   Ghost::GhostType  gn  = Ghost::None;
-  Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
+  Task::MaterialDomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
   MaterialSubset* press_matl = scinew MaterialSubset();
   press_matl->add(0);
   press_matl->addReference();

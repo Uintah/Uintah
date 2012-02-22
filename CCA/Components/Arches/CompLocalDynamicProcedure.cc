@@ -197,7 +197,7 @@ CompLocalDynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched,
   Ghost::GhostType  gn = Ghost::None;
   Ghost::GhostType  gac = Ghost::AroundCells;
   Ghost::GhostType  gaf = Ghost::AroundFaces;
-  Task::DomainSpec oams = Task::OutOfDomain;  //outside of arches matlSet.
+  Task::MaterialDomainSpec oams = Task::OutOfDomain;  //outside of arches matlSet.
   {
     string taskname =  "CompLocalDynamicProcedure::reComputeTurbSubmodel" +
                        timelabels->integrator_step_name;

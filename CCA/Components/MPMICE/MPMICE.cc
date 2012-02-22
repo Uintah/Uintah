@@ -2736,7 +2736,7 @@ void MPMICE::scheduleErrorEstimate(const LevelP& coarseLevel,
                        variable, defaultValue, modifies, coarsenMethod);
   
   Ghost::GhostType  gn = Ghost::None;
-  Task::DomainSpec ND   = Task::NormalDomain;
+  Task::MaterialDomainSpec ND   = Task::NormalDomain;
   
   t->requires(Task::NewDW, variable, 0, Task::FineLevel, 0, ND,gn,0);
   
@@ -2780,7 +2780,7 @@ void MPMICE::scheduleErrorEstimate(const LevelP& coarseLevel,
 
   //Ghost::GhostType  gn = Ghost::None;
   Ghost::GhostType  gan = Ghost::AroundNodes;
-  Task::DomainSpec ND   = Task::NormalDomain;
+  Task::MaterialDomainSpec ND   = Task::NormalDomain;
 
   const LevelP fineLevel = getLevel(patches)->getFinerLevel();
   IntVector refineRatio(fineLevel->getRefinementRatio());

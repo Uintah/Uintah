@@ -348,7 +348,7 @@ DetailedTask::scrub(vector<OnDemandDataWarehouseP>& dws)
           for(int i=0;i<neighbors.size();i++){
             const Patch* neighbor=neighbors[i];
 
-            if (patch->getLevel()->getIndex() > 0 && patch != neighbor && req->patches_dom == Task::NormalDomain) {
+            if (patch->getLevel()->getIndex() > 0 && patch != neighbor && req->patches_dom == Task::ThisLevel) {
               // don't scrub on AMR overlapping patches...
               IntVector l = low, h = high;
               l = Max(neighbor->getExtraLowIndex(basis, req->var->getBoundaryLayer()), low);
@@ -739,7 +739,7 @@ DetailedTasks::possiblyCreateDependency(DetailedTask* from,
   }
 
   if ((toresource == d_myworld->myrank() || 
-        (req->patches_dom != Task::NormalDomain && fromresource == d_myworld->myrank())) && 
+        (req->patches_dom != Task::ThisLevel && fromresource == d_myworld->myrank())) && 
       fromPatch && !req->var->typeDescription()->isReductionVariable()) {
     // add scrub counts for local tasks, and not for non-data deps
     addScrubCount(req->var, matl, fromPatch, req->whichdw);
