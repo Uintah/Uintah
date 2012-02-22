@@ -1,5 +1,7 @@
 //-- Uintah includes --//
 #include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Exceptions/InvalidValue.h>
+#include <Core/Exceptions/ProblemSetupException.h>
 
 
 //-- Wasatch includes --//
@@ -18,6 +20,7 @@
 
 #include <CCA/Components/Wasatch/Expressions/VelocityMagnitude.h>
 #include <CCA/Components/Wasatch/Expressions/Vorticity.h>
+#include <CCA/Components/Wasatch/Expressions/PostProcessing/InterpolateExpression.h>
 
 //-- ExprLib includes --//
 #include <expression/ExprLib.h>
@@ -339,6 +342,42 @@ namespace Wasatch{
       }
     }    
     
+    else if( params->findBlock("InterpolateExpression") ){
+      Uintah::ProblemSpecP valParams = params->findBlock("InterpolateExpression");
+      std::string srcFieldType;
+      valParams->getAttribute("type",srcFieldType);
+      Expr::Tag srcTag = Expr::Tag();
+      srcTag = parse_nametag( valParams->findBlock("NameTag") );
+
+      switch( get_field_type(srcFieldType) ){
+        case SVOL : {
+          std::ostringstream msg;
+          msg << "ERROR: unsupported field type '" << srcFieldType << "'" << ". Trying to interpolate SVOL to SVOL is redundant." << std::endl;
+          throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+          
+        }
+        case XVOL : {
+          typedef typename InterpolateExpression<XVolField, SVolField>::Builder Builder;
+          builder = scinew Builder(tag, srcTag);  
+          break;
+        }
+        case YVOL : {
+          typedef typename InterpolateExpression<YVolField, SVolField>::Builder Builder;
+          builder = scinew Builder(tag, srcTag);  
+          break;
+        }
+        case ZVOL : {
+          typedef typename InterpolateExpression<ZVolField, SVolField>::Builder Builder;
+          builder = scinew Builder(tag, srcTag);  
+          break;     
+        }
+        default:
+          std::ostringstream msg;
+          msg << "ERROR: unsupported field type '" << srcFieldType << "'" << "while parsing an InterpolateExpression." << std::endl;
+          throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+      }          
+    }    
+    
     return builder;
   }
   
@@ -367,8 +406,8 @@ namespace Wasatch{
       case ZVOL : builder = build_basic_expr< ZVolField >( exprParams );  break;
       default:
         std::ostringstream msg;
-        msg << "ERROR: unsupported field type '" << fieldType << "'" << endl
-            << __FILE__ << " : " << __LINE__ << endl;
+        msg << "ERROR: unsupported field type '" << fieldType << "'" << std::endl;
+        throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
       }
 
       Category cat = INITIALIZATION;
@@ -377,8 +416,8 @@ namespace Wasatch{
       else if( taskListName == "advance_solution" )   cat = ADVANCE_SOLUTION;
       else{
         std::ostringstream msg;
-        msg << "ERROR: unsupported task list '" << taskListName << "'" << endl
-            << __FILE__ << " : " << __LINE__ << endl;
+        msg << "ERROR: unsupported task list '" << taskListName << "'" << std::endl;
+        throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
       }
 
       GraphHelper* const graphHelper = gc[cat];
@@ -407,8 +446,8 @@ namespace Wasatch{
       case ZVOL : builder = build_taylor_vortex_mms_expr< ZVolField >( exprParams );  break;
       default:
         std::ostringstream msg;
-        msg << "ERROR: unsupported field type '" << fieldType << "'" << endl
-            << __FILE__ << " : " << __LINE__ << endl;
+        msg << "ERROR: unsupported field type '" << fieldType << "'" << std::endl;
+        throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
       }
 
       Category cat = INITIALIZATION;
@@ -417,8 +456,8 @@ namespace Wasatch{
       else if( taskListName == "advance_solution" )   cat = ADVANCE_SOLUTION;
       else{
         std::ostringstream msg;
-        msg << "ERROR: unsupported task list '" << taskListName << "'" << endl
-            << __FILE__ << " : " << __LINE__ << endl;
+        msg << "ERROR: unsupported task list '" << taskListName << "'" << std::endl;
+        throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
       }
 
       GraphHelper* const graphHelper = gc[cat];
@@ -442,8 +481,8 @@ namespace Wasatch{
         case ZVOL : builder = build_physics_coefficient_expr< ZVolField >( exprParams );  break;
         default:
           std::ostringstream msg;
-          msg << "ERROR: unsupported field type '" << fieldType << "'" << endl
-          << __FILE__ << " : " << __LINE__ << endl;
+          msg << "ERROR: unsupported field type '" << fieldType << "'" << std::endl;
+          throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
       }
       
       Category cat = INITIALIZATION;
@@ -452,8 +491,8 @@ namespace Wasatch{
       else if( taskListName == "advance_solution" )   cat = ADVANCE_SOLUTION;
       else{
         std::ostringstream msg;
-        msg << "ERROR: unsupported task list '" << taskListName << "'" << endl
-        << __FILE__ << " : " << __LINE__ << endl;
+        msg << "ERROR: unsupported task list '" << taskListName << "'" << std::endl;
+        throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
       }
       
       GraphHelper* const graphHelper = gc[cat];
@@ -462,7 +501,6 @@ namespace Wasatch{
     
     //___________________________________________________
     // parse and build post-processing expressions    
-    std::cout << "Looking for post processing expressions\n";
     for( Uintah::ProblemSpecP exprParams = parser->findBlock("PostProcessingExpression");
         exprParams != 0;
         exprParams = exprParams->findNextBlock("PostProcessingExpression") ){
@@ -473,13 +511,11 @@ namespace Wasatch{
       
       switch( get_field_type(fieldType) ){
         case SVOL : builder = build_post_processing_expr< SVolField >( exprParams );  break;
-        case XVOL : builder = build_post_processing_expr< XVolField >( exprParams );  break;
-        case YVOL : builder = build_post_processing_expr< YVolField >( exprParams );  break;
-        case ZVOL : builder = build_post_processing_expr< ZVolField >( exprParams );  break;
         default:
           std::ostringstream msg;
-          msg << "ERROR: unsupported field type '" << fieldType << "'" << endl
-          << __FILE__ << " : " << __LINE__ << endl;
+          msg << "ERROR: unsupported field type '" << fieldType << "'. Postprocessing expressions are setup with SVOLFields as destination fields only." << std::endl
+              << "You were trying to register a postprocessing expression with a non cell centered destination field. Please revise you input file." << std::endl;
+          throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
       }
       
       Category cat = INITIALIZATION;
@@ -488,8 +524,8 @@ namespace Wasatch{
       else if( taskListName == "advance_solution" )   cat = ADVANCE_SOLUTION;
       else{
         std::ostringstream msg;
-        msg << "ERROR: unsupported task list '" << taskListName << "'" << endl
-        << __FILE__ << " : " << __LINE__ << endl;
+        msg << "ERROR: unsupported task list '" << taskListName << "'" << std::endl;
+        throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
       }
       
       GraphHelper* const graphHelper = gc[cat];

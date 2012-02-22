@@ -79,7 +79,7 @@ class Vorticity
   const InpterpVel2FaceT2FieldT* InpterpVel2FaceT2FieldTOp_;
       
   Vorticity( const Expr::Tag& vel1tag,
-                    const Expr::Tag& vel2tag );
+             const Expr::Tag& vel2tag );
   
 public:
   class Builder : public Expr::ExpressionBuilder
