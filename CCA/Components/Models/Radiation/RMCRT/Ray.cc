@@ -831,7 +831,6 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
             // Logic for moving between levels
             // currently you can only move  from fine to coarse level
             if( onFinePatch && finePatch->containsCell(cur) == false ){
-              cur   = level->mapCellToCoarser(cur); 
               level = level->getCoarserLevel().get_rep();
               level->findInteriorCellIndexRange(domainLo, domainHi);     // excluding extraCells
               
@@ -841,19 +840,20 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
               tMax_prev     = tMax[dir];
               tMax[dir]     = tMax[dir] + tDelta[L][dir];
               
-              int coarsenRatio = 1;  // Todd:  do you know how to get this dynamically?
+              IntVector coarsenRatio = IntVector(1,1,1);  // Todd:  do you know how to get this dynamically?
               Vector lineup;
               for (int ii=0; ii<3; ii++){
                 if (sign[ii]) {
-                  lineup[ii] = cur[ii] % coarsenRatio - (coarsenRatio - 1 );   
+                  lineup[ii] = cur[ii] % coarsenRatio[ii] - (coarsenRatio[ii] - 1 );   
                 }  
               
                 else {
-                  lineup[ii] = cur[ii] % coarsenRatio;
+                  lineup[ii] = cur[ii] % coarsenRatio[ii];
                 }
               }
               tMax += lineup * tDelta[L]; 
               
+              cur   = level->mapCellToCoarser(cur); 
               L     = level->getIndex();
               onFinePatch = false;
               dbg2 << " Jumping off fine patch switching Levels:  prev L: " << prevLev << " cur L " << L << " cur " << cur << endl;
