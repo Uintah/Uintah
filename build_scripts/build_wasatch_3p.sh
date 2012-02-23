@@ -57,30 +57,6 @@ run "mkdir -p src"
 run "mkdir -p install"
 
 ############################################################################
-# RadProps
-
-run "cd src"
-run "rm -rf RadProps"
-run "git clone --depth 1 git://software.crsim.utah.edu/RadProps.git RadProps"
-run "mkdir $BASE_BUILD_DIR/Wasatch3P/src/RadProps/build"
-run "cd $BASE_BUILD_DIR/Wasatch3P/src/RadProps/build"
-
-INSTALL_HERE=$BASE_BUILD_DIR/Wasatch3P/install/RadProps
-
-run \
-"cmake \
-  $DEBUG \
-  -DRadProps_ENABLE_TESTING=OFF \
-  -DCMAKE_INSTALL_PREFIX=${INSTALL_HERE} \
-  -DCMAKE_CXX_FLAGS=-fPIC \
-  .."
-#  -DTabProps_DIR=${BASE_BUILD_DIR}/Wasatch3P/install/TabProps/share \
-
-run "make VERBOSE=1"
-run "make install"
-run "cd ../../.."  # back to Wasatch3P
-
-############################################################################
 # SpatialOps
 
 run "cd src"
@@ -158,6 +134,30 @@ run \
   .."
 
 run "make -j4"
+run "make install"
+run "cd ../../.."  # back to Wasatch3P
+
+############################################################################
+# RadProps
+
+run "cd src"
+run "rm -rf RadProps"
+run "git clone --depth 1 git://software.crsim.utah.edu/RadProps.git RadProps"
+run "mkdir $BASE_BUILD_DIR/Wasatch3P/src/RadProps/build"
+run "cd $BASE_BUILD_DIR/Wasatch3P/src/RadProps/build"
+
+INSTALL_HERE=$BASE_BUILD_DIR/Wasatch3P/install/RadProps
+
+run \
+"cmake \
+  $DEBUG \
+  -DRadProps_ENABLE_TESTING=OFF \
+  -DCMAKE_INSTALL_PREFIX=${INSTALL_HERE} \
+  -DCMAKE_CXX_FLAGS=-fPIC \
+  -DTabProps_DIR=${BASE_BUILD_DIR}/Wasatch3P/install/TabProps/share \
+  .."
+
+run "make VERBOSE=1"
 run "make install"
 run "cd ../../.."  # back to Wasatch3P
 
