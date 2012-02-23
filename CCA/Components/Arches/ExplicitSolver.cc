@@ -364,6 +364,55 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
      }
 
+    
+#   ifdef WASATCH_IN_ARCHES
+    /* hook in construction of task interface for wasatch transport equations here.
+     * This is within the RK loop, so we need to pass the stage as well.
+     *
+     * Note that at this point we should also build Expr::PlaceHolder objects
+     * for all "out-edges" in the Wasatch graph (required quantities from Arches)
+     * such as advecting velocity, etc.  These need to be consistent with the
+     * names given in the input file, which is a bit of a pain.  We will have
+     * to trust the user to get those right.
+     */
+    {
+      const Wasatch::Wasatch::EquationAdaptors& adaptors = wasatch.equation_adaptors();
+      Wasatch::GraphHelper* const gh = wasatch.graph_categories()[Wasatch::ADVANCE_SOLUTION];
+      
+      std::vector<std::string> phi;
+      std::vector<std::string> phi_rhs;
+      
+      for( Wasatch::Wasatch::EquationAdaptors::const_iterator ia=adaptors.begin(); ia!=adaptors.end(); ++ia ) {
+        Wasatch::TransportEquation* transEq = (*ia)->equation();
+        std::string solnVarName = transEq->solution_variable_name();
+        phi.push_back(solnVarName);
+        phi_rhs.push_back(solnVarName + "_rhs");
+      }      
+      //
+      std::stringstream strRKStage;
+      strRKStage << curr_level;
+      const std::set<std::string>& ioFieldSet = wasatch.io_field_set();              
+      Wasatch::TaskInterface* wasatchRHSTask =
+      scinew Wasatch::TaskInterface( gh->rootIDs,
+                                    "wasatch_in_arches_rhs_task_stage_" + strRKStage.str(),
+                                    *(gh->exprFactory),
+                                    level, sched, patches, matls,
+                                    wasatch.patch_info_map(),
+                                    true,
+                                    curr_level+1,
+                                    ioFieldSet 
+                                    );
+      
+      // jcs need to build a CoordHelper (or graph the one from wasatch?) - see Wasatch::TimeStepper.cc...
+      wasatch.task_interface_list().push_back( wasatchRHSTask );
+      wasatchRHSTask->schedule( curr_level +1 );  
+      // note that there is another interface for this if we need some fields from the new DW.      
+      d_timeIntegrator->sched_fe_update(sched, patches, matls, phi, phi_rhs, curr_level, true);
+      if(curr_level>0) d_timeIntegrator->sched_time_ave(sched, patches, matls, phi, curr_level, true);
+      //d_timeIntegrator->sched_wasatch_time_ave(sched, patches, matls, phi, phi_rhs, curr_level);            
+    }
+#   endif // WASATCH_IN_ARCHES
+    
     if (d_doDQMOM) {
 
       CoalModelFactory& modelFactory = CoalModelFactory::self();
@@ -661,53 +710,6 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
                                        d_timeIntegratorLabels[curr_level]);
     }
 
-#   ifdef WASATCH_IN_ARCHES
-    /* hook in construction of task interface for wasatch transport equations here.
-     * This is within the RK loop, so we need to pass the stage as well.
-     *
-     * Note that at this point we should also build Expr::PlaceHolder objects
-     * for all "out-edges" in the Wasatch graph (required quantities from Arches)
-     * such as advecting velocity, etc.  These need to be consistent with the
-     * names given in the input file, which is a bit of a pain.  We will have
-     * to trust the user to get those right.
-     */
-    {
-      const Wasatch::Wasatch::EquationAdaptors& adaptors = wasatch.equation_adaptors();
-      Wasatch::GraphHelper* const gh = wasatch.graph_categories()[Wasatch::ADVANCE_SOLUTION];
-
-      std::vector<std::string> phi;
-      std::vector<std::string> phi_rhs;
-      
-      for( Wasatch::Wasatch::EquationAdaptors::const_iterator ia=adaptors.begin(); ia!=adaptors.end(); ++ia ) {
-        Wasatch::TransportEquation* transEq = (*ia)->equation();
-        std::string solnVarName = transEq->solution_variable_name();
-        phi.push_back(solnVarName);
-        phi_rhs.push_back(solnVarName + "_rhs");
-      }      
-      //
-      std::stringstream strRKStage;
-      strRKStage << curr_level;
-      const std::set<std::string>& ioFieldSet = wasatch.io_field_set();              
-      Wasatch::TaskInterface* wasatchRHSTask =
-        scinew Wasatch::TaskInterface( gh->rootIDs,
-                                       "wasatch_in_arches_rhs_task_stage_" + strRKStage.str(),
-                                       *(gh->exprFactory),
-                                       level, sched, patches, matls,
-                                       wasatch.patch_info_map(),
-                                       true,
-                                       curr_level+1,
-                                       ioFieldSet 
-                                       );
-
-      // jcs need to build a CoordHelper (or graph the one from wasatch?) - see Wasatch::TimeStepper.cc...
-      wasatch.task_interface_list().push_back( wasatchRHSTask );
-      wasatchRHSTask->schedule( curr_level +1 );  
-      // note that there is another interface for this if we need some fields from the new DW.      
-      d_timeIntegrator->sched_fe_update(sched, patches, matls, phi, phi_rhs, curr_level, true);
-      if(curr_level>0) d_timeIntegrator->sched_time_ave(sched, patches, matls, phi, curr_level, true);
-      //d_timeIntegrator->sched_wasatch_time_ave(sched, patches, matls, phi, phi_rhs, curr_level);            
-    }
-#   endif // WASATCH_IN_ARCHES
   }
 
   // print information at probes provided in input file

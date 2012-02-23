@@ -378,7 +378,7 @@ Arches::problemSetup(const ProblemSpecP& params,
   if( !(initgh->exprFactory->have_entry( volFractionTag )) ) {
     // register placeholder expressions for volume fraction field: "volFraction"
     typedef Expr::PlaceHolder<SVolField>  VolFracT;
-    initgh->exprFactory->register_expression( new VolFracT::Builder(Expr::Tag( volFractionName, Expr::STATE_NONE )) );        
+    initgh->exprFactory->register_expression( new VolFracT::Builder(volFractionTag) );        
   }  
   
   if( !(solngh->exprFactory->have_entry( volFractionTag )) ) {
