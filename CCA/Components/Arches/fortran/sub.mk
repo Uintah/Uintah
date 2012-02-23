@@ -67,7 +67,6 @@ SRCS += \
         $(SRCDIR)/scalarvarmodel.F \
         $(SRCDIR)/scalcoef.F \
         $(SRCDIR)/scalsrc.F \
-        $(SRCDIR)/smagmodel.F \
         $(SRCDIR)/uvelcoef.F \
         $(SRCDIR)/uvelsrc.F \
         $(SRCDIR)/vvelcoef.F \
@@ -116,7 +115,6 @@ $(SRCDIR)/profv.$(OBJEXT): $(SRCDIR)/profv_fort.h $(SRCDIR)/ramping.h
 $(SRCDIR)/scalarvarmodel.$(OBJEXT): $(SRCDIR)/scalarvarmodel_fort.h
 $(SRCDIR)/scalcoef.$(OBJEXT): $(SRCDIR)/scalcoef_fort.h
 $(SRCDIR)/scalsrc.$(OBJEXT): $(SRCDIR)/scalsrc_fort.h
-$(SRCDIR)/smagmodel.$(OBJEXT): $(SRCDIR)/smagmodel_fort.h
 $(SRCDIR)/uvelcoef.$(OBJEXT): $(SRCDIR)/uvelcoef_fort.h
 $(SRCDIR)/uvelsrc.$(OBJEXT): $(SRCDIR)/uvelsrc_fort.h
 $(SRCDIR)/vvelcoef.$(OBJEXT): $(SRCDIR)/vvelcoef_fort.h
